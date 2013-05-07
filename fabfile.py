@@ -110,6 +110,7 @@ def deploy():
     virtualenv.pip_install_req.run()
     virtualenv.make_relocatable.run()
 
+    push_anj_config.run()
     run('cd %(project_path)s/ui; ./scripts/production.sh' % env.conf)
 
     release.activate.run()

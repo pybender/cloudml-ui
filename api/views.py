@@ -294,25 +294,42 @@ class TestExamplesResource(BaseResource):
         model_name = kwargs.get('model_name')
         test_name = kwargs.get('test_name')
         collection = app.db.TestExample.collection
-        from bson.code import Code
-        _map = Code("emit(this.%s, {pred: this.label,\
-                    label: this.label});" % group_by_field)
-        _reduce = Code("function (key, values) { \
-                         return {'list':  values}; }")
-        params = {'model_name': model_name,
-                  'test_name': test_name}
+
         res = []
         avps = []
-        result = collection.map_reduce(_map, _reduce, 'avp',
-                                       query=params)
-        for doc in result.find():
-            group = doc['value']
-            group_list = group['list'] if 'list' in group else [group, ]
-            labels = [str(item['label']) for item in group_list]
-            pred_labels = [str(item['pred']) for item in group_list]
+
+        # from bson.code import Code
+        # _map = Code("emit(this.%s, {pred: this.label,\
+        #             label: this.label});" % group_by_field)
+        # _reduce = Code("function (key, values) { \
+        #                  return {'list':  values}; }")
+        # params = {'model_name': model_name,
+        #           'test_name': test_name}
+        # result = collection.map_reduce(_map, _reduce, 'avp',
+        #                                query=params)
+
+        # for doc in result.find():
+        #     group = doc['value']
+        #     group_list = group['list'] if 'list' in group else [group, ]
+        #     labels = [str(item['label']) for item in group_list]
+        #     pred_labels = [str(item['pred']) for item in group_list]
+        #     avp = apk(labels, pred_labels, count)
+        #     avps.append(avp)
+        #     res.append({'group_by_field': doc["_id"],
+        #                 'count': len(group_list),
+        #                 'avp': avp})
+
+        groups = collection.group([group_by_field, ],
+                                  {'model_name': model_name,
+                                   'test_name': test_name},
+                                  {'list': []}, REDUCE_FUNC)
+        for group in groups:
+            group_list = group['list']
+            labels = [item['label'] for item in group_list]
+            pred_labels = [item['pred'] for item in group_list]
             avp = apk(labels, pred_labels, count)
             avps.append(avp)
-            res.append({'group_by_field': doc["_id"],
+            res.append({'group_by_field': group[group_by_field],
                         'count': len(group_list),
                         'avp': avp})
 

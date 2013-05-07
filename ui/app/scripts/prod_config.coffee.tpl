@@ -5,7 +5,7 @@
 
 LOCAL_SETTINGS = {
 
-  apiUrl: 'http://172.27.67.106:5000/api/cloudml/b/v1/'
+  apiUrl: 'apiUrl: 'http://172.27.77.141/api/cloudml/'
 }
 
 angular.module('app.local_config', []).constant 'settings', LOCAL_SETTINGS
