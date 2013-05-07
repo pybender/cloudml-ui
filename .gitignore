@@ -6,6 +6,7 @@
 *.swp
 *.vim
 _build
+_public
 *.bak
 *.dat
 local_config.coffee
