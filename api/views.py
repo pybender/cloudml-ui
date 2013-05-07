@@ -304,13 +304,13 @@ class TestExamplesResource(BaseResource):
         res = []
         avps = []
         result = collection.map_reduce(_map, _reduce, 'avp',
-                                       query=params, limit=count)
+                                       query=params)
         for doc in result.find():
             group = doc['value']
             group_list = group['list'] if 'list' in group else [group, ]
             labels = [str(item['label']) for item in group_list]
             pred_labels = [str(item['pred']) for item in group_list]
-            avp = apk(labels, pred_labels)
+            avp = apk(labels, pred_labels, count)
             avps.append(avp)
             res.append({'group_by_field': doc["_id"],
                         'count': len(group_list),
