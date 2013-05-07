@@ -7,21 +7,6 @@ from fabdeploy.api import DefaultConf
 DIRNAME = os.path.dirname(__file__)
 
 
-class HereConf(DefaultConf):
-    """Local development settings. Change these for your machine."""
-
-    address = 'atmel@home'
-    sudo_user = 'atmel'
-    src_path = os.path.dirname(DIRNAME)
-    env_path = os.path.join(DIRNAME, 've')
-    django_dir = 'api'
-
-    rabbitmq_host = 'localhost'
-    rabbitmq_port = 5672
-    rabbitmq_user = 'cloudml'
-    rabbitmq_password = 'cloudml'
-    rabbitmq_vhost =  'cloudml'
-
 
 class BaseConf(DefaultConf):
     """Base deployment settings."""
@@ -29,7 +14,7 @@ class BaseConf(DefaultConf):
     django_dir = 'api'
     home_path = '/webapps/cloudmlui'
 
-    ui_scripts_dir = ['home_path', 'ui', 'app', 'scripts']
+    ui_scripts_dir = ['%(current_project_link)s', 'ui', 'app', 'scripts']
     current_public_link = ['%(current_project_link)s', 'ui', '_public']
     current_docs_link = ['%(current_project_link)s', 'docs', 'build', 'html']
 
@@ -39,6 +24,8 @@ class BaseConf(DefaultConf):
     supervisor_prefix = 'cloudmlui_'
     supervisord_config_lfile = 'supervisor/supervisord.conf'
     supervisord_config_file = ['%(supervisor_config_path)s', 'supervisord.conf']
+    
+    local_anjsettings_file = ['%(ui_scripts_dir)s', 'local_config.coffee']
 
     supervisor__log_path = ['%(var_path)s', 'log', 'supervisor']
     supervisor_programs = ['celeryd', 'celerycam', 'gunicorn']
@@ -111,7 +98,7 @@ class ProductionConf(BaseConf):
 
     address = 'cloudml@172.27.77.141'
 
-    home_path = '/webapps/cloudml'
+    home_path = '/webapps/cloudmlui'
 
     sudo_user = 'nmelnik'
 
@@ -125,3 +112,4 @@ class ProductionConf(BaseConf):
     gunicorn_port = 5000
 
     remote_settings_lfile = 'prod_config.py.tpl'
+    remote_anjsettings_lfile = 'ui/app/scripts/prod_config.coffee.tpl'

@@ -10,7 +10,7 @@ scikit-learn
 psycopg2==2.4.6 # sudo apt-get install libpq-dev python-dev
 jsonpath==0.54
 celery==3.0.16
-flower==0.4.2
+flower==0.5.0
 supervisor
 ml_metrics
 pmap
