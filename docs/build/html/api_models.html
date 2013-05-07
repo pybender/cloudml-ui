@@ -1,0 +1,315 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Models &mdash; oDesk CloudML 0.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="oDesk CloudML 0.0.1 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="models">
+<h1>Models<a class="headerlink" href="#models" title="Permalink to this headline">¶</a></h1>
+<table border="1" class="docutils">
+<colgroup>
+<col width="9%" />
+<col width="69%" />
+<col width="22%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Method</th>
+<th class="head">Resource</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>GET</td>
+<td><a class="reference internal" href="#list-models"><em>/cloudml/model/</em></a></td>
+<td>Get list of models</td>
+</tr>
+<tr class="row-odd"><td>GET</td>
+<td><a class="reference internal" href="#get-model"><em>/cloudml/model/:ModelName</em></a></td>
+<td>Get model by name</td>
+</tr>
+<tr class="row-even"><td>POST</td>
+<td><a class="reference internal" href="#predict"><em>/cloudml/model/:ModelName/:HandlerName/predict</em></a></td>
+<td>Predict</td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="list-of-models">
+<span id="list-models"></span><h2>List of Models<a class="headerlink" href="#list-of-models" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Method: GET</li>
+<li>URL: /cloudml/model/</li>
+</ul>
+<div class="section" id="response-parameters">
+<h3>Response Parameters<a class="headerlink" href="#response-parameters" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>models - List of models</li>
+</ul>
+</div>
+<div class="section" id="errors">
+<h3>Errors<a class="headerlink" href="#errors" title="Permalink to this headline">¶</a></h3>
+<p>404 Not Found:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+  <span class="s">&quot;response&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s">&quot;server_time&quot;</span><span class="p">:</span> <span class="mf">1364714381.157842</span><span class="p">,</span>
+    <span class="s">&quot;error&quot;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s">&quot;status&quot;</span><span class="p">:</span> <span class="mi">404</span><span class="p">,</span>
+      <span class="s">&quot;debug&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+      <span class="s">&quot;message&quot;</span><span class="p">:</span> <span class="s">&quot;Model doesn&#39;t exist&quot;</span><span class="p">,</span>
+      <span class="s">&quot;code&quot;</span><span class="p">:</span> <span class="mi">1001</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="example">
+<h3>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h3>
+<p>cURL:</p>
+<div class="highlight-python"><pre>curl http://127.0.0.1:5000/cloudml/model/</pre>
+</div>
+<p>Response body:</p>
+<div class="highlight-python"><pre>{
+    "models": [
+        {
+            "name": "test",
+            "status": "Trained",
+            "created_on": "2013-03-28T05:47:46.566463"
+            ...
+        }
+    ]
+}</pre>
+</div>
+</div>
+</div>
+<div class="section" id="get-model">
+<span id="id1"></span><h2>Get Model<a class="headerlink" href="#get-model" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Method: GET</li>
+<li>URL: /cloudml/model/:ModelName</li>
+</ul>
+<div class="section" id="request-paraneters">
+<h3>Request paraneters<a class="headerlink" href="#request-paraneters" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>ModelName - name of model</li>
+</ul>
+</div>
+<div class="section" id="id2">
+<h3>Response Parameters<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>id - internal id of model</li>
+<li>name - name of model</li>
+<li>status - status of model [New, Trained]</li>
+<li>created_on - date and tiome of create</li>
+<li>importhandler - importhandler for testing model</li>
+<li>target_variable - target variable</li>
+</ul>
+</div>
+<div class="section" id="id3">
+<h3>Errors<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<p>404 Not Found:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+  <span class="s">&quot;response&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s">&quot;server_time&quot;</span><span class="p">:</span> <span class="mf">1364714381.157842</span><span class="p">,</span>
+    <span class="s">&quot;error&quot;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s">&quot;status&quot;</span><span class="p">:</span> <span class="mi">404</span><span class="p">,</span>
+      <span class="s">&quot;debug&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+      <span class="s">&quot;message&quot;</span><span class="p">:</span> <span class="s">&quot;Model doesn&#39;t exist&quot;</span><span class="p">,</span>
+      <span class="s">&quot;code&quot;</span><span class="p">:</span> <span class="mi">1001</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id4">
+<h3>Example<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<p>cURL:</p>
+<div class="highlight-python"><pre>curl http://127.0.0.1:5000/cloudml/model/test</pre>
+</div>
+<p>Response body:</p>
+<div class="highlight-python"><pre>{
+    "model": {
+        "name": "test",
+        "status": "Trained",
+        "created_on": "2013-03-28T05:47:46.566463"
+        ...
+    }
+}</pre>
+</div>
+</div>
+</div>
+<div class="section" id="predict">
+<span id="id5"></span><h2>Predict<a class="headerlink" href="#predict" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Method: POST</li>
+<li>URL: /cloudml/model/:ModelName/:ImporthandlerName/predict</li>
+</ul>
+<div class="section" id="id6">
+<h3>Request paraneters<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>ModelName - name of model</li>
+</ul>
+</div>
+<div class="section" id="id7">
+<h3>Response Parameters<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="id8">
+<h3>Errors<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
+<p>400 Bad Request:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+  <span class="s">&quot;response&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s">&quot;server_time&quot;</span><span class="p">:</span> <span class="mf">1364714887.802514</span><span class="p">,</span>
+    <span class="s">&quot;error&quot;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s">&quot;status&quot;</span><span class="p">:</span> <span class="mi">400</span><span class="p">,</span>
+      <span class="s">&quot;debug&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+      <span class="s">&quot;message&quot;</span><span class="p">:</span> <span class="s">&quot;400 Bad Request&quot;</span><span class="p">,</span>
+      <span class="s">&quot;code&quot;</span><span class="p">:</span> <span class="mi">1005</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>404 Not Found:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+  <span class="s">&quot;response&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s">&quot;server_time&quot;</span><span class="p">:</span> <span class="mf">1364714381.157842</span><span class="p">,</span>
+    <span class="s">&quot;error&quot;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s">&quot;status&quot;</span><span class="p">:</span> <span class="mi">404</span><span class="p">,</span>
+      <span class="s">&quot;debug&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+      <span class="s">&quot;message&quot;</span><span class="p">:</span> <span class="s">&quot;Model doesn&#39;t exist&quot;</span><span class="p">,</span>
+      <span class="s">&quot;code&quot;</span><span class="p">:</span> <span class="mi">1001</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id9">
+<h3>Example<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
+<p>cURL:</p>
+<div class="highlight-python"><pre>curl -XPOST http://127.0.0.1:5000/cloudml/model/1111/qqqq/predict \
+--data-urlencode 'hire_outcome=1'
+--data-urlencode 'application=app'
+--data-urlencode 'opening=232'
+--data-urlencode 'employer_info={"country": "Ukrain","op_timezone": "GMT2","op_country_tz": "GMT1"}'\
+--data-urlencode 'contractor_info={"country": "Ukrain","dev_timezone": "dev_timezone"}'</pre>
+</div>
+<p>Response body:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+  <span class="s">&quot;prob&quot;</span><span class="p">:</span> <span class="mf">0.5167695219179442</span><span class="p">,</span>
+  <span class="s">&quot;label&quot;</span><span class="p">:</span> <span class="mi">0</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Models</a><ul>
+<li><a class="reference internal" href="#list-of-models">List of Models</a><ul>
+<li><a class="reference internal" href="#response-parameters">Response Parameters</a></li>
+<li><a class="reference internal" href="#errors">Errors</a></li>
+<li><a class="reference internal" href="#example">Example</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#get-model">Get Model</a><ul>
+<li><a class="reference internal" href="#request-paraneters">Request paraneters</a></li>
+<li><a class="reference internal" href="#id2">Response Parameters</a></li>
+<li><a class="reference internal" href="#id3">Errors</a></li>
+<li><a class="reference internal" href="#id4">Example</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#predict">Predict</a><ul>
+<li><a class="reference internal" href="#id6">Request paraneters</a></li>
+<li><a class="reference internal" href="#id7">Response Parameters</a></li>
+<li><a class="reference internal" href="#id8">Errors</a></li>
+<li><a class="reference internal" href="#id9">Example</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/api_models.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Nikolay Melnik.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

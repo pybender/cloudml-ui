@@ -1,0 +1,52 @@
+<h2>
+  Model List
+  <div class="actions">
+  <a class="btn btn-info" href="#/upload_model">
+    <i class="status-icon icon-upload"></i> Upload trained model
+  </a>
+  <a class="btn btn-info" href="#/add_model">
+    <i class="status-icon icon-plus"></i> Add new model
+  </a>
+  <a class="btn btn-info" href="#/compare_models">
+    <i class="icon-th-large"></i> Compare models
+  </a>
+  </div>
+</h2>
+
+<alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+
+<alert-message ng-show="objects.length == 0" class="alert-info" msg="No models found"></alert-message>
+
+<table ng-hide="objects.length == 0" class="table table-hover">
+<thead>
+  <tr>
+    <th>Name</th>
+    <th>Status</th>
+    <th>Created</th>
+    <th>Params</th>
+    <th>Actions</th>
+  </tr>
+</thead>
+<tbody>
+  <tr ng-repeat="model in objects" ng-class="{success : model.status=='Trained', warning : model.status =='New', info : model.status =='Training', error : model.status =='Error'}">
+    <td><a href="#/models/{{ model.name }}">{{ model.name }}</a></td>
+    <td title="{{ model.error }}">{{ model.status }}</td>
+    <td>{{ model.created_on|format_date }}</td>
+    <td><span ng-repeat="param in model.import_params">{{ param|capfirst }} </span></td>
+    <td ng-controller="ModelActionsCtrl">
+      <div ng-init="init({model: model})">
+        <button ng-show="model.status == 'Trained'" ng-click="test_model(model)" class="btn btn-success">
+          <i title="Apply the classifier to the input provided by the data import handler" class="status-icon icon-play"></i>
+        </button>
+        <button ng-show="model.status == 'New' || model.status == 'Error'" ng-click="train_model(model)" class="btn btn-info">
+          <i title="Train your model" class="icon-tasks"></i>
+        </button>
+        <button ng-click="delete_model(model)" class="btn btn-danger">
+          <i title="Delete your model. Be careful - you could not recover it!" class="icon-remove"></i>
+        </button>
+      </div>
+      <i ng-show="model.status == 'Training'" class="icon-large icon-refresh" title="Training model is in progress"></i>
+    </td>
+  </tr>
+</tbody>
+</table>

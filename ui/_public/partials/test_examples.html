@@ -1,0 +1,46 @@
+<div ng-app="ng-app" ng-controller="ObjectListCtrl">
+  <div ng-init="init({objectLoader: loadDatas()})">
+    <h2>{{ test_name|capfirst }} Examples List</h2>
+
+    <alert-message ng-show="total == 0" class="alert-warning" msg="No examples to display."></alert-message>
+
+    <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+
+    <form class="form-inline well">
+      <label>Label: </label>
+      <select class="input-small" ng-model="filter_opts.label">
+        <option value="">--- any ---</option>
+        <option ng-repeat="label in labels" ng-value="label" ng-selected="label==filter_opts.label">{{ label }}</option>
+      </select> &nbsp;
+      <label>Predicted Label: </label> {{ selectedPredLabel }}
+      <select class="input-small" ng-model="filter_opts.pred_label">
+        <option value="">--- any ---</option>
+        <option ng-repeat="label in labels" ng-value="label" ng-selected="label==filter_opts.pred_label">{{ label }}</option>
+      </select>
+    </form>
+
+    <pagination boundary-links="true" max-size="8" num-pages="pages" current-page="page" style="margin:0;"></pagination>
+
+    <small ng-show="total">
+      <p>Total examples : {{ total }}</p>
+    </small>
+
+    <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Original</th>
+            <th>Predict</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr ng-repeat="data in objects | filter:search | orderBy:'id'" ng-class="{success : data.label==data.pred_label, error : !(data.label==data.pred_label)}">
+            <td><a href="#/models/{{ data.model_name }}/tests/{{ data.test_name }}/examples/{{ data._id }}">{{ data.name }}</a></td>
+            <td><span>{{ data.label }}</span></td>
+            <td><span>{{ data.pred_label }}</span></td>
+          </tr>
+        </tbody>
+    </table>
+    <pagination boundary-links="true" num-pages="pages" max-size="8" current-page="page"></pagination>
+  </div>
+</div>

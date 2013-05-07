@@ -1,0 +1,35 @@
+<div>
+  <div>
+    <h2>{{ test_name|capfirst }} Examples List</h2>
+
+    <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+    <form class="form-inline well">
+      <label>Field Name:</label>
+      <input title='could be field from raw data (use "data_input.{{ fieldname }}") or any other field like "label", "pred_label".' type=text ng-model="form.field" name="field"/> &nbsp;
+      <label>Count of examples:</label>
+      <input type=text ng-model="form.count" name="field"/>
+      <button ng-click="update()" class="btn btn-success">
+          <i title="Apply" class="status-icon icon-play"></i>
+          Update
+      </button>
+    </form>
+
+    Mean avarage precision: {{ mavp.toFixed(4) }}
+    <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Group By Field: {{ field_name }}</th>
+            <th>Count of examples</th>
+            <th>Average precision</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr ng-repeat="data in objects">
+            <td><a href="#/models/{{ model_name }}/tests/{{ test_name }}/examples/?group_by_field={{ data.group_by_field }}">{{ data.group_by_field }}</a></td>
+            <td><span>{{ data.count }} </span></td>
+            <td><span>{{ data.avp.toFixed(4) }} </span></td>
+          </tr>
+        </tbody>
+    </table>
+  </div>
+</div>

@@ -1,0 +1,23 @@
+Flask==0.9
+Flask-RESTful==0.1.6
+Flask-Script==0.5.3
+Jinja2==2.6
+Werkzeug==0.8.3
+numpy
+gunicorn
+scipy
+scikit-learn
+psycopg2==2.4.6 # sudo apt-get install libpq-dev python-dev
+jsonpath==0.54
+celery==3.0.16
+flower==0.4.2
+supervisor
+ml_metrics
+pmap
+pymongo==2.0.1
+-e git+https://github.com/kolia1985/mongokit.git#egg=mongokit
+Flask-mongokit
+nose
+nose-exclude
+-e git+https://github.com/odeskdev/odeskdev-cloudml.git#egg=cloudml
+

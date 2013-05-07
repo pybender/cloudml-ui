@@ -1,0 +1,9 @@
+.value {
+    font-size: 110%;
+    font-weight: 700;
+    margin: 0 1em 0 1em;
+}
+
+.actions {
+    float: right;
+}

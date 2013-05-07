@@ -1,0 +1,4 @@
+fabric==1.5.4
+Jinja2==2.6
+-e git+https://github.com/kolia1985/fabdeploy.git#egg=fabdeploy
+ordereddict

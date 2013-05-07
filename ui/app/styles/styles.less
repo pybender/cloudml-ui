@@ -1,0 +1,116 @@
+@red_color: #f97777;
+@green_color: #92fc6c;
+
+.darkest(@c) when (iscolor(@c)) {
+  background-color: darken(@c, 40%);
+}
+
+.darker(@c) when (iscolor(@c)) { 
+  background-color: darken(@c, 30%);
+}
+
+.dark(@c) when (iscolor(@c)) { 
+  background-color: darken(@c, 15%);
+}
+
+.light(@c) when (iscolor(@c)) { 
+  background-color: lighten(@c, 5%);
+}
+
+.lighter(@c) when (iscolor(@c)) { 
+  background-color: lighten(@c, 10%);
+}
+
+.lightest(@c) when (iscolor(@c)) { 
+  background-color: lighten(@c, 15%);
+}
+
+.red { 
+  background-color: @red_color;
+}
+
+.red.darkest { 
+  .darkest(@red_color);
+}
+
+.red.darker { 
+  .darker(@red_color);
+}
+
+.red.dark { 
+  .dark(@red_color);
+}
+
+.red.light { 
+  .light(@red_color);
+}
+
+.red.lighter { 
+  .lighter(@red_color);
+}
+
+.red.lightest { 
+  .lightest(@red_color);
+}
+
+
+.green { 
+  background-color: @green_color;
+}
+
+.green.darkest { 
+  .darkest(@green_color);
+}
+
+.green.darker { 
+  .darker(@green_color);
+}
+
+.green.dark { 
+  .dark(@green_color);
+}
+
+.green .light { 
+  .light(@green_color);
+}
+
+.green.lighter { 
+  .lighter(@green_color);
+}
+
+.green.lightest { 
+  .lightest(@green_color);
+}
+
+.block {
+  background-color: whiteSmoke;
+  border: 1px solid #e3e3e3;
+  border-width: 1px 2px 2px 1px;
+  border-radius: 4px;
+  padding: 5px;
+  margin: 1em 0;
+}
+
+.breadcrumb {
+  margin: 0;
+}
+
+.wrapper > .container {
+  padding-top: 0px;
+}
+
+.pointer {
+  cursor: pointer;
+}
+
+.icon-train {
+  background: url("../img/books-icon.png");
+}
+
+.icon-test {
+  background: url("../img/chart-icon.png");
+}
+
+.switcher .active {
+  font-weight: bold;
+}

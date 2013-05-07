@@ -1,0 +1,42 @@
+<h2>{{ data.test_name|capfirst }}:{{ data.id }} Example</h2>
+<div class="well">
+<div>
+  Target Variable: <span class="value">{{ data.target_variable }}</span>
+</div>
+<div>
+  Label: <span class="value">{{ data.label }}</span>
+</div>
+<div>
+  Predicted Label: <span class="value">{{ data.pred_label }}</span>
+</div>
+</div>
+<h4>Parameters with Weights</h4>
+<table class="table">
+    <thead>
+        <tr>
+          <th class="span2">Parameter</th>
+          <th class="span7">Value</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr ng-repeat="(title, val) in data.weighted_data_input" ng-class="val.2">
+          <td>{{ title }}</td>
+          <td style="max-width: 200px;">
+            <span ng-show="!val.weights" title="weight={{ val.weight }}" class="badge {{ val.css_class }}">{{ val.value }}</span>
+
+            <div ng-show="val.weights">
+              <span  ng-show="val.type == 'List'" ng-init="lword=word.toLowerCase()" ng-repeat="word in val.value|words">
+                <span ng-show="val.weights[lword].weight" title="weight={{ val.weights[lword].weight }}" class="badge {{ val.weights[lword].css_class }}">{{ word }}</span>
+                <span ng-show="!val.weights[lword].weight">{{ word }}</span>
+              </span>
+
+              <span ng-show="val.type == 'Dictionary'" ng-repeat="(key, dval) in val.weights">
+                <span title="weight={{ dval.weight }}" class="badge {{ dval.css_class }}">{{ key }}={{ dval.value }}</span>
+                
+              </span>
+
+            </div>
+          </td>
+        </tr>
+    </tbody>
+</table>

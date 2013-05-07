@@ -1,0 +1,45 @@
+<h2>
+  Add New Model
+  <small>
+      <a ng-href="#" href="#">(Cancel)</a>
+  </small>
+</h2>
+
+<alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+
+<form name="UploadModelForm" class="form-horizontal">
+  <p class="lead">
+    Please upload features and define import handler.
+  </p>
+  <div class="control-group" ng-class="{error: UploadModelForm.name.$invalid}">
+    <label class="control-label">Name</label>
+    <div class="controls">
+      <input type="text" name="name" ng-model="model.name" required>
+      <span ng-show="UploadModelForm.name.$error.required" class="help-inline">
+        Required</span>
+      <span class="help-block">name should be without spaces</span>
+    </div>
+  </div>
+  <div class="control-group" ng-class="{error: !features}">
+    <label class="control-label">Features</label>
+    <div class="controls">
+      <input type="file" name="features" ng-model="model.features" onchange="angular.element(this).scope().setFeaturesFile(this)">
+      <span ng-show="!features" class="help-inline">
+          Required</span>
+      <span class="help-block">json file with features</span>
+    </div>
+  </div>
+  <div class="control-group" ng-class="{error: !import_handler}">
+    <label class="control-label">Import Handler</label>
+    <div class="controls">
+      <input type="file" name="importhandler" ng-model="model.importhandler" onchange="angular.element(this).scope().setImportHandlerFile(this)">
+      <span ng-show="!import_handler" class="help-inline">
+          Required</span>
+      <span class="help-block">json file with import data details</span>
+    </div>
+  </div>
+  <br />
+  <a href="#/models" class="btn">Cancel</a>
+  <button ng-click="upload()" ng-disabled="UploadModelForm.$invalid || !import_handler"
+          class="btn btn-primary">Add new model</button> <small>and start training</small>
+</form>

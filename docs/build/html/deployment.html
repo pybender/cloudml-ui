@@ -1,0 +1,199 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Deployment &mdash; oDesk CloudML 0.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="oDesk CloudML 0.0.1 documentation" href="index.html" />
+    <link rel="next" title="Development" href="development.html" />
+    <link rel="prev" title="Welcome to oDesk CloudML’s documentation!" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="development.html" title="Development"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to oDesk CloudML’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="deployment">
+<h1>Deployment<a class="headerlink" href="#deployment" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="setup-project-to-new-instance">
+<h2>Setup project to new instance<a class="headerlink" href="#setup-project-to-new-instance" title="Permalink to this headline">¶</a></h2>
+<p>We are going to deploy using:</p>
+<ul class="simple">
+<li>Apache</li>
+<li>Fabdeploy</li>
+<li>Virtualenv</li>
+<li>Supervisor</li>
+<li>EC2 instance with Ubuntu</li>
+</ul>
+<p>Create virtual env locally:</p>
+<div class="highlight-python"><pre>$ virtualenv --no-site-packages ve
+$ . ve/bin/activate
+$ pip install -r requirements.txt</pre>
+</div>
+<p>Create settings:</p>
+<div class="highlight-python"><pre>$ cp fabconf.py.def fabconf.py</pre>
+</div>
+<p>Add new configuration. For example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">StagingConf</span><span class="p">(</span><span class="n">BaseConf</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Settings specific to staging environment.&quot;&quot;&quot;</span>
+    <span class="c"># user@ip_address</span>
+    <span class="n">address</span> <span class="o">=</span> <span class="s">&#39;cloudml@172.27.67.106&#39;</span>
+
+    <span class="n">sudo_user</span> <span class="o">=</span> <span class="s">&#39;nmelnik&#39;</span>
+    <span class="n">home_path</span> <span class="o">=</span> <span class="s">&#39;/webapps/cloudml&#39;</span>
+
+    <span class="c"># Code from this branch will be deployed.</span>
+    <span class="n">branch</span> <span class="o">=</span> <span class="s">&#39;staging&#39;</span>
+
+    <span class="n">server_name</span> <span class="o">=</span> <span class="s">&#39;cloudml.staging.match.odesk.com&#39;</span>
+    <span class="c"># For Apache ServerAdmin directive</span>
+    <span class="n">server_admin</span> <span class="o">=</span> <span class="s">&#39;nmelnik@odesk.com&#39;</span>
+    <span class="c"># Apache will serve WSGI on this port.</span>
+    <span class="n">apache_port</span> <span class="o">=</span> <span class="mi">5000</span>
+
+    <span class="c"># It should be a Jinja2 template, and can make use of fabdeploy config</span>
+    <span class="c"># variables.</span>
+    <span class="n">remote_settings_lfile</span> <span class="o">=</span> <span class="s">&#39;staging_config.py.tpl&#39;</span>
+</pre></div>
+</div>
+<p>Read fabfile.py tasks to be aware of changes that will be made to your system.</p>
+<p>Install packages, create user:</p>
+<div class="highlight-python"><pre>$ fab staging install</pre>
+</div>
+<p>Setup software:</p>
+<div class="highlight-python"><pre>$ fab staging setup</pre>
+</div>
+<p>Deploy current version:</p>
+<div class="highlight-python"><pre>$ fab staging deploy</pre>
+</div>
+<p>For first starting supervisor please run:</p>
+<div class="highlight-python"><pre>$ fab staging supervisor.d</pre>
+</div>
+</div>
+<div class="section" id="deploy-new-version">
+<h2>Deploy new version<a class="headerlink" href="#deploy-new-version" title="Permalink to this headline">¶</a></h2>
+<p>Create settings:</p>
+<div class="highlight-python"><pre>$ cp fabconf.py.def fabconf.py</pre>
+</div>
+<p>Set <cite>sudo_user</cite> property of config class.</p>
+<p>Add your ssh pub key to projects user:</p>
+<div class="highlight-python"><pre>$ fab staging push_key</pre>
+</div>
+<p>Commit changes to <cite>staging</cite> branch</p>
+<p>Deploy:</p>
+<div class="highlight-python"><pre>$ fab staging deploy</pre>
+</div>
+</div>
+<div class="section" id="management-supervisor">
+<h2>Management supervisor<a class="headerlink" href="#management-supervisor" title="Permalink to this headline">¶</a></h2>
+<p>Run supervisorctl:</p>
+<div class="highlight-python"><pre>$ fab staging supervisor.ctl</pre>
+</div>
+<p>Get list of available tasks:</p>
+<div class="highlight-python"><pre>$ fab -l</pre>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Deployment</a><ul>
+<li><a class="reference internal" href="#setup-project-to-new-instance">Setup project to new instance</a></li>
+<li><a class="reference internal" href="#deploy-new-version">Deploy new version</a></li>
+<li><a class="reference internal" href="#management-supervisor">Management supervisor</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Welcome to oDesk CloudML&#8217;s documentation!</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="development.html"
+                        title="next chapter">Development</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/deployment.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="development.html" title="Development"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to oDesk CloudML’s documentation!"
+             >previous</a> |</li>
+        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Nikolay Melnik.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

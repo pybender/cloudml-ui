@@ -1,0 +1,14 @@
+<div class="modal-header">
+<button ng-click="close()" class="close" data-dismiss="modal">×</button>
+<h3>Delete the model</h3>
+<p class="lead">
+    Do you really want to delete {{ test.name }}?
+</p>
+</div>
+<div class="modal-body">
+    <div class='alert alert-error' ng-show='err'>{{ err }}</div>
+</div>
+<div class="modal-footer">
+<button ng-click="close()" class="btn">Cancel</button>
+<button ng-click="delete()" class="btn btn-primary">Delete</button>
+</div>

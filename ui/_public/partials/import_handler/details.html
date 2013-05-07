@@ -1,0 +1,24 @@
+<h2>
+  {{ handler.name|capfirst }} Details
+</h2>
+
+<alert-message ng-show="msg" class="alert-info" msg='{{ msg }}' unsafe>
+</alert-message>
+
+<alert-message ng-show="err" class="alert-error" msg='{{ err }}' unsafe>
+</alert-message>
+
+<div>
+    Type:
+    <span class="value">
+        {{ handler.type }}
+    </span>
+</div>
+<div>
+    Created at:
+    <span class="value">
+        {{ handler.created_on|format_date }}
+    </span>
+</div>
+<h5>Import Handler JSON data</h5>
+<textarea name="data" ui-codemirror="{ mode: {name: 'javascript', json: true} }" ng-model="handler.data"> </textarea>

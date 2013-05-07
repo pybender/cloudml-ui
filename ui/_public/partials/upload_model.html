@@ -1,0 +1,52 @@
+<h2>
+  Upload Trained Model
+  <small>
+      <a ng-href="#" href="#">(Cancel)</a>
+  </small>
+</h2>
+
+<loadindicator
+  title="Saving changes..."
+  ng-show="saving"
+  progress="savingProgress">
+</loadindicator>
+
+<alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+
+<form name="UploadModelForm" class="form-horizontal">
+  <p class="lead">
+    Please upload pickled trained model and define import handler.
+  </p>
+  <div class="control-group" ng-class="{error: UploadModelForm.name.$invalid}">
+    <label class="control-label">Name</label>
+    <div class="controls">
+      <input type="text" name="name" ng-model="model.name" required>
+      <span ng-show="UploadModelForm.name.$error.required" class="help-inline">
+        Required</span>
+        <span class="help-block">name without spaces</span>
+    </div>
+  </div>
+  <div class="control-group" ng-class="{error: !model_file}">
+    <label class="control-label">Model file name</label>
+    <div class="controls">
+      <input type="file" name="model_file" ng-model="model.model_file" onchange="angular.element(this).scope().setModelFile(this)">
+      <span ng-show="!model_file" class="help-inline">
+          Required</span>
+      <span class="help-block">pickled trained model file</span>
+    </div>
+  </div>
+  <div class="control-group" ng-class="{error: !import_handler}">
+    <label title="local file or s3 or http address" class="control-label">Import Handler</label>
+    <div class="controls">
+      <input type="file" name="import_handler" ng-model="model.import_handler" onchange="angular.element(this).scope().setImportHandlerFile(this)">
+      <span ng-show="!import_handler" class="help-inline">
+          Required</span>
+      <span class="help-block">json file with import data details that would be used to test model</span>
+    </div>
+  </div>
+
+  <br />
+  <a href="#/models" class="btn">Cancel</a>
+  <button ng-click="upload()" ng-disabled="UploadModelForm.$invalid || !model_file || !import_handler"
+          class="btn btn-primary">Upload</button>
+</form>

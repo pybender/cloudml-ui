@@ -1,0 +1,85 @@
+<h2>
+    {{ test.name|capfirst }} Details
+    <div class="actions">
+        <a ng-show="test.status == 'Completed'" class="btn" href="#/models/{{ test.model_name }}/tests/{{ test_num }}/examples">
+            <i class="status-icon icon-search"></i><small> Browse examples</small>
+          </a>
+        <a ng-show="test.status == 'Completed'" class="btn" href="#/models/{{ test.model_name }}/tests/{{ test_num }}/grouped_examples">
+            <i class="status-icon icon-search"></i><small> Average Precision</small>
+          </a>
+    </div>
+</h2>
+
+<alert-message ng-show="test.error" class="alert-error" msg="{{ test.error }}" unsafe></alert-message>
+
+<alert-message ng-show="test.status != 'Completed'" class="alert-warning" msg="Test was not calculated yet. Status: {{ test.status }}" unsafe></alert-message>
+
+<div ng-show="test.status == 'Completed'">
+    <ul class="nav nav-tabs" id="tabs">
+      <li ng-class="{active: action[0] == 'test'}"><a ng-click="action = ['test', 'details']">Details</a></li>
+      <li ng-class="{active: action[0] == 'curves'}"><a ng-click="action = ['curves', 'show']">ROC and Precision-Recall</a></li>
+      <li ng-class="{active: action[0] == 'matrix'}"><a ng-click="action = ['matrix', 'confusion']">Confusion Matrix</a></li>
+    </ul>
+
+    <div class="tab-content">
+      <div  ng-show="action[0] == 'test'" id="details">
+        <div class="row">
+            <div class="span12">
+                <div>
+                    Trained Model:
+                    <a class="value" href="#/models/{{ test.model_name }}">{{ test.model_name }}</a>
+                </div>
+                <div>
+                    Import parameters:
+                    <span class="value">{{ test.parameters }}</span>
+                </div>
+                <div>
+                    Classes Set:
+                    <span class="value">
+                        <span ng-repeat='cls in test.classes_set'><span class="label">{{ cls }}</span> 
+                        </span> 
+                    </span>
+                </div>
+                <div>
+                    Created at:
+                    <span class="value">
+                        {{ test.created_on|format_date }}
+                    </span>
+                </div>
+                <div>
+                    Classification Accuracy: <span class="value">{{ test.accuracy.toFixed(4) }}</span>
+                </div>
+                <div>
+                    Examples count: <span class="value">{{ test.examples_count }}</span>
+                </div>
+            </div>
+        </div>
+      </div>
+      <div ng-show="action[0] == 'curves'">
+        <div class="row">
+          <div class="span6">
+            <h4>Receiver operating characteristic</h4>
+            <p>The Area Under an ROC Curve: 
+                <span>{{ test.metrics.roc_auc.toFixed(4) }}</span>
+            </p>
+            <sc-curves xlabel="False-positive rate" ylabel="True-positive rate" curves-dict="rocCurve" show-line="1" width="500"></sc-curves>
+          </div>
+          <div class="span6">
+            <h4>Precision-Recall</h4>
+            <sc-curves xlabel="Recall" ylabel="Precision" curves-dict="prCurve" width="500"></sc-curves>
+          </div>
+        </div>
+
+      </div>
+
+    <div  ng-show="action[0] == 'matrix'">
+        <div class="row">
+            <div class="span6">
+                <h4>Confusion Matrix</h4>
+                <confusion-matrix matrix=test.metrics.confusion_matrix url=test.examplesUrl()></confusion-matrix>
+            </div>
+        </div>
+      </div>
+
+    </div>
+</div>
