@@ -110,7 +110,7 @@ def deploy():
     virtualenv.pip_install_req.run()
     virtualenv.make_relocatable.run()
 
-    push_anj_config.run()
+    push_angularjs_config.run()
     run('cd %(project_path)s/ui; ./scripts/production.sh' % env.conf)
 
     release.activate.run()
@@ -125,12 +125,12 @@ class PushAnjularConfig(Task):
     @conf
     def from_file(self):
         return os.path.join(
-            self.conf.django_dir, self.conf.remote_anjsettings_lfile)
+            self.conf.project_dir, self.conf.remote_anjsettings_lfile)
 
     @conf
     def to_file(self):
         return posixpath.join(
-            self.conf.django_path, self.conf.local_anjsettings_file)
+            self.conf.project_path, self.conf.local_anjsettings_file)
 
     def do(self):
         files.upload_template(
@@ -139,4 +139,4 @@ class PushAnjularConfig(Task):
             context=self.conf,
             use_jinja=True)
 
-push_anj_config = PushAnjularConfig()
+push_angularjs_config = PushAnjularConfig()
