@@ -1,0 +1,79 @@
+{
+  "schema-name": "bestmatch",
+  "classifier": {
+    "type": "logistic regression",
+    "penalty": "l2"
+  },
+  "feature-types":[
+    {
+      "name":"str_to_timezone",
+      "type": "composite",
+      "params": {
+        "chain": [
+          { "type": "regex", "params": { "pattern": "UTC([-\\+]+\\d\\d).*"  }},
+          { "type": "int" }
+        ]
+      }
+    }
+  ],
+  "features":[
+    {
+      "name":"target",
+      "type":"map",
+      "params": {
+        "mappings":{
+          "appropriate": 0,
+          "inappropriate": 1
+        }
+      },
+      "is-target-variable":true
+    },
+    {
+      "name": "title",
+      "transformer":{
+        "type":"Tfidf",
+        "min_df":3
+      }
+    },
+    {
+      "name": "description",
+      "transformer":{
+        "type":"Tfidf",
+        "min_df":10,
+        "ngram_range_min": 1,
+        "ngram_range_max": 2
+      }
+    },
+    {
+      "name": "skills",
+      "transformer":{
+        "type":"Count",
+        "token_pattern": "[^\\s,]+"
+      }
+    },
+    {
+      "name": "category",
+      "transformer":{
+        "type":"Count",
+        "token_pattern": "[^\\t]+"
+      }
+    },
+    {
+      "name": "country",
+      "default": "Neverland",
+      "transformer":{
+        "type":"Count",
+        "token_pattern": "[\\w\\s]+"
+      }
+    },
+    {
+      "name": "days_after_join",
+      "type": "int",
+      "transformer": {
+        "type": "Scale",
+        "with_mean": false
+      }
+    }
+
+  ]
+}

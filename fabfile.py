@@ -34,11 +34,6 @@ def dev(**kwargs):
 
 
 @task
-def test(**kwargs):
-    fabd.conf.run('test')
-
-
-@task
 def install():
     users.create.run()
      #ssh.push_key.run(pub_key_file='~/.ssh/id_rsa.pub')
@@ -79,9 +74,14 @@ def setup():
     nginx.restart.run()
 
     # init env for build ui
-    run('cd %(project_path)s/ui; ./scripts/init.sh' % env.conf)
+    angularjs.init.run()
 
-
+    # install numpy and scipy
+    with prefix('export LAPACK=/usr/lib/liblapack.so'):
+        with prefix('export ATLAS=/usr/lib/libatlas.so'):
+            with prefix('export BLAS=/usr/lib/libblas.so'):
+                virtualenv.pip_install.run(app='numpy')
+                virtualenv.pip_install.run(app='scipy')
 
 @task
 def qdeploy():
@@ -102,16 +102,11 @@ def deploy():
     gunicorn.push_config.run()
 
     virtualenv.create.run()
-    with prefix('export LAPACK=/usr/lib/liblapack.so'):
-        with prefix('export ATLAS=/usr/lib/libatlas.so'):
-            with prefix('export BLAS=/usr/lib/libblas.so'):
-                virtualenv.pip_install.run(app='numpy')
-                virtualenv.pip_install.run(app='scipy')
     virtualenv.pip_install_req.run()
     virtualenv.make_relocatable.run()
 
-    push_angularjs_config.run()
-    run('cd %(project_path)s/ui; ./scripts/production.sh' % env.conf)
+    angularjs.push_config.run()
+    angularjs.build.run()
 
     release.activate.run()
 

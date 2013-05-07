@@ -23,10 +23,19 @@ class Flower(Command):
 def _make_context():
     return dict(app=app, db=app.db, models=models)
 
+class Test(Command):
+    """Run app tests."""
+
+    def run(self):
+        import nose
+        nose.run(argv=['', '--exclude-dir=core'])
+
+
 manager = Manager(app)
 manager.add_command("migrate", ManageMigrations())
 manager.add_command("celeryd", Celeryd())
 manager.add_command("flower", Flower())
+manager.add_command('test', Test())
 manager.add_command("shell", Shell(make_context=_make_context))
 
 if __name__ == "__main__":

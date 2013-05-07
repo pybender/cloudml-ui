@@ -1,0 +1,30 @@
+[
+    {
+        "application": "aplication",
+        "opening": "opening",
+        "hire_outcome": "hire",
+        "contractor_info":{
+            "country": "Ukrain",
+            "dev_timezone": "dev_timezone"
+        },
+        "employer_info": {
+            "country": "Ukrain",
+            "op_timezone": "GMT2",
+            "op_country_tz": "GMT1"
+        }
+    },
+    {
+        "application": "aplication",
+        "opening": "opening",
+        "hire_outcome": "hire",
+        "contractor_info":{
+            "country": "Ukrain",
+            "dev_timezone": "dev_timezone"
+        },
+        "employer_info": {
+            "country": "Ukrain",
+            "op_timezone": "GMT2",
+            "op_country_tz": "GMT1"
+        }
+    }
+]

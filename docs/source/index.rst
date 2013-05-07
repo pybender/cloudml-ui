@@ -15,7 +15,6 @@ Contents:
    deployment
    development
    api
-   changelog
 
 
 .. seealso::

@@ -1,0 +1,123 @@
+{
+  "target-schema":"bestmatch",
+  "datasource":[
+    {
+      "name":"odw",
+      "type":"sql",
+      "db":{
+        "conn":"host='localhost' dbname='odw' user='postgres' password='postgres'",
+        "vendor":"postgres"
+      }
+    }
+  ],
+  "queries":[
+    {
+      "name":"retrieve",
+      "sql": "select case when co.cancel_initiator = 'MQ' then 'inappropriate' else 'appropriate' end as target, \"Opening Title\" as title, \"Job Description\" as description, coalesce(\"Required Skills\", '') as skills, jc.\"Level1\" as category, jc.\"Level2\" as subcategory, \"JobType\" as job_type, et.\"Type\" as workload, ed.\"Label\" as duration, c.\"Country\" as client_country, to_timestamp(c.\"Date Created\"/1000)::date as client_member_since, -(to_timestamp(c.\"Date Created\"/1000)::date - co.date) as days_after_join from agg.c_opening co join \"oDesk DB\".\"Openings\" o on co.opening = o.\"Record ID#\" join \"oDesk DB\".\"EngagementType\" et on o.\"EngagementType\" = et.\"Record ID#\" join \"oDesk DB\".\"EngagementDuration\" ed on o.\"Related EngagementDuration\" = ed.\"Record ID#\" join \"oDesk DB\".\"JobCategories\" jc on o.\"Related JobCategory\" = jc.\"Record ID#\" join \"oDesk DB\".\"Companies\" c on o.\"Rollup Company (ref) (snap)\" = c.\"Record ID#\" join \"oDesk DB\".date_dim dd on dd.date = co.date where dd.ym between '%(start_month)s' and '%(end_month)s' and co.reason <> 'Accidental job posting creation' and o.\"JobProfileAccessOverride\" in ('public', 'odesk') and co.opening not in ( select co.opening from agg.c_opening co join (select o.employer , o.opening_title, count(*) cnt, sum(case when cancel_initiator = 'MQ' then 1 else 0 end) mq from agg.b_opening o group by o.employer, o.opening_title having count(*) > 1 and sum(case when cancel_initiator = 'MQ' then 1 else 0 end) = 1) oa on oa.employer = co.employer and oa.opening_title = co.opening_title ) order by random() limit %(n)s;",
+      "items": [
+        {
+          "source": "target",
+          "process-as": "string",
+          "is-required": true,
+          "target-features": [
+            { "name": "target" }
+          ]
+        },
+        {
+          "source": "title",
+          "process-as": "string",
+          "is-required": true,
+          "target-features": [
+            { "name": "title" }
+          ]
+        },
+        {
+          "source": "description",
+          "process-as": "string",
+          "is-required": true,
+          "target-features": [
+            { "name": "description" }
+          ]
+        },
+        {
+          "source": "skills",
+          "process-as": "string",
+          "is-required": true,
+          "target-features": [
+            { "name": "skills" }
+          ]
+        },
+        {
+          "source": "category",
+          "process-as": "string",
+          "is-required": true,
+          "target-features": [
+            { "name": "l1_category" }
+          ]
+        },
+        {
+          "source": "subcategory",
+          "process-as": "string",
+          "is-required": true,
+          "target-features": [
+            { "name": "l2_category" }
+          ]
+        },
+        {
+          "process-as": "expression",
+          "target-features": [
+            { "name": "category", "expression": "%(l1_category)s\t%(l2_category)s"}
+          ]
+        },
+        {
+          "source": "job_type",
+          "process-as": "string",
+          "is-required": true,
+          "target-features": [
+            { "name": "job_type" }
+          ]
+        },
+        {
+          "source": "workload",
+          "process-as": "string",
+          "is-required": true,
+          "target-features": [
+            { "name": "workload" }
+          ]
+        },
+        {
+          "source": "duration",
+          "process-as": "string",
+          "is-required": true,
+          "target-features": [
+            { "name": "duration" }
+          ]
+        },
+        {
+          "source": "client_country",
+          "process-as": "string",
+          "is-required": true,
+          "target-features": [
+            { "name": "client_country" }
+          ]
+        },
+        {
+          "source": "client_member_since",
+          "process-as": "string",
+          "is-required": true,
+          "target-features": [
+            { "name": "client_member_since" }
+          ]
+        },
+        {
+          "source": "days_after_join",
+          "process-as": "string",
+          "is-required": true,
+          "target-features": [
+            { "name": "days_after_join" }
+          ]
+        }
+      ]
+    }
+  ]
+}
