@@ -10,6 +10,29 @@ from api import connection, app
 
 
 @connection.register
+class Weight(Document):
+    __collection__ = 'weights'
+    structure = {
+        'name': basestring,
+        'model_name': basestring,
+        'value': float,
+        'is_positive': bool,
+        'css_class': basestring,
+    }
+
+app.db.Weight.collection.ensure_index(
+    [
+        ('name', 'text'),
+        ('value', 'text')
+    ],
+    weights={
+        'name': 10,
+        'value': 5,
+    }
+)
+
+
+@connection.register
 class Model(Document):
     """
     Represents Model details and it's Tests.
@@ -100,6 +123,14 @@ class Model(Document):
         self.positive_weights = calc_weights_css(positive, 'green')
         self.negative_weights = calc_weights_css(negative, 'red')
         self.negative_weights.reverse()
+
+        weights = app.db.Weight.collection
+        for weight in self.positive_weights + self.negative_weights:
+            weights.insert({'name': weight['name'],
+                            'model_name': self.name,
+                            'value': weight['weight'],
+                            'is_positive': bool(weight['weight'] > 0),
+                            'css_class': weight['css_class']})
 
     def delete(self):
         params = {'model_name': self.name}

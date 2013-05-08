@@ -1,9 +1,12 @@
 import os
 
 from flask.ext.script import Manager, Command, Shell
-from flask.ext.alembic import ManageMigrations
 
 from api import app, models
+
+import gevent.monkey
+from gevent.pywsgi import WSGIServer
+gevent.monkey.patch_all()
 
 
 class Celeryd(Command):
@@ -19,6 +22,13 @@ class Flower(Command):
     def run(self, **kwargs):
         os.system("celery -A api.celery flower --loglevel=info")
 
+class Run(Command):
+    """Runs a Celery Flower worker node."""
+
+    def run(self, **kwargs):
+        http_server = WSGIServer(('', 5000), app)
+        http_server.serve_forever()
+
 
 def _make_context():
     return dict(app=app, db=app.db, models=models)
@@ -32,10 +42,10 @@ class Test(Command):
 
 
 manager = Manager(app)
-manager.add_command("migrate", ManageMigrations())
 manager.add_command("celeryd", Celeryd())
 manager.add_command("flower", Flower())
 manager.add_command('test', Test())
+manager.add_command('run', Run())
 manager.add_command("shell", Shell(make_context=_make_context))
 
 if __name__ == "__main__":

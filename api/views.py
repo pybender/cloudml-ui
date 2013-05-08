@@ -26,6 +26,24 @@ model_parser.add_argument('features', type=str)
 model_parser.add_argument('trainer', type=FileStorage, location='files')
 
 
+import gevent
+from flask import Response
+
+
+def event_stream():
+    count = 0
+    while True:
+        gevent.sleep(2)
+        yield 'data: %s\n\n' % count
+        count += 1
+
+
+@app.route('/log/')
+def sse_request():
+    return Response(event_stream(),
+                    mimetype='text/event-stream')
+
+
 class Models(BaseResource):
     """
     Models API methods
@@ -158,6 +176,52 @@ trained model is required')
 api.add_resource(Models, '/cloudml/model/<regex("[\w\.]*"):name>',
                  '/cloudml/model/<regex("[\w\.]+"):name>/\
 <regex("[\w\.]+"):action>')
+
+
+ # motor.Op(self.db.command, 'text', 'posts',
+ #    search=q,
+ #    filter={'status': 'publish', 'type': 'post'},
+ #    projection={
+ #        'display': False,
+ #        'original': False,
+ #        'plain': False
+ #    },
+ #    limit=50)
+
+
+class WeightsResource(BaseResource):
+    """
+    Model Parameters weights API methods
+    """
+    OBJECT_NAME = 'weight'
+    methods = ('GET', )
+    FILTER_PARAMS = (('is_positive', int), ('q', str))
+
+    @property
+    def Model(self):
+        return app.db.Weight
+
+    def _get_list_query(self, params, fields, **kwargs):
+        filter_params = self._prepare_filter_params(params)
+        q = filter_params['q']
+        if not q is None:
+            import pdb; pdb.set_trace()
+            try:
+                r = app.db.command("text", "weights", 
+    search="title", 
+    project={"name": 1, "_id": 0}, 
+    limit=10)
+                return r
+            except Exception, exc:
+                print exc
+
+            
+        else:
+            kwargs.update(filter_params)
+            return self.Model.find(kwargs, fields)
+
+api.add_resource(WeightsResource,
+                 '/cloudml/weights/<regex("[\w\.]*"):model_name>')
 
 
 class ImportHandlerResource(BaseResource):
