@@ -47,12 +47,40 @@ def train_model(model_name, parameters):
 
     return "Model trained at %s" % trainer.train_time
 
+from mongotools.pubsub import Channel
+
+class MongoHandler(logging.Handler):
+    """
+    """
+    def __init__(self, test_id):
+        super(MongoHandler, self).__init__()
+        self.test_id = test_id
+
+    def emit(self, record):
+        chan = Channel(app.db, 'log')
+        chan.ensure_channel()
+        try:
+            msg = self.format(record)
+            chan.pub('test_log', {'test': self.test_id, 'msg': msg})
+        except:
+            self.handleError(record)
 
 @celery.task
 def run_test(test_id):
     """
     Running tests for trained model
     """
+
+    logger = logging.getLogger()
+    #handler = logging.FileHandler('test-%s.log' % test_id)
+    handler = MongoHandler(test_id=test_id)
+    formatter = logging.Formatter(logging.BASIC_FORMAT)
+    handler.setFormatter(formatter)
+    logger.handlers = []
+    logger.addHandler(handler)
+    logger.setLevel(logging.INFO)
+    logger.propagate = True
+
     test = app.db.Test.find_one({'_id': ObjectId(test_id)})
     model = test.model
     try:

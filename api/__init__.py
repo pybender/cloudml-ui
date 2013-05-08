@@ -4,33 +4,6 @@ from mongokit import Connection
 from flask.ext import restful
 from celery import Celery
 
-from celery.signals import after_setup_task_logger
-import logging
-
-# class BroadcastLogHandler(logging.Handler):
-#     def __init__(self):
-#         self.broadcaster = None#Producer()
-#         self.level = 0
-#         self.filters = []
-#         self.lock = 0
-#         self.machine = os.uname()[1]
-
-#     def emit(self, record):
-#         # Send the log message to the broadcast queue
-#         message = {"source":"logger","machine":self.machine, "message":record.msg % record.args, "level":record.levelname, "pathname":record.pathname, "lineno":record.lineno, "exception":record.exc_info}
-#         self.broadcaster.message(message)
-
-def foo_tasks_setup_logging(**kw):
-    logger = logging.getLogger('celery')
-    if not logger.handlers:
-        handler = logging.FileHandler('tasks.log')
-        formatter = logging.Formatter(logging.BASIC_FORMAT)
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
-        logger.propagate = True
-
-after_setup_task_logger.connect(foo_tasks_setup_logging)
-
 
 app = Flask(__name__)
 app.config.from_object('api.config')
@@ -41,6 +14,15 @@ if app.config.get('TESTING'):
     db_name += '-test'
 
 app.db = getattr(connection, db_name)
+
+
+from mongotools.pubsub import Channel
+
+app.chan = Channel(app.db, 'log')
+app.chan.ensure_channel()
+
+app.chan.sub('test_log')
+
 
 celery = Celery('cloudml')
 celery.add_defaults(lambda: app.config)

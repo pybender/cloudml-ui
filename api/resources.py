@@ -34,6 +34,9 @@ class BaseResource(restful.Resource):
     FILTER_PARAMS = ()
     PAGING_PARAMS = (('page', int), )
 
+    ENABLE_FULLTEXT_SEARCH = True
+    FULLTEXT_SEARCH_PARAM_NAME = 'q'
+
     MESSAGE404 = "Object doesn't exist"
     decorators = [crossdomain(origin='*',
                               headers="accept, origin, content-type")]
@@ -180,8 +183,20 @@ class BaseResource(restful.Resource):
 
     def _get_list_query(self, params, fields, **kwargs):
         filter_params = self._prepare_filter_params(params)
-        kwargs.update(filter_params)
-        return self.Model.find(kwargs, fields)
+        if self.ENABLE_FULLTEXT_SEARCH and \
+                self.FULLTEXT_SEARCH_PARAM_NAME in filter_params:
+            # Run full text search
+            # NOTE: it's betta in mongo now.
+            search = filter_params[self.FULLTEXT_SEARCH_PARAM_NAME]
+            show = dict([(field, 1) for field in fields])
+            # NOTE: The text command matches on the complete stemmed word
+            res = app.db.command("text", "weights", search=search,
+                                 project=show, filter=kwargs,
+                                 limit=1000)
+            return res['results']
+        else:
+            kwargs.update(filter_params)
+            return self.Model.find(kwargs, fields)
 
     def _prepare_filter_params(self, params):
         filter_names = [v[0] for v in self.FILTER_PARAMS]
