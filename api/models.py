@@ -10,6 +10,19 @@ from api import connection, app
 
 
 @connection.register
+class WeightsCategory(Document):
+    __collection__ = 'weights_categories'
+    structure = {
+        'name': basestring,
+        'short_name': basestring,
+        'model_name': basestring,
+
+        'parent': basestring,
+        'has_weights': bool,
+    }
+
+
+@connection.register
 class Weight(Document):
     __collection__ = 'weights'
     structure = {
@@ -123,9 +136,28 @@ class Model(Document):
         self.positive_weights = calc_weights_css(positive, 'green')
         self.negative_weights = calc_weights_css(negative, 'red')
         self.negative_weights.reverse()
-
+#<tree tree="tree_dict" custom-click="load"></tree>
         weights = app.db.Weight.collection
-        for weight in self.positive_weights + self.negative_weights:
+        categories = app.db.WeightsCategory.collection
+        category_names = []
+        for weight in self.positive_weights:
+            name = weight['name']
+            splitted_names = name.split('.')
+            long_name = ''
+            subcat_count = len(splitted_names)
+            for i, sname in enumerate(splitted_names[:-1]):
+                parent = long_name
+                long_name = '%s.%s' % (long_name, sname) \
+                            if long_name else sname
+                if sname not in category_names:
+                    category_names.append(sname)
+                    is_last = bool(i == (subcat_count - 2))
+                    categories.insert({'name': long_name,
+                                       'model_name': self.name,
+                                       'short_name': sname,
+                                       'parent': parent,
+                                       'has_weights': is_last})
+
             weights.insert({'name': weight['name'],
                             'model_name': self.name,
                             'value': weight['weight'],

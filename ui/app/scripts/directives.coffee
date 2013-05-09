@@ -117,20 +117,23 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
 
 .directive("tree", [ ->
   return {
-    scope: {tree: '='}
+    scope: {tree: '=', innerLoad: '&customClick'}
     # replace: true
     #restrict: 'E'
     transclude : true
     template: '''<ul>
                 <li ng-repeat="(key, row) in tree" >
                   {{ key }}
-                  <a ng-show="!row.value" ng-click="show=!show"
-                    ng-init="show=false">
-      <i ng-class="{false:'icon-arrow-right',true:'icon-arrow-down'}[show]"></i>
+                  <a ng-show="!row.value" ng-click="show=!show;
+                  innerLoad()(row['details'])" ng-init="show=false">
+      <i ng-class="{false:'icon-arrow-right',
+true:'icon-arrow-down'}[show]"></i>
                   </a>
+                  {{ row.details.has_weights}}
                   <span class="{{ row.css_class }}">{{ row.value }}</span>
                   <recursive ng-show="show">
-                    <span tree="row"></span>
+                    <span tree="row.subcategories" custom-click="innerLoad()">
+                    </span>
                   </recursive>
                 </li>
               </ul>'''
@@ -138,6 +141,7 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
       return () ->
   }
 ])
+
 
 
 .directive('loadindicator',

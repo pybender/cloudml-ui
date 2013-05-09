@@ -51,3 +51,52 @@ angular.module('app.weights.model', ['app.config'])
 
     return Weight
 ])
+
+.factory('WeightsCategory', [
+  '$http'
+  '$q'
+  'settings'
+  
+  ($http, $q, settings) ->
+    ###
+    Model Parameter WeightsCategory
+    ###
+    class Category
+      constructor: (opts) ->
+        @loadFromJSON opts
+
+      _id: null
+      name: null
+      model_name: null
+      short_name: null
+      parent: null
+
+      ### API methods ###
+
+      loadFromJSON: (origData) =>
+        data = _.extend {}, origData
+        _.extend @, data
+
+      @$loadAll: (modelName, opts) ->
+        dfd = $q.defer()
+
+        if not modelName then throw new Error "Model is required to load tests"
+        $http(
+          method: 'GET'
+          url: "#{settings.apiUrl}weights/categories/#{modelName}"
+          headers: settings.apiRequestDefaultHeaders
+          params: _.extend {
+          }, opts
+        )
+        .then ((resp) =>
+          dfd.resolve {
+            objects: (new Category(obj) for obj in resp.data.category_weights)
+            _resp: resp
+          }
+
+        ), (-> dfd.reject.apply @, arguments)
+
+        dfd.promise
+
+    return Category
+])

@@ -241,6 +241,23 @@ api.add_resource(WeightsResource,
                  '/cloudml/weights/<regex("[\w\.]*"):model_name>')
 
 
+class WeightsCategoriesResource(BaseResource):
+    """
+    Model Parameters weights categories API methods
+    """
+    OBJECT_NAME = 'category_weight'
+    methods = ('GET', )
+
+    FILTER_PARAMS = (('parent', str), )
+
+    @property
+    def Model(self):
+        return app.db.WeightsCategory
+
+api.add_resource(WeightsCategoriesResource,
+                 '/cloudml/weights/categories/<regex("[\w\.]*"):model_name>')
+
+
 class ImportHandlerResource(BaseResource):
     """
     Import handler API methods

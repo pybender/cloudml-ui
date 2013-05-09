@@ -46,3 +46,48 @@ angular.module('app.weights.controllers', ['app.config', ])
   $scope.search = () ->
     $scope.loadWeights($scope.q)
 ])
+
+
+
+.controller('WeightsTreeCtrl', [
+  '$scope'
+  '$http'
+  '$routeParams'
+  'settings'
+  'Weight'
+  'WeightsCategory'
+
+($scope, $http, $routeParams, settings, Weight, WeightsCategory) ->
+  if not $routeParams.name
+    throw new Error "Can't initialize without model name"
+
+  $scope.tree_dict = {}
+
+  $scope.loadWeightsCategories = (parent='', load_weights='False') ->
+    WeightsCategory.$loadAll(
+      $routeParams.name,
+      show: 'name,short_name,parent,has_weights',
+      parent: parent
+    ).then ((opts) ->
+      $scope.categories = opts.objects
+      for cat in $scope.categories
+        val = {'subcategories': {}, 'details': cat}
+        if !parent
+          $scope.tree_dict[cat.name] = val
+        else
+          $scope.tree_dict[parent]['subcategories'][cat.name] = val
+      if load_weights == 'True'
+        alert('load' + load_weights)
+    ), ((opts) ->
+      $scope.err = "Error while loading parameters weights: " +
+        "server responded with " + "#{opts.status} " +
+        "(#{opts.data.response.error.message or "no message"}). "
+    )
+
+  $scope.load = (parentCategory) ->
+    alert(parentCategory.name)
+    $scope.loadWeightsCategories(parentCategory.name,
+      parentCategory.has_weights)
+
+  $scope.loadWeightsCategories()
+])
