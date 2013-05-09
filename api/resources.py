@@ -41,6 +41,8 @@ class BaseResource(restful.Resource):
     decorators = [crossdomain(origin='*',
                               headers="accept, origin, content-type")]
 
+    is_fulltext_search = False
+
     @property
     def Model(self):
         """
@@ -163,9 +165,16 @@ class BaseResource(restful.Resource):
         return self._render(context)
 
     def _paginate(self, models, page, per_page=20):
-        total = models.count()
-        offset = (page - 1) * per_page
-        models = models.skip(offset).limit(per_page)
+        # TODO: Watch https://jira.mongodb.org/browse/SERVER-9063
+        # and simplify code
+        if self.is_fulltext_search:
+            total = len(models)
+            offset = (page - 1) * per_page
+            models = models[offset:page * per_page]
+        else:
+            total = models.count()
+            offset = (page - 1) * per_page
+            models = models.skip(offset).limit(per_page)
         return total, models
 
     def _details(self, extra_params=(), **kwargs):
@@ -184,17 +193,24 @@ class BaseResource(restful.Resource):
     def _get_list_query(self, params, fields, **kwargs):
         filter_params = self._prepare_filter_params(params)
         if self.ENABLE_FULLTEXT_SEARCH and \
-                self.FULLTEXT_SEARCH_PARAM_NAME in filter_params:
+                self.FULLTEXT_SEARCH_PARAM_NAME in filter_params and \
+                filter_params[self.FULLTEXT_SEARCH_PARAM_NAME]:
             # Run full text search
             # NOTE: it's betta in mongo now.
             search = filter_params[self.FULLTEXT_SEARCH_PARAM_NAME]
             show = dict([(field, 1) for field in fields])
+            del filter_params[self.FULLTEXT_SEARCH_PARAM_NAME]
+            kwargs.update(filter_params)
             # NOTE: The text command matches on the complete stemmed word
             res = app.db.command("text", "weights", search=search,
                                  project=show, filter=kwargs,
                                  limit=1000)
-            return res['results']
+            self.is_fulltext_search = True
+            return [result['obj'] for result in res['results']]
         else:
+            if self.FULLTEXT_SEARCH_PARAM_NAME in filter_params:
+                del filter_params[self.FULLTEXT_SEARCH_PARAM_NAME]
+
             kwargs.update(filter_params)
             return self.Model.find(kwargs, fields)
 

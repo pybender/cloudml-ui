@@ -1,0 +1,30 @@
+<form class="form-search well">
+  <input type="text" ng-model="q" class="input-medium search-query" title="Search by complete stemmed word">
+  <select ng-model="is_positive">
+    <option value="1">only positive</option>
+    <option value="-1">only negative</option>
+    <option value="0">both</option>
+  </select>
+  <button class="btn" ng-click="search()">Search</button>
+</form>
+<small ng-show="total">
+  <p>Total model parameters weights: {{ total }}</p>
+</small>
+<table>
+  <thead>
+    <tr>
+      <th>Parameter</th>
+      <th>Weight</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr ng-repeat="row in weights">
+      <td>{{ row.name }}</td>
+      <td>
+        <div class="badge" ng-class="row.css_class">
+          {{ row.value }}</div>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<pagination boundary-links="true" max-size="8" num-pages="pages" current-page="page"></pagination>

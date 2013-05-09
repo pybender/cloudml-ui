@@ -210,11 +210,32 @@ class WeightsResource(BaseResource):
     ENABLE_FULLTEXT_SEARCH = True
     OBJECT_NAME = 'weight'
     methods = ('GET', )
+    NEED_PAGING = True
     FILTER_PARAMS = (('is_positive', int), ('q', str))
 
     @property
     def Model(self):
         return app.db.Weight
+
+    def _prepare_filter_params(self, params):
+        pdict = super(WeightsResource, self)._prepare_filter_params(params)
+        if 'is_positive' in pdict:
+            if pdict['is_positive'] == 1:
+                pdict['is_positive'] = True
+            elif pdict['is_positive'] == -1:
+                pdict['is_positive'] = False
+            else:
+                del pdict['is_positive']
+        return pdict
+
+    def _get_list_query(self, params, fields, **kwargs):
+        results = super(WeightsResource, self)._get_list_query(params, fields, **kwargs)
+        if self.is_fulltext_search:
+            # sort
+            cmp_func = lambda a: abs(a['value'])
+            results.sort(key=cmp_func)
+            results.reverse()
+        return results
 
 api.add_resource(WeightsResource,
                  '/cloudml/weights/<regex("[\w\.]*"):model_name>')

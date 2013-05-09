@@ -3,6 +3,9 @@
   {{ model.name|capfirst }} Details
   <div class="actions" ng-controller="ModelActionsCtrl">
     <div ng-init="init({model: model})">
+      <a ng-show="model.status == 'Trained'" href="#/models/{{ model.name }}/weights" class="btn btn-info">
+        <i title="Navigates to parameters weights page with search" class="icon-th-large"></i> Search Weights
+      </a>
       <button ng-show="model.status == 'Trained'" ng-click="test_model(model)" class="btn btn-success">
         <i title="Apply the classifier to the input provided by the data import handler" class="status-icon icon-play"></i>
         Run test
@@ -87,14 +90,12 @@
               <div class="row">
               <div class="span5">
                 <h4>Positive Weights</h4>
-                <div><a><b>List</b></a> | <a>Tree - todo</a></div>
                 <weights-table weights="positive">
                 </weights-table>
                 <a class="btn" ng-click="morePositiveWeights()">Load More...</a>
               </div>
               <div class="offset1 span5">
                 <h4>Negative Weights</h4>
-                <div><a><b>List</b></a> | <a>Tree - todo</a></div>
                 <weights-table weights="negative">
                 </weights-table>
                 <a class="btn" ng-click="moreNegativeWeights()">Load More...</a>

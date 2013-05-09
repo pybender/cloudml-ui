@@ -22,6 +22,8 @@ App = angular.module('app', [
   'app.reports.controllers'
   'app.importhandlers.model'
   'app.importhandlers.controllers'
+  'app.weights.model'
+  'app.weights.controllers'
 ])
 App.config([
   '$routeProvider'
@@ -38,6 +40,10 @@ App.config([
     .when('/models/:name', {
       controller: 'ModelDetailsCtrl'
       templateUrl: '/partials/model_details.html'
+    })
+    .when('/models/:name/weights', {
+      controller: 'WeightsListCtrl'
+      templateUrl: '/partials/weights/list.html'
     })
     .when('/models/:name/tests/:test_name', {
       controller: 'TestDetailsCtrl'
