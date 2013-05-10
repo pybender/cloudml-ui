@@ -351,15 +351,21 @@ class TestExamplesResource(BaseResource):
             params = self._parse_parameters(parser_params)
             fields = self._get_fields_to_show(params)
 
-            # Removing empty values
             kw = dict([(k, v) for k, v in kwargs.iteritems() if v])
-            examples = self._get_list_query(params, fields, **kw)
+            examples = self._get_list_query(params, None, **kw)
             fout = StringIO.StringIO()
             writer = csv.writer(fout, delimiter=';', quoting=csv.QUOTE_ALL)
             writer.writerow(fields)
             for example in examples:
-                rows = [example[name] if name in example else ''
-                        for name in fields]
+                rows = []
+                for name in fields:
+                    # TODO: This is a quick hack. Fix it!
+                    if name.startswith('data_input'):
+                        feature_name = name.replace('data_input.', '')
+                        val = example['data_input'][feature_name]
+                    else:
+                        val = example[name] if name in example else ''
+                    rows.append(val)
                 writer.writerow(rows)
             return fout.getvalue()
 
