@@ -85,7 +85,7 @@ angular.module('app.datas.controllers', ['app.config', ])
     id: $routeParams.data_id})
 
   $scope.data.$load(
-    show: "id,weighted_data_input,target_variable,pred_label,label"
+    show: "id,weighted_data_input,target_variable,pred_label,label, probs"
   ).then (->
     ), (->
       $scope.error = data
