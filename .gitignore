@@ -23,7 +23,7 @@ fabconf.py
 .settings
 .idea/*
 
-node_modules/*
+ui/node_modules/*
 npm-debug.log
 local.json
 
