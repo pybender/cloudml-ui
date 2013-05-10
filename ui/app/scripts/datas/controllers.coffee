@@ -39,7 +39,7 @@ angular.module('app.datas.controllers', ['app.config', ])
       delete opts.filter_opts
       Data.$loadAll(_.extend({model_name: $routeParams.name,
       test_name: $routeParams.test_name,
-      show:'name,label,pred_label,title'}, opts, filter_opts))
+      show:'name,label,pred_label,title, probs'}, opts, filter_opts))
 ])
 
 .controller('GroupedExamplesCtrl', [

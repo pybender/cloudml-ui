@@ -175,7 +175,7 @@ angular.module('app.models.controllers', ['app.config', ])
           $scope.go 'train_importhandler,status,id'
         else
           $scope.go 'importhandler,status,id'
-      else $scope.go 'status,created_on,target_variable,error'
+      else $scope.go 'status,created_on,target_variable,error,labels'
 
   if not $scope.model
     if not $routeParams.name
