@@ -74,7 +74,7 @@ def run_test(test_id):
         confusion_matrix = metrics_dict['confusion_matrix']
         confusion_matrix_ex = []
         for i, val in enumerate(metrics.classes_set):
-            confusion_matrix_ex.append((val, confusion_matrix[i]))
+            confusion_matrix_ex.append((str(val), confusion_matrix[i]))
         metrics_dict['confusion_matrix'] = confusion_matrix_ex
         n = len(raw_data) / 100 or 1
         metrics_dict['roc_curve'][1] = metrics_dict['roc_curve'][1][0::n]
