@@ -2,6 +2,7 @@ import json
 import logging
 import cPickle as pickle
 import traceback
+import StringIO, csv
 from flask.ext.restful import reqparse
 from flask import request
 from werkzeug.datastructures import FileStorage
@@ -249,7 +250,7 @@ class TestExamplesResource(BaseResource):
 
     OBJECT_NAME = 'data'
     NEED_PAGING = True
-    GET_ACTIONS = ('groupped', )
+    GET_ACTIONS = ('groupped', 'csv')
     DETAILS_PARAM = 'example_id'
     FILTER_PARAMS = (('label', str), ('pred_label', str))
     decorators = [crossdomain(origin='*')]
@@ -268,7 +269,7 @@ class TestExamplesResource(BaseResource):
             weighted_data_input = get_weighted_data(model,
                                                     example['data_input'])
             example['weighted_data_input'] = dict(weighted_data_input)
-            example.save()
+            example.save(check_keys=False)
         return example
 
     def _get_groupped_action(self, **kwargs):
@@ -340,6 +341,33 @@ class TestExamplesResource(BaseResource):
                    'field_name': group_by_field,
                    'mavp': mavp}
         return self._render(context)
+
+    def _get_csv_action(self, **kwargs):
+        """
+        Returns list of examples in csv format
+        """
+        def generate():
+            parser_params = self.GET_PARAMS + self.FILTER_PARAMS
+            params = self._parse_parameters(parser_params)
+            fields = self._get_fields_to_show(params)
+
+            # Removing empty values
+            kw = dict([(k, v) for k, v in kwargs.iteritems() if v])
+            examples = self._get_list_query(params, fields, **kw)
+            fout = StringIO.StringIO()
+            writer = csv.writer(fout, delimiter=';', quoting=csv.QUOTE_ALL)
+            writer.writerow(fields)
+            for example in examples:
+                rows = [example[name] if name in example else ''
+                        for name in fields]
+                writer.writerow(rows)
+            return fout.getvalue()
+
+        from flask import Response
+        resp = Response(generate(), mimetype='text/csv')
+        resp.headers["Content-Disposition"] = "attachment; \
+filename=%(model_name)s-%(test_name)s-examples.csv" % kwargs
+        return resp
 
 api.add_resource(TestExamplesResource, '/cloudml/model/\
 <regex("[\w\.]+"):model_name>/test/<regex("[\w\.\-]+"):test_name>/data',
