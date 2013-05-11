@@ -239,7 +239,7 @@ api.add_resource(Tests, '/cloudml/model/<regex("[\w\.]+"):model>/test/\
 
 REDUCE_FUNC = 'function(obj, prev) {\
                             prev.list.push({"label": obj.pred_label,\
-                            "pred": obj.label})\
+                            "pred": obj.label, "prob": obj.prob})\
                       }'
 
 
@@ -324,11 +324,25 @@ class TestExamplesResource(BaseResource):
                                   {'model_name': model_name,
                                    'test_name': test_name},
                                   {'list': []}, REDUCE_FUNC)
+        import sklearn.metrics as sk_metrics
+        from scipy.sparse import hstack
+        import numpy
         for group in groups:
             group_list = group['list']
-            labels = [item['label'] for item in group_list]
-            pred_labels = [item['pred'] for item in group_list]
-            avp = apk(labels, pred_labels, count)
+            labels = [int(item['label']) for item in group_list]
+            pred_labels = [int(item['pred']) for item in group_list]
+            probs = [item['prob'][1] for item in group_list]
+            if len(labels) > 1:
+                labels = numpy.array(labels)
+                probs = numpy.array(probs)
+                try:
+                    precision, recall, thresholds = \
+                        sk_metrics.precision_recall_curve(labels, probs)
+                    avp = sk_metrics.auc(recall[:count], precision[:count])
+                except:
+                    avp = apk(labels, pred_labels, count)
+            else:
+                avp = apk(labels, pred_labels, count)
             avps.append(avp)
             res.append({'group_by_field': group[group_by_field],
                         'count': len(group_list),
