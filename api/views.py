@@ -334,6 +334,10 @@ class TestExamplesResource(BaseResource):
             logging.error('Examples do not contain probabilities')
             return odesk_error_response(400, ERR_INVALID_DATA,
                                         'Examples do not contain probabilities')
+        if not isinstance(groups[0]['list'][0]['prob'], list):
+            logging.error('Examples do not contain probabilities')
+            return odesk_error_response(400, ERR_INVALID_DATA,
+                                        'Examples do not contain probabilities')
 
         if groups[0]['list'][0]['label'] in ("True", "False"):
             transform = lambda x: int(bool(x))
