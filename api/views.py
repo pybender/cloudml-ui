@@ -330,10 +330,15 @@ class TestExamplesResource(BaseResource):
                                   {'list': []}, REDUCE_FUNC)
         import sklearn.metrics as sk_metrics
         import numpy
+        if len(groups) < 1:
+            logging.error('Can not group')
+            return odesk_error_response(400, ERR_INVALID_DATA,
+                                        'Can not group')
         if not groups[0]['list'][0].has_key('prob'):
             logging.error('Examples do not contain probabilities')
             return odesk_error_response(400, ERR_INVALID_DATA,
                                         'Examples do not contain probabilities')
+        print type(groups[0]['list'][0]['prob'])
         if not isinstance(groups[0]['list'][0]['prob'], list):
             logging.error('Examples do not contain probabilities')
             return odesk_error_response(400, ERR_INVALID_DATA,

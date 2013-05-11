@@ -90,6 +90,13 @@ def qdeploy():
 
 
 @task
+def cdeploy():
+    release.work_on.run(0)
+    git.push.run()
+    supervisor.restart_program.run(program='gunicorn')
+    supervisor.restart_program.run(program='celeryd')
+
+@task
 def deploy():
     fabd.mkdirs.run()
 
