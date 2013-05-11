@@ -102,7 +102,7 @@ def run_test(test_id):
         confusion_matrix = metrics_dict['confusion_matrix']
         confusion_matrix_ex = []
         for i, val in enumerate(metrics.classes_set):
-            confusion_matrix_ex.append((val, confusion_matrix[i]))
+            confusion_matrix_ex.append((str(val), confusion_matrix[i]))
         metrics_dict['confusion_matrix'] = confusion_matrix_ex
         n = len(raw_data) / 100 or 1
         metrics_dict['roc_curve'][1] = metrics_dict['roc_curve'][1][0::n]
@@ -127,7 +127,7 @@ def run_test(test_id):
 
         def store_examples(items):
             count = 0
-            for row, label, pred in items:
+            for row, label, pred, prob in items:
                 count += 1
                 if count % 100 == 0:
                     logging.info('Stored %d rows' % count)
@@ -139,6 +139,7 @@ def run_test(test_id):
                                           'noname')
                 example['label'] = str(label)
                 example['pred_label'] = str(pred)
+                example['prob'] = prob.tolist()
                 example['test_name'] = test.name
                 example['model_name'] = model.name
                 try:
@@ -149,7 +150,10 @@ def run_test(test_id):
                     continue
                 example.save(check_keys=False)
 
-        examples = izip(raw_data, metrics._labels, metrics._preds)
+        examples = izip(raw_data,
+                        metrics._labels,
+                        metrics._preds,
+                        metrics._probs)
         store_examples(examples)
 
     except Exception, exc:

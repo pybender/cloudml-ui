@@ -90,6 +90,13 @@ def qdeploy():
 
 
 @task
+def cdeploy():
+    release.work_on.run(0)
+    git.push.run()
+    supervisor.restart_program.run(program='gunicorn')
+    supervisor.restart_program.run(program='celeryd')
+
+@task
 def deploy():
     fabd.mkdirs.run()
 
@@ -105,15 +112,16 @@ def deploy():
     virtualenv.pip_install_req.run()
     virtualenv.make_relocatable.run()
 
+    #angularjs.init.run()
     angularjs.push_config.run()
     angularjs.build.run()
 
     release.activate.run()
 
     supervisor.update.run()
+    supervisor.restart_program.run(program='gunicorn')
     supervisor.restart_program.run(program='celeryd')
     supervisor.restart_program.run(program='celerycam')
-    supervisor.restart_program.run(program='gunicorn')
 
 
 class PushAnjularConfig(Task):

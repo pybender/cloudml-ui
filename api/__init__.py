@@ -1,3 +1,4 @@
+import logging
 from flask import Flask
 from werkzeug.routing import BaseConverter
 from mongokit import Connection
@@ -28,6 +29,9 @@ celery = Celery('cloudml')
 celery.add_defaults(lambda: app.config)
 api = restful.Api(app)
 
+logging_level = logging.INFO
+logging.basicConfig(format='[%(asctime)s] %(levelname)s - %(message)s',
+        level=logging_level)
 
 class RegExConverter(BaseConverter):
     """

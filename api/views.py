@@ -2,6 +2,7 @@ import json
 import logging
 import cPickle as pickle
 import traceback
+import StringIO, csv
 from flask.ext.restful import reqparse
 from flask import request
 from werkzeug.datastructures import FileStorage
@@ -336,7 +337,7 @@ api.add_resource(Tests, '/cloudml/model/<regex("[\w\.]+"):model>/test/\
 
 REDUCE_FUNC = 'function(obj, prev) {\
                             prev.list.push({"label": obj.pred_label,\
-                            "pred": obj.label})\
+                            "pred": obj.label, "prob": obj.prob})\
                       }'
 
 
@@ -347,7 +348,7 @@ class TestExamplesResource(BaseResource):
 
     OBJECT_NAME = 'data'
     NEED_PAGING = True
-    GET_ACTIONS = ('groupped', )
+    GET_ACTIONS = ('groupped', 'csv')
     DETAILS_PARAM = 'example_id'
     FILTER_PARAMS = (('label', str), ('pred_label', str))
     decorators = [crossdomain(origin='*')]
@@ -366,7 +367,7 @@ class TestExamplesResource(BaseResource):
             weighted_data_input = get_weighted_data(model,
                                                     example['data_input'])
             example['weighted_data_input'] = dict(weighted_data_input)
-            example.save()
+            example.save(check_keys=False)
         return example
 
     def _get_groupped_action(self, **kwargs):
@@ -378,6 +379,7 @@ class TestExamplesResource(BaseResource):
         from ml_metrics import apk
         import numpy as np
         from operator import itemgetter
+        logging.info('Start request for calculating MAP')
 
         # getting from request parameters fieldname to group.
         parser = reqparse.RequestParser()
@@ -391,6 +393,9 @@ class TestExamplesResource(BaseResource):
                                         'field parameter is required')
         model_name = kwargs.get('model_name')
         test_name = kwargs.get('test_name')
+        logging.info('For model: %s test: %s' % (model_name, test_name))
+        logging.info('Gettings examples')
+
         collection = app.db.TestExample.collection
 
         res = []
@@ -421,23 +426,94 @@ class TestExamplesResource(BaseResource):
                                   {'model_name': model_name,
                                    'test_name': test_name},
                                   {'list': []}, REDUCE_FUNC)
+        import sklearn.metrics as sk_metrics
+        import numpy
+        if len(groups) < 1:
+            logging.error('Can not group')
+            return odesk_error_response(400, ERR_INVALID_DATA,
+                                        'Can not group')
+        if not groups[0]['list'][0].has_key('prob'):
+            logging.error('Examples do not contain probabilities')
+            return odesk_error_response(400, ERR_INVALID_DATA,
+                                        'Examples do not contain probabilities')
+        print type(groups[0]['list'][0]['prob'])
+        if not isinstance(groups[0]['list'][0]['prob'], list):
+            logging.error('Examples do not contain probabilities')
+            return odesk_error_response(400, ERR_INVALID_DATA,
+                                        'Examples do not contain probabilities')
+
+        if groups[0]['list'][0]['label'] in ("True", "False"):
+            transform = lambda x: int(bool(x))
+        elif groups[0]['list'][0]['label'] in ("0", "1"):
+            transform = lambda x: int(x)
+        else:
+            logging.error('Type of labels do not support')
+            return odesk_error_response(400, ERR_INVALID_DATA,
+                                        'Type of labels do not support')
+        logging.info('Calculating avps for groups')
         for group in groups:
             group_list = group['list']
-            labels = [item['label'] for item in group_list]
-            pred_labels = [item['pred'] for item in group_list]
-            avp = apk(labels, pred_labels, count)
+            labels = [transform(item['label']) for item in group_list]
+            pred_labels = [transform(item['pred']) for item in group_list]
+            probs = [item['prob'][1] for item in group_list]
+            if len(labels) > 1:
+                labels = numpy.array(labels)
+                probs = numpy.array(probs)
+                try:
+                    precision, recall, thresholds = \
+                        sk_metrics.precision_recall_curve(labels, probs)
+                    avp = sk_metrics.auc(recall[:count], precision[:count])
+                except:
+                    avp = apk(labels, pred_labels, count)
+            else:
+                avp = apk(labels, pred_labels, count)
             avps.append(avp)
             res.append({'group_by_field': group[group_by_field],
                         'count': len(group_list),
                         'avp': avp})
 
         res = sorted(res, key=itemgetter("count"), reverse=True)[:100]
+        logging.info('Calculating map')
         mavp = np.mean(avps)
 
         context = {self.list_key: {'items': res},
                    'field_name': group_by_field,
                    'mavp': mavp}
+        logging.info('End request for calculating MAP')
         return self._render(context)
+
+    def _get_csv_action(self, **kwargs):
+        """
+        Returns list of examples in csv format
+        """
+        def generate():
+            parser_params = self.GET_PARAMS + self.FILTER_PARAMS
+            params = self._parse_parameters(parser_params)
+            fields = self._get_fields_to_show(params)
+
+            kw = dict([(k, v) for k, v in kwargs.iteritems() if v])
+            examples = self._get_list_query(params, None, **kw)
+            fout = StringIO.StringIO()
+            writer = csv.writer(fout, delimiter=';', quoting=csv.QUOTE_ALL)
+            writer.writerow(fields)
+            for example in examples:
+                rows = []
+                for name in fields:
+                    # TODO: This is a quick hack. Fix it!
+                    if name.startswith('data_input'):
+                        feature_name = name.replace('data_input.', '')
+                        val = example['data_input'][feature_name]
+                    else:
+                        val = example[name] if name in example else ''
+                    rows.append(val)
+                writer.writerow(rows)
+            return fout.getvalue()
+
+        from flask import Response
+        resp = Response(generate(), mimetype='text/csv')
+        resp.headers["Content-Disposition"] = "attachment; \
+filename=%(model_name)s-%(test_name)s-examples.csv" % kwargs
+        return resp
 
 api.add_resource(TestExamplesResource, '/cloudml/model/\
 <regex("[\w\.]+"):model_name>/test/<regex("[\w\.\-]+"):test_name>/data',

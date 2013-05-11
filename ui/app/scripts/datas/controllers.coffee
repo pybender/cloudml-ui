@@ -39,7 +39,7 @@ angular.module('app.datas.controllers', ['app.config', ])
       delete opts.filter_opts
       Data.$loadAll(_.extend({model_name: $routeParams.name,
       test_name: $routeParams.test_name,
-      show:'name,label,pred_label,title'}, opts, filter_opts))
+      show:'name,label,pred_label,title, probs'}, opts, filter_opts))
 ])
 
 .controller('GroupedExamplesCtrl', [
@@ -85,7 +85,7 @@ angular.module('app.datas.controllers', ['app.config', ])
     id: $routeParams.data_id})
 
   $scope.data.$load(
-    show: "id,weighted_data_input,target_variable,pred_label,label"
+    show: "id,weighted_data_input,target_variable,pred_label,label,prob"
   ).then (->
     ), (->
       $scope.error = data
