@@ -27,10 +27,12 @@ class Weight(Document):
     __collection__ = 'weights'
     structure = {
         'name': basestring,
+        'short_name': basestring,
         'model_name': basestring,
         'value': float,
         'is_positive': bool,
         'css_class': basestring,
+        'parent': basestring,
     }
 
 app.db.Weight.collection.ensure_index(
@@ -89,8 +91,6 @@ class Model(Document):
         # },
 
         'trainer': None,
-        'positive_weights': list,
-        'negative_weights': list,
         'comparable': bool,
 
         'labels': list,
@@ -134,36 +134,38 @@ class Model(Document):
 
     def set_weights(self, positive, negative):
         from helpers.weights import calc_weights_css
-        self.positive_weights = calc_weights_css(positive, 'green')
-        self.negative_weights = calc_weights_css(negative, 'red')
-        self.negative_weights.reverse()
-#<tree tree="tree_dict" custom-click="load"></tree>
-        weights = app.db.Weight.collection
-        categories = app.db.WeightsCategory.collection
+        positive_weights = calc_weights_css(positive, 'green')
+        negative_weights = calc_weights_css(negative, 'red')
+        weight_list = positive_weights + negative_weights
+        weight_list.sort(key=lambda a: abs(a['weight']))
+        weight_list.reverse()
+
+        # Adding weights and weights categories to db
         category_names = []
-        for weight in self.positive_weights:
+        for weight in weight_list:
             name = weight['name']
-            splitted_names = name.split('.')
+            splitted_name = name.split('->')
             long_name = ''
-            subcat_count = len(splitted_names)
-            for i, sname in enumerate(splitted_names[:-1]):
+            count = len(splitted_name)
+            for i, sname in enumerate(splitted_name):
                 parent = long_name
                 long_name = '%s.%s' % (long_name, sname) \
                             if long_name else sname
-                if sname not in category_names:
-                    category_names.append(sname)
-                    is_last = bool(i == (subcat_count - 2))
-                    categories.insert({'name': long_name,
-                                       'model_name': self.name,
-                                       'short_name': sname,
-                                       'parent': parent,
-                                       'has_weights': is_last})
-
-            weights.insert({'name': weight['name'],
-                            'model_name': self.name,
-                            'value': weight['weight'],
-                            'is_positive': bool(weight['weight'] > 0),
-                            'css_class': weight['css_class']})
+                params = {'model_name': self.name,
+                          'parent': parent,
+                          'short_name': sname}
+                if i == (count - 1):
+                    params.update({'name': weight['name'],
+                                   'value': weight['weight'],
+                                   'is_positive': bool(weight['weight'] > 0),
+                                   'css_class': weight['css_class']})
+                    app.db.Weight.collection.insert(params)
+                else:
+                    if sname not in category_names:
+                        # Adding a category, if it has not already added
+                        category_names.append(sname)
+                        params.update({'name': long_name})
+                        app.db.WeightsCategory.collection.insert(params)
 
     def delete(self):
         params = {'model_name': self.name}

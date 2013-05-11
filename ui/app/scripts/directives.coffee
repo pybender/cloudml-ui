@@ -31,23 +31,7 @@ angular.module('app.directives', [
 .directive('weightsTable', () ->
   return {
     restrict: 'E',
-    template: '<table>
-                      <thead>
-                        <tr>
-                          <th>Paremeter</th>
-                          <th>Weight</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr ng-repeat="row in weights">
-                          <td>{{ row.name }}</td>
-                          <td>
-                            <div class="badge" ng-class="row.css_class">
-                              {{ row.weight }}</div>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>',
+    templateUrl: 'partials/directives/weights_table.html',
     replace: true,
     transclude : true,
     scope: { weights: '=' }
@@ -121,22 +105,7 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
     # replace: true
     #restrict: 'E'
     transclude : true
-    template: '''<ul>
-                <li ng-repeat="(key, row) in tree" >
-                  {{ key }}
-                  <a ng-show="!row.value" ng-click="show=!show;
-                  innerLoad()(row['details'])" ng-init="show=false">
-      <i ng-class="{false:'icon-arrow-right',
-true:'icon-arrow-down'}[show]"></i>
-                  </a>
-                  {{ row.details.has_weights}}
-                  <span class="{{ row.css_class }}">{{ row.value }}</span>
-                  <recursive ng-show="show">
-                    <span tree="row.subcategories" custom-click="innerLoad()">
-                    </span>
-                  </recursive>
-                </li>
-              </ul>'''
+    templateUrl:'partials/directives/weights_tree.html'
     compile: () ->
       return () ->
   }

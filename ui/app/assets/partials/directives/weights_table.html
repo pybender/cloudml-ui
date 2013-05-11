@@ -1,0 +1,16 @@
+<table>
+  <thead>
+    <tr>
+      <th>Parameter</th>
+      <th>Weight</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr ng-repeat="row in weights">
+      <td>{{ row.name }}</td>
+      <td>
+        <div class="badge" ng-class="row.css_class">{{ row.value }}</div>
+      </td>
+    </tr>
+  </tbody>
+</table>

@@ -17,10 +17,12 @@ angular.module('app.weights.controllers', ['app.config', ])
     throw new Error "Can't initialize without model name"
 
   $scope.q = ''
+  $scope.is_positive = 0
+  $scope.model_name = $routeParams.name
 
   $scope.loadWeights = (search='', page=1) ->
     Weight.$loadAll(
-      $routeParams.name,
+      $scope.model_name,
       show: 'name,value,css_class',
       q: search,
       page: page,
@@ -47,47 +49,56 @@ angular.module('app.weights.controllers', ['app.config', ])
     $scope.loadWeights($scope.q)
 ])
 
-
-
 .controller('WeightsTreeCtrl', [
   '$scope'
   '$http'
   '$routeParams'
   'settings'
   'Weight'
-  'WeightsCategory'
+  'WeightsTree'
 
-($scope, $http, $routeParams, settings, Weight, WeightsCategory) ->
+($scope, $http, $routeParams, settings, Weight, WeightsTree) ->
   if not $routeParams.name
     throw new Error "Can't initialize without model name"
 
-  $scope.tree_dict = {}
+  $scope.tree_dict = {'weights': {}, 'categories': {}}
+  $scope.model_name = $routeParams.name
 
-  $scope.loadWeightsCategories = (parent='', load_weights='False') ->
-    WeightsCategory.$loadAll(
+  $scope.loadNode = (parent='') ->
+    if parent
+        parent_list = parent.split('.')
+        name = parent_list.shift()
+        parent_node = $scope.tree_dict['categories'][name]
+        for name in parent_list
+          parent_node = parent_node['categories'][name]
+
+        if parent_node['loaded']?
+          return
+      else
+        parent_node = $scope.tree_dict
+
+    WeightsTree.$loadNode(
       $routeParams.name,
-      show: 'name,short_name,parent,has_weights',
+      show: 'name,short_name,parent',
       parent: parent
     ).then ((opts) ->
-      $scope.categories = opts.objects
-      for cat in $scope.categories
-        val = {'subcategories': {}, 'details': cat}
-        if !parent
-          $scope.tree_dict[cat.name] = val
-        else
-          $scope.tree_dict[parent]['subcategories'][cat.name] = val
-      if load_weights == 'True'
-        alert('load' + load_weights)
+      for details in opts.categories
+        val = {'categories': {}, 'details': details, 'weights': {}}
+        parent_node['categories'][details.short_name] = val
+
+      for details in opts.weights
+        parent_node['weights'][details.name] = details
+
+      parent_node['loaded'] = true
     ), ((opts) ->
       $scope.err = "Error while loading parameters weights: " +
         "server responded with " + "#{opts.status} " +
         "(#{opts.data.response.error.message or "no message"}). "
     )
 
-  $scope.load = (parentCategory) ->
-    alert(parentCategory.name)
-    $scope.loadWeightsCategories(parentCategory.name,
-      parentCategory.has_weights)
+  $scope.load = (parentCategory, show) ->
+    if show
+      $scope.loadNode(parentCategory.name)
 
-  $scope.loadWeightsCategories()
+  $scope.loadNode()
 ])

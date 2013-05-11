@@ -1,0 +1,11 @@
+<ul>
+  <li ng-show="!row.value" ng-init="show=false" ng-repeat="(key, row) in tree['categories']" >
+      {{ key }} <a ng-click="show=!show;innerLoad()(row['details'], show)"><i ng-class="{false:'icon-arrow-right',true:'icon-arrow-down'}[show]"></i></a>
+      <recursive ng-show="show">
+        <span tree="row" custom-click="innerLoad()"></span>
+      </recursive>
+  </li>
+  <li ng-repeat="(name, w) in tree['weights']">
+    {{ w.name }} <div class="badge" ng-class="w.css_class">{{ w.value }}</div>
+  </li>
+</ul>

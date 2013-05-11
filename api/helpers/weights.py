@@ -91,7 +91,7 @@ def get_weighted_data(model, row):
             if isinstance(value, basestring):
                 value = value.strip()
                 # try to find weight for {{ key.value }}
-                concated_key = ("%s.%s" % (key, value)).lower()
+                concated_key = ("%s->%s" % (key, value)).lower()
                 if concated_key in weights:
                     wdict = weights[concated_key]
                     result[key]['weight'] = wdict['weight']
@@ -105,7 +105,7 @@ def get_weighted_data(model, row):
                         word = word.lower().strip()
                         if not 'weights' in result[key]:
                             result[key]['weights'] = {}
-                        concated_key = "%s.%s" % (key, word)
+                        concated_key = "%s->%s" % (key, word)
                         if concated_key in weights:
                             wdict = weights[concated_key]
                             word_weight = {'weight': wdict['weight'],
@@ -114,7 +114,7 @@ def get_weighted_data(model, row):
             elif isinstance(value, dict):
                 result[key]['type'] = 'Dictionary'
                 for dkey, dvalue in value.iteritems():
-                    concated_key = ("%s.%s=%s" % (key, dkey, dvalue))
+                    concated_key = ("%s->%s=%s" % (key, dkey, dvalue))
                     if not 'weights' in result[key]:
                         result[key]['weights'] = {}
                     if concated_key in weights:

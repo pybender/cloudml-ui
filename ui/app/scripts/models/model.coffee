@@ -6,9 +6,6 @@ angular.module('app.models.model', ['app.config'])
   'settings'
   
   ($http, $q, settings) ->
-
-    trimTrailingWhitespace = (val) -> val.replace /^\s+|\s+$/g, ''
-
     ###
     Trained Model
     ###
@@ -82,7 +79,6 @@ angular.module('app.models.model', ['app.config'])
           return resp
         )
 
-
       prepareSaveJSON: (json) =>
         reqData = json or @toJSON()
         return reqData
@@ -139,26 +135,6 @@ angular.module('app.models.model', ['app.config'])
         ), (-> dfd.reject.apply @, arguments)
 
         dfd.promise
-
-      $loadWeights: (opts) ->
-        if @name == null
-          throw new Error "Can't load model without name"
-
-        $http(
-          method: 'GET'
-          url: settings.apiUrl + "model/#{@name}/weights"
-          headers:
-            'X-Requested-With': null
-          params: _.extend {
-          }, opts
-        ).then ((resp) =>
-          @loaded = true
-          @loadFromJSON(resp.data['model'])
-          return resp
-
-        ), ((resp) =>
-          return resp
-        )
 
       $train: (opts={}) =>
         fd = new FormData()

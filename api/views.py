@@ -2,7 +2,8 @@ import json
 import logging
 import cPickle as pickle
 import traceback
-import StringIO, csv
+import StringIO
+import csv
 from flask.ext.restful import reqparse
 from flask import request
 from werkzeug.datastructures import FileStorage
@@ -38,6 +39,7 @@ from flask import Response
 #     time.sleep(0.1)
 from pymongo.errors import OperationFailure
 
+
 def event_stream():
     curs = app.chan.cursor(True)
     while True:
@@ -63,7 +65,6 @@ class Models(BaseResource):
     """
     Models API methods
     """
-    GET_ACTIONS = ('weights', )
     PUT_ACTIONS = ('train', )
     FILTER_PARAMS = (('status', str), ('comparable', int))
     methods = ('GET', 'OPTIONS', 'DELETE', 'PUT', 'POST')
@@ -88,28 +89,28 @@ class Models(BaseResource):
             pdict['comparable'] = bool(pdict['comparable'])
         return pdict
 
-    def _get_weights_action(self, per_page=50, **kwargs):
-        """
-        Gets list with Model's weighted parameters with pagination.
-        """
-        paging_params = (('ppage', int), ('npage', int),)
-        params = self._parse_parameters(self.GET_PARAMS + paging_params)
+    # def _get_weights_action(self, per_page=50, **kwargs):
+    #     """
+    #     Gets list with Model's weighted parameters with pagination.
+    #     """
+    #     paging_params = (('ppage', int), ('npage', int),)
+    #     params = self._parse_parameters(self.GET_PARAMS + paging_params)
 
-        # Paginate weights
-        ppage = params.get('ppage') or 1
-        npage = params.get('npage') or 1
-        fields = self._get_fields_to_show(params)
-        fields_dict = {'positive_weights': {'$slice': [(ppage - 1) * per_page,
-                                                       per_page]},
-                       'negative_weights': {'$slice': [(npage - 1) * per_page,
-                                                       per_page]}}
-        for field in fields:
-            fields_dict[field] = ""
+    #     # Paginate weights
+    #     ppage = params.get('ppage') or 1
+    #     npage = params.get('npage') or 1
+    #     fields = self._get_fields_to_show(params)
+    #     fields_dict = {'positive_weights': {'$slice': [(ppage - 1) * per_page,
+    #                                                    per_page]},
+    #                    'negative_weights': {'$slice': [(npage - 1) * per_page,
+    #                                                    per_page]}}
+    #     for field in fields:
+    #         fields_dict[field] = ""
 
-        model = self._get_details_query(params, fields_dict, **kwargs)
-        if model is None:
-            raise NotFound(self.MESSAGE404 % kwargs)
-        return self._render({self.OBJECT_NAME: model})
+    #     model = self._get_details_query(params, fields_dict, **kwargs)
+    #     if model is None:
+    #         raise NotFound(self.MESSAGE404 % kwargs)
+    #     return self._render({self.OBJECT_NAME: model})
 
     # POST specific methods
 
@@ -193,26 +194,16 @@ api.add_resource(Models, '/cloudml/model/<regex("[\w\.]*"):name>',
 <regex("[\w\.]+"):action>')
 
 
- # motor.Op(self.db.command, 'text', 'posts',
- #    search=q,
- #    filter={'status': 'publish', 'type': 'post'},
- #    projection={
- #        'display': False,
- #        'original': False,
- #        'plain': False
- #    },
- #    limit=50)
-
-
 class WeightsResource(BaseResource):
     """
     Model Parameters weights API methods
     """
+    GET_ACTIONS = ('brief', )
     ENABLE_FULLTEXT_SEARCH = True
     OBJECT_NAME = 'weight'
     methods = ('GET', )
     NEED_PAGING = True
-    FILTER_PARAMS = (('is_positive', int), ('q', str))
+    FILTER_PARAMS = (('is_positive', int), ('q', str), ('parent', str), )
 
     @property
     def Model(self):
@@ -229,8 +220,30 @@ class WeightsResource(BaseResource):
                 del pdict['is_positive']
         return pdict
 
+    def _get_brief_action(self, per_page=50, **kwargs):
+        """
+        Gets list with Model's weighted parameters with pagination.
+        """
+        def get_weights(is_positive, page):
+            model_name = kwargs.get('model_name')
+            return self.Model.find({'model_name': model_name,
+                                    'is_positive': is_positive}, fields).\
+                skip(page * per_page).limit(per_page)
+
+        paging_params = (('ppage', int), ('npage', int),)
+        params = self._parse_parameters(self.GET_PARAMS + paging_params)
+
+        # Paginate weights
+        ppage = params.get('ppage') or 1
+        npage = params.get('npage') or 1
+        fields = self._get_fields_to_show(params)
+        context = {'positive_weights': get_weights(True, ppage),
+                   'negative_weights': get_weights(False, npage)}
+        return self._render(context)
+
     def _get_list_query(self, params, fields, **kwargs):
-        results = super(WeightsResource, self)._get_list_query(params, fields, **kwargs)
+        results = super(WeightsResource, self)._get_list_query(params, fields,
+                                                               **kwargs)
         if self.is_fulltext_search:
             # sort
             cmp_func = lambda a: abs(a['value'])
@@ -238,25 +251,34 @@ class WeightsResource(BaseResource):
             results.reverse()
         return results
 
-api.add_resource(WeightsResource,
-                 '/cloudml/weights/<regex("[\w\.]*"):model_name>')
+api.add_resource(WeightsResource, '/cloudml/weights/<regex("[\w\.]*"):model_name>\
+/<regex("[\w\.]+"):action>', '/cloudml/weights/<regex("[\w\.]*"):model_name>')
 
 
-class WeightsCategoriesResource(BaseResource):
+class WeightsTreeResource(BaseResource):
     """
-    Model Parameters weights categories API methods
+    Model Parameters weights categories/weights API methods
+
+    NOTE: it used for constructing tree of model parameters.
     """
-    OBJECT_NAME = 'category_weight'
     methods = ('GET', )
 
     FILTER_PARAMS = (('parent', str), )
 
-    @property
-    def Model(self):
-        return app.db.WeightsCategory
+    def _list(self, **kwargs):
+        """
+        """
+        params = self._parse_parameters(self.FILTER_PARAMS)
+        kwargs.update(params)
+        categories = app.db.WeightsCategory.find(kwargs,
+                                                 ('short_name', 'name'))
+        weights = app.db.Weight.find(kwargs, ('name', 'value',
+                                              'css_class', 'short_name'))
+        context = {'categories': categories, 'weights': weights}
+        return self._render(context)
 
-api.add_resource(WeightsCategoriesResource,
-                 '/cloudml/weights/categories/<regex("[\w\.]*"):model_name>')
+api.add_resource(WeightsTreeResource,
+                 '/cloudml/weights_tree/<regex("[\w\.]*"):model_name>')
 
 
 class ImportHandlerResource(BaseResource):
@@ -432,15 +454,14 @@ class TestExamplesResource(BaseResource):
             logging.error('Can not group')
             return odesk_error_response(400, ERR_INVALID_DATA,
                                         'Can not group')
-        if not groups[0]['list'][0].has_key('prob'):
+        if not 'prob' in groups[0]['list'][0]:
             logging.error('Examples do not contain probabilities')
-            return odesk_error_response(400, ERR_INVALID_DATA,
-                                        'Examples do not contain probabilities')
-        print type(groups[0]['list'][0]['prob'])
+            return odesk_error_response(400, ERR_INVALID_DATA, 'Examples do \
+not contain probabilities')
         if not isinstance(groups[0]['list'][0]['prob'], list):
             logging.error('Examples do not contain probabilities')
-            return odesk_error_response(400, ERR_INVALID_DATA,
-                                        'Examples do not contain probabilities')
+            return odesk_error_response(400, ERR_INVALID_DATA, 'Examples do \
+not contain probabilities')
 
         if groups[0]['list'][0]['label'] in ("True", "False"):
             transform = lambda x: int(bool(x))

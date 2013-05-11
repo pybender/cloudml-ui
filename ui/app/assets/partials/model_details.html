@@ -90,7 +90,9 @@
       <ng-include src="'/partials/test_list.html'"></ng-include>
     </div>  
   </div>
-  <div  ng-show="action[0] == 'weights'" id="weights">
+  <div ng-show="action[0] == 'weights'" id="weights">
+    <alert-message class="alert-info" msg='NEW: To view detalized parameters weights navigate to <a href="#/models/{{ model.name }}/weights">list view</a> or <a href="#/models/{{ model.name }}/weights/tree">tree view</a>' unsafe>
+    </alert-message>
     <div class="row">
         <div class="span12">
               <div class="row">

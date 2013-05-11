@@ -152,8 +152,10 @@ angular.module('app.models.controllers', ['app.config', ])
   'settings'
   'Model'
   'TestResult'
+  'Weight'
 
-($scope, $http, $location, $routeParams, $dialog, settings, Model, Test) ->
+($scope, $http, $location, $routeParams, $dialog, settings,
+  Model, Test, Weight) ->
   DEFAULT_ACTION = 'model:details'
   $scope.ppage = 1
   $scope.npage = 1
@@ -197,17 +199,16 @@ angular.module('app.models.controllers', ['app.config', ])
       )
 
   $scope.goWeights = (morePositive, moreNegative) ->
-    $scope.model.$loadWeights(
-      show: 'status,name'
+    Weight.$loadBriefList(
+      $scope.model.name,
+      show: 'name,value,css_class'
       ppage: $scope.ppage
       npage: $scope.npage
-      ).then ((resp) ->
+      ).then ((opts) ->
         if morePositive
-          $scope.positive.push.apply($scope.positive,
-          $scope.model.positive_weights)
+          $scope.positive.push.apply($scope.positive, opts.positive)
         if moreNegative
-          $scope.negative.push.apply($scope.negative,
-          $scope.model.negative_weights)
+          $scope.negative.push.apply($scope.negative, opts.negative)
       ), (->
         $scope.err = data
       )

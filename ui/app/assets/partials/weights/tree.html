@@ -1,3 +1,9 @@
-http://127.0.0.1:3333/#/models/tr3/weights/tree
-
+<h2>
+  {{ model_name|capfirst }} Parameters Weights Tree View
+   <div class="actions">
+    <a href="#/models/{{ model_name }}/weights" class="btn btn-info">
+      <i title="Model parameters weights tree view" class="icon-list"></i> List View
+    </a>
+  </div>
+</h2>
 <tree tree="tree_dict" custom-click="load"></tree>

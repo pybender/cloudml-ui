@@ -1,9 +1,17 @@
+<h2>
+  {{ model_name|capfirst }} Parameters Weights
+   <div class="actions">
+    <a href="#/models/{{ model_name }}/weights/tree" class="btn btn-info">
+      <i title="Model parameters weights tree view" class="icon-leaf"></i> Tree View
+    </a>
+  </div>
+</h2>
 <form class="form-search well">
-  <input type="text" ng-model="q" class="input-medium search-query" title="Search by complete stemmed word">
+  <input type="text" placeholder="complete word" ng-model="q" class="input-medium search-query" title="Search by complete stemmed word">
   <select ng-model="is_positive">
+    <option value="0">both</option>
     <option value="1">only positive</option>
     <option value="-1">only negative</option>
-    <option value="0">both</option>
   </select>
   <button class="btn" ng-click="search()">Search</button>
 </form>
