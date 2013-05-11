@@ -325,12 +325,18 @@ class TestExamplesResource(BaseResource):
                                    'test_name': test_name},
                                   {'list': []}, REDUCE_FUNC)
         import sklearn.metrics as sk_metrics
-        from scipy.sparse import hstack
         import numpy
+        if groups[0]['list'][0]['label'] in ("True", "False"):
+            transform = lambda x: int(bool(x))
+        elif groups[0]['list'][0]['label'] in ("0", "1"):
+            transform = lambda x: int(x)
+        else:
+            return odesk_error_response(400, ERR_INVALID_DATA,
+                                        'Type of labels do not support')
         for group in groups:
             group_list = group['list']
-            labels = [int(item['label']) for item in group_list]
-            pred_labels = [int(item['pred']) for item in group_list]
+            labels = [transform(item['label']) for item in group_list]
+            pred_labels = [transform(item['pred']) for item in group_list]
             probs = [item['prob'][1] for item in group_list]
             if len(labels) > 1:
                 labels = numpy.array(labels)
