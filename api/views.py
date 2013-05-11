@@ -281,6 +281,7 @@ class TestExamplesResource(BaseResource):
         from ml_metrics import apk
         import numpy as np
         from operator import itemgetter
+        logging.info('Start request for calculating MAP')
 
         # getting from request parameters fieldname to group.
         parser = reqparse.RequestParser()
@@ -294,6 +295,9 @@ class TestExamplesResource(BaseResource):
                                         'field parameter is required')
         model_name = kwargs.get('model_name')
         test_name = kwargs.get('test_name')
+        logging.info('For model: %s test: %s' % (model_name, test_name))
+        logging.info('Gettings examples')
+
         collection = app.db.TestExample.collection
 
         res = []
@@ -326,13 +330,20 @@ class TestExamplesResource(BaseResource):
                                   {'list': []}, REDUCE_FUNC)
         import sklearn.metrics as sk_metrics
         import numpy
+        if not groups[0]['list'][0].has_key('prob'):
+            logging.error('Examples do not contain probabilities')
+            return odesk_error_response(400, ERR_INVALID_DATA,
+                                        'Examples do not contain probabilities')
+
         if groups[0]['list'][0]['label'] in ("True", "False"):
             transform = lambda x: int(bool(x))
         elif groups[0]['list'][0]['label'] in ("0", "1"):
             transform = lambda x: int(x)
         else:
+            logging.error('Type of labels do not support')
             return odesk_error_response(400, ERR_INVALID_DATA,
                                         'Type of labels do not support')
+        logging.info('Calculating avps for groups')
         for group in groups:
             group_list = group['list']
             labels = [transform(item['label']) for item in group_list]
@@ -355,11 +366,13 @@ class TestExamplesResource(BaseResource):
                         'avp': avp})
 
         res = sorted(res, key=itemgetter("count"), reverse=True)[:100]
+        logging.info('Calculating map')
         mavp = np.mean(avps)
 
         context = {self.list_key: {'items': res},
                    'field_name': group_by_field,
                    'mavp': mavp}
+        logging.info('End request for calculating MAP')
         return self._render(context)
 
     def _get_csv_action(self, **kwargs):

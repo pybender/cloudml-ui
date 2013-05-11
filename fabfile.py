@@ -112,9 +112,9 @@ def deploy():
     release.activate.run()
 
     supervisor.update.run()
+    supervisor.restart_program.run(program='gunicorn')
     supervisor.restart_program.run(program='celeryd')
     supervisor.restart_program.run(program='celerycam')
-    supervisor.restart_program.run(program='gunicorn')
 
 
 class PushAnjularConfig(Task):
