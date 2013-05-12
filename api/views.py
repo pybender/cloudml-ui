@@ -89,29 +89,6 @@ class Models(BaseResource):
             pdict['comparable'] = bool(pdict['comparable'])
         return pdict
 
-    # def _get_weights_action(self, per_page=50, **kwargs):
-    #     """
-    #     Gets list with Model's weighted parameters with pagination.
-    #     """
-    #     paging_params = (('ppage', int), ('npage', int),)
-    #     params = self._parse_parameters(self.GET_PARAMS + paging_params)
-
-    #     # Paginate weights
-    #     ppage = params.get('ppage') or 1
-    #     npage = params.get('npage') or 1
-    #     fields = self._get_fields_to_show(params)
-    #     fields_dict = {'positive_weights': {'$slice': [(ppage - 1) * per_page,
-    #                                                    per_page]},
-    #                    'negative_weights': {'$slice': [(npage - 1) * per_page,
-    #                                                    per_page]}}
-    #     for field in fields:
-    #         fields_dict[field] = ""
-
-    #     model = self._get_details_query(params, fields_dict, **kwargs)
-    #     if model is None:
-    #         raise NotFound(self.MESSAGE404 % kwargs)
-    #     return self._render({self.OBJECT_NAME: model})
-
     # POST specific methods
 
     def _validate_parameters(self, params):

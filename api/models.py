@@ -1,4 +1,3 @@
-import logging
 import json
 from datetime import datetime
 import cPickle as pickle
@@ -11,6 +10,11 @@ from api import connection, app
 
 @connection.register
 class WeightsCategory(Document):
+    """
+    Represents Model Parameter Weights Category.
+
+    NOTE: used for constructing trees of weights.
+    """
     __collection__ = 'weights_categories'
     structure = {
         'name': basestring,
@@ -24,6 +28,9 @@ class WeightsCategory(Document):
 
 @connection.register
 class Weight(Document):
+    """
+    Represents Model Parameter Weight
+    """
     __collection__ = 'weights'
     structure = {
         'name': basestring,
@@ -67,34 +74,17 @@ class Model(Document):
         'error': basestring,
 
         'features': dict,
-        # {
-        #     "schema-name": unicode,
-        #     "classifier": dict,
-        #     "feature-types": list,
-        #     "features": list
-        # },
         'target_variable': unicode,
 
         # Import data to train and test options
         'import_params': list,
         'importhandler': dict,
-        # {
-        #     "target-schema": unicode,
-        #     "datasource": list,
-        #     "queries": list
-        # },
         'train_importhandler': dict,
-        #  {
-        #     "target-schema": unicode,
-        #     "datasource": list,
-        #     "queries": list
-        # },
 
         'trainer': None,
         'comparable': bool,
 
         'labels': list,
-        #'tests': list,
     }
     gridfs = {'files': ['trainer']}
     required_fields = ['name', 'created_on', ]
@@ -121,14 +111,14 @@ class Model(Document):
         test_handler = self.get_import_handler(parameters, is_test=True)
         metrics = trainer.test(test_handler, callback=callback)
         raw_data = trainer._raw_data
-        # TODO:
         trainer.clear_temp_data()
         return metrics, raw_data
 
     def set_trainer(self, trainer):
         self.fs.trainer = Binary(pickle.dumps(trainer))
         self.target_variable = trainer._feature_model.target_variable
-        #feature_type = trainer._feature_model.features[self.target_variable]['type']
+        #feature_type = trainer._feature_model.
+        #features[self.target_variable]['type']
         if self.status == self.STATUS_TRAINED:
             self.labels = map(str, trainer._classifier.classes_.tolist())
 
