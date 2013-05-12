@@ -125,8 +125,9 @@ trained model is required')
             obj.status = obj.STATUS_TRAINED
             obj.save()
             obj.set_trainer(trainer)
-            obj.set_weights(**trainer.get_weights())
-
+            from api.tasks import fill_model_parameter_weights
+            fill_model_parameter_weights.delay(obj.name,
+                                               **trainer.get_weights())
         try:
             obj.train_importhandler = obj.importhandler = \
                 json.loads(params['importhandler'])

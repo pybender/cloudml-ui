@@ -83,6 +83,7 @@ class Model(Document):
 
         'trainer': None,
         'comparable': bool,
+        'weights_synchronized': bool,
 
         'labels': list,
     }
@@ -91,7 +92,8 @@ class Model(Document):
     default_values = {'created_on': datetime.utcnow,
                       'updated_on': datetime.utcnow,
                       'status': STATUS_NEW,
-                      'comparable': False, }
+                      'comparable': False,
+                      'weights_synchronized': False}
     use_dot_notation = True
 
     def get_import_handler(self, parameters=None, is_test=False):
@@ -121,41 +123,6 @@ class Model(Document):
         #features[self.target_variable]['type']
         if self.status == self.STATUS_TRAINED:
             self.labels = map(str, trainer._classifier.classes_.tolist())
-
-    def set_weights(self, positive, negative):
-        from helpers.weights import calc_weights_css
-        positive_weights = calc_weights_css(positive, 'green')
-        negative_weights = calc_weights_css(negative, 'red')
-        weight_list = positive_weights + negative_weights
-        weight_list.sort(key=lambda a: abs(a['weight']))
-        weight_list.reverse()
-
-        # Adding weights and weights categories to db
-        category_names = []
-        for weight in weight_list:
-            name = weight['name']
-            splitted_name = name.split('->')
-            long_name = ''
-            count = len(splitted_name)
-            for i, sname in enumerate(splitted_name):
-                parent = long_name
-                long_name = '%s.%s' % (long_name, sname) \
-                            if long_name else sname
-                params = {'model_name': self.name,
-                          'parent': parent,
-                          'short_name': sname}
-                if i == (count - 1):
-                    params.update({'name': weight['name'],
-                                   'value': weight['weight'],
-                                   'is_positive': bool(weight['weight'] > 0),
-                                   'css_class': weight['css_class']})
-                    app.db.Weight.collection.insert(params)
-                else:
-                    if sname not in category_names:
-                        # Adding a category, if it has not already added
-                        category_names.append(sname)
-                        params.update({'name': long_name})
-                        app.db.WeightsCategory.collection.insert(params)
 
     def delete(self):
         params = {'model_name': self.name}

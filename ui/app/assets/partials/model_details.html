@@ -95,6 +95,10 @@
       <a ng-class="{active: action[1] == 'list'}" ng-click="action = ['weights', 'list']">List</a> |
       <a ng-class="{active: action[1] == 'tree'}" ng-click="action = ['weights', 'tree']">Tree</a>
     </p>
+    <alert-message ng-show="model.status == 'Trained' && !model.weights_synchronized" class="alert-warning" msg="Please wait! Model parameters weights aren't filled.">
+    </alert-message>
+    <alert-message ng-show="model.status != 'Trained'" class="alert-warning" msg="Please train model to get parameters weights.">
+    </alert-message>
     <div ng-show="action[1] == 'columns'" class="columns">
         <div class="row">
           <div class="span5">

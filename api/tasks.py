@@ -36,7 +36,7 @@ def train_model(model_name, parameters):
         trainer.clear_temp_data()
         model.status = model.STATUS_TRAINED
         model.set_trainer(trainer)
-        model.set_weights(**trainer.get_weights())
+        fill_model_parameter_weights.delay(model.name, **trainer.get_weights())
         model.save()
     except Exception, exc:
         logging.error(exc)
@@ -64,6 +64,52 @@ class MongoHandler(logging.Handler):
             chan.pub('test_log', {'test': self.test_id, 'msg': msg})
         except:
             self.handleError(record)
+
+
+@celery.task
+def fill_model_parameter_weights(model_name, positive, negative):
+    """
+    Adds model parameters weights to db.
+    """
+    model = app.db.Model.find_one({'name': model_name})
+    from helpers.weights import calc_weights_css
+    positive_weights = calc_weights_css(positive, 'green')
+    negative_weights = calc_weights_css(negative, 'red')
+    weight_list = positive_weights + negative_weights
+    weight_list.sort(key=lambda a: abs(a['weight']))
+    weight_list.reverse()
+
+    # Adding weights and weights categories to db
+    category_names = []
+    for weight in weight_list:
+        name = weight['name']
+        splitted_name = name.split('->')
+        long_name = ''
+        count = len(splitted_name)
+        for i, sname in enumerate(splitted_name):
+            parent = long_name
+            long_name = '%s.%s' % (long_name, sname) \
+                        if long_name else sname
+            params = {'model_name': model.name,
+                      'parent': parent,
+                      'short_name': sname}
+            if i == (count - 1):
+                params.update({'name': weight['name'],
+                               'value': weight['weight'],
+                               'is_positive': bool(weight['weight'] > 0),
+                               'css_class': weight['css_class']})
+                app.db.Weight.collection.insert(params)
+            else:
+                if sname not in category_names:
+                    # Adding a category, if it has not already added
+                    category_names.append(sname)
+                    params.update({'name': long_name})
+                    app.db.WeightsCategory.collection.insert(params)
+    model.weights_synchronized = True
+    model.save()
+    return 'Model %s parameters weights was added to db: %s' % \
+        (model.name, len(weight_list))
+
 
 @celery.task
 def run_test(test_id):
