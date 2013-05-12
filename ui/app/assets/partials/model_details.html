@@ -3,9 +3,6 @@
   {{ model.name|capfirst }} Details
   <div class="actions" ng-controller="ModelActionsCtrl">
     <div ng-init="init({model: model})">
-      <a ng-show="model.status == 'Trained'" href="#/models/{{ model.name }}/weights" class="btn btn-info">
-        <i title="Navigates to parameters weights page with search" class="icon-th-large"></i> Search Weights
-      </a>
       <button ng-show="model.status == 'Trained'" ng-click="test_model(model)" class="btn btn-success">
         <i title="Apply the classifier to the input provided by the data import handler" class="status-icon icon-play"></i>
         Run test
@@ -46,7 +43,7 @@
 
 <ul class="nav nav-tabs" id="tabs">
   <li  ng-class="{active: action[0] == 'model'}"><a ng-click="action = ['model', 'details']">Details</a></li>
-  <li ng-class="{active: action[0] == 'weights'}"><a  ng-click="action = ['weights', 'file']">Parameters Weights</a></li>
+  <li ng-class="{active: action[0] == 'weights'}"><a  ng-click="action = ['weights', 'columns']">Parameters Weights</a></li>
   <li ng-class="{active: action[0] == 'test'}"><a  ng-click="action = ['test', 'list']">Tests</a></li>
   <li ng-class="{active: action[0] == 'features'}"><a ng-click="action = ['features', 'file']">Features</a></li>
   <li ng-class="{active: action[0] == 'import_handlers'}"><a ng-click="action = ['import_handlers', 'train']">Import Handlers</a></li>
@@ -90,26 +87,35 @@
       <ng-include src="'/partials/test_list.html'"></ng-include>
     </div>  
   </div>
-  <div ng-show="action[0] == 'weights'" id="weights">
-    <alert-message class="alert-info" msg='NEW: To view detalized parameters weights navigate to <a href="#/models/{{ model.name }}/weights">list view</a> or <a href="#/models/{{ model.name }}/weights/tree">tree view</a>' unsafe>
-    </alert-message>
-    <div class="row">
-        <div class="span12">
-              <div class="row">
-              <div class="span5">
-                <h4>Positive Weights</h4>
-                <weights-table weights="positive">
-                </weights-table>
-                <a class="btn" ng-click="morePositiveWeights()">Load More...</a>
-              </div>
-              <div class="offset1 span5">
-                <h4>Negative Weights</h4>
-                <weights-table weights="negative">
-                </weights-table>
-                <a class="btn" ng-click="moreNegativeWeights()">Load More...</a>
-              </div>
-            </div>
+
+  <div ng-show="action[0] == 'weights'" id="weights" ng-controller="WeightsCtrl">
+    <p class="switcher">
+      <b>Switch View: </b>
+      <a ng-class="{active: action[1] == 'columns'}" ng-click="action = ['weights', 'columns']">Columns</a> | 
+      <a ng-class="{active: action[1] == 'list'}" ng-click="action = ['weights', 'list']">List</a> |
+      <a ng-class="{active: action[1] == 'tree'}" ng-click="action = ['weights', 'tree']">Tree</a>
+    </p>
+    <div ng-show="action[1] == 'columns'" class="columns">
+        <div class="row">
+          <div class="span5">
+            <h4>Positive Weights</h4>
+            <weights-table weights="positive">
+            </weights-table>
+            <a class="btn" ng-click="morePositiveWeights()">Load More...</a>
+          </div>
+          <div class="offset1 span5">
+            <h4>Negative Weights</h4>
+            <weights-table weights="negative">
+            </weights-table>
+            <a class="btn" ng-click="moreNegativeWeights()">Load More...</a>
+          </div>
         </div>
+    </div>
+    <div ng-show="action[1] == 'tree'" class="tree">
+        <ng-include src="'/partials/weights/tree.html'"></ng-include>
+    </div>
+    <div ng-show="action[1] == 'list'" class="list">
+        <ng-include src="'/partials/weights/list.html'"></ng-include>
     </div>
   </div>
   <div ng-show="action[0] == 'import_handlers'">

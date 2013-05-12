@@ -157,10 +157,6 @@ angular.module('app.models.controllers', ['app.config', ])
 ($scope, $http, $location, $routeParams, $dialog, settings,
   Model, Test, Weight) ->
   DEFAULT_ACTION = 'model:details'
-  $scope.ppage = 1
-  $scope.npage = 1
-  $scope.positive = []
-  $scope.negative = []
   $scope.action = ($routeParams.action or DEFAULT_ACTION).split ':'
   $scope.$watch 'action', (action) ->
     actionString = action.join(':')
@@ -170,7 +166,6 @@ angular.module('app.models.controllers', ['app.config', ])
 
     switch action[0]
       when "features" then $scope.go 'features,status'
-      when "weights" then  $scope.goWeights(true, true)
       when "test" then $scope.goTests()
       when "import_handlers"
         if action[1] == 'train'
@@ -198,30 +193,8 @@ angular.module('app.models.controllers', ['app.config', ])
         $scope.err = data
       )
 
-  $scope.goWeights = (morePositive, moreNegative) ->
-    Weight.$loadBriefList(
-      $scope.model.name,
-      show: 'name,value,css_class'
-      ppage: $scope.ppage
-      npage: $scope.npage
-      ).then ((opts) ->
-        if morePositive
-          $scope.positive.push.apply($scope.positive, opts.positive)
-        if moreNegative
-          $scope.negative.push.apply($scope.negative, opts.negative)
-      ), (->
-        $scope.err = data
-      )
-
-  $scope.morePositiveWeights  = =>
-    $scope.ppage += 1
-    $scope.goWeights(true, false)
-
-  $scope.moreNegativeWeights  = =>
-    $scope.npage += 1
-    $scope.goWeights(false, true)
-
   $scope.goTests = () ->
+    $scope.go 'status,created_on,target_variable,error,labels'
     Test.$loadTests(
       $scope.model.name,
       show: 'name,created_on,status,parameters,accuracy,examples_count'

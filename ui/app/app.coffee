@@ -41,14 +41,6 @@ App.config([
       controller: 'ModelDetailsCtrl'
       templateUrl: '/partials/model_details.html'
     })
-    .when('/models/:name/weights', {
-      controller: 'WeightsListCtrl'
-      templateUrl: '/partials/weights/list.html'
-    })
-    .when('/models/:name/weights/tree', {
-      controller: 'WeightsTreeCtrl'
-      templateUrl: '/partials/weights/tree.html'
-    })
     .when('/models/:name/tests/:test_name', {
       controller: 'TestDetailsCtrl'
       templateUrl: '/partials/test_details.html'

@@ -4,33 +4,34 @@
 
 angular.module('app.weights.controllers', ['app.config', ])
 
-.controller('WeightsListCtrl', [
+.controller('WeightsCtrl', [
   '$scope'
   '$http'
   '$routeParams'
-  'settings'
-  'Weight'
   '$location'
+  'Weight'
+  'WeightsTree'
 
-($scope, $http, $routeParams, settings, Weight, $location) ->
+($scope, $http, $routeParams, $location, Weight, WeightsTree) ->
   if not $routeParams.name
     throw new Error "Can't initialize without model name"
 
-  $scope.q = ''
-  $scope.is_positive = 0
   $scope.model_name = $routeParams.name
 
-  $scope.loadWeights = (search='', page=1) ->
+  # List search parameters and methods
+  $scope.search_form = {'q': '', 'is_positive': 0}
+
+  $scope.loadList = () ->
     Weight.$loadAll(
       $scope.model_name,
       show: 'name,value,css_class',
-      q: search,
-      page: page,
-      is_positive: $scope.is_positive
+      q: $scope.search_form.q,
+      is_positive: $scope.search_form.is_positive,
+      page: $scope.search_form.page || 1
     ).then ((opts) ->
       $scope.weights = opts.objects
       $scope.total = opts.total
-      $scope.page = opts.page || 1
+      $scope.search_form.page = opts.page || 1
       $scope.pages = opts.pages
       $scope.per_page = opts.per_page
     ), ((opts) ->
@@ -39,32 +40,20 @@ angular.module('app.weights.controllers', ['app.config', ])
         "(#{opts.data.response.error.message or "no message"}). "
     )
 
-  $scope.loadWeights()
-
-  $scope.$watch('page', (page, oldVal, scope) ->
-        $scope.loadWeights($scope.q, page)
+  $scope.$watch('search_form.page', (page, oldVal, scope) ->
+        console.log scope.action
+        if (scope.action[0] == 'weights') and
+            (scope.action[0] == 'list') and page
+          $scope.loadList()
       , true)
 
-  $scope.search = () ->
-    $scope.loadWeights($scope.q)
-])
-
-.controller('WeightsTreeCtrl', [
-  '$scope'
-  '$http'
-  '$routeParams'
-  'settings'
-  'Weight'
-  'WeightsTree'
-
-($scope, $http, $routeParams, settings, Weight, WeightsTree) ->
-  if not $routeParams.name
-    throw new Error "Can't initialize without model name"
-
+  # Tree params & methods
   $scope.tree_dict = {'weights': {}, 'categories': {}}
-  $scope.model_name = $routeParams.name
 
-  $scope.loadNode = (parent='') ->
+  $scope.loadTreeNode = (parent, show) ->
+    if not show
+      return
+
     if parent
         parent_list = parent.split('.')
         name = parent_list.shift()
@@ -96,9 +85,43 @@ angular.module('app.weights.controllers', ['app.config', ])
         "(#{opts.data.response.error.message or "no message"}). "
     )
 
-  $scope.load = (parentCategory, show) ->
-    if show
-      $scope.loadNode(parentCategory.name)
+  # Columns view parameters and methods
+  $scope.ppage = 1
+  $scope.npage = 1
+  $scope.positive = []
+  $scope.negative = []
 
-  $scope.loadNode()
+  $scope.loadColumns = (morePositive, moreNegative) ->
+    Weight.$loadBriefList(
+      $scope.model.name,
+      show: 'name,value,css_class'
+      ppage: $scope.ppage
+      npage: $scope.npage
+      ).then ((opts) ->
+        if morePositive
+          $scope.positive.push.apply($scope.positive, opts.positive)
+        if moreNegative
+          $scope.negative.push.apply($scope.negative, opts.negative)
+      ), (->
+        $scope.err = data
+      )
+
+  $scope.morePositiveWeights  = =>
+    $scope.ppage += 1
+    $scope.loadColumns(true, false)
+
+  $scope.moreNegativeWeights  = =>
+    $scope.npage += 1
+    $scope.loadColumns(false, true)
+
+  # Switching modes methods
+  $scope.$watch 'action', (action) ->
+    if action[0] == 'weights'
+      actionString = action.join(':')
+      $location.search("action=#{actionString}")
+      view = action[1]
+      switch view
+        when "columns" then $scope.loadColumns(true, true)
+        when "list" then  $scope.loadList('', 1)
+        when "tree" then $scope.loadTreeNode('', true)
 ])

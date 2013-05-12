@@ -1,9 +1,2 @@
-<h2>
-  {{ model_name|capfirst }} Parameters Weights Tree View
-   <div class="actions">
-    <a href="#/models/{{ model_name }}/weights" class="btn btn-info">
-      <i title="Model parameters weights tree view" class="icon-list"></i> List View
-    </a>
-  </div>
-</h2>
-<tree tree="tree_dict" custom-click="load"></tree>
+<h4>Parameters Weights Tree</h4>
+<tree tree="tree_dict" custom-click="loadTreeNode"></tree>
