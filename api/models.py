@@ -68,6 +68,12 @@ class Model(Document):
                       'comparable': False, }
     use_dot_notation = True
 
+    def get_trainer(self, loaded=True):
+        trainer = self.trainer or self.fs.trainer
+        if loaded:
+            return pickle.loads(trainer)
+        return trainer
+
     def get_import_handler(self, parameters=None, is_test=False):
         from core.importhandler.importhandler import ExtractionPlan, \
             ImportHandler

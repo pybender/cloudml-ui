@@ -38,6 +38,9 @@ angular.module('app.models.model', ['app.config'])
       objectUrl: =>
         return '/models/' + @name
 
+      downloadUrl: =>
+        return "#{settings.apiUrl}model/#{@name}/download"
+
       isNew: -> if @_id == null then true else false
 
       # Returns an object of job properties, for use in e.g. API requests

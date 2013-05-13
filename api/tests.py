@@ -192,6 +192,10 @@ not unpickle trainer - 'module' object has no attribute 'apply_mappings'")
         new_count = app.db.Model.find().count()
         self.assertEquals(count + 1, new_count)
 
+        model = app.db.Model.find_one({'name': name})
+        self.assertEquals(model.name, name)
+        self.assertTrue(model.fs.trainer)
+
     def test_delete(self):
         url = '/cloudml/model/' + self.MODEL_NAME
         resp = self.app.get(url)

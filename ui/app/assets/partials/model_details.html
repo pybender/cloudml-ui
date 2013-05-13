@@ -11,6 +11,9 @@
         <i title="Train your model" class="icon-tasks"></i>
         Start training
       </button>
+      <a ng-show="model.status == 'Trained'" href="{{ model.downloadUrl() }}?field=trainer" class="btn btn-info">
+          <i title="Download model trainer." class="icon-download-alt"></i> Download Trainer
+        </a>
       <button ng-click="delete_model(model)" class="btn btn-danger">
         <i title="Delete your model. Be careful - you could not recover it!" class="icon-remove"></i> Delete model
       </button>
@@ -115,17 +118,23 @@
       <a ng-click="action = ['import_handlers', 'test']" ng-class="{active: action[1] == 'test'}">for testing</a>
     </div>
     <div ng-show="action[1] == 'train'">
-      <h5>Here is import handler file for running tests:</h5>
+      <h5>Here is import handler file for training model:</h5>
+      <a href="{{ model.downloadUrl() }}?field=importhandler"><i title="Download import handler file." class="icon-download-alt"></i> Download
+      </a>
       <span ng-click="saveTrainHandler()" class="btn btn-primary">Save</span>
       <textarea name="train_import_handler" ui-codemirror="{ mode: {name: 'javascript', json: true} }" ng-model="model.train_importhandler"> </textarea>
     </div>
     <div ng-show="action[1] == 'test'">
       <h5>Here is import handler file for running tests:</h5>
+      <a href="{{ model.downloadUrl() }}?field=train_importhandler"><i title="Download import handler for tests" class="icon-download-alt"></i> Download
+      </a>
       <span ng-click="saveTestHandler()" class="btn btn-primary">Save</span>
       <textarea name="test_import_handler" ui-codemirror="{ mode: {name: 'javascript', json: true} }" ng-model="model.importhandler"> </textarea>
     </div>
   </div>
   <div ng-show="action[0] == 'features'"  id="features">
+    <a href="{{ model.downloadUrl() }}?field=features"><i title="Download features file" class="icon-download-alt"></i> Download
+      </a>
     <textarea ui-codemirror="{ mode: {name: 'javascript', json: true} }" ng-model="model.features"> </textarea>
   </div>
 </div>
