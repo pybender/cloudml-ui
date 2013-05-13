@@ -180,6 +180,19 @@ labels,weights_synchronized'
       err = "Can't initialize without model name"
     $scope.model = new Model({name: $routeParams.name})
 
+  $scope.log_messages = []
+  log_sse = new EventSource("http://127.0.0.1:5000/cloudml/log/")
+  handleCallback = (msg) ->
+    $scope.$apply(() ->
+      if msg?
+        data = JSON.parse(msg.data)
+        action = data['k']
+        name = data['data']['model']
+        if action == 'trainmodel_log' and name == $scope.model.name
+          $scope.log_messages.push(data['data']['msg']))
+
+  log_sse.addEventListener('message', handleCallback)
+
   $scope.toggleAction = (action) =>
     $scope.action = action
 

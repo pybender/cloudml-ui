@@ -41,6 +41,13 @@
 <alert-message ng-show="err" class="alert-error" msg='{{ err }}' unsafe>
 </alert-message>
 
+<div ng-hide="model.status == 'Trained'">
+    <h4>Log Messages:</h4>
+    <div class="logging">
+      <div ng-repeat="msg in log_messages">{{ msg }}</div>
+    </div>
+</div>
+
 <ul class="nav nav-tabs" id="tabs">
   <li  ng-class="{active: action[0] == 'model'}"><a ng-click="action = ['model', 'details']">Details</a></li>
   <li ng-class="{active: action[0] == 'weights'}"><a  ng-click="action = ['weights', 'columns']">Parameters Weights</a></li>
