@@ -31,12 +31,6 @@ model_parser.add_argument('trainer', type=FileStorage, location='files')
 import gevent
 from flask import Response
 
-#, printer)
-# chan.sub('bar', printer)
-
-# while True:
-#     chan.handle_ready(await=True)
-#     time.sleep(0.1)
 from pymongo.errors import OperationFailure
 
 
@@ -47,7 +41,7 @@ def event_stream():
         try:
             msg = curs.next()
             if msg:
-                yield 'data: %s\n\n' % msg
+                yield 'data: %s\n\n' % json.dumps(msg)
         except StopIteration:
             continue
         except OperationFailure, err:
@@ -57,8 +51,11 @@ def event_stream():
 
 @app.route('/log/')
 def sse_request():
-    return Response(event_stream(),
+    resp = Response(event_stream(),
                     mimetype='text/event-stream')
+    resp.headers["Access-Control-Allow-Origin"] = "*"
+    resp.headers["Cache-Control"] = "no-cache"
+    return resp
 
 
 class Models(BaseResource):

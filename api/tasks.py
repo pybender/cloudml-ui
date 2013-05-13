@@ -49,6 +49,7 @@ def train_model(model_name, parameters):
 
 from mongotools.pubsub import Channel
 
+
 class MongoHandler(logging.Handler):
     """
     """

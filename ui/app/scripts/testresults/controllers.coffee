@@ -42,8 +42,8 @@ angular.module('app.testresults.controllers', ['app.config', ])
     ).success((data, status, headers, config) ->
       $scope.success = true
       data['test']['model_name'] = model.name
-      # test = new Test(data['test'])
-      # $location.path test.objectUrl()
+      # test = data['test']['name']
+      # $location.path "/models/#{model.name}/tests/#{test}"
       dialog.close(result)
     ).error((data, status, headers, config) ->
       $scope.httpError = true
@@ -95,6 +95,19 @@ angular.module('app.testresults.controllers', ['app.config', ])
     $scope.test = new Test({model_name: $routeParams.name,
     name: $routeParams.test_name})
     $scope.test_num = $routeParams.test_name
+
+  $scope.log_messages = []
+  log_sse = new EventSource("http://127.0.0.1:5000/log/")
+  handleCallback = (msg) ->
+    $scope.$apply(() ->
+      if msg?
+        data = JSON.parse(msg.data)
+        action = data['k']
+        id = data['data']['test']
+        if action == 'test_log' and id == $scope.test._id
+          $scope.log_messages.push(data['data']['msg']))
+
+  log_sse.addEventListener('message', handleCallback)
 
   DEFAULT_ACTION = 'test:details'
   $scope.action = ($routeParams.action or DEFAULT_ACTION).split ':'

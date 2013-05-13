@@ -14,6 +14,13 @@
 
 <alert-message ng-show="test.status != 'Completed'" class="alert-warning" msg="Test was not calculated yet. Status: {{ test.status }}" unsafe></alert-message>
 
+<div ng-show="test.status != 'Completed'">
+    <h4>Log Messages:</h4>
+    <div class="logging">
+      <div ng-repeat="msg in log_messages">{{ msg }}</div>
+    </div>
+</div>
+
 <div ng-show="test.status == 'Completed'">
     <ul class="nav nav-tabs" id="tabs">
       <li ng-class="{active: action[0] == 'test'}"><a ng-click="action = ['test', 'details']">Details</a></li>
