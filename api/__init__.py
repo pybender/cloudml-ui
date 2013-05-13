@@ -8,9 +8,8 @@ from celery import Celery
 
 class RegExConverter(BaseConverter):
     """
-    Converter that allows routing to specific functions according to given
-    regular expression.
-
+    Converter that allows routing to specific functions according 
+    to given regular expression.
     """
     def __init__(self, url_map, *items):
         super(RegExConverter, self).__init__(url_map)
@@ -32,22 +31,17 @@ class App(Flask):
 
     def init_db(self):
         db_name = self.config['DATABASE_NAME']
-        if self.config.get('TESTING'):
-            db_name += '-test'
-
         self._db = getattr(self.conn, db_name)
+
+        from mongotools.pubsub import Channel
+        self.chan = Channel(self._db, 'log')
+        self.chan.ensure_channel()
+        self.chan.sub('runtest_log')
+        self.chan.sub('trainmodel_log')
 
 
 connection = Connection()
 app = App(connection, __name__)
-
-from mongotools.pubsub import Channel
-
-app.chan = Channel(app.db, 'log')
-app.chan.ensure_channel()
-
-app.chan.sub('runtest_log')
-app.chan.sub('trainmodel_log')
 
 celery = Celery('cloudml')
 celery.add_defaults(lambda: app.config)

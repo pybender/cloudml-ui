@@ -13,7 +13,8 @@ class BaseTestCase(unittest.TestCase):
     _LOADED_COLLECTIONS = []
 
     def setUp(self):
-        app.config['TESTING'] = True
+        app.config['DATABASE_NAME'] = 'cloudml-test'
+        app.init_db()
         self.app = app.test_client()
         self.fixtures_load()
 
