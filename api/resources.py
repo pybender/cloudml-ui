@@ -41,6 +41,7 @@ class BaseResource(restful.Resource):
     decorators = [crossdomain(origin='*',
                               headers="accept, origin, content-type")]
 
+    DEFAULT_FIELDS = None
     is_fulltext_search = False
 
     @property
@@ -105,7 +106,8 @@ class BaseResource(restful.Resource):
         self._validate_parameters(params)
         model = self._get_post_model(params, **kwargs)
         self._fill_post_data(model, params, **kwargs)
-        return self._render({self.OBJECT_NAME: model._id}, code=201)
+        return self._render(self._get_post_response_context(model),
+                            code=201)
 
     def put(self, action=None, **kwargs):
         """
@@ -187,6 +189,12 @@ class BaseResource(restful.Resource):
         if model is None:
             raise NotFound(self.MESSAGE404 % kwargs)
         return self._render({self.OBJECT_NAME: model})
+
+    def _get_post_response_context(self, model):
+        if self.DEFAULT_FIELDS:
+            model = dict([(field, getattr(model, field)) \
+                for field in self.DEFAULT_FIELDS])
+        return {self.OBJECT_NAME: model}
 
     # Specific actions for GET
 

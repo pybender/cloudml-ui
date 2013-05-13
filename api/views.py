@@ -292,6 +292,7 @@ class Tests(BaseResource):
     Tests API Resource
     """
     OBJECT_NAME = 'test'
+    DEFAULT_FIELDS = ('_id', 'name')
     FILTER_PARAMS = (('status', str), )
     methods = ('GET', 'OPTIONS', 'DELETE', 'PUT', 'POST')
 
@@ -326,7 +327,8 @@ class Tests(BaseResource):
         test.model = model
         test.save(check_keys=False)
         run_test.delay(str(test._id))
-        return self._render({self.OBJECT_NAME: test._id}, code=201)
+        return self._render(self._get_post_response_context(test),
+                            code=201)
 
 api.add_resource(Tests, '/cloudml/model/<regex("[\w\.]+"):model>/test/\
 <regex("[\w\.\-]+"):name>', '/cloudml/model/<regex("[\w\.]+"):model>/tests')

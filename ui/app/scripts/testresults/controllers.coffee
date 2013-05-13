@@ -42,8 +42,8 @@ angular.module('app.testresults.controllers', ['app.config', ])
     ).success((data, status, headers, config) ->
       $scope.success = true
       data['test']['model_name'] = model.name
-      # test = data['test']['name']
-      # $location.path "/models/#{model.name}/tests/#{test}"
+      test = new Test(data['test'])
+      $location.path test.objectUrl()
       dialog.close(result)
     ).error((data, status, headers, config) ->
       $scope.httpError = true
