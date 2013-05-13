@@ -119,6 +119,23 @@ filter - all models should be returned')
         # TODO: Add weights to fixtures and implement test
         pass
 
+    def test_download(self):
+        def check(field, is_invalid=False):
+            url = '/cloudml/model/%s/download?field=%s' % (self.MODEL_NAME, field)
+            resp = self.app.get(url)
+            if not is_invalid:
+                self.assertEquals(resp.status_code, httplib.OK)
+                self.assertEquals(resp.mimetype, 'text/plain')
+                self.assertEquals(resp.headers['Content-Disposition'],
+                                  'attachment; filename=%s-%s.json' % \
+                                    (self.MODEL_NAME, field))
+            else:
+                self.assertEquals(resp.status_code, 400)
+        check('importhandler')
+        check('features')
+        check('train_importhandler')
+        check('invalid', is_invalid=True)
+
     def test_post_with_invalid_features(self):
         uri = '/cloudml/model/new'
         post_data = {'importhandler': 'smth'}
