@@ -3,7 +3,6 @@ import os
 import json
 import httplib
 
-from api.models import Model
 from api.serialization import encode_model
 from api import app
 from api.utils import ERR_INVALID_DATA
@@ -14,6 +13,7 @@ class BaseTestCase(unittest.TestCase):
     _LOADED_COLLECTIONS = []
 
     def setUp(self):
+        app.config['TESTING'] = True
         self.app = app.test_client()
         self.fixtures_load()
 

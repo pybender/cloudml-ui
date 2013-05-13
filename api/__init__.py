@@ -5,23 +5,6 @@ from mongokit import Connection
 from flask.ext import restful
 from celery import Celery
 
-app = Flask(__name__)
-app.config.from_object('api.config')
-
-connection = Connection()
-db_name = app.config['DATABASE_NAME']
-if app.config.get('TESTING'):
-    db_name += '-test'
-
-app.db = getattr(connection, db_name)
-
-celery = Celery('cloudml')
-celery.add_defaults(lambda: app.config)
-api = restful.Api(app)
-
-logging_level = logging.INFO
-logging.basicConfig(format='[%(asctime)s] %(levelname)s - %(message)s',
-        level=logging_level)
 
 class RegExConverter(BaseConverter):
     """
@@ -33,7 +16,39 @@ class RegExConverter(BaseConverter):
         super(RegExConverter, self).__init__(url_map)
         self.regex = items[0]
 
-app.url_map.converters['regex'] = RegExConverter
+
+class App(Flask):
+    def __init__(self, connection, *args, **kwargs):
+        super(App, self).__init__(*args, **kwargs)
+        self.conn = connection
+        self.config.from_object('api.config')
+        self.url_map.converters['regex'] = RegExConverter
+
+    @property
+    def db(self):
+        if not hasattr(self, '_db'):
+            self.init_db()
+        return self._db
+
+    def init_db(self):
+        db_name = self.config['DATABASE_NAME']
+        if self.config.get('TESTING'):
+            db_name += '-test'
+
+        self._db = getattr(self.conn, db_name)
+
+
+connection = Connection()
+app = App(connection, __name__)
+
+celery = Celery('cloudml')
+celery.add_defaults(lambda: app.config)
+api = restful.Api(app)
+
+logging_level = logging.INFO
+logging.basicConfig(format='[%(asctime)s] %(levelname)s - %(message)s',
+        level=logging_level)
 
 
 import views
+import models
