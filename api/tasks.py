@@ -2,14 +2,14 @@ import json
 import logging
 from copy import copy
 from itertools import izip
+from bson.objectid import ObjectId
+from mongotools.pubsub import Channel
 
 from api import celery, app
-from bson.objectid import ObjectId
-
+from api.logger import init_logger
 from core.trainer.trainer import Trainer
 from core.trainer.config import FeatureModel
 from api.models import Test, Model
-from helpers.weights import get_weighted_data
 
 
 class InvalidOperationError(Exception):
@@ -19,12 +19,15 @@ class InvalidOperationError(Exception):
 @celery.task
 def train_model(model_name, parameters):
     """
-    Train new model
+    Train new model celery task.
     """
+    init_logger('trainmodel_log', model=model_name)
+
     try:
         model = app.db.Model.find_one({'name': model_name})
         if model.status == model.STATUS_TRAINED:
             raise InvalidOperationError("Model already trained")
+
         model.status = model.STATUS_TRAINING
         model.error = ""
         model.save()
@@ -45,26 +48,9 @@ def train_model(model_name, parameters):
         model.save()
         raise
 
-    return "Model trained at %s" % trainer.train_time
-
-from mongotools.pubsub import Channel
-
-
-class MongoHandler(logging.Handler):
-    """
-    """
-    def __init__(self, test_id):
-        super(MongoHandler, self).__init__()
-        self.test_id = test_id
-
-    def emit(self, record):
-        chan = Channel(app.db, 'log')
-        chan.ensure_channel()
-        try:
-            msg = self.format(record)
-            chan.pub('test_log', {'test': self.test_id, 'msg': msg})
-        except:
-            self.handleError(record)
+    msg = "Model trained at %s" % trainer.train_time
+    logging.info(msg)
+    return msg
 
 
 @celery.task
@@ -117,16 +103,7 @@ def run_test(test_id):
     """
     Running tests for trained model
     """
-
-    logger = logging.getLogger()
-    #handler = logging.FileHandler('test-%s.log' % test_id)
-    handler = MongoHandler(test_id=test_id)
-    formatter = logging.Formatter(logging.BASIC_FORMAT)
-    handler.setFormatter(formatter)
-    logger.handlers = []
-    logger.addHandler(handler)
-    logger.setLevel(logging.INFO)
-    logger.propagate = True
+    init_logger('runtest_log', test=test_id)
 
     test = app.db.Test.find_one({'_id': ObjectId(test_id)})
     model = test.model

@@ -22,8 +22,8 @@ from mongotools.pubsub import Channel
 app.chan = Channel(app.db, 'log')
 app.chan.ensure_channel()
 
-app.chan.sub('test_log')
-
+app.chan.sub('runtest_log')
+app.chan.sub('trainmodel_log')
 
 celery = Celery('cloudml')
 celery.add_defaults(lambda: app.config)
@@ -31,7 +31,8 @@ api = restful.Api(app)
 
 logging_level = logging.INFO
 logging.basicConfig(format='[%(asctime)s] %(levelname)s - %(message)s',
-        level=logging_level)
+                    level=logging_level)
+
 
 class RegExConverter(BaseConverter):
     """
@@ -47,3 +48,4 @@ app.url_map.converters['regex'] = RegExConverter
 
 
 import views
+import models

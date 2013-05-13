@@ -49,7 +49,7 @@ def event_stream():
             break
 
 
-@app.route('/log/')
+@app.route('/cloudml/log/')
 def sse_request():
     resp = Response(event_stream(),
                     mimetype='text/event-stream')

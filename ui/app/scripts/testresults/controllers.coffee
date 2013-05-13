@@ -97,14 +97,14 @@ angular.module('app.testresults.controllers', ['app.config', ])
     $scope.test_num = $routeParams.test_name
 
   $scope.log_messages = []
-  log_sse = new EventSource("http://127.0.0.1:5000/log/")
+  log_sse = new EventSource("http://127.0.0.1:5000/cloudml/log/")
   handleCallback = (msg) ->
     $scope.$apply(() ->
       if msg?
         data = JSON.parse(msg.data)
         action = data['k']
         id = data['data']['test']
-        if action == 'test_log' and id == $scope.test._id
+        if action == 'runtest_log' and id == $scope.test._id
           $scope.log_messages.push(data['data']['msg']))
 
   log_sse.addEventListener('message', handleCallback)
