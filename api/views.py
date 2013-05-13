@@ -5,7 +5,8 @@ import traceback
 import StringIO
 import csv
 from flask.ext.restful import reqparse
-from flask import request
+from flask import request, Response
+
 from werkzeug.datastructures import FileStorage
 from bson.objectid import ObjectId
 
@@ -62,6 +63,7 @@ class Models(BaseResource):
     """
     Models API methods
     """
+    GET_ACTIONS = ('download', )
     PUT_ACTIONS = ('train', )
     FILTER_PARAMS = (('status', str), ('comparable', int))
     methods = ('GET', 'OPTIONS', 'DELETE', 'PUT', 'POST')
@@ -85,6 +87,36 @@ class Models(BaseResource):
         if 'comparable' in pdict:
             pdict['comparable'] = bool(pdict['comparable'])
         return pdict
+
+    def _get_download_action(self, **kwargs):
+        """
+        Downloads trained model, importhandler or features
+        (specified in GET param `field`) file.
+        """
+        model = self.Model.find_one(kwargs)
+        if model is None:
+            raise NotFound(self.MESSAGE404 % kwargs)
+
+        params = self._parse_parameters((('field', str), ))
+        field = params.get('field', 'trainer')
+        field_values = ('trainer', 'importhandler',
+                        'train_importhandler', 'features')
+        if not field in field_values:
+            raise ValidationError('Invalid field specified. \
+Valid values are %s' % ','.join(field_values))
+
+        if field == 'trainer':
+            content = model.get_trainer(loaded=False)
+        else:
+            content = json.dumps(getattr(model, 'importhandler'))
+
+        filename = "%s-%s.%s" % (model.name, field,
+                                 'dat' if field == 'trainer' else 'json')
+
+        resp = Response(content)
+        resp.headers['Content-Type'] = 'text/plain'
+        resp.headers['Content-Disposition'] = 'attachment; filename=%s' % filename
+        return resp
 
     # POST specific methods
 

@@ -41,6 +41,9 @@
         <button ng-show="model.status == 'New' || model.status == 'Error'" ng-click="train_model(model)" class="btn btn-info">
           <i title="Train your model" class="icon-tasks"></i>
         </button>
+        <a ng-show="model.status == 'Trained'" href="{{ model.downloadUrl() }}?field=trainer" class="btn btn-info">
+          <i title="Download model trainer." class="icon-download-alt"></i>
+        </a>
         <button ng-click="delete_model(model)" class="btn btn-danger">
           <i title="Delete your model. Be careful - you could not recover it!" class="icon-remove"></i>
         </button>

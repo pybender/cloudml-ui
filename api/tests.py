@@ -3,7 +3,6 @@ import os
 import json
 import httplib
 
-from api.models import Model
 from api.serialization import encode_model
 from api import app
 from api.utils import ERR_INVALID_DATA
@@ -14,6 +13,7 @@ class BaseTestCase(unittest.TestCase):
     _LOADED_COLLECTIONS = []
 
     def setUp(self):
+        app.config['TESTING'] = True
         self.app = app.test_client()
         self.fixtures_load()
 
@@ -119,6 +119,23 @@ filter - all models should be returned')
         # TODO: Add weights to fixtures and implement test
         pass
 
+    def test_download(self):
+        def check(field, is_invalid=False):
+            url = '/cloudml/model/%s/download?field=%s' % (self.MODEL_NAME, field)
+            resp = self.app.get(url)
+            if not is_invalid:
+                self.assertEquals(resp.status_code, httplib.OK)
+                self.assertEquals(resp.mimetype, 'text/plain')
+                self.assertEquals(resp.headers['Content-Disposition'],
+                                  'attachment; filename=%s-%s.json' % \
+                                    (self.MODEL_NAME, field))
+            else:
+                self.assertEquals(resp.status_code, 400)
+        check('importhandler')
+        check('features')
+        check('train_importhandler')
+        check('invalid', is_invalid=True)
+
     def test_post_with_invalid_features(self):
         uri = '/cloudml/model/new'
         post_data = {'importhandler': 'smth'}
@@ -220,6 +237,10 @@ not unpickle trainer - 'module' object has no attribute 'apply_mappings'")
         # self.assertEquals(authorize['css_class'], 'red lightest')
         # self.assertEquals(authorize['value'], 0)
         # self.assertEquals(authorize['model_name'], name)
+
+        model = app.db.Model.find_one({'name': name})
+        self.assertEquals(model.name, name)
+        self.assertTrue(model.fs.trainer)
 
     def test_delete(self):
         url = '/cloudml/model/' + self.MODEL_NAME
