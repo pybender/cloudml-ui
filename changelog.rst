@@ -3,6 +3,14 @@
 Changelog
 =========
 
+Relese 2013-05-14
+-----------------
+* Feature - Added search weights
+* Feature - Added weights tree view
+* Feature - Added download models, inport handlers
+* Feature - Added show logs in ui when model are testing, training
+ 
+
 Relese 2013-05-07
 -----------------
 

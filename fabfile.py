@@ -48,7 +48,7 @@ def install():
 
     pip.install.run(app='virtualenv', upgrade=True)
     system.package_install.run(packages='liblapack-dev gfortran libpq-dev\
-npm nodejs')
+npm nodejs libevent-dev')
 
 
 @task
@@ -86,6 +86,7 @@ def setup():
 @task
 def qdeploy():
     release.work_on.run(0)
+    system.package_install.run(packages='libevent-dev')
     deploy.run()
 
 
