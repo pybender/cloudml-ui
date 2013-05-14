@@ -59,6 +59,15 @@ def fill_model_parameter_weights(model_name, positive, negative):
     Adds model parameters weights to db.
     """
     model = app.db.Model.find_one({'name': model_name})
+    if model is None:
+        raise ValueError('Model not found: %s' % model_name)
+
+    weights = app.db.Weight.find({'model_name': model_name})
+    count = weights.count()
+    if count > 0:
+        raise InvalidOperationError('Weights for model %s already \
+filled: %s' % (model_name, count))
+
     from helpers.weights import calc_weights_css
     positive_weights = calc_weights_css(positive, 'green')
     negative_weights = calc_weights_css(negative, 'red')
@@ -85,13 +94,16 @@ def fill_model_parameter_weights(model_name, positive, negative):
                                'value': weight['weight'],
                                'is_positive': bool(weight['weight'] > 0),
                                'css_class': weight['css_class']})
-                app.db.Weight.collection.insert(params)
+                weight = app.db.Weight(params)
+                weight.save(validate=True, check_keys=False, safe=False)
             else:
                 if sname not in category_names:
                     # Adding a category, if it has not already added
                     category_names.append(sname)
                     params.update({'name': long_name})
-                    app.db.WeightsCategory.collection.insert(params)
+                    category = app.db.WeightsCategory(params)
+                    category.save(validate=True, check_keys=False, safe=False)
+
     model.weights_synchronized = True
     model.save()
     return 'Model %s parameters weights was added to db: %s' % \

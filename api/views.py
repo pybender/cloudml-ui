@@ -276,7 +276,8 @@ class WeightsTreeResource(BaseResource):
         """
         """
         params = self._parse_parameters(self.FILTER_PARAMS)
-        kwargs.update(params)
+        kwargs['parent'] = params.get('parent') or ''
+
         categories = app.db.WeightsCategory.find(kwargs,
                                                  ('short_name', 'name'))
         weights = app.db.Weight.find(kwargs, ('name', 'value',

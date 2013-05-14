@@ -22,7 +22,6 @@ class WeightsCategory(Document):
         'model_name': basestring,
 
         'parent': basestring,
-        'has_weights': bool,
     }
 
 
