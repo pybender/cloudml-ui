@@ -181,7 +181,7 @@ labels,weights_synchronized'
     $scope.model = new Model({name: $routeParams.name})
 
   $scope.log_messages = []
-  log_sse = new EventSource("http://127.0.0.1:5000/cloudml/log/")
+  log_sse = new EventSource("#{settings.apiUrl}log/")
   handleCallback = (msg) ->
     $scope.$apply(() ->
       if msg?

@@ -97,7 +97,7 @@ angular.module('app.testresults.controllers', ['app.config', ])
     $scope.test_num = $routeParams.test_name
 
   $scope.log_messages = []
-  log_sse = new EventSource("http://127.0.0.1:5000/cloudml/log/")
+  log_sse = new EventSource("#{settings.apiUrl}log/")
   handleCallback = (msg) ->
     $scope.$apply(() ->
       if msg?

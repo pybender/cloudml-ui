@@ -86,7 +86,6 @@ def setup():
 @task
 def qdeploy():
     release.work_on.run(0)
-    system.package_install.run(packages='libevent-dev')
     deploy.run()
 
 
