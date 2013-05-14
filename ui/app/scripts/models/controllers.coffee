@@ -180,18 +180,19 @@ labels,weights_synchronized'
       err = "Can't initialize without model name"
     $scope.model = new Model({name: $routeParams.name})
 
-  $scope.log_messages = []
-  log_sse = new EventSource("#{settings.apiUrl}log/")
-  handleCallback = (msg) ->
-    $scope.$apply(() ->
-      if msg?
-        data = JSON.parse(msg.data)
-        action = data['k']
-        name = data['data']['model']
-        if action == 'trainmodel_log' and name == $scope.model.name
-          $scope.log_messages.push(data['data']['msg']))
+  if not $scope.model.status == 'Trained'
+    $scope.log_messages = []
+    log_sse = new EventSource("#{settings.apiUrl}log/")
+    handleCallback = (msg) ->
+      $scope.$apply(() ->
+        if msg?
+          data = JSON.parse(msg.data)
+          action = data['k']
+          name = data['data']['model']
+          if action == 'trainmodel_log' and name == $scope.model.name
+            $scope.log_messages.push(data['data']['msg']))
 
-  log_sse.addEventListener('message', handleCallback)
+    log_sse.addEventListener('message', handleCallback)
 
   $scope.toggleAction = (action) =>
     $scope.action = action
