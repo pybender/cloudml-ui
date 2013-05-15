@@ -98,16 +98,15 @@ angular.module('app.testresults.controllers', ['app.config', ])
 
   $scope.$watch 'test.status', (status) ->
     if status in ['Queued', 'In Progress', 'Error']
+      $scope.showLog = true
       $scope.log_messages = []
-      log_sse = $scope.getEventSource()
+      params = "channel=runtest_log&test=" + $scope.test._id
+      log_sse = $scope.getEventSource(params=params)
       handleCallback = (msg) ->
         $scope.$apply(() ->
           if msg?
             data = JSON.parse(msg.data)
-            action = data['k']
-            id = data['data']['test']
-            if action == 'runtest_log' and id == $scope.test._id
-              $scope.log_messages.push(data['data']['msg']))
+            $scope.log_messages.push(data['data']['msg']))
       log_sse.addEventListener('message', handleCallback)
 
   DEFAULT_ACTION = 'test:details'

@@ -184,15 +184,13 @@ labels,weights_synchronized'
     if status in ['Queued', 'Training', 'Error']
       $scope.showLog = true
       $scope.log_messages = []
-      log_sse = $scope.getEventSource()
+      params = "channel=trainmodel_log&model=" + $scope.model.name
+      log_sse = $scope.getEventSource(params=params)
       handleCallback = (msg) ->
         $scope.$apply(() ->
           if msg?
             data = JSON.parse(msg.data)
-            action = data['k']
-            name = data['data']['model']
-            if action == 'trainmodel_log' and name == $scope.model.name
-              $scope.log_messages.push(data['data']['msg']))
+            $scope.log_messages.push(data['data']['msg']))
       log_sse.addEventListener('message', handleCallback)
 
   $scope.toggleAction = (action) =>

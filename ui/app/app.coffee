@@ -105,8 +105,8 @@ App.run(['$rootScope', 'settings', ($rootScope, settings) ->
       scope[key] = getLibrary(key)
     return scope
 
-  $rootScope.getEventSource = () ->
+  $rootScope.getEventSource = (params='') ->
     if not $rootScope.sse?
-      $rootScope.sse = new EventSource("#{settings.apiUrl}log/")
+      $rootScope.sse = new EventSource("#{settings.apiUrl}log/?" + params)
     return $rootScope.sse
 ])

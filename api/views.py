@@ -30,13 +30,13 @@ model_parser.add_argument('trainer', type=FileStorage, location='files')
 
 
 import gevent
-from flask import Response
+from flask import Response, request
 
 from pymongo.errors import OperationFailure
 
 
-def event_stream():
-    curs = app.chan.cursor(False)
+def event_stream(query_params={}):
+    curs = app.chan.cursor(query_params, False)
     while True:
         gevent.sleep(0.5)
         try:
@@ -52,7 +52,21 @@ def event_stream():
 
 @app.route('/cloudml/log/')
 def sse_request():
-    resp = Response(event_stream(),
+    query_params = {}
+    channel = request.args.get('channel')
+    if channel:
+        if channel not in app.PUBSUB_CHANNELS.keys():
+            return odesk_error_response(400, ERR_INVALID_DATA,
+                                        'Invalid channel name')
+        query_params['k'] = channel
+
+        params = app.PUBSUB_CHANNELS[channel]
+        for name in params:
+            val = request.args.get(name)
+            if val:
+                query_params["data.%s" % name] = val
+
+    resp = Response(event_stream(query_params),
                     mimetype='text/event-stream')
     resp.headers["Access-Control-Allow-Origin"] = "*"
     resp.headers["Cache-Control"] = "no-cache"
