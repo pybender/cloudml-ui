@@ -91,7 +91,7 @@ App.config([
   $locationProvider.html5Mode(false)
 ])
 
-App.run(['$rootScope', ($rootScope) ->
+App.run(['$rootScope', 'settings', ($rootScope, settings) ->
   $rootScope.Math = window.Math
 
   # this will be available to all scope variables
@@ -105,4 +105,8 @@ App.run(['$rootScope', ($rootScope) ->
       scope[key] = getLibrary(key)
     return scope
 
+  $rootScope.getEventSource = () ->
+    if not $rootScope.sse?
+      $rootScope.sse = new EventSource("#{settings.apiUrl}log/")
+    return $rootScope.sse
 ])

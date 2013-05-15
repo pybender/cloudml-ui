@@ -1,4 +1,3 @@
-{{ detailsLoaded}}
 <h2>
   {{ model.name|capfirst }} Details
   <div class="actions" ng-controller="ModelActionsCtrl">
@@ -44,22 +43,16 @@
 <alert-message ng-show="err" class="alert-error" msg='{{ err }}' unsafe>
 </alert-message>
 
-<div ng-hide="model.status == 'Trained'">
-    <h4>Log Messages:</h4>
-    <div class="logging">
-      <div ng-repeat="msg in log_messages">{{ msg }}</div>
-    </div>
-</div>
-
-<ul class="nav nav-tabs" id="tabs">
+<ul class="nav nav-tabs" id="tabs" ng-show="modelLoaded">
   <li  ng-class="{active: action[0] == 'model'}"><a ng-click="action = ['model', 'details']">Details</a></li>
+  <li  ng-class="{active: action[0] == 'log'}" ng-show="showLog"><a ng-click="action = ['log', 'details']">Logs</a></li>
   <li ng-class="{active: action[0] == 'weights'}"><a  ng-click="action = ['weights', 'columns']">Parameters Weights</a></li>
   <li ng-class="{active: action[0] == 'test'}"><a  ng-click="action = ['test', 'list']">Tests</a></li>
   <li ng-class="{active: action[0] == 'features'}"><a ng-click="action = ['features', 'file']">Features</a></li>
   <li ng-class="{active: action[0] == 'import_handlers'}"><a ng-click="action = ['import_handlers', 'train']">Import Handlers</a></li>
 </ul>
  
-<div class="tab-content">
+<div class="tab-content" ng-show="modelLoaded">
   <div ng-show="action[0] == 'model'" id="details">
     <div class="row">
         <div class="span6">
@@ -89,6 +82,14 @@
             </div>
         </div>
     </div>
+  </div>
+
+
+  <div ng-show="action[0] == 'log' && showLog">
+      <h4>Log Messages:</h4>
+      <div class="logging">
+        <div ng-repeat="msg in log_messages">{{ msg }}</div>
+      </div>
   </div>
 
   <div ng-show="action[0] == 'test'" id="tests" ng-controller="ObjectListCtrl">

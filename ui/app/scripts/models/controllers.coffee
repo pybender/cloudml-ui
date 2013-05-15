@@ -180,19 +180,20 @@ labels,weights_synchronized'
       err = "Can't initialize without model name"
     $scope.model = new Model({name: $routeParams.name})
 
-  if not $scope.model.status == 'Trained'
-    $scope.log_messages = []
-    log_sse = new EventSource("#{settings.apiUrl}log/")
-    handleCallback = (msg) ->
-      $scope.$apply(() ->
-        if msg?
-          data = JSON.parse(msg.data)
-          action = data['k']
-          name = data['data']['model']
-          if action == 'trainmodel_log' and name == $scope.model.name
-            $scope.log_messages.push(data['data']['msg']))
-
-    log_sse.addEventListener('message', handleCallback)
+  $scope.$watch 'model.status', (status) ->
+    if status in ['Queued', 'Training', 'Error']
+      $scope.showLog = true
+      $scope.log_messages = []
+      log_sse = $scope.getEventSource()
+      handleCallback = (msg) ->
+        $scope.$apply(() ->
+          if msg?
+            data = JSON.parse(msg.data)
+            action = data['k']
+            name = data['data']['model']
+            if action == 'trainmodel_log' and name == $scope.model.name
+              $scope.log_messages.push(data['data']['msg']))
+      log_sse.addEventListener('message', handleCallback)
 
   $scope.toggleAction = (action) =>
     $scope.action = action
@@ -201,7 +202,7 @@ labels,weights_synchronized'
     $scope.model.$load(
       show: fields
       ).then (->
-        loaded_var = true
+        $scope.modelLoaded = true
         if callback?
           callback()
       ), (->

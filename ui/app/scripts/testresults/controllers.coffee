@@ -96,18 +96,19 @@ angular.module('app.testresults.controllers', ['app.config', ])
     name: $routeParams.test_name})
     $scope.test_num = $routeParams.test_name
 
-  $scope.log_messages = []
-  log_sse = new EventSource("#{settings.apiUrl}log/")
-  handleCallback = (msg) ->
-    $scope.$apply(() ->
-      if msg?
-        data = JSON.parse(msg.data)
-        action = data['k']
-        id = data['data']['test']
-        if action == 'runtest_log' and id == $scope.test._id
-          $scope.log_messages.push(data['data']['msg']))
-
-  log_sse.addEventListener('message', handleCallback)
+  $scope.$watch 'test.status', (status) ->
+    if status in ['Queued', 'In Progress', 'Error']
+      $scope.log_messages = []
+      log_sse = $scope.getEventSource()
+      handleCallback = (msg) ->
+        $scope.$apply(() ->
+          if msg?
+            data = JSON.parse(msg.data)
+            action = data['k']
+            id = data['data']['test']
+            if action == 'runtest_log' and id == $scope.test._id
+              $scope.log_messages.push(data['data']['msg']))
+      log_sse.addEventListener('message', handleCallback)
 
   DEFAULT_ACTION = 'test:details'
   $scope.action = ($routeParams.action or DEFAULT_ACTION).split ':'
@@ -127,7 +128,7 @@ parameters,error,examples_count'
     $scope.test.$load(
       show: fields
       ).then (->
-        loaded_var = true
+        $scope.testLoaded = true
         if callback?
           callback()
       ), (->

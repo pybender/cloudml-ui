@@ -36,7 +36,7 @@ from pymongo.errors import OperationFailure
 
 
 def event_stream():
-    curs = app.chan.cursor(True)
+    curs = app.chan.cursor(False)
     while True:
         gevent.sleep(0.5)
         try:
