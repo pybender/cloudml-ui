@@ -7,6 +7,8 @@ import csv
 from flask.ext.restful import reqparse
 from flask import request, Response
 
+import gevent
+from pymongo.errors import OperationFailure
 from werkzeug.datastructures import FileStorage
 from bson.objectid import ObjectId
 
@@ -22,17 +24,14 @@ from core.importhandler.importhandler import ExtractionPlan, \
 from api.models import Model, Test, TestExample, ImportHandler
 
 model_parser = reqparse.RequestParser()
-model_parser.add_argument('importhandler', required=True, type=str,
+model_parser.add_argument('importhandler', type=str,
                           default=None)
 model_parser.add_argument('train_importhandler', type=str)
 model_parser.add_argument('features', type=str)
 model_parser.add_argument('trainer', type=FileStorage, location='files')
-
-
-import gevent
-from flask import Response, request
-
-from pymongo.errors import OperationFailure
+model_parser.add_argument('name', type=str, default=None)
+model_parser.add_argument('example_id', type=str, default=None)
+model_parser.add_argument('example_label', type=str, default=None)
 
 
 def event_stream(query_params={}):
@@ -133,19 +132,17 @@ Valid values are %s' % ','.join(field_values))
         return resp
 
     # POST specific methods
-
-    def _validate_parameters(self, params):
-        features = params.get('features')
-        trainer = params.get('trainer')
-        if not features and not trainer:
-            raise ValidationError('Either features, either pickled \
-trained model is required')
-
     def _fill_post_data(self, obj, params, **kwargs):
         """
         Fills Model specific fields when uploading trained model or
         creating new model.
         """
+        features = params.get('features')
+        trainer = params.get('trainer')
+        if not features and not trainer:
+            raise ValidationError('Either features, either pickled \
+trained model is required for posting model')
+
         obj.name = kwargs.get('name')
         if 'features' in params and params['features']:
             # Uploading new model
@@ -183,20 +180,10 @@ trained model is required')
 
     # PUT specififc methods
 
-    def _fill_put_data(self, model, param, **kwargs):
-        importhandler = None
-        train_importhandler = None
-        if param['importhandler'] and \
-                not param['importhandler'] == 'undefined':
-            importhandler = json.loads(param['importhandler'])
-        if param['train_importhandler'] and \
-                not param['train_importhandler'] == 'undefined':
-            train_importhandler = json.loads(param['train_importhandler'])
-        model.importhandler = importhandler or model.importhandler
-        model.train_importhandler = train_importhandler \
-            or model.train_importhandler
-        model.save()
-        return model
+    @property
+    def put_form(self):
+        from api.forms import ModelEdit
+        return ModelEdit
 
     def _put_train_action(self, **kwargs):
         from api.tasks import train_model
@@ -207,7 +194,6 @@ trained model is required')
         train_model.delay(model.name, params)
         model.status = model.STATUS_QUEUED
         model.save()
-
         return self._render({self.OBJECT_NAME: model._id})
 
 api.add_resource(Models, '/cloudml/model/<regex("[\w\.]*"):name>',

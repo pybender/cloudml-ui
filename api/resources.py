@@ -250,6 +250,19 @@ class BaseResource(restful.Resource):
         """
         return self.Model()
 
+    # Specific methods for POST
+
+    @property
+    def put_form(self):
+        raise NotImplemented()
+
+    def _fill_put_data(self, obj, params, **kwargs):
+        form = self.put_form(data=params, obj=obj)
+        if form.is_valid():
+            return form.save()
+        else:
+            raise ValidationError(form.error_messages)
+
     # Utility methods
 
     def _apply_action(self, action, method='GET', **kwargs):

@@ -91,10 +91,14 @@ angular.module('app.models.model', ['app.config'])
       # (only when PUTting to existing objects, API allows partial update)
       $save: (opts={}) =>
         fd = new FormData()
-        fd.append("trainer", @trainer)
-        fd.append("importhandler", @importhandler)
-        fd.append("train_importhandler", @train_importhandler)
-        fd.append("features", @features)
+        if opts.only?
+          for name in opts.only
+            fd.append(name, eval("this." + name))
+        else
+          fd.append("importhandler", @importhandler)
+          fd.append("train_importhandler", @train_importhandler)
+          fd.append("features", @features)
+
         $http(
           method: if @isNew() then "POST" else "PUT"
           #headers: settings.apiRequestDefaultHeaders

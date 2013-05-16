@@ -9,10 +9,11 @@
             "labels": ["0", "1"],
             "import_params": ["start_date", "end_date"],
             "error": "",
+            "example_id": "opening_id",
+            "example_label": "opening_title",
             "target_variable": "hire_outcome",
-            "positive_weights": [],
-            "negative_weights": [],
             "train_importhandler": {},
+            "weights_synchronized": false,
             "importhandler": {
   "target-schema":"bestmatch",
   "datasource":[

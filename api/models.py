@@ -85,6 +85,9 @@ class Model(Document):
         'weights_synchronized': bool,
 
         'labels': list,
+        # Fieldname of the example title from raw data
+        'example_label': basestring,
+        'example_id': basestring,
     }
     gridfs = {'files': ['trainer']}
     required_fields = ['name', 'created_on', ]

@@ -173,7 +173,7 @@ angular.module('app.models.controllers', ['app.config', ])
         else
           $scope.go 'importhandler,status,id'
       else $scope.go 'status,created_on,target_variable,error,
-labels,weights_synchronized'
+labels,weights_synchronized,example_id,example_label,updated_on'
 
   if not $scope.model
     if not $routeParams.name
@@ -233,6 +233,16 @@ labels,weights_synchronized'
     ), (() ->
       throw new Error "Unable to save import handler"
     )
+
+  $scope.saveModel = =>
+    $scope.model.$save(only: ['example_label', 'example_id']).then (() ->
+      $scope.editMode = false
+    ), ((opts) ->
+       $scope.err = "Error while saving model details: server responded with " +
+        "#{opts.status} " +
+        "(#{opts.data.response.error.message or "no message"}). "
+    )
+    
 ])
 
 .controller('TrainModelCtrl', [

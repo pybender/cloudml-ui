@@ -94,7 +94,7 @@ filter - all models should be returned')
         uri = '/cloudml/model/new'
         post_data = {'importhandler': 'smth'}
         self._checkValidationErrors(uri, post_data, 'Either features, either \
-pickled trained model is required')
+pickled trained model is required for posting model')
 
         post_data = {'importhandler': 'smth', 'features': 'smth'}
         self._checkValidationErrors(uri, post_data, 'Invalid features: \
@@ -106,8 +106,6 @@ schema-name is missing')
 
     def test_post_with_invalid_import_handler(self):
         uri = '/cloudml/model/new'
-        self._checkValidationErrors(uri, {}, 'importhandler is required in \
-values')
 
         features = open('./conf/features.json', 'r').read()
         post_data = {'importhandler': 'smth',
@@ -166,6 +164,30 @@ not unpickle trainer - 'module' object has no attribute 'apply_mappings'")
         model = self.db.Model.find_one({'name': name})
         self.assertEquals(model.name, name)
         self.assertTrue(model.fs.trainer)
+
+    def test_edit_model(self):
+        # TODO: check field type when loading fixtures and
+        # create instance of datatime when loading datatime field
+        from datetime import datetime
+        model = self.db.Model.find_one({'name': self.MODEL_NAME})
+        model.created_on = datetime.now()
+        model.updated_on = datetime.now()
+        model.save()
+
+        # TODO: Add validation to importhandlers
+        data = {'example_id': 'some_id',
+                'example_label': 'some_label',
+                'importhandler': '{"b": 2}',
+                'train_importhandler': '{"a": 1}', }
+        resp = self.app.put('/cloudml/model/%s' % self.MODEL_NAME, data=data)
+        self.assertEquals(resp.status_code, httplib.OK)
+        data = json.loads(resp.data)
+        model = self.db.Model.find_one({'name': self.MODEL_NAME})
+        self.assertEquals(data['model'], str(model._id))
+        self.assertEquals(model.example_id, 'some_id')
+        self.assertEquals(model.example_label, 'some_label')
+        self.assertEquals(model.importhandler, {'b': 2})
+        self.assertEquals(model.train_importhandler, {"a": 1})
 
     def test_delete(self):
         url = '/cloudml/model/' + self.MODEL_NAME
