@@ -3,7 +3,6 @@ import logging
 from copy import copy
 from itertools import izip
 from bson.objectid import ObjectId
-from mongotools.pubsub import Channel
 
 from api import celery, app
 from api.logger import init_logger
@@ -170,9 +169,8 @@ def run_test(test_id):
                 row = decode(row)
                 example = app.db.TestExample()
                 example['data_input'] = row
-                # TODO: Specify Example title column in raw data
-                example['name'] = row.get('contractor.dev_profile_title',
-                                          'noname')
+                example['id'] = row.get(model.example_id, '-1')
+                example['name'] = row.get(model.example_label, 'noname')
                 example['label'] = str(label)
                 example['pred_label'] = str(pred)
                 example['prob'] = prob.tolist()

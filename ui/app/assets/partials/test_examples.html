@@ -28,6 +28,7 @@
     <table class="table table-striped">
         <thead>
           <tr>
+            <th>Id</th>
             <th>Name</th>
             <th>Original</th>
             <th>Predict</th>
@@ -35,6 +36,7 @@
           </thead>
           <tbody>
           <tr ng-repeat="data in objects | filter:search | orderBy:'id'" ng-class="{success : data.label==data.pred_label, error : !(data.label==data.pred_label)}">
+            <td><a href="#/models/{{ data.model_name }}/tests/{{ data.test_name }}/examples/{{ data._id }}">{{ data.id }}</a></td>
             <td><a href="#/models/{{ data.model_name }}/tests/{{ data.test_name }}/examples/{{ data._id }}">{{ data.name }}</a></td>
             <td><span>{{ data.label }}</span></td>
             <td><span>{{ data.pred_label }}</span></td>

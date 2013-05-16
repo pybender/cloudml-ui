@@ -10,7 +10,9 @@
     </div>
 </h2>
 
-<alert-message ng-show="test.status != 'Completed'" class="alert-warning" msg="Test was not calculated yet. Status: {{ test.status }}" unsafe></alert-message>
+<div ng-hide="testLoaded">Loading...</div>
+
+<alert-message ng-show="testLoaded && test.status != 'Completed'" class="alert-warning" msg="Test was not calculated yet. Status: {{ test.status }}" unsafe></alert-message>
 
 <alert-message ng-show="test.error" class="alert-error" msg="{{ test.error }}" unsafe></alert-message>
 

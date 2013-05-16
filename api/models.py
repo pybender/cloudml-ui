@@ -197,7 +197,9 @@ class TestExample(Document):
         'data_input': dict,
         'weighted_data_input': dict,
 
+        'id': basestring,
         'name': basestring,
+
         'label': basestring,
         'pred_label': basestring,
         'prob': list,
