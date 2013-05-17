@@ -29,6 +29,14 @@ class Run(Command):
         http_server = WSGIServer(('', 5000), app)
         http_server.serve_forever()
 
+class Migrate(Command):
+    """Migrate"""
+
+    def run(self, **kwargs):
+        from api.migrations import ModelMigration
+        from api.models import Model
+        ModelMigration(Model).migrate_all(app.db.Model.collection)
+
 
 def _make_context():
     return dict(app=app, db=app.db, models=models)
@@ -45,6 +53,7 @@ manager = Manager(app)
 manager.add_command("celeryd", Celeryd())
 manager.add_command("flower", Flower())
 manager.add_command('test', Test())
+manager.add_command('migrate', Migrate())
 manager.add_command('run', Run())
 manager.add_command("shell", Shell(make_context=_make_context))
 

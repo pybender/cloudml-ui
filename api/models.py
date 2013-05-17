@@ -6,6 +6,7 @@ from bson import Binary
 from flask.ext.mongokit import Document
 
 from api import connection, app
+from api.migrations import ModelMigration
 
 
 @connection.register
@@ -97,6 +98,7 @@ class Model(Document):
                       'comparable': False,
                       'weights_synchronized': False}
     use_dot_notation = True
+    migration_handler = ModelMigration
 
     def get_trainer(self, loaded=True):
         trainer = self.trainer or self.fs.trainer
