@@ -2,7 +2,7 @@ import os
 
 from flask.ext.script import Manager, Command, Shell
 
-from api import app, models
+from api import app
 
 import gevent.monkey
 from gevent.pywsgi import WSGIServer
@@ -39,6 +39,7 @@ class Migrate(Command):
 
 
 def _make_context():
+    from api import models
     return dict(app=app, db=app.db, models=models)
 
 class Test(Command):

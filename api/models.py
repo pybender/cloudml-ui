@@ -98,7 +98,7 @@ class Model(Document):
                       'comparable': False,
                       'weights_synchronized': False}
     use_dot_notation = True
-    migration_handler = ModelMigration
+    #migration_handler = ModelMigration
 
     def get_trainer(self, loaded=True):
         trainer = self.trainer or self.fs.trainer

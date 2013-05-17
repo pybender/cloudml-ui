@@ -14,7 +14,7 @@ flower==0.5.0
 supervisor
 ml_metrics
 pmap
-pymongo>=2.4.2
+pymongo==2.5
 -e git+https://github.com/kolia1985/mongokit.git#egg=mongokit
 Flask-mongokit
 nose
