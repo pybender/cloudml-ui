@@ -3,6 +3,13 @@
 Changelog
 =========
 
+Relese 2013-05-17
+-----------------
+* Feature - Added to model property "id example" and "label example"
+* Feature - Move storing weights to celery task
+* Support - Updated pymongo
+
+
 Relese 2013-05-14
 -----------------
 * Feature - Added search weights
