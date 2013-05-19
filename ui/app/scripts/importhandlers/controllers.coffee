@@ -35,10 +35,9 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
   'ImportHandler'
 
 ($scope, $http, $location, $routeParams, $dialog, settings, ImportHandler) ->
-  if not $scope.model
-    if not $routeParams.name
-      err = "Can't initialize without import handler name"
-    $scope.handler = new ImportHandler({name: $routeParams.name})
+  if not $routeParams.id
+    err = "Can't initialize without import handler id"
+  $scope.handler = new ImportHandler({_id: $routeParams.id})
 
   $scope.handler.$load(
     show: 'name,type,created_on,updated_on,data'

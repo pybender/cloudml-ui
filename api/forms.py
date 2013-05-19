@@ -1,13 +1,19 @@
 import json
 from datetime import datetime
+from flask import request
 
 from api.resources import ValidationError
 from api.models import Model
+from core.trainer.store import load_trainer
+from core.trainer.trainer import Trainer, InvalidTrainerFile
+from core.trainer.config import FeatureModel, SchemaException
+from core.importhandler.importhandler import ExtractionPlan, \
+    ImportHandlerException
 
 
 class BaseForm():
-    def __init__(self, data, obj=None, Model=None):
-        self.data = data
+    def __init__(self, obj=None, Model=None):
+        self.data = request.form
         self.errors = []
         if obj:
             self.obj = obj
@@ -65,13 +71,6 @@ class ModelEditForm(BaseForm):
             return json.loads(value)
 
     clean_train_importhandler = clean_importhandler
-
-
-from core.trainer.store import load_trainer
-from core.trainer.trainer import Trainer, InvalidTrainerFile
-from core.trainer.config import FeatureModel, SchemaException
-from core.importhandler.importhandler import ExtractionPlan, \
-    ImportHandlerException
 
 
 class ModelAddForm(BaseForm):
@@ -141,3 +140,26 @@ trained model is required for posting model')
                 return json.loads(value)
             except ValueError, exc:
                 raise ValidationError('Invalid %s: %s %s' % (name, value, exc))
+
+
+class ImportHandlerAddForm(BaseForm):
+    fields = ('name', 'type', 'data', )
+
+    def clean_name(self, value):
+        if not value:
+            raise ValidationError('name is required')
+        return value
+
+    def clean_type(self, value):
+        # if not type in ImportHandler.TYPE_CHOICES:
+        #     raise ValidationError('invalid')
+        return value
+
+    def clean_data(self, value):
+        if not value:
+            raise ValidationError('data is required')
+
+        try:
+            return json.loads(value)
+        except ValueError:
+            raise ValidationError('Invalid data')

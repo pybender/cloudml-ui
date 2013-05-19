@@ -17,7 +17,7 @@ from api import api, app
 from api.utils import crossdomain, ERR_INVALID_DATA, odesk_error_response, \
     ERR_NO_SUCH_MODEL, ERR_UNPICKLING_MODEL
 from api.resources import BaseResource, NotFound, ValidationError
-from api.forms import ModelAddForm, ModelEditForm
+from api.forms import ModelAddForm, ModelEditForm, ImportHandlerAddForm
 from core.importhandler.importhandler import ExtractionPlan, \
     RequestImportHandler, ImportHandlerException
 
@@ -250,23 +250,9 @@ class ImportHandlerResource(BaseResource):
     OBJECT_NAME = 'import_handler'
     decorators = [crossdomain(origin='*')]
     methods = ['GET', 'OPTIONS', 'PUT', 'POST']
+    post_form = ImportHandlerAddForm
 
-    @classmethod
-    def _get_model_parser(cls):
-        if not hasattr(cls, "_model_parser"):
-            parser = reqparse.RequestParser()
-            parser.add_argument('data', type=str)
-            parser.add_argument('type', type=str)
-            cls._model_parser = parser
-        return cls._model_parser
-
-    def _fill_post_data(self, obj, params, name):
-        obj.name = name
-        obj.type = params.get('type')
-        obj.data = json.loads(params.get('data'))
-        obj.save()
-
-api.add_resource(ImportHandlerResource, '/cloudml/import/handler')
+api.add_resource(ImportHandlerResource, '/cloudml/importhandlers/')
 
 
 class Tests(BaseResource):

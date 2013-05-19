@@ -95,21 +95,14 @@ class BaseResource(restful.Resource):
         """
         if action:
             return self._apply_action(action, method='POST', **kwargs)
-        parser = self._get_model_parser()
-        try:
-            params = parser.parse_args() if parser else []
-        except Exception, exc:
-            if hasattr(exc, 'data') and 'message' in exc.data:
-                raise ValidationError(exc.data['message'])
-            raise
 
-        form = self.post_form(data=params, Model=self.Model)
+        form = self.post_form(Model=self.Model)
         if form.is_valid():
             obj = form.save()
         else:
             raise ValidationError(form.error_messages)
 
-        return self._render(self._get_post_response_context(obj),
+        return self._render(self._get_save_response_context(obj),
                             code=201)
 
     def put(self, action=None, **kwargs):
@@ -119,15 +112,18 @@ class BaseResource(restful.Resource):
         if action:
             return self._apply_action(action, method='PUT', **kwargs)
 
-        parser = self._get_model_parser(method='PUT')
-        params = parser.parse_args()
-
-        model = self._get_details_query(None, None, **kwargs)
-        if model is None:
+        obj = self._get_details_query(None, None, **kwargs)
+        if obj is None:
             raise NotFound(self.MESSAGE404 % kwargs)
 
-        model = self._fill_put_data(model, params, **kwargs)
-        return self._render({self.OBJECT_NAME: model._id}, code=200)
+        form = self.put_form(obj=obj)
+        if form.is_valid():
+            return form.save()
+        else:
+            raise ValidationError(form.error_messages)
+
+        return self._render(self._get_save_response_context(obj),
+                            code=200)
 
     def delete(self, action=None, **kwargs):
         """
@@ -194,10 +190,10 @@ class BaseResource(restful.Resource):
             raise NotFound(self.MESSAGE404 % kwargs)
         return self._render({self.OBJECT_NAME: model})
 
-    def _get_post_response_context(self, model):
+    def _get_save_response_context(self, model):
         if self.DEFAULT_FIELDS:
-            model = dict([(field, getattr(model, field)) \
-                for field in self.DEFAULT_FIELDS])
+            model = dict([(field, getattr(model, field))
+                         for field in self.DEFAULT_FIELDS])
         return {self.OBJECT_NAME: model}
 
     # Specific actions for GET
@@ -257,13 +253,6 @@ class BaseResource(restful.Resource):
     @property
     def put_form(self):
         raise NotImplemented()
-
-    def _fill_put_data(self, obj, params, **kwargs):
-        form = self.put_form(data=params, obj=obj)
-        if form.is_valid():
-            return form.save()
-        else:
-            raise ValidationError(form.error_messages)
 
     # Utility methods
 

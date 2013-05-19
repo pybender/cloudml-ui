@@ -80,7 +80,7 @@ App.config([
       controller: "AddImportHandlerCtl"
       templateUrl: '/partials/import_handler/add.html'
     })
-    .when('/import_handlers/:name', {
+    .when('/import_handlers/:id', {
       controller: 'ImportHandlerDetailsCtrl'
       templateUrl: '/partials/import_handler/details.html'
     })
