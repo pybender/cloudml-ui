@@ -11,9 +11,21 @@ class ModelTests(BaseTestCase):
     """
     MODEL_NAME = 'TrainedModel'
     FIXTURES = ('models.json', 'tests.json', 'examples.json')
+    BASE_URL = '/cloudml/models/'
+
+    def setUp(self):
+        super(ModelTests, self).setUp()
+        self.model = self.db.Model.find_one({'name': self.MODEL_NAME})
+
+        # TODO: check field type when loading fixtures and
+        # create instance of datatime when loading datatime field
+        from datetime import datetime
+        self.model.created_on = datetime.now()
+        self.model.updated_on = datetime.now()
+        self.model.save()
 
     def test_list(self):
-        resp = self.app.get('/cloudml/model/')
+        resp = self.app.get(self.BASE_URL)
         self.assertEquals(resp.status_code, httplib.OK)
         data = json.loads(resp.data)
         self.assertTrue('models' in data, data)
@@ -22,7 +34,8 @@ class ModelTests(BaseTestCase):
         self.assertEquals(count, len(data['models']))
         self.assertEquals(models_resp[0].keys(), [u'_id', u'name'])
 
-        resp = self.app.get('/cloudml/model/?show=created_on,updated_on')
+        url = self._get_url(show='created_on,updated_on')
+        resp = self.app.get(url)
         self.assertEquals(resp.status_code, httplib.OK)
         data = json.loads(resp.data)
         models_resp = data['models']
@@ -30,13 +43,15 @@ class ModelTests(BaseTestCase):
                           [u'updated_on', u'created_on', u'_id'])
 
     def test_filter(self):
-        resp = self.app.get('/cloudml/model/?status=New')
+        url = self._get_url(status='New')
+        resp = self.app.get(url)
         self.assertEquals(resp.status_code, httplib.OK)
         data = json.loads(resp.data)
         count = self.db.Model.find({'status': 'New'}).count()
         self.assertEquals(count, len(data['models']))
 
-        resp = self.app.get('/cloudml/model/?name=Test')
+        url = self._get_url(name='Test')
+        resp = self.app.get(url)
         self.assertEquals(resp.status_code, httplib.OK)
         data = json.loads(resp.data)
         count = self.db.Model.find().count()
@@ -45,7 +60,8 @@ filter - all models should be returned')
 
     def test_comparable_filter(self):
         def _check(comparable):
-            resp = self.app.get('/cloudml/model/?comparable=%d' % comparable)
+            url = self._get_url(comparable=int(comparable))
+            resp = self.app.get(url)
             self.assertEquals(resp.status_code, httplib.OK)
             data = json.loads(resp.data)
             count = self.db.Model.find({'comparable': comparable}).count()
@@ -55,34 +71,35 @@ filter - all models should be returned')
         _check(False)
 
     def test_details(self):
-        model = self.db.Model.find_one({'name': self.MODEL_NAME})
-        resp = self.app.get('/cloudml/model/%s' % self.MODEL_NAME)
+        url = self._get_url(id=self.model._id)
+        resp = self.app.get(url)
         self.assertEquals(resp.status_code, httplib.OK)
         data = json.loads(resp.data)
         self.assertTrue('model' in data, data)
         model_resp = data['model']
-        self.assertEquals(str(model._id), model_resp['_id'])
-        self.assertEquals(model.name, model_resp['name'])
+        self.assertEquals(str(self.model._id), model_resp['_id'])
+        self.assertEquals(self.model.name, model_resp['name'])
 
-        resp = self.app.get('/cloudml/model/%s?show=created_on,labels' %
-                            self.MODEL_NAME)
+        url = self._get_url(id=self.model._id, show='created_on,labels')
+        resp = self.app.get(url)
         self.assertEquals(resp.status_code, httplib.OK)
         data = json.loads(resp.data)
         model_resp = data['model']
         self.assertEquals(model_resp.keys(),
                           [u'created_on', u'labels', u'_id'])
-        self.assertEquals(model.labels, model_resp['labels'])
+        self.assertEquals(self.model.labels, model_resp['labels'])
 
     def test_download(self):
         def check(field, is_invalid=False):
-            url = '/cloudml/model/%s/download?field=%s' % (self.MODEL_NAME, field)
+            url = self._get_url(id=self.model._id, action='download',
+                                field=field)
             resp = self.app.get(url)
             if not is_invalid:
                 self.assertEquals(resp.status_code, httplib.OK)
                 self.assertEquals(resp.mimetype, 'text/plain')
                 self.assertEquals(resp.headers['Content-Disposition'],
-                                  'attachment; filename=%s-%s.json' % \
-                                    (self.MODEL_NAME, field))
+                                  'attachment; filename=%s-%s.json' %
+                                  (self.MODEL_NAME, field))
             else:
                 self.assertEquals(resp.status_code, 400)
         check('importhandler')
@@ -90,59 +107,73 @@ filter - all models should be returned')
         check('train_importhandler')
         check('invalid', is_invalid=True)
 
-    def test_post_with_invalid_features(self):
-        uri = '/cloudml/model/new'
+    def test_post_without_name(self):
+        uri = self.BASE_URL
         post_data = {'importhandler': 'smth'}
+        self._checkValidationErrors(uri, post_data, 'name is required')
+
+    def test_post_with_invalid_features(self):
+        uri = self.BASE_URL
+        hanlder = open('./conf/extract.json', 'r').read()
+        post_data = {'importhandler': hanlder,
+                     'name': 'new'}
         self._checkValidationErrors(uri, post_data, 'Either features, either \
 pickled trained model is required for posting model')
 
-        post_data = {'importhandler': 'smth', 'features': 'smth'}
+        post_data = {'importhandler': hanlder, 'features': 'smth',
+                     'name': 'new'}
         self._checkValidationErrors(uri, post_data, 'Invalid features: \
-smth No JSON object could be decoded ')
+smth No JSON object could be decoded')
 
-        post_data = {'importhandler': 'smth', 'features': '{}'}
+        post_data = {'importhandler': 'smth', 'features': '{"a": "1"}',
+                     'name': 'new'}
         self._checkValidationErrors(uri, post_data, 'Invalid features: \
 schema-name is missing')
 
     def test_post_with_invalid_import_handler(self):
-        uri = '/cloudml/model/new'
-
         features = open('./conf/features.json', 'r').read()
         post_data = {'importhandler': 'smth',
-                     'features': features}
-        self._checkValidationErrors(uri, post_data, 'Invalid Import Handler: \
+                     'features': features,
+                     'name': 'new'}
+        self._checkValidationErrors(self.BASE_URL, post_data,
+                                    'Invalid importhandler: smth \
 No JSON object could be decoded')
 
         features = open('./conf/features.json', 'r').read()
         post_data = {'importhandler': '{}',
-                     'features': features}
-        self._checkValidationErrors(uri, post_data, 'Invalid Import Handler: \
-No target schema defined in config')
+                     'features': features,
+                     'name': 'new'}
+        self._checkValidationErrors(self.BASE_URL, post_data,
+                                    'importhandler is required')
 
     def test_post_with_invalid_trainer(self):
-        uri = '/cloudml/model/new'
         handler = open('./conf/extract.json', 'r').read()
         trainer = open('./api/fixtures/invalid_model.dat', 'r')
         post_data = {'importhandler': handler,
-                     'trainer': trainer}
-        self._checkValidationErrors(uri, post_data, 'Invalid trainer: Could \
+                     'trainer': trainer,
+                     'name': 'new'}
+        self._checkValidationErrors(self.BASE_URL, post_data,
+                                    'Invalid trainer: Could \
 not unpickle trainer - could not find MARK')
 
         handler = open('./conf/extract.json', 'r').read()
         trainer = open('./api/fixtures/invalid_testmodel.dat', 'r')
         post_data = {'importhandler': handler,
-                     'trainer': trainer}
-        self._checkValidationErrors(uri, post_data, "Invalid trainer: Could \
-not unpickle trainer - 'module' object has no attribute 'apply_mappings'")
+                     'trainer': trainer,
+                     'name': 'new'}
+        self._checkValidationErrors(self.BASE_URL, post_data,
+                                    "Invalid trainer: Could not unpickle \
+trainer - 'module' object has no attribute 'FeatureTypeInstance'")
 
     def test_post_new_model(self):
         count = self.db.Model.find().count()
-        name = 'UnitTestModel1'
+        name = 'new'
         features = open('./conf/features.json', 'r').read()
         handler = open('./conf/extract.json', 'r').read()
         post_data = {'importhandler': handler,
-                     'features': features}
-        resp = self.app.post('/cloudml/model/%s' % name, data=post_data)
+                     'features': features,
+                     'name': name}
+        resp = self.app.post(self.BASE_URL, data=post_data)
         self.assertEquals(resp.status_code, httplib.CREATED)
         self.assertTrue('model' in resp.data)
         new_count = self.db.Model.find().count()
@@ -150,12 +181,13 @@ not unpickle trainer - 'module' object has no attribute 'apply_mappings'")
 
     def test_post_trained_model(self):
         count = self.db.Model.find().count()
-        name = 'UnitTestModel2'
+        name = 'new2'
         handler = open('./conf/extract.json', 'r').read()
         trainer = open('./model.dat', 'r')
         post_data = {'importhandler': handler,
-                     'trainer': trainer}
-        resp = self.app.post('/cloudml/model/%s' % name, data=post_data)
+                     'trainer': trainer,
+                     'name': name}
+        resp = self.app.post(self.BASE_URL, data=post_data)
         self.assertEquals(resp.status_code, httplib.CREATED)
         self.assertTrue('model' in resp.data)
         new_count = self.db.Model.find().count()
@@ -166,20 +198,12 @@ not unpickle trainer - 'module' object has no attribute 'apply_mappings'")
         self.assertTrue(model.fs.trainer)
 
     def test_edit_model(self):
-        # TODO: check field type when loading fixtures and
-        # create instance of datatime when loading datatime field
-        from datetime import datetime
-        model = self.db.Model.find_one({'name': self.MODEL_NAME})
-        model.created_on = datetime.now()
-        model.updated_on = datetime.now()
-        model.save()
-
         # TODO: Add validation to importhandlers
         data = {'example_id': 'some_id',
                 'example_label': 'some_label',
                 'importhandler': '{"b": 2}',
                 'train_importhandler': '{"a": 1}', }
-        resp = self.app.put('/cloudml/model/%s' % self.MODEL_NAME, data=data)
+        resp = self.app.put(self._get_url(id=self.model._id), data=data)
         self.assertEquals(resp.status_code, httplib.OK)
         data = json.loads(resp.data)
         model = self.db.Model.find_one({'name': self.MODEL_NAME})
@@ -190,7 +214,7 @@ not unpickle trainer - 'module' object has no attribute 'apply_mappings'")
         self.assertEquals(model.train_importhandler, {"a": 1})
 
     def test_delete(self):
-        url = '/cloudml/model/' + self.MODEL_NAME
+        url = self._get_url(id=self.model._id)
         resp = self.app.get(url)
         self.assertEquals(resp.status_code, httplib.OK)
 

@@ -27,7 +27,7 @@ class BaseResource(restful.Resource):
     POST_ACTIONS = ()
     PUT_ACTIONS = ()
 
-    DETAILS_PARAM = 'name'
+    DETAILS_PARAM = '_id'
     OBJECT_NAME = 'model'
     NEED_PAGING = False
     GET_PARAMS = (('show', str), )
@@ -103,10 +103,13 @@ class BaseResource(restful.Resource):
                 raise ValidationError(exc.data['message'])
             raise
 
-        self._validate_parameters(params)
-        model = self._get_post_model(params, **kwargs)
-        self._fill_post_data(model, params, **kwargs)
-        return self._render(self._get_post_response_context(model),
+        form = self.post_form(data=params, Model=self.Model)
+        if form.is_valid():
+            obj = form.save()
+        else:
+            raise ValidationError(form.error_messages)
+
+        return self._render(self._get_post_response_context(obj),
                             code=201)
 
     def put(self, action=None, **kwargs):
@@ -149,6 +152,7 @@ class BaseResource(restful.Resource):
             parser_params += self.PAGING_PARAMS
         params = self._parse_parameters(parser_params)
         fields = self._get_fields_to_show(params)
+        print "fields", fields
 
         # Removing empty values
         kw = dict([(k, v) for k, v in kwargs.iteritems() if v])
@@ -228,6 +232,9 @@ class BaseResource(restful.Resource):
                     if not v is None and k in filter_names])
 
     def _get_details_query(self, params, fields, **kwargs):
+        if '_id' in kwargs:
+            from bson.objectid import ObjectId
+            kwargs['_id'] = ObjectId(kwargs['_id'])
         model = self.Model.find_one(kwargs, fields)
         return model
 
@@ -235,20 +242,15 @@ class BaseResource(restful.Resource):
         return None
 
     # Specific methods for POST
+    @property
+    def post_form(self):
+        raise NotImplemented()
 
     def _validate_parameters(self, params):
         pass
 
     def _fill_post_data(self, obj, params, **kwargs):
         raise NotImplemented()
-
-    def _get_post_model(self, params, **kwargs):
-        """
-        It should be overridden when it's subdocument resource.
-        In this case parent model already exist and we need to
-        add elements in subdocument.
-        """
-        return self.Model()
 
     # Specific methods for POST
 

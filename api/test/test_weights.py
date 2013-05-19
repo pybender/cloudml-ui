@@ -4,6 +4,7 @@ import json
 import random
 
 from utils import BaseTestCase
+from api import app
 
 
 class WeightsTests(BaseTestCase):
@@ -12,21 +13,25 @@ class WeightsTests(BaseTestCase):
     """
     COUNT = 4556
     MODEL_NAME = 'weights_model'
+    BASE_URL = '/cloudml/weights/%s/' % MODEL_NAME
 
-    def setUp(self):
-        super(WeightsTests, self).setUp()
+    @classmethod
+    def setUpClass(cls):
+        super(WeightsTests, cls).setUpClass()
         handler = open('./conf/extract.json', 'r').read()
         trainer = open('./model.dat', 'r')
         post_data = {'importhandler': handler,
                      'trainer': trainer}
-        resp = self.app.post('/cloudml/model/%s' % self.MODEL_NAME,
-                             data=post_data)
-        self.assertEquals(resp.status_code, httplib.CREATED)
-        self.model = self.db.Model.find_one({'name': self.MODEL_NAME})
-        trainer = self.model.get_trainer()
-        weights = self.trainer_weights = trainer.get_weights()
-        self.weight_list = weights['positive'] + weights['negative']
-        self._LOADED_COLLECTIONS += ['WeightsCategory', 'Weight']
+        resp = cls.app.post(cls.BASE_URL, data=post_data)
+        assert resp.status_code == httplib.CREATED
+        cls.model = app.db.Model.find_one({'name': cls.MODEL_NAME})
+        trainer = cls.model.get_trainer()
+        weights = cls.trainer_weights = trainer.get_weights()
+        cls.weight_list = weights['positive'] + weights['negative']
+        #cls._LOADED_COLLECTIONS += ['WeightsCategory', 'Weight']
+
+    def tearDown(self):
+        pass
 
     def test_weights(self):
         self._check_weights_task()
@@ -81,7 +86,7 @@ was added to db: %s' % self.COUNT)
                       'value': 0})
 
     def _check_list(self):
-        resp = self.app.get('/cloudml/weights/%s' % self.MODEL_NAME)
+        resp = self.app.get(self.BASE_URL)
         self.assertEquals(resp.status_code, httplib.OK)
         data = json.loads(resp.data)
         self.assertTrue(data['has_next'])

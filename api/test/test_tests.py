@@ -8,9 +8,15 @@ class TestTests(BaseTestCase):
     MODEL_NAME = 'TrainedModel'
     TEST_NAME = 'Test-1'
     FIXTURES = ('models.json', 'tests.json', 'examples.json')
+    BASE_URL = '/cloudml/models/%s/tests/' % MODEL_NAME
+
+    def setUp(self):
+        super(TestTests, self).setUp()
+        self.test = self.db.Test.find_one({'model_name': self.MODEL_NAME,
+                                           'name': self.TEST_NAME})
 
     def test_list(self):
-        url = self._get_url(self.MODEL_NAME, search='show=name,status')
+        url = self._get_url(show='name,status')
         resp = self.app.get(url)
         self.assertEquals(resp.status_code, httplib.OK)
         data = json.loads(resp.data)
@@ -23,9 +29,9 @@ class TestTests(BaseTestCase):
         self.assertFalse(tests[0].model_name in resp.data, resp.data)
 
     def test_details(self):
-        url = self._get_url(self.MODEL_NAME, self.TEST_NAME,
-                            'show=name,status')
+        url = self._get_url(id=self.test._id, show='name,status')
         resp = self.app.get(url)
+        print resp.data
         self.assertEquals(resp.status_code, httplib.OK)
         data = json.loads(resp.data)
         self.assertTrue('test' in data, data)
@@ -36,14 +42,13 @@ class TestTests(BaseTestCase):
         self.assertEquals(test.status, test_data['status'], resp.data)
         self.assertFalse('model_name' in test_data, test_data)
 
-    # def test_post(self):
-    #     url = self._get_url(self.MODEL_NAME)
-    #     resp = self.app.post(url)
-    #     self.assertEquals(resp.status_code, httplib.OK)
+    def test_post(self):
+        url = self._get_url()
+        resp = self.app.post(url)
+        self.assertEquals(resp.status_code, httplib.CREATED)
 
     def test_delete(self):
-        url = self._get_url(self.MODEL_NAME, self.TEST_NAME,
-                            'show=name,status')
+        url = self._get_url(id=self.test._id, show='name,status')
         resp = self.app.get(url)
         self.assertEquals(resp.status_code, httplib.OK)
 
@@ -61,9 +66,3 @@ class TestTests(BaseTestCase):
 deleted" % examples)
         other_examples = self.db.TestExample.find().count()
         self.assertTrue(other_examples, "All examples was deleted!")
-
-    def _get_url(self, model, test=None, search=None):
-        if test:
-            return '/cloudml/model/%s/test/%s?%s' % (model, test, search)
-        else:
-            return '/cloudml/model/%s/tests?%s' % (model, search)

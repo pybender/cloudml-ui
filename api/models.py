@@ -98,7 +98,6 @@ class Model(Document):
                       'comparable': False,
                       'weights_synchronized': False}
     use_dot_notation = True
-    #migration_handler = ModelMigration
 
     def get_trainer(self, loaded=True):
         trainer = self.trainer or self.fs.trainer
@@ -162,7 +161,6 @@ class Test(Document):
         'classes_set': list,
         'accuracy': float,
         'metrics': dict,
-        'model': Model,
         # Raw test data
         #'examples': [TestExample ],
     }

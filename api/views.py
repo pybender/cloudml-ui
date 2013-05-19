@@ -4,6 +4,7 @@ import cPickle as pickle
 import traceback
 import StringIO
 import csv
+from datetime import datetime
 from flask.ext.restful import reqparse
 from flask import request, Response
 
@@ -16,12 +17,9 @@ from api import api, app
 from api.utils import crossdomain, ERR_INVALID_DATA, odesk_error_response, \
     ERR_NO_SUCH_MODEL, ERR_UNPICKLING_MODEL
 from api.resources import BaseResource, NotFound, ValidationError
-from core.trainer.store import load_trainer
-from core.trainer.trainer import Trainer, InvalidTrainerFile
-from core.trainer.config import FeatureModel, SchemaException
+from api.forms import ModelAddForm, ModelEditForm
 from core.importhandler.importhandler import ExtractionPlan, \
     RequestImportHandler, ImportHandlerException
-from api.models import Model, Test, TestExample, ImportHandler
 
 model_parser = reqparse.RequestParser()
 model_parser.add_argument('importhandler', type=str,
@@ -81,7 +79,13 @@ class Models(BaseResource):
     FILTER_PARAMS = (('status', str), ('comparable', int))
     methods = ('GET', 'OPTIONS', 'DELETE', 'PUT', 'POST')
 
-    MESSAGE404 = "Model with name %(name)s doesn't exist"
+    MESSAGE404 = "Model with name %(_id)s doesn't exist"
+
+    post_form = ModelAddForm
+    put_form = ModelEditForm
+
+    DOWNLOAD_FIELDS = ('trainer', 'importhandler',
+                       'train_importhandler', 'features')
 
     @property
     def Model(self):
@@ -106,17 +110,16 @@ class Models(BaseResource):
         Downloads trained model, importhandler or features
         (specified in GET param `field`) file.
         """
-        model = self.Model.find_one(kwargs)
+        model = self._get_details_query(None, None, **kwargs)
         if model is None:
             raise NotFound(self.MESSAGE404 % kwargs)
 
         params = self._parse_parameters((('field', str), ))
         field = params.get('field', 'trainer')
-        field_values = ('trainer', 'importhandler',
-                        'train_importhandler', 'features')
-        if not field in field_values:
+
+        if not field in self.DOWNLOAD_FIELDS:
             raise ValidationError('Invalid field specified. \
-Valid values are %s' % ','.join(field_values))
+Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
 
         if field == 'trainer':
             content = model.get_trainer(loaded=False)
@@ -132,58 +135,6 @@ Valid values are %s' % ','.join(field_values))
         return resp
 
     # POST specific methods
-    def _fill_post_data(self, obj, params, **kwargs):
-        """
-        Fills Model specific fields when uploading trained model or
-        creating new model.
-        """
-        features = params.get('features')
-        trainer = params.get('trainer')
-        if not features and not trainer:
-            raise ValidationError('Either features, either pickled \
-trained model is required for posting model')
-
-        obj.name = kwargs.get('name')
-        if 'features' in params and params['features']:
-            # Uploading new model
-            try:
-                feature_model = FeatureModel(params['features'], is_file=False)
-            except SchemaException, exc:
-                raise ValidationError('Invalid features: %s' % exc)
-
-            trainer = Trainer(feature_model)
-            obj.save()
-            obj.set_trainer(trainer)
-
-            obj.features = json.loads(params['features'])
-        else:
-            # Uploading trained model
-            try:
-                trainer = load_trainer(params['trainer'])
-            except InvalidTrainerFile, exc:
-                raise ValidationError('Invalid trainer: %s' % exc)
-            obj.status = obj.STATUS_TRAINED
-            obj.save()
-            obj.set_trainer(trainer)
-            from api.tasks import fill_model_parameter_weights
-            fill_model_parameter_weights.delay(obj.name,
-                                               **trainer.get_weights())
-        try:
-            obj.train_importhandler = obj.importhandler = \
-                json.loads(params['importhandler'])
-            plan = ExtractionPlan(params['importhandler'], is_file=False)
-        except (ValueError, ImportHandlerException) as exc:
-            raise ValidationError('Invalid Import Handler: %s' % exc)
-
-        obj.import_params = plan.input_params
-        obj.save()
-
-    # PUT specififc methods
-
-    @property
-    def put_form(self):
-        from api.forms import ModelEdit
-        return ModelEdit
 
     def _put_train_action(self, **kwargs):
         from api.tasks import train_model
@@ -196,9 +147,7 @@ trained model is required for posting model')
         model.save()
         return self._render({self.OBJECT_NAME: model._id})
 
-api.add_resource(Models, '/cloudml/model/<regex("[\w\.]*"):name>',
-                 '/cloudml/model/<regex("[\w\.]+"):name>/\
-<regex("[\w\.]+"):action>')
+api.add_resource(Models, '/cloudml/models/')
 
 
 class WeightsResource(BaseResource):
@@ -258,8 +207,8 @@ class WeightsResource(BaseResource):
             results.reverse()
         return results
 
-api.add_resource(WeightsResource, '/cloudml/weights/<regex("[\w\.]*"):model_name>\
-/<regex("[\w\.]+"):action>', '/cloudml/weights/<regex("[\w\.]*"):model_name>')
+api.add_resource(WeightsResource, '/cloudml/weights/\
+<regex("[\w\.]*"):model_name>/')
 
 
 class WeightsTreeResource(BaseResource):
@@ -286,7 +235,8 @@ class WeightsTreeResource(BaseResource):
         return self._render(context)
 
 api.add_resource(WeightsTreeResource,
-                 '/cloudml/weights_tree/<regex("[\w\.]*"):model_name>')
+                 '/cloudml/weights_tree/<regex("[\w\.]*"):model_name>',
+                 add_standart_urls=False)
 
 
 class ImportHandlerResource(BaseResource):
@@ -316,8 +266,7 @@ class ImportHandlerResource(BaseResource):
         obj.data = json.loads(params.get('data'))
         obj.save()
 
-api.add_resource(ImportHandlerResource,
-                 '/cloudml/import/handler/<regex("[\w\.]*"):name>')
+api.add_resource(ImportHandlerResource, '/cloudml/import/handler')
 
 
 class Tests(BaseResource):
@@ -340,9 +289,9 @@ class Tests(BaseResource):
 
     def _get_details_query(self, params, fields, **kwargs):
         model_name = kwargs.get('model')
-        test_name = kwargs.get('name')
+        id = kwargs.get('_id')
         return self.Model.find_one({'model_name': model_name,
-                                   'name': test_name}, fields)
+                                   '_id': ObjectId(id)}, fields)
 
     def post(self, action=None, **kwargs):
         from api.tasks import run_test
@@ -357,14 +306,12 @@ class Tests(BaseResource):
         total = app.db.Test.find({'model_name': model.name}).count()
         test.name = "Test%s" % (total + 1)
         test.model_name = model.name
-        test.model = model
         test.save(check_keys=False)
         run_test.delay(str(test._id))
         return self._render(self._get_post_response_context(test),
                             code=201)
 
-api.add_resource(Tests, '/cloudml/model/<regex("[\w\.]+"):model>/test/\
-<regex("[\w\.\-]+"):name>', '/cloudml/model/<regex("[\w\.]+"):model>/tests')
+api.add_resource(Tests, '/cloudml/models/<regex("[\w\.]*"):model>/tests/')
 
 
 REDUCE_FUNC = 'function(obj, prev) {\
@@ -546,13 +493,7 @@ not contain probabilities')
 filename=%(model_name)s-%(test_name)s-examples.csv" % kwargs
         return resp
 
-api.add_resource(TestExamplesResource, '/cloudml/model/\
-<regex("[\w\.]+"):model_name>/test/<regex("[\w\.\-]+"):test_name>/data',
-                 '/cloudml/model/<regex("[\w\.]+")\
-:model_name>/test/<regex("[\w\.\-]+"):test_name>/data/\
-<regex("[\w\.\-]+"):example_id>',
-                 '/cloudml/model/<regex("[\w\.]+"):model_name>\
-/test/<regex("[\w\.\-]+"):test_name>/action/<regex("[\w\.]+"):action>/data')
+api.add_resource(TestExamplesResource, '/cloudml/examples/')
 
 
 class CompareReportResource(BaseResource):
@@ -590,7 +531,9 @@ class CompareReportResource(BaseResource):
                              'examples1': examples1,
                              'examples2': examples2})
 
-api.add_resource(CompareReportResource, '/cloudml/reports/compare')
+api.add_resource(CompareReportResource, 
+                 '/cloudml/reports/compare',
+                 add_standart_urls=False)
 
 
 class Predict(BaseResource):
@@ -644,8 +587,8 @@ class Predict(BaseResource):
                              reverse=True)[0]
         return self._render({'label': label, 'prob': prob}, code=201)
 
-api.add_resource(Predict, '/cloudml/model/<regex("[\w\.]*"):model>/\
-<regex("[\w\.]*"):import_handler>/predict')
+api.add_resource(Predict, '/cloudml/model/<regex("[\w\.]*"):model_id>/\
+<regex("[\w\.]*"):handler_id>/predict', add_standart_urls=False)
 
 
 def populate_parser(model):

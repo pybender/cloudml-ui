@@ -9,10 +9,13 @@ class BaseTestCase(unittest.TestCase):
     FIXTURES = []
     _LOADED_COLLECTIONS = []
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         app.config['DATABASE_NAME'] = 'cloudml-test'
         app.init_db()
-        self.app = app.test_client()
+        cls.app = app.test_client()
+
+    def setUp(self):
         self.fixtures_load()
 
     def tearDown(self):
@@ -43,6 +46,17 @@ class BaseTestCase(unittest.TestCase):
     def _get_collection(self, name):
         callable_model = getattr(self.db, name)
         return callable_model.collection
+
+    def _get_url(self, **kwargs):
+        id = kwargs.pop('id', '')
+        action = kwargs.pop('action', '')
+        search = '&'.join(['%s=%s' % (key, val)
+                           for key, val in kwargs.iteritems()])
+        params = {'url': self.BASE_URL,
+                  'id': "%s/" % id if id else '',
+                  'action': "%s/" % action if action else '',
+                  'search': search}
+        return "%(url)s%(id)s%(action)s?%(search)s" % params
 
 
 def dumpdata(document_list, fixture_name):
