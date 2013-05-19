@@ -480,7 +480,8 @@ not contain probabilities')
 filename=%(model_name)s-%(test_name)s-examples.csv" % kwargs
         return resp
 
-api.add_resource(TestExamplesResource, '/cloudml/examples/')
+api.add_resource(TestExamplesResource, '/cloudml/models/\
+<regex("[\w\.]*"):model_id>/tests/<regex("[\w\.]*"):test_id>/examples/')
 
 
 class CompareReportResource(BaseResource):

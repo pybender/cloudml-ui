@@ -4,83 +4,47 @@ angular.module('app.datas.model', ['app.config'])
   '$http'
   '$q'
   'settings'
+  'BaseModel'
 
-  ($http, $q, settings) ->
+  ($http, $q, settings, BaseModel) ->
 
-    class Data
+    class Data extends BaseModel
+      BASE_API_URL: "#{settings.apiUrl}models/"
+      BASE_UI_URL: '/models/'
+      API_FIELDNAME: 'data'
 
-      constructor: (opts) ->
-        @loadFromJSON opts
-
-      id: null
+      _id: null
       created_on: null
       model_name: null
+      model_id: null
       test_name: null
+      test_id: null
       data_input: null
       weighted_data_input: null
       _id: null
 
-      ### API methods ###
+      constructor: (opts) ->
+        super opts
+        @BASE_API_URL = "#{settings.apiUrl}models/#{@model_id}
+/tests/#{@test_id}/examples/"
+        @BASE_UI_URL = "/models/#{@model_id}/tests/#{@test_id}/examples/"
 
-      isNew: -> if @slug == null then true else false
+      @$loadAll: (model_id, test_id, opts) ->
+        if not model_id or not test_id
+          throw new Error "Model and Test ids are required to load examples"
 
-      # Returns an object of job properties, for use in e.g. API requests
-      # and templates
-      toJSON: =>
-        name: @name
-
-      # Sets attributes from object received e.g. from API response
-      loadFromJSON: (origData) =>
-        data = _.extend {}, origData
-        _.extend @, data
-
-      $load: (opts) ->
-        if @name == null
-          throw new Error "Can't load model without name"
-        
-        $http(
-          method: 'GET'
-          url: settings.apiUrl + "model/#{@model_name}/test/
-#{@test_name}/data/#{@id}"
-          headers: {'X-Requested-With': null}
-          params: _.extend {
-          }, opts
-        ).then ((resp) =>
-          @loaded = true
-          @loadFromJSON(resp.data['data'])
-          return resp
-
-        ), ((resp) =>
-          return resp
-        )
-
-      @$loadAll: (opts) ->
-        dfd = $q.defer()
-        model_name = opts.model_name
-        test_name = opts.test_name
-        $http(
-          method: 'GET'
-          url: "#{settings.apiUrl}model/#{model_name}/test/
-#{test_name}/data"
-          headers: settings.apiRequestDefaultHeaders
-          params: opts
-        )
-        .then ((resp) =>
-          extra = {loaded: true, model_name: model_name, test_name: test_name}
-          dfd.resolve {
-            pages: resp.data.pages
+        url = "#{settings.apiUrl}models/#{model_id}/tests/#{test_id}/examples"
+        resolver = (resp, Model) ->
+          {
             page: resp.data.page
             total: resp.data.total
             per_page: resp.data.per_page
             objects: (
-              new @(_.extend(obj, extra)) \
-              for obj in resp.data.datas)
+              new Model(_.extend(obj, {loaded: true})) \
+              for obj in eval("resp.data.#{Model.prototype.API_FIELDNAME}s"))
             _resp: resp
           }
-
-        ), (-> dfd.reject.apply @, arguments)
-
-        dfd.promise
+        @$make_all_request(url, resolver, opts)
 
       @$loadAllGroupped: (opts) ->
         dfd = $q.defer()
