@@ -6,7 +6,6 @@ from bson import Binary
 from flask.ext.mongokit import Document
 
 from api import connection, app
-from api.migrations import ModelMigration
 
 
 @connection.register
@@ -20,6 +19,7 @@ class WeightsCategory(Document):
     structure = {
         'name': basestring,
         'short_name': basestring,
+        'model_id': basestring,
         'model_name': basestring,
 
         'parent': basestring,
@@ -35,6 +35,7 @@ class Weight(Document):
     structure = {
         'name': basestring,
         'short_name': basestring,
+        'model_id': basestring,
         'model_name': basestring,
         'value': float,
         'is_positive': bool,

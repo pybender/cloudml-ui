@@ -5,10 +5,10 @@ from itertools import izip
 from bson.objectid import ObjectId
 
 from api import celery, app
+from api.models import Test
 from api.logger import init_logger
 from core.trainer.trainer import Trainer
 from core.trainer.config import FeatureModel
-from api.models import Test, Model
 
 
 class InvalidOperationError(Exception):
@@ -38,7 +38,8 @@ def train_model(model_name, parameters):
         trainer.clear_temp_data()
         model.status = model.STATUS_TRAINED
         model.set_trainer(trainer)
-        fill_model_parameter_weights.delay(model.name, **trainer.get_weights())
+        fill_model_parameter_weights.delay(str(model._id),
+                                           **trainer.get_weights())
         model.save()
     except Exception, exc:
         logging.error(exc)
@@ -53,19 +54,19 @@ def train_model(model_name, parameters):
 
 
 @celery.task
-def fill_model_parameter_weights(model_name, positive, negative):
+def fill_model_parameter_weights(model_id, positive, negative):
     """
     Adds model parameters weights to db.
     """
-    model = app.db.Model.find_one({'name': model_name})
+    model = app.db.Model.find_one({'_id': ObjectId(model_id)})
     if model is None:
-        raise ValueError('Model not found: %s' % model_name)
+        raise ValueError('Model not found: %s' % model_id)
 
-    weights = app.db.Weight.find({'model_name': model_name})
+    weights = app.db.Weight.find({'model_id': model_id})
     count = weights.count()
     if count > 0:
         raise InvalidOperationError('Weights for model %s already \
-filled: %s' % (model_name, count))
+filled: %s' % (model_id, count))
 
     from helpers.weights import calc_weights_css
     positive_weights = calc_weights_css(positive, 'green')
@@ -86,6 +87,7 @@ filled: %s' % (model_name, count))
             long_name = '%s.%s' % (long_name, sname) \
                         if long_name else sname
             params = {'model_name': model.name,
+                      'model_id': model_id,
                       'parent': parent,
                       'short_name': sname}
             if i == (count - 1):

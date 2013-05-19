@@ -181,8 +181,8 @@ class WeightsResource(BaseResource):
         Gets list with Model's weighted parameters with pagination.
         """
         def get_weights(is_positive, page):
-            model_name = kwargs.get('model_name')
-            return self.Model.find({'model_name': model_name,
+            model_id = kwargs.get('model_id')
+            return self.Model.find({'model_id': model_id,
                                     'is_positive': is_positive}, fields).\
                 skip(page * per_page).limit(per_page)
 
@@ -208,7 +208,7 @@ class WeightsResource(BaseResource):
         return results
 
 api.add_resource(WeightsResource, '/cloudml/weights/\
-<regex("[\w\.]*"):model_name>/')
+<regex("[\w\.]*"):model_id>/')
 
 
 class WeightsTreeResource(BaseResource):
@@ -235,7 +235,7 @@ class WeightsTreeResource(BaseResource):
         return self._render(context)
 
 api.add_resource(WeightsTreeResource,
-                 '/cloudml/weights_tree/<regex("[\w\.]*"):model_name>',
+                 '/cloudml/weights_tree/<regex("[\w\.]*"):model_id>',
                  add_standart_urls=False)
 
 

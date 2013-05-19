@@ -50,7 +50,7 @@ angular.module('app.models.model', ['app.config'])
         data = {}
         for key, val of opts
           data[key] = val
-        @$make_request("#{@BASE_API_URL}#{@_id}/train/", {}, "PUT", data)
+        @$make_request("#{@BASE_API_URL}#{@_id}/action/train/", {}, "PUT", data)
 
     return Model
 ])

@@ -30,26 +30,15 @@ angular.module('app.base', ['app.config'])
 
       # Loads list of objects
       @$loadAll: (opts) ->
-        dfd = $q.defer()
-        $http(
-          method: 'GET'
-          url: "#{@prototype.BASE_API_URL}"
-          headers: settings.apiRequestDefaultHeaders
-          params: _.extend {
-          }, opts
-        )
-        .then ((resp) =>
-          dfd.resolve {
+        resolver = (resp, Model) ->
+          {
             total: resp.data.found
             objects: (
-              new @(_.extend(obj, {loaded: true})) \
-              for obj in eval("resp.data.#{@prototype.API_FIELDNAME}s"))
+              new Model(_.extend(obj, {loaded: true})) \
+              for obj in eval("resp.data.#{Model.prototype.API_FIELDNAME}s"))
             _resp: resp
           }
-
-        ), (-> dfd.reject.apply @, arguments)
-
-        dfd.promise
+        @$make_all_request("#{@prototype.BASE_API_URL}", resolver, opts)
 
       # Loads specific object details
       $load: (opts) ->
@@ -97,6 +86,21 @@ angular.module('app.base', ['app.config'])
           @loadFromJSON(eval("resp.data.#{@API_FIELDNAME}"))
           return resp
         )
+
+      @$make_all_request: (url, resolver, opts={}) ->
+        dfd = $q.defer()
+        $http(
+          method: 'GET'
+          url: url
+          headers: settings.apiRequestDefaultHeaders
+          params: _.extend {
+          }, opts
+        )
+        .then ((resp) =>
+          dfd.resolve resolver(resp, @)
+        ), (-> dfd.reject.apply @, arguments)
+
+        dfd.promise
 
     return BaseModel
 ])

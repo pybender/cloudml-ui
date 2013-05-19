@@ -130,7 +130,7 @@ trained model is required for posting model')
         if obj.status == Model.STATUS_TRAINED:
             # Processing Model Parameters weights in celery task
             from api.tasks import fill_model_parameter_weights
-            fill_model_parameter_weights.delay(obj.name,
+            fill_model_parameter_weights.delay(str(obj._id),
                                                **self.trainer.get_weights())
         obj.save()
         return obj

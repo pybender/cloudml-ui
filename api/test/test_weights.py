@@ -44,7 +44,7 @@ class WeightsTests(BaseTestCase):
 
     def _check_weights_task(self):
         from api.tasks import fill_model_parameter_weights
-        res = fill_model_parameter_weights.run(self.model.name,
+        res = fill_model_parameter_weights.run(str(self.model._id),
                                                **self.trainer_weights)
         self.assertEquals(res, 'Model weights_model parameters weights \
 was added to db: %s' % self.COUNT)

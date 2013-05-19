@@ -4,33 +4,26 @@ angular.module('app.weights.model', ['app.config'])
   '$http'
   '$q'
   'settings'
+  'BaseModel'
   
-  ($http, $q, settings) ->
+  ($http, $q, settings, BaseModel) ->
     ###
     Model Parameter Weight
     ###
-    class Weight
-      constructor: (opts) ->
-        @loadFromJSON opts
-
+    class Weight extends BaseModel
       _id: null
       name: null
       model_name: null
+      model_id: null
       value: null
 
-      ### API methods ###
-
-      loadFromJSON: (origData) =>
-        data = _.extend {}, origData
-        _.extend @, data
-
-      @$loadAll: (modelName, opts) ->
+      @$loadAll: (model_id, opts) ->
         dfd = $q.defer()
 
-        if not modelName then throw new Error "Model is required to load tests"
+        if not model_id then throw new Error "Model is required to load weights"
         $http(
           method: 'GET'
-          url: "#{settings.apiUrl}weights/#{modelName}"
+          url: "#{settings.apiUrl}weights/#{model_id}/"
           headers: settings.apiRequestDefaultHeaders
           params: _.extend {
           }, opts
@@ -49,13 +42,13 @@ angular.module('app.weights.model', ['app.config'])
 
         dfd.promise
 
-      @$loadBriefList: (modelName, opts) ->
+      @$loadBriefList: (model_id, opts) ->
         dfd = $q.defer()
 
-        if not modelName then throw new Error "Model is required to load tests"
+        if not model_id then throw new Error "Model is required to weights list"
         $http(
           method: 'GET'
-          url: "#{settings.apiUrl}weights/#{modelName}/brief"
+          url: "#{settings.apiUrl}weights/#{model_id}/action/brief/"
           headers: settings.apiRequestDefaultHeaders
           params: _.extend {
           }, opts

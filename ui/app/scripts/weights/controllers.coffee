@@ -23,7 +23,7 @@ angular.module('app.weights.controllers', ['app.config', ])
 
   $scope.loadList = () ->
     Weight.$loadAll(
-      $scope.model_name,
+      $scope.model.id,
       show: 'name,value,css_class',
       q: $scope.search_form.q,
       is_positive: $scope.search_form.is_positive,
@@ -93,7 +93,7 @@ angular.module('app.weights.controllers', ['app.config', ])
 
   $scope.loadColumns = (morePositive, moreNegative) ->
     Weight.$loadBriefList(
-      $scope.model.name,
+      $scope.model_id,
       show: 'name,value,css_class'
       ppage: $scope.ppage
       npage: $scope.npage
@@ -102,8 +102,8 @@ angular.module('app.weights.controllers', ['app.config', ])
           $scope.positive.push.apply($scope.positive, opts.positive)
         if moreNegative
           $scope.negative.push.apply($scope.negative, opts.negative)
-      ), (->
-        $scope.err = data
+      ), ((opts)->
+        $scope.err = opts
       )
 
   $scope.morePositiveWeights  = =>
