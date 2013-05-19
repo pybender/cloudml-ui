@@ -54,7 +54,7 @@ class BaseTestCase(unittest.TestCase):
                            for key, val in kwargs.iteritems()])
         params = {'url': self.BASE_URL,
                   'id': "%s/" % id if id else '',
-                  'action': "%s/" % action if action else '',
+                  'action': "action/%s/" % action if action else '',
                   'search': search}
         return "%(url)s%(id)s%(action)s?%(search)s" % params
 

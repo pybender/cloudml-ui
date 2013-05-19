@@ -77,6 +77,7 @@ class Models(BaseResource):
     GET_ACTIONS = ('download', )
     PUT_ACTIONS = ('train', )
     FILTER_PARAMS = (('status', str), ('comparable', int))
+    DEFAULT_FIELDS = ('_id', 'name')
     methods = ('GET', 'OPTIONS', 'DELETE', 'PUT', 'POST')
 
     MESSAGE404 = "Model with name %(_id)s doesn't exist"
@@ -270,26 +271,26 @@ class Tests(BaseResource):
 
     def _get_list_query(self, params, fields, **kwargs):
         params = self._prepare_filter_params(params)
-        params['model_name'] = kwargs.get('model')
+        params['model_id'] = kwargs.get('model_id')
         return self.Model.find(params, fields)
 
     def _get_details_query(self, params, fields, **kwargs):
-        model_name = kwargs.get('model')
+        model_id = kwargs.get('model_id')
         id = kwargs.get('_id')
-        return self.Model.find_one({'model_name': model_name,
+        return self.Model.find_one({'model_id': model_id,
                                    '_id': ObjectId(id)}, fields)
 
     def post(self, action=None, **kwargs):
         from api.tasks import run_test
-        model_name = kwargs.get('model')
-        model = app.db.Model.find_one({'name': model_name})
+        model_id = kwargs.get('model_id')
+        model = app.db.Model.find_one({'_id': ObjectId(model_id)})
         parser = populate_parser(model)
         parameters = parser.parse_args()
         test = app.db.Test()
         test.status = test.STATUS_QUEUED
         test.parameters = parameters
 
-        total = app.db.Test.find({'model_name': model.name}).count()
+        total = app.db.Test.find({'model_id': model_id}).count()
         test.name = "Test%s" % (total + 1)
         test.model_name = model.name
         test.save(check_keys=False)
@@ -297,7 +298,7 @@ class Tests(BaseResource):
         return self._render(self._get_post_response_context(test),
                             code=201)
 
-api.add_resource(Tests, '/cloudml/models/<regex("[\w\.]*"):model>/tests/')
+api.add_resource(Tests, '/cloudml/models/<regex("[\w\.]*"):model_id>/tests/')
 
 
 REDUCE_FUNC = 'function(obj, prev) {\

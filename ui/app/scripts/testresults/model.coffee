@@ -5,15 +5,16 @@ angular.module('app.testresults.model', ['app.config'])
   '$q'
   'settings'
   'Model'
+  'BaseModel'
   
-  ($http, $q, settings, Model) ->
+  ($http, $q, settings, Model, BaseModel) ->
     ###
     Trained Model Test
     ###
-    class TestResult
-
-      constructor: (opts) ->
-        @loadFromJSON opts
+    class TestResult extends BaseModel
+      API_FIELDNAME: 'test'
+      DEFAULT_FIELDS_TO_SAVE: ['importhandler', 'train_importhandler',
+                                'features', 'trainer', 'name']
 
       _id: null
       accuracy: null
@@ -25,57 +26,26 @@ angular.module('app.testresults.model', ['app.config'])
       model_name: null
       loaded: false
 
-      ### API methods ###
-
-      isNew: -> if @_id == null then true else false
-
-      objectUrl: =>
-        return '/models/' + (@model_name || @model.name) + "/tests/" + @name
+      constructor: (opts) ->
+        super opts
+        @BASE_API_URL = "#{settings.apiUrl}models/#{@model_id}/tests/"
+        @BASE_UI_URL = "/models/#{@model_id || @model._id}/tests/#{@_id}"
 
       examplesUrl: =>
         model = @model_name || @model.name
-        return "/models/#{model}/tests/#{@name}/examples"
+        return "#{@BASE_UI_URL}/examples"
 
       fullName: =>
         if @model? || @model_name
           return (@model_name || @model.name) + " / " + @name
         return @name
 
-      # Returns an object of job properties, for use in e.g. API requests
-      # and templates
-      toJSON: =>
-        name: @name
-
-      # Sets attributes from object received e.g. from API response
       loadFromJSON: (origData) =>
-        data = _.extend {}, origData
-        _.extend @, data
+        super origData
         if 'model' in origData
           @model = new Model(origData['model'])
           @model_name = origData['model']['name']
 
-      $load: (opts) ->
-        if @name == null
-          throw new Error "Can't load model without name"
-        $http(
-          method: 'GET'
-          url: settings.apiUrl + "model/#{@model_name}/test/#{@name}"
-          headers: {'X-Requested-With': null}
-          params: _.extend {
-          }, opts
-        ).then ((resp) =>
-          @loaded = true
-          @loadFromJSON(resp.data['test'])
-          #@model = new Model(resp.data['model'])
-          return resp
-
-        ), ((resp) =>
-          return resp
-        )
-
-      # Makes PUT or POST request to save the object. Options:
-      # ``only``: may contain a list of fields that will be sent to the server
-      # (only when PUTting to existing objects, API allows partial update)
       $save: (opts={}) =>
         saveData = @toJSON()
 
@@ -96,35 +66,19 @@ angular.module('app.testresults.model', ['app.config'])
         )
         .then((resp) => @loadFromJSON(resp.data))
 
-      $delete: (opts={}) =>
-        $http(
-          method: "DELETE"
-          headers: settings.apiRequestDefaultHeaders
-          url: "#{settings.apiUrl}model/#{@model.name}/test/#{@name}"
-          transformRequest: angular.identity
-        )
+      @$loadTests: (model_id, opts) ->
+        if not model_id
+          throw new Error "Model is required to load tests"
 
-      @$loadTests: (modelName, opts) ->
-        dfd = $q.defer()
-
-        if not modelName then throw new Error "Model is required to load tests"
-
-        $http(
-          method: 'GET'
-          url: "#{settings.apiUrl}model/#{modelName}/tests"
-          headers: settings.apiRequestDefaultHeaders
-          params: _.extend {
-          }, opts
-        )
-        .then ((resp) =>
-          dfd.resolve {
-            #total: resp.data.found
-            objects: (new TestResult(obj) for obj in resp.data.tests)
+        url = "#{settings.apiUrl}models/#{model_id}/tests/"
+        resolver = (resp, Model) ->
+          {
+            objects: (
+              new Model(_.extend(obj, {loaded: true})) \
+              for obj in eval("resp.data.#{Model.prototype.API_FIELDNAME}s"))
             _resp: resp
           }
+        @$make_all_request(url, resolver, opts)
 
-        ), (-> dfd.reject.apply @, arguments)
-
-        dfd.promise
     return TestResult
 ])

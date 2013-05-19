@@ -118,7 +118,7 @@ class BaseResource(restful.Resource):
 
         form = self.put_form(obj=obj)
         if form.is_valid():
-            return form.save()
+            obj = form.save()
         else:
             raise ValidationError(form.error_messages)
 

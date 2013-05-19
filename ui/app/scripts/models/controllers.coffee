@@ -211,7 +211,7 @@ name'
   $scope.goTests = () ->
     $scope.go 'status,created_on,target_variable,error,labels'
     Test.$loadTests(
-      $scope.model.name,
+      $scope.model._id,
       show: 'name,created_on,status,parameters,accuracy,examples_count'
     ).then ((opts) ->
       $scope.tests = opts.objects
