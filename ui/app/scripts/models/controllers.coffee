@@ -173,12 +173,13 @@ angular.module('app.models.controllers', ['app.config', ])
         else
           $scope.go 'importhandler,status,id'
       else $scope.go 'status,created_on,target_variable,error,
-labels,weights_synchronized,example_id,example_label,updated_on'
+labels,weights_synchronized,example_id,example_label,updated_on,
+name'
 
   if not $scope.model
-    if not $routeParams.name
-      err = "Can't initialize without model name"
-    $scope.model = new Model({name: $routeParams.name})
+    if not $routeParams.id
+      err = "Can't initialize without model id"
+    $scope.model = new Model({_id: $routeParams.id})
 
   $scope.$watch 'model.status', (status) ->
     if status in ['Queued', 'Training', 'Error']
@@ -252,7 +253,6 @@ labels,weights_synchronized,example_id,example_label,updated_on'
   'settings'
 
   ($scope, $http, dialog, settings) ->
-
     $scope.model = dialog.model
     $scope.model.$load(
       show: 'import_params'
@@ -325,7 +325,8 @@ labels,weights_synchronized,example_id,example_label,updated_on'
         modalFade: false
       )
       d.model = model
-      d.open('partials/model_train_popup.html', 'TrainModelCtrl')
+      d.open('partials/models/model_train_popup.html',
+             'TrainModelCtrl')
 
     $scope.delete_model = (model)->
       d = $dialog.dialog(

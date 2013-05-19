@@ -13,10 +13,10 @@ angular.module('app.weights.controllers', ['app.config', ])
   'WeightsTree'
 
 ($scope, $http, $routeParams, $location, Weight, WeightsTree) ->
-  if not $routeParams.name
-    throw new Error "Can't initialize without model name"
+  if not $routeParams.id
+    throw new Error "Can't initialize without model id"
 
-  $scope.model_name = $routeParams.name
+  $scope.model_id = $routeParams.id
 
   # List search parameters and methods
   $scope.search_form = {'q': '', 'is_positive': 0}

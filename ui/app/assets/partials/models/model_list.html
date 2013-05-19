@@ -29,7 +29,7 @@
 </thead>
 <tbody>
   <tr ng-repeat="model in objects" ng-class="{success : model.status=='Trained', warning : model.status =='New', info : model.status =='Training', error : model.status =='Error'}">
-    <td><a href="#/models/{{ model.name }}">{{ model.name }}</a></td>
+    <td><a href="#{{ model.objectUrl() }}">{{ model.name }}</a></td>
     <td title="{{ model.error }}">{{ model.status }}</td>
     <td>{{ model.created_on|format_date }}</td>
     <td><span ng-repeat="param in model.import_params">{{ param|capfirst }} </span></td>

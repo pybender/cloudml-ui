@@ -12,6 +12,7 @@ App = angular.module('app', [
   'app.services'
   'ui.bootstrap'
 
+  'app.base'
   'app.models.model'
   'app.models.controllers'
   'app.testresults.model'
@@ -35,11 +36,11 @@ App.config([
 
     .when('/models', {
       controller: "ModelListCtrl"
-      templateUrl: '/partials/model_list.html'
+      templateUrl: '/partials/models/model_list.html'
     })
-    .when('/models/:name', {
+    .when('/models/:id', {
       controller: 'ModelDetailsCtrl'
-      templateUrl: '/partials/model_details.html'
+      templateUrl: '/partials/models/model_details.html'
     })
     .when('/models/:name/tests/:test_name', {
       controller: 'TestDetailsCtrl'
@@ -59,11 +60,11 @@ App.config([
       templateUrl: '/partials/example_details.html'
     })
     .when('/upload_model', {
-      templateUrl: '/partials/upload_model.html'
+      templateUrl: '/partials/models/upload_model.html'
       controller: 'UploadModelCtl'
     })
     .when('/add_model', {
-      templateUrl: '/partials/add_model.html'
+      templateUrl: '/partials/models/add_model.html'
       controller: 'AddModelCtl'
     })
     .when('/compare_models', {
