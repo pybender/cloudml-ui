@@ -4,7 +4,6 @@
 
 angular.module('app.reports.controllers', ['app.config', ])
 
-
 .controller('CompareModelsFormCtl', [
   '$scope'
   '$http'
@@ -19,101 +18,79 @@ angular.module('app.reports.controllers', ['app.config', ])
   ($scope, $http, $location, $routeParams, settings,
   Model, Test, Data, CompareReport) ->
     FORM_ACTION = 'form:'
-    $scope.section = 'metrics'
     $scope.action = ($routeParams.action or FORM_ACTION).split ':'
+    $scope.section = 'metrics' # section of report view
+
+    $scope.form_data = [{'model': null, 'test': null},
+                        {'model': null, 'test': null}]
 
     $scope.$watch 'action', (action) ->
+      # Parsing get parameters:
+      #   model_id1,test_id1...model_idN,test_idN
       get_params = action[1].split ','
       if !$scope.report? && get_params.length != 0
-        kwargs = {}
+        data = []
         for i in [0...get_params.length]
             param = get_params[i]
             num = Math.floor(i / 2 + 1)
             if i % 2 == 1
-                kwargs['test_name' + num] = param
+                val['test'] = {'_id': param}
+                data.push(val)
             else
-                kwargs['model_name' + num] = param
-        $scope.report = new CompareReport(kwargs)
+                val = {'model': {'_id': param}}
+        $scope.form_data = data
+        $scope.report = new CompareReport(data)
 
       if action[0] == 'report'
         if !$scope.report.generated
             $scope.generate()
       else
-        if action[0] == 'form'
-          $scope.initForm()
+        $scope.initForm()
 
       actionString = action.join(':')
       $location.search(
         if actionString == FORM_ACTION then ""
         else "action=#{actionString}")
 
-    model_watcher = (model, oldVal, scope) ->
-      if model?
-        $scope.loadTestsList(model)
+    $scope.initForm = () =>
+      Model.$loadAll({comparable: 1, show: "name"}
+      ).then ((opts) ->
+        $scope.comparable_models = []
+        for model in opts.objects
+          $scope.comparable_models.push({'_id': model._id, 'name': model.name})
+      ), ((opts) ->
+        $scope.setError(opts, 'loading models')
+      )
 
-    $scope.$watch('model1', model_watcher, true)
-    $scope.$watch('model2', model_watcher, true)
+    $scope.changeModel = (item) ->
+      item.avaiable_tests = []
+      Test.$loadAll(item.model._id, {status: "Completed"}
+      ).then ((opts) ->
+        for test in opts.objects
+          item.avaiable_tests.push({'_id': test._id, 'name': test.name})
+      ), ((opts) ->
+        $scope.setError(opts, 'loading tests')
+      )
 
     $scope.is_form = ->
       $scope.action[0] == 'form'
 
-    $scope.loadModelsList = =>
-      Model.$loadAll({comparable: 1}
-      ).then ((opts) ->
-        $scope.models = opts.objects
-        # TODO: Fix this
-        if $scope.is_form()
-          for m in $scope.models
-            if m.name == $scope.report.model_name1
-              $scope.model1 = m
-            if m.name == $scope.report.model_name2
-              $scope.model2 = m
-      ), ((opts) ->
-        err = opts.$error
-      )
-
-    $scope.loadTestsList = (model) =>
-      Test.$loadTests(
-        model.name, {status: "Completed"}
-      ).then ((opts) ->
-        model.tests = opts.objects
-        # TODO: Fix this
-        if $scope.is_form()
-          for t in model.tests
-            if (t.name == $scope.report.test_name1) &&
-            (model.name == $scope.report.model_name1)
-              $scope.test1 = t
-            if (t.name == $scope.report.test_name2) &&
-            (model.name == $scope.report.model_name2)
-              $scope.test2 = t
-      ), ((opts) ->
-        err = opts.$error
-      )
-
     $scope.backToForm = () =>
       $scope.toogleAction("form")
 
-    $scope.generateReport = () =>
-      # fill parameters from form
-      kwargs = {test_name1: $scope.test1.name,
-      model_name1: $scope.model1.name,
-      test_name2: $scope.test2.name,
-      model_name2: $scope.model2.name}
-      $scope.report = new CompareReport(kwargs)
+    $scope.toogleReport = () =>
       $scope.toogleAction("report", "metrics")
 
     $scope.toogleAction = (action_name) =>
       report = $scope.report
+      csv_ids = ''
+      for item in $scope.form_data
+        csv_ids += "#{item.model._id},#{item.test._id},"
 
-      $scope.action = [action_name,
-            "#{report.model_name1},#{report.test_name1}," +
-            "#{report.model_name2},#{report.test_name2}"]
+      $scope.action = [action_name, csv_ids]
 
     $scope.toogleReportSection = (section) =>
       $scope.section = section
-
-    $scope.initForm = () =>
-      $scope.loadModelsList()
 
     $scope.generate = () =>
       $scope.generating = true
@@ -124,18 +101,12 @@ angular.module('app.reports.controllers', ['app.config', ])
         $scope.generatingProgress = '70%'
         $scope.$apply()
 
-      $scope.report.$getReportData()
+      $scope.report.$generate()
       .then (->
         $scope.generatingProgress = '100%'
         $scope.generating = false
-        $scope.generated = true
       ), ((resp) ->
         $scope.generating = false
-        $scope.err = "Error while generating compare report:" +
-          "server responded with #{resp.status} " +
-          "(#{resp.data.response.error.message or "no message"}). " +
-          "Make sure you filled the form correctly. " +
-          "Please contact support if the error will not go away."
+        $scope.setError(opts, 'generating report')
       )
-
 ])

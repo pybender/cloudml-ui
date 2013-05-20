@@ -68,7 +68,7 @@ App.config([
       controller: 'AddModelCtl'
     })
     .when('/compare_models', {
-      templateUrl: '/partials/compare_models_form.html'
+      templateUrl: '/partials/reports/compare_models_form.html'
       controller: 'CompareModelsFormCtl'
     })
 

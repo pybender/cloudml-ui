@@ -481,28 +481,37 @@ class CompareReportResource(BaseResource):
         return False
 
     def _details(self, extra_params=(), **kwargs):
-        params = self._parse_parameters(self.GET_PARAMS)
-        test_fields = ('name', 'model_name', 'accuracy', 'metrics')
-        test1 = app.db.Test.find_one({'model_name': params.get('model1'),
-                                      'name': params.get('test1')},
-                                     test_fields)
-        test2 = app.db.Test.find_one({'model_name': params.get('model2'),
-                                      'name': params.get('test2')},
-                                     test_fields)
+        from flask import request
+        params_pairs = {}
+
+        def process_val(key, val, val_type):
+            if key.startswith(val_type):
+                index = key.replace(val_type, '')
+                if not index in params_pairs:
+                    params_pairs[index] = {}
+                params_pairs[index][val_type] = val
+
+        for key, val in request.values.iteritems():
+            process_val(key, val, 'model')
+            process_val(key, val, 'test')
+
+        test_fields = ('name', 'model_name', 'accuracy', 'metrics',
+                       'model_id', 'parameters', 'examples_count')
         examples_fields = ('name', 'label', 'pred_label',
                            'weighted_data_input')
-        examples1 = app.db.TestExample.find({'model_name': params.get('model1'),
-                                             'test_name': params.get('test1')},
-                                            examples_fields).limit(10)
-        examples2 = app.db.TestExample.find({'model_name': params.get('model2'),
-                                             'test_name': params.get('test2')},
-                                            examples_fields).limit(10)
-        return self._render({'test1': test1, 'test2': test2,
-                             'examples1': examples1,
-                             'examples2': examples2})
+        resp_data = []
+        for index, item in params_pairs.iteritems():
+            test = app.db.Test.find_one({'model_id': item['model'],
+                                         '_id': ObjectId(item['test'])},
+                                        test_fields)
+            examples = app.db.TestExample.find({'model_id': item['model'],
+                                                'test_id': item['test']},
+                                               examples_fields).limit(10)
+            resp_data.append({'test': test, 'examples': examples})
+        return self._render({'data': resp_data})
 
 api.add_resource(CompareReportResource, 
-                 '/cloudml/reports/compare',
+                 '/cloudml/reports/compare/',
                  add_standart_urls=False)
 
 
