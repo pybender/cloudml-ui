@@ -28,12 +28,14 @@ angular.module('app.testresults.model', ['app.config'])
 
       constructor: (opts) ->
         super opts
-        @BASE_API_URL = "#{settings.apiUrl}models/#{@model_id}/tests/"
-        @BASE_UI_URL = "/models/#{@model_id || @model._id}/tests/#{@_id}"
+        @BASE_API_URL = TestResult.$get_api_url(@model_id)
+        @BASE_UI_URL = "/models/#{@model_id || @model._id}/tests/"
+
+      @$get_api_url: (model_id) ->
+        return "#{settings.apiUrl}models/#{model_id}/tests/"
 
       examplesUrl: =>
-        model = @model_name || @model.name
-        return "#{@BASE_UI_URL}/examples"
+        return "#{@BASE_UI_URL}#{@_id}/examples"
 
       fullName: =>
         if @model? || @model_name
@@ -46,39 +48,24 @@ angular.module('app.testresults.model', ['app.config'])
           @model = new Model(origData['model'])
           @model_name = origData['model']['name']
 
-      $save: (opts={}) =>
-        saveData = @toJSON()
+      $run: (data) =>
+        if @_id?
+          throw new Error "You can run only new test"
 
-        fields = opts.only || []
-        if fields.length > 0
-          for key in _.keys(saveData)
-            if key not in fields
-              delete saveData[key]
+        @$make_request(@BASE_API_URL, {}, 'POST', data)
 
-        saveData = @prepareSaveJSON(saveData)
-
-        $http(
-          method: if @isNew() then 'POST' else 'PUT'
-          headers: settings.apiRequestDefaultHeaders
-          url: "#{settings.apiUrl}/jobs/#{@id or ""}"
-          params: {access_token: user.access_token}
-          data: $.param saveData
-        )
-        .then((resp) => @loadFromJSON(resp.data))
-
-      @$loadTests: (model_id, opts) ->
+      @$loadAll: (model_id, opts) ->
         if not model_id
           throw new Error "Model is required to load tests"
 
-        url = "#{settings.apiUrl}models/#{model_id}/tests/"
         resolver = (resp, Model) ->
           {
             objects: (
-              new Model(_.extend(obj, {loaded: true})) \
+              new Model(_.extend(obj, {loaded: true, model_id: model_id})) \
               for obj in eval("resp.data.#{Model.prototype.API_FIELDNAME}s"))
             _resp: resp
           }
-        @$make_all_request(url, resolver, opts)
+        @$make_all_request(TestResult.$get_api_url(model_id), resolver, opts)
 
     return TestResult
 ])

@@ -152,6 +152,7 @@ class Test(Document):
     structure = {
         'name': basestring,
         'model_name': basestring,
+        'model_id': basestring,
         'status': basestring,
         'error': basestring,
         'created_on': datetime,
@@ -162,6 +163,7 @@ class Test(Document):
         'classes_set': list,
         'accuracy': float,
         'metrics': dict,
+        'model': Model,
         # Raw test data
         #'examples': [TestExample ],
     }

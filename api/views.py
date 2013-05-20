@@ -293,9 +293,11 @@ class Tests(BaseResource):
         total = app.db.Test.find({'model_id': model_id}).count()
         test.name = "Test%s" % (total + 1)
         test.model_name = model.name
+        test.model_id = model_id
+        test.model = model
         test.save(check_keys=False)
         run_test.delay(str(test._id))
-        return self._render(self._get_post_response_context(test),
+        return self._render(self._get_save_response_context(test),
                             code=201)
 
 api.add_resource(Tests, '/cloudml/models/<regex("[\w\.]*"):model_id>/tests/')

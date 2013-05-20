@@ -1,7 +1,7 @@
 <h2>
     {{ test.name|capfirst }} Details
     <div class="actions">
-        <a ng-show="test.status == 'Completed'" class="btn" href="#/models/{{ test.model_name }}/tests/{{ test_num }}/examples">
+        <a ng-show="test.status == 'Completed'" class="btn" href="#{{ test.examplesUrl() }}">
             <i class="status-icon icon-search"></i><small> Browse examples</small>
           </a>
         <a ng-show="test.status == 'Completed'" class="btn" href="#/models/{{ test.model_name }}/tests/{{ test_num }}/grouped_examples">
@@ -10,13 +10,13 @@
     </div>
 </h2>
 
-<div ng-hide="testLoaded">Loading...</div>
+<div ng-hide="test.loaded">Loading...</div>
 
-<alert-message ng-show="testLoaded && test.status != 'Completed'" class="alert-warning" msg="Test was not calculated yet. Status: {{ test.status }}" unsafe></alert-message>
+<alert-message ng-show="test.loaded && test.status != 'Completed'" class="alert-warning" msg="Test was not calculated yet. Status: {{ test.status }}" unsafe></alert-message>
 
 <alert-message ng-show="test.error" class="alert-error" msg="{{ test.error }}" unsafe></alert-message>
 
-<div ng-show="testLoaded && showLog">
+<div ng-show="test.loaded && showLog">
     <h4>Log Messages:</h4>
     <div class="logging">
       <div ng-repeat="msg in log_messages">{{ msg }}</div>

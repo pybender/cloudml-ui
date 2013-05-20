@@ -209,8 +209,8 @@ name'
       )
 
   $scope.goTests = () ->
-    $scope.go 'status,created_on,target_variable,error,labels'
-    Test.$loadTests(
+    $scope.go 'name,status,created_on,target_variable,error,labels'
+    Test.$loadAll(
       $scope.model._id,
       show: 'name,created_on,status,parameters,accuracy,examples_count'
     ).then ((opts) ->

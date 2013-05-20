@@ -42,13 +42,13 @@ App.config([
       controller: 'ModelDetailsCtrl'
       templateUrl: '/partials/models/model_details.html'
     })
-    .when('/models/:name/tests/:test_name', {
+    .when('/models/:model_id/tests/:id', {
       controller: 'TestDetailsCtrl'
-      templateUrl: '/partials/test_details.html'
+      templateUrl: '/partials/testresults/test_details.html'
     })
     .when('/models/:name/tests/:test_name/examples', {
       controller: 'TestExamplesCtrl'
-      templateUrl: '/partials/test_examples.html',
+      templateUrl: '/partials/testresults/test_examples.html',
       reloadOnSearch: false,
     })
     .when('/models/:name/tests/:test_name/grouped_examples', {
@@ -110,4 +110,15 @@ App.run(['$rootScope', 'settings', ($rootScope, settings) ->
     if not $rootScope.sse?
       $rootScope.sse = new EventSource("#{settings.apiUrl}log/?" + params)
     return $rootScope.sse
+
+  $rootScope.setError = (opts, message=null) ->
+    if !message?
+        message = 'processing request'
+
+    if opts.data
+      $rootScope.err = "Error while #{message}: server responded
+ with #{opts.status} (#{opts.data.response.error.message or "no message"})."
+    else
+      $rootScope.err = "Error while #{message}."
+
 ])

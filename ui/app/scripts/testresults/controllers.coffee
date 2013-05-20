@@ -6,58 +6,43 @@ angular.module('app.testresults.controllers', ['app.config', ])
 
 .controller('TestDialogController', [
   '$scope'
-  '$http'
   'dialog'
-  'settings'
   '$location'
   'TestResult'
 
-($scope, $http, dialog, settings, $location, Test) ->
+($scope, dialog, $location, Test) ->
 
-  $scope.model = dialog.model
-  $scope.model.$load(
-    show: 'import_params'
-    ).then (->
-      $scope.params = $scope.model.import_params
-    ), (->
-      $scope.err = data
-    )
   $scope.parameters = {} # parameters to send via API
+  $scope.model = dialog.model
+  $scope.model.$load(show: 'import_params').then (->
+    $scope.params = $scope.model.import_params
+  ), ((opts) ->
+    $scope.setError(opts, 'loading model import parameters')
+  )
 
   $scope.close = ->
     dialog.close()
 
-  $scope.start = (result) ->
-    form_data = new FormData()
-    model = $scope.model
+  $scope.start = () ->
+    data = {}
     for key of $scope.parameters
-      form_data.append(key, $scope.parameters[key])
+      data[key] = $scope.parameters[key]
 
-    $http(
-      method: "POST"
-      url: settings.apiUrl + "model/#{model.name}/test/test"
-      data: form_data
-      headers: {'Content-Type':undefined, 'X-Requested-With': null}
-      transformRequest: angular.identity
-    ).success((data, status, headers, config) ->
-      $scope.success = true
-      data['test']['model_name'] = model.name
-      test = new Test(data['test'])
-      $location.path test.objectUrl()
-      dialog.close(result)
-    ).error((data, status, headers, config) ->
-      $scope.httpError = true
+    $scope.test = new Test({model_id: $scope.model._id})
+    $scope.test.$run(data).then (->
+      $location.path $scope.test.objectUrl()
+      dialog.close()
+    ), ((opts) ->
+      $scope.setError(opts, 'running test')
     )
 ])
 
 .controller('DeleteTestCtrl', [
   '$scope'
-  '$http'
   'dialog'
-  'settings'
   '$location'
 
-  ($scope, $http, dialog, settings, location) ->
+  ($scope, dialog, location) ->
     $scope.test = dialog.test
     $scope.model = dialog.test.model
 
@@ -69,32 +54,26 @@ angular.module('app.testresults.controllers', ['app.config', ])
         $scope.close()
         location.search('action=test:list&any=' + Math.random())
       ), ((opts) ->
-        if opts.data
-          $scope.err = "Error while deleting test:" +
-            "server responded with " + "#{opts.status} " +
-            "(#{opts.data.response.error.message or "no message"}). "
-        else
-          $scope.err = "Error while deleting test"
+        $scope.setError(opts, 'deleting test')
       )
 ])
 
 .controller('TestDetailsCtrl', [
   '$scope'
-  '$http'
   '$routeParams'
-  'settings'
   'TestResult'
   '$location'
 
-($scope, $http, $routeParams, settings, Test, $location) ->
+($scope, $routeParams, Test, $location) ->
   if not $scope.test
-    if not $routeParams.name
-      throw new Error "Can't initialize test detail controller
-      without test name"
+    if not ($routeParams.model_id  and $routeParams.id)
+      throw new Error "Can't initialize test details controller
+without test id and model id"
 
-    $scope.test = new Test({model_name: $routeParams.name,
-    name: $routeParams.test_name})
-    $scope.test_num = $routeParams.test_name
+    $scope.test = new Test({
+      model_id: $routeParams.model_id,
+      _id: $routeParams.id
+    })
 
   $scope.$watch 'test.status', (status) ->
     if status in ['Queued', 'In Progress', 'Error']
@@ -127,11 +106,10 @@ parameters,error,examples_count'
     $scope.test.$load(
       show: fields
       ).then (->
-        $scope.testLoaded = true
         if callback?
           callback()
-      ), (->
-        $scope.err = 'Error'
+      ), ((opts)->
+        $scope.setError(opts, 'loading test')
       )
 
   $scope.goMetrics = (fields, callback) ->
