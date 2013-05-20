@@ -4,19 +4,46 @@
             "name": "Test-1",
             "status": "Completed",
             "created_on": "2013-04-19 14:40:23.145000", 
-            "model_name": "TrainedModel"
+            "model_name": "TrainedModel",
+            "model_id": "",
+            "parameters": {},
+            "metrics": {},
+            "examples_count": 100,
+            "error": "",
+            "model": null,
+            "data": {},
+            "classes_set": [],
+            "accuracy": 0.95
         },
         {
             "name": "Test-2",
             "status": "Completed",
             "created_on": "2013-04-19 14:40:23.145000", 
-            "model_name": "TrainedModel"
+            "model_name": "TrainedModel",
+            "model_id": "",
+            "parameters": {},
+            "metrics": {},
+            "examples_count": 100,
+            "error": "",
+            "model": null,
+            "data": {},
+            "classes_set": [],
+            "accuracy": 0.95
         },
         {
             "name": "Test-1",
             "status": "Completed",
             "created_on": "2013-04-19 14:40:23.145000", 
-            "model_name": "OtherModel"
+            "model_name": "OtherModel",
+            "model_id": "",
+            "parameters": {},
+            "metrics": {},
+            "examples_count": 100,
+            "error": "",
+            "model": null,
+            "data": {},
+            "classes_set": [],
+            "accuracy": 0.95
         }
     ]
 }

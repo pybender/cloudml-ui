@@ -1,6 +1,7 @@
 import unittest
 import json
 import os
+from datetime import datetime
 
 from api import app
 
@@ -31,6 +32,9 @@ class BaseTestCase(unittest.TestCase):
             for collection_name, documents in data.iteritems():
                 self._LOADED_COLLECTIONS.append(collection_name)
                 collection = self._get_collection(collection_name)
+                for doc in documents:
+                    doc['created_on'] = datetime.now()
+                    doc['updated_on'] = datetime.now()
                 collection.insert(documents)
 
     def fixtures_cleanup(self):

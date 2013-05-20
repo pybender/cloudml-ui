@@ -96,7 +96,7 @@ class BaseResource(restful.Resource):
         if action:
             return self._apply_action(action, method='POST', **kwargs)
 
-        form = self.post_form(Model=self.Model)
+        form = self.post_form(Model=self.Model, **kwargs)
         if form.is_valid():
             obj = form.save()
         else:

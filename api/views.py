@@ -17,7 +17,8 @@ from api import api, app
 from api.utils import crossdomain, ERR_INVALID_DATA, odesk_error_response, \
     ERR_NO_SUCH_MODEL, ERR_UNPICKLING_MODEL
 from api.resources import BaseResource, NotFound, ValidationError
-from api.forms import ModelAddForm, ModelEditForm, ImportHandlerAddForm
+from api.forms import ModelAddForm, ModelEditForm, ImportHandlerAddForm, \
+    AddTestForm
 from core.importhandler.importhandler import ExtractionPlan, \
     RequestImportHandler, ImportHandlerException
 
@@ -264,6 +265,7 @@ class Tests(BaseResource):
     DEFAULT_FIELDS = ('_id', 'name')
     FILTER_PARAMS = (('status', str), )
     methods = ('GET', 'OPTIONS', 'DELETE', 'PUT', 'POST')
+    post_form = AddTestForm
 
     @property
     def Model(self):
@@ -280,25 +282,25 @@ class Tests(BaseResource):
         return self.Model.find_one({'model_id': model_id,
                                    '_id': ObjectId(id)}, fields)
 
-    def post(self, action=None, **kwargs):
-        from api.tasks import run_test
-        model_id = kwargs.get('model_id')
-        model = app.db.Model.find_one({'_id': ObjectId(model_id)})
-        parser = populate_parser(model)
-        parameters = parser.parse_args()
-        test = app.db.Test()
-        test.status = test.STATUS_QUEUED
-        test.parameters = parameters
+    # def post(self, action=None, **kwargs):
+    #     from api.tasks import run_test
+    #     model_id = kwargs.get('model_id')
+    #     model = app.db.Model.find_one({'_id': ObjectId(model_id)})
+    #     parser = populate_parser(model)
+    #     parameters = parser.parse_args()
+    #     test = app.db.Test()
+    #     test.status = test.STATUS_QUEUED
+    #     test.parameters = parameters
 
-        total = app.db.Test.find({'model_id': model_id}).count()
-        test.name = "Test%s" % (total + 1)
-        test.model_name = model.name
-        test.model_id = model_id
-        test.model = model
-        test.save(check_keys=False)
-        run_test.delay(str(test._id))
-        return self._render(self._get_save_response_context(test),
-                            code=201)
+    #     total = app.db.Test.find({'model_id': model_id}).count()
+    #     test.name = "Test%s" % (total + 1)
+    #     test.model_name = model.name
+    #     test.model_id = model_id
+    #     test.model = model
+    #     test.save(check_keys=False)
+    #     run_test.delay(str(test._id))
+    #     return self._render(self._get_save_response_context(test),
+    #                         code=201)
 
 api.add_resource(Tests, '/cloudml/models/<regex("[\w\.]*"):model_id>/tests/')
 

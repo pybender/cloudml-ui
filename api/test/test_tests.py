@@ -8,12 +8,18 @@ class TestTests(BaseTestCase):
     MODEL_NAME = 'TrainedModel'
     TEST_NAME = 'Test-1'
     FIXTURES = ('models.json', 'tests.json', 'examples.json')
-    BASE_URL = '/cloudml/models/%s/tests/' % MODEL_NAME
 
     def setUp(self):
         super(TestTests, self).setUp()
+        self.model = self.db.Model.find_one({'name': self.MODEL_NAME})
         self.test = self.db.Test.find_one({'model_name': self.MODEL_NAME,
                                            'name': self.TEST_NAME})
+        model_tests = self.db.Test.find({'model_name': self.MODEL_NAME})
+        for test in model_tests:
+            test.model_id = str(self.model._id)
+            test.save()
+
+        self.BASE_URL = '/cloudml/models/%s/tests/' % self.model._id
 
     def test_list(self):
         url = self._get_url(show='name,status')
@@ -21,7 +27,7 @@ class TestTests(BaseTestCase):
         self.assertEquals(resp.status_code, httplib.OK)
         data = json.loads(resp.data)
         self.assertTrue('tests' in data)
-        tests = self.db.Test.find({'model_name': self.MODEL_NAME})
+        tests = self.db.Test.find({'model_name': self.model.name})
         count = tests.count()
         self.assertEquals(count, len(data['tests']))
         self.assertTrue(tests[0].name in resp.data, resp.data)

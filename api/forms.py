@@ -2,6 +2,7 @@ import json
 from datetime import datetime
 from flask import request
 
+from api import app
 from api.resources import ValidationError
 from api.models import Model
 from core.trainer.store import load_trainer
@@ -12,7 +13,7 @@ from core.importhandler.importhandler import ExtractionPlan, \
 
 
 class BaseForm():
-    def __init__(self, obj=None, Model=None):
+    def __init__(self, obj=None, Model=None, **kwargs):
         self.data = request.form
         self.errors = []
         if obj:
@@ -22,6 +23,9 @@ class BaseForm():
         else:
             raise Exception('Spec obj or Model')
         self._cleaned = False
+
+        for key, val in kwargs.iteritems():
+            setattr(self, key, val)
 
     @property
     def error_messages(self):
@@ -163,3 +167,42 @@ class ImportHandlerAddForm(BaseForm):
             return json.loads(value)
         except ValueError:
             raise ValidationError('Invalid data')
+
+
+class AddTestForm(BaseForm):
+    fields = ('name', 'model', 'parameters')
+
+    def clean_name(self, value):
+        total = app.db.Test.find({'model_id': self.model_id}).count()
+        return "Test%s" % (total + 1)
+
+    def clean_model(self, value):
+        from bson.objectid import ObjectId
+        self.model = app.db.Model.find_one({'_id': ObjectId(self.model_id)})
+        if self.model is None:
+            raise ValidationError('Model not found')
+
+        self.cleaned_data['model_name'] = self.model.name
+        self.cleaned_data['model_id'] = self.model_id
+        return self.model
+
+    def clean_parameters(self, value):
+        parser = populate_parser(self.model)
+        return parser.parse_args()
+
+    def save(self):
+        test = BaseForm.save(self, commit=False)
+        test.status = test.STATUS_QUEUED
+        test.save(check_keys=False)
+
+        from api.tasks import run_test
+        run_test.delay(str(test._id))
+        return test
+
+
+def populate_parser(model):
+    from flask.ext.restful import reqparse
+    parser = reqparse.RequestParser()
+    for param in model.import_params:
+        parser.add_argument(param, type=str)
+    return parser
