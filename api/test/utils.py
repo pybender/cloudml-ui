@@ -26,30 +26,23 @@ class BaseTestCase(unittest.TestCase):
     def db(self):
         return app.db
 
-    def fixtures_load(self):
-        for fixture in self.FIXTURES:
-            data = self._load_fixture_data(fixture)
+    @classmethod
+    def fixtures_load(cls):
+        for fixture in cls.FIXTURES:
+            data = _load_fixture_data(fixture)
             for collection_name, documents in data.iteritems():
-                self._LOADED_COLLECTIONS.append(collection_name)
-                collection = self._get_collection(collection_name)
+                cls._LOADED_COLLECTIONS.append(collection_name)
+                collection = _get_collection(collection_name)
                 for doc in documents:
                     doc['created_on'] = datetime.now()
                     doc['updated_on'] = datetime.now()
                 collection.insert(documents)
 
-    def fixtures_cleanup(self):
-        for collection_name in self._LOADED_COLLECTIONS:
-            collection = self._get_collection(collection_name)
+    @classmethod
+    def fixtures_cleanup(cls):
+        for collection_name in cls._LOADED_COLLECTIONS:
+            collection = _get_collection(collection_name)
             collection.remove()
-
-    def _load_fixture_data(self, filename):
-        filename = os.path.join('./api/fixtures/', filename)
-        content = open(filename, 'rb').read()
-        return json.loads(content)
-
-    def _get_collection(self, name):
-        callable_model = getattr(self.db, name)
-        return callable_model.collection
 
     def _get_url(self, **kwargs):
         id = kwargs.pop('id', '')
@@ -61,6 +54,16 @@ class BaseTestCase(unittest.TestCase):
                   'action': "action/%s/" % action if action else '',
                   'search': search}
         return "%(url)s%(id)s%(action)s?%(search)s" % params
+
+
+def _get_collection(name):
+    callable_model = getattr(app.db, name)
+    return callable_model.collection
+
+def _load_fixture_data(filename):
+    filename = os.path.join('./api/fixtures/', filename)
+    content = open(filename, 'rb').read()
+    return json.loads(content)
 
 
 def dumpdata(document_list, fixture_name):

@@ -148,7 +148,6 @@ class BaseResource(restful.Resource):
             parser_params += self.PAGING_PARAMS
         params = self._parse_parameters(parser_params)
         fields = self._get_fields_to_show(params)
-        print "fields", fields
 
         # Removing empty values
         kw = dict([(k, v) for k, v in kwargs.iteritems() if v])

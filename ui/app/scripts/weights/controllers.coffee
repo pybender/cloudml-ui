@@ -23,7 +23,7 @@ angular.module('app.weights.controllers', ['app.config', ])
 
   $scope.loadList = () ->
     Weight.$loadAll(
-      $scope.model.id,
+      $routeParams.id,
       show: 'name,value,css_class',
       q: $scope.search_form.q,
       is_positive: $scope.search_form.is_positive,
@@ -41,10 +41,10 @@ angular.module('app.weights.controllers', ['app.config', ])
     )
 
   $scope.$watch('search_form.page', (page, oldVal, scope) ->
-        if (scope.action[0] == 'weights') and
-            (scope.action[0] == 'list') and page
-          $scope.loadList()
-      , true)
+    if (scope.action[0] == 'weights') and
+        (scope.action[1] == 'list') and page
+      $scope.loadList()
+  , true)
 
   # Tree params & methods
   $scope.tree_dict = {'weights': {}, 'categories': {}}
@@ -66,7 +66,7 @@ angular.module('app.weights.controllers', ['app.config', ])
         parent_node = $scope.tree_dict
 
     WeightsTree.$loadNode(
-      $routeParams.name,
+      $routeParams.id,
       show: 'name,short_name,parent',
       parent: parent
     ).then ((opts) ->
