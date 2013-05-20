@@ -17,13 +17,6 @@ class ModelTests(BaseTestCase):
         super(ModelTests, self).setUp()
         self.model = self.db.Model.find_one({'name': self.MODEL_NAME})
 
-        # TODO: check field type when loading fixtures and
-        # create instance of datatime when loading datatime field
-        from datetime import datetime
-        self.model.created_on = datetime.now()
-        self.model.updated_on = datetime.now()
-        self.model.save()
-
     def test_list(self):
         resp = self.app.get(self.BASE_URL)
         self.assertEquals(resp.status_code, httplib.OK)
@@ -183,11 +176,12 @@ trainer - 'module' object has no attribute 'FeatureTypeInstance'")
         count = self.db.Model.find().count()
         name = 'new2'
         handler = open('./conf/extract.json', 'r').read()
-        trainer = open('./model.dat', 'r')
+        trainer = open('./api/test/model.dat', 'r')
         post_data = {'importhandler': handler,
                      'trainer': trainer,
                      'name': name}
         resp = self.app.post(self.BASE_URL, data=post_data)
+        print resp.data
         self.assertEquals(resp.status_code, httplib.CREATED)
         self.assertTrue('model' in resp.data)
         new_count = self.db.Model.find().count()

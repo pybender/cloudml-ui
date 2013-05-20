@@ -13,8 +13,15 @@ from core.importhandler.importhandler import ExtractionPlan, \
 
 
 class BaseForm():
-    def __init__(self, obj=None, Model=None, **kwargs):
-        self.data = request.form
+    def __init__(self, data=None, obj=None, Model=None, **kwargs):
+        if data is None:
+            data = {}
+            for k in request.form.keys():
+                data[k] = request.form.get(k, None)
+            for k in request.files.keys():
+                data[k] = request.files.get(k, None)
+
+        self.data = data
         self.errors = []
         if obj:
             self.obj = obj
@@ -80,11 +87,19 @@ class ModelEditForm(BaseForm):
 class ModelAddForm(BaseForm):
     fields = ('features', 'trainer', 'train_importhandler',
               'name', 'importhandler')
+    trainer = None
 
     def clean_name(self, value):
         if not value:
             raise ValidationError('name is required')
         return value
+
+    def clean_trainer(self, value):
+        if value:
+            try:
+                self.trainer = load_trainer(value)
+            except InvalidTrainerFile, exc:
+                raise ValidationError('Invalid trainer: %s' % exc)
 
     def clean_features(self, value):
         loaded_value = self._clean_json_val('features', value)
@@ -113,18 +128,13 @@ class ModelAddForm(BaseForm):
 
     def validate_obj(self):
         features = self.cleaned_data.get('features')
-        trainer = self.cleaned_data.get('trainer')
-        if not features and not trainer:
+        if not features and not self.trainer:
             raise ValidationError('Either features, either pickled \
 trained model is required for posting model')
 
         if features:
             self.trainer = Trainer(self.feature_model)
         else:
-            try:
-                self.trainer = load_trainer(trainer)
-            except InvalidTrainerFile, exc:
-                raise ValidationError('Invalid trainer: %s' % exc)
             self.cleaned_data['status'] = Model.STATUS_TRAINED
 
     def save(self):
@@ -139,11 +149,13 @@ trained model is required for posting model')
         return obj
 
     def _clean_json_val(self, name, value):
-        if value and not value == 'undefined':
+        if value:
             try:
                 return json.loads(value)
-            except ValueError, exc:
+            except (ValueError), exc:
                 raise ValidationError('Invalid %s: %s %s' % (name, value, exc))
+            except TypeError:
+                return {}
 
 
 class ImportHandlerAddForm(BaseForm):

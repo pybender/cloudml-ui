@@ -37,7 +37,6 @@ class TestTests(BaseTestCase):
     def test_details(self):
         url = self._get_url(id=self.test._id, show='name,status')
         resp = self.app.get(url)
-        print resp.data
         self.assertEquals(resp.status_code, httplib.OK)
         data = json.loads(resp.data)
         self.assertTrue('test' in data, data)

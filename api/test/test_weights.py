@@ -19,10 +19,11 @@ class WeightsTests(BaseTestCase):
     def setUpClass(cls):
         super(WeightsTests, cls).setUpClass()
         handler = open('./conf/extract.json', 'r').read()
-        trainer = open('./model.dat', 'r')
+        trainer = open('./api/test/model.dat', 'r')
         post_data = {'importhandler': handler,
-                     'trainer': trainer}
-        resp = cls.app.post(cls.BASE_URL, data=post_data)
+                     'trainer': trainer,
+                     'name': cls.MODEL_NAME}
+        resp = cls.app.post('/cloudml/models/', data=post_data)
         assert resp.status_code == httplib.CREATED
         cls.model = app.db.Model.find_one({'name': cls.MODEL_NAME})
         trainer = cls.model.get_trainer()

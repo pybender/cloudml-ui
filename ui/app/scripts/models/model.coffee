@@ -44,7 +44,7 @@ angular.module('app.models.model', ['app.config'])
               origData['train_importhandler'], pretty=true)
 
       downloadUrl: =>
-        return "#{@BASE_API_URL}#{@_id}/download/"
+        return "#{@BASE_API_URL}#{@_id}/action/download/"
 
       $train: (opts={}) =>
         data = {}
