@@ -46,18 +46,18 @@ App.config([
       controller: 'TestDetailsCtrl'
       templateUrl: '/partials/testresults/test_details.html'
     })
-    .when('/models/:name/tests/:test_name/examples', {
+    .when('/models/:model_id/tests/:test_id/examples', {
       controller: 'TestExamplesCtrl'
-      templateUrl: '/partials/testresults/test_examples.html',
+      templateUrl: '/partials/examples/example_list.html',
       reloadOnSearch: false,
     })
-    .when('/models/:name/tests/:test_name/grouped_examples', {
+    .when('/models/:model_id/tests/:test_id/grouped_examples', {
       controller: 'GroupedExamplesCtrl'
-      templateUrl: '/partials/grouped_examples.html'
+      templateUrl: '/partials/examples/grouped_examples.html'
     })
-    .when('/models/:name/tests/:test_name/examples/:data_id', {
+    .when('/models/:model_id/tests/:test_id/examples/:id', {
       controller: 'ExampleDetailsCtrl'
-      templateUrl: '/partials/example_details.html'
+      templateUrl: '/partials/examples/example_details.html'
     })
     .when('/upload_model', {
       templateUrl: '/partials/models/upload_model.html'

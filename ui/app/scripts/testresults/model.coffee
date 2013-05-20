@@ -29,13 +29,16 @@ angular.module('app.testresults.model', ['app.config'])
       constructor: (opts) ->
         super opts
         @BASE_API_URL = TestResult.$get_api_url(@model_id)
-        @BASE_UI_URL = "/models/#{@model_id || @model._id}/tests/"
+        @BASE_UI_URL = "/models/#{@model_id}/tests/"
 
       @$get_api_url: (model_id) ->
         return "#{settings.apiUrl}models/#{model_id}/tests/"
 
       examplesUrl: =>
         return "#{@BASE_UI_URL}#{@_id}/examples"
+
+      avaragePrecisionUrl: =>
+        return "#{@BASE_UI_URL}#{@_id}/grouped_examples"
 
       fullName: =>
         if @model? || @model_name

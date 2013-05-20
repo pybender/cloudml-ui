@@ -1,6 +1,6 @@
 <div ng-app="ng-app" ng-controller="ObjectListCtrl">
   <div ng-init="init({objectLoader: loadDatas()})">
-    <h2>{{ test_name|capfirst }} Examples List</h2>
+    <h2>{{ test.name|capfirst }} Examples List</h2>
 
     <alert-message ng-show="total == 0" class="alert-warning" msg="No examples to display."></alert-message>
 
@@ -36,8 +36,8 @@
           </thead>
           <tbody>
           <tr ng-repeat="data in objects | filter:search | orderBy:'id'" ng-class="{success : data.label==data.pred_label, error : !(data.label==data.pred_label)}">
-            <td><a href="#/models/{{ data.model_name }}/tests/{{ data.test_name }}/examples/{{ data._id }}">{{ data.id }}</a></td>
-            <td><a href="#/models/{{ data.model_name }}/tests/{{ data.test_name }}/examples/{{ data._id }}">{{ data.name }}</a></td>
+            <td><a href="#{{ data.objectUrl() }}">{{ data.id }}</a></td>
+            <td><a href="#{{ data.objectUrl() }}">{{ data.name }}</a></td>
             <td><span>{{ data.label }}</span></td>
             <td><span>{{ data.pred_label }}</span></td>
           </tr>

@@ -210,6 +210,8 @@ class TestExample(Document):
 
         'test_name': basestring,
         'model_name': basestring,
+        'test_id': basestring,
+        'model_id': basestring,
     }
     use_autorefs = True
     default_values = {'created_on': datetime.utcnow}

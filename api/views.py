@@ -282,26 +282,6 @@ class Tests(BaseResource):
         return self.Model.find_one({'model_id': model_id,
                                    '_id': ObjectId(id)}, fields)
 
-    # def post(self, action=None, **kwargs):
-    #     from api.tasks import run_test
-    #     model_id = kwargs.get('model_id')
-    #     model = app.db.Model.find_one({'_id': ObjectId(model_id)})
-    #     parser = populate_parser(model)
-    #     parameters = parser.parse_args()
-    #     test = app.db.Test()
-    #     test.status = test.STATUS_QUEUED
-    #     test.parameters = parameters
-
-    #     total = app.db.Test.find({'model_id': model_id}).count()
-    #     test.name = "Test%s" % (total + 1)
-    #     test.model_name = model.name
-    #     test.model_id = model_id
-    #     test.model = model
-    #     test.save(check_keys=False)
-    #     run_test.delay(str(test._id))
-    #     return self._render(self._get_save_response_context(test),
-    #                         code=201)
-
 api.add_resource(Tests, '/cloudml/models/<regex("[\w\.]*"):model_id>/tests/')
 
 
@@ -319,21 +299,19 @@ class TestExamplesResource(BaseResource):
     OBJECT_NAME = 'data'
     NEED_PAGING = True
     GET_ACTIONS = ('groupped', 'csv')
-    DETAILS_PARAM = 'example_id'
     FILTER_PARAMS = (('label', str), ('pred_label', str))
     decorators = [crossdomain(origin='*')]
 
     def _get_details_query(self, params, fields, **kwargs):
+        # TODO: return only fields that are specified
+        example = super(TestExamplesResource, self).\
+            _get_details_query(params, None, **kwargs)
+        if example is None:
+            raise NotFound('Example not found')
+
         from helpers.weights import get_weighted_data
-        model_name = kwargs.get('model_name')
-        test_name = kwargs.get('test_name')
-        example_id = kwargs.get('example_id')
-        fields.append('data_input')
-        example = self.Model.find_one({'model_name': model_name,
-                                       'test_name': test_name,
-                                       '_id': ObjectId(example_id)})
         if example['weighted_data_input'] == {}:
-            model = app.db.Model.find_one({'name': model_name})
+            model = app.db.Model.find_one({'_id': ObjectId(kwargs['model_id'])})
             weighted_data_input = get_weighted_data(model,
                                                     example['data_input'])
             example['weighted_data_input'] = dict(weighted_data_input)
@@ -361,9 +339,9 @@ class TestExamplesResource(BaseResource):
         if not group_by_field:
             return odesk_error_response(400, ERR_INVALID_DATA,
                                         'field parameter is required')
-        model_name = kwargs.get('model_name')
-        test_name = kwargs.get('test_name')
-        logging.info('For model: %s test: %s' % (model_name, test_name))
+        model_id = kwargs.get('model_id')
+        test_id = kwargs.get('test_id')
+        logging.info('For model: %s test: %s' % (model_id, test_id))
         logging.info('Gettings examples')
 
         collection = app.db.TestExample.collection
@@ -393,8 +371,8 @@ class TestExamplesResource(BaseResource):
         #                 'avp': avp})
 
         groups = collection.group([group_by_field, ],
-                                  {'model_name': model_name,
-                                   'test_name': test_name},
+                                  {'model_id': model_id,
+                                   'test_id': test_id},
                                   {'list': []}, REDUCE_FUNC)
         import sklearn.metrics as sk_metrics
         import numpy
@@ -481,7 +459,7 @@ not contain probabilities')
         from flask import Response
         resp = Response(generate(), mimetype='text/csv')
         resp.headers["Content-Disposition"] = "attachment; \
-filename=%(model_name)s-%(test_name)s-examples.csv" % kwargs
+filename=%(model_id)s-%(test_id)s-examples.csv" % kwargs
         return resp
 
 api.add_resource(TestExamplesResource, '/cloudml/models/\

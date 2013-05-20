@@ -178,6 +178,8 @@ def run_test(test_id):
                 example['prob'] = prob.tolist()
                 example['test_name'] = test.name
                 example['model_name'] = model.name
+                example['test_id'] = str(test._id)
+                example['model_id'] = str(model._id)
                 try:
                     example.validate()
                 except Exception, exc:

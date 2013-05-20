@@ -4,7 +4,7 @@
         <a ng-show="test.status == 'Completed'" class="btn" href="#{{ test.examplesUrl() }}">
             <i class="status-icon icon-search"></i><small> Browse examples</small>
           </a>
-        <a ng-show="test.status == 'Completed'" class="btn" href="#/models/{{ test.model_name }}/tests/{{ test_num }}/grouped_examples">
+        <a ng-show="test.status == 'Completed'" class="btn" href="#{{ test.avaragePrecisionUrl() }}">
             <i class="status-icon icon-search"></i><small> Average Precision</small>
           </a>
     </div>
