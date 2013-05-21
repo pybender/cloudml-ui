@@ -4,7 +4,6 @@ import cPickle as pickle
 import traceback
 import StringIO
 import csv
-from datetime import datetime
 from flask.ext.restful import reqparse
 from flask import request, Response
 
@@ -19,8 +18,7 @@ from api.utils import crossdomain, ERR_INVALID_DATA, odesk_error_response, \
 from api.resources import BaseResource, NotFound, ValidationError
 from api.forms import ModelAddForm, ModelEditForm, ImportHandlerAddForm, \
     AddTestForm
-from core.importhandler.importhandler import ExtractionPlan, \
-    RequestImportHandler, ImportHandlerException
+from core.importhandler.importhandler import ExtractionPlan, RequestImportHandler
 
 model_parser = reqparse.RequestParser()
 model_parser.add_argument('importhandler', type=str,
@@ -144,7 +142,7 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
                                         **kwargs)
         parser = populate_parser(model)
         params = parser.parse_args()
-        train_model.delay(model.name, params)
+        train_model.delay(str(model._id), params)
         model.status = model.STATUS_QUEUED
         model.save()
         return self._render({self.OBJECT_NAME: model._id})

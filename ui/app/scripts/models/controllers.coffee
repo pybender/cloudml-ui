@@ -185,7 +185,7 @@ name'
     if status in ['Queued', 'Training', 'Error', 'New']
       $scope.showLog = true
       $scope.log_messages = []
-      params = "channel=trainmodel_log&model=" + $scope.model.name
+      params = "channel=trainmodel_log&model=" + $scope.model._id
       log_sse = $scope.getEventSource(params=params)
       handleCallback = (msg) ->
         $scope.$apply(() ->

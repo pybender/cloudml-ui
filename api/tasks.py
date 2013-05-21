@@ -16,14 +16,14 @@ class InvalidOperationError(Exception):
 
 
 @celery.task
-def train_model(model_name, parameters):
+def train_model(model_id, parameters):
     """
     Train new model celery task.
     """
-    init_logger('trainmodel_log', model=model_name)
+    init_logger('trainmodel_log', model=model_id)
 
     try:
-        model = app.db.Model.find_one({'name': model_name})
+        model = app.db.Model.find_one({'_id': ObjectId(model_id)})
         if model.status == model.STATUS_TRAINED:
             raise InvalidOperationError("Model already trained")
 
