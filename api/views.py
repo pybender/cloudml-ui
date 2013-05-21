@@ -296,7 +296,7 @@ class TestExamplesResource(BaseResource):
 
     OBJECT_NAME = 'data'
     NEED_PAGING = True
-    GET_ACTIONS = ('groupped', 'csv')
+    GET_ACTIONS = ('groupped', 'csv', 'datafields')
     FILTER_PARAMS = (('label', str), ('pred_label', str))
     decorators = [crossdomain(origin='*')]
 
@@ -426,6 +426,11 @@ not contain probabilities')
                    'mavp': mavp}
         logging.info('End request for calculating MAP')
         return self._render(context)
+
+    def _get_datafields_action(self, **kwargs):
+        example = self.Model.find_one(kwargs, ('data_input', ))
+        data = example['data_input']
+        return self._render({'fields': data.keys()})
 
     def _get_csv_action(self, **kwargs):
         """

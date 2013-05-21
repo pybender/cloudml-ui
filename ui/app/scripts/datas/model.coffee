@@ -47,6 +47,14 @@ angular.module('app.datas.model', ['app.config'])
           }
         @$make_all_request(url, resolver, opts)
 
+      @$loadFieldList: (model_id, test_id) ->
+        if not model_id or not test_id
+          throw new Error "Model and Test ids are required to load data fields"
+
+        url = Data.$get_api_url(model_id, test_id) + 'action/datafields/'
+        resolver = (resp) -> { fields: resp.data['fields'] }
+        @$make_all_request(url, resolver, {})
+
       @$loadAllGroupped: (model_id, test_id, opts) ->
         if not model_id or not test_id
           throw new Error "Model and Test ids are required to load examples"
