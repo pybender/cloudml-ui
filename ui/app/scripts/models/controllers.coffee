@@ -182,7 +182,7 @@ name'
     $scope.model = new Model({_id: $routeParams.id})
 
   $scope.$watch 'model.status', (status) ->
-    if status in ['Queued', 'Training', 'Error']
+    if status in ['Queued', 'Training', 'Error', 'New']
       $scope.showLog = true
       $scope.log_messages = []
       params = "channel=trainmodel_log&model=" + $scope.model.name
@@ -236,7 +236,9 @@ name'
     )
 
   $scope.saveModel = =>
-    $scope.model.$save(only: ['example_label', 'example_id']).then (() ->
+    $scope.model.$save(only: ['name',
+                              'example_label',
+                              'example_id']).then (() ->
       $scope.editMode = false
     ), ((opts) ->
        $scope.err = "Error while saving model details: server responded with " +

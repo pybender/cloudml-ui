@@ -56,7 +56,7 @@ angular.module('app.base', ['app.config'])
           data[name] = eval("this." + name)
 
         method = if @isNew() then "POST" else "PUT"
-        @$make_request(@BASE_API_URL + (@id or ""), {}, method, data)
+        @$make_request(@BASE_API_URL + (@_id + "/" or ""), {}, method, data)
 
       # Removes object by id
       $delete: (opts={}) =>

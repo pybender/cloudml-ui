@@ -17,7 +17,7 @@ angular.module('app.reports.controllers', ['app.config', ])
 
   ($scope, $http, $location, $routeParams, settings,
   Model, Test, Data, CompareReport) ->
-    FORM_ACTION = 'form:'
+    FORM_ACTION = 'form'
     $scope.action = ($routeParams.action or FORM_ACTION).split ':'
     $scope.section = 'metrics' # section of report view
 
@@ -27,7 +27,9 @@ angular.module('app.reports.controllers', ['app.config', ])
     $scope.$watch 'action', (action) ->
       # Parsing get parameters:
       #   model_id1,test_id1...model_idN,test_idN
-      get_params = action[1].split ','
+      get_params = []
+      if action[1]
+        get_params = action[1].split ','
       if !$scope.report? && get_params.length != 0
         data = []
         for i in [0...get_params.length]

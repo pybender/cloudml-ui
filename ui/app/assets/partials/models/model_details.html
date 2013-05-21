@@ -60,9 +60,10 @@
         <div class="span6">
             <div>
                 Name:
-                <span class="value editable">
+                <span class="value editable" ng-hide="editMode">
                     {{ model.name }}
                 </span>
+                <input type="text" ng-model="model.name" name="name" ng-show="editMode" />
             </div>
             <div>
                 Status:
@@ -116,7 +117,7 @@
     </div>
   </div>
 
-
+showLog = {{  showLog }}
   <div ng-show="action[0] == 'log' && showLog">
       <h4>Log Messages:</h4>
       <div class="logging">

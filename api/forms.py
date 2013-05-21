@@ -75,7 +75,7 @@ class BaseForm():
 
 class ModelEditForm(BaseForm):
     fields = ('importhandler', 'train_importhandler',
-              'example_id', 'example_label')
+              'example_id', 'example_label', 'name')
 
     def clean_importhandler(self, value):
         if value and not value == 'undefined':
