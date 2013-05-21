@@ -197,16 +197,6 @@ class WeightsResource(BaseResource):
                    'negative_weights': get_weights(False, npage)}
         return self._render(context)
 
-    def _get_list_query(self, params, fields, **kwargs):
-        results = super(WeightsResource, self)._get_list_query(params, fields,
-                                                               **kwargs)
-        if self.is_fulltext_search:
-            # sort
-            cmp_func = lambda a: abs(a['value'])
-            results.sort(key=cmp_func)
-            results.reverse()
-        return results
-
 api.add_resource(WeightsResource, '/cloudml/weights/\
 <regex("[\w\.]*"):model_id>/')
 

@@ -33,11 +33,13 @@ class BaseResource(restful.Resource):
     GET_PARAMS = (('show', str), )
     FILTER_PARAMS = ()
     PAGING_PARAMS = (('page', int), )
+    SORT_PARAMS = (('sort_by', str), ('order', str))
 
     ENABLE_FULLTEXT_SEARCH = True
     FULLTEXT_SEARCH_PARAM_NAME = 'q'
 
     MESSAGE404 = "Object doesn't exist"
+    ORDER_DICT = {'asc': 1, 'desc': -1}
     decorators = [crossdomain(origin='*',
                               headers="accept, origin, content-type")]
 
@@ -143,7 +145,8 @@ class BaseResource(restful.Resource):
         GET parameters:
             * show - list of fields to return
         """
-        parser_params = extra_params + self.GET_PARAMS + self.FILTER_PARAMS
+        parser_params = extra_params + self.GET_PARAMS + self.FILTER_PARAMS +\
+            self.SORT_PARAMS
         if self.NEED_PAGING:
             parser_params += self.PAGING_PARAMS
         params = self._parse_parameters(parser_params)
@@ -199,6 +202,14 @@ class BaseResource(restful.Resource):
 
     def _get_list_query(self, params, fields, **kwargs):
         filter_params = self._prepare_filter_params(params)
+        sort_by = params.get('sort_by', None)
+        if sort_by:
+            order = params.get('order') or 'asc'
+            try:
+                order = self.ORDER_DICT[order]
+            except KeyError:
+                raise ValidationError('Invalid order. It could be asc or desc')
+
         if self.ENABLE_FULLTEXT_SEARCH and \
                 self.FULLTEXT_SEARCH_PARAM_NAME in filter_params and \
                 filter_params[self.FULLTEXT_SEARCH_PARAM_NAME]:
@@ -212,14 +223,22 @@ class BaseResource(restful.Resource):
             res = app.db.command("text", "weights", search=search,
                                  project=show, filter=kwargs,
                                  limit=1000)
+            res = [result['obj'] for result in res['results']]
+            if sort_by:
+                res.sort(key=lambda a: a[sort_by])
+                if order == -1:
+                    res.reverse()
             self.is_fulltext_search = True
-            return [result['obj'] for result in res['results']]
+            return res
         else:
             if self.FULLTEXT_SEARCH_PARAM_NAME in filter_params:
                 del filter_params[self.FULLTEXT_SEARCH_PARAM_NAME]
 
             kwargs.update(filter_params)
-            return self.Model.find(kwargs, fields)
+            cursor = self.Model.find(kwargs, fields)
+            if sort_by:
+                cursor.sort(sort_by, order)
+            return cursor
 
     def _prepare_filter_params(self, params):
         filter_names = [v[0] for v in self.FILTER_PARAMS]
