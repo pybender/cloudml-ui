@@ -33,9 +33,10 @@ class Migrate(Command):
     """Migrate"""
 
     def run(self, **kwargs):
-        from api.migrations import ModelMigration
-        from api.models import Model
-        ModelMigration(Model).migrate_all(app.db.Model.collection)
+        from api.migrations import ModelMigration, TestMigration
+        from api.models import Model, Test
+        TestMigration(Test).migrate_all(app.db.Test.collection)
+        #ModelMigration(Model).migrate_all(app.db.Model.collection)
 
 
 def _make_context():
