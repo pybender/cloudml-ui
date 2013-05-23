@@ -108,7 +108,7 @@ App.run(['$rootScope', 'settings', ($rootScope, settings) ->
 
   $rootScope.getEventSource = (params='') ->
     if not $rootScope.sse?
-      $rootScope.sse = new EventSource("#{settings.apiUrl}log/?" + params)
+      $rootScope.sse = new EventSource("#{settings.logUrl}log/?" + params)
     return $rootScope.sse
 
   $rootScope.setError = (opts, message=null) ->
