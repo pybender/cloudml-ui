@@ -38,7 +38,7 @@
         <button ng-show="model.status == 'Trained'" ng-click="test_model(model)" class="btn btn-success">
           <i title="Apply the classifier to the input provided by the data import handler" class="status-icon icon-play"></i>
         </button>
-        <button ng-show="model.status == 'New' || model.status == 'Error'" ng-click="train_model(model)" class="btn btn-info">
+        <button ng-click="train_model(model)" class="btn btn-info">
           <i title="Train your model" class="icon-tasks"></i>
         </button>
         <a ng-show="model.status == 'Trained'" href="{{ model.downloadUrl() }}?field=trainer" class="btn btn-info">
