@@ -1,4 +1,5 @@
 import unittest
+import httplib
 import json
 import os
 from datetime import datetime
@@ -9,10 +10,11 @@ from api import app
 class BaseTestCase(unittest.TestCase):
     FIXTURES = []
     _LOADED_COLLECTIONS = []
+    RESOURCE = None
 
     @classmethod
     def setUpClass(cls):
-        app.config['DATABASE_NAME'] = 'cloudml-test'
+        app.config['DATABASE_NAME'] = 'cloudml-testdb'
         app.init_db()
         cls.app = app.test_client()
 
@@ -55,10 +57,72 @@ class BaseTestCase(unittest.TestCase):
                   'search': search}
         return "%(url)s%(id)s%(action)s?%(search)s" % params
 
+    def _check_list(self, show='created_on,type'):
+        key = "%ss" % self.RESOURCE.OBJECT_NAME
+        url = self.BASE_URL
+        resp = self.app.get(url)
+        self.assertEquals(resp.status_code, httplib.OK,
+                          'Got %s when trying get %s' % (resp.status, url))
+        data = json.loads(resp.data)
+        self.assertTrue(key in data, data)
+        obj_resp = data[key]
+        count = self.Model.find().count()
+        #self.assertTrue(count, 'Invalid fixtures')
+        self.assertEquals(count, len(obj_resp))
+        default_fields = self.RESOURCE.DEFAULT_FIELDS or [u'_id', u'name']
+        self.assertEquals(obj_resp[0].keys(), default_fields)
+
+        url = self._get_url(show=show)
+        resp = self.app.get(url)
+        self.assertEquals(resp.status_code, httplib.OK,
+                          'Got %s when trying get %s' % (resp.status, url))
+        data = json.loads(resp.data)
+        obj_resp = data[key][0]
+        fields = show.split(',')
+        self.assertEquals(len(fields) + 1, len(obj_resp.keys()))
+        for field in fields:
+            self.assertTrue(field in obj_resp.keys())
+
+    def _check_details(self, show='created_on,type'):
+        key = self.RESOURCE.OBJECT_NAME
+        url = self._get_url(id=self.obj._id)
+        resp = self.app.get(url)
+        self.assertEquals(resp.status_code, httplib.OK,
+                          'Got %s when trying get %s: %s' %
+                          (resp.status, url, resp.data))
+        data = json.loads(resp.data)
+        self.assertTrue(key in data, data)
+        obj_resp = data[key]
+        self.assertEquals(str(self.obj._id), obj_resp['_id'])
+        self.assertEquals(self.obj.name, obj_resp['name'])
+
+        url = self._get_url(id=self.obj._id, show=show)
+        resp = self.app.get(url)
+        self.assertEquals(resp.status_code, httplib.OK,
+                          'Got %s when trying get %s' % (resp.status, url))
+        data = json.loads(resp.data)
+        obj_resp = data[key]
+        fields = show.split(',')
+        self.assertEquals(len(fields) + 1, len(obj_resp.keys()))
+        for field in fields:
+            self.assertTrue(field in obj_resp.keys())
+            self.assertEquals(str(getattr(self.obj, field)),
+                              obj_resp[field])
+
+    def _check_post(self, post_data={}):
+        count = self.Model.find().count()
+        resp = self.app.post(self.BASE_URL, data=post_data)
+        self.assertEquals(resp.status_code, httplib.CREATED)
+        self.assertTrue(self.RESOURCE.OBJECT_NAME in resp.data)
+        new_count = self.Model.find().count()
+        self.assertEquals(count + 1, new_count)
+        return resp
+
 
 def _get_collection(name):
     callable_model = getattr(app.db, name)
     return callable_model.collection
+
 
 def _load_fixture_data(filename):
     filename = os.path.join('./api/fixtures/', filename)

@@ -212,6 +212,25 @@ class AddTestForm(BaseForm):
         return test
 
 
+class AwsInstanceAddForm(BaseForm):
+    fields = ('name', 'description', 'ip', 'type', )
+
+    def clean_name(self, value):
+        if not value:
+            raise ValidationError('name is required')
+        return value
+
+    def clean_type(self, value):
+        # if not type in ImportHandler.TYPE_CHOICES:
+        #     raise ValidationError('invalid')
+        return value
+
+    def clean_ip(self, value):
+        if not value:
+            raise ValidationError('data is required')
+        return value
+
+
 def populate_parser(model):
     from flask.ext.restful import reqparse
     parser = reqparse.RequestParser()

@@ -17,7 +17,7 @@ from api.utils import crossdomain, ERR_INVALID_DATA, odesk_error_response, \
     ERR_NO_SUCH_MODEL, ERR_UNPICKLING_MODEL
 from api.resources import BaseResource, NotFound, ValidationError
 from api.forms import ModelAddForm, ModelEditForm, ImportHandlerAddForm, \
-    AddTestForm
+    AddTestForm, AwsInstanceAddForm
 from core.importhandler.importhandler import ExtractionPlan, RequestImportHandler
 
 model_parser = reqparse.RequestParser()
@@ -566,6 +566,22 @@ class Predict(BaseResource):
 
 api.add_resource(Predict, '/cloudml/model/<regex("[\w\.]*"):model_id>/\
 <regex("[\w\.]*"):handler_id>/predict', add_standart_urls=False)
+
+
+class AwsInstanceResource(BaseResource):
+    """
+    AWS Instances API methods
+    """
+    @property
+    def Model(self):
+        return app.db.AwsInstance
+
+    OBJECT_NAME = 'instance'
+    decorators = [crossdomain(origin='*')]
+    methods = ['GET', 'OPTIONS', 'PUT', 'POST']
+    post_form = AwsInstanceAddForm
+
+api.add_resource(AwsInstanceResource, '/cloudml/aws_instances/')
 
 
 def populate_parser(model):

@@ -238,3 +238,23 @@ class ImportHandler(Document):
 
     def __repr__(self):
         return '<Import Handler %r>' % self.name
+
+
+@connection.register
+class AwsInstance(Document):
+    __collection__ = 'aws_instance'
+    structure = {
+        'name': basestring,
+        'description': basestring,
+        'ip': basestring,
+        'type': basestring,
+        'created_on': datetime,
+        'updated_on': datetime,
+    }
+    required_fields = ['name', 'created_on', 'updated_on', 'ip', ]
+    default_values = {'created_on': datetime.utcnow,
+                      'updated_on': datetime.utcnow}
+    use_dot_notation = True
+
+    def __repr__(self):
+        return '<Aws Instance %r>' % self.name
