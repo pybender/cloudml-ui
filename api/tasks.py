@@ -24,12 +24,11 @@ def train_model(model_id, parameters):
 
     try:
         model = app.db.Model.find_one({'_id': ObjectId(model_id)})
-        if model.status == model.STATUS_TRAINED:
-            raise InvalidOperationError("Model already trained")
+        model.delete_metadata()
 
         model.status = model.STATUS_TRAINING
         model.error = ""
-        model.save()
+        model.save(validate=True)
         feature_model = FeatureModel(json.dumps(model.features),
                                      is_file=False)
         trainer = Trainer(feature_model)
@@ -38,9 +37,9 @@ def train_model(model_id, parameters):
         trainer.clear_temp_data()
         model.status = model.STATUS_TRAINED
         model.set_trainer(trainer)
+        model.save()
         fill_model_parameter_weights.delay(str(model._id),
                                            **trainer.get_weights())
-        model.save()
     except Exception, exc:
         logging.error(exc)
         model.status = model.STATUS_ERROR
@@ -107,8 +106,10 @@ filled: %s' % (model_id, count))
 
     model.weights_synchronized = True
     model.save()
-    return 'Model %s parameters weights was added to db: %s' % \
+    msg = 'Model %s parameters weights was added to db: %s' % \
         (model.name, len(weight_list))
+    logging.info(msg)
+    return msg
 
 
 @celery.task

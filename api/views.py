@@ -34,7 +34,7 @@ model_parser.add_argument('example_label', type=str, default=None)
 def event_stream(query_params={}):
     curs = app.chan.cursor(query_params, False)
     while True:
-        gevent.sleep(0.5)
+        gevent.sleep(0.2)
         try:
             msg = curs.next()
             if msg:
@@ -140,11 +140,12 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
         from api.tasks import train_model
         model = self._get_details_query(None, None,
                                         **kwargs)
-        parser = populate_parser(model)
+        parser = populate_parser(model, is_requred=True)
         params = parser.parse_args()
-        train_model.delay(str(model._id), params)
         model.status = model.STATUS_QUEUED
         model.save()
+
+        train_model.delay(str(model._id), params)
         return self._render({self.OBJECT_NAME: model._id})
 
 api.add_resource(Models, '/cloudml/models/')
@@ -541,10 +542,7 @@ class Predict(BaseResource):
         plan = ExtractionPlan(json.dumps(hndl.data), is_file=False)
         request_import_handler = RequestImportHandler(plan, data)
         try:
-            if model.trainer:
-                trainer = pickle.loads(model.trainer)
-            else:
-                trainer = pickle.loads(model.fs.trainer)
+            trainer = model.get_trainer()
         except Exception, exc:
             msg = "Model %s can't be unpickled: %s" % (model.name,
                                                        exc)
@@ -573,8 +571,8 @@ api.add_resource(Predict, '/cloudml/model/<regex("[\w\.]*"):model_id>/\
 <regex("[\w\.]*"):handler_id>/predict', add_standart_urls=False)
 
 
-def populate_parser(model):
+def populate_parser(model, is_requred=False):
     parser = reqparse.RequestParser()
     for param in model.import_params:
-        parser.add_argument(param, type=str)
+        parser.add_argument(param, type=str, required=is_requred)
     return parser

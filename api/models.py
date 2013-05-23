@@ -103,7 +103,8 @@ class Model(Document):
     def get_trainer(self, loaded=True):
         trainer = self.trainer or self.fs.trainer
         if loaded:
-            return pickle.loads(trainer)
+            from core.trainer.store import TrainerStorage
+            return TrainerStorage.loads(trainer)
         return trainer
 
     def get_import_handler(self, parameters=None, is_test=False):
@@ -116,10 +117,7 @@ class Model(Document):
         return handler
 
     def run_test(self, parameters=True, callback=None):
-        if self.trainer:
-            trainer = pickle.loads(self.trainer)
-        else:
-            trainer = pickle.loads(self.fs.trainer)
+        trainer = self.get_trainer()
         test_handler = self.get_import_handler(parameters, is_test=True)
         metrics = trainer.test(test_handler, callback=callback)
         raw_data = trainer._raw_data
@@ -127,7 +125,8 @@ class Model(Document):
         return metrics, raw_data
 
     def set_trainer(self, trainer):
-        self.fs.trainer = Binary(pickle.dumps(trainer))
+        from core.trainer.store import TrainerStorage
+        self.fs.trainer = Binary(TrainerStorage(trainer).dumps())
         self.target_variable = trainer._feature_model.target_variable
         #feature_type = trainer._feature_model.
         #features[self.target_variable]['type']
@@ -135,10 +134,15 @@ class Model(Document):
             self.labels = map(str, trainer._classifier.classes_.tolist())
 
     def delete(self):
-        params = {'model_name': self.name}
-        app.db.TestExample.collection.remove(params)
-        app.db.Test.collection.remove(params)
+        self.delete_metadata()
         self.collection.remove({'_id': self._id})
+
+    def delete_metadata(self):
+        params = {'model_id': str(self._id)}
+        app.db.Test.collection.remove(params)
+        app.db.TestExample.collection.remove(params)
+        app.db.WeightsCategory.collection.remove(params)
+        app.db.Weight.collection.remove(params)
 
 
 @connection.register
@@ -197,6 +201,7 @@ class TestExample(Document):
 
     structure = {
         'created_on': datetime,
+        'updated_on': datetime,
         'data_input': dict,
         'weighted_data_input': dict,
 

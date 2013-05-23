@@ -72,7 +72,6 @@ app = App(connection, __name__)
 celery = Celery('cloudml')
 celery.add_defaults(lambda: app.config)
 
-
 class Api(restful.Api):
     def add_resource(self, resource, *urls, **kwargs):
         """Adds a resource to the api.

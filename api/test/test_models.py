@@ -1,7 +1,7 @@
 import httplib
 import json
 
-from utils import BaseTestCase
+from utils import MODEL_ID, BaseTestCase
 from api.utils import ERR_INVALID_DATA
 
 
@@ -10,7 +10,8 @@ class ModelTests(BaseTestCase):
     Tests of the Models API.
     """
     MODEL_NAME = 'TrainedModel'
-    FIXTURES = ('models.json', 'tests.json', 'examples.json')
+    FIXTURES = ('models.json', 'tests.json', 'examples.json',
+                'weights.json')
     BASE_URL = '/cloudml/models/'
 
     def setUp(self):
@@ -158,9 +159,8 @@ not unpickle trainer - could not find MARK')
                                     "Invalid trainer: Could not unpickle \
 trainer - 'module' object has no attribute 'FeatureTypeInstance'")
 
-    def test_post_new_model(self):
+    def test_post_new_model(self, name='new'):
         count = self.db.Model.find().count()
-        name = 'new'
         features = open('./conf/features.json', 'r').read()
         handler = open('./conf/extract.json', 'r').read()
         post_data = {'importhandler': handler,
@@ -181,7 +181,6 @@ trainer - 'module' object has no attribute 'FeatureTypeInstance'")
                      'trainer': trainer,
                      'name': name}
         resp = self.app.post(self.BASE_URL, data=post_data)
-        print resp.data
         self.assertEquals(resp.status_code, httplib.CREATED)
         self.assertTrue('model' in resp.data)
         new_count = self.db.Model.find().count()
@@ -216,6 +215,44 @@ trainer - 'module' object has no attribute 'FeatureTypeInstance'")
         model = self.db.Model.find_one(id=self.model._id)
         self.assertEquals(data['model']['name'], 'new name %@#')
         self.assertEquals(model.name, 'new name %@#')
+
+    def test_retrain_model(self):
+        model_filter_params = {'model_name': self.MODEL_NAME,
+                               'model_id': MODEL_ID}
+        self.assertEquals(self.model.status, "Trained")
+
+        def check(Model, exist=True, msg=''):
+            """
+            Checks whether documents exist.
+            """
+            obj_list = Model.find(model_filter_params)
+            self.assertEqual(bool(obj_list.count()), exist, msg)
+            return obj_list
+
+        check(self.db.Test)
+        check(self.db.TestExample)
+        check(self.db.Weight)
+        check(self.db.WeightsCategory)
+
+        url = self._get_url(id=self.model._id, action='train')
+        resp = self.app.put(url, data={})
+        self.assertTrue('start is required' in resp.data)
+
+        data = {'start': '2012-12-03',
+                'end': '2012-12-04'}
+        resp = self.app.put(url, data=data)
+        self.assertTrue(str(self.model._id) in resp.data)
+
+        check(self.db.Test, exist=False,
+              msg='Tests should be removed after retrain model')
+        check(self.db.TestExample, exist=False,
+              msg='Tests Examples should be removed after retrain model')
+        weights = self.db.Weight.find(model_filter_params)
+        self.assertEquals(weights.count(), 319)
+        categories = self.db.WeightsCategory.find(model_filter_params)
+        self.assertEquals(categories.count(), 6)
+        self.model = self.db.Model.find_one({'_id': self.model._id})
+        self.assertEquals(self.model.status, 'Trained')
 
     def test_delete(self):
         url = self._get_url(id=self.model._id)

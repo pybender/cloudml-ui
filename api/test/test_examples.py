@@ -37,7 +37,7 @@ class TestExamplesTests(BaseTestCase):
         self.assertEquals(resp.status_code, httplib.OK)
         data = json.loads(resp.data)
         self.assertTrue('datas' in data, data)
-        import pdb; pdb.set_trace()
+        #import pdb; pdb.set_trace()
         datas_resp = data['datas']
         count = self.db.TestExamples.find({'model_name': self.MODEL_NAME,
                                            'test_name': self.TEST_NAME}).count()

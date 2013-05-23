@@ -34,8 +34,6 @@ class WeightsTests(BaseTestCase):
         weights = cls.trainer_weights = trainer.get_weights()
         cls.weight_list = weights['positive'] + weights['negative']
         cls.COUNT = len(cls.weight_list)
-        cls._run_fill_model_weights_task()
-
         cls._LOADED_COLLECTIONS += ['WeightsCategory', 'Weight']
 
     @classmethod
