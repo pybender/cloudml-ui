@@ -56,7 +56,7 @@ without test id and model id"
   'TestResult'
 
 ($scope, $routeParams, Data, Test) ->
-  $scope.form = {'field': "data_input.hire_outcome", 'count': 2 }
+  $scope.form = {'field': "", 'count': 2 }
   $scope.test = new Test({
     model_id: $routeParams.model_id,
     _id: $routeParams.test_id
@@ -64,9 +64,16 @@ without test id and model id"
   $scope.test.$load(
       show: 'name'
   )
+  Data.$loadFieldList($routeParams.model_id,
+                      $routeParams.test_id).then ((opts) ->
+      $scope.fields = opts.fields
+    ), ((opts) ->
+      $scope.setError(opts, 'loading data field list')
+    )
+
   $scope.update = () ->
     Data.$loadAllGroupped($routeParams.model_id, $routeParams.test_id, {
-      field: $scope.form.field,
+      field: 'data_input.' + $scope.form.field,
       count: $scope.form.count
     }).then ((opts) ->
       $scope.field_name = opts.field_name
@@ -75,7 +82,6 @@ without test id and model id"
     ), ((opts) ->
       $scope.setError(opts, 'loading test examples')
     )
-  $scope.update()
 ])
 
 .controller('ExampleDetailsCtrl', [

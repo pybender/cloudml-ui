@@ -208,6 +208,15 @@ trainer - 'module' object has no attribute 'FeatureTypeInstance'")
         self.assertEquals(model.importhandler, {'b': 2})
         self.assertEquals(model.train_importhandler, {"a": 1})
 
+    def test_edit_model_name(self):
+        data = {'name': 'new name %@#'}
+        resp = self.app.put(self._get_url(id=self.model._id), data=data)
+        self.assertEquals(resp.status_code, httplib.OK)
+        data = json.loads(resp.data)
+        model = self.db.Model.find_one(id=self.model._id)
+        self.assertEquals(data['model']['name'], 'new name %@#')
+        self.assertEquals(model.name, 'new name %@#')
+
     def test_delete(self):
         url = self._get_url(id=self.model._id)
         resp = self.app.get(url)
