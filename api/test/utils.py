@@ -2,8 +2,12 @@ import unittest
 import json
 import os
 from datetime import datetime
+from celery.task.base import Task
 
 from api import app
+
+
+MODEL_ID = '519318e6106a6c0df349bc0b'
 
 
 class BaseTestCase(unittest.TestCase):
@@ -28,6 +32,7 @@ class BaseTestCase(unittest.TestCase):
 
     @classmethod
     def fixtures_load(cls):
+        from bson.objectid import ObjectId
         for fixture in cls.FIXTURES:
             data = _load_fixture_data(fixture)
             for collection_name, documents in data.iteritems():
@@ -36,6 +41,8 @@ class BaseTestCase(unittest.TestCase):
                 for doc in documents:
                     doc['created_on'] = datetime.now()
                     doc['updated_on'] = datetime.now()
+                    if '_id' in doc:
+                        doc['_id'] = ObjectId(doc['_id'])
                 collection.insert(documents)
 
     @classmethod
@@ -56,9 +63,44 @@ class BaseTestCase(unittest.TestCase):
         return "%(url)s%(id)s%(action)s?%(search)s" % params
 
 
+class CeleryTestCaseBase(BaseTestCase):
+
+    def setUp(self):
+        super(CeleryTestCaseBase, self).setUp()
+        self.applied_tasks = []
+
+        self.task_apply_async_orig = Task.apply_async
+
+        @classmethod
+        def new_apply_async(task_class, args=None, kwargs=None, **options):
+            self.handle_apply_async(task_class, args, kwargs, **options)
+
+        # monkey patch the regular apply_sync with our method
+        Task.apply_async = new_apply_async
+
+    def tearDown(self):
+        super(CeleryTestCaseBase, self).tearDown()
+
+        # Reset the monkey patch to the original method
+        Task.apply_async = self.task_apply_async_orig
+
+    def handle_apply_async(self, task_class, args=None, kwargs=None, **options):
+        self.applied_tasks.append((task_class, tuple(args), kwargs))
+
+    def assert_task_sent(self, task_class, *args, **kwargs):
+        was_sent = any(task_class == task[0] and args == task[1] and kwargs == task[2]
+                       for task in self.applied_tasks)
+        self.assertTrue(was_sent, 'Task not called w/class %s and args %s' % (task_class, args))
+
+    def assert_task_not_sent(self, task_class):
+        was_sent = any(task_class == task[0] for task in self.applied_tasks)
+        self.assertFalse(was_sent, 'Task was not expected to be called, but was.  Applied tasks: %s' %                 self.applied_tasks)
+
+
 def _get_collection(name):
     callable_model = getattr(app.db, name)
     return callable_model.collection
+
 
 def _load_fixture_data(filename):
     filename = os.path.join('./api/fixtures/', filename)

@@ -6,7 +6,7 @@
         <i title="Apply the classifier to the input provided by the data import handler" class="status-icon icon-play"></i>
         Run test
       </button>
-      <button ng-show="model.status == 'New' || model.status == 'Error'" ng-click="train_model(model)" class="btn btn-info">
+      <button ng-click="train_model(model)" class="btn btn-info">
         <i title="Train your model" class="icon-tasks"></i>
         Start training
       </button>
@@ -47,7 +47,7 @@
   <li  ng-class="{active: action[0] == 'model'}">
     <a ng-click="action = ['model', 'details']">Details</a> 
   </li>
-  <li  ng-class="{active: action[0] == 'log'}" ng-show="showLog"><a ng-click="action = ['log', 'details']">Logs</a></li>
+  <li  ng-class="{active: action[0] == 'log'}"><a ng-click="action = ['log', 'details']">Logs</a></li>
   <li ng-class="{active: action[0] == 'weights'}"><a  ng-click="action = ['weights', 'columns']">Parameters Weights</a></li>
   <li ng-class="{active: action[0] == 'test'}"><a  ng-click="action = ['test', 'list']">Tests</a></li>
   <li ng-class="{active: action[0] == 'features'}"><a ng-click="action = ['features', 'file']">Features</a></li>
@@ -117,7 +117,7 @@
     </div>
   </div>
 
-  <div ng-show="action[0] == 'log' && showLog">
+  <div ng-show="action[0] == 'log'">
       <h4>Log Messages:</h4>
       <div class="logging">
         <div ng-repeat="msg in log_messages">{{ msg }}</div>
