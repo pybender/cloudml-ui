@@ -12,5 +12,5 @@ class ModelMigration(DocumentMigration):
 
 class TestMigration(DocumentMigration):
     def allmigration01__add_model_id(self):
-        self.target = {'model_id': {'$exists': False}}
+        self.target = {'model_id': {'$exists': False}, 'model': {'$exists': True}}
         self.update = {'$set': {'model_id': self.doc['model']['_id']}}
