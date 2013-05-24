@@ -4,10 +4,6 @@ from flask.ext.script import Manager, Command, Shell
 
 from api import app
 
-import gevent.monkey
-from gevent.pywsgi import WSGIServer
-gevent.monkey.patch_all()
-
 
 class Celeryd(Command):
     """Runs a Celery worker node."""
@@ -26,6 +22,9 @@ class Run(Command):
     """Runs a Celery Flower worker node."""
 
     def run(self, **kwargs):
+        import gevent.monkey
+        from gevent.pywsgi import WSGIServer
+        gevent.monkey.patch_all()
         http_server = WSGIServer(('', 5000), app)
         http_server.serve_forever()
 
