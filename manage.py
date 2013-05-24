@@ -36,13 +36,14 @@ class Migrate(Command):
         from api.migrations import ModelMigration, TestMigration
         from api.models import Model, Test
         #TestMigration(Test).migrate_all(app.db.Test.collection)
-        target = {'model_id': {'$exists': False}, 'model': {'$exists': True}}
+        target = {'model_id': {'$exists': False}, 'model_name': {'$exists': True}}
         
         #ModelMigration(Model).migrate_all(app.db.Model.collection)
         for doc in app.db.tests.find(target):
-                model_id = app.db.model.find_one({'name': doc['model_name']})['_id']
-                update = {'$set': {'model_id': model_id }}
-                app.db.tests.update(target, update, multi=True, safe=True)
+            model_id = app.db.model.find_one({'name': doc['model_name']})['_id']
+            update = {'$set': {'model_id': model_id}}
+            print model_id
+            app.db.tests.update(target, update, multi=True, safe=True)
 
 
 def _make_context():
