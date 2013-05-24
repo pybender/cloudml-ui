@@ -572,14 +572,15 @@ class AwsInstanceResource(BaseResource):
     """
     AWS Instances API methods
     """
-    @property
-    def Model(self):
-        return app.db.AwsInstance
-
+    MESSAGE404 = "AWS Instance doesn't exist"
     OBJECT_NAME = 'instance'
     decorators = [crossdomain(origin='*')]
     methods = ['GET', 'OPTIONS', 'PUT', 'POST']
     post_form = AwsInstanceAddForm
+
+    @property
+    def Model(self):
+        return app.db.AwsInstance
 
 api.add_resource(AwsInstanceResource, '/cloudml/aws_instances/')
 

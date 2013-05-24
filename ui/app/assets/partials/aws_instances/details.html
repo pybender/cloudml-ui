@@ -1,0 +1,11 @@
+<h2>{{ instance.name|capfirst }} Details</h2>
+
+<alert-message ng-show="err" class="alert-error" msg='{{ err }}' unsafe>
+</alert-message>
+<p>{{ instance.description }}</p>
+<div>IP: <span class="value">{{ instance.ip }}</span></div>
+<div>Type: <span class="value">{{ instance.type }}</span></div>
+<div>
+    Created at: 
+    <span class="value">{{ instance.created_on|format_date }}</span>
+</div>

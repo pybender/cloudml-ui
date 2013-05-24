@@ -3,6 +3,7 @@ import httplib
 import json
 import os
 from datetime import datetime
+from bson.objectid import ObjectId
 
 from api import app
 
@@ -38,6 +39,8 @@ class BaseTestCase(unittest.TestCase):
                 for doc in documents:
                     doc['created_on'] = datetime.now()
                     doc['updated_on'] = datetime.now()
+                    if '_id' in doc:
+                        doc['_id'] = ObjectId(doc['_id'])
                 collection.insert(documents)
 
     @classmethod
@@ -109,13 +112,18 @@ class BaseTestCase(unittest.TestCase):
             self.assertEquals(str(getattr(self.obj, field)),
                               obj_resp[field])
 
-    def _check_post(self, post_data={}):
+    def _check_post(self, post_data={}, load_model=False):
         count = self.Model.find().count()
         resp = self.app.post(self.BASE_URL, data=post_data)
         self.assertEquals(resp.status_code, httplib.CREATED)
         self.assertTrue(self.RESOURCE.OBJECT_NAME in resp.data)
         new_count = self.Model.find().count()
         self.assertEquals(count + 1, new_count)
+        if load_model:
+            data = json.loads(resp.data)
+            _id = data[self.RESOURCE.OBJECT_NAME]['_id']
+            obj = self.Model.find_one({'_id': ObjectId(_id)})
+            return resp, obj
         return resp
 
 

@@ -1,7 +1,3 @@
-import httplib
-import json
-from bson.objectid import ObjectId
-
 from utils import BaseTestCase
 from api.views import AwsInstanceResource
 
@@ -31,4 +27,7 @@ class AwsInstancesTests(BaseTestCase):
         post_data = {'ip': '1.1.1.1',
                      'type': 'small',
                      'name': 'new'}
-        self._check_post(post_data)
+        resp, obj = self._check_post(post_data, load_model=True)
+        self.assertEqual(obj.name, post_data['name'])
+        self.assertEqual(obj.ip, post_data['ip'])
+        self.assertEqual(obj.type, post_data['type'])

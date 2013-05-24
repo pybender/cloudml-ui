@@ -1,0 +1,35 @@
+<h2>
+  AWS Instances List
+  <div class="actions">
+      <a class="btn btn-info" href="#/aws/instances/add">
+        <i class="status-icon icon-plus"></i> Add new AWS Instance
+      </a>
+  </div>
+</h2>
+
+<alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+
+<alert-message ng-show="objects.length == 0" class="alert-info" msg="No AWS instances found"></alert-message>
+
+<table ng-hide="objects.length == 0" class="table table-hover">
+<thead>
+  <tr>
+    <th>Name</th>
+    <th>IP</th>
+    <th>Type</th>
+    <th>Created</th>
+    <th>Updated</th>
+    <th>Actions</th>
+  </tr>
+</thead>
+<tbody>
+  <tr ng-repeat="instance in objects">
+    <td><a href="#{{ instance.objectUrl() }}">{{ instance.name }}</a></td>
+    <td>{{ instance.ip }}</td>
+    <td>{{ instance.type }}</td>
+    <td>{{ instance.created_on|format_date }}</td>
+    <td>{{ instance.updated_on|format_date }}</td>
+    <td/>
+  </tr>
+</tbody>
+</table>

@@ -41,7 +41,7 @@ class BaseResource(restful.Resource):
     decorators = [crossdomain(origin='*',
                               headers="accept, origin, content-type")]
 
-    DEFAULT_FIELDS = None
+    DEFAULT_FIELDS = ['_id', 'name']
     is_fulltext_search = False
 
     @property
@@ -101,7 +101,6 @@ class BaseResource(restful.Resource):
             obj = form.save()
         else:
             raise ValidationError(form.error_messages)
-
         return self._render(self._get_save_response_context(obj),
                             code=201)
 
@@ -190,9 +189,8 @@ class BaseResource(restful.Resource):
         return self._render({self.OBJECT_NAME: model})
 
     def _get_save_response_context(self, model):
-        if self.DEFAULT_FIELDS:
-            model = dict([(field, getattr(model, field))
-                         for field in self.DEFAULT_FIELDS])
+        model = dict([(field, getattr(model, field))
+                     for field in self.DEFAULT_FIELDS])
         return {self.OBJECT_NAME: model}
 
     # Specific actions for GET

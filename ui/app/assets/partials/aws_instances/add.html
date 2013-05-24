@@ -1,0 +1,43 @@
+<h2>
+  Add New AWS Instance
+  <small>
+      <a ng-href="#/aws/instances">(Cancel)</a>
+  </small>
+</h2>
+
+<alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+
+<form name="UploadAWSInstanceForm" class="form-horizontal">
+  <div class="control-group" ng-class="{error: UploadAWSInstanceForm.name.$invalid}">
+    <label class="control-label">Name</label>
+    <div class="controls">
+      <input type="text" name="name" ng-model="instance.name" required>
+      <span ng-show="UploadAWSInstanceForm.name.$error.required" class="help-inline">Required</span>
+    </div>
+  </div>
+  <div class="control-group" ng-class="{error: UploadAWSInstanceForm.description.$invalid}">
+    <label class="control-label">Description</label>
+    <div class="controls">
+      <textarea name="description" ng-model="instance.description">
+      </textarea>
+    </div>
+  </div>
+  <div class="control-group" ng-class="{error: UploadAWSInstanceForm.ip.$invalid}">
+    <label class="control-label">IP</label>
+    <div class="controls">
+      <input type="text" name="name" ng-model="instance.ip" required>
+      <span ng-show="UploadAWSInstanceForm.name.$error.required" class="help-inline">Required</span>
+    </div>
+  </div>
+  <div class="control-group" ng-class="{error: UploadAWSInstanceForm.type.$invalid}">
+    <label class="control-label">Type</label>
+    <div class="controls">
+      <select ng-model="instance.type" required ng-options="value.name for value in types" ng-selected='types[0]'>
+      </select>
+      <span ng-show="UploadAWSInstanceForm.type.$error.required" class="help-inline">Required</span>
+    </div>
+  </div>
+  <br />
+  <a href="#/aws/instances" class="btn">Cancel</a>
+  <button ng-click="add()" ng-disabled="UploadAWSInstanceForm.$invalid" class="btn btn-primary">Add</button>
+</form>

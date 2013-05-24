@@ -25,6 +25,8 @@ App = angular.module('app', [
   'app.importhandlers.controllers'
   'app.weights.model'
   'app.weights.controllers'
+  'app.awsinstances.model'
+  'app.awsinstances.controllers'
 ])
 App.config([
   '$routeProvider'
@@ -83,6 +85,18 @@ App.config([
     .when('/import_handlers/:id', {
       controller: 'ImportHandlerDetailsCtrl'
       templateUrl: '/partials/import_handler/details.html'
+    })
+    .when('/aws/instances', {
+      controller: "AwsInstanceListCtrl"
+      templateUrl: '/partials/aws_instances/list.html'
+    })
+    .when('/aws/instances/add', {
+      controller: "AddAwsInstanceCtl"
+      templateUrl: '/partials/aws_instances/add.html'
+    })
+    .when('/aws/instances/:id', {
+      controller: 'AwsInstanceDetailsCtrl'
+      templateUrl: '/partials/aws_instances/details.html'
     })
 
     # Catch all
