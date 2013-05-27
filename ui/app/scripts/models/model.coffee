@@ -46,6 +46,9 @@ angular.module('app.models.model', ['app.config'])
       downloadUrl: =>
         return "#{@BASE_API_URL}#{@_id}/action/download/"
 
+      $reload: =>
+        @$make_request("#{@BASE_API_URL}#{@_id}/action/reload/", {}, "GET", {})
+
       $train: (opts={}) =>
         data = {}
         for key, val of opts

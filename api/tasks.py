@@ -38,8 +38,7 @@ def train_model(model_id, parameters):
         model.status = model.STATUS_TRAINED
         model.set_trainer(trainer)
         model.save()
-        fill_model_parameter_weights.delay(str(model._id),
-                                           **trainer.get_weights())
+        fill_model_parameter_weights.delay(str(model._id))
     except Exception, exc:
         logging.error(exc)
         model.status = model.STATUS_ERROR
@@ -53,14 +52,22 @@ def train_model(model_id, parameters):
 
 
 @celery.task
-def fill_model_parameter_weights(model_id, positive, negative):
+def fill_model_parameter_weights(model_id, reload=False):
     """
     Adds model parameters weights to db.
     """
+    logging.info("Starting to fill model weights")
     model = app.db.Model.find_one({'_id': ObjectId(model_id)})
     if model is None:
         raise ValueError('Model not found: %s' % model_id)
 
+    weights = model.get_trainer().get_weights()
+    positive = weights['positive']
+    negative = weights['negative']
+    if reload:
+        params = {'model_id': model_id}
+        app.db.WeightsCategory.collection.remove(params)
+        app.db.Weight.collection.remove(params)
     weights = app.db.Weight.find({'model_id': model_id})
     count = weights.count()
     if count > 0:

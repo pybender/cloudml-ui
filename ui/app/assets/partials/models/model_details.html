@@ -10,6 +10,10 @@
         <i title="Train your model" class="icon-tasks"></i>
         Start training
       </button>
+      <button ng-click="reload_model(model)" class="btn btn-info">
+        <i title="Reload model" class="icon-tasks"></i>
+        Reload model
+      </button>
       <a ng-show="model.status == 'Trained'" href="{{ model.downloadUrl() }}?field=trainer" class="btn btn-info">
           <i title="Download model trainer." class="icon-download-alt"></i> Download Trainer
         </a>

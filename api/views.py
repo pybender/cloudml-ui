@@ -73,7 +73,7 @@ class Models(BaseResource):
     """
     Models API methods
     """
-    GET_ACTIONS = ('download', )
+    GET_ACTIONS = ('download', 'reload' )
     PUT_ACTIONS = ('train', )
     FILTER_PARAMS = (('status', str), ('comparable', int))
     DEFAULT_FIELDS = ('_id', 'name')
@@ -104,6 +104,13 @@ class Models(BaseResource):
         if 'comparable' in pdict:
             pdict['comparable'] = bool(pdict['comparable'])
         return pdict
+
+    def _get_reload_action(self, **kwargs):
+        from api.tasks import fill_model_parameter_weights
+        model = self._get_details_query(None, None,
+                                        **kwargs)
+        fill_model_parameter_weights.delay(str(model._id), True)
+        return self._render({self.OBJECT_NAME: model._id})
 
     def _get_download_action(self, **kwargs):
         """

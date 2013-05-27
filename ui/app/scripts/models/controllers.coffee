@@ -319,6 +319,9 @@ name'
       d.model = model
       d.open('partials/modal.html', 'TestDialogController')
 
+    $scope.reload_model = (model)->
+      model.$reload()
+
     $scope.train_model = (model)->
       d = $dialog.dialog(
         modalFade: false
