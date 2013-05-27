@@ -1,6 +1,8 @@
 <div class="modal-header">
 <button ng-click="close()" class="close" data-dismiss="modal">×</button>
 <h3>Train the model</h3>
+<alert-message ng-show="model.status == 'Trained'" class="alert-warning" msg='Be carefull. All model metadata will be removed after re-trainging!' unsafe>
+</alert-message>
 <p class="lead">
     Please enter import parameters
 </p>

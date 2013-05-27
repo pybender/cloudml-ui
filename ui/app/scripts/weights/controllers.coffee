@@ -17,9 +17,21 @@ angular.module('app.weights.controllers', ['app.config', ])
     throw new Error "Can't initialize without model id"
 
   $scope.model_id = $routeParams.id
+  $scope.sort_by = 'name'
+  $scope.asc_order = true
 
   # List search parameters and methods
   $scope.search_form = {'q': '', 'is_positive': 0}
+
+  $scope.sort = (sort_by) ->
+    if $scope.sort_by == sort_by
+      # Only change ordering
+      $scope.asc_order = !$scope.asc_order
+    else
+      # Change sort by field
+      $scope.asc_order = true
+      $scope.sort_by = sort_by
+    $scope.loadList()
 
   $scope.loadList = () ->
     Weight.$loadAll(
@@ -27,7 +39,9 @@ angular.module('app.weights.controllers', ['app.config', ])
       show: 'name,value,css_class',
       q: $scope.search_form.q,
       is_positive: $scope.search_form.is_positive,
-      page: $scope.search_form.page || 1
+      page: $scope.search_form.page || 1,
+      sort_by: $scope.sort_by,
+      order: if $scope.asc_order then 'asc' else 'desc'
     ).then ((opts) ->
       $scope.weights = opts.objects
       $scope.total = opts.total

@@ -1,0 +1,22 @@
+{"Weight": [
+ {
+    "name": "opening",
+    "model_name": "TrainedModel",
+    "model_id": "519318e6106a6c0df349bc0b",
+    "short_name": "opening",
+    "value": 0.4444,
+    "is_positive": true,
+    "css_class": "green",
+    "parent": null
+ }
+ ],
+ "WeightsCategory": [
+ {
+    "name": "opening",
+    "model_name": "TrainedModel",
+    "model_id": "519318e6106a6c0df349bc0b",
+    "short_name": "opening",
+    "parent": null
+ }
+ ]
+}

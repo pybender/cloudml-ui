@@ -3,6 +3,11 @@
 Changelog
 =========
 
+Relese 2013-05-27
+-----------------
+* Feature - Added button for reload weights
+
+
 Relese 2013-05-17
 -----------------
 * Feature - Added to model property "id example" and "label example"

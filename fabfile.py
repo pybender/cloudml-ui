@@ -88,6 +88,10 @@ def qdeploy():
     release.work_on.run(0)
     deploy.run()
 
+@task
+def migrate():
+    release.work_on.run(0)
+    django.migrate.run()
 
 @task
 def cdeploy():

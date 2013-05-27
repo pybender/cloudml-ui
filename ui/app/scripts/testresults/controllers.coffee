@@ -80,7 +80,7 @@ without test id and model id"
       $scope.showLog = true
       $scope.log_messages = []
       params = "channel=runtest_log&test=" + $scope.test._id
-      log_sse = $scope.getEventSource(params=params)
+      log_sse = $scope.getEventSourceTest(params=params)
       handleCallback = (msg) ->
         $scope.$apply(() ->
           if msg?

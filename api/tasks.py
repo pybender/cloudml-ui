@@ -24,12 +24,11 @@ def train_model(model_id, parameters):
 
     try:
         model = app.db.Model.find_one({'_id': ObjectId(model_id)})
-        if model.status == model.STATUS_TRAINED:
-            raise InvalidOperationError("Model already trained")
+        model.delete_metadata()
 
         model.status = model.STATUS_TRAINING
         model.error = ""
-        model.save()
+        model.save(validate=True)
         feature_model = FeatureModel(json.dumps(model.features),
                                      is_file=False)
         trainer = Trainer(feature_model)
@@ -38,9 +37,8 @@ def train_model(model_id, parameters):
         trainer.clear_temp_data()
         model.status = model.STATUS_TRAINED
         model.set_trainer(trainer)
-        fill_model_parameter_weights.delay(str(model._id),
-                                           **trainer.get_weights())
         model.save()
+        fill_model_parameter_weights.delay(str(model._id))
     except Exception, exc:
         logging.error(exc)
         model.status = model.STATUS_ERROR
@@ -54,14 +52,22 @@ def train_model(model_id, parameters):
 
 
 @celery.task
-def fill_model_parameter_weights(model_id, positive, negative):
+def fill_model_parameter_weights(model_id, reload=False):
     """
     Adds model parameters weights to db.
     """
+    logging.info("Starting to fill model weights")
     model = app.db.Model.find_one({'_id': ObjectId(model_id)})
     if model is None:
         raise ValueError('Model not found: %s' % model_id)
 
+    weights = model.get_trainer().get_weights()
+    positive = weights['positive']
+    negative = weights['negative']
+    if reload:
+        params = {'model_id': model_id}
+        app.db.WeightsCategory.collection.remove(params)
+        app.db.Weight.collection.remove(params)
     weights = app.db.Weight.find({'model_id': model_id})
     count = weights.count()
     if count > 0:
@@ -107,8 +113,10 @@ filled: %s' % (model_id, count))
 
     model.weights_synchronized = True
     model.save()
-    return 'Model %s parameters weights was added to db: %s' % \
+    msg = 'Model %s parameters weights was added to db: %s' % \
         (model.name, len(weight_list))
+    logging.info(msg)
+    return msg
 
 
 @celery.task

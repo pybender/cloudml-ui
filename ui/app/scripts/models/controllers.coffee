@@ -181,18 +181,15 @@ name'
       err = "Can't initialize without model id"
     $scope.model = new Model({_id: $routeParams.id})
 
-  $scope.$watch 'model.status', (status) ->
-    if status in ['Queued', 'Training', 'Error', 'New']
-      $scope.showLog = true
-      $scope.log_messages = []
-      params = "channel=trainmodel_log&model=" + $scope.model._id
-      log_sse = $scope.getEventSource(params=params)
-      handleCallback = (msg) ->
-        $scope.$apply(() ->
-          if msg?
-            data = JSON.parse(msg.data)
-            $scope.log_messages.push(data['data']['msg']))
-      log_sse.addEventListener('message', handleCallback)
+  $scope.log_messages = []
+  params = "channel=trainmodel_log&model=" + $scope.model._id
+  log_sse = $scope.getEventSource(params=params)
+  handleCallback = (msg) ->
+    $scope.$apply(() ->
+      if msg?
+        data = JSON.parse(msg.data)
+        $scope.log_messages.push(data['data']['msg']))
+  log_sse.addEventListener('message', handleCallback)
 
   $scope.toggleAction = (action) =>
     $scope.action = action
@@ -321,6 +318,9 @@ name'
       )
       d.model = model
       d.open('partials/modal.html', 'TestDialogController')
+
+    $scope.reload_model = (model)->
+      model.$reload()
 
     $scope.train_model = (model)->
       d = $dialog.dialog(

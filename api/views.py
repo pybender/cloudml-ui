@@ -34,7 +34,7 @@ model_parser.add_argument('example_label', type=str, default=None)
 def event_stream(query_params={}):
     curs = app.chan.cursor(query_params, False)
     while True:
-        gevent.sleep(0.5)
+        gevent.sleep(0.2)
         try:
             msg = curs.next()
             if msg:
@@ -73,7 +73,7 @@ class Models(BaseResource):
     """
     Models API methods
     """
-    GET_ACTIONS = ('download', )
+    GET_ACTIONS = ('download', 'reload' )
     PUT_ACTIONS = ('train', )
     FILTER_PARAMS = (('status', str), ('comparable', int))
     DEFAULT_FIELDS = ('_id', 'name')
@@ -104,6 +104,13 @@ class Models(BaseResource):
         if 'comparable' in pdict:
             pdict['comparable'] = bool(pdict['comparable'])
         return pdict
+
+    def _get_reload_action(self, **kwargs):
+        from api.tasks import fill_model_parameter_weights
+        model = self._get_details_query(None, None,
+                                        **kwargs)
+        fill_model_parameter_weights.delay(str(model._id), True)
+        return self._render({self.OBJECT_NAME: model._id})
 
     def _get_download_action(self, **kwargs):
         """
@@ -140,11 +147,12 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
         from api.tasks import train_model
         model = self._get_details_query(None, None,
                                         **kwargs)
-        parser = populate_parser(model)
+        parser = populate_parser(model, is_requred=True)
         params = parser.parse_args()
-        train_model.delay(str(model._id), params)
         model.status = model.STATUS_QUEUED
         model.save()
+
+        train_model.delay(str(model._id), params)
         return self._render({self.OBJECT_NAME: model._id})
 
 api.add_resource(Models, '/cloudml/models/')
@@ -196,16 +204,6 @@ class WeightsResource(BaseResource):
         context = {'positive_weights': get_weights(True, ppage),
                    'negative_weights': get_weights(False, npage)}
         return self._render(context)
-
-    def _get_list_query(self, params, fields, **kwargs):
-        results = super(WeightsResource, self)._get_list_query(params, fields,
-                                                               **kwargs)
-        if self.is_fulltext_search:
-            # sort
-            cmp_func = lambda a: abs(a['value'])
-            results.sort(key=cmp_func)
-            results.reverse()
-        return results
 
 api.add_resource(WeightsResource, '/cloudml/weights/\
 <regex("[\w\.]*"):model_id>/')
@@ -296,7 +294,7 @@ class TestExamplesResource(BaseResource):
 
     OBJECT_NAME = 'data'
     NEED_PAGING = True
-    GET_ACTIONS = ('groupped', 'csv')
+    GET_ACTIONS = ('groupped', 'csv', 'datafields')
     FILTER_PARAMS = (('label', str), ('pred_label', str))
     decorators = [crossdomain(origin='*')]
 
@@ -427,6 +425,11 @@ not contain probabilities')
         logging.info('End request for calculating MAP')
         return self._render(context)
 
+    def _get_datafields_action(self, **kwargs):
+        example = self.Model.find_one(kwargs, ('data_input', ))
+        data = example['data_input']
+        return self._render({'fields': data.keys()})
+
     def _get_csv_action(self, **kwargs):
         """
         Returns list of examples in csv format
@@ -536,10 +539,7 @@ class Predict(BaseResource):
         plan = ExtractionPlan(json.dumps(hndl.data), is_file=False)
         request_import_handler = RequestImportHandler(plan, data)
         try:
-            if model.trainer:
-                trainer = pickle.loads(model.trainer)
-            else:
-                trainer = pickle.loads(model.fs.trainer)
+            trainer = model.get_trainer()
         except Exception, exc:
             msg = "Model %s can't be unpickled: %s" % (model.name,
                                                        exc)
@@ -585,8 +585,8 @@ class AwsInstanceResource(BaseResource):
 api.add_resource(AwsInstanceResource, '/cloudml/aws_instances/')
 
 
-def populate_parser(model):
+def populate_parser(model, is_requred=False):
     parser = reqparse.RequestParser()
     for param in model.import_params:
-        parser.add_argument(param, type=str)
+        parser.add_argument(param, type=str, required=is_requred)
     return parser
