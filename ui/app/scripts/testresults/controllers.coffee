@@ -9,11 +9,19 @@ angular.module('app.testresults.controllers', ['app.config', ])
   'dialog'
   '$location'
   'TestResult'
+  'AwsInstance'
 
-($scope, dialog, $location, Test) ->
+($scope, dialog, $location, Test, AwsInstance) ->
 
   $scope.parameters = {} # parameters to send via API
   $scope.model = dialog.model
+  AwsInstance.$loadAll(
+    show: 'name,ip'
+  ).then ((opts) ->
+    $scope.aws_instances = opts.objects
+  ), ((opts) ->
+    $scope.setError(opts, 'loading aws instances')
+  )
   $scope.model.$load(show: 'import_params').then (->
     $scope.params = $scope.model.import_params
   ), ((opts) ->

@@ -323,7 +323,7 @@ name'
         modalFade: false
       )
       d.model = model
-      d.open('partials/modal.html', 'TestDialogController')
+      d.open('partials/testresults/run_test.html', 'TestDialogController')
 
     $scope.reload_model = (model)->
       model.$reload()

@@ -1,0 +1,31 @@
+<div class="modal-header">
+  <button ng-click="close()" class="close" data-dismiss="modal">×</button>
+  <h3>Run test</h3>
+  <p class="lead">
+      Please enter import parameters and choose AWS Instance for running test.
+  </p>
+</div>
+<alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+<div class="modal-body">
+  <form name="DialogForm" class="form-horizontal">
+    <div class="control-group">
+      <label class="control-label">AWS Instance:</label>
+      <div class="controls" ng-class="{error: DialogForm.aws_instance.$invalid}">
+        <select class="input-small" name="aws_instance" ng-model="parameters.aws_instance" required>
+          <option ng-repeat="instance in aws_instances" value="{{ instance._id }}" ng-selected="instance==parameters.aws_instance">{{ instance.name }}: {{ instance.ip }}</option>
+        </select>
+        <span ng-show="DialogForm.aws_instance.$error.required" class="help-inline">Required</span>
+      </div>
+    </div>
+     <div ng-repeat="param in params" class="control-group">
+          <label class="control-label">{{ param | capfirst }}:</label>
+          <div class="controls"  ng-class="{error: DialogForm.parameters[param].$invalid}">
+            <input ng-model='parameters[param]' placeholder='Please input {{ param }}' type='text' required />
+            <span ng-show="DialogForm.parameters[param].$error.required" class="help-inline">Required</span>
+          </div>
+      </div>
+  </form>
+</div>
+<div class="modal-footer">
+  <button ng-click="start(result)" ng-disabled="DialogForm.$invalid" class="btn btn-primary" >Start test</button>
+</div>
