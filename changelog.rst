@@ -6,6 +6,7 @@ Changelog
 Relese 2013-05-27
 -----------------
 * Feature - Added button for reload weights
+* Bug - Fixed storing examples
 
 
 Relese 2013-05-17

@@ -179,8 +179,8 @@ def run_test(test_id):
                 row = decode(row)
                 example = app.db.TestExample()
                 example['data_input'] = row
-                example['id'] = row.get(model.example_id, '-1')
-                example['name'] = row.get(model.example_label, 'noname')
+                example['id'] = str(row.get(model.example_id, '-1'))
+                example['name'] = str(row.get(model.example_label, 'noname'))
                 example['label'] = str(label)
                 example['pred_label'] = str(pred)
                 example['prob'] = prob.tolist()
