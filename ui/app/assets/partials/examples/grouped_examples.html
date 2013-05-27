@@ -27,7 +27,7 @@
           </thead>
           <tbody>
           <tr ng-repeat="data in objects">
-            <td><a href="#/models/{{ model_name }}/tests/{{ test_name }}/examples/?group_by_field={{ data.group_by_field }}">{{ data.group_by_field }}</a></td>
+            <td><a href="#{{ test.examplesUrl() }}?{{ form.field }}={{ data.group_by_field }}">{{ data.group_by_field }}</a></td>
             <td><span>{{ data.count }} </span></td>
             <td><span>{{ data.avp.toFixed(4) }} </span></td>
           </tr>

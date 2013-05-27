@@ -8,15 +8,28 @@
 
     <form class="form-inline well">
       <label>Label: </label>
-      <select class="input-small" ng-model="filter_opts.label">
+      <select class="input-small" ng-model="new_filters.label">
         <option value="">--- any ---</option>
-        <option ng-repeat="label in labels" ng-value="label" ng-selected="label==filter_opts.label">{{ label }}</option>
+        <option ng-repeat="label in labels" ng-value="label" ng-selected="label==new_filters.label">{{ label }}</option>
       </select> &nbsp;
-      <label>Predicted Label: </label> {{ selectedPredLabel }}
-      <select class="input-small" ng-model="filter_opts.pred_label">
+      <label>Predicted Label: </label>
+      <select class="input-small" ng-model="new_filters.pred_label">
         <option value="">--- any ---</option>
-        <option ng-repeat="label in labels" ng-value="label" ng-selected="label==filter_opts.pred_label">{{ label }}</option>
-      </select>
+        <option ng-repeat="label in labels" ng-value="label" ng-selected="label==new_filters.pred_label">{{ label }}</option>
+      </select> 
+      <b> Data filters:</b>
+      <span>
+        <span ng-repeat="item in data_filters">
+          <select class="input-small" ng-model="data_filters[$index].name">
+            <option value=''>-- select field name --</option>
+            <option ng-repeat="field in fields" ng-value="field" ng-selected="field==item.name">{{ field }}</option>
+          </select> : 
+          <input type="text" value="{{ item.value }}" ng-model="data_filters[$index].value" />
+          &nbsp;
+        </span>
+      </span>
+      <a ng-click="addFilter()">add</a>
+      <a class="btn btn-info" ng-click="filter()">Filter</a>
     </form>
 
     <pagination boundary-links="true" max-size="8" num-pages="pages" current-page="page" style="margin:0;"></pagination>

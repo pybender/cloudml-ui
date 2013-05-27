@@ -298,6 +298,16 @@ class TestExamplesResource(BaseResource):
     FILTER_PARAMS = (('label', str), ('pred_label', str))
     decorators = [crossdomain(origin='*')]
 
+    def _get_list_query(self, params, fields, **kwargs):
+        filter_params = {}
+        param_keys = params.keys()
+        for key, val in request.values.iteritems():
+            if key not in param_keys:
+                if key and val:
+                    filter_params["data_input.%s" % key] = val
+        kwargs.update(filter_params)
+        return self.Model.find(kwargs, fields)
+
     def _get_details_query(self, params, fields, **kwargs):
         # TODO: return only fields that are specified
         example = super(TestExamplesResource, self).\

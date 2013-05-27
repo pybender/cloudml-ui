@@ -16,10 +16,22 @@ angular.module('app.datas.controllers', ['app.config', ])
   if not ($routeParams.model_id  and $routeParams.test_id)
       throw new Error "Can't initialize examples list controller
 without test id and model id"
-
   $scope.filter_opts = $location.search()
+  $scope.new_filters = {}
+  $scope.data_filters = []
+  for key, val of $scope.filter_opts
+    if key != 'label' && key != 'pred_label'
+      $scope.data_filters.push({name: key, value: val})
+    else
+      $scope.new_filters[key] = val
+  
+  Data.$loadFieldList($routeParams.model_id,
+                      $routeParams.test_id).then ((opts) ->
+    $scope.fields = opts.fields
+  ), ((opts) ->
+    $scope.setError(opts, 'loading data field list')
+  )
 
-  $scope.model = new Model({_id: $routeParams.model_id})
   $scope.test = new Test({
     model_id: $routeParams.model_id,
     _id: $routeParams.test_id
@@ -28,16 +40,24 @@ without test id and model id"
       show: 'name'
   )
 
+  $scope.model = new Model({_id: $routeParams.model_id})
   $scope.model.$load(
       show: 'name,labels'
   ).then (->
     $scope.labels = $scope.model.labels
-    $scope.$watch('filter_opts', (filter_opts, oldVal, scope) ->
-      $location.search(filter_opts)
-    , true)
-  ), (->
-    $scope.err = data
+  ), ((opts) ->
+    $scope.setError(opts, 'loading model')
   )
+
+  $scope.$watch('data_filters', (data_filters, oldVal, scope) ->
+    for item in data_filters
+      if item.name
+        $scope.new_filters[item.name] = item.value
+  , true)
+
+  $scope.$watch('new_filters', (new_filters, oldVal, scope) ->
+      $location.search(new_filters)
+    , true)
 
   $scope.loadDatas = () ->
     (opts) ->
@@ -47,6 +67,13 @@ without test id and model id"
       opts = _.extend({show: show}, opts, filter_opts)
       Data.$loadAll($routeParams.model_id, $routeParams.test_id,
                     opts)
+
+  $scope.addFilter = () ->
+    $scope.data_filters.push({name: '', value: ''})
+
+  $scope.filter = () ->
+    $scope.filter_opts = $scope.new_filters
+
 ])
 
 .controller('GroupedExamplesCtrl', [
