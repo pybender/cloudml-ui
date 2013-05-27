@@ -247,21 +247,27 @@ name'
 
 .controller('TrainModelCtrl', [
   '$scope'
-  '$http'
   'dialog'
-  'settings'
+  'AwsInstance'
 
-  ($scope, $http, dialog, settings) ->
+  ($scope, dialog, AwsInstance) ->
+    $scope.parameters = {}
     $scope.model = dialog.model
     $scope.model.$load(
       show: 'import_params'
       ).then (->
         $scope.params = $scope.model.import_params
-      ), (->
-        $scope.err = data
+      ), ((opts)->
+        $scope.setError(opts, 'loading model details')
       )
 
-    $scope.parameters = {}
+    AwsInstance.$loadAll(
+      show: 'name,type,ip'
+    ).then ((opts) ->
+      $scope.aws_instances = opts.objects
+    ), ((opts) ->
+      $scope.setError(opts, 'loading aws instances')
+    )
 
     $scope.close = ->
       dialog.close()

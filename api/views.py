@@ -148,9 +148,16 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
         model = self._get_details_query(None, None,
                                         **kwargs)
         parser = populate_parser(model, is_requred=True)
+        parser.add_argument('aws_instance', type=str, required=True)
         params = parser.parse_args()
         model.status = model.STATUS_QUEUED
         model.save()
+
+        # Get AWS Instance
+        instance_id = params.get('aws_instance')
+        instance = app.db.AwsInstance.find({'_id': ObjectId(instance_id)})
+        if instance is None:
+            raise NotFound('AWS Instance not found')
 
         train_model.delay(str(model._id), params)
         return self._render({self.OBJECT_NAME: model._id})

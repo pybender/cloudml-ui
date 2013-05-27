@@ -1,23 +1,32 @@
 <div class="modal-header">
 <button ng-click="close()" class="close" data-dismiss="modal">×</button>
 <h3>Train the model</h3>
-<alert-message ng-show="model.status == 'Trained'" class="alert-warning" msg='Be carefull. All model metadata will be removed after re-trainging!' unsafe>
-</alert-message>
 <p class="lead">
-    Please enter import parameters
+    Please enter import parameters and choose AWS Instance that would be used for model training.
 </p>
 </div>
+
+<alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+<alert-message ng-show="model.status == 'Trained'" class="alert-warning" msg='Be carefull. All model metadata will be removed after re-trainging!' unsafe>
+</alert-message>
+
 <div class="modal-body">
 <form name="TrainDialogForm" class="form-horizontal">
-  <div class='alert alert-error' ng-show='httpError'>
-    An Error occured trying to send request.
+  <div class="control-group">
+    <label class="control-label">AWS Instance:</label>
+    <div class="controls" ng-class="{error: TrainDialogForm.aws_instance.$invalid}">
+      <select class="input-small" name="aws_instance" ng-model="parameters.aws_instance" required>
+        <option ng-repeat="instance in aws_instances" value="{{ instance._id }}" ng-selected="instance==parameters.aws_instance">{{ instance.name }}: {{ instance.ip }}</option>
+      </select>
+      <span ng-show="TrainDialogForm.aws_instance.$error.required" class="help-inline">Required</span>
+    </div>
   </div>
    <div ng-repeat="param in params" class="control-group">
-        <label class="control-label">{{ param | capfirst }}:</label>
-        <div class="controls"  ng-class="{error: TrainDialogForm.parameters[param].$invalid}">
-          <input ng-model='parameters[param]' placeholder='Please input {{ param }}' type='text' required />
-          <span ng-show="TrainDialogForm.parameters[param].$error.required" class="help-inline">Required</span>
-        </div>
+      <label class="control-label">{{ param | capfirst }}:</label>
+      <div class="controls"  ng-class="{error: TrainDialogForm.parameters[param].$invalid}">
+        <input ng-model='parameters[param]' name="{{ param }}" placeholder='Please input {{ param }}' type='text' required />
+        <span ng-show="TrainDialogForm.start.$error.required" class="help-inline">Required</span>
+      </div>
     </div>
 </form>
 </div>
