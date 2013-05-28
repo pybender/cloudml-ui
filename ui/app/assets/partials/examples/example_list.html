@@ -8,21 +8,21 @@
 
     <form class="form-inline well">
       <label>Label: </label>
-      <select class="input-small" ng-model="new_filters.label">
+      <select class="input-small" ng-model="simple_filters.label">
         <option value="">--- any ---</option>
-        <option ng-repeat="label in labels" ng-value="label" ng-selected="label==new_filters.label">{{ label }}</option>
+        <option ng-repeat="label in labels" ng-value="label" ng-selected="label==simple_filters.label">{{ label }}</option>
       </select> &nbsp;
       <label>Predicted Label: </label>
-      <select class="input-small" ng-model="new_filters.pred_label">
+      <select class="input-small" ng-model="simple_filters.pred_label">
         <option value="">--- any ---</option>
-        <option ng-repeat="label in labels" ng-value="label" ng-selected="label==new_filters.pred_label">{{ label }}</option>
+        <option ng-repeat="label in labels" ng-value="label" ng-selected="label==simple_filters.pred_label">{{ label }}</option>
       </select> 
       <b> Data filters:</b>
       <span>
         <span ng-repeat="item in data_filters">
           <select class="input-small" ng-model="data_filters[$index].name">
             <option value=''>-- select field name --</option>
-            <option ng-repeat="field in fields" ng-value="field" ng-selected="field==item.name">{{ field }}</option>
+            <option ng-repeat="field in fields" value="data_input.{{ field }}" ng-selected="'data_input.' + field==item.name">{{ field }}</option>
           </select> : 
           <input type="text" value="{{ item.value }}" ng-model="data_filters[$index].value" />
           &nbsp;

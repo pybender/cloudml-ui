@@ -145,7 +145,7 @@ class BaseResource(restful.Resource):
         GET parameters:
             * show - list of fields to return
         """
-        parser_params = extra_params + self.GET_PARAMS + self.FILTER_PARAMS +\
+        parser_params = tuple(extra_params) + self.GET_PARAMS + tuple(self.FILTER_PARAMS) + \
             self.SORT_PARAMS
         if self.NEED_PAGING:
             parser_params += self.PAGING_PARAMS
