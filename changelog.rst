@@ -6,6 +6,8 @@ Changelog
 Relese 2013-05-27
 -----------------
 * Feature - Added button for reload weights
+* Bug - Fixed storing examples
+* Feature - Made clickable links on MAP page
 
 
 Relese 2013-05-17

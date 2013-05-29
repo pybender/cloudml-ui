@@ -144,7 +144,7 @@ class BaseResource(restful.Resource):
         GET parameters:
             * show - list of fields to return
         """
-        parser_params = extra_params + self.GET_PARAMS + self.FILTER_PARAMS +\
+        parser_params = tuple(extra_params) + self.GET_PARAMS + tuple(self.FILTER_PARAMS) + \
             self.SORT_PARAMS
         if self.NEED_PAGING:
             parser_params += self.PAGING_PARAMS
@@ -239,9 +239,12 @@ class BaseResource(restful.Resource):
             return cursor
 
     def _prepare_filter_params(self, params):
+        def is_none_or_empty(val):
+            return val is None or val == ''
+
         filter_names = [v[0] for v in self.FILTER_PARAMS]
         return dict([(k, v) for k, v in params.iteritems()
-                    if not v is None and k in filter_names])
+                    if not is_none_or_empty(v) and k in filter_names])
 
     def _get_details_query(self, params, fields, **kwargs):
         if '_id' in kwargs:

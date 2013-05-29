@@ -79,7 +79,9 @@ def get_weighted_data(model, row):
         weights_dict[name] = weight
 
     result = {}
-    for key, value in row.iteritems():
+    for name, value in row.iteritems():
+        # TODO: don't use dots at all for keys
+        key = name.replace('->', '.')
         result[key] = {'value': value}
         if key in weights_dict:
             wdict = weights_dict[key]

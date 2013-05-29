@@ -302,8 +302,16 @@ class TestExamplesResource(BaseResource):
     OBJECT_NAME = 'data'
     NEED_PAGING = True
     GET_ACTIONS = ('groupped', 'csv', 'datafields')
-    FILTER_PARAMS = (('label', str), ('pred_label', str))
+    FILTER_PARAMS = [('label', str), ('pred_label', str)]
     decorators = [crossdomain(origin='*')]
+
+    def _list(self, **kwargs):
+        data_input = self._get_random_datainput(**kwargs)
+        # TODO: ideas how to get types...
+        # TODO: fields in dict should not contains dots
+        for key, val in data_input.iteritems():
+            self.FILTER_PARAMS.append(('data_input.%s' % key, str))
+        return super(TestExamplesResource, self)._list(**kwargs)
 
     def _get_details_query(self, params, fields, **kwargs):
         # TODO: return only fields that are specified
@@ -433,9 +441,8 @@ not contain probabilities')
         return self._render(context)
 
     def _get_datafields_action(self, **kwargs):
-        example = self.Model.find_one(kwargs, ('data_input', ))
-        data = example['data_input']
-        return self._render({'fields': data.keys()})
+        fields = self._get_datafields(**kwargs)
+        return self._render({'fields': fields})
 
     def _get_csv_action(self, **kwargs):
         """
@@ -469,6 +476,16 @@ not contain probabilities')
         resp.headers["Content-Disposition"] = "attachment; \
 filename=%(model_id)s-%(test_id)s-examples.csv" % kwargs
         return resp
+
+    def _get_datafields(self, **kwargs):
+        data_input = self._get_random_datainput(**kwargs)
+        return data_input.keys()
+
+    def _get_random_datainput(self, **kwargs):
+        example = self.Model.find_one(kwargs, ('data_input', ))
+        if example is None:
+            raise NotFound('No test examples found!')
+        return example['data_input']
 
 api.add_resource(TestExamplesResource, '/cloudml/models/\
 <regex("[\w\.]*"):model_id>/tests/<regex("[\w\.]*"):test_id>/examples/')

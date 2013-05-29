@@ -177,10 +177,15 @@ def run_test(test_id):
                 if count % 100 == 0:
                     logging.info('Stored %d rows' % count)
                 row = decode(row)
+                new_row = {}
+                for key, val in row.iteritems():
+                    new_key = key.replace('.', '->')
+                    new_row[new_key] = val
+
                 example = app.db.TestExample()
-                example['data_input'] = row
-                example['id'] = row.get(model.example_id, '-1')
-                example['name'] = row.get(model.example_label, 'noname')
+                example['data_input'] = new_row
+                example['id'] = str(row.get(model.example_id, '-1'))
+                example['name'] = str(row.get(model.example_label, 'noname'))
                 example['label'] = str(label)
                 example['pred_label'] = str(pred)
                 example['prob'] = prob.tolist()
