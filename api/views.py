@@ -17,7 +17,7 @@ from api.utils import crossdomain, ERR_INVALID_DATA, odesk_error_response, \
     ERR_NO_SUCH_MODEL, ERR_UNPICKLING_MODEL
 from api.resources import BaseResource, NotFound, ValidationError
 from api.forms import ModelAddForm, ModelEditForm, ImportHandlerAddForm, \
-    AddTestForm, AwsInstanceAddForm
+    AddTestForm, InstanceAddForm, InstanceEditForm
 from core.importhandler.importhandler import ExtractionPlan, RequestImportHandler
 
 model_parser = reqparse.RequestParser()
@@ -592,21 +592,24 @@ api.add_resource(Predict, '/cloudml/model/<regex("[\w\.]*"):model_id>/\
 <regex("[\w\.]*"):handler_id>/predict', add_standart_urls=False)
 
 
-class AwsInstanceResource(BaseResource):
+class InstanceResource(BaseResource):
     """
-    AWS Instances API methods
+    Instances API methods
     """
-    MESSAGE404 = "AWS Instance doesn't exist"
+    MESSAGE404 = "Instance doesn't exist"
     OBJECT_NAME = 'instance'
     decorators = [crossdomain(origin='*')]
+    PUT_ACTIONS = ('make_default', )
     methods = ['GET', 'OPTIONS', 'PUT', 'POST']
-    post_form = AwsInstanceAddForm
+
+    post_form = InstanceAddForm
+    put_form = InstanceEditForm
 
     @property
     def Model(self):
         return app.db.Instance
 
-api.add_resource(AwsInstanceResource, '/cloudml/aws_instances/')
+api.add_resource(InstanceResource, '/cloudml/aws_instances/')
 
 
 def populate_parser(model, is_requred=False):

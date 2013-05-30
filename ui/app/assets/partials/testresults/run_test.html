@@ -12,7 +12,7 @@
       <label class="control-label">AWS Instance:</label>
       <div class="controls" ng-class="{error: DialogForm.instance.$invalid}">
         <select class="input-small" name="instance" ng-model="parameters.instance" required>
-          <option ng-repeat="instance in aws_instances" value="{{ instance._id }}" ng-selected="instance==parameters.instance">{{ instance.name }}: {{ instance.ip }}</option>
+          <option ng-repeat="instance in aws_instances" value="{{ instance._id }}" ng-selected="instance.is_default">{{ instance.name }}: {{ instance.ip }}</option>
         </select>
         <span ng-show="DialogForm.instance.$error.required" class="help-inline">Required</span>
       </div>

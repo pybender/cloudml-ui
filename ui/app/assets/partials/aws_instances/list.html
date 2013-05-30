@@ -24,12 +24,17 @@
 </thead>
 <tbody>
   <tr ng-repeat="instance in objects">
-    <td><a href="#{{ instance.objectUrl() }}">{{ instance.name }}</a></td>
+    <td>
+      <a href="#{{ instance.objectUrl() }}">{{ instance.name }}</a>
+    </td>
     <td>{{ instance.ip }}</td>
     <td>{{ instance.type }}</td>
     <td>{{ instance.created_on|format_date }}</td>
     <td>{{ instance.updated_on|format_date }}</td>
-    <td/>
+    <td ng-controller="InstanceActionsCtrl">
+      <a ng-click="makeDefault(instance)" title="Make default" ng-hide="instance.is_default" class="btn btn-info"><i class="icon-check"></i></a>
+      <span ng-show="instance.is_default" class="text-info">Default instance</span>
+    </td>
   </tr>
 </tbody>
 </table>

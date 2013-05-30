@@ -262,7 +262,7 @@ name'
       )
 
     AwsInstance.$loadAll(
-      show: 'name,type,ip'
+      show: 'name,type,ip,is_default'
     ).then ((opts) ->
       $scope.aws_instances = opts.objects
     ), ((opts) ->
@@ -275,8 +275,8 @@ name'
     $scope.start = (result) ->
       $scope.model.$train($scope.parameters).then (() ->
         $scope.close()
-      ), (() ->
-        throw new Error "Unable to start model training"
+      ), ((opts) ->
+        $scope.setError(opts, 'starting model training')
       )
 ])
 

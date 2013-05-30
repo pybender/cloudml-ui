@@ -1,10 +1,16 @@
-<h2>{{ instance.name|capfirst }} Details</h2>
+<h2>
+    {{ instance.name|capfirst }} Details
+    <div class="actions" ng-controller="InstanceActionsCtrl">
+    <a ng-click="makeDefault(instance)" title="Make default" ng-hide="instance.is_default" class="btn btn-info"><i class="icon-check"></i> Make default</a>
+</div>
+</h2>
 
 <alert-message ng-show="err" class="alert-error" msg='{{ err }}' unsafe>
 </alert-message>
 <p>{{ instance.description }}</p>
 <div>IP: <span class="value">{{ instance.ip }}</span></div>
 <div>Type: <span class="value">{{ instance.type }}</span></div>
+<div>Is Default: {{ instance.is_default }}</div>
 <div>
     Created at: 
     <span class="value">{{ instance.created_on|format_date }}</span>

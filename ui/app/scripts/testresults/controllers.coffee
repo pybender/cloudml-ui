@@ -16,7 +16,7 @@ angular.module('app.testresults.controllers', ['app.config', ])
   $scope.parameters = {} # parameters to send via API
   $scope.model = dialog.model
   AwsInstance.$loadAll(
-    show: 'name,ip'
+    show: 'name,ip,is_default'
   ).then ((opts) ->
     $scope.aws_instances = opts.objects
   ), ((opts) ->

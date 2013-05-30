@@ -218,8 +218,11 @@ class AddTestForm(BaseForm):
         return test
 
 
-class AwsInstanceAddForm(BaseForm):
-    fields = ('name', 'description', 'ip', 'type', )
+class InstanceAddForm(BaseForm):
+    fields = ('name', 'description', 'ip', 'type', 'is_default', )
+
+    def clean_is_default(self, value):
+        return value == 'true'
 
     def clean_name(self, value):
         if not value:
@@ -235,6 +238,35 @@ class AwsInstanceAddForm(BaseForm):
         if not value:
             raise ValidationError('data is required')
         return value
+
+    def save(self):
+        instance = BaseForm.save(self)
+        if instance.is_default:
+            instances = app.db.Instance.collection
+            instances.update({'_id': {'$ne': instance._id}},
+                             {"$set": {"is_default": False}},
+                             multi=True, safe=True)
+        return instance
+
+
+class InstanceEditForm(BaseForm):
+    fields = ('name', 'is_default', )
+
+    def clean_is_default(self, value):
+        return value == 'true'
+
+    def _field_changed(self, name):
+        return getattr(self.obj, name) != self.cleaned_data[name]
+
+    def save(self):
+        default_changed = self._field_changed('is_default')
+        instance = BaseForm.save(self)
+        if default_changed:
+            instances = app.db.Instance.collection
+            instances.update({'_id': {'$ne': instance._id}},
+                             {"$set": {"is_default": False}},
+                             multi=True, safe=True)
+        return instance
 
 
 def populate_parser(model):

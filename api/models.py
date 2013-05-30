@@ -253,13 +253,15 @@ class Instance(Document):
         'description': basestring,
         'ip': basestring,
         'type': basestring,
+        'is_default': bool,
         'created_on': datetime,
         'updated_on': datetime,
     }
     required_fields = ['name', 'created_on', 'updated_on', 'ip', ]
     default_values = {'created_on': datetime.utcnow,
-                      'updated_on': datetime.utcnow}
+                      'updated_on': datetime.utcnow,
+                      'is_default': False, }
     use_dot_notation = True
 
     def __repr__(self):
-        return '<Aws Instance %r>' % self.name
+        return '<Instance %r>' % self.name

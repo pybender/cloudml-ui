@@ -16,7 +16,7 @@
     <label class="control-label">AWS Instance:</label>
     <div class="controls" ng-class="{error: TrainDialogForm.aws_instance.$invalid}">
       <select class="input-small" name="aws_instance" ng-model="parameters.aws_instance" required>
-        <option ng-repeat="instance in aws_instances" value="{{ instance._id }}" ng-selected="instance==parameters.aws_instance">{{ instance.name }}: {{ instance.ip }}</option>
+        <option ng-repeat="instance in aws_instances" value="{{ instance._id }}" ng-selected="instance.is_default">{{ instance.name }}: {{ instance.ip }}</option>
       </select>
       <span ng-show="TrainDialogForm.aws_instance.$error.required" class="help-inline">Required</span>
     </div>
