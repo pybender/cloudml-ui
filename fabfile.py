@@ -19,9 +19,11 @@ setup_fabdeploy()
 def here(**kwargs):
     fabd.conf.run('here')
 
+
 @task
 def staging(**kwargs):
     fabd.conf.run('staging')
+
 
 @task
 def prod(**kwargs):
@@ -83,15 +85,18 @@ def setup():
                 virtualenv.pip_install.run(app='numpy')
                 virtualenv.pip_install.run(app='scipy')
 
+
 @task
 def qdeploy():
     release.work_on.run(0)
     deploy.run()
 
+
 @task
 def migrate():
     release.work_on.run(0)
     django.migrate.run()
+
 
 @task
 def cdeploy():
@@ -99,6 +104,7 @@ def cdeploy():
     git.push.run()
     supervisor.restart_program.run(program='gunicorn')
     supervisor.restart_program.run(program='celeryd')
+
 
 @task
 def deploy():
@@ -126,6 +132,52 @@ def deploy():
     supervisor.restart_program.run(program='gunicorn')
     supervisor.restart_program.run(program='celeryd')
     supervisor.restart_program.run(program='celerycam')
+
+
+@task
+def setupworker():
+    fabd.mkdirs.run()
+    for app in ['supervisor']:
+        pip.install.run(app=app)
+
+    pip.install.run(app='virtualenv', upgrade=True)
+    system.package_install.run(packages='liblapack-dev gfortran libpq-dev\
+npm nodejs libevent-dev')
+    supervisor.push_init_config.run()
+    supervisor.push_d_config.run()
+    supervisor.push_configs.run()
+    supervisor.d.run()
+
+    release.create.run()
+    virtualenv.create.run()
+    # install numpy and scipy
+    with prefix('export LAPACK=/usr/lib/liblapack.so'):
+        with prefix('export ATLAS=/usr/lib/libatlas.so'):
+            with prefix('export BLAS=/usr/lib/libblas.so'):
+                virtualenv.pip_install.run(app='numpy')
+                virtualenv.pip_install.run(app='scipy')
+    virtualenv.make_relocatable.run()
+
+
+@task
+def deployworker():
+    fabd.mkdirs.run()
+
+    release.create.run()
+    git.init.run()
+    git.push.run()
+
+    supervisor.push_configs.run()
+    flask.push_flask_config.run()
+
+    virtualenv.create.run()
+    virtualenv.pip_install_req.run()
+    virtualenv.make_relocatable.run()
+
+    release.activate.run()
+
+    supervisor.update.run()
+    supervisor.restart_program.run(program='celeryd')
 
 
 class PushAnjularConfig(Task):

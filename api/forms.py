@@ -181,7 +181,7 @@ class ImportHandlerAddForm(BaseForm):
 
 
 class AddTestForm(BaseForm):
-    fields = ('name', 'model', 'parameters')
+    fields = ('name', 'model', 'parameters', 'instance',)
 
     def clean_name(self, value):
         total = app.db.Test.find({'model_id': self.model_id}).count()
@@ -197,6 +197,10 @@ class AddTestForm(BaseForm):
         self.cleaned_data['model_id'] = self.model_id
         return self.model
 
+    def clean_instance(self, value):
+        from bson.objectid import ObjectId
+        return app.db.Instance.find_one({'_id': ObjectId(value)})
+
     def clean_parameters(self, value):
         parser = populate_parser(self.model)
         return parser.parse_args()
@@ -207,7 +211,10 @@ class AddTestForm(BaseForm):
         test.save(check_keys=False)
 
         from api.tasks import run_test
-        run_test.delay(str(test._id))
+        instance = self.cleaned_data['instance']
+        run_test.apply_async(args=[str(test._id)],
+                             queue=instance.name,
+                             routing_key='%s.run_test' % instance.name)
         return test
 
 

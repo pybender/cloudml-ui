@@ -246,8 +246,8 @@ class ImportHandler(Document):
 
 
 @connection.register
-class AwsInstance(Document):
-    __collection__ = 'aws_instance'
+class Instance(Document):
+    __collection__ = 'instances'
     structure = {
         'name': basestring,
         'description': basestring,

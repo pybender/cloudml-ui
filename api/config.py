@@ -14,3 +14,13 @@ CELERY_ENABLE_UTC = True
 BROKER_URL = 'mongodb://localhost:27017/cloudmlqueue'
 CELERY_RESULT_BACKEND = ''
 CELERY_IMPORTS = ('api.models', 'api', 'api.tasks')
+
+from kombu import Queue
+
+CELERY_DEFAULT_QUEUE = 'default'
+CELERY_QUEUES = [
+    Queue('default', routing_key='task.#')
+]
+CELERY_DEFAULT_EXCHANGE = 'tasks'
+CELERY_DEFAULT_EXCHANGE_TYPE = 'topic'
+CELERY_DEFAULT_ROUTING_KEY = 'task.default'

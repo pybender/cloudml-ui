@@ -604,7 +604,7 @@ class AwsInstanceResource(BaseResource):
 
     @property
     def Model(self):
-        return app.db.AwsInstance
+        return app.db.Instance
 
 api.add_resource(AwsInstanceResource, '/cloudml/aws_instances/')
 

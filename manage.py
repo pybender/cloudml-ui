@@ -9,7 +9,14 @@ class Celeryd(Command):
     """Runs a Celery worker node."""
 
     def run(self, **kwargs):
-        os.system("celery -A api.celery worker -E --loglevel=info")
+        os.system("celery -A api.celery worker -Q default -E --loglevel=info")
+
+
+class Celeryw(Command):
+    """Runs a Celery worker node."""
+
+    def run(self, **kwargs):
+        os.system("celery -A api.celery worker -Q worker1 -E --loglevel=info")
 
 
 class Flower(Command):
@@ -59,6 +66,7 @@ class Test(Command):
 
 manager = Manager(app)
 manager.add_command("celeryd", Celeryd())
+manager.add_command("celeryw", Celeryw())
 manager.add_command("flower", Flower())
 manager.add_command('test', Test())
 manager.add_command('migrate', Migrate())
