@@ -1,24 +1,63 @@
 <h2>
   {{ handler.name|capfirst }} Details
+  <div class="actions" ng-controller="ImportHandlerActionsCtrl">
+    <div ng-init="init({handler: handler})">
+      <button ng-click="importData(handler)" class="btn btn-info">
+        <i title="Load data" class="icon-tasks"></i>
+        Load DataSet
+      </button>
+    </div>
+  </div>
 </h2>
 
-<alert-message ng-show="msg" class="alert-info" msg='{{ msg }}' unsafe>
-</alert-message>
+<alert-message ng-show="msg" class="alert-info" msg='{{ msg }}' unsafe></alert-message>
+<alert-message ng-show="err" class="alert-error" msg='{{ err }}' unsafe></alert-message>
 
-<alert-message ng-show="err" class="alert-error" msg='{{ err }}' unsafe>
-</alert-message>
+<ul class="nav nav-tabs" ng-show="handler.loaded">
+  <li ng-class="{active: action[0] == 'model'}">
+    <a ng-click="setSection(['model', 'details'])">Details</a> 
+  </li>
+  <li ng-class="{active: action[0] == 'dataset'}"><a ng-click="setSection(['dataset', 'list'])">DataSets</a></li>
+</ul>
+ 
+<div class="tab-content" ng-show="handler.loaded">
+  <div ng-show="action[0] == 'model'">
+    <div>
+        Type: <span class="value">{{ handler.type }}</span>
+    </div>
+    <div>
+        Import Parameters: <span class="value" ng-repeat="param in handler.import_params">{{ param }}</span>
+    </div>
+    <div>
+        Created at: <span class="value">{{ handler.created_on|format_date }}</span>
+    </div>
+    <h5>Import Handler JSON data</h5>
+    <textarea name="data" ui-codemirror="{ mode: {name: 'javascript', json: true} }" ng-model="handler.data"> </textarea>
+  </div>
 
-<div>
-    Type:
-    <span class="value">
-        {{ handler.type }}
-    </span>
+  <div ng-show="action[0] == 'dataset'">
+    <h3>DataSets</h3>
+    <div>
+        <table class="table table-striped">
+          <thead>
+              <tr>
+                <th>Name</th>
+                <th>Status</th>
+                <th>Import Parameters</th>
+                <th>Data</th>
+                <th>Created</th>
+              </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="ds in datasets" ng-class="{error : ds.status=='Error', warning : ds.status=='Importing', success : ds.status =='Imported'}">
+              <td>{{ ds.name }}</td>
+              <td title="{{ ds.error }}">{{ ds.status }}</td>
+              <td><span class="value" ng-repeat="(key, val) in ds.import_params">{{ key }}={{ val }}</span></td>
+              <td>{{ ds.data }}</td>
+              <td>{{ ds.created_on|format_date }}</td>
+            </tr>
+          </tbody>
+        </table>
+    </div>  
+  </div>
 </div>
-<div>
-    Created at:
-    <span class="value">
-        {{ handler.created_on|format_date }}
-    </span>
-</div>
-<h5>Import Handler JSON data</h5>
-<textarea name="data" ui-codemirror="{ mode: {name: 'javascript', json: true} }" ng-model="handler.data"> </textarea>

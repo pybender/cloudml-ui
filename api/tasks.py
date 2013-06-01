@@ -16,6 +16,34 @@ class InvalidOperationError(Exception):
 
 
 @celery.task
+def import_data(id):
+    """
+    Import data from database.
+    """
+    from core.importhandler.importhandler import ExtractionPlan, ImportHandler
+    init_logger('importdata_log', handler_id=id)
+    try:
+        dataset = app.db.DataSet.find_one({'_id': ObjectId(id)})
+        importhandler = app.db.ImportHandler.find_one(
+            {'_id': ObjectId(dataset.import_handler_id)})
+        handler = json.dumps(importhandler.data)
+        plan = ExtractionPlan(handler, is_file=False)
+        handler = ImportHandler(plan, dataset.import_params)
+
+        logging.info("Loading data using %s imported.", importhandler.name)
+        handler.store_data_json(dataset.data)
+        dataset.status = dataset.STATUS_IMPORTED
+        dataset.save(validate=True)
+    except Exception, exc:
+        logging.error(exc)
+        dataset.set_error(exc)
+        raise
+
+    logging.info("Dataset using %s imported.", importhandler.name)
+    return
+
+
+@celery.task
 def train_model(model_id, parameters):
     """
     Train new model celery task.

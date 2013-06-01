@@ -23,6 +23,8 @@ App = angular.module('app', [
   'app.reports.controllers'
   'app.importhandlers.model'
   'app.importhandlers.controllers'
+  'app.datasets.model'
+  'app.datasets.controllers'
   'app.weights.model'
   'app.weights.controllers'
   'app.awsinstances.model'
@@ -73,16 +75,15 @@ App.config([
       templateUrl: '/partials/reports/compare_models_form.html'
       controller: 'CompareModelsFormCtl'
     })
-
-    .when('/import_handlers', {
+    .when('/importhandlers', {
       controller: "ImportHandlerListCtrl"
       templateUrl: '/partials/import_handler/list.html'
     })
-    .when('/import_handlers/add', {
+    .when('/importhandlers/add', {
       controller: "AddImportHandlerCtl"
       templateUrl: '/partials/import_handler/add.html'
     })
-    .when('/import_handlers/:id', {
+    .when('/importhandlers/:id', {
       controller: 'ImportHandlerDetailsCtrl'
       templateUrl: '/partials/import_handler/details.html'
     })
@@ -106,7 +107,8 @@ App.config([
   $locationProvider.html5Mode(false)
 ])
 
-App.run(['$rootScope', 'settings', ($rootScope, settings) ->
+App.run(['$rootScope', '$routeParams', '$location', 'settings',
+($rootScope, $routeParams, $location, settings) ->
   $rootScope.Math = window.Math
 
   # this will be available to all scope variables
@@ -129,6 +131,21 @@ App.run(['$rootScope', 'settings', ($rootScope, settings) ->
     if not $rootScope.sse_test?
       $rootScope.sse_test = new EventSource("#{settings.logUrl}log/?" + params)
     return $rootScope.sse_test
+
+  DEFAULT_ACTION = "model:details"
+
+  $rootScope.initSections = (go, defaultAction=DEFAULT_ACTION) ->
+    $rootScope.action = ($routeParams.action or defaultAction).split ':'
+    $rootScope.goSection = go
+    $rootScope.goSection $rootScope.action
+
+  $rootScope.setSection = (action) ->
+    $rootScope.action = action
+    actionString = action.join(':')
+    $location.search(
+      if actionString == DEFAULT_ACTION then ""
+      else "action=#{actionString}")
+    $rootScope.goSection action
 
   $rootScope.setError = (opts, message=null) ->
     if !message?

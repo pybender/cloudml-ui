@@ -1,0 +1,10 @@
+{"AwsInstance": [
+ {
+    "_id": "5170dd3a106a6c1631000000",
+    "name": "Instance 1",
+    "description": "Some description",
+    "type": "small",
+    "ip": "0.0.0.0"
+ }
+ ]
+}

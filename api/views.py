@@ -260,6 +260,47 @@ class ImportHandlerResource(BaseResource):
 api.add_resource(ImportHandlerResource, '/cloudml/importhandlers/')
 
 
+class DataSetResource(BaseResource):
+    """
+    DataSet API methods
+    """
+    @property
+    def Model(self):
+        return app.db.DataSet
+
+    OBJECT_NAME = 'dataset'
+    decorators = [crossdomain(origin='*')]
+    methods = ('GET', 'OPTIONS', 'POST')
+
+    def post(self, **kwargs):
+        """
+        Loads dataset using specified import handler.
+        """
+        from api.tasks import import_data
+        handler_id = kwargs.get('import_handler_id')
+        importhandler = app.db.ImportHandler.find_one({'_id': ObjectId(handler_id)})
+        if importhandler is None:
+            raise NotFound('Import handler not found')
+
+        parser = populate_parser(importhandler, is_requred=True)
+        parameters = parser.parse_args()
+
+        dataset = app.db.DataSet()
+        str_params = "-".join(["%s=%s" % item
+                              for item in parameters.iteritems()])
+        dataset.name = "%s: %s" % (importhandler.name, str_params)
+        dataset.import_handler_id = handler_id
+        dataset.import_params = parameters
+        filename = '%s-%s' % (handler_id, str_params.replace('=', '_'))
+        dataset.data = filename
+        dataset.save(validate=True)
+        import_data.delay(str(dataset._id))
+        return self._render(self._get_save_response_context(dataset))
+
+api.add_resource(DataSetResource, '/cloudml/importhandlers/\
+<regex("[\w\.]*"):import_handler_id>/datasets/')
+
+
 class Tests(BaseResource):
     """
     Tests API Resource

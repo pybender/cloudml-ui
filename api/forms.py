@@ -46,6 +46,7 @@ class BaseForm():
     def clean(self):
         self.cleaned_data = {}
         for name in self.fields:
+            print name
             value = self.data.get(name, None)
             mthd = "clean_%s" % name
             if hasattr(self, mthd):
@@ -54,6 +55,7 @@ class BaseForm():
                 self.cleaned_data[name] = value
         self.validate_obj()
         self._cleaned = True
+        print self.cleaned_data.keys()
         return self.cleaned_data
 
     def save(self, commit=True):
@@ -158,7 +160,7 @@ trained model is required for posting model')
 
 
 class ImportHandlerAddForm(BaseForm):
-    fields = ('name', 'type', 'data', )
+    fields = ('name', 'type', 'data', 'import_params', )
 
     def clean_name(self, value):
         if not value:
@@ -175,13 +177,17 @@ class ImportHandlerAddForm(BaseForm):
             raise ValidationError('data is required')
 
         try:
-            return json.loads(value)
-        except ValueError:
-            raise ValidationError('Invalid data')
+            data = json.loads(value)
+        except ValueError, exc:
+            raise ValidationError('Invalid data: %s' % exc)
+
+        plan = ExtractionPlan(value, is_file=False)
+        self.cleaned_data['import_params'] = plan.input_params
+        return data
 
 
 class AddTestForm(BaseForm):
-    fields = ('name', 'model', 'parameters', 'instance',)
+    fields = ('name', 'model', 'parameters', 'instance', )
 
     def clean_name(self, value):
         total = app.db.Test.find({'model_id': self.model_id}).count()

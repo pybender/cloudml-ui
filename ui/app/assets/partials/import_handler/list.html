@@ -1,7 +1,7 @@
 <h2>
   Import Handler List
   <div class="actions">
-      <a class="btn btn-info" href="#/import_handlers/add">
+      <a class="btn btn-info" href="#/importhandlers/add">
         <i class="status-icon icon-plus"></i> Add new import handler
       </a>
   </div>
@@ -16,6 +16,7 @@
   <tr>
     <th>Name</th>
     <th>Type</th>
+    <th>Import Parameters</th>
     <th>Created</th>
     <th>Updated</th>
     <th>Actions</th>
@@ -25,9 +26,14 @@
   <tr ng-repeat="handler in objects">
     <td><a href="#{{ handler.objectUrl() }}">{{ handler.name }}</a></td>
     <td>{{ handler.type }}</td>
+    <td><span ng-repeat="param in handler.import_params">{{ param }} </span></td>
     <td>{{ handler.created_on|format_date }}</td>
     <td>{{ handler.updated_on|format_date }}</td>
-    <td/>
+    <td ng-controller="ImportHandlerActionsCtrl">
+      <button ng-show="handler.type == 'Db'" ng-click="importData(handler)" class="btn btn-info">
+        <i title="Import Data" class="icon-tasks"></i>
+      </button>
+    </td>
   </tr>
 </tbody>
 </table>

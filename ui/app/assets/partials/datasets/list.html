@@ -1,0 +1,27 @@
+<h2>
+  Dataset List
+</h2>
+
+<alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+
+<alert-message ng-show="objects.length == 0" class="alert-info" msg="No datasets found"></alert-message>
+
+<table ng-hide="objects.length == 0" class="table table-hover">
+<thead>
+  <tr>
+    <th>Name</th>
+    <th>Created</th>
+    <th>Updated</th>
+    <th>Actions</th>
+  </tr>
+</thead>
+<tbody>
+  <tr ng-repeat="handler in objects">
+    <td><a href="#{{ handler.objectUrl() }}">{{ handler.name }}</a></td>
+    <td>{{ handler.created_on|format_date }}</td>
+    <td>{{ handler.updated_on|format_date }}</td>
+    <td>
+    </td>
+  </tr>
+</tbody>
+</table>

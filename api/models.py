@@ -234,6 +234,7 @@ class ImportHandler(Document):
         'created_on': datetime,
         'updated_on': datetime,
         'data': dict,
+        'import_params': list,
     }
     required_fields = ['name', 'created_on', 'updated_on', ]
     default_values = {'created_on': datetime.utcnow,
@@ -243,6 +244,44 @@ class ImportHandler(Document):
 
     def __repr__(self):
         return '<Import Handler %r>' % self.name
+
+
+@connection.register
+class DataSet(Document):
+    __collection__ = 'dataset'
+    STATUS_IMPORTINING = 'Importing'
+    STATUS_IMPORTED = 'Imported'
+    STATUS_ERROR = 'Error'
+    structure = {
+        'name': basestring,
+        'status': basestring,
+        'error': basestring,
+        'created_on': datetime,
+        'updated_on': datetime,
+        'data': basestring,
+        'import_params': dict,
+        'import_handler_id': basestring,
+    }
+    required_fields = ['name', 'created_on', 'updated_on', ]
+    default_values = {'created_on': datetime.utcnow,
+                      'updated_on': datetime.utcnow,
+                      'error': '',
+                      'status': STATUS_IMPORTINING}
+    use_dot_notation = True
+
+    def set_error(self, error, commit=True):
+        self.error = str(error)
+        self.status = self.STATUS_ERROR
+        if commit:
+            self.save()
+
+    def save(self, *args, **kwargs):
+        if self.status != self.STATUS_ERROR:
+            self.error = ''
+        super(DataSet, self).save(*args, **kwargs)
+
+    def __repr__(self):
+        return '<Dataset %r>' % self.name
 
 
 @connection.register

@@ -6,48 +6,53 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
 
 .controller('ImportHandlerListCtrl', [
   '$scope'
-  '$http'
   '$dialog'
-  'settings'
   'ImportHandler'
 
-($scope, $http, $dialog, settings, ImportHandler) ->
+($scope, $dialog, ImportHandler) ->
   ImportHandler.$loadAll(
-    show: 'name,type,created_on,updated_on'
+    show: 'name,type,created_on,updated_on,import_params'
   ).then ((opts) ->
     $scope.objects = opts.objects
   ), ((opts) ->
-    $scope.err = "Error while saving: server responded with " +
-        "#{resp.status} " +
-        "(#{resp.data.response.error.message or "no message"}). " +
-        "Make sure you filled the form correctly. " +
-        "Please contact support if the error will not go away."
+    $scope.setError(opts, 'loading handler list')
   )
 ])
 
 .controller('ImportHandlerDetailsCtrl', [
   '$scope'
-  '$http'
-  '$location'
   '$routeParams'
-  '$dialog'
-  'settings'
   'ImportHandler'
+  'DataSet'
 
-($scope, $http, $location, $routeParams, $dialog, settings, ImportHandler) ->
-  if not $routeParams.id
-    err = "Can't initialize without import handler id"
-  $scope.handler = new ImportHandler({_id: $routeParams.id})
+  ($scope, $routeParams, ImportHandler, DataSet) ->
+    if not $routeParams.id
+      err = "Can't initialize without import handler id"
+    $scope.handler = new ImportHandler({_id: $routeParams.id})
 
-  $scope.handler.$load(
-    show: 'name,type,created_on,updated_on,data'
-    ).then (->
-      loaded_var = true
-      if callback?
-        callback()
-    ), (->
-      $scope.err = data
-    )
+    $scope.go = (section) ->
+      $scope.loadDetails()
+      switch section[0]
+        when "dataset" then $scope.loadDataSets()
+
+    $scope.loadDetails = () ->
+      $scope.handler.$load(
+        show: 'name,type,created_on,updated_on,data,import_params'
+      ).then (->), ((opts) ->
+        $scope.setError(opts, 'loading handler details')
+      )
+
+    $scope.loadDataSets = () ->
+      DataSet.$loadAll(
+        $scope.handler._id,
+        show: 'name,created_on,status,error,data,import_params'
+      ).then ((opts) ->
+        $scope.datasets = opts.objects
+      ), ((opts) ->
+        $scope.setError(opts, 'loading datasets')
+      )
+
+    $scope.initSections($scope.go)
 ])
 
 .controller('AddImportHandlerCtl', [
@@ -80,13 +85,8 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
         $scope.$apply()
       ), 300
 
-    ), ((resp) ->
-      $scope.saving = false
-      $scope.err = "Error while saving: server responded with " +
-        "#{resp.status} " +
-        "(#{resp.data.response.error.message or "no message"}). " +
-        "Make sure you filled the form correctly. " +
-        "Please contact support if the error will not go away."
+    ), ((opts) ->
+      $scope.setError(opts, 'adding import handler')
     )
 
   $scope.setDataFile = (element) ->
@@ -99,4 +99,47 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
           str = e.target.result
           $scope.handler.data = str
         reader.readAsText($scope.data)
+])
+
+
+.controller('LoadDataDialogCtrl', [
+  '$scope'
+  '$location'
+  'dialog'
+  'ImportHandler'
+  'DataSet'
+
+  ($scope, $location, dialog, ImportHandler, DataSet) ->
+    $scope.parameters = {}
+    $scope.handler = dialog.handler
+    $scope.handler.$load(show: 'import_params').then (->
+      $scope.params = $scope.handler.import_params
+    ), ((opts)->
+      $scope.setError(opts, 'loading handler parameters')
+    )
+
+    $scope.close = ->
+      dialog.close()
+
+    $scope.start = (result) ->
+      $scope.dataset = new DataSet({'import_handler_id': $scope.handler._id})
+      $scope.dataset.$save($scope.parameters).then (() ->
+        $scope.close()
+        url = $scope.handler.objectUrl()
+        $location.path(url).search({'action': 'dataset:list',
+        'a': Math.random()})
+      ), ((opts) ->
+        $scope.setError(opts, 'creating dataset')
+      )
+])
+
+.controller('ImportHandlerActionsCtrl', [
+  '$scope'
+  '$dialog'
+($scope, $dialog) ->
+  $scope.importData = (handler) ->
+    d = $dialog.dialog(modalFade: false)
+    d.handler = handler
+    d.open('partials/import_handler/load_data.html', 'LoadDataDialogCtrl')
+
 ])
