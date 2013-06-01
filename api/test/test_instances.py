@@ -1,19 +1,19 @@
 from utils import BaseTestCase
-from api.views import AwsInstanceResource
+from api.views import InstanceResource
 
 
-class AwsInstancesTests(BaseTestCase):
+class InstancesTests(BaseTestCase):
     """
-    Tests of the AWS Instances API.
+    Tests of the Instances API.
     """
     INSTANCE_ID = '5170dd3a106a6c1631000000'
-    FIXTURES = ('aws_instances.json', )
+    FIXTURES = ('instances.json', )
     BASE_URL = '/cloudml/aws_instances/'
-    RESOURCE = AwsInstanceResource
+    RESOURCE = InstanceResource
 
     def setUp(self):
-        super(AwsInstancesTests, self).setUp()
-        self.Model = self.db.AwsInstance
+        super(InstancesTests, self).setUp()
+        self.Model = self.db.Instance
         self.obj = self.Model.find_one({'name': 'Instance 1'})
         self.assertTrue(self.obj)
 

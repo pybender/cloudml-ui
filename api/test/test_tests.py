@@ -7,7 +7,8 @@ from utils import BaseTestCase
 class TestTests(BaseTestCase):
     MODEL_NAME = 'TrainedModel'
     TEST_NAME = 'Test-1'
-    FIXTURES = ('models.json', 'tests.json', 'examples.json')
+    FIXTURES = ('models.json', 'tests.json', 'examples.json',
+                'instances.json', )
 
     def setUp(self):
         super(TestTests, self).setUp()
@@ -49,7 +50,7 @@ class TestTests(BaseTestCase):
 
     def test_post(self):
         url = self._get_url()
-        resp = self.app.post(url)
+        resp = self.app.post(url, data={'instance': '5170dd3a106a6c1631000000'})
         self.assertEquals(resp.status_code, httplib.CREATED)
 
     def test_delete(self):

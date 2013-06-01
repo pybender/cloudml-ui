@@ -2,6 +2,7 @@ import httplib
 import json
 
 from utils import MODEL_ID, BaseTestCase
+from bson.objectid import ObjectId
 from api.utils import ERR_INVALID_DATA
 
 
@@ -192,14 +193,15 @@ trainer - 'module' object has no attribute 'FeatureTypeInstance'")
 
     def test_edit_model(self):
         # TODO: Add validation to importhandlers
-        data = {'example_id': 'some_id',
+        data = {'name': 'new name',
+                'example_id': 'some_id',
                 'example_label': 'some_label',
                 'importhandler': '{"b": 2}',
                 'train_importhandler': '{"a": 1}', }
         resp = self.app.put(self._get_url(id=self.model._id), data=data)
         self.assertEquals(resp.status_code, httplib.OK)
         data = json.loads(resp.data)
-        model = self.db.Model.find_one({'name': self.MODEL_NAME})
+        model = self.db.Model.find_one({'_id': ObjectId(self.model._id)})
         self.assertEquals(data['model']['_id'], str(model._id))
         self.assertEquals(data['model']['name'], str(model.name))
         self.assertEquals(model.example_id, 'some_id')
@@ -239,9 +241,10 @@ trainer - 'module' object has no attribute 'FeatureTypeInstance'")
         self.assertTrue('start is required' in resp.data)
 
         data = {'start': '2012-12-03',
-                'end': '2012-12-04'}
+                'end': '2012-12-04',
+                'aws_instance': '5170dd3a106a6c1631000000'}
         resp = self.app.put(url, data=data)
-        self.assertTrue(str(self.model._id) in resp.data)
+        self.assertTrue(str(self.model._id) in resp.data, resp.data)
 
         check(self.db.Test, exist=False,
               msg='Tests should be removed after retrain model')

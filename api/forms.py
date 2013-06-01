@@ -46,16 +46,13 @@ class BaseForm():
     def clean(self):
         self.cleaned_data = {}
         for name in self.fields:
-            print name
             value = self.data.get(name, None)
             mthd = "clean_%s" % name
             if hasattr(self, mthd):
                 value = getattr(self, mthd)(value)
-            if value:
-                self.cleaned_data[name] = value
+            self.cleaned_data[name] = value
         self.validate_obj()
         self._cleaned = True
-        print self.cleaned_data.keys()
         return self.cleaned_data
 
     def save(self, commit=True):
@@ -205,7 +202,10 @@ class AddTestForm(BaseForm):
 
     def clean_instance(self, value):
         from bson.objectid import ObjectId
-        return app.db.Instance.find_one({'_id': ObjectId(value)})
+        instance = app.db.Instance.find_one({'_id': ObjectId(value)})
+        if instance is None:
+            raise ValidationError('Instance not found')
+        return instance
 
     def clean_parameters(self, value):
         parser = populate_parser(self.model)
