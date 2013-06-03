@@ -35,7 +35,6 @@ class BaseTestCase(unittest.TestCase):
 
     @classmethod
     def fixtures_load(cls):
-        from bson.objectid import ObjectId
         for fixture in cls.FIXTURES:
             data = _load_fixture_data(fixture)
             for collection_name, documents in data.iteritems():

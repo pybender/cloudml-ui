@@ -97,9 +97,7 @@ filter - all models should be returned')
                                   (self.MODEL_NAME, field))
             else:
                 self.assertEquals(resp.status_code, 400)
-        check('importhandler')
         check('features')
-        check('train_importhandler')
         check('invalid', is_invalid=True)
 
     def test_post_without_name(self):
@@ -124,22 +122,6 @@ smth No JSON object could be decoded')
                      'name': 'new'}
         self._checkValidationErrors(uri, post_data, 'Invalid features: \
 schema-name is missing')
-
-    def test_post_with_invalid_import_handler(self):
-        features = open('./conf/features.json', 'r').read()
-        post_data = {'importhandler': 'smth',
-                     'features': features,
-                     'name': 'new'}
-        self._checkValidationErrors(self.BASE_URL, post_data,
-                                    'Invalid importhandler: smth \
-No JSON object could be decoded')
-
-        features = open('./conf/features.json', 'r').read()
-        post_data = {'importhandler': '{}',
-                     'features': features,
-                     'name': 'new'}
-        self._checkValidationErrors(self.BASE_URL, post_data,
-                                    'importhandler is required')
 
     def test_post_with_invalid_trainer(self):
         handler = open('./conf/extract.json', 'r').read()
@@ -195,9 +177,7 @@ trainer - 'module' object has no attribute 'FeatureTypeInstance'")
         # TODO: Add validation to importhandlers
         data = {'name': 'new name',
                 'example_id': 'some_id',
-                'example_label': 'some_label',
-                'importhandler': '{"b": 2}',
-                'train_importhandler': '{"a": 1}', }
+                'example_label': 'some_label', }
         resp = self.app.put(self._get_url(id=self.model._id), data=data)
         self.assertEquals(resp.status_code, httplib.OK)
         data = json.loads(resp.data)
@@ -206,8 +186,6 @@ trainer - 'module' object has no attribute 'FeatureTypeInstance'")
         self.assertEquals(data['model']['name'], str(model.name))
         self.assertEquals(model.example_id, 'some_id')
         self.assertEquals(model.example_label, 'some_label')
-        self.assertEquals(model.importhandler, {'b': 2})
-        self.assertEquals(model.train_importhandler, {"a": 1})
 
     def test_edit_model_name(self):
         data = {'name': 'new name %@#'}

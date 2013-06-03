@@ -21,3 +21,21 @@ class ImportHandlersTests(BaseTestCase):
 
     def test_list(self):
         self._check_list()
+
+
+
+#     def test_post_with_invalid_import_handler(self):
+#         features = open('./conf/features.json', 'r').read()
+#         post_data = {'importhandler': 'smth',
+#                      'features': features,
+#                      'name': 'new'}
+#         self._checkValidationErrors(self.BASE_URL, post_data,
+#                                     'Invalid importhandler: smth \
+# No JSON object could be decoded')
+
+#         features = open('./conf/features.json', 'r').read()
+#         post_data = {'importhandler': '{}',
+#                      'features': features,
+#                      'name': 'new'}
+#         self._checkValidationErrors(self.BASE_URL, post_data,
+#                                     'importhandler is required')
