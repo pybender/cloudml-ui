@@ -32,6 +32,8 @@
         Created at: <span class="value">{{ handler.created_on|format_date }}</span>
     </div>
     <h5>Import Handler JSON data</h5>
+    <a href="{{ handler.downloadUrl() }}"><i title="Download import handler file" class="icon-download-alt"></i> Download</a>
+    <span ng-click="saveData()" class="btn btn-primary">Save</span>
     <textarea name="data" ui-codemirror="{ mode: {name: 'javascript', json: true} }" ng-model="handler.data"> </textarea>
   </div>
 

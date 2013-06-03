@@ -84,8 +84,7 @@ class Models(BaseResource):
     post_form = ModelAddForm
     put_form = ModelEditForm
 
-    DOWNLOAD_FIELDS = ('trainer', 'importhandler',
-                       'train_importhandler', 'features')
+    DOWNLOAD_FIELDS = ('trainer', 'features')
 
     @property
     def Model(self):
@@ -131,7 +130,7 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
         if field == 'trainer':
             content = model.get_trainer(loaded=False)
         else:
-            content = json.dumps(getattr(model, 'importhandler'))
+            content = json.dumps(getattr(model, field))
 
         filename = "%s-%s.%s" % (model.name, field,
                                  'dat' if field == 'trainer' else 'json')
@@ -256,6 +255,22 @@ class ImportHandlerResource(BaseResource):
     decorators = [crossdomain(origin='*')]
     methods = ['GET', 'OPTIONS', 'PUT', 'POST']
     post_form = ImportHandlerAddForm
+    GET_ACTIONS = ('download', )
+
+    def _get_download_action(self, **kwargs):
+        """
+        Downloads importhandler data file.
+        """
+        model = self._get_details_query(None, None, **kwargs)
+        if model is None:
+            raise NotFound(self.MESSAGE404 % kwargs)
+
+        content = json.dumps(model.data)
+        resp = Response(content)
+        resp.headers['Content-Type'] = 'text/plain'
+        resp.headers['Content-Disposition'] = 'attachment; \
+filename=importhandler-%s.json' % model.name
+        return resp
 
 api.add_resource(ImportHandlerResource, '/cloudml/importhandlers/')
 

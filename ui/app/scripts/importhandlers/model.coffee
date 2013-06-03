@@ -24,6 +24,9 @@ angular.module('app.importhandlers.model', ['app.config'])
       data: null
       import_params: []
 
+      downloadUrl: =>
+        return "#{@BASE_API_URL}#{@_id}/action/download/"
+
       loadFromJSON: (origData) =>
         super origData
         if origData?
