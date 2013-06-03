@@ -42,105 +42,62 @@ angular.module('app.models.controllers', ['app.config', ])
 
 .controller('ModelDetailsCtrl', [
   '$scope'
-  '$http'
   '$location'
   '$routeParams'
-  '$dialog'
-  'settings'
   'Model'
   'TestResult'
   'Weight'
 
-($scope, $http, $location, $routeParams, $dialog, settings,
-  Model, Test, Weight) ->
-  DEFAULT_ACTION = 'model:details'
-  $scope.action = ($routeParams.action or DEFAULT_ACTION).split ':'
-  $scope.$watch 'action', (action) ->
-    actionString = action.join(':')
-    $location.search(
-      if actionString == DEFAULT_ACTION then ""
-      else "action=#{actionString}")
+  ($scope, $location, $routeParams, Model, Test, Weight) ->
+    if not $scope.model
+      if not $routeParams.id
+        throw new Error "Can't initialize without model id"
+      $scope.model = new Model({_id: $routeParams.id})
+    $scope.person_name = "John Doe"
+    $scope.initLog = () ->
+      $scope.log_messages = []
+      params = "channel=trainmodel_log&model=" + $scope.model._id
+      log_sse = $scope.getEventSource(params=params)
+      handleCallback = (msg) ->
+        $scope.$apply(() ->
+          if msg?
+            data = JSON.parse(msg.data)
+            $scope.log_messages.push(data['data']['msg']))
+      log_sse.addEventListener('message', handleCallback)
 
-    switch action[0]
-      when "features" then $scope.go 'features,status'
-      when "test" then $scope.goTests()
-      when "import_handlers"
-        if action[1] == 'train'
-          $scope.go 'train_importhandler,status,id'
-        else
-          $scope.go 'importhandler,status,id'
-      else $scope.go 'status,created_on,target_variable,error,
-labels,weights_synchronized,example_id,example_label,updated_on,
-name, test_import_handler'
+    $scope.load = (fields) ->
+      $scope.model.$load(
+        show: fields
+        ).then (->
+        ), (->
+          $scope.setError(opts, 'loading model details')
+        )
 
-  if not $scope.model
-    if not $routeParams.id
-      err = "Can't initialize without model id"
-    $scope.model = new Model({_id: $routeParams.id})
-
-  $scope.log_messages = []
-  params = "channel=trainmodel_log&model=" + $scope.model._id
-  log_sse = $scope.getEventSource(params=params)
-  handleCallback = (msg) ->
-    $scope.$apply(() ->
-      if msg?
-        data = JSON.parse(msg.data)
-        $scope.log_messages.push(data['data']['msg']))
-  log_sse.addEventListener('message', handleCallback)
-
-  $scope.toggleAction = (action) =>
-    $scope.action = action
-
-  $scope.go = (fields, callback) ->
-    $scope.model.$load(
-      show: fields
-      ).then (->
-        $scope.modelLoaded = true
-        if callback?
-          callback()
-      ), (->
-        $scope.err = data
+    $scope.goTests = () ->
+      Test.$loadAll(
+        $scope.model._id,
+        show: 'name,created_on,status,parameters,accuracy,examples_count'
+      ).then ((opts) ->
+        $scope.tests = opts.objects
+      ), ((opts) ->
+        $scope.setError(opts, 'loading tests')
       )
-
-  $scope.goTests = () ->
-    $scope.go 'name,status,created_on,target_variable,error,labels'
-    Test.$loadAll(
-      $scope.model._id,
-      show: 'name,created_on,status,parameters,accuracy,examples_count'
-    ).then ((opts) ->
-      $scope.tests = opts.objects
-    ), ((opts) ->
-      $scope.err = "Error while loading tests: server responded with " +
-        "#{opts.status} " +
-        "(#{opts.data.response.error.message or "no message"}). "
-    )
-
-  $scope.saveTrainHandler = =>
-    $scope.model.$save(only: ['train_importhandler']).then (() ->
-      $scope.msg = 'Import Handler for training model saved'
-    ), (() ->
-      throw new Error "Unable to save import handler"
-    )
-
-  $scope.saveTestHandler = =>
-    $scope.model.$save(only: ['importhandler']).then (() ->
-      $scope.msg = 'Import Handler for tests saved'
-    ), (() ->
-      throw new Error "Unable to save import handler"
-    )
-
-  $scope.saveModel = =>
-    $scope.model.$save(only: ['name',
-                              'example_label',
-                              'example_id']).then (() ->
-      $scope.editMode = false
-    ), ((opts) ->
-       $scope.err = "Error while saving model details: server responded with " +
-        "#{opts.status} " +
-        "(#{opts.data.response.error.message or "no message"}). "
-    )
     
-])
+    $scope.goSection = (section) ->
+      name = section[0]
+      switch name
+        when 'model' then fields = 'status,created_on,target_variable,
+error, labels,weights_synchronized,example_id,example_label,
+updated_on,name,test_import_handler.name,test_import_handler._id,
+train_import_handler.name,train_import_handler._id'
+        when 'features' then fields = 'name,status,features'
+        else fields = 'name,status'
+      $scope.load fields
+      if name == 'log'
+        $scope.initLog()
+
+    $scope.initSections($scope.goSection)
+  ])
 
 .controller('TrainModelCtrl', [
   '$scope'

@@ -153,6 +153,10 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
       show: 'name'
     ).then ((opts) ->
       $scope.handlers = opts.objects
+      $scope.handlers_list  = []
+      for h in $scope.handlers
+        $scope.handlers_list.push {value: h._id, text: h.name}
+
     ), ((opts) ->
       $scope.setError(opts, 'loading import handler list')
     )

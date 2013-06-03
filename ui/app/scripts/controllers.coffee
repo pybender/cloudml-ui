@@ -63,6 +63,18 @@ angular.module('app.controllers', ['app.config', ])
       dialog.close()
 ])
 
+.controller('ObjEditCtrl', [
+  '$scope'
+
+  ($scope) ->
+    $scope.save = (fields) =>
+      $scope.model.$save(only: fields).then (() ->
+        $scope.editMode = false
+      ), ((opts) ->
+         $scope.err = $scope.setError(opts, 'saving model')
+      )
+])
+
 .controller('SaveObjectCtl', [
   '$scope'
   '$location'

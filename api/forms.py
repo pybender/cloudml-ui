@@ -1,6 +1,7 @@
 import json
 from datetime import datetime
 from flask import request
+from bson.objectid import ObjectId
 
 from api import app
 from api.resources import ValidationError
@@ -50,7 +51,8 @@ class BaseForm():
             mthd = "clean_%s" % name
             if hasattr(self, mthd):
                 value = getattr(self, mthd)(value)
-            self.cleaned_data[name] = value
+            if value:
+                self.cleaned_data[name] = value
         self.validate_obj()
         self._cleaned = True
         return self.cleaned_data
@@ -62,7 +64,7 @@ class BaseForm():
         for name, val in self.cleaned_data.iteritems():
             setattr(self.obj, name, val)
 
-        self.updated_on = datetime.now()
+        self.obj.updated_on = datetime.now()
         if commit:
             self.obj.save(validate=True)
 
@@ -72,20 +74,25 @@ class BaseForm():
         pass
 
 
-class ModelEditForm(BaseForm):
-    fields = ('importhandler', 'train_importhandler',
+class BaseModelForm(BaseForm):
+    def _clean_importhandler(self, value):
+        if value and not value == 'undefined':
+            obj = app.db.ImportHandler.find_one({'_id': ObjectId(value)})
+            if obj is not None:
+                return obj
+
+    clean_train_import_handler = _clean_importhandler
+    clean_test_import_handler = _clean_importhandler
+
+
+class ModelEditForm(BaseModelForm):
+    fields = ('test_import_handler', 'train_import_handler',
               'example_id', 'example_label', 'name')
 
-    def clean_importhandler(self, value):
-        if value and not value == 'undefined':
-            return json.loads(value)
 
-    clean_train_importhandler = clean_importhandler
-
-
-class ModelAddForm(BaseForm):
-    fields = ('features', 'trainer', 'train_importhandler',
-              'name', 'importhandler')
+class ModelAddForm(BaseModelForm):
+    fields = ('features', 'trainer', 'train_import_handler',
+              'name', 'test_import_handler')
     trainer = None
 
     def clean_name(self, value):
@@ -108,21 +115,6 @@ class ModelAddForm(BaseForm):
             except SchemaException, exc:
                 raise ValidationError('Invalid features: %s' % exc)
 
-        return loaded_value
-
-    def clean_train_importhandler(self, value):
-        return self._clean_json_val('train_importhandler', value)
-
-    def clean_importhandler(self, value):
-        loaded_value = self._clean_json_val('importhandler', value)
-        if not loaded_value:
-            raise ValidationError('importhandler is required')
-
-        try:
-            plan = ExtractionPlan(value, is_file=False)
-            self.cleaned_data['import_params'] = plan.input_params
-        except (ValueError, ImportHandlerException) as exc:
-            raise ValidationError('Invalid importhandler: %s' % exc)
         return loaded_value
 
     def validate_obj(self):
@@ -178,8 +170,12 @@ class ImportHandlerAddForm(BaseForm):
         except ValueError, exc:
             raise ValidationError('Invalid data: %s' % exc)
 
-        plan = ExtractionPlan(value, is_file=False)
-        self.cleaned_data['import_params'] = plan.input_params
+        try:
+            plan = ExtractionPlan(value, is_file=False)
+            self.cleaned_data['import_params'] = plan.input_params
+        except (ValueError, ImportHandlerException) as exc:
+            raise ValidationError('Invalid importhandler: %s' % exc)
+
         return data
 
 
@@ -191,7 +187,6 @@ class AddTestForm(BaseForm):
         return "Test%s" % (total + 1)
 
     def clean_model(self, value):
-        from bson.objectid import ObjectId
         self.model = app.db.Model.find_one({'_id': ObjectId(self.model_id)})
         if self.model is None:
             raise ValidationError('Model not found')

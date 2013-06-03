@@ -27,6 +27,87 @@ angular.module('app.directives', [
   }
 )
 
+.directive('editable',
+
+  () ->
+    ###
+    Integrates editable widget for updating fields without opening separate
+    page.
+
+    Attributes used on the element:
+
+      editable: must point to the object being edited. Object must provide
+                $save method implementation that supports ``only`` argument.
+      ng-bind: must point to the expression that resolves to default value
+               for editable element (i.e. value before user edits it).
+               Directive watches it for changes, since it could be changed
+               from outside.
+      field: name of the field of object referenced by ``editable`` that
+             will be updated.
+      type: input type to be used with editable plug-in. E.g. text or textarea.
+
+    ###
+    return {
+      restrict: 'A'
+      transclude: true
+      scope: {
+        obj: '=editable'
+        value: '&value'
+        source: '&'
+        display: '&'
+      }
+
+      link: (scope, el, attrs) ->
+        fieldName = attrs.editableField
+        inputType = attrs.editableInput
+        placement = attrs.editablePlacement
+
+        submitFn = (params) ->
+          if not scope.obj.$save
+            throw new Error "Editable: can't handle object without $save method"
+
+          scope.obj[fieldName] = params.value
+          return scope.obj.$save only: [fieldName]
+
+        previousValue = null
+
+        successHandler = (obj) ->
+          previousValue = obj[fieldName]
+          # Update value on given object with value returned with response
+          scope.obj[fieldName] = obj[fieldName]
+
+        errorHandler = ->
+          # Revert changed value
+          scope.obj[fieldName] = previousValue
+          $(el).editable 'setValue', previousValue
+          if attrs.displayValue then $(el).text attrs.displayValue
+          #throw new Error "Error saving job information"
+
+        promiseHandler = (promise) ->
+          promise.then successHandler, errorHandler
+
+        editableOpts = {
+          url: submitFn
+          type: inputType
+          placement: placement
+          autotext: 'never'
+          success: promiseHandler
+        }
+
+        if inputType == 'select'
+          editableOpts.source = eval("scope.source")
+
+        $(el).editable editableOpts
+
+        scope.$watch scope.value, (newVal, oldVal) ->
+          previousValue = newVal
+          $(el).editable 'setValue', newVal
+          if attrs.display then $(el).text eval("scope.display")
+
+        attrs.$observe 'display', (newVal, oldVal) ->
+          if newVal then $(el).text newVal
+    }
+)
 
 .directive('weightsTable', () ->
   return {

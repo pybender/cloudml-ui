@@ -5,8 +5,9 @@ angular.module('app.models.model', ['app.config'])
   '$q'
   'settings'
   'BaseModel'
+  'ImportHandler'
   
-  ($http, $q, settings, BaseModel) ->
+  ($http, $q, settings, BaseModel, ImportHandler) ->
     ###
     Model
     ###
@@ -34,8 +35,9 @@ angular.module('app.models.model', ['app.config'])
         super origData
 
         if origData?
-          @created_on = String(origData['created_on'])
           @features = angular.toJson(origData['features'], pretty=true)
+          @test_import_handler_obj = new ImportHandler(
+            origData['test_import_handler'])
 
       downloadUrl: =>
         return "#{@BASE_API_URL}#{@_id}/action/download/"
