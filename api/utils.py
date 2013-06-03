@@ -3,6 +3,8 @@ from functools import update_wrapper, wraps
 import json
 import pickle
 import logging
+import re
+import translitcodec
 from time import time
 
 
@@ -20,6 +22,19 @@ ERR_INVALID_METHOD = 1006
 ERR_PICKLING_MODEL = 1007
 ERR_UNPICKLING_MODEL = 1008
 ERR_NO_SUCH_IMPORT_HANDLER = 1009
+
+
+_punct_re = re.compile(r'[\t !"#$%&\'()*\-/<=>?@\[\\\]^_`{|},.]+')
+
+
+def slugify(text, delim=u'_'):
+    """Generates an ASCII-only slug."""
+    result = []
+    for word in _punct_re.split(text.lower()):
+        word = word.encode('translit/long')
+        if word:
+            result.append(word)
+    return unicode(delim.join(result))
 
 
 def consumes(content_type=None):

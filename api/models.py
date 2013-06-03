@@ -56,6 +56,29 @@ app.db.Weight.collection.ensure_index(
 
 
 @connection.register
+class ImportHandler(Document):
+    TYPE_DB = 'Db'
+    TYPE_REQUEST = 'Request'
+    __collection__ = 'handlers'
+    structure = {
+        'name': basestring,
+        'type': basestring,
+        'created_on': datetime,
+        'updated_on': datetime,
+        'data': dict,
+        'import_params': list,
+    }
+    required_fields = ['name', 'created_on', 'updated_on', ]
+    default_values = {'created_on': datetime.utcnow,
+                      'updated_on': datetime.utcnow,
+                      'type': TYPE_DB}
+    use_dot_notation = True
+
+    def __repr__(self):
+        return '<Import Handler %r>' % self.name
+
+
+@connection.register
 class Model(Document):
     """
     Represents Model details and it's Tests.
@@ -79,8 +102,9 @@ class Model(Document):
 
         # Import data to train and test options
         'import_params': list,
-        'importhandler': dict,
-        'train_importhandler': dict,
+
+        'test_import_handler': ImportHandler,
+        'train_import_handler': ImportHandler,
 
         'trainer': None,
         'comparable': bool,
@@ -221,29 +245,6 @@ class TestExample(Document):
     use_autorefs = True
     default_values = {'created_on': datetime.utcnow}
     required_fields = ['created_on', ]
-
-
-@connection.register
-class ImportHandler(Document):
-    TYPE_DB = 'Db'
-    TYPE_REQUEST = 'Request'
-    __collection__ = 'handlers'
-    structure = {
-        'name': basestring,
-        'type': basestring,
-        'created_on': datetime,
-        'updated_on': datetime,
-        'data': dict,
-        'import_params': list,
-    }
-    required_fields = ['name', 'created_on', 'updated_on', ]
-    default_values = {'created_on': datetime.utcnow,
-                      'updated_on': datetime.utcnow,
-                      'type': TYPE_DB}
-    use_dot_notation = True
-
-    def __repr__(self):
-        return '<Import Handler %r>' % self.name
 
 
 @connection.register

@@ -156,5 +156,6 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings',
  with #{opts.status} (#{opts.data.response.error.message or "no message"})."
     else
       $rootScope.err = "Error while #{message}."
+    return $rootScope.err
 
 ])

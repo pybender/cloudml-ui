@@ -14,8 +14,8 @@ angular.module('app.models.model', ['app.config'])
       BASE_API_URL: "#{settings.apiUrl}models/"
       BASE_UI_URL: '/models/'
       API_FIELDNAME: 'model'
-      DEFAULT_FIELDS_TO_SAVE: ['importhandler', 'train_importhandler',
-                                'features', 'trainer', 'name']
+      DEFAULT_FIELDS_TO_SAVE: ['train_import_handler', 'features',
+                               'trainer', 'test_import_handler', 'name']
 
       _id: null
       name: null
@@ -25,23 +25,17 @@ angular.module('app.models.model', ['app.config'])
 
       trainer: null
       importParams: null
-      importhandler: null
-      train_importhandler: null
       features: null
+
+      train_import_handler: null
+      test_import_handler: null
 
       loadFromJSON: (origData) =>
         super origData
 
         if origData?
           @created_on = String(origData['created_on'])
-          #if 'features' in origData
           @features = angular.toJson(origData['features'], pretty=true)
-          #if 'importhandler' in origData
-          @importhandler = angular.toJson(origData['importhandler'],
-                                        pretty=true)
-          #if 'train_importhandler' in origData
-          @train_importhandler = angular.toJson(
-              origData['train_importhandler'], pretty=true)
 
       downloadUrl: =>
         return "#{@BASE_API_URL}#{@_id}/action/download/"

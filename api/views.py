@@ -14,7 +14,7 @@ from bson.objectid import ObjectId
 
 from api import api, app
 from api.utils import crossdomain, ERR_INVALID_DATA, odesk_error_response, \
-    ERR_NO_SUCH_MODEL, ERR_UNPICKLING_MODEL
+    ERR_NO_SUCH_MODEL, ERR_UNPICKLING_MODEL, slugify
 from api.resources import BaseResource, NotFound, ValidationError
 from api.forms import ModelAddForm, ModelEditForm, ImportHandlerAddForm, \
     AddTestForm, InstanceAddForm, InstanceEditForm
@@ -291,7 +291,7 @@ class DataSetResource(BaseResource):
         dataset.name = "%s: %s" % (importhandler.name, str_params)
         dataset.import_handler_id = handler_id
         dataset.import_params = parameters
-        filename = '%s-%s' % (handler_id, str_params.replace('=', '_'))
+        filename = '%s-%s' % (slugify(importhandler['name']), str_params.replace('=', '_'))
         dataset.data = filename
         dataset.save(validate=True)
         import_data.delay(str(dataset._id))

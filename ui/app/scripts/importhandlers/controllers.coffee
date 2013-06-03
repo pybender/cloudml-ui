@@ -143,3 +143,17 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
     d.open('partials/import_handler/load_data.html', 'LoadDataDialogCtrl')
 
 ])
+
+.controller('ImportHandlerSelectCtrl', [
+  '$scope'
+  'ImportHandler'
+
+  ($scope, ImportHandler) ->
+    ImportHandler.$loadAll(
+      show: 'name'
+    ).then ((opts) ->
+      $scope.handlers = opts.objects
+    ), ((opts) ->
+      $scope.setError(opts, 'loading import handler list')
+    )
+])

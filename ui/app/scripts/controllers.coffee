@@ -51,6 +51,55 @@ angular.module('app.controllers', ['app.config', ])
       return ''
 ])
 
+.controller('DialogCtrl', [
+  '$scope'
+  'dialog'
+  '$location'
+
+  ($scope, dialog, $location) ->
+    $scope.model = dialog.model
+
+    $scope.close = ->
+      dialog.close()
+])
+
+.controller('SaveObjectCtl', [
+  '$scope'
+  '$location'
+
+  ($scope, $location) ->
+    $scope.save = (fields) ->
+      $scope.saving = true
+      $scope.savingProgress = '0%'
+
+      _.defer ->
+        $scope.savingProgress = '50%'
+        $scope.$apply()
+
+      $scope.model.$save(only: fields).then (->
+        $scope.savingProgress = '100%'
+
+        _.delay (->
+          $location.path $scope.model.objectUrl()
+          $scope.$apply()
+        ), 300
+
+      ), ((opts) ->
+        $scope.err = $scope.setError(opts, "saving")
+        $scope.savingProgress = '0%'
+      )
+
+    $scope.readFile = (element, name) ->
+      $scope.$apply ($scope) ->
+        $scope.msg = ""
+        $scope.error = ""
+        $scope.data = element.files[0]
+        reader = new FileReader()
+        reader.onload = (e) ->
+          eval("$scope.model." + name + " = e.target.result")
+        reader.readAsText($scope.data)
+])
+
 # Controller used for UI Bootstrap pagination
 .controller('ObjectListCtrl', [
   '$scope'

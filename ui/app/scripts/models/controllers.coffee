@@ -6,141 +6,38 @@ angular.module('app.models.controllers', ['app.config', ])
 
 .controller('ModelListCtrl', [
   '$scope'
-  '$http'
-  '$dialog'
-  'settings'
   'Model'
 
-($scope, $http, $dialog, settings, Model) ->
-  Model.$loadAll(
-    show: 'name,status,created_on,import_params,error'
-  ).then ((opts) ->
-    $scope.objects = opts.objects
-  ), ((opts) ->
-    $scope.err = "Error while saving: server responded with " +
-        "#{opts.status} " +
-        "(#{opts.data.response.error.message or "no message"}). " +
-        "Make sure you filled the form correctly. " +
-        "Please contact support if the error will not go away."
-  )
+  ($scope, Model) ->
+    Model.$loadAll(
+      show: 'name,status,created_on,import_params,error'
+    ).then ((opts) ->
+      $scope.objects = opts.objects
+    ), ((opts) ->
+      $scope.setError(opts, 'loading models')
+    )
 ])
 
+# Add new model controller
 .controller('AddModelCtl', [
   '$scope'
-  '$http'
-  '$location'
-  'settings'
   'Model'
 
-($scope, $http, $location, settings, Model) ->
+($scope, Model) ->
   $scope.model = new Model()
-  $scope.err = ''
-  $scope.new = true
-
-  $scope.upload = ->
-    $scope.saving = true
-    $scope.savingProgress = '0%'
-    $scope.savingError = null
-
-    _.defer ->
-      $scope.savingProgress = '50%'
-      $scope.$apply()
-
-    $scope.model.$save().then (->
-      $scope.savingProgress = '100%'
-
-      _.delay (->
-        $location.path $scope.model.objectUrl()
-        $scope.$apply()
-      ), 300
-
-    ), ((resp) ->
-      $scope.saving = false
-      $scope.err = "Error while saving: server responded with " +
-        "#{resp.status} " +
-        "(#{resp.data.response.error.message or "no message"}). " +
-        "Make sure you filled the form correctly. " +
-        "Please contact support if the error will not go away."
-    )
-
-  $scope.setImportHandlerFile = (element) ->
-      $scope.$apply ($scope) ->
-        $scope.msg = ""
-        $scope.error = ""
-        $scope.import_handler = element.files[0]
-        reader = new FileReader()
-        reader.onload = (e) ->
-          str = e.target.result
-          $scope.model.importhandler = str
-          $scope.model.train_importhandler = str
-        reader.readAsText($scope.import_handler)
-
-  $scope.setFeaturesFile = (element) ->
-      $scope.$apply ($scope) ->
-        $scope.msg = ""
-        $scope.error = ""
-        $scope.features = element.files[0]
-        reader = new FileReader()
-        reader.onload = (e) ->
-          str = e.target.result
-          $scope.model.features = str
-        reader.readAsText($scope.features)
 ])
 
-# Upload trained model
+# Upload trained model controller
 .controller('UploadModelCtl', [
   '$scope'
-  '$http'
-  '$location'
-  'settings'
   'Model'
 
-($scope, $http, $location, settings, Model) ->
-  $scope.new = true
-  $scope.model = new Model()
+  ($scope, Model) ->
+    $scope.model = new Model()
 
-  $scope.upload = ->
-    
-    $scope.saving = true
-    $scope.savingProgress = '0%'
-    $scope.savingError = null
-    _.defer ->
-      $scope.savingProgress = '50%'
-      $scope.$apply()
-    $scope.model.$save().then (->
-      $scope.savingProgress = '100%'
-
-      _.delay (->
-        $location.path $scope.model.objectUrl()
-        $scope.$apply()
-      ), 300
-
-    ), ((resp) ->
-      $scope.saving = false
-      $scope.err = "Error while saving: server responded with " +
-        "#{resp.status} " +
-        "(#{resp.data.response.error.message or "no message"}). " +
-        "Make sure you filled the form correctly. " +
-        "Please contact support if the error will not go away."
-    )
-
-  $scope.setModelFile = (element) ->
+    $scope.setModelFile = (element) ->
       $scope.$apply ($scope) ->
-        $scope.msg = ""
-        $scope.error = ""
-        $scope.model_file = element.files[0]
         $scope.model.trainer = element.files[0]
-
-  $scope.setImportHandlerFile = (element) ->
-      $scope.$apply ($scope) ->
-        $scope.msg = ""
-        $scope.error = ""
-        $scope.import_handler = element.files[0]
-        reader = new FileReader()
-        reader.onload = (e) ->
-          str = e.target.result
-          $scope.model.importhandler = str
-        reader.readAsText($scope.import_handler)
 ])
 
 .controller('ModelDetailsCtrl', [
@@ -174,7 +71,7 @@ angular.module('app.models.controllers', ['app.config', ])
           $scope.go 'importhandler,status,id'
       else $scope.go 'status,created_on,target_variable,error,
 labels,weights_synchronized,example_id,example_label,updated_on,
-name'
+name, test_import_handler'
 
   if not $scope.model
     if not $routeParams.id
@@ -282,12 +179,10 @@ name'
 
 .controller('DeleteModelCtrl', [
   '$scope'
-  '$http'
   'dialog'
-  'settings'
   '$location'
 
-  ($scope, $http, dialog, settings, location) ->
+  ($scope, dialog, $location) ->
     $scope.model = dialog.model
 
     $scope.close = ->
@@ -296,14 +191,9 @@ name'
     $scope.delete = (result) ->
       $scope.model.$delete().then (() ->
         $scope.close()
-        location.path "#/models"
+        $location.path "#/models"
       ), ((opts) ->
-        if opts.data
-          $scope.err = "Error while deleting model:" +
-            "server responded with " + "#{opts.status} " +
-            "(#{opts.data.response.error.message or "no message"}). "
-        else
-          $scope.err = "Error while deleting model"
+        $scope.setError(opts, 'deleting model')
       )
 ])
 
@@ -319,28 +209,24 @@ name'
       $scope.model = opts.model
 
     $scope.test_model = (model)->
-      d = $dialog.dialog(
-        modalFade: false
-      )
-      d.model = model
-      d.open('partials/testresults/run_test.html', 'TestDialogController')
+      $scope.openDialog(model, 'partials/testresults/run_test.html',
+                        'TestDialogController')
 
     $scope.reload_model = (model)->
       model.$reload()
 
     $scope.train_model = (model)->
-      d = $dialog.dialog(
-        modalFade: false
-      )
-      d.model = model
-      d.open('partials/models/model_train_popup.html',
-             'TrainModelCtrl')
+      $scope.openDialog(model, 'partials/models/model_train_popup.html',
+                        'TrainModelCtrl')
 
     $scope.delete_model = (model)->
+      $scope.openDialog(model, 'partials/models/delete_model_popup.html',
+                        'DeleteModelCtrl')
+
+    $scope.openDialog = (model, templete, ctrl_name) ->
       d = $dialog.dialog(
         modalFade: false
       )
       d.model = model
-      d.open('partials/models/delete_model_popup.html', 'DeleteModelCtrl')
-  
+      d.open(templete, ctrl_name)
 ])
