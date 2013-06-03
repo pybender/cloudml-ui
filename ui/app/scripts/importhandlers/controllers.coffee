@@ -52,6 +52,12 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
         $scope.setError(opts, 'loading datasets')
       )
 
+    $scope.saveData = () ->
+      $scope.handler.$save(only: ['data'])
+      .then (->), ((opts) ->
+        $scope.setError(opts, 'saving handler details')
+      )
+
     $scope.initSections($scope.go)
 ])
 

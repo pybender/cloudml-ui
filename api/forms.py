@@ -148,19 +148,7 @@ trained model is required for posting model')
                 return {}
 
 
-class ImportHandlerAddForm(BaseForm):
-    fields = ('name', 'type', 'data', 'import_params', )
-
-    def clean_name(self, value):
-        if not value:
-            raise ValidationError('name is required')
-        return value
-
-    def clean_type(self, value):
-        # if not type in ImportHandler.TYPE_CHOICES:
-        #     raise ValidationError('invalid')
-        return value
-
+class BaseImportHandlerForm(BaseForm):
     def clean_data(self, value):
         if not value:
             raise ValidationError('data is required')
@@ -177,6 +165,24 @@ class ImportHandlerAddForm(BaseForm):
             raise ValidationError('Invalid importhandler: %s' % exc)
 
         return data
+
+
+class ImportHandlerEditForm(BaseImportHandlerForm):
+    fields = ('data', )
+
+
+class ImportHandlerAddForm(BaseImportHandlerForm):
+    fields = ('name', 'type', 'data', 'import_params', )
+
+    def clean_name(self, value):
+        if not value:
+            raise ValidationError('name is required')
+        return value
+
+    def clean_type(self, value):
+        # if not type in ImportHandler.TYPE_CHOICES:
+        #     raise ValidationError('invalid')
+        return value
 
 
 class AddTestForm(BaseForm):

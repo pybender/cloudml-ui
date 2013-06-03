@@ -17,7 +17,7 @@ from api.utils import crossdomain, ERR_INVALID_DATA, odesk_error_response, \
     ERR_NO_SUCH_MODEL, ERR_UNPICKLING_MODEL, slugify
 from api.resources import BaseResource, NotFound, ValidationError
 from api.forms import ModelAddForm, ModelEditForm, ImportHandlerAddForm, \
-    AddTestForm, InstanceAddForm, InstanceEditForm
+    AddTestForm, InstanceAddForm, InstanceEditForm, ImportHandlerEditForm
 from core.importhandler.importhandler import ExtractionPlan, RequestImportHandler
 
 model_parser = reqparse.RequestParser()
@@ -255,6 +255,7 @@ class ImportHandlerResource(BaseResource):
     decorators = [crossdomain(origin='*')]
     methods = ['GET', 'OPTIONS', 'PUT', 'POST']
     post_form = ImportHandlerAddForm
+    put_form = ImportHandlerEditForm
     GET_ACTIONS = ('download', )
 
     def _get_download_action(self, **kwargs):
