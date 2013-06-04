@@ -36,10 +36,14 @@ angular.module('app.models.model', ['app.config'])
 
         if origData?
           @features = angular.toJson(origData['features'], pretty=true)
-          @test_import_handler_obj = new ImportHandler(
-            origData['test_import_handler'])
-          @train_import_handler_obj = new ImportHandler(
-            origData['train_import_handler'])
+          if origData.test_import_handler?
+            @test_import_handler_obj = new ImportHandler(
+              origData['test_import_handler'])
+            @test_import_handler = @test_import_handler_obj._id
+          if origData.train_import_handler?
+            @train_import_handler_obj = new ImportHandler(
+              origData['train_import_handler'])
+            @train_import_handler = @train_import_handler_obj._id
 
       downloadUrl: =>
         return "#{@BASE_API_URL}#{@_id}/action/download/"

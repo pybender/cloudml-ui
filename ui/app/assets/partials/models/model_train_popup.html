@@ -30,7 +30,7 @@
     <div ng-class="{span3: !new, span6: new}" ng-hide="existed" class="span3">
       <div class="alert-info well">
         <h4 title="Load new dataset and train model">New DataSet</h4>
-        <p>Load dataset using import handler <a target="_blank" href="#{{ model.train_import_handler_obj.objectUrl() }}">{{ model.train_import_handler.name }}</a></p>
+        <p>Load dataset using import handler <a target="_blank" href="#{{ model.train_import_handler_obj.objectUrl() }}">{{ model.train_import_handler_obj.name }}</a></p>
         <div ng-repeat="param in model.train_import_handler.import_params" class="control-group">
           <label class="control-label">{{ param | capfirst }}:</label>
           <div class="controls"  ng-class="{error: Form.parameters[param].$invalid}">

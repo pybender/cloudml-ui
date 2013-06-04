@@ -120,10 +120,11 @@ class BaseResource(restful.Resource):
         form = self.put_form(obj=obj)
         if form.is_valid():
             obj = form.save()
+            extra_fields = form.cleaned_data.keys()
         else:
             raise ValidationError(form.error_messages)
 
-        return self._render(self._get_save_response_context(obj),
+        return self._render(self._get_save_response_context(obj, extra_fields=extra_fields),
                             code=200)
 
     def delete(self, action=None, **kwargs):
@@ -191,9 +192,9 @@ class BaseResource(restful.Resource):
             raise NotFound(self.MESSAGE404 % kwargs)
         return self._render({self.OBJECT_NAME: model})
 
-    def _get_save_response_context(self, model):
+    def _get_save_response_context(self, model, extra_fields=[]):
         model = dict([(field, getattr(model, field))
-                     for field in self.DEFAULT_FIELDS])
+                     for field in list(self.DEFAULT_FIELDS) + extra_fields])
         return {self.OBJECT_NAME: model}
 
     # Specific actions for GET

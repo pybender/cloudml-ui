@@ -74,6 +74,7 @@ angular.module('app.directives', [
         successHandler = (obj) ->
           previousValue = obj[fieldName]
           # Update value on given object with value returned with response
+          # debugger
           # scope.obj[fieldName] = obj[fieldName]
           # scope.value = obj[fieldName]
 
