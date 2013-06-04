@@ -1,9 +1,6 @@
 <div class="modal-header">
 <button ng-click="close()" class="close" data-dismiss="modal">×</button>
 <h3>Train the model</h3>
-<p class="lead">
-    Please enter import parameters and choose AWS Instance that would be used for model training.
-</p>
 </div>
 
 <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
@@ -11,25 +8,51 @@
 </alert-message>
 
 <div class="modal-body">
-<form name="TrainDialogForm" class="form-horizontal">
-  <div class="control-group">
-    <label class="control-label">AWS Instance:</label>
-    <div class="controls" ng-class="{error: TrainDialogForm.aws_instance.$invalid}">
-      <select class="input-small" name="aws_instance" ng-model="parameters.aws_instance" required>
-        <option ng-repeat="instance in aws_instances" value="{{ instance._id }}" ng-selected="instance.is_default">{{ instance.name }}: {{ instance.ip }}</option>
-      </select>
-      <span ng-show="TrainDialogForm.aws_instance.$error.required" class="help-inline">Required</span>
-    </div>
-  </div>
-   <div ng-repeat="param in params" class="control-group">
-      <label class="control-label">{{ param | capfirst }}:</label>
-      <div class="controls"  ng-class="{error: TrainDialogForm.parameters[param].$invalid}">
-        <input ng-model='parameters[param]' name="{{ param }}" placeholder='Please input {{ param }}' type='text' required />
-        <span ng-show="TrainDialogForm.start.$error.required" class="help-inline">Required</span>
+<form name="Form" class="form-horizontal">
+  <p class="lead text-center">Choose way of getting training data</p>
+  <div class="row columns">
+    <div ng-hide="new" ng-class="{span3: !existed, span6: existed}">
+      <div class="alert-success well">
+        <h4 title="Use existing dataset for train model">Existing DataSet</h4>
+        <p>Please select dataset from list to start model training.</p>
+        <div class="control-group" ng-controller="DatasetSelectCtrl">
+          <label class="control-label">DataSet:</label>
+          <div class="controls" ng-class="{error: Form.dataset.$invalid}">
+            <select name="dataset" class="input-small" ng-model='parameters["dataset"]' ng-change="changeDataSet()" required>
+              <option value="">--- select dataset ---</option>
+              <option ng-repeat="ds in datasets" value="{{ ds._id }}">{{ ds.name }}</option>
+            </select>
+            <span ng-show="Form.dataset.$error.required" class="help-inline">Required</span>
+          </div>
+        </div>                         
       </div>
     </div>
+    <div ng-class="{span3: !new, span6: new}" ng-hide="existed" class="span3">
+      <div class="alert-info well">
+        <h4 title="Load new dataset and train model">New DataSet</h4>
+        <p>Load dataset using import handler <a target="_blank" href="#{{ model.train_import_handler_obj.objectUrl() }}">{{ model.train_import_handler.name }}</a></p>
+        <div ng-repeat="param in model.train_import_handler.import_params" class="control-group">
+          <label class="control-label">{{ param | capfirst }}:</label>
+          <div class="controls"  ng-class="{error: Form.parameters[param].$invalid}">
+            <input ng-change="changeParams(param)" class="input-small" ng-model='parameters[param]' name="{{ param }}" placeholder='{{ param }}' type='text' required />
+            <span ng-show="Form.parameters[param].$error.required" class="help-inline">Required</span>
+          </div>
+        </div>                         
+      </div>
+    </div>
+  </div>
+  <p class="lead text-center">then choose instance that would be used for training</p>
+  <div class="control-group" ng-controller="InstanceSelectCtrl">
+    <label class="control-label">Instance:</label>
+    <div class="controls" ng-class="{error: Form.aws_instance.$invalid}">
+      <select name="aws_instance" ng-model="parameters.aws_instance" required>
+        <option ng-repeat="instance in instances" value="{{ instance._id }}" ng-selected="instance.is_default">{{ instance.name }}: {{ instance.ip }}</option>
+      </select>
+      <span ng-show="Form.aws_instance.$error.required" class="help-inline">Required</span>
+    </div>
+  </div>
 </form>
 </div>
 <div class="modal-footer">
-<button ng-click="start(result)" ng-disabled="TrainDialogForm.$invalid" class="btn btn-primary" >Start training</button>
+<button ng-click="start(result)" ng-disabled="" class="btn btn-primary" >Start training</button>
 </div>

@@ -51,18 +51,6 @@ angular.module('app.controllers', ['app.config', ])
       return ''
 ])
 
-.controller('DialogCtrl', [
-  '$scope'
-  'dialog'
-  '$location'
-
-  ($scope, dialog, $location) ->
-    $scope.model = dialog.model
-
-    $scope.close = ->
-      dialog.close()
-])
-
 .controller('ObjEditCtrl', [
   '$scope'
 

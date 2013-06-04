@@ -74,7 +74,8 @@ angular.module('app.directives', [
         successHandler = (obj) ->
           previousValue = obj[fieldName]
           # Update value on given object with value returned with response
-          scope.obj[fieldName] = obj[fieldName]
+          # scope.obj[fieldName] = obj[fieldName]
+          # scope.value = obj[fieldName]
 
         errorHandler = ->
           # Revert changed value
@@ -95,14 +96,14 @@ angular.module('app.directives', [
         }
 
         if inputType == 'select'
-          editableOpts.source = eval("scope.source")
+          editableOpts.source = scope.source
 
         $(el).editable editableOpts
 
         scope.$watch scope.value, (newVal, oldVal) ->
           previousValue = newVal
           $(el).editable 'setValue', newVal
-          if attrs.display then $(el).text eval("scope.display")
+          if attrs.display then $(el).text scope.display
 
         attrs.$observe 'display', (newVal, oldVal) ->
           if newVal then $(el).text newVal

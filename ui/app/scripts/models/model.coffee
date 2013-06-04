@@ -38,6 +38,8 @@ angular.module('app.models.model', ['app.config'])
           @features = angular.toJson(origData['features'], pretty=true)
           @test_import_handler_obj = new ImportHandler(
             origData['test_import_handler'])
+          @train_import_handler_obj = new ImportHandler(
+            origData['train_import_handler'])
 
       downloadUrl: =>
         return "#{@BASE_API_URL}#{@_id}/action/download/"

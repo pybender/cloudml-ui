@@ -46,14 +46,13 @@ angular.module('app.models.controllers', ['app.config', ])
   '$routeParams'
   'Model'
   'TestResult'
-  'Weight'
 
-  ($scope, $location, $routeParams, Model, Test, Weight) ->
-    if not $scope.model
-      if not $routeParams.id
-        throw new Error "Can't initialize without model id"
-      $scope.model = new Model({_id: $routeParams.id})
-    $scope.person_name = "John Doe"
+  ($scope, $location, $routeParams, Model, Test) ->
+    if not $routeParams.id
+      throw new Error "Can't initialize without model id"
+    $scope.model = new Model({_id: $routeParams.id})
+    $scope.LOADED_SECTIONS = []
+
     $scope.initLog = () ->
       $scope.log_messages = []
       params = "channel=trainmodel_log&model=" + $scope.model._id
@@ -65,10 +64,13 @@ angular.module('app.models.controllers', ['app.config', ])
             $scope.log_messages.push(data['data']['msg']))
       log_sse.addEventListener('message', handleCallback)
 
-    $scope.load = (fields) ->
+    $scope.initLog()
+
+    $scope.load = (fields, section) ->
       $scope.model.$load(
         show: fields
         ).then (->
+          $scope.LOADED_SECTIONS.push section
         ), (->
           $scope.setError(opts, 'loading model details')
         )
@@ -82,19 +84,27 @@ angular.module('app.models.controllers', ['app.config', ])
       ), ((opts) ->
         $scope.setError(opts, 'loading tests')
       )
-    
+
+    MAIN_FIELDS = ',name,_id,status,train_import_handler._id,
+train_import_handler.import_params,train_import_handler.name'
+
     $scope.goSection = (section) ->
       name = section[0]
-      switch name
-        when 'model' then fields = 'status,created_on,target_variable,
-error, labels,weights_synchronized,example_id,example_label,
-updated_on,name,test_import_handler.name,test_import_handler._id,
-train_import_handler.name,train_import_handler._id'
-        when 'features' then fields = 'name,status,features'
-        else fields = 'name,status'
-      $scope.load fields
-      if name == 'log'
-        $scope.initLog()
+      if name not in $scope.LOADED_SECTIONS
+        extra_fields = ''
+        switch name
+          when 'model' then extra_fields = 'created_on,target_variable,
+  error,labels,weights_synchronized,example_id,example_label,
+  updated_on,test_import_handler.name,test_import_handler._id'
+          when 'features' then extra_fields = 'features'
+
+        if 'main' in $scope.LOADED_SECTIONS
+          # Do not need load main fields -> only etra
+          if extra_fields != ''
+            $scope.load(extra_fields, name)
+        else
+          $scope.load(extra_fields + MAIN_FIELDS, name)
+          $scope.LOADED_SECTIONS.push 'main'
 
     $scope.initSections($scope.goSection)
   ])
@@ -102,26 +112,22 @@ train_import_handler.name,train_import_handler._id'
 .controller('TrainModelCtrl', [
   '$scope'
   'dialog'
-  'AwsInstance'
 
-  ($scope, dialog, AwsInstance) ->
+  ($scope, dialog) ->
     $scope.parameters = {}
     $scope.model = dialog.model
-    $scope.model.$load(
-      show: 'import_params'
-      ).then (->
-        $scope.params = $scope.model.import_params
-      ), ((opts)->
-        $scope.setError(opts, 'loading model details')
-      )
+    $scope.handler = $scope.model.train_import_handler_obj
+    $scope.params = $scope.model.train_import_handler.import_params
 
-    AwsInstance.$loadAll(
-      show: 'name,type,ip,is_default'
-    ).then ((opts) ->
-      $scope.aws_instances = opts.objects
-    ), ((opts) ->
-      $scope.setError(opts, 'loading aws instances')
-    )
+    $scope.changeDataSet = ->
+      $scope.existed = $scope.parameters["dataset"]
+
+    $scope.changeParams = (param) ->
+      for key, val of $scope.parameters
+        if key != 'dataset' and val?
+          $scope.new = true
+          return
+      $scope.new = false
 
     $scope.close = ->
       dialog.close()
@@ -180,10 +186,11 @@ train_import_handler.name,train_import_handler._id'
       $scope.openDialog(model, 'partials/models/delete_model_popup.html',
                         'DeleteModelCtrl')
 
-    $scope.openDialog = (model, templete, ctrl_name) ->
+    $scope.openDialog = (model, templete, ctrlName, cssClass='modal large') ->
       d = $dialog.dialog(
-        modalFade: false
+        modalFade: false,
+        dialogClass: cssClass
       )
       d.model = model
-      d.open(templete, ctrl_name)
+      d.open(templete, ctrlName)
 ])

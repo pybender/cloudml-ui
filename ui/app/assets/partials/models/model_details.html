@@ -74,7 +74,7 @@
   </li>
   <li  ng-class="{active: action[0] == 'log'}"><a ng-click="setSection(['log', 'details'])">Logs</a></li>
   <li ng-class="{active: action[0] == 'weights'}"><a  ng-click="setSection(['weights', 'columns'])">Parameters Weights</a></li>
-  <li ng-class="{active: action[0] == 'test'}"><a  ng-click="action = ['test', 'list']">Tests</a></li>
+  <li ng-class="{active: action[0] == 'test'}"><a ng-click="setSection(['test', 'list'])">Tests</a></li>
   <li ng-class="{active: action[0] == 'features'}"><a ng-click="setSection(['features', 'file'])">Features</a></li>
 </ul>
  
@@ -85,12 +85,12 @@
         <b>Import Handlers</b>
         <div>
           For Train:
-          <span title="Select Test Import Handler" ng-bind="model.test_import_handler.name" editable="model" value="model.test_import_handler" editable-field="test_import_handler" editable-input="select" editable-placement="right" source="handlers_list" display="model.test_import_handler.name"></span>
+          <span title="Select Test Import Handler" ng-bind="model.test_import_handler.name" editable="model" value="model.test_import_handler._id" editable-field="test_import_handler" editable-input="select" editable-placement="right" source="handlers_list" display="model.test_import_handler.name"></span>
           <a target="_blank" href="#/importhandlers/{{ model.test_import_handler._id }}"><i class="icon-arrow-right"></i></a>
         </div>
         <div>
           For Tests:
-          <span title="Select Train Import Handler" ng-bind="model.train_import_handler.name" editable="model" value="model.train_import_handler" editable-field="train_import_handler" editable-input="select" editable-placement="right" source="handlers_list" display="model.train_import_handler.name"></span>
+          <span title="Select Train Import Handler" ng-bind="model.train_import_handler.name" editable="model" value="model.train_import_handler._id" editable-field="train_import_handler" editable-input="select" editable-placement="right" source="handlers_list" display="model.train_import_handler.name"></span>
           <a target="_blank" href="#/importhandlers/{{ model.train_import_handler._id }}"><i class="icon-arrow-right"></i></a>
         </div>
       </div>

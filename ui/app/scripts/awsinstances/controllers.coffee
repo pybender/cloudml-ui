@@ -88,3 +88,17 @@ angular.module('app.awsinstances.controllers', ['app.config', ])
         $scope.setError(opts, 'adding instance')
       )
 ])
+
+.controller('InstanceSelectCtrl', [
+  '$scope'
+  'AwsInstance'
+
+  ($scope, AwsInstance) ->
+    AwsInstance.$loadAll(
+      show: 'name,_id,ip,is_default'
+    ).then ((opts) ->
+      $scope.instances = opts.objects
+    ), ((opts) ->
+      $scope.err = $scope.setError(opts, 'loading instances')
+    )
+])
