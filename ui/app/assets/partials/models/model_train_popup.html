@@ -8,7 +8,8 @@
 </alert-message>
 
 <div class="modal-body">
-<form name="Form" class="form-horizontal">
+<alert-message ng-hide="handler" class="alert-error" msg="Please define Train Import Handler in model details before!" unsafe></alert-message>
+<form name="Form" class="form-horizontal" ng-show="handler">
   <p class="lead text-center">Choose way of getting training data</p>
   <div class="row columns">
     <div ng-hide="new" ng-class="{span3: !existed, span6: existed}">
@@ -22,7 +23,7 @@
               <option value="">--- select dataset ---</option>
               <option ng-repeat="ds in datasets" value="{{ ds._id }}">{{ ds.name }}</option>
             </select>
-            <span ng-show="Form.dataset.$error.required" class="help-inline">Required</span>
+            <span ng-show="Form.dataset.$error.required" class="help-inline">*</span>
           </div>
         </div>                         
       </div>
@@ -31,16 +32,18 @@
       <div class="alert-info well">
         <h4 title="Load new dataset and train model">New DataSet</h4>
         <p>Load dataset using import handler <a target="_blank" href="#{{ model.train_import_handler_obj.objectUrl() }}">{{ model.train_import_handler_obj.name }}</a></p>
-        <div ng-repeat="param in model.train_import_handler.import_params" class="control-group">
+
+        <div ng-repeat="param in params" class="control-group">
           <label class="control-label">{{ param | capfirst }}:</label>
-          <div class="controls"  ng-class="{error: Form.parameters[param].$invalid}">
-            <input ng-change="changeParams(param)" class="input-small" ng-model='parameters[param]' name="{{ param }}" placeholder='{{ param }}' type='text' required />
-            <span ng-show="Form.parameters[param].$error.required" class="help-inline">Required</span>
+          <div class="controls" ng-class="{error: !paramsFilled}">
+            <input ng-change="changeParams(param)" class="input-small" ng-model='parameters[param]' name="{{param}}" placeholder='{{ param }}' type='text' required />
+            <span class="help-inline">*</span>
           </div>
         </div>                         
       </div>
     </div>
   </div>
+
   <p class="lead text-center">then choose instance that would be used for training</p>
   <div class="control-group" ng-controller="InstanceSelectCtrl">
     <label class="control-label">Instance:</label>
@@ -48,11 +51,11 @@
       <select name="aws_instance" ng-model="parameters.aws_instance" required>
         <option ng-repeat="instance in instances" value="{{ instance._id }}" ng-selected="instance.is_default">{{ instance.name }}: {{ instance.ip }}</option>
       </select>
-      <span ng-show="Form.aws_instance.$error.required" class="help-inline">Required</span>
+      <span ng-show="Form.aws_instance.$error.required" class="help-inline">*</span>
     </div>
   </div>
 </form>
 </div>
 <div class="modal-footer">
-<button ng-click="start(result)" ng-disabled="" class="btn btn-primary" >Start training</button>
+<button ng-click="start(result)" ng-disabled="Form.aws_instance.$error.required || (Form.dataset.$error.required && !paramsFilled)" class="btn btn-primary" >Start training</button>
 </div>

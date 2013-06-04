@@ -28,13 +28,14 @@ angular.module('app.datasets.controllers', ['app.config', ])
   'DataSet'
 
   ($scope, DataSet) ->
-    DataSet.$loadAll(
-      $scope.handler._id,
-      status: 'Imported',
-      show: 'name,_id'
-    ).then ((opts) ->
-      $scope.datasets = opts.objects
-    ), ((opts) ->
-      $scope.setError(opts, 'loading datasets')
-    )
+    if $scope.handler?
+      DataSet.$loadAll(
+        $scope.handler._id,
+        status: 'Imported',
+        show: 'name,_id'
+      ).then ((opts) ->
+        $scope.datasets = opts.objects
+      ), ((opts) ->
+        $scope.setError(opts, 'loading datasets')
+      )
 ])

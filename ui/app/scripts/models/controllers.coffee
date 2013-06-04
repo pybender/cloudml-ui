@@ -107,34 +107,45 @@ train_import_handler.import_params,train_import_handler.name'
           $scope.LOADED_SECTIONS.push 'main'
 
     $scope.initSections($scope.goSection)
+    $scope.$on('modelUpdated', (model) ->
+      $scope.load(MAIN_FIELDS)
+    )
   ])
 
 .controller('TrainModelCtrl', [
   '$scope'
+  '$rootScope'
   'dialog'
 
-  ($scope, dialog) ->
+  ($scope, $rootScope, dialog) ->
     $scope.parameters = {}
     $scope.model = dialog.model
     $scope.handler = $scope.model.train_import_handler_obj
-    $scope.params = $scope.model.train_import_handler.import_params
+    if $scope.handler?
+      $scope.params = $scope.handler.import_params
 
     $scope.changeDataSet = ->
       $scope.existed = $scope.parameters["dataset"]
 
     $scope.changeParams = (param) ->
-      for key, val of $scope.parameters
-        if key != 'dataset' and val?
-          $scope.new = true
-          return
+      $scope.paramsFilled = true
       $scope.new = false
+      for key in $scope.params
+        val = $scope.parameters[key]
+        if val?
+          $scope.new = true
+        else
+          $scope.paramsFilled = false
+      return
 
     $scope.close = ->
       dialog.close()
 
     $scope.start = (result) ->
+      model = $scope.model
       $scope.model.$train($scope.parameters).then (() ->
         $scope.close()
+        $rootScope.$broadcast('modelUpdated', model)
       ), ((opts) ->
         $scope.setError(opts, 'starting model training')
       )
