@@ -148,6 +148,41 @@ trained model is required for posting model')
                 return {}
 
 
+class ModelTrainForm(BaseForm):
+    fields = ['aws_instance', 'dataset', 'parameters']
+
+    def clean_parameters(self, value):
+        parser = populate_parser(self.obj.train_import_handler['import_params'])
+        params = parser.parse_args()
+        self.paramsFilled = True
+        parameters = {}
+        for name, val in params.iteritems():
+            if not val:
+                self.paramsFilled = False
+            else:
+                parameters[name] = val
+        return parameters
+
+    def clean_dataset(self, value):
+        return app.db.DataSet.find_one({'_id': ObjectId(value)})
+
+    def clean_aws_instance(self, value):
+        instance = app.db.Instance.find_one({'_id': ObjectId(value)})
+        if instance is None:
+            raise ValidationError('Instance is required')
+        return instance
+
+    def validate_obj(self):
+        ds = self.cleaned_data.get('dataset', None)
+        if not (self.paramsFilled or ds):
+            raise ValidationError('Parameters or dataset should be specified')
+
+    def save(self):
+        self.obj.status = self.obj.STATUS_QUEUED
+        self.obj.save()
+        return self.obj
+
+
 class BaseImportHandlerForm(BaseForm):
     def clean_data(self, value):
         if not value:
@@ -276,9 +311,9 @@ class InstanceEditForm(BaseForm):
         return instance
 
 
-def populate_parser(model):
+def populate_parser(import_params):
     from flask.ext.restful import reqparse
     parser = reqparse.RequestParser()
-    for param in model.import_params:
+    for param in import_params:
         parser.add_argument(param, type=str)
     return parser

@@ -144,22 +144,18 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
 
     def _put_train_action(self, **kwargs):
         from api.tasks import train_model
-        model = self._get_details_query(None, None,
+        from api.forms import ModelTrainForm
+        obj = self._get_details_query(None, None,
                                         **kwargs)
-        parser = populate_parser(model, is_requred=True)
-        parser.add_argument('aws_instance', type=str, required=True)
-        params = parser.parse_args()
-        model.status = model.STATUS_QUEUED
-        model.save()
-
-        # Get AWS Instance
-        instance_id = params.get('aws_instance')
-        instance = app.db.Instance.find({'_id': ObjectId(instance_id)})
-        if instance is None:
-            raise NotFound('Instance not found')
-
-        train_model.delay(str(model._id), params)
-        return self._render({self.OBJECT_NAME: model._id})
+        form = ModelTrainForm(obj=obj, **kwargs)
+        if form.is_valid():
+            model = form.save()
+            instance = form.cleaned_data['aws_instance']
+            dataset = form.cleaned_data.get('dataset', None)
+            params = form.cleaned_data.get('parameters', None)
+            print form.cleaned_data
+            train_model.delay(str(model._id), params)
+            return self._render(self._get_save_response_context(model, extra_fields=['status']))
 
 api.add_resource(Models, '/cloudml/models/')
 

@@ -107,9 +107,6 @@ train_import_handler.import_params,train_import_handler.name'
           $scope.LOADED_SECTIONS.push 'main'
 
     $scope.initSections($scope.goSection)
-    $scope.$on('modelUpdated', (model) ->
-      $scope.load(MAIN_FIELDS)
-    )
   ])
 
 .controller('TrainModelCtrl', [
@@ -145,7 +142,6 @@ train_import_handler.import_params,train_import_handler.name'
       model = $scope.model
       $scope.model.$train($scope.parameters).then (() ->
         $scope.close()
-        $rootScope.$broadcast('modelUpdated', model)
       ), ((opts) ->
         $scope.setError(opts, 'starting model training')
       )
