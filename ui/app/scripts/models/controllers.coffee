@@ -10,7 +10,7 @@ angular.module('app.models.controllers', ['app.config', ])
 
   ($scope, Model) ->
     Model.$loadAll(
-      show: 'name,status,created_on,import_params,error'
+      show: 'created_on,error' + Model.MAIN_FIELDS
     ).then ((opts) ->
       $scope.objects = opts.objects
     ), ((opts) ->
@@ -85,9 +85,6 @@ angular.module('app.models.controllers', ['app.config', ])
         $scope.setError(opts, 'loading tests')
       )
 
-    MAIN_FIELDS = ',name,_id,status,train_import_handler._id,
-train_import_handler.import_params,train_import_handler.name'
-
     $scope.goSection = (section) ->
       name = section[0]
       if name not in $scope.LOADED_SECTIONS
@@ -103,7 +100,7 @@ train_import_handler.import_params,train_import_handler.name'
           if extra_fields != ''
             $scope.load(extra_fields, name)
         else
-          $scope.load(extra_fields + MAIN_FIELDS, name)
+          $scope.load(extra_fields + Model.MAIN_FIELDS, name)
           $scope.LOADED_SECTIONS.push 'main'
 
     $scope.initSections($scope.goSection)
