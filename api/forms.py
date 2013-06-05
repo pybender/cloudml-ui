@@ -148,11 +148,14 @@ trained model is required for posting model')
                 return {}
 
 
-class ModelTrainForm(BaseForm):
+class BaseChooseInstanceAndDataset(BaseForm):
+    HANDLER_TYPE = 'train'
+
     fields = ['aws_instance', 'dataset', 'parameters']
 
     def clean_parameters(self, value):
-        parser = populate_parser(self.obj.train_import_handler['import_params'])
+        handler = getattr(self.model, '%s_import_handler' % self.HANDLER_TYPE)
+        parser = populate_parser(handler['import_params'])
         params = parser.parse_args()
         self.params_filled = True
         parameters = {}
@@ -176,6 +179,12 @@ class ModelTrainForm(BaseForm):
         ds = self.cleaned_data.get('dataset', None)
         if not (self.params_filled or ds):
             raise ValidationError('Parameters or dataset should be specified')
+
+
+class ModelTrainForm(BaseChooseInstanceAndDataset):
+    def __init__(self, *args, **kwargs):
+        self.model = kwargs.get('obj', None)
+        super(ModelTrainForm, self).__init__(*args, **kwargs)
 
     def save(self):
         self.obj.status = self.obj.STATUS_QUEUED
@@ -220,8 +229,10 @@ class ImportHandlerAddForm(BaseImportHandlerForm):
         return value
 
 
-class AddTestForm(BaseForm):
-    fields = ('name', 'model', 'parameters', 'instance', )
+class AddTestForm(BaseChooseInstanceAndDataset):
+    HANDLER_TYPE = 'test'
+
+    fields = ['name', 'model', ] + BaseChooseInstanceAndDataset.fields
 
     def clean_name(self, value):
         total = app.db.Test.find({'model_id': self.model_id}).count()
@@ -236,24 +247,13 @@ class AddTestForm(BaseForm):
         self.cleaned_data['model_id'] = self.model_id
         return self.model
 
-    def clean_instance(self, value):
-        from bson.objectid import ObjectId
-        instance = app.db.Instance.find_one({'_id': ObjectId(value)})
-        if instance is None:
-            raise ValidationError('Instance not found')
-        return instance
-
-    def clean_parameters(self, value):
-        parser = populate_parser(self.model)
-        return parser.parse_args()
-
     def save(self):
         test = BaseForm.save(self, commit=False)
         test.status = test.STATUS_QUEUED
         test.save(check_keys=False)
 
         from api.tasks import run_test
-        instance = self.cleaned_data['instance']
+        instance = self.cleaned_data['aws_instance']
         run_test.apply_async(args=[str(test._id)],
                              queue=instance.name,
                              routing_key='%s.run_test' % instance.name)

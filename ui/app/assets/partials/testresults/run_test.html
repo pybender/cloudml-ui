@@ -1,31 +1,23 @@
-<div class="modal-header">
-  <button ng-click="close()" class="close" data-dismiss="modal">×</button>
-  <h3>Run test</h3>
-  <p class="lead">
-      Please enter import parameters and choose AWS Instance for running test.
-  </p>
-</div>
-<alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
-<div class="modal-body">
-  <form name="DialogForm" class="form-horizontal">
-    <div class="control-group">
-      <label class="control-label">AWS Instance:</label>
-      <div class="controls" ng-class="{error: DialogForm.instance.$invalid}">
-        <select class="input-small" name="instance" ng-model="parameters.instance" required>
-          <option ng-repeat="instance in aws_instances" value="{{ instance._id }}" ng-selected="instance.is_default">{{ instance.name }}: {{ instance.ip }}</option>
-        </select>
-        <span ng-show="DialogForm.instance.$error.required" class="help-inline">Required</span>
-      </div>
-    </div>
-     <div ng-repeat="param in params" class="control-group">
-          <label class="control-label">{{ param | capfirst }}:</label>
-          <div class="controls"  ng-class="{error: DialogForm.parameters[param].$invalid}">
-            <input ng-model='parameters[param]' placeholder='Please input {{ param }}' type='text' required />
-            <span ng-show="DialogForm.parameters[param].$error.required" class="help-inline">Required</span>
-          </div>
-      </div>
-  </form>
-</div>
-<div class="modal-footer">
-  <button ng-click="start(result)" ng-disabled="DialogForm.$invalid" class="btn btn-primary" >Start test</button>
+<div ng-controller="BaseModelDataSetActionCtrl">
+  <div class="modal-header">
+    <button ng-click="close()" class="close" data-dismiss="modal">×</button>
+    <h3>Run test</h3>
+  </div>
+
+  <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+
+  <div class="modal-body">
+    <alert-message ng-hide="handler" class="alert-error" msg="Please define Test Import Handler in model details before!" unsafe></alert-message>
+
+    <form name="Form" class="form-horizontal" ng-show="handler">
+      <p class="lead text-center">Choose way of getting testing data</p>
+      <ng-include src="'/partials/datasets/dataset_fields.html'"></ng-include>
+      <p class="lead text-center">then choose instance that would be used for running test</p>
+      <ng-include src="'/partials/aws_instances/instance_select.html'"></ng-include>
+    </form>
+  </div>
+
+  <div class="modal-footer">
+    <button ng-click="start(result)" ng-disabled="Form.aws_instance.$error.required || (Form.dataset.$error.required && !paramsFilled)" class="btn btn-primary" >Start test</button>
+  </div>
 </div>

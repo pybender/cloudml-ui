@@ -106,15 +106,11 @@ angular.module('app.models.controllers', ['app.config', ])
     $scope.initSections($scope.goSection)
   ])
 
-.controller('TrainModelCtrl', [
+.controller('BaseModelDataSetActionCtrl', [
   '$scope'
   '$rootScope'
-  'dialog'
 
-  ($scope, $rootScope, dialog) ->
-    $scope.parameters = {}
-    $scope.model = dialog.model
-    $scope.handler = $scope.model.train_import_handler_obj
+  ($scope, $rootScope) ->
     if $scope.handler?
       $scope.params = $scope.handler.import_params
 
@@ -133,12 +129,24 @@ angular.module('app.models.controllers', ['app.config', ])
       return
 
     $scope.close = ->
-      dialog.close()
+      $scope.dialog.close()
+])
+
+.controller('TrainModelCtrl', [
+  '$scope'
+  '$rootScope'
+  'dialog'
+
+  ($scope, $rootScope, dialog) ->
+    $scope.dialog = dialog
+    $scope.parameters = {}
+    $scope.model = dialog.model
+    $scope.handler = $scope.model.train_import_handler_obj
 
     $scope.start = (result) ->
-      model = $scope.model
-      $scope.model.$train($scope.parameters).then (() ->
-        $scope.close()
+      model = $scope.dialog.model
+      model.$train($scope.parameters).then (() ->
+        dialog.close()
       ), ((opts) ->
         $scope.setError(opts, 'starting model training')
       )

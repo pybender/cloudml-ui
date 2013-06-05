@@ -9,40 +9,24 @@ angular.module('app.testresults.controllers', ['app.config', ])
   'dialog'
   '$location'
   'TestResult'
-  'AwsInstance'
 
-($scope, dialog, $location, Test, AwsInstance) ->
+  ($scope, dialog, $location, Test) ->
+    $scope.dialog = dialog
+    $scope.parameters = {}
+    $scope.model = dialog.model
+    $scope.handler = $scope.model.test_import_handler_obj
 
-  $scope.parameters = {} # parameters to send via API
-  $scope.model = dialog.model
-  AwsInstance.$loadAll(
-    show: 'name,ip,is_default'
-  ).then ((opts) ->
-    $scope.aws_instances = opts.objects
-  ), ((opts) ->
-    $scope.setError(opts, 'loading aws instances')
-  )
-  $scope.model.$load(show: 'import_params').then (->
-    $scope.params = $scope.model.import_params
-  ), ((opts) ->
-    $scope.setError(opts, 'loading model import parameters')
-  )
+    $scope.start = (result) ->
+      data = {}
+      for key of $scope.parameters
+        data[key] = $scope.parameters[key]
 
-  $scope.close = ->
-    dialog.close()
-
-  $scope.start = () ->
-    data = {}
-    for key of $scope.parameters
-      data[key] = $scope.parameters[key]
-
-    $scope.test = new Test({model_id: $scope.model._id})
-    $scope.test.$run(data).then (->
-      $location.path $scope.test.objectUrl()
-      dialog.close()
-    ), ((opts) ->
-      $scope.setError(opts, 'running test')
-    )
+      $scope.test = new Test({model_id: $scope.model._id})
+      $scope.test.$run(data).then (->
+        $location.path $scope.test.objectUrl()
+      ), ((opts) ->
+        $scope.setError(opts, 'running test')
+      )
 ])
 
 .controller('DeleteTestCtrl', [

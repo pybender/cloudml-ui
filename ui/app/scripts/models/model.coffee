@@ -18,7 +18,9 @@ angular.module('app.models.model', ['app.config'])
       DEFAULT_FIELDS_TO_SAVE: ['train_import_handler', 'features',
                                'trainer', 'test_import_handler', 'name']
       @MAIN_FIELDS: ',name,_id,status,train_import_handler._id,
-train_import_handler.import_params,train_import_handler.name'
+train_import_handler.import_params,train_import_handler.name,
+test_import_handler._id,test_import_handler.import_params,
+test_import_handler.name'
 
 
       _id: null

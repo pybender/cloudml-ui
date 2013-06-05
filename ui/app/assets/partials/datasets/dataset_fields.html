@@ -1,0 +1,32 @@
+<div class="row columns">
+  <div ng-hide="new" ng-class="{span3: !existed, span6: existed}">
+    <div class="alert-success well">
+      <h4 title="Use existing dataset for train model">Existing DataSet</h4>
+      <p>Please select dataset from list to start model training.</p>
+      <div class="control-group" ng-controller="DatasetSelectCtrl">
+        <label class="control-label">DataSet:</label>
+        <div class="controls" ng-class="{error: Form.dataset.$invalid}">
+          <select name="dataset" class="input-small" ng-model='parameters["dataset"]' ng-change="changeDataSet()" required>
+            <option value="">--- select dataset ---</option>
+            <option ng-repeat="ds in datasets" value="{{ ds._id }}">{{ ds.name }}</option>
+          </select>
+          <span ng-show="Form.dataset.$error.required" class="help-inline">*</span>
+        </div>
+      </div>                         
+    </div>
+  </div>
+  <div ng-class="{span3: !new, span6: new}" ng-hide="existed" class="span3">
+    <div class="alert-info well">
+      <h4 title="Load new dataset and train model">New DataSet</h4>
+      <p>Load dataset using import handler <a target="_blank" href="#{{ model.train_import_handler_obj.objectUrl() }}">{{ model.train_import_handler_obj.name }}</a></p>
+
+      <div ng-repeat="param in params" class="control-group">
+        <label class="control-label">{{ param | capfirst }}:</label>
+        <div class="controls" ng-class="{error: !paramsFilled}">
+          <input ng-change="changeParams(param)" class="input-small" ng-model='parameters[param]' name="{{param}}" placeholder='{{ param }}' type='text' required />
+          <span class="help-inline">*</span>
+        </div>
+      </div>                         
+    </div>
+  </div>
+</div>
