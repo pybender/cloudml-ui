@@ -143,7 +143,7 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
     # POST specific methods
 
     def _put_train_action(self, **kwargs):
-        from api.tasks import train_model
+        from api.tasks import train_model, import_data
         from api.forms import ModelTrainForm
         obj = self._get_details_query(None, None,
                                         **kwargs)
@@ -151,10 +151,29 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
         if form.is_valid():
             model = form.save()
             instance = form.cleaned_data['aws_instance']
-            dataset = form.cleaned_data.get('dataset', None)
-            params = form.cleaned_data.get('parameters', None)
-            print form.cleaned_data
-            train_model.delay(str(model._id), params)
+            if form.params_filled:
+                # load and train
+                import_handler = model.train_import_handler
+                params = form.cleaned_data.get('parameters', None)
+                dataset = app.db.DataSet()
+                str_params = "-".join(["%s=%s" % item
+                    for item in params.iteritems()])
+                dataset.name = "%s: %s" % (import_handler['name'], str_params)
+                dataset.import_handler_id = str(import_handler['_id'])
+                dataset.import_params = params
+                filename = '%s-%s.json' % (slugify(import_handler['name']), str_params.replace('=', '_'))
+                dataset.data = filename
+                dataset.save(validate=True)
+                import_data.apply_async((str(dataset._id), ),
+                    link=train_model.subtask(args=(str(model._id),),
+                    queue=instance['name']))
+                #train_model.delay(str(model._id), params)
+            else:
+                # train using dataset
+                dataset = form.cleaned_data.get('dataset', None)
+                train_model.delay(str(dataset._id),
+                                  str(model._id),
+                                  queue=instance['name'])
             return self._render(self._get_save_response_context(model, extra_fields=['status']))
 
 api.add_resource(Models, '/cloudml/models/')
@@ -303,7 +322,7 @@ class DataSetResource(BaseResource):
         dataset.name = "%s: %s" % (importhandler.name, str_params)
         dataset.import_handler_id = handler_id
         dataset.import_params = parameters
-        filename = '%s-%s' % (slugify(importhandler['name']), str_params.replace('=', '_'))
+        filename = '%s-%s.json' % (slugify(importhandler['name']), str_params.replace('=', '_'))
         dataset.data = filename
         dataset.save(validate=True)
         import_data.delay(str(dataset._id))

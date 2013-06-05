@@ -3,12 +3,15 @@ import logging
 from copy import copy
 from itertools import izip
 from bson.objectid import ObjectId
+from os.path import join, exists
+from os import makedirs
 
 from api import celery, app
 from api.models import Test
 from api.logger import init_logger
 from core.trainer.trainer import Trainer
 from core.trainer.config import FeatureModel
+from core.trainer.streamutils import streamingiterload
 
 
 class InvalidOperationError(Exception):
@@ -16,14 +19,14 @@ class InvalidOperationError(Exception):
 
 
 @celery.task
-def import_data(id):
+def import_data(dataset_id):
     """
     Import data from database.
     """
     from core.importhandler.importhandler import ExtractionPlan, ImportHandler
-    init_logger('importdata_log', handler_id=id)
+    init_logger('importdata_log', dataset_id=dataset_id)
     try:
-        dataset = app.db.DataSet.find_one({'_id': ObjectId(id)})
+        dataset = app.db.DataSet.find_one({'_id': ObjectId(dataset_id)})
         importhandler = app.db.ImportHandler.find_one(
             {'_id': ObjectId(dataset.import_handler_id)})
         handler = json.dumps(importhandler.data)
@@ -31,7 +34,10 @@ def import_data(id):
         handler = ImportHandler(plan, dataset.import_params)
 
         logging.info("Loading data using %s imported.", importhandler.name)
-        handler.store_data_json(dataset.data)
+        path = app.config['DATA_FOLDER']
+        if not exists(path):
+            makedirs(path)
+        handler.store_data_json(join(path, dataset.data))
         dataset.status = dataset.STATUS_IMPORTED
         dataset.save(validate=True)
     except Exception, exc:
@@ -40,11 +46,11 @@ def import_data(id):
         raise
 
     logging.info("Dataset using %s imported.", importhandler.name)
-    return
+    return dataset_id
 
 
 @celery.task
-def train_model(model_id, parameters):
+def train_model(dataset_id, model_id):
     """
     Train new model celery task.
     """
@@ -52,6 +58,7 @@ def train_model(model_id, parameters):
 
     try:
         model = app.db.Model.find_one({'_id': ObjectId(model_id)})
+        dataset = app.db.DataSet.find_one({'_id': ObjectId(dataset_id)})
         model.delete_metadata()
 
         model.status = model.STATUS_TRAINING
@@ -60,8 +67,8 @@ def train_model(model_id, parameters):
         feature_model = FeatureModel(json.dumps(model.features),
                                      is_file=False)
         trainer = Trainer(feature_model)
-        train_handler = model.get_import_handler(parameters)
-        trainer.train(train_handler)
+        with open(dataset.data, 'r') as train_fp:
+            trainer.train(streamingiterload(train_fp))
         trainer.clear_temp_data()
         model.status = model.STATUS_TRAINED
         model.set_trainer(trainer)

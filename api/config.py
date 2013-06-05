@@ -3,6 +3,7 @@ SECRET_KEY = 'CHANGE_ME'
 DATABASE_NAME = 'main_cloudml'
 STATIC_ROOT = None
 UPLOAD_FOLDER = 'models'
+DATA_FOLDER = './data'
 MAX_CONTENT_LENGTH = 128 * 1024 * 1024
 DEBUG = True
 

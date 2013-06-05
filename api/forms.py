@@ -154,11 +154,11 @@ class ModelTrainForm(BaseForm):
     def clean_parameters(self, value):
         parser = populate_parser(self.obj.train_import_handler['import_params'])
         params = parser.parse_args()
-        self.paramsFilled = True
+        self.params_filled = True
         parameters = {}
         for name, val in params.iteritems():
             if not val:
-                self.paramsFilled = False
+                self.params_filled = False
             else:
                 parameters[name] = val
         return parameters
@@ -174,7 +174,7 @@ class ModelTrainForm(BaseForm):
 
     def validate_obj(self):
         ds = self.cleaned_data.get('dataset', None)
-        if not (self.paramsFilled or ds):
+        if not (self.params_filled or ds):
             raise ValidationError('Parameters or dataset should be specified')
 
     def save(self):
