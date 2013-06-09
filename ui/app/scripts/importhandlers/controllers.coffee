@@ -24,8 +24,9 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
   '$routeParams'
   'ImportHandler'
   'DataSet'
+  '$dialog'
 
-  ($scope, $routeParams, ImportHandler, DataSet) ->
+  ($scope, $routeParams, ImportHandler, DataSet, $dialog) ->
     if not $routeParams.id
       err = "Can't initialize without import handler id"
     $scope.handler = new ImportHandler({_id: $routeParams.id})
@@ -42,10 +43,23 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
         $scope.setError(opts, 'loading handler details')
       )
 
+    $scope.delete_dataset = (dataset)->
+      $scope.openDialog(dataset, 'partials/datasets/delete_dataset_popup.html',
+                        'DeleteDatasetCtrl')
+
+    $scope.openDialog = (dataset, templete, ctrlName, cssClass='modal large') ->
+      d = $dialog.dialog(
+        modalFade: false,
+        dialogClass: cssClass
+      )
+      d.dataset = dataset
+      d.open(templete, ctrlName)
+
     $scope.loadDataSets = () ->
       DataSet.$loadAll(
         $scope.handler._id,
-        show: 'name,created_on,status,error,data,import_params'
+        show: 'name,created_on,status,error,data,import_params,
+import_handler_id'
       ).then ((opts) ->
         $scope.datasets = opts.objects
       ), ((opts) ->
@@ -59,6 +73,27 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
       )
 
     $scope.initSections($scope.go)
+])
+
+.controller('DeleteDatasetCtrl', [
+  '$scope'
+  'dialog'
+  '$location'
+
+  ($scope, dialog, $location) ->
+    $scope.dataset = dialog.dataset
+    $scope.resetError()
+
+    $scope.close = ->
+      dialog.close()
+
+    $scope.delete = (result) ->
+      $scope.dataset.$delete().then (() ->
+        $scope.close()
+        $location.path "/importhandlers/#{$scope.dataset.import_handler_id}"
+      ), ((opts) ->
+        $scope.setError(opts, 'deleting dataset')
+      )
 ])
 
 .controller('AddImportHandlerCtl', [

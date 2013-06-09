@@ -148,6 +148,9 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings',
       else "action=#{actionString}")
     $rootScope.goSection action
 
+  $rootScope.resetError = ->
+    $rootScope.err = ''
+
   $rootScope.setError = (opts, message=null) ->
     if !message?
         message = 'processing request'

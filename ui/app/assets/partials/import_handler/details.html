@@ -48,6 +48,7 @@
                 <th>Import Parameters</th>
                 <th>Data</th>
                 <th>Created</th>
+                <th>Actions</th>
               </tr>
           </thead>
           <tbody>
@@ -57,6 +58,11 @@
               <td><span class="value" ng-repeat="(key, val) in ds.import_params">{{ key }}={{ val }}</span></td>
               <td>{{ ds.data }}</td>
               <td>{{ ds.created_on|format_date }}</td>
+              <td>
+                <button ng-click="delete_dataset(ds)" class="btn btn-danger">
+                  <i title="Delete dataset. Be careful - you could not recover it!" class="icon-remove"></i>
+                </button>
+              </td>
             </tr>
           </tbody>
         </table>

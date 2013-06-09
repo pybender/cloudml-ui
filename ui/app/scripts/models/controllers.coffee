@@ -141,6 +141,7 @@ angular.module('app.models.controllers', ['app.config', ])
 
   ($scope, $rootScope, dialog) ->
     $scope.dialog = dialog
+    $scope.resetError()
     $scope.parameters = {}
     $scope.model = dialog.model
     $scope.handler = $scope.model.train_import_handler_obj
@@ -161,6 +162,7 @@ angular.module('app.models.controllers', ['app.config', ])
 
   ($scope, dialog, $location) ->
     $scope.model = dialog.model
+    $scope.resetError()
 
     $scope.close = ->
       dialog.close()

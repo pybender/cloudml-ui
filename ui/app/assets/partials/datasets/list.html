@@ -16,11 +16,14 @@
   </tr>
 </thead>
 <tbody>
-  <tr ng-repeat="handler in objects">
-    <td><a href="#{{ handler.objectUrl() }}">{{ handler.name }}</a></td>
-    <td>{{ handler.created_on|format_date }}</td>
-    <td>{{ handler.updated_on|format_date }}</td>
+  <tr ng-repeat="dataset in objects">
+    <td><a href="#{{ dataset.objectUrl() }}">{{ dataset.name }}</a></td>
+    <td>{{ dataset.created_on|format_date }}</td>
+    <td>{{ dataset.updated_on|format_date }}</td>
     <td>
+      <button ng-click="delete_dataset(dataset)" class="btn btn-danger">
+          <i title="Delete dataset. Be careful - you could not recover it!" class="icon-remove"></i>
+      </button>
     </td>
   </tr>
 </tbody>

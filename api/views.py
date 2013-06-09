@@ -293,8 +293,8 @@ class DataSetResource(BaseResource):
         return app.db.DataSet
 
     OBJECT_NAME = 'dataset'
-    decorators = [crossdomain(origin='*')]
-    methods = ('GET', 'OPTIONS', 'POST')
+    #decorators = [crossdomain(origin='*')]
+    methods = ('GET', 'OPTIONS', 'DELETE', 'POST' )
 
     def post(self, **kwargs):
         """

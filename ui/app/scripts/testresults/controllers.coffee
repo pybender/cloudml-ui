@@ -38,6 +38,7 @@ angular.module('app.testresults.controllers', ['app.config', ])
   ($scope, dialog, location) ->
     $scope.test = dialog.test
     $scope.model = dialog.test.model
+    $scope.resetError()
 
     $scope.close = ->
       dialog.close()
