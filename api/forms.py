@@ -46,13 +46,21 @@ class BaseForm(object):
 
     def clean(self):
         self.cleaned_data = {}
-        for name in self.fields:
+        if isinstance(self.fields, dict):
+            fields = self.fields
+        else:
+            fields = dict([(name, False) for name in self.fields])
+
+        for name, required in fields.iteritems():
             value = self.data.get(name, None)
             mthd = "clean_%s" % name
             if hasattr(self, mthd):
                 value = getattr(self, mthd)(value)
             if value:
                 self.cleaned_data[name] = value
+            elif required:
+                raise ValidationError('%s is required' % name)
+
         self.validate_obj()
         self._cleaned = True
         return self.cleaned_data
@@ -209,7 +217,7 @@ class ModelTrainForm(BaseChooseInstanceAndDataset):
 class BaseImportHandlerForm(BaseForm):
     def clean_data(self, value):
         if not value:
-            raise ValidationError('data is required')
+            return
 
         try:
             data = json.loads(value)
@@ -226,16 +234,14 @@ class BaseImportHandlerForm(BaseForm):
 
 
 class ImportHandlerEditForm(BaseImportHandlerForm):
-    fields = ('data', )
+    fields = ('data', 'name')
 
 
 class ImportHandlerAddForm(BaseImportHandlerForm):
-    fields = ('name', 'type', 'data', 'import_params', )
-
-    def clean_name(self, value):
-        if not value:
-            raise ValidationError('name is required')
-        return value
+    fields = {'name': True,
+              'type': True,
+              'data': True,
+              'import_params': True}
 
     def clean_type(self, value):
         # if not type in ImportHandler.TYPE_CHOICES:

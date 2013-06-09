@@ -3,7 +3,8 @@
         {
             "name": "Test-1",
             "status": "Completed",
-            "created_on": "2013-04-19 14:40:23.145000", 
+            "created_on": "2013-04-19 14:37:23.145000",
+            "updated_on": "2013-04-19 14:37:23.145000",
             "model_name": "TrainedModel",
             "model_id": "519318e6106a6c0df349bc0b",
             "parameters": {},
@@ -18,7 +19,8 @@
         {
             "name": "Test-2",
             "status": "Completed",
-            "created_on": "2013-04-19 14:40:23.145000", 
+            "created_on": "2013-04-19 14:37:23.145000",
+            "updated_on": "2013-04-19 14:37:23.145000",
             "model_name": "TrainedModel",
             "model_id": "519318e6106a6c0df349bc0b",
             "parameters": {},
@@ -33,7 +35,8 @@
         {
             "name": "Test-1",
             "status": "Completed",
-            "created_on": "2013-04-19 14:40:23.145000", 
+            "created_on": "2013-04-19 14:37:23.145000",
+            "updated_on": "2013-04-19 14:37:23.145000",
             "model_name": "OtherModel",
             "model_id": "",
             "parameters": {},

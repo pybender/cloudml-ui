@@ -35,16 +35,27 @@ class BaseTestCase(unittest.TestCase):
 
     @classmethod
     def fixtures_load(cls):
+        from api import models
+        from mongokit.document import DocumentProperties
         for fixture in cls.FIXTURES:
             data = _load_fixture_data(fixture)
             for collection_name, documents in data.iteritems():
                 cls._LOADED_COLLECTIONS.append(collection_name)
                 collection = _get_collection(collection_name)
+                Model = getattr(models, collection_name)
                 for doc in documents:
-                    doc['created_on'] = datetime.now()
-                    doc['updated_on'] = datetime.now()
-                    if '_id' in doc:
-                        doc['_id'] = ObjectId(doc['_id'])
+                    for key, val in doc.iteritems():
+                        if key == '_id':
+                            doc['_id'] = ObjectId(val)
+                        else:
+                            field_type = Model.structure[key]
+
+                            if field_type == datetime:
+                                doc[key] = datetime.now()
+                            elif isinstance(field_type, DocumentProperties):
+                                relation = field_type
+                                # TODO:
+
                 collection.insert(documents)
 
     @classmethod

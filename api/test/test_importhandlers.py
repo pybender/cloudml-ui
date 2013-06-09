@@ -1,5 +1,6 @@
 import httplib
 import json
+from bson.objectid import ObjectId
 
 from utils import BaseTestCase
 from api.views import ImportHandlerResource
@@ -9,7 +10,7 @@ class ImportHandlersTests(BaseTestCase):
     """
     Tests of the ImportHandlers API.
     """
-    HANDLER_NAME = 'IH1'
+    HANDLER_ID = '5170dd3a106a6c1631000000'
     FIXTURES = ('importhandlers.json', )
     BASE_URL = '/cloudml/importhandlers/'
     RESOURCE = ImportHandlerResource
@@ -17,10 +18,19 @@ class ImportHandlersTests(BaseTestCase):
     def setUp(self):
         super(ImportHandlersTests, self).setUp()
         self.Model = self.db.ImportHandler
-        self.obj = self.Model.find_one({'name': self.HANDLER_NAME})
+        self.obj = self.Model.find_one({'_id': ObjectId(self.HANDLER_ID)})
 
     def test_list(self):
         self._check_list()
+
+    def test_edit_name(self):
+        url = self._get_url(id=self.obj._id)
+        data = {'name': 'new name'}
+        resp = self.app.put(url, data=data)
+        self.assertEquals(resp.status_code, httplib.OK)
+        self.assertTrue(self.RESOURCE.OBJECT_NAME in resp.data)
+        handler = self.Model.find_one({'_id': ObjectId(self.HANDLER_ID)})
+        self.assertEquals(handler.name, data['name'])
 
 
 
