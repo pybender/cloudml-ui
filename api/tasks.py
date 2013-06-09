@@ -67,7 +67,10 @@ def train_model(dataset_id, model_id):
         feature_model = FeatureModel(json.dumps(model.features),
                                      is_file=False)
         trainer = Trainer(feature_model)
-        with open(dataset.data, 'r') as train_fp:
+        path = app.config['DATA_FOLDER']
+        if not exists(path):
+            makedirs(path)
+        with open(join(path, dataset.data), 'r') as train_fp:
             trainer.train(streamingiterload(train_fp))
         trainer.clear_temp_data()
         model.status = model.STATUS_TRAINED
@@ -155,13 +158,14 @@ filled: %s' % (model_id, count))
 
 
 @celery.task
-def run_test(test_id):
+def run_test(dataset_id, test_id):
     """
     Running tests for trained model
     """
     init_logger('runtest_log', test=test_id)
 
     test = app.db.Test.find_one({'_id': ObjectId(test_id)})
+    dataset = app.db.DataSet.find_one({'_id': ObjectId(dataset_id)})
     model = test.model
     try:
         if model.status != model.STATUS_TRAINED:
@@ -171,8 +175,7 @@ def run_test(test_id):
         test.error = ""
         test.save()
 
-        parameters = copy(test.parameters)
-        metrics, raw_data = model.run_test(parameters)
+        metrics, raw_data = model.run_test(dataset)
         test.accuracy = metrics.accuracy
 
         metrics_dict = metrics.get_metrics_dict()

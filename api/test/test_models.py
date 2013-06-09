@@ -11,8 +11,8 @@ class ModelTests(BaseTestCase):
     Tests of the Models API.
     """
     MODEL_NAME = 'TrainedModel'
-    FIXTURES = ('models.json', 'tests.json', 'examples.json',
-                'weights.json')
+    FIXTURES = ('models.json', 'tests.json', 'examples.json', 'datasets.json',
+                'weights.json', 'instances.json', 'importhandlers.json')
     BASE_URL = '/cloudml/models/'
 
     def setUp(self):
@@ -196,6 +196,52 @@ trainer - 'module' object has no attribute 'FeatureTypeInstance'")
         self.assertEquals(data['model']['name'], 'new name %@#')
         self.assertEquals(model.name, 'new name %@#')
 
+    def test_train_model(self):
+        url = self._get_url(id=self.model._id, action='train')
+
+        # Setting import handler for train
+        handler = self.db.ImportHandler.find_one({'_id': ObjectId('5170dd3a106a6c1631000000')})
+        self.assertTrue(handler, 'Invalid fixtures: import handlers')
+        self.model.train_import_handler = handler
+        self.model.save()
+        inst = self.db.Instance.find_one({'_id': ObjectId('5170dd3a106a6c1631000000')})
+        self.assertTrue(inst, 'Invalid fixtures: instances')
+
+        data = {}
+        resp = self.app.put(url, data=data)
+        self.assertTrue(resp.status_code, httplib.BAD_REQUEST)
+        self.assertTrue('Instance is required' in resp.data, resp.data)
+
+        data = {'aws_instance': str(inst._id)}
+        resp = self.app.put(url, data=data)
+        self.assertTrue(resp.status_code, httplib.BAD_REQUEST)
+        self.assertTrue('Parameters (start, end, category) or dataset are required' in resp.data,
+                        resp.data)
+
+        # Tests specifying dataset
+        data['dataset'] = '5170dd3a106a6c1631000001'
+        resp = self.app.put(url, data=data)
+        self.assertTrue(resp.status_code, httplib.BAD_REQUEST)
+        self.assertTrue('DataSet not found' in resp.data, resp.data)
+
+        data['dataset'] = '5270dd3a106a6c1631000000'
+        resp = self.app.put(url, data=data)
+        self.assertTrue(resp.status_code, httplib.OK)
+        model_resp = json.loads(resp.data)['model']
+        self.assertEquals(model_resp["status"], "Queued")
+        self.assertEquals(model_resp["name"], self.model.name)
+
+        # Tests specifying loading data parameters
+        data = {'aws_instance': str(inst._id),
+                'start': '2012-12-03'}
+        resp = self.app.put(url, data=data)
+        self.assertTrue(resp.status_code, httplib.BAD_REQUEST)
+        self.assertTrue('Parameters category, end are required' in resp.data, resp.data)
+
+        data.update({'end': '2012-12-04',
+                     'category': '1'})
+        self.assertTrue(resp.status_code, httplib.OK)
+
     def test_retrain_model(self):
         model_filter_params = {'model_name': self.MODEL_NAME,
                                'model_id': MODEL_ID}
@@ -215,9 +261,6 @@ trainer - 'module' object has no attribute 'FeatureTypeInstance'")
         check(self.db.WeightsCategory)
 
         url = self._get_url(id=self.model._id, action='train')
-        resp = self.app.put(url, data={})
-        self.assertTrue('start is required' in resp.data)
-
         data = {'start': '2012-12-03',
                 'end': '2012-12-04',
                 'aws_instance': '5170dd3a106a6c1631000000'}

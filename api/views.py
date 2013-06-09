@@ -153,26 +153,19 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
             instance = form.cleaned_data['aws_instance']
             if form.params_filled:
                 # load and train
-                import_handler = model.train_import_handler
+                from api.models import ImportHandler
+                import_handler = ImportHandler(model.train_import_handler)
                 params = form.cleaned_data.get('parameters', None)
-                dataset = app.db.DataSet()
-                str_params = "-".join(["%s=%s" % item
-                    for item in params.iteritems()])
-                dataset.name = "%s: %s" % (import_handler['name'], str_params)
-                dataset.import_handler_id = str(import_handler['_id'])
-                dataset.import_params = params
-                filename = '%s-%s.json' % (slugify(import_handler['name']), str_params.replace('=', '_'))
-                dataset.data = filename
-                dataset.save(validate=True)
+                dataset = import_handler.create_dataset(params)
                 import_data.apply_async((str(dataset._id), ),
-                    link=train_model.subtask(args=(str(model._id),),
-                    queue=instance['name']))
+                                        link=train_model.subtask(args=(str(model._id), ),
+                                        options={'queue':instance['name']}))
                 #train_model.delay(str(model._id), params)
             else:
                 # train using dataset
                 dataset = form.cleaned_data.get('dataset', None)
-                train_model.delay(str(dataset._id),
-                                  str(model._id),
+                train_model.apply_async((str(dataset._id),
+                                  str(model._id),),
                                   queue=instance['name'])
             return self._render(self._get_save_response_context(model, extra_fields=['status']))
 

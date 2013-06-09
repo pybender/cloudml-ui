@@ -60,6 +60,9 @@ class App(Flask):
     def init_db(self):
         db_name = self.config['DATABASE_NAME']
         self._db = getattr(self.conn, db_name)
+        #from pymongo.son_manipulator import AutoReference, NamespaceInjector
+        #self._db.add_son_manipulator(NamespaceInjector()) # inject _ns
+        #self._db.add_son_manipulator(AutoReference(self._db))
 
         self.chan = LogChannel(self._db, 'log')
         self.chan.ensure_channel()
@@ -68,6 +71,7 @@ class App(Flask):
 
 
 connection = Connection()
+
 app = App(connection, __name__)
 
 celery = Celery('cloudml')

@@ -13,8 +13,9 @@
             "example_id": "opening_id",
             "example_label": "opening_title",
             "target_variable": "hire_outcome",
-            "train_import_handler": "",
-            "test_import_handler": "",
+            "train_import_handler": null,
+            "test_import_handler": null,
+            "weights_synchronized": false,
         "features": {
   "schema-name": "bestmatch",
   "classifier": {

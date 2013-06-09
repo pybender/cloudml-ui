@@ -5,7 +5,8 @@
     "name": "IH1",
     "type": "Db",
     "label": "1",
-    "data": {}
+    "data": {},
+    "import_params": ["start", "end", "category"]
  }
  ]
 }

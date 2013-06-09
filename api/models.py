@@ -1,9 +1,12 @@
 import json
 from datetime import datetime
 import cPickle as pickle
+from os.path import join, exists
+from os import makedirs
 
 from bson import Binary
 from flask.ext.mongokit import Document
+from core.trainer.streamutils import streamingiterload
 
 from api import connection, app
 
@@ -74,6 +77,19 @@ class ImportHandler(Document):
                       'type': TYPE_DB}
     use_dot_notation = True
 
+    def create_dataset(self, params, run_import_data=True):
+        from api.utils import slugify
+        dataset = app.db.DataSet()
+        str_params = "-".join(["%s=%s" % item
+                              for item in params.iteritems()])
+        dataset.name = "%s: %s" % (self.name, str_params)
+        dataset.import_handler_id = str(self._id)
+        dataset.import_params = params
+        filename = '%s-%s.json' % (slugify(self.name), str_params.replace('=', '_'))
+        dataset.data = filename
+        dataset.save(validate=True)
+        return dataset
+
     def __repr__(self):
         return '<Import Handler %r>' % self.name
 
@@ -106,6 +122,9 @@ class Model(Document):
         'test_import_handler': ImportHandler,
         'train_import_handler': ImportHandler,
 
+        'train_importhandler':dict,
+        'importhandler':dict,
+
         'trainer': None,
         'comparable': bool,
         'weights_synchronized': bool,
@@ -123,6 +142,7 @@ class Model(Document):
                       'comparable': False,
                       'weights_synchronized': False}
     use_dot_notation = True
+    #use_autorefs = True
 
     def get_trainer(self, loaded=True):
         trainer = self.trainer or self.fs.trainer
@@ -140,10 +160,13 @@ class Model(Document):
         handler = ImportHandler(plan, parameters)
         return handler
 
-    def run_test(self, parameters=True, callback=None):
+    def run_test(self, dataset, callback=None):
         trainer = self.get_trainer()
-        test_handler = self.get_import_handler(parameters, is_test=True)
-        metrics = trainer.test(test_handler, callback=callback)
+        path = app.config['DATA_FOLDER']
+        if not exists(path):
+            makedirs(path)
+        with open(join(path, dataset.data), 'r') as train_fp:
+            metrics = trainer.test(streamingiterload(train_fp), callback=callback)
         raw_data = trainer._raw_data
         trainer.clear_temp_data()
         return metrics, raw_data

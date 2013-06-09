@@ -23,6 +23,7 @@ angular.module('app.testresults.controllers', ['app.config', ])
 
       $scope.test = new Test({model_id: $scope.model._id})
       $scope.test.$run(data).then (->
+        dialog.close()
         $location.path $scope.test.objectUrl()
       ), ((opts) ->
         $scope.setError(opts, 'running test')

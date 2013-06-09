@@ -13,7 +13,7 @@ from core.importhandler.importhandler import ExtractionPlan, \
     ImportHandlerException
 
 
-class BaseForm():
+class BaseForm(object):
     def __init__(self, data=None, obj=None, Model=None, **kwargs):
         if data is None:
             data = {}
@@ -78,6 +78,7 @@ class BaseModelForm(BaseForm):
     def _clean_importhandler(self, value):
         if value and not value == 'undefined':
             obj = app.db.ImportHandler.find_one({'_id': ObjectId(value)})
+            print type(obj)
             if obj is not None:
                 return obj
 
@@ -154,20 +155,32 @@ class BaseChooseInstanceAndDataset(BaseForm):
     fields = ['aws_instance', 'dataset', 'parameters']
 
     def clean_parameters(self, value):
+        self.params_filled = False
         handler = getattr(self.model, '%s_import_handler' % self.HANDLER_TYPE)
-        parser = populate_parser(handler['import_params'])
+        self.parameter_names = handler['import_params']
+        parser = populate_parser(self.parameter_names)
         params = parser.parse_args()
-        self.params_filled = True
+
         parameters = {}
+        missed_params = []
         for name, val in params.iteritems():
             if not val:
-                self.params_filled = False
+                missed_params.append(name)
             else:
                 parameters[name] = val
+                self.params_filled = True
+
+        if self.params_filled and missed_params:
+            raise ValidationError('Parameters %s are required' % ', '.join(missed_params))
+
         return parameters
 
     def clean_dataset(self, value):
-        return app.db.DataSet.find_one({'_id': ObjectId(value)})
+        if value:
+            ds = app.db.DataSet.find_one({'_id': ObjectId(value)})
+            if ds is None:
+                raise ValidationError('DataSet not found')
+            return ds
 
     def clean_aws_instance(self, value):
         instance = app.db.Instance.find_one({'_id': ObjectId(value)})
@@ -178,7 +191,8 @@ class BaseChooseInstanceAndDataset(BaseForm):
     def validate_obj(self):
         ds = self.cleaned_data.get('dataset', None)
         if not (self.params_filled or ds):
-            raise ValidationError('Parameters or dataset should be specified')
+            raise ValidationError('Parameters (%s) or \
+dataset are required' % ', '.join(self.parameter_names))
 
 
 class ModelTrainForm(BaseChooseInstanceAndDataset):
@@ -252,11 +266,25 @@ class AddTestForm(BaseChooseInstanceAndDataset):
         test.status = test.STATUS_QUEUED
         test.save(check_keys=False)
 
-        from api.tasks import run_test
+        from api.tasks import run_test, import_data
         instance = self.cleaned_data['aws_instance']
-        run_test.apply_async(args=[str(test._id)],
-                             queue=instance.name,
-                             routing_key='%s.run_test' % instance.name)
+
+        if self.params_filled:
+            # load and train
+            from api.models import ImportHandler
+            import_handler = ImportHandler(test.model.test_import_handler)
+            params = self.cleaned_data.get('parameters', None)
+            dataset = import_handler.create_dataset(params)
+            import_data.apply_async((str(dataset._id), ),
+                                    link=run_test.subtask(args=(str(test._id), ),
+                                    options={'queue':instance['name']}))
+        else:
+            # test using dataset
+            dataset = self.cleaned_data.get('dataset', None)
+            run_test.apply_async((str(dataset._id),
+                                  str(test._id),),
+                                  queue=instance['name'])
+
         return test
 
 

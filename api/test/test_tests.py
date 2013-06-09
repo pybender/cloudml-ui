@@ -50,7 +50,10 @@ class TestTests(BaseTestCase):
 
     def test_post(self):
         url = self._get_url()
-        resp = self.app.post(url, data={'instance': '5170dd3a106a6c1631000000'})
+        data = {'start': '2012-12-03',
+                'end': '2012-12-04',
+                'aws_instance': '5170dd3a106a6c1631000000'}
+        resp = self.app.post(url, data=data)
         self.assertEquals(resp.status_code, httplib.CREATED)
 
     def test_delete(self):
