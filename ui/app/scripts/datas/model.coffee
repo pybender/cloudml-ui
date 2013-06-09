@@ -19,7 +19,6 @@ angular.module('app.datas.model', ['app.config'])
       test_id: null
       data_input: null
       weighted_data_input: null
-      _id: null
 
       constructor: (opts) ->
         super opts
