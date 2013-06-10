@@ -87,6 +87,7 @@ App.config([
     .when('/importhandlers/:id', {
       controller: 'ImportHandlerDetailsCtrl'
       templateUrl: '/partials/import_handler/details.html'
+      reloadOnSearch: false
     })
     .when('/aws/instances', {
       controller: "AwsInstanceListCtrl"
@@ -132,6 +133,16 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings',
     if not $rootScope.sse_test?
       $rootScope.sse_test = new EventSource("#{settings.logUrl}log/?" + params)
     return $rootScope.sse_test
+
+  $rootScope.initLogMessages = (channel) ->
+    $rootScope.log_messages = []
+    log_sse = $rootScope.getEventSource(params=channel)
+    handleCallback = (msg) ->
+      $rootScope.$apply(() ->
+        if msg?
+          data = JSON.parse(msg.data)
+          $rootScope.log_messages.push(data['data']['msg']))
+    log_sse.addEventListener('message', handleCallback)
 
   DEFAULT_ACTION = "model:details"
 

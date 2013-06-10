@@ -73,6 +73,7 @@ import_handler_id'
       )
 
     $scope.initSections($scope.go)
+    $scope.initLogMessages("channel=importdata_log&model=" + $scope.handler._id)
 ])
 
 .controller('DeleteDatasetCtrl', [

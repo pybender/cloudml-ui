@@ -43,7 +43,8 @@ class LogChannel(Channel):
 
 class App(Flask):
     PUBSUB_CHANNELS = {'runtest_log': ('test', ),
-                       'trainmodel_log': ('model', )}
+                       'trainmodel_log': ('model', ),
+                       'importdata_log': ('handler', )}
 
     def __init__(self, connection, *args, **kwargs):
         super(App, self).__init__(*args, **kwargs)

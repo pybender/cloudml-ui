@@ -24,11 +24,12 @@ def import_data(dataset_id):
     Import data from database.
     """
     from core.importhandler.importhandler import ExtractionPlan, ImportHandler
-    init_logger('importdata_log', dataset_id=dataset_id)
     try:
         dataset = app.db.DataSet.find_one({'_id': ObjectId(dataset_id)})
         importhandler = app.db.ImportHandler.find_one(
             {'_id': ObjectId(dataset.import_handler_id)})
+        init_logger('importdata_log', handler=dataset.import_handler_id)
+        logging.info('Loading dataset %s' % dataset._id)
         handler = json.dumps(importhandler.data)
         plan = ExtractionPlan(handler, is_file=False)
         handler = ImportHandler(plan, dataset.import_params)

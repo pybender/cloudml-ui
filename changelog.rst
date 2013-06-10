@@ -3,6 +3,12 @@
 Changelog
 =========
 
+Relese 2013-06-09
+-----------------
+* Feature - Moved importing data to separate task
+* Feature - Added storing datasets
+
+
 Relese 2013-05-27
 -----------------
 * Feature - Added button for reload weights
