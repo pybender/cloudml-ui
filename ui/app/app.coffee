@@ -50,11 +50,12 @@ App.config([
     .when('/models/:model_id/tests/:id', {
       controller: 'TestDetailsCtrl'
       templateUrl: '/partials/testresults/test_details.html'
+      reloadOnSearch: false
     })
     .when('/models/:model_id/tests/:test_id/examples', {
       controller: 'TestExamplesCtrl'
       templateUrl: '/partials/examples/example_list.html',
-      reloadOnSearch: false,
+      reloadOnSearch: false
     })
     .when('/models/:model_id/tests/:test_id/grouped_examples', {
       controller: 'GroupedExamplesCtrl'

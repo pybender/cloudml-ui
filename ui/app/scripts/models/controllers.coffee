@@ -96,7 +96,7 @@ angular.module('app.models.controllers', ['app.config', ])
           if extra_fields != ''
             $scope.load(extra_fields, name)
         else
-          $scope.load(extra_fields + Model.MAIN_FIELDS, name)
+          $scope.load(extra_fields + ',' + Model.MAIN_FIELDS, name)
           $scope.LOADED_SECTIONS.push 'main'
 
         if name == 'test' then $scope.goTests()

@@ -59,6 +59,7 @@ angular.module('app.testresults.controllers', ['app.config', ])
   '$location'
 
 ($scope, $routeParams, Test, $location) ->
+  $scope.LOADED_SECTIONS = []
   if not $scope.test
     if not ($routeParams.model_id  and $routeParams.id)
       throw new Error "Can't initialize test details controller
@@ -82,38 +83,44 @@ without test id and model id"
             $scope.log_messages.push(data['data']['msg']))
       log_sse.addEventListener('message', handleCallback)
 
-  DEFAULT_ACTION = 'test:details'
-  $scope.action = ($routeParams.action or DEFAULT_ACTION).split ':'
-  $scope.$watch 'action', (action) ->
-    actionString = action.join(':')
-    $location.search(
-      if actionString == DEFAULT_ACTION then ""
-      else "action=#{actionString}")
-
-    switch action[0]
-      when "curves" then $scope.goMetrics()
-      when "matrix" then $scope.go 'status,metrics.confusion_matrix'
-      else $scope.go 'name,status,classes_set,created_on,accuracy,
-parameters,error,examples_count'
-
-  $scope.go = (fields, callback) ->
+  $scope.load = (fields, section, callback) ->
     $scope.test.$load(
       show: fields
       ).then (->
+        $scope.LOADED_SECTIONS.push section
         if callback?
           callback()
       ), ((opts)->
         $scope.setError(opts, 'loading test')
       )
 
-  $scope.goMetrics = (fields, callback) ->
-    $scope.go('status,metrics.roc_curve,
-metrics.precision_recall_curve,metrics.roc_auc',
-    () =>
-      $scope.rocCurve = {'ROC curve': $scope.test.metrics.roc_curve}
-      pr = $scope.test.metrics.precision_recall_curve
-      $scope.prCurve = {'Precision-Recall curve': [pr[1], pr[0]]}
-    )
+  $scope.goSection = (section) ->
+    name = section[0]
+    cb = null
+    if name not in $scope.LOADED_SECTIONS
+      extra_fields = ''
+      switch name
+        when 'model'
+          extra_fields = 'classes_set,created_on,accuracy,
+parameters,error,examples_count'
+        when 'curves'
+          extra_fields = 'metrics.roc_curve,metrics.precision_recall_curve,
+metrics.roc_auc'
+          cb = () =>
+            $scope.rocCurve = {'ROC curve': $scope.test.metrics.roc_curve}
+            pr = $scope.test.metrics.precision_recall_curve
+            $scope.prCurve = {'Precision-Recall curve': [pr[1], pr[0]]}
+        when 'matrix' then extra_fields = 'metrics.confusion_matrix'
+
+      if 'main' in $scope.LOADED_SECTIONS
+        # Do not need load main fields -> only extra
+        if extra_fields != ''
+          $scope.load(extra_fields, name)
+      else
+        $scope.load(extra_fields + ',' + Test.MAIN_FIELDS, name, cb)
+        $scope.LOADED_SECTIONS.push 'main'
+
+  $scope.initSections($scope.goSection)
 ])
 
 .controller('TestActionsCtrl', [

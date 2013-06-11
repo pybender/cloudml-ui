@@ -25,19 +25,15 @@
 
 <div ng-show="test.status == 'Completed'">
     <ul class="nav nav-tabs" id="tabs">
-      <li ng-class="{active: action[0] == 'test'}"><a ng-click="action = ['test', 'details']">Details</a></li>
-      <li ng-class="{active: action[0] == 'curves'}"><a ng-click="action = ['curves', 'show']">ROC and Precision-Recall</a></li>
-      <li ng-class="{active: action[0] == 'matrix'}"><a ng-click="action = ['matrix', 'confusion']">Confusion Matrix</a></li>
+      <li ng-class="{active: action[0] == 'model'}"><a ng-click="setSection(['model', 'details'])">Details</a></li>
+      <li ng-class="{active: action[0] == 'curves'}"><a ng-click="setSection(['curves', 'show'])">ROC and Precision-Recall</a></li>
+      <li ng-class="{active: action[0] == 'matrix'}"><a ng-click="setSection(['matrix', 'confusion'])">Confusion Matrix</a></li>
     </ul>
 
     <div class="tab-content">
-      <div  ng-show="action[0] == 'test'" id="details">
+      <div  ng-show="action[0] == 'model'">
         <div class="row">
             <div class="span12">
-                <div>
-                    Trained Model:
-                    <a class="value" href="#/models/{{ test.model_name }}">{{ test.model_name }}</a>
-                </div>
                 <div>
                     Import parameters:
                     <span class="value">{{ test.parameters }}</span>
