@@ -5,7 +5,7 @@
 
 LOCAL_SETTINGS = {
 
-  apiUrl: 'http://cloudml.int.odesk.com:5000/cloudml/'
+  apiUrl: 'http://cloudml.int.odesk.com/api/cloudml/'
   logUrl: 'http://172.27.77.141:5000/cloudml/'
 }
 
