@@ -144,6 +144,18 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings',
           $rootScope.log_messages.push(data['data']['msg']))
     log_sse.addEventListener('message', handleCallback)
 
+  $rootScope.openDialog = ($dialog, model, templete, ctrlName,
+                           cssClass='modal', action='', path='#') ->
+    d = $dialog.dialog(
+      modalFade: false
+      dialogClass: cssClass
+    )
+    d.model = model
+    d.action = action
+    d.path = path
+    d.open(templete, ctrlName)
+    return d
+
   DEFAULT_ACTION = "model:details"
 
   $rootScope.initSections = (go, defaultAction=DEFAULT_ACTION) ->

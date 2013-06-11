@@ -11,7 +11,7 @@
 
 <alert-message ng-show="objects.length == 0" class="alert-info" msg="No import handlers found"></alert-message>
 
-<table ng-hide="objects.length == 0" class="table table-hover">
+<table ng-controller="BaseListCtrl" ng-hide="objects.length == 0" class="table table-hover">
 <thead>
   <tr>
     <th>Name</th>
@@ -32,6 +32,9 @@
     <td ng-controller="ImportHandlerActionsCtrl">
       <button ng-show="handler.type == 'Db'" ng-click="importData(handler)" class="btn btn-info">
         <i title="Import Data" class="icon-tasks"></i>
+      </button>
+      <button ng-click="delete(handler)" class="btn btn-danger">
+        <i title="Delete your handler. Be careful - you could not recover it!" class="icon-remove"></i>
       </button>
     </td>
   </tr>

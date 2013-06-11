@@ -6,20 +6,21 @@ angular.module('app.datasets.controllers', ['app.config', ])
 
 .controller('DatasetListCtrl', [
   '$scope'
-  '$http'
   '$dialog'
-  'settings'
-  'Dataset'
+  'DataSet'
 
-($scope, $http, $dialog, settings, Dataset) ->
-  DataSet.$loadAll(
-    $scope.handler._id,
-    show: 'name,created_on,status,error,data,import_params'
-  ).then ((opts) ->
-    $scope.datasets = opts.objects
-  ), ((opts) ->
-    $scope.setError(opts, 'loading datasets')
-  )
+  ($scope, $dialog, DataSet) ->
+    $scope.MODEL = DataSet
+    $scope.FIELDS = 'name,created_on,status,error,data,import_params'
+    $scope.ACTION = 'loading datasets'
+
+    $scope.init = (handler) ->
+      $scope.kwargs = {'handler_id': handler._id}
+
+    $scope.delete = (dataset)->
+      $scope.openDialog($dialog, dataset,
+        'partials/base/delete_dialog.html', 'DeleteDialogCtrl',
+        "modal", "delete dataset", $scope.handler.objectUrl())
 ])
 
 

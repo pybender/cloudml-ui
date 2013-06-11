@@ -155,27 +155,6 @@ angular.module('app.models.controllers', ['app.config', ])
       )
 ])
 
-.controller('DeleteModelCtrl', [
-  '$scope'
-  'dialog'
-  '$location'
-
-  ($scope, dialog, $location) ->
-    $scope.model = dialog.model
-    $scope.resetError()
-
-    $scope.close = ->
-      dialog.close()
-
-    $scope.delete = (result) ->
-      $scope.model.$delete().then (() ->
-        $scope.close()
-        $location.path "#/models"
-      ), ((opts) ->
-        $scope.setError(opts, 'deleting model')
-      )
-])
-
 .controller('ModelActionsCtrl', [
   '$scope'
   '$dialog'
@@ -188,25 +167,19 @@ angular.module('app.models.controllers', ['app.config', ])
       $scope.model = opts.model
 
     $scope.test_model = (model)->
-      $scope.openDialog(model, 'partials/testresults/run_test.html',
+      $scope.openDialog($dialog, model, 'partials/testresults/run_test.html',
                         'TestDialogController')
 
     $scope.reload_model = (model)->
       model.$reload()
 
     $scope.train_model = (model)->
-      $scope.openDialog(model, 'partials/models/model_train_popup.html',
-                        'TrainModelCtrl')
+      $scope.openDialog($dialog, model,
+        'partials/models/model_train_popup.html',
+        'TrainModelCtrl', 'modal large')
 
-    $scope.delete_model = (model)->
-      $scope.openDialog(model, 'partials/models/delete_model_popup.html',
-                        'DeleteModelCtrl')
-
-    $scope.openDialog = (model, templete, ctrlName, cssClass='modal large') ->
-      d = $dialog.dialog(
-        modalFade: false,
-        dialogClass: cssClass
-      )
-      d.model = model
-      d.open(templete, ctrlName)
+    $scope.delete_model = (model) ->
+      $scope.openDialog($dialog, model,
+        'partials/base/delete_dialog.html', 'DeleteDialogCtrl',
+        'modal', 'delete model', 'models')
 ])

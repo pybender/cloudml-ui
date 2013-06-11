@@ -149,3 +149,52 @@ angular.module('app.controllers', ['app.config', ])
         $scope.$broadcast 'ObjectListCtrl:load:error', opts
       )
 ])
+
+
+.controller('DeleteDialogCtrl', [
+  '$scope'
+  '$location'
+  'dialog'
+
+  ($scope, $location, dialog) ->
+    $scope.resetError()
+    $scope.MESSAGE = dialog.action
+    $scope.model = dialog.model
+
+    $scope.close = ->
+      dialog.close()
+
+    $scope.delete = (result) ->
+      $scope.model.$delete().then (() ->
+        $scope.close()
+        $scope.$emit('modelDeleted', [$scope.model])
+        $scope.$broadcast('modelDeleted', [$scope.model])
+        $location.path dialog.path
+      ), ((opts) ->
+        $scope.setError(opts, dialog.action + ' ' + $scope.model.name)
+      )
+])
+
+.controller('BaseListCtrl', [
+  '$scope'
+  '$rootScope'
+
+($scope, $rootScope) ->
+  $scope.load = () ->
+    params = $.extend({'show': $scope.FIELDS}, $scope.kwargs || {})
+
+    $scope.MODEL.$loadAll(params).then ((opts) ->
+      $scope.objects = opts.objects
+    ), ((opts) ->
+      $scope.setError(opts, $scope.ACTION)
+    )
+
+  $scope.load()
+
+  $rootScope.$on('modelDeleted', () ->
+    $scope.load()
+  )
+  $rootScope.$on('modelCreated', () ->
+    $scope.load()
+  )
+])

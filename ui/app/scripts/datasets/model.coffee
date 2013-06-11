@@ -35,8 +35,9 @@ angular.module('app.datasets.model', ['app.config'])
         @$make_request(@BASE_API_URL, data, 'POST', {})
 
 
-      @$loadAll: (handler_id, opts) ->
-        if not handler_id
+      @$loadAll: (opts) ->
+        handler_id = opts.handler_id
+        if not handler_id?
           throw new Error "Import Handler is required to load datasets"
 
         resolver = (resp, Model) ->

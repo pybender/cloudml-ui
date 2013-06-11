@@ -10,6 +10,10 @@
         <i title="Load data" class="icon-tasks"></i>
         Import DataSet
       </button>
+      <button ng-click="delete(handler)" class="btn btn-danger">
+        <i title="Delete your handler. Be careful - you could not recover it!" class="icon-remove"></i>
+        Delete
+      </button>
     </div>
   </div>
 </h2>
@@ -51,33 +55,8 @@
 
   <div ng-show="action[0] == 'dataset'">
     <h3>DataSets</h3>
-    <div>
-        <table class="table table-striped">
-          <thead>
-              <tr>
-                <th>Name</th>
-                <th>Status</th>
-                <th>Import Parameters</th>
-                <th>Data</th>
-                <th>Created</th>
-                <th>Actions</th>
-              </tr>
-          </thead>
-          <tbody>
-            <tr ng-repeat="ds in datasets" ng-class="{error : ds.status=='Error', warning : ds.status=='Importing', success : ds.status =='Imported'}">
-              <td>{{ ds.name }}</td>
-              <td title="{{ ds.error }}">{{ ds.status }}</td>
-              <td><span class="value" ng-repeat="(key, val) in ds.import_params">{{ key }}={{ val }}</span></td>
-              <td>{{ ds.data }}</td>
-              <td>{{ ds.created_on|format_date }}</td>
-              <td>
-                <button ng-click="delete_dataset(ds)" class="btn btn-danger">
-                  <i title="Delete dataset. Be careful - you could not recover it!" class="icon-remove"></i>
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-    </div>  
+    <div ng-controller="DatasetListCtrl" ng-init="init(handler)">
+      <ng-include src="'/partials/datasets/list.html'"></ng-include>
+    </div>
   </div>
 </div>

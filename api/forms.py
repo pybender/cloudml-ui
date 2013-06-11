@@ -59,7 +59,9 @@ class BaseForm(object):
             if value:
                 self.cleaned_data[name] = value
             elif required:
-                raise ValidationError('%s is required' % name)
+                cleaned_value = self.cleaned_data.get(name)
+                if not cleaned_value:
+                    raise ValidationError('%s is required' % name)
 
         self.validate_obj()
         self._cleaned = True

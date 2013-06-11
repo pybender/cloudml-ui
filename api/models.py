@@ -1,4 +1,5 @@
 import json
+import os
 from datetime import datetime
 import cPickle as pickle
 from os.path import join, exists
@@ -89,6 +90,12 @@ class ImportHandler(Document):
         dataset.data = filename
         dataset.save(validate=True)
         return dataset
+
+    def delete(self):
+        datasets = app.db.DataSet.find({'import_handler_id': str(self._id)})
+        for ds in datasets:
+            ds.delete()
+        super(ImportHandler, self).delete()
 
     def __repr__(self):
         return '<Import Handler %r>' % self.name
@@ -298,6 +305,16 @@ class DataSet(Document):
         self.status = self.STATUS_ERROR
         if commit:
             self.save()
+
+    def delete(self):
+        super(DataSet, self).delete()
+        # TODO: check import handler type
+        data_folder = app.config['DATA_FOLDER']
+        filename = os.path.join(data_folder, self.data)
+        try:
+            os.remove(filename)
+        except OSError:
+            pass
 
     def save(self, *args, **kwargs):
         if self.status != self.STATUS_ERROR:

@@ -1,3 +1,4 @@
+<div ng-controller="SaveObjectCtl">
 <h2>
   Add New Import Handler
   <small>
@@ -7,36 +8,37 @@
 
 <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
 
-<form name="UploadImportHandlerForm" class="form-horizontal">
+<form name="Form" class="form-horizontal">
   <p class="lead">
     Please define name, type and upload json file with defined 
     import handler parameters.
   </p>
-  <div class="control-group" ng-class="{error: UploadImportHandlerForm.name.$invalid}">
+  <div class="control-group" ng-class="{error: Form.name.$invalid}">
     <label class="control-label">Name</label>
     <div class="controls">
-      <input type="text" name="name" ng-model="handler.name" required>
-      <span ng-show="UploadImportHandlerForm.name.$error.required" class="help-inline">Required</span>
+      <input type="text" name="name" ng-model="model.name" required>
+      <span ng-show="Form.name.$error.required" class="help-inline">Required</span>
       <span class="help-block">name should be without spaces</span>
     </div>
   </div>
- <div class="control-group" ng-class="{error: UploadImportHandlerForm.type.$invalid}">
+ <div class="control-group" ng-class="{error: Form.type.$invalid}">
     <label class="control-label">Type</label>
     <div class="controls">
-      <select ng-model="handler.type" required ng-options="value.name for value in types" ng-selected='types[0]'>
+      <select ng-model="model.type" required ng-options="value.name for value in types" ng-selected='types[0]'>
       </select>
-      <span ng-show="UploadImportHandlerForm.type.$error.required" class="help-inline">Required</span>
+      <span ng-show="Form.type.$error.required" class="help-inline">Required</span>
     </div>
   </div>
   <div class="control-group" ng-class="{error: !data}">
     <label class="control-label">JSON file</label>
     <div class="controls">
-      <input type="file" name="data" ng-model="handler.data" onchange="angular.element(this).scope().setDataFile(this)">
+      <input type="file" name="data" ng-model="model.data" onchange="angular.element(this).scope().readFile(this, 'data')">
       <span ng-show="!data" class="help-inline">Required</span>
       <span class="help-block">json file with import data details</span>
     </div>
   </div>
   <br />
   <a href="#/import_handlers" class="btn">Cancel</a>
-  <button ng-click="add()" ng-disabled="UploadImportHandlerForm.$invalid || !data" class="btn btn-primary">Add new import handler</button> <small>and start using it in your models</small>
+  <button ng-click="save(['name', 'data', 'type'])" ng-disabled="Form.$invalid || !data" class="btn btn-primary">Add new import handler</button> <small>and start using it in your models</small>
 </form>
+</div>

@@ -260,8 +260,7 @@ class ImportHandlerResource(BaseResource):
         return app.db.ImportHandler
 
     OBJECT_NAME = 'import_handler'
-    decorators = [crossdomain(origin='*')]
-    methods = ['GET', 'OPTIONS', 'PUT', 'POST']
+    methods = ('GET', 'OPTIONS', 'DELETE', 'POST', 'PUT')
     post_form = ImportHandlerAddForm
     put_form = ImportHandlerEditForm
     GET_ACTIONS = ('download', )
@@ -293,8 +292,7 @@ class DataSetResource(BaseResource):
         return app.db.DataSet
 
     OBJECT_NAME = 'dataset'
-    #decorators = [crossdomain(origin='*')]
-    methods = ('GET', 'OPTIONS', 'DELETE', 'POST' )
+    methods = ('GET', 'OPTIONS', 'DELETE', 'POST')
 
     def post(self, **kwargs):
         """
