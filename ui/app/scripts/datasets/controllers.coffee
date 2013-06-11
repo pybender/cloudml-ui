@@ -31,7 +31,7 @@ angular.module('app.datasets.controllers', ['app.config', ])
   ($scope, DataSet) ->
     if $scope.handler?
       DataSet.$loadAll(
-        $scope.handler._id,
+        handler_id: $scope.handler._id,
         status: 'Imported',
         show: 'name,_id'
       ).then ((opts) ->

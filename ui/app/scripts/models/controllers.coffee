@@ -168,7 +168,7 @@ angular.module('app.models.controllers', ['app.config', ])
 
     $scope.test_model = (model)->
       $scope.openDialog($dialog, model, 'partials/testresults/run_test.html',
-                        'TestDialogController')
+                        'TestDialogController', 'modal large')
 
     $scope.reload_model = (model)->
       model.$reload()

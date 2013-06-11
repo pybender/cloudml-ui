@@ -17,7 +17,7 @@
       <td>{{ test.created_on|format_date }}</td>
       <td><span class="value" ng-repeat="(key, val) in test.parameters">{{ key }}={{ val }}</span></td>
       <td>{{ test.accuracy.toFixed(4) }}</td>
-      <td><a href="#/models/{{ model.name }}/tests/{{ test.name }}/examples">{{ test.examples_count }}</a></td>
+      <td><a href="#{{ test.examplesUrl() }}">{{ test.examples_count }}</a></td>
       <td ng-controller="TestActionsCtrl">
         <div ng-init="init({test: test, model: model})">
         <button ng-click="delete_test(test)" class="btn btn-danger">
