@@ -2,6 +2,7 @@ import unittest
 import httplib
 import json
 import os
+import re
 from datetime import datetime
 from bson.objectid import ObjectId
 from celery.task.base import Task
@@ -53,8 +54,11 @@ class BaseTestCase(unittest.TestCase):
                             if field_type == datetime:
                                 doc[key] = datetime.now()
                             elif isinstance(field_type, DocumentProperties):
-                                relation = field_type
-                                # TODO:
+                                if val:
+                                    pattern = re.compile("<class '%s.(.*?)'>" % field_type.__module__)
+                                    model_name = pattern.findall(str(field_type))[0]
+                                    RelModel = getattr(app.db, model_name)
+                                    doc[key] = RelModel.find_one({'_id': ObjectId(val)})
 
                 collection.insert(documents)
 

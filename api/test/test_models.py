@@ -11,8 +11,8 @@ class ModelTests(BaseTestCase):
     Tests of the Models API.
     """
     MODEL_NAME = 'TrainedModel'
-    FIXTURES = ('models.json', 'tests.json', 'examples.json', 'datasets.json',
-                'weights.json', 'instances.json', 'importhandlers.json')
+    FIXTURES = ('importhandlers.json', 'models.json', 'tests.json', 'examples.json', 'datasets.json',
+                'weights.json', 'instances.json', )
     BASE_URL = '/cloudml/models/'
 
     def setUp(self):
@@ -263,6 +263,7 @@ trainer - 'module' object has no attribute 'FeatureTypeInstance'")
         url = self._get_url(id=self.model._id, action='train')
         data = {'start': '2012-12-03',
                 'end': '2012-12-04',
+                'category': 'smth',
                 'aws_instance': '5170dd3a106a6c1631000000'}
         resp = self.app.put(url, data=data)
         self.assertTrue(str(self.model._id) in resp.data, resp.data)

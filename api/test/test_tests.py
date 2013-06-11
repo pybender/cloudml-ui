@@ -7,8 +7,8 @@ from utils import BaseTestCase
 class TestTests(BaseTestCase):
     MODEL_NAME = 'TrainedModel'
     TEST_NAME = 'Test-1'
-    FIXTURES = ('models.json', 'tests.json', 'examples.json',
-                'instances.json', )
+    FIXTURES = ('importhandlers.json', 'models.json', 'tests.json',
+                'examples.json', 'instances.json', )
 
     def setUp(self):
         super(TestTests, self).setUp()
@@ -52,6 +52,7 @@ class TestTests(BaseTestCase):
         url = self._get_url()
         data = {'start': '2012-12-03',
                 'end': '2012-12-04',
+                'category': 'smth',
                 'aws_instance': '5170dd3a106a6c1631000000'}
         resp = self.app.post(url, data=data)
         self.assertEquals(resp.status_code, httplib.CREATED)
