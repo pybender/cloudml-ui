@@ -10,7 +10,7 @@ angular.module('app.models.controllers', ['app.config', ])
 
   ($scope, Model) ->
     $scope.MODEL = Model
-    $scope.FIELDS = 'created_on,error' + Model.MAIN_FIELDS
+    $scope.FIELDS = 'created_on,error,' + Model.MAIN_FIELDS
     $scope.ACTION = 'loading models'
 ])
 
