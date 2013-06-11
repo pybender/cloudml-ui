@@ -9,13 +9,9 @@ angular.module('app.models.controllers', ['app.config', ])
   'Model'
 
   ($scope, Model) ->
-    Model.$loadAll(
-      show: 'created_on,error' + Model.MAIN_FIELDS
-    ).then ((opts) ->
-      $scope.objects = opts.objects
-    ), ((opts) ->
-      $scope.setError(opts, 'loading models')
-    )
+    $scope.MODEL = Model
+    $scope.FIELDS = 'created_on,error' + Model.MAIN_FIELDS
+    $scope.ACTION = 'loading models'
 ])
 
 # Add new model controller
