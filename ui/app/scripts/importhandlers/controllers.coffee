@@ -82,6 +82,38 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
       )
 ])
 
+
+.controller('DeleteImportHandlerCtrl', [
+  '$scope'
+  '$location'
+  'dialog'
+  'Model'
+
+  ($scope, $location, dialog, Model) ->
+    $scope.resetError()
+    $scope.MESSAGE = dialog.action
+    $scope.model = dialog.model
+    $scope.path = dialog.path
+    $scope.action = dialog.action
+    $scope.extra_template = '/partials/import_handler/extra_delete.html'
+
+    $scope.loadModels = () ->
+      Model.$by_handler(
+        handler: $scope.model._id,
+        show: 'name,_id'
+      ).then ((opts) ->
+        $scope.umodels = opts.objects
+      ), ((opts) ->
+        $scope.setError(opts, 'loading models that use import handler')
+      )
+
+    $scope.loadModels()
+
+    $scope.close = ->
+      dialog.close()
+])
+
+
 .controller('ImportHandlerActionsCtrl', [
   '$scope'
   '$dialog'
@@ -92,7 +124,7 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
 
   $scope.delete = (handler) ->
     $scope.openDialog($dialog, handler,
-    'partials/base/delete_dialog.html', 'DeleteDialogCtrl',
+    'partials/base/delete_dialog.html', 'DeleteImportHandlerCtrl',
     "modal", "delete import handler", "/importhandlers")
 
 ])

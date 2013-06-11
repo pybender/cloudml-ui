@@ -180,6 +180,6 @@ angular.module('app.models.controllers', ['app.config', ])
 
     $scope.delete_model = (model) ->
       $scope.openDialog($dialog, model,
-        'partials/base/delete_dialog.html', 'DeleteDialogCtrl',
+        'partials/base/delete_dialog.html', 'DialogCtrl',
         'modal', 'delete model', 'models')
 ])

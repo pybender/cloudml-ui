@@ -150,8 +150,25 @@ angular.module('app.controllers', ['app.config', ])
       )
 ])
 
+.controller('BaseDeleteCtrl', [
+  '$scope'
+  '$location'
 
-.controller('DeleteDialogCtrl', [
+  ($scope, $location) ->
+    $scope.resetError()
+
+    $scope.delete = (result) ->
+      $scope.model.$delete().then (() ->
+        $scope.close()
+        $scope.$emit('modelDeleted', [$scope.model])
+        $scope.$broadcast('modelDeleted', [$scope.model])
+        $location.path $scope.path
+      ), ((opts) ->
+        $scope.setError(opts, $scope.action + ' ' + $scope.model.name)
+      )
+])
+
+.controller('DialogCtrl', [
   '$scope'
   '$location'
   'dialog'
@@ -160,19 +177,11 @@ angular.module('app.controllers', ['app.config', ])
     $scope.resetError()
     $scope.MESSAGE = dialog.action
     $scope.model = dialog.model
+    $scope.path = dialog.path
+    $scope.action = dialog.action
 
     $scope.close = ->
       dialog.close()
-
-    $scope.delete = (result) ->
-      $scope.model.$delete().then (() ->
-        $scope.close()
-        $scope.$emit('modelDeleted', [$scope.model])
-        $scope.$broadcast('modelDeleted', [$scope.model])
-        $location.path dialog.path
-      ), ((opts) ->
-        $scope.setError(opts, dialog.action + ' ' + $scope.model.name)
-      )
 ])
 
 .controller('BaseListCtrl', [

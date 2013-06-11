@@ -56,6 +56,18 @@ test_import_handler.name'
       $reload: =>
         @$make_request("#{@BASE_API_URL}#{@_id}/action/reload/", {}, "GET", {})
 
+      @$by_handler: (opts) =>
+        resolver = (resp, Model) ->
+          {
+            total: resp.data.found
+            objects: (
+              new Model(_.extend(obj, {loaded: true})) \
+              for obj in eval("resp.data.#{Model.prototype.API_FIELDNAME}s"))
+            _resp: resp
+          }
+        @$make_all_request("#{@prototype.BASE_API_URL}action/by_importhandler/",
+                           resolver, opts)
+
       $train: (opts={}) =>
         data = {}
         for key, val of opts

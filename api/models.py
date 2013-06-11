@@ -95,6 +95,24 @@ class ImportHandler(Document):
         datasets = app.db.DataSet.find({'import_handler_id': str(self._id)})
         for ds in datasets:
             ds.delete()
+
+        expr = {'$or': [{'test_import_handler._id': self._id},
+                        {'train_import_handler._id': self._id}]}
+        models = app.db.Model.find(expr)
+
+        def unset(model, handler_type='train'):
+            handler = getattr(model, '%s_import_handler' % handler_type)
+            if handler['_id'] == self._id:
+                setattr(model, '%s_import_handler' % handler_type, None)
+                model.changed = True
+
+        for model in models:
+            model.changed = False
+            unset(model, 'train')
+            unset(model, 'test')
+            if model.changed:
+                model.save()
+
         super(ImportHandler, self).delete()
 
     def __repr__(self):

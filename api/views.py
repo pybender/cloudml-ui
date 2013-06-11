@@ -73,7 +73,7 @@ class Models(BaseResource):
     """
     Models API methods
     """
-    GET_ACTIONS = ('download', 'reload' )
+    GET_ACTIONS = ('download', 'reload', 'by_importhandler')
     PUT_ACTIONS = ('train', )
     FILTER_PARAMS = (('status', str), ('comparable', int))
     DEFAULT_FIELDS = ('_id', 'name')
@@ -110,6 +110,16 @@ class Models(BaseResource):
                                         **kwargs)
         fill_model_parameter_weights.delay(str(model._id), True)
         return self._render({self.OBJECT_NAME: model._id})
+
+    def _get_by_importhandler_action(self, **kwargs):
+        parser_params = self.GET_PARAMS + (('handler', str), )
+        params = self._parse_parameters(parser_params)
+        fields = self._get_fields_to_show(params)
+        _id = ObjectId(params.get('handler'))
+        expr = {'$or': [{'test_import_handler._id': _id},
+                        {'train_import_handler._id': _id}]}
+        models = self.Model.find(expr, fields)
+        return self._render({"%ss" % self.OBJECT_NAME: models})
 
     def _get_download_action(self, **kwargs):
         """

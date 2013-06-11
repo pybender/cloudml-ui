@@ -1,3 +1,4 @@
+<div ng-controller="BaseDeleteCtrl">
 <div class="modal-header">
     <button ng-click="close()" class="close" data-dismiss="modal">×</button>
 <h3>{{ MESSAGE|capfirst }}</h3>
@@ -7,8 +8,13 @@
 </div>
 <div class="modal-body">
     <div class='alert alert-error' ng-show='err'>{{ err }}</div>
+    <div class='alert alert-warning' ng-show='warn'>{{ warn }}</div>
+    <div ng-show="extra_template">
+        <ng-include src="extra_template"></ng-include>
+    </div>
 </div>
 <div class="modal-footer">
 <button ng-click="close()" class="btn">Cancel</button>
 <button ng-click="delete()" class="btn btn-primary">Delete</button>
+</div>
 </div>

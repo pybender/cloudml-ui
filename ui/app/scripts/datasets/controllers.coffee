@@ -19,7 +19,7 @@ angular.module('app.datasets.controllers', ['app.config', ])
 
     $scope.delete = (dataset)->
       $scope.openDialog($dialog, dataset,
-        'partials/base/delete_dialog.html', 'DeleteDialogCtrl',
+        'partials/base/delete_dialog.html', 'DialogCtrl',
         "modal", "delete dataset", $scope.handler.objectUrl())
 ])
 
