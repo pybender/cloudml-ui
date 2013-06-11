@@ -11,7 +11,7 @@ class ImportHandlersTests(BaseTestCase):
     Tests of the ImportHandlers API.
     """
     HANDLER_ID = '5170dd3a106a6c1631000000'
-    FIXTURES = ('importhandlers.json', )
+    FIXTURES = ('datasets.json', 'importhandlers.json', )
     BASE_URL = '/cloudml/importhandlers/'
     RESOURCE = ImportHandlerResource
 
@@ -32,6 +32,16 @@ class ImportHandlersTests(BaseTestCase):
         handler = self.Model.find_one({'_id': ObjectId(self.HANDLER_ID)})
         self.assertEquals(handler.name, data['name'])
 
+    def test_delete(self):
+        datasets = self.db.DataSet.find({'import_handler_id': self.HANDLER_ID})
+        self.assertTrue(datasets.count(), 'Invalid fixtures')
+
+        url = self._get_url(id=self.obj._id)
+        resp = self.app.delete(url)
+        self.assertEquals(resp.status_code, httplib.NO_CONTENT)
+        self.assertFalse(self.Model.find_one({'_id': ObjectId(self.HANDLER_ID)}))
+        datasets = self.db.DataSet.find({'import_handler_id': self.HANDLER_ID})
+        self.assertFalse(datasets.count(), 'DataSets should be removed')
 
 
 #     def test_post_with_invalid_import_handler(self):

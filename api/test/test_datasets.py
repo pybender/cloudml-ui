@@ -8,7 +8,7 @@ class DataSetsTests(BaseTestCase):
     """
     HANDLER_ID = '5170dd3a106a6c1631000000'
     DS_ID = '5170dd3a106a6c1631000000'
-    FIXTURES = ('importhandlers.json', 'datasets.json' )
+    FIXTURES = ('importhandlers.json', 'datasets.json')
     RESOURCE = DataSetResource
 
     def setUp(self):
