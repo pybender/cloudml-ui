@@ -72,10 +72,10 @@
   <li  ng-class="{active: action[0] == 'model'}">
     <a ng-click="setSection(['model', 'details'])">Details</a> 
   </li>
-  <li  ng-class="{active: action[0] == 'log'}"><a ng-click="setSection(['log', 'details'])">Logs</a></li>
   <li ng-class="{active: action[0] == 'weights'}"><a  ng-click="setSection(['weights', 'columns'])">Parameters Weights</a></li>
   <li ng-class="{active: action[0] == 'test'}"><a ng-click="setSection(['test', 'list'])">Tests</a></li>
   <li ng-class="{active: action[0] == 'features'}"><a ng-click="setSection(['features', 'file'])">Features</a></li>
+  <li ng-class="{active: action[0] == 'log'}"><a ng-click="setSection(['log', 'details'])">Logs</a></li>
 </ul>
  
 <div class="tab-content" ng-show="model.loaded">
@@ -118,11 +118,14 @@
     </div>
   </div>
 
-  <div ng-show="action[0] == 'log'">
-      <h4>Log Messages:</h4>
-      <div class="logging">
-        <div ng-repeat="msg in log_messages">{{ msg }}</div>
+  <div ng-show="action[0] == 'log'" ng-controller="LogMessageListCtrl" ng-init="init('trainmodel_log', model._id)">
+    <div class="row" ng-controller="BaseListCtrl">
+      <div class="span6">
+        <p ng-repeat="msg in objects">
+          <ng-include src="'/partials/logmessages/item.html'"></ng-include>
+        </p>
       </div>
+    </div>
   </div>
 
   <div ng-show="action[0] == 'test'" id="tests">

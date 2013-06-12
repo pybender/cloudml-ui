@@ -6,19 +6,13 @@
 
 <alert-message ng-show="test.error" class="alert-error" msg="{{ test.error }}" unsafe></alert-message>
 
-<div ng-show="test.loaded && showLog">
-    <h4>Log Messages:</h4>
-    <div class="logging">
-      <div ng-repeat="msg in log_messages">{{ msg }}</div>
-    </div>
-</div>
-
-<div ng-show="test.status == 'Completed'">
+<div>
   <ul class="nav nav-tabs" id="tabs">
-    <li ng-class="{active: action[0] == 'metrics'}"><a ng-click="setSection(['metrics', 'accuracy'])">Metrics</a></li>
-    <li ng-class="{active: action[0] == 'matrix'}"><a ng-click="setSection(['matrix', 'confusion'])">Confusion Matrix</a></li>
-    <li ng-show="test.status == 'Completed'" ng-class="{active: action[0] == 'examples'}"><a ng-click="setSection(['examples', 'list'])">Examples</a></li>
+    <li ng-show="test.status == 'Completed'" ng-class="{active: action[0] == 'metrics'}"><a ng-click="setSection(['metrics', 'accuracy'])">Metrics</a></li>
+    <li ng-show="test.status == 'Completed'" ng-class="{active: action[0] == 'matrix'}"><a ng-click="setSection(['matrix', 'confusion'])">Confusion Matrix</a></li>
+    <li ng-show="test.status == 'Completed'" ng-show="test.status == 'Completed'" ng-class="{active: action[0] == 'examples'}"><a ng-click="setSection(['examples', 'list'])">Examples</a></li>
     <li ng-class="{active: action[0] == 'about'}"><a ng-click="setSection(['about', 'details'])">About</a></li>
+    <li ng-class="{active: action[0] == 'logs'}"><a ng-click="setSection(['logs', 'list'])">Logs</a></li>
   </ul>
 
     <div class="tab-content">
@@ -78,6 +72,16 @@
                 <h4>Confusion Matrix</h4>
                 <confusion-matrix matrix=test.metrics.confusion_matrix url=test.examplesUrl()></confusion-matrix>
             </div>
+        </div>
+      </div>
+
+      <div ng-show="action[0] == 'logs'" ng-controller="LogMessageListCtrl" ng-init="init('runtest_log', test._id)">
+        <div class="row" ng-controller="BaseListCtrl">
+          <div class="span6">
+            <p ng-repeat="msg in objects">
+              <ng-include src="'/partials/logmessages/item.html'"></ng-include>
+            </p>
+          </div>
         </div>
       </div>
 

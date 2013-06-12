@@ -22,7 +22,9 @@ class LogMessage(Document):
         'type': basestring,
         'params': dict,
         'content': basestring,
+        'created_on': datetime,
     }
+    default_values = {'created_on': datetime.utcnow}
 
 
 @connection.register

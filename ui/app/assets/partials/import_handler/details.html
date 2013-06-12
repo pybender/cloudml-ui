@@ -46,11 +46,14 @@
     <textarea name="data" ui-codemirror="{ mode: {name: 'javascript', json: true} }" ng-model="handler.data"> </textarea>
   </div>
 
-  <div ng-show="action[0] == 'log'">
-      <h4>Log Messages:</h4>
-      <div class="logging">
-        <div ng-repeat="msg in log_messages">{{ msg }}</div>
+  <div ng-show="action[0] == 'log'" ng-controller="LogMessageListCtrl" ng-init="init('importdata_log', handler._id)">
+    <div class="row" ng-controller="BaseListCtrl">
+      <div class="span6">
+        <p ng-repeat="msg in objects">
+          <ng-include src="'/partials/logmessages/item.html'"></ng-include>
+        </p>
       </div>
+    </div>
   </div>
 
   <div ng-show="action[0] == 'dataset'">

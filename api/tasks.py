@@ -56,7 +56,9 @@ def train_model(dataset_id, model_id):
     Train new model celery task.
     """
     init_logger('trainmodel_log', obj=model_id)
-
+    # Removing old log messages
+    app.db.LogMessage.collection.remove({'type': 'trainmodel_log',
+                                         'params.obj': model_id})
     try:
         model = app.db.Model.find_one({'_id': ObjectId(model_id)})
         dataset = app.db.DataSet.find_one({'_id': ObjectId(dataset_id)})

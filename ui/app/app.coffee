@@ -29,6 +29,8 @@ App = angular.module('app', [
   'app.weights.controllers'
   'app.awsinstances.model'
   'app.awsinstances.controllers'
+  'app.logmessages.model'
+  'app.logmessages.controllers'
 ])
 App.config([
   '$routeProvider'

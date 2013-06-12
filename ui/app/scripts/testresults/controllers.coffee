@@ -71,19 +71,6 @@ without test id and model id"
       _id: $routeParams.id
     })
 
-  $scope.$watch 'test.status', (status) ->
-    if status in ['Queued', 'In Progress', 'Error']
-      $scope.showLog = true
-      $scope.log_messages = []
-      params = "channel=runtest_log&test=" + $scope.test._id
-      log_sse = $scope.getEventSourceTest(params=params)
-      handleCallback = (msg) ->
-        $scope.$apply(() ->
-          if msg?
-            data = JSON.parse(msg.data)
-            $scope.log_messages.push(data['data']['msg']))
-      log_sse.addEventListener('message', handleCallback)
-
   $scope.load = (fields, section, callback) ->
     $scope.test.$load(
       show: fields
@@ -124,7 +111,7 @@ metrics.roc_curve,metrics.roc_auc'
         $scope.load(extra_fields + ',' + Test.MAIN_FIELDS, name, cb)
         $scope.LOADED_SECTIONS.push 'main'
 
-  $scope.initSections($scope.goSection, defaultAction='metrics:accuracy')
+  $scope.initSections($scope.goSection, defaultAction='about:details')
 ])
 
 .controller('TestActionsCtrl', [

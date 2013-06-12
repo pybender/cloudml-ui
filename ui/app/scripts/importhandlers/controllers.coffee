@@ -40,7 +40,8 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
       )
 
     $scope.initSections($scope.go)
-    $scope.initLogMessages("channel=importdata_log&model=" + $scope.handler._id)
+    #$scope.initLogMessages("channel=importdata_log&model=" +
+    #$scope.handler._id)
 ])
 
 

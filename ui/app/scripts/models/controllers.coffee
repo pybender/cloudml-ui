@@ -49,19 +49,6 @@ angular.module('app.models.controllers', ['app.config', ])
     $scope.model = new Model({_id: $routeParams.id})
     $scope.LOADED_SECTIONS = []
 
-    $scope.initLog = () ->
-      $scope.log_messages = []
-      params = "channel=trainmodel_log&model=" + $scope.model._id
-      log_sse = $scope.getEventSource(params=params)
-      handleCallback = (msg) ->
-        $scope.$apply(() ->
-          if msg?
-            data = JSON.parse(msg.data)
-            $scope.log_messages.push(data['data']['msg']))
-      log_sse.addEventListener('message', handleCallback)
-
-    $scope.initLog()
-
     $scope.load = (fields, section) ->
       $scope.model.$load(
         show: fields
