@@ -57,8 +57,9 @@ angular.module('app.testresults.controllers', ['app.config', ])
   '$routeParams'
   'TestResult'
   '$location'
+  '$rootScope'
 
-($scope, $routeParams, Test, $location) ->
+($scope, $routeParams, Test, $location, $rootScope) ->
   $scope.LOADED_SECTIONS = []
   if not $scope.test
     if not ($routeParams.model_id  and $routeParams.id)

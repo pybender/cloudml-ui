@@ -36,7 +36,7 @@ angular.module('app.testresults.model', ['app.config'])
         return "#{settings.apiUrl}models/#{model_id}/tests/"
 
       examplesUrl: =>
-        return "#{@BASE_UI_URL}#{@_id}/examples"
+        return "#{@BASE_UI_URL}#{@_id}?action=examples:list"
 
       avaragePrecisionUrl: =>
         return "#{@BASE_UI_URL}#{@_id}/grouped_examples"

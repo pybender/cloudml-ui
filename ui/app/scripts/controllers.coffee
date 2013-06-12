@@ -106,7 +106,8 @@ angular.module('app.controllers', ['app.config', ])
 
   ($scope) ->
     $scope.pages = 0
-    $scope.page = 1
+    if !$scope.page?
+      $scope.page = 1
     $scope.total = 0
     $scope.per_page = 20
 

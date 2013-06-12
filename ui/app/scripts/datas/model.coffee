@@ -39,6 +39,7 @@ angular.module('app.datas.model', ['app.config'])
             page: resp.data.page
             total: resp.data.total
             per_page: resp.data.per_page
+            pages: resp.data.pages
             objects: (
               new Model(_.extend(obj, extra_data)) \
               for obj in eval("resp.data.#{Model.prototype.API_FIELDNAME}s"))
