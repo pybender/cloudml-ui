@@ -75,6 +75,7 @@ def train_model(dataset_id, model_id):
             makedirs(path)
         with open(join(path, dataset.data), 'r') as train_fp:
             trainer.train(streamingiterload(train_fp))
+        train_fp.close()
         trainer.clear_temp_data()
         model.status = model.STATUS_TRAINED
         model.set_trainer(trainer)

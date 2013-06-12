@@ -207,6 +207,7 @@ class Model(Document):
             makedirs(path)
         with open(join(path, dataset.data), 'r') as train_fp:
             metrics = trainer.test(streamingiterload(train_fp), callback=callback)
+        train_fp.closed
         raw_data = trainer._raw_data
         trainer.clear_temp_data()
         return metrics, raw_data
