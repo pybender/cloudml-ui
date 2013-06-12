@@ -98,6 +98,12 @@ angular.module('app.awsinstances.controllers', ['app.config', ])
       show: 'name,_id,ip,is_default'
     ).then ((opts) ->
       $scope.instances = opts.objects
+      $scope.default_instance = null
+      for inst in $scope.instances
+        if inst.is_default
+          $scope.parameters.aws_instance = inst._id
+          break
+
     ), ((opts) ->
       $scope.err = $scope.setError(opts, 'loading instances')
     )

@@ -5,7 +5,7 @@
   </div>
 
   <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
-  <alert-message ng-show="model.status == 'Trained'" class="alert-warning" msg='Be carefull. All model metadata will be removed after re-trainging!' unsafe></alert-message>
+  <alert-message ng-show="model.status == 'Trained'" class="alert-warning" msg='Be carefull. All model metadata will be removed while re-training!' unsafe></alert-message>
 
   <div class="modal-body">
     <alert-message ng-hide="handler" class="alert-error" msg="Please define Train Import Handler in model details before!" unsafe></alert-message>
