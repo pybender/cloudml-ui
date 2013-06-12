@@ -99,65 +99,68 @@ def fill_model_parameter_weights(model_id, reload=False):
     """
     init_logger('trainmodel_log', obj=model_id)
     logging.info("Starting to fill model weights")
-    model = app.db.Model.find_one({'_id': ObjectId(model_id)})
-    if model is None:
-        raise ValueError('Model not found: %s' % model_id)
+    try:
+        model = app.db.Model.find_one({'_id': ObjectId(model_id)})
+        if model is None:
+            raise ValueError('Model not found: %s' % model_id)
 
-    weights = model.get_trainer().get_weights()
-    positive = weights['positive']
-    negative = weights['negative']
-    if reload:
-        params = {'model_id': model_id}
-        app.db.WeightsCategory.collection.remove(params)
-        app.db.Weight.collection.remove(params)
-    weights = app.db.Weight.find({'model_id': model_id})
-    count = weights.count()
-    if count > 0:
-        raise InvalidOperationError('Weights for model %s already \
-filled: %s' % (model_id, count))
+        weights = model.get_trainer().get_weights()
+        positive = weights['positive']
+        negative = weights['negative']
+        if reload:
+            params = {'model_id': model_id}
+            app.db.WeightsCategory.collection.remove(params)
+            app.db.Weight.collection.remove(params)
+        weights = app.db.Weight.find({'model_id': model_id})
+        count = weights.count()
+        if count > 0:
+            raise InvalidOperationError('Weights for model %s already \
+    filled: %s' % (model_id, count))
 
-    from helpers.weights import calc_weights_css
-    positive_weights = calc_weights_css(positive, 'green')
-    negative_weights = calc_weights_css(negative, 'red')
-    weight_list = positive_weights + negative_weights
-    weight_list.sort(key=lambda a: abs(a['weight']))
-    weight_list.reverse()
+        from helpers.weights import calc_weights_css
+        positive_weights = calc_weights_css(positive, 'green')
+        negative_weights = calc_weights_css(negative, 'red')
+        weight_list = positive_weights + negative_weights
+        weight_list.sort(key=lambda a: abs(a['weight']))
+        weight_list.reverse()
 
-    # Adding weights and weights categories to db
-    category_names = []
-    for weight in weight_list:
-        name = weight['name']
-        splitted_name = name.split('->')
-        long_name = ''
-        count = len(splitted_name)
-        for i, sname in enumerate(splitted_name):
-            parent = long_name
-            long_name = '%s.%s' % (long_name, sname) \
-                        if long_name else sname
-            params = {'model_name': model.name,
-                      'model_id': model_id,
-                      'parent': parent,
-                      'short_name': sname}
-            if i == (count - 1):
-                params.update({'name': weight['name'],
-                               'value': weight['weight'],
-                               'is_positive': bool(weight['weight'] > 0),
-                               'css_class': weight['css_class']})
-                weight = app.db.Weight(params)
-                weight.save(validate=True, check_keys=False, safe=False)
-            else:
-                if sname not in category_names:
-                    # Adding a category, if it has not already added
-                    category_names.append(sname)
-                    params.update({'name': long_name})
-                    category = app.db.WeightsCategory(params)
-                    category.save(validate=True, check_keys=False, safe=False)
+        # Adding weights and weights categories to db
+        category_names = []
+        for weight in weight_list:
+            name = weight['name']
+            splitted_name = name.split('->')
+            long_name = ''
+            count = len(splitted_name)
+            for i, sname in enumerate(splitted_name):
+                parent = long_name
+                long_name = '%s.%s' % (long_name, sname) \
+                            if long_name else sname
+                params = {'model_name': model.name,
+                          'model_id': model_id,
+                          'parent': parent,
+                          'short_name': sname}
+                if i == (count - 1):
+                    params.update({'name': weight['name'],
+                                   'value': weight['weight'],
+                                   'is_positive': bool(weight['weight'] > 0),
+                                   'css_class': weight['css_class']})
+                    weight = app.db.Weight(params)
+                    weight.save(validate=True, check_keys=False, safe=False)
+                else:
+                    if sname not in category_names:
+                        # Adding a category, if it has not already added
+                        category_names.append(sname)
+                        params.update({'name': long_name})
+                        category = app.db.WeightsCategory(params)
+                        category.save(validate=True, check_keys=False, safe=False)
 
-    model.weights_synchronized = True
-    model.save()
-    msg = 'Model %s parameters weights was added to db: %s' % \
-        (model.name, len(weight_list))
-    logging.info(msg)
+        model.weights_synchronized = True
+        model.save()
+        msg = 'Model %s parameters weights was added to db: %s' % \
+            (model.name, len(weight_list))
+        logging.info(msg)
+    except Exception, exc:
+        logging.error(exc)
     return msg
 
 
