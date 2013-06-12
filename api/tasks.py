@@ -97,6 +97,7 @@ def fill_model_parameter_weights(model_id, reload=False):
     """
     Adds model parameters weights to db.
     """
+    init_logger('trainmodel_log', obj=model_id)
     logging.info("Starting to fill model weights")
     model = app.db.Model.find_one({'_id': ObjectId(model_id)})
     if model is None:

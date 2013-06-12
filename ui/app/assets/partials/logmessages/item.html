@@ -1,10 +1,3 @@
 <p>
-  <div>{{ msg.content }}</div>
-  <div>
-    <i class="icon-calendar"></i>
-    created on <span class="badge badge-info">{{ msg.created_on }}</span>
-    <i class="icon-status"></i> level
-    <span class="badge badge-{{ msg.level.toLowerCase() }}">{{ msg.level }}</span>
-    <span class="badge">{{ msg.type }}</span>
-  </div>
+  <span class="badge badge-info">{{ msg.created_on }}</span> {{ msg.content }}
 </p>

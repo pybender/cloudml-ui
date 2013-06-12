@@ -35,8 +35,12 @@ class LogMessageHandler(logging.Handler):
         self.log_type = log_type
 
     def emit(self, record):
+        content = self.format(record)
+        if 'DeprecationWarning' in content:
+            return
+
         msg = app.db.LogMessage()
-        msg['content'] = self.format(record)
+        msg['content'] = content
         msg['type'] = self.log_type
         msg['params'] = self.params
         msg['level'] = record.levelname
@@ -51,6 +55,6 @@ def init_logger(name, **kwargs):
     handler.setFormatter(formatter)
     logger.handlers = []
     logger.addHandler(handler)
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.DEBUG)
     logger.propagate = True
     return logger
