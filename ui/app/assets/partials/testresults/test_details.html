@@ -1,14 +1,4 @@
-<h2>
-    {{ test.name|capfirst }} Details
-    <div class="actions">
-        <a ng-show="test.status == 'Completed'" class="btn" href="#{{ test.examplesUrl() }}">
-            <i class="status-icon icon-search"></i><small> Browse examples</small>
-          </a>
-        <a ng-show="test.status == 'Completed'" class="btn" href="#{{ test.avaragePrecisionUrl() }}">
-            <i class="status-icon icon-search"></i><small> Average Precision</small>
-          </a>
-    </div>
-</h2>
+<h2>{{ test.name|capfirst }} Details</h2>
 
 <div ng-hide="test.loaded">Loading...</div>
 
@@ -24,16 +14,17 @@
 </div>
 
 <div ng-show="test.status == 'Completed'">
-    <ul class="nav nav-tabs" id="tabs">
-      <li ng-class="{active: action[0] == 'model'}"><a ng-click="setSection(['model', 'details'])">Details</a></li>
-      <li ng-class="{active: action[0] == 'curves'}"><a ng-click="setSection(['curves', 'show'])">ROC and Precision-Recall</a></li>
-      <li ng-class="{active: action[0] == 'matrix'}"><a ng-click="setSection(['matrix', 'confusion'])">Confusion Matrix</a></li>
-    </ul>
+  <ul class="nav nav-tabs" id="tabs">
+    <li ng-class="{active: action[0] == 'metrics'}"><a ng-click="setSection(['metrics', 'accuracy'])">Metrics</a></li>
+    <li ng-class="{active: action[0] == 'matrix'}"><a ng-click="setSection(['matrix', 'confusion'])">Confusion Matrix</a></li>
+    <li ng-show="test.status == 'Completed'" ng-class="{active: action[0] == 'examples'}"><a ng-click="setSection(['examples', 'list'])">Examples</a></li>
+    <li ng-class="{active: action[0] == 'about'}"><a ng-click="setSection(['about', 'details'])">About</a></li>
+  </ul>
 
     <div class="tab-content">
-      <div  ng-show="action[0] == 'model'">
+      <div ng-show="action[0] == 'about'">
         <div class="row">
-            <div class="span12">
+            <div class="span6">
                 <div>
                     Import parameters:
                     <span class="value">{{ test.parameters }}</span>
@@ -41,18 +32,11 @@
                 <div>
                     Classes Set:
                     <span class="value">
-                        <span ng-repeat='cls in test.classes_set'><span class="label">{{ cls }}</span> 
-                        </span> 
+                        <span ng-repeat='cls in test.classes_set'><span class="label">{{ cls }}</span> </span> 
                     </span>
                 </div>
                 <div>
-                    Created at:
-                    <span class="value">
-                        {{ test.created_on|format_date }}
-                    </span>
-                </div>
-                <div>
-                    Classification Accuracy: <span class="value">{{ test.accuracy.toFixed(4) }}</span>
+                    Created at: <span class="value">{{ test.created_on|format_date }}</span>
                 </div>
                 <div>
                     Examples count: <span class="value">{{ test.examples_count }}</span>
@@ -60,24 +44,39 @@
             </div>
         </div>
       </div>
-      <div ng-show="action[0] == 'curves'">
-        <div class="row">
-          <div class="span6">
-            <h4>Receiver operating characteristic</h4>
-            <p>The Area Under an ROC Curve: 
-                <span>{{ test.metrics.roc_auc.toFixed(4) }}</span>
-            </p>
-            <sc-curves xlabel="False-positive rate" ylabel="True-positive rate" curves-dict="rocCurve" show-line="1" width="500"></sc-curves>
-          </div>
-          <div class="span6">
-            <h4>Precision-Recall</h4>
-            <sc-curves xlabel="Recall" ylabel="Precision" curves-dict="prCurve" width="500"></sc-curves>
+
+      <div ng-show="action[0] == 'metrics'">
+        <div class="actions"><a ng-show="test.status == 'Completed'" class="btn" href="#{{ test.avaragePrecisionUrl() }}"><i class="status-icon icon-search"></i> Average precision</a></div>
+        <p class="switcher">
+          <b>Switch View: </b>
+          <a ng-class="{active: action[1] == 'accuracy'}" ng-click="setSection(['metrics', 'accuracy'])">Accuracy</a> | 
+          <a ng-class="{active: action[1] == 'roc_curve'}" ng-click="setSection(['metrics', 'roc_curve'])">ROC curve</a> | 
+          <a ng-class="{active: action[1] == 'precision_recal'}" ng-click="setSection(['metrics', 'precision_recal'])">Precision recall</a>
+        </p>
+        <div ng-show="action[1] == 'accuracy'">
+          <div>
+              Classification Accuracy: <span class="value">{{ test.accuracy.toFixed(4) }}</span>
           </div>
         </div>
-
+        <div ng-show="action[1] == 'roc_curve'">
+          <h4>Receiver operating characteristic</h4>
+          <p>The Area Under an ROC Curve: 
+              <span>{{ test.metrics.roc_auc.toFixed(4) }}</span>
+          </p>
+          <sc-curves xlabel="False-positive rate" ylabel="True-positive rate" curves-dict="rocCurve" show-line="1" width="500"></sc-curves>
+        </div>
+        <div ng-show="action[1] == 'precision_recal'">
+          <h4>Precision-Recall</h4>
+          <sc-curves xlabel="Recall" ylabel="Precision" curves-dict="prCurve" width="500"></sc-curves>
+        </div>
       </div>
 
-    <div  ng-show="action[0] == 'matrix'">
+      <div ng-show="action[0] == 'examples'" ng-controller="TestExamplesCtrl" ng-init="init(test)">
+        <h3>Examples List</h3>
+        <ng-include src="'/partials/examples/example_list.html'"></ng-include>
+      </div>
+
+      <div ng-show="action[0] == 'matrix'">
         <div class="row">
             <div class="span6">
                 <h4>Confusion Matrix</h4>

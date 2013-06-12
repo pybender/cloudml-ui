@@ -13,9 +13,6 @@ angular.module('app.datas.controllers', ['app.config', ])
   'TestResult'
 
 ($scope, $routeParams, $location, Data, Model, Test) ->
-  if not ($routeParams.model_id  and $routeParams.test_id)
-      throw new Error "Can't initialize examples list controller
-without test id and model id"
   $scope.filter_opts = $location.search() # Used in ObjectListCtrl.
   $scope.simple_filters = {} # Filters by label and pred_label
   $scope.data_filters = [] # Filters by data_input.* fields
@@ -25,30 +22,21 @@ without test id and model id"
       $scope.data_filters.push(item)
     else
       $scope.simple_filters[key] = val
-  
-  Data.$loadFieldList($routeParams.model_id,
-                      $routeParams.test_id).then ((opts) ->
-    $scope.fields = opts.fields
-  ), ((opts) ->
-    $scope.setError(opts, 'loading data field list')
-  )
 
-  $scope.test = new Test({
-    model_id: $routeParams.model_id,
-    _id: $routeParams.test_id
-  })
-  $scope.test.$load(
-      show: 'name'
-  )
+  $scope.init = (test) ->
+    $scope.test = test
+    Data.$loadFieldList(test.model_id, test._id).then ((opts) ->
+      $scope.fields = opts.fields
+    ), ((opts) ->
+      $scope.setError(opts, 'loading data field list')
+    )
 
-  $scope.model = new Model({_id: $routeParams.model_id})
-  $scope.model.$load(
-      show: 'name,labels'
-  ).then (->
-    $scope.labels = $scope.model.labels
-  ), ((opts) ->
-    $scope.setError(opts, 'loading model')
-  )
+    $scope.model = new Model({_id: $scope.test.model_id})
+    $scope.model.$load(show: 'name,labels').then (->
+      $scope.labels = $scope.model.labels
+    ), ((opts) ->
+      $scope.setError(opts, 'loading model')
+    )
 
   $scope.loadDatas = () ->
     (opts) ->
@@ -56,8 +44,7 @@ without test id and model id"
       delete opts.filter_opts
       show = 'id,name,label,pred_label,title, probs'
       opts = _.extend({show: show}, opts, filter_opts)
-      Data.$loadAll($routeParams.model_id, $routeParams.test_id,
-                    opts)
+      Data.$loadAll($scope.test.model_id, $scope.test._id,opts)
 
   $scope.addFilter = () ->
     $scope.data_filters.push({name: '', value: ''})

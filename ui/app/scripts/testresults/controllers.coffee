@@ -95,32 +95,39 @@ without test id and model id"
       )
 
   $scope.goSection = (section) ->
-    name = section[0]
+    section_name = section[0]
+    subsection_name = section[1]
+    name = section_name + '-' + subsection_name
     cb = null
     if name not in $scope.LOADED_SECTIONS
       extra_fields = ''
-      switch name
-        when 'model'
-          extra_fields = 'classes_set,created_on,accuracy,
-parameters,error,examples_count'
-        when 'curves'
-          extra_fields = 'metrics.roc_curve,metrics.precision_recall_curve,
-metrics.roc_auc'
-          cb = () =>
-            $scope.rocCurve = {'ROC curve': $scope.test.metrics.roc_curve}
-            pr = $scope.test.metrics.precision_recall_curve
-            $scope.prCurve = {'Precision-Recall curve': [pr[1], pr[0]]}
+      switch section_name
+        when 'about'
+          extra_fields = 'classes_set,created_on,parameters,error,
+examples_count'
+        when 'metrics'
+          switch subsection_name
+            when 'accuracy' then extra_fields = 'accuracy'
+            when 'roc_curve'
+              extra_fields = 'metrics.roc_curve,metrics.roc_auc'
+              cb = () =>
+                $scope.rocCurve = {'ROC curve': $scope.test.metrics.roc_curve}
+            when 'precision_recal'
+              extra_fields = 'metrics.precision_recall_curve'
+              cb = () =>
+                pr = $scope.test.metrics.precision_recall_curve
+                $scope.prCurve = {'Precision-Recall curve': [pr[1], pr[0]]}
         when 'matrix' then extra_fields = 'metrics.confusion_matrix'
 
       if 'main' in $scope.LOADED_SECTIONS
         # Do not need load main fields -> only extra
         if extra_fields != ''
-          $scope.load(extra_fields, name)
+          $scope.load(extra_fields, name, cb)
       else
         $scope.load(extra_fields + ',' + Test.MAIN_FIELDS, name, cb)
         $scope.LOADED_SECTIONS.push 'main'
 
-  $scope.initSections($scope.goSection)
+  $scope.initSections($scope.goSection, defaultAction='metrics:accuracy')
 ])
 
 .controller('TestActionsCtrl', [
