@@ -685,6 +685,23 @@ class InstanceResource(BaseResource):
 api.add_resource(InstanceResource, '/cloudml/aws_instances/')
 
 
+class LogResource(BaseResource):
+    """
+    Log API methods
+    """
+    FILTER_PARAMS = (('type', str), ('level', str), ('params.obj', str))
+    MESSAGE404 = "Log doesn't exist"
+    OBJECT_NAME = 'log'
+    decorators = [crossdomain(origin='*')]
+    methods = ('GET', )
+
+    @property
+    def Model(self):
+        return app.db.LogMessage
+
+api.add_resource(LogResource, '/cloudml/logs/')
+
+
 def populate_parser(model, is_requred=False):
     parser = reqparse.RequestParser()
     for param in model.import_params:

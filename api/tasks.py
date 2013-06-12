@@ -28,7 +28,7 @@ def import_data(dataset_id):
         dataset = app.db.DataSet.find_one({'_id': ObjectId(dataset_id)})
         importhandler = app.db.ImportHandler.find_one(
             {'_id': ObjectId(dataset.import_handler_id)})
-        init_logger('importdata_log', handler=dataset.import_handler_id)
+        init_logger('importdata_log', obj=dataset.import_handler_id)
         logging.info('Loading dataset %s' % dataset._id)
         handler = json.dumps(importhandler.data)
         plan = ExtractionPlan(handler, is_file=False)
@@ -55,7 +55,7 @@ def train_model(dataset_id, model_id):
     """
     Train new model celery task.
     """
-    init_logger('trainmodel_log', model=model_id)
+    init_logger('trainmodel_log', obj=model_id)
 
     try:
         model = app.db.Model.find_one({'_id': ObjectId(model_id)})
@@ -163,7 +163,7 @@ def run_test(dataset_id, test_id):
     """
     Running tests for trained model
     """
-    init_logger('runtest_log', test=test_id)
+    init_logger('runtest_log', obj=test_id)
 
     test = app.db.Test.find_one({'_id': ObjectId(test_id)})
     dataset = app.db.DataSet.find_one({'_id': ObjectId(dataset_id)})

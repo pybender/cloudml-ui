@@ -13,6 +13,19 @@ from api import connection, app
 
 
 @connection.register
+class LogMessage(Document):
+    __collection__ = 'logs'
+    structure = {
+        # error, warning
+        'level': basestring,
+        # operation type: run test, train model, etc
+        'type': basestring,
+        'params': dict,
+        'content': basestring,
+    }
+
+
+@connection.register
 class WeightsCategory(Document):
     """
     Represents Model Parameter Weights Category.
