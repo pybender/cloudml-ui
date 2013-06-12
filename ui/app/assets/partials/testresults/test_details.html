@@ -1,6 +1,6 @@
-<h2>{{ test.name|capfirst }} Details</h2>
+<h2 ng-show="test.loaded">{{ test.name|capfirst }} Details</h2>
 
-<div ng-hide="test.loaded">Loading...</div>
+<alert-message ng-hide="test.loaded" class="alert-info" msg="Loading..." unsafe></alert-message>
 
 <alert-message ng-show="test.loaded && test.status != 'Completed'" class="alert-warning" msg="Test was not calculated yet. Status: {{ test.status }}" unsafe></alert-message>
 
