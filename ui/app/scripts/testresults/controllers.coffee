@@ -107,17 +107,13 @@ without test id and model id"
           extra_fields = 'classes_set,created_on,parameters,error,
 examples_count'
         when 'metrics'
-          switch subsection_name
-            when 'accuracy' then extra_fields = 'accuracy'
-            when 'roc_curve'
-              extra_fields = 'metrics.roc_curve,metrics.roc_auc'
-              cb = () =>
-                $scope.rocCurve = {'ROC curve': $scope.test.metrics.roc_curve}
-            when 'precision_recal'
-              extra_fields = 'metrics.precision_recall_curve'
-              cb = () =>
-                pr = $scope.test.metrics.precision_recall_curve
-                $scope.prCurve = {'Precision-Recall curve': [pr[1], pr[0]]}
+          extra_fields = 'accuracy,metrics.precision_recall_curve,
+metrics.roc_curve,metrics.roc_auc'
+          cb = () =>
+            $scope.rocCurve = {'ROC curve': $scope.test.metrics.roc_curve}
+            pr = $scope.test.metrics.precision_recall_curve
+            $scope.prCurve = {'Precision-Recall curve': [pr[1], pr[0]]}
+               
         when 'matrix' then extra_fields = 'metrics.confusion_matrix'
 
       if 'main' in $scope.LOADED_SECTIONS

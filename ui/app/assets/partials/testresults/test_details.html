@@ -46,29 +46,26 @@
       </div>
 
       <div ng-show="action[0] == 'metrics'">
-        <div class="actions"><a ng-show="test.status == 'Completed'" class="btn" href="#{{ test.avaragePrecisionUrl() }}"><i class="status-icon icon-search"></i> Average precision</a></div>
-        <p class="switcher">
-          <b>Switch View: </b>
-          <a ng-class="{active: action[1] == 'accuracy'}" ng-click="setSection(['metrics', 'accuracy'])">Accuracy</a> | 
-          <a ng-class="{active: action[1] == 'roc_curve'}" ng-click="setSection(['metrics', 'roc_curve'])">ROC curve</a> | 
-          <a ng-class="{active: action[1] == 'precision_recal'}" ng-click="setSection(['metrics', 'precision_recal'])">Precision recall</a>
-        </p>
-        <div ng-show="action[1] == 'accuracy'">
+        <div>
           <div>
               Classification Accuracy: <span class="value">{{ test.accuracy.toFixed(4) }}</span>
           </div>
         </div>
-        <div ng-show="action[1] == 'roc_curve'">
+        <hr/>
+        <div>
           <h4>Receiver operating characteristic</h4>
           <p>The Area Under an ROC Curve: 
               <span>{{ test.metrics.roc_auc.toFixed(4) }}</span>
           </p>
           <sc-curves xlabel="False-positive rate" ylabel="True-positive rate" curves-dict="rocCurve" show-line="1" width="500"></sc-curves>
         </div>
-        <div ng-show="action[1] == 'precision_recal'">
+        <hr/>
+        <div>
           <h4>Precision-Recall</h4>
           <sc-curves xlabel="Recall" ylabel="Precision" curves-dict="prCurve" width="500"></sc-curves>
         </div>
+        <hr/>
+        <a ng-show="test.status == 'Completed'" href="#{{ test.avaragePrecisionUrl() }}"><i class="status-icon icon-search"></i> Average precision</a>
       </div>
 
       <div ng-show="action[0] == 'examples'" ng-controller="TestExamplesCtrl" ng-init="init(test)">
