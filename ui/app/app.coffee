@@ -87,6 +87,11 @@ App.config([
       templateUrl: '/partials/import_handler/details.html'
       reloadOnSearch: false
     })
+    .when('/importhandlers/:handler_id/datasets/:id', {
+      controller: 'DataSetDetailsCtrl'
+      templateUrl: '/partials/datasets/details.html'
+      reloadOnSearch: false
+    })
     .when('/aws/instances', {
       controller: "AwsInstanceListCtrl"
       templateUrl: '/partials/aws_instances/list.html'
@@ -156,10 +161,12 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings',
 
   DEFAULT_ACTION = "model:details"
 
-  $rootScope.initSections = (go, defaultAction=DEFAULT_ACTION) ->
+  $rootScope.initSections = (go, defaultAction=DEFAULT_ACTION, simple=false) ->
     $rootScope.action = ($routeParams.action or defaultAction).split ':'
     $rootScope.goSection = go
     $rootScope.goSection $rootScope.action
+    $rootScope.isSimpleTabs = simple
+    $rootScope.initializedSections = []
 
   $rootScope.setSection = (action) ->
     $rootScope.action = action
@@ -167,7 +174,14 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings',
     $location.search(
       if actionString == DEFAULT_ACTION then ""
       else "action=#{actionString}")
-    $rootScope.goSection action
+
+    needGo = true
+    if $rootScope.isSimpleTabs && actionString in $rootScope.initializedSections
+      needGo = false
+
+    if needGo
+      $rootScope.goSection action
+      $rootScope.initializedSections.push(actionString)
 
   $rootScope.resetError = ->
     $rootScope.err = ''

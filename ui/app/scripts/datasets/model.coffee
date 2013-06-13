@@ -25,8 +25,9 @@ angular.module('app.datasets.model', ['app.config'])
       import_handler_id: null
 
       constructor: (opts) ->
-        super opts
+        super
         @BASE_API_URL = DataSet.$get_api_url(@import_handler_id)
+        @BASE_UI_URL = "/importhandlers/#{@import_handler_id}/datasets/"
 
       @$get_api_url: (handler_id) ->
         return "#{settings.apiUrl}importhandlers/#{handler_id}/datasets/"

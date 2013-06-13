@@ -1,0 +1,51 @@
+<h2>
+  <span title="Title"
+    class="title" ng-bind="dataset.name || 'untitled dataset'"
+    editable="dataset" value="dataset.name"
+    editable-field="name" editable-input="text"
+    editable-placement="right"></span> Details
+</h2>
+<div class="date-created">
+    <i class="icon-calendar"></i>
+    created on <span class="badge badge-info">{{ dataset.created_on|format_date }}</span>
+    <span ng-hide="dataset.created_on == dataset.updated_on">
+      updated on <span class="badge badge-info">{{ dataset.updated_on|format_date }}</span>
+    </span>
+    <i class="icon-status"></i>
+    <span class="badge badge-warning">{{ dataset.status }}</span>
+  </div>
+</div>
+<p></p>
+
+<alert-message ng-show="msg" class="alert-info" msg='{{ msg }}' unsafe></alert-message>
+<alert-message ng-show="err" class="alert-error" msg='{{ err }}' unsafe></alert-message>
+
+<alert-message ng-show="dataset.error" class="alert-error" msg='{{ dataset.error }}' unsafe></alert-message>
+
+<ul class="nav nav-tabs" ng-show="dataset.loaded">
+  <li ng-class="{active: action[0] == 'model'}">
+    <a ng-click="setSection(['model', 'details'])">Details</a> 
+  </li>
+  <li ng-class="{active: action[0] == 'log'}"><a ng-click="setSection(['log', 'details'])">Logs</a></li>
+</ul>
+ 
+<div class="tab-content" ng-show="dataset.loaded">
+  <div ng-show="action[0] == 'model'">
+    <div>
+        Data: <span class="value">{{ dataset.data }}</span>
+    </div>
+    <div>
+        Import Params: <span class="value">{{ dataset.import_params }}</span>
+    </div>
+  </div>
+
+  <div ng-show="action[0] == 'log'" ng-controller="LogMessageListCtrl" ng-init="init('importdata_log', dataset._id)">
+    <div class="row" ng-controller="BaseListCtrl">
+      <div class="span6">
+        <p ng-repeat="msg in objects">
+          <ng-include src="'/partials/logmessages/item.html'"></ng-include>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

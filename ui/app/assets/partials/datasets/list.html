@@ -11,7 +11,9 @@
   </thead>
   <tbody>
     <tr ng-repeat="ds in objects" ng-class="{error : ds.status=='Error', warning : ds.status=='Importing', success : ds.status =='Imported'}">
-      <td>{{ ds.name }}</td>
+      <td>
+        <a href="#{{ ds.objectUrl() }}">{{ ds.name }}</a>
+      </td>
       <td title="{{ ds.error }}">{{ ds.status }}</td>
       <td><span class="value" ng-repeat="(key, val) in ds.import_params">{{ key }}={{ val }}</span></td>
       <td>{{ ds.data }}</td>

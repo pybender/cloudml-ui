@@ -23,6 +23,28 @@ angular.module('app.datasets.controllers', ['app.config', ])
         "modal", "delete dataset", $scope.handler.objectUrl())
 ])
 
+.controller('DataSetDetailsCtrl', [
+  '$scope'
+  '$routeParams'
+  'DataSet'
+
+  ($scope, $routeParams, DataSet) ->
+    if not $routeParams.id
+      err = "Can't initialize without id"
+
+    $scope.dataset = new DataSet({_id: $routeParams.id,
+    import_handler_id: $routeParams.handler_id})
+
+    $scope.go = (section) ->
+      $scope.dataset.$load(
+        show: 'name,status,created_on,updated_on,data,import_params,error'
+      ).then (->), ((opts) ->
+        $scope.setError(opts, 'loading dataset details')
+      )
+
+    $scope.initSections($scope.go, "model:details", simple=true)
+])
+
 
 .controller('DatasetSelectCtrl', [
   '$scope'
