@@ -3,10 +3,20 @@
 Changelog
 =========
 
+Relese 2013-06-13
+-----------------
+* Task - Reorganized model details tabs
+* Feature - Added a button to delete an import handle and dataset
+* Bug - Restored link to examples on test list
+* Task - Display train/test/load data logs without using event source
+* Feature - Added dataset details
+
+
 Relese 2013-06-09
 -----------------
 * Feature - Moved importing data to separate task
 * Feature - Added storing datasets
+* Feature - Added list of instances wich use for training/testing
 
 
 Relese 2013-05-27
