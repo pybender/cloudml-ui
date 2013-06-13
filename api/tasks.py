@@ -28,7 +28,7 @@ def import_data(dataset_id):
         dataset = app.db.DataSet.find_one({'_id': ObjectId(dataset_id)})
         importhandler = app.db.ImportHandler.find_one(
             {'_id': ObjectId(dataset.import_handler_id)})
-        init_logger('importdata_log', obj=dataset.import_handler_id)
+        init_logger('importdata_log', obj=dataset_id)
         logging.info('Loading dataset %s' % dataset._id)
         handler = json.dumps(importhandler.data)
         plan = ExtractionPlan(handler, is_file=False)

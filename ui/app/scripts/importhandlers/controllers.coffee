@@ -54,36 +54,6 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
     $scope.model = new ImportHandler()
 ])
 
-.controller('LoadDataDialogCtrl', [
-  '$scope'
-  '$location'
-  'dialog'
-  'ImportHandler'
-  'DataSet'
-
-  ($scope, $location, dialog, ImportHandler, DataSet) ->
-    $scope.parameters = {}
-    $scope.handler = dialog.model
-    $scope.handler.$load(show: 'import_params').then (->
-      $scope.params = $scope.handler.import_params
-    ), ((opts)->
-      $scope.setError(opts, 'loading handler parameters')
-    )
-
-    $scope.close = ->
-      dialog.close()
-
-    $scope.start = (result) ->
-      $scope.dataset = new DataSet({'import_handler_id': $scope.handler._id})
-      $scope.dataset.$save($scope.parameters).then (() ->
-        $scope.close()
-        $scope.$emit('modelCreated', [$scope.dataset])
-      ), ((opts) ->
-        $scope.setError(opts, 'creating dataset')
-      )
-])
-
-
 .controller('DeleteImportHandlerCtrl', [
   '$scope'
   '$location'

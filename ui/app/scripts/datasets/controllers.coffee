@@ -62,3 +62,28 @@ angular.module('app.datasets.controllers', ['app.config', ])
         $scope.setError(opts, 'loading datasets')
       )
 ])
+
+.controller('LoadDataDialogCtrl', [
+  '$scope'
+  '$location'
+  'dialog'
+  'DataSet'
+
+  ($scope, $location, dialog, DataSet) ->
+    $scope.parameters = {}
+    handler = dialog.model
+    $scope.handler = handler
+    $scope.params = handler.import_params
+
+    $scope.close = ->
+      dialog.close()
+
+    $scope.start = (result) ->
+      $scope.dataset = new DataSet({'import_handler_id': $scope.handler._id})
+      $scope.dataset.$save($scope.parameters).then (() ->
+        $scope.close()
+        $location.path $scope.dataset.objectUrl()
+      ), ((opts) ->
+        $scope.setError(opts, 'creating dataset')
+      )
+])

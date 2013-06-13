@@ -25,7 +25,6 @@
   <li ng-class="{active: action[0] == 'model'}">
     <a ng-click="setSection(['model', 'details'])">Details</a> 
   </li>
-  <li ng-class="{active: action[0] == 'log'}"><a ng-click="setSection(['log', 'details'])">Logs</a></li>
   <li ng-class="{active: action[0] == 'dataset'}"><a ng-click="setSection(['dataset', 'list'])">DataSets</a></li>
 </ul>
  
@@ -44,16 +43,6 @@
     <a href="{{ handler.downloadUrl() }}"><i title="Download import handler file" class="icon-download-alt"></i> Download</a>
     <span ng-click="saveData()" class="btn btn-primary">Save</span>
     <textarea name="data" ui-codemirror="{ mode: {name: 'javascript', json: true} }" ng-model="handler.data"> </textarea>
-  </div>
-
-  <div ng-show="action[0] == 'log'" ng-controller="LogMessageListCtrl" ng-init="init('importdata_log', handler._id)">
-    <div class="row" ng-controller="BaseListCtrl">
-      <div class="span6">
-        <p ng-repeat="msg in objects">
-          <ng-include src="'/partials/logmessages/item.html'"></ng-include>
-        </p>
-      </div>
-    </div>
   </div>
 
   <div ng-show="action[0] == 'dataset'">
