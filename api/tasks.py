@@ -30,13 +30,15 @@ def import_data(dataset_id, model_id=None, test_id=None):
             {'_id': ObjectId(dataset.import_handler_id)})
         if dataset is None or importhandler is None:
             raise ValueError('DataSet or Import Handler not found')
+        obj = None
         if not model_id is None:
             obj = app.db.Model.find_one({'_id': ObjectId(model_id)})
         if not test_id is None:
             obj = app.db.Test.find_one({'_id': ObjectId(test_id)})
 
-        obj.status = obj.STATUS_IMPORTINING
-        obj.save()
+        if obj:
+            obj.status = obj.STATUS_IMPORTINING
+            obj.save()
         init_logger('importdata_log', obj=dataset_id)
         logging.info('Loading dataset %s' % dataset._id)
 
@@ -54,8 +56,9 @@ with%s compression", importhandler.name, '' if dataset.compress else 'out')
         logging.info('File saved to Amazon S3')
 
         dataset.status = dataset.STATUS_IMPORTED
-        obj.status = obj.STATUS_IMPORTED
-        obj.save()
+        if obj:
+            obj.status = obj.STATUS_IMPORTED
+            obj.save()
         dataset.save(validate=True)
         logging.info('DataSet was loaded')
     except Exception, exc:
