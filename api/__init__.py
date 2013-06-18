@@ -46,10 +46,10 @@ class App(Flask):
                        'trainmodel_log': ('model', ),
                        'importdata_log': ('handler', )}
 
-    def __init__(self, connection, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super(App, self).__init__(*args, **kwargs)
-        self.conn = connection
         self.config.from_object('api.config')
+        self.conn = Connection(host=self.config.get('DATABASE_HOST', 'localhost'))
         self.url_map.converters['regex'] = RegExConverter
 
     @property
@@ -71,9 +71,7 @@ class App(Flask):
             self.chan.sub(name)
 
 
-connection = Connection()
-
-app = App(connection, __name__)
+app = App(__name__)
 
 celery = Celery('cloudml')
 
