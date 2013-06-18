@@ -3,6 +3,14 @@
 Changelog
 =========
 
+
+Relese 2013-06-18
+-----------------
+* Feature - Added storing datasets to s3
+* Feature - Added compressing dataset
+* Feature - Updated model/test status when importing dataset in separete task 
+
+
 Relese 2013-06-13
 -----------------
 * Task - Reorganized model details tabs

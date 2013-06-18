@@ -3,7 +3,9 @@
     "_id": "5270dd3a106a6c1631000000",
     "name": "DS",
     "import_handler_id": "5170dd3a106a6c1631000000",
-    "data": "noname.json"
+    "data": "noname.json",
+    "filename": "file.json",
+    "on_s3": false
  }
  ]
 }

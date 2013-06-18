@@ -11,7 +11,7 @@ angular.module('app.datasets.controllers', ['app.config', ])
 
   ($scope, $dialog, DataSet) ->
     $scope.MODEL = DataSet
-    $scope.FIELDS = 'name,created_on,status,error,data,import_params'
+    $scope.FIELDS = 'name,created_on,status,error,data,import_params,on_s3'
     $scope.ACTION = 'loading datasets'
 
     $scope.init = (handler) ->

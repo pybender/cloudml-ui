@@ -23,4 +23,5 @@ nose-exclude
 -e git+https://github.com/odeskdev/cloudml.git#egg=cloudml
 -e git+https://github.com/rick446/MongoTools.git#egg=mongotools
 translitcodec==0.3
+boto
 

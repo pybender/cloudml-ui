@@ -113,3 +113,7 @@ class ProductionConf(BaseConf):
 
     remote_settings_lfile = 'prod_config.py.tpl'
     remote_anjsettings_lfile = 'ui/app/scripts/prod_config.coffee.tpl'
+
+    amazon_access_token = '....'
+    amazon_token_secret = '....'
+    amazon_bucket_name = 'odesk-match-cloudml'

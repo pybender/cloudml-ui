@@ -283,7 +283,8 @@ class AddTestForm(BaseChooseInstanceAndDataset):
             import_handler = ImportHandler(test.model.test_import_handler)
             params = self.cleaned_data.get('parameters', None)
             dataset = import_handler.create_dataset(params)
-            import_data.apply_async((str(dataset._id), ),
+            import_data.apply_async(kwargs={'dataset_id': str(dataset._id),
+                                            'test_id': str(test._id)},
                                     link=run_test.subtask(args=(str(test._id), ),
                                     options={'queue':instance['name']}))
         else:

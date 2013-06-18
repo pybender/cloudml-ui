@@ -19,7 +19,7 @@ class InvalidOperationError(Exception):
 
 
 @celery.task
-def import_data(dataset_id):
+def import_data(dataset_id, model_id=None, test_id=None):
     """
     Import data from database.
     """
@@ -28,26 +28,46 @@ def import_data(dataset_id):
         dataset = app.db.DataSet.find_one({'_id': ObjectId(dataset_id)})
         importhandler = app.db.ImportHandler.find_one(
             {'_id': ObjectId(dataset.import_handler_id)})
+        if dataset is None or importhandler is None:
+            raise ValueError('DataSet or Import Handler not found')
+        if not model_id is None:
+            obj = app.db.Model.find_one({'_id': ObjectId(model_id)})
+        if not test_id is None:
+            obj = app.db.Test.find_one({'_id': ObjectId(test_id)})
+
+        obj.status = obj.STATUS_IMPORTINING
+        obj.save()
         init_logger('importdata_log', obj=dataset_id)
         logging.info('Loading dataset %s' % dataset._id)
+
+        logging.info("Import data using import handler '%s' \
+with%s compression", importhandler.name, '' if dataset.compress else 'out')
         handler = json.dumps(importhandler.data)
         plan = ExtractionPlan(handler, is_file=False)
         handler = ImportHandler(plan, dataset.import_params)
+        logging.info('Storing data to file %s', dataset.filename)
+        handler.store_data_json(dataset.filename, dataset.compress)
+        logging.info('Import data completed')
 
-        logging.info("Loading data using %s imported.", importhandler.name)
-        path = app.config['DATA_FOLDER']
-        if not exists(path):
-            makedirs(path)
-        handler.store_data_json(join(path, dataset.data))
+        logging.info('Saving file to Amazon S3')
+        dataset.save_to_s3()
+        logging.info('File saved to Amazon S3')
+
         dataset.status = dataset.STATUS_IMPORTED
+        obj.status = obj.STATUS_IMPORTED
+        obj.save()
         dataset.save(validate=True)
+        logging.info('DataSet was loaded')
     except Exception, exc:
-        logging.error(exc)
+        logging.exception('Got exception when import dataset')
         dataset.set_error(exc)
+        if obj:
+            obj.set_error(exc)
         raise
 
     logging.info("Dataset using %s imported.", importhandler.name)
     return dataset_id
+
 
 
 @celery.task
@@ -73,8 +93,8 @@ def train_model(dataset_id, model_id):
         path = app.config['DATA_FOLDER']
         if not exists(path):
             makedirs(path)
-        with open(join(path, dataset.data), 'r') as train_fp:
-            trainer.train(streamingiterload(train_fp))
+        train_fp = dataset.get_data_stream()
+        trainer.train(streamingiterload(train_fp))
         train_fp.close()
         trainer.clear_temp_data()
         model.status = model.STATUS_TRAINED
@@ -82,7 +102,7 @@ def train_model(dataset_id, model_id):
         model.save()
         fill_model_parameter_weights.delay(str(model._id))
     except Exception, exc:
-        logging.error(exc)
+        logging.exception('Got exception when train model')
         model.status = model.STATUS_ERROR
         model.error = str(exc)
         model.save()
@@ -161,7 +181,7 @@ def fill_model_parameter_weights(model_id, reload=False):
             (model.name, len(weight_list))
         logging.info(msg)
     except Exception, exc:
-        logging.error(exc)
+        logging.exception('Got exception when fill_model_parameter')
     return msg
 
 
@@ -254,7 +274,7 @@ def run_test(dataset_id, test_id):
         store_examples(examples)
 
     except Exception, exc:
-        logging.error(exc)
+        logging.exception('Got exception when tets model')
         test.status = test.STATUS_ERROR
         test.error = str(exc)
         test.save()

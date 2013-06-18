@@ -167,7 +167,8 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
                 import_handler = ImportHandler(model.train_import_handler)
                 params = form.cleaned_data.get('parameters', None)
                 dataset = import_handler.create_dataset(params)
-                import_data.apply_async((str(dataset._id), ),
+                import_data.apply_async(kwargs={'dataset_id': str(dataset._id),
+                                                'model_id': str(model._id)},
                                         link=train_model.subtask(args=(str(model._id), ),
                                         options={'queue':instance['name']}))
                 #train_model.delay(str(model._id), params)
@@ -321,11 +322,10 @@ class DataSetResource(BaseResource):
         str_params = "-".join(["%s=%s" % item
                               for item in parameters.iteritems()])
         dataset.name = "%s: %s" % (importhandler.name, str_params)
-        dataset.import_handler_id = handler_id
+        dataset.import_handler_id = str(importhandler._id)
         dataset.import_params = parameters
-        filename = '%s-%s.json' % (slugify(importhandler['name']), str_params.replace('=', '_'))
-        dataset.data = filename
         dataset.save(validate=True)
+        dataset.set_file_path()
         import_data.delay(str(dataset._id))
         return self._render(self._get_save_response_context(dataset))
 

@@ -5,6 +5,7 @@
         <th>Status</th>
         <th>Import Parameters</th>
         <th>Data</th>
+        <th>On S3</th>
         <th>Created</th>
         <th>Actions</th>
       </tr>
@@ -17,6 +18,7 @@
       <td title="{{ ds.error }}">{{ ds.status }}</td>
       <td><span class="value" ng-repeat="(key, val) in ds.import_params">{{ key }}={{ val }}</span></td>
       <td>{{ ds.data }}</td>
+      <td>{{ ds.on_s3 }}</td>
       <td>{{ ds.created_on|format_date }}</td>
       <td>
         <button ng-click="delete(ds)" class="btn btn-danger">
