@@ -76,13 +76,7 @@
       </div>
 
       <div ng-show="action[0] == 'logs'" ng-controller="LogMessageListCtrl" ng-init="init('runtest_log', test._id)">
-        <div class="row" ng-controller="BaseListCtrl">
-          <div class="span6">
-            <p ng-repeat="msg in objects">
-              <ng-include src="'/partials/logmessages/item.html'"></ng-include>
-            </p>
-          </div>
-        </div>
+        <ng-include src="'/partials/logmessages/list.html'"></ng-include>
       </div>
 
     </div>

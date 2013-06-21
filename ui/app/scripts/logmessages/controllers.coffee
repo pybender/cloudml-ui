@@ -15,5 +15,5 @@ angular.module('app.logmessages.controllers', ['app.config', ])
   $scope.ACTION = 'loading logs'
 
   $scope.init = (type, _id) ->
-    $scope.kwargs = {'type': type, 'params.obj': _id}
+    $scope.kwargs = {'type': type, 'params.obj': _id, 'page': 1}
 ])

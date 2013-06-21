@@ -694,6 +694,7 @@ class LogResource(BaseResource):
     OBJECT_NAME = 'log'
     decorators = [crossdomain(origin='*')]
     methods = ('GET', )
+    NEED_PAGING = True
 
     @property
     def Model(self):

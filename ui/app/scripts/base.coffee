@@ -32,7 +32,10 @@ angular.module('app.base', ['app.config'])
       @$loadAll: (opts) ->
         resolver = (resp, Model) ->
           {
-            total: resp.data.found
+            total: resp.data.total
+            pages: resp.data.pages
+            has_prev: resp.data.has_prev
+            has_next: resp.data.has_next
             objects: (
               new Model(_.extend(obj, {loaded: true})) \
               for obj in eval("resp.data.#{Model.prototype.API_FIELDNAME}s"))
