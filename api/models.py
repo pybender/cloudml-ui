@@ -28,6 +28,11 @@ class LogMessage(Document):
     }
     default_values = {'created_on': datetime.utcnow}
 
+    @classmethod
+    def delete_related_logs(cls, obj, level=None):
+        # TODO: implement level
+        app.db.LogMessage.collection.remove({'params.obj': str(obj._id),
+                                             'type': obj.LOG_TYPE})
 
 @app.conn.register
 class WeightsCategory(Document):
@@ -142,6 +147,8 @@ class Model(Document):
     """
     Represents Model details and it's Tests.
     """
+    LOG_TYPE = 'trainmodel_log'
+
     STATUS_NEW = 'New'
     STATUS_QUEUED = 'Queued'
     STATUS_IMPORTINING = 'Importing'
@@ -237,6 +244,7 @@ class Model(Document):
             self.save()
 
     def delete_metadata(self):
+        LogMessage.delete_related_logs(self)
         params = {'model_id': str(self._id)}
         app.db.Test.collection.remove(params)
         app.db.TestExample.collection.remove(params)
@@ -246,6 +254,8 @@ class Model(Document):
 
 @app.conn.register
 class Test(Document):
+    LOG_TYPE = 'runtest_log'
+
     STATUS_QUEUED = 'Queued'
     STATUS_IMPORTINING = 'Importing'
     STATUS_IMPORTED = 'Imported'
@@ -294,6 +304,7 @@ class Test(Document):
                       model_name=self.model_name)
         app.db.TestExample.collection.remove(params)
         self.collection.remove({'_id': self._id})
+        LogMessage.delete_related_logs(self)
 
 
 @app.conn.register
@@ -327,9 +338,12 @@ class TestExample(Document):
 @app.conn.register
 class DataSet(Document):
     __collection__ = 'dataset'
+    LOG_TYPE = 'importdata_log'
+
     STATUS_IMPORTINING = 'Importing'
     STATUS_IMPORTED = 'Imported'
     STATUS_ERROR = 'Error'
+
     structure = {
         'name': basestring,
         'status': basestring,
@@ -406,6 +420,8 @@ class DataSet(Document):
 
     def delete(self):
         super(DataSet, self).delete()
+        LogMessage.delete_related_logs(self)
+
         # TODO: check import handler type
         try:
             os.remove(self.filename)
