@@ -12,6 +12,7 @@ from flask.ext.mongokit import Document
 from core.trainer.streamutils import streamingiterload
 
 from api import app
+from api.amazon_utils import AmazonS3Helper
 
 
 @app.conn.register
@@ -369,6 +370,10 @@ class DataSet(Document):
     def __init__(self, *args, **kwargs):
         super(DataSet, self).__init__(*args, **kwargs)
 
+    def get_s3_download_url(self, expires_in=3600):
+        helper = AmazonS3Helper()
+        return helper.get_download_url(str(self._id), expires_in)
+
     def set_file_path(self):
         self.data = '%s.%s' % (self._id, 'gz' if self.compress else 'json')
         path = app.config['DATA_FOLDER']
@@ -395,12 +400,10 @@ class DataSet(Document):
             return open_meth(self.filename, 'r')
 
     def load_from_s3(self):
-        from api.amazon_utils import AmazonS3Helper
         helper = AmazonS3Helper()
         return helper.load_key(str(self._id))
 
-    def save_to_s3(self):
-        from api.amazon_utils import AmazonS3Helper
+    def save_to_s3(self):        
         meta = {'handler': self.import_handler_id,
                 'dataset': self.name,
                 'params': str(self.import_params)}

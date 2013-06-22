@@ -6,14 +6,18 @@
     editable-placement="right"></span> Details
 </h2>
 <div class="date-created">
-    <i class="icon-calendar"></i>
-    created on <span class="badge badge-info">{{ dataset.created_on|format_date }}</span>
-    <span ng-hide="dataset.created_on == dataset.updated_on">
-      updated on <span class="badge badge-info">{{ dataset.updated_on|format_date }}</span>
-    </span>
-    <i class="icon-status"></i>
-    <span class="badge badge-warning">{{ dataset.status }}</span>
-  </div>
+  <div ng-show="dataset.on_s3" class="input-prepend input-append">
+    <span class="add-on">S3 URL</span>
+    <input class="span2" value="{{ url }}" disabled type="text">
+    <button class="btn" type="button" ng-click="generateS3Url()">Generate</button>
+  </div> &nbsp;
+  <i class="icon-calendar"></i>
+  created on <span class="badge badge-info">{{ dataset.created_on|format_date }}</span>
+  <span ng-hide="dataset.created_on == dataset.updated_on">
+    updated on <span class="badge badge-info">{{ dataset.updated_on|format_date }}</span>
+  </span>
+  <i class="icon-status"></i>
+  <span class="badge badge-warning">{{ dataset.status }}</span>
 </div>
 <p></p>
 

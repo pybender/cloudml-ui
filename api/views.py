@@ -303,11 +303,20 @@ class DataSetResource(BaseResource):
         return app.db.DataSet
 
     OBJECT_NAME = 'dataset'
+    GET_ACTIONS = ('generate_url', )
     methods = ('GET', 'OPTIONS', 'DELETE', 'POST')
+
+    def _get_generate_url_action(self, **kwargs):
+        ds = self._get_details_query(None, None, **kwargs)
+        if ds is None:
+            raise NotFound('DataSet not found')
+        url = ds.get_s3_download_url()
+        return self._render({self.OBJECT_NAME: ds._id,
+                             'url': url})
 
     def post(self, **kwargs):
         """
-        Loads dataset using specified import handler.
+        Loads dataset using specimodel.get_s3_download_url()fied import handler.
         """
         from api.tasks import import_data
         handler_id = kwargs.get('import_handler_id')

@@ -32,6 +32,10 @@ angular.module('app.datasets.model', ['app.config'])
       @$get_api_url: (handler_id) ->
         return "#{settings.apiUrl}importhandlers/#{handler_id}/datasets/"
 
+      $generateS3Url: () =>
+        @$make_request("#{@BASE_API_URL}#{@_id}/action/generate_url/",
+                       {}, 'GET', {})
+
       $save: (data) =>
         @$make_request(@BASE_API_URL, data, 'POST', {})
 

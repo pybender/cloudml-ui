@@ -19,6 +19,11 @@ class AmazonS3Helper(object):
             self._bucket = self._get_bucket()
         return self._bucket
 
+    def get_download_url(self, name, expires_in):
+        key = Key(self.bucket)
+        key.key = name
+        return key.generate_url(expires_in)
+
     def load_key(self, name):
         # for i in self.bucket.list():
         #     logging.info(i)
@@ -29,7 +34,7 @@ class AmazonS3Helper(object):
             return key.get_contents_as_string()
         except Exception, exc:
             if n < 4:
-                logging.info('Got error %s try again %d' % (s, n))
+                logging.info('Got error %s try again %d' % (name, n))
                 n += 1
             else:
                 logging.error('Got error when getting data from s3')

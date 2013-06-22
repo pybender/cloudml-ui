@@ -35,9 +35,16 @@ angular.module('app.datasets.controllers', ['app.config', ])
     $scope.dataset = new DataSet({_id: $routeParams.id,
     import_handler_id: $routeParams.handler_id})
 
+    $scope.generateS3Url = () ->
+      $scope.dataset.$generateS3Url().then ((opts) ->
+        $scope.url = opts.data.url
+      ), ((opts) ->
+        $scope.setError(opts, 'generating url to dataset file on Amazon S3')
+      )
+
     $scope.go = (section) ->
       $scope.dataset.$load(
-        show: 'name,status,created_on,updated_on,data,import_params,error'
+        show: 'name,status,created_on,updated_on,data,on_s3,import_params,error'
       ).then (->), ((opts) ->
         $scope.setError(opts, 'loading dataset details')
       )
