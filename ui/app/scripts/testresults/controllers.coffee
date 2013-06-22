@@ -111,7 +111,7 @@ metrics.roc_curve,metrics.roc_auc'
         $scope.load(extra_fields + ',' + Test.MAIN_FIELDS, name, cb)
         $scope.LOADED_SECTIONS.push 'main'
 
-  $scope.initSections($scope.goSection, defaultAction='about:details')
+  $scope.initSections($scope.goSection, defaultAction='metrics:accuracy')
 ])
 
 .controller('TestActionsCtrl', [
