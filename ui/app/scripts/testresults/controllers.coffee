@@ -76,6 +76,10 @@ without test id and model id"
       show: fields
       ).then (->
         $scope.LOADED_SECTIONS.push section
+        if $scope.test.status != 'Completed'
+          $scope.setSection(['about', 'details'])
+          return
+
         if callback?
           callback()
       ), ((opts)->
