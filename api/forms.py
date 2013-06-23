@@ -104,27 +104,8 @@ class BaseModelForm(BaseForm):
         if value and not value == 'undefined':
             return app.db.ImportHandler.find_one({'_id': ObjectId(value)})
 
-    def _clean_importhandler_file(self, value):
-        if not value:
-            return
-
-        try:
-            data = json.loads(value)
-        except ValueError, exc:
-            raise ValidationError('Invalid importhandler data: %s' % exc)
-
-        try:
-            plan = ExtractionPlan(value, is_file=False)
-            self.cleaned_data['import_params'] = plan.input_params
-        except (ValueError, ImportHandlerException) as exc:
-            raise ValidationError('Invalid importhandler: %s' % exc)
-
-        return data
-
     clean_train_import_handler = _clean_importhandler
     clean_test_import_handler = _clean_importhandler
-    clean_train_import_handler_file = _clean_importhandler_file
-    clean_test_import_handler_file = _clean_importhandler_file
 
 
 class ModelEditForm(BaseModelForm):
@@ -134,7 +115,8 @@ class ModelEditForm(BaseModelForm):
 
 class ModelAddForm(BaseModelForm):
     fields = ('features', 'trainer', 'train_import_handler',
-              'name', 'test_import_handler')
+              'name', 'test_import_handler',
+              'test_import_handler_file', 'train_import_handler_file')
     trainer = None
 
     def clean_name(self, value):
@@ -160,7 +142,37 @@ class ModelAddForm(BaseModelForm):
 
         return loaded_value
 
+    def _clean_importhandler_file(self, value, action='test'):
+        if not value:
+            return
+
+        try:
+            data = json.loads(value)
+        except ValueError, exc:
+            raise ValidationError('Invalid importhandler data: %s' % exc)
+
+        try:
+            plan = ExtractionPlan(value, is_file=False)
+            self.cleaned_data['%s_import_params' % action] = plan.input_params
+        except (ValueError, ImportHandlerException) as exc:
+            raise ValidationError('Invalid importhandler: %s' % exc)
+
+        return data
+
+    def clean_train_import_handler_file(self, value):
+        data = self._clean_importhandler_file(value, 'train')
+        return data
+
+    clean_test_import_handler_file = _clean_importhandler_file
+
     def validate_obj(self):
+        only_one_required(self.cleaned_data,
+                          ('train_import_handler',
+                           'train_import_handler_file'))
+        only_one_required(self.cleaned_data,
+                          ('test_import_handler',
+                           'test_import_handler_file'))
+
         features = self.cleaned_data.get('features')
         if not features and not self.trainer:
             raise ValidationError('Either features, either pickled \
@@ -172,7 +184,25 @@ trained model is required for posting model')
             self.cleaned_data['status'] = Model.STATUS_TRAINED
 
     def save(self):
-        obj = BaseForm.save(self)
+        name = self.cleaned_data['name']
+
+        def save_importhandler(fieldname):
+            data = self.cleaned_data.pop(fieldname, None)
+            if data is not None:
+                handler = app.db.ImportHandler()
+                action = 'test' if fieldname.startswith('test') else 'train'
+                handler.name = '%s handler for %s' % (name, action)
+                handler.type = handler.TYPE_DB
+                handler.import_params = self.cleaned_data.pop('%s_import_params' % action)
+                handler.data = data
+                handler.save()
+                self.cleaned_data['%s_import_handler' % action] = handler
+
+        import pdb; pdb.set_trace()
+        save_importhandler('train_import_handler_file')
+        save_importhandler('test_import_handler_file')
+
+        obj = super(ModelAddForm, self).save()
         obj.set_trainer(self.trainer)
         if obj.status == Model.STATUS_TRAINED:
             # Processing Model Parameters weights in celery task

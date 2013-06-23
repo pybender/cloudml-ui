@@ -56,7 +56,8 @@ angular.module('app.base', ['app.config'])
 
         data = {}
         for name in opts.only
-          data[name] = eval("this." + name)
+          val = eval("this." + name)
+          if val? then data[name] = val
 
         method = if @isNew() then "POST" else "PUT"
         @$make_request(@BASE_API_URL + (@_id + "/" or ""), {}, method, data)
