@@ -159,7 +159,8 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
         form = ModelTrainForm(obj=obj, **kwargs)
         if form.is_valid():
             model = form.save()
-            instance = form.cleaned_data['aws_instance']
+            instance = form.cleaned_data.get('aws_instance', None)
+            spot_instance_type = form.cleaned_data.get('spot_instance_type', None)
             if form.params_filled:
                 # load and train
                 from api.models import ImportHandler

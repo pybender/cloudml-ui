@@ -9,6 +9,7 @@ from os import makedirs
 from api import celery, app
 from api.models import Test
 from api.logger import init_logger
+from api.amazon_utils import AmazonEC2Helper
 from core.trainer.trainer import Trainer
 from core.trainer.config import FeatureModel
 from core.trainer.streamutils import streamingiterload
@@ -17,6 +18,15 @@ from core.trainer.streamutils import streamingiterload
 class InvalidOperationError(Exception):
     pass
 
+@celery.task
+def request_spot_instance():
+    ec2 = AmazonEC2Helper()
+    instance_id = ec2.request_spot_instance()
+
+@celery.task
+def terminate_instance(instance_id):
+    ec2 = AmazonEC2Helper()
+    ec2.terminate_instance(instance_id)
 
 @celery.task
 def import_data(dataset_id, model_id=None, test_id=None):

@@ -210,12 +210,12 @@ trainer - 'module' object has no attribute 'FeatureTypeInstance'")
         data = {}
         resp = self.app.put(url, data=data)
         self.assertTrue(resp.status_code, httplib.BAD_REQUEST)
-        self.assertTrue('Instance is required' in resp.data, resp.data)
+        self.assertTrue('One of spot_instance_type, aws_instance is required' in resp.data, resp.data)
 
         data = {'aws_instance': str(inst._id)}
         resp = self.app.put(url, data=data)
         self.assertTrue(resp.status_code, httplib.BAD_REQUEST)
-        self.assertTrue('Parameters (start, end, category) or dataset are required' in resp.data,
+        self.assertTrue('One of parameters, dataset is required' in resp.data,
                         resp.data)
 
         # Tests specifying dataset
@@ -311,4 +311,4 @@ deleted" % examples)
         data = json.loads(resp.data)
         err_data = data['response']['error']
         self.assertEquals(err_data['code'], code)
-        self.assertEquals(err_data['message'], message)
+        self.assertTrue(message in err_data['message'])

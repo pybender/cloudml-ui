@@ -37,33 +37,48 @@ class BaseForm(object):
 
     @property
     def error_messages(self):
-        return ','.join(self.errors)
+        errors = ', '.join(["%s%s" % (err['name'] + ': ' if err['name'] else '', err['error'])
+                           for err in self.errors])
+        return 'Here is some validation errors: %s' % errors
 
     def is_valid(self):
         if not self._cleaned:
             self.clean()
         return not bool(self.errors)
 
+    def before_clean(self):
+        pass
+
     def clean(self):
         self.cleaned_data = {}
+        self.before_clean()
         if isinstance(self.fields, dict):
             fields = self.fields
         else:
             fields = dict([(name, False) for name in self.fields])
-
         for name, required in fields.iteritems():
             value = self.data.get(name, None)
             mthd = "clean_%s" % name
             if hasattr(self, mthd):
-                value = getattr(self, mthd)(value)
+                try:
+                    value = getattr(self, mthd)(value)
+                except ValidationError, exc:
+                    self.errors.append({'name': name, 'error': exc.message})
             if value:
                 self.cleaned_data[name] = value
             elif required:
                 cleaned_value = self.cleaned_data.get(name)
                 if not cleaned_value:
-                    raise ValidationError('%s is required' % name)
+                    self.errors.append({'name': name, 'error': '%s is required'})
 
-        self.validate_obj()
+        try:
+            self.validate_obj()
+        except ValidationError, exc:
+            self.errors.append({'name': None, 'error': exc.message})
+
+        if self.errors:
+            raise ValidationError(self.error_messages, errors=self.errors)
+
         self._cleaned = True
         return self.cleaned_data
 
@@ -135,6 +150,7 @@ class ModelAddForm(BaseModelForm):
                 raise ValidationError('Invalid trainer: %s' % exc)
 
     def clean_features(self, value):
+        self.feature_model = None
         loaded_value = self._clean_json_val('features', value)
         if loaded_value:
             try:
@@ -150,7 +166,7 @@ class ModelAddForm(BaseModelForm):
             raise ValidationError('Either features, either pickled \
 trained model is required for posting model')
 
-        if features:
+        if self.feature_model:
             self.trainer = Trainer(self.feature_model)
         else:
             self.cleaned_data['status'] = Model.STATUS_TRAINED
@@ -177,11 +193,16 @@ trained model is required for posting model')
 
 class BaseChooseInstanceAndDataset(BaseForm):
     HANDLER_TYPE = 'train'
+    TYPE_CHOICES = ('m3.xlarge', 'm3.2xlarge', 'cc2.8xlarge', 'cr1.8xlarge',
+                    'hi1.4xlarge', 'hs1.8xlarge')
 
-    fields = ['aws_instance', 'dataset', 'parameters']
+    fields = ['aws_instance', 'dataset', 'parameters', 'spot_instance_type']
 
     def clean_parameters(self, value):
         self.params_filled = False
+        if self.model is None:
+            return
+
         handler = getattr(self.model, '%s_import_handler' % self.HANDLER_TYPE)
         self.parameter_names = handler['import_params']
         parser = populate_parser(self.parameter_names)
@@ -209,16 +230,17 @@ class BaseChooseInstanceAndDataset(BaseForm):
             return ds
 
     def clean_aws_instance(self, value):
-        instance = app.db.Instance.find_one({'_id': ObjectId(value)})
-        if instance is None:
-            raise ValidationError('Instance is required')
-        return instance
+        return app.db.Instance.find_one({'_id': ObjectId(value)})
+
+    def clean_spot_instance_type(self, value):
+        if value and value not in self.TYPE_CHOICES:
+            raise ValidationError('%s invalid choice for spot_instance_type. \
+Please choose one of %s' % (self.TYPE_CHOICES, value))
+        return value
 
     def validate_obj(self):
-        ds = self.cleaned_data.get('dataset', None)
-        if not (self.params_filled or ds):
-            raise ValidationError('Parameters (%s) or \
-dataset are required' % ', '.join(self.parameter_names))
+        only_one_required(self.cleaned_data, ('spot_instance_type', 'aws_instance'))
+        only_one_required(self.cleaned_data, ('parameters', 'dataset'))
 
 
 class ModelTrainForm(BaseChooseInstanceAndDataset):
@@ -270,14 +292,16 @@ class ImportHandlerAddForm(BaseImportHandlerForm):
 class AddTestForm(BaseChooseInstanceAndDataset):
     HANDLER_TYPE = 'test'
 
-    fields = ['name', 'model', ] + BaseChooseInstanceAndDataset.fields
+    fields = ['name', 'model'] + BaseChooseInstanceAndDataset.fields
+
+    def before_clean(self):
+        self.model = app.db.Model.find_one({'_id': ObjectId(self.model_id)})
 
     def clean_name(self, value):
         total = app.db.Test.find({'model_id': self.model_id}).count()
         return "Test%s" % (total + 1)
 
     def clean_model(self, value):
-        self.model = app.db.Model.find_one({'_id': ObjectId(self.model_id)})
         if self.model is None:
             raise ValidationError('Model not found')
 
@@ -291,7 +315,8 @@ class AddTestForm(BaseChooseInstanceAndDataset):
         test.save(check_keys=False)
 
         from api.tasks import run_test, import_data
-        instance = self.cleaned_data['aws_instance']
+        instance = self.cleaned_data.get('aws_instance', None)
+        spot_instance_type = self.cleaned_data.get('spot_instance_type', None)
 
         if self.params_filled:
             # load and train
@@ -370,3 +395,16 @@ def populate_parser(import_params):
     for param in import_params:
         parser.add_argument(param, type=str)
     return parser
+
+
+def only_one_required(cleaned_data, names):
+    filled_names = []
+    for name in names:
+        if cleaned_data.get(name, None):
+            filled_names.append(name)
+    count = len(filled_names)
+    if count == 0:
+        raise ValidationError('One of %s is required' % ', '.join(names))
+    elif count > 1:
+        raise ValidationError('Only one parameter from %s is required. \
+%s are filled.' % (', '.join(names), ', '.join(filled_names)))

@@ -150,7 +150,7 @@ def setupw():
     supervisor.push_d_config.run()
     supervisor.push_configs.run()
     supervisor.d.run()
-
+    
     release.create.run()
     virtualenv.create.run()
     # install numpy and scipy
@@ -160,10 +160,12 @@ def setupw():
                 virtualenv.pip_install.run(app='numpy')
                 virtualenv.pip_install.run(app='scipy')
     virtualenv.make_relocatable.run()
+    release.activate.run()
 
 
 @task
 def deployw():
+    release.work_on.run(0)
     fabd.mkdirs.run()
 
     release.create.run()
