@@ -303,6 +303,7 @@ class DataSetResource(BaseResource):
         return app.db.DataSet
 
     OBJECT_NAME = 'dataset'
+    FILTER_PARAMS = (('status', str), )
     GET_ACTIONS = ('generate_url', )
     methods = ('GET', 'OPTIONS', 'DELETE', 'POST')
 
