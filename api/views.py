@@ -155,8 +155,7 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
     def _put_train_action(self, **kwargs):
         from api.tasks import train_model, import_data
         from api.forms import ModelTrainForm
-        obj = self._get_details_query(None, None,
-                                        **kwargs)
+        obj = self._get_details_query(None, None, **kwargs)
         form = ModelTrainForm(obj=obj, **kwargs)
         if form.is_valid():
             model = form.save()
@@ -170,14 +169,14 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
                 import_data.apply_async(kwargs={'dataset_id': str(dataset._id),
                                                 'model_id': str(model._id)},
                                         link=train_model.subtask(args=(str(model._id), ),
-                                        options={'queue':instance['name']}))
+                                        options={'queue': instance['name']}))
                 #train_model.delay(str(model._id), params)
             else:
                 # train using dataset
                 dataset = form.cleaned_data.get('dataset', None)
                 train_model.apply_async((str(dataset._id),
-                                  str(model._id),),
-                                  queue=instance['name'])
+                                        str(model._id),),
+                                        queue=instance['name'])
             return self._render(self._get_save_response_context(model, extra_fields=['status']))
 
 api.add_resource(Models, '/cloudml/models/')

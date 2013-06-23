@@ -87,13 +87,29 @@ class BaseForm(object):
 class BaseModelForm(BaseForm):
     def _clean_importhandler(self, value):
         if value and not value == 'undefined':
-            obj = app.db.ImportHandler.find_one({'_id': ObjectId(value)})
-            print type(obj)
-            if obj is not None:
-                return obj
+            return app.db.ImportHandler.find_one({'_id': ObjectId(value)})
+
+    def _clean_importhandler_file(self, value):
+        if not value:
+            return
+
+        try:
+            data = json.loads(value)
+        except ValueError, exc:
+            raise ValidationError('Invalid importhandler data: %s' % exc)
+
+        try:
+            plan = ExtractionPlan(value, is_file=False)
+            self.cleaned_data['import_params'] = plan.input_params
+        except (ValueError, ImportHandlerException) as exc:
+            raise ValidationError('Invalid importhandler: %s' % exc)
+
+        return data
 
     clean_train_import_handler = _clean_importhandler
     clean_test_import_handler = _clean_importhandler
+    clean_train_import_handler_file = _clean_importhandler_file
+    clean_test_import_handler_file = _clean_importhandler_file
 
 
 class ModelEditForm(BaseModelForm):

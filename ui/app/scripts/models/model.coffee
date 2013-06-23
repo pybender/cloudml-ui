@@ -16,7 +16,9 @@ angular.module('app.models.model', ['app.config'])
       BASE_UI_URL: '/models/'
       API_FIELDNAME: 'model'
       DEFAULT_FIELDS_TO_SAVE: ['train_import_handler', 'features',
-                               'trainer', 'test_import_handler', 'name']
+                               'trainer', 'test_import_handler', 'name',
+                               'test_import_handler_file',
+                               'train_import_handler_file']
       @MAIN_FIELDS: 'name,_id,status,train_import_handler._id,
 train_import_handler.import_params,train_import_handler.name,
 test_import_handler._id,test_import_handler.import_params,
