@@ -38,6 +38,9 @@ angular.module('app.testresults.model', ['app.config'])
       examplesUrl: =>
         return "#{@BASE_UI_URL}#{@_id}?action=examples:list"
 
+      examplesCsvUrl: () ->
+        return "#{@BASE_API_URL}#{@_id}/examples/action/csv/"
+
       avaragePrecisionUrl: =>
         return "#{@BASE_UI_URL}#{@_id}/grouped_examples"
 

@@ -532,7 +532,7 @@ not contain probabilities')
         Returns list of examples in csv format
         """
         def generate():
-            parser_params = self.GET_PARAMS + self.FILTER_PARAMS
+            parser_params = list(self.GET_PARAMS) + self.FILTER_PARAMS
             params = self._parse_parameters(parser_params)
             fields = self._get_fields_to_show(params)
 

@@ -1,4 +1,11 @@
-<h2 ng-show="test.loaded">{{ test.name|capfirst }} Details</h2>
+<h2 ng-show="test.loaded">
+  {{ test.name|capfirst }} Details
+  <div class="actions">
+    <a ng-show="test.status == 'Completed'" class="btn btn-info" href="{{ test.examplesCsvUrl() }}">
+      <i title="Download test examples" class="icon-download-alt"></i> Classification Results in CSV
+    </a>
+  </div>
+</h2>
 
 <alert-message ng-hide="test.loaded" class="alert-info" msg="Loading..." unsafe></alert-message>
 
