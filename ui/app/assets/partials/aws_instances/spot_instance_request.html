@@ -1,0 +1,10 @@
+<div ng-controller="SpotInstanceRequestCtrl">
+    <p class="text-center" title="Choose instance type, when you want to request spot instance.">Request Spot Instance</p>
+    <label class="control-label">Type:</label>
+    <div class="controls" ng-class="{error: Form.spot_instance_type.$invalid}">
+      <select title="Choose instance type, when you want to request spot instance." class="input-small" name="spot_instance_type" ng-model="parameters.spot_instance_type">
+        <option value="" selected>--- select type ---</option>
+        <option ng-repeat="type in types" value="{{type}}">{{ type }}</option>
+      </select>
+    </div>
+</div>

@@ -29,6 +29,9 @@ def staging(**kwargs):
 def prod(**kwargs):
     fabd.conf.run('production')
 
+@task
+def worker1(**kwargs):
+    fabd.conf.run('worker1')
 
 @task
 def dev(**kwargs):
@@ -135,19 +138,19 @@ def deploy():
 
 
 @task
-def setupworker():
+def setupw():
     fabd.mkdirs.run()
     for app in ['supervisor']:
         pip.install.run(app=app)
 
     pip.install.run(app='virtualenv', upgrade=True)
     system.package_install.run(packages='liblapack-dev gfortran libpq-dev\
-npm nodejs libevent-dev')
+ libevent-dev')
     supervisor.push_init_config.run()
     supervisor.push_d_config.run()
     supervisor.push_configs.run()
     supervisor.d.run()
-
+    
     release.create.run()
     virtualenv.create.run()
     # install numpy and scipy
@@ -157,10 +160,12 @@ npm nodejs libevent-dev')
                 virtualenv.pip_install.run(app='numpy')
                 virtualenv.pip_install.run(app='scipy')
     virtualenv.make_relocatable.run()
+    release.activate.run()
 
 
 @task
-def deployworker():
+def deployw():
+    release.work_on.run(0)
     fabd.mkdirs.run()
 
     release.create.run()

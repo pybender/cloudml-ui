@@ -63,7 +63,7 @@ def consumes(content_type=None):
     return _consumes_decorator
 
 
-def odesk_error_response(status, code, message, debug=None, traceback=None):
+def odesk_error_response(status, code, message, debug=None, traceback=None, errors=None):
     """
     Creates a JSON error response that is compliant with
     https://sites.google.com/a/odesk.com/eng/Home/FunctionalSpecifications/webservices-error-handling-enhancements-frd
@@ -80,7 +80,8 @@ def odesk_error_response(status, code, message, debug=None, traceback=None):
     result = {'response': {
               'server_time': time(),
               'error': {'status': status, 'code': code,
-                        'message': message, 'traceback': traceback}}}
+                        'message': message, 'traceback': traceback,
+                        'errors': errors}}}
     if app.debug:
         result['response']['error']['debug'] = app.debug
 

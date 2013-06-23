@@ -9,6 +9,7 @@ from os import makedirs
 from api import celery, app
 from api.models import Test
 from api.logger import init_logger
+from api.amazon_utils import AmazonEC2Helper
 from core.trainer.trainer import Trainer
 from core.trainer.config import FeatureModel
 from core.trainer.streamutils import streamingiterload
@@ -17,6 +18,15 @@ from core.trainer.streamutils import streamingiterload
 class InvalidOperationError(Exception):
     pass
 
+@celery.task
+def request_spot_instance():
+    ec2 = AmazonEC2Helper()
+    instance_id = ec2.request_spot_instance()
+
+@celery.task
+def terminate_instance(instance_id):
+    ec2 = AmazonEC2Helper()
+    ec2.terminate_instance(instance_id)
 
 @celery.task
 def import_data(dataset_id, model_id=None, test_id=None):
@@ -42,14 +52,14 @@ def import_data(dataset_id, model_id=None, test_id=None):
         init_logger('importdata_log', obj=dataset_id)
         logging.info('Loading dataset %s' % dataset._id)
 
-        logging.info("Import data using import handler '%s' \
+        logging.info("Import dataset using import handler '%s' \
 with%s compression", importhandler.name, '' if dataset.compress else 'out')
         handler = json.dumps(importhandler.data)
         plan = ExtractionPlan(handler, is_file=False)
         handler = ImportHandler(plan, dataset.import_params)
-        logging.info('Storing data to file %s', dataset.filename)
+        logging.info('The dataset will be stored to file %s', dataset.filename)
         handler.store_data_json(dataset.filename, dataset.compress)
-        logging.info('Import data completed')
+        logging.info('Import dataset completed')
 
         logging.info('Saving file to Amazon S3')
         dataset.save_to_s3()

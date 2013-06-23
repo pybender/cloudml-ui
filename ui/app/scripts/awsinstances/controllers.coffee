@@ -108,3 +108,13 @@ angular.module('app.awsinstances.controllers', ['app.config', ])
       $scope.err = $scope.setError(opts, 'loading instances')
     )
 ])
+
+
+.controller('SpotInstanceRequestCtrl', [
+  '$scope'
+
+  ($scope) ->
+    # http://aws.amazon.com/amazon-linux-ami/instance-type-matrix/
+    $scope.types = ['m3.xlarge', 'm3.2xlarge', 'cc2.8xlarge', 'cr1.8xlarge',
+    'hi1.4xlarge', 'hs1.8xlarge']
+])

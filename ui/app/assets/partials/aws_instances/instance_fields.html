@@ -1,0 +1,11 @@
+<div class="row columns">
+  <div ng-hide="parameters['spot_instance_type']" ng-class="{span3: !parameters['aws_instance'], span6: parameters['aws_instance']}">
+    <ng-include src="'/partials/aws_instances/instance_select.html'"></ng-include>
+  </div>
+  <div ng-hide="parameters['spot_instance_type'] || parameters['aws_instance']" style="float: left;">
+    <b class="text-center">or</b>
+  </div>
+  <div ng-class="{span3: !parameters['spot_instance_type'], span6: parameters['spot_instance_type']}" ng-hide="parameters['aws_instance']" class="span3">
+    <ng-include src="'/partials/aws_instances/spot_instance_request.html'"></ng-include>
+  </div>
+</div>

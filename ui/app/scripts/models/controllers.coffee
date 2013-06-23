@@ -96,11 +96,9 @@ angular.module('app.models.controllers', ['app.config', ])
   '$rootScope'
 
   ($scope, $rootScope) ->
+    # DataSet section specific methods
     if $scope.handler?
       $scope.params = $scope.handler.import_params
-
-    $scope.changeDataSet = ->
-      $scope.existed = $scope.parameters["dataset"]
 
     $scope.changeParams = (param) ->
       $scope.paramsFilled = true

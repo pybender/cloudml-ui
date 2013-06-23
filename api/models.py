@@ -11,10 +11,10 @@ from bson import Binary
 from flask.ext.mongokit import Document
 from core.trainer.streamutils import streamingiterload
 
-from api import connection, app
+from api import app
 
 
-@connection.register
+@app.conn.register
 class LogMessage(Document):
     __collection__ = 'logs'
     structure = {
@@ -29,7 +29,7 @@ class LogMessage(Document):
     default_values = {'created_on': datetime.utcnow}
 
 
-@connection.register
+@app.conn.register
 class WeightsCategory(Document):
     """
     Represents Model Parameter Weights Category.
@@ -47,7 +47,7 @@ class WeightsCategory(Document):
     }
 
 
-@connection.register
+@app.conn.register
 class Weight(Document):
     """
     Represents Model Parameter Weight
@@ -76,7 +76,7 @@ app.db.Weight.collection.ensure_index(
 )
 
 
-@connection.register
+@app.conn.register
 class ImportHandler(Document):
     TYPE_DB = 'Db'
     TYPE_REQUEST = 'Request'
@@ -137,7 +137,7 @@ class ImportHandler(Document):
         return '<Import Handler %r>' % self.name
 
 
-@connection.register
+@app.conn.register
 class Model(Document):
     """
     Represents Model details and it's Tests.
@@ -244,7 +244,7 @@ class Model(Document):
         app.db.Weight.collection.remove(params)
 
 
-@connection.register
+@app.conn.register
 class Test(Document):
     STATUS_QUEUED = 'Queued'
     STATUS_IMPORTINING = 'Importing'
@@ -296,7 +296,7 @@ class Test(Document):
         self.collection.remove({'_id': self._id})
 
 
-@connection.register
+@app.conn.register
 class TestExample(Document):
     __collection__ = 'example'
 
@@ -324,7 +324,7 @@ class TestExample(Document):
     required_fields = ['created_on', ]
 
 
-@connection.register
+@app.conn.register
 class DataSet(Document):
     __collection__ = 'dataset'
     STATUS_IMPORTINING = 'Importing'
@@ -425,7 +425,7 @@ class DataSet(Document):
         return '<Dataset %r>' % self.name
 
 
-@connection.register
+@app.conn.register
 class Instance(Document):
     __collection__ = 'instances'
     structure = {

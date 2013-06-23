@@ -15,7 +15,9 @@ class NotFound(Exception):
 
 
 class ValidationError(Exception):
-    pass
+    def __init__(self, *args, **kwargs):
+        self.errors = kwargs.pop('errors', None)
+        super(ValidationError, self).__init__(*args, **kwargs)
 
 
 class BaseResource(restful.Resource):
@@ -71,7 +73,8 @@ class BaseResource(restful.Resource):
         except NotFound, exc:
             return odesk_error_response(404, ERR_NO_SUCH_MODEL, exc.message)
         except ValidationError, exc:
-            return odesk_error_response(400, ERR_INVALID_DATA, exc.message)
+            return odesk_error_response(400, ERR_INVALID_DATA, 
+                                        exc.message, errors=exc.errors)
 
     # HTTP Methods
 
