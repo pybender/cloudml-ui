@@ -21,7 +21,7 @@ class WeightsTests(BaseTestCase):
         # POST Trained Model
         handler = open('./conf/extract.json', 'r').read()
         trainer = open('./api/test/model.dat', 'r')
-        post_data = {'importhandler': handler,
+        post_data = {'test_import_handler_file': handler,
                      'trainer': trainer,
                      'name': cls.MODEL_NAME}
         resp = cls.app.post('/cloudml/models/', data=post_data)

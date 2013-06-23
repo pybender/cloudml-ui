@@ -166,22 +166,22 @@ class ModelAddForm(BaseModelForm):
     clean_test_import_handler_file = _clean_importhandler_file
 
     def validate_obj(self):
-        only_one_required(self.cleaned_data,
-                          ('train_import_handler',
-                           'train_import_handler_file'))
-        only_one_required(self.cleaned_data,
-                          ('test_import_handler',
-                           'test_import_handler_file'))
-
         features = self.cleaned_data.get('features')
         if not features and not self.trainer:
             raise ValidationError('Either features, either pickled \
 trained model is required for posting model')
 
         if self.feature_model:
+            only_one_required(self.cleaned_data,
+                              ('train_import_handler',
+                               'train_import_handler_file'))
             self.trainer = Trainer(self.feature_model)
         else:
             self.cleaned_data['status'] = Model.STATUS_TRAINED
+
+        only_one_required(self.cleaned_data,
+                          ('test_import_handler',
+                           'test_import_handler_file'))
 
     def save(self):
         name = self.cleaned_data['name']
@@ -198,7 +198,6 @@ trained model is required for posting model')
                 handler.save()
                 self.cleaned_data['%s_import_handler' % action] = handler
 
-        import pdb; pdb.set_trace()
         save_importhandler('train_import_handler_file')
         save_importhandler('test_import_handler_file')
 

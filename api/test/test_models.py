@@ -108,7 +108,8 @@ filter - all models should be returned')
     def test_post_with_invalid_features(self):
         uri = self.BASE_URL
         hanlder = open('./conf/extract.json', 'r').read()
-        post_data = {'importhandler': hanlder,
+        post_data = {'test_import_handler_file': hanlder,
+                     'train_import_handler_file': hanlder,
                      'name': 'new'}
         self._checkValidationErrors(uri, post_data, 'Either features, either \
 pickled trained model is required for posting model')
@@ -146,7 +147,8 @@ trainer - 'module' object has no attribute 'FeatureTypeInstance'")
         count = self.db.Model.find().count()
         features = open('./conf/features.json', 'r').read()
         handler = open('./conf/extract.json', 'r').read()
-        post_data = {'importhandler': handler,
+        post_data = {'test_import_handler_file': handler,
+                     'train_import_handler_file': handler,
                      'features': features,
                      'name': name}
         resp = self.app.post(self.BASE_URL, data=post_data)
@@ -160,12 +162,12 @@ trainer - 'module' object has no attribute 'FeatureTypeInstance'")
         name = 'new2'
         handler = open('./conf/extract.json', 'r').read()
         trainer = open('./api/test/model.dat', 'r')
-        post_data = {'importhandler': handler,
+        post_data = {'test_import_handler_file': handler,
                      'trainer': trainer,
                      'name': name}
         resp = self.app.post(self.BASE_URL, data=post_data)
         self.assertEquals(resp.status_code, httplib.CREATED)
-        self.assertTrue('model' in resp.data)
+        self.assertTrue('model' in resp.data, resp.data)
         new_count = self.db.Model.find().count()
         self.assertEquals(count + 1, new_count)
 
@@ -311,4 +313,5 @@ deleted" % examples)
         data = json.loads(resp.data)
         err_data = data['response']['error']
         self.assertEquals(err_data['code'], code)
-        self.assertTrue(message in err_data['message'])
+        self.assertTrue(message in err_data['message'],
+                        "Response message is: %s" % err_data['message'])
