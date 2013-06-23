@@ -19,8 +19,8 @@ angular.module('app.models.controllers', ['app.config', ])
   '$scope'
   'Model'
 
-($scope, Model) ->
-  $scope.model = new Model()
+  ($scope, Model) ->
+    $scope.model = new Model()
 ])
 
 # Upload trained model controller
