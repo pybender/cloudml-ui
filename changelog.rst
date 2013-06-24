@@ -4,6 +4,15 @@ Changelog
 =========
 
 
+Relese 2013-06-24
+-----------------
+* Feature - Added log pagination
+* Task - Delete log when delete related object
+* Bug - Display in run test and train model popup only successfully imported datasets
+* Task - Made “Metrics” the default screen on test details
+* Task - Make possible to upload import handler file (not choose from list) when upload/add new model
+
+
 Relese 2013-06-18
 -----------------
 * Feature - Added storing datasets to s3
