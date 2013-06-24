@@ -6,12 +6,15 @@ angular.module('app.models.controllers', ['app.config', ])
 
 .controller('ModelListCtrl', [
   '$scope'
+  '$location'
   'Model'
 
-  ($scope, Model) ->
+  ($scope, $location, Model) ->
     $scope.MODEL = Model
     $scope.FIELDS = 'created_on,error,' + Model.MAIN_FIELDS
     $scope.ACTION = 'loading models'
+    $scope.currentTag = $location.search()['tag']
+    $scope.kwargs = {'tag': $scope.currentTag}
 ])
 
 # Add new model controller
@@ -42,8 +45,40 @@ angular.module('app.models.controllers', ['app.config', ])
   '$routeParams'
   'Model'
   'TestResult'
+  'Tag'
 
-  ($scope, $location, $routeParams, Model, Test) ->
+  ($scope, $location, $routeParams, Model, Test, Tag) ->
+    # Configure Select2 widget for model tags edditing
+    # TODO: init data
+    $scope.params = {}
+
+    $scope.select2params = {
+      multiple: true,
+      query: (query) ->
+        data = {results: []}
+        angular.forEach($scope.tag_list, (item, key) ->
+          data.results.push(item)
+        )
+        query.callback(data)
+
+      createSearchChoice: (term, data) ->
+        cmp = () ->
+          return this.text.localeCompare(term) == 0
+        if $(data).filter(cmp).length == 0 then return {id: term, text: term}
+    }
+
+    Tag.$loadAll(
+      show: 'text,id'
+    ).then ((opts) ->
+      $scope.tag_list = []
+      for t in opts.objects
+        if t.text?
+          $scope.tag_list.push {'text': t.text, 'id': t.id}
+
+    ), ((opts) ->
+      $scope.setError(opts, 'loading tags')
+    )
+
     if not $routeParams.id
       throw new Error "Can't initialize without model id"
     $scope.model = new Model({_id: $routeParams.id})
@@ -54,6 +89,10 @@ angular.module('app.models.controllers', ['app.config', ])
         show: fields
         ).then (->
           $scope.LOADED_SECTIONS.push section
+          if $scope.params['tags']?
+            $scope.params['tags'] = []
+            for t in $scope.model.tags
+              $scope.params['tags'].push {'id': t, 'text': t}
         ), (->
           $scope.setError(opts, 'loading model details')
         )
@@ -73,7 +112,8 @@ angular.module('app.models.controllers', ['app.config', ])
       if name not in $scope.LOADED_SECTIONS
         extra_fields = ''
         switch name
-          when 'model' then extra_fields = 'created_on,target_variable,
+          when 'model'
+            extra_fields = 'created_on,target_variable,
   error,labels,weights_synchronized,example_id,example_label,
   updated_on,test_import_handler.name,test_import_handler._id'
           when 'features' then extra_fields = 'features'
@@ -89,6 +129,14 @@ angular.module('app.models.controllers', ['app.config', ])
         if name == 'test' then $scope.goTests()
 
     $scope.initSections($scope.goSection)
+
+    $scope.updateTags = () ->
+      $scope.model.tags = []
+      for t in $scope.params['tags']
+        $scope.model.tags.push t['text']
+
+      $scope.model.$save(only: ['tags']).then (->), (->
+        $scope.setError(opts, 'saving model tags'))
   ])
 
 .controller('BaseModelDataSetActionCtrl', [

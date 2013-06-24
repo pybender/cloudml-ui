@@ -74,8 +74,8 @@ class Models(BaseResource):
     Models API methods
     """
     GET_ACTIONS = ('download', 'reload', 'by_importhandler')
-    PUT_ACTIONS = ('train', )
-    FILTER_PARAMS = (('status', str), ('comparable', int))
+    PUT_ACTIONS = ('train', 'tags')
+    FILTER_PARAMS = (('status', str), ('comparable', int), ('tag', str))
     DEFAULT_FIELDS = ('_id', 'name')
     methods = ('GET', 'OPTIONS', 'DELETE', 'PUT', 'POST')
 
@@ -102,6 +102,9 @@ class Models(BaseResource):
         pdict = super(Models, self)._prepare_filter_params(params)
         if 'comparable' in pdict:
             pdict['comparable'] = bool(pdict['comparable'])
+        if 'tag' in pdict:
+            pdict['tags'] = {'$in': [pdict['tag']]}
+            del pdict['tag']
         return pdict
 
     def _get_reload_action(self, **kwargs):
@@ -150,8 +153,7 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
         resp.headers['Content-Disposition'] = 'attachment; filename=%s' % filename
         return resp
 
-    # POST specific methods
-
+    # POST/PUT specific methods
     def _put_train_action(self, **kwargs):
         from api.tasks import train_model, import_data
         from api.forms import ModelTrainForm
@@ -712,6 +714,21 @@ class LogResource(BaseResource):
 
 api.add_resource(LogResource, '/cloudml/logs/')
 
+
+class TagResource(BaseResource):
+    """
+    Tags API methods
+    """
+    MESSAGE404 = "Tag doesn't exist"
+    OBJECT_NAME = 'tag'
+    decorators = [crossdomain(origin='*')]
+    methods = ('GET', )
+
+    @property
+    def Model(self):
+        return app.db.Tag
+
+api.add_resource(TagResource, '/cloudml/tags/')
 
 def populate_parser(model, is_requred=False):
     parser = reqparse.RequestParser()

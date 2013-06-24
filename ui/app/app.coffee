@@ -11,6 +11,7 @@ App = angular.module('app', [
   'app.filters'
   'app.services'
   'ui.bootstrap'
+  'ui.select2'
 
   'app.base'
   'app.models.model'

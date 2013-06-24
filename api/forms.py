@@ -110,7 +110,32 @@ class BaseModelForm(BaseForm):
 
 class ModelEditForm(BaseModelForm):
     fields = ('test_import_handler', 'train_import_handler',
-              'example_id', 'example_label', 'name')
+              'example_id', 'example_label', 'name', 'tags')
+
+    def clean_tags(self, value):
+        if not value:
+            return []
+        return json.loads(value)
+
+    def save(self, commit=True):
+        model = super(ModelEditForm, self).save(False)
+
+        def get_or_create_tag(text):
+            tag = app.db.Tag.find_one({'text': text})
+            if tag is None:
+                tag = app.db.Tag()
+                tag.text = tag.id = text
+                tag.save()
+            return tag
+
+        cd_tags = self.cleaned_data.get('tags', None)
+        if cd_tags:
+            model.tags = []
+            for tag_dict in cd_tags:
+                tag = get_or_create_tag(tag_dict)
+                model.tags.append(tag.text)
+        model.save()
+        return model
 
 
 class ModelAddForm(BaseModelForm):

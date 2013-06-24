@@ -144,6 +144,16 @@ class ImportHandler(Document):
 
 
 @app.conn.register
+class Tag(Document):
+    __collection__ = 'tags'
+    structure = {
+        'id': basestring,
+        'text': basestring,
+    }
+    use_dot_notation = True
+
+
+@app.conn.register
 class Model(Document):
     """
     Represents Model details and it's Tests.
@@ -186,6 +196,7 @@ class Model(Document):
         # Fieldname of the example title from raw data
         'example_label': basestring,
         'example_id': basestring,
+        'tags': list,
     }
     gridfs = {'files': ['trainer']}
     required_fields = ['name', 'created_on', ]
@@ -193,6 +204,7 @@ class Model(Document):
                       'updated_on': datetime.utcnow,
                       'status': STATUS_NEW,
                       'comparable': False,
+                      'tags': [],
                       'weights_synchronized': False}
     use_dot_notation = True
     #use_autorefs = True

@@ -22,7 +22,7 @@ angular.module('app.models.model', ['app.config'])
       @MAIN_FIELDS: 'name,_id,status,train_import_handler._id,
 train_import_handler.import_params,train_import_handler.name,
 test_import_handler._id,test_import_handler.import_params,
-test_import_handler.name'
+test_import_handler.name,tags,updated_on'
 
 
       _id: null
@@ -30,6 +30,7 @@ test_import_handler.name'
       status: null
       created_on: null
       updated_on: null
+      tags: []
 
       trainer: null
       importParams: null
@@ -77,4 +78,23 @@ test_import_handler.name'
         @$make_request("#{@BASE_API_URL}#{@_id}/action/train/", {}, "PUT", data)
 
     return Model
+])
+
+
+.factory('Tag', [
+  '$http'
+  '$q'
+  'settings'
+  'BaseModel'
+  
+  ($http, $q, settings, BaseModel) ->
+    class Tag extends BaseModel
+      BASE_API_URL: "#{settings.apiUrl}tags/"
+      API_FIELDNAME: 'tag'
+
+      _id: null
+      id: null
+      text: null
+
+    return Tag
 ])

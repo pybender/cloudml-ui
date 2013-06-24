@@ -1,5 +1,5 @@
 <h2>
-  Model List
+  Model List <small ng-show="currentTag">tagged with {{ currentTag }}</small>
   <div class="actions">
   <a class="btn btn-info" href="#/upload_model">
     <i class="status-icon icon-upload"></i> Upload trained model
@@ -29,7 +29,16 @@
 </thead>
 <tbody>
   <tr ng-repeat="model in objects" ng-class="{success : model.status=='Trained', warning : model.status =='New', info : model.status =='Training', error : model.status =='Error'}">
-    <td><a href="#{{ model.objectUrl() }}">{{ model.name }}</a></td>
+    <td>
+      <a href="#{{ model.objectUrl() }}">{{ model.name }}</a>
+      <div title="tags">
+        <span ng-repeat="tag in model.tags">
+          <span class="badge">
+            <a href="#/models/?tag={{ tag }}" style="color: white;">{{ tag }}</a>
+          </span> 
+        </span>
+      </div>
+    </td>
     <td title="{{ model.error }}">{{ model.status }}</td>
     <td>{{ model.created_on|format_date }}</td>
     <td><span ng-repeat="param in model.import_params">{{ param|capfirst }} </span></td>

@@ -51,12 +51,17 @@ angular.module('app.base', ['app.config'])
 
       # Saves or creates the object
       $save: (opts={}) =>
+        typeIsArray = Array.isArray || ( value ) ->
+            return {}.toString.call( value ) is '[object Array]'
+
         if !opts.only?
           opts.only = @DEFAULT_FIELDS_TO_SAVE
 
         data = {}
         for name in opts.only
           val = eval("this." + name)
+          if typeIsArray val then val = JSON.stringify(val)
+
           if val? then data[name] = val
 
         method = if @isNew() then "POST" else "PUT"
