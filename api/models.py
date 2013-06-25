@@ -35,6 +35,7 @@ class LogMessage(Document):
         app.db.LogMessage.collection.remove({'params.obj': str(obj._id),
                                              'type': obj.LOG_TYPE})
 
+
 @app.conn.register
 class WeightsCategory(Document):
     """
@@ -109,7 +110,8 @@ class ImportHandler(Document):
         dataset.name = "%s: %s" % (self.name, str_params)
         dataset.import_handler_id = str(self._id)
         dataset.import_params = params
-        # filename = '%s-%s.json' % (slugify(self.name), str_params.replace('=', '_'))
+        # filename = '%s-%s.json' % (slugify(self.name)
+        # str_params.replace('=', '_'))
         # dataset.data = filename
         dataset.save(validate=True)
         dataset.set_file_path()
@@ -149,8 +151,35 @@ class Tag(Document):
     structure = {
         'id': basestring,
         'text': basestring,
+        # Count of models with this tag
+        'count': int,
     }
+    default_values = {'count': 1}
     use_dot_notation = True
+
+    @classmethod
+    def update_tags_count(cls, old_list, new_list):
+        def get_or_create_tag(text, increase_count=True):
+            tag = app.db.Tag.find_one({'text': text})
+            if tag is None:
+                tag = app.db.Tag()
+                tag.text = tag.id = text
+                tag.count = 1
+                tag.save()
+            else:
+                if increase_count:
+                    tag.count += 1
+                    tag.save()
+            return tag
+
+        for name in new_list:
+            tag = get_or_create_tag(name, increase_count=not name in old_list)
+
+        tags_to_decrease_count = set(old_list) - set(new_list)
+        for text in tags_to_decrease_count:
+            tag = app.db.Tag.find_one({'text': text})
+            tag.count -= 1
+            tag.save()
 
 
 @app.conn.register
@@ -185,8 +214,8 @@ class Model(Document):
         'test_import_handler': ImportHandler,
         'train_import_handler': ImportHandler,
 
-        'train_importhandler':dict,
-        'importhandler':dict,
+        'train_importhandler': dict,
+        'importhandler': dict,
 
         'trainer': None,
         'comparable': bool,
@@ -415,7 +444,7 @@ class DataSet(Document):
         helper = AmazonS3Helper()
         return helper.load_key(str(self._id))
 
-    def save_to_s3(self):        
+    def save_to_s3(self):
         meta = {'handler': self.import_handler_id,
                 'dataset': self.name,
                 'params': str(self.import_params)}

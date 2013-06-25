@@ -64,7 +64,7 @@ class BaseForm(object):
                     value = getattr(self, mthd)(value)
                 except ValidationError, exc:
                     self.errors.append({'name': name, 'error': exc.message})
-            if value:
+            if value is not None:
                 self.cleaned_data[name] = value
             elif required:
                 cleaned_value = self.cleaned_data.get(name)
@@ -114,27 +114,16 @@ class ModelEditForm(BaseModelForm):
 
     def clean_tags(self, value):
         if not value:
-            return []
+            return None
         return json.loads(value)
 
     def save(self, commit=True):
-        model = super(ModelEditForm, self).save(False)
+        old_tags = self.obj.tags
+        model = super(ModelEditForm, self).save()
 
-        def get_or_create_tag(text):
-            tag = app.db.Tag.find_one({'text': text})
-            if tag is None:
-                tag = app.db.Tag()
-                tag.text = tag.id = text
-                tag.save()
-            return tag
+        if self.cleaned_data.get('tags', None):
+            app.db.Tag.update_tags_count(old_tags, model.tags)
 
-        cd_tags = self.cleaned_data.get('tags', None)
-        if cd_tags:
-            model.tags = []
-            for tag_dict in cd_tags:
-                tag = get_or_create_tag(tag_dict)
-                model.tags.append(tag.text)
-        model.save()
         return model
 
 
@@ -381,7 +370,7 @@ class AddTestForm(BaseChooseInstanceAndDataset):
             import_data.apply_async(kwargs={'dataset_id': str(dataset._id),
                                             'test_id': str(test._id)},
                                     link=run_test.subtask(args=(str(test._id), ),
-                                    options={'queue':instance['name']}))
+                                    options={'queue': instance['name']}))
         else:
             # test using dataset
             dataset = self.cleaned_data.get('dataset', None)
