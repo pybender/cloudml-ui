@@ -18,6 +18,7 @@
             "train_import_handler": "5170dd3a106a6c1631000000",
             "test_import_handler": "5170dd3a106a6c1631000000",
             "weights_synchronized": false,
+            "tags": ["bestmatch"],
         "features": {
   "schema-name": "bestmatch",
   "classifier": {
