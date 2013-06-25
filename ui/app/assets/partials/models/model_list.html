@@ -1,5 +1,5 @@
 <h2>
-  Model List <small ng-show="currentTag">tagged with {{ currentTag }}</small>
+  <a href="#/models/">Model List</a> <small ng-show="currentTag">tagged with {{ currentTag }}</small>
   <div class="actions">
   <a class="btn btn-info" href="#/upload_model">
     <i class="status-icon icon-upload"></i> Upload trained model
@@ -16,6 +16,14 @@
 <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
 
 <alert-message ng-show="objects.length == 0" class="alert-info" msg="No models found"></alert-message>
+
+<div ng-controller="TagCloudCtrl" class="alert-info well">
+  <span ng-repeat="tag in tag_list">
+    <span>
+      <a href="#/models/?tag={{ tag.text }}">{{ tag.text }} ({{ tag.count }})</a> 
+    </span>&nbsp;
+  </span>
+</div>
 
 <table ng-controller="BaseListCtrl" ng-hide="objects.length == 0" class="table table-hover">
 <thead>

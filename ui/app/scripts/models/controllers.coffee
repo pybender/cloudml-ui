@@ -17,6 +17,21 @@ angular.module('app.models.controllers', ['app.config', ])
     $scope.kwargs = {'tag': $scope.currentTag}
 ])
 
+
+.controller('TagCloudCtrl', [
+  '$scope'
+  'Tag'
+
+  ($scope, Tag) ->
+    Tag.$loadAll(
+      show: 'text,count'
+    ).then ((opts) ->
+      $scope.tag_list = opts.objects
+    ), ((opts) ->
+      $scope.setError(opts, 'loading tags list')
+    )
+])
+
 # Add new model controller
 .controller('AddModelCtl', [
   '$scope'
