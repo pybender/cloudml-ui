@@ -82,30 +82,6 @@
   <div ng-show="action[0] == 'model'" ng-controller="ObjEditCtrl">
     <div class="row">
       <div class="span4" ng-controller="ImportHandlerSelectCtrl">
-        <b>Import Handlers</b>
-        <div>
-          For Train:
-          <span title="Select Train Import Handler" ng-bind="model.train_import_handler_obj.name" editable="model" value="model.train_import_handler_obj._id" editable-field="train_import_handler" editable-input="select" editable-placement="right" source="handlers_list" display="model.train_import_handler_obj.name"></span>
-          <a target="_blank" href="#/importhandlers/{{ model.train_import_handler._id }}"><i class="icon-arrow-right"></i></a>
-        </div>
-        <div>
-          For Tests:
-          <span title="Select Test Import Handler" ng-bind="model.test_import_handler_obj.name" editable="model" value="model.test_import_handler_obj._id" editable-field="test_import_handler" editable-input="select" editable-placement="right" source="handlers_list" display="model.test_import_handler_obj.name"></span>
-          <a target="_blank" href="#/importhandlers/{{ model.test_import_handler._id }}"><i class="icon-arrow-right"></i></a>
-        </div>
-      </div>
-      <div class="span4">
-        <b>Data Examples Titles</b>
-        <div>
-          Examples label field name:
-          <span title="Label Field Name" ng-bind="model.example_label || 'not specified'" editable="model" value="model.example_label" editable-field="example_label" editable-input="text" editable-placement="right"></span>
-        </div>
-        <div>
-            Examples id field name:
-            <span title="ID Field Name" ng-bind="model.example_id" editable="model" value="model.example_id" editable-field="example_id" editable-input="text" editable-placement="right"></span>
-        </div>
-      </div>
-      <div class="span4">
         <div>
             Target variable:
             <span class="value">{{ model.target_variable }}</span>
@@ -113,6 +89,37 @@
         <div>
             Classes:
             <span class="value">{{ model.labels }}</span>
+        </div>
+      </div>
+      <div class="span4">
+        <h5>Import Handlers</h5>
+        <div>
+          For Train:
+          <span title="Select Train Import Handler" ng-bind="model.train_import_handler_obj.name" editable="model" value="model.train_import_handler_obj._id" editable-field="train_import_handler" editable-input="select" editable-placement="right" source="handlers_list" display="model.train_import_handler_obj.name"></span>
+          <a target="_blank" href="#{{ model.train_import_handler_obj.objectUrl() }}"><i class="icon-arrow-right"></i></a>
+        </div>
+        <div>
+          For Tests:
+          <span title="Select Test Import Handler" ng-bind="model.test_import_handler_obj.name" editable="model" value="model.test_import_handler_obj._id" editable-field="test_import_handler" editable-input="select" editable-placement="right" source="handlers_list" display="model.test_import_handler_obj.name"></span>
+          <a target="_blank" href="#{{ model.test_import_handler_obj.objectUrl() }}"><i class="icon-arrow-right"></i></a>
+        </div>
+        <div ng-show="model.dataset" title="DataSet which was used for training">
+            DataSet:
+            <span class="value">
+              <a href="#{{ model.dataset_obj.objectUrl() }}">
+              {{ model.dataset_obj.name }}</a>
+            </span>
+        </div>
+      </div>
+      <div class="span3">
+        <h5>Data Examples Titles</h5>
+        <div>
+          Examples label field name:
+          <span title="Label Field Name" ng-bind="model.example_label || 'not specified'" editable="model" value="model.example_label" editable-field="example_label" editable-input="text" editable-placement="right"></span>
+        </div>
+        <div>
+            Examples id field name:
+            <span title="ID Field Name" ng-bind="model.example_id" editable="model" value="model.example_id" editable-field="example_id" editable-input="text" editable-placement="right"></span>
         </div>
       </div>
     </div>

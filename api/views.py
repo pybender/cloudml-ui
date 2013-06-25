@@ -87,7 +87,7 @@ class Models(BaseResource):
     DOWNLOAD_FIELDS = ('trainer', 'features')
 
     @property
-    def Model(self):
+    def Model(self):        
         return app.db.Model
 
     def _get_model_parser(self, **kwargs):

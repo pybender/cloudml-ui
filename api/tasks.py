@@ -18,15 +18,18 @@ from core.trainer.streamutils import streamingiterload
 class InvalidOperationError(Exception):
     pass
 
+
 @celery.task
 def request_spot_instance():
     ec2 = AmazonEC2Helper()
     instance_id = ec2.request_spot_instance()
 
+
 @celery.task
 def terminate_instance(instance_id):
     ec2 = AmazonEC2Helper()
     ec2.terminate_instance(instance_id)
+
 
 @celery.task
 def import_data(dataset_id, model_id=None, test_id=None):
@@ -97,6 +100,7 @@ def train_model(dataset_id, model_id):
         dataset = app.db.DataSet.find_one({'_id': ObjectId(dataset_id)})
         model.delete_metadata()
 
+        model.dataset = dataset
         model.status = model.STATUS_TRAINING
         model.error = ""
         model.save(validate=True)
@@ -207,6 +211,7 @@ def run_test(dataset_id, test_id):
 
     test = app.db.Test.find_one({'_id': ObjectId(test_id)})
     dataset = app.db.DataSet.find_one({'_id': ObjectId(dataset_id)})
+    test.dataset = dataset
     model = test.model
     try:
         if model.status != model.STATUS_TRAINED:

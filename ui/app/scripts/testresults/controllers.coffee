@@ -96,7 +96,7 @@ without test id and model id"
       switch section_name
         when 'about'
           extra_fields = 'classes_set,created_on,parameters,error,
-examples_count'
+examples_count,dataset'
         when 'metrics'
           extra_fields = 'accuracy,metrics.precision_recall_curve,
 metrics.roc_curve,metrics.roc_auc'

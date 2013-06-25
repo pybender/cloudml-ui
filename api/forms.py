@@ -201,12 +201,19 @@ trained model is required for posting model')
         save_importhandler('train_import_handler_file')
         save_importhandler('test_import_handler_file')
 
+        train_import_handler = self.cleaned_data.pop('train_import_handler')
+        test_import_handler = self.cleaned_data.pop('test_import_handler')
         obj = super(ModelAddForm, self).save()
         obj.set_trainer(self.trainer)
         if obj.status == Model.STATUS_TRAINED:
             # Processing Model Parameters weights in celery task
             from api.tasks import fill_model_parameter_weights
             fill_model_parameter_weights.delay(str(obj._id))
+        obj.validate()
+        obj.save()
+
+        obj.train_import_handler = train_import_handler
+        obj.test_import_handler = test_import_handler
         obj.save()
         return obj
 

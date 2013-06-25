@@ -23,7 +23,6 @@
     <th>Name</th>
     <th>Status</th>
     <th>Created</th>
-    <th>Params</th>
     <th>Actions</th>
   </tr>
 </thead>
@@ -32,7 +31,6 @@
     <td><a href="#{{ model.objectUrl() }}">{{ model.name }}</a></td>
     <td title="{{ model.error }}">{{ model.status }}</td>
     <td>{{ model.created_on|format_date }}</td>
-    <td><span ng-repeat="param in model.import_params">{{ param|capfirst }} </span></td>
     <td ng-controller="ModelActionsCtrl">
       <div ng-init="init({model: model})">
         <button ng-show="model.status == 'Trained'" ng-click="test_model(model)" class="btn btn-success">

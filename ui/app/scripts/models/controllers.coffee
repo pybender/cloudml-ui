@@ -10,7 +10,7 @@ angular.module('app.models.controllers', ['app.config', ])
 
   ($scope, Model) ->
     $scope.MODEL = Model
-    $scope.FIELDS = 'created_on,error,' + Model.MAIN_FIELDS
+    $scope.FIELDS = 'created_on,error,name,_id,status'
     $scope.ACTION = 'loading models'
 ])
 
@@ -75,7 +75,7 @@ angular.module('app.models.controllers', ['app.config', ])
         switch name
           when 'model' then extra_fields = 'created_on,target_variable,
   error,labels,weights_synchronized,example_id,example_label,
-  updated_on,test_import_handler.name,test_import_handler._id'
+  updated_on,dataset'
           when 'features' then extra_fields = 'features'
 
         if 'main' in $scope.LOADED_SECTIONS

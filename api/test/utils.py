@@ -37,7 +37,8 @@ class BaseTestCase(unittest.TestCase):
     @classmethod
     def fixtures_load(cls):
         from api import models
-        from mongokit.document import DocumentProperties
+        from mongokit.document import DocumentProperties, R
+        related_objects = []
         for fixture in cls.FIXTURES:
             data = _load_fixture_data(fixture)
             for collection_name, documents in data.iteritems():
@@ -50,17 +51,30 @@ class BaseTestCase(unittest.TestCase):
                             doc['_id'] = ObjectId(val)
                         else:
                             field_type = Model.structure[key]
-
                             if field_type == datetime:
                                 doc[key] = datetime.now()
                             elif isinstance(field_type, DocumentProperties):
                                 if val:
-                                    pattern = re.compile("<class '%s.(.*?)'>" % field_type.__module__)
-                                    model_name = pattern.findall(str(field_type))[0]
-                                    RelModel = getattr(app.db, model_name)
-                                    doc[key] = RelModel.find_one({'_id': ObjectId(val)})
-
+                                    RelModel = getattr(app.db, val['$ref'])
+                                    doc[key] = RelModel.find_one({'_id': ObjectId(val['$id'])})
+                            elif isinstance(field_type, R):
+                                if val:
+                                    related_objects.append({'id': doc['_id'],
+                                                            'collection': collection_name,
+                                                            'related_collection': val['$ref'],
+                                                            'related_id': val['$id'],
+                                                            'fieldname': key})
+                                    doc[key] = None
                 collection.insert(documents)
+
+        for related_item in related_objects:
+            Model = getattr(app.db, related_item['collection'])
+            RelModel = getattr(app.db, related_item['related_collection'])
+            obj = Model.find_one({'_id': ObjectId(related_item['id'])})
+            related_obj = RelModel.find_one({'_id': ObjectId(related_item['related_id'])})
+
+            setattr(obj, related_item['fieldname'], related_obj)
+            obj.save()
 
     @classmethod
     def fixtures_cleanup(cls):

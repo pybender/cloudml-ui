@@ -36,6 +36,13 @@
                         <span ng-repeat='cls in test.classes_set'><span class="label">{{ cls }}</span> </span> 
                     </span>
                 </div>
+                <div ng-show="test.dataset" title="DataSet which was used for running test">
+                  DataSet:
+                  <span class="value">
+                    <a href="#{{ test.dataset_obj.objectUrl() }}">
+                    {{ test.dataset_obj.name }}</a>
+                  </span>
+                </div>
                 <div>
                     Created at: <span class="value">{{ test.created_on|format_date }}</span>
                 </div>

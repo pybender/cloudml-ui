@@ -6,8 +6,9 @@ angular.module('app.models.model', ['app.config'])
   'settings'
   'BaseModel'
   'ImportHandler'
+  'DataSet'
   
-  ($http, $q, settings, BaseModel, ImportHandler) ->
+  ($http, $q, settings, BaseModel, ImportHandler, DataSet) ->
     ###
     Model
     ###
@@ -19,11 +20,8 @@ angular.module('app.models.model', ['app.config'])
                                'trainer', 'test_import_handler', 'name',
                                'test_import_handler_file',
                                'train_import_handler_file']
-      @MAIN_FIELDS: 'name,_id,status,train_import_handler._id,
-train_import_handler.import_params,train_import_handler.name,
-test_import_handler._id,test_import_handler.import_params,
-test_import_handler.name'
-
+      @MAIN_FIELDS: 'name,_id,status,train_import_handler,
+test_import_handler'
 
       _id: null
       name: null
@@ -51,6 +49,9 @@ test_import_handler.name'
             @train_import_handler_obj = new ImportHandler(
               origData['train_import_handler'])
             @train_import_handler = @train_import_handler_obj._id
+          if origData.dataset?
+            @dataset_obj = new DataSet(origData['dataset'])
+            @dataset = @dataset._id
 
       downloadUrl: =>
         return "#{@BASE_API_URL}#{@_id}/action/download/"

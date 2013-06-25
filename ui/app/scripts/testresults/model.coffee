@@ -6,8 +6,9 @@ angular.module('app.testresults.model', ['app.config'])
   'settings'
   'Model'
   'BaseModel'
+  'DataSet'
   
-  ($http, $q, settings, Model, BaseModel) ->
+  ($http, $q, settings, Model, BaseModel, DataSet) ->
     ###
     Trained Model Test
     ###
@@ -32,6 +33,8 @@ angular.module('app.testresults.model', ['app.config'])
         @BASE_API_URL = TestResult.$get_api_url(@model_id)
         @BASE_UI_URL = "/models/#{@model_id}/tests/"
 
+
+
       @$get_api_url: (model_id) ->
         return "#{settings.apiUrl}models/#{model_id}/tests/"
 
@@ -54,6 +57,10 @@ angular.module('app.testresults.model', ['app.config'])
         if 'model' in origData
           @model = new Model(origData['model'])
           @model_name = origData['model']['name']
+
+        if origData.dataset?
+          @dataset_obj = new DataSet(origData['dataset'])
+          @dataset = @dataset._id
 
       $run: (data) =>
         if @_id?
