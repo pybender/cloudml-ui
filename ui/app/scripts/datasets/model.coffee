@@ -31,7 +31,8 @@ angular.module('app.datasets.model', ['app.config'])
 
         if origData?
           if origData.on_s3?
-            @on_s3 = origData.on_s3 == 'True'
+            if typeof(origData.on_s3) != "boolean"
+              @on_s3 = origData.on_s3 == 'True'
 
       constructor: (opts) ->
         super

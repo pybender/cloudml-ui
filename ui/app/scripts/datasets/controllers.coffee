@@ -66,7 +66,8 @@ angular.module('app.datasets.controllers', ['app.config', ])
       ).then (->
         if $scope.dataset.on_s3
           generateS3Url($scope.dataset, ((resp) ->
-            $scope.url = resp.url), $scope.setError)
+            $scope.url = resp.url
+          ), $scope.setError)
       ), ((opts) ->
         $scope.setError(opts, 'loading dataset details')
       )
