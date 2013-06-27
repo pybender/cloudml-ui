@@ -1,25 +1,25 @@
-<h2>
-  <span title="Title"
-    class="title" ng-bind="dataset.name || 'untitled dataset'"
-    editable="dataset" value="dataset.name"
-    editable-field="name" editable-input="text"
-    editable-placement="right"></span> Details
-</h2>
-<div class="date-created">
-  <div ng-show="dataset.on_s3" class="input-prepend input-append">
-    <span class="add-on">S3 URL</span>
-    <input class="span2" value="{{ url }}" disabled type="text">
-    <button class="btn" type="button" ng-click="generateS3Url()">Generate</button>
-  </div> &nbsp;
-  <i class="icon-calendar"></i>
-  created on <span class="badge badge-info">{{ dataset.created_on|format_date }}</span>
-  <span ng-hide="dataset.created_on == dataset.updated_on">
-    updated on <span class="badge badge-info">{{ dataset.updated_on|format_date }}</span>
-  </span>
-  <i class="icon-status"></i>
-  <span class="badge badge-warning">{{ dataset.status }}</span>
+<div>
+  <h2>
+    <span title="Title"
+      class="title" ng-bind="dataset.name || 'untitled dataset'"
+      editable="dataset" value="dataset.name"
+      editable-field="name" editable-input="text"
+      editable-placement="right"></span> Details
+  </h2>
+  <div class="date-created">
+    <span ng-show="dataset.on_s3">
+      <a href="{{ url }}">S3 URL</a>
+    </span> &nbsp;
+    <i class="icon-calendar"></i>
+    created on <span class="badge badge-info">{{ dataset.created_on|format_date }}</span>
+    <span ng-hide="dataset.created_on == dataset.updated_on">
+      updated on <span class="badge badge-info">{{ dataset.updated_on|format_date }}</span>
+    </span>
+    <i class="icon-status"></i>
+    <span class="badge badge-warning">{{ dataset.status }}</span>
+  </div>
+  <p></p>
 </div>
-<p></p>
 
 <alert-message ng-show="msg" class="alert-info" msg='{{ msg }}' unsafe></alert-message>
 <alert-message ng-show="err" class="alert-error" msg='{{ err }}' unsafe></alert-message>

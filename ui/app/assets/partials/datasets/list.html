@@ -1,4 +1,6 @@
-<table ng-controller="BaseListCtrl" class="table table-striped">
+<alert-message ng-show="msg" class="alert-info" msg='{{ msg }}' unsafe></alert-message>
+
+<table ng-controller="BaseListCtrl" ng-init="init(false, 'dataset')" class="table table-striped">
   <thead>
       <tr>
         <th>Name</th>
@@ -16,11 +18,12 @@
         <a href="#{{ ds.objectUrl() }}">{{ ds.name }}</a>
       </td>
       <td title="{{ ds.error }}">{{ ds.status }}</td>
-      <td><span class="value" ng-repeat="(key, val) in ds.import_params">{{ key }}={{ val }}</span></td>
+      <td><div class="value" ng-repeat="(key, val) in ds.import_params">{{ key }}={{ val }}</div></td>
       <td>{{ ds.data }}</td>
       <td>{{ ds.on_s3 }}</td>
       <td>{{ ds.created_on|format_date }}</td>
       <td>
+        <a class="btn btn-info" ng-show="ds.url" href="{{ ds.url }}"><i title="Download From Amazon S3" class="icon-download-alt"></i></a>
         <button ng-click="delete(ds)" class="btn btn-danger">
           <i title="Delete dataset. Be careful - you could not recover it!" class="icon-remove"></i>
         </button>

@@ -32,6 +32,7 @@ App = angular.module('app', [
   'app.logmessages.model'
   'app.logmessages.controllers'
 ])
+
 App.config([
   '$routeProvider'
   '$locationProvider'

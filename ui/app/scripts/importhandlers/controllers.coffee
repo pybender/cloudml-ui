@@ -17,21 +17,34 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
 
 .controller('ImportHandlerDetailsCtrl', [
   '$scope'
+  '$rootScope'
   '$routeParams'
   'ImportHandler'
 
-  ($scope, $routeParams, ImportHandler) ->
+  ($scope, $rootScope, $routeParams, ImportHandler) ->
     if not $routeParams.id
       err = "Can't initialize without import handler id"
 
     $scope.handler = new ImportHandler({_id: $routeParams.id})
+    $scope.LOADED_SECTIONS = []
 
     $scope.go = (section) ->
-      $scope.handler.$load(
-        show: 'name,type,created_on,updated_on,data,import_params'
-      ).then (->), ((opts) ->
-        $scope.setError(opts, 'loading handler details')
-      )
+      name = section[0]
+      if name not in $scope.LOADED_SECTIONS
+        $scope.handler.$load(
+          show: 'name,type,created_on,updated_on,data,import_params'
+        ).then (->
+          $scope.LOADED_SECTIONS.push name
+        ), ((opts) ->
+          $scope.setError(opts, 'loading handler details')
+        )
+        if name == 'dataset'
+          setTimeout(() ->
+            $scope.$broadcast('loadDataSet', true)
+            $scope.LOADED_SECTIONS.push name
+          , 100)
+
+        
 
     $scope.saveData = () ->
       $scope.handler.$save(only: ['data'])

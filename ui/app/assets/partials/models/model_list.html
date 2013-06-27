@@ -17,7 +17,7 @@
 
 <alert-message ng-show="objects.length == 0" class="alert-info" msg="No models found"></alert-message>
 
-<table ng-controller="BaseListCtrl" ng-hide="objects.length == 0" class="table table-hover">
+<table ng-controller="BaseListCtrl" ng-init="init(true, 'models')" ng-hide="objects.length == 0" class="table table-hover">
 <thead>
   <tr>
     <th>Name</th>
