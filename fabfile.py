@@ -167,7 +167,7 @@ def setupw():
 
 @task
 def deployw():
-    release.work_on.run(0)
+    #release.work_on.run(0)
     fabd.mkdirs.run()
 
     release.create.run()
@@ -184,7 +184,7 @@ def deployw():
     release.activate.run()
 
     supervisor.update.run()
-    supervisor.restart_program.run(program='celeryd')
+    supervisor.restart_program.run(program='celerydw')
 
 
 class PushAnjularConfig(Task):

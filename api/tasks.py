@@ -31,9 +31,11 @@ def request_spot_instance(callback=None,
              instance.private_ip_address))
     if callback is not None:
         queue = "ip-%s" % "-".join(instance.private_ip_address.split('.'))
-        subtask(callback).apply_async((dataset_id
+        subtask(callback).apply_async((dataset_id,
                                        model_id),
-                                       queue=queue)
+                                       queue=queue,
+                                       link_error=self_terminate.s()
+                                       )
     return instance.private_ip_address
 
 
