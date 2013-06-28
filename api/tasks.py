@@ -4,7 +4,8 @@ from copy import copy
 from itertools import izip
 from bson.objectid import ObjectId
 from os.path import join, exists
-from os import makedirs
+from os import makedirs, system
+from celery.task.sets import subtask
 
 from api import celery, app
 from api.models import Test
@@ -19,14 +20,33 @@ class InvalidOperationError(Exception):
     pass
 
 @celery.task
-def request_spot_instance():
+def request_spot_instance(callback=None,
+                          dataset_id=None,
+                          model_id=None):
     ec2 = AmazonEC2Helper()
-    instance_id = ec2.request_spot_instance()
+    logging.info('Request spot instance')
+    instance = ec2.request_spot_instance()
+    logging.info('Instance %s(%s) lunched' % 
+            (instance.id_instance,
+             instance.private_ip_address))
+    if callback is not None:
+        queue = "ip-%s" % "-".join(instance.private_ip_address.split('.'))
+        subtask(callback).apply_async((dataset_id
+                                       model_id),
+                                       queue=queue)
+    return instance.private_ip_address
+
 
 @celery.task
 def terminate_instance(instance_id):
     ec2 = AmazonEC2Helper()
     ec2.terminate_instance(instance_id)
+
+
+@celery.task
+def self_terminate():
+    system("halt")
+
 
 @celery.task
 def import_data(dataset_id, model_id=None, test_id=None):

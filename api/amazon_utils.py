@@ -27,7 +27,9 @@ class AmazonEC2Helper(object):
             instance_type=instance_type,
             placement="us-west-2a",
             subnet_id="subnet-8cf096e5")
-        return req[0].instance_id
+        reservations = conn.get_all_instances(instance_ids=[req[0].instance_id, ])
+        instance = reservations[0].instances[0]
+        return instance
 
 
 class AmazonS3Helper(object):

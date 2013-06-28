@@ -153,31 +153,51 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
     # POST specific methods
 
     def _put_train_action(self, **kwargs):
-        from api.tasks import train_model, import_data
+        from api.tasks import train_model, import_data, \
+            request_spot_instance, self_terminate
         from api.forms import ModelTrainForm
+        from celery import chain
         obj = self._get_details_query(None, None, **kwargs)
         form = ModelTrainForm(obj=obj, **kwargs)
         if form.is_valid():
             model = form.save()
             instance = form.cleaned_data.get('aws_instance', None)
             spot_instance_type = form.cleaned_data.get('spot_instance_type', None)
+      
+            tasks_list = []
             if form.params_filled:
-                # load and train
                 from api.models import ImportHandler
                 import_handler = ImportHandler(model.train_import_handler)
                 params = form.cleaned_data.get('parameters', None)
                 dataset = import_handler.create_dataset(params)
-                import_data.apply_async(kwargs={'dataset_id': str(dataset._id),
-                                                'model_id': str(model._id)},
-                                        link=train_model.subtask(args=(str(model._id), ),
-                                        options={'queue': instance['name']}))
-                #train_model.delay(str(model._id), params)
-            else:
-                # train using dataset
-                dataset = form.cleaned_data.get('dataset', None)
-                train_model.apply_async((str(dataset._id),
-                                        str(model._id),),
-                                        queue=instance['name'])
+                tasks_list.append(import_data.s(str(dataset._id),
+                                                str(model._id)))
+            if not spot_instance_type is None:
+                tasks_list.append(request_spot_instance.s(callback=train_model,
+                                                          dataset_id=str(dataset._id),
+                                                          model_id=str(model._id)))
+                tasks_list.append(self_terminate.s())
+            elif not instance is None:
+                tasks_list.append(train_model.s(args=(str(dataset._id), str(model._id)),
+                                                options={'queue': instance['name']}))
+
+            # if form.params_filled:
+            #     # load and train
+            #     from api.models import ImportHandler
+            #     import_handler = ImportHandler(model.train_import_handler)
+            #     params = form.cleaned_data.get('parameters', None)
+            #     dataset = import_handler.create_dataset(params)
+            #     import_data.apply_async(kwargs={'dataset_id': str(dataset._id),
+            #                                     'model_id': str(model._id)},
+            #                             link=train_model.subtask(args=(str(model._id), ),
+            #                             options={'queue': instance['name']}))
+            #     #train_model.delay(str(model._id), params)
+            # else:
+            #     # train using dataset
+            #     dataset = form.cleaned_data.get('dataset', None)
+            #     train_model.apply_async((str(dataset._id),
+            #                             str(model._id),),
+            #                             queue=instance['name'])
             return self._render(self._get_save_response_context(model, extra_fields=['status']))
 
 api.add_resource(Models, '/cloudml/models/')
