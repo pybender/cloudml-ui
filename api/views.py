@@ -6,6 +6,7 @@ import StringIO
 import csv
 from flask.ext.restful import reqparse
 from flask import request, Response
+from celery import subtask
 
 import gevent
 from pymongo.errors import OperationFailure
@@ -154,7 +155,7 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
 
     def _put_train_action(self, **kwargs):
         from api.tasks import train_model, import_data, \
-            request_spot_instance, self_terminate
+            request_spot_instance, self_terminate, get_request_instance
         from api.forms import ModelTrainForm
         from celery import chain
         obj = self._get_details_query(None, None, **kwargs)
@@ -172,15 +173,28 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
                 dataset = import_handler.create_dataset(params)
                 tasks_list.append(import_data.s(str(dataset._id),
                                                 str(model._id)))
+            else:
+                dataset = form.cleaned_data.get('dataset', None)
             if not spot_instance_type is None:
-                tasks_list.append(request_spot_instance.s(callback=train_model,
-                                                          dataset_id=str(dataset._id),
-                                                          model_id=str(model._id)))
-                tasks_list.append(self_terminate.s())
+                tasks_list.append(request_spot_instance.s(instance_type=spot_instance_type))
+                tasks_list.append(get_request_instance.subtask((),
+                                          {'callback':'train',
+                                           'dataset_id':str(dataset._id),
+                                           'model_id':str(model._id)},
+                                          retry=True,
+                                          countdown=10,
+                                          retry_policy={
+                                                        'max_retries': 3,
+                                                        'interval_start': 5,
+                                                        'interval_step': 5,
+                                                        'interval_max': 10
+                                                        }
+                                            ))
+                #tasks_list.append(self_terminate.s())
             elif not instance is None:
                 tasks_list.append(train_model.s(args=(str(dataset._id), str(model._id)),
                                                 options={'queue': instance['name']}))
-
+            chain(tasks_list).apply_async()
             # if form.params_filled:
             #     # load and train
             #     from api.models import ImportHandler

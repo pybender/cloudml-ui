@@ -167,7 +167,7 @@ def setupw():
 
 @task
 def deployw():
-    #release.work_on.run(0)
+    release.work_on.run(0)
     fabd.mkdirs.run()
 
     release.create.run()

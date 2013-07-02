@@ -259,7 +259,11 @@ class BaseChooseInstanceAndDataset(BaseForm):
             return ds
 
     def clean_aws_instance(self, value):
-        return app.db.Instance.find_one({'_id': ObjectId(value)})
+        if value:
+            inst = app.db.Instance.find_one({'_id': ObjectId(value)})
+            if inst is None:
+                raise ValidationError('DataSet not found')
+            return inst
 
     def clean_spot_instance_type(self, value):
         if value and value not in self.TYPE_CHOICES:

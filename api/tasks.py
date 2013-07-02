@@ -6,6 +6,7 @@ from bson.objectid import ObjectId
 from os.path import join, exists
 from os import makedirs, system
 from celery.task.sets import subtask
+from datetime import timedelta, datetime
 
 from api import celery, app
 from api.models import Test
@@ -20,22 +21,39 @@ class InvalidOperationError(Exception):
     pass
 
 @celery.task
-def request_spot_instance(callback=None,
-                          dataset_id=None,
-                          model_id=None):
+def request_spot_instance(dataset_id=None, instance_type=None):
     ec2 = AmazonEC2Helper()
-    logging.info('Request spot instance')
-    instance = ec2.request_spot_instance()
+    logging.info('Request spot instance type: %s' % instance_type)
+    request = ec2.request_spot_instance(instance_type)
+    logging.info('Request id: %s:' % request.id)
+    return request.id
+
+@celery.task()                                                    
+def get_request_instance(request_id,
+                         callback=None,
+                         dataset_id=None,
+                         model_id=None):
+    ec2 = AmazonEC2Helper()
+    request = ec2.get_request_spot_instance(request_id)
+    if not request.state == 'active':
+        raise get_request_instance.retry(countdown=10, max_retries=15)
+
+    instance = ec2.get_instance(request.instance_id)
+    instance.add_tag('Name', 'cloudml-worker-auto')
+    instance.add_tag('Owner', 'papadimitriou,nmelnik')
+    instance.add_tag('Model_id', model_id)
     logging.info('Instance %s(%s) lunched' % 
-            (instance.id_instance,
+            (instance.id,
              instance.private_ip_address))
-    if callback is not None:
+
+    if callback == "train":
         queue = "ip-%s" % "-".join(instance.private_ip_address.split('.'))
-        subtask(callback).apply_async((dataset_id,
-                                       model_id),
-                                       queue=queue,
-                                       link_error=self_terminate.s()
-                                       )
+        train_model.apply_async((dataset_id,
+                                 model_id),
+                                 queue=queue,
+                                 link=self_terminate.subtask(args=(),options={'queue':queue}),
+                                 link_error=self_terminate.subtask(args=(),options={'queue':queue})
+                                )
     return instance.private_ip_address
 
 
@@ -46,7 +64,7 @@ def terminate_instance(instance_id):
 
 
 @celery.task
-def self_terminate():
+def self_terminate(result=None):
     system("halt")
 
 
