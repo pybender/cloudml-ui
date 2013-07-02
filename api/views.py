@@ -176,7 +176,8 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
             else:
                 dataset = form.cleaned_data.get('dataset', None)
             if not spot_instance_type is None:
-                tasks_list.append(request_spot_instance.s(instance_type=spot_instance_type))
+                tasks_list.append(request_spot_instance.s(instance_type=spot_instance_type,
+                                                          model_id=str(model._id)))
                 tasks_list.append(get_request_instance.subtask((),
                                           {'callback':'train',
                                            'dataset_id':str(dataset._id),

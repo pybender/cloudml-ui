@@ -21,7 +21,8 @@ class InvalidOperationError(Exception):
     pass
 
 @celery.task
-def request_spot_instance(dataset_id=None, instance_type=None):
+def request_spot_instance(dataset_id=None, instance_type=None, model_id=None):
+    init_logger('trainmodel_log', obj=model_id)
     ec2 = AmazonEC2Helper()
     logging.info('Request spot instance type: %s' % instance_type)
     request = ec2.request_spot_instance(instance_type)
@@ -33,11 +34,15 @@ def get_request_instance(request_id,
                          callback=None,
                          dataset_id=None,
                          model_id=None):
+    init_logger('trainmodel_log', obj=model_id)
     ec2 = AmazonEC2Helper()
+    logging.info('Get spot instance request %s' %  request_id)
     request = ec2.get_request_spot_instance(request_id)
     if not request.state == 'active':
+        logging.info('Instance did not run. Retry in 10s.')
         raise get_request_instance.retry(countdown=10, max_retries=15)
 
+    logging.info('Get instance %s' % request.instance_id)
     instance = ec2.get_instance(request.instance_id)
     instance.add_tag('Name', 'cloudml-worker-auto')
     instance.add_tag('Owner', 'papadimitriou,nmelnik')
@@ -47,12 +52,13 @@ def get_request_instance(request_id,
              instance.private_ip_address))
 
     if callback == "train":
+        logging.info('Train model task apply async')
         queue = "ip-%s" % "-".join(instance.private_ip_address.split('.'))
         train_model.apply_async((dataset_id,
                                  model_id),
                                  queue=queue,
-                                 link=self_terminate.subtask(args=(),options={'queue':queue}),
-                                 link_error=self_terminate.subtask(args=(),options={'queue':queue})
+                                 link=self_terminate.subtask(args=(instance.id, ),options={'queue':queue}),
+                                 link_error=self_terminate.subtask(args=(instance.id, ),options={'queue':queue})
                                 )
     return instance.private_ip_address
 
@@ -64,7 +70,8 @@ def terminate_instance(instance_id):
 
 
 @celery.task
-def self_terminate(result=None):
+def self_terminate(result=None, instance_id=None):
+    logging.info('Instance %s will be terminated' % instance_id)
     system("halt")
 
 
