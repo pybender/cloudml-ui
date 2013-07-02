@@ -57,8 +57,8 @@ def get_request_instance(request_id,
         train_model.apply_async((dataset_id,
                                  model_id),
                                  queue=queue,
-                                 link=self_terminate.subtask(args=(instance.id, ),options={'queue':queue}),
-                                 link_error=self_terminate.subtask(args=(instance.id, ),options={'queue':queue})
+                                 link=self_terminate.subtask(args=(),options={'queue':queue}),
+                                 link_error=self_terminate.subtask(args=(),options={'queue':queue})
                                 )
     return instance.private_ip_address
 
@@ -70,8 +70,8 @@ def terminate_instance(instance_id):
 
 
 @celery.task
-def self_terminate(result=None, instance_id=None):
-    logging.info('Instance %s will be terminated' % instance_id)
+def self_terminate(result=None):
+    logging.info('Instance will be terminated')
     system("halt")
 
 
@@ -136,9 +136,7 @@ def train_model(dataset_id, model_id):
     Train new model celery task.
     """
     init_logger('trainmodel_log', obj=model_id)
-    # Removing old log messages
-    app.db.LogMessage.collection.remove({'type': 'trainmodel_log',
-                                         'params.obj': model_id})
+
     try:
         model = app.db.Model.find_one({'_id': ObjectId(model_id)})
         dataset = app.db.DataSet.find_one({'_id': ObjectId(dataset_id)})

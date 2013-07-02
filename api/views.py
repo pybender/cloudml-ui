@@ -164,8 +164,11 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
             model = form.save()
             instance = form.cleaned_data.get('aws_instance', None)
             spot_instance_type = form.cleaned_data.get('spot_instance_type', None)
-      
+
             tasks_list = []
+            # Removing old log messages
+            app.db.LogMessage.collection.remove({'type': 'trainmodel_log',
+                                                'params.obj': model._id})
             if form.params_filled:
                 from api.models import ImportHandler
                 import_handler = ImportHandler(model.train_import_handler)
