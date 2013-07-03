@@ -196,7 +196,11 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
                                             ))
                 #tasks_list.append(self_terminate.s())
             elif not instance is None:
-                tasks_list.append(train_model.subtask((str(dataset._id), str(model._id)),{},
+                if form.params_filled:
+                    train_model_args = (str(model._id), )
+                else:
+                    train_model_args = (str(dataset._id), str(model._id))
+                tasks_list.append(train_model.subtask(train_model_args, {},
                                                 queue=instance['name']))
             chain(tasks_list).apply_async()
             # if form.params_filled:
