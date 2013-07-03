@@ -38,10 +38,13 @@ def get_request_instance(request_id,
     ec2 = AmazonEC2Helper()
     logging.info('Get spot instance request %s' %  request_id)
     request = ec2.get_request_spot_instance(request_id)
-    if not request.state == 'active':
-        logging.info('Instance did not run. Retry in 10s.')
-        raise get_request_instance.retry(countdown=10, max_retries=15)
+    if request.state == 'open':
+        logging.info('Instance did not run. Status: %s . Retry in 10s.' % request.state)
+        raise get_request_instance.retry(countdown=20, max_retries=30)
 
+    if not request.state == 'active':
+        logging.info('Instance did not lunche. Status %s' % request.state)
+        raise Exception('Instance did not lunche')
     logging.info('Get instance %s' % request.instance_id)
     instance = ec2.get_instance(request.instance_id)
     instance.add_tag('Name', 'cloudml-worker-auto')
