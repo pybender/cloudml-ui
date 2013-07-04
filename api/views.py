@@ -591,7 +591,7 @@ not contain probabilities')
                     # TODO: This is a quick hack. Fix it!
                     if name.startswith('data_input'):
                         feature_name = name.replace('data_input.', '')
-                        val = example['data_input'][feature_name]
+                        val = example['data_input'].get(feature_name, '')
                     else:
                         val = example[name] if name in example else ''
                     rows.append(val)

@@ -119,3 +119,32 @@ angular.module('app.datas.controllers', ['app.config', ])
       $scope.setError(opts, 'loading test example')
     )
 ])
+
+.controller('CsvDownloadCtrl', [
+  '$scope'
+  'dialog'
+  'Data'
+
+  ($scope, dialog, Data) ->
+    $scope.csvField = null
+    $scope.csvFields = ['name', 'id', 'label', 'pred_label', 'prob']
+    $scope.showFields = 'name,id,label,pred_label,prob'
+
+    $scope.test = dialog.model
+    Data.$loadFieldList($scope.test.model_id,
+      $scope.test._id).then ((opts) ->
+      $scope.dataFields = opts.fields
+    ), ((opts) ->
+      $scope.setError(opts, 'loading data field list')
+    )
+
+    $scope.appendField = () ->
+      if $scope.csvField?
+        $scope.csvFields.push $scope.csvField
+        $scope.showFields = $scope.showFields + ',data_input.' + $scope.csvField
+        $scope.dataFields = $scope.dataFields.filter (f) ->
+            f isnt $scope.csvField
+
+    $scope.close = () ->
+      dialog.close()
+  ])
