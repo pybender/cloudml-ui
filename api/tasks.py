@@ -243,6 +243,7 @@ def fill_model_parameter_weights(model_id, reload=False):
         logging.info(msg)
     except Exception, exc:
         logging.exception('Got exception when fill_model_parameter')
+        raise
     return msg
 
 
@@ -308,7 +309,7 @@ def run_test(dataset_id, test_id):
                 for key, val in row.iteritems():
                     new_key = key.replace('.', '->')
                     new_row[new_key] = val
-
+                logging.error('Row %s', new_row.keys())
                 example = app.db.TestExample()
                 example['data_input'] = new_row
                 example['id'] = str(row.get(model.example_id, '-1'))

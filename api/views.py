@@ -573,11 +573,13 @@ not contain probabilities')
         """
         Returns list of examples in csv format
         """
+        logging.info('Download examples in csv')
+
         def generate():
             parser_params = list(self.GET_PARAMS) + self.FILTER_PARAMS
             params = self._parse_parameters(parser_params)
             fields = self._get_fields_to_show(params)
-
+            logging.info('Use fields %s' % str(fields))
             kw = dict([(k, v) for k, v in kwargs.iteritems() if v])
             examples = self._get_list_query(params, None, **kw)
             fout = StringIO.StringIO()
