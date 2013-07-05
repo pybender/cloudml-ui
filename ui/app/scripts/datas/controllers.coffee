@@ -120,30 +120,41 @@ angular.module('app.datas.controllers', ['app.config', ])
     )
 ])
 
+# Choose fields to download classification results in CSV dialog controller
 .controller('CsvDownloadCtrl', [
   '$scope'
   'dialog'
   'Data'
 
   ($scope, dialog, Data) ->
-    $scope.csvField = null
+    # Field list to be displayed in choose field select
+    $scope.selectFields = []
+
+    $scope.csvField = ''
     $scope.csvFields = ['name', 'id', 'label', 'pred_label', 'prob']
-    $scope.showFields = 'name,id,label,pred_label,prob'
+    $scope.show = 'name,id,label,pred_label,prob'
 
     $scope.test = dialog.model
     Data.$loadFieldList($scope.test.model_id,
       $scope.test._id).then ((opts) ->
-      $scope.dataFields = opts.fields
+      $scope.selectFields = ("data_input." + x for x in opts.fields)
     ), ((opts) ->
       $scope.setError(opts, 'loading data field list')
     )
 
     $scope.appendField = () ->
-      if $scope.csvField?
+      if !!$scope.csvField
         $scope.csvFields.push $scope.csvField
-        $scope.showFields = $scope.showFields + ',data_input.' + $scope.csvField
-        $scope.dataFields = $scope.dataFields.filter (f) ->
+        $scope.show = $scope.csvFields.join(',')
+        $scope.selectFields = $scope.selectFields.filter (f) ->
             f isnt $scope.csvField
+        $scope.csvField = ''
+
+    $scope.removeField = (fieldname) ->
+      $scope.csvFields = $scope.csvFields.filter (f) ->
+        f isnt fieldname
+      $scope.show = $scope.csvFields.join(',')
+      $scope.selectFields.push fieldname
 
     $scope.close = () ->
       dialog.close()

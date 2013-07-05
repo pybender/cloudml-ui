@@ -7,14 +7,18 @@
   <form class="form-horizontal">
     <div class="alert-info well">
       <b>Fields: </b>
-      <span ng-repeat="f in csvFields"><span ng-hide="$index==0">, </span>{{ f }}</span>  
+      <span ng-repeat="f in csvFields">
+        <span class="label label-info">
+          {{ f.replace('data_input.', '') }} <a ng-click="removeField(f)"><i class="icon-remove"></i></a>
+        </span>
+      </span> 
     </div>
     <label class="control-label">Field: </label>
     <div class="controls">
       <div class="input-append">
         <select ng-model="csvField">
           <option value=''>-- select field name --</option>
-          <option ng-repeat="field in dataFields" value="{{ field }}">{{ field }}</option>
+          <option ng-repeat="field in selectFields" value="{{ field }}">{{ field.replace('data_input.', '') }}</option>
         </select>
 
         <a ng-click="appendField()" class="btn btn-info">
@@ -26,5 +30,5 @@
 </div>
 <div class="modal-footer">
   <button ng-click="close()" class="btn">Cancel</button>
-  <a ng-click="close()" href="{{ test.examplesCsvUrl() }}?show={{ showFields }}" class="btn btn-primary">Download</a>
+  <a ng-click="close()" href="{{ test.examplesCsvUrl() }}?show={{ show }}" class="btn btn-primary">Download</a>
 </div>
