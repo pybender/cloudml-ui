@@ -200,8 +200,12 @@ def fill_model_parameter_weights(model_id, reload=False):
     filled: %s' % (model_id, count))
 
         from helpers.weights import calc_weights_css
-        positive_weights = calc_weights_css(positive, 'green')
-        negative_weights = calc_weights_css(negative, 'red')
+        positive_weights = []
+        negative_weights = []
+        if len(positive) > 0:
+            positive_weights = calc_weights_css(positive, 'green')
+        if len(negative) > 0:
+            negative_weights = calc_weights_css(negative, 'red')
         weight_list = positive_weights + negative_weights
         weight_list.sort(key=lambda a: abs(a['weight']))
         weight_list.reverse()
