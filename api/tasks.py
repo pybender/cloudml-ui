@@ -302,14 +302,14 @@ def run_test(dataset_id, test_id):
             count = 0
             for row, label, pred, prob in items:
                 count += 1
-                if count % 100 == 0:
+                if count % 1000 == 0:
                     logging.info('Stored %d rows' % count)
                 row = decode(row)
                 new_row = {}
                 for key, val in row.iteritems():
                     new_key = key.replace('.', '->')
                     new_row[new_key] = val
-                logging.error('Row %s', new_row.keys())
+                #logging.error('Row %s', new_row.keys())
                 example = app.db.TestExample()
                 example['data_input'] = new_row
                 example['id'] = str(row.get(model.example_id, '-1'))
