@@ -25,7 +25,8 @@
   </span>
 </div>
 
-<table ng-controller="BaseListCtrl" ng-hide="objects.length == 0" class="table table-hover">
+<table ng-controller="BaseListCtrl" ng-init="init(true, 'models')" ng-hide="objects.length == 0" class="table table-hover">
+
 <thead>
   <tr>
     <th>Name</th>

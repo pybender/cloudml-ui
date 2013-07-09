@@ -58,8 +58,9 @@ angular.module('app.testresults.controllers', ['app.config', ])
   'TestResult'
   '$location'
   '$rootScope'
+  '$dialog'
 
-($scope, $routeParams, Test, $location, $rootScope) ->
+($scope, $routeParams, Test, $location, $rootScope, $dialog) ->
   $scope.LOADED_SECTIONS = []
   if not $scope.test
     if not ($routeParams.model_id  and $routeParams.id)
@@ -114,6 +115,11 @@ metrics.roc_curve,metrics.roc_auc'
       else
         $scope.load(extra_fields + ',' + Test.MAIN_FIELDS, name, cb)
         $scope.LOADED_SECTIONS.push 'main'
+
+  $scope.downloadCsvResults = () ->
+    $scope.openDialog($dialog, $scope.test,
+        'partials/datasets/csv_list_popup.html',
+        'CsvDownloadCtrl', 'modal')
 
   $scope.initSections($scope.goSection, defaultAction='metrics:accuracy')
 ])

@@ -12,7 +12,8 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_ENABLE_UTC = True
 #BROKER_URL = 'sqla+sqlite:///celerydb.sqlite'
-BROKER_URL = 'mongodb://localhost:27017/cloudmlqueue'
+#BROKER_URL = 'mongodb://localhost:27017/cloudmlqueue'
+BROKER_URL = 'amqp://guest:guest@localhost:5672//'
 CELERY_RESULT_BACKEND = ''
 CELERY_IMPORTS = ('api.models', 'api', 'api.tasks')
 
@@ -25,3 +26,9 @@ CELERY_QUEUES = [
 CELERY_DEFAULT_EXCHANGE = 'tasks'
 CELERY_DEFAULT_EXCHANGE_TYPE = 'topic'
 CELERY_DEFAULT_ROUTING_KEY = 'task.default'
+
+
+
+AMAZON_ACCESS_TOKEN = 'AKIAJYNNIPFWF2ABW42Q'
+AMAZON_TOKEN_SECRET = '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'
+AMAZON_BUCKET_NAME = 'odesk-match-cloudml'

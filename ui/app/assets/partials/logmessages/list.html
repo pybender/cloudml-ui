@@ -1,4 +1,4 @@
-<div class="row" ng-controller="BaseListCtrl">
+<div class="row" ng-controller="BaseListCtrl" ng-init="init(true, 'logs')">
     <div class="span6">
         <p ng-repeat="msg in objects">
           <ng-include src="'/partials/logmessages/item.html'"></ng-include>

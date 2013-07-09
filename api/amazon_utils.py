@@ -7,27 +7,37 @@ from api import app
 
 
 class AmazonEC2Helper(object):
-    def __init__(self, token=None, secret=None, region='us-west-2'):
+    def __init__(self, token=None, secret=None, region='us-west-1'):
         token = token or app.config['AMAZON_ACCESS_TOKEN']
         secret = secret or app.config['AMAZON_TOKEN_SECRET']
         self.conn = boto.ec2.connect_to_region(
-            region=region,
+            region,
             aws_access_key_id=token,
             aws_secret_access_key=secret)
 
-    def terminate_instance(instance_id):
+    def terminate_instance(self, instance_id):
         return self.conn.terminate_instances(
             instance_ids=[instance_id, ])
 
-    def request_spot_instance(instance_type='m3.xlarge'):
-        request = conn.request_spot_instances(
+    def request_spot_instance(self, instance_type='m3.xlarge'):
+        request = self.conn.request_spot_instances(
             price="1",
-            image_id="ami-72f96e42",
-            security_group_ids=["sg-1dc1dc71", ],
+            image_id="ami-f0af86b5",#"ami-66c8e123",
+            security_group_ids=["sg-534f5d3f", ],
             instance_type=instance_type,
-            placement="us-west-2a",
-            subnet_id="subnet-8cf096e5")
-        return req[0].instance_id
+            placement="us-west-1a",
+            subnet_id="subnet-3f5bc256")
+        return request[0]
+
+    def get_instance(self, instance_id):
+        reservations = self.conn.get_all_instances(instance_ids=[instance_id, ])
+        instance = reservations[0].instances[0]
+        return instance
+
+    def get_request_spot_instance(self, request_id):
+        request = self.conn.get_all_spot_instance_requests(request_ids=[request_id, ])
+        request = request[0]
+        return request
 
 
 class AmazonS3Helper(object):

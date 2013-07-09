@@ -6,6 +6,7 @@ import StringIO
 import csv
 from flask.ext.restful import reqparse
 from flask import request, Response
+from celery import subtask
 
 import gevent
 from pymongo.errors import OperationFailure
@@ -155,31 +156,72 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
 
     # POST/PUT specific methods
     def _put_train_action(self, **kwargs):
-        from api.tasks import train_model, import_data
+        from api.tasks import train_model, import_data, \
+            request_spot_instance, self_terminate, get_request_instance
         from api.forms import ModelTrainForm
+        from celery import chain
         obj = self._get_details_query(None, None, **kwargs)
         form = ModelTrainForm(obj=obj, **kwargs)
         if form.is_valid():
             model = form.save()
             instance = form.cleaned_data.get('aws_instance', None)
             spot_instance_type = form.cleaned_data.get('spot_instance_type', None)
+
+            tasks_list = []
+            # Removing old log messages
+            app.db.LogMessage.collection.remove({'type': 'trainmodel_log',
+                                                'params.obj': model._id})
             if form.params_filled:
-                # load and train
                 from api.models import ImportHandler
                 import_handler = ImportHandler(model.train_import_handler)
                 params = form.cleaned_data.get('parameters', None)
                 dataset = import_handler.create_dataset(params)
-                import_data.apply_async(kwargs={'dataset_id': str(dataset._id),
-                                                'model_id': str(model._id)},
-                                        link=train_model.subtask(args=(str(model._id), ),
-                                        options={'queue': instance['name']}))
-                #train_model.delay(str(model._id), params)
+                tasks_list.append(import_data.s(str(dataset._id),
+                                                str(model._id)))
             else:
-                # train using dataset
                 dataset = form.cleaned_data.get('dataset', None)
-                train_model.apply_async((str(dataset._id),
-                                        str(model._id),),
-                                        queue=instance['name'])
+            if not spot_instance_type is None:
+                tasks_list.append(request_spot_instance.s(instance_type=spot_instance_type,
+                                                          model_id=str(model._id)))
+                tasks_list.append(get_request_instance.subtask((),
+                                          {'callback':'train',
+                                           'dataset_id':str(dataset._id),
+                                           'model_id':str(model._id)},
+                                          retry=True,
+                                          countdown=10,
+                                          retry_policy={
+                                                        'max_retries': 3,
+                                                        'interval_start': 5,
+                                                        'interval_step': 5,
+                                                        'interval_max': 10
+                                                        }
+                                            ))
+                #tasks_list.append(self_terminate.s())
+            elif not instance is None:
+                if form.params_filled:
+                    train_model_args = (str(model._id), )
+                else:
+                    train_model_args = (str(dataset._id), str(model._id))
+                tasks_list.append(train_model.subtask(train_model_args, {},
+                                                queue=instance['name']))
+            chain(tasks_list).apply_async()
+            # if form.params_filled:
+            #     # load and train
+            #     from api.models import ImportHandler
+            #     import_handler = ImportHandler(model.train_import_handler)
+            #     params = form.cleaned_data.get('parameters', None)
+            #     dataset = import_handler.create_dataset(params)
+            #     import_data.apply_async(kwargs={'dataset_id': str(dataset._id),
+            #                                     'model_id': str(model._id)},
+            #                             link=train_model.subtask(args=(str(model._id), ),
+            #                             options={'queue': instance['name']}))
+            #     #train_model.delay(str(model._id), params)
+            # else:
+            #     # train using dataset
+            #     dataset = form.cleaned_data.get('dataset', None)
+            #     train_model.apply_async((str(dataset._id),
+            #                             str(model._id),),
+            #                             queue=instance['name'])
             return self._render(self._get_save_response_context(model, extra_fields=['status']))
 
 api.add_resource(Models, '/cloudml/models/')
@@ -219,7 +261,7 @@ class WeightsResource(BaseResource):
             model_id = kwargs.get('model_id')
             return self.Model.find({'model_id': model_id,
                                     'is_positive': is_positive}, fields).\
-                skip(page * per_page).limit(per_page)
+                skip((page - 1) * per_page).limit(per_page)
 
         paging_params = (('ppage', int), ('npage', int),)
         params = self._parse_parameters(self.GET_PARAMS + paging_params)
@@ -533,11 +575,13 @@ not contain probabilities')
         """
         Returns list of examples in csv format
         """
+        logging.info('Download examples in csv')
+
         def generate():
             parser_params = list(self.GET_PARAMS) + self.FILTER_PARAMS
             params = self._parse_parameters(parser_params)
             fields = self._get_fields_to_show(params)
-
+            logging.info('Use fields %s' % str(fields))
             kw = dict([(k, v) for k, v in kwargs.iteritems() if v])
             examples = self._get_list_query(params, None, **kw)
             fout = StringIO.StringIO()
@@ -549,7 +593,7 @@ not contain probabilities')
                     # TODO: This is a quick hack. Fix it!
                     if name.startswith('data_input'):
                         feature_name = name.replace('data_input.', '')
-                        val = example['data_input'][feature_name]
+                        val = example['data_input'].get(feature_name, '')
                     else:
                         val = example[name] if name in example else ''
                     rows.append(val)

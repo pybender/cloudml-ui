@@ -189,32 +189,45 @@ angular.module('app.controllers', ['app.config', ])
   '$scope'
   '$rootScope'
 
-($scope, $rootScope) ->
-  $scope.load = (append=false) ->
-    params = $.extend({'show': $scope.FIELDS},
-                       $scope.kwargs || {})
+  ($scope, $rootScope) ->
 
-    $scope.MODEL.$loadAll(params).then ((opts) ->
-      $scope.pages = opts.pages
-      $scope.has_next = opts.has_next
-      if append
-        $scope.objects = $scope.objects.concat(opts.objects)
+    $scope.init = (autoload=true, modelName='noname') ->
+      $scope.modelName = modelName
+      $scope.autoload = autoload
+
+      if $scope.autoload
+        $scope.load()
       else
-        $scope.objects = opts.objects
-    ), ((opts) ->
-      $scope.setError(opts, $scope.ACTION)
+        $rootScope.$on('BaseListCtrl:start:load', (event, name) ->
+          if name == $scope.modelName
+            $scope.load()
+        )
+
+    $scope.load = (append=false) ->
+      params = $.extend({'show': $scope.FIELDS},
+                         $scope.kwargs || {})
+
+      $scope.MODEL.$loadAll(params).then ((opts) ->
+        $scope.pages = opts.pages
+        $scope.has_next = opts.has_next
+        if append
+          $scope.objects = $scope.objects.concat(opts.objects)
+        else
+          $scope.objects = opts.objects
+
+        $scope.$emit 'BaseListCtrl:load:success', $scope.objects
+      ), ((opts) ->
+        $scope.setError(opts, $scope.ACTION)
+      )
+
+    $scope.loadMore = () ->
+      $scope.kwargs['page'] += 1
+      $scope.load(true)
+
+    $rootScope.$on('modelDeleted', () ->
+      $scope.load()
     )
-
-  $scope.load()
-
-  $scope.loadMore = () ->
-    $scope.kwargs['page'] += 1
-    $scope.load(true)
-
-  $rootScope.$on('modelDeleted', () ->
-    $scope.load()
-  )
-  $rootScope.$on('modelCreated', () ->
-    $scope.load()
-  )
+    $rootScope.$on('modelCreated', () ->
+      $scope.load()
+    )
 ])

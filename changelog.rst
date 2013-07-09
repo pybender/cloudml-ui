@@ -4,6 +4,22 @@ Changelog
 =========
 
 
+Relese 2013-01-09
+-----------------
+* Bug - Added cathing when model have only negative weights in fill_model_parameter_weights task
+* Bug - Fixed paging on weights tab
+
+
+Relese 2013-01-04
+-----------------
+* Feature - Added option to choose which fields should be included in the csv
+
+
+Relese 2013-01-03
+-----------------
+* Feature - Added request spot instance for training model
+
+
 Relese 2013-06-24
 -----------------
 * Feature - Added log pagination

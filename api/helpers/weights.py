@@ -82,11 +82,11 @@ def get_weighted_data(model, row):
     for name, value in row.iteritems():
         # TODO: don't use dots at all for keys
         key = name.replace('->', '.')
-        result[key] = {'value': value}
+        result[name] = {'value': value}
         if key in weights_dict:
             wdict = weights_dict[key]
-            result[key]['weight'] = wdict['value']
-            result[key]['css_class'] = wdict['css_class']
+            result[name]['weight'] = wdict['value']
+            result[name]['css_class'] = wdict['css_class']
         else:
             if isinstance(value, basestring):
                 value = value.strip()
@@ -94,32 +94,32 @@ def get_weighted_data(model, row):
                 concated_key = ("%s.%s" % (key, value)).lower()
                 if concated_key in weights_dict:
                     wdict = weights_dict[concated_key]
-                    result[key]['weight'] = wdict['value']
-                    result[key]['css_class'] = wdict['css_class']
+                    result[name]['weight'] = wdict['value']
+                    result[name]['css_class'] = wdict['css_class']
                 else:
                     # try to find each word from the value
                     rgx = re.compile("(\w[\w']*)")
                     words = rgx.findall(value)
-                    result[key]['type'] = 'List'
+                    result[name]['type'] = 'List'
                     for word in words:
                         word = word.lower().strip()
-                        if not 'weights' in result[key]:
-                            result[key]['weights'] = {}
+                        if not 'weights' in result[name]:
+                            result[name]['weights'] = {}
                         concated_key = "%s.%s" % (key, word)
                         if concated_key in weights_dict:
                             wdict = weights_dict[concated_key]
                             word_weight = {'weight': wdict['value'],
                                            'css_class': wdict['css_class']}
-                            result[key]['weights'][word] = word_weight
+                            result[name]['weights'][word] = word_weight
             elif isinstance(value, dict):
-                result[key]['type'] = 'Dictionary'
+                result[name]['type'] = 'Dictionary'
                 for dkey, dvalue in value.iteritems():
                     concated_key = ("%s.%s=%s" % (key, dkey, dvalue))
-                    if not 'weights' in result[key]:
-                        result[key]['weights'] = {}
+                    if not 'weights' in result[name]:
+                        result[name]['weights'] = {}
                     if concated_key in weights_dict:
                         wdict = weights_dict[concated_key]
-                        result[key]['weights'][dkey] = {'weight': wdict['value'],
+                        result[name]['weights'][dkey] = {'weight': wdict['value'],
                                                         'css_class': wdict['css_class'],
                                                         'value': dvalue}
     return result
