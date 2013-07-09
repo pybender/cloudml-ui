@@ -4,9 +4,10 @@ Changelog
 =========
 
 
-Relese 2013-01-04
+Relese 2013-01-09
 -----------------
 * Bug - Added cathing when model have only negative weights in fill_model_parameter_weights task
+* Bug - Fixed paging on weights tab
 
 
 Relese 2013-01-04
