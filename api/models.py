@@ -365,6 +365,7 @@ class TestExample(Document):
         'label': basestring,
         'pred_label': basestring,
         'prob': list,
+        'vect_data': list,
         'test': Test,
 
         'test_name': basestring,

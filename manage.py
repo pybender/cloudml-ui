@@ -50,7 +50,7 @@ class Migrate(Command):
         #     update = {'$set': {'model_id': model_id}}
         #     print model_id
         #     app.db.tests.update(target, update, multi=True, safe=True)
-        update = {'$set': {'train_import_handler': None,'test_import_handler': None}}
+        update = {'$set': {'tags': []}}
         app.db.models.update({}, update, multi=True, safe=True)
 
 

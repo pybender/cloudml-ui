@@ -448,8 +448,45 @@ class TestExamplesResource(BaseResource):
             raise NotFound('Example not found')
 
         from helpers.weights import get_weighted_data
-        if example['weighted_data_input'] == {}:
+        def get_data_from_vectorizer(feature_name, vectorizer, offset):
+            data = {}
+            feature_names = vectorizer.get_feature_names()
+            for j in range(0, len(feature_names)):
+                name = '%s->%s' % (feature_name.replace(".", "->"), feature_names[j])
+                data[name] = vect_data[offset + j]
+            return data
+
+        if True:#example['weighted_data_input'] == {}:
             model = app.db.Model.find_one({'_id': ObjectId(kwargs['model_id'])})
+            trainer = model.get_trainer()
+            logging.info(example['data_input'])
+            logging.info( example['vect_data'])
+            vect_data = example['vect_data']
+            data = {}
+            index = 0
+            for feature_name, feature in trainer._feature_model.features.items():
+                if feature_name != trainer._feature_model.target_variable:
+                    transformer = feature['transformer']
+                    preprocessor = feature['type'].preprocessor
+                    if transformer is not None and hasattr(transformer,
+                                                           'get_feature_names'):
+                        data_v = get_data_from_vectorizer(feature_name,
+                                                          transformer,
+                                                          index)
+                        data.update(data_v)
+                        index += len(data_v)
+                    elif preprocessor is not None and hasattr(preprocessor,
+                                                              'get_feature_names'):
+                        data_v = get_data_from_vectorizer(feature_name,
+                                                          preprocessor,
+                                                          index)
+                        data.update(data_v)
+                        index += len(data_v)
+                    else:
+                        # Scaler or array
+                        data[feature_name] = vect_data[index]
+                        index += 1
+            logging.info(data)
             weighted_data_input = get_weighted_data(model,
                                                     example['data_input'])
             example['weighted_data_input'] = dict(weighted_data_input)
