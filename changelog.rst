@@ -3,6 +3,10 @@
 Changelog
 =========
 
+Relese 2013-01-09
+-----------------
+* Task - Changed gunicorn timeout
+
 
 Relese 2013-01-09
 -----------------
