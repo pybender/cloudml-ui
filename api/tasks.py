@@ -345,12 +345,40 @@ def run_test(dataset_id, test_id):
         store_examples(examples)
 
     except Exception, exc:
-        logging.exception('Got exception when tets model')
+        logging.exception('Got exception when tests model')
         test.status = test.STATUS_ERROR
         test.error = str(exc)
         test.save()
         raise
     return 'Test completed'
+
+
+@celery.task
+def calculate_confusion_matrix(test_id, threshold):
+    """
+    Calculate confusion matrix for test.
+    """
+    init_logger('confusion_matrix_log', obj=test_id)
+
+    if threshold < 0 or threshold > 0.5:
+        raise ValueError('Threshold should be float value from 0 to 0.5')
+
+    test = app.db.Test.find_one({'_id': ObjectId(test_id)})
+    if test is None:
+        raise ValueError('Test with id {0!s} not found!'.format(test_id))
+
+    logging.info('Calculating confusion matrix for test id {!s}'.format(test_id))
+
+    matrix = [[0, 0],
+              [0, 0]]
+
+    for example in app.db.TestExample.find({'test_id': str(test['_id'])}):
+        true_value = int(example['label'])
+        for idx, prob in enumerate(example['prob']):
+            if prob >= threshold:
+                matrix[true_value][idx] += 1
+
+    return matrix
 
 
 def decode(row):
