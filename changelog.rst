@@ -3,9 +3,10 @@
 Changelog
 =========
 
-Relese 2013-01-09
+Relese 2013-01-10
 -----------------
 * Task - Changed gunicorn timeout
+* Bug - Fixed loading weights on column view after each changing view
 
 
 Relese 2013-01-09
