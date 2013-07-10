@@ -32,3 +32,8 @@ CELERY_DEFAULT_ROUTING_KEY = 'task.default'
 AMAZON_ACCESS_TOKEN = 'AKIAJYNNIPFWF2ABW42Q'
 AMAZON_TOKEN_SECRET = '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'
 AMAZON_BUCKET_NAME = 'odesk-match-cloudml'
+
+try:
+    from api.local_config import *
+except ImportError:
+    pass

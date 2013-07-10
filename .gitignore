@@ -33,3 +33,5 @@ target
 *.sublime-workspace
 
 data
+
+api/local_config.py
