@@ -22,31 +22,34 @@
   <div class="control-group" ng-class="{error: Form.trainer.$invalid}">
     <label class="control-label">Model File Name</label>
     <div class="controls">
-      <input type="file" name="trainer" ng-model="model.trainer" onchange="angular.element(this).scope().setModelFile(this)" required />
+      <input type="file" name="trainer" ng-model="model.trainer" json-file required />
       <span ng-show="Form.trainer.$error.required" class="help-inline">*</span>
+      <span ng-show="Form.trainer.$error.jsonFile" class="help-block">Should be a valid json file</span>
       <span class="help-block">pickled trained model file</span>
     </div>
   </div>
 
   <div ng-controller="ImportHandlerSelectCtrl">
-    <div class="control-group" ng-class="{error: Form.train_import_handler.$invalid}">
+    <div class="control-group" ng-class="{error: Form.train_import_handler.$invalid || Form.train_import_handler_file.$invalid}">
       <label class="control-label">Train Import Handler</label>
       <div class="controls">
         <select ng-model="model.train_import_handler">
           <option ng-repeat="handler in handlers" value="{{ handler._id }}">{{ handler.name }}</option>
         </select>
         <span>or</span> 
-        <input type="file" name="train_import_handler_file" ng-model="model.train_import_handler_file" onchange="angular.element(this).scope().readFile(this, 'train_import_handler_file')" />
+        <input type="file" name="train_import_handler_file" ng-model="model.train_import_handler_file" json-file  />
+        <span ng-show="Form.train_import_handler_file.$error.jsonFile" class="help-block">Should be a valid json file</span>
       </div>
     </div>
-    <div class="control-group" ng-class="{error: Form.test_import_handler.$invalid}">
+    <div class="control-group" ng-class="{error: Form.test_import_handler.$invalid || Form.test_import_handler_file.$invalid}">
       <label class="control-label">Test Import Handler</label>
       <div class="controls">
         <select ng-model="model.test_import_handler">
           <option ng-repeat="handler in handlers" value="{{ handler._id }}">{{ handler.name }}</option>
         </select>
         <span>or</span> 
-        <input type="file" name="test_import_handler_file" ng-model="model.test_import_handler_file" onchange="angular.element(this).scope().readFile(this, 'test_import_handler_file')" />
+        <input type="file" name="test_import_handler_file" ng-model="model.test_import_handler_file" json-file />
+        <span ng-show="Form.test_import_handler_file.$error.jsonFile" class="help-block">Should be a valid json file</span>
       </div>
     </div>
   </div>
