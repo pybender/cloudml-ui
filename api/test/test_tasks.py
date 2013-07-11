@@ -8,7 +8,7 @@ class TestTasksTests(BaseTestCase):
     Tests of the celery tasks.
     """
     TEST_NAME = 'Test-1'
-    FIXTURES = ('tests.json', 'examples.json')
+    FIXTURES = ('models.json', 'tests.json', 'examples.json')
 
     def setUp(self):
         super(TestTasksTests, self).setUp()
@@ -36,10 +36,12 @@ class TestTasksTests(BaseTestCase):
         self.assertEquals(calculate_confusion_matrix(self.test._id, 0.1), [[2, 2], [2, 2]])
         self.assertEquals(calculate_confusion_matrix(self.test._id, 0.3), [[2, 1], [1, 2]])
         self.assertEquals(calculate_confusion_matrix(self.test._id, 0.5), [[1, 1], [0, 2]])
+        self.assertEquals(calculate_confusion_matrix(self.test._id, 0.7), [[1, 1], [0, 2]])
+        self.assertEquals(calculate_confusion_matrix(self.test._id, 1), [[0, 0], [0, 0]])
 
         self.assertRaises(ValueError, calculate_confusion_matrix, self.test._id, 'wrong')
         self.assertRaises(ValueError, calculate_confusion_matrix, self.test._id, -1)
-        self.assertRaises(ValueError, calculate_confusion_matrix, self.test._id, 0.9)
+        self.assertRaises(ValueError, calculate_confusion_matrix, self.test._id, 1.2)
         self.assertRaises(ValueError, calculate_confusion_matrix, ObjectId(), 0.3)
 
         self._set_probabilities({
@@ -53,3 +55,5 @@ class TestTasksTests(BaseTestCase):
         self.assertEquals(calculate_confusion_matrix(self.test._id, 0.1), [[2, 2], [2, 2]])
         self.assertEquals(calculate_confusion_matrix(self.test._id, 0.3), [[2, 0], [0, 2]])
         self.assertEquals(calculate_confusion_matrix(self.test._id, 0.5), [[2, 0], [0, 2]])
+        self.assertEquals(calculate_confusion_matrix(self.test._id, 0.7), [[2, 0], [0, 2]])
+        self.assertEquals(calculate_confusion_matrix(self.test._id, 1), [[0, 0], [0, 0]])
