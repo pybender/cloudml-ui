@@ -190,7 +190,7 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
     transclude : true
     templateUrl:'partials/directives/weights_tree.html'
     compile: () ->
-      return () ->
+      return () -> undefined
   }
 ])
 
@@ -301,6 +301,43 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
           if newVal
             alert.addClass newVal
     }
+)
+
+# Directives for forms validation
+
+.directive('jsonFile', () ->
+  return {
+    require: 'ngModel',
+    restrict: 'A',
+    link: (scope, element, attrs, control) ->
+
+      control.$parsers.unshift((viewValue) ->
+        scope.$apply( () ->
+          isValid = true
+
+          try
+            jQuery.parseJSON(viewValue)
+          catch e
+            isValid = false
+
+          control.$setValidity('jsonFile', isValid)
+          control.$render()
+        )
+        return viewValue
+      )
+
+      element.change((e) ->
+        scope.$apply( () ->
+          reader = new FileReader()
+
+          reader.onload = (e) ->
+            control.$setViewValue(e.target.result)
+            control.$render()
+
+          reader.readAsText(element[0].files[0])
+        )
+      )
+  }
 )
 
 # Directives for creating plots
