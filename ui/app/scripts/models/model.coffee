@@ -36,6 +36,7 @@ test_import_handler'
 
       train_import_handler: null
       test_import_handler: null
+      dataset: null
 
       loadFromJSON: (origData) =>
         super origData

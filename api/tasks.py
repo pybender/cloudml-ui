@@ -134,7 +134,6 @@ with%s compression", importhandler.name, '' if dataset.compress else 'out')
     return dataset_id
 
 
-
 @celery.task
 def train_model(dataset_id, model_id):
     """

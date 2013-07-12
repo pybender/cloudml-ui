@@ -253,6 +253,7 @@ class DataSet(Document):
         return '<Dataset %r>' % self.name
 
 
+@app.conn.register
 class Tag(Document):
     __collection__ = 'tags'
     structure = {
