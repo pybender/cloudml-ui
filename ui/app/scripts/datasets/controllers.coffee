@@ -1,18 +1,43 @@
 'use strict'
 
 ### Dataset specific Controllers ###
+generateS3Url = (dataset, cb=null, errCb=null) ->
+  dataset.$generateS3Url().then ((opts) ->
+    cb({url: opts.data.url, dataset: dataset})
+  ), ((opts) ->
+    errCb(opts, 'generating Amazon S3 url')
+  )
 
 angular.module('app.datasets.controllers', ['app.config', ])
 
 .controller('DatasetListCtrl', [
   '$scope'
   '$dialog'
+  '$rootScope'
   'DataSet'
 
-  ($scope, $dialog, DataSet) ->
+  ($scope, $dialog, $rootScope, DataSet) ->
     $scope.MODEL = DataSet
     $scope.FIELDS = 'name,created_on,status,error,data,import_params,on_s3'
     $scope.ACTION = 'loading datasets'
+
+    $scope.$on('loadDataSet', (event, opts) ->
+      setTimeout(() ->
+        $scope.$emit('BaseListCtrl:start:load', 'dataset')
+      , 100)
+    )
+
+    $scope.$on('BaseListCtrl:load:success', (event, datasets) ->
+      $scope.msg = "Please wait. Generating Amazon S3 URLs..."
+      for ds in datasets
+        if ds.on_s3
+          generateS3Url(ds, ((opts) ->
+            ds = opts.dataset
+            ds.url = opts.url
+            $scope.msg = "Amazon S3 URL for " + ds.data + " generated."
+          ), $scope.setError)
+      $scope.msg = null
+    )
 
     $scope.init = (handler) ->
       $scope.kwargs = {'handler_id': handler._id}
@@ -35,17 +60,15 @@ angular.module('app.datasets.controllers', ['app.config', ])
     $scope.dataset = new DataSet({_id: $routeParams.id,
     import_handler_id: $routeParams.handler_id})
 
-    $scope.generateS3Url = () ->
-      $scope.dataset.$generateS3Url().then ((opts) ->
-        $scope.url = opts.data.url
-      ), ((opts) ->
-        $scope.setError(opts, 'generating url to dataset file on Amazon S3')
-      )
-
     $scope.go = (section) ->
       $scope.dataset.$load(
         show: 'name,status,created_on,updated_on,data,on_s3,import_params,error'
-      ).then (->), ((opts) ->
+      ).then (->
+        if $scope.dataset.on_s3
+          generateS3Url($scope.dataset, ((resp) ->
+            $scope.url = resp.url
+          ), $scope.setError)
+      ), ((opts) ->
         $scope.setError(opts, 'loading dataset details')
       )
 

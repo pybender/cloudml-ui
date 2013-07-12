@@ -1,5 +1,5 @@
 <h2>
-  Model List
+  <a href="#/models/">Model List</a> <small ng-show="currentTag">tagged with {{ currentTag }}</small>
   <div class="actions">
   <a class="btn btn-info" href="#/upload_model">
     <i class="status-icon icon-upload"></i> Upload trained model
@@ -17,7 +17,16 @@
 
 <alert-message ng-show="objects.length == 0" class="alert-info" msg="No models found"></alert-message>
 
-<table ng-controller="BaseListCtrl" ng-hide="objects.length == 0" class="table table-hover">
+<div ng-controller="TagCloudCtrl" class="alert-info well">
+  <span ng-repeat="tag in tag_list">
+    <span>
+      <a href="#/models/?tag={{ tag.text }}">{{ tag.text }} ({{ tag.count }})</a> 
+    </span>&nbsp;
+  </span>
+</div>
+
+<table ng-controller="BaseListCtrl" ng-init="init(true, 'models')" ng-hide="objects.length == 0" class="table table-hover">
+
 <thead>
   <tr>
     <th>Name</th>
@@ -28,7 +37,16 @@
 </thead>
 <tbody>
   <tr ng-repeat="model in objects" ng-class="{success : model.status=='Trained', warning : model.status =='New', info : model.status =='Training', error : model.status =='Error'}">
-    <td><a href="#{{ model.objectUrl() }}">{{ model.name }}</a></td>
+    <td>
+      <a href="#{{ model.objectUrl() }}">{{ model.name }}</a>
+      <div title="tags">
+        <span ng-repeat="tag in model.tags">
+          <span class="badge">
+            <a href="#/models/?tag={{ tag }}" style="color: white;">{{ tag }}</a>
+          </span> 
+        </span>
+      </div>
+    </td>
     <td title="{{ model.error }}">{{ model.status }}</td>
     <td>{{ model.created_on|format_date }}</td>
     <td ng-controller="ModelActionsCtrl">

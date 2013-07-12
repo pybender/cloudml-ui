@@ -57,19 +57,24 @@
     editable-field="description" editable-input="textarea"
     editable-placement="right"></span>
 </p>
-<div title="Date Created" class="date-created">
-    <i class="icon-calendar"></i>
-    created on <span class="badge badge-info">{{ model.created_on|format_date }}</span>
-    <span ng-hide="model.created_on == model.updated_on">
-      updated on <span class="badge badge-info">{{ model.updated_on|format_date }}</span>
-    </span>
-    <i class="icon-status"></i>
-    <span class="badge badge-warning">{{ model.status }}</span>
+<div title="tags">
+  <span ng-repeat="tag in model.tags">
+    <span class="badge">
+      <a href="#/models/?tag={{ tag }}" style="color: white;">{{ tag }}</a>
+    </span> 
+  </span>
+  <i class="icon-calendar"></i>
+  created on <span class="badge badge-info">{{ model.created_on|format_date }}</span>
+  <span ng-hide="model.created_on == model.updated_on">
+    updated on <span class="badge badge-info">{{ model.updated_on|format_date }}</span>
+  </span>
+  <i class="icon-status"></i>
+  <span class="badge badge-warning">{{ model.status }}</span>
   </div>
 </div>
 <p></p>
 <ul class="nav nav-tabs" id="tabs" ng-show="model.loaded">
-  <li  ng-class="{active: action[0] == 'model'}">
+  <li ng-class="{active: action[0] == 'model'}">
     <a ng-click="setSection(['model', 'details'])">Details</a> 
   </li>
   <li ng-class="{active: action[0] == 'weights'}"><a  ng-click="setSection(['weights', 'columns'])">Parameters Weights</a></li>
@@ -81,17 +86,11 @@
 <div class="tab-content" ng-show="model.loaded">
   <div ng-show="action[0] == 'model'" ng-controller="ObjEditCtrl">
     <div class="row">
-      <div class="span4" ng-controller="ImportHandlerSelectCtrl">
-        <div>
-            Target variable:
-            <span class="value">{{ model.target_variable }}</span>
-        </div>
-        <div>
-            Classes:
-            <span class="value">{{ model.labels }}</span>
-        </div>
-      </div>
       <div class="span4">
+        <h5>Edit tags</h5>
+        <input ui-select2="select2params" ng-model="params['tags']" /> 
+        <input type="button" class="btn btn-info" value="Save" ng-click="updateTags()" style="margin-left: 5px;" />
+
         <h5>Import Handlers</h5>
         <div>
           For Train:
@@ -111,7 +110,7 @@
             </span>
         </div>
       </div>
-      <div class="span3">
+      <div class="span4">
         <h5>Data Examples Titles</h5>
         <div>
           Examples label field name:
@@ -120,6 +119,16 @@
         <div>
             Examples id field name:
             <span title="ID Field Name" ng-bind="model.example_id" editable="model" value="model.example_id" editable-field="example_id" editable-input="text" editable-placement="right"></span>
+        </div>
+      </div>
+      <div class="span3">
+        <div>
+            Target variable:
+            <span class="value">{{ model.target_variable }}</span>
+        </div>
+        <div>
+            Classes:
+            <span class="value">{{ model.labels }}</span>
         </div>
       </div>
     </div>

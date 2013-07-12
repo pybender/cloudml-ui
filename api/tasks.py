@@ -4,7 +4,9 @@ from copy import copy
 from itertools import izip
 from bson.objectid import ObjectId
 from os.path import join, exists
-from os import makedirs
+from os import makedirs, system
+from celery.task.sets import subtask
+from datetime import timedelta, datetime
 
 from api import celery, app
 from api.models import Test
@@ -20,15 +22,62 @@ class InvalidOperationError(Exception):
 
 
 @celery.task
-def request_spot_instance():
+def request_spot_instance(dataset_id=None, instance_type=None, model_id=None):
+    init_logger('trainmodel_log', obj=model_id)
     ec2 = AmazonEC2Helper()
-    instance_id = ec2.request_spot_instance()
+    logging.info('Request spot instance type: %s' % instance_type)
+    request = ec2.request_spot_instance(instance_type)
+    logging.info('Request id: %s:' % request.id)
+    return request.id
+
+@celery.task()                                                    
+def get_request_instance(request_id,
+                         callback=None,
+                         dataset_id=None,
+                         model_id=None):
+    init_logger('trainmodel_log', obj=model_id)
+    ec2 = AmazonEC2Helper()
+    logging.info('Get spot instance request %s' %  request_id)
+    request = ec2.get_request_spot_instance(request_id)
+    if request.state == 'open':
+        logging.info('Instance did not run. Status: %s . Retry in 10s.' % request.state)
+        raise get_request_instance.retry(countdown=20, max_retries=30)
+
+    if not request.state == 'active':
+        logging.info('Instance did not lunche. Status %s' % request.state)
+        raise Exception('Instance did not lunche')
+    logging.info('Get instance %s' % request.instance_id)
+    instance = ec2.get_instance(request.instance_id)
+    instance.add_tag('Name', 'cloudml-worker-auto')
+    instance.add_tag('Owner', 'papadimitriou,nmelnik')
+    instance.add_tag('Model_id', model_id)
+    logging.info('Instance %s(%s) lunched' % 
+            (instance.id,
+             instance.private_ip_address))
+
+    if callback == "train":
+        logging.info('Train model task apply async')
+        queue = "ip-%s" % "-".join(instance.private_ip_address.split('.'))
+        train_model.apply_async((dataset_id,
+                                 model_id),
+                                 queue=queue,
+                                 link=self_terminate.subtask(args=(),options={'queue':queue}),
+                                 link_error=self_terminate.subtask(args=(),options={'queue':queue})
+                                )
+    return instance.private_ip_address
+
 
 
 @celery.task
 def terminate_instance(instance_id):
     ec2 = AmazonEC2Helper()
     ec2.terminate_instance(instance_id)
+
+
+@celery.task
+def self_terminate(result=None):
+    logging.info('Instance will be terminated')
+    system("halt")
 
 
 @celery.task
@@ -92,9 +141,7 @@ def train_model(dataset_id, model_id):
     Train new model celery task.
     """
     init_logger('trainmodel_log', obj=model_id)
-    # Removing old log messages
-    app.db.LogMessage.collection.remove({'type': 'trainmodel_log',
-                                         'params.obj': model_id})
+
     try:
         model = app.db.Model.find_one({'_id': ObjectId(model_id)})
         dataset = app.db.DataSet.find_one({'_id': ObjectId(dataset_id)})
@@ -156,8 +203,12 @@ def fill_model_parameter_weights(model_id, reload=False):
     filled: %s' % (model_id, count))
 
         from helpers.weights import calc_weights_css
-        positive_weights = calc_weights_css(positive, 'green')
-        negative_weights = calc_weights_css(negative, 'red')
+        positive_weights = []
+        negative_weights = []
+        if len(positive) > 0:
+            positive_weights = calc_weights_css(positive, 'green')
+        if len(negative) > 0:
+            negative_weights = calc_weights_css(negative, 'red')
         weight_list = positive_weights + negative_weights
         weight_list.sort(key=lambda a: abs(a['weight']))
         weight_list.reverse()
@@ -199,6 +250,7 @@ def fill_model_parameter_weights(model_id, reload=False):
         logging.info(msg)
     except Exception, exc:
         logging.exception('Got exception when fill_model_parameter')
+        raise
     return msg
 
 
@@ -258,14 +310,14 @@ def run_test(dataset_id, test_id):
             count = 0
             for row, label, pred, prob in items:
                 count += 1
-                if count % 100 == 0:
+                if count % 1000 == 0:
                     logging.info('Stored %d rows' % count)
                 row = decode(row)
                 new_row = {}
                 for key, val in row.iteritems():
                     new_key = key.replace('.', '->')
                     new_row[new_key] = val
-
+                #logging.error('Row %s', new_row.keys())
                 example = app.db.TestExample()
                 example['data_input'] = new_row
                 example['id'] = str(row.get(model.example_id, '-1'))

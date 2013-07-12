@@ -9,21 +9,21 @@ class Celeryd(Command):
     """Runs a Celery worker node."""
 
     def run(self, **kwargs):
-        os.system("celery -A api.celery worker -Q default -E --loglevel=info")
+        os.system("celery -A api.tasks worker -Q default -E --loglevel=info")
 
 
 class Celeryw(Command):
     """Runs a Celery worker node."""
 
     def run(self, **kwargs):
-        os.system("celery -A api.celery worker -Q worker1 -E --loglevel=info")
+        os.system("celery -A api.tasks worker -Q worker1 -E --loglevel=info")
 
 
 class Flower(Command):
     """Runs a Celery Flower worker node."""
 
     def run(self, **kwargs):
-        os.system("celery -A api.celery flower --loglevel=info")
+        os.system("celery -A api.tasks flower --loglevel=info")
 
 class Run(Command):
     """Runs a Celery Flower worker node."""

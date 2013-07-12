@@ -23,6 +23,16 @@ angular.module('app.datasets.model', ['app.config'])
       data: null
       import_params: null
       import_handler_id: null
+      on_s3: false
+
+
+      loadFromJSON: (origData) =>
+        super origData
+
+        if origData?
+          if origData.on_s3?
+            if typeof(origData.on_s3) != "boolean"
+              @on_s3 = origData.on_s3 == 'True'
 
       constructor: (opts) ->
         super

@@ -29,16 +29,17 @@
       <span ng-show="Form.type.$error.required" class="help-inline">Required</span>
     </div>
   </div>
-  <div class="control-group" ng-class="{error: !data}">
+  <div class="control-group" ng-class="{error: Form.data.$invalid}">
     <label class="control-label">JSON file</label>
     <div class="controls">
-      <input type="file" name="data" ng-model="model.data" onchange="angular.element(this).scope().readFile(this, 'data')">
-      <span ng-show="!data" class="help-inline">Required</span>
+      <input type="file" name="data" ng-model="model.data" json-file required>
+      <span ng-show="Form.data.$error.required" class="help-inline">Required</span>
+      <span ng-show="Form.data.$error.jsonFile" class="help-block">Should be a valid json file</span>
       <span class="help-block">json file with import data details</span>
     </div>
   </div>
   <br />
   <a href="#/import_handlers" class="btn">Cancel</a>
-  <button ng-click="save(['name', 'data', 'type'])" ng-disabled="Form.$invalid || !data" class="btn btn-primary">Add new import handler</button> <small>and start using it in your models</small>
+  <button ng-click="save(['name', 'data', 'type'])" ng-disabled="Form.$invalid" class="btn btn-primary">Add new import handler</button> <small>and start using it in your models</small>
 </form>
 </div>

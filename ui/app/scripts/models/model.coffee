@@ -28,6 +28,7 @@ test_import_handler'
       status: null
       created_on: null
       updated_on: null
+      tags: []
 
       trainer: null
       importParams: null
@@ -78,4 +79,23 @@ test_import_handler'
         @$make_request("#{@BASE_API_URL}#{@_id}/action/train/", {}, "PUT", data)
 
     return Model
+])
+
+
+.factory('Tag', [
+  '$http'
+  '$q'
+  'settings'
+  'BaseModel'
+  
+  ($http, $q, settings, BaseModel) ->
+    class Tag extends BaseModel
+      BASE_API_URL: "#{settings.apiUrl}tags/"
+      API_FIELDNAME: 'tag'
+
+      _id: null
+      id: null
+      text: null
+
+    return Tag
 ])

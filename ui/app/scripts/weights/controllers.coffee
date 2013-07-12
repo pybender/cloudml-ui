@@ -134,7 +134,9 @@ angular.module('app.weights.controllers', ['app.config', ])
       $location.search("action=#{actionString}")
       view = action[1]
       switch view
-        when "columns" then $scope.loadColumns(true, true)
+        when "columns"
+          if ($scope.positive.length + $scope.negative.length) == 0
+            $scope.loadColumns(true, true)
         when "list" then  $scope.loadList('', 1)
         when "tree" then $scope.loadTreeNode('', true)
 ])

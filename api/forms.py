@@ -64,7 +64,7 @@ class BaseForm(object):
                     value = getattr(self, mthd)(value)
                 except ValidationError, exc:
                     self.errors.append({'name': name, 'error': exc.message})
-            if value:
+            if value is not None:
                 self.cleaned_data[name] = value
             elif required:
                 cleaned_value = self.cleaned_data.get(name)
@@ -110,7 +110,21 @@ class BaseModelForm(BaseForm):
 
 class ModelEditForm(BaseModelForm):
     fields = ('test_import_handler', 'train_import_handler',
-              'example_id', 'example_label', 'name')
+              'example_id', 'example_label', 'name', 'tags')
+
+    def clean_tags(self, value):
+        if not value:
+            return None
+        return json.loads(value)
+
+    def save(self, commit=True):
+        old_tags = self.obj.tags
+        model = super(ModelEditForm, self).save()
+
+        if self.cleaned_data.get('tags', None):
+            app.db.Tag.update_tags_count(old_tags, model.tags)
+
+        return model
 
 
 class ModelAddForm(BaseModelForm):
@@ -266,7 +280,11 @@ class BaseChooseInstanceAndDataset(BaseForm):
             return ds
 
     def clean_aws_instance(self, value):
-        return app.db.Instance.find_one({'_id': ObjectId(value)})
+        if value:
+            inst = app.db.Instance.find_one({'_id': ObjectId(value)})
+            if inst is None:
+                raise ValidationError('DataSet not found')
+            return inst
 
     def clean_spot_instance_type(self, value):
         if value and value not in self.TYPE_CHOICES:
@@ -363,7 +381,7 @@ class AddTestForm(BaseChooseInstanceAndDataset):
             import_data.apply_async(kwargs={'dataset_id': str(dataset._id),
                                             'test_id': str(test._id)},
                                     link=run_test.subtask(args=(str(test._id), ),
-                                    options={'queue':instance['name']}))
+                                    options={'queue': instance['name']}))
         else:
             # test using dataset
             dataset = self.cleaned_data.get('dataset', None)

@@ -139,13 +139,15 @@ def deploy():
 
 @task
 def setupw():
+    supervisor.push_init_config.run()
+
     fabd.mkdirs.run()
     for app in ['supervisor']:
         pip.install.run(app=app)
 
     pip.install.run(app='virtualenv', upgrade=True)
     system.package_install.run(packages='liblapack-dev gfortran libpq-dev\
- libevent-dev')
+ libevent-dev cloud-utils')
     supervisor.push_init_config.run()
     supervisor.push_d_config.run()
     supervisor.push_configs.run()
@@ -165,7 +167,7 @@ def setupw():
 
 @task
 def deployw():
-    release.work_on.run(0)
+    #release.work_on.run(0)
     fabd.mkdirs.run()
 
     release.create.run()
@@ -182,7 +184,7 @@ def deployw():
     release.activate.run()
 
     supervisor.update.run()
-    supervisor.restart_program.run(program='celeryd')
+    supervisor.restart_program.run(program='celerydw')
 
 
 class PushAnjularConfig(Task):
