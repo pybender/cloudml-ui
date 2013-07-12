@@ -35,29 +35,47 @@ class Run(Command):
         http_server = WSGIServer(('', 5000), app)
         http_server.serve_forever()
 
+
 class Migrate(Command):
     """Migrate"""
 
     def run(self, **kwargs):
-        from api.migrations import ModelMigration, TestMigration
-        from api.models import Model, Test
-        #TestMigration(Test).migrate_all(app.db.Test.collection)
-        # target = {'model_id': {'$exists': False}, 'model_name': {'$exists': True}}
-        
-        # #ModelMigration(Model).migrate_all(app.db.Model.collection)
-        # for doc in app.db.tests.find(target):
-        #     model_id = app.db.model.find_one({'name': doc['model_name']})['_id']
-        #     update = {'$set': {'model_id': model_id}}
-        #     print model_id
-        #     app.db.tests.update(target, update, multi=True, safe=True)
-        update = {'$set': {'tags': []}}
-        app.db.models.update({}, update, multi=True, safe=True)
+        from bson.objectid import ObjectId
+        from bson.dbref import DBRef
 
+        model_collection = app.db.Model.collection
+        model_list = model_collection.find({})
+
+        def _update(doc, fieldname, collection):
+            if fieldname in doc:
+                val = doc[fieldname]
+                if val and isinstance(val, dict):
+                    _id = val['_id']
+                    doc[fieldname] = DBRef(collection=collection,
+                                           id=ObjectId(_id),
+                                           database=app.config['DATABASE_NAME'])
+
+        print "Adding dbrefs"
+        for model in model_list:
+            _update(model, "test_import_handler", "handlers")
+            _update(model, "train_import_handler", "handlers")
+            _update(model, "dataset", "dataset")
+            model['feature_count'] = -1
+            model_collection.save(model)
+            print 'Model %s was updated' % model['name']
+
+        print "Recalc features count"
+        for model in app.db.Model.find({}):
+            trainer = model.get_trainer()
+            model.feature_count = len(trainer._feature_model.features.keys())
+            model.save()
+            print 'Model %s has %s features' % (model.name, model.feature_count)
 
 
 def _make_context():
     from api import models
     return dict(app=app, db=app.db, models=models)
+
 
 class Test(Command):
     """Run app tests."""

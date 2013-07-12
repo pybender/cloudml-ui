@@ -89,7 +89,8 @@ def odesk_error_response(status, code, message, debug=None, traceback=None, erro
     response.status_code = status
     response.headers.add('Content-type', 'application/json')
     response.headers.add('X-Odesk-Error-Code', code)
-    response.headers.add('X-Odesk-Error-Message', message)
+    #import pdb; pdb.set_trace()
+    response.headers.add('X-Odesk-Error-Message', message.replace('\n', ''))
     return response
 
 
