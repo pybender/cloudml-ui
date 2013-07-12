@@ -354,14 +354,14 @@ def run_test(dataset_id, test_id):
 
 
 @celery.task
-def calculate_confusion_matrix(test_id, threshold):
+def calculate_confusion_matrix(test_id, weight0, weight1):
     """
     Calculate confusion matrix for test.
     """
     init_logger('confusion_matrix_log', obj=test_id)
 
-    if threshold < 0 or threshold > 1:
-        raise ValueError('Threshold should be float value from 0 to 1')
+    if weight0 == 0 and weight1 == 0:
+        raise ValueError('Both weights can not be 0')
 
     test = app.db.Test.find_one({'_id': ObjectId(test_id)})
     if test is None:
@@ -378,9 +378,14 @@ def calculate_confusion_matrix(test_id, threshold):
 
     for example in app.db.TestExample.find({'test_id': str(test['_id'])}):
         true_value_idx = model.labels.index(example['label'])
-        for idx, prob in enumerate(example['prob']):
-            if prob >= threshold:
-                matrix[true_value_idx][idx] += 1
+
+        prob0, prob1 = example['prob'][:2]
+        weighted_sum = weight1 * prob0 + weight0 * prob1
+        weighted_prob0 = weight1 * prob0 / weighted_sum
+        weighted_prob1 = weight0 * prob1 / weighted_sum
+
+        predicted = [weighted_prob0, weighted_prob1].index(max([weighted_prob0, weighted_prob1]))
+        matrix[true_value_idx][predicted] += 1
 
     return matrix
 
