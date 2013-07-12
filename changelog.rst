@@ -5,6 +5,12 @@ Changelog
 
 Relese 2013-01-10
 -----------------
+* Bug - Fixed and improved validation json files
+* Task - Changed delimeter to ',' in csv export
+
+
+Relese 2013-01-10
+-----------------
 * Task - Changed gunicorn timeout
 * Bug - Fixed loading weights on column view after each changing view
 

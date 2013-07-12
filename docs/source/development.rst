@@ -32,7 +32,7 @@ Frontend
 
 Install nodejs and nmp::
 
-    $ sudo aptget install nodejs nmp
+    $ sudo apt-get install nodejs npm
 
 Init ui dev enviropment::
     

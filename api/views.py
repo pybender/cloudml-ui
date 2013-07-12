@@ -585,7 +585,7 @@ not contain probabilities')
             kw = dict([(k, v) for k, v in kwargs.iteritems() if v])
             examples = self._get_list_query(params, None, **kw)
             fout = StringIO.StringIO()
-            writer = csv.writer(fout, delimiter=';', quoting=csv.QUOTE_ALL)
+            writer = csv.writer(fout, delimiter=',', quoting=csv.QUOTE_ALL)
             writer.writerow(fields)
             for example in examples:
                 rows = []
