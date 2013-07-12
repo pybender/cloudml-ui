@@ -113,7 +113,8 @@ angular.module('app.datas.controllers', ['app.config', ])
     })
 
   $scope.data.$load(
-    show: "id,weighted_data_input,target_variable,pred_label,label,prob"
+    show: "id,test_name,weighted_data_input,target_variable,
+pred_label,label,prob"
   ).then (->
     ), ((opts)->
       $scope.setError(opts, 'loading test example')

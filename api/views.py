@@ -184,9 +184,9 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
                 tasks_list.append(request_spot_instance.s(instance_type=spot_instance_type,
                                                           model_id=str(model._id)))
                 tasks_list.append(get_request_instance.subtask((),
-                                          {'callback':'train',
-                                           'dataset_id':str(dataset._id),
-                                           'model_id':str(model._id)},
+                  {'callback':'train',
+                   'dataset_id':str(dataset._id),
+                   'model_id':str(model._id)},
                                           retry=True,
                                           countdown=10,
                                           retry_policy={
@@ -441,56 +441,32 @@ class TestExamplesResource(BaseResource):
         return super(TestExamplesResource, self)._list(**kwargs)
 
     def _get_details_query(self, params, fields, **kwargs):
-        # TODO: return only fields that are specified
+        if 'weighted_data_input' in fields:
+            fields += ['vect_data', 'data_input']
+
         example = super(TestExamplesResource, self).\
-            _get_details_query(params, None, **kwargs)
-        if example is None:
-            raise NotFound('Example not found')
+            _get_details_query(params, fields, **kwargs)
 
-        from helpers.weights import get_weighted_data
-        def get_data_from_vectorizer(feature_name, vectorizer, offset):
-            data = {}
-            feature_names = vectorizer.get_feature_names()
-            for j in range(0, len(feature_names)):
-                name = '%s->%s' % (feature_name.replace(".", "->"), feature_names[j])
-                data[name] = vect_data[offset + j]
-            return data
+        if example and 'weighted_data_input' in fields \
+                and example['weighted_data_input'] == {}:
+            # Calculate weights for params
+            from api.helpers.features import get_features_vect_data
+            model_id = kwargs['model_id']
+            model = app.db.Model.find_one({'_id': ObjectId(model_id)})
+            feature_model = model.get_trainer()._feature_model
+            data = get_features_vect_data(example['vect_data'],
+                                          feature_model.features.items(),
+                                          feature_model.target_variable)
 
-        if True:#example['weighted_data_input'] == {}:
-            model = app.db.Model.find_one({'_id': ObjectId(kwargs['model_id'])})
-            trainer = model.get_trainer()
-            logging.info(example['data_input'])
-            logging.info( example['vect_data'])
-            vect_data = example['vect_data']
-            data = {}
-            index = 0
-            for feature_name, feature in trainer._feature_model.features.items():
-                if feature_name != trainer._feature_model.target_variable:
-                    transformer = feature['transformer']
-                    preprocessor = feature['type'].preprocessor
-                    if transformer is not None and hasattr(transformer,
-                                                           'get_feature_names'):
-                        data_v = get_data_from_vectorizer(feature_name,
-                                                          transformer,
-                                                          index)
-                        data.update(data_v)
-                        index += len(data_v)
-                    elif preprocessor is not None and hasattr(preprocessor,
-                                                              'get_feature_names'):
-                        data_v = get_data_from_vectorizer(feature_name,
-                                                          preprocessor,
-                                                          index)
-                        data.update(data_v)
-                        index += len(data_v)
-                    else:
-                        # Scaler or array
-                        data[feature_name] = vect_data[index]
-                        index += 1
-            logging.info(data)
-            weighted_data_input = get_weighted_data(model,
-                                                    example['data_input'])
-            example['weighted_data_input'] = dict(weighted_data_input)
-            example.save(check_keys=False)
+            from helpers.weights import get_example_params
+            model_weights = app.db.Weight.find({'model_id': model_id})
+            weighted_data = dict(get_example_params(
+                model_weights, example['data_input'], data))
+            example['weighted_data_input'] = weighted_data
+            # FIXME: Find a better way to do it using mongokit
+            app.db.TestExample.collection.update(
+                {'_id': example['_id']},
+                {'$set': {'weighted_data_input': weighted_data}})
         return example
 
     def _get_groupped_action(self, **kwargs):

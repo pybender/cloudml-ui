@@ -70,6 +70,7 @@ class Weight(Document):
         'css_class': basestring,
         'parent': basestring,
     }
+    use_dot_notation = True
 
 app.db.Weight.collection.ensure_index(
     [
