@@ -3,30 +3,31 @@
 Changelog
 =========
 
-Relese 2013-01-10
+Relese 2013-07-11
 -----------------
 * Bug - Fixed and improved validation json files
 * Task - Changed delimeter to ',' in csv export
+* Task - Added support local config
 
 
-Relese 2013-01-10
+Relese 2013-07-10
 -----------------
 * Task - Changed gunicorn timeout
 * Bug - Fixed loading weights on column view after each changing view
 
 
-Relese 2013-01-09
+Relese 2013-07-09
 -----------------
 * Bug - Added cathing when model have only negative weights in fill_model_parameter_weights task
 * Bug - Fixed paging on weights tab
 
 
-Relese 2013-01-04
+Relese 2013-07-04
 -----------------
 * Feature - Added option to choose which fields should be included in the csv
 
 
-Relese 2013-01-03
+Relese 2013-07-03
 -----------------
 * Feature - Added request spot instance for training model
 

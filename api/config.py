@@ -1,11 +1,11 @@
 SECRET_KEY = 'CHANGE_ME'
-#SQLALCHEMY_DATABASE_URI = 'sqlite:///cloudml.db'
-DATABASE_NAME = 'main_cloudml'
+DATABASE_NAME = 'cloudml'
 STATIC_ROOT = None
+
 UPLOAD_FOLDER = 'models'
 DATA_FOLDER = './data'
 MAX_CONTENT_LENGTH = 128 * 1024 * 1024
-DEBUG = True
+DEBUG = False
 
 # Celery specific settings
 CELERY_TASK_SERIALIZER = 'json'
@@ -27,11 +27,6 @@ CELERY_DEFAULT_EXCHANGE = 'tasks'
 CELERY_DEFAULT_EXCHANGE_TYPE = 'topic'
 CELERY_DEFAULT_ROUTING_KEY = 'task.default'
 
-
-
-AMAZON_ACCESS_TOKEN = 'AKIAJYNNIPFWF2ABW42Q'
-AMAZON_TOKEN_SECRET = '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'
-AMAZON_BUCKET_NAME = 'odesk-match-cloudml'
 
 try:
     from api.local_config import *

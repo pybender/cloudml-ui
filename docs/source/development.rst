@@ -10,6 +10,10 @@ Create virtual env and install requirements::
     $ . ve/bin/activate
     $ pip install -r requirements.txt
 
+Create local config::
+
+    $ cp api/local_config.py.tpl api/local_config.py
+
 Run dev server::
 
     $ python manage.py runserver
