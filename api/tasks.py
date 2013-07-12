@@ -307,7 +307,7 @@ def run_test(dataset_id, test_id):
 
         def store_examples(items):
             count = 0
-            for row, label, pred, prob in items:
+            for row, label, pred, prob, vectorized_data in items:
                 count += 1
                 if count % 1000 == 0:
                     logging.info('Stored %d rows' % count)
@@ -319,6 +319,7 @@ def run_test(dataset_id, test_id):
                 #logging.error('Row %s', new_row.keys())
                 example = app.db.TestExample()
                 example['data_input'] = new_row
+                example['vect_data'] = vectorized_data.tolist()[0]
                 example['id'] = str(row.get(model.example_id, '-1'))
                 example['name'] = str(row.get(model.example_label, 'noname'))
                 example['label'] = str(label)
@@ -339,7 +340,8 @@ def run_test(dataset_id, test_id):
         examples = izip(raw_data,
                         metrics._labels,
                         metrics._preds,
-                        metrics._probs)
+                        metrics._probs,
+                        metrics._true_data.todense())
         store_examples(examples)
 
     except Exception, exc:

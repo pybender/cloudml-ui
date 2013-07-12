@@ -184,9 +184,9 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
                 tasks_list.append(request_spot_instance.s(instance_type=spot_instance_type,
                                                           model_id=str(model._id)))
                 tasks_list.append(get_request_instance.subtask((),
-                                          {'callback':'train',
-                                           'dataset_id':str(dataset._id),
-                                           'model_id':str(model._id)},
+                  {'callback':'train',
+                   'dataset_id':str(dataset._id),
+                   'model_id':str(model._id)},
                                           retry=True,
                                           countdown=10,
                                           retry_policy={
@@ -441,19 +441,32 @@ class TestExamplesResource(BaseResource):
         return super(TestExamplesResource, self)._list(**kwargs)
 
     def _get_details_query(self, params, fields, **kwargs):
-        # TODO: return only fields that are specified
-        example = super(TestExamplesResource, self).\
-            _get_details_query(params, None, **kwargs)
-        if example is None:
-            raise NotFound('Example not found')
+        if 'weighted_data_input' in fields:
+            fields += ['vect_data', 'data_input']
 
-        from helpers.weights import get_weighted_data
-        if example['weighted_data_input'] == {}:
-            model = app.db.Model.find_one({'_id': ObjectId(kwargs['model_id'])})
-            weighted_data_input = get_weighted_data(model,
-                                                    example['data_input'])
-            example['weighted_data_input'] = dict(weighted_data_input)
-            example.save(check_keys=False)
+        example = super(TestExamplesResource, self).\
+            _get_details_query(params, fields, **kwargs)
+
+        if example and 'weighted_data_input' in fields \
+                and example['weighted_data_input'] == {}:
+            # Calculate weights for params
+            from api.helpers.features import get_features_vect_data
+            model_id = kwargs['model_id']
+            model = app.db.Model.find_one({'_id': ObjectId(model_id)})
+            feature_model = model.get_trainer()._feature_model
+            data = get_features_vect_data(example['vect_data'],
+                                          feature_model.features.items(),
+                                          feature_model.target_variable)
+
+            from helpers.weights import get_example_params
+            model_weights = app.db.Weight.find({'model_id': model_id})
+            weighted_data = dict(get_example_params(
+                model_weights, example['data_input'], data))
+            example['weighted_data_input'] = weighted_data
+            # FIXME: Find a better way to do it using mongokit
+            app.db.TestExample.collection.update(
+                {'_id': example['_id']},
+                {'$set': {'weighted_data_input': weighted_data}})
         return example
 
     def _get_groupped_action(self, **kwargs):

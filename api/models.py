@@ -70,6 +70,7 @@ class Weight(Document):
         'css_class': basestring,
         'parent': basestring,
     }
+    use_dot_notation = True
 
 app.db.Weight.collection.ensure_index(
     [
@@ -314,6 +315,7 @@ class Model(Document):
         'error': basestring,
 
         'features': dict,
+        'feature_count': int,
         'target_variable': unicode,
 
         # Import data to train and test options
@@ -380,6 +382,7 @@ class Model(Document):
         from core.trainer.store import TrainerStorage
         self.fs.trainer = Binary(TrainerStorage(trainer).dumps())
         self.target_variable = trainer._feature_model.target_variable
+        self.feature_count = len(trainer._feature_model.features.keys())
         #feature_type = trainer._feature_model.
         #features[self.target_variable]['type']
         if self.status == self.STATUS_TRAINED:
@@ -477,6 +480,7 @@ class TestExample(Document):
         'label': basestring,
         'pred_label': basestring,
         'prob': list,
+        'vect_data': list,
         'test': Test,
 
         'test_name': basestring,

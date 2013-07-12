@@ -130,7 +130,7 @@ angular.module('app.models.controllers', ['app.config', ])
           when 'model'
             extra_fields = 'created_on,target_variable,
   error,labels,weights_synchronized,example_id,example_label,
-  updated_on,dataset'
+  updated_on,dataset,feature_count'
           when 'features' then extra_fields = 'features'
 
         if 'main' in $scope.LOADED_SECTIONS

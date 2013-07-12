@@ -1,6 +1,11 @@
 import math
+import sys
+import logging
 import re
 from api import app
+
+
+TONES = ['lightest', 'lighter', 'light', 'dark', 'darker', 'darkest']
 
 
 def calc_weights_css(weights, css_cls):
@@ -67,59 +72,131 @@ def weights2tree(weights):
     return tree
 
 
-def get_weighted_data(model, row):
-    """
-    Add weights and color tones to each test example parameter.
-    """
-    weights_dict = {}
-    weight_list = app.db.Weight.find({'model_name': model.name})
-    for weight in weight_list:
-        # TODO: use -> in all parameters
-        name = weight['name'].replace('->', '.')
-        weights_dict[name] = weight
+def get_example_params(model_weights, row, vect_row):
+    """ Adds weights and color tones to each test example parameter.
+    Note: Uses real data data when calculating this values:
+        weight = model parameter weight * parameter value.
 
+    :param model_weights:
+    :param row: parameters values dict
+    :param vect_row: vectorized parameters values (dict)
+    """
     result = {}
-    for name, value in row.iteritems():
-        # TODO: don't use dots at all for keys
-        key = name.replace('->', '.')
-        result[name] = {'value': value}
-        if key in weights_dict:
+    weights_dict = dict([(weight.name, weight) for weight in model_weights])
+
+    def try_set_item(result, name, value, subkey=None,
+                     value_type=None):
+        """
+        Tries to find model parameters weight for:
+            * name
+            * name->value
+            * name->value in lowercase
+            * name=value
+        and set weight for test example parameter.
+        """
+        def _get_item(key, value):
             wdict = weights_dict[key]
-            result[name]['weight'] = wdict['value']
-            result[name]['css_class'] = wdict['css_class']
-        else:
-            if isinstance(value, basestring):
-                value = value.strip()
-                # try to find weight for {{ key.value }}
-                concated_key = ("%s.%s" % (key, value)).lower()
-                if concated_key in weights_dict:
-                    wdict = weights_dict[concated_key]
-                    result[name]['weight'] = wdict['value']
-                    result[name]['css_class'] = wdict['css_class']
-                else:
-                    # try to find each word from the value
-                    rgx = re.compile("(\w[\w']*)")
-                    words = rgx.findall(value)
-                    result[name]['type'] = 'List'
-                    for word in words:
-                        word = word.lower().strip()
-                        if not 'weights' in result[name]:
-                            result[name]['weights'] = {}
-                        concated_key = "%s.%s" % (key, word)
-                        if concated_key in weights_dict:
-                            wdict = weights_dict[concated_key]
-                            word_weight = {'weight': wdict['value'],
-                                           'css_class': wdict['css_class']}
-                            result[name]['weights'][word] = word_weight
-            elif isinstance(value, dict):
-                result[name]['type'] = 'Dictionary'
-                for dkey, dvalue in value.iteritems():
-                    concated_key = ("%s.%s=%s" % (key, dkey, dvalue))
+            vect_val = vect_row[key]
+            return {'weight': wdict['value'] * vect_val,
+                    'model_weight': wdict['value'],
+                    'value': value,
+                    'css_class': 'fill me',
+                    'vect_value': vect_val}
+
+        def _check(key):
+            if key in weights_dict:
+                item = _get_item(key, value)
+                if subkey:
+                    result[name]['type'] = value_type
                     if not 'weights' in result[name]:
                         result[name]['weights'] = {}
-                    if concated_key in weights_dict:
-                        wdict = weights_dict[concated_key]
-                        result[name]['weights'][dkey] = {'weight': wdict['value'],
-                                                        'css_class': wdict['css_class'],
-                                                        'value': dvalue}
+                    result[name]['weights'][subkey] = item
+                else:
+                    result[name] = item
+                return True
+
+        key = "%s->%s" % (name, subkey) if subkey else name
+        if _check(key):
+            return True
+        elif isinstance(value, basestring):
+            if _check("%s->%s" % (name, value)):
+                return True
+            elif _check("%s->%s" % (name, value.lower())):
+                return True
+            else:
+                key = "%s=%s" % (name, value)
+                return _check(key)
+        return False
+
+    for key, value in row.iteritems():
+        result[key] = {'value': value}
+        if not try_set_item(result, key, value):
+            if isinstance(value, basestring):
+                # try to find each word from the value
+                rgx = re.compile("(\w[\w']*)")
+                words = rgx.findall(value)
+                for word in words:
+                    word = word.lower().strip()
+                    try_set_item(result, key, value, word, 'list')
+            elif isinstance(value, dict):
+                for dkey, dvalue in value.iteritems():
+                    try_set_item(result, key, dvalue, dkey, 'dict')
+    _tone_weights(result.values())
     return result
+
+
+def _tone_weights(weights, value_name='weight'):
+    """
+    Tones test example parameters weights tree with css styles:
+    red and green with tone (lighter, darker, etc.)
+    """
+    weight_list = _prepare_weights_list(weights, value_name)
+    _transform_weights_values(weight_list, value_name)
+    _append_css_class_to_weights(weight_list, value_name)
+    return weight_list
+
+
+def _prepare_weights_list(weights, value_name='weight'):
+    """
+    Prepares list of weights from tree structure of weights and
+    sorts them.
+    """
+    weight_list = []
+
+    def _process(items):
+        for item in items:
+            if value_name in item and item[value_name] is not None:
+                weight_list.append(item)
+            if 'weights' in item:
+                _process(item['weights'].values())
+    _process(weights)
+    weight_list.sort(key=lambda a: abs(a[value_name]))
+    return weight_list
+
+
+def _transform_weights_values(weight_list, value_name='weight',
+                              transformed_value_name='transformed_weight'):
+    """
+    Adds transformed weight (as log of it) to each param weight item.
+    """
+    min_val = None
+    for item in weight_list:
+        val = item[value_name]
+        if val == 0:
+            item[transformed_value_name] = 0
+        else:
+            if min_val is None:
+                min_val = val
+            item[transformed_value_name] = math.log(abs(val / min_val))
+
+
+def _append_css_class_to_weights(weight_list, value_name='weight',
+                                 transformed_value_name='transformed_weight'):
+    max_transformed_val = weight_list[-1]['transformed_weight']
+    delta = round(max_transformed_val / len(TONES))
+    for i, tone in enumerate(TONES):
+        limit = i * delta
+        for item in weight_list:
+            if abs(item[transformed_value_name]) >= limit:
+                color = 'green' if item[value_name] > 0 else 'red'
+                item['css_class'] = "%s %s" % (color, tone)
