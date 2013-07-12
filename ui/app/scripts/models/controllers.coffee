@@ -130,7 +130,7 @@ angular.module('app.models.controllers', ['app.config', ])
           when 'model'
             extra_fields = 'created_on,target_variable,
 error,labels,weights_synchronized,example_id,example_label,
-updated_on,dataset,feature_count,test_import_handler.name,
+updated_on,dataset._id,dataset.name,feature_count,test_import_handler.name,
 train_import_handler.name,tags'
           when 'features' then extra_fields = 'features'
 

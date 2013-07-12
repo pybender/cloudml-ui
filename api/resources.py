@@ -344,14 +344,15 @@ def _filter_model_fields(model, show_fields):
             inner_model = model
             for subfield in subfields:
                 from flask.ext.mongokit import Document
-                val = getattr(inner_model, subfield)
-                if isinstance(val, Document):
-                    if not subfield in inner:
-                        inner[subfield] = {}
-                else:
-                    inner[subfield] = val
-                inner_model = val
-                inner = inner[subfield]
+                if subfield in inner_model:
+                    val = getattr(inner_model, subfield)
+                    if isinstance(val, Document):
+                        if not subfield in inner:
+                            inner[subfield] = {}
+                    else:
+                        inner[subfield] = val
+                    inner_model = val
+                    inner = inner[subfield]
         else:
             if hasattr(model, field):
                 res[field] = getattr(model, field)
