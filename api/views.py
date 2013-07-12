@@ -19,7 +19,8 @@ from api.utils import crossdomain, ERR_INVALID_DATA, odesk_error_response, \
 from api.resources import BaseResource, NotFound, ValidationError
 from api.forms import ModelAddForm, ModelEditForm, ImportHandlerAddForm, \
     AddTestForm, InstanceAddForm, InstanceEditForm, ImportHandlerEditForm
-from core.importhandler.importhandler import ExtractionPlan, RequestImportHandler
+from core.importhandler.importhandler import ExtractionPlan, \
+    RequestImportHandler
 
 model_parser = reqparse.RequestParser()
 model_parser.add_argument('importhandler', type=str,
@@ -88,7 +89,7 @@ class Models(BaseResource):
     DOWNLOAD_FIELDS = ('trainer', 'features')
 
     @property
-    def Model(self):        
+    def Model(self):
         return app.db.Model
 
     def _get_model_parser(self, **kwargs):
@@ -183,19 +184,19 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
             if not spot_instance_type is None:
                 tasks_list.append(request_spot_instance.s(instance_type=spot_instance_type,
                                                           model_id=str(model._id)))
-                tasks_list.append(get_request_instance.subtask((),
-                  {'callback':'train',
-                   'dataset_id':str(dataset._id),
-                   'model_id':str(model._id)},
-                                          retry=True,
-                                          countdown=10,
-                                          retry_policy={
-                                                        'max_retries': 3,
-                                                        'interval_start': 5,
-                                                        'interval_step': 5,
-                                                        'interval_max': 10
-                                                        }
-                                            ))
+                tasks_list.append(get_request_instance.subtask(
+                    (),
+                    {'callback': 'train',
+                     'dataset_id': str(dataset._id),
+                     'model_id': str(model._id)},
+                    retry=True,
+                    countdown=10,
+                    retry_policy={
+                        'max_retries': 3,
+                        'interval_start': 5,
+                        'interval_step': 5,
+                        'interval_max': 10
+                        }))
                 #tasks_list.append(self_terminate.s())
             elif not instance is None:
                 if form.params_filled:
@@ -203,25 +204,8 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
                 else:
                     train_model_args = (str(dataset._id), str(model._id))
                 tasks_list.append(train_model.subtask(train_model_args, {},
-                                                queue=instance['name']))
+                                                      queue=instance['name']))
             chain(tasks_list).apply_async()
-            # if form.params_filled:
-            #     # load and train
-            #     from api.models import ImportHandler
-            #     import_handler = ImportHandler(model.train_import_handler)
-            #     params = form.cleaned_data.get('parameters', None)
-            #     dataset = import_handler.create_dataset(params)
-            #     import_data.apply_async(kwargs={'dataset_id': str(dataset._id),
-            #                                     'model_id': str(model._id)},
-            #                             link=train_model.subtask(args=(str(model._id), ),
-            #                             options={'queue': instance['name']}))
-            #     #train_model.delay(str(model._id), params)
-            # else:
-            #     # train using dataset
-            #     dataset = form.cleaned_data.get('dataset', None)
-            #     train_model.apply_async((str(dataset._id),
-            #                             str(model._id),),
-            #                             queue=instance['name'])
             return self._render(self._get_save_response_context(model, extra_fields=['status']))
 
 api.add_resource(Models, '/cloudml/models/')
@@ -447,9 +431,9 @@ class TestExamplesResource(BaseResource):
         example = super(TestExamplesResource, self).\
             _get_details_query(params, fields, **kwargs)
 
-        if example and 'weighted_data_input' in fields \
-                and example['weighted_data_input'] == {}:
-            # Calculate weights for params
+        if example and 'weighted_data_input' in fields and \
+                example['weighted_data_input'] == {} \
+                and 'vect_data' in example:
             from api.helpers.features import get_features_vect_data
             model_id = kwargs['model_id']
             model = app.db.Model.find_one({'_id': ObjectId(model_id)})
@@ -677,7 +661,7 @@ class CompareReportResource(BaseResource):
             resp_data.append({'test': test, 'examples': examples})
         return self._render({'data': resp_data})
 
-api.add_resource(CompareReportResource, 
+api.add_resource(CompareReportResource,
                  '/cloudml/reports/compare/',
                  add_standart_urls=False)
 
@@ -786,6 +770,7 @@ class TagResource(BaseResource):
         return app.db.Tag
 
 api.add_resource(TagResource, '/cloudml/tags/')
+
 
 def populate_parser(model, is_requred=False):
     parser = reqparse.RequestParser()

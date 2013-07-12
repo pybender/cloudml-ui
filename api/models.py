@@ -491,6 +491,7 @@ class TestExample(Document):
     use_autorefs = True
     default_values = {'created_on': datetime.utcnow}
     required_fields = ['created_on', ]
+    use_dot_notation = True
 
 
 @app.conn.register
