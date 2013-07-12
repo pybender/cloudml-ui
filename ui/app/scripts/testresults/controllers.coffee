@@ -121,6 +121,13 @@ metrics.roc_curve,metrics.roc_auc'
         'partials/datasets/csv_list_popup.html',
         'CsvDownloadCtrl', 'modal')
 
+  $scope.confusion_matrix_weights = {w0: 1, w1: 1}
+
+  $scope.recalculateConfusionMatrix = (weight0, weight1) ->
+    $scope.test.$get_confusion_matrix(weight0, weight1).then((resp) ->
+      $scope.test.metrics.confusion_matrix = resp.data.confusion_matrix
+    )
+
   $scope.initSections($scope.goSection, defaultAction='metrics:accuracy')
 ])
 
