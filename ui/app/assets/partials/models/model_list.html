@@ -13,59 +13,61 @@
   </div>
 </h2>
 
-<alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+<div ng-controller="BaseListCtrl" ng-init="init(true, 'models')" >
+  <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
 
-<alert-message ng-show="objects.length == 0" class="alert-info" msg="No models found"></alert-message>
+  <alert-message ng-show="objects.length == 0" class="alert-info" msg="No models found"></alert-message>
 
-<div ng-controller="TagCloudCtrl" class="alert-info well">
-  <span ng-repeat="tag in tag_list">
-    <span>
-      <a href="#/models/?tag={{ tag.text }}">{{ tag.text }} ({{ tag.count }})</a> 
-    </span>&nbsp;
-  </span>
+  <div ng-hide="objects.length == 0" ng-controller="TagCloudCtrl" class="alert-info well">
+    <span ng-repeat="tag in tag_list">
+      <span>
+        <a href="#/models/?tag={{ tag.text }}">{{ tag.text }} ({{ tag.count }})</a> 
+      </span>&nbsp;
+    </span>
+  </div>
+
+  <table ng-hide="objects.length == 0" class="table table-hover">
+
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Status</th>
+      <th>Created</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr ng-repeat="model in objects" ng-class="{success : model.status=='Trained', warning : model.status =='New', info : model.status =='Training', error : model.status =='Error'}">
+      <td>
+        <a href="#{{ model.objectUrl() }}">{{ model.name }}</a>
+        <div title="tags">
+          <span ng-repeat="tag in model.tags">
+            <span class="badge">
+              <a href="#/models/?tag={{ tag }}" style="color: white;">{{ tag }}</a>
+            </span> 
+          </span>
+        </div>
+      </td>
+      <td title="{{ model.error }}">{{ model.status }}</td>
+      <td>{{ model.created_on|format_date }}</td>
+      <td ng-controller="ModelActionsCtrl">
+        <div ng-init="init({model: model})">
+          <button ng-show="model.status == 'Trained'" ng-click="test_model(model)" class="btn btn-success">
+            <i title="Apply the classifier to the input provided by the data import handler" class="status-icon icon-play"></i>
+          </button>
+          <button ng-click="train_model(model)" class="btn btn-info">
+            <i title="Train your model" class="icon-tasks"></i>
+          </button>
+          <a ng-show="model.status == 'Trained'" href="{{ model.downloadUrl() }}?field=trainer" class="btn btn-info">
+            <i title="Download model trainer." class="icon-download-alt"></i>
+          </a>
+          <button ng-click="delete_model(model)" class="btn btn-danger">
+            <i title="Delete your model. Be careful - you could not recover it!" class="icon-remove"></i>
+          </button>
+        </div>
+        <i ng-show="model.status == 'Training'" class="icon-large icon-refresh" title="Training model is in progress"></i>
+      </td>
+    </tr>
+  </tbody>
+  </table>
 </div>
-
-<table ng-controller="BaseListCtrl" ng-init="init(true, 'models')" ng-hide="objects.length == 0" class="table table-hover">
-
-<thead>
-  <tr>
-    <th>Name</th>
-    <th>Status</th>
-    <th>Created</th>
-    <th>Actions</th>
-  </tr>
-</thead>
-<tbody>
-  <tr ng-repeat="model in objects" ng-class="{success : model.status=='Trained', warning : model.status =='New', info : model.status =='Training', error : model.status =='Error'}">
-    <td>
-      <a href="#{{ model.objectUrl() }}">{{ model.name }}</a>
-      <div title="tags">
-        <span ng-repeat="tag in model.tags">
-          <span class="badge">
-            <a href="#/models/?tag={{ tag }}" style="color: white;">{{ tag }}</a>
-          </span> 
-        </span>
-      </div>
-    </td>
-    <td title="{{ model.error }}">{{ model.status }}</td>
-    <td>{{ model.created_on|format_date }}</td>
-    <td ng-controller="ModelActionsCtrl">
-      <div ng-init="init({model: model})">
-        <button ng-show="model.status == 'Trained'" ng-click="test_model(model)" class="btn btn-success">
-          <i title="Apply the classifier to the input provided by the data import handler" class="status-icon icon-play"></i>
-        </button>
-        <button ng-click="train_model(model)" class="btn btn-info">
-          <i title="Train your model" class="icon-tasks"></i>
-        </button>
-        <a ng-show="model.status == 'Trained'" href="{{ model.downloadUrl() }}?field=trainer" class="btn btn-info">
-          <i title="Download model trainer." class="icon-download-alt"></i>
-        </a>
-        <button ng-click="delete_model(model)" class="btn btn-danger">
-          <i title="Delete your model. Be careful - you could not recover it!" class="icon-remove"></i>
-        </button>
-      </div>
-      <i ng-show="model.status == 'Training'" class="icon-large icon-refresh" title="Training model is in progress"></i>
-    </td>
-  </tr>
-</tbody>
-</table>
