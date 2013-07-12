@@ -394,6 +394,7 @@ class Tests(BaseResource):
     OBJECT_NAME = 'test'
     DEFAULT_FIELDS = ('_id', 'name')
     FILTER_PARAMS = (('status', str), )
+    GET_ACTIONS = ('confusion_matrix')
     methods = ('GET', 'OPTIONS', 'DELETE', 'PUT', 'POST')
     post_form = AddTestForm
 
@@ -411,6 +412,28 @@ class Tests(BaseResource):
         id = kwargs.get('_id')
         return self.Model.find_one({'model_id': model_id,
                                    '_id': ObjectId(id)}, fields)
+
+    def _get_confusion_matrix_action(self, **kwargs):
+        from api.tasks import calculate_confusion_matrix
+
+        parser = reqparse.RequestParser()
+        parser.add_argument('weight0', type=float)
+        parser.add_argument('weight1', type=float)
+        args = parser.parse_args()
+
+        test = self._get_details_query(None, None, **kwargs)
+        if not test:
+            raise NotFound('Test not found')
+
+        model = app.db.Model.find_one({'_id': ObjectId(kwargs.get('model_id'))})
+        if not model:
+            raise NotFound('Model not found')
+
+        result = calculate_confusion_matrix(test._id, args.get('weight0'), args.get('weight1'))
+        result = zip(model.labels, result)
+
+        return self._render({self.OBJECT_NAME: test._id,
+                             'confusion_matrix': result})
 
 api.add_resource(Tests, '/cloudml/models/<regex("[\w\.]*"):model_id>/tests/')
 

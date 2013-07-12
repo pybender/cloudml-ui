@@ -84,7 +84,22 @@
         <div class="row">
             <div class="span6">
                 <h4>Confusion Matrix</h4>
+
+                <form name="ConfusionMatrixForm" class="form-inline well">
+
+                  <label>Weight 0: </label>
+                  <input type="text" name="weight0" class="input-mini" ng-model="confusion_matrix_weights.w0" required smart-float>
+
+                  <label>Weight 1: </label>
+                  <input type="text" name="weight1" class="input-mini" ng-model="confusion_matrix_weights.w1" required smart-float>
+
+                  <button ng-disabled="ConfusionMatrixForm.$invalid" class="btn" ng-click="recalculateConfusionMatrix(confusion_matrix_weights.w0, confusion_matrix_weights.w1)">
+                      Recalculate with weights
+                  </button>
+                </form>
+
                 <confusion-matrix matrix=test.metrics.confusion_matrix url=test.examplesUrl()></confusion-matrix>
+
             </div>
         </div>
       </div>
