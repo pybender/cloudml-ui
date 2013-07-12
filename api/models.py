@@ -167,6 +167,9 @@ class DataSet(Document):
         'on_s3': bool,
         'compress': bool,
         'filename': basestring,
+        'filesize': long,
+        'records_count': int,
+        'time': int,
     }
     required_fields = ['name', 'created_on', 'updated_on', ]
     default_values = {'created_on': datetime.utcnow,

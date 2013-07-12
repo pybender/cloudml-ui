@@ -1,3 +1,4 @@
+import os
 import json
 import logging
 from copy import copy
@@ -104,6 +105,8 @@ def import_data(dataset_id, model_id=None, test_id=None):
         init_logger('importdata_log', obj=dataset_id)
         logging.info('Loading dataset %s' % dataset._id)
 
+        import_start_time = datetime.now()
+
         logging.info("Import dataset using import handler '%s' \
 with%s compression", importhandler.name, '' if dataset.compress else 'out')
         handler = json.dumps(importhandler.data)
@@ -121,7 +124,13 @@ with%s compression", importhandler.name, '' if dataset.compress else 'out')
         if obj:
             obj.status = obj.STATUS_IMPORTED
             obj.save()
+
+        dataset.filesize = os.path.getsize(dataset.filename)
+        dataset.records_count = handler.count
+        dataset.time = (datetime.now() - import_start_time).seconds
+
         dataset.save(validate=True)
+
         logging.info('DataSet was loaded')
     except Exception, exc:
         logging.exception('Got exception when import dataset')
