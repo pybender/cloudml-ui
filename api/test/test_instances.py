@@ -18,7 +18,7 @@ class InstancesTests(BaseTestCase):
         self.assertTrue(self.obj)
 
     def test_list(self):
-        self._check_list()
+        self._check_list(show='name')
 
     def test_details(self):
         self._check_details()

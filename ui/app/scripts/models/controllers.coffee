@@ -11,7 +11,7 @@ angular.module('app.models.controllers', ['app.config', ])
 
   ($scope, $location, Model) ->
     $scope.MODEL = Model
-    $scope.FIELDS = Model.MAIN_FIELDS
+    $scope.FIELDS = Model.MAIN_FIELDS + ',tags'
     $scope.ACTION = 'loading models'
     $scope.currentTag = $location.search()['tag']
     $scope.kwargs = {'tag': $scope.currentTag}
@@ -129,8 +129,9 @@ angular.module('app.models.controllers', ['app.config', ])
         switch name
           when 'model'
             extra_fields = 'created_on,target_variable,
-  error,labels,weights_synchronized,example_id,example_label,
-  updated_on,dataset,feature_count'
+error,labels,weights_synchronized,example_id,example_label,
+updated_on,dataset,feature_count,test_import_handler.name,
+train_import_handler.name,tags'
           when 'features' then extra_fields = 'features'
 
         if 'main' in $scope.LOADED_SECTIONS

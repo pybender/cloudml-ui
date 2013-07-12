@@ -106,6 +106,7 @@ class BaseTestCase(unittest.TestCase):
         #self.assertTrue(count, 'Invalid fixtures')
         self.assertEquals(count, len(obj_resp))
         default_fields = self.RESOURCE.DEFAULT_FIELDS or [u'_id', u'name']
+        print obj_resp
         self.assertEquals(obj_resp[0].keys(), default_fields)
 
         url = self._get_url(show=show)

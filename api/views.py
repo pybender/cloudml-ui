@@ -118,11 +118,11 @@ class Models(BaseResource):
     def _get_by_importhandler_action(self, **kwargs):
         parser_params = self.GET_PARAMS + (('handler', str), )
         params = self._parse_parameters(parser_params)
-        fields = self._get_fields_to_show(params)
+        query_fields, show_fields = self._get_fields(params)
         _id = ObjectId(params.get('handler'))
         expr = {'$or': [{'test_import_handler._id': _id},
                         {'train_import_handler._id': _id}]}
-        models = self.Model.find(expr, fields)
+        models = self.Model.find(expr, query_fields)
         return self._render({"%ss" % self.OBJECT_NAME: models})
 
     def _get_download_action(self, **kwargs):
@@ -260,7 +260,7 @@ class WeightsResource(BaseResource):
         def get_weights(is_positive, page):
             model_id = kwargs.get('model_id')
             return self.Model.find({'model_id': model_id,
-                                    'is_positive': is_positive}, fields).\
+                                    'is_positive': is_positive}, query_fields).\
                 skip((page - 1) * per_page).limit(per_page)
 
         paging_params = (('ppage', int), ('npage', int),)
@@ -269,7 +269,7 @@ class WeightsResource(BaseResource):
         # Paginate weights
         ppage = params.get('ppage') or 1
         npage = params.get('npage') or 1
-        fields = self._get_fields_to_show(params)
+        query_fields, show_fields = self._get_fields(params)
         context = {'positive_weights': get_weights(True, ppage),
                    'negative_weights': get_weights(False, npage)}
         return self._render(context)
@@ -593,7 +593,7 @@ not contain probabilities')
         def generate():
             parser_params = list(self.GET_PARAMS) + self.FILTER_PARAMS
             params = self._parse_parameters(parser_params)
-            fields = self._get_fields_to_show(params)
+            fields, show_fields = self._get_fields(params)
             logging.info('Use fields %s' % str(fields))
             kw = dict([(k, v) for k, v in kwargs.iteritems() if v])
             examples = self._get_list_query(params, None, **kw)

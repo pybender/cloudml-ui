@@ -12,6 +12,8 @@
             "labels": ["0", "1"],
             "import_params": ["start", "end"],
             "error": "",
+            "dataset": null,
+            "feature_count": 37,
             "example_id": "opening_id",
             "example_label": "opening_title",
             "target_variable": "hire_outcome",

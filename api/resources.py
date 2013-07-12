@@ -73,7 +73,7 @@ class BaseResource(restful.Resource):
         except NotFound, exc:
             return odesk_error_response(404, ERR_NO_SUCH_MODEL, exc.message)
         except ValidationError, exc:
-            return odesk_error_response(400, ERR_INVALID_DATA, 
+            return odesk_error_response(400, ERR_INVALID_DATA,
                                         exc.message, errors=exc.errors)
 
     # HTTP Methods
@@ -153,11 +153,11 @@ class BaseResource(restful.Resource):
         if self.NEED_PAGING:
             parser_params += self.PAGING_PARAMS
         params = self._parse_parameters(parser_params)
-        fields = self._get_fields_to_show(params)
+        query_fields, show_fields = self._get_fields(params)
 
         # Removing empty values
         kw = dict([(k, v) for k, v in kwargs.iteritems() if v])
-        models = self._get_list_query(params, fields, **kw)
+        models = self._get_list_query(params, query_fields, **kw)
         context = {}
         if self.NEED_PAGING:
             context['per_page'] = per_page = params.get('per_page') or 20
@@ -167,6 +167,10 @@ class BaseResource(restful.Resource):
             context['pages'] = pages = int(math.ceil(1.0 * total / per_page))
             context['has_prev'] = page > 1
             context['has_next'] = page < pages
+
+        if query_fields != show_fields:
+            models = [_filter_model_fields(model, show_fields)
+                      for model in models]
 
         context.update({self.list_key: models})
         return self._render(context)
@@ -189,10 +193,14 @@ class BaseResource(restful.Resource):
         GET model by name
         """
         params = self._parse_parameters(extra_params + self.GET_PARAMS)
-        fields = self._get_fields_to_show(params)
-        model = self._get_details_query(params, fields, **kwargs)
+        query_fields, show_fields = self._get_fields(params)
+        model = self._get_details_query(params, query_fields, **kwargs)
         if model is None:
             raise NotFound(self.MESSAGE404 % kwargs)
+
+        if query_fields != show_fields:
+            model = _filter_model_fields(model, show_fields)
+
         return self._render({self.OBJECT_NAME: model})
 
     def _get_save_response_context(self, model, extra_fields=[]):
@@ -298,9 +306,22 @@ for %s method: %s" % (method, action))
             parser.add_argument(name, type=param_type)
         return parser.parse_args()
 
-    def _get_fields_to_show(self, params):
-        fields = params.get('show', None)
-        return fields.split(',') if fields else ('name', )
+    def _get_fields(self, params):
+        show = params.get('show', None)
+        fields = ['_id'] + show.split(',') if show else ('name', '_id') 
+        if self.Model.use_autorefs:
+            query_fields = []
+            for field in fields:
+                if '.' in field:
+                    fieldname = field.split('.')[0]
+                    from mongokit.document import R
+                    if isinstance(self.Model.structure[fieldname], R):
+                        query_fields.append(fieldname)
+                        continue
+                query_fields.append(field)
+            return query_fields, fields
+        else:
+            return fields, fields
 
     def _render(self, content, code=200):
         try:
@@ -312,3 +333,27 @@ for %s method: %s" % (method, action))
 
         return app.response_class(content,
                                   mimetype='application/json'), code
+
+
+def _filter_model_fields(model, show_fields):
+    res = {}
+    for field in show_fields:
+        if '.' in field:
+            subfields = field.split('.')
+            inner = res
+            inner_model = model
+            for subfield in subfields:
+                from flask.ext.mongokit import Document
+                val = getattr(inner_model, subfield)
+                if isinstance(val, Document):
+                    if not subfield in inner:
+                        inner[subfield] = {}
+                else:
+                    inner[subfield] = val
+                inner_model = val
+                inner = inner[subfield]
+        else:
+            if hasattr(model, field):
+                res[field] = getattr(model, field)
+
+    return res
