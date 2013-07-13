@@ -340,6 +340,24 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
   }
 )
 
+.directive('smartFloat', () ->
+  return {
+    require: 'ngModel',
+    restrict: 'A',
+    link: (scope, element, attrs, control) ->
+      FLOAT_REGEXP = /^\-?\d+((\.|\,)\d+)?$/
+
+      control.$parsers.unshift((viewValue) ->
+        if FLOAT_REGEXP.test(viewValue)
+          control.$setValidity('float', true)
+          return parseFloat(viewValue.replace(',', '.'))
+        else
+          control.$setValidity('float', false)
+          return undefined
+      )
+  }
+)
+
 # Directives for creating plots
 
 .directive('scCurves', [ ->
