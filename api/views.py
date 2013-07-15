@@ -429,11 +429,14 @@ class Tests(BaseResource):
         if not model:
             raise NotFound('Model not found')
 
-        result = calculate_confusion_matrix(test._id, args.get('weight0'), args.get('weight1'))
+        try:
+            result = calculate_confusion_matrix(test._id, args.get('weight0'), args.get('weight1'))
+        except Exception as e:
+            return self._render({self.OBJECT_NAME: test._id, 'error': e.message})
+
         result = zip(model.labels, result)
 
-        return self._render({self.OBJECT_NAME: test._id,
-                             'confusion_matrix': result})
+        return self._render({self.OBJECT_NAME: test._id, 'confusion_matrix': result})
 
 api.add_resource(Tests, '/cloudml/models/<regex("[\w\.]*"):model_id>/tests/')
 
