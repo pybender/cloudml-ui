@@ -39,6 +39,11 @@ class AmazonEC2Helper(object):
         request = request[0]
         return request
 
+    def cancel_request_spot_instance(self, request_id):
+        request = self.conn.cancel_spot_instance_requests([request_id, ])
+        request = request[0]
+        return request
+
 
 class AmazonS3Helper(object):
     def __init__(self, token=None, secret=None, bucket_name=None):

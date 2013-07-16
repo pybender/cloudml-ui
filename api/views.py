@@ -75,7 +75,7 @@ class Models(BaseResource):
     Models API methods
     """
     GET_ACTIONS = ('download', 'reload', 'by_importhandler')
-    PUT_ACTIONS = ('train', 'tags')
+    PUT_ACTIONS = ('train', 'tags', 'cancel_request_instance')
     FILTER_PARAMS = (('status', str), ('comparable', int), ('tag', str))
     DEFAULT_FIELDS = ('_id', 'name')
     methods = ('GET', 'OPTIONS', 'DELETE', 'PUT', 'POST')
@@ -223,6 +223,15 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
             #                             str(model._id),),
             #                             queue=instance['name'])
             return self._render(self._get_save_response_context(model, extra_fields=['status']))
+
+    def _put_cancel_request_instance_action(self, **kwargs):
+        from api.tasks import cancel_request_spot_instance
+        model = self._get_details_query(None, None, **kwargs)
+        request_id = model.get('spot_instance_request_id')
+        if request_id and model.status == model.STATUS_REQUESTING_INSTANCE:
+            cancel_request_spot_instance.delay(request_id, str(model._id))
+            model.status = model.STATUS_CANCELED
+        return self._render(self._get_save_response_context(model, extra_fields=['status']))
 
 api.add_resource(Models, '/cloudml/models/')
 

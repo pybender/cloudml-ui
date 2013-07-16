@@ -218,6 +218,9 @@ train_import_handler.name,tags'
     $scope.reload_model = (model)->
       model.$reload()
 
+    $scope.cancel_request_spot_instance = (model)->
+      model.$cancel_request_spot_instance()
+
     $scope.train_model = (model)->
       $scope.openDialog($dialog, model,
         'partials/models/model_train_popup.html',

@@ -151,7 +151,7 @@ class DataSet(Document):
     __collection__ = 'dataset'
     LOG_TYPE = 'importdata_log'
 
-    STATUS_IMPORTINING = 'Importing'
+    STATUS_IMPORTING = 'Importing'
     STATUS_IMPORTED = 'Imported'
     STATUS_ERROR = 'Error'
 
@@ -174,7 +174,7 @@ class DataSet(Document):
                       'error': '',
                       'on_s3': False,
                       'compress': True,
-                      'status': STATUS_IMPORTINING}
+                      'status': STATUS_IMPORTING}
     use_dot_notation = True
 
     def __init__(self, *args, **kwargs):
@@ -300,11 +300,13 @@ class Model(Document):
 
     STATUS_NEW = 'New'
     STATUS_QUEUED = 'Queued'
-    STATUS_IMPORTINING = 'Importing'
+    STATUS_IMPORTING = 'Importing'
     STATUS_IMPORTED = 'Imported'
+    STATUS_REQUESTING_INSTANCE = 'Requesting Instance'
     STATUS_TRAINING = 'Training'
     STATUS_TRAINED = 'Trained'
     STATUS_ERROR = 'Error'
+    STATUS_CANCELED = 'Canceled'
 
     __collection__ = 'models'
     structure = {
@@ -338,6 +340,8 @@ class Model(Document):
         'example_label': basestring,
         'example_id': basestring,
         'tags': list,
+
+        'spot_instance_request_id': basestring,
     }
     gridfs = {'files': ['trainer']}
     required_fields = ['name', 'created_on', ]
@@ -346,7 +350,8 @@ class Model(Document):
                       'status': STATUS_NEW,
                       'comparable': False,
                       'tags': [],
-                      'weights_synchronized': False}
+                      'weights_synchronized': False,
+                      'spot_instance_request_id': ''}
     use_dot_notation = True
     use_autorefs = True
 
@@ -412,7 +417,7 @@ class Test(Document):
     LOG_TYPE = 'runtest_log'
 
     STATUS_QUEUED = 'Queued'
-    STATUS_IMPORTINING = 'Importing'
+    STATUS_IMPORTING = 'Importing'
     STATUS_IMPORTED = 'Imported'
     STATUS_IN_PROGRESS = 'In Progress'
     STATUS_COMPLETED = 'Completed'
