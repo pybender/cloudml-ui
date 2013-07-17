@@ -787,6 +787,28 @@ class TagResource(BaseResource):
 
 api.add_resource(TagResource, '/cloudml/tags/')
 
+
+class DbStatsResource(BaseResource):
+    ALLOWED_METHODS = ('get', )
+
+    def get(self, action=None, **kwargs):
+        stats = {}
+
+        for coll_name in ('models', 'tests', 'logs'):
+            coll_stats = app.db.command('collStats', coll_name)
+            stats[coll_name] = {
+                'count': coll_stats['count'],
+                'size': coll_stats['size'],
+                'avgObjSize': coll_stats['avgObjSize'],
+                'storageSize': coll_stats['storageSize'],
+                'totalIndexSize': coll_stats['totalIndexSize'],
+            }
+
+        return self._render(stats)
+
+api.add_resource(DbStatsResource, '/cloudml/dbstats', add_standart_urls=False)
+
+
 def populate_parser(model, is_requred=False):
     parser = reqparse.RequestParser()
     for param in model.import_params:
