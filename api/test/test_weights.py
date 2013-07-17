@@ -20,7 +20,7 @@ class WeightsTests(BaseTestCase):
 
         # POST Trained Model
         handler = open('./conf/extract.json', 'r').read()
-        trainer = open('./api/test/model.dat', 'r')
+        trainer = open('./api/fixtures/model.dat', 'r')
         post_data = {'test_import_handler_file': handler,
                      'train_import_handler_file': handler,
                      'trainer': trainer,

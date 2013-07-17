@@ -8,7 +8,6 @@
 _build
 _public
 *.bak
-*.dat
 local_config.coffee
 ve
 *.sqlite

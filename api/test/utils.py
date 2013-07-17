@@ -53,11 +53,7 @@ class BaseTestCase(unittest.TestCase):
                             field_type = Model.structure[key]
                             if field_type == datetime:
                                 doc[key] = datetime.now()
-                            elif isinstance(field_type, DocumentProperties):
-                                if val:
-                                    RelModel = getattr(app.db, val['$ref'])
-                                    doc[key] = RelModel.find_one({'_id': ObjectId(val['$id'])})
-                            elif isinstance(field_type, R):
+                            elif isinstance(field_type, (R, DocumentProperties)):
                                 if val:
                                     related_objects.append({'id': doc['_id'],
                                                             'collection': collection_name,
