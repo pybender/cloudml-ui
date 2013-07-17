@@ -200,3 +200,24 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings',
     return $rootScope.err
 
 ])
+
+App.factory('httpEx', [
+  '$http'
+  '$rootScope'
+
+  ($http, $rootScope) ->
+    $rootScope.loadingCount = 0
+
+    $http.defaults.transformRequest.push (data, headersGetter) ->
+      $rootScope.loadingCount += 1
+      $rootScope.$broadcast('httpCallStarted')
+      return data
+
+    $http.defaults.transformResponse.push (data, headersGetter) ->
+      $rootScope.loadingCount -= 1
+      if $rootScope.loadingCount < 0 then $rootScope.loadingCount = 0
+      $rootScope.$broadcast('httpCallStopped')
+      return data
+
+    return $http
+])

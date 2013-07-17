@@ -1,7 +1,7 @@
 angular.module('app.base', ['app.config'])
 
 .factory('BaseModel', [
-  '$http'
+  'httpEx'
   '$q'
   'settings'
   
@@ -87,7 +87,6 @@ angular.module('app.base', ['app.config'])
           headers: {'Content-Type':undefined, 'X-Requested-With': null}
           url: url
           data: fd
-          transformRequest: angular.identity
           params: _.extend {
           }, opts
         ).then ((resp) =>
