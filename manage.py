@@ -103,7 +103,11 @@ class RemObsoluteMongoKeys(Command):
     def run(self, obj_type):
         def execute(obj_type):
             mthd = getattr(self, "_check_%s" % obj_type)
-            mthd()
+            err_count = mthd()
+            if err_count:
+                logging.error('Executed with %d errors', err_count)
+            else:
+                logging.info('Executed without errors!')
 
         if obj_type != 'all':
             execute(obj_type)
@@ -136,6 +140,7 @@ class RemObsoluteMongoKeys(Command):
         logging.info("================ Analyse Tests ================")
         fields = ('name', '_id', 'model_name',
                   'model_id', 'created_on')
+        err_count = 0
         for i, test in enumerate(app.db.Test.find({}, fields)):
             model_name = test.get('model_name', None)
             model_id = test.get('model_id', None)
@@ -145,6 +150,7 @@ class RemObsoluteMongoKeys(Command):
                 model = app.db.Model.find_one({'_id': ObjectId(model_id)})
                 if not model:
                     logging.error('Model not found by id %s' % model_id)
+                    err_count += 1
                 else:
                     logging.info('Found: %s', model.name)
             else:
@@ -155,6 +161,7 @@ class RemObsoluteMongoKeys(Command):
                 model = app.db.Model.find_one({'name': model_name})
                 if not model:
                     logging.error('Model not found by name %s' % model_name)
+                    err_count += 1
                 else:
                     logging.info('Found: %s', model.name)
             else:
@@ -168,6 +175,7 @@ class RemObsoluteMongoKeys(Command):
                 if test_obj.status == app.db.Test.STATUS_QUEUED:
                     logging.warning('Test is queued. Please check whether it isn"t hung ups.')
             except AutoReferenceError, exc:
+                err_count += 1
                 logging.error('Problem with db refs: %s', exc)
 
             if test_obj:
@@ -177,7 +185,56 @@ class RemObsoluteMongoKeys(Command):
                 else:
                     logging.warning('DataSet not set')
 
-            # Analyse Logs
+        return err_count
+
+    def _check_logs(self):
+        logging.info("================ Analyse Logs ================")
+        err_count = 0
+
+        def _check(log, err_count, name):
+            err_count = 0
+            if log.params.keys() != ['obj']:
+                logging.info('Log created %s', log.get('created_on'))
+                logging.error('Invalid parameters: %s', log.params)
+                err_count += 1
+            else:
+                _id = log.params['obj']
+                Model = getattr(app.db, name)
+                obj = Model.find({'_id': ObjectId(_id)})
+                if not obj:
+                    logging.error('%s not found by id: %s', name, _id)
+                    err_count += 1
+            return err_count
+
+        for i, log in enumerate(app.db.LogMessage.find()):
+            # TODO: Fix issue with not set created on!
+            # if not log.get('created_on'):
+            #     logging.warning('Created on not set')
+
+            if log.type == app.db.LogMessage.TRAIN_MODEL:
+                err_count += _check(log, err_count, 'Model')
+            elif log.type == app.db.LogMessage.IMPORT_DATA:
+                err_count += _check(log, err_count, 'DataSet')
+            elif log.type == app.db.LogMessage.RUN_TEST:
+                err_count += _check(log, err_count, 'Test')
+            elif log.type == app.db.LogMessage.CONFUSION_MATRIX_LOG:
+                err_count += _check(log, err_count, 'Test')
+            else:
+                logging.error('Invalid type %s', log.type)
+                err_count += 1
+
+        return err_count
+
+    def _check_examples(self):
+        logging.info("================ Analyse Test Examples ================")
+        err_count = 0
+        for i, example in enumerate(app.db.TestExamples.find()):
+            test = example.test
+            if not test:
+                logging.error('Test not found for example %s', example._id)
+                err_count += 1
+        return err_count
+
 
 manager = Manager(app)
 manager.add_command("celeryd", Celeryd())
