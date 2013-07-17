@@ -146,26 +146,9 @@ class RemObsoluteMongoKeys(Command):
             model_id = test.get('model_id', None)
             logging.info("%d - Test: %s. Created: %s", i, test._id, test.created_on)
             logging.info('Looking for model by id')
-            if model_id:
-                model = app.db.Model.find_one({'_id': ObjectId(model_id)})
-                if not model:
-                    logging.error('Model not found by id %s' % model_id)
-                    err_count += 1
-                else:
-                    logging.info('Found: %s', model.name)
-            else:
-                logging.warning('Model id not set.')
-
+            err_count += self._look_model_by_id('Model', _id=model_id)
             logging.info('Looking for model by name')
-            if model_name:
-                model = app.db.Model.find_one({'name': model_name})
-                if not model:
-                    logging.error('Model not found by name %s' % model_name)
-                    err_count += 1
-                else:
-                    logging.info('Found: %s', model.name)
-            else:
-                logging.warning('Model name not set.')
+            err_count += self._look_model_by_id('Model', name=model_name)
 
             test_obj = None
             try:
@@ -233,6 +216,29 @@ class RemObsoluteMongoKeys(Command):
             if not test:
                 logging.error('Test not found for example %s', example._id)
                 err_count += 1
+            err_count += self._look_model_by_id('Model', _id=test.model_id)
+            err_count += self._look_model_by_id('Model', name=test.model_name)
+            err_count += self._look_model_by_id('Test', _id=test.test_id)
+            err_count += self._look_model_by_id('Test', name=test.test_name)
+        return err_count
+
+    def _look_model_by_id(self, model_name='Model', **kwargs):
+        err_count = 0
+        for key, val in kwargs.iteritems():
+            if not val:
+                logging.warning('%s not set', key)
+                return err_count
+
+            if key == '_id':
+                kwargs['_id'] = ObjectId(val)
+
+            MODEL = getattr(app.db, model_name)
+            model = MODEL.find_one(kwargs)
+            if not model:
+                logging.error('%s not found by %s', model_name, kwargs)
+                err_count += 1
+            else:
+                logging.info('Found: %s', model.name)
         return err_count
 
 
