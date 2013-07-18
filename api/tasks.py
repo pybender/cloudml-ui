@@ -144,7 +144,7 @@ def train_model(dataset_id, model_id):
     try:
         model = app.db.Model.find_one({'_id': ObjectId(model_id)})
         dataset = app.db.DataSet.find_one({'_id': ObjectId(dataset_id)})
-        model.delete_metadata()
+        model.delete_metadata(delete_log=False)
 
         model.dataset = dataset
         model.status = model.STATUS_TRAINING

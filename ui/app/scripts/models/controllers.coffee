@@ -11,7 +11,8 @@ angular.module('app.models.controllers', ['app.config', ])
 
   ($scope, $location, Model) ->
     $scope.MODEL = Model
-    $scope.FIELDS = Model.MAIN_FIELDS + ',tags'
+    $scope.FIELDS = Model.MAIN_FIELDS + ',tags,
+train_import_handler.import_params,test_import_handler.import_params'
     $scope.ACTION = 'loading models'
     $scope.currentTag = $location.search()['tag']
     $scope.kwargs = {'tag': $scope.currentTag}
@@ -131,7 +132,8 @@ angular.module('app.models.controllers', ['app.config', ])
             extra_fields = 'created_on,target_variable,
 error,labels,weights_synchronized,example_id,example_label,
 updated_on,dataset._id,dataset.name,feature_count,test_import_handler.name,
-train_import_handler.name,tags'
+train_import_handler.name,train_import_handler.import_params,tags,
+test_import_handler.import_params'
           when 'features' then extra_fields = 'features'
 
         if 'main' in $scope.LOADED_SECTIONS

@@ -406,8 +406,9 @@ class Model(Document):
         if commit:
             self.save()
 
-    def delete_metadata(self):
-        LogMessage.delete_related_logs(self)
+    def delete_metadata(self, delete_log=True):
+        if delete_log:
+            LogMessage.delete_related_logs(self)
         params = {'model_id': str(self._id)}
         app.db.Test.collection.remove(params)
         app.db.TestExample.collection.remove(params)
