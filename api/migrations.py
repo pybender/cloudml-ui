@@ -17,10 +17,14 @@ class DbMigration(DocumentMigration):
         super(DbMigration, self).migrate_all(getattr(app.db, self.DOC_CLASS.__collection__))
 
     @classmethod
-    def do_all_migrations(cls):
+    def do_all_migrations(cls, class_or_collection=None):
         for name, obj in inspect.getmembers(sys.modules[__name__], inspect.isclass):
             if hasattr(obj, '__bases__') and cls in obj.__bases__:
-                obj().migrate_all()
+                if (not class_or_collection
+                    or class_or_collection == obj.DOC_CLASS.__collection__
+                        or class_or_collection == obj.DOC_CLASS.__name__):
+                    migration = obj()
+                    migration.migrate_all()
 
 
 class ModelMigration(DbMigration):

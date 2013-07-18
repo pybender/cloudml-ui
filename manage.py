@@ -1,6 +1,6 @@
 import os
 
-from flask.ext.script import Manager, Command, Shell
+from flask.ext.script import Manager, Command, Shell, Option
 
 from api import app
 
@@ -75,9 +75,16 @@ class MigrateOld(Command):
 class Migrate(Command):
     """Migrate"""
 
+    def get_options(self):
+        return (
+            Option('-d', '--document',
+                   dest='document',
+                   default=None),
+        )
+
     def run(self, **kwargs):
         from api.migrations import DbMigration
-        DbMigration.do_all_migrations()
+        DbMigration.do_all_migrations(kwargs.get('document'))
 
 
 def _make_context():
