@@ -48,3 +48,19 @@ class TestMigration(DbMigration):
             for doc in self.collection.find(self.target):
                 self.update = {'$set': {'model_id': doc.model._id }}
                 self.collection.update(self.target, self.update)
+
+
+class DataSetMigration(DbMigration):
+    DOC_CLASS = models.DataSet
+
+    def allmigration01__add_stats_fields(self):
+        self.target = {
+            'filesize': {'$exists': False},
+            'records_count': {'$exists': False},
+            'time': {'$exists': False},
+        }
+        self.update = {'$set': {
+            'filesize': long(0.0),
+            'records_count': 0,
+            'time': 0,
+        }}
