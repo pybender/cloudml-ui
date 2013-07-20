@@ -48,12 +48,13 @@ def get_request_instance(request_id,
         raise Exception('Instance did not lunche')
     logging.info('Get instance %s' % request.instance_id)
     instance = ec2.get_instance(request.instance_id)
-    instance.add_tag('Name', 'cloudml-worker-auto')
-    instance.add_tag('Owner', 'papadimitriou,nmelnik')
-    instance.add_tag('Model_id', model_id)
     logging.info('Instance %s(%s) lunched' % 
             (instance.id,
              instance.private_ip_address))
+    instance.add_tag('Name', 'cloudml-worker-auto')
+    instance.add_tag('Owner', 'papadimitriou,nmelnik')
+    instance.add_tag('Model_id', model_id)
+    instance.add_tag('whoami', 'cloudml')
 
     if callback == "train":
         logging.info('Train model task apply async')
@@ -61,8 +62,8 @@ def get_request_instance(request_id,
         train_model.apply_async((dataset_id,
                                  model_id),
                                  queue=queue,
-                                 link=self_terminate.subtask(args=(),options={'queue':queue}),
-                                 link_error=self_terminate.subtask(args=(),options={'queue':queue})
+                                 link=terminate_instance.subtask(args=(instance.id,), options={'queue':queue}),
+                                 link_error=terminate_instance.subtask(args=(instance.id), options={'queue':queue})
                                 )
     return instance.private_ip_address
 
@@ -72,6 +73,7 @@ def get_request_instance(request_id,
 def terminate_instance(instance_id):
     ec2 = AmazonEC2Helper()
     ec2.terminate_instance(instance_id)
+    logging.info('Instance %s terminated' % instance_id)
 
 
 @celery.task
@@ -144,7 +146,7 @@ def train_model(dataset_id, model_id):
     try:
         model = app.db.Model.find_one({'_id': ObjectId(model_id)})
         dataset = app.db.DataSet.find_one({'_id': ObjectId(dataset_id)})
-        model.delete_metadata(delete_log=False)
+        model.delete_metadata()
 
         model.dataset = dataset
         model.status = model.STATUS_TRAINING
