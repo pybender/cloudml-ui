@@ -130,8 +130,10 @@ angular.module('app.models.controllers', ['app.config', ])
           when 'model'
             extra_fields = 'created_on,target_variable,
 error,labels,weights_synchronized,example_id,example_label,
-updated_on,dataset,feature_count,test_import_handler.name,
-train_import_handler.name,tags'
+updated_on,dataset._id,dataset.name,feature_count,test_import_handler.name,
+train_import_handler.name,train_import_handler.import_params,tags,
+test_import_handler.import_params,train_import_handler._id,
+test_import_handler._id'
           when 'features' then extra_fields = 'features'
 
         if 'main' in $scope.LOADED_SECTIONS
@@ -212,8 +214,9 @@ train_import_handler.name,tags'
       $scope.model = opts.model
 
     $scope.test_model = (model)->
-      $scope.openDialog($dialog, model, 'partials/testresults/run_test.html',
-                        'TestDialogController', 'modal large')
+      $scope._showModelActionDialog(model, 'test', (model) ->
+        $scope.openDialog($dialog, model, 'partials/testresults/run_test.html',
+                        'TestDialogController', 'modal large'))
 
     $scope.reload_model = (model)->
       model.$reload()
@@ -222,12 +225,25 @@ train_import_handler.name,tags'
       model.$cancel_request_spot_instance()
 
     $scope.train_model = (model)->
-      $scope.openDialog($dialog, model,
-        'partials/models/model_train_popup.html',
-        'TrainModelCtrl', 'modal large')
+      $scope._showModelActionDialog(model, 'train', (model) ->
+        $scope.openDialog($dialog, model,
+            'partials/models/model_train_popup.html',
+            'TrainModelCtrl', 'modal large'))
 
     $scope.delete_model = (model) ->
       $scope.openDialog($dialog, model,
         'partials/base/delete_dialog.html', 'DialogCtrl',
         'modal', 'delete model', 'models')
+
+    $scope._showModelActionDialog = (model, action, fn)->
+      if eval('model.' + action + '_import_handler_obj')?
+        fn(model)
+      else
+        model.$load(
+          show: action + '_import_handler'
+          ).then (->
+            fn(model)
+          ), (->
+            $scope.setError(opts, 'loading import handler details')
+          )
 ])

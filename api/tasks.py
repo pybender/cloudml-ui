@@ -80,12 +80,13 @@ def get_request_instance(request_id,
 
     logging.info('Get instance %s' % request.instance_id)
     instance = ec2.get_instance(request.instance_id)
+    logging.info('Instance %s(%s) lunched' % 
+            (instance.id,
+             instance.private_ip_address))
     instance.add_tag('Name', 'cloudml-worker-auto')
     instance.add_tag('Owner', 'papadimitriou,nmelnik')
     instance.add_tag('Model_id', model_id)
-    logging.info('Instance %s(%s) lunched' % (
-        instance.id,
-        instance.private_ip_address))
+    instance.add_tag('whoami', 'cloudml')
 
     if callback == "train":
         logging.info('Train model task apply async')
@@ -93,8 +94,8 @@ def get_request_instance(request_id,
         train_model.apply_async((dataset_id,
                                  model_id),
                                  queue=queue,
-                                 link=self_terminate.subtask(args=(),options={'queue':queue}),
-                                 link_error=self_terminate.subtask(args=(),options={'queue':queue})
+                                 link=terminate_instance.subtask(args=(instance.id,), options={'queue':queue}),
+                                 link_error=terminate_instance.subtask(args=(instance.id), options={'queue':queue})
                                 )
     return instance.private_ip_address
 
@@ -104,6 +105,7 @@ def get_request_instance(request_id,
 def terminate_instance(instance_id):
     ec2 = AmazonEC2Helper()
     ec2.terminate_instance(instance_id)
+    logging.info('Instance %s terminated' % instance_id)
 
 
 @celery.task
@@ -396,12 +398,49 @@ def run_test(dataset_id, test_id):
         store_examples(examples)
 
     except Exception, exc:
-        logging.exception('Got exception when tets model')
+        logging.exception('Got exception when tests model')
         test.status = test.STATUS_ERROR
         test.error = str(exc)
         test.save()
         raise
     return 'Test completed'
+
+
+@celery.task
+def calculate_confusion_matrix(test_id, weight0, weight1):
+    """
+    Calculate confusion matrix for test.
+    """
+    init_logger('confusion_matrix_log', obj=test_id)
+
+    if weight0 == 0 and weight1 == 0:
+        raise ValueError('Both weights can not be 0')
+
+    test = app.db.Test.find_one({'_id': ObjectId(test_id)})
+    if test is None:
+        raise ValueError('Test with id {0!s} not found!'.format(test_id))
+
+    logging.info('Calculating confusion matrix for test id {!s}'.format(test_id))
+
+    model = app.db.Model.find_one({'_id': ObjectId(test['model_id'])})
+    if model is None:
+        raise ValueError('Model with id {0!s} not found!'.format(test['model_id']))
+
+    matrix = [[0, 0],
+              [0, 0]]
+
+    for example in app.db.TestExample.find({'test_id': str(test['_id'])}):
+        true_value_idx = model.labels.index(example['label'])
+
+        prob0, prob1 = example['prob'][:2]
+        weighted_sum = weight1 * prob0 + weight0 * prob1
+        weighted_prob0 = weight1 * prob0 / weighted_sum
+        weighted_prob1 = weight0 * prob1 / weighted_sum
+
+        predicted = [weighted_prob0, weighted_prob1].index(max([weighted_prob0, weighted_prob1]))
+        matrix[true_value_idx][predicted] += 1
+
+    return matrix
 
 
 def decode(row):

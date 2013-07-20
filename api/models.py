@@ -17,6 +17,13 @@ from api.amazon_utils import AmazonS3Helper
 
 @app.conn.register
 class LogMessage(Document):
+    TRAIN_MODEL = 'trainmodel_log'
+    IMPORT_DATA = 'importdata_log'
+    RUN_TEST = 'runtest_log'
+    CONFUSION_MATRIX_LOG = 'confusion_matrix_log'
+    TYPE_CHOICES = (TRAIN_MODEL, IMPORT_DATA, RUN_TEST,
+                    CONFUSION_MATRIX_LOG)
+
     __collection__ = 'logs'
     structure = {
         # error, warning
@@ -28,6 +35,7 @@ class LogMessage(Document):
         'created_on': datetime,
     }
     default_values = {'created_on': datetime.utcnow}
+    use_dot_notation = True
 
     @classmethod
     def delete_related_logs(cls, obj, level=None):
@@ -403,8 +411,9 @@ class Model(Document):
         if commit:
             self.save()
 
-    def delete_metadata(self):
-        LogMessage.delete_related_logs(self)
+    def delete_metadata(self, delete_log=True):
+        if delete_log:
+            LogMessage.delete_related_logs(self)
         params = {'model_id': str(self._id)}
         app.db.Test.collection.remove(params)
         app.db.TestExample.collection.remove(params)
@@ -496,6 +505,7 @@ class TestExample(Document):
     use_autorefs = True
     default_values = {'created_on': datetime.utcnow}
     required_fields = ['created_on', ]
+    use_dot_notation = True
 
 
 @app.conn.register
