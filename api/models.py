@@ -311,6 +311,7 @@ class Model(Document):
     STATUS_IMPORTING = 'Importing'
     STATUS_IMPORTED = 'Imported'
     STATUS_REQUESTING_INSTANCE = 'Requesting Instance'
+    STATUS_INSTANCE_STARTED = 'Instance Started'
     STATUS_TRAINING = 'Training'
     STATUS_TRAINED = 'Trained'
     STATUS_ERROR = 'Error'
@@ -359,7 +360,8 @@ class Model(Document):
                       'comparable': False,
                       'tags': [],
                       'weights_synchronized': False,
-                      'spot_instance_request_id': ''}
+                      'spot_instance_request_id': ''
+                      }
     use_dot_notation = True
     use_autorefs = True
 

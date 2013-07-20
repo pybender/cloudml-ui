@@ -59,21 +59,26 @@ class Migrate(Command):
                                            id=ObjectId(_id),
                                            database=app.config['DATABASE_NAME'])
 
-        print "Adding dbrefs"
         for model in model_list:
-            _update(model, "test_import_handler", "handlers")
-            _update(model, "train_import_handler", "handlers")
-            _update(model, "dataset", "dataset")
-            model['feature_count'] = -1
+            model['spot_instance_request_id'] = ''
             model_collection.save(model)
             print 'Model %s was updated' % model['name']
 
-        print "Recalc features count"
-        for model in app.db.Model.find({}):
-            trainer = model.get_trainer()
-            model.feature_count = len(trainer._feature_model.features.keys())
-            model.save()
-            print 'Model %s has %s features' % (model.name, model.feature_count)
+        # print "Adding dbrefs"
+        # for model in model_list:
+        #     _update(model, "test_import_handler", "handlers")
+        #     _update(model, "train_import_handler", "handlers")
+        #     _update(model, "dataset", "dataset")
+        #     model['feature_count'] = -1
+        #     model_collection.save(model)
+        #     print 'Model %s was updated' % model['name']
+
+        # print "Recalc features count"
+        # for model in app.db.Model.find({}):
+        #     trainer = model.get_trainer()
+        #     model.feature_count = len(trainer._feature_model.features.keys())
+        #     model.save()
+        #     print 'Model %s has %s features' % (model.name, model.feature_count)
 
 
 def _make_context():

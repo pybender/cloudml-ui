@@ -159,6 +159,7 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
     def _put_train_action(self, **kwargs):
         from api.tasks import train_model, import_data, \
             request_spot_instance, self_terminate, get_request_instance
+        from api.tasks import cancel_request_spot_instance
         from api.forms import ModelTrainForm
         from celery import chain
         obj = self._get_details_query(None, None, **kwargs)

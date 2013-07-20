@@ -78,6 +78,9 @@ def get_request_instance(request_id,
         model.set_error('Instance was not launched')
         raise Exception('Instance was not launched')
 
+    model.status = model.STATUS_INSTANCE_STARTED
+    model.save()
+
     logging.info('Get instance %s' % request.instance_id)
     instance = ec2.get_instance(request.instance_id)
     logging.info('Instance %s(%s) lunched' % 
@@ -94,15 +97,15 @@ def get_request_instance(request_id,
         train_model.apply_async((dataset_id,
                                  model_id),
                                  queue=queue,
-                                 link=terminate_instance.subtask(args=(instance.id,), options={'queue':queue}),
-                                 link_error=terminate_instance.subtask(args=(instance.id), options={'queue':queue})
+                                 link=terminate_instance.subtask(kwargs={'instance_id':instance.id,}),
+                                 link_error=terminate_instance.subtask(kwargs={'instance_id':instance.id})
                                 )
     return instance.private_ip_address
 
 
 
 @celery.task
-def terminate_instance(instance_id):
+def terminate_instance(task_id=None, instance_id=None):
     ec2 = AmazonEC2Helper()
     ec2.terminate_instance(instance_id)
     logging.info('Instance %s terminated' % instance_id)
