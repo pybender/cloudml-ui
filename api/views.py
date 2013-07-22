@@ -478,7 +478,7 @@ class TestExamplesResource(BaseResource):
             from helpers.weights import get_example_params
             model_weights = app.db.Weight.find({'model_id': model_id})
             weighted_data = dict(get_example_params(
-                model_weights, example['data_input'], data))
+                model_weights, example.data_input, data))
             example['weighted_data_input'] = weighted_data
             # FIXME: Find a better way to do it using mongokit
             app.db.TestExample.collection.update(
@@ -644,7 +644,7 @@ filename=%(model_id)s-%(test_id)s-examples.csv" % kwargs
         example = self.Model.find_one(kwargs, ('data_input', ))
         if example is None:
             raise NotFound('No test examples found!')
-        return example['data_input']
+        return example.data_input
 
 api.add_resource(TestExamplesResource, '/cloudml/models/\
 <regex("[\w\.]*"):model_id>/tests/<regex("[\w\.]*"):test_id>/examples/')

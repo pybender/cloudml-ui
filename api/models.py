@@ -483,6 +483,7 @@ class Test(Document):
 @app.conn.register
 class TestExample(Document):
     __collection__ = 'example'
+    S3_KEY = 'text_example_'
 
     structure = {
         'created_on': datetime,
@@ -508,6 +509,49 @@ class TestExample(Document):
     default_values = {'created_on': datetime.utcnow}
     required_fields = ['created_on', ]
     use_dot_notation = True
+
+    @property
+    def s3_key(self):
+        return '{0!s}_{1!s}'.format(self.S3_KEY, self._id)
+
+    def _save_to_s3(self, data):
+        meta = {
+            'example_id': self.id,
+            'test_id': self.test_id,
+            'model_id': self.model_id,
+        }
+        helper = AmazonS3Helper()
+        helper.save_key_string(self.s3_key, json.dumps(data), meta)
+        helper.close()
+
+    def _load_from_s3(self):
+        helper = AmazonS3Helper()
+        return helper.load_key(self.s3_key)
+
+    @property
+    def data_input(self):
+        if not self['data_input'] and getattr(self, '_id'):
+            data = self._load_from_s3()
+            self['data_input'] = json.loads(data)
+        return self['data_input']
+
+    @data_input.setter
+    def set_data_input(self, value):
+        self['data_input'] = value
+
+    def save(self, *args, **kwargs):
+        data_input = None
+        if self['data_input']:
+            data_input = self['data_input']
+            self['data_input'] = None
+        super(TestExample, self).save(*args, **kwargs)
+        if data_input:
+            self._save_to_s3(data_input)
+
+    def delete(self):
+        helper = AmazonS3Helper()
+        helper.delete_key(self.s3_key)
+        super(TestExample, self).delete()
 
 
 @app.conn.register
