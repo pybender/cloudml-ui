@@ -20,8 +20,7 @@ angular.module('app.models.model', ['app.config'])
                                'trainer', 'test_import_handler', 'name',
                                'test_import_handler_file',
                                'train_import_handler_file']
-      @MAIN_FIELDS: 'name,_id,status,train_import_handler._id,
-test_import_handler._id'
+      @MAIN_FIELDS: 'name,_id,status'
 
       _id: null
       name: null
@@ -78,6 +77,12 @@ test_import_handler._id'
         for key, val of opts
           data[key] = val
         @$make_request("#{@BASE_API_URL}#{@_id}/action/train/", {}, "PUT", data)
+
+      $cancel_request_spot_instance: =>
+        url = "#{@BASE_API_URL}#{@_id}/action/cancel_request_instance/"
+        @$make_request(url, {}, "PUT", {}).then(
+          (resp) =>
+            @status = resp.data.model.status)
 
     return Model
 ])

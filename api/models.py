@@ -17,6 +17,13 @@ from api.amazon_utils import AmazonS3Helper
 
 @app.conn.register
 class LogMessage(Document):
+    TRAIN_MODEL = 'trainmodel_log'
+    IMPORT_DATA = 'importdata_log'
+    RUN_TEST = 'runtest_log'
+    CONFUSION_MATRIX_LOG = 'confusion_matrix_log'
+    TYPE_CHOICES = (TRAIN_MODEL, IMPORT_DATA, RUN_TEST,
+                    CONFUSION_MATRIX_LOG)
+
     __collection__ = 'logs'
     structure = {
         # error, warning
@@ -28,6 +35,7 @@ class LogMessage(Document):
         'created_on': datetime,
     }
     default_values = {'created_on': datetime.utcnow}
+    use_dot_notation = True
 
     @classmethod
     def delete_related_logs(cls, obj, level=None):
@@ -151,7 +159,7 @@ class DataSet(Document):
     __collection__ = 'dataset'
     LOG_TYPE = 'importdata_log'
 
-    STATUS_IMPORTINING = 'Importing'
+    STATUS_IMPORTING = 'Importing'
     STATUS_IMPORTED = 'Imported'
     STATUS_ERROR = 'Error'
 
@@ -177,7 +185,7 @@ class DataSet(Document):
                       'error': '',
                       'on_s3': False,
                       'compress': True,
-                      'status': STATUS_IMPORTINING}
+                      'status': STATUS_IMPORTING}
     use_dot_notation = True
 
     def __init__(self, *args, **kwargs):
@@ -303,11 +311,14 @@ class Model(Document):
 
     STATUS_NEW = 'New'
     STATUS_QUEUED = 'Queued'
-    STATUS_IMPORTINING = 'Importing'
+    STATUS_IMPORTING = 'Importing'
     STATUS_IMPORTED = 'Imported'
+    STATUS_REQUESTING_INSTANCE = 'Requesting Instance'
+    STATUS_INSTANCE_STARTED = 'Instance Started'
     STATUS_TRAINING = 'Training'
     STATUS_TRAINED = 'Trained'
     STATUS_ERROR = 'Error'
+    STATUS_CANCELED = 'Canceled'
 
     __collection__ = 'models'
     structure = {
@@ -341,6 +352,8 @@ class Model(Document):
         'example_label': basestring,
         'example_id': basestring,
         'tags': list,
+
+        'spot_instance_request_id': basestring,
     }
     gridfs = {'files': ['trainer']}
     required_fields = ['name', 'created_on', ]
@@ -349,7 +362,9 @@ class Model(Document):
                       'status': STATUS_NEW,
                       'comparable': False,
                       'tags': [],
-                      'weights_synchronized': False}
+                      'weights_synchronized': False,
+                      'spot_instance_request_id': ''
+                      }
     use_dot_notation = True
     use_autorefs = True
 
@@ -401,8 +416,9 @@ class Model(Document):
         if commit:
             self.save()
 
-    def delete_metadata(self):
-        LogMessage.delete_related_logs(self)
+    def delete_metadata(self, delete_log=True):
+        if delete_log:
+            LogMessage.delete_related_logs(self)
         params = {'model_id': str(self._id)}
         app.db.Test.collection.remove(params)
         app.db.TestExample.collection.remove(params)
@@ -415,7 +431,7 @@ class Test(Document):
     LOG_TYPE = 'runtest_log'
 
     STATUS_QUEUED = 'Queued'
-    STATUS_IMPORTINING = 'Importing'
+    STATUS_IMPORTING = 'Importing'
     STATUS_IMPORTED = 'Imported'
     STATUS_IN_PROGRESS = 'In Progress'
     STATUS_COMPLETED = 'Completed'
@@ -494,6 +510,7 @@ class TestExample(Document):
     use_autorefs = True
     default_values = {'created_on': datetime.utcnow}
     required_fields = ['created_on', ]
+    use_dot_notation = True
 
 
 @app.conn.register

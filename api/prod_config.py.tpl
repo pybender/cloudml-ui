@@ -5,6 +5,7 @@ UPLOAD_FOLDER = 'models'
 DATA_FOLDER = '{{ current_var_link }}/data'
 MAX_CONTENT_LENGTH = 128 * 1024 * 1024
 DATABASE_NAME = 'cloudml'
+DATABASE_HOST = '172.27.77.252'
 
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
@@ -28,3 +29,6 @@ CELERY_DEFAULT_ROUTING_KEY = 'task.default'
 AMAZON_ACCESS_TOKEN = '{{ amazon_access_token }}'
 AMAZON_TOKEN_SECRET = '{{ amazon_token_secret }}'
 AMAZON_BUCKET_NAME = '{{ amazon_bucket_name }}'
+
+REQUESTING_INSTANCE_COUNTDOWN = 20
+REQUESTING_INSTANCE_MAX_RETRIES = 30

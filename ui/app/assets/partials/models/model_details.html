@@ -7,7 +7,7 @@
 <alert-message ng-show="model.status == 'New'" class="alert-warning" msg='Model is not trained yet. Please start training.' unsafe>
 </alert-message>
 
-<alert-message ng-show="model.status == 'Error'" class="alert-error" msg='Error occures while model training. Look at celery tasks for details' unsafe>
+<alert-message ng-show="model.status == 'Error'" class="alert-error" msg='Error occurred while model training. Look at celery tasks for details' unsafe>
 </alert-message>
 
 <alert-message ng-show="model.error" class="alert-error" msg="{{ model.error }}" unsafe></alert-message>
