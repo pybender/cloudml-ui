@@ -10,7 +10,7 @@ from datetime import timedelta, datetime
 from boto.exception import EC2ResponseError
 
 from api import celery, app
-from api.models import Test
+from api.models import Test, Model
 from api.logger import init_logger
 from api.amazon_utils import AmazonEC2Helper
 from core.trainer.trainer import Trainer
@@ -213,12 +213,18 @@ def train_model(dataset_id, model_id):
         if not exists(path):
             makedirs(path)
         train_fp = dataset.get_data_stream()
-        trainer.train(streamingiterload(train_fp))
+
+        from memory_profiler import memory_usage
+        mem_usage = memory_usage((Trainer.train, (trainer, streamingiterload(train_fp),)), interval=0)
+
         train_fp.close()
         trainer.clear_temp_data()
+
         model.status = model.STATUS_TRAINED
         model.set_trainer(trainer)
+        model.memory_usage['training'] = max(mem_usage)
         model.save()
+
         fill_model_parameter_weights.delay(str(model._id))
     except Exception, exc:
         logging.exception('Got exception when train model')
@@ -328,7 +334,10 @@ def run_test(dataset_id, test_id):
         test.error = ""
         test.save()
 
-        metrics, raw_data = model.run_test(dataset)
+        from memory_profiler import memory_usage
+        mem_usage, result = memory_usage((Model.run_test, (model, dataset,)), interval=0, retval=True)
+
+        metrics, raw_data = result
         test.accuracy = metrics.accuracy
 
         metrics_dict = metrics.get_metrics_dict()
@@ -359,6 +368,7 @@ def run_test(dataset_id, test_id):
 
         all_count = metrics._preds.size
         test.examples_count = all_count
+        test.memory_usage['testing'] = max(mem_usage)
         test.save()
 
         def store_examples(items):

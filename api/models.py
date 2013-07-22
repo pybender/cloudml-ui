@@ -351,6 +351,7 @@ class Model(Document):
         'tags': list,
 
         'spot_instance_request_id': basestring,
+        'memory_usage': dict,
     }
     gridfs = {'files': ['trainer']}
     required_fields = ['name', 'created_on', ]
@@ -360,7 +361,8 @@ class Model(Document):
                       'comparable': False,
                       'tags': [],
                       'weights_synchronized': False,
-                      'spot_instance_request_id': ''
+                      'spot_instance_request_id': '',
+                      'memory_usage': {},
                       }
     use_dot_notation = True
     use_autorefs = True
@@ -454,12 +456,16 @@ class Test(Document):
         'dataset': DataSet,
         # Raw test data
         #'examples': [TestExample ],
+        'memory_usage': dict,
     }
     required_fields = ['name', 'created_on', 'updated_on',
                        'status']
-    default_values = {'created_on': datetime.utcnow,
-                      'updated_on': datetime.utcnow,
-                      'status': STATUS_QUEUED}
+    default_values = {
+        'created_on': datetime.utcnow,
+        'updated_on': datetime.utcnow,
+        'status': STATUS_QUEUED,
+        'memory_usage': {},
+    }
     use_dot_notation = True
     use_autorefs = True
 
