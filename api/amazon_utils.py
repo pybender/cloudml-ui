@@ -7,7 +7,7 @@ from api import app
 
 
 class AmazonEC2Helper(object):
-    def __init__(self, token=None, secret=None, region='us-west-1'):
+    def __init__(self, token=None, secret=None, region='us-west-2'):
         token = token or app.config['AMAZON_ACCESS_TOKEN']
         secret = secret or app.config['AMAZON_TOKEN_SECRET']
         self.conn = boto.ec2.connect_to_region(
@@ -22,11 +22,11 @@ class AmazonEC2Helper(object):
     def request_spot_instance(self, instance_type='m3.xlarge'):
         request = self.conn.request_spot_instances(
             price="1",
-            image_id="ami-f0af86b5",#"ami-66c8e123",
-            security_group_ids=["sg-534f5d3f", ],
+            image_id='ami-a7f96b97',#"ami-f0af86b5",#"ami-66c8e123",
+            security_group_ids=["sg-1dc1dc71",],#["sg-534f5d3f", ],
             instance_type=instance_type,
-            placement="us-west-1a",
-            subnet_id="subnet-3f5bc256")
+            placement="us-west-2a",
+            subnet_id="subnet-7a7c3612")#"subnet-3f5bc256")
         return request[0]
 
     def get_instance(self, instance_id):
@@ -36,6 +36,11 @@ class AmazonEC2Helper(object):
 
     def get_request_spot_instance(self, request_id):
         request = self.conn.get_all_spot_instance_requests(request_ids=[request_id, ])
+        request = request[0]
+        return request
+
+    def cancel_request_spot_instance(self, request_id):
+        request = self.conn.cancel_spot_instance_requests([request_id, ])
         request = request[0]
         return request
 
