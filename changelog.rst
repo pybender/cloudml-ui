@@ -3,6 +3,13 @@
 Changelog
 =========
 
+Relese 2013-07-22
+-----------------
+* Task - Added some field to dataset details
+* Feature - Add cancel request button 
+* Feature - Add 'Requesting spot instance' and 'Instance started' to model
+
+
 Relese 2013-07-11
 -----------------
 * Bug - Fixed and improved validation json files
