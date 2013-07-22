@@ -63,8 +63,14 @@ def get_request_instance(request_id,
 
     if request.state == 'open':
         logging.info('Instance was not ran. Status: %s . Retry in 10s.' % request.state)
-        raise get_request_instance.retry(countdown=app.config['REQUESTING_INSTANCE_COUNTDOWN'],
-                                         max_retries=app.config['REQUESTING_INSTANCE_MAX_RETRIES'])
+        try:
+            raise get_request_instance.retry(countdown=app.config['REQUESTING_INSTANCE_COUNTDOWN'],
+                                             max_retries=app.config['REQUESTING_INSTANCE_MAX_RETRIES'])
+        except get_request_instance.MaxRetriesExceededError:
+            logging.info('Max retries was reached, cancelling now.')
+            cancel_request_spot_instance.delay(request_id, model_id)
+            model.set_error('Instance was not launched')
+            raise Exception('Instance was not launched')
 
     if request.state == 'canceled':
         logging.info('Instance was canceled.')
@@ -83,7 +89,7 @@ def get_request_instance(request_id,
 
     logging.info('Get instance %s' % request.instance_id)
     instance = ec2.get_instance(request.instance_id)
-    logging.info('Instance %s(%s) lunched' % 
+    logging.info('Instance %s(%s) lunched' %
             (instance.id,
              instance.private_ip_address))
     instance.add_tag('Name', 'cloudml-worker-auto')
