@@ -224,7 +224,7 @@ def train_model(dataset_id, model_id):
         train_fp = dataset.get_data_stream()
 
         from memory_profiler import memory_usage
-        mem_usage = memory_usage((Trainer.train, (trainer, streamingiterload(train_fp),)), interval=0)
+        mem_usage = memory_usage((trainer.train, (streamingiterload(train_fp),)), interval=0)
 
         train_fp.close()
         trainer.clear_temp_data()
