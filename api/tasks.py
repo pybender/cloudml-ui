@@ -344,7 +344,8 @@ def run_test(dataset_id, test_id):
         test.save()
 
         from memory_profiler import memory_usage
-        mem_usage, result = memory_usage((Model.run_test, (model, dataset,)), interval=0, retval=True)
+        mem_usage, result = memory_usage((Model.run_test, (model, dataset,)),
+                                         interval=0, retval=True)
 
         metrics, raw_data = result
         test.accuracy = metrics.accuracy
