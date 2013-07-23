@@ -126,22 +126,12 @@ schema-name is missing')
 
     def test_post_with_invalid_trainer(self):
         handler = open('./conf/extract.json', 'r').read()
-        trainer = open('./api/fixtures/invalid_model.dat', 'r')
+        trainer = open('./api/test/invalid_model.dat', 'r')
         post_data = {'importhandler': handler,
                      'trainer': trainer,
                      'name': 'new'}
         self._checkValidationErrors(self.BASE_URL, post_data,
-                                    'Invalid trainer: Could \
-not unpickle trainer - could not find MARK')
-
-        handler = open('./conf/extract.json', 'r').read()
-        trainer = open('./api/fixtures/invalid_testmodel.dat', 'r')
-        post_data = {'importhandler': handler,
-                     'trainer': trainer,
-                     'name': 'new'}
-        self._checkValidationErrors(self.BASE_URL, post_data,
-                                    "Invalid trainer: Could not unpickle \
-trainer - 'module' object has no attribute 'FeatureTypeInstance'")
+                                    "Invalid trainer")
 
     def test_post_new_model(self, name='new'):
         count = self.db.Model.find().count()
@@ -200,6 +190,8 @@ trainer - 'module' object has no attribute 'FeatureTypeInstance'")
         self.assertEquals(model.name, 'new name %@#')
 
     def test_train_model(self):
+        self.assertTrue(self.model.status, "New")
+
         url = self._get_url(id=self.model._id, action='train')
 
         # Setting import handler for train
@@ -275,8 +267,13 @@ trainer - 'module' object has no attribute 'FeatureTypeInstance'")
               msg='Tests should be removed after retrain model')
         check(self.db.TestExample, exist=False,
               msg='Tests Examples should be removed after retrain model')
+
+        # Checking weights
+        tr_weights = self.model.get_trainer().get_weights()
+        valid_count = len(tr_weights['positive']) + len(tr_weights['negative'])
         weights = self.db.Weight.find(model_filter_params)
-        self.assertEquals(weights.count(), 319)
+
+        self.assertEquals(weights.count(), valid_count)
         categories = self.db.WeightsCategory.find(model_filter_params)
         self.assertEquals(categories.count(), 6)
         self.model = self.db.Model.find_one({'_id': self.model._id})

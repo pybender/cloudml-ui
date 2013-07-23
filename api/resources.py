@@ -71,10 +71,10 @@ class BaseResource(restful.Resource):
         try:
             return super(BaseResource, self).dispatch_request(*args, **kwargs)
         except NotFound, exc:
-            return odesk_error_response(404, ERR_NO_SUCH_MODEL, exc.message)
+            return odesk_error_response(404, ERR_NO_SUCH_MODEL, str(exc))
         except ValidationError, exc:
             return odesk_error_response(400, ERR_INVALID_DATA,
-                                        exc.message, errors=exc.errors)
+                                        str(exc), errors=exc.errors)
 
     # HTTP Methods
 
