@@ -6,6 +6,7 @@ import logging
 from bson.objectid import ObjectId
 from mongokit.mongo_exceptions import AutoReferenceError
 
+
 from api import app
 
 
@@ -40,7 +41,7 @@ class Run(Command):
         http_server.serve_forever()
 
 
-class Migrate(Command):
+class MigrateOld(Command):
     """Migrate"""
 
     def run(self, **kwargs):
@@ -79,6 +80,21 @@ class Migrate(Command):
         #     model.feature_count = len(trainer._feature_model.features.keys())
         #     model.save()
         #     print 'Model %s has %s features' % (model.name, model.feature_count)
+
+
+class Migrate(Command):
+    """Migrate"""
+
+    def get_options(self):
+        return (
+            Option('-d', '--document',
+                   dest='document',
+                   default=None),
+        )
+
+    def run(self, **kwargs):
+        from api.migrations import DbMigration
+        DbMigration.do_all_migrations(kwargs.get('document'))
 
 
 def _make_context():
@@ -253,6 +269,7 @@ manager.add_command("celeryw", Celeryw())
 manager.add_command("flower", Flower())
 manager.add_command('test', Test())
 manager.add_command('migrate', Migrate())
+manager.add_command('migrate_old', MigrateOld())
 manager.add_command('run', Run())
 manager.add_command('fix_mongo', RemObsoluteMongoKeys())
 manager.add_command("shell", Shell(make_context=_make_context))

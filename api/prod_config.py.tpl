@@ -29,3 +29,6 @@ CELERY_DEFAULT_ROUTING_KEY = 'task.default'
 AMAZON_ACCESS_TOKEN = '{{ amazon_access_token }}'
 AMAZON_TOKEN_SECRET = '{{ amazon_token_secret }}'
 AMAZON_BUCKET_NAME = '{{ amazon_bucket_name }}'
+
+REQUESTING_INSTANCE_COUNTDOWN = 20
+REQUESTING_INSTANCE_MAX_RETRIES = 30
