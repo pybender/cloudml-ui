@@ -20,7 +20,7 @@ angular.module('app.models.model', ['app.config'])
                                'trainer', 'test_import_handler', 'name',
                                'test_import_handler_file',
                                'train_import_handler_file']
-      @MAIN_FIELDS: 'name,_id,status'
+      @MAIN_FIELDS: 'name,_id,status,tests_count,created_on'
 
       _id: null
       name: null

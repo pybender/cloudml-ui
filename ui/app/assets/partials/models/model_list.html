@@ -32,6 +32,7 @@
     <tr>
       <th>Name</th>
       <th>Status</th>
+      <th>Tests count</th>
       <th>Created</th>
       <th>Actions</th>
     </tr>
@@ -49,6 +50,7 @@
         </div>
       </td>
       <td title="{{ model.error }}">{{ model.status }}</td>
+      <td>{{ model.tests_count }}</td>
       <td>{{ model.created_on|format_date }}</td>
       <td ng-controller="ModelActionsCtrl">
         <div ng-init="init({model: model})">

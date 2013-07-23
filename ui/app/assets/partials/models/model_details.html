@@ -78,7 +78,11 @@
     <a ng-click="setSection(['model', 'details'])">Details</a> 
   </li>
   <li ng-class="{active: action[0] == 'weights'}"><a  ng-click="setSection(['weights', 'columns'])">Parameters Weights</a></li>
-  <li ng-class="{active: action[0] == 'test'}"><a ng-click="setSection(['test', 'list'])">Tests</a></li>
+  <li ng-class="{active: action[0] == 'test'}">
+    <a ng-click="setSection(['test', 'list'])">
+      Tests<span ng-show="model.tests_count">&nbsp;({{ model.tests_count }})</span>
+    </a>
+  </li>
   <li ng-class="{active: action[0] == 'features'}"><a ng-click="setSection(['features', 'file'])">Features</a></li>
   <li ng-class="{active: action[0] == 'log'}"><a ng-click="setSection(['log', 'details'])">Logs</a></li>
 </ul>

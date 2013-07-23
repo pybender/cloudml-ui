@@ -354,6 +354,8 @@ class Model(Document):
         'tags': list,
 
         'spot_instance_request_id': basestring,
+
+        'tests_count': int,
     }
     gridfs = {'files': ['trainer']}
     required_fields = ['name', 'created_on', ]
@@ -363,7 +365,8 @@ class Model(Document):
                       'comparable': False,
                       'tags': [],
                       'weights_synchronized': False,
-                      'spot_instance_request_id': ''
+                      'spot_instance_request_id': '',
+                      'tests_count': 0,
                       }
     use_dot_notation = True
     use_autorefs = True
@@ -425,6 +428,10 @@ class Model(Document):
         app.db.WeightsCategory.collection.remove(params)
         app.db.Weight.collection.remove(params)
 
+    def update_tests_count(self):
+        self.tests_count = app.db.Test.collection.find(
+            {'model_id': str(self._id)}).count()
+        self.save()
 
 @app.conn.register
 class Test(Document):
@@ -475,12 +482,17 @@ class Test(Document):
     def data_count(self):
         return self.data.count()
 
+    def save(self, *args, **kwargs):
+        super(Test, self).save(*args, **kwargs)
+        self.model.update_tests_count()
+
     def delete(self):
         params = dict(test_name=self.name,
                       model_name=self.model_name)
         app.db.TestExample.collection.remove(params)
         self.collection.remove({'_id': self._id})
         LogMessage.delete_related_logs(self)
+        self.model.update_tests_count()
 
 
 @app.conn.register

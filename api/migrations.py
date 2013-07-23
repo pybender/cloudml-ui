@@ -38,6 +38,16 @@ class ModelMigration(DbMigration):
         self.target = {'example_label': {'$exists': False}}
         self.update = {'$set': {'example_label': 'contractor.dev_profile_title'}}
 
+    def allmigration04__add_tests_count(self):
+        self.target = {'tests_count': {'$exists': False}}
+        if not self.status:
+            for doc in self.collection.find(self.target):
+                tests_count = app.db.Test.find({'model_id': str(doc['_id'])}).count()
+                self.update = {'$set': {'tests_count': tests_count}}
+                target = self.target.copy()
+                target['_id'] = doc['_id']
+                self.collection.update(target, self.update)
+
 
 class TestMigration(DbMigration):
     DOC_CLASS = models.Test
