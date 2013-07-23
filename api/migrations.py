@@ -38,6 +38,10 @@ class ModelMigration(DbMigration):
         self.target = {'example_label': {'$exists': False}}
         self.update = {'$set': {'example_label': 'contractor.dev_profile_title'}}
 
+    def allmigration03__add_memory_usage(self):
+        self.target = {'memory_usage': {'$exists': False}}
+        self.update = {'$set': {'memory_usage': {}}}
+
 
 class TestMigration(DbMigration):
     DOC_CLASS = models.Test
