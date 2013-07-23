@@ -142,7 +142,7 @@ class ModelAddForm(BaseModelForm):
         if value:
             try:
                 self.trainer = load_trainer(value)
-            except InvalidTrainerFile, exc:
+            except Exception, exc:
                 raise ValidationError('Invalid trainer: %s' % exc)
 
     def clean_features(self, value):

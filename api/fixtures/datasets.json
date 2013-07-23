@@ -2,10 +2,19 @@
  {
     "_id": "5270dd3a106a6c1631000000",
     "name": "DS",
+    "status": "Importing",
+    "error": "",
+    "created_on": "2013-04-19 14:37:23.145000",
+    "updated_on": "2013-04-19 14:37:23.145000",
     "import_handler_id": "5170dd3a106a6c1631000000",
-    "data": "noname.json",
-    "filename": "file.json",
-    "on_s3": false
+    "data": "5270dd3a106a6c1631000000.json",
+    "import_params": {},
+    "on_s3": false,
+    "compress": true,
+    "filename": "test_data/ds.gz",
+    "filesize": 100,
+    "records_count": 100,
+    "time": 200
  }
  ]
 }

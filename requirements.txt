@@ -25,4 +25,4 @@ nose-exclude
 translitcodec==0.3
 boto
 memory-profiler
-
+mock

@@ -1,5 +1,4 @@
 import httplib
-import json
 from bson.objectid import ObjectId
 
 from utils import BaseTestCase
