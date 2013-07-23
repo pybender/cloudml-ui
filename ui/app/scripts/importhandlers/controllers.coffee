@@ -11,7 +11,8 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
 
 ($scope, $rootScope, ImportHandler) ->
   $scope.MODEL = ImportHandler
-  $scope.FIELDS = 'name,type,created_on,updated_on,import_params'
+  $scope.FIELDS = 'name,type,created_on,updated_on,import_params,
+datasets_count'
   $scope.ACTION = 'loading handler list'
 ])
 
@@ -32,7 +33,8 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
       name = section[0]
       if name not in $scope.LOADED_SECTIONS
         $scope.handler.$load(
-          show: 'name,type,created_on,updated_on,data,import_params'
+          show: 'name,type,created_on,updated_on,data,import_params,
+datasets_count'
         ).then (->
           $scope.LOADED_SECTIONS.push name
         ), ((opts) ->

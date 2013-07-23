@@ -7,7 +7,7 @@ import cPickle as pickle
 from os.path import join, exists
 from os import makedirs
 
-from bson import Binary
+from bson import Binary, ObjectId
 from flask.ext.mongokit import Document
 from core.trainer.streamutils import streamingiterload
 
@@ -104,11 +104,13 @@ class ImportHandler(Document):
         'updated_on': datetime,
         'data': dict,
         'import_params': list,
+        'datasets_count': int,
     }
     required_fields = ['name', 'created_on', 'updated_on', ]
     default_values = {'created_on': datetime.utcnow,
                       'updated_on': datetime.utcnow,
-                      'type': TYPE_DB}
+                      'type': TYPE_DB,
+                      'datasets_count': 0}
     use_dot_notation = True
 
     def create_dataset(self, params, run_import_data=True):
@@ -152,6 +154,11 @@ class ImportHandler(Document):
 
     def __repr__(self):
         return '<Import Handler %r>' % self.name
+
+    def update_datasets_count(self):
+        self.datasets_count = app.db.DataSet.collection.find(
+            {'import_handler_id': str(self._id)}).count()
+        self.save()
 
 
 @app.conn.register
@@ -242,8 +249,15 @@ class DataSet(Document):
         if commit:
             self.save()
 
+    @property
+    def import_handler(self):
+        return app.db.ImportHandler.find_one(
+            {'_id': ObjectId(self.import_handler_id)}
+        )
+
     def delete(self):
         super(DataSet, self).delete()
+        self.import_handler.update_datasets_count()
         LogMessage.delete_related_logs(self)
 
         # TODO: check import handler type
@@ -260,6 +274,7 @@ class DataSet(Document):
         if self.status != self.STATUS_ERROR:
             self.error = ''
         super(DataSet, self).save(*args, **kwargs)
+        self.import_handler.update_datasets_count()
 
     def __repr__(self):
         return '<Dataset %r>' % self.name

@@ -17,6 +17,7 @@
     <th>Name</th>
     <th>Type</th>
     <th>Import Parameters</th>
+    <th>Datasets</th>
     <th>Created</th>
     <th>Updated</th>
     <th>Actions</th>
@@ -27,6 +28,7 @@
     <td><a href="#{{ handler.objectUrl() }}">{{ handler.name }}</a></td>
     <td>{{ handler.type }}</td>
     <td><span ng-repeat="param in handler.import_params">{{ param }} </span></td>
+    <td>{{ handler.datasets_count }}</td>
     <td>{{ handler.created_on|format_date }}</td>
     <td>{{ handler.updated_on|format_date }}</td>
     <td ng-controller="ImportHandlerActionsCtrl">

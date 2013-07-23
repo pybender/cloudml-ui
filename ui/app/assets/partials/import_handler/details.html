@@ -23,9 +23,13 @@
 
 <ul class="nav nav-tabs" ng-show="handler.loaded">
   <li ng-class="{active: action[0] == 'model'}">
-    <a ng-click="setSection(['model', 'details'])">Details</a> 
+    <a ng-click="setSection(['model', 'details'])">Details</a>
   </li>
-  <li ng-class="{active: action[0] == 'dataset'}"><a ng-click="setSection(['dataset', 'list'])">DataSets</a></li>
+  <li ng-class="{active: action[0] == 'dataset'}">
+      <a ng-click="setSection(['dataset', 'list'])">
+          DataSets<span ng-show="handler.datasets_count">&nbsp;({{ handler.datasets_count }})</span>
+      </a>
+  </li>
 </ul>
  
 <div class="tab-content" ng-show="handler.loaded">

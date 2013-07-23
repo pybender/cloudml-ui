@@ -74,3 +74,17 @@ class DataSetMigration(DbMigration):
             'records_count': 0,
             'time': 0,
         }}
+
+
+class ImportHandlerMigration(DbMigration):
+    DOC_CLASS = models.ImportHandler
+
+    def allmigration01__add_datasets_count(self):
+        self.target = {'datasets_count': {'$exists': False}}
+        if not self.status:
+            for doc in self.collection.find(self.target):
+                datasets_count = app.db.DataSet.find({'import_handler_id': str(doc['_id'])}).count()
+                self.update = {'$set': {'datasets_count': datasets_count}}
+                target = self.target.copy()
+                target['_id'] = doc['_id']
+                self.collection.update(target, self.update)
