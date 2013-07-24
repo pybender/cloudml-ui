@@ -1,3 +1,4 @@
+from collections import defaultdict
 import json
 import logging
 import cPickle as pickle
@@ -539,10 +540,45 @@ class TestExamplesResource(BaseResource):
         #                 'count': len(group_list),
         #                 'avp': avp})
 
-        groups = collection.group([group_by_field, ],
-                                  {'model_id': model_id,
-                                   'test_id': test_id},
-                                  {'list': []}, REDUCE_FUNC)
+        # TODO: generalize data loading/querying
+
+        test = app.db.Test.find_one({'_id': ObjectId(test_id)})
+        example_id_field = test.model.example_id
+        dataset_data = test.dataset.get_data_stream()
+        data = [json.loads(row) for row in dataset_data]
+
+        examples_data = app.db.TestExample.find(
+            {'model_id': model_id, 'test_id': test_id},
+            ['label', 'pred_label', 'prob', 'id']
+        )
+        examples_data = dict([(epl['id'], epl)
+                              for epl in examples_data])
+
+        groups_dict = defaultdict(list)
+
+        # TODO: use helper
+        field_name = group_by_field.replace(
+            'data_input.', ''
+        ).replace(
+            '->', '.')
+
+        for row in data:
+            example_id = row[example_id_field]
+            example = examples_data[example_id]
+            groups_dict[row[field_name]].append({
+                'label': example['pred_label'],
+                'pred': example['label'],
+                'prob': example['prob'],
+            })
+
+        groups = [{
+            group_by_field: key,
+            'list': value
+        } for key, value in groups_dict.iteritems()]
+
+        groups_dict = None
+        examples_data = None
+
         import sklearn.metrics as sk_metrics
         import numpy
         if len(groups) < 1:
