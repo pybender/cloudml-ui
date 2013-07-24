@@ -181,7 +181,7 @@ with%s compression", importhandler.name, '' if dataset.compress else 'out')
             obj.status = obj.STATUS_IMPORTED
             obj.save()
 
-        dataset.filesize = os.path.getsize(dataset.filename)
+        dataset.filesize = long(os.path.getsize(dataset.filename))
         dataset.records_count = handler.count
         dataset.time = (datetime.now() - import_start_time).seconds
 
