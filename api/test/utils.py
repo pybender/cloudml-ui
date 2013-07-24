@@ -12,6 +12,10 @@ from api import app
 
 MODEL_ID = '519318e6106a6c0df349bc0b'
 
+# Count of the features in conf/features.json file
+FEATURE_COUNT = 37
+TARGET_VARIABLE = 'hire_outcome'
+
 
 class BaseTestCase(unittest.TestCase):
     FIXTURES = []
@@ -21,6 +25,7 @@ class BaseTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         app.config['DATABASE_NAME'] = 'cloudml-testdb'
+        app.config['DATA_FOLDER'] = 'test_data'
         app.init_db()
         cls.app = app.test_client()
 
@@ -38,43 +43,46 @@ class BaseTestCase(unittest.TestCase):
     def fixtures_load(cls):
         from api import models
         from mongokit.document import DocumentProperties, R
-        related_objects = []
         for fixture in cls.FIXTURES:
             data = _load_fixture_data(fixture)
             for collection_name, documents in data.iteritems():
                 cls._LOADED_COLLECTIONS.append(collection_name)
-                collection = _get_collection(collection_name)
-                Model = getattr(models, collection_name)
+                Model = getattr(app.db, collection_name)
                 for doc in documents:
+                    related_objects = []
+                    obj = Model()
                     for key, val in doc.iteritems():
+                        if val is None:
+                            continue
+
                         if key == '_id':
-                            doc['_id'] = ObjectId(val)
+                            obj['_id'] = ObjectId(val)
                         else:
                             field_type = Model.structure[key]
                             if field_type == datetime:
-                                doc[key] = datetime.now()
-                            elif isinstance(field_type, DocumentProperties):
-                                if val:
-                                    RelModel = getattr(app.db, val['$ref'])
-                                    doc[key] = RelModel.find_one({'_id': ObjectId(val['$id'])})
-                            elif isinstance(field_type, R):
-                                if val:
-                                    related_objects.append({'id': doc['_id'],
-                                                            'collection': collection_name,
-                                                            'related_collection': val['$ref'],
-                                                            'related_id': val['$id'],
-                                                            'fieldname': key})
-                                    doc[key] = None
-                collection.insert(documents)
+                                obj[key] = datetime.now()
+                            elif field_type == long:
+                                obj[key] = long(doc[key])
+                            elif isinstance(field_type, DocumentProperties) \
+                                    or isinstance(field_type, R):
+                                related_objects.append({
+                                    'id': doc['_id'],
+                                    'collection': collection_name,
+                                    'related_collection': val['$ref'],
+                                    'related_id': val['$id'],
+                                    'fieldname': key})
+                                doc[key] = None
+                            else:
+                                obj[key] = doc[key]
+                    obj.save()
 
-        for related_item in related_objects:
-            Model = getattr(app.db, related_item['collection'])
-            RelModel = getattr(app.db, related_item['related_collection'])
-            obj = Model.find_one({'_id': ObjectId(related_item['id'])})
-            related_obj = RelModel.find_one({'_id': ObjectId(related_item['related_id'])})
-
-            setattr(obj, related_item['fieldname'], related_obj)
-            obj.save()
+                    # Save db refs
+                    for rel in related_objects:
+                        RelModel = getattr(app.db, rel['related_collection'])
+                        related_obj = RelModel.find_one({
+                            '_id': ObjectId(rel['related_id'])})
+                        setattr(obj, rel['fieldname'], related_obj)
+                        obj.save()
 
     @classmethod
     def fixtures_cleanup(cls):
@@ -93,7 +101,7 @@ class BaseTestCase(unittest.TestCase):
                   'search': search}
         return "%(url)s%(id)s%(action)s?%(search)s" % params
 
-    def _check_list(self, show='created_on,type'):
+    def _check_list(self, show='created_on,type', query_params={}):
         key = "%ss" % self.RESOURCE.OBJECT_NAME
         url = self.BASE_URL
         resp = self.app.get(url)
@@ -102,12 +110,11 @@ class BaseTestCase(unittest.TestCase):
         data = json.loads(resp.data)
         self.assertTrue(key in data, data)
         obj_resp = data[key]
-        count = self.Model.find().count()
+        count = self.Model.find(query_params).count()
         #self.assertTrue(count, 'Invalid fixtures')
-        self.assertEquals(count, len(obj_resp))
+        self.assertEquals(count, len(obj_resp), obj_resp)
         default_fields = self.RESOURCE.DEFAULT_FIELDS or [u'_id', u'name']
-        print obj_resp
-        self.assertEquals(obj_resp[0].keys(), default_fields)
+        self.assertEquals(obj_resp[0].keys(), list(default_fields))
 
         url = self._get_url(show=show)
         resp = self.app.get(url)
@@ -115,8 +122,11 @@ class BaseTestCase(unittest.TestCase):
                           'Got %s when trying get %s' % (resp.status, url))
         data = json.loads(resp.data)
         obj_resp = data[key][0]
-        fields = show.split(',')
-        self.assertEquals(len(fields) + 1, len(obj_resp.keys()))
+        fields = self.__get_fields(show)
+        valid_count = len(fields) if '_id' in fields \
+            else len(fields) + 1
+        self.assertEquals(valid_count, len(obj_resp.keys()))
+
         for field in fields:
             self.assertTrue(field in obj_resp.keys())
 
@@ -139,26 +149,114 @@ class BaseTestCase(unittest.TestCase):
                           'Got %s when trying get %s' % (resp.status, url))
         data = json.loads(resp.data)
         obj_resp = data[key]
-        fields = show.split(',')
-        self.assertEquals(len(fields) + 1, len(obj_resp.keys()))
-        for field in fields:
-            self.assertTrue(field in obj_resp.keys())
-            self.assertEquals(str(getattr(self.obj, field)),
-                              obj_resp[field])
+        _id = data[self.RESOURCE.OBJECT_NAME]['_id']
+        doc = self.Model.find_one({'_id': ObjectId(_id)})
 
-    def _check_post(self, post_data={}, load_model=False):
+        fields = self.__get_fields(show)
+        valid_count = len(fields) if '_id' in fields \
+            else len(fields) + 1
+        self.assertEquals(valid_count, len(obj_resp.keys()))
+
+        for field in fields:
+            self.assertTrue(field in obj_resp.keys(),
+                            'Field %s is not in resp: %s' %
+                            (field, obj_resp.keys()))
+            self.assertEquals(str(doc.get(field)),
+                              str(obj_resp.get(field)))
+
+    def __get_fields(self, show):
+        if show:
+            return show.split(',')
+        else:
+            return self.RESOURCE.DEFAULT_FIELDS or [u'_id', u'name']
+
+    def _check_post(self, post_data={}, error='', load_model=False, action=None):
         count = self.Model.find().count()
-        resp = self.app.post(self.BASE_URL, data=post_data)
-        self.assertEquals(resp.status_code, httplib.CREATED)
-        self.assertTrue(self.RESOURCE.OBJECT_NAME in resp.data)
-        new_count = self.Model.find().count()
-        self.assertEquals(count + 1, new_count)
-        if load_model:
+        url = self._get_url(action=action) if action else self.BASE_URL
+        resp = self.app.post(url, data=post_data)
+        if error:
+            from api.utils import ERR_INVALID_DATA
+            # Checking validation error
+            self.assertEquals(resp.status_code, httplib.BAD_REQUEST)
             data = json.loads(resp.data)
-            _id = data[self.RESOURCE.OBJECT_NAME]['_id']
-            obj = self.Model.find_one({'_id': ObjectId(_id)})
-            return resp, obj
+            err_data = data['response']['error']
+            self.assertEquals(err_data['code'], ERR_INVALID_DATA)
+            self.assertTrue(error in err_data['message'],
+                            "Response message is: %s" % err_data['message'])
+        else:
+            self.assertEquals(resp.status_code, httplib.CREATED)
+            self.assertTrue(self.RESOURCE.OBJECT_NAME in resp.data)
+            new_count = self.Model.find().count()
+            self.assertEquals(count + 1, new_count)
+
+            if load_model:
+                data = json.loads(resp.data)
+                _id = data[self.RESOURCE.OBJECT_NAME]['_id']
+                obj = self.Model.find_one({'_id': ObjectId(_id)})
+                return resp, obj
+
         return resp
+
+    def _check_put(self, post_data={}, error='', load_model=False, action=None):
+        if action:
+            url = self._get_url(id=self.obj._id, action=action)
+        else:
+            url = self._get_url(id=self.obj._id)
+
+        resp = self.app.put(url, data=post_data)
+        if error:
+            from api.utils import ERR_INVALID_DATA
+            # Checking validation error
+            self.assertEquals(resp.status_code, httplib.BAD_REQUEST)
+            data = json.loads(resp.data)
+            err_data = data['response']['error']
+            self.assertEquals(err_data['code'], ERR_INVALID_DATA)
+            self.assertTrue(error in err_data['message'],
+                            "Response message is: %s" % err_data['message'])
+        else:
+            self.assertEquals(resp.status_code, httplib.OK)
+            self.assertTrue(self.RESOURCE.OBJECT_NAME in resp.data)
+
+            if load_model:
+                data = json.loads(resp.data)
+                _id = data[self.RESOURCE.OBJECT_NAME]['_id']
+                obj = self.Model.find_one({'_id': ObjectId(_id)})
+                return resp, obj
+
+        return resp
+
+    def _check_filter(self, filter_params, query_params=None):
+        key = "%ss" % self.RESOURCE.OBJECT_NAME
+        if query_params is None:
+            query_params = filter_params
+
+        url = self._get_url(**filter_params)
+        resp = self.app.get(url)
+        self.assertEquals(resp.status_code, httplib.OK)
+        data = json.loads(resp.data)
+        count = self.db.Model.find(query_params).count()
+        self.assertEquals(count, len(data[key]))
+
+    def _check_delete(self):
+        self.assertTrue(self.obj)
+        url = self._get_url(id=self.obj._id)
+        resp = self.app.get(url)
+        self.assertEquals(resp.status_code, httplib.OK)
+
+        resp = self.app.delete(url)
+        self.assertEquals(resp.status_code, 204)
+
+        obj = self.Model.find_one({'_id': self.obj._id})
+        self.assertFalse(obj)
+
+    def check_related_docs_existance(self, Model, exist=True,
+                                     msg=''):
+        """
+        Checks whether documents exist.
+        """
+        obj_list = Model.find(self.RELATED_PARAMS)
+        self.assertEqual(bool(obj_list.count()), exist, msg)
+        return obj_list
 
 
 class CeleryTestCaseBase(BaseTestCase):
@@ -192,7 +290,7 @@ class CeleryTestCaseBase(BaseTestCase):
 
     def assert_task_not_sent(self, task_class):
         was_sent = any(task_class == task[0] for task in self.applied_tasks)
-        self.assertFalse(was_sent, 'Task was not expected to be called, but was.  Applied tasks: %s' %                 self.applied_tasks)
+        self.assertFalse(was_sent, 'Task was not expected to be called, but was.  Applied tasks: %s' % self.applied_tasks)
 
 
 def _get_collection(name):

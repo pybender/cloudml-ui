@@ -63,7 +63,7 @@ class BaseForm(object):
                 try:
                     value = getattr(self, mthd)(value)
                 except ValidationError, exc:
-                    self.errors.append({'name': name, 'error': exc.message})
+                    self.errors.append({'name': name, 'error': str(exc)})
             if value is not None:
                 self.cleaned_data[name] = value
             elif required:
@@ -74,7 +74,7 @@ class BaseForm(object):
         try:
             self.validate_obj()
         except ValidationError, exc:
-            self.errors.append({'name': None, 'error': exc.message})
+            self.errors.append({'name': None, 'error': str(exc)})
 
         if self.errors:
             raise ValidationError(self.error_messages, errors=self.errors)
@@ -142,7 +142,7 @@ class ModelAddForm(BaseModelForm):
         if value:
             try:
                 self.trainer = load_trainer(value)
-            except InvalidTrainerFile, exc:
+            except Exception, exc:
                 raise ValidationError('Invalid trainer: %s' % exc)
 
     def clean_features(self, value):
@@ -419,7 +419,7 @@ class InstanceAddForm(BaseForm):
             instances = app.db.Instance.collection
             instances.update({'_id': {'$ne': instance._id}},
                              {"$set": {"is_default": False}},
-                             multi=True, safe=True)
+                             multi=True)
         return instance
 
 
@@ -439,7 +439,7 @@ class InstanceEditForm(BaseForm):
             instances = app.db.Instance.collection
             instances.update({'_id': {'$ne': instance._id}},
                              {"$set": {"is_default": False}},
-                             multi=True, safe=True)
+                             multi=True)
         return instance
 
 
