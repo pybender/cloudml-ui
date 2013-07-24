@@ -355,7 +355,7 @@ class DataSetResource(BaseResource):
 
     def post(self, **kwargs):
         """
-        Loads dataset using specimodel.get_s3_download_url()fied import handler.
+        Loads dataset using specified import handler.
         """
         from api.tasks import import_data
         handler_id = kwargs.get('import_handler_id')
@@ -375,7 +375,8 @@ class DataSetResource(BaseResource):
         dataset.save(validate=True)
         dataset.set_file_path()
         import_data.delay(str(dataset._id))
-        return self._render(self._get_save_response_context(dataset))
+        return self._render(self._get_save_response_context(dataset),
+                            code=201)
 
 api.add_resource(DataSetResource, '/cloudml/importhandlers/\
 <regex("[\w\.]*"):import_handler_id>/datasets/')
@@ -388,7 +389,7 @@ class Tests(BaseResource):
     OBJECT_NAME = 'test'
     DEFAULT_FIELDS = ('_id', 'name')
     FILTER_PARAMS = (('status', str), )
-    GET_ACTIONS = ('confusion_matrix',)
+    GET_ACTIONS = ('confusion_matrix', )
     methods = ('GET', 'OPTIONS', 'DELETE', 'PUT', 'POST')
     post_form = AddTestForm
 

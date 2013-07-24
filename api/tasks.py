@@ -298,14 +298,14 @@ def fill_model_parameter_weights(model_id, reload=False):
                                    'is_positive': bool(weight['weight'] > 0),
                                    'css_class': weight['css_class']})
                     weight = app.db.Weight(params)
-                    weight.save(validate=True, check_keys=False, safe=False)
+                    weight.save(validate=True, check_keys=False)
                 else:
                     if sname not in category_names:
                         # Adding a category, if it has not already added
                         category_names.append(sname)
                         params.update({'name': long_name})
                         category = app.db.WeightsCategory(params)
-                        category.save(validate=True, check_keys=False, safe=False)
+                        category.save(validate=True, check_keys=False)
 
         model.weights_synchronized = True
         model.save()

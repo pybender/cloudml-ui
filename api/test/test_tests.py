@@ -1,78 +1,70 @@
-import httplib
 import json
+from mock import patch
+from bson.objectid import ObjectId
 
 from utils import BaseTestCase
+from utils import MODEL_ID
+from api.views import Tests as TestResource
 
 
 class TestTests(BaseTestCase):
-    MODEL_NAME = 'TrainedModel'
-    TEST_NAME = 'Test-1'
+    TEST_ID = '000000000000000000000002'
+    MODEL_PARAMS = {'model_id': MODEL_ID}
+    RELATED_PARAMS = {'test_id': TEST_ID, 'model_id': MODEL_ID}
+    RESOURCE = TestResource
     FIXTURES = ('importhandlers.json', 'models.json', 'tests.json',
                 'examples.json', 'instances.json', )
 
     def setUp(self):
         super(TestTests, self).setUp()
-        self.model = self.db.Model.find_one({'name': self.MODEL_NAME})
-        self.test = self.db.Test.find_one({'model_name': self.MODEL_NAME,
-                                           'name': self.TEST_NAME})
-        model_tests = self.db.Test.find({'model_name': self.MODEL_NAME})
-        for test in model_tests:
-            test.model_id = str(self.model._id)
-            test.save()
+        self.model = self.db.Model.find_one({'_id': ObjectId(MODEL_ID)})
+        self.assertTrue(self.model, 'Invalid fixtures: models')
+
+        self.Model = self.db.Test
+        self.obj = self.db.Test.find_one({
+            '_id': ObjectId(self.TEST_ID)})
+        self.assertTrue(self.obj, 'Invalid fixtures: tests')
 
         self.BASE_URL = '/cloudml/models/%s/tests/' % self.model._id
 
     def test_list(self):
-        url = self._get_url(show='name,status')
-        resp = self.app.get(url)
-        self.assertEquals(resp.status_code, httplib.OK)
-        data = json.loads(resp.data)
-        self.assertTrue('tests' in data)
-        tests = self.db.Test.find({'model_name': self.model.name})
-        count = tests.count()
-        self.assertEquals(count, len(data['tests']))
-        self.assertTrue(tests[0].name in resp.data, resp.data)
-        self.assertTrue(tests[0].status in resp.data, resp.data)
-        self.assertFalse(tests[0].model_name in resp.data, resp.data)
+        self._check_list(show='', query_params=self.MODEL_PARAMS)
+        self._check_list(show='name,status', query_params=self.MODEL_PARAMS)
 
     def test_details(self):
-        url = self._get_url(id=self.test._id, show='name,status')
-        resp = self.app.get(url)
-        self.assertEquals(resp.status_code, httplib.OK)
-        data = json.loads(resp.data)
-        self.assertTrue('test' in data, data)
-        test_data = data['test']
-        test = self.db.Test.find_one({'model_name': self.MODEL_NAME,
-                                     'name': self.TEST_NAME})
-        self.assertEquals(test.name, test_data['name'], resp.data)
-        self.assertEquals(test.status, test_data['status'], resp.data)
-        self.assertFalse('model_name' in test_data, test_data)
+        self._check_details(show='name,status')
 
-    def test_post(self):
-        url = self._get_url()
+    @patch('api.models.DataSet.save_to_s3')
+    def test_post(self, save_to_s3_mock):
         data = {'start': '2012-12-03',
                 'end': '2012-12-04',
                 'category': 'smth',
                 'aws_instance': '5170dd3a106a6c1631000000'}
-        resp = self.app.post(url, data=data)
-        self.assertEquals(resp.status_code, httplib.CREATED)
+        resp, test = self._check_post(data, load_model=True)
+        test_resp = json.loads(resp.data)['test']
+
+        # TODO: Why status is imported, not completed here?
+        #self.assertEquals(test.status, test.STATUS_COMPLETED)
+        # TODO: check resp and created test
+
+    def test_post_with_dataset(self):
+        # TODO: check post with spec. dataset
+        pass
+
+    def test_recalc_confusion_matrix(self):
+        # TODO:
+        pass
 
     def test_delete(self):
-        url = self._get_url(id=self.test._id, show='name,status')
-        resp = self.app.get(url)
-        self.assertEquals(resp.status_code, httplib.OK)
+        self.check_related_docs_existance(self.db.TestExample)
+        self._check_delete()
 
-        resp = self.app.delete(url)
-        self.assertEquals(resp.status_code, 204)
-        params = {'model_name': self.MODEL_NAME,
-                  'name': self.TEST_NAME}
-        test = self.db.Test.find_one(params)
-        self.assertEquals(test, None, test)
+        self.check_related_docs_existance(self.db.TestExample, exist=False,
+                                          msg='Tests Examples should be \
+when remove test')
 
-        params = {'model_name': self.MODEL_NAME,
-                  'test_name': self.TEST_NAME}
-        examples = self.db.TestExample.find(params).count()
-        self.assertFalse(examples, "%s test examples was not \
-deleted" % examples)
-        other_examples = self.db.TestExample.find().count()
-        self.assertTrue(other_examples, "All examples was deleted!")
+        # Checks whether not all docs was deleted
+        self.assertTrue(self.db.Test.find().count(),
+                        "All tests was deleted!")
+        self.assertTrue(self.db.TestExample.find().count(),
+                        "All examples was deleted!")
