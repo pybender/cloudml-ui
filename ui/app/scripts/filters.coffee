@@ -44,6 +44,22 @@ angular.module('app.filters', [])
     return d + "-" + m + "-" + y + ' ' + h + ':' + mm
 ])
 
+.filter('bytes', [() ->
+  (bytes, precision) ->
+    bytes = parseFloat(bytes)
+    if isNaN(bytes) or not isFinite(bytes) or not bytes
+      return '-'
+    if not precision?
+      precision = 1
+    units = ['bytes', 'kB', 'MB', 'GB', 'TB', 'PB']
+    number = Math.floor(Math.log(bytes) / Math.log(1024))
+    console.log('Bytes: ' + bytes)
+    console.log('Number: ' + number)
+    rounded = (bytes / Math.pow(1024, Math.floor(number)))
+    console.log('rounded: ' + rounded)
+    return rounded.toFixed(precision) +  ' ' + units[number]
+])
+
 add_zero = (val) ->
   if val < 10
     val = '0' + val
