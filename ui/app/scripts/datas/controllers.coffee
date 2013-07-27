@@ -70,6 +70,7 @@ angular.module('app.datas.controllers', ['app.config', ])
 
 ($scope, $routeParams, Data, Test) ->
   $scope.form = {'field': "", 'count': 2 }
+  $scope.loading_state = true
   $scope.test = new Test({
     model_id: $routeParams.model_id,
     _id: $routeParams.test_id
@@ -78,22 +79,31 @@ angular.module('app.datas.controllers', ['app.config', ])
       show: 'name'
   )
   Data.$loadFieldList($routeParams.model_id,
-                      $routeParams.test_id).then ((opts) ->
+                      $routeParams.test_id)
+  .then ((opts) ->
       $scope.fields = opts.fields
+      $scope.loading_state = false
     ), ((opts) ->
       $scope.setError(opts, 'loading data field list')
+      $scope.loading_state = true
     )
 
   $scope.update = () ->
+    if not $scope.form.field
+      $scope.setError({}, 'Please, select a field')
+      return
+    $scope.loading_state = true
     Data.$loadAllGroupped($routeParams.model_id, $routeParams.test_id, {
-      field: 'data_input.' + $scope.form.field,
-      count: $scope.form.count
-    }).then ((opts) ->
+      field: $scope.form.field,
+      count: $scope.form.count})
+    .then ((opts) ->
       $scope.field_name = opts.field_name
       $scope.mavp = opts.mavp
       $scope.objects = opts.objects
+      $scope.loading_state = false
     ), ((opts) ->
       $scope.setError(opts, 'loading test examples')
+      $scope.loading_state = false
     )
 ])
 
@@ -137,7 +147,8 @@ pred_label,label,prob"
 
     $scope.test = dialog.model
     Data.$loadFieldList($scope.test.model_id,
-      $scope.test._id).then ((opts) ->
+      $scope.test._id)
+    .then ((opts) ->
       $scope.selectFields = ("data_input." + x for x in opts.fields)
     ), ((opts) ->
       $scope.setError(opts, 'loading data field list')

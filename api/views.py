@@ -514,38 +514,14 @@ class TestExamplesResource(BaseResource):
         logging.info('For model: %s test: %s' % (model_id, test_id))
         logging.info('Gettings examples')
 
-        collection = app.db.TestExample.collection
-
         res = []
         avps = []
-
-        # from bson.code import Code
-        # _map = Code("emit(this.%s, {pred: this.label,\
-        #             label: this.label});" % group_by_field)
-        # _reduce = Code("function (key, values) { \
-        #                  return {'list':  values}; }")
-        # params = {'model_name': model_name,
-        #           'test_name': test_name}
-        # result = collection.map_reduce(_map, _reduce, 'avp',
-        #                                query=params)
-
-        # for doc in result.find():
-        #     group = doc['value']
-        #     group_list = group['list'] if 'list' in group else [group, ]
-        #     labels = [str(item['label']) for item in group_list]
-        #     pred_labels = [str(item['pred']) for item in group_list]
-        #     avp = apk(labels, pred_labels, count)
-        #     avps.append(avp)
-        #     res.append({'group_by_field': doc["_id"],
-        #                 'count': len(group_list),
-        #                 'avp': avp})
 
         # TODO: generalize data loading/querying
 
         test = app.db.Test.find_one({'_id': ObjectId(test_id)})
         example_id_field = test.model.example_id
-        dataset_data = test.dataset.get_data_stream()
-        data = [json.loads(row) for row in dataset_data]
+        dataset_data_stream = test.dataset.get_data_stream()
 
         examples_data = app.db.TestExample.find(
             {'model_id': model_id, 'test_id': test_id},
@@ -553,19 +529,14 @@ class TestExamplesResource(BaseResource):
         )
         examples_data = dict([(epl['id'], epl)
                               for epl in examples_data])
+        groups = defaultdict(list)
+        field_name = group_by_field.replace('->', '.')
 
-        groups_dict = defaultdict(list)
-
-        # TODO: use helper
-        field_name = group_by_field.replace(
-            'data_input.', ''
-        ).replace(
-            '->', '.')
-
-        for row in data:
-            example_id = row[example_id_field]
+        for row in dataset_data_stream:
+            data = json.loads(row)
+            example_id = data[example_id_field]
             example = examples_data[example_id]
-            groups_dict[row[field_name]].append({
+            groups[data[field_name]].append({
                 'label': example['pred_label'],
                 'pred': example['label'],
                 'prob': example['prob'],
@@ -574,9 +545,8 @@ class TestExamplesResource(BaseResource):
         groups = [{
             group_by_field: key,
             'list': value
-        } for key, value in groups_dict.iteritems()]
+        } for key, value in groups.iteritems()]
 
-        groups_dict = None
         examples_data = None
 
         import sklearn.metrics as sk_metrics
