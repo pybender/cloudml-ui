@@ -488,6 +488,31 @@ class Test(Document):
         self.collection.remove({'_id': self._id})
         LogMessage.delete_related_logs(self)
 
+    def get_examples_full_data(self, fields):
+        """
+        Get examples with data_input fields from dataset stored at s3
+        :param fields: list of needed examples fields
+        :return: iterator
+        """
+        example_id_field = self.model.example_id
+        dataset_data_stream = self.dataset.get_data_stream()
+
+        examples_data = app.db.TestExample.find(
+            {'model_id': self.model_id, 'test_id': str(self._id)},
+            fields
+        )
+        examples_data = dict([(epl['id'], epl)
+                              for epl in examples_data])
+
+        for row in dataset_data_stream:
+            data = json.loads(row)
+            example_id = data[example_id_field]
+            example = examples_data[example_id]
+            for key in data:
+                new_key = 'data_input.{0}'.format(key.replace('.', '->'))
+                example[new_key] = data[key]
+            yield example
+
 
 @app.conn.register
 class TestExample(Document):

@@ -1,19 +1,19 @@
 import os
 import json
 import logging
-from copy import copy
+import StringIO
+import csv
 from itertools import izip
 from bson.objectid import ObjectId
 from os.path import join, exists
 from os import makedirs, system
-from celery.task.sets import subtask
 from datetime import timedelta, datetime
 from boto.exception import EC2ResponseError
 
 from api import celery, app
 from api.models import Test, Model
 from api.logger import init_logger
-from api.amazon_utils import AmazonEC2Helper
+from api.amazon_utils import AmazonEC2Helper, AmazonS3Helper
 from core.trainer.trainer import Trainer
 from core.trainer.config import FeatureModel
 from core.trainer.streamutils import streamingiterload
@@ -464,6 +464,40 @@ def calculate_confusion_matrix(test_id, weight0, weight1):
         matrix[true_value_idx][predicted] += 1
 
     return matrix
+
+
+@celery.task
+def get_csv_results(model_id, test_id, fields):
+    """
+    Get test classification result using csv format.
+    """
+    def generate():
+        test = app.db.Test.find_one({
+            'model_id': model_id,
+            '_id': ObjectId(test_id)
+        })
+
+        fout = StringIO.StringIO()
+        writer = csv.writer(fout, delimiter=',', quoting=csv.QUOTE_ALL)
+        writer.writerow(fields)
+        for example in test.get_examples_full_data(None):
+            rows = []
+            for name in fields:
+                val = example[name] if name in example else ''
+                rows.append(val)
+            writer.writerow(rows)
+        return fout.getvalue()
+
+    init_logger('get_csv_results_log', obj=test_id)
+
+    import uuid
+
+    name = '{0!s}-{1!s}-{2!s}-examples.csv'.format(
+        model_id, test_id, uuid.uuid1())
+
+    s3 = AmazonS3Helper()
+    s3.save_key_string(name, generate())
+    return s3.get_download_url(name, 60 * 60 * 24)
 
 
 def decode(row):

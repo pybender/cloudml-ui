@@ -94,7 +94,7 @@ angular.module('app.datas.controllers', ['app.config', ])
       return
     $scope.loading_state = true
     Data.$loadAllGroupped($routeParams.model_id, $routeParams.test_id, {
-      field: $scope.form.field,
+      field: 'data_input.' + $scope.form.field,
       count: $scope.form.count})
     .then ((opts) ->
       $scope.field_name = opts.field_name
@@ -145,13 +145,17 @@ pred_label,label,prob"
     $scope.csvFields = ['name', 'id', 'label', 'pred_label', 'prob']
     $scope.show = 'name,id,label,pred_label,prob'
 
+    $scope.loading_state = true
+
     $scope.test = dialog.model
     Data.$loadFieldList($scope.test.model_id,
       $scope.test._id)
     .then ((opts) ->
       $scope.selectFields = ("data_input." + x for x in opts.fields)
+      $scope.loading_state = false
     ), ((opts) ->
       $scope.setError(opts, 'loading data field list')
+      $scope.loading_state = false
     )
 
     $scope.appendField = () ->
@@ -167,6 +171,14 @@ pred_label,label,prob"
         f isnt fieldname
       $scope.show = $scope.csvFields.join(',')
       $scope.selectFields.push fieldname
+
+    $scope.getExamplesCsv = () ->
+      $scope.loading_state = true
+      @test.$get_examples_csv(@show).then((resp) ->
+        window.location = resp.url
+        $scope.loading_state = false
+        $scope.close()
+      )
 
     $scope.close = () ->
       dialog.close()

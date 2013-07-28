@@ -517,37 +517,21 @@ class TestExamplesResource(BaseResource):
         res = []
         avps = []
 
-        # TODO: generalize data loading/querying
-
         test = app.db.Test.find_one({'_id': ObjectId(test_id)})
-        example_id_field = test.model.example_id
-        dataset_data_stream = test.dataset.get_data_stream()
-
-        examples_data = app.db.TestExample.find(
-            {'model_id': model_id, 'test_id': test_id},
-            ['label', 'pred_label', 'prob', 'id']
-        )
-        examples_data = dict([(epl['id'], epl)
-                              for epl in examples_data])
         groups = defaultdict(list)
-        field_name = group_by_field.replace('->', '.')
+        example_fields = ['label', 'pred_label', 'prob', 'id']
 
-        for row in dataset_data_stream:
-            data = json.loads(row)
-            example_id = data[example_id_field]
-            example = examples_data[example_id]
-            groups[data[field_name]].append({
-                'label': example['pred_label'],
-                'pred': example['label'],
-                'prob': example['prob'],
+        for row in test.get_examples_full_data(example_fields):
+            groups[row[group_by_field]].append({
+                'label': row['pred_label'],
+                'pred': row['label'],
+                'prob': row['prob'],
             })
 
         groups = [{
             group_by_field: key,
             'list': value
         } for key, value in groups.iteritems()]
-
-        examples_data = None
 
         import sklearn.metrics as sk_metrics
         import numpy
@@ -614,34 +598,19 @@ not contain probabilities')
         """
         logging.info('Download examples in csv')
 
-        def generate():
-            parser_params = list(self.GET_PARAMS) + self.FILTER_PARAMS
-            params = self._parse_parameters(parser_params)
-            fields, show_fields = self._get_fields(params)
-            logging.info('Use fields %s' % str(fields))
-            kw = dict([(k, v) for k, v in kwargs.iteritems() if v])
-            examples = self._get_list_query(params, None, **kw)
-            fout = StringIO.StringIO()
-            writer = csv.writer(fout, delimiter=',', quoting=csv.QUOTE_ALL)
-            writer.writerow(fields)
-            for example in examples:
-                rows = []
-                for name in fields:
-                    # TODO: This is a quick hack. Fix it!
-                    if name.startswith('data_input'):
-                        feature_name = name.replace('data_input.', '')
-                        val = example['data_input'].get(feature_name, '')
-                    else:
-                        val = example[name] if name in example else ''
-                    rows.append(val)
-                writer.writerow(rows)
-            return fout.getvalue()
+        from api.tasks import get_csv_results
 
-        from flask import Response
-        resp = Response(generate(), mimetype='text/csv')
-        resp.headers["Content-Disposition"] = "attachment; \
-filename=%(model_id)s-%(test_id)s-examples.csv" % kwargs
-        return resp
+        parser_params = list(self.GET_PARAMS) + self.FILTER_PARAMS
+        params = self._parse_parameters(parser_params)
+        fields, show_fields = self._get_fields(params)
+        logging.info('Use fields %s' % str(fields))
+
+        # TODO: do not wait for result
+        url = get_csv_results.delay(
+            kwargs.get('model_id'), kwargs.get('test_id'),
+            fields
+        ).get()
+        return self._render({'url': url})
 
     def _get_datafields(self, **kwargs):
         data_input = self._get_random_datainput(**kwargs)
