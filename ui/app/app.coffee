@@ -51,6 +51,10 @@ App.config([
       templateUrl: '/partials/models/model_details.html'
       reloadOnSearch: false
     })
+    .when('/models/:model_id/tests', {
+      redirectTo: (params, loc) ->
+        return 'models/' + params.model_id + '?action=test:list'
+    })
     .when('/models/:model_id/tests/:id', {
       controller: 'TestDetailsCtrl'
       templateUrl: '/partials/testresults/test_details.html'
