@@ -459,11 +459,31 @@ class TestExamplesResource(BaseResource):
     FILTER_PARAMS = [('label', str), ('pred_label', str)]
     decorators = [crossdomain(origin='*')]
 
+    def _get_list_query(self, params, fields, **kwargs):
+        test = app.db.Test.find_one({'_id': ObjectId(kwargs.get('test_id'))})
+
+        data_input_params = dict([(p, v) for p, v in params.items()
+                                  if p.startswith('data_input.') and v])
+        if data_input_params:
+            params['_id'] = {
+                '$in': [e['_id'] for e in test.get_examples_full_data(
+                    ['_id'],
+                    data_input_params
+                )]
+            }
+
+            for param in data_input_params:
+                params[param] = None
+
+        return super(TestExamplesResource, self)._get_list_query(
+            params, fields, **kwargs)
+
     def _list(self, **kwargs):
         test = app.db.Test.find_one({'_id': ObjectId(kwargs.get('test_id'))})
         for field in test.dataset.data_fields:
             field_new = field.replace('.', '->')
             self.FILTER_PARAMS.append(('data_input.%s' % field_new, str))
+        self.FILTER_PARAMS.append(('_id', dict),)
         return super(TestExamplesResource, self)._list(**kwargs)
 
     def _get_details_query(self, params, fields, **kwargs):

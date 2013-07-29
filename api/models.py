@@ -495,7 +495,7 @@ class Test(Document):
         self.collection.remove({'_id': self._id})
         LogMessage.delete_related_logs(self)
 
-    def get_examples_full_data(self, fields):
+    def get_examples_full_data(self, fields=None, data_input_params=None):
         """
         Get examples with data_input fields from dataset stored at s3
         :param fields: list of needed examples fields
@@ -503,6 +503,11 @@ class Test(Document):
         """
         example_id_field = self.model.example_id
         dataset_data_stream = self.dataset.get_data_stream()
+
+        if fields:
+            for required_field in ['_id', 'id', example_id_field]:
+                if required_field not in fields:
+                    fields.append(required_field)
 
         examples_data = app.db.TestExample.find(
             {'model_id': self.model_id, 'test_id': str(self._id)},
@@ -520,6 +525,14 @@ class Test(Document):
             for key in data:
                 new_key = 'data_input.{0}'.format(key.replace('.', '->'))
                 example[new_key] = data[key]
+            if data_input_params:
+                skip_it = False
+                for k, v in data_input_params.items():
+                    if example[k] != v:
+                        skip_it = True
+                        break
+                if skip_it:
+                    continue
             yield example
 
 

@@ -44,8 +44,13 @@
             <th>Original</th>
             <th>Predict</th>
           </tr>
-          </thead>
-          <tbody>
+        </thead>
+        <tbody ng-show="loading_state">
+          <tr ng-show="loading_state">
+              <td colspan="4"><span class="badge">Loading... Please wait.</span></td>
+          </tr>
+        </tbody>
+        <tbody ng-show="!loading_state">
           <tr ng-repeat="data in objects | filter:search | orderBy:'id'" ng-class="{success : data.label==data.pred_label, error : !(data.label==data.pred_label)}">
             <td><a href="#{{ data.objectUrl() }}">{{ data.id }}</a></td>
             <td><a href="#{{ data.objectUrl() }}">{{ data.name }}</a></td>

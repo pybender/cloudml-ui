@@ -15,6 +15,7 @@ angular.module('app.datas.controllers', ['app.config', ])
   $scope.filter_opts = $location.search() # Used in ObjectListCtrl.
   $scope.simple_filters = {} # Filters by label and pred_label
   $scope.data_filters = [] # Filters by data_input.* fields
+  $scope.loading_state = false
 
   $scope.init = (test, extra_params={'action': 'examples:list'}) ->
     $scope.extra_params = extra_params
@@ -46,7 +47,11 @@ angular.module('app.datas.controllers', ['app.config', ])
       delete opts.filter_opts
       show = 'id,name,label,pred_label,title, probs'
       opts = _.extend({show: show}, opts, filter_opts)
-      Data.$loadAll($scope.test.model_id, $scope.test._id, opts)
+      $scope.loading_state = true
+      Data.$loadAll($scope.test.model_id, $scope.test._id, opts).then((resp) ->
+        $scope.loading_state = false
+        return resp
+      )
 
   $scope.addFilter = () ->
     $scope.data_filters.push({name: '', value: ''})
