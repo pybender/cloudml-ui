@@ -1,13 +1,10 @@
 from collections import defaultdict
+from datetime import datetime
 import json
 import logging
-import cPickle as pickle
 import traceback
-import StringIO
-import csv
 from flask.ext.restful import reqparse
 from flask import request, Response
-from celery import subtask
 
 import gevent
 from pymongo.errors import OperationFailure
@@ -390,7 +387,7 @@ class Tests(BaseResource):
     OBJECT_NAME = 'test'
     DEFAULT_FIELDS = ('_id', 'name')
     FILTER_PARAMS = (('status', str), )
-    GET_ACTIONS = ('confusion_matrix', )
+    GET_ACTIONS = ('confusion_matrix', 'exports')
     methods = ('GET', 'OPTIONS', 'DELETE', 'PUT', 'POST')
     post_form = AddTestForm
 
@@ -431,6 +428,17 @@ class Tests(BaseResource):
         return self._render({self.OBJECT_NAME: test._id,
                              'confusion_matrix': result})
 
+    def _get_exports_action(self, **kwargs):
+        test = self._get_details_query(None, None, **kwargs)
+        if not test:
+            raise NotFound('Test not found')
+
+        exports = [ex for ex in test.exports
+                   if ex['expires'] > datetime.now()]
+
+        return self._render({self.OBJECT_NAME: test._id,
+                             'exports': exports})
+
 api.add_resource(Tests, '/cloudml/models/<regex("[\w\.]*"):model_id>/tests/')
 
 
@@ -452,11 +460,10 @@ class TestExamplesResource(BaseResource):
     decorators = [crossdomain(origin='*')]
 
     def _list(self, **kwargs):
-        data_input = self._get_random_datainput(**kwargs)
-        # TODO: ideas how to get types...
-        # TODO: fields in dict should not contains dots
-        for key, val in data_input.iteritems():
-            self.FILTER_PARAMS.append(('data_input.%s' % key, str))
+        test = app.db.Test.find_one({'_id': ObjectId(kwargs.get('test_id'))})
+        for field in test.dataset.data_fields:
+            field_new = field.replace('.', '->')
+            self.FILTER_PARAMS.append(('data_input.%s' % field_new, str))
         return super(TestExamplesResource, self)._list(**kwargs)
 
     def _get_details_query(self, params, fields, **kwargs):
@@ -589,7 +596,8 @@ not contain probabilities')
         return self._render(context)
 
     def _get_datafields_action(self, **kwargs):
-        fields = self._get_datafields(**kwargs)
+        fields = [field.replace('.', '->') for field in
+                  self._get_datafields(**kwargs)]
         return self._render({'fields': fields})
 
     def _get_csv_action(self, **kwargs):
@@ -600,27 +608,28 @@ not contain probabilities')
 
         from api.tasks import get_csv_results
 
-        parser_params = list(self.GET_PARAMS) + self.FILTER_PARAMS
-        params = self._parse_parameters(parser_params)
+        parser = reqparse.RequestParser()
+        parser.add_argument('show', type=str)
+        params = parser.parse_args()
         fields, show_fields = self._get_fields(params)
         logging.info('Use fields %s' % str(fields))
 
-        # TODO: do not wait for result
-        url = get_csv_results.delay(
-            kwargs.get('model_id'), kwargs.get('test_id'),
+        test = app.db.Test.find_one({
+            '_id': ObjectId(kwargs.get('test_id')),
+            'model_id': kwargs.get('model_id')
+        })
+        if not test:
+            raise NotFound('Test not found')
+
+        get_csv_results.delay(
+            test.model_id, str(test._id),
             fields
-        ).get()
-        return self._render({'url': url})
+        )
+        return self._render({})
 
     def _get_datafields(self, **kwargs):
-        data_input = self._get_random_datainput(**kwargs)
-        return data_input.keys()
-
-    def _get_random_datainput(self, **kwargs):
-        example = self.Model.find_one(kwargs, ('data_input', ))
-        if example is None:
-            raise NotFound('No test examples found!')
-        return example.data_input
+        test = app.db.Test.find_one({'_id': ObjectId(kwargs.get('test_id'))})
+        return test.dataset.data_fields
 
 api.add_resource(TestExamplesResource, '/cloudml/models/\
 <regex("[\w\.]*"):model_id>/tests/<regex("[\w\.]*"):test_id>/examples/')

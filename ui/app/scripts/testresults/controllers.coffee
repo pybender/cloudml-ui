@@ -153,3 +153,31 @@ metrics.roc_curve,metrics.roc_auc'
       d.open('partials/testresults/delete_popup.html', 'DeleteTestCtrl')
   
 ])
+
+.controller('TestExportsCtrl', [
+  '$scope'
+
+  ($scope) ->
+    $scope.exports = []
+
+    $scope.init = (test) =>
+      $scope.test = test
+      $scope.reload()
+
+    $scope.reload = () ->
+      $scope.test.$get_exports().then((resp) ->
+        $scope.exports = resp.data.exports
+        statuses = []
+        statuses.push e.status for e in $scope.exports
+        if 'In Progress' in statuses
+          window.setTimeout(
+            () ->$scope.reload()
+            1000)
+      )
+
+    $scope.$on('exportsChanged', () ->
+      window.setTimeout(
+        () ->$scope.reload()
+        1000)
+    )
+])

@@ -91,5 +91,9 @@ angular.module('app.testresults.model', ['app.config'])
         resolver = (resp) -> { url: resp.data['url'] }
         TestResult.$make_all_request(url, resolver)
 
+      $get_exports: () ->
+        url = "#{@BASE_API_URL}#{@_id}/action/exports/"
+        @$make_request(url, {}, "GET", {})
+
     return TestResult
 ])

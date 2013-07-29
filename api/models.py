@@ -178,6 +178,7 @@ class DataSet(Document):
         'filesize': long,
         'records_count': int,
         'time': int,
+        'data_fields': list,
     }
     required_fields = ['name', 'created_on', 'updated_on', ]
     default_values = {'created_on': datetime.utcnow,
@@ -185,7 +186,8 @@ class DataSet(Document):
                       'error': '',
                       'on_s3': False,
                       'compress': True,
-                      'status': STATUS_IMPORTING}
+                      'status': STATUS_IMPORTING,
+                      'data_fields': []}
     use_dot_notation = True
 
     def __init__(self, *args, **kwargs):
@@ -439,6 +441,9 @@ class Test(Document):
     STATUS_COMPLETED = 'Completed'
     STATUS_ERROR = 'Error'
 
+    EXPORT_STATUS_IN_PROGRESS = 'In Progress'
+    EXPORT_STATUS_COMPLETED = 'Completed'
+
     __collection__ = 'tests'
     structure = {
         'name': basestring,
@@ -460,6 +465,7 @@ class Test(Document):
         # Raw test data
         #'examples': [TestExample ],
         'memory_usage': dict,
+        'exports': list,
     }
     required_fields = ['name', 'created_on', 'updated_on',
                        'status']
@@ -468,6 +474,7 @@ class Test(Document):
         'updated_on': datetime.utcnow,
         'status': STATUS_QUEUED,
         'memory_usage': {},
+        'exports': []
     }
     use_dot_notation = True
     use_autorefs = True
@@ -507,7 +514,9 @@ class Test(Document):
         for row in dataset_data_stream:
             data = json.loads(row)
             example_id = data[example_id_field]
-            example = examples_data[example_id]
+            example = examples_data.get(example_id)
+            if not example:
+                continue
             for key in data:
                 new_key = 'data_input.{0}'.format(key.replace('.', '->'))
                 example[new_key] = data[key]

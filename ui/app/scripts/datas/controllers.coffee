@@ -136,8 +136,10 @@ pred_label,label,prob"
   '$scope'
   'dialog'
   'Data'
+  '$location'
+  '$rootScope'
 
-  ($scope, dialog, Data) ->
+  ($scope, dialog, Data, $location, $rootScope) ->
     # Field list to be displayed in choose field select
     $scope.selectFields = []
 
@@ -175,9 +177,10 @@ pred_label,label,prob"
     $scope.getExamplesCsv = () ->
       $scope.loading_state = true
       @test.$get_examples_csv(@show).then((resp) ->
-        window.location = resp.url
         $scope.loading_state = false
+        $location.search('action=about:details')
         $scope.close()
+        $rootScope.$broadcast 'exportsChanged'
       )
 
     $scope.close = () ->

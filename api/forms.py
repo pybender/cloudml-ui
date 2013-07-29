@@ -359,6 +359,9 @@ class AddTestForm(BaseChooseInstanceAndDataset):
         if self.model is None:
             raise ValidationError('Model not found')
 
+        if not self.model.example_id:
+            raise ValidationError('Please fill in "Examples id field name"')
+
         self.cleaned_data['model_name'] = self.model.name
         self.cleaned_data['model_id'] = self.model_id
         return self.model

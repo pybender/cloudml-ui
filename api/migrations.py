@@ -53,6 +53,10 @@ class TestMigration(DbMigration):
     #             self.update = {'$set': {'model_id': doc.model._id }}
     #             self.collection.update(self.target, self.update)
 
+    def allmigration02__add_exports(self):
+        self.target = {'exports': {'$exists': False}}
+        self.update = {'$set': {'exports': []}}
+
 
 class DataSetMigration(DbMigration):
     DOC_CLASS = models.DataSet
@@ -68,3 +72,7 @@ class DataSetMigration(DbMigration):
             'records_count': 0,
             'time': 0,
         }}
+
+    def allmigration02__add_data_fields(self):
+        self.target = {'data_fields': {'$exists': False}}
+        self.update = {'$set': {'data_fields': []}}

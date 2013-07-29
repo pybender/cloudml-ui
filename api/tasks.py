@@ -172,6 +172,14 @@ with%s compression", importhandler.name, '' if dataset.compress else 'out')
         handler.store_data_json(dataset.filename, dataset.compress)
         logging.info('Import dataset completed')
 
+        logging.info('Retrieving data fields')
+        row = None
+        with dataset.get_data_stream() as fp:
+            row = next(fp)
+        if row:
+            dataset.data_fields = json.loads(row).keys()
+        logging.info('Dataset fields: {0!s}'.format(dataset.data_fields))
+
         logging.info('Saving file to Amazon S3')
         dataset.save_to_s3()
         logging.info('File saved to Amazon S3')
@@ -469,35 +477,70 @@ def calculate_confusion_matrix(test_id, weight0, weight1):
 @celery.task
 def get_csv_results(model_id, test_id, fields):
     """
-    Get test classification result using csv format.
+    Get test classification results using csv format.
     """
-    def generate():
-        test = app.db.Test.find_one({
-            'model_id': model_id,
-            '_id': ObjectId(test_id)
-        })
+    def generate(test, name):
+        path = app.config['DATA_FOLDER']
+        if not exists(path):
+            makedirs(path)
+        filename = os.path.join(path, name)
 
-        fout = StringIO.StringIO()
-        writer = csv.writer(fout, delimiter=',', quoting=csv.QUOTE_ALL)
-        writer.writerow(fields)
-        for example in test.get_examples_full_data(None):
-            rows = []
-            for name in fields:
-                val = example[name] if name in example else ''
-                rows.append(val)
-            writer.writerow(rows)
-        return fout.getvalue()
+        with open(filename, 'w') as fp:
+            writer = csv.writer(fp, delimiter=',',
+                                quoting=csv.QUOTE_ALL)
+            writer.writerow(fields)
+            for example in test.get_examples_full_data(None):
+                rows = []
+                for field in fields:
+                    val = example[field] if field in example else ''
+                    rows.append(val)
+                writer.writerow(rows)
+        return filename
 
     init_logger('get_csv_results_log', obj=test_id)
 
     import uuid
 
-    name = '{0!s}-{1!s}-{2!s}-examples.csv'.format(
-        model_id, test_id, uuid.uuid1())
+    test = app.db.Test.find_one({
+        'model_id': model_id,
+        '_id': ObjectId(test_id)
+    })
+    if not test:
+        logging.error('Test not found')
+        return None
+
+    name = 'Examples-{0!s}.csv'.format(uuid.uuid1())
+    expires = 60 * 60 * 24 * 7  # 7 days
+    test.exports.append({
+        'name': name,
+        'fields': fields,
+        'status': Test.EXPORT_STATUS_IN_PROGRESS,
+        'datetime': datetime.now(),
+        'url': None,
+        'type': 'csv',
+        'expires': datetime.now() + timedelta(seconds=expires)
+    })
+    test.save()
+
+    logging.info('Creating file {0}...'.format(name))
 
     s3 = AmazonS3Helper()
-    s3.save_key_string(name, generate())
-    return s3.get_download_url(name, 60 * 60 * 24)
+    filename = generate(test, name)
+    logging.info('Uploading file {0} to s3...'.format(filename))
+    s3.save_key(name, filename, {
+        'model_id': model_id,
+        'test_id': test_id}, compressed=False)
+    s3.close()
+    os.remove(filename)
+    url = s3.get_download_url(name, expires)
+
+    export = next((ex for ex in test.exports if ex['name'] == name))
+    export['url'] = url
+    export['status'] = Test.EXPORT_STATUS_COMPLETED
+    export['expires'] = datetime.now() + timedelta(seconds=expires)
+    test.save()
+
+    return url
 
 
 def decode(row):
