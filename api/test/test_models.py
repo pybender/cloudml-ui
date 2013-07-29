@@ -86,7 +86,7 @@ schema-name is missing')
 
     def test_post_with_invalid_trainer(self):
         handler = open('./conf/extract.json', 'r').read()
-        trainer = open('./api/test/invalid_model.dat', 'r')
+        trainer = open('./api/fixtures/invalid_model.dat', 'r')
         post_data = {'importhandler': handler,
                      'trainer': trainer,
                      'name': 'new'}
@@ -122,7 +122,7 @@ schema-name is missing')
     def test_post_trained_model(self):
         name = 'new2'
         handler = open('./conf/extract.json', 'r').read()
-        trainer = open('./api/test/model.dat', 'r')
+        trainer = open('./api/fixtures/model.dat', 'r')
         post_data = {'test_import_handler_file': handler,
                      'train_import_handler_file': handler,
                      'trainer': trainer,

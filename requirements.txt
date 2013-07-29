@@ -26,3 +26,5 @@ translitcodec==0.3
 boto
 psutil==1.0.1
 memory-profiler==0.27
+mock
+moto
