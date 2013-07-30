@@ -1,14 +1,14 @@
 import os
 import json
 import logging
-import StringIO
 import csv
 from itertools import izip
 from bson.objectid import ObjectId
-from os.path import join, exists
+from os.path import exists
 from os import makedirs, system
 from datetime import timedelta, datetime
 from boto.exception import EC2ResponseError
+from celery.canvas import group
 
 from api import celery, app
 from api.models import Test, Model
@@ -389,44 +389,42 @@ def run_test(dataset_id, test_id):
         test.memory_usage['testing'] = max(mem_usage)
         test.save()
 
-        def store_examples(items):
-            count = 0
-            for row, label, pred, prob, vectorized_data in items:
-                count += 1
-                if count % 1000 == 0:
-                    logging.info('Stored %d rows' % count)
-                row = decode(row)
-                new_row = {}
-                for key, val in row.iteritems():
-                    new_key = key.replace('.', '->')
-                    new_row[new_key] = val
-                #logging.error('Row %s', new_row.keys())
-                example = app.db.TestExample()
-                example['data_input'] = new_row
-                example['vect_data'] = vectorized_data.tolist()[0]
-                example['id'] = str(row.get(model.example_id, '-1'))
-                example['name'] = str(row.get(model.example_label, 'noname'))
-                example['label'] = str(label)
-                example['pred_label'] = str(pred)
-                example['prob'] = prob.tolist()
-                example['test_name'] = test.name
-                example['model_name'] = model.name
-                example['test_id'] = str(test._id)
-                example['model_id'] = str(model._id)
-                try:
-                    example.validate()
-                except Exception, exc:
-                    logging.error('Problem with saving example #%s: %s',
-                                  count, exc)
-                    continue
-                example.save(check_keys=False)
+        import uuid
 
-        examples = izip(raw_data,
-                        metrics._labels,
-                        metrics._preds,
-                        metrics._probs,
-                        metrics._true_data.todense())
-        store_examples(examples)
+        _CHUNK_SIZE = 10
+
+        path = app.config['DATA_FOLDER']
+        if not exists(path):
+            makedirs(path)
+        name = 'Test_raw_data-{0!s}.dat'.format(uuid.uuid1())
+        filename = os.path.join(path, name)
+        with open(filename, 'w') as fp:
+            fp.writelines(['{0}\n'.format(json.dumps(r)) for r in raw_data])
+
+        def _chunks(sequences, n):
+            for i in xrange(0, len(sequences[0]), n):
+                yield [s[i:i+n] for s in sequences]
+
+        examples = [
+            range(len(raw_data)),  # indexes
+            metrics._labels,
+            metrics._preds.tolist(),
+            metrics._probs.tolist(),
+            [v.tolist() for v in metrics._true_data.todense()]
+        ]
+
+        examples_tasks = []
+        for params in _chunks(examples, _CHUNK_SIZE):
+            examples_tasks.append(store_examples.si(test_id, filename, params))
+
+        # Wait for all results
+        res = group(examples_tasks).apply_async().get()
+        os.remove(filename)
+
+        # TODO: remove debug lines
+        filename = os.path.join(path, 'result')
+        with open(filename, 'w') as fp:
+            fp.writelines(['{0}\n'.format(r) for r in res])
 
     except Exception, exc:
         logging.exception('Got exception when tests model')
@@ -435,6 +433,53 @@ def run_test(dataset_id, test_id):
         test.save()
         raise
     return 'Test completed'
+
+
+@celery.task
+def store_examples(test_id, filename, params):
+    res = []
+
+    test = app.db.Test.find_one({'_id': ObjectId(test_id)})
+    model = test.model
+
+    with open(filename, 'r') as fp:
+        row_nums = params[0]
+        for r in range(row_nums[0]):  # First row_num
+            fp.readline()
+
+        for row_num, label, pred, prob, vectorized_data in izip(*params):
+            row = fp.readline()
+            row = json.loads(row)
+
+            row = decode(row)
+            new_row = {}
+            for key, val in row.iteritems():
+                new_key = key.replace('.', '->')
+                new_row[new_key] = val
+
+            example = app.db.TestExample()
+            example['data_input'] = new_row
+            example['vect_data'] = vectorized_data[0]
+            example['id'] = str(row.get(model.example_id, '-1'))
+            example['name'] = str(row.get(model.example_label, 'noname'))
+            example['label'] = str(label)
+            example['pred_label'] = str(pred)
+            example['prob'] = prob
+            example['test_name'] = test.name
+            example['model_name'] = model.name
+            example['test_id'] = str(test._id)
+            example['model_id'] = str(model._id)
+            try:
+                example.validate()
+            except Exception, exc:
+                logging.error('Problem with saving example #%s: %s',
+                              row_num, exc)
+                res.append((None, None))
+            example.save(check_keys=False)
+
+            res.append((row_num, str(example._id)))
+
+    return res
 
 
 @celery.task
