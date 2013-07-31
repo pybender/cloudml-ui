@@ -403,8 +403,8 @@ class Model(Document):
         try:
             metrics = trainer.test(
                 streamingiterload(fp),
-                callback=callback,
-                save_raw=False)
+                callback=callback)
+                # save_raw=False) # TODO: check if it should work
         finally:
             fp.close()
         # raw_data = trainer._raw_data
