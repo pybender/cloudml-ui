@@ -34,6 +34,11 @@ class ImportHandlersTests(BaseTestCase):
     def test_delete(self):
         datasets = self.db.DataSet.find({'import_handler_id': self.HANDLER_ID})
         self.assertTrue(datasets.count(), 'Invalid fixtures')
+        import shutil
+        files = []
+        for dataset in datasets:
+            files.append(dataset.filename)
+            shutil.copy2(dataset.filename, dataset.filename + '.bak')
 
         url = self._get_url(id=self.obj._id)
         resp = self.app.delete(url)
@@ -41,6 +46,9 @@ class ImportHandlersTests(BaseTestCase):
         self.assertFalse(self.Model.find_one({'_id': ObjectId(self.HANDLER_ID)}))
         datasets = self.db.DataSet.find({'import_handler_id': self.HANDLER_ID})
         self.assertFalse(datasets.count(), 'DataSets should be removed')
+        for filename in files:
+            shutil.move(filename + '.bak', filename)
+
 
 
 #     def test_post_with_invalid_import_handler(self):

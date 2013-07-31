@@ -11,7 +11,7 @@
     "import_params": {},
     "on_s3": false,
     "compress": true,
-    "filename": "test_data/ds.gz",
+    "filename": "api/fixtures/ds.gz",
     "filesize": 100,
     "records_count": 100,
     "time": 200

@@ -198,11 +198,12 @@ class DataSet(Document):
         return helper.get_download_url(str(self._id), expires_in)
 
     def set_file_path(self):
-        self.data = '%s.%s' % (self._id, 'gz' if self.compress else 'json')
+        data = '%s.%s' % (self._id, 'gz' if self.compress else 'json')
+        self.data = data
         path = app.config['DATA_FOLDER']
         if not exists(path):
             makedirs(path)
-        self.filename = join(path, self.data)
+        self.filename = join(path, data)
         self.save()
 
     @property

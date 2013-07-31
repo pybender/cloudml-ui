@@ -480,9 +480,10 @@ class TestExamplesResource(BaseResource):
 
     def _list(self, **kwargs):
         test = app.db.Test.find_one({'_id': ObjectId(kwargs.get('test_id'))})
-        for field in test.dataset.data_fields:
-            field_new = field.replace('.', '->')
-            self.FILTER_PARAMS.append(('data_input.%s' % field_new, str))
+        if not test.dataset is None:
+            for field in test.dataset.data_fields:
+                field_new = field.replace('.', '->')
+                self.FILTER_PARAMS.append(('data_input.%s' % field_new, str))
         self.FILTER_PARAMS.append(('_id', dict),)
         return super(TestExamplesResource, self)._list(**kwargs)
 

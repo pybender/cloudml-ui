@@ -87,7 +87,8 @@ schema-name is missing')
     def test_post_with_invalid_trainer(self):
         handler = open('./conf/extract.json', 'r').read()
         trainer = open('./api/fixtures/invalid_model.dat', 'r')
-        post_data = {'importhandler': handler,
+        post_data = {'test_import_handler_file': handler,
+                     'train_import_handler_file': handler,
                      'trainer': trainer,
                      'name': 'new'}
         self._check_post(post_data, error="Invalid trainer")
