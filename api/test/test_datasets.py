@@ -33,7 +33,7 @@ class DataSetsTests(BaseTestCase):
         resp, ds = self._check_post(post_data=post_data, load_model=True)
         self.assertEquals(ds.status, 'Imported', ds.error)
         self.assertEquals(ds.import_handler_id, self.HANDLER_ID)
-        self.assertEquals(ds.records_count, 100)
+        self.assertEquals(ds.records_count, 99)
         self.assertEquals(ds.import_params, post_data)
         self.assertTrue(ds.compress)
         self.assertTrue(save_to_s3_mock.called)
@@ -59,4 +59,8 @@ class DataSetsTests(BaseTestCase):
         self._check_details(show='name,status')
 
     def test_delete(self):
+        import shutil
+        filename = self.obj.filename
+        shutil.copy2(filename, filename + '.bak')
         self._check_delete()
+        shutil.move(filename + '.bak', filename)
