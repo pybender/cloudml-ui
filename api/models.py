@@ -205,13 +205,21 @@ class DataSet(Document):
         self.filename = join(path, self.data)
         self.save()
 
+    @property
+    def data(self):
+        if not self.on_s3:
+            raise Exception('Invalid oper')
+
+        if not hasattr(self, '_data'):
+            self._data = self.load_from_s3()
+        return self._data
+
     def get_data_stream(self):
         import gzip
         #import zlib
         if self.on_s3:
             logging.info('Loading data from Amazon S3')
-            data = self.load_from_s3()
-            stream = StringIO.StringIO(data)
+            stream = StringIO.StringIO(self.data)
             if self.compress:
                 logging.info('Decompress data')
                 return gzip.GzipFile(fileobj=stream, mode='r')
@@ -392,13 +400,15 @@ class Model(Document):
         trainer = self.get_trainer()
         fp = dataset.get_data_stream()
         try:
-            metrics = trainer.test(streamingiterload(fp), callback=callback)
+            metrics = trainer.test(
+                streamingiterload(fp),
+                callback=callback,
+                save_raw=False)
         finally:
             fp.close()
-
-        raw_data = trainer._raw_data
+        # raw_data = trainer._raw_data
         trainer.clear_temp_data()
-        return metrics, raw_data
+        return metrics
 
     def set_trainer(self, trainer):
         from core.trainer.store import TrainerStorage
