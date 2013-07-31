@@ -1,4 +1,5 @@
 import logging
+from logging import config as logging_config
 import re
 from flask import Flask
 from werkzeug.routing import BaseConverter
@@ -127,9 +128,7 @@ class Api(restful.Api):
 
 api = Api(app)
 
-logging_level = logging.INFO
-logging.basicConfig(format='[%(asctime)s] %(levelname)s - %(message)s',
-                    level=logging_level)
+logging_config.dictConfig(app.config['LOGGING'])
 
 import views
 import models
