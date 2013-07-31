@@ -31,6 +31,8 @@ CELERY_DEFAULT_ROUTING_KEY = 'task.default'
 REQUESTING_INSTANCE_COUNTDOWN = 20
 REQUESTING_INSTANCE_MAX_RETRIES = 30
 
+EXAMPLES_CHUNK_SIZE = 10
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': True,

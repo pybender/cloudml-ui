@@ -391,8 +391,6 @@ def run_test(dataset_id, test_id):
 
         import uuid
 
-        _CHUNK_SIZE = 10
-
         path = app.config['DATA_FOLDER']
         if not exists(path):
             makedirs(path)
@@ -416,7 +414,7 @@ def run_test(dataset_id, test_id):
         ]
 
         examples_tasks = []
-        for params in _chunks(examples, _CHUNK_SIZE):
+        for params in _chunks(examples, app.config['EXAMPLES_CHUNK_SIZE']):
             examples_tasks.append(store_examples.si(test_id, filename, params))
 
         # Wait for all results
