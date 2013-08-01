@@ -397,18 +397,15 @@ class Model(Document):
         handler = ImportHandler(plan, parameters)
         return handler
 
-    def run_test(self, dataset, callback=None):
+    def run_test(self, filename, callback=None):
         trainer = self.get_trainer()
-        fp = dataset.get_data_stream()
-        try:
+        with open(filename, 'r') as fp:
             metrics = trainer.test(
                 streamingiterload(fp),
                 callback=callback)
                 # save_raw=False) # TODO: check if it should work
-        finally:
-            fp.close()
-        # raw_data = trainer._raw_data
-        trainer.clear_temp_data()
+            # raw_data = trainer._raw_data
+            trainer.clear_temp_data()
         return metrics
 
     def set_trainer(self, trainer):

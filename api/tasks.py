@@ -2,6 +2,7 @@ import os
 import json
 import logging
 import csv
+import uuid
 from itertools import izip
 from bson.objectid import ObjectId
 from os.path import exists
@@ -351,8 +352,17 @@ def run_test(dataset_id, test_id):
         test.error = ""
         test.save()
 
+        # Caching data into temp file
+        path = app.config['DATA_FOLDER']
+        if not exists(path):
+            makedirs(path)
+        name = 'Test_raw_data-{0!s}.dat'.format(uuid.uuid1())
+        filename = os.path.join(path, name)
+        with open(filename, 'w') as fp:
+            fp.write(str(dataset.get_data_stream().read()))
+
         from memory_profiler import memory_usage
-        mem_usage, result = memory_usage((Model.run_test, (model, dataset, )),
+        mem_usage, result = memory_usage((Model.run_test, (model, filename, )),
                                          interval=0, retval=True)
         metrics = result
         test.accuracy = metrics.accuracy
@@ -389,18 +399,6 @@ def run_test(dataset_id, test_id):
         test.memory_usage['testing'] = max(mem_usage)
         test.save()
 
-        import uuid
-
-        path = app.config['DATA_FOLDER']
-        if not exists(path):
-            makedirs(path)
-        name = 'Test_raw_data-{0!s}.dat'.format(uuid.uuid1())
-        filename = os.path.join(path, name)
-        with open(filename, 'w') as fp:
-            data_stream = dataset.get_data_stream()
-            fp.writelines(('{0}\n'.format(json.dumps(r))
-                           for r in streamingiterload(data_stream)))
-
         def _chunks(sequences, n):
             for i in xrange(0, len(sequences[0]), n):
                 yield [s[i:i+n] for s in sequences]
@@ -420,11 +418,6 @@ def run_test(dataset_id, test_id):
         # Wait for all results
         res = group(examples_tasks).apply_async().get()
         os.remove(filename)
-
-        # TODO: remove debug lines
-        filename = os.path.join(path, 'result')
-        with open(filename, 'w') as fp:
-            fp.writelines(['{0}\n'.format(r) for r in res])
 
     except Exception, exc:
         logging.exception('Got exception when tests model')
@@ -543,8 +536,6 @@ def get_csv_results(model_id, test_id, fields):
         return filename
 
     init_logger('get_csv_results_log', obj=test_id)
-
-    import uuid
 
     test = app.db.Test.find_one({
         'model_id': model_id,

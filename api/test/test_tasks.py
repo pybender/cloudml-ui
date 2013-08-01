@@ -3,6 +3,7 @@ from bson import ObjectId
 from moto import mock_s3
 from mock import patch, MagicMock
 
+from api import app
 from utils import BaseTestCase
 
 
@@ -20,6 +21,12 @@ class TestTasksTests(BaseTestCase):
         self.dataset = self.db.DataSet.find_one({'_id': ObjectId(self.DS_ID)})
         self.examples_count = self.db.TestExample.find(
             {'test_name': self.TEST_NAME}).count()
+        self.real_chunks_config = app.config['EXAMPLES_CHUNK_SIZE']
+        app.config['EXAMPLES_CHUNK_SIZE'] = 10
+
+    def tearDown(self):
+        super(TestTasksTests, self).tearDown()
+        app.config['EXAMPLES_CHUNK_SIZE'] = self.real_chunks_config
 
     def _set_probabilities(self, probabilities):
         for example in self.db.TestExample.find({'test_name': self.TEST_NAME}):
@@ -105,11 +112,34 @@ class TestTasksTests(BaseTestCase):
 
         with patch('core.trainer.trainer.Trainer.test',
                    _fake_test) as mock_test:
+
             result = run_test(self.dataset._id, self.test._id)
             self.assertTrue(mock_test.called)
 
-        self.assertEquals(result, 'Test completed')
-        self.assertTrue(mock_get_data_stream.called)
+            self.assertEquals(result, 'Test completed')
 
-        self.assertEquals(10, mock_store_examples.si.call_count)
-        self.assertEquals(10, mock_apply_async.apply.call_count)
+            # Should be cached and called only once
+            self.assertEquals(1, mock_get_data_stream.call_count)
+
+            self.assertEquals(10, mock_store_examples.si.call_count)
+            self.assertEquals(10, mock_apply_async.apply.call_count)
+
+            mock_store_examples.reset_mock()
+            mock_apply_async.reset_mock()
+
+            app.config['EXAMPLES_CHUNK_SIZE'] = 5
+
+            result = run_test(self.dataset._id, self.test._id)
+            self.assertEquals(result, 'Test completed')
+            self.assertEquals(20, mock_store_examples.si.call_count)
+            self.assertEquals(20, mock_apply_async.apply.call_count)
+
+            mock_store_examples.reset_mock()
+            mock_apply_async.reset_mock()
+
+            app.config['EXAMPLES_CHUNK_SIZE'] = 7
+
+            result = run_test(self.dataset._id, self.test._id)
+            self.assertEquals(result, 'Test completed')
+            self.assertEquals(15, mock_store_examples.si.call_count)
+            self.assertEquals(15, mock_apply_async.apply.call_count)
