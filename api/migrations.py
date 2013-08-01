@@ -86,8 +86,11 @@ class DataSetMigration(DbMigration):
             for doc in self.collection.find(self.target):
                 dataset = app.db.DataSet.find_one({'_id': doc['_id']})
                 row = None
-                with dataset.get_data_stream() as fp:
-                    row = next(fp)
-                if row:
-                    dataset.data_fields = json.loads(row).keys()
-                    dataset.save()
+                try:
+                    with dataset.get_data_stream() as fp:
+                        row = next(fp)
+                    if row:
+                        dataset.data_fields = json.loads(row).keys()
+                        dataset.save()
+                except Exception, e:
+                    print e
