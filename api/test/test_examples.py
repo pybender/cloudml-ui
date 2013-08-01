@@ -1,5 +1,6 @@
 import httplib
-import json
+from moto import mock_s3
+
 from utils import BaseTestCase
 
 
@@ -12,6 +13,7 @@ class TestExamplesTests(BaseTestCase):
     TEST_NAME = 'Test-1'
     FIXTURES = ('models.json', 'tests.json', 'examples.json')
 
+    @mock_s3
     def setUp(self):
         super(TestExamplesTests, self).setUp()
         self.model = self.db.Model.find_one({'name': self.MODEL_NAME})
@@ -30,7 +32,12 @@ class TestExamplesTests(BaseTestCase):
         self.BASE_URL = '/cloudml/models/%s/tests/%s/examples/' % \
             (self.model._id, self.test._id)
 
+    @mock_s3
     def test_list(self):
-        resp = self.app.get(self.BASE_URL)
-        # self.assertEquals(resp.status_code, httplib.OK)
-        # data = json.loads(resp.data)
+        # self._check_list()
+        pass
+
+    @mock_s3
+    def test_details(self):
+        # self._check_details()
+        pass

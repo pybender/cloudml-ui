@@ -12,12 +12,14 @@
             "metrics": {},
             "examples_count": 100,
             "error": "",
-            "model": null,
+            "model": {"$ref" : "Model", "$id" : "519318e6106a6c0df349bc0b"},
+            "dataset": {"$ref" : "DataSet", "$id" : "5270dd3a106a6c1631000000"},
             "data": {},
             "classes_set": [],
             "accuracy": 0.95
         },
         {
+            "_id": "000000000000000000000003",
             "name": "Test-2",
             "status": "Completed",
             "created_on": "2013-04-19 14:37:23.145000",
@@ -28,12 +30,13 @@
             "metrics": {},
             "examples_count": 100,
             "error": "",
-            "model": null,
+            "model": {"$ref" : "Model", "$id" : "519318e6106a6c0df349bc0b"},
             "data": {},
             "classes_set": [],
             "accuracy": 0.95
         },
         {
+            "_id": "000000000000000000000004",
             "name": "Test-3",
             "status": "Completed",
             "created_on": "2013-04-19 14:37:23.145000",
