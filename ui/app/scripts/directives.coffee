@@ -347,13 +347,20 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
     link: (scope, element, attrs, control) ->
 
       control.$parsers.unshift((viewValue) ->
-        control.$setValidity('requiredFile', viewValue)
+        scope.$apply( () ->
+          control.$setValidity('requiredFile', viewValue != '')
+        )
         return viewValue
       )
 
       element.change((e) ->
         scope.$apply( () ->
-          control.$setViewValue(element[0].files[0].name)
+          reader = new FileReader()
+
+          reader.onload = (e) ->
+            control.$setViewValue(e.target.result)
+
+          reader.readAsText(element[0].files[0])
         )
       )
   }
