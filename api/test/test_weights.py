@@ -20,7 +20,7 @@ class WeightsTests(BaseTestCase):
 
         # POST Trained Model
         handler = open('./conf/extract.json', 'r').read()
-        trainer = open('./api/fixtures/model.dat', 'r')
+        trainer = open('./api/fixtures/model.dat', 'r').read()
         post_data = {'test_import_handler_file': handler,
                      'train_import_handler_file': handler,
                      'trainer': trainer,
@@ -85,11 +85,11 @@ class WeightsTests(BaseTestCase):
                 self.assertEquals(wgh[key], val)
 
         check_weight('contractor->dev_blurb->best',
-                     {'is_positive': True,
+                     {'is_positive': False,
                       'short_name': 'best',
-                      'css_class': 'green lighter',
+                      'css_class': 'red dark',
                       'parent': 'contractor.dev_blurb',
-                      'value': 0.0065625655563437855})
+                      'value': -0.07864226503356551})
 
     def test_list(self):
         resp = self.app.get(self.BASE_URL)
@@ -101,7 +101,7 @@ class WeightsTests(BaseTestCase):
         self.assertEquals(data['total'], self.COUNT)
         self.assertEquals(data['pages'], math.ceil(1.0 * self.COUNT / 20))
         self.assertTrue('weights' in data, data)
-        self.assertTrue('tsexams->Wordpress Test' in resp.data)
+        self.assertTrue('tsexams->Ruby on Rails' in resp.data)
 
     def test_tree(self):
         resp = self.app.get('/cloudml/weights_tree/%s' % self.model._id)
