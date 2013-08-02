@@ -22,9 +22,8 @@
   <div class="control-group" ng-class="{error: Form.trainer.$invalid}">
     <label class="control-label">Model File Name</label>
     <div class="controls">
-      <input type="file" name="trainer" ng-model="model.trainer" json-file required />
+      <input type="file" name="trainer" ng-model="model.trainer" required-file required />
       <span ng-show="Form.trainer.$error.required" class="help-inline">*</span>
-      <span ng-show="Form.trainer.$error.jsonFile" class="help-block">Should be a valid json file</span>
       <span class="help-block">pickled trained model file</span>
     </div>
   </div>

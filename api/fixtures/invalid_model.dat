@@ -2,7 +2,7 @@ ccopy_reg
 _reconstructor
 p1
 (ccore.trainer.store
-TrainerStorage
+TrainerStorage1
 p2
 c__builtin__
 object

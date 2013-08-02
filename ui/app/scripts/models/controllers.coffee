@@ -48,10 +48,6 @@ angular.module('app.models.controllers', ['app.config', ])
 
   ($scope, Model) ->
     $scope.model = new Model()
-
-    $scope.setModelFile = (element) ->
-      $scope.$apply ($scope) ->
-        $scope.model.trainer = element.files[0]
 ])
 
 .controller('ModelDetailsCtrl', [
