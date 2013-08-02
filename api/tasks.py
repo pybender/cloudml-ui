@@ -1,17 +1,19 @@
+import os
 import json
 import logging
-from copy import copy
+import StringIO
+import csv
 from itertools import izip
 from bson.objectid import ObjectId
 from os.path import join, exists
 from os import makedirs, system
-from celery.task.sets import subtask
 from datetime import timedelta, datetime
+from boto.exception import EC2ResponseError
 
 from api import celery, app
-from api.models import Test
+from api.models import Test, Model
 from api.logger import init_logger
-from api.amazon_utils import AmazonEC2Helper
+from api.amazon_utils import AmazonEC2Helper, AmazonS3Helper
 from core.trainer.trainer import Trainer
 from core.trainer.config import FeatureModel
 from core.trainer.streamutils import streamingiterload
@@ -24,36 +26,72 @@ class InvalidOperationError(Exception):
 @celery.task
 def request_spot_instance(dataset_id=None, instance_type=None, model_id=None):
     init_logger('trainmodel_log', obj=model_id)
-    ec2 = AmazonEC2Helper()
-    logging.info('Request spot instance type: %s' % instance_type)
-    request = ec2.request_spot_instance(instance_type)
-    logging.info('Request id: %s:' % request.id)
+
+    model = app.db.Model.find_one({'_id': ObjectId(model_id)})
+    model.status = model.STATUS_REQUESTING_INSTANCE
+    model.save()
+
+    try:
+        ec2 = AmazonEC2Helper()
+        logging.info('Request spot instance type: %s' % instance_type)
+        request = ec2.request_spot_instance(instance_type)
+        logging.info('Request id: %s:' % request.id)
+    except EC2ResponseError as e:
+        model.set_error(e.error_message)
+        raise Exception(e.error_message)
+
+    model.spot_instance_request_id = request.id
+    model.save()
+
     return request.id
 
-@celery.task()                                                    
+
+@celery.task()
 def get_request_instance(request_id,
                          callback=None,
                          dataset_id=None,
                          model_id=None):
     init_logger('trainmodel_log', obj=model_id)
     ec2 = AmazonEC2Helper()
-    logging.info('Get spot instance request %s' %  request_id)
-    request = ec2.get_request_spot_instance(request_id)
-    if request.state == 'open':
-        logging.info('Instance did not run. Status: %s . Retry in 10s.' % request.state)
-        raise get_request_instance.retry(countdown=20, max_retries=30)
+    logging.info('Get spot instance request %s' % request_id)
 
-    if not request.state == 'active':
-        logging.info('Instance did not lunche. Status %s' % request.state)
-        raise Exception('Instance did not lunche')
+    model = app.db.Model.find_one({'_id': ObjectId(model_id)})
+
+    try:
+        request = ec2.get_request_spot_instance(request_id)
+    except EC2ResponseError as e:
+        model.set_error(e.error_message)
+        raise Exception(e.error_message)
+
+    if request.state == 'open':
+        logging.info('Instance was not ran. Status: %s . Retry in 10s.' % request.state)
+        raise get_request_instance.retry(countdown=app.config['REQUESTING_INSTANCE_COUNTDOWN'],
+                                         max_retries=app.config['REQUESTING_INSTANCE_MAX_RETRIES'])
+
+    if request.state == 'canceled':
+        logging.info('Instance was canceled.')
+        model.status = model.STATUS_CANCELED
+        model.save()
+        return None
+
+    if request.state != 'active':
+        logging.info('Instance was not launched. State is {0!s}, status is {1!s}, {2!s}.'.format(
+            request.state, request.status.code, request.status.message))
+        model.set_error('Instance was not launched')
+        raise Exception('Instance was not launched')
+
+    model.status = model.STATUS_INSTANCE_STARTED
+    model.save()
+
     logging.info('Get instance %s' % request.instance_id)
     instance = ec2.get_instance(request.instance_id)
+    logging.info('Instance %s(%s) lunched' %
+            (instance.id,
+             instance.private_ip_address))
     instance.add_tag('Name', 'cloudml-worker-auto')
     instance.add_tag('Owner', 'papadimitriou,nmelnik')
     instance.add_tag('Model_id', model_id)
-    logging.info('Instance %s(%s) lunched' % 
-            (instance.id,
-             instance.private_ip_address))
+    instance.add_tag('whoami', 'cloudml')
 
     if callback == "train":
         logging.info('Train model task apply async')
@@ -61,23 +99,42 @@ def get_request_instance(request_id,
         train_model.apply_async((dataset_id,
                                  model_id),
                                  queue=queue,
-                                 link=self_terminate.subtask(args=(),options={'queue':queue}),
-                                 link_error=self_terminate.subtask(args=(),options={'queue':queue})
+                                 link=terminate_instance.subtask(kwargs={'instance_id': instance.id}),
+                                 link_error=terminate_instance.subtask(kwargs={'instance_id': instance.id})
                                 )
     return instance.private_ip_address
 
 
-
 @celery.task
-def terminate_instance(instance_id):
+def terminate_instance(task_id=None, instance_id=None):
     ec2 = AmazonEC2Helper()
     ec2.terminate_instance(instance_id)
+    logging.info('Instance %s terminated' % instance_id)
 
 
 @celery.task
 def self_terminate(result=None):
     logging.info('Instance will be terminated')
     system("halt")
+
+
+@celery.task
+def cancel_request_spot_instance(request_id, model_id):
+    init_logger('trainmodel_log', obj=model_id)
+    model = app.db.Model.find_one({'_id': ObjectId(model_id)})
+
+    logging.info('Cancelling spot instance request {0!s} for model id {1!s}...'.format(
+        request_id, model_id))
+
+    try:
+        AmazonEC2Helper().cancel_request_spot_instance(request_id)
+        logging.info('Spot instance request {0!s} has been cancelled for model id {1!s}'.format(
+            request_id, model_id))
+        model.status = model.STATUS_CANCELED
+        model.save()
+    except EC2ResponseError as e:
+        model.set_error(e.error_message)
+        raise Exception(e.error_message)
 
 
 @celery.task
@@ -99,10 +156,12 @@ def import_data(dataset_id, model_id=None, test_id=None):
             obj = app.db.Test.find_one({'_id': ObjectId(test_id)})
 
         if obj:
-            obj.status = obj.STATUS_IMPORTINING
+            obj.status = obj.STATUS_IMPORTING
             obj.save()
         init_logger('importdata_log', obj=dataset_id)
         logging.info('Loading dataset %s' % dataset._id)
+
+        import_start_time = datetime.now()
 
         logging.info("Import dataset using import handler '%s' \
 with%s compression", importhandler.name, '' if dataset.compress else 'out')
@@ -113,6 +172,14 @@ with%s compression", importhandler.name, '' if dataset.compress else 'out')
         handler.store_data_json(dataset.filename, dataset.compress)
         logging.info('Import dataset completed')
 
+        logging.info('Retrieving data fields')
+        row = None
+        with dataset.get_data_stream() as fp:
+            row = next(fp)
+        if row:
+            dataset.data_fields = json.loads(row).keys()
+        logging.info('Dataset fields: {0!s}'.format(dataset.data_fields))
+
         logging.info('Saving file to Amazon S3')
         dataset.save_to_s3()
         logging.info('File saved to Amazon S3')
@@ -121,7 +188,13 @@ with%s compression", importhandler.name, '' if dataset.compress else 'out')
         if obj:
             obj.status = obj.STATUS_IMPORTED
             obj.save()
+
+        dataset.filesize = long(os.path.getsize(dataset.filename))
+        dataset.records_count = handler.count
+        dataset.time = (datetime.now() - import_start_time).seconds
+
         dataset.save(validate=True)
+
         logging.info('DataSet was loaded')
     except Exception, exc:
         logging.exception('Got exception when import dataset')
@@ -157,12 +230,18 @@ def train_model(dataset_id, model_id):
         if not exists(path):
             makedirs(path)
         train_fp = dataset.get_data_stream()
-        trainer.train(streamingiterload(train_fp))
+
+        from memory_profiler import memory_usage
+        mem_usage = memory_usage((trainer.train, (streamingiterload(train_fp),)), interval=0)
+
         train_fp.close()
         trainer.clear_temp_data()
+
         model.status = model.STATUS_TRAINED
         model.set_trainer(trainer)
+        model.memory_usage['training'] = max(mem_usage)
         model.save()
+
         fill_model_parameter_weights.delay(str(model._id))
     except Exception, exc:
         logging.exception('Got exception when train model')
@@ -233,14 +312,14 @@ def fill_model_parameter_weights(model_id, reload=False):
                                    'is_positive': bool(weight['weight'] > 0),
                                    'css_class': weight['css_class']})
                     weight = app.db.Weight(params)
-                    weight.save(validate=True, check_keys=False, safe=False)
+                    weight.save(validate=True, check_keys=False)
                 else:
                     if sname not in category_names:
                         # Adding a category, if it has not already added
                         category_names.append(sname)
                         params.update({'name': long_name})
                         category = app.db.WeightsCategory(params)
-                        category.save(validate=True, check_keys=False, safe=False)
+                        category.save(validate=True, check_keys=False)
 
         model.weights_synchronized = True
         model.save()
@@ -272,7 +351,10 @@ def run_test(dataset_id, test_id):
         test.error = ""
         test.save()
 
-        metrics, raw_data = model.run_test(dataset)
+        from memory_profiler import memory_usage
+        mem_usage, result = memory_usage((Model.run_test, (model, dataset, )),
+                                         interval=0, retval=True)
+        metrics = result
         test.accuracy = metrics.accuracy
 
         metrics_dict = metrics.get_metrics_dict()
@@ -284,7 +366,8 @@ def run_test(dataset_id, test_id):
         for i, val in enumerate(metrics.classes_set):
             confusion_matrix_ex.append((str(val), confusion_matrix[i]))
         metrics_dict['confusion_matrix'] = confusion_matrix_ex
-        n = len(raw_data) / 100 or 1
+
+        n = len(metrics._labels) / 100 or 1
         metrics_dict['roc_curve'][1] = metrics_dict['roc_curve'][1][0::n]
         metrics_dict['roc_curve'][0] = metrics_dict['roc_curve'][0][0::n]
         metrics_dict['precision_recall_curve'][1] = \
@@ -303,6 +386,7 @@ def run_test(dataset_id, test_id):
 
         all_count = metrics._preds.size
         test.examples_count = all_count
+        test.memory_usage['testing'] = max(mem_usage)
         test.save()
 
         def store_examples(items):
@@ -337,7 +421,8 @@ def run_test(dataset_id, test_id):
                     continue
                 example.save(check_keys=False)
 
-        examples = izip(raw_data,
+        fp = dataset.get_data_stream()
+        examples = izip(streamingiterload(fp),
                         metrics._labels,
                         metrics._preds,
                         metrics._probs,
@@ -383,6 +468,7 @@ def calculate_confusion_matrix(test_id, weight0, weight1):
         true_value_idx = model.labels.index(example['label'])
 
         prob0, prob1 = example['prob'][:2]
+
         weighted_sum = weight0 * prob0 + weight1 * prob1
         weighted_prob0 = weight0 * prob0 / weighted_sum
         weighted_prob1 = weight1 * prob1 / weighted_sum
@@ -391,6 +477,75 @@ def calculate_confusion_matrix(test_id, weight0, weight1):
         matrix[true_value_idx][predicted] += 1
 
     return matrix
+
+
+@celery.task
+def get_csv_results(model_id, test_id, fields):
+    """
+    Get test classification results using csv format.
+    """
+    def generate(test, name):
+        path = app.config['DATA_FOLDER']
+        if not exists(path):
+            makedirs(path)
+        filename = os.path.join(path, name)
+
+        with open(filename, 'w') as fp:
+            writer = csv.writer(fp, delimiter=',',
+                                quoting=csv.QUOTE_ALL)
+            writer.writerow(fields)
+            for example in test.get_examples_full_data(None):
+                rows = []
+                for field in fields:
+                    val = example[field] if field in example else ''
+                    rows.append(val)
+                writer.writerow(rows)
+        return filename
+
+    init_logger('get_csv_results_log', obj=test_id)
+
+    import uuid
+
+    test = app.db.Test.find_one({
+        'model_id': model_id,
+        '_id': ObjectId(test_id)
+    })
+    if not test:
+        logging.error('Test not found')
+        return None
+
+    name = 'Examples-{0!s}.csv'.format(uuid.uuid1())
+    expires = 60 * 60 * 24 * 7  # 7 days
+    test.exports.append({
+        'name': name,
+        'fields': fields,
+        'status': Test.EXPORT_STATUS_IN_PROGRESS,
+        'datetime': datetime.now(),
+        'url': None,
+        'type': 'csv',
+        'expires': datetime.now() + timedelta(seconds=expires)
+    })
+    test.save()
+
+    logging.info('Creating file {0}...'.format(name))
+
+    s3 = AmazonS3Helper()
+    filename = generate(test, name)
+    logging.info('Uploading file {0} to s3...'.format(filename))
+    s3.save_key(name, filename, {
+        'model_id': model_id,
+        'test_id': test_id}, compressed=False)
+    s3.close()
+    os.remove(filename)
+    url = s3.get_download_url(name, expires)
+
+    export = next((ex for ex in test.exports if ex['name'] == name))
+    export['url'] = url
+    export['status'] = Test.EXPORT_STATUS_COMPLETED
+    export['expires'] = datetime.now() + timedelta(seconds=expires)
+    test.save()
+
+    return url
 
 
 def decode(row):

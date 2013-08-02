@@ -40,6 +40,7 @@ class TestTasksTests(BaseTestCase):
 
         _assertMatrix(1, 1, [[1, 1], [0, 2]])
         _assertMatrix(0.5, 0.5, [[1, 1], [0, 2]])
+
         _assertMatrix(1, 10, [[0, 2], [0, 2]])
         _assertMatrix(1, 100, [[0, 2], [0, 2]])
         _assertMatrix(10, 1, [[2, 0], [2, 0]])

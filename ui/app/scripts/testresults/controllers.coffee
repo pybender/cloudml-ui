@@ -97,7 +97,7 @@ without test id and model id"
       switch section_name
         when 'about'
           extra_fields = 'classes_set,created_on,parameters,error,
-examples_count,dataset'
+examples_count,dataset,memory_usage'
         when 'metrics'
           extra_fields = 'accuracy,metrics.precision_recall_curve,
 metrics.roc_curve,metrics.roc_auc'
@@ -153,4 +153,32 @@ metrics.roc_curve,metrics.roc_auc'
       d.test = $scope.test
       d.open('partials/testresults/delete_popup.html', 'DeleteTestCtrl')
   
+])
+
+.controller('TestExportsCtrl', [
+  '$scope'
+
+  ($scope) ->
+    $scope.exports = []
+
+    $scope.init = (test) =>
+      $scope.test = test
+      $scope.reload()
+
+    $scope.reload = () ->
+      $scope.test.$get_exports().then((resp) ->
+        $scope.exports = resp.data.exports
+        statuses = []
+        statuses.push e.status for e in $scope.exports
+        if 'In Progress' in statuses
+          window.setTimeout(
+            () ->$scope.reload()
+            1000)
+      )
+
+    $scope.$on('exportsChanged', () ->
+      window.setTimeout(
+        () ->$scope.reload()
+        1000)
+    )
 ])

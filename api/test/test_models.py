@@ -1,88 +1,48 @@
 import httplib
 import json
+from mock import patch
 
-from utils import MODEL_ID, BaseTestCase
+from utils import MODEL_ID, BaseTestCase, FEATURE_COUNT, TARGET_VARIABLE
 from bson.objectid import ObjectId
 from api.utils import ERR_INVALID_DATA
+from api.views import Models as ModelsResource
 
 
 class ModelTests(BaseTestCase):
     """
     Tests of the Models API.
     """
+    INSTANCE_ID = '5170dd3a106a6c1631000000'
     MODEL_NAME = 'TrainedModel'
-    FIXTURES = ('importhandlers.json', 'models.json', 'tests.json', 'examples.json', 'datasets.json',
+    RELATED_PARAMS = {'model_id': MODEL_ID, 'model_name': MODEL_NAME}
+    FIXTURES = ('importhandlers.json', 'models.json',
+                'tests.json', 'examples.json', 'datasets.json',
                 'weights.json', 'instances.json', )
+    RESOURCE = ModelsResource
     BASE_URL = '/cloudml/models/'
 
     def setUp(self):
         super(ModelTests, self).setUp()
-        self.model = self.db.Model.find_one({'name': self.MODEL_NAME})
+        self.Model = self.db.Model
+        self.obj = self.model = self.db.Model.find_one({
+            '_id': ObjectId(MODEL_ID)})
 
     def test_list(self):
-        resp = self.app.get(self.BASE_URL)
-        self.assertEquals(resp.status_code, httplib.OK)
-        data = json.loads(resp.data)
-        self.assertTrue('models' in data, data)
-        models_resp = data['models']
-        count = self.db.Model.find().count()
-        self.assertEquals(count, len(data['models']))
-        self.assertEquals(models_resp[0].keys(), [u'_id', u'name'])
-
-        url = self._get_url(show='created_on,updated_on')
-        resp = self.app.get(url)
-        self.assertEquals(resp.status_code, httplib.OK)
-        data = json.loads(resp.data)
-        models_resp = data['models']
-        self.assertEquals(models_resp[0].keys(),
-                          [u'updated_on', u'created_on', u'_id'])
+        self._check_list(show='')
+        self._check_list(show='created_on,updated_on')
 
     def test_filter(self):
-        url = self._get_url(status='New')
-        resp = self.app.get(url)
-        self.assertEquals(resp.status_code, httplib.OK)
-        data = json.loads(resp.data)
-        count = self.db.Model.find({'status': 'New'}).count()
-        self.assertEquals(count, len(data['models']))
+        self._check_filter({'status': 'New'})
+        # No name filter - all models should be returned
+        self._check_filter({'name': 'Test'}, {})
 
-        url = self._get_url(name='Test')
-        resp = self.app.get(url)
-        self.assertEquals(resp.status_code, httplib.OK)
-        data = json.loads(resp.data)
-        count = self.db.Model.find().count()
-        self.assertEquals(count, len(data['models']), 'No name \
-filter - all models should be returned')
-
-    def test_comparable_filter(self):
-        def _check(comparable):
-            url = self._get_url(comparable=int(comparable))
-            resp = self.app.get(url)
-            self.assertEquals(resp.status_code, httplib.OK)
-            data = json.loads(resp.data)
-            count = self.db.Model.find({'comparable': comparable}).count()
-            self.assertEquals(count, len(data['models']))
-
-        _check(True)
-        _check(False)
+        # Comparable filter
+        self._check_filter({'comparable': 1}, {'comparable': True})
+        self._check_filter({'comparable': 0}, {'comparable': False})
 
     def test_details(self):
-        url = self._get_url(id=self.model._id)
-        resp = self.app.get(url)
-        self.assertEquals(resp.status_code, httplib.OK)
-        data = json.loads(resp.data)
-        self.assertTrue('model' in data, data)
-        model_resp = data['model']
-        self.assertEquals(str(self.model._id), model_resp['_id'])
-        self.assertEquals(self.model.name, model_resp['name'])
-
-        url = self._get_url(id=self.model._id, show='created_on,labels')
-        resp = self.app.get(url)
-        self.assertEquals(resp.status_code, httplib.OK)
-        data = json.loads(resp.data)
-        model_resp = data['model']
-        self.assertEquals(model_resp.keys(),
-                          [u'created_on', u'labels', u'_id'])
-        self.assertEquals(self.model.labels, model_resp['labels'])
+        self._check_details(show='')
+        self._check_details(show='created_on,labels')
 
     def test_download(self):
         def check(field, is_invalid=False):
@@ -101,79 +61,76 @@ filter - all models should be returned')
         check('invalid', is_invalid=True)
 
     def test_post_without_name(self):
-        uri = self.BASE_URL
-        post_data = {'importhandler': 'smth'}
-        self._checkValidationErrors(uri, post_data, 'name is required')
+        self._check_post({'importhandler': 'smth'},
+                         error='name is required')
 
     def test_post_with_invalid_features(self):
-        uri = self.BASE_URL
-        hanlder = open('./conf/extract.json', 'r').read()
-        post_data = {'test_import_handler_file': hanlder,
-                     'train_import_handler_file': hanlder,
+        handler = open('./conf/extract.json', 'r').read()
+        post_data = {'test_import_handler_file': handler,
+                     'train_import_handler_file': handler,
                      'name': 'new'}
-        self._checkValidationErrors(uri, post_data, 'Either features, either \
+        self._check_post(post_data, error='Either features, either \
 pickled trained model is required for posting model')
 
-        post_data = {'importhandler': hanlder, 'features': 'smth',
+        post_data = {'importhandler': handler,
+                     'features': 'smth',
                      'name': 'new'}
-        self._checkValidationErrors(uri, post_data, 'Invalid features: \
+        self._check_post(post_data, error='Invalid features: \
 smth No JSON object could be decoded')
 
-        post_data = {'importhandler': 'smth', 'features': '{"a": "1"}',
+        post_data = {'importhandler': 'smth',
+                     'features': '{"a": "1"}',
                      'name': 'new'}
-        self._checkValidationErrors(uri, post_data, 'Invalid features: \
+        self._check_post(post_data, error='Invalid features: \
 schema-name is missing')
 
     def test_post_with_invalid_trainer(self):
         handler = open('./conf/extract.json', 'r').read()
         trainer = open('./api/fixtures/invalid_model.dat', 'r')
-        post_data = {'importhandler': handler,
+        post_data = {'test_import_handler_file': handler,
+                     'train_import_handler_file': handler,
                      'trainer': trainer,
                      'name': 'new'}
-        self._checkValidationErrors(self.BASE_URL, post_data,
-                                    'Invalid trainer: Could \
-not unpickle trainer - could not find MARK')
-
-        handler = open('./conf/extract.json', 'r').read()
-        trainer = open('./api/fixtures/invalid_testmodel.dat', 'r')
-        post_data = {'importhandler': handler,
-                     'trainer': trainer,
-                     'name': 'new'}
-        self._checkValidationErrors(self.BASE_URL, post_data,
-                                    "Invalid trainer: Could not unpickle \
-trainer - 'module' object has no attribute 'FeatureTypeInstance'")
+        self._check_post(post_data, error="Invalid trainer")
 
     def test_post_new_model(self, name='new'):
-        count = self.db.Model.find().count()
-        features = open('./conf/features.json', 'r').read()
+        #count = self.db.Model.find().count()
         handler = open('./conf/extract.json', 'r').read()
         post_data = {'test_import_handler_file': handler,
                      'train_import_handler_file': handler,
-                     'features': features,
+                     'features': open('./conf/features.json', 'r').read(),
                      'name': name}
-        resp = self.app.post(self.BASE_URL, data=post_data)
-        self.assertEquals(resp.status_code, httplib.CREATED)
-        self.assertTrue('model' in resp.data)
-        new_count = self.db.Model.find().count()
-        self.assertEquals(count + 1, new_count)
+        resp, model = self._check_post(post_data, load_model=True)
+        self.assertEquals(model.name, name)
+        self.assertEquals(model.status, model.STATUS_NEW)
+        self.assertTrue(model.test_import_handler,
+                        "Test import handler was not set")
+        self.assertTrue(model.train_import_handler,
+                        "Train import handler was not set")
+        self.assertTrue(model.features, "Features was not set")
+        self.assertEquals(model.labels, [],
+                          "Labels is empty for recently posted model")
+        self.assertFalse(model.dataset)
+        self.assertEquals(model.feature_count, FEATURE_COUNT)
+        self.assertEquals(model.target_variable, TARGET_VARIABLE)
+        self.assertFalse(model.example_id)
+        self.assertFalse(model.example_label)
+        self.assertFalse(model.comparable)
+        self.assertEquals(model.tags, [])
+        self.assertFalse(model.weights_synchronized)
+        self.assertFalse(model.error)
 
     def test_post_trained_model(self):
-        count = self.db.Model.find().count()
         name = 'new2'
         handler = open('./conf/extract.json', 'r').read()
-        trainer = open('./api/test/model.dat', 'r')
+        trainer = open('./api/fixtures/model.dat', 'r').read()
         post_data = {'test_import_handler_file': handler,
                      'train_import_handler_file': handler,
                      'trainer': trainer,
                      'name': name}
-        resp = self.app.post(self.BASE_URL, data=post_data)
-        self.assertEquals(resp.status_code, httplib.CREATED)
-        self.assertTrue('model' in resp.data, resp.data)
-        new_count = self.db.Model.find().count()
-        self.assertEquals(count + 1, new_count)
-
-        model = self.db.Model.find_one({'name': name})
+        resp, model = self._check_post(post_data, load_model=True)
         self.assertEquals(model.name, name)
+        self.assertEquals(model.status, model.STATUS_TRAINED)
         self.assertTrue(model.fs.trainer)
 
     def test_edit_model(self):
@@ -181,138 +138,121 @@ trainer - 'module' object has no attribute 'FeatureTypeInstance'")
         data = {'name': 'new name',
                 'example_id': 'some_id',
                 'example_label': 'some_label', }
-        resp = self.app.put(self._get_url(id=self.model._id), data=data)
-        self.assertEquals(resp.status_code, httplib.OK)
+        resp, model = self._check_put(data, load_model=True)
         data = json.loads(resp.data)
-        model = self.db.Model.find_one({'_id': ObjectId(self.model._id)})
-        self.assertEquals(data['model']['_id'], str(model._id))
         self.assertEquals(data['model']['name'], str(model.name))
         self.assertEquals(model.example_id, 'some_id')
         self.assertEquals(model.example_label, 'some_label')
 
     def test_edit_model_name(self):
         data = {'name': 'new name %@#'}
-        resp = self.app.put(self._get_url(id=self.model._id), data=data)
-        self.assertEquals(resp.status_code, httplib.OK)
+        resp, model = self._check_put(data, load_model=True)
         data = json.loads(resp.data)
-        model = self.db.Model.find_one(id=self.model._id)
-        self.assertEquals(data['model']['name'], 'new name %@#')
-        self.assertEquals(model.name, 'new name %@#')
+        self.assertTrue(model.name == data['model']['name'] ==
+                        'new name %@#')
 
-    def test_train_model(self):
-        url = self._get_url(id=self.model._id, action='train')
+    def test_train_model_validation_errors(self):
+        self.assertTrue(self.model.status, "New")
+        self._check_put({}, action='train',
+                        error='One of spot_instance_type, \
+aws_instance is required')
 
-        # Setting import handler for train
-        handler = self.db.ImportHandler.find_one({'_id': ObjectId('5170dd3a106a6c1631000000')})
-        self.assertTrue(handler, 'Invalid fixtures: import handlers')
-        self.model.train_import_handler = handler
-        self.model.save()
-        inst = self.db.Instance.find_one({'_id': ObjectId('5170dd3a106a6c1631000000')})
-        self.assertTrue(inst, 'Invalid fixtures: instances')
+        data = {'aws_instance': self.INSTANCE_ID,
+                'start': '2012-12-03'}
+        self._check_put(data, action='train',
+                        error='Parameters category, end are required')
 
-        data = {}
-        resp = self.app.put(url, data=data)
-        self.assertTrue(resp.status_code, httplib.BAD_REQUEST)
-        self.assertTrue('One of spot_instance_type, aws_instance is required' in resp.data, resp.data)
-
-        data = {'aws_instance': str(inst._id)}
-        resp = self.app.put(url, data=data)
-        self.assertTrue(resp.status_code, httplib.BAD_REQUEST)
-        self.assertTrue('One of parameters, dataset is required' in resp.data,
-                        resp.data)
+        data = {'aws_instance': self.INSTANCE_ID}
+        self._check_put(data, action='train',
+                        error='One of parameters, dataset is required')
 
         # Tests specifying dataset
-        data['dataset'] = '5170dd3a106a6c1631000001'
-        resp = self.app.put(url, data=data)
-        self.assertTrue(resp.status_code, httplib.BAD_REQUEST)
-        self.assertTrue('DataSet not found' in resp.data, resp.data)
+        data['dataset'] = '000000000000000000000001'
+        self._check_put(data, action='train',
+                        error='DataSet not found')
 
-        data['dataset'] = '5270dd3a106a6c1631000000'
-        resp = self.app.put(url, data=data)
-        self.assertTrue(resp.status_code, httplib.OK)
+    def test_train_model_with_dataset(self):
+        # TODO: Check with dataset from another handler
+        handler_id = str(self.obj.train_import_handler._id)
+        ds = self.db.DataSet.find({
+            'import_handler_id': handler_id})[0]
+        data = {'aws_instance': self.INSTANCE_ID,
+                'dataset': str(ds._id)}
+        resp, model = self._check_put(data, action='train', load_model=True)
         model_resp = json.loads(resp.data)['model']
         self.assertEquals(model_resp["status"], "Queued")
         self.assertEquals(model_resp["name"], self.model.name)
+        # NOTE: Make sure that ds.gz file exist in test_data folder
+        self.assertEqual(model.status, model.STATUS_TRAINED, model.error)
 
-        # Tests specifying loading data parameters
-        data = {'aws_instance': str(inst._id),
-                'start': '2012-12-03'}
-        resp = self.app.put(url, data=data)
-        self.assertTrue(resp.status_code, httplib.BAD_REQUEST)
-        self.assertTrue('Parameters category, end are required' in resp.data, resp.data)
+        # TODO: check other fields of the model
 
-        data.update({'end': '2012-12-04',
-                     'category': '1'})
-        self.assertTrue(resp.status_code, httplib.OK)
+    @patch('api.models.DataSet.save_to_s3')
+    def test_train_model_with_load_params(self, save_to_s3_mock):
+        data = {'aws_instance': self.INSTANCE_ID,
+                'start': '2012-12-03',
+                'end': '2012-12-04',
+                'category': '1'}
+        resp, model = self._check_put(data, action='train',
+                                      load_model=True)
+        model_resp = json.loads(resp.data)['model']
+        self.assertEquals(model_resp["status"], "Queued")
+        self.assertEquals(model_resp["name"], self.model.name)
+        self.assertEqual(model.status, model.STATUS_TRAINED)
 
-    def test_retrain_model(self):
-        model_filter_params = {'model_name': self.MODEL_NAME,
-                               'model_id': MODEL_ID}
-        self.assertEquals(self.model.status, "Trained")
+        # TODO: check other fields of the model
 
-        def check(Model, exist=True, msg=''):
-            """
-            Checks whether documents exist.
-            """
-            obj_list = Model.find(model_filter_params)
-            self.assertEqual(bool(obj_list.count()), exist, msg)
-            return obj_list
+    @patch('api.models.DataSet.save_to_s3')
+    def test_retrain_model(self, save_to_s3_mock):
+        self.assertEquals(self.obj.status, "Trained")
+        self.check_related_docs_existance(self.db.Test)
+        self.check_related_docs_existance(self.db.TestExample)
+        self.check_related_docs_existance(self.db.Weight)
+        self.check_related_docs_existance(self.db.WeightsCategory)
 
-        check(self.db.Test)
-        check(self.db.TestExample)
-        check(self.db.Weight)
-        check(self.db.WeightsCategory)
-
-        url = self._get_url(id=self.model._id, action='train')
         data = {'start': '2012-12-03',
                 'end': '2012-12-04',
                 'category': 'smth',
-                'aws_instance': '5170dd3a106a6c1631000000'}
-        resp = self.app.put(url, data=data)
-        self.assertTrue(str(self.model._id) in resp.data, resp.data)
+                'aws_instance': self.INSTANCE_ID}
+        resp, model = self._check_put(data, action='train',
+                                      load_model=True)
+        self.assertEquals(model.status, model.STATUS_TRAINED)
 
-        check(self.db.Test, exist=False,
-              msg='Tests should be removed after retrain model')
-        check(self.db.TestExample, exist=False,
-              msg='Tests Examples should be removed after retrain model')
-        weights = self.db.Weight.find(model_filter_params)
-        self.assertEquals(weights.count(), 319)
-        categories = self.db.WeightsCategory.find(model_filter_params)
+        self.check_related_docs_existance(self.db.Test, exist=False,
+                                          msg='Tests should be removed \
+after retrain model')
+        self.check_related_docs_existance(self.db.TestExample, exist=False,
+                                          msg='Tests Examples should be \
+removed after retrain model')
+
+        # Checking weights
+        self.assertTrue(model.weights_synchronized)
+        tr_weights = self.model.get_trainer().get_weights()
+        valid_count = len(tr_weights['positive']) + len(tr_weights['negative'])
+        weights = self.db.Weight.find(self.RELATED_PARAMS)
+
+        self.assertEquals(weights.count(), valid_count)
+        categories = self.db.WeightsCategory.find(self.RELATED_PARAMS)
         self.assertEquals(categories.count(), 6)
         self.model = self.db.Model.find_one({'_id': self.model._id})
         self.assertEquals(self.model.status, 'Trained')
 
     def test_delete(self):
-        url = self._get_url(id=self.model._id)
-        resp = self.app.get(url)
-        self.assertEquals(resp.status_code, httplib.OK)
+        self.check_related_docs_existance(self.db.Test)
+        self.check_related_docs_existance(self.db.TestExample)
 
-        resp = self.app.delete(url)
-        self.assertEquals(resp.status_code, 204)
-
-        model = self.db.Model.find_one({'name': self.MODEL_NAME})
-        self.assertEquals(model, None, model)
+        self._check_delete()
 
         # Check wheither tests and examples was deleted
-        params = {'model_name': self.MODEL_NAME}
-        tests = self.db.Test.find(params).count()
-        self.assertFalse(tests, "%s tests was not deleted" % tests)
-        other_examples = self.db.Test.find().count()
-        self.assertTrue(other_examples, "All tests was deleted!")
+        self.check_related_docs_existance(self.db.Test, exist=False,
+                                          msg='Tests should be removed \
+when remove model')
+        self.check_related_docs_existance(self.db.TestExample, exist=False,
+                                          msg='Tests Examples should be \
+when remove model')
 
-        examples = self.db.TestExample.find(params).count()
-        self.assertFalse(examples, "%s test examples was not \
-deleted" % examples)
-        other_examples = self.db.TestExample.find().count()
-        self.assertTrue(other_examples, "All examples was deleted!")
-
-    def _checkValidationErrors(self, uri, post_data, message,
-                               code=ERR_INVALID_DATA,
-                               status_code=httplib.BAD_REQUEST):
-        resp = self.app.post(uri, data=post_data)
-        self.assertEquals(resp.status_code, status_code)
-        data = json.loads(resp.data)
-        err_data = data['response']['error']
-        self.assertEquals(err_data['code'], code)
-        self.assertTrue(message in err_data['message'],
-                        "Response message is: %s" % err_data['message'])
+        # Checks whether not all docs was deleted
+        self.assertTrue(self.db.Test.find().count(),
+                        "All tests was deleted!")
+        self.assertTrue(self.db.TestExample.find().count(),
+                        "All examples was deleted!")

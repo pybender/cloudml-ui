@@ -16,6 +16,7 @@ CELERY_ENABLE_UTC = True
 BROKER_URL = 'amqp://guest:guest@localhost:5672//'
 CELERY_RESULT_BACKEND = ''
 CELERY_IMPORTS = ('api.models', 'api', 'api.tasks')
+CELERYD_MAX_TASKS_PER_CHILD = 1
 
 from kombu import Queue
 
@@ -27,6 +28,38 @@ CELERY_DEFAULT_EXCHANGE = 'tasks'
 CELERY_DEFAULT_EXCHANGE_TYPE = 'topic'
 CELERY_DEFAULT_ROUTING_KEY = 'task.default'
 
+REQUESTING_INSTANCE_COUNTDOWN = 20
+REQUESTING_INSTANCE_MAX_RETRIES = 30
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': True,
+    'formatters': {
+        'normal': {
+            'format': '[%(asctime)s] %(levelname)s - %(message)s'
+        },
+    },
+    'filters': {},
+    'handlers': {
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'normal'
+        },
+    },
+    'loggers': {
+        'root': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'boto': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    }
+}
 
 try:
     from api.local_config import *

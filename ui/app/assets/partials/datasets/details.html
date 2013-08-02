@@ -44,6 +44,15 @@
     <div>
         Import Params: <span class="value">{{ dataset.import_params }}</span>
     </div>
+    <div>
+        File Size: <span class="value">{{ dataset.filesize|bytes }}</span>
+    </div>
+    <div>
+        Records Count: <span class="value">{{ dataset.records_count|number }}</span>
+    </div>
+    <div>
+        Loading time, seconds: <span class="value">{{ dataset.time|number }}</span>
+    </div>
   </div>
 
   <div ng-show="action[0] == 'log'" ng-controller="LogMessageListCtrl" ng-init="init('importdata_log', dataset._id)">

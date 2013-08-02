@@ -51,6 +51,10 @@ App.config([
       templateUrl: '/partials/models/model_details.html'
       reloadOnSearch: false
     })
+    .when('/models/:model_id/tests', {
+      redirectTo: (params, loc) ->
+        return 'models/' + params.model_id + '?action=test:list'
+    })
     .when('/models/:model_id/tests/:id', {
       controller: 'TestDetailsCtrl'
       templateUrl: '/partials/testresults/test_details.html'
@@ -149,7 +153,7 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings',
           $rootScope.log_messages.push(data['data']['msg']))
     log_sse.addEventListener('message', handleCallback)
 
-  $rootScope.openDialog = ($dialog, model, templete, ctrlName,
+  $rootScope.openDialog = ($dialog, model, template, ctrlName,
                            cssClass='modal', action='', path='#') ->
     d = $dialog.dialog(
       modalFade: false
@@ -158,7 +162,7 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings',
     d.model = model
     d.action = action
     d.path = path
-    d.open(templete, ctrlName)
+    d.open(template, ctrlName)
     return d
 
   DEFAULT_ACTION = "model:details"

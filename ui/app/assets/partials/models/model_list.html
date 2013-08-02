@@ -61,6 +61,9 @@
           <a ng-show="model.status == 'Trained'" href="{{ model.downloadUrl() }}?field=trainer" class="btn btn-info">
             <i title="Download model trainer." class="icon-download-alt"></i>
           </a>
+          <button ng-show="model.status == 'Requesting Instance'" ng-click="cancel_request_spot_instance(model)" class="btn btn-danger">
+            Cancel requesting instance
+          </button>
           <button ng-click="delete_model(model)" class="btn btn-danger">
             <i title="Delete your model. Be careful - you could not recover it!" class="icon-remove"></i>
           </button>

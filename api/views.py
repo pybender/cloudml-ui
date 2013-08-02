@@ -1,12 +1,10 @@
+from collections import defaultdict
+from datetime import datetime
 import json
 import logging
-import cPickle as pickle
 import traceback
-import StringIO
-import csv
 from flask.ext.restful import reqparse
 from flask import request, Response
-from celery import subtask
 
 import gevent
 from pymongo.errors import OperationFailure
@@ -19,7 +17,8 @@ from api.utils import crossdomain, ERR_INVALID_DATA, odesk_error_response, \
 from api.resources import BaseResource, NotFound, ValidationError
 from api.forms import ModelAddForm, ModelEditForm, ImportHandlerAddForm, \
     AddTestForm, InstanceAddForm, InstanceEditForm, ImportHandlerEditForm
-from core.importhandler.importhandler import ExtractionPlan, RequestImportHandler
+from core.importhandler.importhandler import ExtractionPlan, \
+    RequestImportHandler
 
 model_parser = reqparse.RequestParser()
 model_parser.add_argument('importhandler', type=str,
@@ -75,7 +74,7 @@ class Models(BaseResource):
     Models API methods
     """
     GET_ACTIONS = ('download', 'reload', 'by_importhandler')
-    PUT_ACTIONS = ('train', 'tags')
+    PUT_ACTIONS = ('train', 'tags', 'cancel_request_instance')
     FILTER_PARAMS = (('status', str), ('comparable', int), ('tag', str))
     DEFAULT_FIELDS = ('_id', 'name')
     methods = ('GET', 'OPTIONS', 'DELETE', 'PUT', 'POST')
@@ -88,7 +87,7 @@ class Models(BaseResource):
     DOWNLOAD_FIELDS = ('trainer', 'features')
 
     @property
-    def Model(self):        
+    def Model(self):
         return app.db.Model
 
     def _get_model_parser(self, **kwargs):
@@ -158,6 +157,7 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
     def _put_train_action(self, **kwargs):
         from api.tasks import train_model, import_data, \
             request_spot_instance, self_terminate, get_request_instance
+        from api.tasks import cancel_request_spot_instance
         from api.forms import ModelTrainForm
         from celery import chain
         obj = self._get_details_query(None, None, **kwargs)
@@ -183,19 +183,19 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
             if not spot_instance_type is None:
                 tasks_list.append(request_spot_instance.s(instance_type=spot_instance_type,
                                                           model_id=str(model._id)))
-                tasks_list.append(get_request_instance.subtask((),
-                  {'callback':'train',
-                   'dataset_id':str(dataset._id),
-                   'model_id':str(model._id)},
-                                          retry=True,
-                                          countdown=10,
-                                          retry_policy={
-                                                        'max_retries': 3,
-                                                        'interval_start': 5,
-                                                        'interval_step': 5,
-                                                        'interval_max': 10
-                                                        }
-                                            ))
+                tasks_list.append(get_request_instance.subtask(
+                    (),
+                    {'callback': 'train',
+                     'dataset_id': str(dataset._id),
+                     'model_id': str(model._id)},
+                    retry=True,
+                    countdown=10,
+                    retry_policy={
+                        'max_retries': 3,
+                        'interval_start': 5,
+                        'interval_step': 5,
+                        'interval_max': 10
+                        }))
                 #tasks_list.append(self_terminate.s())
             elif not instance is None:
                 if form.params_filled:
@@ -203,26 +203,18 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
                 else:
                     train_model_args = (str(dataset._id), str(model._id))
                 tasks_list.append(train_model.subtask(train_model_args, {},
-                                                queue=instance['name']))
+                                                      queue=instance['name']))
             chain(tasks_list).apply_async()
-            # if form.params_filled:
-            #     # load and train
-            #     from api.models import ImportHandler
-            #     import_handler = ImportHandler(model.train_import_handler)
-            #     params = form.cleaned_data.get('parameters', None)
-            #     dataset = import_handler.create_dataset(params)
-            #     import_data.apply_async(kwargs={'dataset_id': str(dataset._id),
-            #                                     'model_id': str(model._id)},
-            #                             link=train_model.subtask(args=(str(model._id), ),
-            #                             options={'queue': instance['name']}))
-            #     #train_model.delay(str(model._id), params)
-            # else:
-            #     # train using dataset
-            #     dataset = form.cleaned_data.get('dataset', None)
-            #     train_model.apply_async((str(dataset._id),
-            #                             str(model._id),),
-            #                             queue=instance['name'])
             return self._render(self._get_save_response_context(model, extra_fields=['status']))
+
+    def _put_cancel_request_instance_action(self, **kwargs):
+        from api.tasks import cancel_request_spot_instance
+        model = self._get_details_query(None, None, **kwargs)
+        request_id = model.get('spot_instance_request_id')
+        if request_id and model.status == model.STATUS_REQUESTING_INSTANCE:
+            cancel_request_spot_instance.delay(request_id, str(model._id))
+            model.status = model.STATUS_CANCELED
+        return self._render(self._get_save_response_context(model, extra_fields=['status']))
 
 api.add_resource(Models, '/cloudml/models/')
 
@@ -361,7 +353,7 @@ class DataSetResource(BaseResource):
 
     def post(self, **kwargs):
         """
-        Loads dataset using specimodel.get_s3_download_url()fied import handler.
+        Loads dataset using specified import handler.
         """
         from api.tasks import import_data
         handler_id = kwargs.get('import_handler_id')
@@ -381,7 +373,8 @@ class DataSetResource(BaseResource):
         dataset.save(validate=True)
         dataset.set_file_path()
         import_data.delay(str(dataset._id))
-        return self._render(self._get_save_response_context(dataset))
+        return self._render(self._get_save_response_context(dataset),
+                            code=201)
 
 api.add_resource(DataSetResource, '/cloudml/importhandlers/\
 <regex("[\w\.]*"):import_handler_id>/datasets/')
@@ -394,7 +387,8 @@ class Tests(BaseResource):
     OBJECT_NAME = 'test'
     DEFAULT_FIELDS = ('_id', 'name')
     FILTER_PARAMS = (('status', str), )
-    GET_ACTIONS = ('confusion_matrix',)
+    GET_ACTIONS = ('confusion_matrix', 'exports')
+
     methods = ('GET', 'OPTIONS', 'DELETE', 'PUT', 'POST')
     post_form = AddTestForm
 
@@ -438,6 +432,18 @@ class Tests(BaseResource):
 
         return self._render({self.OBJECT_NAME: test._id, 'confusion_matrix': result})
 
+    def _get_exports_action(self, **kwargs):
+        test = self._get_details_query(None, None, **kwargs)
+        if not test:
+            raise NotFound('Test not found')
+
+        exports = [ex for ex in test.exports
+                   if ex['expires'] > datetime.now()]
+
+        return self._render({self.OBJECT_NAME: test._id,
+                             'exports': exports})
+
+
 api.add_resource(Tests, '/cloudml/models/<regex("[\w\.]*"):model_id>/tests/')
 
 
@@ -458,12 +464,32 @@ class TestExamplesResource(BaseResource):
     FILTER_PARAMS = [('label', str), ('pred_label', str)]
     decorators = [crossdomain(origin='*')]
 
+    def _get_list_query(self, params, fields, **kwargs):
+        test = app.db.Test.find_one({'_id': ObjectId(kwargs.get('test_id'))})
+
+        data_input_params = dict([(p, v) for p, v in params.items()
+                                  if p.startswith('data_input.') and v])
+        if data_input_params:
+            params['_id'] = {
+                '$in': [e['_id'] for e in test.get_examples_full_data(
+                    ['_id'],
+                    data_input_params
+                )]
+            }
+
+            for param in data_input_params:
+                params[param] = None
+
+        return super(TestExamplesResource, self)._get_list_query(
+            params, fields, **kwargs)
+
     def _list(self, **kwargs):
-        data_input = self._get_random_datainput(**kwargs)
-        # TODO: ideas how to get types...
-        # TODO: fields in dict should not contains dots
-        for key, val in data_input.iteritems():
-            self.FILTER_PARAMS.append(('data_input.%s' % key, str))
+        test = app.db.Test.find_one({'_id': ObjectId(kwargs.get('test_id'))})
+        if not test.dataset is None:
+            for field in test.dataset.data_fields:
+                field_new = field.replace('.', '->')
+                self.FILTER_PARAMS.append(('data_input.%s' % field_new, str))
+        self.FILTER_PARAMS.append(('_id', dict),)
         return super(TestExamplesResource, self)._list(**kwargs)
 
     def _get_details_query(self, params, fields, **kwargs):
@@ -473,9 +499,9 @@ class TestExamplesResource(BaseResource):
         example = super(TestExamplesResource, self).\
             _get_details_query(params, fields, **kwargs)
 
-        if example and 'weighted_data_input' in fields \
-                and example['weighted_data_input'] == {}:
-            # Calculate weights for params
+        if example and 'weighted_data_input' in fields and \
+                example['weighted_data_input'] == {} \
+                and 'vect_data' in example:
             from api.helpers.features import get_features_vect_data
             model_id = kwargs['model_id']
             model = app.db.Model.find_one({'_id': ObjectId(model_id)})
@@ -487,7 +513,7 @@ class TestExamplesResource(BaseResource):
             from helpers.weights import get_example_params
             model_weights = app.db.Weight.find({'model_id': model_id})
             weighted_data = dict(get_example_params(
-                model_weights, example['data_input'], data))
+                model_weights, example.data_input, data))
             example['weighted_data_input'] = weighted_data
             # FIXME: Find a better way to do it using mongokit
             app.db.TestExample.collection.update(
@@ -521,36 +547,25 @@ class TestExamplesResource(BaseResource):
         logging.info('For model: %s test: %s' % (model_id, test_id))
         logging.info('Gettings examples')
 
-        collection = app.db.TestExample.collection
-
         res = []
         avps = []
 
-        # from bson.code import Code
-        # _map = Code("emit(this.%s, {pred: this.label,\
-        #             label: this.label});" % group_by_field)
-        # _reduce = Code("function (key, values) { \
-        #                  return {'list':  values}; }")
-        # params = {'model_name': model_name,
-        #           'test_name': test_name}
-        # result = collection.map_reduce(_map, _reduce, 'avp',
-        #                                query=params)
+        test = app.db.Test.find_one({'_id': ObjectId(test_id)})
+        groups = defaultdict(list)
+        example_fields = ['label', 'pred_label', 'prob', 'id']
 
-        # for doc in result.find():
-        #     group = doc['value']
-        #     group_list = group['list'] if 'list' in group else [group, ]
-        #     labels = [str(item['label']) for item in group_list]
-        #     pred_labels = [str(item['pred']) for item in group_list]
-        #     avp = apk(labels, pred_labels, count)
-        #     avps.append(avp)
-        #     res.append({'group_by_field': doc["_id"],
-        #                 'count': len(group_list),
-        #                 'avp': avp})
+        for row in test.get_examples_full_data(example_fields):
+            groups[row[group_by_field]].append({
+                'label': row['pred_label'],
+                'pred': row['label'],
+                'prob': row['prob'],
+            })
 
-        groups = collection.group([group_by_field, ],
-                                  {'model_id': model_id,
-                                   'test_id': test_id},
-                                  {'list': []}, REDUCE_FUNC)
+        groups = [{
+            group_by_field: key,
+            'list': value
+        } for key, value in groups.iteritems()]
+
         import sklearn.metrics as sk_metrics
         import numpy
         if len(groups) < 1:
@@ -607,7 +622,8 @@ not contain probabilities')
         return self._render(context)
 
     def _get_datafields_action(self, **kwargs):
-        fields = self._get_datafields(**kwargs)
+        fields = [field.replace('.', '->') for field in
+                  self._get_datafields(**kwargs)]
         return self._render({'fields': fields})
 
     def _get_csv_action(self, **kwargs):
@@ -616,44 +632,30 @@ not contain probabilities')
         """
         logging.info('Download examples in csv')
 
-        def generate():
-            parser_params = list(self.GET_PARAMS) + self.FILTER_PARAMS
-            params = self._parse_parameters(parser_params)
-            fields, show_fields = self._get_fields(params)
-            logging.info('Use fields %s' % str(fields))
-            kw = dict([(k, v) for k, v in kwargs.iteritems() if v])
-            examples = self._get_list_query(params, None, **kw)
-            fout = StringIO.StringIO()
-            writer = csv.writer(fout, delimiter=',', quoting=csv.QUOTE_ALL)
-            writer.writerow(fields)
-            for example in examples:
-                rows = []
-                for name in fields:
-                    # TODO: This is a quick hack. Fix it!
-                    if name.startswith('data_input'):
-                        feature_name = name.replace('data_input.', '')
-                        val = example['data_input'].get(feature_name, '')
-                    else:
-                        val = example[name] if name in example else ''
-                    rows.append(val)
-                writer.writerow(rows)
-            return fout.getvalue()
+        from api.tasks import get_csv_results
 
-        from flask import Response
-        resp = Response(generate(), mimetype='text/csv')
-        resp.headers["Content-Disposition"] = "attachment; \
-filename=%(model_id)s-%(test_id)s-examples.csv" % kwargs
-        return resp
+        parser = reqparse.RequestParser()
+        parser.add_argument('show', type=str)
+        params = parser.parse_args()
+        fields, show_fields = self._get_fields(params)
+        logging.info('Use fields %s' % str(fields))
+
+        test = app.db.Test.find_one({
+            '_id': ObjectId(kwargs.get('test_id')),
+            'model_id': kwargs.get('model_id')
+        })
+        if not test:
+            raise NotFound('Test not found')
+
+        get_csv_results.delay(
+            test.model_id, str(test._id),
+            fields
+        )
+        return self._render({})
 
     def _get_datafields(self, **kwargs):
-        data_input = self._get_random_datainput(**kwargs)
-        return data_input.keys()
-
-    def _get_random_datainput(self, **kwargs):
-        example = self.Model.find_one(kwargs, ('data_input', ))
-        if example is None:
-            raise NotFound('No test examples found!')
-        return example['data_input']
+        test = app.db.Test.find_one({'_id': ObjectId(kwargs.get('test_id'))})
+        return test.dataset.data_fields
 
 api.add_resource(TestExamplesResource, '/cloudml/models/\
 <regex("[\w\.]*"):model_id>/tests/<regex("[\w\.]*"):test_id>/examples/')
@@ -703,7 +705,7 @@ class CompareReportResource(BaseResource):
             resp_data.append({'test': test, 'examples': examples})
         return self._render({'data': resp_data})
 
-api.add_resource(CompareReportResource, 
+api.add_resource(CompareReportResource,
                  '/cloudml/reports/compare/',
                  add_standart_urls=False)
 
@@ -795,6 +797,21 @@ class LogResource(BaseResource):
     def Model(self):
         return app.db.LogMessage
 
+    def _prepare_filter_params(self, params):
+        params = super(LogResource, self)._prepare_filter_params(params)
+
+        if 'level' in params:
+            all_levels = ['CRITICAL', 'ERROR', 'WARN', 'WARNING',
+                          'INFO', 'DEBUG', 'NOTSET']
+            if params['level'] in all_levels:
+                idx = all_levels.index(params['level'])
+                levels = [l for i, l in enumerate(all_levels) if i <= idx]
+                params['level'] = {'$in': levels}
+            else:
+                del params['level']
+
+        return params
+
 api.add_resource(LogResource, '/cloudml/logs/')
 
 
@@ -812,6 +829,7 @@ class TagResource(BaseResource):
         return app.db.Tag
 
 api.add_resource(TagResource, '/cloudml/tags/')
+
 
 def populate_parser(model, is_requred=False):
     parser = reqparse.RequestParser()

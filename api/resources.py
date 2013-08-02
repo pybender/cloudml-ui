@@ -71,10 +71,10 @@ class BaseResource(restful.Resource):
         try:
             return super(BaseResource, self).dispatch_request(*args, **kwargs)
         except NotFound, exc:
-            return odesk_error_response(404, ERR_NO_SUCH_MODEL, exc.message)
+            return odesk_error_response(404, ERR_NO_SUCH_MODEL, str(exc))
         except ValidationError, exc:
             return odesk_error_response(400, ERR_INVALID_DATA,
-                                        exc.message, errors=exc.errors)
+                                        str(exc), errors=exc.errors)
 
     # HTTP Methods
 
@@ -344,16 +344,16 @@ def _filter_model_fields(model, show_fields):
             inner_model = model
             for subfield in subfields:
                 from flask.ext.mongokit import Document
-                val = getattr(inner_model, subfield)
-                if isinstance(val, Document):
-                    if not subfield in inner:
-                        inner[subfield] = {}
-                else:
-                    inner[subfield] = val
-                inner_model = val
-                inner = inner[subfield]
+                if inner_model and subfield in inner_model:
+                    val = getattr(inner_model, subfield)
+                    if isinstance(val, Document):
+                        if not subfield in inner:
+                            inner[subfield] = {}
+                    else:
+                        inner[subfield] = val
+                    inner_model = val
+                    inner = inner[subfield]
         else:
-            if hasattr(model, field):
+            if field in model:
                 res[field] = getattr(model, field)
-
     return res
