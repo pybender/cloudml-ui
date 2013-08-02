@@ -184,6 +184,7 @@ class BaseTestCase(unittest.TestCase):
             self.assertTrue(error in err_data['message'],
                             "Response message is: %s" % err_data['message'])
         else:
+            print resp.data
             self.assertEquals(resp.status_code, httplib.CREATED)
             self.assertTrue(self.RESOURCE.OBJECT_NAME in resp.data)
             new_count = self.Model.find().count()

@@ -1,19 +1,19 @@
 import os
 import json
 import logging
-from copy import copy
+import StringIO
+import csv
 from itertools import izip
 from bson.objectid import ObjectId
 from os.path import join, exists
 from os import makedirs, system
-from celery.task.sets import subtask
 from datetime import timedelta, datetime
 from boto.exception import EC2ResponseError
 
 from api import celery, app
 from api.models import Test, Model
 from api.logger import init_logger
-from api.amazon_utils import AmazonEC2Helper
+from api.amazon_utils import AmazonEC2Helper, AmazonS3Helper
 from core.trainer.trainer import Trainer
 from core.trainer.config import FeatureModel
 from core.trainer.streamutils import streamingiterload
@@ -45,14 +45,15 @@ def request_spot_instance(dataset_id=None, instance_type=None, model_id=None):
 
     return request.id
 
-@celery.task()                                                    
+
+@celery.task()
 def get_request_instance(request_id,
                          callback=None,
                          dataset_id=None,
                          model_id=None):
     init_logger('trainmodel_log', obj=model_id)
     ec2 = AmazonEC2Helper()
-    logging.info('Get spot instance request %s' %  request_id)
+    logging.info('Get spot instance request %s' % request_id)
 
     model = app.db.Model.find_one({'_id': ObjectId(model_id)})
 
@@ -84,7 +85,7 @@ def get_request_instance(request_id,
 
     logging.info('Get instance %s' % request.instance_id)
     instance = ec2.get_instance(request.instance_id)
-    logging.info('Instance %s(%s) lunched' % 
+    logging.info('Instance %s(%s) lunched' %
             (instance.id,
              instance.private_ip_address))
     instance.add_tag('Name', 'cloudml-worker-auto')
@@ -98,11 +99,10 @@ def get_request_instance(request_id,
         train_model.apply_async((dataset_id,
                                  model_id),
                                  queue=queue,
-                                 link=terminate_instance.subtask(kwargs={'instance_id':instance.id,}),
-                                 link_error=terminate_instance.subtask(kwargs={'instance_id':instance.id})
+                                 link=terminate_instance.subtask(kwargs={'instance_id': instance.id}),
+                                 link_error=terminate_instance.subtask(kwargs={'instance_id': instance.id})
                                 )
     return instance.private_ip_address
-
 
 
 @celery.task
@@ -171,6 +171,14 @@ with%s compression", importhandler.name, '' if dataset.compress else 'out')
         logging.info('The dataset will be stored to file %s', dataset.filename)
         handler.store_data_json(dataset.filename, dataset.compress)
         logging.info('Import dataset completed')
+
+        logging.info('Retrieving data fields')
+        row = None
+        with dataset.get_data_stream() as fp:
+            row = next(fp)
+        if row:
+            dataset.data_fields = json.loads(row).keys()
+        logging.info('Dataset fields: {0!s}'.format(dataset.data_fields))
 
         logging.info('Saving file to Amazon S3')
         dataset.save_to_s3()
@@ -344,10 +352,9 @@ def run_test(dataset_id, test_id):
         test.save()
 
         from memory_profiler import memory_usage
-        mem_usage, result = memory_usage((Model.run_test, (model, dataset,)),
+        mem_usage, result = memory_usage((Model.run_test, (model, dataset, )),
                                          interval=0, retval=True)
-
-        metrics, raw_data = result
+        metrics = result
         test.accuracy = metrics.accuracy
 
         metrics_dict = metrics.get_metrics_dict()
@@ -359,7 +366,8 @@ def run_test(dataset_id, test_id):
         for i, val in enumerate(metrics.classes_set):
             confusion_matrix_ex.append((str(val), confusion_matrix[i]))
         metrics_dict['confusion_matrix'] = confusion_matrix_ex
-        n = len(raw_data) / 100 or 1
+
+        n = len(metrics._labels) / 100 or 1
         metrics_dict['roc_curve'][1] = metrics_dict['roc_curve'][1][0::n]
         metrics_dict['roc_curve'][0] = metrics_dict['roc_curve'][0][0::n]
         metrics_dict['precision_recall_curve'][1] = \
@@ -413,7 +421,8 @@ def run_test(dataset_id, test_id):
                     continue
                 example.save(check_keys=False)
 
-        examples = izip(raw_data,
+        fp = dataset.get_data_stream()
+        examples = izip(streamingiterload(fp),
                         metrics._labels,
                         metrics._preds,
                         metrics._probs,
@@ -464,6 +473,75 @@ def calculate_confusion_matrix(test_id, weight0, weight1):
         matrix[true_value_idx][predicted] += 1
 
     return matrix
+
+
+@celery.task
+def get_csv_results(model_id, test_id, fields):
+    """
+    Get test classification results using csv format.
+    """
+    def generate(test, name):
+        path = app.config['DATA_FOLDER']
+        if not exists(path):
+            makedirs(path)
+        filename = os.path.join(path, name)
+
+        with open(filename, 'w') as fp:
+            writer = csv.writer(fp, delimiter=',',
+                                quoting=csv.QUOTE_ALL)
+            writer.writerow(fields)
+            for example in test.get_examples_full_data(None):
+                rows = []
+                for field in fields:
+                    val = example[field] if field in example else ''
+                    rows.append(val)
+                writer.writerow(rows)
+        return filename
+
+    init_logger('get_csv_results_log', obj=test_id)
+
+    import uuid
+
+    test = app.db.Test.find_one({
+        'model_id': model_id,
+        '_id': ObjectId(test_id)
+    })
+    if not test:
+        logging.error('Test not found')
+        return None
+
+    name = 'Examples-{0!s}.csv'.format(uuid.uuid1())
+    expires = 60 * 60 * 24 * 7  # 7 days
+    test.exports.append({
+        'name': name,
+        'fields': fields,
+        'status': Test.EXPORT_STATUS_IN_PROGRESS,
+        'datetime': datetime.now(),
+        'url': None,
+        'type': 'csv',
+        'expires': datetime.now() + timedelta(seconds=expires)
+    })
+    test.save()
+
+    logging.info('Creating file {0}...'.format(name))
+
+    s3 = AmazonS3Helper()
+    filename = generate(test, name)
+    logging.info('Uploading file {0} to s3...'.format(filename))
+    s3.save_key(name, filename, {
+        'model_id': model_id,
+        'test_id': test_id}, compressed=False)
+    s3.close()
+    os.remove(filename)
+    url = s3.get_download_url(name, expires)
+
+    export = next((ex for ex in test.exports if ex['name'] == name))
+    export['url'] = url
+    export['status'] = Test.EXPORT_STATUS_COMPLETED
+    export['expires'] = datetime.now() + timedelta(seconds=expires)
+    test.save()
+
+    return url
 
 
 def decode(row):

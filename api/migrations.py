@@ -1,5 +1,6 @@
 import sys
 import inspect
+import json
 
 from mongokit import DocumentMigration
 
@@ -53,6 +54,10 @@ class TestMigration(DbMigration):
     #             self.update = {'$set': {'model_id': doc.model._id }}
     #             self.collection.update(self.target, self.update)
 
+    def allmigration02__add_exports(self):
+        self.target = {'exports': {'$exists': False}}
+        self.update = {'$set': {'exports': []}}
+
 
 class DataSetMigration(DbMigration):
     DOC_CLASS = models.DataSet
@@ -68,3 +73,24 @@ class DataSetMigration(DbMigration):
             'records_count': 0,
             'time': 0,
         }}
+
+    def allmigration02__add_data_fields(self):
+        self.target = {'data_fields': {'$exists': False}}
+        self.update = {'$set': {'data_fields': []}}
+
+    def allmigration03__fill_data_fields(self):
+        self.target = {
+            'data_fields': {'$size': 0}
+        }
+        if not self.status:
+            for doc in self.collection.find(self.target):
+                dataset = app.db.DataSet.find_one({'_id': doc['_id']})
+                row = None
+                try:
+                    with dataset.get_data_stream() as fp:
+                        row = next(fp)
+                    if row:
+                        dataset.data_fields = json.loads(row).keys()
+                        dataset.save()
+                except Exception, e:
+                    print e

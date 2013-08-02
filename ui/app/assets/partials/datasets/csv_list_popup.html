@@ -21,14 +21,15 @@
           <option ng-repeat="field in selectFields" value="{{ field }}">{{ field.replace('data_input.', '') }}</option>
         </select>
 
-        <a ng-click="appendField()" class="btn btn-info">
+        <a ng-click="appendField()" ng-disabled="loading_state" class="btn btn-info">
           <i class="icon-plus"></i>
         </a>
       </div>
+      <span ng-show="loading_state">Loading...</span>
     </div>
   </form>
 </div>
 <div class="modal-footer">
   <button ng-click="close()" class="btn">Cancel</button>
-  <a ng-click="close()" href="{{ test.examplesCsvUrl() }}?show={{ show }}" class="btn btn-primary">Download</a>
+  <a ng-click="getExamplesCsv()" ng-disabled="loading_state" class="btn btn-primary">Download</a>
 </div>

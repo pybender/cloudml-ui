@@ -86,5 +86,14 @@ angular.module('app.testresults.model', ['app.config'])
         data = {weight0: weight0, weight1: weight1}
         @$make_request(url, data, "GET", {})
 
+      $get_examples_csv: (show) ->
+        url = @examplesCsvUrl() + '?show=' + show
+        resolver = (resp) -> { url: resp.data['url'] }
+        TestResult.$make_all_request(url, resolver)
+
+      $get_exports: () ->
+        url = "#{@BASE_API_URL}#{@_id}/action/exports/"
+        @$make_request(url, {}, "GET", {})
+
     return TestResult
 ])

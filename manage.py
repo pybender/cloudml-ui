@@ -107,7 +107,7 @@ class Test(Command):
 
     def run(self):
         import nose
-        nose.run(argv=['', '--exclude-dir=core'])
+        nose.run(argv=[''])
 
 
 class RemObsoluteMongoKeys(Command):

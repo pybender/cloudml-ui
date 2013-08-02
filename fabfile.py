@@ -170,24 +170,24 @@ def setupw():
 @task
 def deployw():
     release.work_on.run(0)
-    upload_init_template(name='supervisordw.conf', name_to='supervisord.conf')
-    # fabd.mkdirs.run()
+    #upload_init_template(name='supervisordw.conf', name_to='supervisord.conf')
+    fabd.mkdirs.run()
 
-    # release.create.run()
-    # git.init.run()
-    # git.push.run()
+    release.create.run()
+    git.init.run()
+    git.push.run()
 
-    # supervisor.push_configs.run()
-    # flask.push_flask_config.run()
+    supervisor.push_configs.run()
+    flask.push_flask_config.run()
 
-    # virtualenv.create.run()
-    # virtualenv.pip_install_req.run()
-    # virtualenv.make_relocatable.run()
+    virtualenv.create.run()
+    virtualenv.pip_install_req.run()
+    virtualenv.make_relocatable.run()
 
-    # release.activate.run()
+    release.activate.run()
 
-    # supervisor.update.run()
-    # supervisor.restart_program.run(program='celerydw')
+    supervisor.update.run()
+    supervisor.restart_program.run(program='celerydw')
 
 
 @task

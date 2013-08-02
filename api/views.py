@@ -1,12 +1,10 @@
+from collections import defaultdict
+from datetime import datetime
 import json
 import logging
-import cPickle as pickle
 import traceback
-import StringIO
-import csv
 from flask.ext.restful import reqparse
 from flask import request, Response
-from celery import subtask
 
 import gevent
 from pymongo.errors import OperationFailure
@@ -389,7 +387,7 @@ class Tests(BaseResource):
     OBJECT_NAME = 'test'
     DEFAULT_FIELDS = ('_id', 'name')
     FILTER_PARAMS = (('status', str), )
-    GET_ACTIONS = ('confusion_matrix', )
+    GET_ACTIONS = ('confusion_matrix', 'exports')
     methods = ('GET', 'OPTIONS', 'DELETE', 'PUT', 'POST')
     post_form = AddTestForm
 
@@ -430,6 +428,17 @@ class Tests(BaseResource):
         return self._render({self.OBJECT_NAME: test._id,
                              'confusion_matrix': result})
 
+    def _get_exports_action(self, **kwargs):
+        test = self._get_details_query(None, None, **kwargs)
+        if not test:
+            raise NotFound('Test not found')
+
+        exports = [ex for ex in test.exports
+                   if ex['expires'] > datetime.now()]
+
+        return self._render({self.OBJECT_NAME: test._id,
+                             'exports': exports})
+
 api.add_resource(Tests, '/cloudml/models/<regex("[\w\.]*"):model_id>/tests/')
 
 
@@ -450,12 +459,32 @@ class TestExamplesResource(BaseResource):
     FILTER_PARAMS = [('label', str), ('pred_label', str)]
     decorators = [crossdomain(origin='*')]
 
+    def _get_list_query(self, params, fields, **kwargs):
+        test = app.db.Test.find_one({'_id': ObjectId(kwargs.get('test_id'))})
+
+        data_input_params = dict([(p, v) for p, v in params.items()
+                                  if p.startswith('data_input.') and v])
+        if data_input_params:
+            params['_id'] = {
+                '$in': [e['_id'] for e in test.get_examples_full_data(
+                    ['_id'],
+                    data_input_params
+                )]
+            }
+
+            for param in data_input_params:
+                params[param] = None
+
+        return super(TestExamplesResource, self)._get_list_query(
+            params, fields, **kwargs)
+
     def _list(self, **kwargs):
-        data_input = self._get_random_datainput(**kwargs)
-        # TODO: ideas how to get types...
-        # TODO: fields in dict should not contains dots
-        for key, val in data_input.iteritems():
-            self.FILTER_PARAMS.append(('data_input.%s' % key, str))
+        test = app.db.Test.find_one({'_id': ObjectId(kwargs.get('test_id'))})
+        if not test.dataset is None:
+            for field in test.dataset.data_fields:
+                field_new = field.replace('.', '->')
+                self.FILTER_PARAMS.append(('data_input.%s' % field_new, str))
+        self.FILTER_PARAMS.append(('_id', dict),)
         return super(TestExamplesResource, self)._list(**kwargs)
 
     def _get_details_query(self, params, fields, **kwargs):
@@ -479,7 +508,7 @@ class TestExamplesResource(BaseResource):
             from helpers.weights import get_example_params
             model_weights = app.db.Weight.find({'model_id': model_id})
             weighted_data = dict(get_example_params(
-                model_weights, example['data_input'], data))
+                model_weights, example.data_input, data))
             example['weighted_data_input'] = weighted_data
             # FIXME: Find a better way to do it using mongokit
             app.db.TestExample.collection.update(
@@ -513,36 +542,25 @@ class TestExamplesResource(BaseResource):
         logging.info('For model: %s test: %s' % (model_id, test_id))
         logging.info('Gettings examples')
 
-        collection = app.db.TestExample.collection
-
         res = []
         avps = []
 
-        # from bson.code import Code
-        # _map = Code("emit(this.%s, {pred: this.label,\
-        #             label: this.label});" % group_by_field)
-        # _reduce = Code("function (key, values) { \
-        #                  return {'list':  values}; }")
-        # params = {'model_name': model_name,
-        #           'test_name': test_name}
-        # result = collection.map_reduce(_map, _reduce, 'avp',
-        #                                query=params)
+        test = app.db.Test.find_one({'_id': ObjectId(test_id)})
+        groups = defaultdict(list)
+        example_fields = ['label', 'pred_label', 'prob', 'id']
 
-        # for doc in result.find():
-        #     group = doc['value']
-        #     group_list = group['list'] if 'list' in group else [group, ]
-        #     labels = [str(item['label']) for item in group_list]
-        #     pred_labels = [str(item['pred']) for item in group_list]
-        #     avp = apk(labels, pred_labels, count)
-        #     avps.append(avp)
-        #     res.append({'group_by_field': doc["_id"],
-        #                 'count': len(group_list),
-        #                 'avp': avp})
+        for row in test.get_examples_full_data(example_fields):
+            groups[row[group_by_field]].append({
+                'label': row['pred_label'],
+                'pred': row['label'],
+                'prob': row['prob'],
+            })
 
-        groups = collection.group([group_by_field, ],
-                                  {'model_id': model_id,
-                                   'test_id': test_id},
-                                  {'list': []}, REDUCE_FUNC)
+        groups = [{
+            group_by_field: key,
+            'list': value
+        } for key, value in groups.iteritems()]
+
         import sklearn.metrics as sk_metrics
         import numpy
         if len(groups) < 1:
@@ -599,7 +617,8 @@ not contain probabilities')
         return self._render(context)
 
     def _get_datafields_action(self, **kwargs):
-        fields = self._get_datafields(**kwargs)
+        fields = [field.replace('.', '->') for field in
+                  self._get_datafields(**kwargs)]
         return self._render({'fields': fields})
 
     def _get_csv_action(self, **kwargs):
@@ -608,44 +627,30 @@ not contain probabilities')
         """
         logging.info('Download examples in csv')
 
-        def generate():
-            parser_params = list(self.GET_PARAMS) + self.FILTER_PARAMS
-            params = self._parse_parameters(parser_params)
-            fields, show_fields = self._get_fields(params)
-            logging.info('Use fields %s' % str(fields))
-            kw = dict([(k, v) for k, v in kwargs.iteritems() if v])
-            examples = self._get_list_query(params, None, **kw)
-            fout = StringIO.StringIO()
-            writer = csv.writer(fout, delimiter=',', quoting=csv.QUOTE_ALL)
-            writer.writerow(fields)
-            for example in examples:
-                rows = []
-                for name in fields:
-                    # TODO: This is a quick hack. Fix it!
-                    if name.startswith('data_input'):
-                        feature_name = name.replace('data_input.', '')
-                        val = example['data_input'].get(feature_name, '')
-                    else:
-                        val = example[name] if name in example else ''
-                    rows.append(val)
-                writer.writerow(rows)
-            return fout.getvalue()
+        from api.tasks import get_csv_results
 
-        from flask import Response
-        resp = Response(generate(), mimetype='text/csv')
-        resp.headers["Content-Disposition"] = "attachment; \
-filename=%(model_id)s-%(test_id)s-examples.csv" % kwargs
-        return resp
+        parser = reqparse.RequestParser()
+        parser.add_argument('show', type=str)
+        params = parser.parse_args()
+        fields, show_fields = self._get_fields(params)
+        logging.info('Use fields %s' % str(fields))
+
+        test = app.db.Test.find_one({
+            '_id': ObjectId(kwargs.get('test_id')),
+            'model_id': kwargs.get('model_id')
+        })
+        if not test:
+            raise NotFound('Test not found')
+
+        get_csv_results.delay(
+            test.model_id, str(test._id),
+            fields
+        )
+        return self._render({})
 
     def _get_datafields(self, **kwargs):
-        data_input = self._get_random_datainput(**kwargs)
-        return data_input.keys()
-
-    def _get_random_datainput(self, **kwargs):
-        example = self.Model.find_one(kwargs, ('data_input', ))
-        if example is None:
-            raise NotFound('No test examples found!')
-        return example['data_input']
+        test = app.db.Test.find_one({'_id': ObjectId(kwargs.get('test_id'))})
+        return test.dataset.data_fields
 
 api.add_resource(TestExamplesResource, '/cloudml/models/\
 <regex("[\w\.]*"):model_id>/tests/<regex("[\w\.]*"):test_id>/examples/')

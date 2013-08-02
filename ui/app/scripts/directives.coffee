@@ -340,6 +340,32 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
   }
 )
 
+.directive('requiredFile', () ->
+  return {
+    require: 'ngModel',
+    restrict: 'A',
+    link: (scope, element, attrs, control) ->
+
+      control.$parsers.unshift((viewValue) ->
+        scope.$apply( () ->
+          control.$setValidity('requiredFile', viewValue != '')
+        )
+        return viewValue
+      )
+
+      element.change((e) ->
+        scope.$apply( () ->
+          reader = new FileReader()
+
+          reader.onload = (e) ->
+            control.$setViewValue(e.target.result)
+
+          reader.readAsText(element[0].files[0])
+        )
+      )
+  }
+)
+
 .directive('smartFloat', () ->
   return {
     require: 'ngModel',

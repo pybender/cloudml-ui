@@ -141,9 +141,11 @@ class ModelAddForm(BaseModelForm):
     def clean_trainer(self, value):
         if value:
             try:
+                # TODO: find a better way?
+                value = value.encode('utf-8').replace('\r', '')
                 self.trainer = load_trainer(value)
-            except Exception, exc:
-                raise ValidationError('Invalid trainer: %s' % exc)
+            except Exception as exc:
+                raise ValidationError('Invalid trainer: {0!s}'.format(exc))
 
     def clean_features(self, value):
         self.feature_model = None
@@ -197,7 +199,7 @@ trained model is required for posting model')
                           ('test_import_handler',
                            'test_import_handler_file'))
 
-    def save(self):
+    def save(self, *args, **kwargs):
         name = self.cleaned_data['name']
 
         def save_importhandler(fieldname):
@@ -358,6 +360,9 @@ class AddTestForm(BaseChooseInstanceAndDataset):
     def clean_model(self, value):
         if self.model is None:
             raise ValidationError('Model not found')
+
+        if not self.model.example_id:
+            raise ValidationError('Please fill in "Examples id field name"')
 
         self.cleaned_data['model_name'] = self.model.name
         self.cleaned_data['model_id'] = self.model_id
