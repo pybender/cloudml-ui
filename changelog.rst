@@ -3,6 +3,13 @@
 Changelog
 =========
 
+Relese 2013-08-01
+-----------------
+* Bug - Fixed upload model
+* Feature - Added log levels filter
+* Task - Store TestExamples on s3
+
+
 Relese 2013-07-22
 -----------------
 * Task - Added some field to dataset details
