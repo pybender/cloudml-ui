@@ -86,7 +86,7 @@ class TestTasksTests(BaseTestCase):
     def test_run_test(self, mock_store_examples, mock_get_data_stream):
         from api.tasks import run_test
 
-        def _fake_test(*args, **kwargs):
+        def _fake_test(self, *args, **kwargs):
             class MetricsMock(MagicMock):
                 accuracy = 1.0
                 classes_set = []
@@ -100,6 +100,8 @@ class TestTasksTests(BaseTestCase):
                     }
 
             _fake_test.called = True
+
+            self._raw_data = [{'data': 0}] * 100
 
             metrics_mock = MetricsMock()
             preds = MagicMock()

@@ -397,16 +397,19 @@ class Model(Document):
         handler = ImportHandler(plan, parameters)
         return handler
 
-    def run_test(self, filename, callback=None):
+    def run_test(self, dataset, callback=None):
         trainer = self.get_trainer()
-        with open(filename, 'r') as fp:
+        fp = dataset.get_data_stream()
+        try:
             metrics = trainer.test(
                 streamingiterload(fp),
                 callback=callback,
-                save_raw=False)
-            # raw_data = trainer._raw_data
-            trainer.clear_temp_data()
-        return metrics
+                save_raw=True)
+        finally:
+            fp.close()
+        raw_data = trainer._raw_data
+        trainer.clear_temp_data()
+        return metrics, raw_data
 
     def set_trainer(self, trainer):
         from core.trainer.store import TrainerStorage

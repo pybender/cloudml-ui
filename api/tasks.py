@@ -352,19 +352,10 @@ def run_test(dataset_id, test_id):
         test.error = ""
         test.save()
 
-        # Caching data into temp file
-        path = app.config['DATA_FOLDER']
-        if not exists(path):
-            makedirs(path)
-        name = 'Test_raw_data-{0!s}.dat'.format(uuid.uuid1())
-        filename = os.path.join(path, name)
-        with open(filename, 'w') as fp:
-            fp.write(str(dataset.get_data_stream().read()))
-
         from memory_profiler import memory_usage
-        mem_usage, result = memory_usage((Model.run_test, (model, filename, )),
+        mem_usage, result = memory_usage((Model.run_test, (model, dataset, )),
                                          interval=0, retval=True)
-        metrics = result
+        metrics, raw_data = result
         test.accuracy = metrics.accuracy
 
         metrics_dict = metrics.get_metrics_dict()
@@ -399,12 +390,21 @@ def run_test(dataset_id, test_id):
         test.memory_usage['testing'] = max(mem_usage)
         test.save()
 
+        # Caching raw data into temp file
+        path = app.config['DATA_FOLDER']
+        if not exists(path):
+            makedirs(path)
+        name = 'Test_raw_data-{0!s}.dat'.format(uuid.uuid1())
+        filename = os.path.join(path, name)
+        with open(filename, 'w') as fp:
+            fp.writelines(['{0}\n'.format(json.dumps(r)) for r in raw_data])
+
         def _chunks(sequences, n):
             for i in xrange(0, len(sequences[0]), n):
                 yield [s[i:i+n] for s in sequences]
 
         examples = [
-            range(dataset.records_count),  # indexes
+            range(len(raw_data)),  # indexes
             metrics._labels,
             metrics._preds.tolist(),
             metrics._probs.tolist(),
@@ -416,7 +416,7 @@ def run_test(dataset_id, test_id):
             examples_tasks.append(store_examples.si(test_id, filename, params))
 
         # Wait for all results
-        res = group(examples_tasks).apply_async().get()
+        res = group(examples_tasks).apply_async().get(propagate=False)
         os.remove(filename)
 
     except Exception, exc:
