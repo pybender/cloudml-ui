@@ -7,6 +7,8 @@ import cPickle as pickle
 from os.path import join, exists
 from os import makedirs
 
+import odesk
+
 from bson import Binary
 from flask.ext.mongokit import Document
 from core.trainer.streamutils import streamingiterload
@@ -642,3 +644,60 @@ class Instance(Document):
 
     def __repr__(self):
         return '<Instance %r>' % self.name
+
+
+@app.conn.register
+class User(Document):
+    __collection__ = 'users'
+    structure = {
+        'uid': basestring,
+        'name': basestring,
+        'odesk_url': basestring,
+        'bio': basestring,
+        'portrait_32_img': basestring,
+        'created_on': datetime,
+        'updated_on': datetime,
+        'auth_token': basestring,
+    }
+    required_fields = ['name', 'created_on', 'updated_on']
+    default_values = {
+        'created_on': datetime.utcnow,
+        'updated_on': datetime.utcnow,
+    }
+    use_dot_notation = True
+
+    def __repr__(self):
+        return '<User %r>' % self.name
+
+    @classmethod
+    def authenticate(cls, oauth_token, oauth_token_secret, oauth_verifier):
+        from auth import OdeskAuth
+        auth = OdeskAuth()
+        _oauth_token, _oauth_token_secret = auth.authenticate(
+            oauth_token, oauth_token_secret, oauth_verifier)
+        info = auth.get_my_info(_oauth_token, _oauth_token_secret,
+                                oauth_verifier)
+
+        user = app.db.User.find_one({'uid': info['auth_user']['uid']})
+        if not user:
+            user = app.db.User()
+            user.uid = info['auth_user']['uid']
+
+        import uuid
+        auth_token = str(uuid.uuid1())  # TODO: check if it's unique
+        user.auth_token = auth_token
+
+        user.name = '{0} {1}'.format(
+            info['auth_user']['first_name'],
+            info['auth_user']['last_name'])
+        user.odesk_url = info['info']['profile_url']
+        user.portrait_32_img = info['info']['portrait_32_img']
+
+        user.save()
+        return auth_token, user
+
+    @classmethod
+    def get_auth_url(cls):
+        from auth import OdeskAuth
+        auth = OdeskAuth()
+        return auth.get_auth_url()

@@ -1,0 +1,21 @@
+
+<li class="divider-vertical"></li>
+<li>
+
+    <div ng-show="user" class="controls">
+        <a class="btn btn-small" href="{{ user.odesk_url }}" target="_blank">
+            <!--<i class="icon-user"></i>-->
+            <img src="{{ user.portrait_32_img }}">
+            {{ user.name }} ({{ user.uid }})
+        </a>
+    </div>
+
+    <div ng-show="!user">
+        Not logged in
+    </div>
+
+</li>
+
+<li ng-show="user">
+    <button class="btn-link" ng-click="logout()">logout</button>
+</li>

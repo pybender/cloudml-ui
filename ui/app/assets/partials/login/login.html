@@ -1,0 +1,16 @@
+
+<div>
+<div class="modal-header">
+<h3>Login</h3>
+</div>
+<div class="modal-body">
+    <div ng-show="!is_authenticated">
+        <button class="btn btn-large btn-primary" ng-click="authenticate()">Press to Login</button>
+    </div>
+    <div ng-show="is_authenticated">
+        You are already logged in
+    </div>
+</div>
+<div class="modal-footer">
+</div>
+</div>

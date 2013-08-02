@@ -4,6 +4,7 @@ import math
 from flask.ext import restful
 from flask.ext.restful import reqparse
 
+from api.decorators import authenticate
 from api.utils import crossdomain, ERR_NO_SUCH_MODEL, odesk_error_response, \
     ERR_INVALID_METHOD, ERR_INVALID_DATA
 from api.serialization import encode_model
@@ -42,8 +43,12 @@ class BaseResource(restful.Resource):
 
     MESSAGE404 = "Object doesn't exist"
     ORDER_DICT = {'asc': 1, 'desc': -1}
-    decorators = [crossdomain(origin='*',
-                              headers="accept, origin, content-type")]
+    decorators = [
+        crossdomain(origin='*',
+                    headers="accept, origin, content-type, X-Auth-Token",
+                    methods=['get', 'post', 'put', 'delete', 'options']
+                    )]
+    method_decorators = [authenticate]
 
     DEFAULT_FIELDS = ['_id', 'name']
     is_fulltext_search = False
