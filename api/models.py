@@ -402,8 +402,8 @@ class Model(Document):
         with open(filename, 'r') as fp:
             metrics = trainer.test(
                 streamingiterload(fp),
-                callback=callback)
-                # save_raw=False) # TODO: check if it should work
+                callback=callback,
+                save_raw=False)
             # raw_data = trainer._raw_data
             trainer.clear_temp_data()
         return metrics
