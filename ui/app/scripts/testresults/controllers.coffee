@@ -106,7 +106,7 @@ metrics.roc_curve,metrics.roc_auc'
             pr = $scope.test.metrics.precision_recall_curve
             $scope.prCurve = {'Precision-Recall curve': [pr[1], pr[0]]}
                
-        when 'matrix' then extra_fields = 'metrics.confusion_matrix'
+        when 'matrix' then extra_fields = 'metrics.confusion_matrix,model'
 
       if 'main' in $scope.LOADED_SECTIONS
         # Do not need load main fields -> only extra
@@ -121,11 +121,12 @@ metrics.roc_curve,metrics.roc_auc'
         'partials/datasets/csv_list_popup.html',
         'CsvDownloadCtrl', 'modal')
 
-  $scope.confusion_matrix_weights = {w0: 1, w1: 1}
+  $scope.confusion_matrix_weights = {w0: 1, w1: 1, error: undefined}
 
   $scope.recalculateConfusionMatrix = (weight0, weight1) ->
     $scope.test.$get_confusion_matrix(weight0, weight1).then((resp) ->
       $scope.test.metrics.confusion_matrix = resp.data.confusion_matrix
+      $scope.confusion_matrix_weights.error = resp.data.error
     )
 
   $scope.initSections($scope.goSection, defaultAction='metrics:accuracy')

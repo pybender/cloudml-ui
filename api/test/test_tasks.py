@@ -53,16 +53,19 @@ class TestTasksTests(BaseTestCase):
 
         _assertMatrix(1, 1, [[1, 1], [0, 2]])
         _assertMatrix(0.5, 0.5, [[1, 1], [0, 2]])
-        _assertMatrix(1, 10, [[2, 0], [2, 0]])
-        _assertMatrix(1, 100, [[2, 0], [2, 0]])
-        _assertMatrix(10, 1, [[0, 2], [0, 2]])
-        _assertMatrix(100, 1, [[0, 2], [0, 2]])
-        _assertMatrix(0, 1, [[2, 0], [2, 0]])
-        _assertMatrix(1, 0, [[0, 2], [0, 2]])
-        _assertMatrix(1, 3, [[2, 0], [1, 1]])
-        _assertMatrix(3, 1, [[1, 1], [0, 2]])
+
+        _assertMatrix(1, 10, [[0, 2], [0, 2]])
+        _assertMatrix(1, 100, [[0, 2], [0, 2]])
+        _assertMatrix(10, 1, [[2, 0], [2, 0]])
+        _assertMatrix(100, 1, [[2, 0], [2, 0]])
+        _assertMatrix(0, 1, [[0, 2], [0, 2]])
+        _assertMatrix(1, 0, [[2, 0], [2, 0]])
+        _assertMatrix(1, 3, [[1, 1], [0, 2]])
+        _assertMatrix(3, 1, [[2, 0], [1, 1]])
 
         self.assertRaises(ValueError, calculate_confusion_matrix, self.test._id, 0, 0)
+        self.assertRaises(ValueError, calculate_confusion_matrix, self.test._id, -1, 1)
+        self.assertRaises(ValueError, calculate_confusion_matrix, self.test._id, 1, -1)
         self.assertRaises(ValueError, calculate_confusion_matrix, ObjectId(), 1, 1)
 
     @mock_s3

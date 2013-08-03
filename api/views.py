@@ -388,6 +388,7 @@ class Tests(BaseResource):
     DEFAULT_FIELDS = ('_id', 'name')
     FILTER_PARAMS = (('status', str), )
     GET_ACTIONS = ('confusion_matrix', 'exports')
+
     methods = ('GET', 'OPTIONS', 'DELETE', 'PUT', 'POST')
     post_form = AddTestForm
 
@@ -422,11 +423,14 @@ class Tests(BaseResource):
         if not model:
             raise NotFound('Model not found')
 
-        result = calculate_confusion_matrix(test._id, args.get('weight0'), args.get('weight1'))
+        try:
+            result = calculate_confusion_matrix(test._id, args.get('weight0'), args.get('weight1'))
+        except Exception as e:
+            return self._render({self.OBJECT_NAME: test._id, 'error': e.message})
+
         result = zip(model.labels, result)
 
-        return self._render({self.OBJECT_NAME: test._id,
-                             'confusion_matrix': result})
+        return self._render({self.OBJECT_NAME: test._id, 'confusion_matrix': result})
 
     def _get_exports_action(self, **kwargs):
         test = self._get_details_query(None, None, **kwargs)
@@ -438,6 +442,7 @@ class Tests(BaseResource):
 
         return self._render({self.OBJECT_NAME: test._id,
                              'exports': exports})
+
 
 api.add_resource(Tests, '/cloudml/models/<regex("[\w\.]*"):model_id>/tests/')
 

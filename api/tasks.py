@@ -485,6 +485,9 @@ def calculate_confusion_matrix(test_id, weight0, weight1):
     if weight0 == 0 and weight1 == 0:
         raise ValueError('Both weights can not be 0')
 
+    if weight0 < 0 or weight1 < 0:
+        raise ValueError('Negative weights are not allowed')
+
     test = app.db.Test.find_one({'_id': ObjectId(test_id)})
     if test is None:
         raise ValueError('Test with id {0!s} not found!'.format(test_id))
@@ -502,9 +505,10 @@ def calculate_confusion_matrix(test_id, weight0, weight1):
         true_value_idx = model.labels.index(example['label'])
 
         prob0, prob1 = example['prob'][:2]
-        weighted_sum = weight1 * prob0 + weight0 * prob1
-        weighted_prob0 = weight1 * prob0 / weighted_sum
-        weighted_prob1 = weight0 * prob1 / weighted_sum
+
+        weighted_sum = weight0 * prob0 + weight1 * prob1
+        weighted_prob0 = weight0 * prob0 / weighted_sum
+        weighted_prob1 = weight1 * prob1 / weighted_sum
 
         predicted = [weighted_prob0, weighted_prob1].index(max([weighted_prob0, weighted_prob1]))
         matrix[true_value_idx][predicted] += 1
