@@ -419,8 +419,8 @@ def run_test(dataset_id, test_id):
                 fp.write('{0}\n'.format(json.dumps(new_row)))
 
                 example['vect_data'] = vectorized_data.tolist()[0]
-                example['id'] = str(row.get(model.example_id, '-1'))
-                example['name'] = str(row.get(model.example_label, 'noname'))
+                example['id'] = str(new_row.get(model.example_id, '-1'))
+                example['name'] = str(new_row.get(model.example_label, 'noname'))
                 example['label'] = str(label)
                 example['pred_label'] = str(pred)
                 example['prob'] = prob.tolist()
