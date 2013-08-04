@@ -15,9 +15,9 @@
 
 <div>
   <ul class="nav nav-tabs" id="tabs">
-    <li ng-show="test.status == 'Completed'" ng-class="{active: action[0] == 'metrics'}"><a ng-click="setSection(['metrics', 'accuracy'])">Metrics</a></li>
-    <li ng-show="test.status == 'Completed'" ng-class="{active: action[0] == 'matrix'}"><a ng-click="setSection(['matrix', 'confusion'])">Confusion Matrix</a></li>
-    <li ng-show="test.status == 'Completed'" ng-show="test.status == 'Completed'" ng-class="{active: action[0] == 'examples'}"><a ng-click="setSection(['examples', 'list'])">Examples</a></li>
+    <li ng-show="showdetails" ng-class="{active: action[0] == 'metrics'}"><a ng-click="setSection(['metrics', 'accuracy'])">Metrics</a></li>
+    <li ng-show="showdetails" ng-class="{active: action[0] == 'matrix'}"><a ng-click="setSection(['matrix', 'confusion'])">Confusion Matrix</a></li>
+    <li ng-show="showdetails" ng-show="test.status == 'Completed'" ng-class="{active: action[0] == 'examples'}"><a ng-click="setSection(['examples', 'list'])">Examples</a></li>
     <li ng-class="{active: action[0] == 'about'}"><a ng-click="setSection(['about', 'details'])">About</a></li>
     <li ng-class="{active: action[0] == 'logs'}"><a ng-click="setSection(['logs', 'list'])">Logs</a></li>
   </ul>

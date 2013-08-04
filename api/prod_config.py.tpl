@@ -12,7 +12,7 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_ENABLE_UTC = True
 #BROKER_URL = 'sqla+sqlite:////home/cloudml/shared/var/cloudml-celery.db'
 BROKER_URL = 'amqp://cloudml:cloudml@localhost:5672/cloudml'
-CELERY_RESULT_BACKEND = ''
+CELERY_RESULT_BACKEND = 'amqp://cloudml:cloudml@localhost:5672/cloudml'
 
 CELERY_IMPORTS = ('api.models', 'api', 'api.tasks')
 

@@ -449,6 +449,7 @@ class Test(Document):
     STATUS_IMPORTING = 'Importing'
     STATUS_IMPORTED = 'Imported'
     STATUS_IN_PROGRESS = 'In Progress'
+    STATUS_STORING = 'Storing'
     STATUS_COMPLETED = 'Completed'
     STATUS_ERROR = 'Error'
 

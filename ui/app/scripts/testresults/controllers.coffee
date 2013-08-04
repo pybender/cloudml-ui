@@ -72,12 +72,15 @@ without test id and model id"
       _id: $routeParams.id
     })
 
+
+
   $scope.load = (fields, section, callback) ->
     $scope.test.$load(
       show: fields
       ).then (->
         $scope.LOADED_SECTIONS.push section
-        if $scope.test.status != 'Completed'
+        $scope.showdetails = ($scope.test.status in ['Completed', 'Storing'])
+        if $scope.test.status != 'Completed' && $scope.test.status != 'Storing'
           $scope.setSection(['about', 'details'])
           return
 

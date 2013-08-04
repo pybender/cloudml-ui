@@ -14,14 +14,14 @@ class Celeryd(Command):
     """Runs a Celery worker node."""
 
     def run(self, **kwargs):
-        os.system("celery -A api.tasks worker -Q default -E --loglevel=info")
+        os.system("celery -A api.tasks worker --concurrency=10 -Q default -E --loglevel=info")
 
 
 class Celeryw(Command):
     """Runs a Celery worker node."""
 
     def run(self, **kwargs):
-        os.system("celery -A api.tasks worker -Q worker1 -E --loglevel=info")
+        os.system("celery -A api.tasks worker --concurrency=10 -Q worker1 -E --loglevel=info")
 
 
 class Flower(Command):

@@ -377,7 +377,7 @@ def run_test(dataset_id, test_id):
             metrics_dict['precision_recall_curve'][0][0::n]
         test.metrics = metrics_dict
         test.classes_set = list(metrics.classes_set)
-        test.status = Test.STATUS_COMPLETED
+        test.status = Test.STATUS_STORING
 
         if not model.comparable:
             # TODO: fix this
@@ -394,30 +394,78 @@ def run_test(dataset_id, test_id):
         path = app.config['DATA_FOLDER']
         if not exists(path):
             makedirs(path)
-        name = 'Test_raw_data-{0!s}.dat'.format(uuid.uuid1())
+        name = 'Test_raw_data-{0!s}.dat'.format(str(test._id))
         filename = os.path.join(path, name)
+        from sys import getsizeof
+        size_of_examle = getsizeof(raw_data[0])
+        logging.info('Size of example %f' % size_of_examle)
+
+        res = []
         with open(filename, 'w') as fp:
-            fp.writelines(['{0}\n'.format(json.dumps(r)) for r in raw_data])
+            #fp.writelines(['{0}\n'.format(json.dumps(r)) for r in raw_data])
+            examples = izip(raw_data,
+                            metrics._labels,
+                            metrics._preds,
+                            metrics._probs,
+                            metrics._true_data.todense())
+            for row, label, pred, prob, vectorized_data in examples:
+                new_row = {}
+                for key, val in row.iteritems():
+                    new_key = key.replace('.', '->')
+                    new_row[new_key] = val
+
+                example = app.db.TestExample()
+                #example['data_input'] = new_row
+                fp.write('{0}\n'.format(json.dumps(new_row)))
+
+                example['vect_data'] = vectorized_data.tolist()[0]
+                example['id'] = str(row.get(model.example_id, '-1'))
+                example['name'] = str(row.get(model.example_label, 'noname'))
+                example['label'] = str(label)
+                example['pred_label'] = str(pred)
+                example['prob'] = prob.tolist()
+                example['test_name'] = test.name
+                example['model_name'] = model.name
+                example['test_id'] = str(test._id)
+                example['model_id'] = str(model._id)
+                try:
+                    example.validate()
+                except Exception, exc:
+                    logging.error('Problem with saving example')
+                    res.append(None)
+                    continue
+                example.save(check_keys=False)
+
+                res.append(str(example._id))
+
+
 
         def _chunks(sequences, n):
             for i in xrange(0, len(sequences[0]), n):
                 yield [s[i:i+n] for s in sequences]
 
         examples = [
-            range(len(raw_data)),  # indexes
-            metrics._labels,
-            metrics._preds.tolist(),
-            metrics._probs.tolist(),
-            [v.tolist() for v in metrics._true_data.todense()]
+             range(len(raw_data)),  # indexes
+             res
         ]
+        #     metrics._labels,
+        #     metrics._preds.tolist(),
+        #     metrics._probs.tolist(),
+        #     [v.tolist() for v in metrics._true_data.todense()]
+        # ]
 
         examples_tasks = []
         for params in _chunks(examples, app.config['EXAMPLES_CHUNK_SIZE']):
-            examples_tasks.append(store_examples.si(test_id, filename, params))
+            examples_tasks.append(store_examples.si(test_id, params))
 
         # Wait for all results
+        logging.info('Starting store examples' )
         res = group(examples_tasks).apply_async().get(propagate=False)
         os.remove(filename)
+        test.status = Test.STATUS_COMPLETED
+        test.save()
+        logging.info('Test %s completed' % test.name)
+        
 
     except Exception, exc:
         logging.exception('Got exception when tests model')
@@ -429,39 +477,27 @@ def run_test(dataset_id, test_id):
 
 
 @celery.task
-def store_examples(test_id, filename, params):
+def store_examples(test_id, params):
     res = []
 
     test = app.db.Test.find_one({'_id': ObjectId(test_id)})
-    model = test.model
+    name = 'Test_raw_data-{0!s}.dat'.format(str(test._id))
+    path = app.config['DATA_FOLDER']
+    filename = os.path.join(path, name)
 
     with open(filename, 'r') as fp:
         row_nums = params[0]
         for r in range(row_nums[0]):  # First row_num
             fp.readline()
 
-        for row_num, label, pred, prob, vectorized_data in izip(*params):
+        for row_num, example_id in izip(*params):
             row = fp.readline()
             row = json.loads(row)
 
             row = decode(row)
-            new_row = {}
-            for key, val in row.iteritems():
-                new_key = key.replace('.', '->')
-                new_row[new_key] = val
 
-            example = app.db.TestExample()
-            example['data_input'] = new_row
-            example['vect_data'] = vectorized_data[0]
-            example['id'] = str(row.get(model.example_id, '-1'))
-            example['name'] = str(row.get(model.example_label, 'noname'))
-            example['label'] = str(label)
-            example['pred_label'] = str(pred)
-            example['prob'] = prob
-            example['test_name'] = test.name
-            example['model_name'] = model.name
-            example['test_id'] = str(test._id)
-            example['model_id'] = str(model._id)
+            example = app.db.TestExample.find_one({'_id': ObjectId(example_id)})
+            example['data_input'] = row
             try:
                 example.validate()
             except Exception, exc:

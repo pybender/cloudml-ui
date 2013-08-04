@@ -14,7 +14,7 @@ CELERY_ENABLE_UTC = True
 #BROKER_URL = 'sqla+sqlite:///celerydb.sqlite'
 #BROKER_URL = 'mongodb://localhost:27017/cloudmlqueue'
 BROKER_URL = 'amqp://guest:guest@localhost:5672//'
-CELERY_RESULT_BACKEND = ''
+CELERY_RESULT_BACKEND = 'amqp://guest:guest@localhost:5672//'
 CELERY_IMPORTS = ('api.models', 'api', 'api.tasks')
 CELERYD_MAX_TASKS_PER_CHILD = 1
 
