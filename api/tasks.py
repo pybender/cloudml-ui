@@ -441,8 +441,9 @@ def run_test(dataset_id, test_id):
 
 
         def _chunks(sequences, n):
-            for i in xrange(0, len(sequences[0]), int(len(sequences[0])/n)):
-                yield [s[i:i+n] for s in sequences]
+            count = int(len(sequences[0])/n)
+            for i in xrange(0, len(sequences[0]), count):
+                yield [s[i:i+count] for s in sequences]
 
         examples = [
              range(len(raw_data)),  # indexes
