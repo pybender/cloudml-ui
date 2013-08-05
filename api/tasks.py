@@ -404,12 +404,13 @@ def run_test(dataset_id, test_id):
         res = []
         with open(filename, 'w') as fp:
             #fp.writelines(['{0}\n'.format(json.dumps(r)) for r in raw_data])
-            examples = izip(raw_data,
+            examples = izip(range(len(raw_data)),
+                            raw_data,
                             metrics._labels,
                             metrics._preds,
                             metrics._probs,
                             metrics._true_data.todense())
-            for n, row, label, pred, prob, vectorized_data in enumerate(examples):
+            for n, row, label, pred, prob, vectorized_data in examples:
                 if n % (all_count / 10) == 0:
                     logging.info('Processed %s rows so far' % n)
                 new_row = {}
