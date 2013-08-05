@@ -399,6 +399,7 @@ def run_test(dataset_id, test_id):
         from sys import getsizeof
         size_of_examle = getsizeof(raw_data[0])
         logging.info('Size of example %f' % size_of_examle)
+        logging.info('Storing examples to mongo')
 
         res = []
         with open(filename, 'w') as fp:
@@ -408,7 +409,9 @@ def run_test(dataset_id, test_id):
                             metrics._preds,
                             metrics._probs,
                             metrics._true_data.todense())
-            for row, label, pred, prob, vectorized_data in examples:
+            for n, row, label, pred, prob, vectorized_data in enumerate(examples):
+                if n % (all_count / 10) == 0:
+                    logging.info('Processed %s rows so far' % n)
                 new_row = {}
                 for key, val in row.iteritems():
                     new_key = key.replace('.', '->')
@@ -460,7 +463,7 @@ def run_test(dataset_id, test_id):
             examples_tasks.append(store_examples.si(test_id, params))
 
         # Wait for all results
-        logging.info('Starting store examples' )
+        logging.info('Storing raw data to s3' )
         res = group(examples_tasks).apply_async().get(propagate=False)
         os.remove(filename)
         test.status = Test.STATUS_COMPLETED
@@ -479,12 +482,15 @@ def run_test(dataset_id, test_id):
 
 @celery.task
 def store_examples(test_id, params):
+
+    init_logger('runtest_log', obj=test_id)
     res = []
 
     test = app.db.Test.find_one({'_id': ObjectId(test_id)})
     name = 'Test_raw_data-{0!s}.dat'.format(str(test._id))
     path = app.config['DATA_FOLDER']
     filename = os.path.join(path, name)
+    logging.info('Storing raw data to s3 %s - %s' % (params[0][0], params[0][-1]) )
 
     with open(filename, 'r') as fp:
         row_nums = params[0]
@@ -508,6 +514,7 @@ def store_examples(test_id, params):
             example.save(check_keys=False)
 
             res.append((row_num, str(example._id)))
+    logging.info('Complete storing raw data to s3 %s - %s' % (params[0][0], params[0][-1]) )
 
     return res
 
