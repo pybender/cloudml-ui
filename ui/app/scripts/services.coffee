@@ -31,7 +31,6 @@ services.factory('auth', ($http, $cookieStore, $rootScope, settings) ->
         method: 'POST'
         headers: settings.apiRequestDefaultHeaders
         url: url
-        data: {}
         transformRequest: angular.identity
         params: {}
       ).then ((resp) =>
@@ -45,7 +44,6 @@ services.factory('auth', ($http, $cookieStore, $rootScope, settings) ->
         method: 'POST'
         headers: settings.apiRequestDefaultHeaders
         url: url
-        data: {}
         transformRequest: angular.identity
         params: {
           oauth_token: oauth_token,
@@ -77,7 +75,6 @@ services.factory('auth', ($http, $cookieStore, $rootScope, settings) ->
           'X-Auth-Token': token
         }
         url: url
-        data: {}
         transformRequest: angular.identity
         params: {}
       ).then ((resp) =>
