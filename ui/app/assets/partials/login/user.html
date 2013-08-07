@@ -2,20 +2,22 @@
 <li class="divider-vertical"></li>
 <li>
 
-    <div ng-show="user" class="controls">
-        <a class="btn btn-small" href="{{ user.odesk_url }}" target="_blank">
-            <!--<i class="icon-user"></i>-->
+    <p ng-show="user" class="navbar-text">
+        <a class="username" href="{{ user.odesk_url }}" target="_blank" title="Click to go to your oDesk profile">
             <img src="{{ user.portrait_32_img }}">
             {{ user.name }} ({{ user.uid }})
         </a>
-    </div>
+    </p>
 
-    <div ng-show="!user">
+    <p ng-show="!user" class="navbar-text">
         Not logged in
-    </div>
+    </p>
 
 </li>
 
+<li ng-show="user" class="divider-vertical"></li>
 <li ng-show="user">
-    <button class="btn-link" ng-click="logout()">logout</button>
+    <div class="controls">
+        <button class="btn btn-small" ng-click="logout()">logout</button>
+    </div>
 </li>
