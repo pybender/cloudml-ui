@@ -11,7 +11,8 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
 
 ($scope, $rootScope, ImportHandler) ->
   $scope.MODEL = ImportHandler
-  $scope.FIELDS = 'name,type,created_on,updated_on,import_params'
+  $scope.FIELDS = 'name,type,created_on,updated_on,import_params,created_by,
+updated_by'
   $scope.ACTION = 'loading handler list'
 ])
 

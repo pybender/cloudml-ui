@@ -52,6 +52,10 @@
                 <div>
                     Memory used: <span class="value">{{ test.memory_usage.testing }} Mb</span>
                 </div>
+                <div ng-show="test.created_by">
+                    Created by:
+                    <span class="value">{{ test.created_by.name }} ({{ test.created_by.uid }})</span>
+                </div>
 
                 <div ng-controller="TestExportsCtrl" ng-init="init(test)">
                     <div ng-show="exports">

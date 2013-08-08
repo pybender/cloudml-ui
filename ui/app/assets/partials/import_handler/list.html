@@ -27,8 +27,14 @@
     <td><a href="#{{ handler.objectUrl() }}">{{ handler.name }}</a></td>
     <td>{{ handler.type }}</td>
     <td><span ng-repeat="param in handler.import_params">{{ param }} </span></td>
-    <td>{{ handler.created_on|format_date }}</td>
-    <td>{{ handler.updated_on|format_date }}</td>
+    <td>
+        {{ handler.created_on|format_date }}<br>
+        <small ng-show="handler.created_by">by {{ handler.created_by.name }} ({{ handler.created_by.uid }})</small>
+    </td>
+    <td>
+        {{ handler.updated_on|format_date }}<br>
+        <small ng-show="handler.updated_by">by {{ handler.updated_by.name }} ({{ handler.updated_by.uid }})</small>
+    </td>
     <td ng-controller="ImportHandlerActionsCtrl">
       <button ng-show="handler.type == 'Db'" ng-click="importData(handler)" class="btn btn-info">
         <i title="Import Data" class="icon-tasks"></i>
