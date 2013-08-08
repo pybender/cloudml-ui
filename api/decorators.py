@@ -22,7 +22,9 @@ def authenticate(func):
         token = request.headers.get('X-Auth-Token')
 
         if token:
-            user = app.db.User.find_one({'auth_token': token})
+            user = app.db.User.find_one({
+                'auth_token': app.db.User.get_hash(token)
+            })
             if user:
                 is_authenticated = True
                 request.user = user

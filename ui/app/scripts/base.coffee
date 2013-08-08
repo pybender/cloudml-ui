@@ -72,7 +72,8 @@ angular.module('app.base', ['app.config'])
       $delete: (opts={}) =>
         $http(
           method: "DELETE"
-          headers: {'Content-Type':undefined, 'X-Requested-With': null}
+          headers: {'Content-Type':undefined, 'X-Requested-With': null,
+          'X-Auth-Token': $auth.get_auth_token()}
           url: "#{@BASE_API_URL}#{@_id}/"
           transformRequest: angular.identity
         )

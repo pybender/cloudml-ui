@@ -5,7 +5,10 @@
 </div>
 <div class="modal-body">
     <div ng-show="!is_authenticated">
-        <button class="btn btn-large btn-primary" ng-click="authenticate()">Press to Login</button>
+        <button class="btn btn-large btn-primary" ng-click="authenticate()" ng-disabled="loading_state">
+            Press to Login
+        </button>
+        <span ng-show="loading_state">Logging in...</span>
     </div>
     <div ng-show="is_authenticated">
         You are already logged in

@@ -12,10 +12,12 @@ angular.module('app.login.controllers', ['app.config', ])
 
   ($scope, $http, $location, $routeParams, settings, $auth) ->
     $scope.is_authenticated = $auth.is_authenticated()
+    $scope.loading_state = false
 
     $scope.authenticate = () =>
       params = "menubar=no,location=no,width=840,height=500"
       url = "/#auth/authenticate"
+      $scope.loading_state = true
       w = window.open(url, 'Authentication', params)
       w.focus()
 ])
@@ -33,6 +35,8 @@ angular.module('app.login.controllers', ['app.config', ])
     $auth.login().then ((resp) ->
       $scope.status = 'Redirecting to oDesk. Please wait...'
       window.location = resp.data.auth_url
+    ), ((resp) ->
+      $scope.setError(resp, 'logging in')
     )
 ])
 
@@ -52,6 +56,8 @@ angular.module('app.login.controllers', ['app.config', ])
       $scope.status = 'Authorized'
       window.opener.location.reload()
       window.close()
+    ), ((resp) ->
+      $scope.setError(resp, 'authorizing')
     )
 ])
 

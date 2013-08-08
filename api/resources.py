@@ -43,6 +43,7 @@ class BaseResource(restful.Resource):
 
     MESSAGE404 = "Object doesn't exist"
     ORDER_DICT = {'asc': 1, 'desc': -1}
+    methods = ('GET', 'OPTIONS', 'DELETE', 'PUT', 'POST')
     decorators = [
         crossdomain(origin='*',
                     headers="accept, origin, content-type, X-Auth-Token",

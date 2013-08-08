@@ -78,7 +78,6 @@ class Models(BaseResource):
     PUT_ACTIONS = ('train', 'tags', 'cancel_request_instance')
     FILTER_PARAMS = (('status', str), ('comparable', int), ('tag', str))
     DEFAULT_FIELDS = ('_id', 'name')
-    methods = ('GET', 'OPTIONS', 'DELETE', 'PUT', 'POST')
 
     MESSAGE404 = "Model with name %(_id)s doesn't exist"
 
@@ -227,7 +226,6 @@ class WeightsResource(BaseResource):
     GET_ACTIONS = ('brief', )
     ENABLE_FULLTEXT_SEARCH = True
     OBJECT_NAME = 'weight'
-    methods = ('GET', 'OPTIONS')
     NEED_PAGING = True
     FILTER_PARAMS = (('is_positive', int), ('q', str), ('parent', str), )
 
@@ -277,7 +275,6 @@ class WeightsTreeResource(BaseResource):
 
     NOTE: it used for constructing tree of model parameters.
     """
-    methods = ('GET', 'OPTIONS')
 
     FILTER_PARAMS = (('parent', str), )
 
@@ -308,7 +305,6 @@ class ImportHandlerResource(BaseResource):
         return app.db.ImportHandler
 
     OBJECT_NAME = 'import_handler'
-    methods = ('GET', 'OPTIONS', 'DELETE', 'POST', 'PUT')
     post_form = ImportHandlerAddForm
     put_form = ImportHandlerEditForm
     GET_ACTIONS = ('download', )
@@ -342,7 +338,6 @@ class DataSetResource(BaseResource):
     OBJECT_NAME = 'dataset'
     FILTER_PARAMS = (('status', str), )
     GET_ACTIONS = ('generate_url', )
-    methods = ('GET', 'OPTIONS', 'DELETE', 'POST')
 
     def _get_generate_url_action(self, **kwargs):
         ds = self._get_details_query(None, None, **kwargs)
@@ -390,7 +385,6 @@ class Tests(BaseResource):
     FILTER_PARAMS = (('status', str), )
     GET_ACTIONS = ('confusion_matrix', 'exports')
 
-    methods = ('GET', 'OPTIONS', 'DELETE', 'PUT', 'POST')
     post_form = AddTestForm
 
     @property
@@ -767,7 +761,6 @@ class InstanceResource(BaseResource):
     MESSAGE404 = "Instance doesn't exist"
     OBJECT_NAME = 'instance'
     PUT_ACTIONS = ('make_default', )
-    methods = ['GET', 'OPTIONS', 'PUT', 'POST']
 
     post_form = InstanceAddForm
     put_form = InstanceEditForm
@@ -786,7 +779,6 @@ class LogResource(BaseResource):
     FILTER_PARAMS = (('type', str), ('level', str), ('params.obj', str))
     MESSAGE404 = "Log doesn't exist"
     OBJECT_NAME = 'log'
-    methods = ('GET', 'OPTIONS')
     NEED_PAGING = True
 
     @property
@@ -817,7 +809,6 @@ class TagResource(BaseResource):
     """
     MESSAGE404 = "Tag doesn't exist"
     OBJECT_NAME = 'tag'
-    methods = ('GET', 'OPTIONS')
 
     @property
     def Model(self):
@@ -830,7 +821,6 @@ class AuthResource(BaseResource):
     """
     User API methods
     """
-    methods = ('POST', 'OPTIONS')
 
     @public
     def post(self, action=None, **kwargs):

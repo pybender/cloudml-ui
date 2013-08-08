@@ -3,11 +3,8 @@ import StringIO
 import logging
 import os
 from datetime import datetime
-import cPickle as pickle
 from os.path import join, exists
 from os import makedirs
-
-import odesk
 
 from bson import Binary
 from flask.ext.mongokit import Document
@@ -653,13 +650,13 @@ class User(Document):
         'uid': basestring,
         'name': basestring,
         'odesk_url': basestring,
-        'bio': basestring,
+        'email': basestring,
         'portrait_32_img': basestring,
         'created_on': datetime,
         'updated_on': datetime,
         'auth_token': basestring,
     }
-    required_fields = ['name', 'created_on', 'updated_on']
+    required_fields = ['uid', 'name', 'created_on', 'updated_on']
     default_values = {
         'created_on': datetime.utcnow,
         'updated_on': datetime.utcnow,
@@ -668,6 +665,11 @@ class User(Document):
 
     def __repr__(self):
         return '<User %r>' % self.name
+
+    @classmethod
+    def get_hash(cls, token):
+        import hashlib
+        return hashlib.sha224(token).hexdigest()
 
     @classmethod
     def authenticate(cls, oauth_token, oauth_token_secret, oauth_verifier):
@@ -684,14 +686,15 @@ class User(Document):
             user.uid = info['auth_user']['uid']
 
         import uuid
-        auth_token = str(uuid.uuid1())  # TODO: check if it's unique
-        user.auth_token = auth_token
+        auth_token = str(uuid.uuid1())
+        user.auth_token = cls.get_hash(auth_token)
 
         user.name = '{0} {1}'.format(
             info['auth_user']['first_name'],
             info['auth_user']['last_name'])
         user.odesk_url = info['info']['profile_url']
         user.portrait_32_img = info['info']['portrait_32_img']
+        user.email = info['auth_user']['mail']
 
         user.save()
         return auth_token, user
