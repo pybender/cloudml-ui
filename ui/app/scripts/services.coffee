@@ -59,7 +59,7 @@ services.factory('auth', ($http, $cookieStore, $rootScope, settings) ->
 
     logout: () ->
       _put_auth_token(undefined)
-      location.reload()
+      $rootScope.user = undefined
 
     get_user: () ->
       if not _get_auth_token()

@@ -216,6 +216,10 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
     else
       $rootScope.err = "Error while #{message}."
 
+    if opts.status == 401  # Unauthorized
+      $auth.logout()
+      return $location.path("/auth/login")
+
     return $rootScope.err
 
   # Authentication

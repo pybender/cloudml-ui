@@ -80,4 +80,5 @@ angular.module('app.login.controllers', ['app.config', ])
 
     $scope.logout = () =>
       $auth.logout()
+      location.reload()
 ])
