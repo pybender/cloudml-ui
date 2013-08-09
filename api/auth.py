@@ -72,6 +72,9 @@ class OdeskAuth(Auth):
     ACCESS_TOKEN_METHOD = 'POST'
     AUTHORIZE_URL = 'https://www.odesk.com/services/api/auth'
 
+    # TODO: httpS
+    GET_INFO_URL = 'http://www.odesk.com/api/auth/v1/info'
+
     def __init__(self):
         super(OdeskAuth, self).__init__(
             app.config['ODESK_OAUTH_KEY'],
@@ -87,10 +90,11 @@ class OdeskAuth(Auth):
             '{0}.json'.format(url),
             method
         )
+        if resp['status'] != '200':
+            raise AuthException('Getting info failed: {0!s}'.format(content))
         return json.loads(content)
 
     def get_my_info(self, oauth_token, oauth_token_secret, oauth_verifier):
-        # TODO: httpS
-        url = 'http://www.odesk.com/api/auth/v1/info'
-        return self.api_request(url, 'GET', oauth_token, oauth_token_secret,
+        return self.api_request(self.GET_INFO_URL, 'GET',
+                                oauth_token, oauth_token_secret,
                                 oauth_verifier)

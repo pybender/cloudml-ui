@@ -824,11 +824,13 @@ class AuthResource(BaseResource):
 
     @public
     def post(self, action=None, **kwargs):
+        from api.auth import AuthException
+
         if action == 'get_auth_url':
             auth_url, oauth_token, oauth_token_secret =\
                 app.db.User.get_auth_url()
 
-            # Use redis?
+            # TODO: Use redis?
             app.db['auth_tokens'].insert({
                 'oauth_token': oauth_token,
                 'oauth_token_secret': oauth_token_secret,
@@ -845,12 +847,14 @@ class AuthResource(BaseResource):
             oauth_token = params.get('oauth_token')
             oauth_verifier = params.get('oauth_verifier')
 
-            # Use redis?
+            # TODO: Use redis?
             auth = app.db['auth_tokens'].find_one({
                 'oauth_token': oauth_token
             })
             if not auth:
-                raise Exception('Wrong token: {0!s}'.format(oauth_token))
+                return odesk_error_response(
+                    500, 500,
+                    'Wrong token: {0!s}'.format(oauth_token))
 
             oauth_token_secret = auth.get('oauth_token_secret')
             auth_token, user = app.db.User.authenticate(

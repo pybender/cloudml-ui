@@ -19,6 +19,7 @@ TARGET_VARIABLE = 'hire_outcome'
 AUTH_TOKEN = '123'
 HTTP_HEADERS = [('X-Auth-Token', AUTH_TOKEN)]
 
+
 class BaseTestCase(unittest.TestCase):
     FIXTURES = []
     _LOADED_COLLECTIONS = []
