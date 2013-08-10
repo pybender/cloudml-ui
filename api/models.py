@@ -572,9 +572,11 @@ class TestExample(Document):
         'model_name': basestring,
         'test_id': basestring,
         'model_id': basestring,
+
+        'on_s3': bool,
     }
     use_autorefs = True
-    default_values = {'created_on': datetime.utcnow}
+    default_values = {'created_on': datetime.utcnow, 'on_s3': False}
     required_fields = ['created_on', ]
     use_dot_notation = True
 
@@ -598,9 +600,10 @@ class TestExample(Document):
 
     @property
     def data_input(self):
-        if not self['data_input'] and getattr(self, '_id'):
-            data = self._load_from_s3()
-            self['data_input'] = json.loads(data)
+        if self['on_s3']:
+            if not self['data_input'] and getattr(self, '_id'):
+                data = self._load_from_s3()
+                self['data_input'] = json.loads(data)
         return self['data_input']
 
     @data_input.setter
@@ -609,7 +612,7 @@ class TestExample(Document):
 
     def save(self, *args, **kwargs):
         data_input = None
-        if self['data_input']:
+        if self['data_input'] and self.on_s3:
             data_input = self['data_input']
             self['data_input'] = None
         super(TestExample, self).save(*args, **kwargs)

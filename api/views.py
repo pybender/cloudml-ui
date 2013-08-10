@@ -494,7 +494,7 @@ class TestExamplesResource(BaseResource):
 
     def _get_details_query(self, params, fields, **kwargs):
         if 'weighted_data_input' in fields:
-            fields += ['vect_data', 'data_input']
+            fields += ['vect_data', 'data_input', 'on_s3']
 
         example = super(TestExamplesResource, self).\
             _get_details_query(params, fields, **kwargs)
