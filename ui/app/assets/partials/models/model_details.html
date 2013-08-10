@@ -112,15 +112,15 @@
             </span>
         </div>
       </div>
-      <div class="span4">
+      <div class="span4" ng-show="model.dataset_obj">
         <h5>Data Examples Titles</h5>
         <div>
           Examples label field name:
-          <span title="Label Field Name" ng-bind="model.example_label || 'not specified'" editable="model" value="model.example_label" editable-field="example_label" editable-input="text" editable-placement="right"></span>
+          <span title="Label Field Name" ng-bind="model.example_label || 'not specified'" editable="model" value="model.example_label" editable-field="example_label" editable-input="select" source="model.dataset_obj.data_fields" editable-placement="right"></span>
         </div>
         <div>
-            Examples id field name:
-            <span title="ID Field Name" ng-bind="model.example_id" editable="model" value="model.example_id" editable-field="example_id" editable-input="text" editable-placement="right"></span>
+          Examples id field name:
+          <span title="ID Field Name" ng-bind="model.example_id" editable="model" value="model.example_id" editable-field="example_id" editable-input="select" source="model.dataset_obj.data_fields" editable-placement="right"></span>
         </div>
       </div>
       <div class="span3">

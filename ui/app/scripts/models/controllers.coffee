@@ -129,7 +129,8 @@ error,labels,weights_synchronized,example_id,example_label,
 updated_on,dataset._id,dataset.name,feature_count,test_import_handler.name,
 train_import_handler.name,train_import_handler.import_params,tags,
 test_import_handler.import_params,train_import_handler._id,
-test_import_handler._id,memory_usage'
+test_import_handler._id,memory_usage,dataset.data_fields,
+dataset.import_handler_id'
           when 'features' then extra_fields = 'features'
 
         if 'main' in $scope.LOADED_SECTIONS
