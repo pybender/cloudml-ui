@@ -4,8 +4,9 @@ angular.module('app.base', ['app.config'])
   '$http'
   '$q'
   'settings'
+  'auth'
   
-  ($http, $q, settings) ->
+  ($http, $q, settings, $auth) ->
 
     class BaseModel
       BASE_UI_URL: ''
@@ -71,7 +72,8 @@ angular.module('app.base', ['app.config'])
       $delete: (opts={}) =>
         $http(
           method: "DELETE"
-          headers: {'Content-Type':undefined, 'X-Requested-With': null}
+          headers: {'Content-Type':undefined, 'X-Requested-With': null,
+          'X-Auth-Token': $auth.get_auth_token()}
           url: "#{@BASE_API_URL}#{@_id}/"
           transformRequest: angular.identity
         )
@@ -84,7 +86,8 @@ angular.module('app.base', ['app.config'])
         $http(
           method: method
           #headers: settings.apiRequestDefaultHeaders
-          headers: {'Content-Type':undefined, 'X-Requested-With': null}
+          headers: {'Content-Type': undefined, 'X-Requested-With': null,
+          'X-Auth-Token': $auth.get_auth_token()}
           url: url
           data: fd
           transformRequest: angular.identity
@@ -101,7 +104,8 @@ angular.module('app.base', ['app.config'])
         $http(
           method: 'GET'
           url: url
-          headers: settings.apiRequestDefaultHeaders
+          headers: _.extend(settings.apiRequestDefaultHeaders, {
+            'X-Auth-Token': $auth.get_auth_token()})
           params: _.extend {
           }, opts
         )

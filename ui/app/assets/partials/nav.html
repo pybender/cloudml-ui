@@ -1,6 +1,8 @@
 
-<ul class="nav">
+<ul class="nav" ng-show="user">
   <li ng-class="getClass('/models')"><a ng-href="#/models">models</a></li>
   <li ng-class="getClass('/importhandlers')"><a ng-href="#/importhandlers">import handlers</a></li>
   <li ng-class="getClass('/aws/instances')"><a ng-href="#/aws/instances">instances</a></li>
 </ul>
+
+<ul class="nav pull-right" ng-include="'/partials/login/user.html'" ng-controller="UserCtl" ng-init="init()"></ul>
