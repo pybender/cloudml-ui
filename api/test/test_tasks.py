@@ -136,8 +136,8 @@ class TestTasksTests(BaseTestCase):
 
             result = run_test(self.dataset._id, self.test._id)
             self.assertEquals(result, 'Test completed')
-            self.assertEquals(20, mock_store_examples.si.call_count)
-            self.assertEquals(20, mock_apply_async.apply.call_count)
+            self.assertEquals(5, mock_store_examples.si.call_count)
+            self.assertEquals(5, mock_apply_async.apply.call_count)
 
             mock_store_examples.reset_mock()
             mock_apply_async.reset_mock()
@@ -146,5 +146,5 @@ class TestTasksTests(BaseTestCase):
 
             result = run_test(self.dataset._id, self.test._id)
             self.assertEquals(result, 'Test completed')
-            self.assertEquals(15, mock_store_examples.si.call_count)
-            self.assertEquals(15, mock_apply_async.apply.call_count)
+            self.assertEquals(7, mock_store_examples.si.call_count)
+            self.assertEquals(7, mock_apply_async.apply.call_count)
