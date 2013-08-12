@@ -33,7 +33,8 @@ updated_by'
       name = section[0]
       if name not in $scope.LOADED_SECTIONS
         $scope.handler.$load(
-          show: 'name,type,created_on,updated_on,data,import_params'
+          show: 'name,type,created_on,updated_on,data,
+import_params,created_by'
         ).then (->
           $scope.LOADED_SECTIONS.push name
         ), ((opts) ->

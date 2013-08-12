@@ -52,7 +52,8 @@ updated_by'
   $scope.instance = new AwsInstance({_id: $routeParams.id})
 
   $scope.instance.$load(
-    show: 'name,type,created_on,updated_on,ip,description,is_default'
+    show: 'name,type,created_on,updated_on,ip,description,is_default,
+created_by'
     ).then (->), (-> $scope.setError(opts, 'loading instance'))
 ])
 

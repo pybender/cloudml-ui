@@ -14,6 +14,10 @@ Create local config::
 
     $ cp api/local_config.py.tpl api/local_config.py
 
+Note::
+
+    Create OATH API keys using https://www.odesk.com/services/api/apply. Callback URL is http://127.0.0.1:3333/#/auth/callback
+
 Run dev server::
 
     $ python manage.py runserver
