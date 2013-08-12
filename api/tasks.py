@@ -442,16 +442,18 @@ def run_test(dataset_id, test_id):
 
                 res.append(str(example._id))
 
-
-
         def _chunks(sequences, n):
-            count = int(len(sequences[0])/n)
+            length = len(sequences[0])
+            count = int(length / n)
+            if length % n != 0:
+                count += 1
+
             for i in xrange(0, len(sequences[0]), count):
                 yield [s[i:i+count] for s in sequences]
 
         examples = [
-             range(len(raw_data)),  # indexes
-             res
+            range(len(raw_data)),  # indexes
+            res
         ]
         #     metrics._labels,
         #     metrics._preds.tolist(),
@@ -464,13 +466,12 @@ def run_test(dataset_id, test_id):
             examples_tasks.append(store_examples.si(test_id, params))
 
         # Wait for all results
-        logging.info('Storing raw data to s3' )
+        logging.info('Storing raw data to s3')
         res = group(examples_tasks).apply_async().get(propagate=False)
         os.remove(filename)
         test.status = Test.STATUS_COMPLETED
         test.save()
         logging.info('Test %s completed' % test.name)
-        
 
     except Exception, exc:
         logging.exception('Got exception when tests model')
@@ -488,10 +489,16 @@ def store_examples(test_id, params):
     res = []
 
     test = app.db.Test.find_one({'_id': ObjectId(test_id)})
+    if not test:
+        logging.warning('Test with id {0!s} can\'t be found'.format(
+            test_id
+        ))
+        return res
+
     name = 'Test_raw_data-{0!s}.dat'.format(str(test._id))
     path = app.config['DATA_FOLDER']
     filename = os.path.join(path, name)
-    logging.info('Storing raw data to s3 %s - %s' % (params[0][0], params[0][-1]) )
+    logging.info('Storing raw data to s3 %s - %s' % (params[0][0], params[0][-1]))
 
     with open(filename, 'r') as fp:
         row_nums = params[0]
@@ -505,6 +512,12 @@ def store_examples(test_id, params):
             row = decode(row)
 
             example = app.db.TestExample.find_one({'_id': ObjectId(example_id)})
+            if not example:
+                logging.warning('Example with id {0!s} can\'t be found'.format(
+                    example_id
+                ))
+                continue
+
             example['data_input'] = row
             try:
                 example.validate()
