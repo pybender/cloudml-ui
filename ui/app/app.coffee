@@ -64,6 +64,12 @@ App.config([
       controller: 'GroupedExamplesCtrl'
       templateUrl: '/partials/examples/grouped_examples.html'
     })
+    # TODO: it doesn't work (angular bug?)
+    .when('/models/:model_id/tests/:test_id/examples', {
+      redirectTo: (params, loc) ->
+        return '/models/' + params.model_id + '/tests/' + params.test_id
+        + '?action=examples:list'
+    })
     .when('/models/:model_id/tests/:test_id/examples/:id', {
       controller: 'ExampleDetailsCtrl'
       templateUrl: '/partials/examples/example_details.html'
@@ -92,6 +98,10 @@ App.config([
       controller: 'ImportHandlerDetailsCtrl'
       templateUrl: '/partials/import_handler/details.html'
       reloadOnSearch: false
+    })
+    .when('/importhandlers/:handler_id/datasets', {
+      redirectTo: (params, loc) ->
+        return '/importhandlers/' + params.handler_id + '?action=dataset:list'
     })
     .when('/importhandlers/:handler_id/datasets/:id', {
       controller: 'DataSetDetailsCtrl'
