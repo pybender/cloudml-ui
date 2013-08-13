@@ -64,7 +64,7 @@ filesize,records_count,time,created_by,updated_by'
     $scope.go = (section) ->
       $scope.dataset.$load(
         show: 'name,status,created_on,updated_on,data,on_s3,import_params,error,
-filesize,records_count,time'
+filesize,records_count,time,created_by'
       ).then (->
         if $scope.dataset.on_s3
           generateS3Url($scope.dataset, ((resp) ->

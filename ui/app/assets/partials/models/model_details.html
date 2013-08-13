@@ -57,17 +57,13 @@
     editable-field="description" editable-input="textarea"
     editable-placement="right"></span>
 </p>
-<div title="tags">
+<div title="tags" ng-init="obj=model">
   <span ng-repeat="tag in model.tags">
     <span class="badge">
       <a href="#/models/?tag={{ tag }}" style="color: white;">{{ tag }}</a>
     </span> 
   </span>
-  <i class="icon-calendar"></i>
-  created on <span class="badge badge-info">{{ model.created_on|format_date }}</span>
-  <span ng-hide="model.created_on == model.updated_on">
-    updated on <span class="badge badge-info">{{ model.updated_on|format_date }}</span>
-  </span>
+  <ng-include src="'/partials/parts/created_tags.html'"></ng-include>
   <i class="icon-status"></i>
   <span class="badge badge-warning">{{ model.status }}</span>
   </div>

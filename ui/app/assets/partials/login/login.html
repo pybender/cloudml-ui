@@ -1,19 +1,14 @@
-
-<div>
-<div class="modal-header">
-<h3>Login</h3>
-</div>
-<div class="modal-body">
+<div class="form-signin">
+	<h2>Welcome to CloudML UI!</h2>
+	<div class="modal-body">
     <div ng-show="!is_authenticated">
+    	<alert-message ng-show="loading_state" class="alert-info" msg='Logging in...'></alert-message>
         <button class="btn btn-large btn-primary" ng-click="authenticate()" ng-disabled="loading_state">
-            Press to Login
+            Login via <strong><em class="blue">o</em>Desk</strong>            
         </button>
-        <span ng-show="loading_state">Logging in...</span>
     </div>
     <div ng-show="is_authenticated">
         You are already logged in
     </div>
-</div>
-<div class="modal-footer">
 </div>
 </div>
