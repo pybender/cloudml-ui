@@ -31,7 +31,7 @@
           </div>
         </div>
       </div>
-      <ul class="breadcrumb">
+      <ul class="breadcrumb" ng-show="user">
           <li ng-repeat="breadcrumb in pathElements" class="active">
               <span class="divider">/</span>
               <ng-switch on="$last">

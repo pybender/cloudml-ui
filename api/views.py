@@ -12,7 +12,8 @@ from werkzeug.datastructures import FileStorage
 from bson.objectid import ObjectId
 
 from api import api, app
-from api.utils import crossdomain, ERR_INVALID_DATA, odesk_error_response, \
+from api.decorators import public
+from api.utils import ERR_INVALID_DATA, odesk_error_response, \
     ERR_NO_SUCH_MODEL, ERR_UNPICKLING_MODEL, slugify
 from api.resources import BaseResource, NotFound, ValidationError
 from api.forms import ModelAddForm, ModelEditForm, ImportHandlerAddForm, \
@@ -77,7 +78,6 @@ class Models(BaseResource):
     PUT_ACTIONS = ('train', 'tags', 'cancel_request_instance')
     FILTER_PARAMS = (('status', str), ('comparable', int), ('tag', str))
     DEFAULT_FIELDS = ('_id', 'name')
-    methods = ('GET', 'OPTIONS', 'DELETE', 'PUT', 'POST')
 
     MESSAGE404 = "Model with name %(_id)s doesn't exist"
 
@@ -185,9 +185,12 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
                                                           model_id=str(model._id)))
                 tasks_list.append(get_request_instance.subtask(
                     (),
-                    {'callback': 'train',
-                     'dataset_id': str(dataset._id),
-                     'model_id': str(model._id)},
+                    {
+                        'callback': 'train',
+                        'dataset_id': str(dataset._id),
+                        'model_id': str(model._id),
+                        'user_id': str(request.user._id),
+                    },
                     retry=True,
                     countdown=10,
                     retry_policy={
@@ -199,9 +202,10 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
                 #tasks_list.append(self_terminate.s())
             elif not instance is None:
                 if form.params_filled:
-                    train_model_args = (str(model._id), )
+                    train_model_args = (str(model._id), str(request.user._id))
                 else:
-                    train_model_args = (str(dataset._id), str(model._id))
+                    train_model_args = (str(dataset._id), str(model._id),
+                                        str(request.user._id))
                 tasks_list.append(train_model.subtask(train_model_args, {},
                                                       queue=instance['name']))
             chain(tasks_list).apply_async()
@@ -226,7 +230,6 @@ class WeightsResource(BaseResource):
     GET_ACTIONS = ('brief', )
     ENABLE_FULLTEXT_SEARCH = True
     OBJECT_NAME = 'weight'
-    methods = ('GET', )
     NEED_PAGING = True
     FILTER_PARAMS = (('is_positive', int), ('q', str), ('parent', str), )
 
@@ -276,7 +279,6 @@ class WeightsTreeResource(BaseResource):
 
     NOTE: it used for constructing tree of model parameters.
     """
-    methods = ('GET', )
 
     FILTER_PARAMS = (('parent', str), )
 
@@ -307,7 +309,6 @@ class ImportHandlerResource(BaseResource):
         return app.db.ImportHandler
 
     OBJECT_NAME = 'import_handler'
-    methods = ('GET', 'OPTIONS', 'DELETE', 'POST', 'PUT')
     post_form = ImportHandlerAddForm
     put_form = ImportHandlerEditForm
     GET_ACTIONS = ('download', )
@@ -341,7 +342,6 @@ class DataSetResource(BaseResource):
     OBJECT_NAME = 'dataset'
     FILTER_PARAMS = (('status', str), )
     GET_ACTIONS = ('generate_url', )
-    methods = ('GET', 'OPTIONS', 'DELETE', 'POST')
 
     def _get_generate_url_action(self, **kwargs):
         ds = self._get_details_query(None, None, **kwargs)
@@ -389,7 +389,6 @@ class Tests(BaseResource):
     FILTER_PARAMS = (('status', str), )
     GET_ACTIONS = ('confusion_matrix', 'exports')
 
-    methods = ('GET', 'OPTIONS', 'DELETE', 'PUT', 'POST')
     post_form = AddTestForm
 
     @property
@@ -462,7 +461,6 @@ class TestExamplesResource(BaseResource):
     NEED_PAGING = True
     GET_ACTIONS = ('groupped', 'csv', 'datafields')
     FILTER_PARAMS = [('label', str), ('pred_label', str)]
-    decorators = [crossdomain(origin='*')]
 
     def _get_list_query(self, params, fields, **kwargs):
         test = app.db.Test.find_one({'_id': ObjectId(kwargs.get('test_id'))})
@@ -494,7 +492,7 @@ class TestExamplesResource(BaseResource):
 
     def _get_details_query(self, params, fields, **kwargs):
         if 'weighted_data_input' in fields:
-            fields += ['vect_data', 'data_input']
+            fields += ['vect_data', 'data_input', 'on_s3']
 
         example = super(TestExamplesResource, self).\
             _get_details_query(params, fields, **kwargs)
@@ -665,8 +663,7 @@ class CompareReportResource(BaseResource):
     """
     Resource which generated compare 2 tests report
     """
-    ALLOWED_METHODS = ('get', )
-    decorators = [crossdomain(origin='*')]
+    ALLOWED_METHODS = ('get', 'options')
     GET_PARAMS = (('model1', str),
                   ('test1', str),
                   ('model2', str),
@@ -711,8 +708,7 @@ api.add_resource(CompareReportResource,
 
 
 class Predict(BaseResource):
-    ALLOWED_METHODS = ('post', )
-    decorators = [crossdomain(origin='*')]
+    ALLOWED_METHODS = ('post', 'options')
 
     def post(self, model, import_handler):
 
@@ -768,9 +764,7 @@ class InstanceResource(BaseResource):
     """
     MESSAGE404 = "Instance doesn't exist"
     OBJECT_NAME = 'instance'
-    decorators = [crossdomain(origin='*')]
     PUT_ACTIONS = ('make_default', )
-    methods = ['GET', 'OPTIONS', 'PUT', 'POST']
 
     post_form = InstanceAddForm
     put_form = InstanceEditForm
@@ -789,8 +783,6 @@ class LogResource(BaseResource):
     FILTER_PARAMS = (('type', str), ('level', str), ('params.obj', str))
     MESSAGE404 = "Log doesn't exist"
     OBJECT_NAME = 'log'
-    decorators = [crossdomain(origin='*')]
-    methods = ('GET', )
     NEED_PAGING = True
 
     @property
@@ -821,14 +813,75 @@ class TagResource(BaseResource):
     """
     MESSAGE404 = "Tag doesn't exist"
     OBJECT_NAME = 'tag'
-    decorators = [crossdomain(origin='*')]
-    methods = ('GET', )
 
     @property
     def Model(self):
         return app.db.Tag
 
 api.add_resource(TagResource, '/cloudml/tags/')
+
+
+class AuthResource(BaseResource):
+    """
+    User API methods
+    """
+
+    @public
+    def post(self, action=None, **kwargs):
+        from api.auth import AuthException
+
+        if action == 'get_auth_url':
+            auth_url, oauth_token, oauth_token_secret =\
+                app.db.User.get_auth_url()
+
+            # TODO: Use redis?
+            app.db['auth_tokens'].insert({
+                'oauth_token': oauth_token,
+                'oauth_token_secret': oauth_token_secret,
+            })
+
+            return self._render({'auth_url': auth_url})
+
+        if action == 'authenticate':
+            parser = reqparse.RequestParser()
+            parser.add_argument('oauth_token', type=str)
+            parser.add_argument('oauth_verifier', type=str)
+            params = parser.parse_args()
+
+            oauth_token = params.get('oauth_token')
+            oauth_verifier = params.get('oauth_verifier')
+
+            # TODO: Use redis?
+            auth = app.db['auth_tokens'].find_one({
+                'oauth_token': oauth_token
+            })
+            if not auth:
+                return odesk_error_response(
+                    500, 500,
+                    'Wrong token: {0!s}'.format(oauth_token))
+
+            oauth_token_secret = auth.get('oauth_token_secret')
+            auth_token, user = app.db.User.authenticate(
+                oauth_token, oauth_token_secret, oauth_verifier)
+
+            app.db['auth_tokens'].remove({'_id': auth['_id']})
+
+            return self._render({
+                'auth_token': auth_token,
+                'user': user
+            })
+
+        if action == 'get_user':
+            user = getattr(request, 'user', None)
+            if user:
+                return self._render({'user': user})
+
+            return odesk_error_response(401, 401, 'Unauthorized')
+
+        raise NotFound()
+
+api.add_resource(AuthResource, '/cloudml/auth/<regex("[\w\.]*"):action>',
+                 add_standart_urls=False)
 
 
 def populate_parser(model, is_requred=False):

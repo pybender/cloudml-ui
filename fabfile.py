@@ -169,7 +169,7 @@ def setupw():
 
 @task
 def deployw():
-    release.work_on.run(0)
+    #release.work_on.run(0)
     #upload_init_template(name='supervisordw.conf', name_to='supervisord.conf')
     fabd.mkdirs.run()
 

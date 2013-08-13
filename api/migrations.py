@@ -43,6 +43,18 @@ class ModelMigration(DbMigration):
         self.target = {'memory_usage': {'$exists': False}}
         self.update = {'$set': {'memory_usage': {}}}
 
+    def allmigration04__add_created_by(self):
+        self.target = {'created_by': {'$exists': False}}
+        self.update = {'$set': {'created_by': {}}}
+
+    def allmigration05__add_updated_by(self):
+        self.target = {'updated_by': {'$exists': False}}
+        self.update = {'$set': {'updated_by': {}}}
+
+    def allmigration06__add_trained_by(self):
+        self.target = {'trained_by': {'$exists': False}}
+        self.update = {'$set': {'trained_by': {}}}
+
 
 class TestMigration(DbMigration):
     DOC_CLASS = models.Test
@@ -57,6 +69,10 @@ class TestMigration(DbMigration):
     def allmigration02__add_exports(self):
         self.target = {'exports': {'$exists': False}}
         self.update = {'$set': {'exports': []}}
+
+    def allmigration03__add_created_by(self):
+        self.target = {'created_by': {'$exists': False}}
+        self.update = {'$set': {'created_by': {}}}
 
 
 class DataSetMigration(DbMigration):
@@ -78,19 +94,51 @@ class DataSetMigration(DbMigration):
         self.target = {'data_fields': {'$exists': False}}
         self.update = {'$set': {'data_fields': []}}
 
-    def allmigration03__fill_data_fields(self):
-        self.target = {
-            'data_fields': {'$size': 0}
-        }
-        if not self.status:
-            for doc in self.collection.find(self.target):
-                dataset = app.db.DataSet.find_one({'_id': doc['_id']})
-                row = None
-                try:
-                    with dataset.get_data_stream() as fp:
-                        row = next(fp)
-                    if row:
-                        dataset.data_fields = json.loads(row).keys()
-                        dataset.save()
-                except Exception, e:
-                    print e
+    # def allmigration03__fill_data_fields(self):
+    #     self.target = {
+    #         'data_fields': {'$size': 0}
+    #     }
+    #     if not self.status:
+    #         for doc in self.collection.find(self.target):
+    #             dataset = app.db.DataSet.find_one({'_id': doc['_id']})
+    #             row = None
+    #             try:
+    #                 with dataset.get_data_stream() as fp:
+    #                     row = next(fp)
+    #                 if row:
+    #                     dataset.data_fields = json.loads(row).keys()
+    #                     dataset.save()
+    #             except Exception, e:
+    #                 print e
+
+    def allmigration04__add_created_by(self):
+        self.target = {'created_by': {'$exists': False}}
+        self.update = {'$set': {'created_by': {}}}
+
+    def allmigration05__add_updated_by(self):
+        self.target = {'updated_by': {'$exists': False}}
+        self.update = {'$set': {'updated_by': {}}}
+
+
+class InstanceMigration(DbMigration):
+    DOC_CLASS = models.Instance
+
+    def allmigration01__add_created_by(self):
+        self.target = {'created_by': {'$exists': False}}
+        self.update = {'$set': {'created_by': {}}}
+
+    def allmigration02__add_updated_by(self):
+        self.target = {'updated_by': {'$exists': False}}
+        self.update = {'$set': {'updated_by': {}}}
+
+
+class ImportHandlerMigration(DbMigration):
+    DOC_CLASS = models.ImportHandler
+
+    def allmigration01__add_created_by(self):
+        self.target = {'created_by': {'$exists': False}}
+        self.update = {'$set': {'created_by': {}}}
+
+    def allmigration02__add_updated_by(self):
+        self.target = {'updated_by': {'$exists': False}}
+        self.update = {'$set': {'updated_by': {}}}

@@ -3,7 +3,7 @@ import json
 from bson.objectid import ObjectId
 from mock import patch
 
-from utils import BaseTestCase
+from utils import BaseTestCase, HTTP_HEADERS
 from api.views import DataSetResource
 
 
@@ -46,7 +46,7 @@ class DataSetsTests(BaseTestCase):
         """
         url_mock.return_value = 'example.com'
         url = self._get_url(id=self.obj._id, action='generate_url')
-        resp = self.app.get(url)
+        resp = self.app.get(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.OK)
         data = json.loads(resp.data)
         self.assertEquals(data['dataset'], self.DS_ID)

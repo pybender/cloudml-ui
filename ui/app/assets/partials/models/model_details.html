@@ -57,17 +57,13 @@
     editable-field="description" editable-input="textarea"
     editable-placement="right"></span>
 </p>
-<div title="tags">
+<div title="tags" ng-init="obj=model">
   <span ng-repeat="tag in model.tags">
     <span class="badge">
       <a href="#/models/?tag={{ tag }}" style="color: white;">{{ tag }}</a>
     </span> 
   </span>
-  <i class="icon-calendar"></i>
-  created on <span class="badge badge-info">{{ model.created_on|format_date }}</span>
-  <span ng-hide="model.created_on == model.updated_on">
-    updated on <span class="badge badge-info">{{ model.updated_on|format_date }}</span>
-  </span>
+  <ng-include src="'/partials/parts/created_tags.html'"></ng-include>
   <i class="icon-status"></i>
   <span class="badge badge-warning">{{ model.status }}</span>
   </div>
@@ -123,7 +119,7 @@
           <span title="ID Field Name" ng-bind="model.example_id" editable="model" value="model.example_id" editable-field="example_id" editable-input="select" source="model.dataset_obj.data_fields" editable-placement="right"></span>
         </div>
       </div>
-      <div class="span3">
+      <div class="span4">
         <div>
             Target variable:
             <span class="value">{{ model.target_variable }}</span>
@@ -139,6 +135,18 @@
         <div>
             Memory used:
             <span class="value">{{ model.memory_usage.training }} Mb</span>
+        </div>
+        <div ng-show="model.created_by">
+            Created by:
+            <span class="value">{{ model.created_by.name }} ({{ model.created_by.uid }})</span>
+        </div>
+        <div ng-show="model.updated_by">
+            Updated by:
+            <span class="value">{{ model.updated_by.name }} ({{ model.updated_by.uid }})</span>
+        </div>
+        <div ng-show="model.status == 'Trained'">
+            Trained by:
+            <span class="value">{{ model.trained_by.name }} ({{ model.trained_by.uid }})</span>
         </div>
       </div>
     </div>

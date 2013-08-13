@@ -2,7 +2,8 @@ import httplib
 import json
 from mock import patch
 
-from utils import MODEL_ID, BaseTestCase, FEATURE_COUNT, TARGET_VARIABLE
+from utils import MODEL_ID, BaseTestCase, FEATURE_COUNT, TARGET_VARIABLE,\
+    HTTP_HEADERS
 from bson.objectid import ObjectId
 from api.utils import ERR_INVALID_DATA
 from api.views import Models as ModelsResource
@@ -48,7 +49,7 @@ class ModelTests(BaseTestCase):
         def check(field, is_invalid=False):
             url = self._get_url(id=self.model._id, action='download',
                                 field=field)
-            resp = self.app.get(url)
+            resp = self.app.get(url, headers=HTTP_HEADERS)
             if not is_invalid:
                 self.assertEquals(resp.status_code, httplib.OK)
                 self.assertEquals(resp.mimetype, 'text/plain')

@@ -32,6 +32,7 @@ App = angular.module('app', [
   'app.awsinstances.controllers'
   'app.logmessages.model'
   'app.logmessages.controllers'
+  'app.login.controllers'
 ])
 
 App.config([
@@ -64,6 +65,12 @@ App.config([
       controller: 'GroupedExamplesCtrl'
       templateUrl: '/partials/examples/grouped_examples.html'
     })
+    # TODO: it doesn't work (angular bug?)
+    .when('/models/:model_id/tests/:test_id/examples', {
+      redirectTo: (params, loc) ->
+        return '/models/' + params.model_id + '/tests/' + params.test_id
+        + '?action=examples:list'
+    })
     .when('/models/:model_id/tests/:test_id/examples/:id', {
       controller: 'ExampleDetailsCtrl'
       templateUrl: '/partials/examples/example_details.html'
@@ -93,6 +100,10 @@ App.config([
       templateUrl: '/partials/import_handler/details.html'
       reloadOnSearch: false
     })
+    .when('/importhandlers/:handler_id/datasets', {
+      redirectTo: (params, loc) ->
+        return '/importhandlers/' + params.handler_id + '?action=dataset:list'
+    })
     .when('/importhandlers/:handler_id/datasets/:id', {
       controller: 'DataSetDetailsCtrl'
       templateUrl: '/partials/datasets/details.html'
@@ -110,6 +121,18 @@ App.config([
       controller: 'AwsInstanceDetailsCtrl'
       templateUrl: '/partials/aws_instances/details.html'
     })
+    .when('/auth/login', {
+      controller: 'LoginCtl'
+      templateUrl: '/partials/login/login.html'
+    })
+    .when('/auth/authenticate', {
+      controller: 'AuthCtl'
+      templateUrl: '/partials/login/auth.html'
+    })
+    .when('/auth/callback', {
+      controller: 'AuthCallbackCtl'
+      templateUrl: '/partials/login/auth.html'
+    })
 
     # Catch all
     .otherwise({redirectTo: '/models'})
@@ -118,8 +141,9 @@ App.config([
   $locationProvider.html5Mode(false)
 ])
 
-App.run(['$rootScope', '$routeParams', '$location', 'settings',
-($rootScope, $routeParams, $location, settings) ->
+App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
+         '$cookieStore'
+($rootScope, $routeParams, $location, settings, $auth, $cookieStore) ->
   $rootScope.Math = window.Math
 
   # this will be available to all scope variables
@@ -201,6 +225,28 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings',
  with #{opts.status} (#{opts.data.response.error.message or "no message"})."
     else
       $rootScope.err = "Error while #{message}."
+
+    if opts.status == 401  # Unauthorized
+      $auth.logout()
+      return $location.path("/auth/login")
+
     return $rootScope.err
+
+  # Authentication
+  $rootScope.$on("$routeChangeStart", (event, next, current) ->
+    auth_ctrls = ['LoginCtl', 'AuthCtl', 'AuthCallbackCtl']
+    if next.$route
+      if not $auth.is_authenticated()
+        if next.$route.controller not in auth_ctrls
+          $cookieStore.put('redirect_to', $location.url())
+          $location.path("/auth/login")
+      else
+        if next.$route.controller in auth_ctrls
+          url = $cookieStore.get('redirect_to')
+          if url
+            $location.url(url)
+          else
+            $location.path("/models")
+  )
 
 ])
