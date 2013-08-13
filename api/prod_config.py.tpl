@@ -31,8 +31,8 @@ AMAZON_TOKEN_SECRET = '{{ amazon_token_secret }}'
 AMAZON_BUCKET_NAME = '{{ amazon_bucket_name }}'
 
 # OAuth keys
-ODESK_OAUTH_KEY = '{{ odesk api key }}'
-ODESK_OAUTH_SECRET = '{{ odesk secret key }}'
+ODESK_OAUTH_KEY = '{{ odesk_api_key }}'
+ODESK_OAUTH_SECRET = '{{ odesk_secret_key }}'
 
 REQUESTING_INSTANCE_COUNTDOWN = 20
 REQUESTING_INSTANCE_MAX_RETRIES = 30
