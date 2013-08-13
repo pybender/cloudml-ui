@@ -51,7 +51,8 @@ def request_spot_instance(dataset_id=None, instance_type=None, model_id=None):
 def get_request_instance(request_id,
                          callback=None,
                          dataset_id=None,
-                         model_id=None):
+                         model_id=None,
+                         user_id=None):
     init_logger('trainmodel_log', obj=model_id)
     ec2 = AmazonEC2Helper()
     logging.info('Get spot instance request %s' % request_id)
@@ -98,7 +99,7 @@ def get_request_instance(request_id,
         logging.info('Train model task apply async')
         queue = "ip-%s" % "-".join(instance.private_ip_address.split('.'))
         train_model.apply_async((dataset_id,
-                                 model_id),
+                                 model_id, user_id),
                                  queue=queue,
                                  link=terminate_instance.subtask(kwargs={'instance_id': instance.id}),
                                  link_error=terminate_instance.subtask(kwargs={'instance_id': instance.id})
@@ -209,13 +210,14 @@ with%s compression", importhandler.name, '' if dataset.compress else 'out')
 
 
 @celery.task
-def train_model(dataset_id, model_id):
+def train_model(dataset_id, model_id, user_id):
     """
     Train new model celery task.
     """
     init_logger('trainmodel_log', obj=model_id)
 
     try:
+        user = app.db.User.find_one({'_id': ObjectId(user_id)})
         model = app.db.Model.find_one({'_id': ObjectId(model_id)})
         dataset = app.db.DataSet.find_one({'_id': ObjectId(dataset_id)})
         model.delete_metadata()
@@ -223,6 +225,11 @@ def train_model(dataset_id, model_id):
         model.dataset = dataset
         model.status = model.STATUS_TRAINING
         model.error = ""
+        model.trained_by = {
+            '_id': user._id,
+            'uid': user.uid,
+            'name': user.name
+        }
         model.save(validate=True)
         feature_model = FeatureModel(json.dumps(model.features),
                                      is_file=False)
@@ -233,7 +240,8 @@ def train_model(dataset_id, model_id):
         train_fp = dataset.get_data_stream()
 
         from memory_profiler import memory_usage
-        mem_usage = memory_usage((trainer.train, (streamingiterload(train_fp),)), interval=0)
+        mem_usage = memory_usage((trainer.train,
+                                  (streamingiterload(train_fp),)), interval=0)
 
         train_fp.close()
         trainer.clear_temp_data()
@@ -419,8 +427,17 @@ def run_test(dataset_id, test_id):
                     new_row[new_key] = val
 
                 example = app.db.TestExample()
-                #example['data_input'] = new_row
-                fp.write('{0}\n'.format(json.dumps(new_row)))
+
+                size_of_examle = getsizeof(new_row)
+                store_on_s3 = size_of_examle >\
+                              app.config['MAX_MONGO_EXAMPLE_SIZE']
+
+                if store_on_s3:
+                    fp.write('{0}\n'.format(json.dumps(new_row)))
+                    example['on_s3'] = True
+                else:
+                    example['data_input'] = new_row
+                    example['on_s3'] = False
 
                 example['vect_data'] = vectorized_data.tolist()[0]
                 example['id'] = str(new_row.get(model.example_id, '-1'))
@@ -432,15 +449,18 @@ def run_test(dataset_id, test_id):
                 example['model_name'] = model.name
                 example['test_id'] = str(test._id)
                 example['model_id'] = str(model._id)
+
                 try:
                     example.validate()
-                except Exception, exc:
+                except Exception as exc:
                     logging.error('Problem with saving example')
-                    res.append(None)
+                    if store_on_s3:
+                        res.append(None)
                     continue
                 example.save(check_keys=False)
 
-                res.append(str(example._id))
+                if store_on_s3:
+                    res.append(str(example._id))
 
         def _chunks(sequences, n):
             length = len(sequences[0])
@@ -451,24 +471,27 @@ def run_test(dataset_id, test_id):
             for i in xrange(0, len(sequences[0]), count):
                 yield [s[i:i+count] for s in sequences]
 
-        examples = [
-            range(len(raw_data)),  # indexes
-            res
-        ]
-        #     metrics._labels,
-        #     metrics._preds.tolist(),
-        #     metrics._probs.tolist(),
-        #     [v.tolist() for v in metrics._true_data.todense()]
-        # ]
+        if len(res):
+            examples = [
+                range(len(res)),  # indexes
+                res
+            ]
+            #     metrics._labels,
+            #     metrics._preds.tolist(),
+            #     metrics._probs.tolist(),
+            #     [v.tolist() for v in metrics._true_data.todense()]
+            # ]
 
-        examples_tasks = []
-        for params in _chunks(examples, app.config['EXAMPLES_CHUNK_SIZE']):
-            examples_tasks.append(store_examples.si(test_id, params))
+            examples_tasks = []
+            for params in _chunks(examples, app.config['EXAMPLES_CHUNK_SIZE']):
+                examples_tasks.append(store_examples.si(test_id, params))
 
-        # Wait for all results
-        logging.info('Storing raw data to s3')
-        res = group(examples_tasks).apply_async().get(propagate=False)
+            # Wait for all results
+            logging.info('Storing raw data to s3')
+            res = group(examples_tasks).apply_async().get(propagate=False)
+
         os.remove(filename)
+
         test.status = Test.STATUS_COMPLETED
         test.save()
         logging.info('Test %s completed' % test.name)

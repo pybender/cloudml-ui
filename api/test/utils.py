@@ -16,6 +16,9 @@ MODEL_ID = '519318e6106a6c0df349bc0b'
 FEATURE_COUNT = 37
 TARGET_VARIABLE = 'hire_outcome'
 
+AUTH_TOKEN = '123'
+HTTP_HEADERS = [('X-Auth-Token', AUTH_TOKEN)]
+
 
 class BaseTestCase(unittest.TestCase):
     FIXTURES = []
@@ -41,8 +44,11 @@ class BaseTestCase(unittest.TestCase):
 
     @classmethod
     def fixtures_load(cls):
-        from api import models
         from mongokit.document import DocumentProperties, R
+
+        if 'users.json' not in cls.FIXTURES:
+            cls.FIXTURES = ('users.json',) + tuple(cls.FIXTURES)
+
         for fixture in cls.FIXTURES:
             data = _load_fixture_data(fixture)
             for collection_name, documents in data.iteritems():
@@ -104,7 +110,7 @@ class BaseTestCase(unittest.TestCase):
     def _check_list(self, show='created_on,type', query_params={}):
         key = "%ss" % self.RESOURCE.OBJECT_NAME
         url = self.BASE_URL
-        resp = self.app.get(url)
+        resp = self.app.get(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.OK,
                           'Got %s when trying get %s' % (resp.status, url))
         data = json.loads(resp.data)
@@ -117,7 +123,7 @@ class BaseTestCase(unittest.TestCase):
         self.assertEquals(obj_resp[0].keys(), list(default_fields))
 
         url = self._get_url(show=show)
-        resp = self.app.get(url)
+        resp = self.app.get(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.OK,
                           'Got %s when trying get %s' % (resp.status, url))
         data = json.loads(resp.data)
@@ -133,7 +139,7 @@ class BaseTestCase(unittest.TestCase):
     def _check_details(self, show='created_on,type'):
         key = self.RESOURCE.OBJECT_NAME
         url = self._get_url(id=self.obj._id)
-        resp = self.app.get(url)
+        resp = self.app.get(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.OK,
                           'Got %s when trying get %s: %s' %
                           (resp.status, url, resp.data))
@@ -144,7 +150,7 @@ class BaseTestCase(unittest.TestCase):
         self.assertEquals(self.obj.name, obj_resp['name'])
 
         url = self._get_url(id=self.obj._id, show=show)
-        resp = self.app.get(url)
+        resp = self.app.get(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.OK,
                           'Got %s when trying get %s' % (resp.status, url))
         data = json.loads(resp.data)
@@ -173,7 +179,7 @@ class BaseTestCase(unittest.TestCase):
     def _check_post(self, post_data={}, error='', load_model=False, action=None):
         count = self.Model.find().count()
         url = self._get_url(action=action) if action else self.BASE_URL
-        resp = self.app.post(url, data=post_data)
+        resp = self.app.post(url, data=post_data, headers=HTTP_HEADERS)
         if error:
             from api.utils import ERR_INVALID_DATA
             # Checking validation error
@@ -204,7 +210,7 @@ class BaseTestCase(unittest.TestCase):
         else:
             url = self._get_url(id=self.obj._id)
 
-        resp = self.app.put(url, data=post_data)
+        resp = self.app.put(url, data=post_data, headers=HTTP_HEADERS)
         if error:
             from api.utils import ERR_INVALID_DATA
             # Checking validation error
@@ -232,7 +238,7 @@ class BaseTestCase(unittest.TestCase):
             query_params = filter_params
 
         url = self._get_url(**filter_params)
-        resp = self.app.get(url)
+        resp = self.app.get(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.OK)
         data = json.loads(resp.data)
         count = self.db.Model.find(query_params).count()
@@ -241,10 +247,10 @@ class BaseTestCase(unittest.TestCase):
     def _check_delete(self):
         self.assertTrue(self.obj)
         url = self._get_url(id=self.obj._id)
-        resp = self.app.get(url)
+        resp = self.app.get(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.OK)
 
-        resp = self.app.delete(url)
+        resp = self.app.delete(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, 204)
 
         obj = self.Model.find_one({'_id': self.obj._id})

@@ -14,7 +14,11 @@
     <tr ng-repeat="test in tests" ng-class="{error : test.status=='Error', warning : test.status=='In Progress', success : test.status =='Completed'}">
       <td><a href="#{{ test.objectUrl() }}">{{ test.name }}</a></td>
       <td title="{{ test.error }}">{{ test.status }}</td>
-      <td>{{ test.created_on|format_date }}</td>
+      <td>
+          {{ test.created_on|format_date }}
+          <br>
+          <small ng-show="test.created_by">by {{ test.created_by.name }} ({{ test.created_by.uid }})</small>
+      </td>
       <td><span class="value" ng-repeat="(key, val) in test.parameters">{{ key }}={{ val }}</span></td>
       <td>{{ test.accuracy.toFixed(4) }}</td>
       <td><a href="#{{ test.examplesUrl() }}">{{ test.examples_count }}</a></td>

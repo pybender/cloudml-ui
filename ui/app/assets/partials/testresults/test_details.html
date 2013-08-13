@@ -7,6 +7,11 @@
   </div>
 </h2>
 
+<div title="quick info" ng-init="obj=test">
+  <ng-include src="'/partials/parts/created_tags.html'"></ng-include>
+</div>
+<p></p>
+
 <alert-message ng-hide="test.loaded" class="alert-info" msg="Loading..." unsafe></alert-message>
 
 <alert-message ng-show="test.loaded && test.status != 'Completed'" class="alert-warning" msg="Test was not calculated yet. Status: {{ test.status }}" unsafe></alert-message>
@@ -44,13 +49,14 @@
                   </span>
                 </div>
                 <div>
-                    Created at: <span class="value">{{ test.created_on|format_date }}</span>
-                </div>
-                <div>
                     Examples count: <span class="value">{{ test.examples_count }}</span>
                 </div>
                 <div>
                     Memory used: <span class="value">{{ test.memory_usage.testing }} Mb</span>
+                </div>
+                <div ng-show="test.created_by">
+                    Created by:
+                    <span class="value">{{ test.created_by.name }} ({{ test.created_by.uid }})</span>
                 </div>
 
                 <div ng-controller="TestExportsCtrl" ng-init="init(test)">

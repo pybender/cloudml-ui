@@ -3,20 +3,38 @@ import StringIO
 import logging
 import os
 from datetime import datetime
-import cPickle as pickle
 from os.path import join, exists
 from os import makedirs
 
 from bson import Binary
 from flask.ext.mongokit import Document
+from flask import request, has_request_context
+
 from core.trainer.streamutils import streamingiterload
 
 from api import app
 from api.amazon_utils import AmazonS3Helper
 
 
+class BaseDocument(Document):
+    def _set_user(self, user):
+        if user:
+            field = 'created_by' if '_id' not in self else 'updated_by'
+            if field in self:
+                self[field] = {
+                    '_id': user._id,
+                    'uid': user.uid,
+                    'name': user.name
+                }
+
+    def save(self, *args, **kwargs):
+        if has_request_context():
+            self._set_user(getattr(request, 'user', None))
+        return super(BaseDocument, self).save(*args, **kwargs)
+
+
 @app.conn.register
-class LogMessage(Document):
+class LogMessage(BaseDocument):
     TRAIN_MODEL = 'trainmodel_log'
     IMPORT_DATA = 'importdata_log'
     RUN_TEST = 'runtest_log'
@@ -45,7 +63,7 @@ class LogMessage(Document):
 
 
 @app.conn.register
-class WeightsCategory(Document):
+class WeightsCategory(BaseDocument):
     """
     Represents Model Parameter Weights Category.
 
@@ -63,7 +81,7 @@ class WeightsCategory(Document):
 
 
 @app.conn.register
-class Weight(Document):
+class Weight(BaseDocument):
     """
     Represents Model Parameter Weight
     """
@@ -93,7 +111,7 @@ app.db.Weight.collection.ensure_index(
 
 
 @app.conn.register
-class ImportHandler(Document):
+class ImportHandler(BaseDocument):
     TYPE_DB = 'Db'
     TYPE_REQUEST = 'Request'
     __collection__ = 'handlers'
@@ -101,14 +119,18 @@ class ImportHandler(Document):
         'name': basestring,
         'type': basestring,
         'created_on': datetime,
+        'created_by': dict,
         'updated_on': datetime,
+        'updated_by': dict,
         'data': dict,
         'import_params': list,
     }
     required_fields = ['name', 'created_on', 'updated_on', ]
     default_values = {'created_on': datetime.utcnow,
                       'updated_on': datetime.utcnow,
-                      'type': TYPE_DB}
+                      'type': TYPE_DB,
+                      'created_by': {},
+                      'updated_by': {}}
     use_dot_notation = True
 
     def create_dataset(self, params, run_import_data=True):
@@ -155,7 +177,7 @@ class ImportHandler(Document):
 
 
 @app.conn.register
-class DataSet(Document):
+class DataSet(BaseDocument):
     __collection__ = 'dataset'
     LOG_TYPE = 'importdata_log'
 
@@ -168,7 +190,9 @@ class DataSet(Document):
         'status': basestring,
         'error': basestring,
         'created_on': datetime,
+        'created_by': dict,
         'updated_on': datetime,
+        'updated_by': dict,
         'data': basestring,
         'import_params': dict,
         'import_handler_id': basestring,
@@ -187,7 +211,9 @@ class DataSet(Document):
                       'on_s3': False,
                       'compress': True,
                       'status': STATUS_IMPORTING,
-                      'data_fields': []}
+                      'data_fields': [],
+                      'created_by': {},
+                      'updated_by': {}}
     use_dot_notation = True
 
     def __init__(self, *args, **kwargs):
@@ -277,7 +303,7 @@ class DataSet(Document):
 
 
 @app.conn.register
-class Tag(Document):
+class Tag(BaseDocument):
     __collection__ = 'tags'
     structure = {
         'id': basestring,
@@ -314,7 +340,7 @@ class Tag(Document):
 
 
 @app.conn.register
-class Model(Document):
+class Model(BaseDocument):
     """
     Represents Model details and it's Tests.
     """
@@ -336,7 +362,10 @@ class Model(Document):
         'name': basestring,
         'status': basestring,
         'created_on': datetime,
+        'created_by': dict,
         'updated_on': datetime,
+        'updated_by': dict,
+        'trained_by': dict,
         'error': basestring,
 
         'features': dict,
@@ -377,6 +406,9 @@ class Model(Document):
                       'weights_synchronized': False,
                       'spot_instance_request_id': '',
                       'memory_usage': {},
+                      'created_by': {},
+                      'updated_by': {},
+                      'trained_by': {},
                       }
     use_dot_notation = True
     use_autorefs = True
@@ -442,7 +474,7 @@ class Model(Document):
 
 
 @app.conn.register
-class Test(Document):
+class Test(BaseDocument):
     LOG_TYPE = 'runtest_log'
 
     STATUS_QUEUED = 'Queued'
@@ -464,6 +496,7 @@ class Test(Document):
         'status': basestring,
         'error': basestring,
         'created_on': datetime,
+        'created_by': dict,
         'updated_on': datetime,
         'data': dict,
         'examples_count': int,
@@ -486,7 +519,8 @@ class Test(Document):
         'updated_on': datetime.utcnow,
         'status': STATUS_QUEUED,
         'memory_usage': {},
-        'exports': []
+        'exports': [],
+        'created_by': {},
     }
     use_dot_notation = True
     use_autorefs = True
@@ -549,7 +583,7 @@ class Test(Document):
 
 
 @app.conn.register
-class TestExample(Document):
+class TestExample(BaseDocument):
     __collection__ = 'example'
     S3_KEY = 'text_example_'
 
@@ -572,9 +606,11 @@ class TestExample(Document):
         'model_name': basestring,
         'test_id': basestring,
         'model_id': basestring,
+
+        'on_s3': bool,
     }
     use_autorefs = True
-    default_values = {'created_on': datetime.utcnow}
+    default_values = {'created_on': datetime.utcnow, 'on_s3': False}
     required_fields = ['created_on', ]
     use_dot_notation = True
 
@@ -598,9 +634,10 @@ class TestExample(Document):
 
     @property
     def data_input(self):
-        if not self['data_input'] and getattr(self, '_id'):
-            data = self._load_from_s3()
-            self['data_input'] = json.loads(data)
+        if self['on_s3']:
+            if not self['data_input'] and getattr(self, '_id'):
+                data = self._load_from_s3()
+                self['data_input'] = json.loads(data)
         return self['data_input']
 
     @data_input.setter
@@ -609,7 +646,7 @@ class TestExample(Document):
 
     def save(self, *args, **kwargs):
         data_input = None
-        if self['data_input']:
+        if self['data_input'] and self.on_s3:
             data_input = self['data_input']
             self['data_input'] = None
         super(TestExample, self).save(*args, **kwargs)
@@ -623,7 +660,7 @@ class TestExample(Document):
 
 
 @app.conn.register
-class Instance(Document):
+class Instance(BaseDocument):
     __collection__ = 'instances'
     structure = {
         'name': basestring,
@@ -632,13 +669,80 @@ class Instance(Document):
         'type': basestring,
         'is_default': bool,
         'created_on': datetime,
+        'created_by': dict,
         'updated_on': datetime,
+        'updated_by': dict,
     }
     required_fields = ['name', 'created_on', 'updated_on', 'ip', ]
     default_values = {'created_on': datetime.utcnow,
                       'updated_on': datetime.utcnow,
-                      'is_default': False, }
+                      'is_default': False,
+                      'created_by': {},
+                      'updated_by': {}}
     use_dot_notation = True
 
     def __repr__(self):
         return '<Instance %r>' % self.name
+
+
+@app.conn.register
+class User(BaseDocument):
+    __collection__ = 'users'
+    structure = {
+        'uid': basestring,
+        'name': basestring,
+        'odesk_url': basestring,
+        'email': basestring,
+        'portrait_32_img': basestring,
+        'created_on': datetime,
+        'updated_on': datetime,
+        'auth_token': basestring,
+    }
+    required_fields = ['uid', 'name', 'created_on', 'updated_on']
+    default_values = {
+        'created_on': datetime.utcnow,
+        'updated_on': datetime.utcnow,
+    }
+    use_dot_notation = True
+
+    def __repr__(self):
+        return '<User %r>' % self.name
+
+    @classmethod
+    def get_hash(cls, token):
+        import hashlib
+        return hashlib.sha224(token).hexdigest()
+
+    @classmethod
+    def authenticate(cls, oauth_token, oauth_token_secret, oauth_verifier):
+        from auth import OdeskAuth
+        auth = OdeskAuth()
+        _oauth_token, _oauth_token_secret = auth.authenticate(
+            oauth_token, oauth_token_secret, oauth_verifier)
+        info = auth.get_my_info(_oauth_token, _oauth_token_secret,
+                                oauth_verifier)
+
+        user = app.db.User.find_one({'uid': info['auth_user']['uid']})
+        if not user:
+            user = app.db.User()
+            user.uid = info['auth_user']['uid']
+
+        import uuid
+        auth_token = str(uuid.uuid1())
+        user.auth_token = cls.get_hash(auth_token)
+
+        user.name = '{0} {1}'.format(
+            info['auth_user']['first_name'],
+            info['auth_user']['last_name'])
+        user.odesk_url = info['info']['profile_url']
+        user.portrait_32_img = info['info']['portrait_32_img']
+        user.email = info['auth_user']['mail']
+
+        user.save()
+        return auth_token, user
+
+    @classmethod
+    def get_auth_url(cls):
+        from auth import OdeskAuth
+        auth = OdeskAuth()
+        return auth.get_auth_url()

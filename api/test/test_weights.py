@@ -3,7 +3,7 @@ import math
 import json
 import random
 
-from utils import BaseTestCase
+from utils import BaseTestCase, HTTP_HEADERS
 from api import app
 
 
@@ -25,7 +25,8 @@ class WeightsTests(BaseTestCase):
                      'train_import_handler_file': handler,
                      'trainer': trainer,
                      'name': cls.MODEL_NAME}
-        resp = cls.app.post('/cloudml/models/', data=post_data)
+        resp = cls.app.post('/cloudml/models/', data=post_data,
+                            headers=HTTP_HEADERS)
         assert resp.status_code == httplib.CREATED
         cls.model = app.db.Model.find_one({'name': cls.MODEL_NAME})
         cls.BASE_URL = '/cloudml/weights/%s/' % cls.model._id
@@ -92,7 +93,7 @@ class WeightsTests(BaseTestCase):
                       'value': -0.07864226503356551})
 
     def test_list(self):
-        resp = self.app.get(self.BASE_URL)
+        resp = self.app.get(self.BASE_URL, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.OK)
         data = json.loads(resp.data)
         self.assertTrue(data['has_next'])
@@ -104,7 +105,8 @@ class WeightsTests(BaseTestCase):
         self.assertTrue('tsexams->Ruby on Rails' in resp.data)
 
     def test_tree(self):
-        resp = self.app.get('/cloudml/weights_tree/%s' % self.model._id)
+        resp = self.app.get('/cloudml/weights_tree/%s' % self.model._id,
+                            headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.OK)
         data = json.loads(resp.data)
         self.assertTrue('weights' in data, data)
