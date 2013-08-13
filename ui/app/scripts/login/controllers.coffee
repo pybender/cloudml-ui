@@ -1,6 +1,6 @@
 'use strict'
 
-angular.module('app.login.controllers', ['app.config', ])
+angular.module('app.login.controllers', ['app.config', 'app.services'])
 
 .controller('LoginCtl', [
   '$scope'
