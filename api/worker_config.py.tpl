@@ -27,3 +27,36 @@ CELERY_DEFAULT_ROUTING_KEY = 'task.default'
 AMAZON_ACCESS_TOKEN = '{{ amazon_access_token }}'
 AMAZON_TOKEN_SECRET = '{{ amazon_token_secret }}'
 AMAZON_BUCKET_NAME = '{{ amazon_bucket_name }}'
+
+EXAMPLES_CHUNK_SIZE = 10
+MAX_MONGO_EXAMPLE_SIZE = 2000
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': True,
+    'formatters': {
+        'normal': {
+            'format': '[%(asctime)s] %(levelname)s - %(message)s'
+        },
+    },
+    'filters': {},
+    'handlers': {
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'normal'
+        },
+    },
+    'loggers': {
+        'root': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'boto': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    }
+}
