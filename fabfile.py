@@ -126,7 +126,7 @@ def deploy():
     virtualenv.pip_install_req.run()
     virtualenv.make_relocatable.run()
 
-    angularjs.init.run()
+    #angularjs.init.run()
     angularjs.push_config.run()
     angularjs.build.run()
 
