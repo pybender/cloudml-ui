@@ -9,6 +9,8 @@ Relese 2013-08-13
 * Feature - Add oDesk auth
 * Task - Store test examples to s3 the default only for very big datasets
 * Bug - Fixed storing examples to s3
+* Taks - Added select for 'Examples label field name' and
+'Examples id field name' fields on model details page
 
 
 Relese 2013-08-01
