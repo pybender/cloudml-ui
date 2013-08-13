@@ -2,7 +2,7 @@
 
 ### Sevices ###
 
-services = angular.module('app.services', [])
+services = angular.module('app.services', ['app.config'])
 
 services.factory 'version', -> "0.1"
 
