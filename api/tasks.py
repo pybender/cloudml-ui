@@ -51,7 +51,8 @@ def request_spot_instance(dataset_id=None, instance_type=None, model_id=None):
 def get_request_instance(request_id,
                          callback=None,
                          dataset_id=None,
-                         model_id=None):
+                         model_id=None,
+                         user_id=None):
     init_logger('trainmodel_log', obj=model_id)
     ec2 = AmazonEC2Helper()
     logging.info('Get spot instance request %s' % request_id)
@@ -98,7 +99,7 @@ def get_request_instance(request_id,
         logging.info('Train model task apply async')
         queue = "ip-%s" % "-".join(instance.private_ip_address.split('.'))
         train_model.apply_async((dataset_id,
-                                 model_id),
+                                 model_id, user_id),
                                  queue=queue,
                                  link=terminate_instance.subtask(kwargs={'instance_id': instance.id}),
                                  link_error=terminate_instance.subtask(kwargs={'instance_id': instance.id})
@@ -209,13 +210,14 @@ with%s compression", importhandler.name, '' if dataset.compress else 'out')
 
 
 @celery.task
-def train_model(dataset_id, model_id):
+def train_model(dataset_id, model_id, user_id):
     """
     Train new model celery task.
     """
     init_logger('trainmodel_log', obj=model_id)
 
     try:
+        user = app.db.User.find_one({'_id': ObjectId(user_id)})
         model = app.db.Model.find_one({'_id': ObjectId(model_id)})
         dataset = app.db.DataSet.find_one({'_id': ObjectId(dataset_id)})
         model.delete_metadata()
@@ -223,6 +225,11 @@ def train_model(dataset_id, model_id):
         model.dataset = dataset
         model.status = model.STATUS_TRAINING
         model.error = ""
+        model.trained_by = {
+            '_id': user._id,
+            'uid': user.uid,
+            'name': user.name
+        }
         model.save(validate=True)
         feature_model = FeatureModel(json.dumps(model.features),
                                      is_file=False)

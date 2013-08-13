@@ -144,6 +144,14 @@
             Created by:
             <span class="value">{{ model.created_by.name }} ({{ model.created_by.uid }})</span>
         </div>
+        <div ng-show="model.updated_by">
+            Updated by:
+            <span class="value">{{ model.updated_by.name }} ({{ model.updated_by.uid }})</span>
+        </div>
+        <div ng-show="model.status == 'Trained'">
+            Trained by:
+            <span class="value">{{ model.trained_by.name }} ({{ model.trained_by.uid }})</span>
+        </div>
       </div>
     </div>
   </div>

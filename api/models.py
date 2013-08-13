@@ -365,6 +365,7 @@ class Model(BaseDocument):
         'created_by': dict,
         'updated_on': datetime,
         'updated_by': dict,
+        'trained_by': dict,
         'error': basestring,
 
         'features': dict,
@@ -407,6 +408,7 @@ class Model(BaseDocument):
                       'memory_usage': {},
                       'created_by': {},
                       'updated_by': {},
+                      'trained_by': {},
                       }
     use_dot_notation = True
     use_autorefs = True

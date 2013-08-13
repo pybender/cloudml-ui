@@ -185,9 +185,12 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
                                                           model_id=str(model._id)))
                 tasks_list.append(get_request_instance.subtask(
                     (),
-                    {'callback': 'train',
-                     'dataset_id': str(dataset._id),
-                     'model_id': str(model._id)},
+                    {
+                        'callback': 'train',
+                        'dataset_id': str(dataset._id),
+                        'model_id': str(model._id),
+                        'user_id': str(request.user._id),
+                    },
                     retry=True,
                     countdown=10,
                     retry_policy={
@@ -199,9 +202,10 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
                 #tasks_list.append(self_terminate.s())
             elif not instance is None:
                 if form.params_filled:
-                    train_model_args = (str(model._id), )
+                    train_model_args = (str(model._id), str(request.user._id))
                 else:
-                    train_model_args = (str(dataset._id), str(model._id))
+                    train_model_args = (str(dataset._id), str(model._id),
+                                        str(request.user._id))
                 tasks_list.append(train_model.subtask(train_model_args, {},
                                                       queue=instance['name']))
             chain(tasks_list).apply_async()

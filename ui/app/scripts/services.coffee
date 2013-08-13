@@ -34,7 +34,6 @@ services.factory('auth', ($http, $cookieStore, $rootScope, settings) ->
         transformRequest: angular.identity
         params: {}
       ).then ((resp) =>
-        console.log(resp.data.auth_url)
         resp
       )
 
@@ -50,7 +49,6 @@ services.factory('auth', ($http, $cookieStore, $rootScope, settings) ->
           oauth_verifier: oauth_verifier
         }
       ).then ((resp) =>
-        console.log(resp.data)
         token = resp.data.auth_token
         _put_auth_token(token)
 

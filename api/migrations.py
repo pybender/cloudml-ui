@@ -51,6 +51,10 @@ class ModelMigration(DbMigration):
         self.target = {'updated_by': {'$exists': False}}
         self.update = {'$set': {'updated_by': {}}}
 
+    def allmigration06__add_trained_by(self):
+        self.target = {'trained_by': {'$exists': False}}
+        self.update = {'$set': {'trained_by': {}}}
+
 
 class TestMigration(DbMigration):
     DOC_CLASS = models.Test

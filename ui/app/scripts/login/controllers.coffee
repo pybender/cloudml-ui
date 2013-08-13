@@ -15,11 +15,7 @@ angular.module('app.login.controllers', ['app.config', ])
     $scope.loading_state = false
 
     $scope.authenticate = () =>
-      params = "menubar=no,location=no,width=840,height=500"
-      url = "/#auth/authenticate"
-      $scope.loading_state = true
-      w = window.open(url, 'Authentication', params)
-      w.focus()
+      $location.path("/auth/authenticate")
 ])
 
 .controller('AuthCtl', [
@@ -31,6 +27,10 @@ angular.module('app.login.controllers', ['app.config', ])
   'auth'
 
   ($scope, $http, $location, $routeParams, settings, $auth) ->
+    $scope.is_authenticated = $auth.is_authenticated()
+    if $scope.is_authenticated
+      $scope.status = 'Already logged in'
+      return
     $scope.status = 'Getting data. Please wait...'
     $auth.login().then ((resp) ->
       $scope.status = 'Redirecting to oDesk. Please wait...'
@@ -49,13 +49,16 @@ angular.module('app.login.controllers', ['app.config', ])
   'auth'
 
   ($scope, $http, $location, $routeParams, settings, $auth) ->
+    $scope.is_authenticated = $auth.is_authenticated()
+    if $scope.is_authenticated
+      $scope.status = 'Already logged in'
+      return
     $scope.status = 'Authorization. Please wait...'
     oauth_token = $location.search().oauth_token
     oauth_verifier = $location.search().oauth_verifier
     $auth.authorize(oauth_token, oauth_verifier).then ((resp) ->
       $scope.status = 'Authorized'
-      window.opener.location.reload()
-      window.close()
+      window.location.reload()
     ), ((resp) ->
       $scope.setError(resp, 'authorizing')
     )

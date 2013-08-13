@@ -132,8 +132,8 @@ App.config([
 ])
 
 App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
-         '$dialog',
-($rootScope, $routeParams, $location, settings, $auth, $dialog) ->
+         '$cookieStore'
+($rootScope, $routeParams, $location, settings, $auth, $cookieStore) ->
   $rootScope.Math = window.Math
 
   # this will be available to all scope variables
@@ -228,10 +228,15 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
     if next.$route
       if not $auth.is_authenticated()
         if next.$route.controller not in auth_ctrls
+          $cookieStore.put('redirect_to', $location.url())
           $location.path("/auth/login")
       else
         if next.$route.controller in auth_ctrls
-          $location.path("/models")
+          url = $cookieStore.get('redirect_to')
+          if url
+            $location.url(url)
+          else
+            $location.path("/models")
   )
 
 ])
