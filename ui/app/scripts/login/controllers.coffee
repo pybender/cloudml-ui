@@ -10,8 +10,8 @@ angular.module('app.login.controllers', ['app.config', 'app.services'])
   'settings'
   'auth'
 
-  ($scope, $http, $location, $routeParams, settings, $auth) ->
-    $scope.is_authenticated = $auth.is_authenticated()
+  ($scope, $http, $location, $routeParams, settings, auth) ->
+    $scope.is_authenticated = auth.is_authenticated()
     $scope.loading_state = false
 
     $scope.authenticate = () =>
@@ -26,13 +26,13 @@ angular.module('app.login.controllers', ['app.config', 'app.services'])
   'settings'
   'auth'
 
-  ($scope, $http, $location, $routeParams, settings, $auth) ->
-    $scope.is_authenticated = $auth.is_authenticated()
+  ($scope, $http, $location, $routeParams, settings, auth) ->
+    $scope.is_authenticated = auth.is_authenticated()
     if $scope.is_authenticated
       $scope.status = 'Already logged in'
       return
     $scope.status = 'Getting data. Please wait...'
-    $auth.login().then ((resp) ->
+    auth.login().then ((resp) ->
       $scope.status = 'Redirecting to oDesk. Please wait...'
       window.location = resp.data.auth_url
     ), ((resp) ->
@@ -48,15 +48,15 @@ angular.module('app.login.controllers', ['app.config', 'app.services'])
   'settings'
   'auth'
 
-  ($scope, $http, $location, $routeParams, settings, $auth) ->
-    $scope.is_authenticated = $auth.is_authenticated()
+  ($scope, $http, $location, $routeParams, settings, auth) ->
+    $scope.is_authenticated = auth.is_authenticated()
     if $scope.is_authenticated
       $scope.status = 'Already logged in'
       return
     $scope.status = 'Authorization. Please wait...'
     oauth_token = $location.search().oauth_token
     oauth_verifier = $location.search().oauth_verifier
-    $auth.authorize(oauth_token, oauth_verifier).then ((resp) ->
+    auth.authorize(oauth_token, oauth_verifier).then ((resp) ->
       $scope.status = 'Authorized'
       window.location.reload()
     ), ((resp) ->
@@ -72,9 +72,9 @@ angular.module('app.login.controllers', ['app.config', 'app.services'])
   'settings'
   'auth'
 
-  ($scope, $http, $location, $routeParams, settings, $auth) ->
+  ($scope, $http, $location, $routeParams, settings, auth) ->
     $scope.init = () =>
-      user = $auth.get_user()
+      user = auth.get_user()
       if user
         user.then ((resp) ->
           $scope.user = resp.data.user
@@ -82,6 +82,6 @@ angular.module('app.login.controllers', ['app.config', 'app.services'])
         )
 
     $scope.logout = () =>
-      $auth.logout()
+      auth.logout()
       location.reload()
 ])
