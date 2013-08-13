@@ -3,6 +3,14 @@
 Changelog
 =========
 
+
+Relese 2013-08-13
+-----------------
+* Feature - Add oDesk auth
+* Task - Store test examples to s3 the default only for very big datasets
+* Bug - Fixed storing examples to s3
+
+
 Relese 2013-08-01
 -----------------
 * Bug - Fixed upload model
