@@ -1,4 +1,4 @@
-angular.module('app.base', ['app.config'])
+angular.module('app.base', ['app.config', 'app.services'])
 
 .factory('BaseModel', [
   '$http'
