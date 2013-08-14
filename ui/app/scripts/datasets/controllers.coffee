@@ -83,6 +83,7 @@ filesize,records_count,time,created_by'
   'DataSet'
 
   ($scope, DataSet) ->
+    $scope.dataset_options = []
     if $scope.handler?
       DataSet.$loadAll(
         handler_id: $scope.handler._id,
@@ -90,6 +91,13 @@ filesize,records_count,time,created_by'
         show: 'name,_id'
       ).then ((opts) ->
         $scope.datasets = opts.objects
+
+        if $scope.datasets? and not $scope.multiple_dataset
+          $scope.datasets.unshift({
+            _id: '',
+            name: '--- select dataset ---'
+          })
+
       ), ((opts) ->
         $scope.setError(opts, 'loading datasets')
       )

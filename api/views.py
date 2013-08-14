@@ -178,8 +178,12 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
                 dataset = import_handler.create_dataset(params)
                 tasks_list.append(import_data.s(str(dataset._id),
                                                 str(model._id)))
+                dataset = [dataset]
             else:
                 dataset = form.cleaned_data.get('dataset', None)
+
+            dataset_ids = [str(ds._id) for ds in dataset]
+
             if not spot_instance_type is None:
                 tasks_list.append(request_spot_instance.s(instance_type=spot_instance_type,
                                                           model_id=str(model._id)))
@@ -187,7 +191,7 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
                     (),
                     {
                         'callback': 'train',
-                        'dataset_id': str(dataset._id),
+                        'dataset_ids': dataset_ids,
                         'model_id': str(model._id),
                         'user_id': str(request.user._id),
                     },
@@ -204,7 +208,7 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
                 if form.params_filled:
                     train_model_args = (str(model._id), str(request.user._id))
                 else:
-                    train_model_args = (str(dataset._id), str(model._id),
+                    train_model_args = (dataset_ids, str(model._id),
                                         str(request.user._id))
                 tasks_list.append(train_model.subtask(train_model_args, {},
                                                       queue=instance['name']))

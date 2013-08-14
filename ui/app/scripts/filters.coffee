@@ -35,9 +35,13 @@ angular.module('app.filters', [])
 
 .filter('format_date', [() ->
   (text) ->
+    if not text
+      return ''
     dt = moment(text, 'YYYY-MM-DD HH:mm:ss.SSS')
     if dt
       return dt.format('DD-MM-YYYY HH:mm')
+    else
+      return text
 ])
 
 .filter('bytes', [() ->

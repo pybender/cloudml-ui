@@ -165,6 +165,15 @@ dataset.import_handler_id,created_by,trained_by'
     if $scope.handler?
       $scope.params = $scope.handler.import_params
 
+    if $scope.multiple_dataset
+      $scope.select2Options = {
+        allowClear: true,
+        placeholder: 'Please select dataset or several',
+        width: 230  # TODO: better move to template?
+      }
+    else
+      $scope.select2Options = {allowClear: true}
+
     $scope.changeParams = (param) ->
       $scope.paramsFilled = true
       $scope.new = false
@@ -191,6 +200,7 @@ dataset.import_handler_id,created_by,trained_by'
     $scope.parameters = {}
     $scope.model = dialog.model
     $scope.handler = $scope.model.train_import_handler_obj
+    $scope.multiple_dataset = true
 
     $scope.start = (result) ->
       model = $scope.dialog.model

@@ -285,7 +285,7 @@ class BaseChooseInstanceAndDataset(BaseForm):
         if value:
             inst = app.db.Instance.find_one({'_id': ObjectId(value)})
             if inst is None:
-                raise ValidationError('DataSet not found')
+                raise ValidationError('Instance not found')
             return inst
 
     def clean_spot_instance_type(self, value):
@@ -299,7 +299,18 @@ Please choose one of %s' % (self.TYPE_CHOICES, value))
         only_one_required(self.cleaned_data, ('parameters', 'dataset'))
 
 
-class ModelTrainForm(BaseChooseInstanceAndDataset):
+class BaseChooseInstanceAndDatasetMultiple(BaseChooseInstanceAndDataset):
+    def clean_dataset(self, value):
+        if value:
+            ids = value.split(',')
+            ds_list = list(app.db.DataSet.find({'_id': {'$in': [
+                ObjectId(ds_id) for ds_id in ids]}}))
+            if not ds_list:
+                raise ValidationError('DataSet not found')
+            return ds_list
+
+
+class ModelTrainForm(BaseChooseInstanceAndDatasetMultiple):
     def __init__(self, *args, **kwargs):
         self.model = kwargs.get('obj', None)
         super(ModelTrainForm, self).__init__(*args, **kwargs)

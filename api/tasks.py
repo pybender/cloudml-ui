@@ -3,7 +3,7 @@ import json
 import logging
 import csv
 import uuid
-from itertools import izip
+from itertools import izip, chain
 from bson.objectid import ObjectId
 from os.path import exists
 from os import makedirs, system
@@ -50,7 +50,7 @@ def request_spot_instance(dataset_id=None, instance_type=None, model_id=None):
 @celery.task()
 def get_request_instance(request_id,
                          callback=None,
-                         dataset_id=None,
+                         dataset_ids=None,
                          model_id=None,
                          user_id=None):
     init_logger('trainmodel_log', obj=model_id)
@@ -98,7 +98,7 @@ def get_request_instance(request_id,
     if callback == "train":
         logging.info('Train model task apply async')
         queue = "ip-%s" % "-".join(instance.private_ip_address.split('.'))
-        train_model.apply_async((dataset_id,
+        train_model.apply_async((dataset_ids,
                                  model_id, user_id),
                                  queue=queue,
                                  link=terminate_instance.subtask(kwargs={'instance_id': instance.id}),
@@ -206,23 +206,27 @@ with%s compression", importhandler.name, '' if dataset.compress else 'out')
         raise
 
     logging.info("Dataset using %s imported.", importhandler.name)
-    return dataset_id
+    return [dataset_id]
 
 
 @celery.task
-def train_model(dataset_id, model_id, user_id):
+def train_model(dataset_ids, model_id, user_id):
     """
     Train new model celery task.
     """
     init_logger('trainmodel_log', obj=model_id)
 
+    user = app.db.User.find_one({'_id': ObjectId(user_id)})
+    model = app.db.Model.find_one({'_id': ObjectId(model_id)})
+    datasets = app.db.DataSet.find({
+        '_id': {'$in': [ObjectId(ds_id) for ds_id in dataset_ids]}
+    })
+
     try:
-        user = app.db.User.find_one({'_id': ObjectId(user_id)})
-        model = app.db.Model.find_one({'_id': ObjectId(model_id)})
-        dataset = app.db.DataSet.find_one({'_id': ObjectId(dataset_id)})
         model.delete_metadata()
 
-        model.dataset = dataset
+        model.dataset = app.db.Model.find_one(
+            {'_id': ObjectId(dataset_ids[0])})  # TODO: is this right?
         model.status = model.STATUS_TRAINING
         model.error = ""
         model.trained_by = {
@@ -231,19 +235,28 @@ def train_model(dataset_id, model_id, user_id):
             'name': user.name
         }
         model.save(validate=True)
-        feature_model = FeatureModel(json.dumps(model.features),
-                                     is_file=False)
+        feature_model = FeatureModel(json.dumps(model.features), is_file=False)
         trainer = Trainer(feature_model)
         path = app.config['DATA_FOLDER']
         if not exists(path):
             makedirs(path)
-        train_fp = dataset.get_data_stream()
+
+        def _chain_datasets(ds_list):
+            fp = None
+            for d in ds_list:
+                if fp:
+                    fp.close()
+                fp = d.get_data_stream()
+                for row in streamingiterload(fp):
+                    yield row
+            if fp:
+                fp.close()
+
+        train_iter = _chain_datasets(datasets)
 
         from memory_profiler import memory_usage
         mem_usage = memory_usage((trainer.train,
-                                  (streamingiterload(train_fp),)), interval=0)
-
-        train_fp.close()
+                                  (train_iter,)), interval=0)
         trainer.clear_temp_data()
 
         model.status = model.STATUS_TRAINED
