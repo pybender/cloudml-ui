@@ -14,6 +14,8 @@ class ModelTests(BaseTestCase):
     Tests of the Models API.
     """
     INSTANCE_ID = '5170dd3a106a6c1631000000'
+    DS_ID = '5270dd3a106a6c1631000000'
+    DS2_ID = '5270dd3a106a6c1631000111'
     MODEL_NAME = 'TrainedModel'
     RELATED_PARAMS = {'model_id': MODEL_ID, 'model_name': MODEL_NAME}
     FIXTURES = ('importhandlers.json', 'models.json',
@@ -179,6 +181,20 @@ aws_instance is required')
             'import_handler_id': handler_id})[0]
         data = {'aws_instance': self.INSTANCE_ID,
                 'dataset': str(ds._id)}
+        resp, model = self._check_put(data, action='train', load_model=True)
+        model_resp = json.loads(resp.data)['model']
+        self.assertEquals(model_resp["status"], "Queued")
+        self.assertEquals(model_resp["name"], self.model.name)
+        # NOTE: Make sure that ds.gz file exist in test_data folder
+        self.assertEqual(model.status, model.STATUS_TRAINED, model.error)
+
+        # TODO: check other fields of the model
+
+    def test_train_model_with_multiple_dataset(self):
+        data = {
+            'aws_instance': self.INSTANCE_ID,
+            'dataset': ','.join([self.DS_ID, self.DS2_ID])
+        }
         resp, model = self._check_put(data, action='train', load_model=True)
         model_resp = json.loads(resp.data)['model']
         self.assertEquals(model_resp["status"], "Queued")
