@@ -100,23 +100,25 @@
             <a target="_blank" href="#{{ model.test_import_handler_obj.objectUrl() }}"><i class="icon-arrow-right"></i></a>
           </div>
         </div>
-        <div ng-show="model.dataset" title="DataSet which was used for training">
-            DataSet:
-            <span class="value">
-              <a href="#{{ model.dataset_obj.objectUrl() }}">
-              {{ model.dataset_obj.name }}</a>
-            </span>
+        <div ng-show="model.datasets" title="Data sets which was used for training">
+            Data sets:
+            <div ng-repeat="ds in model.datasets_obj">
+                <span class="value">
+                  <a href="#{{ ds.objectUrl() }}">
+                  {{ ds.name }}</a>
+                </span>
+            </div>
         </div>
       </div>
-      <div class="span4" ng-show="model.dataset_obj">
+      <div class="span4" ng-show="model.data_fields">
         <h5>Data Examples Titles</h5>
         <div>
           Examples label field name:
-          <span title="Label Field Name" ng-bind="model.example_label || 'not specified'" editable="model" value="model.example_label" editable-field="example_label" editable-input="select" source="model.dataset_obj.data_fields" editable-placement="right"></span>
+          <span title="Label Field Name" ng-bind="model.example_label || 'not specified'" editable="model" value="model.example_label" editable-field="example_label" editable-input="select" source="model.data_fields" editable-placement="right"></span>
         </div>
         <div>
           Examples id field name:
-          <span title="ID Field Name" ng-bind="model.example_id" editable="model" value="model.example_id" editable-field="example_id" editable-input="select" source="model.dataset_obj.data_fields" editable-placement="right"></span>
+          <span title="ID Field Name" ng-bind="model.example_id" editable="model" value="model.example_id" editable-field="example_id" editable-input="select" source="model.data_fields" editable-placement="right"></span>
         </div>
       </div>
       <div class="span4">

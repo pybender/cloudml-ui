@@ -377,8 +377,9 @@ class Model(BaseDocument):
 
         'test_import_handler': ImportHandler,
         'train_import_handler': ImportHandler,
-        # dataset which used for model training
-        'dataset': DataSet,
+        # ids of datasets used for model training
+        # 'dataset': DataSet,
+        'dataset_ids': list,
 
         'train_importhandler': dict,
         'importhandler': dict,
@@ -409,9 +410,21 @@ class Model(BaseDocument):
                       'created_by': {},
                       'updated_by': {},
                       'trained_by': {},
+                      'dataset_ids': [],
                       }
     use_dot_notation = True
     use_autorefs = True
+
+    @property
+    def dataset(self):
+        if self.dataset_ids:
+            return app.db.DataSet.find_one({'_id': self.dataset_ids[0]})
+        else:
+            return None
+
+    @property
+    def datasets_list(self):
+        return app.db.DataSet.find({'_id': {'$in': self.dataset_ids}})
 
     def get_trainer(self, loaded=True):
         trainer = self.trainer or self.fs.trainer

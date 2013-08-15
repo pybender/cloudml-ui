@@ -98,6 +98,35 @@ class Models(BaseResource):
 
     # GET specific methods
 
+    def _get_details_query(self, params, fields, **kwargs):
+        get_datasets = False
+        get_data_fields = False
+        if fields and 'datasets' in fields:
+            get_datasets = True
+            fields.remove('datasets')
+        if fields and 'data_fields' in fields:
+            get_data_fields = True
+            fields.remove('data_fields')
+
+        if get_datasets or get_data_fields:
+            fields.append('dataset_ids')
+
+        model = super(Models, self)._get_details_query(
+            params, fields, **kwargs)
+
+        if get_datasets:
+            model['datasets'] = [{
+                '_id': str(ds._id),
+                'name': ds.name,
+                'import_handler_id': str(ds.import_handler_id),
+            } for ds in model.datasets_list]
+
+        if get_data_fields:
+            model['data_fields'] = model.dataset.data_fields\
+                if model.dataset else []
+
+        return model
+
     def _prepare_filter_params(self, params):
         pdict = super(Models, self)._prepare_filter_params(params)
         if 'comparable' in pdict:

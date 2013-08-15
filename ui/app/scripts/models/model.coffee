@@ -35,7 +35,7 @@ angular.module('app.models.model', ['app.config'])
 
       train_import_handler: null
       test_import_handler: null
-      dataset: null
+      datasets: []
 
       loadFromJSON: (origData) =>
         super origData
@@ -50,9 +50,9 @@ angular.module('app.models.model', ['app.config'])
             @train_import_handler_obj = new ImportHandler(
               origData['train_import_handler'])
             @train_import_handler = @train_import_handler_obj._id
-          if origData.dataset?
-            @dataset_obj = new DataSet(origData['dataset'])
-            @dataset = @dataset._id
+          if origData.datasets?
+            @datasets_obj = for row in origData['datasets']
+              new DataSet(row)
 
       downloadUrl: =>
         return "#{@BASE_API_URL}#{@_id}/action/download/"

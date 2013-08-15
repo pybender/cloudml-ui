@@ -55,6 +55,21 @@ class ModelMigration(DbMigration):
         self.target = {'trained_by': {'$exists': False}}
         self.update = {'$set': {'trained_by': {}}}
 
+    def allmigration07__move_to_multiple_dataset(self):
+        self.target = {'dataset_ids': {'$exists': False}}
+        if not self.status:
+            for doc in self.collection.find(self.target):
+                try:
+                    doc['dataset_ids'] = []
+                    if doc['dataset']:
+                        doc['dataset_ids'].append(doc['dataset'].id)
+
+                    del doc['dataset']
+
+                    self.collection.save(doc)
+                except Exception, e:
+                    print e
+
 
 class TestMigration(DbMigration):
     DOC_CLASS = models.Test

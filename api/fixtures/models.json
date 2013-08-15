@@ -12,7 +12,7 @@
             "labels": ["0", "1"],
             "import_params": ["start", "end"],
             "error": "",
-            "dataset": null,
+            "dataset_ids": [],
             "feature_count": 37,
             "example_id": "opening_id",
             "example_label": "opening_title",

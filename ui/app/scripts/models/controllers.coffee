@@ -128,15 +128,14 @@ created_by'
           when 'model'
             extra_fields = 'created_on,target_variable,
 error,labels,weights_synchronized,example_id,example_label,
-updated_on,dataset._id,dataset.name,feature_count,test_import_handler.name,
+updated_on,feature_count,test_import_handler.name,
 train_import_handler.name,train_import_handler.import_params,tags,
 test_import_handler.import_params,train_import_handler._id,
-test_import_handler._id,memory_usage,dataset.data_fields,
-dataset.import_handler_id,created_by,trained_by'
+test_import_handler._id,memory_usage,created_by,trained_by,datasets,data_fields'
           when 'features' then extra_fields = 'features'
 
         if 'main' in $scope.LOADED_SECTIONS
-          # Do not need load main fields -> only etra
+          # Do not need load main fields -> only extra
           if extra_fields != ''
             $scope.load(extra_fields, name)
         else

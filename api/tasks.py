@@ -225,8 +225,7 @@ def train_model(dataset_ids, model_id, user_id):
     try:
         model.delete_metadata()
 
-        model.dataset = app.db.DataSet.find_one(
-            {'_id': ObjectId(dataset_ids[0])})  # TODO: is this right?
+        model.dataset_ids = [ObjectId(ds_id) for ds_id in dataset_ids]
         model.status = model.STATUS_TRAINING
         model.error = ""
         model.trained_by = {
