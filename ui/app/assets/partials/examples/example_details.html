@@ -1,5 +1,7 @@
-<h2>{{ data.test_name|capfirst }}:{{ data.id }} Example</h2>
-<div title="quick info" ng-init="obj=data">
+<h2>
+  Test Example <span ng-show="data.loaded">"{{ data.test_name|capfirst }}:{{ data.id }}"</span> Details
+</h2>
+<div title="quick info" ng-show="data.loaded" ng-init="obj=data">
   <span ng-repeat="tag in model.tags">
     <span class="badge">
       <a href="#/models/?tag={{ tag }}" style="color: white;">{{ tag }}</a>
