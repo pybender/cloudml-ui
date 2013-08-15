@@ -145,6 +145,7 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
          '$cookieStore'
 ($rootScope, $routeParams, $location, settings, $auth, $cookieStore) ->
   $rootScope.Math = window.Math
+  $rootScope.loadingCount = 0
 
   # this will be available to all scope variables
   $rootScope.includeLibraries = true
@@ -248,5 +249,4 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
           else
             $location.path("/models")
   )
-
 ])

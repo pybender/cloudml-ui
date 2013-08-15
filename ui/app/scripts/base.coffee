@@ -1,12 +1,25 @@
 angular.module('app.base', ['app.config', 'app.services'])
 
+
 .factory('BaseModel', [
   '$http'
   '$q'
   'settings'
   'auth'
+  '$rootScope'
   
-  ($http, $q, settings, auth) ->
+  ($http, $q, settings, auth, $rootScope) ->
+    transformRequest = (data, headersGetter) ->
+      $rootScope.loadingCount += 1
+      $rootScope.$broadcast('httpCallStarted')
+      return data
+
+    transformResponse = (data, headersGetter) ->
+      $rootScope.loadingCount -= 1
+      $rootScope.$broadcast('httpCallStopped')
+      if data
+        return JSON.parse(data)
+      return data
 
     class BaseModel
       BASE_UI_URL: ''
@@ -90,7 +103,8 @@ angular.module('app.base', ['app.config', 'app.services'])
           'X-Auth-Token': auth.get_auth_token()}
           url: url
           data: fd
-          transformRequest: angular.identity
+          transformRequest: transformRequest
+          transformResponse: transformResponse
           params: _.extend {
           }, opts
         ).then ((resp) =>
@@ -104,6 +118,8 @@ angular.module('app.base', ['app.config', 'app.services'])
         $http(
           method: 'GET'
           url: url
+          transformRequest: transformRequest
+          transformResponse: transformResponse
           headers: _.extend(settings.apiRequestDefaultHeaders, {
             'X-Auth-Token': auth.get_auth_token()})
           params: _.extend {

@@ -460,6 +460,7 @@ def run_test(dataset_id, test_id):
                 example['test_name'] = test.name
                 example['model_name'] = model.name
                 example['test_id'] = str(test._id)
+                example['test'] = test
                 example['model_id'] = str(model._id)
 
                 try:
@@ -519,7 +520,6 @@ def run_test(dataset_id, test_id):
 
 @celery.task
 def store_examples(test_id, params):
-
     init_logger('runtest_log', obj=test_id)
     res = []
 

@@ -33,8 +33,6 @@ angular.module('app.testresults.model', ['app.config'])
         @BASE_API_URL = TestResult.$get_api_url(@model_id)
         @BASE_UI_URL = "/models/#{@model_id}/tests/"
 
-
-
       @$get_api_url: (model_id) ->
         return "#{settings.apiUrl}models/#{model_id}/tests/"
 
