@@ -1,45 +1,65 @@
 <h2>{{ data.test_name|capfirst }}:{{ data.id }} Example</h2>
+<div title="quick info" ng-init="obj=data">
+  <span ng-repeat="tag in model.tags">
+    <span class="badge">
+      <a href="#/models/?tag={{ tag }}" style="color: white;">{{ tag }}</a>
+    </span> 
+  </span>
+  <ng-include src="'/partials/parts/created_tags.html'"></ng-include>
+  <i class="icon-status"></i>
+  <span class="badge badge-warning">{{ model.status }}</span>
+  </div>
+</div>
+<p/>
+
+<alert-message ng-show="data.isLoadedToS3() == false" class="alert-info" msg="This example data is storing to Amazon S3 now... Please take a look to details page later to get example parameters with weights" unsafe></alert-message>
+
 <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+
+<div ng-show="data.loaded">
 <div class="well">
-<div>
-  Target Variable: <span class="value">{{ data.target_variable }}</span>
+  <div>
+    Target Variable: <span class="value">{{ data.test.model.target_variable }}</span>
+  </div>
+  <div>
+    Label: <span class="value">{{ data.label }}</span>
+  </div>
+  <div>
+    Predicted Label: <span class="value">{{ data.pred_label }}</span>
+  </div>
+  <div>
+    Probs: <span class="value">{{ data.prob }}</span>
+  </div>
 </div>
-<div>
-  Label: <span class="value">{{ data.label }}</span>
-</div>
-<div>
-  Predicted Label: <span class="value">{{ data.pred_label }}</span>
-</div>
-<div>
-  Probs: <span class="value">{{ data.prob }}</span>
-</div>
-</div>
-<h4>Parameters with Weights</h4>
-<table class="table">
-    <thead>
-        <tr>
-          <th class="span2">Parameter</th>
-          <th class="span7">Value</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr ng-repeat="(title, val) in data.weighted_data_input" ng-class="val.2">
-          <td>{{ title }}</td>
-          <td style="max-width: 200px;">
-            <span ng-show="!val.weights" title="Weight: {{ val.model_weight }}. Vectorized value: {{ val.vect_value }}. Parameters weight: {{ val.weight }}" class="badge {{ val.css_class }}">{{ val.value }}</span>
 
-            <div ng-show="val.weights">
-              <span ng-show="val.type == 'list'" ng-init="lword=word.toLowerCase()" ng-repeat="word in val.value|words">
-                <span ng-show="val.weights[lword].weight" title="Weight: {{ val.weights[lword].model_weight }}. Vectorized value: {{ val.weights[lword].vect_value }}. Parameters weight: {{ val.weights[lword].weight }}" class="badge {{ val.weights[lword].css_class }}">{{ word }}</span>
-                <span ng-show="!val.weights[lword].weight">{{ word }}</span>
-              </span>
+<div ng-show="data.isLoadedToS3()">
+  <h4>Parameters with Weights</h4>
+  <table class="table">
+      <thead>
+          <tr>
+            <th class="span2">Parameter</th>
+            <th class="span7">Value</th>
+          </tr>
+      </thead>
+      <tbody>
+          <tr ng-repeat="(title, val) in data.weighted_data_input" ng-class="val.2">
+            <td>{{ title }}</td>
+            <td style="max-width: 200px;">
+              <span ng-show="!val.weights" title="Weight: {{ val.model_weight }}. Vectorized value: {{ val.vect_value }}. Parameters weight: {{ val.weight }}" class="badge {{ val.css_class }}">{{ val.value }}</span>
 
-              <span ng-show="val.type == 'dict'" ng-repeat="(key, dval) in val.weights">
-                <span title="Weight: {{ dval.model_weight }}. Vectorized value: {{ dval.vect_value }}. Parameters weight: {{ dval.weight }}" class="badge {{ dval.css_class }}">{{ key }}={{ dval.value }}</span>
-              </span>
+              <div ng-show="val.weights">
+                <span ng-show="val.type == 'list'" ng-init="lword=word.toLowerCase()" ng-repeat="word in val.value|words">
+                  <span ng-show="val.weights[lword].weight" title="Weight: {{ val.weights[lword].model_weight }}. Vectorized value: {{ val.weights[lword].vect_value }}. Parameters weight: {{ val.weights[lword].weight }}" class="badge {{ val.weights[lword].css_class }}">{{ word }}</span>
+                  <span ng-show="!val.weights[lword].weight">{{ word }}</span>
+                </span>
 
-            </div>
-          </td>
-        </tr>
-    </tbody>
-</table>
+                <span ng-show="val.type == 'dict'" ng-repeat="(key, dval) in val.weights">
+                  <span title="Weight: {{ dval.model_weight }}. Vectorized value: {{ dval.vect_value }}. Parameters weight: {{ dval.weight }}" class="badge {{ dval.css_class }}">{{ key }}={{ dval.value }}</span>
+                </span>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+  </table>
+</div>
+</div>

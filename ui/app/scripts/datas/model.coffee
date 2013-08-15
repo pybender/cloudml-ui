@@ -5,8 +5,9 @@ angular.module('app.datas.model', ['app.config'])
   '$q'
   'settings'
   'BaseModel'
+  'TestResult'
 
-  ($http, $q, settings, BaseModel) ->
+  ($http, $q, settings, BaseModel, Test) ->
 
     class Data extends BaseModel
       API_FIELDNAME: 'data'
@@ -24,6 +25,24 @@ angular.module('app.datas.model', ['app.config'])
         super opts
         @BASE_API_URL = Data.$get_api_url(@model_id, @test_id)
         @BASE_UI_URL = "/models/#{@model_id}/tests/#{@test_id}/examples/"
+
+      loadFromJSON: (origData) =>
+        super origData
+        if origData.test?
+          @test = new Test(origData['test'])
+
+      isLoadedToS3: ->
+        if !@loaded
+          return null
+
+        if @weighted_data_input?
+          if Object.keys(@weighted_data_input).length != 0
+            return true
+
+        if @test?
+          return @test.status != 'Storing'
+        else
+          return false
 
       @$get_api_url: (model_id, test_id) ->
         return "#{settings.apiUrl}models/#{model_id}/tests/#{test_id}/examples/"

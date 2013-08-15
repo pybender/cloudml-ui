@@ -637,7 +637,8 @@ class TestExample(BaseDocument):
         if self['on_s3']:
             if not self['data_input'] and getattr(self, '_id'):
                 data = self._load_from_s3()
-                self['data_input'] = json.loads(data)
+                if data:
+                    self['data_input'] = json.loads(data)
         return self['data_input']
 
     @data_input.setter

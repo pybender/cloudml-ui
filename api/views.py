@@ -514,13 +514,15 @@ class TestExamplesResource(BaseResource):
 
             from helpers.weights import get_example_params
             model_weights = app.db.Weight.find({'model_id': model_id})
-            weighted_data = dict(get_example_params(
-                model_weights, example.data_input, data))
-            example['weighted_data_input'] = weighted_data
-            # FIXME: Find a better way to do it using mongokit
-            app.db.TestExample.collection.update(
-                {'_id': example['_id']},
-                {'$set': {'weighted_data_input': weighted_data}})
+            if example.data_input:
+                weighted_data = dict(get_example_params(
+                    model_weights, example.data_input, data))
+                example['weighted_data_input'] = weighted_data
+                # FIXME: Find a better way to do it using mongokit
+                app.db.TestExample.collection.update(
+                    {'_id': example['_id']},
+                    {'$set': {'weighted_data_input': weighted_data}})
+           
         return example
 
     def _get_groupped_action(self, **kwargs):
