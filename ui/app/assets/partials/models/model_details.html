@@ -110,15 +110,27 @@
             </div>
         </div>
       </div>
-      <div class="span4" ng-show="model.data_fields">
+      <div class="span4">
         <h5>Data Examples Titles</h5>
-        <div>
+        <div ng-show="model.data_fields.length">
           Examples label field name:
-          <span title="Label Field Name" ng-bind="model.example_label || 'not specified'" editable="model" value="model.example_label" editable-field="example_label" editable-input="select" source="model.data_fields" editable-placement="right"></span>
+          <span title="Label Field Name" ng-bind="model.example_label || 'not specified'" editable="model" value="model.example_label" editable-field="example_label" editable-placement="right"
+editable-input="select" source="model.data_fields"></span>
         </div>
-        <div>
+        <div ng-show="!model.data_fields.length">
+          Examples label field name:
+          <span title="Label Field Name" ng-bind="model.example_label || 'not specified'" editable="model" value="model.example_label" editable-field="example_label" editable-placement="right"
+editable-input="text" source="model.data_fields"></span>
+        </div>
+        <div ng-show="model.data_fields.length">
           Examples id field name:
-          <span title="ID Field Name" ng-bind="model.example_id" editable="model" value="model.example_id" editable-field="example_id" editable-input="select" source="model.data_fields" editable-placement="right"></span>
+          <span title="ID Field Name" ng-bind="model.example_id" editable="model" value="model.example_id" editable-field="example_id" editable-placement="right"
+editable-input="select" source="model.data_fields"></span>
+        </div>
+        <div ng-show="!model.data_fields.length">
+          Examples id field name:
+          <span title="ID Field Name" ng-bind="model.example_id" editable="model" value="model.example_id" editable-field="example_id" editable-placement="right"
+editable-input="text" source="model.data_fields"></span>
         </div>
       </div>
       <div class="span4">
