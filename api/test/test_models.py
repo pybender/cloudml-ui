@@ -187,6 +187,7 @@ aws_instance is required')
         self.assertEquals(model_resp["name"], self.model.name)
         # NOTE: Make sure that ds.gz file exist in test_data folder
         self.assertEqual(model.status, model.STATUS_TRAINED, model.error)
+        self.assertEqual(model.dataset_ids, [ObjectId(self.DS_ID)])
 
         # TODO: check other fields of the model
 
@@ -201,6 +202,9 @@ aws_instance is required')
         self.assertEquals(model_resp["name"], self.model.name)
         # NOTE: Make sure that ds.gz file exist in test_data folder
         self.assertEqual(model.status, model.STATUS_TRAINED, model.error)
+        self.assertEqual(model.dataset_ids, [
+            ObjectId(self.DS_ID), ObjectId(self.DS2_ID)
+        ])
 
         # TODO: check other fields of the model
 

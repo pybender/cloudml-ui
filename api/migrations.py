@@ -61,10 +61,20 @@ class ModelMigration(DbMigration):
             for doc in self.collection.find(self.target):
                 try:
                     doc['dataset_ids'] = []
-                    if doc['dataset']:
-                        doc['dataset_ids'].append(doc['dataset'].id)
 
-                    del doc['dataset']
+                    if doc.get('dataset'):
+                        doc['dataset_ids'].append(doc['dataset'].id)
+                    elif doc['train_import_handler']:
+                        ds = app.db.DataSet.find_one({
+                            'import_handler_id': str(
+                                doc['train_import_handler'].id),
+                            'status': 'Imported'
+                        })
+                        if ds:
+                            doc['dataset_ids'].append(ds._id)
+
+                    if 'dataset' in doc:
+                        del doc['dataset']
 
                     self.collection.save(doc)
                 except Exception, e:

@@ -378,7 +378,6 @@ class Model(BaseDocument):
         'test_import_handler': ImportHandler,
         'train_import_handler': ImportHandler,
         # ids of datasets used for model training
-        # 'dataset': DataSet,
         'dataset_ids': list,
 
         'train_importhandler': dict,
