@@ -30,8 +30,9 @@
     Predicted Label: <span class="value">{{ data.pred_label }}</span>
   </div>
   <div>
-    Probs: <span class="value">{{ data.prob }}</span>
+    Probabilities: <span class="value">{{ data.prob }}</span>
   </div>
+  <div><sc-chart chart-dict="data.probChartData" width="150" height="150"></sc-chart></div>
 </div>
 
 <div ng-show="data.isLoadedToS3()">
