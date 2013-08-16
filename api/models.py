@@ -395,6 +395,7 @@ class Model(BaseDocument):
 
         'spot_instance_request_id': basestring,
         'memory_usage': dict,
+        'train_records_count': int,
     }
     gridfs = {'files': ['trainer']}
     required_fields = ['name', 'created_on', ]

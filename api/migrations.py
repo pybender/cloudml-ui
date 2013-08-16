@@ -80,6 +80,10 @@ class ModelMigration(DbMigration):
                 except Exception, e:
                     print e
 
+    def allmigration08__add_train_records_count(self):
+        self.target = {'train_records_count': {'$exists': False}}
+        self.update = {'$set': {'train_records_count': 0}}
+
 
 class TestMigration(DbMigration):
     DOC_CLASS = models.Test

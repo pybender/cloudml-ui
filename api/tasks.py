@@ -261,6 +261,10 @@ def train_model(dataset_ids, model_id, user_id):
         model.status = model.STATUS_TRAINED
         model.set_trainer(trainer)
         model.memory_usage['training'] = max(mem_usage)
+        model.train_records_count = int(sum((
+            d['records_count'] for d in app.db.DataSet.find({
+                '_id': {'$in': model.dataset_ids}
+            }, ['records_count']))))
         model.save()
 
         fill_model_parameter_weights.delay(str(model._id))
