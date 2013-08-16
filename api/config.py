@@ -64,6 +64,25 @@ LOGGING = {
     }
 }
 
+# Enables error emails.
+CELERY_SEND_TASK_ERROR_EMAILS = False
+SEND_ERROR_EMAILS = False
+
+# Name and email addresses of recipients
+ADMINS = (
+    ("Nikolay Melnik", "nmelnik@odesk.com"),
+    ("Mikhail Medvedev", "moorcock@odesk.com"),
+)
+
+# Email address used as sender (From field).
+SERVER_EMAIL = "no-reply@odesk.com"
+
+# Mailserver configuration
+EMAIL_HOST = "localhost"
+EMAIL_PORT = 25
+EMAIL_HOST_USER = ""
+EMAIL_HOST_PASSWORD = ""
+
 try:
     from api.local_config import *
 except ImportError:

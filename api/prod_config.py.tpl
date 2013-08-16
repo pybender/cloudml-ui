@@ -69,3 +69,22 @@ LOGGING = {
         },
     }
 }
+
+# Enables error emails.
+CELERY_SEND_TASK_ERROR_EMAILS = True
+SEND_ERROR_EMAILS = True
+
+# Name and email addresses of recipients
+ADMINS = (
+    ("Nikolay Melnik", "nmelnik@odesk.com"),
+    ("Mikhail Medvedev", "moorcock@odesk.com"),
+)
+
+# Email address used as sender (From field).
+SERVER_EMAIL = "{{ server_email }}"
+
+# Mailserver configuration
+EMAIL_HOST = "{{ smtp_server_address }}"
+EMAIL_PORT = {{ smtp_server_port }}
+EMAIL_HOST_USER = ""
+EMAIL_HOST_PASSWORD = ""
