@@ -118,7 +118,7 @@ class TestTasksTests(BaseTestCase):
         with patch('core.trainer.trainer.Trainer.test',
                    _fake_test) as mock_test:
 
-            result = run_test(self.dataset._id, self.test._id)
+            result = run_test([self.dataset._id], self.test._id)
             self.assertTrue(mock_test.called)
 
             self.assertEquals(result, 'Test completed')
@@ -134,7 +134,7 @@ class TestTasksTests(BaseTestCase):
 
             app.config['EXAMPLES_CHUNK_SIZE'] = 5
 
-            result = run_test(self.dataset._id, self.test._id)
+            result = run_test([self.dataset._id], self.test._id)
             self.assertEquals(result, 'Test completed')
             self.assertEquals(5, mock_store_examples.si.call_count)
             self.assertEquals(5, mock_apply_async.apply.call_count)
@@ -144,7 +144,7 @@ class TestTasksTests(BaseTestCase):
 
             app.config['EXAMPLES_CHUNK_SIZE'] = 7
 
-            result = run_test(self.dataset._id, self.test._id)
+            result = run_test([self.dataset._id], self.test._id)
             self.assertEquals(result, 'Test completed')
             self.assertEquals(7, mock_store_examples.si.call_count)
             self.assertEquals(7, mock_apply_async.apply.call_count)
