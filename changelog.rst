@@ -4,6 +4,14 @@ Changelog
 =========
 
 
+Relese 2013-08-16
+-----------------
+* Bug - Fixed running test with importing dataset
+* Bug - Reset error message before open test dialog
+* Bug - Restore ordering weights on column view
+* Feature - Using multiple datasets for train model
+
+
 Relese 2013-08-13
 -----------------
 * Feature - Add oDesk auth

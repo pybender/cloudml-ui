@@ -29,6 +29,12 @@ def authenticate(func):
                 is_authenticated = True
                 request.user = user
 
+        _public_actions = getattr(func, 'public_actions', False)
+        if _public_actions:
+            action = kwargs.get('action')
+            if action and action in _public_actions:
+                is_authenticated = True
+
         if is_authenticated:
             return func(*args, **kwargs)
 
@@ -39,6 +45,14 @@ def authenticate(func):
 def public(func):
     func.authenticated = True
     return func
+
+
+def public_actions(actions=None):
+    def _public_actions(func):
+        func.authenticated = False
+        func.public_actions = actions
+        return func
+    return _public_actions
 
 
 def render(brief=True, code=200):

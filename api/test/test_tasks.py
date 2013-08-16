@@ -1,7 +1,7 @@
 from bson import ObjectId
 
 from moto import mock_s3
-from mock import patch, MagicMock
+from mock import patch, MagicMock, Mock
 
 from api import app
 from utils import BaseTestCase
@@ -23,10 +23,13 @@ class TestTasksTests(BaseTestCase):
             {'test_name': self.TEST_NAME}).count()
         self.real_chunks_config = app.config['EXAMPLES_CHUNK_SIZE']
         app.config['EXAMPLES_CHUNK_SIZE'] = 10
+        self.real_size_config = app.config['MAX_MONGO_EXAMPLE_SIZE']
+        app.config['MAX_MONGO_EXAMPLE_SIZE'] = 10
 
     def tearDown(self):
         super(TestTasksTests, self).tearDown()
         app.config['EXAMPLES_CHUNK_SIZE'] = self.real_chunks_config
+        app.config['MAX_MONGO_EXAMPLE_SIZE'] = self.real_size_config
 
     def _set_probabilities(self, probabilities):
         for example in self.db.TestExample.find({'test_name': self.TEST_NAME}):
@@ -92,7 +95,7 @@ class TestTasksTests(BaseTestCase):
         def _fake_test(self, *args, **kwargs):
             class MetricsMock(MagicMock):
                 accuracy = 1.0
-                classes_set = []
+                classes_set = ['0', '1']
                 _labels = ['0', '1'] * 50
 
                 def get_metrics_dict(self):
@@ -104,12 +107,24 @@ class TestTasksTests(BaseTestCase):
 
             _fake_test.called = True
 
-            self._raw_data = [{'data': 0}] * 100
+            self._raw_data = [{'data': 'some-data-here'}] * 100
 
             metrics_mock = MetricsMock()
-            preds = MagicMock()
-            preds.size = 0
+            preds = Mock()
+            preds.size = 100
+            preds.__iter__ = Mock(return_value=iter([0] * 100))
             metrics_mock._preds = preds
+
+            m = MagicMock(side_effect=[MagicMock()] * 100)
+
+            metrics_mock._probs = MagicMock()
+            metrics_mock._probs.__iter__ = Mock(return_value=iter([m] * 100))
+
+            metrics_mock._true_data = MagicMock()
+            todense = MagicMock()
+            todense.__iter__ = Mock(return_value=iter([m] * 100))
+            metrics_mock._true_data.todense.return_value = todense
+
             return metrics_mock
 
         mock_apply_async = MagicMock()
@@ -118,7 +133,7 @@ class TestTasksTests(BaseTestCase):
         with patch('core.trainer.trainer.Trainer.test',
                    _fake_test) as mock_test:
 
-            result = run_test([self.dataset._id], self.test._id)
+            result = run_test([self.dataset._id, ], self.test._id)
             self.assertTrue(mock_test.called)
 
             self.assertEquals(result, 'Test completed')
@@ -134,7 +149,7 @@ class TestTasksTests(BaseTestCase):
 
             app.config['EXAMPLES_CHUNK_SIZE'] = 5
 
-            result = run_test([self.dataset._id], self.test._id)
+            result = run_test([self.dataset._id, ], self.test._id)
             self.assertEquals(result, 'Test completed')
             self.assertEquals(5, mock_store_examples.si.call_count)
             self.assertEquals(5, mock_apply_async.apply.call_count)
@@ -144,7 +159,17 @@ class TestTasksTests(BaseTestCase):
 
             app.config['EXAMPLES_CHUNK_SIZE'] = 7
 
-            result = run_test([self.dataset._id], self.test._id)
+            result = run_test([self.dataset._id, ], self.test._id)
             self.assertEquals(result, 'Test completed')
             self.assertEquals(7, mock_store_examples.si.call_count)
             self.assertEquals(7, mock_apply_async.apply.call_count)
+
+            mock_store_examples.reset_mock()
+            mock_apply_async.reset_mock()
+
+            app.config['MAX_MONGO_EXAMPLE_SIZE'] = 5000
+
+            result = run_test([self.dataset._id, ], self.test._id)
+            self.assertEquals(result, 'Test completed')
+            self.assertFalse(mock_store_examples.si.called)
+            self.assertFalse(mock_apply_async.apply.called)

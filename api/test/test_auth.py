@@ -12,9 +12,9 @@ class AuthDecoratorsTests(BaseTestCase):
     """
 
     def test_auth_decorators(self):
-        from api.decorators import authenticate, public
+        from api.decorators import authenticate, public, public_actions
 
-        def _view(_argument):
+        def _view(_argument, action=None):
             return app.response_class(_argument,
                                       mimetype='application/json', status=200)
 
@@ -32,6 +32,7 @@ class AuthDecoratorsTests(BaseTestCase):
             self.assertFalse(hasattr(req, 'user'))
 
         # Authorized
+        if hasattr(_view, 'authenticated'): delattr(_view, 'authenticated')
         with app.test_request_context('/', headers=HTTP_HEADERS) as ctx:
             req = ctx.request
 
@@ -47,6 +48,7 @@ class AuthDecoratorsTests(BaseTestCase):
         # Wrong auth token
         headers = dict(HTTP_HEADERS)
         headers['X-Auth-Token'] = 'wrong'
+        if hasattr(_view, 'authenticated'): delattr(_view, 'authenticated')
         with app.test_request_context('/', headers=headers.items()) as ctx:
             req = ctx.request
 
@@ -60,6 +62,7 @@ class AuthDecoratorsTests(BaseTestCase):
             self.assertFalse(hasattr(req, 'user'))
 
         # Public view
+        if hasattr(_view, 'authenticated'): delattr(_view, 'authenticated')
         with app.test_request_context('/') as ctx:
             req = ctx.request
 
@@ -74,6 +77,33 @@ class AuthDecoratorsTests(BaseTestCase):
             self.assertEquals(res.status_code, 200)
             self.assertEquals(res.data, 'sample')
             self.assertFalse(hasattr(req, 'user'))
+
+        # Public actions
+        if hasattr(_view, 'authenticated'): delattr(_view, 'authenticated')
+        with app.test_request_context('/') as ctx:
+            req = ctx.request
+
+            view = public_actions(['act1', 'act2'])(_view)
+            self.assertTrue(hasattr(view, 'public_actions'))
+
+            view = authenticate(view)
+            self.assertEquals(view.__name__, _view.__name__)
+
+            res = view('sample', action='act1')
+            self.assertEquals(res.status_code, 200)
+            self.assertEquals(res.data, 'sample')
+            self.assertFalse(hasattr(req, 'user'))
+
+            res = view('sample', action='act2')
+            self.assertEquals(res.status_code, 200)
+            self.assertEquals(res.data, 'sample')
+            self.assertFalse(hasattr(req, 'user'))
+
+            res = view('sample')
+            self.assertEquals(res.status_code, 401)
+
+            res = view('sample', action='some_other')
+            self.assertEquals(res.status_code, 401)
 
 
 class AuthResourceTests(BaseTestCase):
