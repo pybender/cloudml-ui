@@ -13,6 +13,7 @@ angular.module('app.testresults.controllers', ['app.config', ])
   ($scope, dialog, $location, Test) ->
     $scope.dialog = dialog
     $scope.parameters = {}
+    $scope.resetError()
     $scope.model = dialog.model
     $scope.handler = $scope.model.test_import_handler_obj
 
