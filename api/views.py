@@ -289,6 +289,7 @@ class WeightsResource(BaseResource):
             model_id = kwargs.get('model_id')
             return self.Model.find({'model_id': model_id,
                                     'is_positive': is_positive}, query_fields).\
+                sort('value', -1 if is_positive else 1 ).\
                 skip((page - 1) * per_page).limit(per_page)
 
         paging_params = (('ppage', int), ('npage', int),)
