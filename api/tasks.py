@@ -354,15 +354,17 @@ def fill_model_parameter_weights(model_id, reload=False):
 
 
 @celery.task
-def run_test(dataset_id, test_id):
+def run_test(dataset_ids, test_id):
     """
     Running tests for trained model
     """
     init_logger('runtest_log', obj=test_id)
 
     test = app.db.Test.find_one({'_id': ObjectId(test_id)})
-    dataset = app.db.DataSet.find_one({'_id': ObjectId(dataset_id)})
-    test.dataset = dataset
+    datasets = app.db.DataSet.find({
+        '_id': {'$in': [ObjectId(ds_id) for ds_id in dataset_ids]}
+    })
+    dataset = datasets[0]
     model = test.model
     try:
         if model.status != model.STATUS_TRAINED:
