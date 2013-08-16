@@ -12,7 +12,7 @@ from werkzeug.datastructures import FileStorage
 from bson.objectid import ObjectId
 
 from api import api, app
-from api.decorators import public
+from api.decorators import public, public_actions, authenticate
 from api.utils import ERR_INVALID_DATA, odesk_error_response, \
     ERR_NO_SUCH_MODEL, ERR_UNPICKLING_MODEL, slugify
 from api.resources import BaseResource, NotFound, ValidationError
@@ -97,6 +97,10 @@ class Models(BaseResource):
         return model_parser
 
     # GET specific methods
+
+    @public_actions(['download'])
+    def get(self, *args, **kwargs):
+        return super(Models, self).get(*args, **kwargs)
 
     def _get_details_query(self, params, fields, **kwargs):
         get_datasets = False
@@ -345,6 +349,10 @@ class ImportHandlerResource(BaseResource):
     post_form = ImportHandlerAddForm
     put_form = ImportHandlerEditForm
     GET_ACTIONS = ('download', )
+
+    @public_actions(['download'])
+    def get(self, *args, **kwargs):
+        return super(ImportHandlerResource, self).get(*args, **kwargs)
 
     def _get_download_action(self, **kwargs):
         """
