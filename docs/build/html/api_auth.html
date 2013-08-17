@@ -1,0 +1,192 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Authentication &mdash; oDesk CloudML 0.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="oDesk CloudML 0.0.1 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="authentication">
+<h1>Authentication<a class="headerlink" href="#authentication" title="Permalink to this headline">¶</a></h1>
+<p>All API requests (except listed on this page) should be sent including authentication http header:</p>
+<ul class="simple">
+<li>X-Auth-Token: &lt;auth_token&gt; received from <a class="reference internal" href="#authenticate"><em>/cloudml/auth/authenticate</em></a> resource</li>
+</ul>
+<table border="1" class="docutils">
+<colgroup>
+<col width="9%" />
+<col width="65%" />
+<col width="26%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Method</th>
+<th class="head">Resource</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>POST</td>
+<td><a class="reference internal" href="#get-auth-url"><em>/cloudml/auth/get_auth_url</em></a></td>
+<td>Get oauth redirect url</td>
+</tr>
+<tr class="row-odd"><td>POST</td>
+<td><a class="reference internal" href="#authenticate"><em>/cloudml/auth/authenticate</em></a></td>
+<td>Authenticate</td>
+</tr>
+<tr class="row-even"><td>POST</td>
+<td><a class="reference internal" href="#get-user"><em>/cloudml/auth/get_user</em></a></td>
+<td>Get current user info</td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="get-oauth-redirect-url">
+<span id="get-auth-url"></span><h2>Get oauth redirect url<a class="headerlink" href="#get-oauth-redirect-url" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Method: POST</li>
+<li>URL: /cloudml/auth/get_auth_url</li>
+</ul>
+<div class="section" id="response-parameters">
+<h3>Response Parameters<a class="headerlink" href="#response-parameters" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>auth_url - Oauth url for redirect to</li>
+</ul>
+</div>
+</div>
+<div class="section" id="authenticate">
+<span id="id1"></span><h2>Authenticate<a class="headerlink" href="#authenticate" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p class="first">Method: POST</p>
+</li>
+<li><p class="first">URL: /cloudml/auth/authenticate</p>
+</li>
+<li><dl class="first docutils">
+<dt>POST params:</dt>
+<dd><ul class="first last simple">
+<li>oauth_token: token received from oDesk</li>
+<li>oauth_verifier: token received from oDesk</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<div class="section" id="id2">
+<h3>Response Parameters<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>auth_token - API auth token to use in API requests</li>
+<li>user - Current user info</li>
+</ul>
+</div>
+</div>
+<div class="section" id="get-current-user-info">
+<span id="get-user"></span><h2>Get current user info<a class="headerlink" href="#get-current-user-info" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Method: POST</li>
+<li>URL: /cloudml/auth/get_user</li>
+</ul>
+<div class="section" id="id3">
+<h3>Response Parameters<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>user - Current user info</li>
+</ul>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Authentication</a><ul>
+<li><a class="reference internal" href="#get-oauth-redirect-url">Get oauth redirect url</a><ul>
+<li><a class="reference internal" href="#response-parameters">Response Parameters</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#authenticate">Authenticate</a><ul>
+<li><a class="reference internal" href="#id2">Response Parameters</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#get-current-user-info">Get current user info</a><ul>
+<li><a class="reference internal" href="#id3">Response Parameters</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/api_auth.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Nikolay Melnik.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

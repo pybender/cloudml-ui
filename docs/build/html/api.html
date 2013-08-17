@@ -25,7 +25,6 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="oDesk CloudML 0.0.1 documentation" href="index.html" />
-    <link rel="next" title="Changelog" href="changelog.html" />
     <link rel="prev" title="Development" href="development.html" /> 
   </head>
   <body>
@@ -35,9 +34,6 @@
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="changelog.html" title="Changelog"
-             accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="development.html" title="Development"
              accesskey="P">previous</a> |</li>
@@ -52,6 +48,36 @@
             
   <div class="section" id="api">
 <h1>Api<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="authentication">
+<h2>Authentication<a class="headerlink" href="#authentication" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="9%" />
+<col width="65%" />
+<col width="26%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Method</th>
+<th class="head">Resource</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>POST</td>
+<td><a class="reference internal" href="api_auth.html#get-auth-url"><em>/cloudml/auth/get_auth_url</em></a></td>
+<td>Get oauth redirect url</td>
+</tr>
+<tr class="row-odd"><td>POST</td>
+<td><a class="reference internal" href="api_auth.html#authenticate"><em>/cloudml/auth/authenticate</em></a></td>
+<td>Authenticate</td>
+</tr>
+<tr class="row-even"><td>POST</td>
+<td><a class="reference internal" href="api_auth.html#get-user"><em>/cloudml/auth/get_user</em></a></td>
+<td>Get current user info</td>
+</tr>
+</tbody>
+</table>
+</div>
 <div class="section" id="import-handlers">
 <h2>Import Handlers<a class="headerlink" href="#import-handlers" title="Permalink to this headline">¶</a></h2>
 <table border="1" class="docutils">
@@ -123,6 +149,7 @@
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Api</a><ul>
+<li><a class="reference internal" href="#authentication">Authentication</a></li>
 <li><a class="reference internal" href="#import-handlers">Import Handlers</a></li>
 <li><a class="reference internal" href="#models">Models</a></li>
 </ul>
@@ -132,9 +159,6 @@
   <h4>Previous topic</h4>
   <p class="topless"><a href="development.html"
                         title="previous chapter">Development</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="changelog.html"
-                        title="next chapter">Changelog</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/api.txt"
@@ -163,9 +187,6 @@
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              >index</a></li>
-        <li class="right" >
-          <a href="changelog.html" title="Changelog"
-             >next</a> |</li>
         <li class="right" >
           <a href="development.html" title="Development"
              >previous</a> |</li>

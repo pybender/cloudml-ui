@@ -15,7 +15,6 @@ Contents:
    deployment
    development
    api
-   changelog
 
 
 .. seealso::
@@ -24,7 +23,7 @@ Contents:
    * `Github repository <https://github.com/odeskdev/odeskdev-cloudml>`_
    * Production http://172.27.77.242
    * Staging http://172.27.67.106:5000
-   * Developers: Nikolay Melnik <nmelnik@odesk.com>
+   * Developers: Nikolay Melnik <nmelnik@odesk.com>, Mikhail Medvedev <moorcock@odesk.com>
 
 
 

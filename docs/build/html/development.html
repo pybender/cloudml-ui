@@ -59,6 +59,12 @@
 $ . ve/bin/activate
 $ pip install -r requirements.txt</pre>
 </div>
+<p>Create local config:</p>
+<div class="highlight-python"><pre>$ cp api/local_config.py.tpl api/local_config.py</pre>
+</div>
+<p>Note:</p>
+<div class="highlight-python"><pre>Create OATH API keys using https://www.odesk.com/services/api/apply. Callback URL is http://127.0.0.1:3333/#/auth/callback</pre>
+</div>
 <p>Run dev server:</p>
 <div class="highlight-python"><pre>$ python manage.py runserver</pre>
 </div>
@@ -75,7 +81,7 @@ $ pip install -r requirements.txt</pre>
 <div class="section" id="frontend">
 <h2>Frontend<a class="headerlink" href="#frontend" title="Permalink to this headline">¶</a></h2>
 <p>Install nodejs and nmp:</p>
-<div class="highlight-python"><pre>$ sudo aptget install nodejs nmp</pre>
+<div class="highlight-python"><pre>$ sudo apt-get install nodejs npm</pre>
 </div>
 <p>Init ui dev enviropment:</p>
 <div class="highlight-python"><pre>$ cd ui

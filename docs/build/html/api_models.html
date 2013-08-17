@@ -71,6 +71,18 @@
 </tr>
 </tbody>
 </table>
+<div class="section" id="upload-model">
+<h2>Upload Model<a class="headerlink" href="#upload-model" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Method: POST</li>
+<li>URL: /cloudml/model/:ModelName/</li>
+</ul>
+<div class="section" id="examples">
+<h3>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div>curl -X POST -F &#8220;<a class="reference external" href="mailto:trainer=&#37;&#52;&#48;/data/models/model&#46;autohde&#46;v1&#46;20121025&#46;20121028">trainer=<span>&#64;</span>/data/models/model<span>&#46;</span>autohde<span>&#46;</span>v1<span>&#46;</span>20121025<span>&#46;</span>20121028</a>&#8221; -F importhandler=&#8221;$(cat /home/papadimitriou/odeskdev-cloudml/models/bestmatch/autohide/extract.v1.json)&#8221;  &#8220;<a class="reference external" href="http://172.27.77.141/api/cloudml/model/BestMatch.Autohide.vv1.w2">http://172.27.77.141/api/cloudml/model/BestMatch.Autohide.vv1.w2</a>&#8220;</div></blockquote>
+</div>
+</div>
 <div class="section" id="list-of-models">
 <span id="list-models"></span><h2>List of Models<a class="headerlink" href="#list-of-models" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
@@ -252,6 +264,10 @@
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Models</a><ul>
+<li><a class="reference internal" href="#upload-model">Upload Model</a><ul>
+<li><a class="reference internal" href="#examples">Examples</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#list-of-models">List of Models</a><ul>
 <li><a class="reference internal" href="#response-parameters">Response Parameters</a></li>
 <li><a class="reference internal" href="#errors">Errors</a></li>
