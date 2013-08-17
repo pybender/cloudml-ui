@@ -383,7 +383,7 @@ def run_test(dataset_ids, test_id):
                                          interval=0, retval=True)
         metrics, raw_data = result
         test.accuracy = metrics.accuracy
-
+        logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
         metrics_dict = metrics.get_metrics_dict()
 
         # TODO: Refactor this. Here are possible issues with conformity
@@ -434,9 +434,14 @@ def run_test(dataset_ids, test_id):
                             raw_data,
                             metrics._labels,
                             metrics._preds,
-                            metrics._probs,
-                            metrics._true_data.todense())
-            for n, row, label, pred, prob, vectorized_data in examples:
+                            metrics._probs
+                            #metrics._true_data.todense()
+                            )
+            logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
+            for n, row, label, pred, prob in examples:
+                #logging.info("vect %s" % vectorized_data.tolist()[0])
+                #logging.info("row %s" % metrics._true_data.getrow(n).todense().tolist()[0])
+                vectorized_data = metrics._true_data.getrow(n).todense()
                 if n % (all_count / 10) == 0:
                     logging.info('Processed %s rows so far' % n)
                 new_row = {}
