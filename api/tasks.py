@@ -1,18 +1,20 @@
+import os
 import json
 import logging
-from copy import copy
-from itertools import izip
+import csv
+import uuid
+from itertools import izip, chain
 from bson.objectid import ObjectId
-from os.path import join, exists
+from os.path import exists
 from os import makedirs, system
-from celery.task.sets import subtask
 from datetime import timedelta, datetime
 from boto.exception import EC2ResponseError
+from celery.canvas import group
 
 from api import celery, app
-from api.models import Test
+from api.models import Test, Model
 from api.logger import init_logger
-from api.amazon_utils import AmazonEC2Helper
+from api.amazon_utils import AmazonEC2Helper, AmazonS3Helper
 from core.trainer.trainer import Trainer
 from core.trainer.config import FeatureModel
 from core.trainer.streamutils import streamingiterload
@@ -44,14 +46,16 @@ def request_spot_instance(dataset_id=None, instance_type=None, model_id=None):
 
     return request.id
 
-@celery.task()                                                    
+
+@celery.task()
 def get_request_instance(request_id,
                          callback=None,
-                         dataset_id=None,
-                         model_id=None):
+                         dataset_ids=None,
+                         model_id=None,
+                         user_id=None):
     init_logger('trainmodel_log', obj=model_id)
     ec2 = AmazonEC2Helper()
-    logging.info('Get spot instance request %s' %  request_id)
+    logging.info('Get spot instance request %s' % request_id)
 
     model = app.db.Model.find_one({'_id': ObjectId(model_id)})
 
@@ -100,14 +104,13 @@ def get_request_instance(request_id,
     if callback == "train":
         logging.info('Train model task apply async')
         queue = "ip-%s" % "-".join(instance.private_ip_address.split('.'))
-        train_model.apply_async((dataset_id,
-                                 model_id),
+        train_model.apply_async((dataset_ids,
+                                 model_id, user_id),
                                  queue=queue,
-                                 link=terminate_instance.subtask(kwargs={'instance_id':instance.id,}),
-                                 link_error=terminate_instance.subtask(kwargs={'instance_id':instance.id})
+                                 link=terminate_instance.subtask(kwargs={'instance_id': instance.id}),
+                                 link_error=terminate_instance.subtask(kwargs={'instance_id': instance.id})
                                 )
     return instance.private_ip_address
-
 
 
 @celery.task
@@ -166,6 +169,8 @@ def import_data(dataset_id, model_id=None, test_id=None):
         init_logger('importdata_log', obj=dataset_id)
         logging.info('Loading dataset %s' % dataset._id)
 
+        import_start_time = datetime.now()
+
         logging.info("Import dataset using import handler '%s' \
 with%s compression", importhandler.name, '' if dataset.compress else 'out')
         handler = json.dumps(importhandler.data)
@@ -175,6 +180,14 @@ with%s compression", importhandler.name, '' if dataset.compress else 'out')
         handler.store_data_json(dataset.filename, dataset.compress)
         logging.info('Import dataset completed')
 
+        logging.info('Retrieving data fields')
+        row = None
+        with dataset.get_data_stream() as fp:
+            row = next(fp)
+        if row:
+            dataset.data_fields = json.loads(row).keys()
+        logging.info('Dataset fields: {0!s}'.format(dataset.data_fields))
+
         logging.info('Saving file to Amazon S3')
         dataset.save_to_s3()
         logging.info('File saved to Amazon S3')
@@ -183,7 +196,13 @@ with%s compression", importhandler.name, '' if dataset.compress else 'out')
         if obj:
             obj.status = obj.STATUS_IMPORTED
             obj.save()
+
+        dataset.filesize = long(os.path.getsize(dataset.filename))
+        dataset.records_count = handler.count
+        dataset.time = (datetime.now() - import_start_time).seconds
+
         dataset.save(validate=True)
+
         logging.info('DataSet was loaded')
     except Exception, exc:
         logging.exception('Got exception when import dataset')
@@ -193,38 +212,67 @@ with%s compression", importhandler.name, '' if dataset.compress else 'out')
         raise
 
     logging.info("Dataset using %s imported.", importhandler.name)
-    return dataset_id
+    return [dataset_id]
 
 
 @celery.task
-def train_model(dataset_id, model_id):
+def train_model(dataset_ids, model_id, user_id):
     """
     Train new model celery task.
     """
     init_logger('trainmodel_log', obj=model_id)
 
+    user = app.db.User.find_one({'_id': ObjectId(user_id)})
+    model = app.db.Model.find_one({'_id': ObjectId(model_id)})
+    datasets = app.db.DataSet.find({
+        '_id': {'$in': [ObjectId(ds_id) for ds_id in dataset_ids]}
+    })
+
     try:
-        model = app.db.Model.find_one({'_id': ObjectId(model_id)})
-        dataset = app.db.DataSet.find_one({'_id': ObjectId(dataset_id)})
         model.delete_metadata()
 
-        model.dataset = dataset
+        model.dataset_ids = [ObjectId(ds_id) for ds_id in dataset_ids]
         model.status = model.STATUS_TRAINING
         model.error = ""
+        model.trained_by = {
+            '_id': user._id,
+            'uid': user.uid,
+            'name': user.name
+        }
         model.save(validate=True)
-        feature_model = FeatureModel(json.dumps(model.features),
-                                     is_file=False)
+        feature_model = FeatureModel(json.dumps(model.features), is_file=False)
         trainer = Trainer(feature_model)
         path = app.config['DATA_FOLDER']
         if not exists(path):
             makedirs(path)
-        train_fp = dataset.get_data_stream()
-        trainer.train(streamingiterload(train_fp))
-        train_fp.close()
+
+        def _chain_datasets(ds_list):
+            fp = None
+            for d in ds_list:
+                if fp:
+                    fp.close()
+                fp = d.get_data_stream()
+                for row in streamingiterload(fp):
+                    yield row
+            if fp:
+                fp.close()
+
+        train_iter = _chain_datasets(datasets)
+
+        from memory_profiler import memory_usage
+        mem_usage = memory_usage((trainer.train,
+                                  (train_iter,)), interval=0)
         trainer.clear_temp_data()
+
         model.status = model.STATUS_TRAINED
         model.set_trainer(trainer)
+        model.memory_usage['training'] = max(mem_usage)
+        model.train_records_count = int(sum((
+            d['records_count'] for d in app.db.DataSet.find({
+                '_id': {'$in': model.dataset_ids}
+            }, ['records_count']))))
         model.save()
+
         fill_model_parameter_weights.delay(str(model._id))
     except Exception, exc:
         logging.exception('Got exception when train model')
@@ -295,14 +343,14 @@ def fill_model_parameter_weights(model_id, reload=False):
                                    'is_positive': bool(weight['weight'] > 0),
                                    'css_class': weight['css_class']})
                     weight = app.db.Weight(params)
-                    weight.save(validate=True, check_keys=False, safe=False)
+                    weight.save(validate=True, check_keys=False)
                 else:
                     if sname not in category_names:
                         # Adding a category, if it has not already added
                         category_names.append(sname)
                         params.update({'name': long_name})
                         category = app.db.WeightsCategory(params)
-                        category.save(validate=True, check_keys=False, safe=False)
+                        category.save(validate=True, check_keys=False)
 
         model.weights_synchronized = True
         model.save()
@@ -316,15 +364,17 @@ def fill_model_parameter_weights(model_id, reload=False):
 
 
 @celery.task
-def run_test(dataset_id, test_id):
+def run_test(dataset_ids, test_id):
     """
     Running tests for trained model
     """
     init_logger('runtest_log', obj=test_id)
 
     test = app.db.Test.find_one({'_id': ObjectId(test_id)})
-    dataset = app.db.DataSet.find_one({'_id': ObjectId(dataset_id)})
-    test.dataset = dataset
+    datasets = app.db.DataSet.find({
+        '_id': {'$in': [ObjectId(ds_id) for ds_id in dataset_ids]}
+    })
+    dataset = datasets[0]
     model = test.model
     try:
         if model.status != model.STATUS_TRAINED:
@@ -334,9 +384,12 @@ def run_test(dataset_id, test_id):
         test.error = ""
         test.save()
 
-        metrics, raw_data = model.run_test(dataset)
+        from memory_profiler import memory_usage
+        mem_usage, result = memory_usage((Model.run_test, (model, dataset, )),
+                                         interval=0, retval=True)
+        metrics, raw_data = result
         test.accuracy = metrics.accuracy
-
+        logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
         metrics_dict = metrics.get_metrics_dict()
 
         # TODO: Refactor this. Here are possible issues with conformity
@@ -346,7 +399,8 @@ def run_test(dataset_id, test_id):
         for i, val in enumerate(metrics.classes_set):
             confusion_matrix_ex.append((str(val), confusion_matrix[i]))
         metrics_dict['confusion_matrix'] = confusion_matrix_ex
-        n = len(raw_data) / 100 or 1
+
+        n = len(metrics._labels) / 100 or 1
         metrics_dict['roc_curve'][1] = metrics_dict['roc_curve'][1][0::n]
         metrics_dict['roc_curve'][0] = metrics_dict['roc_curve'][0][0::n]
         metrics_dict['precision_recall_curve'][1] = \
@@ -355,7 +409,7 @@ def run_test(dataset_id, test_id):
             metrics_dict['precision_recall_curve'][0][0::n]
         test.metrics = metrics_dict
         test.classes_set = list(metrics.classes_set)
-        test.status = Test.STATUS_COMPLETED
+        test.status = Test.STATUS_STORING
 
         if not model.comparable:
             # TODO: fix this
@@ -365,46 +419,112 @@ def run_test(dataset_id, test_id):
 
         all_count = metrics._preds.size
         test.examples_count = all_count
+        test.memory_usage['testing'] = max(mem_usage)
         test.save()
 
-        def store_examples(items):
-            count = 0
-            for row, label, pred, prob, vectorized_data in items:
-                count += 1
-                if count % 1000 == 0:
-                    logging.info('Stored %d rows' % count)
-                row = decode(row)
+        # Caching raw data into temp file
+        path = app.config['DATA_FOLDER']
+        if not exists(path):
+            makedirs(path)
+        name = 'Test_raw_data-{0!s}.dat'.format(str(test._id))
+        filename = os.path.join(path, name)
+        from sys import getsizeof
+        size_of_examle = getsizeof(raw_data[0])
+        logging.info('Size of example %f' % size_of_examle)
+        logging.info('Storing examples to mongo')
+
+        res = []
+        with open(filename, 'w') as fp:
+            #fp.writelines(['{0}\n'.format(json.dumps(r)) for r in raw_data])
+            examples = izip(range(len(raw_data)),
+                            raw_data,
+                            metrics._labels,
+                            metrics._preds,
+                            metrics._probs
+                            #metrics._true_data.todense()
+                            )
+            logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
+            for n, row, label, pred, prob in examples:
+                #logging.info("vect %s" % vectorized_data.tolist()[0])
+                #logging.info("row %s" % metrics._true_data.getrow(n).todense().tolist()[0])
+                vectorized_data = metrics._true_data.getrow(n).todense()
+                if n % (all_count / 10) == 0:
+                    logging.info('Processed %s rows so far' % n)
                 new_row = {}
                 for key, val in row.iteritems():
                     new_key = key.replace('.', '->')
                     new_row[new_key] = val
-                #logging.error('Row %s', new_row.keys())
+
                 example = app.db.TestExample()
-                example['data_input'] = new_row
+
+                size_of_examle = getsizeof(new_row)
+                store_on_s3 = size_of_examle >\
+                              app.config['MAX_MONGO_EXAMPLE_SIZE']
+
+                if store_on_s3:
+                    fp.write('{0}\n'.format(json.dumps(new_row)))
+                    example['on_s3'] = True
+                else:
+                    example['data_input'] = new_row
+                    example['on_s3'] = False
+
                 example['vect_data'] = vectorized_data.tolist()[0]
-                example['id'] = str(row.get(model.example_id, '-1'))
-                example['name'] = str(row.get(model.example_label, 'noname'))
+                example['id'] = str(new_row.get(model.example_id, '-1'))
+                example['name'] = str(new_row.get(model.example_label, 'noname'))
                 example['label'] = str(label)
                 example['pred_label'] = str(pred)
                 example['prob'] = prob.tolist()
                 example['test_name'] = test.name
                 example['model_name'] = model.name
                 example['test_id'] = str(test._id)
+                example['test'] = test
                 example['model_id'] = str(model._id)
+
                 try:
                     example.validate()
-                except Exception, exc:
-                    logging.error('Problem with saving example #%s: %s',
-                                  count, exc)
+                except Exception as exc:
+                    logging.error('Problem with saving example')
+                    if store_on_s3:
+                        res.append(None)
                     continue
                 example.save(check_keys=False)
 
-        examples = izip(raw_data,
-                        metrics._labels,
-                        metrics._preds,
-                        metrics._probs,
-                        metrics._true_data.todense())
-        store_examples(examples)
+                if store_on_s3:
+                    res.append(str(example._id))
+
+        def _chunks(sequences, n):
+            length = len(sequences[0])
+            count = int(length / n)
+            if length % n != 0:
+                count += 1
+
+            for i in xrange(0, len(sequences[0]), count):
+                yield [s[i:i+count] for s in sequences]
+
+        if len(res):
+            examples = [
+                range(len(res)),  # indexes
+                res
+            ]
+            #     metrics._labels,
+            #     metrics._preds.tolist(),
+            #     metrics._probs.tolist(),
+            #     [v.tolist() for v in metrics._true_data.todense()]
+            # ]
+
+            examples_tasks = []
+            for params in _chunks(examples, app.config['EXAMPLES_CHUNK_SIZE']):
+                examples_tasks.append(store_examples.si(test_id, params))
+
+            # Wait for all results
+            logging.info('Storing raw data to s3')
+            res = group(examples_tasks).apply_async().get(propagate=False)
+
+        os.remove(filename)
+
+        test.status = Test.STATUS_COMPLETED
+        test.save()
+        logging.info('Test %s completed' % test.name)
 
     except Exception, exc:
         logging.exception('Got exception when tests model')
@@ -416,6 +536,56 @@ def run_test(dataset_id, test_id):
 
 
 @celery.task
+def store_examples(test_id, params):
+    init_logger('runtest_log', obj=test_id)
+    res = []
+
+    test = app.db.Test.find_one({'_id': ObjectId(test_id)})
+    if not test:
+        logging.warning('Test with id {0!s} can\'t be found'.format(
+            test_id
+        ))
+        return res
+
+    name = 'Test_raw_data-{0!s}.dat'.format(str(test._id))
+    path = app.config['DATA_FOLDER']
+    filename = os.path.join(path, name)
+    logging.info('Storing raw data to s3 %s - %s' % (params[0][0], params[0][-1]))
+
+    with open(filename, 'r') as fp:
+        row_nums = params[0]
+        for r in range(row_nums[0]):  # First row_num
+            fp.readline()
+
+        for row_num, example_id in izip(*params):
+            row = fp.readline()
+            row = json.loads(row)
+
+            row = decode(row)
+
+            example = app.db.TestExample.find_one({'_id': ObjectId(example_id)})
+            if not example:
+                logging.warning('Example with id {0!s} can\'t be found'.format(
+                    example_id
+                ))
+                continue
+
+            example['data_input'] = row
+            try:
+                example.validate()
+            except Exception, exc:
+                logging.error('Problem with saving example #%s: %s',
+                              row_num, exc)
+                res.append((None, None))
+            example.save(check_keys=False)
+
+            res.append((row_num, str(example._id)))
+    logging.info('Complete storing raw data to s3 %s - %s' % (params[0][0], params[0][-1]) )
+
+    return res
+
+
+@celery.task
 def calculate_confusion_matrix(test_id, weight0, weight1):
     """
     Calculate confusion matrix for test.
@@ -424,6 +594,9 @@ def calculate_confusion_matrix(test_id, weight0, weight1):
 
     if weight0 == 0 and weight1 == 0:
         raise ValueError('Both weights can not be 0')
+
+    if weight0 < 0 or weight1 < 0:
+        raise ValueError('Negative weights are not allowed')
 
     test = app.db.Test.find_one({'_id': ObjectId(test_id)})
     if test is None:
@@ -442,14 +615,82 @@ def calculate_confusion_matrix(test_id, weight0, weight1):
         true_value_idx = model.labels.index(example['label'])
 
         prob0, prob1 = example['prob'][:2]
-        weighted_sum = weight1 * prob0 + weight0 * prob1
-        weighted_prob0 = weight1 * prob0 / weighted_sum
-        weighted_prob1 = weight0 * prob1 / weighted_sum
+
+        weighted_sum = weight0 * prob0 + weight1 * prob1
+        weighted_prob0 = weight0 * prob0 / weighted_sum
+        weighted_prob1 = weight1 * prob1 / weighted_sum
 
         predicted = [weighted_prob0, weighted_prob1].index(max([weighted_prob0, weighted_prob1]))
         matrix[true_value_idx][predicted] += 1
 
     return matrix
+
+
+@celery.task
+def get_csv_results(model_id, test_id, fields):
+    """
+    Get test classification results using csv format.
+    """
+    def generate(test, name):
+        path = app.config['DATA_FOLDER']
+        if not exists(path):
+            makedirs(path)
+        filename = os.path.join(path, name)
+
+        with open(filename, 'w') as fp:
+            writer = csv.writer(fp, delimiter=',',
+                                quoting=csv.QUOTE_ALL)
+            writer.writerow(fields)
+            for example in test.get_examples_full_data(None):
+                rows = []
+                for field in fields:
+                    val = example[field] if field in example else ''
+                    rows.append(val)
+                writer.writerow(rows)
+        return filename
+
+    init_logger('get_csv_results_log', obj=test_id)
+
+    test = app.db.Test.find_one({
+        'model_id': model_id,
+        '_id': ObjectId(test_id)
+    })
+    if not test:
+        logging.error('Test not found')
+        return None
+
+    name = 'Examples-{0!s}.csv'.format(uuid.uuid1())
+    expires = 60 * 60 * 24 * 7  # 7 days
+    test.exports.append({
+        'name': name,
+        'fields': fields,
+        'status': Test.EXPORT_STATUS_IN_PROGRESS,
+        'datetime': datetime.now(),
+        'url': None,
+        'type': 'csv',
+        'expires': datetime.now() + timedelta(seconds=expires)
+    })
+    test.save()
+
+    logging.info('Creating file {0}...'.format(name))
+
+    s3 = AmazonS3Helper()
+    filename = generate(test, name)
+    logging.info('Uploading file {0} to s3...'.format(filename))
+    s3.save_key(name, filename, {
+        'model_id': model_id,
+        'test_id': test_id}, compressed=False)
+    s3.close()
+    os.remove(filename)
+    url = s3.get_download_url(name, expires)
+
+    export = next((ex for ex in test.exports if ex['name'] == name))
+    export['url'] = url
+    export['status'] = Test.EXPORT_STATUS_COMPLETED
+    export['expires'] = datetime.now() + timedelta(seconds=expires)
+    test.save()
+
+    return url
 
 
 def decode(row):

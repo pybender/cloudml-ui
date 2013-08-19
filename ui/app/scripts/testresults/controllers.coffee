@@ -13,6 +13,7 @@ angular.module('app.testresults.controllers', ['app.config', ])
   ($scope, dialog, $location, Test) ->
     $scope.dialog = dialog
     $scope.parameters = {}
+    $scope.resetError()
     $scope.model = dialog.model
     $scope.handler = $scope.model.test_import_handler_obj
 
@@ -72,12 +73,15 @@ without test id and model id"
       _id: $routeParams.id
     })
 
+
+
   $scope.load = (fields, section, callback) ->
     $scope.test.$load(
       show: fields
       ).then (->
         $scope.LOADED_SECTIONS.push section
-        if $scope.test.status != 'Completed'
+        $scope.showdetails = ($scope.test.status in ['Completed', 'Storing'])
+        if $scope.test.status != 'Completed' && $scope.test.status != 'Storing'
           $scope.setSection(['about', 'details'])
           return
 
@@ -97,7 +101,7 @@ without test id and model id"
       switch section_name
         when 'about'
           extra_fields = 'classes_set,created_on,parameters,error,
-examples_count,dataset'
+examples_count,dataset,memory_usage,created_by'
         when 'metrics'
           extra_fields = 'accuracy,metrics.precision_recall_curve,
 metrics.roc_curve,metrics.roc_auc'
@@ -106,7 +110,7 @@ metrics.roc_curve,metrics.roc_auc'
             pr = $scope.test.metrics.precision_recall_curve
             $scope.prCurve = {'Precision-Recall curve': [pr[1], pr[0]]}
                
-        when 'matrix' then extra_fields = 'metrics.confusion_matrix'
+        when 'matrix' then extra_fields = 'metrics.confusion_matrix,model'
 
       if 'main' in $scope.LOADED_SECTIONS
         # Do not need load main fields -> only extra
@@ -121,11 +125,12 @@ metrics.roc_curve,metrics.roc_auc'
         'partials/datasets/csv_list_popup.html',
         'CsvDownloadCtrl', 'modal')
 
-  $scope.confusion_matrix_weights = {w0: 1, w1: 1}
+  $scope.confusion_matrix_weights = {w0: 1, w1: 1, error: undefined}
 
   $scope.recalculateConfusionMatrix = (weight0, weight1) ->
     $scope.test.$get_confusion_matrix(weight0, weight1).then((resp) ->
       $scope.test.metrics.confusion_matrix = resp.data.confusion_matrix
+      $scope.confusion_matrix_weights.error = resp.data.error
     )
 
   $scope.initSections($scope.goSection, defaultAction='metrics:accuracy')
@@ -152,4 +157,32 @@ metrics.roc_curve,metrics.roc_auc'
       d.test = $scope.test
       d.open('partials/testresults/delete_popup.html', 'DeleteTestCtrl')
   
+])
+
+.controller('TestExportsCtrl', [
+  '$scope'
+
+  ($scope) ->
+    $scope.exports = []
+
+    $scope.init = (test) =>
+      $scope.test = test
+      $scope.reload()
+
+    $scope.reload = () ->
+      $scope.test.$get_exports().then((resp) ->
+        $scope.exports = resp.data.exports
+        statuses = []
+        statuses.push e.status for e in $scope.exports
+        if 'In Progress' in statuses
+          window.setTimeout(
+            () ->$scope.reload()
+            1000)
+      )
+
+    $scope.$on('exportsChanged', () ->
+      window.setTimeout(
+        () ->$scope.reload()
+        1000)
+    )
 ])

@@ -1,11 +1,25 @@
-angular.module('app.base', ['app.config'])
+angular.module('app.base', ['app.config', 'app.services'])
+
 
 .factory('BaseModel', [
   '$http'
   '$q'
   'settings'
+  'auth'
+  '$rootScope'
   
-  ($http, $q, settings) ->
+  ($http, $q, settings, auth, $rootScope) ->
+    transformRequest = (data, headersGetter) ->
+      $rootScope.loadingCount += 1
+      $rootScope.$broadcast('httpCallStarted')
+      return data
+
+    transformResponse = (data, headersGetter) ->
+      $rootScope.loadingCount -= 1
+      $rootScope.$broadcast('httpCallStopped')
+      if data
+        return JSON.parse(data)
+      return data
 
     class BaseModel
       BASE_UI_URL: ''
@@ -71,7 +85,8 @@ angular.module('app.base', ['app.config'])
       $delete: (opts={}) =>
         $http(
           method: "DELETE"
-          headers: {'Content-Type':undefined, 'X-Requested-With': null}
+          headers: {'Content-Type':undefined, 'X-Requested-With': null,
+          'X-Auth-Token': auth.get_auth_token()}
           url: "#{@BASE_API_URL}#{@_id}/"
           transformRequest: angular.identity
         )
@@ -84,10 +99,12 @@ angular.module('app.base', ['app.config'])
         $http(
           method: method
           #headers: settings.apiRequestDefaultHeaders
-          headers: {'Content-Type':undefined, 'X-Requested-With': null}
+          headers: {'Content-Type': undefined, 'X-Requested-With': null,
+          'X-Auth-Token': auth.get_auth_token()}
           url: url
           data: fd
-          transformRequest: angular.identity
+          transformRequest: transformRequest
+          transformResponse: transformResponse
           params: _.extend {
           }, opts
         ).then ((resp) =>
@@ -101,7 +118,10 @@ angular.module('app.base', ['app.config'])
         $http(
           method: 'GET'
           url: url
-          headers: settings.apiRequestDefaultHeaders
+          transformRequest: transformRequest
+          transformResponse: transformResponse
+          headers: _.extend(settings.apiRequestDefaultHeaders, {
+            'X-Auth-Token': auth.get_auth_token()})
           params: _.extend {
           }, opts
         )

@@ -10,6 +10,7 @@ import posixpath
 from fabric.api import task, env, settings, local, run, sudo, prefix
 from fabric.contrib import files
 from fabdeploy.api import *
+from fabdeploy.utils import upload_init_template
 
 
 setup_fabdeploy()
@@ -147,7 +148,8 @@ def setupw():
 
     pip.install.run(app='virtualenv', upgrade=True)
     system.package_install.run(packages='liblapack-dev gfortran libpq-dev\
- libevent-dev cloud-utils')
+ libevent-dev cloud-utils jgit-cli')
+    upload_init_template('supervisordw.conf')
     supervisor.push_init_config.run()
     supervisor.push_d_config.run()
     supervisor.push_configs.run()
@@ -168,6 +170,7 @@ def setupw():
 @task
 def deployw():
     #release.work_on.run(0)
+    #upload_init_template(name='supervisordw.conf', name_to='supervisord.conf')
     fabd.mkdirs.run()
 
     release.create.run()
@@ -186,6 +189,11 @@ def deployw():
     supervisor.update.run()
     supervisor.restart_program.run(program='celerydw')
 
+
+@task
+def upload_code_to_s3():
+    local('git archive --format=tar master | gzip > cloudml.tar.gz')
+    local("s3cmd put cloudml.tar.gz s3://odesk-match-cloudml/cloudml.tar.gz")
 
 class PushAnjularConfig(Task):
     @conf

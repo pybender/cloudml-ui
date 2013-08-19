@@ -3,7 +3,7 @@ import math
 import json
 import random
 
-from utils import BaseTestCase
+from utils import BaseTestCase, HTTP_HEADERS
 from api import app
 
 
@@ -20,12 +20,13 @@ class WeightsTests(BaseTestCase):
 
         # POST Trained Model
         handler = open('./conf/extract.json', 'r').read()
-        trainer = open('./api/test/model.dat', 'r')
+        trainer = open('./api/fixtures/model.dat', 'r').read()
         post_data = {'test_import_handler_file': handler,
                      'train_import_handler_file': handler,
                      'trainer': trainer,
                      'name': cls.MODEL_NAME}
-        resp = cls.app.post('/cloudml/models/', data=post_data)
+        resp = cls.app.post('/cloudml/models/', data=post_data,
+                            headers=HTTP_HEADERS)
         assert resp.status_code == httplib.CREATED
         cls.model = app.db.Model.find_one({'name': cls.MODEL_NAME})
         cls.BASE_URL = '/cloudml/weights/%s/' % cls.model._id
@@ -85,14 +86,14 @@ class WeightsTests(BaseTestCase):
                 self.assertEquals(wgh[key], val)
 
         check_weight('contractor->dev_blurb->best',
-                     {'is_positive': True,
+                     {'is_positive': False,
                       'short_name': 'best',
-                      'css_class': 'green lighter',
+                      'css_class': 'red dark',
                       'parent': 'contractor.dev_blurb',
-                      'value': 0.0065625655563437855})
+                      'value': -0.07864226503356551})
 
     def test_list(self):
-        resp = self.app.get(self.BASE_URL)
+        resp = self.app.get(self.BASE_URL, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.OK)
         data = json.loads(resp.data)
         self.assertTrue(data['has_next'])
@@ -101,10 +102,11 @@ class WeightsTests(BaseTestCase):
         self.assertEquals(data['total'], self.COUNT)
         self.assertEquals(data['pages'], math.ceil(1.0 * self.COUNT / 20))
         self.assertTrue('weights' in data, data)
-        self.assertTrue('tsexams->Wordpress Test' in resp.data)
+        self.assertTrue('tsexams->Ruby on Rails' in resp.data)
 
     def test_tree(self):
-        resp = self.app.get('/cloudml/weights_tree/%s' % self.model._id)
+        resp = self.app.get('/cloudml/weights_tree/%s' % self.model._id,
+                            headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.OK)
         data = json.loads(resp.data)
         self.assertTrue('weights' in data, data)

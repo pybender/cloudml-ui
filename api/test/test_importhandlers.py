@@ -1,8 +1,7 @@
 import httplib
-import json
 from bson.objectid import ObjectId
 
-from utils import BaseTestCase
+from utils import BaseTestCase, HTTP_HEADERS
 from api.views import ImportHandlerResource
 
 
@@ -26,7 +25,7 @@ class ImportHandlersTests(BaseTestCase):
     def test_edit_name(self):
         url = self._get_url(id=self.obj._id)
         data = {'name': 'new name'}
-        resp = self.app.put(url, data=data)
+        resp = self.app.put(url, data=data, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.OK)
         self.assertTrue(self.RESOURCE.OBJECT_NAME in resp.data)
         handler = self.Model.find_one({'_id': ObjectId(self.HANDLER_ID)})
@@ -35,13 +34,21 @@ class ImportHandlersTests(BaseTestCase):
     def test_delete(self):
         datasets = self.db.DataSet.find({'import_handler_id': self.HANDLER_ID})
         self.assertTrue(datasets.count(), 'Invalid fixtures')
+        import shutil
+        files = []
+        for dataset in datasets:
+            files.append(dataset.filename)
+            shutil.copy2(dataset.filename, dataset.filename + '.bak')
 
         url = self._get_url(id=self.obj._id)
-        resp = self.app.delete(url)
+        resp = self.app.delete(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.NO_CONTENT)
         self.assertFalse(self.Model.find_one({'_id': ObjectId(self.HANDLER_ID)}))
         datasets = self.db.DataSet.find({'import_handler_id': self.HANDLER_ID})
         self.assertFalse(datasets.count(), 'DataSets should be removed')
+        for filename in files:
+            shutil.move(filename + '.bak', filename)
+
 
 
 #     def test_post_with_invalid_import_handler(self):

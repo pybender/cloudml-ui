@@ -63,7 +63,7 @@ class BaseForm(object):
                 try:
                     value = getattr(self, mthd)(value)
                 except ValidationError, exc:
-                    self.errors.append({'name': name, 'error': exc.message})
+                    self.errors.append({'name': name, 'error': str(exc)})
             if value is not None:
                 self.cleaned_data[name] = value
             elif required:
@@ -74,7 +74,7 @@ class BaseForm(object):
         try:
             self.validate_obj()
         except ValidationError, exc:
-            self.errors.append({'name': None, 'error': exc.message})
+            self.errors.append({'name': None, 'error': str(exc)})
 
         if self.errors:
             raise ValidationError(self.error_messages, errors=self.errors)
@@ -141,9 +141,11 @@ class ModelAddForm(BaseModelForm):
     def clean_trainer(self, value):
         if value:
             try:
+                # TODO: find a better way?
+                value = value.encode('utf-8').replace('\r', '')
                 self.trainer = load_trainer(value)
-            except InvalidTrainerFile, exc:
-                raise ValidationError('Invalid trainer: %s' % exc)
+            except Exception as exc:
+                raise ValidationError('Invalid trainer: {0!s}'.format(exc))
 
     def clean_features(self, value):
         self.feature_model = None
@@ -197,7 +199,7 @@ trained model is required for posting model')
                           ('test_import_handler',
                            'test_import_handler_file'))
 
-    def save(self):
+    def save(self, *args, **kwargs):
         name = self.cleaned_data['name']
 
         def save_importhandler(fieldname):
@@ -283,7 +285,7 @@ class BaseChooseInstanceAndDataset(BaseForm):
         if value:
             inst = app.db.Instance.find_one({'_id': ObjectId(value)})
             if inst is None:
-                raise ValidationError('DataSet not found')
+                raise ValidationError('Instance not found')
             return inst
 
     def clean_spot_instance_type(self, value):
@@ -297,7 +299,18 @@ Please choose one of %s' % (self.TYPE_CHOICES, value))
         only_one_required(self.cleaned_data, ('parameters', 'dataset'))
 
 
-class ModelTrainForm(BaseChooseInstanceAndDataset):
+class BaseChooseInstanceAndDatasetMultiple(BaseChooseInstanceAndDataset):
+    def clean_dataset(self, value):
+        if value:
+            ids = value.split(',')
+            ds_list = list(app.db.DataSet.find({'_id': {'$in': [
+                ObjectId(ds_id) for ds_id in ids]}}))
+            if not ds_list:
+                raise ValidationError('DataSet not found')
+            return ds_list
+
+
+class ModelTrainForm(BaseChooseInstanceAndDatasetMultiple):
     def __init__(self, *args, **kwargs):
         self.model = kwargs.get('obj', None)
         super(ModelTrainForm, self).__init__(*args, **kwargs)
@@ -359,6 +372,9 @@ class AddTestForm(BaseChooseInstanceAndDataset):
         if self.model is None:
             raise ValidationError('Model not found')
 
+        if not self.model.example_id:
+            raise ValidationError('Please fill in "Examples id field name"')
+
         self.cleaned_data['model_name'] = self.model.name
         self.cleaned_data['model_id'] = self.model_id
         return self.model
@@ -385,7 +401,7 @@ class AddTestForm(BaseChooseInstanceAndDataset):
         else:
             # test using dataset
             dataset = self.cleaned_data.get('dataset', None)
-            run_test.apply_async((str(dataset._id),
+            run_test.apply_async(([str(dataset._id),],
                                   str(test._id),),
                                   queue=instance['name'])
 
@@ -419,7 +435,7 @@ class InstanceAddForm(BaseForm):
             instances = app.db.Instance.collection
             instances.update({'_id': {'$ne': instance._id}},
                              {"$set": {"is_default": False}},
-                             multi=True, safe=True)
+                             multi=True)
         return instance
 
 
@@ -439,7 +455,7 @@ class InstanceEditForm(BaseForm):
             instances = app.db.Instance.collection
             instances.update({'_id': {'$ne': instance._id}},
                              {"$set": {"is_default": False}},
-                             multi=True, safe=True)
+                             multi=True)
         return instance
 
 

@@ -81,6 +81,9 @@ def get_example_params(model_weights, row, vect_row):
     :param row: parameters values dict
     :param vect_row: vectorized parameters values (dict)
     """
+    if not row:
+        return {}
+
     result = {}
     weights_dict = dict([(weight.name, weight) for weight in model_weights])
 

@@ -35,13 +35,26 @@ angular.module('app.filters', [])
 
 .filter('format_date', [() ->
   (text) ->
-    dt = new Date(text)
-    d = add_zero(dt.getDate())
-    m = add_zero(dt.getMonth() + 1)
-    y = dt.getFullYear()
-    h = add_zero(dt.getHours())
-    mm = add_zero(dt.getMinutes())
-    return d + "-" + m + "-" + y + ' ' + h + ':' + mm
+    if not text
+      return ''
+    dt = moment(text, 'YYYY-MM-DD HH:mm:ss.SSS')
+    if dt
+      return dt.format('DD-MM-YYYY HH:mm')
+    else
+      return text
+])
+
+.filter('bytes', [() ->
+  (bytes, precision) ->
+    bytes = parseFloat(bytes)
+    if isNaN(bytes) or not isFinite(bytes) or not bytes
+      return '-'
+    if not precision?
+      precision = 1
+    units = ['bytes', 'kB', 'MB', 'GB', 'TB', 'PB']
+    number = Math.floor(Math.log(bytes) / Math.log(1024))
+    rounded = (bytes / Math.pow(1024, Math.floor(number)))
+    return rounded.toFixed(precision) +  ' ' + units[number]
 ])
 
 add_zero = (val) ->

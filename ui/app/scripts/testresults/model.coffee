@@ -14,7 +14,7 @@ angular.module('app.testresults.model', ['app.config'])
     ###
     class TestResult extends BaseModel
       API_FIELDNAME: 'test'
-      @MAIN_FIELDS: 'name,status'
+      @MAIN_FIELDS: 'name,status,created_on,created_by'
       DEFAULT_FIELDS_TO_SAVE: ['importhandler', 'train_importhandler',
                                 'features', 'trainer', 'name']
 
@@ -32,8 +32,6 @@ angular.module('app.testresults.model', ['app.config'])
         super opts
         @BASE_API_URL = TestResult.$get_api_url(@model_id)
         @BASE_UI_URL = "/models/#{@model_id}/tests/"
-
-
 
       @$get_api_url: (model_id) ->
         return "#{settings.apiUrl}models/#{model_id}/tests/"
@@ -85,6 +83,15 @@ angular.module('app.testresults.model', ['app.config'])
         url = "#{@BASE_API_URL}#{@_id}/action/confusion_matrix/"
         data = {weight0: weight0, weight1: weight1}
         @$make_request(url, data, "GET", {})
+
+      $get_examples_csv: (show) ->
+        url = @examplesCsvUrl() + '?show=' + show
+        resolver = (resp) -> { url: resp.data['url'] }
+        TestResult.$make_all_request(url, resolver)
+
+      $get_exports: () ->
+        url = "#{@BASE_API_URL}#{@_id}/action/exports/"
+        @$make_request(url, {}, "GET", {})
 
     return TestResult
 ])

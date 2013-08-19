@@ -3,6 +3,38 @@
 Changelog
 =========
 
+
+Relese 2013-08-16
+-----------------
+* Bug - Fixed running test with importing dataset
+* Bug - Reset error message before open test dialog
+* Bug - Restore ordering weights on column view
+* Feature - Using multiple datasets for train model
+
+
+Relese 2013-08-13
+-----------------
+* Feature - Add oDesk auth
+* Task - Store test examples to s3 the default only for very big datasets
+* Bug - Fixed storing examples to s3
+* Taks - Added select for 'Examples label field name' and
+'Examples id field name' fields on model details page
+
+
+Relese 2013-08-01
+-----------------
+* Bug - Fixed upload model
+* Feature - Added log levels filter
+* Task - Store TestExamples on s3
+
+
+Relese 2013-07-22
+-----------------
+* Task - Added some field to dataset details
+* Feature - Add cancel request button 
+* Feature - Add 'Requesting spot instance' and 'Instance started' to model
+
+
 Relese 2013-07-11
 -----------------
 * Bug - Fixed and improved validation json files

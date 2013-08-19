@@ -6,15 +6,11 @@
       editable-field="name" editable-input="text"
       editable-placement="right"></span> Details
   </h2>
-  <div class="date-created">
+  <div class="date-created" ng-init="obj=dataset">
     <span ng-show="dataset.on_s3">
       <a href="{{ url }}">S3 URL</a>
     </span> &nbsp;
-    <i class="icon-calendar"></i>
-    created on <span class="badge badge-info">{{ dataset.created_on|format_date }}</span>
-    <span ng-hide="dataset.created_on == dataset.updated_on">
-      updated on <span class="badge badge-info">{{ dataset.updated_on|format_date }}</span>
-    </span>
+    <ng-include src="'/partials/parts/created_tags.html'"></ng-include>
     <i class="icon-status"></i>
     <span class="badge badge-warning">{{ dataset.status }}</span>
   </div>
@@ -43,6 +39,15 @@
     </div>
     <div>
         Import Params: <span class="value">{{ dataset.import_params }}</span>
+    </div>
+    <div>
+        File Size: <span class="value">{{ dataset.filesize|bytes }}</span>
+    </div>
+    <div>
+        Records Count: <span class="value">{{ dataset.records_count|number }}</span>
+    </div>
+    <div>
+        Loading time, seconds: <span class="value">{{ dataset.time|number }}</span>
     </div>
   </div>
 

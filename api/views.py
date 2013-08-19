@@ -1,12 +1,10 @@
+from collections import defaultdict
+from datetime import datetime
 import json
 import logging
-import cPickle as pickle
 import traceback
-import StringIO
-import csv
 from flask.ext.restful import reqparse
 from flask import request, Response
-from celery import subtask
 
 import gevent
 from pymongo.errors import OperationFailure
@@ -14,7 +12,8 @@ from werkzeug.datastructures import FileStorage
 from bson.objectid import ObjectId
 
 from api import api, app
-from api.utils import crossdomain, ERR_INVALID_DATA, odesk_error_response, \
+from api.decorators import public, public_actions, authenticate
+from api.utils import ERR_INVALID_DATA, odesk_error_response, \
     ERR_NO_SUCH_MODEL, ERR_UNPICKLING_MODEL, slugify
 from api.resources import BaseResource, NotFound, ValidationError
 from api.forms import ModelAddForm, ModelEditForm, ImportHandlerAddForm, \
@@ -79,7 +78,6 @@ class Models(BaseResource):
     PUT_ACTIONS = ('train', 'tags', 'cancel_request_instance')
     FILTER_PARAMS = (('status', str), ('comparable', int), ('tag', str))
     DEFAULT_FIELDS = ('_id', 'name')
-    methods = ('GET', 'OPTIONS', 'DELETE', 'PUT', 'POST')
 
     MESSAGE404 = "Model with name %(_id)s doesn't exist"
 
@@ -99,6 +97,39 @@ class Models(BaseResource):
         return model_parser
 
     # GET specific methods
+
+    @public_actions(['download'])
+    def get(self, *args, **kwargs):
+        return super(Models, self).get(*args, **kwargs)
+
+    def _get_details_query(self, params, fields, **kwargs):
+        get_datasets = False
+        get_data_fields = False
+        if fields and 'datasets' in fields:
+            get_datasets = True
+            fields.remove('datasets')
+        if fields and 'data_fields' in fields:
+            get_data_fields = True
+            fields.remove('data_fields')
+
+        if get_datasets or get_data_fields:
+            fields.append('dataset_ids')
+
+        model = super(Models, self)._get_details_query(
+            params, fields, **kwargs)
+
+        if get_datasets:
+            model['datasets'] = [{
+                '_id': str(ds._id),
+                'name': ds.name,
+                'import_handler_id': str(ds.import_handler_id),
+            } for ds in model.datasets_list]
+
+        if get_data_fields:
+            model['data_fields'] = model.dataset.data_fields\
+                if model.dataset else []
+
+        return model
 
     def _prepare_filter_params(self, params):
         pdict = super(Models, self)._prepare_filter_params(params)
@@ -180,16 +211,23 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
                 dataset = import_handler.create_dataset(params)
                 tasks_list.append(import_data.s(str(dataset._id),
                                                 str(model._id)))
+                dataset = [dataset]
             else:
                 dataset = form.cleaned_data.get('dataset', None)
+
+            dataset_ids = [str(ds._id) for ds in dataset]
+
             if not spot_instance_type is None:
                 tasks_list.append(request_spot_instance.s(instance_type=spot_instance_type,
                                                           model_id=str(model._id)))
                 tasks_list.append(get_request_instance.subtask(
                     (),
-                    {'callback': 'train',
-                     'dataset_id': str(dataset._id),
-                     'model_id': str(model._id)},
+                    {
+                        'callback': 'train',
+                        'dataset_ids': dataset_ids,
+                        'model_id': str(model._id),
+                        'user_id': str(request.user._id),
+                    },
                     retry=True,
                     countdown=10,
                     retry_policy={
@@ -201,9 +239,10 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
                 #tasks_list.append(self_terminate.s())
             elif not instance is None:
                 if form.params_filled:
-                    train_model_args = (str(model._id), )
+                    train_model_args = (str(model._id), str(request.user._id))
                 else:
-                    train_model_args = (str(dataset._id), str(model._id))
+                    train_model_args = (dataset_ids, str(model._id),
+                                        str(request.user._id))
                 tasks_list.append(train_model.subtask(train_model_args, {},
                                                       queue=instance['name']))
             chain(tasks_list).apply_async()
@@ -228,7 +267,6 @@ class WeightsResource(BaseResource):
     GET_ACTIONS = ('brief', )
     ENABLE_FULLTEXT_SEARCH = True
     OBJECT_NAME = 'weight'
-    methods = ('GET', )
     NEED_PAGING = True
     FILTER_PARAMS = (('is_positive', int), ('q', str), ('parent', str), )
 
@@ -255,6 +293,7 @@ class WeightsResource(BaseResource):
             model_id = kwargs.get('model_id')
             return self.Model.find({'model_id': model_id,
                                     'is_positive': is_positive}, query_fields).\
+                sort('value', -1 if is_positive else 1 ).\
                 skip((page - 1) * per_page).limit(per_page)
 
         paging_params = (('ppage', int), ('npage', int),)
@@ -278,7 +317,6 @@ class WeightsTreeResource(BaseResource):
 
     NOTE: it used for constructing tree of model parameters.
     """
-    methods = ('GET', )
 
     FILTER_PARAMS = (('parent', str), )
 
@@ -309,10 +347,13 @@ class ImportHandlerResource(BaseResource):
         return app.db.ImportHandler
 
     OBJECT_NAME = 'import_handler'
-    methods = ('GET', 'OPTIONS', 'DELETE', 'POST', 'PUT')
     post_form = ImportHandlerAddForm
     put_form = ImportHandlerEditForm
     GET_ACTIONS = ('download', )
+
+    @public_actions(['download'])
+    def get(self, *args, **kwargs):
+        return super(ImportHandlerResource, self).get(*args, **kwargs)
 
     def _get_download_action(self, **kwargs):
         """
@@ -343,7 +384,6 @@ class DataSetResource(BaseResource):
     OBJECT_NAME = 'dataset'
     FILTER_PARAMS = (('status', str), )
     GET_ACTIONS = ('generate_url', )
-    methods = ('GET', 'OPTIONS', 'DELETE', 'POST')
 
     def _get_generate_url_action(self, **kwargs):
         ds = self._get_details_query(None, None, **kwargs)
@@ -355,7 +395,7 @@ class DataSetResource(BaseResource):
 
     def post(self, **kwargs):
         """
-        Loads dataset using specimodel.get_s3_download_url()fied import handler.
+        Loads dataset using specified import handler.
         """
         from api.tasks import import_data
         handler_id = kwargs.get('import_handler_id')
@@ -375,7 +415,8 @@ class DataSetResource(BaseResource):
         dataset.save(validate=True)
         dataset.set_file_path()
         import_data.delay(str(dataset._id))
-        return self._render(self._get_save_response_context(dataset))
+        return self._render(self._get_save_response_context(dataset),
+                            code=201)
 
 api.add_resource(DataSetResource, '/cloudml/importhandlers/\
 <regex("[\w\.]*"):import_handler_id>/datasets/')
@@ -388,8 +429,8 @@ class Tests(BaseResource):
     OBJECT_NAME = 'test'
     DEFAULT_FIELDS = ('_id', 'name')
     FILTER_PARAMS = (('status', str), )
-    GET_ACTIONS = ('confusion_matrix',)
-    methods = ('GET', 'OPTIONS', 'DELETE', 'PUT', 'POST')
+    GET_ACTIONS = ('confusion_matrix', 'exports')
+
     post_form = AddTestForm
 
     @property
@@ -423,11 +464,26 @@ class Tests(BaseResource):
         if not model:
             raise NotFound('Model not found')
 
-        result = calculate_confusion_matrix(test._id, args.get('weight0'), args.get('weight1'))
+        try:
+            result = calculate_confusion_matrix(test._id, args.get('weight0'), args.get('weight1'))
+        except Exception as e:
+            return self._render({self.OBJECT_NAME: test._id, 'error': e.message})
+
         result = zip(model.labels, result)
 
+        return self._render({self.OBJECT_NAME: test._id, 'confusion_matrix': result})
+
+    def _get_exports_action(self, **kwargs):
+        test = self._get_details_query(None, None, **kwargs)
+        if not test:
+            raise NotFound('Test not found')
+
+        exports = [ex for ex in test.exports
+                   if ex['expires'] > datetime.now()]
+
         return self._render({self.OBJECT_NAME: test._id,
-                             'confusion_matrix': result})
+                             'exports': exports})
+
 
 api.add_resource(Tests, '/cloudml/models/<regex("[\w\.]*"):model_id>/tests/')
 
@@ -447,19 +503,38 @@ class TestExamplesResource(BaseResource):
     NEED_PAGING = True
     GET_ACTIONS = ('groupped', 'csv', 'datafields')
     FILTER_PARAMS = [('label', str), ('pred_label', str)]
-    decorators = [crossdomain(origin='*')]
+
+    def _get_list_query(self, params, fields, **kwargs):
+        test = app.db.Test.find_one({'_id': ObjectId(kwargs.get('test_id'))})
+
+        data_input_params = dict([(p, v) for p, v in params.items()
+                                  if p.startswith('data_input.') and v])
+        if data_input_params:
+            params['_id'] = {
+                '$in': [e['_id'] for e in test.get_examples_full_data(
+                    ['_id'],
+                    data_input_params
+                )]
+            }
+
+            for param in data_input_params:
+                params[param] = None
+
+        return super(TestExamplesResource, self)._get_list_query(
+            params, fields, **kwargs)
 
     def _list(self, **kwargs):
-        data_input = self._get_random_datainput(**kwargs)
-        # TODO: ideas how to get types...
-        # TODO: fields in dict should not contains dots
-        for key, val in data_input.iteritems():
-            self.FILTER_PARAMS.append(('data_input.%s' % key, str))
+        test = app.db.Test.find_one({'_id': ObjectId(kwargs.get('test_id'))})
+        if not test.dataset is None:
+            for field in test.dataset.data_fields:
+                field_new = field.replace('.', '->')
+                self.FILTER_PARAMS.append(('data_input.%s' % field_new, str))
+        self.FILTER_PARAMS.append(('_id', dict),)
         return super(TestExamplesResource, self)._list(**kwargs)
 
     def _get_details_query(self, params, fields, **kwargs):
         if 'weighted_data_input' in fields:
-            fields += ['vect_data', 'data_input']
+            fields += ['vect_data', 'data_input', 'on_s3']
 
         example = super(TestExamplesResource, self).\
             _get_details_query(params, fields, **kwargs)
@@ -477,13 +552,15 @@ class TestExamplesResource(BaseResource):
 
             from helpers.weights import get_example_params
             model_weights = app.db.Weight.find({'model_id': model_id})
-            weighted_data = dict(get_example_params(
-                model_weights, example['data_input'], data))
-            example['weighted_data_input'] = weighted_data
-            # FIXME: Find a better way to do it using mongokit
-            app.db.TestExample.collection.update(
-                {'_id': example['_id']},
-                {'$set': {'weighted_data_input': weighted_data}})
+            if example.data_input:
+                weighted_data = dict(get_example_params(
+                    model_weights, example.data_input, data))
+                example['weighted_data_input'] = weighted_data
+                # FIXME: Find a better way to do it using mongokit
+                app.db.TestExample.collection.update(
+                    {'_id': example['_id']},
+                    {'$set': {'weighted_data_input': weighted_data}})
+           
         return example
 
     def _get_groupped_action(self, **kwargs):
@@ -512,36 +589,25 @@ class TestExamplesResource(BaseResource):
         logging.info('For model: %s test: %s' % (model_id, test_id))
         logging.info('Gettings examples')
 
-        collection = app.db.TestExample.collection
-
         res = []
         avps = []
 
-        # from bson.code import Code
-        # _map = Code("emit(this.%s, {pred: this.label,\
-        #             label: this.label});" % group_by_field)
-        # _reduce = Code("function (key, values) { \
-        #                  return {'list':  values}; }")
-        # params = {'model_name': model_name,
-        #           'test_name': test_name}
-        # result = collection.map_reduce(_map, _reduce, 'avp',
-        #                                query=params)
+        test = app.db.Test.find_one({'_id': ObjectId(test_id)})
+        groups = defaultdict(list)
+        example_fields = ['label', 'pred_label', 'prob', 'id']
 
-        # for doc in result.find():
-        #     group = doc['value']
-        #     group_list = group['list'] if 'list' in group else [group, ]
-        #     labels = [str(item['label']) for item in group_list]
-        #     pred_labels = [str(item['pred']) for item in group_list]
-        #     avp = apk(labels, pred_labels, count)
-        #     avps.append(avp)
-        #     res.append({'group_by_field': doc["_id"],
-        #                 'count': len(group_list),
-        #                 'avp': avp})
+        for row in test.get_examples_full_data(example_fields):
+            groups[row[group_by_field]].append({
+                'label': row['pred_label'],
+                'pred': row['label'],
+                'prob': row['prob'],
+            })
 
-        groups = collection.group([group_by_field, ],
-                                  {'model_id': model_id,
-                                   'test_id': test_id},
-                                  {'list': []}, REDUCE_FUNC)
+        groups = [{
+            group_by_field: key,
+            'list': value
+        } for key, value in groups.iteritems()]
+
         import sklearn.metrics as sk_metrics
         import numpy
         if len(groups) < 1:
@@ -598,7 +664,8 @@ not contain probabilities')
         return self._render(context)
 
     def _get_datafields_action(self, **kwargs):
-        fields = self._get_datafields(**kwargs)
+        fields = [field.replace('.', '->') for field in
+                  self._get_datafields(**kwargs)]
         return self._render({'fields': fields})
 
     def _get_csv_action(self, **kwargs):
@@ -607,44 +674,30 @@ not contain probabilities')
         """
         logging.info('Download examples in csv')
 
-        def generate():
-            parser_params = list(self.GET_PARAMS) + self.FILTER_PARAMS
-            params = self._parse_parameters(parser_params)
-            fields, show_fields = self._get_fields(params)
-            logging.info('Use fields %s' % str(fields))
-            kw = dict([(k, v) for k, v in kwargs.iteritems() if v])
-            examples = self._get_list_query(params, None, **kw)
-            fout = StringIO.StringIO()
-            writer = csv.writer(fout, delimiter=',', quoting=csv.QUOTE_ALL)
-            writer.writerow(fields)
-            for example in examples:
-                rows = []
-                for name in fields:
-                    # TODO: This is a quick hack. Fix it!
-                    if name.startswith('data_input'):
-                        feature_name = name.replace('data_input.', '')
-                        val = example['data_input'].get(feature_name, '')
-                    else:
-                        val = example[name] if name in example else ''
-                    rows.append(val)
-                writer.writerow(rows)
-            return fout.getvalue()
+        from api.tasks import get_csv_results
 
-        from flask import Response
-        resp = Response(generate(), mimetype='text/csv')
-        resp.headers["Content-Disposition"] = "attachment; \
-filename=%(model_id)s-%(test_id)s-examples.csv" % kwargs
-        return resp
+        parser = reqparse.RequestParser()
+        parser.add_argument('show', type=str)
+        params = parser.parse_args()
+        fields, show_fields = self._get_fields(params)
+        logging.info('Use fields %s' % str(fields))
+
+        test = app.db.Test.find_one({
+            '_id': ObjectId(kwargs.get('test_id')),
+            'model_id': kwargs.get('model_id')
+        })
+        if not test:
+            raise NotFound('Test not found')
+
+        get_csv_results.delay(
+            test.model_id, str(test._id),
+            fields
+        )
+        return self._render({})
 
     def _get_datafields(self, **kwargs):
-        data_input = self._get_random_datainput(**kwargs)
-        return data_input.keys()
-
-    def _get_random_datainput(self, **kwargs):
-        example = self.Model.find_one(kwargs, ('data_input', ))
-        if example is None:
-            raise NotFound('No test examples found!')
-        return example['data_input']
+        test = app.db.Test.find_one({'_id': ObjectId(kwargs.get('test_id'))})
+        return test.dataset.data_fields
 
 api.add_resource(TestExamplesResource, '/cloudml/models/\
 <regex("[\w\.]*"):model_id>/tests/<regex("[\w\.]*"):test_id>/examples/')
@@ -654,8 +707,7 @@ class CompareReportResource(BaseResource):
     """
     Resource which generated compare 2 tests report
     """
-    ALLOWED_METHODS = ('get', )
-    decorators = [crossdomain(origin='*')]
+    ALLOWED_METHODS = ('get', 'options')
     GET_PARAMS = (('model1', str),
                   ('test1', str),
                   ('model2', str),
@@ -700,8 +752,7 @@ api.add_resource(CompareReportResource,
 
 
 class Predict(BaseResource):
-    ALLOWED_METHODS = ('post', )
-    decorators = [crossdomain(origin='*')]
+    ALLOWED_METHODS = ('post', 'options')
 
     def post(self, model, import_handler):
 
@@ -757,9 +808,7 @@ class InstanceResource(BaseResource):
     """
     MESSAGE404 = "Instance doesn't exist"
     OBJECT_NAME = 'instance'
-    decorators = [crossdomain(origin='*')]
     PUT_ACTIONS = ('make_default', )
-    methods = ['GET', 'OPTIONS', 'PUT', 'POST']
 
     post_form = InstanceAddForm
     put_form = InstanceEditForm
@@ -778,13 +827,26 @@ class LogResource(BaseResource):
     FILTER_PARAMS = (('type', str), ('level', str), ('params.obj', str))
     MESSAGE404 = "Log doesn't exist"
     OBJECT_NAME = 'log'
-    decorators = [crossdomain(origin='*')]
-    methods = ('GET', )
     NEED_PAGING = True
 
     @property
     def Model(self):
         return app.db.LogMessage
+
+    def _prepare_filter_params(self, params):
+        params = super(LogResource, self)._prepare_filter_params(params)
+
+        if 'level' in params:
+            all_levels = ['CRITICAL', 'ERROR', 'WARN', 'WARNING',
+                          'INFO', 'DEBUG', 'NOTSET']
+            if params['level'] in all_levels:
+                idx = all_levels.index(params['level'])
+                levels = [l for i, l in enumerate(all_levels) if i <= idx]
+                params['level'] = {'$in': levels}
+            else:
+                del params['level']
+
+        return params
 
 api.add_resource(LogResource, '/cloudml/logs/')
 
@@ -795,14 +857,75 @@ class TagResource(BaseResource):
     """
     MESSAGE404 = "Tag doesn't exist"
     OBJECT_NAME = 'tag'
-    decorators = [crossdomain(origin='*')]
-    methods = ('GET', )
 
     @property
     def Model(self):
         return app.db.Tag
 
 api.add_resource(TagResource, '/cloudml/tags/')
+
+
+class AuthResource(BaseResource):
+    """
+    User API methods
+    """
+
+    @public
+    def post(self, action=None, **kwargs):
+        from api.auth import AuthException
+
+        if action == 'get_auth_url':
+            auth_url, oauth_token, oauth_token_secret =\
+                app.db.User.get_auth_url()
+
+            # TODO: Use redis?
+            app.db['auth_tokens'].insert({
+                'oauth_token': oauth_token,
+                'oauth_token_secret': oauth_token_secret,
+            })
+
+            return self._render({'auth_url': auth_url})
+
+        if action == 'authenticate':
+            parser = reqparse.RequestParser()
+            parser.add_argument('oauth_token', type=str)
+            parser.add_argument('oauth_verifier', type=str)
+            params = parser.parse_args()
+
+            oauth_token = params.get('oauth_token')
+            oauth_verifier = params.get('oauth_verifier')
+
+            # TODO: Use redis?
+            auth = app.db['auth_tokens'].find_one({
+                'oauth_token': oauth_token
+            })
+            if not auth:
+                return odesk_error_response(
+                    500, 500,
+                    'Wrong token: {0!s}'.format(oauth_token))
+
+            oauth_token_secret = auth.get('oauth_token_secret')
+            auth_token, user = app.db.User.authenticate(
+                oauth_token, oauth_token_secret, oauth_verifier)
+
+            app.db['auth_tokens'].remove({'_id': auth['_id']})
+
+            return self._render({
+                'auth_token': auth_token,
+                'user': user
+            })
+
+        if action == 'get_user':
+            user = getattr(request, 'user', None)
+            if user:
+                return self._render({'user': user})
+
+            return odesk_error_response(401, 401, 'Unauthorized')
+
+        raise NotFound()
+
+api.add_resource(AuthResource, '/cloudml/auth/<regex("[\w\.]*"):action>',
+                 add_standart_urls=False)
 
 
 def populate_parser(model, is_requred=False):

@@ -15,6 +15,7 @@ angular.module('app.datas.controllers', ['app.config', ])
   $scope.filter_opts = $location.search() # Used in ObjectListCtrl.
   $scope.simple_filters = {} # Filters by label and pred_label
   $scope.data_filters = [] # Filters by data_input.* fields
+  $scope.loading_state = false
 
   $scope.init = (test, extra_params={'action': 'examples:list'}) ->
     $scope.extra_params = extra_params
@@ -46,7 +47,11 @@ angular.module('app.datas.controllers', ['app.config', ])
       delete opts.filter_opts
       show = 'id,name,label,pred_label,title, probs'
       opts = _.extend({show: show}, opts, filter_opts)
-      Data.$loadAll($scope.test.model_id, $scope.test._id, opts)
+      $scope.loading_state = true
+      Data.$loadAll($scope.test.model_id, $scope.test._id, opts).then((resp) ->
+        $scope.loading_state = false
+        return resp
+      )
 
   $scope.addFilter = () ->
     $scope.data_filters.push({name: '', value: ''})
@@ -70,6 +75,7 @@ angular.module('app.datas.controllers', ['app.config', ])
 
 ($scope, $routeParams, Data, Test) ->
   $scope.form = {'field': "", 'count': 2 }
+  $scope.loading_state = true
   $scope.test = new Test({
     model_id: $routeParams.model_id,
     _id: $routeParams.test_id
@@ -78,22 +84,31 @@ angular.module('app.datas.controllers', ['app.config', ])
       show: 'name'
   )
   Data.$loadFieldList($routeParams.model_id,
-                      $routeParams.test_id).then ((opts) ->
+                      $routeParams.test_id)
+  .then ((opts) ->
       $scope.fields = opts.fields
+      $scope.loading_state = false
     ), ((opts) ->
       $scope.setError(opts, 'loading data field list')
+      $scope.loading_state = true
     )
 
   $scope.update = () ->
+    if not $scope.form.field
+      $scope.setError({}, 'Please, select a field')
+      return
+    $scope.loading_state = true
     Data.$loadAllGroupped($routeParams.model_id, $routeParams.test_id, {
       field: 'data_input.' + $scope.form.field,
-      count: $scope.form.count
-    }).then ((opts) ->
+      count: $scope.form.count})
+    .then ((opts) ->
       $scope.field_name = opts.field_name
       $scope.mavp = opts.mavp
       $scope.objects = opts.objects
+      $scope.loading_state = false
     ), ((opts) ->
       $scope.setError(opts, 'loading test examples')
+      $scope.loading_state = false
     )
 ])
 
@@ -113,8 +128,9 @@ angular.module('app.datas.controllers', ['app.config', ])
     })
 
   $scope.data.$load(
-    show: "id,test_name,weighted_data_input,target_variable,
-pred_label,label,prob"
+    show: "id,test_name,weighted_data_input,
+test.model.target_variable,pred_label,label,
+prob,test.status,created_on,test.classes_set"
   ).then (->
     ), ((opts)->
       $scope.setError(opts, 'loading test example')
@@ -126,8 +142,10 @@ pred_label,label,prob"
   '$scope'
   'dialog'
   'Data'
+  '$location'
+  '$rootScope'
 
-  ($scope, dialog, Data) ->
+  ($scope, dialog, Data, $location, $rootScope) ->
     # Field list to be displayed in choose field select
     $scope.selectFields = []
 
@@ -135,12 +153,17 @@ pred_label,label,prob"
     $scope.csvFields = ['name', 'id', 'label', 'pred_label', 'prob']
     $scope.show = 'name,id,label,pred_label,prob'
 
+    $scope.loading_state = true
+
     $scope.test = dialog.model
     Data.$loadFieldList($scope.test.model_id,
-      $scope.test._id).then ((opts) ->
+      $scope.test._id)
+    .then ((opts) ->
       $scope.selectFields = ("data_input." + x for x in opts.fields)
+      $scope.loading_state = false
     ), ((opts) ->
       $scope.setError(opts, 'loading data field list')
+      $scope.loading_state = false
     )
 
     $scope.appendField = () ->
@@ -156,6 +179,15 @@ pred_label,label,prob"
         f isnt fieldname
       $scope.show = $scope.csvFields.join(',')
       $scope.selectFields.push fieldname
+
+    $scope.getExamplesCsv = () ->
+      $scope.loading_state = true
+      @test.$get_examples_csv(@show).then((resp) ->
+        $scope.loading_state = false
+        $location.search('action=about:details')
+        $scope.close()
+        $rootScope.$broadcast 'exportsChanged'
+      )
 
     $scope.close = () ->
       dialog.close()

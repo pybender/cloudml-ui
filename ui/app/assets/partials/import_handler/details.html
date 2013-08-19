@@ -18,6 +18,11 @@
   </div>
 </h2>
 
+<div title="quick info" ng-init="obj=handler">
+  <ng-include src="'/partials/parts/created_tags.html'"></ng-include>
+</div>
+<p></p>
+
 <alert-message ng-show="msg" class="alert-info" msg='{{ msg }}' unsafe></alert-message>
 <alert-message ng-show="err" class="alert-error" msg='{{ err }}' unsafe></alert-message>
 
@@ -35,9 +40,6 @@
     </div>
     <div>
         Import Parameters: <span class="value" ng-repeat="param in handler.import_params">{{ param }}</span>
-    </div>
-    <div>
-        Created at: <span class="value">{{ handler.created_on|format_date }}</span>
     </div>
     <h5>Import Handler JSON data</h5>
     <a href="{{ handler.downloadUrl() }}"><i title="Download import handler file" class="icon-download-alt"></i> Download</a>

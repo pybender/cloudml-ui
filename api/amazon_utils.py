@@ -22,7 +22,7 @@ class AmazonEC2Helper(object):
     def request_spot_instance(self, instance_type='m3.xlarge'):
         request = self.conn.request_spot_instances(
             price="1",
-            image_id='ami-7df96b4d',#"ami-f0af86b5",#"ami-66c8e123",
+            image_id='ami-a068f590',#'ami-78b42948',#'ami-65821055',#'ami-a7f96b97',#"ami-f0af86b5",#"ami-66c8e123",
             security_group_ids=["sg-1dc1dc71",],#["sg-534f5d3f", ],
             instance_type=instance_type,
             placement="us-west-2a",
@@ -116,6 +116,13 @@ class AmazonS3Helper(object):
         if compressed:
             headers['Content-Encoding'] = 'gzip'
         key.set_contents_from_filename(filename, headers)
+
+    def save_key_string(self, name, data, meta={}):
+        key = Key(self.bucket)
+        key.key = name
+        for meta_key, meta_val in meta.iteritems():
+            key.set_metadata(meta_key, meta_val)
+        key.set_contents_from_string(data)
 
     def delete_key(self, name):
         key = Key(self.bucket)

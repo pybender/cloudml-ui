@@ -11,7 +11,8 @@ angular.module('app.models.controllers', ['app.config', ])
 
   ($scope, $location, Model) ->
     $scope.MODEL = Model
-    $scope.FIELDS = Model.MAIN_FIELDS + ',tags'
+    $scope.FIELDS = Model.MAIN_FIELDS + ',tags,created_on,created_by,
+updated_on,updated_by'
     $scope.ACTION = 'loading models'
     $scope.currentTag = $location.search()['tag']
     $scope.kwargs = {'tag': $scope.currentTag}
@@ -48,10 +49,6 @@ angular.module('app.models.controllers', ['app.config', ])
 
   ($scope, Model) ->
     $scope.model = new Model()
-
-    $scope.setModelFile = (element) ->
-      $scope.$apply ($scope) ->
-        $scope.model.trainer = element.files[0]
 ])
 
 .controller('ModelDetailsCtrl', [
@@ -115,7 +112,8 @@ angular.module('app.models.controllers', ['app.config', ])
     $scope.goTests = () ->
       Test.$loadAll(
         $scope.model._id,
-        show: 'name,created_on,status,parameters,accuracy,examples_count'
+        show: 'name,created_on,status,parameters,accuracy,examples_count,
+created_by'
       ).then ((opts) ->
         $scope.tests = opts.objects
       ), ((opts) ->
@@ -130,14 +128,15 @@ angular.module('app.models.controllers', ['app.config', ])
           when 'model'
             extra_fields = 'created_on,target_variable,
 error,labels,weights_synchronized,example_id,example_label,
-updated_on,dataset._id,dataset.name,feature_count,test_import_handler.name,
+updated_on,feature_count,test_import_handler.name,
 train_import_handler.name,train_import_handler.import_params,tags,
 test_import_handler.import_params,train_import_handler._id,
-test_import_handler._id'
+test_import_handler._id,memory_usage,created_by,trained_by,datasets,data_fields,
+train_records_count'
           when 'features' then extra_fields = 'features'
 
         if 'main' in $scope.LOADED_SECTIONS
-          # Do not need load main fields -> only etra
+          # Do not need load main fields -> only extra
           if extra_fields != ''
             $scope.load(extra_fields, name)
         else
@@ -166,6 +165,15 @@ test_import_handler._id'
     if $scope.handler?
       $scope.params = $scope.handler.import_params
 
+    if $scope.multiple_dataset
+      $scope.select2Options = {
+        allowClear: true,
+        placeholder: 'Please select dataset or several',
+        width: 230  # TODO: better move to template?
+      }
+    else
+      $scope.select2Options = {allowClear: true}
+
     $scope.changeParams = (param) ->
       $scope.paramsFilled = true
       $scope.new = false
@@ -192,6 +200,7 @@ test_import_handler._id'
     $scope.parameters = {}
     $scope.model = dialog.model
     $scope.handler = $scope.model.train_import_handler_obj
+    $scope.multiple_dataset = true
 
     $scope.start = (result) ->
       model = $scope.dialog.model

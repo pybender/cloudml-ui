@@ -4,11 +4,10 @@
       <p title="Use existing dataset for train model" class="text-center">Existing DataSet</p>
       <label class="control-label">DataSet:</label>
       <div class="controls" ng-class="{error: Form.dataset.$invalid}">
-        <select title="Please select dataset from list to start model training." name="dataset" class="input-small" ng-model='parameters["dataset"]' required>
-          <option value="">--- select dataset ---</option>
-          <option ng-repeat="ds in datasets" value="{{ ds._id }}">{{ ds.name }}</option>
+        <select ui-select2="select2Options" ng-multiple="multiple_dataset" name="dataset" ng-model='parameters["dataset"]' required>
+            <option ng-repeat="ds in datasets" value="{{ ds._id }}">{{ ds.name }}</option>
         </select>
-      </div>                         
+      </div>
     </div>
   </div>
   <div ng-hide="new || parameters['dataset']" style="float: left;">
@@ -22,7 +21,7 @@
         <div class="controls" ng-class="{error: !paramsFilled}">
           <input title="Load dataset using import handler" ng-change="changeParams(param)" class="input-small" ng-model='parameters[param]' name="{{param}}" placeholder='{{ param }}' type='text' required />
         </div>
-      </div>                         
+      </div>
     </div>
   </div>
 </div>

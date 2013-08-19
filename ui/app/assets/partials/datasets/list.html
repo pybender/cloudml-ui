@@ -9,6 +9,9 @@
         <th>Data</th>
         <th>On S3</th>
         <th>Created</th>
+        <th>File Size</th>
+        <th>Records Count</th>
+        <th>Loading time, seconds</th>
         <th>Actions</th>
       </tr>
   </thead>
@@ -21,8 +24,14 @@
       <td><div class="value" ng-repeat="(key, val) in ds.import_params">{{ key }}={{ val }}</div></td>
       <td>{{ ds.data }}</td>
       <td>{{ ds.on_s3 }}</td>
-      <td>{{ ds.created_on|format_date }}</td>
       <td>
+          {{ ds.created_on|format_date }}<br>
+          <small ng-show="ds.created_by">by {{ ds.created_by.name }} ({{ ds.created_by.uid }})</small>
+      </td>
+      <td>{{ ds.filesize|bytes }}</td>
+      <td>{{ ds.records_count|number }}</td>
+      <td>{{ ds.time|number }}</td>
+      <td style="min-width: 100px;">
         <a class="btn btn-info" ng-show="ds.url" href="{{ ds.url }}"><i title="Download From Amazon S3" class="icon-download-alt"></i></a>
         <button ng-click="delete(ds)" class="btn btn-danger">
           <i title="Delete dataset. Be careful - you could not recover it!" class="icon-remove"></i>
