@@ -100,10 +100,6 @@ class ModelMigration(DbMigration):
                     self.collection.save(doc)
 
 
-
-
-
-
 class TestMigration(DbMigration):
     DOC_CLASS = models.Test
 
@@ -167,6 +163,10 @@ class DataSetMigration(DbMigration):
         self.target = {'updated_by': {'$exists': False}}
         self.update = {'$set': {'updated_by': {}}}
 
+    def allmigration06__add_on_s3(self):
+        self.target = {'on_s3': {'$exists': False}}
+        self.update = {'$set': {'on_s3': False}}
+
 
 class InstanceMigration(DbMigration):
     DOC_CLASS = models.Instance
@@ -190,3 +190,11 @@ class ImportHandlerMigration(DbMigration):
     def allmigration02__add_updated_by(self):
         self.target = {'updated_by': {'$exists': False}}
         self.update = {'$set': {'updated_by': {}}}
+
+
+class TestExampleMigration(DbMigration):
+    DOC_CLASS = models.TestExample
+
+    def allmigration01__add_on_s3(self):
+        self.target = {'on_s3': {'$exists': False}}
+        self.update = {'$set': {'on_s3': False}}
