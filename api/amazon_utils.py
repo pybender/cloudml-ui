@@ -22,7 +22,7 @@ class AmazonEC2Helper(object):
     def request_spot_instance(self, instance_type='m3.xlarge'):
         request = self.conn.request_spot_instances(
             price="1",
-            image_id='ami-78b42948',#'ami-65821055',#'ami-a7f96b97',#"ami-f0af86b5",#"ami-66c8e123",
+            image_id='ami-a068f590',#'ami-78b42948',#'ami-65821055',#'ami-a7f96b97',#"ami-f0af86b5",#"ami-66c8e123",
             security_group_ids=["sg-1dc1dc71",],#["sg-534f5d3f", ],
             instance_type=instance_type,
             placement="us-west-2a",
