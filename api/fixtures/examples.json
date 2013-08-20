@@ -58,10 +58,11 @@
     "model_id": "519318e6106a6c0df349bc0b",
     "data_input": {},
     "test": null,
-    "test_id": null,
+    "test_id": "000000000000000000000003",
     "weighted_data_input": {},
     "prob": [],
-    "id": "3"
+    "id": "3",
+    "on_s3": true
  },
  {
     "created_on": "2013-04-19 14:37:23.145000",

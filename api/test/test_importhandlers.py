@@ -10,9 +10,10 @@ class ImportHandlersTests(BaseTestCase):
     Tests of the ImportHandlers API.
     """
     HANDLER_ID = '5170dd3a106a6c1631000000'
-    FIXTURES = ('datasets.json', 'importhandlers.json', )
+    FIXTURES = ('models.json', 'datasets.json', 'importhandlers.json', )
     BASE_URL = '/cloudml/importhandlers/'
     RESOURCE = ImportHandlerResource
+    MODEL_NAME = 'TrainedModel'
 
     def setUp(self):
         super(ImportHandlersTests, self).setUp()
@@ -40,15 +41,25 @@ class ImportHandlersTests(BaseTestCase):
             files.append(dataset.filename)
             shutil.copy2(dataset.filename, dataset.filename + '.bak')
 
+        model = self.db.Model.find_one({'name': self.MODEL_NAME})
+        model.test_import_handler = self.obj
+        model.train_import_handler = self.obj
+        model.save()
+
         url = self._get_url(id=self.obj._id)
         resp = self.app.delete(url, headers=HTTP_HEADERS)
+
         self.assertEquals(resp.status_code, httplib.NO_CONTENT)
-        self.assertFalse(self.Model.find_one({'_id': ObjectId(self.HANDLER_ID)}))
+        self.assertIsNone(self.Model.find_one({'_id': ObjectId(self.HANDLER_ID)}))
+
         datasets = self.db.DataSet.find({'import_handler_id': self.HANDLER_ID})
         self.assertFalse(datasets.count(), 'DataSets should be removed')
         for filename in files:
             shutil.move(filename + '.bak', filename)
 
+        model = self.db.Model.find_one({'name': self.MODEL_NAME})
+        self.assertIsNone(model.test_import_handler, 'Ref should be removed')
+        self.assertIsNone(model.train_import_handler, 'Ref should be removed')
 
 
 #     def test_post_with_invalid_import_handler(self):
