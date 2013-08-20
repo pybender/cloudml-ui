@@ -203,9 +203,14 @@ angular.module('app.controllers', ['app.config', ])
             $scope.load()
         )
 
+      $scope.$watch('filter_opts ', (filter_opts, oldVal, scope) ->
+        $scope.load()
+      , true)
+
     $scope.load = (append=false) ->
       params = $.extend({'show': $scope.FIELDS},
-                         $scope.kwargs || {})
+                         $scope.kwargs || {},
+                         $scope.filter_opts)
 
       $scope.MODEL.$loadAll(params).then ((opts) ->
         $scope.pages = opts.pages

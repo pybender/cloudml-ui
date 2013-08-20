@@ -76,7 +76,8 @@ class Models(BaseResource):
     """
     GET_ACTIONS = ('download', 'reload', 'by_importhandler')
     PUT_ACTIONS = ('train', 'tags', 'cancel_request_instance')
-    FILTER_PARAMS = (('status', str), ('comparable', int), ('tag', str))
+    FILTER_PARAMS = (('status', str), ('comparable', int), ('tag', str),
+                    ('created_by', str), ('updated_by', str))
     DEFAULT_FIELDS = ('_id', 'name')
 
     MESSAGE404 = "Model with name %(_id)s doesn't exist"
@@ -138,6 +139,12 @@ class Models(BaseResource):
         if 'tag' in pdict:
             pdict['tags'] = {'$in': [pdict['tag']]}
             del pdict['tag']
+        if 'created_by' in pdict:
+            pdict['created_by.uid'] = pdict['created_by']
+            del pdict['created_by']
+        if 'updated_by' in pdict:
+            pdict['updated_by.uid'] = pdict['updated_by']
+            del pdict['updated_by']
         return pdict
 
     def _get_reload_action(self, **kwargs):
