@@ -47,7 +47,7 @@
         Records Count: <span class="value">{{ dataset.records_count|number }}</span>
     </div>
     <div>
-        Loading time, seconds: <span class="value">{{ dataset.time|number }}</span>
+        Loading time: <span class="value">{{ dataset.time|humanize_time }}</span>
     </div>
   </div>
 

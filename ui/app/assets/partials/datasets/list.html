@@ -11,7 +11,7 @@
         <th>Created</th>
         <th>File Size</th>
         <th>Records Count</th>
-        <th>Loading time, seconds</th>
+        <th>Loading time</th>
         <th>Actions</th>
       </tr>
   </thead>
@@ -30,7 +30,7 @@
       </td>
       <td>{{ ds.filesize|bytes }}</td>
       <td>{{ ds.records_count|number }}</td>
-      <td>{{ ds.time|number }}</td>
+      <td>{{ ds.time|humanize_time }}</td>
       <td style="min-width: 100px;">
         <a class="btn btn-info" ng-show="ds.url" href="{{ ds.url }}"><i title="Download From Amazon S3" class="icon-download-alt"></i></a>
         <button ng-click="delete(ds)" class="btn btn-danger">
