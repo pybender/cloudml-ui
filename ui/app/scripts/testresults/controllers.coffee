@@ -12,16 +12,17 @@ angular.module('app.testresults.controllers', ['app.config', ])
 
   ($scope, dialog, $location, Test) ->
     $scope.dialog = dialog
-    $scope.parameters = {}
     $scope.resetError()
     $scope.model = dialog.model
     $scope.handler = $scope.model.test_import_handler_obj
 
-    $scope.start = (result) ->
-      data = {}
-      for key of $scope.parameters
-        data[key] = $scope.parameters[key]
+    # Form elements for each tab in the section with values
+    $scope.formElements = {}
+    # Columns by section
+    $scope.currentColumns = {'dataset': null, 'instance': null}
 
+    $scope.start = (result) ->
+      data = $scope.getData()
       $scope.test = new Test({model_id: $scope.model._id})
       $scope.test.$run(data).then (->
         dialog.close()
@@ -29,6 +30,14 @@ angular.module('app.testresults.controllers', ['app.config', ])
       ), ((opts) ->
         $scope.setError(opts, 'running test')
       )
+
+    # TODO: Remove code duplication
+    $scope.getData = () ->
+      data = {}
+      for section, tab of $scope.currentColumns
+        for key, val of $scope.formElements[tab]
+          if val then data[key] = val
+      return data
 ])
 
 .controller('DeleteTestCtrl', [

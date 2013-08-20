@@ -156,34 +156,57 @@ train_records_count'
         $scope.setError(opts, 'saving model tags'))
   ])
 
+
 .controller('BaseModelDataSetActionCtrl', [
   '$scope'
   '$rootScope'
 
   ($scope, $rootScope) ->
-    # DataSet section specific methods
+    $scope.initForm = () ->
+      # Form elements initialization
+      # dataset section
+      $scope.NEW_DATASET = 'New DataSet'
+      params = {}
+      $scope.formValid = false
+      for p in $scope.params
+        params[p] = false
+      $scope.formElements[$scope.NEW_DATASET] = params
+
+      $scope.EXISTED_DATASET = 'Existed DataSet'
+      $scope.formElements[$scope.EXISTED_DATASET] = {'dataset': false}
+
+      # instance section
+      $scope.REQUEST_SPOT_INSTANCE = 'Request Spot Instance'
+      $scope.formElements[$scope.REQUEST_SPOT_INSTANCE] = {'type': false}
+
+      $scope.EXISTED_INSTANCE = 'Existed Instance'
+      $scope.formElements[$scope.EXISTED_INSTANCE] = {'aws_instance': false}
+
+      if $scope.multiple_dataset
+        $scope.select2Options = {
+          allowClear: true,
+          placeholder: 'Please select dataset or several',
+          width: 230  # TODO: better move to template?
+        }
+      else
+        $scope.select2Options = {allowClear: true}
+
     if $scope.handler?
       $scope.params = $scope.handler.import_params
+      $scope.initForm()
 
-    if $scope.multiple_dataset
-      $scope.select2Options = {
-        allowClear: true,
-        placeholder: 'Please select dataset or several',
-        width: 230  # TODO: better move to template?
-      }
-    else
-      $scope.select2Options = {allowClear: true}
+    $scope.changeFormData = (column, param) ->
+      $scope.formValid = $scope.isDataSetDataValid()
 
-    $scope.changeParams = (param) ->
-      $scope.paramsFilled = true
-      $scope.new = false
-      for key in $scope.params
-        val = $scope.parameters[key]
-        if val?
-          $scope.new = true
-        else
-          $scope.paramsFilled = false
-      return
+    $scope.activateSectionColumn = (section, name) ->
+      $scope.currentColumns[section] = name
+      $scope.formValid = $scope.isDataSetDataValid()
+
+    $scope.isDataSetDataValid = () ->
+      for section, tab of $scope.currentColumns
+        for key, val of $scope.formElements[tab]
+          if !val then return false
+      return true
 
     $scope.close = ->
       $scope.dialog.close()
@@ -197,18 +220,30 @@ train_records_count'
   ($scope, $rootScope, dialog) ->
     $scope.dialog = dialog
     $scope.resetError()
-    $scope.parameters = {}
     $scope.model = dialog.model
     $scope.handler = $scope.model.train_import_handler_obj
     $scope.multiple_dataset = true
 
+    # Form elements for each tab in the section with values
+    $scope.formElements = {}
+    # Columns by section
+    $scope.currentColumns = {'dataset': null, 'instance': null}
+
     $scope.start = (result) ->
-      model = $scope.dialog.model
-      model.$train($scope.parameters).then (() ->
+      data = $scope.getData()
+      dialog.model.$train(data).then (() ->
         dialog.close()
       ), ((opts) ->
         $scope.setError(opts, 'starting model training')
       )
+
+    # TODO: Remove code duplication
+    $scope.getData = () ->
+      data = {}
+      for section, tab of $scope.currentColumns
+        for key, val of $scope.formElements[tab]
+          if val then data[key] = val
+      return data
 ])
 
 .controller('ModelActionsCtrl', [
@@ -237,7 +272,7 @@ train_records_count'
       $scope._showModelActionDialog(model, 'train', (model) ->
         $scope.openDialog($dialog, model,
             'partials/models/model_train_popup.html',
-            'TrainModelCtrl', 'modal large'))
+            'TrainModelCtrl', 'modal'))
 
     $scope.delete_model = (model) ->
       $scope.openDialog($dialog, model,

@@ -91,24 +91,39 @@ created_by'
       )
 ])
 
-.controller('InstanceSelectCtrl', [
+
+.controller('GetInstanceCtrl', [
   '$scope'
   'AwsInstance'
 
   ($scope, AwsInstance) ->
+    $scope.activeColumns = [$scope.REQUEST_SPOT_INSTANCE]
+
     AwsInstance.$loadAll(
       show: 'name,_id,ip,is_default'
     ).then ((opts) ->
       $scope.instances = opts.objects
+      if $scope.instances.length != 0
+          $scope.activeColumns.push $scope.EXISTED_INSTANCE
+        else
+          $scope.activateColumn($scope.REQUEST_SPOT_INSTANCE)
+
       $scope.default_instance = null
       for inst in $scope.instances
         if inst.is_default
-          $scope.parameters.aws_instance = inst._id
+          $scope.formElements[$scope.EXISTED_INSTANCE]['aws_instance'] = \
+          inst._id
           break
 
     ), ((opts) ->
       $scope.err = $scope.setError(opts, 'loading instances')
     )
+
+    $scope.activateColumn = (name) ->
+      $scope.activateSectionColumn('instance', name)
+      $scope.currentColumn = name
+
+    $scope.activateColumn($scope.EXISTED_INSTANCE)
 ])
 
 

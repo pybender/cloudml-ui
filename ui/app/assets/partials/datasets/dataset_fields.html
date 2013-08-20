@@ -1,26 +1,27 @@
-<div class="row columns">
-  <div ng-hide="new" ng-class="{span3: !parameters['dataset'], span6: parameters['dataset']}">
-    <div class="control-group" ng-controller="DatasetSelectCtrl">
-      <p title="Use existing dataset for train model" class="text-center">Existing DataSet</p>
-      <label class="control-label">DataSet:</label>
-      <div class="controls" ng-class="{error: Form.dataset.$invalid}">
-        <select ui-select2="select2Options" ng-multiple="multiple_dataset" name="dataset" ng-model='parameters["dataset"]' required>
-            <option ng-repeat="ds in datasets" value="{{ ds._id }}">{{ ds.name }}</option>
-        </select>
+<div ng-controller="DatasetSelectCtrl">
+  <ul class="nav nav-pills">
+    <li ng-repeat="column in activeColumns" ng-class="{active: currentColumn == column}"><a ng-click="activateColumn(column)">{{ column }}</a></li>
+    <li ng-show="activeColumns.indexOf(EXISTED_DATASET) == -1"class="disabled"><a title="There aren't successfully loaded datasets">Existed DataSet</a></li>
+  </ul>
+
+  <!-- Existed dataset  -->
+  <div ng-hide="activeColumns.indexOf(EXISTED_DATASET) == -1">
+    <div ng-show="currentColumn == 'Existed DataSet'">
+      <div class="control-group" ng-class="{error: !formElements[EXISTED_DATASET]['dataset']}">
+        <select class="input-xlarge" ui-select2="select2Options" ng-multiple="multiple_dataset" name="dataset" ng-model="formElements[EXISTED_DATASET]['dataset']" ng-change="changeFormData(currentColumn, 'dataset')" required>
+          <option ng-repeat="ds in datasets" value="{{ ds._id }}">{{ ds.name }}</option>
+        </select>&nbsp;<i class="icon-question-sign" title="Choose successfull loaded dataset" />
+        <span ng-show="!formElements[EXISTED_DATASET]['dataset']" class="help-inline error">required</span>
       </div>
     </div>
   </div>
-  <div ng-hide="new || parameters['dataset']" style="float: left;">
-    <b class="text-center">or</b>
-  </div>
-  <div ng-class="{span3: !new, span6: new}" ng-hide="parameters['dataset']">
-    <div>
-      <p class="text-center" title="Load new dataset and train model">New DataSet using <a target="_blank" href="#{{ model.train_import_handler_obj.objectUrl() }}">{{ model.train_import_handler_obj.name }}</a></p>
-      <div ng-repeat="param in params" class="control-group">
-        <label class="control-label">{{ param | capfirst }}:</label>
-        <div class="controls" ng-class="{error: !paramsFilled}">
-          <input title="Load dataset using import handler" ng-change="changeParams(param)" class="input-small" ng-model='parameters[param]' name="{{param}}" placeholder='{{ param }}' type='text' required />
-        </div>
+
+  <!-- New Dataset -->
+  <div ng-hide="activeColumns.indexOf(NEW_DATASET) == -1">
+    <div ng-show="currentColumn == NEW_DATASET">
+      <div ng-repeat="param in params" ng-class="{error: !formElements[NEW_DATASET][param]}" class="control-group">
+        <input class="input-xlarge" title="Load dataset using import handler" ng-change="changeFormData(currentColumn, param)" ng-model="formElements[NEW_DATASET][param]" title="Select {{ param }}" name="{{ param }}" placeholder='{{ param }}' type='text' required /> <i class="icon-question-sign" title="Fill {{ param }} parameter" />
+        <span ng-show="!formElements[NEW_DATASET][param]" class="help-inline">required</span>
       </div>
     </div>
   </div>

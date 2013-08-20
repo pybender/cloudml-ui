@@ -7,20 +7,18 @@
   <div class="modal-body">
     <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
     <alert-message ng-hide="handler" class="alert-error" msg="Please define Test Import Handler in model details before!" unsafe></alert-message>
+    <alert-message ng-hide="formValid" class="alert-error" msg="Not all required fields are filled" unsafe></alert-message>
 
     <form name="Form" class="form-horizontal" ng-show="handler">
       <h4 class="text-center">Choose way of getting testing data</h4>
-      <div class="alert-info well">
-        <ng-include src="'/partials/datasets/dataset_fields.html'"></ng-include>
-      </div>
+      <ng-include src="'/partials/datasets/dataset_fields.html'"></ng-include>
+
       <h4 class="text-center">then choose amazon instance</h4>
-      <div class="alert-info well">
-        <ng-include src="'/partials/aws_instances/instance_fields.html'"></ng-include>
-      </div>
+      <ng-include src="'/partials/aws_instances/instance_fields.html'"></ng-include>
     </form>
   </div>
 
   <div class="modal-footer">
-    <button ng-click="start(result)" ng-disabled="Form.aws_instance.$error.required || (Form.dataset.$error.required && !paramsFilled)" class="btn btn-primary" >Start test</button>
+    <button ng-click="start(result)" ng-disabled="!formValid" class="btn btn-primary" >Start test</button>
   </div>
 </div>
