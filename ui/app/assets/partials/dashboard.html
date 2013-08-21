@@ -1,0 +1,54 @@
+<alert-message ng-show="msg" class="alert-info" msg='{{ msg }}' unsafe></alert-message>
+<alert-message ng-show="err" class="alert-error" msg='{{ err }}' unsafe></alert-message>
+
+<h2 class="title">
+	Dashboard
+	<div class="actions">
+  	</div>
+</h2>
+
+<div class="span3">
+	<div class="well">
+	<h2 class="muted">Models</h2>
+	<ul class="unstyled">
+		<li ng-repeat="item in statistics.models.data">
+		{{ item._id }} <span class="pull-right strong">{{ item.count }}</span>
+		<div class="progress progress-{{ STYLES_MAP[item._id] }}">
+		<div class="bar" style="width: {{ 100 * item.count / statistics.models.count }}%;"></div>
+		</div>
+		</li>
+	</ul>
+	</div>
+</div>
+<div class="span3">
+	<div class="well">
+		<h2 class="text-warning">Tests</h2>
+		<ul class="unstyled" ng-init="states={}">
+			<li ng-repeat="(status, data) in statistics.tests.data">
+				<a ng-click="states[status]=!states[status]">{{ status }} <span class="pull-right strong">{{ data.count }}</span></a>
+				<ul ng-show="states[status]">
+					<li ng-repeat="item_stat in data.data">
+						<small><a href="#{{ statistics.getModelUrl(item_stat.model_id) }}?action=test:list">{{ item_stat.model_name }}</a> <span class="pull-right strong">{{ item_stat.count }}</span></small>
+					</li>
+				</ul>
+				<div class="progress progress-{{ STYLES_MAP[status] }}"><div class="bar" style="width: {{ 100 * data.count / statistics.tests.count }}%;"></div></div>
+			</li>
+		</ul>
+	</div>
+</div>
+<div class="span3">
+	<div class="well">
+		<h2 class="text-info">DataSets</h2>
+		<ul class="unstyled" ng-init="states={}">
+			<li ng-repeat="(status, data) in statistics.datasets.data">
+				<a ng-click="states[status]=!states[status]">{{ status }} <span class="pull-right strong">{{ data.count }}</span></a>
+				<ul ng-show="states[status]">
+					<li ng-repeat="item_stat in data.data">
+						<small><a href="#{{ statistics.getImportHandlerUrl(item_stat.import_handler_id) }}?action=dataset:list">{{ item_stat.import_handler_id }}</a> <span class="pull-right strong">{{ item_stat.count }}</span></small>
+					</li>
+				</ul>
+				<div class="progress progress-{{ STYLES_MAP[status] }}"><div class="bar" style="width: {{ 100 * data.count / statistics.tests.count }}%;"></div></div>
+			</li>
+		</ul>
+	</div>
+</div>

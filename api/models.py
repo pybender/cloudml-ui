@@ -488,6 +488,8 @@ class Model(BaseDocument):
         app.db.TestExample.collection.remove(params)
         app.db.WeightsCategory.collection.remove(params)
         app.db.Weight.collection.remove(params)
+        self.comparable = False
+        self.save()
 
 
 @app.conn.register

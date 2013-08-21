@@ -33,6 +33,8 @@ App = angular.module('app', [
   'app.logmessages.model'
   'app.logmessages.controllers'
   'app.login.controllers'
+  'app.dashboard.model'
+  'app.dashboard.controllers'
 ])
 
 App.config([
@@ -42,6 +44,10 @@ App.config([
 ($routeProvider, $locationProvider, config) ->
 
   $routeProvider
+    .when('/dashboard', {
+      controller: "DashboardCtrl"
+      templateUrl: '/partials/dashboard.html'
+    })
 
     .when('/models', {
       controller: "ModelListCtrl"

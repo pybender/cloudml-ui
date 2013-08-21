@@ -16,8 +16,6 @@
 <div ng-controller="BaseListCtrl" ng-init="init(true, 'models')" >
   <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
 
-  <alert-message ng-show="objects.length == 0" class="alert-info" msg="No models found"></alert-message>
-
   <div ng-hide="objects.length == 0" ng-controller="TagCloudCtrl" class="alert-info well">
     <span ng-repeat="tag in tag_list">
       <span>
@@ -26,18 +24,55 @@
     </span>
   </div>
 
-  <table ng-hide="objects.length == 0" class="table table-hover">
-
+  <table class="table table-hover">
   <thead>
     <tr>
       <th>Name</th>
-      <th>Status</th>
-      <th>Created</th>
-      <th>Updated</th>
+      <th>
+        Status
+        <a ng-click="showStatusFilter=!showStatusFilter"><i class="icon-search"></i></a>
+        <div ng-show="showStatusFilter || filter_opts['status']">
+          <select ui-select2="{allowClear: true}" ng-multiple="false" name="status" ng-model="filter_opts['status']">
+            <option ng-repeat="status in STATUSES" value="{{ status }}">{{ status }}</option>
+        </select>
+        </div>
+      </th>
+      <th>
+        Created
+        <a ng-click="showCreatedFilter=!showCreatedFilter"><i class="icon-search"></i></a>
+        <div ng-show="showCreatedFilter || filter_opts['created_by']">
+          <input name="created_by" ng-model="filter_opts['created_by']" placeholder="Input user uid" />
+        </div>
+      </th>
+      <th>
+        Updated
+        <a ng-click="showUpdatedFilter=!showUpdatedFilter"><i class="icon-search"></i></a>
+        <div ng-show="showUpdatedFilter || filter_opts['updated_by']">
+          <input name="updated_by" ng-model="filter_opts['updated_by']" placeholder="Input user uid" />
+        </div>
+      </th>
+      <th>
+        Comparable
+        <a ng-click="showComparableFilter=!showComparableFilter"><i class="icon-search"></i></a>
+        <div ng-show="showComparableFilter || filter_opts['comparable']">
+          <select ui-select2="{allowClear: true}" ng-multiple="false" name="comparable" ng-model="filter_opts['comparable']">
+            <option value=""></option>
+            <option value="1">Yes</option>
+            <option value="0">No</option>
+        </select>
+        </div>
+      </th>
       <th>Actions</th>
     </tr>
   </thead>
-  <tbody>
+  <tbody ng-show="objects.length == 0">
+    <tr>
+      <td colspan="5">
+        <alert-message ng-show="objects.length == 0" class="alert-info" msg="No models found"></alert-message>
+      </td>
+    </tr>
+  </tbody>
+  <tbody ng-hide="objects.length == 0">
     <tr ng-repeat="model in objects" ng-class="{success : model.status=='Trained', warning : model.status =='New', info : model.status =='Training', error : model.status =='Error'}">
       <td>
         <a href="#{{ model.objectUrl() }}">{{ model.name }}</a>
@@ -57,6 +92,10 @@
       <td>
           {{ model.updated_on|format_date }}<br>
           <small ng-show="model.updated_by">by {{ model.updated_by.name }} ({{ model.updated_by.uid }})</small>
+      </td>
+      <td>
+        <i ng-hide="model.comparable" title="This model don't contains any successfull tests" class="icon-remove"></i>
+        <i ng-show="model.comparable" title="This model contains at least one successfull test" class="icon-ok"></i>
       </td>
       <td ng-controller="ModelActionsCtrl">
         <div ng-init="init({model: model})">
