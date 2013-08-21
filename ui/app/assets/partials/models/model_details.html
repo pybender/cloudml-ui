@@ -181,9 +181,9 @@ editable-input="text" source="model.data_fields"></span>
   <div ng-show="action[0] == 'weights'" ng-controller="WeightsCtrl">
     <p class="switcher">
       <b>Switch View: </b>
-      <a ng-class="{active: action[1] == 'columns'}" ng-click="action = ['weights', 'columns']">Columns</a> | 
-      <a ng-class="{active: action[1] == 'list'}" ng-click="action = ['weights', 'list']">List</a> |
-      <a ng-class="{active: action[1] == 'tree'}" ng-click="action = ['weights', 'tree']">Tree</a>
+      <a ng-class="{active: action[1] == 'columns'}" ng-click="setSection(['weights', 'columns'])">Columns</a> | 
+      <a ng-class="{active: action[1] == 'list'}" ng-click="setSection(['weights', 'list'])">List</a> |
+      <a ng-class="{active: action[1] == 'tree'}" ng-click="setSection(['weights', 'tree'])">Tree</a>
     </p>
     <alert-message ng-show="model.status == 'Trained' && !model.weights_synchronized" class="alert-warning" msg="Please wait! Model parameters weights aren't filled.">
     </alert-message>
