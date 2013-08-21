@@ -569,12 +569,9 @@ class TestExamplesResource(BaseResource):
         precision.
         Note: `group_by_field` should be specified in request parameters.
         """
-        from ml_metrics import apk
-        import numpy as np
-        from operator import itemgetter
-        logging.info('Start request for calculating MAP')
+        from api.tasks import calculate_mean_average_precision
 
-        # getting from request parameters fieldname to group.
+        # Getting from request parameters fieldname to group.
         parser = reqparse.RequestParser()
         parser.add_argument('count', type=int)
         parser.add_argument('field', type=str)
@@ -586,81 +583,22 @@ class TestExamplesResource(BaseResource):
                                         'field parameter is required')
         model_id = kwargs.get('model_id')
         test_id = kwargs.get('test_id')
-        logging.info('For model: %s test: %s' % (model_id, test_id))
-        logging.info('Gettings examples')
 
-        res = []
-        avps = []
+        try:
+            # TODO: run in background
+            res, mavp = calculate_mean_average_precision.delay(
+                model_id,
+                test_id,
+                group_by_field,
+                count
+            ).get()
 
-        test = app.db.Test.find_one({'_id': ObjectId(test_id)})
-        groups = defaultdict(list)
-        example_fields = ['label', 'pred_label', 'prob', 'id']
-
-        for row in test.get_examples_full_data(example_fields):
-            groups[row[group_by_field]].append({
-                'label': row['pred_label'],
-                'pred': row['label'],
-                'prob': row['prob'],
-            })
-
-        groups = [{
-            group_by_field: key,
-            'list': value
-        } for key, value in groups.iteritems()]
-
-        import sklearn.metrics as sk_metrics
-        import numpy
-        if len(groups) < 1:
-            logging.error('Can not group')
-            return odesk_error_response(400, ERR_INVALID_DATA,
-                                        'Can not group')
-        if not 'prob' in groups[0]['list'][0]:
-            logging.error('Examples do not contain probabilities')
-            return odesk_error_response(400, ERR_INVALID_DATA, 'Examples do \
-not contain probabilities')
-        if not isinstance(groups[0]['list'][0]['prob'], list):
-            logging.error('Examples do not contain probabilities')
-            return odesk_error_response(400, ERR_INVALID_DATA, 'Examples do \
-not contain probabilities')
-
-        if groups[0]['list'][0]['label'] in ("True", "False"):
-            transform = lambda x: int(bool(x))
-        elif groups[0]['list'][0]['label'] in ("0", "1"):
-            transform = lambda x: int(x)
-        else:
-            logging.error('Type of labels do not support')
-            return odesk_error_response(400, ERR_INVALID_DATA,
-                                        'Type of labels do not support')
-        logging.info('Calculating avps for groups')
-        for group in groups:
-            group_list = group['list']
-            labels = [transform(item['label']) for item in group_list]
-            pred_labels = [transform(item['pred']) for item in group_list]
-            probs = [item['prob'][1] for item in group_list]
-            if len(labels) > 1:
-                labels = numpy.array(labels)
-                probs = numpy.array(probs)
-                try:
-                    precision, recall, thresholds = \
-                        sk_metrics.precision_recall_curve(labels, probs)
-                    avp = sk_metrics.auc(recall[:count], precision[:count])
-                except:
-                    avp = apk(labels, pred_labels, count)
-            else:
-                avp = apk(labels, pred_labels, count)
-            avps.append(avp)
-            res.append({'group_by_field': group[group_by_field],
-                        'count': len(group_list),
-                        'avp': avp})
-
-        res = sorted(res, key=itemgetter("count"), reverse=True)[:100]
-        logging.info('Calculating map')
-        mavp = np.mean(avps)
+        except Exception as e:
+            return odesk_error_response(400, ERR_INVALID_DATA, str(e))
 
         context = {self.list_key: {'items': res},
                    'field_name': group_by_field,
                    'mavp': mavp}
-        logging.info('End request for calculating MAP')
         return self._render(context)
 
     def _get_datafields_action(self, **kwargs):

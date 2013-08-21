@@ -99,7 +99,7 @@
           <sc-curves xlabel="Recall" ylabel="Precision" curves-dict="prCurve" width="500"></sc-curves>
         </div>
         <hr/>
-        <a ng-show="test.status == 'Completed'" href="#{{ test.avaragePrecisionUrl() }}"><i class="status-icon icon-search"></i> Average precision</a>
+        <a ng-show="test.status == 'Completed'" href="#{{ test.averagePrecisionUrl() }}"><i class="status-icon icon-search"></i> Average precision</a>
       </div>
 
       <div ng-show="action[0] == 'examples'" ng-controller="TestExamplesCtrl" ng-init="init(test)">

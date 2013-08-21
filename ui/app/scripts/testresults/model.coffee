@@ -42,7 +42,7 @@ angular.module('app.testresults.model', ['app.config'])
       examplesCsvUrl: () ->
         return "#{@BASE_API_URL}#{@_id}/examples/action/csv/"
 
-      avaragePrecisionUrl: =>
+      averagePrecisionUrl: =>
         return "#{@BASE_UI_URL}#{@_id}/grouped_examples"
 
       fullName: =>

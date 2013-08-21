@@ -1,3 +1,4 @@
+from collections import defaultdict
 import os
 import json
 import logging
@@ -691,6 +692,91 @@ def get_csv_results(model_id, test_id, fields):
     test.save()
 
     return url
+
+
+@celery.task
+def calculate_mean_average_precision(model_id, test_id, group_by_field, count):
+    """
+    Groups data by `group_by_field` field and calculates mean average
+    precision.
+    """
+    from ml_metrics import apk
+    import numpy as np
+    from operator import itemgetter
+
+    init_logger('mean_average_precision_log', obj=test_id)
+
+    logging.info('Start request for calculating MAP')
+    logging.info('For model: %s test: %s' % (model_id, test_id))
+    logging.info('Gettings examples...')
+
+    res = []
+    avps = []
+
+    test = app.db.Test.find_one({'_id': ObjectId(test_id)})
+    groups = defaultdict(list)
+    example_fields = ['label', 'pred_label', 'prob', 'id']
+
+    for row in test.get_examples_full_data(example_fields):
+        groups[row[group_by_field]].append({
+            'label': row['pred_label'],
+            'pred': row['label'],
+            'prob': row['prob'],
+        })
+
+    groups = [{
+        group_by_field: key,
+        'list': value
+    } for key, value in groups.iteritems()]
+
+    import sklearn.metrics as sk_metrics
+    import numpy
+    if len(groups) < 1:
+        logging.error('Can not group')
+        raise Exception('Can not group')
+    if not 'prob' in groups[0]['list'][0]:
+        logging.error('Examples do not contain probabilities')
+        raise Exception('Examples do not contain probabilities')
+    if not isinstance(groups[0]['list'][0]['prob'], list):
+        logging.error('Examples do not contain probabilities')
+        raise Exception('Examples do not contain probabilities')
+
+    if groups[0]['list'][0]['label'] in ("True", "False"):
+        transform = lambda x: int(bool(x))
+    elif groups[0]['list'][0]['label'] in ("0", "1"):
+        transform = lambda x: int(x)
+    else:
+        logging.error('Type of labels do not support')
+        raise Exception('Type of labels do not support')
+    logging.info('Calculating avps for groups')
+    for group in groups:
+        group_list = group['list']
+        labels = [transform(item['label']) for item in group_list]
+        pred_labels = [transform(item['pred']) for item in group_list]
+        probs = [item['prob'][1] for item in group_list]
+        if len(labels) > 1:
+            labels = numpy.array(labels)
+            probs = numpy.array(probs)
+            try:
+                precision, recall, thresholds = \
+                    sk_metrics.precision_recall_curve(labels, probs)
+                avp = sk_metrics.auc(recall[:count], precision[:count])
+            except ValueError:
+                avp = apk(labels, pred_labels, count)
+        else:
+            avp = apk(labels, pred_labels, count)
+        avps.append(avp)
+        res.append({'group_by_field': group[group_by_field],
+                    'count': len(group_list),
+                    'avp': avp})
+
+    res = sorted(res, key=itemgetter("count"), reverse=True)[:100]
+    logging.info('Calculating map')
+    mavp = np.mean(avps)
+
+    logging.info('End request for calculating MAP')
+
+    return res, mavp
 
 
 def decode(row):
