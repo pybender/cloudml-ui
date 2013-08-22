@@ -1,4 +1,7 @@
-from utils import BaseTestCase
+import httplib
+import json
+
+from utils import BaseTestCase, HTTP_HEADERS
 from api.views import InstanceResource
 
 
@@ -31,3 +34,14 @@ class InstancesTests(BaseTestCase):
         self.assertEqual(obj.name, post_data['name'])
         self.assertEqual(obj.ip, post_data['ip'])
         self.assertEqual(obj.type, post_data['type'])
+
+    def test_edit_is_default(self):
+        url = self._get_url(id=self.obj._id)
+        self.assertFalse(self.obj.is_default)
+        data = {'is_default': 'true'}
+        resp = self.app.put(url, data=data, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.OK)
+        data = json.loads(resp.data)
+        self.assertTrue(self.RESOURCE.OBJECT_NAME in data)
+        self.obj.reload()
+        self.assertTrue(self.obj.is_default)

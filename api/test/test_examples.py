@@ -1,3 +1,4 @@
+import json
 from bson import ObjectId
 from moto import mock_s3
 from mock import patch
@@ -15,7 +16,8 @@ class TestExamplesTests(BaseTestCase):
     TEST_NAME = 'Test-1'
     TEST_NAME2 = 'Test-2'
     DS_ID = '5270dd3a106a6c1631000000'
-    FIXTURES = ('datasets.json', 'models.json', 'tests.json', 'examples.json')
+    FIXTURES = ('datasets.json', 'models.json', 'tests.json', 'examples.json',
+                'weights.json')
     RESOURCE = TestExamplesResource
 
     @mock_s3
@@ -50,6 +52,11 @@ class TestExamplesTests(BaseTestCase):
 
         self.Model = self.db.TestExample
         self.obj = self.db.TestExample.find_one({'test_id': str(self.test._id)})
+        self.obj.vect_data = [0.123, 0.0] * 217
+        self.obj.data_input = {
+            'opening_id': "201913099"
+        }
+        self.obj.save()
 
         self.BASE_URL = '/cloudml/models/%s/tests/%s/examples/' % \
             (self.model._id, self.test._id)
@@ -86,3 +93,22 @@ class TestExamplesTests(BaseTestCase):
     @mock_s3
     def test_details(self):
         self._check_details(show='id,test_name')
+
+    @mock_s3
+    @patch('api.models.Model.get_trainer')
+    def test_details_weight(self, mock_get_trainer):
+        from core.trainer.store import TrainerStorage
+        trainer = TrainerStorage.loads(
+            open('./api/fixtures/model.dat', 'r').read())
+        mock_get_trainer.return_value = trainer
+
+        url = self._get_url(id=self.obj._id,
+                            show='id,test_name,weighted_data_input')
+        resp = self.app.get(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, 200)
+        self.assertTrue(mock_get_trainer.called)
+        data = json.loads(resp.data)['data']
+
+        for key in ['css_class', 'model_weight', 'transformed_weight',
+                    'value', 'vect_value', 'weight']:
+            self.assertTrue(key in data['weighted_data_input']['opening_id'])

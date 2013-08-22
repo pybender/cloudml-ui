@@ -33,6 +33,12 @@ class BaseTestCase(unittest.TestCase):
         app.init_db()
         cls.app = app.test_client()
 
+    @classmethod
+    def tearDownClass(cls):
+        for root, dirs, files in os.walk(app.config['DATA_FOLDER']):
+            for f in files:
+                os.unlink(os.path.join(root, f))
+
     def setUp(self):
         self.fixtures_load()
 
@@ -203,7 +209,6 @@ class BaseTestCase(unittest.TestCase):
             self.assertTrue(error in err_data['message'],
                             "Response message is: %s" % err_data['message'])
         else:
-            print resp.data
             self.assertEquals(resp.status_code, httplib.CREATED)
             self.assertTrue(self.RESOURCE.OBJECT_NAME in resp.data)
             new_count = self.Model.find().count()

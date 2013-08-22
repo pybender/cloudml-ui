@@ -452,9 +452,9 @@ class Tests(BaseResource):
 
     def _get_details_query(self, params, fields, **kwargs):
         model_id = kwargs.get('model_id')
-        id = kwargs.get('_id')
+        test_id = kwargs.get('_id')
         return self.Model.find_one({'model_id': model_id,
-                                   '_id': ObjectId(id)}, fields)
+                                   '_id': ObjectId(test_id)}, fields)
 
     def _get_confusion_matrix_action(self, **kwargs):
         from api.tasks import calculate_confusion_matrix
@@ -468,18 +468,22 @@ class Tests(BaseResource):
         if not test:
             raise NotFound('Test not found')
 
-        model = app.db.Model.find_one({'_id': ObjectId(kwargs.get('model_id'))})
+        model = app.db.Model.find_one({'_id':
+                                           ObjectId(kwargs.get('model_id'))})
         if not model:
             raise NotFound('Model not found')
 
         try:
-            result = calculate_confusion_matrix(test._id, args.get('weight0'), args.get('weight1'))
+            result = calculate_confusion_matrix(test._id, args.get('weight0'),
+                                                args.get('weight1'))
         except Exception as e:
-            return self._render({self.OBJECT_NAME: test._id, 'error': e.message})
+            return self._render({self.OBJECT_NAME: test._id,
+                                 'error': e.message})
 
         result = zip(model.labels, result)
 
-        return self._render({self.OBJECT_NAME: test._id, 'confusion_matrix': result})
+        return self._render({self.OBJECT_NAME: test._id,
+                             'confusion_matrix': result})
 
     def _get_exports_action(self, **kwargs):
         test = self._get_details_query(None, None, **kwargs)
@@ -836,6 +840,7 @@ class LogResource(BaseResource):
     MESSAGE404 = "Log doesn't exist"
     OBJECT_NAME = 'log'
     NEED_PAGING = True
+    DEFAULT_FIELDS = [u'_id']
 
     @property
     def Model(self):
@@ -865,6 +870,7 @@ class TagResource(BaseResource):
     """
     MESSAGE404 = "Tag doesn't exist"
     OBJECT_NAME = 'tag'
+    DEFAULT_FIELDS = [u'_id']
 
     @property
     def Model(self):

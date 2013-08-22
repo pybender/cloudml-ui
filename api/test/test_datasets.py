@@ -2,6 +2,7 @@ import httplib
 import json
 from bson.objectid import ObjectId
 from mock import patch
+from moto import mock_s3
 
 from utils import BaseTestCase, HTTP_HEADERS
 from api.views import DataSetResource
@@ -22,8 +23,8 @@ class DataSetsTests(BaseTestCase):
         self.Model = self.db.DataSet
         self.obj = self.Model.find_one({'_id': ObjectId(self.DS_ID)})
 
-    @patch('api.models.DataSet.save_to_s3')
-    def test_post(self, save_to_s3_mock):
+    @mock_s3
+    def test_post(self):
         """
         Tests loading dataset using specified import handler
         """
@@ -36,7 +37,8 @@ class DataSetsTests(BaseTestCase):
         self.assertEquals(ds.records_count, 99)
         self.assertEquals(ds.import_params, post_data)
         self.assertTrue(ds.compress)
-        self.assertTrue(save_to_s3_mock.called)
+        self.assertIsNotNone(ds.data)
+        self.assertTrue(ds.on_s3)
         self.assertEquals(ds.filename, 'test_data/%s.gz' % ds._id)
 
     def test_edit_name(self):
@@ -48,18 +50,18 @@ class DataSetsTests(BaseTestCase):
         dataset = self.Model.find_one({'_id': ObjectId(self.DS_ID)})
         self.assertEquals(dataset.name, data['name'])
 
-    @patch('api.models.DataSet.get_s3_download_url')
-    def test_generate_url_action(self, url_mock):
+    @mock_s3
+    def test_generate_url_action(self):
         """
         Tests generation Amazon S3 url method.
         """
-        url_mock.return_value = 'example.com'
         url = self._get_url(id=self.obj._id, action='generate_url')
         resp = self.app.get(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.OK)
         data = json.loads(resp.data)
         self.assertEquals(data['dataset'], self.DS_ID)
-        self.assertEquals(data['url'], 'example.com')
+        self.assertTrue(data['url'].startswith('https://'))
+        self.assertTrue('s3.amazonaws.com' in data['url'])
 
     def test_list(self):
         self._check_list(show='name,status')

@@ -61,6 +61,15 @@ class ImportHandlersTests(BaseTestCase):
         self.assertIsNone(model.test_import_handler, 'Ref should be removed')
         self.assertIsNone(model.train_import_handler, 'Ref should be removed')
 
+    def test_download(self):
+        url = self._get_url(id=self.obj._id, action='download')
+        resp = self.app.get(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.OK)
+        self.assertEquals(resp.mimetype, 'text/plain')
+        self.assertEquals(resp.headers['Content-Disposition'],
+                          'attachment; filename=importhandler-%s.json' %
+                          self.obj.name)
+
 
 #     def test_post_with_invalid_import_handler(self):
 #         features = open('./conf/features.json', 'r').read()

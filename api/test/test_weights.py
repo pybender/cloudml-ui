@@ -2,6 +2,7 @@ import httplib
 import math
 import json
 import random
+import urllib
 
 from utils import BaseTestCase, HTTP_HEADERS
 from api import app
@@ -32,6 +33,7 @@ class WeightsTests(BaseTestCase):
 
     @classmethod
     def tearDownClass(cls):
+        super(WeightsTests, cls).tearDownClass()
         cls.fixtures_cleanup()
 
     def setUp(self):
@@ -46,7 +48,6 @@ class WeightsTests(BaseTestCase):
         fill_model_parameter_weights.run(str(cls.model._id),
                                          **cls.trainer_weights)
         count = app.db.Weight.find({'model_name': cls.model.name}).count()
-        print count
         assert count == cls.COUNT
 
     def test_categories_in_db(self):
@@ -95,6 +96,65 @@ class WeightsTests(BaseTestCase):
         self.assertEquals(data['pages'], math.ceil(1.0 * self.COUNT / 20))
         self.assertTrue('weights' in data, data)
         self.assertTrue('tsexams->Ruby on Rails' in resp.data)
+
+    def test_search(self):
+        self.db.Weight.collection.ensure_index(
+            [
+                ('name', 'text'),
+                ('value', 'text')
+            ]
+        )
+
+        url = '{0}?{1}'.format(self.BASE_URL, urllib.urlencode({
+            'is_positive': -1,
+            'order': 'asc',
+            'page': 1,
+            'show': 'name,value,css_class',
+            'sort_by': 'name',
+            'q': 'python'
+        }))
+        resp = self.app.get(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.OK)
+        data = json.loads(resp.data)
+        self.assertFalse(data['has_next'])
+        self.assertFalse(data['has_prev'])
+        self.assertEquals(data['per_page'], 20)
+        self.assertTrue('weights' in data, data)
+        self.assertFalse('tsexams->Ruby on Rails' in resp.data)
+        self.assertTrue('tsexams->Python 2.x Test' in data['weights'][0]['name'])
+
+        url = '{0}?{1}'.format(self.BASE_URL, urllib.urlencode({
+            'is_positive': 0,
+            'order': 'asc',
+            'page': 1,
+            'show': 'name,value,css_class',
+            'sort_by': 'name',
+            'q': 'python'
+        }))
+        resp = self.app.get(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.OK)
+        data = json.loads(resp.data)
+        self.assertTrue('tsexams->Python 2.x Test' in data['weights'][0]['name'])
+
+        url = '{0}?{1}'.format(self.BASE_URL, urllib.urlencode({
+            'is_positive': 1,
+            'order': 'asc',
+            'page': 1,
+            'show': 'name,value,css_class',
+            'sort_by': 'name',
+            'q': 'python'
+        }))
+        resp = self.app.get(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.OK)
+        self.assertTrue('tsexams->Python 2.x Test' not in resp.data)
+
+    def test_brief(self):
+        url = self._get_url(action='brief')
+        resp = self.app.get(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.OK)
+        data = json.loads(resp.data)
+        self.assertTrue('negative_weights' in data, data)
+        self.assertTrue('positive_weights' in data, data)
 
     def test_tree(self):
         resp = self.app.get('/cloudml/weights_tree/%s' % self.model._id,

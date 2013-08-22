@@ -1,6 +1,7 @@
 import httplib
 import json
 from mock import patch
+from moto import mock_s3
 
 from utils import MODEL_ID, BaseTestCase, FEATURE_COUNT, TARGET_VARIABLE,\
     HTTP_HEADERS
@@ -208,8 +209,8 @@ aws_instance is required')
 
         # TODO: check other fields of the model
 
-    @patch('api.models.DataSet.save_to_s3')
-    def test_train_model_with_load_params(self, save_to_s3_mock):
+    @mock_s3
+    def test_train_model_with_load_params(self):
         data = {'aws_instance': self.INSTANCE_ID,
                 'start': '2012-12-03',
                 'end': '2012-12-04',
@@ -223,8 +224,8 @@ aws_instance is required')
 
         # TODO: check other fields of the model
 
-    @patch('api.models.DataSet.save_to_s3')
-    def test_retrain_model(self, save_to_s3_mock):
+    @mock_s3
+    def test_retrain_model(self):
         self.assertEquals(self.obj.status, "Trained")
         self.check_related_docs_existance(self.db.Test)
         self.check_related_docs_existance(self.db.TestExample)
