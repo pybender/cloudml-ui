@@ -15,8 +15,9 @@ angular.module('app.datasets.controllers', ['app.config', ])
   '$dialog'
   '$rootScope'
   'DataSet'
+  '$window'
 
-  ($scope, $dialog, $rootScope, DataSet) ->
+  ($scope, $dialog, $rootScope, DataSet, $window) ->
     $scope.MODEL = DataSet
     $scope.FIELDS = 'name,created_on,status,error,data,import_params,on_s3,
 filesize,records_count,time,created_by,updated_by'
@@ -28,49 +29,61 @@ filesize,records_count,time,created_by,updated_by'
       , 100)
     )
 
-    $scope.$on('BaseListCtrl:load:success', (event, datasets) ->
-      $scope.msg = "Please wait. Generating Amazon S3 URLs..."
-      for ds in datasets
-        if ds.on_s3
-          generateS3Url(ds, ((opts) ->
-            ds = opts.dataset
-            ds.url = opts.url
-            $scope.msg = "Amazon S3 URL for " + ds.data + " generated."
-          ), $scope.setError)
-      $scope.msg = null
-    )
-
     $scope.init = (handler) ->
       $scope.kwargs = {'handler_id': handler._id}
+])
 
-    $scope.delete = (dataset)->
-      $scope.openDialog($dialog, dataset,
+
+.controller('DatasetActionsCtrl', [
+  '$scope'
+  '$dialog'
+  '$window'
+  'DataSet'
+
+  ($scope, $dialog, $window, DataSet) ->
+    $scope.init = (opts={}) =>
+      if not opts.dataset
+        throw new Error "Please specify dataset"
+
+      if not opts.handler
+        throw new Error "Please specify handler"
+
+      $scope.ds = opts.dataset
+      $scope.handler = opts.handler
+
+    $scope.delete = ()->
+      $scope.openDialog($dialog, $scope.ds,
         'partials/base/delete_dialog.html', 'DialogCtrl',
         "modal", "delete dataset", $scope.handler.objectUrl())
+
+    $scope.download = () ->
+      if $scope.ds.on_s3
+        generateS3Url($scope.ds, ((opts) ->
+          $window.location.replace opts.url
+        ), $scope.setError)
 ])
+
 
 .controller('DataSetDetailsCtrl', [
   '$scope'
   '$routeParams'
   'DataSet'
+  'ImportHandler'
 
-  ($scope, $routeParams, DataSet) ->
+  ($scope, $routeParams, DataSet, ImportHandler) ->
     if not $routeParams.id
       err = "Can't initialize without id"
 
     $scope.dataset = new DataSet({_id: $routeParams.id,
     import_handler_id: $routeParams.handler_id})
+    $scope.handler = new ImportHandler(
+          {_id: $routeParams.handler_id})
 
     $scope.go = (section) ->
       $scope.dataset.$load(
         show: 'name,status,created_on,updated_on,data,on_s3,import_params,error,
-filesize,records_count,time,created_by'
-      ).then (->
-        if $scope.dataset.on_s3
-          generateS3Url($scope.dataset, ((resp) ->
-            $scope.url = resp.url
-          ), $scope.setError)
-      ), ((opts) ->
+filesize,records_count,time,created_by,import_handler_id'
+      ).then (->), ((opts) ->
         $scope.setError(opts, 'loading dataset details')
       )
 

@@ -12,10 +12,14 @@ angular.module('app.models.controllers', ['app.config', ])
   ($scope, $location, Model) ->
     $scope.MODEL = Model
     $scope.FIELDS = Model.MAIN_FIELDS + ',tags,created_on,created_by,
-updated_on,updated_by'
+updated_on,updated_by,comparable'
     $scope.ACTION = 'loading models'
     $scope.currentTag = $location.search()['tag']
     $scope.kwargs = {'tag': $scope.currentTag}
+    $scope.STATUSES = ['', 'New', 'Queued', 'Importing',
+    'Imported', 'Requesting Instance', 'Instance Started',
+    'Training', 'Trained', 'Error', 'Canceled']
+    $scope.filter_opts = {}
 ])
 
 

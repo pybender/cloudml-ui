@@ -110,6 +110,33 @@ class Test(Command):
         nose.run(argv=[''])
 
 
+class Coverage(Command):
+    """Build test code coverage report."""
+
+    def run(self):
+        # import nose
+        print 'Collecting coverage info...'
+        output_dir = os.path.join('api', 'test', 'cover')
+        # TODO: why does nose.run show different results?
+        # nose.run(argv=[
+        #     '',
+        #     '--with-coverage', '--cover-erase', '--cover-html',
+        #     '--cover-html-dir={}'.format(output_dir),
+        #     '--cover-package=api'])
+        args = [
+            'with-coverage',
+            'cover-erase',
+            'cover-html',
+            'cover-package=api',
+            "cover-html-dir='{0}'".format(output_dir),
+        ]
+        os.system('nosetests --{0}'.format(' --'.join(args)))
+        report_path = 'file://' + os.path.join(
+            os.path.abspath(output_dir), 'index.html')
+        print 'Coverage html report has been generated at {}'.format(
+            report_path)
+
+
 class RemObsoluteMongoKeys(Command):
     """
     Removes obsolete (hung ups) Tests, Examples, Logs, etc. from
@@ -268,6 +295,7 @@ manager.add_command("celeryd", Celeryd())
 manager.add_command("celeryw", Celeryw())
 manager.add_command("flower", Flower())
 manager.add_command('test', Test())
+manager.add_command('coverage', Coverage())
 manager.add_command('migrate', Migrate())
 manager.add_command('migrate_old', MigrateOld())
 manager.add_command('run', Run())

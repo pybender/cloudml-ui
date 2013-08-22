@@ -28,4 +28,5 @@ psutil==1.0.1
 memory-profiler==0.27
 mock
 moto
-oauth2
+oauth2==1.5.211
+coverage==3.6

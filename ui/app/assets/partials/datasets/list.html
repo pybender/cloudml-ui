@@ -11,7 +11,7 @@
         <th>Created</th>
         <th>File Size</th>
         <th>Records Count</th>
-        <th>Loading time, seconds</th>
+        <th>Loading time</th>
         <th>Actions</th>
       </tr>
   </thead>
@@ -30,9 +30,10 @@
       </td>
       <td>{{ ds.filesize|bytes }}</td>
       <td>{{ ds.records_count|number }}</td>
-      <td>{{ ds.time|number }}</td>
-      <td style="min-width: 100px;">
-        <a class="btn btn-info" ng-show="ds.url" href="{{ ds.url }}"><i title="Download From Amazon S3" class="icon-download-alt"></i></a>
+
+      <td>{{ ds.time|humanize_time }}</td>
+      <td ng-controller="DatasetActionsCtrl" style="min-width: 100px;" ng-init="init({dataset: ds, handler: handler})">
+        <a class="btn btn-info" ng-show="ds.on_s3" ng-click="download(ds)"><i title="Download From Amazon S3" class="icon-download-alt"></i></a>
         <button ng-click="delete(ds)" class="btn btn-danger">
           <i title="Delete dataset. Be careful - you could not recover it!" class="icon-remove"></i>
         </button>

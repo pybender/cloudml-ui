@@ -34,3 +34,6 @@ target
 data
 test_data
 api/local_config.py
+
+.coverage
+api/test/cover/*

@@ -12,12 +12,14 @@ class TestTasksTests(BaseTestCase):
     Tests of the celery tasks.
     """
     TEST_NAME = 'Test-1'
+    TEST_NAME2 = 'Test-2'
     DS_ID = '5270dd3a106a6c1631000000'
     FIXTURES = ('datasets.json', 'models.json', 'tests.json', 'examples.json')
 
     def setUp(self):
         super(TestTasksTests, self).setUp()
         self.test = self.db.Test.find_one({'name': self.TEST_NAME})
+        self.test2 = self.db.Test.find_one({'name': self.TEST_NAME2})
         self.dataset = self.db.DataSet.find_one({'_id': ObjectId(self.DS_ID)})
         self.examples_count = self.db.TestExample.find(
             {'test_name': self.TEST_NAME}).count()
@@ -84,6 +86,17 @@ class TestTasksTests(BaseTestCase):
         self.assertTrue(url)
         self.assertEquals(test.exports[0]['url'], url)
         self.assertEquals(test.exports[0]['fields'], fields)
+        # Data wasn't loaded from s3:
+        self.assertFalse(mock_get_data_stream.called)
+
+        url = get_csv_results(self.test.model_id, self.test2._id, fields)
+
+        test = self.db.Test.find_one({'name': self.TEST_NAME2})
+
+        self.assertTrue(url)
+        self.assertEquals(test.exports[0]['url'], url)
+        self.assertEquals(test.exports[0]['fields'], fields)
+        # Data was loaded from s3:
         self.assertTrue(mock_get_data_stream.called)
 
     @mock_s3
@@ -143,6 +156,9 @@ class TestTasksTests(BaseTestCase):
 
             self.assertEquals(10, mock_store_examples.si.call_count)
             self.assertEquals(10, mock_apply_async.apply.call_count)
+
+            test = self.db.Test.get_from_id(ObjectId(self.test._id))
+            self.assertEquals(test.dataset._id, self.dataset._id)
 
             mock_store_examples.reset_mock()
             mock_apply_async.reset_mock()

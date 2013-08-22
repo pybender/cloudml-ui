@@ -418,6 +418,7 @@ def run_test(dataset_ids, test_id):
             model.save()
 
         all_count = metrics._preds.size
+        test.dataset = app.db.DataSet.get_from_id(ObjectId(dataset_ids[0]))
         test.examples_count = all_count
         test.memory_usage['testing'] = max(mem_usage)
         test.save()

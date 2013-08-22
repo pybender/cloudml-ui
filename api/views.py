@@ -76,7 +76,8 @@ class Models(BaseResource):
     """
     GET_ACTIONS = ('download', 'reload', 'by_importhandler')
     PUT_ACTIONS = ('train', 'tags', 'cancel_request_instance')
-    FILTER_PARAMS = (('status', str), ('comparable', int), ('tag', str))
+    FILTER_PARAMS = (('status', str), ('comparable', int), ('tag', str),
+                    ('created_by', str), ('updated_by', str))
     DEFAULT_FIELDS = ('_id', 'name')
 
     MESSAGE404 = "Model with name %(_id)s doesn't exist"
@@ -138,6 +139,12 @@ class Models(BaseResource):
         if 'tag' in pdict:
             pdict['tags'] = {'$in': [pdict['tag']]}
             del pdict['tag']
+        if 'created_by' in pdict:
+            pdict['created_by.uid'] = pdict['created_by']
+            del pdict['created_by']
+        if 'updated_by' in pdict:
+            pdict['updated_by.uid'] = pdict['updated_by']
+            del pdict['updated_by']
         return pdict
 
     def _get_reload_action(self, **kwargs):
@@ -926,6 +933,56 @@ class AuthResource(BaseResource):
 
 api.add_resource(AuthResource, '/cloudml/auth/<regex("[\w\.]*"):action>',
                  add_standart_urls=False)
+
+
+class StatisticsResource(BaseResource):
+    """
+    Statistics methods
+    """
+    @property
+    def Model(self):
+        raise Exception('Invalid operation')
+
+    def get(self, action=None):
+        def get_count_by_status(collection, extra_fields=[]):
+            all_count = 0
+            if extra_fields:
+                from collections import defaultdict
+                from bson.code import Code
+                reducer = Code("function(obj, prev){prev.count++;}")
+                extra_fields.append("status")
+                groupped_data = collection.group(
+                    key=extra_fields, 
+                    condition={}, 
+                    initial={"count": 0}, 
+                    reduce=reducer
+                )
+                res = {}
+                for item in groupped_data:
+                    key = item.pop("status")
+                    all_count += item["count"]
+                    if key in res:
+                        res[key]["count"] += item["count"]
+                    else:
+                        res[key] = {"count": item["count"],
+                                    "data": []}
+                    res[key]["data"].append(item)
+            else:
+                res = collection.aggregate([
+                    {"$group": {"_id": "$status", 
+                                "count": {"$sum": 1}}}
+                ])['result']
+                for item in res:
+                    all_count += item["count"]
+            return {'count': all_count, 'data': res}
+
+        return self._render({'statistics': {
+            'models': get_count_by_status(app.db.Model.collection),
+            'datasets': get_count_by_status(app.db.DataSet.collection, ["import_handler_id"]),
+            'tests': get_count_by_status(app.db.Test.collection, ["model_id", "model_name"])
+        }})
+
+api.add_resource(StatisticsResource, '/cloudml/statistics/')
 
 
 def populate_parser(model, is_requred=False):

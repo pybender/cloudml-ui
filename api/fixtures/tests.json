@@ -31,6 +31,7 @@
             "examples_count": 100,
             "error": "",
             "model": {"$ref" : "Model", "$id" : "519318e6106a6c0df349bc0b"},
+            "dataset": {"$ref" : "DataSet", "$id" : "5270dd3a106a6c1631000000"},
             "data": {},
             "classes_set": [],
             "accuracy": 0.95
