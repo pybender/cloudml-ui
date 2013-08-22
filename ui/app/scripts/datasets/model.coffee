@@ -47,8 +47,10 @@ angular.module('app.datasets.model', ['app.config'])
                        {}, 'GET', {})
 
       $save: (data) =>
-        @$make_request(@BASE_API_URL, data, 'POST', {})
-
+        if data.only
+          super data
+        else
+          @$make_request(@BASE_API_URL, data, 'POST', {})
 
       @$loadAll: (opts) ->
         handler_id = opts.handler_id

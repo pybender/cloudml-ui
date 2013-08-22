@@ -17,7 +17,7 @@ from api.utils import ERR_INVALID_DATA, odesk_error_response, \
     ERR_NO_SUCH_MODEL, ERR_UNPICKLING_MODEL, slugify
 from api.resources import BaseResource, NotFound, ValidationError
 from api.forms import ModelAddForm, ModelEditForm, ImportHandlerAddForm, \
-    AddTestForm, InstanceAddForm, InstanceEditForm, ImportHandlerEditForm
+    AddTestForm, InstanceAddForm, InstanceEditForm, ImportHandlerEditForm, DataSetEditForm
 from core.importhandler.importhandler import ExtractionPlan, \
     RequestImportHandler
 
@@ -391,6 +391,7 @@ class DataSetResource(BaseResource):
     OBJECT_NAME = 'dataset'
     FILTER_PARAMS = (('status', str), )
     GET_ACTIONS = ('generate_url', )
+    put_form = DataSetEditForm
 
     def _get_generate_url_action(self, **kwargs):
         ds = self._get_details_query(None, None, **kwargs)
