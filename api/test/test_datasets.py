@@ -13,7 +13,10 @@ class DataSetsTests(BaseTestCase):
     """
     HANDLER_ID = '5170dd3a106a6c1631000000'
     DS_ID = '5270dd3a106a6c1631000000'
-    FIXTURES = ('importhandlers.json', 'datasets.json')
+    DS_ID2 = '5270dd3a106a6c1631000111'
+    TEST_ID = '000000000000000000000002'
+    MODEL_ID = '519318e6106a6c0df349bc0b'
+    FIXTURES = ('tests.json', 'models.json', 'importhandlers.json', 'datasets.json')
     RESOURCE = DataSetResource
     BASE_URL = '/cloudml/importhandlers/%s/datasets/' % HANDLER_ID
 
@@ -59,8 +62,23 @@ class DataSetsTests(BaseTestCase):
         self._check_details(show='name,status')
 
     def test_delete(self):
+        test = self.db.Test.get_from_id(ObjectId(self.TEST_ID))
+        test.dataset = self.obj
+        test.save()
+
+        model = self.db.Model.get_from_id(ObjectId(self.MODEL_ID))
+        model.dataset_ids = [ObjectId(ds_id) for ds_id in
+                             [self.DS_ID, self.DS_ID2]]
+        model.save()
+
         import shutil
         filename = self.obj.filename
         shutil.copy2(filename, filename + '.bak')
         self._check_delete()
         shutil.move(filename + '.bak', filename)
+
+        test.reload()
+        model.reload()
+
+        self.assertIsNone(test.dataset)
+        self.assertEquals(model.dataset_ids, [ObjectId(self.DS_ID2)])

@@ -281,6 +281,16 @@ class DataSet(BaseDocument):
             self.save()
 
     def delete(self):
+        # Remove from tests
+        app.db.Test.collection.update({
+            'dataset.$id': self._id
+        }, {'$set': {'dataset': None}}, multi=True)
+
+        # Remove from models
+        app.db.Model.collection.update({
+            'dataset_ids': self._id
+        }, {'$pull': {'dataset_ids': self._id}}, multi=True)
+
         super(DataSet, self).delete()
         LogMessage.delete_related_logs(self)
 
