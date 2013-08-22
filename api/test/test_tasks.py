@@ -4,7 +4,9 @@ from moto import mock_s3
 from mock import patch, MagicMock, Mock
 
 from api import app
+from sklearn.linear_model import LogisticRegression
 from utils import BaseTestCase
+from core.trainer.metrics import RegressionModelMetrics
 
 
 class TestTasksTests(BaseTestCase):
@@ -14,6 +16,7 @@ class TestTasksTests(BaseTestCase):
     TEST_NAME = 'Test-1'
     TEST_NAME2 = 'Test-2'
     DS_ID = '5270dd3a106a6c1631000000'
+    MODEL_NAME = 'TrainedModel1'
     FIXTURES = ('datasets.json', 'models.json', 'tests.json', 'examples.json')
 
     def setUp(self):
@@ -122,26 +125,35 @@ class TestTasksTests(BaseTestCase):
 
             self._raw_data = [{'data': 'some-data-here'}] * 100
 
+            import numpy
+            import scipy
+
             metrics_mock = MetricsMock()
             preds = Mock()
             preds.size = 100
             preds.__iter__ = Mock(return_value=iter([0] * 100))
             metrics_mock._preds = preds
 
-            m = MagicMock(side_effect=[MagicMock()] * 100)
+            metrics_mock._probs = [numpy.array([0.1, 0.2])] * 100
 
-            metrics_mock._probs = MagicMock()
-            metrics_mock._probs.__iter__ = Mock(return_value=iter([m] * 100))
-
-            metrics_mock._true_data = MagicMock()
-            todense = MagicMock()
-            todense.__iter__ = Mock(return_value=iter([m] * 100))
-            metrics_mock._true_data.todense.return_value = todense
+            metrics_mock._true_data = scipy.sparse.coo_matrix([[0, 0, 0]] * 100)
 
             return metrics_mock
 
         mock_apply_async = MagicMock()
         mock_store_examples.si.return_value = mock_apply_async
+
+        # POST Trained Model
+        self.post_trained_model(self.MODEL_NAME)
+        model = app.db.Model.find_one({'name': self.MODEL_NAME})
+
+        self.test.model_id = str(model._id)
+        self.test.model = model
+        self.test.save()
+
+        self.test2.model_id = str(model._id)
+        self.test2.model = model
+        self.test2.save()
 
         with patch('core.trainer.trainer.Trainer.test',
                    _fake_test) as mock_test:

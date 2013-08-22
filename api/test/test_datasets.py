@@ -39,6 +39,15 @@ class DataSetsTests(BaseTestCase):
         self.assertTrue(save_to_s3_mock.called)
         self.assertEquals(ds.filename, 'test_data/%s.gz' % ds._id)
 
+    def test_edit_name(self):
+        url = self._get_url(id=self.obj._id)
+        data = {'name': 'new name'}
+        resp = self.app.put(url, data=data, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.OK)
+        self.assertTrue(self.RESOURCE.OBJECT_NAME in resp.data)
+        dataset = self.Model.find_one({'_id': ObjectId(self.DS_ID)})
+        self.assertEquals(dataset.name, data['name'])
+
     @patch('api.models.DataSet.get_s3_download_url')
     def test_generate_url_action(self, url_mock):
         """

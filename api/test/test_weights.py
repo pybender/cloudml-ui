@@ -19,15 +19,7 @@ class WeightsTests(BaseTestCase):
         cls.fixtures_load()
 
         # POST Trained Model
-        handler = open('./conf/extract.json', 'r').read()
-        trainer = open('./api/fixtures/model.dat', 'r').read()
-        post_data = {'test_import_handler_file': handler,
-                     'train_import_handler_file': handler,
-                     'trainer': trainer,
-                     'name': cls.MODEL_NAME}
-        resp = cls.app.post('/cloudml/models/', data=post_data,
-                            headers=HTTP_HEADERS)
-        assert resp.status_code == httplib.CREATED
+        cls.post_trained_model(cls.MODEL_NAME)
         cls.model = app.db.Model.find_one({'name': cls.MODEL_NAME})
         cls.BASE_URL = '/cloudml/weights/%s/' % cls.model._id
 
