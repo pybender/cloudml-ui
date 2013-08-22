@@ -28,7 +28,6 @@ angular.module('app.awsinstances.model', ['app.config'])
 
       loadFromJSON: (origData) =>
         super origData
-        @is_default = @is_default == 'True'
 
       $save: (opts={}) =>
         @type = @type['name']
