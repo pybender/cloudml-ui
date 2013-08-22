@@ -14,7 +14,8 @@
     "filename": "api/fixtures/ds.gz",
     "filesize": 100,
     "records_count": 100,
-    "time": 200
+    "time": 200,
+    "data_fields": ["employer.country"]
  },
  {
     "_id": "5270dd3a106a6c1631000111",

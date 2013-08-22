@@ -1,9 +1,10 @@
 <h2>
-  <span title="Title"
+  Import Handler
+  <small title="Title"
     class="title" ng-bind="model.name || 'untitled handler'"
     editable="handler" value="handler.name"
     editable-field="name" editable-input="text"
-    editable-placement="right"></span> Details
+    editable-placement="right"></small>
   <div class="actions" ng-controller="ImportHandlerActionsCtrl">
     <div ng-init="init({handler: handler})">
       <button ng-click="importData(handler)" class="btn btn-info">

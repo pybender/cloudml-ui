@@ -1,15 +1,18 @@
 <div>
   <h2>
-    <span title="Title"
+    DataSet <small title="Title"
       class="title" ng-bind="dataset.name || 'untitled dataset'"
       editable="dataset" value="dataset.name"
       editable-field="name" editable-input="text"
-      editable-placement="right"></span> Details
+      editable-placement="right"></small>
+      <div class="actions" ng-controller="DatasetActionsCtrl" style="min-width: 100px;" ng-init="init({dataset: dataset, handler: handler})">
+        <a class="btn btn-info" ng-show="dataset.on_s3" ng-click="download()"><i title="Download From Amazon S3" class="icon-download-alt"></i> Download</a>
+        <button ng-click="delete()" class="btn btn-danger">
+          <i title="Delete dataset. Be careful - you could not recover it!" class="icon-remove"></i> Delete
+        </button>
+      </div>
   </h2>
   <div class="date-created" ng-init="obj=dataset">
-    <span ng-show="dataset.on_s3">
-      <a href="{{ url }}">S3 URL</a>
-    </span> &nbsp;
     <ng-include src="'/partials/parts/created_tags.html'"></ng-include>
     <i class="icon-status"></i>
     <span class="badge badge-warning">{{ dataset.status }}</span>
