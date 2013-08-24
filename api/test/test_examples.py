@@ -48,6 +48,9 @@ class TestExamplesTests(BaseTestCase):
             example.test_id = str(self.test._id) \
                 if example.test_name == self.TEST_NAME \
                 else str(self.test2._id)
+            example.data_input = {
+                'opening_id': "201913099"
+            }
             example.save()
 
         self.Model = self.db.TestExample
@@ -112,3 +115,31 @@ class TestExamplesTests(BaseTestCase):
         for key in ['css_class', 'model_weight', 'transformed_weight',
                     'value', 'vect_value', 'weight']:
             self.assertTrue(key in data['weighted_data_input']['opening_id'])
+
+    def test_groupped(self):
+        url = self._get_url(action='groupped',
+                            field='data_input.opening_id', count='2')
+        resp = self.app.get(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, 200)
+        data = json.loads(resp.data)
+        self.assertEquals(data['field_name'], 'data_input.opening_id')
+        item = data['datas']['items'][0]
+        self.assertEquals(item['count'], 3)
+        self.assertEquals(item['group_by_field'], '201913099')
+        self.assertTrue(item['avp'] > 0)
+        self.assertTrue(data['mavp'] > 0)
+
+    def test_datafields(self):
+        url = self._get_url(action='datafields')
+        resp = self.app.get(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, 200)
+        data = json.loads(resp.data)
+        self.assertEquals(data['fields'], ['employer->country'])
+
+    @patch('api.tasks.get_csv_results')
+    def test_csv(self, mock_get_csv):
+        fields = 'name,id,label,pred_label,prob,data_input.employer->country'
+        url = self._get_url(action='csv', show=fields)
+        resp = self.app.get(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, 200)
+        self.assertTrue(mock_get_csv.delay.called)

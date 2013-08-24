@@ -32,7 +32,7 @@ model_parser.add_argument('example_id', type=str, default=None)
 model_parser.add_argument('example_label', type=str, default=None)
 
 
-def event_stream(query_params={}):
+def event_stream(query_params={}):    # pragma: no cover
     curs = app.chan.cursor(query_params, False)
     while True:
         gevent.sleep(0.2)
@@ -48,7 +48,7 @@ def event_stream(query_params={}):
 
 
 @app.route('/cloudml/log/')
-def sse_request():
+def sse_request():    # pragma: no cover
     query_params = {}
     channel = request.args.get('channel')
     if channel:
@@ -763,7 +763,7 @@ api.add_resource(CompareReportResource,
                  add_standart_urls=False)
 
 
-class Predict(BaseResource):
+class Predict(BaseResource):  # pragma: no cover
     ALLOWED_METHODS = ('post', 'options')
 
     def post(self, model, import_handler):

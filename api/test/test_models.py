@@ -48,6 +48,24 @@ class ModelTests(BaseTestCase):
         self._check_details(show='')
         self._check_details(show='created_on,labels')
 
+    def test_datasets(self):
+        self.obj.dataset_ids = [ObjectId(self.DS_ID), ObjectId(self.DS2_ID)]
+        self.obj.save()
+        resp = self.app.get(self._get_url(id=self.obj._id, show='datasets'),
+                            headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.OK)
+        data = json.loads(resp.data)
+        self.assertEquals(len(data['model']['datasets']), 2)
+
+    def test_data_fields(self):
+        self.obj.dataset_ids = [ObjectId(self.DS_ID), ObjectId(self.DS2_ID)]
+        self.obj.save()
+        resp = self.app.get(self._get_url(id=self.obj._id, show='data_fields'),
+                            headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.OK)
+        data = json.loads(resp.data)
+        self.assertEquals(data['model']['data_fields'], ['employer.country'])
+
     def test_download(self):
         def check(field, is_invalid=False):
             url = self._get_url(id=self.model._id, action='download',
@@ -278,3 +296,20 @@ when remove model')
                         "All tests was deleted!")
         self.assertTrue(self.db.TestExample.find().count(),
                         "All examples was deleted!")
+
+    @patch('api.tasks.cancel_request_spot_instance')
+    def test_cancel_request_instance(self, mock_task):
+        url = self._get_url(id=self.obj._id, action='cancel_request_instance')
+
+        resp = self.app.put(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.OK)
+        self.assertFalse(mock_task.delay.called)
+
+        self.obj.status = self.obj.STATUS_REQUESTING_INSTANCE
+        self.obj.spot_instance_request_id = 'someid'
+        self.obj.save()
+
+        resp = self.app.put(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.OK)
+        self.assertTrue(mock_task.delay.called)
+        self.obj.reload()
