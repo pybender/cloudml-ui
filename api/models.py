@@ -437,7 +437,8 @@ class Model(BaseDocument):
             return TrainerStorage.loads(trainer)
         return trainer
 
-    def get_import_handler(self, parameters=None, is_test=False):
+    # TODO: unused code
+    def get_import_handler(self, parameters=None, is_test=False):  # pragma: no cover
         from core.importhandler.importhandler import ExtractionPlan, \
             ImportHandler
         handler = json.dumps(self.importhandler if is_test
@@ -544,13 +545,15 @@ class Test(BaseDocument):
     use_dot_notation = True
     use_autorefs = True
 
+    # TODO: unused code
     @classmethod
-    def generate_name(cls, model, base_name='Test'):
+    def generate_name(cls, model, base_name='Test'):  # pragma: no cover
         count = model.tests.count()
         return "%s-%s" % (base_name, count + 1)
 
+    # TODO: unused code
     @property
-    def data_count(self):
+    def data_count(self):  # pragma: no cover
         return self.data.count()
 
     def delete(self):

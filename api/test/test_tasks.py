@@ -1,7 +1,7 @@
 import os
 from bson import ObjectId
 
-from moto import mock_s3, mock_ec2
+from moto import mock_s3
 from mock import patch, MagicMock, Mock
 
 from api import app
@@ -253,7 +253,6 @@ class TestTasksTests(BaseTestCase):
         model = self.db.Model.find_one()
         user = self.db.User.find_one()
 
-        # TODO: test using statuses beside 'active'
         with patch('api.amazon_utils.AmazonEC2Helper.get_request_spot_instance',
                    return_value=Mock(**{
                        'state': 'active',
@@ -271,6 +270,80 @@ class TestTasksTests(BaseTestCase):
             model.reload()
             self.assertEquals(model.status, model.STATUS_INSTANCE_STARTED)
 
+    @patch('api.amazon_utils.AmazonEC2Helper.get_request_spot_instance')
+    def test_get_request_instance_failed(self, mock_request_instance):
+        from api.tasks import get_request_instance, InstanceRequestingError
+
+        model = self.db.Model.find_one()
+        user = self.db.User.find_one()
+
+        mock_request_instance.return_value = Mock(**{
+            'state': 'failed',
+            'status.code': 'bad-parameters',
+            'status.message': 'Msg',
+        })
+
+        self.assertRaises(
+            InstanceRequestingError,
+            get_request_instance,
+            'some_id',
+            callback='train',
+            dataset_ids=['dataset_id'],
+            model_id=model._id,
+            user_id=user._id
+        )
+
+        model.reload()
+        self.assertEquals(model.status, model.STATUS_ERROR)
+        self.assertEquals(model.error, 'Instance was not launched')
+
+    @patch('api.amazon_utils.AmazonEC2Helper.get_request_spot_instance')
+    def test_get_request_instance_canceled(self, mock_request_instance):
+        from api.tasks import get_request_instance
+
+        model = self.db.Model.find_one()
+        user = self.db.User.find_one()
+
+        mock_request_instance.return_value = Mock(**{
+            'state': 'canceled',
+            'status.code': 'canceled',
+            'status.message': 'Msg',
+        })
+
+        res = get_request_instance('some_id',
+                         callback='train',
+                         dataset_ids=['dataset_id'],
+                         model_id=model._id,
+                         user_id=user._id)
+        self.assertIsNone(res)
+
+        model.reload()
+        self.assertEquals(model.status, model.STATUS_CANCELED)
+
+    @patch('api.amazon_utils.AmazonEC2Helper.get_request_spot_instance')
+    def test_get_request_instance_still_open(self, mock_request_instance):
+        from celery.exceptions import RetryTaskError
+        from api.tasks import get_request_instance
+
+        model = self.db.Model.find_one()
+        user = self.db.User.find_one()
+
+        mock_request_instance.return_value = Mock(**{
+            'state': 'open',
+            'status.code': 'bad-parameters',
+            'status.message': 'Msg',
+        })
+
+        self.assertRaises(
+            RetryTaskError,
+            get_request_instance,
+            'some_id',
+            callback='train',
+            dataset_ids=['dataset_id'],
+            model_id=model._id,
+            user_id=user._id
+        )
+
     @patch('api.amazon_utils.AmazonEC2Helper.terminate_instance')
     def test_terminate_instance(self, mock_terminate_instance):
         from api.tasks import terminate_instance
@@ -278,7 +351,8 @@ class TestTasksTests(BaseTestCase):
         mock_terminate_instance.assert_called_with('some instance id')
 
     @patch('api.amazon_utils.AmazonEC2Helper.cancel_request_spot_instance')
-    def test_terminate_instance(self, mock_cancel_request_spot_instance):
+    def test_cancel_request_spot_instance(self,
+                                          mock_cancel_request_spot_instance):
         from api.tasks import cancel_request_spot_instance
         model = self.db.Model.find_one()
         cancel_request_spot_instance('some req id', model._id)

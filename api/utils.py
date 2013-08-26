@@ -27,7 +27,8 @@ ERR_NO_SUCH_IMPORT_HANDLER = 1009
 _punct_re = re.compile(r'[\t !"#$%&\'()*\-/<=>?@\[\\\]^_`{|},.]+')
 
 
-def slugify(text, delim=u'_'):
+# TODO: unused code
+def slugify(text, delim=u'_'):  # pragma: no cover
     """Generates an ASCII-only slug."""
     result = []
     for word in _punct_re.split(text.lower()):
@@ -37,7 +38,8 @@ def slugify(text, delim=u'_'):
     return unicode(delim.join(result))
 
 
-def consumes(content_type=None):
+# TODO: unused code
+def consumes(content_type=None):  # pragma: no cover
     """
     Annotation that filters requests according to Content-type. If the
     request's content-type doesn't match the content type defined in the

@@ -12,7 +12,7 @@ from werkzeug.datastructures import FileStorage
 from bson.objectid import ObjectId
 
 from api import api, app
-from api.decorators import public, public_actions, authenticate
+from api.decorators import public, public_actions
 from api.utils import ERR_INVALID_DATA, odesk_error_response, \
     ERR_NO_SUCH_MODEL, ERR_UNPICKLING_MODEL, slugify
 from api.resources import BaseResource, NotFound, ValidationError
@@ -32,7 +32,7 @@ model_parser.add_argument('example_id', type=str, default=None)
 model_parser.add_argument('example_label', type=str, default=None)
 
 
-def event_stream(query_params={}):    # pragma: no cover
+def event_stream(query_params={}):  # pragma: no cover
     curs = app.chan.cursor(query_params, False)
     while True:
         gevent.sleep(0.2)
@@ -48,7 +48,7 @@ def event_stream(query_params={}):    # pragma: no cover
 
 
 @app.route('/cloudml/log/')
-def sse_request():    # pragma: no cover
+def sse_request():  # pragma: no cover
     query_params = {}
     channel = request.args.get('channel')
     if channel:

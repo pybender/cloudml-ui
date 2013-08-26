@@ -6,7 +6,6 @@ from moto import mock_s3
 from utils import MODEL_ID, BaseTestCase, FEATURE_COUNT, TARGET_VARIABLE,\
     HTTP_HEADERS
 from bson.objectid import ObjectId
-from api.utils import ERR_INVALID_DATA
 from api.views import Models as ModelsResource
 
 
@@ -21,7 +20,7 @@ class ModelTests(BaseTestCase):
     RELATED_PARAMS = {'model_id': MODEL_ID, 'model_name': MODEL_NAME}
     FIXTURES = ('importhandlers.json', 'models.json',
                 'tests.json', 'examples.json', 'datasets.json',
-                'weights.json', 'instances.json', )
+                'weights.json', 'instances.json', 'tags.json')
     RESOURCE = ModelsResource
     BASE_URL = '/cloudml/models/'
 
@@ -173,6 +172,50 @@ schema-name is missing')
         self.assertTrue(model.name == data['model']['name'] ==
                         'new name %@#')
 
+    def test_edit_tags(self):
+        self.obj.tags = []
+        self.obj.save()
+        self.obj.reload()
+
+        data = {'tags': json.dumps(['tag'])}
+        url = self._get_url(id=self.obj._id)
+        resp = self.app.put(url, data=data, headers=HTTP_HEADERS)
+        self.obj.reload()
+        self.assertEquals(resp.status_code, httplib.OK)
+        self.assertEquals(self.obj.tags, ['tag'])
+
+        tag = self.db.Tag.find_one({'text': 'tag'})
+        self.assertEquals(tag.count, 8)
+
+        data = {'tags': json.dumps(['tag', 'tag2'])}
+        url = self._get_url(id=self.obj._id)
+        resp = self.app.put(url, data=data, headers=HTTP_HEADERS)
+        self.obj.reload()
+        self.assertEquals(resp.status_code, httplib.OK)
+        self.assertEquals(self.obj.tags, ['tag', 'tag2'])
+
+        tag = self.db.Tag.find_one({'text': 'tag'})
+        self.assertEquals(tag.count, 8)
+
+        tag2 = self.db.Tag.find_one({'text': 'tag2'})
+        self.assertEquals(tag2.count, 4)
+
+        data = {'tags': json.dumps(['some_new'])}
+        url = self._get_url(id=self.obj._id)
+        resp = self.app.put(url, data=data, headers=HTTP_HEADERS)
+        self.obj.reload()
+        self.assertEquals(resp.status_code, httplib.OK)
+        self.assertEquals(self.obj.tags, ['some_new'])
+
+        tag = self.db.Tag.find_one({'text': 'tag'})
+        self.assertEquals(tag.count, 7)
+
+        tag2 = self.db.Tag.find_one({'text': 'tag2'})
+        self.assertEquals(tag2.count, 3)
+
+        tag3 = self.db.Tag.find_one({'text': 'some_new'})
+        self.assertEquals(tag3.count, 1)
+
     def test_train_model_validation_errors(self):
         self.assertTrue(self.model.status, "New")
         self._check_put({}, action='train',
@@ -193,11 +236,26 @@ aws_instance is required')
         self._check_put(data, action='train',
                         error='DataSet not found')
 
-    def test_train_model_with_dataset(self):
-        # TODO: Check with dataset from another handler
+    @patch('core.trainer.trainer.Trainer.__init__')
+    def test_train_model_exception(self, mock_trainer):
+        mock_trainer.side_effect = Exception('Some message')
+
         handler_id = str(self.obj.train_import_handler._id)
-        ds = self.db.DataSet.find({
-            'import_handler_id': handler_id})[0]
+        ds = self.db.DataSet.find_one({'import_handler_id': handler_id})
+        data = {'aws_instance': self.INSTANCE_ID,
+                'dataset': str(ds._id)}
+
+        url = self._get_url(id=self.model._id, action='train')
+        resp = self.app.put(url, data=data, headers=HTTP_HEADERS)
+        self.assertEqual(resp.status_code, httplib.OK)
+
+        self.model.reload()
+        self.assertEqual(self.model.status, self.model.STATUS_ERROR)
+        self.assertEqual(self.model.error, 'Some message')
+
+    def test_train_model_with_dataset(self):
+        handler_id = str(self.obj.train_import_handler._id)
+        ds = self.db.DataSet.find_one({'import_handler_id': handler_id})
         data = {'aws_instance': self.INSTANCE_ID,
                 'dataset': str(ds._id)}
         resp, model = self._check_put(data, action='train', load_model=True)
@@ -205,10 +263,37 @@ aws_instance is required')
         self.assertEquals(model_resp["status"], "Queued")
         self.assertEquals(model_resp["name"], self.model.name)
         # NOTE: Make sure that ds.gz file exist in test_data folder
+
         self.assertEqual(model.status, model.STATUS_TRAINED, model.error)
         self.assertEqual(model.dataset_ids, [ObjectId(self.DS_ID)])
 
-        # TODO: check other fields of the model
+        self.assertEqual(model.trained_by['uid'], 'somebody')
+        self.assertTrue(model.memory_usage['training'] > 0)
+        self.assertEqual(model.train_records_count, 100)
+
+    def test_train_model_with_dataset_other_handler(self):
+        # Dataset from another handler
+        new_handler = self.db.ImportHandler.get_from_id(
+            self.obj.train_import_handler._id)
+        new_handler['_id'] = ObjectId()
+        new_handler.save()
+        ds = self.db.DataSet.find_one()
+        ds.import_handler_id = str(new_handler._id)
+        ds.save()
+
+        data = {'aws_instance': self.INSTANCE_ID,
+                'dataset': str(ds._id)}
+        resp, model = self._check_put(data, action='train', load_model=True)
+        model_resp = json.loads(resp.data)['model']
+        self.assertEquals(model_resp["status"], "Queued")
+        self.assertEquals(model_resp["name"], self.model.name)
+
+        self.assertEqual(model.status, model.STATUS_TRAINED, model.error)
+        self.assertEqual(model.dataset_ids, [ObjectId(self.DS_ID)])
+
+        self.assertEqual(model.trained_by['uid'], 'somebody')
+        self.assertTrue(model.memory_usage['training'] > 0)
+        self.assertEqual(model.train_records_count, 100)
 
     def test_train_model_with_multiple_dataset(self):
         data = {
@@ -225,7 +310,9 @@ aws_instance is required')
             ObjectId(self.DS_ID), ObjectId(self.DS2_ID)
         ])
 
-        # TODO: check other fields of the model
+        self.assertEqual(model.trained_by['uid'], 'somebody')
+        self.assertTrue(model.memory_usage['training'] > 0)
+        self.assertEqual(model.train_records_count, 200)
 
     @mock_s3
     def test_train_model_with_load_params(self):
@@ -239,8 +326,10 @@ aws_instance is required')
         self.assertEquals(model_resp["status"], "Queued")
         self.assertEquals(model_resp["name"], self.model.name)
         self.assertEqual(model.status, model.STATUS_TRAINED)
-
-        # TODO: check other fields of the model
+        self.assertIsInstance(model.dataset_ids[0], ObjectId)
+        self.assertEqual(model.trained_by['uid'], 'somebody')
+        self.assertTrue(model.memory_usage['training'] > 0)
+        self.assertEqual(model.train_records_count, 99)
 
     @mock_s3
     def test_retrain_model(self):

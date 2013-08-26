@@ -41,6 +41,22 @@ class DataSetsTests(BaseTestCase):
         self.assertTrue(ds.on_s3)
         self.assertEquals(ds.filename, 'test_data/%s.gz' % ds._id)
 
+    @patch('core.importhandler.importhandler.ImportHandler.__init__')
+    def test_post_exception(self, mock_handler):
+        mock_handler.side_effect = Exception('Some message')
+
+        post_data = {'start': '2012-12-03',
+                'end': '2012-12-04',
+                'category': 'smth'}
+        url = self._get_url()
+        resp = self.app.post(url, data=post_data, headers=HTTP_HEADERS)
+        self.assertEqual(resp.status_code, httplib.CREATED)
+        data = json.loads(resp.data)
+
+        dataset = self.db.DataSet.get_from_id(ObjectId(data['dataset']['_id']))
+        self.assertEqual(dataset.status, dataset.STATUS_ERROR)
+        self.assertEqual(dataset.error, 'Some message')
+
     def test_edit_name(self):
         url = self._get_url(id=self.obj._id)
         data = {'name': 'new name'}
