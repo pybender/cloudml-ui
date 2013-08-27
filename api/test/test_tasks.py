@@ -1,3 +1,4 @@
+from api.tasks import InvalidOperationError
 import os
 from bson import ObjectId
 
@@ -75,6 +76,10 @@ class TestTasksTests(BaseTestCase):
         self.assertRaises(ValueError, calculate_confusion_matrix, self.test._id, -1, 1)
         self.assertRaises(ValueError, calculate_confusion_matrix, self.test._id, 1, -1)
         self.assertRaises(ValueError, calculate_confusion_matrix, ObjectId(), 1, 1)
+
+        self.test.model_id = str(ObjectId())
+        self.test.save()
+        self.assertRaises(ValueError, calculate_confusion_matrix, self.test._id, 2, 1)
 
     @mock_s3
     @patch('api.models.DataSet.get_data_stream')
@@ -206,6 +211,12 @@ class TestTasksTests(BaseTestCase):
             self.assertEquals(result, 'Test completed')
             self.assertFalse(mock_store_examples.si.called)
             self.assertFalse(mock_apply_async.apply.called)
+
+            model.status = model.STATUS_NEW
+            model.save()
+            self.assertRaises(InvalidOperationError, run_test,
+                              [self.dataset._id, ], self.test._id)
+
 
     @mock_s3
     def test_store_examples(self):

@@ -57,7 +57,13 @@ class TestExamplesTests(BaseTestCase):
         self.obj = self.db.TestExample.find_one({'test_id': str(self.test._id)})
         self.obj.vect_data = [0.123, 0.0] * 217
         self.obj.data_input = {
-            'opening_id': "201913099"
+            'opening_id': "201913099",
+            'contractor->dev_blurb': "Over ten years experience successfully "
+                                     "performing a number of data entry"
+                                     " and clerical tasks.",
+            'tsexams': {
+                'Some Exam': 5.0
+            }
         }
         self.obj.save()
 
@@ -111,6 +117,9 @@ class TestExamplesTests(BaseTestCase):
         self.assertEquals(resp.status_code, 200)
         self.assertTrue(mock_get_trainer.called)
         data = json.loads(resp.data)['data']
+
+        import pprint
+        pprint.pprint(data['weighted_data_input'])
 
         for key in ['css_class', 'model_weight', 'transformed_weight',
                     'value', 'vect_value', 'weight']:
