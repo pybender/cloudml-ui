@@ -6,7 +6,7 @@ from boto.s3.key import Key
 from api import app
 
 
-class AmazonEC2Helper(object):
+class AmazonEC2Helper(object):    # pragma: no cover
     def __init__(self, token=None, secret=None, region='us-west-2'):
         token = token or app.config['AMAZON_ACCESS_TOKEN']
         secret = secret or app.config['AMAZON_TOKEN_SECRET']
@@ -79,7 +79,8 @@ class AmazonS3Helper(object):
                 logging.error('Got error when getting data from s3')
                 raise exc
 
-    def save_gz_file(self, key, filename, meta, suffix=''):
+    # TODO: unused code
+    def save_gz_file(self, key, filename, meta, suffix=''):  # pragma: no cover
         import cStringIO
         import gzip
         key += suffix

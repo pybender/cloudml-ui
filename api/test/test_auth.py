@@ -239,6 +239,10 @@ class UserModelTests(BaseTestCase):
             self.assertEqual(user.odesk_url, 'http://profile2.com')
             self.assertEqual(user.portrait_32_img, 'http://image.com/image2.jpg')
 
+    @patch('api.auth.OdeskAuth.get_auth_url', Mock(return_value='some_url'))
+    def test_get_auth_url(self):
+        self.assertEqual(app.db.User.get_auth_url(), 'some_url')
+
 
 class OdeskAuthTests(BaseTestCase):
     """

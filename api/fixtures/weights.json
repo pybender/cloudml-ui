@@ -1,13 +1,23 @@
 {"Weight": [
  {
-    "name": "opening",
+    "name": "opening_id",
     "model_name": "TrainedModel",
     "model_id": "519318e6106a6c0df349bc0b",
-    "short_name": "opening",
+    "short_name": "opening_id",
     "value": 0.4444,
     "is_positive": true,
     "css_class": "green",
     "parent": null
+ },
+ {
+    "name": "contractor->dev_blurb->Over",
+    "model_name": "TrainedModel",
+    "model_id": "519318e6106a6c0df349bc0b",
+    "short_name": "Over",
+    "value": 0.022345208915455828,
+    "is_positive": true,
+    "css_class": "green dark",
+    "parent": "contractor.dev_blurb"
  }
  ],
  "WeightsCategory": [

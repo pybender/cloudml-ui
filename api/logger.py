@@ -4,7 +4,7 @@ from mongotools.pubsub import Channel
 from api import app
 
 
-class MongoHandler(logging.Handler):
+class MongoHandler(logging.Handler):  # pragma: no cover
     """
     Logging handler, which supports pub/sub
     """

@@ -12,12 +12,12 @@ from werkzeug.datastructures import FileStorage
 from bson.objectid import ObjectId
 
 from api import api, app
-from api.decorators import public, public_actions, authenticate
+from api.decorators import public, public_actions
 from api.utils import ERR_INVALID_DATA, odesk_error_response, \
     ERR_NO_SUCH_MODEL, ERR_UNPICKLING_MODEL, slugify
 from api.resources import BaseResource, NotFound, ValidationError
 from api.forms import ModelAddForm, ModelEditForm, ImportHandlerAddForm, \
-    AddTestForm, InstanceAddForm, InstanceEditForm, ImportHandlerEditForm
+    AddTestForm, InstanceAddForm, InstanceEditForm, ImportHandlerEditForm, DataSetEditForm
 from core.importhandler.importhandler import ExtractionPlan, \
     RequestImportHandler
 
@@ -32,7 +32,7 @@ model_parser.add_argument('example_id', type=str, default=None)
 model_parser.add_argument('example_label', type=str, default=None)
 
 
-def event_stream(query_params={}):
+def event_stream(query_params={}):  # pragma: no cover
     curs = app.chan.cursor(query_params, False)
     while True:
         gevent.sleep(0.2)
@@ -48,7 +48,7 @@ def event_stream(query_params={}):
 
 
 @app.route('/cloudml/log/')
-def sse_request():
+def sse_request():  # pragma: no cover
     query_params = {}
     channel = request.args.get('channel')
     if channel:
@@ -76,7 +76,8 @@ class Models(BaseResource):
     """
     GET_ACTIONS = ('download', 'reload', 'by_importhandler')
     PUT_ACTIONS = ('train', 'tags', 'cancel_request_instance')
-    FILTER_PARAMS = (('status', str), ('comparable', int), ('tag', str))
+    FILTER_PARAMS = (('status', str), ('comparable', int), ('tag', str),
+                    ('created_by', str), ('updated_by', str))
     DEFAULT_FIELDS = ('_id', 'name')
 
     MESSAGE404 = "Model with name %(_id)s doesn't exist"
@@ -138,6 +139,12 @@ class Models(BaseResource):
         if 'tag' in pdict:
             pdict['tags'] = {'$in': [pdict['tag']]}
             del pdict['tag']
+        if 'created_by' in pdict:
+            pdict['created_by.uid'] = pdict['created_by']
+            del pdict['created_by']
+        if 'updated_by' in pdict:
+            pdict['updated_by.uid'] = pdict['updated_by']
+            del pdict['updated_by']
         return pdict
 
     def _get_reload_action(self, **kwargs):
@@ -384,6 +391,7 @@ class DataSetResource(BaseResource):
     OBJECT_NAME = 'dataset'
     FILTER_PARAMS = (('status', str), )
     GET_ACTIONS = ('generate_url', )
+    put_form = DataSetEditForm
 
     def _get_generate_url_action(self, **kwargs):
         ds = self._get_details_query(None, None, **kwargs)
@@ -444,9 +452,9 @@ class Tests(BaseResource):
 
     def _get_details_query(self, params, fields, **kwargs):
         model_id = kwargs.get('model_id')
-        id = kwargs.get('_id')
+        test_id = kwargs.get('_id')
         return self.Model.find_one({'model_id': model_id,
-                                   '_id': ObjectId(id)}, fields)
+                                   '_id': ObjectId(test_id)}, fields)
 
     def _get_confusion_matrix_action(self, **kwargs):
         from api.tasks import calculate_confusion_matrix
@@ -460,18 +468,22 @@ class Tests(BaseResource):
         if not test:
             raise NotFound('Test not found')
 
-        model = app.db.Model.find_one({'_id': ObjectId(kwargs.get('model_id'))})
+        model = app.db.Model.find_one({'_id':
+                                           ObjectId(kwargs.get('model_id'))})
         if not model:
             raise NotFound('Model not found')
 
         try:
-            result = calculate_confusion_matrix(test._id, args.get('weight0'), args.get('weight1'))
+            result = calculate_confusion_matrix(test._id, args.get('weight0'),
+                                                args.get('weight1'))
         except Exception as e:
-            return self._render({self.OBJECT_NAME: test._id, 'error': e.message})
+            return self._render({self.OBJECT_NAME: test._id,
+                                 'error': e.message})
 
         result = zip(model.labels, result)
 
-        return self._render({self.OBJECT_NAME: test._id, 'confusion_matrix': result})
+        return self._render({self.OBJECT_NAME: test._id,
+                             'confusion_matrix': result})
 
     def _get_exports_action(self, **kwargs):
         test = self._get_details_query(None, None, **kwargs)
@@ -751,7 +763,7 @@ api.add_resource(CompareReportResource,
                  add_standart_urls=False)
 
 
-class Predict(BaseResource):
+class Predict(BaseResource):  # pragma: no cover
     ALLOWED_METHODS = ('post', 'options')
 
     def post(self, model, import_handler):
@@ -828,6 +840,7 @@ class LogResource(BaseResource):
     MESSAGE404 = "Log doesn't exist"
     OBJECT_NAME = 'log'
     NEED_PAGING = True
+    DEFAULT_FIELDS = [u'_id']
 
     @property
     def Model(self):
@@ -857,6 +870,7 @@ class TagResource(BaseResource):
     """
     MESSAGE404 = "Tag doesn't exist"
     OBJECT_NAME = 'tag'
+    DEFAULT_FIELDS = [u'_id']
 
     @property
     def Model(self):
@@ -926,6 +940,56 @@ class AuthResource(BaseResource):
 
 api.add_resource(AuthResource, '/cloudml/auth/<regex("[\w\.]*"):action>',
                  add_standart_urls=False)
+
+
+class StatisticsResource(BaseResource):
+    """
+    Statistics methods
+    """
+    @property
+    def Model(self):
+        raise Exception('Invalid operation')
+
+    def get(self, action=None):
+        def get_count_by_status(collection, extra_fields=[]):
+            all_count = 0
+            if extra_fields:
+                from collections import defaultdict
+                from bson.code import Code
+                reducer = Code("function(obj, prev){prev.count++;}")
+                extra_fields.append("status")
+                groupped_data = collection.group(
+                    key=extra_fields, 
+                    condition={}, 
+                    initial={"count": 0}, 
+                    reduce=reducer
+                )
+                res = {}
+                for item in groupped_data:
+                    key = item.pop("status")
+                    all_count += item["count"]
+                    if key in res:
+                        res[key]["count"] += item["count"]
+                    else:
+                        res[key] = {"count": item["count"],
+                                    "data": []}
+                    res[key]["data"].append(item)
+            else:
+                res = collection.aggregate([
+                    {"$group": {"_id": "$status", 
+                                "count": {"$sum": 1}}}
+                ])['result']
+                for item in res:
+                    all_count += item["count"]
+            return {'count': all_count, 'data': res}
+
+        return self._render({'statistics': {
+            'models': get_count_by_status(app.db.Model.collection),
+            'datasets': get_count_by_status(app.db.DataSet.collection, ["import_handler_id"]),
+            'tests': get_count_by_status(app.db.Test.collection, ["model_id", "model_name"])
+        }})
+
+api.add_resource(StatisticsResource, '/cloudml/statistics/')
 
 
 def populate_parser(model, is_requred=False):

@@ -21,7 +21,7 @@ class RegExConverter(BaseConverter):
         self.regex = items[0]
 
 
-class LogChannel(Channel):
+class LogChannel(Channel):    # pragma: no cover
     def cursor(self, query_params={}, await=False):
         if not self._callbacks:
             return iter([])

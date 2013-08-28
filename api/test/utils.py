@@ -29,8 +29,15 @@ class BaseTestCase(unittest.TestCase):
     def setUpClass(cls):
         app.config['DATABASE_NAME'] = 'cloudml-testdb'
         app.config['DATA_FOLDER'] = 'test_data'
+        app.conn.drop_database(app.config['DATABASE_NAME'])
         app.init_db()
         cls.app = app.test_client()
+
+    @classmethod
+    def tearDownClass(cls):
+        for root, dirs, files in os.walk(app.config['DATA_FOLDER']):
+            for f in files:
+                os.unlink(os.path.join(root, f))
 
     def setUp(self):
         self.fixtures_load()
@@ -95,6 +102,18 @@ class BaseTestCase(unittest.TestCase):
         for collection_name in cls._LOADED_COLLECTIONS:
             collection = _get_collection(collection_name)
             collection.remove()
+
+    @classmethod
+    def post_trained_model(cls, model_name):
+        handler = open('./conf/extract.json', 'r').read()
+        trainer = open('./api/fixtures/model.dat', 'r').read()
+        post_data = {'test_import_handler_file': handler,
+                     'train_import_handler_file': handler,
+                     'trainer': trainer,
+                     'name': model_name}
+        resp = cls.app.post('/cloudml/models/', data=post_data,
+                            headers=HTTP_HEADERS)
+        assert resp.status_code == httplib.CREATED
 
     def _get_url(self, **kwargs):
         id = kwargs.pop('id', '')
@@ -190,7 +209,6 @@ class BaseTestCase(unittest.TestCase):
             self.assertTrue(error in err_data['message'],
                             "Response message is: %s" % err_data['message'])
         else:
-            print resp.data
             self.assertEquals(resp.status_code, httplib.CREATED)
             self.assertTrue(self.RESOURCE.OBJECT_NAME in resp.data)
             new_count = self.Model.find().count()

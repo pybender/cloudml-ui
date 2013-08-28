@@ -1,3 +1,5 @@
+from api.tasks import InvalidOperationError
+import os
 from bson import ObjectId
 
 from moto import mock_s3
@@ -12,12 +14,16 @@ class TestTasksTests(BaseTestCase):
     Tests of the celery tasks.
     """
     TEST_NAME = 'Test-1'
+    TEST_NAME2 = 'Test-2'
     DS_ID = '5270dd3a106a6c1631000000'
+    EXAMPLE_NAME = 'Some Example #1-1'
+    MODEL_NAME = 'TrainedModel1'
     FIXTURES = ('datasets.json', 'models.json', 'tests.json', 'examples.json')
 
     def setUp(self):
         super(TestTasksTests, self).setUp()
         self.test = self.db.Test.find_one({'name': self.TEST_NAME})
+        self.test2 = self.db.Test.find_one({'name': self.TEST_NAME2})
         self.dataset = self.db.DataSet.find_one({'_id': ObjectId(self.DS_ID)})
         self.examples_count = self.db.TestExample.find(
             {'test_name': self.TEST_NAME}).count()
@@ -71,6 +77,10 @@ class TestTasksTests(BaseTestCase):
         self.assertRaises(ValueError, calculate_confusion_matrix, self.test._id, 1, -1)
         self.assertRaises(ValueError, calculate_confusion_matrix, ObjectId(), 1, 1)
 
+        self.test.model_id = str(ObjectId())
+        self.test.save()
+        self.assertRaises(ValueError, calculate_confusion_matrix, self.test._id, 2, 1)
+
     @mock_s3
     @patch('api.models.DataSet.get_data_stream')
     def test_get_csv_results(self, mock_get_data_stream):
@@ -84,12 +94,27 @@ class TestTasksTests(BaseTestCase):
         self.assertTrue(url)
         self.assertEquals(test.exports[0]['url'], url)
         self.assertEquals(test.exports[0]['fields'], fields)
+        # Data wasn't loaded from s3:
+        self.assertFalse(mock_get_data_stream.called)
+
+        url = get_csv_results(self.test.model_id, self.test2._id, fields)
+
+        test = self.db.Test.find_one({'name': self.TEST_NAME2})
+
+        self.assertTrue(url)
+        self.assertEquals(test.exports[0]['url'], url)
+        self.assertEquals(test.exports[0]['fields'], fields)
+        # Data was loaded from s3:
         self.assertTrue(mock_get_data_stream.called)
 
     @mock_s3
+    @patch('api.models.Model.get_trainer')
     @patch('api.models.DataSet.get_data_stream')
     @patch('api.tasks.store_examples')
-    def test_run_test(self, mock_store_examples, mock_get_data_stream):
+    def test_run_test(self, mock_store_examples, mock_get_data_stream,
+                      mock_get_trainer):
+        import numpy
+        import scipy
         from api.tasks import run_test
 
         def _fake_test(self, *args, **kwargs):
@@ -115,20 +140,30 @@ class TestTasksTests(BaseTestCase):
             preds.__iter__ = Mock(return_value=iter([0] * 100))
             metrics_mock._preds = preds
 
-            m = MagicMock(side_effect=[MagicMock()] * 100)
+            metrics_mock._probs = [numpy.array([0.1, 0.2])] * 100
 
-            metrics_mock._probs = MagicMock()
-            metrics_mock._probs.__iter__ = Mock(return_value=iter([m] * 100))
-
-            metrics_mock._true_data = MagicMock()
-            todense = MagicMock()
-            todense.__iter__ = Mock(return_value=iter([m] * 100))
-            metrics_mock._true_data.todense.return_value = todense
+            metrics_mock._true_data = scipy.sparse.coo_matrix([[0, 0, 0]] * 100)
 
             return metrics_mock
 
         mock_apply_async = MagicMock()
         mock_store_examples.si.return_value = mock_apply_async
+
+        # Set up mock trainer
+        from core.trainer.store import TrainerStorage
+        trainer = TrainerStorage.loads(
+            open('./api/fixtures/model.dat', 'r').read())
+        mock_get_trainer.return_value = trainer
+
+        model = self.db.Model.find_one()
+
+        self.test.model_id = str(model._id)
+        self.test.model = model
+        self.test.save()
+
+        self.test2.model_id = str(model._id)
+        self.test2.model = model
+        self.test2.save()
 
         with patch('core.trainer.trainer.Trainer.test',
                    _fake_test) as mock_test:
@@ -143,6 +178,9 @@ class TestTasksTests(BaseTestCase):
 
             self.assertEquals(10, mock_store_examples.si.call_count)
             self.assertEquals(10, mock_apply_async.apply.call_count)
+
+            test = self.db.Test.get_from_id(ObjectId(self.test._id))
+            self.assertEquals(test.dataset._id, self.dataset._id)
 
             mock_store_examples.reset_mock()
             mock_apply_async.reset_mock()
@@ -173,3 +211,162 @@ class TestTasksTests(BaseTestCase):
             self.assertEquals(result, 'Test completed')
             self.assertFalse(mock_store_examples.si.called)
             self.assertFalse(mock_apply_async.apply.called)
+
+            model.status = model.STATUS_NEW
+            model.save()
+            self.assertRaises(InvalidOperationError, run_test,
+                              [self.dataset._id, ], self.test._id)
+
+
+    @mock_s3
+    def test_store_examples(self):
+        from api.tasks import store_examples
+
+        _ROW_COUNT = 5
+
+        filename = 'Test_raw_data-{0!s}.dat'.format(str(self.test._id))
+        with open(os.path.join(app.config['DATA_FOLDER'], filename), 'w') as fp:
+            fp.writelines(['{"data": "value"}\n'] * _ROW_COUNT)
+
+        example = self.db.TestExample.find_one({'name': self.EXAMPLE_NAME})
+        example.on_s3 = True
+        example.save()
+
+        result = store_examples(self.test._id, [
+            range(_ROW_COUNT), [str(example._id)] * _ROW_COUNT
+        ])
+        self.assertEquals(result, list(zip(
+            range(_ROW_COUNT), [str(example._id)] * _ROW_COUNT)))
+
+        example.reload()
+        self.assertEquals(example.data_input, {'data': 'value'})
+
+    @patch('api.amazon_utils.AmazonEC2Helper.request_spot_instance',
+           return_value=Mock(id='some_id')
+           )
+    def test_request_spot_instance(self, mock_request):
+        from api.tasks import request_spot_instance
+
+        model = self.db.Model.find_one()
+        res = request_spot_instance('dataset_id', 'instance_type', model._id)
+
+        model.reload()
+        self.assertEquals(model.status, model.STATUS_REQUESTING_INSTANCE)
+        self.assertEquals(res, 'some_id')
+        self.assertEquals(model.spot_instance_request_id, res)
+
+    @patch('api.amazon_utils.AmazonEC2Helper.get_instance',
+           return_value=Mock(**{'private_ip_address': '8.8.8.8'}))
+    @patch('api.tasks.train_model')
+    def test_get_request_instance(self, mock_get_instance, mock_train):
+        from api.tasks import get_request_instance
+
+        model = self.db.Model.find_one()
+        user = self.db.User.find_one()
+
+        with patch('api.amazon_utils.AmazonEC2Helper.get_request_spot_instance',
+                   return_value=Mock(**{
+                       'state': 'active',
+                       'status.code': '200',
+                       'status.message': 'Msg',
+                   })):
+            res = get_request_instance('some_id',
+                         callback='train',
+                         dataset_ids=['dataset_id'],
+                         model_id=model._id,
+                         user_id=user._id)
+            self.assertEquals(res, '8.8.8.8')
+            self.assertTrue(mock_train.apply_async)
+
+            model.reload()
+            self.assertEquals(model.status, model.STATUS_INSTANCE_STARTED)
+
+    @patch('api.amazon_utils.AmazonEC2Helper.get_request_spot_instance')
+    def test_get_request_instance_failed(self, mock_request_instance):
+        from api.tasks import get_request_instance, InstanceRequestingError
+
+        model = self.db.Model.find_one()
+        user = self.db.User.find_one()
+
+        mock_request_instance.return_value = Mock(**{
+            'state': 'failed',
+            'status.code': 'bad-parameters',
+            'status.message': 'Msg',
+        })
+
+        self.assertRaises(
+            InstanceRequestingError,
+            get_request_instance,
+            'some_id',
+            callback='train',
+            dataset_ids=['dataset_id'],
+            model_id=model._id,
+            user_id=user._id
+        )
+
+        model.reload()
+        self.assertEquals(model.status, model.STATUS_ERROR)
+        self.assertEquals(model.error, 'Instance was not launched')
+
+    @patch('api.amazon_utils.AmazonEC2Helper.get_request_spot_instance')
+    def test_get_request_instance_canceled(self, mock_request_instance):
+        from api.tasks import get_request_instance
+
+        model = self.db.Model.find_one()
+        user = self.db.User.find_one()
+
+        mock_request_instance.return_value = Mock(**{
+            'state': 'canceled',
+            'status.code': 'canceled',
+            'status.message': 'Msg',
+        })
+
+        res = get_request_instance('some_id',
+                         callback='train',
+                         dataset_ids=['dataset_id'],
+                         model_id=model._id,
+                         user_id=user._id)
+        self.assertIsNone(res)
+
+        model.reload()
+        self.assertEquals(model.status, model.STATUS_CANCELED)
+
+    @patch('api.amazon_utils.AmazonEC2Helper.get_request_spot_instance')
+    def test_get_request_instance_still_open(self, mock_request_instance):
+        from celery.exceptions import RetryTaskError
+        from api.tasks import get_request_instance
+
+        model = self.db.Model.find_one()
+        user = self.db.User.find_one()
+
+        mock_request_instance.return_value = Mock(**{
+            'state': 'open',
+            'status.code': 'bad-parameters',
+            'status.message': 'Msg',
+        })
+
+        self.assertRaises(
+            RetryTaskError,
+            get_request_instance,
+            'some_id',
+            callback='train',
+            dataset_ids=['dataset_id'],
+            model_id=model._id,
+            user_id=user._id
+        )
+
+    @patch('api.amazon_utils.AmazonEC2Helper.terminate_instance')
+    def test_terminate_instance(self, mock_terminate_instance):
+        from api.tasks import terminate_instance
+        terminate_instance('some task id', 'some instance id')
+        mock_terminate_instance.assert_called_with('some instance id')
+
+    @patch('api.amazon_utils.AmazonEC2Helper.cancel_request_spot_instance')
+    def test_cancel_request_spot_instance(self,
+                                          mock_cancel_request_spot_instance):
+        from api.tasks import cancel_request_spot_instance
+        model = self.db.Model.find_one()
+        cancel_request_spot_instance('some req id', model._id)
+        mock_cancel_request_spot_instance.assert_called_with('some req id')
+        model.reload()
+        self.assertEquals(model.status, model.STATUS_CANCELED)

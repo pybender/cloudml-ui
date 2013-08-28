@@ -24,6 +24,10 @@ class InvalidOperationError(Exception):
     pass
 
 
+class InstanceRequestingError(Exception):
+    pass
+
+
 @celery.task
 def request_spot_instance(dataset_id=None, instance_type=None, model_id=None):
     init_logger('trainmodel_log', obj=model_id)
@@ -63,7 +67,7 @@ def get_request_instance(request_id,
         request = ec2.get_request_spot_instance(request_id)
     except EC2ResponseError as e:
         model.set_error(e.error_message)
-        raise Exception(e.error_message)
+        raise InstanceRequestingError(e.error_message)
 
     if request.state == 'open':
         logging.info('Instance was not ran. Status: %s . Retry in 10s.' % request.state)
@@ -74,7 +78,7 @@ def get_request_instance(request_id,
             logging.info('Max retries was reached, cancelling now.')
             cancel_request_spot_instance.delay(request_id, model_id)
             model.set_error('Instance was not launched')
-            raise Exception('Instance was not launched')
+            raise InstanceRequestingError('Instance was not launched')
 
     if request.state == 'canceled':
         logging.info('Instance was canceled.')
@@ -86,7 +90,7 @@ def get_request_instance(request_id,
         logging.info('Instance was not launched. State is {0!s}, status is {1!s}, {2!s}.'.format(
             request.state, request.status.code, request.status.message))
         model.set_error('Instance was not launched')
-        raise Exception('Instance was not launched')
+        raise InstanceRequestingError('Instance was not launched')
 
     model.status = model.STATUS_INSTANCE_STARTED
     model.save()
@@ -121,7 +125,7 @@ def terminate_instance(task_id=None, instance_id=None):
 
 
 @celery.task
-def self_terminate(result=None):
+def self_terminate(result=None):  # pragma: no cover
     logging.info('Instance will be terminated')
     system("halt")
 
@@ -418,6 +422,7 @@ def run_test(dataset_ids, test_id):
             model.save()
 
         all_count = metrics._preds.size
+        test.dataset = app.db.DataSet.get_from_id(ObjectId(dataset_ids[0]))
         test.examples_count = all_count
         test.memory_usage['testing'] = max(mem_usage)
         test.save()

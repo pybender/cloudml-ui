@@ -1,6 +1,7 @@
 import json
 import StringIO
 import logging
+from boto.exception import S3ResponseError
 import os
 from datetime import datetime
 from os.path import join, exists
@@ -153,8 +154,8 @@ class ImportHandler(BaseDocument):
         for ds in datasets:
             ds.delete()
 
-        expr = {'$or': [{'test_import_handler._id': self._id},
-                        {'train_import_handler._id': self._id}]}
+        expr = {'$or': [{'test_import_handler.$id': self._id},
+                        {'train_import_handler.$id': self._id}]}
         models = app.db.Model.find(expr)
 
         def unset(model, handler_type='train'):
@@ -244,7 +245,11 @@ class DataSet(BaseDocument):
     def get_data_stream(self):
         import gzip
         #import zlib
-        if self.on_s3:
+        if not self.on_s3 or exists(self.filename):
+            logging.info('Loading data from local file')
+            open_meth = gzip.open if self.compress else open
+            return open_meth(self.filename, 'r')
+        else:
             logging.info('Loading data from Amazon S3')
             stream = StringIO.StringIO(self.data)
             if self.compress:
@@ -252,10 +257,7 @@ class DataSet(BaseDocument):
                 return gzip.GzipFile(fileobj=stream, mode='r')
                 #data = zlib.decompress(data)
             return stream
-        else:
-            logging.info('Loading data from local file')
-            open_meth = gzip.open if self.compress else open
-            return open_meth(self.filename, 'r')
+        
 
     def load_from_s3(self):
         helper = AmazonS3Helper()
@@ -280,6 +282,16 @@ class DataSet(BaseDocument):
             self.save()
 
     def delete(self):
+        # Remove from tests
+        app.db.Test.collection.update({
+            'dataset.$id': self._id
+        }, {'$set': {'dataset': None}}, multi=True)
+
+        # Remove from models
+        app.db.Model.collection.update({
+            'dataset_ids': self._id
+        }, {'$pull': {'dataset_ids': self._id}}, multi=True)
+
         super(DataSet, self).delete()
         LogMessage.delete_related_logs(self)
 
@@ -291,7 +303,10 @@ class DataSet(BaseDocument):
         if self.on_s3:
             from api.amazon_utils import AmazonS3Helper
             helper = AmazonS3Helper()
-            helper.delete_key(str(self._id))
+            try:
+                helper.delete_key(str(self._id))
+            except S3ResponseError as e:
+                logging.exception(str(e))
 
     def save(self, *args, **kwargs):
         if self.status != self.STATUS_ERROR:
@@ -433,7 +448,8 @@ class Model(BaseDocument):
             return TrainerStorage.loads(trainer)
         return trainer
 
-    def get_import_handler(self, parameters=None, is_test=False):
+    # TODO: unused code
+    def get_import_handler(self, parameters=None, is_test=False):  # pragma: no cover
         from core.importhandler.importhandler import ExtractionPlan, \
             ImportHandler
         handler = json.dumps(self.importhandler if is_test
@@ -484,6 +500,8 @@ class Model(BaseDocument):
         app.db.TestExample.collection.remove(params)
         app.db.WeightsCategory.collection.remove(params)
         app.db.Weight.collection.remove(params)
+        self.comparable = False
+        self.save()
 
 
 @app.conn.register
@@ -538,13 +556,15 @@ class Test(BaseDocument):
     use_dot_notation = True
     use_autorefs = True
 
+    # TODO: unused code
     @classmethod
-    def generate_name(cls, model, base_name='Test'):
+    def generate_name(cls, model, base_name='Test'):  # pragma: no cover
         count = model.tests.count()
         return "%s-%s" % (base_name, count + 1)
 
+    # TODO: unused code
     @property
-    def data_count(self):
+    def data_count(self):  # pragma: no cover
         return self.data.count()
 
     def delete(self):
@@ -561,38 +581,57 @@ class Test(BaseDocument):
         :return: iterator
         """
         example_id_field = self.model.example_id
-        dataset_data_stream = self.dataset.get_data_stream()
 
         if fields:
             for required_field in ['_id', 'id', example_id_field]:
                 if required_field not in fields:
                     fields.append(required_field)
 
-        examples_data = app.db.TestExample.find(
-            {'model_id': self.model_id, 'test_id': str(self._id)},
-            fields
-        )
-        examples_data = dict([(epl['id'], epl)
-                              for epl in examples_data])
+        filter_dict = {'model_id': self.model_id, 'test_id': str(self._id)}
 
-        for row in dataset_data_stream:
-            data = json.loads(row)
-            example_id = data[example_id_field]
-            example = examples_data.get(example_id)
-            if not example:
-                continue
-            for key in data:
-                new_key = 'data_input.{0}'.format(key.replace('.', '->'))
-                example[new_key] = data[key]
-            if data_input_params:
-                skip_it = False
-                for k, v in data_input_params.items():
-                    if example[k] != v:
-                        skip_it = True
-                        break
-                if skip_it:
+        examples_on_s3 = app.db.TestExample.find(
+            dict(filter_dict.items() + {'on_s3': True}.items())
+        ).count()
+
+        # Don't download dataset if it's not needed
+        if not examples_on_s3:
+            if fields:
+                if data_input_params:
+                    filter_dict.update(data_input_params)
+                    fields += data_input_params.keys()
+                else:
+                    fields += ['data_input']
+            for example in app.db.TestExample.find(filter_dict, fields):
+                if example.get('data_input'):
+                    for key, value in example['data_input'].iteritems():
+                        example['data_input.{0}'.format(key)] = value
+                    del example['data_input']
+                yield example
+            return
+
+        examples_data = dict([(epl['id'], epl)
+                              for epl in
+                              app.db.TestExample.find(filter_dict, fields)])
+
+        with self.dataset.get_data_stream() as dataset_data_stream:
+            for row in dataset_data_stream:
+                data = json.loads(row)
+                example_id = data[example_id_field]
+                example = examples_data.get(example_id)
+                if not example:
                     continue
-            yield example
+                for key in data:
+                    new_key = 'data_input.{0}'.format(key.replace('.', '->'))
+                    example[new_key] = data[key]
+                if data_input_params:
+                    skip_it = False
+                    for k, v in data_input_params.items():
+                        if example[k] != v:
+                            skip_it = True
+                            break
+                    if skip_it:
+                        continue
+                yield example
 
 
 @app.conn.register

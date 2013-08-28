@@ -12,7 +12,7 @@
     "test": null,
     "test_id": "000000000000000000000002",
     "weighted_data_input": {},
-    "prob": [],
+    "prob": [0.123, 0.5],
     "id": "1"
  },
  {
@@ -28,7 +28,7 @@
     "test": null,
     "test_id": null,
     "weighted_data_input": {},
-    "prob": [],
+    "prob": [0.123, 0.5],
     "id": "1a"
  },
  {
@@ -44,7 +44,7 @@
     "test": null,
     "test_id": null,
     "weighted_data_input": {},
-    "prob": [],
+    "prob": [0.123, 0.5],
     "id": "2"
  },
  {
@@ -58,10 +58,11 @@
     "model_id": "519318e6106a6c0df349bc0b",
     "data_input": {},
     "test": null,
-    "test_id": null,
+    "test_id": "000000000000000000000003",
     "weighted_data_input": {},
-    "prob": [],
-    "id": "3"
+    "prob": [0.123, 0.5],
+    "id": "3",
+    "on_s3": true
  },
  {
     "created_on": "2013-04-19 14:37:23.145000",
@@ -76,7 +77,7 @@
     "test": null,
     "test_id": null,
     "weighted_data_input": {},
-    "prob": [],
+    "prob": [0.123, 0.5],
     "id": "4"
  }
 ]}

@@ -1,19 +1,21 @@
 import json
-from mock import patch
+from mock import patch, MagicMock
 from bson.objectid import ObjectId
+from moto import mock_s3
 
-from utils import BaseTestCase
+from utils import BaseTestCase, HTTP_HEADERS
 from utils import MODEL_ID
 from api.views import Tests as TestResource
 
 
 class TestTests(BaseTestCase):
     TEST_ID = '000000000000000000000002'
+    DS_ID = '5270dd3a106a6c1631000000'
     MODEL_PARAMS = {'model_id': MODEL_ID}
     RELATED_PARAMS = {'test_id': TEST_ID, 'model_id': MODEL_ID}
     RESOURCE = TestResource
-    FIXTURES = ('importhandlers.json', 'models.json', 'tests.json',
-                'examples.json', 'instances.json', )
+    FIXTURES = ('datasets.json', 'importhandlers.json', 'models.json',
+                'tests.json', 'examples.json', 'instances.json', )
 
     def setUp(self):
         super(TestTests, self).setUp()
@@ -34,26 +36,47 @@ class TestTests(BaseTestCase):
     def test_details(self):
         self._check_details(show='name,status')
 
-    @patch('api.models.DataSet.save_to_s3')
-    def test_post(self, save_to_s3_mock):
+    @patch('api.tasks.calculate_confusion_matrix')
+    def test_confusion_matrix(self, mock_calculate):
+        mock_calculate.return_value = [[1, 2], [3, 4]]
+
+        url = self._get_url(id=self.obj._id,
+                            action='confusion_matrix')
+        resp = self.app.get(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, 200)
+        data = json.loads(resp.data)
+        matrix = data['confusion_matrix']
+        self.assertEquals(matrix[0], ['0', [1, 2]])
+        self.assertEquals(matrix[1], ['1', [3, 4]])
+
+    @mock_s3
+    @patch('api.tasks.run_test')
+    def test_post(self, mock_run_test):
         data = {'start': '2012-12-03',
                 'end': '2012-12-04',
                 'category': 'smth',
                 'aws_instance': '5170dd3a106a6c1631000000'}
         resp, test = self._check_post(data, load_model=True)
-        test_resp = json.loads(resp.data)['test']
+        data = json.loads(resp.data)
 
-        # TODO: Why status is imported, not completed here?
-        #self.assertEquals(test.status, test.STATUS_COMPLETED)
-        # TODO: check resp and created test
+        self.assertEquals(test.status, test.STATUS_IMPORTED)
+        self.assertTrue(mock_run_test.subtask.called)
+        self.assertTrue('test' in data)
 
-    def test_post_with_dataset(self):
-        # TODO: check post with spec. dataset
-        pass
+    @mock_s3
+    @patch('api.tasks.run_test')
+    def test_post_with_dataset(self, mock_run_test):
+        data = {'dataset': self.DS_ID,
+                'aws_instance': '5170dd3a106a6c1631000000'}
+        resp = self.app.post(self._get_url(), data=data, headers=HTTP_HEADERS)
+        data = json.loads(resp.data)
+        self.assertEquals(resp.status_code, 201)
 
-    def test_recalc_confusion_matrix(self):
-        # TODO:
-        pass
+        test = self.db.Test.get_from_id(ObjectId(data['test']['_id']))
+
+        self.assertEquals(test.status, test.STATUS_QUEUED)
+        self.assertTrue(mock_run_test.apply_async.called)
+        self.assertTrue('test' in data)
 
     def test_delete(self):
         self.check_related_docs_existance(self.db.TestExample)

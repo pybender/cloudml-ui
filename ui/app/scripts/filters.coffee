@@ -44,6 +44,24 @@ angular.module('app.filters', [])
       return text
 ])
 
+.filter('humanize_time', [() ->
+  (text) ->
+    if not text
+      return ''
+    dn = moment.duration(parseInt(text), 'seconds')
+    if dn
+      pieces = []
+      if dn.hours()
+        pieces.push(dn.hours() + ' h')
+      if dn.minutes()
+        pieces.push(dn.minutes() + ' m')
+      if dn.seconds()
+        pieces.push(dn.seconds() + ' s')
+      return pieces.join(' ')
+    else
+      return text
+])
+
 .filter('bytes', [() ->
   (bytes, precision) ->
     bytes = parseFloat(bytes)

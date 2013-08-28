@@ -47,7 +47,8 @@ def calc_weights_css(weights, css_cls):
     return weights
 
 
-def weights2tree(weights):
+# TODO: unused code
+def weights2tree(weights):  # pragma: no cover
     """
     Converts weights list to tree dict.
     """

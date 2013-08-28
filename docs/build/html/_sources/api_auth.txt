@@ -1,0 +1,60 @@
+Authentication
+======
+
+All API requests (except listed on this page) should be sent including authentication http header:
+
+* X-Auth-Token: <auth_token> received from :ref:`/cloudml/auth/authenticate<authenticate>` resource
+
++--------+-----------------------------------------------------------+------------------------+
+| Method | Resource                                                  | Description            |
++========+===========================================================+========================+
+| POST   | :ref:`/cloudml/auth/get_auth_url<get_auth_url>`           | Get oauth redirect url |
++--------+-----------------------------------------------------------+------------------------+
+| POST   | :ref:`/cloudml/auth/authenticate<authenticate>`           | Authenticate           |
++--------+-----------------------------------------------------------+------------------------+
+| POST   | :ref:`/cloudml/auth/get_user<get_user>`                   | Get current user info  |
++--------+-----------------------------------------------------------+------------------------+
+
+
+.. _get_auth_url:
+
+Get oauth redirect url
+--------------
+
+* Method: POST
+* URL: /cloudml/auth/get_auth_url
+
+Response Parameters
+^^^^^^^^^^^^^^^^^^^
+
+* auth_url - Oauth url for redirect to
+
+.. _authenticate:
+
+Authenticate
+--------------
+
+* Method: POST
+* URL: /cloudml/auth/authenticate
+* POST params:
+    * oauth_token: token received from oDesk
+    * oauth_verifier: token received from oDesk
+
+Response Parameters
+^^^^^^^^^^^^^^^^^^^
+
+* auth_token - API auth token to use in API requests
+* user - Current user info
+
+.. _get_user:
+
+Get current user info
+--------------
+
+* Method: POST
+* URL: /cloudml/auth/get_user
+
+Response Parameters
+^^^^^^^^^^^^^^^^^^^
+
+* user - Current user info

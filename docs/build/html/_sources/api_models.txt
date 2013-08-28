@@ -11,6 +11,19 @@ Models
 | POST   | :ref:`/cloudml/model/:ModelName/:HandlerName/predict<predict>`| Predict            |
 +--------+---------------------------------------------------------------+--------------------+
 
+
+Upload Model
+------------
+
+* Method: POST
+* URL: /cloudml/model/:ModelName/
+
+Examples
+^^^^^^^^
+
+ curl -X POST -F "trainer=@/data/models/model.autohde.v1.20121025.20121028" -F importhandler="$(cat /home/papadimitriou/odeskdev-cloudml/models/bestmatch/autohide/extract.v1.json)"  "http://172.27.77.141/api/cloudml/model/BestMatch.Autohide.vv1.w2"
+ 
+
 .. _list_models:
 
 List of Models

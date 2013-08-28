@@ -28,7 +28,8 @@ angular.module('app.awsinstances.model', ['app.config'])
 
       loadFromJSON: (origData) =>
         super origData
-        @is_default = @is_default == 'True'
+        @is_default = @is_default and
+        @is_default.toString().toLowerCase() == 'true'
 
       $save: (opts={}) =>
         @type = @type['name']

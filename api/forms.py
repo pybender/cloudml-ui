@@ -356,6 +356,10 @@ class ImportHandlerAddForm(BaseImportHandlerForm):
         return value
 
 
+class DataSetEditForm(BaseForm):
+    fields = ('name',)
+
+
 class AddTestForm(BaseChooseInstanceAndDataset):
     HANDLER_TYPE = 'test'
 

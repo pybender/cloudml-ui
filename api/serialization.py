@@ -25,7 +25,8 @@ def encode_model(obj):
     return out
 
 
-class Serializer(object):
+# TODO: unused code
+class Serializer(object):  # pragma: no cover
     __public__ = None
     __all_public__ = None
     "Must be implemented by implementors"
@@ -45,9 +46,8 @@ class Serializer(object):
         return dict
 
 
-
-
-class ModelEncoder(json.JSONEncoder):
+# TODO: unused code
+class ModelEncoder(json.JSONEncoder):  # pragma: no cover
     method_name = 'to_brief_dict'
 
     def default(self, obj):
@@ -59,9 +59,11 @@ class ModelEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-class BriefDetailsEncoder(ModelEncoder):
+# TODO: unused code
+class BriefDetailsEncoder(ModelEncoder):  # pragma: no cover
     pass
 
 
-class FullDetailsEncoder(BriefDetailsEncoder):
+# TODO: unused code
+class FullDetailsEncoder(BriefDetailsEncoder):  # pragma: no cover
     method_name = 'to_full_dict'

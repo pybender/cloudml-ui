@@ -1,6 +1,5 @@
 import sys
 import inspect
-import json
 
 from mongokit import DocumentMigration
 
@@ -17,9 +16,13 @@ class DbMigration(DocumentMigration):
     def migrate_all(self, *args, **kwargs):
         super(DbMigration, self).migrate_all(getattr(app.db, self.DOC_CLASS.__collection__))
 
+    @staticmethod
+    def get_migrations_module():  # pragma: no cover
+        return sys.modules[__name__]
+
     @classmethod
     def do_all_migrations(cls, class_or_collection=None):
-        for name, obj in inspect.getmembers(sys.modules[__name__], inspect.isclass):
+        for name, obj in inspect.getmembers(cls.get_migrations_module(), inspect.isclass):
             if hasattr(obj, '__bases__') and cls in obj.__bases__:
                 if (not class_or_collection
                     or class_or_collection == obj.DOC_CLASS.__collection__
@@ -28,7 +31,7 @@ class DbMigration(DocumentMigration):
                     migration.migrate_all()
 
 
-class ModelMigration(DbMigration):
+class ModelMigration(DbMigration):  # pragma: no cover
     DOC_CLASS = models.Model
 
     # def allmigration01__add_example_id(self):
@@ -100,11 +103,7 @@ class ModelMigration(DbMigration):
                     self.collection.save(doc)
 
 
-
-
-
-
-class TestMigration(DbMigration):
+class TestMigration(DbMigration):  # pragma: no cover
     DOC_CLASS = models.Test
 
     # def allmigration01__add_model_id(self):
@@ -123,7 +122,7 @@ class TestMigration(DbMigration):
         self.update = {'$set': {'created_by': {}}}
 
 
-class DataSetMigration(DbMigration):
+class DataSetMigration(DbMigration):  # pragma: no cover
     DOC_CLASS = models.DataSet
 
     def allmigration01__add_stats_fields(self):
@@ -167,8 +166,12 @@ class DataSetMigration(DbMigration):
         self.target = {'updated_by': {'$exists': False}}
         self.update = {'$set': {'updated_by': {}}}
 
+    def allmigration06__add_on_s3(self):
+        self.target = {'on_s3': {'$exists': False}}
+        self.update = {'$set': {'on_s3': False}}
 
-class InstanceMigration(DbMigration):
+
+class InstanceMigration(DbMigration):  # pragma: no cover
     DOC_CLASS = models.Instance
 
     def allmigration01__add_created_by(self):
@@ -180,7 +183,7 @@ class InstanceMigration(DbMigration):
         self.update = {'$set': {'updated_by': {}}}
 
 
-class ImportHandlerMigration(DbMigration):
+class ImportHandlerMigration(DbMigration):  # pragma: no cover
     DOC_CLASS = models.ImportHandler
 
     def allmigration01__add_created_by(self):
@@ -190,3 +193,11 @@ class ImportHandlerMigration(DbMigration):
     def allmigration02__add_updated_by(self):
         self.target = {'updated_by': {'$exists': False}}
         self.update = {'$set': {'updated_by': {}}}
+
+
+class TestExampleMigration(DbMigration):  # pragma: no cover
+    DOC_CLASS = models.TestExample
+
+    def allmigration01__add_on_s3(self):
+        self.target = {'on_s3': {'$exists': False}}
+        self.update = {'$set': {'on_s3': False}}
