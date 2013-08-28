@@ -245,7 +245,11 @@ class DataSet(BaseDocument):
     def get_data_stream(self):
         import gzip
         #import zlib
-        if self.on_s3:
+        if not self.on_s3 or exists(self.filename):
+            logging.info('Loading data from local file')
+            open_meth = gzip.open if self.compress else open
+            return open_meth(self.filename, 'r')
+        else:
             logging.info('Loading data from Amazon S3')
             stream = StringIO.StringIO(self.data)
             if self.compress:
@@ -253,10 +257,7 @@ class DataSet(BaseDocument):
                 return gzip.GzipFile(fileobj=stream, mode='r')
                 #data = zlib.decompress(data)
             return stream
-        else:
-            logging.info('Loading data from local file')
-            open_meth = gzip.open if self.compress else open
-            return open_meth(self.filename, 'r')
+        
 
     def load_from_s3(self):
         helper = AmazonS3Helper()
@@ -281,6 +282,16 @@ class DataSet(BaseDocument):
             self.save()
 
     def delete(self):
+        # Remove from tests
+        app.db.Test.collection.update({
+            'dataset.$id': self._id
+        }, {'$set': {'dataset': None}}, multi=True)
+
+        # Remove from models
+        app.db.Model.collection.update({
+            'dataset_ids': self._id
+        }, {'$pull': {'dataset_ids': self._id}}, multi=True)
+
         super(DataSet, self).delete()
         LogMessage.delete_related_logs(self)
 
