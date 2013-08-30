@@ -173,9 +173,9 @@ editable-input="text" source="model.data_fields"></span>
 
   <div ng-show="action[0] == 'test'" id="tests">
     <h3>Tests</h3>
-    <div>
+    <div ng-controller="TestListCtrl" ng-init="init(model)">
       <ng-include src="'/partials/testresults/test_list.html'"></ng-include>
-    </div>  
+    </div>
   </div>
 
   <div ng-show="action[0] == 'weights'" ng-controller="WeightsCtrl">
