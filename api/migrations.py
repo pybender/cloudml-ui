@@ -102,6 +102,10 @@ class ModelMigration(DbMigration):  # pragma: no cover
                     doc['test_import_handler'] = None
                     self.collection.save(doc)
 
+    def allmigration10__add_current_task_id(self):
+        self.target = {'current_task_id': {'$exists': False}}
+        self.update = {'$set': {'current_task_id': ''}}
+
 
 class TestMigration(DbMigration):  # pragma: no cover
     DOC_CLASS = models.Test
@@ -120,6 +124,10 @@ class TestMigration(DbMigration):  # pragma: no cover
     def allmigration03__add_created_by(self):
         self.target = {'created_by': {'$exists': False}}
         self.update = {'$set': {'created_by': {}}}
+
+    def allmigration04__add_current_task_id(self):
+        self.target = {'current_task_id': {'$exists': False}}
+        self.update = {'$set': {'current_task_id': ''}}
 
 
 class DataSetMigration(DbMigration):  # pragma: no cover
@@ -169,6 +177,10 @@ class DataSetMigration(DbMigration):  # pragma: no cover
     def allmigration06__add_on_s3(self):
         self.target = {'on_s3': {'$exists': False}}
         self.update = {'$set': {'on_s3': False}}
+
+    def allmigration07__add_current_task_id(self):
+        self.target = {'current_task_id': {'$exists': False}}
+        self.update = {'$set': {'current_task_id': ''}}
 
 
 class InstanceMigration(DbMigration):  # pragma: no cover

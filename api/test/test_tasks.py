@@ -217,7 +217,6 @@ class TestTasksTests(BaseTestCase):
             self.assertRaises(InvalidOperationError, run_test,
                               [self.dataset._id, ], self.test._id)
 
-
     @mock_s3
     def test_store_examples(self):
         from api.tasks import store_examples

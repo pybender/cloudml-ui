@@ -118,9 +118,6 @@ class TestExamplesTests(BaseTestCase):
         self.assertTrue(mock_get_trainer.called)
         data = json.loads(resp.data)['data']
 
-        import pprint
-        pprint.pprint(data['weighted_data_input'])
-
         for key in ['css_class', 'model_weight', 'transformed_weight',
                     'value', 'vect_value', 'weight']:
             self.assertTrue(key in data['weighted_data_input']['opening_id'])
