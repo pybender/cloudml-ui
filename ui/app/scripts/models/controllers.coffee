@@ -176,14 +176,14 @@ train_records_count'
         params[p] = false
       $scope.formElements[$scope.NEW_DATASET] = params
 
-      $scope.EXISTED_DATASET = 'Existed DataSet'
+      $scope.EXISTED_DATASET = 'Existing DataSet'
       $scope.formElements[$scope.EXISTED_DATASET] = {'dataset': false}
 
       # instance section
       $scope.REQUEST_SPOT_INSTANCE = 'Request Spot Instance'
       $scope.formElements[$scope.REQUEST_SPOT_INSTANCE] = {'type': false}
 
-      $scope.EXISTED_INSTANCE = 'Existed Instance'
+      $scope.EXISTED_INSTANCE = 'Existing Instance'
       $scope.formElements[$scope.EXISTED_INSTANCE] = {'aws_instance': false}
 
       if $scope.multiple_dataset

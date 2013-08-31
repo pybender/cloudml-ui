@@ -1,12 +1,12 @@
 <div ng-controller="DatasetSelectCtrl">
   <ul class="nav nav-pills">
     <li ng-repeat="column in activeColumns" ng-class="{active: currentColumn == column}"><a ng-click="activateColumn(column)">{{ column }}</a></li>
-    <li ng-show="activeColumns.indexOf(EXISTED_DATASET) == -1"class="disabled"><a title="There aren't successfully loaded datasets">Existed DataSet</a></li>
+    <li ng-show="activeColumns.indexOf(EXISTED_DATASET) == -1"class="disabled"><a title="There aren't successfully loaded datasets">Existing DataSet</a></li>
   </ul>
 
-  <!-- Existed dataset  -->
+  <!-- Existing dataset  -->
   <div ng-hide="activeColumns.indexOf(EXISTED_DATASET) == -1">
-    <div ng-show="currentColumn == 'Existed DataSet'">
+    <div ng-show="currentColumn == 'Existing DataSet'">
       <div class="control-group" ng-class="{error: !formElements[EXISTED_DATASET]['dataset']}">
         <select class="input-xlarge" ui-select2="select2Options" ng-multiple="multiple_dataset" name="dataset" ng-model="formElements[EXISTED_DATASET]['dataset']" ng-change="changeFormData(currentColumn, 'dataset')" required>
           <option ng-repeat="ds in datasets" value="{{ ds._id }}">{{ ds.name }}</option>
