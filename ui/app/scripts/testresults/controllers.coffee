@@ -18,8 +18,15 @@ angular.module('app.testresults.controllers', ['app.config', ])
 
     # Form elements for each tab in the section with values
     $scope.formElements = {}
+    $scope.SETTINGS = 'Settings'
+    $scope.formElements[$scope.SETTINGS] = {'examples_storage': 'Amazon S3'}
+
     # Columns by section
-    $scope.currentColumns = {'dataset': null, 'instance': null}
+    $scope.currentColumns = {
+      dataset: null
+      instance: null
+      settings: $scope.SETTINGS
+    }
 
     $scope.start = (result) ->
       data = $scope.getData()

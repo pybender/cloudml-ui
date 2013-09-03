@@ -15,6 +15,19 @@
 
       <h4 class="text-center">then choose amazon instance</h4>
       <ng-include src="'/partials/aws_instances/instance_fields.html'"></ng-include>
+
+      <h4 class="text-center">Settings</h4>
+      <div>
+        <div ng-class="{error: !formElements[SETTINGS]['examples_storage']}" class="control-group">
+          <select class="input-xlarge" name="examples_storage" ng-change="changeFormData(SETTINGS, 'examples_storage')" ng-model="formElements[SETTINGS]['examples_storage']">
+            <option value="">--- select examples storage ---</option>
+            <option value="Amazon S3">Amazon S3</option>
+            <option value="MongoDB">MongoDB</option>
+            <option value="Not save">Don't save</option>
+          </select>&nbsp;<i class="icon-question-sign" title="Choose test examples placement" />
+          <span ng-show="!formElements[SETTINGS]['examples_storage']" class="help-inline">required</span>
+        </div>
+      </div>
     </form>
   </div>
 
