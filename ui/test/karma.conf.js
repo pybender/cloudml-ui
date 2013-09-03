@@ -43,7 +43,7 @@ module.exports = function(config) {
 
     // test results reporter to use
     // possible values: 'dots', 'progress', 'junit', 'growl', 'coverage'
-    reporters: ['spec', 'coverage'],
+    reporters: ['spec'],  //'coverage'],
 
     // optionally, configure the reporter
     coverageReporter: {
@@ -96,6 +96,6 @@ module.exports = function(config) {
 
     // Continuous Integration mode
     // if true, it capture browsers, run tests and exit
-    singleRun: true
+    singleRun: true // Change to "false" for developing mode
   });
 };
