@@ -220,6 +220,32 @@ with%s compression", importhandler.name, '' if dataset.compress else 'out')
 
 
 @celery.task
+def upload_dataset(dataset_id):
+    """
+    Upload dataset to S3.
+    """
+    dataset = app.db.DataSet.find_one({'_id': ObjectId(dataset_id)})
+    try:
+        if not dataset:
+            raise ValueError('DataSet not found')
+
+        logging.info('Saving file to Amazon S3')
+        dataset.save_to_s3()
+        logging.info('File saved to Amazon S3')
+
+        dataset.status = dataset.STATUS_IMPORTED
+        dataset.save()
+
+    except Exception, exc:
+        logging.exception('Got exception when uploading dataset')
+        dataset.set_error(exc)
+        raise
+
+    logging.info("Dataset using {0!s} uploaded.".format(dataset))
+    return [dataset_id]
+
+
+@celery.task
 def train_model(dataset_ids, model_id, user_id):
     """
     Train new model celery task.

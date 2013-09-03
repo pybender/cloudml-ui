@@ -79,12 +79,19 @@ class AmazonS3Helper(object):
                 logging.error('Got error when getting data from s3')
                 raise exc
 
-    # TODO: unused code
-    def save_gz_file(self, key, filename, meta, suffix=''):  # pragma: no cover
+    def save_gz_file(self, name, filename, meta={}):  # pragma: no cover
         import cStringIO
         import gzip
-        key += suffix
-        mpu = self.bucket.initiate_multipart_upload(key)
+
+        headers = {
+            'Content-Type': 'application/octet-stream',
+            'Content-Encoding': 'gzip'
+        }
+        mpu = self.bucket.initiate_multipart_upload(
+            name,
+            metadata=meta,
+            headers=headers
+        )
         stream = cStringIO.StringIO()
         compressor = gzip.GzipFile(fileobj=stream, mode='w')
 
@@ -95,7 +102,7 @@ class AmazonS3Helper(object):
             stream.seek(0)
             stream.truncate()
 
-        with file(filename) as inputFile:
+        with gzip.open(filename, 'r') as inputFile:
             while True:
                 chunk = inputFile.read(8192)
                 if not chunk:

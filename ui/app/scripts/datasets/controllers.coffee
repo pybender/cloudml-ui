@@ -61,6 +61,10 @@ filesize,records_count,time,created_by,updated_by'
         generateS3Url($scope.ds, ((opts) ->
           $window.location.replace opts.url
         ), $scope.setError)
+
+    $scope.reupload = () ->
+      if $scope.ds.on_s3
+        $scope.ds.$reupload()
 ])
 
 
