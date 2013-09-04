@@ -16,12 +16,12 @@
 
   <div ng-show="currentColumn == REQUEST_SPOT_INSTANCE">
     <div ng-controller="SpotInstanceRequestCtrl">
-      <div class="control-group" ng-class="{error: !formElements[REQUEST_SPOT_INSTANCE]['type']}">
-        <select class="input-xlarge" title="Choose instance type, when you want to request spot instance." name="spot_instance_type" ng-change="changeFormData(currentColumn, 'type')" ng-model="formElements[REQUEST_SPOT_INSTANCE]['type']">
+      <div class="control-group" ng-class="{error: !formElements[REQUEST_SPOT_INSTANCE]['spot_instance_type']}">
+        <select class="input-xlarge" title="Choose instance type, when you want to request spot instance." name="spot_instance_type" ng-change="changeFormData(currentColumn, 'spot_instance_type')" ng-model="formElements[REQUEST_SPOT_INSTANCE]['spot_instance_type']">
           <option value="" selected>--- select type ---</option>
           <option ng-repeat="type in types" value="{{type}}">{{ type }}</option>
         </select>&nbsp;<i class="icon-question-sign" title="Choose instance type, when you want to request spot instance." />
-        <span ng-show="!formElements[REQUEST_SPOT_INSTANCE]['type']" class="help-inline">required</span>
+        <span ng-show="!formElements[REQUEST_SPOT_INSTANCE]['spot_instance_type']" class="help-inline">required</span>
       </div>
       </div>
   </div>
