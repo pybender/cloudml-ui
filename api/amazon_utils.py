@@ -81,7 +81,6 @@ class AmazonS3Helper(object):
 
     def save_gz_file(self, name, filename, meta={}):  # pragma: no cover
         import cStringIO
-        import gzip
 
         headers = {
             'Content-Type': 'application/octet-stream',
@@ -93,7 +92,6 @@ class AmazonS3Helper(object):
             headers=headers
         )
         stream = cStringIO.StringIO()
-        compressor = gzip.GzipFile(fileobj=stream, mode='w')
 
         def upload_part(part_count=[0]):
             part_count[0] += 1
@@ -102,19 +100,18 @@ class AmazonS3Helper(object):
             stream.seek(0)
             stream.truncate()
 
-        with gzip.open(filename, 'r') as input_file:
+        with open(filename, 'r') as input_file:
             while True:
                 chunk = input_file.read(
                     app.config.get('MULTIPART_UPLOAD_CHUNK_SIZE'))
                 if not chunk:
-                    compressor.close()
                     upload_part()
                     logging.info('Uploaded parts: {0!s}'.format(
                         [(part.part_number, part.size) for part in mpu]))
                     mpu.complete_upload()
                     break
-                compressor.write(chunk)
-                if stream.tell() > 10 << 20:
+                stream.write(chunk)
+                if input_file.tell() > 10 << 20:
                     upload_part()
 
     def save_key(self, name, filename, meta={}, compressed=True):
