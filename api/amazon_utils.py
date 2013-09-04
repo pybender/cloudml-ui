@@ -95,24 +95,25 @@ class AmazonS3Helper(object):
         stream = cStringIO.StringIO()
         compressor = gzip.GzipFile(fileobj=stream, mode='w')
 
-        def uploadPart(partCount=[0]):
-            partCount[0] += 1
+        def upload_part(part_count=[0]):
+            part_count[0] += 1
             stream.seek(0)
-            mpu.upload_part_from_file(stream, partCount[0])
+            mpu.upload_part_from_file(stream, part_count[0])
             stream.seek(0)
             stream.truncate()
 
-        with gzip.open(filename, 'r') as inputFile:
+        with gzip.open(filename, 'r') as input_file:
             while True:
-                chunk = inputFile.read(8192)
+                chunk = input_file.read(
+                    app.config.get('MULTIPART_UPLOAD_CHUNK_SIZE'))
                 if not chunk:
                     compressor.close()
-                    uploadPart()
+                    upload_part()
                     mpu.complete_upload()
                     break
                 compressor.write(chunk)
                 if stream.tell() > 10 << 20:
-                    uploadPart()
+                    upload_part()
 
     def save_key(self, name, filename, meta={}, compressed=True):
         key = Key(self.bucket)
