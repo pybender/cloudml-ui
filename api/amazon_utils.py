@@ -109,6 +109,8 @@ class AmazonS3Helper(object):
                 if not chunk:
                     compressor.close()
                     upload_part()
+                    logging.info('Uploaded parts: {0!s}'.format(
+                        [(part.part_number, part.size) for part in mpu]))
                     mpu.complete_upload()
                     break
                 compressor.write(chunk)
