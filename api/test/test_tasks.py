@@ -1,3 +1,5 @@
+# -*- coding: utf8 -*-
+
 from api.tasks import InvalidOperationError
 import os
 from bson import ObjectId
@@ -117,6 +119,8 @@ class TestTasksTests(BaseTestCase):
         import scipy
         from api.tasks import run_test
 
+        _fake_raw_data = [{'data': 'some-data-here'}] * 100
+
         def _fake_test(self, *args, **kwargs):
             class MetricsMock(MagicMock):
                 accuracy = 1.0
@@ -132,7 +136,7 @@ class TestTasksTests(BaseTestCase):
 
             _fake_test.called = True
 
-            self._raw_data = [{'data': 'some-data-here'}] * 100
+            self._raw_data = _fake_raw_data
 
             metrics_mock = MetricsMock()
             preds = Mock()
@@ -216,6 +220,21 @@ class TestTasksTests(BaseTestCase):
             model.save()
             self.assertRaises(InvalidOperationError, run_test,
                               [self.dataset._id, ], self.test._id)
+
+            # Unicode encoding test
+            model.status = model.STATUS_TRAINED
+            model.save()
+            unicode_string = u'Привет!'
+            for row in _fake_raw_data:
+                row['opening_id'] = row['opening_title'] = unicode_string
+            self.db.TestExample.collection.remove(
+                {'test_id': str(self.test2._id)})
+            result = run_test([self.dataset._id, ], self.test2._id)
+            self.assertEquals(result, 'Test completed')
+            example = self.db.TestExample.find_one(
+                {'test_id': str(self.test2._id)})
+            self.assertEquals(example.id, unicode_string)
+            self.assertEquals(example.name, unicode_string)
 
 
     @mock_s3

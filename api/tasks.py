@@ -434,8 +434,8 @@ def run_test(dataset_ids, test_id):
         name = 'Test_raw_data-{0!s}.dat'.format(str(test._id))
         filename = os.path.join(path, name)
         from sys import getsizeof
-        size_of_examle = getsizeof(raw_data[0])
-        logging.info('Size of example %f' % size_of_examle)
+        size_of_example = getsizeof(raw_data[0])
+        logging.info('Size of example %f' % size_of_example)
         logging.info('Storing examples to mongo')
 
         res = []
@@ -474,8 +474,19 @@ def run_test(dataset_ids, test_id):
                     example['on_s3'] = False
 
                 example['vect_data'] = vectorized_data.tolist()[0]
-                example['id'] = str(new_row.get(model.example_id, '-1'))
-                example['name'] = str(new_row.get(model.example_label, 'noname'))
+
+                example_id = new_row.get(model.example_id, '-1')
+                try:
+                    example['id'] = str(example_id)
+                except UnicodeEncodeError:
+                    example['id'] = example_id.encode('utf-8')
+
+                example_name = new_row.get(model.example_label, 'noname')
+                try:
+                    example['name'] = str(example_name)
+                except UnicodeEncodeError:
+                    example['name'] = example_name.encode('utf-8')
+
                 example['label'] = str(label)
                 example['pred_label'] = str(pred)
                 example['prob'] = prob.tolist()

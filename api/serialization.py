@@ -12,16 +12,19 @@ def encode_model(obj):
         out = encode_model(dict(obj))
     elif isinstance(obj, mongokit.cursor.Cursor):
         out = [encode_model(item) for item in obj]
-    elif isinstance(obj, (list)):
+    elif isinstance(obj, list):
         out = [encode_model(item) for item in obj]
-    elif isinstance(obj, (dict)):
+    elif isinstance(obj, dict):
         out = dict([(k, encode_model(v)) for (k, v) in obj.items()])
     elif isinstance(obj, datetime.datetime):
         out = str(obj)
     elif isinstance(obj, ObjectId):
         out = str(obj)
     else:
-        out = str(obj)
+        try:
+            out = str(obj)
+        except UnicodeEncodeError:
+            out = obj.encode('utf-8')
     return out
 
 
