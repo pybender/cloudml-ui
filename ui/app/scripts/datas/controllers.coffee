@@ -16,6 +16,8 @@ angular.module('app.datas.controllers', ['app.config', ])
   $scope.simple_filters = {} # Filters by label and pred_label
   $scope.data_filters = [] # Filters by data_input.* fields
   $scope.loading_state = false
+  $scope.sort_by = 'id'
+  $scope.asc_order = true
 
   $scope.init = (test, extra_params={'action': 'examples:list'}) ->
     $scope.extra_params = extra_params
@@ -45,13 +47,25 @@ angular.module('app.datas.controllers', ['app.config', ])
     (opts) ->
       filter_opts = opts.filter_opts
       delete opts.filter_opts
-      show = 'id,name,label,pred_label,title, probs'
+      show = 'id,name,label,pred_label,title,prob'
       opts = _.extend({show: show}, opts, filter_opts)
       $scope.loading_state = true
+      opts.sort_by = $scope.sort_by
+      opts.order = if $scope.asc_order then 'asc' else 'desc'
       Data.$loadAll($scope.test.model_id, $scope.test._id, opts).then((resp) ->
         $scope.loading_state = false
         return resp
       )
+
+  $scope.sort = (sort_by) ->
+    if $scope.sort_by == sort_by
+      # Only change ordering
+      $scope.asc_order = !$scope.asc_order
+    else
+      # Change sort by field
+      $scope.asc_order = true
+      $scope.sort_by = sort_by
+    @load()
 
   $scope.addFilter = () ->
     $scope.data_filters.push({name: '', value: ''})
