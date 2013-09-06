@@ -264,8 +264,10 @@ def train_model(dataset_ids, model_id, user_id):
         train_iter = _chain_datasets(datasets)
 
         from memory_profiler import memory_usage
-        mem_usage = memory_usage((trainer.train,
-                                  (train_iter,)), interval=0)
+        #mem_usage = memory_usage((trainer.train,
+        #                          (train_iter,)), interval=0)
+        trainer.train(train_iter)
+        mem_usage = memory_usage(-1, interval=0, timeout=None)
         trainer.clear_temp_data()
 
         model.status = model.STATUS_TRAINED
