@@ -92,11 +92,16 @@ class AmazonS3Helper(object):
             headers=headers
         )
         stream = cStringIO.StringIO()
+        part_count = [0]
 
-        def upload_part(part_count=[0]):
+        def progress(x,y):
+            if y > 0:
+                logging.debug("Part %d: %0.2f%%" % (part_count[0], 100.*x/y))
+
+        def upload_part(part_count):
             part_count[0] += 1
             stream.seek(0)
-            mpu.upload_part_from_file(stream, part_count[0])
+            mpu.upload_part_from_file(stream, part_count[0], cb=progress)
             stream.seek(0)
             stream.truncate()
 
@@ -104,15 +109,15 @@ class AmazonS3Helper(object):
             while True:
                 chunk = input_file.read(
                     app.config.get('MULTIPART_UPLOAD_CHUNK_SIZE'))
-                if not chunk:
-                    upload_part()
+                if len(chunk) == 0:
+                    upload_part(part_count)
                     logging.info('Uploaded parts: {0!s}'.format(
                         [(part.part_number, part.size) for part in mpu]))
                     mpu.complete_upload()
                     break
                 stream.write(chunk)
                 if input_file.tell() > 10 << 20:
-                    upload_part()
+                    upload_part(part_count)
 
     def save_key(self, name, filename, meta={}, compressed=True):
         key = Key(self.bucket)

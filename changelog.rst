@@ -4,6 +4,25 @@ Changelog
 =========
 
 
+Relese 2013-09-09
+-----------------
+* Bug - Fixed dataset name editing
+* Bug - Remove links to dataset when deleting
+* Task - Added manual upload dataset to s3
+* Task - Added multipart upload dataset to s3
+* Task - Improve train dialog
+* Task - Tests improvements
+* Taks - Adding dashboard page and API for getting some stat data
+* Taks - Humanize time format
+* Feature - Adding filtering to models list
+* Feature - Added using exsiting file datset instead download from s3
+* Feature - Generating download from s3 dataset url only when user clicks download btn
+* Support - Added generating xunit report
+* Support - Celery version updated
+* Support - Added coverage report command
+* Support - Documentation updated
+
+
 Relese 2013-08-16
 -----------------
 * Bug - Fixed running test with importing dataset
@@ -14,18 +33,18 @@ Relese 2013-08-16
 
 Relese 2013-08-13
 -----------------
-* Feature - Add oDesk auth
-* Task - Store test examples to s3 the default only for very big datasets
 * Bug - Fixed storing examples to s3
+* Task - Store test examples to s3 the default only for very big datasets
 * Taks - Added select for 'Examples label field name' and
 'Examples id field name' fields on model details page
+* Feature - Add oDesk auth
 
 
 Relese 2013-08-01
 -----------------
 * Bug - Fixed upload model
-* Feature - Added log levels filter
 * Task - Store TestExamples on s3
+* Feature - Added log levels filter
 
 
 Relese 2013-07-22

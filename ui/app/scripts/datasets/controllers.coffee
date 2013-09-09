@@ -63,7 +63,7 @@ filesize,records_count,time,created_by,updated_by'
         ), $scope.setError)
 
     $scope.reupload = () ->
-      if $scope.ds.on_s3
+      if !$scope.ds.on_s3
         $scope.ds.$reupload()
 ])
 

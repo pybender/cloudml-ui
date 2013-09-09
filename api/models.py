@@ -183,6 +183,7 @@ class DataSet(BaseDocument):
     LOG_TYPE = 'importdata_log'
 
     STATUS_IMPORTING = 'Importing'
+    STATUS_UPLOADING = 'Uploading'
     STATUS_IMPORTED = 'Imported'
     STATUS_ERROR = 'Error'
 
