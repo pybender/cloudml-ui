@@ -79,33 +79,45 @@ class AmazonS3Helper(object):
                 logging.error('Got error when getting data from s3')
                 raise exc
 
-    # TODO: unused code
-    def save_gz_file(self, key, filename, meta, suffix=''):  # pragma: no cover
+    def save_gz_file(self, name, filename, meta={}):  # pragma: no cover
         import cStringIO
-        import gzip
-        key += suffix
-        mpu = self.bucket.initiate_multipart_upload(key)
-        stream = cStringIO.StringIO()
-        compressor = gzip.GzipFile(fileobj=stream, mode='w')
 
-        def uploadPart(partCount=[0]):
-            partCount[0] += 1
+        headers = {
+            'Content-Type': 'application/octet-stream',
+            'Content-Encoding': 'gzip'
+        }
+        mpu = self.bucket.initiate_multipart_upload(
+            name,
+            metadata=meta,
+            headers=headers
+        )
+        stream = cStringIO.StringIO()
+        part_count = [0]
+
+        def progress(x,y):
+            if y > 0:
+                logging.debug("Part %d: %0.2f%%" % (part_count[0], 100.*x/y))
+
+        def upload_part(part_count):
+            part_count[0] += 1
             stream.seek(0)
-            mpu.upload_part_from_file(stream, partCount[0])
+            mpu.upload_part_from_file(stream, part_count[0], cb=progress)
             stream.seek(0)
             stream.truncate()
 
-        with file(filename) as inputFile:
+        with open(filename, 'r') as input_file:
             while True:
-                chunk = inputFile.read(8192)
-                if not chunk:
-                    compressor.close()
-                    uploadPart()
+                chunk = input_file.read(
+                    app.config.get('MULTIPART_UPLOAD_CHUNK_SIZE'))
+                if len(chunk) == 0:
+                    upload_part(part_count)
+                    logging.info('Uploaded parts: {0!s}'.format(
+                        [(part.part_number, part.size) for part in mpu]))
                     mpu.complete_upload()
                     break
-                compressor.write(chunk)
-                if stream.tell() > 10 << 20:
-                    uploadPart()
+                stream.write(chunk)
+                if input_file.tell() > 10 << 20:
+                    upload_part(part_count)
 
     def save_key(self, name, filename, meta={}, compressed=True):
         key = Key(self.bucket)

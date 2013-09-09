@@ -192,18 +192,23 @@ with%s compression", importhandler.name, '' if dataset.compress else 'out')
             dataset.data_fields = json.loads(row).keys()
         logging.info('Dataset fields: {0!s}'.format(dataset.data_fields))
 
+        dataset.filesize = long(os.path.getsize(dataset.filename))
+        dataset.records_count = handler.count
+        dataset.status = dataset.STATUS_UPLOADING
+        dataset.save(validate=True)
+
+
+
         logging.info('Saving file to Amazon S3')
         dataset.save_to_s3()
         logging.info('File saved to Amazon S3')
+        dataset.time = (datetime.now() - import_start_time).seconds
 
         dataset.status = dataset.STATUS_IMPORTED
         if obj:
             obj.status = obj.STATUS_IMPORTED
             obj.save()
-
-        dataset.filesize = long(os.path.getsize(dataset.filename))
-        dataset.records_count = handler.count
-        dataset.time = (datetime.now() - import_start_time).seconds
+        
 
         dataset.save(validate=True)
 
@@ -216,6 +221,39 @@ with%s compression", importhandler.name, '' if dataset.compress else 'out')
         raise
 
     logging.info("Dataset using %s imported.", importhandler.name)
+    return [dataset_id]
+
+
+@celery.task
+def upload_dataset(dataset_id):
+    """
+    Upload dataset to S3.
+    """
+    dataset = app.db.DataSet.find_one({'_id': ObjectId(dataset_id)})
+    try:
+        if not dataset:
+            raise ValueError('DataSet not found')
+        init_logger('importdata_log', obj=dataset_id)
+        logging.info('Uploading dataset %s' % dataset._id)
+
+        dataset.status = dataset.STATUS_UPLOADING
+        dataset.save(validate=True)
+
+        logging.info('Saving file to Amazon S3')
+        dataset.save_to_s3()
+        logging.info('File saved to Amazon S3')
+
+        dataset.status = dataset.STATUS_IMPORTED
+        if dataset.records_count is None:
+            dataset.records_count = 0
+        dataset.save()
+
+    except Exception, exc:
+        logging.exception('Got exception when uploading dataset')
+        dataset.set_error(exc)
+        raise
+
+    logging.info("Dataset using {0!s} uploaded.".format(dataset))
     return [dataset_id]
 
 
