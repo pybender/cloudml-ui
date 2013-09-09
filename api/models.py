@@ -183,6 +183,7 @@ class DataSet(BaseDocument):
     LOG_TYPE = 'importdata_log'
 
     STATUS_IMPORTING = 'Importing'
+    STATUS_UPLOADING = 'Uploading'
     STATUS_IMPORTED = 'Imported'
     STATUS_ERROR = 'Error'
 
@@ -257,7 +258,6 @@ class DataSet(BaseDocument):
                 return gzip.GzipFile(fileobj=stream, mode='r')
                 #data = zlib.decompress(data)
             return stream
-        
 
     def load_from_s3(self):
         helper = AmazonS3Helper()
@@ -268,10 +268,9 @@ class DataSet(BaseDocument):
                 'dataset': self.name,
                 'params': str(self.import_params)}
         helper = AmazonS3Helper()
-        helper.save_key(str(self._id), self.filename, meta)
-        #helper.save_gz_file(str(self._id), self.filename, meta)
+        # helper.save_key(str(self._id), self.filename, meta)
+        helper.save_gz_file(str(self._id), self.filename, meta)
         helper.close()
-        #logging.info("Keys in bucket: %s" % [i for i in helper.bucket.list()])
         self.on_s3 = True
         self.save()
 

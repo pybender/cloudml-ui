@@ -50,8 +50,9 @@ class TestTests(BaseTestCase):
         self.assertEquals(matrix[1], ['1', [3, 4]])
 
     @mock_s3
+    @patch('api.amazon_utils.AmazonS3Helper.save_gz_file')
     @patch('api.tasks.run_test')
-    def test_post(self, mock_run_test):
+    def test_post(self, mock_run_test, mock_multipart_upload):
         data = {'start': '2012-12-03',
                 'end': '2012-12-04',
                 'category': 'smth',

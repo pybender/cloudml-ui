@@ -315,7 +315,8 @@ aws_instance is required')
         self.assertEqual(model.train_records_count, 200)
 
     @mock_s3
-    def test_train_model_with_load_params(self):
+    @patch('api.amazon_utils.AmazonS3Helper.save_gz_file')
+    def test_train_model_with_load_params(self, mock_multipart_upload):
         data = {'aws_instance': self.INSTANCE_ID,
                 'start': '2012-12-03',
                 'end': '2012-12-04',
@@ -332,7 +333,8 @@ aws_instance is required')
         self.assertEqual(model.train_records_count, 99)
 
     @mock_s3
-    def test_retrain_model(self):
+    @patch('api.amazon_utils.AmazonS3Helper.save_gz_file')
+    def test_retrain_model(self, mock_multipart_upload):
         self.assertEquals(self.obj.status, "Trained")
         self.check_related_docs_existance(self.db.Test)
         self.check_related_docs_existance(self.db.TestExample)
