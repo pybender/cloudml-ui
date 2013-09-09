@@ -185,7 +185,8 @@ train_records_count'
 
       # instance section
       $scope.REQUEST_SPOT_INSTANCE = 'Request Spot Instance'
-      $scope.formElements[$scope.REQUEST_SPOT_INSTANCE] = {'type': false}
+      $scope.formElements[$scope.REQUEST_SPOT_INSTANCE] = \
+      {'spot_instance_type': false}
 
       $scope.EXISTED_INSTANCE = 'Existing Instance'
       $scope.formElements[$scope.EXISTED_INSTANCE] = {'aws_instance': false}

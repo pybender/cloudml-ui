@@ -128,6 +128,8 @@ class Coverage(Command):
             'cover-erase',
             'cover-html',
             'cover-package=api',
+            'with-xunit',
+            "xunit-file='{0}/report.xml'".format(output_dir),
             "cover-html-dir='{0}'".format(output_dir),
         ]
         os.system('nosetests --{0}'.format(' --'.join(args)))
