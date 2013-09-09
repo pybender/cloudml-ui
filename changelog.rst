@@ -8,6 +8,7 @@ Relese 2013-09-09
 -----------------
 * Bug - Fixed dataset name editing
 * Bug - Remove links to dataset when deleting
+* Bug - Tag's "count" field isn't updated after model was deleted
 * Task - Added manual upload dataset to s3
 * Task - Added multipart upload dataset to s3
 * Task - Improve train dialog
