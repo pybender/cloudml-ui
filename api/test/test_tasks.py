@@ -389,3 +389,20 @@ class TestTasksTests(BaseTestCase):
         mock_cancel_request_spot_instance.assert_called_with('some req id')
         model.reload()
         self.assertEquals(model.status, model.STATUS_CANCELED)
+
+    @patch('api.amazon_utils.AmazonS3Helper.save_gz_file')
+    def test_upload_dataset(self, mock_multipart_upload):
+        from api.tasks import upload_dataset
+        dataset = self.db.DataSet.find_one()
+        upload_dataset(str(dataset._id))
+        mock_multipart_upload.assert_called_once_with(
+            str(dataset._id),
+            dataset.filename,
+            {
+                'params': str(dataset.import_params),
+                'handler': dataset.import_handler_id,
+                'dataset': dataset.name
+            }
+        )
+        dataset.reload()
+        self.assertEquals(dataset.status, dataset.STATUS_IMPORTED)

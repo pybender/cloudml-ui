@@ -27,7 +27,8 @@ class DataSetsTests(BaseTestCase):
         self.obj = self.Model.find_one({'_id': ObjectId(self.DS_ID)})
 
     @mock_s3
-    def test_post(self):
+    @patch('api.amazon_utils.AmazonS3Helper.save_gz_file')
+    def test_post(self, mock_multipart_upload):
         """
         Tests loading dataset using specified import handler
         """
@@ -40,9 +41,9 @@ class DataSetsTests(BaseTestCase):
         self.assertEquals(ds.records_count, 99)
         self.assertEquals(ds.import_params, post_data)
         self.assertTrue(ds.compress)
-        self.assertIsNotNone(ds.data)
         self.assertTrue(ds.on_s3)
         self.assertEquals(ds.filename, 'test_data/%s.gz' % ds._id)
+        self.assertTrue(mock_multipart_upload.called)
 
     @patch('core.importhandler.importhandler.ImportHandler.__init__')
     def test_post_exception(self, mock_handler):
@@ -81,6 +82,28 @@ class DataSetsTests(BaseTestCase):
         self.assertEquals(data['dataset'], self.DS_ID)
         self.assertTrue(data['url'].startswith('https://'))
         self.assertTrue('s3.amazonaws.com' in data['url'])
+
+    @mock_s3
+    @patch('api.tasks.upload_dataset')
+    def test_reupload_action(self, mock_upload_dataset):
+        """
+        Tests reupload to Amazon S3.
+        """
+        url = self._get_url(id=self.obj._id, action='reupload')
+
+        resp = self.app.put(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.OK)
+        self.assertFalse(mock_upload_dataset.delay.called)
+
+        self.obj.status = self.obj.STATUS_ERROR
+        self.obj.save()
+
+        resp = self.app.put(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.OK)
+        data = json.loads(resp.data)
+        self.assertEquals(data['dataset']['_id'], self.DS_ID)
+        self.assertEquals(data['dataset']['status'], self.obj.STATUS_IMPORTING)
+        mock_upload_dataset.delay.assert_called_once_with(self.DS_ID)
 
     def test_list(self):
         self._check_list(show='name,status')

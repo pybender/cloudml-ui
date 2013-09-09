@@ -114,15 +114,19 @@ updated_on,updated_by,comparable'
         )
 
     $scope.goTests = () ->
-      Test.$loadAll(
-        $scope.model._id,
-        show: 'name,created_on,status,parameters,accuracy,examples_count,
-created_by'
-      ).then ((opts) ->
-        $scope.tests = opts.objects
-      ), ((opts) ->
-        $scope.setError(opts, 'loading tests')
-      )
+      setTimeout(() ->
+          $scope.$broadcast('loadTest', true)
+          $scope.LOADED_SECTIONS.push 'test'
+        , 100)
+#      Test.$loadAll(
+#        $scope.model._id,
+#        show: 'name,created_on,status,parameters,accuracy,examples_count,
+#created_by'
+#      ).then ((opts) ->
+#        $scope.tests = opts.objects
+#      ), ((opts) ->
+#        $scope.setError(opts, 'loading tests')
+#      )
 
     $scope.goSection = (section) ->
       name = section[0]
