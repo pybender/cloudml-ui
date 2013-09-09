@@ -130,6 +130,22 @@ class Models(BaseResource):
             model['data_fields'] = model.dataset.data_fields\
                 if model.dataset else []
 
+        if fields and 'test_handler_fields' in fields:
+            # TODO: check type in cloudml project
+            # to avoid dump/load data here
+            data = json.dumps(model.test_import_handler.data)
+            plan = ExtractionPlan(data, is_file=False)
+            
+            # TODO: Move to ExtractionPlan (fill in validate_features mthd)
+            test_handler_fields = []
+            for query in plan.queries:
+                items = query['items']
+                for item in items:
+                    features = item['target-features']
+                    for feature in features:
+                        test_handler_fields.append(feature['name'].replace('.', '->'))
+            model['test_handler_fields'] = test_handler_fields
+
         return model
 
     def _prepare_filter_params(self, params):

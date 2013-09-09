@@ -11,22 +11,41 @@
 
     <form name="Form" class="form-horizontal" ng-show="handler">
       <h4 class="text-center">Choose way of getting testing data</h4>
-      <ng-include src="'/partials/datasets/dataset_fields.html'"></ng-include>
+      <div class="well">
+        <ng-include src="'/partials/datasets/dataset_fields.html'"></ng-include>
+      </div>
 
       <h4 class="text-center">then choose amazon instance</h4>
-      <ng-include src="'/partials/aws_instances/instance_fields.html'"></ng-include>
+      <div class="well">
+        <ng-include src="'/partials/aws_instances/instance_fields.html'"></ng-include>
+      </div>
 
       <h4 class="text-center">Settings</h4>
-      <div>
+      <div class="well">
         <div ng-class="{error: !formElements[SETTINGS]['examples_storage']}" class="control-group">
-          <select class="input-xlarge" name="examples_storage" ng-change="changeFormData(SETTINGS, 'examples_storage')" ng-model="formElements[SETTINGS]['examples_storage']">
-            <option value="">--- select examples storage ---</option>
-            <option value="Amazon S3">Amazon S3</option>
-            <option value="MongoDB">MongoDB</option>
-            <option value="Not save">Don't save</option>
-          </select>&nbsp;<i class="icon-question-sign" title="Choose test examples placement" />
-          <span ng-show="!formElements[SETTINGS]['examples_storage']" class="help-inline">required</span>
+          <label class="control-label" style="text-align: left;">Examples Placement: </label>
+          <div class="controls">
+            <select class="input-xlarge" name="examples_storage" ng-change="changeFormData(SETTINGS, 'examples_storage')" ng-model="formElements[SETTINGS]['examples_storage']">
+              <option value="">--- select examples storage ---</option>
+              <option value="Amazon S3">Amazon S3</option>
+              <option value="MongoDB">MongoDB</option>
+              <option value="Not save">Don't save</option>
+            </select>&nbsp;<i class="icon-question-sign" title="Choose test examples placement" />
+            <span ng-show="!formElements[SETTINGS]['examples_storage']" class="help-inline">required</span>
+          </div>
         </div>
+        <p>
+          <a ng-click="show_advanced_settings=!show_advanced_settings">
+            <span ng-hide="show_advanced_settings">Show</span><span ng-show="show_advanced_settings">Hide</span> advanced settings</a>
+          <div ng-show="show_advanced_settings" ng-class="{error: !formElements[SETTINGS]['examples_fields']}" class="control-group">
+            <label>Examples Fields: </label>
+            <div>
+              <input class="input-xxlarge" type="text" ui-select2="select2params" ng-model="formElements[SETTINGS]['examples_fields']" data-placeholder="Select fields" />
+              &nbsp;<i class="icon-question-sign" title="Choose test examples fields list" />
+              <span ng-show="!formElements[SETTINGS]['examples_fields']" class="help-inline">required</span>
+            </div>
+          </div>
+        </p>
       </div>
     </form>
   </div>

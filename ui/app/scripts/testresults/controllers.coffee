@@ -42,14 +42,26 @@ created_by'
     # Form elements for each tab in the section with values
     $scope.formElements = {}
     $scope.SETTINGS = 'Settings'
-    $scope.formElements[$scope.SETTINGS] = {'examples_storage': 'Amazon S3'}
-
     # Columns by section
     $scope.currentColumns = {
       dataset: null
       instance: null
       settings: $scope.SETTINGS
     }
+
+    # Choose examples fields select options
+    test_handler_fields = {results: []}
+    angular.forEach($scope.model.test_handler_fields, (item, key) ->
+      test_handler_fields.results.push({text: item, id: item})
+    )
+    $scope.select2params = {
+      multiple: true,
+      simple_tags: true,
+      tags: $scope.model.test_handler_fields
+    }
+    $scope.formElements[$scope.SETTINGS] = {
+      'examples_fields': $scope.model.test_handler_fields,
+      'examples_storage': 'Amazon S3'}
 
     $scope.start = (result) ->
       data = $scope.getData()
@@ -61,12 +73,14 @@ created_by'
         $scope.setError(opts, 'running test')
       )
 
-    # TODO: Remove code duplication
     $scope.getData = () ->
       data = {}
       for section, tab of $scope.currentColumns
         for key, val of $scope.formElements[tab]
-          if val then data[key] = val
+          if val
+            if key == 'examples_fields'
+              val = (field['text'] for field in val)
+            data[key] = val
       return data
 ])
 

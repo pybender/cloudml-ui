@@ -12,10 +12,14 @@
 
     <form name="Form" class="form-horizontal" ng-show="handler">
       <h4 class="text-center">Choose way of getting training data</h4>
-      <ng-include src="'/partials/datasets/dataset_fields.html'"></ng-include>
+      <div class="well">
+        <ng-include src="'/partials/datasets/dataset_fields.html'"></ng-include>
+      </div>
 
       <h4 class="text-center">then choose amazon instance</h4>
-      <ng-include src="'/partials/aws_instances/instance_fields.html'"></ng-include>
+      <div class="well">
+        <ng-include src="'/partials/aws_instances/instance_fields.html'"></ng-include>
+      </div>
     </form>
   </div>
 
