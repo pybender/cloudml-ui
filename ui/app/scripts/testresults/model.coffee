@@ -66,7 +66,8 @@ angular.module('app.testresults.model', ['app.config'])
 
         @$make_request(@BASE_API_URL, {}, 'POST', data)
 
-      @$loadAll: (model_id, opts) ->
+      @$loadAll: (opts) ->
+        model_id = opts.model_id
         if not model_id
           throw new Error "Model is required to load tests"
 

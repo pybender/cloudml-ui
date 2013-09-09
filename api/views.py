@@ -391,6 +391,7 @@ class DataSetResource(BaseResource):
     OBJECT_NAME = 'dataset'
     FILTER_PARAMS = (('status', str), )
     GET_ACTIONS = ('generate_url', )
+    PUT_ACTIONS = ('reupload', )
     put_form = DataSetEditForm
 
     def _get_generate_url_action(self, **kwargs):
@@ -425,6 +426,16 @@ class DataSetResource(BaseResource):
         import_data.delay(str(dataset._id))
         return self._render(self._get_save_response_context(dataset),
                             code=201)
+
+    def _put_reupload_action(self, **kwargs):
+        from api.tasks import upload_dataset
+        dataset = self._get_details_query(None, None, **kwargs)
+        if dataset.status == dataset.STATUS_ERROR:
+            dataset.status = dataset.STATUS_IMPORTING
+            dataset.save()
+            upload_dataset.delay(str(dataset._id))
+        return self._render(self._get_save_response_context(
+            dataset, extra_fields=['status']))
 
 api.add_resource(DataSetResource, '/cloudml/importhandlers/\
 <regex("[\w\.]*"):import_handler_id>/datasets/')

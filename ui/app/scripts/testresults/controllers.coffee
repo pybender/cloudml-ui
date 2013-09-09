@@ -4,6 +4,29 @@
 
 angular.module('app.testresults.controllers', ['app.config', ])
 
+.controller('TestListCtrl', [
+  '$scope'
+  '$dialog'
+  '$rootScope'
+  'TestResult'
+
+  ($scope, $dialog, $rootScope, TestResult) ->
+    $scope.MODEL = TestResult
+    $scope.FIELDS = 'name,created_on,status,parameters,accuracy,examples_count,
+created_by'
+    $scope.ACTION = 'loading tests'
+
+    $scope.$on('loadTest', (event, opts) ->
+      setTimeout(() ->
+        $scope.$emit('BaseListCtrl:start:load', 'testresult')
+      , 100)
+    )
+
+    $scope.init = (model) ->
+      $scope.model = model
+      $scope.kwargs = {'model_id': model._id}
+])
+
 .controller('TestDialogController', [
   '$scope'
   'dialog'
@@ -63,7 +86,9 @@ angular.module('app.testresults.controllers', ['app.config', ])
     $scope.delete = (result) ->
       $scope.test.$delete().then (() ->
         $scope.close()
-        location.search('action=test:list&any=' + Math.random())
+#        location.search('action=test:list&any=' + Math.random())
+        $scope.$emit('modelDeleted', [$scope.model])
+        $scope.$broadcast('modelDeleted', [$scope.model])
       ), ((opts) ->
         $scope.setError(opts, 'deleting test')
       )
