@@ -486,14 +486,14 @@ def run_test(dataset_ids, test_id):
                             raw_data,
                             metrics._labels,
                             metrics._preds,
-                            metrics._probs
-                            #metrics._true_data.todense()
+                            metrics._probs,
+                            metrics._true_data.todense()
                             )
             logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
-            for n, row, label, pred, prob in examples:
+            for n, row, label, pred, prob, vectorized_data in examples:
                 #logging.info("vect %s" % vectorized_data.tolist()[0])
                 #logging.info("row %s" % metrics._true_data.getrow(n).todense().tolist()[0])
-                vectorized_data = metrics._true_data.getrow(n).todense()
+                #vectorized_data = metrics._true_data.getrow(n).todense()
                 if n % (all_count / 10) == 0:
                     logging.info('Processed %s rows so far' % n)
                 new_row = {}
@@ -753,12 +753,16 @@ def get_csv_results(model_id, test_id, fields):
 def decode(row):
     from decimal import Decimal
     for key, val in row.iteritems():
-        try:
-            if isinstance(val, basestring):
-                row[key] = val.encode('ascii', 'ignore')
-            if isinstance(val, Decimal):
+        if isinstance(val, Decimal):
                 row[key] = val.to_eng_string()
-        except UnicodeDecodeError:
-            #logging.error('Error while decoding %s: %s', val, exc)
-            row[key] = ""
+        
+        if isinstance(val, basestring):
+            try:
+                #row[key] = val.encode('ascii', 'ignore')
+                row[key] = str(val)
+            # except UnicodeDecodeError:
+            #     #logging.error('Error while decoding %s: %s', val, exc)
+            #     row[key] = ""
+            except UnicodeEncodeError:
+                row[key] =val.encode('utf-8')
     return row
