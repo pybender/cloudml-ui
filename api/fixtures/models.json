@@ -20,7 +20,7 @@
             "train_import_handler": {"$ref": "ImportHandler", "$id": "5170dd3a106a6c1631000000"},
             "test_import_handler": {"$ref": "ImportHandler", "$id": "5170dd3a106a6c1631000000"},
             "weights_synchronized": false,
-            "tags": ["bestmatch"],
+            "tags": ["tag2"],
         "features": {
   "schema-name": "bestmatch",
   "classifier": {
@@ -224,7 +224,8 @@
             "updated_on": "2013-04-19 14:37:23.145000",
             "name": "OtherModel",
             "comparable": true,
-            "labels": ["0", "1"]
+            "labels": ["0", "1"],
+            "tags": ["tag", "tag2"]
         },
         {
             "status": "New", 
@@ -232,7 +233,8 @@
             "updated_on": "2013-04-19 14:37:23.145000",
             "name": "NewModel",
             "comparable": false,
-            "labels": ["0", "1"]
+            "labels": ["0", "1"],
+            "tags": ["tag", "tag2"]
         }
     ]
 }

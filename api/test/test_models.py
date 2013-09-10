@@ -185,7 +185,7 @@ schema-name is missing')
         self.assertEquals(self.obj.tags, ['tag'])
 
         tag = self.db.Tag.find_one({'text': 'tag'})
-        self.assertEquals(tag.count, 8)
+        self.assertEquals(tag.count, 3)
 
         data = {'tags': json.dumps(['tag', 'tag2'])}
         url = self._get_url(id=self.obj._id)
@@ -195,10 +195,10 @@ schema-name is missing')
         self.assertEquals(self.obj.tags, ['tag', 'tag2'])
 
         tag = self.db.Tag.find_one({'text': 'tag'})
-        self.assertEquals(tag.count, 8)
+        self.assertEquals(tag.count, 3)
 
         tag2 = self.db.Tag.find_one({'text': 'tag2'})
-        self.assertEquals(tag2.count, 4)
+        self.assertEquals(tag2.count, 3)
 
         data = {'tags': json.dumps(['some_new'])}
         url = self._get_url(id=self.obj._id)
@@ -208,10 +208,10 @@ schema-name is missing')
         self.assertEquals(self.obj.tags, ['some_new'])
 
         tag = self.db.Tag.find_one({'text': 'tag'})
-        self.assertEquals(tag.count, 7)
+        self.assertEquals(tag.count, 2)
 
         tag2 = self.db.Tag.find_one({'text': 'tag2'})
-        self.assertEquals(tag2.count, 3)
+        self.assertEquals(tag2.count, 2)
 
         tag3 = self.db.Tag.find_one({'text': 'some_new'})
         self.assertEquals(tag3.count, 1)
@@ -315,7 +315,8 @@ aws_instance is required')
         self.assertEqual(model.train_records_count, 200)
 
     @mock_s3
-    def test_train_model_with_load_params(self):
+    @patch('api.amazon_utils.AmazonS3Helper.save_gz_file')
+    def test_train_model_with_load_params(self, mock_multipart_upload):
         data = {'aws_instance': self.INSTANCE_ID,
                 'start': '2012-12-03',
                 'end': '2012-12-04',
@@ -332,7 +333,8 @@ aws_instance is required')
         self.assertEqual(model.train_records_count, 99)
 
     @mock_s3
-    def test_retrain_model(self):
+    @patch('api.amazon_utils.AmazonS3Helper.save_gz_file')
+    def test_retrain_model(self, mock_multipart_upload):
         self.assertEquals(self.obj.status, "Trained")
         self.check_related_docs_existance(self.db.Test)
         self.check_related_docs_existance(self.db.TestExample)
@@ -370,6 +372,17 @@ removed after retrain model')
         self.check_related_docs_existance(self.db.Test)
         self.check_related_docs_existance(self.db.TestExample)
 
+        # Set up the tags
+        data = {'tags': json.dumps(['tag2', 'some_new'])}
+        url = self._get_url(id=self.obj._id)
+        self.app.put(url, data=data, headers=HTTP_HEADERS)
+        self.obj.reload()
+
+        tag2 = self.db.Tag.find_one({'text': 'tag2'})
+        tag3 = self.db.Tag.find_one({'text': 'some_new'})
+        self.assertEquals(tag2.count, 3)
+        self.assertEquals(tag3.count, 1)
+
         self._check_delete()
 
         # Check wheither tests and examples was deleted
@@ -385,6 +398,11 @@ when remove model')
                         "All tests was deleted!")
         self.assertTrue(self.db.TestExample.find().count(),
                         "All examples was deleted!")
+
+        tag2.reload()
+        self.assertEquals(tag2.count, 2)  # It's updated
+        tag3 = self.db.Tag.find_one({'text': 'some_new'})
+        self.assertIsNone(tag3)  # Unused tag is removed
 
     @patch('api.tasks.cancel_request_spot_instance')
     def test_cancel_request_instance(self, mock_task):
