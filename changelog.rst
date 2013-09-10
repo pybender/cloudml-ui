@@ -6,6 +6,7 @@ Changelog
 
 Relese 2013-09-09
 -----------------
+* Bug - UnicodeEncodeError during run_test
 * Bug - Tests list should be updated after deleting test
 * Bug - Fixed dataset name editing
 * Bug - Remove links to dataset when deleting

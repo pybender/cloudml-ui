@@ -497,6 +497,7 @@ def run_test(dataset_ids, test_id):
                 if n % (all_count / 10) == 0:
                     logging.info('Processed %s rows so far' % n)
                 new_row = {}
+                row = decode(row)
                 for key, val in row.iteritems():
                     new_key = key.replace('.', '->')
                     new_row[new_key] = val
@@ -618,7 +619,6 @@ def store_examples(test_id, params):
             row = fp.readline()
             row = json.loads(row)
 
-            row = decode(row)
 
             example = app.db.TestExample.find_one({'_id': ObjectId(example_id)})
             if not example:
