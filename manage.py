@@ -124,11 +124,15 @@ class Coverage(Command):
         #     '--cover-html-dir={}'.format(output_dir),
         #     '--cover-package=api'])
         args = [
-            'with-coverage',
+            #'with-coverage',
+            'with-xcoverage',
             'cover-erase',
             'cover-html',
             'cover-package=api',
+            'with-xunit',
+            "xunit-file='{0}/report.xml'".format(output_dir),
             "cover-html-dir='{0}'".format(output_dir),
+            "xcoverage-file='{0}/coverage.xml'".format(output_dir),
         ]
         os.system('nosetests --{0}'.format(' --'.join(args)))
         report_path = 'file://' + os.path.join(

@@ -67,5 +67,11 @@ angular.module('app.datasets.model', ['app.config'])
           }
         @$make_all_request(DataSet.$get_api_url(handler_id), resolver, opts)
 
+      $reupload: =>
+        url = "#{@BASE_API_URL}#{@_id}/action/reupload/"
+        @$make_request(url, {}, "PUT", {}).then(
+          (resp) =>
+            @status = resp.data.dataset.status)
+
     return DataSet
 ])

@@ -1,3 +1,5 @@
+# -*- coding: utf8 -*-
+
 from api.tasks import InvalidOperationError
 import os
 from bson import ObjectId
@@ -117,6 +119,8 @@ class TestTasksTests(BaseTestCase):
         import scipy
         from api.tasks import run_test
 
+        _fake_raw_data = [{'data': 'some-data-here'}] * 100
+
         def _fake_test(self, *args, **kwargs):
             class MetricsMock(MagicMock):
                 accuracy = 1.0
@@ -132,7 +136,7 @@ class TestTasksTests(BaseTestCase):
 
             _fake_test.called = True
 
-            self._raw_data = [{'data': 'some-data-here'}] * 100
+            self._raw_data = _fake_raw_data
 
             metrics_mock = MetricsMock()
             preds = Mock()
@@ -216,6 +220,22 @@ class TestTasksTests(BaseTestCase):
             model.save()
             self.assertRaises(InvalidOperationError, run_test,
                               [self.dataset._id, ], self.test._id)
+
+
+            # Unicode encoding test
+            model.status = model.STATUS_TRAINED
+            model.save()
+            unicode_string = u'Привет!'
+            for row in _fake_raw_data:
+                row['opening_id'] = row['opening_title'] = unicode_string
+            self.db.TestExample.collection.remove(
+                {'test_id': str(self.test2._id)})
+            result = run_test([self.dataset._id, ], self.test2._id)
+            self.assertEquals(result, 'Test completed')
+            example = self.db.TestExample.find_one(
+                {'test_id': str(self.test2._id)})
+            self.assertEquals(example.id, unicode_string)
+            self.assertEquals(example.name, unicode_string)
 
     @mock_s3
     def test_store_examples(self):
@@ -369,3 +389,20 @@ class TestTasksTests(BaseTestCase):
         mock_cancel_request_spot_instance.assert_called_with('some req id')
         model.reload()
         self.assertEquals(model.status, model.STATUS_CANCELED)
+
+    @patch('api.amazon_utils.AmazonS3Helper.save_gz_file')
+    def test_upload_dataset(self, mock_multipart_upload):
+        from api.tasks import upload_dataset
+        dataset = self.db.DataSet.find_one()
+        upload_dataset(str(dataset._id))
+        mock_multipart_upload.assert_called_once_with(
+            str(dataset._id),
+            dataset.filename,
+            {
+                'params': str(dataset.import_params),
+                'handler': dataset.import_handler_id,
+                'dataset': dataset.name
+            }
+        )
+        dataset.reload()
+        self.assertEquals(dataset.status, dataset.STATUS_IMPORTED)

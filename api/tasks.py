@@ -193,18 +193,23 @@ with%s compression", importhandler.name, '' if dataset.compress else 'out')
             dataset.data_fields = json.loads(row).keys()
         logging.info('Dataset fields: {0!s}'.format(dataset.data_fields))
 
+        dataset.filesize = long(os.path.getsize(dataset.filename))
+        dataset.records_count = handler.count
+        dataset.status = dataset.STATUS_UPLOADING
+        dataset.save(validate=True)
+
+
+
         logging.info('Saving file to Amazon S3')
         dataset.save_to_s3()
         logging.info('File saved to Amazon S3')
+        dataset.time = (datetime.now() - import_start_time).seconds
 
         dataset.status = dataset.STATUS_IMPORTED
         if obj:
             obj.status = obj.STATUS_IMPORTED
             obj.save()
-
-        dataset.filesize = long(os.path.getsize(dataset.filename))
-        dataset.records_count = handler.count
-        dataset.time = (datetime.now() - import_start_time).seconds
+        
 
         dataset.save(validate=True)
 
@@ -217,6 +222,39 @@ with%s compression", importhandler.name, '' if dataset.compress else 'out')
         raise
 
     logging.info("Dataset using %s imported.", importhandler.name)
+    return [dataset_id]
+
+
+@celery.task
+def upload_dataset(dataset_id):
+    """
+    Upload dataset to S3.
+    """
+    dataset = app.db.DataSet.find_one({'_id': ObjectId(dataset_id)})
+    try:
+        if not dataset:
+            raise ValueError('DataSet not found')
+        init_logger('importdata_log', obj=dataset_id)
+        logging.info('Uploading dataset %s' % dataset._id)
+
+        dataset.status = dataset.STATUS_UPLOADING
+        dataset.save(validate=True)
+
+        logging.info('Saving file to Amazon S3')
+        dataset.save_to_s3()
+        logging.info('File saved to Amazon S3')
+
+        dataset.status = dataset.STATUS_IMPORTED
+        if dataset.records_count is None:
+            dataset.records_count = 0
+        dataset.save()
+
+    except Exception, exc:
+        logging.exception('Got exception when uploading dataset')
+        dataset.set_error(exc)
+        raise
+
+    logging.info("Dataset using {0!s} uploaded.".format(dataset))
     return [dataset_id]
 
 
@@ -265,12 +303,15 @@ def train_model(dataset_ids, model_id, user_id):
         train_iter = _chain_datasets(datasets)
 
         from memory_profiler import memory_usage
-        mem_usage = memory_usage((trainer.train,
-                                  (train_iter,)), interval=0)
+        #mem_usage = memory_usage((trainer.train,
+        #                          (train_iter,)), interval=0)
+        trainer.train(train_iter)
+        mem_usage = memory_usage(-1, interval=0, timeout=None)
         trainer.clear_temp_data()
 
         model.status = model.STATUS_TRAINED
         model.set_trainer(trainer)
+        model.save()
         model.memory_usage['training'] = max(mem_usage)
         model.train_records_count = int(sum((
             d['records_count'] for d in app.db.DataSet.find({
@@ -436,8 +477,8 @@ def run_test(dataset_ids, test_id):
         name = 'Test_raw_data-{0!s}.dat'.format(str(test._id))
         filename = os.path.join(path, name)
         from sys import getsizeof
-        size_of_examle = getsizeof(raw_data[0])
-        logging.info('Size of example %f' % size_of_examle)
+        size_of_example = getsizeof(raw_data[0])
+        logging.info('Size of example %f' % size_of_example)
         logging.info('Storing examples to mongo')
 
         res = []
@@ -447,17 +488,18 @@ def run_test(dataset_ids, test_id):
                             raw_data,
                             metrics._labels,
                             metrics._preds,
-                            metrics._probs
-                            #metrics._true_data.todense()
+                            metrics._probs,
+                            metrics._true_data.todense()
                             )
             logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
-            for n, row, label, pred, prob in examples:
+            for n, row, label, pred, prob, vectorized_data in examples:
                 #logging.info("vect %s" % vectorized_data.tolist()[0])
                 #logging.info("row %s" % metrics._true_data.getrow(n).todense().tolist()[0])
-                vectorized_data = metrics._true_data.getrow(n).todense()
+                #vectorized_data = metrics._true_data.getrow(n).todense()
                 if n % (all_count / 10) == 0:
                     logging.info('Processed %s rows so far' % n)
                 new_row = {}
+                row = decode(row)
                 for key, val in row.iteritems():
                     new_key = key.replace('.', '->')
                     new_row[new_key] = val
@@ -476,8 +518,19 @@ def run_test(dataset_ids, test_id):
                     example['on_s3'] = False
 
                 example['vect_data'] = vectorized_data.tolist()[0]
-                example['id'] = str(new_row.get(model.example_id, '-1'))
-                example['name'] = str(new_row.get(model.example_label, 'noname'))
+
+                example_id = new_row.get(model.example_id, '-1')
+                try:
+                    example['id'] = str(example_id)
+                except UnicodeEncodeError:
+                    example['id'] = example_id.encode('utf-8')
+
+                example_name = new_row.get(model.example_label, 'noname')
+                try:
+                    example['name'] = str(example_name)
+                except UnicodeEncodeError:
+                    example['name'] = example_name.encode('utf-8')
+
                 example['label'] = str(label)
                 example['pred_label'] = str(pred)
                 example['prob'] = prob.tolist()
@@ -568,7 +621,6 @@ def store_examples(test_id, params):
             row = fp.readline()
             row = json.loads(row)
 
-            row = decode(row)
 
             example = app.db.TestExample.find_one({'_id': ObjectId(example_id)})
             if not example:
@@ -703,14 +755,18 @@ def get_csv_results(model_id, test_id, fields):
 def decode(row):
     from decimal import Decimal
     for key, val in row.iteritems():
-        try:
-            if isinstance(val, basestring):
-                row[key] = val.encode('ascii', 'ignore')
-            if isinstance(val, Decimal):
+        if isinstance(val, Decimal):
                 row[key] = val.to_eng_string()
-        except UnicodeDecodeError:
-            #logging.error('Error while decoding %s: %s', val, exc)
-            row[key] = ""
+        
+        if isinstance(val, basestring):
+            try:
+                #row[key] = val.encode('ascii', 'ignore')
+                row[key] = str(val)
+            # except UnicodeDecodeError:
+            #     #logging.error('Error while decoding %s: %s', val, exc)
+            #     row[key] = ""
+            except UnicodeEncodeError:
+                row[key] =val.encode('utf-8')
     return row
 
 

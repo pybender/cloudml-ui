@@ -190,6 +190,7 @@ class DataSet(BaseDocument):
     LOG_TYPE = 'importdata_log'
 
     STATUS_IMPORTING = 'Importing'
+    STATUS_UPLOADING = 'Uploading'
     STATUS_IMPORTED = 'Imported'
     STATUS_ERROR = 'Error'
 
@@ -265,7 +266,6 @@ class DataSet(BaseDocument):
                 return gzip.GzipFile(fileobj=stream, mode='r')
                 #data = zlib.decompress(data)
             return stream
-        
 
     def load_from_s3(self):
         helper = AmazonS3Helper()
@@ -276,10 +276,9 @@ class DataSet(BaseDocument):
                 'dataset': self.name,
                 'params': str(self.import_params)}
         helper = AmazonS3Helper()
-        helper.save_key(str(self._id), self.filename, meta)
-        #helper.save_gz_file(str(self._id), self.filename, meta)
+        # helper.save_key(str(self._id), self.filename, meta)
+        helper.save_gz_file(str(self._id), self.filename, meta)
         helper.close()
-        #logging.info("Keys in bucket: %s" % [i for i in helper.bucket.list()])
         self.on_s3 = True
         self.save()
 
@@ -342,7 +341,8 @@ class Tag(BaseDocument):
 
     @classmethod
     def update_tags_count(cls, old_list, new_list):
-        def get_or_create_tag(text, increase_count=True):
+        tags_to_update = list(set(old_list) ^ set(new_list))
+        for text in tags_to_update:
             tag = app.db.Tag.find_one({'text': text})
             if tag is None:
                 tag = app.db.Tag()
@@ -350,19 +350,13 @@ class Tag(BaseDocument):
                 tag.count = 1
                 tag.save()
             else:
-                if increase_count:
-                    tag.count += 1
+                tag.count = app.db.Model.find({
+                    'tags': text
+                }).count()
+                if tag.count == 0:
+                    tag.delete()
+                else:
                     tag.save()
-            return tag
-
-        for name in new_list:
-            tag = get_or_create_tag(name, increase_count=not name in old_list)
-
-        tags_to_decrease_count = set(old_list) - set(new_list)
-        for text in tags_to_decrease_count:
-            tag = app.db.Tag.find_one({'text': text})
-            tag.count -= 1
-            tag.save()
 
 
 @app.conn.register
@@ -499,6 +493,7 @@ class Model(BaseDocument):
         self.terminate_task()
         self.delete_metadata()
         self.collection.remove({'_id': self._id})
+        app.db.Tag.update_tags_count(self.tags, [])
 
     def set_error(self, error, commit=True):
         self.error = str(error)
