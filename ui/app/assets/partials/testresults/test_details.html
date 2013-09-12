@@ -54,13 +54,15 @@
                     Examples count: <span class="value">{{ test.examples_count }}</span>
                 </div>
                 <div>
+                    Examples placement: <span class="value">{{ test.examples_placement }}</span>
+                </div>
+                <div>
+                    Examples fields: <span class="value">
+                    <span ng-repeat="f in test.examples_fields"><span class="label">{{ f }}</span> </span></span>
+                </div>
+                <div>
                     Memory used: <span class="value">{{ test.memory_usage.testing }} Mb</span>
                 </div>
-                <div ng-show="test.created_by">
-                    Created by:
-                    <span class="value">{{ test.created_by.name }} ({{ test.created_by.uid }})</span>
-                </div>
-
                 <div ng-controller="TestExportsCtrl" ng-init="init(test)">
                     <div ng-show="exports">
                     <b>CSV Exports:</b><br>

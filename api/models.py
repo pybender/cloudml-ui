@@ -514,6 +514,13 @@ class Test(BaseDocument):
     EXPORT_STATUS_IN_PROGRESS = 'In Progress'
     EXPORT_STATUS_COMPLETED = 'Completed'
 
+    EXAMPLES_TO_AMAZON_S3 = 'Amazon S3'
+    EXAMPLES_TO_MONGO = 'MongoDB'
+    EXAMPLES_DONT_SAVE = 'Do not save'
+    EXAMPLES_STORAGE_CHOICES = (EXAMPLES_TO_AMAZON_S3,
+                                EXAMPLES_TO_MONGO,
+                                EXAMPLES_DONT_SAVE)
+
     __collection__ = 'tests'
     structure = {
         'name': basestring,
@@ -525,7 +532,11 @@ class Test(BaseDocument):
         'created_by': dict,
         'updated_on': datetime,
         'data': dict,
+
         'examples_count': int,
+        'examples_placement': basestring,
+        'examples_fields': list,
+
         'parameters': dict,
         'classes_set': list,
         'accuracy': float,
@@ -561,6 +572,18 @@ class Test(BaseDocument):
     @property
     def data_count(self):  # pragma: no cover
         return self.data.count()
+
+    @property
+    def temp_data_filename(self):
+        if not hasattr(self, '_temp_data_filename'):
+            name = 'Test_raw_data-{0!s}.dat'.format(self._id)
+            path = app.config['DATA_FOLDER']
+
+            if not exists(path):
+                makedirs(path)
+            self._temp_data_filename = os.path.join(path, name)
+
+        return self._temp_data_filename
 
     def delete(self):
         params = dict(test_name=self.name,

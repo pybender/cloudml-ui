@@ -421,6 +421,7 @@ def run_test(dataset_ids, test_id):
     })
     dataset = datasets[0]
     model = test.model
+
     try:
         if model.status != model.STATUS_TRAINED:
             raise InvalidOperationError("Train the model before")
@@ -429,11 +430,13 @@ def run_test(dataset_ids, test_id):
         test.error = ""
         test.save()
 
+        logging.info('Getting metrics and raw data')
         from memory_profiler import memory_usage
         mem_usage, result = memory_usage((Model.run_test, (model, dataset, )),
                                          interval=0, retval=True)
         metrics, raw_data = result
         test.accuracy = metrics.accuracy
+        logging.info('Accuracy: %f', test.accuracy)
         logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
         metrics_dict = metrics.get_metrics_dict()
 
@@ -468,105 +471,52 @@ def run_test(dataset_ids, test_id):
         test.memory_usage['testing'] = max(mem_usage)
         test.save()
 
-        # Caching raw data into temp file
-        path = app.config['DATA_FOLDER']
-        if not exists(path):
-            makedirs(path)
-        name = 'Test_raw_data-{0!s}.dat'.format(str(test._id))
-        filename = os.path.join(path, name)
-        from sys import getsizeof
-        size_of_examle = getsizeof(raw_data[0])
-        logging.info('Size of example %f' % size_of_examle)
-        logging.info('Storing examples to mongo')
+        logging.info('Storing test examples')
+        example_ids = []
+        examples = izip(range(len(raw_data)),
+                        raw_data,
+                        metrics._labels,
+                        metrics._preds,
+                        metrics._probs)
+        logging.info("Memory usage: %f",
+                     memory_usage(-1, interval=0, timeout=None)[0])
 
-        res = []
-        with open(filename, 'w') as fp:
-            #fp.writelines(['{0}\n'.format(json.dumps(r)) for r in raw_data])
-            examples = izip(range(len(raw_data)),
-                            raw_data,
-                            metrics._labels,
-                            metrics._preds,
-                            metrics._probs
-                            #metrics._true_data.todense()
-                            )
-            logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
-            for n, row, label, pred, prob in examples:
-                #logging.info("vect %s" % vectorized_data.tolist()[0])
-                #logging.info("row %s" % metrics._true_data.getrow(n).todense().tolist()[0])
-                vectorized_data = metrics._true_data.getrow(n).todense()
-                if n % (all_count / 10) == 0:
-                    logging.info('Processed %s rows so far' % n)
-                new_row = {}
-                for key, val in row.iteritems():
-                    new_key = key.replace('.', '->')
-                    new_row[new_key] = val
+        for n, row, label, pred, prob in examples:
+            if n % (all_count / 10) == 0:
+                logging.info('Processed %s rows so far' % n)
+            vectorized_data = metrics._true_data.getrow(n).todense()
+            example, new_row = _add_example_to_mongo(test, vectorized_data, row, label,
+                                                     pred, prob)
+            example_ids.append(str(example._id))
 
-                example = app.db.TestExample()
-
-                size_of_examle = getsizeof(new_row)
-                store_on_s3 = size_of_examle >\
-                              app.config['MAX_MONGO_EXAMPLE_SIZE']
-
-                if store_on_s3:
+            if test.examples_placement == test.EXAMPLES_TO_AMAZON_S3:
+                # Caching raw data into temp file
+                with open(test.temp_data_filename, 'w') as fp:
                     fp.write('{0}\n'.format(json.dumps(new_row)))
-                    example['on_s3'] = True
-                else:
-                    example['data_input'] = new_row
-                    example['on_s3'] = False
 
-                example['vect_data'] = vectorized_data.tolist()[0]
-                example['id'] = str(new_row.get(model.example_id, '-1'))
-                example['name'] = str(new_row.get(model.example_label, 'noname'))
-                example['label'] = str(label)
-                example['pred_label'] = str(pred)
-                example['prob'] = prob.tolist()
-                example['test_name'] = test.name
-                example['model_name'] = model.name
-                example['test_id'] = str(test._id)
-                example['test'] = test
-                example['model_id'] = str(model._id)
+        if test.examples_placement == test.EXAMPLES_TO_AMAZON_S3:
 
-                try:
-                    example.validate()
-                except Exception as exc:
-                    logging.error('Problem with saving example')
-                    if store_on_s3:
-                        res.append(None)
-                    continue
-                example.save(check_keys=False)
+            def _chunks(sequences, n):
+                length = len(sequences[0])
+                count = int(length / n)
+                if length % n != 0:
+                    count += 1
 
-                if store_on_s3:
-                    res.append(str(example._id))
+                for i in xrange(0, len(sequences[0]), count):
+                    yield [s[i:i + count] for s in sequences]
 
-        def _chunks(sequences, n):
-            length = len(sequences[0])
-            count = int(length / n)
-            if length % n != 0:
-                count += 1
-
-            for i in xrange(0, len(sequences[0]), count):
-                yield [s[i:i+count] for s in sequences]
-
-        if len(res):
             examples = [
-                range(len(res)),  # indexes
-                res
+                range(len(example_ids)),  # indexes
+                example_ids
             ]
-            #     metrics._labels,
-            #     metrics._preds.tolist(),
-            #     metrics._probs.tolist(),
-            #     [v.tolist() for v in metrics._true_data.todense()]
-            # ]
-
             examples_tasks = []
             for params in _chunks(examples, app.config['EXAMPLES_CHUNK_SIZE']):
                 examples_tasks.append(store_examples.si(test_id, params))
 
             # Wait for all results
-            logging.info('Storing raw data to s3')
-            res = group(examples_tasks).apply_async().get(propagate=False)
-
-        os.remove(filename)
+            logging.info('Storing raw data to Amazon S3')
+            group(examples_tasks).apply_async().get(propagate=False)
+            os.remove(test.temp_data_filename)
 
         test.status = Test.STATUS_COMPLETED
         test.save()
@@ -581,6 +531,47 @@ def run_test(dataset_ids, test_id):
     return 'Test completed'
 
 
+def _add_example_to_mongo(test, vectorized_data, data, label, pred, prob):
+    """
+    Adds info about Test Example to MongoDB.
+    Returns created TestExample document and data.
+    """
+    model = test.model
+    example = app.db.TestExample()
+    example.id = str(data.get(model.example_id, '-1'))
+    example.name = str(data.get(model.example_label, 'noname'))
+    example.label = str(label)
+    example.pred_label = str(pred)
+    example.prob = prob.tolist()
+    example.test = test
+    example.vect_data = vectorized_data.tolist()[0]
+    # TODO: this field is obsolete
+    example.on_s3 = test.examples_placement == test.EXAMPLES_TO_AMAZON_S3
+
+    # Denormalized fields. TODO: move denormalization to TestExample model
+    example.test_name = test.name
+    example.model_name = model.name
+    example.test_id = str(test._id)
+    example.model_id = str(model._id)
+
+    # Choose only specified in test fields in test
+    new_row = {}
+    for key, val in data.iteritems():
+        new_key = key.replace('.', '->')
+        if new_key in test.examples_fields:
+            new_row[new_key] = val
+
+    if test.examples_placement == test.EXAMPLES_TO_MONGO:
+        example.data_input = new_row
+
+    try:
+        example.validate()
+    except Exception as exc:
+        logging.error('Problem with validating example: %s', exc)
+    example.save(check_keys=False)
+    return example, new_row
+
+
 @celery.task
 def store_examples(test_id, params):
     init_logger('runtest_log', obj=test_id)
@@ -593,12 +584,9 @@ def store_examples(test_id, params):
         ))
         return res
 
-    name = 'Test_raw_data-{0!s}.dat'.format(str(test._id))
-    path = app.config['DATA_FOLDER']
-    filename = os.path.join(path, name)
     logging.info('Storing raw data to s3 %s - %s' % (params[0][0], params[0][-1]))
 
-    with open(filename, 'r') as fp:
+    with open(test.temp_data_filename, 'r') as fp:
         row_nums = params[0]
         for r in range(row_nums[0]):  # First row_num
             fp.readline()

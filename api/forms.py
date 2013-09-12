@@ -290,13 +290,20 @@ class BaseChooseInstanceAndDataset(BaseForm):
 
     def clean_spot_instance_type(self, value):
         if value and value not in self.TYPE_CHOICES:
-            raise ValidationError('%s invalid choice for spot_instance_type. \
-Please choose one of %s' % (self.TYPE_CHOICES, value))
+            raise ValidationError('%s is invalid choice for spot_instance_type. \
+Please choose one of %s' % (value, self.TYPE_CHOICES))
         return value
 
     def validate_obj(self):
-        only_one_required(self.cleaned_data, ('spot_instance_type', 'aws_instance'))
-        only_one_required(self.cleaned_data, ('parameters', 'dataset'))
+        inst_err = only_one_required(
+            self.cleaned_data,
+            ('spot_instance_type', 'aws_instance'), raise_exc=False)
+        ds_err = only_one_required(
+            self.cleaned_data,
+            ('parameters', 'dataset'), raise_exc=False)
+        if inst_err or ds_err:
+            raise ValidationError('%s%s%s.' %
+                (inst_err, '. ' if inst_err else '', ds_err))
 
 
 class BaseChooseInstanceAndDatasetMultiple(BaseChooseInstanceAndDataset):
@@ -362,8 +369,10 @@ class DataSetEditForm(BaseForm):
 
 class AddTestForm(BaseChooseInstanceAndDataset):
     HANDLER_TYPE = 'test'
-
-    fields = ['name', 'model'] + BaseChooseInstanceAndDataset.fields
+    fields = ['name', 'model', 
+              'examples_placement',
+              'examples_fields'] + \
+            BaseChooseInstanceAndDataset.fields
 
     def before_clean(self):
         self.model = app.db.Model.find_one({'_id': ObjectId(self.model_id)})
@@ -383,9 +392,23 @@ class AddTestForm(BaseChooseInstanceAndDataset):
         self.cleaned_data['model_id'] = self.model_id
         return self.model
 
+    def clean_examples_placement(self, value):
+        if not value:
+            raise ValidationError('Examples placement is required')
+
+        if value not in app.db.Test.EXAMPLES_STORAGE_CHOICES:
+            raise ValidationError('Invalid test examples storage specified')
+        return value
+
+    def clean_examples_fields(self, value):
+        if not value:
+            raise ValidationError('Examples fields are required')
+        return value.split(',')
+
     def save(self):
         test = BaseForm.save(self, commit=False)
         test.status = test.STATUS_QUEUED
+        test.examples_placement = self.cleaned_data['examples_placement']
         test.save(check_keys=False)
 
         from api.tasks import run_test, import_data
@@ -408,6 +431,7 @@ class AddTestForm(BaseChooseInstanceAndDataset):
             run_test.apply_async(([str(dataset._id),],
                                   str(test._id),),
                                   queue=instance['name'])
+            # run_test.run([str(dataset._id),], str(test._id))
 
         return test
 
@@ -471,14 +495,23 @@ def populate_parser(import_params):
     return parser
 
 
-def only_one_required(cleaned_data, names):
+def only_one_required(cleaned_data, names, raise_exc=True):
     filled_names = []
     for name in names:
         if cleaned_data.get(name, None):
             filled_names.append(name)
     count = len(filled_names)
+    err = None
     if count == 0:
-        raise ValidationError('One of %s is required' % ', '.join(names))
+        err = 'One of %s is required' % ', '.join(names)
     elif count > 1:
-        raise ValidationError('Only one parameter from %s is required. \
-%s are filled.' % (', '.join(names), ', '.join(filled_names)))
+        err = 'Only one parameter from %s is required. \
+%s are filled.' % (', '.join(names), ', '.join(filled_names))
+
+    if err:
+        if raise_exc:
+            raise ValidationError(err)
+        else:
+            return err
+
+    return ''

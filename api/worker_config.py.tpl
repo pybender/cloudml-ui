@@ -29,7 +29,6 @@ AMAZON_TOKEN_SECRET = '{{ amazon_token_secret }}'
 AMAZON_BUCKET_NAME = '{{ amazon_bucket_name }}'
 
 EXAMPLES_CHUNK_SIZE = 10
-MAX_MONGO_EXAMPLE_SIZE = 2000
 
 # OAuth keys
 ODESK_OAUTH_KEY = '{{ odesk_api_key }}'

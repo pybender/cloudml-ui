@@ -61,7 +61,7 @@ created_by'
     }
     $scope.formElements[$scope.SETTINGS] = {
       'examples_fields': $scope.model.test_handler_fields,
-      'examples_storage': 'Amazon S3'}
+      'examples_placement': 'Amazon S3'}
 
     $scope.start = (result) ->
       data = $scope.getData()
@@ -128,8 +128,6 @@ without test id and model id"
       _id: $routeParams.id
     })
 
-
-
   $scope.load = (fields, section, callback) ->
     $scope.test.$load(
       show: fields
@@ -156,7 +154,8 @@ without test id and model id"
       switch section_name
         when 'about'
           extra_fields = 'classes_set,created_on,parameters,error,
-examples_count,dataset,memory_usage,created_by'
+examples_count,dataset,memory_usage,created_by,examples_placement,
+examples_fields'
         when 'metrics'
           extra_fields = 'accuracy,metrics.precision_recall_curve,
 metrics.roc_curve,metrics.roc_auc'

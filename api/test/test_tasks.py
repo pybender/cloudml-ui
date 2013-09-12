@@ -6,6 +6,7 @@ from moto import mock_s3
 from mock import patch, MagicMock, Mock
 
 from api import app
+from constants import DATASET_ID, TEST1_ID, TEST2_ID, QUEUED_TEST4_ID
 from utils import BaseTestCase
 
 
@@ -15,27 +16,23 @@ class TestTasksTests(BaseTestCase):
     """
     TEST_NAME = 'Test-1'
     TEST_NAME2 = 'Test-2'
-    DS_ID = '5270dd3a106a6c1631000000'
     EXAMPLE_NAME = 'Some Example #1-1'
     MODEL_NAME = 'TrainedModel1'
     FIXTURES = ('datasets.json', 'models.json', 'tests.json', 'examples.json')
 
     def setUp(self):
         super(TestTasksTests, self).setUp()
-        self.test = self.db.Test.find_one({'name': self.TEST_NAME})
-        self.test2 = self.db.Test.find_one({'name': self.TEST_NAME2})
-        self.dataset = self.db.DataSet.find_one({'_id': ObjectId(self.DS_ID)})
+        self.test = self.db.Test.find_one({'_id': ObjectId(TEST1_ID)})
+        self.test2 = self.db.Test.find_one({'_id': ObjectId(TEST2_ID)})
+        self.dataset = self.db.DataSet.find_one({'_id': ObjectId(DATASET_ID)})
         self.examples_count = self.db.TestExample.find(
             {'test_name': self.TEST_NAME}).count()
         self.real_chunks_config = app.config['EXAMPLES_CHUNK_SIZE']
         app.config['EXAMPLES_CHUNK_SIZE'] = 10
-        self.real_size_config = app.config['MAX_MONGO_EXAMPLE_SIZE']
-        app.config['MAX_MONGO_EXAMPLE_SIZE'] = 10
 
     def tearDown(self):
         super(TestTasksTests, self).tearDown()
         app.config['EXAMPLES_CHUNK_SIZE'] = self.real_chunks_config
-        app.config['MAX_MONGO_EXAMPLE_SIZE'] = self.real_size_config
 
     def _set_probabilities(self, probabilities):
         for example in self.db.TestExample.find({'test_name': self.TEST_NAME}):
@@ -113,26 +110,40 @@ class TestTasksTests(BaseTestCase):
     @patch('api.tasks.store_examples')
     def test_run_test(self, mock_store_examples, mock_get_data_stream,
                       mock_get_trainer):
+        # Checks whether Test in fixtures is valid
+        test = app.db.Test.get_from_id(ObjectId(QUEUED_TEST4_ID))
+        self.assertFalse(test.accuracy)
+        self.assertFalse(test.classes_set)
+        self.assertFalse(test.examples_count)
+        self.assertEquals(test.examples_placement, test.EXAMPLES_TO_MONGO)
+        self.assertEquals(test.status, test.STATUS_QUEUED)
+        test_examples = app.db.TestExample.find({'test_id': str(test._id)})
+        self.assertEquals(test_examples.count(), 0)
+
         import numpy
         import scipy
         from api.tasks import run_test
 
+        class MetricsMock(MagicMock):
+            accuracy = 0.80
+            classes_set = ['0', '1']
+            _labels = ['0', '1'] * 50
+
+            METRICS_DICT = {
+                'confusion_matrix': [0, 0],
+                'roc_curve': [[0], [0], [0], [0]],
+                'precision_recall_curve': [[0], [0], [0], [0]],
+            }
+
+            def get_metrics_dict(self):
+                return self.METRICS_DICT
+
         def _fake_test(self, *args, **kwargs):
-            class MetricsMock(MagicMock):
-                accuracy = 1.0
-                classes_set = ['0', '1']
-                _labels = ['0', '1'] * 50
-
-                def get_metrics_dict(self):
-                    return {
-                        'confusion_matrix': [0, 0],
-                        'roc_curve': [[0], [0], [0], [0]],
-                        'precision_recall_curve': [[0], [0], [0], [0]],
-                    }
-
             _fake_test.called = True
 
-            self._raw_data = [{'data': 'some-data-here'}] * 100
+            self._raw_data = [{'application_id': '123',
+                               'hire_outcome': '0',
+                               'title': 'A1'}] * 100
 
             metrics_mock = MetricsMock()
             preds = Mock()
@@ -155,63 +166,71 @@ class TestTasksTests(BaseTestCase):
             open('./api/fixtures/model.dat', 'r').read())
         mock_get_trainer.return_value = trainer
 
-        model = self.db.Model.find_one()
-
-        self.test.model_id = str(model._id)
-        self.test.model = model
-        self.test.save()
-
-        self.test2.model_id = str(model._id)
-        self.test2.model = model
-        self.test2.save()
-
         with patch('core.trainer.trainer.Trainer.test',
                    _fake_test) as mock_test:
 
-            result = run_test([self.dataset._id, ], self.test._id)
+            # Examples raw data to MongoDB
+            result = run_test([self.dataset._id, ], test._id)
             self.assertTrue(mock_test.called)
-
             self.assertEquals(result, 'Test completed')
+
+            test = app.db.Test.find_one({'_id': test._id})
+            self.assertEquals(test.status, test.STATUS_COMPLETED)
+            self.assertEquals(test.classes_set, MetricsMock.classes_set)
+            self.assertEquals(test.accuracy, MetricsMock.accuracy)
+            self.assertTrue(test.memory_usage['testing'],
+                            "Memory usage for testing was not filled")
+            self.assertEquals(test.dataset._id, self.dataset._id)
+
+            examples_count = app.db.TestExample.find({'test_name': test.name}).count()
+            self.assertTrue(examples_count == test.examples_count == 100)
+            example = app.db.TestExample.find_one({'test_id': str(test._id)})
+            self.assertTrue(example.data_input, 'Raw data should be filled to MongoDB')
 
             # Should be cached and called only once
             self.assertEquals(1, mock_get_data_stream.call_count)
 
-            self.assertEquals(10, mock_store_examples.si.call_count)
-            self.assertEquals(10, mock_apply_async.apply.call_count)
+            self.assertFalse(mock_store_examples.si.call_count,
+                              "Examples placement is MongoDB. \
+                              We do not need to store it in Amazon S3")
+            self.assertFalse(mock_apply_async.apply.call_count)
 
             test = self.db.Test.get_from_id(ObjectId(self.test._id))
-            self.assertEquals(test.dataset._id, self.dataset._id)
 
+            mock_store_examples.reset_mock()
+            mock_apply_async.reset_mock()
+
+            # Examples raw data to Amazon S3
+            test.status = test.STATUS_QUEUED
+            test.examples_placement = test.EXAMPLES_TO_AMAZON_S3
+            test.save()
+
+            result = run_test([self.dataset._id, ], self.test._id)
+            self.assertEquals(result, 'Test completed')
+            self.assertEquals(10, mock_store_examples.si.call_count)
+            self.assertEquals(10, mock_apply_async.apply.call_count)
+            example = app.db.TestExample.find_one({'test_id': str(test._id)})
+            self.assertFalse(example.data_input, 'Raw data should not be filled to MongoDB')
             mock_store_examples.reset_mock()
             mock_apply_async.reset_mock()
 
             app.config['EXAMPLES_CHUNK_SIZE'] = 5
-
             result = run_test([self.dataset._id, ], self.test._id)
             self.assertEquals(result, 'Test completed')
             self.assertEquals(5, mock_store_examples.si.call_count)
             self.assertEquals(5, mock_apply_async.apply.call_count)
-
             mock_store_examples.reset_mock()
             mock_apply_async.reset_mock()
 
             app.config['EXAMPLES_CHUNK_SIZE'] = 7
-
             result = run_test([self.dataset._id, ], self.test._id)
             self.assertEquals(result, 'Test completed')
             self.assertEquals(7, mock_store_examples.si.call_count)
             self.assertEquals(7, mock_apply_async.apply.call_count)
-
             mock_store_examples.reset_mock()
             mock_apply_async.reset_mock()
 
-            app.config['MAX_MONGO_EXAMPLE_SIZE'] = 5000
-
-            result = run_test([self.dataset._id, ], self.test._id)
-            self.assertEquals(result, 'Test completed')
-            self.assertFalse(mock_store_examples.si.called)
-            self.assertFalse(mock_apply_async.apply.called)
-
+            model = test.model
             model.status = model.STATUS_NEW
             model.save()
             self.assertRaises(InvalidOperationError, run_test,

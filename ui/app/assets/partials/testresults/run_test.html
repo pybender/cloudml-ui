@@ -22,16 +22,16 @@
 
       <h4 class="text-center">Settings</h4>
       <div class="well">
-        <div ng-class="{error: !formElements[SETTINGS]['examples_storage']}" class="control-group">
+        <div ng-class="{error: !formElements[SETTINGS]['examples_placement']}" class="control-group">
           <label class="control-label" style="text-align: left;">Examples Placement: </label>
           <div class="controls">
-            <select class="input-xlarge" name="examples_storage" ng-change="changeFormData(SETTINGS, 'examples_storage')" ng-model="formElements[SETTINGS]['examples_storage']">
+            <select class="input-xlarge" name="examples_placement" ng-change="changeFormData(SETTINGS, 'examples_placement')" ng-model="formElements[SETTINGS]['examples_placement']">
               <option value="">--- select examples storage ---</option>
               <option value="Amazon S3">Amazon S3</option>
               <option value="MongoDB">MongoDB</option>
-              <option value="Not save">Don't save</option>
+              <option value="Do not save">Don't save</option>
             </select>&nbsp;<i class="icon-question-sign" title="Choose test examples placement" />
-            <span ng-show="!formElements[SETTINGS]['examples_storage']" class="help-inline">required</span>
+            <span ng-show="!formElements[SETTINGS]['examples_placement']" class="help-inline">required</span>
           </div>
         </div>
         <p>

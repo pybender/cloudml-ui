@@ -121,6 +121,14 @@ class TestMigration(DbMigration):  # pragma: no cover
         self.target = {'created_by': {'$exists': False}}
         self.update = {'$set': {'created_by': {}}}
 
+    def allmigration04__add_examples_placement(self):
+        self.target = {'examples_placement': {'$exists': False}}
+        self.update = {'$set': {'examples_placement': 'Amazon S3'}}
+
+    def allmigration05__add_examples_fields(self):
+        self.target = {'examples_fields': {'$exists': False}}
+        self.update = {'$set': {'examples_fields': []}}
+
 
 class DataSetMigration(DbMigration):  # pragma: no cover
     DOC_CLASS = models.DataSet
