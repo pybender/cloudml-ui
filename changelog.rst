@@ -3,6 +3,10 @@
 Changelog
 =========
 
+Relese 2013-09-??
+-----------------
+* Bug - Fixed deleting test and dataset while they is in progress
+
 
 Relese 2013-09-09
 -----------------
@@ -17,6 +21,7 @@ Relese 2013-09-09
 * Task - Tests improvements
 * Taks - Adding dashboard page and API for getting some stat data
 * Taks - Humanize time format
+* Feature - Sort examples by probability
 * Feature - Adding filtering to models list
 * Feature - Added using exsiting file datset instead download from s3
 * Feature - Generating download from s3 dataset url only when user clicks download btn
