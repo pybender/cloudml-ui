@@ -13,7 +13,7 @@ from flask import request, has_request_context
 
 from core.trainer.streamutils import streamingiterload
 
-from api import app
+from api import app, celery
 from api.amazon_utils import AmazonS3Helper
 
 
@@ -32,6 +32,13 @@ class BaseDocument(Document):
         if has_request_context():
             self._set_user(getattr(request, 'user', None))
         return super(BaseDocument, self).save(*args, **kwargs)
+
+    def terminate_task(self):
+        if hasattr(self, 'current_task_id'):
+            try:
+                celery.control.revoke(self.current_task_id, terminate=True)
+            except Exception as e:
+                logging.exception(e)
 
 
 @app.conn.register
@@ -205,6 +212,7 @@ class DataSet(BaseDocument):
         'records_count': int,
         'time': int,
         'data_fields': list,
+        'current_task_id': basestring,
     }
     required_fields = ['name', 'created_on', 'updated_on', ]
     default_values = {'created_on': datetime.utcnow,
@@ -281,6 +289,9 @@ class DataSet(BaseDocument):
             self.save()
 
     def delete(self):
+        # Stop task
+        self.terminate_task()
+
         # Remove from tests
         app.db.Test.collection.update({
             'dataset.$id': self._id
@@ -405,6 +416,7 @@ class Model(BaseDocument):
         'spot_instance_request_id': basestring,
         'memory_usage': dict,
         'train_records_count': int,
+        'current_task_id': basestring,
     }
     gridfs = {'files': ['trainer']}
     required_fields = ['name', 'created_on', ]
@@ -477,6 +489,8 @@ class Model(BaseDocument):
             self.labels = map(str, trainer._classifier.classes_.tolist())
 
     def delete(self):
+        # Stop running task
+        self.terminate_task()
         self.delete_metadata()
         self.collection.remove({'_id': self._id})
         app.db.Tag.update_tags_count(self.tags, [])
@@ -548,6 +562,7 @@ class Test(BaseDocument):
         #'examples': [TestExample ],
         'memory_usage': dict,
         'exports': list,
+        'current_task_id': basestring,
     }
     required_fields = ['name', 'created_on', 'updated_on',
                        'status']
@@ -586,6 +601,8 @@ class Test(BaseDocument):
         return self._temp_data_filename
 
     def delete(self):
+        # Stop running task
+        self.terminate_task()
         params = dict(test_name=self.name,
                       model_name=self.model_name)
         app.db.TestExample.collection.remove(params)
