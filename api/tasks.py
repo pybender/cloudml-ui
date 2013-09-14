@@ -537,15 +537,17 @@ def _add_example_to_mongo(test, vectorized_data, data, label, pred, prob):
     Adds info about Test Example to MongoDB.
     Returns created TestExample document and data.
     """
+    ndata = dict([(key.replace('.', '->'), val) \
+        for key, val in data.iteritems()])
     model = test.model
     example = app.db.TestExample()
-    example_id = new_row.get(model.example_id, '-1')
+    example_id = ndata.get(model.example_id, '-1')
     try:
         example['id'] = str(example_id)
     except UnicodeEncodeError:
         example['id'] = example_id.encode('utf-8')
 
-    example_name = new_row.get(model.example_label, 'noname')
+    example_name = ndata.get(model.example_label, 'noname')
     try:
         example['name'] = str(example_name)
     except UnicodeEncodeError:
@@ -565,11 +567,8 @@ def _add_example_to_mongo(test, vectorized_data, data, label, pred, prob):
     example.model_id = str(model._id)
 
     # Choose only specified in test fields in test
-    new_row = {}
-    for key, val in data.iteritems():
-        new_key = key.replace('.', '->')
-        if new_key in test.examples_fields:
-            new_row[new_key] = val
+    new_row = dict([(field, ndata.get(field, None)) 
+                for field in test.examples_fields])
 
     if test.examples_placement == test.EXAMPLES_TO_MONGO:
         example.data_input = new_row

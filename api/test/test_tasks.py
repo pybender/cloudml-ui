@@ -186,6 +186,7 @@ class TestTasksTests(BaseTestCase):
             self.assertTrue(examples_count == test.examples_count == 100)
             example = app.db.TestExample.find_one({'test_id': str(test._id)})
             self.assertTrue(example.data_input, 'Raw data should be filled to MongoDB')
+            self.assertEquals(example.data_input.keys(), test.examples_fields)
 
             # Should be cached and called only once
             self.assertEquals(1, mock_get_data_stream.call_count)
