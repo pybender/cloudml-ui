@@ -141,9 +141,12 @@ App.config([
       controller: 'AuthCallbackCtl'
       templateUrl: '/partials/login/auth.html'
     })
-    .when('/features', {
+    .when('/features/sets', {
       controller: "FeaturesListCtrl"
       templateUrl: '/partials/features/list.html'
+    })
+    .when('/features', {
+      redirectTo: '/features/sets'
     })
     .when('/features/sets/:id', {
       controller: 'FeaturesSetDetailsCtrl'
