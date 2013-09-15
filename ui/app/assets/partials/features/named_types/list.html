@@ -1,41 +1,40 @@
 <h2>
   Named Feature Types List
   <div class="actions">
-      <a class="btn btn-info" href="#/aws/instances/add">
+      <a class="btn btn-info" href="#/features/types/add">
         <i class="status-icon icon-plus"></i> Add new Named Type
       </a>
   </div>
 </h2>
 
-<alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+<div ng-controller="BaseListCtrl" ng-init="init(true, 'named_features')">
+	<alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
 
-<alert-message ng-show="objects.length == 0" class="alert-info" msg="No AWS instances found"></alert-message>
+	<alert-message ng-show="objects.length == 0" class="alert-info" msg="No Named Feature Types found"></alert-message>
 
-<table ng-hide="objects.length == 0" class="table table-hover">
-<thead>
-  <tr>
-    <th>Name</th>
-    <th>Type</th>
-    <th>Input Format</th>
-    <th>Params</th>
-    <th>Created</th>
-    <th>Actions</th>
-  </tr>
-</thead>
-<tbody>
-  <tr ng-repeat="ftype in objects">
-    <td>
-      <a href="#{{ namedType.objectUrl() }}">{{ namedType.name }}</a>
-    </td>
-    <td>{{ namedType.type }}</td>
-    <td>{{ namedType.input_format }}</td>
-    <td>{{ namedType.params }}</td>
-    <td>
-        {{ namedType.created_on|format_date }}<br>
-        <small ng-show="namedType.created_by">by {{ namedType.created_by.name }} ({{ namedType.created_by.uid }})</small>
-    </td>
-    <td>
-    </td>
-  </tr>
-</tbody>
-</table>
+	<table ng-hide="objects.length == 0" class="table table-hover">
+	<thead>
+	  <tr>
+	    <th>Name</th>
+	    <th>Type</th>
+	    <th>Input Format</th>
+	    <th>Params</th>
+	    <th>Created</th>
+	  </tr>
+	</thead>
+	<tbody>
+	  <tr ng-repeat="namedType in objects">
+	    <td>
+	      <a href="#{{ namedType.objectUrl() }}">{{ namedType.name }}</a>
+	    </td>
+	    <td>{{ namedType.type }}</td>
+	    <td>{{ namedType.input_format }}</td>
+	    <td>{{ namedType.params }}</td>
+	    <td>
+	        {{ namedType.created_on|format_date }}<br>
+	        <small ng-show="namedType.created_by">by {{ namedType.created_by.name }} ({{ namedType.created_by.uid }})</small>
+	    </td>
+	  </tr>
+	</tbody>
+	</table>
+</div>

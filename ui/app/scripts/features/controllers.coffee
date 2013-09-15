@@ -23,13 +23,16 @@ updated_on,updated_by,comparable'
 ])
 
 
+# Feature Sets specific controllers
+
 .controller('FeaturesSetDetailsCtrl', [
   '$scope'
   '$routeParams'
   'FeaturesSet'
   'Feature'
+  'NamedFeatureType'
 
-  ($scope, $routeParams, FeaturesSet, Feature) ->
+  ($scope, $routeParams, FeaturesSet, Feature, NamedFeatureType) ->
     if not $routeParams.id then err = "Can't initialize without instance id"
     $scope.featuresSet = new FeaturesSet({_id: $routeParams.id})
 
@@ -39,7 +42,15 @@ updated_on,updated_by,comparable'
       ).then (->), ((opts)-> $scope.setError(opts, 'loading featuresSet'))
 
     $scope.feature = new Feature()
-    types = $scope.feature.getAvailableTypes()
+    $scope.types = NamedFeatureType.$TYPES_LIST
+    NamedFeatureType.$loadAll(
+      show: 'name'
+    ).then ((opts) ->
+      for nt in opts.objects
+        $scope.types.push nt.name
+    ), ((opts) ->
+      #$scope.err = $scope.setError(opts, 'loading instances')
+    )
   ])
 
 
@@ -55,23 +66,29 @@ updated_on,updated_by,comparable'
     $scope.ACTION = 'loading named feature types'
 ])
 
+
+.controller('AddFeatureTypeCtrl', [
+  '$scope'
+  'NamedFeatureType'
+
+  ($scope, NamedFeatureType) ->
+    $scope.model = new NamedFeatureType()
+    $scope.types = NamedFeatureType.$TYPES_LIST
+])
+
 .controller('FeatureTypeDetailsCtrl', [
   '$scope'
   '$routeParams'
-  'FeaturesSet'
-  'Feature'
+  'NamedFeatureType'
 
-  ($scope, $routeParams, FeaturesSet, Feature) ->
-    if not $routeParams.id then err = "Can't initialize without instance id"
-    $scope.featuresSet = new FeaturesSet({_id: $routeParams.id})
+  ($scope, $routeParams, NamedFeatureType) ->
+    if not $routeParams.id
+      err = "Can't initialize without id"
 
-    $scope.featuresSet.$load(
-      show: 'name,type,created_on,updated_on,ip,description,is_default,
-  created_by'
+    $scope.namedType = new NamedFeatureType({_id: $routeParams.id})
+    $scope.namedType.$load(
+      show: NamedFeatureType.MAIN_FIELDS
       ).then (->), ((opts)-> $scope.setError(opts, 'loading featuresSet'))
-
-    $scope.feature = new Feature()
-    types = $scope.feature.getAvailableTypes()
   ])
 
 .controller('FeaturesActionsCtrl', [

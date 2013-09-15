@@ -17,7 +17,8 @@ from api.utils import ERR_INVALID_DATA, odesk_error_response, \
     ERR_NO_SUCH_MODEL, ERR_UNPICKLING_MODEL, slugify
 from api.resources import BaseResource, NotFound, ValidationError
 from api.forms import ModelAddForm, ModelEditForm, ImportHandlerAddForm, \
-    AddTestForm, InstanceAddForm, InstanceEditForm, ImportHandlerEditForm, DataSetEditForm
+    AddTestForm, InstanceAddForm, InstanceEditForm, ImportHandlerEditForm, \
+    DataSetEditForm, NamedFeatureTypeAddForm
 from core.importhandler.importhandler import ExtractionPlan, \
     RequestImportHandler
 
@@ -1001,6 +1002,24 @@ class StatisticsResource(BaseResource):
         }})
 
 api.add_resource(StatisticsResource, '/cloudml/statistics/')
+
+
+# Features specific resources
+
+class NamedFeatureTypeResource(BaseResource):
+    """
+    Tags API methods
+    """
+    MESSAGE404 = "Named feature type doesn't exist"
+    OBJECT_NAME = 'named_type'
+    DEFAULT_FIELDS = [u'_id', 'name']
+    post_form = NamedFeatureTypeAddForm
+
+    @property
+    def Model(self):
+        return app.db.NamedFeatureType
+
+api.add_resource(NamedFeatureTypeResource, '/cloudml/features/named_types/')
 
 
 def populate_parser(model, is_requred=False):

@@ -38,7 +38,7 @@
 		<tr>
 			<td><span title="Feature Name" class="title" ng-bind="feature.name || 'feature name here'" editable="feature" value="feature.name" editable-field="name" editable-input="text" editable-placement="right"></span></td>
 			<td><span title="Feature Type" ng-bind="feature.type" editable="feature" value="feature.type" editable-field="type" editable-placement="right"
-editable-input="select" source="feature.TYPES_LIST"></span></td>
+editable-input="select" source="types"></span></td>
 			<td></td>
 			<td></td>
 			<td></td>
@@ -49,4 +49,4 @@ editable-input="select" source="feature.TYPES_LIST"></span></td>
 		</tr>
 	</tbody>
 </table>
-getAvailableTypes = {{ feature.getAvailableTypes() }}
+getAvailableTypes = {{ types }}

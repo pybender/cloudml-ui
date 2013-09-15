@@ -43,9 +43,6 @@ angular.module('app.features.models', ['app.config'])
       is_required: false
       is_target_variable: false
 
-      getAvailableTypes: =>
-        return NamedFeatureType.$TYPES_LIST  # add named types
-
     return Feature
 ])
 
@@ -58,8 +55,10 @@ angular.module('app.features.models', ['app.config'])
   
   ($http, $q, settings, BaseModel) ->
     class NamedFeatureType extends BaseModel
-      BASE_API_URL: "#{settings.apiUrl}features/types"
-      API_FIELDNAME: 'feature_type'
+      BASE_API_URL: "#{settings.apiUrl}features/named_types/"
+      BASE_UI_URL: "/features/types/"
+      API_FIELDNAME: 'named_type'
+      @MAIN_FIELDS: 'name,type,input_format,params,created_on,created_by'
       @$TYPES_LIST: ['boolean', 'int', 'float', 'numeric', 'date',
                    'map', 'categorical_label', 'categorical',
                    'text', 'regex', 'composite']

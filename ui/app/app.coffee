@@ -157,9 +157,13 @@ App.config([
       controller: "FeatureTypeListCtrl"
       templateUrl: '/partials/features/named_types/list.html'
     })
+    .when('/features/types/add', {
+      controller: "AddFeatureTypeCtrl"
+      templateUrl: '/partials/features/named_types/add.html'
+    })
     .when('/features/types/:id', {
-      controller: 'FeaturesSetDetailsCtrl'
-      templateUrl: '/partials/features/details.html'
+      controller: 'FeatureTypeDetailsCtrl'
+      templateUrl: '/partials/features/named_types/details.html'
     })
     .when('/features/transformers/:id', {
       controller: 'FeaturesSetDetailsCtrl'

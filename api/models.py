@@ -811,3 +811,33 @@ class User(BaseDocument):
         from auth import OdeskAuth
         auth = OdeskAuth()
         return auth.get_auth_url()
+
+
+# Features specific models
+
+@app.conn.register
+class NamedFeatureType(BaseDocument):
+    __collection__ = 'named_feature_types'
+
+    TYPES_LIST = ['boolean', 'int', 'float', 'numeric', 'date',
+                   'map', 'categorical_label', 'categorical',
+                   'text', 'regex', 'composite']
+    structure = {
+        'name': basestring,
+        'type': basestring,
+        'input_format': basestring,
+        'params': dict,
+        'created_on': datetime,
+        'created_by': dict,
+        'updated_on': datetime,
+        'updated_by': dict,
+    }
+    required_fields = ['name', 'type', 'created_on', 'updated_on']
+    default_values = {
+        'created_on': datetime.utcnow,
+        'updated_on': datetime.utcnow,
+    }
+    use_dot_notation = True
+
+    def __repr__(self):
+        return '<Named Feature Type %r>' % self.name
