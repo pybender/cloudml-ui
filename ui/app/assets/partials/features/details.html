@@ -1,0 +1,52 @@
+<h2>
+    {{ featuresSet.name|capfirst }} Details
+    <div class="actions" ng-controller="FeaturesActionsCtrl">
+</div>
+</h2>
+
+<div title="quick info" ng-init="obj=instance">
+  <ng-include src="'/partials/parts/created_tags.html'"></ng-include>
+</div>
+<p></p>
+
+<alert-message ng-show="err" class="alert-error" msg='{{ err }}' unsafe></alert-message>
+
+<div>Schema Name: <span class="value">{{ featuresSet.schema_name }}</span></div>
+<div>Classifier: <span class="value"></span></div>
+<div>Target Variable: <span class="value">{{ featuresSet.target_variable }}</span></div>
+
+<h4>Features List
+	<div class="actions">
+		append 
+	</div>
+</h4>
+<table class="table table-hover">
+	<thead>
+	<tr>
+		<th>Name</th>
+		<th>Type</th>
+		<th>Input Format</th>
+		<th>Transformer</th>
+		<th>Params</th>
+		<th>Required</th>
+		<th>Scaler</th>
+		<th>Default</th>
+		<th>Is Target Variable</th>
+	</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td><span title="Feature Name" class="title" ng-bind="feature.name || 'feature name here'" editable="feature" value="feature.name" editable-field="name" editable-input="text" editable-placement="right"></span></td>
+			<td><span title="Feature Type" ng-bind="feature.type" editable="feature" value="feature.type" editable-field="type" editable-placement="right"
+editable-input="select" source="feature.TYPES_LIST"></span></td>
+			<td></td>
+			<td></td>
+			<td></td>
+			<td><a ng-show="feature.is_required"><i class="icon-ok" title="Make not required" /></a><a ng-hide="feature.is_required"><i class="icon-check" title="Make required" /></a></td>
+			<td></td>
+			<td><span title="Default Value" class="title" ng-bind="feature.default" editable="feature" value="feature.default" editable-field="default" editable-input="text" editable-placement="right"></span></td>
+			<td><span ng-show="feature.is_target_variable"><i class="icon-ok" /></span><a ng-hide="feature.is_target_variable"><i class="icon-check" title="Make this variable target" /></a></td>
+		</tr>
+	</tbody>
+</table>
+getAvailableTypes = {{ feature.getAvailableTypes() }}

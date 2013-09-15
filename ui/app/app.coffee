@@ -35,6 +35,8 @@ App = angular.module('app', [
   'app.login.controllers'
   'app.dashboard.model'
   'app.dashboard.controllers'
+  'app.features.models'
+  'app.features.controllers'
 ])
 
 App.config([
@@ -138,6 +140,30 @@ App.config([
     .when('/auth/callback', {
       controller: 'AuthCallbackCtl'
       templateUrl: '/partials/login/auth.html'
+    })
+    .when('/features', {
+      controller: "FeaturesListCtrl"
+      templateUrl: '/partials/features/list.html'
+    })
+    .when('/features/sets/:id', {
+      controller: 'FeaturesSetDetailsCtrl'
+      templateUrl: '/partials/features/details.html'
+    })
+    .when('/features/input_formats/:id', {
+      controller: 'FeaturesSetDetailsCtrl'
+      templateUrl: '/partials/features/details.html'
+    })
+    .when('/features/types', {
+      controller: "FeatureTypeListCtrl"
+      templateUrl: '/partials/features/named_types/list.html'
+    })
+    .when('/features/types/:id', {
+      controller: 'FeaturesSetDetailsCtrl'
+      templateUrl: '/partials/features/details.html'
+    })
+    .when('/features/transformers/:id', {
+      controller: 'FeaturesSetDetailsCtrl'
+      templateUrl: '/partials/features/details.html'
     })
 
     # Catch all
