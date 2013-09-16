@@ -25,28 +25,21 @@ angular.module('app.features.controllers', ['app.config', ])
 
 .controller('FeaturesSetDetailsCtrl', [
   '$scope'
+  '$routeParams'
+  '$dialog'
   'FeaturesSet'
-  'Feature'
-  'NamedFeatureType'
 
-  ($scope, FeaturesSet, Feature, NamedFeatureType) ->
+  ($scope, $routeParams, $dialog, FeaturesSet) ->
     if not $routeParams.id then err = "Can't initialize without instance id"
     $scope.featuresSet = new FeaturesSet({_id: $routeParams.id})
-
     $scope.featuresSet.$load(
       show: FeaturesSet.MAIN_FIELDS
       ).then (->), ((opts)-> $scope.setError(opts, 'loading featuresSet'))
 
-    $scope.feature = new Feature()
-    $scope.types = NamedFeatureType.$TYPES_LIST
-    NamedFeatureType.$loadAll(
-      show: 'name'
-    ).then ((opts) ->
-      for nt in opts.objects
-        $scope.types.push nt.name
-    ), ((opts) ->
-      #$scope.err = $scope.setError(opts, 'loading instances')
-    )
+    $scope.addFeature = () ->
+      $scope.openDialog($dialog, $scope.featuresSet,
+        'partials/features/items/add.html',
+        'AddFeatureDialogCtrl', 'modal', 'add feature', 'feature')
   ])
 
 .controller('AddFeatureSetDialogCtrl', [
@@ -64,6 +57,35 @@ angular.module('app.features.controllers', ['app.config', ])
     ), ((opts) ->
       $scope.err = $scope.setError(opts, 'loading classifiers')
     )
+    $scope.$on('SaveObjectCtl:save:success', (event, current) ->
+      dialog.close()
+    )
+])
+
+# Feature Items Controllers
+
+.controller('AddFeatureDialogCtrl', [
+  '$scope'
+  'dialog'
+  'Feature'
+  'NamedFeatureType'
+
+  ($scope, dialog, Feature, NamedFeatureType) ->
+    $scope.featureSet = dialog.model
+    $scope.model = new Feature()
+    $scope.dialog = dialog
+
+    # Loads list of types
+    $scope.types = NamedFeatureType.$TYPES_LIST
+    NamedFeatureType.$loadAll(
+      show: 'name'
+    ).then ((opts) ->
+      for nt in opts.objects
+        $scope.types.push nt.name
+    ), ((opts) ->
+      $scope.err = $scope.setError(opts, 'loading instances')
+    )
+
     $scope.$on('SaveObjectCtl:save:success', (event, current) ->
       dialog.close()
     )
