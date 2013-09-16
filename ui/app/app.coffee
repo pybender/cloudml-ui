@@ -172,6 +172,14 @@ App.config([
       controller: 'FeaturesSetDetailsCtrl'
       templateUrl: '/partials/features/details.html'
     })
+    .when('/features/classifiers', {
+      controller: "ClassifiersListCtrl"
+      templateUrl: '/partials/features/classifiers/list.html'
+    })
+    .when('/features/classifiers/:id', {
+      controller: 'ClassifierDetailsCtrl'
+      templateUrl: '/partials/features/classifiers/details.html'
+    })
 
     # Catch all
     .otherwise({redirectTo: '/models'})

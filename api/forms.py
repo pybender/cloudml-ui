@@ -484,6 +484,27 @@ class NamedFeatureTypeAddForm(BaseForm):
             return json.loads(value)
 
 
+class ClassifierAddForm(BaseForm):
+    fields = ('name', 'type', 'params', )
+
+    def clean_name(self, value):
+        if not value:
+            raise ValidationError('name is required')
+        return value
+
+    def clean_type(self, value):
+        if not value:
+            raise ValidationError('type is required')
+        if not value in app.db.Classifier.TYPES_LIST:
+            raise ValidationError('invalid type. please choose one of %s' %
+                                  app.db.Classifier.TYPES_LIST)
+        return value
+
+    def clean_params(self, value):
+        if value:
+            return json.loads(value)
+
+
 def populate_parser(import_params):
     from flask.ext.restful import reqparse
     parser = reqparse.RequestParser()

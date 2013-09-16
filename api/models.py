@@ -841,3 +841,57 @@ class NamedFeatureType(BaseDocument):
 
     def __repr__(self):
         return '<Named Feature Type %r>' % self.name
+
+
+from core.trainer.classifier_settings import CLASSIFIERS
+
+@app.conn.register
+class Classifier(BaseDocument):
+    __collection__ = 'classifier'
+
+    TYPES_LIST = CLASSIFIERS.keys()
+
+    structure = {
+        'name': basestring,
+        'type': basestring,
+        'params': dict,
+        'created_on': datetime,
+        'created_by': dict,
+        'updated_on': datetime,
+        'updated_by': dict,
+    }
+    required_fields = ['name', 'type', 'created_on', 'updated_on']
+    default_values = {
+        'created_on': datetime.utcnow,
+        'updated_on': datetime.utcnow,
+    }
+    use_dot_notation = True
+
+    def __repr__(self):
+        return '<Classifier %r>' % self.name
+
+
+@app.conn.register
+class FeatureSet(BaseDocument):
+    __collection__ = 'feature_set'
+
+    structure = {
+        'name': basestring,
+        'schema_name': basestring,
+        'features_count': int,
+        'classifier': Classifier,
+        'target_variable': datetime,
+        'created_on': datetime,
+        'created_by': dict,
+        'updated_on': datetime,
+        'updated_by': dict,
+    }
+    required_fields = ['name', 'schema_name', 'created_on', 'updated_on']
+    default_values = {
+        'created_on': datetime.utcnow,
+        'updated_on': datetime.utcnow,
+    }
+    use_dot_notation = True
+
+    def __repr__(self):
+        return '<Feature Set %r>' % self.name

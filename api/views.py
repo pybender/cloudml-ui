@@ -18,7 +18,7 @@ from api.utils import ERR_INVALID_DATA, odesk_error_response, \
 from api.resources import BaseResource, NotFound, ValidationError
 from api.forms import ModelAddForm, ModelEditForm, ImportHandlerAddForm, \
     AddTestForm, InstanceAddForm, InstanceEditForm, ImportHandlerEditForm, \
-    DataSetEditForm, NamedFeatureTypeAddForm
+    DataSetEditForm, NamedFeatureTypeAddForm, ClassifierAddForm
 from core.importhandler.importhandler import ExtractionPlan, \
     RequestImportHandler
 
@@ -1005,6 +1005,21 @@ api.add_resource(StatisticsResource, '/cloudml/statistics/')
 
 
 # Features specific resources
+class ClassifierResource(BaseResource):
+    """
+    Classifier API methods
+    """
+    MESSAGE404 = "Named feature type doesn't exist"
+    OBJECT_NAME = 'classifier'
+    DEFAULT_FIELDS = [u'_id', 'name']
+    post_form = ClassifierAddForm
+
+    @property
+    def Model(self):
+        return app.db.Classifier
+
+api.add_resource(ClassifierResource, '/cloudml/features/classifiers/')
+
 
 class NamedFeatureTypeResource(BaseResource):
     """

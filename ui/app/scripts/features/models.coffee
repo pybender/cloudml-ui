@@ -1,5 +1,30 @@
 angular.module('app.features.models', ['app.config'])
 
+.factory('Classifier', [
+  '$http'
+  '$q'
+  'settings'
+  'BaseModel'
+  
+  ($http, $q, settings, BaseModel) ->
+    class Classifier extends BaseModel
+      BASE_API_URL: "#{settings.apiUrl}features/classifiers/"
+      BASE_UI_URL: "/features/classifiers/"
+      API_FIELDNAME: 'classifier'
+      @MAIN_FIELDS: 'name,type,created_on,created_by,params'
+      @$TYPES_LIST: ['stochastic gradient descent classifier',
+      'support vector regression', 'logistic regression']
+
+      _id: null
+      name: null
+      type: null
+      params: null
+      created_on: null
+      created_by: null
+
+    return Classifier
+])
+
 .factory('FeaturesSet', [
   '$http'
   '$q'
@@ -8,12 +33,19 @@ angular.module('app.features.models', ['app.config'])
   
   ($http, $q, settings, BaseModel) ->
     class FeaturesSet extends BaseModel
-      BASE_API_URL: "#{settings.apiUrl}tags/"
-      API_FIELDNAME: 'tag'
+      BASE_API_URL: "#{settings.apiUrl}features/sets/"
+      BASE_UI_URL: "/features/sets/"
+      API_FIELDNAME: 'set'
+      @MAIN_FIELDS: 'name,schema_name'
 
       _id: null
-      id: null
-      text: null
+      name: null
+      schema_name: null
+      features_count: 0
+      classifier: null
+      target_variable: null
+      created_on: null
+      created_by: null
 
     return FeaturesSet
 ])
@@ -68,6 +100,8 @@ angular.module('app.features.models', ['app.config'])
       type: 'int'
       input_format: null
       params: null
+      created_on: null
+      created_by: null
                    
     return NamedFeatureType
 ])

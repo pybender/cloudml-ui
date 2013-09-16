@@ -80,6 +80,7 @@ angular.module('app.controllers', ['app.config', ])
         $scope.savingProgress = '100%'
 
         _.delay (->
+          $scope.$emit 'SaveObjectCtl:save:success', $scope.model
           $location.path $scope.model.objectUrl()
           $scope.$apply()
         ), 300
