@@ -87,20 +87,20 @@ class ModelMigration(DbMigration):  # pragma: no cover
         self.target = {'train_records_count': {'$exists': False}}
         self.update = {'$set': {'train_records_count': 0}}
 
-    def allmigration09__clear_importhandler(self):
-        for doc in self.collection.find():
-            if not doc['train_import_handler'] is None:
-                print doc['train_import_handler'].id
-                handler = app.db.ImportHandler.find_one({'_id': doc['train_import_handler'].id})
-                if handler is None:
-                    doc['train_import_handler'] = None
-                    self.collection.save(doc)
-            if not doc['test_import_handler'] is None:
-                print doc['test_import_handler'].id
-                handler = app.db.ImportHandler.find_one({'_id': doc['test_import_handler'].id})
-                if handler is None:
-                    doc['test_import_handler'] = None
-                    self.collection.save(doc)
+    # def allmigration09__clear_importhandler(self):
+    #     for doc in self.collection.find():
+    #         if not doc['train_import_handler'] is None:
+    #             print doc['train_import_handler'].id
+    #             handler = app.db.ImportHandler.find_one({'_id': doc['train_import_handler'].id})
+    #             if handler is None:
+    #                 doc['train_import_handler'] = None
+    #                 self.collection.save(doc)
+    #         if not doc['test_import_handler'] is None:
+    #             print doc['test_import_handler'].id
+    #             handler = app.db.ImportHandler.find_one({'_id': doc['test_import_handler'].id})
+    #             if handler is None:
+    #                 doc['test_import_handler'] = None
+    #                 self.collection.save(doc)
 
     def allmigration10__add_current_task_id(self):
         self.target = {'current_task_id': {'$exists': False}}
