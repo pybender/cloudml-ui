@@ -4,41 +4,37 @@
 
 angular.module('app.features.controllers', ['app.config', ])
 
+# Feature Sets specific controllers
+
 .controller('FeaturesListCtrl', [
   '$scope'
-  '$location'
+  '$dialog'
   'FeaturesSet'
 
-  ($scope, $location, FeaturesSet) ->
+  ($scope, $dialog, FeaturesSet) ->
     $scope.MODEL = FeaturesSet
-    $scope.FIELDS = FeaturesSet.MAIN_FIELDS + ',tags,created_on,created_by,
-updated_on,updated_by,comparable'
-    $scope.ACTION = 'loading models'
-    $scope.currentTag = $location.search()['tag']
-    $scope.kwargs = {'tag': $scope.currentTag}
-    $scope.STATUSES = ['', 'New', 'Queued', 'Importing',
-    'Imported', 'Requesting Instance', 'Instance Started',
-    'Training', 'Trained', 'Error', 'Canceled']
-    $scope.filter_opts = {}
+    $scope.FIELDS = FeaturesSet.MAIN_FIELDS
+    $scope.ACTION = 'loading feature sets'
+
+    $scope.add = () ->
+      set = new FeaturesSet()
+      $scope.openDialog($dialog, set,
+        'partials/features/sets/add.html',
+        'AddFeatureSetDialogCtrl', 'modal', 'add FeaturesSet', 'FeaturesSets')
 ])
-
-
-# Feature Sets specific controllers
 
 .controller('FeaturesSetDetailsCtrl', [
   '$scope'
-  '$routeParams'
   'FeaturesSet'
   'Feature'
   'NamedFeatureType'
 
-  ($scope, $routeParams, FeaturesSet, Feature, NamedFeatureType) ->
+  ($scope, FeaturesSet, Feature, NamedFeatureType) ->
     if not $routeParams.id then err = "Can't initialize without instance id"
     $scope.featuresSet = new FeaturesSet({_id: $routeParams.id})
 
     $scope.featuresSet.$load(
-      show: 'name,type,created_on,updated_on,ip,description,is_default,
-  created_by'
+      show: FeaturesSet.MAIN_FIELDS
       ).then (->), ((opts)-> $scope.setError(opts, 'loading featuresSet'))
 
     $scope.feature = new Feature()
@@ -52,6 +48,26 @@ updated_on,updated_by,comparable'
       #$scope.err = $scope.setError(opts, 'loading instances')
     )
   ])
+
+.controller('AddFeatureSetDialogCtrl', [
+  '$scope'
+  'dialog'
+  'FeaturesSet'
+  'Classifier'
+
+  ($scope, dialog, FeaturesSet, Classifier) ->
+    $scope.model = dialog.model
+    Classifier.$loadAll(
+      show: 'name'
+    ).then ((opts) ->
+      $scope.classifiers = opts.objects
+    ), ((opts) ->
+      $scope.err = $scope.setError(opts, 'loading classifiers')
+    )
+    $scope.$on('SaveObjectCtl:save:success', (event, current) ->
+      dialog.close()
+    )
+])
 
 # Classifiers Controllers
 

@@ -1,0 +1,42 @@
+<div ng-controller="SaveObjectCtl">
+  <div class="modal-header">
+    <button ng-click="close()" class="close" data-dismiss="modal">×</button>
+    <h3>Add new features set</h3>
+  </div>
+
+  <div class="modal-body">
+    <loadindicator title="Adding features set..." ng-show="saving" progress="savingProgress"></loadindicator>
+
+    <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+
+    <form name="Form" class="form-horizontal">
+      <div class="control-group" ng-class="{error: Form.name.$invalid}">
+        <label class="control-label">Name</label>
+        <div class="controls">
+          <input type="text" name="name" ng-model="model.name" required />
+          <span ng-show="Form.name.$error.required" class="help-inline">*</span>
+        </div>
+      </div>
+      <div class="control-group" ng-class="{error: Form.name.$invalid}">
+        <label class="control-label">Schema Name</label>
+        <div class="controls">
+          <input type="text" name="schema_name" ng-model="model.schema_name" required />
+          <span ng-show="Form.schema_name.$error.required" class="help-inline">*</span>
+        </div>
+      </div>
+      <div class="control-group" ng-class="{error: Form.classifier.$invalid}">
+        <label class="control-label">Classifier</label>
+        <div class="controls">
+          <select name="classifier" ng-model="model.classifier" required>
+            <option ng-repeat="classifier in classifiers" value="{{ classifier._id }}">{{ classifier.name }}</option>
+          </select>
+          <span ng-show="Form.classifier.$error.required" class="help-inline">*</span>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="modal-footer">
+    <button ng-click="save(['name', 'schema_name', 'classifier'])" ng-disabled="Form.$invalid" class="btn btn-primary">Add new feature set</button> <small>and start adding features</small>
+  </div>
+</div>

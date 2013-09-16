@@ -1,12 +1,13 @@
 <h2>
   Features Set List
   <div class="actions">
-      <a class="btn btn-info" href="#/aws/instances/add">
+      <a class="btn btn-info" ng-click="add()">
         <i class="status-icon icon-plus"></i> Add new Feature Set
       </a>
   </div>
 </h2>
 
+<div  ng-controller="BaseListCtrl" ng-init="init(true, 'feature_sets')">
 <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
 
 <alert-message ng-show="objects.length == 0" class="alert-info" msg="No AWS instances found"></alert-message>
@@ -19,7 +20,6 @@
     <th>Classifier Type</th>
     <th>Features Count</th>
     <th>Created</th>
-    <th>Actions</th>
   </tr>
 </thead>
 <tbody>
@@ -28,14 +28,13 @@
       <a href="#{{ fset.objectUrl() }}">{{ fset.name }}</a>
     </td>
     <td>{{ fset.schema_name }}</td>
-    <td>{{ instance.classifier_type }}</td>
-    <td>{{ instance.features_count }}</td>
+    <td>{{ fset.classifier.name }} ({{ fset.classifier.type }})</td>
+    <td>{{ fset.features_count }}</td>
     <td>
-        {{ instance.created_on|format_date }}<br>
-        <small ng-show="instance.created_by">by {{ instance.created_by.name }} ({{ instance.created_by.uid }})</small>
-    </td>
-    <td ng-controller="FeaturesActionsCtrl">
+        {{ fset.created_on|format_date }}<br>
+        <small ng-show="fset.created_by">by {{ fset.created_by.name }} ({{ fset.created_by.uid }})</small>
     </td>
   </tr>
 </tbody>
 </table>
+</div>

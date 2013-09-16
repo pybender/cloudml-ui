@@ -890,6 +890,7 @@ class FeatureSet(BaseDocument):
     default_values = {
         'created_on': datetime.utcnow,
         'updated_on': datetime.utcnow,
+        'features_count': 0,
     }
     use_dot_notation = True
 

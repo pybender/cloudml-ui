@@ -36,7 +36,8 @@ angular.module('app.features.models', ['app.config'])
       BASE_API_URL: "#{settings.apiUrl}features/sets/"
       BASE_UI_URL: "/features/sets/"
       API_FIELDNAME: 'set'
-      @MAIN_FIELDS: 'name,schema_name'
+      @MAIN_FIELDS: 'name,schema_name,classifier,
+features_count,created_on,created_by'
 
       _id: null
       name: null

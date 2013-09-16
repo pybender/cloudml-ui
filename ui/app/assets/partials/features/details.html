@@ -4,7 +4,7 @@
 </div>
 </h2>
 
-<div title="quick info" ng-init="obj=instance">
+<div title="quick info" ng-init="obj=featuresSet">
   <ng-include src="'/partials/parts/created_tags.html'"></ng-include>
 </div>
 <p></p>
@@ -12,7 +12,7 @@
 <alert-message ng-show="err" class="alert-error" msg='{{ err }}' unsafe></alert-message>
 
 <div>Schema Name: <span class="value">{{ featuresSet.schema_name }}</span></div>
-<div>Classifier: <span class="value"></span></div>
+<div>Classifier: <span class="value">{{ featuresSet.classifier.name }} ({{ featuresSet.classifier.type }})</span></div>
 <div>Target Variable: <span class="value">{{ featuresSet.target_variable }}</span></div>
 
 <h4>Features List

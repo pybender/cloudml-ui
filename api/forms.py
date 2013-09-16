@@ -484,6 +484,25 @@ class NamedFeatureTypeAddForm(BaseForm):
             return json.loads(value)
 
 
+class FeatureSetAddForm(BaseForm):
+    fields = ('name', 'schema_name', 'classifier', )
+
+    def clean_name(self, value):
+        if not value:
+            raise ValidationError('name is required')
+        return value
+
+    def clean_classifier(self, value):
+        if not value:
+            raise ValidationError('classifier is required')
+
+        classifier = app.db.Classifier.get_from_id(ObjectId(value))
+        if not classifier:
+            raise ValidationError('classifier not found')
+
+        return classifier
+
+
 class ClassifierAddForm(BaseForm):
     fields = ('name', 'type', 'params', )
 

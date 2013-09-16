@@ -16,9 +16,7 @@ from api.decorators import public, public_actions
 from api.utils import ERR_INVALID_DATA, odesk_error_response, \
     ERR_NO_SUCH_MODEL, ERR_UNPICKLING_MODEL, slugify
 from api.resources import BaseResource, NotFound, ValidationError
-from api.forms import ModelAddForm, ModelEditForm, ImportHandlerAddForm, \
-    AddTestForm, InstanceAddForm, InstanceEditForm, ImportHandlerEditForm, \
-    DataSetEditForm, NamedFeatureTypeAddForm, ClassifierAddForm
+from api.forms import *
 from core.importhandler.importhandler import ExtractionPlan, \
     RequestImportHandler
 
@@ -1005,6 +1003,22 @@ api.add_resource(StatisticsResource, '/cloudml/statistics/')
 
 
 # Features specific resources
+class FeatureSetResource(BaseResource):
+    """
+    Classifier API methods
+    """
+    MESSAGE404 = "Feature set doesn't exist"
+    OBJECT_NAME = 'set'
+    DEFAULT_FIELDS = [u'_id', 'name']
+    post_form = FeatureSetAddForm
+
+    @property
+    def Model(self):
+        return app.db.FeatureSet
+
+api.add_resource(FeatureSetResource, '/cloudml/features/sets/')
+
+
 class ClassifierResource(BaseResource):
     """
     Classifier API methods

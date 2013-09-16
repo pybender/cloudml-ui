@@ -6,6 +6,11 @@
   {{ classifier.name }} details
 </h2>
 
+<div title="quick info" ng-init="obj=classifier">
+  <ng-include src="'/partials/parts/created_tags.html'"></ng-include>
+</div>
+<p></p>
+
 <div>
   <div>
       Type: <span class="value">{{ classifier.type }}</span>

@@ -6,6 +6,11 @@
   {{ namedType.name }} details
 </h2>
 
+<div title="quick info" ng-init="obj=namedType">
+  <ng-include src="'/partials/parts/created_tags.html'"></ng-include>
+</div>
+<p></p>
+
 <div>
   <div>
       Type: <span class="value">{{ namedType.type }}</span>
