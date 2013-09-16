@@ -474,6 +474,9 @@ class NamedFeatureTypeAddForm(BaseForm):
     def clean_type(self, value):
         if not value:
             raise ValidationError('type is required')
+        if not value in app.db.NamedFeatureType.TYPES_LIST:
+            raise ValidationError('invalid type. please choose one of %s' %
+                                  app.db.NamedFeatureType.TYPES_LIST)
         return value
 
     def clean_params(self, value):
