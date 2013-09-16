@@ -5,7 +5,7 @@
   </div>
 
   <div class="modal-body">
-    <loadindicator title="Adding named feature type..." ng-show="saving" progress="savingProgress"></loadindicator>
+    <loadindicator title="Adding named feature..." ng-show="saving" progress="savingProgress"></loadindicator>
 
     <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
 
@@ -29,22 +29,31 @@
       <div class="control-group" ng-class="{error: Form.input_format.$invalid}">
         <label class="control-label">Input Format</label>
         <div class="controls">
-          <input type="text" name="input_format" ng-model="model.input_format" required />
+          <input type="text" name="input_format" ng-model="model.input_format" />
           <span ng-show="Form.input_format.$error.required" class="help-inline">*</span>
+        </div>
+      </div>
+      <div class="control-group" ng-class="{error: Form.transformer.$invalid}">
+        <label class="control-label">Transformer</label>
+        <div class="controls">
+          <select name="transformer" ng-model="model.transformer">
+            <option ng-repeat="transformer in transformers" value="{{ transformer._id }}">{{ transformer.name }}</option>
+          </select>
+          <span ng-show="Form.transformer.$error.required" class="help-inline">*</span>
         </div>
       </div>
       <div class="control-group" ng-class="{error: Form.default.$invalid}">
         <label class="control-label">Default</label>
         <div class="controls">
-          <input type="text" name="default" ng-model="model.default" required />
+          <input type="text" name="default" ng-model="model.default" />
           <span ng-show="Form.default.$error.required" class="help-inline">*</span>
         </div>
       </div>
-      # TODO: params
+      # TODO: params, scaler
     </form>
   </div>
 
   <div class="modal-footer">
-    <button ng-click="save(['name', 'type', 'input_format'])" ng-disabled="Form.$invalid" class="btn btn-primary">Add new classifer</button> <small>and start using it in features</small>
+    <button ng-click="save(['name', 'type', 'input_format'])" ng-disabled="Form.$invalid" class="btn btn-primary">Add new feature</button>
   </div>
 </div>

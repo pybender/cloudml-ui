@@ -1051,6 +1051,37 @@ class NamedFeatureTypeResource(BaseResource):
 api.add_resource(NamedFeatureTypeResource, '/cloudml/features/named_types/')
 
 
+class TransformerResource(BaseResource):
+    """
+    Transformer API methods
+    """
+    MESSAGE404 = "transformer doesn't exist"
+    OBJECT_NAME = 'transformer'
+    DEFAULT_FIELDS = [u'_id', 'name']
+    post_form = TransformerAddForm
+
+    @property
+    def Model(self):
+        return app.db.Transformer
+
+api.add_resource(TransformerResource, '/cloudml/features/transformers/')
+
+
+class FeatureResource(BaseResource):
+    """
+    Feature API methods
+    """
+    MESSAGE404 = "Feature doesn't exist"
+    OBJECT_NAME = 'feature'
+    DEFAULT_FIELDS = [u'_id', 'name']
+    post_form = FeatureAddForm
+
+    @property
+    def Model(self):
+        return app.db.Feature
+
+api.add_resource(FeatureResource, '/cloudml/features/items/')
+
 def populate_parser(model, is_requred=False):
     parser = reqparse.RequestParser()
     for param in model.import_params:

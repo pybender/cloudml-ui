@@ -142,7 +142,7 @@ App.config([
       templateUrl: '/partials/login/auth.html'
     })
     .when('/features/sets', {
-      controller: "FeaturesListCtrl"
+      controller: "FeaturesSetListCtrl"
       templateUrl: '/partials/features/list.html'
     })
     .when('/features', {
@@ -179,6 +179,14 @@ App.config([
     .when('/features/classifiers/:id', {
       controller: 'ClassifierDetailsCtrl'
       templateUrl: '/partials/features/classifiers/details.html'
+    })
+    .when('/features/transformers', {
+      controller: "TransformersListCtrl"
+      templateUrl: '/partials/features/transformers/list.html'
+    })
+    .when('/features/transformers/:id', {
+      controller: 'TransformerDetailsCtrl'
+      templateUrl: '/partials/features/transformers/details.html'
     })
 
     # Catch all

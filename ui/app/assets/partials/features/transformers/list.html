@@ -1,0 +1,38 @@
+<h2>
+  Transformers List
+  <div class="actions">
+      <a class="btn btn-info" ng-click="add()">
+        <i class="status-icon icon-plus"></i> Add new transformer
+      </a>
+  </div>
+</h2>
+
+<div ng-controller="BaseListCtrl" ng-init="init(true, 'transformers')">
+	<alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+
+	<alert-message ng-show="objects.length == 0" class="alert-info" msg="No transformers found"></alert-message>
+
+	<table ng-hide="objects.length == 0" class="table table-hover">
+	<thead>
+	  <tr>
+	    <th>Name</th>
+	    <th>Type</th>
+	    <th>Params</th>
+	    <th>Created</th>
+	  </tr>
+	</thead>
+	<tbody>
+	  <tr ng-repeat="transformer in objects">
+	    <td>
+	      <a href="#{{ transformer.objectUrl() }}">{{ transformer.name }}</a>
+	    </td>
+	    <td>{{ transformer.type }}</td>
+	    <td>{{ transformer.params }}</td>
+	    <td>
+	        {{ transformer.created_on|format_date }}<br>
+	        <small ng-show="transformer.created_by">by {{ transformer.created_by.name }} ({{ transformer.created_by.uid }})</small>
+	    </td>
+	  </tr>
+	</tbody>
+	</table>
+</div>

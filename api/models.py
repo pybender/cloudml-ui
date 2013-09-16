@@ -896,3 +896,61 @@ class FeatureSet(BaseDocument):
 
     def __repr__(self):
         return '<Feature Set %r>' % self.name
+
+
+from core.trainer.transformers import TRANSFORMER_TO_VECTORIZER
+
+@app.conn.register
+class Transformer(BaseDocument):
+    __collection__ = 'transformers'
+
+    TYPES_LIST = TRANSFORMER_TO_VECTORIZER.keys()
+
+    structure = {
+        'name': basestring,
+        'type': basestring,
+        'params': dict,
+        'created_on': datetime,
+        'created_by': dict,
+        'updated_on': datetime,
+        'updated_by': dict,
+    }
+    required_fields = ['name', 'type', 'created_on', 'updated_on']
+    default_values = {
+        'created_on': datetime.utcnow,
+        'updated_on': datetime.utcnow,
+    }
+    use_dot_notation = True
+
+    def __repr__(self):
+        return '<Transformer %r>' % self.name
+
+
+@app.conn.register
+class Feature(BaseDocument):
+    __collection__ = 'features1'
+
+    structure = {
+        'name': basestring,
+        'type': basestring,
+        'input_format': basestring,
+        'transformer': Transformer,
+        'params': dict,
+        'required': bool,
+        'scaler': dict,
+        'default': basestring,
+        'is_target_variable': bool,
+        'created_on': datetime,
+        'created_by': dict,
+        'updated_on': datetime,
+        'updated_by': dict,
+    }
+    required_fields = ['name', 'type', 'created_on', 'updated_on']
+    default_values = {
+        'created_on': datetime.utcnow,
+        'updated_on': datetime.utcnow,
+    }
+    use_dot_notation = True
+
+    def __repr__(self):
+        return '<Feature %r>' % self.name

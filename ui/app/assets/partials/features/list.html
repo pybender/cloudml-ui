@@ -7,7 +7,7 @@
   </div>
 </h2>
 
-<div  ng-controller="BaseListCtrl" ng-init="init(true, 'feature_sets')">
+<div ng-controller="BaseListCtrl" ng-init="init(true, 'feature_sets')">
 <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
 
 <alert-message ng-show="objects.length == 0" class="alert-info" msg="No AWS instances found"></alert-message>

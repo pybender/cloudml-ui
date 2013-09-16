@@ -1,0 +1,21 @@
+<alert-message ng-show="msg" class="alert-info" msg='{{ msg }}' unsafe></alert-message>
+
+<alert-message ng-show="err" class="alert-error" msg='{{ err }}' unsafe></alert-message>
+
+<h2 class="title">
+  {{ transformer.name }} details
+</h2>
+
+<div title="quick info" ng-init="obj=classifier">
+  <ng-include src="'/partials/parts/created_tags.html'"></ng-include>
+</div>
+<p></p>
+
+<div>
+  <div>
+      Type: <span class="value">{{ transformer.type }}</span>
+  </div>
+  <div>
+      Params: <span class="value">{{ transformer.params }}</span>
+  </div>
+</div>

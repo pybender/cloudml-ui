@@ -6,7 +6,7 @@ angular.module('app.features.controllers', ['app.config', ])
 
 # Feature Sets specific controllers
 
-.controller('FeaturesListCtrl', [
+.controller('FeaturesSetListCtrl', [
   '$scope'
   '$dialog'
   'FeaturesSet'
@@ -63,14 +63,28 @@ angular.module('app.features.controllers', ['app.config', ])
 ])
 
 # Feature Items Controllers
+.controller('FeaturesListCtrl', [
+  '$scope'
+  '$dialog'
+  'Feature'
+
+  ($scope, $dialog, Feature) ->
+    $scope.MODEL = Feature
+    $scope.FIELDS = Feature.MAIN_FIELDS
+    $scope.ACTION = 'loading features'
+
+    $scope.init = (featureSet) ->
+      $scope.kwargs = {'feature_set_id': featureSet._id}
+])
 
 .controller('AddFeatureDialogCtrl', [
   '$scope'
   'dialog'
   'Feature'
   'NamedFeatureType'
+  'Transformer'
 
-  ($scope, dialog, Feature, NamedFeatureType) ->
+  ($scope, dialog, Feature, NamedFeatureType, Transformer) ->
     $scope.featureSet = dialog.model
     $scope.model = new Feature()
     $scope.dialog = dialog
@@ -84,6 +98,14 @@ angular.module('app.features.controllers', ['app.config', ])
         $scope.types.push nt.name
     ), ((opts) ->
       $scope.err = $scope.setError(opts, 'loading instances')
+    )
+
+    Transformer.$loadAll(
+      show: 'name'
+    ).then ((opts) ->
+      $scope.transformers = opts.objects
+    ), ((opts) ->
+      $scope.err = $scope.setError(opts, 'loading transformers')
     )
 
     $scope.$on('SaveObjectCtl:save:success', (event, current) ->
@@ -140,6 +162,55 @@ angular.module('app.features.controllers', ['app.config', ])
     )
 ])
 
+# Transformer Controllers
+
+.controller('TransformersListCtrl', [
+  '$scope'
+  '$dialog'
+  'Transformer'
+
+  ($scope, $dialog, Transformer) ->
+    $scope.MODEL = Transformer
+    $scope.FIELDS = Transformer.MAIN_FIELDS
+    $scope.ACTION = 'loading transformers'
+
+    $scope.add = () ->
+      transformer = new Transformer()
+      $scope.openDialog($dialog, transformer,
+        'partials/features/transformers/add.html',
+        'AddTransformerDialogCtrl', 'modal', 'add transformer', 'transformers')
+])
+
+.controller('TransformerDetailsCtrl', [
+  '$scope'
+  '$routeParams'
+  'Transformer'
+
+  ($scope, $routeParams, Transformer) ->
+    if not $routeParams.id
+      err = "Can't initialize without id"
+
+    $scope.transformer = new Transformer({_id: $routeParams.id})
+    $scope.transformer.$load(
+      show: Transformer.MAIN_FIELDS
+      ).then (->), ((opts)-> $scope.setError(opts, 'loading transformer'))
+  ])
+
+.controller('AddTransformerDialogCtrl', [
+  '$scope'
+  '$rootScope'
+  'dialog'
+  'Transformer'
+
+  ($scope, $rootScope, dialog, Transformer) ->
+    $scope.model = dialog.model
+    $scope.types = Transformer.$TYPES_LIST
+
+    $scope.$on('SaveObjectCtl:save:success', (event, current) ->
+      dialog.close()
+    )
+])
+
 # Named Feature Types Controllers
 
 .controller('FeatureTypeListCtrl', [
@@ -166,8 +237,9 @@ angular.module('app.features.controllers', ['app.config', ])
   '$scope'
   '$routeParams'
   'NamedFeatureType'
+  'Transformer'
 
-  ($scope, $routeParams, NamedFeatureType) ->
+  ($scope, $routeParams, NamedFeatureType, Transformer) ->
     if not $routeParams.id
       err = "Can't initialize without id"
 
@@ -175,12 +247,4 @@ angular.module('app.features.controllers', ['app.config', ])
     $scope.namedType.$load(
       show: NamedFeatureType.MAIN_FIELDS
       ).then (->), ((opts)-> $scope.setError(opts, 'loading featuresSet'))
-  ])
-
-.controller('FeaturesActionsCtrl', [
-  '$scope'
-  'FeaturesSet'
-
-  ($scope, $rootScope, FeaturesSet) ->
-    
   ])
