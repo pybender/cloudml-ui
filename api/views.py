@@ -1080,10 +1080,16 @@ class TransformerResource(BaseResource):
     OBJECT_NAME = 'transformer'
     DEFAULT_FIELDS = [u'_id', 'name']
     post_form = TransformerAddForm
+    GET_ACTIONS = ('configuration', )
 
     @property
     def Model(self):
         return app.db.Transformer
+
+    def _get_configuration_action(self, **kwargs):
+        from api.models import TRANSFORMERS
+        return self._render({'configuration': TRANSFORMERS})
+
 
 api.add_resource(TransformerResource, '/cloudml/features/transformers/')
 

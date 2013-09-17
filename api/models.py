@@ -929,13 +929,46 @@ class FeatureSet(BaseDocument):
         return '<Feature Set %r>' % self.name
 
 
-from core.trainer.transformers import TRANSFORMER_TO_VECTORIZER
+# TODO: move and use it in cloudml project
+TRANSFORMERS = {
+    'Dictionary': {
+        #'mthd': get_dict_vectorizer,
+        'parameters': ['separator', 'sparse'],
+        'default': {},  # default value
+        'defaults': {}  # default values of the parameters
+    },
+    'Count': {
+        #'mthd': get_count_vectorizer,
+        'parameters': ['charset', 'charset_error',
+                     'strip_accents', 'lowercase',
+                     'stop_words', 'token_pattern',
+                     'analyzer', 'max_df', 'min_df',
+                     'max_features', 'vocabulary',
+                     'binary'],
+        'default': '',
+        'defaults': {}
+    },
+    'Tfidf': {
+        #'mthd': get_tfidf_vectorizer,
+        'parameters': ['charset', 'charset_error',
+                     'strip_accents', 'lowercase',
+                     'analyzer', 'stop_words',
+                     'token_pattern', 'max_df',
+                     'min_df', 'max_features',
+                     'vocabulary', 'binary',
+                     'use_idf', 'smooth_idf',
+                     'sublinear_tf'],
+        'default': '',
+        'defaults': {}
+    }
+}
+
 
 @app.conn.register
 class Transformer(BaseDocument):
     __collection__ = 'transformers'
 
-    TYPES_LIST = TRANSFORMER_TO_VECTORIZER.keys()
+    TYPES_LIST = TRANSFORMERS.keys()
     FIELDS_TO_SERIALIZE = ('name', 'type', 'params')
 
     structure = {

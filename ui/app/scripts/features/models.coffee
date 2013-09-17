@@ -145,36 +145,17 @@ scaler,default,is_target_variable,created_on,created_by'
       params: null
       created_on: null
       created_by: null
-                   
+
+      $save: (opts={}) =>
+        if @params?
+          @params = JSON.stringify(@params)
+        super opts
+
+      $getConfiguration: (opts={}) =>
+        @$make_request("#{@BASE_API_URL}#{@_id}/action/configuration/",
+                       load=false)
+
     return Transformer
-])
-
-
-.factory('NamedFeatureType', [
-  '$http'
-  '$q'
-  'settings'
-  'BaseModel'
-  
-  ($http, $q, settings, BaseModel) ->
-    class NamedFeatureType extends BaseModel
-      BASE_API_URL: "#{settings.apiUrl}features/named_types/"
-      BASE_UI_URL: "/features/types/"
-      API_FIELDNAME: 'named_type'
-      @MAIN_FIELDS: 'name,type,input_format,params,created_on,created_by'
-      @$TYPES_LIST: ['boolean', 'int', 'float', 'numeric', 'date',
-                   'map', 'categorical_label', 'categorical',
-                   'text', 'regex', 'composite']
-
-      _id: null
-      name: null
-      type: 'int'
-      input_format: null
-      params: null
-      created_on: null
-      created_by: null
-                   
-    return NamedFeatureType
 ])
 
 .factory('NamedFeatureType', [
