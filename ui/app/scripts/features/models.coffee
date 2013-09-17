@@ -18,9 +18,17 @@ angular.module('app.features.models', ['app.config'])
       _id: null
       name: null
       type: null
-      params: null
+      params: {}
       created_on: null
       created_by: null
+
+      $getConfiguration: (opts={}) =>
+        @$make_request("#{@BASE_API_URL}#{@_id}/action/configuration/",
+                       load=false)
+
+      $save: (opts={}) =>
+        @params = JSON.stringify(@params)
+        super opts
 
     return Classifier
 ])

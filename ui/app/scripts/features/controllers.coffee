@@ -155,7 +155,20 @@ angular.module('app.features.controllers', ['app.config', ])
 
   ($scope, $rootScope, dialog, Classifier) ->
     $scope.model = dialog.model
-    $scope.types = Classifier.$TYPES_LIST
+    $scope.dialog = dialog
+    $scope.params = {}
+    $scope.model.$getConfiguration(
+    ).then ((opts)->
+      $scope.configuration = opts.data.configuration
+    ), ((opts)->
+      $scope.setError(opts, 'loading classifier types and parameters')
+    )
+
+    $scope.loadParameters = () ->
+      $scope.model.params = {}
+      $scope.params = $scope.configuration[$scope.model.type]
+      for name, val of $scope.params.defaults
+        $scope.model.params[name] = val
 
     $scope.$on('SaveObjectCtl:save:success', (event, current) ->
       dialog.close()

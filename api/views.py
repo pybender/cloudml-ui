@@ -1027,10 +1027,15 @@ class ClassifierResource(BaseResource):
     OBJECT_NAME = 'classifier'
     DEFAULT_FIELDS = [u'_id', 'name']
     post_form = ClassifierAddForm
+    GET_ACTIONS = ('configuration', )
 
     @property
     def Model(self):
         return app.db.Classifier
+
+    def _get_configuration_action(self, **kwargs):
+        from core.trainer.classifier_settings import CLASSIFIERS
+        return self._render({'configuration': CLASSIFIERS})
 
 api.add_resource(ClassifierResource, '/cloudml/features/classifiers/')
 

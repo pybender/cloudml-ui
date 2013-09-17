@@ -91,12 +91,12 @@ angular.module('app.base', ['app.config', 'app.services'])
           transformRequest: angular.identity
         )
 
-      $make_request: (url, opts={}, method='GET', data={}) =>
+      $make_request: (url, opts={}, method='GET', data={}, load=true) =>
         fd = new FormData()
         for key, val of data
           fd.append(key, val)
         
-        $http(
+        res = $http(
           method: method
           #headers: settings.apiRequestDefaultHeaders
           headers: {'Content-Type': undefined, 'X-Requested-With': null,
@@ -107,11 +107,13 @@ angular.module('app.base', ['app.config', 'app.services'])
           transformResponse: transformResponse
           params: _.extend {
           }, opts
-        ).then ((resp) =>
-          @loaded = true
-          @loadFromJSON(eval("resp.data.#{@API_FIELDNAME}"))
-          return resp
         )
+        if load
+          res.then ((resp) =>
+            @loaded = true
+            @loadFromJSON(eval("resp.data.#{@API_FIELDNAME}"))
+            return resp
+          )
 
       @$make_all_request: (url, resolver, opts={}) ->
         dfd = $q.defer()

@@ -520,6 +520,7 @@ class ClassifierAddForm(BaseForm):
         return value
 
     def clean_params(self, value):
+        # TODO: parse type: bool, int
         if value:
             return json.loads(value)
 
