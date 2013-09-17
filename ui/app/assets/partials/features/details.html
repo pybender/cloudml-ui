@@ -11,7 +11,9 @@
 <alert-message ng-show="err" class="alert-error" msg='{{ err }}' unsafe></alert-message>
 
 <div>Schema Name: <span class="value">{{ featuresSet.schema_name }}</span></div>
-<div>Classifier: <span class="value">{{ featuresSet.classifier.name }} ({{ featuresSet.classifier.type }})</span></div>
+<div>Classifier: <a target="_blank" href="#{{ featuresSet.classifier.objectUrl() }}" class="value">
+	{{ featuresSet.classifier.name }} ({{ featuresSet.classifier.type }})
+</a></div>
 <div>Target Variable: <span class="value">{{ featuresSet.target_variable }}</span></div>
 
 <div ng-controller="FeaturesListCtrl" >
@@ -22,6 +24,8 @@
       </a>
   	</div>
 </h4>
+
+<div ng-controller="FeatureFieldsSelectsLoader">
 <table ng-controller="BaseListCtrl" ng-init="init(true, 'feature_sets')" class="table table-hover">
 	<thead>
 	<tr>
@@ -41,15 +45,14 @@
 	<tbody>
 		<tr ng-repeat="feature in objects">
 			<td><span title="Feature Name" class="title" ng-bind="feature.name || 'feature name here'" editable="feature" value="feature.name" editable-field="name" editable-input="text" editable-placement="right"></span></td>
-			<td><span title="Feature Type" ng-bind="feature.type" editable="feature" value="feature.type" editable-field="type" editable-placement="right"
-editable-input="select" source="types"></span></td>
-			<td></td>
-			<td></td>
-			<td></td>
-			<td><a ng-show="feature.is_required"><i class="icon-ok" title="Make not required" /></a><a ng-hide="feature.is_required"><i class="icon-remove" title="Make required" /></a></td>
-			<td></td>
-			<td><span title="Default Value" class="title" ng-bind="feature.default" editable="feature" value="feature.default" editable-field="default" editable-input="text" editable-placement="right"></span></td>
-			<td><span ng-show="feature.is_target_variable"><i class="icon-ok" /></span><a ng-hide="feature.is_target_variable"><i class="icon-check" title="Make this variable target" /></a></td>
+			<td><span title="Feature Type" ng-bind="feature.type" editable="feature" value="feature.type" editable-field="type" editable-placement="right" editable-input="select" source="types"></span></td>
+			<td><span title="Input Format" ng-bind="feature.input_format" editable="feature" value="feature.input_format" editable-field="input_format" editable-placement="right"editable-input="text"></span></td>
+			<td><span title="Transformer" ng-bind="feature.transformer.name" editable="feature" value="feature.transformer.name" editable-field="transformer" editable-placement="right" editable-input="select" source="transformers"></span></td>
+			<td>{{ feature.params }}</td>
+			<td><a ng-show="feature.is_required"><i class="icon-ok" title="Make not required" /> yes</a><a ng-hide="feature.is_required"><i class="icon-remove" title="Make required" /> no</a></td>
+			<td># TODO:</td>
+			<td><span title="Default Value" class="title" ng-bind="feature.default || ''" editable="feature" value="feature.default" editable-field="default" editable-input="text" editable-placement="right"></span></td>
+			<td><span ng-show="feature.is_target_variable"><i class="icon-ok" /> yes</span><a ng-hide="feature.is_target_variable"><i class="icon-check" title="Make this variable target" /> make target</a></td>
 			<td>
 		        {{ feature.created_on|format_date }}<br>
 		        <small ng-show="feature.created_by">by {{ feature.created_by.name }} ({{ feature.created_by.uid }})</small>
@@ -58,4 +61,5 @@ editable-input="select" source="types"></span></td>
 		</tr>
 	</tbody>
 </table>
+</div>
 </div>

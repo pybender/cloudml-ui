@@ -98,6 +98,14 @@ class BaseForm(object):
     def validate_obj(self):
         pass
 
+    def _clean_document(self, value, Document, name):
+        if value:
+            obj = Document.get_from_id(ObjectId(value))
+            if not obj:
+                raise ValidationError('%s not found' % name)
+
+            return obj
+
 
 class BaseModelForm(BaseForm):
     def _clean_importhandler(self, value):
@@ -547,7 +555,9 @@ class TransformerAddForm(BaseForm):
 
 
 class FeatureAddForm(BaseForm):
-    fields = ('name', 'type', 'params', )
+    fields = ('name', 'type', 'input_format', 'transformer',
+              'params', 'required', 'scaler', 'default',
+              'is_target_variable')
 
     def clean_name(self, value):
         if not value:
@@ -562,7 +572,11 @@ class FeatureAddForm(BaseForm):
                                   app.db.NamedFeatureType.TYPES_LIST)
         return value
 
+    def clean_transformer(self, value):
+        return self._clean_document(value, app.db.Transformer, 'transformer')
+
     def clean_params(self, value):
+        # TODO: parse parameters types: int, bool
         if value:
             return json.loads(value)
 

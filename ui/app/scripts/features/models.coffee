@@ -38,8 +38,9 @@ angular.module('app.features.models', ['app.config'])
   '$q'
   'settings'
   'BaseModel'
+  'Classifier'
   
-  ($http, $q, settings, BaseModel) ->
+  ($http, $q, settings, BaseModel, Classifier) ->
     class FeaturesSet extends BaseModel
       BASE_API_URL: "#{settings.apiUrl}features/sets/"
       BASE_UI_URL: "/features/sets/"
@@ -56,6 +57,12 @@ features_count,created_on,created_by'
       created_on: null
       created_by: null
 
+      loadFromJSON: (origData) =>
+        super origData
+
+        if origData? and origData.classifier?
+          @classifier = new Classifier(origData.classifier)
+
     return FeaturesSet
 ])
 
@@ -70,7 +77,7 @@ features_count,created_on,created_by'
     class Feature extends BaseModel
       BASE_API_URL: "#{settings.apiUrl}features/items/"
       API_FIELDNAME: 'feature'
-      @MAIN_FIELDS: 'name,type,input_format,transformer__name,params,
+      @MAIN_FIELDS: 'name,type,input_format,transformer,params,
 scaler,default,is_target_variable,created_on,created_by'
 
       _id: null
@@ -83,6 +90,10 @@ scaler,default,is_target_variable,created_on,created_by'
       default: null
       is_required: false
       is_target_variable: false
+
+      $save: (opts={}) =>
+        @params = JSON.stringify(@params)
+        super opts
 
     return Feature
 ])

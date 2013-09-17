@@ -4,7 +4,7 @@
     <h3>Add new feature</h3>
   </div>
 
-  <div class="modal-body">
+  <div class="modal-body" ng-controller="FeatureFieldsSelectsLoader">
     <loadindicator title="Adding named feature..." ng-show="saving" progress="savingProgress"></loadindicator>
 
     <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
@@ -54,6 +54,6 @@
   </div>
 
   <div class="modal-footer">
-    <button ng-click="save(['name', 'type', 'input_format'])" ng-disabled="Form.$invalid" class="btn btn-primary">Add new feature</button>
+    <button ng-click="save(['name', 'type', 'input_format', 'transformer', 'params', 'required', 'scaler', 'default'])" ng-disabled="Form.$invalid" class="btn btn-primary">Add new feature</button>
   </div>
 </div>

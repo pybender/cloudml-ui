@@ -63,12 +63,42 @@ angular.module('app.features.controllers', ['app.config', ])
 ])
 
 # Feature Items Controllers
+.controller('FeatureFieldsSelectsLoader', [
+  '$scope'
+  '$dialog'
+  'Transformer'
+  'NamedFeatureType'
+
+  ($scope, $dialog, Transformer, NamedFeatureType) ->
+    $scope.types = NamedFeatureType.$TYPES_LIST
+    NamedFeatureType.$loadAll(
+      show: 'name'
+    ).then ((opts) ->
+      for nt in opts.objects
+        $scope.types.push nt.name
+    ), ((opts) ->
+      $scope.err = $scope.setError(opts, 'loading instances')
+    )
+
+    $scope.transformers = []
+    Transformer.$loadAll(
+      show: 'name'
+    ).then ((opts) ->
+      for tr in opts.objects
+        $scope.transformers.push tr.name
+    ), ((opts) ->
+      $scope.err = $scope.setError(opts, 'loading transformers')
+    )
+
+])
+
 .controller('FeaturesListCtrl', [
   '$scope'
   '$dialog'
   'Feature'
+  'NamedFeatureType'
 
-  ($scope, $dialog, Feature) ->
+  ($scope, $dialog, Feature, NamedFeatureType) ->
     $scope.MODEL = Feature
     $scope.FIELDS = Feature.MAIN_FIELDS
     $scope.ACTION = 'loading features'
@@ -88,25 +118,6 @@ angular.module('app.features.controllers', ['app.config', ])
     $scope.featureSet = dialog.model
     $scope.model = new Feature()
     $scope.dialog = dialog
-
-    # Loads list of types
-    $scope.types = NamedFeatureType.$TYPES_LIST
-    NamedFeatureType.$loadAll(
-      show: 'name'
-    ).then ((opts) ->
-      for nt in opts.objects
-        $scope.types.push nt.name
-    ), ((opts) ->
-      $scope.err = $scope.setError(opts, 'loading instances')
-    )
-
-    Transformer.$loadAll(
-      show: 'name'
-    ).then ((opts) ->
-      $scope.transformers = opts.objects
-    ), ((opts) ->
-      $scope.err = $scope.setError(opts, 'loading transformers')
-    )
 
     $scope.$on('SaveObjectCtl:save:success', (event, current) ->
       dialog.close()
