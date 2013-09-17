@@ -16,7 +16,7 @@
 </a></div>
 <div>Target Variable: <span class="value">{{ featuresSet.target_variable }}</span></div>
 
-<div ng-controller="FeaturesListCtrl" >
+<div ng-controller="FeaturesListCtrl" ng-init="init(featuresSet)">
 <h4>Features List
 	<div class="actions">
       <a class="btn btn-info" ng-click="addFeature()">
@@ -26,7 +26,7 @@
 </h4>
 
 <div ng-controller="FeatureFieldsSelectsLoader">
-<table ng-controller="BaseListCtrl" ng-init="init(true, 'feature_sets')" class="table table-hover">
+<table ng-controller="BaseListCtrl" ng-init="init(true, 'features')" class="table table-hover">
 	<thead>
 	<tr>
 		<th>Name</th>

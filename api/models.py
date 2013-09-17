@@ -928,11 +928,13 @@ class Transformer(BaseDocument):
 
 @app.conn.register
 class Feature(BaseDocument):
-    __collection__ = 'features1'
+    __collection__ = 'features2'
 
     structure = {
         'name': basestring,
         'type': basestring,
+        'feature_set': FeatureSet,
+        'feature_set_id': basestring,
         'input_format': basestring,
         'transformer': Transformer,
         'params': dict,

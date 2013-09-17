@@ -1085,7 +1085,8 @@ class FeatureResource(BaseResource):
     def Model(self):
         return app.db.Feature
 
-api.add_resource(FeatureResource, '/cloudml/features/items/')
+api.add_resource(FeatureResource, '/cloudml/features/<regex("[\w\.]*"):feature_set_id>/items/')
+
 
 def populate_parser(model, is_requred=False):
     parser = reqparse.RequestParser()

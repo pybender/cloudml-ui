@@ -75,7 +75,6 @@ features_count,created_on,created_by'
   
   ($http, $q, settings, BaseModel, NamedFeatureType) ->
     class Feature extends BaseModel
-      BASE_API_URL: "#{settings.apiUrl}features/items/"
       API_FIELDNAME: 'feature'
       @MAIN_FIELDS: 'name,type,input_format,transformer,params,
 scaler,default,is_target_variable,created_on,created_by'
@@ -83,16 +82,40 @@ scaler,default,is_target_variable,created_on,created_by'
       _id: null
       name: null
       type: 'int'
+      feature_set_id: null
       transformer: null
       input_format: null
-      params: {}
+      params: null
       scaler: null
       default: null
       is_required: false
       is_target_variable: false
 
+      constructor: (opts) ->
+        super opts
+        @BASE_API_URL = Feature.$get_api_url(@feature_set_id)
+
+      @$get_api_url: (feature_set_id) ->
+        return "#{settings.apiUrl}features/#{feature_set_id}/items/"
+
+      @$loadAll: (opts) ->
+        feature_set_id = opts.feature_set_id
+        if not feature_set_id
+          throw new Error "Feature Set is required"
+
+        resolver = (resp, Model) ->
+          {
+            objects: (
+              new Model(_.extend(obj, {loaded: true})) \
+              for obj in eval("resp.data.#{Model.prototype.API_FIELDNAME}s"))
+            _resp: resp
+          }
+        @$make_all_request(Feature.$get_api_url(feature_set_id),
+                           resolver, opts)
+
       $save: (opts={}) =>
-        @params = JSON.stringify(@params)
+        if @params?
+          @params = JSON.stringify(@params)
         super opts
 
     return Feature

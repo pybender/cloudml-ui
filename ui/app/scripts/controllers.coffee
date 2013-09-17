@@ -81,7 +81,8 @@ angular.module('app.controllers', ['app.config', ])
 
         _.delay (->
           $scope.$emit 'SaveObjectCtl:save:success', $scope.model
-          $location.path $scope.model.objectUrl()
+          if $scope.model.BASE_UI_URL
+            $location.path $scope.model.objectUrl()
           $scope.$apply()
         ), 300
 
@@ -198,11 +199,11 @@ angular.module('app.controllers', ['app.config', ])
 
       if $scope.autoload
         $scope.load()
-      else
-        $rootScope.$on('BaseListCtrl:start:load', (event, name) ->
-          if name == $scope.modelName
-            $scope.load()
-        )
+
+      $rootScope.$on('BaseListCtrl:start:load', (event, name) ->
+        if name == $scope.modelName
+          $scope.load()
+      )
 
       $scope.$watch('filter_opts ', (filter_opts, oldVal, scope) ->
         $scope.load()

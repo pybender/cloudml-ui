@@ -557,7 +557,7 @@ class TransformerAddForm(BaseForm):
 class FeatureAddForm(BaseForm):
     fields = ('name', 'type', 'input_format', 'transformer',
               'params', 'required', 'scaler', 'default',
-              'is_target_variable')
+              'is_target_variable', 'feature_set_id')
 
     def clean_name(self, value):
         if not value:
@@ -579,6 +579,15 @@ class FeatureAddForm(BaseForm):
         # TODO: parse parameters types: int, bool
         if value:
             return json.loads(value)
+
+    def clean_feature_set_id(self, value):
+        if not value:
+            raise ValidationError('Feature set ID is required')
+
+        self.cleaned_data['feature_set'] = self._clean_document(\
+                value, app.db.FeatureSet, 'feature set')
+
+        return value
 
 
 def populate_parser(import_params):

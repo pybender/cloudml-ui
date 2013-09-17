@@ -116,11 +116,12 @@ angular.module('app.features.controllers', ['app.config', ])
 
   ($scope, dialog, Feature, NamedFeatureType, Transformer) ->
     $scope.featureSet = dialog.model
-    $scope.model = new Feature()
+    $scope.model = new Feature({'feature_set_id': $scope.featureSet._id})
     $scope.dialog = dialog
 
     $scope.$on('SaveObjectCtl:save:success', (event, current) ->
       dialog.close()
+      $scope.$emit('BaseListCtrl:start:load', 'features')
     )
 ])
 
