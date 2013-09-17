@@ -37,7 +37,7 @@
         <label class="control-label">Transformer</label>
         <div class="controls">
           <select name="transformer" ng-model="model.transformer">
-            <option ng-repeat="transformer in transformers" value="{{ transformer._id }}">{{ transformer.name }}</option>
+            <option ng-repeat="transformer in transformers" value="{{ transformer }}">{{ transformer }}</option>
           </select>
           <span ng-show="Form.transformer.$error.required" class="help-inline">*</span>
         </div>

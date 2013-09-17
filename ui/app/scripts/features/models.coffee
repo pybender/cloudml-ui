@@ -63,6 +63,9 @@ features_count,created_on,created_by'
         if origData? and origData.classifier?
           @classifier = new Classifier(origData.classifier)
 
+      downloadUrl: =>
+        return "#{@BASE_API_URL}#{@_id}/action/download/"
+
     return FeaturesSet
 ])
 

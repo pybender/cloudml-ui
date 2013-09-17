@@ -1,6 +1,10 @@
 <h2>
     {{ featuresSet.name|capfirst }} Details
-</div>
+	<div class="actions">
+		<a href="{{ featuresSet.downloadUrl() }}" class="btn btn-info">
+        <i title="Download features" class="icon-download-alt"></i> Download Features
+      </a>
+	</div>
 </h2>
 
 <div title="quick info" ng-init="obj=featuresSet">

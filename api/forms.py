@@ -98,9 +98,12 @@ class BaseForm(object):
     def validate_obj(self):
         pass
 
-    def _clean_document(self, value, Document, name):
+    def _clean_document(self, value, Document, name, by_id=True):
         if value:
-            obj = Document.get_from_id(ObjectId(value))
+            if by_id:
+                obj = Document.get_from_id(ObjectId(value))
+            else:
+                obj = Document.find_one({'name': value})
             if not obj:
                 raise ValidationError('%s not found' % name)
 
@@ -567,13 +570,18 @@ class FeatureAddForm(BaseForm):
     def clean_type(self, value):
         if not value:
             raise ValidationError('type is required')
+
         if not value in app.db.NamedFeatureType.TYPES_LIST:
-            raise ValidationError('invalid type. please choose one of %s' %
-                                  app.db.NamedFeatureType.TYPES_LIST)
+            # Try to find type in named types
+            named_type = app.db.NamedFeatureType.find_one({'name': value})
+            if not named_type:
+                raise ValidationError('invalid type')
+
         return value
 
     def clean_transformer(self, value):
-        return self._clean_document(value, app.db.Transformer, 'transformer')
+        return self._clean_document(value, app.db.Transformer,
+                                    'transformer', by_id=False)
 
     def clean_params(self, value):
         # TODO: parse parameters types: int, bool

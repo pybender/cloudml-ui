@@ -1011,10 +1011,26 @@ class FeatureSetResource(BaseResource):
     OBJECT_NAME = 'set'
     DEFAULT_FIELDS = [u'_id', 'name']
     post_form = FeatureSetAddForm
+    GET_ACTIONS = ('download', )
 
     @property
     def Model(self):
         return app.db.FeatureSet
+
+    @public_actions(['download'])
+    def get(self, *args, **kwargs):
+        return super(FeatureSetResource, self).get(*args, **kwargs)
+
+    def _get_download_action(self, **kwargs):
+        model = self._get_details_query(None, None, **kwargs)
+        if model is None:
+            raise NotFound(self.MESSAGE404 % kwargs)
+
+        data = json.dumps(model.to_dict())
+        resp = Response(data)
+        resp.headers['Content-Type'] = 'text/plain'
+        resp.headers['Content-Disposition'] = 'attachment; filename=%s.json' % model.name
+        return resp
 
 api.add_resource(FeatureSetResource, '/cloudml/features/sets/')
 

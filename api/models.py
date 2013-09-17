@@ -40,6 +40,14 @@ class BaseDocument(Document):
             except Exception as e:
                 logging.exception(e)
 
+    def to_dict(self):
+        data = {}
+        for field in self.FIELDS_TO_SERIALIZE:
+            val = getattr(self, field)
+            if val is not None:
+                data[field] = val
+        return data
+
 
 @app.conn.register
 class LogMessage(BaseDocument):
@@ -822,6 +830,8 @@ class NamedFeatureType(BaseDocument):
     TYPES_LIST = ['boolean', 'int', 'float', 'numeric', 'date',
                    'map', 'categorical_label', 'categorical',
                    'text', 'regex', 'composite']
+    FIELDS_TO_SERIALIZE = ('name', 'type', 'input_format', 'params')
+
     structure = {
         'name': basestring,
         'type': basestring,
@@ -850,6 +860,7 @@ class Classifier(BaseDocument):
     __collection__ = 'classifier'
 
     TYPES_LIST = CLASSIFIERS.keys()
+    FIELDS_TO_SERIALIZE = ('name', 'type', 'params')
 
     structure = {
         'name': basestring,
@@ -873,7 +884,7 @@ class Classifier(BaseDocument):
 
 @app.conn.register
 class FeatureSet(BaseDocument):
-    __collection__ = 'feature_set'
+    __collection__ = 'feature_set1'
 
     structure = {
         'name': basestring,
@@ -893,6 +904,26 @@ class FeatureSet(BaseDocument):
         'features_count': 0,
     }
     use_dot_notation = True
+    use_autorefs = True
+
+    def to_dict(self):
+        data = {'schema-name': self.schema_name,
+                'features': [],
+                'classifier': self.classifier.to_dict(),
+                "feature-types": []}
+
+        named_types = []  # named types to include to the file
+        features = app.db.Feature.find({'feature_set_id': str(self._id)})
+        for feature in features:
+            data['features'].append(feature.to_dict())
+            if feature.type not in NamedFeatureType.TYPES_LIST:
+                named_types.append(feature.type)
+
+        for name in named_types:
+            named_type = app.db.NamedFeatureType.find_one({'name': name})
+            data["feature-types"].append(named_type.to_dict())
+        
+        return data
 
     def __repr__(self):
         return '<Feature Set %r>' % self.name
@@ -905,6 +936,7 @@ class Transformer(BaseDocument):
     __collection__ = 'transformers'
 
     TYPES_LIST = TRANSFORMER_TO_VECTORIZER.keys()
+    FIELDS_TO_SERIALIZE = ('name', 'type', 'params')
 
     structure = {
         'name': basestring,
@@ -928,7 +960,10 @@ class Transformer(BaseDocument):
 
 @app.conn.register
 class Feature(BaseDocument):
-    __collection__ = 'features2'
+    __collection__ = 'features3'
+
+    FIELDS_TO_SERIALIZE = ('name', 'type', 'input_format', 'params',
+                           'default')
 
     structure = {
         'name': basestring,
@@ -953,6 +988,13 @@ class Feature(BaseDocument):
         'updated_on': datetime.utcnow,
     }
     use_dot_notation = True
+    use_autorefs = True
+
+    def to_dict(self):
+        data = super(Feature, self).to_dict()
+        if self.transformer:
+            data['transformer'] = self.transformer.to_dict()
+        return data
 
     def __repr__(self):
         return '<Feature %r>' % self.name
