@@ -116,7 +116,7 @@ class AmazonS3Helper(object):
                     mpu.complete_upload()
                     break
                 stream.write(chunk)
-                if input_file.tell() > 10 << 20:
+                if input_file.tell() > 5*1024*1024:
                     upload_part(part_count)
 
     def save_key(self, name, filename, meta={}, compressed=True):
