@@ -101,7 +101,7 @@ class AmazonS3Helper(object):
         def upload_part(part_count):
             part_count[0] += 1
             stream.seek(0)
-            mpu.upload_part_from_file(stream, part_count[0], cb=progress)
+            mpu.upload_part_from_file(stream, part_count[0])
             stream.seek(0)
             stream.truncate()
 
