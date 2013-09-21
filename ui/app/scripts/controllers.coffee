@@ -205,8 +205,9 @@ angular.module('app.controllers', ['app.config', ])
           $scope.load()
       )
 
-      $scope.$watch('filter_opts ', (filter_opts, oldVal, scope) ->
-        $scope.load()
+      $scope.$watch('filter_opts', (filter_opts, oldVal, scope) ->
+        if filter_opts?
+          $scope.load()
       , true)
 
     $scope.load = (append=false) ->

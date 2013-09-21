@@ -46,7 +46,7 @@ angular.module('app.features.models', ['app.config'])
       BASE_UI_URL: "/features/sets/"
       API_FIELDNAME: 'set'
       @MAIN_FIELDS: 'name,schema_name,classifier,
-features_count,created_on,created_by'
+features_count,created_on,created_by,target_variable'
 
       _id: null
       name: null
@@ -75,8 +75,9 @@ features_count,created_on,created_by'
   'settings'
   'BaseModel'
   'NamedFeatureType'
+  'Transformer'
   
-  ($http, $q, settings, BaseModel, NamedFeatureType) ->
+  ($http, $q, settings, BaseModel, NamedFeatureType, Transformer) ->
     class Feature extends BaseModel
       API_FIELDNAME: 'feature'
       @MAIN_FIELDS: 'name,type,input_format,transformer,params,
@@ -85,7 +86,7 @@ scaler,default,is_target_variable,created_on,created_by'
       _id: null
       name: null
       type: 'int'
-      feature_set_id: null
+      features_set_id: null
       transformer: null
       input_format: null
       params: null
@@ -94,16 +95,22 @@ scaler,default,is_target_variable,created_on,created_by'
       is_required: false
       is_target_variable: false
 
+      loadFromJSON: (origData) =>
+        super origData
+
+        if origData? and origData.transformer?
+          @transformer = new Transformer(origData.transformer)
+
       constructor: (opts) ->
         super opts
-        @BASE_API_URL = Feature.$get_api_url(@feature_set_id)
+        @BASE_API_URL = Feature.$get_api_url(@features_set_id)
 
-      @$get_api_url: (feature_set_id) ->
-        return "#{settings.apiUrl}features/#{feature_set_id}/items/"
+      @$get_api_url: (features_set_id) ->
+        return "#{settings.apiUrl}features/#{features_set_id}/items/"
 
       @$loadAll: (opts) ->
-        feature_set_id = opts.feature_set_id
-        if not feature_set_id
+        features_set_id = opts.features_set_id
+        if not features_set_id
           throw new Error "Feature Set is required"
 
         resolver = (resp, Model) ->
@@ -113,7 +120,7 @@ scaler,default,is_target_variable,created_on,created_by'
               for obj in eval("resp.data.#{Model.prototype.API_FIELDNAME}s"))
             _resp: resp
           }
-        @$make_all_request(Feature.$get_api_url(feature_set_id),
+        @$make_all_request(Feature.$get_api_url(features_set_id),
                            resolver, opts)
 
       $save: (opts={}) =>

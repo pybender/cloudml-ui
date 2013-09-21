@@ -133,6 +133,7 @@ updated_on,updated_by,comparable'
       if name not in $scope.LOADED_SECTIONS
         extra_fields = ''
         switch name
+          when 'features_set' then extra_fields = 'features_set_id'
           when 'model'
             extra_fields = 'created_on,target_variable,
 error,labels,weights_synchronized,example_id,example_label,

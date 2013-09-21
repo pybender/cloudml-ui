@@ -7,6 +7,7 @@ from utils import MODEL_ID, BaseTestCase, FEATURE_COUNT, TARGET_VARIABLE,\
     HTTP_HEADERS
 from bson.objectid import ObjectId
 from api.views import Models as ModelsResource
+from api import app
 
 
 class ModelTests(BaseTestCase):

@@ -7,8 +7,9 @@ angular.module('app.models.model', ['app.config'])
   'BaseModel'
   'ImportHandler'
   'DataSet'
+  'FeaturesSet'
   
-  ($http, $q, settings, BaseModel, ImportHandler, DataSet) ->
+  ($http, $q, settings, BaseModel, ImportHandler, DataSet, FeaturesSet) ->
     ###
     Model
     ###
@@ -32,6 +33,8 @@ angular.module('app.models.model', ['app.config'])
       trainer: null
       importParams: null
       features: null
+      featuresSet: null
+      features_set_id: null
 
       train_import_handler: null
       test_import_handler: null
@@ -53,6 +56,8 @@ angular.module('app.models.model', ['app.config'])
           if origData.datasets?
             @datasets_obj = for row in origData['datasets']
               new DataSet(row)
+          if origData.features_set_id?
+            @featuresSet = new FeaturesSet({'_id': @features_set_id})
 
       downloadUrl: =>
         return "#{@BASE_API_URL}#{@_id}/action/download/"

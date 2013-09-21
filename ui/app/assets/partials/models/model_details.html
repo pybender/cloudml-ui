@@ -73,9 +73,12 @@
   <li ng-class="{active: action[0] == 'model'}">
     <a ng-click="setSection(['model', 'details'])">Details</a> 
   </li>
+  <li ng-class="{active: action[0] == 'features_set'}">
+    <a ng-click="setSection(['features_set', 'list'])">Features</a>
+  </li>
   <li ng-class="{active: action[0] == 'weights'}"><a  ng-click="setSection(['weights', 'columns'])">Parameters Weights</a></li>
   <li ng-class="{active: action[0] == 'test'}"><a ng-click="setSection(['test', 'list'])">Tests</a></li>
-  <li ng-class="{active: action[0] == 'features'}"><a ng-click="setSection(['features', 'file'])">Features</a></li>
+  <li ng-class="{active: action[0] == 'features'}"><a ng-click="setSection(['features', 'file'])">Features JSON</a></li>
   <li ng-class="{active: action[0] == 'log'}"><a ng-click="setSection(['log', 'details'])">Logs</a></li>
 </ul>
  
@@ -165,6 +168,10 @@ editable-input="text" source="model.data_fields"></span>
         </div>
       </div>
     </div>
+  </div>
+
+  <div ng-show="action[0] == 'features_set'" ng-controller="FeaturesSetDetailsCtrl" ng-init="init(model)">
+    <ng-include src="'/partials/features/sets/details.html'"></ng-include>
   </div>
 
   <div ng-show="action[0] == 'log'" ng-controller="LogMessageListCtrl" ng-init="init('trainmodel_log', model._id)">

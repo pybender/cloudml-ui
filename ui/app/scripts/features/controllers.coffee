@@ -30,12 +30,19 @@ angular.module('app.features.controllers', ['app.config', ])
   'FeaturesSet'
 
   ($scope, $routeParams, $dialog, FeaturesSet) ->
-    if not $routeParams.id then err = "Can't initialize without instance id"
-    $scope.featuresSet = new FeaturesSet({_id: $routeParams.id})
-    $scope.featuresSet.$load(
-      show: FeaturesSet.MAIN_FIELDS
-      ).then (->), ((opts)-> $scope.setError(opts, 'loading featuresSet'))
+    # if not $routeParams.id then err = "Can't initialize without instance id"
+    # $scope.featuresSet = new FeaturesSet({_id: $routeParams.id})
+    $scope.init = (model) ->
+      $scope.model = model
+      $scope.$watch('model.featuresSet', (featuresSet, oldVal, scope) ->
+        if featuresSet?
+          $scope.featuresSet = featuresSet
+          featuresSet.$load(
+            show: FeaturesSet.MAIN_FIELDS
+          ).then (->), ((opts)-> $scope.setError(opts, 'loading featuresSet'))
 
+      , true)
+      
     $scope.addFeature = () ->
       $scope.openDialog($dialog, $scope.featuresSet,
         'partials/features/items/add.html',
@@ -103,8 +110,14 @@ angular.module('app.features.controllers', ['app.config', ])
     $scope.FIELDS = Feature.MAIN_FIELDS
     $scope.ACTION = 'loading features'
 
-    $scope.init = (featureSet) ->
-      $scope.kwargs = {'feature_set_id': featureSet._id}
+    $scope.init = (model) ->
+      $scope.model = model
+
+      $scope.$watch('model.featuresSet', (featuresSet, oldVal, scope) ->
+        if featuresSet?
+          $scope.filter_opts = {'features_set_id': featuresSet._id}
+      , true)
+      
 ])
 
 .controller('AddFeatureDialogCtrl', [
@@ -229,6 +242,7 @@ angular.module('app.features.controllers', ['app.config', ])
 
   ($scope, $rootScope, dialog, Transformer) ->
     $scope.model = dialog.model
+    $scope.dialog = dialog
     $scope.types = Transformer.$TYPES_LIST
 
     $scope.params = {}

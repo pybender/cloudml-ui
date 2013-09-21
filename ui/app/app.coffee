@@ -141,21 +141,21 @@ App.config([
       controller: 'AuthCallbackCtl'
       templateUrl: '/partials/login/auth.html'
     })
+    .when('/features', {
+      redirectTo: '/features/types'
+    })
     .when('/features/sets', {
       controller: "FeaturesSetListCtrl"
-      templateUrl: '/partials/features/list.html'
+      templateUrl: '/partials/features/sets/list.html'
     })
-    .when('/features', {
-      redirectTo: '/features/sets'
-    })
-    .when('/features/sets/:id', {
-      controller: 'FeaturesSetDetailsCtrl'
-      templateUrl: '/partials/features/details.html'
-    })
-    .when('/features/input_formats/:id', {
-      controller: 'FeaturesSetDetailsCtrl'
-      templateUrl: '/partials/features/details.html'
-    })
+    # .when('/features/sets/:id', {
+    #   controller: 'FeaturesSetDetailsCtrl'
+    #   templateUrl: '/partials/features/details.html'
+    # })
+    # .when('/features/input_formats/:id', {
+    #   controller: 'FeaturesSetDetailsCtrl'
+    #   templateUrl: '/partials/features/details.html'
+    # })
     .when('/features/types', {
       controller: "FeatureTypeListCtrl"
       templateUrl: '/partials/features/named_types/list.html'
