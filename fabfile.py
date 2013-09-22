@@ -111,6 +111,15 @@ def cdeploy():
 
 
 @task
+def deployui():
+    release.work_on.run(0)
+   # git.push.run()
+    angularjs.activate.run()
+    angularjs.push_config.run()
+    angularjs.build.run()
+
+
+@task
 def deploy():
     fabd.mkdirs.run()
 
@@ -126,7 +135,8 @@ def deploy():
     virtualenv.pip_install_req.run()
     virtualenv.make_relocatable.run()
 
-    #angularjs.init.run()
+    
+    angularjs.activate.run()
     angularjs.push_config.run()
     angularjs.build.run()
 
@@ -136,6 +146,7 @@ def deploy():
     supervisor.restart_program.run(program='gunicorn')
     supervisor.restart_program.run(program='celeryd')
     supervisor.restart_program.run(program='celerycam')
+    local('jgit push s3 master:master')
 
 
 @task

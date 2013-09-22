@@ -31,6 +31,8 @@ AMAZON_ACCESS_TOKEN = '{{ amazon_access_token }}'
 AMAZON_TOKEN_SECRET = '{{ amazon_token_secret }}'
 AMAZON_BUCKET_NAME = '{{ amazon_bucket_name }}'
 
+MULTIPART_UPLOAD_CHUNK_SIZE = 8192
+
 # OAuth keys
 ODESK_OAUTH_KEY = '{{ odesk_api_key }}'
 ODESK_OAUTH_SECRET = '{{ odesk_secret_key }}'
