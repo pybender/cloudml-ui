@@ -1011,6 +1011,7 @@ class FeatureSetResource(BaseResource):
     OBJECT_NAME = 'set'
     DEFAULT_FIELDS = [u'_id', 'name']
     post_form = FeatureSetAddForm
+    #put_form = FeatureSetEditForm
     GET_ACTIONS = ('download', )
 
     @property
@@ -1043,6 +1044,7 @@ class ClassifierResource(BaseResource):
     OBJECT_NAME = 'classifier'
     DEFAULT_FIELDS = [u'_id', 'name']
     post_form = ClassifierAddForm
+    put_form = ClassifierEditForm
     GET_ACTIONS = ('configuration', )
 
     @property

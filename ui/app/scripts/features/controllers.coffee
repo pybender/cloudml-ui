@@ -180,19 +180,27 @@ angular.module('app.features.controllers', ['app.config', ])
 
   ($scope, $rootScope, dialog, Classifier) ->
     $scope.model = dialog.model
+    $scope.DONT_REDIRECT = true
     $scope.dialog = dialog
     $scope.params = {}
     $scope.model.$getConfiguration(
     ).then ((opts)->
       $scope.configuration = opts.data.configuration
+      if $scope.model.type?
+        $scope.loadParameters()
     ), ((opts)->
       $scope.setError(opts, 'loading classifier types and parameters')
     )
 
-    $scope.loadParameters = () ->
-      $scope.model.params = {}
+    $scope.loadParameters = (setDefault=false) ->
       $scope.params = $scope.configuration[$scope.model.type]
-      for name, val of $scope.params.defaults
+      if !setDefault && $scope.model.params?
+        params = $scope.model.params
+      else
+        $scope.model.params = {}
+        params = $scope.params.defaults
+
+      for name, val of params
         $scope.model.params[name] = val
 
     $scope.$on('SaveObjectCtl:save:success', (event, current) ->

@@ -405,6 +405,84 @@ class Tag(BaseDocument):
                     tag.save()
 
 
+@app.conn.register
+class FeatureSet(BaseDocument):
+    __collection__ = 'feature_set123'
+
+    FIELDS_TO_SERIALIZE = ('schema_name', )
+
+    structure = {
+        'name': basestring,
+        'schema_name': basestring,
+        'features_count': int,
+        'target_variable': basestring,
+        'created_on': datetime,
+        'created_by': dict,
+        'updated_on': datetime,
+        'updated_by': dict,
+    }
+    required_fields = ['name', 'schema_name', 'created_on', 'updated_on']
+    default_values = {
+        'created_on': datetime.utcnow,
+        'updated_on': datetime.utcnow,
+        'features_count': 0,
+    }
+    use_dot_notation = True
+    use_autorefs = True
+
+    def to_dict(self):
+        data = {'schema-name': self.schema_name,
+                'features': [],
+                # 'classifier': self.classifier.to_dict(),
+                "feature-types": []}
+
+        named_types = []  # named types to include to the file
+        features = app.db.Feature.find({'feature_set_id': str(self._id)})
+        for feature in features:
+            data['features'].append(feature.to_dict())
+            if feature.type not in NamedFeatureType.TYPES_LIST:
+                named_types.append(feature.type)
+
+        for name in named_types:
+            named_type = app.db.NamedFeatureType.find_one({'name': name})
+            data["feature-types"].append(named_type.to_dict())
+        
+        return data
+
+    @classmethod
+    def from_model_features_dict(cls, model):
+        if not model['features']:
+            return None
+
+        features_dict = model['features']
+        features_set, is_new = app.db.FeatureSet.from_dict(\
+            app.db.FeatureSet, features_dict,
+            extra_fields={'name': "%s features" % model.name,
+                          'features_count': len(features_dict['features'])},
+            add_new=True)
+
+        for feature_type in features_dict['feature-types']:
+            app.db.NamedFeatureType.from_dict(app.db.NamedFeatureType,
+                                              feature_type)
+
+        for feature_dict in features_dict['features']:
+            f_id = str(features_set._id)
+
+            feature, is_new = app.db.Feature.from_dict(\
+                app.db.Feature, feature_dict, add_new=True,
+                extra_fields={'features_set': features_set,
+                              'features_set_id': f_id})
+
+            if feature.is_target_variable:
+                features_set.target_variable = feature.name
+                features_set.save()
+
+        return features_set
+
+    def __repr__(self):
+        return '<Feature Set %r>' % self.name
+
+
 from core.trainer.classifier_settings import CLASSIFIERS
 
 @app.conn.register
@@ -431,56 +509,6 @@ class Classifier(BaseDocument):
     }
     use_dot_notation = True
 
-    def __repr__(self):
-        return '<Classifier %r>' % self.name
-
-
-@app.conn.register
-class FeatureSet(BaseDocument):
-    __collection__ = 'feature_set123'
-
-    FIELDS_TO_SERIALIZE = ('schema_name', )
-
-    structure = {
-        'name': basestring,
-        'schema_name': basestring,
-        'features_count': int,
-        'classifier': Classifier,
-        'target_variable': basestring,
-        'created_on': datetime,
-        'created_by': dict,
-        'updated_on': datetime,
-        'updated_by': dict,
-    }
-    required_fields = ['name', 'schema_name', 'created_on', 'updated_on']
-    default_values = {
-        'created_on': datetime.utcnow,
-        'updated_on': datetime.utcnow,
-        'features_count': 0,
-    }
-    use_dot_notation = True
-    use_autorefs = True
-
-    def to_dict(self):
-        data = {'schema-name': self.schema_name,
-                'features': [],
-                'classifier': self.classifier.to_dict(),
-                "feature-types": []}
-
-        named_types = []  # named types to include to the file
-        features = app.db.Feature.find({'feature_set_id': str(self._id)})
-        for feature in features:
-            data['features'].append(feature.to_dict())
-            if feature.type not in NamedFeatureType.TYPES_LIST:
-                named_types.append(feature.type)
-
-        for name in named_types:
-            named_type = app.db.NamedFeatureType.find_one({'name': name})
-            data["feature-types"].append(named_type.to_dict())
-        
-        return data
-
-    @classmethod
     def from_model_features_dict(cls, model):
         if not model['features']:
             return None
@@ -492,34 +520,10 @@ class FeatureSet(BaseDocument):
             add_new=True,
             extra_fields={'name': "%s classifier" % model.name}
         )
-
-        features_set, is_new = app.db.FeatureSet.from_dict(\
-            app.db.FeatureSet, features_dict,
-            extra_fields={'name': "%s features" % model.name,
-                          'classifier': classifier,
-                          'features_count': len(features_dict['features'])},
-            add_new=True)
-
-        for feature_type in features_dict['feature-types']:
-            app.db.NamedFeatureType.from_dict(app.db.NamedFeatureType,
-                                              feature_type)
-
-        for feature_dict in features_dict['features']:
-            f_id = str(features_set._id)
-
-            feature, is_new = app.db.Feature.from_dict(\
-                app.db.Feature, feature_dict, add_new=True,
-                extra_fields={'features_set': features_set,
-                              'features_set_id': f_id})
-
-            if feature.is_target_variable:
-                features_set.target_variable = feature.name
-                features_set.save()
-
-        return features_set
+        return classifier
 
     def __repr__(self):
-        return '<Feature Set %r>' % self.name
+        return '<Classifier %r>' % self.name
 
 
 @app.conn.register
@@ -551,6 +555,7 @@ class Model(BaseDocument):
         'trained_by': dict,
         'error': basestring,
 
+        'classifier': Classifier,
         'features': dict,
         'features_set': FeatureSet,
         'features_set_id': basestring,

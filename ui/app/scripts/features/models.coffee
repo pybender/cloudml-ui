@@ -22,6 +22,10 @@ angular.module('app.features.models', ['app.config'])
       created_on: null
       created_by: null
 
+      constructor: (opts) ->
+        super opts
+        @TYPES_LIST = Classifier.$TYPES_LIST
+
       $getConfiguration: (opts={}) =>
         @$make_request("#{@BASE_API_URL}#{@_id}/action/configuration/",
                        load=false)

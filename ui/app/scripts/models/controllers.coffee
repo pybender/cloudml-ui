@@ -134,6 +134,7 @@ updated_on,updated_by,comparable'
         extra_fields = ''
         switch name
           when 'features_set' then extra_fields = 'features_set_id'
+          when 'classifier' then extra_fields = 'classifier'
           when 'model'
             extra_fields = 'created_on,target_variable,
 error,labels,weights_synchronized,example_id,example_label,
@@ -288,6 +289,11 @@ train_records_count'
       $scope.openDialog($dialog, model,
         'partials/base/delete_dialog.html', 'DialogCtrl',
         'modal', 'delete model', 'models')
+
+    $scope.editClassifier = (model) ->
+      $scope.openDialog($dialog, model.classifier,
+        'partials/features/classifiers/edit.html', 'AddClassifierDialogCtrl',
+        'modal', 'edit classifier', 'classifiers')
 
     $scope._showModelActionDialog = (model, action, fn)->
       if eval('model.' + action + '_import_handler_obj')?

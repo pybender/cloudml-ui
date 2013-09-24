@@ -81,7 +81,7 @@ angular.module('app.controllers', ['app.config', ])
 
         _.delay (->
           $scope.$emit 'SaveObjectCtl:save:success', $scope.model
-          if $scope.model.BASE_UI_URL
+          if $scope.model.BASE_UI_URL && !$scope.DONT_REDIRECT
             $location.path $scope.model.objectUrl()
           $scope.$apply()
         ), 300

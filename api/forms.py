@@ -536,6 +536,10 @@ class ClassifierAddForm(BaseForm):
             return json.loads(value)
 
 
+class ClassifierEditForm(ClassifierAddForm):
+    pass
+
+
 class TransformerAddForm(BaseForm):
     fields = ('name', 'type', 'params', )
 

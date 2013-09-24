@@ -21,35 +21,35 @@
 <alert-message ng-show="err" class="alert-error" msg='{{ err }}' unsafe>
 </alert-message>
 
-<h2 class="title">
-  <span title="Title"
-    class="title" ng-bind="model.name || 'untitled model'"
-    editable="model" value="model.name"
-    editable-field="name" editable-input="text"
-    editable-placement="right"></span> details
-  <div class="actions" ng-controller="ModelActionsCtrl">
-  <div ng-init="init({model: model})">
-    <button ng-show="model.status == 'Trained'" ng-click="test_model(model)" class="btn btn-success">
-      <i title="Apply the classifier to the input provided by the data import handler" class="status-icon icon-play"></i>
-      Run test
-    </button>
-    <button ng-click="train_model(model)" class="btn btn-info">
-      <i title="Train your model" class="icon-tasks"></i>
-      Start training
-    </button>
-    <button ng-click="reload_model(model)" class="btn btn-info">
-      <i title="Reload model" class="icon-tasks"></i>
-      Reload model
-    </button>
-    <a ng-show="model.status == 'Trained'" href="{{ model.downloadUrl() }}?field=trainer" class="btn btn-info">
-        <i title="Download model trainer." class="icon-download-alt"></i> Download Trainer
-      </a>
-    <button ng-click="delete_model(model)" class="btn btn-danger">
-      <i title="Delete your model. Be careful - you could not recover it!" class="icon-remove"></i> Delete model
-    </button>
-  </div>
-  </div>
-</h2>
+<div ng-init="init({model: model})" ng-controller="ModelActionsCtrl">
+  <h2 class="title">
+    <span title="Title"
+      class="title" ng-bind="model.name || 'untitled model'"
+      editable="model" value="model.name"
+      editable-field="name" editable-input="text"
+      editable-placement="right"></span> details
+    <div class="actions">
+      <button ng-show="model.status == 'Trained'" ng-click="test_model(model)" class="btn btn-success">
+        <i title="Apply the classifier to the input provided by the data import handler" class="status-icon icon-play"></i>
+        Run test
+      </button>
+      <button ng-click="train_model(model)" class="btn btn-info">
+        <i title="Train your model" class="icon-tasks"></i>
+        Start training
+      </button>
+      <button ng-click="reload_model(model)" class="btn btn-info">
+        <i title="Reload model" class="icon-tasks"></i>
+        Reload model
+      </button>
+      <a ng-show="model.status == 'Trained'" href="{{ model.downloadUrl() }}?field=trainer" class="btn btn-info">
+          <i title="Download model trainer." class="icon-download-alt"></i> Download Trainer
+        </a>
+      <button ng-click="delete_model(model)" class="btn btn-danger">
+        <i title="Delete your model. Be careful - you could not recover it!" class="icon-remove"></i> Delete model
+      </button>
+    </div>
+  </h2>
+
 <p class="lead">
   <span title="Description"
     ng-bind="model.description || 'no description'"
@@ -66,12 +66,15 @@
   <ng-include src="'/partials/parts/created_tags.html'"></ng-include>
   <i class="icon-status"></i>
   <span class="badge badge-warning">{{ model.status }}</span>
-  </div>
 </div>
+
 <p></p>
 <ul class="nav nav-tabs" id="tabs" ng-show="model.loaded">
   <li ng-class="{active: action[0] == 'model'}">
     <a ng-click="setSection(['model', 'details'])">Details</a> 
+  </li>
+  <li ng-class="{active: action[0] == 'classifier'}">
+    <a ng-click="setSection(['classifier', 'details'])">Classifier</a>
   </li>
   <li ng-class="{active: action[0] == 'features_set'}">
     <a ng-click="setSection(['features_set', 'list'])">Features</a>
@@ -118,23 +121,19 @@
         <h5>Data Examples Titles</h5>
         <div ng-show="model.data_fields.length">
           Examples label field name:
-          <span title="Label Field Name" ng-bind="model.example_label || 'not specified'" editable="model" value="model.example_label" editable-field="example_label" editable-placement="right"
-editable-input="select" source="model.data_fields"></span>
+          <span title="Label Field Name" ng-bind="model.example_label || 'not specified'" editable="model" value="model.example_label" editable-field="example_label" editable-placement="right" editable-input="select" source="model.data_fields"></span>
         </div>
         <div ng-show="!model.data_fields.length">
           Examples label field name:
-          <span title="Label Field Name" ng-bind="model.example_label || 'not specified'" editable="model" value="model.example_label" editable-field="example_label" editable-placement="right"
-editable-input="text" source="model.data_fields"></span>
+          <span title="Label Field Name" ng-bind="model.example_label || 'not specified'" editable="model" value="model.example_label" editable-field="example_label" editable-placement="right" editable-input="text" source="model.data_fields"></span>
         </div>
         <div ng-show="model.data_fields.length">
           Examples id field name:
-          <span title="ID Field Name" ng-bind="model.example_id" editable="model" value="model.example_id" editable-field="example_id" editable-placement="right"
-editable-input="select" source="model.data_fields"></span>
+          <span title="ID Field Name" ng-bind="model.example_id" editable="model" value="model.example_id" editable-field="example_id" editable-placement="right" editable-input="select" source="model.data_fields"></span>
         </div>
         <div ng-show="!model.data_fields.length">
           Examples id field name:
-          <span title="ID Field Name" ng-bind="model.example_id" editable="model" value="model.example_id" editable-field="example_id" editable-placement="right"
-editable-input="text" source="model.data_fields"></span>
+          <span title="ID Field Name" ng-bind="model.example_id" editable="model" value="model.example_id" editable-field="example_id" editable-placement="right" editable-input="text" source="model.data_fields"></span>
         </div>
       </div>
       <div class="span4">
@@ -167,6 +166,27 @@ editable-input="text" source="model.data_fields"></span>
             <span class="value">{{ model.trained_by.name }} ({{ model.trained_by.uid }})</span>
         </div>
       </div>
+    </div>
+  </div>
+
+  <div ng-show="action[0] == 'classifier'">
+    <h4>
+        {{ model.classifier.name }}
+        <span>
+          <a ng-click="editClassifier(model)">(edit)</a>
+        </span>
+    </h4>
+     <div>
+        Type:
+        <span class="value">{{ model.classifier.type }}</span>
+    </div>
+     <div>
+        Parameters:
+        <span class="value">{{ model.classifier.params }}</span>
+    </div>
+    <div ng-show="model.created_by">
+        Created by:
+        <span class="value">{{ model.classifier.created_by.name }} ({{ model.classifier.created_by.uid }})</span>
     </div>
   </div>
 
@@ -224,4 +244,5 @@ editable-input="text" source="model.data_fields"></span>
       </a>
     <textarea ui-codemirror="{ mode: {name: 'javascript', json: true} }" ng-model="model.features"> </textarea>
   </div>
+</div>
 </div>

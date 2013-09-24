@@ -8,8 +8,10 @@ angular.module('app.models.model', ['app.config'])
   'ImportHandler'
   'DataSet'
   'FeaturesSet'
+  'Classifier'
   
-  ($http, $q, settings, BaseModel, ImportHandler, DataSet, FeaturesSet) ->
+  ($http, $q, settings, BaseModel, ImportHandler, DataSet,
+    FeaturesSet, Classifier) ->
     ###
     Model
     ###
@@ -58,6 +60,8 @@ angular.module('app.models.model', ['app.config'])
               new DataSet(row)
           if origData.features_set_id?
             @featuresSet = new FeaturesSet({'_id': @features_set_id})
+          if origData.classifier?
+            @classifier = new Classifier(origData.classifier)
 
       downloadUrl: =>
         return "#{@BASE_API_URL}#{@_id}/action/download/"
