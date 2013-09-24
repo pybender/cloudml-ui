@@ -27,7 +27,7 @@ Get oauth redirect url
 Response Parameters
 ^^^^^^^^^^^^^^^^^^^
 
-* auth_url - Oauth url for redirect to
+* auth_url - OAuth url for redirect to
 
 .. _authenticate:
 

@@ -15,6 +15,7 @@ Contents:
    deployment
    development
    api
+   settings
 
 
 .. seealso::
