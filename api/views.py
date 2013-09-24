@@ -1104,6 +1104,7 @@ class FeatureResource(BaseResource):
     OBJECT_NAME = 'feature'
     DEFAULT_FIELDS = [u'_id', 'name']
     post_form = FeatureAddForm
+    put_form = FeatureEditForm
 
     @property
     def Model(self):

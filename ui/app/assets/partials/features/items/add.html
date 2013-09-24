@@ -33,15 +33,6 @@
           <span ng-show="Form.input_format.$error.required" class="help-inline">*</span>
         </div>
       </div>
-      <div class="control-group" ng-class="{error: Form.transformer.$invalid}">
-        <label class="control-label">Transformer</label>
-        <div class="controls">
-          <select name="transformer" ng-model="model.transformer">
-            <option ng-repeat="transformer in transformers" value="{{ transformer }}">{{ transformer }}</option>
-          </select>
-          <span ng-show="Form.transformer.$error.required" class="help-inline">*</span>
-        </div>
-      </div>
       <div class="control-group" ng-class="{error: Form.default.$invalid}">
         <label class="control-label">Default</label>
         <div class="controls">
@@ -49,11 +40,25 @@
           <span ng-show="Form.default.$error.required" class="help-inline">*</span>
         </div>
       </div>
-      # TODO: params, scaler
+      <div class="control-group" ng-class="{error: Form.required.$invalid}">
+        <label class="control-label">Required</label>
+        <div class="controls">
+          <input type="checkbox" name="required" ng-checked="model.required" ng-model="model.required" />
+        </div>
+      </div>
+      <h4>Parameters</h4>
+      <div>
+      </div>
+      <h4>Transformer</h4>
+      <div>
+      </div>
+      <h4>Scaler</h4>
+      <div>
+      </div>
     </form>
   </div>
 
   <div class="modal-footer">
-    <button ng-click="save(['name', 'type', 'input_format', 'transformer', 'params', 'required', 'scaler', 'default', 'feature_set_id'])" ng-disabled="Form.$invalid" class="btn btn-primary">Add new feature</button>
+    <button ng-click="save(['name', 'type', 'input_format', 'transformer', 'params', 'required', 'scaler', 'default', 'features_set_id'])" ng-disabled="Form.$invalid" class="btn btn-primary">Add new feature</button>
   </div>
 </div>

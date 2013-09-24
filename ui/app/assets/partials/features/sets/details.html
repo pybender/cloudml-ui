@@ -26,30 +26,34 @@
 		<th>Params</th>
 		<th>Required</th>
 		<th>Default</th>
-		<th>Is Target Variable</th>
+		<th>Is Target?</th>
 		<th>Actions</th>
 	</tr>
 	</thead>
 	<tbody>
-		<tr ng-repeat="feature in objects">
+		<tr ng-repeat="feature in objects" ng-init="init({model: feature})" ng-controller="FeatureActionsCtrl">
 			<td>
 				<span title="Feature Name" class="title" ng-bind="feature.name || 'feature name here'" editable="feature" value="feature.name" editable-field="name" editable-input="text" editable-placement="right"></span><br />
 				<small>(<span title="Feature Type" ng-bind="feature.type" editable="feature" value="feature.type" editable-field="type" editable-placement="right" editable-input="select" source="types"></span>)</small>
 			</td>
 			<td><span title="Input Format" ng-bind="feature.input_format" editable="feature" value="feature.input_format || ''" editable-field="input_format" editable-placement="right"editable-input="text"></span></td>
 			<td>
-				{{ feature.transformer.name }} {{ feature.scaler.name }}
+				{{ feature.transformer.type }} {{ feature.scaler.type }}
 			</td>
 			<td>{{ feature.params }}</td>
-			<td><a ng-show="feature.is_required"><i class="icon-ok" title="Make not required" /> yes</a><a ng-hide="feature.is_required"><i class="icon-remove" title="Make required" /> no</a></td>
-			<td><span title="Default Value" class="title" ng-bind="feature.default || ''" editable="feature" value="feature.default || ''" editable-field="default" editable-input="text" editable-placement="right"></span></td>
-			<td><span ng-show="feature.is_target_variable"><i class="icon-ok" /> yes</span><a ng-hide="feature.is_target_variable"><i class="icon-check" title="make target" /></a></td>
-		    <td ng-controller="FeatureActionsCtrl">
-        		<div ng-init="init({model: feature})">
-			    	<button ng-click="deleteModel(model)" class="btn btn-danger">
-			            <i title="Delete your model. Be careful - you could not recover it!" class="icon-remove"></i>
-		          </button>
-		        </div>
+			<td>
+				<a ng-show="feature.required" ng-click="makeRequired(feature, false)"><i class="icon-ok" title="Make not required" /> yes</a>
+				<a ng-click="makeRequired(feature, true)" ng-hide="feature.required"><i class="icon-remove" title="Make required" /> no</a></td>
+			<td>
+				<span title="Default Value" class="title" ng-bind="feature.default || ''" editable="feature" value="feature.default || ''" editable-field="default" editable-input="text" editable-placement="right"></span>
+			</td>
+			<td>
+				<span ng-show="feature.is_target_variable"><i class="icon-ok" /> yes</span>
+				<span ng-hide="feature.is_target_variable"><i class="icon-ok" /> no</span>
+				</td>
+		    <td>
+		    	<a class="btn btn-info" ng-click="makeTarget(feature)" ng-hide="feature.is_target_variable"><i class="icon-check" title="make target" /></a>
+			    <button ng-click="deleteModel(model)" class="btn btn-danger"><i title="Delete your model. Be careful - you could not recover it!" class="icon-remove"></i></button>
 		    </td>
 		</tr>
 	</tbody>

@@ -129,7 +129,7 @@ angular.module('app.features.controllers', ['app.config', ])
 
   ($scope, dialog, Feature, NamedFeatureType, Transformer) ->
     $scope.featureSet = dialog.model
-    $scope.model = new Feature({'feature_set_id': $scope.featureSet._id})
+    $scope.model = new Feature({'features_set_id': $scope.featureSet._id})
     $scope.dialog = dialog
 
     $scope.$on('SaveObjectCtl:save:success', (event, current) ->
@@ -326,4 +326,20 @@ angular.module('app.features.controllers', ['app.config', ])
       $scope.openDialog($dialog, model,
         'partials/base/delete_dialog.html', 'DialogCtrl',
         'modal', 'delete feature')
+
+    $scope.makeRequired = (feature, is_required) ->
+      feature.required = is_required
+      feature.$save(only: ['required']).then (->
+        $scope.$emit('updateList', [])
+      ), ((opts) ->
+        $scope.setError(opts, 'updating feature')
+      )
+
+    $scope.makeTarget = (feature) ->
+      feature.is_target_variable = true
+      feature.$save(only: ['is_target_variable']).then (->
+        $scope.$emit('updateList', [])
+      ), ((opts) ->
+        $scope.setError(opts, 'updating feature')
+      )
 ])

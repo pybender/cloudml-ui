@@ -85,7 +85,7 @@ features_count,created_on,created_by,target_variable'
     class Feature extends BaseModel
       API_FIELDNAME: 'feature'
       @MAIN_FIELDS: 'name,type,input_format,transformer,params,
-scaler,default,is_target_variable,created_on,created_by'
+scaler,default,is_target_variable,created_on,created_by,required'
 
       _id: null
       name: null
@@ -101,9 +101,12 @@ scaler,default,is_target_variable,created_on,created_by'
 
       loadFromJSON: (origData) =>
         super origData
-
-        if origData? and origData.transformer?
-          @transformer = new Transformer(origData.transformer)
+        
+        if origData?
+          if origData.transformer?
+            @transformer = new Transformer(origData.transformer)
+          if origData.required?
+            @required = origData.required == true || origData.required == 'True'
 
       constructor: (opts) ->
         super opts
@@ -129,8 +132,6 @@ scaler,default,is_target_variable,created_on,created_by'
                            resolver, opts)
 
       $save: (opts={}) =>
-        if @params?
-          @params = JSON.stringify(@params)
         super opts
 
     return Feature
