@@ -309,3 +309,21 @@ angular.module('app.features.controllers', ['app.config', ])
       show: NamedFeatureType.MAIN_FIELDS
       ).then (->), ((opts)-> $scope.setError(opts, 'loading featuresSet'))
   ])
+
+
+.controller('FeatureActionsCtrl', [
+  '$scope'
+  '$dialog'
+
+  ($scope, $dialog) ->
+    $scope.init = (opts={}) =>
+      if not opts.model
+        throw new Error "Please specify feature model"
+
+      $scope.model = opts.model
+
+    $scope.deleteModel = (model)->
+      $scope.openDialog($dialog, model,
+        'partials/base/delete_dialog.html', 'DialogCtrl',
+        'modal', 'delete feature')
+])

@@ -165,7 +165,8 @@ angular.module('app.controllers', ['app.config', ])
         $scope.close()
         $scope.$emit('modelDeleted', [$scope.model])
         $scope.$broadcast('modelDeleted', [$scope.model])
-        $location.path $scope.path
+        if $scope.path?
+          $location.path $scope.path
       ), ((opts) ->
         $scope.setError(opts, $scope.action + ' ' + $scope.model.name)
       )

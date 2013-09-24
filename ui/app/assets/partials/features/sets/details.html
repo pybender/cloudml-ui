@@ -4,14 +4,6 @@
 <div>Target Variable: <span class="value">{{ featuresSet.target_variable }}</span></div>
 <div>Features Count: <span class="value">{{ featuresSet.features_count }}</span></div>
 
-<h4>Classifier</h4>
-<div>
-	{{ featuresSet.classifier.name }} ({{ featuresSet.classifier.type }})
-	<p>
-		Parameters: {{ featuresSet.classifier.params }}
-	</p>
-</div>
-
 <div ng-controller="FeaturesListCtrl" ng-init="init(model)">
 <h4>Features List
 	<div class="actions">
@@ -52,10 +44,12 @@
 			<td><a ng-show="feature.is_required"><i class="icon-ok" title="Make not required" /> yes</a><a ng-hide="feature.is_required"><i class="icon-remove" title="Make required" /> no</a></td>
 			<td><span title="Default Value" class="title" ng-bind="feature.default || ''" editable="feature" value="feature.default || ''" editable-field="default" editable-input="text" editable-placement="right"></span></td>
 			<td><span ng-show="feature.is_target_variable"><i class="icon-ok" /> yes</span><a ng-hide="feature.is_target_variable"><i class="icon-check" title="make target" /></a></td>
-		    <td>
-		    	<button ng-click="delete_model(model)" class="btn btn-danger">
-		            <i title="Delete your model. Be careful - you could not recover it!" class="icon-remove"></i>
+		    <td ng-controller="FeatureActionsCtrl">
+        		<div ng-init="init({model: feature})">
+			    	<button ng-click="deleteModel(model)" class="btn btn-danger">
+			            <i title="Delete your model. Be careful - you could not recover it!" class="icon-remove"></i>
 		          </button>
+		        </div>
 		    </td>
 		</tr>
 	</tbody>

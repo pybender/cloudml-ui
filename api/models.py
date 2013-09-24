@@ -3,6 +3,7 @@ import StringIO
 import logging
 from boto.exception import S3ResponseError
 import os
+from bson import ObjectId
 from datetime import datetime
 from os.path import join, exists
 from os import makedirs
@@ -1143,6 +1144,13 @@ class Feature(BaseDocument):
     }
     use_dot_notation = True
     use_autorefs = True
+
+    def delete(self):
+        _id = self.features_set_id
+        super(Feature, self).delete()
+        feature_set = app.db.FeatureSet.get_from_id(ObjectId(_id))
+        feature_set.features_count -= 1
+        feature_set.save()
 
     @classmethod
     def from_dict(cls, Doc, obj_dict, extra_fields={},

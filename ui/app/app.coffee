@@ -234,7 +234,7 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
     log_sse.addEventListener('message', handleCallback)
 
   $rootScope.openDialog = ($dialog, model, template, ctrlName,
-                           cssClass='modal', action='', path='#') ->
+                           cssClass='modal', action='', path=null) ->
     d = $dialog.dialog(
       modalFade: false
       dialogClass: cssClass

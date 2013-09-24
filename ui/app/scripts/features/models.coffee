@@ -117,10 +117,11 @@ scaler,default,is_target_variable,created_on,created_by'
         if not features_set_id
           throw new Error "Feature Set is required"
 
+        extra = {loaded: true, features_set_id: features_set_id}
         resolver = (resp, Model) ->
           {
             objects: (
-              new Model(_.extend(obj, {loaded: true})) \
+              new Model(_.extend(obj, extra)) \
               for obj in eval("resp.data.#{Model.prototype.API_FIELDNAME}s"))
             _resp: resp
           }
