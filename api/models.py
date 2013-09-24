@@ -529,11 +529,11 @@ class Test(BaseDocument):
     EXPORT_STATUS_COMPLETED = 'Completed'
 
     EXAMPLES_TO_AMAZON_S3 = 'Amazon S3'
-    EXAMPLES_TO_MONGO = 'MongoDB'
     EXAMPLES_DONT_SAVE = 'Do not save'
+    EXAMPLES_MONGODB = 'Mongo DB'
     EXAMPLES_STORAGE_CHOICES = (EXAMPLES_TO_AMAZON_S3,
-                                EXAMPLES_TO_MONGO,
-                                EXAMPLES_DONT_SAVE)
+                                EXAMPLES_DONT_SAVE,
+                                EXAMPLES_MONGODB)
 
     __collection__ = 'tests'
     structure = {
@@ -720,26 +720,34 @@ class TestExample(BaseDocument):
         return helper.load_key(self.s3_key)
 
     @property
+    def data_input_m(self):
+        return self['data_input']
+
+    @property
     def data_input(self):
         if self['on_s3']:
-            if not self['data_input'] and getattr(self, '_id'):
+            if not self.has_key('data_input_a') and getattr(self, '_id'):
                 data = self._load_from_s3()
                 if data:
-                    self['data_input'] = json.loads(data)
-        return self['data_input']
+                    self['data_input_a'] = json.loads(data)
+            return self['data_input_a']
+        else:
+            return self['data_input']
 
     @data_input.setter
     def set_data_input(self, value):
-        self['data_input'] = value
+        self['data_input_a'] = value
 
     def save(self, *args, **kwargs):
         data_input = None
-        if self['data_input'] and self.on_s3:
-            data_input = self['data_input']
-            self['data_input'] = None
-        super(TestExample, self).save(*args, **kwargs)
-        if data_input:
+        if self.has_key('data_input_a') and self['data_input_a'] and self.on_s3:
+            data_input = self['data_input_a']
             self._save_to_s3(data_input)
+        if self.has_key('data_input_a'):
+            self.pop('data_input_a')
+        super(TestExample, self).save(*args, **kwargs)
+        # if data_input:
+        #     self._save_to_s3(data_input)
 
     def delete(self):
         helper = AmazonS3Helper()

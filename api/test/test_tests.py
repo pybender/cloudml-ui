@@ -19,7 +19,7 @@ class TestTests(BaseTestCase):
                 'tests.json', 'examples.json', 'instances.json', )
     POST_DATA = {'aws_instance': INSTANCE_ID,
                  'examples_fields': 'employer->op_country_tz,hire_outcome',
-                 'examples_placement': app.db.Test.EXAMPLES_TO_MONGO}
+                 'examples_placement': app.db.Test.EXAMPLES_TO_AMAZON_S3}
 
     def setUp(self):
         super(TestTests, self).setUp()
@@ -160,7 +160,7 @@ One of parameters, dataset is required.',
         _check(data, errors)
 
         data = {'examples_fields': 'hire_outcome,application_id',
-                'examples_placement': app.db.Test.EXAMPLES_TO_MONGO,
+                'examples_placement': app.db.Test.EXAMPLES_TO_AMAZON_S3,
                 'aws_instance': '5270da3a106a6c1631000000',
                 'dataset': '5270da3a106a6c1631000000'}
         errors = {
@@ -169,7 +169,7 @@ One of parameters, dataset is required.',
         _check(data, errors)
 
         data = {'examples_fields': 'hire_outcome,application_id',
-                'examples_placement': app.db.Test.EXAMPLES_TO_MONGO,
+                'examples_placement': app.db.Test.EXAMPLES_TO_AMAZON_S3,
                 'spot_instance_type': 'INVALID',
                 'start': '2013-01-01'}
         errors = {

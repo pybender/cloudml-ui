@@ -12,7 +12,7 @@ angular.module('app.models.controllers', ['app.config', ])
   ($scope, $location, Model) ->
     $scope.MODEL = Model
     $scope.FIELDS = Model.MAIN_FIELDS + ',tags,created_on,created_by,
-updated_on,updated_by,comparable'
+updated_on,updated_by,comparable,test_handler_fields'
     $scope.ACTION = 'loading models'
     $scope.currentTag = $location.search()['tag']
     $scope.kwargs = {'tag': $scope.currentTag}
@@ -268,8 +268,11 @@ train_records_count,test_handler_fields'
 
     $scope.test_model = (model)->
       $scope._showModelActionDialog(model, 'test', (model) ->
-        $scope.openDialog($dialog, model, 'partials/testresults/run_test.html',
-                        'TestDialogController', 'modal large'))
+        model.$load(show: 'test_handler_fields').then (->
+          $scope.openDialog($dialog, model,
+            'partials/testresults/run_test.html',
+            'TestDialogController', 'modal large'))
+        )
 
     $scope.reload_model = (model)->
       model.$reload()

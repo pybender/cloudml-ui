@@ -95,17 +95,13 @@ angular.module('app.datas.controllers', ['app.config', ])
     _id: $routeParams.test_id
   })
   $scope.test.$load(
-      show: 'name'
-  )
-  Data.$loadFieldList($routeParams.model_id,
-                      $routeParams.test_id)
-  .then ((opts) ->
-      $scope.fields = opts.fields
+      show: 'name,examples_fields'
+  ).then ((opts) ->
       $scope.loading_state = false
-    ), ((opts) ->
-      $scope.setError(opts, 'loading data field list')
+  ), ((opts) ->
+      $scope.setError(opts, 'loading test details')
       $scope.loading_state = true
-    )
+  )
 
   $scope.update = () ->
     if not $scope.form.field

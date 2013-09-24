@@ -50,9 +50,9 @@ created_by'
     }
 
     # Choose examples fields select options
-    test_handler_fields = {results: []}
+    $scope.test_handler_fields = []
     angular.forEach($scope.model.test_handler_fields, (item, key) ->
-      test_handler_fields.results.push({text: item, id: item})
+      $scope.test_handler_fields.push({text: item, id: item})
     )
     $scope.select2params = {
       multiple: true,

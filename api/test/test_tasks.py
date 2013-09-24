@@ -117,7 +117,8 @@ class TestTasksTests(BaseTestCase):
         self.assertFalse(test.accuracy)
         self.assertFalse(test.classes_set)
         self.assertFalse(test.examples_count)
-        self.assertEquals(test.examples_placement, test.EXAMPLES_TO_MONGO)
+        self.assertEquals(test.examples_placement, test.EXAMPLES_TO_AMAZON_S3)
+        self.assertEquals(test.examples_fields, ["hire_outcome", "application_id"])
         self.assertEquals(test.status, test.STATUS_QUEUED)
         test_examples = app.db.TestExample.find({'test_id': str(test._id)})
         self.assertEquals(test_examples.count(), 0)
@@ -185,33 +186,15 @@ class TestTasksTests(BaseTestCase):
             examples_count = app.db.TestExample.find({'test_name': test.name}).count()
             self.assertTrue(examples_count == test.examples_count == 100)
             example = app.db.TestExample.find_one({'test_id': str(test._id)})
+
             self.assertTrue(example.data_input, 'Raw data should be filled to MongoDB')
             self.assertEquals(example.data_input.keys(), test.examples_fields)
-
-            # Should be cached and called only once
-            self.assertEquals(1, mock_get_data_stream.call_count)
-
-            self.assertFalse(mock_store_examples.si.call_count,
-                              "Examples placement is MongoDB. \
-                              We do not need to store it in Amazon S3")
-            self.assertFalse(mock_apply_async.apply.call_count)
+            # TODO: Check whether all data saved to amazon s3
+            self.assertEquals(10, mock_store_examples.si.call_count)
+            self.assertEquals(10, mock_apply_async.apply.call_count)
 
             test = self.db.Test.get_from_id(ObjectId(self.test._id))
 
-            mock_store_examples.reset_mock()
-            mock_apply_async.reset_mock()
-
-            # Examples raw data to Amazon S3
-            test.status = test.STATUS_QUEUED
-            test.examples_placement = test.EXAMPLES_TO_AMAZON_S3
-            test.save()
-
-            result = run_test([self.dataset._id, ], self.test._id)
-            self.assertEquals(result, 'Test completed')
-            self.assertEquals(10, mock_store_examples.si.call_count)
-            self.assertEquals(10, mock_apply_async.apply.call_count)
-            example = app.db.TestExample.find_one({'test_id': str(test._id)})
-            self.assertFalse(example.data_input, 'Raw data should not be filled to MongoDB')
             mock_store_examples.reset_mock()
             mock_apply_async.reset_mock()
 
@@ -231,12 +214,31 @@ class TestTasksTests(BaseTestCase):
             mock_store_examples.reset_mock()
             mock_apply_async.reset_mock()
 
+            # Don't save examples raw data at all
+            mock_get_data_stream.reset_mock()
+            test.status = test.STATUS_QUEUED
+            test.examples_placement = test.EXAMPLES_DONT_SAVE
+            test.save()
+
+            result = run_test([self.dataset._id, ], self.test._id)
+            self.assertEquals(result, 'Test completed')
+            self.assertEquals(1, mock_get_data_stream.call_count,
+                              'Should be cached and called only once')
+            self.assertFalse(mock_store_examples.si.call_count,
+                              "Examples placement is MongoDB. \
+                              We do not need to store it in Amazon S3")
+            self.assertFalse(mock_apply_async.apply.call_count)
+            example = app.db.TestExample.find_one({'test_id': str(test._id)})
+            self.assertFalse(example.data_input,
+                             'Raw data should not be filled at all')
+            mock_store_examples.reset_mock()
+            mock_apply_async.reset_mock()
+
             model = test.model
             model.status = model.STATUS_NEW
             model.save()
             self.assertRaises(InvalidOperationError, run_test,
                               [self.dataset._id, ], self.test._id)
-
 
             # Unicode encoding test
             model.status = model.STATUS_TRAINED

@@ -402,7 +402,7 @@ class AddTestForm(BaseChooseInstanceAndDataset):
 
     def clean_examples_fields(self, value):
         if not value:
-            raise ValidationError('Examples fields are required')
+            return []
         return value.split(',')
 
     def save(self):

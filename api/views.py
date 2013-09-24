@@ -116,6 +116,9 @@ class Models(BaseResource):
         if get_datasets or get_data_fields:
             fields.append('dataset_ids')
 
+        if fields and 'test_handler_fields' in fields: 
+            fields.append('test_import_handler')
+
         model = super(Models, self)._get_details_query(
             params, fields, **kwargs)
 
@@ -633,12 +636,14 @@ class TestExamplesResource(BaseResource):
 
         test = app.db.Test.find_one({'_id': ObjectId(test_id)})
         groups = defaultdict(list)
-        example_fields = ['label', 'pred_label', 'prob', 'id']
+        example_fields = ['label', 'pred_label', 'prob', 'id','data_input']
 
-        for row in test.get_examples_full_data(example_fields):
-            groups[row[group_by_field]].append({
-                'label': row['pred_label'],
-                'pred': row['label'],
+        filter_dict = {'model_id': model_id, 'test_id': test_id}
+        for row in app.db.TestExample.find(filter_dict, example_fields):
+        #for row in test.get_examples_full_data(example_fields):
+            groups[row.data_input_m[group_by_field.replace('data_input.','')]].append({
+                'label': row['label'],
+                'pred': row['pred_label'],
                 'prob': row['prob'],
             })
 
@@ -673,6 +678,8 @@ not contain probabilities')
         logging.info('Calculating avps for groups')
         for group in groups:
             group_list = group['list']
+
+            #print group_list
             labels = [transform(item['label']) for item in group_list]
             pred_labels = [transform(item['pred']) for item in group_list]
             probs = [item['prob'][1] for item in group_list]

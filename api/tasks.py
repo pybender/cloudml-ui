@@ -481,19 +481,21 @@ def run_test(dataset_ids, test_id):
                         metrics._probs)
         logging.info("Memory usage: %f",
                      memory_usage(-1, interval=0, timeout=None)[0])
+        with open(test.temp_data_filename, 'w') as fp:
+            for n, row, label, pred, prob in examples:
+                if n % (all_count / 10) == 0:
+                    logging.info('Processed %s rows so far' % n)
+                if test.examples_placement == test.EXAMPLES_TO_AMAZON_S3:
+                    # Caching raw data into temp file
+                    ndata = dict([(key.replace('.', '->'), val) \
+                        for key, val in row.iteritems()])
+                    fp.write('{0}\n'.format(json.dumps(ndata)))
+                vectorized_data = metrics._true_data.getrow(n).todense()
+                example, new_row = _add_example_to_mongo(test, vectorized_data, row, label,
+                                                         pred, prob)
+                example_ids.append(str(example._id))
 
-        for n, row, label, pred, prob in examples:
-            if n % (all_count / 10) == 0:
-                logging.info('Processed %s rows so far' % n)
-            vectorized_data = metrics._true_data.getrow(n).todense()
-            example, new_row = _add_example_to_mongo(test, vectorized_data, row, label,
-                                                     pred, prob)
-            example_ids.append(str(example._id))
 
-            if test.examples_placement == test.EXAMPLES_TO_AMAZON_S3:
-                # Caching raw data into temp file
-                with open(test.temp_data_filename, 'w') as fp:
-                    fp.write('{0}\n'.format(json.dumps(new_row)))
 
         if test.examples_placement == test.EXAMPLES_TO_AMAZON_S3:
 
@@ -517,7 +519,7 @@ def run_test(dataset_ids, test_id):
             # Wait for all results
             logging.info('Storing raw data to Amazon S3')
             group(examples_tasks).apply_async().get(propagate=False)
-            os.remove(test.temp_data_filename)
+            #os.remove(test.temp_data_filename)
 
         test.status = Test.STATUS_COMPLETED
         test.save()
@@ -554,6 +556,7 @@ def _add_example_to_mongo(test, vectorized_data, data, label, pred, prob):
         example['name'] = example_name.encode('utf-8')
 
     example.pred_label = str(pred)
+    example.label = str(label)
     example.prob = prob.tolist()
     example.test = test
     example.vect_data = vectorized_data.tolist()[0]
@@ -566,11 +569,16 @@ def _add_example_to_mongo(test, vectorized_data, data, label, pred, prob):
     example.test_id = str(test._id)
     example.model_id = str(model._id)
 
-    # Choose only specified in test fields in test
-    new_row = dict([(field, ndata.get(field, None)) 
+    
+    new_row = ndata
+    if test.examples_placement == test.EXAMPLES_MONGODB:
+        example.data_input = ndata
+    if test.examples_placement == test.EXAMPLES_TO_AMAZON_S3:
+        # Fill all data to Amazon S3 and only specified fields
+        # to MongoDB
+        # Choose only specified in test fields in test
+        new_row = dict([(field, ndata.get(field, None)) 
                 for field in test.examples_fields])
-
-    if test.examples_placement == test.EXAMPLES_TO_MONGO:
         example.data_input = new_row
 
     try:
@@ -597,11 +605,13 @@ def store_examples(test_id, params):
 
     with open(test.temp_data_filename, 'r') as fp:
         row_nums = params[0]
+        #logging.warning('offset %d' % row_nums[0])
         for r in range(row_nums[0]):  # First row_num
             fp.readline()
 
         for row_num, example_id in izip(*params):
             row = fp.readline()
+            #logging.warning(row)
             row = json.loads(row)
 
 
@@ -612,14 +622,14 @@ def store_examples(test_id, params):
                 ))
                 continue
 
-            example['data_input'] = row
+            example['data_input_a'] = row
             try:
-                example.validate()
+                example.save()
             except Exception, exc:
                 logging.error('Problem with saving example #%s: %s',
                               row_num, exc)
                 res.append((None, None))
-            example.save(check_keys=False)
+            #example.save(check_keys=False)
 
             res.append((row_num, str(example._id)))
     logging.info('Complete storing raw data to s3 %s - %s' % (params[0][0], params[0][-1]) )
