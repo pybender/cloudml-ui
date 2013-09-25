@@ -4,10 +4,25 @@ Development
 Backend
 -------
 
-Create virtual env and install requirements::
+Install system requirements(mongodb==2.4.6)::
+
+    $ sudo apt-get install liblapack-dev gfortran libpq-dev libevent-dev python-dev mongo-server
+
+Create virtual env::
 
     $ virtualenv --no-site-packages ve
     $ . ve/bin/activate
+
+Install numpy and scipy::
+
+    $ export LAPACK=/usr/lib/liblapack.so
+    $ export ATLAS=/usr/lib/libatlas.so
+    $ export BLAS=/usr/lib/libblas.so
+    $ pip install numpy
+    $ pip install scipy
+
+Install python requirements::
+
     $ pip install -r requirements.txt
 
 Create local config::
@@ -17,6 +32,13 @@ Create local config::
 Note::
 
     Create OATH API keys using https://www.odesk.com/services/api/apply. Callback URL is http://127.0.0.1:3333/#/auth/callback
+
+Configure rabbitmq(celery broker)::
+
+    $ rabbitmqctl add_user cloudml {{password}}
+    $ rabbitmqctl add_vhost cloudml
+    $ rabbitmqctl set_permissions cloudml cloudml "*" "*" "*
+    "
 
 Run dev server::
 
@@ -38,7 +60,7 @@ Run shell::
 Frontend
 --------
 
-Install nodejs and nmp::
+Install nodejs and nmp(nodejs==0.8.6)::
 
     $ sudo apt-get install nodejs npm
 

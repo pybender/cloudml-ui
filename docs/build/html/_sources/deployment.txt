@@ -18,9 +18,25 @@ Create virtual env locally::
     $ . ve/bin/activate
     $ pip install -r requirements.txt
 
-Create settings::
+Installing jgit::
+
+    $ wget .....
+
+Configure jgit::
+
+    $ git remote add s3 amazon-s3://.jgit@odesk-match-cloudml/cloudml.git/
+
+Note::
+
+    Create OATH API keys using https://www.odesk.com/services/api/apply. Callback URL is http://{{host}}/#/auth/callback
+
+Create fabsettings::
 
     $ cp fabconf.py.def fabconf.py
+
+Create config::
+
+    $ cp api/local_config.py.tpl api/staging_config.py.tpl
 
 Add new configuration. For example::
 
@@ -60,9 +76,13 @@ Deploy current version::
 
     $ fab staging deploy
 
-For first starting supervisor please run::
+For manuall starting supervisor please run::
 
     $ fab staging supervisor.d
+
+For manuall push source code to s3::
+
+    $ jgit push s3 master:master
 
 
 Deploy new version
@@ -96,3 +116,26 @@ Run supervisorctl::
 Get list of available tasks::
 
     $ fab -l
+
+
+Creating image for cloudml node
+-------------------------------
+
+For creating image you need use instance 2x.large with support .. and apply
+match and cloudml chief recipets.
+
+Activate virtualenv::
+
+    $ source ./ve/bin/activate
+
+Setup cloudml worker::
+
+    $ fab worker setupw
+
+Deploy new version::
+
+    $ fab worker deployw
+
+
+
+

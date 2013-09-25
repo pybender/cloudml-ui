@@ -17,9 +17,23 @@ DATABASE_HOST
 Host of mongo db
 
 
+Amazon settings
+===============
+
+AMAZON_ACCESS_TOKEN
+AMAZON_TOKEN_SECRET
+AMAZON_BUCKET_NAME
+
+
+Odesk settings
+==============
+
+ODESK_OAUTH_KEY
+ODESK_OAUTH_SECRET
+
+
 Main settings
 =============
-
 
 DATA_FOLDER
 -----------

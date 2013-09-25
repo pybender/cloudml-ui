@@ -22,7 +22,8 @@ Contents:
 
    * `Jira project <http://jira.odesk.com/browse/MATCH/component/11626>`_
    * `Github repository <https://github.com/odeskdev/odeskdev-cloudml>`_
-   * Production http://172.27.77.242
+   * Production http://172.27.77.141
+   * Temprary worker 172.27.133.33
    * Staging http://172.27.67.106:5000
    * Developers: Nikolay Melnik <nmelnik@odesk.com>, Mikhail Medvedev <moorcock@odesk.com>
 
