@@ -1,0 +1,176 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Settings &mdash; oDesk CloudML 0.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="oDesk CloudML 0.0.1 documentation" href="index.html" />
+    <link rel="prev" title="Api" href="api.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="api.html" title="Api"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="settings">
+<h1>Settings<a class="headerlink" href="#settings" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="db-settings">
+<h2>DB settings<a class="headerlink" href="#db-settings" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="database-name">
+<h3>DATABASE_NAME<a class="headerlink" href="#database-name" title="Permalink to this headline">¶</a></h3>
+<p>Name of mongo db</p>
+</div>
+<div class="section" id="database-host">
+<h3>DATABASE_HOST<a class="headerlink" href="#database-host" title="Permalink to this headline">¶</a></h3>
+<p>Host of mongo db</p>
+</div>
+</div>
+<div class="section" id="amazon-settings">
+<h2>Amazon settings<a class="headerlink" href="#amazon-settings" title="Permalink to this headline">¶</a></h2>
+<p>AMAZON_ACCESS_TOKEN
+AMAZON_TOKEN_SECRET
+AMAZON_BUCKET_NAME</p>
+</div>
+<div class="section" id="odesk-settings">
+<h2>Odesk settings<a class="headerlink" href="#odesk-settings" title="Permalink to this headline">¶</a></h2>
+<p>ODESK_OAUTH_KEY
+ODESK_OAUTH_SECRET</p>
+</div>
+<div class="section" id="main-settings">
+<h2>Main settings<a class="headerlink" href="#main-settings" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="data-folder">
+<h3>DATA_FOLDER<a class="headerlink" href="#data-folder" title="Permalink to this headline">¶</a></h3>
+<p>Folder for temprary saving datasets.</p>
+</div>
+<div class="section" id="examples-chunk-size">
+<h3>EXAMPLES_CHUNK_SIZE<a class="headerlink" href="#examples-chunk-size" title="Permalink to this headline">¶</a></h3>
+<p>Number of examples in chunk for store examples to s3</p>
+</div>
+<div class="section" id="multipart-upload-chunk-size">
+<h3>MULTIPART_UPLOAD_CHUNK_SIZE<a class="headerlink" href="#multipart-upload-chunk-size" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="broker-url">
+<h3>BROKER_URL<a class="headerlink" href="#broker-url" title="Permalink to this headline">¶</a></h3>
+<p>Celery broker url</p>
+</div>
+<div class="section" id="celery-result-backend">
+<h3>CELERY_RESULT_BACKEND<a class="headerlink" href="#celery-result-backend" title="Permalink to this headline">¶</a></h3>
+<p>Celery result backend</p>
+</div>
+<div class="section" id="requesting-instance-max-retries">
+<h3>REQUESTING_INSTANCE_MAX_RETRIES<a class="headerlink" href="#requesting-instance-max-retries" title="Permalink to this headline">¶</a></h3>
+<p>Max retries when request spot instance</p>
+</div>
+<div class="section" id="requesting-instance-countdown">
+<h3>REQUESTING_INSTANCE_COUNTDOWN<a class="headerlink" href="#requesting-instance-countdown" title="Permalink to this headline">¶</a></h3>
+<p>Timeout between retries request spot instance</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Settings</a><ul>
+<li><a class="reference internal" href="#db-settings">DB settings</a><ul>
+<li><a class="reference internal" href="#database-name">DATABASE_NAME</a></li>
+<li><a class="reference internal" href="#database-host">DATABASE_HOST</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#amazon-settings">Amazon settings</a></li>
+<li><a class="reference internal" href="#odesk-settings">Odesk settings</a></li>
+<li><a class="reference internal" href="#main-settings">Main settings</a><ul>
+<li><a class="reference internal" href="#data-folder">DATA_FOLDER</a></li>
+<li><a class="reference internal" href="#examples-chunk-size">EXAMPLES_CHUNK_SIZE</a></li>
+<li><a class="reference internal" href="#multipart-upload-chunk-size">MULTIPART_UPLOAD_CHUNK_SIZE</a></li>
+<li><a class="reference internal" href="#broker-url">BROKER_URL</a></li>
+<li><a class="reference internal" href="#celery-result-backend">CELERY_RESULT_BACKEND</a></li>
+<li><a class="reference internal" href="#requesting-instance-max-retries">REQUESTING_INSTANCE_MAX_RETRIES</a></li>
+<li><a class="reference internal" href="#requesting-instance-countdown">REQUESTING_INSTANCE_COUNTDOWN</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="api.html"
+                        title="previous chapter">Api</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/settings.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="api.html" title="Api"
+             >previous</a> |</li>
+        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Nikolay Melnik.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b2.
+    </div>
+  </body>
+</html>

@@ -1,4 +1,3 @@
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -14,7 +13,7 @@
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
+        URL_ROOT:    './',
         VERSION:     '0.0.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
@@ -67,8 +66,20 @@
 $ . ve/bin/activate
 $ pip install -r requirements.txt</pre>
 </div>
-<p>Create settings:</p>
+<p>Installing jgit:</p>
+<div class="highlight-python"><pre>$ wget .....</pre>
+</div>
+<p>Configure jgit:</p>
+<div class="highlight-python"><pre>$ git remote add s3 amazon-s3://.jgit@odesk-match-cloudml/cloudml.git/</pre>
+</div>
+<p>Note:</p>
+<div class="highlight-python"><pre>Create OATH API keys using https://www.odesk.com/services/api/apply. Callback URL is http://{{host}}/#/auth/callback</pre>
+</div>
+<p>Create fabsettings:</p>
 <div class="highlight-python"><pre>$ cp fabconf.py.def fabconf.py</pre>
+</div>
+<p>Create config:</p>
+<div class="highlight-python"><pre>$ cp api/local_config.py.tpl api/staging_config.py.tpl</pre>
 </div>
 <p>Add new configuration. For example:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">StagingConf</span><span class="p">(</span><span class="n">BaseConf</span><span class="p">):</span>
@@ -103,8 +114,11 @@ $ pip install -r requirements.txt</pre>
 <p>Deploy current version:</p>
 <div class="highlight-python"><pre>$ fab staging deploy</pre>
 </div>
-<p>For first starting supervisor please run:</p>
+<p>For manuall starting supervisor please run:</p>
 <div class="highlight-python"><pre>$ fab staging supervisor.d</pre>
+</div>
+<p>For manuall push source code to s3:</p>
+<div class="highlight-python"><pre>$ jgit push s3 master:master</pre>
 </div>
 </div>
 <div class="section" id="deploy-new-version">
@@ -130,6 +144,20 @@ $ pip install -r requirements.txt</pre>
 <div class="highlight-python"><pre>$ fab -l</pre>
 </div>
 </div>
+<div class="section" id="creating-image-for-cloudml-node">
+<h2>Creating image for cloudml node<a class="headerlink" href="#creating-image-for-cloudml-node" title="Permalink to this headline">¶</a></h2>
+<p>For creating image you need use instance 2x.large with support .. and apply
+match and cloudml chief recipets.</p>
+<p>Activate virtualenv:</p>
+<div class="highlight-python"><pre>$ source ./ve/bin/activate</pre>
+</div>
+<p>Setup cloudml worker:</p>
+<div class="highlight-python"><pre>$ fab worker setupw</pre>
+</div>
+<p>Deploy new version:</p>
+<div class="highlight-python"><pre>$ fab worker deployw</pre>
+</div>
+</div>
 </div>
 
 
@@ -144,6 +172,7 @@ $ pip install -r requirements.txt</pre>
 <li><a class="reference internal" href="#setup-project-to-new-instance">Setup project to new instance</a></li>
 <li><a class="reference internal" href="#deploy-new-version">Deploy new version</a></li>
 <li><a class="reference internal" href="#management-supervisor">Management supervisor</a></li>
+<li><a class="reference internal" href="#creating-image-for-cloudml-node">Creating image for cloudml node</a></li>
 </ul>
 </li>
 </ul>
@@ -193,7 +222,7 @@ $ pip install -r requirements.txt</pre>
     </div>
     <div class="footer">
         &copy; Copyright 2013, Nikolay Melnik.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b2.
     </div>
   </body>
 </html>

@@ -101,7 +101,7 @@ class AmazonS3Helper(object):
         def upload_part(part_count=[0]):
             part_count[0] += 1
             stream.seek(0)
-            mpu.upload_part_from_file(stream, part_count[0])
+            mpu.upload_part_from_file(stream, part_count[0], cb=progress)
             stream.seek(0)
             stream.truncate()
 
@@ -116,8 +116,8 @@ class AmazonS3Helper(object):
                     mpu.complete_upload()
                     break
                 stream.write(chunk)
-                if input_file.tell() > 5*1024*1024:
-                    upload_part()
+                if stream.tell() > 5*1024*1024:
+                    upload_part(part_count)
 
     def save_key(self, name, filename, meta={}, compressed=True):
         key = Key(self.bucket)
