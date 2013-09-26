@@ -187,11 +187,13 @@ class TestTasksTests(BaseTestCase):
             self.assertTrue(examples_count == test.examples_count == 100)
             example = app.db.TestExample.find_one({'test_id': str(test._id)})
 
-            self.assertTrue(example.data_input, 'Raw data should be filled to MongoDB')
-            self.assertEquals(example.data_input.keys(), test.examples_fields)
+            
             # TODO: Check whether all data saved to amazon s3
             self.assertEquals(10, mock_store_examples.si.call_count)
             self.assertEquals(10, mock_apply_async.apply.call_count)
+
+            self.assertTrue(example.data_input, 'Raw data should be filled to MongoDB')
+            self.assertEquals(example.data_input.keys(), test.examples_fields)
 
             test = self.db.Test.get_from_id(ObjectId(self.test._id))
 

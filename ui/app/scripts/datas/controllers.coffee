@@ -22,18 +22,22 @@ angular.module('app.datas.controllers', ['app.config', ])
   $scope.init = (test, extra_params={'action': 'examples:list'}) ->
     $scope.extra_params = extra_params
     $scope.test = test
-    Data.$loadFieldList(test.model_id, test._id).then ((opts) ->
-      $scope.fields = opts.fields
-      # Init search form
-      for key, val of $scope.filter_opts
-        key_name = key.replace("data_input.", "")
-        if key_name in $scope.fields
-          $scope.data_filters.push({name: key, value: val})
-        else if key == 'label' || key == 'pred_label'
-          $scope.simple_filters[key] = val
-      $scope.filter()
+    $scope.test.$load(
+        show: 'name,examples_fields'
+    ).then ((opts) ->
+        $scope.fields = $scope.test.examples_fields
+        # Init search form
+        for key, val of $scope.filter_opts
+          key_name = key.replace("data_input.", "")
+          if key_name in $scope.fields
+            $scope.data_filters.push({name: key, value: val})
+          else if key == 'label' || key == 'pred_label'
+            $scope.simple_filters[key] = val
+        $scope.filter()
+        $scope.loading_state = false
     ), ((opts) ->
-      $scope.setError(opts, 'loading data field list')
+        $scope.setError(opts, 'loading test details')
+        $scope.loading_state = true
     )
 
     $scope.model = new Model({_id: $scope.test.model_id})

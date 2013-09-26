@@ -705,6 +705,38 @@ class TestExample(BaseDocument):
     def s3_key(self):
         return '{0!s}_{1!s}'.format(self.S3_KEY, self._id)
 
+    @property
+    def is_weights_calculated(self):
+        return self.weighted_data_input != {}
+
+    def calc_weighted_data(self):
+        if self.on_s3:
+            data = self._load_from_s3()
+            if data:
+                data_input = json.loads(data)
+        else:
+            data_input = example.data_input
+
+        if not data_input:
+            return None
+
+        from api.helpers.features import get_features_vect_data
+        from bson.objectid import ObjectId
+        model = app.db.Model.find_one({'_id': ObjectId(self.model_id)})
+        feature_model = model.get_trainer()._feature_model
+        data = get_features_vect_data(self.vect_data,
+                                      feature_model.features.items(),
+                                      feature_model.target_variable)
+
+        from helpers.weights import get_example_params
+        model_weights = app.db.Weight.find({'model_id': self.model_id})
+        weighted_data = dict(get_example_params(model_weights, data_input, data))
+        # app.db.TestExample.collection.update(
+        #             {'_id': self._id},
+        #             {'$set': {'weighted_data_input': weighted_data}})
+        self.weighted_data_input = weighted_data
+        self.save(check_keys=False)
+
     def _save_to_s3(self, data):
         meta = {
             'example_id': self.id,
@@ -719,35 +751,35 @@ class TestExample(BaseDocument):
         helper = AmazonS3Helper()
         return helper.load_key(self.s3_key)
 
-    @property
-    def data_input_m(self):
-        return self['data_input']
+    # @property
+    # def data_input_m(self):
+    #     return self['data_input']
 
-    @property
-    def data_input(self):
-        if self['on_s3']:
-            if not self.has_key('data_input_a') and getattr(self, '_id'):
-                data = self._load_from_s3()
-                if data:
-                    self['data_input_a'] = json.loads(data)
-            return self['data_input_a']
-        else:
-            return self['data_input']
+    # @property
+    # def data_input(self):
+    #     if self['on_s3']:
+    #         if not self.has_key('data_input_a') and getattr(self, '_id'):
+    #             data = self._load_from_s3()
+    #             if data:
+    #                 self['data_input_a'] = json.loads(data)
+    #         return self['data_input_a']
+    #     else:
+    #         return self['data_input']
 
-    @data_input.setter
-    def set_data_input(self, value):
-        self['data_input_a'] = value
+    # @data_input.setter
+    # def set_data_input(self, value):
+    #     self['data_input_a'] = value
 
-    def save(self, *args, **kwargs):
-        data_input = None
-        if self.has_key('data_input_a') and self['data_input_a'] and self.on_s3:
-            data_input = self['data_input_a']
-            self._save_to_s3(data_input)
-        if self.has_key('data_input_a'):
-            self.pop('data_input_a')
-        super(TestExample, self).save(*args, **kwargs)
-        # if data_input:
-        #     self._save_to_s3(data_input)
+    # def save(self, *args, **kwargs):
+    #     data_input = None
+    #     if self.has_key('data_input_a') and self['data_input_a'] and self.on_s3:
+    #         data_input = self['data_input_a']
+    #         self._save_to_s3(data_input)
+    #     if self.has_key('data_input_a'):
+    #         self.pop('data_input_a')
+    #     super(TestExample, self).save(*args, **kwargs)
+    #     # if data_input:
+    #     #     self._save_to_s3(data_input)
 
     def delete(self):
         helper = AmazonS3Helper()

@@ -537,6 +537,8 @@ REDUCE_FUNC = 'function(obj, prev) {\
 
 
 class TestExamplesResource(BaseResource):
+    """
+    """
     @property
     def Model(self):
         return app.db.TestExample
@@ -546,24 +548,24 @@ class TestExamplesResource(BaseResource):
     GET_ACTIONS = ('groupped', 'csv', 'datafields')
     FILTER_PARAMS = [('label', str), ('pred_label', str)]
 
-    def _get_list_query(self, params, fields, **kwargs):
-        test = app.db.Test.find_one({'_id': ObjectId(kwargs.get('test_id'))})
+    # def _get_list_query(self, params, fields, **kwargs):
+    #     test = app.db.Test.find_one({'_id': ObjectId(kwargs.get('test_id'))})
 
-        data_input_params = dict([(p, v) for p, v in params.items()
-                                  if p.startswith('data_input.') and v])
-        if data_input_params:
-            params['_id'] = {
-                '$in': [e['_id'] for e in test.get_examples_full_data(
-                    ['_id'],
-                    data_input_params
-                )]
-            }
+    #     data_input_params = dict([(p, v) for p, v in params.items()
+    #                               if p.startswith('data_input.') and v])
+    #     # if data_input_params:
+    #     #     params['_id'] = {
+    #     #         '$in': [e['_id'] for e in test.get_examples_full_data(
+    #     #             ['_id'],
+    #     #             data_input_params
+    #     #         )]
+    #     #     }
 
-            for param in data_input_params:
-                params[param] = None
+    #     #     for param in data_input_params:
+    #     #         params[param] = None
 
-        return super(TestExamplesResource, self)._get_list_query(
-            params, fields, **kwargs)
+    #     return super(TestExamplesResource, self)._get_list_query(
+    #         params, fields, **kwargs)
 
     def _list(self, **kwargs):
         test = app.db.Test.find_one({'_id': ObjectId(kwargs.get('test_id'))})
@@ -575,34 +577,22 @@ class TestExamplesResource(BaseResource):
         return super(TestExamplesResource, self)._list(**kwargs)
 
     def _get_details_query(self, params, fields, **kwargs):
+        """
+        Note: Example details raw data should be loaded from Amazon S3, if it's in it.
+        """
+        load_weights = False
         if 'weighted_data_input' in fields:
-            fields += ['vect_data', 'data_input', 'on_s3']
+            fields = None  # We need all fields to recalc weights
+            load_weights = True
 
-        example = super(TestExamplesResource, self).\
-            _get_details_query(params, fields, **kwargs)
+        example = super(TestExamplesResource, self)._get_details_query(params, fields, **kwargs)
 
-        if example and 'weighted_data_input' in fields and \
-                example['weighted_data_input'] == {} \
-                and 'vect_data' in example:
-            from api.helpers.features import get_features_vect_data
-            model_id = kwargs['model_id']
-            model = app.db.Model.find_one({'_id': ObjectId(model_id)})
-            feature_model = model.get_trainer()._feature_model
-            data = get_features_vect_data(example['vect_data'],
-                                          feature_model.features.items(),
-                                          feature_model.target_variable)
+        if example is None:
+            raise NotFound()
 
-            from helpers.weights import get_example_params
-            model_weights = app.db.Weight.find({'model_id': model_id})
-            if example.data_input:
-                weighted_data = dict(get_example_params(
-                    model_weights, example.data_input, data))
-                example['weighted_data_input'] = weighted_data
-                # FIXME: Find a better way to do it using mongokit
-                app.db.TestExample.collection.update(
-                    {'_id': example['_id']},
-                    {'$set': {'weighted_data_input': weighted_data}})
-           
+        if load_weights and not example.is_weights_calculated:
+            example.calc_weighted_data()
+
         return example
 
     def _get_groupped_action(self, **kwargs):

@@ -591,6 +591,9 @@ def _add_example_to_mongo(test, vectorized_data, data, label, pred, prob):
 
 @celery.task
 def store_examples(test_id, params):
+    """
+    Stores examples full raw data to Amazon S3.
+    """
     init_logger('runtest_log', obj=test_id)
     res = []
 
@@ -611,9 +614,7 @@ def store_examples(test_id, params):
 
         for row_num, example_id in izip(*params):
             row = fp.readline()
-            #logging.warning(row)
             row = json.loads(row)
-
 
             example = app.db.TestExample.find_one({'_id': ObjectId(example_id)})
             if not example:
@@ -622,14 +623,12 @@ def store_examples(test_id, params):
                 ))
                 continue
 
-            example['data_input_a'] = row
             try:
-                example.save()
+                example._save_to_s3(row)
             except Exception, exc:
-                logging.error('Problem with saving example #%s: %s',
+                logging.error('Problem with saving example data to Amazon #%s: %s',
                               row_num, exc)
                 res.append((None, None))
-            #example.save(check_keys=False)
 
             res.append((row_num, str(example._id)))
     logging.info('Complete storing raw data to s3 %s - %s' % (params[0][0], params[0][-1]) )
