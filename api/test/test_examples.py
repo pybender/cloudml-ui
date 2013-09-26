@@ -70,13 +70,10 @@ class TestExamplesTests(BaseTestCase):
         self.BASE_URL = '/cloudml/models/%s/tests/%s/examples/' % \
             (self.model._id, self.test._id)
 
-    @mock_s3
-    @patch('api.models.DataSet.get_data_stream')
-    def test_list(self, mock_get_data_stream):
+    def test_list(self):
         self._check_list(show='created_on,label,pred_label', query_params={
             'test_id': str(self.test._id)
         })
-        self.assertFalse(mock_get_data_stream.called)
 
         # Data filter, not stored at s3
         url = '{0}?{1}&{2}'.format(
@@ -86,18 +83,6 @@ class TestExamplesTests(BaseTestCase):
         )
         resp = self.app.get(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, 200)
-        self.assertFalse(mock_get_data_stream.called)
-
-        # Data filter, when stored at s3
-        url = '/cloudml/models/{0!s}/tests/{1!s}/examples/?{2}&{3}'.format(
-            self.model._id,
-            self.test2._id,
-            'action=examples:list',
-            'data_input.employer->country=United Kingdom'
-        )
-        resp = self.app.get(url, headers=HTTP_HEADERS)
-        self.assertEquals(resp.status_code, 200)
-        self.assertTrue(mock_get_data_stream.called)
 
     @mock_s3
     def test_details(self):

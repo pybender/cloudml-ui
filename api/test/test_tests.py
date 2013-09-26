@@ -139,13 +139,14 @@ class TestTests(BaseTestCase):
                 errors_dict = dict([(item['name'], item['error'])
                                     for item in err_list])
                 for field, err_msg in errors.iteritems():
+                    self.assertTrue(field in errors_dict,
+                                    "Should be err for field %s: %s" % (field, err_msg))
                     self.assertEquals(err_msg, errors_dict[field])
                 self.assertEquals(len(errors_dict), len(errors),
                                   errors_dict.keys())
 
         data = {}
         errors = {
-            u'examples_fields': u'Examples fields are required',
             None: u'One of spot_instance_type, aws_instance is required. \
 One of parameters, dataset is required.',
             u'examples_placement': u'Examples placement is required'}

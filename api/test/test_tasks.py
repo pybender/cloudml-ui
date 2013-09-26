@@ -2,6 +2,7 @@
 
 from api.tasks import InvalidOperationError
 import os
+import json
 from bson import ObjectId
 
 from moto import mock_s3
@@ -278,7 +279,8 @@ class TestTasksTests(BaseTestCase):
             range(_ROW_COUNT), [str(example._id)] * _ROW_COUNT)))
 
         example.reload()
-        self.assertEquals(example.data_input, {'data': 'value'})
+        self.assertEquals(example.data_input, {})
+        self.assertEquals(json.loads(example._load_from_s3()), {'data': 'value'})
 
     @patch('api.amazon_utils.AmazonEC2Helper.request_spot_instance',
            return_value=Mock(id='some_id')
