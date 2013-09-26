@@ -710,6 +710,7 @@ class TestExample(BaseDocument):
         return self.weighted_data_input != {}
 
     def calc_weighted_data(self):
+        data_input = None
         if self.on_s3:
             data = self._load_from_s3()
             if data:
