@@ -606,41 +606,18 @@ class TestExamplesResource(BaseResource):
         from operator import itemgetter
         logging.info('Start request for calculating MAP')
 
-        # getting from request parameters fieldname to group.
-        parser = reqparse.RequestParser()
-        parser.add_argument('count', type=int)
-        parser.add_argument('field', type=str)
-        params = parser.parse_args()
-        group_by_field = params.get('field')
-        count = params.get('count', 100)
+        group_by_field, count = parse_map_params()
         if not group_by_field:
             return odesk_error_response(400, ERR_INVALID_DATA,
                                         'field parameter is required')
-        model_id = kwargs.get('model_id')
-        test_id = kwargs.get('test_id')
-        logging.info('For model: %s test: %s' % (model_id, test_id))
-        logging.info('Gettings examples')
 
         res = []
         avps = []
-
-        test = app.db.Test.find_one({'_id': ObjectId(test_id)})
-        groups = defaultdict(list)
-        example_fields = ['label', 'pred_label', 'prob', 'id','data_input']
-
-        filter_dict = {'model_id': model_id, 'test_id': test_id}
-        for row in app.db.TestExample.find(filter_dict, example_fields):
-        #for row in test.get_examples_full_data(example_fields):
-            groups[row.data_input_m[group_by_field.replace('data_input.','')]].append({
-                'label': row['label'],
-                'pred': row['pred_label'],
-                'prob': row['prob'],
-            })
-
-        groups = [{
-            group_by_field: key,
-            'list': value
-        } for key, value in groups.iteritems()]
+        collection = app.db.TestExample.collection
+        groups = collection.group([group_by_field, ],
+                                  {'model_id': kwargs.get('model_id'),
+                                   'test_id': kwargs.get('test_id')},
+                                  {'list': []}, REDUCE_FUNC)
 
         import sklearn.metrics as sk_metrics
         import numpy
@@ -1021,3 +998,16 @@ def populate_parser(model, is_requred=False):
     for param in model.import_params:
         parser.add_argument(param, type=str, required=is_requred)
     return parser
+
+
+def parse_map_params():
+    """
+    Parse fieldname to group and count from GET parameters
+    """
+    parser = reqparse.RequestParser()
+    parser.add_argument('count', type=int)
+    parser.add_argument('field', type=str)
+    params = parser.parse_args()
+    group_by_field = params.get('field')
+    count = params.get('count', 100)
+    return group_by_field, count
