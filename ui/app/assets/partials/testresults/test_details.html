@@ -31,52 +31,54 @@
 
     <div class="tab-content">
       <div ng-show="action[0] == 'about'">
-        <div class="row">
-            <div class="span8">
-                <div>
-                    Import parameters:
-                    <span class="value">{{ test.parameters }}</span>
-                </div>
-                <div>
-                    Classes Set:
-                    <span class="value">
-                        <span ng-repeat='cls in test.classes_set'><span class="label">{{ cls }}</span> </span> 
+        <div>
+            Import parameters:
+            <span class="value">{{ test.parameters }}</span>
+        </div>
+        <div>
+            Classes Set:
+            <span class="value">
+                <span ng-repeat='cls in test.classes_set'><span class="label">{{ cls }}</span> </span> 
+            </span>
+        </div>
+        <div ng-show="test.dataset" title="DataSet which was used for running test">
+          DataSet:
+          <span class="value">
+            <a href="#{{ test.dataset_obj.objectUrl() }}">
+            {{ test.dataset_obj.name }}</a>
+          </span>
+        </div>
+        <div>
+            Examples count: <span class="value">{{ test.examples_count }}</span>
+        </div>
+        <div>
+            Examples placement: <span class="value">{{ test.examples_placement }}</span>
+        </div>
+        <div>
+            Examples fields: <span class="value">
+            <span ng-repeat="f in test.examples_fields"><span class="label">{{ f }}</span> </span></span>
+        </div>
+        <div>
+            Memory used: <span class="value">{{ test.memory_usage.testing }} Mb</span>
+        </div>
+        <div ng-controller="TestExportsCtrl" ng-init="init(test)">
+            <div ng-show="exports">
+              <h4>CSV Exports</h4>
+              <ul class="unstyled">
+                <li class="row well well-small" ng-repeat="export in exports">
+                  <div class="span10">
+                    <i class="icon-calendar"></i> created on <span class="badge badge-info">{{ export.datetime|format_date }}</span> 
+                    <i class="icon-th"></i><span> fields </span>
+                    <span ng-repeat="field in export.fields">
+                      <span class="label">{{ field }}</span> 
                     </span>
-                </div>
-                <div ng-show="test.dataset" title="DataSet which was used for running test">
-                  DataSet:
-                  <span class="value">
-                    <a href="#{{ test.dataset_obj.objectUrl() }}">
-                    {{ test.dataset_obj.name }}</a>
-                  </span>
-                </div>
-                <div>
-                    Examples count: <span class="value">{{ test.examples_count }}</span>
-                </div>
-                <div>
-                    Examples placement: <span class="value">{{ test.examples_placement }}</span>
-                </div>
-                <div>
-                    Examples fields: <span class="value">
-                    <span ng-repeat="f in test.examples_fields"><span class="label">{{ f }}</span> </span></span>
-                </div>
-                <div>
-                    Memory used: <span class="value">{{ test.memory_usage.testing }} Mb</span>
-                </div>
-                <div ng-controller="TestExportsCtrl" ng-init="init(test)">
-                    <div ng-show="exports">
-                    <b>CSV Exports:</b><br>
-                    <ul>
-                    <li ng-repeat="export in exports">
-                        <i>{{ export.datetime|format_date }}</i>
-                        <span ng-repeat="field in export.fields" class="badge">{{ field }}</span>
-                        <span class="badge badge-info">{{ export.status }}</span>
-                        <a ng-show="export.status == 'Completed'" class="btn btn-small" href="{{ export.url }}">Download</a>
-                    </li>
-                    </ul>
-                    </div>
-                </div>
-
+                    <span class="badge badge-info">{{ export.status }}</span><br/>
+                  </div>
+                  <div ng-show="export.status == 'Completed'" class="span1 pull-right">
+                    <a class="btn btn-small" href="{{ export.url }}">Download</a>
+                  </div>
+                </li>
+              </ul>
             </div>
         </div>
       </div>
