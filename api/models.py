@@ -648,7 +648,7 @@ class Test(BaseDocument):
 
         examples_data = dict([(epl['id'], epl)
                               for epl in
-                              app.db.TestExample.find(filter_dict, fields)])
+                              app.db.TestExample.find(filter_dict)])
 
         with self.dataset.get_data_stream() as dataset_data_stream:
             logging.info('Getting dataset stream')
