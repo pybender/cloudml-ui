@@ -648,8 +648,8 @@ class Test(BaseDocument):
 
         examples_data = dict([(epl['id'], epl)
                               for epl in
-                              app.db.TestExample.find(filter_dict)])
-
+                              app.db.TestExample.find(filter_dict, fields)])
+        logging.debug('Examples count %d' % len(examples_data))
         with self.dataset.get_data_stream() as dataset_data_stream:
             logging.info('Getting dataset stream')
             for (i, row) in enumerate(dataset_data_stream):
@@ -663,7 +663,8 @@ class Test(BaseDocument):
                 if i == 0:
                     logging.debug('row %s, example %s' % (row, example))
                 if not example:
-                    logging.warning('Example %s did not found' % (example_id))
+                    if i == 0:
+                        logging.warning('Example %s did not found' % (example_id))
                     continue
                 for key in data:
                     new_key = 'data_input.{0}'.format(key.replace('.', '->'))
