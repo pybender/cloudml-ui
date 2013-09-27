@@ -98,12 +98,12 @@ def qdeploy():
 @task
 def shell():
     release.work_on.run(0)
-    django.shell.run()
+    flask.shell.run()
 
 @task
 def migrate():
     release.work_on.run(0)
-    django.migrate.run()
+    flask.migrate.run()
 
 
 @task
