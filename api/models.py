@@ -658,7 +658,7 @@ class Test(BaseDocument):
 
 
                 data = json.loads(row)
-                example_id = data[example_id_field]
+                example_id = str(data[example_id_field])
                 example = examples_data.get(example_id)
                 if i == 0:
                     logging.debug('row %s, example %s' % (row, example))
