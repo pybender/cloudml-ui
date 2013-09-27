@@ -616,6 +616,7 @@ class Test(BaseDocument):
         :return: iterator
         """
         example_id_field = self.model.example_id
+        logging.info('Getting examples full data. Id field is %s', example_id_field)
 
         if fields:
             for required_field in ['_id', 'id', example_id_field]:
@@ -627,9 +628,10 @@ class Test(BaseDocument):
         examples_on_s3 = app.db.TestExample.find(
             dict(filter_dict.items() + {'on_s3': True}.items())
         ).count()
+        logging.info("%s examples on Amazon S3 found", examples_on_s3)
 
-        # Don't download dataset if it's not needed
         if not examples_on_s3:
+            logging.info("Don't download dataset - no examples on S3")
             if fields:
                 if data_input_params:
                     filter_dict.update(data_input_params)
@@ -649,11 +651,19 @@ class Test(BaseDocument):
                               app.db.TestExample.find(filter_dict, fields)])
 
         with self.dataset.get_data_stream() as dataset_data_stream:
-            for row in dataset_data_stream:
+            logging.info('Getting dataset stream')
+            for (i, row) in enumerate(dataset_data_stream):
+                if i % 100 == 0:
+                    logging.info('Processing %s row' % i)
+
+
                 data = json.loads(row)
                 example_id = data[example_id_field]
                 example = examples_data.get(example_id)
+                if i == 0:
+                    logging.debug('row %s, example %s' % (row, example))
                 if not example:
+                    logging.warning('Example %s did not found' % (example_id))
                     continue
                 for key in data:
                     new_key = 'data_input.{0}'.format(key.replace('.', '->'))
