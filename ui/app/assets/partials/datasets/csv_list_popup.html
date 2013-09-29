@@ -5,6 +5,7 @@
 <div class="modal-body">
   <div class='alert alert-error' ng-show='err'>{{ err }}</div>
   <form class="form-horizontal">
+    <alert-message class="alert-info" msg='Export to CSV is background operation. You could see pending and completed exports in the About tab' unsafe></alert-message>
     <div class="alert-info well">
       <b>Fields: </b>
       <span ng-repeat="f in csvFields">
@@ -31,5 +32,5 @@
 </div>
 <div class="modal-footer">
   <button ng-click="close()" class="btn">Cancel</button>
-  <a ng-click="getExamplesCsv()" ng-disabled="loading_state" class="btn btn-primary">Download</a>
+  <a ng-click="getExamplesCsv()" ng-disabled="loading_state" class="btn btn-primary">Start export</a>
 </div>

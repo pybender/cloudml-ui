@@ -208,70 +208,6 @@ angular.module('app.features.controllers', ['app.config', ])
     )
 ])
 
-# Transformer Controllers
-
-.controller('TransformersListCtrl', [
-  '$scope'
-  '$dialog'
-  'Transformer'
-
-  ($scope, $dialog, Transformer) ->
-    $scope.MODEL = Transformer
-    $scope.FIELDS = Transformer.MAIN_FIELDS
-    $scope.ACTION = 'loading transformers'
-
-    $scope.add = () ->
-      transformer = new Transformer()
-      $scope.openDialog($dialog, transformer,
-        'partials/features/transformers/add.html',
-        'AddTransformerDialogCtrl', 'modal', 'add transformer', 'transformers')
-])
-
-.controller('TransformerDetailsCtrl', [
-  '$scope'
-  '$routeParams'
-  'Transformer'
-
-  ($scope, $routeParams, Transformer) ->
-    if not $routeParams.id
-      err = "Can't initialize without id"
-
-    $scope.transformer = new Transformer({_id: $routeParams.id})
-    $scope.transformer.$load(
-      show: Transformer.MAIN_FIELDS
-      ).then (->), ((opts)-> $scope.setError(opts, 'loading transformer'))
-  ])
-
-.controller('AddTransformerDialogCtrl', [
-  '$scope'
-  '$rootScope'
-  'dialog'
-  'Transformer'
-
-  ($scope, $rootScope, dialog, Transformer) ->
-    $scope.model = dialog.model
-    $scope.dialog = dialog
-    $scope.types = Transformer.$TYPES_LIST
-
-    $scope.params = {}
-    $scope.model.$getConfiguration(
-    ).then ((opts)->
-      $scope.configuration = opts.data.configuration
-    ), ((opts)->
-      $scope.setError(opts, 'loading classifier types and parameters')
-    )
-
-    $scope.loadParameters = () ->
-      $scope.model.params = {}
-      $scope.params = $scope.configuration[$scope.model.type]
-      for name, val of $scope.params.defaults
-        $scope.model.params[name] = val
-
-    $scope.$on('SaveObjectCtl:save:success', (event, current) ->
-      dialog.close()
-    )
-])
-
 # Named Feature Types Controllers
 
 .controller('FeatureTypeListCtrl', [
@@ -314,8 +250,9 @@ angular.module('app.features.controllers', ['app.config', ])
 .controller('FeatureActionsCtrl', [
   '$scope'
   '$dialog'
+  'Transformer'
 
-  ($scope, $dialog) ->
+  ($scope, $dialog, Transformer) ->
     $scope.init = (opts={}) =>
       if not opts.model
         throw new Error "Please specify feature model"
@@ -342,4 +279,15 @@ angular.module('app.features.controllers', ['app.config', ])
       ), ((opts) ->
         $scope.setError(opts, 'updating feature')
       )
+
+    $scope.editTransformer = (feature) ->
+      if !feature.transformer?
+        feature.transformer = new Transformer({'feature_id': feature._id})
+
+      $scope.openDialog($dialog, feature.transformer,
+        'partials/features/transformers/edit_feature_transformer.html',
+        'ModelWithParamsEditDialogCtrl', 'modal', 'edit feature transformer')
+
+    $scope.deleteTransformer = (feature) ->
+      alert "TODO"
 ])

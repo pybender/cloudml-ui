@@ -29,6 +29,7 @@ class BaseResource(restful.Resource):
     GET_ACTIONS = ()
     POST_ACTIONS = ()
     PUT_ACTIONS = ()
+    ALL_FIELDS_IN_POST = False
 
     DETAILS_PARAM = '_id'
     OBJECT_NAME = 'model'
@@ -210,7 +211,8 @@ class BaseResource(restful.Resource):
         return self._render({self.OBJECT_NAME: model})
 
     def _get_save_response_context(self, model, extra_fields=[]):
-        model = dict([(field, getattr(model, field))
+        if not self.ALL_FIELDS_IN_POST:
+            model = dict([(field, getattr(model, field))
                      for field in list(self.DEFAULT_FIELDS) + extra_fields])
         return {self.OBJECT_NAME: model}
 

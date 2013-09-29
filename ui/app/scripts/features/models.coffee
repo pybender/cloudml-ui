@@ -19,6 +19,7 @@ angular.module('app.features.models', ['app.config'])
       name: null
       type: null
       params: {}
+      feature_id: null
       created_on: null
       created_by: null
 
@@ -149,6 +150,8 @@ scaler,default,is_target_variable,created_on,created_by,required'
       BASE_API_URL: "#{settings.apiUrl}features/transformers/"
       BASE_UI_URL: "/features/transformers/"
       API_FIELDNAME: 'transformer'
+      @LIST_MODEL_NAME: 'transformers'
+      LIST_MODEL_NAME: @LIST_MODEL_NAME
       @MAIN_FIELDS: 'name,type,params,created_on,created_by'
       @$TYPES_LIST: ['Dictionary', 'Count', 'Tfidf']
 
@@ -158,9 +161,10 @@ scaler,default,is_target_variable,created_on,created_by,required'
       params: null
       created_on: null
       created_by: null
+      predefined_selected: null
 
       $save: (opts={}) =>
-        if @params?
+        if @params? && typeof(@params) == 'object'
           @params = JSON.stringify(@params)
         super opts
 

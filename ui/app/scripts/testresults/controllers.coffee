@@ -41,8 +41,27 @@ created_by'
 
     # Form elements for each tab in the section with values
     $scope.formElements = {}
+    $scope.SETTINGS = 'Settings'
     # Columns by section
-    $scope.currentColumns = {'dataset': null, 'instance': null}
+    $scope.currentColumns = {
+      dataset: null
+      instance: null
+      settings: $scope.SETTINGS
+    }
+
+    # Choose examples fields select options
+    $scope.test_handler_fields = []
+    angular.forEach($scope.model.test_handler_fields, (item, key) ->
+      $scope.test_handler_fields.push({text: item, id: item})
+    )
+    $scope.select2params = {
+      multiple: true,
+      simple_tags: true,
+      tags: $scope.model.test_handler_fields
+    }
+    $scope.formElements[$scope.SETTINGS] = {
+      'examples_fields': $scope.model.test_handler_fields,
+      'examples_placement': 'Amazon S3'}
 
     $scope.start = (result) ->
       data = $scope.getData()
@@ -54,12 +73,14 @@ created_by'
         $scope.setError(opts, 'running test')
       )
 
-    # TODO: Remove code duplication
     $scope.getData = () ->
       data = {}
       for section, tab of $scope.currentColumns
         for key, val of $scope.formElements[tab]
-          if val then data[key] = val
+          if val
+            if key == 'examples_fields'
+              val = (field['text'] for field in val)
+            data[key] = val
       return data
 ])
 
@@ -107,8 +128,6 @@ without test id and model id"
       _id: $routeParams.id
     })
 
-
-
   $scope.load = (fields, section, callback) ->
     $scope.test.$load(
       show: fields
@@ -135,7 +154,8 @@ without test id and model id"
       switch section_name
         when 'about'
           extra_fields = 'classes_set,created_on,parameters,error,
-examples_count,dataset,memory_usage,created_by'
+examples_count,dataset,memory_usage,created_by,examples_placement,
+examples_fields'
         when 'metrics'
           extra_fields = 'accuracy,metrics.precision_recall_curve,
 metrics.roc_curve,metrics.roc_auc'

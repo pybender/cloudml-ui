@@ -408,7 +408,7 @@ class Tag(BaseDocument):
 
 @app.conn.register
 class FeatureSet(BaseDocument):
-    __collection__ = 'feature_set123'
+    __collection__ = 'features_sets'
 
     FIELDS_TO_SERIALIZE = ('schema_name', )
 
@@ -699,6 +699,13 @@ class Test(BaseDocument):
     EXPORT_STATUS_IN_PROGRESS = 'In Progress'
     EXPORT_STATUS_COMPLETED = 'Completed'
 
+    EXAMPLES_TO_AMAZON_S3 = 'Amazon S3'
+    EXAMPLES_DONT_SAVE = 'Do not save'
+    EXAMPLES_MONGODB = 'Mongo DB'
+    EXAMPLES_STORAGE_CHOICES = (EXAMPLES_TO_AMAZON_S3,
+                                EXAMPLES_DONT_SAVE,
+                                EXAMPLES_MONGODB)
+
     __collection__ = 'tests'
     structure = {
         'name': basestring,
@@ -710,7 +717,11 @@ class Test(BaseDocument):
         'created_by': dict,
         'updated_on': datetime,
         'data': dict,
+
         'examples_count': int,
+        'examples_placement': basestring,
+        'examples_fields': list,
+
         'parameters': dict,
         'classes_set': list,
         'accuracy': float,
@@ -748,6 +759,18 @@ class Test(BaseDocument):
     def data_count(self):  # pragma: no cover
         return self.data.count()
 
+    @property
+    def temp_data_filename(self):
+        if not hasattr(self, '_temp_data_filename'):
+            name = 'Test_raw_data-{0!s}.dat'.format(self._id)
+            path = app.config['DATA_FOLDER']
+
+            if not exists(path):
+                makedirs(path)
+            self._temp_data_filename = os.path.join(path, name)
+
+        return self._temp_data_filename
+
     def delete(self):
         # Stop running task
         self.terminate_task()
@@ -764,6 +787,7 @@ class Test(BaseDocument):
         :return: iterator
         """
         example_id_field = self.model.example_id
+        logging.info('Getting examples full data. Id field is %s', example_id_field)
 
         if fields:
             for required_field in ['_id', 'id', example_id_field]:
@@ -775,9 +799,10 @@ class Test(BaseDocument):
         examples_on_s3 = app.db.TestExample.find(
             dict(filter_dict.items() + {'on_s3': True}.items())
         ).count()
+        logging.info("%s examples on Amazon S3 found", examples_on_s3)
 
-        # Don't download dataset if it's not needed
         if not examples_on_s3:
+            logging.info("Don't download dataset - no examples on S3")
             if fields:
                 if data_input_params:
                     filter_dict.update(data_input_params)
@@ -795,13 +820,22 @@ class Test(BaseDocument):
         examples_data = dict([(epl['id'], epl)
                               for epl in
                               app.db.TestExample.find(filter_dict, fields)])
-
+        logging.debug('Examples count %d' % len(examples_data))
         with self.dataset.get_data_stream() as dataset_data_stream:
-            for row in dataset_data_stream:
+            logging.info('Getting dataset stream')
+            for (i, row) in enumerate(dataset_data_stream):
+                if i % 100 == 0:
+                    logging.info('Processing %s row' % i)
+
+
                 data = json.loads(row)
-                example_id = data[example_id_field]
+                example_id = str(data[example_id_field])
                 example = examples_data.get(example_id)
+                if i == 0:
+                    logging.debug('row %s, example %s' % (row, example))
                 if not example:
+                    if i == 0:
+                        logging.warning('Example %s did not found' % (example_id))
                     continue
                 for key in data:
                     new_key = 'data_input.{0}'.format(key.replace('.', '->'))
@@ -853,6 +887,36 @@ class TestExample(BaseDocument):
     def s3_key(self):
         return '{0!s}_{1!s}'.format(self.S3_KEY, self._id)
 
+    @property
+    def is_weights_calculated(self):
+        return self.weighted_data_input != {}
+
+    def calc_weighted_data(self):
+        data_input = None
+        if self.on_s3:
+            data = self._load_from_s3()
+            if data:
+                data_input = json.loads(data)
+        else:
+            data_input = self.data_input
+
+        if not data_input:
+            return None
+
+        from api.helpers.features import get_features_vect_data
+        from bson.objectid import ObjectId
+        model = app.db.Model.find_one({'_id': ObjectId(self.model_id)})
+        feature_model = model.get_trainer()._feature_model
+        data = get_features_vect_data(self.vect_data,
+                                      feature_model.features.items(),
+                                      feature_model.target_variable)
+
+        from helpers.weights import get_example_params
+        model_weights = app.db.Weight.find({'model_id': self.model_id})
+        weighted_data = dict(get_example_params(model_weights, data_input, data))
+        self.weighted_data_input = weighted_data
+        self.save(check_keys=False)
+
     def _save_to_s3(self, data):
         meta = {
             'example_id': self.id,
@@ -866,28 +930,6 @@ class TestExample(BaseDocument):
     def _load_from_s3(self):
         helper = AmazonS3Helper()
         return helper.load_key(self.s3_key)
-
-    @property
-    def data_input(self):
-        if self['on_s3']:
-            if not self['data_input'] and getattr(self, '_id'):
-                data = self._load_from_s3()
-                if data:
-                    self['data_input'] = json.loads(data)
-        return self['data_input']
-
-    @data_input.setter
-    def set_data_input(self, value):
-        self['data_input'] = value
-
-    def save(self, *args, **kwargs):
-        data_input = None
-        if self['data_input'] and self.on_s3:
-            data_input = self['data_input']
-            self['data_input'] = None
-        super(TestExample, self).save(*args, **kwargs)
-        if data_input:
-            self._save_to_s3(data_input)
 
     def delete(self):
         helper = AmazonS3Helper()
@@ -1068,11 +1110,13 @@ class Transformer(BaseDocument):
         'created_by': dict,
         'updated_on': datetime,
         'updated_by': dict,
+        'is_predefined': bool,
     }
     required_fields = ['name', 'type', 'created_on', 'updated_on']
     default_values = {
         'created_on': datetime.utcnow,
         'updated_on': datetime.utcnow,
+        'is_predefined': False,
     }
     use_dot_notation = True
 
@@ -1097,11 +1141,13 @@ class Scaler(BaseDocument):
         'created_by': dict,
         'updated_on': datetime,
         'updated_by': dict,
+        'is_predefined': bool,
     }
     required_fields = ['name', 'type', 'created_on', 'updated_on']
     default_values = {
         'created_on': datetime.utcnow,
         'updated_on': datetime.utcnow,
+        'is_predefined': False,
     }
     use_dot_notation = True
 
@@ -1111,7 +1157,7 @@ class Scaler(BaseDocument):
 
 @app.conn.register
 class Feature(BaseDocument):
-    __collection__ = 'features21'
+    __collection__ = 'features'
 
     FIELDS_TO_SERIALIZE = ('name', 'type', 'input_format', 'params',
                            'default', 'is_target_variable', 'required',

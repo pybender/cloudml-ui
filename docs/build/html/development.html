@@ -1,4 +1,3 @@
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -14,7 +13,7 @@
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
+        URL_ROOT:    './',
         VERSION:     '0.0.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
@@ -54,16 +53,34 @@
 <h1>Development<a class="headerlink" href="#development" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="backend">
 <h2>Backend<a class="headerlink" href="#backend" title="Permalink to this headline">¶</a></h2>
-<p>Create virtual env and install requirements:</p>
+<p>Install system requirements(mongodb==2.4.6):</p>
+<div class="highlight-python"><pre>$ sudo apt-get install liblapack-dev gfortran libpq-dev libevent-dev python-dev mongo-server</pre>
+</div>
+<p>Create virtual env:</p>
 <div class="highlight-python"><pre>$ virtualenv --no-site-packages ve
-$ . ve/bin/activate
-$ pip install -r requirements.txt</pre>
+$ . ve/bin/activate</pre>
+</div>
+<p>Install numpy and scipy:</p>
+<div class="highlight-python"><pre>$ export LAPACK=/usr/lib/liblapack.so
+$ export ATLAS=/usr/lib/libatlas.so
+$ export BLAS=/usr/lib/libblas.so
+$ pip install numpy
+$ pip install scipy</pre>
+</div>
+<p>Install python requirements:</p>
+<div class="highlight-python"><pre>$ pip install -r requirements.txt</pre>
 </div>
 <p>Create local config:</p>
 <div class="highlight-python"><pre>$ cp api/local_config.py.tpl api/local_config.py</pre>
 </div>
 <p>Note:</p>
 <div class="highlight-python"><pre>Create OATH API keys using https://www.odesk.com/services/api/apply. Callback URL is http://127.0.0.1:3333/#/auth/callback</pre>
+</div>
+<p>Configure rabbitmq(celery broker):</p>
+<div class="highlight-python"><pre>$ rabbitmqctl add_user cloudml {{password}}
+$ rabbitmqctl add_vhost cloudml
+$ rabbitmqctl set_permissions cloudml cloudml "*" "*" "*
+"</pre>
 </div>
 <p>Run dev server:</p>
 <div class="highlight-python"><pre>$ python manage.py runserver</pre>
@@ -80,7 +97,7 @@ $ pip install -r requirements.txt</pre>
 </div>
 <div class="section" id="frontend">
 <h2>Frontend<a class="headerlink" href="#frontend" title="Permalink to this headline">¶</a></h2>
-<p>Install nodejs and nmp:</p>
+<p>Install nodejs and nmp(nodejs==0.8.6):</p>
 <div class="highlight-python"><pre>$ sudo apt-get install nodejs npm</pre>
 </div>
 <p>Init ui dev enviropment:</p>
@@ -154,7 +171,7 @@ $ ./scripts/server.sh</pre>
     </div>
     <div class="footer">
         &copy; Copyright 2013, Nikolay Melnik.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b2.
     </div>
   </body>
 </html>

@@ -115,6 +115,9 @@ class Models(BaseResource):
         if get_datasets or get_data_fields:
             fields.append('dataset_ids')
 
+        if fields and 'test_handler_fields' in fields: 
+            fields.append('test_import_handler')
+
         model = super(Models, self)._get_details_query(
             params, fields, **kwargs)
 
@@ -128,6 +131,22 @@ class Models(BaseResource):
         if get_data_fields:
             model['data_fields'] = model.dataset.data_fields\
                 if model.dataset else []
+
+        if fields and 'test_handler_fields' in fields:
+            # TODO: check type in cloudml project
+            # to avoid dump/load data here
+            data = json.dumps(model.test_import_handler.data)
+            plan = ExtractionPlan(data, is_file=False)
+            
+            # TODO: Move to ExtractionPlan (fill in validate_features mthd)
+            test_handler_fields = []
+            for query in plan.queries:
+                items = query['items']
+                for item in items:
+                    features = item['target-features']
+                    for feature in features:
+                        test_handler_fields.append(feature['name'].replace('.', '->'))
+            model['test_handler_fields'] = test_handler_fields
 
         return model
 
@@ -517,6 +536,8 @@ REDUCE_FUNC = 'function(obj, prev) {\
 
 
 class TestExamplesResource(BaseResource):
+    """
+    """
     @property
     def Model(self):
         return app.db.TestExample
@@ -526,24 +547,24 @@ class TestExamplesResource(BaseResource):
     GET_ACTIONS = ('groupped', 'csv', 'datafields')
     FILTER_PARAMS = [('label', str), ('pred_label', str)]
 
-    def _get_list_query(self, params, fields, **kwargs):
-        test = app.db.Test.find_one({'_id': ObjectId(kwargs.get('test_id'))})
+    # def _get_list_query(self, params, fields, **kwargs):
+    #     test = app.db.Test.find_one({'_id': ObjectId(kwargs.get('test_id'))})
 
-        data_input_params = dict([(p, v) for p, v in params.items()
-                                  if p.startswith('data_input.') and v])
-        if data_input_params:
-            params['_id'] = {
-                '$in': [e['_id'] for e in test.get_examples_full_data(
-                    ['_id'],
-                    data_input_params
-                )]
-            }
+    #     data_input_params = dict([(p, v) for p, v in params.items()
+    #                               if p.startswith('data_input.') and v])
+    #     # if data_input_params:
+    #     #     params['_id'] = {
+    #     #         '$in': [e['_id'] for e in test.get_examples_full_data(
+    #     #             ['_id'],
+    #     #             data_input_params
+    #     #         )]
+    #     #     }
 
-            for param in data_input_params:
-                params[param] = None
+    #     #     for param in data_input_params:
+    #     #         params[param] = None
 
-        return super(TestExamplesResource, self)._get_list_query(
-            params, fields, **kwargs)
+    #     return super(TestExamplesResource, self)._get_list_query(
+    #         params, fields, **kwargs)
 
     def _list(self, **kwargs):
         test = app.db.Test.find_one({'_id': ObjectId(kwargs.get('test_id'))})
@@ -555,34 +576,22 @@ class TestExamplesResource(BaseResource):
         return super(TestExamplesResource, self)._list(**kwargs)
 
     def _get_details_query(self, params, fields, **kwargs):
+        """
+        Note: Example details raw data should be loaded from Amazon S3, if it's in it.
+        """
+        load_weights = False
         if 'weighted_data_input' in fields:
-            fields += ['vect_data', 'data_input', 'on_s3']
+            fields = None  # We need all fields to recalc weights
+            load_weights = True
 
-        example = super(TestExamplesResource, self).\
-            _get_details_query(params, fields, **kwargs)
+        example = super(TestExamplesResource, self)._get_details_query(params, fields, **kwargs)
 
-        if example and 'weighted_data_input' in fields and \
-                example['weighted_data_input'] == {} \
-                and 'vect_data' in example:
-            from api.helpers.features import get_features_vect_data
-            model_id = kwargs['model_id']
-            model = app.db.Model.find_one({'_id': ObjectId(model_id)})
-            feature_model = model.get_trainer()._feature_model
-            data = get_features_vect_data(example['vect_data'],
-                                          feature_model.features.items(),
-                                          feature_model.target_variable)
+        if example is None:
+            raise NotFound()
 
-            from helpers.weights import get_example_params
-            model_weights = app.db.Weight.find({'model_id': model_id})
-            if example.data_input:
-                weighted_data = dict(get_example_params(
-                    model_weights, example.data_input, data))
-                example['weighted_data_input'] = weighted_data
-                # FIXME: Find a better way to do it using mongokit
-                app.db.TestExample.collection.update(
-                    {'_id': example['_id']},
-                    {'$set': {'weighted_data_input': weighted_data}})
-           
+        if load_weights and not example.is_weights_calculated:
+            example.calc_weighted_data()
+
         return example
 
     def _get_groupped_action(self, **kwargs):
@@ -596,39 +605,18 @@ class TestExamplesResource(BaseResource):
         from operator import itemgetter
         logging.info('Start request for calculating MAP')
 
-        # getting from request parameters fieldname to group.
-        parser = reqparse.RequestParser()
-        parser.add_argument('count', type=int)
-        parser.add_argument('field', type=str)
-        params = parser.parse_args()
-        group_by_field = params.get('field')
-        count = params.get('count', 100)
+        group_by_field, count = parse_map_params()
         if not group_by_field:
             return odesk_error_response(400, ERR_INVALID_DATA,
                                         'field parameter is required')
-        model_id = kwargs.get('model_id')
-        test_id = kwargs.get('test_id')
-        logging.info('For model: %s test: %s' % (model_id, test_id))
-        logging.info('Gettings examples')
 
         res = []
         avps = []
-
-        test = app.db.Test.find_one({'_id': ObjectId(test_id)})
-        groups = defaultdict(list)
-        example_fields = ['label', 'pred_label', 'prob', 'id']
-
-        for row in test.get_examples_full_data(example_fields):
-            groups[row[group_by_field]].append({
-                'label': row['pred_label'],
-                'pred': row['label'],
-                'prob': row['prob'],
-            })
-
-        groups = [{
-            group_by_field: key,
-            'list': value
-        } for key, value in groups.iteritems()]
+        collection = app.db.TestExample.collection
+        groups = collection.group([group_by_field, ],
+                                  {'model_id': kwargs.get('model_id'),
+                                   'test_id': kwargs.get('test_id')},
+                                  {'list': []}, REDUCE_FUNC)
 
         import sklearn.metrics as sk_metrics
         import numpy
@@ -656,6 +644,8 @@ not contain probabilities')
         logging.info('Calculating avps for groups')
         for group in groups:
             group_list = group['list']
+
+            #print group_list
             labels = [transform(item['label']) for item in group_list]
             pred_labels = [transform(item['pred']) for item in group_list]
             probs = [item['prob'][1] for item in group_list]
@@ -1081,12 +1071,21 @@ class TransformerResource(BaseResource):
     MESSAGE404 = "transformer doesn't exist"
     OBJECT_NAME = 'transformer'
     DEFAULT_FIELDS = [u'_id', 'name']
-    post_form = TransformerAddForm
+    post_form = TransformerForm
+    put_form = TransformerForm
     GET_ACTIONS = ('configuration', )
+    FILTER_PARAMS = (('is_predefined', int), )
+    ALL_FIELDS_IN_POST = True
 
     @property
     def Model(self):
         return app.db.Transformer
+
+    def _prepare_filter_params(self, params):
+        pdict = super(TransformerResource, self)._prepare_filter_params(params)
+        if 'is_predefined' in pdict:
+            pdict['is_predefined'] = bool(pdict['is_predefined'])
+        return pdict
 
     def _get_configuration_action(self, **kwargs):
         from api.models import TRANSFORMERS
@@ -1118,3 +1117,16 @@ def populate_parser(model, is_requred=False):
     for param in model.import_params:
         parser.add_argument(param, type=str, required=is_requred)
     return parser
+
+
+def parse_map_params():
+    """
+    Parse fieldname to group and count from GET parameters
+    """
+    parser = reqparse.RequestParser()
+    parser.add_argument('count', type=int)
+    parser.add_argument('field', type=str)
+    params = parser.parse_args()
+    group_by_field = params.get('field')
+    count = params.get('count', 100)
+    return group_by_field, count

@@ -37,6 +37,8 @@ App = angular.module('app', [
   'app.dashboard.controllers'
   'app.features.models'
   'app.features.controllers'
+  'app.features.controllers.transformers'
+  'app.features.controllers.base'
 ])
 
 App.config([
@@ -167,10 +169,6 @@ App.config([
     .when('/features/types/:id', {
       controller: 'FeatureTypeDetailsCtrl'
       templateUrl: '/partials/features/named_types/details.html'
-    })
-    .when('/features/transformers/:id', {
-      controller: 'FeaturesSetDetailsCtrl'
-      templateUrl: '/partials/features/details.html'
     })
     .when('/features/classifiers', {
       controller: "ClassifiersListCtrl"

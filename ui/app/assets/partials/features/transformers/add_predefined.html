@@ -1,0 +1,18 @@
+<div ng-controller="SaveObjectCtl">
+  <div class="modal-header">
+    <button ng-click="dialog.close()" class="close" data-dismiss="modal">×</button>
+    <h3>Add new transformer</h3>
+  </div>
+
+  <div class="modal-body">
+    <loadindicator title="Adding feature transformer..." ng-show="saving" progress="savingProgress"></loadindicator>
+
+    <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+
+    <ng-include src="'/partials/features/transformers/form.html'"></ng-include>
+  </div>
+
+  <div class="modal-footer">
+    <button ng-click="save(['name', 'type', 'params'])" ng-disabled="Form.$invalid" class="btn btn-primary">Add new transformer</button> <small>and start using it in features</small>
+  </div>
+</div>

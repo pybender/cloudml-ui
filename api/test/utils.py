@@ -259,7 +259,7 @@ class BaseTestCase(unittest.TestCase):
         resp = self.app.get(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.OK)
         data = json.loads(resp.data)
-        count = self.db.Model.find(query_params).count()
+        count = self.Model.find(query_params).count()
         self.assertEquals(count, len(data[key]))
 
     def _check_delete(self):
