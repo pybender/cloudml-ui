@@ -190,6 +190,8 @@ scaler,default,is_target_variable,created_on,created_by,required'
       @$TYPES_LIST: ['boolean', 'int', 'float', 'numeric', 'date',
                    'map', 'categorical_label', 'categorical',
                    'text', 'regex', 'composite']
+      @LIST_MODEL_NAME: 'named_types'
+      LIST_MODEL_NAME: @LIST_MODEL_NAME
 
       _id: null
       name: null

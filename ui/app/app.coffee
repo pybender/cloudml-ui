@@ -38,6 +38,7 @@ App = angular.module('app', [
   'app.features.models'
   'app.features.controllers'
   'app.features.controllers.transformers'
+  'app.features.controllers.named_types'
   'app.features.controllers.base'
 ])
 
@@ -131,6 +132,8 @@ App.config([
       controller: 'AwsInstanceDetailsCtrl'
       templateUrl: '/partials/aws_instances/details.html'
     })
+
+    # auth
     .when('/auth/login', {
       controller: 'LoginCtl'
       templateUrl: '/partials/login/login.html'
@@ -143,48 +146,32 @@ App.config([
       controller: 'AuthCallbackCtl'
       templateUrl: '/partials/login/auth.html'
     })
-    .when('/features', {
-      redirectTo: '/features/types'
-    })
-    .when('/features/sets', {
-      controller: "FeaturesSetListCtrl"
-      templateUrl: '/partials/features/sets/list.html'
-    })
-    # .when('/features/sets/:id', {
-    #   controller: 'FeaturesSetDetailsCtrl'
-    #   templateUrl: '/partials/features/details.html'
+
+    # Feature set list (now used only for debug)
+    # .when('/features/sets', {
+    #   controller: "FeaturesSetListCtrl"
+    #   templateUrl: '/partials/features/sets/list.html'
     # })
-    # .when('/features/input_formats/:id', {
-    #   controller: 'FeaturesSetDetailsCtrl'
-    #   templateUrl: '/partials/features/details.html'
-    # })
-    .when('/features/types', {
+
+    # Predefined feature objects
+    .when('/predefined', {
+      redirectTo: '/predefined/classifiers'
+    })
+    .when('/predefined/types', {
       controller: "FeatureTypeListCtrl"
       templateUrl: '/partials/features/named_types/list.html'
     })
-    .when('/features/types/add', {
-      controller: "AddFeatureTypeCtrl"
-      templateUrl: '/partials/features/named_types/add.html'
-    })
-    .when('/features/types/:id', {
-      controller: 'FeatureTypeDetailsCtrl'
-      templateUrl: '/partials/features/named_types/details.html'
-    })
-    .when('/features/classifiers', {
+    .when('/predefined/classifiers', {
       controller: "ClassifiersListCtrl"
       templateUrl: '/partials/features/classifiers/list.html'
     })
-    .when('/features/classifiers/:id', {
-      controller: 'ClassifierDetailsCtrl'
-      templateUrl: '/partials/features/classifiers/details.html'
-    })
-    .when('/features/transformers', {
+    .when('/predefined/transformers', {
       controller: "TransformersListCtrl"
       templateUrl: '/partials/features/transformers/list.html'
     })
-    .when('/features/transformers/:id', {
-      controller: 'TransformerDetailsCtrl'
-      templateUrl: '/partials/features/transformers/details.html'
+    .when('/predefined/scalars', {
+      controller: "ScalarsListCtrl"
+      templateUrl: '/partials/features/scalars/list.html'
     })
 
     # Catch all

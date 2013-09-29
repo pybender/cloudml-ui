@@ -7,11 +7,17 @@
   <li ng-class="getClass('/features')" class="dropdown">
     <a class="dropdown-toggle" data-toggle="dropdown" href="#">predefined models <b class="caret"></b></a>
     <ul class="dropdown-menu">
-      <li ng-class="getClass('/features/types')">
-        <a ng-href="#/features/types">named feature types</a>
+      <li ng-class="getClass('/predefined/classifiers')">
+        <a ng-href="#/predefined/classifiers">classifiers</a>
       </li>
-      <li ng-class="getClass('/features/transformers')">
-        <a ng-href="#/features/transformers">feature transformers</a>
+      <li ng-class="getClass('/predefined/types')">
+        <a ng-href="#/predefined/types">named feature types</a>
+      </li>
+      <li ng-class="getClass('/predefined/transformers')">
+        <a ng-href="#/predefined/transformers">feature transformers</a>
+      </li>
+      <li ng-class="getClass('/predefined/scalars')">
+        <a ng-href="#/predefined/scalars">feature scalars</a>
       </li>
     </ul>
   </li>

@@ -4,6 +4,22 @@
 
 angular.module('app.features.controllers.base', ['app.config', ])
 
+.controller('ModelEditDialogCtrl', [
+  '$scope'
+  '$rootScope'
+  'dialog'
+
+  ($scope, $rootScope, dialog) ->
+    $scope.model = dialog.model
+    $scope.DONT_REDIRECT = true
+    $scope.LIST_MODEL_NAME = $scope.model.LIST_MODEL_NAME
+    $scope.dialog = dialog
+
+    $scope.$on('SaveObjectCtl:save:success', (event, current) ->
+      dialog.close()
+    )
+])
+
 .controller('ModelWithParamsEditDialogCtrl', [
   '$scope'
   '$rootScope'

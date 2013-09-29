@@ -210,15 +210,15 @@ angular.module('app.features.controllers', ['app.config', ])
 
 # Named Feature Types Controllers
 
-.controller('FeatureTypeListCtrl', [
-  '$scope'
-  'NamedFeatureType'
+# .controller('FeatureTypeListCtrl', [
+#   '$scope'
+#   'NamedFeatureType'
 
-  ($scope, NamedFeatureType) ->
-    $scope.MODEL = NamedFeatureType
-    $scope.FIELDS = NamedFeatureType.MAIN_FIELDS
-    $scope.ACTION = 'loading named feature types'
-])
+#   ($scope, NamedFeatureType) ->
+#     $scope.MODEL = NamedFeatureType
+#     $scope.FIELDS = NamedFeatureType.MAIN_FIELDS
+#     $scope.ACTION = 'loading named feature types'
+# ])
 
 
 .controller('AddFeatureTypeCtrl', [
