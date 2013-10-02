@@ -500,25 +500,13 @@ class InstanceEditForm(BaseForm):
         return instance
 
 
-class NamedFeatureTypeAddForm(BaseForm):
-    fields = ('name', 'type', 'input_format', 'params', )
+class NamedFeatureTypeAddForm(BaseFormEx):
+    required_fields = ('name', 'type')
 
-    def clean_name(self, value):
-        if not value:
-            raise ValidationError('name is required')
-        return value
-
-    def clean_type(self, value):
-        if not value:
-            raise ValidationError('type is required')
-        if not value in app.db.NamedFeatureType.TYPES_LIST:
-            raise ValidationError('invalid type. please choose one of %s' %
-                                  app.db.NamedFeatureType.TYPES_LIST)
-        return value
-
-    def clean_params(self, value):
-        if value:
-            return json.loads(value)
+    name = CharField()
+    type = ChoiceField(choices=app.db.NamedFeatureType.TYPES_LIST)
+    input_format = CharField()
+    params = JsonField()
 
 
 class FeatureSetAddForm(BaseForm):

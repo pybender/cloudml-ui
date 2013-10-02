@@ -1030,7 +1030,7 @@ class ClassifierResource(BaseResource):
     """
     Classifier API methods
     """
-    MESSAGE404 = "Named feature type doesn't exist"
+    MESSAGE404 = "Classifier type doesn't exist"
     OBJECT_NAME = 'classifier'
     DEFAULT_FIELDS = [u'_id', 'name']
     post_form = ClassifierAddForm
@@ -1055,7 +1055,7 @@ class NamedFeatureTypeResource(BaseResource):
     MESSAGE404 = "Named feature type doesn't exist"
     OBJECT_NAME = 'named_type'
     DEFAULT_FIELDS = [u'_id', 'name']
-    post_form = NamedFeatureTypeAddForm
+    put_form = post_form = NamedFeatureTypeAddForm
 
     @property
     def Model(self):

@@ -1,0 +1,9 @@
+<ul>
+<li ng-repeat="(key, val) in params">
+  	<input class="input-small" type="text" name="{{ key }}" ng-model="key" />
+  	<input ng-hide="typeof(val) == 'object'" class="input-small" type="text" name="{{ key }}-value" ng-model="val" />
+	<params-recursive>
+	  <params-editor params="val"></params-editor>
+	</params-recursive>
+</li>
+<ul>

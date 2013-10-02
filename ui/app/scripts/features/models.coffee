@@ -139,40 +139,17 @@ scaler,default,is_target_variable,created_on,created_by,required'
 ])
 
 
-.factory('Transformer', [
-  '$http'
-  '$q'
-  'settings'
-  'BaseModel'
-  
-  ($http, $q, settings, BaseModel) ->
-    class Transformer extends BaseModel
-      BASE_API_URL: "#{settings.apiUrl}features/transformers/"
-      BASE_UI_URL: "/features/transformers/"
-      API_FIELDNAME: 'transformer'
-      @LIST_MODEL_NAME: 'transformers'
-      LIST_MODEL_NAME: @LIST_MODEL_NAME
-      @MAIN_FIELDS: 'name,type,params,created_on,created_by'
-      @$TYPES_LIST: ['Dictionary', 'Count', 'Tfidf']
-
-      _id: null
+.factory('Param', [
+  () ->
+    class Param
       name: null
-      type: null
-      params: null
-      created_on: null
-      created_by: null
-      predefined_selected: null
+      value: null
+      saved: true
 
-      $save: (opts={}) =>
-        if @params? && typeof(@params) == 'object'
-          @params = JSON.stringify(@params)
-        super opts
+      constructor: (opts) ->
+        _.extend @, opts
 
-      $getConfiguration: (opts={}) =>
-        @$make_request("#{@BASE_API_URL}#{@_id}/action/configuration/",
-                       load=false)
-
-    return Transformer
+    return Param
 ])
 
 .factory('NamedFeatureType', [
@@ -180,8 +157,9 @@ scaler,default,is_target_variable,created_on,created_by,required'
   '$q'
   'settings'
   'BaseModel'
+  'Param'
   
-  ($http, $q, settings, BaseModel) ->
+  ($http, $q, settings, BaseModel, Param) ->
     class NamedFeatureType extends BaseModel
       BASE_API_URL: "#{settings.apiUrl}features/named_types/"
       BASE_UI_URL: "/features/types/"
@@ -198,8 +176,20 @@ scaler,default,is_target_variable,created_on,created_by,required'
       type: 'int'
       input_format: null
       params: null
+      paramsObjects: null
       created_on: null
       created_by: null
-                   
+
+      loadFromJSON: (origData) =>
+        super origData
+
+        if origData?
+          if origData.params?
+            @paramsDict = @params
+            @params = JSON.stringify(origData.params)
+            # @paramsObjects = []
+            # for name, val of origData.params
+            #   @paramsObjects.push new Param({'name': name, 'value': val})
+
     return NamedFeatureType
 ])

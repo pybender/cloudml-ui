@@ -23,13 +23,13 @@
 	  </tr>
 	</thead>
 	<tbody>
-	  <tr ng-repeat="namedType in objects">
+	  <tr ng-repeat="namedType in objects | orderBy:'name'">
 	    <td>
 	      <a ng-click="edit(namedType)">{{ namedType.name }}</a>
 	    </td>
 	    <td>{{ namedType.type }}</td>
 	    <td>{{ namedType.input_format }}</td>
-	    <td ng-init="params = namedType.params">
+	    <td ng-init="params = namedType.paramsDict">
 	    	<ng-include src="'/partials/parts/params_list.html'"></ng-include>
 	    </td>
 	    <td>
