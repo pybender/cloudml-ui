@@ -181,8 +181,9 @@ angular.module('app.features.controllers', ['app.config', ])
   '$scope'
   '$dialog'
   'Transformer'
+  'Scaler'
 
-  ($scope, $dialog, Transformer) ->
+  ($scope, $dialog, Transformer, Scaler) ->
     $scope.init = (opts={}) =>
       if not opts.model
         throw new Error "Please specify feature model"
@@ -210,6 +211,14 @@ angular.module('app.features.controllers', ['app.config', ])
         $scope.setError(opts, 'updating feature')
       )
 
+    $scope.editScaler = (feature) ->
+      if !feature.scaler?
+        feature.scaler = new Scaler({'feature_id': feature._id})
+
+      $scope.openDialog($dialog, feature.scaler,
+        'partials/features/scalers/edit_feature_scaler.html',
+        'ModelWithParamsEditDialogCtrl')
+
     $scope.editTransformer = (feature) ->
       if !feature.transformer?
         feature.transformer = new Transformer({'feature_id': feature._id})
@@ -220,4 +229,8 @@ angular.module('app.features.controllers', ['app.config', ])
 
     $scope.deleteTransformer = (feature) ->
       alert "TODO"
+
+    $scope.deleteScaler = (feature) ->
+      alert "TODO"
+  
 ])

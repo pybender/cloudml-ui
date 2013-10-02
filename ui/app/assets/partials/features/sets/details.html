@@ -27,14 +27,14 @@
 		<th>Params</th>
 		<th style="width: 10%;">Required</th>
 		<th style="width: 10%;">Default</th>
-		<th style="width: 10%;">Is Target?</th>
-		<th style="width: 100px;">Actions</th>
+		<th style="width: 100px;min-width:100px;">Actions</th>
 	</tr>
 	</thead>
 	<tbody>
-		<tr ng-repeat="feature in objects" ng-init="init({model: feature})" ng-controller="FeatureActionsCtrl">
-			<td>
-				<span title="Feature Name" class="title" ng-bind="feature.name || 'feature name here'" editable="feature" value="feature.name" editable-field="name" editable-input="text" editable-placement="right"></span><br />
+		<tr ng-repeat="feature in objects | orderBy:'name'" ng-init="init({model: feature})" ng-controller="FeatureActionsCtrl">
+			<td ng-class="{bold : feature.is_target_variable==true}">
+				<span title="Feature Name" class="title" ng-bind="feature.name || 'feature name here'" editable="feature" value="feature.name" editable-field="name" editable-input="text" editable-placement="right"></span>
+				<br />
 				<small>(<span title="Feature Type" ng-bind="feature.type" editable="feature" value="feature.type" editable-field="type" editable-placement="right" editable-input="select" source="types"></span>)</small>
 			</td>
 			<td><span title="Input Format" ng-bind="feature.input_format" editable="feature" value="feature.input_format || ''" editable-field="input_format" editable-placement="right"editable-input="text"></span></td>
@@ -52,7 +52,17 @@
 				</div>
 			</td>
 			<td>
-				{{ feature.scaler.type }}
+				<div ng-show="feature.scaler._id">
+					<a ng-click="editScaler(feature)">
+						<span>{{ feature.scaler.name }} ({{ feature.scaler.type }})</span>
+					</a>
+					<a ng-click="deleteScaler(feature)">
+						<i title="Delete feature scaler" class="icon-remove" />
+					</a>
+				</div>
+				<div ng-hide="feature.scaler._id">
+					<a ng-click="editScaler(feature)" title="add feature scaler" class="btn btn-info" href=""><i class="status-icon icon-plus"></i></a>
+				</div>
 			</td>
 			<td ng-init="params = feature.params">
 		    	<ng-include src="'/partials/parts/params_list.html'"></ng-include>
@@ -63,10 +73,6 @@
 			<td>
 				<span title="Default Value" class="title" ng-bind="feature.default || ''" editable="feature" value="feature.default || ''" editable-field="default" editable-input="text" editable-placement="right"></span>
 			</td>
-			<td>
-				<span ng-show="feature.is_target_variable"><i class="icon-ok" /> yes</span>
-				<span ng-hide="feature.is_target_variable"><i class="icon-ok" /> no</span>
-				</td>
 		    <td>
 		    	<a class="btn btn-info" ng-click="makeTarget(feature)" ng-hide="feature.is_target_variable"><i class="icon-check" title="make target" /></a>
 			    <button ng-click="deleteModel(model)" class="btn btn-danger"><i title="Delete your model. Be careful - you could not recover it!" class="icon-remove"></i></button>

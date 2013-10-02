@@ -177,6 +177,9 @@ scaler,default,is_target_variable,created_on,created_by,required'
             @transformer = new Transformer(origData.transformer)
           if origData.required?
             @required = origData.required == true || origData.required == 'True'
+          if origData.is_target_variable?
+            @is_target_variable = origData.is_target_variable == true || \
+              origData.is_target_variable == 'True'
 
       constructor: (opts) ->
         super opts

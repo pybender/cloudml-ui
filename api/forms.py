@@ -529,11 +529,44 @@ class FeatureSetAddForm(BaseForm):
 
 
 class ScalerForm(BaseFormEx):
-    required_fields = ('name', 'type')
+    group_chooser = 'predefined_selected'
+    required_fields_groups = {'true': ('scaler', ),
+                              None: ('name', 'type')}
 
     name = CharField()
     type = ChoiceField(choices=app.db.Scaler.TYPES_LIST)
     params = JsonField()
+    scaler = DocumentField(doc=app.db.Scaler, by_name=True,
+                                filter_params={'is_predefined': True},
+                                return_doc=True)
+    feature_id = DocumentField(doc=app.db.Feature, by_name=False,
+                                return_doc=False)
+
+    def clean_feature_id(self, value, field):        
+        if value:
+            feature = field.doc
+            self.cleaned_data['feature'] = feature
+
+        self.cleaned_data['is_predefined'] = not bool(value)
+        return value
+
+    def clean_scaler(self, value, field):
+        if value:
+            # Copy fields from predefined transformer
+            self.cleaned_data['name'] = value.name
+            self.cleaned_data['type'] = value.type
+            self.cleaned_data['params'] = value.params
+            self.cleaned_data['is_predefined'] = False
+
+        return value
+
+    def save(self):
+        scaler = super(ScalerForm, self).save()
+        feature = self.cleaned_data.get('feature', None)
+        if feature:
+            feature.scaler = scaler
+            feature.save()
+        return scaler
 
 
 class ClassifierForm(BaseFormEx):
