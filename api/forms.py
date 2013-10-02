@@ -528,6 +528,14 @@ class FeatureSetAddForm(BaseForm):
         return classifier
 
 
+class ScalerForm(BaseFormEx):
+    required_fields = ('name', 'type')
+
+    name = CharField()
+    type = ChoiceField(choices=app.db.Scaler.TYPES_LIST)
+    params = JsonField()
+
+
 class ClassifierForm(BaseFormEx):
     required_fields = ('name', 'type')
 

@@ -1124,7 +1124,26 @@ class Transformer(BaseDocument):
         return '<Transformer %r>' % self.name
 
 
-from core.trainer.scalers import SCALERS
+#from core.trainer.scalers import SCALERS
+from core.trainer.scalers import MinMaxScaler, StandardScaler
+SCALERS = {
+    'MinMaxScaler': {
+        'class': MinMaxScaler,
+        'parameters': {
+            'feature_range_min': 0,
+            'feature_range_max': 1,
+            'copy': True
+                  },
+        },
+    'StandardScaler': {
+        'class': StandardScaler,
+        'parameters': {
+            'copy': True,
+            'with_std': True,
+            'with_mean': True
+                  },
+        }
+}
 
 @app.conn.register
 class Scaler(BaseDocument):
@@ -1147,7 +1166,7 @@ class Scaler(BaseDocument):
     default_values = {
         'created_on': datetime.utcnow,
         'updated_on': datetime.utcnow,
-        'is_predefined': False,
+        'is_predefined': True,
     }
     use_dot_notation = True
 

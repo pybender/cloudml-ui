@@ -41,6 +41,7 @@ App = angular.module('app', [
   'app.features.controllers.transformers'
   'app.features.controllers.named_types'
   'app.features.controllers.base'
+  'app.features.controllers.scalers'
 ])
 
 App.config([
@@ -171,8 +172,8 @@ App.config([
       templateUrl: '/partials/features/transformers/list.html'
     })
     .when('/predefined/scalars', {
-      controller: "ScalarsListCtrl"
-      templateUrl: '/partials/features/scalars/list.html'
+      controller: "ScalersListCtrl"
+      templateUrl: '/partials/features/scalers/list.html'
     })
 
     # Catch all

@@ -9,7 +9,7 @@ angular.module('app.features.models', ['app.config'])
   ($http, $q, settings, BaseModel) ->
     class Transformer extends BaseModel
       BASE_API_URL: "#{settings.apiUrl}features/transformers/"
-      BASE_UI_URL: "/features/transformers/"
+      #BASE_UI_URL: "/features/transformers/"
       API_FIELDNAME: 'transformer'
       @LIST_MODEL_NAME: 'transformers'
       LIST_MODEL_NAME: @LIST_MODEL_NAME
@@ -33,6 +33,38 @@ angular.module('app.features.models', ['app.config'])
     return Transformer
 ])
 
+
+.factory('Scaler', [
+  '$http'
+  '$q'
+  'settings'
+  'BaseModel'
+  
+  ($http, $q, settings, BaseModel) ->
+    class Scaler extends BaseModel
+      BASE_API_URL: "#{settings.apiUrl}features/scalers/"
+      API_FIELDNAME: 'scaler'
+      @LIST_MODEL_NAME: 'scalers'
+      LIST_MODEL_NAME: @LIST_MODEL_NAME
+      @MAIN_FIELDS: 'name,type,params,created_on,created_by'
+      @$TYPES_LIST: ['MinMaxScaler', 'StandardScaler']
+
+      _id: null
+
+      $getConfiguration: (opts={}) =>
+        @$make_request("#{@BASE_API_URL}#{@_id}/action/configuration/",
+                       load=false)
+
+      $save: (opts={}) =>
+        if @params? && typeof(@params) == 'object'
+          @params = JSON.stringify(@params)
+        super opts
+
+      constructor: (opts) ->
+        _.extend @, opts
+ 
+    return Scaler
+])
 
 .factory('Classifier', [
   '$http'
