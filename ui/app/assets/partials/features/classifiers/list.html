@@ -7,7 +7,7 @@
   </div>
 </h2>
 
-<div ng-controller="BaseListCtrl" ng-init="init(true, 'classifiers')">
+<div ng-controller="BaseListCtrl" ng-init="init(true, LIST_MODEL_NAME)">
 	<alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
 
 	<alert-message ng-show="objects.length == 0" class="alert-info" msg="No classifiers found"></alert-message>
@@ -22,9 +22,9 @@
 	  </tr>
 	</thead>
 	<tbody>
-	  <tr ng-repeat="classifier in objects">
+	  <tr ng-repeat="classifier in objects | orderBy:'name'">
 	    <td>
-	      <a href="#{{ classifier.objectUrl() }}">{{ classifier.name }}</a>
+	      <a ng-click="edit(classifier)">{{ classifier.name }}</a>
 	    </td>
 	    <td>{{ classifier.type }}</td>
 	    <td>{{ classifier.params }}</td>

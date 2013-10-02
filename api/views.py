@@ -995,7 +995,7 @@ api.add_resource(StatisticsResource, '/cloudml/statistics/')
 # Features specific resources
 class FeatureSetResource(BaseResource):
     """
-    Classifier API methods
+    Features Set API methods
     """
     MESSAGE404 = "Feature set doesn't exist"
     OBJECT_NAME = 'set'
@@ -1033,8 +1033,7 @@ class ClassifierResource(BaseResource):
     MESSAGE404 = "Classifier type doesn't exist"
     OBJECT_NAME = 'classifier'
     DEFAULT_FIELDS = [u'_id', 'name']
-    post_form = ClassifierAddForm
-    put_form = ClassifierEditForm
+    post_form = put_form = ClassifierForm
     GET_ACTIONS = ('configuration', )
 
     @property

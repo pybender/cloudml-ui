@@ -528,30 +528,12 @@ class FeatureSetAddForm(BaseForm):
         return classifier
 
 
-class ClassifierAddForm(BaseForm):
-    fields = ('name', 'type', 'params', )
+class ClassifierForm(BaseFormEx):
+    required_fields = ('name', 'type')
 
-    def clean_name(self, value):
-        if not value:
-            raise ValidationError('name is required')
-        return value
-
-    def clean_type(self, value):
-        if not value:
-            raise ValidationError('type is required')
-        if not value in app.db.Classifier.TYPES_LIST:
-            raise ValidationError('invalid type. please choose one of %s' %
-                                  app.db.Classifier.TYPES_LIST)
-        return value
-
-    def clean_params(self, value):
-        # TODO: parse type: bool, int
-        if value:
-            return json.loads(value)
-
-
-class ClassifierEditForm(ClassifierAddForm):
-    pass
+    name = CharField()
+    type = ChoiceField(choices=app.db.Classifier.TYPES_LIST)
+    params = JsonField()
 
 
 class TransformerForm(BaseFormEx):

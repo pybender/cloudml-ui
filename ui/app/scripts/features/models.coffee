@@ -1,5 +1,39 @@
 angular.module('app.features.models', ['app.config'])
 
+.factory('Transformer', [
+  '$http'
+  '$q'
+  'settings'
+  'BaseModel'
+  
+  ($http, $q, settings, BaseModel) ->
+    class Transformer extends BaseModel
+      BASE_API_URL: "#{settings.apiUrl}features/transformers/"
+      BASE_UI_URL: "/features/transformers/"
+      API_FIELDNAME: 'transformer'
+      @LIST_MODEL_NAME: 'transformers'
+      LIST_MODEL_NAME: @LIST_MODEL_NAME
+      @MAIN_FIELDS: 'name,type,params,created_on,created_by'
+      @$TYPES_LIST: ['Dictionary', 'Count', 'Tfidf']
+
+      _id: null
+
+      $getConfiguration: (opts={}) =>
+        @$make_request("#{@BASE_API_URL}#{@_id}/action/configuration/",
+                       load=false)
+
+      $save: (opts={}) =>
+        if @params? && typeof(@params) == 'object'
+          @params = JSON.stringify(@params)
+        super opts
+
+      constructor: (opts) ->
+        _.extend @, opts
+ 
+    return Transformer
+])
+
+
 .factory('Classifier', [
   '$http'
   '$q'
@@ -11,6 +45,8 @@ angular.module('app.features.models', ['app.config'])
       BASE_API_URL: "#{settings.apiUrl}features/classifiers/"
       BASE_UI_URL: "/features/classifiers/"
       API_FIELDNAME: 'classifier'
+      @LIST_MODEL_NAME: 'classifiers'
+      LIST_MODEL_NAME: @LIST_MODEL_NAME
       @MAIN_FIELDS: 'name,type,created_on,created_by,params'
       @$TYPES_LIST: ['stochastic gradient descent classifier',
       'support vector regression', 'logistic regression']
@@ -32,7 +68,8 @@ angular.module('app.features.models', ['app.config'])
                        load=false)
 
       $save: (opts={}) =>
-        @params = JSON.stringify(@params)
+        if @params? && typeof(@params) == 'object'
+          @params = JSON.stringify(@params)
         super opts
 
     return Classifier

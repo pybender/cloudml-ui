@@ -37,6 +37,7 @@ App = angular.module('app', [
   'app.dashboard.controllers'
   'app.features.models'
   'app.features.controllers'
+  'app.features.controllers.classifiers'
   'app.features.controllers.transformers'
   'app.features.controllers.named_types'
   'app.features.controllers.base'
