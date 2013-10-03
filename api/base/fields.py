@@ -19,6 +19,14 @@ class CharField(BaseField):
     pass
 
 
+class BooleanField(BaseField):
+    def clean(self, value):
+        value = super(BooleanField, self).clean(value)
+        if value is not None:
+            return value == 'true'
+        return None
+
+
 class ChoiceField(CharField):
     def __init__(self, **kwargs):
         self._choices = kwargs.pop('choices')

@@ -144,14 +144,13 @@ features_count,created_on,created_by,target_variable'
 ])
 
 .factory('Feature', [
-  '$http'
-  '$q'
   'settings'
   'BaseModel'
   'NamedFeatureType'
   'Transformer'
+  'Scaler'
   
-  ($http, $q, settings, BaseModel, NamedFeatureType, Transformer) ->
+  (settings, BaseModel, NamedFeatureType, Transformer, Scaler) ->
     class Feature extends BaseModel
       API_FIELDNAME: 'feature'
       @MAIN_FIELDS: 'name,type,input_format,transformer,params,
@@ -175,6 +174,8 @@ scaler,default,is_target_variable,created_on,created_by,required'
         if origData?
           if origData.transformer?
             @transformer = new Transformer(origData.transformer)
+          if origData.scaler?
+            @scaler = new Scaler(origData.scaler)
           if origData.required?
             @required = origData.required == true || origData.required == 'True'
           if origData.is_target_variable?
