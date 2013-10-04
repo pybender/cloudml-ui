@@ -6,16 +6,20 @@ from api.resources import ValidationError
 
 
 
-def get_declared_fields(bases, attrs):
+def get_declared_items(bases, attrs, cls=BaseField):
     """
     Creates a list of Field instances.
     """
-    variables = [(variable_name, attrs.pop(variable_name))
-                 for variable_name, obj in attrs.items()
-                 if isinstance(obj, BaseField)]
-    for name, var in variables:
-        var.option = name
-    return variables
+    items = [(name, attrs.pop(name))
+                 for name, obj in attrs.items()
+                 if isinstance(obj, cls)]
+    for name, item in items:
+        item.option = name
+    return items
+
+
+class InternalForm(object):
+    pass
 
 
 class DeclarativeFieldsMetaclass(type):
@@ -24,12 +28,13 @@ class DeclarativeFieldsMetaclass(type):
     'base_fields' and Schemas to a dictionary called 'base_schemas'.
     """
     def __new__(cls, name, bases, attrs):
-        attrs['base_fields'] = get_declared_fields(bases, attrs)
+        attrs['base_fields'] = get_declared_items(bases, attrs)
+        attrs['base_forms'] = get_declared_items(bases, attrs, cls=InternalForm)
         return super(DeclarativeFieldsMetaclass,
                      cls).__new__(cls, name, bases, attrs)
 
 
-class BaseForm(object):
+class BaseForm(InternalForm):
     """
     Base class for any Form.
     """
@@ -42,11 +47,13 @@ class BaseForm(object):
     required_fields_groups = {}
     group_chooser = None
 
-    def __init__(self, data=None, obj=None, Model=None, **kwargs):
+    def __init__(self, data=None, obj=None, Model=None,
+                 data_from_request=True, prefix='', **kwargs):
         self.fields = dict(deepcopy(self.base_fields))
+        self.forms = dict(deepcopy(self.base_forms))
         self.errors = []
+        self.prefix = prefix
         self._cleaned = False
-        self.data = data if data else from_request()
 
         if obj:
             self.obj = obj
@@ -62,12 +69,21 @@ class BaseForm(object):
             if not self.group_chooser:
                 raise ValueError('Specify group_chooser')
 
-            self.current_group = self.data.get(self.group_chooser)
-            self.required_fields = self.required_fields_groups[self.current_group]
+        self.set_data(from_request() if data_from_request else data)
 
         # Setting extra parameters
         for key, val in kwargs.iteritems():
             setattr(self, key, val)
+
+    def set_data(self, data):
+        self.data = data
+        if data:
+            if self.required_fields_groups:
+                self.current_group = self.data.get(self.group_chooser)
+                self.required_fields = self.required_fields_groups[self.current_group]
+
+            for name, form in self.forms.iteritems():
+                form.set_data(data)
 
     @property
     def error_messages(self):
@@ -85,7 +101,7 @@ class BaseForm(object):
         self.before_clean()
 
         for name, field in self.fields.iteritems():
-            value = self.data.get(name, None)
+            value = self.data.get(self.prefix + name, None)
 
             try:
                 value = field.clean(value)
@@ -108,6 +124,13 @@ class BaseForm(object):
             self.validate_data()
         except ValidationError, exc:
             self.errors.append({'name': None, 'error': str(exc)})
+
+        for name, form in self.forms.iteritems():
+            try:
+                form.clean()
+                self.cleaned_data[name] = form.save(commit=False)
+            except ValueError, exc:
+                self.errors.append({'name': 'Form %s' % name, 'errors': str(exc)})
 
         if self.errors:
             raise ValidationError(self.error_messages, errors=self.errors)

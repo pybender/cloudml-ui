@@ -1,0 +1,25 @@
+<ul class="nav nav-pills" ng-init="currentTab='custom'">
+  <li ng-class="{active: currentTab == 'custom'}">
+    <a ng-click="currentTab='custom';model.predefined_selected=false">Custom</a>
+  </li>
+  <li ng-class="{active: currentTab == 'predefined'}">
+    <a ng-click="currentTab='predefined';model.predefined_selected=true">Predefined</a>
+  </li>
+</ul>
+
+<div ng-show="currentTab=='predefined'" class="control-group">
+  <alert-message class="alert-info" msg='Please choose predefined transformer. You could add other predefined transformers at <a target="_blank" href="#/features/transformers/">Transformers List</a> page.' unsafe></alert-message>
+  <div class="control-group" ng-class="{error: TransformerForm.transformer.$invalid}">
+    <label class="control-label">Transformer</label>
+    <div class="controls"  ng-controller="TransformersSelectLoader">
+      <select name="transformer" ng-model="model.transformer" ng-required="currentTab=='predefined'">
+        <option ng-repeat="name in transformers" value="{{ name }}">{{ name }}</option>
+      </select>
+      <span ng-show="TransformerForm.transformer.$error.required" class="help-inline">*</span>
+    </div>
+  </div>
+</div>
+
+<div ng-show="currentTab=='custom'" class="control-group">
+  <ng-include src="'/partials/features/transformers/form.html'"></ng-include>
+</div>

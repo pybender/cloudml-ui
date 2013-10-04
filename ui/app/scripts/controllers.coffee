@@ -68,6 +68,9 @@ angular.module('app.controllers', ['app.config', ])
   '$location'
 
   ($scope, $location) ->
+    $scope.init = (model) ->
+      $scope.model = model
+
     $scope.save = (fields) ->
       $scope.saving = true
       $scope.savingProgress = '0%'

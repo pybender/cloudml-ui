@@ -206,6 +206,24 @@ scaler,default,is_target_variable,created_on,created_by,required'
                            resolver, opts)
 
       $save: (opts={}) =>
+        opts.extraData = {}
+        for name in opts.only
+          if (name.indexOf "transformer__") == 0 && @transformer
+            field = name.slice 13
+            val = eval('this.transformer.' + field)
+            if val? && typeof(val) == 'object'
+              val = JSON.stringify(val)
+            opts.extraData['transformer-' + field] = val
+          if (name.indexOf "scaler__") == 0 && @scaler
+            field = name.slice 8
+            val = eval('this.scaler.' + field)
+            if val? && typeof(val) == 'object'
+              val = JSON.stringify(val)
+            opts.extraData['scaler-' + field] = val
+
+        if @params? && typeof(@params) == 'object'
+          @params = JSON.stringify(@params)
+
         super opts
 
     return Feature

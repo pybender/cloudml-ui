@@ -55,3 +55,34 @@ angular.module('app.features.controllers.base', ['app.config', ])
       dialog.close()
     )
 ])
+
+.controller('ConfigurationLoaderCtrl', [
+  '$scope'
+
+  ($scope) ->
+    $scope.init = (model) ->
+      $scope.model = model
+
+      $scope.model.$getConfiguration(
+      ).then ((opts)->
+        $scope.configuration = opts.data.configuration
+        if $scope.model.type?
+          $scope.loadParameters()
+      ), ((opts)->
+        $scope.setError(opts, 'loading types and parameters')
+      )
+
+    if $scope.model?
+      $scope.init($scope.model)
+
+    $scope.loadParameters = (setDefault=false) ->
+      $scope.params = $scope.configuration[$scope.model.type]
+      if !setDefault && $scope.model.params?
+        params = $scope.model.params
+      else
+        $scope.model.params = {}
+        params = $scope.params.defaults
+
+      for name, val of params
+        $scope.model.params[name] = val
+])

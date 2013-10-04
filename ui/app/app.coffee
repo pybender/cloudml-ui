@@ -42,6 +42,7 @@ App = angular.module('app', [
   'app.features.controllers.named_types'
   'app.features.controllers.base'
   'app.features.controllers.scalers'
+  'app.features.controllers.features'
 ])
 
 App.config([
@@ -149,6 +150,10 @@ App.config([
       templateUrl: '/partials/login/auth.html'
     })
 
+    .when('/models/:model_id/features/:set_id', {
+      controller: "FeatureAddCtrl"
+      templateUrl: '/partials/features/items/add.html'
+    })
     # Feature set list (now used only for debug)
     # .when('/features/sets', {
     #   controller: "FeaturesSetListCtrl"

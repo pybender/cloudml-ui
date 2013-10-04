@@ -7,7 +7,7 @@
 <div ng-controller="FeaturesListCtrl" ng-init="init(model)">
 <h4>Features List
 	<div class="actions">
-      <a class="btn btn-info" ng-click="addFeature()">
+      <a class="btn btn-info" href="#/models/{{ model._id }}/features/{{ featuresSet._id }}">
         <i class="status-icon icon-plus"></i> Add
       </a>
       <a href="{{ featuresSet.downloadUrl() }}" class="btn btn-info">
@@ -36,6 +36,8 @@
 				<span title="Feature Name" class="title" ng-bind="feature.name || 'feature name here'" editable="feature" value="feature.name" editable-field="name" editable-input="text" editable-placement="right"></span>
 				<br />
 				<small>(<span title="Feature Type" ng-bind="feature.type" editable="feature" value="feature.type" editable-field="type" editable-placement="right" editable-input="select" source="types"></span>)</small>
+				<br/>
+				<a ng-hide='feature.is_target_variable==true' ng-click="makeTarget(feature)" ng-hide="feature.is_target_variable">make target</a>
 			</td>
 			<td><span title="Input Format" ng-bind="feature.input_format" editable="feature" value="feature.input_format || ''" editable-field="input_format" editable-placement="right"editable-input="text"></span></td>
 			<td>
@@ -74,7 +76,9 @@
 				<span title="Default Value" class="title" ng-bind="feature.default || ''" editable="feature" value="feature.default || ''" editable-field="default" editable-input="text" editable-placement="right"></span>
 			</td>
 		    <td>
-		    	<a class="btn btn-info" ng-click="makeTarget(feature)" ng-hide="feature.is_target_variable"><i class="icon-check" title="make target" /></a>
+		    	<a class="btn btn-info" href="#">
+		    		<i class="icon-edit" title="edit" />
+		    	</a>
 			    <button ng-click="deleteModel(model)" class="btn btn-danger"><i title="Delete your model. Be careful - you could not recover it!" class="icon-remove"></i></button>
 		    </td>
 		</tr>

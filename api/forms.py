@@ -560,8 +560,8 @@ class ScalerForm(BaseFormEx):
 
         return value
 
-    def save(self):
-        scaler = super(ScalerForm, self).save()
+    def save(self, commit=True):
+        scaler = super(ScalerForm, self).save(commit)
         feature = self.cleaned_data.get('feature', None)
         if feature:
             feature.scaler = scaler
@@ -609,8 +609,8 @@ class TransformerForm(BaseFormEx):
 
         return value
 
-    def save(self):
-        transformer = super(TransformerForm, self).save()
+    def save(self, commit=True):
+        transformer = super(TransformerForm, self).save(commit)
         feature = self.cleaned_data.get('feature', None)
         if feature:
             feature.transformer = transformer
@@ -625,13 +625,16 @@ class FeatureAddForm(BaseFormEx):
     type = CharField()
     input_format = CharField()
     params = JsonField()
-    #transformer = 
-    # scaler =
     required = BooleanField()
     default = CharField()
     is_target_variable = BooleanField()
     features_set_id = DocumentField(doc=app.db.FeatureSet, by_name=False,
                                     return_doc=False)
+
+    transformer = TransformerForm(Model=app.db.Transformer,
+                                  prefix='transformer-', data_from_request=False)
+    scaler = ScalerForm(Model=app.db.Scaler, prefix='scaler-',
+                        data_from_request=False)
 
     def clean_features_set_id(self, value, field):        
         if value:

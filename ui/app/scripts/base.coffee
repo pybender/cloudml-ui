@@ -78,6 +78,10 @@ angular.module('app.base', ['app.config', 'app.services'])
 
           if val? then data[name] = val
 
+        if opts.extraData?
+          data = $.extend(data, opts.extraData)
+        console.log data
+
         method = if @isNew() then "POST" else "PUT"
         @$make_request(@BASE_API_URL + (@_id + "/" or ""), {}, method, data)
 

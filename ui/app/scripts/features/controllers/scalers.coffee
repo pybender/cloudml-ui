@@ -17,15 +17,15 @@ angular.module('app.features.controllers.scalers', ['app.config', ])
   'Scaler'
 
   ($scope, Scaler) ->
-    $scope.transformers = []
+    $scope.scalers = []
     Scaler.$loadAll(
       show: 'name'
       is_predefined: 1
     ).then ((opts) ->
-      for tr in opts.objects
-        $scope.transformers.push tr.name
+      for sc in opts.objects
+        $scope.scalers.push sc.name
     ), ((opts) ->
-      $scope.err = $scope.setError(opts, 'loading transformers')
+      $scope.err = $scope.setError(opts, 'loading scalers')
     )
 ])
 
