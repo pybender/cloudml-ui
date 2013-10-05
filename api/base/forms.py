@@ -40,6 +40,7 @@ class BaseForm(InternalForm):
     """
     __metaclass__ = DeclarativeFieldsMetaclass
 
+    NO_REQUIRED_FOR_EDIT = False  # don't validate required fields if obj specified
     required_fields = ()  # list of required fields
 
     # could be used with tabs edit forms, where we can spec. one 
@@ -48,19 +49,14 @@ class BaseForm(InternalForm):
     group_chooser = None
 
     def __init__(self, data=None, obj=None, Model=None,
-                 data_from_request=True, prefix='', **kwargs):
+                 data_from_request=True, prefix='', no_required=False, **kwargs):
         self.fields = dict(deepcopy(self.base_fields))
         self.forms = dict(deepcopy(self.base_forms))
         self.errors = []
         self.prefix = prefix
         self._cleaned = False
-
-        if obj:
-            self.obj = obj
-        elif Model:
-            self.obj = Model()
-        else:
-            raise ValueError('Either obj or Model should be specified')
+        self.no_required = no_required
+        self.filled = False
 
         if self.required_fields and self.required_fields_groups:
             raise ValueError('Either required fields or groups should be specified')
@@ -68,6 +64,15 @@ class BaseForm(InternalForm):
         if self.required_fields_groups:
             if not self.group_chooser:
                 raise ValueError('Specify group_chooser')
+
+        if obj:
+            self.obj = obj
+            if self.NO_REQUIRED_FOR_EDIT:
+                self.no_required = True
+        elif Model:
+            self.obj = Model()
+        else:
+            raise ValueError('Either obj or Model should be specified')
 
         self.set_data(from_request() if data_from_request else data)
 
@@ -113,8 +118,9 @@ class BaseForm(InternalForm):
 
             if value is not None:
                 self.cleaned_data[name] = value
+                self.filled = True
 
-            if name in self.required_fields:
+            if not self.no_required and name in self.required_fields:
                 cleaned_value = self.cleaned_data.get(name)
                 if not cleaned_value:
                     self.errors.append({'name': name,
@@ -127,10 +133,14 @@ class BaseForm(InternalForm):
 
         for name, form in self.forms.iteritems():
             try:
+                form.no_required = self.no_required
                 form.clean()
-                self.cleaned_data[name] = form.save(commit=False)
+                # TODO: make possible to choose whether form field is required
+                if form.filled:
+                    self.cleaned_data[name] = form.save(commit=False)
             except ValueError, exc:
-                self.errors.append({'name': 'Form %s' % name, 'errors': str(exc)})
+                if form.filled:
+                    self.errors.append({'name': 'Form %s' % name, 'errors': str(exc)})
 
         if self.errors:
             raise ValidationError(self.error_messages, errors=self.errors)

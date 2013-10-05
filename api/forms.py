@@ -559,9 +559,9 @@ class ScalerForm(BaseFormEx):
         return value
 
     def validate_data(self):
-        is_predefined = self.cleaned_data['is_predefined']
+        is_predefined = self.cleaned_data.get('is_predefined', None)
         if is_predefined:
-            name = self.cleaned_data.get('name')
+            name = self.cleaned_data.get('name', None)
             if not name:
                 raise ValidationError('name is required for predefined scaler')
 
@@ -614,9 +614,9 @@ class TransformerForm(BaseFormEx):
         return value
 
     def validate_data(self):
-        is_predefined = self.cleaned_data['is_predefined']
+        is_predefined = self.cleaned_data.get('is_predefined', None)
         if is_predefined:
-            name = self.cleaned_data.get('name')
+            name = self.cleaned_data.get('name', None)
             if not name:
                 raise ValidationError('name is required for predefined transformer')
 
@@ -629,7 +629,8 @@ class TransformerForm(BaseFormEx):
         return transformer
 
 
-class FeatureAddForm(BaseFormEx):
+class FeatureForm(BaseFormEx):
+    NO_REQUIRED_FOR_EDIT = True
     required_fields = ('name', 'type', 'features_set_id')
 
     name = CharField()
@@ -660,60 +661,6 @@ class FeatureAddForm(BaseFormEx):
             if not named_type:
                 raise ValidationError('invalid type')
         return value
-
-
-# class FeatureAddForm(BaseForm):
-#     fields = {'name': True, 
-#               'type': True,
-#               'input_format': False,
-#               'transformer': False,
-#               'params': False,
-#               'required': False,
-#               'scaler': False,
-#               'default': False,
-#               'is_target_variable': False,
-#               'features_set_id': True,
-#               'features_set': False}
-
-#     def clean_type(self, value):
-#         if value and not value in app.db.NamedFeatureType.TYPES_LIST:
-#             # Try to find type in named types
-#             named_type = app.db.NamedFeatureType.find_one({'name': value})
-#             if not named_type:
-#                 raise ValidationError('invalid type')
-
-#         return value
-
-#     def clean_transformer(self, value):
-#         return self._clean_document(value, app.db.Transformer,
-#                                     'transformer', by_id=False)
-
-#     def clean_params(self, value):
-#         # TODO: parse parameters types: int, bool
-#         if value:
-#             return json.loads(value)
-
-#     def clean_features_set_id(self, value):
-#         if value:
-#             self.cleaned_data['features_set'] = self._clean_document(\
-#                 value, app.db.FeatureSet, 'feature set')
-
-#         return value
-
-#     def clean_required(self, value):
-#         if value is not None:
-#             return value == 'true'
-
-#     def clean_is_target_variable(self, value):
-#         if value is not None:
-#             return value == 'true'
-
-
-class FeatureEditForm(FeatureAddForm):
-    fields = ('name', 'type', 'input_format', 'transformer',
-              'params', 'required', 'scaler', 'default',
-              'is_target_variable', 'features_set_id',
-              'features_set')
 
 
 def populate_parser(import_params):

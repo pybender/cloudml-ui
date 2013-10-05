@@ -1131,8 +1131,8 @@ class FeatureResource(BaseResource):
     MESSAGE404 = "Feature doesn't exist"
     OBJECT_NAME = 'feature'
     DEFAULT_FIELDS = [u'_id', 'name']
-    post_form = FeatureAddForm
-    put_form = FeatureEditForm
+    post_form = FeatureForm
+    put_form = FeatureForm
 
     @property
     def Model(self):
