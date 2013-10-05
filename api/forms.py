@@ -530,12 +530,13 @@ class FeatureSetAddForm(BaseForm):
 
 class ScalerForm(BaseFormEx):
     group_chooser = 'predefined_selected'
-    required_fields_groups = {'true': ('scaler', ),
-                              None: ('name', 'type')}
+    required_fields_groups = {'true': ('scaler', 'type' ),
+                              None: ('type')}
 
     name = CharField()
     type = ChoiceField(choices=app.db.Scaler.TYPES_LIST)
     params = JsonField()
+    is_predefined = BooleanField()
     scaler = DocumentField(doc=app.db.Scaler, by_name=True,
                                 filter_params={'is_predefined': True},
                                 return_doc=True)
@@ -546,8 +547,6 @@ class ScalerForm(BaseFormEx):
         if value:
             feature = field.doc
             self.cleaned_data['feature'] = feature
-
-        self.cleaned_data['is_predefined'] = not bool(value)
         return value
 
     def clean_scaler(self, value, field):
@@ -556,9 +555,15 @@ class ScalerForm(BaseFormEx):
             self.cleaned_data['name'] = value.name
             self.cleaned_data['type'] = value.type
             self.cleaned_data['params'] = value.params
-            self.cleaned_data['is_predefined'] = False
 
         return value
+
+    def validate_data(self):
+        is_predefined = self.cleaned_data['is_predefined']
+        if is_predefined:
+            name = self.cleaned_data.get('name')
+            if not name:
+                raise ValidationError('name is required for predefined scaler')
 
     def save(self, commit=True):
         scaler = super(ScalerForm, self).save(commit)
@@ -579,12 +584,13 @@ class ClassifierForm(BaseFormEx):
 
 class TransformerForm(BaseFormEx):
     group_chooser = 'predefined_selected'
-    required_fields_groups = {'true': ('transformer', 'name', ),
-                              None: ('name', 'type')}
+    required_fields_groups = {'true': ('transformer', 'type', ),
+                              None: ('type')}
 
     name = CharField()
     type = ChoiceField(choices=app.db.Transformer.TYPES_LIST)
     params = JsonField()
+    is_predefined = BooleanField()
     transformer = DocumentField(doc=app.db.Transformer, by_name=True,
                                 filter_params={'is_predefined': True},
                                 return_doc=True)
@@ -596,7 +602,6 @@ class TransformerForm(BaseFormEx):
             feature = field.doc
             self.cleaned_data['feature'] = feature
 
-        self.cleaned_data['is_predefined'] = not bool(value)
         return value
 
     def clean_transformer(self, value, field):
@@ -605,9 +610,15 @@ class TransformerForm(BaseFormEx):
             self.cleaned_data['name'] = value.name
             self.cleaned_data['type'] = value.type
             self.cleaned_data['params'] = value.params
-            self.cleaned_data['is_predefined'] = False
 
         return value
+
+    def validate_data(self):
+        is_predefined = self.cleaned_data['is_predefined']
+        if is_predefined:
+            name = self.cleaned_data.get('name')
+            if not name:
+                raise ValidationError('name is required for predefined transformer')
 
     def save(self, commit=True):
         transformer = super(TransformerForm, self).save(commit)

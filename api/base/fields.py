@@ -23,7 +23,7 @@ class BooleanField(BaseField):
     def clean(self, value):
         value = super(BooleanField, self).clean(value)
         if value is not None:
-            return value == 'true'
+            return value == 'true' or value == 'True'
         return None
 
 

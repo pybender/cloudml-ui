@@ -49,7 +49,7 @@ angular.module('app.features.controllers.transformers', ['app.config', ])
         'transformers')
 
     $scope.add = () ->
-      transformer = new Transformer()
+      transformer = new Transformer({'is_predefined': true})
       $scope.openDialog($dialog, transformer,
         'partials/features/transformers/add_predefined.html',
         'ModelWithParamsEditDialogCtrl', 'modal', 'add transformer',

@@ -150,7 +150,11 @@ App.config([
       templateUrl: '/partials/login/auth.html'
     })
 
-    .when('/models/:model_id/features/:set_id', {
+    .when('/models/:model_id/features/:set_id/add', {
+      controller: "FeatureAddCtrl"
+      templateUrl: '/partials/features/items/add.html'
+    })
+    .when('/models/:model_id/features/:set_id/edit/:feature_id', {
       controller: "FeatureAddCtrl"
       templateUrl: '/partials/features/items/add.html'
     })
@@ -226,7 +230,8 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
     log_sse.addEventListener('message', handleCallback)
 
   $rootScope.openDialog = ($dialog, model, template, ctrlName,
-                           cssClass='modal', action='', path=null) ->
+                           cssClass='modal', action='', path=null,
+                           extra={}) ->
     d = $dialog.dialog(
       modalFade: false
       dialogClass: cssClass
@@ -235,6 +240,7 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
     d.action = action
     d.path = path
     d.open(template, ctrlName)
+    d.extra = extra
     return d
 
   DEFAULT_ACTION = "model:details"

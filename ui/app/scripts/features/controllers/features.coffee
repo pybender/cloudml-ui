@@ -14,11 +14,21 @@ angular.module('app.features.controllers.features', ['app.config', ])
   if not $routeParams.model_id then throw new Error "Specify model id"
   if not $routeParams.set_id then throw new Error "Specify set id"
 
-  $scope.feature = new Feature({
-    'transformer': {},
-    'scaler': {},
-    'features_set_id': $routeParams.set_id
-  })
+  if $routeParams.feature_id
+    $scope.feature = new Feature({
+      '_id': $routeParams.feature_id,
+      'features_set_id': $routeParams.set_id,
+      'transformer': {},
+      'scaler': {}
+    })
+    $scope.feature.$load(show: Feature.MAIN_FIELDS
+    ).then (->), ((opts)-> $scope.setError(opts, 'loading feature'))
+  else
+    $scope.feature = new Feature({
+      'transformer': {'is_predefined': false},
+      'scaler': {'is_predefined': false},
+      'features_set_id': $routeParams.set_id
+    })
   $scope.modelObj = new Model({'_id': $routeParams.model_id})
 
   #  TODO: use SaveObjectCtl

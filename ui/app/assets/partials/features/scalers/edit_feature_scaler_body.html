@@ -12,7 +12,7 @@
 	<div class="control-group" ng-class="{error: ScalerForm.scaler.$invalid}">
 	  <label class="control-label">Scaler</label>
 	  <div class="controls"  ng-controller="ScalersSelectLoader">
-	    <select name="scaler" ng-model="model.scaler" ng-required="currentTab=='predefined'">
+	    <select name="scaler" ng-model="feature.scaler.scaler" ng-required="currentTab=='predefined'">
 	      <option ng-repeat="name in scalers" value="{{ name }}">{{ name }}</option>
 	    </select>
 	    <span ng-show="ScalerForm.scaler.$error.required" class="help-inline">*</span>
@@ -21,6 +21,23 @@
 </div>
 
 <div ng-show="currentTab=='custom'" class="control-group">
-  <ng-include src="'/partials/features/scalers/form.html'"></ng-include>
-</div>
+	<div class="control-group" ng-class="{error: ScalerForm.type.$invalid}">
+	  <label class="control-label">Type</label>
+	  <div class="controls" ng-controller="ScalersTypesLoader">
+	    <select ng-change="loadParameters(true)" name="type" ng-model="feature.scaler.type" ng-required="currentTab == null || currentTab=='custom'">
+	      <option ng-selected="typeName == feature.scaler.type" ng-repeat="typeName in types" value="{{ typeName }}">{{ typeName }}</option>
+	    </select>
+	    <span ng-show="ScalerForm.type.$error.required" class="help-inline">*</span>
+	  </div>
+	</div>
+	<div ng-show="feature.scaler.config.parameters">
+	  <h4>Scalar Parameters</h4>
+	  <div ng-repeat="name in feature.scaler.config.parameters" class="control-group">
+	    <label class="control-label">{{ name }}</label>
+	    <div class="controls">
+	      <input ng-model="feature.scaler.params[name]" name="{{ name }}" type='text' />
+	    </div>
+	  </div>
+	</div>
+	</div>
 </div>

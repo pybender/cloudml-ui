@@ -49,26 +49,6 @@ angular.module('app.features.controllers', ['app.config', ])
         'AddFeatureDialogCtrl', 'modal', 'add feature', 'feature')
   ])
 
-.controller('AddFeatureSetDialogCtrl', [
-  '$scope'
-  'dialog'
-  'FeaturesSet'
-  'Classifier'
-
-  ($scope, dialog, FeaturesSet, Classifier) ->
-    $scope.model = dialog.model
-    Classifier.$loadAll(
-      show: 'name'
-    ).then ((opts) ->
-      $scope.classifiers = opts.objects
-    ), ((opts) ->
-      $scope.err = $scope.setError(opts, 'loading classifiers')
-    )
-    $scope.$on('SaveObjectCtl:save:success', (event, current) ->
-      dialog.close()
-    )
-])
-
 # Feature Items Controllers
 .controller('FeatureFieldsSelectsLoader', [
   '$scope'
@@ -120,35 +100,24 @@ angular.module('app.features.controllers', ['app.config', ])
       
 ])
 
-.controller('AddFeatureDialogCtrl', [
-  '$scope'
-  'dialog'
-  'Feature'
-  'NamedFeatureType'
-  'Transformer'
-
-  ($scope, dialog, Feature, NamedFeatureType, Transformer) ->
-    $scope.featureSet = dialog.model
-    $scope.model = new Feature({'features_set_id': $scope.featureSet._id})
-    $scope.dialog = dialog
-
-    $scope.$on('SaveObjectCtl:save:success', (event, current) ->
-      dialog.close()
-      $scope.$emit('BaseListCtrl:start:load', 'features')
-    )
-])
-
-# Named Feature Types Controllers
-
-# .controller('FeatureTypeListCtrl', [
+# .controller('AddFeatureDialogCtrl', [
 #   '$scope'
+#   'dialog'
+#   'Feature'
 #   'NamedFeatureType'
+#   'Transformer'
 
-#   ($scope, NamedFeatureType) ->
-#     $scope.MODEL = NamedFeatureType
-#     $scope.FIELDS = NamedFeatureType.MAIN_FIELDS
-#     $scope.ACTION = 'loading named feature types'
+#   ($scope, dialog, Feature, NamedFeatureType, Transformer) ->
+#     $scope.featureSet = dialog.model
+#     $scope.model = new Feature({'features_set_id': $scope.featureSet._id})
+#     $scope.dialog = dialog
+
+#     $scope.$on('SaveObjectCtl:save:success', (event, current) ->
+#       dialog.close()
+#       $scope.$emit('BaseListCtrl:start:load', 'features')
+#     )
 # ])
+
 
 
 .controller('AddFeatureTypeCtrl', [
@@ -160,21 +129,21 @@ angular.module('app.features.controllers', ['app.config', ])
     $scope.types = NamedFeatureType.$TYPES_LIST
 ])
 
-.controller('FeatureTypeDetailsCtrl', [
-  '$scope'
-  '$routeParams'
-  'NamedFeatureType'
-  'Transformer'
+# .controller('FeatureTypeDetailsCtrl', [
+#   '$scope'
+#   '$routeParams'
+#   'NamedFeatureType'
+#   'Transformer'
 
-  ($scope, $routeParams, NamedFeatureType, Transformer) ->
-    if not $routeParams.id
-      err = "Can't initialize without id"
+#   ($scope, $routeParams, NamedFeatureType, Transformer) ->
+#     if not $routeParams.id
+#       err = "Can't initialize without id"
 
-    $scope.namedType = new NamedFeatureType({_id: $routeParams.id})
-    $scope.namedType.$load(
-      show: NamedFeatureType.MAIN_FIELDS
-      ).then (->), ((opts)-> $scope.setError(opts, 'loading featuresSet'))
-  ])
+#     $scope.namedType = new NamedFeatureType({_id: $routeParams.id})
+#     $scope.namedType.$load(
+#       show: NamedFeatureType.MAIN_FIELDS
+#       ).then (->), ((opts)-> $scope.setError(opts, 'loading featuresSet'))
+#   ])
 
 
 .controller('FeatureActionsCtrl', [
@@ -213,19 +182,23 @@ angular.module('app.features.controllers', ['app.config', ])
 
     $scope.editScaler = (feature) ->
       if !feature.scaler?
-        feature.scaler = new Scaler({'feature_id': feature._id})
+        feature.scaler = new Scaler({'feature_id': feature._id,
+        'is_predefined': false})
 
-      $scope.openDialog($dialog, feature.scaler,
+      $scope.openDialog($dialog, null,
         'partials/features/scalers/edit_feature_scaler.html',
-        'ModelWithParamsEditDialogCtrl')
+        'ModelWithParamsEditDialogCtrl', 'modal', null, null,
+        {'feature': feature, 'fieldname': 'scaler'})
 
     $scope.editTransformer = (feature) ->
       if !feature.transformer?
-        feature.transformer = new Transformer({'feature_id': feature._id})
+        feature.transformer = new Transformer({'feature_id': feature._id,
+        'is_predefined': false})
 
-      $scope.openDialog($dialog, feature.transformer,
+      $scope.openDialog($dialog, null,
         'partials/features/transformers/edit_feature_transformer.html',
-        'ModelWithParamsEditDialogCtrl', 'modal', 'edit feature transformer')
+        'ModelWithParamsEditDialogCtrl', 'modal', null, null,
+        {'feature': feature, 'fieldname': 'transformer'})
 
     $scope.deleteTransformer = (feature) ->
       alert "TODO"

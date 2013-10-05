@@ -1112,7 +1112,7 @@ class Transformer(BaseDocument):
         'updated_by': dict,
         'is_predefined': bool,
     }
-    required_fields = ['name', 'type', 'created_on', 'updated_on']
+    required_fields = ['type', 'created_on', 'updated_on']
     default_values = {
         'created_on': datetime.utcnow,
         'updated_on': datetime.utcnow,
@@ -1162,7 +1162,7 @@ class Scaler(BaseDocument):
         'updated_by': dict,
         'is_predefined': bool,
     }
-    required_fields = ['name', 'type', 'created_on', 'updated_on']
+    required_fields = ['type', 'created_on', 'updated_on']
     default_values = {
         'created_on': datetime.utcnow,
         'updated_on': datetime.utcnow,

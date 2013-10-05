@@ -49,7 +49,7 @@ angular.module('app.features.controllers.scalers', ['app.config', ])
         'scalars')
 
     $scope.add = () ->
-      scalar = new Scaler()
+      scalar = new Scaler({'is_predefined': true})
       $scope.openDialog($dialog, scalar,
         'partials/features/scalers/add_predefined.html',
         'ModelWithParamsEditDialogCtrl', 'modal', 'add scalar',

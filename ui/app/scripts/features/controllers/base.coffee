@@ -20,16 +20,32 @@ angular.module('app.features.controllers.base', ['app.config', ])
     )
 ])
 
+.controller('ModelCtrl', [
+  '$scope'
+
+  ($scope) ->
+    $scope.init = (model) ->
+      $scope.model = model
+])
+
 .controller('ModelWithParamsEditDialogCtrl', [
   '$scope'
   '$rootScope'
   'dialog'
 
   ($scope, $rootScope, dialog) ->
-    $scope.model = dialog.model
     $scope.DONT_REDIRECT = true
-    $scope.LIST_MODEL_NAME = $scope.model.LIST_MODEL_NAME
     $scope.dialog = dialog
+
+    if dialog.model?
+      $scope.model = dialog.model
+    else if dialog.extra.feature? && dialog.extra.fieldname?
+      $scope.feature = dialog.extra.feature
+      $scope.model = eval('$scope.feature.' + dialog.extra.fieldname)
+    else
+      throw new Excepion "Please spec model or feature and field name"
+
+    $scope.LIST_MODEL_NAME = $scope.model.LIST_MODEL_NAME
     $scope.params = {}
     $scope.model.$getConfiguration(
     ).then ((opts)->
@@ -41,15 +57,18 @@ angular.module('app.features.controllers.base', ['app.config', ])
     )
 
     $scope.loadParameters = (setDefault=false) ->
-      $scope.params = $scope.configuration[$scope.model.type]
-      if !setDefault && $scope.model.params?
-        params = $scope.model.params
+      model = $scope.model
+      if !model.type? then return
+      config = $scope.configuration[model.type]
+      model.config = config
+      if !setDefault && model.params?
+        params = model.params
       else
-        $scope.model.params = {}
-        params = $scope.params.defaults
+        model.params = {}
+        params = config.defaults
 
       for name, val of params
-        $scope.model.params[name] = val
+        model.params[name] = val
 
     $scope.$on('SaveObjectCtl:save:success', (event, current) ->
       dialog.close()
@@ -60,29 +79,38 @@ angular.module('app.features.controllers.base', ['app.config', ])
   '$scope'
 
   ($scope) ->
-    $scope.init = (model) ->
-      $scope.model = model
+    $scope.init = (parentModel, fieldname) ->
+      $scope.parentModel = parentModel
+      $scope.fieldname = fieldname
 
-      $scope.model.$getConfiguration(
+      $scope.$watch('parentModel.' + $scope.fieldname, (model, oldVal, scope) ->
+        if model?
+          $scope.loadConfiguration(model)
+      , true)
+
+    $scope.loadConfiguration = (model) ->
+      if $scope.configurationLoaded then return
+
+      model.$getConfiguration(
       ).then ((opts)->
         $scope.configuration = opts.data.configuration
-        if $scope.model.type?
-          $scope.loadParameters()
+        $scope.configurationLoaded = true
+        $scope.loadParameters()
       ), ((opts)->
         $scope.setError(opts, 'loading types and parameters')
       )
 
-    if $scope.model?
-      $scope.init($scope.model)
-
     $scope.loadParameters = (setDefault=false) ->
-      $scope.params = $scope.configuration[$scope.model.type]
-      if !setDefault && $scope.model.params?
-        params = $scope.model.params
+      model = eval('$scope.parentModel.' + $scope.fieldname)
+      if !model.type? then return
+      config = $scope.configuration[model.type]
+      eval('$scope.parentModel.' + $scope.fieldname).config = config
+      if !setDefault && model.params?
+        params = model.params
       else
-        $scope.model.params = {}
-        params = $scope.params.defaults
+        model.params = {}
+        params = config.defaults
 
       for name, val of params
-        $scope.model.params[name] = val
+        model.params[name] = val
 ])

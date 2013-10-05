@@ -10,7 +10,7 @@
     <label class="control-label">Type</label>
     <div class="controls" ng-controller="NamedFeatureTypesSelectsLoader">
       <select name="type" ng-model="feature.type" required>
-        <option ng-repeat="typeName in types" value="{{ typeName }}">{{ typeName }}</option>
+        <option ng-selected="feature.type==typeName" ng-repeat="typeName in types" value="{{ typeName }}">{{ typeName }}</option>
       </select>
       <span ng-show="FeatureForm.type.$error.required" class="help-inline">*</span>
     </div>

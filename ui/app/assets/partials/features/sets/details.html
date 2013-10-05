@@ -7,7 +7,7 @@
 <div ng-controller="FeaturesListCtrl" ng-init="init(model)">
 <h4>Features List
 	<div class="actions">
-      <a class="btn btn-info" href="#/models/{{ model._id }}/features/{{ featuresSet._id }}">
+      <a class="btn btn-info" href="#/models/{{ model._id }}/features/{{ featuresSet._id }}/add">
         <i class="status-icon icon-plus"></i> Add
       </a>
       <a href="{{ featuresSet.downloadUrl() }}" class="btn btn-info">
@@ -40,10 +40,10 @@
 				<a ng-hide='feature.is_target_variable==true' ng-click="makeTarget(feature)" ng-hide="feature.is_target_variable">make target</a>
 			</td>
 			<td><span title="Input Format" ng-bind="feature.input_format" editable="feature" value="feature.input_format || ''" editable-field="input_format" editable-placement="right"editable-input="text"></span></td>
-			<td>
+			<td nowrap>
 				<div ng-show="feature.transformer._id">
 					<a ng-click="editTransformer(feature)">
-						<span>{{ feature.transformer.name }} ({{ feature.transformer.type }})</span>
+						<span>{{ feature.transformer.type }}</span>
 					</a>
 					<a ng-click="deleteTransformer(feature)">
 						<i title="Delete transformer from feature" class="icon-remove" />
@@ -53,10 +53,10 @@
 					<a ng-click="editTransformer(feature)" title="add feature transformer" class="btn btn-info" href=""><i class="status-icon icon-plus"></i></a>
 				</div>
 			</td>
-			<td>
+			<td nowrap>
 				<div ng-show="feature.scaler._id">
 					<a ng-click="editScaler(feature)">
-						<span>{{ feature.scaler.name }} ({{ feature.scaler.type }})</span>
+						<span>{{ feature.scaler.type }}</span>
 					</a>
 					<a ng-click="deleteScaler(feature)">
 						<i title="Delete feature scaler" class="icon-remove" />
@@ -76,7 +76,7 @@
 				<span title="Default Value" class="title" ng-bind="feature.default || ''" editable="feature" value="feature.default || ''" editable-field="default" editable-input="text" editable-placement="right"></span>
 			</td>
 		    <td>
-		    	<a class="btn btn-info" href="#">
+		    	<a class="btn btn-info" href="#/models/{{ model._id }}/features/{{ featuresSet._id }}/edit/{{ feature._id }}">
 		    		<i class="icon-edit" title="edit" />
 		    	</a>
 			    <button ng-click="deleteModel(model)" class="btn btn-danger"><i title="Delete your model. Be careful - you could not recover it!" class="icon-remove"></i></button>
