@@ -80,3 +80,25 @@ class JsonField(CharField):
                 return json.loads(value)
             except ValueError:
                 raise ValidationError('invalid json: %s' % value)
+
+
+class ImportHandlerFileField(BaseField):
+    def clean(self, value):
+        self.import_params = None
+        if not value:
+            return
+
+        from core.importhandler.importhandler import ExtractionPlan, \
+            ImportHandlerException
+        try:
+            data = json.loads(value)
+        except ValueError, exc:
+            raise ValidationError('Invalid data: %s' % exc)
+
+        try:
+            plan = ExtractionPlan(value, is_file=False)
+            self.import_params = plan.input_params
+        except (ValueError, ImportHandlerException) as exc:
+            raise ValidationError('Invalid importhandler: %s' % exc)
+
+        return data

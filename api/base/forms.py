@@ -1,5 +1,6 @@
 from copy import deepcopy
 from datetime import datetime
+from collections import Iterable
 
 from api.base.fields import BaseField
 from api.resources import ValidationError
@@ -120,11 +121,20 @@ class BaseForm(InternalForm):
                 self.cleaned_data[name] = value
                 self.filled = True
 
-            if not self.no_required and name in self.required_fields:
-                cleaned_value = self.cleaned_data.get(name)
-                if not cleaned_value:
-                    self.errors.append({'name': name,
-                                        'error': '%s is required' % name})
+        if not self.no_required:
+            # Check required fields
+            for fields in self.required_fields:
+                is_valid = check_required(fields, self.cleaned_data)
+                if not is_valid:
+                    if isinstance(fields, str):
+                        field = fields
+                        self.errors.append({
+                            'name': field,
+                            'error': '%s is required' % field})
+                    else:
+                        self.errors.append({
+                            'name': None,
+                            'error': 'Either one of fields %s is required' % ', '.join(fields)})
 
         try:
             self.validate_data()
@@ -182,3 +192,25 @@ def from_request():
     for k in request.files.keys():
         data[k] = request.files.get(k, None)
     return data
+
+
+def check_required(obj, cd):
+    if isinstance(obj, str):
+        val = cd.get(obj)
+        if not val:
+            return False
+
+    elif isinstance(obj, Iterable):
+        # check whether one of specified fields is filled
+        is_valid = False
+        for item in obj:
+            if cd.get(item) is not None:
+                is_valid = True
+                break
+
+        if not is_valid:
+            return False
+    else:
+        raise ValueError()
+
+    return True

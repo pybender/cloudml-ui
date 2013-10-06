@@ -81,7 +81,7 @@ class Models(BaseResource):
 
     MESSAGE404 = "Model with name %(_id)s doesn't exist"
 
-    post_form = ModelAddForm
+    post_form = ModelForm
     put_form = ModelEditForm
 
     DOWNLOAD_FIELDS = ('trainer', 'features')

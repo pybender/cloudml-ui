@@ -91,20 +91,23 @@ class ModelTests(BaseTestCase):
         post_data = {'test_import_handler_file': handler,
                      'train_import_handler_file': handler,
                      'name': 'new'}
-        self._check_post(post_data, error='Either features, either \
-pickled trained model is required for posting model')
+        self._check_post(
+            post_data,
+            error='Either one of fields features, trainer is required')
 
         post_data = {'importhandler': handler,
                      'features': 'smth',
                      'name': 'new'}
-        self._check_post(post_data, error='Invalid features: \
-smth No JSON object could be decoded')
+        self._check_post(
+            post_data,
+            error='features: invalid json: smth')
 
         post_data = {'importhandler': 'smth',
                      'features': '{"a": "1"}',
                      'name': 'new'}
-        self._check_post(post_data, error='Invalid features: \
-schema-name is missing')
+        self._check_post(
+            post_data,
+            error='Invalid features: schema-name is missing')
 
     def test_post_with_invalid_trainer(self):
         handler = open('./conf/extract.json', 'r').read()
