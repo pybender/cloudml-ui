@@ -6,8 +6,9 @@ from api.resources import ValidationError
 class BaseField(object):
     DEFAULT_VALUE = None
 
-    def __init__(self, default=None):
+    def __init__(self, default=None, name=None):
         self.value = None
+        self.name = name
         self._default = default or self.DEFAULT_VALUE
 
     def clean(self, value):

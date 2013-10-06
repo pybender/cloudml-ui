@@ -143,8 +143,7 @@ class ModelEditForm(BaseModelForm):
 class ModelForm(BaseFormEx):
     NO_REQUIRED_FOR_EDIT = True
     required_fields = ('name',
-                       ('features', 'trainer'),
-                       ('test_import_handler', 'test_import_handler_file'))
+                      ('test_import_handler', 'test_import_handler_file'))
 
     name = CharField()
     train_import_handler = DocumentField(doc=app.db.ImportHandler, by_name=False,
@@ -156,7 +155,10 @@ class ModelForm(BaseFormEx):
     features = JsonField()
     trainer = CharField()
 
+    # 
     feature_model = None
+    trainer_obj = None
+    classifier = None
 
     def clean_train_import_handler_file(self, value, field):
         self.cleaned_data['train_import_params'] = field.import_params
@@ -171,8 +173,9 @@ class ModelForm(BaseFormEx):
             try:
                 # TODO: find a better way?
                 value = value.encode('utf-8').replace('\r', '')
-                self.trainer = load_trainer(value)
-                return self.trainer
+                self.trainer_obj = load_trainer(value)
+                self.cleaned_data['status'] = Model.STATUS_TRAINED
+                return self.trainer_obj
             except Exception as exc:
                 raise ValidationError('Invalid trainer: {0!s}'.format(exc))
 
@@ -193,9 +196,8 @@ class ModelForm(BaseFormEx):
                 self.cleaned_data['train_import_handler']):
                 raise ValidationError('train_import_handler_file or \
 train_import_handler should be specified for new model')
-            self.trainer = Trainer(self.feature_model)
+            self.trainer_obj = Trainer(self.feature_model)
         else:
-            self.cleaned_data['status'] = Model.STATUS_TRAINED
             self.cleaned_data['trainer'] = None
 
     def save_importhandler(self, fieldname, name):
@@ -217,7 +219,16 @@ train_import_handler should be specified for new model')
         self.save_importhandler('test_import_handler_file', name)
 
         obj = super(ModelForm, self).save()
-        obj.set_trainer(self.trainer)
+        # TODO: move it to model training for new models
+        if self.trainer_obj:
+            obj.set_trainer(self.trainer_obj)
+
+        features_set = app.db.FeatureSet.from_model_features_dict(obj.name, obj.features)
+        classifier = app.db.Classifier.from_model_features_dict(obj.name, obj.features)
+        obj.features_set_id = str(features_set._id)
+        obj.features_set = features_set
+        obj.classifier = classifier
+
         obj.validate()
         obj.save()
 
@@ -620,10 +631,10 @@ class FeatureSetAddForm(BaseForm):
 class ScalerForm(BaseFormEx):
     group_chooser = 'predefined_selected'
     required_fields_groups = {'true': ('scaler', 'type' ),
-                              None: ('type')}
+                              None: ('type', )}
 
     name = CharField()
-    type = ChoiceField(choices=app.db.Scaler.TYPES_LIST)
+    type_field = ChoiceField(choices=app.db.Scaler.TYPES_LIST, name='type')
     params = JsonField()
     is_predefined = BooleanField()
     scaler = DocumentField(doc=app.db.Scaler, by_name=True,
@@ -674,10 +685,10 @@ class ClassifierForm(BaseFormEx):
 class TransformerForm(BaseFormEx):
     group_chooser = 'predefined_selected'
     required_fields_groups = {'true': ('transformer', 'type', ),
-                              None: ('type')}
+                              None: ('type', )}
 
     name = CharField()
-    type = ChoiceField(choices=app.db.Transformer.TYPES_LIST)
+    type_field = ChoiceField(choices=app.db.Transformer.TYPES_LIST, name='type')
     params = JsonField()
     is_predefined = BooleanField()
     transformer = DocumentField(doc=app.db.Transformer, by_name=True,
@@ -723,7 +734,7 @@ class FeatureForm(BaseFormEx):
     required_fields = ('name', 'type', 'features_set_id')
 
     name = CharField()
-    type = CharField()
+    type_field = CharField(name='type')
     input_format = CharField()
     params = JsonField()
     required = BooleanField()

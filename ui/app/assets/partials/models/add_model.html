@@ -22,7 +22,7 @@
   <div class="control-group" ng-class="{error: Form.features.$invalid}">
     <label class="control-label">Features</label>
     <div class="controls">
-      <input type="file" name="features" ng-model="model.features" json-file required />
+      <input type="file" name="features" ng-model="model.features" json-file />
       <span ng-show="Form.features.$error.required" class="help-inline">*</span>
       <span ng-show="Form.features.$error.jsonFile" class="help-block">Should be a valid json file</span>
       <span class="help-block">json file with features</span>

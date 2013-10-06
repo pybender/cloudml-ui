@@ -422,7 +422,7 @@ class FeatureSet(BaseDocument):
         'updated_on': datetime,
         'updated_by': dict,
     }
-    required_fields = ['name', 'schema_name', 'created_on', 'updated_on']
+    required_fields = ['created_on', 'updated_on']
     default_values = {
         'created_on': datetime.utcnow,
         'updated_on': datetime.utcnow,
@@ -451,14 +451,16 @@ class FeatureSet(BaseDocument):
         return data
 
     @classmethod
-    def from_model_features_dict(cls, model):
-        if not model['features']:
-            return None
+    def from_model_features_dict(cls, name, features_dict):
+        if not features_dict:
+            features_set = app.db.FeatureSet()
+            features_set.name = name
+            features_set.save()
+            return features_set
 
-        features_dict = model['features']
         features_set, is_new = app.db.FeatureSet.from_dict(\
             app.db.FeatureSet, features_dict,
-            extra_fields={'name': "%s features" % model.name,
+            extra_fields={'name': name,
                           'features_count': len(features_dict['features'])},
             add_new=True)
 
@@ -503,23 +505,25 @@ class Classifier(BaseDocument):
         'updated_on': datetime,
         'updated_by': dict,
     }
-    required_fields = ['name', 'type', 'created_on', 'updated_on']
+    required_fields = ['created_on', 'updated_on']
     default_values = {
         'created_on': datetime.utcnow,
         'updated_on': datetime.utcnow,
     }
     use_dot_notation = True
 
-    def from_model_features_dict(cls, model):
-        if not model['features']:
-            return None
-
-        features_dict = model['features']
+    @classmethod
+    def from_model_features_dict(cls, name, features_dict):
+        if not features_dict:
+            classifier = app.db.Classifier()
+            classifier.name = name
+            classifier.save()
+            return classifier
 
         classifier, is_new = app.db.Classifier.from_dict(\
             app.db.Classifier, features_dict['classifier'],
             add_new=True,
-            extra_fields={'name': "%s classifier" % model.name}
+            extra_fields={'name': name}
         )
         return classifier
 

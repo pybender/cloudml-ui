@@ -11,11 +11,17 @@ def get_declared_items(bases, attrs, cls=BaseField):
     """
     Creates a list of Field instances.
     """
-    items = [(name, attrs.pop(name))
-                 for name, obj in attrs.items()
-                 if isinstance(obj, cls)]
-    for name, item in items:
-        item.option = name
+    items = []
+    for name, obj in attrs.items():
+        if not isinstance(obj, cls):
+            continue
+
+        if hasattr(obj, "name") and obj.name:
+            obj.option = obj.name
+        else:
+            obj.option = name
+        items.append((obj.option, attrs.pop(name)))
+       
     return items
 
 

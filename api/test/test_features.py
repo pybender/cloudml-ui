@@ -1,64 +1,61 @@
-import httplib
-import json
 from bson import ObjectId
 
-from utils import BaseTestCase, HTTP_HEADERS
+from utils import BaseTestCase
 from utils import MODEL_ID
-from api.views import NamedFeatureTypeResource
 from api import app
+from api.views import FeatureResource
 
 
-class NamedFeatureTypeTests(BaseTestCase):
+class TestFeatureResource(BaseTestCase):
     """
-    Tests of the Instances API.
+    Features API methods tests.
     """
-    NAMED_TYPE_ID = '5170dd3a106a6c1631000000'
-    FIXTURES = ('named_feature_types.json', )
-    BASE_URL = '/cloudml/features/named_types/'
-    RESOURCE = NamedFeatureTypeResource
+    TRANSFORMER_ID = '5170dd3a106a6c1631000000'
+    FIXTURES = ['features.json', 'models.json']
+    BASE_URL = '/cloudml/features/transformers/'
+    RESOURCE = FeatureResource
 
     def setUp(self):
-        super(NamedFeatureTypeTests, self).setUp()
-        self.Model = self.db.NamedFeatureType
-        self.obj = self.Model.get_from_id(ObjectId(self.NAMED_TYPE_ID))
+        super(TestFeatureResource, self).setUp()
+        self.Model = self.db.Feature
+        self.model = self.db.Model.find_one({'_id': ObjectId(MODEL_ID)})
+        self.assertTrue(self.model)
+        self.assertTrue(self.model.features_set)
+
+        self.BASE_URL = '/cloudml/features/%s/items/' % \
+            self.model.features_set._id
+
+        self.obj = self.db.Feature.find_one()
         self.assertTrue(self.obj)
 
-    def test_list(self):
-        self._check_list(show='name')
-
-    def test_details(self):
-        self._check_details()
-
     def test_post(self):
-        post_data = {'type': 'int',
-                     'name': 'new'}
+        post_data = {
+            "name":"contractor.dev_recent_hours",
+            "type":"int"
+        }
         resp, obj = self._check_post(post_data, load_model=True)
         self.assertEqual(obj.name, post_data['name'])
         self.assertEqual(obj.type, post_data['type'])
+        self.assertTrue(obj.is_predefined)
+        self.assertEqual(obj.params, {"charset": "utf-8"})
 
 
-class TestFeaturesDoc(BaseTestCase):
+class TestFeatureSetDoc(BaseTestCase):
     """
-    Tests for the Model methods.
+    Tests for the FeatureSet methods.
     """
-    MODEL_NAME = 'TrainedModel'
     FIXTURES = ('models.json', )
 
     def test_from_model_features_dict(self):
         model = app.db.Model.get_from_id(ObjectId(MODEL_ID))
 
-        features_set = app.db.FeatureSet.from_model_features_dict(model)
+        from api.models import FeatureSet
+        features_set = FeatureSet.from_model_features_dict("Set", model.features)
         self.assertTrue(features_set)
-        self.assertEquals(features_set.name, '%s features' % model.name)
+        self.assertEquals(features_set.name, "Set")
         self.assertEquals(features_set.schema_name, 'bestmatch')
         self.assertEquals(features_set.features_count, 37)
         self.assertEquals(features_set.target_variable, 'hire_outcome')
-
-        self.assertTrue(features_set.classifier, 'Classifier not set')
-        classifier = features_set.classifier
-        self.assertEquals(classifier.name, '%s classifier' % model.name)
-        self.assertEquals(classifier.type, 'logistic regression')
-        self.assertEquals(classifier.params, {"penalty": "l2"})
 
         # named features type "str_to_timezone" should be added
         ftype = app.db.NamedFeatureType.find_one({'name': 'str_to_timezone'})
@@ -127,3 +124,7 @@ class TestFeaturesDoc(BaseTestCase):
                                  {'required': False})
         feature = _check_feature('employer.op_timezone',
                                  {'type': 'str_to_timezone'})
+
+        print dict(features_set)
+        print dict(features[0])
+        raise

@@ -21,14 +21,14 @@
         <label class="control-label">Type</label>
         <div class="controls">
           <select ng-change="loadParameters()" name="type" ng-model="model.type" required>
-            <option ng-repeat="(typeName, conf) in configuration" value="{{ typeName }}">{{ typeName }}</option>
+            <option ng-repeat="typeName in types" value="{{ typeName }}">{{ typeName }}</option>
           </select>
           <span ng-show="Form.type.$error.required" class="help-inline">*</span>
         </div>
       </div>
-      <div ng-show="params.parameters">
+      <div ng-show="model.config.parameters">
         <h4>Classifier Parameters</h4>
-        <div ng-repeat="name in params.parameters" class="control-group">
+        <div ng-repeat="name in model.config.parameters" class="control-group">
           <label class="control-label">{{ name }}</label>
           <div class="controls">
             <input ng-model="model.params[name]" name="{{ name }}" type='text' />

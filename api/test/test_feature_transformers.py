@@ -33,7 +33,8 @@ class TransformersTests(BaseTestCase):
         # Adding predefined Transformer
         post_data = {'type': 'Count',
                      'name': 'Test Transformer',
-                     'params': '{"charset":"utf-8"}'}
+                     'params': '{"charset":"utf-8"}',
+                     'is_predefined': 'True'}
         resp, obj = self._check_post(post_data, load_model=True)
         self.assertEqual(obj.name, post_data['name'])
         self.assertEqual(obj.type, post_data['type'])

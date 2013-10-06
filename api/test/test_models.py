@@ -87,14 +87,8 @@ class ModelTests(BaseTestCase):
                          error='name is required')
 
     def test_post_with_invalid_features(self):
+        # Features aren't required. Can be added in model details
         handler = open('./conf/extract.json', 'r').read()
-        post_data = {'test_import_handler_file': handler,
-                     'train_import_handler_file': handler,
-                     'name': 'new'}
-        self._check_post(
-            post_data,
-            error='Either one of fields features, trainer is required')
-
         post_data = {'importhandler': handler,
                      'features': 'smth',
                      'name': 'new'}
@@ -144,6 +138,34 @@ class ModelTests(BaseTestCase):
         self.assertEquals(model.tags, [])
         self.assertFalse(model.weights_synchronized)
         self.assertFalse(model.error)
+
+        # Checking that classifier from features created
+        classifier = model.classifier
+        self.assertTrue(classifier, "classifier not setted")
+        self.assertEquals(classifier.name, name)
+        self.assertEquals(classifier.type, u'logistic regression')
+        self.assertEquals(classifier.params, {u'penalty': u'l2'})
+
+        # Checking that features set created
+        features_set = model.features_set
+        self.assertTrue(features_set, "Features set not created")
+        self.assertEquals(features_set.schema_name, "bestmatch")
+
+    def test_post_new_model_without_features(self):
+        name = 'test one'
+        handler = open('./conf/extract.json', 'r').read()
+        post_data = {'test_import_handler_file': handler,
+                     'train_import_handler_file': handler,
+                     'name': name}
+        resp, model = self._check_post(post_data, load_model=True)
+        self.assertEquals(model.name, name)
+        self.assertEquals(model.status, model.STATUS_NEW)
+
+        classifier = model.classifier
+        self.assertTrue(classifier, "classifier not setted")
+
+        features_set = model.features_set
+        self.assertTrue(features_set, "Features set not created")
 
     def test_post_trained_model(self):
         name = 'new2'

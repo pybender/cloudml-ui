@@ -295,7 +295,8 @@ train_records_count,test_handler_fields'
 
     $scope.editClassifier = (model) ->
       $scope.openDialog($dialog, model.classifier,
-        'partials/features/classifiers/edit.html', 'AddClassifierDialogCtrl',
+        'partials/features/classifiers/edit.html',
+          'ModelWithParamsEditDialogCtrl',
         'modal', 'edit classifier', 'classifiers')
 
     $scope._showModelActionDialog = (model, action, fn)->

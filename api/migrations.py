@@ -124,8 +124,8 @@ class ModelMigration(DbMigration):  # pragma: no cover
             if not model['features']:
                 continue
 
-            features_set = app.db.FeatureSet.from_model_features_dict(model)
-            classifier = app.db.Classifier.from_model_features_dict(model)
+            features_set = app.db.FeatureSet.from_model_features_dict(model.name, model.features)
+            classifier = app.db.Classifier.from_model_features_dict(model.name, model.features)
             model.features_set_id = str(features_set._id)
             model.features_set = features_set
             model.classifier = classifier
