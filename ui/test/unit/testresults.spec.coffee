@@ -70,6 +70,7 @@ describe "testresults", ->
       createController "DeleteTestCtrl"
 
   describe "TestDetailsCtrl", ->
+
     beforeEach ->
       $routeParams.model_id = 'somemodelid'
       $routeParams.id = 'sometestid'
