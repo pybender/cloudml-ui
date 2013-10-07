@@ -164,6 +164,7 @@ def deploy():
     supervisor.restart_program.run(program='gunicorn')
     supervisor.restart_program.run(program='celeryd')
     supervisor.restart_program.run(program='celerycam')
+    #local('jgit push s3 master:master')
 
 
 @task
