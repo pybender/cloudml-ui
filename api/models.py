@@ -434,11 +434,10 @@ class FeatureSet(BaseDocument):
     def to_dict(self):
         data = {'schema-name': self.schema_name,
                 'features': [],
-                # 'classifier': self.classifier.to_dict(),
                 "feature-types": []}
 
         named_types = []  # named types to include to the file
-        features = app.db.Feature.find({'feature_set_id': str(self._id)})
+        features = app.db.Feature.find({'features_set_id': str(self._id)})
         for feature in features:
             data['features'].append(feature.to_dict())
             if feature.type not in NamedFeatureType.TYPES_LIST:

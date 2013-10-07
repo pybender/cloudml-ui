@@ -684,7 +684,8 @@ class ScalerForm(BasePredefinedForm):
 
     group_chooser = 'predefined_selected'
     required_fields_groups = {'true': ('scaler', 'type' ),
-                              'false': ('type', )}
+                              'false': ('type', ),
+                              None: ('type', )}
 
     name = CharField()
     type_field = ChoiceField(choices=app.db.Scaler.TYPES_LIST, name='type')
@@ -713,7 +714,8 @@ class TransformerForm(BasePredefinedForm):
 
     group_chooser = 'predefined_selected'
     required_fields_groups = {'true': ('transformer', 'type', ),
-                              'false': ('type', )}
+                              'false': ('type', ),
+                              None: ('type', )}
 
     name = CharField()
     type_field = ChoiceField(choices=app.db.Transformer.TYPES_LIST, name='type')

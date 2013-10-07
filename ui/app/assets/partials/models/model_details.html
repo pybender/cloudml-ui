@@ -43,7 +43,10 @@
       </button>
       <a ng-show="model.status == 'Trained'" href="{{ model.downloadUrl() }}?field=trainer" class="btn btn-info">
           <i title="Download model trainer." class="icon-download-alt"></i> Download Trainer
-        </a>
+      </a>
+      <a style="font-weight: normal;" href="{{ model.downloadUrl() }}?field=features" class="btn btn-info">
+        <i title="Download features JSON file" class="icon-download-alt"></i> Download Features
+      </a>
       <button ng-click="delete_model(model)" class="btn btn-danger">
         <i title="Delete your model. Be careful - you could not recover it!" class="icon-remove"></i> Delete model
       </button>

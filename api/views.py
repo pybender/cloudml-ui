@@ -201,7 +201,9 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
         if field == 'trainer':
             content = model.get_trainer(loaded=False)
         else:
-            content = json.dumps(getattr(model, field))
+            data = model.features_set.to_dict()
+            data['classifier'] = model.classifier.to_dict()
+            content = json.dumps(data)
 
         filename = "%s-%s.%s" % (model.name, field,
                                  'dat' if field == 'trainer' else 'json')
