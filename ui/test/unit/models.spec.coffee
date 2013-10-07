@@ -98,13 +98,11 @@ describe "models", ->
       # TODO: more expectations
 
     it "should make details request", inject () ->
-      url = BASE_URL + MODEL_ID + '/' + '?show=' + encodeURIComponent('created_on,target_variable,
-error,labels,weights_synchronized,example_id,example_label,
-updated_on,feature_count,test_import_handler.name,
-train_import_handler.name,train_import_handler.import_params,tags,
-test_import_handler.import_params,train_import_handler._id,
-test_import_handler._id,memory_usage,created_by,trained_by,datasets,data_fields,
-train_records_count,name,_id,status')
+      url = BASE_URL + MODEL_ID + '/' + '?show=' + encodeURIComponent('created_on,target_variable,error,
+labels,weights_synchronized,example_id,example_label,updated_on,feature_count,test_import_handler.name,
+train_import_handler.name,train_import_handler.import_params,tags,test_import_handler.import_params,
+train_import_handler._id,test_import_handler._id,memory_usage,created_by,trained_by,datasets,data_fields,
+train_records_count,test_handler_fields,name,_id,status')
       $httpBackend.expectGET(url).respond('{"model": [{"_id": "' + MODEL_ID + '"}]}')
 
       $rootScope.goSection(['model'])
@@ -165,38 +163,3 @@ created_on,status,parameters,accuracy,examples_count,created_by')
 
       expect($rootScope.select2Options).toBeDefined()
       expect(_.keys($rootScope.formElements).length).toBeGreaterThan(2)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

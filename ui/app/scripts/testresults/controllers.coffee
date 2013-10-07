@@ -119,7 +119,7 @@ created_by'
 ($scope, $routeParams, Test, $location, $rootScope, $dialog) ->
   $scope.LOADED_SECTIONS = []
   if not $scope.test
-    if not ($routeParams.model_id  and $routeParams.id)
+    if not ($routeParams.model_id and $routeParams.id)
       throw new Error "Can't initialize test details controller
 without test id and model id"
 

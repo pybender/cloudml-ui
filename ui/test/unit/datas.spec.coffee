@@ -63,25 +63,24 @@ describe "test examples", ->
       createController "TestExamplesCtrl"
 
     # TODO: Test with filter params
-    it "should make initialization requests", inject () ->
-      url = BASE_URL + 'action/datafields/?'
-      $httpBackend.expectGET(url).respond('{"fields": ["one", "two"]}')
+    it "should make initialization requests", inject (TestResult) ->
+      url = settings.apiUrl + 'models/' + MODEL_ID + '/tests/' + TEST_ID + '/?show=' + encodeURIComponent('name,examples_fields')
+      $httpBackend.expectGET(url).respond('{"test": {"name": "Some"}}')
 
       # TODO: Can we get rid of this request?
       url = settings.apiUrl + 'models/' + MODEL_ID + '/?show=' + encodeURIComponent('name,labels')
       $httpBackend.expectGET(url).respond('{"model": {"labels": ["0", "1"]}}')
 
-      test = {
+      test = new TestResult({
         _id: TEST_ID,
         model_id: MODEL_ID
-      }
+      })
 
       createController "TestExamplesCtrl"
       $rootScope.init(test)
       $httpBackend.flush()
 
       expect($rootScope.test).toEqual(test)
-      expect($rootScope.fields).toEqual(['one', 'two'])
       expect($rootScope.labels).toEqual(['0', '1'])
 
     xit "should make list query", inject () ->
@@ -116,11 +115,8 @@ describe "test examples", ->
   describe "GroupedExamplesCtrl", ->
 
     it "should make requests", inject () ->
-      url = settings.apiUrl + 'models/' + MODEL_ID + '/tests/' + TEST_ID + '/?show=name'
-      $httpBackend.expectGET(url).respond('{"test": {"_id": "' + TEST_ID + '"}}')
-
-      url = BASE_URL + 'action/datafields/?'
-      $httpBackend.expectGET(url).respond('{"fields": ["one", "two"]}')
+      url = settings.apiUrl + 'models/' + MODEL_ID + '/tests/' + TEST_ID + '/?show=' + encodeURIComponent('name,examples_fields')
+      $httpBackend.expectGET(url).respond('{"test": {"name": "Some"}}')
 
       $routeParams.model_id = MODEL_ID
       $routeParams.test_id = TEST_ID
@@ -132,7 +128,6 @@ describe "test examples", ->
 
       expect($rootScope.loading_state).toBeFalsy()
       expect($rootScope.test._id).toEqual(TEST_ID)
-      expect($rootScope.fields).toEqual(['one', 'two'])
 
       url = BASE_URL + 'action/groupped/?count=2&field=data_input.application_id'
       $httpBackend.expectGET(url).respond('{"datas": []}')
