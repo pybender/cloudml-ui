@@ -1,4 +1,4 @@
-<ul class="nav nav-pills" ng-init="currentTab='custom'">
+<ul  ng-init="model.predefined_selected=false;currentTab='custom'" class="nav nav-pills" ng-init="currentTab='custom'">
   <li ng-class="{active: currentTab == 'custom'}">
     <a ng-click="currentTab='custom';feature.transformer.predefined_selected=false">Custom</a>
   </li>

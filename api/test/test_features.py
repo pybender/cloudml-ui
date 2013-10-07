@@ -29,15 +29,30 @@ class TestFeatureResource(BaseTestCase):
         self.assertTrue(self.obj)
 
     def test_post(self):
-        post_data = {
-            "name":"contractor.dev_recent_hours",
-            "type":"int"
-        }
-        resp, obj = self._check_post(post_data, load_model=True)
-        self.assertEqual(obj.name, post_data['name'])
-        self.assertEqual(obj.type, post_data['type'])
-        self.assertTrue(obj.is_predefined)
-        self.assertEqual(obj.params, {"charset": "utf-8"})
+        def _check(data, errors):
+            """
+            Checks validation errors
+            """
+            resp = self._check_post(data, error='required')
+            self._check_errors(resp, errors)
+
+        _check({}, errors={
+            'name': 'name is required',
+            'type': 'type is required',
+            'features_set_id': 'features_set_id is required'})
+
+        _check({"name":"contractor.dev_recent_hours"}, errors={
+            'type': 'type is required',
+            'features_set_id': 'features_set_id is required'})
+        # data = {
+        #     "name":"contractor.dev_recent_hours",
+        #     "type":"int",
+        #     "features_set_id": self.model.features_set_id
+        # }
+        # resp, feature = self._check_post(data, load_model=True)
+        # self.assertEquals(feature.name, data['name'])
+        # self.assertEquals(feature.type, data['type'])
+        # self.assertEquals(feature.features_set_id, data['features_set_id'])
 
 
 class TestFeatureSetDoc(BaseTestCase):
@@ -124,7 +139,3 @@ class TestFeatureSetDoc(BaseTestCase):
                                  {'required': False})
         feature = _check_feature('employer.op_timezone',
                                  {'type': 'str_to_timezone'})
-
-        print dict(features_set)
-        print dict(features[0])
-        raise

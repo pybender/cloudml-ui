@@ -997,7 +997,7 @@ class FeatureSetResource(BaseResource):
     """
     Features Set API methods
     """
-    MESSAGE404 = "Feature set doesn't exist"
+    MESSAGE404 = "Feature set set doesn't exist"
     OBJECT_NAME = 'set'
     DEFAULT_FIELDS = [u'_id', 'name']
     post_form = FeatureSetAddForm

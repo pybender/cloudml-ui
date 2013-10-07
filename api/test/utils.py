@@ -284,6 +284,19 @@ class BaseTestCase(unittest.TestCase):
         self.assertEqual(bool(obj_list.count()), exist, msg)
         return obj_list
 
+    def _check_errors(self, resp, errors):
+        data = json.loads(resp.data)
+        self.assertEquals(resp.status_code, 400)
+        err_list = data['response']['error']['errors']
+        errors_dict = dict([(item['name'], item['error'])
+                            for item in err_list])
+        for field, err_msg in errors.iteritems():
+            self.assertTrue(field in errors_dict,
+                            "Should be err for field %s: %s" % (field, err_msg))
+            self.assertEquals(err_msg, errors_dict[field])
+        self.assertEquals(len(errors_dict), len(errors),
+                          errors_dict.keys())
+
 
 class CeleryTestCaseBase(BaseTestCase):
 

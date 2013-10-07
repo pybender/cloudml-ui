@@ -192,8 +192,8 @@ class ModelForm(BaseFormEx):
 
     def validate_data(self):
         if self.feature_model:
-            if not (self.cleaned_data['train_import_handler_file'] or \
-                self.cleaned_data['train_import_handler']):
+            if not (self.cleaned_data.get('train_import_handler_file', None) or \
+                self.cleaned_data.get('train_import_handler', None) ):
                 raise ValidationError('train_import_handler_file or \
 train_import_handler should be specified for new model')
             self.trainer_obj = Trainer(self.feature_model)
@@ -628,20 +628,18 @@ class FeatureSetAddForm(BaseForm):
         return classifier
 
 
-class ScalerForm(BaseFormEx):
-    group_chooser = 'predefined_selected'
-    required_fields_groups = {'true': ('scaler', 'type' ),
-                              None: ('type', )}
-
-    name = CharField()
-    type_field = ChoiceField(choices=app.db.Scaler.TYPES_LIST, name='type')
-    params = JsonField()
-    is_predefined = BooleanField()
-    scaler = DocumentField(doc=app.db.Scaler, by_name=True,
-                                filter_params={'is_predefined': True},
-                                return_doc=True)
-    feature_id = DocumentField(doc=app.db.Feature, by_name=False,
-                                return_doc=False)
+class BasePredefinedForm(BaseFormEx):
+    """
+    Base form for creating/edditing features specific items, which could be:
+        * predefined item - that could be used when creating/edditing 
+            feature item to copy fields from them
+        * feature item like feature transformer, scaler, etc 
+            when item fields are specified
+        * feature item copied from predefined item.
+    """
+    # name of the feature field of this item or POST/PUT parameter of the
+    # predefined item to copy fields from, when `predefined_selected`.
+    OBJECT_NAME = None
 
     def clean_feature_id(self, value, field):        
         if value:
@@ -649,29 +647,57 @@ class ScalerForm(BaseFormEx):
             self.cleaned_data['feature'] = feature
         return value
 
-    def clean_scaler(self, value, field):
-        if value:
-            # Copy fields from predefined transformer
-            self.cleaned_data['name'] = value.name
-            self.cleaned_data['type'] = value.type
-            self.cleaned_data['params'] = value.params
-
-        return value
-
     def validate_data(self):
         is_predefined = self.cleaned_data.get('is_predefined', None)
         if is_predefined:
             name = self.cleaned_data.get('name', None)
             if not name:
-                raise ValidationError('name is required for predefined scaler')
+                raise ValidationError('name is required for predefined item')
+
+        predefined_selected = self.cleaned_data.get('predefined_selected', False)
+        if predefined_selected:
+            obj = self.cleaned_data.get(self.OBJECT_NAME, None)
+            if not obj:
+                raise ValidationError('%s is required' % self.OBJECT_NAME)
+
+            self._fill_predefined_values(obj)
+            
+    def _fill_predefined_values(self, obj):
+        """
+        Fills fields from predefined obj
+        """
+        self.cleaned_data['name'] = obj.name
+        self.cleaned_data['type'] = obj.type
+        self.cleaned_data['params'] = obj.params
 
     def save(self, commit=True):
-        scaler = super(ScalerForm, self).save(commit)
+        obj = super(BasePredefinedForm, self).save(commit)
         feature = self.cleaned_data.get('feature', None)
         if feature:
-            feature.scaler = scaler
+            setattr(feature, self.OBJECT_NAME, obj)
             feature.save()
-        return scaler
+        return obj
+
+
+class ScalerForm(BasePredefinedForm):
+    OBJECT_NAME = 'scaler'
+
+    group_chooser = 'predefined_selected'
+    required_fields_groups = {'true': ('scaler', 'type' ),
+                              'false': ('type', )}
+
+    name = CharField()
+    type_field = ChoiceField(choices=app.db.Scaler.TYPES_LIST, name='type')
+    params = JsonField()
+    # whether need to copy feature scaler fields from predefined one
+    predefined_selected = BooleanField()
+    # whether we need to create predefined item (not feature related)
+    is_predefined = BooleanField()
+    scaler = DocumentField(doc=app.db.Scaler, by_name=True,
+                                filter_params={'is_predefined': True},
+                                return_doc=True)
+    feature_id = DocumentField(doc=app.db.Feature, by_name=False,
+                                return_doc=False)
 
 
 class ClassifierForm(BaseFormEx):
@@ -682,51 +708,23 @@ class ClassifierForm(BaseFormEx):
     params = JsonField()
 
 
-class TransformerForm(BaseFormEx):
+class TransformerForm(BasePredefinedForm):
+    OBJECT_NAME = 'transformer'
+
     group_chooser = 'predefined_selected'
     required_fields_groups = {'true': ('transformer', 'type', ),
-                              None: ('type', )}
+                              'false': ('type', )}
 
     name = CharField()
     type_field = ChoiceField(choices=app.db.Transformer.TYPES_LIST, name='type')
     params = JsonField()
     is_predefined = BooleanField()
+    predefined_selected = BooleanField()
     transformer = DocumentField(doc=app.db.Transformer, by_name=True,
                                 filter_params={'is_predefined': True},
                                 return_doc=True)
     feature_id = DocumentField(doc=app.db.Feature, by_name=False,
                                 return_doc=False)
-
-    def clean_feature_id(self, value, field):        
-        if value:
-            feature = field.doc
-            self.cleaned_data['feature'] = feature
-
-        return value
-
-    def clean_transformer(self, value, field):
-        if value:
-            # Copy fields from predefined transformer
-            self.cleaned_data['name'] = value.name
-            self.cleaned_data['type'] = value.type
-            self.cleaned_data['params'] = value.params
-
-        return value
-
-    def validate_data(self):
-        is_predefined = self.cleaned_data.get('is_predefined', None)
-        if is_predefined:
-            name = self.cleaned_data.get('name', None)
-            if not name:
-                raise ValidationError('name is required for predefined transformer')
-
-    def save(self, commit=True):
-        transformer = super(TransformerForm, self).save(commit)
-        feature = self.cleaned_data.get('feature', None)
-        if feature:
-            feature.transformer = transformer
-            feature.save()
-        return transformer
 
 
 class FeatureForm(BaseFormEx):

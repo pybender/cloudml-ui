@@ -88,7 +88,7 @@ class BaseForm(InternalForm):
             setattr(self, key, val)
 
     def set_data(self, data):
-        self.data = data
+        self.data = data or {}
         if data:
             if self.required_fields_groups:
                 self.current_group = self.data.get(self.group_chooser)
@@ -109,23 +109,34 @@ class BaseForm(InternalForm):
         return not bool(self.errors)
 
     def clean(self):
+        def add_error(name, msg):
+            if hasattr(self, 'inner_name'):
+                field_name = '%s-%s' % (self.inner_name, name)
+            else:
+                field_name = name
+            self.errors.append({'name': field_name, 'error': msg})
+
         self.cleaned_data = {}
         self.before_clean()
 
         for name, field in self.fields.iteritems():
             value = self.data.get(self.prefix + name, None)
-
             try:
                 value = field.clean(value)
                 mthd = "clean_%s" % name
                 if hasattr(self, mthd):
                     value = getattr(self, mthd)(value, field)
             except ValidationError, exc:
-                self.errors.append({'name': name, 'error': str(exc)})
+                add_error(name, str(exc))
 
             if value is not None:
                 self.cleaned_data[name] = value
                 self.filled = True
+
+        try:
+            self.validate_data()
+        except ValidationError, exc:
+            self.errors.append({'name': None, 'error': str(exc)})
 
         if not self.no_required:
             # Check required fields
@@ -134,22 +145,16 @@ class BaseForm(InternalForm):
                 if not is_valid:
                     if isinstance(fields, str):
                         field = fields
-                        self.errors.append({
-                            'name': field,
-                            'error': '%s is required' % field})
+                        add_error(field, '%s is required' % field)
                     else:
-                        self.errors.append({
-                            'name': None,
-                            'error': 'Either one of fields %s is required' % ', '.join(fields)})
+                        add_error("fields", 'Either one of fields \
+                            %s is required' % ', '.join(fields))
 
-        try:
-            self.validate_data()
-        except ValidationError, exc:
-            self.errors.append({'name': None, 'error': str(exc)})
 
         for name, form in self.forms.iteritems():
             try:
-                form.no_required = self.no_required
+                form.no_required = True
+                form.inner_name = name
                 form.clean()
                 # TODO: make possible to choose whether form field is required
                 if form.filled:

@@ -33,8 +33,8 @@ angular.module('app.features.controllers', ['app.config', ])
     # if not $routeParams.id then err = "Can't initialize without instance id"
     # $scope.featuresSet = new FeaturesSet({_id: $routeParams.id})
     $scope.init = (model) ->
-      $scope.model = model
-      $scope.$watch('model.featuresSet', (featuresSet, oldVal, scope) ->
+      $scope.modelObj = model
+      $scope.$watch('modelObj.featuresSet', (featuresSet, oldVal, scope) ->
         if featuresSet?
           $scope.featuresSet = featuresSet
           featuresSet.$load(

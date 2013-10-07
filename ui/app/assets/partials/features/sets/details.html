@@ -76,7 +76,7 @@
 				<span title="Default Value" class="title" ng-bind="feature.default || ''" editable="feature" value="feature.default || ''" editable-field="default" editable-input="text" editable-placement="right"></span>
 			</td>
 		    <td>
-		    	<a class="btn btn-info" href="#/models/{{ model._id }}/features/{{ featuresSet._id }}/edit/{{ feature._id }}">
+		    	<a class="btn btn-info" href="#/models/{{ modelObj._id }}/features/{{ featuresSet._id }}/edit/{{ feature._id }}">
 		    		<i class="icon-edit" title="edit" />
 		    	</a>
 			    <button ng-click="deleteModel(model)" class="btn btn-danger"><i title="Delete your model. Be careful - you could not recover it!" class="icon-remove"></i></button>
