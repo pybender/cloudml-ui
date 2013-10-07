@@ -700,7 +700,7 @@ def get_csv_results(model_id, test_id, fields):
                 writer.writerow(rows)
         return filename
 
-    init_logger('get_csv_results_log', obj=test_id)
+    init_logger('runtest_log', obj=test_id)
 
     test = app.db.Test.find_one({
         'model_id': model_id,
