@@ -1132,20 +1132,20 @@ from core.trainer.scalers import MinMaxScaler, StandardScaler
 SCALERS = {
     'MinMaxScaler': {
         'class': MinMaxScaler,
-        'parameters': {
+        'defaults': {
             'feature_range_min': 0,
             'feature_range_max': 1,
-            'copy': True
-                  },
+            'copy': True},
+        'parameters': ['feature_range_min', 'feature_range_max', 'copy']
         },
     'StandardScaler': {
         'class': StandardScaler,
-        'parameters': {
+        'defaults': {
             'copy': True,
             'with_std': True,
-            'with_mean': True
-                  },
-        }
+            'with_mean': True},
+        'parameters': ['copy', 'with_std', 'with_mean']
+    }
 }
 
 @app.conn.register
