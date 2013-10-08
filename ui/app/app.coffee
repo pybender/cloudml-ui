@@ -35,6 +35,14 @@ App = angular.module('app', [
   'app.login.controllers'
   'app.dashboard.model'
   'app.dashboard.controllers'
+  'app.features.models'
+  'app.features.controllers'
+  'app.features.controllers.classifiers'
+  'app.features.controllers.transformers'
+  'app.features.controllers.named_types'
+  'app.features.controllers.base'
+  'app.features.controllers.scalers'
+  'app.features.controllers.features'
 ])
 
 App.config([
@@ -127,6 +135,8 @@ App.config([
       controller: 'AwsInstanceDetailsCtrl'
       templateUrl: '/partials/aws_instances/details.html'
     })
+
+    # auth
     .when('/auth/login', {
       controller: 'LoginCtl'
       templateUrl: '/partials/login/login.html'
@@ -138,6 +148,41 @@ App.config([
     .when('/auth/callback', {
       controller: 'AuthCallbackCtl'
       templateUrl: '/partials/login/auth.html'
+    })
+
+    .when('/models/:model_id/features/:set_id/add', {
+      controller: "FeatureAddCtrl"
+      templateUrl: '/partials/features/items/add.html'
+    })
+    .when('/models/:model_id/features/:set_id/edit/:feature_id', {
+      controller: "FeatureAddCtrl"
+      templateUrl: '/partials/features/items/add.html'
+    })
+    # Feature set list (now used only for debug)
+    # .when('/features/sets', {
+    #   controller: "FeaturesSetListCtrl"
+    #   templateUrl: '/partials/features/sets/list.html'
+    # })
+
+    # Predefined feature objects
+    .when('/predefined', {
+      redirectTo: '/predefined/classifiers'
+    })
+    .when('/predefined/types', {
+      controller: "FeatureTypeListCtrl"
+      templateUrl: '/partials/features/named_types/list.html'
+    })
+    .when('/predefined/classifiers', {
+      controller: "ClassifiersListCtrl"
+      templateUrl: '/partials/features/classifiers/list.html'
+    })
+    .when('/predefined/transformers', {
+      controller: "TransformersListCtrl"
+      templateUrl: '/partials/features/transformers/list.html'
+    })
+    .when('/predefined/scalars', {
+      controller: "ScalersListCtrl"
+      templateUrl: '/partials/features/scalers/list.html'
     })
 
     # Catch all
@@ -185,7 +230,8 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
     log_sse.addEventListener('message', handleCallback)
 
   $rootScope.openDialog = ($dialog, model, template, ctrlName,
-                           cssClass='modal', action='', path='#') ->
+                           cssClass='modal', action='', path=null,
+                           extra={}) ->
     d = $dialog.dialog(
       modalFade: false
       dialogClass: cssClass
@@ -194,6 +240,7 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
     d.action = action
     d.path = path
     d.open(template, ctrlName)
+    d.extra = extra
     return d
 
   DEFAULT_ACTION = "model:details"

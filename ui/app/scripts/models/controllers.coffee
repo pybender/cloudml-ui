@@ -109,7 +109,7 @@ updated_on,updated_by,comparable,test_handler_fields'
             $scope.params['tags'] = []
             for t in $scope.model.tags
               $scope.params['tags'].push {'id': t, 'text': t}
-        ), (->
+        ), ((opts) ->
           $scope.setError(opts, 'loading model details')
         )
 
@@ -133,6 +133,8 @@ updated_on,updated_by,comparable,test_handler_fields'
       if name not in $scope.LOADED_SECTIONS
         extra_fields = ''
         switch name
+          when 'features_set' then extra_fields = 'features_set_id'
+          when 'classifier' then extra_fields = 'classifier'
           when 'model'
             extra_fields = 'created_on,target_variable,
 error,labels,weights_synchronized,example_id,example_label,
@@ -290,6 +292,12 @@ train_records_count,test_handler_fields'
       $scope.openDialog($dialog, model,
         'partials/base/delete_dialog.html', 'DialogCtrl',
         'modal', 'delete model', 'models')
+
+    $scope.editClassifier = (model) ->
+      $scope.openDialog($dialog, model.classifier,
+        'partials/features/classifiers/edit.html',
+          'ModelWithParamsEditDialogCtrl',
+        'modal', 'edit classifier', 'classifiers')
 
     $scope._showModelActionDialog = (model, action, fn)->
       if eval('model.' + action + '_import_handler_obj')?

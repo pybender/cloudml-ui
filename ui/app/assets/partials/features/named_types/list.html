@@ -1,0 +1,42 @@
+<h2>
+  Named Feature Types List
+  <div class="actions">
+      <a class="btn btn-info" ng-click="add()">
+        <i class="status-icon icon-plus"></i> Add new Named Type
+      </a>
+  </div>
+</h2>
+
+<div ng-controller="BaseListCtrl" ng-init="init(true, LIST_MODEL_NAME)">
+	<alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+
+	<alert-message ng-show="objects.length == 0" class="alert-info" msg="No Named Feature Types found"></alert-message>
+
+	<table ng-hide="objects.length == 0" class="table table-hover">
+	<thead>
+	  <tr>
+	    <th>Name</th>
+	    <th>Type</th>
+	    <th>Input Format</th>
+	    <th>Params</th>
+	    <th>Created</th>
+	  </tr>
+	</thead>
+	<tbody>
+	  <tr ng-repeat="namedType in objects | orderBy:'name'">
+	    <td>
+	      <a ng-click="edit(namedType)">{{ namedType.name }}</a>
+	    </td>
+	    <td>{{ namedType.type }}</td>
+	    <td>{{ namedType.input_format }}</td>
+	    <td ng-init="params = namedType.paramsDict">
+	    	<ng-include src="'/partials/parts/params_list.html'"></ng-include>
+	    </td>
+	    <td>
+	        {{ namedType.created_on|format_date }}<br>
+	        <small ng-show="namedType.created_by">by {{ namedType.created_by.name }} ({{ namedType.created_by.uid }})</small>
+	    </td>
+	  </tr>
+	</tbody>
+	</table>
+</div>

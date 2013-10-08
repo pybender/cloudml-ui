@@ -1,0 +1,40 @@
+<h2>
+  Predefined Scalers List
+  <div class="actions">
+      <a class="btn btn-info" ng-click="add()">
+        <i class="status-icon icon-plus"></i> Add new scaler
+      </a>
+  </div>
+</h2>
+
+<div ng-controller="BaseListCtrl" ng-init="init(true, LIST_MODEL_NAME)">
+	<alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+
+	<alert-message ng-show="objects.length == 0" class="alert-info" msg="No scalers found"></alert-message>
+
+	<table ng-hide="objects.length == 0" class="table table-hover">
+	<thead>
+	  <tr>
+	    <th>Name</th>
+	    <th>Type</th>
+	    <th>Params</th>
+	    <th>Created</th>
+	  </tr>
+	</thead>
+	<tbody>
+	  <tr ng-repeat="scaler in objects | orderBy:'name'">
+	    <td>
+	      <a ng-click="edit(scaler)">{{ scaler.name }}</a>
+	    </td>
+	    <td>{{ scaler.type }}</td>
+	    <td ng-init="params = scaler.params">
+	    	<ng-include src="'/partials/parts/params_list.html'"></ng-include>
+	    </td>
+	    <td>
+	        {{ scaler.created_on|format_date }}<br>
+	        <small ng-show="scaler.created_by">by {{ scaler.created_by.name }} ({{ scaler.created_by.uid }})</small>
+	    </td>
+	  </tr>
+	</tbody>
+	</table>
+</div>

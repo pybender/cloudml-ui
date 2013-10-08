@@ -194,7 +194,39 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
   }
 ])
 
+.directive("paramsEditor", [ ->
+  return {
+    scope: {params: '='}
+    restrict: 'E',
+    replace: true,
+    transclude : true,
+    templateUrl:'partials/directives/params_editor.html'
+    compile: () ->
+      return () -> undefined
+  }
+])
 
+.directive("paramsRecursive", [
+  '$compile'
+
+($compile) ->
+  return {
+    restrict: "EACM"
+    priority: 100000
+    compile: (tElement, tAttr) ->
+      contents = tElement.contents().remove()
+      compiledContents = undefined
+      return (scope, iElement, iAttr) ->
+        console.log scope.key, scope.val, typeof(scope.val)
+        #if value instanceof Array
+        if typeof(scope.val) != 'object'
+          return
+        if not compiledContents
+          compiledContents = $compile(contents)
+        iElement.append(
+          compiledContents(scope, (clone) -> return clone))
+  }
+])
 
 .directive('loadindicator',
 

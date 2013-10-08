@@ -1,0 +1,18 @@
+<div ng-controller="SaveObjectCtl">
+  <div class="modal-header">
+    <button ng-click="dialog.close()" class="close" data-dismiss="modal">×</button>
+    <h3>Edit named feature type</h3>
+  </div>
+
+  <div class="modal-body">
+    <loadindicator title="Editing named feature type..." ng-show="saving" progress="savingProgress"></loadindicator>
+
+    <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+
+    <ng-include src="'/partials/features/named_types/form.html'"></ng-include>
+  </div>
+
+  <div class="modal-footer">
+    <button ng-click="save(['name', 'type', 'input_format', 'params'])" ng-disabled="Form.$invalid" class="btn btn-primary">Save</button>
+  </div>
+</div>

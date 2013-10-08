@@ -68,6 +68,9 @@ angular.module('app.controllers', ['app.config', ])
   '$location'
 
   ($scope, $location) ->
+    $scope.init = (model) ->
+      $scope.model = model
+
     $scope.save = (fields) ->
       $scope.saving = true
       $scope.savingProgress = '0%'
@@ -80,7 +83,13 @@ angular.module('app.controllers', ['app.config', ])
         $scope.savingProgress = '100%'
 
         _.delay (->
-          $location.path $scope.model.objectUrl()
+          $scope.$emit 'SaveObjectCtl:save:success', $scope.model
+
+          if $scope.LIST_MODEL_NAME?
+            $scope.$emit 'BaseListCtrl:start:load', $scope.LIST_MODEL_NAME
+
+          if $scope.model.BASE_UI_URL && !$scope.DONT_REDIRECT
+            $location.path $scope.model.objectUrl()
           $scope.$apply()
         ), 300
 
@@ -163,7 +172,8 @@ angular.module('app.controllers', ['app.config', ])
         $scope.close()
         $scope.$emit('modelDeleted', [$scope.model])
         $scope.$broadcast('modelDeleted', [$scope.model])
-        $location.path $scope.path
+        if $scope.path?
+          $location.path $scope.path
       ), ((opts) ->
         $scope.setError(opts, $scope.action + ' ' + $scope.model.name)
       )
@@ -197,14 +207,15 @@ angular.module('app.controllers', ['app.config', ])
 
       if $scope.autoload
         $scope.load()
-      else
-        $rootScope.$on('BaseListCtrl:start:load', (event, name) ->
-          if name == $scope.modelName
-            $scope.load()
-        )
 
-      $scope.$watch('filter_opts ', (filter_opts, oldVal, scope) ->
-        $scope.load()
+      $rootScope.$on('BaseListCtrl:start:load', (event, name) ->
+        if name == $scope.modelName
+          $scope.load()
+      )
+
+      $scope.$watch('filter_opts', (filter_opts, oldVal, scope) ->
+        if filter_opts?
+          $scope.load()
       , true)
 
     $scope.load = (append=false) ->

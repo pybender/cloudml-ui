@@ -106,6 +106,31 @@ class ModelMigration(DbMigration):  # pragma: no cover
         self.target = {'current_task_id': {'$exists': False}}
         self.update = {'$set': {'current_task_id': ''}}
 
+    def allmigration11__add_features_set(self):
+        self.target = {'features_set': {'$exists': False}}
+        self.update = {'$set': {'features_set': None}}
+
+    def allmigration11__add_features_set_id(self):
+        self.target = {'features_set_id': {'$exists': False}}
+        self.update = {'$set': {'features_set_id': None}}
+
+    def allmigration12_add_classifier(self):
+        self.target = {'classifier': {'$exists': False}}
+        self.update = {'$set': {'classifier': None}}
+
+    def allmigration13__fill_features(self):
+         model_list = app.db.Model.find()
+         for model in model_list:
+            if not model['features']:
+                continue
+
+            features_set = app.db.FeatureSet.from_model_features_dict(model.name, model.features)
+            classifier = app.db.Classifier.from_model_features_dict(model.name, model.features)
+            model.features_set_id = str(features_set._id)
+            model.features_set = features_set
+            model.classifier = classifier
+            model.save()
+
 
 class TestMigration(DbMigration):  # pragma: no cover
     DOC_CLASS = models.Test

@@ -1,0 +1,28 @@
+<form name="Form" class="form-horizontal">
+  <div class="control-group" ng-class="{error: Form.name.$invalid}">
+    <label class="control-label">Name</label>
+    <div class="controls">
+      <input type="text" name="name" ng-model="model.name" required />
+      <span ng-show="Form.name.$error.required" class="help-inline">*</span>
+    </div>
+  </div>
+  <div class="control-group" ng-class="{error: Form.type.$invalid}">
+    <label class="control-label">Type</label>
+    <div class="controls">
+      <select ng-change="loadParameters(true)" name="type" ng-model="model.type" required>
+        <option ng-selected="typeName == model.type" ng-repeat="(typeName, conf) in configuration" value="{{ typeName }}">{{ typeName }}</option>
+      </select>
+      <span ng-show="Form.type.$error.required" class="help-inline">*</span>
+    </div>
+  </div>
+  <div ng-show="model.config.parameters">
+    <h4>Classifier Parameters</h4>
+    <div ng-repeat="name in model.config.parameters" class="control-group">
+      <label class="control-label">{{ name }}</label>
+      <div class="controls">
+        <input ng-model="model.params[name]" name="{{ name }}" type='text' />
+      </div>
+    </div>
+  </div>
+</form>
+</div>

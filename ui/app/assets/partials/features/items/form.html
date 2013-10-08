@@ -1,0 +1,49 @@
+<div class="span6">
+  <div class="control-group" ng-class="{error: FeatureForm.name.$invalid}">
+    <label class="control-label">Name</label>
+    <div class="controls">
+      <input type="text" name="name" ng-model="feature.name" required />
+      <span ng-show="FeatureForm.name.$error.required" class="help-inline">*</span>
+    </div>
+  </div>
+  <div class="control-group" ng-class="{error: FeatureForm.type.$invalid}">
+    <label class="control-label">Type</label>
+    <div class="controls" ng-controller="NamedFeatureTypesSelectsLoader">
+      <select name="type" ng-model="feature.type" required>
+        <option ng-selected="feature.type==typeName" ng-repeat="typeName in types" value="{{ typeName }}">{{ typeName }}</option>
+      </select>
+      <span ng-show="FeatureForm.type.$error.required" class="help-inline">*</span>
+    </div>
+  </div>
+  <div class="control-group" ng-class="{error: FeatureForm.input_format.$invalid}">
+    <label class="control-label">Input Format</label>
+    <div class="controls">
+      <input type="text" name="input_format" ng-model="feature.input_format" />
+    </div>
+  </div>
+  <div class="control-group" ng-class="{error: FeatureForm.default.$invalid}">
+    <label class="control-label">Default</label>
+    <div class="controls">
+      <input type="text" name="default" ng-model="feature.default" />
+      <span ng-show="FeatureForm.default.$error.required" class="help-inline">*</span>
+    </div>
+  </div>
+  <div class="control-group" ng-class="{error: FeatureForm.required.$invalid}">
+    <label class="control-label">Required</label>
+    <div class="controls">
+      <input type="checkbox" name="required" ng-checked="feature.required" ng-model="feature.required" />
+    </div>
+  </div>
+  <div class="control-group" ng-class="{error: FeatureForm.is_target_variable.$invalid}">
+    <label class="control-label">Is Target Variable</label>
+    <div class="controls">
+      <input type="checkbox" name="is_target_variable" ng-checked="feature.is_target_variable" ng-model="feature.is_target_variable" />
+    </div>
+  </div>
+</div>
+<div class="span5">
+  <div class="control-group" ng-class="{error: FeatureForm.params.$invalid}">
+    <h4>Parameters</h4>
+    <textarea type="text" name="params" class="params" ng-model="feature.params" />
+  </div>
+</div>

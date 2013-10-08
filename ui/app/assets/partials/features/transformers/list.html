@@ -1,0 +1,51 @@
+<h2>
+  Predefined Transformers List
+  <div class="actions">
+      <a class="btn btn-info" ng-click="add()">
+        <i class="status-icon icon-plus"></i> Add new transformer
+      </a>
+  </div>
+</h2>
+
+<div ng-controller="BaseListCtrl" ng-init="init(true, LIST_MODEL_NAME)">
+	<alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+
+	<alert-message ng-show="objects.length == 0" class="alert-info" msg="No transformers found"></alert-message>
+
+	<table ng-hide="objects.length == 0" class="table table-hover">
+	<colgroup>
+		<col />
+		<col style="width: 15%;" />
+	    <col style="width: 40%; text-overflow: ellipsis;" />
+	    <col style="width: 15%;" />
+	    <col style="width: 60px;"/>
+	</colgroup>
+	<thead>
+	  <tr>
+	    <th>Name</th>
+	    <th>Type</th>
+	    <th>Params</th>
+	    <th>Created</th>
+	    <th>Actions</th>
+	  </tr>
+	</thead>
+	<tbody>
+	  <tr ng-repeat="transformer in objects | orderBy:'name'">
+	    <td>
+	      <a ng-click="edit(transformer)">{{ transformer.name }}</a>
+	    </td>
+	    <td>{{ transformer.type }}</td>
+	    <td ng-init="params = transformer.params">
+	    	<ng-include src="'/partials/parts/params_list.html'"></ng-include>
+	    </td>
+	    <td>
+	        {{ transformer.created_on|format_date }}<br>
+	        <small ng-show="transformer.created_by">by {{ transformer.created_by.name }} ({{ transformer.created_by.uid }})</small>
+	    </td>
+	    <td>
+	    	<button ng-click="delete(transformer)" class="btn btn-danger"><i title="Delete predefined transformer. Be careful - you could not recover it!" class="icon-remove"></i></button>
+	    </td>
+	  </tr>
+	</tbody>
+	</table>
+</div>

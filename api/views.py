@@ -16,8 +16,7 @@ from api.decorators import public, public_actions
 from api.utils import ERR_INVALID_DATA, odesk_error_response, \
     ERR_NO_SUCH_MODEL, ERR_UNPICKLING_MODEL, slugify
 from api.resources import BaseResource, NotFound, ValidationError
-from api.forms import ModelAddForm, ModelEditForm, ImportHandlerAddForm, \
-    AddTestForm, InstanceAddForm, InstanceEditForm, ImportHandlerEditForm, DataSetEditForm
+from api.forms import *
 from core.importhandler.importhandler import ExtractionPlan, \
     RequestImportHandler
 
@@ -82,7 +81,7 @@ class Models(BaseResource):
 
     MESSAGE404 = "Model with name %(_id)s doesn't exist"
 
-    post_form = ModelAddForm
+    post_form = ModelForm
     put_form = ModelEditForm
 
     DOWNLOAD_FIELDS = ('trainer', 'features')
@@ -202,7 +201,9 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
         if field == 'trainer':
             content = model.get_trainer(loaded=False)
         else:
-            content = json.dumps(getattr(model, field))
+            data = model.features_set.to_dict()
+            data['classifier'] = model.classifier.to_dict()
+            content = json.dumps(data)
 
         filename = "%s-%s.%s" % (model.name, field,
                                  'dat' if field == 'trainer' else 'json')
@@ -991,6 +992,155 @@ class StatisticsResource(BaseResource):
         }})
 
 api.add_resource(StatisticsResource, '/cloudml/statistics/')
+
+
+# Features specific resources
+class FeatureSetResource(BaseResource):
+    """
+    Features Set API methods
+    """
+    MESSAGE404 = "Feature set set doesn't exist"
+    OBJECT_NAME = 'set'
+    DEFAULT_FIELDS = [u'_id', 'name']
+    post_form = FeatureSetAddForm
+    #put_form = FeatureSetEditForm
+    GET_ACTIONS = ('download', )
+
+    @property
+    def Model(self):
+        return app.db.FeatureSet
+
+    @public_actions(['download'])
+    def get(self, *args, **kwargs):
+        return super(FeatureSetResource, self).get(*args, **kwargs)
+
+    def _get_download_action(self, **kwargs):
+        model = self._get_details_query(None, None, **kwargs)
+        if model is None:
+            raise NotFound(self.MESSAGE404 % kwargs)
+
+        data = json.dumps(model.to_dict())
+        resp = Response(data)
+        resp.headers['Content-Type'] = 'text/plain'
+        resp.headers['Content-Disposition'] = 'attachment; filename=%s.json' % model.name
+        return resp
+
+api.add_resource(FeatureSetResource, '/cloudml/features/sets/')
+
+
+class ClassifierResource(BaseResource):
+    """
+    Classifier API methods
+    """
+    MESSAGE404 = "Classifier type doesn't exist"
+    OBJECT_NAME = 'classifier'
+    DEFAULT_FIELDS = [u'_id', 'name']
+    post_form = put_form = ClassifierForm
+    GET_ACTIONS = ('configuration', )
+
+    @property
+    def Model(self):
+        return app.db.Classifier
+
+    def _get_configuration_action(self, **kwargs):
+        from core.trainer.classifier_settings import CLASSIFIERS
+        return self._render({'configuration': CLASSIFIERS})
+
+api.add_resource(ClassifierResource, '/cloudml/features/classifiers/')
+
+
+class NamedFeatureTypeResource(BaseResource):
+    """
+    Tags API methods
+    """
+    MESSAGE404 = "Named feature type doesn't exist"
+    OBJECT_NAME = 'named_type'
+    DEFAULT_FIELDS = [u'_id', 'name']
+    put_form = post_form = NamedFeatureTypeAddForm
+
+    @property
+    def Model(self):
+        return app.db.NamedFeatureType
+
+api.add_resource(NamedFeatureTypeResource, '/cloudml/features/named_types/')
+
+
+class TransformerResource(BaseResource):
+    """
+    Transformer API methods
+    """
+    MESSAGE404 = "transformer doesn't exist"
+    OBJECT_NAME = 'transformer'
+    DEFAULT_FIELDS = [u'_id', 'name']
+    post_form = TransformerForm
+    put_form = TransformerForm
+    GET_ACTIONS = ('configuration', )
+    FILTER_PARAMS = (('is_predefined', int), )
+    ALL_FIELDS_IN_POST = True
+
+    @property
+    def Model(self):
+        return app.db.Transformer
+
+    def _prepare_filter_params(self, params):
+        pdict = super(TransformerResource, self)._prepare_filter_params(params)
+        if 'is_predefined' in pdict:
+            pdict['is_predefined'] = bool(pdict['is_predefined'])
+        return pdict
+
+    def _get_configuration_action(self, **kwargs):
+        from api.models import TRANSFORMERS
+        return self._render({'configuration': TRANSFORMERS})
+
+
+api.add_resource(TransformerResource, '/cloudml/features/transformers/')
+
+
+class ScalersResource(BaseResource):
+    """
+    Scalers API methods
+    """
+    MESSAGE404 = "Scaler doesn't exist"
+    OBJECT_NAME = 'scaler'
+    DEFAULT_FIELDS = [u'_id', 'name']
+    put_form = post_form = ScalerForm
+    GET_ACTIONS = ('configuration', )
+    FILTER_PARAMS = (('is_predefined', int), )
+    ALL_FIELDS_IN_POST = True
+
+    @property
+    def Model(self):
+        return app.db.Scaler
+
+    def _prepare_filter_params(self, params):
+        pdict = super(ScalersResource, self)._prepare_filter_params(params)
+        if 'is_predefined' in pdict:
+            pdict['is_predefined'] = bool(pdict['is_predefined'])
+        return pdict
+
+    def _get_configuration_action(self, **kwargs):
+        from api.models import SCALERS
+        return self._render({'configuration': SCALERS})
+
+
+api.add_resource(ScalersResource, '/cloudml/features/scalers/')
+
+
+class FeatureResource(BaseResource):
+    """
+    Feature API methods
+    """
+    MESSAGE404 = "Feature doesn't exist"
+    OBJECT_NAME = 'feature'
+    DEFAULT_FIELDS = [u'_id', 'name']
+    post_form = FeatureForm
+    put_form = FeatureForm
+
+    @property
+    def Model(self):
+        return app.db.Feature
+
+api.add_resource(FeatureResource, '/cloudml/features/<regex("[\w\.]*"):features_set_id>/items/')
 
 
 def populate_parser(model, is_requred=False):

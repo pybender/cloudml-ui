@@ -1,0 +1,26 @@
+<div class="control-group" ng-class="{error: ScalerForm.name.$invalid}">
+  <label class="control-label">Name</label>
+  <div class="controls">
+    <input type="text" name="name" ng-model="model.name" ng-required="currentTab == null || currentTab=='custom'" />
+    <span ng-show="ScalerForm.name.$error.required" class="help-inline">*</span>
+  </div>
+</div>
+<div class="control-group" ng-class="{error: ScalerForm.type.$invalid}">
+  <label class="control-label">Type</label>
+  <div class="controls" ng-controller="ScalersTypesLoader">
+    <select ng-change="loadParameters(true)" name="type" ng-model="model.type" ng-required="currentTab == null || currentTab=='custom'">
+      <option ng-selected="typeName == model.type" ng-repeat="typeName in types" value="{{ typeName }}">{{ typeName }}</option>
+    </select>
+    <span ng-show="ScalerForm.type.$error.required" class="help-inline">*</span>
+  </div>
+</div>
+<div ng-show="model.config.parameters">
+    <h4>Scalar Parameters</h4>
+    <div ng-repeat="name in model.config.parameters" class="control-group">
+      <label class="control-label">{{ name }}</label>
+      <div class="controls">
+        <input ng-model="model.params[name]" name="{{ name }}" type='text' />
+      </div>
+    </div>
+  </div>
+</div>

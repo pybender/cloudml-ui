@@ -209,6 +209,7 @@ class BaseTestCase(unittest.TestCase):
             self.assertTrue(error in err_data['message'],
                             "Response message is: %s" % err_data['message'])
         else:
+            print resp.data
             self.assertEquals(resp.status_code, httplib.CREATED)
             self.assertTrue(self.RESOURCE.OBJECT_NAME in resp.data)
             new_count = self.Model.find().count()
@@ -259,7 +260,7 @@ class BaseTestCase(unittest.TestCase):
         resp = self.app.get(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.OK)
         data = json.loads(resp.data)
-        count = self.db.Model.find(query_params).count()
+        count = self.Model.find(query_params).count()
         self.assertEquals(count, len(data[key]))
 
     def _check_delete(self):
@@ -282,6 +283,19 @@ class BaseTestCase(unittest.TestCase):
         obj_list = Model.find(self.RELATED_PARAMS)
         self.assertEqual(bool(obj_list.count()), exist, msg)
         return obj_list
+
+    def _check_errors(self, resp, errors):
+        data = json.loads(resp.data)
+        self.assertEquals(resp.status_code, 400)
+        err_list = data['response']['error']['errors']
+        errors_dict = dict([(item['name'], item['error'])
+                            for item in err_list])
+        for field, err_msg in errors.iteritems():
+            self.assertTrue(field in errors_dict,
+                            "Should be err for field %s: %s" % (field, err_msg))
+            self.assertEquals(err_msg, errors_dict[field])
+        self.assertEquals(len(errors_dict), len(errors),
+                          errors_dict.keys())
 
 
 class CeleryTestCaseBase(BaseTestCase):
