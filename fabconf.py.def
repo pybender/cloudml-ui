@@ -72,24 +72,33 @@ class DevConf(BaseConf):
 class StagingConf(BaseConf):
     """Settings specific to production environment."""
 
-    address = 'cloudml@172.27.67.106'
+    address = 'cloudml@172.27.77.182'
 
-    sudo_user = 'nmelnik'
     home_path = '/webapps/cloudml'
 
+    sudo_user = 'moorcock'
+
     # Code from this branch will be deployed.
-    branch = 'staging'
+    repo_branch = 'staging'
+    queue = 'Main,default'
 
-    server_name = 'cloudml.staging.match.odesk.com'
-    # For Apache ServerAdmin directive
-    server_admin = 'nmelnik@odesk.com'
-    # Apache will serve WSGI on this port. (Nginx is front-end.)
-    gunicorn_port = 8020
+    server_name = '172.27.77.182'
+    # For Nginx ServerAdmin directive
+    server_admin = 'moorcock@odesk.com'
+    # Gunicorn will serve WSGI on this port. (Nginx is front-end.)
+    gunicorn_port = 5000
 
-    # Once on production, this file will replace %(local_settings_file)s
-    # It should be a Jinja2 template, and can make use of fabdeploy config
-    # variables.
     remote_settings_lfile = 'staging_config.py.tpl'
+    remote_anjsettings_lfile = 'ui/app/scripts/staging_config.coffee.tpl'
+
+    amazon_access_token = 'AKIAJYNNIPFWF2ABW42Q'
+    amazon_token_secret = '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'
+    amazon_bucket_name = 'odesk-match-cloudml'
+
+    odesk_api_key = '6b1d852a66a6468efaa329510cab0748'
+    odesk_secret_key = '7a92ec3683f3cf4b'
+
+    local_settings_file = 'local_config.py'
 
 
 
