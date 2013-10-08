@@ -528,6 +528,9 @@ class Test(BaseDocument):
     EXPORT_STATUS_IN_PROGRESS = 'In Progress'
     EXPORT_STATUS_COMPLETED = 'Completed'
 
+    MATRIX_STATUS_IN_PROGRESS = 'In Progress'
+    MATRIX_STATUS_COMPLETED = 'Completed'
+
     EXAMPLES_TO_AMAZON_S3 = 'Amazon S3'
     EXAMPLES_DONT_SAVE = 'Do not save'
     EXAMPLES_MONGODB = 'Mongo DB'
@@ -563,6 +566,7 @@ class Test(BaseDocument):
         'memory_usage': dict,
         'exports': list,
         'current_task_id': basestring,
+        'confusion_matrix_calculations': list,
     }
     required_fields = ['name', 'created_on', 'updated_on',
                        'status']
@@ -573,6 +577,7 @@ class Test(BaseDocument):
         'memory_usage': {},
         'exports': [],
         'created_by': {},
+        'confusion_matrix_calculations': [],
     }
     use_dot_notation = True
     use_autorefs = True
