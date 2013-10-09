@@ -27,10 +27,10 @@ class BaseTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        app.config['DATABASE_NAME'] = 'cloudml-testdb'
-        app.config['DATA_FOLDER'] = 'test_data'
-        app.conn.drop_database(app.config['DATABASE_NAME'])
-        app.init_db()
+        # app.config['DATABASE_NAME'] = 'cloudml-testdb'
+        # app.config['DATA_FOLDER'] = 'test_data'
+        # app.conn.drop_database(app.config['DATABASE_NAME'])
+        # app.init_db()
         cls.app = app.test_client()
 
     @classmethod

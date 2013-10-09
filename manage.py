@@ -105,9 +105,23 @@ def _make_context():
 class Test(Command):
     """Run app tests."""
 
-    def run(self):
+    def get_options(self):
+        return (
+            Option('-t', '--tests',
+                   dest='tests',
+                   default=None,
+                   help="specifies tests"),
+        )
+
+    def run(self, **kwargs):
         import nose
-        nose.run(argv=[''])
+        os.environ['CLOUDML_CONFIG'] = "./api/test_config.py"
+        argv = ['']
+        tests = kwargs.get('tests', None)
+        if tests:
+            argv.append('--tests')
+            argv.append(tests)
+        nose.run(argv=argv)
 
 
 class Coverage(Command):

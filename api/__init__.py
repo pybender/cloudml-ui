@@ -50,6 +50,7 @@ class App(Flask):
     def __init__(self, *args, **kwargs):
         super(App, self).__init__(*args, **kwargs)
         self.config.from_object('api.config')
+        self.config.from_envvar('CLOUDML_CONFIG',silent=True)
         self.conn = Connection(host=self.config.get('DATABASE_HOST', 'localhost'))
         self.url_map.converters['regex'] = RegExConverter
 

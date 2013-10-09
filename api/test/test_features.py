@@ -44,15 +44,16 @@ class TestFeatureResource(BaseTestCase):
         _check({"name":"contractor.dev_recent_hours"}, errors={
             'type': 'type is required',
             'features_set_id': 'features_set_id is required'})
-        # data = {
-        #     "name":"contractor.dev_recent_hours",
-        #     "type":"int",
-        #     "features_set_id": self.model.features_set_id
-        # }
-        # resp, feature = self._check_post(data, load_model=True)
-        # self.assertEquals(feature.name, data['name'])
-        # self.assertEquals(feature.type, data['type'])
-        # self.assertEquals(feature.features_set_id, data['features_set_id'])
+
+        data = {
+            "name":"contractor.dev_recent_hours",
+            "type":"int",
+            "features_set_id": self.model.features_set_id
+        }
+        resp, feature = self._check_post(data, load_model=True)
+        self.assertEquals(feature.name, data['name'])
+        self.assertEquals(feature.type, data['type'])
+        self.assertEquals(feature.features_set_id, data['features_set_id'])
 
 
 class TestFeatureSetDoc(BaseTestCase):
