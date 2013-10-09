@@ -22,7 +22,7 @@ describe "datasets", ->
   $rootScope = null
   settings = null
   $routeParams = null
-  $location = null
+  $window = null
   $dialog = null
   createController = null
 
@@ -37,11 +37,10 @@ describe "datasets", ->
     $rootScope = $injector.get('$rootScope')
     $controller = $injector.get('$controller')
     $routeParams = $injector.get('$routeParams')
-    $location = $injector.get('$location')
+    $window = $injector.get('$window')
     $dialog = $injector.get('$dialog')
 
-    spyOn($location, 'path')
-    spyOn($location, 'search')
+    spyOn($window.location, 'replace')
 
     BASE_URL = settings.apiUrl + 'importhandlers/' + HANDLER_ID + '/datasets/'
 
@@ -59,11 +58,36 @@ describe "datasets", ->
     it "should make no query", inject () ->
       createController "DatasetListCtrl"
 
-  # TODO: test 'delete' and 'download'
   describe "DatasetActionsCtrl", ->
 
     it "should make no query", inject () ->
       createController "DatasetActionsCtrl"
+
+    it "should open delete dialog", inject (ImportHandler, DataSet) ->
+      $rootScope.handler = new ImportHandler()
+      $rootScope.ds = new DataSet()
+
+      $rootScope.openDialog = jasmine.createSpy()
+
+      createController "DatasetActionsCtrl"
+      $rootScope.delete()
+
+      expect($rootScope.openDialog).toHaveBeenCalled()
+
+    it "should generate download link", inject (ImportHandler, DataSet) ->
+      $rootScope.handler = new ImportHandler({_id: HANDLER_ID})
+      $rootScope.ds = new DataSet(
+        {_id: DS_ID, on_s3: true, import_handler_id: HANDLER_ID}
+      )
+
+      url = BASE_URL + DS_ID + '/action/generate_url/?'
+      $httpBackend.expectGET(url).respond('{"url": "http://amazon/ds_path"}')
+
+      createController "DatasetActionsCtrl"
+      $rootScope.download()
+      $httpBackend.flush()
+
+      expect($window.location.replace).toHaveBeenCalledWith('http://amazon/ds_path')
 
   describe "DataSetDetailsCtrl", ->
 

@@ -62,7 +62,6 @@ describe "test examples", ->
     it "should make no query", inject () ->
       createController "TestExamplesCtrl"
 
-    # TODO: Test with filter params
     it "should make initialization requests", inject (TestResult) ->
       url = settings.apiUrl + 'models/' + MODEL_ID + '/tests/' + TEST_ID + '/?show=' + encodeURIComponent('name,examples_fields')
       $httpBackend.expectGET(url).respond('{"test": {"name": "Some"}}')
@@ -82,6 +81,40 @@ describe "test examples", ->
 
       expect($rootScope.test).toEqual(test)
       expect($rootScope.labels).toEqual(['0', '1'])
+
+    it "should make initialization requests using filters", inject (TestResult) ->
+      url = settings.apiUrl + 'models/' + MODEL_ID + '/tests/' + TEST_ID + '/?show=' + encodeURIComponent('name,examples_fields')
+      $httpBackend.expectGET(url).respond('{"test": {"name": "Some"}}')
+
+      # TODO: Can we get rid of this request?
+      url = settings.apiUrl + 'models/' + MODEL_ID + '/?show=' + encodeURIComponent('name,labels')
+      $httpBackend.expectGET(url).respond('{"model": {"labels": ["0", "1"]}}')
+
+      test = new TestResult({
+        _id: TEST_ID,
+        model_id: MODEL_ID,
+        examples_fields: ['some_field', 'data_field']
+      })
+
+      createController "TestExamplesCtrl"
+
+      $rootScope.filter_opts = {
+        label: '0',
+        some_field: 'val1',
+        'data_input.data_field': 'val2',
+      }
+
+      $rootScope.init(test)
+      $httpBackend.flush()
+
+      expect($rootScope.test).toEqual(test)
+      expect($rootScope.labels).toEqual(['0', '1'])
+      expect($location.search).toHaveBeenCalledWith({
+        'label': '0',
+        'some_field': 'val1',
+        'data_input.data_field': 'val2',
+        action: 'examples:list',
+      })
 
     xit "should make list query", inject () ->
       fields = "id,name,label,pred_label,title,probs"
@@ -146,7 +179,6 @@ describe "test examples", ->
 
   describe "ExampleDetailsCtrl", ->
 
-    # TODO: Check charts etc.
     it "should make details request", inject () ->
       fields = 'id,test_name,weighted_data_input,
 test.model.target_variable,pred_label,label,

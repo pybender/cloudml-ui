@@ -95,7 +95,12 @@ describe "models", ->
       createController "ModelDetailsCtrl"
       $httpBackend.flush()
 
-      # TODO: more expectations
+      expect($rootScope.model._id).toEqual(MODEL_ID)
+      expect($rootScope.LOADED_SECTIONS).toBeDefined()
+      expect($rootScope.select2params).toBeDefined()
+      expect($rootScope.params).toBeDefined()
+      expect($rootScope.tag_list).toBeDefined()
+      expect($rootScope.tag_list[0].text).toEqual('smth')
 
     it "should make details request", inject () ->
       url = BASE_URL + MODEL_ID + '/' + '?show=' + encodeURIComponent('created_on,target_variable,error,
@@ -108,16 +113,12 @@ train_records_count,test_handler_fields,name,_id,status')
       $rootScope.goSection(['model'])
       $httpBackend.flush()
 
-      # TODO: more expectations
-
     it "should request only features", inject () ->
       url = BASE_URL + MODEL_ID + '/' + '?show=' + encodeURIComponent('features,name,_id,status')
       $httpBackend.expectGET(url).respond('{"model": [{"_id": "' + MODEL_ID + '"}]}')
 
       $rootScope.goSection(['features'])
       $httpBackend.flush()
-
-      # TODO: more expectations
 
     xit "should load tests", inject () ->
       url = BASE_URL + MODEL_ID + '/tests/?show=' + encodeURIComponent('name,
@@ -128,8 +129,6 @@ created_on,status,parameters,accuracy,examples_count,created_by')
 
       $rootScope.goSection(['test'])
       $httpBackend.flush()
-
-      # TODO: more expectations
 
     # TODO: solve the issue with "TypeError: 'undefined' is not an object (evaluating 'fn.apply')"
     xit "should send tags update query", inject () ->

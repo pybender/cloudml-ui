@@ -91,10 +91,8 @@ created_by'
         }
       }
 
-      # TODO: Why is null here ?
       url = settings.apiUrl + 'aws_instances/null/?'
 
-      # TODO: check post data
       $httpBackend.expectPOST(url).respond(angular.toJson(data))
 
       createController "AddAwsInstanceCtl"
