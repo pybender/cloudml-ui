@@ -31,7 +31,7 @@
 	    <span ng-show="ScalerForm.type.$error.required" class="help-inline">*</span>
 	  </div>
 	</div>
-	<div ng-show="feature.scaler.config.parameters">
+	<div ng-show="feature.scaler.type">
 	  <h4>Scalar Parameters</h4>
 	  <div ng-repeat="name in feature.scaler.config.parameters" class="control-group">
 	    <label class="control-label">{{ name }}</label>

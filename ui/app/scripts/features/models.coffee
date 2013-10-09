@@ -1,3 +1,17 @@
+isEmpty = (dict) ->
+  for prop, val of dict
+    if dict.hasOwnProperty(prop) then return false
+  true
+
+getVal = (val) ->
+  if val? && typeof(val) == 'object'
+    if !isEmpty(val)
+      val = JSON.stringify(val)
+    else
+      val = null
+  return val
+
+
 angular.module('app.features.models', ['app.config'])
 
 .factory('Transformer', [
@@ -172,10 +186,8 @@ scaler,default,is_target_variable,created_on,created_by,required'
         super origData
         
         if origData?
-          if origData.transformer?
-            @transformer = new Transformer(origData.transformer)
-          if origData.scaler?
-            @scaler = new Scaler(origData.scaler)
+          @transformer = new Transformer(origData.transformer)
+          @scaler = new Scaler(origData.scaler)
           if origData.required?
             @required = origData.required == true || origData.required == 'True'
           if origData.is_target_variable?
@@ -207,32 +219,33 @@ scaler,default,is_target_variable,created_on,created_by,required'
 
       $save: (opts={}) =>
         opts.extraData = {}
-        fillTransformer = false
-        fillScaler = false
+        removeItems = opts.removeItems || false
+        isTransformerFilled = false
+        isScalerFilled = false
         for name in opts.only
           if (name.indexOf "transformer__") == 0 && @transformer
             field = name.slice 13
-            val = eval('this.transformer.' + field)
+            val = getVal(eval('this.transformer.' + field))
             if val?
-              if typeof(val) == 'object'
-                val = JSON.stringify(val)
               opts.extraData['transformer-' + field] = val
-              fillTransformer = true
+              isTransformerFilled = true
 
           if (name.indexOf "scaler__") == 0 && @scaler
             field = name.slice 8
-            val = eval('this.scaler.' + field)
+            val = getVal(eval('this.scaler.' + field))
             if val?
-              if typeof(val) == 'object'
-                val = JSON.stringify(val)
               opts.extraData['scaler-' + field] = val
-              fillScaler = true
+              isScalerFilled = true
 
-        if fillTransformer
+        if isTransformerFilled
           opts.extraData['transformer-is_predefined'] = false
+        else if removeItems
+          opts.extraData['remove_transformer'] = true
 
-        if fillScaler
+        if isScalerFilled
           opts.extraData['scaler-is_predefined'] = false
+        else if removeItems
+          opts.extraData['remove_scaler'] = true
 
         if @params? && typeof(@params) == 'object'
           @params = JSON.stringify(@params)

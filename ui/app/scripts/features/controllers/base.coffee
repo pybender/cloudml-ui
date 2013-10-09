@@ -102,15 +102,14 @@ angular.module('app.features.controllers.base', ['app.config', ])
 
     $scope.loadParameters = (setDefault=false) ->
       model = eval('$scope.parentModel.' + $scope.fieldname)
-      if !model.type? then return
+      if !model.type?
+        model.params = {}
+        return
+
       config = $scope.configuration[model.type]
       eval('$scope.parentModel.' + $scope.fieldname).config = config
-      if !setDefault && model.params?
-        params = model.params
+      if setDefault
+        model.params = config.defaults
       else
-        model.params = {}
-        params = config.defaults
-
-      for name, val of params
-        model.params[name] = val
+        model.params = model.params || {}
 ])

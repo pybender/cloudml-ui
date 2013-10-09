@@ -103,6 +103,10 @@ class BaseForm(InternalForm):
                            for err in self.errors])
         return 'Here is some validation errors: %s' % errors
 
+    @property
+    def is_edit(self):
+        return hasattr(self.obj, "_id") and bool(self.obj._id)
+
     def is_valid(self):
         if not self._cleaned:
             self.clean()

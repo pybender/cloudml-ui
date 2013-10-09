@@ -745,8 +745,10 @@ class FeatureForm(BaseFormEx):
 
     transformer = TransformerForm(Model=app.db.Transformer,
                                   prefix='transformer-', data_from_request=False)
+    remove_transformer = BooleanField()
     scaler = ScalerForm(Model=app.db.Scaler, prefix='scaler-',
                         data_from_request=False)
+    remove_scaler = BooleanField()
 
     def clean_features_set_id(self, value, field):        
         if value:
@@ -762,6 +764,24 @@ class FeatureForm(BaseFormEx):
                 raise ValidationError('invalid type')
         return value
 
+    def clean_remove_scaler(self, value, field):
+        return value and self.is_edit
+
+    def clean_remove_transformer(self, value, field):
+        return value and self.is_edit
+
+    def save(self, commit=True):
+        remove_transformer = self.cleaned_data.get('remove_transformer', False)
+        if remove_transformer and self.obj.transformer:
+            self.obj.transformer.delete()
+            self.obj.transformer = None
+
+        remove_scaler = self.cleaned_data.get('remove_scaler', False)
+        if remove_scaler and self.obj.scaler:
+            self.obj.scaler.delete()
+            self.obj.scaler = None
+
+        return super(FeatureForm, self).save()
 
 def populate_parser(import_params):
     from flask.ext.restful import reqparse
