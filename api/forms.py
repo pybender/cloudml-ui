@@ -751,7 +751,7 @@ class FeatureForm(BaseFormEx):
     def clean_features_set_id(self, value, field):        
         if value:
             feature_set = field.doc
-            self.cleaned_data['feature_set'] = feature_set
+            self.cleaned_data['features_set'] = feature_set
         return value
 
     def clean_type(self, value, field):

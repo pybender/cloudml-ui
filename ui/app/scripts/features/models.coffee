@@ -158,7 +158,7 @@ scaler,default,is_target_variable,created_on,created_by,required'
 
       _id: null
       name: null
-      type: 'int'
+      type: null
       features_set_id: null
       transformer: null
       input_format: null
@@ -207,19 +207,32 @@ scaler,default,is_target_variable,created_on,created_by,required'
 
       $save: (opts={}) =>
         opts.extraData = {}
+        fillTransformer = false
+        fillScaler = false
         for name in opts.only
           if (name.indexOf "transformer__") == 0 && @transformer
             field = name.slice 13
             val = eval('this.transformer.' + field)
-            if val? && typeof(val) == 'object'
-              val = JSON.stringify(val)
-            opts.extraData['transformer-' + field] = val
+            if val?
+              if typeof(val) == 'object'
+                val = JSON.stringify(val)
+              opts.extraData['transformer-' + field] = val
+              fillTransformer = true
+
           if (name.indexOf "scaler__") == 0 && @scaler
             field = name.slice 8
             val = eval('this.scaler.' + field)
-            if val? && typeof(val) == 'object'
-              val = JSON.stringify(val)
-            opts.extraData['scaler-' + field] = val
+            if val?
+              if typeof(val) == 'object'
+                val = JSON.stringify(val)
+              opts.extraData['scaler-' + field] = val
+              fillScaler = true
+
+        if fillTransformer
+          opts.extraData['transformer-is_predefined'] = false
+
+        if fillScaler
+          opts.extraData['scaler-is_predefined'] = false
 
         if @params? && typeof(@params) == 'object'
           @params = JSON.stringify(@params)

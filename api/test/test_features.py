@@ -33,7 +33,7 @@ class TestFeatureResource(BaseTestCase):
             """
             Checks validation errors
             """
-            resp = self._check_post(data, error='required')
+            resp = self._check_post(data, error='err')
             self._check_errors(resp, errors)
 
         _check({}, errors={
@@ -54,6 +54,16 @@ class TestFeatureResource(BaseTestCase):
         self.assertEquals(feature.name, data['name'])
         self.assertEquals(feature.type, data['type'])
         self.assertEquals(feature.features_set_id, data['features_set_id'])
+        self.assertEquals(feature.features_set._id, self.model.features_set._id)
+
+        data = {
+            "name":"contractor.dev_recent_hours",
+            "type":"int",
+            "features_set_id": self.model.features_set_id,
+            'transformer-type': 'type'
+        }
+        _check(data, errors={
+            'transformer-type': "please choose one of ['Count', 'Tfidf', 'Dictionary']"})
 
 
 class TestFeatureSetDoc(BaseTestCase):

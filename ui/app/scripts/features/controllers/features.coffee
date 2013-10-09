@@ -1,8 +1,12 @@
 'use strict'
 
+### Feature specific controllers ###
+
 angular.module('app.features.controllers.features', ['app.config', ])
 
-.controller('FeatureAddCtrl', [
+# Controller for adding/edditing features fields in separate page.
+# template: features/items/edit.html
+.controller('FeatureEditCtrl', [
   '$scope'
   '$routeParams'
   '$location'
@@ -14,22 +18,17 @@ angular.module('app.features.controllers.features', ['app.config', ])
   if not $routeParams.model_id then throw new Error "Specify model id"
   if not $routeParams.set_id then throw new Error "Specify set id"
 
-  if $routeParams.feature_id
-    $scope.feature = new Feature({
+  $scope.modelObj = new Model({'_id': $routeParams.model_id})
+  $scope.feature = new Feature({
       '_id': $routeParams.feature_id,
       'features_set_id': $routeParams.set_id,
       'transformer': {},
       'scaler': {}
-    })
+  })
+
+  if $routeParams.feature_id
     $scope.feature.$load(show: Feature.MAIN_FIELDS
-    ).then (->), ((opts)-> $scope.setError(opts, 'loading feature'))
-  else
-    $scope.feature = new Feature({
-      'transformer': {'is_predefined': false},
-      'scaler': {'is_predefined': false},
-      'features_set_id': $routeParams.set_id
-    })
-  $scope.modelObj = new Model({'_id': $routeParams.model_id})
+    ).then (->), ((opts)-> $scope.setError(opts, 'loading feature details'))
 
   #  TODO: use SaveObjectCtl
   $scope.save = (fields) ->
@@ -48,4 +47,10 @@ angular.module('app.features.controllers.features', ['app.config', ])
       $scope.err = $scope.setError(opts, "saving")
       $scope.savingProgress = '0%'
     )
+
+  $scope.clearTransformer = () ->
+    $scope.feature.transformer = {}
+
+  $scope.clearScaler = () ->
+    $scope.feature.scaler = {}
 ])

@@ -151,12 +151,12 @@ App.config([
     })
 
     .when('/models/:model_id/features/:set_id/add', {
-      controller: "FeatureAddCtrl"
-      templateUrl: '/partials/features/items/add.html'
+      controller: "FeatureEditCtrl"
+      templateUrl: '/partials/features/items/edit.html'
     })
     .when('/models/:model_id/features/:set_id/edit/:feature_id', {
-      controller: "FeatureAddCtrl"
-      templateUrl: '/partials/features/items/add.html'
+      controller: "FeatureEditCtrl"
+      templateUrl: '/partials/features/items/edit.html'
     })
     # Feature set list (now used only for debug)
     # .when('/features/sets', {
