@@ -13,6 +13,7 @@ class WeightsTests(BaseTestCase):
     Tests of the Models Parameters Weights.
     """
     MODEL_NAME = 'weights_model'
+    FIXTURES = ('classifiers.json', 'features.json', 'models.json')
 
     @classmethod
     def setUpClass(cls):
@@ -95,7 +96,7 @@ class WeightsTests(BaseTestCase):
         self.assertEquals(data['total'], self.COUNT)
         self.assertEquals(data['pages'], math.ceil(1.0 * self.COUNT / 20))
         self.assertTrue('weights' in data, data)
-        self.assertTrue('tsexams->Ruby on Rails' in resp.data)
+        self.assertEquals(data['total'], app.db.Weight.find().count())
 
     def test_search(self):
         self.db.Weight.collection.ensure_index(

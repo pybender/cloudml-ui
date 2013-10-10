@@ -7,7 +7,6 @@ from utils import MODEL_ID, BaseTestCase, FEATURE_COUNT, TARGET_VARIABLE,\
     HTTP_HEADERS
 from bson.objectid import ObjectId
 from api.views import Models as ModelsResource
-from api import app
 
 
 class ModelTests(BaseTestCase):
@@ -19,8 +18,8 @@ class ModelTests(BaseTestCase):
     DS2_ID = '5270dd3a106a6c1631000111'
     MODEL_NAME = 'TrainedModel'
     RELATED_PARAMS = {'model_id': MODEL_ID, 'model_name': MODEL_NAME}
-    FIXTURES = ('importhandlers.json', 'models.json',
-                'tests.json', 'examples.json', 'datasets.json',
+    FIXTURES = ('classifiers.json', 'features.json', 'importhandlers.json',
+                'models.json', 'tests.json', 'examples.json', 'datasets.json',
                 'weights.json', 'instances.json', 'tags.json')
     RESOURCE = ModelsResource
     BASE_URL = '/cloudml/models/'

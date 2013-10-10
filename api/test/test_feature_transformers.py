@@ -2,11 +2,11 @@ import json
 import logging
 from bson import ObjectId
 
-from utils import BaseTestCase
+from utils import BaseTestCase, FeaturePredefinedItems
 from api.views import TransformerResource
 
 
-class TransformersTests(BaseTestCase):
+class TransformersTests(FeaturePredefinedItems):
     """
     Tests of the Transformers API.
     """
@@ -14,6 +14,11 @@ class TransformersTests(BaseTestCase):
     FIXTURES = ('transformers.json', 'features.json')
     BASE_URL = '/cloudml/features/transformers/'
     RESOURCE = TransformerResource
+
+    OBJECT_NAME = 'transformer'
+    DATA = {'type': 'Count',
+            'name': 'Test Transformer',
+            'params': '{"charset":"utf-8"}'}
 
     def setUp(self):
         super(TransformersTests, self).setUp()
@@ -31,48 +36,16 @@ class TransformersTests(BaseTestCase):
         self._check_details()
 
     def test_add_predefined_transformer(self):
-        post_data = {'type': 'Count',
-                     'name': 'Test Transformer',
-                     'params': '{"charset":"utf-8"}',
-                     'is_predefined': 'True'}
-        resp, obj = self._check_post(post_data, load_model=True)
-        self.assertEqual(obj.name, post_data['name'])
-        self.assertEqual(obj.type, post_data['type'])
-        self.assertTrue(obj.is_predefined)
-        self.assertEqual(obj.params, {"charset": "utf-8"})
+        self._test_add_predefined()
 
     def test_add_feature_transformer(self):
         feature = self.db.Feature.find_one()
-        data = {'type': 'Count',
-                'name': 'Test Transformer',
-                'params': '{"charset":"utf-8"}',
-                'is_predefined': 'false',
-                'feature_id': str(feature._id)}
-        resp, obj = self._check_post(data, load_model=True)
-        self.assertEqual(obj.name, data['name'])
-        self.assertEqual(obj.type, data['type'])
-        self.assertFalse(obj.is_predefined)
-        self.assertEqual(obj.params, {"charset": "utf-8"})
-
-        feature = self.db.Feature.find_one({'_id': feature._id})
-        self.assertTrue(feature.transformer,
-                        "Transformer of the feature should be filled")
+        self._test_add_feature_item(feature)
 
     def add_feature_transformer_from_predefined(self):
         feature = self.db.Feature.find_one()
         transformer = self.db.Transformer.find_one({'is_predefined': True})
-        data = {'transformer': transformer.name,
-                'feature_id': str(feature._id),
-                'predefined_selected': 'true'}
-        resp, obj = self._check_post(data, load_model=True)
-        self.assertEqual(obj.name, transformer.name)
-        self.assertEqual(obj.type, transformer.type)
-        self.assertFalse(obj.is_predefined)
-        self.assertEqual(obj.params, transformer.params)
-
-        feature = self.db.Feature.find_one({'_id': feature._id})
-        self.assertTrue(feature.transformer,
-                        "Transformer of the feature should be filled")
+        self._add_feature_item_from_predefined(feature, transformer)
 
     def test_post_validation(self):
         def _check(data, errors):
@@ -131,14 +104,7 @@ class TransformersTests(BaseTestCase):
             'fields': 'name of predefined item should be unique'})
 
     def test_edit_predefined_transformer(self):
-        data = {'name': 'predefined Transformer',
-                'type': 'Tfidf',
-                'is_predefined': True}
-        resp, obj = self._check_put(data, load_model=True)
-        rdata = json.loads(resp.data)
-        self.assertEquals(rdata['transformer']['name'], str(obj.name))
-        self.assertEquals(obj.name, data['name'])
-        self.assertEquals(obj.type, data['type'])
+        self._test_edit_predefined_item()
 
     def test_edit_feature_transformer(self):
         # TODO:
