@@ -246,4 +246,7 @@ angular.module('app.controllers', ['app.config', ])
     $rootScope.$on('modelCreated', () ->
       $scope.load()
     )
+    $rootScope.$on('modelChanged', () ->
+      $scope.load()
+    )
 ])

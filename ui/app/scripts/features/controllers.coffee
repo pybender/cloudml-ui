@@ -93,11 +93,11 @@ angular.module('app.features.controllers', ['app.config', ])
     $scope.init = (model) ->
       $scope.model = model
 
+      # TODO: Watch only _id?
       $scope.$watch('model.featuresSet', (featuresSet, oldVal, scope) ->
         if featuresSet?
           $scope.filter_opts = {'features_set_id': featuresSet._id}
       , true)
-      
 ])
 
 # .controller('AddFeatureDialogCtrl', [
@@ -175,7 +175,9 @@ angular.module('app.features.controllers', ['app.config', ])
     $scope.makeTarget = (feature) ->
       feature.is_target_variable = true
       feature.$save(only: ['is_target_variable']).then (->
-        $scope.$emit('updateList', [])
+        $scope.$emit('modelChanged', [])
+        if $scope.featuresSet
+          $scope.featuresSet.target_variable = feature.name
       ), ((opts) ->
         $scope.setError(opts, 'updating feature')
       )

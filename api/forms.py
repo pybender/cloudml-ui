@@ -793,6 +793,19 @@ class FeatureForm(BaseFormEx):
                 raise ValidationError('invalid type')
         return value
 
+    def save(self, *args, **kwargs):
+        feature = super(FeatureForm, self).save(*args, **kwargs)
+        if feature.is_target_variable:
+            feature.features_set.target_variable = feature.name
+            feature.features_set.save()
+            app.db.Feature.collection.update({
+                'features_set_id': feature.features_set_id,
+                '_id': {'$ne': feature._id}
+            }, {
+                '$set': {'is_target_variable': False}
+            }, multi=True)
+        return feature
+
 
 def populate_parser(import_params):
     from flask.ext.restful import reqparse

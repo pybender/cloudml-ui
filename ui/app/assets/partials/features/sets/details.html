@@ -22,6 +22,7 @@
 		<th>Transformer</th>
 		<th>Scaler</th>
 		<th>Params</th>
+		<th style="width: 10%;">Target Variable</th>
 		<th style="width: 10%;">Required</th>
 		<th style="width: 10%;">Default</th>
 		<th style="width: 100px;min-width:100px;">Actions</th>
@@ -33,8 +34,6 @@
 				<span title="Feature Name" class="title" ng-bind="feature.name || 'feature name here'" editable="feature" value="feature.name" editable-field="name" editable-input="text" editable-placement="right"></span>
 				<br />
 				<small>(<span title="Feature Type" ng-bind="feature.type" editable="feature" value="feature.type" editable-field="type" editable-placement="right" editable-input="select" source="types"></span>)</small>
-				<br/>
-				<a ng-hide='feature.is_target_variable==true' ng-click="makeTarget(feature)" ng-hide="feature.is_target_variable">make target</a>
 			</td>
 			<td><span title="Input Format" ng-bind="feature.input_format" editable="feature" value="feature.input_format || ''" editable-field="input_format" editable-placement="right"editable-input="text"></span></td>
 			<td nowrap>
@@ -66,6 +65,10 @@
 			<td ng-init="params = feature.params">
 		    	<ng-include src="'/partials/parts/params_list.html'"></ng-include>
 		    </td>
+            <td>
+                <a ng-show="feature.is_target_variable==true" title="It is target variable"><i class="icon-ok" /> yes</a>
+                <a ng-hide="feature.is_target_variable==true" ng-click="makeTarget(feature)" ng-hide="feature.is_target_variable">make target</a>
+            </td>
 			<td>
 				<a ng-show="feature.required" ng-click="makeRequired(feature, false)"><i class="icon-ok" title="Make not required" /> yes</a>
 				<a ng-click="makeRequired(feature, true)" ng-hide="feature.required"><i class="icon-remove" title="Make required" /> no</a></td>
