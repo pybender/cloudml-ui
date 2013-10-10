@@ -36,7 +36,7 @@
         </div>
         <div ng-show="formElements[SETTINGS]['examples_placement'] == 'Amazon S3'" ng-class="{error: !formElements[SETTINGS]['examples_fields']}" class="control-group">
           <label>
-            Examples Fields <a ng-show="formElements[SETTINGS]['examples_fields']" ng-click="formElements[SETTINGS]['examples_fields']=[]">deselect all</a><a ng-hide="formElements[SETTINGS]['examples_fields']" ng-click="formElements[SETTINGS]['examples_fields']=test_handler_fields">select all</a>: 
+            Please select fields which you plan to use for calculate MAP <a ng-show="formElements[SETTINGS]['examples_fields']" ng-click="formElements[SETTINGS]['examples_fields']=[]">deselect all</a>: 
           </label>
           <div>
             <input class="input-xxlarge" type="text" ui-select2="select2params" ng-model="formElements[SETTINGS]['examples_fields']" data-placeholder="Select fields" />
