@@ -7,7 +7,7 @@ from fabdeploy import monkey
 monkey.patch_all()
 import os
 import posixpath
-from fabric.api import task, env, settings, local, run, sudo, prefix
+from fabric.api import task, env, settings, local, run, sudo, prefix, cd
 from fabric.contrib import files
 from fabdeploy.api import *
 from fabdeploy.utils import upload_init_template
@@ -54,8 +54,15 @@ def install():
 
     pip.install.run(app='virtualenv', upgrade=True)
     system.package_install.run(packages='liblapack-dev gfortran libpq-dev\
-npm nodejs libevent-dev')
+ libevent-dev python-dev mongodb')
 
+    # Install nodejs from source
+    sudo("wget http://nodejs.org/dist/v0.10.18/node-v0.10.18.tar.gz")
+    sudo("tar -zxf node-v0.10.18.tar.gz")
+    with cd("node-v0.10.18"):
+        sudo("./configure")
+        sudo("make")
+        sudo("make install")
 
 @task
 def push_key():
@@ -65,6 +72,10 @@ def push_key():
 @task
 def setup():
     fabd.mkdirs.run()
+
+    release.create.run()
+    git.init.run()
+    git.push.run()
 
     supervisor.push_init_config.run()
     supervisor.push_d_config.run()
@@ -79,6 +90,8 @@ def setup():
     gunicorn.push_nginx_config.run()
     nginx.restart.run()
 
+    virtualenv.create.run()
+
     # init env for build ui
     angularjs.init.run()
 
@@ -86,8 +99,11 @@ def setup():
     with prefix('export LAPACK=/usr/lib/liblapack.so'):
         with prefix('export ATLAS=/usr/lib/libatlas.so'):
             with prefix('export BLAS=/usr/lib/libblas.so'):
-                virtualenv.pip_install.run(app='numpy')
-                virtualenv.pip_install.run(app='scipy')
+                virtualenv.pip_install.run(app='numpy==1.7.1')
+                virtualenv.pip_install.run(app='scipy==0.12.0')
+
+    virtualenv.make_relocatable.run()
+    release.activate.run()
 
 
 @task
@@ -136,21 +152,23 @@ def deploy():
     gunicorn.push_config.run()
 
     virtualenv.create.run()
-    virtualenv.pip_install_req.run()
+    with prefix('export LAPACK=/usr/lib/liblapack.so'):
+        with prefix('export ATLAS=/usr/lib/libatlas.so'):
+            with prefix('export BLAS=/usr/lib/libblas.so'):
+                virtualenv.pip_install_req.run()
     virtualenv.make_relocatable.run()
 
-    
+    release.activate.run()
+
     angularjs.activate.run()
     angularjs.push_config.run()
     angularjs.build.run()
-
-    release.activate.run()
 
     supervisor.update.run()
     supervisor.restart_program.run(program='gunicorn')
     supervisor.restart_program.run(program='celeryd')
     supervisor.restart_program.run(program='celerycam')
-    local('jgit push s3 master:master')
+    #local('jgit push s3 master:master')
 
 
 @task
@@ -209,23 +227,3 @@ def deployw():
 def upload_code_to_s3():
     local('git archive --format=tar master | gzip > cloudml.tar.gz')
     local("s3cmd put cloudml.tar.gz s3://odesk-match-cloudml/cloudml.tar.gz")
-
-class PushAnjularConfig(Task):
-    @conf
-    def from_file(self):
-        return os.path.join(
-            self.conf.project_dir, self.conf.remote_anjsettings_lfile)
-
-    @conf
-    def to_file(self):
-        return posixpath.join(
-            self.conf.project_path, self.conf.local_anjsettings_file)
-
-    def do(self):
-        files.upload_template(
-            self.conf.from_file,
-            self.conf.to_file,
-            context=self.conf,
-            use_jinja=True)
-
-push_angularjs_config = PushAnjularConfig()

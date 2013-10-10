@@ -60,7 +60,7 @@ created_by'
       tags: $scope.model.test_handler_fields
     }
     $scope.formElements[$scope.SETTINGS] = {
-      'examples_fields': $scope.model.test_handler_fields,
+      'examples_fields': [],
       'examples_placement': 'Amazon S3'}
 
     $scope.start = (result) ->
