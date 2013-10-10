@@ -669,7 +669,11 @@ class BasePredefinedForm(BaseFormEx):
             if not name:
                 raise ValidationError('name is required for predefined item')
 
-            count = self.DOC.find({'is_predefined': True, 'name': name}).count()
+            kwargs = {'is_predefined': True,
+                      'name': name}
+            if '_id' in self.obj and self.obj._id:
+                kwargs['_id'] = {'$ne': self.obj._id}
+            count = self.DOC.find(kwargs).count()
             if count:
                 raise ValidationError('name of predefined item should be unique')
 
