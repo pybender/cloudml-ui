@@ -108,7 +108,7 @@ angular.module('app.features.controllers.base', ['app.config', ])
 
       config = $scope.configuration[model.type]
       eval('$scope.parentModel.' + $scope.fieldname).config = config
-      if setDefault
+      if setDefault && config?
         model.params = config.defaults
       else
         model.params = model.params || {}

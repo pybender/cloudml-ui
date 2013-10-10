@@ -57,4 +57,12 @@ angular.module('app.features.controllers.features', ['app.config', ])
 
   $scope.clearScaler = () ->
     $scope.feature.scaler = {}
+
+  $scope.changeTransformerType = () ->
+    if !$scope.feature.transformer.type
+      $scope.clearTransformer()
+
+  $scope.changeScalerType = () ->
+    if !$scope.feature.scaler.type
+      $scope.clearScaler()
 ])

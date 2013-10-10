@@ -24,7 +24,7 @@
   <div class="control-group" ng-class="{error: TransformerForm.type.$invalid}">
     <label class="control-label">Type</label>
     <div class="controls" ng-controller="TransformersTypesLoader">
-      <select ng-change="loadParameters()" name="type" ng-model="feature.transformer.type">
+      <select ng-change="loadParameters(true);changeTransformerType()" name="type" ng-model="feature.transformer.type">
         <option value="">-----</option>
         <option ng-selected="typeName == feature.transformer.type" ng-repeat="typeName in types" value="{{ typeName }}">{{ typeName }}</option>
       </select>
