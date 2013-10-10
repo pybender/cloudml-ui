@@ -24,7 +24,7 @@
 	<div class="control-group" ng-class="{error: ScalerForm.type.$invalid}">
 	  <label class="control-label">Type</label>
 	  <div class="controls" ng-controller="ScalersTypesLoader">
-	    <select ng-change="loadParameters(true)" name="type" ng-model="feature.scaler.type" ng-required="currentTab == null || currentTab=='custom'">
+	    <select ng-change="loadParameters(true)" name="type" ng-model="feature.scaler.type">
 	      <option value="">-----</option>
 	      <option ng-selected="typeName == feature.scaler.type" ng-repeat="typeName in types" value="{{ typeName }}">{{ typeName }}</option>
 	    </select>

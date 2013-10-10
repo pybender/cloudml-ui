@@ -1,4 +1,5 @@
 import unittest
+import logging
 import httplib
 import json
 import os
@@ -240,6 +241,8 @@ class BaseTestCase(unittest.TestCase):
             self.assertTrue(error in err_data['message'],
                             "Response message is: %s" % err_data['message'])
         else:
+            if resp.status_code != httplib.OK:
+                logging.debug("Response is: %s", resp.data)
             self.assertEquals(resp.status_code, httplib.OK)
             self.assertTrue(self.RESOURCE.OBJECT_NAME in resp.data)
 
@@ -290,6 +293,7 @@ class BaseTestCase(unittest.TestCase):
         err_list = data['response']['error']['errors']
         errors_dict = dict([(item['name'], item['error'])
                             for item in err_list])
+        logging.debug("Response is: %s", errors_dict)
         for field, err_msg in errors.iteritems():
             self.assertTrue(field in errors_dict,
                             "Should be err for field %s: %s" % (field, err_msg))

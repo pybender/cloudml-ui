@@ -640,6 +640,7 @@ class BasePredefinedForm(BaseFormEx):
     # name of the feature field of this item or POST/PUT parameter of the
     # predefined item to copy fields from, when `predefined_selected`.
     OBJECT_NAME = None
+    DOC = None
 
     def clean_feature_id(self, value, field):        
         if value:
@@ -648,19 +649,34 @@ class BasePredefinedForm(BaseFormEx):
         return value
 
     def validate_data(self):
-        is_predefined = self.cleaned_data.get('is_predefined', None)
+        is_predefined = self.cleaned_data.get('is_predefined', False)
+        predefined_selected = self.cleaned_data.get('predefined_selected', False)
+        feature_id = self.cleaned_data.get('feature_id', False)
+
+        if predefined_selected and is_predefined:
+            raise ValidationError('item could be predefined or copied from predefined')
+
+        if self.inner_name:
+            # It's feature related form
+            if is_predefined:
+                raise ValidationError('feature item could not be predefined')
+        else:
+            if not (bool(feature_id) != bool(is_predefined)):
+                raise ValidationError('one of feature_id and is_predefined is required')
+
         if is_predefined:
             name = self.cleaned_data.get('name', None)
             if not name:
                 raise ValidationError('name is required for predefined item')
 
-        predefined_selected = self.cleaned_data.get('predefined_selected', False)
+            count = self.DOC.find({'is_predefined': True, 'name': name}).count()
+            if count:
+                raise ValidationError('name of predefined item should be unique')
+
         if predefined_selected:
             obj = self.cleaned_data.get(self.OBJECT_NAME, None)
-            if not obj:
-                raise ValidationError('%s is required' % self.OBJECT_NAME)
-
-            self._fill_predefined_values(obj)
+            if obj:
+               self._fill_predefined_values(obj)
             
     def _fill_predefined_values(self, obj):
         """
@@ -681,9 +697,10 @@ class BasePredefinedForm(BaseFormEx):
 
 class ScalerForm(BasePredefinedForm):
     OBJECT_NAME = 'scaler'
+    DOC = app.db.Scaler
 
     group_chooser = 'predefined_selected'
-    required_fields_groups = {'true': ('scaler', 'type' ),
+    required_fields_groups = {'true': ('scaler', ),
                               'false': ('type', ),
                               None: ('type', )}
 
@@ -711,11 +728,13 @@ class ClassifierForm(BaseFormEx):
 
 class TransformerForm(BasePredefinedForm):
     OBJECT_NAME = 'transformer'
+    DOC = app.db.Transformer
 
     group_chooser = 'predefined_selected'
-    required_fields_groups = {'true': ('transformer', 'type', ),
-                              'false': ('type', ),
-                              None: ('type', )}
+    required_fields_groups = {
+        'true': ('transformer', ),
+        'false': ('type', ),
+        None: ('type', )}
 
     name = CharField()
     type_field = ChoiceField(choices=app.db.Transformer.TYPES_LIST, name='type')

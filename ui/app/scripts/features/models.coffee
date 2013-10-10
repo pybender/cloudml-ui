@@ -186,8 +186,10 @@ scaler,default,is_target_variable,created_on,created_by,required'
         super origData
         
         if origData?
-          @transformer = new Transformer(origData.transformer)
-          @scaler = new Scaler(origData.scaler)
+          defaultData = {'feature_id': @_id, 'is_predefined': false}
+          @transformer = new Transformer(
+            _.extend defaultData, origData.transformer)
+          @scaler = new Scaler(_.extend defaultData, origData.scaler)
           if origData.required?
             @required = origData.required == true || origData.required == 'True'
           if origData.is_target_variable?

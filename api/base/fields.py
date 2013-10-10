@@ -37,7 +37,7 @@ class ChoiceField(CharField):
         value = super(ChoiceField, self).clean(value)
 
         if value and not value in self._choices:
-            raise ValidationError('please choose one of %s' % self._choices)
+            raise ValidationError('should be one of %s' % ', '.join(self._choices))
 
         return value
 

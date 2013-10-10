@@ -64,6 +64,7 @@ class BaseForm(InternalForm):
         self._cleaned = False
         self.no_required = no_required
         self.filled = False
+        self.inner_name = None
 
         if self.required_fields and self.required_fields_groups:
             raise ValueError('Either required fields or groups should be specified')
@@ -101,6 +102,8 @@ class BaseForm(InternalForm):
     def error_messages(self):
         errors = ', '.join(["%s%s" % (err['name'] + ': ' if err['name'] else '', err['error'])
                            for err in self.errors])
+        if self.inner_name:
+            return errors
         return 'Here is some validation errors: %s' % errors
 
     @property
@@ -114,7 +117,7 @@ class BaseForm(InternalForm):
 
     def clean(self):
         def add_error(name, msg):
-            if hasattr(self, 'inner_name'):
+            if self.inner_name:
                 field_name = '%s-%s' % (self.inner_name, name)
             else:
                 field_name = name
@@ -140,7 +143,7 @@ class BaseForm(InternalForm):
         try:
             self.validate_data()
         except ValidationError, exc:
-            self.errors.append({'name': None, 'error': str(exc)})
+            add_error("fields", str(exc))
 
         if not self.no_required:
             # Check required fields
@@ -151,21 +154,18 @@ class BaseForm(InternalForm):
                         field = fields
                         add_error(field, '%s is required' % field)
                     else:
-                        add_error("fields", 'Either one of fields \
-                            %s is required' % ', '.join(fields))
-
+                        add_error("fields", 'either one of fields %s is required' % ', '.join(fields))
 
         for name, form in self.forms.iteritems():
             try:
-                form.no_required = True
+                #form.no_required = True
                 form.inner_name = name
-                form.clean()
                 # TODO: make possible to choose whether form field is required
-                if form.filled:
+                if form.is_valid() and form.filled:
                     self.cleaned_data[name] = form.save(commit=False)
-            except ValueError, exc:
+            except ValidationError, exc:
                 if form.filled:
-                    self.errors.append({'name': 'Form %s' % name, 'errors': str(exc)})
+                    self.errors.append({'name': '%s' % name, 'error': str(exc)})
 
         if self.errors:
             raise ValidationError(self.error_messages, errors=self.errors)

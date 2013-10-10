@@ -181,20 +181,12 @@ angular.module('app.features.controllers', ['app.config', ])
       )
 
     $scope.editScaler = (feature) ->
-      if !feature.scaler?
-        feature.scaler = new Scaler({'feature_id': feature._id,
-        'is_predefined': false})
-
       $scope.openDialog($dialog, null,
         'partials/features/scalers/edit_feature_scaler.html',
         'ModelWithParamsEditDialogCtrl', 'modal', null, null,
         {'feature': feature, 'fieldname': 'scaler'})
 
     $scope.editTransformer = (feature) ->
-      if !feature.transformer?
-        feature.transformer = new Transformer({'feature_id': feature._id,
-        'is_predefined': false})
-
       $scope.openDialog($dialog, null,
         'partials/features/transformers/edit_feature_transformer.html',
         'ModelWithParamsEditDialogCtrl', 'modal', null, null,
