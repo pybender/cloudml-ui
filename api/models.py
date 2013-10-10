@@ -503,11 +503,13 @@ class Classifier(BaseDocument):
         'created_by': dict,
         'updated_on': datetime,
         'updated_by': dict,
+        'is_predefined': bool,
     }
     required_fields = ['created_on', 'updated_on']
     default_values = {
         'created_on': datetime.utcnow,
         'updated_on': datetime.utcnow,
+        'is_predefined': False,
     }
     use_dot_notation = True
 
