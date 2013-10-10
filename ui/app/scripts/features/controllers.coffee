@@ -193,9 +193,18 @@ angular.module('app.features.controllers', ['app.config', ])
         {'feature': feature, 'fieldname': 'transformer'})
 
     $scope.deleteTransformer = (feature) ->
-      alert "TODO"
+      feature.remove_transformer = true
+      feature.$save(only: ['remove_transformer']).then (->
+        feature.transformer = {}
+      ), ((opts) ->
+        $scope.setError(opts, "error while removing transformer")
+      )
 
     $scope.deleteScaler = (feature) ->
-      alert "TODO"
-  
+      feature.remove_scaler = true
+      feature.$save(only: ['remove_scaler']).then (->
+        feature.scaler = {}
+      ), ((opts) ->
+        $scope.setError(opts, "error while removing scaler")
+      )
 ])
