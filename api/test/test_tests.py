@@ -42,16 +42,19 @@ class TestTests(BaseTestCase):
 
     @patch('api.tasks.calculate_confusion_matrix')
     def test_confusion_matrix(self, mock_calculate):
-        mock_calculate.return_value = [[1, 2], [3, 4]]
-
-        url = self._get_url(id=self.obj._id,
-                            action='confusion_matrix')
+        url = self._get_url(
+            id=self.obj._id,
+            action='confusion_matrix',
+            weight0=10,
+            weight1=12,
+        )
         resp = self.app.get(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, 200)
-        data = json.loads(resp.data)
-        matrix = data['confusion_matrix']
-        self.assertEquals(matrix[0], ['0', [1, 2]])
-        self.assertEquals(matrix[1], ['1', [3, 4]])
+        mock_calculate.delay.assert_called_once_with(
+            str(self.obj._id),
+            10,
+            12
+        )
 
     @mock_s3
     @patch('api.amazon_utils.AmazonS3Helper.save_gz_file')
