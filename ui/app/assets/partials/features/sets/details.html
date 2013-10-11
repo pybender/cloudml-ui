@@ -22,7 +22,7 @@
 		<th>Transformer</th>
 		<th>Scaler</th>
 		<th>Params</th>
-		<th style="width: 10%;">Target Variable</th>
+		<th style="width: 10%;">Is Target</th>
 		<th style="width: 10%;">Required</th>
 		<th style="width: 10%;">Default</th>
 		<th style="width: 100px;min-width:100px;">Actions</th>
@@ -66,8 +66,7 @@
 		    	<ng-include src="'/partials/parts/params_list.html'"></ng-include>
 		    </td>
             <td>
-                <a ng-show="feature.is_target_variable==true" title="It is target variable"><i class="icon-ok" /> yes</a>
-                <a ng-hide="feature.is_target_variable==true" ng-click="makeTarget(feature)" ng-hide="feature.is_target_variable">make target</a>
+                <input type="radio" ng-click="makeTarget(feature)" ng-checked="feature.is_target_variable==true" />
             </td>
 			<td>
 				<a ng-show="feature.required" ng-click="makeRequired(feature, false)"><i class="icon-ok" title="Make not required" /> yes</a>
