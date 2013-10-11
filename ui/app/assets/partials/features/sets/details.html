@@ -18,6 +18,7 @@
 	<thead>
 	<tr>
 		<th>Name</th>
+		<th>Type</th>
 		<th>Input Format</th>
 		<th>Transformer</th>
 		<th>Scaler</th>
@@ -32,9 +33,10 @@
 			<td ng-class="{bold : feature.is_target_variable==true}">
 				<span title="Feature Name" class="title" ng-bind="feature.name || 'feature name here'" editable="feature" value="feature.name" editable-field="name" editable-input="text" editable-placement="right"></span>
 				<br />
-				<small>(<span title="Feature Type" ng-bind="feature.type" editable="feature" value="feature.type" editable-field="type" editable-placement="right" editable-input="select" source="types"></span>)</small>
-				<br/>
 				<a ng-hide='feature.is_target_variable==true' ng-click="makeTarget(feature)" ng-hide="feature.is_target_variable">make target</a>
+			</td>
+			<td>
+				<span title="Feature Type" ng-bind="feature.type" editable="feature" value="feature.type" editable-field="type" editable-placement="right" editable-input="select" source="types"></span>
 			</td>
 			<td><span title="Input Format" ng-bind="feature.input_format" editable="feature" value="feature.input_format || ''" editable-field="input_format" editable-placement="right"editable-input="text"></span></td>
 			<td nowrap>
