@@ -56,7 +56,8 @@ class BaseForm(InternalForm):
     group_chooser = None
 
     def __init__(self, data=None, obj=None, Model=None,
-                 data_from_request=True, prefix='', no_required=False, **kwargs):
+                 data_from_request=True, prefix='', no_required=False,
+                 model_name=None, **kwargs):
         self.fields = dict(deepcopy(self.base_fields))
         self.forms = dict(deepcopy(self.base_forms))
         self.errors = []
@@ -65,6 +66,7 @@ class BaseForm(InternalForm):
         self.no_required = no_required
         self.filled = False
         self.inner_name = None
+        self.obj = None
 
         if self.required_fields and self.required_fields_groups:
             raise ValueError('Either required fields or groups should be specified')
@@ -79,6 +81,8 @@ class BaseForm(InternalForm):
                 self.no_required = True
         elif Model:
             self.obj = Model()
+        elif model_name:
+            self.model_name = model_name
         else:
             raise ValueError('Either obj or Model should be specified')
 
@@ -116,6 +120,11 @@ class BaseForm(InternalForm):
         return not bool(self.errors)
 
     def clean(self):
+        if not self.obj and self.model_name:
+            from api import app
+            callable_model = getattr(app.db, self.model_name)
+            self.obj = callable_model()
+
         def add_error(name, msg):
             if self.inner_name:
                 field_name = '%s-%s' % (self.inner_name, name)

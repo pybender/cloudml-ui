@@ -97,8 +97,9 @@ class TransformersTests(FeaturePredefinedItems):
                 'feature_id': '525123b1106a6c5bcbc12efb'}
         _check(data, errors={'transformer': 'transformer is required'})
 
+        transformer = self.db.Transformer.find_one({'is_predefined': True})
         data = {'is_predefined': True,
-                'name': 'Words count',
+                'name': transformer.name,
                 'type': 'Count'}
         _check(data, errors={
             'fields': 'name of predefined item should be unique'})

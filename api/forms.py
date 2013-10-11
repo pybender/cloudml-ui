@@ -146,10 +146,10 @@ class ModelForm(BaseFormEx):
                       ('test_import_handler', 'test_import_handler_file'))
 
     name = CharField()
-    train_import_handler = DocumentField(doc=app.db.ImportHandler, by_name=False,
+    train_import_handler = DocumentField(doc='ImportHandler', by_name=False,
                                          return_doc=True)
     train_import_handler_file = ImportHandlerFileField()
-    test_import_handler = DocumentField(doc=app.db.ImportHandler, by_name=False,
+    test_import_handler = DocumentField(doc='ImportHandler', by_name=False,
                                          return_doc=True)
     test_import_handler_file = ImportHandlerFileField()
     features = JsonField()
@@ -668,12 +668,13 @@ class BasePredefinedForm(BaseFormEx):
             name = self.cleaned_data.get('name', None)
             if not name:
                 raise ValidationError('name is required for predefined item')
-
             kwargs = {'is_predefined': True,
                       'name': name}
             if '_id' in self.obj and self.obj._id:
                 kwargs['_id'] = {'$ne': self.obj._id}
-            count = self.DOC.find(kwargs).count()
+            callable_document = getattr(app.db, self.DOC)
+            count = callable_document.find(kwargs).count()
+
             if count:
                 raise ValidationError('name of predefined item should be unique')
 
@@ -701,7 +702,7 @@ class BasePredefinedForm(BaseFormEx):
 
 class ScalerForm(BasePredefinedForm):
     OBJECT_NAME = 'scaler'
-    DOC = app.db.Scaler
+    DOC = 'Scaler'
 
     group_chooser = 'predefined_selected'
     required_fields_groups = {'true': ('scaler', ),
@@ -715,10 +716,10 @@ class ScalerForm(BasePredefinedForm):
     predefined_selected = BooleanField()
     # whether we need to create predefined item (not feature related)
     is_predefined = BooleanField()
-    scaler = DocumentField(doc=app.db.Scaler, by_name=True,
+    scaler = DocumentField(doc='Scaler', by_name=True,
                                 filter_params={'is_predefined': True},
                                 return_doc=True)
-    feature_id = DocumentField(doc=app.db.Feature, by_name=False,
+    feature_id = DocumentField(doc='Feature', by_name=False,
                                 return_doc=False)
 
 
@@ -732,7 +733,7 @@ class ClassifierForm(BaseFormEx):
 
 class TransformerForm(BasePredefinedForm):
     OBJECT_NAME = 'transformer'
-    DOC = app.db.Transformer
+    DOC = 'Transformer'
 
     group_chooser = 'predefined_selected'
     required_fields_groups = {
@@ -745,10 +746,10 @@ class TransformerForm(BasePredefinedForm):
     params = JsonField()
     is_predefined = BooleanField()
     predefined_selected = BooleanField()
-    transformer = DocumentField(doc=app.db.Transformer, by_name=True,
+    transformer = DocumentField(doc='Transformer', by_name=True,
                                 filter_params={'is_predefined': True},
                                 return_doc=True)
-    feature_id = DocumentField(doc=app.db.Feature, by_name=False,
+    feature_id = DocumentField(doc='Feature', by_name=False,
                                 return_doc=False)
 
 
@@ -763,13 +764,13 @@ class FeatureForm(BaseFormEx):
     required = BooleanField()
     default = CharField()
     is_target_variable = BooleanField()
-    features_set_id = DocumentField(doc=app.db.FeatureSet, by_name=False,
+    features_set_id = DocumentField(doc='FeatureSet', by_name=False,
                                     return_doc=False)
 
-    transformer = TransformerForm(Model=app.db.Transformer,
+    transformer = TransformerForm(model_name='Transformer',
                                   prefix='transformer-', data_from_request=False)
     remove_transformer = BooleanField()
-    scaler = ScalerForm(Model=app.db.Scaler, prefix='scaler-',
+    scaler = ScalerForm(model_name='Scaler', prefix='scaler-',
                         data_from_request=False)
     remove_scaler = BooleanField()
 
