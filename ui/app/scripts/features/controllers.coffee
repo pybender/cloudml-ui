@@ -49,36 +49,6 @@ angular.module('app.features.controllers', ['app.config', ])
         'AddFeatureDialogCtrl', 'modal', 'add feature', 'feature')
   ])
 
-# Feature Items Controllers
-.controller('FeatureFieldsSelectsLoader', [
-  '$scope'
-  '$dialog'
-  'Transformer'
-  'NamedFeatureType'
-
-  ($scope, $dialog, Transformer, NamedFeatureType) ->
-    $scope.types = NamedFeatureType.$TYPES_LIST
-    NamedFeatureType.$loadAll(
-      show: 'name'
-    ).then ((opts) ->
-      for nt in opts.objects
-        $scope.types.push nt.name
-    ), ((opts) ->
-      $scope.err = $scope.setError(opts, 'loading instances')
-    )
-
-    $scope.transformers = []
-    Transformer.$loadAll(
-      show: 'name'
-    ).then ((opts) ->
-      for tr in opts.objects
-        $scope.transformers.push tr.name
-    ), ((opts) ->
-      $scope.err = $scope.setError(opts, 'loading transformers')
-    )
-
-])
-
 .controller('FeaturesListCtrl', [
   '$scope'
   '$dialog'
