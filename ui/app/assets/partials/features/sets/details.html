@@ -13,11 +13,12 @@
   	</div>
 </h4>
 
-<div ng-controller="FeatureFieldsSelectsLoader">
+<div ng-controller="NamedFeatureTypesSelectsLoader">
 <table ng-controller="BaseListCtrl" ng-init="init(false, 'features')" class="table table-hover">
 	<thead>
 	<tr>
 		<th>Name</th>
+		<th>Type</th>
 		<th>Input Format</th>
 		<th>Transformer</th>
 		<th>Scaler</th>
@@ -32,8 +33,9 @@
 		<tr ng-repeat="feature in objects | orderBy:'name'" ng-init="init({model: feature})" ng-controller="FeatureActionsCtrl">
 			<td ng-class="{bold : feature.is_target_variable==true}">
 				<span title="Feature Name" class="title" ng-bind="feature.name || 'feature name here'" editable="feature" value="feature.name" editable-field="name" editable-input="text" editable-placement="right"></span>
-				<br />
-				<small>(<span title="Feature Type" ng-bind="feature.type" editable="feature" value="feature.type" editable-field="type" editable-placement="right" editable-input="select" source="types"></span>)</small>
+			</td>
+			<td>
+				<span title="Feature Type" ng-bind="feature.type" editable="feature" value="feature.type" editable-field="type" editable-placement="right" editable-input="select" source="types"></span>
 			</td>
 			<td><span title="Input Format" ng-bind="feature.input_format" editable="feature" value="feature.input_format || ''" editable-field="input_format" editable-placement="right"editable-input="text"></span></td>
 			<td nowrap>

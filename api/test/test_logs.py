@@ -17,6 +17,7 @@ class LogsTests(BaseTestCase):
     def setUp(self):
         super(LogsTests, self).setUp()
         self.Model = self.db.LogMessage
+        self.Model.collection.remove()
 
     def test_list(self):
         import logging

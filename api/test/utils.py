@@ -1,8 +1,9 @@
 import unittest
+import logging
 import httplib
 import json
 import os
-import re
+from copy import copy
 from datetime import datetime
 from bson.objectid import ObjectId
 from celery.task.base import Task
@@ -240,6 +241,8 @@ class BaseTestCase(unittest.TestCase):
             self.assertTrue(error in err_data['message'],
                             "Response message is: %s" % err_data['message'])
         else:
+            if resp.status_code != httplib.OK:
+                logging.debug("Response is: %s", resp.data)
             self.assertEquals(resp.status_code, httplib.OK)
             self.assertTrue(self.RESOURCE.OBJECT_NAME in resp.data)
 
@@ -290,6 +293,7 @@ class BaseTestCase(unittest.TestCase):
         err_list = data['response']['error']['errors']
         errors_dict = dict([(item['name'], item['error'])
                             for item in err_list])
+        logging.debug("Response is: %s", errors_dict)
         for field, err_msg in errors.iteritems():
             self.assertTrue(field in errors_dict,
                             "Should be err for field %s: %s" % (field, err_msg))
@@ -349,3 +353,57 @@ def dumpdata(document_list, fixture_name):
     file_path = os.path.join('./api/fixtures/', fixture_name)
     with open(file_path, 'w') as ffile:
         ffile.write(content)
+
+
+class FeaturePredefinedItems(BaseTestCase):
+    OBJECT_NAME = None
+    DATA = {}
+
+    def _test_add_predefined(self, extra_data={}):
+        data = copy(self.DATA)
+        data['is_predefined'] = True
+        data.update(extra_data)
+
+        resp, obj = self._check_post(data, load_model=True)
+        self.assertEqual(obj.name, data['name'])
+        self.assertEqual(obj.type, data['type'])
+        self.assertTrue(obj.is_predefined)
+        self.assertEqual(obj.params, json.loads(data['params']))
+
+    def _test_add_feature_item(self, feature, extra_data={}):
+        data = copy(self.DATA)
+        data.update({'is_predefined': 'false',
+                     'feature_id': str(feature._id)})
+        data.update(extra_data)
+
+        resp, obj = self._check_post(data, load_model=True)
+        self.assertEqual(obj.name, data['name'])
+        self.assertEqual(obj.type, data['type'])
+        self.assertFalse(obj.is_predefined)
+        self.assertEqual(obj.params, json.loads(data['params']))
+
+        feature = self.db.Feature.find_one({'_id': feature._id})
+        self.assertTrue(getattr(feature, self.OBJECT_NAME),
+                        "%s of the feature should be filled" % self.OBJECT_NAME)
+
+    def _add_feature_item_from_predefined(self, feature, item):
+        data = {self.OBJECT_NAME: item.name,
+                'feature_id': str(feature._id),
+                'predefined_selected': 'true'}
+        resp, obj = self._check_post(data, load_model=True)
+        self.assertEqual(obj.name, item.name)
+        self.assertEqual(obj.type, item.type)
+        self.assertFalse(obj.is_predefined)
+        self.assertEqual(obj.params, item.params)
+
+        feature = self.db.Feature.find_one({'_id': feature._id})
+        self.assertTrue(feature.item,
+                        "%s of the feature should be filled" % self.OBJECT_NAME)
+
+    def _test_edit_predefined_item(self):
+        data = copy(self.DATA)
+        data['is_predefined'] = True
+        data['name'] = 'new'
+        resp, obj = self._check_put(data, load_model=True)
+        self.assertEquals(obj.name, 'new')
+        self.assertEquals(obj.type, data['type'])

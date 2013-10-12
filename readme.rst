@@ -16,9 +16,6 @@ Run dev server::
 
 Run tests::
 
-    $ python manage.py test
+	$ python manage.py test
 
-    or
-
-    export CLOUDML_CONFIG="{{ path to }}/cloudml-ui/api/test_config.py"
-    nosetests --tests api.test.test_features
+	$ nosetests --tests api.test.test_features

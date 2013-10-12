@@ -1,16 +1,10 @@
-import httplib
-import json
-from bson import ObjectId
-
-from utils import BaseTestCase, HTTP_HEADERS
-from utils import MODEL_ID
+from utils import BaseTestCase
 from api.views import NamedFeatureTypeResource
-from api import app
 
 
 class NamedFeatureTypeTests(BaseTestCase):
     """
-    Tests of the Instances API.
+    Tests of the Feature types API.
     """
     NAMED_TYPE_ID = '5170dd3a106a6c1631000000'
     FIXTURES = ('named_feature_types.json', )
@@ -20,6 +14,7 @@ class NamedFeatureTypeTests(BaseTestCase):
     def setUp(self):
         super(NamedFeatureTypeTests, self).setUp()
         self.Model = self.db.NamedFeatureType
+        from bson import ObjectId
         self.obj = self.Model.get_from_id(ObjectId(self.NAMED_TYPE_ID))
         self.assertTrue(self.obj)
 

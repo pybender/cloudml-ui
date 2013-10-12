@@ -1171,7 +1171,7 @@ class Scaler(BaseDocument):
     default_values = {
         'created_on': datetime.utcnow,
         'updated_on': datetime.utcnow,
-        'is_predefined': True,
+        'is_predefined': False,
     }
     use_dot_notation = True
 
@@ -1243,6 +1243,7 @@ class Feature(BaseDocument):
         data = super(Feature, self).to_dict()
         if self.transformer:
             data['transformer'] = self.transformer.to_dict()
+        print data
         return data
 
     def __repr__(self):

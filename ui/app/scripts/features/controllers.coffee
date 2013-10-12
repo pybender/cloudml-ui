@@ -49,36 +49,6 @@ angular.module('app.features.controllers', ['app.config', ])
         'AddFeatureDialogCtrl', 'modal', 'add feature', 'feature')
   ])
 
-# Feature Items Controllers
-.controller('FeatureFieldsSelectsLoader', [
-  '$scope'
-  '$dialog'
-  'Transformer'
-  'NamedFeatureType'
-
-  ($scope, $dialog, Transformer, NamedFeatureType) ->
-    $scope.types = NamedFeatureType.$TYPES_LIST
-    NamedFeatureType.$loadAll(
-      show: 'name'
-    ).then ((opts) ->
-      for nt in opts.objects
-        $scope.types.push nt.name
-    ), ((opts) ->
-      $scope.err = $scope.setError(opts, 'loading instances')
-    )
-
-    $scope.transformers = []
-    Transformer.$loadAll(
-      show: 'name'
-    ).then ((opts) ->
-      for tr in opts.objects
-        $scope.transformers.push tr.name
-    ), ((opts) ->
-      $scope.err = $scope.setError(opts, 'loading transformers')
-    )
-
-])
-
 .controller('FeaturesListCtrl', [
   '$scope'
   '$dialog'
@@ -183,29 +153,30 @@ angular.module('app.features.controllers', ['app.config', ])
       )
 
     $scope.editScaler = (feature) ->
-      if !feature.scaler?
-        feature.scaler = new Scaler({'feature_id': feature._id,
-        'is_predefined': false})
-
       $scope.openDialog($dialog, null,
         'partials/features/scalers/edit_feature_scaler.html',
         'ModelWithParamsEditDialogCtrl', 'modal', null, null,
         {'feature': feature, 'fieldname': 'scaler'})
 
     $scope.editTransformer = (feature) ->
-      if !feature.transformer?
-        feature.transformer = new Transformer({'feature_id': feature._id,
-        'is_predefined': false})
-
       $scope.openDialog($dialog, null,
         'partials/features/transformers/edit_feature_transformer.html',
         'ModelWithParamsEditDialogCtrl', 'modal', null, null,
         {'feature': feature, 'fieldname': 'transformer'})
 
     $scope.deleteTransformer = (feature) ->
-      alert "TODO"
+      feature.remove_transformer = true
+      feature.$save(only: ['remove_transformer']).then (->
+        feature.transformer = {}
+      ), ((opts) ->
+        $scope.setError(opts, "error while removing transformer")
+      )
 
     $scope.deleteScaler = (feature) ->
-      alert "TODO"
-  
+      feature.remove_scaler = true
+      feature.$save(only: ['remove_scaler']).then (->
+        feature.scaler = {}
+      ), ((opts) ->
+        $scope.setError(opts, "error while removing scaler")
+      )
 ])

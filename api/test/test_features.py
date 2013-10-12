@@ -11,7 +11,7 @@ class TestFeatureResource(BaseTestCase):
     Features API methods tests.
     """
     TRANSFORMER_ID = '5170dd3a106a6c1631000000'
-    FIXTURES = ['features.json', 'models.json']
+    FIXTURES = ['features.json', 'models.json', 'transformers.json']
     BASE_URL = '/cloudml/features/transformers/'
     RESOURCE = FeatureResource
 
@@ -28,7 +28,7 @@ class TestFeatureResource(BaseTestCase):
         self.obj = self.db.Feature.find_one()
         self.assertTrue(self.obj)
 
-    def test_post(self):
+    def test_post_validation(self):
         def _check(data, errors):
             """
             Checks validation errors
@@ -41,29 +41,132 @@ class TestFeatureResource(BaseTestCase):
             'type': 'type is required',
             'features_set_id': 'features_set_id is required'})
 
-        _check({"name":"contractor.dev_recent_hours"}, errors={
+        _check({"name": "contractor.dev_recent_hours"}, errors={
             'type': 'type is required',
             'features_set_id': 'features_set_id is required'})
 
+        # Transformers data is invalid
         data = {
-            "name":"contractor.dev_recent_hours",
-            "type":"int",
-            "features_set_id": self.model.features_set_id
-        }
-        resp, feature = self._check_post(data, load_model=True)
-        self.assertEquals(feature.name, data['name'])
-        self.assertEquals(feature.type, data['type'])
-        self.assertEquals(feature.features_set_id, data['features_set_id'])
-        self.assertEquals(feature.features_set._id, self.model.features_set._id)
-
-        data = {
-            "name":"contractor.dev_recent_hours",
-            "type":"int",
+            "name": "contractor.dev_recent_hours",
+            "type": "int",
             "features_set_id": self.model.features_set_id,
-            'transformer-type': 'type'
+            'transformer-type': 'type',
+            'transformer-params': 'aaa'
         }
         _check(data, errors={
-            'transformer-type': "please choose one of ['Count', 'Tfidf', 'Dictionary']"})
+            'transformer': "transformer-params: invalid json: aaa, \
+transformer-type: should be one of Count, Tfidf, Dictionary"})
+
+    def test_add_simple_feature(self):
+        data = {
+            "name": "contractor.dev_recent_hours",
+            "type": "int",
+            "features_set_id": self.model.features_set_id,
+            "input_format": "choice",
+            "default": "100",
+            "required": True,
+            "is_target_variable": True
+        }
+        resp, obj = self._check_post(data, load_model=True)
+        self.assertEquals(obj.name, data['name'])
+        self.assertEquals(obj.type, data['type'])
+        self.assertEquals(obj.features_set_id, data['features_set_id'])
+        self.assertTrue(obj.features_set, "Feature set not filled")
+        self.assertTrue(obj.required)
+        self.assertTrue(obj.is_target_variable)
+        self.assertEquals(obj.input_format, data['input_format'])
+        self.assertEquals(obj.default, data['default'])
+
+    def test_add_feature(self):
+        """
+        Adding feature with transformer and scaler
+        """
+        data = {
+            "name": "title",
+            "type": "text",
+            "features_set_id": self.model.features_set_id,
+            "transformer-type": "Count",
+            "scaler-type": "MinMaxScaler"
+        }
+        resp, obj = self._check_post(data, load_model=True)
+        self.assertEquals(obj.name, data['name'])
+        self.assertEquals(obj.type, data['type'])
+        self.assertEquals(obj.features_set_id, data['features_set_id'])
+        self.assertTrue(obj.features_set, "Feature set not filled")
+        self.assertTrue(obj.transformer, "Transformer not created")
+        self.assertEquals(obj.transformer.type, data["transformer-type"])
+        self.assertFalse(obj.transformer.is_predefined)
+        self.assertTrue(obj.scaler, "Scaler not created")
+        self.assertEquals(obj.scaler.type, data["scaler-type"])
+        self.assertFalse(obj.scaler.is_predefined)
+
+        transformer = app.db.Transformer.find_one({'is_predefined': True})
+        data = {
+            "name": "title",
+            "type": "text",
+            "features_set_id": self.model.features_set_id,
+            "transformer-transformer": transformer.name,
+            "transformer-predefined_selected": True
+        }
+        resp, obj = self._check_post(data, load_model=True)
+        self.assertEquals(obj.name, data['name'])
+        self.assertEquals(obj.type, data['type'])
+        self.assertEquals(obj.features_set_id, data['features_set_id'])
+        self.assertTrue(obj.features_set, "Feature set not filled")
+        self.assertTrue(obj.transformer, "Transformer not created")
+        self.assertEquals(obj.transformer.name, transformer.name)
+        self.assertEquals(obj.transformer.type, transformer.type)
+        self.assertEquals(obj.transformer.params, transformer.params)
+        self.assertFalse(obj.transformer.is_predefined)
+
+    def test_inline_edit_feature(self):
+        """
+        Checking edditing of separate fields
+        """
+        data = {"name": "new name"}
+        resp, obj = self._check_put(data, load_model=True)
+        self.assertEquals(obj.name, data['name'])
+
+        data = {"type": "text"}
+        resp, obj = self._check_put(data, load_model=True)
+        self.assertEquals(obj.type, data['type'])
+
+        data = {"input_format": "dict"}
+        resp, obj = self._check_put(data, load_model=True)
+        self.assertEquals(obj.input_format, data['input_format'])
+
+        # TODO: default values could be int, dict, etc?
+        data = {"default": "some text"}
+        resp, obj = self._check_put(data, load_model=True)
+        self.assertEquals(obj.default, data['default'])
+
+        data = {"required": True}
+        resp, obj = self._check_put(data, load_model=True)
+        self.assertEquals(obj.required, data['required'])
+
+    def test_edit_feature(self):
+        """
+        Tests edditing feature in separate page API call.
+        """
+        data = {"name": "some name",
+                "type": "int",
+                "transformer-type": "Dictionary",
+                "scaler-type": "StandardScaler"}
+        resp, obj = self._check_put(data, load_model=True)
+        self.assertEquals(obj.name, data['name'])
+        self.assertEquals(obj.type, data['type'])
+        self.assertTrue(obj.transformer, "Transformer not filled")
+        self.assertTrue(obj.transformer.type, data['transformer-type'])
+        self.assertTrue(obj.scaler, "scaler not filled")
+        self.assertTrue(obj.scaler.type, data['scaler-type'])
+
+        data = {"name": "some name",
+                "type": "int",
+                "remove_transformer": True,
+                "remove_scaler": True}
+        resp, obj = self._check_put(data, load_model=True)
+        self.assertFalse(obj.transformer, "Transformer should be removed")
+        self.assertFalse(obj.scaler, "scaler should be removed")
 
 
 class TestFeatureSetDoc(BaseTestCase):
@@ -76,7 +179,8 @@ class TestFeatureSetDoc(BaseTestCase):
         model = app.db.Model.get_from_id(ObjectId(MODEL_ID))
 
         from api.models import FeatureSet
-        features_set = FeatureSet.from_model_features_dict("Set", model.features)
+        features_set = FeatureSet.\
+            from_model_features_dict("Set", model.features)
         self.assertTrue(features_set)
         self.assertEquals(features_set.name, "Set")
         self.assertEquals(features_set.schema_name, 'bestmatch')
@@ -87,10 +191,10 @@ class TestFeatureSetDoc(BaseTestCase):
         ftype = app.db.NamedFeatureType.find_one({'name': 'str_to_timezone'})
         self.assertTrue(ftype, 'Named type not added')
         self.assertEquals(ftype.type, 'composite')
-        self.assertEquals(ftype.params,
-                          {u'chain': [{u'params': \
-{u'pattern': u'UTC([-\\+]+\\d\\d).*'}, u'type': u'regex'},
-{u'type': u'int'}]})
+        self.assertEquals(ftype.params, {u'chain': [{
+            u'params': {u'pattern': u'UTC([-\\+]+\\d\\d).*'},
+            u'type': u'regex'},
+            {u'type': u'int'}]})
 
         # Checking features
         params = {'features_set_id': str(features_set._id)}
@@ -103,29 +207,25 @@ class TestFeatureSetDoc(BaseTestCase):
             feature = app.db.Feature.find_one(params)
             self.assertTrue(feature)
             for field, val in fields.iteritems():
-                self.assertEquals(feature[field], val,
+                self.assertEquals(
+                    feature[field], val,
                     'Field: %s: %s != %s' % (field, feature[field], val))
             return feature
 
-        feature = _check_feature('hire_outcome',
-            {
+        feature = _check_feature('hire_outcome', {
             'is_target_variable': True,
             'type': 'map',
             'params': {"mappings": {"class1": 1,
-                                    "class2": 0 }
-                      }
-            }
+                                    "class2": 0}}}
         )
-        self.assertEquals(str(feature.features_set._id), 
+        self.assertEquals(str(feature.features_set._id),
                           str(features_set._id))
 
-        feature = _check_feature('contractor.dev_blurb',
-            {
+        feature = _check_feature('contractor.dev_blurb', {
             'is_target_variable': False,
             'type': 'text',
             'params': {},
-            'required': True
-            }
+            'required': True}
         )
         transformer = feature.transformer
         self.assertTrue(transformer)
@@ -136,12 +236,10 @@ class TestFeatureSetDoc(BaseTestCase):
                            u'ngram_range_min': 1,
                            u'min_df': 10})
 
-        feature = _check_feature('tsexams',
-            {
+        feature = _check_feature('tsexams', {
             'type': 'float',
             'params': {},
-            'input_format': 'dict' 
-            }
+            'input_format': 'dict'}
         )
 
         feature = _check_feature('contractor.dev_last_worked',

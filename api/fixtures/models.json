@@ -20,6 +20,7 @@
   "test_import_handler": {"$ref": "ImportHandler", "$id": "5170dd3a106a6c1631000000"},
   "weights_synchronized": false,
   "tags": ["tag2"],
+  "classifier": {"$ref" : "Classifier", "$id" : "519318e6106a6c0df349bc0b"},
   "features_set": {"$ref" : "FeatureSet", "$id" : "5251233d106a6c5b36c54896"},
   "features_set_id": "5251233d106a6c5b36c54896",
   "features": {

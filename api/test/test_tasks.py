@@ -232,6 +232,7 @@ class TestTasksTests(BaseTestCase):
                               We do not need to store it in Amazon S3")
             self.assertFalse(mock_apply_async.apply.call_count)
             example = app.db.TestExample.find_one({'test_id': str(test._id)})
+            print "example.data_input", example.data_input
             self.assertFalse(example.data_input,
                              'Raw data should not be filled at all')
             mock_store_examples.reset_mock()
