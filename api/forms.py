@@ -680,10 +680,8 @@ class BasePredefinedForm(BaseFormEx):
 
         if predefined_selected:
             obj = self.cleaned_data.get(self.OBJECT_NAME, None)
-            if not obj:
-                raise ValidationError('%s is required' % self.OBJECT_NAME)
-
-            self._fill_predefined_values(obj)
+            if obj:
+               self._fill_predefined_values(obj)
 
     def _fill_predefined_values(self, obj):
         """
@@ -827,7 +825,7 @@ class FeatureForm(BaseFormEx):
     def clean_remove_transformer(self, value, field):
         return value and self.is_edit
 
-    def save(self, commit=True):
+    def save(self, *args, **kwargs):
         remove_transformer = self.cleaned_data.get('remove_transformer', False)
         if remove_transformer and self.obj.transformer:
             self.obj.transformer.delete()
