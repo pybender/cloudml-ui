@@ -144,9 +144,12 @@ class BaseResource(restful.Resource):
         model = self._get_details_query(None, None, **kwargs)
         if model is None:
             raise NotFound(self.MESSAGE404 % kwargs)
-
+        self._delete_validataion(model)
         model.delete()
         return '', 204
+
+    def _delete_validataion(self, model):
+        pass
 
     def _list(self, extra_params=(), **kwargs):
         """

@@ -1099,6 +1099,9 @@ class TransformerResource(BaseResource):
         from api.models import TRANSFORMERS
         return self._render({'configuration': TRANSFORMERS})
 
+    def _delete_validataion(self, model):
+        if not model.is_predefined:
+            raise ValidationError("Can't delete feature transformer")
 
 api.add_resource(TransformerResource, '/cloudml/features/transformers/')
 
@@ -1128,6 +1131,10 @@ class ScalersResource(BaseResource):
     def _get_configuration_action(self, **kwargs):
         from api.models import SCALERS
         return self._render({'configuration': SCALERS})
+
+    def _delete_validataion(self, model):
+        if not model.is_predefined:
+            raise ValidationError("Can't delete feature scaler")
 
 
 api.add_resource(ScalersResource, '/cloudml/features/scalers/')

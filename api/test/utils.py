@@ -224,11 +224,15 @@ class BaseTestCase(unittest.TestCase):
 
         return resp
 
-    def _check_put(self, post_data={}, error='', load_model=False, action=None):
+    def _check_put(self, post_data={}, error='', load_model=False, action=None,
+                   obj=None):
+        if obj is None:
+            obj = self.obj
+
         if action:
-            url = self._get_url(id=self.obj._id, action=action)
+            url = self._get_url(id=obj._id, action=action)
         else:
-            url = self._get_url(id=self.obj._id)
+            url = self._get_url(id=obj._id)
 
         resp = self.app.put(url, data=post_data, headers=HTTP_HEADERS)
         if error:
@@ -266,17 +270,19 @@ class BaseTestCase(unittest.TestCase):
         count = self.Model.find(query_params).count()
         self.assertEquals(count, len(data[key]))
 
-    def _check_delete(self):
-        self.assertTrue(self.obj)
-        url = self._get_url(id=self.obj._id)
+    def _check_delete(self, obj=None):
+        if obj is None:
+            obj = self.obj
+
+        self.assertTrue(obj)
+        url = self._get_url(id=obj._id)
         resp = self.app.get(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.OK)
 
         resp = self.app.delete(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, 204)
 
-        obj = self.Model.find_one({'_id': self.obj._id})
-        self.assertFalse(obj)
+        self.assertFalse(self.Model.find_one({'_id': obj._id}))
 
     def check_related_docs_existance(self, Model, exist=True,
                                      msg=''):
@@ -397,8 +403,8 @@ class FeaturePredefinedItems(BaseTestCase):
         self.assertEqual(obj.params, item.params)
 
         feature = self.db.Feature.find_one({'_id': feature._id})
-        self.assertTrue(feature.item,
-                        "%s of the feature should be filled" % self.OBJECT_NAME)
+        self.assertTrue(getattr(feature, self.OBJECT_NAME),
+                        "%s should be filled" % self.OBJECT_NAME)
 
     def _test_edit_predefined_item(self):
         data = copy(self.DATA)
@@ -407,3 +413,41 @@ class FeaturePredefinedItems(BaseTestCase):
         resp, obj = self._check_put(data, load_model=True)
         self.assertEquals(obj.name, 'new')
         self.assertEquals(obj.type, data['type'])
+
+    def _test_edit_feature_item(self, feature, extra_data={}):
+        data = copy(self.DATA)
+        data.update({'is_predefined': 'false',
+                     'feature_id': str(feature._id)})
+        data.update(extra_data)
+
+        item = getattr(feature, self.OBJECT_NAME)
+        resp, obj = self._check_put(data, obj=item, load_model=True)
+        self.assertEqual(obj.name, data['name'])
+        self.assertEqual(obj.type, data['type'])
+        self.assertFalse(obj.is_predefined)
+        self.assertEqual(obj.params, json.loads(data['params']))
+
+        feature = self.db.Feature.find_one({'_id': feature._id})
+        feature_item = getattr(feature, self.OBJECT_NAME)
+        self.assertTrue(feature_item, "%s should be filled" % self.OBJECT_NAME)
+        self.assertEquals(feature_item._id, obj._id)
+        return resp, obj
+
+    def _edit_feature_item_from_predefined(self, feature, predefined_item):
+        self.assertTrue(predefined_item.is_predefined, "Specify predefined item")
+        data = {self.OBJECT_NAME: predefined_item.name,
+                'feature_id': str(feature._id),
+                'predefined_selected': 'true'}
+        item = getattr(feature, self.OBJECT_NAME)
+        resp, obj = self._check_put(data, obj=item, load_model=True)
+        feature = self.db.Feature.find_one({'_id': feature._id})
+        self.assertTrue(getattr(feature, self.OBJECT_NAME),
+                        "%s should be filled" % self.OBJECT_NAME)
+        self.assertNotEquals(obj._id, predefined_item._id)
+
+        self.assertEqual(obj.name, predefined_item.name)
+        self.assertEqual(obj.type, predefined_item.type)
+        self.assertEqual(obj.params, predefined_item.params)
+        self.assertFalse(obj.is_predefined)
+        return resp, obj
+        

@@ -1,8 +1,7 @@
-import json
 import logging
 from bson import ObjectId
 
-from utils import BaseTestCase, FeaturePredefinedItems
+from utils import FeaturePredefinedItems, HTTP_HEADERS
 from api.views import TransformerResource
 
 
@@ -11,7 +10,7 @@ class TransformersTests(FeaturePredefinedItems):
     Tests of the Transformers API.
     """
     TRANSFORMER_ID = '5170dd3a106a6c1631000000'
-    FIXTURES = ('transformers.json', 'features.json')
+    FIXTURES = ('transformers.json', 'features.json', 'complex_features.json')
     BASE_URL = '/cloudml/features/transformers/'
     RESOURCE = TransformerResource
 
@@ -108,16 +107,33 @@ class TransformersTests(FeaturePredefinedItems):
         self._test_edit_predefined_item()
 
     def test_edit_feature_transformer(self):
-        # TODO:
-        pass
+        feature = self.db.Feature.get_from_id(ObjectId('525123b1206a6c5bcbc12efb'))
+        self.assertTrue(feature.transformer, "Invalid fixtures")
+        data = {'name': 'new transformer name',
+                'type': 'Tfidf',
+                'params': '{"lowercase": true}'}
+
+        resp, obj = self._test_edit_feature_item(feature, extra_data=data)
+        self.assertTrue(obj.params, {"lowercase": True})
 
     def test_edit_feature_transformer_from_predefined(self):
-        # TODO:
-        pass
+        feature = self.db.Feature.get_from_id(ObjectId('525123b1206a6c5bcbc12efb'))
+        self.assertTrue(feature.transformer, "Invalid fixtures")
+
+        transformer = self.db.Transformer.find_one({'is_predefined': True})
+        self._edit_feature_item_from_predefined(feature, transformer)
 
     def test_delete_predefined_transformer(self):
         self._check_delete()
 
     def test_delete_feature_transformer(self):
-        # TODO: check deleting feature transformer
-        pass
+        """
+        Check that we can't delete feature transformer
+        """
+        feature = self.db.Feature.get_from_id(ObjectId('525123b1206a6c5bcbc12efb'))
+        self.assertTrue(feature.transformer, "Invalid fixtures")
+        self.assertFalse(feature.transformer.is_predefined)
+
+        url = self._get_url(id=feature.transformer._id)
+        resp = self.app.delete(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, 400)

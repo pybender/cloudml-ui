@@ -6,7 +6,6 @@ from api.base.fields import BaseField
 from api.resources import ValidationError
 
 
-
 def get_declared_items(bases, attrs, cls=BaseField):
     """
     Creates a list of Field instances.
