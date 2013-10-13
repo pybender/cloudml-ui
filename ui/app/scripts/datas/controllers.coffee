@@ -51,7 +51,7 @@ angular.module('app.datas.controllers', ['app.config', ])
     (opts) ->
       filter_opts = opts.filter_opts
       delete opts.filter_opts
-      show = 'id,name,label,pred_label,title,prob'
+      show = 'id,name,label,pred_label,title,probs'
       opts = _.extend({show: show}, opts, filter_opts)
       $scope.loading_state = true
       opts.sort_by = $scope.sort_by

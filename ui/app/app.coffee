@@ -123,6 +123,9 @@ App.config([
       templateUrl: '/partials/datasets/details.html'
       reloadOnSearch: false
     })
+    .when('/aws', {
+      redirectTo: '/aws/instances'
+    })
     .when('/aws/instances', {
       controller: "AwsInstanceListCtrl"
       templateUrl: '/partials/aws_instances/list.html'

@@ -15,5 +15,3 @@ describe "directives", ->
       inject ($compile, $rootScope) ->
         element = $compile("<span app-version></span>")($rootScope)
         expect(element.text()).toEqual "TEST_VER"
-
-
