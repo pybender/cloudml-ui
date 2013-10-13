@@ -17,6 +17,7 @@ describe "models", ->
   beforeEach(module "app.datasets.model")
   beforeEach(module "app.testresults.model")
   beforeEach(module "app.weights.model")
+  beforeEach(module "app.features.models")
 
   beforeEach(module "app.models.controllers")
   beforeEach(module "app.models.model")

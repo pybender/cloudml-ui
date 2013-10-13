@@ -18,6 +18,7 @@ describe "reports", ->
   beforeEach(module "app.datasets.model")
   beforeEach(module "app.testresults.model")
   beforeEach(module "app.datas.model")
+  beforeEach(module "app.features.models")
 
   beforeEach(module "app.reports.model")
   beforeEach(module "app.reports.controllers")

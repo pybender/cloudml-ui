@@ -11,6 +11,7 @@ describe "dashboard", ->
 
   beforeEach(module "app.dashboard.controllers")
   beforeEach(module "app.dashboard.model")
+  beforeEach(module "app.features.models")
 
   beforeEach(module "app.models.model")
   beforeEach(module "app.importhandlers.model")

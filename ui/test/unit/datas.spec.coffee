@@ -16,6 +16,7 @@ describe "test examples", ->
   beforeEach(module "app.testresults.model")
   beforeEach(module "app.importhandlers.model")
   beforeEach(module "app.datasets.model")
+  beforeEach(module "app.features.models")
 
   beforeEach(module "app.datas.model")
   beforeEach(module "app.datas.controllers")
