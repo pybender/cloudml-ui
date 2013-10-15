@@ -1,6 +1,19 @@
 'use strict'
 
-### Trained Model specific Controllers ###
+### Base Feature Edit specific Controllers ###
+
+loadParameters = (model, configuration, setDefault=false) ->
+  if !model.type?
+    model.params = {}
+    return
+
+  config = configuration[model.type]
+  model.config = config
+  if setDefault && config?
+    model.params = config.defaults
+  else
+    model.params = model.params || {}
+
 
 angular.module('app.features.controllers.base', ['app.config', ])
 
@@ -42,6 +55,9 @@ angular.module('app.features.controllers.base', ['app.config', ])
     else if dialog.extra.feature? && dialog.extra.fieldname?
       $scope.feature = dialog.extra.feature
       $scope.model = eval('$scope.feature.' + dialog.extra.fieldname)
+    else if dialog.extra.model?
+      $scope.target_model = dialog.extra.model
+      $scope.model = eval('$scope.target_model.' + dialog.extra.fieldname)
     else
       throw new Excepion "Please spec model or feature and field name"
 
@@ -58,17 +74,7 @@ angular.module('app.features.controllers.base', ['app.config', ])
 
     $scope.loadParameters = (setDefault=false) ->
       model = $scope.model
-      if !model.type? then return
-      config = $scope.configuration[model.type]
-      model.config = config
-      if !setDefault && model.params?
-        params = model.params
-      else
-        model.params = {}
-        params = config.defaults
-
-      for name, val of params
-        model.params[name] = val
+      loadParameters(model, $scope.configuration, setDefault)
 
     $scope.$on('SaveObjectCtl:save:success', (event, current) ->
       dialog.close()
@@ -102,15 +108,6 @@ angular.module('app.features.controllers.base', ['app.config', ])
 
     $scope.loadParameters = (setDefault=false) ->
       model = eval('$scope.parentModel.' + $scope.fieldname)
-      if !model.type? then return
-      config = $scope.configuration[model.type]
-      eval('$scope.parentModel.' + $scope.fieldname).config = config
-      if !setDefault && model.params?
-        params = model.params
-      else
-        model.params = {}
-        params = config.defaults
+      loadParameters(model, $scope.configuration, setDefault)
 
-      for name, val of params
-        model.params[name] = val
 ])

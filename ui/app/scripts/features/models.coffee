@@ -1,3 +1,17 @@
+isEmpty = (dict) ->
+  for prop, val of dict
+    if dict.hasOwnProperty(prop) then return false
+  true
+
+getVal = (val) ->
+  if val? && typeof(val) == 'object'
+    if !isEmpty(val)
+      val = JSON.stringify(val)
+    else
+      val = null
+  return val
+
+
 angular.module('app.features.models', ['app.config'])
 
 .factory('Transformer', [
@@ -79,7 +93,7 @@ angular.module('app.features.models', ['app.config'])
       API_FIELDNAME: 'classifier'
       @LIST_MODEL_NAME: 'classifiers'
       LIST_MODEL_NAME: @LIST_MODEL_NAME
-      @MAIN_FIELDS: 'name,type,created_on,created_by,params'
+      @MAIN_FIELDS: 'name,type,created_on,created_by,params,is_predefined'
       @$TYPES_LIST: ['stochastic gradient descent classifier',
       'support vector regression', 'logistic regression']
 
@@ -158,7 +172,7 @@ scaler,default,is_target_variable,created_on,created_by,required'
 
       _id: null
       name: null
-      type: 'int'
+      type: null
       features_set_id: null
       transformer: null
       input_format: null
@@ -172,10 +186,10 @@ scaler,default,is_target_variable,created_on,created_by,required'
         super origData
         
         if origData?
-          if origData.transformer?
-            @transformer = new Transformer(origData.transformer)
-          if origData.scaler?
-            @scaler = new Scaler(origData.scaler)
+          defaultData = {'feature_id': @_id, 'is_predefined': false}
+          @transformer = new Transformer(
+            _.extend defaultData, origData.transformer)
+          @scaler = new Scaler(_.extend defaultData, origData.scaler)
           if origData.required?
             @required = origData.required == true || origData.required == 'True'
           if origData.is_target_variable?
@@ -207,19 +221,33 @@ scaler,default,is_target_variable,created_on,created_by,required'
 
       $save: (opts={}) =>
         opts.extraData = {}
+        removeItems = opts.removeItems || false
+        isTransformerFilled = false
+        isScalerFilled = false
         for name in opts.only
           if (name.indexOf "transformer__") == 0 && @transformer
             field = name.slice 13
-            val = eval('this.transformer.' + field)
-            if val? && typeof(val) == 'object'
-              val = JSON.stringify(val)
-            opts.extraData['transformer-' + field] = val
+            val = getVal(eval('this.transformer.' + field))
+            if val?
+              opts.extraData['transformer-' + field] = val
+              isTransformerFilled = true
+
           if (name.indexOf "scaler__") == 0 && @scaler
             field = name.slice 8
-            val = eval('this.scaler.' + field)
-            if val? && typeof(val) == 'object'
-              val = JSON.stringify(val)
-            opts.extraData['scaler-' + field] = val
+            val = getVal(eval('this.scaler.' + field))
+            if val?
+              opts.extraData['scaler-' + field] = val
+              isScalerFilled = true
+
+        if isTransformerFilled
+          opts.extraData['transformer-is_predefined'] = false
+        else if removeItems
+          opts.extraData['remove_transformer'] = true
+
+        if isScalerFilled
+          opts.extraData['scaler-is_predefined'] = false
+        else if removeItems
+          opts.extraData['remove_scaler'] = true
 
         if @params? && typeof(@params) == 'object'
           @params = JSON.stringify(@params)

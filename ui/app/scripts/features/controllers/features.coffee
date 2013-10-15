@@ -1,8 +1,12 @@
 'use strict'
 
+### Feature specific controllers ###
+
 angular.module('app.features.controllers.features', ['app.config', ])
 
-.controller('FeatureAddCtrl', [
+# Controller for adding/edditing features fields in separate page.
+# template: features/items/edit.html
+.controller('FeatureEditCtrl', [
   '$scope'
   '$routeParams'
   '$location'
@@ -14,25 +18,24 @@ angular.module('app.features.controllers.features', ['app.config', ])
   if not $routeParams.model_id then throw new Error "Specify model id"
   if not $routeParams.set_id then throw new Error "Specify set id"
 
-  if $routeParams.feature_id
-    $scope.feature = new Feature({
-      '_id': $routeParams.feature_id,
+  $scope.modelObj = new Model({'_id': $routeParams.model_id})
+  $scope.feature = new Feature({
       'features_set_id': $routeParams.set_id,
       'transformer': {},
       'scaler': {}
-    })
-    $scope.feature.$load(show: Feature.MAIN_FIELDS
-    ).then (->), ((opts)-> $scope.setError(opts, 'loading feature'))
-  else
-    $scope.feature = new Feature({
-      'transformer': {'is_predefined': false},
-      'scaler': {'is_predefined': false},
-      'features_set_id': $routeParams.set_id
-    })
-  $scope.modelObj = new Model({'_id': $routeParams.model_id})
+  })
 
-  #  TODO: use SaveObjectCtl
+  if $routeParams.feature_id
+    $scope.feature._id = $routeParams.feature_id
+    $scope.feature.$load(show: Feature.MAIN_FIELDS
+    ).then (->), ((opts)-> $scope.setError(opts, 'loading feature details'))
+
+  #  TODO: Could we use SaveObjectCtl?
   $scope.save = (fields) ->
+    # Note: We need to delete transformer or scaler when
+    # transformer/scaler fields selected, when edditing
+    # feature in full details page.
+    is_edit = $scope.feature._id != null
     $scope.saving = true
     $scope.savingProgress = '0%'
 
@@ -40,7 +43,7 @@ angular.module('app.features.controllers.features', ['app.config', ])
       $scope.savingProgress = '50%'
       $scope.$apply()
 
-    $scope.feature.$save(only: fields).then (->
+    $scope.feature.$save(only: fields, removeItems: true).then (->
       $scope.savingProgress = '100%'
       $location.path($scope.modelObj.objectUrl())\
       .search({'action': 'features_set:list'})
@@ -48,4 +51,18 @@ angular.module('app.features.controllers.features', ['app.config', ])
       $scope.err = $scope.setError(opts, "saving")
       $scope.savingProgress = '0%'
     )
+
+  $scope.clearTransformer = () ->
+    $scope.feature.transformer = {}
+
+  $scope.clearScaler = () ->
+    $scope.feature.scaler = {}
+
+  $scope.changeTransformerType = () ->
+    if !$scope.feature.transformer.type
+      $scope.clearTransformer()
+
+  $scope.changeScalerType = () ->
+    if !$scope.feature.scaler.type
+      $scope.clearScaler()
 ])

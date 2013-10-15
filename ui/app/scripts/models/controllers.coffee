@@ -294,10 +294,12 @@ train_records_count,test_handler_fields'
         'modal', 'delete model', 'models')
 
     $scope.editClassifier = (model) ->
-      $scope.openDialog($dialog, model.classifier,
+      $scope.openDialog($dialog, null,
         'partials/features/classifiers/edit.html',
           'ModelWithParamsEditDialogCtrl',
-        'modal', 'edit classifier', 'classifiers')
+        'modal', 'edit classifier', 'classifiers',
+        {model: model, fieldname: 'classifier'}
+      )
 
     $scope._showModelActionDialog = (model, action, fn)->
       if eval('model.' + action + '_import_handler_obj')?

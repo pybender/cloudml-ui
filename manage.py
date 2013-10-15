@@ -103,11 +103,37 @@ def _make_context():
 
 
 class Test(Command):
-    """Run app tests."""
+    """
+    Run app tests.
+    Please initialize env variable with path to test config:
 
-    def run(self):
+    $ export CLOUDML_CONFIG="{{ path to }}/cloudml-ui/api/test_config.py"
+    """
+
+    def get_options(self):
+        return (
+            Option('-t', '--tests',
+                   dest='tests',
+                   default=None,
+                   help="specifies tests"),
+        )
+
+    def run(self, **kwargs):
         import nose
-        nose.run(argv=[''])
+        app.config.from_object('api.test_config')
+        app.init_db()
+        argv = ['']
+        tests = kwargs.get('tests', None)
+        if tests:
+            argv.append('--tests')
+            argv.append(tests)
+        try:
+            nose.run(argv=argv)
+        finally:
+            if app.db.name == 'cloudml-test-db':
+                for name in app.db.collection_names():
+                    model = getattr(app.db, name)
+                    model.collection.remove()
 
 
 class Coverage(Command):

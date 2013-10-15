@@ -16,4 +16,6 @@ Run dev server::
 
 Run tests::
 
-    $ python manage.py test
+	$ python manage.py test
+
+	$ nosetests --tests api.test.test_features

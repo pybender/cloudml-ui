@@ -10,10 +10,9 @@ angular.module('app.features.controllers.named_types', ['app.config', ])
 
   ($scope, NamedFeatureType) ->
     $scope.TYPES_LIST = NamedFeatureType.$TYPES_LIST
-    $scope.types = NamedFeatureType.$TYPES_LIST
     NamedFeatureType.$loadAll(show: 'name').then ((opts) ->
-      for nt in opts.objects
-        $scope.types.push nt.name
+      predefined = (t.name for t in opts.objects)
+      $scope.types = NamedFeatureType.$TYPES_LIST.concat predefined
     ), ((opts) ->
       $scope.err = $scope.setError(opts, 'loading instances')
     )

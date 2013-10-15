@@ -503,11 +503,13 @@ class Classifier(BaseDocument):
         'created_by': dict,
         'updated_on': datetime,
         'updated_by': dict,
+        'is_predefined': bool,
     }
     required_fields = ['created_on', 'updated_on']
     default_values = {
         'created_on': datetime.utcnow,
         'updated_on': datetime.utcnow,
+        'is_predefined': False,
     }
     use_dot_notation = True
 
@@ -1132,20 +1134,20 @@ from core.trainer.scalers import MinMaxScaler, StandardScaler
 SCALERS = {
     'MinMaxScaler': {
         'class': MinMaxScaler,
-        'parameters': {
+        'defaults': {
             'feature_range_min': 0,
             'feature_range_max': 1,
-            'copy': True
-                  },
+            'copy': True},
+        'parameters': ['feature_range_min', 'feature_range_max', 'copy']
         },
     'StandardScaler': {
         'class': StandardScaler,
-        'parameters': {
+        'defaults': {
             'copy': True,
             'with_std': True,
-            'with_mean': True
-                  },
-        }
+            'with_mean': True},
+        'parameters': ['copy', 'with_std', 'with_mean']
+    }
 }
 
 @app.conn.register
@@ -1169,7 +1171,7 @@ class Scaler(BaseDocument):
     default_values = {
         'created_on': datetime.utcnow,
         'updated_on': datetime.utcnow,
-        'is_predefined': True,
+        'is_predefined': False,
     }
     use_dot_notation = True
 
@@ -1241,6 +1243,7 @@ class Feature(BaseDocument):
         data = super(Feature, self).to_dict()
         if self.transformer:
             data['transformer'] = self.transformer.to_dict()
+        print data
         return data
 
     def __repr__(self):

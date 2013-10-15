@@ -4,7 +4,8 @@ exports.config =
     definition: false
     wrapper: false
   paths:
-    public: '_public'
+    'public': '_public'
+    watched: ['app', 'vendor']
   files:
     javascripts:
       joinTo:

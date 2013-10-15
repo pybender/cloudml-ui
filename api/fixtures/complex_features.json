@@ -1,0 +1,19 @@
+{"Feature": [
+{
+	"scaler": {"$ref" : "Scaler", "$id" : "5270dd3a106a6c1631000002"}, 
+	"updated_by": {}, 
+	"input_format": "dict", 
+	"name": "transformed feature", 
+	"transformer": {"$ref" : "Transformer", "$id" : "5270dd3a106a6c1631000002"}, 
+	"features_set": {"$ref" : "FeatureSet", "$id" : "5251233d106a6c5b36c54896"},
+	"is_target_variable": false, 
+	"default": "smth", 
+	"required": true, 
+	"created_by": {}, 
+	"params": {"mappings": {"class2": 0, "class1": 1}}, 
+	"_id": "525123b1206a6c5bcbc12efb", 
+	"type": "map", 
+	"features_set_id": "5251233d106a6c5b36c54896"
+}
+]
+}
