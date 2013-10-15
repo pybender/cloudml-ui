@@ -6,5 +6,13 @@
   "type": "logistic regression",
   "created_on": "2013-04-19 14:37:23.145000",
   "updated_on": "2013-04-19 14:37:23.145000"
+},
+{
+  "_id": "519318e6106a6c0df489bc1a",
+  "name": "predefined name",
+  "type": "logistic regression",
+  "is_predefined": true,
+  "created_on": "2013-04-19 14:37:23.145000",
+  "updated_on": "2013-04-19 14:37:23.145000"
 }]
 }

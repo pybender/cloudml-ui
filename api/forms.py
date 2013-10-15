@@ -641,6 +641,7 @@ class BasePredefinedForm(BaseFormEx):
     # predefined item to copy fields from, when `predefined_selected`.
     OBJECT_NAME = None
     DOC = None
+    TARGET_ID_FIELD = 'feature_id'
 
     def clean_feature_id(self, value, field):
         if value:
@@ -650,11 +651,13 @@ class BasePredefinedForm(BaseFormEx):
 
     def validate_data(self):
         is_predefined = self.cleaned_data.get('is_predefined', False)
-        predefined_selected = self.cleaned_data.get('predefined_selected', False)
-        feature_id = self.cleaned_data.get('feature_id', False)
+        predefined_selected = self.cleaned_data.get(
+            'predefined_selected', False)
+        feature_id = self.cleaned_data.get(self.TARGET_ID_FIELD, False)
 
         if predefined_selected and is_predefined:
-            raise ValidationError('item could be predefined or copied from predefined')
+            raise ValidationError(
+                'item could be predefined or copied from predefined')
 
         if self.inner_name:
             # It's feature related form
@@ -662,7 +665,8 @@ class BasePredefinedForm(BaseFormEx):
                 raise ValidationError('feature item could not be predefined')
         else:
             if not (bool(feature_id) != bool(is_predefined)):
-                raise ValidationError('one of feature_id and is_predefined is required')
+                raise ValidationError(
+                    'one of feature_id and is_predefined is required')
 
         if is_predefined:
             name = self.cleaned_data.get('name', None)
@@ -676,12 +680,13 @@ class BasePredefinedForm(BaseFormEx):
             count = callable_document.find(kwargs).count()
 
             if count:
-                raise ValidationError('name of predefined item should be unique')
+                raise ValidationError(
+                    'name of predefined item should be unique')
 
         if predefined_selected:
             obj = self.cleaned_data.get(self.OBJECT_NAME, None)
             if obj:
-               self._fill_predefined_values(obj)
+                self._fill_predefined_values(obj)
 
     def _fill_predefined_values(self, obj):
         """
@@ -728,6 +733,8 @@ class ClassifierForm(BasePredefinedForm):
     Form with predefined item selection for model instead of feature
     """
     OBJECT_NAME = 'classifier'
+    DOC = 'Classifier'
+    TARGET_ID_FIELD = 'model_id'
 
     group_chooser = 'predefined_selected'
     required_fields_groups = {'true': ('classifier', 'type'),
@@ -741,10 +748,10 @@ class ClassifierForm(BasePredefinedForm):
     predefined_selected = BooleanField()
     # whether we need to create predefined item (not model-related)
     is_predefined = BooleanField()
-    classifier = DocumentField(doc=app.db.Classifier, by_name=False,
+    classifier = DocumentField(doc='Classifier', by_name=True,
                                filter_params={'is_predefined': True},
                                return_doc=True)
-    model_id = DocumentField(doc=app.db.Model, by_name=False,
+    model_id = DocumentField(doc='Model', by_name=False,
                              return_doc=False)
 
     def clean_model_id(self, value, field):

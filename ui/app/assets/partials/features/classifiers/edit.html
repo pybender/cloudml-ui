@@ -1,8 +1,10 @@
-<div ng-controller="SaveObjectCtl">
+<div ng-controller="SaveObjectCtl" ng-init="target_model.classifier.classifier = null">
   <div class="modal-header">
     <button ng-click="dialog.close()" class="close" data-dismiss="modal">×</button>
     <h3>Edit classifier</h3>
   </div>
+
+  <form name="Form" class="form-horizontal">
 
   <div class="modal-body">
     <loadindicator title="Saving classifier..." ng-show="saving" progress="savingProgress"></loadindicator>
@@ -22,9 +24,9 @@
       <alert-message class="alert-info" msg='Please choose predefined classifier. You could add other predefined classifiers at <a target="_blank" href="#/predefined/classifiers/">Classifiers List</a> page.' unsafe></alert-message>
       <div class="control-group" ng-class="{error: Form.classifier.$invalid}">
         <label class="control-label">Classifier</label>
-        <div class="controls"  ng-controller="ClassifiersSelectLoader">
-          <select name="classifier" ng-model="target_model.classifier.classifier" ng-required="currentTab=='predefined'">
-            <option ng-repeat="clr in classifiers" value="{{ clr._id }}">{{ clr.name }}</option>
+        <div class="controls" ng-controller="ClassifiersSelectLoader">
+          <select name="classifier" ng-model="model.classifier" ng-required="currentTab=='predefined'">
+            <option ng-repeat="clr in classifiers" value="{{ clr.name }}">{{ clr.name }}</option>
           </select>
           <span ng-show="Form.classifier.$error.required" class="help-inline">*</span>
         </div>
@@ -40,4 +42,6 @@
   <div class="modal-footer">
     <button ng-click="save(['name', 'type', 'params', 'model_id', 'predefined_selected', 'classifier', 'is_predefined'])" ng-disabled="Form.$invalid" class="btn btn-primary">Save</button>
   </div>
+
+    </form>
 </div>

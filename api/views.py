@@ -1053,6 +1053,10 @@ class ClassifierResource(BaseResource):
         from core.trainer.classifier_settings import CLASSIFIERS
         return self._render({'configuration': CLASSIFIERS})
 
+    def _delete_validataion(self, model):
+        if not model.is_predefined:
+            raise ValidationError("Can't delete model's classifier")
+
 api.add_resource(ClassifierResource, '/cloudml/features/classifiers/')
 
 

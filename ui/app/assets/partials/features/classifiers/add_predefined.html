@@ -4,6 +4,8 @@
     <h3>Add classifier</h3>
   </div>
 
+  <form name="Form" class="form-horizontal">
+
   <div class="modal-body">
     <loadindicator title="Adding classifier..." ng-show="saving" progress="savingProgress"></loadindicator>
 
@@ -15,4 +17,6 @@
   <div class="modal-footer">
     <button ng-click="save(['name', 'type', 'input_format', 'params', 'is_predefined'])" ng-disabled="Form.$invalid" class="btn btn-primary">Add classifier</button> <small>and start using it</small>
   </div>
+
+  </form>
 </div>

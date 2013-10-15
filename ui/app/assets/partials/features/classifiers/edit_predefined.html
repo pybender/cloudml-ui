@@ -4,6 +4,8 @@
     <h3>Edit classifier</h3>
   </div>
 
+  <form name="Form" class="form-horizontal">
+
   <div class="modal-body">
     <loadindicator title="Editing classifier..." ng-show="saving" progress="savingProgress"></loadindicator>
 
@@ -13,6 +15,8 @@
   </div>
 
   <div class="modal-footer">
-    <button ng-click="save(['name', 'type', 'params'])" ng-disabled="Form.$invalid" class="btn btn-primary">Save</button>
+    <button ng-click="save(['name', 'type', 'params', 'is_predefined'])" ng-disabled="Form.$invalid" class="btn btn-primary">Save</button>
   </div>
+
+  </form>
 </div>

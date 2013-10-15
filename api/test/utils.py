@@ -364,6 +364,12 @@ def dumpdata(document_list, fixture_name):
 class FeaturePredefinedItems(BaseTestCase):
     OBJECT_NAME = None
     DATA = {}
+    TARGET_ID_FIELD = 'feature_id'
+    TARGET_MODEL = None
+
+    def __init__(self, *args, **kwargs):
+        super(FeaturePredefinedItems, self).__init__(*args, **kwargs)
+        self.TARGET_MODEL = self.db.Feature
 
     def _test_add_predefined(self, extra_data={}):
         data = copy(self.DATA)
@@ -379,7 +385,7 @@ class FeaturePredefinedItems(BaseTestCase):
     def _test_add_feature_item(self, feature, extra_data={}):
         data = copy(self.DATA)
         data.update({'is_predefined': 'false',
-                     'feature_id': str(feature._id)})
+                     self.TARGET_ID_FIELD: str(feature._id)})
         data.update(extra_data)
 
         resp, obj = self._check_post(data, load_model=True)
@@ -388,7 +394,7 @@ class FeaturePredefinedItems(BaseTestCase):
         self.assertFalse(obj.is_predefined)
         self.assertEqual(obj.params, json.loads(data['params']))
 
-        feature = self.db.Feature.find_one({'_id': feature._id})
+        feature = self.TARGET_MODEL.find_one({'_id': feature._id})
         self.assertTrue(getattr(feature, self.OBJECT_NAME),
                         "%s of the feature should be filled" % self.OBJECT_NAME)
 
@@ -402,7 +408,7 @@ class FeaturePredefinedItems(BaseTestCase):
         self.assertFalse(obj.is_predefined)
         self.assertEqual(obj.params, item.params)
 
-        feature = self.db.Feature.find_one({'_id': feature._id})
+        feature = self.TARGET_MODEL.find_one({'_id': feature._id})
         self.assertTrue(getattr(feature, self.OBJECT_NAME),
                         "%s should be filled" % self.OBJECT_NAME)
 
@@ -417,7 +423,7 @@ class FeaturePredefinedItems(BaseTestCase):
     def _test_edit_feature_item(self, feature, extra_data={}):
         data = copy(self.DATA)
         data.update({'is_predefined': 'false',
-                     'feature_id': str(feature._id)})
+                     self.TARGET_ID_FIELD: str(feature._id)})
         data.update(extra_data)
 
         item = getattr(feature, self.OBJECT_NAME)
@@ -427,7 +433,7 @@ class FeaturePredefinedItems(BaseTestCase):
         self.assertFalse(obj.is_predefined)
         self.assertEqual(obj.params, json.loads(data['params']))
 
-        feature = self.db.Feature.find_one({'_id': feature._id})
+        feature = self.TARGET_MODEL.find_one({'_id': feature._id})
         feature_item = getattr(feature, self.OBJECT_NAME)
         self.assertTrue(feature_item, "%s should be filled" % self.OBJECT_NAME)
         self.assertEquals(feature_item._id, obj._id)
@@ -436,11 +442,11 @@ class FeaturePredefinedItems(BaseTestCase):
     def _edit_feature_item_from_predefined(self, feature, predefined_item):
         self.assertTrue(predefined_item.is_predefined, "Specify predefined item")
         data = {self.OBJECT_NAME: predefined_item.name,
-                'feature_id': str(feature._id),
+                self.TARGET_ID_FIELD: str(feature._id),
                 'predefined_selected': 'true'}
         item = getattr(feature, self.OBJECT_NAME)
         resp, obj = self._check_put(data, obj=item, load_model=True)
-        feature = self.db.Feature.find_one({'_id': feature._id})
+        feature = self.TARGET_MODEL.find_one({'_id': feature._id})
         self.assertTrue(getattr(feature, self.OBJECT_NAME),
                         "%s should be filled" % self.OBJECT_NAME)
         self.assertNotEquals(obj._id, predefined_item._id)
@@ -450,4 +456,3 @@ class FeaturePredefinedItems(BaseTestCase):
         self.assertEqual(obj.params, predefined_item.params)
         self.assertFalse(obj.is_predefined)
         return resp, obj
-        

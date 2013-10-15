@@ -58,6 +58,7 @@ angular.module('app.features.controllers.base', ['app.config', ])
     else if dialog.extra.model?
       $scope.target_model = dialog.extra.model
       $scope.model = eval('$scope.target_model.' + dialog.extra.fieldname)
+      $scope.model.model_id = $scope.target_model._id
     else
       throw new Excepion "Please spec model or feature and field name"
 

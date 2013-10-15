@@ -51,13 +51,13 @@ angular.module('app.features.controllers.classifiers', ['app.config', ])
       classifier = new Classifier({'is_predefined': true})
       $scope.openDialog($dialog, classifier,
         'partials/features/classifiers/add_predefined.html',
-        'ModelWithParamsEditDialogCtrl', 'modal', 'add transformer',
-        'transformers')
+        'ModelWithParamsEditDialogCtrl', 'modal', 'add classifier',
+        'classifiers')
 
     $scope.delete = (classifier)->
       $scope.openDialog($dialog, classifier,
         'partials/base/delete_dialog.html', 'DialogCtrl',
-        'modal', 'delete predefined transformer')
+        'modal', 'delete predefined classifier')
 ])
 
 
