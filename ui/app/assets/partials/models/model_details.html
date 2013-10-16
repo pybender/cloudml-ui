@@ -242,9 +242,10 @@
         <ng-include src="'/partials/weights/list.html'"></ng-include>
     </div>
   </div>
-  <div ng-show="action[0] == 'features'"  id="features">
+  <div ng-show="action[0] == 'features'"  id="features" ng-controller='FeaturesSetDetailsCtrl' ng-init="init(model)">
     <a href="{{ model.downloadUrl() }}?field=features"><i title="Download features file" class="icon-download-alt"></i> Download
       </a>
+    {{ featuresSet.json }}
     <textarea ui-codemirror="{ mode: {name: 'javascript', json: true} }" ng-model="model.features"> </textarea>
   </div>
 </div>

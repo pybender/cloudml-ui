@@ -169,11 +169,55 @@ transformer-type: should be one of Count, Tfidf, Dictionary"})
         self.assertFalse(obj.scaler, "scaler should be removed")
 
 
-class TestFeatureSetDoc(BaseTestCase):
+class TestFeaturesDocs(BaseTestCase):
     """
-    Tests for the FeatureSet methods.
+    Tests for the FeatureSet and Feature models.
     """
     FIXTURES = ('models.json', )
+
+    def test_create_feature_set(self):
+        def fields_from_dict(obj, fields):
+            for key, val in fields.iteritems():
+                setattr(obj, key, val)
+
+        FeatureSet = app.db.FeatureSet
+        Feature = app.db.Feature
+
+        fset = FeatureSet()
+        self.assertTrue(fset.features_dict)
+        fset.schema_name = 'bestmatch'
+        fset.save()
+        self.assertEquals(fset.features_dict,
+                          {'feature-types': [],
+                           'features': [],
+                           'schema-name': 'bestmatch'})
+        feature1 = Feature()
+        feature1_data = {
+            'features_set': fset,
+            'features_set_id': str(fset._id),
+            'name': 'name',
+            'type': 'text'}
+        fields_from_dict(feature1, feature1_data)
+        feature1.save()
+
+        fset = FeatureSet.get_from_id(fset._id)
+        self.assertFalse(fset.target_variable)
+        self.assertEquals(fset.features_count, 1)
+        self.assertEquals(len(fset.features_dict['features']), 1)
+        feature2 = Feature()
+        feature2_data = {
+            'features_set': fset,
+            'features_set_id': str(fset._id),
+            'name': 'hire_outcome', 'type': 'int',
+            'is_target_variable': True}
+        fields_from_dict(feature2, feature2_data)
+        fset = FeatureSet.get_from_id(fset._id)
+        feature2.save()
+
+        fset = FeatureSet.get_from_id(fset._id)
+        self.assertEquals(fset.target_variable, 'hire_outcome')
+        self.assertEquals(fset.features_count, 2)
+        self.assertEquals(len(fset.features_dict['features']), 2)
 
     def test_from_model_features_dict(self):
         model = app.db.Model.get_from_id(ObjectId(MODEL_ID))

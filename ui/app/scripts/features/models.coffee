@@ -134,7 +134,7 @@ angular.module('app.features.models', ['app.config'])
       BASE_UI_URL: "/features/sets/"
       API_FIELDNAME: 'set'
       @MAIN_FIELDS: 'name,schema_name,classifier,
-features_count,created_on,created_by,target_variable'
+features_count,created_on,created_by,target_variable,json'
 
       _id: null
       name: null
@@ -144,6 +144,7 @@ features_count,created_on,created_by,target_variable'
       target_variable: null
       created_on: null
       created_by: null
+      json: null
 
       loadFromJSON: (origData) =>
         super origData
