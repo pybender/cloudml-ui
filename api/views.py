@@ -467,7 +467,7 @@ class Tests(BaseResource):
     OBJECT_NAME = 'test'
     DEFAULT_FIELDS = ('_id', 'name')
     FILTER_PARAMS = (('status', str), )
-    GET_ACTIONS = ('confusion_matrix', 'exports')
+    GET_ACTIONS = ('confusion_matrix', 'exports', 'examples_size')
 
     post_form = AddTestForm
 
@@ -485,6 +485,12 @@ class Tests(BaseResource):
         test_id = kwargs.get('_id')
         return self.Model.find_one({'model_id': model_id,
                                    '_id': ObjectId(test_id)}, fields)
+
+    def _get_examples_size_action(self, **kwargs):
+        fields = ['name', 'model_name', 'model_id', 'examples_size', 'created_on',
+                  'created_by']
+        tests = app.db.Test.find({}, fields).sort([('examples_size', -1)]).limit(10)
+        return self._render({'tests': tests})
 
     def _get_confusion_matrix_action(self, **kwargs):
         from api.tasks import calculate_confusion_matrix

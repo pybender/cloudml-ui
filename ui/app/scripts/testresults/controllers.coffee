@@ -155,7 +155,7 @@ without test id and model id"
         when 'about'
           extra_fields = 'classes_set,created_on,parameters,error,
 examples_count,dataset,memory_usage,created_by,examples_placement,
-examples_fields'
+examples_fields,examples_size'
         when 'metrics'
           extra_fields = 'accuracy,metrics.precision_recall_curve,
 metrics.roc_curve,metrics.roc_auc'

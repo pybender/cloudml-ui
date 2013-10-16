@@ -550,6 +550,7 @@ class Test(BaseDocument):
         'examples_count': int,
         'examples_placement': basestring,
         'examples_fields': list,
+        'examples_size': int,
 
         'parameters': dict,
         'classes_set': list,
@@ -573,6 +574,7 @@ class Test(BaseDocument):
         'memory_usage': {},
         'exports': [],
         'created_by': {},
+        'examples_size': 0,
     }
     use_dot_notation = True
     use_autorefs = True

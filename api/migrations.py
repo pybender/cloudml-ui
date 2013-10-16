@@ -137,6 +137,22 @@ class TestMigration(DbMigration):  # pragma: no cover
         self.target = {'examples_fields': {'$exists': False}}
         self.update = {'$set': {'examples_fields': []}}
 
+    def allmigration07__add_examples_size(self):
+        self.target = {'examples_size': {'$exists': False}}
+        self.update = {'$set': {'examples_size': []}}
+
+    def allmigration08__fill_examples_size(self):
+        from api.utils import get_doc_size
+        for test in app.db.Test.find():
+            if not test.examples_size:
+                size = 0
+                examples = app.db.TestExample.find({'test_id': str(test._id)})
+                for example in examples:
+                    size += get_doc_size(example)
+
+                test['examples_size'] = size / 1024 / 1024
+                test.save()
+
 
 class DataSetMigration(DbMigration):  # pragma: no cover
     DOC_CLASS = models.DataSet

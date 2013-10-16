@@ -5,7 +5,12 @@ import pickle
 import logging
 import re
 import translitcodec
-from time import time
+import sys
+try:
+    from pymongo.bson import BSON
+except ImportError:
+    from bson import BSON
+    from time import time
 
 
 from flask import make_response, request, current_app, jsonify
@@ -137,3 +142,17 @@ def crossdomain(origin=None, methods=None, headers=None,
         f.provide_automatic_options = False
         return update_wrapper(wrapped_function, f)
     return decorator
+
+
+def get_doc_size(doc):
+    """
+    Get document size in bytes
+
+    :Parameters:
+        - `doc`: string or dict
+
+    """
+    if not isinstance(doc, dict):
+        doc = json.loads(doc)
+
+    return len(BSON.encode(doc))
