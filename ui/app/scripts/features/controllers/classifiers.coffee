@@ -23,7 +23,7 @@ angular.module('app.features.controllers.classifiers', ['app.config', ])
       is_predefined: 1
     ).then ((opts) ->
       for tr in opts.objects
-        $scope.classifiers.push tr.name
+        $scope.classifiers.push {_id: tr._id, name: tr.name}
     ), ((opts) ->
       $scope.err = $scope.setError(opts, 'loading classifiers')
     )
@@ -48,7 +48,7 @@ angular.module('app.features.controllers.classifiers', ['app.config', ])
         'ModelWithParamsEditDialogCtrl', 'modal')
 
     $scope.add = () ->
-      classifier = new Classifier()
+      classifier = new Classifier({'is_predefined': true})
       $scope.openDialog($dialog, classifier,
         'partials/features/classifiers/add_predefined.html',
         'ModelWithParamsEditDialogCtrl', 'modal', 'add transformer',
@@ -59,6 +59,7 @@ angular.module('app.features.controllers.classifiers', ['app.config', ])
         'partials/base/delete_dialog.html', 'DialogCtrl',
         'modal', 'delete predefined transformer')
 ])
+
 
 # .controller('ClassifierDetailsCtrl', [
 #   '$scope'

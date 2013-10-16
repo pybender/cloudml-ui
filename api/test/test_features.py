@@ -1,6 +1,8 @@
+import httplib
+import logging
 from bson import ObjectId
 
-from utils import BaseTestCase
+from utils import BaseTestCase, HTTP_HEADERS
 from utils import MODEL_ID
 from api import app
 from api.views import FeatureResource
@@ -167,6 +169,28 @@ transformer-type: should be one of Count, Tfidf, Dictionary"})
         resp, obj = self._check_put(data, load_model=True)
         self.assertFalse(obj.transformer, "Transformer should be removed")
         self.assertFalse(obj.scaler, "scaler should be removed")
+
+    def test_make_target_variable(self):
+        fset = self.model.features_set
+        data = {'is_target_variable': 'true'}
+        params = {'is_target_variable': False,
+                  'features_set_id': str(fset._id)}
+        feature = app.db.Feature.find_one(params)
+        url = self._get_url(id=feature._id)
+        resp = self.app.put(url, data=data, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.OK)
+
+        fset = app.db.FeatureSet.get_from_id(fset._id)
+        self.assertEquals(feature.name, fset.target_variable)
+
+        logging.debug('Target varialble is %s', feature.name)
+        feature = app.db.Feature.get_from_id(feature._id)
+        self.assertTrue(feature.is_target_variable)
+
+        features = app.db.Feature.find(params)
+        self.assertTrue(features.count())
+        for f in features:
+            self.assertFalse(f.is_target_variable)
 
 
 class TestFeaturesDocs(BaseTestCase):

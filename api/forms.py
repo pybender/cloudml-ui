@@ -631,9 +631,9 @@ class FeatureSetAddForm(BaseForm):
 class BasePredefinedForm(BaseFormEx):
     """
     Base form for creating/edditing features specific items, which could be:
-        * predefined item - that could be used when creating/edditing 
+        * predefined item - that could be used when creating/edditing
             feature item to copy fields from them
-        * feature item like feature transformer, scaler, etc 
+        * feature item like feature transformer, scaler, etc
             when item fields are specified
         * feature item copied from predefined item.
     """
@@ -642,7 +642,7 @@ class BasePredefinedForm(BaseFormEx):
     OBJECT_NAME = None
     DOC = None
 
-    def clean_feature_id(self, value, field):        
+    def clean_feature_id(self, value, field):
         if value:
             feature = field.doc
             self.cleaned_data['feature'] = feature
@@ -682,7 +682,7 @@ class BasePredefinedForm(BaseFormEx):
             obj = self.cleaned_data.get(self.OBJECT_NAME, None)
             if obj:
                self._fill_predefined_values(obj)
-            
+
     def _fill_predefined_values(self, obj):
         """
         Fills fields from predefined obj
@@ -723,12 +723,43 @@ class ScalerForm(BasePredefinedForm):
                                 return_doc=False)
 
 
-class ClassifierForm(BaseFormEx):
-    required_fields = ('name', 'type')
+class ClassifierForm(BasePredefinedForm):
+    """
+    Form with predefined item selection for model instead of feature
+    """
+    OBJECT_NAME = 'classifier'
+
+    group_chooser = 'predefined_selected'
+    required_fields_groups = {'true': ('classifier', 'type'),
+                              'false': ('name', 'type',),
+                              None: ('name', 'type',)}
 
     name = CharField()
-    type = ChoiceField(choices=app.db.Classifier.TYPES_LIST)
+    type_field = ChoiceField(choices=app.db.Classifier.TYPES_LIST, name='type')
     params = JsonField()
+    # whether need to copy model classifier fields from predefined one
+    predefined_selected = BooleanField()
+    # whether we need to create predefined item (not model-related)
+    is_predefined = BooleanField()
+    classifier = DocumentField(doc=app.db.Classifier, by_name=False,
+                               filter_params={'is_predefined': True},
+                               return_doc=True)
+    model_id = DocumentField(doc=app.db.Model, by_name=False,
+                             return_doc=False)
+
+    def clean_model_id(self, value, field):
+        if value:
+            model = field.doc
+            self.cleaned_data['model'] = model
+        return value
+
+    def save(self, commit=True):
+        classifier = super(ClassifierForm, self).save(commit)
+        model = self.cleaned_data.get('model', None)
+        if model:
+            model.classifier = classifier
+            model.save()
+        return classifier
 
 
 class TransformerForm(BasePredefinedForm):
@@ -794,7 +825,7 @@ class FeatureForm(BaseFormEx):
     def clean_remove_transformer(self, value, field):
         return value and self.is_edit
 
-    def save(self, commit=True):
+    def save(self, *args, **kwargs):
         remove_transformer = self.cleaned_data.get('remove_transformer', False)
         if remove_transformer and self.obj.transformer:
             self.obj.transformer.delete()
@@ -805,7 +836,18 @@ class FeatureForm(BaseFormEx):
             self.obj.scaler.delete()
             self.obj.scaler = None
 
-        return super(FeatureForm, self).save()
+        feature = super(FeatureForm, self).save(*args, **kwargs)
+        if feature.is_target_variable:
+            feature.features_set.target_variable = feature.name
+            feature.features_set.save()
+            app.db.Feature.collection.update({
+                'features_set_id': feature.features_set_id,
+                '_id': {'$ne': feature._id}
+            }, {
+                '$set': {'is_target_variable': False}
+            }, multi=True)
+        return feature
+
 
 def populate_parser(import_params):
     from flask.ext.restful import reqparse

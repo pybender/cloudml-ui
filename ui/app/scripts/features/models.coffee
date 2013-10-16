@@ -93,7 +93,7 @@ angular.module('app.features.models', ['app.config'])
       API_FIELDNAME: 'classifier'
       @LIST_MODEL_NAME: 'classifiers'
       LIST_MODEL_NAME: @LIST_MODEL_NAME
-      @MAIN_FIELDS: 'name,type,created_on,created_by,params'
+      @MAIN_FIELDS: 'name,type,created_on,created_by,params,is_predefined'
       @$TYPES_LIST: ['stochastic gradient descent classifier',
       'support vector regression', 'logistic regression']
 
