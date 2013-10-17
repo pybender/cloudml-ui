@@ -17,7 +17,8 @@ from core.trainer.streamutils import streamingiterload
 from api import app, celery
 from api.amazon_utils import AmazonS3Helper
 
-
+SYSTEM_FIELDS = ('name', 'created_on', 'updated_on', 'created_by',
+                 'updated_by', 'type', 'is_predefined')
 FIELDS_MAP = {'input_format': 'input-format',
               'is_target_variable': 'is-target-variable',
               'required': 'is-required',
@@ -73,7 +74,7 @@ class BaseDocument(Document):
                 if cls.NO_PARAMS_KEY and field == 'params':
                     # Fields that would be placed to params dict.
                     params_fields = set(obj_dict.keys()) - \
-                        set(cls.FIELDS_TO_SERIALIZE)
+                        set(cls.FIELDS_TO_SERIALIZE + SYSTEM_FIELDS)
                     value = dict([(name, obj_dict[name])
                                  for name in params_fields])
                 else:
@@ -95,8 +96,12 @@ class BaseDocument(Document):
             if val is not None:
                 if field_type in (bool, dict) and not val:
                     continue
-                field_name = FIELDS_MAP.get(field, field)
-                data[field_name] = val
+                if self.NO_PARAMS_KEY and field == 'params':
+                    for key, value in self.params.iteritems():
+                        data[key] = value
+                else:
+                    field_name = FIELDS_MAP.get(field, field)
+                    data[field_name] = val
         return data
 
 
