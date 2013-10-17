@@ -20,15 +20,42 @@ angular.module('app.features.controllers.features', ['app.config', ])
 
   $scope.modelObj = new Model({'_id': $routeParams.model_id})
   $scope.feature = new Feature({
-      'features_set_id': $routeParams.set_id,
-      'transformer': {},
-      'scaler': {}
+    features_set_id: $routeParams.set_id,
+    transformer: {},
+    scaler: {}
   })
+  $scope.config = {}
+  $scope.params_config = {}
 
   if $routeParams.feature_id
     $scope.feature._id = $routeParams.feature_id
     $scope.feature.$load(show: Feature.MAIN_FIELDS
-    ).then (->), ((opts)-> $scope.setError(opts, 'loading feature details'))
+    ).then ((opts) ->
+      $scope.loadFeatureParameters()),
+      ((opts)-> $scope.setError(opts, 'loading feature details'))
+
+  $scope.feature.$getConfiguration().then ((opts)->
+      $scope.configuration = opts.data.configuration
+      $scope.loadFeatureParameters()
+    ), ((opts)->
+      $scope.setError(opts, 'loading types and parameters')
+    )
+
+  $scope.loadFeatureParameters = () ->
+    if !$scope.feature.type || !$scope.configuration
+      return
+
+    config = $scope.configuration.types[$scope.feature.type]
+    $scope.config = config
+    $scope.params_config = $scope.configuration.params
+    $scope.feature.params = _.extend(
+      _.object(config.required_params, []),
+      $scope.feature.params
+    )
+
+  $scope.$watch('feature.type', (type) ->
+    $scope.loadFeatureParameters()
+  )
 
   #  TODO: Could we use SaveObjectCtl?
   $scope.save = (fields) ->
