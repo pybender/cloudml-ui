@@ -1,4 +1,3 @@
-import logging
 from bson import ObjectId
 
 from utils import FeaturePredefinedItems, HTTP_HEADERS
@@ -10,7 +9,8 @@ class ScalersTests(FeaturePredefinedItems):
     Tests of the Feature scalers API.
     """
     ID = '5170dd3a106a6c1631000000'
-    FIXTURES = ('features.json', 'scalers.json', 'complex_features.json')
+    FIXTURES = ('feature_sets.json', 'features.json',
+                'scalers.json', 'complex_features.json')
     BASE_URL = '/cloudml/features/scalers/'
     RESOURCE = ScalersResource
 

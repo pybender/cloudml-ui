@@ -1,3 +1,4 @@
+import json
 import httplib
 import logging
 from bson import ObjectId
@@ -13,7 +14,8 @@ class TestFeatureResource(BaseTestCase):
     Features API methods tests.
     """
     TRANSFORMER_ID = '5170dd3a106a6c1631000000'
-    FIXTURES = ['features.json', 'models.json', 'transformers.json']
+    FIXTURES = ('feature_sets.json', 'features.json',
+                'models.json', 'transformers.json')
     BASE_URL = '/cloudml/features/transformers/'
     RESOURCE = FeatureResource
 
@@ -289,11 +291,11 @@ class TestFeaturesDocs(BaseTestCase):
                           'hire_outcome')
 
     def test_load_from_features_dict(self):
-        model = app.db.Model.get_from_id(ObjectId(MODEL_ID))
+        features_json = json.loads(open('./conf/features.json', 'r').read())
 
         from api.models import FeatureSet
         features_set = FeatureSet.\
-            from_model_features_dict("Set", model.features)
+            from_model_features_dict("Set", features_json)
         self.assertTrue(features_set)
         self.assertEquals(features_set.name, "Set")
         self.assertEquals(features_set.schema_name, 'bestmatch')

@@ -19,7 +19,7 @@ class ModelTests(BaseTestCase):
     MODEL_NAME = 'TrainedModel'
     RELATED_PARAMS = {'model_id': MODEL_ID, 'model_name': MODEL_NAME}
     FIXTURES = ('named_feature_types.json', 'classifiers.json',
-                'features.json', 'importhandlers.json', 'models.json',
+                'feature_sets.json', 'importhandlers.json', 'models.json',
                 'tests.json', 'examples.json', 'datasets.json',
                 'weights.json', 'instances.json', 'tags.json')
     RESOURCE = ModelsResource

@@ -13,7 +13,8 @@ class WeightsTests(BaseTestCase):
     Tests of the Models Parameters Weights.
     """
     MODEL_NAME = 'weights_model'
-    FIXTURES = ('classifiers.json', 'features.json', 'models.json')
+    FIXTURES = ('classifiers.json', 'feature_sets.json',
+                'models.json')
 
     @classmethod
     def setUpClass(cls):
@@ -52,14 +53,16 @@ class WeightsTests(BaseTestCase):
         assert count == cls.COUNT
 
     def test_categories_in_db(self):
-        cat = self.db.WeightsCategory.find_one({'model_name': self.MODEL_NAME,
-                                                'model_id': str(self.model._id),
-                                                'name': 'contractor'})
+        cat = self.db.WeightsCategory.find_one(
+            {'model_name': self.MODEL_NAME,
+             'model_id': str(self.model._id),
+             'name': 'contractor'})
         self.assertEquals(cat['parent'], '')
         self.assertEquals(cat['short_name'], 'contractor')
 
-        cat = self.db.WeightsCategory.find_one({'model_name': self.MODEL_NAME,
-                                                'name': 'contractor.dev_profile_title'})
+        cat = self.db.WeightsCategory.find_one(
+            {'model_name': self.MODEL_NAME,
+             'name': 'contractor.dev_profile_title'})
         self.assertEquals(cat['parent'], 'contractor')
         self.assertEquals(cat['short_name'], 'dev_profile_title')
 
@@ -122,7 +125,8 @@ class WeightsTests(BaseTestCase):
         self.assertEquals(data['per_page'], 20)
         self.assertTrue('weights' in data, data)
         self.assertFalse('tsexams->Ruby on Rails' in resp.data)
-        self.assertTrue('tsexams->Python 2.x Test' in data['weights'][0]['name'])
+        self.assertTrue(
+            'tsexams->Python 2.x Test' in data['weights'][0]['name'])
 
         url = '{0}?{1}'.format(self.BASE_URL, urllib.urlencode({
             'is_positive': 0,
@@ -135,7 +139,8 @@ class WeightsTests(BaseTestCase):
         resp = self.app.get(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.OK)
         data = json.loads(resp.data)
-        self.assertTrue('tsexams->Python 2.x Test' in data['weights'][0]['name'])
+        self.assertTrue(
+            'tsexams->Python 2.x Test' in data['weights'][0]['name'])
 
         url = '{0}?{1}'.format(self.BASE_URL, urllib.urlencode({
             'is_positive': 1,
