@@ -90,9 +90,13 @@ class BaseDocument(Document):
     def to_dict(self):
         data = {}
         for field in self.FIELDS_TO_SERIALIZE:
+            field_type = self.structure[field]
             val = getattr(self, field)
             if val is not None:
-                data[field] = val
+                if field_type in (bool, dict) and not val:
+                    continue
+                field_name = FIELDS_MAP.get(field, field)
+                data[field_name] = val
         return data
 
 
@@ -448,30 +452,39 @@ class FeatureSet(BaseDocument):
     use_autorefs = True
 
     def save(self, *args, **kwargs):
-        if self.is_new:
-            self.features_dict['schema-name'] = self.schema_name
-        #self.features_dict = self.to_dict()
+        self.features_dict['schema-name'] = self.schema_name
         super(FeatureSet, self).save(*args, **kwargs)
 
-    def edit_feature(self, feature, is_new=False):
+    def edit_feature(self, name, feature, is_new=False):
         if is_new:
             self.features_count += 1
         else:
-            self.delete_from_features_dict(feature.name)
+            self.delete_feature(name, is_edit=not is_new)
 
         if feature.is_target_variable:
             self.target_variable = feature.name
 
         self.features_dict['features'].append(feature.to_dict())
+        if feature.type not in app.db.NamedFeatureType.TYPES_LIST:
+            # this is named type - add it's description
+            named_type = app.db.NamedFeatureType.find_one(
+                {'name': feature.type})
+            for ndict in self.features_dict['feature-types']:
+                if ndict['name'] == named_type.name:
+                    self.features_dict['feature-types'].remove(ndict)
+            self.features_dict['feature-types'].append(named_type.to_dict())
         self.save()
 
-    def delete_feature(self, feature_name):
+    def delete_feature(self, feature_name, is_edit=False):
         # TODO: how about deleting target variable?
         for fdict in self.features_dict['features']:
-            if fdict.name == feature_name:
-                del fdict
-        self.features_count -= 1
-        self.save()
+            if fdict['name'] == feature_name:
+                self.features_dict['features'].remove(fdict)
+                if not is_edit:
+                    self.features_count -= 1
+                self.save()
+                return
+        # TODO: do we need to raise NotFound exception here?
 
     def to_dict(self):
         """
@@ -504,27 +517,19 @@ class FeatureSet(BaseDocument):
 
         features_set, is_new = app.db.FeatureSet.from_dict(
             app.db.FeatureSet, features_dict,
-            extra_fields={'name': name,
-                          'features_count': len(features_dict['features'])},
+            extra_fields={'name': name},
             add_new=True)
 
         for feature_type in features_dict['feature-types']:
-            app.db.NamedFeatureType.from_dict(app.db.NamedFeatureType,
-                                              feature_type)
+            app.db.NamedFeatureType.from_dict(
+                app.db.NamedFeatureType, feature_type)
 
+        _id = features_set._id
         for feature_dict in features_dict['features']:
-            f_id = str(features_set._id)
-
             feature, is_new = app.db.Feature.from_dict(
                 app.db.Feature, feature_dict, add_new=True,
-                extra_fields={'features_set': features_set,
-                              'features_set_id': f_id})
-
-            if feature.is_target_variable:
-                features_set.target_variable = feature.name
-                features_set.save()
-
-        return features_set
+                extra_fields={'features_set_id': str(_id)})
+        return app.db.FeatureSet.get_from_id(ObjectId(_id))
 
     def __repr__(self):
         return '<Feature Set %r:%d>' % (self.name or self.schema_name,
@@ -540,7 +545,7 @@ class Classifier(BaseDocument):
 
     TYPES_LIST = CLASSIFIERS.keys()
     NO_PARAMS_KEY = True
-    FIELDS_TO_SERIALIZE = ('name', 'type', 'params')
+    FIELDS_TO_SERIALIZE = ('type', 'params')
 
     structure = {
         'name': basestring,
@@ -735,6 +740,11 @@ class Model(BaseDocument):
         app.db.Weight.collection.remove(params)
         self.comparable = False
         self.save()
+
+    def get_features_json(self):
+        data = self.features_set.to_dict()
+        data['classifier'] = self.classifier.to_dict()
+        return json.dumps(data)
 
 
 @app.conn.register
@@ -1253,7 +1263,7 @@ class Feature(BaseDocument):
         'updated_by': dict,
     }
     required_fields = ['name', 'type', 'created_on',
-                       'updated_on', 'features_set', 'features_set_id']
+                       'updated_on']
     default_values = {
         'created_on': datetime.utcnow,
         'updated_on': datetime.utcnow,
@@ -1266,8 +1276,22 @@ class Feature(BaseDocument):
 
     def save(self, *args, **kwargs):
         is_new = self.is_new
+        name = self.name
+        if not is_new:
+            feature = app.db.Feature.find_one({'_id': self._id}, ('name', ))
+            if feature:
+                name = feature.name
         super(Feature, self).save(*args, **kwargs)
-        self.features_set.edit_feature(self, is_new)
+        if self.is_target_variable:
+            app.db.Feature.collection.update({
+                'features_set_id': self.features_set_id,
+                '_id': {'$ne': self._id}
+            }, {
+                '$set': {'is_target_variable': False}
+            }, multi=True)
+
+        if self.features_set is not None:
+            self.features_set.edit_feature(name, self, is_new)
 
     def delete(self):
         features_set = self.features_set
@@ -1288,6 +1312,9 @@ class Feature(BaseDocument):
                 app.db.Transformer, obj_dict['scaler'],
                 {'name': '%s-scaler' % obj_dict['name']})[0]
 
+        if 'features_set_id' in extra_fields:
+            extra_fields['features_set'] = app.db.FeatureSet.get_from_id(
+                ObjectId(extra_fields['features_set_id']))
         feature, is_new = super(Feature, cls).from_dict(
             Doc, obj_dict, extra_fields,
             filter_params, save, add_new)

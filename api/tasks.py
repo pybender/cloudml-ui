@@ -283,7 +283,8 @@ def train_model(dataset_ids, model_id, user_id):
             'name': user.name
         }
         model.save(validate=True)
-        feature_model = FeatureModel(json.dumps(model.features), is_file=False)
+        feature_model = FeatureModel(model.get_features_json(),
+                                     is_file=False)
         trainer = Trainer(feature_model)
         path = app.config['DATA_FOLDER']
         if not exists(path):

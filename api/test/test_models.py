@@ -18,8 +18,9 @@ class ModelTests(BaseTestCase):
     DS2_ID = '5270dd3a106a6c1631000111'
     MODEL_NAME = 'TrainedModel'
     RELATED_PARAMS = {'model_id': MODEL_ID, 'model_name': MODEL_NAME}
-    FIXTURES = ('classifiers.json', 'features.json', 'importhandlers.json',
-                'models.json', 'tests.json', 'examples.json', 'datasets.json',
+    FIXTURES = ('named_feature_types.json', 'classifiers.json',
+                'features.json', 'importhandlers.json', 'models.json',
+                'tests.json', 'examples.json', 'datasets.json',
                 'weights.json', 'instances.json', 'tags.json')
     RESOURCE = ModelsResource
     BASE_URL = '/cloudml/models/'

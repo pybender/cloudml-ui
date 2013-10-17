@@ -197,13 +197,40 @@ class TestFeaturesDocs(BaseTestCase):
     """
     Tests for the FeatureSet and Feature models.
     """
-    FIXTURES = ('models.json', )
+    FIXTURES = ('complex_features.json', 'features.json', 'models.json', )
 
-    def test_create_feature_set(self):
-        def fields_from_dict(obj, fields):
-            for key, val in fields.iteritems():
-                setattr(obj, key, val)
+    def test_feature_to_dict(self):
+        FeatureSet = app.db.FeatureSet
+        Feature = app.db.Feature
 
+        fset = FeatureSet()
+        fset.schema_name = 'bestmatch'
+        fset.save()
+
+        feature = Feature()
+        feature_data = {
+            'features_set': fset,
+            'features_set_id': str(fset._id),
+            'name': 'name',
+            'type': 'text',
+            'required': False}
+        fields_from_dict(feature, feature_data)
+        feature.save()
+        fdict = feature.to_dict()
+        self.assertEquals(fdict, {'name': 'name',
+                                  'type': 'text'})
+
+        feature = app.db.Feature.find_one({'name': 'transformed feature'})
+        fdict = feature.to_dict()
+        self.assertEquals(fdict, {
+            'name': u'transformed feature',
+            'input-format': u'dict',
+            'default': u'smth',
+            'is-required': True,
+            'params': {u'mappings': {u'class2': 0, u'class1': 1}},
+            'type': u'map'})
+
+    def test_manipulating_with_features(self):
         FeatureSet = app.db.FeatureSet
         Feature = app.db.Feature
 
@@ -243,7 +270,25 @@ class TestFeaturesDocs(BaseTestCase):
         self.assertEquals(fset.features_count, 2)
         self.assertEquals(len(fset.features_dict['features']), 2)
 
-    def test_from_model_features_dict(self):
+        feature1 = Feature.get_from_id(feature1._id)
+        feature1.name = 'feature_new_name'
+        feature1.save()
+
+        fset = FeatureSet.get_from_id(fset._id)
+        self.assertEquals(fset.features_count, 2)
+        self.assertEquals(len(fset.features_dict['features']), 2)
+        self.assertTrue(
+            'feature_new_name' in str(fset.features_dict['features']))
+
+        feature1 = Feature.get_from_id(feature1._id)
+        feature1.delete()
+        fset = FeatureSet.get_from_id(fset._id)
+        self.assertEquals(fset.features_count, 1)
+        self.assertEquals(len(fset.features_dict['features']), 1)
+        self.assertEquals(fset.features_dict['features'][0]['name'],
+                          'hire_outcome')
+
+    def test_load_from_features_dict(self):
         model = app.db.Model.get_from_id(ObjectId(MODEL_ID))
 
         from api.models import FeatureSet
@@ -253,6 +298,7 @@ class TestFeaturesDocs(BaseTestCase):
         self.assertEquals(features_set.name, "Set")
         self.assertEquals(features_set.schema_name, 'bestmatch')
         self.assertEquals(features_set.features_count, 37)
+        self.assertEquals(len(features_set.features_dict['features']), 37)
         self.assertEquals(features_set.target_variable, 'hire_outcome')
 
         # named features type "str_to_timezone" should be added
@@ -270,7 +316,8 @@ class TestFeaturesDocs(BaseTestCase):
         self.assertEquals(features.count(), 37)
 
         def _check_feature(name, fields):
-            params = {'name': name}
+            params = {'name': name,
+                      'features_set_id': str(features_set._id)}
             params.update(params)
             feature = app.db.Feature.find_one(params)
             self.assertTrue(feature)
@@ -316,3 +363,8 @@ class TestFeaturesDocs(BaseTestCase):
                                  {'required': False})
         feature = _check_feature('employer.op_timezone',
                                  {'type': 'str_to_timezone'})
+
+
+def fields_from_dict(obj, fields):
+    for key, val in fields.iteritems():
+        setattr(obj, key, val)

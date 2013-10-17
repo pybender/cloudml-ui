@@ -115,6 +115,11 @@ class Models(BaseResource):
         if get_datasets or get_data_fields:
             fields.append('dataset_ids')
 
+        if fields and 'features' in fields:
+            fields.append('features_set')
+            fields.append('features_set_id')
+            fields.append('classifier')
+
         if fields and 'test_handler_fields' in fields: 
             fields.append('test_import_handler')
 
@@ -147,6 +152,9 @@ class Models(BaseResource):
                     for feature in features:
                         test_handler_fields.append(feature['name'].replace('.', '->'))
             model['test_handler_fields'] = test_handler_fields
+
+        if fields and 'features' in fields:
+            model['features'] = model.get_features_json()
 
         return model
 
@@ -201,9 +209,7 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
         if field == 'trainer':
             content = model.get_trainer(loaded=False)
         else:
-            data = model.features_set.to_dict()
-            data['classifier'] = model.classifier.to_dict()
-            content = json.dumps(data)
+            content = model.get_features_json()
 
         filename = "%s-%s.%s" % (model.name, field,
                                  'dat' if field == 'trainer' else 'json')

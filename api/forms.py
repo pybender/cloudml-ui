@@ -661,8 +661,9 @@ class BasePredefinedForm(BaseFormEx):
             if is_predefined:
                 raise ValidationError('feature item could not be predefined')
         else:
-            if not (bool(feature_id) != bool(is_predefined)):
-                raise ValidationError('one of feature_id and is_predefined is required')
+            if 'feature_id' in self.fields.keys():  # feature specific item
+                if not (bool(feature_id) != bool(is_predefined)):
+                    raise ValidationError('one of feature_id and is_predefined is required')
 
         if is_predefined:
             name = self.cleaned_data.get('name', None)
@@ -836,17 +837,7 @@ class FeatureForm(BaseFormEx):
             self.obj.scaler.delete()
             self.obj.scaler = None
 
-        feature = super(FeatureForm, self).save(*args, **kwargs)
-        if feature.is_target_variable:
-            feature.features_set.target_variable = feature.name
-            feature.features_set.save()
-            app.db.Feature.collection.update({
-                'features_set_id': feature.features_set_id,
-                '_id': {'$ne': feature._id}
-            }, {
-                '$set': {'is_target_variable': False}
-            }, multi=True)
-        return feature
+        return super(FeatureForm, self).save(*args, **kwargs)
 
 
 def populate_parser(import_params):
