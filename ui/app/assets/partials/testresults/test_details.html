@@ -115,26 +115,54 @@
             <div class="span6">
                 <h4>Confusion Matrix</h4>
 
-                <form name="ConfusionMatrixForm" class="form-inline well">
-
-                  <div class="alert alert-error" ng-show="confusion_matrix_weights.error">
-                      {{ confusion_matrix_weights.error }}
-                  </div>
-
-                  <label>Weight of &quot;{{ test.model.labels[0] }}&quot;: </label>
-                  <input type="text" name="weight0" class="input-mini" ng-model="confusion_matrix_weights.w0" required smart-float>
-
-                  <label>Weight of &quot;{{ test.model.labels[1] }}&quot;: </label>
-
-                  <input type="text" name="weight1" class="input-mini" ng-model="confusion_matrix_weights.w1" required smart-float>
-
-                  <button ng-disabled="ConfusionMatrixForm.$invalid" class="btn" ng-click="recalculateConfusionMatrix(confusion_matrix_weights.w0, confusion_matrix_weights.w1)">
-                      Recalculate with weights
-                  </button>
-                </form>
-
                 <confusion-matrix matrix=test.metrics.confusion_matrix url=test.examplesUrl()></confusion-matrix>
 
+            </div>
+        </div>
+        <div ng-controller="TestConfusionMatrixCtrl" ng-init="init(test)" class="row">
+            <form name="ConfusionMatrixForm" class="form-inline well">
+
+              <div class="alert alert-error" ng-show="confusion_matrix_weights.error">
+                  {{ confusion_matrix_weights.error }}
+              </div>
+
+              <label>Weight of &quot;{{ test.model.labels[0] }}&quot;: </label>
+              <input type="text" name="weight0" class="input-mini" ng-model="confusion_matrix_weights.w0" required smart-float>
+
+              <label>Weight of &quot;{{ test.model.labels[1] }}&quot;: </label>
+
+              <input type="text" name="weight1" class="input-mini" ng-model="confusion_matrix_weights.w1" required smart-float>
+
+              <button ng-disabled="ConfusionMatrixForm.$invalid" class="btn" ng-click="recalculate(confusion_matrix_weights.w0, confusion_matrix_weights.w1)">
+                  Recalculate with weights
+              </button>
+            </form>
+
+
+            <div class="span10" ng-show="test.confusion_matrix_calculations">
+              <h4>Confusion matrix calculations</h4>
+              <ul class="unstyled">
+                <li class="row well well-small" ng-repeat="calc in test.confusion_matrix_calculations">
+                  <div class="row">
+                    <div class="span5">
+                        <i class="icon-calendar"></i> created on <span class="badge badge-info">{{ calc.datetime|format_date }}</span>
+                        <i class="icon-th"></i><span> weights </span>
+                        <span ng-repeat="label in calc.weights">
+                            <span class="label">{{ label }}</span>
+                        </span>
+                        <span class="badge badge-info">{{ calc.status }}</span><br/>
+                    </div>
+                    <div ng-show="calc.status == 'Completed'" class="span2 pull-right">
+                      <button class="btn btn-link" ng-click="showResult(calc._id)">
+                          Show result
+                      </button>
+                    </div>
+                  </div>
+                  <div class="row" ng-show="open_calc_id == calc._id">
+                      <div class="span4"><confusion-matrix matrix=calc.result></confusion-matrix></div>
+                  </div>
+                </li>
+              </ul>
             </div>
         </div>
       </div>

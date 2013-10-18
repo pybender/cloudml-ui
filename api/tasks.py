@@ -658,11 +658,24 @@ def calculate_confusion_matrix(test_id, weight0, weight1):
     if test is None:
         raise ValueError('Test with id {0!s} not found!'.format(test_id))
 
-    logging.info('Calculating confusion matrix for test id {!s}'.format(test_id))
-
     model = app.db.Model.find_one({'_id': ObjectId(test['model_id'])})
     if model is None:
-        raise ValueError('Model with id {0!s} not found!'.format(test['model_id']))
+        raise ValueError('Model with id {0!s} not found!'.format(
+            test['model_id']))
+
+    logging.info('Calculating confusion matrix for test id {!s}'.format(
+        test_id))
+
+    calc_id = ObjectId()
+
+    test.confusion_matrix_calculations.append({
+        '_id': calc_id,
+        'weights': dict(zip(model.labels, [weight0, weight1])),
+        'status': Test.MATRIX_STATUS_IN_PROGRESS,
+        'datetime': datetime.now(),
+        'result': []
+    })
+    test.save()
 
     matrix = [[0, 0],
               [0, 0]]
@@ -676,8 +689,15 @@ def calculate_confusion_matrix(test_id, weight0, weight1):
         weighted_prob0 = weight0 * prob0 / weighted_sum
         weighted_prob1 = weight1 * prob1 / weighted_sum
 
-        predicted = [weighted_prob0, weighted_prob1].index(max([weighted_prob0, weighted_prob1]))
+        predicted = [weighted_prob0, weighted_prob1].index(
+            max([weighted_prob0, weighted_prob1]))
         matrix[true_value_idx][predicted] += 1
+
+    calc = next((c for c in test.confusion_matrix_calculations
+                 if c['_id'] == calc_id))
+    calc['result'] = zip(model.labels, matrix)
+    calc['status'] = Test.MATRIX_STATUS_COMPLETED
+    test.save()
 
     return matrix
 
