@@ -38,7 +38,7 @@
 <p></p>
 <ul class="nav nav-tabs" id="tabs" ng-show="model.loaded">
   <li ng-class="{active: action[0] == 'model'}">
-    <a ng-click="setSection(['model', 'edit'])">Model</a> 
+    <a ng-click="setSection(['model', 'details'])">Model</a> 
   </li>
   <li ng-class="{active: action[0] == 'training'}">
     <a ng-click="setSection(['training', 'details'])">Training</a>
@@ -53,12 +53,12 @@
   <div ng-show="action[0] == 'model'">
     <p class="switcher">
       <b>Switch View: </b>
-      <a ng-class="{active: action[1] == 'edit'}" ng-click="setSection(['model', 'edit'])">Standart</a> | 
+      <a ng-class="{active: action[1] == 'details'}" ng-click="setSection(['model', 'details'])">Standart</a> | 
       <a ng-class="{active: action[1] == 'json'}" ng-click="setSection(['model', 'json'])">JSON File</a>
     </p>
 
     <!-- Model tab starts here -->
-    <div ng-show="action[1] == 'edit'" ng-controller="FeaturesSetDetailsCtrl" ng-init="init(model)">
+    <div ng-show="action[1] == 'details'" ng-controller="FeaturesSetDetailsCtrl" ng-init="init(model)">
       <div class="row">
         <div class="span6">
           <h4>
@@ -114,45 +114,39 @@
     </alert-message>
 
     <div>
-        Status: <span class="value">{{ model.status }}</span>
-    </div>
-    <div ng-show="model.status == 'Trained'">
-        Trained by:
-        <span class="value">{{ model.trained_by.name }} ({{ model.trained_by.uid }})</span>
-    </div>
-    <p class="switcher">
-      <b>Weights: </b>
-      <a ng-class="{active: action[1] == 'columns'}" ng-click="setSection(['weights', 'columns'])">Columns</a> | 
-      <a ng-class="{active: action[1] == 'list'}" ng-click="setSection(['weights', 'list'])">List</a> |
-      <a ng-class="{active: action[1] == 'tree'}" ng-click="setSection(['weights', 'tree'])">Tree</a> &nbsp;
-      <b>Logs: </b>
-      <a ng-class="{active: action[1] == 'tree'}" ng-click="setSection(['weights', 'tree'])">Logs</a>
-    </p>
-    <alert-message ng-show="model.status == 'Trained' && !model.weights_synchronized" class="alert-warning" msg="Please wait! Model parameters weights aren't filled.">
-    </alert-message>
-    <alert-message ng-show="model.status != 'Trained'" class="alert-warning" msg="Please train model to get parameters weights.">
-    </alert-message>
-    <div ng-show="action[1] == 'columns'" class="columns">
-        <div class="row">
-          <div class="span5">
-            <h4>Positive Weights</h4>
-            <weights-table weights="positive">
-            </weights-table>
-            <a class="btn" ng-click="morePositiveWeights()">Load More...</a>
-          </div>
-          <div class="offset1 span5">
-            <h4>Negative Weights</h4>
-            <weights-table weights="negative">
-            </weights-table>
-            <a class="btn" ng-click="moreNegativeWeights()">Load More...</a>
+        Status: <span class="value">{{ model.status }}</span> <a ng-click="showLogs=!showLogs">(logs)</a>
+        <div ng-show="showLogs" class="well" ng-controller="LogMessageListCtrl" ng-init="init('trainmodel_log', model._id, 5)">
+          <div class="message">
+            <ng-include src="'/partials/logmessages/list.html'"></ng-include>
           </div>
         </div>
     </div>
-    <div ng-show="action[1] == 'tree'" class="tree">
-        <ng-include src="'/partials/weights/tree.html'"></ng-include>
+    <div ng-show="model.status == 'Trained'">
+      Memory used:
+      <span class="value">{{ model.memory_usage.training }} Mb</span>
     </div>
-    <div ng-show="action[1] == 'list'" class="list">
+    <div ng-show="model.status == 'Trained'">
+        Trained by:
+        <span class=a"value">{{ model.trained_by.name }} ({{ model.trained_by.uid }})</span>
+    </div>
+    <hr />
+    <div ng-controller="WeightsCtrl">
+      <h4>Parameters Weights</h4>
+      <p class="switcher">
+        <b>Switch view: </b>
+        <a ng-class="{active: action[1] == 'details'}" ng-click="setSection(['training', 'details'])">Columns</a> | 
+        <a ng-class="{active: action[1] == 'list'}" ng-click="setSection(['training', 'list'])">List</a> |
+        <a ng-class="{active: action[1] == 'tree'}" ng-click="setSection(['training', 'tree'])">Tree</a> &nbsp;
+      </p>
+      <div ng-show="action[1] == 'details'" class="details">
+        <ng-include src="'/partials/weights/columns.html'"></ng-include>
+      </div>
+      <div ng-show="action[1] == 'tree'" class="tree">
+        <ng-include src="'/partials/weights/tree.html'"></ng-include>
+      </div>
+      <div ng-show="action[1] == 'list'" class="list">
         <ng-include src="'/partials/weights/list.html'"></ng-include>
+      </div>
     </div>
   </div>
 
@@ -175,7 +169,7 @@
       <ng-include src="'/partials/parts/created_tags.html'"></ng-include>
     </div>
     <div class="row">
-      <div class="span4">
+      <div class="span6">
         <h5>Edit tags</h5>
         <input ui-select2="select2params" ng-model="params['tags']" /> 
         <input type="button" class="btn btn-info" value="Save" ng-click="updateTags()" style="margin-left: 5px;" />
@@ -204,7 +198,7 @@
             Records count: <span class="value">{{ model.train_records_count }}</span>
         </div>
       </div>
-      <div class="span4">
+      <div class="span5">
         <h5>Data Examples Titles</h5>
         <div ng-show="model.data_fields.length">
           Examples label field name:
@@ -222,23 +216,19 @@
           Examples id field name:
           <span title="ID Field Name" ng-bind="model.example_id" editable="model" value="model.example_id" editable-field="example_id" editable-placement="right" editable-input="text" source="model.data_fields"></span>
         </div>
-      </div>
-      <div class="span4">
         <div>
             Target variable:
             <span class="value">{{ model.target_variable }}</span>
         </div>
         <div>
             Classes:
-            <span class="value">{{ model.labels }}</span>
+            <span class="value">
+              <span ng-repeat="label in model.labels"><span class="badge badge-info" ng-bind="label" /> </span>
+            </span>
         </div>
         <div>
             Count of features:
             <span class="value">{{ model.feature_count }}</span>
-        </div>
-        <div>
-            Memory used:
-            <span class="value">{{ model.memory_usage.training }} Mb</span>
         </div>
         <div ng-show="model.created_by">
             Created by:
@@ -251,16 +241,5 @@
       </div>
     </div>
   </div>
-
-  
-
-  
-
-  <div ng-show="action[0] == 'log'" ng-controller="LogMessageListCtrl" ng-init="init('trainmodel_log', model._id)">
-    <ng-include src="'/partials/logmessages/list.html'"></ng-include>
-  </div>
-
-  
-
 </div>
 </div>

@@ -1,6 +1,7 @@
 'use strict'
 
 ### Parameters weights specific Controllers ###
+SECTION_NAME = 'training'
 
 angular.module('app.weights.controllers', ['app.config', ])
 
@@ -129,12 +130,12 @@ angular.module('app.weights.controllers', ['app.config', ])
 
   # Switching modes methods
   $scope.$watch 'action', (action) ->
-    if action[0] == 'weights'
+    if action[0] == SECTION_NAME
       actionString = action.join(':')
       $location.search("action=#{actionString}")
       view = action[1]
       switch view
-        when "columns"
+        when "details"
           if ($scope.positive.length + $scope.negative.length) == 0
             $scope.loadColumns(true, true)
         when "list" then  $scope.loadList('', 1)
