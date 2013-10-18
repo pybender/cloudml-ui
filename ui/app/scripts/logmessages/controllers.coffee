@@ -1,6 +1,6 @@
 'use strict'
 
-### Import Handlers specific Controllers ###
+### Log Messages specific Controllers ###
 
 angular.module('app.logmessages.controllers', ['app.config', ])
 
