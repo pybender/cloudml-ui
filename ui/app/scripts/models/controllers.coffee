@@ -133,8 +133,6 @@ updated_on,updated_by,comparable,test_handler_fields'
       if name not in $scope.LOADED_SECTIONS
         extra_fields = ''
         switch name
-          when 'features_set' then extra_fields = 'features_set_id'
-          when 'classifier' then extra_fields = 'classifier'
           when 'model'
             extra_fields = 'created_on,target_variable,
 error,labels,weights_synchronized,example_id,example_label,
@@ -142,7 +140,8 @@ updated_on,feature_count,test_import_handler.name,
 train_import_handler.name,train_import_handler.import_params,tags,
 test_import_handler.import_params,train_import_handler._id,
 test_import_handler._id,memory_usage,created_by,trained_by,datasets,data_fields,
-train_records_count,test_handler_fields'
+train_records_count,test_handler_fields,classifier,features_set,features_set_id,
+features'
           when 'features' then extra_fields = 'features'
 
         if 'main' in $scope.LOADED_SECTIONS
