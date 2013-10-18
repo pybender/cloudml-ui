@@ -132,6 +132,14 @@ class ModelMigration(DbMigration):  # pragma: no cover
             model.save()
 
 
+class FeatureSetMigration(DbMigration):  # pragma: no cover
+    DOC_CLASS = models.FeatureSet
+
+    def allmigration01__add_json(self):
+        self.target = {'features_dict': {'$exists': False}}
+        self.update = {'$set': {'features_dict': []}}
+
+
 class TestMigration(DbMigration):  # pragma: no cover
     DOC_CLASS = models.Test
 

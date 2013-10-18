@@ -1,3 +1,4 @@
+import json
 import httplib
 import logging
 from bson import ObjectId
@@ -13,7 +14,8 @@ class TestFeatureResource(BaseTestCase):
     Features API methods tests.
     """
     TRANSFORMER_ID = '5170dd3a106a6c1631000000'
-    FIXTURES = ['features.json', 'models.json', 'transformers.json']
+    FIXTURES = ('feature_sets.json', 'features.json',
+                'models.json', 'transformers.json')
     BASE_URL = '/cloudml/features/transformers/'
     RESOURCE = FeatureResource
 
@@ -193,22 +195,112 @@ transformer-type: should be one of Count, Tfidf, Dictionary"})
             self.assertFalse(f.is_target_variable)
 
 
-class TestFeatureSetDoc(BaseTestCase):
+class TestFeaturesDocs(BaseTestCase):
     """
-    Tests for the FeatureSet methods.
+    Tests for the FeatureSet and Feature models.
     """
-    FIXTURES = ('models.json', )
+    FIXTURES = ('complex_features.json', 'features.json', 'models.json', )
 
-    def test_from_model_features_dict(self):
-        model = app.db.Model.get_from_id(ObjectId(MODEL_ID))
+    def test_feature_to_dict(self):
+        FeatureSet = app.db.FeatureSet
+        Feature = app.db.Feature
+
+        fset = FeatureSet()
+        fset.schema_name = 'bestmatch'
+        fset.save()
+
+        feature = Feature()
+        feature_data = {
+            'features_set': fset,
+            'features_set_id': str(fset._id),
+            'name': 'name',
+            'type': 'text',
+            'required': False}
+        fields_from_dict(feature, feature_data)
+        feature.save()
+        fdict = feature.to_dict()
+        self.assertEquals(fdict, {'name': 'name',
+                                  'type': 'text'})
+
+        feature = app.db.Feature.find_one({'name': 'transformed feature'})
+        fdict = feature.to_dict()
+        self.assertEquals(fdict, {
+            'name': u'transformed feature',
+            'input-format': u'dict',
+            'default': u'smth',
+            'is-required': True,
+            'params': {u'mappings': {u'class2': 0, u'class1': 1}},
+            'type': u'map'})
+
+    def test_manipulating_with_features(self):
+        FeatureSet = app.db.FeatureSet
+        Feature = app.db.Feature
+
+        fset = FeatureSet()
+        self.assertTrue(fset.features_dict)
+        fset.schema_name = 'bestmatch'
+        fset.save()
+        self.assertEquals(fset.features_dict,
+                          {'feature-types': [],
+                           'features': [],
+                           'schema-name': 'bestmatch'})
+        feature1 = Feature()
+        feature1_data = {
+            'features_set': fset,
+            'features_set_id': str(fset._id),
+            'name': 'name',
+            'type': 'text'}
+        fields_from_dict(feature1, feature1_data)
+        feature1.save()
+
+        fset = FeatureSet.get_from_id(fset._id)
+        self.assertFalse(fset.target_variable)
+        self.assertEquals(fset.features_count, 1)
+        self.assertEquals(len(fset.features_dict['features']), 1)
+        feature2 = Feature()
+        feature2_data = {
+            'features_set': fset,
+            'features_set_id': str(fset._id),
+            'name': 'hire_outcome', 'type': 'int',
+            'is_target_variable': True}
+        fields_from_dict(feature2, feature2_data)
+        fset = FeatureSet.get_from_id(fset._id)
+        feature2.save()
+
+        fset = FeatureSet.get_from_id(fset._id)
+        self.assertEquals(fset.target_variable, 'hire_outcome')
+        self.assertEquals(fset.features_count, 2)
+        self.assertEquals(len(fset.features_dict['features']), 2)
+
+        feature1 = Feature.get_from_id(feature1._id)
+        feature1.name = 'feature_new_name'
+        feature1.save()
+
+        fset = FeatureSet.get_from_id(fset._id)
+        self.assertEquals(fset.features_count, 2)
+        self.assertEquals(len(fset.features_dict['features']), 2)
+        self.assertTrue(
+            'feature_new_name' in str(fset.features_dict['features']))
+
+        feature1 = Feature.get_from_id(feature1._id)
+        feature1.delete()
+        fset = FeatureSet.get_from_id(fset._id)
+        self.assertEquals(fset.features_count, 1)
+        self.assertEquals(len(fset.features_dict['features']), 1)
+        self.assertEquals(fset.features_dict['features'][0]['name'],
+                          'hire_outcome')
+
+    def test_load_from_features_dict(self):
+        features_json = json.loads(open('./conf/features.json', 'r').read())
 
         from api.models import FeatureSet
         features_set = FeatureSet.\
-            from_model_features_dict("Set", model.features)
+            from_model_features_dict("Set", features_json)
         self.assertTrue(features_set)
         self.assertEquals(features_set.name, "Set")
         self.assertEquals(features_set.schema_name, 'bestmatch')
         self.assertEquals(features_set.features_count, 37)
+        self.assertEquals(len(features_set.features_dict['features']), 37)
         self.assertEquals(features_set.target_variable, 'hire_outcome')
 
         # named features type "str_to_timezone" should be added
@@ -226,7 +318,8 @@ class TestFeatureSetDoc(BaseTestCase):
         self.assertEquals(features.count(), 37)
 
         def _check_feature(name, fields):
-            params = {'name': name}
+            params = {'name': name,
+                      'features_set_id': str(features_set._id)}
             params.update(params)
             feature = app.db.Feature.find_one(params)
             self.assertTrue(feature)
@@ -272,3 +365,8 @@ class TestFeatureSetDoc(BaseTestCase):
                                  {'required': False})
         feature = _check_feature('employer.op_timezone',
                                  {'type': 'str_to_timezone'})
+
+
+def fields_from_dict(obj, fields):
+    for key, val in fields.iteritems():
+        setattr(obj, key, val)

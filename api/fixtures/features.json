@@ -1,18 +1,4 @@
-{"FeatureSet": [
-
-{
-	"created_on": "2013-04-19 14:37:23.145000",
-    "updated_on": "2013-04-19 14:37:23.145000",
-	"features_count": 37,
- 	"name": "Set",
- 	"created_by": {},
- 	"schema_name": "bestmatch", 
- 	"_id": "5251233d106a6c5b36c54896",
- 	"target_variable": "hire_outcome", 
- 	"updated_by": {}
-}
-],
-"Feature": [
+{"Feature": [
 {
 	"scaler": null, 
 	"updated_by": {}, 
@@ -61,6 +47,5 @@
 	"type": "map", 
 	"features_set_id": "5251233d106a6c5b36c54896"
 }
-]}
-
-
+]
+}

@@ -36,7 +36,7 @@ class BaseResource(restful.Resource):
     NEED_PAGING = False
     GET_PARAMS = (('show', str), )
     FILTER_PARAMS = ()
-    PAGING_PARAMS = (('page', int), )
+    PAGING_PARAMS = (('page', int), ('per_page', int))
     SORT_PARAMS = (('sort_by', str), ('order', str))
 
     ENABLE_FULLTEXT_SEARCH = True

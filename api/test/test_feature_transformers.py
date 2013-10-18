@@ -10,7 +10,8 @@ class TransformersTests(FeaturePredefinedItems):
     Tests of the Transformers API.
     """
     TRANSFORMER_ID = '5170dd3a106a6c1631000000'
-    FIXTURES = ('transformers.json', 'features.json', 'complex_features.json')
+    FIXTURES = ('feature_sets.json', 'transformers.json',
+                'features.json', 'complex_features.json')
     BASE_URL = '/cloudml/features/transformers/'
     RESOURCE = TransformerResource
 
@@ -107,7 +108,8 @@ class TransformersTests(FeaturePredefinedItems):
         self._test_edit_predefined_item()
 
     def test_edit_feature_transformer(self):
-        feature = self.db.Feature.get_from_id(ObjectId('525123b1206a6c5bcbc12efb'))
+        feature = self.db.Feature.get_from_id(
+            ObjectId('525123b1206a6c5bcbc12efb'))
         self.assertTrue(feature.transformer, "Invalid fixtures")
         data = {'name': 'new transformer name',
                 'type': 'Tfidf',
@@ -117,7 +119,8 @@ class TransformersTests(FeaturePredefinedItems):
         self.assertTrue(obj.params, {"lowercase": True})
 
     def test_edit_feature_transformer_from_predefined(self):
-        feature = self.db.Feature.get_from_id(ObjectId('525123b1206a6c5bcbc12efb'))
+        feature = self.db.Feature.get_from_id(
+            ObjectId('525123b1206a6c5bcbc12efb'))
         self.assertTrue(feature.transformer, "Invalid fixtures")
 
         transformer = self.db.Transformer.find_one({'is_predefined': True})
@@ -130,7 +133,8 @@ class TransformersTests(FeaturePredefinedItems):
         """
         Check that we can't delete feature transformer
         """
-        feature = self.db.Feature.get_from_id(ObjectId('525123b1206a6c5bcbc12efb'))
+        feature = self.db.Feature.get_from_id(
+            ObjectId('525123b1206a6c5bcbc12efb'))
         self.assertTrue(feature.transformer, "Invalid fixtures")
         self.assertFalse(feature.transformer.is_predefined)
 

@@ -71,10 +71,12 @@ def get_request_instance(request_id,
         raise InstanceRequestingError(e.error_message)
 
     if request.state == 'open':
-        logging.info('Instance was not ran. Status: %s . Retry in 10s.' % request.state)
+        logging.info('Instance was not ran. \
+Status: %s . Retry in 10s.' % request.state)
         try:
-            raise get_request_instance.retry(countdown=app.config['REQUESTING_INSTANCE_COUNTDOWN'],
-                                             max_retries=app.config['REQUESTING_INSTANCE_MAX_RETRIES'])
+            raise get_request_instance.retry(
+                countdown=app.config['REQUESTING_INSTANCE_COUNTDOWN'],
+                max_retries=app.config['REQUESTING_INSTANCE_MAX_RETRIES'])
         except get_request_instance.MaxRetriesExceededError:
             logging.info('Max retries was reached, cancelling now.')
             cancel_request_spot_instance.delay(request_id, model_id)
@@ -88,7 +90,8 @@ def get_request_instance(request_id,
         return None
 
     if request.state != 'active':
-        logging.info('Instance was not launched. State is {0!s}, status is {1!s}, {2!s}.'.format(
+        logging.info('Instance was not launched. \
+State is {0!s}, status is {1!s}, {2!s}.'.format(
             request.state, request.status.code, request.status.message))
         model.set_error('Instance was not launched')
         raise InstanceRequestingError('Instance was not launched')
@@ -99,8 +102,7 @@ def get_request_instance(request_id,
     logging.info('Get instance %s' % request.instance_id)
     instance = ec2.get_instance(request.instance_id)
     logging.info('Instance %s(%s) lunched' %
-            (instance.id,
-             instance.private_ip_address))
+                 (instance.id, instance.private_ip_address))
     instance.add_tag('Name', 'cloudml-worker-auto')
     instance.add_tag('Owner', 'papadimitriou,nmelnik')
     instance.add_tag('Model_id', model_id)
@@ -109,12 +111,13 @@ def get_request_instance(request_id,
     if callback == "train":
         logging.info('Train model task apply async')
         queue = "ip-%s" % "-".join(instance.private_ip_address.split('.'))
-        train_model.apply_async((dataset_ids,
-                                 model_id, user_id),
-                                 queue=queue,
-                                 link=terminate_instance.subtask(kwargs={'instance_id': instance.id}),
-                                 link_error=terminate_instance.subtask(kwargs={'instance_id': instance.id})
-                                )
+        train_model.apply_async(
+            (dataset_ids, model_id, user_id),
+            queue=queue,
+            link=terminate_instance.subtask(
+                kwargs={'instance_id': instance.id}),
+            link_error=terminate_instance.subtask(
+                kwargs={'instance_id': instance.id}))
     return instance.private_ip_address
 
 
@@ -136,13 +139,14 @@ def cancel_request_spot_instance(request_id, model_id):
     init_logger('trainmodel_log', obj=model_id)
     model = app.db.Model.find_one({'_id': ObjectId(model_id)})
 
-    logging.info('Cancelling spot instance request {0!s} for model id {1!s}...'.format(
+    logging.info('Cancelling spot instance request {0!s} \
+for model id {1!s}...'.format(
         request_id, model_id))
 
     try:
         AmazonEC2Helper().cancel_request_spot_instance(request_id)
-        logging.info('Spot instance request {0!s} has been cancelled for model id {1!s}'.format(
-            request_id, model_id))
+        logging.info('Spot instance request {0!s} has been \
+cancelled for model id {1!s}'.format(request_id, model_id))
         model.status = model.STATUS_CANCELED
         model.save()
     except EC2ResponseError as e:
@@ -198,8 +202,6 @@ with%s compression", importhandler.name, '' if dataset.compress else 'out')
         dataset.status = dataset.STATUS_UPLOADING
         dataset.save(validate=True)
 
-
-
         logging.info('Saving file to Amazon S3')
         dataset.save_to_s3()
         logging.info('File saved to Amazon S3')
@@ -209,7 +211,6 @@ with%s compression", importhandler.name, '' if dataset.compress else 'out')
         if obj:
             obj.status = obj.STATUS_IMPORTED
             obj.save()
-        
 
         dataset.save(validate=True)
 
@@ -283,7 +284,8 @@ def train_model(dataset_ids, model_id, user_id):
             'name': user.name
         }
         model.save(validate=True)
-        feature_model = FeatureModel(json.dumps(model.features), is_file=False)
+        feature_model = FeatureModel(model.get_features_json(),
+                                     is_file=False)
         trainer = Trainer(feature_model)
         path = app.config['DATA_FOLDER']
         if not exists(path):
@@ -438,7 +440,8 @@ def run_test(dataset_ids, test_id):
         metrics, raw_data = result
         test.accuracy = metrics.accuracy
         logging.info('Accuracy: %f', test.accuracy)
-        logging.info("Memory usage: %f" % memory_usage(-1, interval=0, timeout=None)[0])
+        logging.info("Memory usage: %f",
+                     memory_usage(-1, interval=0, timeout=None)[0])
         metrics_dict = metrics.get_metrics_dict()
 
         # TODO: Refactor this. Here are possible issues with conformity
@@ -487,15 +490,13 @@ def run_test(dataset_ids, test_id):
                     logging.info('Processed %s rows so far' % n)
                 if test.examples_placement == test.EXAMPLES_TO_AMAZON_S3:
                     # Caching raw data into temp file
-                    ndata = dict([(key.replace('.', '->'), val) \
-                        for key, val in row.iteritems()])
+                    ndata = dict([(key.replace('.', '->'), val)
+                                 for key, val in row.iteritems()])
                     fp.write('{0}\n'.format(json.dumps(ndata)))
                 vectorized_data = metrics._true_data.getrow(n).todense()
-                example, new_row = _add_example_to_mongo(test, vectorized_data, row, label,
-                                                         pred, prob)
+                example, new_row = _add_example_to_mongo(
+                    test, vectorized_data, row, label, pred, prob)
                 example_ids.append(str(example._id))
-
-
 
         if test.examples_placement == test.EXAMPLES_TO_AMAZON_S3:
 
@@ -539,8 +540,8 @@ def _add_example_to_mongo(test, vectorized_data, data, label, pred, prob):
     Adds info about Test Example to MongoDB.
     Returns created TestExample document and data.
     """
-    ndata = dict([(key.replace('.', '->'), val) \
-        for key, val in data.iteritems()])
+    ndata = dict([(key.replace('.', '->'), val)
+                 for key, val in data.iteritems()])
     model = test.model
     example = app.db.TestExample()
     example_id = ndata.get(model.example_id, '-1')
@@ -569,7 +570,6 @@ def _add_example_to_mongo(test, vectorized_data, data, label, pred, prob):
     example.test_id = str(test._id)
     example.model_id = str(model._id)
 
-    
     new_row = ndata
     if test.examples_placement == test.EXAMPLES_MONGODB:
         example.data_input = ndata
@@ -577,8 +577,8 @@ def _add_example_to_mongo(test, vectorized_data, data, label, pred, prob):
         # Fill all data to Amazon S3 and only specified fields
         # to MongoDB
         # Choose only specified in test fields in test
-        new_row = dict([(field, ndata.get(field, None)) 
-                for field in test.examples_fields])
+        new_row = dict([(field, ndata.get(field, None))
+                       for field in test.examples_fields])
         example.data_input = new_row
 
     try:
@@ -604,7 +604,8 @@ def store_examples(test_id, params):
         ))
         return res
 
-    logging.info('Storing raw data to s3 %s - %s' % (params[0][0], params[0][-1]))
+    logging.info('Storing raw data to s3 %s - %s' %
+                 (params[0][0], params[0][-1]))
 
     with open(test.temp_data_filename, 'r') as fp:
         row_nums = params[0]
@@ -616,7 +617,8 @@ def store_examples(test_id, params):
             row = fp.readline()
             row = json.loads(row)
 
-            example = app.db.TestExample.find_one({'_id': ObjectId(example_id)})
+            example = app.db.TestExample.find_one(
+                {'_id': ObjectId(example_id)})
             if not example:
                 logging.warning('Example with id {0!s} can\'t be found'.format(
                     example_id
@@ -626,13 +628,13 @@ def store_examples(test_id, params):
             try:
                 example._save_to_s3(row)
             except Exception, exc:
-                logging.error('Problem with saving example data to Amazon #%s: %s',
-                              row_num, exc)
+                logging.error('Problem with saving example data to \
+Amazon #%s: %s', row_num, exc)
                 res.append((None, None))
 
             res.append((row_num, str(example._id)))
-    logging.info('Complete storing raw data to s3 %s - %s' % (params[0][0], params[0][-1]) )
-
+    logging.info('Complete storing raw data to s3 %s - %s' %
+                 (params[0][0], params[0][-1]))
     return res
 
 
@@ -653,11 +655,13 @@ def calculate_confusion_matrix(test_id, weight0, weight1):
     if test is None:
         raise ValueError('Test with id {0!s} not found!'.format(test_id))
 
-    logging.info('Calculating confusion matrix for test id {!s}'.format(test_id))
+    logging.info('Calculating confusion matrix for test id {!s}'.format(
+        test_id))
 
     model = app.db.Model.find_one({'_id': ObjectId(test['model_id'])})
     if model is None:
-        raise ValueError('Model with id {0!s} not found!'.format(test['model_id']))
+        raise ValueError('Model with id {0!s} not found!'.format(
+            ['model_id']))
 
     matrix = [[0, 0],
               [0, 0]]
@@ -671,7 +675,8 @@ def calculate_confusion_matrix(test_id, weight0, weight1):
         weighted_prob0 = weight0 * prob0 / weighted_sum
         weighted_prob1 = weight1 * prob1 / weighted_sum
 
-        predicted = [weighted_prob0, weighted_prob1].index(max([weighted_prob0, weighted_prob1]))
+        predicted = [weighted_prob0, weighted_prob1].index(
+            max([weighted_prob0, weighted_prob1]))
         matrix[true_value_idx][predicted] += 1
 
     return matrix
@@ -749,7 +754,7 @@ def decode(row):
     for key, val in row.iteritems():
         if isinstance(val, Decimal):
                 row[key] = val.to_eng_string()
-        
+
         if isinstance(val, basestring):
             try:
                 #row[key] = val.encode('ascii', 'ignore')
@@ -758,7 +763,7 @@ def decode(row):
             #     #logging.error('Error while decoding %s: %s', val, exc)
             #     row[key] = ""
             except UnicodeEncodeError:
-                row[key] =val.encode('utf-8')
+                row[key] = val.encode('utf-8')
     return row
 
 

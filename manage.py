@@ -128,12 +128,15 @@ class Test(Command):
             argv.append('--tests')
             argv.append(tests)
         try:
+            logging.debug("Running nosetests with args: %s", argv)
             nose.run(argv=argv)
         finally:
             if app.db.name == 'cloudml-test-db':
+                logging.debug("Remove collections from db: %s", app.db.name)
                 for name in app.db.collection_names():
-                    model = getattr(app.db, name)
-                    model.collection.remove()
+                    if not name.startswith('system.'):
+                        model = getattr(app.db, name)
+                        model.drop()
 
 
 class Coverage(Command):
