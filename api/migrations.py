@@ -106,6 +106,10 @@ class ModelMigration(DbMigration):  # pragma: no cover
         self.target = {'current_task_id': {'$exists': False}}
         self.update = {'$set': {'current_task_id': ''}}
 
+    def allmigration11__add_training_time(self):
+        self.target = {'training_time': {'$exists': False}}
+        self.update = {'$set': {'training_time': 0}}
+
 
 class TestMigration(DbMigration):  # pragma: no cover
     DOC_CLASS = models.Test

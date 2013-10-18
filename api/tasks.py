@@ -8,6 +8,7 @@ from bson.objectid import ObjectId
 from os.path import exists
 from os import makedirs, system
 from datetime import timedelta, datetime
+from dateutil import parser, tz
 from boto.exception import EC2ResponseError
 from celery.canvas import group
 from celery.signals import task_prerun, task_postrun
@@ -305,9 +306,12 @@ def train_model(dataset_ids, model_id, user_id):
         from memory_profiler import memory_usage
         #mem_usage = memory_usage((trainer.train,
         #                          (train_iter,)), interval=0)
+        train_begin_time = datetime.utcnow().replace(tzinfo=tz.tzutc())
         trainer.train(train_iter)
+
         mem_usage = memory_usage(-1, interval=0, timeout=None)
         trainer.clear_temp_data()
+        train_end_time = parser.parse(trainer.train_time)
 
         model.status = model.STATUS_TRAINED
         model.set_trainer(trainer)
@@ -317,6 +321,7 @@ def train_model(dataset_ids, model_id, user_id):
             d['records_count'] for d in app.db.DataSet.find({
                 '_id': {'$in': model.dataset_ids}
             }, ['records_count']))))
+        model.training_time = int((train_end_time - train_begin_time).seconds)
         model.save()
 
         fill_model_parameter_weights.delay(str(model._id))

@@ -417,6 +417,7 @@ class Model(BaseDocument):
         'memory_usage': dict,
         'train_records_count': int,
         'current_task_id': basestring,
+        'training_time': int
     }
     gridfs = {'files': ['trainer']}
     required_fields = ['name', 'created_on', ]
