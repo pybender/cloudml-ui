@@ -137,6 +137,10 @@ class TestMigration(DbMigration):  # pragma: no cover
         self.target = {'examples_fields': {'$exists': False}}
         self.update = {'$set': {'examples_fields': []}}
 
+    def allmigration07__add_confusion_matrix_calculations(self):
+        self.target = {'confusion_matrix_calculations': {'$exists': False}}
+        self.update = {'$set': {'confusion_matrix_calculations': []}}
+
 
 class DataSetMigration(DbMigration):  # pragma: no cover
     DOC_CLASS = models.DataSet
