@@ -183,6 +183,35 @@ app.db.Weight.collection.ensure_index(
 
 
 @app.conn.register
+class DataSource(BaseDocument):
+    TYPE_REQUEST = 'request'
+    TYPE_SQL = 'sql'
+    TYPES_LIST = (TYPE_REQUEST, TYPE_SQL)
+
+    VENDOR_POSTGRES = 'postgres'
+    VENDORS_LIST = (VENDOR_POSTGRES, )
+
+    __collection__ = 'datasources'
+    structure = {
+        'name': basestring,
+        'type': basestring,
+        'db_settings': {"conn": basestring,
+                        "vendor": basestring},
+        'created_on': datetime,
+        'created_by': dict,
+        'updated_on': datetime,
+        'updated_by': dict,
+    }
+    use_dot_notation = True
+    required_fields = ['name', 'type', 'created_on', ]
+    default_values = {'created_on': datetime.utcnow,
+                      'updated_on': datetime.utcnow,
+                      'type': TYPE_SQL,
+                      'name': 'noname',
+                      'db_settings.vendor': VENDOR_POSTGRES}
+
+
+@app.conn.register
 class ImportHandler(BaseDocument):
     TYPE_DB = 'Db'
     TYPE_REQUEST = 'Request'

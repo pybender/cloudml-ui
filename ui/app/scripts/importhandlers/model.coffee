@@ -45,3 +45,39 @@ angular.module('app.importhandlers.model', ['app.config'])
 
     return ImportHandler
 ])
+
+
+.factory('DataSource', [
+  '$http'
+  '$q'
+  'settings'
+  'BaseModel'
+  
+  ($http, $q, settings, BaseModel) ->
+    ###
+    Data Source
+    ###
+    class DataSource  extends BaseModel
+      BASE_API_URL: "#{settings.apiUrl}datasources/"
+      API_FIELDNAME: 'datasource'
+      DEFAULT_FIELDS_TO_SAVE: ['name', 'type']
+      @LIST_MODEL_NAME: 'datasources'
+      LIST_MODEL_NAME: @LIST_MODEL_NAME
+      @$TYPES_LIST: ['sql', ]
+      @MAIN_FIELDS: 'name,_id,type,db_settings,created_on,created_by'
+      @$VENDORS_LIST: ['postgres', ]
+
+      _id: null
+      name: null
+      type: null
+      db_settings: {'conn': '', 'vendor': ''}
+      created_on: null
+      updated_on: null
+
+      $save: (opts={}) =>
+        if @db_settings? && typeof(@db_settings) == 'object'
+          @db_settings = JSON.stringify(@db_settings)
+        super opts
+
+    return DataSource
+])

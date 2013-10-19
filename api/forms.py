@@ -39,8 +39,9 @@ class BaseForm(object):
 
     @property
     def error_messages(self):
-        errors = ', '.join(["%s%s" % (err['name'] + ': ' if err['name'] else '', err['error'])
-                           for err in self.errors])
+        errors = ', '.join(
+            ["%s%s" % (err['name'] + ': ' if err['name'] else '', err['error'])
+             for err in self.errors])
         return 'Here is some validation errors: %s' % errors
 
     def is_valid(self):
@@ -71,7 +72,8 @@ class BaseForm(object):
             elif required:
                 cleaned_value = self.cleaned_data.get(name)
                 if not cleaned_value:
-                    self.errors.append({'name': name, 'error': '%s is required'})
+                    self.errors.append({'name': name,
+                                        'error': '%s is required'})
 
         try:
             self.validate_obj()
@@ -150,12 +152,11 @@ class ModelForm(BaseFormEx):
                                          return_doc=True)
     train_import_handler_file = ImportHandlerFileField()
     test_import_handler = DocumentField(doc='ImportHandler', by_name=False,
-                                         return_doc=True)
+                                        return_doc=True)
     test_import_handler_file = ImportHandlerFileField()
     features = JsonField()
     trainer = CharField()
 
-    # 
     feature_model = None
     trainer_obj = None
     classifier = None
@@ -192,8 +193,8 @@ class ModelForm(BaseFormEx):
 
     def validate_data(self):
         if self.feature_model:
-            if not (self.cleaned_data.get('train_import_handler_file', None) or \
-                self.cleaned_data.get('train_import_handler', None) ):
+            if not (self.cleaned_data.get('train_import_handler_file', None) or
+                    self.cleaned_data.get('train_import_handler', None)):
                 raise ValidationError('train_import_handler_file or \
 train_import_handler should be specified for new model')
             self.trainer_obj = Trainer(self.feature_model)
@@ -207,7 +208,8 @@ train_import_handler should be specified for new model')
             action = 'test' if fieldname.startswith('test') else 'train'
             handler.name = '%s handler for %s' % (name, action)
             handler.type = handler.TYPE_DB
-            handler.import_params = self.cleaned_data.pop('%s_import_params' % action)
+            handler.import_params = self.cleaned_data.pop(
+                '%s_import_params' % action)
             handler.data = data
             handler.save()
             self.cleaned_data['%s_import_handler' % action] = handler
@@ -223,8 +225,10 @@ train_import_handler should be specified for new model')
         if self.trainer_obj:
             obj.set_trainer(self.trainer_obj)
 
-        features_set = app.db.FeatureSet.from_model_features_dict(obj.name, obj.features)
-        classifier = app.db.Classifier.from_model_features_dict(obj.name, obj.features)
+        features_set = app.db.FeatureSet.from_model_features_dict(
+            obj.name, obj.features)
+        classifier = app.db.Classifier.from_model_features_dict(
+            obj.name, obj.features)
         obj.features_set_id = str(features_set._id)
         obj.features_set = features_set
         obj.classifier = classifier
@@ -322,7 +326,8 @@ trained model is required for posting model')
                 action = 'test' if fieldname.startswith('test') else 'train'
                 handler.name = '%s handler for %s' % (name, action)
                 handler.type = handler.TYPE_DB
-                handler.import_params = self.cleaned_data.pop('%s_import_params' % action)
+                handler.import_params = self.cleaned_data.pop(
+                    '%s_import_params' % action)
                 handler.data = data
                 handler.save()
                 self.cleaned_data['%s_import_handler' % action] = handler
@@ -383,7 +388,8 @@ class BaseChooseInstanceAndDataset(BaseForm):
                 self.params_filled = True
 
         if self.params_filled and missed_params:
-            raise ValidationError('Parameters %s are required' % ', '.join(missed_params))
+            raise ValidationError(
+                'Parameters %s are required' % ', '.join(missed_params))
 
         return parameters
 
@@ -403,7 +409,8 @@ class BaseChooseInstanceAndDataset(BaseForm):
 
     def clean_spot_instance_type(self, value):
         if value and value not in self.TYPE_CHOICES:
-            raise ValidationError('%s is invalid choice for spot_instance_type. \
+            raise ValidationError(
+                '%s is invalid choice for spot_instance_type. \
 Please choose one of %s' % (value, self.TYPE_CHOICES))
         return value
 
@@ -415,8 +422,8 @@ Please choose one of %s' % (value, self.TYPE_CHOICES))
             self.cleaned_data,
             ('parameters', 'dataset'), raise_exc=False)
         if inst_err or ds_err:
-            raise ValidationError('%s%s%s.' %
-                (inst_err, '. ' if inst_err else '', ds_err))
+            raise ValidationError(
+                '%s%s%s.' % (inst_err, '. ' if inst_err else '', ds_err))
 
 
 class BaseChooseInstanceAndDatasetMultiple(BaseChooseInstanceAndDataset):
@@ -482,10 +489,9 @@ class DataSetEditForm(BaseForm):
 
 class AddTestForm(BaseChooseInstanceAndDataset):
     HANDLER_TYPE = 'test'
-    fields = ['name', 'model', 
+    fields = ['name', 'model',
               'examples_placement',
-              'examples_fields'] + \
-            BaseChooseInstanceAndDataset.fields
+              'examples_fields'] + BaseChooseInstanceAndDataset.fields
 
     def before_clean(self):
         self.model = app.db.Model.find_one({'_id': ObjectId(self.model_id)})
@@ -534,16 +540,17 @@ class AddTestForm(BaseChooseInstanceAndDataset):
             import_handler = ImportHandler(test.model.test_import_handler)
             params = self.cleaned_data.get('parameters', None)
             dataset = import_handler.create_dataset(params)
-            import_data.apply_async(kwargs={'dataset_id': str(dataset._id),
-                                            'test_id': str(test._id)},
-                                    link=run_test.subtask(args=(str(test._id), ),
-                                    options={'queue': instance['name']}))
+            import_data.apply_async(
+                kwargs={'dataset_id': str(dataset._id),
+                        'test_id': str(test._id)},
+                link=run_test.subtask(args=(str(test._id), ),
+                                      options={'queue': instance['name']}))
         else:
             # test using dataset
             dataset = self.cleaned_data.get('dataset', None)
-            run_test.apply_async(([str(dataset._id),],
-                                  str(test._id),),
-                                  queue=instance['name'])
+            run_test.apply_async(([str(dataset._id), ],
+                                  str(test._id), ),
+                                 queue=instance['name'])
             # run_test.run([str(dataset._id),], str(test._id))
 
         return test
@@ -650,11 +657,13 @@ class BasePredefinedForm(BaseFormEx):
 
     def validate_data(self):
         is_predefined = self.cleaned_data.get('is_predefined', False)
-        predefined_selected = self.cleaned_data.get('predefined_selected', False)
+        predefined_selected = self.cleaned_data.get(
+            'predefined_selected', False)
         feature_id = self.cleaned_data.get('feature_id', False)
 
         if predefined_selected and is_predefined:
-            raise ValidationError('item could be predefined or copied from predefined')
+            raise ValidationError(
+                'item could be predefined or copied from predefined')
 
         if self.inner_name:
             # It's feature related form
@@ -663,7 +672,8 @@ class BasePredefinedForm(BaseFormEx):
         else:
             if 'feature_id' in self.fields.keys():  # feature specific item
                 if not (bool(feature_id) != bool(is_predefined)):
-                    raise ValidationError('one of feature_id and is_predefined is required')
+                    raise ValidationError(
+                        'one of feature_id and is_predefined is required')
 
         if is_predefined:
             name = self.cleaned_data.get('name', None)
@@ -677,12 +687,13 @@ class BasePredefinedForm(BaseFormEx):
             count = callable_document.find(kwargs).count()
 
             if count:
-                raise ValidationError('name of predefined item should be unique')
+                raise ValidationError(
+                    'name of predefined item should be unique')
 
         if predefined_selected:
             obj = self.cleaned_data.get(self.OBJECT_NAME, None)
             if obj:
-               self._fill_predefined_values(obj)
+                self._fill_predefined_values(obj)
 
     def _fill_predefined_values(self, obj):
         """
@@ -718,10 +729,10 @@ class ScalerForm(BasePredefinedForm):
     # whether we need to create predefined item (not feature related)
     is_predefined = BooleanField()
     scaler = DocumentField(doc='Scaler', by_name=True,
-                                filter_params={'is_predefined': True},
-                                return_doc=True)
+                           filter_params={'is_predefined': True},
+                           return_doc=True)
     feature_id = DocumentField(doc='Feature', by_name=False,
-                                return_doc=False)
+                               return_doc=False)
 
 
 class ClassifierForm(BasePredefinedForm):
@@ -774,7 +785,8 @@ class TransformerForm(BasePredefinedForm):
         None: ('type', )}
 
     name = CharField()
-    type_field = ChoiceField(choices=app.db.Transformer.TYPES_LIST, name='type')
+    type_field = ChoiceField(
+        choices=app.db.Transformer.TYPES_LIST, name='type')
     params = JsonField()
     is_predefined = BooleanField()
     predefined_selected = BooleanField()
@@ -782,7 +794,7 @@ class TransformerForm(BasePredefinedForm):
                                 filter_params={'is_predefined': True},
                                 return_doc=True)
     feature_id = DocumentField(doc='Feature', by_name=False,
-                                return_doc=False)
+                               return_doc=False)
 
 
 class FeatureForm(BaseFormEx):
@@ -799,14 +811,15 @@ class FeatureForm(BaseFormEx):
     features_set_id = DocumentField(doc='FeatureSet', by_name=False,
                                     return_doc=False)
 
-    transformer = TransformerForm(model_name='Transformer',
-                                  prefix='transformer-', data_from_request=False)
+    transformer = TransformerForm(
+        model_name='Transformer', prefix='transformer-',
+        data_from_request=False)
     remove_transformer = BooleanField()
     scaler = ScalerForm(model_name='Scaler', prefix='scaler-',
                         data_from_request=False)
     remove_scaler = BooleanField()
 
-    def clean_features_set_id(self, value, field):        
+    def clean_features_set_id(self, value, field):
         if value:
             feature_set = field.doc
             self.cleaned_data['features_set'] = feature_set
@@ -838,6 +851,27 @@ class FeatureForm(BaseFormEx):
             self.obj.scaler = None
 
         return super(FeatureForm, self).save(*args, **kwargs)
+
+
+class DataSourceForm(BaseFormEx):
+    required_fields = ('type', 'name')
+
+    name = CharField()
+    type_field = ChoiceField(choices=app.db.DataSource.TYPES_LIST, name='type')
+    db_settings = JsonField()
+
+    def clean_db_settings(self, value, field):
+        # TODO vendor in app.db.DataSource.VENDORS_LIST
+        return value
+
+    def clean_name(self, value, field):
+        kwargs = {'name': value}
+        if '_id' in self.obj and self.obj._id:
+            kwargs['_id'] = {'$ne': self.obj._id}
+        count = app.db.DataSource.find(kwargs).count()
+        if count:
+            raise ValidationError('name should be unique')
+        return value
 
 
 def populate_parser(import_params):

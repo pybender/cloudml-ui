@@ -1163,6 +1163,22 @@ class FeatureResource(BaseResource):
 api.add_resource(FeatureResource, '/cloudml/features/<regex("[\w\.]*"):features_set_id>/items/')
 
 
+class DataSourceResource(BaseResource):
+    """
+    DataSource API methods
+    """
+    MESSAGE404 = "DataSource doesn't exist"
+    OBJECT_NAME = 'datasource'
+    DEFAULT_FIELDS = ['_id', 'name', 'db_settings']
+    put_form = post_form = DataSourceForm
+
+    @property
+    def Model(self):
+        return app.db.DataSource
+
+api.add_resource(DataSourceResource, '/cloudml/datasources/')
+
+
 def populate_parser(model, is_requred=False):
     parser = reqparse.RequestParser()
     for param in model.import_params:

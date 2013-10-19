@@ -189,6 +189,7 @@ class BaseTestCase(unittest.TestCase):
                             (field, obj_resp.keys()))
             self.assertEquals(str(doc.get(field)),
                               str(obj_resp.get(field)))
+        return doc
 
     def __get_fields(self, show):
         if show:

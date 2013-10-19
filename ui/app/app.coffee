@@ -24,6 +24,7 @@ App = angular.module('app', [
   'app.reports.controllers'
   'app.importhandlers.model'
   'app.importhandlers.controllers'
+  'app.importhandlers.controllers.datasources'
   'app.datasets.model'
   'app.datasets.controllers'
   'app.weights.model'
@@ -186,6 +187,10 @@ App.config([
     .when('/predefined/scalars', {
       controller: "ScalersListCtrl"
       templateUrl: '/partials/features/scalers/list.html'
+    })
+    .when('/predefined/datasources', {
+      controller: "DataSourceListCtrl"
+      templateUrl: '/partials/import_handler/datasource/list.html'
     })
 
     # Catch all
