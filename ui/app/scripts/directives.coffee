@@ -416,6 +416,190 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
   }
 )
 
+.directive('jsonEditor', ($compile, $timeout) ->
+  return {
+    restrict: 'E',
+    scope: {
+      item: '='
+    },
+    link: (scope, element, attributes) ->
+      TITLE_STRING = "Text"
+      TITLE_OBJECT = "Map"
+      TITLE_ARRAY = "List"
+
+      TYPE_STRING = 'String'
+      TYPE_OBJECT = 'Object'
+      TYPE_ARRAY = 'Array'
+
+      scope.valueTypes = [TITLE_STRING, TITLE_OBJECT, TITLE_ARRAY]
+
+      # Helper functions
+
+      getType = (value) ->
+        if _.isArray(value)
+          return TYPE_ARRAY
+        else if _.isObject(value)
+          return TYPE_OBJECT
+        else
+          return TYPE_STRING
+
+      scope.getType = (obj) ->
+        return getType(obj)
+
+      scope.toggleCollapse = () ->
+        if (scope.collapsed)
+          scope.collapsed = false
+          scope.chevron = "icon-chevron-down"
+        else
+          scope.collapsed = true
+          scope.chevron = "icon-chevron-right"
+
+      scope.moveKey = (obj, key, newkey) ->
+        obj[newkey] = obj[key]
+        delete obj[key]
+
+      scope.deleteKey = (obj, key) ->
+        if (getType(obj) == TYPE_OBJECT)
+          if(confirm('Delete "'+key+'" and all it contains?'))
+            delete obj[key]
+        else if (getType(obj) == TYPE_ARRAY)
+          if(confirm('Delete "'+obj[key]+'"?'))
+            obj.splice(key, 1)
+        else
+          console.error("object to delete from was " + obj)
+
+      scope.addItem = (obj) ->
+        if (getType(obj) == TYPE_OBJECT)
+          # check input for key
+          if (scope.keyName == undefined || scope.keyName.length == 0)
+            alert("Please fill in a name")
+          else if (scope.keyName.indexOf("$") == 0)
+            alert("The name may not start with $ (the dollar sign)")
+          else if (scope.keyName.indexOf("_") == 0)
+            alert("The name may not start with _ (the underscore)")
+          else
+            if (obj[scope.keyName])
+              if(!confirm('TODO: text of message or get rid of it') )
+                return
+
+            # add item to object
+            switch scope.valueType
+              when TITLE_STRING
+                if scope.valueName
+                  obj[scope.keyName] = scope.valueName
+                else
+                  obj[scope.keyName] = ""
+              when TITLE_OBJECT
+                obj[scope.keyName] = {}
+              when TITLE_ARRAY
+                obj[scope.keyName] = []
+              else
+                obj[scope.keyName] = "ERROR"
+
+            # clean-up
+            scope.keyName = ""
+            scope.valueName = ""
+            scope.showAddKey = false
+
+        else if (getType(obj) == TYPE_ARRAY)
+          # add item to array
+          switch scope.valueType
+            when TITLE_STRING
+              if scope.valueName
+                obj.push scope.valueName
+              else
+                obj.push ""
+            when TITLE_OBJECT
+              obj.push({})
+            when TITLE_ARRAY
+              obj.push([])
+            else
+              obj.push "ERROR"
+
+          scope.valueName = ""
+          scope.showAddKey = false
+        else
+          console.error("object to add to was " + obj)
+
+      scope.type = getType(scope.item)
+
+      # Template Generation
+      # recursion
+      switchTemplate =
+        '<span ng-switch on="getType(val)" >
+        <json-editor ng-switch-when="Object" item="val">
+</json-editor>
+        <json-editor ng-switch-when="Array" item="val">
+</json-editor>
+        <span ng-switch-default class="jsonLiteral">
+        <input type="text" ng-model="val"
+ placeholder="Empty" ng-model-onblur
+ ng-change="item[key] = val"/>
+        </span>
+        </span>'
+
+      # display either "plus button" or "key-value inputs"
+      addItemTemplate =
+        '<div ng-switch on="showAddKey" class="block" >
+            <span ng-switch-when="true">'
+
+      if (scope.type == TYPE_OBJECT)
+        addItemTemplate += '<input placeholder="Name" type="text"
+ class="input-small addItemKeyInput" ng-model="$parent.keyName" />'
+
+      addItemTemplate += '<select ng-model="$parent.valueType"
+ ng-options="option for option in valueTypes"
+ ng-init="$parent.valueType=\'' + TITLE_STRING + '\'"></select>
+ <span ng-show="$parent.valueType == \'' + TITLE_STRING + '\'"> :
+ <input type="text" placeholder="Value"
+ class="input-medium addItemValueInput"
+ ng-model="$parent.valueName" /></span>
+ <button class="btn btn-primary" ng-click="addItem(item)">Add</button>
+ <button class="btn" ng-click="$parent.showAddKey=false">Cancel</button>
+ </span>
+ <span ng-switch-default>
+ <button class="addObjectItemBtn"
+ ng-click="$parent.showAddKey = true"><i class="icon-plus"></i></button>
+ </span>
+ </div>'
+
+      # start template
+      if scope.type == TYPE_OBJECT
+        template = '<i ng-click="toggleCollapse()" ng-class="chevron"
+ ng-init="chevron = \'icon-chevron-down\'"></i>
+ <div class="jsonContents" ng-hide="collapsed">
+ <span class="block"
+ ng-hide="key.indexOf(\'_\') == 0" ng-repeat="(key, val) in item">
+ <span class="jsonObjectKey">
+ <input class="keyinput" type="text" ng-model="newkey" ng-init="newkey=key"
+ ng-change="moveKey(item, key, newkey)"/>
+ <i class="deleteKeyBtn icon-trash" ng-click="deleteKey(item, key)"></i>
+              </span>
+              <span class="jsonObjectValue">' + switchTemplate + '</span>
+              </span>' + addItemTemplate + '</div>'
+
+      else if scope.type == TYPE_ARRAY
+        template = '<i ng-click="toggleCollapse()"
+ ng-class="chevron" ng-init="chevron = \'icon-chevron-down\'"></i>
+ <div class="jsonContents" ng-hide="collapsed">
+ <ol class="arrayOl" ng-model="item">
+ <li class="arrayItem" ng-repeat="val in item" ng-init="key=$index">
+ <i class="deleteKeyBtn icon-trash" ng-click="deleteKey(item, $index)"></i>
+ <span>' + switchTemplate + '</span></li></ol>' + addItemTemplate + '</div>'
+
+      else
+        scope.val = scope.item
+        scope.key = ''
+        template = '<div class="jsonContents" ng-hide="collapsed">'
+        + switchTemplate + '</div>'
+
+      newElement = angular.element(template)
+      $compile(newElement)(scope)
+      element.replaceWith(newElement)
+
+  }
+)
+
 # Directives for creating plots
 
 .directive('scCurves', [ ->

@@ -13,8 +13,9 @@ angular.module('app.features.controllers.features', ['app.config', ])
   'Model'
   'Feature'
   'Transformer'
+  '$filter'
 
-($scope, $routeParams, $location, Model, Feature, Transformer) ->
+($scope, $routeParams, $location, Model, Feature, Transformer, $filter) ->
   if not $routeParams.model_id then throw new Error "Specify model id"
   if not $routeParams.set_id then throw new Error "Specify set id"
 
@@ -26,6 +27,7 @@ angular.module('app.features.controllers.features', ['app.config', ])
   })
   $scope.config = {}
   $scope.params_config = {}
+  $scope.feature_params = {}
 
   if $routeParams.feature_id
     $scope.feature._id = $routeParams.feature_id
@@ -52,6 +54,7 @@ angular.module('app.features.controllers.features', ['app.config', ])
       _.object(config.required_params, []),
       $scope.feature.params
     )
+    $scope.feature_params = _.clone($scope.feature.params)
 
   $scope.$watch('feature.type', (type) ->
     $scope.loadFeatureParameters()
@@ -62,6 +65,10 @@ angular.module('app.features.controllers.features', ['app.config', ])
     # Note: We need to delete transformer or scaler when
     # transformer/scaler fields selected, when edditing
     # feature in full details page.
+
+    # Save parameters
+    $scope.feature.params = JSON.parse($filter('json')($scope.feature_params))
+
     is_edit = $scope.feature._id != null
     $scope.saving = true
     $scope.savingProgress = '0%'
