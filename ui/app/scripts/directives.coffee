@@ -416,24 +416,17 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
   }
 )
 
-.directive('jsonEditor', ($compile, $timeout) ->
+.directive('jsonEditor', ($compile, $filter) ->
   return {
     restrict: 'E',
     scope: {
-      item: '='
+      item: '=',
+      config: '=',
     },
-    link: (scope, element, attributes) ->
-      TITLE_STRING = "Text"
-      TITLE_OBJECT = "Map"
-      TITLE_ARRAY = "List"
-
-      TYPE_STRING = 'String'
-      TYPE_OBJECT = 'Object'
-      TYPE_ARRAY = 'Array'
-
-      scope.valueTypes = [TITLE_STRING, TITLE_OBJECT, TITLE_ARRAY]
-
-      # Helper functions
+    link: (scope, element, attributes, ctrl) ->
+      TYPE_STRING = 'str'
+      TYPE_OBJECT = 'dict'
+      TYPE_ARRAY = 'list'
 
       getType = (value) ->
         if _.isArray(value)
@@ -442,6 +435,9 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
           return TYPE_OBJECT
         else
           return TYPE_STRING
+
+      cleanJson = (obj) ->
+        return JSON.parse($filter('json')(obj))
 
       scope.getType = (obj) ->
         return getType(obj)
@@ -479,19 +475,19 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
             alert("The name may not start with _ (the underscore)")
           else
             if (obj[scope.keyName])
-              if(!confirm('TODO: text of message or get rid of it') )
+              if(!confirm('Parameter is already set'))
                 return
 
             # add item to object
             switch scope.valueType
-              when TITLE_STRING
+              when TYPE_STRING
                 if scope.valueName
                   obj[scope.keyName] = scope.valueName
                 else
                   obj[scope.keyName] = ""
-              when TITLE_OBJECT
+              when TYPE_OBJECT
                 obj[scope.keyName] = {}
-              when TITLE_ARRAY
+              when TYPE_ARRAY
                 obj[scope.keyName] = []
               else
                 obj[scope.keyName] = "ERROR"
@@ -504,14 +500,14 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
         else if (getType(obj) == TYPE_ARRAY)
           # add item to array
           switch scope.valueType
-            when TITLE_STRING
+            when TYPE_STRING
               if scope.valueName
                 obj.push scope.valueName
               else
                 obj.push ""
-            when TITLE_OBJECT
+            when TYPE_OBJECT
               obj.push({})
-            when TITLE_ARRAY
+            when TYPE_ARRAY
               obj.push([])
             else
               obj.push "ERROR"
@@ -521,20 +517,23 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
         else
           console.error("object to add to was " + obj)
 
+      scope.valueTypes = for name, config of scope.config
+        {name: name, type: config.type}
+
       scope.type = getType(scope.item)
 
       # Template Generation
       # recursion
       switchTemplate =
         '<span ng-switch on="getType(val)" >
-        <json-editor ng-switch-when="Object" item="val">
-</json-editor>
-        <json-editor ng-switch-when="Array" item="val">
-</json-editor>
+        <json-editor ng-switch-when="dict" item="val" config="config">
+        </json-editor>
+        <json-editor ng-switch-when="list" item="val" config="config">
+        </json-editor>
         <span ng-switch-default class="jsonLiteral">
         <input type="text" ng-model="val"
- placeholder="Empty" ng-model-onblur
- ng-change="item[key] = val"/>
+          placeholder="Empty" ng-model-onblur
+          ng-change="item[key] = val"/>
         </span>
         </span>'
 
@@ -545,58 +544,68 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
 
       if (scope.type == TYPE_OBJECT)
         addItemTemplate += '<input placeholder="Name" type="text"
- class="input-small addItemKeyInput" ng-model="$parent.keyName" />'
+          class="input-small addItemKeyInput"
+          ng-model="$parent.keyName" />'
 
       addItemTemplate += '<select ng-model="$parent.valueType"
- ng-options="option for option in valueTypes"
- ng-init="$parent.valueType=\'' + TITLE_STRING + '\'"></select>
- <span ng-show="$parent.valueType == \'' + TITLE_STRING + '\'"> :
- <input type="text" placeholder="Value"
- class="input-medium addItemValueInput"
- ng-model="$parent.valueName" /></span>
- <button class="btn btn-primary" ng-click="addItem(item)">Add</button>
- <button class="btn" ng-click="$parent.showAddKey=false">Cancel</button>
- </span>
- <span ng-switch-default>
- <button class="addObjectItemBtn"
- ng-click="$parent.showAddKey = true"><i class="icon-plus"></i></button>
- </span>
- </div>'
+        ng-options="option.type as option.name for option in valueTypes"
+        ng-init="$parent.valueType=\'' + TYPE_STRING + '\'">
+      </select>
+      <span ng-show="$parent.valueType == \'' + TYPE_STRING + '\'"> :
+        <input type="text" placeholder="Value"
+          class="input-medium addItemValueInput"
+          ng-model="$parent.valueName" />
+      </span>
+      <button class="btn btn-primary" ng-click="addItem(item)">Add</button>
+      <button class="btn" ng-click="$parent.showAddKey=false">Cancel</button>
+      </span>
+      <span ng-switch-default>
+        <button class="addObjectItemBtn" ng-click="$parent.showAddKey = true">
+          <i class="icon-plus"></i></button>
+      </span>
+      </div>'
 
       # start template
       if scope.type == TYPE_OBJECT
         template = '<i ng-click="toggleCollapse()" ng-class="chevron"
- ng-init="chevron = \'icon-chevron-down\'"></i>
- <div class="jsonContents" ng-hide="collapsed">
- <span class="block"
- ng-hide="key.indexOf(\'_\') == 0" ng-repeat="(key, val) in item">
- <span class="jsonObjectKey">
- <input class="keyinput" type="text" ng-model="newkey" ng-init="newkey=key"
- ng-change="moveKey(item, key, newkey)"/>
- <i class="deleteKeyBtn icon-trash" ng-click="deleteKey(item, key)"></i>
-              </span>
-              <span class="jsonObjectValue">' + switchTemplate + '</span>
-              </span>' + addItemTemplate + '</div>'
+          ng-init="chevron = \'icon-chevron-down\'"></i>
+        <div class="jsonContents" ng-hide="collapsed">
+        <span class="block" ng-hide="key.indexOf(\'_\') == 0"
+          ng-repeat="(key, val) in item">
+          <span class="jsonObjectKey">
+            <input class="keyinput"
+              type="text"
+              ng-model="newkey"
+              ng-init="newkey=key"
+              ng-change="moveKey(item, key, newkey)"/>
+            <i class="deleteKeyBtn icon-trash" ng-click="deleteKey(item, key)">
+            </i>
+          </span>
+          <span class="jsonObjectValue">' + switchTemplate + '</span>
+        </span>' + addItemTemplate + '</div>'
 
       else if scope.type == TYPE_ARRAY
         template = '<i ng-click="toggleCollapse()"
- ng-class="chevron" ng-init="chevron = \'icon-chevron-down\'"></i>
- <div class="jsonContents" ng-hide="collapsed">
- <ol class="arrayOl" ng-model="item">
- <li class="arrayItem" ng-repeat="val in item" ng-init="key=$index">
- <i class="deleteKeyBtn icon-trash" ng-click="deleteKey(item, $index)"></i>
- <span>' + switchTemplate + '</span></li></ol>' + addItemTemplate + '</div>'
+          ng-class="chevron"
+          ng-init="chevron = \'icon-chevron-down\'">
+        </i>
+        <div class="jsonContents" ng-hide="collapsed">
+          <ol class="arrayOl" ng-model="item">
+            <li class="arrayItem" ng-repeat="val in item" ng-init="key=$index">
+              <i class="deleteKeyBtn icon-trash"
+                ng-click="deleteKey(item, $index)">
+              </i>
+              <span>' + switchTemplate + '</span>
+            </li>
+          </ol>' + addItemTemplate + '</div>'
 
       else
-        scope.val = scope.item
-        scope.key = ''
-        template = '<div class="jsonContents" ng-hide="collapsed">'
-        + switchTemplate + '</div>'
+        console.log scope.type
+#        throw new Error("Wrong object type")
 
       newElement = angular.element(template)
       $compile(newElement)(scope)
       element.replaceWith(newElement)
-
   }
 )
 

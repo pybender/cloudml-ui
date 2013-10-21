@@ -26,7 +26,6 @@ angular.module('app.features.controllers.features', ['app.config', ])
     scaler: {}
   })
   $scope.config = {}
-  $scope.params_config = {}
   $scope.feature_params = {}
 
   if $routeParams.feature_id
@@ -43,13 +42,27 @@ angular.module('app.features.controllers.features', ['app.config', ])
       $scope.setError(opts, 'loading types and parameters')
     )
 
+  $scope.params_config = {
+    mappings: {
+      type: 'dict',
+      help_text: 'This is map parameter'
+    },
+    pattern: {
+      type: 'str',
+      help_text: 'Please enter a valid regular expression'
+    },
+    'some composite': {
+      type: 'list',
+      help_text: 'This is composite parameter'
+    }
+  }
+
   $scope.loadFeatureParameters = () ->
     if !$scope.feature.type || !$scope.configuration
       return
 
     config = $scope.configuration.types[$scope.feature.type]
     $scope.config = config
-    $scope.params_config = $scope.configuration.params
     $scope.feature.params = _.extend(
       _.object(config.required_params, []),
       $scope.feature.params
@@ -67,6 +80,7 @@ angular.module('app.features.controllers.features', ['app.config', ])
     # feature in full details page.
 
     # Save parameters
+    # TODO: clean JSON inside the control
     $scope.feature.params = JSON.parse($filter('json')($scope.feature_params))
 
     is_edit = $scope.feature._id != null
