@@ -46,7 +46,7 @@ angular.module('app.features.controllers.features', ['app.config', ])
     $scope.feature.$save(only: fields, removeItems: true).then (->
       $scope.savingProgress = '100%'
       $location.path($scope.modelObj.objectUrl())\
-      .search({'action': 'features_set:list'})
+      .search({'action': 'model:details'})
     ), ((opts) ->
       $scope.err = $scope.setError(opts, "saving")
       $scope.savingProgress = '0%'
