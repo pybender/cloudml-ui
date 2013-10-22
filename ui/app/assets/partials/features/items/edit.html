@@ -1,7 +1,7 @@
 <div>
   <h2>
     <span ng-show="feature._id">Edit</span><span ng-hide="feature._id">New</span> Feature <span ng-show="feature._id">{{ feature.name }}</span>
-    <small><a href="#{{ modelObj.objectUrl() }}?action=features_set:list">(Cancel)</a></small>
+    <small><a href="#{{ modelObj.objectUrl() }}?action=model:details">(Cancel)</a></small>
   </h2>
 
   <loadindicator title="Save feature..." ng-show="saving" progress="savingProgress"></loadindicator>
