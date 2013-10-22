@@ -457,6 +457,9 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
         delete obj[key]
 
       scope.deleteKey = (obj, key) ->
+        if scope.isRequired(key)
+          alert("Can't delete required parameter")
+          return
         if (getType(obj) == TYPE_OBJECT)
           if(confirm('Delete "'+key+'" ?'))
             delete obj[key]
@@ -467,6 +470,15 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
           console.error("object to delete from was " + obj)
 
       scope.addItem = (obj) ->
+        _getValue = () ->
+          switch scope.valueType
+            when TYPE_STRING
+              if scope.valueName then scope.valueName
+              else ""
+            when TYPE_OBJECT then {}
+            when TYPE_ARRAY then []
+            else "ERROR"
+
         if (getType(obj) == TYPE_OBJECT)
           # check input for key
           if (scope.keyName == undefined || scope.keyName.length == 0)
@@ -481,18 +493,7 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
                 return
 
             # add item to object
-            switch scope.valueType
-              when TYPE_STRING
-                if scope.valueName
-                  obj[scope.keyName] = scope.valueName
-                else
-                  obj[scope.keyName] = ""
-              when TYPE_OBJECT
-                obj[scope.keyName] = {}
-              when TYPE_ARRAY
-                obj[scope.keyName] = []
-              else
-                obj[scope.keyName] = "ERROR"
+            obj[scope.keyName] = _getValue()
 
             # clean-up
             scope.keyName = ""
@@ -501,21 +502,11 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
 
         else if (getType(obj) == TYPE_ARRAY)
           # add item to array
-          switch scope.valueType
-            when TYPE_STRING
-              if scope.valueName
-                obj.push scope.valueName
-              else
-                obj.push ""
-            when TYPE_OBJECT
-              obj.push({})
-            when TYPE_ARRAY
-              obj.push([])
-            else
-              obj.push "ERROR"
+          obj.push _getValue()
 
           scope.valueName = ""
           scope.showAddKey = false
+
         else
           console.error("object to add to was " + obj)
 
