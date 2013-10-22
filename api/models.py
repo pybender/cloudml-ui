@@ -180,7 +180,7 @@ class ImportHandler(BaseDocument):
 
         def unset(model, handler_type='train'):
             handler = getattr(model, '%s_import_handler' % handler_type)
-            if handler['_id'] == self._id:
+            if handler and handler['_id'] == self._id:
                 setattr(model, '%s_import_handler' % handler_type, None)
                 model.changed = True
 

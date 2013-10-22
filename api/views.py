@@ -134,7 +134,8 @@ class Models(BaseResource):
                 if model.dataset else []
 
         if fields and 'test_handler_fields' in fields:
-            model['test_handler_fields'] = model.test_import_handler.get_fields()
+            if model.test_import_handler:
+                model['test_handler_fields'] = model.test_import_handler.get_fields()
 
         return model
 
@@ -165,8 +166,8 @@ class Models(BaseResource):
         params = self._parse_parameters(parser_params)
         query_fields, show_fields = self._get_fields(params)
         _id = ObjectId(params.get('handler'))
-        expr = {'$or': [{'test_import_handler._id': _id},
-                        {'train_import_handler._id': _id}]}
+        expr = {'$or': [{'test_import_handler.$id': _id},
+                        {'train_import_handler.$id': _id}]}
         models = self.Model.find(expr, query_fields)
         return self._render({"%ss" % self.OBJECT_NAME: models})
 
