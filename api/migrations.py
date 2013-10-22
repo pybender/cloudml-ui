@@ -121,7 +121,7 @@ class ModelMigration(DbMigration):  # pragma: no cover
     def allmigration13__fill_features(self):
          model_list = app.db.Model.find()
          for model in model_list:
-            if not model['features']:
+            if not model['features'] or not model.features_set_id is None:
                 continue
 
             features_set = app.db.FeatureSet.from_model_features_dict(model.name, model.features)
