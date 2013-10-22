@@ -416,12 +416,14 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
   }
 )
 
+# TODO: generalize, add possibility to edit composite type
 .directive('jsonEditor', ($compile, $filter) ->
   return {
     restrict: 'E',
     scope: {
       item: '=',
       config: '=',
+      requiredParams: '='
     },
     link: (scope, element, attributes, ctrl) ->
       TYPE_STRING = 'str'
@@ -456,7 +458,7 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
 
       scope.deleteKey = (obj, key) ->
         if (getType(obj) == TYPE_OBJECT)
-          if(confirm('Delete "'+key+'" and all it contains?'))
+          if(confirm('Delete "'+key+'" ?'))
             delete obj[key]
         else if (getType(obj) == TYPE_ARRAY)
           if(confirm('Delete "'+obj[key]+'"?'))
@@ -517,8 +519,20 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
         else
           console.error("object to add to was " + obj)
 
+      scope.isRequired = (key) ->
+        if scope.requiredParams
+          _.indexOf(scope.requiredParams, key) > -1
+        else
+          false
+
+      scope.isTopLevel = () ->
+        scope.requiredParams?
+
+      scope.isEmpty = () ->
+        scope.isTopLevel() && _.isEmpty(scope.item)
+
       scope.valueTypes = for name, config of scope.config
-        {name: name, type: config.type}
+        {name: name, type: config.type, help_text: config.help_text}
 
       scope.type = getType(scope.item)
 
@@ -526,32 +540,36 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
       # recursion
       switchTemplate =
         '<span ng-switch on="getType(val)" >
-        <json-editor ng-switch-when="dict" item="val" config="config">
+        <json-editor ng-switch-when="dict" item="val"
+          config="config" required-params="">
         </json-editor>
-        <json-editor ng-switch-when="list" item="val" config="config">
+        <json-editor ng-switch-when="list" item="val"
+           config="config" required-params="">
         </json-editor>
         <span ng-switch-default class="jsonLiteral">
         <input type="text" ng-model="val"
-          placeholder="Empty" ng-model-onblur
+          placeholder="Empty"
           ng-change="item[key] = val"/>
         </span>
         </span>'
 
       # display either "plus button" or "key-value inputs"
       addItemTemplate =
-        '<div ng-switch on="showAddKey" class="block" >
-            <span ng-switch-when="true">'
+        '<div ng-switch on="showAddKey" class="block"
+          ng-init="valueType=\'' + TYPE_STRING + '\'">
+          <span ng-switch-when="true">'
 
       if (scope.type == TYPE_OBJECT)
         addItemTemplate += '<input placeholder="Name" type="text"
           class="input-small addItemKeyInput"
           ng-model="$parent.keyName" />'
 
-      addItemTemplate += '<select ng-model="$parent.valueType"
-        ng-options="option.type as option.name for option in valueTypes"
-        ng-init="$parent.valueType=\'' + TYPE_STRING + '\'">
-      </select>
-      <span ng-show="$parent.valueType == \'' + TYPE_STRING + '\'"> :
+#      <select ng-model="$parent.valueType"
+#        ng-options="option.type as option.name for option in valueTypes"
+#        ng-init="$parent.valueType=\'' + TYPE_STRING + '\'">
+#      </select>
+
+      addItemTemplate += ' <span> :
         <input type="text" placeholder="Value"
           class="input-medium addItemValueInput"
           ng-model="$parent.valueName" />
@@ -568,25 +586,35 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
       # start template
       if scope.type == TYPE_OBJECT
         template = '<i ng-click="toggleCollapse()" ng-class="chevron"
+          ng-show="false"
           ng-init="chevron = \'icon-chevron-down\'"></i>
+        <div ng-show="isEmpty()">
+          There are no parameters to edit</div>
         <div class="jsonContents" ng-hide="collapsed">
         <span class="block" ng-hide="key.indexOf(\'_\') == 0"
           ng-repeat="(key, val) in item">
           <span class="jsonObjectKey">
-            <input class="keyinput"
+            <input ng-disabled="isRequired(key)" class="keyinput"
               type="text"
               ng-model="newkey"
               ng-init="newkey=key"
               ng-change="moveKey(item, key, newkey)"/>
-            <i class="deleteKeyBtn icon-trash" ng-click="deleteKey(item, key)">
+            <i ng-hide="isRequired(key)"
+              class="deleteKeyBtn icon-trash"
+              ng-click="deleteKey(item, key)">
             </i>
           </span>
-          <span class="jsonObjectValue">' + switchTemplate + '</span>
-        </span>' + addItemTemplate + '</div>'
+          <span class="jsonObjectValue">&nbsp;:&nbsp;
+          ' + switchTemplate + '</span>
+          <i ng-show="isRequired(key)" class="badge">
+            {{ config[key].help_text }}
+          </i>
+          </span><div ng-hide="isTopLevel()">' + addItemTemplate + '</div>
+        </div>'
 
       else if scope.type == TYPE_ARRAY
-        template = '<i ng-click="toggleCollapse()"
-          ng-class="chevron"
+        template = '<i ng-click="toggleCollapse()" ng-class="chevron"
+          ng-show="false"
           ng-init="chevron = \'icon-chevron-down\'">
         </i>
         <div class="jsonContents" ng-hide="collapsed">

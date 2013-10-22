@@ -27,6 +27,8 @@ angular.module('app.features.controllers.features', ['app.config', ])
   })
   $scope.config = {}
   $scope.feature_params = {}
+  $scope.params_config = {}
+  $scope.required_params = []
 
   if $routeParams.feature_id
     $scope.feature._id = $routeParams.feature_id
@@ -37,36 +39,39 @@ angular.module('app.features.controllers.features', ['app.config', ])
 
   $scope.feature.$getConfiguration().then ((opts)->
       $scope.configuration = opts.data.configuration
+      $scope.params_config = $scope.configuration.params
       $scope.loadFeatureParameters()
     ), ((opts)->
       $scope.setError(opts, 'loading types and parameters')
     )
-
-  $scope.params_config = {
-    mappings: {
-      type: 'dict',
-      help_text: 'This is map parameter'
-    },
-    pattern: {
-      type: 'str',
-      help_text: 'Please enter a valid regular expression'
-    },
-    'some composite': {
-      type: 'list',
-      help_text: 'This is composite parameter'
-    }
-  }
 
   $scope.loadFeatureParameters = () ->
     if !$scope.feature.type || !$scope.configuration
       return
 
     config = $scope.configuration.types[$scope.feature.type]
+
+    if not config
+      config = {
+        required_params: []
+      }
+
     $scope.config = config
+    _defaults = []
+    for name in config.required_params
+      type = $scope.params_config[name].type
+      if type == 'dict'
+        _defaults.push({})
+      else if type == 'list'
+        _defaults.push([])
+      else
+        _defaults.push('')
+#    $scope.feature.params = _.object(config.required_params, _defaults)
     $scope.feature.params = _.extend(
-      _.object(config.required_params, []),
-      $scope.feature.params
+      _.object(config.required_params, _defaults),
+      _.pick($scope.feature.params, config.required_params)
     )
+    $scope.required_params = config.required_params
     $scope.feature_params = _.clone($scope.feature.params)
 
   $scope.$watch('feature.type', (type) ->
