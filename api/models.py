@@ -141,6 +141,19 @@ class ImportHandler(BaseDocument):
                       'updated_by': {}}
     use_dot_notation = True
 
+    def get_fields(self):
+        from core.importhandler.importhandler import ExtractionPlan
+        data = json.dumps(self.data)
+        plan = ExtractionPlan(data, is_file=False)
+        test_handler_fields = []
+        for query in plan.queries:
+            items = query['items']
+            for item in items:
+                features = item['target-features']
+                for feature in features:
+                    test_handler_fields.append(feature['name'].replace('.', '->'))
+        return test_handler_fields
+
     def create_dataset(self, params, run_import_data=True):
         #from api.utils import slugify
         dataset = app.db.DataSet()

@@ -103,7 +103,10 @@
           <sc-curves xlabel="Recall" ylabel="Precision" curves-dict="prCurve" width="500"></sc-curves>
         </div>
         <hr/>
-        <a ng-show="test.status == 'Completed'" href="#{{ test.avaragePrecisionUrl() }}"><i class="status-icon icon-search"></i> Average precision</a>
+        <div ng-show="test.status == 'Completed'">
+          <alert-message ng-show="test.examples_placement == 'Do not save'" class="alert-info" msg="Examples data isn't stored for this test at all. So average precision could not be calculated." unsafe></alert-message>
+          <a ng-hide="test.examples_placement == 'Do not save'" href="#{{ test.avaragePrecisionUrl() }}"><i class="status-icon icon-search"></i> Average precision</a>
+        </div>
       </div>
 
       <div ng-show="action[0] == 'examples'" ng-controller="TestExamplesCtrl" ng-init="init(test)">

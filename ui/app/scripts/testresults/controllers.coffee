@@ -172,7 +172,8 @@ confusion_matrix_calculations'
         if extra_fields != ''
           $scope.load(extra_fields, name, cb)
       else
-        $scope.load(extra_fields + ',' + Test.MAIN_FIELDS, name, cb)
+        show = extra_fields + ',examples_placement,' + Test.MAIN_FIELDS
+        $scope.load(show, name, cb)
         $scope.LOADED_SECTIONS.push 'main'
 
   $scope.downloadCsvResults = () ->
