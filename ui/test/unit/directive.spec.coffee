@@ -27,7 +27,7 @@ describe "directives", ->
 
         expect(element.html()).toContain('<span class="jsonObjectKey">')
         expect(element.html()).toContain('<span ng-switch-default="" class="jsonLiteral ng-scope">')
-        expect(element.html()).toContain('<input type="text" ng-model="val" placeholder="Empty" ng-change="item[key] = val" class="ng-pristine ng-valid">')
+        expect(element.html()).toContain('<input type="text" ng-model="item[key]" placeholder="Empty" class="ng-pristine ng-valid">')
         expect(element.html()).toNotContain('<ol class="arrayOl ng-pristine ng-valid" ng-model="item">')
 
     it "should create json editor control for array", ->

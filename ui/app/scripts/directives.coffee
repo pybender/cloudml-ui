@@ -417,7 +417,7 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
 )
 
 # TODO: generalize, add possibility to edit composite type
-.directive('jsonEditor', ($compile, $filter) ->
+.directive('jsonEditor', ['$compile', '$filter', ($compile, $filter) ->
   return {
     restrict: 'E',
     scope: {
@@ -530,17 +530,16 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
       # Template Generation
       # recursion
       switchTemplate =
-        '<span ng-switch on="getType(val)" >
-        <json-editor ng-switch-when="dict" item="val"
+        '<span ng-switch on="getType(item[key])" >
+        <json-editor ng-switch-when="dict" item="item[key]"
           config="config" required-params="">
         </json-editor>
-        <json-editor ng-switch-when="list" item="val"
+        <json-editor ng-switch-when="list" item="item[key]"
            config="config" required-params="">
         </json-editor>
         <span ng-switch-default class="jsonLiteral">
-        <input type="text" ng-model="val"
-          placeholder="Empty"
-          ng-change="item[key] = val"/>
+        <input type="text" ng-model="item[key]"
+          placeholder="Empty" />
         </span>
         </span>'
 
@@ -583,7 +582,7 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
           There are no parameters to edit</div>
         <div class="jsonContents" ng-hide="collapsed">
         <span class="block" ng-hide="key.indexOf(\'_\') == 0"
-          ng-repeat="(key, val) in item">
+          ng-repeat="(key, value) in item">
           <span class="jsonObjectKey">
             <input ng-disabled="isRequired(key)" class="keyinput"
               type="text"
@@ -626,7 +625,7 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
       $compile(newElement)(scope)
       element.replaceWith(newElement)
   }
-)
+])
 
 # Directives for creating plots
 
