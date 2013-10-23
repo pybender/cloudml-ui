@@ -20,7 +20,6 @@ angular.module('app.features.controllers.transformers', ['app.config', ])
     $scope.transformers = []
     Transformer.$loadAll(
       show: 'name'
-      is_predefined: 1
     ).then ((opts) ->
       for tr in opts.objects
         $scope.transformers.push tr.name
@@ -40,8 +39,6 @@ angular.module('app.features.controllers.transformers', ['app.config', ])
     $scope.ACTION = 'loading transformers'
     $scope.LIST_MODEL_NAME = Transformer.LIST_MODEL_NAME
 
-    $scope.filter_opts = {'is_predefined': 1}
-
     $scope.edit = (transformer) ->
       $scope.openDialog($dialog, transformer,
         'partials/features/transformers/edit_predefined.html',
@@ -49,7 +46,7 @@ angular.module('app.features.controllers.transformers', ['app.config', ])
         'transformers')
 
     $scope.add = () ->
-      transformer = new Transformer({'is_predefined': true})
+      transformer = new Transformer()
       $scope.openDialog($dialog, transformer,
         'partials/features/transformers/add_predefined.html',
         'ModelWithParamsEditDialogCtrl', 'modal', 'add transformer',

@@ -97,12 +97,10 @@ transformer-type: should be one of Count, Tfidf, Dictionary"})
         self.assertEquals(obj.features_set_id, data['features_set_id'])
         self.assertTrue(obj.transformer, "Transformer not created")
         self.assertEquals(obj.transformer['type'], data["transformer-type"])
-        self.assertFalse(obj.transformer['is_predefined'])
         self.assertTrue(obj.scaler, "Scaler not created")
         self.assertEquals(obj.scaler['type'], data["scaler-type"])
-        self.assertFalse(obj.scaler['is_predefined'])
 
-        transformer = app.db.Transformer.find_one({'is_predefined': True})
+        transformer = app.db.Transformer.find_one()
         data = {
             "name": "title",
             "type": "text",
@@ -120,7 +118,6 @@ transformer-type: should be one of Count, Tfidf, Dictionary"})
         self.assertEquals(transformer.name, transformer.name)
         self.assertEquals(transformer.type, transformer.type)
         self.assertEquals(transformer.params, transformer.params)
-        self.assertFalse(transformer.is_predefined)
 
     def test_inline_edit_feature(self):
         """

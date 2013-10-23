@@ -40,7 +40,7 @@ class ScalersTests(FeaturePredefinedItems):
 
     def test_add_feature_scaler_from_predefined(self):
         feature = self.db.Feature.find_one()
-        scaler = self.db.Scaler.find_one({'is_predefined': True})
+        scaler = self.db.Scaler.find_one()
         self._add_feature_item_from_predefined(feature, scaler)
 
     def test_edit_predefined_scaler(self):
@@ -61,7 +61,7 @@ class ScalersTests(FeaturePredefinedItems):
             ObjectId('525123b1206a6c5bcbc12efb'))
         self.assertTrue(feature.scaler, "Invalid fixtures")
 
-        scaler = self.db.Scaler.find_one({'is_predefined': True})
+        scaler = self.db.Scaler.find_one()
         self._edit_feature_item_from_predefined(feature, scaler)
 
     def test_delete_predefined_scaler(self):

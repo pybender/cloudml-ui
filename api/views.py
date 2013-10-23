@@ -1073,26 +1073,15 @@ class TransformerResource(BaseResource):
     post_form = TransformerForm
     put_form = TransformerForm
     GET_ACTIONS = ('configuration', )
-    FILTER_PARAMS = (('is_predefined', int), )
     ALL_FIELDS_IN_POST = True
 
     @property
     def Model(self):
         return app.db.Transformer
 
-    def _prepare_filter_params(self, params):
-        pdict = super(TransformerResource, self)._prepare_filter_params(params)
-        if 'is_predefined' in pdict:
-            pdict['is_predefined'] = bool(pdict['is_predefined'])
-        return pdict
-
     def _get_configuration_action(self, **kwargs):
         from api.models import TRANSFORMERS
         return self._render({'configuration': TRANSFORMERS})
-
-    def _delete_validataion(self, model):
-        if not model.is_predefined:
-            raise ValidationError("Can't delete feature transformer")
 
 api.add_resource(TransformerResource, '/cloudml/features/transformers/')
 
@@ -1106,27 +1095,15 @@ class ScalersResource(BaseResource):
     DEFAULT_FIELDS = [u'_id', 'name']
     put_form = post_form = ScalerForm
     GET_ACTIONS = ('configuration', )
-    FILTER_PARAMS = (('is_predefined', int), )
     ALL_FIELDS_IN_POST = True
 
     @property
     def Model(self):
         return app.db.Scaler
 
-    def _prepare_filter_params(self, params):
-        pdict = super(ScalersResource, self)._prepare_filter_params(params)
-        if 'is_predefined' in pdict:
-            pdict['is_predefined'] = bool(pdict['is_predefined'])
-        return pdict
-
     def _get_configuration_action(self, **kwargs):
         from api.models import SCALERS
         return self._render({'configuration': SCALERS})
-
-    def _delete_validataion(self, model):
-        if not model.is_predefined:
-            raise ValidationError("Can't delete feature scaler")
-
 
 api.add_resource(ScalersResource, '/cloudml/features/scalers/')
 

@@ -29,9 +29,6 @@ class TransformersTests(FeaturePredefinedItems):
     def test_list(self):
         self._check_list(show='name')
 
-    def test_filter(self):
-        self._check_filter({'is_predefined': 1}, {'is_predefined': True})
-
     def test_details(self):
         self._check_details()
 
@@ -44,7 +41,7 @@ class TransformersTests(FeaturePredefinedItems):
 
     def add_feature_transformer_from_predefined(self):
         feature = self.db.Feature.find_one()
-        transformer = self.db.Transformer.find_one({'is_predefined': True})
+        transformer = self.db.Transformer.find_one()
         self._add_feature_item_from_predefined(feature, transformer)
 
     def test_post_validation(self):
@@ -56,13 +53,8 @@ class TransformersTests(FeaturePredefinedItems):
             resp = self._check_post(data, error='err')
             self._check_errors(resp, errors)
 
-        data = {"name": "transformer #1"}
-        _check(data, errors={
-            'type': 'type is required',
-            'fields': 'one of feature_id and is_predefined is required'})
-
-        data['type'] = 'invalid'
-        data["is_predefined"] = True
+        data = {"name": "transformer #1",
+                'type': 'invalid'}
         _check(data, errors={
             'type': 'should be one of Count, Tfidf, Dictionary'})
 
@@ -82,13 +74,7 @@ class TransformersTests(FeaturePredefinedItems):
         # is_predefined and invalid feature_id is specified
         data["feature_id"] = '5170dd3a106a6c1631000000'
         _check(data, errors={
-            'feature_id': 'Document not found',
-            'fields': 'one of feature_id and is_predefined is required'})
-
-        # is_predefined and valid feature_id is specified
-        data['feature_id'] = '525123b1106a6c5bcbc12efb'
-        _check(data, errors={
-            'fields': 'one of feature_id and is_predefined is required'})
+            'feature_id': 'Document not found'})
 
         data = {'name': 'transformer #1',
                 'type': 'Count',
@@ -97,7 +83,7 @@ class TransformersTests(FeaturePredefinedItems):
                 'feature_id': '525123b1106a6c5bcbc12efb'}
         _check(data, errors={'transformer': 'transformer is required'})
 
-        transformer = self.db.Transformer.find_one({'is_predefined': True})
+        transformer = self.db.Transformer.find_one()
         data = {'is_predefined': True,
                 'name': transformer.name,
                 'type': 'Count'}
@@ -122,7 +108,7 @@ class TransformersTests(FeaturePredefinedItems):
             ObjectId('525123b1206a6c5bcbc12efb'))
         self.assertTrue(feature.transformer, "Invalid fixtures")
 
-        transformer = self.db.Transformer.find_one({'is_predefined': True})
+        transformer = self.db.Transformer.find_one()
         self._edit_feature_item_from_predefined(feature, transformer)
 
     def test_delete_predefined_transformer(self):

@@ -659,28 +659,21 @@ class BasePredefinedForm(BaseFormEx):
         return value
 
     def validate_data(self):
-        is_predefined = self.cleaned_data.get('is_predefined', False)
         predefined_selected = self.cleaned_data.get('predefined_selected', False)
         feature_id = self.cleaned_data.get('feature_id', False)
+        is_predefined = self.cleaned_data.get('is_predefined', None)
+        if is_predefined is None:
+            self.cleaned_data['is_predefined'] = is_predefined = \
+                not (feature_id or self.inner_name)
 
         if predefined_selected and is_predefined:
             raise ValidationError('item could be predefined or copied from predefined')
-
-        if self.inner_name:
-            # It's feature related form
-            if is_predefined:
-                raise ValidationError('feature item could not be predefined')
-        else:
-            if 'feature_id' in self.fields.keys():  # feature specific item
-                if not (bool(feature_id) != bool(is_predefined)):
-                    raise ValidationError('one of feature_id and is_predefined is required')
 
         if is_predefined:
             name = self.cleaned_data.get('name', None)
             if not name:
                 raise ValidationError('name is required for predefined item')
-            kwargs = {'is_predefined': True,
-                      'name': name}
+            kwargs = {'name': name}
             if '_id' in self.obj and self.obj._id:
                 kwargs['_id'] = {'$ne': self.obj._id}
             callable_document = getattr(app.db, self.DOC)
@@ -727,10 +720,7 @@ class ScalerForm(BasePredefinedForm):
     # whether need to copy feature scaler fields from predefined one
     predefined_selected = BooleanField()
     # whether we need to create predefined item (not feature related)
-    is_predefined = BooleanField()
-    scaler = DocumentField(doc='Scaler', by_name=True,
-                                filter_params={'is_predefined': True},
-                                return_doc=True)
+    scaler = DocumentField(doc='Scaler', by_name=True, return_doc=True)
     feature_id = DocumentField(doc='Feature', by_name=False,
                                 return_doc=False)
 
@@ -787,11 +777,8 @@ class TransformerForm(BasePredefinedForm):
     name = CharField()
     type_field = ChoiceField(choices=app.db.Transformer.TYPES_LIST, name='type')
     params = JsonField()
-    is_predefined = BooleanField()
     predefined_selected = BooleanField()
-    transformer = DocumentField(doc='Transformer', by_name=True,
-                                filter_params={'is_predefined': True},
-                                return_doc=True)
+    transformer = DocumentField(doc='Transformer', by_name=True, return_doc=True)
     feature_id = DocumentField(doc='Feature', by_name=False,
                                 return_doc=False)
 

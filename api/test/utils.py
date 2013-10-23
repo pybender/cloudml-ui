@@ -376,7 +376,6 @@ class FeaturePredefinedItems(BaseTestCase):
         resp, obj = self._check_post(data, load_model=True)
         self.assertEqual(obj.name, data['name'])
         self.assertEqual(obj.type, data['type'])
-        self.assertTrue(obj.is_predefined)
         self.assertEqual(obj.params, json.loads(data['params']))
 
     def _test_add_feature_item(self, feature, extra_data={}):
@@ -423,7 +422,6 @@ class FeaturePredefinedItems(BaseTestCase):
         return resp, obj
 
     def _edit_feature_item_from_predefined(self, feature, predefined_item):
-        self.assertTrue(predefined_item.is_predefined, "Specify predefined item")
         data = {self.OBJECT_NAME: predefined_item.name,
                 'feature_id': str(feature._id),
                 'predefined_selected': 'true'}
