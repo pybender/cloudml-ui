@@ -216,7 +216,8 @@ class ImportHandler(BaseDocument):
             for item in items:
                 features = item['target-features']
                 for feature in features:
-                    test_handler_fields.append(feature['name'].replace('.', '->'))
+                    test_handler_fields.append(
+                        feature['name'].replace('.', '->'))
         return test_handler_fields
 
     def create_dataset(self, params, run_import_data=True):
@@ -557,36 +558,34 @@ class Classifier(BaseDocument):
         'created_on': datetime,
         'created_by': dict,
         'updated_on': datetime,
-        'updated_by': dict,
-        'is_predefined': bool,
+        'updated_by': dict
     }
     required_fields = ['created_on', 'updated_on']
     default_values = {
         'created_on': datetime.utcnow,
         'updated_on': datetime.utcnow,
-        'is_predefined': False,
     }
     use_dot_notation = True
 
     @classmethod
     def from_model_features_dict(cls, name, features_dict):
         if not features_dict:
-            classifier = app.db.Classifier()
+            classifier = Classifier()
             classifier.name = name
-            classifier.save()
             return classifier
 
-        classifier, is_new = app.db.Classifier.from_dict(
+        classifier, is_new = Classifier.from_dict(
             features_dict['classifier'],
             add_new=True,
-            extra_fields={'name': name}
+            extra_fields={'name': name},
+            save=False
         )
         return classifier
 
     def __repr__(self):
         return '<Classifier %r>' % self.name
 
-app.db.Transformer.collection.ensure_index('name')
+app.db.Classifier.collection.ensure_index('name', unique=True)
 
 
 @app.conn.register
@@ -618,7 +617,7 @@ class Model(BaseDocument):
         'trained_by': dict,
         'error': basestring,
 
-        'classifier': Classifier,
+        'classifier': dict,
         'features': dict,
         'features_set': FeatureSet,
         'features_set_id': basestring,
@@ -749,7 +748,7 @@ class Model(BaseDocument):
 
     def get_features_json(self):
         data = self.features_set.to_dict()
-        data['classifier'] = self.classifier.to_dict()
+        data['classifier'] = Classifier(self.classifier).to_dict()
         return json.dumps(data)
 
 

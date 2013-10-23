@@ -1,7 +1,7 @@
 import logging
 from bson import ObjectId
 
-from utils import FeaturePredefinedItems, HTTP_HEADERS
+from utils import FeaturePredefinedItems
 from api.views import TransformerResource
 
 
@@ -79,13 +79,11 @@ class TransformersTests(FeaturePredefinedItems):
         data = {'name': 'transformer #1',
                 'type': 'Count',
                 'predefined_selected': 'true',
-                'is_predefined': False,
                 'feature_id': '525123b1106a6c5bcbc12efb'}
         _check(data, errors={'transformer': 'transformer is required'})
 
         transformer = self.db.Transformer.find_one()
-        data = {'is_predefined': True,
-                'name': transformer.name,
+        data = {'name': transformer.name,
                 'type': 'Count'}
         _check(data, errors={
             'fields': 'name of predefined item should be unique'})

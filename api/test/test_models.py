@@ -142,9 +142,8 @@ class ModelTests(BaseTestCase):
         # Checking that classifier from features created
         classifier = model.classifier
         self.assertTrue(classifier, "classifier not setted")
-        self.assertEquals(classifier.name, name)
-        self.assertEquals(classifier.type, u'logistic regression')
-        self.assertEquals(classifier.params, {u'penalty': u'l2'})
+        self.assertEquals(classifier['type'], u'logistic regression')
+        self.assertEquals(classifier['params'], {u'penalty': u'l2'})
 
         # Checking that features set created
         features_set = model.features_set

@@ -81,7 +81,7 @@ class Models(BaseResource):
 
     MESSAGE404 = "Model with name %(_id)s doesn't exist"
 
-    post_form = ModelForm
+    post_form = ModelAddForm
     put_form = ModelEditForm
 
     DOWNLOAD_FIELDS = ('trainer', 'features')
@@ -1028,17 +1028,10 @@ class ClassifierResource(BaseResource):
     DEFAULT_FIELDS = [u'_id', 'name']
     post_form = put_form = ClassifierForm
     GET_ACTIONS = ('configuration', )
-    FILTER_PARAMS = (('is_predefined', int), )
 
     @property
     def Model(self):
         return app.db.Classifier
-
-    def _prepare_filter_params(self, params):
-        pdict = super(ClassifierResource, self)._prepare_filter_params(params)
-        if 'is_predefined' in pdict:
-            pdict['is_predefined'] = bool(pdict['is_predefined'])
-        return pdict
 
     def _get_configuration_action(self, **kwargs):
         from core.trainer.classifier_settings import CLASSIFIERS

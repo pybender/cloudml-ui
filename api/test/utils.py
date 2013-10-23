@@ -370,7 +370,6 @@ class FeaturePredefinedItems(BaseTestCase):
 
     def _test_add_predefined(self, extra_data={}):
         data = copy(self.DATA)
-        data['is_predefined'] = True
         data.update(extra_data)
 
         resp, obj = self._check_post(data, load_model=True)
