@@ -615,6 +615,10 @@ class NamedFeatureTypeAddForm(BaseFormEx):
     params = JsonField()
 
 
+class FeatureSetForm(BaseFormEx):
+    schema_name = CharField()
+
+
 class FeatureSetAddForm(BaseForm):
     fields = ('name', 'schema_name', 'classifier', )
 

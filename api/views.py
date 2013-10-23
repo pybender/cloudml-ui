@@ -993,8 +993,8 @@ class FeatureSetResource(BaseResource):
     MESSAGE404 = "Feature set set doesn't exist"
     OBJECT_NAME = 'set'
     DEFAULT_FIELDS = [u'_id', 'name']
-    post_form = FeatureSetAddForm
-    #put_form = FeatureSetEditForm
+    #post_form = FeatureSetAddForm
+    put_form = FeatureSetForm
     GET_ACTIONS = ('download', )
 
     @property
