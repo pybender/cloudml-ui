@@ -511,21 +511,6 @@ class FeatureSet(BaseDocument):
         """
         return self.features_dict
 
-        # self.features_dict['features'] = []
-        # self.features_dict['named_types'] = []
-        # named_types = []  # named types to include to the dictionary
-        # features = app.db.Feature.find({'features_set_id': str(self._id)})
-        # for feature in features:
-        #     self.features_dict['features'].append(feature.to_dict())
-        #     if feature.type not in NamedFeatureType.TYPES_LIST:
-        #         named_types.append(feature.type)
-
-        # for name in named_types:
-        #     named_type = app.db.NamedFeatureType.find_one({'name': name})
-        #     self.features_dict["feature-types"].append(named_type.to_dict())
-
-        # return self.features_dict
-
     @classmethod
     def from_model_features_dict(cls, name, features_dict):
         if not features_dict:
@@ -600,6 +585,8 @@ class Classifier(BaseDocument):
 
     def __repr__(self):
         return '<Classifier %r>' % self.name
+
+app.db.Transformer.collection.ensure_index('name')
 
 
 @app.conn.register
@@ -1145,6 +1132,8 @@ class NamedFeatureType(BaseDocument):
     def __repr__(self):
         return '<Named Feature Type %r>' % self.name
 
+app.db.NamedFeatureType.collection.ensure_index('name', unique=True)
+
 
 # TODO: move and use it in cloudml project
 TRANSFORMERS = {
@@ -1210,6 +1199,8 @@ class Transformer(BaseDocument):
     def __repr__(self):
         return '<Transformer %r>' % self.type
 
+app.db.Transformer.collection.ensure_index('name', unique=True)
+
 
 #from core.trainer.scalers import SCALERS
 from core.trainer.scalers import MinMaxScaler, StandardScaler
@@ -1260,6 +1251,8 @@ class Scaler(BaseDocument):
 
     def __repr__(self):
         return '<Scaler %r>' % self.type
+
+app.db.Transformer.collection.ensure_index('name', unique=True)
 
 
 @app.conn.register
@@ -1364,3 +1357,6 @@ class Feature(BaseDocument):
 
     def __repr__(self):
         return '<Feature %s:%s>' % (self.name, self.type)
+
+
+app.db.Feature.collection.ensure_index('feature_set_id')
