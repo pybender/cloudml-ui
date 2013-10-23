@@ -115,8 +115,7 @@ class TransformersTests(FeaturePredefinedItems):
                 'type': 'Tfidf',
                 'params': '{"lowercase": true}'}
 
-        resp, obj = self._test_edit_feature_item(feature, extra_data=data)
-        self.assertTrue(obj.params, {"lowercase": True})
+        self._test_edit_feature_item(feature, extra_data=data)
 
     def test_edit_feature_transformer_from_predefined(self):
         feature = self.db.Feature.get_from_id(
@@ -128,16 +127,3 @@ class TransformersTests(FeaturePredefinedItems):
 
     def test_delete_predefined_transformer(self):
         self._check_delete()
-
-    def test_delete_feature_transformer(self):
-        """
-        Check that we can't delete feature transformer
-        """
-        feature = self.db.Feature.get_from_id(
-            ObjectId('525123b1206a6c5bcbc12efb'))
-        self.assertTrue(feature.transformer, "Invalid fixtures")
-        self.assertFalse(feature.transformer.is_predefined)
-
-        url = self._get_url(id=feature.transformer._id)
-        resp = self.app.delete(url, headers=HTTP_HEADERS)
-        self.assertEquals(resp.status_code, 400)

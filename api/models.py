@@ -55,14 +55,15 @@ class BaseDocument(Document):
                 logging.exception(e)
 
     @classmethod
-    def from_dict(cls, Doc, obj_dict, extra_fields={},
+    def from_dict(cls, obj_dict, extra_fields={},
                   filter_params=None, save=True, add_new=False):
+        name = cls.__name__.replace('Callable', '')
+        Doc = getattr(app.db, name)
+
         obj_dict.update(extra_fields)
         fields_list = list(cls.FIELDS_TO_SERIALIZE) + extra_fields.keys()
-
-        if add_new:
-            obj = None
-        else:
+        obj = None
+        if not add_new and save:
             if filter_params is None:
                 filter_params = {'name': obj_dict['name']}
             obj = Doc.find_one(filter_params)
@@ -92,7 +93,7 @@ class BaseDocument(Document):
         data = {}
         for field in self.FIELDS_TO_SERIALIZE:
             field_type = self.structure[field]
-            val = getattr(self, field)
+            val = self.get(field, None)
             if val is not None:
                 if field_type in (bool, dict) and not val:
                     continue
@@ -521,18 +522,17 @@ class FeatureSet(BaseDocument):
             return features_set
 
         features_set, is_new = app.db.FeatureSet.from_dict(
-            app.db.FeatureSet, features_dict,
+            features_dict,
             extra_fields={'name': name},
             add_new=True)
 
         for feature_type in features_dict['feature-types']:
-            app.db.NamedFeatureType.from_dict(
-                app.db.NamedFeatureType, feature_type)
+            app.db.NamedFeatureType.from_dict(feature_type)
 
         _id = features_set._id
         for feature_dict in features_dict['features']:
             feature, is_new = app.db.Feature.from_dict(
-                app.db.Feature, feature_dict, add_new=True,
+                feature_dict, add_new=True,
                 extra_fields={'features_set_id': str(_id)})
         return app.db.FeatureSet.get_from_id(ObjectId(_id))
 
@@ -579,7 +579,7 @@ class Classifier(BaseDocument):
             return classifier
 
         classifier, is_new = app.db.Classifier.from_dict(
-            app.db.Classifier, features_dict['classifier'],
+            features_dict['classifier'],
             add_new=True,
             extra_fields={'name': name}
         )
@@ -1189,7 +1189,7 @@ class Transformer(BaseDocument):
     use_dot_notation = True
 
     def __repr__(self):
-        return '<Transformer %r>' % self.name
+        return '<Transformer %r>' % self.type
 
 
 #from core.trainer.scalers import SCALERS
@@ -1218,6 +1218,7 @@ class Scaler(BaseDocument):
     __collection__ = 'scalers'
 
     TYPES_LIST = SCALERS.keys()
+    NO_PARAMS_KEY = True
     FIELDS_TO_SERIALIZE = ('name', 'type', 'params')
 
     structure = {
@@ -1239,7 +1240,7 @@ class Scaler(BaseDocument):
     use_dot_notation = True
 
     def __repr__(self):
-        return '<Scaler %r>' % self.name
+        return '<Scaler %r>' % self.type
 
 
 @app.conn.register
@@ -1248,20 +1249,21 @@ class Feature(BaseDocument):
 
     FIELDS_TO_SERIALIZE = ('name', 'type', 'input_format', 'params',
                            'default', 'is_target_variable', 'required',
-                           'transformer')
+                           'transformer', 'scaler')
 
     structure = {
         'name': basestring,
         'type': basestring,
-        'features_set': FeatureSet,
+        #'features_set': FeatureSet,
         'features_set_id': basestring,
         'input_format': basestring,
-        'transformer': Transformer,
         'params': dict,
         'required': bool,
-        'scaler': Scaler,
+        'scaler': dict,
+        'transformer': dict,
         'default': None,
         'is_target_variable': bool,
+
         'created_on': datetime,
         'created_by': dict,
         'updated_on': datetime,
@@ -1277,15 +1279,17 @@ class Feature(BaseDocument):
         'params': {},
     }
     use_dot_notation = True
-    use_autorefs = True
+    #use_autorefs = True
 
     def save(self, *args, **kwargs):
         is_new = self.is_new
         name = self.name
         if not is_new:
+            # Note: name could be modified
             feature = app.db.Feature.find_one({'_id': self._id}, ('name', ))
             if feature:
                 name = feature.name
+
         super(Feature, self).save(*args, **kwargs)
         if self.is_target_variable:
             app.db.Feature.collection.update({
@@ -1295,41 +1299,49 @@ class Feature(BaseDocument):
                 '$set': {'is_target_variable': False}
             }, multi=True)
 
-        if self.features_set is not None:
-            self.features_set.edit_feature(name, self, is_new)
+        if self.features_set_id is not None:
+            features_set = app.db.FeatureSet.get_from_id(
+                ObjectId(self.features_set_id))
+            if features_set:
+                features_set.edit_feature(name, self, is_new)
 
     def delete(self):
-        features_set = self.features_set
+        features_set = app.db.FeatureSet.get_from_id(
+            ObjectId(self.features_set_id))
         name = self.name
         super(Feature, self).delete()
         features_set.delete_feature(name)
 
     @classmethod
-    def from_dict(cls, Doc, obj_dict, extra_fields={},
+    def from_dict(cls, obj_dict, extra_fields={},
                   filter_params=None, save=True, add_new=True):
         if 'transformer' in obj_dict:
-            obj_dict['transformer'] = app.db.Transformer.from_dict(
-                app.db.Transformer, obj_dict['transformer'],
-                {'name': '%s-transformer' % obj_dict['name']})[0]
+            transformer = Transformer.from_dict(
+                obj_dict['transformer'], save=False)[0]
+            obj_dict['transformer'] = dict(
+                [(key, val) for key, val in transformer.iteritems()
+                 if key in Transformer.FIELDS_TO_SERIALIZE])
 
         if 'scaler' in obj_dict:
-            obj_dict['scaler'] = app.db.Scaler.from_dict(
-                app.db.Transformer, obj_dict['scaler'],
-                {'name': '%s-scaler' % obj_dict['name']})[0]
+            scaler = app.db.Scaler.from_dict(
+                obj_dict['scaler'], save=False)[0]
+            obj_dict['scaler'] = dict(
+                [(key, val) for key, val in scaler.iteritems()
+                 if key in Scaler.FIELDS_TO_SERIALIZE])
 
-        if 'features_set_id' in extra_fields:
-            extra_fields['features_set'] = app.db.FeatureSet.get_from_id(
-                ObjectId(extra_fields['features_set_id']))
         feature, is_new = super(Feature, cls).from_dict(
-            Doc, obj_dict, extra_fields,
+            obj_dict, extra_fields,
             filter_params, save, add_new)
+
         return feature, is_new
 
     def to_dict(self):
-        data = super(Feature, self).to_dict()
+        res = super(Feature, self).to_dict()
         if self.transformer:
-            data['transformer'] = self.transformer.to_dict()
-        return data
+            res['transformer'] = Transformer(self.transformer).to_dict()
+        if self.scaler:
+            res['scaler'] = Scaler(self.scaler).to_dict()
+        return res
 
     def __repr__(self):
-        return '<Feature %r>' % self.name
+        return '<Feature %s:%s>' % (self.name, self.type)

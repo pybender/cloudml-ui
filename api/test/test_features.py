@@ -75,7 +75,6 @@ transformer-type: should be one of Count, Tfidf, Dictionary"})
         self.assertEquals(obj.name, data['name'])
         self.assertEquals(obj.type, data['type'])
         self.assertEquals(obj.features_set_id, data['features_set_id'])
-        self.assertTrue(obj.features_set, "Feature set not filled")
         self.assertTrue(obj.required)
         self.assertTrue(obj.is_target_variable)
         self.assertEquals(obj.input_format, data['input_format'])
@@ -96,13 +95,12 @@ transformer-type: should be one of Count, Tfidf, Dictionary"})
         self.assertEquals(obj.name, data['name'])
         self.assertEquals(obj.type, data['type'])
         self.assertEquals(obj.features_set_id, data['features_set_id'])
-        self.assertTrue(obj.features_set, "Feature set not filled")
         self.assertTrue(obj.transformer, "Transformer not created")
-        self.assertEquals(obj.transformer.type, data["transformer-type"])
-        self.assertFalse(obj.transformer.is_predefined)
+        self.assertEquals(obj.transformer['type'], data["transformer-type"])
+        self.assertFalse(obj.transformer['is_predefined'])
         self.assertTrue(obj.scaler, "Scaler not created")
-        self.assertEquals(obj.scaler.type, data["scaler-type"])
-        self.assertFalse(obj.scaler.is_predefined)
+        self.assertEquals(obj.scaler['type'], data["scaler-type"])
+        self.assertFalse(obj.scaler['is_predefined'])
 
         transformer = app.db.Transformer.find_one({'is_predefined': True})
         data = {
@@ -116,12 +114,13 @@ transformer-type: should be one of Count, Tfidf, Dictionary"})
         self.assertEquals(obj.name, data['name'])
         self.assertEquals(obj.type, data['type'])
         self.assertEquals(obj.features_set_id, data['features_set_id'])
-        self.assertTrue(obj.features_set, "Feature set not filled")
-        self.assertTrue(obj.transformer, "Transformer not created")
-        self.assertEquals(obj.transformer.name, transformer.name)
-        self.assertEquals(obj.transformer.type, transformer.type)
-        self.assertEquals(obj.transformer.params, transformer.params)
-        self.assertFalse(obj.transformer.is_predefined)
+        from api.models import Transformer
+        transformer = Transformer(obj.transformer)
+        self.assertTrue(transformer, "Transformer not created")
+        self.assertEquals(transformer.name, transformer.name)
+        self.assertEquals(transformer.type, transformer.type)
+        self.assertEquals(transformer.params, transformer.params)
+        self.assertFalse(transformer.is_predefined)
 
     def test_inline_edit_feature(self):
         """
@@ -160,9 +159,9 @@ transformer-type: should be one of Count, Tfidf, Dictionary"})
         self.assertEquals(obj.name, data['name'])
         self.assertEquals(obj.type, data['type'])
         self.assertTrue(obj.transformer, "Transformer not filled")
-        self.assertTrue(obj.transformer.type, data['transformer-type'])
+        self.assertTrue(obj.transformer['type'], data['transformer-type'])
         self.assertTrue(obj.scaler, "scaler not filled")
-        self.assertTrue(obj.scaler.type, data['scaler-type'])
+        self.assertTrue(obj.scaler['type'], data['scaler-type'])
 
         data = {"name": "some name",
                 "type": "int",
@@ -224,7 +223,15 @@ class TestFeaturesDocs(BaseTestCase):
 
         feature = app.db.Feature.find_one({'name': 'transformed feature'})
         fdict = feature.to_dict()
+        self.maxDiff = None
+        print fdict['scaler']
         self.assertEquals(fdict, {
+            'scaler': {'copy': True,
+                       'name': u'feature scaler #3',
+                       'type': u'MinMaxScaler'},
+            'transformer': {'charset': u'aaa1',
+                            'name': u'Test count #2 not is_predefined',
+                            'type': u'Count'},
             'name': u'transformed feature',
             'input-format': u'dict',
             'default': u'smth',
@@ -335,8 +342,6 @@ class TestFeaturesDocs(BaseTestCase):
             'params': {"mappings": {"class1": 1,
                                     "class2": 0}}}
         )
-        self.assertEquals(str(feature.features_set._id),
-                          str(features_set._id))
 
         feature = _check_feature('contractor.dev_blurb', {
             'is_target_variable': False,
@@ -344,9 +349,10 @@ class TestFeaturesDocs(BaseTestCase):
             'params': {},
             'required': True}
         )
-        transformer = feature.transformer
+        from api.models import Transformer
+        transformer = Transformer(feature.transformer)
+
         self.assertTrue(transformer)
-        self.assertEquals(transformer.name, 'contractor.dev_blurb-transformer')
         self.assertEquals(transformer.type, 'Tfidf')
         self.assertEquals(transformer.params,
                           {u'ngram_range_max': 1,
