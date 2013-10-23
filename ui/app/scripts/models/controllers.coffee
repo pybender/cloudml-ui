@@ -5,7 +5,7 @@
 FIELDS_BY_SECTION = {
   'model': 'classifier,features_set_id,features'
   'training': 'error,weights_synchronized,memory_usage,
-trained_by,trained_on'
+trained_by,trained_on,training_time'
   'about': 'created_on,target_variable,example_id,example_label,
 labels,updated_on,feature_count,test_import_handler.name,
 train_import_handler.name,train_import_handler.import_params,
@@ -91,10 +91,11 @@ updated_on,updated_by,comparable,test_handler_fields'
         show: fields
         ).then (->
           $scope.LOADED_SECTIONS.push section
-          $scope.params['tags'] = []
-          for t in $scope.model.tags
-            $scope.params['tags'].push {'id': t, 'text': t}
-        ), ((opts) ->
+          if $scope.params['tags']?
+            $scope.params['tags'] = []
+            for t in $scope.model.tags
+              $scope.params['tags'].push {'id': t, 'text': t}
+        ), ((opts)->
           $scope.setError(opts, 'loading model details')
         )
 

@@ -138,20 +138,8 @@ class Models(BaseResource):
                 if model.dataset else []
 
         if fields and 'test_handler_fields' in fields:
-            # TODO: check type in cloudml project
-            # to avoid dump/load data here
-            data = json.dumps(model.test_import_handler.data)
-            plan = ExtractionPlan(data, is_file=False)
-            
-            # TODO: Move to ExtractionPlan (fill in validate_features mthd)
-            test_handler_fields = []
-            for query in plan.queries:
-                items = query['items']
-                for item in items:
-                    features = item['target-features']
-                    for feature in features:
-                        test_handler_fields.append(feature['name'].replace('.', '->'))
-            model['test_handler_fields'] = test_handler_fields
+            if model.test_import_handler:
+                model['test_handler_fields'] = model.test_import_handler.get_fields()
 
         if fields and 'features' in fields:
             model['features'] = model.get_features_json()
@@ -185,8 +173,8 @@ class Models(BaseResource):
         params = self._parse_parameters(parser_params)
         query_fields, show_fields = self._get_fields(params)
         _id = ObjectId(params.get('handler'))
-        expr = {'$or': [{'test_import_handler._id': _id},
-                        {'train_import_handler._id': _id}]}
+        expr = {'$or': [{'test_import_handler.$id': _id},
+                        {'train_import_handler.$id': _id}]}
         models = self.Model.find(expr, query_fields)
         return self._render({"%ss" % self.OBJECT_NAME: models})
 
@@ -505,22 +493,19 @@ class Tests(BaseResource):
         if not test:
             raise NotFound('Test not found')
 
-        model = app.db.Model.find_one({'_id':
-                                           ObjectId(kwargs.get('model_id'))})
+        model = app.db.Model.find_one(
+            {'_id': ObjectId(kwargs.get('model_id'))})
         if not model:
             raise NotFound('Model not found')
 
         try:
-            result = calculate_confusion_matrix(test._id, args.get('weight0'),
-                                                args.get('weight1'))
+            calculate_confusion_matrix.delay(
+                str(test._id), args.get('weight0'), args.get('weight1'))
         except Exception as e:
-            return self._render({self.OBJECT_NAME: test._id,
+            return self._render({self.OBJECT_NAME: str(test._id),
                                  'error': e.message})
 
-        result = zip(model.labels, result)
-
-        return self._render({self.OBJECT_NAME: test._id,
-                             'confusion_matrix': result})
+        return self._render({self.OBJECT_NAME: str(test._id)})
 
     def _get_exports_action(self, **kwargs):
         test = self._get_details_query(None, None, **kwargs)

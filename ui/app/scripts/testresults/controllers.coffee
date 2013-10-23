@@ -164,28 +164,22 @@ metrics.roc_curve,metrics.roc_auc'
             pr = $scope.test.metrics.precision_recall_curve
             $scope.prCurve = {'Precision-Recall curve': [pr[1], pr[0]]}
                
-        when 'matrix' then extra_fields = 'metrics.confusion_matrix,model'
+        when 'matrix' then extra_fields = 'metrics.confusion_matrix,model,
+confusion_matrix_calculations'
 
       if 'main' in $scope.LOADED_SECTIONS
         # Do not need load main fields -> only extra
         if extra_fields != ''
           $scope.load(extra_fields, name, cb)
       else
-        $scope.load(extra_fields + ',' + Test.MAIN_FIELDS, name, cb)
+        show = extra_fields + ',examples_placement,' + Test.MAIN_FIELDS
+        $scope.load(show, name, cb)
         $scope.LOADED_SECTIONS.push 'main'
 
   $scope.downloadCsvResults = () ->
     $scope.openDialog($dialog, $scope.test,
         'partials/datasets/csv_list_popup.html',
         'CsvDownloadCtrl', 'modal')
-
-  $scope.confusion_matrix_weights = {w0: 1, w1: 1, error: undefined}
-
-  $scope.recalculateConfusionMatrix = (weight0, weight1) ->
-    $scope.test.$get_confusion_matrix(weight0, weight1).then((resp) ->
-      $scope.test.metrics.confusion_matrix = resp.data.confusion_matrix
-      $scope.confusion_matrix_weights.error = resp.data.error
-    )
 
   $scope.initSections($scope.goSection, defaultAction='metrics:accuracy')
 ])
@@ -236,7 +230,43 @@ metrics.roc_curve,metrics.roc_auc'
 
     $scope.$on('exportsChanged', () ->
       window.setTimeout(
-        () ->$scope.reload()
+        () -> $scope.reload()
         1000)
     )
+])
+
+.controller('TestConfusionMatrixCtrl', [
+  '$scope'
+
+  ($scope) ->
+    $scope.open_calc_id = null
+    $scope.confusion_matrix_weights = {w0: 1, w1: 1, error: undefined}
+
+    $scope.init = (test) =>
+      $scope.test = test
+
+    $scope.recalculate = (weight0, weight1) ->
+      $scope.test.$get_confusion_matrix(weight0, weight1).then((resp) ->
+        $scope.confusion_matrix_weights.error = resp.data.error
+        window.setTimeout(
+          () -> $scope.reload()
+          100)
+      )
+
+    $scope.showResult = (id) =>
+      if $scope.open_calc_id == id
+        $scope.open_calc_id = null
+      else
+        $scope.open_calc_id = id
+
+    $scope.reload = () ->
+      $scope.test.$load({show: 'confusion_matrix_calculations'}).then((resp) ->
+        statuses = []
+        statuses.push c.status for c in ($scope.test
+        .confusion_matrix_calculations)
+        if 'In Progress' in statuses
+          window.setTimeout(
+            () -> $scope.reload()
+            1000)
+      )
 ])

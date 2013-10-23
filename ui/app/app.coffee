@@ -199,6 +199,7 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
          '$cookieStore'
 ($rootScope, $routeParams, $location, settings, $auth, $cookieStore) ->
   $rootScope.Math = window.Math
+  $rootScope.Object = Object
   $rootScope.loadingCount = 0
 
   # this will be available to all scope variables

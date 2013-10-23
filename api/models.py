@@ -206,6 +206,19 @@ class ImportHandler(BaseDocument):
                       'updated_by': {}}
     use_dot_notation = True
 
+    def get_fields(self):
+        from core.importhandler.importhandler import ExtractionPlan
+        data = json.dumps(self.data)
+        plan = ExtractionPlan(data, is_file=False)
+        test_handler_fields = []
+        for query in plan.queries:
+            items = query['items']
+            for item in items:
+                features = item['target-features']
+                for feature in features:
+                    test_handler_fields.append(feature['name'].replace('.', '->'))
+        return test_handler_fields
+
     def create_dataset(self, params, run_import_data=True):
         #from api.utils import slugify
         dataset = app.db.DataSet()
@@ -232,7 +245,7 @@ class ImportHandler(BaseDocument):
 
         def unset(model, handler_type='train'):
             handler = getattr(model, '%s_import_handler' % handler_type)
-            if handler['_id'] == self._id:
+            if handler and handler['_id'] == self._id:
                 setattr(model, '%s_import_handler' % handler_type, None)
                 model.changed = True
 
@@ -650,6 +663,7 @@ class Model(BaseDocument):
         'memory_usage': dict,
         'train_records_count': int,
         'current_task_id': basestring,
+        'training_time': int
     }
     gridfs = {'files': ['trainer']}
     required_fields = ['name', 'created_on', ]
@@ -767,6 +781,9 @@ class Test(BaseDocument):
     EXPORT_STATUS_IN_PROGRESS = 'In Progress'
     EXPORT_STATUS_COMPLETED = 'Completed'
 
+    MATRIX_STATUS_IN_PROGRESS = 'In Progress'
+    MATRIX_STATUS_COMPLETED = 'Completed'
+
     EXAMPLES_TO_AMAZON_S3 = 'Amazon S3'
     EXAMPLES_DONT_SAVE = 'Do not save'
     EXAMPLES_MONGODB = 'Mongo DB'
@@ -802,6 +819,7 @@ class Test(BaseDocument):
         'memory_usage': dict,
         'exports': list,
         'current_task_id': basestring,
+        'confusion_matrix_calculations': list,
     }
     required_fields = ['name', 'created_on', 'updated_on',
                        'status']
@@ -812,6 +830,7 @@ class Test(BaseDocument):
         'memory_usage': {},
         'exports': [],
         'created_by': {},
+        'confusion_matrix_calculations': [],
     }
     use_dot_notation = True
     use_autorefs = True

@@ -144,7 +144,8 @@ angular.module('app.datas.controllers', ['app.config', ])
   $scope.data.$load(
     show: "id,test_name,weighted_data_input,
 test.model.target_variable,pred_label,label,
-prob,test.status,created_on,test.classes_set"
+prob,test.status,created_on,test.classes_set,
+test.examples_placement"
   ).then (->
     ), ((opts)->
       $scope.setError(opts, 'loading test example')
