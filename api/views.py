@@ -1155,10 +1155,27 @@ class FeatureResource(BaseResource):
     DEFAULT_FIELDS = [u'_id', 'name']
     post_form = FeatureForm
     put_form = FeatureForm
+    GET_ACTIONS = ('configuration', )
 
     @property
     def Model(self):
         return app.db.Feature
+
+    def _get_configuration_action(self, **kwargs):
+        from core.trainer.feature_types import FEATURE_TYPE_FACTORIES
+        from core.trainer.feature_types import FEATURE_TYPE_DEFAULTS
+        from core.trainer.feature_types import FEATURE_PARAMS_TYPES
+        _types = [(key, {
+            'type': getattr(value, 'python_type', ''),
+            'required_params': value.required_params,
+            'default_params': value.default_params,
+        }) for key, value in FEATURE_TYPE_FACTORIES.items()]
+        _conf = {
+            'types': dict(_types),
+            'params': FEATURE_PARAMS_TYPES,
+            'defaults': FEATURE_TYPE_DEFAULTS
+        }
+        return self._render({'configuration': _conf})
 
 api.add_resource(FeatureResource, '/cloudml/features/<regex("[\w\.]*"):features_set_id>/items/')
 

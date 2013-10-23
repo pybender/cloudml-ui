@@ -256,6 +256,10 @@ scaler,default,is_target_variable,created_on,created_by,required'
 
         super opts
 
+      $getConfiguration: (opts={}) =>
+        @$make_request("#{@BASE_API_URL}#{@_id}/action/configuration/",
+                       load=false)
+
     return Feature
 ])
 
