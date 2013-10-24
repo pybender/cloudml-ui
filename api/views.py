@@ -410,7 +410,7 @@ class DataSetResource(BaseResource):
     OBJECT_NAME = 'dataset'
     FILTER_PARAMS = (('status', str), )
     GET_ACTIONS = ('generate_url', )
-    PUT_ACTIONS = ('reupload', )
+    PUT_ACTIONS = ('reupload', 'reimport')
     put_form = DataSetEditForm
 
     def _get_generate_url_action(self, **kwargs):
@@ -453,6 +453,18 @@ class DataSetResource(BaseResource):
             dataset.status = dataset.STATUS_IMPORTING
             dataset.save()
             upload_dataset.delay(str(dataset._id))
+        return self._render(self._get_save_response_context(
+            dataset, extra_fields=['status']))
+
+    def _put_reimport_action(self, **kwargs):
+        from api.tasks import import_data
+        dataset = self._get_details_query(None, None, **kwargs)
+        if dataset.status not in (dataset.STATUS_IMPORTING,
+                                  dataset.STATUS_UPLOADING):
+            dataset.status = dataset.STATUS_IMPORTING
+            dataset.save()
+            import_data.delay(dataset_id=str(dataset._id))
+
         return self._render(self._get_save_response_context(
             dataset, extra_fields=['status']))
 
