@@ -67,6 +67,8 @@ angular.module('app.features.controllers.features', ['app.config', ])
       else
         _defaults.push('')
 #    $scope.feature.params = _.object(config.required_params, _defaults)
+    if not $scope.feature.params
+      $scope.feature.params = {}
     $scope.feature.params = _.extend(
       _.object(config.required_params, _defaults),
       _.pick($scope.feature.params, config.required_params)
