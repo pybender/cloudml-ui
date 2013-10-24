@@ -1023,7 +1023,7 @@ class ClassifierResource(BaseResource):
     """
     Classifier API methods
     """
-    MESSAGE404 = "Classifier type doesn't exist"
+    MESSAGE404 = "Classifier doesn't exist"
     OBJECT_NAME = 'classifier'
     DEFAULT_FIELDS = [u'_id', 'name']
     post_form = put_form = ClassifierForm

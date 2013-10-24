@@ -215,7 +215,7 @@ class BaseResource(restful.Resource):
 
     def _get_save_response_context(self, model, extra_fields=[]):
         if not self.ALL_FIELDS_IN_POST:
-            model = dict([(field, getattr(model, field))
+            model = dict([(field, getattr(model, field, None))
                      for field in list(self.DEFAULT_FIELDS) + extra_fields])
         return {self.OBJECT_NAME: model}
 

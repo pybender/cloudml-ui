@@ -161,6 +161,14 @@ App.config([
       controller: "FeatureEditCtrl"
       templateUrl: '/partials/features/items/edit.html'
     })
+    .when('/models/:model_id/features', {
+      redirectTo: (params, loc) ->
+        return 'models/' + params.model_id + '?action=model:details'
+    })
+    .when('/models/:model_id/features/:set_id', {
+      redirectTo: (params, loc) ->
+        return 'models/' + params.model_id + '?action=model:details'
+    })
     # Feature set list (now used only for debug)
     # .when('/features/sets', {
     #   controller: "FeaturesSetListCtrl"

@@ -602,7 +602,7 @@ class BasePredefinedForm(BaseFormEx):
         self.cleaned_data['params'] = obj.params
 
     def save(self, commit=True):
-        commit = not self.inner_name
+        commit = self.cleaned_data['is_predefined']
         obj = super(BasePredefinedForm, self).save(commit)
         feature = self.cleaned_data.get('feature', None)
         if feature:

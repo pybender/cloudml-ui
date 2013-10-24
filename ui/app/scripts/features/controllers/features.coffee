@@ -13,17 +13,19 @@ angular.module('app.features.controllers.features', ['app.config', ])
   'Model'
   'Feature'
   'Transformer'
+  'Scaler'
   '$filter'
 
-($scope, $routeParams, $location, Model, Feature, Transformer, $filter) ->
+($scope, $routeParams, $location, Model, \
+Feature, Transformer, Scaler, $filter) ->
   if not $routeParams.model_id then throw new Error "Specify model id"
   if not $routeParams.set_id then throw new Error "Specify set id"
 
   $scope.modelObj = new Model({'_id': $routeParams.model_id})
   $scope.feature = new Feature({
     features_set_id: $routeParams.set_id,
-    transformer: {},
-    scaler: {}
+    transformer: new Transformer({}),
+    scaler: new Scaler({})
   })
   $scope.config = {}
   $scope.feature_params = {}
