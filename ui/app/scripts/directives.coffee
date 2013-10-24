@@ -416,6 +416,21 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
   }
 )
 
+# Override the default input to update on blur
+.directive('ngModelOnblur', () ->
+  return {
+    restrict: 'A',
+    require: 'ngModel',
+    link: (scope, element, attributes, ctrl) ->
+      if (attributes.type == 'radio' || attributes.type == 'checkbox')
+        return
+      element.unbind('input').unbind('keydown').unbind('change')
+      element.bind 'blur', () ->
+        scope.$apply () ->
+          ctrl.$setViewValue element.val()
+  }
+)
+
 # TODO: generalize, add possibility to edit composite type
 .directive('jsonEditor', ['$compile', '$filter', ($compile, $filter) ->
   return {
@@ -538,7 +553,7 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
            config="config" required-params="">
         </json-editor>
         <span ng-switch-default class="jsonLiteral">
-        <input type="text" ng-model="item[key]"
+        <input type="text" ng-model="item[key]" ng-model-onblur
           placeholder="Empty" />
         </span>
         </span>'
