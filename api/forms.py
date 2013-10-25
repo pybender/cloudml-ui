@@ -448,8 +448,11 @@ class ModelTrainForm(BaseChooseInstanceAndDatasetMultiple):
         return self.obj
 
 
-class BaseImportHandlerForm(BaseForm):
-    def clean_data(self, value):
+class AddImportHandlerForm(BaseFormEx):
+    name = CharField()
+    data = CharField()
+
+    def clean_data(self, value, field):
         if not value:
             return
 
@@ -458,29 +461,26 @@ class BaseImportHandlerForm(BaseForm):
         except ValueError, exc:
             raise ValidationError('Invalid data: %s' % exc)
 
-        try:
-            plan = ExtractionPlan(value, is_file=False)
-            self.cleaned_data['import_params'] = plan.input_params
-        except (ValueError, ImportHandlerException) as exc:
-            raise ValidationError('Invalid importhandler: %s' % exc)
-
+        # try:
+        #     plan = ExtractionPlan(value, is_file=False)
+        #     self.cleaned_data['import_params'] = plan.input_params
+        # except (ValueError, ImportHandlerException) as exc:
+        #     raise ValidationError('Invalid importhandler: %s' % exc)
         return data
 
+    def save(self):
+        data = self.cleaned_data.get('data', None)
+        obj = super(AddImportHandlerForm, self).save(commit=data is None)
+        if data:
+            obj.from_import_handler_json(data)
+            obj.save()
+        return obj
 
-class ImportHandlerEditForm(BaseImportHandlerForm):
-    fields = ('data', 'name')
 
-
-class ImportHandlerAddForm(BaseImportHandlerForm):
-    fields = {'name': True,
-              'type': True,
-              'data': True,
-              'import_params': True}
-
-    def clean_type(self, value):
-        # if not type in ImportHandler.TYPE_CHOICES:
-        #     raise ValidationError('invalid')
-        return value
+class EditImportHandlerForm(BaseFormEx):
+    name = CharField()
+    target_schema = CharField()
+    queries = JsonField()
 
 
 class DataSetEditForm(BaseForm):

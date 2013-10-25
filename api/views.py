@@ -377,11 +377,11 @@ class ImportHandlerResource(BaseResource):
     """
     @property
     def Model(self):
-        return app.db.ImportHandler
+        return app.db.ImportHandlerEx
 
     OBJECT_NAME = 'import_handler'
-    post_form = ImportHandlerAddForm
-    put_form = ImportHandlerEditForm
+    post_form = AddImportHandlerForm
+    put_form = EditImportHandlerForm
     GET_ACTIONS = ('download', )
 
     @public_actions(['download'])

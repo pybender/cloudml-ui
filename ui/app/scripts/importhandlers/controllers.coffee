@@ -11,8 +11,7 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
 
 ($scope, $rootScope, ImportHandler) ->
   $scope.MODEL = ImportHandler
-  $scope.FIELDS = 'name,type,created_on,updated_on,import_params,created_by,
-updated_by'
+  $scope.FIELDS = ImportHandler.MAIN_FIELDS
   $scope.ACTION = 'loading handler list'
 ])
 
@@ -28,13 +27,13 @@ updated_by'
 
     $scope.handler = new ImportHandler({_id: $routeParams.id})
     $scope.LOADED_SECTIONS = []
+    $scope.PROCESS_STRATEGIES = ImportHandler.PROCESS_STRATEGIES
 
     $scope.go = (section) ->
       name = section[0]
       if name not in $scope.LOADED_SECTIONS
         $scope.handler.$load(
-          show: 'name,type,created_on,updated_on,data,
-import_params,created_by'
+          show: ImportHandler.MAIN_FIELDS + ',queries'
         ).then (->
           $scope.LOADED_SECTIONS.push name
         ), ((opts) ->
@@ -46,7 +45,22 @@ import_params,created_by'
             $scope.LOADED_SECTIONS.push name
           , 100)
 
-        
+    $scope.saveQueries = () ->
+      console.log $scope.handler.queries
+      $scope.handler.$save(only: ['queries'])
+      .then (->), ((opts) ->
+        $scope.setError(opts, 'saving handler queries')
+      )
+
+    $scope.makeRequired = (item, is_required) ->
+      item.is_required = is_required
+      $scope.saveQueries()
+
+    $scope.deleteItem = (items, item) ->
+      index = items.indexOf(item)
+      if index != -1
+        items.splice(index, 1)
+        $scope.saveQueries()
 
     $scope.saveData = () ->
       $scope.handler.$save(only: ['data'])

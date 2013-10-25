@@ -36,16 +36,78 @@
  
 <div class="tab-content" ng-show="handler.loaded">
   <div ng-show="action[0] == 'model'">
+  <p class="switcher">
+    <b>Switch View: </b>
+    <a ng-class="{active: action[1] == 'details'}" ng-click="setSection(['model', 'details'])">Standart</a> | 
+    <a ng-class="{active: action[1] == 'json'}" ng-click="setSection(['model', 'json'])">JSON File</a>
+  </p>
+  <div ng-show="action[1] == 'details'">
     <div>
-        Type: <span class="value">{{ handler.type }}</span>
+      Target Schema:
+      <span title="Target Schema" class="target_schema" ng-bind="handler.target_schema || 'untitled target schema'" editable="handler" value="handler.target_schema"    editable-field="target_schema" editable-input="text" editable-placement="right"></span>
+    </div>
+    <div>
+      DataSource:
+      {{ handler.datasource }}
     </div>
     <div>
         Import Parameters: <span class="value" ng-repeat="param in handler.import_params">{{ param }}</span>
     </div>
-    <h5>Import Handler JSON data</h5>
-    <a href="{{ handler.downloadUrl() }}"><i title="Download import handler file" class="icon-download-alt"></i> Download</a>
-    <span ng-click="saveData()" class="btn btn-primary">Save</span>
-    <textarea name="data" ui-codemirror="{ mode: {name: 'javascript', json: true} }" ng-model="handler.data"> </textarea>
+
+    <h4>Queries</h4>
+    <div class="well" ng-repeat="query in handler.queries">
+      <div>
+        Name:
+        <span title="name" class="name" ng-bind="query.name || 'untitled name'" editable="query" value="query.name" editable-field="name" editable-input="text" editable-placement="right"></span>
+      </div>
+      <div>
+        SQL (TODO: editor):
+        <span title="sql" class="sql" ng-bind="query.sql || 'no sql'" editable="query" value="query.sql" editable-field="sql" editable-input="text" editable-placement="top"></span>
+      </div>
+      <div>
+        <h5>Items</h5>
+        <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Source</th>
+            <th>Target Features</th>
+            <th>Process As</th>
+            <th>Required?</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="item in query.items">
+            <td>
+              <span title="source" class="source" ng-bind="item.source || 'no source'" editable="item" value="item.source" editable-field="source" editable-input="text" editable-placement="right"></span>
+            </td>
+            <td>
+              <ul>
+              <li ng-repeat="feature in item.target_features">
+                <a ng-click="" title="edit feature">{{ feature.name }}</a>
+              </li>
+              </ul>
+            </td>
+            <td>
+              <span title="Process strategy" ng-bind="item.process_as" editable="item" value="item.process_as" editable-field="process_as" editable-placement="right" editable-input="select" source="PROCESS_STRATEGIES"></span>
+            </td>
+            <td>
+              <a ng-show="item.is_required" ng-click="makeRequired(item, false)"><i class="icon-ok" title="Make not required" /> yes</a> <a ng-click="makeRequired(item, true)" ng-hide="item.is_required"><i class="icon-remove" title="Make required" /> no</a>
+            </td>
+            <td>
+              <a ng-click="deleteItem(query.items, item)">
+                <i title="Delete query item" class="icon-remove"></i>
+              </a>
+            </td>
+          </tr>
+        </tbody>
+        </table>
+      </div>
+    </div>
+    </div>
+    <div ng-show="action[1] == 'json'">
+      <textarea name="data" ui-codemirror="{ mode: {name: 'javascript', json: true} }" ng-model="handler.data"> </textarea>
+    </div>    
   </div>
 
   <div ng-show="action[0] == 'dataset'">

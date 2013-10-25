@@ -183,6 +183,33 @@ app.db.Weight.collection.ensure_index(
 
 
 @app.conn.register
+class Query(BaseDocument):
+    __collection__ = 'datasources'
+    structure = {
+        'name': basestring,
+        'sql': basestring,
+        'items': list,
+        'created_on': datetime,
+        'created_by': dict,
+        'updated_on': datetime,
+        'updated_by': dict,
+    }
+    use_dot_notation = True
+    required_fields = ['name', 'sql', 'created_on', ]
+    default_values = {'created_on': datetime.utcnow,
+                      'updated_on': datetime.utcnow, }
+
+    def validate(self, *args, **kwargs):
+        super(Query, self).validate(*args, **kwars)
+        # "source": "contractor_info",
+        #   "is-required": true,
+        #   "process-as": "json",
+        #   "target-features"
+        # for item in self["queries"]:
+        #     assert item["desc"], "desc is required: %s" % item
+
+
+@app.conn.register
 class DataSource(BaseDocument):
     TYPE_REQUEST = 'request'
     TYPE_SQL = 'sql'
@@ -209,6 +236,55 @@ class DataSource(BaseDocument):
                       'type': TYPE_SQL,
                       'name': 'noname',
                       'db_settings.vendor': VENDOR_POSTGRES}
+
+
+@app.conn.register
+class ImportHandlerEx(BaseDocument):
+    __collection__ = 'ih'
+    QUERY_STRUCT = {
+        "name": basestring,
+        "sql": basestring,
+        "items": [{"target_features": [{'name': basestring, }]}]
+    }
+
+    structure = {
+        'name': basestring,
+        'target_schema': basestring,
+        'datasource': DataSource,
+        "import_params": list,
+        'queries': list,
+
+        'created_on': datetime,
+        'created_by': dict,
+        'updated_on': datetime,
+        'updated_by': dict,
+    }
+    use_dot_notation = True
+    use_autorefs = True
+    required_fields = ['name', 'created_on', ]
+    default_values = {'created_on': datetime.utcnow,
+                      'updated_on': datetime.utcnow, }
+
+    def from_import_handler_json(self, data):
+        self.target_schema = data['target_schema']
+        #self.datasource = app.db.DataSource.find_one()
+        self.queries = data['queries']
+        self.save()
+
+    def validate(self, *args, **kwargs):
+        def validate_structure(item, struct):
+            for key, val in struct.iteritems():
+                if type(val) == dict:
+                    validate_structure(item[key], val)
+                elif type(val) == list:
+                    for subitem in item[key]:
+                        validate_structure(subitem, val[0])
+                else:
+                    assert key in item, '%s is required' % key
+
+        super(ImportHandlerEx, self).validate(*args, **kwargs)
+        for query in self['queries']:
+            validate_structure(query, self.QUERY_STRUCT)
 
 
 @app.conn.register

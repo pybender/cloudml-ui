@@ -15,25 +15,24 @@
 <thead>
   <tr>
     <th>Name</th>
-    <th>Type</th>
+    <th>Target Schema</th>
+    <th>Data Source</th>
     <th>Import Parameters</th>
     <th>Created</th>
-    <th>Updated</th>
     <th>Actions</th>
   </tr>
 </thead>
 <tbody>
   <tr ng-repeat="handler in objects">
     <td><a href="#{{ handler.objectUrl() }}">{{ handler.name }}</a></td>
-    <td>{{ handler.type }}</td>
-    <td><span ng-repeat="param in handler.import_params">{{ param }} </span></td>
+    <td>{{ handler.target_schema }}</td>
+    <td><a href="#{{ handler.objectUrl() }}">{{ handler.datasource }}</a></td>
+    <td>
+      <span ng-repeat="param in handler.import_params">{{ param }} </span>
+    </td>
     <td>
         {{ handler.created_on|format_date }}<br>
         <small ng-show="handler.created_by">by {{ handler.created_by.name }} ({{ handler.created_by.uid }})</small>
-    </td>
-    <td>
-        {{ handler.updated_on|format_date }}<br>
-        <small ng-show="handler.updated_by">by {{ handler.updated_by.name }} ({{ handler.updated_by.uid }})</small>
     </td>
     <td ng-controller="ImportHandlerActionsCtrl">
       <button ng-show="handler.type == 'Db'" ng-click="importData(handler)" class="btn btn-info">

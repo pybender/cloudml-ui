@@ -14,15 +14,18 @@ angular.module('app.importhandlers.model', ['app.config'])
       BASE_API_URL: "#{settings.apiUrl}importhandlers/"
       BASE_UI_URL: '/importhandlers/'
       API_FIELDNAME: 'import_handler'
-      DEFAULT_FIELDS_TO_SAVE: ['name', 'type', 'data']
+      @MAIN_FIELDS: 'name,_id,target_schema,import_parameters,
+created_on,created_by,datasource__name'
+      DEFAULT_FIELDS_TO_SAVE: ['name', 'data']
+
+      @PROCESS_STRATEGIES = ['identity', 'string', 'float',
+        'boolean', 'integer', 'json', 'composite']
 
       _id: null
       created_on: null
       updated_on: null
       name: null
-      type: null
       data: null
-      import_params: []
 
       downloadUrl: =>
         return "#{@BASE_API_URL}#{@_id}/action/download/"
@@ -30,10 +33,16 @@ angular.module('app.importhandlers.model', ['app.config'])
       loadFromJSON: (origData) =>
         super origData
         if origData?
-          @data = angular.toJson(origData['data'], pretty=true)
+          data = {
+            'target_schema': @target_schema,
+            'queries': @queries,
+            'sql': @sql}
+          if @datasource?
+            data['datasource'] = @datasource.toJson()
+          @data = angular.toJson(data, pretty=true)
 
       $save: (opts={}) =>
-        @type = @type['name']
+        #@type = @type['name']
         super opts
 
       $loadData: (opts={}) =>

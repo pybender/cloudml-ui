@@ -25,6 +25,7 @@ App = angular.module('app', [
   'app.importhandlers.model'
   'app.importhandlers.controllers'
   'app.importhandlers.controllers.datasources'
+  'app.importhandlers.controllers.handlers'
   'app.datasets.model'
   'app.datasets.controllers'
   'app.weights.model'

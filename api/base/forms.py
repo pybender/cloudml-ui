@@ -193,7 +193,7 @@ class BaseForm(InternalForm):
 
         self.obj.updated_on = datetime.now()
         if commit:
-            self.obj.save(validate=True)
+            self.obj.save(validate=True, check_keys=False)
 
         return self.obj
 
