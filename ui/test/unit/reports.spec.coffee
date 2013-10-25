@@ -63,10 +63,13 @@ describe "reports", ->
       $rootScope.initForm()
       $httpBackend.flush()
 
-    # TODO: wants fix: Error: Model is required to load tests
-    xit "should init model", inject () ->
-      url = settings.apiUrl + 'models/modelid123/tests/?status=Completed'
+    it "should init model", inject () ->
+      url = settings.apiUrl + 'models/modelid123/tests/?model_id=modelid123&status=Completed'
       $httpBackend.expectGET(url).respond('{"tests": []}')
+
+      # TODO: Why this request?
+      url = settings.apiUrl + 'models/?comparable=1&show=name'
+      $httpBackend.expectGET(url).respond('{"models": []}')
 
       item = {
         model: {'_id': 'modelid123'}

@@ -1,11 +1,17 @@
 {"Feature": [
 {
-	"scaler": {"$ref" : "Scaler", "$id" : "5270dd3a106a6c1631000002"}, 
+	"scaler": {
+    "name": "feature scaler #3",
+    "type": "MinMaxScaler",
+    "params": {"copy":true}
+ },
 	"updated_by": {}, 
 	"input_format": "dict", 
 	"name": "transformed feature", 
-	"transformer": {"$ref" : "Transformer", "$id" : "5270dd3a106a6c1631000002"}, 
-	"features_set": {"$ref" : "FeatureSet", "$id" : "5251233d106a6c5b36c54896"},
+	"transformer": {
+	    "name": "Test count #2 not is_predefined",
+	    "type": "Count",
+	    "params": {"charset":"aaa1"}},
 	"is_target_variable": false, 
 	"default": "smth", 
 	"required": true, 
