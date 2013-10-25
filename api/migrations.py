@@ -106,22 +106,26 @@ class ModelMigration(DbMigration):  # pragma: no cover
         self.target = {'current_task_id': {'$exists': False}}
         self.update = {'$set': {'current_task_id': ''}}
 
-    def allmigration11__add_features_set(self):
+    def allmigration11__add_training_time(self):
+        self.target = {'training_time': {'$exists': False}}
+        self.update = {'$set': {'training_time': 0}}
+
+    def allmigration12__add_features_set(self):
         self.target = {'features_set': {'$exists': False}}
         self.update = {'$set': {'features_set': None}}
 
-    def allmigration11__add_features_set_id(self):
+    def allmigration13__add_features_set_id(self):
         self.target = {'features_set_id': {'$exists': False}}
         self.update = {'$set': {'features_set_id': None}}
 
-    def allmigration12_add_classifier(self):
+    def allmigration14_add_classifier(self):
         self.target = {'classifier': {'$exists': False}}
         self.update = {'$set': {'classifier': None}}
 
-    def allmigration13__fill_features(self):
+    def allmigration15__fill_features(self):
          model_list = app.db.Model.find()
          for model in model_list:
-            if not model['features']:
+            if not model['features'] or not model.features_set_id is None:
                 continue
 
             features_set = app.db.FeatureSet.from_model_features_dict(model.name, model.features)
@@ -130,14 +134,6 @@ class ModelMigration(DbMigration):  # pragma: no cover
             model.features_set = features_set
             model.classifier = classifier
             model.save()
-
-
-class FeatureSetMigration(DbMigration):  # pragma: no cover
-    DOC_CLASS = models.FeatureSet
-
-    def allmigration01__add_json(self):
-        self.target = {'features_dict': {'$exists': False}}
-        self.update = {'$set': {'features_dict': []}}
 
 
 class TestMigration(DbMigration):  # pragma: no cover
@@ -169,6 +165,10 @@ class TestMigration(DbMigration):  # pragma: no cover
     def allmigration06__add_examples_fields(self):
         self.target = {'examples_fields': {'$exists': False}}
         self.update = {'$set': {'examples_fields': []}}
+
+    def allmigration07__add_confusion_matrix_calculations(self):
+        self.target = {'confusion_matrix_calculations': {'$exists': False}}
+        self.update = {'$set': {'confusion_matrix_calculations': []}}
 
 
 class DataSetMigration(DbMigration):  # pragma: no cover

@@ -1,4 +1,4 @@
-<div class="span6">
+<div class="span5">
   <div class="control-group" ng-class="{error: FeatureForm.name.$invalid}">
     <label class="control-label">Name</label>
     <div class="controls">
@@ -41,9 +41,17 @@
     </div>
   </div>
 </div>
-<div class="span5">
-  <div class="control-group" ng-class="{error: FeatureForm.params.$invalid}">
+<div class="span6">
+  <div ng-class="{error: FeatureForm.params.$invalid}">
     <h4>Parameters</h4>
-    <textarea type="text" name="params" class="params" ng-model="feature.params" />
+
+      <div ng-hide="true">
+          {{ feature_params }}
+      </div>
+
+      <div class="jsonView" ng-show="params_config">
+        <json-editor item="feature_params" config="params_config" required-params="required_params"></json-editor>
+      </div>
+
   </div>
 </div>

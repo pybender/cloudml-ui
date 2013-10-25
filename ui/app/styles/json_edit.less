@@ -1,0 +1,119 @@
+/* JSON EDITOR */
+
+/* inputs */
+.jsonView select {
+    margin: 0;
+    padding: 0;
+    width: 100px;
+}
+.jsonView input[type="text"] {
+    margin: -1px 5px 0 -5px;
+}
+.jsonView input.keyinput {
+    font-weight: bold;
+}
+.jsonView input[type="text"].addItemKeyInput, .jsonView input[type="text"].addItemValueInput {
+    border: 1px solid #ccc;
+    background: white;
+    margin-left: 0;
+}
+.jsonView .addItemKeyInput {
+    font-weight: bold;
+}
+
+/* chevrons */
+.jsonView .icon-chevron-right, .jsonView .icon-chevron-down {
+    float: left;
+    cursor: pointer;
+    position: relative;
+    top: 5px;
+    right: 20px;
+    margin-right: -15px;
+}
+.jsonView > .icon-chevron-down {
+    display: none;
+}
+/* add and delete */
+.jsonView .addObjectItemBtn {
+    background-color: transparent;
+    border-color: transparent;
+    line-height: 10px;
+}
+.jsonView .deleteKeyBtn, .jsonView .moveArrayItemBtn {
+    float: right;
+    margin-right: 10px;
+    position: relative;
+    top: 7px;
+    z-index: 99999999999999;
+    cursor: pointer;
+}
+
+/* basic layout */
+.jsonView .jsonObjectKey {
+    font-weight: bold;
+    cursor: select;
+}
+.jsonContents {
+
+}
+.jsonView .block {
+    display: block;
+    line-height: 30px;
+    min-height: 30px;
+    background: white;
+}
+.jsonView .brace, .jsonItemDesc {
+    font-family: Georgia, serif;
+    color: grey;
+}
+.jsonView .objectDesc {
+    cursor: default;
+}
+/* first brace */
+.jsonView > .jsonItemDesc {
+    display: block;
+    float: left;
+    position: relative;
+    bottom: 25px;
+    height: 0;
+    width: 0;
+}
+
+/* array numbering */
+.jsonView ol.arrayOl {
+    margin: 0 0 0 25px;
+}
+.jsonView ol.arrayOl > li > span > span > .icon-chevron-down,
+.jsonView ol.arrayOl > li > span > span > .icon-chevron-right {
+    left: -40px;
+}
+.jsonView li {
+    color: grey;
+    font-style: italic;
+    font-family: Georgia, serif;
+    margin: 0;
+    line-height: 30px;
+    list-style-type: decimal;
+}
+.jsonView li li {
+    list-style-type: lower-roman;
+}
+.jsonView li li li {
+    list-style-type: upper-roman;
+}
+.jsonView li li li li {
+    list-style-type: lower-latin;
+}
+.jsonView li li li li li {
+    list-style-type: upper-latin;
+}
+.jsonView li li li li li li {
+    list-style-type: lower-greek;
+}
+.jsonView li li li li li li li {
+    list-style-type: decimal;
+}
+.sortable-placeholder {
+    height: 20px;
+    display: block;
+}

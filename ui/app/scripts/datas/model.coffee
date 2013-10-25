@@ -40,14 +40,13 @@ angular.module('app.datas.model', ['app.config'])
         if !@loaded
           return null
 
+        if !@test? || @test.examples_placement != 'Amazon S3'
+          return null
+
         if @weighted_data_input?
           if Object.keys(@weighted_data_input).length != 0
             return true
-
-        if @test?
-          return @test.status != 'Storing'
-        else
-          return false
+        return @test.status != 'Storing'
 
       @$get_api_url: (model_id, test_id) ->
         return "#{settings.apiUrl}models/#{model_id}/tests/#{test_id}/examples/"

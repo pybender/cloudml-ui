@@ -129,6 +129,10 @@
         Trained by:
         <span class=a"value">{{ model.trained_by.name }} ({{ model.trained_by.uid }})</span>
     </div>
+    <div ng-if="model.status == 'Trained'">
+        Training time:
+        <span class="value">{{ model.training_time|humanize_time }}</span>
+    </div>
     <hr />
     <div ng-controller="WeightsCtrl">
       <h4>Parameters Weights</h4>

@@ -5,7 +5,7 @@ from bson.objectid import ObjectId
 
 from api import app
 from api.resources import ValidationError
-from api.models import Model
+from api.models import Model, Classifier, FeatureSet
 from api.base.forms import BaseForm as BaseFormEx
 from api.base.fields import *
 from core.trainer.store import load_trainer
@@ -114,23 +114,43 @@ class BaseForm(object):
             return obj
 
 
-class BaseModelForm(BaseForm):
-    def _clean_importhandler(self, value):
-        if value and not value == 'undefined':
-            return app.db.ImportHandler.find_one({'_id': ObjectId(value)})
+# class BaseModelForm(BaseForm):
+#     def _clean_importhandler(self, value):
+#         if value and not value == 'undefined':
+#             return app.db.ImportHandler.find_one({'_id': ObjectId(value)})
 
-    clean_train_import_handler = _clean_importhandler
-    clean_test_import_handler = _clean_importhandler
+#     clean_train_import_handler = _clean_importhandler
+#     clean_test_import_handler = _clean_importhandler
 
 
-class ModelEditForm(BaseModelForm):
-    fields = ('test_import_handler', 'train_import_handler',
-              'example_id', 'example_label', 'name', 'tags')
+# class ModelEditForm(BaseModelForm):
+#     fields = ('test_import_handler', 'train_import_handler',
+#               'example_id', 'example_label', 'name', 'tags')
 
-    def clean_tags(self, value):
-        if not value:
-            return None
-        return json.loads(value)
+#     def clean_tags(self, value):
+#         if not value:
+#             return None
+#         return json.loads(value)
+
+#     def save(self, commit=True):
+#         old_tags = self.obj.tags
+#         model = super(ModelEditForm, self).save()
+
+#         if self.cleaned_data.get('tags', None):
+#             app.db.Tag.update_tags_count(old_tags, model.tags)
+
+#         return model
+
+
+class ModelEditForm(BaseFormEx):
+    name = CharField()
+    train_import_handler = DocumentField(doc='ImportHandler', by_name=False,
+                                         return_doc=True)
+    test_import_handler = DocumentField(doc='ImportHandler', by_name=False,
+                                         return_doc=True)
+    example_id = CharField()
+    example_label = CharField()
+    tags = JsonField()
 
     def save(self, commit=True):
         old_tags = self.obj.tags
@@ -142,7 +162,7 @@ class ModelEditForm(BaseModelForm):
         return model
 
 
-class ModelForm(BaseFormEx):
+class ModelAddForm(BaseFormEx):
     NO_REQUIRED_FOR_EDIT = True
     required_fields = ('name',
                       ('test_import_handler', 'test_import_handler_file'))
@@ -159,7 +179,7 @@ class ModelForm(BaseFormEx):
 
     feature_model = None
     trainer_obj = None
-    classifier = None
+    classifier_obj = None
 
     def clean_train_import_handler_file(self, value, field):
         self.cleaned_data['train_import_params'] = field.import_params
@@ -220,18 +240,15 @@ train_import_handler should be specified for new model')
         self.save_importhandler('train_import_handler_file', name)
         self.save_importhandler('test_import_handler_file', name)
 
-        obj = super(ModelForm, self).save()
+        obj = super(ModelAddForm, self).save()
         # TODO: move it to model training for new models
         if self.trainer_obj:
             obj.set_trainer(self.trainer_obj)
 
-        features_set = app.db.FeatureSet.from_model_features_dict(
-            obj.name, obj.features)
-        classifier = app.db.Classifier.from_model_features_dict(
-            obj.name, obj.features)
+        features_set = FeatureSet.from_model_features_dict(obj.name, obj.features)
         obj.features_set_id = str(features_set._id)
         obj.features_set = features_set
-        obj.classifier = classifier
+        obj.classifier = Classifier.from_model_features_dict(obj.name, obj.features)
 
         obj.validate()
         obj.save()
@@ -242,123 +259,6 @@ train_import_handler should be specified for new model')
             fill_model_parameter_weights.delay(str(obj._id))
 
         return obj
-
-
-class ModelAddForm(BaseModelForm):
-    fields = ('features', 'trainer', 'train_import_handler',
-              'name', 'test_import_handler',
-              'test_import_handler_file', 'train_import_handler_file')
-    trainer = None
-
-    def clean_name(self, value):
-        if not value:
-            raise ValidationError('name is required')
-        return value
-
-    def clean_trainer(self, value):
-        if value:
-            try:
-                # TODO: find a better way?
-                value = value.encode('utf-8').replace('\r', '')
-                self.trainer = load_trainer(value)
-            except Exception as exc:
-                raise ValidationError('Invalid trainer: {0!s}'.format(exc))
-
-    def clean_features(self, value):
-        self.feature_model = None
-        loaded_value = self._clean_json_val('features', value)
-        if loaded_value:
-            try:
-                self.feature_model = FeatureModel(value, is_file=False)
-            except SchemaException, exc:
-                raise ValidationError('Invalid features: %s' % exc)
-
-        return loaded_value
-
-    def _clean_importhandler_file(self, value, action='test'):
-        if not value:
-            return
-
-        try:
-            data = json.loads(value)
-        except ValueError, exc:
-            raise ValidationError('Invalid importhandler data: %s' % exc)
-
-        try:
-            plan = ExtractionPlan(value, is_file=False)
-            self.cleaned_data['%s_import_params' % action] = plan.input_params
-        except (ValueError, ImportHandlerException) as exc:
-            raise ValidationError('Invalid importhandler: %s' % exc)
-
-        return data
-
-    def clean_train_import_handler_file(self, value):
-        data = self._clean_importhandler_file(value, 'train')
-        return data
-
-    clean_test_import_handler_file = _clean_importhandler_file
-
-    def validate_obj(self):
-        features = self.cleaned_data.get('features')
-        if not features and not self.trainer:
-            raise ValidationError('Either features, either pickled \
-trained model is required for posting model')
-
-        if self.feature_model:
-            only_one_required(self.cleaned_data,
-                              ('train_import_handler',
-                               'train_import_handler_file'))
-            self.trainer = Trainer(self.feature_model)
-        else:
-            self.cleaned_data['status'] = Model.STATUS_TRAINED
-
-        only_one_required(self.cleaned_data,
-                          ('test_import_handler',
-                           'test_import_handler_file'))
-
-    def save(self, *args, **kwargs):
-        name = self.cleaned_data['name']
-
-        def save_importhandler(fieldname):
-            data = self.cleaned_data.pop(fieldname, None)
-            if data is not None:
-                handler = app.db.ImportHandler()
-                action = 'test' if fieldname.startswith('test') else 'train'
-                handler.name = '%s handler for %s' % (name, action)
-                handler.type = handler.TYPE_DB
-                handler.import_params = self.cleaned_data.pop(
-                    '%s_import_params' % action)
-                handler.data = data
-                handler.save()
-                self.cleaned_data['%s_import_handler' % action] = handler
-
-        save_importhandler('train_import_handler_file')
-        save_importhandler('test_import_handler_file')
-
-        train_import_handler = self.cleaned_data.pop('train_import_handler')
-        test_import_handler = self.cleaned_data.pop('test_import_handler')
-        obj = super(ModelAddForm, self).save()
-        obj.set_trainer(self.trainer)
-        if obj.status == Model.STATUS_TRAINED:
-            # Processing Model Parameters weights in celery task
-            from api.tasks import fill_model_parameter_weights
-            fill_model_parameter_weights.delay(str(obj._id))
-        obj.validate()
-        obj.save()
-
-        obj.train_import_handler = train_import_handler
-        obj.test_import_handler = test_import_handler
-        obj.save()
-        return obj
-
-    def _clean_json_val(self, name, value):
-        if value:
-            try:
-                return json.loads(value)
-            except (ValueError), exc:
-                raise ValidationError('Invalid %s: %s %s' % (name, value, exc))
-            except TypeError:
-                return {}
 
 
 class BaseChooseInstanceAndDataset(BaseForm):
@@ -525,6 +425,12 @@ class AddTestForm(BaseChooseInstanceAndDataset):
         return value.split(',')
 
     def save(self):
+        placement = self.cleaned_data['examples_placement']
+        if placement == app.db.Test.EXAMPLES_MONGODB:
+            # All fields would be placed to MongoDB
+            self.cleaned_data['examples_fields'] = \
+                self.model.test_import_handler.get_fields()
+
         test = BaseForm.save(self, commit=False)
         test.status = test.STATUS_QUEUED
         test.examples_placement = self.cleaned_data['examples_placement']
@@ -616,6 +522,10 @@ class NamedFeatureTypeAddForm(BaseFormEx):
     params = JsonField()
 
 
+class FeatureSetForm(BaseFormEx):
+    schema_name = CharField()
+
+
 class FeatureSetAddForm(BaseForm):
     fields = ('name', 'schema_name', 'classifier', )
 
@@ -651,36 +561,30 @@ class BasePredefinedForm(BaseFormEx):
 
     def clean_feature_id(self, value, field):
         if value:
-            feature = field.doc
-            self.cleaned_data['feature'] = feature
+            self.cleaned_data['feature'] = field.doc
+        return value
+
+    def clean_model_id(self, value, field):
+        if value:
+            self.cleaned_data['model'] = field.doc
         return value
 
     def validate_data(self):
-        is_predefined = self.cleaned_data.get('is_predefined', False)
-        predefined_selected = self.cleaned_data.get(
-            'predefined_selected', False)
+        predefined_selected = self.cleaned_data.get('predefined_selected', False)
         feature_id = self.cleaned_data.get('feature_id', False)
+        model_id = self.cleaned_data.get('model_id', False)
+        self.cleaned_data['is_predefined'] = is_predefined = \
+                not (feature_id or model_id or self.inner_name)
 
         if predefined_selected and is_predefined:
             raise ValidationError(
                 'item could be predefined or copied from predefined')
 
-        if self.inner_name:
-            # It's feature related form
-            if is_predefined:
-                raise ValidationError('feature item could not be predefined')
-        else:
-            if 'feature_id' in self.fields.keys():  # feature specific item
-                if not (bool(feature_id) != bool(is_predefined)):
-                    raise ValidationError(
-                        'one of feature_id and is_predefined is required')
-
         if is_predefined:
             name = self.cleaned_data.get('name', None)
             if not name:
                 raise ValidationError('name is required for predefined item')
-            kwargs = {'is_predefined': True,
-                      'name': name}
+            kwargs = {'name': name}
             if '_id' in self.obj and self.obj._id:
                 kwargs['_id'] = {'$ne': self.obj._id}
             callable_document = getattr(app.db, self.DOC)
@@ -704,11 +608,17 @@ class BasePredefinedForm(BaseFormEx):
         self.cleaned_data['params'] = obj.params
 
     def save(self, commit=True):
+        commit = self.cleaned_data['is_predefined']
         obj = super(BasePredefinedForm, self).save(commit)
         feature = self.cleaned_data.get('feature', None)
         if feature:
             setattr(feature, self.OBJECT_NAME, obj)
             feature.save()
+
+        model = self.cleaned_data.get('model', None)
+        if model:
+            setattr(model, self.OBJECT_NAME, obj)
+            model.save()
         return obj
 
 
@@ -727,10 +637,7 @@ class ScalerForm(BasePredefinedForm):
     # whether need to copy feature scaler fields from predefined one
     predefined_selected = BooleanField()
     # whether we need to create predefined item (not feature related)
-    is_predefined = BooleanField()
-    scaler = DocumentField(doc='Scaler', by_name=True,
-                           filter_params={'is_predefined': True},
-                           return_doc=True)
+    scaler = DocumentField(doc='Scaler', by_name=True, return_doc=True)
     feature_id = DocumentField(doc='Feature', by_name=False,
                                return_doc=False)
 
@@ -740,11 +647,12 @@ class ClassifierForm(BasePredefinedForm):
     Form with predefined item selection for model instead of feature
     """
     OBJECT_NAME = 'classifier'
+    DOC = 'Classifier'
 
     group_chooser = 'predefined_selected'
-    required_fields_groups = {'true': ('classifier', 'type'),
-                              'false': ('name', 'type',),
-                              None: ('name', 'type',)}
+    required_fields_groups = {'true': ('classifier', ),
+                              'false': ('type', ),
+                              None: ('type', )}
 
     name = CharField()
     type_field = ChoiceField(choices=app.db.Classifier.TYPES_LIST, name='type')
@@ -752,26 +660,8 @@ class ClassifierForm(BasePredefinedForm):
     # whether need to copy model classifier fields from predefined one
     predefined_selected = BooleanField()
     # whether we need to create predefined item (not model-related)
-    is_predefined = BooleanField()
-    classifier = DocumentField(doc=app.db.Classifier, by_name=False,
-                               filter_params={'is_predefined': True},
-                               return_doc=True)
-    model_id = DocumentField(doc=app.db.Model, by_name=False,
-                             return_doc=False)
-
-    def clean_model_id(self, value, field):
-        if value:
-            model = field.doc
-            self.cleaned_data['model'] = model
-        return value
-
-    def save(self, commit=True):
-        classifier = super(ClassifierForm, self).save(commit)
-        model = self.cleaned_data.get('model', None)
-        if model:
-            model.classifier = classifier
-            model.save()
-        return classifier
+    classifier = DocumentField(doc='Classifier', by_name=False, return_doc=True)
+    model_id = DocumentField(doc='Model', by_name=False, return_doc=False)
 
 
 class TransformerForm(BasePredefinedForm):
@@ -788,11 +678,8 @@ class TransformerForm(BasePredefinedForm):
     type_field = ChoiceField(
         choices=app.db.Transformer.TYPES_LIST, name='type')
     params = JsonField()
-    is_predefined = BooleanField()
     predefined_selected = BooleanField()
-    transformer = DocumentField(doc='Transformer', by_name=True,
-                                filter_params={'is_predefined': True},
-                                return_doc=True)
+    transformer = DocumentField(doc='Transformer', by_name=True, return_doc=True)
     feature_id = DocumentField(doc='Feature', by_name=False,
                                return_doc=False)
 
@@ -819,12 +706,6 @@ class FeatureForm(BaseFormEx):
                         data_from_request=False)
     remove_scaler = BooleanField()
 
-    def clean_features_set_id(self, value, field):
-        if value:
-            feature_set = field.doc
-            self.cleaned_data['features_set'] = feature_set
-        return value
-
     def clean_type(self, value, field):
         if value and not value in app.db.NamedFeatureType.TYPES_LIST:
             # Try to find type in named types
@@ -842,12 +723,12 @@ class FeatureForm(BaseFormEx):
     def save(self, *args, **kwargs):
         remove_transformer = self.cleaned_data.get('remove_transformer', False)
         if remove_transformer and self.obj.transformer:
-            self.obj.transformer.delete()
+            #self.obj.transformer.delete()
             self.obj.transformer = None
 
         remove_scaler = self.cleaned_data.get('remove_scaler', False)
         if remove_scaler and self.obj.scaler:
-            self.obj.scaler.delete()
+            #self.obj.scaler.delete()
             self.obj.scaler = None
 
         return super(FeatureForm, self).save(*args, **kwargs)

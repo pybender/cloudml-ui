@@ -8,6 +8,7 @@ from bson.objectid import ObjectId
 from os.path import exists
 from os import makedirs, system
 from datetime import timedelta, datetime
+from dateutil import parser, tz
 from boto.exception import EC2ResponseError
 from celery.canvas import group
 from celery.signals import task_prerun, task_postrun
@@ -307,9 +308,12 @@ def train_model(dataset_ids, model_id, user_id):
         from memory_profiler import memory_usage
         #mem_usage = memory_usage((trainer.train,
         #                          (train_iter,)), interval=0)
+        train_begin_time = datetime.utcnow().replace(tzinfo=tz.tzutc())
         trainer.train(train_iter)
+
         mem_usage = memory_usage(-1, interval=0, timeout=None)
         trainer.clear_temp_data()
+        train_end_time = parser.parse(trainer.train_time)
 
         model.status = model.STATUS_TRAINED
         model.set_trainer(trainer)
@@ -319,6 +323,7 @@ def train_model(dataset_ids, model_id, user_id):
             d['records_count'] for d in app.db.DataSet.find({
                 '_id': {'$in': model.dataset_ids}
             }, ['records_count']))))
+        model.training_time = int((train_end_time - train_begin_time).seconds)
         model.save()
 
         fill_model_parameter_weights.delay(str(model._id))
@@ -655,13 +660,24 @@ def calculate_confusion_matrix(test_id, weight0, weight1):
     if test is None:
         raise ValueError('Test with id {0!s} not found!'.format(test_id))
 
-    logging.info('Calculating confusion matrix for test id {!s}'.format(
-        test_id))
-
     model = app.db.Model.find_one({'_id': ObjectId(test['model_id'])})
     if model is None:
         raise ValueError('Model with id {0!s} not found!'.format(
-            ['model_id']))
+            test['model_id']))
+
+    logging.info('Calculating confusion matrix for test id {!s}'.format(
+        test_id))
+
+    calc_id = ObjectId()
+
+    test.confusion_matrix_calculations.append({
+        '_id': calc_id,
+        'weights': dict(zip(model.labels, [weight0, weight1])),
+        'status': Test.MATRIX_STATUS_IN_PROGRESS,
+        'datetime': datetime.now(),
+        'result': []
+    })
+    test.save()
 
     matrix = [[0, 0],
               [0, 0]]
@@ -678,6 +694,12 @@ def calculate_confusion_matrix(test_id, weight0, weight1):
         predicted = [weighted_prob0, weighted_prob1].index(
             max([weighted_prob0, weighted_prob1]))
         matrix[true_value_idx][predicted] += 1
+
+    calc = next((c for c in test.confusion_matrix_calculations
+                 if c['_id'] == calc_id))
+    calc['result'] = zip(model.labels, matrix)
+    calc['status'] = Test.MATRIX_STATUS_COMPLETED
+    test.save()
 
     return matrix
 

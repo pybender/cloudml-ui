@@ -9,6 +9,7 @@ from bson.objectid import ObjectId
 from celery.task.base import Task
 
 from api import app
+from api.models import Transformer
 
 
 MODEL_ID = '519318e6106a6c0df349bc0b'
@@ -197,7 +198,8 @@ class BaseTestCase(unittest.TestCase):
         else:
             return self.RESOURCE.DEFAULT_FIELDS or [u'_id', u'name']
 
-    def _check_post(self, post_data={}, error='', load_model=False, action=None):
+    def _check_post(self, post_data={}, error='',
+                    load_model=False, action=None, inner_obj=False):
         count = self.Model.find().count()
         url = self._get_url(action=action) if action else self.BASE_URL
         resp = self.app.post(url, data=post_data, headers=HTTP_HEADERS)
@@ -211,11 +213,11 @@ class BaseTestCase(unittest.TestCase):
             self.assertTrue(error in err_data['message'],
                             "Response message is: %s" % err_data['message'])
         else:
-            print resp.data
             self.assertEquals(resp.status_code, httplib.CREATED)
             self.assertTrue(self.RESOURCE.OBJECT_NAME in resp.data)
-            new_count = self.Model.find().count()
-            self.assertEquals(count + 1, new_count)
+            if not inner_obj:
+                new_count = self.Model.find().count()
+                self.assertEquals(count + 1, new_count)
 
             if load_model:
                 data = json.loads(resp.data)
@@ -302,8 +304,9 @@ class BaseTestCase(unittest.TestCase):
                             for item in err_list])
         logging.debug("Response is: %s", errors_dict)
         for field, err_msg in errors.iteritems():
-            self.assertTrue(field in errors_dict,
-                            "Should be err for field %s: %s" % (field, err_msg))
+            self.assertTrue(
+                field in errors_dict,
+                "Should be err for field %s: %s" % (field, err_msg))
             self.assertEquals(err_msg, errors_dict[field])
         self.assertEquals(len(errors_dict), len(errors),
                           errors_dict.keys())
@@ -368,44 +371,33 @@ class FeaturePredefinedItems(BaseTestCase):
 
     def _test_add_predefined(self, extra_data={}):
         data = copy(self.DATA)
-        data['is_predefined'] = True
         data.update(extra_data)
 
         resp, obj = self._check_post(data, load_model=True)
         self.assertEqual(obj.name, data['name'])
         self.assertEqual(obj.type, data['type'])
-        self.assertTrue(obj.is_predefined)
         self.assertEqual(obj.params, json.loads(data['params']))
 
     def _test_add_feature_item(self, feature, extra_data={}):
         data = copy(self.DATA)
-        data.update({'is_predefined': 'false',
-                     'feature_id': str(feature._id)})
+        data.update({'feature_id': str(feature._id)})
         data.update(extra_data)
 
-        resp, obj = self._check_post(data, load_model=True)
-        self.assertEqual(obj.name, data['name'])
-        self.assertEqual(obj.type, data['type'])
-        self.assertFalse(obj.is_predefined)
-        self.assertEqual(obj.params, json.loads(data['params']))
-
-        feature = self.db.Feature.find_one({'_id': feature._id})
-        self.assertTrue(getattr(feature, self.OBJECT_NAME),
-                        "%s of the feature should be filled" % self.OBJECT_NAME)
+        self._check_post(data, load_model=False, inner_obj=True)
+        feature = app.db.Feature.get_from_id(feature._id)
+        obj = getattr(feature, self.OBJECT_NAME)
+        self.assertEqual(obj['type'], data['type'])
+        self.assertEqual(obj['params'], json.loads(data['params']))
 
     def _add_feature_item_from_predefined(self, feature, item):
         data = {self.OBJECT_NAME: item.name,
                 'feature_id': str(feature._id),
                 'predefined_selected': 'true'}
-        resp, obj = self._check_post(data, load_model=True)
-        self.assertEqual(obj.name, item.name)
-        self.assertEqual(obj.type, item.type)
-        self.assertFalse(obj.is_predefined)
-        self.assertEqual(obj.params, item.params)
-
-        feature = self.db.Feature.find_one({'_id': feature._id})
-        self.assertTrue(getattr(feature, self.OBJECT_NAME),
-                        "%s should be filled" % self.OBJECT_NAME)
+        self._check_post(data, load_model=False, inner_obj=True)
+        feature = app.db.Feature.get_from_id(feature._id)
+        obj = getattr(feature, self.OBJECT_NAME)
+        self.assertEqual(obj['type'], item.type)
+        self.assertEqual(obj['params'], item.params)
 
     def _test_edit_predefined_item(self):
         data = copy(self.DATA)
@@ -417,38 +409,29 @@ class FeaturePredefinedItems(BaseTestCase):
 
     def _test_edit_feature_item(self, feature, extra_data={}):
         data = copy(self.DATA)
-        data.update({'is_predefined': 'false',
-                     'feature_id': str(feature._id)})
+        data.update({'feature_id': str(feature._id)})
         data.update(extra_data)
 
-        item = getattr(feature, self.OBJECT_NAME)
-        resp, obj = self._check_put(data, obj=item, load_model=True)
-        self.assertEqual(obj.name, data['name'])
-        self.assertEqual(obj.type, data['type'])
-        self.assertFalse(obj.is_predefined)
-        self.assertEqual(obj.params, json.loads(data['params']))
+        resp = self._check_put(data)
+        feature = app.db.Feature.get_from_id(feature._id)
+        obj = getattr(feature, self.OBJECT_NAME)
+        self.assertEqual(obj['name'], data['name'])
+        self.assertEqual(obj['type'], data['type'])
+        self.assertEqual(obj['params'], json.loads(data['params']))
 
-        feature = self.db.Feature.find_one({'_id': feature._id})
-        feature_item = getattr(feature, self.OBJECT_NAME)
-        self.assertTrue(feature_item, "%s should be filled" % self.OBJECT_NAME)
-        self.assertEquals(feature_item._id, obj._id)
         return resp, obj
 
     def _edit_feature_item_from_predefined(self, feature, predefined_item):
-        self.assertTrue(predefined_item.is_predefined, "Specify predefined item")
         data = {self.OBJECT_NAME: predefined_item.name,
                 'feature_id': str(feature._id),
                 'predefined_selected': 'true'}
-        item = getattr(feature, self.OBJECT_NAME)
-        resp, obj = self._check_put(data, obj=item, load_model=True)
+        resp = self._check_put(data, load_model=False)
         feature = self.db.Feature.find_one({'_id': feature._id})
         self.assertTrue(getattr(feature, self.OBJECT_NAME),
                         "%s should be filled" % self.OBJECT_NAME)
-        self.assertNotEquals(obj._id, predefined_item._id)
 
-        self.assertEqual(obj.name, predefined_item.name)
-        self.assertEqual(obj.type, predefined_item.type)
-        self.assertEqual(obj.params, predefined_item.params)
-        self.assertFalse(obj.is_predefined)
+        obj = getattr(feature, self.OBJECT_NAME)
+        self.assertEqual(obj['name'], predefined_item.name)
+        self.assertEqual(obj['type'], predefined_item.type)
+        self.assertEqual(obj['params'], predefined_item.params)
         return resp, obj
-        

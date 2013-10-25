@@ -23,6 +23,7 @@
       <h4 class="text-center">Settings</h4>
       <div class="well">
         <div ng-class="{error: !formElements[SETTINGS]['examples_placement']}" class="control-group">
+          <alert-message ng-show="formElements[SETTINGS]['examples_placement'] == 'Mongo DB'" class="alert-warning" msg="Be careful when selecting 'Mongo DB': all data would be stored to MongoDB. Check that examples aren't very large." unsafe></alert-message>
           <label class="control-label" style="text-align: left;">Examples Placement: </label>
           <div class="controls">
             <select class="input-xlarge" name="examples_placement" ng-change="changeFormData(SETTINGS, 'examples_placement')" ng-model="formElements[SETTINGS]['examples_placement']">
