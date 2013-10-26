@@ -1,0 +1,28 @@
+<div>
+  <h2>
+    New Query
+    <small><a href="#{{ handler.objectUrl() }}">(Cancel)</a></small>
+  </h2>
+
+  <loadindicator title="Save import handler..." ng-show="saving" progress="savingProgress"></loadindicator>
+
+  <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+ 
+  <form name="QueryForm" class="form-horizontal query">
+    <div class="control-group" ng-class="{error: FeatureForm.name.$invalid}">
+      <label class="control-label">Name</label>
+      <div class="controls">
+        <input type="text" name="name" ng-model="query.name" required />
+        <span ng-show="FeatureForm.name.$error.required" class="help-inline">*</span>
+      </div>
+    </div>
+    <div class="control-group" ng-class="{error: FeatureForm.sql.$invalid}">
+      <label class="control-label">SQL</label>
+      <div class="controls">
+        <textarea ui-codemirror="{mode: 'text/x-mysql', indentWithTabs: true, smartIndent: true, matchBrackets : true, height: '100px'}" ng-model="query.sql"></textarea>
+        <span ng-show="FeatureForm.sql.$error.required" class="help-inline">*</span>
+      </div>
+    </div>
+  </form>
+  <button ng-disabled="QueryForm.$invalid" ng-click="save()" class="btn btn-primary"><span>Add</span> query</button>
+</div>

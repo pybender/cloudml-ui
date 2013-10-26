@@ -58,15 +58,27 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
     $scope.deleteQuery = (queries, query) ->
       index = queries.indexOf(query)
       query.$remove().then(()->
-        if index != -1
-          queries.splice(index, 1)
+        # Reorganize indexes
+        for i in [queries.length - 1..0] by -1
+          q = queries[i]
+          if q.num == index
+            queries.splice(index, 1)
+            break
+          else
+            q.num -= 1
       )
 
     $scope.deleteItem = (items, item) ->
       index = items.indexOf(item)
       item.$remove().then(()->
-        if index != -1
-          items.splice(index, 1)
+        # Reorganize indexes
+        for i in [items.length - 1..0] by -1
+          it = items[i]
+          if it.num == index
+            items.splice(index, 1)
+            break
+          else
+            it.num -= 1
       )
 
     $scope.saveData = () ->
@@ -151,5 +163,36 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
 
     ), ((opts) ->
       $scope.setError(opts, 'loading import handler list')
+    )
+])
+
+.controller('AddImportHandlerQueryCtrl', [
+  '$scope'
+  '$routeParams'
+  '$location'
+  'ImportHandler'
+  'Query'
+
+($scope, $routeParams, $location, ImportHandler, Query) ->
+  if not $routeParams.id then throw new Error "Specify id"
+
+  $scope.handler = new ImportHandler({_id: $routeParams.id})
+  $scope.query = new Query(
+    {handler: $scope.handler, num: -1})
+
+  $scope.save = (fields) ->
+    $scope.saving = true
+    $scope.savingProgress = '0%'
+
+    _.defer ->
+      $scope.savingProgress = '50%'
+      $scope.$apply()
+
+    $scope.query.$save(only: ['name', 'sql']).then (->
+      $scope.savingProgress = '100%'
+      $location.path($scope.handler.objectUrl())
+    ), ((opts) ->
+      $scope.err = $scope.setError(opts, "saving")
+      $scope.savingProgress = '0%'
     )
 ])

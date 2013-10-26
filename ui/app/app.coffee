@@ -116,6 +116,10 @@ App.config([
       templateUrl: '/partials/import_handler/details.html'
       reloadOnSearch: false
     })
+    .when('/importhandlers/:id/query/add', {
+      controller: 'AddImportHandlerQueryCtrl'
+      templateUrl: '/partials/import_handler/add_query.html'
+    })
     .when('/importhandlers/:handler_id/datasets', {
       redirectTo: (params, loc) ->
         return '/importhandlers/' + params.handler_id + '?action=dataset:list'

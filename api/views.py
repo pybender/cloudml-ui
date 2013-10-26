@@ -383,10 +383,12 @@ class ImportHandlerResource(BaseResource):
 
         data = request.form
         def update_inner_items():
+            new_subitem_idx = None
             for key, val in data.iteritems():
                 fields = key.split('.')
                 sub = obj
                 count = len(fields)
+                prefield = None
                 for i, field in enumerate(fields):
                     if type(sub) == list:
                         try:
@@ -395,12 +397,30 @@ class ImportHandlerResource(BaseResource):
                             continue
 
                     if type(field) == int or field in sub:
+                        if field == -1:  # adding new item to list
+                            if new_subitem_idx is None:
+                                new_subitem_idx = len(sub)
+
+                                if prefield == 'queries':
+                                    sub.append(
+                                        {"name": '',
+                                         "sql": '',
+                                         "items": {}})
+                                elif prefield == 'items':
+                                    sub.append(
+                                        {"source": '',
+                                         "process_as": '',
+                                         "target_variables": []})
+
+                            field = new_subitem_idx
+
                         if i + 1 == count:
                             sub[field] = val
                         else:
                             sub = sub[field]
                     else:
                         break
+                    prefield = field
 
         if 'remove_item' in data:
             num = int(data.get('num', None))

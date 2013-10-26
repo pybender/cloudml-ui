@@ -184,33 +184,6 @@ app.db.Weight.collection.ensure_index(
 
 
 @app.conn.register
-class Query(BaseDocument):
-    __collection__ = 'datasources'
-    structure = {
-        'name': basestring,
-        'sql': basestring,
-        'items': list,
-        'created_on': datetime,
-        'created_by': dict,
-        'updated_on': datetime,
-        'updated_by': dict,
-    }
-    use_dot_notation = True
-    required_fields = ['name', 'sql', 'created_on', ]
-    default_values = {'created_on': datetime.utcnow,
-                      'updated_on': datetime.utcnow, }
-
-    def validate(self, *args, **kwargs):
-        super(Query, self).validate(*args, **kwars)
-        # "source": "contractor_info",
-        #   "is-required": true,
-        #   "process-as": "json",
-        #   "target-features"
-        # for item in self["queries"]:
-        #     assert item["desc"], "desc is required: %s" % item
-
-
-@app.conn.register
 class DataSource(BaseDocument):
     TYPE_REQUEST = 'request'
     TYPE_SQL = 'sql'
