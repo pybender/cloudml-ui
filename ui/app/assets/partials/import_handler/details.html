@@ -55,7 +55,7 @@
     </div>
 
     <h4>Queries</h4>
-    <div class="well" ng-repeat="query in handler.queries">
+    <div class="well query" ng-repeat="query in handler.queries">
       <a style="float: right;" ng-click="deleteQuery(handler.queries, query)">
         <i title="Delete query" class="icon-remove"></i>
       </a>
@@ -64,8 +64,9 @@
         <span title="name" class="name" ng-bind="query.name || 'untitled name'" editable="query" value="query.name" editable-field="name" editable-input="text" editable-placement="right"></span>
       </div>
       <div>
-        SQL (TODO: editor):
-        <span title="sql" class="sql" ng-bind="query.sql || 'no sql'" editable="query" value="query.sql" editable-field="sql" editable-input="text" editable-placement="top"></span>
+        SQL:
+        <p><textarea ui-codemirror="{mode: 'text/x-mysql', indentWithTabs: true, smartIndent: true, lineNumbers: true, matchBrackets : true, height: '100px'}" ng-model="query.sql"></textarea></p>
+        <button ng-click="query.$save({only: ['sql']})">Save</button>
       </div>
       <div>
         <h5>Items</h5>
