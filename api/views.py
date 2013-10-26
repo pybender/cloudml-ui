@@ -381,24 +381,41 @@ class ImportHandlerResource(BaseResource):
         if obj is None:
             raise NotFound(self.MESSAGE404 % kwargs)
 
-        for key, val in request.form.iteritems():
-            fields = key.split('.')
-            sub = obj
-            count = len(fields)
-            for i, field in enumerate(fields):
-                if type(sub) == list:
-                    try:
-                        field = int(field)
-                    except ValueError:
-                        continue
+        data = request.form
+        def update_inner_items():
+            for key, val in data.iteritems():
+                fields = key.split('.')
+                sub = obj
+                count = len(fields)
+                for i, field in enumerate(fields):
+                    if type(sub) == list:
+                        try:
+                            field = int(field)
+                        except ValueError:
+                            continue
 
-                if type(field) == int or field in sub:
-                    if i + 1 == count:
-                        sub[field] = val
+                    if type(field) == int or field in sub:
+                        if i + 1 == count:
+                            sub[field] = val
+                        else:
+                            sub = sub[field]
                     else:
-                        sub = sub[field]
-                else:
-                    break
+                        break
+
+        if 'remove_item' in data:
+            num = int(data.get('num', None))
+            query_num = int(data.get('query_num', None))
+            if num is None or query_num is None:
+                raise ValidationError('num and query_num are required')
+            del obj['queries'][query_num]['items'][num]
+        elif 'remove_query' in data:
+            num = int(data.get('num', None))
+            if num is None:
+                raise ValidationError('num is required')
+            del obj['queries'][num]
+        else:
+            update_inner_items()
+        
         obj.save()
         return self._render(self._get_save_response_context(obj),
                             code=200)

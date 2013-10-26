@@ -37,6 +37,10 @@ angular.module('app.importhandlers.model', ['app.config'])
           data[prefix + key] = eval('this.' + key)
         @$make_request(@handler.getUrl(), {}, "PUT", data)
 
+      $remove: () ->
+        data = {'remove_item': 1, 'num': @num, 'query_num': @query_num}
+        @$make_request(@handler.getUrl(), {}, "PUT", data)
+
     return Item
 ])
 
@@ -81,6 +85,10 @@ angular.module('app.importhandlers.model', ['app.config'])
         data = {}
         for key in opts.only
           data[prefix + key] = eval('this.' + key)
+        @$make_request(@handler.getUrl(), {}, "PUT", data)
+
+      $remove: () ->
+        data = {'remove_query': 1, 'num': @num}
         @$make_request(@handler.getUrl(), {}, "PUT", data)
 
     return Query
@@ -144,9 +152,9 @@ created_on,created_by,datasource__name'
                 _.extend queryData, {'handler': @, 'num': i})
               i += 1
 
-      $save: (opts={}) =>
-        #@type = @type['name']
-        super opts
+      # $save: (opts={}) =>
+      #   #@type = @type['name']
+      #   super opts
 
       $loadData: (opts={}) =>
         # Executes loading dataset task

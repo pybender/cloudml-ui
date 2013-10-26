@@ -45,21 +45,29 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
             $scope.LOADED_SECTIONS.push name
           , 100)
 
-    $scope.saveQueries = () ->
-      $scope.handler.$save(only: ['queries'])
+    $scope.save = (fields) ->
+      $scope.handler.$save(only: fields)
       .then (->), ((opts) ->
-        $scope.setError(opts, 'saving handler queries')
+        $scope.setError(opts, 'saving import handler')
       )
 
     $scope.makeRequired = (item, is_required) ->
       item.is_required = is_required
-      item.$save()
+      item.$save({only: ['is_required']})
+
+    $scope.deleteQuery = (queries, query) ->
+      index = queries.indexOf(query)
+      query.$remove().then(()->
+        if index != -1
+          queries.splice(index, 1)
+      )
 
     $scope.deleteItem = (items, item) ->
       index = items.indexOf(item)
-      if index != -1
-        items.splice(index, 1)
-        $scope.saveQueries()
+      item.$remove().then(()->
+        if index != -1
+          items.splice(index, 1)
+      )
 
     $scope.saveData = () ->
       $scope.handler.$save(only: ['data'])

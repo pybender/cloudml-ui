@@ -56,6 +56,9 @@
 
     <h4>Queries</h4>
     <div class="well" ng-repeat="query in handler.queries">
+      <a style="float: right;" ng-click="deleteQuery(handler.queries, query)">
+        <i title="Delete query" class="icon-remove"></i>
+      </a>
       <div>
         Name:
         <span title="name" class="name" ng-bind="query.name || 'untitled name'" editable="query" value="query.name" editable-field="name" editable-input="text" editable-placement="right"></span>
