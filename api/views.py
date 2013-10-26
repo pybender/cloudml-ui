@@ -376,6 +376,33 @@ class ImportHandlerResource(BaseResource):
     def get(self, *args, **kwargs):
         return super(ImportHandlerResource, self).get(*args, **kwargs)
 
+    def put(self, action=None, **kwargs):
+        obj = self._get_details_query(None, None, **kwargs)
+        if obj is None:
+            raise NotFound(self.MESSAGE404 % kwargs)
+
+        for key, val in request.form.iteritems():
+            fields = key.split('.')
+            sub = obj
+            count = len(fields)
+            for i, field in enumerate(fields):
+                if type(sub) == list:
+                    try:
+                        field = int(field)
+                    except ValueError:
+                        continue
+
+                if type(field) == int or field in sub:
+                    if i + 1 == count:
+                        sub[field] = val
+                    else:
+                        sub = sub[field]
+                else:
+                    break
+        obj.save()
+        return self._render(self._get_save_response_context(obj),
+                            code=200)
+
     def _get_download_action(self, **kwargs):
         """
         Downloads importhandler data file.

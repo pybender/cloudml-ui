@@ -1,12 +1,100 @@
 angular.module('app.importhandlers.model', ['app.config'])
 
-.factory('ImportHandler', [
+.factory('Item', [
   '$http'
   '$q'
   'settings'
   'BaseModel'
   
   ($http, $q, settings, BaseModel) ->
+    class Item  extends BaseModel
+      source: null
+      target_features: []
+      process_as: null
+      is_required: null
+
+      handler: null
+      query_num: null
+      num: null
+
+      loadFromJSON: (origData) =>
+        super origData
+        if origData?
+          data = {
+            'target_schema': @target_schema,
+            'queries': @queries,
+            'sql': @sql}
+          if @datasource?
+            data['datasource'] = @datasource.toJson()
+          @data = angular.toJson(data, pretty=true)
+
+      $save: (opts={}) =>
+        prefix = 'queries.' + @query_num + '.items.' + @num + '.'
+        if !opts.only?
+          opts.only = ['source', 'process_as', 'is_required']
+        data = {}
+        for key in opts.only
+          data[prefix + key] = eval('this.' + key)
+        @$make_request(@handler.getUrl(), {}, "PUT", data)
+
+    return Item
+])
+
+.factory('Query', [
+  '$http'
+  '$q'
+  'settings'
+  'BaseModel'
+  'Item'
+  
+  ($http, $q, settings, BaseModel, Item) ->
+    class Query  extends BaseModel
+      name: null
+      sql: null
+      items: []
+
+      handler: null
+      num: null
+
+      loadFromJSON: (origData) =>
+        super origData
+        if origData?
+          data = {
+            'target_schema': @target_schema,
+            'queries': @queries,
+            'sql': @sql}
+          if @datasource?
+            data['datasource'] = @datasource.toJson()
+          @data = angular.toJson(data, pretty=true)
+
+          i = 0
+          if origData.items?
+            @items = []
+            for queryData in origData.items
+              @items.push new Item(
+                _.extend queryData, {
+                  'handler': @handler, 'num': i, 'query_num': @num})
+              i += 1
+
+      $save: (opts={}) =>
+        prefix = 'queries.' + @num + '.'
+        data = {}
+        for key in opts.only
+          data[prefix + key] = eval('this.' + key)
+        @$make_request(@handler.getUrl(), {}, "PUT", data)
+
+    return Query
+])
+
+
+.factory('ImportHandler', [
+  '$http'
+  '$q'
+  'settings'
+  'BaseModel'
+  'Query'
+  
+  ($http, $q, settings, BaseModel, Query) ->
     ###
     Import Handler
     ###
@@ -25,7 +113,13 @@ created_on,created_by,datasource__name'
       created_on: null
       updated_on: null
       name: null
-      data: null
+      target_schema: null
+      import_params: null
+      datasource: null
+      queries: []
+
+      getUrl: =>
+        return "#{@BASE_API_URL}#{@_id || ''}/"
 
       downloadUrl: =>
         return "#{@BASE_API_URL}#{@_id}/action/download/"
@@ -37,9 +131,18 @@ created_on,created_by,datasource__name'
             'target_schema': @target_schema,
             'queries': @queries,
             'sql': @sql}
+          @data = angular.toJson(data, pretty=true)
+
           if @datasource?
             data['datasource'] = @datasource.toJson()
-          @data = angular.toJson(data, pretty=true)
+
+          i = 0
+          if origData.queries?
+            @queries = []
+            for queryData in origData.queries
+              @queries.push new Query(
+                _.extend queryData, {'handler': @, 'num': i})
+              i += 1
 
       $save: (opts={}) =>
         #@type = @type['name']

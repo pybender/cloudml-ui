@@ -46,7 +46,6 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
           , 100)
 
     $scope.saveQueries = () ->
-      console.log $scope.handler.queries
       $scope.handler.$save(only: ['queries'])
       .then (->), ((opts) ->
         $scope.setError(opts, 'saving handler queries')
@@ -54,7 +53,7 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
 
     $scope.makeRequired = (item, is_required) ->
       item.is_required = is_required
-      $scope.saveQueries()
+      item.$save()
 
     $scope.deleteItem = (items, item) ->
       index = items.indexOf(item)
