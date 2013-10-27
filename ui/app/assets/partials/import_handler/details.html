@@ -54,10 +54,11 @@
         Import Parameters: <span class="value" ng-repeat="param in handler.import_params">{{ param }}</span>
     </div>
 
-    <h4>Queries
+    <h4>
+      Queries
       <div class="actions">
         <a class="btn btn-info" href="#/importhandlers/{{ handler._id }}/query/add">
-          <i class="status-icon icon-plus"></i> Add
+          <i class="status-icon icon-plus"></i> Add Query
         </a>
       </div>
     </h4>
@@ -76,7 +77,14 @@
         <button ng-click="query.$save({only: ['sql']})">Save</button>
       </div>
       <div>
-        <h5>Items</h5>
+        <h5>
+          Items
+          <div class="actions">
+            <a class="btn btn-info" href="#/importhandlers/{{ handler._id }}/query/{{ query.num }}/items/add">
+              <i class="status-icon icon-plus"></i> Add Item
+            </a>
+          </div>
+        </h5>
         <table class="table table-hover">
         <thead>
           <tr>

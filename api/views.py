@@ -400,17 +400,16 @@ class ImportHandlerResource(BaseResource):
                         if field == -1:  # adding new item to list
                             if new_subitem_idx is None:
                                 new_subitem_idx = len(sub)
-
                                 if prefield == 'queries':
                                     sub.append(
                                         {"name": '',
                                          "sql": '',
-                                         "items": {}})
+                                         "items": []})
                                 elif prefield == 'items':
                                     sub.append(
                                         {"source": '',
                                          "process_as": '',
-                                         "target_variables": []})
+                                         "target_features": []})
 
                             field = new_subitem_idx
 

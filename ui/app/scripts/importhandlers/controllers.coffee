@@ -177,22 +177,31 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
   if not $routeParams.id then throw new Error "Specify id"
 
   $scope.handler = new ImportHandler({_id: $routeParams.id})
-  $scope.query = new Query(
+  $scope.model = new Query(
     {handler: $scope.handler, num: -1})
 
-  $scope.save = (fields) ->
-    $scope.saving = true
-    $scope.savingProgress = '0%'
+  $scope.$on('SaveObjectCtl:save:success', (event, current) ->
+    $location.path($scope.handler.objectUrl())
+  )
+])
 
-    _.defer ->
-      $scope.savingProgress = '50%'
-      $scope.$apply()
+.controller('AddImportHandlerQueryItemCtrl', [
+  '$scope'
+  '$routeParams'
+  '$location'
+  'ImportHandler'
+  'Item'
 
-    $scope.query.$save(only: ['name', 'sql']).then (->
-      $scope.savingProgress = '100%'
-      $location.path($scope.handler.objectUrl())
-    ), ((opts) ->
-      $scope.err = $scope.setError(opts, "saving")
-      $scope.savingProgress = '0%'
-    )
+($scope, $routeParams, $location, ImportHandler, Item) ->
+  if not $routeParams.id then throw new Error "Specify id"
+  if not $routeParams.num then throw new Error "Specify query number"
+  $scope.PROCESS_STRATEGIES = ImportHandler.PROCESS_STRATEGIES
+
+  $scope.handler = new ImportHandler({_id: $routeParams.id})
+  $scope.model = new Item(
+    {handler: $scope.handler, query_num: $routeParams.num, num: -1})
+
+  $scope.$on('SaveObjectCtl:save:success', (event, current) ->
+    $location.path($scope.handler.objectUrl())
+  )
 ])
