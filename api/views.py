@@ -134,20 +134,8 @@ class Models(BaseResource):
                 if model.dataset else []
 
         if fields and 'test_handler_fields' in fields:
-            # TODO: check type in cloudml project
-            # to avoid dump/load data here
-            data = json.dumps(model.test_import_handler.data)
-            plan = ExtractionPlan(data, is_file=False)
-            
-            # TODO: Move to ExtractionPlan (fill in validate_features mthd)
-            test_handler_fields = []
-            for query in plan.queries:
-                items = query['items']
-                for item in items:
-                    features = item['target-features']
-                    for feature in features:
-                        test_handler_fields.append(feature['name'].replace('.', '->'))
-            model['test_handler_fields'] = test_handler_fields
+            if model.test_import_handler:
+                model['test_handler_fields'] = model.test_import_handler.get_fields()
 
         return model
 
@@ -178,8 +166,8 @@ class Models(BaseResource):
         params = self._parse_parameters(parser_params)
         query_fields, show_fields = self._get_fields(params)
         _id = ObjectId(params.get('handler'))
-        expr = {'$or': [{'test_import_handler._id': _id},
-                        {'train_import_handler._id': _id}]}
+        expr = {'$or': [{'test_import_handler.$id': _id},
+                        {'train_import_handler.$id': _id}]}
         models = self.Model.find(expr, query_fields)
         return self._render({"%ss" % self.OBJECT_NAME: models})
 
@@ -504,22 +492,19 @@ class Tests(BaseResource):
         if not test:
             raise NotFound('Test not found')
 
-        model = app.db.Model.find_one({'_id':
-                                           ObjectId(kwargs.get('model_id'))})
+        model = app.db.Model.find_one(
+            {'_id': ObjectId(kwargs.get('model_id'))})
         if not model:
             raise NotFound('Model not found')
 
         try:
-            result = calculate_confusion_matrix(test._id, args.get('weight0'),
-                                                args.get('weight1'))
+            calculate_confusion_matrix.delay(
+                str(test._id), args.get('weight0'), args.get('weight1'))
         except Exception as e:
-            return self._render({self.OBJECT_NAME: test._id,
+            return self._render({self.OBJECT_NAME: str(test._id),
                                  'error': e.message})
 
-        result = zip(model.labels, result)
-
-        return self._render({self.OBJECT_NAME: test._id,
-                             'confusion_matrix': result})
+        return self._render({self.OBJECT_NAME: str(test._id)})
 
     def _get_exports_action(self, **kwargs):
         test = self._get_details_query(None, None, **kwargs)
@@ -893,8 +878,6 @@ class AuthResource(BaseResource):
 
     @public
     def post(self, action=None, **kwargs):
-        from api.auth import AuthException
-
         if action == 'get_auth_url':
             auth_url, oauth_token, oauth_token_secret =\
                 app.db.User.get_auth_url()
@@ -904,7 +887,8 @@ class AuthResource(BaseResource):
                 'oauth_token': oauth_token,
                 'oauth_token_secret': oauth_token_secret,
             })
-
+            logging.debug(
+                "User Auth: oauth token %s added to mongo", oauth_token)
             return self._render({'auth_url': auth_url})
 
         if action == 'authenticate':
@@ -916,11 +900,14 @@ class AuthResource(BaseResource):
             oauth_token = params.get('oauth_token')
             oauth_verifier = params.get('oauth_verifier')
 
+            logging.debug(
+                "User Auth: trying to authenticate with token %s", oauth_token)
             # TODO: Use redis?
             auth = app.db['auth_tokens'].find_one({
                 'oauth_token': oauth_token
             })
             if not auth:
+                logging.error('User Auth: token %s not found', oauth_token)
                 return odesk_error_response(
                     500, 500,
                     'Wrong token: {0!s}'.format(oauth_token))
@@ -929,6 +916,8 @@ class AuthResource(BaseResource):
             auth_token, user = app.db.User.authenticate(
                 oauth_token, oauth_token_secret, oauth_verifier)
 
+            logging.debug(
+                'User Auth: Removing token %s from mongo', oauth_token)
             app.db['auth_tokens'].remove({'_id': auth['_id']})
 
             return self._render({
@@ -943,6 +932,7 @@ class AuthResource(BaseResource):
 
             return odesk_error_response(401, 401, 'Unauthorized')
 
+        logging.error('User Auth: invalid action %s', action)
         raise NotFound()
 
 api.add_resource(AuthResource, '/cloudml/auth/<regex("[\w\.]*"):action>',

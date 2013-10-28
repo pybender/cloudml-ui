@@ -106,6 +106,10 @@ class ModelMigration(DbMigration):  # pragma: no cover
         self.target = {'current_task_id': {'$exists': False}}
         self.update = {'$set': {'current_task_id': ''}}
 
+    def allmigration11__add_training_time(self):
+        self.target = {'training_time': {'$exists': False}}
+        self.update = {'$set': {'training_time': 0}}
+
 
 class TestMigration(DbMigration):  # pragma: no cover
     DOC_CLASS = models.Test
@@ -137,21 +141,25 @@ class TestMigration(DbMigration):  # pragma: no cover
         self.target = {'examples_fields': {'$exists': False}}
         self.update = {'$set': {'examples_fields': []}}
 
-    def allmigration07__add_examples_size(self):
+    def allmigration07__add_confusion_matrix_calculations(self):
+        self.target = {'confusion_matrix_calculations': {'$exists': False}}
+        self.update = {'$set': {'confusion_matrix_calculations': []}}
+
+    def allmigration08__add_examples_size(self):
         self.target = {'examples_size': {'$exists': False}}
-        self.update = {'$set': {'examples_size': []}}
+        self.update = {'$set': {'examples_size': 0}}
 
-    def allmigration08__fill_examples_size(self):
-        from api.utils import get_doc_size
-        for test in app.db.Test.find():
-            if not test.examples_size:
-                size = 0
-                examples = app.db.TestExample.find({'test_id': str(test._id)})
-                for example in examples:
-                    size += get_doc_size(example)
+    # def allmigration09__fill_examples_size(self):
+    #     from api.utils import get_doc_size
+    #     for test in app.db.Test.find():
+    #         if not test.examples_size:
+    #             size = 0
+    #             examples = app.db.TestExample.find({'test_id': str(test._id)})
+    #             for example in examples:
+    #                 size += get_doc_size(example)
 
-                test['examples_size'] = size / 1024 / 1024
-                test.save()
+    #             test['examples_size'] = size / 1024 / 1024
+    #             test.save()
 
 
 class DataSetMigration(DbMigration):  # pragma: no cover

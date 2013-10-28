@@ -109,7 +109,7 @@ updated_on,updated_by,comparable,test_handler_fields'
             $scope.params['tags'] = []
             for t in $scope.model.tags
               $scope.params['tags'].push {'id': t, 'text': t}
-        ), (->
+        ), ((opts)->
           $scope.setError(opts, 'loading model details')
         )
 
@@ -140,7 +140,7 @@ updated_on,feature_count,test_import_handler.name,
 train_import_handler.name,train_import_handler.import_params,tags,
 test_import_handler.import_params,train_import_handler._id,
 test_import_handler._id,memory_usage,created_by,trained_by,datasets,data_fields,
-train_records_count,test_handler_fields'
+train_records_count,test_handler_fields,training_time'
           when 'features' then extra_fields = 'features'
 
         if 'main' in $scope.LOADED_SECTIONS

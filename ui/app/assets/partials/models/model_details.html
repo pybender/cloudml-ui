@@ -151,6 +151,10 @@ editable-input="text" source="model.data_fields"></span>
             Memory used:
             <span class="value">{{ model.memory_usage.training }} Mb</span>
         </div>
+        <div ng-if="model.status == 'Trained'">
+            Training time:
+            <span class="value">{{ model.training_time|humanize_time }}</span>
+        </div>
         <div ng-show="model.created_by">
             Created by:
             <span class="value">{{ model.created_by.name }} ({{ model.created_by.uid }})</span>
