@@ -61,6 +61,9 @@
         <div>
             Memory used: <span class="value">{{ test.memory_usage.testing }} Mb</span>
         </div>
+        <div>
+            Examples Size: <span class="value">{{ test.examples_size }} Mb</span>
+        </div>
         <div ng-controller="TestExportsCtrl" ng-init="init(test)">
             <div ng-show="exports">
               <h4>CSV Exports</h4>

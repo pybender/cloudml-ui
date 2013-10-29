@@ -792,6 +792,7 @@ class Test(BaseDocument):
         'examples_count': int,
         'examples_placement': basestring,
         'examples_fields': list,
+        'examples_size': int,
 
         'parameters': dict,
         'classes_set': list,
@@ -816,6 +817,7 @@ class Test(BaseDocument):
         'memory_usage': {},
         'exports': [],
         'created_by': {},
+        'examples_size': 0,
         'confusion_matrix_calculations': [],
     }
     use_dot_notation = True
@@ -1067,17 +1069,19 @@ class User(BaseDocument):
 
     @classmethod
     def authenticate(cls, oauth_token, oauth_token_secret, oauth_verifier):
+        logging.debug('User Auth: try to authenticate with token %s', oauth_token)
         from auth import OdeskAuth
         auth = OdeskAuth()
         _oauth_token, _oauth_token_secret = auth.authenticate(
             oauth_token, oauth_token_secret, oauth_verifier)
         info = auth.get_my_info(_oauth_token, _oauth_token_secret,
                                 oauth_verifier)
-
+        logging.info('User Auth: authenticating user %s', info['auth_user']['uid'])
         user = app.db.User.find_one({'uid': info['auth_user']['uid']})
         if not user:
             user = app.db.User()
             user.uid = info['auth_user']['uid']
+            logging.debug('User Auth: new user %s added', user.uid)
 
         import uuid
         auth_token = str(uuid.uuid1())
