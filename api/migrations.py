@@ -125,7 +125,7 @@ class ModelMigration(DbMigration):  # pragma: no cover
     def allmigration15__fill_features(self):
          model_list = app.db.Model.find()
          for model in model_list:
-            if not model['features'] or not model.features_set_id is None:
+            if not model['features']:
                 continue
 
             features_set = app.db.FeatureSet.from_model_features_dict(model.name, model.features)
@@ -270,11 +270,3 @@ class TestExampleMigration(DbMigration):  # pragma: no cover
     def allmigration01__add_on_s3(self):
         self.target = {'on_s3': {'$exists': False}}
         self.update = {'$set': {'on_s3': False}}
-
-
-class ClassifierMigration(DbMigration):  # pragma: no cover
-    DOC_CLASS = models.Classifier
-
-    def allmigration01__add_is_predefined(self):
-        self.target = {'is_predefined': {'$exists': False}}
-        self.update = {'$set': {'is_predefined': False}}
