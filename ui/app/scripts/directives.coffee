@@ -431,33 +431,24 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
   }
 )
 
-# TODO: generalize, add possibility to edit composite type
-.directive('jsonEditor', ['$compile', '$filter', ($compile, $filter) ->
+.directive('parametersEditor', ['$compile', ($compile) ->
   return {
     restrict: 'E',
-    scope: {
-      item: '=',
-      config: '=',
-      requiredParams: '='
-    },
-    link: (scope, element, attributes, ctrl) ->
+    require: '?ngModel',
+    link: (scope, element, attributes, ngModel) ->
       TYPE_STRING = 'str'
       TYPE_OBJECT = 'dict'
-      TYPE_ARRAY = 'list'
+      TYPE_TEXT = 'text'
 
-      getType = (value) ->
-        if _.isArray(value)
-          return TYPE_ARRAY
-        else if _.isObject(value)
-          return TYPE_OBJECT
-        else
-          return TYPE_STRING
-
-      cleanJson = (obj) ->
-        return JSON.parse($filter('json')(obj))
-
-      scope.getType = (obj) ->
-        return getType(obj)
+      scope.getType = (key, value) ->
+        if scope.isTopLevel() && scope.paramsConfig
+          _conf = scope.paramsConfig[key]
+          if _conf
+            _type = _conf.type
+          else
+            _type = TYPE_STRING
+          return _type or TYPE_STRING
+        return TYPE_STRING
 
       scope.toggleCollapse = () ->
         if (scope.collapsed)
@@ -475,55 +466,31 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
         if scope.isRequired(key)
           alert("Can't delete required parameter")
           return
-        if (getType(obj) == TYPE_OBJECT)
-          if(confirm('Delete "'+key+'" ?'))
+        if(confirm('Delete "'+key+'" ?'))
             delete obj[key]
-        else if (getType(obj) == TYPE_ARRAY)
-          if(confirm('Delete "'+obj[key]+'"?'))
-            obj.splice(key, 1)
-        else
-          console.error("object to delete from was " + obj)
 
       scope.addItem = (obj) ->
-        _getValue = () ->
-          switch scope.valueType
-            when TYPE_STRING
-              if scope.valueName then scope.valueName
-              else ""
-            when TYPE_OBJECT then {}
-            when TYPE_ARRAY then []
-            else "ERROR"
+        # check input for key
+        if (scope.keyName == undefined || scope.keyName.length == 0)
+          alert("Please fill in a name")
+        else if (scope.keyName.indexOf("$") == 0)
+          alert("The name may not start with $ (the dollar sign)")
+        else if (scope.keyName.indexOf("_") == 0)
+          alert("The name may not start with _ (the underscore)")
+        else
+          if (obj[scope.keyName])
+            if(!confirm('Parameter is already set'))
+              return
 
-        if (getType(obj) == TYPE_OBJECT)
-          # check input for key
-          if (scope.keyName == undefined || scope.keyName.length == 0)
-            alert("Please fill in a name")
-          else if (scope.keyName.indexOf("$") == 0)
-            alert("The name may not start with $ (the dollar sign)")
-          else if (scope.keyName.indexOf("_") == 0)
-            alert("The name may not start with _ (the underscore)")
-          else
-            if (obj[scope.keyName])
-              if(!confirm('Parameter is already set'))
-                return
+          # add paramsEditorData to object
+          _val = ""
+          if scope.valueName then _val = scope.valueName
+          obj[scope.keyName] = _val
 
-            # add item to object
-            obj[scope.keyName] = _getValue()
-
-            # clean-up
-            scope.keyName = ""
-            scope.valueName = ""
-            scope.showAddKey = false
-
-        else if (getType(obj) == TYPE_ARRAY)
-          # add item to array
-          obj.push _getValue()
-
+          # clean-up
+          scope.keyName = ""
           scope.valueName = ""
           scope.showAddKey = false
-
-        else
-          console.error("object to add to was " + obj)
 
       scope.isRequired = (key) ->
         if scope.requiredParams
@@ -532,29 +499,31 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
           false
 
       scope.isTopLevel = () ->
-        scope.requiredParams?
+        _.indexOf(_(attributes).keys(), 'inner') < 0
 
       scope.isEmpty = () ->
-        scope.isTopLevel() && _.isEmpty(scope.item)
+        scope.isTopLevel() && _.isEmpty(scope.paramsEditorData)
 
-      scope.valueTypes = for name, config of scope.config
-        {name: name, type: config.type, help_text: config.help_text}
-
-      scope.type = getType(scope.item)
+      if scope.isTopLevel()
+        scope.type = TYPE_OBJECT
 
       # Template Generation
       # recursion
       switchTemplate =
-        '<span ng-switch on="getType(item[key])" >
-        <json-editor ng-switch-when="dict" item="item[key]"
-          config="config" required-params="">
-        </json-editor>
-        <json-editor ng-switch-when="list" item="item[key]"
-           config="config" required-params="">
-        </json-editor>
+        '<span ng-switch on="getType(key, paramsEditorData[key])" >
+        <div ng-switch-when="dict">
+        <parameters-editor ng-model="$parent.paramsEditorData[key]"
+          inner="">
+        </parameters-editor>
+        </div>
+        <span ng-switch-when="text" class="jsonLiteral">
+          <textarea ng-model="paramsEditorData[key]" ng-model-onblur
+            ui-codemirror="{ mode: {name: \'javascript\', json: true} }">
+          </textarea>
+        </span>
         <span ng-switch-default class="jsonLiteral">
-        <input type="text" ng-model="item[key]" ng-model-onblur
-          placeholder="Empty" />
+          <input type="text" ng-model="paramsEditorData[key]" ng-model-onblur
+            placeholder="Empty" />
         </span>
         </span>'
 
@@ -562,83 +531,88 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
       addItemTemplate =
         '<div ng-switch on="showAddKey" class="block"
           ng-init="valueType=\'' + TYPE_STRING + '\'">
-          <span ng-switch-when="true">'
-
-      if (scope.type == TYPE_OBJECT)
-        addItemTemplate += '<input placeholder="Name" type="text"
-          class="input-small addItemKeyInput"
-          ng-model="$parent.keyName" />'
-
-#      <select ng-model="$parent.valueType"
-#        ng-options="option.type as option.name for option in valueTypes"
-#        ng-init="$parent.valueType=\'' + TYPE_STRING + '\'">
-#      </select>
-
-      addItemTemplate += ' <span> :
-        <input type="text" placeholder="Value"
-          class="input-medium addItemValueInput"
-          ng-model="$parent.valueName" />
-      </span>
-      <button class="btn btn-primary" ng-click="addItem(item)">Add</button>
-      <button class="btn" ng-click="$parent.showAddKey=false">Cancel</button>
-      </span>
-      <span ng-switch-default>
-        <button class="addObjectItemBtn" ng-click="$parent.showAddKey = true">
-          <i class="icon-plus"></i></button>
-      </span>
-      </div>'
-
-      # start template
-      if scope.type == TYPE_OBJECT
-        template = '<i ng-click="toggleCollapse()" ng-class="chevron"
-          ng-show="false"
-          ng-init="chevron = \'icon-chevron-down\'"></i>
-        <div ng-show="isEmpty()">
-          There are no parameters to edit</div>
-        <div class="jsonContents" ng-hide="collapsed">
-        <span class="block" ng-hide="key.indexOf(\'_\') == 0"
-          ng-repeat="(key, value) in item">
-          <span class="jsonObjectKey">
-            <input ng-disabled="isRequired(key)" class="keyinput"
-              type="text"
-              ng-model="newkey"
-              ng-init="newkey=key"
-              ng-change="moveKey(item, key, newkey)"/>
-            <i ng-hide="isRequired(key)"
-              class="deleteKeyBtn icon-trash"
-              ng-click="deleteKey(item, key)">
-            </i>
+          <span ng-switch-when="true">
+            <input placeholder="Name" type="text"
+              class="input-small addItemKeyInput"
+              ng-model="$parent.keyName" />
+            <span> :
+              <input type="text" placeholder="Value"
+                class="input-medium addItemValueInput"
+                ng-model="$parent.valueName" />
+            </span>
+            <button class="btn btn-primary"
+              ng-click="addItem(paramsEditorData)">
+                Add
+            </button>
+            <button class="btn" ng-click="$parent.showAddKey=false">
+              Cancel
+            </button>
           </span>
-          <span class="jsonObjectValue">&nbsp;:&nbsp;
-          ' + switchTemplate + '</span>
-          <i ng-show="isRequired(key)" class="badge">
-            {{ config[key].help_text }}
-          </i>
-          </span><div ng-hide="isTopLevel()">' + addItemTemplate + '</div>
+          <span ng-switch-default>
+            <button class="addObjectItemBtn"
+              ng-click="$parent.showAddKey = true">
+              <i class="icon-plus"></i></button>
+            </span>
         </div>'
 
-      else if scope.type == TYPE_ARRAY
-        template = '<i ng-click="toggleCollapse()" ng-class="chevron"
-          ng-show="false"
-          ng-init="chevron = \'icon-chevron-down\'">
+      # start template
+      template = '
+      <div ng-show="isEmpty()">
+        There are no parameters to edit
+      </div>
+      <div class="jsonContents">
+      <span class="block" ng-hide="key.indexOf(\'_\') == 0"
+        ng-repeat="(key, value) in paramsEditorData">
+        <span class="jsonObjectKey">
+          <input ng-disabled="isRequired(key)" class="keyinput"
+            type="text"
+            ng-model="newkey"
+            ng-init="newkey=key"
+            ng-change="moveKey(paramsEditorData, key, newkey)"/>
+          <i ng-hide="isRequired(key)"
+            class="deleteKeyBtn icon-trash"
+            ng-click="deleteKey(paramsEditorData, key)">
+          </i>
+        </span>
+        <span class="jsonObjectValue">&nbsp;:&nbsp;
+        ' + switchTemplate + '</span>
+        <i ng-show="isRequired(key)" class="badge">
+          {{ paramsConfig[key].help_text }}
         </i>
-        <div class="jsonContents" ng-hide="collapsed">
-          <ol class="arrayOl" ng-model="item">
-            <li class="arrayItem" ng-repeat="val in item" ng-init="key=$index">
-              <i class="deleteKeyBtn icon-trash"
-                ng-click="deleteKey(item, $index)">
-              </i>
-              <span>' + switchTemplate + '</span>
-            </li>
-          </ol>' + addItemTemplate + '</div>'
+        </span><div ng-hide="isTopLevel()">' + addItemTemplate + '</div>
+      </div>'
 
-      else
-        console.log scope.type
-#        throw new Error("Wrong object type")
+      render = () ->
+        newElement = angular.element(template)
+        $compile(newElement)(scope)
+        element.html(newElement)
 
-      newElement = angular.element(template)
-      $compile(newElement)(scope)
-      element.replaceWith(newElement)
+      ngModel.$render = () ->
+        scope.paramsEditorData = ngModel.$viewValue
+        render()
+
+      scope.$watch 'paramsConfig', (newValue, oldValue) ->
+        render()
+
+      scope.$watch 'requiredParams', (newValue, oldValue) ->
+        render()
+
+      validate = () ->
+        # TODO: Validate parameters
+        console.log 'Parameters is being validated...'
+
+        errs = []
+
+        for key in scope.paramsEditorData
+          val = scope.paramsEditorData[key]
+          if val == ''
+            errs.push key
+
+        ngModel.$setValidity('params', errs.length <= 0)
+
+      scope.$watch 'paramsEditorData', (newValue, oldValue) ->
+        validate()
+      , true
   }
 ])
 

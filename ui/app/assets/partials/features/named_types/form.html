@@ -25,7 +25,9 @@
     <div class="control-group" ng-class="{error: Form.params.$invalid}">
       <label class="control-label">Parameters</label>
       <div class="controls">
-        <textarea type="text" name="params"  ng-model="model.params" />
+        <div class="jsonView">
+            <parameters-editor ng-model="model.paramsDict"></parameters-editor>
+        </div>
         <span ng-show="Form.params.$error.required" class="help-inline">*</span>
       </div>
     </div>

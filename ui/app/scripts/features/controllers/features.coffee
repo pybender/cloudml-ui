@@ -13,9 +13,10 @@ angular.module('app.features.controllers.features', ['app.config', ])
   'Model'
   'Feature'
   'Transformer'
-  '$filter'
+  'Parameters'
 
-($scope, $routeParams, $location, Model, Feature, Transformer, $filter) ->
+($scope, $routeParams, $location, Model, Feature, Transformer,
+ Parameters) ->
   if not $routeParams.model_id then throw new Error "Specify model id"
   if not $routeParams.set_id then throw new Error "Specify set id"
 
@@ -26,20 +27,22 @@ angular.module('app.features.controllers.features', ['app.config', ])
     scaler: {}
   })
   $scope.config = {}
-  $scope.feature_params = {}
-  $scope.params_config = {}
-  $scope.required_params = []
+  $scope.paramsConfig = {}
+  $scope.requiredParams = []
 
   if $routeParams.feature_id
     $scope.feature._id = $routeParams.feature_id
     $scope.feature.$load(show: Feature.MAIN_FIELDS
     ).then ((opts) ->
-      $scope.loadFeatureParameters()),
-      ((opts)-> $scope.setError(opts, 'loading feature details'))
+      $scope.loadFeatureParameters()
+    ), ((opts)->
+      $scope.setError(opts, 'loading feature details')
+    )
 
-  $scope.feature.$getConfiguration().then ((opts)->
+  $scope.params = new Parameters()
+  $scope.params.$load().then ((opts)->
       $scope.configuration = opts.data.configuration
-      $scope.params_config = $scope.configuration.params
+      $scope.paramsConfig = $scope.configuration.params
       $scope.loadFeatureParameters()
     ), ((opts)->
       $scope.setError(opts, 'loading types and parameters')
@@ -59,22 +62,20 @@ angular.module('app.features.controllers.features', ['app.config', ])
     $scope.config = config
     _defaults = []
     for name in config.required_params
-      type = $scope.params_config[name].type
+      type = $scope.paramsConfig[name].type
       if type == 'dict'
         _defaults.push({})
-      else if type == 'list'
-        _defaults.push([])
+      else if type == 'text'
+        _defaults.push('')
       else
         _defaults.push('')
-#    $scope.feature.params = _.object(config.required_params, _defaults)
-    if not $scope.feature.params
-      $scope.feature.params = {}
-    $scope.feature.params = _.extend(
+    if not $scope.feature.paramsDict
+      $scope.feature.paramsDict = {}
+    $scope.feature.paramsDict = _.extend(
       _.object(config.required_params, _defaults),
-      _.pick($scope.feature.params, config.required_params)
+      _.pick($scope.feature.paramsDict, config.required_params)
     )
-    $scope.required_params = config.required_params
-    $scope.feature_params = _.clone($scope.feature.params)
+    $scope.requiredParams = config.required_params
 
   $scope.$watch('feature.type', (type) ->
     $scope.loadFeatureParameters()
@@ -85,10 +86,6 @@ angular.module('app.features.controllers.features', ['app.config', ])
     # Note: We need to delete transformer or scaler when
     # transformer/scaler fields selected, when edditing
     # feature in full details page.
-
-    # Save parameters
-    # TODO: clean JSON inside the control
-    $scope.feature.params = JSON.parse($filter('json')($scope.feature_params))
 
     is_edit = $scope.feature._id != null
     $scope.saving = true

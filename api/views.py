@@ -1155,13 +1155,23 @@ class FeatureResource(BaseResource):
     DEFAULT_FIELDS = [u'_id', 'name']
     post_form = FeatureForm
     put_form = FeatureForm
-    GET_ACTIONS = ('configuration', )
 
     @property
     def Model(self):
         return app.db.Feature
 
-    def _get_configuration_action(self, **kwargs):
+api.add_resource(FeatureResource, '/cloudml/features/<regex("[\w\.]*"):features_set_id>/items/')
+
+
+class ParamsResource(BaseResource):
+    """
+    Parameters API methods
+    """
+    @property
+    def Model(self):
+        raise Exception('Invalid operation')
+
+    def get(self, *args, **kwargs):
         from core.trainer.feature_types import FEATURE_TYPE_FACTORIES
         from core.trainer.feature_types import FEATURE_TYPE_DEFAULTS
         from core.trainer.feature_types import FEATURE_PARAMS_TYPES
@@ -1177,7 +1187,7 @@ class FeatureResource(BaseResource):
         }
         return self._render({'configuration': _conf})
 
-api.add_resource(FeatureResource, '/cloudml/features/<regex("[\w\.]*"):features_set_id>/items/')
+api.add_resource(ParamsResource, '/cloudml/features/params/')
 
 
 def populate_parser(model, is_requred=False):
