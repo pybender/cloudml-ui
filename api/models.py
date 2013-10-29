@@ -525,8 +525,10 @@ class FeatureSet(BaseDocument):
             extra_fields={'name': name},
             add_new=True)
 
-        for feature_type in features_dict['feature-types']:
-            app.db.NamedFeatureType.from_dict(feature_type)
+        type_list = features_dict.get('feature-types', None)
+        if type_list:
+            for feature_type in type_list:
+                app.db.NamedFeatureType.from_dict(feature_type)
 
         _id = features_set._id
         for feature_dict in features_dict['features']:
