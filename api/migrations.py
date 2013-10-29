@@ -122,9 +122,18 @@ class ModelMigration(DbMigration):  # pragma: no cover
         self.target = {'classifier': {'$exists': False}}
         self.update = {'$set': {'classifier': None}}
 
-    def allmigration15__fill_features(self):
-         model_list = app.db.Model.find()
-         for model in model_list:
+    def allmigration15_remove_positive_weights(self):
+        self.target = {'positive_weights': {'$exists': True}}
+        self.update = {'$unset': {'positive_weights': 1}}
+
+    def allmigration16_remove_negative_weights(self):
+        self.target = {'negative_weights': {'$exists': True}}
+        self.update = {'$unset': {'negative_weights': 1}}
+
+    def allmigration17__fill_features(self):
+        self.target = {'classifier': {'$size': 0}}
+        model_list = app.db.Model.find()
+        for model in model_list:
             if not model['features']:
                 continue
 
