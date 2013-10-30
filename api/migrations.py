@@ -145,6 +145,22 @@ class TestMigration(DbMigration):  # pragma: no cover
         self.target = {'confusion_matrix_calculations': {'$exists': False}}
         self.update = {'$set': {'confusion_matrix_calculations': []}}
 
+    def allmigration08__add_examples_size(self):
+        self.target = {'examples_size': {'$exists': False}}
+        self.update = {'$set': {'examples_size': 0}}
+
+    # def allmigration09__fill_examples_size(self):
+    #     from api.utils import get_doc_size
+    #     for test in app.db.Test.find():
+    #         if not test.examples_size:
+    #             size = 0
+    #             examples = app.db.TestExample.find({'test_id': str(test._id)})
+    #             for example in examples:
+    #                 size += get_doc_size(example)
+
+    #             test['examples_size'] = size / 1024 / 1024
+    #             test.save()
+
 
 class DataSetMigration(DbMigration):  # pragma: no cover
     DOC_CLASS = models.DataSet

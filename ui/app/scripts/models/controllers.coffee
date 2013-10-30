@@ -109,7 +109,7 @@ updated_on,updated_by,comparable,test_handler_fields'
             $scope.params['tags'] = []
             for t in $scope.model.tags
               $scope.params['tags'].push {'id': t, 'text': t}
-        ), (->
+        ), ((opts)->
           $scope.setError(opts, 'loading model details')
         )
 

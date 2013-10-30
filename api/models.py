@@ -141,6 +141,19 @@ class ImportHandler(BaseDocument):
                       'updated_by': {}}
     use_dot_notation = True
 
+    def get_fields(self):
+        from core.importhandler.importhandler import ExtractionPlan
+        data = json.dumps(self.data)
+        plan = ExtractionPlan(data, is_file=False)
+        test_handler_fields = []
+        for query in plan.queries:
+            items = query['items']
+            for item in items:
+                features = item['target-features']
+                for feature in features:
+                    test_handler_fields.append(feature['name'].replace('.', '->'))
+        return test_handler_fields
+
     def create_dataset(self, params, run_import_data=True):
         #from api.utils import slugify
         dataset = app.db.DataSet()
@@ -167,7 +180,7 @@ class ImportHandler(BaseDocument):
 
         def unset(model, handler_type='train'):
             handler = getattr(model, '%s_import_handler' % handler_type)
-            if handler['_id'] == self._id:
+            if handler and handler['_id'] == self._id:
                 setattr(model, '%s_import_handler' % handler_type, None)
                 model.changed = True
 
@@ -554,6 +567,7 @@ class Test(BaseDocument):
         'examples_count': int,
         'examples_placement': basestring,
         'examples_fields': list,
+        'examples_size': int,
 
         'parameters': dict,
         'classes_set': list,
@@ -578,6 +592,7 @@ class Test(BaseDocument):
         'memory_usage': {},
         'exports': [],
         'created_by': {},
+        'examples_size': 0,
         'confusion_matrix_calculations': [],
     }
     use_dot_notation = True
@@ -828,17 +843,19 @@ class User(BaseDocument):
 
     @classmethod
     def authenticate(cls, oauth_token, oauth_token_secret, oauth_verifier):
+        logging.debug('User Auth: try to authenticate with token %s', oauth_token)
         from auth import OdeskAuth
         auth = OdeskAuth()
         _oauth_token, _oauth_token_secret = auth.authenticate(
             oauth_token, oauth_token_secret, oauth_verifier)
         info = auth.get_my_info(_oauth_token, _oauth_token_secret,
                                 oauth_verifier)
-
+        logging.info('User Auth: authenticating user %s', info['auth_user']['uid'])
         user = app.db.User.find_one({'uid': info['auth_user']['uid']})
         if not user:
             user = app.db.User()
             user.uid = info['auth_user']['uid']
+            logging.debug('User Auth: new user %s added', user.uid)
 
         import uuid
         auth_token = str(uuid.uuid1())

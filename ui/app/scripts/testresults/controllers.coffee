@@ -155,7 +155,7 @@ without test id and model id"
         when 'about'
           extra_fields = 'classes_set,created_on,parameters,error,
 examples_count,dataset,memory_usage,created_by,examples_placement,
-examples_fields'
+examples_fields,examples_size'
         when 'metrics'
           extra_fields = 'accuracy,metrics.precision_recall_curve,
 metrics.roc_curve,metrics.roc_auc'
@@ -172,7 +172,8 @@ confusion_matrix_calculations'
         if extra_fields != ''
           $scope.load(extra_fields, name, cb)
       else
-        $scope.load(extra_fields + ',' + Test.MAIN_FIELDS, name, cb)
+        show = extra_fields + ',examples_placement,' + Test.MAIN_FIELDS
+        $scope.load(show, name, cb)
         $scope.LOADED_SECTIONS.push 'main'
 
   $scope.downloadCsvResults = () ->
