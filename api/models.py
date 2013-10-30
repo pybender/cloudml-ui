@@ -567,7 +567,7 @@ class Test(BaseDocument):
         'examples_count': int,
         'examples_placement': basestring,
         'examples_fields': list,
-        'examples_size': long,
+        'examples_size': float,
 
         'parameters': dict,
         'classes_set': list,
