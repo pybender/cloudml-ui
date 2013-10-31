@@ -482,7 +482,7 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
             if(!confirm('Parameter is already set'))
               return
 
-          # add paramsEditorData to object
+          # add a new item to object
           _val = ""
           if scope.valueName then _val = scope.valueName
           obj[scope.keyName] = _val
@@ -493,7 +493,7 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
           scope.showAddKey = false
 
       scope.isRequired = (key) ->
-        if scope.requiredParams
+        if scope.requiredParams && scope.isTopLevel()
           _.indexOf(scope.requiredParams, key) > -1
         else
           false
@@ -518,8 +518,9 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
         </div>
         <span ng-switch-when="text" class="jsonLiteral">
           <textarea name="params" ng-model="paramsEditorData[key]"
-            ng-model-onblur
-            ui-codemirror="{ mode: {name: \'javascript\', json: true} }">
+            class="span5"
+            rows="3"
+            ng-model-onblur>
           </textarea>
         </span>
         <span ng-switch-default class="jsonLiteral">
@@ -583,11 +584,23 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
         </span><div ng-hide="isTopLevel()">' + addItemTemplate + '</div>
       </div>'
 
+      ngModel.$formatters.unshift((viewValue) ->
+        if _.isObject(viewValue)
+          for key of viewValue
+            conf = scope.paramsConfig[key]
+            if not conf then continue
+            # Covert "chain" parameter to text
+            if conf.type == TYPE_TEXT && _.isObject(viewValue[key])
+              viewValue[key] = angular.toJson(viewValue[key])
+        return viewValue
+      )
+
       render = () ->
         newElement = angular.element(template)
         $compile(newElement)(scope)
         element.html(newElement)
-        scope.validate()
+        if scope.isTopLevel()
+          scope.validate()
 
       ngModel.$render = () ->
         scope.paramsEditorData = ngModel.$viewValue
