@@ -47,9 +47,6 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
             $scope.LOADED_SECTIONS.push name
           , 100)
 
-    $scope.prepareDownload = () ->
-      console.log "prep"
-
     $scope.save = (fields) ->
       $scope.handler.$save(only: fields)
       .then (->), ((opts) ->
@@ -81,6 +78,19 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
           it = items[i]
           if it.num == index
             items.splice(index, 1)
+            break
+          else
+            it.num -= 1
+      )
+
+    $scope.deleteFeature = (features, feature) ->
+      index = features.indexOf(feature)
+      feature.$remove().then(()->
+        # Reorganize indexes
+        for i in [features.length - 1..0] by -1
+          it = features[i]
+          if it.num == index
+            features.splice(index, 1)
             break
           else
             it.num -= 1

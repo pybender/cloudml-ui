@@ -75,7 +75,7 @@ angular.module('app.importhandlers.model', ['app.config'])
                   'handler': @handler,
                   'num': i,
                   'query_num': @query_num,
-                  'item_num': @item_num})
+                  'item_num': @num})
               i += 1
 
       getJsonData: () =>

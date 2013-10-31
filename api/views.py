@@ -432,6 +432,13 @@ class ImportHandlerResource(BaseResource):
             if num is None:
                 raise ValidationError('num is required')
             del obj['queries'][num]
+        elif 'remove_feature' in data:
+            num = int(data.get('num', None))
+            query_num = int(data.get('query_num', None))
+            item_num = int(data.get('item_num', None))
+            if num is None:
+                raise ValidationError('num is required')
+            del obj['queries'][num]['items'][item_num]['target_features'][num]
         elif 'fill_predefined' in data:
             num = int(data.get('num', None))
             datasource_id = data.get('datasource', None)
