@@ -1,34 +1,32 @@
-  <form name="Form" class="form-horizontal">
-    <div class="control-group" ng-class="{error: Form.name.$invalid}">
-      <label class="control-label">Name</label>
-      <div class="controls">
-        <input type="text" name="name" ng-model="model.name" required />
-        <span ng-show="Form.name.$error.required" class="help-inline">*</span>
-      </div>
+<div class="control-group" ng-class="{error: Form.name.$invalid}">
+  <label class="control-label">Name</label>
+  <div class="controls">
+    <input type="text" name="name" ng-model="model.name" required />
+    <span ng-show="Form.name.$error.required" class="help-inline">*</span>
+  </div>
+</div>
+<div class="control-group" ng-class="{error: Form.type.$invalid}">
+  <label class="control-label">Type</label>
+  <div class="controls" ng-controller="NamedFeatureTypesSelectsLoader">
+    <select name="type" ng-model="model.type" required>
+      <option ng-selected="model.type == typeName" ng-repeat="typeName in TYPES_LIST" value="{{ typeName }}">{{ typeName }}</option>
+    </select>
+    <span ng-show="Form.type.$error.required" class="help-inline">*</span>
+  </div>
+</div>
+<div class="control-group" ng-class="{error: Form.input_format.$invalid}">
+  <label class="control-label">Input Format</label>
+  <div class="controls">
+    <input type="text" name="input_format" ng-model="model.input_format" />
+    <span ng-show="Form.input_format.$error.required" class="help-inline">*</span>
+  </div>
+</div>
+<div class="control-group" ng-class="{error: Form.params.$invalid}">
+  <label class="control-label">Parameters</label>
+  <div class="controls">
+    <div class="jsonView">
+        <parameters-editor ng-model="model.paramsDict" name="params"></parameters-editor>
     </div>
-    <div class="control-group" ng-class="{error: Form.type.$invalid}">
-      <label class="control-label">Type</label>
-      <div class="controls" ng-controller="NamedFeatureTypesSelectsLoader">
-        <select name="type" ng-model="model.type" required>
-          <option ng-selected="model.type == typeName" ng-repeat="typeName in TYPES_LIST" value="{{ typeName }}">{{ typeName }}</option>
-        </select>
-        <span ng-show="Form.type.$error.required" class="help-inline">*</span>
-      </div>
-    </div>
-    <div class="control-group" ng-class="{error: Form.input_format.$invalid}">
-      <label class="control-label">Input Format</label>
-      <div class="controls">
-        <input type="text" name="input_format" ng-model="model.input_format" />
-        <span ng-show="Form.input_format.$error.required" class="help-inline">*</span>
-      </div>
-    </div>
-    <div class="control-group" ng-class="{error: Form.params.$invalid}">
-      <label class="control-label">Parameters</label>
-      <div class="controls">
-        <div class="jsonView">
-            <parameters-editor ng-model="model.paramsDict"></parameters-editor>
-        </div>
-        <span ng-show="Form.params.$error.required" class="help-inline">*</span>
-      </div>
-    </div>
-  </form>
+    <span ng-show="Form.params.$error.required" class="help-inline">*</span>
+  </div>
+</div>

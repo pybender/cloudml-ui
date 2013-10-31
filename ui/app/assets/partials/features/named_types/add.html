@@ -5,6 +5,8 @@
         <h3>Add new named feature type</h3>
       </div>
 
+      <form name="Form" class="form-vertical">
+
       <div class="modal-body">
         <loadindicator title="Adding named feature type..." ng-show="saving" progress="savingProgress"></loadindicator>
 
@@ -16,5 +18,7 @@
       <div class="modal-footer">
         <button ng-click="save(['name', 'type', 'input_format', 'params'])" ng-disabled="Form.$invalid" class="btn btn-primary">Add new named type</button> <small>and start using it in features</small>
       </div>
+
+      </form>
   </div>
 </div>

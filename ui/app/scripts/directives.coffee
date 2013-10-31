@@ -517,7 +517,8 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
         </parameters-editor>
         </div>
         <span ng-switch-when="text" class="jsonLiteral">
-          <textarea ng-model="paramsEditorData[key]" ng-model-onblur
+          <textarea name="params" ng-model="paramsEditorData[key]"
+            ng-model-onblur
             ui-codemirror="{ mode: {name: \'javascript\', json: true} }">
           </textarea>
         </span>
@@ -586,6 +587,7 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
         newElement = angular.element(template)
         $compile(newElement)(scope)
         element.html(newElement)
+        scope.validate()
 
       ngModel.$render = () ->
         scope.paramsEditorData = ngModel.$viewValue
@@ -597,22 +599,50 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
       scope.$watch 'requiredParams', (newValue, oldValue) ->
         render()
 
-      validate = () ->
-        # TODO: Validate parameters
-        console.log 'Parameters is being validated...'
+      _validateStrParam = (key, data) ->
+        return data != ''
 
+      _validateObjectParam = (name, data) ->
+        # Hack: remove $$hashKey added by angular
+        data = angular.fromJson(angular.toJson(data))
+        if _.isEmpty(data) then return false
+        else
+          for key of data
+            if data[key] == '' then return false
+        return true
+
+      _validateJsonParam = (key, data) ->
+        if data == ''
+          return false
+        try
+          jQuery.parseJSON(data)
+          return true
+        catch e
+          return false
+
+      VALIDATORS = {}
+      VALIDATORS[TYPE_STRING] = _validateStrParam
+      VALIDATORS[TYPE_OBJECT] = _validateObjectParam
+      VALIDATORS[TYPE_TEXT] = _validateJsonParam
+
+      scope.validate = () ->
+        if !scope.paramsEditorData then return
         errs = []
 
-        for key in scope.paramsEditorData
-          val = scope.paramsEditorData[key]
-          if val == ''
-            errs.push key
+        for key of scope.paramsEditorData
+          data = scope.paramsEditorData[key]
+          conf = scope.paramsConfig[key]
+          if not conf then return
+          validator = VALIDATORS[conf.type]
+          if !validator(key, data)
+              errs.push key
 
         ngModel.$setValidity('params', errs.length <= 0)
 
-      scope.$watch 'paramsEditorData', (newValue, oldValue) ->
-        validate()
-      , true
+      if scope.isTopLevel()
+        scope.$watch 'paramsEditorData', (newValue, oldValue) ->
+          scope.validate()
+        , true
   }
 ])
 
