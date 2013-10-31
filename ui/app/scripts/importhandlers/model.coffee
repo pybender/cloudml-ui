@@ -1,13 +1,59 @@
 angular.module('app.importhandlers.model', ['app.config'])
 
-.factory('Item', [
+.factory('TargetFeature', [
   '$http'
   '$q'
   'settings'
   'BaseModel'
   
   ($http, $q, settings, BaseModel) ->
+    class TargetFeature  extends BaseModel
+      DATA_FIELDS: ['name', 'jsonpath', 'to_csv', 'key_path',
+      'value_path']
+      name: null
+      jsonpath: null
+      to_csv: null
+      key_path: null
+      value_path: null
+
+      handler: null
+      item_num: null
+      query_num: null
+      num: null
+
+      $save: (opts={}) =>
+        prefix = 'queries.' + @query_num + '.items.'
+        + @item_num + '.' + @num + '.'
+
+        if !opts.only?
+          opts.only = @DATA_FIELDS
+        data = {}
+        for key in opts.only
+          data[prefix + key] = eval('this.' + key)
+        @$make_request(@handler.getUrl(), {}, "PUT", data)
+
+      $remove: () ->
+        data = {
+          'remove_feature': 1
+          'num': @num
+          'item_num': @item_num
+          'query_num': @query_num}
+        @$make_request(@handler.getUrl(), {}, "PUT", data)
+
+    return TargetFeature
+])
+
+
+.factory('Item', [
+  '$http'
+  '$q'
+  'settings'
+  'BaseModel'
+  'TargetFeature'
+  
+  ($http, $q, settings, BaseModel, TargetFeature) ->
     class Item  extends BaseModel
+      DATA_FIELDS: ['source', 'process_as', 'is_required']
       source: null
       target_features: []
       process_as: null
@@ -17,13 +63,26 @@ angular.module('app.importhandlers.model', ['app.config'])
       query_num: null
       num: null
 
+      loadFromJSON: (origData) =>
+        super origData
+        if origData?
+          i = 0
+          if origData.target_features?
+            @target_features = []
+            for queryData in origData.target_features
+              @target_features.push new TargetFeature(
+                _.extend queryData, {
+                  'handler': @handler,
+                  'num': i,
+                  'query_num': @query_num,
+                  'item_num': @item_num})
+              i += 1
+
       getJsonData: () =>
-        data = {
-          'source': @source,
-          'process_as': @process_as,
-          'is_required': @is_required,
-          'target_features': @target_features
-        }
+        data = super()
+        data['target_features'] = []
+        for feature in @target_features
+          data['target_features'].push feature.getJsonData()
         return data
 
       $save: (opts={}) =>
@@ -51,6 +110,7 @@ angular.module('app.importhandlers.model', ['app.config'])
   
   ($http, $q, settings, BaseModel, Item) ->
     class Query  extends BaseModel
+      DATA_FIELDS: ['name', 'sql']
       name: null
       sql: null
       items: []
@@ -59,11 +119,8 @@ angular.module('app.importhandlers.model', ['app.config'])
       num: null
 
       getJsonData: () =>
-        data = {
-          'name': @name,
-          'sql': @sql,
-          "items": []
-        }
+        data = super()
+        data['items'] = []
         for i in @items
           data['items'].push i.getJsonData()
         return data
@@ -117,7 +174,7 @@ created_on,created_by'
 
       @PROCESS_STRATEGIES = ['identity', 'string', 'float',
         'boolean', 'integer', 'json', 'composite']
-
+      DATA_FIELDS: ['target_schema']
       _id: null
       created_on: null
       updated_on: null
@@ -134,10 +191,9 @@ created_on,created_by'
         return "#{@BASE_API_URL}#{@_id}/action/download/"
 
       getJsonData: () =>
-        data = {
-          'target_schema': @target_schema,
-          'datasource': []
-          'queries': []}
+        data = super()
+        data['datasource'] = []
+        data['queries'] = []
         for d in @datasource
           data['datasource'].push d.getJsonData()
         for q in @queries
@@ -163,10 +219,6 @@ created_on,created_by'
               @queries.push new Query(
                 _.extend queryData, {'handler': @, 'num': i})
               i += 1
-
-      # $save: (opts={}) =>
-      #   #@type = @type['name']
-      #   super opts
 
       $loadData: (opts={}) =>
         # Executes loading dataset task
@@ -226,7 +278,6 @@ created_on,created_by'
             data = {}
             for key in opts.only
               val = eval('this.' + key)
-              console.log key, val
               if key == 'db_settings'
                 for db_key, db_val of val
                   data[prefix + key + '.' + db_key] = db_val

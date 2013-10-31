@@ -108,7 +108,7 @@
             </a>
           </div>
         </h5>
-        <table class="table table-hover">
+        <table class="table table-hover" style="margin-bottom: 0px;">
         <thead>
           <tr>
             <th>Source</th>
@@ -121,14 +121,46 @@
         <tbody>
           <tr ng-repeat="item in query.items">
             <td>
-              <span title="source" class="source" ng-bind="item.source || 'no source'" editable="item" value="item.source" editable-field="source" editable-input="text" editable-placement="right"></span>
+              <span title="source" class="source" ng-bind="item.source || 'no source'" editable="item" value="item.source" editable-field="source" editable-input="text" editable-placement="right"></span><br/>
+              <a ng-click="" title="add feature">add target feature</a>
             </td>
             <td>
-              <ul>
-              <li ng-repeat="feature in item.target_features">
-                <a ng-click="" title="edit feature">{{ feature.name }}</a>
-              </li>
-              </ul>
+              <small>
+              <table class="table table-bordered">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>JSON Path</th>
+                    <th>To csv</th>
+                    <th>Key Path</th>
+                    <th>Value Path</th>
+                    <th />
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr ng-repeat="feature in item.target_features">
+                    <th>
+                      <a ng-click="" title="edit feature">{{ feature.name }}</a>
+                    </th>
+                    <td>
+                      {{ feature.jsonpath }}
+                    </td>
+                    <td>
+                      {{ feature.to_csv }}
+                    </td>
+                    <td>
+                      {{ feature.key_path }}
+                    </td>
+                    <td>
+                      {{ feature.value_path }}
+                    </td>
+                    <td>
+                      <a ng-click="" title="remove feature"><i class="icon-remove" /></a>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              </small>
             </td>
             <td>
               <span title="Process strategy" ng-bind="item.process_as" editable="item" value="item.process_as" editable-field="process_as" editable-placement="right" editable-input="select" source="PROCESS_STRATEGIES"></span>

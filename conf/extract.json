@@ -53,8 +53,8 @@
           "is_required": true,
           "process_as": "json",
           "target_features": [
-            { "name": "contractor.skills", "jsonpath": "$.skills.*.skl_name", "to-csv": true},
-            { "name": "tsexams", "jsonpath": "$.tsexams", "key-path": "$.*.ts_name", "value-path": "$.*.ts_score" },
+            { "name": "contractor.skills", "jsonpath": "$.skills.*.skl_name", "to_csv": true},
+            { "name": "tsexams", "jsonpath": "$.tsexams", "key_path": "$.*.ts_name", "value_path": "$.*.ts_score" },
             { "name": "contractor.dev_adj_score_recent", "jsonpath": "$.dev_adj_score_recent"},
             { "name": "contractor.dev_is_looking", "jsonpath": "$.dev_is_looking" },
             { "name": "contractor.dev_recent_rank_percentile", "jsonpath": "$.dev_recent_rank_percentile" },

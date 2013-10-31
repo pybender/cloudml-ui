@@ -26,6 +26,7 @@ angular.module('app.base', ['app.config', 'app.services'])
       BASE_API_URL: ''
       API_FIELDNAME: 'object'
       DEFAULT_FIELDS_TO_SAVE = []
+      DATA_FIELDS: []
 
       constructor: (opts) ->
         @loadFromJSON opts
@@ -41,6 +42,14 @@ angular.module('app.base', ['app.config', 'app.services'])
       loadFromJSON: (origData) =>
         data = _.extend {}, origData
         _.extend @, data
+
+      getJsonData: () =>
+        data = {}
+        for key in @DATA_FIELDS
+          val = eval('this.' + key)
+          if val?
+            data[key] = val
+        return data
 
       # Loads list of objects
       @$loadAll: (opts) ->
