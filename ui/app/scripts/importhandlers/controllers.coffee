@@ -19,9 +19,10 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
   '$scope'
   '$rootScope'
   '$routeParams'
+  '$dialog'
   'ImportHandler'
 
-  ($scope, $rootScope, $routeParams, ImportHandler) ->
+  ($scope, $rootScope, $routeParams, $dialog, ImportHandler) ->
     if not $routeParams.id
       err = "Can't initialize without import handler id"
 
@@ -33,9 +34,10 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
       name = section[0]
       if name not in $scope.LOADED_SECTIONS
         $scope.handler.$load(
-          show: ImportHandler.MAIN_FIELDS + ',queries'
+          show: ImportHandler.MAIN_FIELDS + ',queries,datasource'
         ).then (->
           $scope.LOADED_SECTIONS.push name
+          $scope.handler.data = $scope.handler.getJsonData()
         ), ((opts) ->
           $scope.setError(opts, 'loading handler details')
         )
@@ -44,6 +46,9 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
             $scope.$broadcast('loadDataSet', true)
             $scope.LOADED_SECTIONS.push name
           , 100)
+
+    $scope.prepareDownload = () ->
+      console.log "prep"
 
     $scope.save = (fields) ->
       $scope.handler.$save(only: fields)
@@ -87,9 +92,36 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
         $scope.setError(opts, 'saving handler details')
       )
 
+    $scope.editDataSource = (handler, ds) ->
+      $scope.openDialog($dialog, null,
+        'partials/import_handler/datasource/edit_handler_datasource.html',
+          'DataSourceEditDialogCtrl',
+        'modal', 'edit data source', 'data source',
+        {handler: handler, ds: ds}
+      )
+
     $scope.initSections($scope.go)
     #$scope.initLogMessages("channel=importdata_log&model=" +
     #$scope.handler._id)
+])
+
+.controller('DataSourceEditDialogCtrl', [
+  '$scope'
+  '$rootScope'
+  'dialog'
+
+  ($scope, $rootScope, dialog) ->
+    $scope.handler = dialog.extra.handler
+    $scope.model = dialog.extra.ds
+    $scope.DONT_REDIRECT = true
+    $scope.dialog = dialog
+
+    $scope.$on('SaveObjectCtl:save:success', (event, current) ->
+      dialog.close()
+      $scope.handler.$load(
+        show: 'datasource'
+      ).then (->), (-> $scope.setError(opts, 'loading datasource details'))
+    )
 ])
 
 

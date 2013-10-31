@@ -17,16 +17,14 @@ angular.module('app.importhandlers.model', ['app.config'])
       query_num: null
       num: null
 
-      loadFromJSON: (origData) =>
-        super origData
-        if origData?
-          data = {
-            'target_schema': @target_schema,
-            'queries': @queries,
-            'sql': @sql}
-          if @datasource?
-            data['datasource'] = @datasource.toJson()
-          @data = angular.toJson(data, pretty=true)
+      getJsonData: () =>
+        data = {
+          'source': @source,
+          'process_as': @process_as,
+          'is_required': @is_required,
+          'target_features': @target_features
+        }
+        return data
 
       $save: (opts={}) =>
         prefix = 'queries.' + @query_num + '.items.' + @num + '.'
@@ -60,17 +58,19 @@ angular.module('app.importhandlers.model', ['app.config'])
       handler: null
       num: null
 
+      getJsonData: () =>
+        data = {
+          'name': @name,
+          'sql': @sql,
+          "items": []
+        }
+        for i in @items
+          data['items'].push i.getJsonData()
+        return data
+
       loadFromJSON: (origData) =>
         super origData
         if origData?
-          data = {
-            'target_schema': @target_schema,
-            'queries': @queries,
-            'sql': @sql}
-          if @datasource?
-            data['datasource'] = @datasource.toJson()
-          @data = angular.toJson(data, pretty=true)
-
           i = 0
           if origData.items?
             @items = []
@@ -101,8 +101,9 @@ angular.module('app.importhandlers.model', ['app.config'])
   'settings'
   'BaseModel'
   'Query'
+  'DataSource'
   
-  ($http, $q, settings, BaseModel, Query) ->
+  ($http, $q, settings, BaseModel, Query, DataSource) ->
     ###
     Import Handler
     ###
@@ -111,7 +112,7 @@ angular.module('app.importhandlers.model', ['app.config'])
       BASE_UI_URL: '/importhandlers/'
       API_FIELDNAME: 'import_handler'
       @MAIN_FIELDS: 'name,_id,target_schema,import_parameters,
-created_on,created_by,datasource__name'
+created_on,created_by'
       DEFAULT_FIELDS_TO_SAVE: ['name', 'data']
 
       @PROCESS_STRATEGIES = ['identity', 'string', 'float',
@@ -123,7 +124,7 @@ created_on,created_by,datasource__name'
       name: null
       target_schema: null
       import_params: null
-      datasource: null
+      datasource: []
       queries: []
 
       getUrl: =>
@@ -132,17 +133,28 @@ created_on,created_by,datasource__name'
       downloadUrl: =>
         return "#{@BASE_API_URL}#{@_id}/action/download/"
 
+      getJsonData: () =>
+        data = {
+          'target_schema': @target_schema,
+          'datasource': []
+          'queries': []}
+        for d in @datasource
+          data['datasource'].push d.getJsonData()
+        for q in @queries
+          data['queries'].push q.getJsonData()
+        return angular.toJson(data, pretty=true)
+
       loadFromJSON: (origData) =>
         super origData
-        if origData?
-          data = {
-            'target_schema': @target_schema,
-            'queries': @queries,
-            'sql': @sql}
-          @data = angular.toJson(data, pretty=true)
 
-          if @datasource?
-            data['datasource'] = @datasource.toJson()
+        if origData?
+          i = 0
+          if origData.datasource?
+            @datasource = []
+            for dsData in origData.datasource
+              @datasource.push new DataSource(
+                _.extend dsData, {'handler': @, 'num': i})
+              i += 1
 
           i = 0
           if origData.queries?
@@ -194,10 +206,37 @@ created_on,created_by,datasource__name'
       created_on: null
       updated_on: null
 
+      getJsonData: () =>
+        data = {
+          'name': @name,
+          'type': @type
+          'db_settings': {'conn': @db_settings.conn,
+          'vendor': @db_settings.vendor}}
+        return data
+
       $save: (opts={}) =>
-        if @db_settings? && typeof(@db_settings) == 'object'
-          @db_settings = JSON.stringify(@db_settings)
-        super opts
+        if @handler?
+          if @predefined_selected && @datasource
+            data = {
+              fill_predefined: 1,
+              num: @num,
+              datasource: @datasource}
+          else
+            prefix = 'datasource.' + @num + '.'
+            data = {}
+            for key in opts.only
+              val = eval('this.' + key)
+              console.log key, val
+              if key == 'db_settings'
+                for db_key, db_val of val
+                  data[prefix + key + '.' + db_key] = db_val
+              else
+                data[prefix + key] = val
+          @$make_request(@handler.getUrl(), {}, "PUT", data)
+        else
+          if @db_settings? && typeof(@db_settings) == 'object'
+            @db_settings = JSON.stringify(@db_settings)
+          super opts
 
     return DataSource
 ])

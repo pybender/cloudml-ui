@@ -9,6 +9,23 @@ angular.module('app.importhandlers.controllers.datasources', ['app.config', ])
     $scope.vendors = DataSource.$VENDORS_LIST
 ])
 
+
+.controller('DataSourcesSelectLoader', [
+  '$scope'
+  'DataSource'
+
+  ($scope, DataSource) ->
+    $scope.datasources = []
+    DataSource.$loadAll(
+      show: 'name'
+    ).then ((opts) ->
+      for ds in opts.objects
+        $scope.datasources.push {_id: ds._id, name: ds.name}
+    ), ((opts) ->
+      $scope.err = $scope.setError(opts, 'loading datasources')
+    )
+])
+
 .controller('DataSourceListCtrl', [
   '$scope'
   '$dialog'

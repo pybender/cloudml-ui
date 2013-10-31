@@ -1,0 +1,45 @@
+<div ng-controller="SaveObjectCtl">
+  <div class="modal-header">
+    <button ng-click="dialog.close()" class="close" data-dismiss="modal">×</button>
+    <h3>Edit data source</h3>
+  </div>
+
+  <div class="modal-body">
+    <loadindicator title="Saving data source..." ng-show="saving" progress="savingProgress"></loadindicator>
+
+    <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+
+    <ul ng-init="model.predefined_selected=false;" class="nav nav-pills">
+      <li ng-class="{active: !model.predefined_selected}">
+        <a ng-click="model.predefined_selected=false;">Custom</a>
+      </li>
+      <li ng-class="{active: model.predefined_selected}">
+        <a ng-click="model.predefined_selected=true;">Predefined</a>
+      </li>
+    </ul>
+
+    <div ng-show="model.predefined_selected" class="control-group">
+      <alert-message class="alert-info" msg='Please choose predefined data source. You could add other predefined data sources at <a target="_blank" href="#/predefined/datasources/">Data Sources List</a> page.' unsafe></alert-message>
+      <form name="Form" class="form-horizontal">
+        <div class="control-group" ng-class="{error: Form.datasource.$invalid}">
+          <label class="control-label">Data Source</label>
+          <div class="controls"  ng-controller="DataSourcesSelectLoader">
+            <select name="datasource" ng-model="model.datasource" ng-required="currentTab=='predefined'">
+              <option ng-repeat="ds in datasources" value="{{ ds._id }}">{{ ds.name }}</option>
+            </select>
+            <span ng-show="Form.datasource.$error.required" class="help-inline">*</span>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div ng-hide="model.predefined_selected" class="control-group">
+      <ng-include src="'/partials/import_handler/datasource/form.html'"></ng-include>
+    </div>
+
+  </div>
+
+  <div class="modal-footer">
+    <button ng-click="save(['name', 'type', 'db_settings', 'predefined_selected', 'datasource', 'num'])" ng-disabled="Form.$invalid" class="btn btn-primary">Save</button>
+  </div>
+</div>

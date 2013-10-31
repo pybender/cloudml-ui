@@ -224,7 +224,7 @@ class ImportHandlerEx(BaseDocument):
     structure = {
         'name': basestring,
         'target_schema': basestring,
-        'datasource': DataSource,
+        'datasource': list,
         "import_params": list,
         'queries': list,
 
@@ -234,14 +234,17 @@ class ImportHandlerEx(BaseDocument):
         'updated_by': dict,
     }
     use_dot_notation = True
-    use_autorefs = True
     required_fields = ['name', 'created_on', ]
     default_values = {'created_on': datetime.utcnow,
-                      'updated_on': datetime.utcnow, }
+                      'updated_on': datetime.utcnow,
+                      'datasource': [] }
 
     def from_import_handler_json(self, data):
         self.target_schema = data['target_schema']
-        #self.datasource = app.db.DataSource.find_one()
+        for ds in data["datasource"]:
+            self.datasource.append({"name": ds["name"],
+                                     "type": ds["type"],
+                                     "db_settings": ds["db"]})
         self.queries = data['queries']
         self.save()
 

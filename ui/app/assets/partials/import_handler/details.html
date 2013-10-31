@@ -39,7 +39,7 @@
   <p class="switcher">
     <b>Switch View: </b>
     <a ng-class="{active: action[1] == 'details'}" ng-click="setSection(['model', 'details'])">Standart</a> | 
-    <a ng-class="{active: action[1] == 'json'}" ng-click="setSection(['model', 'json'])">JSON File</a>
+    <a ng-class="{active: action[1] == 'json'}" ng-click="setSection(['model', 'json']);handler.data = handler.getJsonData()">JSON File</a>
   </p>
   <div ng-show="action[1] == 'details'">
     <div>
@@ -47,13 +47,36 @@
       <span title="Target Schema" class="target_schema" ng-bind="handler.target_schema || 'untitled target schema'" editable="handler" value="handler.target_schema"    editable-field="target_schema" editable-input="text" editable-placement="right"></span>
     </div>
     <div>
-      DataSource:
-      {{ handler.datasource }}
-    </div>
-    <div>
         Import Parameters: <span class="value" ng-repeat="param in handler.import_params">{{ param }}</span>
     </div>
-
+    <div>
+      <h4>
+          Data Sources
+      </h4>
+      <div class="well" ng-repeat="ds in handler.datasource">
+        <!-- <a style="float: right;" ng-click="deleteDataSource(handler.datasources, ds)">
+          <i title="Delete data source" class="icon-remove"></i>
+        </a> -->
+        <div>
+          Name:
+          <span class="value">
+             {{ ds.name }} <span><a ng-click="editDataSource(handler, ds)">(edit)</a></span>
+          </span>
+        </div>
+        <div>
+          Type:
+          <span class="value">{{ ds.type }}</span>
+        </div>
+        <div>
+          Vendor:
+          <span class="value">{{ ds.db_settings.vendor }}</span>
+        </div>
+        <div>
+          Connection String:
+          <span class="value">{{ ds.db_settings.conn }}</span>
+        </div>
+      </div>
+    </div>
     <h4>
       Queries
       <div class="actions">
@@ -125,7 +148,8 @@
     </div>
     </div>
     <div ng-show="action[1] == 'json'">
-      <textarea name="data" ui-codemirror="{ mode: {name: 'javascript', json: true} }" ng-model="handler.data"> </textarea>
+      <file-download text="'Download JSON'" css-class="'btn-info btn'" filename="'handler-' + handler.name + '.json'" data="handler.data"></file-download>
+      <textarea name="data" ui-codemirror="{ mode: {name: 'javascript', json: true, readOnly: true} }" ng-model="handler.data"></textarea>
     </div>    
   </div>
 

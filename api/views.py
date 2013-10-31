@@ -432,6 +432,15 @@ class ImportHandlerResource(BaseResource):
             if num is None:
                 raise ValidationError('num is required')
             del obj['queries'][num]
+        elif 'fill_predefined' in data:
+            num = int(data.get('num', None))
+            datasource_id = data.get('datasource', None)
+            ds = app.db.DataSource.get_from_id(ObjectId(datasource_id))
+            obj.datasource[num] = {
+                'name': ds.name,
+                'type': ds.type,
+                'db_settings': ds.db_settings
+            }
         else:
             update_inner_items()
         

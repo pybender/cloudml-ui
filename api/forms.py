@@ -558,6 +558,7 @@ class BasePredefinedForm(BaseFormEx):
     # predefined item to copy fields from, when `predefined_selected`.
     OBJECT_NAME = None
     DOC = None
+    INNER_FIELDNAME = None
 
     def clean_feature_id(self, value, field):
         if value:
@@ -569,12 +570,16 @@ class BasePredefinedForm(BaseFormEx):
             self.cleaned_data['model'] = field.doc
         return value
 
+    def clean_handler_id(self, value, field):
+        if value:
+            self.cleaned_data['handler'] = field.doc
+        return value
+
     def validate_data(self):
         predefined_selected = self.cleaned_data.get('predefined_selected', False)
-        feature_id = self.cleaned_data.get('feature_id', False)
-        model_id = self.cleaned_data.get('model_id', False)
+        model_id = self.cleaned_data.get(self.INNER_FIELDNAME, False)
         self.cleaned_data['is_predefined'] = is_predefined = \
-                not (feature_id or model_id or self.inner_name)
+                not (model_id or self.inner_name)
 
         if predefined_selected and is_predefined:
             raise ValidationError(
@@ -610,12 +615,9 @@ class BasePredefinedForm(BaseFormEx):
     def save(self, commit=True):
         commit = self.cleaned_data['is_predefined']
         obj = super(BasePredefinedForm, self).save(commit)
-        feature = self.cleaned_data.get('feature', None)
-        if feature:
-            setattr(feature, self.OBJECT_NAME, obj)
-            feature.save()
 
-        model = self.cleaned_data.get('model', None)
+
+        model = self.cleaned_data.get(self.INNER_FIELDNAME.replace('_id', ''), None)
         if model:
             setattr(model, self.OBJECT_NAME, obj)
             model.save()
@@ -625,6 +627,7 @@ class BasePredefinedForm(BaseFormEx):
 class ScalerForm(BasePredefinedForm):
     OBJECT_NAME = 'scaler'
     DOC = 'Scaler'
+    INNER_FIELDNAME = 'feature_id'
 
     group_chooser = 'predefined_selected'
     required_fields_groups = {'true': ('scaler', ),
@@ -648,6 +651,7 @@ class ClassifierForm(BasePredefinedForm):
     """
     OBJECT_NAME = 'classifier'
     DOC = 'Classifier'
+    INNER_FIELDNAME = 'model_id'
 
     group_chooser = 'predefined_selected'
     required_fields_groups = {'true': ('classifier', ),
@@ -667,6 +671,7 @@ class ClassifierForm(BasePredefinedForm):
 class TransformerForm(BasePredefinedForm):
     OBJECT_NAME = 'transformer'
     DOC = 'Transformer'
+    INNER_FIELDNAME = 'feature_id'
 
     group_chooser = 'predefined_selected'
     required_fields_groups = {
@@ -734,25 +739,50 @@ class FeatureForm(BaseFormEx):
         return super(FeatureForm, self).save(*args, **kwargs)
 
 
-class DataSourceForm(BaseFormEx):
-    required_fields = ('type', 'name')
+class DataSourceForm(BasePredefinedForm):
+    INNER_FIELDNAME = 'handler_id'
+    OBJECT_NAME = 'datasource'
+    DOC = 'DataSource'
+    group_chooser = 'predefined_selected'
+    required_fields_groups = {
+        'true': ('datasource', ),
+        'false': ('type', ),
+        None: ('type', )}
 
     name = CharField()
     type_field = ChoiceField(choices=app.db.DataSource.TYPES_LIST, name='type')
     db_settings = JsonField()
+    predefined_selected = BooleanField()
+    datasource = DocumentField(doc='DataSource', by_name=False, return_doc=True)
+    handler_id = DocumentField(doc='ImportHandlerEx', by_name=False,
+                               return_doc=False)
 
     def clean_db_settings(self, value, field):
         # TODO vendor in app.db.DataSource.VENDORS_LIST
         return value
 
     def clean_name(self, value, field):
-        kwargs = {'name': value}
-        if '_id' in self.obj and self.obj._id:
-            kwargs['_id'] = {'$ne': self.obj._id}
-        count = app.db.DataSource.find(kwargs).count()
-        if count:
-            raise ValidationError('name should be unique')
+        if self.cleaned_data.get('is_predefined'):
+            kwargs = {'name': value}
+            if '_id' in self.obj and self.obj._id:
+                kwargs['_id'] = {'$ne': self.obj._id}
+            count = app.db.DataSource.find(kwargs).count()
+            if count:
+                raise ValidationError('name should be unique')
         return value
+
+    def _fill_predefined_values(self, obj):
+        """
+        Fills fields from predefined obj
+        """
+        self.cleaned_data['name'] = obj.name
+        self.cleaned_data['type'] = obj.type
+        self.cleaned_data['db_settings'] = obj.db_settings
+
+    # def save(self, *args, **kwargs):
+    #     print self.cleaned_data
+
+    #     return super(DataSourceForm, self).save(*args, **kwargs)
 
 
 def populate_parser(import_params):
