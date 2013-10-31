@@ -63,7 +63,8 @@ angular.module('app.models.model', ['app.config'])
           if origData.features_set_id?
             @featuresSet = new FeaturesSet({'_id': @features_set_id})
           if origData.classifier?
-            @classifier = new Classifier(origData.classifier)
+            @classifier = new Classifier(
+              _.extend origData.classifier, {'model_id': @_id})
 
       downloadUrl: =>
         return "#{@BASE_API_URL}#{@_id}/action/download/"

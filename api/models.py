@@ -55,14 +55,15 @@ class BaseDocument(Document):
                 logging.exception(e)
 
     @classmethod
-    def from_dict(cls, Doc, obj_dict, extra_fields={},
+    def from_dict(cls, obj_dict, extra_fields={},
                   filter_params=None, save=True, add_new=False):
+        name = cls.__name__.replace('Callable', '')
+        Doc = getattr(app.db, name)
+
         obj_dict.update(extra_fields)
         fields_list = list(cls.FIELDS_TO_SERIALIZE) + extra_fields.keys()
-
-        if add_new:
-            obj = None
-        else:
+        obj = None
+        if not add_new and save:
             if filter_params is None:
                 filter_params = {'name': obj_dict['name']}
             obj = Doc.find_one(filter_params)
@@ -92,7 +93,7 @@ class BaseDocument(Document):
         data = {}
         for field in self.FIELDS_TO_SERIALIZE:
             field_type = self.structure[field]
-            val = getattr(self, field)
+            val = self.get(field, None)
             if val is not None:
                 if field_type in (bool, dict) and not val:
                     continue
@@ -205,6 +206,20 @@ class ImportHandler(BaseDocument):
                       'updated_by': {}}
     use_dot_notation = True
 
+    def get_fields(self):
+        from core.importhandler.importhandler import ExtractionPlan
+        data = json.dumps(self.data)
+        plan = ExtractionPlan(data, is_file=False)
+        test_handler_fields = []
+        for query in plan.queries:
+            items = query['items']
+            for item in items:
+                features = item['target-features']
+                for feature in features:
+                    test_handler_fields.append(
+                        feature['name'].replace('.', '->'))
+        return test_handler_fields
+
     def create_dataset(self, params, run_import_data=True):
         #from api.utils import slugify
         dataset = app.db.DataSet()
@@ -231,7 +246,7 @@ class ImportHandler(BaseDocument):
 
         def unset(model, handler_type='train'):
             handler = getattr(model, '%s_import_handler' % handler_type)
-            if handler['_id'] == self._id:
+            if handler and handler['_id'] == self._id:
                 setattr(model, '%s_import_handler' % handler_type, None)
                 model.changed = True
 
@@ -497,21 +512,6 @@ class FeatureSet(BaseDocument):
         """
         return self.features_dict
 
-        # self.features_dict['features'] = []
-        # self.features_dict['named_types'] = []
-        # named_types = []  # named types to include to the dictionary
-        # features = app.db.Feature.find({'features_set_id': str(self._id)})
-        # for feature in features:
-        #     self.features_dict['features'].append(feature.to_dict())
-        #     if feature.type not in NamedFeatureType.TYPES_LIST:
-        #         named_types.append(feature.type)
-
-        # for name in named_types:
-        #     named_type = app.db.NamedFeatureType.find_one({'name': name})
-        #     self.features_dict["feature-types"].append(named_type.to_dict())
-
-        # return self.features_dict
-
     @classmethod
     def from_model_features_dict(cls, name, features_dict):
         if not features_dict:
@@ -521,18 +521,19 @@ class FeatureSet(BaseDocument):
             return features_set
 
         features_set, is_new = app.db.FeatureSet.from_dict(
-            app.db.FeatureSet, features_dict,
+            features_dict,
             extra_fields={'name': name},
             add_new=True)
 
-        for feature_type in features_dict['feature-types']:
-            app.db.NamedFeatureType.from_dict(
-                app.db.NamedFeatureType, feature_type)
+        type_list = features_dict.get('feature-types', None)
+        if type_list:
+            for feature_type in type_list:
+                app.db.NamedFeatureType.from_dict(feature_type)
 
         _id = features_set._id
         for feature_dict in features_dict['features']:
             feature, is_new = app.db.Feature.from_dict(
-                app.db.Feature, feature_dict, add_new=True,
+                feature_dict, add_new=True,
                 extra_fields={'features_set_id': str(_id)})
         return app.db.FeatureSet.get_from_id(ObjectId(_id))
 
@@ -559,34 +560,34 @@ class Classifier(BaseDocument):
         'created_on': datetime,
         'created_by': dict,
         'updated_on': datetime,
-        'updated_by': dict,
-        'is_predefined': bool,
+        'updated_by': dict
     }
     required_fields = ['created_on', 'updated_on']
     default_values = {
         'created_on': datetime.utcnow,
         'updated_on': datetime.utcnow,
-        'is_predefined': False,
     }
     use_dot_notation = True
 
     @classmethod
     def from_model_features_dict(cls, name, features_dict):
         if not features_dict:
-            classifier = app.db.Classifier()
+            classifier = Classifier()
             classifier.name = name
-            classifier.save()
             return classifier
 
-        classifier, is_new = app.db.Classifier.from_dict(
-            app.db.Classifier, features_dict['classifier'],
+        classifier, is_new = Classifier.from_dict(
+            features_dict['classifier'],
             add_new=True,
-            extra_fields={'name': name}
+            extra_fields={'name': name},
+            save=False
         )
         return classifier
 
     def __repr__(self):
         return '<Classifier %r>' % self.name
+
+app.db.Classifier.collection.ensure_index('name', unique=True)
 
 
 @app.conn.register
@@ -618,7 +619,7 @@ class Model(BaseDocument):
         'trained_by': dict,
         'error': basestring,
 
-        'classifier': Classifier,
+        'classifier': dict,
         'features': dict,
         'features_set': FeatureSet,
         'features_set_id': basestring,
@@ -650,6 +651,7 @@ class Model(BaseDocument):
         'memory_usage': dict,
         'train_records_count': int,
         'current_task_id': basestring,
+        'training_time': int
     }
     gridfs = {'files': ['trainer']}
     required_fields = ['name', 'created_on', ]
@@ -748,7 +750,7 @@ class Model(BaseDocument):
 
     def get_features_json(self):
         data = self.features_set.to_dict()
-        data['classifier'] = self.classifier.to_dict()
+        data['classifier'] = Classifier(self.classifier).to_dict()
         return json.dumps(data)
 
 
@@ -766,6 +768,9 @@ class Test(BaseDocument):
 
     EXPORT_STATUS_IN_PROGRESS = 'In Progress'
     EXPORT_STATUS_COMPLETED = 'Completed'
+
+    MATRIX_STATUS_IN_PROGRESS = 'In Progress'
+    MATRIX_STATUS_COMPLETED = 'Completed'
 
     EXAMPLES_TO_AMAZON_S3 = 'Amazon S3'
     EXAMPLES_DONT_SAVE = 'Do not save'
@@ -789,6 +794,7 @@ class Test(BaseDocument):
         'examples_count': int,
         'examples_placement': basestring,
         'examples_fields': list,
+        'examples_size': int,
 
         'parameters': dict,
         'classes_set': list,
@@ -802,6 +808,7 @@ class Test(BaseDocument):
         'memory_usage': dict,
         'exports': list,
         'current_task_id': basestring,
+        'confusion_matrix_calculations': list,
     }
     required_fields = ['name', 'created_on', 'updated_on',
                        'status']
@@ -812,6 +819,8 @@ class Test(BaseDocument):
         'memory_usage': {},
         'exports': [],
         'created_by': {},
+        'examples_size': 0,
+        'confusion_matrix_calculations': [],
     }
     use_dot_notation = True
     use_autorefs = True
@@ -1062,17 +1071,19 @@ class User(BaseDocument):
 
     @classmethod
     def authenticate(cls, oauth_token, oauth_token_secret, oauth_verifier):
+        logging.debug('User Auth: try to authenticate with token %s', oauth_token)
         from auth import OdeskAuth
         auth = OdeskAuth()
         _oauth_token, _oauth_token_secret = auth.authenticate(
             oauth_token, oauth_token_secret, oauth_verifier)
         info = auth.get_my_info(_oauth_token, _oauth_token_secret,
                                 oauth_verifier)
-
+        logging.info('User Auth: authenticating user %s', info['auth_user']['uid'])
         user = app.db.User.find_one({'uid': info['auth_user']['uid']})
         if not user:
             user = app.db.User()
             user.uid = info['auth_user']['uid']
+            logging.debug('User Auth: new user %s added', user.uid)
 
         import uuid
         auth_token = str(uuid.uuid1())
@@ -1126,6 +1137,8 @@ class NamedFeatureType(BaseDocument):
     def __repr__(self):
         return '<Named Feature Type %r>' % self.name
 
+app.db.NamedFeatureType.collection.ensure_index('name', unique=True)
+
 
 # TODO: move and use it in cloudml project
 TRANSFORMERS = {
@@ -1178,18 +1191,18 @@ class Transformer(BaseDocument):
         'created_by': dict,
         'updated_on': datetime,
         'updated_by': dict,
-        'is_predefined': bool,
     }
     required_fields = ['type', 'created_on', 'updated_on']
     default_values = {
         'created_on': datetime.utcnow,
         'updated_on': datetime.utcnow,
-        'is_predefined': False,
     }
     use_dot_notation = True
 
     def __repr__(self):
-        return '<Transformer %r>' % self.name
+        return '<Transformer %r>' % self.type
+
+app.db.Transformer.collection.ensure_index('name', unique=True)
 
 
 #from core.trainer.scalers import SCALERS
@@ -1218,6 +1231,7 @@ class Scaler(BaseDocument):
     __collection__ = 'scalers'
 
     TYPES_LIST = SCALERS.keys()
+    NO_PARAMS_KEY = True
     FIELDS_TO_SERIALIZE = ('name', 'type', 'params')
 
     structure = {
@@ -1228,18 +1242,18 @@ class Scaler(BaseDocument):
         'created_by': dict,
         'updated_on': datetime,
         'updated_by': dict,
-        'is_predefined': bool,
     }
     required_fields = ['type', 'created_on', 'updated_on']
     default_values = {
         'created_on': datetime.utcnow,
         'updated_on': datetime.utcnow,
-        'is_predefined': False,
     }
     use_dot_notation = True
 
     def __repr__(self):
-        return '<Scaler %r>' % self.name
+        return '<Scaler %r>' % self.type
+
+app.db.Transformer.collection.ensure_index('name', unique=True)
 
 
 @app.conn.register
@@ -1248,20 +1262,21 @@ class Feature(BaseDocument):
 
     FIELDS_TO_SERIALIZE = ('name', 'type', 'input_format', 'params',
                            'default', 'is_target_variable', 'required',
-                           'transformer')
+                           'transformer', 'scaler')
 
     structure = {
         'name': basestring,
         'type': basestring,
-        'features_set': FeatureSet,
+        #'features_set': FeatureSet,
         'features_set_id': basestring,
         'input_format': basestring,
-        'transformer': Transformer,
         'params': dict,
         'required': bool,
-        'scaler': Scaler,
+        'scaler': dict,
+        'transformer': dict,
         'default': None,
         'is_target_variable': bool,
+
         'created_on': datetime,
         'created_by': dict,
         'updated_on': datetime,
@@ -1277,15 +1292,17 @@ class Feature(BaseDocument):
         'params': {},
     }
     use_dot_notation = True
-    use_autorefs = True
+    #use_autorefs = True
 
     def save(self, *args, **kwargs):
         is_new = self.is_new
         name = self.name
         if not is_new:
+            # Note: name could be modified
             feature = app.db.Feature.find_one({'_id': self._id}, ('name', ))
             if feature:
                 name = feature.name
+
         super(Feature, self).save(*args, **kwargs)
         if self.is_target_variable:
             app.db.Feature.collection.update({
@@ -1295,41 +1312,52 @@ class Feature(BaseDocument):
                 '$set': {'is_target_variable': False}
             }, multi=True)
 
-        if self.features_set is not None:
-            self.features_set.edit_feature(name, self, is_new)
+        if self.features_set_id is not None:
+            features_set = app.db.FeatureSet.get_from_id(
+                ObjectId(self.features_set_id))
+            if features_set:
+                features_set.edit_feature(name, self, is_new)
 
     def delete(self):
-        features_set = self.features_set
+        features_set = app.db.FeatureSet.get_from_id(
+            ObjectId(self.features_set_id))
         name = self.name
         super(Feature, self).delete()
         features_set.delete_feature(name)
 
     @classmethod
-    def from_dict(cls, Doc, obj_dict, extra_fields={},
+    def from_dict(cls, obj_dict, extra_fields={},
                   filter_params=None, save=True, add_new=True):
         if 'transformer' in obj_dict:
-            obj_dict['transformer'] = app.db.Transformer.from_dict(
-                app.db.Transformer, obj_dict['transformer'],
-                {'name': '%s-transformer' % obj_dict['name']})[0]
+            transformer = Transformer.from_dict(
+                obj_dict['transformer'], save=False)[0]
+            obj_dict['transformer'] = dict(
+                [(key, val) for key, val in transformer.iteritems()
+                 if key in Transformer.FIELDS_TO_SERIALIZE])
 
         if 'scaler' in obj_dict:
-            obj_dict['scaler'] = app.db.Scaler.from_dict(
-                app.db.Transformer, obj_dict['scaler'],
-                {'name': '%s-scaler' % obj_dict['name']})[0]
+            scaler = app.db.Scaler.from_dict(
+                obj_dict['scaler'], save=False)[0]
+            obj_dict['scaler'] = dict(
+                [(key, val) for key, val in scaler.iteritems()
+                 if key in Scaler.FIELDS_TO_SERIALIZE])
 
-        if 'features_set_id' in extra_fields:
-            extra_fields['features_set'] = app.db.FeatureSet.get_from_id(
-                ObjectId(extra_fields['features_set_id']))
         feature, is_new = super(Feature, cls).from_dict(
-            Doc, obj_dict, extra_fields,
+            obj_dict, extra_fields,
             filter_params, save, add_new)
+
         return feature, is_new
 
     def to_dict(self):
-        data = super(Feature, self).to_dict()
+        res = super(Feature, self).to_dict()
         if self.transformer:
-            data['transformer'] = self.transformer.to_dict()
-        return data
+            res['transformer'] = Transformer(self.transformer).to_dict()
+        if self.scaler:
+            res['scaler'] = Scaler(self.scaler).to_dict()
+        return res
 
     def __repr__(self):
-        return '<Feature %r>' % self.name
+        return '<Feature %s:%s>' % (self.name, self.type)
+
+
+app.db.Feature.collection.ensure_index('feature_set_id')

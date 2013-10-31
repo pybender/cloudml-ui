@@ -66,7 +66,7 @@ angular.module('app.reports.controllers', ['app.config', ])
 
     $scope.changeModel = (item) ->
       item.avaiable_tests = []
-      Test.$loadAll(item.model._id, {status: "Completed"}
+      Test.$loadAll({model_id: item.model._id, status: "Completed"}
       ).then ((opts) ->
         for test in opts.objects
           item.avaiable_tests.push({'_id': test._id, 'name': test.name})

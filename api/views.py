@@ -81,7 +81,7 @@ class Models(BaseResource):
 
     MESSAGE404 = "Model with name %(_id)s doesn't exist"
 
-    post_form = ModelForm
+    post_form = ModelAddForm
     put_form = ModelEditForm
 
     DOWNLOAD_FIELDS = ('trainer', 'features')
@@ -138,20 +138,8 @@ class Models(BaseResource):
                 if model.dataset else []
 
         if fields and 'test_handler_fields' in fields:
-            # TODO: check type in cloudml project
-            # to avoid dump/load data here
-            data = json.dumps(model.test_import_handler.data)
-            plan = ExtractionPlan(data, is_file=False)
-            
-            # TODO: Move to ExtractionPlan (fill in validate_features mthd)
-            test_handler_fields = []
-            for query in plan.queries:
-                items = query['items']
-                for item in items:
-                    features = item['target-features']
-                    for feature in features:
-                        test_handler_fields.append(feature['name'].replace('.', '->'))
-            model['test_handler_fields'] = test_handler_fields
+            if model.test_import_handler:
+                model['test_handler_fields'] = model.test_import_handler.get_fields()
 
         if fields and 'features' in fields:
             model['features'] = model.get_features_json()
@@ -185,8 +173,8 @@ class Models(BaseResource):
         params = self._parse_parameters(parser_params)
         query_fields, show_fields = self._get_fields(params)
         _id = ObjectId(params.get('handler'))
-        expr = {'$or': [{'test_import_handler._id': _id},
-                        {'train_import_handler._id': _id}]}
+        expr = {'$or': [{'test_import_handler.$id': _id},
+                        {'train_import_handler.$id': _id}]}
         models = self.Model.find(expr, query_fields)
         return self._render({"%ss" % self.OBJECT_NAME: models})
 
@@ -474,7 +462,7 @@ class Tests(BaseResource):
     OBJECT_NAME = 'test'
     DEFAULT_FIELDS = ('_id', 'name')
     FILTER_PARAMS = (('status', str), )
-    GET_ACTIONS = ('confusion_matrix', 'exports')
+    GET_ACTIONS = ('confusion_matrix', 'exports', 'examples_size')
 
     post_form = AddTestForm
 
@@ -493,6 +481,12 @@ class Tests(BaseResource):
         return self.Model.find_one({'model_id': model_id,
                                    '_id': ObjectId(test_id)}, fields)
 
+    def _get_examples_size_action(self, **kwargs):
+        fields = ['name', 'model_name', 'model_id', 'examples_size', 'created_on',
+                  'created_by']
+        tests = app.db.Test.find({}, fields).sort([('examples_size', -1)]).limit(10)
+        return self._render({'tests': tests})
+
     def _get_confusion_matrix_action(self, **kwargs):
         from api.tasks import calculate_confusion_matrix
 
@@ -505,22 +499,19 @@ class Tests(BaseResource):
         if not test:
             raise NotFound('Test not found')
 
-        model = app.db.Model.find_one({'_id':
-                                           ObjectId(kwargs.get('model_id'))})
+        model = app.db.Model.find_one(
+            {'_id': ObjectId(kwargs.get('model_id'))})
         if not model:
             raise NotFound('Model not found')
 
         try:
-            result = calculate_confusion_matrix(test._id, args.get('weight0'),
-                                                args.get('weight1'))
+            calculate_confusion_matrix.delay(
+                str(test._id), args.get('weight0'), args.get('weight1'))
         except Exception as e:
-            return self._render({self.OBJECT_NAME: test._id,
+            return self._render({self.OBJECT_NAME: str(test._id),
                                  'error': e.message})
 
-        result = zip(model.labels, result)
-
-        return self._render({self.OBJECT_NAME: test._id,
-                             'confusion_matrix': result})
+        return self._render({self.OBJECT_NAME: str(test._id)})
 
     def _get_exports_action(self, **kwargs):
         test = self._get_details_query(None, None, **kwargs)
@@ -894,8 +885,6 @@ class AuthResource(BaseResource):
 
     @public
     def post(self, action=None, **kwargs):
-        from api.auth import AuthException
-
         if action == 'get_auth_url':
             auth_url, oauth_token, oauth_token_secret =\
                 app.db.User.get_auth_url()
@@ -905,7 +894,8 @@ class AuthResource(BaseResource):
                 'oauth_token': oauth_token,
                 'oauth_token_secret': oauth_token_secret,
             })
-
+            logging.debug(
+                "User Auth: oauth token %s added to mongo", oauth_token)
             return self._render({'auth_url': auth_url})
 
         if action == 'authenticate':
@@ -917,11 +907,14 @@ class AuthResource(BaseResource):
             oauth_token = params.get('oauth_token')
             oauth_verifier = params.get('oauth_verifier')
 
+            logging.debug(
+                "User Auth: trying to authenticate with token %s", oauth_token)
             # TODO: Use redis?
             auth = app.db['auth_tokens'].find_one({
                 'oauth_token': oauth_token
             })
             if not auth:
+                logging.error('User Auth: token %s not found', oauth_token)
                 return odesk_error_response(
                     500, 500,
                     'Wrong token: {0!s}'.format(oauth_token))
@@ -930,6 +923,8 @@ class AuthResource(BaseResource):
             auth_token, user = app.db.User.authenticate(
                 oauth_token, oauth_token_secret, oauth_verifier)
 
+            logging.debug(
+                'User Auth: Removing token %s from mongo', oauth_token)
             app.db['auth_tokens'].remove({'_id': auth['_id']})
 
             return self._render({
@@ -944,6 +939,7 @@ class AuthResource(BaseResource):
 
             return odesk_error_response(401, 401, 'Unauthorized')
 
+        logging.error('User Auth: invalid action %s', action)
         raise NotFound()
 
 api.add_resource(AuthResource, '/cloudml/auth/<regex("[\w\.]*"):action>',
@@ -1008,8 +1004,8 @@ class FeatureSetResource(BaseResource):
     MESSAGE404 = "Feature set set doesn't exist"
     OBJECT_NAME = 'set'
     DEFAULT_FIELDS = [u'_id', 'name']
-    post_form = FeatureSetAddForm
-    #put_form = FeatureSetEditForm
+    #post_form = FeatureSetAddForm
+    put_form = FeatureSetForm
     GET_ACTIONS = ('download', )
 
     @property
@@ -1038,22 +1034,15 @@ class ClassifierResource(BaseResource):
     """
     Classifier API methods
     """
-    MESSAGE404 = "Classifier type doesn't exist"
+    MESSAGE404 = "Classifier doesn't exist"
     OBJECT_NAME = 'classifier'
     DEFAULT_FIELDS = [u'_id', 'name']
     post_form = put_form = ClassifierForm
     GET_ACTIONS = ('configuration', )
-    FILTER_PARAMS = (('is_predefined', int), )
 
     @property
     def Model(self):
         return app.db.Classifier
-
-    def _prepare_filter_params(self, params):
-        pdict = super(ClassifierResource, self)._prepare_filter_params(params)
-        if 'is_predefined' in pdict:
-            pdict['is_predefined'] = bool(pdict['is_predefined'])
-        return pdict
 
     def _get_configuration_action(self, **kwargs):
         from core.trainer.classifier_settings import CLASSIFIERS
@@ -1088,26 +1077,15 @@ class TransformerResource(BaseResource):
     post_form = TransformerForm
     put_form = TransformerForm
     GET_ACTIONS = ('configuration', )
-    FILTER_PARAMS = (('is_predefined', int), )
     ALL_FIELDS_IN_POST = True
 
     @property
     def Model(self):
         return app.db.Transformer
 
-    def _prepare_filter_params(self, params):
-        pdict = super(TransformerResource, self)._prepare_filter_params(params)
-        if 'is_predefined' in pdict:
-            pdict['is_predefined'] = bool(pdict['is_predefined'])
-        return pdict
-
     def _get_configuration_action(self, **kwargs):
         from api.models import TRANSFORMERS
         return self._render({'configuration': TRANSFORMERS})
-
-    def _delete_validataion(self, model):
-        if not model.is_predefined:
-            raise ValidationError("Can't delete feature transformer")
 
 api.add_resource(TransformerResource, '/cloudml/features/transformers/')
 
@@ -1121,27 +1099,15 @@ class ScalersResource(BaseResource):
     DEFAULT_FIELDS = [u'_id', 'name']
     put_form = post_form = ScalerForm
     GET_ACTIONS = ('configuration', )
-    FILTER_PARAMS = (('is_predefined', int), )
     ALL_FIELDS_IN_POST = True
 
     @property
     def Model(self):
         return app.db.Scaler
 
-    def _prepare_filter_params(self, params):
-        pdict = super(ScalersResource, self)._prepare_filter_params(params)
-        if 'is_predefined' in pdict:
-            pdict['is_predefined'] = bool(pdict['is_predefined'])
-        return pdict
-
     def _get_configuration_action(self, **kwargs):
         from api.models import SCALERS
         return self._render({'configuration': SCALERS})
-
-    def _delete_validataion(self, model):
-        if not model.is_predefined:
-            raise ValidationError("Can't delete feature scaler")
-
 
 api.add_resource(ScalersResource, '/cloudml/features/scalers/')
 
