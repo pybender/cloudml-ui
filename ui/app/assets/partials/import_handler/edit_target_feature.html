@@ -1,0 +1,54 @@
+<div ng-controller="SaveObjectCtl">
+  <div class="modal-header">
+    <button ng-click="dialog.close()" class="close" data-dismiss="modal">×</button>
+    <h3>Edit target feature</h3>
+  </div>
+
+  <div class="modal-body">
+    <loadindicator title="Saving target feature..." ng-show="saving" progress="savingProgress"></loadindicator>
+
+    <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+
+    <form name="Form" class="form-horizontal">
+      <div class="control-group" ng-class="{error: Form.name.$invalid}">
+        <label class="control-label">Name</label>
+        <div class="controls">
+          <input type="text" name="name" ng-model="model.name" />
+          <span ng-show="Form.name.$error.required" class="help-inline">*</span>
+        </div>
+      </div>
+      <div class="control-group" ng-class="{error: Form.jsonpath.$invalid}">
+        <label class="control-label">JSON Path</label>
+        <div class="controls">
+          <input type="text" name="jsonpath" ng-model="model.jsonpath" />
+          <span ng-show="Form.jsonpath.$error.required" class="help-inline">*</span>
+        </div>
+      </div>
+      <div class="control-group" ng-class="{error: Form.to_csv.$invalid}">
+        <label class="control-label">To CSV</label>
+        <div class="controls">
+          <input type="text" name="to_csv" ng-model="model.to_csv" />
+          <span ng-show="Form.to_csv.$error.required" class="help-inline">*</span>
+        </div>
+      </div>
+      <div class="control-group" ng-class="{error: Form.key_path.$invalid}">
+        <label class="control-label">Key Path</label>
+        <div class="controls">
+          <input type="text" name="key_path" ng-model="model.key_path" />
+          <span ng-show="Form.key_path.$error.required" class="help-inline">*</span>
+        </div>
+      </div>
+      <div class="control-group" ng-class="{error: Form.value_path.$invalid}">
+        <label class="control-label">Value Path</label>
+        <div class="controls">
+          <input type="text" name="value_path" ng-model="model.value_path" />
+          <span ng-show="Form.value_path.$error.required" class="help-inline">*</span>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="modal-footer">
+    <button ng-click="save(['name', 'type', 'db_settings', 'predefined_selected', 'datasource', 'num'])" ng-disabled="Form.$invalid" class="btn btn-primary">Save</button>
+  </div>
+</div>

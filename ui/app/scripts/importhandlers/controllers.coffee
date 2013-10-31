@@ -110,6 +110,14 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
         {handler: handler, ds: ds}
       )
 
+    $scope.editTargetFeature = (handler, feature) ->
+      $scope.openDialog($dialog, null,
+        'partials/import_handler/edit_target_feature.html',
+          'TargetFeatureEditDialogCtrl',
+        'modal', 'edit target feature', 'target feature',
+        {handler: handler, feature: feature}
+      )
+
     $scope.initSections($scope.go)
     #$scope.initLogMessages("channel=importdata_log&model=" +
     #$scope.handler._id)
@@ -134,6 +142,22 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
     )
 ])
 
+
+.controller('TargetFeatureEditDialogCtrl', [
+  '$scope'
+  '$rootScope'
+  'dialog'
+
+  ($scope, $rootScope, dialog) ->
+    $scope.handler = dialog.extra.handler
+    $scope.model = dialog.extra.feature
+    $scope.DONT_REDIRECT = true
+    $scope.dialog = dialog
+
+    $scope.$on('SaveObjectCtl:save:success', (event, current) ->
+      dialog.close()
+    )
+])
 
 .controller('AddImportHandlerCtl', [
   '$scope'
