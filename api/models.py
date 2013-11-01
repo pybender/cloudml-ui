@@ -218,7 +218,7 @@ class ImportHandlerEx(BaseDocument):
     QUERY_STRUCT = {
         "name": basestring,
         "sql": basestring,
-        "items": [{"target_features": [{'name': basestring, }]}]
+        "items": [{"target_features": [{}]}]
     }
 
     structure = {

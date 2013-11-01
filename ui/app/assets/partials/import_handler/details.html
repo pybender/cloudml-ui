@@ -122,19 +122,21 @@
           <tr ng-repeat="item in query.items">
             <td>
               <span title="source" class="source" ng-bind="item.source || 'no source'" editable="item" value="item.source" editable-field="source" editable-input="text" editable-placement="right"></span><br/>
-              <a ng-click="" title="add feature">add target feature</a>
             </td>
             <td>
               <small>
               <table class="table table-bordered">
                 <thead>
                   <tr>
-                    <th>Name</th>
+                    <th>
+                      Name
+                       <a ng-click="editTargetFeature(item, null)" title="add target feature"><i class="icon-plus" title="add" /></a>
+                    </th>
                     <th>JSON Path</th>
                     <th>To csv</th>
                     <th>Key Path</th>
                     <th>Value Path</th>
-                    <th />
+                    <th style="width:35px;" />
                   </tr>
                 </thead>
                 <tbody>
@@ -155,7 +157,7 @@
                       {{ feature.value_path }}
                     </td>
                     <td>
-                      <a ng-click="editTargetFeature(handler, feature)"><i class="icon-edit" title="edit" /></a>
+                      <a ng-click="editTargetFeature(item, feature)"><i class="icon-edit" title="edit" /></a>
                       <a ng-click="deleteFeature(item.target_features, feature)" title="remove feature"><i class="icon-remove" /></a>
                     </td>
                   </tr>

@@ -410,6 +410,8 @@ class ImportHandlerResource(BaseResource):
                                         {"source": '',
                                          "process_as": '',
                                          "target_features": []})
+                                elif prefield == 'target_features':
+                                    sub.append({})
 
                             field = new_subitem_idx
 
@@ -418,7 +420,7 @@ class ImportHandlerResource(BaseResource):
                         else:
                             sub = sub[field]
                     else:
-                        break
+                        sub[field] = val
                     prefield = field
 
         if 'remove_item' in data:
@@ -438,7 +440,7 @@ class ImportHandlerResource(BaseResource):
             item_num = int(data.get('item_num', None))
             if num is None:
                 raise ValidationError('num is required')
-            del obj['queries'][num]['items'][item_num]['target_features'][num]
+            del obj['queries'][query_num]['items'][item_num]['target_features'][num]
         elif 'fill_predefined' in data:
             num = int(data.get('num', None))
             datasource_id = data.get('datasource', None)

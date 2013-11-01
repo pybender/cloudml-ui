@@ -1,7 +1,7 @@
 <div ng-controller="SaveObjectCtl">
   <div class="modal-header">
     <button ng-click="dialog.close()" class="close" data-dismiss="modal">×</button>
-    <h3>Edit target feature</h3>
+    <h3><span ng-hide="model.isNew()">Edit</span><span ng-show="model.isNew()">Add</span> target feature</h3>
   </div>
 
   <div class="modal-body">
@@ -49,6 +49,6 @@
   </div>
 
   <div class="modal-footer">
-    <button ng-click="save(['name', 'type', 'db_settings', 'predefined_selected', 'datasource', 'num'])" ng-disabled="Form.$invalid" class="btn btn-primary">Save</button>
+    <button ng-click="save(['name', 'jsonpath', 'to_csv', 'key_path', 'value_path'])" ng-disabled="Form.$invalid" class="btn btn-primary">Save</button>
   </div>
 </div>

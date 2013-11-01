@@ -110,12 +110,12 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
         {handler: handler, ds: ds}
       )
 
-    $scope.editTargetFeature = (handler, feature) ->
+    $scope.editTargetFeature = (item, feature) ->
       $scope.openDialog($dialog, null,
         'partials/import_handler/edit_target_feature.html',
           'TargetFeatureEditDialogCtrl',
         'modal', 'edit target feature', 'target feature',
-        {handler: handler, feature: feature}
+        {handler: item.handler, feature: feature, item: item}
       )
 
     $scope.initSections($scope.go)
@@ -147,15 +147,29 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
   '$scope'
   '$rootScope'
   'dialog'
+  'TargetFeature'
 
-  ($scope, $rootScope, dialog) ->
+  ($scope, $rootScope, dialog, TargetFeature) ->
     $scope.handler = dialog.extra.handler
-    $scope.model = dialog.extra.feature
+    feature = dialog.extra.feature
+    item = dialog.extra.item
+    if !feature?
+        feature = new TargetFeature({
+          handler: $scope.handler,
+          query_num: item.query_num,
+          item_num: item.num,
+          num: -1
+          })
+    $scope.model = feature
+    $scope.item = item
     $scope.DONT_REDIRECT = true
     $scope.dialog = dialog
 
     $scope.$on('SaveObjectCtl:save:success', (event, current) ->
       dialog.close()
+      if $scope.model.isNew()
+        $scope.model.num = $scope.item.target_features.length
+        $scope.item.target_features.push $scope.model
     )
 ])
 

@@ -21,9 +21,11 @@ angular.module('app.importhandlers.model', ['app.config'])
       query_num: null
       num: null
 
+      isNew: -> @num == -1
+
       $save: (opts={}) =>
-        prefix = 'queries.' + @query_num + '.items.'
-        + @item_num + '.' + @num + '.'
+        prefix = 'queries.' + @query_num + '.items.'\
+        + @item_num + '.target_features.' + @num + '.'
 
         if !opts.only?
           opts.only = @DATA_FIELDS
