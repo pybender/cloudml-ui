@@ -525,7 +525,7 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
         </span>
         <span ng-switch-default class="jsonLiteral">
           <input type="text" ng-model="paramsEditorData[key]" ng-model-onblur
-            placeholder="Empty" />
+            placeholder="Empty" class="input-medium" />
         </span>
         </span>'
 
@@ -537,48 +537,49 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
             <input placeholder="Name" type="text"
               class="input-small addItemKeyInput"
               ng-model="$parent.keyName" />
-            <span> :
-              <input type="text" placeholder="Value"
-                class="input-medium addItemValueInput"
-                ng-model="$parent.valueName" />
-            </span>
-            <button class="btn btn-primary"
-              ng-click="addItem(paramsEditorData)">
-                Add
-            </button>
-            <button class="btn" ng-click="$parent.showAddKey=false">
-              Cancel
-            </button>
+            <span>: &nbsp;</span>
+            <input type="text" placeholder="Value"
+              class="input-medium addItemValueInput"
+              ng-model="$parent.valueName" />
+            <a title="add" ng-click="addItem(paramsEditorData)">
+              <i class="icon-ok"></i>
+            </a>
+            <a title="cancel" ng-click="$parent.showAddKey=false">
+              <i class="icon-remove"></i>
+            </a>
           </span>
           <span ng-switch-default>
-            <button class="addObjectItemBtn"
+            <a
+              title="add new parameter"
               ng-click="$parent.showAddKey = true">
-              <i class="icon-plus"></i></button>
-            </span>
+              <i class="icon-plus"></i></a>
+          </span>
         </div>'
 
       # start template
       template = '
-      <div ng-show="isEmpty()">
+      <i class="help_text" ng-show="isEmpty()">
         There are no parameters to edit
-      </div>
+      </i>
       <div class="jsonContents">
       <span class="block" ng-hide="key.indexOf(\'_\') == 0"
         ng-repeat="(key, value) in paramsEditorData">
-        <span class="jsonObjectKey">
-          <input ng-disabled="isRequired(key)" class="keyinput"
-            type="text"
-            ng-model="newkey"
-            ng-init="newkey=key"
-            ng-change="moveKey(paramsEditorData, key, newkey)"/>
-          <i ng-hide="isRequired(key)"
-            class="deleteKeyBtn icon-trash"
+        <label
+          ng-show="isRequired(key)"
+          class="control-label" ng-bind="newkey"
+          ng-init="newkey=key"/>
+        <input ng-hide="isRequired(key)"
+          ng-disabled="isRequired(key)" class="input-small keyinput"
+          type="text"
+          ng-model="newkey"
+          ng-init="newkey=key"
+          ng-change="moveKey(paramsEditorData, key, newkey)"/>
+        <span>: &nbsp;</span>' + switchTemplate + '
+        <i ng-hide="isRequired(key)"
+            class="deleteKeyBtn1 icon-trash"
             ng-click="deleteKey(paramsEditorData, key)">
           </i>
-        </span>
-        <span class="jsonObjectValue">&nbsp;:&nbsp;
-        ' + switchTemplate + '</span>
-        <i ng-show="isRequired(key)" class="badge">
+        <i ng-show="isRequired(key)" class="help_text">
           {{ paramsConfig[key].help_text }}
         </i>
         </span><div ng-hide="isTopLevel()">' + addItemTemplate + '</div>
