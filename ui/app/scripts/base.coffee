@@ -47,7 +47,7 @@ angular.module('app.base', ['app.config', 'app.services'])
         data = {}
         for key in @DATA_FIELDS
           val = eval('this.' + key)
-          if val?
+          if val? && val != ""
             data[key] = val
         return data
 

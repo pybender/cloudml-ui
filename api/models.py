@@ -213,8 +213,8 @@ class DataSource(BaseDocument):
 
 
 @app.conn.register
-class ImportHandlerEx(BaseDocument):
-    __collection__ = 'ih'
+class ImportHandler(BaseDocument):
+    __collection__ = 'import_handlers'
     QUERY_STRUCT = {
         "name": basestring,
         "sql": basestring,
@@ -237,14 +237,14 @@ class ImportHandlerEx(BaseDocument):
     required_fields = ['name', 'created_on', ]
     default_values = {'created_on': datetime.utcnow,
                       'updated_on': datetime.utcnow,
-                      'datasource': [] }
+                      'datasource': []}
 
     def from_import_handler_json(self, data):
         self.target_schema = data['target_schema']
         for ds in data["datasource"]:
             self.datasource.append({"name": ds["name"],
-                                     "type": ds["type"],
-                                     "db_settings": ds["db"]})
+                                    "type": ds["type"],
+                                    "db_settings": ds["db"]})
         self.queries = data['queries']
         self.save()
 
@@ -259,34 +259,22 @@ class ImportHandlerEx(BaseDocument):
                 else:
                     assert key in item, '%s is required' % key
 
-        super(ImportHandlerEx, self).validate(*args, **kwargs)
+        super(ImportHandler, self).validate(*args, **kwargs)
         for query in self['queries']:
             validate_structure(query, self.QUERY_STRUCT)
 
+    @property
+    def data(self):
+        data = dict(self)
+        data.pop("_id")
+        data.pop("created_on")
+        data.pop("created_by")
+        data.pop("updated_on")
+        data.pop("updated_by")
+        data.pop("import_params")
+        return data
 
-@app.conn.register
-class ImportHandler(BaseDocument):
-    TYPE_DB = 'Db'
-    TYPE_REQUEST = 'Request'
-    __collection__ = 'handlers'
-    structure = {
-        'name': basestring,
-        'type': basestring,
-        'created_on': datetime,
-        'created_by': dict,
-        'updated_on': datetime,
-        'updated_by': dict,
-        'data': dict,
-        'import_params': list,
-    }
-    required_fields = ['name', 'created_on', 'updated_on', ]
-    default_values = {'created_on': datetime.utcnow,
-                      'updated_on': datetime.utcnow,
-                      'type': TYPE_DB,
-                      'created_by': {},
-                      'updated_by': {}}
-    use_dot_notation = True
-
+    # TODO: Denormalize to field
     def get_fields(self):
         from core.importhandler.importhandler import ExtractionPlan
         data = json.dumps(self.data)
@@ -295,7 +283,7 @@ class ImportHandler(BaseDocument):
         for query in plan.queries:
             items = query['items']
             for item in items:
-                features = item['target-features']
+                features = item['target_features']
                 for feature in features:
                     test_handler_fields.append(
                         feature['name'].replace('.', '->'))

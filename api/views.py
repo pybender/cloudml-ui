@@ -365,7 +365,7 @@ class ImportHandlerResource(BaseResource):
     """
     @property
     def Model(self):
-        return app.db.ImportHandlerEx
+        return app.db.ImportHandler
 
     OBJECT_NAME = 'import_handler'
     post_form = AddImportHandlerForm

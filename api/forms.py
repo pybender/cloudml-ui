@@ -754,7 +754,7 @@ class DataSourceForm(BasePredefinedForm):
     db_settings = JsonField()
     predefined_selected = BooleanField()
     datasource = DocumentField(doc='DataSource', by_name=False, return_doc=True)
-    handler_id = DocumentField(doc='ImportHandlerEx', by_name=False,
+    handler_id = DocumentField(doc='ImportHandler', by_name=False,
                                return_doc=False)
 
     def clean_db_settings(self, value, field):
