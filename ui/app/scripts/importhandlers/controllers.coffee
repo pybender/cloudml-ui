@@ -31,21 +31,27 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
     $scope.PROCESS_STRATEGIES = ImportHandler.PROCESS_STRATEGIES
 
     $scope.go = (section) ->
-      name = section[0]
-      if name not in $scope.LOADED_SECTIONS
+      fields = ''
+      mainSection = section[0]
+      if mainSection not in $scope.LOADED_SECTIONS
+        # is not already loaded
+        fields = ImportHandler.MAIN_FIELDS + ',queries'
+        if mainSection == 'dataset'
+          setTimeout(() ->
+            $scope.$broadcast('loadDataSet', true)
+            $scope.LOADED_SECTIONS.push mainSection
+          , 100)
+
+      if section[1] == 'json' then fields += ',data'
+
+      if fields != ''
         $scope.handler.$load(
-          show: ImportHandler.MAIN_FIELDS + ',queries,datasource'
+            show: fields
         ).then (->
-          $scope.LOADED_SECTIONS.push name
-          $scope.handler.data = $scope.handler.getJsonData()
+          $scope.LOADED_SECTIONS.push mainSection
         ), ((opts) ->
           $scope.setError(opts, 'loading handler details')
         )
-        if name == 'dataset'
-          setTimeout(() ->
-            $scope.$broadcast('loadDataSet', true)
-            $scope.LOADED_SECTIONS.push name
-          , 100)
 
     $scope.save = (fields) ->
       $scope.handler.$save(only: fields)

@@ -170,8 +170,8 @@ angular.module('app.importhandlers.model', ['app.config'])
       BASE_API_URL: "#{settings.apiUrl}importhandlers/"
       BASE_UI_URL: '/importhandlers/'
       API_FIELDNAME: 'import_handler'
-      @MAIN_FIELDS: 'name,_id,target_schema,import_parameters,
-created_on,created_by'
+      @MAIN_FIELDS: 'name,_id,target_schema,import_params,
+created_on,created_by,datasource'
       DEFAULT_FIELDS_TO_SAVE: ['name', 'data']
 
       @PROCESS_STRATEGIES = ['identity', 'string', 'float',
@@ -206,6 +206,7 @@ created_on,created_by'
         super origData
 
         if origData?
+          @data = angular.toJson(origData.data, pretty=true)
           i = 0
           if origData.datasource?
             @datasource = []
@@ -225,6 +226,7 @@ created_on,created_by'
       $loadData: (opts={}) =>
         # Executes loading dataset task
         data = {}
+        return
         for key, val of opts
           data[key] = val
         @$make_request("#{@BASE_API_URL}#{@_id}/action/load/", {}, "PUT", data)

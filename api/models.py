@@ -13,6 +13,7 @@ from flask.ext.mongokit import Document
 from flask import request, has_request_context
 
 from core.trainer.streamutils import streamingiterload
+from core.importhandler.importhandler import ExtractionPlan
 
 from api import app, celery
 from api.amazon_utils import AmazonS3Helper
@@ -239,6 +240,11 @@ class ImportHandler(BaseDocument):
                       'updated_on': datetime.utcnow,
                       'datasource': []}
 
+    def save(self, *args, **kwargs):
+        plan = ExtractionPlan(json.dumps(self.data), is_file=False)
+        self.import_params = plan.input_params
+        super(ImportHandler, self).save(*args, **kwargs)
+
     def from_import_handler_json(self, data):
         self.target_schema = data['target_schema']
         for ds in data["datasource"]:
@@ -263,20 +269,22 @@ class ImportHandler(BaseDocument):
         for query in self['queries']:
             validate_structure(query, self.QUERY_STRUCT)
 
+    SYSTEM_FIELDS = ('_id', 'created_on', 'created_by',
+        'updated_on', 'updated_by', 'import_params')
+
     @property
     def data(self):
-        data = dict(self)
-        data.pop("_id")
-        data.pop("created_on")
-        data.pop("created_by")
-        data.pop("updated_on")
-        data.pop("updated_by")
-        data.pop("import_params")
+        from copy import deepcopy
+        data = deepcopy(dict(self))
+        for field in self.SYSTEM_FIELDS:
+            data.pop(field, None)
+
+        for ds in data['datasource']:
+            ds['db'] = ds.pop('db_settings', None)
         return data
 
-    # TODO: Denormalize to field
+    # TODO: Denormalize to field!
     def get_fields(self):
-        from core.importhandler.importhandler import ExtractionPlan
         data = json.dumps(self.data)
         plan = ExtractionPlan(data, is_file=False)
         test_handler_fields = []

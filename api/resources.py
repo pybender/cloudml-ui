@@ -365,6 +365,6 @@ def _filter_model_fields(model, show_fields):
                     inner_model = val
                     inner = inner[subfield]
         else:
-            if field in model:
+            if hasattr(model, field):
                 res[field] = getattr(model, field)
     return res

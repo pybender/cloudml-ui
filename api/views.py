@@ -371,10 +371,17 @@ class ImportHandlerResource(BaseResource):
     post_form = AddImportHandlerForm
     put_form = EditImportHandlerForm
     GET_ACTIONS = ('download', )
+    FORCE_FIELDS_CHOOSING = True
 
     @public_actions(['download'])
     def get(self, *args, **kwargs):
         return super(ImportHandlerResource, self).get(*args, **kwargs)
+
+    def _get_fields(self, params):
+        query_fields, show_fields = super(ImportHandlerResource, self)._get_fields(params)
+        if 'data' in show_fields:
+            query_fields = None
+        return query_fields, show_fields
 
     def put(self, action=None, **kwargs):
         obj = self._get_details_query(None, None, **kwargs)
@@ -442,8 +449,9 @@ class ImportHandlerResource(BaseResource):
                 raise ValidationError('num is required')
             del obj['queries'][query_num]['items'][item_num]['target_features'][num]
         elif 'fill_predefined' in data:
-            num = int(data.get('num', None))
-            datasource_id = data.get('datasource', None)
+            data.pop('predefined_selected', None)
+            num = int(data.pop('num', None))
+            datasource_id = data.pop('datasource', None)
             ds = app.db.DataSource.get_from_id(ObjectId(datasource_id))
             obj.datasource[num] = {
                 'name': ds.name,

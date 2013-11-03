@@ -39,7 +39,7 @@
   <p class="switcher">
     <b>Switch View: </b>
     <a ng-class="{active: action[1] == 'details'}" ng-click="setSection(['model', 'details'])">Standart</a> | 
-    <a ng-class="{active: action[1] == 'json'}" ng-click="setSection(['model', 'json']);handler.data = handler.getJsonData()">JSON File</a>
+    <a ng-class="{active: action[1] == 'json'}" ng-click="setSection(['model', 'json']);">JSON File</a>
   </p>
   <div ng-show="action[1] == 'details'">
     <div>
@@ -183,7 +183,7 @@
     </div>
     </div>
     <div ng-show="action[1] == 'json'">
-      <file-download text="'Download JSON'" css-class="'btn-info btn'" filename="'handler-' + handler.name + '.json'" data="handler.data"></file-download>
+      <a href="{{handler.downloadUrl()}}">Download</a>
       <textarea name="data" ui-codemirror="{ mode: {name: 'javascript', json: true, readOnly: true} }" ng-model="handler.data"></textarea>
     </div>    
   </div>

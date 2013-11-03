@@ -369,7 +369,7 @@ class AddImportHandlerForm(BaseFormEx):
         return data
 
     def save(self):
-        data = self.cleaned_data.get('data', None)
+        data = self.cleaned_data.pop('data', None)
         obj = super(AddImportHandlerForm, self).save(commit=data is None)
         if data:
             obj.from_import_handler_json(data)
