@@ -33,8 +33,7 @@ class DataSetsTests(BaseTestCase):
         Tests loading dataset using specified import handler
         """
         post_data = {'start': '2012-12-03',
-                     'end': '2012-12-04',
-                     'category': 'smth'}
+                     'end': '2012-12-04'}
         resp, ds = self._check_post(post_data=post_data, load_model=True)
         self.assertEquals(ds.status, 'Imported', ds.error)
         self.assertEquals(ds.import_handler_id, self.HANDLER_ID)

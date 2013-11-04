@@ -9,7 +9,7 @@
       {
         "name":"odw",
         "type":"sql",
-        "db":{
+        "db_settings":{
           "conn":"host='localhost' dbname='cloudml' user='cloudml' password='cloudml'",
           "vendor":"postgres"
         }

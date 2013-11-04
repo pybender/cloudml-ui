@@ -152,7 +152,7 @@ class BaseTestCase(unittest.TestCase):
         fields = self.__get_fields(show)
         valid_count = len(fields) if '_id' in fields \
             else len(fields) + 1
-        self.assertEquals(valid_count, len(obj_resp.keys()))
+        self.assertEquals(valid_count, len(obj_resp.keys()), obj_resp.keys())
 
         for field in fields:
             self.assertTrue(field in obj_resp.keys())
@@ -222,7 +222,7 @@ class BaseTestCase(unittest.TestCase):
             if load_model:
                 data = json.loads(resp.data)
                 _id = data[self.RESOURCE.OBJECT_NAME]['_id']
-                obj = self.Model.find_one({'_id': ObjectId(_id)})
+                obj = self.Model.get_from_id(ObjectId(_id))
                 return resp, obj
 
         return resp

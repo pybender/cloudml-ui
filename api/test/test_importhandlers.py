@@ -21,7 +21,7 @@ class ImportHandlersTests(BaseTestCase):
         self.obj = self.Model.find_one({'_id': ObjectId(self.HANDLER_ID)})
 
     def test_list(self):
-        self._check_list()
+        self._check_list(show="name")
 
     def test_put(self):
         data = {"name": "new name", "target_schema": "new-schema"}

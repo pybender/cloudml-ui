@@ -65,8 +65,7 @@ class TestTests(BaseTestCase):
         """
         data = {}
         import_params = {'start': '2012-12-03',
-                         'end': '2012-12-04',
-                         'category': 'smth'}
+                         'end': '2012-12-04'}
         data.update(self.POST_DATA)
         data.update(import_params)
         resp, test = self._check_post(data, load_model=True)
@@ -180,7 +179,7 @@ One of parameters, dataset is required.',
             'spot_instance_type': "INVALID is invalid choice for \
 spot_instance_type. Please choose one of ('m3.xlarge', 'm3.2xlarge', \
 'cc2.8xlarge', 'cr1.8xlarge', 'hi1.4xlarge', 'hs1.8xlarge')",
-            'parameters': 'Parameters category, end are required',
+            'parameters': 'Parameters end are required',
             None: 'One of parameters, dataset is required.'  # TODO: Remove.
         }
         _check(data, errors)

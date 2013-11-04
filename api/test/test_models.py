@@ -250,7 +250,7 @@ aws_instance is required')
         data = {'aws_instance': self.INSTANCE_ID,
                 'start': '2012-12-03'}
         self._check_put(data, action='train',
-                        error='Parameters category, end are required')
+                        error='Parameters end are required')
 
         data = {'aws_instance': self.INSTANCE_ID}
         self._check_put(data, action='train',
