@@ -374,6 +374,7 @@ class ImportHandlerResource(BaseResource):
     FORCE_FIELDS_CHOOSING = True
 
     HANDLER_REGEXP = re.compile('^[a-zA-Z_]+$')
+    DATASOURCE_REGEXP = re.compile('^datasource.[-\d]+.[a-zA-Z_]+')
     QUERY_REGEXP = re.compile('^queries.[-\d]+.[a-zA-Z_]+$')
     ITEM_REGEXP = re.compile(
         '^queries.[-\d]+.items.[-\d]+.[a-zA-Z_]+$')
@@ -409,6 +410,22 @@ class ImportHandlerResource(BaseResource):
                     handler_form.append_data(key, val)
             if handler_form is not None and handler_form.is_valid():
                 handler_form.save()
+
+            datasource_forms = {}
+            for key, val in data.iteritems():
+                match = self.DATASOURCE_REGEXP.search(key)
+                if match:
+                    sub_keys = key.split('.')
+                    ds_num = sub_keys[1]
+                    if not ds_num in datasource_forms:
+                        datasource_forms[ds_num] = HandlerDataSourceForm(
+                            obj['datasource'], ds_num)
+                    field = sub_keys[2]
+                    datasource_forms[ds_num].append_data(field, val)
+
+            for i, form in datasource_forms.iteritems():
+                if form.is_valid():
+                    form.save()
 
             # Add/edit query fields
             query_forms = {}

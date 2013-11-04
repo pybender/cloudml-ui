@@ -396,6 +396,12 @@ class BaseInnerDocumentForm(BaseFormEx):
                 self.obj[self.num][key] = val
 
 
+class HandlerDataSourceForm(BaseInnerDocumentForm):
+    name = CharField()
+    type_field = ChoiceField(choices=app.db.DataSource.TYPES_LIST, name='type')
+    db_settings = JsonField()
+
+
 class QueryForm(BaseInnerDocumentForm):
     EXTRA_FIELDS = {'items': []}
     name = CharField()

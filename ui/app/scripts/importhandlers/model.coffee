@@ -283,8 +283,7 @@ created_on,created_by,datasource'
             for key in opts.only
               val = eval('this.' + key)
               if key == 'db_settings'
-                for db_key, db_val of val
-                  data[prefix + key + '.' + db_key] = db_val
+                data[prefix + key] = JSON.stringify(val)
               else
                 data[prefix + key] = val
           @$make_request(@handler.getUrl(), {}, "PUT", data)
