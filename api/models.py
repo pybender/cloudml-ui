@@ -794,7 +794,7 @@ class Test(BaseDocument):
         'examples_count': int,
         'examples_placement': basestring,
         'examples_fields': list,
-        'examples_size': int,
+        'examples_size': float,
 
         'parameters': dict,
         'classes_set': list,
@@ -819,7 +819,7 @@ class Test(BaseDocument):
         'memory_usage': {},
         'exports': [],
         'created_by': {},
-        'examples_size': 0,
+        'examples_size': 0.0,
         'confusion_matrix_calculations': [],
     }
     use_dot_notation = True

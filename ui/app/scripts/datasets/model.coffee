@@ -13,6 +13,9 @@ angular.module('app.datasets.model', ['app.config'])
     class DataSet extends BaseModel
       API_FIELDNAME: 'dataset'
 
+      STATUS_IMPORTING = 'Importing'
+      STATUS_UPLOADING = 'Uploading'
+
       _id: null
       name: null
       status: 'not loaded'
@@ -69,6 +72,15 @@ angular.module('app.datasets.model', ['app.config'])
 
       $reupload: =>
         url = "#{@BASE_API_URL}#{@_id}/action/reupload/"
+        @$make_request(url, {}, "PUT", {}).then(
+          (resp) =>
+            @status = resp.data.dataset.status)
+
+      $reimport: =>
+        if @status in [@STATUS_IMPORTING, @STATUS_UPLOADING]
+          throw new Error "Can't re-import a dataset that is importing now"
+
+        url = "#{@BASE_API_URL}#{@_id}/action/reimport/"
         @$make_request(url, {}, "PUT", {}).then(
           (resp) =>
             @status = resp.data.dataset.status)

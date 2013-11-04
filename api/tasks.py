@@ -503,7 +503,7 @@ def run_test(dataset_ids, test_id):
                 vectorized_data = metrics._true_data.getrow(n).todense()
                 example, new_row = _add_example_to_mongo(test, vectorized_data, row, label,
                                                          pred, prob)
-                test.examples_size += get_doc_size(example)
+                test.examples_size += (get_doc_size(example) / 1024.0 / 1024.0)
                 example_ids.append(str(example._id))
 
         if test.examples_placement == test.EXAMPLES_TO_AMAZON_S3:
@@ -530,7 +530,7 @@ def run_test(dataset_ids, test_id):
             group(examples_tasks).apply_async().get(propagate=False)
             #os.remove(test.temp_data_filename)
 
-        test.examples_size = test.examples_size / 1024 / 1024
+        #test.examples_size = test.examples_size
         test.status = Test.STATUS_COMPLETED
         test.save()
         logging.info('Test %s completed' % test.name)
