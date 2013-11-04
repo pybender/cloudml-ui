@@ -1,6 +1,7 @@
 from collections import defaultdict
 from datetime import datetime
 import json
+import re
 import logging
 import traceback
 from flask.ext.restful import reqparse
@@ -369,9 +370,15 @@ class ImportHandlerResource(BaseResource):
 
     OBJECT_NAME = 'import_handler'
     post_form = AddImportHandlerForm
-    put_form = EditImportHandlerForm
     GET_ACTIONS = ('download', )
     FORCE_FIELDS_CHOOSING = True
+
+    HANDLER_REGEXP = re.compile('^[a-zA-Z_]+$')
+    QUERY_REGEXP = re.compile('^queries.[-\d]+.[a-zA-Z_]+$')
+    ITEM_REGEXP = re.compile(
+        '^queries.[-\d]+.items.[-\d]+.[a-zA-Z_]+$')
+    FEATURE_REGEXP = re.compile(
+        '^queries.[-\d]+.items.[-\d]+.target_features.[-\d]+.[a-zA-Z_]+$')
 
     @public_actions(['download'])
     def get(self, *args, **kwargs):
@@ -380,6 +387,7 @@ class ImportHandlerResource(BaseResource):
     def _get_fields(self, params):
         query_fields, show_fields = super(ImportHandlerResource, self)._get_fields(params)
         if 'data' in show_fields:
+            # For generating json data we need to import all fields
             query_fields = None
         return query_fields, show_fields
 
@@ -389,46 +397,76 @@ class ImportHandlerResource(BaseResource):
             raise NotFound(self.MESSAGE404 % kwargs)
 
         data = request.form
-        def update_inner_items():
-            new_subitem_idx = None
+
+        def edit():
+            # edit handler fields
+            handler_form = None
             for key, val in data.iteritems():
-                fields = key.split('.')
-                sub = obj
-                count = len(fields)
-                prefield = None
-                for i, field in enumerate(fields):
-                    if type(sub) == list:
-                        try:
-                            field = int(field)
-                        except ValueError:
-                            continue
+                match = self.HANDLER_REGEXP.search(key)
+                if match:
+                    if not handler_form:
+                        handler_form = HandlerForm(obj=obj)
+                    handler_form.append_data(key, val)
+            if handler_form is not None and handler_form.is_valid():
+                handler_form.save()
 
-                    if type(field) == int or field in sub:
-                        if field == -1:  # adding new item to list
-                            if new_subitem_idx is None:
-                                new_subitem_idx = len(sub)
-                                if prefield == 'queries':
-                                    sub.append(
-                                        {"name": '',
-                                         "sql": '',
-                                         "items": []})
-                                elif prefield == 'items':
-                                    sub.append(
-                                        {"source": '',
-                                         "process_as": '',
-                                         "target_features": []})
-                                elif prefield == 'target_features':
-                                    sub.append({})
+            # Add/edit query fields
+            query_forms = {}
+            for key, val in data.iteritems():
+                match = self.QUERY_REGEXP.search(key)
+                if match:
+                    sub_keys = key.split('.')
+                    query_num = sub_keys[1]
+                    if not query_num in query_forms:
+                        query_forms[query_num] = QueryForm(
+                            obj['queries'], query_num)
+                    field = sub_keys[2]
+                    query_forms[query_num].append_data(field, val)
 
-                            field = new_subitem_idx
+            for i, form in query_forms.iteritems():
+                if form.is_valid():
+                    form.save()
 
-                        if i + 1 == count:
-                            sub[field] = val
-                        else:
-                            sub = sub[field]
-                    else:
-                        sub[field] = val
-                    prefield = field
+            # Add/edit query items fields
+            item_forms = {}
+            for key, val in data.iteritems():
+                match = self.ITEM_REGEXP.search(key)
+                if match:
+                    sub_keys = key.split('.')
+                    query_num = sub_keys[1]
+                    item_num = sub_keys[3]
+                    num = (query_num, item_num)
+                    if not num in item_forms:
+                        items = obj['queries'][int(query_num)]['items']
+                        item_forms[num] = QueryItemForm(
+                            items, item_num)
+                    field = sub_keys[4]
+                    item_forms[num].append_data(field, val)
+
+            for i, form in item_forms.iteritems():
+                if form.is_valid():
+                    form.save()
+
+            # Add/edit target features fields
+            feature_forms = {}
+            for key, val in data.iteritems():
+                match = self.FEATURE_REGEXP.search(key)
+                if match:
+                    sub_keys = key.split('.')
+                    query_num = sub_keys[1]
+                    item_num = sub_keys[3]
+                    feature_num = sub_keys[5]
+                    num = (query_num, item_num, feature_num)
+                    if not num in feature_forms:
+                        features = obj['queries'][int(query_num)]['items'][int(item_num)]['target_features']
+                        feature_forms[num] = TargetFeatureForm(
+                            features, feature_num)
+                    field = sub_keys[6]
+                    feature_forms[num].append_data(field, val)
+
+            for i, form in feature_forms.iteritems():
+                if form.is_valid():
+                    form.save()
 
         if 'remove_item' in data:
             num = int(data.get('num', None))
@@ -459,7 +497,7 @@ class ImportHandlerResource(BaseResource):
                 'db_settings': ds.db_settings
             }
         else:
-            update_inner_items()
+            edit()
         
         obj.save()
         return self._render(self._get_save_response_context(obj),

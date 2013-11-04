@@ -241,8 +241,11 @@ class ImportHandler(BaseDocument):
                       'datasource': []}
 
     def save(self, *args, **kwargs):
-        plan = ExtractionPlan(json.dumps(self.data), is_file=False)
-        self.import_params = plan.input_params
+        try:
+            plan = ExtractionPlan(json.dumps(self.data), is_file=False)
+            self.import_params = plan.input_params
+        except Exception:
+            pass
         super(ImportHandler, self).save(*args, **kwargs)
 
     def from_import_handler_json(self, data):

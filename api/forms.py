@@ -377,10 +377,47 @@ class AddImportHandlerForm(BaseFormEx):
         return obj
 
 
-class EditImportHandlerForm(BaseFormEx):
+class HandlerForm(BaseFormEx):
     name = CharField()
     target_schema = CharField()
-    queries = JsonField()
+
+
+class BaseInnerDocumentForm(BaseFormEx):
+    EXTRA_FIELDS = {}
+
+    def __init__(self, obj, num):
+        self.num = int(num)
+        super(BaseInnerDocumentForm, self).__init__(
+            data_from_request=False, obj=obj)
+
+    def save(self):
+        if self.num == -1:
+            self.cleaned_data.update(self.EXTRA_FIELDS)
+            self.obj.append(self.cleaned_data)
+        else:
+            for key, val in self.cleaned_data.iteritems():
+                self.obj[self.num][key] = val
+
+
+class QueryForm(BaseInnerDocumentForm):
+    EXTRA_FIELDS = {'items': []}
+    name = CharField()
+    sql = CharField()
+
+
+class QueryItemForm(BaseInnerDocumentForm):
+    EXTRA_FIELDS = {'target_features': []}
+    source = CharField()
+    process_as = CharField()  # TODO: choice field
+    is_required = BooleanField()
+
+
+class TargetFeatureForm(BaseInnerDocumentForm):
+    name = CharField()
+    jsonpath = CharField()
+    key_path = CharField()
+    value_path = CharField() 
+    to_csv = BooleanField()
 
 
 class DataSetEditForm(BaseForm):

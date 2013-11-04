@@ -23,14 +23,52 @@ class ImportHandlersTests(BaseTestCase):
     def test_list(self):
         self._check_list()
 
-    def test_edit_name(self):
-        url = self._get_url(id=self.obj._id)
-        data = {'name': 'new name'}
-        resp = self.app.put(url, data=data, headers=HTTP_HEADERS)
-        self.assertEquals(resp.status_code, httplib.OK)
-        self.assertTrue(self.RESOURCE.OBJECT_NAME in resp.data)
-        handler = self.Model.find_one({'_id': ObjectId(self.HANDLER_ID)})
-        self.assertEquals(handler.name, data['name'])
+    def test_put(self):
+        data = {"name": "new name", "target_schema": "new-schema"}
+        resp, obj = self._check_put(data, load_model=True)
+        self.assertEquals(obj.name, data['name'])
+        self.assertEquals(obj.target_schema, data['target_schema'])
+
+        data = {'queries.-1.name': 'new query',
+                'queries.-1.sql': 'select * from ...'}
+        resp, obj = self._check_put(data, load_model=True)
+        self.assertEquals(len(obj.queries), 2, "Query should be added")
+        query = obj.queries[1]
+        self.assertEquals(query['name'], 'new query')
+        self.assertEquals(query['sql'], 'select * from ...')
+
+        data = {'queries.1.name': 'new query1',
+                'queries.1.sql': 'select * from t1...'}
+        resp, obj = self._check_put(data, load_model=True)
+        self.assertEquals(len(obj.queries), 2, "Query should be updated")
+        query = obj.queries[1]
+        self.assertEquals(query['name'], 'new query1')
+        self.assertEquals(query['sql'], 'select * from t1...')
+
+        data = {'queries.1.items.-1.source': 'some-source'}
+        resp, obj = self._check_put(data, load_model=True)
+        self.assertEquals(len(obj.queries[1]['items']), 1,
+                          "Item should be updated")
+        item = obj.queries[1]['items'][0]
+        self.assertEquals(item['source'], 'some-source')
+
+        data = {'queries.1.items.0.source': 'other-source'}
+        resp, obj = self._check_put(data, load_model=True)
+        item = obj.queries[1]['items'][0]
+        self.assertEquals(item['source'], 'other-source')
+
+        data = {'queries.1.items.0.target_features.-1.name': 'hire_outcome'}
+        resp, obj = self._check_put(data, load_model=True)
+        features = obj.queries[1]['items'][0]['target_features']
+        self.assertEquals(len(features), 1,
+                          "Item should be updated")
+        feature = features[0]
+        self.assertEquals(feature['name'], 'hire_outcome')
+
+        data = {'queries.1.items.0.target_features.0.name': 'hire_outcome2'}
+        resp, obj = self._check_put(data, load_model=True)
+        feature = obj.queries[1]['items'][0]['target_features'][0]
+        self.assertEquals(feature['name'], 'hire_outcome2')
 
     def test_delete(self):
         datasets = self.db.DataSet.find({'import_handler_id': self.HANDLER_ID})
@@ -50,7 +88,8 @@ class ImportHandlersTests(BaseTestCase):
         resp = self.app.delete(url, headers=HTTP_HEADERS)
 
         self.assertEquals(resp.status_code, httplib.NO_CONTENT)
-        self.assertIsNone(self.Model.find_one({'_id': ObjectId(self.HANDLER_ID)}))
+        self.assertIsNone(self.Model.find_one(
+            {'_id': ObjectId(self.HANDLER_ID)}))
 
         datasets = self.db.DataSet.find({'import_handler_id': self.HANDLER_ID})
         self.assertFalse(datasets.count(), 'DataSets should be removed')
