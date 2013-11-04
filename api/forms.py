@@ -358,19 +358,20 @@ class AddImportHandlerForm(BaseFormEx):
         except ValueError, exc:
             raise ValidationError('Invalid data: %s' % exc)
 
-        # try:
-        #     plan = ExtractionPlan(value, is_file=False)
-        #     self.cleaned_data['import_params'] = plan.input_params
-        # except (ValueError, ImportHandlerException) as exc:
-        #     raise ValidationError('Invalid importhandler: %s' % exc)
         return data
 
     def save(self):
         data = self.cleaned_data.pop('data', None)
-        obj = super(AddImportHandlerForm, self).save(commit=data is None)
+        obj = super(AddImportHandlerForm, self).save(commit=False)
         if data:
             obj.from_import_handler_json(data)
-            obj.save()
+        else:
+            # Adding default datasource
+            obj.datasource = [{
+                'name': 'default',
+                'type': 'sql',
+                'db_settings': {'vendor': 'postgres', 'conn': ''}}]
+        obj.save()
         return obj
 
 
