@@ -31,6 +31,7 @@ angular.module('app.features.controllers.named_types', ['app.config', ])
   $scope.config = {}
   $scope.paramsConfig = {}
   $scope.requiredParams = []
+  $scope.optionalParams = []
 
   $scope.params = new Parameters()
   $scope.params.$load().then ((opts)->
@@ -49,13 +50,16 @@ angular.module('app.features.controllers.named_types', ['app.config', ])
 
     if not config
       config = {
-        required_params: []
+        required_params: [],
+        optional_params: [],
       }
 
     $scope.config = config
     _defaults = []
 
-    for name in config.required_params
+    _all_params = _.union(config.required_params, config.optional_params)
+
+    for name in _all_params
       type = $scope.paramsConfig[name].type
       if type == 'dict'
         _defaults.push({})
@@ -66,10 +70,11 @@ angular.module('app.features.controllers.named_types', ['app.config', ])
     if not $scope.model.paramsDict
       $scope.model.paramsDict = {}
     $scope.model.paramsDict = _.extend(
-      _.object(config.required_params, _defaults),
-      _.pick($scope.model.paramsDict, config.required_params)
+      _.object(_all_params, _defaults),
+      _.pick($scope.model.paramsDict, _all_params)
     )
     $scope.requiredParams = config.required_params
+    $scope.optionalParams = config.optional_params
 
   $scope.$watch('model.type', (type) ->
     $scope.loadFeatureTypeParameters()

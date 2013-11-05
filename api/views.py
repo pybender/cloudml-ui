@@ -1156,6 +1156,7 @@ class ParamsResource(BaseResource):
         _types = [(key, {
             'type': getattr(value, 'python_type', ''),
             'required_params': value.required_params,
+            'optional_params': value.optional_params,
             'default_params': value.default_params,
         }) for key, value in FEATURE_TYPE_FACTORIES.items()]
         _conf = {

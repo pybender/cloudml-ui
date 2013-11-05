@@ -30,6 +30,7 @@ Feature, Transformer, Scaler, Parameters) ->
   $scope.config = {}
   $scope.paramsConfig = {}
   $scope.requiredParams = []
+  $scope.optionalParams = []
 
   if $routeParams.feature_id
     $scope.feature._id = $routeParams.feature_id
@@ -57,12 +58,16 @@ Feature, Transformer, Scaler, Parameters) ->
 
     if not config
       config = {
-        required_params: []
+        required_params: [],
+        optional_params: [],
       }
 
     $scope.config = config
     _defaults = []
-    for name in config.required_params
+
+    _all_params = _.union(config.required_params, config.optional_params)
+
+    for name in _all_params
       type = $scope.paramsConfig[name].type
       if type == 'dict'
         _defaults.push({})
@@ -73,10 +78,11 @@ Feature, Transformer, Scaler, Parameters) ->
     if not $scope.feature.paramsDict
       $scope.feature.paramsDict = {}
     $scope.feature.paramsDict = _.extend(
-      _.object(config.required_params, _defaults),
-      _.pick($scope.feature.paramsDict, config.required_params)
+      _.object(_all_params, _defaults),
+      _.pick($scope.feature.paramsDict, _all_params)
     )
     $scope.requiredParams = config.required_params
+    $scope.optionalParams = config.optional_params
 
   $scope.$watch('feature.type', (type) ->
     $scope.loadFeatureParameters()

@@ -613,6 +613,9 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
       scope.$watch 'requiredParams', (newValue, oldValue) ->
         render()
 
+      scope.$watch 'optionalParams', (newValue, oldValue) ->
+        render()
+
       _validateStrParam = (key, data) ->
         return data != ''
 
@@ -646,7 +649,10 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
         for key of scope.paramsEditorData
           data = scope.paramsEditorData[key]
           conf = scope.paramsConfig[key]
-          if not conf then return
+          if not conf
+            continue
+          if not scope.isRequired(key)
+            continue
           validator = VALIDATORS[conf.type]
           if !validator(key, data)
               errs.push key
