@@ -215,7 +215,7 @@ class DataSource(BaseDocument):
 
 @app.conn.register
 class ImportHandler(BaseDocument):
-    __collection__ = 'import_handlers'
+    __collection__ = 'handlers'
     QUERY_STRUCT = {
         "name": basestring,
         "sql": basestring,
@@ -234,6 +234,7 @@ class ImportHandler(BaseDocument):
         'updated_on': datetime,
         'updated_by': dict,
     }
+
     use_dot_notation = True
     required_fields = ['name', 'created_on', ]
     default_values = {'created_on': datetime.utcnow,
