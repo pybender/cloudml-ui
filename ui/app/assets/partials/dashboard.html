@@ -7,6 +7,7 @@
   	</div>
 </h2>
 
+<div class="row">
 <div class="span3">
 	<div class="well">
 	<h2 class="muted">Models</h2>
@@ -51,4 +52,31 @@
 			</li>
 		</ul>
 	</div>
+</div>
+</div>
+
+<div>
+  <h3 class="text-info">Sizes of Test Examples</h3>
+  <table class="table table-striped">
+  <thead>
+      <tr>
+        <th>Name</th>
+        <th>Model</th>
+        <th>Examples Size</th>
+        <th>Created</th>
+      </tr>
+  </thead>
+  <tbody>
+    <tr ng-repeat="test in testsWithSizes">
+      <td><a href="#{{ test.objectUrl() }}">{{ test.name }}</a></td>
+      <td><a href="#/models/{{ test.model_id }}">{{ test.model_name }}</a></td>
+      <td>{{ test.examples_size }} Mb</td>
+      <td>
+          {{ test.created_on|format_date }}
+          <br>
+          <small ng-show="test.created_by">by {{ test.created_by.name }} ({{ test.created_by.uid }})</small>
+      </td>
+    </tr>
+  </tbody>
+</table>
 </div>

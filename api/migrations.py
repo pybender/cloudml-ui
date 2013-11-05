@@ -122,10 +122,19 @@ class ModelMigration(DbMigration):  # pragma: no cover
         self.target = {'classifier': {'$exists': False}}
         self.update = {'$set': {'classifier': None}}
 
-    def allmigration15__fill_features(self):
-         model_list = app.db.Model.find()
-         for model in model_list:
-            if not model['features'] or not model.features_set_id is None:
+    def allmigration15_remove_positive_weights(self):
+        self.target = {'positive_weights': {'$exists': True}}
+        self.update = {'$unset': {'positive_weights': 1}}
+
+    def allmigration16_remove_negative_weights(self):
+        self.target = {'negative_weights': {'$exists': True}}
+        self.update = {'$unset': {'negative_weights': 1}}
+
+    def allmigration17__fill_features(self):
+        self.target = {'classifier': {'$size': 0}}
+        model_list = app.db.Model.find()
+        for model in model_list:
+            if not model['features']:
                 continue
 
             features_set = app.db.FeatureSet.from_model_features_dict(model.name, model.features)
@@ -169,6 +178,22 @@ class TestMigration(DbMigration):  # pragma: no cover
     def allmigration07__add_confusion_matrix_calculations(self):
         self.target = {'confusion_matrix_calculations': {'$exists': False}}
         self.update = {'$set': {'confusion_matrix_calculations': []}}
+
+    def allmigration08__add_examples_size(self):
+        self.target = {'examples_size': {'$exists': False}}
+        self.update = {'$set': {'examples_size': 0}}
+
+    # def allmigration09__fill_examples_size(self):
+    #     from api.utils import get_doc_size
+    #     for test in app.db.Test.find():
+    #         if not test.examples_size:
+    #             size = 0
+    #             examples = app.db.TestExample.find({'test_id': str(test._id)})
+    #             for example in examples:
+    #                 size += get_doc_size(example)
+
+    #             test['examples_size'] = size / 1024 / 1024
+    #             test.save()
 
 
 class DataSetMigration(DbMigration):  # pragma: no cover
@@ -254,11 +279,3 @@ class TestExampleMigration(DbMigration):  # pragma: no cover
     def allmigration01__add_on_s3(self):
         self.target = {'on_s3': {'$exists': False}}
         self.update = {'$set': {'on_s3': False}}
-
-
-class ClassifierMigration(DbMigration):  # pragma: no cover
-    DOC_CLASS = models.Classifier
-
-    def allmigration01__add_is_predefined(self):
-        self.target = {'is_predefined': {'$exists': False}}
-        self.update = {'$set': {'is_predefined': False}}

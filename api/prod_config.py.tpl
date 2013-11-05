@@ -53,15 +53,15 @@ LOGGING = {
     'filters': {},
     'handlers': {
         'console': {
-            'level': 'INFO',
+            'level': 'DEBUG',
             'class': 'logging.StreamHandler',
             'formatter': 'normal'
         },
     },
     'loggers': {
-        'root': {
+        '': {
             'handlers': ['console'],
-            'level': 'INFO',
+            'level': 'DEBUG',
             'propagate': True,
         },
         'boto': {

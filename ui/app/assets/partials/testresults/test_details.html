@@ -59,7 +59,10 @@
             <span ng-repeat="f in test.examples_fields"><span class="label">{{ f }}</span> </span></span>
         </div>
         <div>
-            Memory used: <span class="value">{{ test.memory_usage.testing }} Mb</span>
+            Memory used: <span class="value">{{ test.memory_usage.testing| number:2 }} Mb</span>
+        </div>
+        <div>
+            Examples Size: <span class="value">{{ test.examples_size| number:2 }} Mb</span>
         </div>
         <div ng-controller="TestExportsCtrl" ng-init="init(test)">
             <div ng-show="exports">

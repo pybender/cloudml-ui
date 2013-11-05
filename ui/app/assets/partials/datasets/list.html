@@ -34,6 +34,8 @@
       <td>{{ ds.time|humanize_time }}</td>
       <td ng-controller="DatasetActionsCtrl" style="min-width: 100px;" ng-init="init({dataset: ds, handler: handler})">
         <a class="btn btn-info" ng-show="ds.status == 'Error'" ng-click="reupload()"><i title="Reupload to Amazon S3" class="icon-repeat"></i></a>
+        <a class="btn" ng-show="ds.status != 'Importing' && ds.status != 'Uploading'" ng-click="reimport()">
+            <i title="Re-import dataset" class="icon-refresh"></i></a>
         <a class="btn btn-info" ng-show="ds.on_s3" ng-click="download(ds)"><i title="Download From Amazon S3" class="icon-download-alt"></i></a>
         <button ng-click="delete(ds)" class="btn btn-danger">
           <i title="Delete dataset. Be careful - you could not recover it!" class="icon-remove"></i>

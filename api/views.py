@@ -549,7 +549,7 @@ class DataSetResource(BaseResource):
     OBJECT_NAME = 'dataset'
     FILTER_PARAMS = (('status', str), )
     GET_ACTIONS = ('generate_url', )
-    PUT_ACTIONS = ('reupload', )
+    PUT_ACTIONS = ('reupload', 'reimport')
     put_form = DataSetEditForm
 
     def _get_generate_url_action(self, **kwargs):
@@ -595,6 +595,18 @@ class DataSetResource(BaseResource):
         return self._render(self._get_save_response_context(
             dataset, extra_fields=['status']))
 
+    def _put_reimport_action(self, **kwargs):
+        from api.tasks import import_data
+        dataset = self._get_details_query(None, None, **kwargs)
+        if dataset.status not in (dataset.STATUS_IMPORTING,
+                                  dataset.STATUS_UPLOADING):
+            dataset.status = dataset.STATUS_IMPORTING
+            dataset.save()
+            import_data.delay(dataset_id=str(dataset._id))
+
+        return self._render(self._get_save_response_context(
+            dataset, extra_fields=['status']))
+
 api.add_resource(DataSetResource, '/cloudml/importhandlers/\
 <regex("[\w\.]*"):import_handler_id>/datasets/')
 
@@ -606,7 +618,7 @@ class Tests(BaseResource):
     OBJECT_NAME = 'test'
     DEFAULT_FIELDS = ('_id', 'name')
     FILTER_PARAMS = (('status', str), )
-    GET_ACTIONS = ('confusion_matrix', 'exports')
+    GET_ACTIONS = ('confusion_matrix', 'exports', 'examples_size')
 
     post_form = AddTestForm
 
@@ -624,6 +636,12 @@ class Tests(BaseResource):
         test_id = kwargs.get('_id')
         return self.Model.find_one({'model_id': model_id,
                                    '_id': ObjectId(test_id)}, fields)
+
+    def _get_examples_size_action(self, **kwargs):
+        fields = ['name', 'model_name', 'model_id', 'examples_size', 'created_on',
+                  'created_by']
+        tests = app.db.Test.find({}, fields).sort([('examples_size', -1)]).limit(10)
+        return self._render({'tests': tests})
 
     def _get_confusion_matrix_action(self, **kwargs):
         from api.tasks import calculate_confusion_matrix
@@ -1023,8 +1041,6 @@ class AuthResource(BaseResource):
 
     @public
     def post(self, action=None, **kwargs):
-        from api.auth import AuthException
-
         if action == 'get_auth_url':
             auth_url, oauth_token, oauth_token_secret =\
                 app.db.User.get_auth_url()
@@ -1034,7 +1050,8 @@ class AuthResource(BaseResource):
                 'oauth_token': oauth_token,
                 'oauth_token_secret': oauth_token_secret,
             })
-
+            logging.debug(
+                "User Auth: oauth token %s added to mongo", oauth_token)
             return self._render({'auth_url': auth_url})
 
         if action == 'authenticate':
@@ -1046,11 +1063,14 @@ class AuthResource(BaseResource):
             oauth_token = params.get('oauth_token')
             oauth_verifier = params.get('oauth_verifier')
 
+            logging.debug(
+                "User Auth: trying to authenticate with token %s", oauth_token)
             # TODO: Use redis?
             auth = app.db['auth_tokens'].find_one({
                 'oauth_token': oauth_token
             })
             if not auth:
+                logging.error('User Auth: token %s not found', oauth_token)
                 return odesk_error_response(
                     500, 500,
                     'Wrong token: {0!s}'.format(oauth_token))
@@ -1059,6 +1079,8 @@ class AuthResource(BaseResource):
             auth_token, user = app.db.User.authenticate(
                 oauth_token, oauth_token_secret, oauth_verifier)
 
+            logging.debug(
+                'User Auth: Removing token %s from mongo', oauth_token)
             app.db['auth_tokens'].remove({'_id': auth['_id']})
 
             return self._render({
@@ -1073,6 +1095,7 @@ class AuthResource(BaseResource):
 
             return odesk_error_response(401, 401, 'Unauthorized')
 
+        logging.error('User Auth: invalid action %s', action)
         raise NotFound()
 
 api.add_resource(AuthResource, '/cloudml/auth/<regex("[\w\.]*"):action>',
@@ -1254,13 +1277,23 @@ class FeatureResource(BaseResource):
     DEFAULT_FIELDS = [u'_id', 'name']
     post_form = FeatureForm
     put_form = FeatureForm
-    GET_ACTIONS = ('configuration', )
 
     @property
     def Model(self):
         return app.db.Feature
 
-    def _get_configuration_action(self, **kwargs):
+api.add_resource(FeatureResource, '/cloudml/features/<regex("[\w\.]*"):features_set_id>/items/')
+
+
+class ParamsResource(BaseResource):
+    """
+    Parameters API methods
+    """
+    @property
+    def Model(self):
+        raise Exception('Invalid operation')
+
+    def get(self, *args, **kwargs):
         from core.trainer.feature_types import FEATURE_TYPE_FACTORIES
         from core.trainer.feature_types import FEATURE_TYPE_DEFAULTS
         from core.trainer.feature_types import FEATURE_PARAMS_TYPES
@@ -1276,7 +1309,7 @@ class FeatureResource(BaseResource):
         }
         return self._render({'configuration': _conf})
 
-api.add_resource(FeatureResource, '/cloudml/features/<regex("[\w\.]*"):features_set_id>/items/')
+api.add_resource(ParamsResource, '/cloudml/features/params/')
 
 
 class DataSourceResource(BaseResource):

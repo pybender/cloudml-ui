@@ -1,4 +1,5 @@
 import os
+import math
 import json
 import logging
 import csv
@@ -16,6 +17,7 @@ from celery.signals import task_prerun, task_postrun
 from api import celery, app
 from api.models import Test, Model
 from api.logger import init_logger
+from api.utils import get_doc_size
 from api.amazon_utils import AmazonEC2Helper, AmazonS3Helper
 from core.trainer.trainer import Trainer
 from core.trainer.config import FeatureModel
@@ -499,8 +501,9 @@ def run_test(dataset_ids, test_id):
                                  for key, val in row.iteritems()])
                     fp.write('{0}\n'.format(json.dumps(ndata)))
                 vectorized_data = metrics._true_data.getrow(n).todense()
-                example, new_row = _add_example_to_mongo(
-                    test, vectorized_data, row, label, pred, prob)
+                example, new_row = _add_example_to_mongo(test, vectorized_data, row, label,
+                                                         pred, prob)
+                test.examples_size += (get_doc_size(example) / 1024.0 / 1024.0)
                 example_ids.append(str(example._id))
 
         if test.examples_placement == test.EXAMPLES_TO_AMAZON_S3:
@@ -527,6 +530,7 @@ def run_test(dataset_ids, test_id):
             group(examples_tasks).apply_async().get(propagate=False)
             #os.remove(test.temp_data_filename)
 
+        #test.examples_size = test.examples_size
         test.status = Test.STATUS_COMPLETED
         test.save()
         logging.info('Test %s completed' % test.name)

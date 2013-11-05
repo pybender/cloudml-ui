@@ -160,12 +160,13 @@ features_count,created_on,created_by,target_variable,json'
 
 .factory('Feature', [
   'settings'
+  '$filter'
   'BaseModel'
   'NamedFeatureType'
   'Transformer'
   'Scaler'
   
-  (settings, BaseModel, NamedFeatureType, Transformer, Scaler) ->
+  (settings, $filter, BaseModel, NamedFeatureType, Transformer, Scaler) ->
     class Feature extends BaseModel
       API_FIELDNAME: 'feature'
       @MAIN_FIELDS: 'name,type,input_format,transformer,params,
@@ -178,6 +179,7 @@ scaler,default,is_target_variable,created_on,created_by,required'
       transformer: null
       input_format: null
       params: null
+      paramsDict: null
       scaler: null
       default: null
       is_required: false
@@ -203,6 +205,14 @@ scaler,default,is_target_variable,created_on,created_by,required'
           if origData.is_target_variable?
             @is_target_variable = origData.is_target_variable == true || \
               origData.is_target_variable == 'True'
+
+          if origData.params?
+            if _.isObject(@params)
+              @paramsDict = _.clone(@params)
+            else
+              @paramsDict = JSON.parse(@params)
+          else
+            @paramsDict = {}
 
       constructor: (opts) ->
         super opts
@@ -257,8 +267,7 @@ scaler,default,is_target_variable,created_on,created_by,required'
         else if removeItems
           opts.extraData['remove_scaler'] = true
 
-        if @params? && typeof(@params) == 'object'
-          @params = JSON.stringify(@params)
+        @params = $filter('json')(@paramsDict)
 
         super opts
 
@@ -287,10 +296,11 @@ scaler,default,is_target_variable,created_on,created_by,required'
   '$http'
   '$q'
   'settings'
+  '$filter'
   'BaseModel'
   'Param'
   
-  ($http, $q, settings, BaseModel, Param) ->
+  ($http, $q, settings, $filter, BaseModel, Param) ->
     class NamedFeatureType extends BaseModel
       BASE_API_URL: "#{settings.apiUrl}features/named_types/"
       BASE_UI_URL: "/features/types/"
@@ -307,7 +317,7 @@ scaler,default,is_target_variable,created_on,created_by,required'
       type: 'int'
       input_format: null
       params: null
-      paramsObjects: null
+      paramsDict: null
       created_on: null
       created_by: null
 
@@ -316,11 +326,33 @@ scaler,default,is_target_variable,created_on,created_by,required'
 
         if origData?
           if origData.params?
-            @paramsDict = @params
-            @params = JSON.stringify(origData.params)
-            # @paramsObjects = []
-            # for name, val of origData.params
-            #   @paramsObjects.push new Param({'name': name, 'value': val})
+            if _.isObject(@params)
+              @paramsDict = _.clone(@params)
+            else
+              @paramsDict = JSON.parse(@params)
+          else
+            @paramsDict = {}
+
+      $save: (opts={}) =>
+        @params = $filter('json')(@paramsDict)
+
+        super opts
 
     return NamedFeatureType
+])
+
+
+.factory('Parameters', [
+  'settings'
+  'BaseModel'
+
+  (settings, BaseModel) ->
+    class Parameters extends BaseModel
+      API_FIELDNAME: 'configuration'
+      BASE_API_URL: "#{settings.apiUrl}features/params"
+
+      $load: (opts) ->
+        @$make_request("#{@BASE_API_URL}/", opts)
+
+    return Parameters
 ])

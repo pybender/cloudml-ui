@@ -104,6 +104,32 @@ class DataSetsTests(BaseTestCase):
         self.assertEquals(data['dataset']['status'], self.obj.STATUS_IMPORTING)
         mock_upload_dataset.delay.assert_called_once_with(self.DS_ID)
 
+    @mock_s3
+    @patch('api.tasks.import_data')
+    def test_reupload_action(self, mock_import_data):
+        """
+        Tests re-import.
+        """
+        url = self._get_url(id=self.obj._id, action='reimport')
+
+        self.obj.status = self.obj.STATUS_IMPORTED
+        self.obj.save()
+
+        resp = self.app.put(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.OK)
+        data = json.loads(resp.data)
+        self.assertEquals(data['dataset']['_id'], self.DS_ID)
+        self.assertEquals(data['dataset']['status'], self.obj.STATUS_IMPORTING)
+        mock_import_data.delay.assert_called_once_with(dataset_id=self.DS_ID)
+        mock_import_data.reset_mock()
+
+        self.obj.status = self.obj.STATUS_IMPORTING
+        self.obj.save()
+
+        resp = self.app.put(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.OK)
+        self.assertFalse(mock_import_data.delay.called)
+
     def test_list(self):
         self._check_list(show='name,status')
 

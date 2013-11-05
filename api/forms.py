@@ -554,7 +554,57 @@ class InstanceEditForm(BaseForm):
         return instance
 
 
-class NamedFeatureTypeAddForm(BaseFormEx):
+class FeatureParamsMixin(object):
+    """
+    Mixin for feature params validation depended on feature type
+    """
+    def _validate_param(self, data, name):
+        from core.trainer.feature_types import FEATURE_PARAMS_TYPES
+
+        if not name in data:
+            raise ValidationError('Parameter {} is required'.format(name))
+        value = data[name]
+        param_type = FEATURE_PARAMS_TYPES[name]['type']
+
+        if not value:
+            raise ValidationError('Parameter {} is required'.format(name))
+
+        if param_type == 'str':
+            pass  # do nothing
+
+        elif param_type == 'text':
+            try:
+                json.loads(value)
+            except ValueError:
+                raise ValidationError('invalid json: {}'.format(value))
+
+        elif param_type == 'dict':
+            if not isinstance(value, dict):
+                raise ValidationError(
+                    '{} should be a dictionary'.format(name))
+            if not value.keys():
+                raise ValidationError(
+                    'Map {} should contain at least one value'.format(name))
+            for key, val in value.items():
+                if not val:
+                    raise ValidationError(
+                        'Value {0} in {1} can\'t be empty'.format(key, name))
+
+    def clean_params(self, value, field):
+        from core.trainer.feature_types import FEATURE_TYPE_FACTORIES
+
+        value_type = self.data.get('type')
+        if not type:
+            raise ValidationError('invalid type')
+        if not value_type in FEATURE_TYPE_FACTORIES:
+            return
+        required_params = FEATURE_TYPE_FACTORIES[value_type].required_params
+        for name in required_params:
+            self._validate_param(value, name)
+        return value
+
+
+class NamedFeatureTypeAddForm(BaseFormEx, FeatureParamsMixin):
     required_fields = ('name', 'type')
 
     name = CharField()
@@ -730,7 +780,7 @@ class TransformerForm(BasePredefinedForm):
                                return_doc=False)
 
 
-class FeatureForm(BaseFormEx):
+class FeatureForm(BaseFormEx, FeatureParamsMixin):
     NO_REQUIRED_FOR_EDIT = True
     required_fields = ('name', 'type', 'features_set_id')
 
