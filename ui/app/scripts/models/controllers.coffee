@@ -17,6 +17,15 @@ train_records_count,test_handler_fields,tags'
 
 angular.module('app.models.controllers', ['app.config', ])
 
+
+.controller('TagCtrl', [
+  '$scope'
+  '$location'
+
+  ($scope, $location) ->
+    $scope.currentTag = $location.search()['tag']
+])
+
 .controller('ModelListCtrl', [
   '$scope'
   '$location'
@@ -32,7 +41,13 @@ updated_on,updated_by,comparable,test_handler_fields'
     $scope.STATUSES = ['', 'New', 'Queued', 'Importing',
     'Imported', 'Requesting Instance', 'Instance Started',
     'Training', 'Trained', 'Error', 'Canceled']
-    $scope.filter_opts = {}
+
+    $scope.init = (userId) ->
+      if onlyMy
+        $scope.filter_opts = {'updated_by': userId, 'status': ''}
+      else
+        $scope.filter_opts = {'status': ''}
+
 ])
 
 

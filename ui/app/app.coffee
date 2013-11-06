@@ -56,9 +56,7 @@ App.config([
       controller: "DashboardCtrl"
       templateUrl: '/partials/dashboard.html'
     })
-
     .when('/models', {
-      controller: "ModelListCtrl"
       templateUrl: '/partials/models/model_list.html'
     })
     .when('/models/:id', {
