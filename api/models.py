@@ -12,8 +12,6 @@ from bson import Binary
 from flask.ext.mongokit import Document
 from flask import request, has_request_context
 
-from core.trainer.streamutils import streamingiterload
-
 from api import app, celery
 from api.amazon_utils import AmazonS3Helper
 
@@ -354,6 +352,16 @@ class DataSet(BaseDocument):
                 return gzip.GzipFile(fileobj=stream, mode='r')
                 #data = zlib.decompress(data)
             return stream
+
+    def get_iterator(self, stream):
+        from core.trainer.streamutils import streamingiterload
+
+        import_handler = app.db.ImportHandler.get_from_id(
+            ObjectId(self.import_handler_id))
+
+        source_format = (import_handler.format if import_handler
+                         else app.db.ImportHandler.FORMAT_JSON)
+        return streamingiterload(stream, source_format=source_format)
 
     def load_from_s3(self):
         helper = AmazonS3Helper()
@@ -711,16 +719,10 @@ class Model(BaseDocument):
 
     def run_test(self, dataset, callback=None):
         trainer = self.get_trainer()
-        import_handler = app.db.ImportHandler.get_from_id(
-            ObjectId(dataset.import_handler_id))
         fp = dataset.get_data_stream()
-
-        # TODO: incapsulate in dataset?
-        source_format = (import_handler.format if import_handler
-                         else app.db.ImportHandler.FORMAT_JSON)
         try:
             metrics = trainer.test(
-                streamingiterload(fp, source_format=source_format),
+                dataset.get_iterator(fp),
                 callback=callback,
                 save_raw=True)
         finally:

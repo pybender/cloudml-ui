@@ -21,7 +21,6 @@ from api.utils import get_doc_size
 from api.amazon_utils import AmazonEC2Helper, AmazonS3Helper
 from core.trainer.trainer import Trainer
 from core.trainer.config import FeatureModel
-from core.trainer.streamutils import streamingiterload
 
 
 class InvalidOperationError(Exception):
@@ -291,11 +290,6 @@ def train_model(dataset_ids, model_id, user_id):
     datasets = app.db.DataSet.find({
         '_id': {'$in': [ObjectId(ds_id) for ds_id in dataset_ids]}
     })
-    datasets, ds_copy = tee(datasets)
-    import_handlers = app.db.ImportHandler.find({
-        '_id': {'$in': [ObjectId(ds['import_handler_id']) for ds in ds_copy]}
-    })
-    import_handlers = dict([(str(ih._id), ih) for ih in import_handlers])
 
     try:
         model.delete_metadata()
@@ -322,12 +316,7 @@ def train_model(dataset_ids, model_id, user_id):
                 if fp:
                     fp.close()
                 fp = d.get_data_stream()
-                # TODO: incapsulate in dataset?
-                source_format = app.db.ImportHandler.FORMAT_JSON
-                import_handler = import_handlers[d['import_handler_id']]
-                if import_handler:
-                    source_format = import_handler.format
-                for row in streamingiterload(fp, source_format=source_format):
+                for row in d.get_iterator(fp):
                     yield row
             if fp:
                 fp.close()
