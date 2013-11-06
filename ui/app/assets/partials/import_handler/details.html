@@ -42,6 +42,9 @@
     <div>
         Import Parameters: <span class="value" ng-repeat="param in handler.import_params">{{ param }}</span>
     </div>
+    <div>
+        Data Format: <span class="value">{{ handler.format|uppercase }}</span>
+    </div>
     <h5>Import Handler JSON data</h5>
     <a href="{{ handler.downloadUrl() }}"><i title="Download import handler file" class="icon-download-alt"></i> Download</a>
     <span ng-click="saveData()" class="btn btn-primary">Save</span>

@@ -5,7 +5,7 @@ from bson.objectid import ObjectId
 
 from api import app
 from api.resources import ValidationError
-from api.models import Model, Classifier, FeatureSet
+from api.models import Model, Classifier, FeatureSet, ImportHandler
 from api.base.forms import BaseForm as BaseFormEx
 from api.base.fields import *
 from core.trainer.store import load_trainer
@@ -175,6 +175,9 @@ class ModelAddForm(BaseFormEx):
     features = JsonField()
     trainer = CharField()
 
+    train_format = ChoiceField(choices=ImportHandler.FORMATS)
+    test_format = ChoiceField(choices=ImportHandler.FORMATS)
+
     #
     feature_model = None
     trainer_obj = None
@@ -220,13 +223,14 @@ train_import_handler should be specified for new model')
         else:
             self.cleaned_data['trainer'] = None
 
-    def save_importhandler(self, fieldname, name):
+    def save_importhandler(self, fieldname, name, data_format):
         data = self.cleaned_data.pop(fieldname, None)
         if data is not None:
             handler = app.db.ImportHandler()
             action = 'test' if fieldname.startswith('test') else 'train'
             handler.name = '%s handler for %s' % (name, action)
             handler.type = handler.TYPE_DB
+            handler.format = data_format
             handler.import_params = self.cleaned_data.pop('%s_import_params' % action)
             handler.data = data
             handler.save()
@@ -235,8 +239,15 @@ train_import_handler should be specified for new model')
     def save(self, *args, **kwargs):
         name = self.cleaned_data['name']
 
-        self.save_importhandler('train_import_handler_file', name)
-        self.save_importhandler('test_import_handler_file', name)
+        train_format = self.cleaned_data.get('train_format',
+                                             ImportHandler.FORMAT_JSON)
+        test_format = self.cleaned_data.get('test_format',
+                                            ImportHandler.FORMAT_JSON)
+
+        self.save_importhandler('train_import_handler_file', name,
+                                train_format)
+        self.save_importhandler('test_import_handler_file', name,
+                                test_format)
 
         obj = super(ModelAddForm, self).save()
         # TODO: move it to model training for new models
@@ -368,10 +379,13 @@ class ImportHandlerEditForm(BaseImportHandlerForm):
 
 
 class ImportHandlerAddForm(BaseImportHandlerForm):
-    fields = {'name': True,
-              'type': True,
-              'data': True,
-              'import_params': True}
+    fields = {
+        'name': True,
+        'type': True,
+        'data': True,
+        'import_params': True,
+        'format': True,
+    }
 
     def clean_type(self, value):
         # if not type in ImportHandler.TYPE_CHOICES:

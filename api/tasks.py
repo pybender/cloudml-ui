@@ -4,7 +4,7 @@ import json
 import logging
 import csv
 import uuid
-from itertools import izip
+from itertools import izip, tee
 from bson.objectid import ObjectId
 from os.path import exists
 from os import makedirs, system
@@ -189,15 +189,32 @@ with%s compression", importhandler.name, '' if dataset.compress else 'out')
         plan = ExtractionPlan(handler, is_file=False)
         handler = ImportHandler(plan, dataset.import_params)
         logging.info('The dataset will be stored to file %s', dataset.filename)
-        handler.store_data_json(dataset.filename, dataset.compress)
+
+        # TODO: incapsulate in importhandler
+        if importhandler.format == importhandler.FORMAT_CSV:
+            handler.store_data_csv(dataset.filename, dataset.compress)
+        else:
+            handler.store_data_json(dataset.filename, dataset.compress)
+
         logging.info('Import dataset completed')
 
         logging.info('Retrieving data fields')
-        row = None
         with dataset.get_data_stream() as fp:
-            row = next(fp)
-        if row:
-            dataset.data_fields = json.loads(row).keys()
+            # TODO: incapsulate in importhandler
+            if importhandler.format == importhandler.FORMAT_CSV:
+                reader = csv.DictReader(
+                    fp,
+                    quotechar="'",
+                    quoting=csv.QUOTE_ALL
+                )
+                row = next(reader)
+            else:
+                row = next(fp)
+                if row:
+                    row = json.loads(row)
+            if row:
+                dataset.data_fields = row.keys()
+
         logging.info('Dataset fields: {0!s}'.format(dataset.data_fields))
 
         dataset.filesize = long(os.path.getsize(dataset.filename))
@@ -274,6 +291,11 @@ def train_model(dataset_ids, model_id, user_id):
     datasets = app.db.DataSet.find({
         '_id': {'$in': [ObjectId(ds_id) for ds_id in dataset_ids]}
     })
+    datasets, ds_copy = tee(datasets)
+    import_handlers = app.db.ImportHandler.find({
+        '_id': {'$in': [ObjectId(ds['import_handler_id']) for ds in ds_copy]}
+    })
+    import_handlers = dict([(str(ih._id), ih) for ih in import_handlers])
 
     try:
         model.delete_metadata()
@@ -300,7 +322,12 @@ def train_model(dataset_ids, model_id, user_id):
                 if fp:
                     fp.close()
                 fp = d.get_data_stream()
-                for row in streamingiterload(fp):
+                # TODO: incapsulate in dataset?
+                source_format = app.db.ImportHandler.FORMAT_JSON
+                import_handler = import_handlers[d['import_handler_id']]
+                if import_handler:
+                    source_format = import_handler.format
+                for row in streamingiterload(fp, source_format=source_format):
                     yield row
             if fp:
                 fp.close()

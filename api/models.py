@@ -187,7 +187,13 @@ app.db.Weight.collection.ensure_index(
 class ImportHandler(BaseDocument):
     TYPE_DB = 'Db'
     TYPE_REQUEST = 'Request'
+
+    FORMAT_JSON = 'json'
+    FORMAT_CSV = 'csv'
+    FORMATS = [FORMAT_JSON, FORMAT_CSV]
+
     __collection__ = 'handlers'
+
     structure = {
         'name': basestring,
         'type': basestring,
@@ -197,13 +203,16 @@ class ImportHandler(BaseDocument):
         'updated_by': dict,
         'data': dict,
         'import_params': list,
+        'format': basestring
     }
     required_fields = ['name', 'created_on', 'updated_on', ]
     default_values = {'created_on': datetime.utcnow,
                       'updated_on': datetime.utcnow,
                       'type': TYPE_DB,
                       'created_by': {},
-                      'updated_by': {}}
+                      'updated_by': {},
+                      'format': FORMAT_JSON,
+                      }
     use_dot_notation = True
 
     def get_fields(self):
@@ -702,10 +711,16 @@ class Model(BaseDocument):
 
     def run_test(self, dataset, callback=None):
         trainer = self.get_trainer()
+        import_handler = app.db.ImportHandler.get_from_id(
+            ObjectId(dataset.import_handler_id))
         fp = dataset.get_data_stream()
+
+        # TODO: incapsulate in dataset?
+        source_format = (import_handler.format if import_handler
+                         else app.db.ImportHandler.FORMAT_JSON)
         try:
             metrics = trainer.test(
-                streamingiterload(fp),
+                streamingiterload(fp, source_format=source_format),
                 callback=callback,
                 save_raw=True)
         finally:
