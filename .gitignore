@@ -37,3 +37,4 @@ api/local_config.py
 
 .coverage
 api/test/cover/*
+*_topics.txt
