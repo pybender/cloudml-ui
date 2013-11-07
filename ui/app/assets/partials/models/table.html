@@ -6,7 +6,7 @@
         Status
         <a ng-click="showStatusFilter=!showStatusFilter"><i class="icon-search"></i></a>
         <div ng-show="showStatusFilter || filter_opts['status']">
-          <select ui-select2="{allowClear: true}" ng-multiple="false" name="status" ng-model="filter_opts['status']">
+          <select class="input-medium" ui-select2="{allowClear: true}" ng-multiple="false" name="status" ng-model="filter_opts['status']">
             <option ng-repeat="status in STATUSES" value="{{ status }}">{{ status }}</option>
         </select>
         </div>
@@ -15,21 +15,23 @@
         Created
         <a ng-click="showCreatedFilter=!showCreatedFilter"><i class="icon-search"></i></a>
         <div ng-show="showCreatedFilter || filter_opts['created_by']">
-          <input name="created_by" ng-model="filter_opts['created_by']" placeholder="Input user uid" />
+          <input class="input-medium" name="created_by" ng-model="filter_opts['created_by']" placeholder="Input user uid" />
         </div>
       </th>
       <th>
         Updated
+        <span ng-show="modelName=='models'">
         <a ng-click="showUpdatedFilter=!showUpdatedFilter"><i class="icon-search"></i></a>
-        <div ng-show="showUpdatedFilter || filter_opts['updated_by']">
-          <input name="updated_by" ng-model="filter_opts['updated_by']" placeholder="Input user uid" />
-        </div>
+        <span ng-show="showUpdatedFilter || filter_opts['updated_by']"><br/>
+          <input name="updated_by" ng-model="filter_opts['updated_by']" class="input-medium" placeholder="Input user uid" />
+        </span>
+        </span>
       </th>
       <th>
         Comparable
         <a ng-click="showComparableFilter=!showComparableFilter"><i class="icon-search"></i></a>
         <div ng-show="showComparableFilter || filter_opts['comparable']">
-          <select ui-select2="{allowClear: true}" ng-multiple="false" name="comparable" ng-model="filter_opts['comparable']">
+          <select class="input-medium" ui-select2="{allowClear: true}" ng-multiple="false" name="comparable" ng-model="filter_opts['comparable']">
             <option value=""></option>
             <option value="1">Yes</option>
             <option value="0">No</option>
@@ -94,3 +96,4 @@
     </tr>
   </tbody>
   </table>
+  <a ng-show="has_next" ng-click="showMore()">Load More...</a>

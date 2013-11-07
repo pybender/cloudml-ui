@@ -58,6 +58,7 @@ App.config([
     })
     .when('/models', {
       templateUrl: '/partials/models/model_list.html'
+      reloadOnSearch: false
     })
     .when('/models/:id', {
       controller: 'ModelDetailsCtrl'
