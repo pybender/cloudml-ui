@@ -132,10 +132,7 @@
                       Name
                        <a ng-click="editTargetFeature(item, null)" title="add target feature"><i class="icon-plus" title="add" /></a>
                     </th>
-                    <th>JSON Path</th>
-                    <th>To csv</th>
-                    <th>Key Path</th>
-                    <th>Value Path</th>
+                    <th ng-show="['composite', 'json'].indexOf(item.process_as) > -1">Parameters</th>
                     <th style="width:35px;" />
                   </tr>
                 </thead>
@@ -144,17 +141,30 @@
                     <th>
                       <a ng-click="" title="edit feature">{{ feature.name }}</a>
                     </th>
-                    <td>
-                      {{ feature.jsonpath }}
-                    </td>
-                    <td>
-                      {{ feature.to_csv }}
-                    </td>
-                    <td>
-                      {{ feature.key_path }}
-                    </td>
-                    <td>
-                      {{ feature.value_path }}
+                    <td ng-show="['composite', 'json'].indexOf(item.process_as) > -1">
+                      <div ng-show="item.process_as == 'json'">
+                        <div ng-show="feature.to_csv">
+                          <b>To CSV</b>: {{ feature.to_csv }}
+                        </div>
+                        <div ng-show="feature.jsonpath">
+                          <b>JSON Path</b>: {{ feature.jsonpath }}
+                        </div>
+                        <div ng-show="feature.key_path">
+                          <b>Key Path</b>: {{ feature.key_path }}
+                        </div>
+                        <div ng-show="feature.value_path">
+                          <b>Value Path</b>: {{ feature.value_path }}
+                        </div>
+                      </div>
+                      <div ng-show="item.process_as == 'composite'">
+                        <div>
+                          <b>Expression Type: </b>
+                          {{ feature.expression.type }}
+                        </div>
+                        <div>
+                          <b>Expression Value: </b>
+                          {{ feature.expression.value }}
+                        </div>
                     </td>
                     <td>
                       <a ng-click="editTargetFeature(item, feature)"><i class="icon-edit" title="edit" /></a>
