@@ -500,7 +500,13 @@ def run_test(dataset_ids, test_id):
                     ndata = dict([(key.replace('.', '->'), val)
                                  for key, val in row.iteritems()])
                     fp.write('{0}\n'.format(json.dumps(ndata)))
-                vectorized_data = metrics._true_data.getrow(n).todense()
+
+                if test.examples_placement != test.EXAMPLES_DONT_SAVE:
+                    vectorized_data = metrics._true_data.getrow(n).todense()
+                else:
+                    # We don't need to calc and save vect data at all
+                    vectorized_data = None
+
                 example, new_row = _add_example_to_mongo(test, vectorized_data, row, label,
                                                          pred, prob)
                 test.examples_size += (get_doc_size(example) / 1024.0 / 1024.0)
@@ -569,7 +575,9 @@ def _add_example_to_mongo(test, vectorized_data, data, label, pred, prob):
     example.label = str(label)
     example.prob = prob.tolist()
     example.test = test
-    example.vect_data = vectorized_data.tolist()[0]
+    if vectorized_data is not None:
+        example.vect_data = vectorized_data.tolist()[0]
+
     # TODO: this field is obsolete
     example.on_s3 = test.examples_placement == test.EXAMPLES_TO_AMAZON_S3
 
@@ -579,16 +587,13 @@ def _add_example_to_mongo(test, vectorized_data, data, label, pred, prob):
     example.test_id = str(test._id)
     example.model_id = str(model._id)
 
-    new_row = ndata
-    if test.examples_placement == test.EXAMPLES_MONGODB:
-        example.data_input = ndata
-    if test.examples_placement == test.EXAMPLES_TO_AMAZON_S3:
-        # Fill all data to Amazon S3 and only specified fields
-        # to MongoDB
+    if test.examples_placement in test.EXAMPLES_PLACEMENT_WITH_FIELDS:
         # Choose only specified in test fields in test
         new_row = dict([(field, ndata.get(field, None))
                        for field in test.examples_fields])
         example.data_input = new_row
+    else:
+        new_row = ndata
 
     try:
         example.validate()

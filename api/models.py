@@ -775,6 +775,8 @@ class Test(BaseDocument):
     EXAMPLES_TO_AMAZON_S3 = 'Amazon S3'
     EXAMPLES_DONT_SAVE = 'Do not save'
     EXAMPLES_MONGODB = 'Mongo DB'
+    EXAMPLES_PLACEMENT_WITH_FIELDS = (
+        EXAMPLES_TO_AMAZON_S3, EXAMPLES_MONGODB)
     EXAMPLES_STORAGE_CHOICES = (EXAMPLES_TO_AMAZON_S3,
                                 EXAMPLES_DONT_SAVE,
                                 EXAMPLES_MONGODB)
