@@ -40,6 +40,8 @@ updated_on,updated_by,comparable,test_handler_fields'
     $scope.kwargs = {
       tag: $scope.currentTag
       per_page: 2
+      sort_by: 'updated_on'
+      order: 'desc'
     }
     $scope.page = 1
     $scope.STATUSES = ['', 'New', 'Queued', 'Importing',
