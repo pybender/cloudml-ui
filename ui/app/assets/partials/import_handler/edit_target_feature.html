@@ -17,38 +17,56 @@
           <span ng-show="Form.name.$error.required" class="help-inline">*</span>
         </div>
       </div>
-      <div class="control-group" ng-class="{error: Form.jsonpath.$invalid}">
-        <label class="control-label">JSON Path</label>
-        <div class="controls">
-          <input type="text" name="jsonpath" ng-model="model.jsonpath" />
-          <span ng-show="Form.jsonpath.$error.required" class="help-inline">*</span>
+      <div ng-show="item.process_as == 'json'">
+        <div class="control-group" ng-class="{error: Form.jsonpath.$invalid}">
+          <label class="control-label">JSON Path</label>
+          <div class="controls">
+            <input type="text" name="jsonpath" ng-model="model.jsonpath" />
+            <span ng-show="Form.jsonpath.$error.required" class="help-inline">*</span>
+          </div>
+        </div>
+        <div class="control-group" ng-class="{error: Form.to_csv.$invalid}">
+          <label class="control-label">To CSV</label>
+          <div class="controls">
+            <input type="text" name="to_csv" ng-model="model.to_csv" />
+            <span ng-show="Form.to_csv.$error.required" class="help-inline">*</span>
+          </div>
+        </div>
+        <div class="control-group" ng-class="{error: Form.key_path.$invalid}">
+          <label class="control-label">Key Path</label>
+          <div class="controls">
+            <input type="text" name="key_path" ng-model="model.key_path" />
+            <span ng-show="Form.key_path.$error.required" class="help-inline">*</span>
+          </div>
+        </div>
+        <div class="control-group" ng-class="{error: Form.value_path.$invalid}">
+          <label class="control-label">Value Path</label>
+          <div class="controls">
+            <input type="text" name="value_path" ng-model="model.value_path" />
+            <span ng-show="Form.value_path.$error.required" class="help-inline">*</span>
+          </div>
         </div>
       </div>
-      <div class="control-group" ng-class="{error: Form.to_csv.$invalid}">
-        <label class="control-label">To CSV</label>
-        <div class="controls">
-          <input type="text" name="to_csv" ng-model="model.to_csv" />
-          <span ng-show="Form.to_csv.$error.required" class="help-inline">*</span>
+      <div ng-show="item.process_as == 'composite'">
+        <div class="control-group" ng-class="{error: Form.type.$invalid}">
+          <label class="control-label">Expression Type</label>
+          <div class="controls">
+            <input type="text" name="type" ng-model="model.expression.type" />
+            <span ng-show="Form.type.$error.required" class="help-inline">*</span>
+          </div>
         </div>
-      </div>
-      <div class="control-group" ng-class="{error: Form.key_path.$invalid}">
-        <label class="control-label">Key Path</label>
-        <div class="controls">
-          <input type="text" name="key_path" ng-model="model.key_path" />
-          <span ng-show="Form.key_path.$error.required" class="help-inline">*</span>
-        </div>
-      </div>
-      <div class="control-group" ng-class="{error: Form.value_path.$invalid}">
-        <label class="control-label">Value Path</label>
-        <div class="controls">
-          <input type="text" name="value_path" ng-model="model.value_path" />
-          <span ng-show="Form.value_path.$error.required" class="help-inline">*</span>
+        <div class="control-group" ng-class="{error: Form.value.$invalid}">
+          <label class="control-label">Expression Value</label>
+          <div class="controls">
+            <input type="text" name="value" ng-model="model.expression.value" />
+            <span ng-show="Form.value.$error.required" class="help-inline">*</span>
+          </div>
         </div>
       </div>
     </form>
   </div>
 
   <div class="modal-footer">
-    <button ng-click="save(['name', 'jsonpath', 'to_csv', 'key_path', 'value_path'])" ng-disabled="Form.$invalid" class="btn btn-primary">Save</button>
+    <button ng-click="save(['name', 'jsonpath', 'to_csv', 'key_path', 'value_path', 'expression'])" ng-disabled="Form.$invalid" class="btn btn-primary">Save</button>
   </div>
 </div>
