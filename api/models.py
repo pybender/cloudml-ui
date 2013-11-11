@@ -221,7 +221,7 @@ class ImportHandler(BaseDocument):
                         feature['name'].replace('.', '->'))
         return test_handler_fields
 
-    def create_dataset(self, params, run_import_data=True):
+    def create_dataset(self, params, run_import_data=True, data_format='json'):
         #from api.utils import slugify
         dataset = app.db.DataSet()
         str_params = "-".join(["%s=%s" % item
@@ -229,6 +229,7 @@ class ImportHandler(BaseDocument):
         dataset.name = "%s: %s" % (self.name, str_params)
         dataset.import_handler_id = str(self._id)
         dataset.import_params = params
+        dataset.format = data_format
         # filename = '%s-%s.json' % (slugify(self.name)
         # str_params.replace('=', '_'))
         # dataset.data = filename

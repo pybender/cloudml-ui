@@ -229,7 +229,11 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
                 from api.models import ImportHandler
                 import_handler = ImportHandler(model.train_import_handler)
                 params = form.cleaned_data.get('parameters', None)
-                dataset = import_handler.create_dataset(params)
+                dataset = import_handler.create_dataset(
+                    params,
+                    data_format=form.cleaned_data.get(
+                        'format', DataSet.FORMAT_JSON)
+                )
                 tasks_list.append(import_data.s(str(dataset._id),
                                                 str(model._id)))
                 dataset = [dataset]

@@ -37,8 +37,6 @@
         </select> 
         <span>or</span> 
         <input type="file" name="train_import_handler_file" ng-model="model.train_import_handler_file" json-file />
-        <span>Data Format:</span>
-        <select ng-model="model.train_format" required ng-options="v.value as v.name for v in formats"></select>
         <span ng-show="Form.train_import_handler_file.$error.jsonFile" class="help-block">Should be a valid json file</span>
       </div>
     </div>
@@ -50,8 +48,6 @@
         </select>
         <span>or</span> 
         <input type="file" name="test_import_handler_file" ng-model="model.test_import_handler_file" json-file />
-        <span>Data Format:</span>
-        <select ng-model="model.test_format" required ng-options="v.value as v.name for v in formats"></select>
         <span ng-show="Form.test_import_handler_file.$error.jsonFile" class="help-block">Should be a valid json file</span>
       </div>
     </div>

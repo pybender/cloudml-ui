@@ -249,11 +249,12 @@ class ModelTests(BaseTestCase):
 aws_instance is required')
 
         data = {'aws_instance': self.INSTANCE_ID,
-                'start': '2012-12-03'}
+                'start': '2012-12-03', 'format': self.db.DataSet.FORMAT_JSON}
         self._check_put(data, action='train',
                         error='Parameters category, end are required')
 
-        data = {'aws_instance': self.INSTANCE_ID}
+        data = {'aws_instance': self.INSTANCE_ID,
+                'format': self.db.DataSet.FORMAT_JSON}
         self._check_put(data, action='train',
                         error='One of parameters, dataset is required')
 
@@ -364,7 +365,9 @@ aws_instance is required')
         data = {'aws_instance': self.INSTANCE_ID,
                 'start': '2012-12-03',
                 'end': '2012-12-04',
-                'category': '1'}
+                'category': '1',
+                'format': self.db.DataSet.FORMAT_JSON
+                }
         resp, model = self._check_put(data, action='train',
                                       load_model=True)
         model_resp = json.loads(resp.data)['model']
@@ -372,6 +375,28 @@ aws_instance is required')
         self.assertEquals(model_resp["name"], self.model.name)
         self.assertEqual(model.status, model.STATUS_TRAINED)
         self.assertIsInstance(model.dataset_ids[0], ObjectId)
+        self.assertEquals(model.dataset.format, self.db.DataSet.FORMAT_JSON)
+        self.assertEqual(model.trained_by['uid'], 'somebody')
+        self.assertTrue(model.memory_usage['training'] > 0)
+        self.assertEqual(model.train_records_count, 99)
+
+    @mock_s3
+    @patch('api.amazon_utils.AmazonS3Helper.save_gz_file')
+    def test_train_model_with_load_params_CSV(self, mock_multipart_upload):
+        data = {'aws_instance': self.INSTANCE_ID,
+                'start': '2012-12-03',
+                'end': '2012-12-04',
+                'category': '1',
+                'format': self.db.DataSet.FORMAT_CSV
+                }
+        resp, model = self._check_put(data, action='train',
+                                      load_model=True)
+        model_resp = json.loads(resp.data)['model']
+        self.assertEquals(model_resp["status"], "Queued")
+        self.assertEquals(model_resp["name"], self.model.name)
+        self.assertEqual(model.status, model.STATUS_TRAINED)
+        self.assertIsInstance(model.dataset_ids[0], ObjectId)
+        self.assertEquals(model.dataset.format, self.db.DataSet.FORMAT_CSV)
         self.assertEqual(model.trained_by['uid'], 'somebody')
         self.assertTrue(model.memory_usage['training'] > 0)
         self.assertEqual(model.train_records_count, 99)
@@ -385,10 +410,13 @@ aws_instance is required')
         self.check_related_docs_existance(self.db.Weight)
         self.check_related_docs_existance(self.db.WeightsCategory)
 
-        data = {'start': '2012-12-03',
-                'end': '2012-12-04',
-                'category': 'smth',
-                'aws_instance': self.INSTANCE_ID}
+        data = {
+            'start': '2012-12-03',
+            'end': '2012-12-04',
+            'category': 'smth',
+            'aws_instance': self.INSTANCE_ID,
+            'format': self.db.DataSet.FORMAT_JSON
+        }
         resp, model = self._check_put(data, action='train',
                                       load_model=True)
         self.assertEquals(model.status, model.STATUS_TRAINED)
