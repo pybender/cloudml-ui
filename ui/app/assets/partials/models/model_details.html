@@ -20,15 +20,8 @@
       <i title="Train your model" class="icon-tasks"></i>
       Start training
     </button>
-    <button ng-click="reload_model(model)" class="btn btn-info">
-      <i title="Reload model" class="icon-tasks"></i>
-      Reload model
-    </button>
     <a ng-show="model.status == 'Trained'" href="{{ model.downloadUrl() }}?field=trainer" class="btn btn-info">
         <i title="Download model trainer." class="icon-download-alt"></i> Download Trainer
-    </a>
-    <a style="font-weight: normal;" href="{{ model.downloadUrl() }}?field=features" class="btn btn-info">
-      <i title="Download features JSON file" class="icon-download-alt"></i> Download Features
     </a>
     <button ng-click="delete_model(model)" class="btn btn-danger">
       <i title="Delete your model. Be careful - you could not recover it!" class="icon-remove"></i> Delete model
@@ -92,6 +85,13 @@
     <div ng-show="action[1] == 'json'">
       <textarea ui-codemirror="{ mode: {name: 'javascript', readOnly:true, json: true} }" ng-model="model.features"></textarea>
     </div>
+
+    <div class="row well">
+        <a style="font-weight: normal;" href="{{ model.downloadUrl() }}?field=features" class="btn btn-info">
+          <i title="Download features JSON file" class="icon-download-alt"></i> Download Features
+        </a>
+    </div>
+
   </div>
 
   <!-- Training tab starts here -->

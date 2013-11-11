@@ -162,13 +162,6 @@ class Models(BaseResource):
             del pdict['updated_by']
         return pdict
 
-    def _get_reload_action(self, **kwargs):
-        from api.tasks import fill_model_parameter_weights
-        model = self._get_details_query(None, None,
-                                        **kwargs)
-        fill_model_parameter_weights.delay(str(model._id), True)
-        return self._render({self.OBJECT_NAME: model._id})
-
     def _get_by_importhandler_action(self, **kwargs):
         parser_params = self.GET_PARAMS + (('handler', str), )
         params = self._parse_parameters(parser_params)

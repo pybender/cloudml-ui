@@ -293,9 +293,6 @@ updated_on,updated_by,comparable,test_handler_fields'
             'TestDialogController', 'modal large'))
         )
 
-    $scope.reload_model = (model)->
-      model.$reload()
-
     $scope.cancel_request_spot_instance = (model)->
       model.$cancel_request_spot_instance()
 

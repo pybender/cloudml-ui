@@ -69,9 +69,6 @@ angular.module('app.models.model', ['app.config'])
       downloadUrl: =>
         return "#{@BASE_API_URL}#{@_id}/action/download/"
 
-      $reload: =>
-        @$make_request("#{@BASE_API_URL}#{@_id}/action/reload/", {}, "GET", {})
-
       @$by_handler: (opts) =>
         resolver = (resp, Model) ->
           {
