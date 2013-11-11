@@ -4,7 +4,7 @@ from flask import request
 from bson.objectid import ObjectId
 
 from api import app
-from api.resources import ValidationError
+from api.resources import ValidationError, NotFound
 from api.models import Model, Classifier, FeatureSet, ImportHandler, DataSet
 from api.base.forms import BaseForm as BaseFormEx
 from api.base.fields import *
@@ -373,13 +373,36 @@ class ImportHandlerAddForm(BaseImportHandlerForm):
         'type': True,
         'data': True,
         'import_params': True,
-        'format': True,
     }
 
     def clean_type(self, value):
         # if not type in ImportHandler.TYPE_CHOICES:
         #     raise ValidationError('invalid')
         return value
+
+
+class DataSetAddForm(BaseFormEx):
+    required_fields = ('format', 'import_params')
+    format = ChoiceField(choices=DataSet.FORMATS)
+    import_params = JsonField()
+
+    def before_clean(self):
+        self.importhandler = app.db.ImportHandler.get_from_id(
+            ObjectId(self.import_handler_id))
+
+    def save(self, commit=True):
+        from api.tasks import import_data
+
+        dataset = super(DataSetAddForm, self).save(commit=False)
+
+        str_params = "-".join(["%s=%s" % item
+                              for item in dataset.import_params.iteritems()])
+        dataset.name = "%s: %s" % (self.importhandler.name, str_params)
+        dataset.import_handler_id = str(self.importhandler._id)
+        dataset.save(validate=True)
+        dataset.set_file_path()
+        import_data.delay(str(dataset._id))
+        return dataset
 
 
 class DataSetEditForm(BaseForm):

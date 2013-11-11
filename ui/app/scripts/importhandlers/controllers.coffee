@@ -34,7 +34,7 @@ updated_by'
       if name not in $scope.LOADED_SECTIONS
         $scope.handler.$load(
           show: 'name,type,created_on,updated_on,data,
-import_params,created_by,format'
+import_params,created_by'
         ).then (->
           $scope.LOADED_SECTIONS.push name
         ), ((opts) ->
@@ -66,10 +66,7 @@ import_params,created_by,format'
 
   ($scope, ImportHandler) ->
     $scope.types = [{name: 'Db'}, {name: 'Request'}]
-    $scope.formats = [
-      {name: 'JSON', value: 'json'}, {name: 'CSV', value: 'csv'}
-    ]
-    $scope.model = new ImportHandler({format: 'json'})
+    $scope.model = new ImportHandler()
 ])
 
 .controller('DeleteImportHandlerCtrl', [

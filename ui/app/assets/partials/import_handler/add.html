@@ -29,14 +29,6 @@
       <span ng-show="Form.type.$error.required" class="help-inline">Required</span>
     </div>
   </div>
-  <div class="control-group" ng-class="{error: Form.format.$invalid}">
-    <label class="control-label">Data Format</label>
-    <div class="controls">
-      <select ng-model="model.format" required ng-options="v.value as v.name for v in formats" ng-selected='formats[0]'>
-      </select>
-      <span ng-show="Form.format.$error.required" class="help-inline">Required</span>
-    </div>
-  </div>
   <div class="control-group" ng-class="{error: Form.data.$invalid}">
     <label class="control-label">JSON file</label>
     <div class="controls">
@@ -48,6 +40,6 @@
   </div>
   <br />
   <a href="#/import_handlers" class="btn">Cancel</a>
-  <button ng-click="save(['name', 'data', 'type', 'format'])" ng-disabled="Form.$invalid" class="btn btn-primary">Add new import handler</button> <small>and start using it in your models</small>
+  <button ng-click="save(['name', 'data', 'type'])" ng-disabled="Form.$invalid" class="btn btn-primary">Add new import handler</button> <small>and start using it in your models</small>
 </form>
 </div>
