@@ -16,35 +16,38 @@ describe "directives", ->
         element = $compile("<span app-version></span>")($rootScope)
         expect(element.text()).toEqual "TEST_VER"
 
-  # TODO: Fix parameters editor tests
-  xdescribe "json-editor", ->
+  describe "parameters-editor", ->
 
-    it "should create json editor control for object", ->
+    it "should create parameters editor control for object", ->
       inject ($compile, $rootScope) ->
-        $rootScope.jsonVal = {"str_param": "value"}
+        $rootScope.params = {"str_param": "value"}
 
-        element = $compile('<div><json-editor item="jsonVal"></json-editor></div>')($rootScope)
+        $rootScope.paramsConfig = {"str_param": {"type": "str"}}
+        $rootScope.requiredParams = ["str_param"]
+        $rootScope.optionalParams = []
+
+        element = $compile('<parameters-editor ng-model="params"></parameters-editor>')($rootScope)
         $rootScope.$digest()
 
-        expect(element.html()).toContain('<span class="jsonObjectKey">')
-        expect(element.html()).toContain('<span ng-switch-default="" class="jsonLiteral ng-scope">')
-        expect(element.html()).toContain('<input type="text" ng-model="item[key]" ng-model-onblur="" placeholder="Empty" class="ng-pristine ng-valid">')
-        expect(element.html()).toNotContain('<ol class="arrayOl ng-pristine ng-valid" ng-model="item">')
+        expect(element.html()).toContain('<div class="jsonContents ng-scope">')
+        expect(element.html()).toContain('<input ng-hide="isRequired(key)" ng-disabled="isRequired(key)"')
+        expect(element.html()).toContain('>str_param</label>')
 
-    it "should create json editor control for array", ->
+    # TODO: Fix following parameters editor tests:
+    xit "should create json editor control for array", ->
       inject ($compile, $rootScope) ->
         $rootScope.jsonVal = ["one", "two", "three"]
 
-        element = $compile('<div><json-editor item="jsonVal"></json-editor></div>')($rootScope)
+        element = $compile('<div><parameters-editor></parameters-editor></div>')($rootScope)
         $rootScope.$digest()
 
         expect(element.html()).toContain('<ol class="arrayOl ng-pristine ng-valid" ng-model="item">')
 
-    it "should correctly determine object's type", ->
+    xit "should correctly determine object's type", ->
       inject ($compile, $rootScope) ->
         $rootScope.jsonVal = {}
 
-        element = $compile('<div><json-editor item="jsonVal"></json-editor></div>')($rootScope)
+        element = $compile('<div><parameters-editor></parameters-editor></div>')($rootScope)
         $rootScope.$digest()
 
         getType = element.scope().$$childTail.getType
@@ -55,11 +58,11 @@ describe "directives", ->
         expect(getType(undefined)).toEqual('str')
         expect(getType(null)).toEqual('str')
 
-    it "should correctly add a new string item to object", ->
+    xit "should correctly add a new string item to object", ->
       inject ($compile, $rootScope) ->
         $rootScope.jsonVal = {}
 
-        element = $compile('<div><json-editor item="jsonVal"></json-editor></div>')($rootScope)
+        element = $compile('<div><parameters-editor></parameters-editor></div>')($rootScope)
         $rootScope.$digest()
 
         localScope = element.scope().$$childTail
@@ -73,11 +76,11 @@ describe "directives", ->
 
         expect(obj.new_key).toEqual('new_value')
 
-    it "should correctly add a new object item to object", ->
+    xit "should correctly add a new object item to object", ->
       inject ($compile, $rootScope) ->
         $rootScope.jsonVal = {}
 
-        element = $compile('<div><json-editor item="jsonVal"></json-editor></div>')($rootScope)
+        element = $compile('<div><parameters-editor></parameters-editor></div>')($rootScope)
         $rootScope.$digest()
 
         localScope = element.scope().$$childTail
@@ -90,11 +93,11 @@ describe "directives", ->
 
         expect(obj.new_key).toEqual({})
 
-    it "should correctly add a new string item to array", ->
+    xit "should correctly add a new string item to array", ->
       inject ($compile, $rootScope) ->
         $rootScope.jsonVal = []
 
-        element = $compile('<div><json-editor item="jsonVal"></json-editor></div>')($rootScope)
+        element = $compile('<div><parameters-editor></parameters-editor></div>')($rootScope)
         $rootScope.$digest()
 
         localScope = element.scope().$$childTail
@@ -107,11 +110,11 @@ describe "directives", ->
 
         expect(obj[0]).toEqual('new_value')
 
-    it "should correctly add a new object item to array", ->
+    xit "should correctly add a new object item to array", ->
       inject ($compile, $rootScope) ->
         $rootScope.jsonVal = []
 
-        element = $compile('<div><json-editor item="jsonVal"></json-editor></div>')($rootScope)
+        element = $compile('<div><parameters-editor></parameters-editor></div>')($rootScope)
         $rootScope.$digest()
 
         localScope = element.scope().$$childTail
@@ -124,7 +127,7 @@ describe "directives", ->
 
         expect(obj[0]).toEqual({})
 
-    it "should completely apply configuration", ->
+    xit "should completely apply configuration", ->
       inject ($compile, $rootScope) ->
         $rootScope.jsonVal = {}
         $rootScope.params_config = {
@@ -142,7 +145,7 @@ describe "directives", ->
           }
         }
 
-        element = $compile('<div><json-editor item="jsonVal" config="params_config"></json-editor></div>')($rootScope)
+        element = $compile('<div><parameters-editor></parameters-editor></div>')($rootScope)
         $rootScope.$digest()
 
         valueTypes = element.scope().$$childTail.valueTypes
