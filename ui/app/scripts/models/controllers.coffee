@@ -17,6 +17,15 @@ train_records_count,test_handler_fields,tags'
 
 angular.module('app.models.controllers', ['app.config', ])
 
+
+.controller('TagCtrl', [
+  '$scope'
+  '$location'
+
+  ($scope, $location) ->
+    $scope.currentTag = $location.search()['tag']
+])
+
 .controller('ModelListCtrl', [
   '$scope'
   '$location'
@@ -28,11 +37,29 @@ angular.module('app.models.controllers', ['app.config', ])
 updated_on,updated_by,comparable,test_handler_fields'
     $scope.ACTION = 'loading models'
     $scope.currentTag = $location.search()['tag']
-    $scope.kwargs = {'tag': $scope.currentTag}
+    $scope.kwargs = {
+      tag: $scope.currentTag
+      per_page: 2
+      sort_by: 'updated_on'
+      order: 'desc'
+    }
+    $scope.page = 1
     $scope.STATUSES = ['', 'New', 'Queued', 'Importing',
     'Imported', 'Requesting Instance', 'Instance Started',
     'Training', 'Trained', 'Error', 'Canceled']
-    $scope.filter_opts = {}
+
+    $scope.init = (userId, modelName) ->
+      $scope.modelName = modelName
+      if userId?
+        $scope.filter_opts = {'updated_by': userId, 'status': ''}
+      else
+        $scope.filter_opts = {'status': ''}
+
+    $scope.showMore = () ->
+      $scope.page += 1
+      extra = {'page': $scope.page}
+      $scope.$emit('BaseListCtrl:start:load',
+        $scope.modelName, true, extra)
 ])
 
 
