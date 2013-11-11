@@ -189,7 +189,7 @@ with%s compression", importhandler.name, '' if dataset.compress else 'out')
         handler = ImportHandler(plan, dataset.import_params)
         logging.info('The dataset will be stored to file %s', dataset.filename)
 
-        if importhandler.format == importhandler.FORMAT_CSV:
+        if dataset.format == dataset.FORMAT_CSV:
             handler.store_data_csv(dataset.filename, dataset.compress)
         else:
             handler.store_data_json(dataset.filename, dataset.compress)
@@ -198,7 +198,7 @@ with%s compression", importhandler.name, '' if dataset.compress else 'out')
 
         logging.info('Retrieving data fields')
         with dataset.get_data_stream() as fp:
-            if importhandler.format == importhandler.FORMAT_CSV:
+            if dataset.format == dataset.FORMAT_CSV:
                 reader = csv.DictReader(
                     fp,
                     quotechar="'",

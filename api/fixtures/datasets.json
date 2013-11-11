@@ -15,7 +15,8 @@
     "filesize": 100,
     "records_count": 100,
     "time": 200,
-    "data_fields": ["employer.country"]
+    "data_fields": ["employer.country"],
+    "format": "json"
  },
  {
     "_id": "5270dd3a106a6c1631000111",
@@ -32,7 +33,8 @@
     "filename": "api/fixtures/ds2.gz",
     "filesize": 100,
     "records_count": 100,
-    "time": 200
+    "time": 200,
+    "format": "json"
  },
  {
     "_id": "5270dd3a106a6c1631000123",
@@ -49,7 +51,8 @@
     "filename": "api/fixtures/ds_csv.gz",
     "filesize": 100,
     "records_count": 100,
-    "time": 200
+    "time": 200,
+    "format": "csv"
  }
  ]
 }

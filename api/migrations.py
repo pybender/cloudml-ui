@@ -248,6 +248,10 @@ class DataSetMigration(DbMigration):  # pragma: no cover
         self.target = {'current_task_id': {'$exists': False}}
         self.update = {'$set': {'current_task_id': ''}}
 
+    def allmigration08__add_format(self):
+        self.target = {'format': {'$exists': False}}
+        self.update = {'$set': {'format': models.DataSet.FORMAT_JSON}}
+
 
 class InstanceMigration(DbMigration):  # pragma: no cover
     DOC_CLASS = models.Instance
@@ -271,10 +275,6 @@ class ImportHandlerMigration(DbMigration):  # pragma: no cover
     def allmigration02__add_updated_by(self):
         self.target = {'updated_by': {'$exists': False}}
         self.update = {'$set': {'updated_by': {}}}
-
-    def allmigration03__add_format(self):
-        self.target = {'format': {'$exists': False}}
-        self.update = {'$set': {'format': models.ImportHandler.FORMAT_JSON}}
 
 
 class TestExampleMigration(DbMigration):  # pragma: no cover

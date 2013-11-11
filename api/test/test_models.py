@@ -127,10 +127,6 @@ class ModelTests(BaseTestCase):
                         "Test import handler was not set")
         self.assertTrue(model.train_import_handler,
                         "Train import handler was not set")
-        self.assertEquals(model.test_import_handler.format,
-                          self.db.ImportHandler.FORMAT_JSON)
-        self.assertEquals(model.train_import_handler.format,
-                          self.db.ImportHandler.FORMAT_JSON)
         self.assertTrue(model.features, "Features was not set")
         self.assertEquals(model.labels, [],
                           "Labels is empty for recently posted model")
@@ -154,28 +150,6 @@ class ModelTests(BaseTestCase):
         features_set = model.features_set
         self.assertTrue(features_set, "Features set not created")
         self.assertEquals(features_set.schema_name, "bestmatch")
-
-    def test_post_new_model_csv(self, name='new'):
-        handler = open('./conf/extract.json', 'r').read()
-        post_data = {
-            'test_import_handler_file': handler,
-            'train_import_handler_file': handler,
-            'features': open('./conf/features.json', 'r').read(),
-            'name': name,
-            'test_format': self.db.ImportHandler.FORMAT_CSV,
-            'train_format': self.db.ImportHandler.FORMAT_CSV,
-        }
-        resp, model = self._check_post(post_data, load_model=True)
-        self.assertEquals(model.name, name)
-        self.assertEquals(model.status, model.STATUS_NEW)
-        self.assertTrue(model.test_import_handler,
-                        "Test import handler was not set")
-        self.assertTrue(model.train_import_handler,
-                        "Train import handler was not set")
-        self.assertEquals(model.test_import_handler.format,
-                          self.db.ImportHandler.FORMAT_CSV)
-        self.assertEquals(model.train_import_handler.format,
-                          self.db.ImportHandler.FORMAT_CSV)
 
     def test_post_new_model_without_features(self):
         name = 'test one'
@@ -324,9 +298,6 @@ aws_instance is required')
         self.assertEqual(model.train_records_count, 100)
 
     def test_train_model_with_dataset_csv(self):
-        self.obj.train_import_handler.format = self.db.ImportHandler.FORMAT_CSV
-        self.obj.train_import_handler.save()
-
         ds = self.db.DataSet.get_from_id(ObjectId(self.DS_CSV_ID))
 
         data = {'aws_instance': self.INSTANCE_ID,

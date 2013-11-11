@@ -186,10 +186,6 @@ class ImportHandler(BaseDocument):
     TYPE_DB = 'Db'
     TYPE_REQUEST = 'Request'
 
-    FORMAT_JSON = 'json'
-    FORMAT_CSV = 'csv'
-    FORMATS = [FORMAT_JSON, FORMAT_CSV]
-
     __collection__ = 'handlers'
 
     structure = {
@@ -201,7 +197,6 @@ class ImportHandler(BaseDocument):
         'updated_by': dict,
         'data': dict,
         'import_params': list,
-        'format': basestring
     }
     required_fields = ['name', 'created_on', 'updated_on', ]
     default_values = {'created_on': datetime.utcnow,
@@ -209,7 +204,6 @@ class ImportHandler(BaseDocument):
                       'type': TYPE_DB,
                       'created_by': {},
                       'updated_by': {},
-                      'format': FORMAT_JSON,
                       }
     use_dot_notation = True
 
@@ -280,6 +274,10 @@ class DataSet(BaseDocument):
     STATUS_IMPORTED = 'Imported'
     STATUS_ERROR = 'Error'
 
+    FORMAT_JSON = 'json'
+    FORMAT_CSV = 'csv'
+    FORMATS = [FORMAT_JSON, FORMAT_CSV]
+
     structure = {
         'name': basestring,
         'status': basestring,
@@ -299,6 +297,7 @@ class DataSet(BaseDocument):
         'time': int,
         'data_fields': list,
         'current_task_id': basestring,
+        'format': basestring,
     }
     required_fields = ['name', 'created_on', 'updated_on', ]
     default_values = {'created_on': datetime.utcnow,
@@ -309,7 +308,8 @@ class DataSet(BaseDocument):
                       'status': STATUS_IMPORTING,
                       'data_fields': [],
                       'created_by': {},
-                      'updated_by': {}}
+                      'updated_by': {},
+                      'format': FORMAT_JSON,}
     use_dot_notation = True
 
     def __init__(self, *args, **kwargs):
@@ -355,13 +355,7 @@ class DataSet(BaseDocument):
 
     def get_iterator(self, stream):
         from core.trainer.streamutils import streamingiterload
-
-        import_handler = app.db.ImportHandler.get_from_id(
-            ObjectId(self.import_handler_id))
-
-        source_format = (import_handler.format if import_handler
-                         else app.db.ImportHandler.FORMAT_JSON)
-        return streamingiterload(stream, source_format=source_format)
+        return streamingiterload(stream, source_format=self.format)
 
     def load_from_s3(self):
         helper = AmazonS3Helper()
