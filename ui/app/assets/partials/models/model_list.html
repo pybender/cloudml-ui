@@ -1,3 +1,4 @@
+<div ng-controller="TagCtrl">
 <h2>
   <a href="#/models/">Model List</a> <small ng-show="currentTag">tagged with {{ currentTag }}</small>
   <div class="actions">
@@ -13,10 +14,10 @@
   </div>
 </h2>
 
-<div ng-controller="BaseListCtrl" ng-init="init(true, 'models')" >
+<div>
   <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
 
-  <div ng-hide="objects.length == 0 || tag_list.length == 0" ng-controller="TagCloudCtrl" class="alert-info well">
+  <div ng-hide="tag_list.length == 0" ng-controller="TagCloudCtrl" class="alert-info well">
     <span ng-repeat="tag in tag_list">
       <span>
         <a href="#/models/?tag={{ tag.text }}">{{ tag.text }} ({{ tag.count }})</a> 
@@ -24,100 +25,14 @@
     </span>
   </div>
 
-  <table class="table table-hover">
-  <thead>
-    <tr>
-      <th>Name</th>
-      <th>
-        Status
-        <a ng-click="showStatusFilter=!showStatusFilter"><i class="icon-search"></i></a>
-        <div ng-show="showStatusFilter || filter_opts['status']">
-          <select ui-select2="{allowClear: true}" ng-multiple="false" name="status" ng-model="filter_opts['status']">
-            <option ng-repeat="status in STATUSES" value="{{ status }}">{{ status }}</option>
-        </select>
-        </div>
-      </th>
-      <th>
-        Created
-        <a ng-click="showCreatedFilter=!showCreatedFilter"><i class="icon-search"></i></a>
-        <div ng-show="showCreatedFilter || filter_opts['created_by']">
-          <input name="created_by" ng-model="filter_opts['created_by']" placeholder="Input user uid" />
-        </div>
-      </th>
-      <th>
-        Updated
-        <a ng-click="showUpdatedFilter=!showUpdatedFilter"><i class="icon-search"></i></a>
-        <div ng-show="showUpdatedFilter || filter_opts['updated_by']">
-          <input name="updated_by" ng-model="filter_opts['updated_by']" placeholder="Input user uid" />
-        </div>
-      </th>
-      <th>
-        Comparable
-        <a ng-click="showComparableFilter=!showComparableFilter"><i class="icon-search"></i></a>
-        <div ng-show="showComparableFilter || filter_opts['comparable']">
-          <select ui-select2="{allowClear: true}" ng-multiple="false" name="comparable" ng-model="filter_opts['comparable']">
-            <option value=""></option>
-            <option value="1">Yes</option>
-            <option value="0">No</option>
-        </select>
-        </div>
-      </th>
-      <th>Actions</th>
-    </tr>
-  </thead>
-  <tbody ng-show="objects.length == 0">
-    <tr>
-      <td colspan="5">
-        <alert-message ng-show="objects.length == 0" class="alert-info" msg="No models found"></alert-message>
-      </td>
-    </tr>
-  </tbody>
-  <tbody ng-hide="objects.length == 0">
-    <tr ng-repeat="model in objects" ng-class="{success : model.status=='Trained', warning : model.status =='New', info : model.status =='Training', error : model.status =='Error'}">
-      <td>
-        <a href="#{{ model.objectUrl() }}">{{ model.name }}</a>
-        <div title="tags">
-          <span ng-repeat="tag in model.tags">
-            <span class="badge">
-              <a href="#/models/?tag={{ tag }}" style="color: white;">{{ tag }}</a>
-            </span> 
-          </span>
-        </div>
-      </td>
-      <td title="{{ model.error }}">{{ model.status }}</td>
-      <td>
-          {{ model.created_on|format_date }}<br>
-          <small ng-show="model.created_by">by {{ model.created_by.name }} ({{ model.created_by.uid }})</small>
-      </td>
-      <td>
-          {{ model.updated_on|format_date }}<br>
-          <small ng-show="model.updated_by">by {{ model.updated_by.name }} ({{ model.updated_by.uid }})</small>
-      </td>
-      <td>
-        <i ng-hide="model.comparable" title="This model don't contains any successfull tests" class="icon-remove"></i>
-        <i ng-show="model.comparable" title="This model contains at least one successfull test" class="icon-ok"></i>
-      </td>
-      <td ng-controller="ModelActionsCtrl">
-        <div ng-init="init({model: model})">
-          <button ng-show="model.status == 'Trained'" ng-click="test_model(model)" class="btn btn-success">
-            <i title="Apply the classifier to the input provided by the data import handler" class="status-icon icon-play"></i>
-          </button>
-          <button ng-click="train_model(model)" class="btn btn-info">
-            <i title="Train your model" class="icon-tasks"></i>
-          </button>
-          <a ng-show="model.status == 'Trained'" href="{{ model.downloadUrl() }}?field=trainer" class="btn btn-info">
-            <i title="Download model trainer." class="icon-download-alt"></i>
-          </a>
-          <button ng-show="model.status == 'Requesting Instance'" ng-click="cancel_request_spot_instance(model)" class="btn btn-danger">
-            Cancel requesting instance
-          </button>
-          <button ng-click="delete_model(model)" class="btn btn-danger">
-            <i title="Delete your model. Be careful - you could not recover it!" class="icon-remove"></i>
-          </button>
-        </div>
-        <i ng-show="model.status == 'Training'" class="icon-large icon-refresh" title="Training model is in progress"></i>
-      </td>
-    </tr>
-  </tbody>
-  </table>
+  <h4>My recently updated</h4>
+  <div ng-controller="ModelListCtrl" ng-init="init(user.uid, 'my_models')">
+    <ng-include ng-controller="BaseListCtrl" ng-init="init(true, 'my_models')" src="'/partials/models/table.html'"></ng-include>
+  </div>
+
+  <h4>All models</h4>
+  <div ng-controller="ModelListCtrl" ng-init="init(null, 'models')">
+    <ng-include ng-controller="BaseListCtrl" ng-init="init(true, 'models')" src="'/partials/models/table.html'"></ng-include>
+  </div>
+</div>
 </div>
