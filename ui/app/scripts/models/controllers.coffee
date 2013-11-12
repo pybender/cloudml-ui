@@ -39,7 +39,7 @@ updated_on,updated_by,comparable,test_handler_fields'
     $scope.currentTag = $location.search()['tag']
     $scope.kwargs = {
       tag: $scope.currentTag
-      per_page: 2
+      per_page: 5
       sort_by: 'updated_on'
       order: 'desc'
     }
@@ -48,10 +48,18 @@ updated_on,updated_by,comparable,test_handler_fields'
     'Imported', 'Requesting Instance', 'Instance Started',
     'Training', 'Trained', 'Error', 'Canceled']
 
-    $scope.init = (userId, modelName) ->
+    $scope.init = (updatedByMe, modelName) ->
       $scope.modelName = modelName
-      if userId?
-        $scope.filter_opts = {'updated_by': userId, 'status': ''}
+      if updatedByMe
+        $scope.$watch('user', (user, oldVal, scope) ->
+          if user?
+            $scope.filter_opts = {
+              'updated_by': user.uid
+              'status': ''}
+            $scope.$watch('filter_opts', (filter_opts, oldVal, scope) ->
+              $scope.$emit 'BaseListCtrl:start:load', modelName
+            , true)
+        , true)
       else
         $scope.filter_opts = {'status': ''}
 

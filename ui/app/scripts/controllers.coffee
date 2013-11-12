@@ -201,9 +201,10 @@ angular.module('app.controllers', ['app.config', ])
 
   ($scope, $rootScope) ->
 
-    $scope.init = (autoload=true, modelName='noname') ->
+    $scope.init = (autoload=true, modelName='noname', autoloadOnFilter=true) ->
       $scope.modelName = modelName
       $scope.autoload = autoload
+      $scope.autoloadOnFilter = autoloadOnFilter
 
       if $scope.autoload
         $scope.load()
@@ -214,10 +215,11 @@ angular.module('app.controllers', ['app.config', ])
             $scope.load(append, extra)
       )
 
-      $scope.$watch('filter_opts', (filter_opts, oldVal, scope) ->
-        if filter_opts?
-          $scope.load()
-      , true)
+      if $scope.autoloadOnFilter
+        $scope.$watch('filter_opts', (filter_opts, oldVal, scope) ->
+          if filter_opts?
+            $scope.load()
+        , true)
 
     $scope.load = (append=false, extra={}) ->
       params = $.extend({'show': $scope.FIELDS},
