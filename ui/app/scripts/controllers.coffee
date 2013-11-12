@@ -208,9 +208,10 @@ angular.module('app.controllers', ['app.config', ])
       if $scope.autoload
         $scope.load()
 
-      $rootScope.$on('BaseListCtrl:start:load', (event, name) ->
-        if name == $scope.modelName
-          $scope.load()
+      $rootScope.$on(
+        'BaseListCtrl:start:load', (event, name, append=false, extra={}) ->
+          if name == $scope.modelName
+            $scope.load(append, extra)
       )
 
       $scope.$watch('filter_opts', (filter_opts, oldVal, scope) ->
@@ -218,11 +219,10 @@ angular.module('app.controllers', ['app.config', ])
           $scope.load()
       , true)
 
-    $scope.load = (append=false) ->
+    $scope.load = (append=false, extra={}) ->
       params = $.extend({'show': $scope.FIELDS},
                          $scope.kwargs || {},
-                         $scope.filter_opts)
-
+                         $scope.filter_opts, extra)
       $scope.MODEL.$loadAll(params).then ((opts) ->
         $scope.pages = opts.pages
         $scope.has_next = opts.has_next

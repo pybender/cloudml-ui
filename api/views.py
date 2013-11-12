@@ -78,6 +78,7 @@ class Models(BaseResource):
     FILTER_PARAMS = (('status', str), ('comparable', int), ('tag', str),
                     ('created_by', str), ('updated_by', str))
     DEFAULT_FIELDS = ('_id', 'name')
+    NEED_PAGING = True
 
     MESSAGE404 = "Model with name %(_id)s doesn't exist"
 
