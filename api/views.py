@@ -1,6 +1,7 @@
 from collections import defaultdict
 from datetime import datetime
 import json
+from psycopg2._psycopg import DatabaseError
 import re
 import logging
 import traceback
@@ -371,6 +372,7 @@ class ImportHandlerResource(BaseResource):
     OBJECT_NAME = 'import_handler'
     post_form = AddImportHandlerForm
     GET_ACTIONS = ('download', )
+    PUT_ACTIONS = ('run_sql', )
     FORCE_FIELDS_CHOOSING = True
 
     HANDLER_REGEXP = re.compile('^[a-zA-Z_]+$')
@@ -393,6 +395,9 @@ class ImportHandlerResource(BaseResource):
         return query_fields, show_fields
 
     def put(self, action=None, **kwargs):
+        if action:
+            return super(ImportHandlerResource, self).put(action, **kwargs)
+
         obj = self._get_details_query(None, None, **kwargs)
         if obj is None:
             raise NotFound(self.MESSAGE404 % kwargs)
@@ -528,12 +533,43 @@ class ImportHandlerResource(BaseResource):
         if model is None:
             raise NotFound(self.MESSAGE404 % kwargs)
 
-        content = json.dumps(model.data)
-        resp = Response(content)
-        resp.headers['Content-Type'] = 'text/plain'
-        resp.headers['Content-Disposition'] = 'attachment; \
-filename=importhandler-%s.json' % model.name
-        return resp
+        return self._render(self._get_save_response_context(obj),
+                            code=200)
+
+    def _put_run_sql_action(self, **kwargs):
+        """
+        Run sql query for testing
+        """
+        model = self._get_details_query(None, None, **kwargs)
+        if model is None:
+            raise NotFound(self.MESSAGE404 % kwargs)
+
+        form = QueryTestForm(obj={})
+        if not form.is_valid():
+            return self._render({'error': form.error_messages})
+
+        sql = form.cleaned_data['sql']
+        limit = form.cleaned_data['limit']
+        params = form.cleaned_data['params']
+        sql = sql % params
+
+        try:
+            query = model.parse_sql(sql)
+        except Exception as e:
+            return self._render({'error': str(e)})
+
+        sql = model.build_query(query, limit=limit)
+
+        try:
+            data = list(model.execute_sql(sql))[:limit]  # TODO: remove this
+        except DatabaseError as e:
+            return self._render({'error': str(e)})
+
+        columns = []
+        if len(data) > 0:
+            columns = data[0].keys()
+
+        return self._render({'data': data, 'columns': columns})
 
 api.add_resource(ImportHandlerResource, '/cloudml/importhandlers/')
 

@@ -77,7 +77,8 @@ angular.module('app.importhandlers.model', ['app.config'])
                   'handler': @handler,
                   'num': i,
                   'query_num': @query_num,
-                  'item_num': @num})
+                  'item_num': @num}
+              )
               i += 1
 
       getJsonData: () =>
@@ -136,7 +137,8 @@ angular.module('app.importhandlers.model', ['app.config'])
             for queryData in origData.items
               @items.push new Item(
                 _.extend queryData, {
-                  'handler': @handler, 'num': i, 'query_num': @num})
+                  'handler': @handler, 'num': i, 'query_num': @num}
+              )
               i += 1
 
       $save: (opts={}) =>
@@ -149,6 +151,14 @@ angular.module('app.importhandlers.model', ['app.config'])
       $remove: () ->
         data = {'remove_query': 1, 'num': @num}
         @$make_request(@handler.getUrl(), {}, "PUT", data)
+
+      $run: (limit, params) ->
+        data = {
+          sql: @sql,
+          params: JSON.stringify(params),
+          limit: limit
+        }
+        @$make_request(@handler.getUrl() + 'action/run_sql/', {}, "PUT", data)
 
     return Query
 ])

@@ -1,0 +1,45 @@
+from bson import ObjectId
+from sqlparse.sql import Statement
+
+from utils import BaseTestCase
+
+
+class SqlMethodTests(BaseTestCase):
+    HANDLER_ID = '5170dd3a106a6c1631000000'
+    FIXTURES = ('models.json', 'datasets.json', 'importhandlers.json', )
+
+    def setUp(self):
+        super(SqlMethodTests, self).setUp()
+        self.Model = self.db.ImportHandler
+        self.obj = self.Model.find_one({'_id': ObjectId(self.HANDLER_ID)})
+
+    def test_parse_sql(self):
+        with self.assertRaises(Exception):
+            self.obj.parse_sql(
+                'INSERT INTO some_table (id, name) VALUES (1, "Smth")')
+
+        with self.assertRaises(Exception):
+            self.obj.parse_sql(
+                'insert into some_table (id, name) value'
+                ' (select id, name from other)')
+
+        with self.assertRaises(Exception):
+            self.obj.parse_sql('UPDATE some_table SET name="new name"')
+
+        with self.assertRaises(Exception):
+            self.obj.parse_sql(
+                'DELETE FROM some_table; SELECT * FROM some_table;')
+
+        with self.assertRaises(Exception):
+            self.obj.parse_sql('not sql')
+
+        self.assertIsInstance(self.obj.parse_sql(
+            'SELECT * FROM some_table'), Statement)
+
+        self.assertIsInstance(self.obj.parse_sql(
+            ' select * from some_table'), Statement)
+
+        st = self.obj.parse_sql(
+            'SELECT * FROM some_table;DELETE FROM some_table;')
+        self.assertIsInstance(st, Statement)
+        self.assertEquals(st.get_type(), 'SELECT')

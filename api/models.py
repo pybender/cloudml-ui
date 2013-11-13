@@ -340,6 +340,43 @@ class ImportHandler(BaseDocument):
 
         super(ImportHandler, self).delete()
 
+    def parse_sql(self, sql):
+        """
+        Parses sql query structure from text,
+        returns None if it's not a SELECT query or invalid sql
+        """
+        import sqlparse
+
+        query = sqlparse.parse(sql)
+        wrong_sql = False
+        if len(query) < 1:
+            wrong_sql = True
+        else:
+            query = query[0]
+            if query.get_type() != 'SELECT':
+                wrong_sql = True
+
+        if wrong_sql:
+            raise Exception('Invalid sql query')
+        else:
+            return query
+
+    def build_query(self, query, limit=2):
+        import sqlparse
+        # TODO: change limit
+        return sqlparse.format(str(query))
+
+    def execute_sql(self, sql):
+        from core.importhandler import importhandler
+        # TODO: check this
+        datasource = self.datasource[0]
+
+        iter_func = importhandler.ImportHandler.DB_ITERS.get(
+            datasource['db_settings']['vendor'])
+
+        for row in iter_func([sql], datasource['db_settings']['conn']):
+            yield dict(row)
+
     def __repr__(self):
         return '<Import Handler %r>' % self.name
 

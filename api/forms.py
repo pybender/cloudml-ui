@@ -409,6 +409,12 @@ class QueryForm(BaseInnerDocumentForm):
     sql = CharField()
 
 
+class QueryTestForm(BaseFormEx):
+    sql = CharField()
+    params = JsonField()
+    limit = IntegerField()
+
+
 class QueryItemForm(BaseInnerDocumentForm):
     EXTRA_FIELDS = {'target_features': []}
     source = CharField()
