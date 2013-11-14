@@ -554,14 +554,14 @@ class ImportHandlerResource(BaseResource):
         sql = sql % params
 
         try:
-            query = model.parse_sql(sql)
+            model.parse_sql(sql)
         except Exception as e:
             return self._render({'error': str(e)})
 
-        sql = model.build_query(query, limit=limit)
+        sql = model.build_query(sql, limit=limit)
 
         try:
-            data = list(model.execute_sql(sql))[:limit]  # TODO: remove this
+            data = list(model.execute_sql(sql))[:limit]
         except DatabaseError as e:
             return self._render({'error': str(e)})
 

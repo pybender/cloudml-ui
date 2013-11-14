@@ -343,7 +343,7 @@ class ImportHandler(BaseDocument):
     def parse_sql(self, sql):
         """
         Parses sql query structure from text,
-        returns None if it's not a SELECT query or invalid sql
+        raises Exception if it's not a SELECT query or invalid sql
         """
         import sqlparse
 
@@ -361,10 +361,32 @@ class ImportHandler(BaseDocument):
         else:
             return query
 
-    def build_query(self, query, limit=2):
-        import sqlparse
-        # TODO: change limit
-        return sqlparse.format(str(query))
+    def build_query(self, sql, limit=2):
+        import re
+        from sqlparse import parse, tokens
+        from sqlparse.sql import Token
+
+        # It's important to have a whitespace right after every LIMIT
+        pattern = re.compile('limit([^ ])', re.IGNORECASE)
+        sql = pattern.sub(r'LIMIT \1', sql)
+
+        query = parse(sql)[0]
+        # for t in query.tokens:
+        #     print t
+
+        # Find LIMIT statement
+        token = query.token_next_match(0, tokens.Keyword, 'LIMIT')
+        if token:
+            # Find and replace LIMIT value
+            value = query.token_next(query.token_index(token), skip_ws=True)
+            if value:
+                # TODO: check that it's right value
+                new_token = Token(value.ttype, str(limit))
+                query.tokens[query.token_index(value)] = new_token
+
+        # TODO: If statement is not found, append one
+
+        return str(query)
 
     def execute_sql(self, sql):
         from core.importhandler import importhandler

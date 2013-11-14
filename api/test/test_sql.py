@@ -13,6 +13,22 @@ class SqlMethodTests(BaseTestCase):
         self.Model = self.db.ImportHandler
         self.obj = self.Model.find_one({'_id': ObjectId(self.HANDLER_ID)})
 
+    def test_build_query(self):
+        self.assertEquals(
+            self.obj.build_query('SELECT * FROM some_table LIMIT 100;', limit=2),
+            'SELECT * FROM some_table LIMIT 2;'
+        )
+
+        self.assertEquals(
+            self.obj.build_query('SELECT * FROM some_table LIMIT(100);', limit=3),
+            'SELECT * FROM some_table LIMIT 3;'
+        )
+
+        self.assertEquals(
+            self.obj.build_query("SELECT qi.*, 'class' || (trunc(random() * 2) + 1)::char hire_outcome FROM public.ja_quick_info qi where qi.file_provenance_date >= '2012-12-03' AND qi.file_provenance_date < '2012-12-04' LIMIT(100);", limit=2),
+            "SELECT qi.*, 'class' || (trunc(random() * 2) + 1)::char hire_outcome FROM public.ja_quick_info qi where qi.file_provenance_date >= '2012-12-03' AND qi.file_provenance_date < '2012-12-04' LIMIT 2;"
+        )
+
     def test_parse_sql(self):
         with self.assertRaises(Exception):
             self.obj.parse_sql(
