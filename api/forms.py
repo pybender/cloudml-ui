@@ -413,6 +413,7 @@ class QueryTestForm(BaseFormEx):
     sql = CharField()
     params = JsonField()
     limit = IntegerField()
+    datasource = CharField()
 
 
 class QueryItemForm(BaseInnerDocumentForm):

@@ -152,11 +152,12 @@ angular.module('app.importhandlers.model', ['app.config'])
         data = {'remove_query': 1, 'num': @num}
         @$make_request(@handler.getUrl(), {}, "PUT", data)
 
-      $run: (limit, params) ->
+      $run: (limit, params, datasource) ->
         data = {
           sql: @sql,
           params: JSON.stringify(params),
-          limit: limit
+          limit: limit,
+          datasource: datasource
         }
         @$make_request(@handler.getUrl() + 'action/run_sql/', {}, "PUT", data)
 

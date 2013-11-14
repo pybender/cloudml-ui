@@ -98,11 +98,19 @@
         SQL:
         <p><textarea ui-codemirror="{mode: 'text/x-mysql', indentWithTabs: true, smartIndent: true, lineNumbers: true, matchBrackets : true, height: '100px'}" ng-model="query.sql"></textarea></p>
         <button class="btn btn-primary" ng-click="query.$save({only: ['sql']})">Save</button>
-        <button class="btn btn-info" ng-click="runQuery(query)">Run Query</button>
+        <button class="btn btn-info" ng-click="runQuery(query)"><i class="icon-play"></i> Run Query</button>
       </div>
       <alert-message ng-show="query.test.error" class="alert-error" msg="{{ query.test.error }}" unsafe></alert-message>
-      <div ng-show="query.test.data" style="overflow: auto; padding: 6px; background: white;">
-        <table class="table table-bordered table-hovered">
+        <h5 ng-show="query.test.data">
+            Query Result
+            <div class="actions">
+                <button ng-click="query.test = {}" class="btn">Close</button>
+            </div>
+        </h5>
+      <div ng-show="query.test.data" style="overflow: auto;">
+        <span class="badge">{{ query.test.sql }}</span>
+        <br>
+        <table class="table table-bordered table-hovered" style="background: white;">
             <tr><th ng-repeat="col in query.test.columns">{{ col }}</th></tr>
             <tr ng-repeat="row in query.test.data">
                 <td ng-repeat="col in query.test.columns">
@@ -112,7 +120,6 @@
                 </td>
             </tr>
         </table>
-        <button ng-click="query.test = {}" class="btn">Close</button>
       </div>
       <div>
         <h5>

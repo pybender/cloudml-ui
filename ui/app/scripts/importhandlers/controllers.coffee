@@ -152,17 +152,21 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
       $scope.query.test_params = {}
     if !$scope.query.test_limit
       $scope.query.test_limit = 2
+    if !$scope.query.test_datasource
+      $scope.query.test_datasource = $scope.handler.datasource[0].name
 
     $scope.runQuery = () ->
       $scope.query.test = {}
-      $scope.query.$run($scope.query.test_limit, $scope.query.test_params
+      $scope.query.$run($scope.query.test_limit, $scope.query.test_params,
+        $scope.query.test_datasource
       ).then (resp) ->
         if resp.data.error?
           $scope.query.test.error = resp.data.error.replace('\n', '<br>')
+          $scope.query.test.sql = resp.data.sql
         else
           $scope.query.test.columns = resp.data.columns
-          console.log $scope.query.test.columns
           $scope.query.test.data = resp.data.data
+          $scope.query.test.sql = resp.data.sql
       dialog.close()
 ])
 

@@ -551,25 +551,27 @@ class ImportHandlerResource(BaseResource):
         sql = form.cleaned_data['sql']
         limit = form.cleaned_data['limit']
         params = form.cleaned_data['params']
+        datasource_name = form.cleaned_data['datasource']
         sql = sql % params
 
         try:
-            model.parse_sql(sql)
+            model.check_sql(sql)
         except Exception as e:
-            return self._render({'error': str(e)})
+            return self._render({'error': str(e), 'sql': sql})
 
+        # Change query LIMIT
         sql = model.build_query(sql, limit=limit)
 
         try:
-            data = list(model.execute_sql(sql))[:limit]
+            data = list(model.execute_sql_iter(sql, datasource_name))  #[:limit]
         except DatabaseError as e:
-            return self._render({'error': str(e)})
+            return self._render({'error': str(e), 'sql': sql})
 
         columns = []
         if len(data) > 0:
             columns = data[0].keys()
 
-        return self._render({'data': data, 'columns': columns})
+        return self._render({'data': data, 'columns': columns, 'sql': sql})
 
 api.add_resource(ImportHandlerResource, '/cloudml/importhandlers/')
 

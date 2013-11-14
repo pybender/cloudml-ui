@@ -340,10 +340,10 @@ class ImportHandler(BaseDocument):
 
         super(ImportHandler, self).delete()
 
-    def parse_sql(self, sql):
+    def check_sql(self, sql):
         """
         Parses sql query structure from text,
-        raises Exception if it's not a SELECT query or invalid sql
+        raises Exception if it's not a SELECT query or invalid sql.
         """
         import sqlparse
 
@@ -362,6 +362,9 @@ class ImportHandler(BaseDocument):
             return query
 
     def build_query(self, sql, limit=2):
+        """
+        Parses sql query and changes LIMIT statement value.
+        """
         import re
         from sqlparse import parse, tokens
         from sqlparse.sql import Token
@@ -371,8 +374,6 @@ class ImportHandler(BaseDocument):
         sql = pattern.sub(r'LIMIT \1', sql)
 
         query = parse(sql)[0]
-        # for t in query.tokens:
-        #     print t
 
         # Find LIMIT statement
         token = query.token_next_match(0, tokens.Keyword, 'LIMIT')
@@ -380,18 +381,33 @@ class ImportHandler(BaseDocument):
             # Find and replace LIMIT value
             value = query.token_next(query.token_index(token), skip_ws=True)
             if value:
-                # TODO: check that it's right value
                 new_token = Token(value.ttype, str(limit))
                 query.tokens[query.token_index(value)] = new_token
-
-        # TODO: If statement is not found, append one
+        else:
+            # If limit is not found, append one
+            new_tokens = [
+                Token(tokens.Whitespace, ' '),
+                Token(tokens.Keyword, 'LIMIT'),
+                Token(tokens.Whitespace, ' '),
+                Token(tokens.Number, str(limit)),
+            ]
+            last_token = query.tokens[-1]
+            if last_token.ttype == tokens.Punctuation:
+                query.tokens.remove(last_token)
+            for new_token in new_tokens:
+                query.tokens.append(new_token)
 
         return str(query)
 
-    def execute_sql(self, sql):
+    def execute_sql_iter(self, sql, datasource_name):
+        """
+        Executes sql using data source with name datasource_name.
+        Datasource with given name should be in handler's datasource list.
+        Returns iterator.
+        """
         from core.importhandler import importhandler
-        # TODO: check this
-        datasource = self.datasource[0]
+        datasource = next((d for d in self.datasource
+                           if d['name'] == datasource_name))
 
         iter_func = importhandler.ImportHandler.DB_ITERS.get(
             datasource['db_settings']['vendor'])

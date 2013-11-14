@@ -8,6 +8,14 @@
     <alert-message ng-show="query.test.error" class="alert-error" msg="{{ query.test.error }}" unsafe></alert-message>
 
     <form name="Form" class="form-horizontal">
+      <div class="control-group" ng-class="{error: Form.datasource.$invalid}">
+        <label class="control-label">Data source</label>
+        <div class="controls">
+          <select name="datasource" ng-options="s.name as s.name for s in handler.datasource" ng-model="query.test_datasource" ng-selected="handler.datasource[0].name"></select>
+          <span ng-show="Form.datasource.$error.required" class="help-inline">*</span>
+        </div>
+      </div>
+      <hr>
       <div ng-repeat="param in params" class="control-group">
           <label class="control-label">{{ param | capfirst }}:</label>
           <div class="controls"  ng-class="{error: Form.parameters[param].$invalid}">
