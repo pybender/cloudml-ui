@@ -20,7 +20,7 @@ from api.utils import ERR_INVALID_DATA, odesk_error_response, \
 from api.resources import BaseResource, NotFound, ValidationError
 from api.forms import *
 from core.importhandler.importhandler import ExtractionPlan, \
-    RequestImportHandler
+    RequestImportHandler, DecimalEncoder
 
 model_parser = reqparse.RequestParser()
 model_parser.add_argument('importhandler', type=str,
@@ -371,8 +371,8 @@ class ImportHandlerResource(BaseResource):
 
     OBJECT_NAME = 'import_handler'
     post_form = AddImportHandlerForm
-    GET_ACTIONS = ('download', )
-    PUT_ACTIONS = ('run_sql', )
+    GET_ACTIONS = ('download', 'test_handler')
+    PUT_ACTIONS = ('run_sql',)
     FORCE_FIELDS_CHOOSING = True
 
     HANDLER_REGEXP = re.compile('^[a-zA-Z_]+$')
@@ -383,7 +383,7 @@ class ImportHandlerResource(BaseResource):
     FEATURE_REGEXP = re.compile(
         '^queries.[-\d]+.items.[-\d]+.target_features.[-\d]+.[a-zA-Z_]+$')
 
-    @public_actions(['download'])
+    @public_actions(['download', 'test_handler'])
     def get(self, *args, **kwargs):
         return super(ImportHandlerResource, self).get(*args, **kwargs)
 
@@ -533,7 +533,7 @@ class ImportHandlerResource(BaseResource):
         if model is None:
             raise NotFound(self.MESSAGE404 % kwargs)
 
-        return self._render(self._get_save_response_context(obj),
+        return self._render(self._get_save_response_context(model),
                             code=200)
 
     def _put_run_sql_action(self, **kwargs):
@@ -563,7 +563,7 @@ class ImportHandlerResource(BaseResource):
         sql = model.build_query(sql, limit=limit)
 
         try:
-            data = list(model.execute_sql_iter(sql, datasource_name))  #[:limit]
+            data = list(model.execute_sql_iter(sql, datasource_name))
         except DatabaseError as e:
             return self._render({'error': str(e), 'sql': sql})
 
@@ -572,6 +572,38 @@ class ImportHandlerResource(BaseResource):
             columns = data[0].keys()
 
         return self._render({'data': data, 'columns': columns, 'sql': sql})
+
+    def _get_test_handler_action(self, **kwargs):
+        """
+        Run importing data for testing
+        """
+        from core.importhandler.importhandler import ExtractionPlan,\
+            ImportHandler
+
+        # Amount of rows to extract
+        TEST_LIMIT = 2
+
+        model = self._get_details_query(None, None, **kwargs)
+        if model is None:
+            raise NotFound(self.MESSAGE404 % kwargs)
+
+        params = self._parse_parameters((('params', str), ))
+        import_params = json.loads(params.get('params'))
+
+        # Change limit for all handler queries
+        for query in model.queries:
+            query['sql'] = model.build_query(query['sql'], limit=TEST_LIMIT)
+
+        handler = json.dumps(model.data)
+        plan = ExtractionPlan(handler, is_file=False)
+        handler = ImportHandler(plan, import_params)
+        content = (json.dumps(row, cls=DecimalEncoder) for row in handler)
+        content = '\n'.join(content)
+
+        resp = Response(content)
+        resp.headers['Content-Type'] = 'text/plain'
+        resp.headers['Content-Disposition'] = 'attachment; filename=import.json'
+        return resp
 
 api.add_resource(ImportHandlerResource, '/cloudml/importhandlers/')
 

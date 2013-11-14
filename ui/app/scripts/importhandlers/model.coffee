@@ -242,6 +242,11 @@ created_on,created_by,datasource'
           data[key] = val
         @$make_request("#{@BASE_API_URL}#{@_id}/action/load/", {}, "PUT", data)
 
+      $getTestImportUrl: (params) ->
+        params_json = JSON.stringify(params)
+        return "#{@BASE_API_URL}#{@_id}/action/test_handler/" +
+        "?params=#{params_json}"
+
     return ImportHandler
 ])
 

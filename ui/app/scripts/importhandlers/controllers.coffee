@@ -170,6 +170,22 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
       dialog.close()
 ])
 
+.controller('ImportTestDialogCtrl', [
+  '$scope'
+  '$rootScope'
+  'dialog'
+
+  ($scope, $rootScope, dialog) ->
+    $scope.handler = dialog.extra.handler
+    $scope.params = $scope.handler.import_params
+    $scope.parameters = {}
+    $scope.dialog = dialog
+
+    $scope.runTestImport = () ->
+      dialog.close()
+      window.location = $scope.handler.$getTestImportUrl($scope.parameters)
+])
+
 .controller('DataSourceEditDialogCtrl', [
   '$scope'
   '$rootScope'
@@ -272,6 +288,14 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
     $scope.openDialog($dialog, handler,
     'partials/base/delete_dialog.html', 'DeleteImportHandlerCtrl',
     "modal", "delete import handler", "/importhandlers")
+
+  $scope.testHandler = (handler) ->
+    $scope.openDialog($dialog, null,
+        'partials/import_handler/test_handler.html',
+          'ImportTestDialogCtrl',
+        'modal', 'test import handler', 'handler',
+        {handler: $scope.handler}
+      )
 
 ])
 
