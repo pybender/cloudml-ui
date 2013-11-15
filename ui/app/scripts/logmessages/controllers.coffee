@@ -25,4 +25,8 @@ angular.module('app.logmessages.controllers', ['app.config', ])
     $scope.kwargs['level'] = @log_level
     $scope.kwargs['page'] = 1
     @load()
+
+  $scope.refresh = () ->
+    $scope.kwargs['page'] = 1
+    @load()
 ])
