@@ -357,7 +357,7 @@ class WeightsTreeResource(BaseResource):
 
 api.add_resource(WeightsTreeResource,
                  '/cloudml/weights_tree/<regex("[\w\.]*"):model_id>',
-                 add_standart_urls=False)
+                 add_standard_urls=False)
 
 
 class ImportHandlerResource(BaseResource):
@@ -772,7 +772,7 @@ class CompareReportResource(BaseResource):
 
 api.add_resource(CompareReportResource,
                  '/cloudml/reports/compare/',
-                 add_standart_urls=False)
+                 add_standard_urls=False)
 
 
 class Predict(BaseResource):  # pragma: no cover
@@ -823,7 +823,7 @@ class Predict(BaseResource):  # pragma: no cover
         return self._render({'label': label, 'prob': prob}, code=201)
 
 api.add_resource(Predict, '/cloudml/model/<regex("[\w\.]*"):model_id>/\
-<regex("[\w\.]*"):handler_id>/predict', add_standart_urls=False)
+<regex("[\w\.]*"):handler_id>/predict', add_standard_urls=False)
 
 
 class InstanceResource(BaseResource):
@@ -956,7 +956,7 @@ class AuthResource(BaseResource):
         raise NotFound()
 
 api.add_resource(AuthResource, '/cloudml/auth/<regex("[\w\.]*"):action>',
-                 add_standart_urls=False)
+                 add_standard_urls=False)
 
 
 class StatisticsResource(BaseResource):

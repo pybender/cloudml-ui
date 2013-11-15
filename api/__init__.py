@@ -102,7 +102,7 @@ class Api(restful.Api):
         Examples:
             api.add_resource(HelloWorld, '/', '/hello')
         """
-        add_standart_urls = kwargs.get('add_standart_urls', True)
+        add_standard_urls = kwargs.get('add_standard_urls', True)
         endpoint = kwargs.get('endpoint') or resource.__name__.lower()
 
         if endpoint in self.app.view_functions.keys():
@@ -119,7 +119,7 @@ class Api(restful.Api):
         for part in urls:
             base_url = self.prefix + part
             self.app.add_url_rule(base_url, view_func=resource_func)
-            if add_standart_urls:
+            if add_standard_urls:
                 url = base_url + '<regex("[\w\.]*"):_id>/'
                 self.app.add_url_rule(url, view_func=resource_func)
                 url = base_url + 'action/<regex("[\w\.]*"):action>/'
