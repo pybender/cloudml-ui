@@ -485,7 +485,7 @@ def run_test(dataset_ids, test_id):
             from bson import Binary
             import pickle
             test.fs.vect_data = Binary(pickle.dumps(vect_data))
-        
+
         test.save()
 
         logging.info('Storing test examples')
@@ -506,9 +506,7 @@ def run_test(dataset_ids, test_id):
                     ndata = dict([(key.replace('.', '->'), val)
                                  for key, val in row.iteritems()])
                     fp.write('{0}\n'.format(json.dumps(ndata)))
-                # vectorized_data = metrics._true_data.getrow(n).todense()
-                example, new_row = _add_example_to_mongo(
-                    test, row, label, pred, prob)
+
                 test.examples_size += (get_doc_size(example) / 1024.0 / 1024.0)
                 example_ids.append(str(example._id))
 
@@ -584,16 +582,13 @@ def _add_example_to_mongo(test, data, label, pred, prob):
     example.test_id = str(test._id)
     example.model_id = str(model._id)
 
-    new_row = ndata
-    if test.examples_placement == test.EXAMPLES_MONGODB:
-        example.data_input = ndata
-    if test.examples_placement == test.EXAMPLES_TO_AMAZON_S3:
-        # Fill all data to Amazon S3 and only specified fields
-        # to MongoDB
+    if test.examples_placement in test.EXAMPLES_PLACEMENT_WITH_FIELDS:
         # Choose only specified in test fields in test
         new_row = dict([(field, ndata.get(field, None))
                        for field in test.examples_fields])
         example.data_input = new_row
+    else:
+        new_row = ndata
 
     try:
         example.validate()
