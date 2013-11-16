@@ -480,6 +480,12 @@ def run_test(dataset_ids, test_id):
         test.dataset = app.db.DataSet.get_from_id(ObjectId(dataset_ids[0]))
         test.examples_count = all_count
         test.memory_usage['testing'] = max(mem_usage)
+        if test.examples_placement != test.EXAMPLES_DONT_SAVE:
+            vect_data = metrics._true_data
+            from bson import Binary
+            import pickle
+            test.fs.vect_data = Binary(pickle.dumps(vect_data))
+        
         test.save()
 
         logging.info('Storing test examples')
@@ -500,9 +506,9 @@ def run_test(dataset_ids, test_id):
                     ndata = dict([(key.replace('.', '->'), val)
                                  for key, val in row.iteritems()])
                     fp.write('{0}\n'.format(json.dumps(ndata)))
-                vectorized_data = metrics._true_data.getrow(n).todense()
-                example, new_row = _add_example_to_mongo(test, vectorized_data, row, label,
-                                                         pred, prob)
+                # vectorized_data = metrics._true_data.getrow(n).todense()
+                example, new_row = _add_example_to_mongo(
+                    test, row, label, pred, prob)
                 test.examples_size += (get_doc_size(example) / 1024.0 / 1024.0)
                 example_ids.append(str(example._id))
 
@@ -544,7 +550,7 @@ def run_test(dataset_ids, test_id):
     return 'Test completed'
 
 
-def _add_example_to_mongo(test, vectorized_data, data, label, pred, prob):
+def _add_example_to_mongo(test, data, label, pred, prob):
     """
     Adds info about Test Example to MongoDB.
     Returns created TestExample document and data.
@@ -569,7 +575,6 @@ def _add_example_to_mongo(test, vectorized_data, data, label, pred, prob):
     example.label = str(label)
     example.prob = prob.tolist()
     example.test = test
-    example.vect_data = vectorized_data.tolist()[0]
     # TODO: this field is obsolete
     example.on_s3 = test.examples_placement == test.EXAMPLES_TO_AMAZON_S3
 

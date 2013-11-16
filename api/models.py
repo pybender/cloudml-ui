@@ -795,6 +795,7 @@ class Test(BaseDocument):
         'examples_placement': basestring,
         'examples_fields': list,
         'examples_size': float,
+        'vect_data': None,
 
         'parameters': dict,
         'classes_set': list,
@@ -810,6 +811,7 @@ class Test(BaseDocument):
         'current_task_id': basestring,
         'confusion_matrix_calculations': list,
     }
+    gridfs = {'files': ['vect_data']}
     required_fields = ['name', 'created_on', 'updated_on',
                        'status']
     default_values = {
@@ -824,6 +826,13 @@ class Test(BaseDocument):
     }
     use_dot_notation = True
     use_autorefs = True
+
+
+    def get_vect_data(self):
+        return
+            # feature_model = model.get_trainer()._feature_model
+            # if test.examples_fields != feature_model.features.keys():
+
 
     # TODO: unused code
     @classmethod
