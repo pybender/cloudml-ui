@@ -507,6 +507,8 @@ def run_test(dataset_ids, test_id):
                                  for key, val in row.iteritems()])
                     fp.write('{0}\n'.format(json.dumps(ndata)))
 
+                example, new_row = _add_example_to_mongo(
+                     test, row, label, pred, prob, n)
                 test.examples_size += (get_doc_size(example) / 1024.0 / 1024.0)
                 example_ids.append(str(example._id))
 
@@ -548,7 +550,7 @@ def run_test(dataset_ids, test_id):
     return 'Test completed'
 
 
-def _add_example_to_mongo(test, data, label, pred, prob):
+def _add_example_to_mongo(test, data, label, pred, prob, num):
     """
     Adds info about Test Example to MongoDB.
     Returns created TestExample document and data.
@@ -557,6 +559,7 @@ def _add_example_to_mongo(test, data, label, pred, prob):
                  for key, val in data.iteritems()])
     model = test.model
     example = app.db.TestExample()
+    example.num = num
     example_id = ndata.get(model.example_id, '-1')
     try:
         example['id'] = str(example_id)

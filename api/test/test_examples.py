@@ -89,12 +89,15 @@ class TestExamplesTests(BaseTestCase):
         self._check_details(show='id,test_name')
 
     @mock_s3
+    @patch('api.models.Test.get_vect_data')
     @patch('api.models.Model.get_trainer')
-    def test_details_weight(self, mock_get_trainer):
+    def test_details_weight(self, mock_get_trainer, mock_get_vect_data):
         from core.trainer.store import TrainerStorage
         trainer = TrainerStorage.loads(
             open('./api/fixtures/model.dat', 'r').read())
         mock_get_trainer.return_value = trainer
+        vect_data = [0.5] * 1000
+        mock_get_vect_data.return_value = vect_data
 
         url = self._get_url(id=self.obj._id,
                             show='id,test_name,weighted_data_input')

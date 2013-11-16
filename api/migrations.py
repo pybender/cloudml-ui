@@ -283,3 +283,7 @@ class TestExampleMigration(DbMigration):  # pragma: no cover
     def allmigration01__add_on_s3(self):
         self.target = {'on_s3': {'$exists': False}}
         self.update = {'$set': {'on_s3': False}}
+
+    def allmigration02__add_num(self):
+        self.target = {'num': {'$exists': False}}
+        self.update = {'$set': {'num': None}}

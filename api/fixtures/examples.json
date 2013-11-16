@@ -9,11 +9,13 @@
     "model_name": "TrainedModel",
     "model_id": "519318e6106a6c0df349bc0b",
     "data_input": {},
-    "test": null,
     "test_id": "000000000000000000000002",
     "weighted_data_input": {},
     "prob": [0.123, 0.5],
-    "id": "1"
+    "id": "1",
+    "_id": "000000000000000000000001",
+    "test": {"$ref": "Test", "$id": "000000000000000000000002"},
+    "num": 0
  },
  {
     "created_on": "2013-04-19 14:37:23.145000",
@@ -25,11 +27,13 @@
     "model_name": "TrainedModel",
     "model_id": "519318e6106a6c0df349bc0b",
     "data_input": {},
-    "test": null,
+    "_id": "000000000000000000000002",
+    "test": {"$ref": "Test", "$id": "000000000000000000000002"},
     "test_id": null,
     "weighted_data_input": {},
     "prob": [0.123, 0.5],
-    "id": "1a"
+    "id": "1a",
+    "num": 1
  },
  {
     "created_on": "2013-04-19 14:37:23.145000",
@@ -41,11 +45,13 @@
     "model_name": "TrainedModel",
     "model_id": "519318e6106a6c0df349bc0b",
     "data_input": {},
-    "test": null,
+    "_id": "000000000000000000000003",
+    "test": {"$ref": "Test", "$id": "000000000000000000000002"},
     "test_id": null,
     "weighted_data_input": {},
     "prob": [0.123, 0.5],
-    "id": "2"
+    "id": "2",
+    "num": 3
  },
  {
     "created_on": "2013-04-19 14:37:23.145000",
@@ -62,7 +68,8 @@
     "weighted_data_input": {},
     "prob": [0.123, 0.5],
     "id": "3",
-    "on_s3": true
+    "on_s3": true,
+    "num": 0
  },
  {
     "created_on": "2013-04-19 14:37:23.145000",
@@ -78,6 +85,7 @@
     "test_id": null,
     "weighted_data_input": {},
     "prob": [0.123, 0.5],
-    "id": "4"
+    "id": "4",
+    "num": 0
  }
 ]}
