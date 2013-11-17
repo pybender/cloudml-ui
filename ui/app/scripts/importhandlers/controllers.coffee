@@ -127,9 +127,66 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
         {handler: item.handler, feature: feature, item: item}
       )
 
+    $scope.runQuery = (query) ->
+      $scope.openDialog($dialog, null,
+        'partials/import_handler/test_query.html',
+          'QueryTestDialogCtrl',
+        'modal', 'test import handler query', 'query',
+        {handler: $scope.handler, query: query}
+      )
+
     $scope.initSections($scope.go)
     #$scope.initLogMessages("channel=importdata_log&model=" +
     #$scope.handler._id)
+])
+
+.controller('QueryTestDialogCtrl', [
+  '$scope'
+  '$rootScope'
+  'dialog'
+
+  ($scope, $rootScope, dialog) ->
+    $scope.handler = dialog.extra.handler
+    $scope.params = $scope.handler.import_params
+    $scope.query = dialog.extra.query
+    $scope.dialog = dialog
+
+    if !$scope.query.test_params
+      $scope.query.test_params = {}
+    if !$scope.query.test_limit
+      $scope.query.test_limit = 2
+    if !$scope.query.test_datasource
+      $scope.query.test_datasource = $scope.handler.datasource[0].name
+
+    $scope.runQuery = () ->
+      $scope.query.test = {}
+      $scope.query.$run($scope.query.test_limit, $scope.query.test_params,
+        $scope.query.test_datasource
+      ).then (resp) ->
+        if resp.data.error?
+          $scope.query.test.error = resp.data.error.replace('\n', '<br>')
+          $scope.query.test.sql = resp.data.sql
+        else
+          $scope.query.test.columns = resp.data.columns
+          $scope.query.test.data = resp.data.data
+          $scope.query.test.sql = resp.data.sql
+      dialog.close()
+])
+
+.controller('ImportTestDialogCtrl', [
+  '$scope'
+  '$rootScope'
+  'dialog'
+
+  ($scope, $rootScope, dialog) ->
+    $scope.handler = dialog.extra.handler
+    $scope.params = $scope.handler.import_params
+    $scope.parameters = {}
+    $scope.dialog = dialog
+
+    $scope.runTestImport = () ->
+      dialog.close()
+      window.location = $scope.handler.$getTestImportUrl($scope.parameters)
 ])
 
 .controller('DataSourceEditDialogCtrl', [
@@ -239,6 +296,14 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
     $scope.openDialog($dialog, handler,
     'partials/base/delete_dialog.html', 'DeleteImportHandlerCtrl',
     "modal", "delete import handler", "/importhandlers")
+
+  $scope.testHandler = (handler) ->
+    $scope.openDialog($dialog, null,
+        'partials/import_handler/test_handler.html',
+          'ImportTestDialogCtrl',
+        'modal', 'test import handler', 'handler',
+        {handler: $scope.handler}
+      )
 
 ])
 

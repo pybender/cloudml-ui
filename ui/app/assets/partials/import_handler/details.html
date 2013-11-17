@@ -11,6 +11,7 @@
         <i title="Load data" class="icon-tasks"></i>
         Import DataSet
       </button>
+      <button class="btn btn-info" ng-click="testHandler(handler)"><i class="icon-play"></i> Test Import Handler</button>
       <button ng-click="delete(handler)" class="btn btn-danger">
         <i title="Delete your handler. Be careful - you could not recover it!" class="icon-remove"></i>
         Delete
@@ -86,7 +87,7 @@
       </div>
     </h4>
     <div class="clearfix"></div>
-    <div class="well query" ng-repeat="query in handler.queries">
+    <div ng-init="queries_run_sql={}" class="well query" ng-repeat="query in handler.queries">
       <a style="float: right;" ng-click="deleteQuery(handler.queries, query)">
         <i title="Delete query" class="icon-remove"></i>
       </a>
@@ -97,7 +98,24 @@
       <div>
         SQL:
         <p><textarea ui-codemirror="{mode: 'text/x-mysql', indentWithTabs: true, smartIndent: true, lineNumbers: true, matchBrackets : true, height: '100px'}" ng-model="query.sql"></textarea></p>
-        <button ng-click="query.$save({only: ['sql']})">Save</button>
+        <button class="btn btn-primary" ng-click="query.$save({only: ['sql']})">Save</button>
+        <button class="btn btn-info" ng-click="runQuery(query)"><i class="icon-play"></i> Run Query</button>
+      </div>
+      <div class="query-results" ng-show="query.test">
+        <h5 ng-init="queries_run_sql[query.num]=1"><a ng-click="queries_run_sql[query.num]=!queries_run_sql[query.num]"><span ng-hide="queries_run_sql[query.num]" ng-bind="'Show'" /><span ng-show="queries_run_sql[query.num]" ng-bind="'Hide'" /> SQL Query Result</a></h5>
+        <div style="overflow: auto;" ng-show="queries_run_sql[query.num]">
+          <alert-message ng-show="query.test.error" class="alert-error" msg="{{ query.test.error }}" unsafe></alert-message>
+          <table class="table table-bordered table-hovered" style="background: white;">
+              <tr><th ng-repeat="col in query.test.columns">{{ col }}</th></tr>
+              <tr ng-repeat="row in query.test.data">
+                  <td ng-repeat="col in query.test.columns">
+                      <div style="max-height: 200px; overflow: auto">
+                      {{ row[col] }}
+                      </div>
+                  </td>
+              </tr>
+          </table>
+        </div>
       </div>
       <div>
         <h5>

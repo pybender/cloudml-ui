@@ -1,6 +1,7 @@
 from collections import defaultdict
 from datetime import datetime
 import json
+from psycopg2._psycopg import DatabaseError
 import re
 import logging
 import traceback
@@ -19,7 +20,7 @@ from api.utils import ERR_INVALID_DATA, odesk_error_response, \
 from api.resources import BaseResource, NotFound, ValidationError
 from api.forms import *
 from core.importhandler.importhandler import ExtractionPlan, \
-    RequestImportHandler
+    RequestImportHandler, DecimalEncoder
 
 model_parser = reqparse.RequestParser()
 model_parser.add_argument('importhandler', type=str,
@@ -370,7 +371,8 @@ class ImportHandlerResource(BaseResource):
 
     OBJECT_NAME = 'import_handler'
     post_form = AddImportHandlerForm
-    GET_ACTIONS = ('download', )
+    GET_ACTIONS = ('download', 'test_handler')
+    PUT_ACTIONS = ('run_sql',)
     FORCE_FIELDS_CHOOSING = True
 
     HANDLER_REGEXP = re.compile('^[a-zA-Z_]+$')
@@ -381,7 +383,7 @@ class ImportHandlerResource(BaseResource):
     FEATURE_REGEXP = re.compile(
         '^queries.[-\d]+.items.[-\d]+.target_features.[-\d]+.[a-zA-Z_]+$')
 
-    @public_actions(['download'])
+    @public_actions(['download', 'test_handler'])
     def get(self, *args, **kwargs):
         return super(ImportHandlerResource, self).get(*args, **kwargs)
 
@@ -393,6 +395,9 @@ class ImportHandlerResource(BaseResource):
         return query_fields, show_fields
 
     def put(self, action=None, **kwargs):
+        if action:
+            return super(ImportHandlerResource, self).put(action, **kwargs)
+
         obj = self._get_details_query(None, None, **kwargs)
         if obj is None:
             raise NotFound(self.MESSAGE404 % kwargs)
@@ -528,11 +533,76 @@ class ImportHandlerResource(BaseResource):
         if model is None:
             raise NotFound(self.MESSAGE404 % kwargs)
 
-        content = json.dumps(model.data)
+        return self._render(self._get_save_response_context(model),
+                            code=200)
+
+    def _put_run_sql_action(self, **kwargs):
+        """
+        Run sql query for testing
+        """
+        model = self._get_details_query(None, None, **kwargs)
+        if model is None:
+            raise NotFound(self.MESSAGE404 % kwargs)
+
+        form = QueryTestForm(obj={})
+        if not form.is_valid():
+            return self._render({'error': form.error_messages})
+
+        sql = form.cleaned_data['sql']
+        limit = form.cleaned_data['limit']
+        params = form.cleaned_data['params']
+        datasource_name = form.cleaned_data['datasource']
+        sql = sql % params
+
+        try:
+            model.check_sql(sql)
+        except Exception as e:
+            return self._render({'error': str(e), 'sql': sql})
+
+        # Change query LIMIT
+        sql = model.build_query(sql, limit=limit)
+
+        try:
+            data = list(model.execute_sql_iter(sql, datasource_name))
+        except DatabaseError as e:
+            return self._render({'error': str(e), 'sql': sql})
+
+        columns = []
+        if len(data) > 0:
+            columns = data[0].keys()
+
+        return self._render({'data': data, 'columns': columns, 'sql': sql})
+
+    def _get_test_handler_action(self, **kwargs):
+        """
+        Run importing data for testing
+        """
+        from core.importhandler.importhandler import ExtractionPlan,\
+            ImportHandler
+
+        # Amount of rows to extract
+        TEST_LIMIT = 2
+
+        model = self._get_details_query(None, None, **kwargs)
+        if model is None:
+            raise NotFound(self.MESSAGE404 % kwargs)
+
+        params = self._parse_parameters((('params', str), ))
+        import_params = json.loads(params.get('params'))
+
+        # Change limit for all handler queries
+        for query in model.queries:
+            query['sql'] = model.build_query(query['sql'], limit=TEST_LIMIT)
+
+        handler = json.dumps(model.data)
+        plan = ExtractionPlan(handler, is_file=False)
+        handler = ImportHandler(plan, import_params)
+        content = (json.dumps(row, cls=DecimalEncoder) for row in handler)
+        content = '\n'.join(content)
+
         resp = Response(content)
         resp.headers['Content-Type'] = 'text/plain'
-        resp.headers['Content-Disposition'] = 'attachment; \
-filename=importhandler-%s.json' % model.name
+        resp.headers['Content-Disposition'] = 'attachment; filename=import.json'
         return resp
 
 api.add_resource(ImportHandlerResource, '/cloudml/importhandlers/')

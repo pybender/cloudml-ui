@@ -80,7 +80,8 @@ angular.module('app.importhandlers.model', ['app.config'])
                   'handler': @handler,
                   'num': i,
                   'query_num': @query_num,
-                  'item_num': @num})
+                  'item_num': @num}
+              )
               i += 1
 
       getJsonData: () =>
@@ -139,7 +140,8 @@ angular.module('app.importhandlers.model', ['app.config'])
             for queryData in origData.items
               @items.push new Item(
                 _.extend queryData, {
-                  'handler': @handler, 'num': i, 'query_num': @num})
+                  'handler': @handler, 'num': i, 'query_num': @num}
+              )
               i += 1
 
       $save: (opts={}) =>
@@ -152,6 +154,15 @@ angular.module('app.importhandlers.model', ['app.config'])
       $remove: () ->
         data = {'remove_query': 1, 'num': @num}
         @$make_request(@handler.getUrl(), {}, "PUT", data)
+
+      $run: (limit, params, datasource) ->
+        data = {
+          sql: @sql,
+          params: JSON.stringify(params),
+          limit: limit,
+          datasource: datasource
+        }
+        @$make_request(@handler.getUrl() + 'action/run_sql/', {}, "PUT", data)
 
     return Query
 ])
@@ -233,6 +244,11 @@ created_on,created_by,datasource'
         for key, val of opts
           data[key] = val
         @$make_request("#{@BASE_API_URL}#{@_id}/action/load/", {}, "PUT", data)
+
+      $getTestImportUrl: (params) ->
+        params_json = JSON.stringify(params)
+        return "#{@BASE_API_URL}#{@_id}/action/test_handler/" +
+        "?params=#{params_json}"
 
     return ImportHandler
 ])
