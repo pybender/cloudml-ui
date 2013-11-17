@@ -422,6 +422,7 @@ class TargetFeatureForm(BaseInnerDocumentForm):
     key_path = CharField()
     value_path = CharField() 
     to_csv = BooleanField()
+    expression = JsonField()
 
 
 class DataSetEditForm(BaseForm):

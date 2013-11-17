@@ -1,6 +1,9 @@
 'use strict'
 
 ### Import Handlers specific Controllers ###
+EXTRA_TARGET_FEATURES_PARAMS = {
+  'json': ['jsonpath', 'to_csv', 'key_path', 'value_path'],
+  'composite': ['expression']}
 
 angular.module('app.importhandlers.controllers', ['app.config', ])
 
@@ -170,6 +173,11 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
     $scope.item = item
     $scope.DONT_REDIRECT = true
     $scope.dialog = dialog
+
+    $scope.fields = ['name']
+    extra = EXTRA_TARGET_FEATURES_PARAMS[item.process_as]
+    if extra?
+      $scope.fields = $scope.fields.concat(extra)
 
     $scope.$on('SaveObjectCtl:save:success', (event, current) ->
       dialog.close()

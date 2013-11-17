@@ -31,7 +31,10 @@ angular.module('app.importhandlers.model', ['app.config'])
           opts.only = @DATA_FIELDS
         data = {}
         for key in opts.only
-          data[prefix + key] = eval('this.' + key)
+          val = eval('this.' + key)
+          if key == 'expression'
+            val = JSON.stringify(val)
+          data[prefix + key] = val
         @$make_request(@handler.getUrl(), {}, "PUT", data)
 
       $remove: () ->
