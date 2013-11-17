@@ -4,7 +4,7 @@ import json
 import logging
 import csv
 import uuid
-from itertools import izip
+from itertools import izip, tee
 from bson.objectid import ObjectId
 from os.path import exists
 from os import makedirs, system
@@ -21,7 +21,6 @@ from api.utils import get_doc_size
 from api.amazon_utils import AmazonEC2Helper, AmazonS3Helper
 from core.trainer.trainer import Trainer
 from core.trainer.config import FeatureModel
-from core.trainer.streamutils import streamingiterload
 
 
 class InvalidOperationError(Exception):
@@ -189,15 +188,30 @@ with%s compression", importhandler.name, '' if dataset.compress else 'out')
         plan = ExtractionPlan(handler, is_file=False)
         handler = ImportHandler(plan, dataset.import_params)
         logging.info('The dataset will be stored to file %s', dataset.filename)
-        handler.store_data_json(dataset.filename, dataset.compress)
+
+        if dataset.format == dataset.FORMAT_CSV:
+            handler.store_data_csv(dataset.filename, dataset.compress)
+        else:
+            handler.store_data_json(dataset.filename, dataset.compress)
+
         logging.info('Import dataset completed')
 
         logging.info('Retrieving data fields')
-        row = None
         with dataset.get_data_stream() as fp:
-            row = next(fp)
-        if row:
-            dataset.data_fields = json.loads(row).keys()
+            if dataset.format == dataset.FORMAT_CSV:
+                reader = csv.DictReader(
+                    fp,
+                    quotechar="'",
+                    quoting=csv.QUOTE_ALL
+                )
+                row = next(reader)
+            else:
+                row = next(fp)
+                if row:
+                    row = json.loads(row)
+            if row:
+                dataset.data_fields = row.keys()
+
         logging.info('Dataset fields: {0!s}'.format(dataset.data_fields))
 
         dataset.filesize = long(os.path.getsize(dataset.filename))
@@ -300,7 +314,7 @@ def train_model(dataset_ids, model_id, user_id):
                 if fp:
                     fp.close()
                 fp = d.get_data_stream()
-                for row in streamingiterload(fp):
+                for row in d.get_iterator(fp):
                     yield row
             if fp:
                 fp.close()

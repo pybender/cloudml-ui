@@ -1,4 +1,3 @@
-from collections import defaultdict
 from datetime import datetime
 import json
 import logging
@@ -14,7 +13,7 @@ from bson.objectid import ObjectId
 from api import api, app
 from api.decorators import public, public_actions
 from api.utils import ERR_INVALID_DATA, odesk_error_response, \
-    ERR_NO_SUCH_MODEL, ERR_UNPICKLING_MODEL, slugify
+    ERR_NO_SUCH_MODEL, ERR_UNPICKLING_MODEL
 from api.resources import BaseResource, NotFound, ValidationError
 from api.forms import *
 from core.importhandler.importhandler import ExtractionPlan, \
@@ -162,13 +161,6 @@ class Models(BaseResource):
             del pdict['updated_by']
         return pdict
 
-    def _get_reload_action(self, **kwargs):
-        from api.tasks import fill_model_parameter_weights
-        model = self._get_details_query(None, None,
-                                        **kwargs)
-        fill_model_parameter_weights.delay(str(model._id), True)
-        return self._render({self.OBJECT_NAME: model._id})
-
     def _get_by_importhandler_action(self, **kwargs):
         parser_params = self.GET_PARAMS + (('handler', str), )
         params = self._parse_parameters(parser_params)
@@ -230,7 +222,11 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
                 from api.models import ImportHandler
                 import_handler = ImportHandler(model.train_import_handler)
                 params = form.cleaned_data.get('parameters', None)
-                dataset = import_handler.create_dataset(params)
+                dataset = import_handler.create_dataset(
+                    params,
+                    data_format=form.cleaned_data.get(
+                        'format', DataSet.FORMAT_JSON)
+                )
                 tasks_list.append(import_data.s(str(dataset._id),
                                                 str(model._id)))
                 dataset = [dataset]
@@ -357,7 +353,7 @@ class WeightsTreeResource(BaseResource):
 
 api.add_resource(WeightsTreeResource,
                  '/cloudml/weights_tree/<regex("[\w\.]*"):model_id>',
-                 add_standart_urls=False)
+                 add_standard_urls=False)
 
 
 class ImportHandlerResource(BaseResource):
@@ -407,6 +403,7 @@ class DataSetResource(BaseResource):
     FILTER_PARAMS = (('status', str), )
     GET_ACTIONS = ('generate_url', )
     PUT_ACTIONS = ('reupload', 'reimport')
+    post_form = DataSetAddForm
     put_form = DataSetEditForm
 
     def _get_generate_url_action(self, **kwargs):
@@ -416,31 +413,6 @@ class DataSetResource(BaseResource):
         url = ds.get_s3_download_url()
         return self._render({self.OBJECT_NAME: ds._id,
                              'url': url})
-
-    def post(self, **kwargs):
-        """
-        Loads dataset using specified import handler.
-        """
-        from api.tasks import import_data
-        handler_id = kwargs.get('import_handler_id')
-        importhandler = app.db.ImportHandler.find_one({'_id': ObjectId(handler_id)})
-        if importhandler is None:
-            raise NotFound('Import handler not found')
-
-        parser = populate_parser(importhandler, is_requred=True)
-        parameters = parser.parse_args()
-
-        dataset = app.db.DataSet()
-        str_params = "-".join(["%s=%s" % item
-                              for item in parameters.iteritems()])
-        dataset.name = "%s: %s" % (importhandler.name, str_params)
-        dataset.import_handler_id = str(importhandler._id)
-        dataset.import_params = parameters
-        dataset.save(validate=True)
-        dataset.set_file_path()
-        import_data.delay(str(dataset._id))
-        return self._render(self._get_save_response_context(dataset),
-                            code=201)
 
     def _put_reupload_action(self, **kwargs):
         from api.tasks import upload_dataset
@@ -772,7 +744,7 @@ class CompareReportResource(BaseResource):
 
 api.add_resource(CompareReportResource,
                  '/cloudml/reports/compare/',
-                 add_standart_urls=False)
+                 add_standard_urls=False)
 
 
 class Predict(BaseResource):  # pragma: no cover
@@ -823,7 +795,7 @@ class Predict(BaseResource):  # pragma: no cover
         return self._render({'label': label, 'prob': prob}, code=201)
 
 api.add_resource(Predict, '/cloudml/model/<regex("[\w\.]*"):model_id>/\
-<regex("[\w\.]*"):handler_id>/predict', add_standart_urls=False)
+<regex("[\w\.]*"):handler_id>/predict', add_standard_urls=False)
 
 
 class InstanceResource(BaseResource):
@@ -956,7 +928,7 @@ class AuthResource(BaseResource):
         raise NotFound()
 
 api.add_resource(AuthResource, '/cloudml/auth/<regex("[\w\.]*"):action>',
-                 add_standart_urls=False)
+                 add_standard_urls=False)
 
 
 class StatisticsResource(BaseResource):

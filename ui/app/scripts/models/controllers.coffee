@@ -91,7 +91,10 @@ updated_on,updated_by,comparable,test_handler_fields'
   'Model'
 
   ($scope, Model) ->
-    $scope.model = new Model()
+    $scope.formats = [
+      {name: 'JSON', value: 'json'}, {name: 'CSV', value: 'csv'}
+    ]
+    $scope.model = new Model({train_format: 'json', test_format: 'json'})
 ])
 
 # Upload trained model controller
@@ -197,6 +200,10 @@ updated_on,updated_by,comparable,test_handler_fields'
   '$rootScope'
 
   ($scope, $rootScope) ->
+    $scope.formats = [
+      {name: 'JSON', value: 'json'}, {name: 'CSV', value: 'csv'}
+    ]
+
     $scope.initForm = () ->
       # Form elements initialization
       # dataset section
@@ -206,6 +213,8 @@ updated_on,updated_by,comparable,test_handler_fields'
       for p in $scope.params
         params[p] = false
       $scope.formElements[$scope.NEW_DATASET] = params
+
+      $scope.formElements[$scope.NEW_DATASET].format = 'json'
 
       $scope.EXISTED_DATASET = 'Existing DataSet'
       $scope.formElements[$scope.EXISTED_DATASET] = {'dataset': false}
@@ -300,9 +309,6 @@ updated_on,updated_by,comparable,test_handler_fields'
             'partials/testresults/run_test.html',
             'TestDialogController', 'modal large'))
         )
-
-    $scope.reload_model = (model)->
-      model.$reload()
 
     $scope.cancel_request_spot_instance = (model)->
       model.$cancel_request_spot_instance()

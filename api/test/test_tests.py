@@ -63,7 +63,9 @@ class TestTests(BaseTestCase):
         """
         Checks creating new Test with creating new dataset.
         """
-        data = {}
+        data = {
+            'format': self.db.DataSet.FORMAT_JSON
+        }
         import_params = {'start': '2012-12-03',
                          'end': '2012-12-04',
                          'category': 'smth'}
@@ -106,6 +108,32 @@ class TestTests(BaseTestCase):
             options={'queue': instance.name})
         self.assertEquals(data['test']['_id'], str(test._id))
         self.assertEquals(data['test']['name'], str(test.name))
+
+    @mock_s3
+    @patch('api.amazon_utils.AmazonS3Helper.save_gz_file')
+    @patch('api.tasks.run_test')
+    def test_post_csv(self, mock_run_test, mock_multipart_upload):
+        """
+        Checks creating new Test with creating new dataset.
+        """
+        data = {
+            'format': self.db.DataSet.FORMAT_CSV
+        }
+        import_params = {'start': '2012-12-03',
+                         'end': '2012-12-04',
+                         'category': 'smth'}
+        data.update(self.POST_DATA)
+        data.update(import_params)
+        resp, test = self._check_post(data, load_model=True)
+        data = json.loads(resp.data)
+
+        self.assertEquals(test.status, test.STATUS_IMPORTED)
+        self.assertEquals(test.name, 'Test4')
+        model = app.db.Model.find_one({'_id': ObjectId(MODEL_ID)})
+        self.assertEquals(test.model_name, model.name)
+        self.assertEquals(test.model, model)
+        self.assertEquals(test.model_id, MODEL_ID)
+        self.assertFalse(test.error)
 
     @mock_s3
     @patch('api.tasks.run_test')

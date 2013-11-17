@@ -12,8 +12,6 @@ from bson import Binary
 from flask.ext.mongokit import Document
 from flask import request, has_request_context
 
-from core.trainer.streamutils import streamingiterload
-
 from api import app, celery
 from api.amazon_utils import AmazonS3Helper
 
@@ -187,7 +185,9 @@ app.db.Weight.collection.ensure_index(
 class ImportHandler(BaseDocument):
     TYPE_DB = 'Db'
     TYPE_REQUEST = 'Request'
+
     __collection__ = 'handlers'
+
     structure = {
         'name': basestring,
         'type': basestring,
@@ -203,7 +203,8 @@ class ImportHandler(BaseDocument):
                       'updated_on': datetime.utcnow,
                       'type': TYPE_DB,
                       'created_by': {},
-                      'updated_by': {}}
+                      'updated_by': {},
+                      }
     use_dot_notation = True
 
     def get_fields(self):
@@ -220,7 +221,7 @@ class ImportHandler(BaseDocument):
                         feature['name'].replace('.', '->'))
         return test_handler_fields
 
-    def create_dataset(self, params, run_import_data=True):
+    def create_dataset(self, params, run_import_data=True, data_format='json'):
         #from api.utils import slugify
         dataset = app.db.DataSet()
         str_params = "-".join(["%s=%s" % item
@@ -228,6 +229,7 @@ class ImportHandler(BaseDocument):
         dataset.name = "%s: %s" % (self.name, str_params)
         dataset.import_handler_id = str(self._id)
         dataset.import_params = params
+        dataset.format = data_format
         # filename = '%s-%s.json' % (slugify(self.name)
         # str_params.replace('=', '_'))
         # dataset.data = filename
@@ -273,6 +275,10 @@ class DataSet(BaseDocument):
     STATUS_IMPORTED = 'Imported'
     STATUS_ERROR = 'Error'
 
+    FORMAT_JSON = 'json'
+    FORMAT_CSV = 'csv'
+    FORMATS = [FORMAT_JSON, FORMAT_CSV]
+
     structure = {
         'name': basestring,
         'status': basestring,
@@ -292,6 +298,7 @@ class DataSet(BaseDocument):
         'time': int,
         'data_fields': list,
         'current_task_id': basestring,
+        'format': basestring,
     }
     required_fields = ['name', 'created_on', 'updated_on', ]
     default_values = {'created_on': datetime.utcnow,
@@ -302,7 +309,8 @@ class DataSet(BaseDocument):
                       'status': STATUS_IMPORTING,
                       'data_fields': [],
                       'created_by': {},
-                      'updated_by': {}}
+                      'updated_by': {},
+                      'format': FORMAT_JSON,}
     use_dot_notation = True
 
     def __init__(self, *args, **kwargs):
@@ -345,6 +353,10 @@ class DataSet(BaseDocument):
                 return gzip.GzipFile(fileobj=stream, mode='r')
                 #data = zlib.decompress(data)
             return stream
+
+    def get_iterator(self, stream):
+        from core.trainer.streamutils import streamingiterload
+        return streamingiterload(stream, source_format=self.format)
 
     def load_from_s3(self):
         helper = AmazonS3Helper()
@@ -705,7 +717,7 @@ class Model(BaseDocument):
         fp = dataset.get_data_stream()
         try:
             metrics = trainer.test(
-                streamingiterload(fp),
+                dataset.get_iterator(fp),
                 callback=callback,
                 save_raw=True)
         finally:
