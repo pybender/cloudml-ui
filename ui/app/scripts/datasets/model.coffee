@@ -27,6 +27,7 @@ angular.module('app.datasets.model', ['app.config'])
       import_params: null
       import_handler_id: null
       on_s3: false
+      format: 'json'
 
 
       loadFromJSON: (origData) =>
@@ -53,7 +54,7 @@ angular.module('app.datasets.model', ['app.config'])
         if data.only
           super data
         else
-          @$make_request(@BASE_API_URL, data, 'POST', {})
+          @$make_request(@BASE_API_URL, {}, 'POST', data)
 
       @$loadAll: (opts) ->
         handler_id = opts.handler_id

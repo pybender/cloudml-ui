@@ -89,7 +89,7 @@ filesize,records_count,time,created_by,updated_by'
     $scope.go = (section) ->
       $scope.dataset.$load(
         show: 'name,status,created_on,updated_on,data,on_s3,import_params,error,
-filesize,records_count,time,created_by,import_handler_id'
+filesize,records_count,time,created_by,import_handler_id,format'
       ).then (->), ((opts) ->
         $scope.setError(opts, 'loading dataset details')
       )
@@ -147,13 +147,23 @@ filesize,records_count,time,created_by,import_handler_id'
     handler = dialog.model
     $scope.handler = handler
     $scope.params = handler.import_params
+    $scope.format = 'json'
+    $scope.formats = [
+      {name: 'JSON', value: 'json'}, {name: 'CSV', value: 'csv'}
+    ]
 
     $scope.close = ->
       dialog.close()
 
     $scope.start = (result) ->
-      $scope.dataset = new DataSet({'import_handler_id': $scope.handler._id})
-      $scope.dataset.$save($scope.parameters).then (() ->
+      $scope.dataset = new DataSet({
+        'import_handler_id': $scope.handler._id
+      })
+      data = {
+        import_params: JSON.stringify($scope.parameters),
+        format: $scope.format
+      }
+      $scope.dataset.$save(data).then (() ->
         $scope.close()
         $location.path $scope.dataset.objectUrl()
       ), ((opts) ->

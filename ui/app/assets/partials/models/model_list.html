@@ -26,13 +26,12 @@
   </div>
 
   <h4>My recently updated</h4>
-  <div ng-controller="ModelListCtrl" ng-init="init(user.uid, 'my_models')">
-    <ng-include ng-controller="BaseListCtrl" ng-init="init(true, 'my_models')" src="'/partials/models/table.html'"></ng-include>
+  <div ng-controller="ModelListCtrl" ng-init="init(true, 'my_models')">
+    <ng-include ng-controller="BaseListCtrl" ng-init="init(false, 'my_models', false)" src="'/partials/models/table.html'"></ng-include>
   </div>
-
   <h4>All models</h4>
   <div ng-controller="ModelListCtrl" ng-init="init(null, 'models')">
-    <ng-include ng-controller="BaseListCtrl" ng-init="init(true, 'models')" src="'/partials/models/table.html'"></ng-include>
+    <ng-include ng-controller="BaseListCtrl" ng-init="init(true, 'models', true)" src="'/partials/models/table.html'"></ng-include>
   </div>
 </div>
 </div>

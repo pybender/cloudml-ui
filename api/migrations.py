@@ -248,6 +248,10 @@ class DataSetMigration(DbMigration):  # pragma: no cover
         self.target = {'current_task_id': {'$exists': False}}
         self.update = {'$set': {'current_task_id': ''}}
 
+    def allmigration08__add_format(self):
+        self.target = {'format': {'$exists': False}}
+        self.update = {'$set': {'format': models.DataSet.FORMAT_JSON}}
+
 
 class InstanceMigration(DbMigration):  # pragma: no cover
     DOC_CLASS = models.Instance
