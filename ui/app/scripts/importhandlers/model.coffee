@@ -185,7 +185,7 @@ angular.module('app.importhandlers.model', ['app.config'])
       BASE_UI_URL: '/importhandlers/'
       API_FIELDNAME: 'import_handler'
       @MAIN_FIELDS: 'name,_id,target_schema,import_params,
-created_on,created_by,datasource'
+created_on,created_by,datasource,error'
       DEFAULT_FIELDS_TO_SAVE: ['name', 'data']
 
       @PROCESS_STRATEGIES = ['identity', 'string', 'float',
@@ -245,10 +245,13 @@ created_on,created_by,datasource'
           data[key] = val
         @$make_request("#{@BASE_API_URL}#{@_id}/action/load/", {}, "PUT", data)
 
-      $getTestImportUrl: (params) ->
-        params_json = JSON.stringify(params)
-        return "#{@BASE_API_URL}#{@_id}/action/test_handler/" +
-        "?params=#{params_json}"
+      $getTestImportUrl: (params, limit) ->
+        data = {
+          params: JSON.stringify(params),
+          limit: limit,
+        }
+        @$make_request("#{@BASE_API_URL}#{@_id}/action/test_handler/", {},
+          "PUT", data)
 
     return ImportHandler
 ])

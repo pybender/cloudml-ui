@@ -28,6 +28,11 @@
 <alert-message ng-show="msg" class="alert-info" msg='{{ msg }}' unsafe></alert-message>
 <alert-message ng-show="err" class="alert-error" msg='{{ err }}' unsafe></alert-message>
 
+<alert-message ng-show="handler.error" class="alert-error" msg='Error occurred while handler saving' unsafe>
+</alert-message>
+
+<alert-message ng-show="handler.error" class="alert-error" msg="{{ handler.error }}" unsafe></alert-message>
+
 <ul class="nav nav-tabs" ng-show="handler.loaded">
   <li ng-class="{active: action[0] == 'model'}">
     <a ng-click="setSection(['model', 'details'])">Details</a> 
@@ -104,7 +109,6 @@
       <div class="query-results" ng-show="query.test">
         <h5 ng-init="queries_run_sql[query.num]=1"><a ng-click="queries_run_sql[query.num]=!queries_run_sql[query.num]"><span ng-hide="queries_run_sql[query.num]" ng-bind="'Show'" /><span ng-show="queries_run_sql[query.num]" ng-bind="'Hide'" /> SQL Query Result</a></h5>
         <div style="overflow: auto;" ng-show="queries_run_sql[query.num]">
-          <alert-message ng-show="query.test.error" class="alert-error" msg="{{ query.test.error }}" unsafe></alert-message>
           <table class="table table-bordered table-hovered" style="background: white;">
               <tr><th ng-repeat="col in query.test.columns">{{ col }}</th></tr>
               <tr ng-repeat="row in query.test.data">

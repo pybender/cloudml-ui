@@ -162,15 +162,14 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
       $scope.query.test = {}
       $scope.query.$run($scope.query.test_limit, $scope.query.test_params,
         $scope.query.test_datasource
-      ).then (resp) ->
-        if resp.data.error?
-          $scope.query.test.error = resp.data.error.replace('\n', '<br>')
-          $scope.query.test.sql = resp.data.sql
-        else
-          $scope.query.test.columns = resp.data.columns
-          $scope.query.test.data = resp.data.data
-          $scope.query.test.sql = resp.data.sql
-      dialog.close()
+      ).then((resp) ->
+        $scope.query.test.columns = resp.data.columns
+        $scope.query.test.data = resp.data.data
+        $scope.query.test.sql = resp.data.sql
+        dialog.close()
+      , ((opts) ->
+        $scope.query.test.error = $scope.setError(opts, 'testing sql query')
+      ))
 ])
 
 .controller('ImportTestDialogCtrl', [
@@ -182,11 +181,18 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
     $scope.handler = dialog.extra.handler
     $scope.params = $scope.handler.import_params
     $scope.parameters = {}
+    $scope.test_limit = 2
     $scope.dialog = dialog
+    $scope.err = ''
 
     $scope.runTestImport = () ->
-      dialog.close()
-      window.location = $scope.handler.$getTestImportUrl($scope.parameters)
+      $scope.handler.$getTestImportUrl($scope.parameters, $scope.test_limit
+      ).then((resp) ->
+        dialog.close()
+        window.location = resp.data.url
+      , ((opts) ->
+        $scope.err = $scope.setError(opts, 'testing import handler')
+      ))
 ])
 
 .controller('DataSourceEditDialogCtrl', [

@@ -304,6 +304,10 @@ class ImportHandlerMigration(DbMigration):  # pragma: no cover
             '$unset': {'data': 1, 'type': 1}}
             self.collection.update(self.target, self.update, multi=True, safe=True)
 
+    def allmigration04__add_error(self):
+        self.target = {'error': {'$exists': False}}
+        self.update = {'$set': {'error': ''}}
+
 
 class TestExampleMigration(DbMigration):  # pragma: no cover
     DOC_CLASS = models.TestExample

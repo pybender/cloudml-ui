@@ -13,7 +13,7 @@ from flask.ext.mongokit import Document
 from flask import request, has_request_context
 
 from core.trainer.streamutils import streamingiterload
-from core.importhandler.importhandler import ExtractionPlan
+from core.importhandler.importhandler import ExtractionPlan, ImportHandlerException
 
 from api import app, celery
 from api.amazon_utils import AmazonS3Helper
@@ -229,6 +229,8 @@ class ImportHandler(BaseDocument):
         "import_params": list,
         'queries': list,
 
+        'error': basestring,
+
         'created_on': datetime,
         'created_by': dict,
         'updated_on': datetime,
@@ -242,11 +244,12 @@ class ImportHandler(BaseDocument):
                       'datasource': []}
 
     def save(self, *args, **kwargs):
+        self.error = ''
         try:
             plan = ExtractionPlan(json.dumps(self.data), is_file=False)
             self.import_params = plan.input_params
-        except Exception:
-            pass
+        except Exception as e:
+            self.error = str(e)
         super(ImportHandler, self).save(*args, **kwargs)
 
     def from_import_handler_json(self, data):

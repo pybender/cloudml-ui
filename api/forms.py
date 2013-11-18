@@ -380,6 +380,11 @@ class HandlerForm(BaseFormEx):
     target_schema = CharField()
 
 
+class ImportHandlerTestForm(BaseFormEx):
+    params = JsonField()
+    limit = IntegerField()
+
+
 class BaseInnerDocumentForm(BaseFormEx):
     EXTRA_FIELDS = {}
 

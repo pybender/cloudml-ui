@@ -1,7 +1,9 @@
 from collections import defaultdict
 from datetime import datetime
 import json
+import uuid
 from psycopg2._psycopg import DatabaseError
+from api.amazon_utils import AmazonS3Helper
 import re
 import logging
 import traceback
@@ -371,8 +373,8 @@ class ImportHandlerResource(BaseResource):
 
     OBJECT_NAME = 'import_handler'
     post_form = AddImportHandlerForm
-    GET_ACTIONS = ('download', 'test_handler')
-    PUT_ACTIONS = ('run_sql',)
+    GET_ACTIONS = ('download',)
+    PUT_ACTIONS = ('run_sql', 'test_handler')
     FORCE_FIELDS_CHOOSING = True
 
     HANDLER_REGEXP = re.compile('^[a-zA-Z_]+$')
@@ -383,7 +385,7 @@ class ImportHandlerResource(BaseResource):
     FEATURE_REGEXP = re.compile(
         '^queries.[-\d]+.items.[-\d]+.target_features.[-\d]+.[a-zA-Z_]+$')
 
-    @public_actions(['download', 'test_handler'])
+    @public_actions(['download'])
     def get(self, *args, **kwargs):
         return super(ImportHandlerResource, self).get(*args, **kwargs)
 
@@ -557,7 +559,7 @@ class ImportHandlerResource(BaseResource):
         try:
             model.check_sql(sql)
         except Exception as e:
-            return self._render({'error': str(e), 'sql': sql})
+            return odesk_error_response(400, ERR_INVALID_DATA, str(e))
 
         # Change query LIMIT
         sql = model.build_query(sql, limit=limit)
@@ -565,7 +567,7 @@ class ImportHandlerResource(BaseResource):
         try:
             data = list(model.execute_sql_iter(sql, datasource_name))
         except DatabaseError as e:
-            return self._render({'error': str(e), 'sql': sql})
+            return odesk_error_response(400, ERR_INVALID_DATA, str(e))
 
         columns = []
         if len(data) > 0:
@@ -573,37 +575,41 @@ class ImportHandlerResource(BaseResource):
 
         return self._render({'data': data, 'columns': columns, 'sql': sql})
 
-    def _get_test_handler_action(self, **kwargs):
+    def _put_test_handler_action(self, **kwargs):
         """
         Run importing data for testing
         """
         from core.importhandler.importhandler import ExtractionPlan,\
             ImportHandler
 
-        # Amount of rows to extract
-        TEST_LIMIT = 2
-
         model = self._get_details_query(None, None, **kwargs)
         if model is None:
             raise NotFound(self.MESSAGE404 % kwargs)
 
-        params = self._parse_parameters((('params', str), ))
-        import_params = json.loads(params.get('params'))
+        form = ImportHandlerTestForm(obj={})
+        if not form.is_valid():
+            return self._render({'error': form.error_messages})
+
+        import_params = form.cleaned_data['params']
+        limit = form.cleaned_data['limit']
 
         # Change limit for all handler queries
         for query in model.queries:
-            query['sql'] = model.build_query(query['sql'], limit=TEST_LIMIT)
+            query['sql'] = model.build_query(query['sql'], limit=limit)
 
-        handler = json.dumps(model.data)
-        plan = ExtractionPlan(handler, is_file=False)
-        handler = ImportHandler(plan, import_params)
-        content = (json.dumps(row, cls=DecimalEncoder) for row in handler)
-        content = '\n'.join(content)
+        try:
+            handler = json.dumps(model.data)
+            plan = ExtractionPlan(handler, is_file=False)
+            handler = ImportHandler(plan, import_params)
+            content = (json.dumps(row, cls=DecimalEncoder) for row in handler)
+            content = '\n'.join(content)
+        except Exception as e:
+            return odesk_error_response(400, ERR_INVALID_DATA, str(e))
 
-        resp = Response(content)
-        resp.headers['Content-Type'] = 'text/plain'
-        resp.headers['Content-Disposition'] = 'attachment; filename=import.json'
-        return resp
+        helper = AmazonS3Helper()
+        name = '{!s}.txt'.format(uuid.uuid4())
+        helper.save_key_string(name, content)
+        return self._render({'url': helper.get_download_url(name, 3600)})
 
 api.add_resource(ImportHandlerResource, '/cloudml/importhandlers/')
 

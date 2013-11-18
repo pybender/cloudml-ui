@@ -4,6 +4,8 @@
     <h3>Test Import</h3>
   </div>
 
+  <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+
   <div class="modal-body">
     <form name="Form" class="form-horizontal">
       <div ng-repeat="param in params" class="control-group">
@@ -13,6 +15,14 @@
             <span ng-show="Form[param].$error.required" class="help-inline">Required</span>
           </div>
         </div>
+        <hr ng-show="query.test_params" />
+          <div class="control-group" ng-class="{error: Form.limit.$invalid}">
+            <label class="control-label">Limit of rows</label>
+            <div class="controls">
+              <input type="text" name="limit" ng-model="test_limit" />
+              <span ng-show="Form.limit.$error.required" class="help-inline">*</span>
+            </div>
+          </div>
     </form>
   </div>
 
