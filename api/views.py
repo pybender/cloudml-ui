@@ -554,7 +554,11 @@ class ImportHandlerResource(BaseResource):
         limit = form.cleaned_data['limit']
         params = form.cleaned_data['params']
         datasource_name = form.cleaned_data['datasource']
-        sql = sql % params
+        try:
+            sql = sql % params
+        except (KeyError, ValueError):
+            return odesk_error_response(400, ERR_INVALID_DATA,
+                                        'Wrong query parameters')
 
         try:
             model.check_sql(sql)

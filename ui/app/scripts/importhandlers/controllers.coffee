@@ -147,8 +147,9 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
 
   ($scope, $rootScope, dialog) ->
     $scope.handler = dialog.extra.handler
-    $scope.params = $scope.handler.import_params
+#    $scope.params = $scope.handler.import_params
     $scope.query = dialog.extra.query
+    $scope.params = $scope.query.getParams()
     $scope.dialog = dialog
 
     if !$scope.query.test_params
