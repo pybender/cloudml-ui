@@ -56,7 +56,7 @@ class TransformersTests(FeaturePredefinedItems):
         data = {"name": "transformer #1",
                 'type': 'invalid'}
         _check(data, errors={
-            'type': 'should be one of Count, Tfidf, Dictionary'})
+            'type': 'should be one of Count, Tfidf, Lda, Dictionary, Lsi'})
 
         data['type'] = 'Count'
         data["params"] = 'hello!'

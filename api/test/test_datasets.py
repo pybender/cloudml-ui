@@ -32,15 +32,22 @@ class DataSetsTests(BaseTestCase):
         """
         Tests loading dataset using specified import handler
         """
-        post_data = {'start': '2012-12-03',
-                     'end': '2012-12-04'}
+
+        params = {'start': '2012-12-03',
+                  'end': '2012-12-04', 'category': 'smth'}
+        post_data = {
+            'import_params': json.dumps(params),
+            'format': self.db.DataSet.FORMAT_JSON
+        }
+
         resp, ds = self._check_post(post_data=post_data, load_model=True)
         self.assertEquals(ds.status, 'Imported', ds.error)
         self.assertEquals(ds.import_handler_id, self.HANDLER_ID)
         self.assertEquals(ds.records_count, 99)
-        self.assertEquals(ds.import_params, post_data)
+        self.assertEquals(ds.import_params, params)
         self.assertTrue(ds.compress)
         self.assertTrue(ds.on_s3)
+        self.assertEquals(ds.format, self.db.DataSet.FORMAT_JSON)
         self.assertEquals(ds.filename, 'test_data/%s.gz' % ds._id)
         self.assertTrue(mock_multipart_upload.called)
 
@@ -48,9 +55,12 @@ class DataSetsTests(BaseTestCase):
     def test_post_exception(self, mock_handler):
         mock_handler.side_effect = Exception('Some message')
 
-        post_data = {'start': '2012-12-03',
-                'end': '2012-12-04',
-                'category': 'smth'}
+        params = {'start': '2012-12-03',
+                  'end': '2012-12-04', 'category': 'smth'}
+        post_data = {
+            'import_params': json.dumps(params),
+            'format': self.db.DataSet.FORMAT_JSON
+        }
         url = self._get_url()
         resp = self.app.post(url, data=post_data, headers=HTTP_HEADERS)
         self.assertEqual(resp.status_code, httplib.CREATED)
@@ -59,6 +69,29 @@ class DataSetsTests(BaseTestCase):
         dataset = self.db.DataSet.get_from_id(ObjectId(data['dataset']['_id']))
         self.assertEqual(dataset.status, dataset.STATUS_ERROR)
         self.assertEqual(dataset.error, 'Some message')
+
+    @mock_s3
+    @patch('api.amazon_utils.AmazonS3Helper.save_gz_file')
+    def test_post_csv(self, mock_multipart_upload):
+        """
+        Tests loading dataset using specified import handler
+        """
+        params = {'start': '2012-12-03',
+                  'end': '2012-12-04', 'category': 'smth'}
+        post_data = {
+            'import_params': json.dumps(params),
+            'format': self.db.DataSet.FORMAT_CSV
+        }
+        resp, ds = self._check_post(post_data=post_data, load_model=True)
+        self.assertEquals(ds.status, 'Imported', ds.error)
+        self.assertEquals(ds.import_handler_id, self.HANDLER_ID)
+        self.assertEquals(ds.records_count, 99)
+        self.assertEquals(ds.import_params, params)
+        self.assertTrue(ds.compress)
+        self.assertTrue(ds.on_s3)
+        self.assertEquals(ds.format, self.db.DataSet.FORMAT_CSV)
+        self.assertEquals(ds.filename, 'test_data/%s.gz' % ds._id)
+        self.assertTrue(mock_multipart_upload.called)
 
     def test_edit_name(self):
         url = self._get_url(id=self.obj._id)

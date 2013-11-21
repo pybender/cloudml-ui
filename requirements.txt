@@ -6,7 +6,9 @@ Werkzeug==0.8.3
 numpy==1.7.1
 gunicorn
 scipy==0.12.0
-scikit-learn==0.13.1
+#scikit-learn==0.13.1
+-e git+https://github.com/nanli0416/scikit-learn.git@feature_extraction_text-ldalsi_vectorizers#egg=scikit-learn
+gensim
 psycopg2==2.4.6 # sudo apt-get install libpq-dev python-dev
 jsonpath==0.54
 celery==3.0.22
@@ -20,7 +22,7 @@ Flask-mongokit
 nose
 gevent
 nose-exclude
--e git+https://github.com/odeskdev/cloudml.git@MATCH-1145_feature_parameters#egg=cloudml
+-e git+https://github.com/odeskdev/cloudml.git#egg=cloudml
 -e git+https://github.com/rick446/MongoTools.git#egg=mongotools
 translitcodec==0.3
 boto

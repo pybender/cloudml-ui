@@ -1,9 +1,14 @@
 <div ng-controller="BaseListCtrl" ng-init="init(true, 'logs')">
-  <form class="form-inline">
-    <b>Level:</b>
-      <select ng-options="level for level in log_levels"
-    ng-model="log_level" ng-change="setLogLevel()"></select>
-  </form>
+  <div class="row">
+      <form class="span-5 form-inline">
+        <b>Level:</b>
+          <select ng-options="level for level in log_levels"
+        ng-model="log_level" ng-change="setLogLevel()"></select>
+      </form>
+      <div class="pull-right">
+          <button class="btn" ng-click="refresh()"><i class="icon-refresh"></i></button>
+      </div>
+  </div>
   <div>
     <p ng-repeat="msg in objects">
       <ng-include src="'/partials/logmessages/item.html'"></ng-include>

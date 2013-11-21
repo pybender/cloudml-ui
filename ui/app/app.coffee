@@ -58,10 +58,9 @@ App.config([
       controller: "DashboardCtrl"
       templateUrl: '/partials/dashboard.html'
     })
-
     .when('/models', {
-      controller: "ModelListCtrl"
       templateUrl: '/partials/models/model_list.html'
+      reloadOnSearch: false
     })
     .when('/models/:id', {
       controller: 'ModelDetailsCtrl'

@@ -4,8 +4,8 @@ from flask import request
 from bson.objectid import ObjectId
 
 from api import app
-from api.resources import ValidationError
-from api.models import Model, Classifier, FeatureSet
+from api.resources import ValidationError, NotFound
+from api.models import Model, Classifier, FeatureSet, ImportHandler, DataSet
 from api.base.forms import BaseForm as BaseFormEx
 from api.base.fields import *
 from core.trainer.store import load_trainer
@@ -263,7 +263,8 @@ class BaseChooseInstanceAndDataset(BaseForm):
     TYPE_CHOICES = ('m3.xlarge', 'm3.2xlarge', 'cc2.8xlarge', 'cr1.8xlarge',
                     'hi1.4xlarge', 'hs1.8xlarge')
 
-    fields = ['aws_instance', 'dataset', 'parameters', 'spot_instance_type']
+    fields = ['aws_instance', 'dataset', 'parameters', 'spot_instance_type',
+              'format']
 
     def clean_parameters(self, value):
         self.params_filled = False
@@ -289,6 +290,11 @@ class BaseChooseInstanceAndDataset(BaseForm):
                 'Parameters %s are required' % ', '.join(missed_params))
 
         return parameters
+
+    def clean_format(self, value):
+        if value and value not in DataSet.FORMATS:
+            raise ValidationError('Wrong data format')
+        return value
 
     def clean_dataset(self, value):
         if value:
@@ -318,9 +324,12 @@ Please choose one of %s' % (value, self.TYPE_CHOICES))
         ds_err = only_one_required(
             self.cleaned_data,
             ('parameters', 'dataset'), raise_exc=False)
-        if inst_err or ds_err:
-            raise ValidationError(
-                '%s%s%s.' % (inst_err, '. ' if inst_err else '', ds_err))
+        fmt_err = only_one_required(
+            self.cleaned_data,
+            ('format', 'dataset'), raise_exc=False)
+        if inst_err or ds_err or fmt_err:
+            raise ValidationError('%s%s%s.' %
+                (inst_err, '. ' if inst_err else '', ds_err))
 
 
 class BaseChooseInstanceAndDatasetMultiple(BaseChooseInstanceAndDataset):
@@ -437,6 +446,30 @@ class TargetFeatureForm(BaseInnerDocumentForm):
     expression = JsonField()
 
 
+class DataSetAddForm(BaseFormEx):
+    required_fields = ('format', 'import_params')
+    format = ChoiceField(choices=DataSet.FORMATS)
+    import_params = JsonField()
+
+    def before_clean(self):
+        self.importhandler = app.db.ImportHandler.get_from_id(
+            ObjectId(self.import_handler_id))
+
+    def save(self, commit=True):
+        from api.tasks import import_data
+
+        dataset = super(DataSetAddForm, self).save(commit=False)
+
+        str_params = "-".join(["%s=%s" % item
+                              for item in dataset.import_params.iteritems()])
+        dataset.name = "%s: %s" % (self.importhandler.name, str_params)
+        dataset.import_handler_id = str(self.importhandler._id)
+        dataset.save(validate=True)
+        dataset.set_file_path()
+        import_data.delay(str(dataset._id))
+        return dataset
+
+
 class DataSetEditForm(BaseForm):
     fields = ('name',)
 
@@ -496,15 +529,17 @@ class AddTestForm(BaseChooseInstanceAndDataset):
 
         if self.params_filled:
             # load and train
-            from api.models import ImportHandler
             import_handler = ImportHandler(test.model.test_import_handler)
             params = self.cleaned_data.get('parameters', None)
-            dataset = import_handler.create_dataset(params)
-            import_data.apply_async(
-                kwargs={'dataset_id': str(dataset._id),
-                        'test_id': str(test._id)},
-                link=run_test.subtask(args=(str(test._id), ),
-                                      options={'queue': instance['name']}))
+            dataset = import_handler.create_dataset(
+                params,
+                data_format=self.cleaned_data.get(
+                    'format', DataSet.FORMAT_JSON)
+            )
+            import_data.apply_async(kwargs={'dataset_id': str(dataset._id),
+                                            'test_id': str(test._id)},
+                                    link=run_test.subtask(args=(str(test._id), ),
+                                    options={'queue': instance['name']}))
         else:
             # test using dataset
             dataset = self.cleaned_data.get('dataset', None)
