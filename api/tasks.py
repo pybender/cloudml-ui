@@ -520,6 +520,13 @@ def run_test(dataset_ids, test_id):
                 test.examples_size += (get_doc_size(example) / 1024.0 / 1024.0)
                 example_ids.append(str(example._id))
 
+        if test.examples_placement == test.EXAMPLES_POSTGRESQL:
+            from db import commit
+            try:
+                commit()
+            except Exception, exc:
+                logging.error('Cannot commit to PostgreSQL')
+
         if test.examples_placement == test.EXAMPLES_TO_AMAZON_S3:
 
             def _chunks(sequences, n):
@@ -603,6 +610,9 @@ def _add_example_to_mongo(test, vectorized_data, data, label, pred, prob):
         new_row = dict([(field, ndata.get(field, None))
                        for field in test.examples_fields])
         example.data_input = new_row
+    if test.examples_placement == test.EXAMPLES_POSTGRESQL:
+        example.data_input = {}
+        example._save_to_db(ndata)
 
     try:
         example.validate()

@@ -529,26 +529,25 @@ class TestExamplesResource(BaseResource):
     OBJECT_NAME = 'data'
     NEED_PAGING = True
     GET_ACTIONS = ('groupped', 'csv', 'datafields')
-    FILTER_PARAMS = [('label', str), ('pred_label', str)]
+    FILTER_PARAMS = [('label', str), ('pred_label', str), ('id', str)]
 
-    # def _get_list_query(self, params, fields, **kwargs):
-    #     test = app.db.Test.find_one({'_id': ObjectId(kwargs.get('test_id'))})
+    def _get_list_query(self, params, fields, **kwargs):
+        test = app.db.Test.find_one({'_id': ObjectId(kwargs.get('test_id'))})
 
-    #     data_input_params = dict([(p, v) for p, v in params.items()
-    #                               if p.startswith('data_input.') and v])
-    #     # if data_input_params:
-    #     #     params['_id'] = {
-    #     #         '$in': [e['_id'] for e in test.get_examples_full_data(
-    #     #             ['_id'],
-    #     #             data_input_params
-    #     #         )]
-    #     #     }
+        if test.examples_placement == app.db.Test.EXAMPLES_POSTGRESQL:
+            data_input_params = dict([(p, v) for p, v in params.items()
+                                      if p.startswith('data_input.') and v])
+            if data_input_params:
+                params['id'] = {
+                    '$in': [e['example_id'] for e in app.db.TestExample.get_data_from_db(
+                        str(test._id), ('example_id',), data_input_params)]
+                }
 
-    #     #     for param in data_input_params:
-    #     #         params[param] = None
+                for param in data_input_params:
+                    params[param] = None
 
-    #     return super(TestExamplesResource, self)._get_list_query(
-    #         params, fields, **kwargs)
+        return super(TestExamplesResource, self)._get_list_query(
+            params, fields, **kwargs)
 
     def _list(self, **kwargs):
         test = app.db.Test.find_one({'_id': ObjectId(kwargs.get('test_id'))})
@@ -596,8 +595,20 @@ class TestExamplesResource(BaseResource):
 
         res = []
         avps = []
-        collection = app.db.TestExample.collection
-        groups = collection.group([group_by_field, ],
+
+        test_id = kwargs.get('test_id')
+        test = app.db.Test.get_from_id(ObjectId(test_id))
+        if not test:
+            msg = 'Can\' find a test with id {!s}'.format(test_id)
+            return odesk_error_response(400, ERR_INVALID_DATA, msg)
+
+        if test.examples_placement == app.db.Test.EXAMPLES_POSTGRESQL:
+            groups = app.db.TestExample.get_grouped_from_db(
+                test_id, group_by_field)
+
+        else:
+            collection = app.db.TestExample.collection
+            groups = collection.group([group_by_field, ],
                                   {'model_id': kwargs.get('model_id'),
                                    'test_id': kwargs.get('test_id')},
                                   {'list': []}, REDUCE_FUNC)

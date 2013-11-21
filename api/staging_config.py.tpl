@@ -6,6 +6,8 @@ MAX_CONTENT_LENGTH = 128 * 1024 * 1024
 DATABASE_NAME = 'cloudml'
 #DATABASE_HOST = 'localhost'
 
+DB_CONNECTION_STRING = "host='localhost' dbname='cloudml_data' user='postgres' password='postgres'"
+
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_ENABLE_UTC = True

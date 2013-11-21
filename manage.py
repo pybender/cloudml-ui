@@ -323,6 +323,20 @@ class RemObsoluteMongoKeys(Command):
         return err_count
 
 
+class CreateExamplesTable(Command):
+    """Creates 'examples' database table"""
+
+    def run(self, *args, **kwargs):
+        from api.db import execute, commit
+
+        execute("""create table examples (
+         example_id varchar(512),
+         test_id varchar(512),
+         model_id varchar(512),
+         data json);""", {})
+        commit()
+
+
 manager = Manager(app)
 manager.add_command("celeryd", Celeryd())
 manager.add_command("celeryw", Celeryw())
@@ -334,6 +348,7 @@ manager.add_command('migrate_old', MigrateOld())
 manager.add_command('run', Run())
 manager.add_command('fix_mongo', RemObsoluteMongoKeys())
 manager.add_command("shell", Shell(make_context=_make_context))
+manager.add_command("create_examples_table", CreateExamplesTable())
 
 if __name__ == "__main__":
     manager.run()

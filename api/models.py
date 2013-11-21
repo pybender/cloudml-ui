@@ -787,9 +787,11 @@ class Test(BaseDocument):
     EXAMPLES_TO_AMAZON_S3 = 'Amazon S3'
     EXAMPLES_DONT_SAVE = 'Do not save'
     EXAMPLES_MONGODB = 'Mongo DB'
+    EXAMPLES_POSTGRESQL = 'PostgreSQL'
     EXAMPLES_STORAGE_CHOICES = (EXAMPLES_TO_AMAZON_S3,
                                 EXAMPLES_DONT_SAVE,
-                                EXAMPLES_MONGODB)
+                                EXAMPLES_MONGODB,
+                                EXAMPLES_POSTGRESQL)
 
     __collection__ = 'tests'
     structure = {
@@ -886,12 +888,7 @@ class Test(BaseDocument):
 
         filter_dict = {'model_id': self.model_id, 'test_id': str(self._id)}
 
-        examples_on_s3 = app.db.TestExample.find(
-            dict(filter_dict.items() + {'on_s3': True}.items())
-        ).count()
-        logging.info("%s examples on Amazon S3 found", examples_on_s3)
-
-        if not examples_on_s3:
+        if self.examples_placement == self.EXAMPLES_MONGODB:
             logging.info("Don't download dataset - no examples on S3")
             if fields:
                 if data_input_params:
@@ -904,6 +901,25 @@ class Test(BaseDocument):
                     for key, value in example['data_input'].iteritems():
                         example['data_input.{0}'.format(key)] = value
                     del example['data_input']
+                yield example
+            return
+
+        # TODO: filtering
+        if self.examples_placement == self.EXAMPLES_POSTGRESQL:
+            logging.info("Loading examples from PostgreSQL")
+
+            data_db = app.db.TestExample.get_data_from_db(
+                str(self._id),
+                ['example_id', 'data'],
+                {})
+            data_db = dict([(r['example_id'], r) for r in data_db])
+
+            for example in app.db.TestExample.find(filter_dict, fields):
+                data = json.loads(data_db[example.id]['data'])
+                for key, value in data.iteritems():
+                    example['data_input.{0}'.format(key)] = value
+
+                del example['data_input']
                 yield example
             return
 
@@ -980,10 +996,23 @@ class TestExample(BaseDocument):
     def is_weights_calculated(self):
         return self.weighted_data_input != {}
 
+    @property
+    def test(self):
+        test = app.db.Test.get_from_id(ObjectId(self.test_id))
+        if not test:
+            raise Exception('Can\'t find Test by id {!s}'.format(self.test_id))
+        return test
+
     def calc_weighted_data(self):
         data_input = None
-        if self.on_s3:
+        placement = self.test.examples_placement
+
+        if placement == Test.EXAMPLES_TO_AMAZON_S3:
             data = self._load_from_s3()
+            if data:
+                data_input = json.loads(data)
+        elif placement == Test.EXAMPLES_POSTGRESQL:
+            data = self._load_from_db()
             if data:
                 data_input = json.loads(data)
         else:
@@ -1017,11 +1046,91 @@ class TestExample(BaseDocument):
         helper.save_key_string(self.s3_key, json.dumps(data), meta)
         helper.close()
 
+    def _save_to_db(self, data):
+        """
+        :param data:
+        :return:
+        """
+        from db import execute
+        params = [self.id, self.test_id, self.model_id, json.dumps(data)]
+        execute(
+            """INSERT INTO examples (example_id, test_id, model_id, data)
+             VALUES (%s, %s, %s, %s);""",
+            params)
+
     def _load_from_s3(self):
         helper = AmazonS3Helper()
         return helper.load_key(self.s3_key)
 
+    def _load_from_db(self):
+        from db import select
+        data = select("SELECT data FROM examples WHERE example_id = %s",
+                      [self.id]).fetchone()
+        return data.get('data')
+
+    # TODO: Generalize
+    def get_data_from_db(self, test_id, fields, data_params):
+        from db import select
+
+        data_keys = []
+        data_values = []
+        for k, v in data_params.items():
+            data_keys.append(k.split('.')[-1])
+            data_values.append(v)
+
+        if data_params:
+            data_params_str = 'AND ' + (
+                ' AND '.join(["data->>'{}' = %s".format(k) for k in data_keys])
+            )
+        else:
+            data_params_str = ''
+        fields_str = ', '.join(fields)
+
+        sql = "SELECT {0} FROM examples WHERE test_id = %s {1}".format(
+            fields_str, data_params_str
+        )
+
+        return select(sql, [test_id] + data_values)
+
+    # TODO: Generalize
+    def get_grouped_from_db(self, test_id, group_by_field):
+        from collections import defaultdict
+        from db import select
+
+        field = group_by_field.split('.')[-1]
+
+        query = select("""SELECT example_id, data->>%(field)s as _field
+        FROM examples WHERE test_id = %(id)s ORDER BY data->>%(field)s""",
+                        {'field': field, 'id': test_id})
+        data = {}
+        for row in query:
+            data[row['example_id']] = row['_field']
+
+        groups = defaultdict(list)
+        for row in app.db.TestExample.find({'test_id': test_id},
+                                           fields=('id', 'label',
+                                                   'pred_label', 'prob')):
+            groups[data[str(row['id'])]].append({
+                'label': row['label'],
+                'pred': row['pred_label'],
+                'prob': row['prob'],
+            })
+
+        return [{
+            group_by_field: key,
+            'list': items
+        } for key, items in groups.iteritems()]
+
     def delete(self):
+        from db import execute, commit
+
+        placement = self.test.examples_placement
+        if placement == Test.EXAMPLES_POSTGRESQL:
+            execute(
+                "DELETE FROM examples WHERE test_id = %s AND id = %s LIMIT 1;",
+                [self.test_id, self.id])
+            commit()
+
         helper = AmazonS3Helper()
         helper.delete_key(self.s3_key)
         super(TestExample, self).delete()

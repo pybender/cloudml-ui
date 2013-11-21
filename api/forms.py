@@ -458,7 +458,8 @@ class AddTestForm(BaseChooseInstanceAndDataset):
 
     def save(self):
         placement = self.cleaned_data['examples_placement']
-        if placement == app.db.Test.EXAMPLES_MONGODB:
+        if placement in (app.db.Test.EXAMPLES_MONGODB,
+                         app.db.Test.EXAMPLES_POSTGRESQL):
             # All fields would be placed to MongoDB
             self.cleaned_data['examples_fields'] = \
                 self.model.test_import_handler.get_fields()
