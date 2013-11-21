@@ -27,10 +27,6 @@
 
 <alert-message ng-show="msg" class="alert-info" msg='{{ msg }}' unsafe></alert-message>
 <alert-message ng-show="err" class="alert-error" msg='{{ err }}' unsafe></alert-message>
-
-<alert-message ng-show="handler.error" class="alert-error" msg='Error occurred while handler saving' unsafe>
-</alert-message>
-
 <alert-message ng-show="handler.error" class="alert-error" msg="{{ handler.error }}" unsafe></alert-message>
 
 <ul class="nav nav-tabs" ng-show="handler.loaded">
@@ -54,6 +50,9 @@
     </div>
     <div>
         Import Parameters: <span class="value" ng-repeat="param in handler.import_params">{{ param }}</span>
+    </div>
+    <div ng-show="handler.error">
+        Is Valid: <span class="value" title="{{ handler.error }}">no</span>
     </div>
     <div>
       <h4>
@@ -161,7 +160,7 @@
                 <tbody>
                   <tr ng-repeat="feature in item.target_features">
                     <th>
-                      <a ng-click="" title="edit feature">{{ feature.name }}</a>
+                      <span ng-bind="feature.name" />
                     </th>
                     <td ng-show="['composite', 'json'].indexOf(item.process_as) > -1">
                       <div ng-show="item.process_as == 'json'">
