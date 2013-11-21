@@ -535,8 +535,11 @@ class ImportHandlerResource(BaseResource):
         if model is None:
             raise NotFound(self.MESSAGE404 % kwargs)
 
-        return self._render(self._get_save_response_context(model),
-                            code=200)
+        data = json.dumps(model.data)
+        resp = Response(data)
+        resp.headers['Content-Type'] = 'text/plain'
+        resp.headers['Content-Disposition'] = 'attachment; filename=importhandler-%s.json' % model.name
+        return resp
 
     def _put_run_sql_action(self, **kwargs):
         """

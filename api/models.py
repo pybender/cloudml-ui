@@ -277,7 +277,7 @@ class ImportHandler(BaseDocument):
             validate_structure(query, self.QUERY_STRUCT)
 
     SYSTEM_FIELDS = ('_id', 'created_on', 'created_by',
-        'updated_on', 'updated_by', 'import_params')
+        'updated_on', 'updated_by', 'import_params', 'error')
 
     @property
     def data(self):
