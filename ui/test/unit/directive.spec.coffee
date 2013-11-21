@@ -16,139 +16,135 @@ describe "directives", ->
         element = $compile("<span app-version></span>")($rootScope)
         expect(element.text()).toEqual "TEST_VER"
 
-  describe "json-editor", ->
+  describe "parameters-editor", ->
 
-    it "should create json editor control for object", ->
+    it "should create parameters editor control with string parameter", ->
       inject ($compile, $rootScope) ->
-        $rootScope.jsonVal = {"str_param": "value"}
+        $rootScope.params = {"str_param": "value"}
 
-        element = $compile('<div><json-editor item="jsonVal"></json-editor></div>')($rootScope)
+        $rootScope.paramsConfig = {"str_param": {"type": "str"}}
+        $rootScope.requiredParams = ["str_param"]
+        $rootScope.optionalParams = []
+
+        element = $compile('<parameters-editor ng-model="params"></parameters-editor>')($rootScope)
         $rootScope.$digest()
 
-        expect(element.html()).toContain('<span class="jsonObjectKey">')
-        expect(element.html()).toContain('<span ng-switch-default="" class="jsonLiteral ng-scope">')
-        expect(element.html()).toContain('<input type="text" ng-model="item[key]" ng-model-onblur="" placeholder="Empty" class="ng-pristine ng-valid">')
-        expect(element.html()).toNotContain('<ol class="arrayOl ng-pristine ng-valid" ng-model="item">')
+        expect(element.html()).toContain('<div class="jsonContents ng-scope">')
+        expect(element.html()).toContain('<input ng-hide="isRequired(key)" ng-disabled="isRequired(key)"')
+        expect(element.html()).toContain('>str_param</label>')
 
-    it "should create json editor control for array", ->
+    it "should create parameters editor control with object parameter", ->
       inject ($compile, $rootScope) ->
-        $rootScope.jsonVal = ["one", "two", "three"]
+        $rootScope.params = {
+          "map_param": {one: 'one_val', two: 'two_val'}
+        }
 
-        element = $compile('<div><json-editor item="jsonVal"></json-editor></div>')($rootScope)
+        $rootScope.paramsConfig = {"map_param": {"type": "dict"}}
+        $rootScope.requiredParams = ["map_param"]
+        $rootScope.optionalParams = []
+
+        element = $compile('<parameters-editor ng-model="params"></parameters-editor>')($rootScope)
         $rootScope.$digest()
 
-        expect(element.html()).toContain('<ol class="arrayOl ng-pristine ng-valid" ng-model="item">')
+        expect(element.html()).toContain('<div class="jsonContents ng-scope">')
+        expect(element.html()).toContain('<input ng-hide="isRequired(key)" ng-disabled="isRequired(key)"')
+        expect(element.html()).toContain('>map_param</label>')
+        expect(element.html()).toContain('<a title="add new parameter" ng-click="$parent.showAddKey = true"')
 
-    it "should correctly determine object's type", ->
+    it "should create parameters editor control with text parameter", ->
       inject ($compile, $rootScope) ->
-        $rootScope.jsonVal = {}
+        $rootScope.params = {
+          "text_param": '{"key": "val"}'
+        }
 
-        element = $compile('<div><json-editor item="jsonVal"></json-editor></div>')($rootScope)
+        $rootScope.paramsConfig = {"text_param": {"type": "text"}}
+        $rootScope.requiredParams = ["text_param"]
+        $rootScope.optionalParams = []
+
+        element = $compile('<parameters-editor ng-model="params"></parameters-editor>')($rootScope)
         $rootScope.$digest()
 
-        getType = element.scope().$$childTail.getType
+        expect(element.html()).toContain('<div class="jsonContents ng-scope">')
+        expect(element.html()).toContain('<input ng-hide="isRequired(key)" ng-disabled="isRequired(key)"')
+        expect(element.html()).toContain('>text_param</label>')
+        expect(element.html()).toContain('<textarea name="params" ng-model="paramsEditorData[key]"')
 
-        expect(getType('Some string')).toEqual('str')
-        expect(getType(["one", "two", "three"])).toEqual('list')
-        expect(getType({"str_param": "value"})).toEqual('dict')
-        expect(getType(undefined)).toEqual('str')
-        expect(getType(null)).toEqual('str')
+    it "should validate items", ->
+      inject ($compile, $rootScope) ->
+        $rootScope.params = {}
+
+        $rootScope.paramsConfig = {
+          "str_param": {"type": "str"},
+          "map_param": {"type": "dict"},
+          "text_param": {"type": "text"}
+        }
+        $rootScope.requiredParams = ["str_param", "map_param", "text_param"]
+        $rootScope.optionalParams = []
+
+        $compile('<form name="form">
+<parameters-editor ng-model="params" name="params"></parameters-editor>
+</form>')($rootScope)
+        $rootScope.$digest()
+
+        $rootScope.params = {"map_param": {one: 'one_val', two: 'two_val'}}
+        $rootScope.$digest()
+        $rootScope.validate()
+        expect($rootScope.form.params.$valid).toBe(true);
+
+        $rootScope.params = {"map_param": {one: '', two: 'two_val'}}
+        $rootScope.$digest()
+        $rootScope.validate()
+        expect($rootScope.form.params.$valid).toBe(false);
+
+        $rootScope.params = {"map_param": {}}
+        $rootScope.$digest()
+        $rootScope.validate()
+        expect($rootScope.form.params.$valid).toBe(false);
+
+        $rootScope.params = {"str_param": "value"}
+        $rootScope.$digest()
+        $rootScope.validate()
+        expect($rootScope.form.params.$valid).toBe(true);
+
+        $rootScope.params = {"str_param": ""}
+        $rootScope.$digest()
+        $rootScope.validate()
+        expect($rootScope.form.params.$valid).toBe(false);
+
+        $rootScope.params = {"text_param": '{"key": "value"}'}
+        $rootScope.$digest()
+        $rootScope.validate()
+        expect($rootScope.form.params.$valid).toBe(true);
+
+        $rootScope.params = {"text_param": 'wrong{"key": "value"}json'}
+        $rootScope.$digest()
+        $rootScope.validate()
+        expect($rootScope.form.params.$valid).toBe(false);
+
+        $rootScope.params = {"text_param": ""}
+        $rootScope.$digest()
+        $rootScope.validate()
+        expect($rootScope.form.params.$valid).toBe(false);
 
     it "should correctly add a new string item to object", ->
       inject ($compile, $rootScope) ->
-        $rootScope.jsonVal = {}
+        $rootScope.params = {
+          "map_param": {one: 'one_val', two: 'two_val'}
+        }
 
-        element = $compile('<div><json-editor item="jsonVal"></json-editor></div>')($rootScope)
+        $rootScope.paramsConfig = {"map_param": {"type": "dict"}}
+        $rootScope.requiredParams = ["map_param"]
+        $rootScope.optionalParams = []
+
+        element = $compile('<parameters-editor ng-model="params"></parameters-editor>')($rootScope)
         $rootScope.$digest()
 
-        localScope = element.scope().$$childTail
-        addItem = localScope.addItem
-        localScope.keyName = 'new_key'
-        localScope.valueName = 'new_value'
-        localScope.valueType = 'str'
+        addItem = $rootScope.addItem
+        $rootScope.keyName = 'new_key'
+        $rootScope.valueName = 'new_value'
+        $rootScope.valueType = 'str'
 
         obj = {}
         addItem(obj)
 
         expect(obj.new_key).toEqual('new_value')
-
-    it "should correctly add a new object item to object", ->
-      inject ($compile, $rootScope) ->
-        $rootScope.jsonVal = {}
-
-        element = $compile('<div><json-editor item="jsonVal"></json-editor></div>')($rootScope)
-        $rootScope.$digest()
-
-        localScope = element.scope().$$childTail
-        addItem = localScope.addItem
-        localScope.keyName = 'new_key'
-        localScope.valueType = 'dict'
-
-        obj = {}
-        addItem(obj)
-
-        expect(obj.new_key).toEqual({})
-
-    it "should correctly add a new string item to array", ->
-      inject ($compile, $rootScope) ->
-        $rootScope.jsonVal = []
-
-        element = $compile('<div><json-editor item="jsonVal"></json-editor></div>')($rootScope)
-        $rootScope.$digest()
-
-        localScope = element.scope().$$childTail
-        addItem = localScope.addItem
-        localScope.valueName = 'new_value'
-        localScope.valueType = 'str'
-
-        obj = []
-        addItem(obj)
-
-        expect(obj[0]).toEqual('new_value')
-
-    it "should correctly add a new object item to array", ->
-      inject ($compile, $rootScope) ->
-        $rootScope.jsonVal = []
-
-        element = $compile('<div><json-editor item="jsonVal"></json-editor></div>')($rootScope)
-        $rootScope.$digest()
-
-        localScope = element.scope().$$childTail
-        addItem = localScope.addItem
-        localScope.valueName = 'new_value'
-        localScope.valueType = 'dict'
-
-        obj = []
-        addItem(obj)
-
-        expect(obj[0]).toEqual({})
-
-    it "should completely apply configuration", ->
-      inject ($compile, $rootScope) ->
-        $rootScope.jsonVal = {}
-        $rootScope.params_config = {
-          mappings: {
-            type: 'dict',
-            help_text: 'This is map parameter'
-          },
-          pattern: {
-            type: 'str',
-            help_text: 'Please enter a valid regular expression'
-          },
-          'some composite': {
-            type: 'list',
-            help_text: 'This is composite parameter'
-          }
-        }
-
-        element = $compile('<div><json-editor item="jsonVal" config="params_config"></json-editor></div>')($rootScope)
-        $rootScope.$digest()
-
-        valueTypes = element.scope().$$childTail.valueTypes
-
-        expect(valueTypes[0].name).toEqual('mappings')
-        expect(valueTypes[0].type).toEqual('dict')
-        expect(valueTypes[1].name).toEqual('pattern')
-        expect(valueTypes[1].type).toEqual('str')
-        expect(valueTypes[2].name).toEqual('some composite')
-        expect(valueTypes[2].type).toEqual('list')

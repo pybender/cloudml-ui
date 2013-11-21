@@ -11,11 +11,12 @@ describe "dashboard", ->
 
   beforeEach(module "app.dashboard.controllers")
   beforeEach(module "app.dashboard.model")
-  beforeEach(module "app.features.models")
 
   beforeEach(module "app.models.model")
   beforeEach(module "app.importhandlers.model")
   beforeEach(module "app.datasets.model")
+  beforeEach(module "app.features.models")
+  beforeEach(module "app.testresults.model")
 
   $httpBackend = null
   $rootScope = null
@@ -42,6 +43,10 @@ describe "dashboard", ->
     it "should request statictics and define styles map", inject () ->
       url = settings.apiUrl + 'statistics/?'
       $httpBackend.expectGET(url).respond('{"statistics": []}')
+
+      # TODO: why "undefined"?
+      url = settings.apiUrl + 'models/undefined/tests/action/examples_size/?'
+      $httpBackend.expectGET(url).respond('{"tests": []}')
 
       createController "DashboardCtrl"
       $httpBackend.flush()

@@ -183,7 +183,7 @@ describe "test examples", ->
     it "should make details request", inject () ->
       fields = 'id,test_name,weighted_data_input,
 test.model.target_variable,pred_label,label,
-prob,test.status,created_on,test.classes_set'
+prob,test.status,created_on,test.classes_set,test.examples_placement'
       url = BASE_URL + EXAMPLE_ID + '/?show=' + encodeURIComponent(fields)
       $httpBackend.expectGET(url).respond('{"data": {"_id": "' + EXAMPLE_ID + '"}}')
 
