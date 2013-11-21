@@ -155,6 +155,15 @@ angular.module('app.importhandlers.model', ['app.config'])
         data = {'remove_query': 1, 'num': @num}
         @$make_request(@handler.getUrl(), {}, "PUT", data)
 
+      getParams: () ->
+        expr = /%\((\w+)\)s/gi
+        params = []
+        matches = expr.exec(@sql)
+        while matches
+          params.push matches[1]
+          matches = expr.exec(@sql)
+        return params
+
       $run: (limit, params, datasource) ->
         data = {
           sql: @sql,
