@@ -511,9 +511,9 @@ class ImportHandlerResource(BaseResource):
                 raise ValidationError('num is required')
             del obj['queries'][query_num]['items'][item_num]['target_features'][num]
         elif 'fill_predefined' in data:
-            data.pop('predefined_selected', None)
-            num = int(data.pop('num', None))
-            datasource_id = data.pop('datasource', None)
+            data.get('predefined_selected', None)
+            num = int(data.get('num', None))
+            datasource_id = data.get('datasource', None)
             ds = app.db.DataSource.get_from_id(ObjectId(datasource_id))
             obj.datasource[num] = {
                 'name': ds.name,
