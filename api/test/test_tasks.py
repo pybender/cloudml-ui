@@ -86,6 +86,9 @@ class TestTasksTests(BaseTestCase):
     def test_get_csv_results(self, mock_get_data_stream):
         from api.tasks import get_csv_results
 
+        self.test.examples_placement = self.test.EXAMPLES_MONGODB
+        self.test.save()
+
         fields = ['label', 'pred_label', 'prob']
         url = get_csv_results(self.test.model_id, self.test._id, fields)
 
@@ -96,6 +99,9 @@ class TestTasksTests(BaseTestCase):
         self.assertEquals(test.exports[0]['fields'], fields)
         # Data wasn't loaded from s3:
         self.assertFalse(mock_get_data_stream.called)
+
+        self.test.examples_placement = self.test.EXAMPLES_TO_AMAZON_S3
+        self.test.save()
 
         url = get_csv_results(self.test.model_id, self.test2._id, fields)
 

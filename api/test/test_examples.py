@@ -96,6 +96,9 @@ class TestExamplesTests(BaseTestCase):
             open('./api/fixtures/model.dat', 'r').read())
         mock_get_trainer.return_value = trainer
 
+        self.test.examples_placement = self.test.EXAMPLES_MONGODB
+        self.test.save()
+
         url = self._get_url(id=self.obj._id,
                             show='id,test_name,weighted_data_input')
         resp = self.app.get(url, headers=HTTP_HEADERS)
@@ -106,6 +109,9 @@ class TestExamplesTests(BaseTestCase):
         for key in ['css_class', 'model_weight', 'transformed_weight',
                     'value', 'vect_value', 'weight']:
             self.assertTrue(key in data['weighted_data_input']['opening_id'])
+
+        self.test.examples_placement = self.test.EXAMPLES_TO_AMAZON_S3
+        self.test.save()
 
     def test_groupped(self):
         url = self._get_url(action='groupped',
