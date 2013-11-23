@@ -15,7 +15,7 @@ from celery.canvas import group
 from celery.signals import task_prerun, task_postrun
 
 from api import celery, app
-from api.models import Test, Model
+from api.models import Test, Model, TestExampleSql
 from api.logger import init_logger
 from api.utils import get_doc_size
 from api.amazon_utils import AmazonEC2Helper, AmazonS3Helper
@@ -509,40 +509,40 @@ def run_test(dataset_ids, test_id):
             for n, row, label, pred, prob in examples:
                 if n % (all_count / 10) == 0:
                     logging.info('Processed %s rows so far' % n)
-                if test.examples_placement == test.EXAMPLES_TO_AMAZON_S3:
-                    # Caching raw data into temp file
-                    ndata = dict([(key.replace('.', '->'), val)
-                                 for key, val in row.iteritems()])
-                    fp.write('{0}\n'.format(json.dumps(ndata)))
+                # if test.examples_placement == test.EXAMPLES_TO_AMAZON_S3:
+                #     # Caching raw data into temp file
+                #     ndata = dict([(key.replace('.', '->'), val)
+                #                  for key, val in row.iteritems()])
+                #     fp.write('{0}\n'.format(json.dumps(ndata)))
                 vectorized_data = metrics._true_data.getrow(n).todense()
-                example, new_row = _add_example_to_mongo(test, vectorized_data, row, label,
-                                                         pred, prob)
-                test.examples_size += (get_doc_size(example) / 1024.0 / 1024.0)
-                example_ids.append(str(example._id))
+                example, new_row = _add_example_to_db(test, vectorized_data,
+                                                      row, label, pred, prob)
+                # test.examples_size += (get_doc_size(example) / 1024.0 / 1024.0)
+                example_ids.append(str(example.id))
 
-        if test.examples_placement == test.EXAMPLES_TO_AMAZON_S3:
-
-            def _chunks(sequences, n):
-                length = len(sequences[0])
-                count = int(length / n)
-                if length % n != 0:
-                    count += 1
-
-                for i in xrange(0, len(sequences[0]), count):
-                    yield [s[i:i + count] for s in sequences]
-
-            examples = [
-                range(len(example_ids)),  # indexes
-                example_ids
-            ]
-            examples_tasks = []
-            for params in _chunks(examples, app.config['EXAMPLES_CHUNK_SIZE']):
-                examples_tasks.append(store_examples.si(test_id, params))
-
-            # Wait for all results
-            logging.info('Storing raw data to Amazon S3')
-            group(examples_tasks).apply_async().get(propagate=False)
-            #os.remove(test.temp_data_filename)
+        # if test.examples_placement == test.EXAMPLES_TO_AMAZON_S3:
+        #
+        #     def _chunks(sequences, n):
+        #         length = len(sequences[0])
+        #         count = int(length / n)
+        #         if length % n != 0:
+        #             count += 1
+        #
+        #         for i in xrange(0, len(sequences[0]), count):
+        #             yield [s[i:i + count] for s in sequences]
+        #
+        #     examples = [
+        #         range(len(example_ids)),  # indexes
+        #         example_ids
+        #     ]
+        #     examples_tasks = []
+        #     for params in _chunks(examples, app.config['EXAMPLES_CHUNK_SIZE']):
+        #         examples_tasks.append(store_examples.si(test_id, params))
+        #
+        #     # Wait for all results
+        #     logging.info('Storing raw data to Amazon S3')
+        #     group(examples_tasks).apply_async().get(propagate=False)
+        #     #os.remove(test.temp_data_filename)
 
         #test.examples_size = test.examples_size
         test.status = Test.STATUS_COMPLETED
@@ -556,6 +556,46 @@ def run_test(dataset_ids, test_id):
         test.save()
         raise
     return 'Test completed'
+
+
+def _add_example_to_db(test, vectorized_data, data, label, pred, prob):
+    """
+    Adds info about Test Example to PostgreSQL.
+    Returns created TestExampleSql object and data.
+    """
+
+    ndata = dict([(key.replace('.', '->'), val)
+                 for key, val in data.iteritems()])
+    model = test.model
+    example = TestExampleSql()
+    example_id = ndata.get(model.example_id, '-1')
+    try:
+        example.example_id = str(example_id)
+    except UnicodeEncodeError:
+        example.example_id = example_id.encode('utf-8')
+
+    example_name = ndata.get(model.example_label, 'noname')
+    try:
+        example.name = str(example_name)
+    except UnicodeEncodeError:
+        example.name = example_name.encode('utf-8')
+
+    example.pred_label = str(pred)
+    example.label = str(label)
+    example.prob = prob.tolist()
+    example.vect_data = vectorized_data.tolist()[0]
+
+    # Denormalized fields. TODO: move denormalization to TestExample model
+    example.test_name = test.name
+    example.model_name = model.name
+    example.test_id = str(test._id)
+    example.model_id = str(model._id)
+
+    new_row = ndata
+    example.data_input = ndata
+
+    example.save()
+    return example, new_row
 
 
 def _add_example_to_mongo(test, vectorized_data, data, label, pred, prob):

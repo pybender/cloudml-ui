@@ -14,6 +14,11 @@ from flask import request, has_request_context
 
 from api import app, celery
 from api.amazon_utils import AmazonS3Helper
+from api.db import JSONType
+from sqlalchemy import func
+from sqlalchemy.dialects import postgresql
+
+db = app.sql_db
 
 SYSTEM_FIELDS = ('name', 'created_on', 'updated_on', 'created_by',
                  'updated_by', 'type', 'is_predefined')
@@ -938,6 +943,65 @@ class Test(BaseDocument):
                     if skip_it:
                         continue
                 yield example
+
+
+class TestExampleSql(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+
+    created_on = db.Column(db.DateTime, server_default=func.now())
+    updated_on = db.Column(db.DateTime, server_default=func.now(),
+                           onupdate=func.current_timestamp())
+
+    example_id = db.Column(db.String(100))
+    name = db.Column(db.String(100))
+    label = db.Column(db.String(100))
+    pred_label = db.Column(db.String(100))
+
+    prob = db.Column(postgresql.ARRAY(db.Float))
+    vect_data = db.Column(postgresql.ARRAY(db.Float))
+
+    data_input = db.Column(JSONType)
+    weighted_data_input = db.Column(JSONType)
+
+    test_id = db.Column(db.String(255))
+    model_id = db.Column(db.String(255))
+    test_name = db.Column(db.String(255))
+    model_name = db.Column(db.String(255))
+
+    @property
+    def test(self):
+        test = app.db.Test.get_from_id(ObjectId(self.test_id))
+        if not test:
+            raise Exception('Can\'t find Test by id {!s}'.format(self.test_id))
+        return test
+
+    def save(self, commit=True):
+        db.session.add(self)
+        if commit:
+            db.session.commit()
+
+    @property
+    def is_weights_calculated(self):
+        return self.weighted_data_input and self.weighted_data_input != {}
+
+    def calc_weighted_data(self):
+        if not self.data_input:
+            return None
+
+        from api.helpers.features import get_features_vect_data
+        from bson.objectid import ObjectId
+        model = app.db.Model.find_one({'_id': ObjectId(self.model_id)})
+        feature_model = model.get_trainer()._feature_model
+        data = get_features_vect_data(self.vect_data,
+                                      feature_model.features.items(),
+                                      feature_model.target_variable)
+
+        from helpers.weights import get_example_params
+        model_weights = app.db.Weight.find({'model_id': self.model_id})
+        weighted_data = dict(get_example_params(
+            model_weights, self.data_input, data))
+        self.weighted_data_input = weighted_data
+        self.save()
 
 
 @app.conn.register

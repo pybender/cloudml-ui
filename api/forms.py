@@ -443,29 +443,31 @@ class AddTestForm(BaseChooseInstanceAndDataset):
         self.cleaned_data['model_id'] = self.model_id
         return self.model
 
-    def clean_examples_placement(self, value):
-        if not value:
-            raise ValidationError('Examples placement is required')
-
-        if value not in app.db.Test.EXAMPLES_STORAGE_CHOICES:
-            raise ValidationError('Invalid test examples storage specified')
-        return value
-
-    def clean_examples_fields(self, value):
-        if not value:
-            return []
-        return value.split(',')
+    # def clean_examples_placement(self, value):
+    #     if not value:
+    #         raise ValidationError('Examples placement is required')
+    #
+    #     if value not in app.db.Test.EXAMPLES_STORAGE_CHOICES:
+    #         raise ValidationError('Invalid test examples storage specified')
+    #     return value
+    #
+    # def clean_examples_fields(self, value):
+    #     if not value:
+    #         return []
+    #     return value.split(',')
 
     def save(self):
-        placement = self.cleaned_data['examples_placement']
-        if placement == app.db.Test.EXAMPLES_MONGODB:
-            # All fields would be placed to MongoDB
-            self.cleaned_data['examples_fields'] = \
-                self.model.test_import_handler.get_fields()
+        # placement = self.cleaned_data['examples_placement']
+        # if placement == app.db.Test.EXAMPLES_MONGODB:
+        #     # All fields would be placed to MongoDB
+        #     self.cleaned_data['examples_fields'] = \
+        #         self.model.test_import_handler.get_fields()
 
         test = BaseForm.save(self, commit=False)
         test.status = test.STATUS_QUEUED
-        test.examples_placement = self.cleaned_data['examples_placement']
+        test.examples_placement = app.db.Test.EXAMPLES_MONGODB
+        test.examples_fields = \
+                self.model.test_import_handler.get_fields()
         test.save(check_keys=False)
 
         from api.tasks import run_test, import_data

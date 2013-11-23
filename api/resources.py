@@ -3,6 +3,7 @@ import logging
 import math
 from flask.ext import restful
 from flask.ext.restful import reqparse
+from sqlalchemy import desc
 
 from api.decorators import authenticate
 from api.utils import crossdomain, ERR_NO_SUCH_MODEL, odesk_error_response, \
@@ -319,8 +320,8 @@ for %s method: %s" % (method, action))
 
     def _get_fields(self, params):
         show = params.get('show', None)
-        fields = ['_id'] + show.split(',') if show else ('name', '_id') 
-        if self.Model.use_autorefs:
+        fields = ['_id'] + show.split(',') if show else ('name', '_id')
+        if getattr(self.Model, 'use_autorefs', False):
             query_fields = []
             for field in fields:
                 if '.' in field:
@@ -344,6 +345,56 @@ for %s method: %s" % (method, action))
 
         return app.response_class(content,
                                   mimetype='application/json'), code
+
+
+class BaseResourceSQL(BaseResource):
+    """
+    Base REST resource for SQL models.
+    """
+
+    def _get_list_query(self, params, fields, **kwargs):
+        filter_params = self._prepare_filter_params(params)
+        sort_by = params.get('sort_by', None)
+        order = None
+        if sort_by:
+            order = params.get('order') or 'asc'
+            try:
+                order = self.ORDER_DICT[order]
+            except KeyError:
+                raise ValidationError('Invalid order. It could be asc or desc')
+
+        kwargs.update(filter_params)
+
+        # if '_id' in fields:
+        #     fields.remove('_id')
+        # if 'id' not in fields:
+        #     fields.append('id')
+        #
+        # fields = [getattr(self.Model, f) for f in fields
+        #           if hasattr(self.Model, f)]
+
+        # TODO: load only 'fields'
+        cursor = self.Model.query.filter_by(**kwargs)
+
+        if sort_by:
+            sort_by = getattr(self.Model, sort_by, None)
+            if sort_by:
+                if order < 0:
+                    sort_by = desc(sort_by)
+                cursor = cursor.order_by(sort_by)
+
+        return cursor
+
+    def _paginate(self, cursor, page, per_page=20):
+        paginator = cursor.paginate(page, per_page)
+        return paginator.total, paginator.items
+
+    def _get_details_query(self, params, fields, **kwargs):
+        if '_id' in kwargs:
+            kwargs['id'] = kwargs['_id']
+            del kwargs['_id']
+        model = self.Model.query.filter_by(**kwargs).one()
+        return model
 
 
 def _filter_model_fields(model, show_fields):

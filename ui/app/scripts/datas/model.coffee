@@ -12,7 +12,8 @@ angular.module('app.datas.model', ['app.config'])
     class Data extends BaseModel
       API_FIELDNAME: 'data'
 
-      _id: null
+      id: null
+      example_id: null
       created_on: null
       model_name: null
       model_id: null
@@ -90,6 +91,9 @@ angular.module('app.datas.model', ['app.config'])
             objects: resp.data['datas'].items
           }
         @$make_all_request(url, resolver, opts)
+
+      objectUrl: =>
+        return @BASE_UI_URL + @id
 
     return Data
 ])

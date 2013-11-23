@@ -9,6 +9,7 @@ from pymongo.cursor import _QUERY_OPTIONS
 from flask.ext import restful
 from celery import Celery
 from kombu import Queue
+from flask.ext.sqlalchemy import SQLAlchemy
 
 
 class RegExConverter(BaseConverter):
@@ -72,6 +73,15 @@ class App(Flask):
         for name in self.PUBSUB_CHANNELS.keys():
             self.chan.sub(name)
 
+    @property
+    def sql_db(self):
+        if not hasattr(self, '_sql_db'):
+            self.init_sql_db()
+        return self._sql_db
+
+    def init_sql_db(self):
+        self._sql_db = SQLAlchemy(self)
+
 
 app = App(__name__)
 
@@ -81,6 +91,7 @@ for instance in app.db.instances.find():
     app.config['CELERY_QUEUES'].append(Queue(instance['name'],
                                              routing_key='%s.#' % instance['name']))
 celery.add_defaults(lambda: app.config)
+
 
 class Api(restful.Api):
     def add_resource(self, resource, *urls, **kwargs):

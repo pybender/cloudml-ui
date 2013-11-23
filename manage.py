@@ -323,6 +323,14 @@ class RemObsoluteMongoKeys(Command):
         return err_count
 
 
+class CreateDbTables(Command):
+    """Create db tables"""
+
+    def run(self, **kwargs):
+        app.sql_db.create_all()
+        print 'Done.'
+
+
 manager = Manager(app)
 manager.add_command("celeryd", Celeryd())
 manager.add_command("celeryw", Celeryw())
@@ -334,6 +342,7 @@ manager.add_command('migrate_old', MigrateOld())
 manager.add_command('run', Run())
 manager.add_command('fix_mongo', RemObsoluteMongoKeys())
 manager.add_command("shell", Shell(make_context=_make_context))
+manager.add_command("create_db_tables", CreateDbTables())
 
 if __name__ == "__main__":
     manager.run()

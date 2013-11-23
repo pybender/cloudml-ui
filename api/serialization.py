@@ -1,7 +1,10 @@
 import json
 import datetime
 import mongokit
+from sqlalchemy import orm
 from bson.objectid import ObjectId
+
+from api import app
 
 
 def encode_model(obj):
@@ -12,6 +15,13 @@ def encode_model(obj):
         out = encode_model(dict(obj))
     elif isinstance(obj, mongokit.cursor.Cursor):
         out = [encode_model(item) for item in obj]
+    elif isinstance(obj, app.sql_db.Model):
+        data = obj.__dict__
+        if '_sa_instance_state' in data:
+            del data['_sa_instance_state']
+        out = encode_model(data)
+    elif isinstance(obj, orm.Query):
+        out = [encode_model(item) for item in obj.all()]
     elif isinstance(obj, list):
         out = [encode_model(item) for item in obj]
     elif isinstance(obj, dict):

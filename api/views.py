@@ -2,6 +2,7 @@ from datetime import datetime
 import json
 import logging
 import traceback
+from api.models import TestExampleSql
 from flask.ext.restful import reqparse
 from flask import request, Response
 
@@ -14,7 +15,7 @@ from api import api, app
 from api.decorators import public, public_actions
 from api.utils import ERR_INVALID_DATA, odesk_error_response, \
     ERR_NO_SUCH_MODEL, ERR_UNPICKLING_MODEL
-from api.resources import BaseResource, NotFound, ValidationError
+from api.resources import BaseResource, NotFound, ValidationError, BaseResourceSQL
 from api.forms import *
 from core.importhandler.importhandler import ExtractionPlan, \
     RequestImportHandler
@@ -519,62 +520,45 @@ REDUCE_FUNC = 'function(obj, prev) {\
                       }'
 
 
-class TestExamplesResource(BaseResource):
+class TestExamplesResource(BaseResourceSQL):
     """
     """
     @property
     def Model(self):
-        return app.db.TestExample
+        return TestExampleSql
 
     OBJECT_NAME = 'data'
     NEED_PAGING = True
     GET_ACTIONS = ('groupped', 'csv', 'datafields')
     FILTER_PARAMS = [('label', str), ('pred_label', str)]
 
-    # def _get_list_query(self, params, fields, **kwargs):
-    #     test = app.db.Test.find_one({'_id': ObjectId(kwargs.get('test_id'))})
-
-    #     data_input_params = dict([(p, v) for p, v in params.items()
-    #                               if p.startswith('data_input.') and v])
-    #     # if data_input_params:
-    #     #     params['_id'] = {
-    #     #         '$in': [e['_id'] for e in test.get_examples_full_data(
-    #     #             ['_id'],
-    #     #             data_input_params
-    #     #         )]
-    #     #     }
-
-    #     #     for param in data_input_params:
-    #     #         params[param] = None
-
-    #     return super(TestExamplesResource, self)._get_list_query(
-    #         params, fields, **kwargs)
-
     def _list(self, **kwargs):
         test = app.db.Test.find_one({'_id': ObjectId(kwargs.get('test_id'))})
         if not test.dataset is None:
             for field in test.dataset.data_fields:
                 field_new = field.replace('.', '->')
-                self.FILTER_PARAMS.append(('data_input.%s' % field_new, str))
-        self.FILTER_PARAMS.append(('_id', dict),)
+                self.FILTER_PARAMS.append(("data_input->>'%s'" % field_new, str))
         return super(TestExamplesResource, self)._list(**kwargs)
 
     def _get_details_query(self, params, fields, **kwargs):
-        """
-        Note: Example details raw data should be loaded from Amazon S3, if it's in it.
-        """
         load_weights = False
         if 'weighted_data_input' in fields:
             fields = None  # We need all fields to recalc weights
             load_weights = True
 
-        example = super(TestExamplesResource, self)._get_details_query(params, fields, **kwargs)
+        example = super(TestExamplesResource, self)._get_details_query(
+            params, fields, **kwargs)
 
         if example is None:
             raise NotFound()
 
         if load_weights and not example.is_weights_calculated:
             example.calc_weighted_data()
+            example = super(TestExamplesResource, self)._get_details_query(
+                params, fields, **kwargs)
+
+        # TODO: hack
+        example.__dict__['test'] = example.test
 
         return example
 
