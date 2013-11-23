@@ -113,7 +113,7 @@ angular.module('app.datas.controllers', ['app.config', ])
       return
     $scope.loading_state = true
     Data.$loadAllGroupped($routeParams.model_id, $routeParams.test_id, {
-      field: 'data_input.' + $scope.form.field,
+      field: $scope.form.field,
       count: $scope.form.count})
     .then ((opts) ->
       $scope.field_name = opts.field_name

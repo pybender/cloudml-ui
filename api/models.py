@@ -1,3 +1,4 @@
+from collections import defaultdict
 import json
 import StringIO
 import logging
@@ -17,6 +18,7 @@ from api.amazon_utils import AmazonS3Helper
 from api.db import JSONType
 from sqlalchemy import func
 from sqlalchemy.dialects import postgresql
+from sqlalchemy.sql import expression
 
 db = app.sql_db
 
@@ -1002,6 +1004,59 @@ class TestExampleSql(db.Model):
             model_weights, self.data_input, data))
         self.weighted_data_input = weighted_data
         self.save()
+
+    @classmethod
+    def get_grouped(cls, field, model_id, test_id):
+        cursor = cls.query.filter_by(
+            model_id=model_id, test_id=test_id
+        ).with_entities(
+            cls.pred_label,
+            cls.label,
+            cls.prob,
+            # Selecting field from json object isn't supported by alchemy,
+            # using literal column instead
+            expression.literal_column("data_input->>'{!s}'".format(
+                field)).label('group')
+        )
+
+        groups = defaultdict(list)
+        for row in cursor.all():
+            groups[row[3]].append({
+                'label': row[0],
+                'pred': row[1],
+                'prob': row[2],
+            })
+
+        return [{
+            field: key,
+            'list': value
+        } for key, value in groups.iteritems()]
+
+    @classmethod
+    def get_data(cls, test_id, fields):
+        db_fields = []
+        for field in fields:
+            if field == '_id':
+                field = 'id'
+            if field == 'id':
+                field = 'example_id'
+            db_field = getattr(cls, field, None)
+            if db_field:
+                db_fields.append(db_field)
+            else:
+                # Selecting field from json object isn't supported by alchemy,
+                # using literal column instead
+                db_fields.append(
+                    expression.literal_column("data_input->>'{!s}'".format(
+                        field.replace('data_input.', ''))).label(field)
+                )
+
+        cursor = cls.query.filter_by(test_id=test_id).with_entities(
+            *db_fields
+        )
+
+        for row in cursor.all():
+            yield dict(zip(row.keys(), row))
 
 
 @app.conn.register

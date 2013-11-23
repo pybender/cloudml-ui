@@ -777,9 +777,13 @@ def get_csv_results(model_id, test_id, fields):
             writer = csv.writer(fp, delimiter=',',
                                 quoting=csv.QUOTE_ALL)
             writer.writerow(fields)
-            for example in test.get_examples_full_data(None):
+            for example in TestExampleSql.get_data(test_id, fields):
                 rows = []
                 for field in fields:
+                    if field == '_id':
+                        field = 'id'
+                    if field == 'id':
+                        field = 'example_id'
                     val = example[field] if field in example else ''
                     rows.append(val)
                 writer.writerow(rows)

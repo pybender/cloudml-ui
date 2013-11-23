@@ -580,11 +580,12 @@ class TestExamplesResource(BaseResourceSQL):
 
         res = []
         avps = []
-        collection = app.db.TestExample.collection
-        groups = collection.group([group_by_field, ],
-                                  {'model_id': kwargs.get('model_id'),
-                                   'test_id': kwargs.get('test_id')},
-                                  {'list': []}, REDUCE_FUNC)
+
+        groups = TestExampleSql.get_grouped(
+            field=group_by_field,
+            model_id=kwargs.get('model_id'),
+            test_id=kwargs.get('test_id')
+        )
 
         import sklearn.metrics as sk_metrics
         import numpy
