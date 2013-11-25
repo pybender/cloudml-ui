@@ -386,13 +386,6 @@ class ImportHandlerResource(BaseResource):
     def get(self, *args, **kwargs):
         return super(ImportHandlerResource, self).get(*args, **kwargs)
 
-    def _get_fields(self, params):
-        query_fields, show_fields = super(ImportHandlerResource, self)._get_fields(params)
-        if 'data' in show_fields:
-            # For generating json data we need to import all fields
-            query_fields = None
-        return query_fields, show_fields
-
     def put(self, action=None, **kwargs):
         if action:
             return super(ImportHandlerResource, self).put(action, **kwargs)
@@ -423,7 +416,7 @@ class ImportHandlerResource(BaseResource):
                     ds_num = sub_keys[1]
                     if not ds_num in datasource_forms:
                         datasource_forms[ds_num] = HandlerDataSourceForm(
-                            obj['datasource'], ds_num)
+                            obj.data['datasource'], ds_num)
                     field = sub_keys[2]
                     datasource_forms[ds_num].append_data(field, val)
 
@@ -440,7 +433,7 @@ class ImportHandlerResource(BaseResource):
                     query_num = sub_keys[1]
                     if not query_num in query_forms:
                         query_forms[query_num] = QueryForm(
-                            obj['queries'], query_num)
+                            obj.data['queries'], query_num)
                     field = sub_keys[2]
                     query_forms[query_num].append_data(field, val)
 
@@ -458,7 +451,7 @@ class ImportHandlerResource(BaseResource):
                     item_num = sub_keys[3]
                     num = (query_num, item_num)
                     if not num in item_forms:
-                        items = obj['queries'][int(query_num)]['items']
+                        items = obj.data['queries'][int(query_num)]['items']
                         item_forms[num] = QueryItemForm(
                             items, item_num)
                     field = sub_keys[4]
@@ -479,7 +472,7 @@ class ImportHandlerResource(BaseResource):
                     feature_num = sub_keys[5]
                     num = (query_num, item_num, feature_num)
                     if not num in feature_forms:
-                        features = obj['queries'][int(query_num)]['items'][int(item_num)]['target_features']
+                        features = obj.data['queries'][int(query_num)]['items'][int(item_num)]['target_features']
                         feature_forms[num] = TargetFeatureForm(
                             features, feature_num)
                     field = sub_keys[6]
@@ -494,28 +487,28 @@ class ImportHandlerResource(BaseResource):
             query_num = int(data.get('query_num', None))
             if num is None or query_num is None:
                 raise ValidationError('num and query_num are required')
-            del obj['queries'][query_num]['items'][num]
+            del obj.data['queries'][query_num]['items'][num]
         elif 'remove_query' in data:
             num = int(data.get('num', None))
             if num is None:
                 raise ValidationError('num is required')
-            del obj['queries'][num]
+            del obj.data['queries'][num]
         elif 'remove_feature' in data:
             num = int(data.get('num', None))
             query_num = int(data.get('query_num', None))
             item_num = int(data.get('item_num', None))
             if num is None:
                 raise ValidationError('num is required')
-            del obj['queries'][query_num]['items'][item_num]['target_features'][num]
+            del obj.data['queries'][query_num]['items'][item_num]['target_features'][num]
         elif 'fill_predefined' in data:
             data.get('predefined_selected', None)
             num = int(data.get('num', None))
             datasource_id = data.get('datasource', None)
             ds = app.db.DataSource.get_from_id(ObjectId(datasource_id))
-            obj.datasource[num] = {
+            obj.data['datasource'][num] = {
                 'name': ds.name,
                 'type': ds.type,
-                'db_settings': ds.db_settings
+                'db': ds.db_settings
             }
         else:
             edit()
@@ -598,7 +591,7 @@ class ImportHandlerResource(BaseResource):
         limit = form.cleaned_data['limit']
 
         # Change limit for all handler queries
-        for query in model.queries:
+        for query in model.data['queries']:
             query['sql'] = model.build_query(query['sql'], limit=limit)
 
         try:

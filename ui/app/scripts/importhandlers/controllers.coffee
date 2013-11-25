@@ -38,14 +38,12 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
       mainSection = section[0]
       if mainSection not in $scope.LOADED_SECTIONS
         # is not already loaded
-        fields = ImportHandler.MAIN_FIELDS + ',queries'
+        fields = ImportHandler.MAIN_FIELDS + ',data'
         if mainSection == 'dataset'
           setTimeout(() ->
             $scope.$broadcast('loadDataSet', true)
             $scope.LOADED_SECTIONS.push mainSection
           , 100)
-
-      if section[1] == 'json' then fields += ',data'
 
       if fields != ''
         $scope.handler.$load(

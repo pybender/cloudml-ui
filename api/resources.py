@@ -259,6 +259,7 @@ class BaseResource(restful.Resource):
             cursor = self.Model.find(kwargs, fields)
             if sort_by:
                 cursor.sort(sort_by, order)
+            #print app.db.ImportHandler.find_one({}, fields).keys()
             return cursor
 
     def _prepare_filter_params(self, params):

@@ -46,7 +46,7 @@
   <div ng-show="action[1] == 'details'">
     <div>
       Target Schema:
-      <span title="Target Schema" class="target_schema" ng-bind="handler.target_schema || 'untitled target schema'" editable="handler" value="handler.target_schema"    editable-field="target_schema" editable-input="text" editable-placement="right"></span>
+      <span title="Target Schema" class="target_schema" ng-bind="handler.data.target_schema || 'untitled target schema'" editable="handler" value="handler.data.target_schema"    editable-field="target_schema" editable-input="text" editable-placement="right"></span>
     </div>
     <div>
         Import Parameters: <span class="value" ng-repeat="param in handler.import_params">{{ param }}</span>
@@ -74,11 +74,11 @@
         </div>
         <div>
           Vendor:
-          <span class="value">{{ ds.db_settings.vendor }}</span>
+          <span class="value">{{ ds.db.vendor }}</span>
         </div>
         <div>
           Connection String:
-          <span class="value">{{ ds.db_settings.conn }}</span>
+          <span class="value">{{ ds.db.conn }}</span>
         </div>
       </div>
     </div>
@@ -215,7 +215,7 @@
     </div>
     <div ng-show="action[1] == 'json'">
       <a href="{{handler.downloadUrl()}}">Download</a>
-      <textarea name="data" ui-codemirror="{ mode: {name: 'javascript', json: true, readOnly: true} }" ng-model="handler.data"></textarea>
+      <textarea name="data" ui-codemirror="{ mode: {name: 'javascript', json: true, readOnly: true} }" ng-model="handler.data_json"></textarea>
     </div>    
   </div>
 

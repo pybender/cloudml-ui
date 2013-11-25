@@ -225,24 +225,38 @@ class ImportHandler(BaseDocument):
 
     structure = {
         'name': basestring,
-        'target_schema': basestring,
-        'datasource': list,
-        "import_params": list,
-        'queries': list,
-
         'error': basestring,
-
+        "import_params": list,
         'created_on': datetime,
         'created_by': dict,
         'updated_on': datetime,
         'updated_by': dict,
+
+        # FIXME: Investigate, why when spec struct of dict,
+        # data always returns using find or find_one mthd.
+        'data': {
+            'target_schema': basestring,
+            'datasource': list,
+            'queries': list
+        },
+        #'data': dict,
     }
 
     use_dot_notation = True
     required_fields = ['name', 'created_on', ]
     default_values = {'created_on': datetime.utcnow,
                       'updated_on': datetime.utcnow,
-                      'datasource': []}
+                      'data.datasource': [],
+                      'data.queries': [],
+                      'data.target_schema': ''}
+
+    def set_target_schema(self, val):
+        self.data['target_schema'] = val
+
+    def get_target_schema(self):
+        return self.data['target_schema']
+
+    target_schema = property(get_target_schema, set_target_schema)
 
     def save(self, *args, **kwargs):
         self.error = ''
@@ -255,11 +269,8 @@ class ImportHandler(BaseDocument):
 
     def from_import_handler_json(self, data):
         self.target_schema = data['target_schema']
-        for ds in data["datasource"]:
-            self.datasource.append({"name": ds["name"],
-                                    "type": ds["type"],
-                                    "db_settings": ds["db"]})
-        self.queries = data['queries']
+        self.data['queries'] = data['queries']
+        self.data['datasource'] = data['datasource']
         self.save()
 
     def validate(self, *args, **kwargs):
@@ -274,22 +285,22 @@ class ImportHandler(BaseDocument):
                     assert key in item, '%s is required' % key
 
         super(ImportHandler, self).validate(*args, **kwargs)
-        for query in self['queries']:
+        for query in self.data['queries']:
             validate_structure(query, self.QUERY_STRUCT)
 
     SYSTEM_FIELDS = ('_id', 'created_on', 'created_by',
         'updated_on', 'updated_by', 'import_params', 'error')
 
-    @property
-    def data(self):
-        from copy import deepcopy
-        data = deepcopy(dict(self))
-        for field in self.SYSTEM_FIELDS:
-            data.pop(field, None)
+    # @property
+    # def data(self):
+    #     from copy import deepcopy
+    #     data = deepcopy(dict(self))
+    #     for field in self.SYSTEM_FIELDS:
+    #         data.pop(field, None)
 
-        for ds in data['datasource']:
-            ds['db'] = ds.pop('db_settings', None)
-        return data
+    #     for ds in data['datasource']:
+    #         ds['db'] = ds.pop('db_settings', None)
+    #     return data
 
     # TODO: Denormalize to field!
     def get_fields(self):
@@ -411,13 +422,13 @@ class ImportHandler(BaseDocument):
         Returns iterator.
         """
         from core.importhandler import importhandler
-        datasource = next((d for d in self.datasource
+        datasource = next((d for d in self.data['datasource']
                            if d['name'] == datasource_name))
 
         iter_func = importhandler.ImportHandler.DB_ITERS.get(
-            datasource['db_settings']['vendor'])
+            datasource['db']['vendor'])
 
-        for row in iter_func([sql], datasource['db_settings']['conn']):
+        for row in iter_func([sql], datasource['db']['conn']):
             yield dict(row)
 
     def __repr__(self):

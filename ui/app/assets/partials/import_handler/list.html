@@ -15,8 +15,6 @@
 <thead>
   <tr>
     <th>Name</th>
-    <th>Target Schema</th>
-    <th>Data Source</th>
     <th>Import Parameters</th>
     <th>Created</th>
     <th>Actions</th>
@@ -25,10 +23,6 @@
 <tbody>
   <tr ng-repeat="handler in objects">
     <td><a href="#{{ handler.objectUrl() }}">{{ handler.name }}</a></td>
-    <td ng-bind="handler.target_schema" />
-    <td>
-      <span ng-repeat="ds in handler.datasource" ng-bind="ds.name" />
-    </td>
     <td>
       <span ng-repeat="param in handler.import_params">{{ param }} </span>
     </td>

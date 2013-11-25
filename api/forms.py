@@ -414,7 +414,7 @@ class BaseInnerDocumentForm(BaseFormEx):
 class HandlerDataSourceForm(BaseInnerDocumentForm):
     name = CharField()
     type_field = ChoiceField(choices=app.db.DataSource.TYPES_LIST, name='type')
-    db_settings = JsonField()
+    db = JsonField()
 
 
 class QueryForm(BaseInnerDocumentForm):

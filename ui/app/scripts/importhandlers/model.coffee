@@ -193,8 +193,8 @@ angular.module('app.importhandlers.model', ['app.config'])
       BASE_API_URL: "#{settings.apiUrl}importhandlers/"
       BASE_UI_URL: '/importhandlers/'
       API_FIELDNAME: 'import_handler'
-      @MAIN_FIELDS: 'name,_id,target_schema,import_params,
-created_on,created_by,datasource,error'
+      @MAIN_FIELDS: 'name,_id,import_params,
+created_on,created_by,error'
       DEFAULT_FIELDS_TO_SAVE: ['name', 'data']
 
       @PROCESS_STRATEGIES = ['identity', 'string', 'float',
@@ -208,6 +208,7 @@ created_on,created_by,datasource,error'
       import_params: null
       datasource: []
       queries: []
+      data_json: ""
 
       getUrl: =>
         return "#{@BASE_API_URL}#{@_id || ''}/"
@@ -228,20 +229,21 @@ created_on,created_by,datasource,error'
       loadFromJSON: (origData) =>
         super origData
 
-        if origData?
-          @data = angular.toJson(origData.data, pretty=true)
+        if origData? && origData.data?
+          @data_json = angular.toJson(origData.data, pretty=true)
+
           i = 0
-          if origData.datasource?
+          if origData.data.datasource?
             @datasource = []
-            for dsData in origData.datasource
+            for dsData in origData.data.datasource
               @datasource.push new DataSource(
                 _.extend dsData, {'handler': @, 'num': i})
               i += 1
 
           i = 0
-          if origData.queries?
+          if origData.data.queries?
             @queries = []
-            for queryData in origData.queries
+            for queryData in origData.data.queries
               @queries.push new Query(
                 _.extend queryData, {'handler': @, 'num': i})
               i += 1
@@ -313,7 +315,7 @@ created_on,created_by,datasource,error'
             data = {}
             for key in opts.only
               val = eval('this.' + key)
-              if key == 'db_settings'
+              if key == 'db'
                 data[prefix + key] = JSON.stringify(val)
               else
                 data[prefix + key] = val

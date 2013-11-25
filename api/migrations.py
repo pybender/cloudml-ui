@@ -1,4 +1,5 @@
 import sys
+import json
 import inspect
 
 from mongokit import DocumentMigration
@@ -276,41 +277,37 @@ class ImportHandlerMigration(DbMigration):  # pragma: no cover
         self.target = {'updated_by': {'$exists': False}}
         self.update = {'$set': {'updated_by': {}}}
 
-    def allmigration03__add_data_fields(self):
-        self.target = {'target_schema': {'$exists': False}}
-        self.update = {'$set': {'target_schema': {},
-                                'queries': [],
-                                'datasource': []}}
-
-    def allmigration04__migrate_data(self):
-        self.target = {'data': {'$exists': True}}
-        REPLACES = {
-            'process-as': 'process_as',
-            'target-features': 'target_features',
-            'to-csv': 'to_csv',
-            'value-path': 'value_path',
-            'target-schema': 'target_schema',
-            'key-path': 'key_path'
-        }
-        import json
-        def replace(data, name):
-            data_str = json.dumps(data[name])
-
-            for key, val in REPLACES.iteritems():
-                data_str = data_str.replace(key, val)
-            return json.loads(data_str)
-        for doc in self.collection.find(self.target):
-            self.update = {'$set':{
-                'target_schema': replace(doc['data'], 'target-schema'),
-                'queries': replace(doc['data'], 'queries'),
-                'datasource': replace(doc['data'], 'datasource'),
-            },
-            '$unset': {'data': 1, 'type': 1}}
-            self.collection.update(self.target, self.update, multi=True, safe=True)
-
-    def allmigration04__add_error(self):
+    def allmigration03__add_error(self):
         self.target = {'error': {'$exists': False}}
         self.update = {'$set': {'error': ''}}
+
+    def allmigration04__new_importhandlers(self):
+        self.target = {'type': {'$exists': True}}
+
+        for doc in self.collection.find(self.target):
+            self.update = {'$set':{
+                'data.target_schema': doc['data']['target-schema'],
+                'data.queries': replace(doc['data'], 'queries'),
+                'data.datasource': replace(doc['data'], 'datasource'),
+            },
+            '$unset': {'type': 1, 'data.target-schema': 1}}
+            self.collection.update(self.target, self.update, multi=True, safe=True)
+
+REPLACES = {
+    'process-as': 'process_as',
+    'target-features': 'target_features',
+    'to-csv': 'to_csv',
+    'value-path': 'value_path',
+    'target-schema': 'target_schema',
+    'key-path': 'key_path'
+}
+
+def replace(data, name, replace_dict=REPLACES):
+    data_str = json.dumps(data[name])
+
+    for key, val in replace_dict.iteritems():
+        data_str = data_str.replace(key, val)
+    return json.loads(data_str)
 
 
 class TestExampleMigration(DbMigration):  # pragma: no cover
