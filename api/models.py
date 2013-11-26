@@ -794,6 +794,8 @@ class Test(BaseDocument):
     EXAMPLES_TO_AMAZON_S3 = 'Amazon S3'
     EXAMPLES_DONT_SAVE = 'Do not save'
     EXAMPLES_MONGODB = 'Mongo DB'
+    EXAMPLES_PLACEMENT_WITH_FIELDS = (
+        EXAMPLES_TO_AMAZON_S3, EXAMPLES_MONGODB)
     EXAMPLES_STORAGE_CHOICES = (EXAMPLES_TO_AMAZON_S3,
                                 EXAMPLES_DONT_SAVE,
                                 EXAMPLES_MONGODB)
@@ -814,6 +816,7 @@ class Test(BaseDocument):
         'examples_placement': basestring,
         'examples_fields': list,
         'examples_size': float,
+        'vect_data': None,
 
         'parameters': dict,
         'classes_set': list,
@@ -829,6 +832,7 @@ class Test(BaseDocument):
         'current_task_id': basestring,
         'confusion_matrix_calculations': list,
     }
+    gridfs = {'files': ['vect_data']}
     required_fields = ['name', 'created_on', 'updated_on',
                        'status']
     default_values = {
@@ -843,6 +847,11 @@ class Test(BaseDocument):
     }
     use_dot_notation = True
     use_autorefs = True
+
+    def get_vect_data(self, num):
+        from pickle import loads
+        data = loads(self.fs.vect_data)
+        return data.getrow(num).todense().tolist()[0]
 
     # TODO: unused code
     @classmethod
@@ -1083,6 +1092,7 @@ class TestExample(BaseDocument):
         'model_name': basestring,
         'test_id': basestring,
         'model_id': basestring,
+        'num': int,
 
         'on_s3': bool,
     }
@@ -1115,7 +1125,7 @@ class TestExample(BaseDocument):
         from bson.objectid import ObjectId
         model = app.db.Model.find_one({'_id': ObjectId(self.model_id)})
         feature_model = model.get_trainer()._feature_model
-        data = get_features_vect_data(self.vect_data,
+        data = get_features_vect_data(self.test.get_vect_data(self.num),
                                       feature_model.features.items(),
                                       feature_model.target_variable)
 

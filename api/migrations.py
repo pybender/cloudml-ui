@@ -183,6 +183,10 @@ class TestMigration(DbMigration):  # pragma: no cover
         self.target = {'examples_size': {'$exists': False}}
         self.update = {'$set': {'examples_size': 0}}
 
+    def allmigration09__add_vect_data(self):
+        self.target = {'vect_data': {'$exists': False}}
+        self.update = {'$set': {'vect_data': None}}
+
     # def allmigration09__fill_examples_size(self):
     #     from api.utils import get_doc_size
     #     for test in app.db.Test.find():
@@ -283,3 +287,7 @@ class TestExampleMigration(DbMigration):  # pragma: no cover
     def allmigration01__add_on_s3(self):
         self.target = {'on_s3': {'$exists': False}}
         self.update = {'$set': {'on_s3': False}}
+
+    def allmigration02__add_num(self):
+        self.target = {'num': {'$exists': False}}
+        self.update = {'$set': {'num': None}}

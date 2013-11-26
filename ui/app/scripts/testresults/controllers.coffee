@@ -82,6 +82,11 @@ created_by'
               val = (field['text'] for field in val)
             data[key] = val
       return data
+
+    $scope.renderExampleFields = () ->
+      dict = $scope.formElements[$scope.SETTINGS]
+      if dict['examples_placement'] == 'Mongo DB'
+        dict['examples_fields'] = $scope.test_handler_fields
 ])
 
 .controller('DeleteTestCtrl', [
