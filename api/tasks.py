@@ -503,7 +503,6 @@ def run_test(dataset_ids, test_id):
         test.save()
 
         logging.info('Storing test examples')
-        example_ids = []
         examples = izip(range(len(raw_data)),
                         raw_data,
                         metrics._labels,
@@ -514,12 +513,15 @@ def run_test(dataset_ids, test_id):
 
         for n, row, label, pred, prob in examples:
             if n % (all_count / 10) == 0:
+                if all_count > 0:
+                        app.sql_db.session.commit()
                 logging.info('Processed %s rows so far' % n)
 
             example, new_row = _add_example_to_db(
                  test, row, label, pred, prob, n)
-            test.examples_size += (get_doc_size(example) / 1024.0 / 1024.0)
-            example_ids.append(str(example._id))
+            # test.examples_size += (get_doc_size(example) / 1024.0 / 1024.0)
+            # example_ids.append(str(example._id))
+        app.sql_db.session.commit()
 
         test.status = Test.STATUS_COMPLETED
         test.save()
@@ -534,7 +536,7 @@ def run_test(dataset_ids, test_id):
     return 'Test completed'
 
 
-def _add_example_to_db(test, data, label, pred, prob):
+def _add_example_to_db(test, data, label, pred, prob, num):
     """
     Adds info about Test Example to PostgreSQL.
     Returns created TestExampleSql object and data.
@@ -544,6 +546,7 @@ def _add_example_to_db(test, data, label, pred, prob):
                  for key, val in data.iteritems()])
     model = test.model
     example = TestExampleSql()
+    example.num = num
     example_id = ndata.get(model.example_id, '-1')
     try:
         example.example_id = str(example_id)
@@ -559,7 +562,6 @@ def _add_example_to_db(test, data, label, pred, prob):
     example.pred_label = str(pred)
     example.label = str(label)
     example.prob = prob.tolist()
-    example.vect_data = []  #vectorized_data.tolist()[0]
 
     # Denormalized fields. TODO: move denormalization to TestExample model
     example.test_name = test.name
@@ -570,108 +572,8 @@ def _add_example_to_db(test, data, label, pred, prob):
     new_row = ndata
     example.data_input = ndata
 
-    example.save()
+    example.save(commit=False)
     return example, new_row
-
-
-def _add_example_to_mongo(test, data, label, pred, prob, num):
-    """
-    Adds info about Test Example to MongoDB.
-    Returns created TestExample document and data.
-    """
-    ndata = dict([(key.replace('.', '->'), val)
-                 for key, val in data.iteritems()])
-    model = test.model
-    example = app.db.TestExample()
-    example.num = num
-    example_id = ndata.get(model.example_id, '-1')
-    try:
-        example['id'] = str(example_id)
-    except UnicodeEncodeError:
-        example['id'] = example_id.encode('utf-8')
-
-    example_name = ndata.get(model.example_label, 'noname')
-    try:
-        example['name'] = str(example_name)
-    except UnicodeEncodeError:
-        example['name'] = example_name.encode('utf-8')
-
-    example.pred_label = str(pred)
-    example.label = str(label)
-    example.prob = prob.tolist()
-    example.test = test
-    # TODO: this field is obsolete
-    example.on_s3 = test.examples_placement == test.EXAMPLES_TO_AMAZON_S3
-
-    # Denormalized fields. TODO: move denormalization to TestExample model
-    example.test_name = test.name
-    example.model_name = model.name
-    example.test_id = str(test._id)
-    example.model_id = str(model._id)
-
-    if test.examples_placement in test.EXAMPLES_PLACEMENT_WITH_FIELDS:
-        # Choose only specified in test fields in test
-        new_row = dict([(field, ndata.get(field, None))
-                       for field in test.examples_fields])
-        example.data_input = new_row
-    else:
-        new_row = ndata
-
-    try:
-        example.validate()
-    except Exception as exc:
-        logging.error('Problem with validating example: %s', exc)
-    example.save(check_keys=False)
-    return example, new_row
-
-
-@celery.task
-def store_examples(test_id, params):
-    """
-    Stores examples full raw data to Amazon S3.
-    """
-    init_logger('runtest_log', obj=test_id)
-    res = []
-
-    test = app.db.Test.find_one({'_id': ObjectId(test_id)})
-    if not test:
-        logging.warning('Test with id {0!s} can\'t be found'.format(
-            test_id
-        ))
-        return res
-
-    logging.info('Storing raw data to s3 %s - %s' %
-                 (params[0][0], params[0][-1]))
-
-    with open(test.temp_data_filename, 'r') as fp:
-        row_nums = params[0]
-        #logging.warning('offset %d' % row_nums[0])
-        for r in range(row_nums[0]):  # First row_num
-            fp.readline()
-
-        for row_num, example_id in izip(*params):
-            row = fp.readline()
-            row = json.loads(row)
-
-            example = app.db.TestExample.find_one(
-                {'_id': ObjectId(example_id)})
-            if not example:
-                logging.warning('Example with id {0!s} can\'t be found'.format(
-                    example_id
-                ))
-                continue
-
-            try:
-                example._save_to_s3(row)
-            except Exception, exc:
-                logging.error('Problem with saving example data to \
-Amazon #%s: %s', row_num, exc)
-                res.append((None, None))
-
-            res.append((row_num, str(example._id)))
-    logging.info('Complete storing raw data to s3 %s - %s' %
-                 (params[0][0], params[0][-1]))
-    return res
 
 
 @celery.task
@@ -713,10 +615,11 @@ def calculate_confusion_matrix(test_id, weight0, weight1):
     matrix = [[0, 0],
               [0, 0]]
 
-    for example in app.db.TestExample.find({'test_id': str(test['_id'])}):
-        true_value_idx = model.labels.index(example['label'])
+    for example in TestExampleSql.query.filter_by(
+            test_id=(str(test._id))).all():
+        true_value_idx = model.labels.index(example.label)
 
-        prob0, prob1 = example['prob'][:2]
+        prob0, prob1 = example.prob[:2]
 
         weighted_sum = weight0 * prob0 + weight1 * prob1
         weighted_prob0 = weight0 * prob0 / weighted_sum

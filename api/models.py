@@ -762,6 +762,7 @@ class Model(BaseDocument):
         params = {'model_id': str(self._id)}
         app.db.Test.collection.remove(params)
         app.db.TestExample.collection.remove(params)
+        # TODO: Remove TestExampleSql
         app.db.WeightsCategory.collection.remove(params)
         app.db.Weight.collection.remove(params)
         self.comparable = False
@@ -882,6 +883,7 @@ class Test(BaseDocument):
         params = dict(test_name=self.name,
                       model_name=self.model_name)
         app.db.TestExample.collection.remove(params)
+        # TODO: Remove TestExampleSql
         self.collection.remove({'_id': self._id})
         LogMessage.delete_related_logs(self)
 
@@ -967,9 +969,9 @@ class TestExampleSql(db.Model):
     name = db.Column(db.String(100))
     label = db.Column(db.String(100))
     pred_label = db.Column(db.String(100))
+    num = db.Column(db.Integer)
 
     prob = db.Column(postgresql.ARRAY(db.Float))
-    vect_data = db.Column(postgresql.ARRAY(db.Float))
 
     data_input = db.Column(JSONType)
     weighted_data_input = db.Column(JSONType)
@@ -1003,7 +1005,7 @@ class TestExampleSql(db.Model):
         from bson.objectid import ObjectId
         model = app.db.Model.find_one({'_id': ObjectId(self.model_id)})
         feature_model = model.get_trainer()._feature_model
-        data = get_features_vect_data(self.vect_data,
+        data = get_features_vect_data(self.test.get_vect_data(self.num),
                                       feature_model.features.items(),
                                       feature_model.target_variable)
 
