@@ -25,12 +25,11 @@ class MongoHandler(logging.Handler):  # pragma: no cover
             self.handleError(record)
 
 
-class LogMessageHandler(logging.Handler):
-    """
-    Logging handler, which outputs to mongodb LogMessage model.
-    """
+class BaseLogMessageHandler(logging.Handler):
+    """ Logging handler, which outputs to db. """
+
     def __init__(self, log_type='noname', params={}):
-        super(LogMessageHandler, self).__init__()
+        super(BaseLogMessageHandler, self).__init__()
         self.params = params
         self.log_type = log_type
 
@@ -39,12 +38,32 @@ class LogMessageHandler(logging.Handler):
         if 'DeprecationWarning' in content:
             return
 
+        self.write_to_db(content, record)
+
+    def write_to_db(self, content, record):
+        raise NotImplemented()
+
+
+class MongoLogMessageHandler(BaseLogMessageHandler):
+    """ Logging handler, which outputs to mongodb LogMessage model. """
+    def write_to_db(self, content, record):
         msg = app.db.LogMessage()
         msg['content'] = content
         msg['type'] = self.log_type
         msg['params'] = self.params
         msg['level'] = record.levelname
         msg.save(validate=True)
+
+
+class LogMessageHandler(BaseLogMessageHandler):
+    def write_to_db(self, content, record):
+        from api.logs.models import LogMessage
+        msg = LogMessage()
+        msg.content = content
+        msg.type = self.log_type
+        msg.params = self.params
+        msg.level = record.levelname
+        msg.save()
 
 
 def init_logger(name, **kwargs):

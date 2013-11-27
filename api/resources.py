@@ -419,3 +419,6 @@ def _filter_model_fields(model, show_fields):
             if field in model:
                 res[field] = getattr(model, field)
     return res
+
+
+from api.logs.views import *

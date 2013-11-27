@@ -801,36 +801,36 @@ class InstanceResource(BaseResource):
 api.add_resource(InstanceResource, '/cloudml/aws_instances/')
 
 
-class LogResource(BaseResource):
-    """
-    Log API methods
-    """
-    FILTER_PARAMS = (('type', str), ('level', str), ('params.obj', str))
-    MESSAGE404 = "Log doesn't exist"
-    OBJECT_NAME = 'log'
-    NEED_PAGING = True
-    DEFAULT_FIELDS = [u'_id']
+# class LogResource(BaseResource):
+#     """
+#     Log API methods
+#     """
+#     FILTER_PARAMS = (('type', str), ('level', str), ('params.obj', str))
+#     MESSAGE404 = "Log doesn't exist"
+#     OBJECT_NAME = 'log'
+#     NEED_PAGING = True
+#     DEFAULT_FIELDS = [u'_id']
 
-    @property
-    def Model(self):
-        return app.db.LogMessage
+#     @property
+#     def Model(self):
+#         return app.db.LogMessage
 
-    def _prepare_filter_params(self, params):
-        params = super(LogResource, self)._prepare_filter_params(params)
+#     def _prepare_filter_params(self, params):
+#         params = super(LogResource, self)._prepare_filter_params(params)
 
-        if 'level' in params:
-            all_levels = ['CRITICAL', 'ERROR', 'WARN', 'WARNING',
-                          'INFO', 'DEBUG', 'NOTSET']
-            if params['level'] in all_levels:
-                idx = all_levels.index(params['level'])
-                levels = [l for i, l in enumerate(all_levels) if i <= idx]
-                params['level'] = {'$in': levels}
-            else:
-                del params['level']
+#         if 'level' in params:
+#             all_levels = ['CRITICAL', 'ERROR', 'WARN', 'WARNING',
+#                           'INFO', 'DEBUG', 'NOTSET']
+#             if params['level'] in all_levels:
+#                 idx = all_levels.index(params['level'])
+#                 levels = [l for i, l in enumerate(all_levels) if i <= idx]
+#                 params['level'] = {'$in': levels}
+#             else:
+#                 del params['level']
 
-        return params
+#         return params
 
-api.add_resource(LogResource, '/cloudml/logs/')
+# api.add_resource(LogResource, '/cloudml/logs/')
 
 
 class TagResource(BaseResource):
