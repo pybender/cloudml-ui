@@ -68,7 +68,6 @@ class LogMessageHandler(BaseLogMessageHandler):
 
 def init_logger(name, **kwargs):
     logger = logging.getLogger()
-    #handler = MongoHandler(name=name, params=kwargs)
     handler = LogMessageHandler(log_type=name, params=kwargs)
     formatter = logging.Formatter(logging.BASIC_FORMAT)
     handler.setFormatter(formatter)

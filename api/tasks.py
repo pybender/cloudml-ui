@@ -16,7 +16,7 @@ from celery.signals import task_prerun, task_postrun
 
 from api import celery, app
 from api.models import Test, Model, TestExampleSql
-from api.logger import init_logger
+from api.logs.logger import init_logger
 from api.utils import get_doc_size
 from api.amazon_utils import AmazonEC2Helper, AmazonS3Helper
 from core.trainer.trainer import Trainer

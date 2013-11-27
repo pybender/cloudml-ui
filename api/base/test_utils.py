@@ -1,4 +1,5 @@
 import unittest
+import urllib
 import logging
 import httplib
 import json
@@ -481,3 +482,40 @@ class BaseTestCaseSql(BaseTestCase):
         #                 '_id': ObjectId(rel['related_id'])})
         #             setattr(obj, rel['fieldname'], related_obj)
         #             obj.save()
+
+
+class TestChecksMixin(object):
+    BASE_URL = ''
+
+    def check_list(self, show='', data={}, query_params={}, count=None):
+        key = "%ss" % self.RESOURCE.OBJECT_NAME
+        resp_data = self._check(show=show, **data)
+        self.assertTrue(key in resp_data, resp_data)
+        obj_resp = resp_data[key]
+
+        if count is None:
+            count = self.Model.query.find(query_params).count()
+
+        self.assertEquals(count, len(obj_resp), obj_resp)
+        # TODO: check that show works
+        return resp_data
+
+    def _get_url(self, **kwargs):
+        id = kwargs.pop('id', '')
+        action = kwargs.pop('action', '')
+        search = '&'.join(['%s=%s' % (key, val)
+                           for key, val in kwargs.iteritems()])
+        params = {'url': self.BASE_URL,
+                  'id': "%s/" % id if id else '',
+                  'action': "action/%s/" % action if action else '',
+                  'search': search}
+        return "%(url)s%(id)s%(action)s?%(search)s" % urllib.urlencode(params)
+
+    def _check(self, **kwargs):
+        load_json = kwargs.pop('load_json', True)
+        url = self._get_url(**kwargs)
+        resp = self.app.get(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.OK)
+        if load_json:
+            return json.loads(resp.data)
+        return resp.data

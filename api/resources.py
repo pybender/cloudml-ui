@@ -374,7 +374,9 @@ class BaseResourceSQL(BaseResource):
         #           if hasattr(self.Model, f)]
 
         # TODO: load only 'fields'
-        cursor = self.Model.query.filter_by(**kwargs)
+        #cursor = self.Model.query.filter_by(**kwargs)
+        cursor = self.__build_query(kwargs)
+        print cursor
 
         if sort_by:
             sort_by = getattr(self.Model, sort_by, None)
@@ -384,6 +386,23 @@ class BaseResourceSQL(BaseResource):
                 cursor = cursor.order_by(sort_by)
 
         return cursor
+
+    def __build_query(self, filter_params):
+        # TODO: What about joins?
+        cursor = self.Model.query
+        for name, val in filter_params.iteritems():
+            cursor = cursor.filter(self.__build_query_item(name, val))
+        return cursor
+
+    def __build_query_item(self, name, val):
+        if '.' in name:
+            keys = name.split('.')
+            field = getattr(self.Model, keys[0])
+            return getattr(field, keys[1])(val)
+        elif '->>' in name:
+            return "%s='%s'" % (name, val)
+        else:
+            return getattr(self.Model, name) == val
 
     def _paginate(self, cursor, page, per_page=20):
         paginator = cursor.paginate(page, per_page)
