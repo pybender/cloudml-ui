@@ -762,6 +762,7 @@ class Model(BaseDocument):
         params = {'model_id': str(self._id)}
         app.db.Test.collection.remove(params)
         app.db.TestExample.collection.remove(params)
+        # TODO: Remove TestExampleSql
         app.db.WeightsCategory.collection.remove(params)
         app.db.Weight.collection.remove(params)
         self.comparable = False
@@ -794,6 +795,8 @@ class Test(BaseDocument):
     EXAMPLES_TO_AMAZON_S3 = 'Amazon S3'
     EXAMPLES_DONT_SAVE = 'Do not save'
     EXAMPLES_MONGODB = 'Mongo DB'
+    EXAMPLES_PLACEMENT_WITH_FIELDS = (
+        EXAMPLES_TO_AMAZON_S3, EXAMPLES_MONGODB)
     EXAMPLES_STORAGE_CHOICES = (EXAMPLES_TO_AMAZON_S3,
                                 EXAMPLES_DONT_SAVE,
                                 EXAMPLES_MONGODB)
@@ -814,6 +817,7 @@ class Test(BaseDocument):
         'examples_placement': basestring,
         'examples_fields': list,
         'examples_size': float,
+        'vect_data': None,
 
         'parameters': dict,
         'classes_set': list,
@@ -829,6 +833,7 @@ class Test(BaseDocument):
         'current_task_id': basestring,
         'confusion_matrix_calculations': list,
     }
+    gridfs = {'files': ['vect_data']}
     required_fields = ['name', 'created_on', 'updated_on',
                        'status']
     default_values = {
@@ -843,6 +848,11 @@ class Test(BaseDocument):
     }
     use_dot_notation = True
     use_autorefs = True
+
+    def get_vect_data(self, num):
+        from pickle import loads
+        data = loads(self.fs.vect_data)
+        return data.getrow(num).todense().tolist()[0]
 
     # TODO: unused code
     @classmethod
@@ -873,6 +883,7 @@ class Test(BaseDocument):
         params = dict(test_name=self.name,
                       model_name=self.model_name)
         app.db.TestExample.collection.remove(params)
+        # TODO: Remove TestExampleSql
         self.collection.remove({'_id': self._id})
         LogMessage.delete_related_logs(self)
 
@@ -958,9 +969,9 @@ class TestExampleSql(db.Model):
     name = db.Column(db.String(100))
     label = db.Column(db.String(100))
     pred_label = db.Column(db.String(100))
+    num = db.Column(db.Integer)
 
     prob = db.Column(postgresql.ARRAY(db.Float))
-    vect_data = db.Column(postgresql.ARRAY(db.Float))
 
     data_input = db.Column(JSONType)
     weighted_data_input = db.Column(JSONType)
@@ -994,7 +1005,7 @@ class TestExampleSql(db.Model):
         from bson.objectid import ObjectId
         model = app.db.Model.find_one({'_id': ObjectId(self.model_id)})
         feature_model = model.get_trainer()._feature_model
-        data = get_features_vect_data(self.vect_data,
+        data = get_features_vect_data(self.test.get_vect_data(self.num),
                                       feature_model.features.items(),
                                       feature_model.target_variable)
 
@@ -1083,6 +1094,7 @@ class TestExample(BaseDocument):
         'model_name': basestring,
         'test_id': basestring,
         'model_id': basestring,
+        'num': int,
 
         'on_s3': bool,
     }
@@ -1115,7 +1127,7 @@ class TestExample(BaseDocument):
         from bson.objectid import ObjectId
         model = app.db.Model.find_one({'_id': ObjectId(self.model_id)})
         feature_model = model.get_trainer()._feature_model
-        data = get_features_vect_data(self.vect_data,
+        data = get_features_vect_data(self.test.get_vect_data(self.num),
                                       feature_model.features.items(),
                                       feature_model.target_variable)
 
