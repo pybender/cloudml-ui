@@ -1,10 +1,10 @@
 from api.logger import LogMessageHandler
-from api.base.test_utils import BaseTestCase, TestChecksMixin
+from api.base.test_utils import BaseDbTestCase, TestChecksMixin
 from views import LogResource
 from models import LogMessage
 
 
-class LogsTests(BaseTestCase, TestChecksMixin):
+class LogsTests(BaseDbTestCase, TestChecksMixin):
     """
     Tests of the Log Messages API.
     """
@@ -34,6 +34,7 @@ class LogsTests(BaseTestCase, TestChecksMixin):
             count=5)
 
     def test_filter_by_level(self):
+        print self.RESOURCE.OBJECT_NAME
         scenario = [
             ('CRITICAL', 1, ('CRITICAL',)),
             ('ERROR', 2, ('ERROR', 'CRITICAL')),

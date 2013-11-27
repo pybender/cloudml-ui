@@ -2,11 +2,11 @@ from sqlalchemy.orm import deferred
 from sqlalchemy import Integer, String, Enum
 from sqlalchemy import func
 
-from api.base.models import BaseModel, db
+from api.base.models import BaseMixin, db
 from api.db import JSONType
 
 
-class LogMessage(BaseModel, db.Model):
+class LogMessage(BaseMixin, db.Model):
     TRAIN_MODEL = 'trainmodel_log'
     IMPORT_DATA = 'importdata_log'
     RUN_TEST = 'runtest_log'

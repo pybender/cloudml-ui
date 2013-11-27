@@ -6,7 +6,7 @@ from api import app
 db = app.sql_db
 
 
-class BaseModel(object):
+class BaseMixin(object):
     @declared_attr
     def __tablename__(cls):
         return cls.__name__.lower()
@@ -16,7 +16,7 @@ class BaseModel(object):
         db.session.commit()
 
 
-class BaseMixin(BaseModel):
+class BaseModel(BaseMixin):
     id = db.Column(db.Integer, primary_key=True)
     created_on = db.Column(db.DateTime, server_default=func.now())
     updated_on = db.Column(db.DateTime, server_default=func.now(),

@@ -111,33 +111,33 @@ class BaseDocument(Document):
         return data
 
 
-@app.conn.register
-class LogMessage(BaseDocument):
-    TRAIN_MODEL = 'trainmodel_log'
-    IMPORT_DATA = 'importdata_log'
-    RUN_TEST = 'runtest_log'
-    CONFUSION_MATRIX_LOG = 'confusion_matrix_log'
-    TYPE_CHOICES = (TRAIN_MODEL, IMPORT_DATA, RUN_TEST,
-                    CONFUSION_MATRIX_LOG)
+# @app.conn.register
+# class LogMessage(BaseDocument):
+#     TRAIN_MODEL = 'trainmodel_log'
+#     IMPORT_DATA = 'importdata_log'
+#     RUN_TEST = 'runtest_log'
+#     CONFUSION_MATRIX_LOG = 'confusion_matrix_log'
+#     TYPE_CHOICES = (TRAIN_MODEL, IMPORT_DATA, RUN_TEST,
+#                     CONFUSION_MATRIX_LOG)
 
-    __collection__ = 'logs'
-    structure = {
-        # error, warning
-        'level': basestring,
-        # operation type: run test, train model, etc
-        'type': basestring,
-        'params': dict,
-        'content': basestring,
-        'created_on': datetime,
-    }
-    default_values = {'created_on': datetime.utcnow}
-    use_dot_notation = True
+#     __collection__ = 'logs'
+#     structure = {
+#         # error, warning
+#         'level': basestring,
+#         # operation type: run test, train model, etc
+#         'type': basestring,
+#         'params': dict,
+#         'content': basestring,
+#         'created_on': datetime,
+#     }
+#     default_values = {'created_on': datetime.utcnow}
+#     use_dot_notation = True
 
-    @classmethod
-    def delete_related_logs(cls, obj, level=None):
-        # TODO: implement level
-        app.db.LogMessage.collection.remove({'params.obj': str(obj._id),
-                                             'type': obj.LOG_TYPE})
+#     @classmethod
+#     def delete_related_logs(cls, obj, level=None):
+#         # TODO: implement level
+#         app.db.LogMessage.collection.remove({'params.obj': str(obj._id),
+#                                              'type': obj.LOG_TYPE})
 
 
 @app.conn.register
@@ -1184,69 +1184,69 @@ class Instance(BaseDocument):
         return '<Instance %r>' % self.name
 
 
-@app.conn.register
-class User(BaseDocument):
-    __collection__ = 'users'
-    structure = {
-        'uid': basestring,
-        'name': basestring,
-        'odesk_url': basestring,
-        'email': basestring,
-        'portrait_32_img': basestring,
-        'created_on': datetime,
-        'updated_on': datetime,
-        'auth_token': basestring,
-    }
-    required_fields = ['uid', 'name', 'created_on', 'updated_on']
-    default_values = {
-        'created_on': datetime.utcnow,
-        'updated_on': datetime.utcnow,
-    }
-    use_dot_notation = True
+# @app.conn.register
+# class User(BaseDocument):
+#     __collection__ = 'users'
+#     structure = {
+#         'uid': basestring,
+#         'name': basestring,
+#         'odesk_url': basestring,
+#         'email': basestring,
+#         'portrait_32_img': basestring,
+#         'created_on': datetime,
+#         'updated_on': datetime,
+#         'auth_token': basestring,
+#     }
+#     required_fields = ['uid', 'name', 'created_on', 'updated_on']
+#     default_values = {
+#         'created_on': datetime.utcnow,
+#         'updated_on': datetime.utcnow,
+#     }
+#     use_dot_notation = True
 
-    def __repr__(self):
-        return '<User %r>' % self.name
+#     def __repr__(self):
+#         return '<User %r>' % self.name
 
-    @classmethod
-    def get_hash(cls, token):
-        import hashlib
-        return hashlib.sha224(token).hexdigest()
+#     @classmethod
+#     def get_hash(cls, token):
+#         import hashlib
+#         return hashlib.sha224(token).hexdigest()
 
-    @classmethod
-    def authenticate(cls, oauth_token, oauth_token_secret, oauth_verifier):
-        logging.debug('User Auth: try to authenticate with token %s', oauth_token)
-        from auth import OdeskAuth
-        auth = OdeskAuth()
-        _oauth_token, _oauth_token_secret = auth.authenticate(
-            oauth_token, oauth_token_secret, oauth_verifier)
-        info = auth.get_my_info(_oauth_token, _oauth_token_secret,
-                                oauth_verifier)
-        logging.info('User Auth: authenticating user %s', info['auth_user']['uid'])
-        user = app.db.User.find_one({'uid': info['auth_user']['uid']})
-        if not user:
-            user = app.db.User()
-            user.uid = info['auth_user']['uid']
-            logging.debug('User Auth: new user %s added', user.uid)
+#     @classmethod
+#     def authenticate(cls, oauth_token, oauth_token_secret, oauth_verifier):
+#         logging.debug('User Auth: try to authenticate with token %s', oauth_token)
+#         from auth import OdeskAuth
+#         auth = OdeskAuth()
+#         _oauth_token, _oauth_token_secret = auth.authenticate(
+#             oauth_token, oauth_token_secret, oauth_verifier)
+#         info = auth.get_my_info(_oauth_token, _oauth_token_secret,
+#                                 oauth_verifier)
+#         logging.info('User Auth: authenticating user %s', info['auth_user']['uid'])
+#         user = app.db.User.find_one({'uid': info['auth_user']['uid']})
+#         if not user:
+#             user = app.db.User()
+#             user.uid = info['auth_user']['uid']
+#             logging.debug('User Auth: new user %s added', user.uid)
 
-        import uuid
-        auth_token = str(uuid.uuid1())
-        user.auth_token = cls.get_hash(auth_token)
+#         import uuid
+#         auth_token = str(uuid.uuid1())
+#         user.auth_token = cls.get_hash(auth_token)
 
-        user.name = '{0} {1}'.format(
-            info['auth_user']['first_name'],
-            info['auth_user']['last_name'])
-        user.odesk_url = info['info']['profile_url']
-        user.portrait_32_img = info['info']['portrait_32_img']
-        user.email = info['auth_user']['mail']
+#         user.name = '{0} {1}'.format(
+#             info['auth_user']['first_name'],
+#             info['auth_user']['last_name'])
+#         user.odesk_url = info['info']['profile_url']
+#         user.portrait_32_img = info['info']['portrait_32_img']
+#         user.email = info['auth_user']['mail']
 
-        user.save()
-        return auth_token, user
+#         user.save()
+#         return auth_token, user
 
-    @classmethod
-    def get_auth_url(cls):
-        from auth import OdeskAuth
-        auth = OdeskAuth()
-        return auth.get_auth_url()
+#     @classmethod
+#     def get_auth_url(cls):
+#         from auth import OdeskAuth
+#         auth = OdeskAuth()
+#         return auth.get_auth_url()
 
 
 # Features specific models
@@ -1532,3 +1532,6 @@ class Feature(BaseDocument):
 
 
 app.db.Feature.collection.ensure_index('feature_set_id')
+
+
+from api.accounts.models import *

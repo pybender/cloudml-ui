@@ -1,5 +1,6 @@
 import urlparse
 import json
+import httplib2
 
 from oauth2 import Consumer, Client, Token
 

@@ -82,7 +82,10 @@ class App(Flask):
     def init_sql_db(self):
         self._sql_db = SQLAlchemy(self)
 
-app = App(__name__)
+def create_app():
+    return App(__name__)
+
+app = create_app()
 
 celery = Celery('cloudml')
 
@@ -143,4 +146,3 @@ logging_config.dictConfig(app.config['LOGGING'])
 
 import views
 import models
-from api.logs.models import *

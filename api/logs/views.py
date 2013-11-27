@@ -11,13 +11,10 @@ class LogResource(BaseResourceSQL):
                      ('level', str),
                      ("params.obj", str))
     MESSAGE404 = "Log Message doesn't exist"
-    OBJECT_NAME = 'log'
     NEED_PAGING = True
     ALLOWED_METHODS = ('get', )
-
-    @property
-    def Model(self):
-        return LogMessage
+    Model = LogMessage
+    OBJECT_NAME = 'log'
 
     def _prepare_filter_params(self, params):
         params = super(LogResource, self)._prepare_filter_params(params)

@@ -1,11 +1,12 @@
 from functools import wraps
+from sqlalchemy.orm import exc as orm_exc
 
 from flask import request
 
-from api import app
 from api.utils import odesk_error_response
+from api.accounts.models import User
 
-
+# TODO: to accounts?
 def authenticate(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -14,12 +15,12 @@ def authenticate(func):
         token = request.headers.get('X-Auth-Token')
 
         if token:
-            user = app.db.User.find_one({
-                'auth_token': app.db.User.get_hash(token)
-            })
-            if user:
+            try:
+                request.user = User.query.filter_by(
+                    auth_token=User.get_hash(token)).one()
                 is_authenticated = True
-                request.user = user
+            except orm_exc.NoResultFound:
+                request.user = None
 
         _public_actions = getattr(func, 'public_actions', False)
         if _public_actions:
