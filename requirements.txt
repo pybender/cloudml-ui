@@ -2,7 +2,7 @@ Flask==0.10.1
 Flask-RESTful==0.1.6
 Flask-Script==0.5.3
 sqlalchemy==0.8.3
-flask-sqlalchemy==1.0
+-e git+https://github.com/mitsuhiko/flask-sqlalchemy#egg=Flask-SQLAlchemy
 Jinja2==2.6
 Werkzeug==0.8.3
 numpy==1.7.1

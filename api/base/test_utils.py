@@ -2,6 +2,7 @@ import urllib
 import httplib
 import json
 from flask.ext.testing import TestCase
+from sqlalchemy import create_engine
 
 from api import app
 
@@ -20,19 +21,13 @@ class BaseDbTestCase(TestCase):
         return self.app.sql_db
 
     def setUp(self):
-        from sqlalchemy import create_engine
         self.engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
         # TODO: do we need this or need to create test db manually?
         try:
             conn = self.engine.connect()
             conn.close()
         except Exception:  # TODO: catch OperationalError
-            pengine = create_engine(app.config['DB_FORMAT_URI'] % "postgres")
-            create_db_conn = pengine.connect()
-            create_db_conn.execute("commit")
-            create_db_conn.execute(
-                "create database %s" % app.config['DB_NAME'])
-            create_db_conn.close()
+            self.exec_db_level_sql("create database %s" % app.config['DB_NAME'])
 
         self.db.metadata.create_all(self.engine)
         self.db.create_all()
@@ -46,11 +41,20 @@ class BaseDbTestCase(TestCase):
         self.db.drop_all()
 
     # Utility methods
+    def exec_db_level_sql(self, sql):
+        pengine = create_engine(app.config['DB_FORMAT_URI'] % "postgres")
+        create_db_conn = pengine.connect()
+        create_db_conn.execute("commit")
+        create_db_conn.execute(sql)
+        create_db_conn.close()
+
     def create_app(self):
         self.app = app
         return app
 
     def load_fixtures(self, *args):
+        # TODO: Check https://github.com/mitsuhiko/flask-sqlalchemy/pull/89
+        # and update version of Flask-Sqlalchemy
         from api import models
         from fixture import SQLAlchemyFixture
         from fixture.style import NamedDataStyle
