@@ -1,11 +1,9 @@
 import json
-from bson import ObjectId
 from mock import patch, Mock
 
 from api import app
 
-from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS
-from views import AuthResource
+from api.base.test_utils import BaseDbTestCase, HTTP_HEADERS
 from models import User
 
 
@@ -158,7 +156,7 @@ class AuthResourceTests(BaseDbTestCase):
                 'oauth_token_secret': '999',
             })
 
-            resp = self.app.post(url, data={})
+            resp = self.client.post(url, data={})
             self.assertEquals(mock_auth.call_count, 1)
             data = json.loads(resp.data)
             self.assertTrue('auth_token' in data)
