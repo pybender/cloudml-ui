@@ -1,4 +1,4 @@
-from api.logger import LogMessageHandler
+from api.logs.logger import LogMessageHandler
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin
 from views import LogResource
 from models import LogMessage
