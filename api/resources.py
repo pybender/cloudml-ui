@@ -365,16 +365,8 @@ class BaseResourceSQL(BaseResource):
 
         kwargs.update(filter_params)
 
-        # if '_id' in fields:
-        #     fields.remove('_id')
-        # if 'id' not in fields:
-        #     fields.append('id')
-        #
-        # fields = [getattr(self.Model, f) for f in fields
-        #           if hasattr(self.Model, f)]
-
         # TODO: load only 'fields'
-        #cursor = self.Model.query.filter_by(**kwargs)
+        # cursor = self.Model.query.filter_by(**kwargs)
         cursor = self.__build_query(kwargs)
         print cursor
 

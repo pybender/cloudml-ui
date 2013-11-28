@@ -74,6 +74,36 @@ class DocumentField(CharField):
                 return value
 
 
+class ModelField(CharField):
+    def __init__(self, **kwargs):
+        self.Model = kwargs.pop('model')
+        self.by_name = kwargs.pop('by_name', False)
+        self.return_model = kwargs.pop('return_model', False)
+        self.filter_params = kwargs.pop('filter_params', {})
+        super(ModelField, self).__init__(**kwargs)
+
+    def clean(self, value):
+        value = super(ModelField, self).clean(value)
+
+        if value:
+            query = self.Model.query
+
+            if self.by_name:
+                query = query.filter_by(name=value)
+            else:
+                query = query.filter_by(id=value)
+
+            obj = query.one()
+            if obj is None:
+                raise ValidationError('Model not found')
+
+            if self.return_model:
+                return obj
+            else:
+                self.model = obj
+                return value
+
+
 class JsonField(CharField):
     def clean(self, value):
         value = super(JsonField, self).clean(value)

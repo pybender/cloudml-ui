@@ -11,9 +11,10 @@ class BaseMixin(object):
     def __tablename__(cls):
         return cls.__name__.lower()
 
-    def save(self):
+    def save(self, commit=True):
         db.session.add(self)
-        db.session.commit()
+        if commit:
+            db.session.commit()
 
 
 class BaseModel(BaseMixin):

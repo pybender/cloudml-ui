@@ -189,11 +189,15 @@ class BaseForm(InternalForm):
             raise ValidationError(self.errors)
 
         for name, val in self.cleaned_data.iteritems():
-            setattr(self.obj, name, val)
+            if hasattr(self.obj, name):
+                try:
+                    setattr(self.obj, name, val)
+                except AttributeError:
+                    pass
 
         self.obj.updated_on = datetime.now()
         if commit:
-            self.obj.save(validate=True)
+            self.obj.save()
 
         return self.obj
 
