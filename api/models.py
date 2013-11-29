@@ -1536,3 +1536,4 @@ app.db.Feature.collection.ensure_index('feature_set_id')
 
 from api.accounts.models import *
 from api.instances.models import *
+from api.logs.models import *

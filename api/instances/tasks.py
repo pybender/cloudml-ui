@@ -6,7 +6,7 @@ from os import system
 from api import celery, app
 from api.logs.logger import init_logger
 from api.amazon_utils import AmazonEC2Helper
-#from api.ml_models.models import Model
+from api.ml_models.models import Model
 
 
 class InstanceRequestingError(Exception):

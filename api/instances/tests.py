@@ -2,9 +2,13 @@ from mock import patch, Mock
 
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin
 from api.ml_models.fixtures import ModelData
+from api.ml_models.models import Model
+from api.accounts.models import User
+
 from views import InstanceResource
 from models import Instance
 from fixtures import InstanceData
+from tasks import *
 
 
 class InstancesTests(BaseDbTestCase, TestChecksMixin):
@@ -14,7 +18,7 @@ class InstancesTests(BaseDbTestCase, TestChecksMixin):
     BASE_URL = '/cloudml/aws_instances/'
     RESOURCE = InstanceResource
     Model = Instance
-    datasets = [InstanceData]
+    datasets = [InstanceData,]
 
     def test_list(self):
         self.check_list(show='name')
@@ -81,14 +85,19 @@ class InstancesTests(BaseDbTestCase, TestChecksMixin):
 class TestInstanceTasks(BaseDbTestCase):
     datasets = [ModelData]
 
+    # TODO: Investigate why we can't drop db in tearDown
+    # mthd, when testing celery tasks
+    def tearDown(self):
+        pass
+
+    def finish(self):
+        BaseDbTestCase.tearDown()
+
     """ Tests spot instances specific tasks """
     @patch('api.amazon_utils.AmazonEC2Helper.request_spot_instance',
            return_value=Mock(id='some_id')
            )
     def test_request_spot_instance(self, mock_request):
-        from api.instances.tasks import request_spot_instance
-        from api.ml_models.models import Model
-
         model = Model.query.all()[0]
         res = request_spot_instance(
             'dataset_id', 'instance_type', model.id)
@@ -97,15 +106,14 @@ class TestInstanceTasks(BaseDbTestCase):
         self.assertEquals(model.status, model.STATUS_REQUESTING_INSTANCE)
         self.assertEquals(res, 'some_id')
         self.assertEquals(model.spot_instance_request_id, res)
+        self.finish()
 
     @patch('api.amazon_utils.AmazonEC2Helper.get_instance',
            return_value=Mock(**{'private_ip_address': '8.8.8.8'}))
     @patch('api.tasks.train_model')
     def test_get_request_instance(self, mock_get_instance, mock_train):
-        from api.tasks import get_request_instance
-
-        model = self.db.Model.find_one()
-        user = self.db.User.find_one()
+        model = Model.query.all()[0]
+        user = User.query.all()[0]
 
         with patch('api.amazon_utils.AmazonEC2Helper.get_request_spot_instance',
                    return_value=Mock(**{
@@ -126,10 +134,8 @@ class TestInstanceTasks(BaseDbTestCase):
 
     @patch('api.amazon_utils.AmazonEC2Helper.get_request_spot_instance')
     def test_get_request_instance_failed(self, mock_request_instance):
-        from api.tasks import get_request_instance, InstanceRequestingError
-
-        model = self.db.Model.find_one()
-        user = self.db.User.find_one()
+        model = Model.query.all()[0]
+        user = User.query.all()[0]
 
         mock_request_instance.return_value = Mock(**{
             'state': 'failed',
@@ -153,10 +159,8 @@ class TestInstanceTasks(BaseDbTestCase):
 
     @patch('api.amazon_utils.AmazonEC2Helper.get_request_spot_instance')
     def test_get_request_instance_canceled(self, mock_request_instance):
-        from api.tasks import get_request_instance
-
-        model = self.db.Model.find_one()
-        user = self.db.User.find_one()
+        model = Model.query.all()[0]
+        user = User.query.all()[0]
 
         mock_request_instance.return_value = Mock(**{
             'state': 'canceled',
@@ -177,10 +181,9 @@ class TestInstanceTasks(BaseDbTestCase):
     @patch('api.amazon_utils.AmazonEC2Helper.get_request_spot_instance')
     def test_get_request_instance_still_open(self, mock_request_instance):
         from celery.exceptions import RetryTaskError
-        from api.tasks import get_request_instance
 
-        model = self.db.Model.find_one()
-        user = self.db.User.find_one()
+        model = Model.query.all()[0]
+        user = User.query.all()[0]
 
         mock_request_instance.return_value = Mock(**{
             'state': 'open',
@@ -200,15 +203,13 @@ class TestInstanceTasks(BaseDbTestCase):
 
     @patch('api.amazon_utils.AmazonEC2Helper.terminate_instance')
     def test_terminate_instance(self, mock_terminate_instance):
-        from api.tasks import terminate_instance
         terminate_instance('some task id', 'some instance id')
         mock_terminate_instance.assert_called_with('some instance id')
 
     @patch('api.amazon_utils.AmazonEC2Helper.cancel_request_spot_instance')
     def test_cancel_request_spot_instance(self,
                                           mock_cancel_request_spot_instance):
-        from api.tasks import cancel_request_spot_instance
-        model = self.db.Model.find_one()
+        model = Model.query.all()[0]
         cancel_request_spot_instance('some req id', model._id)
         mock_cancel_request_spot_instance.assert_called_with('some req id')
         model.reload()
