@@ -53,7 +53,7 @@ class BaseResource(restful.Resource):
                     )]
     method_decorators = [authenticate]
 
-    DEFAULT_FIELDS = ['_id', 'name']
+    DEFAULT_FIELDS = ['id', 'name']
     is_fulltext_search = False
 
     @property

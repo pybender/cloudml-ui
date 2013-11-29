@@ -1066,6 +1066,29 @@ class Model(BaseDocument):
 #                       'updated_by': {}}
 #     use_dot_notation = True
 #
+
+# @app.conn.register
+# class Instance(BaseDocument):
+#     __collection__ = 'instances'
+#     structure = {
+#         'name': basestring,
+#         'description': basestring,
+#         'ip': basestring,
+#         'type': basestring,
+#         'is_default': bool,
+#         'created_on': datetime,
+#         'created_by': dict,
+#         'updated_on': datetime,
+#         'updated_by': dict,
+#     }
+#     required_fields = ['name', 'created_on', 'updated_on', 'ip', ]
+#     default_values = {'created_on': datetime.utcnow,
+#                       'updated_on': datetime.utcnow,
+#                       'is_default': False,
+#                       'created_by': {},
+#                       'updated_by': {}}
+#     use_dot_notation = True
+
 #     def __repr__(self):
 #         return '<Instance %r>' % self.name
 
