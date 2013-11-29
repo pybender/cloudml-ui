@@ -304,8 +304,9 @@ class BaseChooseInstanceAndDataset(BaseForm):
             return ds
 
     def clean_aws_instance(self, value):
+        from api.models import Instance
         if value:
-            inst = app.db.Instance.find_one({'_id': ObjectId(value)})
+            inst = Instance.query.get(value)
             if inst is None:
                 raise ValidationError('Instance not found')
             return inst
@@ -418,85 +419,85 @@ class DataSetEditForm(BaseForm):
     fields = ('name',)
 
 
-class AddTestForm(BaseChooseInstanceAndDataset):
-    HANDLER_TYPE = 'test'
-    fields = ['name', 'model', 
-              'examples_placement',
-              'examples_fields'] + \
-            BaseChooseInstanceAndDataset.fields
-
-    def before_clean(self):
-        self.model = app.db.Model.find_one({'_id': ObjectId(self.model_id)})
-
-    def clean_name(self, value):
-        total = app.db.Test.find({'model_id': self.model_id}).count()
-        return "Test%s" % (total + 1)
-
-    def clean_model(self, value):
-        if self.model is None:
-            raise ValidationError('Model not found')
-
-        if not self.model.example_id:
-            raise ValidationError('Please fill in "Examples id field name"')
-
-        self.cleaned_data['model_name'] = self.model.name
-        self.cleaned_data['model_id'] = self.model_id
-        return self.model
-
-    # def clean_examples_placement(self, value):
-    #     if not value:
-    #         raise ValidationError('Examples placement is required')
-    #
-    #     if value not in app.db.Test.EXAMPLES_STORAGE_CHOICES:
-    #         raise ValidationError('Invalid test examples storage specified')
-    #     return value
-    #
-    # def clean_examples_fields(self, value):
-    #     if not value:
-    #         return []
-    #     return value.split(',')
-
-    def save(self):
-        # placement = self.cleaned_data['examples_placement']
-        # if placement == app.db.Test.EXAMPLES_MONGODB:
-        #     # All fields would be placed to MongoDB
-        #     self.cleaned_data['examples_fields'] = \
-        #         self.model.test_import_handler.get_fields()
-
-        test = BaseForm.save(self, commit=False)
-        test.status = test.STATUS_QUEUED
-        test.examples_placement = app.db.Test.EXAMPLES_MONGODB
-        test.examples_fields = \
-                self.model.test_import_handler.get_fields()
-        test.save(check_keys=False)
-
-        from api.tasks import run_test, import_data
-        instance = self.cleaned_data.get('aws_instance', None)
-        spot_instance_type = self.cleaned_data.get('spot_instance_type', None)
-
-        if self.params_filled:
-            # load and train
-            from api.models import ImportHandler
-            import_handler = ImportHandler(test.model.test_import_handler)
-            params = self.cleaned_data.get('parameters', None)
-            dataset = import_handler.create_dataset(
-                params,
-                data_format=self.cleaned_data.get(
-                    'format', DataSet.FORMAT_JSON)
-            )
-            import_data.apply_async(kwargs={'dataset_id': str(dataset._id),
-                                            'test_id': str(test._id)},
-                                    link=run_test.subtask(args=(str(test._id), ),
-                                    options={'queue': instance['name']}))
-        else:
-            # test using dataset
-            dataset = self.cleaned_data.get('dataset', None)
-            run_test.apply_async(([str(dataset._id),],
-                                  str(test._id),),
-                                  queue=instance['name'])
-            # run_test.run([str(dataset._id),], str(test._id))
-
-        return test
+# class AddTestForm(BaseChooseInstanceAndDataset):
+#     HANDLER_TYPE = 'test'
+#     fields = ['name', 'model',
+#               'examples_placement',
+#               'examples_fields'] + \
+#             BaseChooseInstanceAndDataset.fields
+#
+#     def before_clean(self):
+#         self.model = app.db.Model.find_one({'_id': ObjectId(self.model_id)})
+#
+#     def clean_name(self, value):
+#         total = app.db.Test.find({'model_id': self.model_id}).count()
+#         return "Test%s" % (total + 1)
+#
+#     def clean_model(self, value):
+#         if self.model is None:
+#             raise ValidationError('Model not found')
+#
+#         if not self.model.example_id:
+#             raise ValidationError('Please fill in "Examples id field name"')
+#
+#         self.cleaned_data['model_name'] = self.model.name
+#         self.cleaned_data['model_id'] = self.model_id
+#         return self.model
+#
+#     # def clean_examples_placement(self, value):
+#     #     if not value:
+#     #         raise ValidationError('Examples placement is required')
+#     #
+#     #     if value not in app.db.Test.EXAMPLES_STORAGE_CHOICES:
+#     #         raise ValidationError('Invalid test examples storage specified')
+#     #     return value
+#     #
+#     # def clean_examples_fields(self, value):
+#     #     if not value:
+#     #         return []
+#     #     return value.split(',')
+#
+#     def save(self):
+#         # placement = self.cleaned_data['examples_placement']
+#         # if placement == app.db.Test.EXAMPLES_MONGODB:
+#         #     # All fields would be placed to MongoDB
+#         #     self.cleaned_data['examples_fields'] = \
+#         #         self.model.test_import_handler.get_fields()
+#
+#         test = BaseForm.save(self, commit=False)
+#         test.status = test.STATUS_QUEUED
+#         test.examples_placement = app.db.Test.EXAMPLES_MONGODB
+#         test.examples_fields = \
+#                 self.model.test_import_handler.get_fields()
+#         test.save(check_keys=False)
+#
+#         from api.tasks import run_test, import_data
+#         instance = self.cleaned_data.get('aws_instance', None)
+#         spot_instance_type = self.cleaned_data.get('spot_instance_type', None)
+#
+#         if self.params_filled:
+#             # load and train
+#             from api.models import ImportHandler
+#             import_handler = ImportHandler(test.model.test_import_handler)
+#             params = self.cleaned_data.get('parameters', None)
+#             dataset = import_handler.create_dataset(
+#                 params,
+#                 data_format=self.cleaned_data.get(
+#                     'format', DataSet.FORMAT_JSON)
+#             )
+#             import_data.apply_async(kwargs={'dataset_id': str(dataset._id),
+#                                             'test_id': str(test._id)},
+#                                     link=run_test.subtask(args=(str(test._id), ),
+#                                     options={'queue': instance['name']}))
+#         else:
+#             # test using dataset
+#             dataset = self.cleaned_data.get('dataset', None)
+#             run_test.apply_async(([str(dataset._id),],
+#                                   str(test._id),),
+#                                   queue=instance['name'])
+#             # run_test.run([str(dataset._id),], str(test._id))
+#
+#         return test
 
 
 class InstanceAddForm(BaseForm):

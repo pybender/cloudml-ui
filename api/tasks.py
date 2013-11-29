@@ -1,21 +1,19 @@
 import os
-import math
 import json
 import logging
 import csv
 import uuid
-from itertools import izip, tee
+from itertools import izip
 from bson.objectid import ObjectId
 from os.path import exists
 from os import makedirs, system
 from datetime import timedelta, datetime
 from dateutil import parser, tz
 from boto.exception import EC2ResponseError
-from celery.canvas import group
 from celery.signals import task_prerun, task_postrun
 
 from api import celery, app
-from api.models import Test, Model, TestExampleSql
+from api.models import Test, Model, TestExample, User
 from api.logs.logger import init_logger
 from api.utils import get_doc_size
 from api.amazon_utils import AmazonEC2Helper, AmazonS3Helper
@@ -283,7 +281,7 @@ def train_model(dataset_ids, model_id, user_id):
     """
     init_logger('trainmodel_log', obj=model_id)
 
-    user = app.db.User.find_one({'_id': ObjectId(user_id)})
+    user = User.query.get(user_id)
     model = app.db.Model.find_one({'_id': ObjectId(model_id)})
     datasets = app.db.DataSet.find({
         '_id': {'$in': [ObjectId(ds_id) for ds_id in dataset_ids]}
@@ -296,9 +294,9 @@ def train_model(dataset_ids, model_id, user_id):
         model.status = model.STATUS_TRAINING
         model.error = ""
         model.trained_by = {
-            '_id': user._id,
+            '_id': user.id,
             'uid': user.uid,
-            'name': user.name
+            # 'name': user.name # TODO
         }
         model.save(validate=True)
         feature_model = FeatureModel(model.get_features_json(),
@@ -439,7 +437,7 @@ def run_test(dataset_ids, test_id):
     """
     init_logger('runtest_log', obj=test_id)
 
-    test = app.db.Test.find_one({'_id': ObjectId(test_id)})
+    test = Test.query.get(test_id)
     datasets = app.db.DataSet.find({
         '_id': {'$in': [ObjectId(ds_id) for ds_id in dataset_ids]}
     })
@@ -491,14 +489,14 @@ def run_test(dataset_ids, test_id):
             model.save()
 
         all_count = metrics._preds.size
-        test.dataset = app.db.DataSet.get_from_id(ObjectId(dataset_ids[0]))
+        test.dataset_id = str(dataset_ids[0])
         test.examples_count = all_count
-        test.memory_usage['testing'] = max(mem_usage)
-        if test.examples_placement != test.EXAMPLES_DONT_SAVE:
-            vect_data = metrics._true_data
-            from bson import Binary
-            import pickle
-            test.fs.vect_data = Binary(pickle.dumps(vect_data))
+        test.memory_usage = max(mem_usage)
+
+        vect_data = metrics._true_data
+        from bson import Binary
+        import pickle
+        test.vect_data = Binary(pickle.dumps(vect_data))
 
         test.save()
 
@@ -545,7 +543,7 @@ def _add_example_to_db(test, data, label, pred, prob, num):
     ndata = dict([(key.replace('.', '->'), val)
                  for key, val in data.iteritems()])
     model = test.model
-    example = TestExampleSql()
+    example = TestExample()
     example.num = num
     example_id = ndata.get(model.example_id, '-1')
     try:
@@ -566,8 +564,9 @@ def _add_example_to_db(test, data, label, pred, prob, num):
     # Denormalized fields. TODO: move denormalization to TestExample model
     example.test_name = test.name
     example.model_name = model.name
-    example.test_id = str(test._id)
+
     example.model_id = str(model._id)
+    example.test_id = test.id
 
     new_row = ndata
     example.data_input = ndata
@@ -589,14 +588,14 @@ def calculate_confusion_matrix(test_id, weight0, weight1):
     if weight0 < 0 or weight1 < 0:
         raise ValueError('Negative weights are not allowed')
 
-    test = app.db.Test.find_one({'_id': ObjectId(test_id)})
+    test = Test.query.get(test_id)
     if test is None:
         raise ValueError('Test with id {0!s} not found!'.format(test_id))
 
     model = app.db.Model.find_one({'_id': ObjectId(test['model_id'])})
     if model is None:
         raise ValueError('Model with id {0!s} not found!'.format(
-            test['model_id']))
+            test.model_id))
 
     logging.info('Calculating confusion matrix for test id {!s}'.format(
         test_id))
@@ -615,8 +614,8 @@ def calculate_confusion_matrix(test_id, weight0, weight1):
     matrix = [[0, 0],
               [0, 0]]
 
-    for example in TestExampleSql.query.filter_by(
-            test_id=(str(test._id))).all():
+    for example in TestExample.query.filter_by(
+            test_id=(str(test.id))).all():
         true_value_idx = model.labels.index(example.label)
 
         prob0, prob1 = example.prob[:2]
@@ -653,7 +652,7 @@ def get_csv_results(model_id, test_id, fields):
             writer = csv.writer(fp, delimiter=',',
                                 quoting=csv.QUOTE_ALL)
             writer.writerow(fields)
-            for example in TestExampleSql.get_data(test_id, fields):
+            for example in TestExample.get_data(test_id, fields):
                 rows = []
                 for field in fields:
                     if field == '_id':
@@ -667,10 +666,7 @@ def get_csv_results(model_id, test_id, fields):
 
     init_logger('runtest_log', obj=test_id)
 
-    test = app.db.Test.find_one({
-        'model_id': model_id,
-        '_id': ObjectId(test_id)
-    })
+    test = Test.query.filter_by(model_id=model_id, id=test_id).first()
     if not test:
         logging.error('Test not found')
         return None
@@ -746,11 +742,12 @@ def task_prerun_handler(sender=None, task_id=None, task=None, args=None,
         elif task.name == 'api.tasks.fill_model_parameter_weights':
             obj_id = args[0] if len(args) else kwargs['model_id']
 
-    if cls and obj_id:
-        obj = cls.get_from_id(ObjectId(obj_id))
-        if obj:
-            obj.current_task_id = task_id
-            obj.save()
+    # TODO
+    # if cls and obj_id:
+    #     obj = cls.get_from_id(ObjectId(obj_id))
+    #     if obj:
+    #         obj.current_task_id = task_id
+    #         obj.save()
 
 
 @task_postrun.connect
@@ -766,8 +763,9 @@ def task_postrun_handler(sender=None, task_id=None, task=None, args=None,
                        'api.tasks.fill_model_parameter_weights'):
         cls = app.db.Model
 
-    if cls:
-        cls.collection.update(
-            {'current_task_id': task_id}, {'$set': {'current_task_id': ''}},
-            multi=True
-        )
+    # TODO
+    # if cls:
+    #     cls.collection.update(
+    #         {'current_task_id': task_id}, {'$set': {'current_task_id': ''}},
+    #         multi=True
+    #     )

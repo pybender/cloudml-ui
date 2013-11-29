@@ -1,7 +1,10 @@
 import json
+from bson import ObjectId
 
-from sqlalchemy.types import UserDefinedType, UnicodeText, TypeDecorator
+from sqlalchemy.types import UserDefinedType, UnicodeText, TypeDecorator,\
+    String
 from sqlalchemy.dialects.postgresql.base import ischema_names
+from gridfs import GridFS
 
 
 class PostgresJSON(UserDefinedType):
@@ -30,4 +33,25 @@ class JSONType(TypeDecorator):
     def process_result_value(self, value, dialect):
         if value is not None:
             value = json.loads(value)
+        return value
+
+
+class GridfsFile(TypeDecorator):
+    impl = String
+
+    def process_bind_param(self, value, dialect):
+        from api import app
+
+        if value is not None:
+            fs = GridFS(app.db)
+            value = str(fs.put(value))
+        return value
+
+    def process_result_value(self, value, dialect):
+        from api import app
+
+        if value is not None:
+            fs = GridFS(app.db)
+            # Returns GridOut object
+            value = fs.get(ObjectId(value))
         return value

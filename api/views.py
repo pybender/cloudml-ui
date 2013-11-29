@@ -1,8 +1,6 @@
-from datetime import datetime
 import json
 import logging
 import traceback
-from api.models import TestExampleSql
 from flask.ext.restful import reqparse
 from flask import request, Response
 
@@ -15,7 +13,7 @@ from api import api, app
 from api.decorators import public, public_actions
 from api.utils import ERR_INVALID_DATA, odesk_error_response, \
     ERR_NO_SUCH_MODEL, ERR_UNPICKLING_MODEL
-from api.resources import BaseResource, NotFound, ValidationError, BaseResourceSQL
+from api.resources import BaseResource, NotFound, ValidationError
 from api.forms import *
 from core.importhandler.importhandler import ExtractionPlan, \
     RequestImportHandler
@@ -245,7 +243,7 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
                         'callback': 'train',
                         'dataset_ids': dataset_ids,
                         'model_id': str(model._id),
-                        'user_id': str(request.user._id),
+                        'user_id': str(request.user.id),
                     },
                     retry=True,
                     countdown=10,
@@ -258,12 +256,12 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
                 #tasks_list.append(self_terminate.s())
             elif not instance is None:
                 if form.params_filled:
-                    train_model_args = (str(model._id), str(request.user._id))
+                    train_model_args = (str(model._id), request.user.id)
                 else:
                     train_model_args = (dataset_ids, str(model._id),
-                                        str(request.user._id))
+                                        request.user.id)
                 tasks_list.append(train_model.subtask(train_model_args, {},
-                                                      queue=instance['name']))
+                                                      queue=instance.name))
             chain(tasks_list).apply_async()
             return self._render(self._get_save_response_context(model, extra_fields=['status']))
 
@@ -441,247 +439,77 @@ api.add_resource(DataSetResource, '/cloudml/importhandlers/\
 <regex("[\w\.]*"):import_handler_id>/datasets/')
 
 
-class Tests(BaseResource):
-    """
-    Tests API Resource
-    """
-    OBJECT_NAME = 'test'
-    DEFAULT_FIELDS = ('_id', 'name')
-    FILTER_PARAMS = (('status', str), )
-    GET_ACTIONS = ('confusion_matrix', 'exports', 'examples_size')
-
-    post_form = AddTestForm
-
-    @property
-    def Model(self):
-        return app.db.Test
-
-    def _get_list_query(self, params, fields, **kwargs):
-        params = self._prepare_filter_params(params)
-        params['model_id'] = kwargs.get('model_id')
-        return self.Model.find(params, fields)
-
-    def _get_details_query(self, params, fields, **kwargs):
-        model_id = kwargs.get('model_id')
-        test_id = kwargs.get('_id')
-        return self.Model.find_one({'model_id': model_id,
-                                   '_id': ObjectId(test_id)}, fields)
-
-    def _get_examples_size_action(self, **kwargs):
-        fields = ['name', 'model_name', 'model_id', 'examples_size', 'created_on',
-                  'created_by']
-        tests = app.db.Test.find({}, fields).sort([('examples_size', -1)]).limit(10)
-        return self._render({'tests': tests})
-
-    def _get_confusion_matrix_action(self, **kwargs):
-        from api.tasks import calculate_confusion_matrix
-
-        parser = reqparse.RequestParser()
-        parser.add_argument('weight0', type=float)
-        parser.add_argument('weight1', type=float)
-        args = parser.parse_args()
-
-        test = self._get_details_query(None, None, **kwargs)
-        if not test:
-            raise NotFound('Test not found')
-
-        model = app.db.Model.find_one(
-            {'_id': ObjectId(kwargs.get('model_id'))})
-        if not model:
-            raise NotFound('Model not found')
-
-        try:
-            calculate_confusion_matrix.delay(
-                str(test._id), args.get('weight0'), args.get('weight1'))
-        except Exception as e:
-            return self._render({self.OBJECT_NAME: str(test._id),
-                                 'error': e.message})
-
-        return self._render({self.OBJECT_NAME: str(test._id)})
-
-    def _get_exports_action(self, **kwargs):
-        test = self._get_details_query(None, None, **kwargs)
-        if not test:
-            raise NotFound('Test not found')
-
-        exports = [ex for ex in test.exports
-                   if ex['expires'] > datetime.now()]
-
-        return self._render({self.OBJECT_NAME: test._id,
-                             'exports': exports})
-
-
-api.add_resource(Tests, '/cloudml/models/<regex("[\w\.]*"):model_id>/tests/')
-
-
-REDUCE_FUNC = 'function(obj, prev) {\
-                            prev.list.push({"label": obj.pred_label,\
-                            "pred": obj.label, "prob": obj.prob})\
-                      }'
-
-
-class TestExamplesResource(BaseResourceSQL):
-    """
-    """
-    @property
-    def Model(self):
-        return TestExampleSql
-
-    OBJECT_NAME = 'data'
-    NEED_PAGING = True
-    GET_ACTIONS = ('groupped', 'csv', 'datafields')
-    FILTER_PARAMS = [('label', str), ('pred_label', str)]
-
-    def _list(self, **kwargs):
-        test = app.db.Test.find_one({'_id': ObjectId(kwargs.get('test_id'))})
-        if not test.dataset is None:
-            for field in test.dataset.data_fields:
-                field_new = field.replace('.', '->')
-                self.FILTER_PARAMS.append(("data_input->>'%s'" % field_new, str))
-        return super(TestExamplesResource, self)._list(**kwargs)
-
-    def _get_details_query(self, params, fields, **kwargs):
-        load_weights = False
-        if 'weighted_data_input' in fields:
-            fields = None  # We need all fields to recalc weights
-            load_weights = True
-
-        example = super(TestExamplesResource, self)._get_details_query(
-            params, fields, **kwargs)
-
-        if example is None:
-            raise NotFound()
-
-        if load_weights and not example.is_weights_calculated:
-            example.calc_weighted_data()
-            example = super(TestExamplesResource, self)._get_details_query(
-                params, fields, **kwargs)
-
-        # TODO: hack
-        example.__dict__['test'] = example.test
-
-        return example
-
-    def _get_groupped_action(self, **kwargs):
-        """
-        Groups data by `group_by_field` field and calculates mean average
-        precision.
-        Note: `group_by_field` should be specified in request parameters.
-        """
-        from ml_metrics import apk
-        import numpy as np
-        from operator import itemgetter
-        logging.info('Start request for calculating MAP')
-
-        group_by_field, count = parse_map_params()
-        if not group_by_field:
-            return odesk_error_response(400, ERR_INVALID_DATA,
-                                        'field parameter is required')
-
-        res = []
-        avps = []
-
-        groups = TestExampleSql.get_grouped(
-            field=group_by_field,
-            model_id=kwargs.get('model_id'),
-            test_id=kwargs.get('test_id')
-        )
-
-        import sklearn.metrics as sk_metrics
-        import numpy
-        if len(groups) < 1:
-            logging.error('Can not group')
-            return odesk_error_response(400, ERR_INVALID_DATA,
-                                        'Can not group')
-        if not 'prob' in groups[0]['list'][0]:
-            logging.error('Examples do not contain probabilities')
-            return odesk_error_response(400, ERR_INVALID_DATA, 'Examples do \
-not contain probabilities')
-        if not isinstance(groups[0]['list'][0]['prob'], list):
-            logging.error('Examples do not contain probabilities')
-            return odesk_error_response(400, ERR_INVALID_DATA, 'Examples do \
-not contain probabilities')
-
-        if groups[0]['list'][0]['label'] in ("True", "False"):
-            transform = lambda x: int(bool(x))
-        elif groups[0]['list'][0]['label'] in ("0", "1"):
-            transform = lambda x: int(x)
-        else:
-            logging.error('Type of labels do not support')
-            return odesk_error_response(400, ERR_INVALID_DATA,
-                                        'Type of labels do not support')
-        logging.info('Calculating avps for groups')
-        for group in groups:
-            group_list = group['list']
-
-            #print group_list
-            labels = [transform(item['label']) for item in group_list]
-            pred_labels = [transform(item['pred']) for item in group_list]
-            probs = [item['prob'][1] for item in group_list]
-            if len(labels) > 1:
-                labels = numpy.array(labels)
-                probs = numpy.array(probs)
-                try:
-                    precision, recall, thresholds = \
-                        sk_metrics.precision_recall_curve(labels, probs)
-                    avp = sk_metrics.auc(recall[:count], precision[:count])
-                except:
-                    avp = apk(labels, pred_labels, count)
-            else:
-                avp = apk(labels, pred_labels, count)
-            avps.append(avp)
-            res.append({'group_by_field': group[group_by_field],
-                        'count': len(group_list),
-                        'avp': avp})
-
-        res = sorted(res, key=itemgetter("count"), reverse=True)[:100]
-        logging.info('Calculating map')
-        mavp = np.mean(avps)
-
-        context = {self.list_key: {'items': res},
-                   'field_name': group_by_field,
-                   'mavp': mavp}
-        logging.info('End request for calculating MAP')
-        return self._render(context)
-
-    def _get_datafields_action(self, **kwargs):
-        fields = [field.replace('.', '->') for field in
-                  self._get_datafields(**kwargs)]
-        return self._render({'fields': fields})
-
-    def _get_csv_action(self, **kwargs):
-        """
-        Returns list of examples in csv format
-        """
-        logging.info('Download examples in csv')
-
-        from api.tasks import get_csv_results
-
-        parser = reqparse.RequestParser()
-        parser.add_argument('show', type=str)
-        params = parser.parse_args()
-        fields, show_fields = self._get_fields(params)
-        logging.info('Use fields %s' % str(fields))
-
-        test = app.db.Test.find_one({
-            '_id': ObjectId(kwargs.get('test_id')),
-            'model_id': kwargs.get('model_id')
-        })
-        if not test:
-            raise NotFound('Test not found')
-
-        get_csv_results.delay(
-            test.model_id, str(test._id),
-            fields
-        )
-        return self._render({})
-
-    def _get_datafields(self, **kwargs):
-        test = app.db.Test.find_one({'_id': ObjectId(kwargs.get('test_id'))})
-        return test.dataset.data_fields
-
-api.add_resource(TestExamplesResource, '/cloudml/models/\
-<regex("[\w\.]*"):model_id>/tests/<regex("[\w\.]*"):test_id>/examples/')
+# class Tests(BaseResource):
+#     """
+#     Tests API Resource
+#     """
+#     OBJECT_NAME = 'test'
+#     DEFAULT_FIELDS = ('_id', 'name')
+#     FILTER_PARAMS = (('status', str), )
+#     GET_ACTIONS = ('confusion_matrix', 'exports', 'examples_size')
+#
+#     post_form = AddTestForm
+#
+#     @property
+#     def Model(self):
+#         return app.db.Test
+#
+#     def _get_list_query(self, params, fields, **kwargs):
+#         params = self._prepare_filter_params(params)
+#         params['model_id'] = kwargs.get('model_id')
+#         return self.Model.find(params, fields)
+#
+#     def _get_details_query(self, params, fields, **kwargs):
+#         model_id = kwargs.get('model_id')
+#         test_id = kwargs.get('_id')
+#         return self.Model.find_one({'model_id': model_id,
+#                                    '_id': ObjectId(test_id)}, fields)
+#
+#     def _get_examples_size_action(self, **kwargs):
+#         fields = ['name', 'model_name', 'model_id', 'examples_size', 'created_on',
+#                   'created_by']
+#         tests = app.db.Test.find({}, fields).sort([('examples_size', -1)]).limit(10)
+#         return self._render({'tests': tests})
+#
+#     def _get_confusion_matrix_action(self, **kwargs):
+#         from api.tasks import calculate_confusion_matrix
+#
+#         parser = reqparse.RequestParser()
+#         parser.add_argument('weight0', type=float)
+#         parser.add_argument('weight1', type=float)
+#         args = parser.parse_args()
+#
+#         test = self._get_details_query(None, None, **kwargs)
+#         if not test:
+#             raise NotFound('Test not found')
+#
+#         model = app.db.Model.find_one(
+#             {'_id': ObjectId(kwargs.get('model_id'))})
+#         if not model:
+#             raise NotFound('Model not found')
+#
+#         try:
+#             calculate_confusion_matrix.delay(
+#                 str(test._id), args.get('weight0'), args.get('weight1'))
+#         except Exception as e:
+#             return self._render({self.OBJECT_NAME: str(test._id),
+#                                  'error': e.message})
+#
+#         return self._render({self.OBJECT_NAME: str(test._id)})
+#
+#     def _get_exports_action(self, **kwargs):
+#         test = self._get_details_query(None, None, **kwargs)
+#         if not test:
+#             raise NotFound('Test not found')
+#
+#         exports = [ex for ex in test.exports
+#                    if ex['expires'] > datetime.now()]
+#
+#         return self._render({self.OBJECT_NAME: test._id,
+#                              'exports': exports})
+#
+#
+# api.add_resource(Tests, '/cloudml/models/<regex("[\w\.]*"):model_id>/tests/')
 
 
 class CompareReportResource(BaseResource):
@@ -1066,19 +894,7 @@ def populate_parser(model, is_requred=False):
     return parser
 
 
-def parse_map_params():
-    """
-    Parse fieldname to group and count from GET parameters
-    """
-    parser = reqparse.RequestParser()
-    parser.add_argument('count', type=int)
-    parser.add_argument('field', type=str)
-    params = parser.parse_args()
-    group_by_field = params.get('field')
-    count = params.get('count', 100)
-    return group_by_field, count
-
-
 from api.accounts.views import *
 from api.logs.views import *
 from api.instances.views import *
+from api.model_tests.views import *

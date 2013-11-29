@@ -1,4 +1,3 @@
-from collections import defaultdict
 import json
 import StringIO
 import logging
@@ -15,10 +14,6 @@ from flask import request, has_request_context
 
 from api import app, celery
 from api.amazon_utils import AmazonS3Helper
-from api.db import JSONType
-from sqlalchemy import func
-from sqlalchemy.dialects import postgresql
-from sqlalchemy.sql import expression
 
 db = app.sql_db
 
@@ -34,14 +29,15 @@ class BaseDocument(Document):
     NO_PARAMS_KEY = False
 
     def _set_user(self, user):
-        if user:
-            field = 'created_by' if '_id' not in self else 'updated_by'
-            if field in self:
-                self[field] = {
-                    '_id': user._id,
-                    'uid': user.uid,
-                    'name': user.name
-                }
+        pass
+        # if user:
+        #     field = 'created_by' if '_id' not in self else 'updated_by'
+        #     if field in self:
+        #         self[field] = {
+        #             '_id': user.id,
+        #             'uid': user.uid,
+        #             'name': user.name
+        #         }
 
     @property
     def is_new(self):
@@ -192,6 +188,8 @@ app.db.Weight.collection.ensure_index(
 class ImportHandler(BaseDocument):
     TYPE_DB = 'Db'
     TYPE_REQUEST = 'Request'
+
+    TYPES = (TYPE_DB, TYPE_REQUEST)
 
     __collection__ = 'handlers'
 
@@ -774,389 +772,300 @@ app.db.Classifier.collection.ensure_index('name', unique=True)
 #         return json.dumps(data)
 from api.ml_models.models import Model
 
-@app.conn.register
-class Test(BaseDocument):
-    LOG_TYPE = 'runtest_log'
-
-    STATUS_QUEUED = 'Queued'
-    STATUS_IMPORTING = 'Importing'
-    STATUS_IMPORTED = 'Imported'
-    STATUS_IN_PROGRESS = 'In Progress'
-    STATUS_STORING = 'Storing'
-    STATUS_COMPLETED = 'Completed'
-    STATUS_ERROR = 'Error'
-
-    EXPORT_STATUS_IN_PROGRESS = 'In Progress'
-    EXPORT_STATUS_COMPLETED = 'Completed'
-
-    MATRIX_STATUS_IN_PROGRESS = 'In Progress'
-    MATRIX_STATUS_COMPLETED = 'Completed'
-
-    EXAMPLES_TO_AMAZON_S3 = 'Amazon S3'
-    EXAMPLES_DONT_SAVE = 'Do not save'
-    EXAMPLES_MONGODB = 'Mongo DB'
-    EXAMPLES_PLACEMENT_WITH_FIELDS = (
-        EXAMPLES_TO_AMAZON_S3, EXAMPLES_MONGODB)
-    EXAMPLES_STORAGE_CHOICES = (EXAMPLES_TO_AMAZON_S3,
-                                EXAMPLES_DONT_SAVE,
-                                EXAMPLES_MONGODB)
-
-    __collection__ = 'tests'
-    structure = {
-        'name': basestring,
-        'model_name': basestring,
-        'model_id': basestring,
-        'status': basestring,
-        'error': basestring,
-        'created_on': datetime,
-        'created_by': dict,
-        'updated_on': datetime,
-        'data': dict,
-
-        'examples_count': int,
-        'examples_placement': basestring,
-        'examples_fields': list,
-        'examples_size': float,
-        'vect_data': None,
-
-        'parameters': dict,
-        'classes_set': list,
-        'accuracy': float,
-        'metrics': dict,
-        #'model': Model,
-        # dataset which used for running test
-        'dataset': DataSet,
-        # Raw test data
-        #'examples': [TestExample ],
-        'memory_usage': dict,
-        'exports': list,
-        'current_task_id': basestring,
-        'confusion_matrix_calculations': list,
-    }
-    gridfs = {'files': ['vect_data']}
-    required_fields = ['name', 'created_on', 'updated_on',
-                       'status']
-    default_values = {
-        'created_on': datetime.utcnow,
-        'updated_on': datetime.utcnow,
-        'status': STATUS_QUEUED,
-        'memory_usage': {},
-        'exports': [],
-        'created_by': {},
-        'examples_size': 0.0,
-        'confusion_matrix_calculations': [],
-    }
-    use_dot_notation = True
-    use_autorefs = True
-
-    def get_vect_data(self, num):
-        from pickle import loads
-        data = loads(self.fs.vect_data)
-        return data.getrow(num).todense().tolist()[0]
-
-    # TODO: unused code
-    @classmethod
-    def generate_name(cls, model, base_name='Test'):  # pragma: no cover
-        count = model.tests.count()
-        return "%s-%s" % (base_name, count + 1)
-
-    # TODO: unused code
-    @property
-    def data_count(self):  # pragma: no cover
-        return self.data.count()
-
-    @property
-    def temp_data_filename(self):
-        if not hasattr(self, '_temp_data_filename'):
-            name = 'Test_raw_data-{0!s}.dat'.format(self._id)
-            path = app.config['DATA_FOLDER']
-
-            if not exists(path):
-                makedirs(path)
-            self._temp_data_filename = os.path.join(path, name)
-
-        return self._temp_data_filename
-
-    def delete(self):
-        # Stop running task
-        self.terminate_task()
-        params = dict(test_name=self.name,
-                      model_name=self.model_name)
-        app.db.TestExample.collection.remove(params)
-        # TODO: Remove TestExampleSql
-        self.collection.remove({'_id': self._id})
-        LogMessage.delete_related_logs(self)
-
-    def get_examples_full_data(self, fields=None, data_input_params=None):
-        """
-        Get examples with data_input fields from dataset stored at s3
-        :param fields: list of needed examples fields
-        :return: iterator
-        """
-        example_id_field = self.model.example_id
-        logging.info('Getting examples full data. Id field is %s',
-                     example_id_field)
-
-        if fields:
-            for required_field in ['_id', 'id', example_id_field]:
-                if required_field not in fields:
-                    fields.append(required_field)
-
-        filter_dict = {'model_id': self.model_id, 'test_id': str(self._id)}
-
-        examples_on_s3 = app.db.TestExample.find(
-            dict(filter_dict.items() + {'on_s3': True}.items())
-        ).count()
-        logging.info("%s examples on Amazon S3 found", examples_on_s3)
-
-        if not examples_on_s3:
-            logging.info("Don't download dataset - no examples on S3")
-            if fields:
-                if data_input_params:
-                    filter_dict.update(data_input_params)
-                    fields += data_input_params.keys()
-                else:
-                    fields += ['data_input']
-            for example in app.db.TestExample.find(filter_dict, fields):
-                if example.get('data_input'):
-                    for key, value in example['data_input'].iteritems():
-                        example['data_input.{0}'.format(key)] = value
-                    del example['data_input']
-                yield example
-            return
-
-        examples_data = dict([(epl['id'], epl)
-                              for epl in
-                              app.db.TestExample.find(filter_dict, fields)])
-        logging.debug('Examples count %d' % len(examples_data))
-        with self.dataset.get_data_stream() as dataset_data_stream:
-            logging.info('Getting dataset stream')
-            for (i, row) in enumerate(dataset_data_stream):
-                if i % 100 == 0:
-                    logging.info('Processing %s row' % i)
-
-                data = json.loads(row)
-                example_id = str(data[example_id_field])
-                example = examples_data.get(example_id)
-                if i == 0:
-                    logging.debug('row %s, example %s' % (row, example))
-                if not example:
-                    if i == 0:
-                        logging.warning('Example %s did not found', example_id)
-                    continue
-                for key in data:
-                    new_key = 'data_input.{0}'.format(key.replace('.', '->'))
-                    example[new_key] = data[key]
-                if data_input_params:
-                    skip_it = False
-                    for k, v in data_input_params.items():
-                        if example[k] != v:
-                            skip_it = True
-                            break
-                    if skip_it:
-                        continue
-                yield example
-
-
-class TestExampleSql(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-
-    created_on = db.Column(db.DateTime, server_default=func.now())
-    updated_on = db.Column(db.DateTime, server_default=func.now(),
-                           onupdate=func.current_timestamp())
-
-    example_id = db.Column(db.String(100))
-    name = db.Column(db.String(100))
-    label = db.Column(db.String(100))
-    pred_label = db.Column(db.String(100))
-    num = db.Column(db.Integer)
-
-    prob = db.Column(postgresql.ARRAY(db.Float))
-
-    data_input = db.Column(JSONType)
-    weighted_data_input = db.Column(JSONType)
-
-    test_id = db.Column(db.String(255))
-    model_id = db.Column(db.String(255))
-    test_name = db.Column(db.String(255))
-    model_name = db.Column(db.String(255))
-
-    @property
-    def test(self):
-        test = app.db.Test.get_from_id(ObjectId(self.test_id))
-        if not test:
-            raise Exception('Can\'t find Test by id {!s}'.format(self.test_id))
-        return test
-
-    def save(self, commit=True):
-        db.session.add(self)
-        if commit:
-            db.session.commit()
-
-    @property
-    def is_weights_calculated(self):
-        return self.weighted_data_input and self.weighted_data_input != {}
-
-    def calc_weighted_data(self):
-        if not self.data_input:
-            return None
-
-        from api.helpers.features import get_features_vect_data
-        from bson.objectid import ObjectId
-        model = app.db.Model.find_one({'_id': ObjectId(self.model_id)})
-        feature_model = model.get_trainer()._feature_model
-        data = get_features_vect_data(self.test.get_vect_data(self.num),
-                                      feature_model.features.items(),
-                                      feature_model.target_variable)
-
-        from helpers.weights import get_example_params
-        model_weights = app.db.Weight.find({'model_id': self.model_id})
-        weighted_data = dict(get_example_params(
-            model_weights, self.data_input, data))
-        self.weighted_data_input = weighted_data
-        self.save()
-
-    @classmethod
-    def get_grouped(cls, field, model_id, test_id):
-        cursor = cls.query.filter_by(
-            model_id=model_id, test_id=test_id
-        ).with_entities(
-            cls.pred_label,
-            cls.label,
-            cls.prob,
-            # Selecting field from json object isn't supported by alchemy,
-            # using literal column instead
-            expression.literal_column("data_input->>'{!s}'".format(
-                field)).label('group')
-        )
-
-        groups = defaultdict(list)
-        for row in cursor.all():
-            groups[row[3]].append({
-                'label': row[0],
-                'pred': row[1],
-                'prob': row[2],
-            })
-
-        return [{
-            field: key,
-            'list': value
-        } for key, value in groups.iteritems()]
-
-    @classmethod
-    def get_data(cls, test_id, fields):
-        db_fields = []
-        for field in fields:
-            if field == '_id':
-                field = 'id'
-            if field == 'id':
-                field = 'example_id'
-            db_field = getattr(cls, field, None)
-            if db_field:
-                db_fields.append(db_field)
-            else:
-                # Selecting field from json object isn't supported by alchemy,
-                # using literal column instead
-                db_fields.append(
-                    expression.literal_column("data_input->>'{!s}'".format(
-                        field.replace('data_input.', ''))).label(field)
-                )
-
-        cursor = cls.query.filter_by(test_id=test_id).with_entities(
-            *db_fields
-        )
-
-        for row in cursor.all():
-            yield dict(zip(row.keys(), row))
+# @app.conn.register
+# class Test(BaseDocument):
+#     LOG_TYPE = 'runtest_log'
+#
+#     STATUS_QUEUED = 'Queued'
+#     STATUS_IMPORTING = 'Importing'
+#     STATUS_IMPORTED = 'Imported'
+#     STATUS_IN_PROGRESS = 'In Progress'
+#     STATUS_STORING = 'Storing'
+#     STATUS_COMPLETED = 'Completed'
+#     STATUS_ERROR = 'Error'
+#
+#     EXPORT_STATUS_IN_PROGRESS = 'In Progress'
+#     EXPORT_STATUS_COMPLETED = 'Completed'
+#
+#     MATRIX_STATUS_IN_PROGRESS = 'In Progress'
+#     MATRIX_STATUS_COMPLETED = 'Completed'
+#
+#     EXAMPLES_TO_AMAZON_S3 = 'Amazon S3'
+#     EXAMPLES_DONT_SAVE = 'Do not save'
+#     EXAMPLES_MONGODB = 'Mongo DB'
+#     EXAMPLES_PLACEMENT_WITH_FIELDS = (
+#         EXAMPLES_TO_AMAZON_S3, EXAMPLES_MONGODB)
+#     EXAMPLES_STORAGE_CHOICES = (EXAMPLES_TO_AMAZON_S3,
+#                                 EXAMPLES_DONT_SAVE,
+#                                 EXAMPLES_MONGODB)
+#
+#     __collection__ = 'tests'
+#     structure = {
+#         'name': basestring,
+#         'model_name': basestring,
+#         'model_id': basestring,
+#         'status': basestring,
+#         'error': basestring,
+#         'created_on': datetime,
+#         'created_by': dict,
+#         'updated_on': datetime,
+#         'data': dict,
+#
+#         'examples_count': int,
+#         'examples_placement': basestring,
+#         'examples_fields': list,
+#         'examples_size': float,
+#         'vect_data': None,
+#
+#         'parameters': dict,
+#         'classes_set': list,
+#         'accuracy': float,
+#         'metrics': dict,
+#         'model': Model,
+#         # dataset which used for running test
+#         'dataset': DataSet,
+#         # Raw test data
+#         #'examples': [TestExample ],
+#         'memory_usage': dict,
+#         'exports': list,
+#         'current_task_id': basestring,
+#         'confusion_matrix_calculations': list,
+#     }
+#     gridfs = {'files': ['vect_data']}
+#     required_fields = ['name', 'created_on', 'updated_on',
+#                        'status']
+#     default_values = {
+#         'created_on': datetime.utcnow,
+#         'updated_on': datetime.utcnow,
+#         'status': STATUS_QUEUED,
+#         'memory_usage': {},
+#         'exports': [],
+#         'created_by': {},
+#         'examples_size': 0.0,
+#         'confusion_matrix_calculations': [],
+#     }
+#     use_dot_notation = True
+#     use_autorefs = True
+#
+#     def get_vect_data(self, num):
+#         from pickle import loads
+#         data = loads(self.fs.vect_data)
+#         return data.getrow(num).todense().tolist()[0]
+#
+#     # TODO: unused code
+#     @classmethod
+#     def generate_name(cls, model, base_name='Test'):  # pragma: no cover
+#         count = model.tests.count()
+#         return "%s-%s" % (base_name, count + 1)
+#
+#     # TODO: unused code
+#     @property
+#     def data_count(self):  # pragma: no cover
+#         return self.data.count()
+#
+#     @property
+#     def temp_data_filename(self):
+#         if not hasattr(self, '_temp_data_filename'):
+#             name = 'Test_raw_data-{0!s}.dat'.format(self._id)
+#             path = app.config['DATA_FOLDER']
+#
+#             if not exists(path):
+#                 makedirs(path)
+#             self._temp_data_filename = os.path.join(path, name)
+#
+#         return self._temp_data_filename
+#
+#     def delete(self):
+#         # Stop running task
+#         self.terminate_task()
+#         params = dict(test_name=self.name,
+#                       model_name=self.model_name)
+#         app.db.TestExample.collection.remove(params)
+#         # TODO: Remove TestExampleSql
+#         self.collection.remove({'_id': self._id})
+#         LogMessage.delete_related_logs(self)
+#
+#     def get_examples_full_data(self, fields=None, data_input_params=None):
+#         """
+#         Get examples with data_input fields from dataset stored at s3
+#         :param fields: list of needed examples fields
+#         :return: iterator
+#         """
+#         example_id_field = self.model.example_id
+#         logging.info('Getting examples full data. Id field is %s',
+#                      example_id_field)
+#
+#         if fields:
+#             for required_field in ['_id', 'id', example_id_field]:
+#                 if required_field not in fields:
+#                     fields.append(required_field)
+#
+#         filter_dict = {'model_id': self.model_id, 'test_id': str(self._id)}
+#
+#         examples_on_s3 = app.db.TestExample.find(
+#             dict(filter_dict.items() + {'on_s3': True}.items())
+#         ).count()
+#         logging.info("%s examples on Amazon S3 found", examples_on_s3)
+#
+#         if not examples_on_s3:
+#             logging.info("Don't download dataset - no examples on S3")
+#             if fields:
+#                 if data_input_params:
+#                     filter_dict.update(data_input_params)
+#                     fields += data_input_params.keys()
+#                 else:
+#                     fields += ['data_input']
+#             for example in app.db.TestExample.find(filter_dict, fields):
+#                 if example.get('data_input'):
+#                     for key, value in example['data_input'].iteritems():
+#                         example['data_input.{0}'.format(key)] = value
+#                     del example['data_input']
+#                 yield example
+#             return
+#
+#         examples_data = dict([(epl['id'], epl)
+#                               for epl in
+#                               app.db.TestExample.find(filter_dict, fields)])
+#         logging.debug('Examples count %d' % len(examples_data))
+#         with self.dataset.get_data_stream() as dataset_data_stream:
+#             logging.info('Getting dataset stream')
+#             for (i, row) in enumerate(dataset_data_stream):
+#                 if i % 100 == 0:
+#                     logging.info('Processing %s row' % i)
+#
+#                 data = json.loads(row)
+#                 example_id = str(data[example_id_field])
+#                 example = examples_data.get(example_id)
+#                 if i == 0:
+#                     logging.debug('row %s, example %s' % (row, example))
+#                 if not example:
+#                     if i == 0:
+#                         logging.warning('Example %s did not found', example_id)
+#                     continue
+#                 for key in data:
+#                     new_key = 'data_input.{0}'.format(key.replace('.', '->'))
+#                     example[new_key] = data[key]
+#                 if data_input_params:
+#                     skip_it = False
+#                     for k, v in data_input_params.items():
+#                         if example[k] != v:
+#                             skip_it = True
+#                             break
+#                     if skip_it:
+#                         continue
+#                 yield example
 
 
-@app.conn.register
-class TestExample(BaseDocument):
-    __collection__ = 'example'
-    S3_KEY = 'text_example_'
+# @app.conn.register
+# class TestExample(BaseDocument):
+#     __collection__ = 'example'
+#     S3_KEY = 'text_example_'
+#
+#     structure = {
+#         'created_on': datetime,
+#         'updated_on': datetime,
+#         'data_input': dict,
+#         'weighted_data_input': dict,
+#
+#         'id': basestring,
+#         'name': basestring,
+#
+#         'label': basestring,
+#         'pred_label': basestring,
+#         'prob': list,
+#         'vect_data': list,
+#         'test': Test,
+#
+#         'test_name': basestring,
+#         'model_name': basestring,
+#         'test_id': basestring,
+#         'model_id': basestring,
+#         'num': int,
+#
+#         'on_s3': bool,
+#     }
+#     use_autorefs = True
+#     default_values = {'created_on': datetime.utcnow, 'on_s3': False}
+#     required_fields = ['created_on', ]
+#     use_dot_notation = True
+#
+#     @property
+#     def s3_key(self):
+#         return '{0!s}_{1!s}'.format(self.S3_KEY, self._id)
+#
+#     @property
+#     def is_weights_calculated(self):
+#         return self.weighted_data_input != {}
+#
+#     def calc_weighted_data(self):
+#         data_input = None
+#         if self.on_s3:
+#             data = self._load_from_s3()
+#             if data:
+#                 data_input = json.loads(data)
+#         else:
+#             data_input = self.data_input
+#
+#         if not data_input:
+#             return None
+#
+#         from api.helpers.features import get_features_vect_data
+#         from bson.objectid import ObjectId
+#         model = app.db.Model.find_one({'_id': ObjectId(self.model_id)})
+#         feature_model = model.get_trainer()._feature_model
+#         data = get_features_vect_data(self.test.get_vect_data(self.num),
+#                                       feature_model.features.items(),
+#                                       feature_model.target_variable)
+#
+#         from helpers.weights import get_example_params
+#         model_weights = app.db.Weight.find({'model_id': self.model_id})
+#         weighted_data = dict(get_example_params(
+#             model_weights, data_input, data))
+#         self.weighted_data_input = weighted_data
+#         self.save(check_keys=False)
+#
+#     def _save_to_s3(self, data):
+#         meta = {
+#             'example_id': self.id,
+#             'test_id': self.test_id,
+#             'model_id': self.model_id,
+#         }
+#         helper = AmazonS3Helper()
+#         helper.save_key_string(self.s3_key, json.dumps(data), meta)
+#         helper.close()
+#
+#     def _load_from_s3(self):
+#         helper = AmazonS3Helper()
+#         return helper.load_key(self.s3_key)
+#
+#     def delete(self):
+#         helper = AmazonS3Helper()
+#         helper.delete_key(self.s3_key)
+#         super(TestExample, self).delete()
 
-    structure = {
-        'created_on': datetime,
-        'updated_on': datetime,
-        'data_input': dict,
-        'weighted_data_input': dict,
 
-        'id': basestring,
-        'name': basestring,
-
-        'label': basestring,
-        'pred_label': basestring,
-        'prob': list,
-        'vect_data': list,
-        'test': Test,
-
-        'test_name': basestring,
-        'model_name': basestring,
-        'test_id': basestring,
-        'model_id': basestring,
-        'num': int,
-
-        'on_s3': bool,
-    }
-    use_autorefs = True
-    default_values = {'created_on': datetime.utcnow, 'on_s3': False}
-    required_fields = ['created_on', ]
-    use_dot_notation = True
-
-    @property
-    def s3_key(self):
-        return '{0!s}_{1!s}'.format(self.S3_KEY, self._id)
-
-    @property
-    def is_weights_calculated(self):
-        return self.weighted_data_input != {}
-
-    def calc_weighted_data(self):
-        data_input = None
-        if self.on_s3:
-            data = self._load_from_s3()
-            if data:
-                data_input = json.loads(data)
-        else:
-            data_input = self.data_input
-
-        if not data_input:
-            return None
-
-        from api.helpers.features import get_features_vect_data
-        from bson.objectid import ObjectId
-        model = app.db.Model.find_one({'_id': ObjectId(self.model_id)})
-        feature_model = model.get_trainer()._feature_model
-        data = get_features_vect_data(self.test.get_vect_data(self.num),
-                                      feature_model.features.items(),
-                                      feature_model.target_variable)
-
-        from helpers.weights import get_example_params
-        model_weights = app.db.Weight.find({'model_id': self.model_id})
-        weighted_data = dict(get_example_params(
-            model_weights, data_input, data))
-        self.weighted_data_input = weighted_data
-        self.save(check_keys=False)
-
-    def _save_to_s3(self, data):
-        meta = {
-            'example_id': self.id,
-            'test_id': self.test_id,
-            'model_id': self.model_id,
-        }
-        helper = AmazonS3Helper()
-        helper.save_key_string(self.s3_key, json.dumps(data), meta)
-        helper.close()
-
-    def _load_from_s3(self):
-        helper = AmazonS3Helper()
-        return helper.load_key(self.s3_key)
-
-    def delete(self):
-        helper = AmazonS3Helper()
-        helper.delete_key(self.s3_key)
-        super(TestExample, self).delete()
-
+# @app.conn.register
+# class Instance(BaseDocument):
+#     __collection__ = 'instances'
+#     structure = {
+#         'name': basestring,
+#         'description': basestring,
+#         'ip': basestring,
+#         'type': basestring,
+#         'is_default': bool,
+#         'created_on': datetime,
+#         'created_by': dict,
+#         'updated_on': datetime,
+#         'updated_by': dict,
+#     }
+#     required_fields = ['name', 'created_on', 'updated_on', 'ip', ]
+#     default_values = {'created_on': datetime.utcnow,
+#                       'updated_on': datetime.utcnow,
+#                       'is_default': False,
+#                       'created_by': {},
+#                       'updated_by': {}}
+#     use_dot_notation = True
+#
 
 # @app.conn.register
 # class Instance(BaseDocument):
@@ -1537,3 +1446,4 @@ app.db.Feature.collection.ensure_index('feature_set_id')
 from api.accounts.models import *
 from api.instances.models import *
 from api.logs.models import *
+from api.model_tests.models import *
