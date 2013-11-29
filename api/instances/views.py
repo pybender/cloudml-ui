@@ -1,7 +1,7 @@
 from api import api
 from api.resources import BaseResourceSQL
 from models import Instance
-from forms import *
+from forms import InstanceForm
 
 
 class InstanceResource(BaseResourceSQL):
@@ -10,11 +10,9 @@ class InstanceResource(BaseResourceSQL):
     """
     MESSAGE404 = "Instance doesn't exist"
     OBJECT_NAME = 'instance'
-    PUT_ACTIONS = ('make_default', )
     Model = Instance
     OBJECT_NAME = 'instance'
 
-    post_form = InstanceAddForm
-    put_form = InstanceEditForm
+    put_form = post_form = InstanceForm
 
 api.add_resource(InstanceResource, '/cloudml/aws_instances/')

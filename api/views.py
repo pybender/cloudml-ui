@@ -1082,3 +1082,4 @@ def parse_map_params():
 from api.accounts.views import *
 from api.logs.views import *
 from api.instances.views import *
+from api.instances.models import *
