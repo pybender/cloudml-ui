@@ -609,170 +609,170 @@ class Classifier(BaseDocument):
 app.db.Classifier.collection.ensure_index('name', unique=True)
 
 
-@app.conn.register
-class Model(BaseDocument):
-    """
-    Represents Model details and it's Tests.
-    """
-    LOG_TYPE = 'trainmodel_log'
+# @app.conn.register
+# class Model(BaseDocument):
+#     """
+#     Represents Model details and it's Tests.
+#     """
+#     LOG_TYPE = 'trainmodel_log'
 
-    STATUS_NEW = 'New'
-    STATUS_QUEUED = 'Queued'
-    STATUS_IMPORTING = 'Importing'
-    STATUS_IMPORTED = 'Imported'
-    STATUS_REQUESTING_INSTANCE = 'Requesting Instance'
-    STATUS_INSTANCE_STARTED = 'Instance Started'
-    STATUS_TRAINING = 'Training'
-    STATUS_TRAINED = 'Trained'
-    STATUS_ERROR = 'Error'
-    STATUS_CANCELED = 'Canceled'
+#     STATUS_NEW = 'New'
+#     STATUS_QUEUED = 'Queued'
+#     STATUS_IMPORTING = 'Importing'
+#     STATUS_IMPORTED = 'Imported'
+#     STATUS_REQUESTING_INSTANCE = 'Requesting Instance'
+#     STATUS_INSTANCE_STARTED = 'Instance Started'
+#     STATUS_TRAINING = 'Training'
+#     STATUS_TRAINED = 'Trained'
+#     STATUS_ERROR = 'Error'
+#     STATUS_CANCELED = 'Canceled'
 
-    __collection__ = 'models'
-    structure = {
-        'name': basestring,
-        'status': basestring,
-        'created_on': datetime,
-        'created_by': dict,
-        'updated_on': datetime,
-        'updated_by': dict,
-        'trained_by': dict,
-        'error': basestring,
+#     __collection__ = 'models'
+#     structure = {
+#         'name': basestring,
+#         'status': basestring,
+#         'created_on': datetime,
+#         'created_by': dict,
+#         'updated_on': datetime,
+#         'updated_by': dict,
+#         'trained_by': dict,
+#         'error': basestring,
 
-        'classifier': dict,
-        'features': dict,
-        'features_set': FeatureSet,
-        'features_set_id': basestring,
-        'feature_count': int,
-        'target_variable': unicode,
+#         'classifier': dict,
+#         'features': dict,
+#         'features_set': FeatureSet,
+#         'features_set_id': basestring,
+#         'feature_count': int,
+#         'target_variable': unicode,
 
-        # Import data to train and test options
-        'import_params': list,
+#         # Import data to train and test options
+#         'import_params': list,
 
-        'test_import_handler': ImportHandler,
-        'train_import_handler': ImportHandler,
-        # ids of datasets used for model training
-        'dataset_ids': list,
+#         'test_import_handler': ImportHandler,
+#         'train_import_handler': ImportHandler,
+#         # ids of datasets used for model training
+#         'dataset_ids': list,
 
-        'train_importhandler': dict,
-        'importhandler': dict,
+#         'train_importhandler': dict,
+#         'importhandler': dict,
 
-        'trainer': None,
-        'comparable': bool,
-        'weights_synchronized': bool,
+#         'trainer': None,
+#         'comparable': bool,
+#         'weights_synchronized': bool,
 
-        'labels': list,
-        # Fieldname of the example title from raw data
-        'example_label': basestring,
-        'example_id': basestring,
-        'tags': list,
+#         'labels': list,
+#         # Fieldname of the example title from raw data
+#         'example_label': basestring,
+#         'example_id': basestring,
+#         'tags': list,
 
-        'spot_instance_request_id': basestring,
-        'memory_usage': dict,
-        'train_records_count': int,
-        'current_task_id': basestring,
-        'training_time': int
-    }
-    gridfs = {'files': ['trainer']}
-    required_fields = ['name', 'created_on', ]
-    default_values = {'created_on': datetime.utcnow,
-                      'updated_on': datetime.utcnow,
-                      'status': STATUS_NEW,
-                      'comparable': False,
-                      'tags': [],
-                      'weights_synchronized': False,
-                      'spot_instance_request_id': '',
-                      'memory_usage': {},
-                      'created_by': {},
-                      'updated_by': {},
-                      'trained_by': {},
-                      'dataset_ids': [],
-                      }
-    use_dot_notation = True
-    use_autorefs = True
+#         'spot_instance_request_id': basestring,
+#         'memory_usage': dict,
+#         'train_records_count': int,
+#         'current_task_id': basestring,
+#         'training_time': int
+#     }
+#     gridfs = {'files': ['trainer']}
+#     required_fields = ['name', 'created_on', ]
+#     default_values = {'created_on': datetime.utcnow,
+#                       'updated_on': datetime.utcnow,
+#                       'status': STATUS_NEW,
+#                       'comparable': False,
+#                       'tags': [],
+#                       'weights_synchronized': False,
+#                       'spot_instance_request_id': '',
+#                       'memory_usage': {},
+#                       'created_by': {},
+#                       'updated_by': {},
+#                       'trained_by': {},
+#                       'dataset_ids': [],
+#                       }
+#     use_dot_notation = True
+#     use_autorefs = True
 
-    @property
-    def dataset(self):
-        if self.dataset_ids:
-            return app.db.DataSet.find_one({'_id': self.dataset_ids[0]})
-        else:
-            return None
+#     @property
+#     def dataset(self):
+#         if self.dataset_ids:
+#             return app.db.DataSet.find_one({'_id': self.dataset_ids[0]})
+#         else:
+#             return None
 
-    @property
-    def datasets_list(self):
-        return app.db.DataSet.find({'_id': {'$in': self.dataset_ids}})
+#     @property
+#     def datasets_list(self):
+#         return app.db.DataSet.find({'_id': {'$in': self.dataset_ids}})
 
-    def get_trainer(self, loaded=True):
-        trainer = self.trainer or self.fs.trainer
-        if loaded:
-            from core.trainer.store import TrainerStorage
-            return TrainerStorage.loads(trainer)
-        return trainer
+#     def get_trainer(self, loaded=True):
+#         trainer = self.trainer or self.fs.trainer
+#         if loaded:
+#             from core.trainer.store import TrainerStorage
+#             return TrainerStorage.loads(trainer)
+#         return trainer
 
-    # TODO: unused code
-    def get_import_handler(self, parameters=None,
-                           is_test=False):  # pragma: no cover
-        from core.importhandler.importhandler import ExtractionPlan, \
-            ImportHandler
-        handler = json.dumps(self.importhandler if is_test
-                             else self.train_importhandler)
-        plan = ExtractionPlan(handler, is_file=False)
-        handler = ImportHandler(plan, parameters)
-        return handler
+#     # TODO: unused code
+#     def get_import_handler(self, parameters=None,
+#                            is_test=False):  # pragma: no cover
+#         from core.importhandler.importhandler import ExtractionPlan, \
+#             ImportHandler
+#         handler = json.dumps(self.importhandler if is_test
+#                              else self.train_importhandler)
+#         plan = ExtractionPlan(handler, is_file=False)
+#         handler = ImportHandler(plan, parameters)
+#         return handler
 
-    def run_test(self, dataset, callback=None):
-        trainer = self.get_trainer()
-        fp = dataset.get_data_stream()
-        try:
-            metrics = trainer.test(
-                dataset.get_iterator(fp),
-                callback=callback,
-                save_raw=True)
-        finally:
-            fp.close()
-        raw_data = trainer._raw_data
-        trainer.clear_temp_data()
-        return metrics, raw_data
+#     def run_test(self, dataset, callback=None):
+#         trainer = self.get_trainer()
+#         fp = dataset.get_data_stream()
+#         try:
+#             metrics = trainer.test(
+#                 dataset.get_iterator(fp),
+#                 callback=callback,
+#                 save_raw=True)
+#         finally:
+#             fp.close()
+#         raw_data = trainer._raw_data
+#         trainer.clear_temp_data()
+#         return metrics, raw_data
 
-    def set_trainer(self, trainer):
-        from core.trainer.store import TrainerStorage
-        self.fs.trainer = Binary(TrainerStorage(trainer).dumps())
-        self.target_variable = trainer._feature_model.target_variable
-        self.feature_count = len(trainer._feature_model.features.keys())
-        #feature_type = trainer._feature_model.
-        #features[self.target_variable]['type']
-        if self.status == self.STATUS_TRAINED:
-            self.labels = map(str, trainer._classifier.classes_.tolist())
+#     def set_trainer(self, trainer):
+#         from core.trainer.store import TrainerStorage
+#         self.fs.trainer = Binary(TrainerStorage(trainer).dumps())
+#         self.target_variable = trainer._feature_model.target_variable
+#         self.feature_count = len(trainer._feature_model.features.keys())
+#         #feature_type = trainer._feature_model.
+#         #features[self.target_variable]['type']
+#         if self.status == self.STATUS_TRAINED:
+#             self.labels = map(str, trainer._classifier.classes_.tolist())
 
-    def delete(self):
-        # Stop running task
-        self.terminate_task()
-        self.delete_metadata()
-        self.collection.remove({'_id': self._id})
-        app.db.Tag.update_tags_count(self.tags, [])
+#     def delete(self):
+#         # Stop running task
+#         self.terminate_task()
+#         self.delete_metadata()
+#         self.collection.remove({'_id': self._id})
+#         app.db.Tag.update_tags_count(self.tags, [])
 
-    def set_error(self, error, commit=True):
-        self.error = str(error)
-        self.status = self.STATUS_ERROR
-        if commit:
-            self.save()
+#     def set_error(self, error, commit=True):
+#         self.error = str(error)
+#         self.status = self.STATUS_ERROR
+#         if commit:
+#             self.save()
 
-    def delete_metadata(self, delete_log=True):
-        if delete_log:
-            LogMessage.delete_related_logs(self)
-        params = {'model_id': str(self._id)}
-        app.db.Test.collection.remove(params)
-        app.db.TestExample.collection.remove(params)
-        # TODO: Remove TestExampleSql
-        app.db.WeightsCategory.collection.remove(params)
-        app.db.Weight.collection.remove(params)
-        self.comparable = False
-        self.save()
+#     def delete_metadata(self, delete_log=True):
+#         if delete_log:
+#             LogMessage.delete_related_logs(self)
+#         params = {'model_id': str(self._id)}
+#         app.db.Test.collection.remove(params)
+#         app.db.TestExample.collection.remove(params)
+#         # TODO: Remove TestExampleSql
+#         app.db.WeightsCategory.collection.remove(params)
+#         app.db.Weight.collection.remove(params)
+#         self.comparable = False
+#         self.save()
 
-    def get_features_json(self):
-        data = self.features_set.to_dict()
-        data['classifier'] = Classifier(self.classifier).to_dict()
-        return json.dumps(data)
-
+#     def get_features_json(self):
+#         data = self.features_set.to_dict()
+#         data['classifier'] = Classifier(self.classifier).to_dict()
+#         return json.dumps(data)
+from api.ml_models.models import Model
 
 @app.conn.register
 class Test(BaseDocument):
@@ -823,7 +823,7 @@ class Test(BaseDocument):
         'classes_set': list,
         'accuracy': float,
         'metrics': dict,
-        'model': Model,
+        #'model': Model,
         # dataset which used for running test
         'dataset': DataSet,
         # Raw test data
