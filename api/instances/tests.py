@@ -91,7 +91,8 @@ class TestInstanceTasks(BaseDbTestCase):
         pass
 
     def finish(self):
-        BaseDbTestCase.tearDown()
+        self.db.session.remove()
+        self.db.drop_all()
 
     """ Tests spot instances specific tasks """
     @patch('api.amazon_utils.AmazonEC2Helper.request_spot_instance',
@@ -102,7 +103,7 @@ class TestInstanceTasks(BaseDbTestCase):
         res = request_spot_instance(
             'dataset_id', 'instance_type', model.id)
 
-        model.reload()
+        model = Model.query.get(model.id)
         self.assertEquals(model.status, model.STATUS_REQUESTING_INSTANCE)
         self.assertEquals(res, 'some_id')
         self.assertEquals(model.spot_instance_request_id, res)
@@ -124,12 +125,12 @@ class TestInstanceTasks(BaseDbTestCase):
             res = get_request_instance('some_id',
                          callback='train',
                          dataset_ids=['dataset_id'],
-                         model_id=model._id,
-                         user_id=user._id)
+                         model_id=model.id,
+                         user_id=user.id)
             self.assertEquals(res, '8.8.8.8')
             self.assertTrue(mock_train.apply_async)
 
-            model.reload()
+            model = Model.query.get(model.id)
             self.assertEquals(model.status, model.STATUS_INSTANCE_STARTED)
 
     @patch('api.amazon_utils.AmazonEC2Helper.get_request_spot_instance')
@@ -149,11 +150,11 @@ class TestInstanceTasks(BaseDbTestCase):
             'some_id',
             callback='train',
             dataset_ids=['dataset_id'],
-            model_id=model._id,
-            user_id=user._id
+            model_id=model.id,
+            user_id=user.id
         )
 
-        model.reload()
+        model = Model.query.get(model.id)
         self.assertEquals(model.status, model.STATUS_ERROR)
         self.assertEquals(model.error, 'Instance was not launched')
 
@@ -171,11 +172,11 @@ class TestInstanceTasks(BaseDbTestCase):
         res = get_request_instance('some_id',
                          callback='train',
                          dataset_ids=['dataset_id'],
-                         model_id=model._id,
-                         user_id=user._id)
+                         model_id=model.id,
+                         user_id=user.id)
         self.assertIsNone(res)
 
-        model.reload()
+        model = Model.query.get(model.id)
         self.assertEquals(model.status, model.STATUS_CANCELED)
 
     @patch('api.amazon_utils.AmazonEC2Helper.get_request_spot_instance')
@@ -197,8 +198,8 @@ class TestInstanceTasks(BaseDbTestCase):
             'some_id',
             callback='train',
             dataset_ids=['dataset_id'],
-            model_id=model._id,
-            user_id=user._id
+            model_id=model.id,
+            user_id=user.id
         )
 
     @patch('api.amazon_utils.AmazonEC2Helper.terminate_instance')
@@ -210,7 +211,7 @@ class TestInstanceTasks(BaseDbTestCase):
     def test_cancel_request_spot_instance(self,
                                           mock_cancel_request_spot_instance):
         model = Model.query.all()[0]
-        cancel_request_spot_instance('some req id', model._id)
+        cancel_request_spot_instance('some req id', model.id)
         mock_cancel_request_spot_instance.assert_called_with('some req id')
-        model.reload()
+        model = Model.query.get(model.id)
         self.assertEquals(model.status, model.STATUS_CANCELED)

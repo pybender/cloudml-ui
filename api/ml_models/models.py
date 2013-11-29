@@ -77,6 +77,12 @@ class Model(db.Model, BaseModel):
 
     trainer = deferred(db.Column(GridfsFile))
 
+    def set_error(self, error, commit=True):
+        self.error = str(error)
+        self.status = self.STATUS_ERROR
+        if commit:
+            self.save()
+
     def get_trainer(self, loaded=True):
         if loaded:
             from core.trainer.store import TrainerStorage
