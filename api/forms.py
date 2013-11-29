@@ -5,7 +5,7 @@ from bson.objectid import ObjectId
 
 from api import app
 from api.resources import ValidationError, NotFound
-from api.models import Model, Classifier, FeatureSet, ImportHandler, DataSet
+from api.models import Model, PredefinedClassifier, FeatureSet, ImportHandler, DataSet
 from api.base.forms import BaseForm as BaseFormEx
 from api.base.fields import *
 from core.trainer.store import load_trainer
@@ -246,7 +246,7 @@ train_import_handler should be specified for new model')
         features_set = FeatureSet.from_model_features_dict(obj.name, obj.features)
         obj.features_set_id = str(features_set._id)
         obj.features_set = features_set
-        obj.classifier = Classifier.from_model_features_dict(obj.name, obj.features)
+        obj.classifier = PredefinedClassifier.from_model_features_dict(obj.name, obj.features)
 
         obj.validate()
         obj.save()

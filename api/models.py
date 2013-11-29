@@ -136,427 +136,427 @@ class BaseDocument(Document):
 #                                              'type': obj.LOG_TYPE})
 
 
-@app.conn.register
-class WeightsCategory(BaseDocument):
-    """
-    Represents Model Parameter Weights Category.
-
-    NOTE: used for constructing trees of weights.
-    """
-    __collection__ = 'weights_categories'
-    structure = {
-        'name': basestring,
-        'short_name': basestring,
-        'model_id': basestring,
-        'model_name': basestring,
-
-        'parent': basestring,
-    }
-
-
-@app.conn.register
-class Weight(BaseDocument):
-    """
-    Represents Model Parameter Weight
-    """
-    __collection__ = 'weights'
-    structure = {
-        'name': basestring,
-        'short_name': basestring,
-        'model_id': basestring,
-        'model_name': basestring,
-        'value': float,
-        'is_positive': bool,
-        'css_class': basestring,
-        'parent': basestring,
-    }
-    use_dot_notation = True
-
-app.db.Weight.collection.ensure_index(
-    [
-        ('name', 'text'),
-        ('value', 'text')
-    ],
-    weights={
-        'name': 10,
-        'value': 5,
-    }
-)
-
-
-@app.conn.register
-class ImportHandler(BaseDocument):
-    TYPE_DB = 'Db'
-    TYPE_REQUEST = 'Request'
-
-    TYPES = (TYPE_DB, TYPE_REQUEST)
-
-    __collection__ = 'handlers'
-
-    structure = {
-        'name': basestring,
-        'type': basestring,
-        'created_on': datetime,
-        'created_by': dict,
-        'updated_on': datetime,
-        'updated_by': dict,
-        'data': dict,
-        'import_params': list,
-    }
-    required_fields = ['name', 'created_on', 'updated_on', ]
-    default_values = {'created_on': datetime.utcnow,
-                      'updated_on': datetime.utcnow,
-                      'type': TYPE_DB,
-                      'created_by': {},
-                      'updated_by': {},
-                      }
-    use_dot_notation = True
-
-    def get_fields(self):
-        from core.importhandler.importhandler import ExtractionPlan
-        data = json.dumps(self.data)
-        plan = ExtractionPlan(data, is_file=False)
-        test_handler_fields = []
-        for query in plan.queries:
-            items = query['items']
-            for item in items:
-                features = item['target-features']
-                for feature in features:
-                    test_handler_fields.append(
-                        feature['name'].replace('.', '->'))
-        return test_handler_fields
-
-    def create_dataset(self, params, run_import_data=True, data_format='json'):
-        #from api.utils import slugify
-        dataset = app.db.DataSet()
-        str_params = "-".join(["%s=%s" % item
-                              for item in params.iteritems()])
-        dataset.name = "%s: %s" % (self.name, str_params)
-        dataset.import_handler_id = str(self._id)
-        dataset.import_params = params
-        dataset.format = data_format
-        # filename = '%s-%s.json' % (slugify(self.name)
-        # str_params.replace('=', '_'))
-        # dataset.data = filename
-        dataset.save(validate=True)
-        dataset.set_file_path()
-        return dataset
-
-    def delete(self):
-        datasets = app.db.DataSet.find({'import_handler_id': str(self._id)})
-        for ds in datasets:
-            ds.delete()
-
-        expr = {'$or': [{'test_import_handler.$id': self._id},
-                        {'train_import_handler.$id': self._id}]}
-        models = app.db.Model.find(expr)
-
-        def unset(model, handler_type='train'):
-            handler = getattr(model, '%s_import_handler' % handler_type)
-            if handler and handler['_id'] == self._id:
-                setattr(model, '%s_import_handler' % handler_type, None)
-                model.changed = True
-
-        for model in models:
-            model.changed = False
-            unset(model, 'train')
-            unset(model, 'test')
-            if model.changed:
-                model.save()
-
-        super(ImportHandler, self).delete()
-
-    def __repr__(self):
-        return '<Import Handler %r>' % self.name
-
-
-@app.conn.register
-class DataSet(BaseDocument):
-    __collection__ = 'dataset'
-    LOG_TYPE = 'importdata_log'
-
-    STATUS_IMPORTING = 'Importing'
-    STATUS_UPLOADING = 'Uploading'
-    STATUS_IMPORTED = 'Imported'
-    STATUS_ERROR = 'Error'
-
-    FORMAT_JSON = 'json'
-    FORMAT_CSV = 'csv'
-    FORMATS = [FORMAT_JSON, FORMAT_CSV]
-
-    structure = {
-        'name': basestring,
-        'status': basestring,
-        'error': basestring,
-        'created_on': datetime,
-        'created_by': dict,
-        'updated_on': datetime,
-        'updated_by': dict,
-        'data': basestring,
-        'import_params': dict,
-        'import_handler_id': basestring,
-        'on_s3': bool,
-        'compress': bool,
-        'filename': basestring,
-        'filesize': long,
-        'records_count': int,
-        'time': int,
-        'data_fields': list,
-        'current_task_id': basestring,
-        'format': basestring,
-    }
-    required_fields = ['name', 'created_on', 'updated_on', ]
-    default_values = {'created_on': datetime.utcnow,
-                      'updated_on': datetime.utcnow,
-                      'error': '',
-                      'on_s3': False,
-                      'compress': True,
-                      'status': STATUS_IMPORTING,
-                      'data_fields': [],
-                      'created_by': {},
-                      'updated_by': {},
-                      'format': FORMAT_JSON,}
-    use_dot_notation = True
-
-    def __init__(self, *args, **kwargs):
-        super(DataSet, self).__init__(*args, **kwargs)
-
-    def get_s3_download_url(self, expires_in=3600):
-        helper = AmazonS3Helper()
-        return helper.get_download_url(str(self._id), expires_in)
-
-    def set_file_path(self):
-        data = '%s.%s' % (self._id, 'gz' if self.compress else 'json')
-        self.data = data
-        path = app.config['DATA_FOLDER']
-        if not exists(path):
-            makedirs(path)
-        self.filename = join(path, data)
-        self.save()
-
-    @property
-    def data(self):
-        if not self.on_s3:
-            raise Exception('Invalid oper')
-
-        if not hasattr(self, '_data'):
-            self._data = self.load_from_s3()
-        return self._data
-
-    def get_data_stream(self):
-        import gzip
-        #import zlib
-        if not self.on_s3 or exists(self.filename):
-            logging.info('Loading data from local file')
-            open_meth = gzip.open if self.compress else open
-            return open_meth(self.filename, 'r')
-        else:
-            logging.info('Loading data from Amazon S3')
-            stream = StringIO.StringIO(self.data)
-            if self.compress:
-                logging.info('Decompress data')
-                return gzip.GzipFile(fileobj=stream, mode='r')
-                #data = zlib.decompress(data)
-            return stream
-
-    def get_iterator(self, stream):
-        from core.trainer.streamutils import streamingiterload
-        return streamingiterload(stream, source_format=self.format)
-
-    def load_from_s3(self):
-        helper = AmazonS3Helper()
-        return helper.load_key(str(self._id))
-
-    def save_to_s3(self):
-        meta = {'handler': self.import_handler_id,
-                'dataset': self.name,
-                'params': str(self.import_params)}
-        helper = AmazonS3Helper()
-        # helper.save_key(str(self._id), self.filename, meta)
-        helper.save_gz_file(str(self._id), self.filename, meta)
-        helper.close()
-        self.on_s3 = True
-        self.save()
-
-    def set_error(self, error, commit=True):
-        self.error = str(error)
-        self.status = self.STATUS_ERROR
-        if commit:
-            self.save()
-
-    def delete(self):
-        # Stop task
-        self.terminate_task()
-
-        # Remove from tests
-        app.db.Test.collection.update({
-            'dataset.$id': self._id
-        }, {'$set': {'dataset': None}}, multi=True)
-
-        # Remove from models
-        app.db.Model.collection.update({
-            'dataset_ids': self._id
-        }, {'$pull': {'dataset_ids': self._id}}, multi=True)
-
-        super(DataSet, self).delete()
-        LogMessage.delete_related_logs(self)
-
-        # TODO: check import handler type
-        try:
-            os.remove(self.filename)
-        except OSError:
-            pass
-        if self.on_s3:
-            from api.amazon_utils import AmazonS3Helper
-            helper = AmazonS3Helper()
-            try:
-                helper.delete_key(str(self._id))
-            except S3ResponseError as e:
-                logging.exception(str(e))
-
-    def save(self, *args, **kwargs):
-        if self.status != self.STATUS_ERROR:
-            self.error = ''
-        super(DataSet, self).save(*args, **kwargs)
-
-    def __repr__(self):
-        return '<Dataset %r>' % self.name
-
-
-@app.conn.register
-class Tag(BaseDocument):
-    __collection__ = 'tags'
-    structure = {
-        'id': basestring,
-        'text': basestring,
-        # Count of models with this tag
-        'count': int,
-    }
-    default_values = {'count': 1}
-    use_dot_notation = True
-
-    @classmethod
-    def update_tags_count(cls, old_list, new_list):
-        tags_to_update = list(set(old_list) ^ set(new_list))
-        for text in tags_to_update:
-            tag = app.db.Tag.find_one({'text': text})
-            if tag is None:
-                tag = app.db.Tag()
-                tag.text = tag.id = text
-                tag.count = 1
-                tag.save()
-            else:
-                tag.count = app.db.Model.find({
-                    'tags': text
-                }).count()
-                if tag.count == 0:
-                    tag.delete()
-                else:
-                    tag.save()
-
-
-@app.conn.register
-class FeatureSet(BaseDocument):
-    """
-    Represents list of the features with schema name.
-    """
-    __collection__ = 'features_sets'
-
-    FIELDS_TO_SERIALIZE = ('schema_name', )
-
-    structure = {
-        'name': basestring,
-        'schema_name': basestring,
-        'features_count': int,
-        'target_variable': basestring,
-        'created_on': datetime,
-        'created_by': dict,
-        'updated_on': datetime,
-        'updated_by': dict,
-        # features dictionary (without classifier) to use in cloudml core
-        'features_dict': dict,
-    }
-    required_fields = ['created_on', 'updated_on']
-    default_values = {
-        'created_on': datetime.utcnow,
-        'updated_on': datetime.utcnow,
-        'features_count': 0,
-        'features_dict': {'schema-name': '',
-                          'features': [],
-                          "feature-types": []}
-    }
-    use_dot_notation = True
-    use_autorefs = True
-
-    def save(self, *args, **kwargs):
-        self.features_dict['schema-name'] = self.schema_name
-        super(FeatureSet, self).save(*args, **kwargs)
-
-    def edit_feature(self, name, feature, is_new=False):
-        if is_new:
-            self.features_count += 1
-        else:
-            self.delete_feature(name, is_edit=not is_new)
-
-        if feature.is_target_variable:
-            self.target_variable = feature.name
-
-        self.features_dict['features'].append(feature.to_dict())
-        if feature.type not in app.db.NamedFeatureType.TYPES_LIST:
-            # this is named type - add it's description
-            named_type = app.db.NamedFeatureType.find_one(
-                {'name': feature.type})
-            for ndict in self.features_dict['feature-types']:
-                if ndict['name'] == named_type.name:
-                    self.features_dict['feature-types'].remove(ndict)
-            self.features_dict['feature-types'].append(named_type.to_dict())
-        self.save()
-
-    def delete_feature(self, feature_name, is_edit=False):
-        # TODO: how about deleting target variable?
-        for fdict in self.features_dict['features']:
-            if fdict['name'] == feature_name:
-                self.features_dict['features'].remove(fdict)
-                if not is_edit:
-                    self.features_count -= 1
-                self.save()
-                return
-        # TODO: do we need to raise NotFound exception here?
-
-    def to_dict(self):
-        """
-        Returns dict of all features and named types, that used in them.
-        """
-        return self.features_dict
-
-    @classmethod
-    def from_model_features_dict(cls, name, features_dict):
-        if not features_dict:
-            features_set = app.db.FeatureSet()
-            features_set.name = name
-            features_set.save()
-            return features_set
-
-        features_set, is_new = app.db.FeatureSet.from_dict(
-            features_dict,
-            extra_fields={'name': name},
-            add_new=True)
-
-        type_list = features_dict.get('feature-types', None)
-        if type_list:
-            for feature_type in type_list:
-                app.db.NamedFeatureType.from_dict(feature_type)
-
-        _id = features_set._id
-        for feature_dict in features_dict['features']:
-            feature, is_new = app.db.Feature.from_dict(
-                feature_dict, add_new=True,
-                extra_fields={'features_set_id': str(_id)})
-        return app.db.FeatureSet.get_from_id(ObjectId(_id))
-
-    def __repr__(self):
-        return '<Feature Set %r:%d>' % (self.name or self.schema_name,
-                                        self.features_count)
+# @app.conn.register
+# class WeightsCategory(BaseDocument):
+#     """
+#     Represents Model Parameter Weights Category.
+#
+#     NOTE: used for constructing trees of weights.
+#     """
+#     __collection__ = 'weights_categories'
+#     structure = {
+#         'name': basestring,
+#         'short_name': basestring,
+#         'model_id': basestring,
+#         'model_name': basestring,
+#
+#         'parent': basestring,
+#     }
+#
+#
+# @app.conn.register
+# class Weight(BaseDocument):
+#     """
+#     Represents Model Parameter Weight
+#     """
+#     __collection__ = 'weights'
+#     structure = {
+#         'name': basestring,
+#         'short_name': basestring,
+#         'model_id': basestring,
+#         'model_name': basestring,
+#         'value': float,
+#         'is_positive': bool,
+#         'css_class': basestring,
+#         'parent': basestring,
+#     }
+#     use_dot_notation = True
+#
+# app.db.Weight.collection.ensure_index(
+#     [
+#         ('name', 'text'),
+#         ('value', 'text')
+#     ],
+#     weights={
+#         'name': 10,
+#         'value': 5,
+#     }
+# )
+#
+#
+# @app.conn.register
+# class ImportHandler(BaseDocument):
+#     TYPE_DB = 'Db'
+#     TYPE_REQUEST = 'Request'
+#
+#     TYPES = (TYPE_DB, TYPE_REQUEST)
+#
+#     __collection__ = 'handlers'
+#
+#     structure = {
+#         'name': basestring,
+#         'type': basestring,
+#         'created_on': datetime,
+#         'created_by': dict,
+#         'updated_on': datetime,
+#         'updated_by': dict,
+#         'data': dict,
+#         'import_params': list,
+#     }
+#     required_fields = ['name', 'created_on', 'updated_on', ]
+#     default_values = {'created_on': datetime.utcnow,
+#                       'updated_on': datetime.utcnow,
+#                       'type': TYPE_DB,
+#                       'created_by': {},
+#                       'updated_by': {},
+#                       }
+#     use_dot_notation = True
+#
+#     def get_fields(self):
+#         from core.importhandler.importhandler import ExtractionPlan
+#         data = json.dumps(self.data)
+#         plan = ExtractionPlan(data, is_file=False)
+#         test_handler_fields = []
+#         for query in plan.queries:
+#             items = query['items']
+#             for item in items:
+#                 features = item['target-features']
+#                 for feature in features:
+#                     test_handler_fields.append(
+#                         feature['name'].replace('.', '->'))
+#         return test_handler_fields
+#
+#     def create_dataset(self, params, run_import_data=True, data_format='json'):
+#         #from api.utils import slugify
+#         dataset = app.db.DataSet()
+#         str_params = "-".join(["%s=%s" % item
+#                               for item in params.iteritems()])
+#         dataset.name = "%s: %s" % (self.name, str_params)
+#         dataset.import_handler_id = str(self._id)
+#         dataset.import_params = params
+#         dataset.format = data_format
+#         # filename = '%s-%s.json' % (slugify(self.name)
+#         # str_params.replace('=', '_'))
+#         # dataset.data = filename
+#         dataset.save(validate=True)
+#         dataset.set_file_path()
+#         return dataset
+#
+#     def delete(self):
+#         datasets = app.db.DataSet.find({'import_handler_id': str(self._id)})
+#         for ds in datasets:
+#             ds.delete()
+#
+#         expr = {'$or': [{'test_import_handler.$id': self._id},
+#                         {'train_import_handler.$id': self._id}]}
+#         models = app.db.Model.find(expr)
+#
+#         def unset(model, handler_type='train'):
+#             handler = getattr(model, '%s_import_handler' % handler_type)
+#             if handler and handler['_id'] == self._id:
+#                 setattr(model, '%s_import_handler' % handler_type, None)
+#                 model.changed = True
+#
+#         for model in models:
+#             model.changed = False
+#             unset(model, 'train')
+#             unset(model, 'test')
+#             if model.changed:
+#                 model.save()
+#
+#         super(ImportHandler, self).delete()
+#
+#     def __repr__(self):
+#         return '<Import Handler %r>' % self.name
+#
+#
+# @app.conn.register
+# class DataSet(BaseDocument):
+#     __collection__ = 'dataset'
+#     LOG_TYPE = 'importdata_log'
+#
+#     STATUS_IMPORTING = 'Importing'
+#     STATUS_UPLOADING = 'Uploading'
+#     STATUS_IMPORTED = 'Imported'
+#     STATUS_ERROR = 'Error'
+#
+#     FORMAT_JSON = 'json'
+#     FORMAT_CSV = 'csv'
+#     FORMATS = [FORMAT_JSON, FORMAT_CSV]
+#
+#     structure = {
+#         'name': basestring,
+#         'status': basestring,
+#         'error': basestring,
+#         'created_on': datetime,
+#         'created_by': dict,
+#         'updated_on': datetime,
+#         'updated_by': dict,
+#         'data': basestring,
+#         'import_params': dict,
+#         'import_handler_id': basestring,
+#         'on_s3': bool,
+#         'compress': bool,
+#         'filename': basestring,
+#         'filesize': long,
+#         'records_count': int,
+#         'time': int,
+#         'data_fields': list,
+#         'current_task_id': basestring,
+#         'format': basestring,
+#     }
+#     required_fields = ['name', 'created_on', 'updated_on', ]
+#     default_values = {'created_on': datetime.utcnow,
+#                       'updated_on': datetime.utcnow,
+#                       'error': '',
+#                       'on_s3': False,
+#                       'compress': True,
+#                       'status': STATUS_IMPORTING,
+#                       'data_fields': [],
+#                       'created_by': {},
+#                       'updated_by': {},
+#                       'format': FORMAT_JSON,}
+#     use_dot_notation = True
+#
+#     def __init__(self, *args, **kwargs):
+#         super(DataSet, self).__init__(*args, **kwargs)
+#
+#     def get_s3_download_url(self, expires_in=3600):
+#         helper = AmazonS3Helper()
+#         return helper.get_download_url(str(self._id), expires_in)
+#
+#     def set_file_path(self):
+#         data = '%s.%s' % (self._id, 'gz' if self.compress else 'json')
+#         self.data = data
+#         path = app.config['DATA_FOLDER']
+#         if not exists(path):
+#             makedirs(path)
+#         self.filename = join(path, data)
+#         self.save()
+#
+#     @property
+#     def data(self):
+#         if not self.on_s3:
+#             raise Exception('Invalid oper')
+#
+#         if not hasattr(self, '_data'):
+#             self._data = self.load_from_s3()
+#         return self._data
+#
+#     def get_data_stream(self):
+#         import gzip
+#         #import zlib
+#         if not self.on_s3 or exists(self.filename):
+#             logging.info('Loading data from local file')
+#             open_meth = gzip.open if self.compress else open
+#             return open_meth(self.filename, 'r')
+#         else:
+#             logging.info('Loading data from Amazon S3')
+#             stream = StringIO.StringIO(self.data)
+#             if self.compress:
+#                 logging.info('Decompress data')
+#                 return gzip.GzipFile(fileobj=stream, mode='r')
+#                 #data = zlib.decompress(data)
+#             return stream
+#
+#     def get_iterator(self, stream):
+#         from core.trainer.streamutils import streamingiterload
+#         return streamingiterload(stream, source_format=self.format)
+#
+#     def load_from_s3(self):
+#         helper = AmazonS3Helper()
+#         return helper.load_key(str(self._id))
+#
+#     def save_to_s3(self):
+#         meta = {'handler': self.import_handler_id,
+#                 'dataset': self.name,
+#                 'params': str(self.import_params)}
+#         helper = AmazonS3Helper()
+#         # helper.save_key(str(self._id), self.filename, meta)
+#         helper.save_gz_file(str(self._id), self.filename, meta)
+#         helper.close()
+#         self.on_s3 = True
+#         self.save()
+#
+#     def set_error(self, error, commit=True):
+#         self.error = str(error)
+#         self.status = self.STATUS_ERROR
+#         if commit:
+#             self.save()
+#
+#     def delete(self):
+#         # Stop task
+#         self.terminate_task()
+#
+#         # Remove from tests
+#         app.db.Test.collection.update({
+#             'dataset.$id': self._id
+#         }, {'$set': {'dataset': None}}, multi=True)
+#
+#         # Remove from models
+#         app.db.Model.collection.update({
+#             'dataset_ids': self._id
+#         }, {'$pull': {'dataset_ids': self._id}}, multi=True)
+#
+#         super(DataSet, self).delete()
+#         LogMessage.delete_related_logs(self)
+#
+#         # TODO: check import handler type
+#         try:
+#             os.remove(self.filename)
+#         except OSError:
+#             pass
+#         if self.on_s3:
+#             from api.amazon_utils import AmazonS3Helper
+#             helper = AmazonS3Helper()
+#             try:
+#                 helper.delete_key(str(self._id))
+#             except S3ResponseError as e:
+#                 logging.exception(str(e))
+#
+#     def save(self, *args, **kwargs):
+#         if self.status != self.STATUS_ERROR:
+#             self.error = ''
+#         super(DataSet, self).save(*args, **kwargs)
+#
+#     def __repr__(self):
+#         return '<Dataset %r>' % self.name
+#
+#
+# @app.conn.register
+# class Tag(BaseDocument):
+#     __collection__ = 'tags'
+#     structure = {
+#         'id': basestring,
+#         'text': basestring,
+#         # Count of models with this tag
+#         'count': int,
+#     }
+#     default_values = {'count': 1}
+#     use_dot_notation = True
+#
+#     @classmethod
+#     def update_tags_count(cls, old_list, new_list):
+#         tags_to_update = list(set(old_list) ^ set(new_list))
+#         for text in tags_to_update:
+#             tag = app.db.Tag.find_one({'text': text})
+#             if tag is None:
+#                 tag = app.db.Tag()
+#                 tag.text = tag.id = text
+#                 tag.count = 1
+#                 tag.save()
+#             else:
+#                 tag.count = app.db.Model.find({
+#                     'tags': text
+#                 }).count()
+#                 if tag.count == 0:
+#                     tag.delete()
+#                 else:
+#                     tag.save()
+#
+#
+# @app.conn.register
+# class FeatureSet(BaseDocument):
+#     """
+#     Represents list of the features with schema name.
+#     """
+#     __collection__ = 'features_sets'
+#
+#     FIELDS_TO_SERIALIZE = ('schema_name', )
+#
+#     structure = {
+#         'name': basestring,
+#         'schema_name': basestring,
+#         'features_count': int,
+#         'target_variable': basestring,
+#         'created_on': datetime,
+#         'created_by': dict,
+#         'updated_on': datetime,
+#         'updated_by': dict,
+#         # features dictionary (without classifier) to use in cloudml core
+#         'features_dict': dict,
+#     }
+#     required_fields = ['created_on', 'updated_on']
+#     default_values = {
+#         'created_on': datetime.utcnow,
+#         'updated_on': datetime.utcnow,
+#         'features_count': 0,
+#         'features_dict': {'schema-name': '',
+#                           'features': [],
+#                           "feature-types": []}
+#     }
+#     use_dot_notation = True
+#     use_autorefs = True
+#
+#     def save(self, *args, **kwargs):
+#         self.features_dict['schema-name'] = self.schema_name
+#         super(FeatureSet, self).save(*args, **kwargs)
+#
+#     def edit_feature(self, name, feature, is_new=False):
+#         if is_new:
+#             self.features_count += 1
+#         else:
+#             self.delete_feature(name, is_edit=not is_new)
+#
+#         if feature.is_target_variable:
+#             self.target_variable = feature.name
+#
+#         self.features_dict['features'].append(feature.to_dict())
+#         if feature.type not in app.db.NamedFeatureType.TYPES_LIST:
+#             # this is named type - add it's description
+#             named_type = app.db.NamedFeatureType.find_one(
+#                 {'name': feature.type})
+#             for ndict in self.features_dict['feature-types']:
+#                 if ndict['name'] == named_type.name:
+#                     self.features_dict['feature-types'].remove(ndict)
+#             self.features_dict['feature-types'].append(named_type.to_dict())
+#         self.save()
+#
+#     def delete_feature(self, feature_name, is_edit=False):
+#         # TODO: how about deleting target variable?
+#         for fdict in self.features_dict['features']:
+#             if fdict['name'] == feature_name:
+#                 self.features_dict['features'].remove(fdict)
+#                 if not is_edit:
+#                     self.features_count -= 1
+#                 self.save()
+#                 return
+#         # TODO: do we need to raise NotFound exception here?
+#
+#     def to_dict(self):
+#         """
+#         Returns dict of all features and named types, that used in them.
+#         """
+#         return self.features_dict
+#
+#     @classmethod
+#     def from_model_features_dict(cls, name, features_dict):
+#         if not features_dict:
+#             features_set = app.db.FeatureSet()
+#             features_set.name = name
+#             features_set.save()
+#             return features_set
+#
+#         features_set, is_new = app.db.FeatureSet.from_dict(
+#             features_dict,
+#             extra_fields={'name': name},
+#             add_new=True)
+#
+#         type_list = features_dict.get('feature-types', None)
+#         if type_list:
+#             for feature_type in type_list:
+#                 app.db.NamedFeatureType.from_dict(feature_type)
+#
+#         _id = features_set._id
+#         for feature_dict in features_dict['features']:
+#             feature, is_new = app.db.Feature.from_dict(
+#                 feature_dict, add_new=True,
+#                 extra_fields={'features_set_id': str(_id)})
+#         return app.db.FeatureSet.get_from_id(ObjectId(_id))
+#
+#     def __repr__(self):
+#         return '<Feature Set %r:%d>' % (self.name or self.schema_name,
+#                                         self.features_count)
 
 
 from core.trainer.classifier_settings import CLASSIFIERS
@@ -607,169 +607,169 @@ class Classifier(BaseDocument):
 app.db.Classifier.collection.ensure_index('name', unique=True)
 
 
-@app.conn.register
-class Model(BaseDocument):
-    """
-    Represents Model details and it's Tests.
-    """
-    LOG_TYPE = 'trainmodel_log'
-
-    STATUS_NEW = 'New'
-    STATUS_QUEUED = 'Queued'
-    STATUS_IMPORTING = 'Importing'
-    STATUS_IMPORTED = 'Imported'
-    STATUS_REQUESTING_INSTANCE = 'Requesting Instance'
-    STATUS_INSTANCE_STARTED = 'Instance Started'
-    STATUS_TRAINING = 'Training'
-    STATUS_TRAINED = 'Trained'
-    STATUS_ERROR = 'Error'
-    STATUS_CANCELED = 'Canceled'
-
-    __collection__ = 'models'
-    structure = {
-        'name': basestring,
-        'status': basestring,
-        'created_on': datetime,
-        'created_by': dict,
-        'updated_on': datetime,
-        'updated_by': dict,
-        'trained_by': dict,
-        'error': basestring,
-
-        'classifier': dict,
-        'features': dict,
-        'features_set': FeatureSet,
-        'features_set_id': basestring,
-        'feature_count': int,
-        'target_variable': unicode,
-
-        # Import data to train and test options
-        'import_params': list,
-
-        'test_import_handler': ImportHandler,
-        'train_import_handler': ImportHandler,
-        # ids of datasets used for model training
-        'dataset_ids': list,
-
-        'train_importhandler': dict,
-        'importhandler': dict,
-
-        'trainer': None,
-        'comparable': bool,
-        'weights_synchronized': bool,
-
-        'labels': list,
-        # Fieldname of the example title from raw data
-        'example_label': basestring,
-        'example_id': basestring,
-        'tags': list,
-
-        'spot_instance_request_id': basestring,
-        'memory_usage': dict,
-        'train_records_count': int,
-        'current_task_id': basestring,
-        'training_time': int
-    }
-    gridfs = {'files': ['trainer']}
-    required_fields = ['name', 'created_on', ]
-    default_values = {'created_on': datetime.utcnow,
-                      'updated_on': datetime.utcnow,
-                      'status': STATUS_NEW,
-                      'comparable': False,
-                      'tags': [],
-                      'weights_synchronized': False,
-                      'spot_instance_request_id': '',
-                      'memory_usage': {},
-                      'created_by': {},
-                      'updated_by': {},
-                      'trained_by': {},
-                      'dataset_ids': [],
-                      }
-    use_dot_notation = True
-    use_autorefs = True
-
-    @property
-    def dataset(self):
-        if self.dataset_ids:
-            return app.db.DataSet.find_one({'_id': self.dataset_ids[0]})
-        else:
-            return None
-
-    @property
-    def datasets_list(self):
-        return app.db.DataSet.find({'_id': {'$in': self.dataset_ids}})
-
-    def get_trainer(self, loaded=True):
-        trainer = self.trainer or self.fs.trainer
-        if loaded:
-            from core.trainer.store import TrainerStorage
-            return TrainerStorage.loads(trainer)
-        return trainer
-
-    # TODO: unused code
-    def get_import_handler(self, parameters=None,
-                           is_test=False):  # pragma: no cover
-        from core.importhandler.importhandler import ExtractionPlan, \
-            ImportHandler
-        handler = json.dumps(self.importhandler if is_test
-                             else self.train_importhandler)
-        plan = ExtractionPlan(handler, is_file=False)
-        handler = ImportHandler(plan, parameters)
-        return handler
-
-    def run_test(self, dataset, callback=None):
-        trainer = self.get_trainer()
-        fp = dataset.get_data_stream()
-        try:
-            metrics = trainer.test(
-                dataset.get_iterator(fp),
-                callback=callback,
-                save_raw=True)
-        finally:
-            fp.close()
-        raw_data = trainer._raw_data
-        trainer.clear_temp_data()
-        return metrics, raw_data
-
-    def set_trainer(self, trainer):
-        from core.trainer.store import TrainerStorage
-        self.fs.trainer = Binary(TrainerStorage(trainer).dumps())
-        self.target_variable = trainer._feature_model.target_variable
-        self.feature_count = len(trainer._feature_model.features.keys())
-        #feature_type = trainer._feature_model.
-        #features[self.target_variable]['type']
-        if self.status == self.STATUS_TRAINED:
-            self.labels = map(str, trainer._classifier.classes_.tolist())
-
-    def delete(self):
-        # Stop running task
-        self.terminate_task()
-        self.delete_metadata()
-        self.collection.remove({'_id': self._id})
-        app.db.Tag.update_tags_count(self.tags, [])
-
-    def set_error(self, error, commit=True):
-        self.error = str(error)
-        self.status = self.STATUS_ERROR
-        if commit:
-            self.save()
-
-    def delete_metadata(self, delete_log=True):
-        if delete_log:
-            LogMessage.delete_related_logs(self)
-        params = {'model_id': str(self._id)}
-        app.db.Test.collection.remove(params)
-        app.db.TestExample.collection.remove(params)
-        # TODO: Remove TestExampleSql
-        app.db.WeightsCategory.collection.remove(params)
-        app.db.Weight.collection.remove(params)
-        self.comparable = False
-        self.save()
-
-    def get_features_json(self):
-        data = self.features_set.to_dict()
-        data['classifier'] = Classifier(self.classifier).to_dict()
-        return json.dumps(data)
+# @app.conn.register
+# class Model(BaseDocument):
+#     """
+#     Represents Model details and it's Tests.
+#     """
+#     LOG_TYPE = 'trainmodel_log'
+#
+#     STATUS_NEW = 'New'
+#     STATUS_QUEUED = 'Queued'
+#     STATUS_IMPORTING = 'Importing'
+#     STATUS_IMPORTED = 'Imported'
+#     STATUS_REQUESTING_INSTANCE = 'Requesting Instance'
+#     STATUS_INSTANCE_STARTED = 'Instance Started'
+#     STATUS_TRAINING = 'Training'
+#     STATUS_TRAINED = 'Trained'
+#     STATUS_ERROR = 'Error'
+#     STATUS_CANCELED = 'Canceled'
+#
+#     __collection__ = 'models'
+#     structure = {
+#         'name': basestring,
+#         'status': basestring,
+#         'created_on': datetime,
+#         'created_by': dict,
+#         'updated_on': datetime,
+#         'updated_by': dict,
+#         'trained_by': dict,
+#         'error': basestring,
+#
+#         'classifier': dict,
+#         'features': dict,
+#         'features_set': FeatureSet,
+#         'features_set_id': basestring,
+#         'feature_count': int,
+#         'target_variable': unicode,
+#
+#         # Import data to train and test options
+#         'import_params': list,
+#
+#         'test_import_handler': ImportHandler,
+#         'train_import_handler': ImportHandler,
+#         # ids of datasets used for model training
+#         'dataset_ids': list,
+#
+#         'train_importhandler': dict,
+#         'importhandler': dict,
+#
+#         'trainer': None,
+#         'comparable': bool,
+#         'weights_synchronized': bool,
+#
+#         'labels': list,
+#         # Fieldname of the example title from raw data
+#         'example_label': basestring,
+#         'example_id': basestring,
+#         'tags': list,
+#
+#         'spot_instance_request_id': basestring,
+#         'memory_usage': dict,
+#         'train_records_count': int,
+#         'current_task_id': basestring,
+#         'training_time': int
+#     }
+#     gridfs = {'files': ['trainer']}
+#     required_fields = ['name', 'created_on', ]
+#     default_values = {'created_on': datetime.utcnow,
+#                       'updated_on': datetime.utcnow,
+#                       'status': STATUS_NEW,
+#                       'comparable': False,
+#                       'tags': [],
+#                       'weights_synchronized': False,
+#                       'spot_instance_request_id': '',
+#                       'memory_usage': {},
+#                       'created_by': {},
+#                       'updated_by': {},
+#                       'trained_by': {},
+#                       'dataset_ids': [],
+#                       }
+#     use_dot_notation = True
+#     use_autorefs = True
+#
+#     @property
+#     def dataset(self):
+#         if self.dataset_ids:
+#             return app.db.DataSet.find_one({'_id': self.dataset_ids[0]})
+#         else:
+#             return None
+#
+#     @property
+#     def datasets_list(self):
+#         return app.db.DataSet.find({'_id': {'$in': self.dataset_ids}})
+#
+#     def get_trainer(self, loaded=True):
+#         trainer = self.trainer or self.fs.trainer
+#         if loaded:
+#             from core.trainer.store import TrainerStorage
+#             return TrainerStorage.loads(trainer)
+#         return trainer
+#
+#     # TODO: unused code
+#     def get_import_handler(self, parameters=None,
+#                            is_test=False):  # pragma: no cover
+#         from core.importhandler.importhandler import ExtractionPlan, \
+#             ImportHandler
+#         handler = json.dumps(self.importhandler if is_test
+#                              else self.train_importhandler)
+#         plan = ExtractionPlan(handler, is_file=False)
+#         handler = ImportHandler(plan, parameters)
+#         return handler
+#
+#     def run_test(self, dataset, callback=None):
+#         trainer = self.get_trainer()
+#         fp = dataset.get_data_stream()
+#         try:
+#             metrics = trainer.test(
+#                 dataset.get_iterator(fp),
+#                 callback=callback,
+#                 save_raw=True)
+#         finally:
+#             fp.close()
+#         raw_data = trainer._raw_data
+#         trainer.clear_temp_data()
+#         return metrics, raw_data
+#
+#     def set_trainer(self, trainer):
+#         from core.trainer.store import TrainerStorage
+#         self.fs.trainer = Binary(TrainerStorage(trainer).dumps())
+#         self.target_variable = trainer._feature_model.target_variable
+#         self.feature_count = len(trainer._feature_model.features.keys())
+#         #feature_type = trainer._feature_model.
+#         #features[self.target_variable]['type']
+#         if self.status == self.STATUS_TRAINED:
+#             self.labels = map(str, trainer._classifier.classes_.tolist())
+#
+#     def delete(self):
+#         # Stop running task
+#         self.terminate_task()
+#         self.delete_metadata()
+#         self.collection.remove({'_id': self._id})
+#         app.db.Tag.update_tags_count(self.tags, [])
+#
+#     def set_error(self, error, commit=True):
+#         self.error = str(error)
+#         self.status = self.STATUS_ERROR
+#         if commit:
+#             self.save()
+#
+#     def delete_metadata(self, delete_log=True):
+#         if delete_log:
+#             LogMessage.delete_related_logs(self)
+#         params = {'model_id': str(self._id)}
+#         app.db.Test.collection.remove(params)
+#         app.db.TestExample.collection.remove(params)
+#         # TODO: Remove TestExampleSql
+#         app.db.WeightsCategory.collection.remove(params)
+#         app.db.Weight.collection.remove(params)
+#         self.comparable = False
+#         self.save()
+#
+#     def get_features_json(self):
+#         data = self.features_set.to_dict()
+#         data['classifier'] = Classifier(self.classifier).to_dict()
+#         return json.dumps(data)
 
 
 # @app.conn.register
@@ -1160,36 +1160,36 @@ class Model(BaseDocument):
 
 # Features specific models
 
-@app.conn.register
-class NamedFeatureType(BaseDocument):
-    __collection__ = 'named_feature_types'
-
-    TYPES_LIST = ['boolean', 'int', 'float', 'numeric', 'date',
-                  'map', 'categorical_label', 'categorical',
-                  'text', 'regex', 'composite']
-    FIELDS_TO_SERIALIZE = ('name', 'type', 'input_format', 'params')
-
-    structure = {
-        'name': basestring,
-        'type': basestring,
-        'input_format': basestring,
-        'params': dict,
-        'created_on': datetime,
-        'created_by': dict,
-        'updated_on': datetime,
-        'updated_by': dict,
-    }
-    required_fields = ['name', 'type', 'created_on', 'updated_on']
-    default_values = {
-        'created_on': datetime.utcnow,
-        'updated_on': datetime.utcnow,
-    }
-    use_dot_notation = True
-
-    def __repr__(self):
-        return '<Named Feature Type %r>' % self.name
-
-app.db.NamedFeatureType.collection.ensure_index('name', unique=True)
+# @app.conn.register
+# class NamedFeatureType(BaseDocument):
+#     __collection__ = 'named_feature_types'
+#
+#     TYPES_LIST = ['boolean', 'int', 'float', 'numeric', 'date',
+#                   'map', 'categorical_label', 'categorical',
+#                   'text', 'regex', 'composite']
+#     FIELDS_TO_SERIALIZE = ('name', 'type', 'input_format', 'params')
+#
+#     structure = {
+#         'name': basestring,
+#         'type': basestring,
+#         'input_format': basestring,
+#         'params': dict,
+#         'created_on': datetime,
+#         'created_by': dict,
+#         'updated_on': datetime,
+#         'updated_by': dict,
+#     }
+#     required_fields = ['name', 'type', 'created_on', 'updated_on']
+#     default_values = {
+#         'created_on': datetime.utcnow,
+#         'updated_on': datetime.utcnow,
+#     }
+#     use_dot_notation = True
+#
+#     def __repr__(self):
+#         return '<Named Feature Type %r>' % self.name
+#
+# app.db.NamedFeatureType.collection.ensure_index('name', unique=True)
 
 
 # TODO: move and use it in cloudml project
@@ -1336,113 +1336,116 @@ class Scaler(BaseDocument):
 app.db.Transformer.collection.ensure_index('name', unique=True)
 
 
-@app.conn.register
-class Feature(BaseDocument):
-    __collection__ = 'features'
-
-    FIELDS_TO_SERIALIZE = ('name', 'type', 'input_format', 'params',
-                           'default', 'is_target_variable', 'required',
-                           'transformer', 'scaler')
-
-    structure = {
-        'name': basestring,
-        'type': basestring,
-        #'features_set': FeatureSet,
-        'features_set_id': basestring,
-        'input_format': basestring,
-        'params': dict,
-        'required': bool,
-        'scaler': dict,
-        'transformer': dict,
-        'default': None,
-        'is_target_variable': bool,
-
-        'created_on': datetime,
-        'created_by': dict,
-        'updated_on': datetime,
-        'updated_by': dict,
-    }
-    required_fields = ['name', 'type', 'created_on',
-                       'updated_on']
-    default_values = {
-        'created_on': datetime.utcnow,
-        'updated_on': datetime.utcnow,
-        'required': True,
-        'is_target_variable': False,
-        'params': {},
-    }
-    use_dot_notation = True
-    #use_autorefs = True
-
-    def save(self, *args, **kwargs):
-        is_new = self.is_new
-        name = self.name
-        if not is_new:
-            # Note: name could be modified
-            feature = app.db.Feature.find_one({'_id': self._id}, ('name', ))
-            if feature:
-                name = feature.name
-
-        super(Feature, self).save(*args, **kwargs)
-        if self.is_target_variable:
-            app.db.Feature.collection.update({
-                'features_set_id': self.features_set_id,
-                '_id': {'$ne': self._id}
-            }, {
-                '$set': {'is_target_variable': False}
-            }, multi=True)
-
-        if self.features_set_id is not None:
-            features_set = app.db.FeatureSet.get_from_id(
-                ObjectId(self.features_set_id))
-            if features_set:
-                features_set.edit_feature(name, self, is_new)
-
-    def delete(self):
-        features_set = app.db.FeatureSet.get_from_id(
-            ObjectId(self.features_set_id))
-        name = self.name
-        super(Feature, self).delete()
-        features_set.delete_feature(name)
-
-    @classmethod
-    def from_dict(cls, obj_dict, extra_fields={},
-                  filter_params=None, save=True, add_new=True):
-        if 'transformer' in obj_dict:
-            transformer = Transformer.from_dict(
-                obj_dict['transformer'], save=False)[0]
-            obj_dict['transformer'] = dict(
-                [(key, val) for key, val in transformer.iteritems()
-                 if key in Transformer.FIELDS_TO_SERIALIZE])
-
-        if 'scaler' in obj_dict:
-            scaler = app.db.Scaler.from_dict(
-                obj_dict['scaler'], save=False)[0]
-            obj_dict['scaler'] = dict(
-                [(key, val) for key, val in scaler.iteritems()
-                 if key in Scaler.FIELDS_TO_SERIALIZE])
-
-        feature, is_new = super(Feature, cls).from_dict(
-            obj_dict, extra_fields,
-            filter_params, save, add_new)
-
-        return feature, is_new
-
-    def to_dict(self):
-        res = super(Feature, self).to_dict()
-        if self.transformer:
-            res['transformer'] = Transformer(self.transformer).to_dict()
-        if self.scaler:
-            res['scaler'] = Scaler(self.scaler).to_dict()
-        return res
-
-    def __repr__(self):
-        return '<Feature %s:%s>' % (self.name, self.type)
-
-
-app.db.Feature.collection.ensure_index('feature_set_id')
+# @app.conn.register
+# class Feature(BaseDocument):
+#     __collection__ = 'features'
+#
+#     FIELDS_TO_SERIALIZE = ('name', 'type', 'input_format', 'params',
+#                            'default', 'is_target_variable', 'required',
+#                            'transformer', 'scaler')
+#
+#     structure = {
+#         'name': basestring,
+#         'type': basestring,
+#         #'features_set': FeatureSet,
+#         'features_set_id': basestring,
+#         'input_format': basestring,
+#         'params': dict,
+#         'required': bool,
+#         'scaler': dict,
+#         'transformer': dict,
+#         'default': None,
+#         'is_target_variable': bool,
+#
+#         'created_on': datetime,
+#         'created_by': dict,
+#         'updated_on': datetime,
+#         'updated_by': dict,
+#     }
+#     required_fields = ['name', 'type', 'created_on',
+#                        'updated_on']
+#     default_values = {
+#         'created_on': datetime.utcnow,
+#         'updated_on': datetime.utcnow,
+#         'required': True,
+#         'is_target_variable': False,
+#         'params': {},
+#     }
+#     use_dot_notation = True
+#     #use_autorefs = True
+#
+#     def save(self, *args, **kwargs):
+#         is_new = self.is_new
+#         name = self.name
+#         if not is_new:
+#             # Note: name could be modified
+#             feature = app.db.Feature.find_one({'_id': self._id}, ('name', ))
+#             if feature:
+#                 name = feature.name
+#
+#         super(Feature, self).save(*args, **kwargs)
+#         if self.is_target_variable:
+#             app.db.Feature.collection.update({
+#                 'features_set_id': self.features_set_id,
+#                 '_id': {'$ne': self._id}
+#             }, {
+#                 '$set': {'is_target_variable': False}
+#             }, multi=True)
+#
+#         if self.features_set_id is not None:
+#             features_set = app.db.FeatureSet.get_from_id(
+#                 ObjectId(self.features_set_id))
+#             if features_set:
+#                 features_set.edit_feature(name, self, is_new)
+#
+#     def delete(self):
+#         features_set = app.db.FeatureSet.get_from_id(
+#             ObjectId(self.features_set_id))
+#         name = self.name
+#         super(Feature, self).delete()
+#         features_set.delete_feature(name)
+#
+#     @classmethod
+#     def from_dict(cls, obj_dict, extra_fields={},
+#                   filter_params=None, save=True, add_new=True):
+#         if 'transformer' in obj_dict:
+#             transformer = Transformer.from_dict(
+#                 obj_dict['transformer'], save=False)[0]
+#             obj_dict['transformer'] = dict(
+#                 [(key, val) for key, val in transformer.iteritems()
+#                  if key in Transformer.FIELDS_TO_SERIALIZE])
+#
+#         if 'scaler' in obj_dict:
+#             scaler = app.db.Scaler.from_dict(
+#                 obj_dict['scaler'], save=False)[0]
+#             obj_dict['scaler'] = dict(
+#                 [(key, val) for key, val in scaler.iteritems()
+#                  if key in Scaler.FIELDS_TO_SERIALIZE])
+#
+#         feature, is_new = super(Feature, cls).from_dict(
+#             obj_dict, extra_fields,
+#             filter_params, save, add_new)
+#
+#         return feature, is_new
+#
+#     def to_dict(self):
+#         res = super(Feature, self).to_dict()
+#         if self.transformer:
+#             res['transformer'] = Transformer(self.transformer).to_dict()
+#         if self.scaler:
+#             res['scaler'] = Scaler(self.scaler).to_dict()
+#         return res
+#
+#     def __repr__(self):
+#         return '<Feature %s:%s>' % (self.name, self.type)
+#
+#
+# app.db.Feature.collection.ensure_index('feature_set_id')
 
 
 from api.accounts.models import *
 from api.instances.models import *
+from api.import_handlers.models import *
+from api.features.models import *
+from api.ml_models.models import *
 from api.model_tests.models import *
