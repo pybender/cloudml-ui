@@ -1158,292 +1158,293 @@ from api.ml_models.models import Model
 #         return auth.get_auth_url()
 
 
-# Features specific models
+# # Features specific models
 
-@app.conn.register
-class NamedFeatureType(BaseDocument):
-    __collection__ = 'named_feature_types'
+# @app.conn.register
+# class NamedFeatureType(BaseDocument):
+#     __collection__ = 'named_feature_types'
 
-    TYPES_LIST = ['boolean', 'int', 'float', 'numeric', 'date',
-                  'map', 'categorical_label', 'categorical',
-                  'text', 'regex', 'composite']
-    FIELDS_TO_SERIALIZE = ('name', 'type', 'input_format', 'params')
+#     TYPES_LIST = ['boolean', 'int', 'float', 'numeric', 'date',
+#                   'map', 'categorical_label', 'categorical',
+#                   'text', 'regex', 'composite']
+#     FIELDS_TO_SERIALIZE = ('name', 'type', 'input_format', 'params')
 
-    structure = {
-        'name': basestring,
-        'type': basestring,
-        'input_format': basestring,
-        'params': dict,
-        'created_on': datetime,
-        'created_by': dict,
-        'updated_on': datetime,
-        'updated_by': dict,
-    }
-    required_fields = ['name', 'type', 'created_on', 'updated_on']
-    default_values = {
-        'created_on': datetime.utcnow,
-        'updated_on': datetime.utcnow,
-    }
-    use_dot_notation = True
+#     structure = {
+#         'name': basestring,
+#         'type': basestring,
+#         'input_format': basestring,
+#         'params': dict,
+#         'created_on': datetime,
+#         'created_by': dict,
+#         'updated_on': datetime,
+#         'updated_by': dict,
+#     }
+#     required_fields = ['name', 'type', 'created_on', 'updated_on']
+#     default_values = {
+#         'created_on': datetime.utcnow,
+#         'updated_on': datetime.utcnow,
+#     }
+#     use_dot_notation = True
 
-    def __repr__(self):
-        return '<Named Feature Type %r>' % self.name
+#     def __repr__(self):
+#         return '<Named Feature Type %r>' % self.name
 
-app.db.NamedFeatureType.collection.ensure_index('name', unique=True)
-
-
-# TODO: move and use it in cloudml project
-TRANSFORMERS = {
-    'Dictionary': {
-        #'mthd': get_dict_vectorizer,
-        'parameters': ['separator', 'sparse'],
-        'default': {},  # default value
-        'defaults': {}  # default values of the parameters
-    },
-    'Count': {
-        #'mthd': get_count_vectorizer,
-        'parameters': ['charset', 'charset_error',
-                       'strip_accents', 'lowercase',
-                       'stop_words', 'token_pattern',
-                       'analyzer', 'max_df', 'min_df',
-                       'max_features', 'vocabulary',
-                       'binary'],
-        'default': '',
-        'defaults': {}
-    },
-    'Tfidf': {
-        #'mthd': get_tfidf_vectorizer,
-        'parameters': ['charset', 'charset_error',
-                       'strip_accents', 'lowercase',
-                       'analyzer', 'stop_words',
-                       'token_pattern', 'max_df',
-                       'min_df', 'max_features',
-                       'vocabulary', 'binary',
-                       'use_idf', 'smooth_idf',
-                       'sublinear_tf'],
-        'default': '',
-        'defaults': {}
-    },
-    'Lda': {
-        #'mthd': get_count_vectorizer,
-        'parameters': ['charset', 'charset_error',
-                        'strip_accents', 'lowercase',
-                        'stop_words', 'token_pattern',
-                        'analyzer', 'max_df', 'min_df',
-                        'max_features', 'vocabulary',
-                        'binary',
-                        'num_topics','id2word', 'alpha',
-                        'eta', 'distributed', 'topic_file'],
-        'default': '',
-        'defaults': {}
-    },
-    'Lsi': {
-        #'mthd': get_count_vectorizer,
-        'parameters': ['charset', 'charset_error',
-                        'strip_accents', 'lowercase',
-                        'stop_words', 'token_pattern',
-                        'analyzer', 'max_df', 'min_df',
-                        'max_features', 'vocabulary',
-                        'binary',
-                        'num_topics','id2word',
-                        'distributed', 'onepass',
-                        'power_iters', 'extra_samples',
-                        'topic_file'],
-        'default': '',
-        'defaults': {}
-    }
-}
+# app.db.NamedFeatureType.collection.ensure_index('name', unique=True)
 
 
-@app.conn.register
-class Transformer(BaseDocument):
-    __collection__ = 'transformers'
-
-    TYPES_LIST = TRANSFORMERS.keys()
-    NO_PARAMS_KEY = True
-    FIELDS_TO_SERIALIZE = ('name', 'type', 'params')
-
-    structure = {
-        'name': basestring,
-        'type': basestring,
-        'params': dict,
-        'created_on': datetime,
-        'created_by': dict,
-        'updated_on': datetime,
-        'updated_by': dict,
-    }
-    required_fields = ['type', 'created_on', 'updated_on']
-    default_values = {
-        'created_on': datetime.utcnow,
-        'updated_on': datetime.utcnow,
-    }
-    use_dot_notation = True
-
-    def __repr__(self):
-        return '<Transformer %r>' % self.type
-
-app.db.Transformer.collection.ensure_index('name', unique=True)
-
-
-#from core.trainer.scalers import SCALERS
-from core.trainer.scalers import MinMaxScaler, StandardScaler
-SCALERS = {
-    'MinMaxScaler': {
-        'class': MinMaxScaler,
-        'defaults': {
-            'feature_range_min': 0,
-            'feature_range_max': 1,
-            'copy': True},
-        'parameters': ['feature_range_min', 'feature_range_max', 'copy']},
-    'StandardScaler': {
-        'class': StandardScaler,
-        'defaults': {
-            'copy': True,
-            'with_std': True,
-            'with_mean': True},
-        'parameters': ['copy', 'with_std', 'with_mean']
-    }
-}
-
-
-@app.conn.register
-class Scaler(BaseDocument):
-    __collection__ = 'scalers'
-
-    TYPES_LIST = SCALERS.keys()
-    NO_PARAMS_KEY = True
-    FIELDS_TO_SERIALIZE = ('name', 'type', 'params')
-
-    structure = {
-        'name': basestring,
-        'type': basestring,
-        'params': dict,
-        'created_on': datetime,
-        'created_by': dict,
-        'updated_on': datetime,
-        'updated_by': dict,
-    }
-    required_fields = ['type', 'created_on', 'updated_on']
-    default_values = {
-        'created_on': datetime.utcnow,
-        'updated_on': datetime.utcnow,
-    }
-    use_dot_notation = True
-
-    def __repr__(self):
-        return '<Scaler %r>' % self.type
-
-app.db.Transformer.collection.ensure_index('name', unique=True)
+# # TODO: move and use it in cloudml project
+# TRANSFORMERS = {
+#     'Dictionary': {
+#         #'mthd': get_dict_vectorizer,
+#         'parameters': ['separator', 'sparse'],
+#         'default': {},  # default value
+#         'defaults': {}  # default values of the parameters
+#     },
+#     'Count': {
+#         #'mthd': get_count_vectorizer,
+#         'parameters': ['charset', 'charset_error',
+#                        'strip_accents', 'lowercase',
+#                        'stop_words', 'token_pattern',
+#                        'analyzer', 'max_df', 'min_df',
+#                        'max_features', 'vocabulary',
+#                        'binary'],
+#         'default': '',
+#         'defaults': {}
+#     },
+#     'Tfidf': {
+#         #'mthd': get_tfidf_vectorizer,
+#         'parameters': ['charset', 'charset_error',
+#                        'strip_accents', 'lowercase',
+#                        'analyzer', 'stop_words',
+#                        'token_pattern', 'max_df',
+#                        'min_df', 'max_features',
+#                        'vocabulary', 'binary',
+#                        'use_idf', 'smooth_idf',
+#                        'sublinear_tf'],
+#         'default': '',
+#         'defaults': {}
+#     },
+#     'Lda': {
+#         #'mthd': get_count_vectorizer,
+#         'parameters': ['charset', 'charset_error',
+#                         'strip_accents', 'lowercase',
+#                         'stop_words', 'token_pattern',
+#                         'analyzer', 'max_df', 'min_df',
+#                         'max_features', 'vocabulary',
+#                         'binary',
+#                         'num_topics','id2word', 'alpha',
+#                         'eta', 'distributed', 'topic_file'],
+#         'default': '',
+#         'defaults': {}
+#     },
+#     'Lsi': {
+#         #'mthd': get_count_vectorizer,
+#         'parameters': ['charset', 'charset_error',
+#                         'strip_accents', 'lowercase',
+#                         'stop_words', 'token_pattern',
+#                         'analyzer', 'max_df', 'min_df',
+#                         'max_features', 'vocabulary',
+#                         'binary',
+#                         'num_topics','id2word',
+#                         'distributed', 'onepass',
+#                         'power_iters', 'extra_samples',
+#                         'topic_file'],
+#         'default': '',
+#         'defaults': {}
+#     }
+# }
 
 
-@app.conn.register
-class Feature(BaseDocument):
-    __collection__ = 'features'
+# @app.conn.register
+# class Transformer(BaseDocument):
+#     __collection__ = 'transformers'
 
-    FIELDS_TO_SERIALIZE = ('name', 'type', 'input_format', 'params',
-                           'default', 'is_target_variable', 'required',
-                           'transformer', 'scaler')
+#     TYPES_LIST = TRANSFORMERS.keys()
+#     NO_PARAMS_KEY = True
+#     FIELDS_TO_SERIALIZE = ('name', 'type', 'params')
 
-    structure = {
-        'name': basestring,
-        'type': basestring,
-        #'features_set': FeatureSet,
-        'features_set_id': basestring,
-        'input_format': basestring,
-        'params': dict,
-        'required': bool,
-        'scaler': dict,
-        'transformer': dict,
-        'default': None,
-        'is_target_variable': bool,
+#     structure = {
+#         'name': basestring,
+#         'type': basestring,
+#         'params': dict,
+#         'created_on': datetime,
+#         'created_by': dict,
+#         'updated_on': datetime,
+#         'updated_by': dict,
+#     }
+#     required_fields = ['type', 'created_on', 'updated_on']
+#     default_values = {
+#         'created_on': datetime.utcnow,
+#         'updated_on': datetime.utcnow,
+#     }
+#     use_dot_notation = True
 
-        'created_on': datetime,
-        'created_by': dict,
-        'updated_on': datetime,
-        'updated_by': dict,
-    }
-    required_fields = ['name', 'type', 'created_on',
-                       'updated_on']
-    default_values = {
-        'created_on': datetime.utcnow,
-        'updated_on': datetime.utcnow,
-        'required': True,
-        'is_target_variable': False,
-        'params': {},
-    }
-    use_dot_notation = True
-    #use_autorefs = True
+#     def __repr__(self):
+#         return '<Transformer %r>' % self.type
 
-    def save(self, *args, **kwargs):
-        is_new = self.is_new
-        name = self.name
-        if not is_new:
-            # Note: name could be modified
-            feature = app.db.Feature.find_one({'_id': self._id}, ('name', ))
-            if feature:
-                name = feature.name
-
-        super(Feature, self).save(*args, **kwargs)
-        if self.is_target_variable:
-            app.db.Feature.collection.update({
-                'features_set_id': self.features_set_id,
-                '_id': {'$ne': self._id}
-            }, {
-                '$set': {'is_target_variable': False}
-            }, multi=True)
-
-        if self.features_set_id is not None:
-            features_set = app.db.FeatureSet.get_from_id(
-                ObjectId(self.features_set_id))
-            if features_set:
-                features_set.edit_feature(name, self, is_new)
-
-    def delete(self):
-        features_set = app.db.FeatureSet.get_from_id(
-            ObjectId(self.features_set_id))
-        name = self.name
-        super(Feature, self).delete()
-        features_set.delete_feature(name)
-
-    @classmethod
-    def from_dict(cls, obj_dict, extra_fields={},
-                  filter_params=None, save=True, add_new=True):
-        if 'transformer' in obj_dict:
-            transformer = Transformer.from_dict(
-                obj_dict['transformer'], save=False)[0]
-            obj_dict['transformer'] = dict(
-                [(key, val) for key, val in transformer.iteritems()
-                 if key in Transformer.FIELDS_TO_SERIALIZE])
-
-        if 'scaler' in obj_dict:
-            scaler = app.db.Scaler.from_dict(
-                obj_dict['scaler'], save=False)[0]
-            obj_dict['scaler'] = dict(
-                [(key, val) for key, val in scaler.iteritems()
-                 if key in Scaler.FIELDS_TO_SERIALIZE])
-
-        feature, is_new = super(Feature, cls).from_dict(
-            obj_dict, extra_fields,
-            filter_params, save, add_new)
-
-        return feature, is_new
-
-    def to_dict(self):
-        res = super(Feature, self).to_dict()
-        if self.transformer:
-            res['transformer'] = Transformer(self.transformer).to_dict()
-        if self.scaler:
-            res['scaler'] = Scaler(self.scaler).to_dict()
-        return res
-
-    def __repr__(self):
-        return '<Feature %s:%s>' % (self.name, self.type)
+# app.db.Transformer.collection.ensure_index('name', unique=True)
 
 
-app.db.Feature.collection.ensure_index('feature_set_id')
+# #from core.trainer.scalers import SCALERS
+# from core.trainer.scalers import MinMaxScaler, StandardScaler
+# SCALERS = {
+#     'MinMaxScaler': {
+#         'class': MinMaxScaler,
+#         'defaults': {
+#             'feature_range_min': 0,
+#             'feature_range_max': 1,
+#             'copy': True},
+#         'parameters': ['feature_range_min', 'feature_range_max', 'copy']},
+#     'StandardScaler': {
+#         'class': StandardScaler,
+#         'defaults': {
+#             'copy': True,
+#             'with_std': True,
+#             'with_mean': True},
+#         'parameters': ['copy', 'with_std', 'with_mean']
+#     }
+# }
+
+
+# @app.conn.register
+# class Scaler(BaseDocument):
+#     __collection__ = 'scalers'
+
+#     TYPES_LIST = SCALERS.keys()
+#     NO_PARAMS_KEY = True
+#     FIELDS_TO_SERIALIZE = ('name', 'type', 'params')
+
+#     structure = {
+#         'name': basestring,
+#         'type': basestring,
+#         'params': dict,
+#         'created_on': datetime,
+#         'created_by': dict,
+#         'updated_on': datetime,
+#         'updated_by': dict,
+#     }
+#     required_fields = ['type', 'created_on', 'updated_on']
+#     default_values = {
+#         'created_on': datetime.utcnow,
+#         'updated_on': datetime.utcnow,
+#     }
+#     use_dot_notation = True
+
+#     def __repr__(self):
+#         return '<Scaler %r>' % self.type
+
+# app.db.Transformer.collection.ensure_index('name', unique=True)
+
+
+# @app.conn.register
+# class Feature(BaseDocument):
+#     __collection__ = 'features'
+
+#     FIELDS_TO_SERIALIZE = ('name', 'type', 'input_format', 'params',
+#                            'default', 'is_target_variable', 'required',
+#                            'transformer', 'scaler')
+
+#     structure = {
+#         'name': basestring,
+#         'type': basestring,
+#         #'features_set': FeatureSet,
+#         'features_set_id': basestring,
+#         'input_format': basestring,
+#         'params': dict,
+#         'required': bool,
+#         'scaler': dict,
+#         'transformer': dict,
+#         'default': None,
+#         'is_target_variable': bool,
+
+#         'created_on': datetime,
+#         'created_by': dict,
+#         'updated_on': datetime,
+#         'updated_by': dict,
+#     }
+#     required_fields = ['name', 'type', 'created_on',
+#                        'updated_on']
+#     default_values = {
+#         'created_on': datetime.utcnow,
+#         'updated_on': datetime.utcnow,
+#         'required': True,
+#         'is_target_variable': False,
+#         'params': {},
+#     }
+#     use_dot_notation = True
+#     #use_autorefs = True
+
+#     def save(self, *args, **kwargs):
+#         is_new = self.is_new
+#         name = self.name
+#         if not is_new:
+#             # Note: name could be modified
+#             feature = app.db.Feature.find_one({'_id': self._id}, ('name', ))
+#             if feature:
+#                 name = feature.name
+
+#         super(Feature, self).save(*args, **kwargs)
+#         if self.is_target_variable:
+#             app.db.Feature.collection.update({
+#                 'features_set_id': self.features_set_id,
+#                 '_id': {'$ne': self._id}
+#             }, {
+#                 '$set': {'is_target_variable': False}
+#             }, multi=True)
+
+#         if self.features_set_id is not None:
+#             features_set = app.db.FeatureSet.get_from_id(
+#                 ObjectId(self.features_set_id))
+#             if features_set:
+#                 features_set.edit_feature(name, self, is_new)
+
+#     def delete(self):
+#         features_set = app.db.FeatureSet.get_from_id(
+#             ObjectId(self.features_set_id))
+#         name = self.name
+#         super(Feature, self).delete()
+#         features_set.delete_feature(name)
+
+#     @classmethod
+#     def from_dict(cls, obj_dict, extra_fields={},
+#                   filter_params=None, save=True, add_new=True):
+#         if 'transformer' in obj_dict:
+#             transformer = Transformer.from_dict(
+#                 obj_dict['transformer'], save=False)[0]
+#             obj_dict['transformer'] = dict(
+#                 [(key, val) for key, val in transformer.iteritems()
+#                  if key in Transformer.FIELDS_TO_SERIALIZE])
+
+#         if 'scaler' in obj_dict:
+#             scaler = app.db.Scaler.from_dict(
+#                 obj_dict['scaler'], save=False)[0]
+#             obj_dict['scaler'] = dict(
+#                 [(key, val) for key, val in scaler.iteritems()
+#                  if key in Scaler.FIELDS_TO_SERIALIZE])
+
+#         feature, is_new = super(Feature, cls).from_dict(
+#             obj_dict, extra_fields,
+#             filter_params, save, add_new)
+
+#         return feature, is_new
+
+#     def to_dict(self):
+#         res = super(Feature, self).to_dict()
+#         if self.transformer:
+#             res['transformer'] = Transformer(self.transformer).to_dict()
+#         if self.scaler:
+#             res['scaler'] = Scaler(self.scaler).to_dict()
+#         return res
+
+#     def __repr__(self):
+#         return '<Feature %s:%s>' % (self.name, self.type)
+
+
+# app.db.Feature.collection.ensure_index('feature_set_id')
 
 
 from api.accounts.models import *
 from api.instances.models import *
 from api.logs.models import *
 from api.model_tests.models import *
+from api.features.models import *
