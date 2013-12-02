@@ -53,7 +53,7 @@ class DataSetAddForm(BaseForm):
         dataset.import_handler_id = self.importhandler.id
         dataset.save()
         dataset.set_file_path()
-        import_data.delay(str(dataset._id))
+        import_data.delay(str(dataset.id))
         return dataset
 
 

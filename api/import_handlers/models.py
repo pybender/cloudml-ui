@@ -1,5 +1,7 @@
 import json
 import logging
+from boto.exception import S3ResponseError
+import os
 from os.path import join, exists
 from os import makedirs
 import StringIO
@@ -54,31 +56,6 @@ class ImportHandler(db.Model, BaseModel):
         dataset.set_file_path()
         return dataset
 
-    def delete(self):
-        # TODO
-        # datasets = app.db.DataSet.find({'import_handler_id': str(self._id)})
-        # for ds in datasets:
-        #     ds.delete()
-        #
-        # expr = {'$or': [{'test_import_handler.$id': self._id},
-        #                 {'train_import_handler.$id': self._id}]}
-        # models = app.db.Model.find(expr)
-        #
-        # def unset(model, handler_type='train'):
-        #     handler = getattr(model, '%s_import_handler' % handler_type)
-        #     if handler and handler['_id'] == self._id:
-        #         setattr(model, '%s_import_handler' % handler_type, None)
-        #         model.changed = True
-        #
-        # for model in models:
-        #     model.changed = False
-        #     unset(model, 'train')
-        #     unset(model, 'test')
-        #     if model.changed:
-        #         model.save()
-
-        super(ImportHandler, self).delete()
-
     def __repr__(self):
         return '<Import Handler %r>' % self.name
 
@@ -132,7 +109,7 @@ class DataSet(db.Model, BaseModel):
         self.save()
 
     @property
-    def data(self):
+    def loaded_data(self):
         if not self.on_s3:
             raise Exception('Invalid oper')
 
@@ -182,8 +159,24 @@ class DataSet(db.Model, BaseModel):
             self.save()
 
     def delete(self):
-        # TODO
-        pass
+        # Stop task
+        # self.terminate_task()  # TODO
+
+        super(DataSet, self).delete()
+        LogMessage.delete_related_logs(self)
+
+        # TODO: check import handler type
+        try:
+            os.remove(self.filename)
+        except OSError:
+            pass
+        if self.on_s3:
+            from api.amazon_utils import AmazonS3Helper
+            helper = AmazonS3Helper()
+            try:
+                helper.delete_key(str(self._id))
+            except S3ResponseError as e:
+                logging.exception(str(e))
 
     def save(self, *args, **kwargs):
         if self.status != self.STATUS_ERROR:

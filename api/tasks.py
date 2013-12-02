@@ -13,7 +13,7 @@ from boto.exception import EC2ResponseError
 from celery.signals import task_prerun, task_postrun
 
 from api import celery, app
-from api.models import Test, Model, TestExample, User
+from api.models import Test, Model, TestExample, User, DataSet, ImportHandler
 from api.logs.logger import init_logger
 from api.utils import get_doc_size
 from api.amazon_utils import AmazonEC2Helper, AmazonS3Helper
@@ -161,22 +161,21 @@ def import_data(dataset_id, model_id=None, test_id=None):
     """
     from core.importhandler.importhandler import ExtractionPlan, ImportHandler
     try:
-        dataset = app.db.DataSet.find_one({'_id': ObjectId(dataset_id)})
-        importhandler = app.db.ImportHandler.find_one(
-            {'_id': ObjectId(dataset.import_handler_id)})
+        dataset = DataSet.query.get(dataset_id)
+        importhandler = dataset.import_handler
         if dataset is None or importhandler is None:
             raise ValueError('DataSet or Import Handler not found')
         obj = None
         if not model_id is None:
-            obj = app.db.Model.find_one({'_id': ObjectId(model_id)})
+            obj = Model.query.get(model_id)
         if not test_id is None:
-            obj = app.db.Test.find_one({'_id': ObjectId(test_id)})
+            obj = Test.query.get(test_id)
 
         if obj:
             obj.status = obj.STATUS_IMPORTING
             obj.save()
         init_logger('importdata_log', obj=dataset_id)
-        logging.info('Loading dataset %s' % dataset._id)
+        logging.info('Loading dataset %s' % dataset.id)
 
         import_start_time = datetime.now()
 
@@ -215,7 +214,7 @@ with%s compression", importhandler.name, '' if dataset.compress else 'out')
         dataset.filesize = long(os.path.getsize(dataset.filename))
         dataset.records_count = handler.count
         dataset.status = dataset.STATUS_UPLOADING
-        dataset.save(validate=True)
+        dataset.save()
 
         logging.info('Saving file to Amazon S3')
         dataset.save_to_s3()
@@ -227,7 +226,7 @@ with%s compression", importhandler.name, '' if dataset.compress else 'out')
             obj.status = obj.STATUS_IMPORTED
             obj.save()
 
-        dataset.save(validate=True)
+        dataset.save()
 
         logging.info('DataSet was loaded')
     except Exception, exc:
@@ -246,15 +245,15 @@ def upload_dataset(dataset_id):
     """
     Upload dataset to S3.
     """
-    dataset = app.db.DataSet.find_one({'_id': ObjectId(dataset_id)})
+    dataset = DataSet.query.get(dataset_id)
     try:
         if not dataset:
             raise ValueError('DataSet not found')
         init_logger('importdata_log', obj=dataset_id)
-        logging.info('Uploading dataset %s' % dataset._id)
+        logging.info('Uploading dataset %s' % dataset.id)
 
         dataset.status = dataset.STATUS_UPLOADING
-        dataset.save(validate=True)
+        dataset.save()
 
         logging.info('Saving file to Amazon S3')
         dataset.save_to_s3()
@@ -298,7 +297,7 @@ def train_model(dataset_ids, model_id, user_id):
             'uid': user.uid,
             # 'name': user.name # TODO
         }
-        model.save(validate=True)
+        model.save()
         feature_model = FeatureModel(model.get_features_json(),
                                      is_file=False)
         trainer = Trainer(feature_model)
@@ -340,7 +339,7 @@ def train_model(dataset_ids, model_id, user_id):
         model.training_time = int((train_end_time - train_begin_time).seconds)
         model.save()
 
-        fill_model_parameter_weights.delay(str(model._id))
+        fill_model_parameter_weights.delay(str(model.id))
     except Exception, exc:
         logging.exception('Got exception when train model')
         model.status = model.STATUS_ERROR
@@ -410,14 +409,14 @@ def fill_model_parameter_weights(model_id, reload=False):
                                    'is_positive': bool(weight['weight'] > 0),
                                    'css_class': weight['css_class']})
                     weight = app.db.Weight(params)
-                    weight.save(validate=True, check_keys=False)
+                    weight.save()
                 else:
                     if sname not in category_names:
                         # Adding a category, if it has not already added
                         category_names.append(sname)
                         params.update({'name': long_name})
                         category = app.db.WeightsCategory(params)
-                        category.save(validate=True, check_keys=False)
+                        category.save()
 
         model.weights_synchronized = True
         model.save()
@@ -484,7 +483,7 @@ def run_test(dataset_ids, test_id):
 
         if not model.comparable:
             # TODO: fix this
-            model = app.db.Model.find_one({'_id': model._id})
+            model = app.db.Model.find_one({'_id': model.id})
             model.comparable = True
             model.save()
 
@@ -518,7 +517,7 @@ def run_test(dataset_ids, test_id):
             example, new_row = _add_example_to_db(
                  test, row, label, pred, prob, n)
             # test.examples_size += (get_doc_size(example) / 1024.0 / 1024.0)
-            # example_ids.append(str(example._id))
+            # example_ids.append(str(example.id))
         app.sql_db.session.commit()
 
         test.status = Test.STATUS_COMPLETED
@@ -565,7 +564,7 @@ def _add_example_to_db(test, data, label, pred, prob, num):
     example.test_name = test.name
     example.model_name = model.name
 
-    example.model_id = str(model._id)
+    example.model_id = model.id
     example.test_id = test.id
 
     new_row = ndata

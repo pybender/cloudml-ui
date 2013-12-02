@@ -56,11 +56,13 @@ class Model(db.Model, BaseModel):
     features_set_id = db.Column(db.Integer, db.ForeignKey('feature_set.id'))
     features_set = relationship('FeatureSet')
 
-    test_import_handler_id = db.Column(db.ForeignKey('import_handler.id'))
+    test_import_handler_id = db.Column(db.ForeignKey('import_handler.id',
+                                                     ondelete='SET NULL'))
     test_import_handler = relationship('ImportHandler',
                                        foreign_keys=[test_import_handler_id])
 
-    train_import_handler_id = db.Column(db.ForeignKey('import_handler.id'))
+    train_import_handler_id = db.Column(db.ForeignKey('import_handler.id',
+                                                      ondelete='SET NULL'))
     train_import_handler = relationship('ImportHandler',
                                         foreign_keys=[train_import_handler_id])
 
