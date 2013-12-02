@@ -4,6 +4,7 @@ import httplib
 import json
 from flask.ext.testing import TestCase
 from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 from api import app
 
@@ -63,10 +64,19 @@ class BaseDbTestCase(TestCase):
         from api import models
         from fixture import SQLAlchemyFixture
         from fixture.style import NamedDataStyle
+
+        # This is to avoid the error:
+        #  AttributeError: 'Session' object has no attribute '_model_changes'
+        Session = sessionmaker(bind=self.engine)
+        session = Session()
+        session._model_changes = {}
+
         db = SQLAlchemyFixture(
-            env=models, style=NamedDataStyle(), engine=self.engine)
+            env=models, style=NamedDataStyle(), engine=self.engine,
+            session=session)
         data = db.data(*args)
         data.setup()
+        session.commit()
         db.dispose()
 
 
