@@ -1,4 +1,4 @@
- json
+import json
 import StringIO
 import logging
 from boto.exception import S3ResponseError
@@ -1235,7 +1235,6 @@ TRANSFORMERS = {
         'defaults': {}
     }
 }
->>>>>>> MATCH-1267_migrate_to_postgresql
 
 #     structure = {
 #         'name': basestring,
