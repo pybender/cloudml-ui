@@ -562,49 +562,49 @@ class BaseDocument(Document):
 from core.trainer.classifier_settings import CLASSIFIERS
 
 
-@app.conn.register
-class Classifier(BaseDocument):
-    __collection__ = 'classifier'
-
-    TYPES_LIST = CLASSIFIERS.keys()
-    NO_PARAMS_KEY = True
-    FIELDS_TO_SERIALIZE = ('type', 'params')
-
-    structure = {
-        'name': basestring,
-        'type': basestring,
-        'params': dict,
-        'created_on': datetime,
-        'created_by': dict,
-        'updated_on': datetime,
-        'updated_by': dict
-    }
-    required_fields = ['created_on', 'updated_on']
-    default_values = {
-        'created_on': datetime.utcnow,
-        'updated_on': datetime.utcnow,
-    }
-    use_dot_notation = True
-
-    @classmethod
-    def from_model_features_dict(cls, name, features_dict):
-        if not features_dict:
-            classifier = Classifier()
-            classifier.name = name
-            return classifier
-
-        classifier, is_new = Classifier.from_dict(
-            features_dict['classifier'],
-            add_new=True,
-            extra_fields={'name': name},
-            save=False
-        )
-        return classifier
-
-    def __repr__(self):
-        return '<Classifier %r>' % self.name
-
-app.db.Classifier.collection.ensure_index('name', unique=True)
+# @app.conn.register
+# class Classifier(BaseDocument):
+#     __collection__ = 'classifier'
+#
+#     TYPES_LIST = CLASSIFIERS.keys()
+#     NO_PARAMS_KEY = True
+#     FIELDS_TO_SERIALIZE = ('type', 'params')
+#
+#     structure = {
+#         'name': basestring,
+#         'type': basestring,
+#         'params': dict,
+#         'created_on': datetime,
+#         'created_by': dict,
+#         'updated_on': datetime,
+#         'updated_by': dict
+#     }
+#     required_fields = ['created_on', 'updated_on']
+#     default_values = {
+#         'created_on': datetime.utcnow,
+#         'updated_on': datetime.utcnow,
+#     }
+#     use_dot_notation = True
+#
+#     @classmethod
+#     def from_model_features_dict(cls, name, features_dict):
+#         if not features_dict:
+#             classifier = Classifier()
+#             classifier.name = name
+#             return classifier
+#
+#         classifier, is_new = Classifier.from_dict(
+#             features_dict['classifier'],
+#             add_new=True,
+#             extra_fields={'name': name},
+#             save=False
+#         )
+#         return classifier
+#
+#     def __repr__(self):
+#         return '<Classifier %r>' % self.name
+#
+# app.db.Classifier.collection.ensure_index('name', unique=True)
 
 
 # @app.conn.register
@@ -1255,34 +1255,34 @@ TRANSFORMERS = {
 }
 
 
-@app.conn.register
-class Transformer(BaseDocument):
-    __collection__ = 'transformers'
-
-    TYPES_LIST = TRANSFORMERS.keys()
-    NO_PARAMS_KEY = True
-    FIELDS_TO_SERIALIZE = ('name', 'type', 'params')
-
-    structure = {
-        'name': basestring,
-        'type': basestring,
-        'params': dict,
-        'created_on': datetime,
-        'created_by': dict,
-        'updated_on': datetime,
-        'updated_by': dict,
-    }
-    required_fields = ['type', 'created_on', 'updated_on']
-    default_values = {
-        'created_on': datetime.utcnow,
-        'updated_on': datetime.utcnow,
-    }
-    use_dot_notation = True
-
-    def __repr__(self):
-        return '<Transformer %r>' % self.type
-
-app.db.Transformer.collection.ensure_index('name', unique=True)
+# @app.conn.register
+# class Transformer(BaseDocument):
+#     __collection__ = 'transformers'
+#
+#     TYPES_LIST = TRANSFORMERS.keys()
+#     NO_PARAMS_KEY = True
+#     FIELDS_TO_SERIALIZE = ('name', 'type', 'params')
+#
+#     structure = {
+#         'name': basestring,
+#         'type': basestring,
+#         'params': dict,
+#         'created_on': datetime,
+#         'created_by': dict,
+#         'updated_on': datetime,
+#         'updated_by': dict,
+#     }
+#     required_fields = ['type', 'created_on', 'updated_on']
+#     default_values = {
+#         'created_on': datetime.utcnow,
+#         'updated_on': datetime.utcnow,
+#     }
+#     use_dot_notation = True
+#
+#     def __repr__(self):
+#         return '<Transformer %r>' % self.type
+#
+# app.db.Transformer.collection.ensure_index('name', unique=True)
 
 
 #from core.trainer.scalers import SCALERS
@@ -1306,34 +1306,34 @@ SCALERS = {
 }
 
 
-@app.conn.register
-class Scaler(BaseDocument):
-    __collection__ = 'scalers'
-
-    TYPES_LIST = SCALERS.keys()
-    NO_PARAMS_KEY = True
-    FIELDS_TO_SERIALIZE = ('name', 'type', 'params')
-
-    structure = {
-        'name': basestring,
-        'type': basestring,
-        'params': dict,
-        'created_on': datetime,
-        'created_by': dict,
-        'updated_on': datetime,
-        'updated_by': dict,
-    }
-    required_fields = ['type', 'created_on', 'updated_on']
-    default_values = {
-        'created_on': datetime.utcnow,
-        'updated_on': datetime.utcnow,
-    }
-    use_dot_notation = True
-
-    def __repr__(self):
-        return '<Scaler %r>' % self.type
-
-app.db.Transformer.collection.ensure_index('name', unique=True)
+# @app.conn.register
+# class Scaler(BaseDocument):
+#     __collection__ = 'scalers'
+#
+#     TYPES_LIST = SCALERS.keys()
+#     NO_PARAMS_KEY = True
+#     FIELDS_TO_SERIALIZE = ('name', 'type', 'params')
+#
+#     structure = {
+#         'name': basestring,
+#         'type': basestring,
+#         'params': dict,
+#         'created_on': datetime,
+#         'created_by': dict,
+#         'updated_on': datetime,
+#         'updated_by': dict,
+#     }
+#     required_fields = ['type', 'created_on', 'updated_on']
+#     default_values = {
+#         'created_on': datetime.utcnow,
+#         'updated_on': datetime.utcnow,
+#     }
+#     use_dot_notation = True
+#
+#     def __repr__(self):
+#         return '<Scaler %r>' % self.type
+#
+# app.db.Transformer.collection.ensure_index('name', unique=True)
 
 
 # @app.conn.register

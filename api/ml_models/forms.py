@@ -1,13 +1,22 @@
+import json
+
+from core.trainer.store import load_trainer
+from core.trainer.trainer import Trainer, InvalidTrainerFile
+from core.trainer.config import FeatureModel, SchemaException
+from core.importhandler.importhandler import ExtractionPlan, \
+    ImportHandlerException
 from api.base.forms import BaseForm, ValidationError
-from api.base.fields import DocumentField, CharField, JsonField,\
+from api.base.fields import ModelField, CharField, JsonField,\
     ImportHandlerFileField
+from api.models import Tag, ImportHandler, Model
+
 
 class ModelEditForm(BaseForm):
     name = CharField()
-    train_import_handler = DocumentField(doc='ImportHandler', by_name=False,
-                                         return_doc=True)
-    test_import_handler = DocumentField(doc='ImportHandler', by_name=False,
-                                         return_doc=True)
+    train_import_handler = ModelField(model=ImportHandler, by_name=False,
+                                         return_model=True)
+    test_import_handler = ModelField(model=ImportHandler, by_name=False,
+                                         return_model=True)
     example_id = CharField()
     example_label = CharField()
     tags = JsonField()
@@ -17,7 +26,7 @@ class ModelEditForm(BaseForm):
         model = super(ModelEditForm, self).save()
 
         if self.cleaned_data.get('tags', None):
-            app.db.Tag.update_tags_count(old_tags, model.tags)
+            Tag.update_tags_count(old_tags, model.tags)
 
         return model
 
@@ -28,11 +37,11 @@ class ModelAddForm(BaseForm):
                       ('test_import_handler', 'test_import_handler_file'))
 
     name = CharField()
-    train_import_handler = DocumentField(doc='ImportHandler', by_name=False,
-                                         return_doc=True)
+    train_import_handler = ModelField(model=ImportHandler, by_name=False,
+                                         return_model=True)
     train_import_handler_file = ImportHandlerFileField()
-    test_import_handler = DocumentField(doc='ImportHandler', by_name=False,
-                                         return_doc=True)
+    test_import_handler = ModelField(model=ImportHandler, by_name=False,
+                                         return_model=True)
     test_import_handler_file = ImportHandlerFileField()
     features = JsonField()
     trainer = CharField()
@@ -85,7 +94,7 @@ train_import_handler should be specified for new model')
     def save_importhandler(self, fieldname, name):
         data = self.cleaned_data.pop(fieldname, None)
         if data is not None:
-            handler = app.db.ImportHandler()
+            handler = ImportHandler()
             action = 'test' if fieldname.startswith('test') else 'train'
             handler.name = '%s handler for %s' % (name, action)
             handler.type = handler.TYPE_DB
@@ -105,17 +114,18 @@ train_import_handler should be specified for new model')
         if self.trainer_obj:
             obj.set_trainer(self.trainer_obj)
 
-        features_set = FeatureSet.from_model_features_dict(obj.name, obj.features)
-        obj.features_set_id = str(features_set._id)
-        obj.features_set = features_set
-        obj.classifier = Classifier.from_model_features_dict(obj.name, obj.features)
+        # TODO
+        # features_set = FeatureSet.from_model_features_dict(obj.name, obj.features)
+        # obj.features_set_id = str(features_set._id)
+        # obj.features_set = features_set
+        # classifier = Classifier.from_model_features_dict(obj.name, obj.features)
+        # obj.classifier = classifier.to_json()
 
-        obj.validate()
         obj.save()
 
         if obj.status == Model.STATUS_TRAINED:
             # Processing Model Parameters weights in celery task
             from api.tasks import fill_model_parameter_weights
-            fill_model_parameter_weights.delay(str(obj._id))
+            fill_model_parameter_weights.delay(str(obj.id))
 
         return obj

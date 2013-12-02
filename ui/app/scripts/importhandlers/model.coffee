@@ -16,7 +16,7 @@ angular.module('app.importhandlers.model', ['app.config'])
       API_FIELDNAME: 'import_handler'
       DEFAULT_FIELDS_TO_SAVE: ['name', 'type', 'data']
 
-      _id: null
+      id: null
       created_on: null
       updated_on: null
       name: null
@@ -25,7 +25,7 @@ angular.module('app.importhandlers.model', ['app.config'])
       import_params: []
 
       downloadUrl: =>
-        return "#{@BASE_API_URL}#{@_id}/action/download/"
+        return "#{@BASE_API_URL}#{@id}/action/download/"
 
       loadFromJSON: (origData) =>
         super origData
@@ -41,7 +41,7 @@ angular.module('app.importhandlers.model', ['app.config'])
         data = {}
         for key, val of opts
           data[key] = val
-        @$make_request("#{@BASE_API_URL}#{@_id}/action/load/", {}, "PUT", data)
+        @$make_request("#{@BASE_API_URL}#{@id}/action/load/", {}, "PUT", data)
 
     return ImportHandler
 ])

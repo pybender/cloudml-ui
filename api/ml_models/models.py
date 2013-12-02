@@ -1,11 +1,12 @@
 # Models, Tags and Weights goes here
+import json
 
 from sqlalchemy.orm import relationship, deferred
 from sqlalchemy.dialects import postgresql
 
 from api.base.models import db, BaseModel
 from api.db import JSONType, GridfsFile
-from api.logs.models import LogMessage
+from api.models import LogMessage
 
 
 class Model(db.Model, BaseModel):
@@ -76,6 +77,10 @@ class Model(db.Model, BaseModel):
             return TrainerStorage.loads(self.trainer.read())
         return self.trainer.read()
 
+    @property
+    def dataset(self):
+        return self.datasets[0]
+
     def run_test(self, dataset, callback=None):
         trainer = self.get_trainer()
         fp = dataset.get_data_stream()
@@ -98,6 +103,17 @@ class Model(db.Model, BaseModel):
         self.feature_count = len(trainer._feature_model.features.keys())
         if self.status == self.STATUS_TRAINED:
             self.labels = map(str, trainer._classifier.classes_.tolist())
+
+    def get_features_json(self):
+        return json.dumps({
+            'classifier': {}
+        })
+        # TODO
+        # from api.features.models import PredefinedClassifier
+        # data = self.features_set.to_dict() if self.features_set else {}
+        # data['classifier'] = PredefinedClassifier.from_dict(
+        #     self.classifier if self.classifier else {}).to_dict()
+        # return json.dumps(data)
 
 
 tags_table = db.Table(

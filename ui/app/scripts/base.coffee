@@ -32,10 +32,10 @@ angular.module('app.base', ['app.config', 'app.services'])
 
       # Returns object details url in UI
       objectUrl: =>
-        return @BASE_UI_URL + @_id
+        return @BASE_UI_URL + @id
 
       # Checks whether object saved to db
-      isNew: -> if @_id == null then true else false
+      isNew: -> if @id == null then true else false
 
       # Sets attributes from object received e.g. from API response
       loadFromJSON: (origData) =>
@@ -59,9 +59,9 @@ angular.module('app.base', ['app.config', 'app.services'])
 
       # Loads specific object details
       $load: (opts) ->
-        if @_id == null
+        if @id == null
           throw new Error "Can't load model without id"
-        @$make_request("#{@BASE_API_URL}#{@_id}/", opts)
+        @$make_request("#{@BASE_API_URL}#{@id}/", opts)
 
       # Saves or creates the object
       $save: (opts={}) =>
@@ -82,7 +82,7 @@ angular.module('app.base', ['app.config', 'app.services'])
           data = $.extend(data, opts.extraData)
 
         method = if @isNew() then "POST" else "PUT"
-        @$make_request(@BASE_API_URL + (@_id + "/" or ""), {}, method, data)
+        @$make_request(@BASE_API_URL + (@id + "/" or ""), {}, method, data)
 
       # Removes object by id
       $delete: (opts={}) =>
@@ -90,7 +90,7 @@ angular.module('app.base', ['app.config', 'app.services'])
           method: "DELETE"
           headers: {'Content-Type':undefined, 'X-Requested-With': null,
           'X-Auth-Token': auth.get_auth_token()}
-          url: "#{@BASE_API_URL}#{@_id}/"
+          url: "#{@BASE_API_URL}#{@id}/"
           transformRequest: angular.identity
         )
 

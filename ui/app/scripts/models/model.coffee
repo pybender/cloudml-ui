@@ -23,9 +23,9 @@ angular.module('app.models.model', ['app.config'])
                                'trainer', 'test_import_handler', 'name',
                                'test_import_handler_file',
                                'train_import_handler_file']
-      @MAIN_FIELDS: 'name,_id,status'
+      @MAIN_FIELDS: 'name,id,status'
 
-      _id: null
+      id: null
       name: null
       status: null
       created_on: null
@@ -52,22 +52,22 @@ angular.module('app.models.model', ['app.config'])
           if origData.test_import_handler?
             @test_import_handler_obj = new ImportHandler(
               origData['test_import_handler'])
-            @test_import_handler = @test_import_handler_obj._id
+            @test_import_handler = @test_import_handler_obj.id
           if origData.train_import_handler?
             @train_import_handler_obj = new ImportHandler(
               origData['train_import_handler'])
-            @train_import_handler = @train_import_handler_obj._id
+            @train_import_handler = @train_import_handler_obj.id
           if origData.datasets?
             @datasets_obj = for row in origData['datasets']
               new DataSet(row)
           if origData.features_set_id?
-            @featuresSet = new FeaturesSet({'_id': @features_set_id})
+            @featuresSet = new FeaturesSet({'id': @features_set_id})
           if origData.classifier?
             @classifier = new Classifier(
-              _.extend origData.classifier, {'model_id': @_id})
+              _.extend origData.classifier, {'model_id': @id})
 
       downloadUrl: =>
-        return "#{@BASE_API_URL}#{@_id}/action/download/"
+        return "#{@BASE_API_URL}#{@id}/action/download/"
 
       @$by_handler: (opts) =>
         resolver = (resp, Model) ->
@@ -85,10 +85,10 @@ angular.module('app.models.model', ['app.config'])
         data = {}
         for key, val of opts
           data[key] = val
-        @$make_request("#{@BASE_API_URL}#{@_id}/action/train/", {}, "PUT", data)
+        @$make_request("#{@BASE_API_URL}#{@id}/action/train/", {}, "PUT", data)
 
       $cancel_request_spot_instance: =>
-        url = "#{@BASE_API_URL}#{@_id}/action/cancel_request_instance/"
+        url = "#{@BASE_API_URL}#{@id}/action/cancel_request_instance/"
         @$make_request(url, {}, "PUT", {}).then(
           (resp) =>
             @status = resp.data.model.status)
@@ -108,7 +108,6 @@ angular.module('app.models.model', ['app.config'])
       BASE_API_URL: "#{settings.apiUrl}tags/"
       API_FIELDNAME: 'tag'
 
-      _id: null
       id: null
       text: null
 

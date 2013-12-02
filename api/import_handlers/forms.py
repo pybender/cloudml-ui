@@ -9,22 +9,17 @@ from core.importhandler.importhandler import ImportHandlerException,\
 
 
 class BaseImportHandlerForm(BaseForm):
-    def clean_data(self, value):
+    def clean_data(self, value, field):
         if not value:
             return
 
         try:
-            data = json.loads(value)
-        except ValueError, exc:
-            raise ValidationError('Invalid data: %s' % exc)
-
-        try:
-            plan = ExtractionPlan(value, is_file=False)
+            plan = ExtractionPlan(json.dumps(value), is_file=False)
             self.cleaned_data['import_params'] = plan.input_params
         except (ValueError, ImportHandlerException) as exc:
             raise ValidationError('Invalid importhandler: %s' % exc)
 
-        return data
+        return value
 
 
 class ImportHandlerEditForm(BaseImportHandlerForm):
