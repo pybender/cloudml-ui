@@ -5,7 +5,7 @@ from sqlalchemy import (Integer, String, Binary, Column,
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship
 
-from api.base.models import BaseModel, db, BasePredefinedItemModel
+from api.models import BaseModel, db, BasePredefinedItemModel
 from api.db import JSONType
 from core.trainer.classifier_settings import CLASSIFIERS
 from config import TRANSFORMERS, SCALERS, FIELDS_MAP, SYSTEM_FIELDS
@@ -62,9 +62,20 @@ class ExportImportMixin(object):
 
 
 ### Predefined Items ###
+class PredefinedItemMixin(object):
+    name = Column(String(200), nullable=False)
 
-class NamedFeatureType(BasePredefinedItemModel, db.Model):
+    @declared_attr
+    def params(cls):
+        return deferred(Column(JSONType))
+
+    def __repr__(self):
+        return '<%s %s>' % (self.__name__.lower(), self.type)
+
+
+class NamedFeatureType(BaseModel, PredefinedItemMixin, db.Model):
     """ Represents named feature type """
+    __tablename__ = 'predefined_feature_type'
     TYPES_LIST = ['boolean', 'int', 'float', 'numeric', 'date',
                   'map', 'categorical_label', 'categorical',
                   'text', 'regex', 'composite']
@@ -73,22 +84,25 @@ class NamedFeatureType(BasePredefinedItemModel, db.Model):
     input_format = Column(String)
 
 
-class PredefinedClassifier(BasePredefinedItemModel, db.Model):
+class PredefinedClassifier(BaseModel, PredefinedItemMixin, db.Model):
     """ Represents predefined classifier """
+    __tablename__ = 'predefined_classifier'
 
     TYPES_LIST = CLASSIFIERS.keys()
     type_ = Column(Enum(*TYPES_LIST, name='classifier_types'))
 
 
-class PredefinedTransformer(BasePredefinedItemModel, db.Model):
+class PredefinedTransformer(BaseModel, PredefinedItemMixin, db.Model):
     """ Represents predefined feature transformer """
+    __tablename__ = 'predefined_transformer'
 
     TYPES_LIST = TRANSFORMERS.keys()
     type_ = Column(Enum(*TYPES_LIST, name='transformer_types'))
 
 
-class PredefinedScaler(BasePredefinedItemModel, db.Model):
+class PredefinedScaler(BaseModel, PredefinedItemMixin, db.Model):
     """ Represents predefined feature scaler """
+    __tablename__ = 'predefined_scaler'
 
     TYPES_LIST = SCALERS.keys()
     type_ = Column(Enum(*TYPES_LIST, name='scaler_types'))
@@ -96,8 +110,10 @@ class PredefinedScaler(BasePredefinedItemModel, db.Model):
 
 ### Feature and Feature Set models ###
 
-class Feature_Set(ExportImportMixin, BaseModel, db.Model):
+
+class FeatureSet(ExportImportMixin, BaseModel, db.Model):
     """ Represents list of the features with schema name."""
+    __tablename__ = 'feature_set'
     schema_name = Column(String(200), nullable=False)
     target_variable = Column(String(200))
     features_count = Column(Integer)

@@ -2,7 +2,7 @@ from collections import defaultdict
 from bson import ObjectId
 
 from sqlalchemy.dialects import postgresql
-from sqlalchemy.orm import relationship, deferred
+from sqlalchemy.orm import relationship, deferred, backref
 from sqlalchemy.sql import expression
 
 from api import app
@@ -30,10 +30,13 @@ class Test(db.Model, BaseModel):
     status = db.Column(db.Enum(*STATUSES, name='test_statuses'))
     error = db.Column(db.String(300))
 
-    model_id = db.Column(db.String(200))
+    model_id = db.Column(db.Integer, db.ForeignKey('model.id'))
+    model = relationship('Model', backref=backref('tests',
+                                                  cascade='all,delete'))
     model_name = db.Column(db.String(200))
 
-    dataset_id = db.Column(db.String(200))
+    dataset_id = db.Column(db.Integer, db.ForeignKey('dataset.id'))
+    dataset = relationship('DataSet')
 
     examples_count = db.Column(db.Integer)
     examples_fields = db.Column(postgresql.ARRAY(db.String))
@@ -53,14 +56,6 @@ class Test(db.Model, BaseModel):
         data = loads(self.vect_data.read())
         return data.getrow(num).todense().tolist()[0]
 
-    @property
-    def model(self):
-        return app.db.Model.get_from_id(ObjectId(self.model_id))
-
-    @property
-    def dataset(self):
-        return app.db.DataSet.get_from_id(ObjectId(self.dataset_id))
-
 
 class TestExample(db.Model, BaseModel):
     __tablename__ = 'test_example'
@@ -77,10 +72,12 @@ class TestExample(db.Model, BaseModel):
     weighted_data_input = db.Column(JSONType)
 
     test_id = db.Column(db.Integer, db.ForeignKey('test.id'))
-    test = relationship('Test', backref='examples')
+    test = relationship('Test', backref=backref('examples',
+                                                cascade='all,delete'))
     test_name = db.Column(db.String(200))
 
-    model_id = db.Column(db.String(200))
+    model_id = db.Column(db.Integer, db.ForeignKey('model.id'))
+    model = relationship('Model')
     model_name = db.Column(db.String(200))
 
     @property

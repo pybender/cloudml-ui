@@ -1,7 +1,5 @@
 # Models, Tags and Weights goes here
 
-from sqlalchemy import (Integer, String, Float, Column, Boolean,
-                        Enum, ForeignKey, Unicode)
 from sqlalchemy.orm import relationship, deferred
 from sqlalchemy.dialects import postgresql
 
@@ -31,49 +29,44 @@ class Model(db.Model, BaseModel):
                 STATUS_REQUESTING_INSTANCE, STATUS_INSTANCE_STARTED,
                 STATUS_TRAINING, STATUS_TRAINED, STATUS_ERROR, STATUS_CANCELED]
 
-    name = Column(String(200))
-    status = Column(Enum(*STATUSES, name='model_statuses'))
-    trained_by = Column(JSONType)
-    error = Column(String(300))
+    name = db.Column(db.String(200))
+    status = db.Column(db.Enum(*STATUSES, name='model_statuses'))
+    trained_by = db.Column(JSONType)
+    error = db.Column(db.String(300))
 
-    comparable = Column(Boolean)
-    weights_synchronized = Column(Boolean)
+    comparable = db.Column(db.Boolean)
+    weights_synchronized = db.Column(db.Boolean)
 
-    labels = Column(postgresql.ARRAY(String))
-    example_label = Column(String(100))
-    example_id = Column(String(100))
+    labels = db.Column(postgresql.ARRAY(db.String))
+    example_label = db.Column(db.String(100))
+    example_id = db.Column(db.String(100))
 
-    # TODO: It's unused?
-    # import_params = Column(JSONType)
-
-    spot_instance_request_id = Column(String(100))
-    memory_usage = Column(Integer)
-    train_records_count = Column(Integer)
-    current_task_id = Column(String(100))
-    training_time = Column(Integer)
+    spot_instance_request_id = db.Column(db.String(100))
+    memory_usage = db.Column(db.Integer)
+    train_records_count = db.Column(db.Integer)
+    current_task_id = db.Column(db.String(100))
+    training_time = db.Column(db.Integer)
 
     tags = relationship('Tag', secondary=lambda: tags_table, backref='models')
 
-    target_variable = Column(Unicode)
-    feature_count = Column(Integer)
+    target_variable = db.Column(db.Unicode)
+    feature_count = db.Column(db.Integer)
 
-    # TODO:
-    # features_set_id = Column(Integer, ForeignKey('feature_set.id'))
-    # features_set = relationship('FeatureSet')
+    features_set_id = db.Column(db.Integer, db.ForeignKey('feature_set.id'))
+    features_set = relationship('FeatureSet')
 
-    # TODO:
-    # features = relationship('Feature')
+    test_import_handler_id = db.Column(db.ForeignKey('import_handler.id'))
+    test_import_handler = relationship('ImportHandler',
+                                       foreign_keys=[test_import_handler_id])
 
-    # TODO:
-    # test_import_handler_id = Column(ForeignKey('import_handler.id'))
-    # train_import_handler_id = Column(ForeignKey('import_handler.id'))
+    train_import_handler_id = db.Column(db.ForeignKey('import_handler.id'))
+    train_import_handler = relationship('ImportHandler',
+                                        foreign_keys=[train_import_handler_id])
 
-    # TODO:
-    # datasets = relationship('Dataset',
-    #                         secondary=lambda: datasets_table, backref='models')
+    datasets = relationship('DataSet',
+                            secondary=lambda: datasets_table)
 
-    # TODO:
-    classifier = Column(JSONType)
+    classifier = deferred(db.Column(JSONType))
 
     trainer = deferred(db.Column(GridfsFile))
 
@@ -109,16 +102,20 @@ class Model(db.Model, BaseModel):
         self.trainer = Binary(TrainerStorage(trainer).dumps())
         self.target_variable = trainer._feature_model.target_variable
         self.feature_count = len(trainer._feature_model.features.keys())
-        #feature_type = trainer._feature_model.
-        #features[self.target_variable]['type']
         if self.status == self.STATUS_TRAINED:
             self.labels = map(str, trainer._classifier.classes_.tolist())
 
 
 tags_table = db.Table(
     'model_tag', db.Model.metadata,
-    Column('model_id', Integer, ForeignKey('model.id')),
-    Column('tag_id', Integer, ForeignKey('tag.id'))
+    db.Column('model_id', db.Integer, db.ForeignKey('model.id')),
+    db.Column('tag_id', db.Integer, db.ForeignKey('tag.id'))
+)
+
+datasets_table = db.Table(
+    'model_dataset', db.Model.metadata,
+    db.Column('model_id', db.Integer, db.ForeignKey('model.id')),
+    db.Column('dataset_id', db.Integer, db.ForeignKey('dataset.id'))
 )
 
 
@@ -126,8 +123,8 @@ class Tag(db.Model, BaseModel):
     """
     Model tag.
     """
-    text = Column(String(200))
-    count = Column(Integer)
+    text = db.Column(db.String(200))
+    count = db.Column(db.Integer)
 
 
 class WeightsCategory(db.Model, BaseModel):
@@ -138,12 +135,12 @@ class WeightsCategory(db.Model, BaseModel):
     """
     __tablename__ = 'weights_category'
 
-    name = Column(String(200))
-    short_name = Column(String(200))
-    model_name = Column(String(200))
+    name = db.Column(db.String(200))
+    short_name = db.Column(db.String(200))
+    model_name = db.Column(db.String(200))
 
-    model = Column(ForeignKey('model.id'))
-    parent_id = Column(Integer, ForeignKey('weights_category.id'))
+    model = db.Column(db.ForeignKey('model.id'))
+    parent_id = db.Column(db.Integer, db.ForeignKey('weights_category.id'))
     parent = relationship('WeightsCategory')
 
 
@@ -151,15 +148,15 @@ class Weight(db.Model, BaseModel):
     """
     Represents Model Parameter Weight
     """
-    name = Column(String(200))
-    short_name = Column(String(200))
-    model_name = Column(String(200))
-    value = Column(Float)
-    is_positive = Column(Boolean)
-    css_class = Column(String)
+    name = db.Column(db.String(200))
+    short_name = db.Column(db.String(200))
+    model_name = db.Column(db.String(200))
+    value = db.Column(db.Float)
+    is_positive = db.Column(db.Boolean)
+    css_class = db.Column(db.String)
 
-    model_id = Column(ForeignKey('model.id'))
+    model_id = db.Column(db.ForeignKey('model.id'))
     model = relationship('WeightsCategory')
 
-    parent_id = Column(Integer, ForeignKey('weights_category.id'))
+    parent_id = db.Column(db.Integer, db.ForeignKey('weights_category.id'))
     parent = relationship('WeightsCategory')
