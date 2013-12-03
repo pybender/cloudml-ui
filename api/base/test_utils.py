@@ -70,18 +70,10 @@ class BaseDbTestCase(TestCase):
         from fixture import SQLAlchemyFixture
         from fixture.style import NamedDataStyle
 
-        # This is to avoid the error:
-        #  AttributeError: 'Session' object has no attribute '_model_changes'
-        Session = sessionmaker(bind=self.engine)
-        session = Session()
-        session._model_changes = {}
-
         db = SQLAlchemyFixture(
-            env=models, style=NamedDataStyle(), engine=self.engine,
-            session=session)
+            env=models, style=NamedDataStyle(), engine=self.engine)
         data = db.data(*args)
         data.setup()
-        session.commit()
         db.dispose()
 
 
