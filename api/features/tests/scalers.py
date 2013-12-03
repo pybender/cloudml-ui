@@ -1,20 +1,17 @@
 from utils import FeaturePredefinedItemsTestMixin, FeatureItemsTestMixin
 from ..views import ScalersResource
 from ..models import Feature, PredefinedScaler
-from ..fixtures import PredefinedScalerData
+from ..fixtures import PredefinedScalerData, FeatureData
 
 
 class PredefinedScalersTests(FeaturePredefinedItemsTestMixin):
     """
     Tests of the Feature scalers API.
     """
-    ID = '5170dd3a106a6c1631000000'
-    FIXTURES = ('feature_sets.json', 'features.json',
-                'scalers.json', 'complex_features.json')
     BASE_URL = '/cloudml/features/scalers/'
     RESOURCE = ScalersResource
     Model = PredefinedScaler
-    datasets = (PredefinedScalerData, )
+    datasets = (PredefinedScalerData, FeatureData)
 
     OBJECT_NAME = 'scaler'
     DATA = {'type': 'StandardScaler',
@@ -47,29 +44,41 @@ class PredefinedScalersTests(FeaturePredefinedItemsTestMixin):
 
 
 class FeatureScalersTests(FeatureItemsTestMixin):
-    def test_add_feature_scaler(self):
-        feature = self.db.Feature.find_one()
-        self._test_add_feature_item(feature)
+    BASE_URL = '/cloudml/features/scalers/'
+    datasets = (PredefinedScalerData, FeatureData)
 
-    def test_add_feature_scaler_from_predefined(self):
-        feature = self.db.Feature.find_one()
-        scaler = self.db.Scaler.find_one()
-        self._add_feature_item_from_predefined(feature, scaler)
+    OBJECT_NAME = 'scaler'
+    DATA = {'type': 'StandardScaler',
+            'name': 'new scaler',
+            'params': '{"copy": true}'}
 
-    def test_edit_feature_scaler(self):
-        feature = Feature.get_from_id(
-            ObjectId('525123b1206a6c5bcbc12efb'))
+    def setUp(self):
+        super(FeatureScalersTests, self).setUp()
+        self.feature = Feature.query.all()[0]
+
+    def test_add(self):
+        resp, obj = self._test_add(self.feature)
+        self.assertEqual(obj, {'type': 'StandardScaler',
+                               "copy": True})
+
+    def test_add_from_predefined(self):
+        scaler = PredefinedScaler.query.all()[0]
+        resp, obj = self._test_add_from_predefined(self.feature, scaler)
+        self.assertEqual(obj['type'], scaler.type)
+
+    def test_edit(self):
+        feature = Feature.query.filter_by(
+            name=FeatureData.complex_feature.name).one()
         self.assertTrue(feature.scaler, "Invalid fixtures")
         data = {'name': 'new scaler name',
                 'type': 'MinMaxScaler',
                 'params': '{"feature_range_max": 2}'}
 
-        resp, obj = self._test_edit_feature_item(feature, extra_data=data)
+        resp, obj = self._test_edit(feature, extra_data=data)
+        self.assertEqual(obj, {'feature_range_max': 2, 
+                               'type': u'MinMaxScaler'})
 
     def test_edit_feature_scaler_from_predefined(self):
-        feature = self.db.Feature.get_from_id(
-            ObjectId('525123b1206a6c5bcbc12efb'))
-        self.assertTrue(feature.scaler, "Invalid fixtures")
-
-        scaler = self.db.Scaler.find_one()
-        self._edit_feature_item_from_predefined(feature, scaler)
+        scaler = PredefinedScaler.query.all()[0]
+        resp, obj = self._test_edit_from_predefined(self.feature, scaler)
+        self.assertEqual(obj['type'], scaler.type)

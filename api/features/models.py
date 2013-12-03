@@ -11,6 +11,10 @@ from config import TRANSFORMERS, SCALERS, FIELDS_MAP, SYSTEM_FIELDS
 
 
 class ExportImportMixin(object):
+    """
+    Mixin with methods to serialize/de-serialize model to JSON
+    when import/export to file.
+    """
     NO_PARAMS_KEY = False
 
     @classmethod
@@ -90,20 +94,20 @@ class NamedFeatureType(BaseModel, PredefinedItemMixin,
                   'text', 'regex', 'composite']
     FIELDS_TO_SERIALIZE = ('name', 'type', 'input_format', 'params')
 
-    type = db.Column(db.Enum(*TYPES_LIST, name='named_feature_types'))
+    type = db.Column(
+        db.Enum(*TYPES_LIST, name='named_feature_types'), nullable=False)
     input_format = db.Column(db.String(200))
 
 
 class PredefinedClassifier(BaseModel, PredefinedItemMixin,
                            db.Model, ExportImportMixin):
     """ Represents predefined classifier """
-    __tablename__ = 'predefined_classifier'
-
     NO_PARAMS_KEY = True
     FIELDS_TO_SERIALIZE = ('type', 'params')
 
     TYPES_LIST = CLASSIFIERS.keys()
-    type = db.Column(db.Enum(*TYPES_LIST, name='classifier_types'))
+    type = db.Column(
+        db.Enum(*TYPES_LIST, name='classifier_types'), nullable=False)
 
     @classmethod
     def from_model_features_dict(cls, name, features_dict):
@@ -121,7 +125,6 @@ class PredefinedClassifier(BaseModel, PredefinedItemMixin,
 class PredefinedTransformer(BaseModel, PredefinedItemMixin, db.Model,
                             ExportImportMixin):
     """ Represents predefined feature transformer """
-    __tablename__ = 'predefined_transformer'
     FIELDS_TO_SERIALIZE = ('type', 'params')
     NO_PARAMS_KEY = True
 
@@ -133,7 +136,6 @@ class PredefinedTransformer(BaseModel, PredefinedItemMixin, db.Model,
 class PredefinedScaler(BaseModel, PredefinedItemMixin, db.Model,
                        ExportImportMixin):
     """ Represents predefined feature scaler """
-    __tablename__ = 'predefined_scaler'
     FIELDS_TO_SERIALIZE = ('type', 'params')
     NO_PARAMS_KEY = True
 
@@ -197,8 +199,6 @@ class Feature(ExportImportMixin, RefFeatureSetMixin,
 
 class FeatureSet(ExportImportMixin, BaseModel, db.Model):
     """ Represents list of the features with schema name."""
-    __tablename__ = 'feature_set'
-
     FIELDS_TO_SERIALIZE = ('schema_name', )
 
     FEATURES_STRUCT = {'schema-name': '',

@@ -13,7 +13,6 @@ class AuthResource(BaseResourceSQL):
     """
     User API methods
     """
-
     @public
     def post(self, action=None, **kwargs):
         if action == 'get_auth_url':

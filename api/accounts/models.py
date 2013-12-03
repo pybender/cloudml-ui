@@ -24,16 +24,19 @@ class User(BaseMixin, db.Model):
 
     @classmethod
     def authenticate(cls, oauth_token, oauth_token_secret, oauth_verifier):
-        logging.debug('User Auth: try to authenticate with token %s', oauth_token)
+        logging.debug(
+            'User Auth: try to authenticate with token %s', oauth_token)
         from auth import OdeskAuth
         auth = OdeskAuth()
         _oauth_token, _oauth_token_secret = auth.authenticate(
             oauth_token, oauth_token_secret, oauth_verifier)
         info = auth.get_my_info(_oauth_token, _oauth_token_secret,
                                 oauth_verifier)
-        logging.info('User Auth: authenticating user %s', info['auth_user']['uid'])
+        logging.info(
+            'User Auth: authenticating user %s', info['auth_user']['uid'])
         try:
-        	user = User.query.filter_by(uid=info['auth_user']['uid']).one()
+            user = User.query.filter_by(
+                uid=info['auth_user']['uid']).one()
         except orm_exc.NoResultFound:
             user = User()
             user.uid = info['auth_user']['uid']

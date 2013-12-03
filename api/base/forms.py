@@ -20,7 +20,6 @@ def get_declared_items(bases, attrs, cls=BaseField):
         else:
             obj.option = name
         items.append((obj.option, attrs.pop(name)))
-       
     return items
 
 
@@ -35,7 +34,8 @@ class DeclarativeFieldsMetaclass(type):
     """
     def __new__(cls, name, bases, attrs):
         attrs['base_fields'] = get_declared_items(bases, attrs)
-        attrs['base_forms'] = get_declared_items(bases, attrs, cls=InternalForm)
+        attrs['base_forms'] = get_declared_items(
+            bases, attrs, cls=InternalForm)
         return super(DeclarativeFieldsMetaclass,
                      cls).__new__(cls, name, bases, attrs)
 
@@ -46,11 +46,12 @@ class BaseForm(InternalForm):
     """
     __metaclass__ = DeclarativeFieldsMetaclass
 
-    NO_REQUIRED_FOR_EDIT = False  # don't validate required fields if obj specified
+    # don't validate required fields if obj specified
+    NO_REQUIRED_FOR_EDIT = False
     required_fields = ()  # list of required fields
 
-    # could be used with tabs edit forms, where we can spec. one 
-    # group of the fields or another one.
+    # could be used with tabs edit forms,
+    # where we can spec. one group of the fields or another one.
     required_fields_groups = {}
     group_chooser = None
 
@@ -68,7 +69,8 @@ class BaseForm(InternalForm):
         self.obj = None
 
         if self.required_fields and self.required_fields_groups:
-            raise ValueError('Either required fields or groups should be specified')
+            raise ValueError(
+                'Either required fields or groups should be specified')
 
         if self.required_fields_groups:
             if not self.group_chooser:
@@ -96,15 +98,17 @@ class BaseForm(InternalForm):
         if data:
             if self.required_fields_groups:
                 self.current_group = self.data.get(self.group_chooser)
-                self.required_fields = self.required_fields_groups[self.current_group]
+                self.required_fields = \
+                    self.required_fields_groups[self.current_group]
 
             for name, form in self.forms.iteritems():
                 form.set_data(data)
 
     @property
     def error_messages(self):
-        errors = ', '.join(["%s%s" % (err['name'] + ': ' if err['name'] else '', err['error'])
-                           for err in self.errors])
+        errors = ', '.join(
+            ["%s%s" % (err['name'] + ': ' if err['name'] else '', err['error'])
+             for err in self.errors])
         if self.inner_name:
             return errors
         return 'Here is some validation errors: %s' % errors
@@ -162,7 +166,8 @@ class BaseForm(InternalForm):
                         field = fields
                         add_error(field, '%s is required' % field)
                     else:
-                        add_error("fields", 'either one of fields %s is required' % ', '.join(fields))
+                        add_error("fields", 'either one of \
+fields %s is required' % ', '.join(fields))
 
         for name, form in self.forms.iteritems():
             try:
@@ -177,7 +182,8 @@ class BaseForm(InternalForm):
                     self.cleaned_data[name] = value
             except ValidationError, exc:
                 if form.filled:
-                    self.errors.append({'name': '%s' % name, 'error': str(exc)})
+                    self.errors.append(
+                        {'name': '%s' % name, 'error': str(exc)})
 
         if self.errors:
             raise ValidationError(self.error_messages, errors=self.errors)

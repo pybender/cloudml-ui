@@ -1,8 +1,9 @@
 import json
+import httplib
 from copy import copy
 
 from api.features.models import Feature
-from api.base.test_utils import BaseDbTestCase, TestChecksMixin
+from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS
 
 
 class FeaturePredefinedItemsTestMixin(BaseDbTestCase, TestChecksMixin):
@@ -32,52 +33,46 @@ class FeaturePredefinedItemsTestMixin(BaseDbTestCase, TestChecksMixin):
 
 
 class FeatureItemsTestMixin(BaseDbTestCase, TestChecksMixin):
-    def _test_add_feature_item(self, feature, extra_data={}):
+    def __run_check(self, feature, method, data):
+        resp = self._check(data=data, method='post')
+        feature = Feature.query.get(feature.id)
+        inner_obj = getattr(feature, self.OBJECT_NAME)
+        return resp, inner_obj
+
+    def _test_add(self, feature, extra_data={}):
         data = copy(self.DATA)
-        data.update({'feature_id': str(feature._id)})
+        data.update({'feature_id': feature.id})
         data.update(extra_data)
 
-        self._check_post(data, load_model=False, inner_obj=True)
-        feature = Feature.get_from_id(feature._id)
-        obj = getattr(feature, self.OBJECT_NAME)
-        self.assertEqual(obj['type'], data['type'])
-        self.assertEqual(obj['params'], json.loads(data['params']))
+        return self.__run_check(feature, 'post', data)
 
-    def _add_feature_item_from_predefined(self, feature, item):
+    def _test_add_from_predefined(self, feature, item):
         data = {self.OBJECT_NAME: item.name,
-                'feature_id': str(feature._id),
+                'feature_id': feature.id,
                 'predefined_selected': 'true'}
-        self._check_post(data, load_model=False, inner_obj=True)
-        feature = Feature.get_from_id(feature._id)
-        obj = getattr(feature, self.OBJECT_NAME)
-        self.assertEqual(obj['type'], item.type)
-        self.assertEqual(obj['params'], item.params)
 
-    def _test_edit_feature_item(self, feature, extra_data={}):
+        return self.__run_check(feature, 'post', data)
+
+    def _test_edit(self, feature, extra_data={}):
         data = copy(self.DATA)
-        data.update({'feature_id': str(feature._id)})
+        data.update({'feature_id': feature.id})
         data.update(extra_data)
 
-        resp = self._check_put(data)
-        feature = Feature.get_from_id(feature._id)
-        obj = getattr(feature, self.OBJECT_NAME)
-        self.assertEqual(obj['name'], data['name'])
-        self.assertEqual(obj['type'], data['type'])
-        self.assertEqual(obj['params'], json.loads(data['params']))
+        return self.__run_check(feature, 'put', data)
 
-        return resp, obj
-
-    def _edit_feature_item_from_predefined(self, feature, predefined_item):
+    def _test_edit_from_predefined(self, feature, predefined_item):
         data = {self.OBJECT_NAME: predefined_item.name,
-                'feature_id': str(feature._id),
+                'feature_id': feature.id,
                 'predefined_selected': 'true'}
-        resp = self._check_put(data, load_model=False)
-        feature = self.db.Feature.find_one({'_id': feature._id})
-        self.assertTrue(getattr(feature, self.OBJECT_NAME),
-                        "%s should be filled" % self.OBJECT_NAME)
 
-        obj = getattr(feature, self.OBJECT_NAME)
-        self.assertEqual(obj['name'], predefined_item.name)
-        self.assertEqual(obj['type'], predefined_item.type)
-        self.assertEqual(obj['params'], predefined_item.params)
-        return resp, obj
+        return self.__run_check(feature, 'post', data)
+
+    def check_edit_error(self, post_data, errors, **data):
+        from api.utils import ERR_INVALID_DATA
+        url = self._get_url(**data)
+        resp = self.client.post(url, data=post_data, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.BAD_REQUEST)
+        resp_data = json.loads(resp.data)
+        err_data = resp_data['response']['error']
+        self.assertEquals(err_data['code'], ERR_INVALID_DATA)
+        self._check_errors(err_data, errors)

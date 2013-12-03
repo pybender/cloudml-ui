@@ -1,11 +1,9 @@
 from flask import has_request_context, request
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy import func
-from api.db import JSONType
 
+from api.db import JSONType
 from api import app
-from api.db import JSONType
-
 
 db = app.sql_db
 
@@ -13,7 +11,7 @@ db = app.sql_db
 class BaseMixin(object):
     @declared_attr
     def __tablename__(cls):
-        return cls.__name__.lower()
+        return _convert_name(cls.__name__)
 
     def _set_user(self, user):
         if user:
@@ -45,3 +43,9 @@ class BaseModel(BaseMixin):
                            onupdate=func.current_timestamp())
     created_by = db.Column(JSONType)
     updated_by = db.Column(JSONType)
+
+
+def _convert_name(name):
+    import re
+    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()

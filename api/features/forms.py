@@ -2,11 +2,12 @@ import json
 import sqlalchemy
 
 from api.base.forms import BaseForm
-from api.base.fields import CharField, ChoiceField, BooleanField, JsonField, DocumentField
+from api.base.fields import (CharField, ChoiceField,
+                             BooleanField, JsonField, DocumentField)
 from api.resources import ValidationError
 from models import NamedFeatureType, PredefinedClassifier, PredefinedScaler, \
     PredefinedTransformer, FeatureSet, Feature
-from api.ml_models.models import *
+from api.ml_models.models import Model
 
 
 class FeatureParamsMixin(object):
@@ -116,17 +117,19 @@ class BasePredefinedForm(BaseForm):
         return value
 
     def validate_data(self):
-        predefined_selected = self.cleaned_data.get('predefined_selected', False)
+        predefined_selected = self.cleaned_data.get(
+            'predefined_selected', False)
         feature_id = self.cleaned_data.get('feature_id', False)
         model_id = self.cleaned_data.get('model_id', False)
 
         # It would be predefined obj, when model, feature not specified
         # and this form will not used as inner form of another one
         self.cleaned_data['is_predefined'] = is_predefined = \
-                not (feature_id or model_id or self.inner_name)
+            not (feature_id or model_id or self.inner_name)
 
         if predefined_selected and is_predefined:
-            raise ValidationError('item could be predefined or copied from predefined')
+            raise ValidationError(
+                'item could be predefined or copied from predefined')
 
         if is_predefined:
             name = self.cleaned_data.get('name', None)
@@ -140,12 +143,13 @@ class BasePredefinedForm(BaseForm):
             count = items.count()
 
             if count:
-                raise ValidationError('name of predefined item should be unique')
+                raise ValidationError(
+                    'name of predefined item should be unique')
 
         if predefined_selected:
             obj = self.cleaned_data.get(self.OBJECT_NAME, None)
             if obj:
-               self._fill_predefined_values(obj)
+                self._fill_predefined_values(obj)
 
     def _fill_predefined_values(self, obj):
         """
@@ -160,12 +164,12 @@ class BasePredefinedForm(BaseForm):
         obj = super(BasePredefinedForm, self).save(commit)
         feature = self.cleaned_data.get('feature', None)
         if feature:
-            setattr(feature, self.OBJECT_NAME, obj)
+            setattr(feature, self.OBJECT_NAME, obj.to_dict())
             feature.save()
 
         model = self.cleaned_data.get('model', None)
         if model:
-            setattr(model, self.OBJECT_NAME, obj)
+            setattr(model, self.OBJECT_NAME, obj.to_dict())
             model.save()
 
         return obj
@@ -188,7 +192,7 @@ class ScalerForm(BasePredefinedForm):
     # whether we need to create predefined item (not feature related)
     scaler = DocumentField(doc=PredefinedScaler, by_name=True, return_doc=True)
     feature_id = DocumentField(doc=Feature, by_name=False,
-                                return_doc=False)
+                               return_doc=False)
 
 
 class ClassifierForm(BasePredefinedForm):
@@ -204,12 +208,14 @@ class ClassifierForm(BasePredefinedForm):
                               None: ('type', )}
 
     name = CharField()
-    type_field = ChoiceField(choices=PredefinedClassifier.TYPES_LIST, name='type')
+    type_field = ChoiceField(
+        choices=PredefinedClassifier.TYPES_LIST, name='type')
     params = JsonField()
     # whether need to copy model classifier fields from predefined one
     predefined_selected = BooleanField()
     # whether we need to create predefined item (not model-related)
-    classifier = DocumentField(doc=PredefinedClassifier, by_name=False, return_doc=True)
+    classifier = DocumentField(
+        doc=PredefinedClassifier, by_name=False, return_doc=True)
     model_id = DocumentField(doc=Model, by_name=False, return_doc=False)
 
 
@@ -224,12 +230,14 @@ class TransformerForm(BasePredefinedForm):
         None: ('type', )}
 
     name = CharField()
-    type_field = ChoiceField(choices=PredefinedTransformer.TYPES_LIST, name='type')
+    type_field = ChoiceField(
+        choices=PredefinedTransformer.TYPES_LIST, name='type')
     params = JsonField()
     predefined_selected = BooleanField()
-    transformer = DocumentField(doc=PredefinedTransformer, by_name=True, return_doc=True)
+    transformer = DocumentField(
+        doc=PredefinedTransformer, by_name=True, return_doc=True)
     feature_id = DocumentField(doc=Feature, by_name=False,
-                                return_doc=False)
+                               return_doc=False)
 
 
 class FeatureForm(BaseForm, FeatureParamsMixin):
@@ -246,8 +254,9 @@ class FeatureForm(BaseForm, FeatureParamsMixin):
     feature_set_id = DocumentField(doc=FeatureSet, by_name=False,
                                    return_doc=False)
 
-    transformer = TransformerForm(Model=PredefinedTransformer,
-                                  prefix='transformer-', data_from_request=False)
+    transformer = TransformerForm(
+        Model=PredefinedTransformer,
+        prefix='transformer-', data_from_request=False)
     remove_transformer = BooleanField()
     scaler = ScalerForm(Model=PredefinedScaler, prefix='scaler-',
                         data_from_request=False)

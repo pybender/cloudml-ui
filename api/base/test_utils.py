@@ -106,6 +106,7 @@ class TestChecksMixin(object):
         obj_id = kwargs.get('id', None)
         method = 'put' if obj_id else 'post'
         resp_data = self._check(method=method, data=data, **kwargs)
+
         self.assertEquals(count if obj_id else count + 1,
                           self.Model.query.count())
 
