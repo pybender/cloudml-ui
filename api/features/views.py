@@ -80,7 +80,7 @@ class TransformerResource(BaseResourceSQL):
     Model = PredefinedTransformer
 
     def _get_configuration_action(self, **kwargs):
-        from utils import TRANSFORMERS
+        from config import TRANSFORMERS
         return self._render({'configuration': TRANSFORMERS})
 
 api.add_resource(TransformerResource, '/cloudml/features/transformers/')
@@ -98,7 +98,7 @@ class ScalersResource(BaseResourceSQL):
     Model = PredefinedScaler
 
     def _get_configuration_action(self, **kwargs):
-        from utils import SCALERS
+        from config import SCALERS
         return self._render({'configuration': SCALERS})
 
 api.add_resource(ScalersResource, '/cloudml/features/scalers/')

@@ -21,8 +21,8 @@ angular.module('app.features.controllers.classifiers', ['app.config', ])
     Classifier.$loadAll(
       show: 'name'
     ).then ((opts) ->
-      for tr in opts.objects
-        $scope.classifiers.push {_id: tr._id, name: tr.name}
+      for classifier in opts.objects
+        $scope.classifiers.push {id: classifier.id, name: classifier.name}
     ), ((opts) ->
       $scope.err = $scope.setError(opts, 'loading classifiers')
     )
