@@ -1,13 +1,10 @@
-from sqlalchemy.orm.attributes import get_history
 from sqlalchemy import event
 from sqlalchemy.orm import deferred
 from sqlalchemy.schema import CheckConstraint, UniqueConstraint
-from sqlalchemy import (Integer, String, Boolean, Column,
-                        Enum, ForeignKey)
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship
 
-from api.models import BaseModel, db
+from api.base.models import BaseModel, db
 from api.db import JSONType
 from core.trainer.classifier_settings import CLASSIFIERS
 from config import TRANSFORMERS, SCALERS, FIELDS_MAP, SYSTEM_FIELDS
@@ -63,7 +60,7 @@ class ExportImportMixin(object):
                         self.__class__, field).property.columns[0].type
                     # TODO: Do we need this only for params or for other
                     # JSON fields also?
-                    if isinstance(field_type, Boolean) or field == 'params':
+                    if isinstance(field_type, db.Boolean) or field == 'params':
                         if not val:
                             continue
 
@@ -74,7 +71,7 @@ class ExportImportMixin(object):
 
 ### Predefined Items ###
 class PredefinedItemMixin(object):
-    name = db.Column(db.String(200), nullable=False)
+    name = db.Column(db.String(200), nullable=False, unique=True)
 
     @declared_attr
     def params(cls):
@@ -93,8 +90,8 @@ class NamedFeatureType(BaseModel, PredefinedItemMixin,
                   'text', 'regex', 'composite']
     FIELDS_TO_SERIALIZE = ('name', 'type', 'input_format', 'params')
 
-    type = db.Column(Enum(*TYPES_LIST, name='named_feature_types'))
-    input_format = db.Column(String)
+    type = db.Column(db.Enum(*TYPES_LIST, name='named_feature_types'))
+    input_format = db.Column(db.String(200))
 
 
 class PredefinedClassifier(BaseModel, PredefinedItemMixin, db.Model):
@@ -102,7 +99,7 @@ class PredefinedClassifier(BaseModel, PredefinedItemMixin, db.Model):
     __tablename__ = 'predefined_classifier'
 
     TYPES_LIST = CLASSIFIERS.keys()
-    type = db.Column(Enum(*TYPES_LIST, name='classifier_types'))
+    type = db.Column(db.Enum(*TYPES_LIST, name='classifier_types'))
 
 
 class PredefinedTransformer(BaseModel, PredefinedItemMixin, db.Model,
@@ -113,7 +110,8 @@ class PredefinedTransformer(BaseModel, PredefinedItemMixin, db.Model,
     NO_PARAMS_KEY = True
 
     TYPES_LIST = TRANSFORMERS.keys()
-    type = db.Column(Enum(*TYPES_LIST, name='transformer_types'))
+    type = db.Column(
+        db.Enum(*TYPES_LIST, name='transformer_types'), nullable=False)
 
 
 class PredefinedScaler(BaseModel, PredefinedItemMixin, db.Model,
@@ -124,7 +122,8 @@ class PredefinedScaler(BaseModel, PredefinedItemMixin, db.Model,
     NO_PARAMS_KEY = True
 
     TYPES_LIST = SCALERS.keys()
-    type = db.Column(Enum(*TYPES_LIST, name='scaler_types'))
+    type = db.Column(
+        db.Enum(*TYPES_LIST, name='scaler_types'), nullable=False)
 
 
 ### Feature and Feature Set models ###
@@ -146,7 +145,7 @@ class Feature(ExportImportMixin, RefFeatureSetMixin,
                            'transformer', 'scaler')
 
     name = db.Column(db.String(200), nullable=False)
-    type = db.Column(db.String(200))
+    type = db.Column(db.String(200), nullable=False)
     input_format = db.Column(db.String(200))
     default = db.Column(JSONType)  # TODO: think about type
     required = db.Column(db.Boolean, default=True)

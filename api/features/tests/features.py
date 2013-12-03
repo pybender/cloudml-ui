@@ -202,7 +202,7 @@ class TestFeaturesDocs(BaseDbTestCase):
     """
     Tests for the FeatureSet and Feature models.
     """
-    datasets = [FeatureSetData, FeatureData]
+    datasets = (FeatureData, )
 
     def test_feature_to_dict(self):
         fset = FeatureSet()
