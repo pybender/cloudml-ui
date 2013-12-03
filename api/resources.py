@@ -321,7 +321,7 @@ for %s method: %s" % (method, action))
 
     def _get_fields(self, params):
         show = params.get('show', None)
-        fields = ['_id'] + show.split(',') if show else ('name', '_id')
+        fields = ['id'] + show.split(',') if show else ('name', 'id')
         if getattr(self.Model, 'use_autorefs', False):
             query_fields = []
             for field in fields:
@@ -352,6 +352,19 @@ class BaseResourceSQL(BaseResource):
     """
     Base REST resource for SQL models.
     """
+    def _get_save_response_context(self, model, extra_fields=[]):
+        if self.ALL_FIELDS_IN_POST:
+            fields = self._get_all_fields()
+        else:
+            fields = list(self.DEFAULT_FIELDS) + extra_fields
+        model = dict([(field, getattr(model, field, None))
+                          for field in fields])
+        return {self.OBJECT_NAME: model}
+
+    def _get_all_fields(self):
+        return [name.replace("%s." % self.Model.__tablename__, '') \
+                for name in self.Model.__table__.columns.keys()]
+
     def put(self, action=None, **kwargs):
         """
         Updates new model
@@ -369,7 +382,6 @@ class BaseResourceSQL(BaseResource):
             extra_fields = form.cleaned_data.keys()
         else:
             raise ValidationError(form.error_messages)
-
         return self._render(self._get_save_response_context(obj, extra_fields=extra_fields),
                             code=200)
 

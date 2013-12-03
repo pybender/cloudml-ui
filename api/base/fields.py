@@ -57,8 +57,9 @@ class DocumentField(CharField):
             params = {'name' if self.by_name else 'id': value}
             params.update(self.filter_params)
 
-            obj = self.Model.query.filter_by(**params)[0]
-            if obj is None:
+            try:
+                obj = self.Model.query.filter_by(**params)[0]
+            except:
                 raise ValidationError('Document not found')
 
             if self.return_doc:

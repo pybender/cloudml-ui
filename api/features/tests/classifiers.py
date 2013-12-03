@@ -1,7 +1,10 @@
 import logging
+import httplib
 import json
 
-from api.base.test_utils import BaseDbTestCase
+from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS
+from api.ml_models.fixtures import ModelData
+from api.ml_models.models import Model
 from utils import FeaturePredefinedItemsTestMixin
 from ..views import ClassifierResource
 from ..models import PredefinedClassifier
@@ -15,13 +18,15 @@ class TestClassifierDoc(BaseDbTestCase):
     datasets = (PredefinedClassifierData, )
 
     def test_to_dict(self):
-        classifier = PredefinedClassifier.query.filter_by(name=PredefinedClassifierData.lr_classifier.name).one()
+        classifier = PredefinedClassifier.query.filter_by(
+            name=PredefinedClassifierData.lr_classifier.name).one()
         self.assertEquals(classifier.to_dict(),
                           {"penalty": "l2", "type": "logistic regression"})
 
     def test_from_features(self):
         features = json.loads(open('./conf/features.json', 'r').read())
-        classifier = PredefinedClassifier.from_model_features_dict("Set", features)
+        classifier = PredefinedClassifier.from_model_features_dict(
+            "Set", features)
         self.assertTrue(classifier, 'Classifier not set')
         self.assertEquals(classifier.name, 'Set')
         self.assertEquals(classifier.type, 'logistic regression')
@@ -88,8 +93,14 @@ support vector regression, logistic regression'})
         self.check_delete()
 
 
-class ModelClassifierTest(BaseDbTestCase):
-    ### Manipulating with model's classifier is here ###
+class ModelClassifierTest(BaseDbTestCase, TestChecksMixin):
+    """ Manipulating with model's classifier is here """
+    BASE_URL = '/cloudml/features/classifiers/'
+    OBJECT_NAME = 'classifier'
+    DATA = {'type': 'logistic regression',
+            'name': 'My predef classifier',
+            'params': "{}"}
+    datasets = (ModelData, PredefinedClassifierData, )
 
     def test_post_validation(self):
         def _check(data, errors):
@@ -100,50 +111,41 @@ class ModelClassifierTest(BaseDbTestCase):
             self.check_edit_error(data, errors)
 
         data = {"name": "classifier name is here",
-                'type': 'invalid'}
-        _check(data, errors={
-            'type': 'should be one of stochastic gradient descent classifier, \
-support vector regression, logistic regression'})
-
-        data['type'] = 'logistic regression'
-        data["params"] = 'hello!'
-        _check(data, errors={'params': 'invalid json: hello!'})
-
-        data = {'name': 'classifier#1',
                 'type': 'logistic regression',
-                'model_id': '512123b1106a6c5bcbc12efb'}
+                'model_id': 1000}
         _check(data, errors={u'model_id': u'Document not found'})
 
         data['predefined_selected'] = 'true'
-        data['model_id'] = MODEL_ID
+        data['model_id'] = 1
         _check(data, errors={u'classifier': u'classifier is required'})
 
-        classifier = self.db.Classifier.find_one()
-        data = {'name': classifier.name,
-                'type': 'logistic regression'}
-        _check(data, errors={
-            'fields': 'name of predefined item should be unique'})
-
-    def test_edit_model_classifier(self):
+    def test_edit(self):
         data = {'name': 'new classifier name',
                 'type': 'logistic regression',
                 'params': '{"C": 1}',
-                'model_id': MODEL_ID}
+                'model_id': 1}
 
-        self._check_put(data)
-        model = self.db.Model.get_from_id(ObjectId(MODEL_ID))
-        self.assertEqual(model.classifier['name'], data['name'])
+        self._check(data=data, method='put')
+        model = Model.query.get(1)
         self.assertEqual(model.classifier['type'], data['type'])
-        self.assertEqual(model.classifier['params'],
-                         json.loads(data['params']))
+        self.assertEqual(model.classifier['C'], 1)
 
-    def test_edit_feature_transformer_from_predefined(self):
-        classifier = self.db.Classifier.find_one()
-        data = {'classifier': str(classifier._id),
-                'model_id': MODEL_ID,
+    def test_edit_from_predefined(self):
+        classifier = PredefinedClassifier.query.get(1)
+        data = {'classifier': classifier.id,
+                'model_id': 1,
                 'predefined_selected': 'true'}
-        self._check_put(data, load_model=False)
-        model = self.db.Model.get_from_id(ObjectId(MODEL_ID))
-        self.assertEqual(model.classifier['name'], classifier.name)
+        self._check(data=data, method='put')
+        model = Model.query.get(1)
         self.assertEqual(model.classifier['type'], classifier.type)
-        self.assertEqual(model.classifier['params'], classifier.params)
+        self.assertEqual(model.classifier['penalty'], "l2")
+
+    def check_edit_error(self, post_data, errors, **data):
+        from api.utils import ERR_INVALID_DATA
+        url = self._get_url(**data)
+        resp = self.client.post(url, data=post_data, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.BAD_REQUEST)
+        resp_data = json.loads(resp.data)
+        err_data = resp_data['response']['error']
+        self.assertEquals(err_data['code'], ERR_INVALID_DATA)
+        self._check_errors(err_data, errors)

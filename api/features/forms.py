@@ -160,12 +160,12 @@ class BasePredefinedForm(BaseForm):
         obj = super(BasePredefinedForm, self).save(commit)
         feature = self.cleaned_data.get('feature', None)
         if feature:
-            setattr(feature, self.OBJECT_NAME, obj)
+            setattr(feature, self.OBJECT_NAME, obj.to_dict())
             feature.save()
 
         model = self.cleaned_data.get('model', None)
         if model:
-            setattr(model, self.OBJECT_NAME, obj)
+            setattr(model, self.OBJECT_NAME, obj.to_dict())
             model.save()
 
         return obj
