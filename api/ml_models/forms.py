@@ -115,12 +115,12 @@ train_import_handler should be specified for new model')
             obj.set_trainer(self.trainer_obj)
 
         # TODO
-        # features_set = FeatureSet.from_model_features_dict(obj.name, obj.features)
-        # obj.features_set_id = str(features_set._id)
-        # obj.features_set = features_set
-        # classifier = Classifier.from_model_features_dict(obj.name, obj.features)
-        # obj.classifier = classifier.to_json()
-
+        from api.features.models import FeatureSet, PredefinedClassifier
+        features = self.cleaned_data['features']
+        features_set = FeatureSet.from_model_features_dict(obj.name, features)
+        obj.features_set = features_set
+        classifier = PredefinedClassifier.from_model_features_dict(obj.name, features)
+        obj.classifier = classifier.to_dict()
         obj.save()
 
         if obj.status == Model.STATUS_TRAINED:

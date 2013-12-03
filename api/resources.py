@@ -4,6 +4,7 @@ import math
 from flask.ext import restful
 from flask.ext.restful import reqparse
 from sqlalchemy import desc
+from sqlalchemy.orm import exc as orm_exc
 
 from api.decorators import authenticate
 from api.utils import crossdomain, ERR_NO_SUCH_MODEL, odesk_error_response, \
@@ -451,7 +452,10 @@ class BaseResourceSQL(BaseResource):
         if '_id' in kwargs:
             kwargs['id'] = kwargs['_id']
             del kwargs['_id']
-        return self.Model.query.filter_by(**kwargs).limit(1)
+        try:
+            return self.Model.query.filter_by(**kwargs).one()
+        except orm_exc.NoResultFound:
+            return None
 
     def _details(self, extra_params=(), **kwargs):
         """
@@ -459,7 +463,7 @@ class BaseResourceSQL(BaseResource):
         """
         params = self._parse_parameters(extra_params + self.GET_PARAMS)
         query_fields, show_fields = self._get_fields(params)
-        model = self._get_details_query(params, query_fields, **kwargs).one()
+        model = self._get_details_query(params, query_fields, **kwargs)
         if model is None:
             raise NotFound(self.MESSAGE404 % kwargs)
 

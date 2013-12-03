@@ -1,3 +1,4 @@
+""" Features specific resources """
 from api import api
 from api.resources import BaseResourceSQL
 from models import *
@@ -5,38 +6,34 @@ from forms import *
 from api.decorators import public_actions
 
 
-# # Features specific resources
-# class FeatureSetResource(BaseResourceSQL):
-#     """
-#     Features Set API methods
-#     """
-#     MESSAGE404 = "Feature set set doesn't exist"
-#     OBJECT_NAME = 'set'
-#     #post_form = FeatureSetAddForm
-#     put_form = FeatureSetForm
-#     GET_ACTIONS = ('download', )
+class FeatureSetResource(BaseResourceSQL):
+    """
+    Features Set API methods
+    """
+    MESSAGE404 = "Feature set set doesn't exist"
+    OBJECT_NAME = 'set'
+    #post_form = FeatureSetAddForm
+    put_form = FeatureSetForm
+    GET_ACTIONS = ('download', )
+    Model = FeatureSet
 
-#     @property
-#     def Model(self):
-#         return app.db.FeatureSet
+    @public_actions(['download'])
+    def get(self, *args, **kwargs):
+        return super(FeatureSetResource, self).get(*args, **kwargs)
 
-#     @public_actions(['download'])
-#     def get(self, *args, **kwargs):
-#         return super(FeatureSetResource, self).get(*args, **kwargs)
+    def _get_download_action(self, **kwargs):
+        model = self._get_details_query(None, None, **kwargs)
+        if model is None:
+            raise NotFound(self.MESSAGE404 % kwargs)
 
-#     def _get_download_action(self, **kwargs):
-#         model = self._get_details_query(None, None, **kwargs)
-#         if model is None:
-#             raise NotFound(self.MESSAGE404 % kwargs)
+        data = json.dumps(model.to_dict())
+        resp = Response(data)
+        resp.headers['Content-Type'] = 'text/plain'
+        resp.headers['Content-Disposition'] = \
+            'attachment; filename=%s.json' % model.name
+        return resp
 
-#         data = json.dumps(model.to_dict())
-#         resp = Response(data)
-#         resp.headers['Content-Type'] = 'text/plain'
-#         resp.headers['Content-Disposition'] = \
-#             'attachment; filename=%s.json' % model.name
-#         return resp
-
-# api.add_resource(FeatureSetResource, '/cloudml/features/sets/')
+api.add_resource(FeatureSetResource, '/cloudml/features/sets/')
 
 
 class ClassifierResource(BaseResourceSQL):
