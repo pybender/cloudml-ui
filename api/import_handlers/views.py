@@ -25,16 +25,14 @@ class ImportHandlerResource(BaseResourceSQL):
     def get(self, *args, **kwargs):
         return super(ImportHandlerResource, self).get(*args, **kwargs)
 
-    def _get_details_query(self, *args, **kwargs):
-        query = super(ImportHandlerResource, self)._get_details_query(
-            *args, **kwargs)
-        return query.options(undefer('data'))
+    def _modify_details_query(self, cursor):
+        return cursor.options(undefer('data'))
 
     def _get_download_action(self, **kwargs):
         """
         Downloads importhandler data file.
         """
-        model = self._get_details_query(None, None, **kwargs).one()
+        model = self._get_details_query(None, None, **kwargs)
         if model is None:
             raise NotFound(self.MESSAGE404 % kwargs)
 
@@ -66,7 +64,7 @@ class DataSetResource(BaseResourceSQL):
         if ds is None:
             raise NotFound('DataSet not found')
         url = ds.get_s3_download_url()
-        return self._render({self.OBJECT_NAME: ds._id,
+        return self._render({self.OBJECT_NAME: ds.id,
                              'url': url})
 
     def _put_reupload_action(self, **kwargs):
@@ -75,7 +73,7 @@ class DataSetResource(BaseResourceSQL):
         if dataset.status == dataset.STATUS_ERROR:
             dataset.status = dataset.STATUS_IMPORTING
             dataset.save()
-            upload_dataset.delay(str(dataset._id))
+            upload_dataset.delay(dataset.id)
         return self._render(self._get_save_response_context(
             dataset, extra_fields=['status']))
 
@@ -86,7 +84,7 @@ class DataSetResource(BaseResourceSQL):
                                   dataset.STATUS_UPLOADING):
             dataset.status = dataset.STATUS_IMPORTING
             dataset.save()
-            import_data.delay(dataset_id=str(dataset._id))
+            import_data.delay(dataset_id=dataset.id)
 
         return self._render(self._get_save_response_context(
             dataset, extra_fields=['status']))

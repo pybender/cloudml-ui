@@ -8,6 +8,8 @@ from sqlalchemy.sql import expression
 from api import app
 from api.base.models import db, BaseModel
 from api.logs.models import LogMessage
+from api.ml_models.models import Model
+from api.import_handlers.models import DataSet
 from api.db import JSONType, GridfsFile
 
 
@@ -31,12 +33,13 @@ class Test(db.Model, BaseModel):
     error = db.Column(db.String(300))
 
     model_id = db.Column(db.Integer, db.ForeignKey('model.id'))
-    model = relationship('Model', backref=backref('tests',
-                                                  cascade='all,delete'))
+    model = relationship(Model, backref=backref('tests',
+                                                cascade='all,delete'))
     model_name = db.Column(db.String(200))
 
-    dataset_id = db.Column(db.Integer, db.ForeignKey('data_set.id'))
-    dataset = relationship('DataSet')
+    data_set_id = db.Column(db.Integer, db.ForeignKey('data_set.id',
+                                                     ondelete='SET NULL'))
+    dataset = relationship(DataSet, foreign_keys=[data_set_id])
 
     examples_count = db.Column(db.Integer)
     examples_fields = db.Column(postgresql.ARRAY(db.String))
@@ -89,14 +92,14 @@ class TestExample(db.Model, BaseModel):
             return None
 
         from api.helpers.features import get_features_vect_data
-        model = app.db.Model.find_one({'_id': ObjectId(self.model_id)})
+        model = self.model
         feature_model = model.get_trainer()._feature_model
         data = get_features_vect_data(self.test.get_vect_data(self.num),
                                       feature_model.features.items(),
                                       feature_model.target_variable)
 
         from api.helpers.weights import get_example_params
-        model_weights = app.db.Weight.find({'model_id': self.model_id})
+        model_weights = model.weights
         weighted_data = dict(get_example_params(
             model_weights, self.data_input, data))
         self.weighted_data_input = weighted_data

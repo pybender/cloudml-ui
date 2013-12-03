@@ -1,7 +1,7 @@
 # Models, Tags and Weights goes here
 import json
 
-from sqlalchemy.orm import relationship, deferred
+from sqlalchemy.orm import relationship, deferred, backref
 from sqlalchemy.dialects import postgresql
 
 from api.base.models import db, BaseModel
@@ -151,7 +151,8 @@ class WeightsCategory(db.Model, BaseModel):
     short_name = db.Column(db.String(200))
     model_name = db.Column(db.String(200))
 
-    model = db.Column(db.ForeignKey('model.id'))
+    model_id = db.Column(db.Integer, db.ForeignKey('model.id'))
+    model = relationship(Model, backref=backref('weight_categories'))
     parent_id = db.Column(db.Integer, db.ForeignKey('weights_category.id'))
     parent = relationship('WeightsCategory')
 
@@ -167,8 +168,8 @@ class Weight(db.Model, BaseModel):
     is_positive = db.Column(db.Boolean)
     css_class = db.Column(db.String)
 
-    model_id = db.Column(db.ForeignKey('model.id'))
-    model = relationship('WeightsCategory')
+    model_id = db.Column(db.Integer, db.ForeignKey('model.id'))
+    model = relationship(Model, backref=backref('weights'))
 
     parent_id = db.Column(db.Integer, db.ForeignKey('weights_category.id'))
     parent = relationship('WeightsCategory')

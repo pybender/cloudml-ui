@@ -51,6 +51,7 @@ class DataSetAddForm(BaseForm):
                               for item in dataset.import_params.iteritems()])
         dataset.name = "%s: %s" % (self.importhandler.name, str_params)
         dataset.import_handler_id = self.importhandler.id
+        dataset.compress = True
         dataset.save()
         dataset.set_file_path()
         import_data.delay(str(dataset.id))

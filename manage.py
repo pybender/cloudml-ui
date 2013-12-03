@@ -331,6 +331,14 @@ class CreateDbTables(Command):
         print 'Done.'
 
 
+class DropDbTables(Command):
+    """Drop db tables"""
+
+    def run(self, **kwargs):
+        app.sql_db.drop_all()
+        print 'Dropped.'
+
+
 manager = Manager(app)
 manager.add_command("celeryd", Celeryd())
 manager.add_command("celeryw", Celeryw())
@@ -343,6 +351,7 @@ manager.add_command('run', Run())
 manager.add_command('fix_mongo', RemObsoluteMongoKeys())
 manager.add_command("shell", Shell(make_context=_make_context))
 manager.add_command("create_db_tables", CreateDbTables())
+manager.add_command("drop_db_tables", DropDbTables())
 
 if __name__ == "__main__":
     manager.run()

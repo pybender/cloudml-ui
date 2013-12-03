@@ -375,7 +375,7 @@ class BaseResourceSQL(BaseResource):
         if action:
             return self._apply_action(action, method='PUT', **kwargs)
 
-        obj = self._get_details_query(None, None, **kwargs).one()
+        obj = self._get_details_query(None, None, **kwargs)
         if obj is None:
             raise NotFound(self.MESSAGE404 % kwargs)
 
@@ -393,7 +393,7 @@ class BaseResourceSQL(BaseResource):
         """
         Deletes unused model
         """
-        model = self._get_details_query(None, None, **kwargs).one()
+        model = self._get_details_query(None, None, **kwargs)
         if model is None:
             raise NotFound(self.MESSAGE404 % kwargs)
         self._delete_validataion(model)
@@ -448,12 +448,16 @@ class BaseResourceSQL(BaseResource):
         paginator = cursor.paginate(page, per_page)
         return paginator.total, paginator.items
 
+    def _modify_details_query(self, cursor):
+        return cursor
+
     def _get_details_query(self, params, fields, **kwargs):
         if '_id' in kwargs:
             kwargs['id'] = kwargs['_id']
             del kwargs['_id']
         try:
-            return self.Model.query.filter_by(**kwargs).one()
+            return self._modify_details_query(
+                self.Model.query.filter_by(**kwargs)).one()
         except orm_exc.NoResultFound:
             return None
 

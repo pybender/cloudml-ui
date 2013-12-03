@@ -1,15 +1,16 @@
+import json
+
 from fixture import DataSet
 
 
 class ImportHandlerData(DataSet):
     class import_handler_01:
-        id = 1
         name = "Handler 1"
         type = "Db"
         created_on = "2013-04-19 14:37:23.145000"
         updated_on = "2013-04-19 14:37:23.145000"
         import_params = ['one', 'two']
-        data = """
+        data = json.loads("""
         {
   "target-schema":"bestmatch",
   "datasource":[
@@ -108,7 +109,7 @@ class ImportHandlerData(DataSet):
     }
   ]
 }
-"""
+""")
 
 
 class DataSetData(DataSet):
@@ -118,7 +119,6 @@ class DataSetData(DataSet):
         error = ""
         created_on = "2013-04-19 14:37:23.145000"
         updated_on = "2013-04-19 14:37:23.145000"
-        import_handler_id = 1
         data = "5270dd3a106a6c1631000000.json"
         import_params = '{}'
         on_s3 = False
@@ -136,7 +136,6 @@ class DataSetData(DataSet):
         error = ""
         created_on = "2013-04-19 14:37:23.145000"
         updated_on = "2013-04-19 14:37:23.145000"
-        import_handler_id = 1
         data = "5270dd3a106a6c1631000000.json"
         import_params = '{}'
         on_s3 = False
@@ -153,7 +152,6 @@ class DataSetData(DataSet):
         error = ""
         created_on = "2013-04-19 14:37:23.145000"
         updated_on = "2013-04-19 14:37:23.145000"
-        import_handler_id = 1
         data = "5270dd3a106a6c1631000000.csv"
         import_params = '{}'
         on_s3 = False
