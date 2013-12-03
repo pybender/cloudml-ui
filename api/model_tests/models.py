@@ -35,7 +35,7 @@ class Test(db.Model, BaseModel):
                                                   cascade='all,delete'))
     model_name = db.Column(db.String(200))
 
-    dataset_id = db.Column(db.Integer, db.ForeignKey('dataset.id'))
+    dataset_id = db.Column(db.Integer, db.ForeignKey('data_set.id'))
     dataset = relationship('DataSet')
 
     examples_count = db.Column(db.Integer)

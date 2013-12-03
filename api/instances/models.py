@@ -10,7 +10,8 @@ class Instance(BaseModel, db.Model):
     name = db.Column(db.String(200), nullable=False)
     description = deferred(db.Column(db.Text))
     ip = db.Column(db.String(200), nullable=False)
-    type = db.Column(db.Enum(*TYPES_LIST, name='instance_types'))
+    type = db.Column(db.Enum(*TYPES_LIST, name='instance_types'),
+                     nullable=False)
     is_default = db.Column(db.Boolean, default=False)
 
     def save(self):

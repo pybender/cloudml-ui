@@ -67,7 +67,7 @@ class Model(db.Model, BaseModel):
                                         foreign_keys=[train_import_handler_id])
 
     datasets = relationship('DataSet',
-                            secondary=lambda: datasets_table)
+                            secondary=lambda: data_sets_table)
 
     classifier = deferred(db.Column(JSONType))
 
@@ -130,10 +130,10 @@ tags_table = db.Table(
     db.Column('tag_id', db.Integer, db.ForeignKey('tag.id'))
 )
 
-datasets_table = db.Table(
+data_sets_table = db.Table(
     'model_dataset', db.Model.metadata,
     db.Column('model_id', db.Integer, db.ForeignKey('model.id')),
-    db.Column('dataset_id', db.Integer, db.ForeignKey('dataset.id'))
+    db.Column('data_set_id', db.Integer, db.ForeignKey('data_set.id'))
 )
 
 

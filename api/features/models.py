@@ -11,6 +11,10 @@ from config import TRANSFORMERS, SCALERS, FIELDS_MAP, SYSTEM_FIELDS
 
 
 class ExportImportMixin(object):
+    """
+    Mixin with methods to serialize/de-serialize model to JSON
+    when import/export to file.
+    """
     NO_PARAMS_KEY = False
 
     @classmethod
@@ -98,8 +102,6 @@ class NamedFeatureType(BaseModel, PredefinedItemMixin,
 class PredefinedClassifier(BaseModel, PredefinedItemMixin,
                            db.Model, ExportImportMixin):
     """ Represents predefined classifier """
-    __tablename__ = 'predefined_classifier'
-
     NO_PARAMS_KEY = True
     FIELDS_TO_SERIALIZE = ('type', 'params')
 
@@ -123,7 +125,6 @@ class PredefinedClassifier(BaseModel, PredefinedItemMixin,
 class PredefinedTransformer(BaseModel, PredefinedItemMixin, db.Model,
                             ExportImportMixin):
     """ Represents predefined feature transformer """
-    __tablename__ = 'predefined_transformer'
     FIELDS_TO_SERIALIZE = ('type', 'params')
     NO_PARAMS_KEY = True
 
@@ -135,7 +136,6 @@ class PredefinedTransformer(BaseModel, PredefinedItemMixin, db.Model,
 class PredefinedScaler(BaseModel, PredefinedItemMixin, db.Model,
                        ExportImportMixin):
     """ Represents predefined feature scaler """
-    __tablename__ = 'predefined_scaler'
     FIELDS_TO_SERIALIZE = ('type', 'params')
     NO_PARAMS_KEY = True
 
@@ -199,8 +199,6 @@ class Feature(ExportImportMixin, RefFeatureSetMixin,
 
 class FeatureSet(ExportImportMixin, BaseModel, db.Model):
     """ Represents list of the features with schema name."""
-    __tablename__ = 'feature_set'
-
     FIELDS_TO_SERIALIZE = ('schema_name', )
 
     FEATURES_STRUCT = {'schema-name': '',
