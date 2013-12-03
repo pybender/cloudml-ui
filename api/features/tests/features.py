@@ -2,7 +2,7 @@ import json
 import httplib
 import logging
 
-from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS
+from api.base.test_utils import BaseDbTestCase, TestChecksMixin
 from ..views import FeatureResource
 from ..models import Feature, FeatureSet, PredefinedTransformer, NamedFeatureType
 from ..fixtures import FeatureSetData, FeatureData, PredefinedTransformerData
@@ -90,7 +90,7 @@ transformer-type: should be one of Count, Tfidf, Lda, Dictionary, Lsi"})
         Adding feature with transformer and scaler
         """
         data = {
-            "name": "title",
+            "name": "jobpost title",
             "type": "text",
             "feature_set_id": self.model.features_set_id,
             "transformer-type": "Count",
@@ -120,7 +120,8 @@ transformer-type: should be one of Count, Tfidf, Lda, Dictionary, Lsi"})
 
         self.assertTrue(obj.transformer, "Transformer not added to feature")
         self.assertEquals(obj.transformer['type'], transformer.type)
-        self.assertEquals(obj.transformer['params'], transformer.params)
+        for name, value in transformer.params.iteritems():
+            self.assertEquals(obj.transformer[name], value)
 
     def test_inline_edit_feature(self):
         """

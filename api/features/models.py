@@ -90,7 +90,8 @@ class NamedFeatureType(BaseModel, PredefinedItemMixin,
                   'text', 'regex', 'composite']
     FIELDS_TO_SERIALIZE = ('name', 'type', 'input_format', 'params')
 
-    type = db.Column(db.Enum(*TYPES_LIST, name='named_feature_types'))
+    type = db.Column(
+        db.Enum(*TYPES_LIST, name='named_feature_types'), nullable=False)
     input_format = db.Column(db.String(200))
 
 
@@ -103,7 +104,8 @@ class PredefinedClassifier(BaseModel, PredefinedItemMixin,
     FIELDS_TO_SERIALIZE = ('type', 'params')
 
     TYPES_LIST = CLASSIFIERS.keys()
-    type = db.Column(db.Enum(*TYPES_LIST, name='classifier_types'))
+    type = db.Column(
+        db.Enum(*TYPES_LIST, name='classifier_types'), nullable=False)
 
     @classmethod
     def from_model_features_dict(cls, name, features_dict):
