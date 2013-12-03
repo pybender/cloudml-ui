@@ -113,15 +113,9 @@ class Model(db.Model, BaseModel):
             self.labels = map(str, trainer._classifier.classes_.tolist())
 
     def get_features_json(self):
-        return json.dumps({
-            'classifier': {}
-        })
-        # TODO
-        # from api.features.models import PredefinedClassifier
-        # data = self.features_set.to_dict() if self.features_set else {}
-        # data['classifier'] = PredefinedClassifier.from_dict(
-        #     self.classifier if self.classifier else {}).to_dict()
-        # return json.dumps(data)
+        data = self.features_set.to_dict()
+        data['classifier'] = self.classifier
+        return json.dumps(data)
 
 
 tags_table = db.Table(

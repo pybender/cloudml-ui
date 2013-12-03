@@ -21,7 +21,7 @@ Feature, Transformer, Scaler, Parameters) ->
   if not $routeParams.model_id then throw new Error "Specify model id"
   if not $routeParams.set_id then throw new Error "Specify set id"
 
-  $scope.modelObj = new Model({'_id': $routeParams.model_id})
+  $scope.modelObj = new Model({'id': $routeParams.model_id})
   $scope.feature = new Feature({
     features_set_id: $routeParams.set_id,
     transformer: new Transformer({}),
@@ -33,7 +33,7 @@ Feature, Transformer, Scaler, Parameters) ->
   $scope.optionalParams = []
 
   if $routeParams.feature_id
-    $scope.feature._id = $routeParams.feature_id
+    $scope.feature.id = $routeParams.feature_id
     $scope.feature.$load(show: Feature.MAIN_FIELDS
     ).then ((opts) ->
       $scope.loadFeatureParameters()
@@ -94,7 +94,7 @@ Feature, Transformer, Scaler, Parameters) ->
     # transformer/scaler fields selected, when edditing
     # feature in full details page.
 
-    is_edit = $scope.feature._id != null
+    is_edit = $scope.feature.id != null
     $scope.saving = true
     $scope.savingProgress = '0%'
 

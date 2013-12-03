@@ -4,6 +4,7 @@ import math
 from flask.ext import restful
 from flask.ext.restful import reqparse
 from sqlalchemy import desc
+from sqlalchemy.orm import exc as orm_exc
 
 from api.decorators import authenticate
 from api.utils import crossdomain, ERR_NO_SUCH_MODEL, odesk_error_response, \
@@ -136,8 +137,9 @@ class BaseResource(restful.Resource):
         else:
             raise ValidationError(form.error_messages)
 
-        return self._render(self._get_save_response_context(obj, extra_fields=extra_fields),
-                            code=200)
+        return self._render(
+            self._get_save_response_context(obj, extra_fields=extra_fields),
+            code=200)
 
     def delete(self, action=None, **kwargs):
         """
@@ -160,8 +162,8 @@ class BaseResource(restful.Resource):
         GET parameters:
             * show - list of fields to return
         """
-        parser_params = tuple(extra_params) + self.GET_PARAMS + tuple(self.FILTER_PARAMS) + \
-            self.SORT_PARAMS
+        parser_params = tuple(extra_params) + self.GET_PARAMS \
+            + tuple(self.FILTER_PARAMS) + self.SORT_PARAMS
         if self.NEED_PAGING:
             parser_params += self.PAGING_PARAMS
         params = self._parse_parameters(parser_params)
@@ -218,7 +220,8 @@ class BaseResource(restful.Resource):
     def _get_save_response_context(self, model, extra_fields=[]):
         if not self.ALL_FIELDS_IN_POST:
             model = dict([(field, getattr(model, field, None))
-                     for field in list(self.DEFAULT_FIELDS) + extra_fields])
+                          for field in list(self.DEFAULT_FIELDS)
+                          + extra_fields])
         return {self.OBJECT_NAME: model}
 
     # Specific actions for GET
@@ -358,11 +361,11 @@ class BaseResourceSQL(BaseResource):
         else:
             fields = list(self.DEFAULT_FIELDS) + extra_fields
         model = dict([(field, getattr(model, field, None))
-                          for field in fields])
+                      for field in fields])
         return {self.OBJECT_NAME: model}
 
     def _get_all_fields(self):
-        return [name.replace("%s." % self.Model.__tablename__, '') \
+        return [name.replace("%s." % self.Model.__tablename__, '')
                 for name in self.Model.__table__.columns.keys()]
 
     def put(self, action=None, **kwargs):
@@ -382,8 +385,9 @@ class BaseResourceSQL(BaseResource):
             extra_fields = form.cleaned_data.keys()
         else:
             raise ValidationError(form.error_messages)
-        return self._render(self._get_save_response_context(obj, extra_fields=extra_fields),
-                            code=200)
+        return self._render(
+            self._get_save_response_context(obj, extra_fields=extra_fields),
+            code=200)
 
     def delete(self, action=None, **kwargs):
         """
@@ -448,7 +452,10 @@ class BaseResourceSQL(BaseResource):
         if '_id' in kwargs:
             kwargs['id'] = kwargs['_id']
             del kwargs['_id']
-        return self.Model.query.filter_by(**kwargs).limit(1)
+        try:
+            return self.Model.query.filter_by(**kwargs).one()
+        except orm_exc.NoResultFound:
+            return None
 
     def _details(self, extra_params=(), **kwargs):
         """
@@ -456,7 +463,7 @@ class BaseResourceSQL(BaseResource):
         """
         params = self._parse_parameters(extra_params + self.GET_PARAMS)
         query_fields, show_fields = self._get_fields(params)
-        model = self._get_details_query(params, query_fields, **kwargs).one()
+        model = self._get_details_query(params, query_fields, **kwargs)
         if model is None:
             raise NotFound(self.MESSAGE404 % kwargs)
 
@@ -488,6 +495,3 @@ def _filter_model_fields(model, show_fields):
             if field in model:
                 res[field] = getattr(model, field)
     return res
-
-
-from api.logs.views import *

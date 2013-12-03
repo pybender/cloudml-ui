@@ -79,7 +79,7 @@ class PredefinedItemMixin(object):
 
     @declared_attr
     def params(cls):
-        return deferred(db.Column(JSONType))
+        return db.Column(JSONType)
 
     def __repr__(self):
         return '<%s %s>' % (self.__class__.__name__.lower(), self.type)

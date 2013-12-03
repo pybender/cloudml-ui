@@ -77,6 +77,8 @@ class ModelResource(BaseResourceSQL):
 
         model = super(ModelResource, self)._get_details_query(
             params, fields, **kwargs)
+        if model is None:
+            raise NotFound()
 
         if get_datasets:
             model['datasets'] = [{

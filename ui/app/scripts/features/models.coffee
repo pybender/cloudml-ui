@@ -30,10 +30,13 @@ angular.module('app.features.models', ['app.config'])
       @MAIN_FIELDS: 'name,type,params,created_on,created_by,is_predefined'
       @$TYPES_LIST: ['Dictionary', 'Count', 'Tfidf', 'Lda', 'Lsi']
 
-      _id: null
+      id: null
+      name: null
+      type: null
+      params: null
 
       $getConfiguration: (opts={}) =>
-        @$make_request("#{@BASE_API_URL}#{@_id}/action/configuration/",
+        @$make_request("#{@BASE_API_URL}#{@id}/action/configuration/",
                        load=false)
 
       $save: (opts={}) =>
@@ -63,10 +66,10 @@ angular.module('app.features.models', ['app.config'])
       @MAIN_FIELDS: 'name,type,params,created_on,created_by,is_predefined'
       @$TYPES_LIST: ['MinMaxScaler', 'StandardScaler']
 
-      _id: null
+      id: null
 
       $getConfiguration: (opts={}) =>
-        @$make_request("#{@BASE_API_URL}#{@_id}/action/configuration/",
+        @$make_request("#{@BASE_API_URL}#{@id}/action/configuration/",
                        load=false)
 
       $save: (opts={}) =>
@@ -97,7 +100,7 @@ angular.module('app.features.models', ['app.config'])
       @$TYPES_LIST: ['stochastic gradient descent classifier',
       'support vector regression', 'logistic regression']
 
-      _id: null
+      id: null
       name: null
       type: null
       params: {}
@@ -110,7 +113,7 @@ angular.module('app.features.models', ['app.config'])
         @TYPES_LIST = Classifier.$TYPES_LIST
 
       $getConfiguration: (opts={}) =>
-        @$make_request("#{@BASE_API_URL}#{@_id}/action/configuration/",
+        @$make_request("#{@BASE_API_URL}#{@id}/action/configuration/",
                        load=false)
 
       $save: (opts={}) =>
@@ -136,7 +139,7 @@ angular.module('app.features.models', ['app.config'])
       @MAIN_FIELDS: 'name,schema_name,classifier,
 features_count,created_on,created_by,target_variable,json'
 
-      _id: null
+      id: null
       name: null
       schema_name: null
       features_count: 0
@@ -153,7 +156,7 @@ features_count,created_on,created_by,target_variable,json'
           @classifier = new Classifier(origData.classifier)
 
       downloadUrl: =>
-        return "#{@BASE_API_URL}#{@_id}/action/download/"
+        return "#{@BASE_API_URL}#{@id}/action/download/"
 
     return FeaturesSet
 ])
@@ -172,10 +175,10 @@ features_count,created_on,created_by,target_variable,json'
       @MAIN_FIELDS: 'name,type,input_format,transformer,params,
 scaler,default,is_target_variable,created_on,created_by,required'
 
-      _id: null
+      id: null
       name: null
       type: null
-      features_set_id: null
+      feature_set_id: null
       transformer: null
       input_format: null
       params: null
@@ -189,7 +192,7 @@ scaler,default,is_target_variable,created_on,created_by,required'
         super origData
         
         if origData?
-          defaultData = {'feature_id': @_id, 'is_predefined': false}
+          defaultData = {'feature_id': @id, 'is_predefined': false}
           if origData.transformer? && Object.keys(origData.transformer).length
             @transformer = new Transformer(
               _.extend origData.transformer, defaultData)
@@ -216,17 +219,17 @@ scaler,default,is_target_variable,created_on,created_by,required'
 
       constructor: (opts) ->
         super opts
-        @BASE_API_URL = Feature.$get_api_url(@features_set_id)
+        @BASE_API_URL = Feature.$get_api_url(@feature_set_id)
 
-      @$get_api_url: (features_set_id) ->
-        return "#{settings.apiUrl}features/#{features_set_id}/items/"
+      @$get_api_url: (feature_set_id) ->
+        return "#{settings.apiUrl}features/#{feature_set_id}/items/"
 
       @$loadAll: (opts) ->
-        features_set_id = opts.features_set_id
-        if not features_set_id
+        feature_set_id = opts.feature_set_id
+        if not feature_set_id
           throw new Error "Feature Set is required"
 
-        extra = {loaded: true, features_set_id: features_set_id}
+        extra = {loaded: true, feature_set_id: feature_set_id}
         resolver = (resp, Model) ->
           {
             objects: (
@@ -234,7 +237,7 @@ scaler,default,is_target_variable,created_on,created_by,required'
               for obj in eval("resp.data.#{Model.prototype.API_FIELDNAME}s"))
             _resp: resp
           }
-        @$make_all_request(Feature.$get_api_url(features_set_id),
+        @$make_all_request(Feature.$get_api_url(feature_set_id),
                            resolver, opts)
 
       $save: (opts={}) =>
@@ -272,7 +275,7 @@ scaler,default,is_target_variable,created_on,created_by,required'
         super opts
 
       $getConfiguration: (opts={}) =>
-        @$make_request("#{@BASE_API_URL}#{@_id}/action/configuration/",
+        @$make_request("#{@BASE_API_URL}#{@id}/action/configuration/",
                        load=false)
 
     return Feature
@@ -312,7 +315,7 @@ scaler,default,is_target_variable,created_on,created_by,required'
       @LIST_MODEL_NAME: 'named_types'
       LIST_MODEL_NAME: @LIST_MODEL_NAME
 
-      _id: null
+      id: null
       name: null
       type: 'int'
       input_format: null
