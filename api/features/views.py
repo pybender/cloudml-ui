@@ -12,7 +12,6 @@ from api.decorators import public_actions
 #     """
 #     MESSAGE404 = "Feature set set doesn't exist"
 #     OBJECT_NAME = 'set'
-#     DEFAULT_FIELDS = [u'_id', 'name']
 #     #post_form = FeatureSetAddForm
 #     put_form = FeatureSetForm
 #     GET_ACTIONS = ('download', )
@@ -46,7 +45,6 @@ class ClassifierResource(BaseResourceSQL):
     """
     MESSAGE404 = "Classifier doesn't exist"
     OBJECT_NAME = 'classifier'
-    DEFAULT_FIELDS = [u'_id', 'name']
     post_form = put_form = ClassifierForm
     GET_ACTIONS = ('configuration', )
     Model = PredefinedClassifier
@@ -64,7 +62,6 @@ class NamedFeatureTypeResource(BaseResourceSQL):
     """
     MESSAGE404 = "Named feature type doesn't exist"
     OBJECT_NAME = 'named_type'
-    DEFAULT_FIELDS = [u'_id', 'name']
     put_form = post_form = NamedFeatureTypeAddForm
     Model = NamedFeatureType
 
@@ -95,7 +92,6 @@ class ScalersResource(BaseResourceSQL):
     """
     MESSAGE404 = "Scaler doesn't exist"
     OBJECT_NAME = 'scaler'
-    DEFAULT_FIELDS = [u'_id', 'name']
     put_form = post_form = ScalerForm
     GET_ACTIONS = ('configuration', )
     ALL_FIELDS_IN_POST = True
