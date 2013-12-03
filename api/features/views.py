@@ -1,42 +1,43 @@
 from api import api
 from api.resources import BaseResourceSQL
-from models import PredefinedTransformer
+from models import *
 from forms import *
 from api.decorators import public_actions
 
 
-# Features specific resources
-class FeatureSetResource(BaseResourceSQL):
-    """
-    Features Set API methods
-    """
-    MESSAGE404 = "Feature set set doesn't exist"
-    OBJECT_NAME = 'set'
-    DEFAULT_FIELDS = [u'_id', 'name']
-    #post_form = FeatureSetAddForm
-    put_form = FeatureSetForm
-    GET_ACTIONS = ('download', )
+# # Features specific resources
+# class FeatureSetResource(BaseResourceSQL):
+#     """
+#     Features Set API methods
+#     """
+#     MESSAGE404 = "Feature set set doesn't exist"
+#     OBJECT_NAME = 'set'
+#     DEFAULT_FIELDS = [u'_id', 'name']
+#     #post_form = FeatureSetAddForm
+#     put_form = FeatureSetForm
+#     GET_ACTIONS = ('download', )
 
-    @property
-    def Model(self):
-        return app.db.FeatureSet
+#     @property
+#     def Model(self):
+#         return app.db.FeatureSet
 
-    @public_actions(['download'])
-    def get(self, *args, **kwargs):
-        return super(FeatureSetResource, self).get(*args, **kwargs)
+#     @public_actions(['download'])
+#     def get(self, *args, **kwargs):
+#         return super(FeatureSetResource, self).get(*args, **kwargs)
 
-    def _get_download_action(self, **kwargs):
-        model = self._get_details_query(None, None, **kwargs)
-        if model is None:
-            raise NotFound(self.MESSAGE404 % kwargs)
+#     def _get_download_action(self, **kwargs):
+#         model = self._get_details_query(None, None, **kwargs)
+#         if model is None:
+#             raise NotFound(self.MESSAGE404 % kwargs)
 
-        data = json.dumps(model.to_dict())
-        resp = Response(data)
-        resp.headers['Content-Type'] = 'text/plain'
-        resp.headers['Content-Disposition'] = 'attachment; filename=%s.json' % model.name
-        return resp
+#         data = json.dumps(model.to_dict())
+#         resp = Response(data)
+#         resp.headers['Content-Type'] = 'text/plain'
+#         resp.headers['Content-Disposition'] = \
+#             'attachment; filename=%s.json' % model.name
+#         return resp
 
-api.add_resource(FeatureSetResource, '/cloudml/features/sets/')
+# api.add_resource(FeatureSetResource, '/cloudml/features/sets/')
 
 
 class ClassifierResource(BaseResourceSQL):
@@ -48,10 +49,7 @@ class ClassifierResource(BaseResourceSQL):
     DEFAULT_FIELDS = [u'_id', 'name']
     post_form = put_form = ClassifierForm
     GET_ACTIONS = ('configuration', )
-
-    @property
-    def Model(self):
-        return app.db.Classifier
+    Model = PredefinedClassifier
 
     def _get_configuration_action(self, **kwargs):
         from core.trainer.classifier_settings import CLASSIFIERS
@@ -68,10 +66,7 @@ class NamedFeatureTypeResource(BaseResourceSQL):
     OBJECT_NAME = 'named_type'
     DEFAULT_FIELDS = [u'_id', 'name']
     put_form = post_form = NamedFeatureTypeAddForm
-
-    @property
-    def Model(self):
-        return app.db.NamedFeatureType
+    Model = NamedFeatureType
 
 api.add_resource(NamedFeatureTypeResource, '/cloudml/features/named_types/')
 
@@ -85,10 +80,7 @@ class TransformerResource(BaseResourceSQL):
     put_form = post_form = TransformerForm
     GET_ACTIONS = ('configuration', )
     ALL_FIELDS_IN_POST = True
-
-    @property
-    def Model(self):
-        return PredefinedTransformer
+    Model = PredefinedTransformer
 
     def _get_configuration_action(self, **kwargs):
         from utils import TRANSFORMERS
@@ -107,13 +99,10 @@ class ScalersResource(BaseResourceSQL):
     put_form = post_form = ScalerForm
     GET_ACTIONS = ('configuration', )
     ALL_FIELDS_IN_POST = True
-
-    @property
-    def Model(self):
-        return app.db.Scaler
+    Model = PredefinedScaler
 
     def _get_configuration_action(self, **kwargs):
-        from api.models import SCALERS
+        from utils import SCALERS
         return self._render({'configuration': SCALERS})
 
 api.add_resource(ScalersResource, '/cloudml/features/scalers/')
@@ -125,17 +114,12 @@ class FeatureResource(BaseResourceSQL):
     """
     MESSAGE404 = "Feature doesn't exist"
     OBJECT_NAME = 'feature'
-    DEFAULT_FIELDS = [u'_id', 'name']
-    post_form = FeatureForm
-    put_form = FeatureForm
-
-    @property
-    def Model(self):
-        return app.db.Feature
+    put_form = post_form = FeatureForm
+    Model = Feature
 
 api.add_resource(
     FeatureResource,
-    '/cloudml/features/<regex("[\w\.]*"):features_set_id>/items/')
+    '/cloudml/features/<regex("[\w\.]*"):feature_set_id>/items/')
 
 
 class ParamsResource(BaseResourceSQL):

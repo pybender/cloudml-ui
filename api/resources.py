@@ -114,6 +114,8 @@ class BaseResource(restful.Resource):
             obj = form.save()
         else:
             raise ValidationError(form.error_messages)
+
+        logging.info('Item %s added' % obj)
         return self._render(self._get_save_response_context(obj),
                             code=201)
 
@@ -135,6 +137,7 @@ class BaseResource(restful.Resource):
         else:
             raise ValidationError(form.error_messages)
 
+        logging.info('Item %s edited' % obj)
         return self._render(self._get_save_response_context(obj, extra_fields=extra_fields),
                             code=200)
 

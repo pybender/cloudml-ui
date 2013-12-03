@@ -34,6 +34,6 @@ class BasePredefinedItemModel(BaseModel):
     name = db.Column(db.String(200), nullable=False)
     params = db.Column(JSONType)
 
-    # @declared_attr
-    # def __repr__(self):
-    #     return '<%s %s>' % (self.__name__.lower(), self.type)
+    @declared_attr
+    def __repr__(self):
+        return '<%s %s>' % (self.__class__.__name__.lower(), self.type)

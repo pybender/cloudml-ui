@@ -1,10 +1,12 @@
 import json
+import sqlalchemy
 
 from api.base.forms import BaseForm
 from api.base.fields import CharField, ChoiceField, BooleanField, JsonField, DocumentField
 from api.resources import ValidationError
 from models import NamedFeatureType, PredefinedClassifier, PredefinedScaler, \
-    PredefinedTransformer
+    PredefinedTransformer, FeatureSet, Feature
+from api.ml_models.models import *
 
 
 class FeatureParamsMixin(object):
@@ -117,6 +119,9 @@ class BasePredefinedForm(BaseForm):
         predefined_selected = self.cleaned_data.get('predefined_selected', False)
         feature_id = self.cleaned_data.get('feature_id', False)
         model_id = self.cleaned_data.get('model_id', False)
+
+        # It would be predefined obj, when model, feature not specified
+        # and this form will not used as inner form of another one
         self.cleaned_data['is_predefined'] = is_predefined = \
                 not (feature_id or model_id or self.inner_name)
 
@@ -127,11 +132,12 @@ class BasePredefinedForm(BaseForm):
             name = self.cleaned_data.get('name', None)
             if not name:
                 raise ValidationError('name is required for predefined item')
-            kwargs = {'name': name}
-            if '_id' in self.obj and self.obj._id:
-                kwargs['_id'] = {'$ne': self.obj._id}
-            callable_document = getattr(app.db, self.DOC)
-            count = callable_document.find(kwargs).count()
+
+            items = self.DOC.query.filter_by(name=name)
+            if self.obj.id:
+                items = items.filter(
+                    sqlalchemy.not_(PredefinedTransformer.id == self.obj.id))
+            count = items.count()
 
             if count:
                 raise ValidationError('name of predefined item should be unique')
@@ -161,12 +167,13 @@ class BasePredefinedForm(BaseForm):
         if model:
             setattr(model, self.OBJECT_NAME, obj)
             model.save()
+
         return obj
 
 
 class ScalerForm(BasePredefinedForm):
     OBJECT_NAME = 'scaler'
-    DOC = 'Scaler'
+    DOC = PredefinedScaler
 
     group_chooser = 'predefined_selected'
     required_fields_groups = {'true': ('scaler', ),
@@ -179,8 +186,8 @@ class ScalerForm(BasePredefinedForm):
     # whether need to copy feature scaler fields from predefined one
     predefined_selected = BooleanField()
     # whether we need to create predefined item (not feature related)
-    scaler = DocumentField(doc='Scaler', by_name=True, return_doc=True)
-    feature_id = DocumentField(doc='Feature', by_name=False,
+    scaler = DocumentField(doc=PredefinedScaler, by_name=True, return_doc=True)
+    feature_id = DocumentField(doc=Feature, by_name=False,
                                 return_doc=False)
 
 
@@ -189,7 +196,7 @@ class ClassifierForm(BasePredefinedForm):
     Form with predefined item selection for model instead of feature
     """
     OBJECT_NAME = 'classifier'
-    DOC = 'Classifier'
+    DOC = PredefinedClassifier
 
     group_chooser = 'predefined_selected'
     required_fields_groups = {'true': ('classifier', ),
@@ -202,13 +209,13 @@ class ClassifierForm(BasePredefinedForm):
     # whether need to copy model classifier fields from predefined one
     predefined_selected = BooleanField()
     # whether we need to create predefined item (not model-related)
-    classifier = DocumentField(doc='Classifier', by_name=False, return_doc=True)
-    model_id = DocumentField(doc='Model', by_name=False, return_doc=False)
+    classifier = DocumentField(doc=PredefinedClassifier, by_name=False, return_doc=True)
+    model_id = DocumentField(doc=Model, by_name=False, return_doc=False)
 
 
 class TransformerForm(BasePredefinedForm):
     OBJECT_NAME = 'transformer'
-    DOC = 'Transformer'
+    DOC = PredefinedTransformer
 
     group_chooser = 'predefined_selected'
     required_fields_groups = {
@@ -220,14 +227,14 @@ class TransformerForm(BasePredefinedForm):
     type_field = ChoiceField(choices=PredefinedTransformer.TYPES_LIST, name='type')
     params = JsonField()
     predefined_selected = BooleanField()
-    transformer = DocumentField(doc='Transformer', by_name=True, return_doc=True)
-    feature_id = DocumentField(doc='Feature', by_name=False,
+    transformer = DocumentField(doc=PredefinedTransformer, by_name=True, return_doc=True)
+    feature_id = DocumentField(doc=Feature, by_name=False,
                                 return_doc=False)
 
 
 class FeatureForm(BaseForm, FeatureParamsMixin):
     NO_REQUIRED_FOR_EDIT = True
-    required_fields = ('name', 'type', 'features_set_id')
+    required_fields = ('name', 'type', 'feature_set_id')
 
     name = CharField()
     type_field = CharField(name='type')
@@ -236,27 +243,27 @@ class FeatureForm(BaseForm, FeatureParamsMixin):
     required = BooleanField()
     default = CharField()
     is_target_variable = BooleanField()
-    features_set_id = DocumentField(doc='FeatureSet', by_name=False,
-                                    return_doc=False)
+    feature_set_id = DocumentField(doc=FeatureSet, by_name=False,
+                                   return_doc=False)
 
-    transformer = TransformerForm(model_name='Transformer',
+    transformer = TransformerForm(Model=PredefinedTransformer,
                                   prefix='transformer-', data_from_request=False)
     remove_transformer = BooleanField()
-    scaler = ScalerForm(model_name='Scaler', prefix='scaler-',
+    scaler = ScalerForm(Model=PredefinedScaler, prefix='scaler-',
                         data_from_request=False)
     remove_scaler = BooleanField()
 
-    # def clean_features_set_id(self, value, field):        
-    #     if value:
-    #         feature_set = field.doc
-    #         self.cleaned_data['features_set'] = feature_set
-    #     return value
+    def clean_transformer(self, value, form):
+        return value.to_dict()
+
+    def clean_scaler(self, value, form):
+        return value.to_dict()
 
     def clean_type(self, value, field):
         if value and not value in NamedFeatureType.TYPES_LIST:
             # Try to find type in named types
-            named_type = NamedFeatureType.find_one({'name': value})
-            if not named_type:
+            found = NamedFeatureType.query.filter_by(name=value).count()
+            if not found:
                 raise ValidationError('invalid type')
         return value
 
@@ -269,12 +276,10 @@ class FeatureForm(BaseForm, FeatureParamsMixin):
     def save(self, *args, **kwargs):
         remove_transformer = self.cleaned_data.get('remove_transformer', False)
         if remove_transformer and self.obj.transformer:
-            #self.obj.transformer.delete()
             self.obj.transformer = None
 
         remove_scaler = self.cleaned_data.get('remove_scaler', False)
         if remove_scaler and self.obj.scaler:
-            #self.obj.scaler.delete()
             self.obj.scaler = None
 
         return super(FeatureForm, self).save(*args, **kwargs)

@@ -1,6 +1,8 @@
+from sqlalchemy.orm.attributes import get_history
+from sqlalchemy import event
 from sqlalchemy.orm import deferred
-from sqlalchemy.schema import CheckConstraint
-from sqlalchemy import (Integer, String, Binary, Column,
+from sqlalchemy.schema import CheckConstraint, UniqueConstraint
+from sqlalchemy import (Integer, String, Boolean, Column,
                         Enum, ForeignKey)
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship
@@ -12,16 +14,20 @@ from config import TRANSFORMERS, SCALERS, FIELDS_MAP, SYSTEM_FIELDS
 
 
 class ExportImportMixin(object):
+    NO_PARAMS_KEY = False
+
     @classmethod
     def from_dict(cls, obj_dict, extra_fields={},
-                  filter_params=None, save=True, add_new=False):
+                  filter_params=None, save=True, add_new=False, commit=True):
         obj_dict.update(extra_fields)
         fields_list = list(cls.FIELDS_TO_SERIALIZE) + extra_fields.keys()
         obj = None
         if not add_new and save:
             if filter_params is None:
                 filter_params = {'name': obj_dict['name']}
-            obj = cls.find_one(filter_params)
+            obj_query = cls.query.filter_by(**filter_params)
+            if obj_query.count():
+                obj = obj_query[0]
 
         if not obj:
             obj = cls()
@@ -36,9 +42,9 @@ class ExportImportMixin(object):
                 else:
                     value = obj_dict.get(dict_field_name, None)
                 if value is not None:
-                    obj[field] = value
-            if save:
-                obj.save()
+                    setattr(obj, field, value)
+
+            obj.save(commit=commit)
 
             return obj, True
 
@@ -47,15 +53,20 @@ class ExportImportMixin(object):
     def to_dict(self):
         data = {}
         for field in self.FIELDS_TO_SERIALIZE:
-            field_type = self.structure[field]
-            val = self.get(field, None)
+            val = getattr(self, field, None)
             if val is not None:
-                if field_type in (bool, dict) and not val:
-                    continue
                 if self.NO_PARAMS_KEY and field == 'params':
                     for key, value in self.params.iteritems():
                         data[key] = value
                 else:
+                    field_type = getattr(
+                        self.__class__, field).property.columns[0].type
+                    # TODO: Do we need this only for params or for other
+                    # JSON fields also?
+                    if isinstance(field_type, Boolean) or field == 'params':
+                        if not val:
+                            continue
+
                     field_name = FIELDS_MAP.get(field, field)
                     data[field_name] = val
         return data
@@ -63,25 +74,27 @@ class ExportImportMixin(object):
 
 ### Predefined Items ###
 class PredefinedItemMixin(object):
-    name = Column(String(200), nullable=False)
+    name = db.Column(db.String(200), nullable=False)
 
     @declared_attr
     def params(cls):
-        return deferred(Column(JSONType))
+        return deferred(db.Column(JSONType))
 
     def __repr__(self):
-        return '<%s %s>' % (self.__name__.lower(), self.type)
+        return '<%s %s>' % (self.__class__.__name__.lower(), self.type)
 
 
-class NamedFeatureType(BaseModel, PredefinedItemMixin, db.Model):
+class NamedFeatureType(BaseModel, PredefinedItemMixin,
+                       ExportImportMixin, db.Model):
     """ Represents named feature type """
     __tablename__ = 'predefined_feature_type'
     TYPES_LIST = ['boolean', 'int', 'float', 'numeric', 'date',
                   'map', 'categorical_label', 'categorical',
                   'text', 'regex', 'composite']
+    FIELDS_TO_SERIALIZE = ('name', 'type', 'input_format', 'params')
 
-    type_ = Column(Enum(*TYPES_LIST, name='named_feature_types'))
-    input_format = Column(String)
+    type = db.Column(Enum(*TYPES_LIST, name='named_feature_types'))
+    input_format = db.Column(String)
 
 
 class PredefinedClassifier(BaseModel, PredefinedItemMixin, db.Model):
@@ -89,58 +102,38 @@ class PredefinedClassifier(BaseModel, PredefinedItemMixin, db.Model):
     __tablename__ = 'predefined_classifier'
 
     TYPES_LIST = CLASSIFIERS.keys()
-    type_ = Column(Enum(*TYPES_LIST, name='classifier_types'))
+    type = db.Column(Enum(*TYPES_LIST, name='classifier_types'))
 
 
-class PredefinedTransformer(BaseModel, PredefinedItemMixin, db.Model):
+class PredefinedTransformer(BaseModel, PredefinedItemMixin, db.Model,
+                            ExportImportMixin):
     """ Represents predefined feature transformer """
     __tablename__ = 'predefined_transformer'
+    FIELDS_TO_SERIALIZE = ('type', 'params')
+    NO_PARAMS_KEY = True
 
     TYPES_LIST = TRANSFORMERS.keys()
-    type_ = Column(Enum(*TYPES_LIST, name='transformer_types'))
+    type = db.Column(Enum(*TYPES_LIST, name='transformer_types'))
 
 
-class PredefinedScaler(BaseModel, PredefinedItemMixin, db.Model):
+class PredefinedScaler(BaseModel, PredefinedItemMixin, db.Model,
+                       ExportImportMixin):
     """ Represents predefined feature scaler """
     __tablename__ = 'predefined_scaler'
+    FIELDS_TO_SERIALIZE = ('type', 'params')
+    NO_PARAMS_KEY = True
 
     TYPES_LIST = SCALERS.keys()
-    type_ = Column(Enum(*TYPES_LIST, name='scaler_types'))
+    type = db.Column(Enum(*TYPES_LIST, name='scaler_types'))
 
 
 ### Feature and Feature Set models ###
 
-
-class FeatureSet(ExportImportMixin, BaseModel, db.Model):
-    """ Represents list of the features with schema name."""
-    __tablename__ = 'feature_set'
-    schema_name = Column(String(200), nullable=False)
-    target_variable = Column(String(200))
-    features_count = Column(Integer)
-    __table_args__ = (
-        CheckConstraint(features_count >= 0,
-                        name='check_features_count_positive'), {})
-
-    def import_from_json(cls, features_dict):
-        features_set = cls()
-        features_set.schema_name = features_dict.get('schema-name', 'noname')
-        features_set.save()
-
-        for feature_type in features_dict.get('feature-types', []):
-            NamedFeatureType.from_dict(feature_type)
-
-        for feature_dict in features_dict.get('features', []):
-            Feature.from_dict(
-                feature_dict, add_new=True,
-                extra_fields={'features_set': features_set})
-
-        return features_set
-
-
 class RefFeatureSetMixin(object):
     @declared_attr
     def feature_set_id(cls):
-        return Column('feature_set_id', ForeignKey('feature_set.id'))
+        return db.Column('feature_set_id',
+                         db.ForeignKey('feature_set.id'))
 
     @declared_attr
     def feature_set(cls):
@@ -149,16 +142,26 @@ class RefFeatureSetMixin(object):
 
 class Feature(ExportImportMixin, RefFeatureSetMixin,
               BaseModel, db.Model):
-    name = Column(String(200), nullable=False)
-    type = Column(String(200))
-    input_format = Column(String(200))
-    default = Column(String(200))  # TODO: think about type
-    required = Column(Binary)
-    is_target_variable = Column(Binary)
+    FIELDS_TO_SERIALIZE = ('name', 'type', 'input_format', 'params',
+                           'default', 'is_target_variable', 'required',
+                           'transformer', 'scaler')
 
-    params = deferred(Column(JSONType))
-    transformer = deferred(Column(JSONType))
-    scaler = deferred(Column(JSONType))
+    name = db.Column(db.String(200), nullable=False)
+    type = db.Column(db.String(200))
+    input_format = db.Column(db.String(200))
+    default = db.Column(JSONType)  # TODO: think about type
+    required = db.Column(db.Boolean, default=True)
+    is_target_variable = db.Column(db.Boolean, default=False)
+
+    params = deferred(db.Column(JSONType, default={}))
+    transformer = deferred(db.Column(JSONType))
+    scaler = deferred(db.Column(JSONType))
+
+    __table_args__ = (UniqueConstraint(
+        'feature_set_id', 'name', name='name_unique'), )
+
+    def __repr__(self):
+        return '<Feature %s>' % self.name
 
     def transformer_type(self):
         if self.transformer is None:
@@ -169,3 +172,113 @@ class Feature(ExportImportMixin, RefFeatureSetMixin,
         if self.scaler is None:
             return None
         return self.scaler['type']
+
+    def save(self, *args, **kwargs):
+        super(Feature, self).save(*args, **kwargs)
+        if self.is_target_variable:
+            Feature.query\
+                .filter(Feature.is_target_variable, Feature.name != self.name)\
+                .update({Feature.is_target_variable: False})
+
+
+class FeatureSet(ExportImportMixin, BaseModel, db.Model):
+    """ Represents list of the features with schema name."""
+    __tablename__ = 'feature_set'
+
+    FIELDS_TO_SERIALIZE = ('schema_name', )
+
+    FEATURES_STRUCT = {'schema-name': '',
+                       'features': [],
+                       "feature-types": []}
+    schema_name = db.Column(db.String(200), nullable=False)
+    target_variable = db.Column(db.String(200))
+    features_count = db.Column(db.Integer, default=0)
+    features_dict = db.Column(JSONType)
+    __table_args__ = (
+        CheckConstraint(features_count >= 0,
+                        name='check_features_count_positive'), {})
+
+    @classmethod
+    def from_model_features_dict(cls, name, features_dict):
+        if not features_dict:
+            feature_set = FeatureSet()
+            feature_set.name = name
+            feature_set.save()
+            return feature_set
+
+        feature_set, is_new = FeatureSet.from_dict(
+            features_dict, add_new=True)
+
+        type_list = features_dict.get('feature-types', None)
+        if type_list:
+            for feature_type in type_list:
+                NamedFeatureType.from_dict(feature_type, commit=False)
+
+        for feature_dict in features_dict['features']:
+            feature, is_new = Feature.from_dict(
+                feature_dict, add_new=True,
+                extra_fields={'feature_set': feature_set},
+                commit=False)
+        db.session.commit()
+
+        db.session.expire(feature_set, ['target_variable',
+                                        'features_count',
+                                        'features_dict'])
+        return feature_set
+
+    def to_dict(self):
+        features_dict = {'schema-name': self.schema_name,
+                         'features': [],
+                         "feature-types": []}
+        types = []
+        for feature in Feature.query.filter_by(feature_set=self):
+            if feature.type not in NamedFeatureType.TYPES_LIST:
+                types.append(feature.type)
+            features_dict['features'].append(feature.to_dict())
+
+        for ftype in types:
+            named_type = NamedFeatureType.query.filter_by(name=ftype).one()
+            self.features_dict['feature-types'].append(named_type.to_dict())
+
+        return features_dict
+
+    def save(self, *args, **kwargs):
+        # TODO: Why do default attr of the column not work?
+        if self.features_dict is None:
+            self.features_dict = self.FEATURES_STRUCT
+        self.features_dict['schema-name'] = self.schema_name
+        BaseModel.save(self, *args, **kwargs)
+
+
+@event.listens_for(Feature, "after_insert")
+def after_insert_feature(mapper, connection, target):
+    if target.feature_set is not None:
+        update_feature_set_on_change_features(
+            connection, target.feature_set, target)
+
+
+@event.listens_for(Feature, "after_update")
+def after_update_feature(mapper, connection, target):
+    if target.feature_set is not None:
+        update_feature_set_on_change_features(
+            connection, target.feature_set, target)
+
+
+@event.listens_for(Feature, "after_delete")
+def after_delete_feature(mapper, connection, target):
+    if target.feature_set is not None:
+        update_feature_set_on_change_features(
+            connection, target.feature_set, target)
+
+
+def update_feature_set_on_change_features(connection, fset, feature):
+    values = dict(features_count=Feature.query.filter_by(
+                  feature_set=fset).count())
+    if feature.is_target_variable:
+        values['target_variable'] = feature.name
+
+    values['features_dict'] = fset.to_dict()
+
+    connection.execute(
+        FeatureSet.__table__.update().
+        where(FeatureSet.id == fset.id).values(**values))

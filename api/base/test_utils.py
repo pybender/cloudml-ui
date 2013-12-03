@@ -103,7 +103,7 @@ class TestChecksMixin(object):
                           self.Model.query.count())
 
         obj_id = resp_data[self.RESOURCE.OBJECT_NAME]['id']
-        obj = self.Model.query.filter_by(id=obj_id).one()
+        obj = self.Model.query.get(obj_id)
         return resp_data, obj
 
     def check_edit_error(self, post_data, errors, **data):

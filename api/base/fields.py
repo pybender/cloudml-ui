@@ -44,7 +44,7 @@ class ChoiceField(CharField):
 
 class DocumentField(CharField):
     def __init__(self, **kwargs):
-        self.document_name = kwargs.pop('doc')
+        self.Model = kwargs.pop('doc')
         self.by_name = kwargs.pop('by_name', False)
         self.return_doc = kwargs.pop('return_doc', False)
         self.filter_params = kwargs.pop('filter_params', {})
@@ -53,17 +53,11 @@ class DocumentField(CharField):
     def clean(self, value):
         value = super(DocumentField, self).clean(value)
 
-        if value:
-            if self.by_name:
-                params = {'name': value}
-            else:
-                from bson.objectid import ObjectId
-                params = {'_id': ObjectId(value)}
+        if value is not None:
+            params = {'name' if self.by_name else 'id': value}
             params.update(self.filter_params)
 
-            from api import app
-            callable_model = getattr(app.db, self.document_name)
-            obj = callable_model.find_one(params)
+            obj = self.Model.query.filter_by(**params)[0]
             if obj is None:
                 raise ValidationError('Document not found')
 

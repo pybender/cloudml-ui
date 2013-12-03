@@ -5,19 +5,33 @@ from api.features.models import Feature
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin
 
 
-class FeaturePredefinedItems(BaseDbTestCase, TestChecksMixin):
+class FeaturePredefinedItemsTestMixin(BaseDbTestCase, TestChecksMixin):
     OBJECT_NAME = None
     DATA = {}
 
-    def _test_add_predefined(self, extra_data={}):
+    def _test_add(self, extra_data={}):
         data = copy(self.DATA)
         data.update(extra_data)
 
-        resp, obj = self._check_post(data, load_model=True)
+        resp, obj = self.check_edit(data)
         self.assertEqual(obj.name, data['name'])
         self.assertEqual(obj.type, data['type'])
         self.assertEqual(obj.params, json.loads(data['params']))
+        return resp, obj
 
+    def _test_edit(self, obj=None):
+        if obj is None:
+            obj = self.obj
+
+        data = copy(self.DATA)
+        data['name'] = 'new'
+        resp, obj = self.check_edit(data, id=obj.id)
+        self.assertEquals(obj.name, 'new')
+        self.assertEquals(obj.type, data['type'])
+        return resp, obj
+
+
+class FeatureItemsTestMixin(BaseDbTestCase, TestChecksMixin):
     def _test_add_feature_item(self, feature, extra_data={}):
         data = copy(self.DATA)
         data.update({'feature_id': str(feature._id)})
@@ -38,14 +52,6 @@ class FeaturePredefinedItems(BaseDbTestCase, TestChecksMixin):
         obj = getattr(feature, self.OBJECT_NAME)
         self.assertEqual(obj['type'], item.type)
         self.assertEqual(obj['params'], item.params)
-
-    def _test_edit_predefined_item(self):
-        data = copy(self.DATA)
-        data['is_predefined'] = True
-        data['name'] = 'new'
-        resp, obj = self._check_put(data, load_model=True)
-        self.assertEquals(obj.name, 'new')
-        self.assertEquals(obj.type, data['type'])
 
     def _test_edit_feature_item(self, feature, extra_data={}):
         data = copy(self.DATA)

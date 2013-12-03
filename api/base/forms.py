@@ -111,7 +111,7 @@ class BaseForm(InternalForm):
 
     @property
     def is_edit(self):
-        return hasattr(self.obj, "_id") and bool(self.obj._id)
+        return hasattr(self.obj, "id") and bool(self.obj.id)
 
     def is_valid(self):
         if not self._cleaned:
@@ -120,8 +120,8 @@ class BaseForm(InternalForm):
 
     def clean(self):
         if not self.obj and self.model_name:
-            from api import app
-            callable_model = getattr(app.db, self.model_name)
+            from api import models as all_models
+            callable_model = getattr(all_models, self.model_name)
             self.obj = callable_model()
 
         def add_error(name, msg):
@@ -170,7 +170,11 @@ class BaseForm(InternalForm):
                 form.inner_name = name
                 # TODO: make possible to choose whether form field is required
                 if form.is_valid() and form.filled:
-                    self.cleaned_data[name] = form.save(commit=False)
+                    value = form.save(commit=False)
+                    mthd = "clean_%s" % name
+                    if hasattr(self, mthd):
+                        value = getattr(self, mthd)(value, form)
+                    self.cleaned_data[name] = value
             except ValidationError, exc:
                 if form.filled:
                     self.errors.append({'name': '%s' % name, 'error': str(exc)})

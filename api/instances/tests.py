@@ -18,7 +18,7 @@ class InstancesTests(BaseDbTestCase, TestChecksMixin):
     BASE_URL = '/cloudml/aws_instances/'
     RESOURCE = InstanceResource
     Model = Instance
-    datasets = [InstanceData,]
+    datasets = [InstanceData, ]
 
     def test_list(self):
         self.check_list(show='name')

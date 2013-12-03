@@ -7,7 +7,7 @@ from api.base.models import BaseMixin, db
 
 class User(BaseMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    uid = db.Column(db.String(200), nullable=False)  # TODO: could be PK?
+    uid = db.Column(db.String(200), nullable=False, unique=True)
     created_on = db.Column(db.DateTime, server_default=func.now())
     updated_on = db.Column(db.DateTime, server_default=func.now(),
                            onupdate=func.current_timestamp())
