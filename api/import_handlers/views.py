@@ -1,5 +1,6 @@
 import json
 from flask import Response
+from sqlalchemy.orm import undefer
 
 from api import api
 from api.resources import BaseResourceSQL, NotFound, ValidationError
@@ -24,11 +25,16 @@ class ImportHandlerResource(BaseResourceSQL):
     def get(self, *args, **kwargs):
         return super(ImportHandlerResource, self).get(*args, **kwargs)
 
+    def _get_details_query(self, *args, **kwargs):
+        query = super(ImportHandlerResource, self)._get_details_query(
+            *args, **kwargs)
+        return query.options(undefer('data'))
+
     def _get_download_action(self, **kwargs):
         """
         Downloads importhandler data file.
         """
-        model = self._get_details_query(None, None, **kwargs)
+        model = self._get_details_query(None, None, **kwargs).one()
         if model is None:
             raise NotFound(self.MESSAGE404 % kwargs)
 

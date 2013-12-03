@@ -115,7 +115,7 @@
 
     <div>
         Status: <span class="value">{{ model.status }}</span> <a ng-click="showLogs=!showLogs">(logs)</a>
-        <div ng-show="showLogs" class="well" ng-controller="LogMessageListCtrl" ng-init="init('trainmodel_log', model._id, 5)">
+        <div ng-show="showLogs" class="well" ng-controller="LogMessageListCtrl" ng-init="init('trainmodel_log', model.id, 5)">
           <div class="message">
             <ng-include src="'/partials/logmessages/list.html'"></ng-include>
           </div>
@@ -182,12 +182,12 @@
           <h5>Import Handlers</h5>
           <div>
             For Train:
-            <span title="Select Train Import Handler" ng-bind="model.train_import_handler_obj.name" editable="model" value="model.train_import_handler_obj._id" editable-field="train_import_handler" editable-input="select" editable-placement="right" source="handlers_list" display="model.train_import_handler_obj.name"></span>
+            <span title="Select Train Import Handler" ng-bind="model.train_import_handler_obj.name" editable="model" value="model.train_import_handler_obj.id" editable-field="train_import_handler" editable-input="select" editable-placement="right" source="handlers_list" display="model.train_import_handler_obj.name"></span>
             <a target="_blank" href="#{{ model.train_import_handler_obj.objectUrl() }}"><i class="icon-arrow-right"></i></a>
           </div>
           <div>
             For Tests:
-            <span title="Select Test Import Handler" ng-bind="model.test_import_handler_obj.name" editable="model" value="model.test_import_handler_obj._id" editable-field="test_import_handler" editable-input="select" editable-placement="right" source="handlers_list" display="model.test_import_handler_obj.name"></span>
+            <span title="Select Test Import Handler" ng-bind="model.test_import_handler_obj.name" editable="model" value="model.test_import_handler_obj.id" editable-field="test_import_handler" editable-input="select" editable-placement="right" source="handlers_list" display="model.test_import_handler_obj.name"></span>
             <a target="_blank" href="#{{ model.test_import_handler_obj.objectUrl() }}"><i class="icon-arrow-right"></i></a>
           </div>
         </div>

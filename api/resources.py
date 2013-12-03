@@ -354,6 +354,37 @@ class BaseResourceSQL(BaseResource):
     """
     Base REST resource for SQL models.
     """
+    def put(self, action=None, **kwargs):
+        """
+        Updates new model
+        """
+        if action:
+            return self._apply_action(action, method='PUT', **kwargs)
+
+        obj = self._get_details_query(None, None, **kwargs).one()
+        if obj is None:
+            raise NotFound(self.MESSAGE404 % kwargs)
+
+        form = self.put_form(obj=obj)
+        if form.is_valid():
+            obj = form.save()
+            extra_fields = form.cleaned_data.keys()
+        else:
+            raise ValidationError(form.error_messages)
+
+        return self._render(self._get_save_response_context(obj, extra_fields=extra_fields),
+                            code=200)
+
+    def delete(self, action=None, **kwargs):
+        """
+        Deletes unused model
+        """
+        model = self._get_details_query(None, None, **kwargs).one()
+        if model is None:
+            raise NotFound(self.MESSAGE404 % kwargs)
+        self._delete_validataion(model)
+        model.delete()
+        return '', 204
 
     def _get_list_query(self, params, fields, **kwargs):
         filter_params = self._prepare_filter_params(params)
@@ -407,8 +438,22 @@ class BaseResourceSQL(BaseResource):
         if '_id' in kwargs:
             kwargs['id'] = kwargs['_id']
             del kwargs['_id']
-        model = self.Model.query.filter_by(**kwargs).one()
-        return model
+        return self.Model.query.filter_by(**kwargs).limit(1)
+
+    def _details(self, extra_params=(), **kwargs):
+        """
+        GET model by name
+        """
+        params = self._parse_parameters(extra_params + self.GET_PARAMS)
+        query_fields, show_fields = self._get_fields(params)
+        model = self._get_details_query(params, query_fields, **kwargs).one()
+        if model is None:
+            raise NotFound(self.MESSAGE404 % kwargs)
+
+        if query_fields != show_fields:
+            model = _filter_model_fields(model, show_fields)
+
+        return self._render({self.OBJECT_NAME: model})
 
 
 def _filter_model_fields(model, show_fields):

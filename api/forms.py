@@ -1,11 +1,14 @@
+from compiler.transformer import Transformer
 import json
 from datetime import datetime
+from api.features.models import Feature
 from flask import request
 from bson.objectid import ObjectId
 
 from api import app
 from api.resources import ValidationError, NotFound
-from api.models import Model, ImportHandler, DataSet
+from api.features.models import FeatureSet
+from api.models import DataSet
 from api.base.forms import BaseForm as BaseFormEx
 from api.base.fields import *
 from core.trainer.store import load_trainer
@@ -140,123 +143,123 @@ class BaseForm(object):
 #         return model
 
 
-class ModelEditForm(BaseFormEx):
-    name = CharField()
-    train_import_handler = DocumentField(doc='ImportHandler', by_name=False,
-                                         return_doc=True)
-    test_import_handler = DocumentField(doc='ImportHandler', by_name=False,
-                                         return_doc=True)
-    example_id = CharField()
-    example_label = CharField()
-    tags = JsonField()
-
-    def save(self, commit=True):
-        old_tags = self.obj.tags
-        model = super(ModelEditForm, self).save()
-
-        if self.cleaned_data.get('tags', None):
-            app.db.Tag.update_tags_count(old_tags, model.tags)
-
-        return model
-
-
-class ModelAddForm(BaseFormEx):
-    NO_REQUIRED_FOR_EDIT = True
-    required_fields = ('name',
-                      ('test_import_handler', 'test_import_handler_file'))
-
-    name = CharField()
-    train_import_handler = DocumentField(doc='ImportHandler', by_name=False,
-                                         return_doc=True)
-    train_import_handler_file = ImportHandlerFileField()
-    test_import_handler = DocumentField(doc='ImportHandler', by_name=False,
-                                         return_doc=True)
-    test_import_handler_file = ImportHandlerFileField()
-    features = JsonField()
-    trainer = CharField()
-
-    #
-    feature_model = None
-    trainer_obj = None
-    classifier_obj = None
-
-    def clean_train_import_handler_file(self, value, field):
-        self.cleaned_data['train_import_params'] = field.import_params
-        return value
-
-    def clean_test_import_handler_file(self, value, field):
-        self.cleaned_data['test_import_params'] = field.import_params
-        return value
-
-    def clean_trainer(self, value, field):
-        if value:
-            try:
-                # TODO: find a better way?
-                value = value.encode('utf-8').replace('\r', '')
-                self.trainer_obj = load_trainer(value)
-                self.cleaned_data['status'] = Model.STATUS_TRAINED
-                return self.trainer_obj
-            except Exception as exc:
-                raise ValidationError('Invalid trainer: {0!s}'.format(exc))
-
-    def clean_features(self, value, field):
-        if not value:
-            return
-
-        try:
-            # TODO: add support of json dict to FeatureModel
-            self.feature_model = FeatureModel(json.dumps(value), is_file=False)
-        except SchemaException, exc:
-            raise ValidationError('Invalid features: %s' % exc)
-        return value
-
-    def validate_data(self):
-        if self.feature_model:
-            if not (self.cleaned_data.get('train_import_handler_file', None) or \
-                self.cleaned_data.get('train_import_handler', None) ):
-                raise ValidationError('train_import_handler_file or \
-train_import_handler should be specified for new model')
-            self.trainer_obj = Trainer(self.feature_model)
-        else:
-            self.cleaned_data['trainer'] = None
-
-    def save_importhandler(self, fieldname, name):
-        data = self.cleaned_data.pop(fieldname, None)
-        if data is not None:
-            handler = app.db.ImportHandler()
-            action = 'test' if fieldname.startswith('test') else 'train'
-            handler.name = '%s handler for %s' % (name, action)
-            handler.type = handler.TYPE_DB
-            handler.import_params = self.cleaned_data.pop('%s_import_params' % action)
-            handler.data = data
-            handler.save()
-            self.cleaned_data['%s_import_handler' % action] = handler
-
-    def save(self, *args, **kwargs):
-        name = self.cleaned_data['name']
-
-        self.save_importhandler('train_import_handler_file', name)
-        self.save_importhandler('test_import_handler_file', name)
-
-        obj = super(ModelAddForm, self).save()
-        # TODO: move it to model training for new models
-        if self.trainer_obj:
-            obj.set_trainer(self.trainer_obj)
-
-        features_set = FeatureSet.from_model_features_dict(obj.name, obj.features)
-        obj.features_set_id = str(features_set._id)
-        obj.features_set = features_set
-        obj.classifier = PredefinedClassifier.from_model_features_dict(obj.name, obj.features)
-
-        obj.validate()
-        obj.save()
-
-        if obj.status == Model.STATUS_TRAINED:
-            # Processing Model Parameters weights in celery task
-            from api.tasks import fill_model_parameter_weights
-            fill_model_parameter_weights.delay(str(obj._id))
-
-        return obj
+# class ModelEditForm(BaseFormEx):
+#     name = CharField()
+#     train_import_handler = DocumentField(doc='ImportHandler', by_name=False,
+#                                          return_doc=True)
+#     test_import_handler = DocumentField(doc='ImportHandler', by_name=False,
+#                                          return_doc=True)
+#     example_id = CharField()
+#     example_label = CharField()
+#     tags = JsonField()
+#
+#     def save(self, commit=True):
+#         old_tags = self.obj.tags
+#         model = super(ModelEditForm, self).save()
+#
+#         if self.cleaned_data.get('tags', None):
+#             app.db.Tag.update_tags_count(old_tags, model.tags)
+#
+#         return model
+#
+#
+# class ModelAddForm(BaseFormEx):
+#     NO_REQUIRED_FOR_EDIT = True
+#     required_fields = ('name',
+#                       ('test_import_handler', 'test_import_handler_file'))
+#
+#     name = CharField()
+#     train_import_handler = DocumentField(doc='ImportHandler', by_name=False,
+#                                          return_doc=True)
+#     train_import_handler_file = ImportHandlerFileField()
+#     test_import_handler = DocumentField(doc='ImportHandler', by_name=False,
+#                                          return_doc=True)
+#     test_import_handler_file = ImportHandlerFileField()
+#     features = JsonField()
+#     trainer = CharField()
+#
+#     #
+#     feature_model = None
+#     trainer_obj = None
+#     classifier_obj = None
+#
+#     def clean_train_import_handler_file(self, value, field):
+#         self.cleaned_data['train_import_params'] = field.import_params
+#         return value
+#
+#     def clean_test_import_handler_file(self, value, field):
+#         self.cleaned_data['test_import_params'] = field.import_params
+#         return value
+#
+#     def clean_trainer(self, value, field):
+#         if value:
+#             try:
+#                 # TODO: find a better way?
+#                 value = value.encode('utf-8').replace('\r', '')
+#                 self.trainer_obj = load_trainer(value)
+#                 self.cleaned_data['status'] = Model.STATUS_TRAINED
+#                 return self.trainer_obj
+#             except Exception as exc:
+#                 raise ValidationError('Invalid trainer: {0!s}'.format(exc))
+#
+#     def clean_features(self, value, field):
+#         if not value:
+#             return
+#
+#         try:
+#             # TODO: add support of json dict to FeatureModel
+#             self.feature_model = FeatureModel(json.dumps(value), is_file=False)
+#         except SchemaException, exc:
+#             raise ValidationError('Invalid features: %s' % exc)
+#         return value
+#
+#     def validate_data(self):
+#         if self.feature_model:
+#             if not (self.cleaned_data.get('train_import_handler_file', None) or \
+#                 self.cleaned_data.get('train_import_handler', None) ):
+#                 raise ValidationError('train_import_handler_file or \
+# train_import_handler should be specified for new model')
+#             self.trainer_obj = Trainer(self.feature_model)
+#         else:
+#             self.cleaned_data['trainer'] = None
+#
+#     def save_importhandler(self, fieldname, name):
+#         data = self.cleaned_data.pop(fieldname, None)
+#         if data is not None:
+#             handler = app.db.ImportHandler()
+#             action = 'test' if fieldname.startswith('test') else 'train'
+#             handler.name = '%s handler for %s' % (name, action)
+#             handler.type = handler.TYPE_DB
+#             handler.import_params = self.cleaned_data.pop('%s_import_params' % action)
+#             handler.data = data
+#             handler.save()
+#             self.cleaned_data['%s_import_handler' % action] = handler
+#
+#     def save(self, *args, **kwargs):
+#         name = self.cleaned_data['name']
+#
+#         self.save_importhandler('train_import_handler_file', name)
+#         self.save_importhandler('test_import_handler_file', name)
+#
+#         obj = super(ModelAddForm, self).save()
+#         # TODO: move it to model training for new models
+#         if self.trainer_obj:
+#             obj.set_trainer(self.trainer_obj)
+#
+#         features_set = FeatureSet.from_model_features_dict(obj.name, obj.features)
+#         obj.features_set_id = str(features_set._id)
+#         obj.features_set = features_set
+#         obj.classifier = PredefinedClassifier.from_model_features_dict(obj.name, obj.features)
+#
+#         obj.validate()
+#         obj.save()
+#
+#         if obj.status == Model.STATUS_TRAINED:
+#             # Processing Model Parameters weights in celery task
+#             from api.tasks import fill_model_parameter_weights
+#             fill_model_parameter_weights.delay(str(obj._id))
+#
+#         return obj
 
 
 class BaseChooseInstanceAndDataset(BaseForm):
@@ -510,11 +513,14 @@ class DataSetEditForm(BaseForm):
 #         if not value:
 #             raise ValidationError('name is required')
 #         return value
+    name = CharField()
+    type_field = ChoiceField(choices=app.db.Transformer.TYPES_LIST, name='type')
+    params = JsonField()
+    predefined_selected = BooleanField()
+    transformer = ModelField(model=Transformer, by_name=True, return_model=True)
+    feature_id = ModelField(model=Feature, by_name=False,
+                                return_model=False)
 
-#     def clean_type(self, value):
-#         # if not type in ImportHandler.TYPE_CHOICES:
-#         #     raise ValidationError('invalid')
-#         return value
 
 #     def clean_ip(self, value):
 #         if not value:
@@ -529,6 +535,39 @@ class DataSetEditForm(BaseForm):
 #                              {"$set": {"is_default": False}},
 #                              multi=True)
 #         return instance
+
+    name = CharField()
+    type_field = CharField(name='type')
+    input_format = CharField()
+    params = JsonField()
+    required = BooleanField()
+    default = CharField()
+    is_target_variable = BooleanField()
+    features_set_id = ModelField(model=FeatureSet, by_name=False,
+                                    return_model=False)
+
+    # TODO:
+    # transformer = TransformerForm(model_name='Transformer',
+    #                               prefix='transformer-', data_from_request=False)
+    remove_transformer = BooleanField()
+    # TODO:
+    # scaler = ScalerForm(model_name='Scaler', prefix='scaler-',
+    #                     data_from_request=False)
+    remove_scaler = BooleanField()
+
+    # def clean_features_set_id(self, value, field):        
+    #     if value:
+    #         feature_set = field.doc
+    #         self.cleaned_data['features_set'] = feature_set
+    #     return value
+
+    def clean_type(self, value, field):
+        if value and not value in app.db.NamedFeatureType.TYPES_LIST:
+            # Try to find type in named types
+            named_type = app.db.NamedFeatureType.find_one({'name': value})
+            if not named_type:
+                raise ValidationError('invalid type')
+        return value
 
 
 # class InstanceEditForm(BaseForm):

@@ -26,7 +26,7 @@ updated_by'
     if not $routeParams.id
       err = "Can't initialize without import handler id"
 
-    $scope.handler = new ImportHandler({_id: $routeParams.id})
+    $scope.handler = new ImportHandler({id: $routeParams.id})
     $scope.LOADED_SECTIONS = []
 
     $scope.go = (section) ->
@@ -85,8 +85,8 @@ import_params,created_by'
 
     $scope.loadModels = () ->
       Model.$by_handler(
-        handler: $scope.model._id,
-        show: 'name,_id'
+        handler: $scope.model.id,
+        show: 'name,id'
       ).then ((opts) ->
         $scope.umodels = opts.objects
       ), ((opts) ->
@@ -126,7 +126,7 @@ import_params,created_by'
       $scope.handlers = opts.objects
       $scope.handlers_list  = []
       for h in $scope.handlers
-        $scope.handlers_list.push {value: h._id, text: h.name}
+        $scope.handlers_list.push {value: h.id, text: h.name}
 
     ), ((opts) ->
       $scope.setError(opts, 'loading import handler list')

@@ -128,7 +128,6 @@ class PredefinedScaler(BaseModel, PredefinedItemMixin, db.Model,
 
 
 ### Feature and Feature Set models ###
-
 class RefFeatureSetMixin(object):
     @declared_attr
     def feature_set_id(cls):

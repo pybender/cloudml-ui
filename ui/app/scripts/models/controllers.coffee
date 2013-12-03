@@ -118,7 +118,7 @@ updated_on,updated_by,comparable,test_handler_fields'
     if not $routeParams.id
       throw new Error "Can't initialize without model id"
 
-    $scope.model = new Model({_id: $routeParams.id})
+    $scope.model = new Model({id: $routeParams.id})
     $scope.LOADED_SECTIONS = []
     $scope.params = {'tags': []}
 

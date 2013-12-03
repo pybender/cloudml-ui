@@ -1,4 +1,5 @@
 from api.decorators import public_actions
+from api.import_handlers.models import DataSet
 from bson import ObjectId
 from flask import Response, request
 from flask.ext.restful import reqparse
@@ -79,10 +80,10 @@ class ModelResource(BaseResourceSQL):
 
         if get_datasets:
             model['datasets'] = [{
-                '_id': str(ds._id),
+                'id': ds.id,
                 'name': ds.name,
-                'import_handler_id': str(ds.import_handler_id),
-            } for ds in model.datasets_list]
+                'import_handler_id': ds.import_handler_id,
+            } for ds in model.datasets]
 
         if get_data_fields:
             model['data_fields'] = model.dataset.data_fields\
@@ -93,25 +94,25 @@ class ModelResource(BaseResourceSQL):
                 model['test_handler_fields'] = model.test_import_handler.get_fields()
 
         if fields and 'features' in fields:
-            model['features'] = model.get_features_json()
+            model.features = model.get_features_json()
 
         return model
 
-    # TODO
-    # def _prepare_filter_params(self, params):
-    #     pdict = super(ModelResource, self)._prepare_filter_params(params)
-    #     if 'comparable' in pdict:
-    #         pdict['comparable'] = bool(pdict['comparable'])
-    #     if 'tag' in pdict:
-    #         pdict['tags'] = {'$in': [pdict['tag']]}
-    #         del pdict['tag']
-    #     if 'created_by' in pdict:
-    #         pdict['created_by.uid'] = pdict['created_by']
-    #         del pdict['created_by']
-    #     if 'updated_by' in pdict:
-    #         pdict['updated_by.uid'] = pdict['updated_by']
-    #         del pdict['updated_by']
-    #     return pdict
+    def _prepare_filter_params(self, params):
+        pdict = super(ModelResource, self)._prepare_filter_params(params)
+        if 'comparable' in pdict:
+            pdict['comparable'] = bool(pdict['comparable'])
+        # TODO
+        # if 'tag' in pdict:
+        #     pdict['tags'] = {'$in': [pdict['tag']]}
+        #     del pdict['tag']
+        if 'created_by' in pdict:
+            pdict["created_by->>'uid'"] = pdict['created_by']
+            del pdict['created_by']
+        if 'updated_by' in pdict:
+            pdict["updated_by->>'uid'"] = pdict['updated_by']
+            del pdict['updated_by']
+        return pdict
 
     def _get_by_importhandler_action(self, **kwargs):
         parser_params = self.GET_PARAMS + (('handler', str), )
