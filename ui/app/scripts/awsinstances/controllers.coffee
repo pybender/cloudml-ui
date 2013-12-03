@@ -49,12 +49,12 @@ updated_by'
 
 ($scope, $routeParams, AwsInstance) ->
   if not $routeParams.id then err = "Can't initialize without instance id"
-  $scope.instance = new AwsInstance({_id: $routeParams.id})
+  $scope.instance = new AwsInstance({id: $routeParams.id})
 
   $scope.instance.$load(
     show: 'name,type,created_on,updated_on,ip,description,is_default,
 created_by'
-    ).then (->), (-> $scope.setError(opts, 'loading instance'))
+    ).then (->), ((opts)-> $scope.setError(opts, 'loading instance'))
 ])
 
 .controller('AddAwsInstanceCtl', [
@@ -63,32 +63,10 @@ created_by'
   'AwsInstance'
 
   ($scope, $location, AwsInstance) ->
-    $scope.instance = new AwsInstance()
+    $scope.model = new AwsInstance()
     $scope.types = [{name: 'small'}, {name: 'large'}]
     $scope.err = ''
     $scope.new = true
-
-    $scope.add = ->
-      $scope.saving = true
-      $scope.savingProgress = '0%'
-      $scope.savingError = null
-
-      _.defer ->
-        $scope.savingProgress = '50%'
-        $scope.$apply()
-
-      $scope.instance.$save().then (->
-        $scope.savingProgress = '100%'
-
-        _.delay (->
-          $location.path $scope.instance.objectUrl()
-          $scope.$apply()
-        ), 300
-
-      ), ((opts) ->
-        $scope.saving = false
-        $scope.setError(opts, 'adding instance')
-      )
 ])
 
 
