@@ -89,12 +89,13 @@ class PredefinedScalerData(DataSet):
 
 
 class PredefinedClassifierData(DataSet):
-    class scaler_01:
-        name = u"my scaler"
-        type = u"logistic regression"
+    class lr_classifier:
+        name = "name"
+        type = "logistic regression"
+        params = {"penalty": "l2"}
         created_on = "2013-04-19 14:37:23.145000"
         updated_on = "2013-04-19 14:37:23.145000"
-        params = {}
+
 
 
 class NamedFeatureTypeData(DataSet):

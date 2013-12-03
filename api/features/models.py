@@ -94,12 +94,28 @@ class NamedFeatureType(BaseModel, PredefinedItemMixin,
     input_format = db.Column(db.String(200))
 
 
-class PredefinedClassifier(BaseModel, PredefinedItemMixin, db.Model):
+class PredefinedClassifier(BaseModel, PredefinedItemMixin,
+                           db.Model, ExportImportMixin):
     """ Represents predefined classifier """
     __tablename__ = 'predefined_classifier'
 
+    NO_PARAMS_KEY = True
+    FIELDS_TO_SERIALIZE = ('type', 'params')
+
     TYPES_LIST = CLASSIFIERS.keys()
     type = db.Column(db.Enum(*TYPES_LIST, name='classifier_types'))
+
+    @classmethod
+    def from_model_features_dict(cls, name, features_dict):
+        if not features_dict:
+            classifier = cls()
+            classifier.name = name
+            return classifier
+
+        classifier, is_new = PredefinedClassifier.from_dict(
+            features_dict['classifier'], add_new=True,
+            extra_fields={'name': name}, commit=False)
+        return classifier
 
 
 class PredefinedTransformer(BaseModel, PredefinedItemMixin, db.Model,

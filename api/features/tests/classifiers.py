@@ -1,15 +1,8 @@
 import logging
 import json
-# from bson import ObjectId
 
-# from utils import FeaturePredefinedItems
-# from api.views import ClassifierResource
-# from api import app
-# from api.models import Classifier
-# from utils import BaseTestCase, MODEL_ID
-# CLASSIFIER_ID = '519318e6106a6c0df349bc0b'
 from api.base.test_utils import BaseDbTestCase
-from utils import FeaturePredefinedItemsTestMixin, FeatureItemsTestMixin
+from utils import FeaturePredefinedItemsTestMixin
 from ..views import ClassifierResource
 from ..models import PredefinedClassifier
 from ..fixtures import PredefinedClassifierData
@@ -19,16 +12,16 @@ class TestClassifierDoc(BaseDbTestCase):
     """
     Tests for the Classifier document methods.
     """
-    FIXTURES = ('classifiers.json', 'models.json')
+    datasets = (PredefinedClassifierData, )
 
     def test_to_dict(self):
-        classifier = PredefinedClassifier.query.all()[0]
+        classifier = PredefinedClassifier.query.filter_by(name=PredefinedClassifierData.lr_classifier.name).one()
         self.assertEquals(classifier.to_dict(),
                           {"penalty": "l2", "type": "logistic regression"})
 
     def test_from_features(self):
         features = json.loads(open('./conf/features.json', 'r').read())
-        classifier = Classifier.from_model_features_dict("Set", features)
+        classifier = PredefinedClassifier.from_model_features_dict("Set", features)
         self.assertTrue(classifier, 'Classifier not set')
         self.assertEquals(classifier.name, 'Set')
         self.assertEquals(classifier.type, 'logistic regression')
@@ -39,7 +32,6 @@ class PredefinedClassifiersTests(FeaturePredefinedItemsTestMixin):
     """
     Tests of the Classifiers API.
     """
-    FIXTURES = ('classifiers.json', 'models.json')
     BASE_URL = '/cloudml/features/classifiers/'
     RESOURCE = ClassifierResource
 
