@@ -346,6 +346,8 @@ class BaseResourceSQL(BaseResource):
     """
     Base REST resource for SQL models.
     """
+    DETAILS_PARAM = 'id'
+
     def _get_save_response_context(self, model, extra_fields=[]):
         if self.ALL_FIELDS_IN_POST:
             fields = self._get_all_fields()

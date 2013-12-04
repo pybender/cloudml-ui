@@ -64,9 +64,9 @@ angular.module('app.features.controllers', ['app.config', ])
       $scope.model = model
 
       # TODO: Watch only _id?
-      $scope.$watch('model.featuresSet', (featuresSet, oldVal, scope) ->
-        if featuresSet?
-          $scope.filter_opts = {'feature_set_id': featuresSet.id}
+      $scope.$watch('model.features_set_id', (set_id, oldVal, scope) ->
+        if set_id?
+          $scope.filter_opts = {'feature_set_id': set_id}
       , true)
 ])
 

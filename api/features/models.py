@@ -264,6 +264,11 @@ class FeatureSet(ExportImportMixin, BaseModel, db.Model):
         BaseModel.save(self, *args, **kwargs)
 
 
+# TODO: don't denormalize features_dict
+# or some lazy denormalization here
+# for example gen it on request and have a bool field, whether 
+# smth in features was modified
+
 @event.listens_for(Feature, "after_insert")
 def after_insert_feature(mapper, connection, target):
     if target.feature_set is not None:
