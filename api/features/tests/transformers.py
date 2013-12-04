@@ -44,7 +44,7 @@ class PredefinedTransformersTests(FeaturePredefinedItemsTestMixin):
             """
             Checks validation errors
             """
-            logging.debug("Checking validation with data %s", data)
+            logging.info("Checking validation with data %s", data)
             self.check_edit_error(data, errors)
 
         data = {"name": "transformer #1",
@@ -126,7 +126,7 @@ class FeatureTransformersTests(FeatureItemsTestMixin):
             """
             Checks validation errors
             """
-            logging.debug("Checking validation with data %s", data)
+            logging.info("Checking validation with data %s", data)
             self.check_edit_error(data, errors)
 
         data = {"name": "transformer #1",

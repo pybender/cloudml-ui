@@ -15,7 +15,7 @@ class User(BaseMixin, db.Model):
     odesk_url = db.Column(db.String(200), nullable=False)
     email = db.Column(db.String(200), nullable=False)
     portrait_32_img = db.Column(db.String(200), nullable=True)
-    auth_token = db.Column(db.String(200), nullable=False)
+    auth_token = db.Column(db.String(200), nullable=False, unique=True)
 
     @classmethod
     def get_hash(cls, token):

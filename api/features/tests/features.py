@@ -42,7 +42,7 @@ class TestFeatureResource(BaseDbTestCase, TestChecksMixin):
             """
             Checks validation errors
             """
-            logging.debug("Checking validation with data %s", data)
+            logging.info("Checking validation with data %s", data)
             self.check_edit_error(data, errors)
 
         _check({}, errors={

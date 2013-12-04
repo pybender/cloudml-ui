@@ -67,7 +67,7 @@ class PredefinedClassifiersTests(FeaturePredefinedItemsTestMixin):
             """
             Checks validation errors
             """
-            logging.debug("Checking validation with data %s", data)
+            logging.info("Checking validation with data %s", data)
             self.check_edit_error(data, errors)
 
         data = {"name": "classifier name is here",
@@ -107,7 +107,7 @@ class ModelClassifierTest(BaseDbTestCase, TestChecksMixin):
             """
             Checks validation errors
             """
-            logging.debug("Checking validation with data %s", data)
+            logging.info("Checking validation with data %s", data)
             self.check_edit_error(data, errors)
 
         data = {"name": "classifier name is here",

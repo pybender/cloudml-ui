@@ -144,7 +144,7 @@ class TestChecksMixin(object):
         err_list = err_data['errors']
         errors_dict = dict([(item['name'], item['error'])
                             for item in err_list])
-        logging.debug("Response is: %s", errors_dict)
+        logging.info("Response is: %s", errors_dict)
         for field, err_msg in errors.iteritems():
             self.assertTrue(
                 field in errors_dict,
