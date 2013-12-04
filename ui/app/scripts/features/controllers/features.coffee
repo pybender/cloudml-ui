@@ -23,7 +23,7 @@ Feature, Transformer, Scaler, Parameters) ->
 
   $scope.modelObj = new Model({'id': $routeParams.model_id})
   $scope.feature = new Feature({
-    features_set_id: $routeParams.set_id,
+    feature_set_id: $routeParams.set_id,
     transformer: new Transformer({}),
     scaler: new Scaler({})
   })

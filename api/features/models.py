@@ -102,7 +102,7 @@ class NamedFeatureType(BaseModel, PredefinedItemMixin,
 class PredefinedClassifier(BaseModel, PredefinedItemMixin,
                            db.Model, ExportImportMixin):
     """ Represents predefined classifier """
-    NO_PARAMS_KEY = True
+    NO_PARAMS_KEY = False
     FIELDS_TO_SERIALIZE = ('type', 'params')
 
     TYPES_LIST = CLASSIFIERS.keys()
@@ -126,7 +126,7 @@ class PredefinedTransformer(BaseModel, PredefinedItemMixin, db.Model,
                             ExportImportMixin):
     """ Represents predefined feature transformer """
     FIELDS_TO_SERIALIZE = ('type', 'params')
-    NO_PARAMS_KEY = True
+    NO_PARAMS_KEY = False
 
     TYPES_LIST = TRANSFORMERS.keys()
     type = db.Column(
@@ -137,7 +137,7 @@ class PredefinedScaler(BaseModel, PredefinedItemMixin, db.Model,
                        ExportImportMixin):
     """ Represents predefined feature scaler """
     FIELDS_TO_SERIALIZE = ('type', 'params')
-    NO_PARAMS_KEY = True
+    NO_PARAMS_KEY = False
 
     TYPES_LIST = SCALERS.keys()
     type = db.Column(
@@ -195,6 +195,7 @@ class Feature(ExportImportMixin, RefFeatureSetMixin,
             Feature.query\
                 .filter(Feature.is_target_variable, Feature.name != self.name)\
                 .update({Feature.is_target_variable: False})
+            db.session.commit()
 
 
 class FeatureSet(ExportImportMixin, BaseModel, db.Model):
@@ -208,9 +209,18 @@ class FeatureSet(ExportImportMixin, BaseModel, db.Model):
     target_variable = db.Column(db.String(200))
     features_count = db.Column(db.Integer, default=0)
     features_dict = db.Column(JSONType)
+    modified = db.Column(db.Boolean, default=False)
     __table_args__ = (
         CheckConstraint(features_count >= 0,
                         name='check_features_count_positive'), {})
+
+    @property
+    def features(self):
+        if self.modified:
+            self.features_dict = self.to_dict()
+            self.modified = False
+            self.save()
+        return self.features_dict
 
     @classmethod
     def from_model_features_dict(cls, name, features_dict):
@@ -264,11 +274,6 @@ class FeatureSet(ExportImportMixin, BaseModel, db.Model):
         BaseModel.save(self, *args, **kwargs)
 
 
-# TODO: don't denormalize features_dict
-# or some lazy denormalization here
-# for example gen it on request and have a bool field, whether 
-# smth in features was modified
-
 @event.listens_for(Feature, "after_insert")
 def after_insert_feature(mapper, connection, target):
     if target.feature_set is not None:
@@ -291,12 +296,11 @@ def after_delete_feature(mapper, connection, target):
 
 
 def update_feature_set_on_change_features(connection, fset, feature):
-    values = dict(features_count=Feature.query.filter_by(
-                  feature_set=fset).count())
+    count = Feature.query.filter_by(feature_set=fset).count()
+    values = {'features_count': count,
+              'modified': True}
     if feature.is_target_variable:
         values['target_variable'] = feature.name
-
-    values['features_dict'] = fset.to_dict()
 
     connection.execute(
         FeatureSet.__table__.update().

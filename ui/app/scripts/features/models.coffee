@@ -172,7 +172,7 @@ features_count,created_on,created_by,target_variable,json'
   (settings, $filter, BaseModel, NamedFeatureType, Transformer, Scaler) ->
     class Feature extends BaseModel
       API_FIELDNAME: 'feature'
-      @MAIN_FIELDS: 'name,type,input_format,transformer,params,
+      @MAIN_FIELDS: 'id,name,type,input_format,transformer,params,
 scaler,default,is_target_variable,created_on,created_by,required'
 
       id: null
