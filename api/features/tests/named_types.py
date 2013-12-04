@@ -1,5 +1,5 @@
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin
-from ..views import NamedFeatureTypeResource
+from ..views import NamedTypeResource
 from ..models import NamedFeatureType
 from ..fixtures import NamedFeatureTypeData
 
@@ -9,7 +9,7 @@ class NamedFeatureTypeTests(BaseDbTestCase, TestChecksMixin):
     Tests of the Feature types API.
     """
     BASE_URL = '/cloudml/features/named_types/'
-    RESOURCE = NamedFeatureTypeResource
+    RESOURCE = NamedTypeResource
     Model = NamedFeatureType
     datasets = (NamedFeatureTypeData, )
 

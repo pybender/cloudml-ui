@@ -11,16 +11,7 @@ from api.utils import crossdomain, ERR_NO_SUCH_MODEL, odesk_error_response, \
     ERR_INVALID_METHOD, ERR_INVALID_DATA
 from api.serialization import encode_model
 from api import app
-
-
-class NotFound(Exception):
-    pass
-
-
-class ValidationError(Exception):
-    def __init__(self, *args, **kwargs):
-        self.errors = kwargs.pop('errors', None)
-        super(ValidationError, self).__init__(*args, **kwargs)
+from api.base.exceptions import NotFound, ValidationError
 
 
 class BaseResource(restful.Resource):

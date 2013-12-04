@@ -1,9 +1,10 @@
 """ Features specific resources """
 from api import api
-from api.resources import BaseResourceSQL
+from api.base.resources import BaseResourceSQL
+from api.decorators import public_actions
+
 from models import *
 from forms import *
-from api.decorators import public_actions
 
 
 class FeatureSetResource(BaseResourceSQL):
@@ -37,11 +38,7 @@ api.add_resource(FeatureSetResource, '/cloudml/features/sets/')
 
 
 class ClassifierResource(BaseResourceSQL):
-    """
-    Classifier API methods
-    """
-    MESSAGE404 = "Classifier doesn't exist"
-    OBJECT_NAME = 'classifier'
+    """ Classifier API methods """
     post_form = put_form = ClassifierForm
     GET_ACTIONS = ('configuration', )
     Model = PredefinedClassifier
@@ -53,24 +50,16 @@ class ClassifierResource(BaseResourceSQL):
 api.add_resource(ClassifierResource, '/cloudml/features/classifiers/')
 
 
-class NamedFeatureTypeResource(BaseResourceSQL):
-    """
-    Tags API methods
-    """
-    MESSAGE404 = "Named feature type doesn't exist"
-    OBJECT_NAME = 'named_type'
+class NamedTypeResource(BaseResourceSQL):
+    """ Predefined named feature types API methods """
     put_form = post_form = NamedFeatureTypeAddForm
     Model = NamedFeatureType
 
-api.add_resource(NamedFeatureTypeResource, '/cloudml/features/named_types/')
+api.add_resource(NamedTypeResource, '/cloudml/features/named_types/')
 
 
 class TransformerResource(BaseResourceSQL):
-    """
-    Transformer API methods
-    """
-    MESSAGE404 = "transformer doesn't exist"
-    OBJECT_NAME = 'transformer'
+    """ Transformer API methods """
     put_form = post_form = TransformerForm
     GET_ACTIONS = ('configuration', )
     ALL_FIELDS_IN_POST = True
@@ -83,12 +72,8 @@ class TransformerResource(BaseResourceSQL):
 api.add_resource(TransformerResource, '/cloudml/features/transformers/')
 
 
-class ScalersResource(BaseResourceSQL):
-    """
-    Scalers API methods
-    """
-    MESSAGE404 = "Scaler doesn't exist"
-    OBJECT_NAME = 'scaler'
+class ScalerResource(BaseResourceSQL):
+    """ Scalers API methods """
     put_form = post_form = ScalerForm
     GET_ACTIONS = ('configuration', )
     ALL_FIELDS_IN_POST = True
@@ -98,15 +83,11 @@ class ScalersResource(BaseResourceSQL):
         from config import SCALERS
         return self._render({'configuration': SCALERS})
 
-api.add_resource(ScalersResource, '/cloudml/features/scalers/')
+api.add_resource(ScalerResource, '/cloudml/features/scalers/')
 
 
 class FeatureResource(BaseResourceSQL):
-    """
-    Feature API methods
-    """
-    MESSAGE404 = "Feature doesn't exist"
-    OBJECT_NAME = 'feature'
+    """ Feature API methods """
     put_form = post_form = FeatureForm
     Model = Feature
 

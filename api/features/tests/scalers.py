@@ -1,5 +1,5 @@
 from utils import FeaturePredefinedItemsTestMixin, FeatureItemsTestMixin
-from ..views import ScalersResource
+from ..views import ScalerResource
 from ..models import Feature, PredefinedScaler
 from ..fixtures import PredefinedScalerData, FeatureData
 
@@ -9,7 +9,7 @@ class PredefinedScalersTests(FeaturePredefinedItemsTestMixin):
     Tests of the Feature scalers API.
     """
     BASE_URL = '/cloudml/features/scalers/'
-    RESOURCE = ScalersResource
+    RESOURCE = ScalerResource
     Model = PredefinedScaler
     datasets = (PredefinedScalerData, FeatureData)
 

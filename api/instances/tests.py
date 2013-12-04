@@ -21,7 +21,9 @@ class InstancesTests(BaseDbTestCase, TestChecksMixin):
     datasets = [InstanceData, ]
 
     def test_list(self):
-        self.check_list(show='name')
+        resp = self.check_list(show='name,type')
+        self.assertTrue(resp['instances'][0]['type'])
+        self.assertTrue(resp['instances'][0]['name'])
 
     def test_details(self):
         instance = self.Model.query.filter_by(name='Instance 1')[0]
@@ -31,7 +33,7 @@ class InstancesTests(BaseDbTestCase, TestChecksMixin):
         self.assertEqual(instance_resp['name'], instance.name)
         self.assertEqual(instance_resp['type'], instance.type)
         self.assertEqual(instance_resp['ip'], instance.ip)
-        self.assertEqual(instance_resp['is_default'], 'False')
+        self.assertEqual(instance_resp['is_default'], False)
 
     def test_post(self):
         post_data = {'ip': '1.1.1.1',
