@@ -8,7 +8,10 @@ from sqlalchemy.orm import sessionmaker
 
 from api import app
 
-AUTH_TOKEN = '123'
+SOMEBODY_AUTH_TOKEN = '123'
+SOMEBODY_HTTP_HEADERS = [('X-Auth-Token', SOMEBODY_AUTH_TOKEN)]
+
+AUTH_TOKEN = 'token'
 HTTP_HEADERS = [('X-Auth-Token', AUTH_TOKEN)]
 
 
