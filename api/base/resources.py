@@ -71,7 +71,6 @@ class BaseResource(restful.Resource):
     method_decorators = [authenticate]
 
     is_fulltext_search = False
-    ALL_PARAMS = GET_PARAMS + FILTER_PARAMS + SORT_PARAMS
 
     def dispatch_request(self, *args, **kwargs):
         from flask import request
@@ -167,7 +166,8 @@ class BaseResource(restful.Resource):
         return models
 
     def _get_list_parameters(self, extra_params):
-        parser_params = tuple(extra_params) + self.ALL_PARAMS
+        parser_params = tuple(extra_params) + self.GET_PARAMS \
+            + self.FILTER_PARAMS + self.SORT_PARAMS
         if self.NEED_PAGING:
             parser_params += self.PAGING_PARAMS
         return self._parse_parameters(parser_params)
