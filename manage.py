@@ -339,6 +339,13 @@ class DropDbTables(Command):
         print 'Dropped.'
 
 
+class MigrateToPosgresql(Command):
+    def run(self, **kwargs):
+        from api.mongo.migrator import migrate as pmigrate
+        pmigrate()
+        print 'Done.'
+
+
 manager = Manager(app)
 manager.add_command("celeryd", Celeryd())
 manager.add_command("celeryw", Celeryw())
@@ -352,6 +359,7 @@ manager.add_command('fix_mongo', RemObsoluteMongoKeys())
 manager.add_command("shell", Shell(make_context=_make_context))
 manager.add_command("create_db_tables", CreateDbTables())
 manager.add_command("drop_db_tables", DropDbTables())
+manager.add_command("migrate_to_postgresql", MigrateToPosgresql())
 
 if __name__ == "__main__":
     manager.run()
