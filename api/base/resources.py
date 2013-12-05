@@ -419,6 +419,7 @@ class BaseResourceSQL(BaseResource):
         if fields:
             model_fields = []
             for field in fields:
+                # TODO: check hasattr
                 model_fields.append(getattr(self.Model, field))
             cursor = cursor.with_entities(*model_fields)
 

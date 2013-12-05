@@ -1,5 +1,4 @@
 import logging
-from mongo.logger import LogMessageHandler
 
 
 class BaseLogMessageHandler(logging.Handler):
@@ -23,6 +22,7 @@ class BaseLogMessageHandler(logging.Handler):
 
 def init_logger(name, **kwargs):
     logger = logging.getLogger()
+    from mongo.logger import LogMessageHandler
     handler = LogMessageHandler(log_type=name, params=kwargs)
     formatter = logging.Formatter(logging.BASIC_FORMAT)
     handler.setFormatter(formatter)
