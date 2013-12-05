@@ -25,12 +25,13 @@ class Migrator(object):
         source_list = self.query_mongo_docs(parent, source_parent)
         print "Found %s objects" % source_list.count()
 
-        for source_obj in source_list:
+        for i, source_obj in enumerate(source_list):
             obj = self.DESTINATION()
             self.fill_model(obj, source_obj)
             if parent is not None:
                 self.process_parent(obj, parent, source_parent)
             self.fill_extra(obj, source_obj)
+            print i + 1,
             try:
                 obj.save()
                 self.IDS_MAP[str(source_obj._id)] = obj.id
@@ -67,6 +68,8 @@ class Migrator(object):
     def process_inner_migrators(self, obj, source_parent):
         for migrator in self.INNER:
             migrator.migrate(parent=obj, source_parent=source_parent)
+        if self.INNER:
+            print "\n\n"
 
     def process_parent(self, obj, parent, source_parent):
         pass
@@ -156,7 +159,8 @@ class FeatureMigrator(Migrator, UserInfoMixin):
         obj.feature_set = parent
 
     def query_mongo_docs(self, parent=None, source_parent=None):
-        return self.SOURCE.find(features_set_id=str(source_parent._id))
+        query = self.SOURCE.find(dict(features_set_id=str(source_parent._id)))
+        return query
 
 feature = FeatureMigrator()
 
@@ -178,7 +182,8 @@ class DataSetMigrator(Migrator, UserInfoMixin):
         obj.import_handler = parent
 
     def query_mongo_docs(self, parent=None, source_parent=None):
-        return self.SOURCE.find(import_handler_id=str(source_parent._id))
+        return self.SOURCE.find(
+            dict(import_handler_id=str(source_parent._id)))
 
 ds = DataSetMigrator()
 
@@ -202,6 +207,19 @@ tag = TagMigrator()
 class TestMigrator(Migrator, UserInfoMixin):
     SOURCE = app.db.Test
     DESTINATION = Test
+    FIELDS_TO_EXCLUDE = ["_id", "model", ]
+
+    def process_parent(self, obj, parent, source_obj):
+        obj.model = parent
+
+    def clean_dataset(self, val):
+        if val:
+            ds_id = ds.IDS_MAP.get(str(val["_id"]), None)
+            if ds_id:
+                return DataSet.query.get(ds_id)
+
+    def fill_extra(self, obj, source_obj):
+        obj.memory_usage = source_obj.memory_usage.get('training', None)
 
 test = TestMigrator()
 
@@ -220,7 +238,7 @@ class ModelMigrator(Migrator, UserInfoMixin, UniqueNameMixin):
         obj.classifier = \
             {'type': source_obj.classifier['type'],
              'params': source_obj.classifier['params']}
-        obj.memory_usage = source_obj.memory_usage['training']
+        obj.memory_usage = source_obj.memory_usage.get('training', None)
         # Looking for feature set
         set_id = feature_set.IDS_MAP[source_obj.features_set_id]
         obj.features_set = FeatureSet.query.get(set_id)
@@ -234,11 +252,20 @@ class ModelMigrator(Migrator, UserInfoMixin, UniqueNameMixin):
 model = ModelMigrator()
 
 
-MIGRATOR_PROCESS = [handler, feature_set, model]
+#MIGRATOR_PROCESS = [user, handler, feature_set, model]
+MIGRATOR_PROCESS = [user, named_type, classifier,
+                    transformer, scaler, handler,
+                    feature_set, model]
 
 
 def migrate():
+    from sqlalchemy import create_engine
+    app.sql_db.drop_all()
+
+    engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
+    app.sql_db.metadata.create_all(engine)
+    app.sql_db.create_all()
+
     print "Start migration to postgresql"
     for migrator in MIGRATOR_PROCESS:
         migrator.migrate()
-        print "ids %s" % migrator.IDS_MAP
