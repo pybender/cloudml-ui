@@ -37,27 +37,27 @@ class ModelData(DataSet):
 
 class WeightData(DataSet):
     class weight_01:
-        name = "opening_id",
-        model_name = "TrainedModel",
-        model = ModelData.model_01,
-        short_name = "opening_id",
-        value = 0.4444,
-        is_positive = True,
-        css_class = "green",
+        name = "opening_id"
+        model_name = "TrainedModel"
+        model = ModelData.model_01
+        short_name = "opening_id"
+        value = 0.4444
+        is_positive = True
+        css_class = "green"
         parent = None
 
     class weight_02:
-        name = "contractor->dev_blurb->Over",
-        model_name = "TrainedModel",
-        model = ModelData.model_01,
-        short_name = "Over",
-        value = 0.022345208915455828,
-        is_positive = True,
-        css_class = "green dark",
+        name = "contractor->dev_blurb->Over"
+        model_name = "TrainedModel"
+        model = ModelData.model_01
+        short_name = "Over"
+        value = 0.022345208915455828
+        is_positive = True
+        css_class = "green dark"
         parent = "contractor.dev_blurb"
 
     class weight_03:
-        name = "opening",
-        model_name = "TrainedModel",
-        model = ModelData.model_01,
-        short_name = "opening",
+        name = "opening"
+        model_name = "TrainedModel"
+        model = ModelData.model_01
+        short_name = "opening"

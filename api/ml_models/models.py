@@ -157,8 +157,8 @@ class WeightsCategory(db.Model, BaseModel):
 
     model_id = db.Column(db.Integer, db.ForeignKey('model.id'))
     model = relationship(Model, backref=backref('weight_categories'))
-    parent_id = db.Column(db.Integer, db.ForeignKey('weights_category.id'))
-    parent = relationship('WeightsCategory')
+
+    parent = db.Column(db.String(200))
 
 
 class Weight(db.Model, BaseModel):
@@ -175,4 +175,4 @@ class Weight(db.Model, BaseModel):
     model_id = db.Column(db.Integer, db.ForeignKey('model.id'))
     model = relationship(Model, backref=backref('weights'))
 
-    parent = relationship('WeightsCategory')
+    parent = db.Column(db.String(200))

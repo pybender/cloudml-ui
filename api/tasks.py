@@ -33,7 +33,7 @@ class InstanceRequestingError(Exception):
 def request_spot_instance(dataset_id=None, instance_type=None, model_id=None):
     init_logger('trainmodel_log', obj=model_id)
 
-    model = app.db.Model.find_one({'_id': ObjectId(model_id)})
+    model = Model.query.get(model_id)
     model.status = model.STATUS_REQUESTING_INSTANCE
     model.save()
 
@@ -62,7 +62,7 @@ def get_request_instance(request_id,
     ec2 = AmazonEC2Helper()
     logging.info('Get spot instance request %s' % request_id)
 
-    model = app.db.Model.find_one({'_id': ObjectId(model_id)})
+    model = Model.query.get(model_id)
 
     try:
         request = ec2.get_request_spot_instance(request_id)
@@ -137,7 +137,7 @@ def self_terminate(result=None):  # pragma: no cover
 @celery.task
 def cancel_request_spot_instance(request_id, model_id):
     init_logger('trainmodel_log', obj=model_id)
-    model = app.db.Model.find_one({'_id': ObjectId(model_id)})
+    model = Model.query.get(model_id)
 
     logging.info('Cancelling spot instance request {0!s} \
 for model id {1!s}...'.format(
@@ -281,15 +281,13 @@ def train_model(dataset_ids, model_id, user_id):
     init_logger('trainmodel_log', obj=model_id)
 
     user = User.query.get(user_id)
-    model = app.db.Model.find_one({'_id': ObjectId(model_id)})
-    datasets = app.db.DataSet.find({
-        '_id': {'$in': [ObjectId(ds_id) for ds_id in dataset_ids]}
-    })
+    model = Model.query.get(model_id)
+    datasets = DataSet.query.filter(DataSet.id.in_(dataset_ids)).all()
 
     try:
         model.delete_metadata()
 
-        model.dataset_ids = [ObjectId(ds_id) for ds_id in dataset_ids]
+        model.datasets = datasets
         model.status = model.STATUS_TRAINING
         model.error = ""
         model.trained_by = {
@@ -333,9 +331,7 @@ def train_model(dataset_ids, model_id, user_id):
         model.save()
         model.memory_usage['training'] = max(mem_usage)
         model.train_records_count = int(sum((
-            d['records_count'] for d in app.db.DataSet.find({
-                '_id': {'$in': model.dataset_ids}
-            }, ['records_count']))))
+            d.records_count for d in model.datasets)))
         model.training_time = int((train_end_time - train_begin_time).seconds)
         model.save()
 
@@ -360,7 +356,7 @@ def fill_model_parameter_weights(model_id, reload=False):
     init_logger('trainmodel_log', obj=model_id)
     logging.info("Starting to fill model weights")
     try:
-        model = app.db.Model.find_one({'_id': ObjectId(model_id)})
+        model = Model.query.get(model_id)
         if model is None:
             raise ValueError('Model not found: %s' % model_id)
 
@@ -371,7 +367,7 @@ def fill_model_parameter_weights(model_id, reload=False):
             params = {'model_id': model_id}
             app.db.WeightsCategory.collection.remove(params)
             app.db.Weight.collection.remove(params)
-        weights = app.db.Weight.find({'model_id': model_id})
+        weights = model.weights
         count = weights.count()
         if count > 0:
             raise InvalidOperationError('Weights for model %s already \
@@ -481,7 +477,7 @@ def run_test(dataset_ids, test_id):
 
         if not model.comparable:
             # TODO: fix this
-            model = app.db.Model.find_one({'_id': model.id})
+            model = Model.query.get(model.id)
             model.comparable = True
             model.save()
 
@@ -589,7 +585,7 @@ def calculate_confusion_matrix(test_id, weight0, weight1):
     if test is None:
         raise ValueError('Test with id {0!s} not found!'.format(test_id))
 
-    model = app.db.Model.find_one({'_id': ObjectId(test['model_id'])})
+    model = test.model
     if model is None:
         raise ValueError('Model with id {0!s} not found!'.format(
             test.model_id))

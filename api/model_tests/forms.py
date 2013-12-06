@@ -2,9 +2,9 @@ from bson import ObjectId
 
 from api import app
 from api.base.forms import BaseForm
-from api.base.fields import CharField, DocumentField, ModelField, ChoiceField
+from api.base.fields import CharField, ModelField, ChoiceField
 from api.resources import ValidationError
-from api.models import DataSet, TestResult, Instance
+from api.models import DataSet, TestResult, Instance, Model
 from api.forms import populate_parser, only_one_required
 
 
@@ -15,7 +15,7 @@ class BaseChooseInstanceAndDataset(BaseForm):
                     'hi1.4xlarge', 'hs1.8xlarge')
 
     aws_instance = ModelField(model=Instance, return_model=True)
-    dataset = DocumentField(doc='DataSet', return_doc=True)
+    dataset = ModelField(model=DataSet, return_model=True)
     parameters = CharField()
     spot_instance_type = ChoiceField(choices=TYPE_CHOICES)
     format = ChoiceField(choices=DataSet.FORMATS)
@@ -28,7 +28,7 @@ class BaseChooseInstanceAndDataset(BaseForm):
             return
 
         handler = getattr(self.model, '%s_import_handler' % self.HANDLER_TYPE)
-        self.parameter_names = handler['import_params']
+        self.parameter_names = handler.import_params
         parser = populate_parser(self.parameter_names)
         params = parser.parse_args()
 
@@ -46,7 +46,7 @@ class BaseChooseInstanceAndDataset(BaseForm):
 
         return parameters
 
-    def validate_obj(self):
+    def validate_data(self):
         inst_err = only_one_required(
             self.cleaned_data,
             ('spot_instance_type', 'aws_instance'), raise_exc=False)
@@ -65,7 +65,7 @@ class AddTestForm(BaseChooseInstanceAndDataset):
     HANDLER_TYPE = 'test'
 
     aws_instance = ModelField(model=Instance, return_model=True)
-    dataset = DocumentField(doc='DataSet', return_doc=True)
+    dataset = ModelField(model=DataSet, return_model=True)
     parameters = CharField()
     spot_instance_type = ChoiceField(choices=BaseChooseInstanceAndDataset.TYPE_CHOICES)
     format = ChoiceField(choices=DataSet.FORMATS)
@@ -74,7 +74,7 @@ class AddTestForm(BaseChooseInstanceAndDataset):
     model_id = CharField()
 
     def before_clean(self):
-        self.model = app.db.Model.find_one({'_id': ObjectId(self.model_id)})
+        self.model = Model.query.get(self.model_id)
 
     def clean_name(self, value, field):
         total = TestResult.query.filter_by(model_id=self.model_id).count()
@@ -104,23 +104,22 @@ class AddTestForm(BaseChooseInstanceAndDataset):
 
         if self.params_filled:
             # load and train
-            from api.models import ImportHandler
-            import_handler = ImportHandler(test.model.test_import_handler)
+            import_handler = test.model.test_import_handler
             params = self.cleaned_data.get('parameters', None)
             dataset = import_handler.create_dataset(
                 params,
                 data_format=self.cleaned_data.get(
                     'format', DataSet.FORMAT_JSON)
             )
-            import_data.apply_async(kwargs={'dataset_id': str(dataset._id),
-                                            'test_id': str(test.id)},
-                                    link=run_test.subtask(args=(str(test.id), ),
+            import_data.apply_async(kwargs={'dataset_id': dataset.id,
+                                            'test_id': test.id},
+                                    link=run_test.subtask(args=(test.id, ),
                                     options={'queue': instance.name}))
         else:
             # test using dataset
             dataset = self.cleaned_data.get('dataset', None)
-            run_test.apply_async(([str(dataset._id),],
-                                  str(test.id),),
+            run_test.apply_async(([dataset.id],
+                                  test.id,),
                                   queue=instance.name)
 
         return test

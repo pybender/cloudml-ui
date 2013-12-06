@@ -86,7 +86,8 @@ def get_example_params(model_weights, row, vect_row):
         return {}
 
     result = {}
-    weights_dict = dict([(weight.name, weight) for weight in model_weights])
+    weights_dict = dict([(weight.name, weight.__dict__)
+                         for weight in model_weights])
 
     def try_set_item(result, name, value, subkey=None,
                      value_type=None):

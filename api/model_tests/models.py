@@ -101,7 +101,7 @@ class TestExample(db.Model, BaseModel):
                                       feature_model.target_variable)
 
         from api.helpers.weights import get_example_params
-        model_weights = model.weights
+        model_weights = list(model.weights)
         weighted_data = dict(get_example_params(
             model_weights, self.data_input, data))
         self.weighted_data_input = weighted_data

@@ -9,7 +9,7 @@ class ImportHandlerData(DataSet):
         type = "Db"
         created_on = "2013-04-19 14:37:23.145000"
         updated_on = "2013-04-19 14:37:23.145000"
-        import_params = ['one', 'two']
+        import_params = ['start', 'end', 'category']
         data = json.loads("""
         {
   "target-schema":"bestmatch",

@@ -7,7 +7,7 @@ from flask.ext.restful import reqparse
 from api import api, app
 from api.base.resources import BaseResourceSQL, NotFound
 from api.utils import odesk_error_response, ERR_INVALID_DATA
-from models import TestResult, TestExample
+from models import TestResult, TestExample, Model
 from forms import AddTestForm
 from sqlalchemy import desc
 
@@ -16,7 +16,6 @@ class TestsResource(BaseResourceSQL):
     """
     Tests API Resource
     """
-    OBJECT_NAME = 'test'
     DEFAULT_FIELDS = ('id', 'name')
     FILTER_PARAMS = (('status', str), )
     GET_ACTIONS = ('confusion_matrix', 'exports', 'examples_size')
@@ -54,19 +53,18 @@ class TestsResource(BaseResourceSQL):
         if not test:
             raise NotFound('Test not found')
 
-        model = app.db.Model.find_one(
-            {'_id': ObjectId(kwargs.get('model_id'))})
+        model = Model.query.get(kwargs.get('model_id'))
         if not model:
             raise NotFound('Model not found')
 
         try:
             calculate_confusion_matrix.delay(
-                str(test._id), args.get('weight0'), args.get('weight1'))
+                test.id, args.get('weight0'), args.get('weight1'))
         except Exception as e:
-            return self._render({self.OBJECT_NAME: str(test._id),
+            return self._render({self.OBJECT_NAME: test.id,
                                  'error': e.message})
 
-        return self._render({self.OBJECT_NAME: str(test._id)})
+        return self._render({self.OBJECT_NAME: test.id})
 
     def _get_exports_action(self, **kwargs):
         test = self._get_details_query(None, **kwargs)
@@ -89,7 +87,6 @@ class TestExamplesResource(BaseResourceSQL):
     """
     Model = TestExample
 
-    OBJECT_NAME = 'data'
     NEED_PAGING = True
     GET_ACTIONS = ('groupped', 'csv', 'datafields')
     FILTER_PARAMS = (('label', str), ('pred_label', str))
@@ -131,7 +128,7 @@ class TestExamplesResource(BaseResourceSQL):
                 params, **kwargs)
 
         # TODO: hack
-        example.__dict__['test'] = example.test
+        example.__dict__['test'] = example.test_result
 
         return example
 
@@ -199,7 +196,6 @@ not contain probabilities')
         for group in groups:
             group_list = group['list']
 
-            #print group_list
             labels = [transform(item['label']) for item in group_list]
             pred_labels = [transform(item['pred']) for item in group_list]
             probs = [item['prob'][1] for item in group_list]
@@ -245,16 +241,17 @@ not contain probabilities')
         parser = reqparse.RequestParser()
         parser.add_argument('show', type=str)
         params = parser.parse_args()
-        fields, show_fields = self._get_fields(params)
+        fields = params.get('show', None)
         logging.info('Use fields %s' % str(fields))
 
-        test = TestResult.query.filter_by(id=kwargs.get('test_result_id'),
-                                    model_id=kwargs.get('model_id')).one()
+        test = TestResult.query.filter_by(
+            id=kwargs.get('test_result_id'),
+            model_id=kwargs.get('model_id')).one()
         if not test:
             raise NotFound('Test not found')
 
         get_csv_results.delay(
-            test.model_id, str(test.id),
+            test.model_id, test.id,
             fields
         )
         return self._render({})
