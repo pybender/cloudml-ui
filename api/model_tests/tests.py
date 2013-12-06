@@ -1,10 +1,8 @@
-import httplib
 import json
 from mock import patch
 from moto import mock_s3
 
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS
-from api.base.models import db
 from views import TestsResource, TestExamplesResource
 from models import TestResult, TestExample
 from api.ml_models.models import Model, Weight

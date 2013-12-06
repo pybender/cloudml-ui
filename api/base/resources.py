@@ -460,15 +460,24 @@ class BaseResourceSQL(BaseResource):
 
     def _build_details_query(self, params, **kwargs):
         cursor = self._modify_details_query(
-            self._set_details_query_opts(
-                self.Model.query, params).filter_by(**kwargs), params)
+            self.Model.query, params).filter_by(**kwargs)
+
+        fields = self._get_show_fields(params)
+        if fields:
+            model_fields = []
+            for field in fields:
+                model_fields.append(getattr(self.Model, field))
+            cursor = cursor.with_entities(*model_fields)
+
         return cursor.one()
 
     def _modify_details_query(self, cursor, params):
         return cursor
 
-    def _set_details_query_opts(self, cursor, params):
-        return cursor
+    def _prepare_model(self, model, params):
+        fields = self._get_show_fields(params)
+        return dict([(field, getattr(model, field, None))
+                     for field in fields])
 
     def _prepare_model_any(self, model, params):
         fields = self._get_all_fields()

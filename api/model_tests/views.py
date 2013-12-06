@@ -1,10 +1,9 @@
 import logging
-from bson import ObjectId
 from datetime import datetime
 
 from flask.ext.restful import reqparse
 
-from api import api, app
+from api import api
 from api.base.resources import BaseResourceSQL, NotFound
 from api.utils import odesk_error_response, ERR_INVALID_DATA
 from models import TestResult, TestExample, Model

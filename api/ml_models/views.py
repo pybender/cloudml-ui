@@ -1,12 +1,13 @@
 from api.decorators import public_actions
 from api.import_handlers.models import DataSet
-from bson import ObjectId
 from flask import Response, request
 from flask.ext.restful import reqparse
+from sqlalchemy import or_
+from sqlalchemy.orm import joinedload, undefer, subqueryload, joinedload_all
 from werkzeug.datastructures import FileStorage
 
 from api import api
-from api.resources import BaseResourceSQL, NotFound, ValidationError
+from api.base.resources import BaseResourceSQL, NotFound, ValidationError
 from models import Model, Tag, Weight, WeightsCategory
 from forms import ModelAddForm, ModelEditForm
 
@@ -28,9 +29,9 @@ class ModelResource(BaseResourceSQL):
     """
     GET_ACTIONS = ('download', 'reload', 'by_importhandler')
     PUT_ACTIONS = ('train', 'tags', 'cancel_request_instance')
-    FILTER_PARAMS = (('status', str), ('comparable', int), ('tag', str),
+    FILTER_PARAMS = (('status', str), ('comparable', str), ('tag', str),
                     ('created_by', str), ('updated_by', str))
-    DEFAULT_FIELDS = ('_id', 'name')
+    DEFAULT_FIELDS = ('id', 'name')
     NEED_PAGING = True
 
     MESSAGE404 = "Model with name %(_id)s doesn't exist"
@@ -54,9 +55,14 @@ class ModelResource(BaseResourceSQL):
     def get(self, *args, **kwargs):
         return super(ModelResource, self).get(*args, **kwargs)
 
-    def _get_details_query(self, params, fields, **kwargs):
+    def _modify_details_query(self, cursor, params):
+        if not params:
+            return cursor
+        fields = self._get_show_fields(params)
+
         get_datasets = False
         get_data_fields = False
+
         if fields and 'datasets' in fields:
             get_datasets = True
             fields.remove('datasets')
@@ -65,65 +71,26 @@ class ModelResource(BaseResourceSQL):
             fields.remove('data_fields')
 
         if get_datasets or get_data_fields:
-            fields.append('dataset_ids')
+            cursor = cursor.options(joinedload_all(Model.datasets))
 
         if fields and 'features' in fields:
-            fields.append('features_set')
             fields.append('features_set_id')
-            fields.append('classifier')
+            cursor = cursor.options(joinedload(Model.features_set))
+            cursor = cursor.options(undefer(Model.classifier))
 
         if fields and 'test_handler_fields' in fields:
-            fields.append('test_import_handler')
+            cursor = cursor.options(joinedload(Model.test_import_handler))
 
-        model = super(ModelResource, self)._get_details_query(
-            params, fields, **kwargs)
-        if model is None:
-            raise NotFound()
-
-        if get_datasets:
-            model['datasets'] = [{
-                'id': ds.id,
-                'name': ds.name,
-                'import_handler_id': ds.import_handler_id,
-            } for ds in model.datasets]
-
-        if get_data_fields:
-            model['data_fields'] = model.dataset.data_fields\
-                if model.dataset else []
-
-        if fields and 'test_handler_fields' in fields:
-            if model.test_import_handler:
-                model['test_handler_fields'] = model.test_import_handler.get_fields()
-
-        if fields and 'features' in fields:
-            model.features = model.get_features_json()
-
-        return model
-
-    def _prepare_filter_params(self, params):
-        pdict = super(ModelResource, self)._prepare_filter_params(params)
-        if 'comparable' in pdict:
-            pdict['comparable'] = bool(pdict['comparable'])
-        # TODO
-        # if 'tag' in pdict:
-        #     pdict['tags'] = {'$in': [pdict['tag']]}
-        #     del pdict['tag']
-        if 'created_by' in pdict:
-            pdict["created_by->>'uid'"] = pdict['created_by']
-            del pdict['created_by']
-        if 'updated_by' in pdict:
-            pdict["updated_by->>'uid'"] = pdict['updated_by']
-            del pdict['updated_by']
-        return pdict
+        return cursor
 
     def _get_by_importhandler_action(self, **kwargs):
         parser_params = self.GET_PARAMS + (('handler', str), )
         params = self._parse_parameters(parser_params)
-        query_fields, show_fields = self._get_fields(params)
-        _id = ObjectId(params.get('handler'))
-        expr = {'$or': [{'test_import_handler.$id': _id},
-                        {'train_import_handler.$id': _id}]}
-        models = self.Model.find(expr, query_fields)
+        handler_id = params.get('handler')
+        models = Model.filter(or_(
+            Model.train_import_handler_id == handler_id,
+            Model.test_import_handler_id == handler_id,
+        )).all()
         return self._render({"%ss" % self.OBJECT_NAME: models})
 
     def _get_download_action(self, **kwargs):
@@ -131,7 +98,7 @@ class ModelResource(BaseResourceSQL):
         Downloads trained model, importhandler or features
         (specified in GET param `field`) file.
         """
-        model = self._get_details_query(None, None, **kwargs)
+        model = self._get_details_query(None, **kwargs)
         if model is None:
             raise NotFound(self.MESSAGE404 % kwargs)
 
@@ -158,11 +125,10 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
     # POST/PUT specific methods
     def _put_train_action(self, **kwargs):
         from api.tasks import train_model, import_data, \
-            request_spot_instance, self_terminate, get_request_instance
-        from api.tasks import cancel_request_spot_instance
+            request_spot_instance, get_request_instance
         from api.forms import ModelTrainForm
         from celery import chain
-        obj = self._get_details_query(None, None, **kwargs)
+        obj = self._get_details_query(None, **kwargs)
         form = ModelTrainForm(obj=obj, **kwargs)
         if form.is_valid():
             model = form.save()
@@ -183,24 +149,25 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
                     data_format=form.cleaned_data.get(
                         'format', DataSet.FORMAT_JSON)
                 )
-                tasks_list.append(import_data.s(str(dataset._id),
-                                                str(model._id)))
+                tasks_list.append(import_data.s(dataset.id, model.id))
                 dataset = [dataset]
             else:
                 dataset = form.cleaned_data.get('dataset', None)
 
-            dataset_ids = [str(ds._id) for ds in dataset]
+            dataset_ids = [ds.id for ds in dataset]
 
             if not spot_instance_type is None:
-                tasks_list.append(request_spot_instance.s(instance_type=spot_instance_type,
-                                                          model_id=str(model._id)))
+                tasks_list.append(request_spot_instance.s(
+                    instance_type=spot_instance_type,
+                    model_id=model.id
+                ))
                 tasks_list.append(get_request_instance.subtask(
                     (),
                     {
                         'callback': 'train',
                         'dataset_ids': dataset_ids,
-                        'model_id': str(model._id),
-                        'user_id': str(request.user.id),
+                        'model_id': model.id,
+                        'user_id': request.user.id,
                     },
                     retry=True,
                     countdown=10,
@@ -210,26 +177,28 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
                         'interval_step': 5,
                         'interval_max': 10
                         }))
-                #tasks_list.append(self_terminate.s())
             elif not instance is None:
                 if form.params_filled:
-                    train_model_args = (str(model._id), request.user.id)
+                    train_model_args = (model.id, request.user.id)
                 else:
-                    train_model_args = (dataset_ids, str(model._id),
-                                        request.user.id)
+                    train_model_args = (dataset_ids, model.id, request.user.id)
                 tasks_list.append(train_model.subtask(train_model_args, {},
                                                       queue=instance.name))
             chain(tasks_list).apply_async()
-            return self._render(self._get_save_response_context(model, extra_fields=['status']))
+            return self._render({
+                self.OBJECT_NAME: model
+            })
 
     def _put_cancel_request_instance_action(self, **kwargs):
         from api.tasks import cancel_request_spot_instance
-        model = self._get_details_query(None, None, **kwargs)
+        model = self._get_details_query(None, **kwargs)
         request_id = model.get('spot_instance_request_id')
         if request_id and model.status == model.STATUS_REQUESTING_INSTANCE:
-            cancel_request_spot_instance.delay(request_id, str(model._id))
+            cancel_request_spot_instance.delay(request_id, model.id)
             model.status = model.STATUS_CANCELED
-        return self._render(self._get_save_response_context(model, extra_fields=['status']))
+        return self._render({
+            self.OBJECT_NAME: model
+        })
 
 api.add_resource(ModelResource, '/cloudml/models/')
 
