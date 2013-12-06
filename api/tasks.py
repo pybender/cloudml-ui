@@ -13,7 +13,7 @@ from boto.exception import EC2ResponseError
 from celery.signals import task_prerun, task_postrun
 
 from api import celery, app
-from api.models import Test, Model, TestExample, User, DataSet, ImportHandler
+from api.models import TestResult, Model, TestExample, User, DataSet, ImportHandler
 from api.logs.logger import init_logger
 from api.utils import get_doc_size
 from api.amazon_utils import AmazonEC2Helper, AmazonS3Helper
@@ -169,7 +169,7 @@ def import_data(dataset_id, model_id=None, test_id=None):
         if not model_id is None:
             obj = Model.query.get(model_id)
         if not test_id is None:
-            obj = Test.query.get(test_id)
+            obj = TestResult.query.get(test_id)
 
         if obj:
             obj.status = obj.STATUS_IMPORTING
@@ -436,10 +436,8 @@ def run_test(dataset_ids, test_id):
     """
     init_logger('runtest_log', obj=test_id)
 
-    test = Test.query.get(test_id)
-    datasets = app.db.DataSet.find({
-        '_id': {'$in': [ObjectId(ds_id) for ds_id in dataset_ids]}
-    })
+    test = TestResult.query.get(test_id)
+    datasets = DataSet.query.filter(DataSet.id.in_(dataset_ids)).all()
     dataset = datasets[0]
     model = test.model
 
@@ -479,7 +477,7 @@ def run_test(dataset_ids, test_id):
             metrics_dict['precision_recall_curve'][0][0::n]
         test.metrics = metrics_dict
         test.classes_set = list(metrics.classes_set)
-        test.status = Test.STATUS_STORING
+        test.status = TestResult.STATUS_STORING
 
         if not model.comparable:
             # TODO: fix this
@@ -520,7 +518,7 @@ def run_test(dataset_ids, test_id):
             # example_ids.append(str(example.id))
         app.sql_db.session.commit()
 
-        test.status = Test.STATUS_COMPLETED
+        test.status = TestResult.STATUS_COMPLETED
         test.save()
         logging.info('Test %s completed' % test.name)
 
@@ -587,7 +585,7 @@ def calculate_confusion_matrix(test_id, weight0, weight1):
     if weight0 < 0 or weight1 < 0:
         raise ValueError('Negative weights are not allowed')
 
-    test = Test.query.get(test_id)
+    test = TestResult.query.get(test_id)
     if test is None:
         raise ValueError('Test with id {0!s} not found!'.format(test_id))
 
@@ -604,7 +602,7 @@ def calculate_confusion_matrix(test_id, weight0, weight1):
     test.confusion_matrix_calculations.append({
         '_id': calc_id,
         'weights': dict(zip(model.labels, [weight0, weight1])),
-        'status': Test.MATRIX_STATUS_IN_PROGRESS,
+        'status': TestResult.MATRIX_STATUS_IN_PROGRESS,
         'datetime': datetime.now(),
         'result': []
     })
@@ -630,7 +628,7 @@ def calculate_confusion_matrix(test_id, weight0, weight1):
     calc = next((c for c in test.confusion_matrix_calculations
                  if c['_id'] == calc_id))
     calc['result'] = zip(model.labels, matrix)
-    calc['status'] = Test.MATRIX_STATUS_COMPLETED
+    calc['status'] = TestResult.MATRIX_STATUS_COMPLETED
     test.save()
 
     return matrix
@@ -665,7 +663,7 @@ def get_csv_results(model_id, test_id, fields):
 
     init_logger('runtest_log', obj=test_id)
 
-    test = Test.query.filter_by(model_id=model_id, id=test_id).first()
+    test = TestResult.query.filter_by(model_id=model_id, id=test_id).first()
     if not test:
         logging.error('Test not found')
         return None
@@ -675,7 +673,7 @@ def get_csv_results(model_id, test_id, fields):
     test.exports.append({
         'name': name,
         'fields': fields,
-        'status': Test.EXPORT_STATUS_IN_PROGRESS,
+        'status': TestResult.EXPORT_STATUS_IN_PROGRESS,
         'datetime': datetime.now(),
         'url': None,
         'type': 'csv',
@@ -697,7 +695,7 @@ def get_csv_results(model_id, test_id, fields):
 
     export = next((ex for ex in test.exports if ex['name'] == name))
     export['url'] = url
-    export['status'] = Test.EXPORT_STATUS_COMPLETED
+    export['status'] = TestResult.EXPORT_STATUS_COMPLETED
     export['expires'] = datetime.now() + timedelta(seconds=expires)
     test.save()
 

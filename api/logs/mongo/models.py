@@ -29,5 +29,5 @@ class LogMessage(Document):
     @classmethod
     def delete_related_logs(cls, obj, level=None):
         # TODO: implement level
-        app.db.LogMessage.collection.remove({'params.obj': str(obj._id),
+        app.db.LogMessage.collection.remove({'params.obj': str(obj.id),
                                              'type': obj.LOG_TYPE})

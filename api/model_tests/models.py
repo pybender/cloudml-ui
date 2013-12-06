@@ -13,7 +13,7 @@ from api.import_handlers.models import DataSet
 from api.db import JSONType, GridfsFile
 
 
-class Test(db.Model, BaseModel):
+class TestResult(db.Model, BaseModel):
     LOG_TYPE = LogMessage.RUN_TEST
 
     STATUS_QUEUED = 'Queued'
@@ -27,6 +27,8 @@ class Test(db.Model, BaseModel):
     STATUSES = [STATUS_QUEUED, STATUS_IMPORTING, STATUS_IMPORTED,
                 STATUS_IN_PROGRESS, STATUS_STORING, STATUS_COMPLETED,
                 STATUS_ERROR]
+
+    __tablename__ = 'test_result'
 
     name = db.Column(db.String(200))
     status = db.Column(db.Enum(*STATUSES, name='test_statuses'))
@@ -74,8 +76,8 @@ class TestExample(db.Model, BaseModel):
     data_input = db.Column(JSONType)
     weighted_data_input = db.Column(JSONType)
 
-    test_id = db.Column(db.Integer, db.ForeignKey('test.id'))
-    test = relationship('Test', backref=backref('examples',
+    test_result_id = db.Column(db.Integer, db.ForeignKey('test_result.id'))
+    test_result = relationship('TestResult', backref=backref('examples',
                                                 cascade='all,delete'))
     test_name = db.Column(db.String(200))
 
@@ -94,7 +96,7 @@ class TestExample(db.Model, BaseModel):
         from api.helpers.features import get_features_vect_data
         model = self.model
         feature_model = model.get_trainer()._feature_model
-        data = get_features_vect_data(self.test.get_vect_data(self.num),
+        data = get_features_vect_data(self.test_result.get_vect_data(self.num),
                                       feature_model.features.items(),
                                       feature_model.target_variable)
 
@@ -106,9 +108,9 @@ class TestExample(db.Model, BaseModel):
         self.save()
 
     @classmethod
-    def get_grouped(cls, field, model_id, test_id):
+    def get_grouped(cls, field, model_id, test_result_id):
         cursor = cls.query.filter_by(
-            model_id=model_id, test_id=test_id
+            model_id=model_id, test_result_id=test_result_id
         ).with_entities(
             cls.pred_label,
             cls.label,
@@ -133,7 +135,7 @@ class TestExample(db.Model, BaseModel):
         } for key, value in groups.iteritems()]
 
     @classmethod
-    def get_data(cls, test_id, fields):
+    def get_data(cls, test_result_id, fields):
         db_fields = []
         for field in fields:
             if field == '_id':
@@ -151,7 +153,7 @@ class TestExample(db.Model, BaseModel):
                         field.replace('data_input.', ''))).label(field)
                 )
 
-        cursor = cls.query.filter_by(test_id=test_id).with_entities(
+        cursor = cls.query.filter_by(test_result_id=test_result_id).with_entities(
             *db_fields
         )
 

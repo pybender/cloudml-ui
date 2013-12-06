@@ -120,14 +120,18 @@ class Model(db.Model, BaseModel):
 
 tags_table = db.Table(
     'model_tag', db.Model.metadata,
-    db.Column('model_id', db.Integer, db.ForeignKey('model.id')),
-    db.Column('tag_id', db.Integer, db.ForeignKey('tag.id'))
+    db.Column('model_id', db.Integer, db.ForeignKey(
+        'model.id', ondelete='CASCADE', onupdate='CASCADE')),
+    db.Column('tag_id', db.Integer, db.ForeignKey(
+        'tag.id', ondelete='CASCADE', onupdate='CASCADE'))
 )
 
 data_sets_table = db.Table(
     'model_dataset', db.Model.metadata,
-    db.Column('model_id', db.Integer, db.ForeignKey('model.id')),
-    db.Column('data_set_id', db.Integer, db.ForeignKey('data_set.id'))
+    db.Column('model_id', db.Integer, db.ForeignKey(
+        'model.id', ondelete='CASCADE', onupdate='CASCADE')),
+    db.Column('data_set_id', db.Integer, db.ForeignKey(
+        'data_set.id', ondelete='CASCADE', onupdate='CASCADE'))
 )
 
 
@@ -171,5 +175,4 @@ class Weight(db.Model, BaseModel):
     model_id = db.Column(db.Integer, db.ForeignKey('model.id'))
     model = relationship(Model, backref=backref('weights'))
 
-    parent_id = db.Column(db.Integer, db.ForeignKey('weights_category.id'))
     parent = relationship('WeightsCategory')

@@ -4,7 +4,7 @@ from api import app
 from api.base.forms import BaseForm
 from api.base.fields import CharField, DocumentField, ModelField, ChoiceField
 from api.resources import ValidationError
-from api.models import DataSet, Test, Instance
+from api.models import DataSet, TestResult, Instance
 from api.forms import populate_parser, only_one_required
 
 
@@ -77,7 +77,7 @@ class AddTestForm(BaseChooseInstanceAndDataset):
         self.model = app.db.Model.find_one({'_id': ObjectId(self.model_id)})
 
     def clean_name(self, value, field):
-        total = Test.query.filter_by(model_id=self.model_id).count()
+        total = TestResult.query.filter_by(model_id=self.model_id).count()
         return "Test%s" % (total + 1)
 
     def clean_model_id(self, value, field):
