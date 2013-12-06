@@ -253,7 +253,7 @@ model = ModelMigrator()
 
 
 #MIGRATOR_PROCESS = [user, handler, feature_set, model]
-MIGRATOR_PROCESS = [user, named_type, classifier,
+MIGRATOR_PROCESS = [user, instance, named_type, classifier,
                     transformer, scaler, handler,
                     feature_set, model]
 

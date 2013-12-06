@@ -6,6 +6,7 @@ from flask.views import MethodViewType
 from flask.ext.restful import reqparse
 from sqlalchemy import desc
 from sqlalchemy.orm import exc as orm_exc
+from sqlalchemy.exc import DataError
 
 from api.decorators import authenticate
 from api.utils import crossdomain, ERR_NO_SUCH_MODEL, odesk_error_response, \
@@ -419,8 +420,12 @@ class BaseResourceSQL(BaseResource):
         if fields:
             model_fields = []
             for field in fields:
-                # TODO: check hasattr
-                model_fields.append(getattr(self.Model, field))
+                if hasattr(self.Model, field):
+                    model_field = getattr(self.Model, field)
+                    model_fields.append(model_field)
+                else:
+                    logging.warning('Field %s not found in %s',
+                                    field, self.OBJECT_NAME)
             cursor = cursor.with_entities(*model_fields)
 
         for name, val in filter_params.iteritems():
@@ -460,10 +465,16 @@ class BaseResourceSQL(BaseResource):
             return None
 
     def _build_details_query(self, params, **kwargs):
-        cursor = self._modify_details_query(
-            self._set_details_query_opts(
-                self.Model.query, params).filter_by(**kwargs), params)
-        return cursor.one()
+        try:
+            cursor = self._modify_details_query(
+                self._set_details_query_opts(
+                    self.Model.query, params).filter_by(**kwargs), params)
+            return cursor.one()
+        except DataError, exc:
+            logging.error(
+                'Data error occures while %s filtering: %s',
+                self.OBJECT_NAME, kwargs)
+            return None
 
     def _modify_details_query(self, cursor, params):
         return cursor

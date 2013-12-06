@@ -23,7 +23,7 @@
   </tr>
 </thead>
 <tbody>
-  <tr ng-repeat="instance in objects">
+  <tr ng-repeat="instance in objects | orderBy:'name'">
     <td>
       <a href="#{{ instance.objectUrl() }}">{{ instance.name }}</a>
     </td>
