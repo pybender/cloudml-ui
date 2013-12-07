@@ -53,6 +53,7 @@ class TestTests(BaseDbTestCase, TestChecksMixin):
         self.check_list(show='name,status', query_params=self.MODEL_PARAMS)
 
     def test_details(self):
+        self.check_details(show='')
         self.check_details(show='name,status')
 
     @patch('api.tasks.calculate_confusion_matrix')
@@ -289,7 +290,7 @@ class TestExamplesTests(BaseDbTestCase, TestChecksMixin):
 
         mock_get_vect_data.return_value = [0.123, 0.0] * 500
 
-        url = self._get_url(id=self.obj.id)
+        url = self._get_url(id=self.obj.id, show='id,name,weighted_data_input')
         resp = self.client.get(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, 200)
         self.assertTrue(mock_get_trainer.called)

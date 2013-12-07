@@ -17,6 +17,11 @@ class ModelData(DataSet):
         example_label = "opening_title"
         target_variable = "hire_outcome"
         weights_synchronized = False
+        classifier = {
+            "name": "Test Classifier",
+            "params": {"penalty": "l2"},
+            "type": "logistic regression"
+        }
 
     class model_02:
         status = "Trained"

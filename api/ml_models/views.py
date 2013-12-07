@@ -1,5 +1,3 @@
-from api.decorators import public_actions
-from api.import_handlers.models import DataSet
 from flask import Response, request
 from flask.ext.restful import reqparse
 from sqlalchemy import or_
@@ -7,6 +5,8 @@ from sqlalchemy.orm import joinedload, undefer, subqueryload, joinedload_all
 from werkzeug.datastructures import FileStorage
 
 from api import api
+from api.decorators import public_actions
+from api.import_handlers.models import DataSet
 from api.base.resources import BaseResourceSQL, NotFound, ValidationError
 from models import Model, Tag, Weight, WeightsCategory
 from forms import ModelAddForm, ModelEditForm
@@ -56,30 +56,19 @@ class ModelResource(BaseResourceSQL):
         return super(ModelResource, self).get(*args, **kwargs)
 
     def _modify_details_query(self, cursor, params):
-        if not params:
-            return cursor
         fields = self._get_show_fields(params)
+        if not fields:
+            return cursor
 
-        get_datasets = False
-        get_data_fields = False
-
-        if fields and 'datasets' in fields:
-            get_datasets = True
-            fields.remove('datasets')
         if fields and 'data_fields' in fields:
-            get_data_fields = True
-            fields.remove('data_fields')
-
-        if get_datasets or get_data_fields:
             cursor = cursor.options(joinedload_all(Model.datasets))
 
         if fields and 'features' in fields:
-            fields.append('features_set_id')
-            cursor = cursor.options(joinedload(Model.features_set))
+            cursor = cursor.options(joinedload_all(Model.features_set))
             cursor = cursor.options(undefer(Model.classifier))
 
         if fields and 'test_handler_fields' in fields:
-            cursor = cursor.options(joinedload(Model.test_import_handler))
+            cursor = cursor.options(joinedload_all(Model.test_import_handler))
 
         return cursor
 
@@ -126,7 +115,7 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
     def _put_train_action(self, **kwargs):
         from api.tasks import train_model, import_data, \
             request_spot_instance, get_request_instance
-        from api.forms import ModelTrainForm
+        from forms import ModelTrainForm
         from celery import chain
         obj = self._get_details_query(None, **kwargs)
         form = ModelTrainForm(obj=obj, **kwargs)
@@ -141,8 +130,7 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
             # app.db.LogMessage.collection.remove({'type': 'trainmodel_log',
             #                                     'params.obj': model._id})
             if form.params_filled:
-                from api.models import ImportHandler
-                import_handler = ImportHandler(model.train_import_handler)
+                import_handler = model.train_import_handler
                 params = form.cleaned_data.get('parameters', None)
                 dataset = import_handler.create_dataset(
                     params,
@@ -186,18 +174,23 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
                                                       queue=instance.name))
             chain(tasks_list).apply_async()
             return self._render({
-                self.OBJECT_NAME: model
+                self.OBJECT_NAME: {
+                    'id': model.id
+                }
             })
 
     def _put_cancel_request_instance_action(self, **kwargs):
         from api.tasks import cancel_request_spot_instance
         model = self._get_details_query(None, **kwargs)
-        request_id = model.get('spot_instance_request_id')
+        request_id = model.spot_instance_request_id
         if request_id and model.status == model.STATUS_REQUESTING_INSTANCE:
             cancel_request_spot_instance.delay(request_id, model.id)
             model.status = model.STATUS_CANCELED
         return self._render({
-            self.OBJECT_NAME: model
+            self.OBJECT_NAME: {
+                'id': model.id,
+                'status': model.status
+            }
         })
 
 api.add_resource(ModelResource, '/cloudml/models/')

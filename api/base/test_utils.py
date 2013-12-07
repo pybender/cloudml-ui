@@ -16,6 +16,10 @@ SOMEBODY_HTTP_HEADERS = [('X-Auth-Token', SOMEBODY_AUTH_TOKEN)]
 AUTH_TOKEN = 'token'
 HTTP_HEADERS = [('X-Auth-Token', AUTH_TOKEN)]
 
+# Count of the features in conf/features.json file
+FEATURE_COUNT = 37
+TARGET_VARIABLE = 'hire_outcome'
+
 
 class BaseDbTestCase(TestCase):
     """
@@ -137,7 +141,9 @@ class TestChecksMixin(object):
         from api.utils import ERR_INVALID_DATA
         count = self.Model.query.count()
         url = self._get_url(**data)
-        resp = self.client.post(url, data=post_data, headers=HTTP_HEADERS)
+        obj_id = data.get('id', None)
+        method = 'put' if obj_id else 'post'
+        resp = getattr(self.client, method)(url, data=post_data, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.BAD_REQUEST)
         resp_data = json.loads(resp.data)
         err_data = resp_data['response']['error']

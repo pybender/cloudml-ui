@@ -5,7 +5,7 @@ from flask.ext import restful
 from flask.views import MethodViewType
 from flask.ext.restful import reqparse
 from sqlalchemy import desc
-from sqlalchemy.orm import exc as orm_exc
+from sqlalchemy.orm import exc as orm_exc, undefer, defer, joinedload_all, object_mapper, properties
 
 from api.decorators import authenticate
 from api.utils import crossdomain, ERR_NO_SUCH_MODEL, odesk_error_response, \
@@ -274,7 +274,7 @@ class BaseResource(restful.Resource):
         return not name
 
     def _get_show_fields(self, params):
-        fields = params.get('show', None)
+        fields = params.get('show', None) if params else None
         if fields:
             return fields.split(',')
         return self.DEFAULT_FIELDS
@@ -464,10 +464,23 @@ class BaseResourceSQL(BaseResource):
 
         fields = self._get_show_fields(params)
         if fields:
-            model_fields = []
-            for field in fields:
-                model_fields.append(getattr(self.Model, field))
-            cursor = cursor.with_entities(*model_fields)
+            opts = []
+            for field in self.Model.__table__.columns.keys():
+                if field in fields or field in ('id',):
+                    opts.append(undefer(getattr(self.Model, field)))
+                else:
+                    opts.append(defer(getattr(self.Model, field)))
+
+            relation_properties = filter(
+                lambda p: isinstance(p, properties.RelationshipProperty),
+                self.Model.__mapper__.iterate_properties
+            )
+            for field in relation_properties:
+                if field.key in fields:
+                    cursor = cursor.options(joinedload_all(
+                        getattr(self.Model, field.key)))
+            if opts:
+                cursor = cursor.options(*opts)
 
         return cursor.one()
 

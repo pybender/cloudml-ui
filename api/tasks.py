@@ -1,3 +1,4 @@
+from api.ml_models.models import Weight, WeightsCategory
 import os
 import json
 import logging
@@ -13,9 +14,8 @@ from boto.exception import EC2ResponseError
 from celery.signals import task_prerun, task_postrun
 
 from api import celery, app
-from api.models import TestResult, Model, TestExample, User, DataSet, ImportHandler
+from api.models import db, TestResult, Model, TestExample, User, DataSet
 from api.logs.logger import init_logger
-from api.utils import get_doc_size
 from api.amazon_utils import AmazonEC2Helper, AmazonS3Helper
 from core.trainer.trainer import Trainer
 from core.trainer.config import FeatureModel
@@ -291,7 +291,7 @@ def train_model(dataset_ids, model_id, user_id):
         model.status = model.STATUS_TRAINING
         model.error = ""
         model.trained_by = {
-            '_id': user.id,
+            'id': user.id,
             'uid': user.uid,
             # 'name': user.name # TODO
         }
@@ -329,13 +329,13 @@ def train_model(dataset_ids, model_id, user_id):
         model.status = model.STATUS_TRAINED
         model.set_trainer(trainer)
         model.save()
-        model.memory_usage['training'] = max(mem_usage)
+        model.memory_usage = max(mem_usage)
         model.train_records_count = int(sum((
             d.records_count for d in model.datasets)))
         model.training_time = int((train_end_time - train_begin_time).seconds)
         model.save()
 
-        fill_model_parameter_weights.delay(str(model.id))
+        fill_model_parameter_weights.delay(model.id)
     except Exception, exc:
         logging.exception('Got exception when train model')
         model.status = model.STATUS_ERROR
@@ -349,7 +349,7 @@ def train_model(dataset_ids, model_id, user_id):
 
 
 @celery.task
-def fill_model_parameter_weights(model_id, reload=False):
+def fill_model_parameter_weights(model_id):
     """
     Adds model parameters weights to db.
     """
@@ -363,12 +363,8 @@ def fill_model_parameter_weights(model_id, reload=False):
         weights = model.get_trainer().get_weights()
         positive = weights['positive']
         negative = weights['negative']
-        if reload:
-            params = {'model_id': model_id}
-            app.db.WeightsCategory.collection.remove(params)
-            app.db.Weight.collection.remove(params)
         weights = model.weights
-        count = weights.count()
+        count = len(weights)
         if count > 0:
             raise InvalidOperationError('Weights for model %s already \
     filled: %s' % (model_id, count))
@@ -395,24 +391,29 @@ def fill_model_parameter_weights(model_id, reload=False):
                 parent = long_name
                 long_name = '%s.%s' % (long_name, sname) \
                             if long_name else sname
-                params = {'model_name': model.name,
-                          'model_id': model_id,
-                          'parent': parent,
-                          'short_name': sname}
                 if i == (count - 1):
-                    params.update({'name': weight['name'],
-                                   'value': weight['weight'],
-                                   'is_positive': bool(weight['weight'] > 0),
-                                   'css_class': weight['css_class']})
-                    weight = app.db.Weight(params)
-                    weight.save()
+                    new_weight = Weight()
+                    new_weight.name = weight['name']
+                    new_weight.value = weight['weight']
+                    new_weight.is_positive = bool(weight['weight'] > 0)
+                    new_weight.css_class = weight['css_class']
+                    new_weight.parent = parent
+                    new_weight.short_name = sname
+                    new_weight.model_name = model.name
+                    new_weight.model = model
+                    new_weight.save(commit=False)
                 else:
                     if sname not in category_names:
                         # Adding a category, if it has not already added
                         category_names.append(sname)
-                        params.update({'name': long_name})
-                        category = app.db.WeightsCategory(params)
-                        category.save()
+                        category = WeightsCategory()
+                        category.name = long_name
+                        category.parent = parent
+                        category.short_name = sname
+                        category.model_name = model.name
+                        category.model = model
+                        category.save(commit=False)
+        db.session.commit()
 
         model.weights_synchronized = True
         model.save()

@@ -103,6 +103,39 @@ class ModelField(CharField):
                 return value
 
 
+class MultipleModelField(CharField):
+    def __init__(self, **kwargs):
+        self.Model = kwargs.pop('model')
+        self.by_name = kwargs.pop('by_name', False)
+        self.return_model = kwargs.pop('return_model', False)
+        self.filter_params = kwargs.pop('filter_params', {})
+        super(MultipleModelField, self).__init__(**kwargs)
+
+    def clean(self, value):
+        value = super(MultipleModelField, self).clean(value)
+        if not value:
+            return None
+
+        ids = value.split(',')
+
+        query = self.Model.query
+
+        if self.by_name:
+            query = query.filter(self.Model.name.in_(ids))
+        else:
+            query = query.filter(self.Model.id.in_(ids))
+        objects = query.all()
+        if not objects:
+            raise ValidationError('{0} not found'.format(
+                self.Model.__name__))
+
+        if self.return_model:
+            return objects
+        else:
+            self.model = objects
+            return value
+
+
 class JsonField(CharField):
     def clean(self, value):
         value = super(JsonField, self).clean(value)
