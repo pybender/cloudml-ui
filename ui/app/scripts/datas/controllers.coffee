@@ -51,7 +51,7 @@ angular.module('app.datas.controllers', ['app.config', ])
     (opts) ->
       filter_opts = opts.filter_opts
       delete opts.filter_opts
-      show = 'id,name,label,pred_label,title,prob'
+      show = 'id,name,label,pred_label,title,prob,example_id'
       opts = _.extend({show: show}, opts, filter_opts)
       $scope.loading_state = true
       opts.sort_by = $scope.sort_by
@@ -143,9 +143,8 @@ angular.module('app.datas.controllers', ['app.config', ])
 
   $scope.data.$load(
     show: "id,test_name,weighted_data_input,
-test.model.target_variable,pred_label,label,
-prob,test.status,created_on,test.classes_set,
-test.examples_placement"
+model,pred_label,label,
+prob,created_on,test_result"
   ).then (->
     ), ((opts)->
       $scope.setError(opts, 'loading test example')

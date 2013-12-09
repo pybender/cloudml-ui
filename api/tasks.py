@@ -506,7 +506,7 @@ def run_test(dataset_ids, test_id):
         for n, row, label, pred, prob in examples:
             if n % (all_count / 10) == 0:
                 if all_count > 0:
-                        app.sql_db.session.commit()
+                    app.sql_db.session.commit()
                 logging.info('Processed %s rows so far' % n)
 
             example, new_row = _add_example_to_db(
@@ -559,8 +559,8 @@ def _add_example_to_db(test, data, label, pred, prob, num):
     example.test_name = test.name
     example.model_name = model.name
 
-    example.model_id = model.id
-    example.test_id = test.id
+    example.model = model
+    example.test_result = test
 
     new_row = ndata
     example.data_input = ndata

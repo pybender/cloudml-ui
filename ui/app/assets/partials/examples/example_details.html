@@ -16,14 +16,14 @@
 
 <alert-message ng-show="data.isLoadedToS3() == false" class="alert-info" msg="This example data is storing to Amazon S3 now... Please take a look to details page later to get example parameters with weights" unsafe></alert-message>
 
-<alert-message ng-show="data.test.examples_placement == 'Do not save'" class="alert-info" msg="Examples data isn't stored for this test at all." unsafe></alert-message>
+<alert-message ng-show="data.test_result.examples_placement == 'Do not save'" class="alert-info" msg="Examples data isn't stored for this test at all." unsafe></alert-message>
 
 <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
 
 <div ng-show="data.loaded">
 <div class="well">
   <div>
-    Target Variable: <span class="value">{{ data.test.model.target_variable }}</span>
+    Target Variable: <span class="value">{{ data.model.target_variable }}</span>
   </div>
   <div>
     Label: <span class="value">{{ data.label }}</span>

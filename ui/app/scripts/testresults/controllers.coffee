@@ -162,14 +162,13 @@ without test id and model id"
 examples_count,dataset,memory_usage,created_by,examples_placement,
 examples_fields,examples_size'
         when 'metrics'
-          extra_fields = 'accuracy,metrics.precision_recall_curve,
-metrics.roc_curve,metrics.roc_auc'
+          extra_fields = 'accuracy,metrics'
           cb = () =>
             $scope.rocCurve = {'ROC curve': $scope.test.metrics.roc_curve}
             pr = $scope.test.metrics.precision_recall_curve
             $scope.prCurve = {'Precision-Recall curve': [pr[1], pr[0]]}
                
-        when 'matrix' then extra_fields = 'metrics.confusion_matrix,model,
+        when 'matrix' then extra_fields = 'metrics,
 confusion_matrix_calculations'
 
       if 'main' in $scope.LOADED_SECTIONS
