@@ -62,9 +62,9 @@ class ExportImportMixin(object):
                 else:
                     field_type = getattr(
                         self.__class__, field).property.columns[0].type
-                    # TODO: Do we need this only for params or for other
-                    # JSON fields also?
-                    if isinstance(field_type, db.Boolean) or field == 'params':
+
+                    if isinstance(field_type, db.Boolean) \
+                            or isinstance(field_type, JSONType):
                         if not val:
                             continue
 
@@ -260,9 +260,9 @@ class FeatureSet(ExportImportMixin, BaseModel, db.Model):
                 types.append(feature.type)
             features_dict['features'].append(feature.to_dict())
 
-        for ftype in types:
+        for ftype in set(types):
             named_type = NamedFeatureType.query.filter_by(name=ftype).one()
-            self.features_dict['feature-types'].append(named_type.to_dict())
+            features_dict['feature-types'].append(named_type.to_dict())
 
         return features_dict
 
