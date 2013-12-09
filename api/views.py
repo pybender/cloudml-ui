@@ -666,55 +666,6 @@ api.add_resource(Predict, '/cloudml/model/<regex("[\w\.]*"):model_id>/\
 # api.add_resource(TagResource, '/cloudml/tags/')
 
 
-class StatisticsResource(BaseResource):
-    """
-    Statistics methods
-    """
-    @property
-    def Model(self):
-        raise Exception('Invalid operation')
-
-    def get(self, action=None):
-        def get_count_by_status(collection, extra_fields=[]):
-            all_count = 0
-            if extra_fields:
-                from collections import defaultdict
-                from bson.code import Code
-                reducer = Code("function(obj, prev){prev.count++;}")
-                extra_fields.append("status")
-                groupped_data = collection.group(
-                    key=extra_fields, 
-                    condition={}, 
-                    initial={"count": 0}, 
-                    reduce=reducer
-                )
-                res = {}
-                for item in groupped_data:
-                    key = item.pop("status")
-                    all_count += item["count"]
-                    if key in res:
-                        res[key]["count"] += item["count"]
-                    else:
-                        res[key] = {"count": item["count"],
-                                    "data": []}
-                    res[key]["data"].append(item)
-            else:
-                res = collection.aggregate([
-                    {"$group": {"_id": "$status", 
-                                "count": {"$sum": 1}}}
-                ])['result']
-                for item in res:
-                    all_count += item["count"]
-            return {'count': all_count, 'data': res}
-
-        return self._render({'statistics': {
-            'models': get_count_by_status(app.db.Model.collection),
-            'datasets': get_count_by_status(app.db.DataSet.collection, ["import_handler_id"]),
-            'tests': get_count_by_status(app.db.Test.collection, ["model_id", "model_name"])
-        }})
-
-api.add_resource(StatisticsResource, '/cloudml/statistics/')
-
 
 # # Features specific resources
 # class FeatureSetResource(BaseResource):
@@ -891,3 +842,4 @@ from api.import_handlers.views import *
 from api.ml_models.views import *
 from api.model_tests.views import *
 from api.features.views import *
+from api.statistics.views import *
