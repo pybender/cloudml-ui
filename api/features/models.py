@@ -294,14 +294,14 @@ def after_update_feature(mapper, connection, target):
 def after_delete_feature(mapper, connection, target):
     if target.feature_set is not None:
         update_feature_set_on_change_features(
-            connection, target.feature_set, target)
+            connection, target.feature_set, None)
 
 
 def update_feature_set_on_change_features(connection, fset, feature):
     count = Feature.query.filter_by(feature_set=fset).count()
     values = {'features_count': count,
               'modified': True}
-    if feature.is_target_variable:
+    if feature and feature.is_target_variable:
         values['target_variable'] = feature.name
 
     connection.execute(

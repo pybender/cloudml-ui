@@ -106,7 +106,10 @@ class TestChecksMixin(object):
         if len(obj_resp):
             obj = obj_resp[0]
             fields = self._get_fields(show)
-            self.assertEquals(len(fields), len(obj.keys()))
+            self.assertEquals(
+                len(fields), len(obj.keys()),
+                "Should display %s fields. Actual fields are: %s" %
+                (fields, obj.keys()))
             for field in fields:
                 self.assertTrue(field in obj.keys())
 
@@ -146,7 +149,8 @@ class TestChecksMixin(object):
         url = self._get_url(**data)
         obj_id = data.get('id', None)
         method = 'put' if obj_id else 'post'
-        resp = getattr(self.client, method)(url, data=post_data, headers=HTTP_HEADERS)
+        resp = getattr(self.client, method)(
+            url, data=post_data, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.BAD_REQUEST)
         resp_data = json.loads(resp.data)
         err_data = resp_data['response']['error']
@@ -203,7 +207,10 @@ class TestChecksMixin(object):
 
     def _get_fields(self, show):
         if show:
-            return show.split(',')
+            fields = show.split(',')
+            if not 'id' in fields:
+                fields.append('id')
+            return set(fields)
         else:
             return self.RESOURCE.DEFAULT_FIELDS or [u'id', u'name']
 

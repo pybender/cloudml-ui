@@ -206,7 +206,7 @@ tag = TagMigrator()
 
 class TestMigrator(Migrator, UserInfoMixin):
     SOURCE = app.db.Test
-    DESTINATION = Test
+    DESTINATION = TestResult
     FIELDS_TO_EXCLUDE = ["_id", "model", ]
 
     def process_parent(self, obj, parent, source_obj):
