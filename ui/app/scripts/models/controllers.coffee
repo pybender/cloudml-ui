@@ -54,7 +54,7 @@ updated_on,updated_by,comparable,test_handler_fields'
         $scope.$watch('user', (user, oldVal, scope) ->
           if user?
             $scope.filter_opts = {
-              'updated_by': user.uid
+              'updated_by.uid': user.uid
               'status': ''}
             $scope.$watch('filter_opts', (filter_opts, oldVal, scope) ->
               $scope.$emit 'BaseListCtrl:start:load', modelName

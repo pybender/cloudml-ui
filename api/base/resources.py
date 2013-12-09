@@ -400,15 +400,15 @@ class BaseResourceSQL(BaseResource):
         return cursor
 
     def _prepare_model_list(self, cursor, params):
-        fields = self._get_show_fields(params)
-        if fields is not None:
-            # magic with converting tuple of fields to dict
-            models = []
-            for model_fields in cursor:
-                model = {field: model_fields[i]
-                         for i, field in enumerate(fields)}
-                models.append(model)
-        return models
+        # fields = self._get_show_fields(params)
+        # if fields is not None:
+        #     # magic with converting tuple of fields to dict
+        #     models = []
+        #     for model_fields in cursor:
+        #         model = {field: model_fields[i]
+        #                  for i, field in enumerate(fields)}
+        #         models.append(model)
+        return cursor
 
     def _build_list_query(self, params, **kwargs):
         # TODO: What about joins?
@@ -417,10 +417,27 @@ class BaseResourceSQL(BaseResource):
         cursor = self._set_list_query_opts(self.Model.query, params)
         fields = self._get_show_fields(params)
         if fields:
-            model_fields = []
-            for field in fields:
-                model_fields.append(getattr(self.Model, field))
-            cursor = cursor.with_entities(*model_fields)
+            # model_fields = []
+            # for field in fields:
+            #     model_fields.append(getattr(self.Model, field))
+            # cursor = cursor.with_entities(*model_fields)
+            opts = []
+            for field in self.Model.__table__.columns.keys():
+                if field in fields or field in ('id',):
+                    opts.append(undefer(getattr(self.Model, field)))
+                else:
+                    opts.append(defer(getattr(self.Model, field)))
+
+            relation_properties = filter(
+                lambda p: isinstance(p, properties.RelationshipProperty),
+                self.Model.__mapper__.iterate_properties
+            )
+            for field in relation_properties:
+                if field.key in fields:
+                    cursor = cursor.options(joinedload_all(
+                        getattr(self.Model, field.key)))
+            if opts:
+                cursor = cursor.options(*opts)
 
         for name, val in filter_params.iteritems():
             cursor = cursor.filter(self.__build_query_item(name, val))
