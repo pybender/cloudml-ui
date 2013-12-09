@@ -2,6 +2,7 @@ import httplib
 import json
 import urllib
 
+from api import app
 from api.logger import LogMessageHandler
 from api.base.test_utils import BaseMongoTestCase, TestChecksMixin, \
     HTTP_HEADERS, BaseDbTestCase
@@ -16,8 +17,9 @@ class LogsTests(BaseMongoTestCase, TestChecksMixin, BaseDbTestCase):
     RESOURCE = LogResource
 
     def setUp(self):
-        super(LogsTests, self).setUp()
-        self.Model = self.db.LogMessage
+        BaseDbTestCase.setUp(self)
+        BaseMongoTestCase.setUp(self)
+        self.Model = app.db.LogMessage
         self.Model.collection.remove()
 
     def test_list(self):

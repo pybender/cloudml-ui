@@ -5,7 +5,9 @@ from flask.ext import restful
 from flask.views import MethodViewType
 from flask.ext.restful import reqparse
 from sqlalchemy import desc
-from sqlalchemy.orm import exc as orm_exc, undefer, defer, joinedload_all, object_mapper, properties
+from sqlalchemy.orm import exc as orm_exc, undefer, defer, \
+    joinedload_all, object_mapper, properties
+from sqlalchemy.exc import DataError
 
 from api.decorators import authenticate
 from api.utils import crossdomain, ERR_NO_SUCH_MODEL, odesk_error_response, \

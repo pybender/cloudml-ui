@@ -96,7 +96,7 @@ class FeatureTransformersTests(FeatureItemsTestMixin):
     def test_add(self):
         resp, obj = self._test_add(self.feature)
         self.assertEqual(obj, {'type': 'Count',
-                               "charset":"utf-8"})
+                               'params': {"charset":"utf-8"}})
 
     def test_add_from_predefined(self):
         transformer = PredefinedTransformer.query.all()[0]
@@ -113,7 +113,7 @@ class FeatureTransformersTests(FeatureItemsTestMixin):
 
         resp, obj = self._test_edit(feature, extra_data=data)
         self.assertEqual(obj, {'type': 'Tfidf',
-                               "lowercase": True})
+                               'params': {"lowercase": True}})
 
     def test_edit_from_predefined(self):
         self.assertTrue(self.feature.transformer, "Invalid fixtures")

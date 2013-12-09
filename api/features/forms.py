@@ -139,7 +139,7 @@ class BasePredefinedForm(BaseForm):
             items = self.DOC.query.filter_by(name=name)
             if self.obj.id:
                 items = items.filter(
-                    sqlalchemy.not_(PredefinedTransformer.id == self.obj.id))
+                    sqlalchemy.not_(self.DOC.id == self.obj.id))
             count = items.count()
 
             if count:

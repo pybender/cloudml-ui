@@ -21,7 +21,8 @@ class TestClassifierDoc(BaseDbTestCase):
         classifier = PredefinedClassifier.query.filter_by(
             name=PredefinedClassifierData.lr_classifier.name).one()
         self.assertEquals(classifier.to_dict(),
-                          {"penalty": "l2", "type": "logistic regression"})
+                          {"params": {"penalty": "l2"},
+                           "type": "logistic regression"})
 
     def test_from_features(self):
         features = json.loads(open('./conf/features.json', 'r').read())
@@ -128,7 +129,7 @@ class ModelClassifierTest(BaseDbTestCase, TestChecksMixin):
         self._check(data=data, method='put')
         model = Model.query.get(1)
         self.assertEqual(model.classifier['type'], data['type'])
-        self.assertEqual(model.classifier['C'], 1)
+        self.assertEqual(model.classifier['params']['C'], 1)
 
     def test_edit_from_predefined(self):
         classifier = PredefinedClassifier.query.get(1)
@@ -138,7 +139,7 @@ class ModelClassifierTest(BaseDbTestCase, TestChecksMixin):
         self._check(data=data, method='put')
         model = Model.query.get(1)
         self.assertEqual(model.classifier['type'], classifier.type)
-        self.assertEqual(model.classifier['penalty'], "l2")
+        self.assertEqual(model.classifier['params']['penalty'], "l2")
 
     def check_edit_error(self, post_data, errors, **data):
         from api.utils import ERR_INVALID_DATA

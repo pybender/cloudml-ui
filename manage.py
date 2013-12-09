@@ -131,8 +131,13 @@ class Test(Command):
             logging.debug("Running nosetests with args: %s", argv)
             nose.run(argv=argv)
         finally:
+            if app.config['SQLALCHEMY_DATABASE_URI'].endswith('test_cloudml'):
+                logging.debug("drop tables (%s)", app.config['SQLALCHEMY_DATABASE_URI'])
+                app.sql_db.session.remove()
+                app.sql_db.drop_all()
+
             if app.db.name == 'cloudml-test-db':
-                logging.debug("Remove collections from db: %s", app.db.name)
+                logging.debug("remove mongo collections from db: %s", app.db.name)
                 for name in app.db.collection_names():
                     if not name.startswith('system.'):
                         model = getattr(app.db, name)

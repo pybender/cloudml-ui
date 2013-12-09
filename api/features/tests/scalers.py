@@ -59,7 +59,7 @@ class FeatureScalersTests(FeatureItemsTestMixin):
     def test_add(self):
         resp, obj = self._test_add(self.feature)
         self.assertEqual(obj, {'type': 'StandardScaler',
-                               "copy": True})
+                               'params': {"copy": True}})
 
     def test_add_from_predefined(self):
         scaler = PredefinedScaler.query.all()[0]
@@ -75,7 +75,7 @@ class FeatureScalersTests(FeatureItemsTestMixin):
                 'params': '{"feature_range_max": 2}'}
 
         resp, obj = self._test_edit(feature, extra_data=data)
-        self.assertEqual(obj, {'feature_range_max': 2, 
+        self.assertEqual(obj, {'params': {'feature_range_max': 2}, 
                                'type': u'MinMaxScaler'})
 
     def test_edit_feature_scaler_from_predefined(self):

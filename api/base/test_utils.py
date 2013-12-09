@@ -47,7 +47,10 @@ class BaseDbTestCase(TestCase):
 
         # Loading fixtures
         from api.accounts.fixtures import UserData
-        self.load_fixtures(UserData)
+        try:
+            self.load_fixtures(UserData)
+        except Exception, exc:
+            logging.error('Exception while load user data: %s', exc)
         for ds in set(self.datasets):
             self.load_fixtures(ds)
 
@@ -227,7 +230,7 @@ class BaseMongoTestCase(unittest.TestCase):
         self.fixtures_cleanup()
 
     @property
-    def db(self):
+    def mongo_db(self):
         return app.db
 
     @classmethod

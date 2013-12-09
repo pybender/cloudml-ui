@@ -4,7 +4,8 @@ import logging
 
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin
 from ..views import FeatureResource
-from ..models import Feature, FeatureSet, PredefinedTransformer, NamedFeatureType
+from ..models import Feature, FeatureSet, PredefinedTransformer, \
+    NamedFeatureType
 from ..fixtures import FeatureSetData, FeatureData, PredefinedTransformerData
 from api.ml_models.models import Model
 from api.ml_models.fixtures import ModelData
@@ -171,7 +172,7 @@ transformer-type: should be one of Count, Tfidf, Lda, Dictionary, Lsi"})
                 "remove_scaler": True}
         resp, obj = self.check_edit(data, id=self.obj.id)
         self.assertFalse(obj.transformer,
-                         "Transformer should be removed (%s)" % obj.transformer)
+                         "Transformer should be rem (%s)" % obj.transformer)
         self.assertFalse(obj.scaler, "scaler should be removed")
 
     def test_make_target_variable(self):
@@ -268,6 +269,10 @@ class TestFeaturesDocs(BaseDbTestCase):
         expire_fset()
         self.assertFalse(fset.target_variable)
         self.assertEquals(fset.features_count, 1)
+        self.assertEquals(len(fset.features_dict['features']), 0)
+        # Note: features_dict updates after accessing to features property
+        print fset.features
+        expire_fset()
         self.assertEquals(len(fset.features_dict['features']), 1)
 
         feature2 = Feature()
@@ -281,12 +286,15 @@ class TestFeaturesDocs(BaseDbTestCase):
         expire_fset()
         self.assertEquals(fset.features_count, 2)
         self.assertEquals(fset.target_variable, 'hire_outcome')
+        print fset.features
+        expire_fset()
         self.assertEquals(len(fset.features_dict['features']), 2)
 
         feature1 = Feature.query.get(feature1.id)
         feature1.name = 'feature_new_name'
         feature1.save()
 
+        print fset.features
         expire_fset()
         self.assertEquals(fset.features_count, 2)
         self.assertEquals(len(fset.features_dict['features']), 2)
@@ -296,6 +304,8 @@ class TestFeaturesDocs(BaseDbTestCase):
         feature1 = Feature.query.get(feature1.id)
         feature1.delete()
         fset = FeatureSet.query.get(fset.id)
+        print fset.features
+        expire_fset()
         self.assertEquals(fset.features_count, 1)
         self.assertEquals(len(fset.features_dict['features']), 1)
         self.assertEquals(fset.features_dict['features'][0]['name'],
@@ -307,6 +317,7 @@ class TestFeaturesDocs(BaseDbTestCase):
             from_model_features_dict("Set", features_json)
         self.assertTrue(feature_set)
         self.assertEquals(feature_set.schema_name, 'bestmatch')
+        print feature_set.features
         self.assertEquals(len(feature_set.features_dict['features']), 37)
         self.assertEquals(feature_set.features_count, 37)
         self.assertEquals(feature_set.target_variable, 'hire_outcome')
@@ -351,10 +362,11 @@ class TestFeaturesDocs(BaseDbTestCase):
         self.assertTrue(feature.transformer)
         self.assertEquals(transformer['type'], 'Tfidf')
         self.assertEquals(
-            transformer, {'ngram_range_max': 1,
-                          'ngram_range_min': 1,
-                          'min_df': 10,
-                          'type': 'Tfidf'})
+            transformer, {'type': 'Tfidf',
+                          'params': {'ngram_range_max': 1,
+                                     'ngram_range_min': 1,
+                                     'min_df': 10}
+                          })
 
         feature = _check_feature('tsexams', {
             'type': 'float',
