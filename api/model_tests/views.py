@@ -22,17 +22,6 @@ class TestsResource(BaseResourceSQL):
     Model = TestResult
     post_form = AddTestForm
 
-    # def _get_list_query(self, params, fields, **kwargs):
-    #     params = self._prepare_filter_params(params)
-    #     params['model_id'] = kwargs.get('model_id')
-    #     return self.Model.find(params, fields)
-
-    # def _get_details_query(self, params, fields, **kwargs):
-    #     model_id = kwargs.get('model_id')
-    #     test_id = kwargs.get('_id')
-    #     return self.Model.find_one({'model_id': model_id,
-    #                                '_id': ObjectId(test_id)}, fields)
-
     def _get_examples_size_action(self, **kwargs):
         fields = ['name', 'model_name', 'model_id', 'examples_size',
                   'created_on', 'created_by']
@@ -90,24 +79,13 @@ class TestExamplesResource(BaseResourceSQL):
     GET_ACTIONS = ('groupped', 'csv', 'datafields')
     FILTER_PARAMS = (('label', str), ('pred_label', str))
 
-    # def _list(self, **kwargs):
-    #     test = TestResult.query.get(kwargs.get('test_result_id'))
-    #     if not test.dataset is None:
-    #         for field in test.dataset.data_fields:
-    #             field_new = field.replace('.', '->')
-    #             self.FILTER_PARAMS += (("data_input.%s" % field_new, str),)
-    #     return super(TestExamplesResource, self)._list(**kwargs)
-
-    # def _prepare_filter_params(self, params):
-    #     params = super(TestExamplesResource, self)._prepare_filter_params(
-    #         params)
-    #
-    #     for key, value in params.items():
-    #         if key.startswith('data_input.'):
-    #             params["data_input->>'{0}'".format(key.split('.')[-1])] = value
-    #             del params[key]
-    #
-    #     return params
+    def _list(self, **kwargs):
+        test = TestResult.query.get(kwargs.get('test_result_id'))
+        if not test.dataset is None:
+            for field in test.dataset.data_fields:
+                field_new = field.replace('.', '->')
+                self.FILTER_PARAMS += (("data_input->>%s" % field_new, str),)
+        return super(TestExamplesResource, self)._list(**kwargs)
 
     def _get_details_query(self, params, **kwargs):
         load_weights = False

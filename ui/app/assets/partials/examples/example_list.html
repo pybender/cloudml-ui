@@ -20,7 +20,7 @@
         <span ng-repeat="item in data_filters">
           <select class="input-small" ng-model="data_filters[$index].name">
             <option value=''>-- select field name --</option>
-            <option ng-repeat="field in fields" value="data_input.{{ field }}" ng-selected="'data_input.' + field==item.name">{{ field }}</option>
+            <option ng-repeat="field in fields" value="data_input->>{{ field }}" ng-selected="'data_input->>' + field==item.name">{{ field }}</option>
           </select> : 
           <input type="text" value="{{ item.value }}" ng-model="data_filters[$index].value" />
           &nbsp;

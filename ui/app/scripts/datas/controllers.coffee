@@ -28,7 +28,7 @@ angular.module('app.datas.controllers', ['app.config', ])
         $scope.fields = $scope.test.examples_fields
         # Init search form
         for key, val of $scope.filter_opts
-          key_name = key.replace("data_input.", "")
+          key_name = key.replace("data_input->>", "")
           if key_name in $scope.fields
             $scope.data_filters.push({name: key, value: val})
           else if key == 'label' || key == 'pred_label'
@@ -173,7 +173,7 @@ prob,created_on,test_result"
     Data.$loadFieldList($scope.test.model_id,
       $scope.test.id)
     .then ((opts) ->
-      $scope.selectFields = ("data_input." + x for x in opts.fields)
+      $scope.selectFields = ("data_input->>" + x for x in opts.fields)
       $scope.loading_state = false
     ), ((opts) ->
       $scope.setError(opts, 'loading data field list')

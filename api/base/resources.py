@@ -445,6 +445,8 @@ class BaseResourceSQL(BaseResource):
             if opts:
                 cursor = cursor.options(*opts)
 
+        print filter_params
+
         for name, val in filter_params.iteritems():
             cursor = cursor.filter(self.__build_query_item(name, val))
         return cursor
@@ -462,7 +464,8 @@ class BaseResourceSQL(BaseResource):
             field = getattr(self.Model, keys[0])
             return getattr(field, keys[1])(val)
         elif '->>' in name:
-            return "%s='%s'" % (name, val)
+            field, key = name.split('->>')
+            return "%s->>'%s'='%s'" % (field, key, val)
         else:
             return getattr(self.Model, name) == val
 
