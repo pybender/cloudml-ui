@@ -125,35 +125,20 @@ angular.module('app.features.models', ['app.config'])
 ])
 
 .factory('FeaturesSet', [
-  '$http'
-  '$q'
   'settings'
   'BaseModel'
-  'Classifier'
   
-  ($http, $q, settings, BaseModel, Classifier) ->
+  (settings, BaseModel) ->
     class FeaturesSet extends BaseModel
       BASE_API_URL: "#{settings.apiUrl}features/sets/"
       BASE_UI_URL: "/features/sets/"
-      API_FIELDNAME: 'set'
-      @MAIN_FIELDS: 'id,name,schema_name,classifier,
-features_count,created_on,created_by,target_variable,json'
+      API_FIELDNAME: 'feature_set'
+      @MAIN_FIELDS: 'id,schema_name,features_count,target_variable'
 
       id: null
-      name: null
       schema_name: null
       features_count: 0
-      classifier: null
       target_variable: null
-      created_on: null
-      created_by: null
-      json: null
-
-      loadFromJSON: (origData) =>
-        super origData
-
-        if origData? and origData.classifier?
-          @classifier = new Classifier(origData.classifier)
 
       downloadUrl: =>
         return "#{@BASE_API_URL}#{@id}/action/download/"
