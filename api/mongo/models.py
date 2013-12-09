@@ -20,6 +20,7 @@ class WeightsCategory(BaseDocument):
 
         'parent': basestring,
     }
+    use_dot_notation = True
 
 
 @app.conn.register

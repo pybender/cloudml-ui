@@ -52,6 +52,9 @@ class Migrator(object):
         fields = self.SOURCE.structure.keys()
         return filter(lambda a: not a in self.FIELDS_TO_EXCLUDE, fields)
 
+    def print_exc(self, source_obj, obj, exc):
+        pass
+
     def fill_model(self, obj, source_obj):
         source_fields = self.get_source_fields()
         for field in source_fields:
@@ -60,6 +63,7 @@ class Migrator(object):
             if hasattr(self, mthd_name):
                 mthd = getattr(self, mthd_name)
                 val = mthd(val)
+            #print field, val
             setattr(obj, field, val)
 
     def fill_extra(self, obj, source_obj):
@@ -224,11 +228,36 @@ class TestMigrator(Migrator, UserInfoMixin):
 test = TestMigrator()
 
 
+class WeightMigrator(Migrator):
+    SOURCE = app.db.Weight
+    DESTINATION = Weight
+    FIELDS_TO_EXCLUDE = ["model_id", '_id']
+    RAISE_EXC = True
+
+    def process_parent(self, obj, parent, source_obj):
+        obj.model = parent
+
+weights = WeightMigrator()
+
+
+class WeightsCategoryMigrator(Migrator):
+    SOURCE = app.db.WeightsCategory
+    DESTINATION = WeightsCategory
+    FIELDS_TO_EXCLUDE = ["model_id", '_id']
+    RAISE_EXC = True
+
+    def process_parent(self, obj, parent, source_obj):
+        obj.model = parent
+
+weights_category = WeightsCategoryMigrator()
+
+
 class ModelMigrator(Migrator, UserInfoMixin, UniqueNameMixin):
     SOURCE = app.db.Model
     DESTINATION = Model
     RAISE_EXC = True
-    INNER = [test]
+    FIELDS_TO_EXCLUDE = ['_id', 'features']
+    INNER = [test, weights_category, weights]
 
     def print_exc(self, source_obj, obj, exc):
         print obj.name
