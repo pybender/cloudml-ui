@@ -1,4 +1,7 @@
 import json
+from api.base.base_forms import BaseChooseInstanceAndDatasetMultiple
+from api.import_handlers.models import DataSet
+from api.instances.models import Instance
 
 from core.trainer.store import load_trainer
 from core.trainer.trainer import Trainer, InvalidTrainerFile
@@ -7,7 +10,7 @@ from core.importhandler.importhandler import ExtractionPlan, \
     ImportHandlerException
 from api.base.forms import BaseForm, ValidationError
 from api.base.fields import ModelField, CharField, JsonField,\
-    ImportHandlerFileField
+    ImportHandlerFileField, MultipleModelField, ChoiceField
 from api.models import Tag, ImportHandler, Model
 
 
@@ -22,11 +25,26 @@ class ModelEditForm(BaseForm):
     tags = JsonField()
 
     def save(self, commit=True):
-        old_tags = self.obj.tags
+        old_tags = [t.text for t in self.obj.tags]
         model = super(ModelEditForm, self).save()
 
-        if self.cleaned_data.get('tags', None):
-            Tag.update_tags_count(old_tags, model.tags)
+        tags = self.cleaned_data.get('tags', None)
+        # TODO: refactor
+        if tags:
+            model.tags = []
+            existing_tags = [t.text for t in Tag.query.all()]
+            tags_to_create = list(set(tags) - set(existing_tags))
+            for text in tags_to_create:
+                tag = Tag()
+                tag.text = text
+                tag.count = 1
+                tag.save()
+            model.tags = Tag.query.filter(Tag.text.in_(tags)).all()
+            model.save()
+            for text in list(set(tags + old_tags) - set(tags_to_create)):
+                tag = Tag.query.filter_by(text=text).one()
+                tag.count = len(tag.models)
+                tag.save()
 
         return model
 
@@ -116,7 +134,7 @@ train_import_handler should be specified for new model')
 
         # TODO
         from api.features.models import FeatureSet, PredefinedClassifier
-        features = self.cleaned_data['features']
+        features = self.cleaned_data.get('features')
         features_set = FeatureSet.from_model_features_dict(obj.name, features)
         obj.features_set = features_set
         classifier = PredefinedClassifier.from_model_features_dict(obj.name, features)
@@ -126,6 +144,24 @@ train_import_handler should be specified for new model')
         if obj.status == Model.STATUS_TRAINED:
             # Processing Model Parameters weights in celery task
             from api.tasks import fill_model_parameter_weights
-            fill_model_parameter_weights.delay(str(obj.id))
+            fill_model_parameter_weights.delay(obj.id)
 
         return obj
+
+
+class ModelTrainForm(BaseChooseInstanceAndDatasetMultiple):
+    aws_instance = ModelField(model=Instance, return_model=True)
+    dataset = MultipleModelField(model=DataSet, return_model=True)
+    parameters = CharField()
+    spot_instance_type = ChoiceField(
+        choices=BaseChooseInstanceAndDatasetMultiple.TYPE_CHOICES)
+    format = ChoiceField(choices=DataSet.FORMATS)
+
+    def __init__(self, *args, **kwargs):
+        self.model = kwargs.get('obj', None)
+        super(ModelTrainForm, self).__init__(*args, **kwargs)
+
+    def save(self, *args, **kwargs):
+        self.obj.status = Model.STATUS_QUEUED
+        self.obj.save()
+        return self.obj

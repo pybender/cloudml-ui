@@ -1,13 +1,12 @@
 import logging
-from bson import ObjectId
 from datetime import datetime
 
 from flask.ext.restful import reqparse
 
-from api import api, app
-from api.resources import BaseResourceSQL, NotFound
+from api import api
+from api.base.resources import BaseResourceSQL, NotFound
 from api.utils import odesk_error_response, ERR_INVALID_DATA
-from models import Test, TestExample
+from models import TestResult, TestExample, Model
 from forms import AddTestForm
 from sqlalchemy import desc
 
@@ -16,12 +15,11 @@ class TestsResource(BaseResourceSQL):
     """
     Tests API Resource
     """
-    OBJECT_NAME = 'test'
-    DEFAULT_FIELDS = ('_id', 'name')
+    DEFAULT_FIELDS = ('id', 'name')
     FILTER_PARAMS = (('status', str), )
     GET_ACTIONS = ('confusion_matrix', 'exports', 'examples_size')
 
-    Model = Test
+    Model = TestResult
     post_form = AddTestForm
 
     # def _get_list_query(self, params, fields, **kwargs):
@@ -36,9 +34,10 @@ class TestsResource(BaseResourceSQL):
     #                                '_id': ObjectId(test_id)}, fields)
 
     def _get_examples_size_action(self, **kwargs):
-        fields = ['name', 'model_name', 'model_id', 'examples_size', 'created_on',
-                  'created_by']
-        tests = Test.query.order_by(desc(Test.examples_size)).limit(10).all()
+        fields = ['name', 'model_name', 'model_id', 'examples_size',
+                  'created_on', 'created_by']
+        tests = TestResult.query.order_by(desc(TestResult.examples_size)
+        ).limit(10).all()
         return self._render({'tests': tests})
 
     def _get_confusion_matrix_action(self, **kwargs):
@@ -49,33 +48,32 @@ class TestsResource(BaseResourceSQL):
         parser.add_argument('weight1', type=float)
         args = parser.parse_args()
 
-        test = self._get_details_query(None, None, **kwargs)
+        test = self._get_details_query(None, **kwargs)
         if not test:
             raise NotFound('Test not found')
 
-        model = app.db.Model.find_one(
-            {'_id': ObjectId(kwargs.get('model_id'))})
+        model = Model.query.get(kwargs.get('model_id'))
         if not model:
             raise NotFound('Model not found')
 
         try:
             calculate_confusion_matrix.delay(
-                str(test._id), args.get('weight0'), args.get('weight1'))
+                test.id, args.get('weight0'), args.get('weight1'))
         except Exception as e:
-            return self._render({self.OBJECT_NAME: str(test._id),
+            return self._render({self.OBJECT_NAME: test.id,
                                  'error': e.message})
 
-        return self._render({self.OBJECT_NAME: str(test._id)})
+        return self._render({self.OBJECT_NAME: test.id})
 
     def _get_exports_action(self, **kwargs):
-        test = self._get_details_query(None, None, **kwargs)
+        test = self._get_details_query(None, **kwargs)
         if not test:
             raise NotFound('Test not found')
 
         exports = [ex for ex in test.exports
                    if ex['expires'] > datetime.now()]
 
-        return self._render({self.OBJECT_NAME: test._id,
+        return self._render({self.OBJECT_NAME: test.id,
                              'exports': exports})
 
 
@@ -88,38 +86,37 @@ class TestExamplesResource(BaseResourceSQL):
     """
     Model = TestExample
 
-    OBJECT_NAME = 'data'
     NEED_PAGING = True
     GET_ACTIONS = ('groupped', 'csv', 'datafields')
-    FILTER_PARAMS = [('label', str), ('pred_label', str)]
+    FILTER_PARAMS = (('label', str), ('pred_label', str))
 
-    def _list(self, **kwargs):
-        test = Test.query.get(kwargs.get('test_id'))
-        if not test.dataset is None:
-            for field in test.dataset.data_fields:
-                field_new = field.replace('.', '->')
-                self.FILTER_PARAMS.append(("data_input.%s" % field_new, str))
-        return super(TestExamplesResource, self)._list(**kwargs)
+    # def _list(self, **kwargs):
+    #     test = TestResult.query.get(kwargs.get('test_result_id'))
+    #     if not test.dataset is None:
+    #         for field in test.dataset.data_fields:
+    #             field_new = field.replace('.', '->')
+    #             self.FILTER_PARAMS += (("data_input.%s" % field_new, str),)
+    #     return super(TestExamplesResource, self)._list(**kwargs)
 
-    def _prepare_filter_params(self, params):
-        params = super(TestExamplesResource, self)._prepare_filter_params(
-            params)
+    # def _prepare_filter_params(self, params):
+    #     params = super(TestExamplesResource, self)._prepare_filter_params(
+    #         params)
+    #
+    #     for key, value in params.items():
+    #         if key.startswith('data_input.'):
+    #             params["data_input->>'{0}'".format(key.split('.')[-1])] = value
+    #             del params[key]
+    #
+    #     return params
 
-        for key, value in params.items():
-            if key.startswith('data_input.'):
-                params["data_input->>'{0}'".format(key.split('.')[-1])] = value
-                del params[key]
-
-        return params
-
-    def _get_details_query(self, params, fields, **kwargs):
+    def _get_details_query(self, params, **kwargs):
         load_weights = False
-        if 'weighted_data_input' in fields:
-            fields = None  # We need all fields to recalc weights
-            load_weights = True
+        # if 'weighted_data_input' in fields:
+        #     fields = None  # We need all fields to recalc weights
+        load_weights = True
 
         example = super(TestExamplesResource, self)._get_details_query(
-            params, fields, **kwargs)
+            params, **kwargs)
 
         if example is None:
             raise NotFound()
@@ -127,10 +124,10 @@ class TestExamplesResource(BaseResourceSQL):
         if load_weights and not example.is_weights_calculated:
             example.calc_weighted_data()
             example = super(TestExamplesResource, self)._get_details_query(
-                params, fields, **kwargs)
+                params, **kwargs)
 
         # TODO: hack
-        example.__dict__['test'] = example.test
+        example.__dict__['test'] = example.test_result
 
         return example
 
@@ -168,7 +165,7 @@ class TestExamplesResource(BaseResourceSQL):
         groups = TestExample.get_grouped(
             field=group_by_field,
             model_id=kwargs.get('model_id'),
-            test_id=kwargs.get('test_id')
+            test_result_id=kwargs.get('test_result_id')
         )
 
         import sklearn.metrics as sk_metrics
@@ -198,7 +195,6 @@ not contain probabilities')
         for group in groups:
             group_list = group['list']
 
-            #print group_list
             labels = [transform(item['label']) for item in group_list]
             pred_labels = [transform(item['pred']) for item in group_list]
             probs = [item['prob'][1] for item in group_list]
@@ -244,23 +240,24 @@ not contain probabilities')
         parser = reqparse.RequestParser()
         parser.add_argument('show', type=str)
         params = parser.parse_args()
-        fields, show_fields = self._get_fields(params)
+        fields = params.get('show', None)
         logging.info('Use fields %s' % str(fields))
 
-        test = Test.query.filter_by(id=kwargs.get('test_id'),
-                                    model_id=kwargs.get('model_id')).one()
+        test = TestResult.query.filter_by(
+            id=kwargs.get('test_result_id'),
+            model_id=kwargs.get('model_id')).one()
         if not test:
             raise NotFound('Test not found')
 
         get_csv_results.delay(
-            test.model_id, str(test._id),
+            test.model_id, test.id,
             fields
         )
         return self._render({})
 
     def _get_datafields(self, **kwargs):
-        test = Test.query.get(kwargs.get('test_id'))
+        test = TestResult.query.get(kwargs.get('test_result_id'))
         return test.dataset.data_fields
 
 api.add_resource(TestExamplesResource, '/cloudml/models/\
-<regex("[\w\.]*"):model_id>/tests/<regex("[\w\.]*"):test_id>/examples/')
+<regex("[\w\.]*"):model_id>/tests/<regex("[\w\.]*"):test_result_id>/examples/')

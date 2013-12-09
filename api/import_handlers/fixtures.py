@@ -9,7 +9,7 @@ class ImportHandlerData(DataSet):
         type = "Db"
         created_on = "2013-04-19 14:37:23.145000"
         updated_on = "2013-04-19 14:37:23.145000"
-        import_params = ['one', 'two']
+        import_params = ['start', 'end', 'category']
         data = json.loads("""
         {
   "target-schema":"bestmatch",
@@ -129,6 +129,7 @@ class DataSetData(DataSet):
         time = 200
         data_fields = ["employer.country"]
         format = "json"
+        import_handler = ImportHandlerData.import_handler_01
 
     class dataset_02:
         name = "DS 2"
@@ -145,6 +146,7 @@ class DataSetData(DataSet):
         records_count = 100
         time = 200
         format = "json"
+        import_handler = ImportHandlerData.import_handler_01
 
     class dataset_03:
         name = "DS 3 (csv)"
@@ -161,3 +163,4 @@ class DataSetData(DataSet):
         records_count = 100
         time = 200
         format = "csv"
+        import_handler = ImportHandlerData.import_handler_01

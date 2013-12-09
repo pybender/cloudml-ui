@@ -21,6 +21,7 @@ class BaseLogMessageHandler(logging.Handler):
 
 
 def init_logger(name, **kwargs):
+    from mongo.logger import LogMessageHandler
     logger = logging.getLogger()
     from mongo.logger import LogMessageHandler
     handler = LogMessageHandler(log_type=name, params=kwargs)

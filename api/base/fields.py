@@ -1,6 +1,7 @@
 import json
 
 from api.resources import ValidationError
+from sqlalchemy.orm.exc import NoResultFound
 
 
 class BaseField(object):
@@ -37,7 +38,7 @@ class ChoiceField(CharField):
         value = super(ChoiceField, self).clean(value)
 
         if value and not value in self._choices:
-            raise ValidationError('should be one of %s' % ', '.join(self._choices))
+            raise ValidationError('Should be one of %s' % ', '.join(self._choices))
 
         return value
 
@@ -80,23 +81,59 @@ class ModelField(CharField):
     def clean(self, value):
         value = super(ModelField, self).clean(value)
 
-        if value:
+        if value is not None:
             query = self.Model.query
 
             if self.by_name:
                 query = query.filter_by(name=value)
             else:
                 query = query.filter_by(id=value)
-
-            obj = query.one()
+            try:
+                obj = query.one()
+            except NoResultFound:
+                obj = None
             if obj is None:
-                raise ValidationError('Model not found')
+                raise ValidationError('{0} not found'.format(
+                    self.Model.__name__))
 
             if self.return_model:
                 return obj
             else:
                 self.model = obj
                 return value
+
+
+class MultipleModelField(CharField):
+    def __init__(self, **kwargs):
+        self.Model = kwargs.pop('model')
+        self.by_name = kwargs.pop('by_name', False)
+        self.return_model = kwargs.pop('return_model', False)
+        self.filter_params = kwargs.pop('filter_params', {})
+        super(MultipleModelField, self).__init__(**kwargs)
+
+    def clean(self, value):
+        value = super(MultipleModelField, self).clean(value)
+        if not value:
+            return None
+
+        ids = value.split(',')
+
+        query = self.Model.query
+
+        if self.by_name:
+            query = query.filter(self.Model.name.in_(ids))
+        else:
+            query = query.filter(self.Model.id.in_(ids))
+        objects = query.all()
+        if not objects:
+            raise ValidationError('{0} not found'.format(
+                self.Model.__name__))
+
+        if self.return_model:
+            return objects
+        else:
+            self.model = objects
+            return value
 
 
 class JsonField(CharField):

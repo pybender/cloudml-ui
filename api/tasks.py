@@ -1,3 +1,4 @@
+from api.ml_models.models import Weight, WeightsCategory
 import os
 import json
 import logging
@@ -13,9 +14,8 @@ from boto.exception import EC2ResponseError
 from celery.signals import task_prerun, task_postrun
 
 from api import celery, app
-from api.models import Test, Model, TestExample, User, DataSet, ImportHandler
+from api.models import db, TestResult, Model, TestExample, User, DataSet
 from api.logs.logger import init_logger
-from api.utils import get_doc_size
 from api.amazon_utils import AmazonEC2Helper, AmazonS3Helper
 from core.trainer.trainer import Trainer
 from core.trainer.config import FeatureModel
@@ -33,7 +33,7 @@ class InstanceRequestingError(Exception):
 def request_spot_instance(dataset_id=None, instance_type=None, model_id=None):
     init_logger('trainmodel_log', obj=model_id)
 
-    model = app.db.Model.find_one({'_id': ObjectId(model_id)})
+    model = Model.query.get(model_id)
     model.status = model.STATUS_REQUESTING_INSTANCE
     model.save()
 
@@ -62,7 +62,7 @@ def get_request_instance(request_id,
     ec2 = AmazonEC2Helper()
     logging.info('Get spot instance request %s' % request_id)
 
-    model = app.db.Model.find_one({'_id': ObjectId(model_id)})
+    model = Model.query.get(model_id)
 
     try:
         request = ec2.get_request_spot_instance(request_id)
@@ -137,7 +137,7 @@ def self_terminate(result=None):  # pragma: no cover
 @celery.task
 def cancel_request_spot_instance(request_id, model_id):
     init_logger('trainmodel_log', obj=model_id)
-    model = app.db.Model.find_one({'_id': ObjectId(model_id)})
+    model = Model.query.get(model_id)
 
     logging.info('Cancelling spot instance request {0!s} \
 for model id {1!s}...'.format(
@@ -169,7 +169,7 @@ def import_data(dataset_id, model_id=None, test_id=None):
         if not model_id is None:
             obj = Model.query.get(model_id)
         if not test_id is None:
-            obj = Test.query.get(test_id)
+            obj = TestResult.query.get(test_id)
 
         if obj:
             obj.status = obj.STATUS_IMPORTING
@@ -281,19 +281,17 @@ def train_model(dataset_ids, model_id, user_id):
     init_logger('trainmodel_log', obj=model_id)
 
     user = User.query.get(user_id)
-    model = app.db.Model.find_one({'_id': ObjectId(model_id)})
-    datasets = app.db.DataSet.find({
-        '_id': {'$in': [ObjectId(ds_id) for ds_id in dataset_ids]}
-    })
+    model = Model.query.get(model_id)
+    datasets = DataSet.query.filter(DataSet.id.in_(dataset_ids)).all()
 
     try:
         model.delete_metadata()
 
-        model.dataset_ids = [ObjectId(ds_id) for ds_id in dataset_ids]
+        model.datasets = datasets
         model.status = model.STATUS_TRAINING
         model.error = ""
         model.trained_by = {
-            '_id': user.id,
+            'id': user.id,
             'uid': user.uid,
             # 'name': user.name # TODO
         }
@@ -331,15 +329,13 @@ def train_model(dataset_ids, model_id, user_id):
         model.status = model.STATUS_TRAINED
         model.set_trainer(trainer)
         model.save()
-        model.memory_usage['training'] = max(mem_usage)
+        model.memory_usage = max(mem_usage)
         model.train_records_count = int(sum((
-            d['records_count'] for d in app.db.DataSet.find({
-                '_id': {'$in': model.dataset_ids}
-            }, ['records_count']))))
+            d.records_count for d in model.datasets)))
         model.training_time = int((train_end_time - train_begin_time).seconds)
         model.save()
 
-        fill_model_parameter_weights.delay(str(model.id))
+        fill_model_parameter_weights.delay(model.id)
     except Exception, exc:
         logging.exception('Got exception when train model')
         model.status = model.STATUS_ERROR
@@ -353,26 +349,22 @@ def train_model(dataset_ids, model_id, user_id):
 
 
 @celery.task
-def fill_model_parameter_weights(model_id, reload=False):
+def fill_model_parameter_weights(model_id):
     """
     Adds model parameters weights to db.
     """
     init_logger('trainmodel_log', obj=model_id)
     logging.info("Starting to fill model weights")
     try:
-        model = app.db.Model.find_one({'_id': ObjectId(model_id)})
+        model = Model.query.get(model_id)
         if model is None:
             raise ValueError('Model not found: %s' % model_id)
 
         weights = model.get_trainer().get_weights()
         positive = weights['positive']
         negative = weights['negative']
-        if reload:
-            params = {'model_id': model_id}
-            app.db.WeightsCategory.collection.remove(params)
-            app.db.Weight.collection.remove(params)
-        weights = app.db.Weight.find({'model_id': model_id})
-        count = weights.count()
+        weights = model.weights
+        count = len(weights)
         if count > 0:
             raise InvalidOperationError('Weights for model %s already \
     filled: %s' % (model_id, count))
@@ -399,24 +391,29 @@ def fill_model_parameter_weights(model_id, reload=False):
                 parent = long_name
                 long_name = '%s.%s' % (long_name, sname) \
                             if long_name else sname
-                params = {'model_name': model.name,
-                          'model_id': model_id,
-                          'parent': parent,
-                          'short_name': sname}
                 if i == (count - 1):
-                    params.update({'name': weight['name'],
-                                   'value': weight['weight'],
-                                   'is_positive': bool(weight['weight'] > 0),
-                                   'css_class': weight['css_class']})
-                    weight = app.db.Weight(params)
-                    weight.save()
+                    new_weight = Weight()
+                    new_weight.name = weight['name']
+                    new_weight.value = weight['weight']
+                    new_weight.is_positive = bool(weight['weight'] > 0)
+                    new_weight.css_class = weight['css_class']
+                    new_weight.parent = parent
+                    new_weight.short_name = sname
+                    new_weight.model_name = model.name
+                    new_weight.model = model
+                    new_weight.save(commit=False)
                 else:
                     if sname not in category_names:
                         # Adding a category, if it has not already added
                         category_names.append(sname)
-                        params.update({'name': long_name})
-                        category = app.db.WeightsCategory(params)
-                        category.save()
+                        category = WeightsCategory()
+                        category.name = long_name
+                        category.parent = parent
+                        category.short_name = sname
+                        category.model_name = model.name
+                        category.model = model
+                        category.save(commit=False)
+        db.session.commit()
 
         model.weights_synchronized = True
         model.save()
@@ -436,10 +433,8 @@ def run_test(dataset_ids, test_id):
     """
     init_logger('runtest_log', obj=test_id)
 
-    test = Test.query.get(test_id)
-    datasets = app.db.DataSet.find({
-        '_id': {'$in': [ObjectId(ds_id) for ds_id in dataset_ids]}
-    })
+    test = TestResult.query.get(test_id)
+    datasets = DataSet.query.filter(DataSet.id.in_(dataset_ids)).all()
     dataset = datasets[0]
     model = test.model
 
@@ -479,11 +474,11 @@ def run_test(dataset_ids, test_id):
             metrics_dict['precision_recall_curve'][0][0::n]
         test.metrics = metrics_dict
         test.classes_set = list(metrics.classes_set)
-        test.status = Test.STATUS_STORING
+        test.status = TestResult.STATUS_STORING
 
         if not model.comparable:
             # TODO: fix this
-            model = app.db.Model.find_one({'_id': model.id})
+            model = Model.query.get(model.id)
             model.comparable = True
             model.save()
 
@@ -520,7 +515,7 @@ def run_test(dataset_ids, test_id):
             # example_ids.append(str(example.id))
         app.sql_db.session.commit()
 
-        test.status = Test.STATUS_COMPLETED
+        test.status = TestResult.STATUS_COMPLETED
         test.save()
         logging.info('Test %s completed' % test.name)
 
@@ -587,11 +582,11 @@ def calculate_confusion_matrix(test_id, weight0, weight1):
     if weight0 < 0 or weight1 < 0:
         raise ValueError('Negative weights are not allowed')
 
-    test = Test.query.get(test_id)
+    test = TestResult.query.get(test_id)
     if test is None:
         raise ValueError('Test with id {0!s} not found!'.format(test_id))
 
-    model = app.db.Model.find_one({'_id': ObjectId(test['model_id'])})
+    model = test.model
     if model is None:
         raise ValueError('Model with id {0!s} not found!'.format(
             test.model_id))
@@ -604,7 +599,7 @@ def calculate_confusion_matrix(test_id, weight0, weight1):
     test.confusion_matrix_calculations.append({
         '_id': calc_id,
         'weights': dict(zip(model.labels, [weight0, weight1])),
-        'status': Test.MATRIX_STATUS_IN_PROGRESS,
+        'status': TestResult.MATRIX_STATUS_IN_PROGRESS,
         'datetime': datetime.now(),
         'result': []
     })
@@ -630,7 +625,7 @@ def calculate_confusion_matrix(test_id, weight0, weight1):
     calc = next((c for c in test.confusion_matrix_calculations
                  if c['_id'] == calc_id))
     calc['result'] = zip(model.labels, matrix)
-    calc['status'] = Test.MATRIX_STATUS_COMPLETED
+    calc['status'] = TestResult.MATRIX_STATUS_COMPLETED
     test.save()
 
     return matrix
@@ -665,7 +660,7 @@ def get_csv_results(model_id, test_id, fields):
 
     init_logger('runtest_log', obj=test_id)
 
-    test = Test.query.filter_by(model_id=model_id, id=test_id).first()
+    test = TestResult.query.filter_by(model_id=model_id, id=test_id).first()
     if not test:
         logging.error('Test not found')
         return None
@@ -675,7 +670,7 @@ def get_csv_results(model_id, test_id, fields):
     test.exports.append({
         'name': name,
         'fields': fields,
-        'status': Test.EXPORT_STATUS_IN_PROGRESS,
+        'status': TestResult.EXPORT_STATUS_IN_PROGRESS,
         'datetime': datetime.now(),
         'url': None,
         'type': 'csv',
@@ -697,7 +692,7 @@ def get_csv_results(model_id, test_id, fields):
 
     export = next((ex for ex in test.exports if ex['name'] == name))
     export['url'] = url
-    export['status'] = Test.EXPORT_STATUS_COMPLETED
+    export['status'] = TestResult.EXPORT_STATUS_COMPLETED
     export['expires'] = datetime.now() + timedelta(seconds=expires)
     test.save()
 

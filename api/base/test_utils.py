@@ -16,6 +16,10 @@ SOMEBODY_HTTP_HEADERS = [('X-Auth-Token', SOMEBODY_AUTH_TOKEN)]
 AUTH_TOKEN = 'token'
 HTTP_HEADERS = [('X-Auth-Token', AUTH_TOKEN)]
 
+# Count of the features in conf/features.json file
+FEATURE_COUNT = 37
+TARGET_VARIABLE = 'hire_outcome'
+
 
 class BaseDbTestCase(TestCase):
     """
@@ -98,7 +102,14 @@ class TestChecksMixin(object):
             count = self.Model.query.filter_by(**query_params).count()
 
         self.assertEquals(count, len(obj_resp), obj_resp)
-        # TODO: check that show works
+
+        if len(obj_resp):
+            obj = obj_resp[0]
+            fields = self._get_fields(show)
+            self.assertEquals(len(fields), len(obj.keys()))
+            for field in fields:
+                self.assertTrue(field in obj.keys())
+
         return resp_data
 
     def check_details(self, obj=None, show='', data={}):
@@ -107,6 +118,13 @@ class TestChecksMixin(object):
         key = self.RESOURCE.OBJECT_NAME
         resp_data = self._check(show=show, id=self.obj.id, **data)
         self.assertTrue(key in resp_data, resp_data)
+
+        obj = resp_data[key]
+        fields = self._get_fields(show)
+        self.assertEquals(len(fields), len(obj.keys()))
+        for field in fields:
+            self.assertTrue(field in obj.keys())
+
         return resp_data
 
     def check_edit(self, data={}, **kwargs):
@@ -126,7 +144,9 @@ class TestChecksMixin(object):
         from api.utils import ERR_INVALID_DATA
         count = self.Model.query.count()
         url = self._get_url(**data)
-        resp = self.client.post(url, data=post_data, headers=HTTP_HEADERS)
+        obj_id = data.get('id', None)
+        method = 'put' if obj_id else 'post'
+        resp = getattr(self.client, method)(url, data=post_data, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.BAD_REQUEST)
         resp_data = json.loads(resp.data)
         err_data = resp_data['response']['error']
@@ -180,6 +200,12 @@ class TestChecksMixin(object):
         if load_json:
             return json.loads(resp.data)
         return resp.data
+
+    def _get_fields(self, show):
+        if show:
+            return show.split(',')
+        else:
+            return self.RESOURCE.DEFAULT_FIELDS or [u'id', u'name']
 
 
 class BaseMongoTestCase(unittest.TestCase):

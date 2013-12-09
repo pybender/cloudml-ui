@@ -31,14 +31,15 @@ class Model(db.Model, BaseModel):
                 STATUS_TRAINING, STATUS_TRAINED, STATUS_ERROR, STATUS_CANCELED]
 
     name = db.Column(db.String(200))
-    status = db.Column(db.Enum(*STATUSES, name='model_statuses'))
+    status = db.Column(db.Enum(*STATUSES, name='model_statuses'),
+                       default=STATUS_NEW)
     trained_by = db.Column(JSONType)
     error = db.Column(db.String(300))
 
     comparable = db.Column(db.Boolean)
     weights_synchronized = db.Column(db.Boolean)
 
-    labels = db.Column(postgresql.ARRAY(db.String))
+    labels = db.Column(postgresql.ARRAY(db.String), default=[])
     example_label = db.Column(db.String(100))
     example_id = db.Column(db.String(100))
 
@@ -87,7 +88,17 @@ class Model(db.Model, BaseModel):
 
     @property
     def dataset(self):
-        return self.datasets[0]
+        return self.datasets[0] if len(self.datasets) else None
+
+    @property
+    def data_fields(self):
+        ds = self.dataset
+        return ds.data_fields if ds else []
+
+    @property
+    def test_handler_fields(self):
+        handler = self.test_import_handler
+        return handler.get_fields() if handler else []
 
     def run_test(self, dataset, callback=None):
         trainer = self.get_trainer()
@@ -113,21 +124,41 @@ class Model(db.Model, BaseModel):
             self.labels = map(str, trainer._classifier.classes_.tolist())
 
     def get_features_json(self):
-        data = self.features_set.features
+        data = self.features_set.to_dict()
         data['classifier'] = self.classifier
         return json.dumps(data)
+
+    def delete_metadata(self, delete_log=True):
+        if delete_log:
+            LogMessage.delete_related_logs(self)
+
+        def _del(items):
+            for item in items:
+                db.session.delete(item)
+
+        _del(self.tests)
+        _del(self.weight_categories)
+        _del(self.weights)
+        db.session.commit()
+
+        self.comparable = False
+        self.save()
 
 
 tags_table = db.Table(
     'model_tag', db.Model.metadata,
-    db.Column('model_id', db.Integer, db.ForeignKey('model.id')),
-    db.Column('tag_id', db.Integer, db.ForeignKey('tag.id'))
+    db.Column('model_id', db.Integer, db.ForeignKey(
+        'model.id', ondelete='CASCADE', onupdate='CASCADE')),
+    db.Column('tag_id', db.Integer, db.ForeignKey(
+        'tag.id', ondelete='CASCADE', onupdate='CASCADE'))
 )
 
 data_sets_table = db.Table(
     'model_dataset', db.Model.metadata,
-    db.Column('model_id', db.Integer, db.ForeignKey('model.id')),
-    db.Column('data_set_id', db.Integer, db.ForeignKey('data_set.id'))
+    db.Column('model_id', db.Integer, db.ForeignKey(
+        'model.id', ondelete='CASCADE', onupdate='CASCADE')),
+    db.Column('data_set_id', db.Integer, db.ForeignKey(
+        'data_set.id', ondelete='CASCADE', onupdate='CASCADE'))
 )
 
 
@@ -153,8 +184,8 @@ class WeightsCategory(db.Model, BaseModel):
 
     model_id = db.Column(db.Integer, db.ForeignKey('model.id'))
     model = relationship(Model, backref=backref('weight_categories'))
-    parent_id = db.Column(db.Integer, db.ForeignKey('weights_category.id'))
-    parent = relationship('WeightsCategory')
+
+    parent = db.Column(db.String(200))
 
 
 class Weight(db.Model, BaseModel):
@@ -171,5 +202,4 @@ class Weight(db.Model, BaseModel):
     model_id = db.Column(db.Integer, db.ForeignKey('model.id'))
     model = relationship(Model, backref=backref('weights'))
 
-    parent_id = db.Column(db.Integer, db.ForeignKey('weights_category.id'))
-    parent = relationship('WeightsCategory')
+    parent = db.Column(db.String(200))

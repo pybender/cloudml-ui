@@ -5,7 +5,8 @@ from flask.ext import restful
 from flask.views import MethodViewType
 from flask.ext.restful import reqparse
 from sqlalchemy import desc
-from sqlalchemy.orm import exc as orm_exc
+from sqlalchemy.orm import exc as orm_exc, undefer, defer, \
+    joinedload_all, object_mapper, properties
 from sqlalchemy.exc import DataError
 
 from api.decorators import authenticate
@@ -275,7 +276,7 @@ class BaseResource(restful.Resource):
         return not name
 
     def _get_show_fields(self, params):
-        fields = params.get('show', None)
+        fields = params.get('show', None) if params else None
         if fields:
             return fields.split(',')
         return self.DEFAULT_FIELDS
@@ -465,22 +466,38 @@ class BaseResourceSQL(BaseResource):
             return None
 
     def _build_details_query(self, params, **kwargs):
-        try:
-            cursor = self._modify_details_query(
-                self._set_details_query_opts(
-                    self.Model.query, params).filter_by(**kwargs), params)
-            return cursor.one()
-        except DataError, exc:
-            logging.error(
-                'Data error occures while %s filtering: %s',
-                self.OBJECT_NAME, kwargs)
-            return None
+        cursor = self._modify_details_query(
+            self.Model.query, params).filter_by(**kwargs)
+
+        fields = self._get_show_fields(params)
+        if fields:
+            opts = []
+            for field in self.Model.__table__.columns.keys():
+                if field in fields or field in ('id',):
+                    opts.append(undefer(getattr(self.Model, field)))
+                else:
+                    opts.append(defer(getattr(self.Model, field)))
+
+            relation_properties = filter(
+                lambda p: isinstance(p, properties.RelationshipProperty),
+                self.Model.__mapper__.iterate_properties
+            )
+            for field in relation_properties:
+                if field.key in fields:
+                    cursor = cursor.options(joinedload_all(
+                        getattr(self.Model, field.key)))
+            if opts:
+                cursor = cursor.options(*opts)
+
+        return cursor.one()
 
     def _modify_details_query(self, cursor, params):
         return cursor
 
-    def _set_details_query_opts(self, cursor, params):
-        return cursor
+    def _prepare_model(self, model, params):
+        fields = self._get_show_fields(params)
+        return dict([(field, getattr(model, field, None))
+                     for field in fields])
 
     def _prepare_model_any(self, model, params):
         fields = self._get_all_fields()
