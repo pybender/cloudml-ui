@@ -1,7 +1,7 @@
 <div ng-controller="FeaturesListCtrl" ng-init="init(model)">
 <h4>Features List
 	<div class="actions">
-      <a class="btn btn-info" href="#/models/{{ model.id }}/features/{{ model.features_set_id }}/add">
+      <a class="btn btn-info" href="#/models/{{ modelObj.id }}/features/{{ modelObj.features_set_id }}/add">
         <i class="status-icon icon-plus"></i> Add
       </a>
   	</div>
@@ -74,7 +74,7 @@
 		    	<a class="btn btn-info" href="#/models/{{ modelObj.id }}/features/{{ modelObj.features_set_id }}/edit/{{ feature.id }}">
 		    		<i class="icon-edit" title="edit" />
 		    	</a>
-			    <button ng-click="deleteModel(model)" class="btn btn-danger"><i title="Delete your model. Be careful - you could not recover it!" class="icon-remove"></i></button>
+			    <button ng-click="deleteModel(feature)" class="btn btn-danger"><i title="Delete your feature. Be careful - you could not recover it!" class="icon-remove"></i></button>
 		    </td>
 		</tr>
 	</tbody>

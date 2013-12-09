@@ -50,7 +50,7 @@ class PredefinedTransformersTests(FeaturePredefinedItemsTestMixin):
         data = {"name": "transformer #1",
                 'type': 'invalid'}
         _check(data, errors={
-            'type': 'should be one of Count, Tfidf, Lda, Dictionary, Lsi'})
+            'type': 'Should be one of Count, Tfidf, Lda, Dictionary, Lsi'})
 
         data['type'] = 'Count'
         data["params"] = 'hello!'
