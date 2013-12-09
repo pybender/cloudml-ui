@@ -72,6 +72,11 @@ class ModelResource(BaseResourceSQL):
 
         return cursor
 
+    def _set_list_query_opts(self, cursor, params):
+        if 'tag' in params and params['tag']:
+            cursor = cursor.filter(Model.tags.any(Tag.text == params['tag']))
+        return cursor
+
     def _get_by_importhandler_action(self, **kwargs):
         parser_params = self.GET_PARAMS + (('handler', str), )
         params = self._parse_parameters(parser_params)

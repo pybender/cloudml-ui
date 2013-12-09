@@ -445,10 +445,10 @@ class BaseResourceSQL(BaseResource):
             if opts:
                 cursor = cursor.options(*opts)
 
-        print filter_params
-
         for name, val in filter_params.iteritems():
-            cursor = cursor.filter(self.__build_query_item(name, val))
+            fltr = self.__build_query_item(name, val)
+            if fltr:
+                cursor = cursor.filter(fltr)
         return cursor
 
     def _set_list_query_opts(self, cursor, params):
@@ -467,7 +467,10 @@ class BaseResourceSQL(BaseResource):
             field, key = name.split('->>')
             return "%s->>'%s'='%s'" % (field, key, val)
         else:
-            return getattr(self.Model, name) == val
+            if hasattr(self.Model, name):
+                return getattr(self.Model, name) == val
+            else:
+                return None
 
     def __prepare_filter_params(self, params):
         def is_none_or_empty(val):
