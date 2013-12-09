@@ -128,6 +128,10 @@ class Model(db.Model, BaseModel):
         data['classifier'] = self.classifier
         return json.dumps(data)
 
+    @property
+    def features(self):
+        return self.get_features_json()
+
     def delete_metadata(self, delete_log=True):
         if delete_log:
             LogMessage.delete_related_logs(self)
