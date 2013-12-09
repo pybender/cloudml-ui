@@ -261,8 +261,10 @@ class FeatureSet(ExportImportMixin, BaseModel, db.Model):
             features_dict['features'].append(feature.to_dict())
 
         for ftype in types:
-            named_type = NamedFeatureType.query.filter_by(name=ftype).one()
-            self.features_dict['feature-types'].append(named_type.to_dict())
+            saved_types = [f['name'] for f in features_dict['feature-types']]
+            if ftype not in saved_types:
+                named_type = NamedFeatureType.query.filter_by(name=ftype).one()
+                features_dict['feature-types'].append(named_type.to_dict())
 
         return features_dict
 
