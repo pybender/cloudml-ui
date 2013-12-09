@@ -11,12 +11,12 @@ angular.module('app.datasets.model', ['app.config'])
     DataSet
     ###
     class DataSet extends BaseModel
-      API_FIELDNAME: 'dataset'
+      API_FIELDNAME: 'data_set'
 
       STATUS_IMPORTING = 'Importing'
       STATUS_UPLOADING = 'Uploading'
 
-      _id: null
+      id: null
       name: null
       status: 'not loaded'
       error: ''

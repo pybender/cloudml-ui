@@ -2,7 +2,9 @@ from sqlalchemy import func
 
 from api import api, app
 from api.base.resources import BaseResourceSQL
-from api.models import Model, Test, DataSet
+from api.ml_models.models import Model
+from api.model_tests.models import TestResult
+from api.import_handlers.models import DataSet
 
 
 class StatisticsResource(BaseResourceSQL):
@@ -11,7 +13,7 @@ class StatisticsResource(BaseResourceSQL):
     def get(self, action=None):
         return self._render({'statistics': {
             'models': get_stat_by_status(Model),
-            'tests': get_stat_by_status(Test),
+            'tests': get_stat_by_status(TestResult),
             'datasets': get_stat_by_status(DataSet),
         }})
 

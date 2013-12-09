@@ -61,7 +61,7 @@ angular.module('app.testresults.model', ['app.config'])
 
         if origData.dataset?
           @dataset_obj = new DataSet(origData['dataset'])
-          @dataset = @dataset._id
+          @dataset = @dataset.id
 
       $run: (data) =>
         if @id?

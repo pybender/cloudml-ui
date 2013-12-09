@@ -11,7 +11,7 @@ angular.module('app.weights.model', ['app.config'])
     Model Parameter Weight
     ###
     class Weight extends BaseModel
-      _id: null
+      id: null
       name: null
       model_name: null
       model_id: null
@@ -84,7 +84,7 @@ angular.module('app.weights.model', ['app.config'])
       constructor: (opts) ->
         @loadFromJSON opts
 
-      _id: null
+      id: null
       name: null
       model_name: null
       short_name: null
@@ -112,7 +112,7 @@ angular.module('app.weights.model', ['app.config'])
       constructor: (opts) ->
         @loadFromJSON opts
 
-      _id: null
+      id: null
       name: null
       model_name: null
       short_name: null

@@ -30,7 +30,7 @@ filesize,records_count,time,created_by,updated_by'
     )
 
     $scope.init = (handler) ->
-      $scope.kwargs = {'handler_id': handler._id}
+      $scope.kwargs = {'handler_id': handler.id}
 ])
 
 
@@ -81,10 +81,10 @@ filesize,records_count,time,created_by,updated_by'
     if not $routeParams.id
       err = "Can't initialize without id"
 
-    $scope.dataset = new DataSet({_id: $routeParams.id,
+    $scope.dataset = new DataSet({id: $routeParams.id,
     import_handler_id: $routeParams.handler_id})
     $scope.handler = new ImportHandler(
-          {_id: $routeParams.handler_id})
+          {id: $routeParams.handler_id})
 
     $scope.go = (section) ->
       $scope.dataset.$load(
@@ -109,7 +109,7 @@ filesize,records_count,time,created_by,import_handler_id,format'
 
     if $scope.handler?
       DataSet.$loadAll(
-        handler_id: $scope.handler._id,
+        handler_id: $scope.handler.id,
         status: 'Imported',
         show: 'name,_id'
       ).then ((opts) ->
@@ -121,7 +121,7 @@ filesize,records_count,time,created_by,import_handler_id,format'
 
         if $scope.datasets? and not $scope.multiple_dataset
           $scope.datasets.unshift({
-            _id: '',
+            id: '',
             name: '--- select dataset ---'
           })
 
@@ -157,7 +157,7 @@ filesize,records_count,time,created_by,import_handler_id,format'
 
     $scope.start = (result) ->
       $scope.dataset = new DataSet({
-        'import_handler_id': $scope.handler._id
+        'import_handler_id': $scope.handler.id
       })
       data = {
         import_params: JSON.stringify($scope.parameters),

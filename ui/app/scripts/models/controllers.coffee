@@ -3,16 +3,14 @@
 ### Trained Model specific Controllers ###
 
 FIELDS_BY_SECTION = {
-  'model': 'classifier,features_set_id,features'
-  'training': 'error,weights_synchronized,memory_usage,
+  'model': 'id,classifier,features_set_id,features'
+  'training': 'id,error,weights_synchronized,memory_usage,
 trained_by,trained_on,training_time'
-  'about': 'created_on,target_variable,example_id,example_label,
-labels,updated_on,feature_count,test_import_handler.name,
-train_import_handler.name,train_import_handler.import_params,
-test_import_handler.import_params,train_import_handler._id,
-test_import_handler._id,created_by,datasets,data_fields,
+  'about': 'id,created_on,target_variable,example_id,example_label,
+labels,updated_on,feature_count,test_import_handler,
+train_import_handler,created_by,datasets,data_fields,
 train_records_count,test_handler_fields,tags'
-  'main': 'name,status'
+  'main': 'id,name,status'
 }
 
 angular.module('app.models.controllers', ['app.config', ])

@@ -24,7 +24,7 @@
         <label class="control-label">Classifier</label>
         <div class="controls"  ng-controller="ClassifiersSelectLoader">
           <select name="classifier" ng-model="target_model.classifier.classifier" ng-required="currentTab=='predefined'">
-            <option ng-repeat="clr in classifiers" value="{{ clr._id }}">{{ clr.name }}</option>
+            <option ng-repeat="clr in classifiers" value="{{ clr.id }}">{{ clr.name }}</option>
           </select>
           <span ng-show="Form.classifier.$error.required" class="help-inline">*</span>
         </div>

@@ -56,7 +56,7 @@ angular.module('app.datas.controllers', ['app.config', ])
       $scope.loading_state = true
       opts.sort_by = $scope.sort_by
       opts.order = if $scope.asc_order then 'asc' else 'desc'
-      Data.$loadAll($scope.test.model_id, $scope.test._id, opts).then((resp) ->
+      Data.$loadAll($scope.test.model_id, $scope.test.id, opts).then((resp) ->
         $scope.loading_state = false
         return resp
       )
@@ -96,7 +96,7 @@ angular.module('app.datas.controllers', ['app.config', ])
   $scope.loading_state = true
   $scope.test = new Test({
     model_id: $routeParams.model_id,
-    _id: $routeParams.test_id
+    id: $routeParams.test_id
   })
   $scope.test.$load(
       show: 'name,examples_fields'
@@ -138,7 +138,7 @@ angular.module('app.datas.controllers', ['app.config', ])
     $scope.data = new Data({
       model_id: $routeParams.model_id,
       test_id: $routeParams.test_id,
-      _id: $routeParams.id
+      id: $routeParams.id
     })
 
   $scope.data.$load(
@@ -172,7 +172,7 @@ test.examples_placement"
 
     $scope.test = dialog.model
     Data.$loadFieldList($scope.test.model_id,
-      $scope.test._id)
+      $scope.test.id)
     .then ((opts) ->
       $scope.selectFields = ("data_input." + x for x in opts.fields)
       $scope.loading_state = false

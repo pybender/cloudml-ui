@@ -90,7 +90,7 @@ created_by'
       for inst in $scope.instances
         if inst.is_default
           $scope.formElements[$scope.EXISTED_INSTANCE]['aws_instance'] = \
-          inst._id
+          inst.id
           break
 
     ), ((opts) ->

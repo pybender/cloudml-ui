@@ -159,12 +159,12 @@
                         <span class="badge badge-info">{{ calc.status }}</span><br/>
                     </div>
                     <div ng-show="calc.status == 'Completed'" class="span2 pull-right">
-                      <button class="btn btn-link" ng-click="showResult(calc._id)">
+                      <button class="btn btn-link" ng-click="showResult(calc.id)">
                           Show result
                       </button>
                     </div>
                   </div>
-                  <div class="row" ng-show="open_calc_id == calc._id">
+                  <div class="row" ng-show="open_calc_id == calc.id">
                       <div class="span4"><confusion-matrix matrix=calc.result></confusion-matrix></div>
                   </div>
                 </li>
@@ -173,7 +173,7 @@
         </div>
       </div>
 
-      <div ng-show="action[0] == 'logs'" ng-controller="LogMessageListCtrl" ng-init="init('runtest_log', test._id)">
+      <div ng-show="action[0] == 'logs'" ng-controller="LogMessageListCtrl" ng-init="init('runtest_log', test.id)">
         <ng-include src="'/partials/logmessages/list.html'"></ng-include>
       </div>
 

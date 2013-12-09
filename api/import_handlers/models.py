@@ -161,20 +161,23 @@ class DataSet(db.Model, BaseModel):
     def delete(self):
         # Stop task
         # self.terminate_task()  # TODO
+        filename = self.filename
+        ds_id = self.id
+        on_s3 = self.on_s3
 
         super(DataSet, self).delete()
         LogMessage.delete_related_logs(self)
 
         # TODO: check import handler type
         try:
-            os.remove(self.filename)
+            os.remove(filename)
         except OSError:
             pass
-        if self.on_s3:
+        if on_s3:
             from api.amazon_utils import AmazonS3Helper
             helper = AmazonS3Helper()
             try:
-                helper.delete_key(str(self._id))
+                helper.delete_key(str(ds_id))
             except S3ResponseError as e:
                 logging.exception(str(e))
 

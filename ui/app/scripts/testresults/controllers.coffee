@@ -24,7 +24,7 @@ created_by'
 
     $scope.init = (model) ->
       $scope.model = model
-      $scope.kwargs = {'model_id': model._id}
+      $scope.kwargs = {'model_id': model.id}
 ])
 
 .controller('TestDialogController', [
@@ -65,7 +65,7 @@ created_by'
 
     $scope.start = (result) ->
       data = $scope.getData()
-      $scope.test = new Test({model_id: $scope.model._id})
+      $scope.test = new Test({model_id: $scope.model.id})
       $scope.test.$run(data).then (->
         dialog.close()
         $location.path $scope.test.objectUrl()
@@ -130,7 +130,7 @@ without test id and model id"
 
     $scope.test = new Test({
       model_id: $routeParams.model_id,
-      _id: $routeParams.id
+      id: $routeParams.id
     })
 
   $scope.load = (fields, section, callback) ->

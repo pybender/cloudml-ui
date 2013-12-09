@@ -278,8 +278,12 @@ class BaseResource(restful.Resource):
     def _get_show_fields(self, params):
         fields = params.get('show', None) if params else None
         if fields:
-            return fields.split(',')
-        return self.DEFAULT_FIELDS
+            res_fields = fields.split(',')
+        else:
+            res_fields = self.DEFAULT_FIELDS
+        if 'id' not in res_fields:
+            res_fields.insert(0, 'id')
+        return res_fields
 
     def _parse_parameters(self, extra_params=()):
         parser = reqparse.RequestParser()

@@ -13,8 +13,8 @@
 	<h2 class="muted">Models</h2>
 	<ul class="unstyled">
 		<li ng-repeat="item in statistics.models.data">
-		{{ item._id }} <span class="pull-right strong">{{ item.count }}</span>
-		<div class="progress progress-{{ STYLES_MAP[item._id] }}">
+		{{ item.id }} <span class="pull-right strong">{{ item.count }}</span>
+		<div class="progress progress-{{ STYLES_MAP[item.id] }}">
 		<div class="bar" style="width: {{ 100 * item.count / statistics.models.count }}%;"></div>
 		</div>
 		</li>

@@ -14,8 +14,8 @@ angular.module('app.logmessages.controllers', ['app.config', ])
   $scope.FIELDS = 'level,type,content,params,created_on'
   $scope.ACTION = 'loading logs'
 
-  $scope.init = (type, _id, per_page=20) ->
-    $scope.kwargs = {'type': type, 'params.obj': _id, 'page': 1,
+  $scope.init = (type, id, per_page=20) ->
+    $scope.kwargs = {'type': type, 'params.obj': id, 'page': 1,
     'sort_by': 'created_on', 'order': 'desc', 'per_page': per_page}
     $scope.log_levels = ['--any--', 'CRITICAL', 'ERROR',
                          'WARNING', 'INFO', 'DEBUG']

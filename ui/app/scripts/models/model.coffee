@@ -65,6 +65,9 @@ angular.module('app.models.model', ['app.config'])
           if origData.classifier?
             @classifier = new Classifier(
               _.extend origData.classifier, {'model_id': @id})
+          if origData.tags?
+            @tags = for tag in origData['tags']
+              tag['text']
 
       downloadUrl: =>
         return "#{@BASE_API_URL}#{@id}/action/download/"
