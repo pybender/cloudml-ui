@@ -74,7 +74,7 @@ class PredefinedClassifiersTests(FeaturePredefinedItemsTestMixin):
         data = {"name": "classifier name is here",
                 'type': 'invalid'}
         _check(data, errors={
-            'type': 'should be one of stochastic gradient descent classifier, \
+            'type': 'Should be one of stochastic gradient descent classifier, \
 support vector regression, logistic regression'})
 
         data['type'] = 'logistic regression'

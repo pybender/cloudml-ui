@@ -65,7 +65,7 @@ class TestFeatureResource(BaseDbTestCase, TestChecksMixin):
         }
         _check(data, errors={
             'transformer': "transformer-params: invalid json: aaa, \
-transformer-type: should be one of Count, Tfidf, Lda, Dictionary, Lsi"})
+transformer-type: Should be one of Count, Tfidf, Lda, Dictionary, Lsi"})
 
     def test_add_simple_feature(self):
         data = {

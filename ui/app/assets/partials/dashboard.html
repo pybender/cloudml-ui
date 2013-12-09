@@ -12,9 +12,9 @@
 	<div class="well">
 	<h2 class="muted">Models</h2>
 	<ul class="unstyled">
-		<li ng-repeat="item in statistics.models.data">
-		{{ item._id }} <span class="pull-right strong">{{ item.count }}</span>
-		<div class="progress progress-{{ STYLES_MAP[item._id] }}">
+		<li ng-repeat="(status, item) in statistics.models.data">
+		{{ status }} <span class="pull-right strong">{{ item.count }}</span>
+		<div class="progress progress-{{ STYLES_MAP[status] }}">
 		<div class="bar" style="width: {{ 100 * item.count / statistics.models.count }}%;"></div>
 		</div>
 		</li>
@@ -48,7 +48,7 @@
 						<small><a href="#{{ statistics.getImportHandlerUrl(item_stat.import_handler_id) }}?action=dataset:list">{{ item_stat.import_handler_id }}</a> <span class="pull-right strong">{{ item_stat.count }}</span></small>
 					</li>
 				</ul>
-				<div class="progress progress-{{ STYLES_MAP[status] }}"><div class="bar" style="width: {{ 100 * data.count / statistics.tests.count }}%;"></div></div>
+				<div class="progress progress-{{ STYLES_MAP[status] }}"><div class="bar" style="width: {{ 100 * data.count / statistics.datasets.count }}%;"></div></div>
 			</li>
 		</ul>
 	</div>

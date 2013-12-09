@@ -1,6 +1,8 @@
-<div>
-	Schema Name:
-	<span title="Schema Name" class="title" ng-bind="featuresSet.schema_name || 'schema name here'" editable="featuresSet" value="featuresSet.schema_name" editable-field="schema_name" editable-input="text" editable-placement="right"></span>
+<div ng-controller="FeaturesSetDetailsCtrl" ng-init="init(model)">
+	<div>
+		Schema Name:
+		<span title="Schema Name" class="title" ng-bind="featuresSet.schema_name || 'schema name here'" editable="featuresSet" value="featuresSet.schema_name" editable-field="schema_name" editable-input="text" editable-placement="right"></span>
+	</div>
+	<div>Target Variable: <span class="value">{{ featuresSet.target_variable }}</span></div>
+	<div>Features Count: <span class="value">{{ featuresSet.features_count }}</span></div>
 </div>
-<div>Target Variable: <span class="value">{{ featuresSet.target_variable }}</span></div>
-<div>Features Count: <span class="value">{{ featuresSet.features_count }}</span></div>
