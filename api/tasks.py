@@ -483,7 +483,7 @@ def run_test(dataset_ids, test_id):
             model.save()
 
         all_count = metrics._preds.size
-        test.dataset_id = str(dataset_ids[0])
+        test.dataset = dataset
         test.examples_count = all_count
         test.memory_usage = max(mem_usage)
 
