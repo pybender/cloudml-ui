@@ -1,3 +1,4 @@
+#TODO: move to apps
 from api.ml_models.models import Weight, WeightsCategory
 import os
 import json

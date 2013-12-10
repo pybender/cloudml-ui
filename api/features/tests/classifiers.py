@@ -126,7 +126,7 @@ class ModelClassifierTest(BaseDbTestCase, TestChecksMixin):
                 'params': '{"C": 1}',
                 'model_id': 1}
 
-        self._check(data=data, method='put')
+        self._check(data=data, method='post')
         model = Model.query.get(1)
         self.assertEqual(model.classifier['type'], data['type'])
         self.assertEqual(model.classifier['params']['C'], 1)
@@ -136,13 +136,13 @@ class ModelClassifierTest(BaseDbTestCase, TestChecksMixin):
         data = {'classifier': classifier.id,
                 'model_id': 1,
                 'predefined_selected': 'true'}
-        self._check(data=data, method='put')
+        self._check(data=data, method='post')
         model = Model.query.get(1)
         self.assertEqual(model.classifier['type'], classifier.type)
         self.assertEqual(model.classifier['params']['penalty'], "l2")
 
     def check_edit_error(self, post_data, errors, **data):
-        from api.utils import ERR_INVALID_DATA
+        from api.base.resources import ERR_INVALID_DATA
         url = self._get_url(**data)
         resp = self.client.post(url, data=post_data, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.BAD_REQUEST)

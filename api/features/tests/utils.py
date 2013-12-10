@@ -68,7 +68,7 @@ class FeatureItemsTestMixin(BaseDbTestCase, TestChecksMixin):
         return self.__run_check(feature, 'post', data)
 
     def check_edit_error(self, post_data, errors, **data):
-        from api.utils import ERR_INVALID_DATA
+        from api.base.resources import ERR_INVALID_DATA
         url = self._get_url(**data)
         resp = self.client.post(url, data=post_data, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.BAD_REQUEST)

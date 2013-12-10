@@ -1,6 +1,6 @@
-from api.base.base_forms import BaseChooseInstanceAndDataset
-from api.base.fields import CharField, ModelField, ChoiceField
-from api.resources import ValidationError
+from api.base.forms.base_forms import BaseChooseInstanceAndDataset, \
+    CharField, ModelField, ChoiceField
+from api.base.resources import ValidationError
 from api.models import DataSet, TestResult, Instance, Model
 
 

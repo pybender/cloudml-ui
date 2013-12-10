@@ -1,7 +1,6 @@
 """ Features specific resources """
 from api import api
-from api.base.resources import BaseResourceSQL
-from api.decorators import public_actions
+from api.base.resources import BaseResourceSQL, public_actions
 
 from models import *
 from forms import *

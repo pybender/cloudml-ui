@@ -1,8 +1,7 @@
 import json
 
-from api.base.forms import BaseForm
-from api.base.fields import CharField, JsonField, ChoiceField
-from api.resources import ValidationError
+from api.base.forms import BaseForm, CharField, JsonField, \
+    ChoiceField, ValidationError
 from api.models import DataSet, ImportHandler
 from core.importhandler.importhandler import ImportHandlerException,\
     ExtractionPlan

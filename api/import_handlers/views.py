@@ -3,8 +3,7 @@ from flask import Response
 from sqlalchemy.orm import undefer
 
 from api import api
-from api.base.resources import BaseResourceSQL, NotFound, ValidationError
-from api.decorators import public_actions
+from api.base.resources import BaseResourceSQL, NotFound, public_actions
 from models import ImportHandler, DataSet
 from forms import ImportHandlerAddForm, ImportHandlerEditForm, \
     DataSetAddForm, DataSetEditForm

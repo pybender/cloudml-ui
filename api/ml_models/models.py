@@ -4,8 +4,7 @@ import json
 from sqlalchemy.orm import relationship, deferred, backref
 from sqlalchemy.dialects import postgresql
 
-from api.base.models import db, BaseModel, BaseMixin
-from api.db import JSONType, GridfsFile
+from api.base.models import db, BaseModel, BaseMixin, JSONType, GridfsFile
 from api.models import LogMessage
 
 

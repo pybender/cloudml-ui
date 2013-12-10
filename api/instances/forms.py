@@ -1,6 +1,5 @@
-from api.base.forms import BaseForm
-from api.base.fields import CharField, BooleanField
-from api.resources import ValidationError
+from api.base.forms import BaseForm, CharField, BooleanField
+from api.base.resources import ValidationError
 from models import Instance
 
 

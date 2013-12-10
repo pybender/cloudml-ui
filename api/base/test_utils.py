@@ -144,7 +144,7 @@ class TestChecksMixin(object):
         return resp_data, obj
 
     def check_edit_error(self, post_data, errors, **data):
-        from api.utils import ERR_INVALID_DATA
+        from api.base.resources import ERR_INVALID_DATA
         count = self.Model.query.count()
         url = self._get_url(**data)
         obj_id = data.get('id', None)
@@ -200,7 +200,7 @@ class TestChecksMixin(object):
         resp = mthd(url, data=data, headers=HTTP_HEADERS)
         self.assertEquals(
             resp.status_code, 201 if method == 'post' else httplib.OK,
-            "Resp %s: %s" % (resp.status_code, resp.data))
+            "Resp of %s %s: %s" % (url, resp.status_code, resp.data))
         if load_json:
             return json.loads(resp.data)
         return resp.data

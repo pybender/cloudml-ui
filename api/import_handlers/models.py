@@ -11,8 +11,7 @@ from sqlalchemy.dialects import postgresql
 
 from api import app
 from api.amazon_utils import AmazonS3Helper
-from api.base.models import db, BaseModel
-from api.db import JSONType
+from api.base.models import db, BaseModel, JSONType
 from api.logs.models import LogMessage
 
 

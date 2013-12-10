@@ -274,7 +274,7 @@ class OdeskAuthTests(BaseDbTestCase):
 
     @patch('oauth2.Client.request', Mock(return_value=OAUTH_RESPONSE_TOKEN))
     def test_odesk_auth_request_token(self):
-        from api.auth import OdeskAuth
+        from api.base.auth import OdeskAuth
         auth = OdeskAuth()
 
         url, token, secret = auth.get_auth_url()
@@ -287,13 +287,13 @@ class OdeskAuthTests(BaseDbTestCase):
 
     @patch('oauth2.Client.request', Mock(return_value=OAUTH_RESPONSE_ERROR))
     def test_odesk_auth_request_token_error(self):
-        from api.auth import OdeskAuth, AuthException
+        from api.base.auth import OdeskAuth, AuthException
         auth = OdeskAuth()
         self.assertRaises(AuthException, auth.get_auth_url)
 
     @patch('oauth2.Client.request', Mock(return_value=OAUTH_RESPONSE_AUTH))
     def test_odesk_auth_authenticate(self):
-        from api.auth import OdeskAuth
+        from api.base.auth import OdeskAuth
         auth = OdeskAuth()
 
         token, secret = auth.authenticate('123', '345', '567')
@@ -302,7 +302,7 @@ class OdeskAuthTests(BaseDbTestCase):
 
     @patch('oauth2.Client.request', Mock(return_value=OAUTH_RESPONSE_ERROR))
     def test_odesk_auth_authenticate_error(self):
-        from api.auth import OdeskAuth, AuthException
+        from api.base.auth import OdeskAuth, AuthException
         auth = OdeskAuth()
         self.assertRaises(AuthException, auth.authenticate,
                           '123', '345', '567')
@@ -317,7 +317,7 @@ class OdeskAuthTests(BaseDbTestCase):
 
     @patch('oauth2.Client.request', Mock(return_value=OAUTH_RESPONSE_ERROR))
     def test_odesk_auth_get_my_info_error(self):
-        from api.auth import OdeskAuth, AuthException
+        from api.base.auth import OdeskAuth, AuthException
         auth = OdeskAuth()
         self.assertRaises(AuthException, auth.get_my_info,
                           '123', '345', '567')

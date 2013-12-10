@@ -1,5 +1,5 @@
 import json
-from api.base.base_forms import BaseChooseInstanceAndDatasetMultiple
+from api.base.forms.base_forms import BaseChooseInstanceAndDatasetMultiple
 from api.import_handlers.models import DataSet
 from api.instances.models import Instance
 
@@ -8,9 +8,9 @@ from core.trainer.trainer import Trainer, InvalidTrainerFile
 from core.trainer.config import FeatureModel, SchemaException
 from core.importhandler.importhandler import ExtractionPlan, \
     ImportHandlerException
-from api.base.forms import BaseForm, ValidationError
-from api.base.fields import ModelField, CharField, JsonField,\
-    ImportHandlerFileField, MultipleModelField, ChoiceField
+from api.base.forms import BaseForm, ValidationError, ModelField, \
+    CharField, JsonField, ImportHandlerFileField, MultipleModelField, \
+    ChoiceField
 from api.models import Tag, ImportHandler, Model
 
 

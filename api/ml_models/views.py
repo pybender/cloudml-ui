@@ -5,9 +5,9 @@ from sqlalchemy.orm import undefer, joinedload_all
 from werkzeug.datastructures import FileStorage
 
 from api import api
-from api.decorators import public_actions
 from api.import_handlers.models import DataSet
-from api.base.resources import BaseResourceSQL, NotFound, ValidationError
+from api.base.resources import BaseResourceSQL, NotFound, ValidationError, \
+    public_actions
 from models import Model, Tag, Weight, WeightsCategory
 from forms import ModelAddForm, ModelEditForm
 

@@ -1,10 +1,9 @@
 import json
 import sqlalchemy
 
-from api.base.forms import BaseForm
-from api.base.fields import (CharField, ChoiceField,
-                             BooleanField, JsonField, DocumentField)
-from api.resources import ValidationError
+from api.base.forms import BaseForm, CharField, ChoiceField, BooleanField, \
+    JsonField, DocumentField
+from api.base.resources import ValidationError
 from models import NamedFeatureType, PredefinedClassifier, PredefinedScaler, \
     PredefinedTransformer, FeatureSet, Feature
 from api.ml_models.models import Model

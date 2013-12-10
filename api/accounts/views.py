@@ -3,10 +3,9 @@ from flask.ext.restful import reqparse
 from flask import request
 
 from api import app, api
-from api.base.resources import BaseResourceSQL, NotFound
-from api.decorators import public
+from api.base.resources import BaseResourceSQL, NotFound, \
+    odesk_error_response, public
 from models import User
-from api.utils import odesk_error_response
 
 
 class AuthResource(BaseResourceSQL):

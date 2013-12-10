@@ -6,11 +6,10 @@ from sqlalchemy.orm import relationship, deferred, backref
 from sqlalchemy.sql import expression
 
 from api import app
-from api.base.models import db, BaseModel
+from api.base.models import db, BaseModel, JSONType, GridfsFile
 from api.logs.models import LogMessage
 from api.ml_models.models import Model
 from api.import_handlers.models import DataSet
-from api.db import JSONType, GridfsFile
 
 
 class TestResult(db.Model, BaseModel):
