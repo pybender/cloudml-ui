@@ -285,7 +285,7 @@ class TestExamplesTests(BaseDbTestCase, TestChecksMixin):
     def test_details_weight(self, mock_get_trainer, mock_get_vect_data):
         from core.trainer.store import TrainerStorage
         trainer = TrainerStorage.loads(
-            open('./api/fixtures/model.dat', 'r').read())
+            open('api/ml_models/model.dat', 'r').read())
         mock_get_trainer.return_value = trainer
 
         mock_get_vect_data.return_value = [0.123, 0.0] * 500

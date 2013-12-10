@@ -2,8 +2,7 @@ from sqlalchemy.orm import deferred
 from sqlalchemy import Integer, String, Enum
 from sqlalchemy import func
 
-from api.base.models import BaseMixin, db
-from api.db import JSONType
+from api.base.models import BaseMixin, db, JSONType
 
 
 class LogMessage(BaseMixin, db.Model):
