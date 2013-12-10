@@ -4,9 +4,9 @@ from mock import patch
 from moto import mock_s3
 
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS, FEATURE_COUNT, TARGET_VARIABLE
-from views import ModelResource
-from models import Model, Tag
-from fixtures import ModelData
+from ..views import ModelResource
+from ..models import Model, Tag
+from ..fixtures import ModelData
 from api.import_handlers.fixtures import ImportHandlerData, DataSetData
 from api.import_handlers.models import DataSet, ImportHandler
 from api.instances.models import Instance

@@ -9,6 +9,8 @@ db = app.sql_db
 
 
 class BaseMixin(object):
+    id = db.Column(db.Integer, primary_key=True)
+
     @declared_attr
     def __tablename__(cls):
         from utils import convert_name
@@ -38,7 +40,6 @@ class BaseMixin(object):
 
 
 class BaseModel(BaseMixin):
-    id = db.Column(db.Integer, primary_key=True)
     created_on = db.Column(db.DateTime, server_default=func.now())
     updated_on = db.Column(db.DateTime, server_default=func.now(),
                            onupdate=func.current_timestamp())

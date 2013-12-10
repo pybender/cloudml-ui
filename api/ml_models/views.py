@@ -1,7 +1,7 @@
 from flask import Response, request
 from flask.ext.restful import reqparse
 from sqlalchemy import or_
-from sqlalchemy.orm import joinedload, undefer, subqueryload, joinedload_all
+from sqlalchemy.orm import undefer, joinedload_all
 from werkzeug.datastructures import FileStorage
 
 from api import api
@@ -113,7 +113,8 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
 
         resp = Response(content)
         resp.headers['Content-Type'] = 'text/plain'
-        resp.headers['Content-Disposition'] = 'attachment; filename=%s' % filename
+        resp.headers['Content-Disposition'] = \
+            'attachment; filename=%s' % filename
         return resp
 
     # POST/PUT specific methods
@@ -127,7 +128,8 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
         if form.is_valid():
             model = form.save()
             instance = form.cleaned_data.get('aws_instance', None)
-            spot_instance_type = form.cleaned_data.get('spot_instance_type', None)
+            spot_instance_type = form.cleaned_data.get(
+                'spot_instance_type', None)
 
             tasks_list = []
             # Removing old log messages
@@ -168,8 +170,7 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
                         'max_retries': 3,
                         'interval_start': 5,
                         'interval_step': 5,
-                        'interval_max': 10
-                        }))
+                        'interval_max': 10}))
             elif not instance is None:
                 if form.params_filled:
                     train_model_args = (model.id, request.user.id)
@@ -202,12 +203,83 @@ api.add_resource(ModelResource, '/cloudml/models/')
 
 
 class TagResource(BaseResourceSQL):
-    """
-    Tags API methods
-    """
-    MESSAGE404 = "Tag doesn't exist"
-    OBJECT_NAME = 'tag'
+    """ Tags API methods """
     DEFAULT_FIELDS = [u'_id']
     Model = Tag
 
 api.add_resource(TagResource, '/cloudml/tags/')
+
+
+class WeightResource(BaseResourceSQL):
+    """ Model Parameters weights API methods """
+    ALLOWED_METHODS = ('get', )
+    GET_ACTIONS = ('brief', )
+    ENABLE_FULLTEXT_SEARCH = True
+    NEED_PAGING = True
+    FILTER_PARAMS = (('is_positive', int), ('q', str), ('parent', str), )
+
+    Model = Weight
+
+    def _prepare_filter_params(self, params):
+        pdict = super(WeightResource, self)._prepare_filter_params(params)
+        if 'is_positive' in pdict:
+            if pdict['is_positive'] == 1:
+                pdict['is_positive'] = True
+            elif pdict['is_positive'] == -1:
+                pdict['is_positive'] = False
+            else:
+                del pdict['is_positive']
+        return pdict
+
+    def _get_brief_action(self, per_page=50, **kwargs):
+        """ Gets list with Model's weighted parameters with pagination. """
+
+        def get_weights(is_positive, page):
+            model_id = kwargs.get('model_id')
+            return self.Model.query.filter(Weight.model_id == model_id,
+                                           Weight.is_positive == is_positive).\
+                order_by(Weight.value.desc()
+                         if is_positive else Weight.value).\
+                offset((page - 1) * per_page).limit(per_page)
+
+        paging_params = (('ppage', int), ('npage', int),)
+        params = self._parse_parameters(self.GET_PARAMS + paging_params)
+
+        # Paginate weights
+        ppage = params.get('ppage') or 1
+        npage = params.get('npage') or 1
+        context = {'positive_weights': get_weights(True, ppage),
+                   'negative_weights': get_weights(False, npage)}
+        return self._render(context)
+
+api.add_resource(WeightResource, '/cloudml/weights/\
+<regex("[\w\.]*"):model_id>/')
+
+
+class WeightTreeResource(BaseResourceSQL):
+    """
+    Model Parameters weights categories/weights API methods
+
+    NOTE: it used for constructing tree of model parameters.
+    """
+    FILTER_PARAMS = (('parent', str), )
+    ALLOWED_METHODS = ('get', )
+
+    def _list(self, **kwargs):
+        params = self._parse_parameters(self.FILTER_PARAMS)
+        kwargs['parent'] = params.get('parent') or ''
+
+        opts = self._prepare_show_fields_opts(
+            WeightsCategory, ('short_name', 'name'))
+        categories = WeightsCategory.query.options(
+            *opts).filter_by(**kwargs)
+
+        opts = self._prepare_show_fields_opts(
+            Weight, ('short_name', 'name', 'css_class', 'value'))
+        weights = Weight.query.options(*opts).filter_by(**kwargs)
+        context = {'categories': categories, 'weights': weights}
+        return self._render(context)
+
+api.add_resource(WeightTreeResource,
+                 '/cloudml/weights_tree/<regex("[\w\.]*"):model_id>',
+                 add_standard_urls=False)
