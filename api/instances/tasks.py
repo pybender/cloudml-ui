@@ -15,7 +15,7 @@ class InstanceRequestingError(Exception):
 
 @celery.task
 def request_spot_instance(dataset_id=None, instance_type=None, model_id=None):
-    init_logger('trainmodel_log', obj=model_id)
+    init_logger('trainmodel_log', obj=int(model_id))
 
     model = Model.query.get(model_id)
     model.status = model.STATUS_REQUESTING_INSTANCE
@@ -42,7 +42,7 @@ def get_request_instance(request_id,
                          dataset_ids=None,
                          model_id=None,
                          user_id=None):
-    init_logger('trainmodel_log', obj=model_id)
+    init_logger('trainmodel_log', obj=int(model_id))
     ec2 = AmazonEC2Helper()
     logging.info('Get spot instance request %s' % request_id)
 
@@ -121,7 +121,7 @@ def self_terminate(result=None):  # pragma: no cover
 
 @celery.task
 def cancel_request_spot_instance(request_id, model_id):
-    init_logger('trainmodel_log', obj=model_id)
+    init_logger('trainmodel_log', obj=int(model_id))
     model = Model.query.get(model_id)
 
     logging.info('Cancelling spot instance request {0!s} \

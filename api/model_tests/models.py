@@ -60,6 +60,12 @@ class TestResult(db.Model, BaseModel):
         data = loads(self.vect_data.read())
         return data.getrow(num).todense().tolist()[0]
 
+    def set_error(self, error, commit=True):
+        self.error = str(error)[:299]
+        self.status = TestResult.STATUS_ERROR
+        if commit:
+            self.save()
+
 
 class TestExample(db.Model, BaseModel):
     __tablename__ = 'test_example'

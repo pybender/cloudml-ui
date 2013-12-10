@@ -32,7 +32,7 @@ class InstanceRequestingError(Exception):
 
 @celery.task
 def request_spot_instance(dataset_id=None, instance_type=None, model_id=None):
-    init_logger('trainmodel_log', obj=model_id)
+    init_logger('trainmodel_log', obj=int(model_id))
 
     model = Model.query.get(model_id)
     model.status = model.STATUS_REQUESTING_INSTANCE
@@ -59,7 +59,7 @@ def get_request_instance(request_id,
                          dataset_ids=None,
                          model_id=None,
                          user_id=None):
-    init_logger('trainmodel_log', obj=model_id)
+    init_logger('trainmodel_log', obj=int(model_id))
     ec2 = AmazonEC2Helper()
     logging.info('Get spot instance request %s' % request_id)
 
@@ -137,7 +137,7 @@ def self_terminate(result=None):  # pragma: no cover
 
 @celery.task
 def cancel_request_spot_instance(request_id, model_id):
-    init_logger('trainmodel_log', obj=model_id)
+    init_logger('trainmodel_log', obj=int(model_id))
     model = Model.query.get(model_id)
 
     logging.info('Cancelling spot instance request {0!s} \
@@ -175,7 +175,7 @@ def import_data(dataset_id, model_id=None, test_id=None):
         if obj:
             obj.status = obj.STATUS_IMPORTING
             obj.save()
-        init_logger('importdata_log', obj=dataset_id)
+        init_logger('importdata_log', obj=dataset.id)
         logging.info('Loading dataset %s' % dataset.id)
 
         import_start_time = datetime.now()
@@ -250,7 +250,7 @@ def upload_dataset(dataset_id):
     try:
         if not dataset:
             raise ValueError('DataSet not found')
-        init_logger('importdata_log', obj=dataset_id)
+        init_logger('importdata_log', obj=dataset.id)
         logging.info('Uploading dataset %s' % dataset.id)
 
         dataset.status = dataset.STATUS_UPLOADING
@@ -279,7 +279,7 @@ def train_model(dataset_ids, model_id, user_id):
     """
     Train new model celery task.
     """
-    init_logger('trainmodel_log', obj=model_id)
+    init_logger('trainmodel_log', obj=int(model_id))
 
     user = User.query.get(user_id)
     model = Model.query.get(model_id)
@@ -354,7 +354,7 @@ def fill_model_parameter_weights(model_id):
     """
     Adds model parameters weights to db.
     """
-    init_logger('trainmodel_log', obj=model_id)
+    init_logger('trainmodel_log', obj=int(model_id))
     logging.info("Starting to fill model weights")
     try:
         model = Model.query.get(model_id)
@@ -432,7 +432,7 @@ def run_test(dataset_ids, test_id):
     """
     Running tests for trained model
     """
-    init_logger('runtest_log', obj=test_id)
+    init_logger('runtest_log', obj=int(test_id))
 
     test = TestResult.query.get(test_id)
     datasets = DataSet.query.filter(DataSet.id.in_(dataset_ids)).all()
@@ -484,7 +484,7 @@ def run_test(dataset_ids, test_id):
             model.save()
 
         all_count = metrics._preds.size
-        test.dataset_id = str(dataset_ids[0])
+        test.dataset = dataset
         test.examples_count = all_count
         test.memory_usage = max(mem_usage)
 
@@ -575,7 +575,7 @@ def calculate_confusion_matrix(test_id, weight0, weight1):
     """
     Calculate confusion matrix for test.
     """
-    init_logger('confusion_matrix_log', obj=test_id)
+    init_logger('confusion_matrix_log', obj=int(test_id))
 
     if weight0 == 0 and weight1 == 0:
         raise ValueError('Both weights can not be 0')
@@ -659,7 +659,7 @@ def get_csv_results(model_id, test_id, fields):
                 writer.writerow(rows)
         return filename
 
-    init_logger('runtest_log', obj=test_id)
+    init_logger('runtest_log', obj=int(test_id))
 
     test = TestResult.query.filter_by(model_id=model_id, id=test_id).first()
     if not test:

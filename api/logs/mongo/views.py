@@ -4,7 +4,7 @@ from api import app
 
 class LogResource(BaseResourceMongo):
     """ Log API methods """
-    FILTER_PARAMS = (('type', str), ('level', str), ('params.obj', str))
+    FILTER_PARAMS = (('type', str), ('level', str), ('params.obj', int))
     NEED_PAGING = True
     DETAILS_PARAM = '_id'
 
@@ -16,7 +16,6 @@ class LogResource(BaseResourceMongo):
         params = super(LogResource, self)._prepare_filter_params(params)
 
         if 'level' in params:
-            print "!!!!!!", params
             all_levels = ['CRITICAL', 'ERROR', 'WARN', 'WARNING',
                           'INFO', 'DEBUG', 'NOTSET']
             if params['level'] in all_levels:
