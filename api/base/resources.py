@@ -418,7 +418,7 @@ class BaseResourceSQL(BaseResource):
 
     def _build_list_query(self, params, **kwargs):
         # TODO: What about joins?
-        filter_params = self.__prepare_filter_params(params)
+        filter_params = self._prepare_filter_params(params)
         filter_params.update(kwargs)
         cursor = self._set_list_query_opts(self.Model.query, params)
         fields = self._get_show_fields(params)
@@ -445,11 +445,18 @@ class BaseResourceSQL(BaseResource):
             if opts:
                 cursor = cursor.options(*opts)
 
-        print filter_params
-
         for name, val in filter_params.iteritems():
             cursor = cursor.filter(self.__build_query_item(name, val))
         return cursor
+
+    def _prepare_show_fields_opts(self, Model, fields):
+        opts = []
+        for field in Model.__table__.columns.keys():
+            if field in fields or field == 'id':
+                opts.append(undefer(getattr(Model, field)))
+            else:
+                opts.append(defer(getattr(Model, field)))
+        return opts
 
     def _set_list_query_opts(self, cursor, params):
         return cursor
@@ -469,7 +476,7 @@ class BaseResourceSQL(BaseResource):
         else:
             return getattr(self.Model, name) == val
 
-    def __prepare_filter_params(self, params):
+    def _prepare_filter_params(self, params):
         def is_none_or_empty(val):
             return val is None or val == ''
 

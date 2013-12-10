@@ -4,7 +4,7 @@ import json
 from sqlalchemy.orm import relationship, deferred, backref
 from sqlalchemy.dialects import postgresql
 
-from api.base.models import db, BaseModel
+from api.base.models import db, BaseModel, BaseMixin
 from api.db import JSONType, GridfsFile
 from api.models import LogMessage
 
@@ -166,7 +166,7 @@ data_sets_table = db.Table(
 )
 
 
-class Tag(db.Model, BaseModel):
+class Tag(db.Model, BaseMixin):
     """
     Model tag.
     """
@@ -174,7 +174,7 @@ class Tag(db.Model, BaseModel):
     count = db.Column(db.Integer)
 
 
-class WeightsCategory(db.Model, BaseModel):
+class WeightsCategory(db.Model, BaseMixin):
     """
     Represents Model Parameter Weights Category.
 
@@ -192,7 +192,7 @@ class WeightsCategory(db.Model, BaseModel):
     parent = db.Column(db.String(200))
 
 
-class Weight(db.Model, BaseModel):
+class Weight(db.Model, BaseMixin):
     """
     Represents Model Parameter Weight
     """

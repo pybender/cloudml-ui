@@ -267,82 +267,82 @@ def sse_request():  # pragma: no cover
 # api.add_resource(Models, '/cloudml/models/')
 
 
-class WeightsResource(BaseResource):
-    """
-    Model Parameters weights API methods
-    """
-    GET_ACTIONS = ('brief', )
-    ENABLE_FULLTEXT_SEARCH = True
-    OBJECT_NAME = 'weight'
-    NEED_PAGING = True
-    FILTER_PARAMS = (('is_positive', int), ('q', str), ('parent', str), )
+# class WeightsResource(BaseResource):
+#     """
+#     Model Parameters weights API methods
+#     """
+#     GET_ACTIONS = ('brief', )
+#     ENABLE_FULLTEXT_SEARCH = True
+#     OBJECT_NAME = 'weight'
+#     NEED_PAGING = True
+#     FILTER_PARAMS = (('is_positive', int), ('q', str), ('parent', str), )
 
-    @property
-    def Model(self):
-        return app.db.Weight
+#     @property
+#     def Model(self):
+#         return app.db.Weight
 
-    def _prepare_filter_params(self, params):
-        pdict = super(WeightsResource, self)._prepare_filter_params(params)
-        if 'is_positive' in pdict:
-            if pdict['is_positive'] == 1:
-                pdict['is_positive'] = True
-            elif pdict['is_positive'] == -1:
-                pdict['is_positive'] = False
-            else:
-                del pdict['is_positive']
-        return pdict
+#     def _prepare_filter_params(self, params):
+#         pdict = super(WeightsResource, self)._prepare_filter_params(params)
+#         if 'is_positive' in pdict:
+#             if pdict['is_positive'] == 1:
+#                 pdict['is_positive'] = True
+#             elif pdict['is_positive'] == -1:
+#                 pdict['is_positive'] = False
+#             else:
+#                 del pdict['is_positive']
+#         return pdict
 
-    def _get_brief_action(self, per_page=50, **kwargs):
-        """
-        Gets list with Model's weighted parameters with pagination.
-        """
-        def get_weights(is_positive, page):
-            model_id = kwargs.get('model_id')
-            return self.Model.find({'model_id': model_id,
-                                    'is_positive': is_positive}, query_fields).\
-                sort('value', -1 if is_positive else 1 ).\
-                skip((page - 1) * per_page).limit(per_page)
+#     def _get_brief_action(self, per_page=50, **kwargs):
+#         """
+#         Gets list with Model's weighted parameters with pagination.
+#         """
+#         def get_weights(is_positive, page):
+#             model_id = kwargs.get('model_id')
+#             return self.Model.find({'model_id': model_id,
+#                                     'is_positive': is_positive}, query_fields).\
+#                 sort('value', -1 if is_positive else 1 ).\
+#                 skip((page - 1) * per_page).limit(per_page)
 
-        paging_params = (('ppage', int), ('npage', int),)
-        params = self._parse_parameters(self.GET_PARAMS + paging_params)
+#         paging_params = (('ppage', int), ('npage', int),)
+#         params = self._parse_parameters(self.GET_PARAMS + paging_params)
 
-        # Paginate weights
-        ppage = params.get('ppage') or 1
-        npage = params.get('npage') or 1
-        query_fields, show_fields = self._get_fields(params)
-        context = {'positive_weights': get_weights(True, ppage),
-                   'negative_weights': get_weights(False, npage)}
-        return self._render(context)
+#         # Paginate weights
+#         ppage = params.get('ppage') or 1
+#         npage = params.get('npage') or 1
+#         query_fields, show_fields = self._get_fields(params)
+#         context = {'positive_weights': get_weights(True, ppage),
+#                    'negative_weights': get_weights(False, npage)}
+#         return self._render(context)
 
-api.add_resource(WeightsResource, '/cloudml/weights/\
-<regex("[\w\.]*"):model_id>/')
+# api.add_resource(WeightsResource, '/cloudml/weights/\
+# <regex("[\w\.]*"):model_id>/')
 
 
-class WeightsTreeResource(BaseResource):
-    """
-    Model Parameters weights categories/weights API methods
+# class WeightsTreeResource(BaseResource):
+#     """
+#     Model Parameters weights categories/weights API methods
 
-    NOTE: it used for constructing tree of model parameters.
-    """
+#     NOTE: it used for constructing tree of model parameters.
+#     """
 
-    FILTER_PARAMS = (('parent', str), )
+#     FILTER_PARAMS = (('parent', str), )
 
-    def _list(self, **kwargs):
-        """
-        """
-        params = self._parse_parameters(self.FILTER_PARAMS)
-        kwargs['parent'] = params.get('parent') or ''
+#     def _list(self, **kwargs):
+#         """
+#         """
+#         params = self._parse_parameters(self.FILTER_PARAMS)
+#         kwargs['parent'] = params.get('parent') or ''
 
-        categories = app.db.WeightsCategory.find(kwargs,
-                                                 ('short_name', 'name'))
-        weights = app.db.Weight.find(kwargs, ('name', 'value',
-                                              'css_class', 'short_name'))
-        context = {'categories': categories, 'weights': weights}
-        return self._render(context)
+#         categories = app.db.WeightsCategory.find(kwargs,
+#                                                  ('short_name', 'name'))
+#         weights = app.db.Weight.find(kwargs, ('name', 'value',
+#                                               'css_class', 'short_name'))
+#         context = {'categories': categories, 'weights': weights}
+#         return self._render(context)
 
-api.add_resource(WeightsTreeResource,
-                 '/cloudml/weights_tree/<regex("[\w\.]*"):model_id>',
-                 add_standard_urls=False)
+# api.add_resource(WeightsTreeResource,
+#                  '/cloudml/weights_tree/<regex("[\w\.]*"):model_id>',
+#                  add_standard_urls=False)
 
 
 # class ImportHandlerResource(BaseResource):
