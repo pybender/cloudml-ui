@@ -40,7 +40,7 @@ angular.module('app.datas.controllers', ['app.config', ])
         $scope.loading_state = true
     )
 
-    $scope.model = new Model({_id: $scope.test.model_id})
+    $scope.model = new Model({id: $scope.test.model_id})
     $scope.model.$load(show: 'name,labels').then (->
       $scope.labels = $scope.model.labels
     ), ((opts) ->

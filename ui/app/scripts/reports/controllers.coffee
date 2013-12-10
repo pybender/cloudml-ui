@@ -36,10 +36,10 @@ angular.module('app.reports.controllers', ['app.config', ])
             param = get_params[i]
             num = Math.floor(i / 2 + 1)
             if i % 2 == 1
-                val['test'] = {'_id': param}
+                val['test'] = {'id': param}
                 data.push(val)
             else
-                val = {'model': {'_id': param}}
+                val = {'model': {'id': param}}
         $scope.form_data = data
         $scope.report = new CompareReport(data)
 

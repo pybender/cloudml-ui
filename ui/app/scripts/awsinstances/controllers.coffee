@@ -78,7 +78,7 @@ created_by'
     $scope.activeColumns = [$scope.REQUEST_SPOT_INSTANCE]
 
     AwsInstance.$loadAll(
-      show: 'name,_id,ip,is_default'
+      show: 'name,id,ip,is_default'
     ).then ((opts) ->
       $scope.instances = opts.objects
       if $scope.instances.length != 0

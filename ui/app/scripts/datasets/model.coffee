@@ -47,7 +47,7 @@ angular.module('app.datasets.model', ['app.config'])
         return "#{settings.apiUrl}importhandlers/#{handler_id}/datasets/"
 
       $generateS3Url: () =>
-        @$make_request("#{@BASE_API_URL}#{@_id}/action/generate_url/",
+        @$make_request("#{@BASE_API_URL}#{@id}/action/generate_url/",
                        {}, 'GET', {})
 
       $save: (data) =>
@@ -72,7 +72,7 @@ angular.module('app.datasets.model', ['app.config'])
         @$make_all_request(DataSet.$get_api_url(handler_id), resolver, opts)
 
       $reupload: =>
-        url = "#{@BASE_API_URL}#{@_id}/action/reupload/"
+        url = "#{@BASE_API_URL}#{@id}/action/reupload/"
         @$make_request(url, {}, "PUT", {}).then(
           (resp) =>
             @status = resp.data.dataset.status)
@@ -81,7 +81,7 @@ angular.module('app.datasets.model', ['app.config'])
         if @status in [@STATUS_IMPORTING, @STATUS_UPLOADING]
           throw new Error "Can't re-import a dataset that is importing now"
 
-        url = "#{@BASE_API_URL}#{@_id}/action/reimport/"
+        url = "#{@BASE_API_URL}#{@id}/action/reimport/"
         @$make_request(url, {}, "PUT", {}).then(
           (resp) =>
             @status = resp.data.dataset.status)

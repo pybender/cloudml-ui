@@ -447,7 +447,7 @@ class BaseResourceSQL(BaseResource):
 
         for name, val in filter_params.iteritems():
             fltr = self.__build_query_item(name, val)
-            if fltr:
+            if not fltr is None:
                 cursor = cursor.filter(fltr)
         return cursor
 
