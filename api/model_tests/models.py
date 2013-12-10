@@ -92,14 +92,14 @@ class TestExample(db.Model, BaseModel):
         if not self.data_input:
             return None
 
-        from api.helpers.features import get_features_vect_data
+        from api.ml_models.helpers.features import get_features_vect_data
         model = self.model
         feature_model = model.get_trainer()._feature_model
         data = get_features_vect_data(self.test_result.get_vect_data(self.num),
                                       feature_model.features.items(),
                                       feature_model.target_variable)
 
-        from api.helpers.weights import get_example_params
+        from api.ml_models.helpers.weights import get_example_params
         model_weights = list(model.weights)
         weighted_data = dict(get_example_params(
             model_weights, self.data_input, data))

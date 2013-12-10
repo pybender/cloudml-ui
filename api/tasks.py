@@ -370,7 +370,7 @@ def fill_model_parameter_weights(model_id):
             raise InvalidOperationError('Weights for model %s already \
     filled: %s' % (model_id, count))
 
-        from helpers.weights import calc_weights_css
+        from api.ml_models.helpers.weights import calc_weights_css
         positive_weights = []
         negative_weights = []
         if len(positive) > 0:
@@ -511,7 +511,7 @@ def run_test(dataset_ids, test_id):
                 logging.info('Processed %s rows so far' % n)
 
             example, new_row = _add_example_to_db(
-                 test, row, label, pred, prob, n)
+                test, row, label, pred, prob, n)
             # test.examples_size += (get_doc_size(example) / 1024.0 / 1024.0)
             # example_ids.append(str(example.id))
         app.sql_db.session.commit()
