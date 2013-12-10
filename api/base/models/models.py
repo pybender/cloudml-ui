@@ -24,8 +24,7 @@ class BaseMixin(JsonSerializableMixin):
                 setattr(self, field, {
                     '_id': user.id,
                     'uid': user.uid,
-                    # TODO
-                    # 'name': user.name
+                    'name': user.name
                 })
 
     def save(self, commit=True):

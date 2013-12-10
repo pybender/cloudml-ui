@@ -294,7 +294,7 @@ def train_model(dataset_ids, model_id, user_id):
         model.trained_by = {
             'id': user.id,
             'uid': user.uid,
-            # 'name': user.name # TODO
+            'name': user.name
         }
         model.save()
         feature_model = FeatureModel(model.get_features_json(),
