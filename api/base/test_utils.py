@@ -104,7 +104,7 @@ class TestChecksMixin(object):
         self.assertEquals(count, len(obj_resp), obj_resp)
 
         if len(obj_resp):
-            obj = obj_resp[0]
+            obj = obj_resp[-1]  # TODO: invest. that 1st el contains all fields
             fields = self._get_fields(show)
             self.assertEquals(
                 len(fields), len(obj.keys()),

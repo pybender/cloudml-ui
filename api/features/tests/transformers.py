@@ -25,6 +25,10 @@ class PredefinedTransformersTests(FeaturePredefinedItemsTestMixin):
         self.obj = PredefinedTransformer.query.all()[0]
 
     def test_list(self):
+        # from sqlalchemy.orm import exc as orm_exc, undefer, defer
+        # curs = PredefinedTransformer.query.options(defer(PredefinedTransformer.name), defer(PredefinedTransformer.created_on)).all()
+        # for c in curs:
+        #     print c.__dict__
         resp = self.check_list(show='name')
         resp = resp['transformers']
         self.assertTrue(len(resp), "No transformers returned")

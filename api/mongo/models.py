@@ -41,17 +41,6 @@ class Weight(BaseDocument):
     }
     use_dot_notation = True
 
-app.db.Weight.collection.ensure_index(
-    [
-        ('name', 'text'),
-        ('value', 'text')
-    ],
-    weights={
-        'name': 10,
-        'value': 5,
-    }
-)
-
 
 @app.conn.register
 class ImportHandler(BaseDocument):
@@ -202,8 +191,6 @@ class Classifier(BaseDocument):
         'updated_on': datetime.utcnow,
     }
     use_dot_notation = True
-
-app.db.Classifier.collection.ensure_index('name', unique=True)
 
 
 @app.conn.register
@@ -474,8 +461,6 @@ class NamedFeatureType(BaseDocument):
     def __repr__(self):
         return '<Named Feature Type %r>' % self.name
 
-app.db.NamedFeatureType.collection.ensure_index('name', unique=True)
-
 
 # TODO: move and use it in cloudml project
 TRANSFORMERS = {
@@ -567,8 +552,6 @@ class Transformer(BaseDocument):
     def __repr__(self):
         return '<Transformer %r>' % self.type
 
-app.db.Transformer.collection.ensure_index('name', unique=True)
-
 
 #from core.trainer.scalers import SCALERS
 from core.trainer.scalers import MinMaxScaler, StandardScaler
@@ -618,8 +601,6 @@ class Scaler(BaseDocument):
     def __repr__(self):
         return '<Scaler %r>' % self.type
 
-app.db.Transformer.collection.ensure_index('name', unique=True)
-
 
 @app.conn.register
 class Feature(BaseDocument):
@@ -658,5 +639,3 @@ class Feature(BaseDocument):
     }
     use_dot_notation = True
     use_autorefs = True
-
-app.db.Feature.collection.ensure_index('feature_set_id')

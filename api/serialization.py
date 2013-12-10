@@ -1,10 +1,83 @@
-import json
-import datetime
+from datetime import datetime, date, time
 import mongokit
 from sqlalchemy import orm
 from bson.objectid import ObjectId
 
 from api import app
+
+
+class JsonSerializableMixin(object):
+
+    def __json__(self):
+        """
+        Converts all the properties of the object into a dict for use in json.
+        You can define the following in your class
+
+        _json_eager_load :
+            list of which child classes need to be eagerly loaded. This applies
+            to one-to-many relationships defined in SQLAlchemy classes.
+
+        _base_blacklist :
+            top level blacklist list of which properties not to include in JSON
+
+        _json_blacklist :
+            blacklist list of which properties not to include in JSON
+
+        :return: dictionary ready to be jsonified
+        :rtype: <dict>
+        """
+        props = {}
+
+        # grab the json_eager_load set, if it exists
+        # use set for easy 'in' lookups
+        json_eager_load = set(getattr(self, '_json_eager_load', []))
+        # now load the property if it exists
+        # (does this issue too many SQL statements?)
+        for prop in json_eager_load:
+            getattr(self, prop, None)
+
+        # we make a copy because the dict will change if the database
+        # is updated / flushed
+        options = self.__dict__.copy()
+
+        # setup the blacklist
+        # use set for easy 'in' lookups
+        blacklist = set(getattr(self, '_base_blacklist', []))
+        # extend the base blacklist with the json blacklist
+        blacklist.update(getattr(self, '_json_blacklist', []))
+
+        for key in options:
+            # skip blacklisted, private and SQLAlchemy properties
+            if key in blacklist or key.startswith(('__', '_sa_')):
+                continue
+
+            # format and date/datetime/time properties to isoformat
+            obj = getattr(self, key)
+            if isinstance(obj, (datetime, date, time)):
+                props[key] = obj.isoformat()
+            else:
+                # get the class property value
+                attr = getattr(self, key)
+                # let see if we need to eagerly load it
+                if key in json_eager_load:
+                    # this is for SQLAlchemy foreign key fields that
+                    # indicate with one-to-many relationships
+                    if not hasattr(attr, 'pk') and attr:
+                        # jsonify all child objects
+                        attr = [x.__json__() for x in attr]
+                else:
+                    # convert all non integer strings to string or if
+                    # string conversion is not possible, convert it to
+                    # Unicode
+                    if attr and not isinstance(attr, (int, float)):
+                        try:
+                            attr = str(attr)
+                        except UnicodeEncodeError:
+                            attr = unicode(attr)  # .encode('utf-8')
+
+                props[key] = attr
+
+        return props
 
 
 def encode_model(obj):
@@ -15,18 +88,21 @@ def encode_model(obj):
         out = encode_model(dict(obj))
     elif isinstance(obj, mongokit.cursor.Cursor):
         out = [encode_model(item) for item in obj]
+    elif isinstance(obj, JsonSerializableMixin):
+        out = obj.__json__()
     elif isinstance(obj, app.sql_db.Model):
         data = obj.__dict__
+        # TODO: Check whether it could cause any issues?
         if '_sa_instance_state' in data:
             del data['_sa_instance_state']
         out = encode_model(data)
     elif isinstance(obj, orm.Query):
-        out = [encode_model(item) for item in obj.all()]
+        out = list(obj.all())
     elif isinstance(obj, list):
         out = [encode_model(item) for item in obj]
     elif isinstance(obj, dict):
         out = dict([(k, encode_model(v)) for (k, v) in obj.items()])
-    elif isinstance(obj, datetime.datetime):
+    elif isinstance(obj, datetime):
         out = str(obj)
     elif isinstance(obj, ObjectId):
         out = str(obj)
@@ -36,47 +112,3 @@ def encode_model(obj):
         except UnicodeEncodeError:
             out = obj.encode('utf-8')
     return out
-
-
-# TODO: unused code
-class Serializer(object):  # pragma: no cover
-    __public__ = None
-    __all_public__ = None
-    "Must be implemented by implementors"
-
-    def to_brief_dict(self):
-        return self._to_dict(self.__public__)
-
-    def to_full_dict(self):
-        return self._to_dict(self.__all_public__ or self.__public__)
-
-    def _to_dict(self, fields):
-        dict = {}
-        for public_key in fields:
-            value = getattr(self, public_key)
-            if value:
-                dict[public_key] = value
-        return dict
-
-
-# TODO: unused code
-class ModelEncoder(json.JSONEncoder):  # pragma: no cover
-    method_name = 'to_brief_dict'
-
-    def default(self, obj):
-        if isinstance(obj, Serializer):
-            method = getattr(obj, self.method_name)
-            return method()
-        elif isinstance(obj, datetime):
-            return obj.isoformat()
-        return json.JSONEncoder.default(self, obj)
-
-
-# TODO: unused code
-class BriefDetailsEncoder(ModelEncoder):  # pragma: no cover
-    pass
-
-
-# TODO: unused code
-class FullDetailsEncoder(BriefDetailsEncoder):  # pragma: no cover
-    method_name = 'to_full_dict'

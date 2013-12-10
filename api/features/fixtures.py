@@ -78,10 +78,24 @@ class PredefinedTransformerData(DataSet):
         updated_on = "2013-04-19 14:37:23.145000"
         params = {}
 
+    class transformer_03:
+        name = u"other transformer #2"
+        type = u"Count"
+        created_on = "2013-04-19 14:37:23.145000"
+        updated_on = "2013-04-19 14:37:23.145000"
+        params = {}
+
 
 class PredefinedScalerData(DataSet):
     class scaler_01:
         name = u"my scaler"
+        type = u"StandardScaler"
+        created_on = "2013-04-19 14:37:23.145000"
+        updated_on = "2013-04-19 14:37:23.145000"
+        params = {"with_std": True}
+
+    class scaler_02:
+        name = u"my scaler #2"
         type = u"StandardScaler"
         created_on = "2013-04-19 14:37:23.145000"
         updated_on = "2013-04-19 14:37:23.145000"
@@ -96,11 +110,27 @@ class PredefinedClassifierData(DataSet):
         created_on = "2013-04-19 14:37:23.145000"
         updated_on = "2013-04-19 14:37:23.145000"
 
+    class lr_classifier_01:
+        name = "another classifier"
+        type = "logistic regression"
+        params = {"penalty": "l2", "C": "1"}
+        created_on = "2013-04-19 14:37:23.145000"
+        updated_on = "2013-04-19 14:37:23.145000"
 
 
 class NamedFeatureTypeData(DataSet):
-    class scaler_01:
+    class type_01:
         name = u"str_to_timezone"
+        type = u"composite"
+        created_on = "2013-04-19 14:37:23.145000"
+        updated_on = "2013-04-19 14:37:23.145000"
+        params = {"chain": [{"params": {"pattern": "UTC([-\\+]+\\d\\d).*"},
+                             "type": "regex"},
+                            {"type": "int"}]}
+        input_format = None
+
+    class type_02:
+        name = u"str_to_timezone2"
         type = u"composite"
         created_on = "2013-04-19 14:37:23.145000"
         updated_on = "2013-04-19 14:37:23.145000"

@@ -3,12 +3,13 @@ from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy import func
 
 from api.db import JSONType
+from api.serialization import JsonSerializableMixin
 from api import app
 
 db = app.sql_db
 
 
-class BaseMixin(object):
+class BaseMixin(JsonSerializableMixin):
     id = db.Column(db.Integer, primary_key=True)
 
     @declared_attr
