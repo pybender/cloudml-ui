@@ -403,8 +403,6 @@ class BaseResourceSQL(BaseResource):
                     sort_by = desc(sort_by)
                 cursor = cursor.order_by(sort_by)
 
-        print cursor
-
         return cursor
 
     def _prepare_model_list(self, cursor, params):
