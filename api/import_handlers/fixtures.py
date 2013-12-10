@@ -123,7 +123,7 @@ class DataSetData(DataSet):
         import_params = '{}'
         on_s3 = False
         compress = True
-        filename = "api/fixtures/ds.gz"
+        filename = "api/import_handlers/ds.gz"
         filesize = 100
         records_count = 100
         time = 200
@@ -141,7 +141,7 @@ class DataSetData(DataSet):
         import_params = '{}'
         on_s3 = False
         compress = True
-        filename = "api/fixtures/ds2.gz"
+        filename = "api/import_handlers/ds2.gz"
         filesize = 100
         records_count = 100
         time = 200
@@ -158,7 +158,7 @@ class DataSetData(DataSet):
         import_params = '{}'
         on_s3 = False
         compress = True
-        filename = "api/fixtures/ds_csv.gz"
+        filename = "api/import_handlers/ds_csv.gz"
         filesize = 100
         records_count = 100
         time = 200
