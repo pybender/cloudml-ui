@@ -1,10 +1,9 @@
-from datetime import datetime, date, time
+from datetime import datetime
 import mongokit
 from sqlalchemy import orm
 from bson.objectid import ObjectId
 
-from api import app
-from api.base.models.serialization import JsonSerializableMixin
+from api.base.models import JsonSerializableMixin, db
 
 
 def encode_model(obj):
@@ -17,12 +16,12 @@ def encode_model(obj):
         out = [encode_model(item) for item in obj]
     elif isinstance(obj, JsonSerializableMixin):
         out = obj.__json__()
-    elif isinstance(obj, app.sql_db.Model):
-        data = obj.__dict__
-        # TODO: Check whether it could cause any issues?
-        if '_sa_instance_state' in data:
-            del data['_sa_instance_state']
-        out = encode_model(data)
+    elif isinstance(obj, db.Model):
+        out = {}
+        for key, val in obj.__dict__.iteritems():
+            if key.startswith(('__', '_sa_')):
+                continue
+            out[key] = encode_model(val)
     elif isinstance(obj, orm.Query):
         out = list(obj.all())
     elif isinstance(obj, list):

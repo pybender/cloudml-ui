@@ -11,7 +11,7 @@ from sqlalchemy.orm import exc as orm_exc, undefer, defer, \
 from .decorators import authenticate
 from .utils import crossdomain, ERR_NO_SUCH_MODEL, odesk_error_response, \
     ERR_INVALID_METHOD, ERR_INVALID_DATA
-from api.serialization import encode_model
+from serialization import encode_model
 from api import app
 from .exceptions import NotFound, ValidationError
 
