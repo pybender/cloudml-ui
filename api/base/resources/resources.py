@@ -339,6 +339,7 @@ class BaseResourceMongo(BaseResource):
                 del filter_params[self.FULLTEXT_SEARCH_PARAM_NAME]
 
             kwargs.update(filter_params)
+            print kwargs
             cursor = self.Model.find(kwargs, fields)
             if sort_by:
                 cursor.sort(sort_by, order)

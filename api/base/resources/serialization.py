@@ -3,7 +3,7 @@ import mongokit
 from sqlalchemy import orm
 from bson.objectid import ObjectId
 
-from api.base.models import JsonSerializableMixin, db
+from api.base.models import db
 
 
 def encode_model(obj):
@@ -14,8 +14,6 @@ def encode_model(obj):
         out = encode_model(dict(obj))
     elif isinstance(obj, mongokit.cursor.Cursor):
         out = [encode_model(item) for item in obj]
-    elif isinstance(obj, JsonSerializableMixin):
-        out = obj.__json__()
     elif isinstance(obj, db.Model):
         out = {}
         for key, val in obj.__dict__.iteritems():

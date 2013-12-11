@@ -29,7 +29,13 @@ class LogsTests(BaseMongoTestCase, TestChecksMixin, BaseDbTestCase):
         logger.addHandler(LogMessageHandler(
             log_type='testing',
             params={
-                'obj': '123'
+                'obj': 123
+            }
+        ))
+        logger.addHandler(LogMessageHandler(
+            log_type='testing',
+            params={
+                'obj': 124
             }
         ))
         logger.info('Info message')
@@ -47,6 +53,7 @@ class LogsTests(BaseMongoTestCase, TestChecksMixin, BaseDbTestCase):
         # items = json.loads(resp.data)['logs']
         # self.assertEquals(len(items), 5)
 
+
         scenario = [
             ('CRITICAL', 1, ('CRITICAL',)),
             ('ERROR', 2, ('ERROR', 'CRITICAL')),
@@ -63,6 +70,7 @@ class LogsTests(BaseMongoTestCase, TestChecksMixin, BaseDbTestCase):
             }))
             resp = self.client.get(url, headers=HTTP_HEADERS)
             self.assertEquals(resp.status_code, httplib.OK, level)
+            print resp.data
             items = json.loads(resp.data)['logs']
             print "l", len(items), count, level
             self.assertEquals(len(items), count, level)

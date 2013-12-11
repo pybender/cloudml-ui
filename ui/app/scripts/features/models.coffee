@@ -196,13 +196,13 @@ scaler,default,is_target_variable,created_on,created_by,required'
             @is_target_variable = origData.is_target_variable == true || \
               origData.is_target_variable == 'True'
 
-          if origData.params?
-            if _.isObject(@params)
-              @paramsDict = _.clone(@params)
-            else
-              @paramsDict = JSON.parse(@params)
-          else
-            @paramsDict = {}
+          # if origData.params?
+          #   if _.isObject(@params)
+          #     @paramsDict = _.clone(@params)
+          #   else
+          #     @paramsDict = JSON.parse(@params)
+          # else
+          @paramsDict = {}
 
       constructor: (opts) ->
         super opts

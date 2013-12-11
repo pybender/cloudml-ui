@@ -15,6 +15,7 @@ class LogResource(BaseResourceMongo):
     def _prepare_filter_params(self, params):
         params = super(LogResource, self)._prepare_filter_params(params)
 
+        
         if 'level' in params:
             all_levels = ['CRITICAL', 'ERROR', 'WARN', 'WARNING',
                           'INFO', 'DEBUG', 'NOTSET']
