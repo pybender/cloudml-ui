@@ -129,7 +129,7 @@ class DataSetData(DataSet):
         time = 200
         data_fields = ["employer.country"]
         format = "json"
-        import_handler = ImportHandlerData.import_handler_01
+        import_handler_id = ImportHandlerData.import_handler_01.ref('id')
 
     class dataset_02:
         name = "DS 2"
@@ -146,7 +146,7 @@ class DataSetData(DataSet):
         records_count = 100
         time = 200
         format = "json"
-        import_handler = ImportHandlerData.import_handler_01
+        import_handler_id = ImportHandlerData.import_handler_01.ref('id')
 
     class dataset_03:
         name = "DS 3 (csv)"
@@ -163,4 +163,4 @@ class DataSetData(DataSet):
         records_count = 100
         time = 200
         format = "csv"
-        import_handler = ImportHandlerData.import_handler_01
+        import_handler_id = ImportHandlerData.import_handler_01.ref('id')

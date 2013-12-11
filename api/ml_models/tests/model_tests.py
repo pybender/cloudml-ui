@@ -5,7 +5,7 @@ from moto import mock_s3
 
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS, FEATURE_COUNT, TARGET_VARIABLE
 from ..views import ModelResource
-from ..models import Model, Tag
+from ..models import Model, Tag, db
 from ..fixtures import ModelData
 from api.import_handlers.fixtures import ImportHandlerData, DataSetData
 from api.import_handlers.models import DataSet, ImportHandler
@@ -23,7 +23,7 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
     RESOURCE = ModelResource
     Model = Model
     datasets = [ImportHandlerData, DataSetData, ModelData,
-                InstanceData, TestResultData, TestExampleData]
+                 InstanceData, TestResultData, TestExampleData]
 
     def setUp(self):
         super(ModelsTests, self).setUp()
@@ -40,7 +40,7 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
 
     def test_list(self):
         self.check_list(show='')
-        self.check_list(show='created_on,updated_on')
+        self.check_list(show='created_on,updated_on,name')
 
     def test_filter(self):
         self.check_list(data={'status': 'New'}, query_params={'status': 'New'})
@@ -48,8 +48,8 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         self.check_list(data={'name': 'Test'}, query_params={})
 
         # Comparable filter
-        self.check_list(data={'comparable': '1'}, query_params={'comparable': True})
-        self.check_list(data={'comparable': '0'}, query_params={'comparable': False})
+        #self.check_list(data={'comparable': '1'}, query_params={'comparable': True})
+        #self.check_list(data={'comparable': '0'}, query_params={'comparable': False})
 
     def test_details(self):
         self.check_details(show='')
