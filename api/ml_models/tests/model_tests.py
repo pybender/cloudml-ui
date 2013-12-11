@@ -166,38 +166,39 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue(features_set, "Features set not created")
         self.assertEquals(features_set.schema_name, "bestmatch")
 
-    # TODO: should we allow this?
     def test_post_new_model_without_features(self):
-        pass
-        # name = 'test one'
-        # handler = open('./conf/extract.json', 'r').read()
-        # post_data = {'test_import_handler_file': handler,
-        #              'train_import_handler_file': handler,
-        #              'name': name}
-        # resp, model = self.check_edit(post_data)
-        # self.assertEquals(model.name, name)
-        # self.assertEquals(model.status, model.STATUS_NEW)
-        #
-        # classifier = model.classifier
-        # self.assertTrue(classifier, "classifier not set")
-        #
-        # features_set = model.features_set
-        # self.assertTrue(features_set, "Features set not created")
+        """
+        User could create new model without specifying features
+        and then start adding them using UI.
+        """
+        name = 'test one'
+        handler = open('./conf/extract.json', 'r').read()
+        post_data = {'test_import_handler_file': handler,
+                     'train_import_handler_file': handler,
+                     'name': name}
+        resp, model = self.check_edit(post_data)
+        self.assertEquals(model.name, name)
+        self.assertEquals(model.status, model.STATUS_NEW)
+        
+        classifier = model.classifier
+        self.assertTrue(classifier, "classifier not set")
+        
+        features_set = model.features_set
+        self.assertTrue(features_set, "Features set not created")
 
-    # TODO: what to do with features here?
     def test_post_trained_model(self):
-        pass
-        # name = 'new2'
-        # handler = open('./conf/extract.json', 'r').read()
-        # trainer = open('./api/fixtures/model.dat', 'r').read()
-        # post_data = {'test_import_handler_file': handler,
-        #              'train_import_handler_file': handler,
-        #              'trainer': trainer,
-        #              'name': name}
-        # resp, model = self.check_edit(post_data)
-        # self.assertEquals(model.name, name)
-        # self.assertEquals(model.status, model.STATUS_TRAINED)
-        # self.assertTrue(model.trainer.read())
+        # TODO: what to do with features here?
+        name = 'new2'
+        handler = open('./conf/extract.json', 'r').read()
+        trainer = open('./api/ml_models/model.dat', 'r').read()
+        post_data = {'test_import_handler_file': handler,
+                     'train_import_handler_file': handler,
+                     'trainer': trainer,
+                     'name': name}
+        resp, model = self.check_edit(post_data)
+        self.assertEquals(model.name, name)
+        self.assertEquals(model.status, model.STATUS_TRAINED)
+        self.assertTrue(model.trainer.read())
 
     def test_edit_model(self):
         # TODO: Add validation to importhandlers
@@ -454,7 +455,7 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
 
         self.assertEquals(obj.status, 'Trained')
 
-    @patch('api.tasks.cancel_request_spot_instance')
+    @patch('api.instances.tasks.cancel_request_spot_instance')
     def test_cancel_request_instance(self, mock_task):
         url = self._get_url(id=self.obj.id, action='cancel_request_instance')
 
@@ -469,3 +470,6 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         resp = self.client.put(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.OK)
         self.assertTrue(mock_task.delay.called)
+
+
+# class TasksTests()  # TODO:

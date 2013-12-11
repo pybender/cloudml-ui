@@ -52,18 +52,18 @@ class ModelData(DataSet):
 class WeightData(DataSet):
     class weight_01:
         name = "opening_id"
-        model_name = "TrainedModel"
-        model_id = ModelData.model_01.ref('id')
+        model_name = ModelData.model_01.name
+        model = ModelData.model_01
         short_name = "opening_id"
         value = 0.4444
         is_positive = True
         css_class = "green"
-        parent = None
+        parent = ''
 
     class weight_02:
         name = "contractor->dev_blurb->Over"
-        model_name = "TrainedModel"
-        model_id = ModelData.model_01.ref('id')
+        model_name = ModelData.model_01.name
+        model = ModelData.model_01
         short_name = "Over"
         value = 0.022345208915455828
         is_positive = True
@@ -72,6 +72,29 @@ class WeightData(DataSet):
 
     class weight_03:
         name = "opening"
-        model_name = "TrainedModel"
-        model_id = ModelData.model_01.ref('id')
+        model_name = ModelData.model_01.name
+        model = ModelData.model_01
         short_name = "opening"
+        value = -0.022345208915455828
+        is_positive = False
+        css_class = "red dark"
+        parent = ''
+
+
+class WeightsCategoryData(DataSet):
+    class weightcategory_01:
+        name = "contractor"
+        model_name = ModelData.model_01.name
+        model = ModelData.model_01
+        short_name = "contractor"
+        parent = ""
+
+
+class TagData(DataSet):
+    class tag_01:
+        text = "tag"
+        count = 2
+
+    class tag_02:
+        text = "tag2"
+        count = 3

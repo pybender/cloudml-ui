@@ -1,174 +1,194 @@
-#TODO:
-# import httplib
-# import math
-# import json
-# import random
-# import urllib
-
-# from utils import BaseTestCase, HTTP_HEADERS
-# from api import app
+import httplib
+import math
+import json
+import random
+import urllib
 
 
-# class WeightsTests(BaseTestCase):
-#     """
-#     Tests of the Models Parameters Weights.
-#     """
-#     MODEL_NAME = 'weights_model'
-#     FIXTURES = ('classifiers.json', 'feature_sets.json',
-#                 'models.json')
+from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS
+from ..fixtures import WeightData, WeightsCategoryData
+from ..models import Weight, WeightsCategory
+from ..views import ModelResource
+from api.ml_models.models import Model
+from api.ml_models.fixtures import ModelData
 
-#     @classmethod
-#     def setUpClass(cls):
-#         super(WeightsTests, cls).setUpClass()
-#         cls.fixtures_load()
 
-#         # POST Trained Model
-#         cls.post_trained_model(cls.MODEL_NAME)
-#         cls.model = app.db.Model.find_one({'name': cls.MODEL_NAME})
-#         cls.BASE_URL = '/cloudml/weights/%s/' % cls.model._id
+class WeightResourceTests(BaseDbTestCase, TestChecksMixin):
+    """ Tests of the WeightResource. """
+    MODEL_NAME = 'weights_model'
+    datasets = [ModelData, WeightsCategoryData, WeightData]
 
-#         # Fill weights
-#         trainer = cls.model.get_trainer()
-#         weights = cls.trainer_weights = trainer.get_weights()
-#         cls.weight_list = weights['positive'] + weights['negative']
-#         cls.COUNT = len(cls.weight_list)
-#         cls._LOADED_COLLECTIONS += ['WeightsCategory', 'Weight']
+    def setUp(self):
+        super(WeightResourceTests, self).setUp()
+        self.model = Model.query.filter_by(name=ModelData.model_01.name).one()
+        self.BASE_URL = '/cloudml/weights/%s/' % self.model.id
 
-#     @classmethod
-#     def tearDownClass(cls):
-#         super(WeightsTests, cls).tearDownClass()
-#         cls.fixtures_cleanup()
+    def test_list(self):
+        data = self._check(per_page=2)
+        self.assertTrue(data['has_next'])
+        self.assertFalse(data['has_prev'])
+        self.assertEquals(data['per_page'], 2)
+        self.assertEquals(data['total'], 3)
+        self.assertEquals(data['pages'], 2)
+        self.assertTrue('weights' in data, data)
+        self.assertEquals(data['total'],
+                          Weight.query.filter_by(model=self.model).count())
 
-#     def setUp(self):
-#         pass
+    # def test_search(self):  # TODO: full text search -> moved to other issue
+    #     self.db.Weight.collection.ensure_index(
+    #         [
+    #             ('name', 'text'),
+    #             ('value', 'text')
+    #         ]
+    #     )
 
-#     def tearDown(self):
-#         pass
+    #     url = '{0}?{1}'.format(self.BASE_URL, urllib.urlencode({
+    #         'is_positive': -1,
+    #         'order': 'asc',
+    #         'page': 1,
+    #         'show': 'name,value,css_class',
+    #         'sort_by': 'name',
+    #         'q': 'python'
+    #     }))
+    #     resp = self.app.get(url, headers=HTTP_HEADERS)
+    #     self.assertEquals(resp.status_code, httplib.OK)
+    #     data = json.loads(resp.data)
+    #     self.assertFalse(data['has_next'])
+    #     self.assertFalse(data['has_prev'])
+    #     self.assertEquals(data['per_page'], 20)
+    #     self.assertTrue('weights' in data, data)
+    #     self.assertFalse('tsexams->Ruby on Rails' in resp.data)
+    #     self.assertTrue(
+    #         'tsexams->Python 2.x Test' in data['weights'][0]['name'])
 
-#     @classmethod
-#     def _run_fill_model_weights_task(cls):
-#         from api.tasks import fill_model_parameter_weights
-#         fill_model_parameter_weights.run(str(cls.model._id),
-#                                          **cls.trainer_weights)
-#         count = app.db.Weight.find({'model_name': cls.model.name}).count()
-#         assert count == cls.COUNT
+    #     url = '{0}?{1}'.format(self.BASE_URL, urllib.urlencode({
+    #         'is_positive': 0,
+    #         'order': 'asc',
+    #         'page': 1,
+    #         'show': 'name,value,css_class',
+    #         'sort_by': 'name',
+    #         'q': 'python'
+    #     }))
+    #     resp = self.app.get(url, headers=HTTP_HEADERS)
+    #     self.assertEquals(resp.status_code, httplib.OK)
+    #     data = json.loads(resp.data)
+    #     self.assertTrue(
+    #         'tsexams->Python 2.x Test' in data['weights'][0]['name'])
 
-#     def test_categories_in_db(self):
-#         cat = self.db.WeightsCategory.find_one(
-#             {'model_name': self.MODEL_NAME,
-#              'model_id': str(self.model._id),
-#              'name': 'contractor'})
-#         self.assertEquals(cat['parent'], '')
-#         self.assertEquals(cat['short_name'], 'contractor')
+    #     url = '{0}?{1}'.format(self.BASE_URL, urllib.urlencode({
+    #         'is_positive': 1,
+    #         'order': 'asc',
+    #         'page': 1,
+    #         'show': 'name,value,css_class',
+    #         'sort_by': 'name',
+    #         'q': 'python'
+    #     }))
+    #     resp = self.app.get(url, headers=HTTP_HEADERS)
+    #     self.assertEquals(resp.status_code, httplib.OK)
+    #     self.assertTrue('tsexams->Python 2.x Test' not in resp.data)
 
-#         cat = self.db.WeightsCategory.find_one(
-#             {'model_name': self.MODEL_NAME,
-#              'name': 'contractor.dev_profile_title'})
-#         self.assertEquals(cat['parent'], 'contractor')
-#         self.assertEquals(cat['short_name'], 'dev_profile_title')
+    def test_brief(self):
+        data = self._check(action='brief')
+        self.assertTrue('negative_weights' in data, data)
+        self.assertTrue('positive_weights' in data, data)
+        positive = data['positive_weights']
+        negative = data['negative_weights']
+        self.assertEquals(len(positive), 2)
+        self.assertEquals(len(negative), 1)
 
-#     def test_weights_in_db(self):
-#         def check_random_weight():
-#             weight_dict = self.weight_list[random.choice(xrange(self.COUNT))]
-#             weight = self.db.Weight.find_one({'model_name': self.MODEL_NAME,
-#                                               'name': weight_dict['name']})
-#             self.assertEquals(weight['value'], weight_dict['weight'])
+    def test_invalid_methods(self):
+        self._check_not_allowed_method('post')
+        self._check_not_allowed_method('delete')
+        self._check_not_allowed_method('put')
 
-#         check_random_weight()
 
-#         def check_weight(name, params):
-#             wgh = self.db.Weight.find_one({'model_name': self.MODEL_NAME,
-#                                            'name': name})
-#             self.assertTrue(wgh)
-#             for key, val in params.iteritems():
-#                 self.assertEquals(wgh[key], val)
+class WeightTreeResourceTests(BaseDbTestCase, TestChecksMixin):
+    datasets = [ModelData, WeightData, WeightsCategoryData]
 
-#         check_weight('contractor->dev_blurb->best',
-#                      {'is_positive': False,
-#                       'short_name': 'best',
-#                       'css_class': 'red dark',
-#                       'parent': 'contractor.dev_blurb',
-#                       'value': -0.07864226503356551})
+    def setUp(self):
+        super(WeightTreeResourceTests, self).setUp()
+        self.model = Model.query.filter_by(name=ModelData.model_01.name).one()
+        self.BASE_URL = '/cloudml/weights_tree/%s/' % self.model.id
 
-#     def test_list(self):
-#         resp = self.app.get(self.BASE_URL, headers=HTTP_HEADERS)
-#         self.assertEquals(resp.status_code, httplib.OK)
-#         data = json.loads(resp.data)
-#         self.assertTrue(data['has_next'])
-#         self.assertFalse(data['has_prev'])
-#         self.assertEquals(data['per_page'], 20)
-#         self.assertEquals(data['total'], self.COUNT)
-#         self.assertEquals(data['pages'], math.ceil(1.0 * self.COUNT / 20))
-#         self.assertTrue('weights' in data, data)
-#         self.assertEquals(data['total'], app.db.Weight.find().count())
+    def test_tree(self):
+        data = self._check()
+        self.assertTrue('weights' in data, data)
+        self.assertTrue('categories' in data, data)
+        self.assertTrue('opening' in str(data), data)
 
-#     def test_search(self):
-#         self.db.Weight.collection.ensure_index(
-#             [
-#                 ('name', 'text'),
-#                 ('value', 'text')
-#             ]
-#         )
+        data = self._check(parent='contractor.dev_blurb')
+        self.assertEquals(data['weights'][0]['name'], WeightData.weight_02.name)
+        self.assertEquals(len(data['weights']), 1)
 
-#         url = '{0}?{1}'.format(self.BASE_URL, urllib.urlencode({
-#             'is_positive': -1,
-#             'order': 'asc',
-#             'page': 1,
-#             'show': 'name,value,css_class',
-#             'sort_by': 'name',
-#             'q': 'python'
-#         }))
-#         resp = self.app.get(url, headers=HTTP_HEADERS)
-#         self.assertEquals(resp.status_code, httplib.OK)
-#         data = json.loads(resp.data)
-#         self.assertFalse(data['has_next'])
-#         self.assertFalse(data['has_prev'])
-#         self.assertEquals(data['per_page'], 20)
-#         self.assertTrue('weights' in data, data)
-#         self.assertFalse('tsexams->Ruby on Rails' in resp.data)
-#         self.assertTrue(
-#             'tsexams->Python 2.x Test' in data['weights'][0]['name'])
+    def test_invalid_methods(self):
+        self._check_not_allowed_method('post')
+        self._check_not_allowed_method('delete')
+        self._check_not_allowed_method('put')
 
-#         url = '{0}?{1}'.format(self.BASE_URL, urllib.urlencode({
-#             'is_positive': 0,
-#             'order': 'asc',
-#             'page': 1,
-#             'show': 'name,value,css_class',
-#             'sort_by': 'name',
-#             'q': 'python'
-#         }))
-#         resp = self.app.get(url, headers=HTTP_HEADERS)
-#         self.assertEquals(resp.status_code, httplib.OK)
-#         data = json.loads(resp.data)
-#         self.assertTrue(
-#             'tsexams->Python 2.x Test' in data['weights'][0]['name'])
 
-#         url = '{0}?{1}'.format(self.BASE_URL, urllib.urlencode({
-#             'is_positive': 1,
-#             'order': 'asc',
-#             'page': 1,
-#             'show': 'name,value,css_class',
-#             'sort_by': 'name',
-#             'q': 'python'
-#         }))
-#         resp = self.app.get(url, headers=HTTP_HEADERS)
-#         self.assertEquals(resp.status_code, httplib.OK)
-#         self.assertTrue('tsexams->Python 2.x Test' not in resp.data)
+class WeightTasksTests(BaseDbTestCase, TestChecksMixin):
+    datasets = [ModelData]
+    Model = Model
+    RESOURCE = ModelResource
+    BASE_URL = '/cloudml/models/'
 
-#     def test_brief(self):
-#         url = self._get_url(action='brief')
-#         resp = self.app.get(url, headers=HTTP_HEADERS)
-#         self.assertEquals(resp.status_code, httplib.OK)
-#         data = json.loads(resp.data)
-#         self.assertTrue('negative_weights' in data, data)
-#         self.assertTrue('positive_weights' in data, data)
+    def setUp(self):
+        super(WeightTasksTests, self).setUp()
 
-#     def test_tree(self):
-#         resp = self.app.get('/cloudml/weights_tree/%s' % self.model._id,
-#                             headers=HTTP_HEADERS)
-#         self.assertEquals(resp.status_code, httplib.OK)
-#         data = json.loads(resp.data)
-#         self.assertTrue('weights' in data, data)
-#         self.assertTrue('categories' in data, data)
-#         self.assertTrue('country_pair' in resp.data, resp.data)
-#         self.assertTrue('opening' in resp.data, resp.data)
+    def test_fill_weights(self):
+        name = 'new2'
+        handler = open('conf/extract.json', 'r').read()
+        trainer = open('./api/ml_models/model.dat', 'r').read()
+        post_data = {'test_import_handler_file': handler,
+                     'train_import_handler_file': handler,
+                     'trainer': trainer,
+                     'name': name}
+        resp, model = self.check_edit(post_data)
+        self.assertEquals(model.name, name)
+        self.assertEquals(model.status, model.STATUS_TRAINED)
+
+        # Fill weights
+        trainer = model.get_trainer()
+        trainer_weights = trainer.get_weights()
+        trainer_weight_list = trainer_weights['positive'] \
+            + trainer_weights['negative']
+
+        self.assertEquals(
+            len(trainer_weight_list),
+            Weight.query.filter_by(model=model).count())
+
+        # Check categories in db
+        cat = WeightsCategory.query.filter_by(
+            model=model, name='contractor').one()
+        self.assertEquals(cat.parent, '')
+        self.assertEquals(cat.short_name, 'contractor')
+
+        cat = WeightsCategory.query.filter_by(
+            model=model, name='contractor.dev_profile_title').one()
+        self.assertEquals(cat.parent, 'contractor')
+        self.assertEquals(cat.short_name, 'dev_profile_title')
+
+        # Check weights in db
+        def check_random_weight():
+            weight_dict = trainer_weight_list[
+                random.choice(xrange(len(trainer_weight_list)))]
+            weight = Weight.query.filter_by(
+                model=model, name=weight_dict['name']).one()
+            self.assertEquals(round(weight.value, 2),
+                              round(weight_dict['weight'], 2))
+
+        for i in xrange(5):
+            check_random_weight()
+
+        def check_weight(name, params):
+            wgh = Weight.query.filter_by(
+                model=model, name=name).one()
+            self.assertTrue(wgh)
+            for key, val in params.iteritems():
+                self.assertEquals(getattr(wgh, key), val)
+
+        check_weight('contractor->dev_blurb->best',
+                     {'is_positive': False,
+                      'short_name': 'best',
+                      'css_class': 'red dark',
+                      'parent': 'contractor.dev_blurb'})

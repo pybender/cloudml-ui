@@ -93,9 +93,9 @@ State is {0!s}, status is {1!s}, {2!s}.'.format(
     instance.add_tag('whoami', 'cloudml')
 
     if callback == "train":
-        from api.tasks import train_model
         logging.info('Train model task apply async')
         queue = "ip-%s" % "-".join(instance.private_ip_address.split('.'))
+        from api.ml_models.tasks import train_model
         train_model.apply_async(
             (dataset_ids, model_id, user_id),
             queue=queue,

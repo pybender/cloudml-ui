@@ -143,7 +143,7 @@ train_import_handler should be specified for new model')
 
         if obj.status == Model.STATUS_TRAINED:
             # Processing Model Parameters weights in celery task
-            from api.tasks import fill_model_parameter_weights
+            from api.ml_models.tasks import fill_model_parameter_weights
             fill_model_parameter_weights.delay(obj.id)
 
         return obj

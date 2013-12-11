@@ -1,6 +1,7 @@
 from flask import has_request_context, request
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy import func
+from sqlalchemy.orm import relationship
 
 from .fields import JSONType
 from serialization import JsonSerializableMixin
@@ -21,12 +22,7 @@ class BaseMixin(JsonSerializableMixin):
         if user:
             field = 'updated_by' if self.id else 'created_by'
             if hasattr(self, field):
-                setattr(self, field, {
-                    '_id': user.id,
-                    'uid': user.uid,
-                    # TODO
-                    # 'name': user.name
-                })
+                setattr(self, field, user)
 
     def save(self, commit=True):
         if has_request_context():
@@ -44,5 +40,23 @@ class BaseModel(BaseMixin):
     created_on = db.Column(db.DateTime, server_default=func.now())
     updated_on = db.Column(db.DateTime, server_default=func.now(),
                            onupdate=func.current_timestamp())
-    created_by = db.Column(JSONType)
-    updated_by = db.Column(JSONType)
+
+    @declared_attr
+    def created_by_id(cls):
+        return db.Column(
+            db.ForeignKey('user.id', ondelete='SET NULL'))
+
+    @declared_attr
+    def created_by(cls):
+        return relationship(
+            "User", foreign_keys='%s.created_by_id' % cls.__name__)
+
+    @declared_attr
+    def updated_by_id(cls):
+        return db.Column(
+            db.ForeignKey('user.id', ondelete='SET NULL'))
+
+    @declared_attr
+    def updated_by(cls):
+        return relationship(
+            "User", foreign_keys='%s.updated_by_id' % cls.__name__)

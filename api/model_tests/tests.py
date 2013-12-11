@@ -1,7 +1,11 @@
+# -*- coding: utf8 -*-
+
 import json
-from mock import patch
+import os
+from mock import patch, MagicMock, Mock
 from moto import mock_s3
 
+from api import app
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS
 from views import TestsResource, TestExamplesResource
 from models import TestResult, TestExample
@@ -11,18 +15,18 @@ from api.import_handlers.fixtures import ImportHandlerData, DataSetData
 from api.import_handlers.models import DataSet, ImportHandler
 from api.instances.models import Instance
 from api.instances.fixtures import InstanceData
+from tasks import run_test
+from api.base.exceptions import InvalidOperationError
 from fixtures import TestResultData, TestExampleData
 
 
 class TestTests(BaseDbTestCase, TestChecksMixin):
-    """
-    Tests of the Test API.
-    """
+    """ Tests of the Test API. """
     BASE_URL = '/cloudml/models/{0!s}/tests/'
     RESOURCE = TestsResource
     Model = TestResult
     datasets = [InstanceData, ImportHandlerData, DataSetData,
-                ModelData, TestResultData]
+                ModelData, TestResultData, TestExampleData]
 
     def setUp(self):
         super(TestTests, self).setUp()
@@ -56,7 +60,7 @@ class TestTests(BaseDbTestCase, TestChecksMixin):
         self.check_details(show='')
         self.check_details(show='name,status')
 
-    @patch('api.tasks.calculate_confusion_matrix')
+    @patch('api.model_tests.tasks.calculate_confusion_matrix')
     def test_confusion_matrix(self, mock_calculate):
         url = self._get_url(
             id=self.obj.id,
@@ -74,14 +78,12 @@ class TestTests(BaseDbTestCase, TestChecksMixin):
 
     @mock_s3
     @patch('api.amazon_utils.AmazonS3Helper.save_gz_file')
-    @patch('api.tasks.run_test')
+    @patch('api.model_tests.tasks.run_test')
     def test_post(self, mock_run_test, mock_multipart_upload):
         """
         Checks creating new Test with creating new dataset.
         """
-        data = {
-            'format': DataSet.FORMAT_JSON
-        }
+        data = {'format': DataSet.FORMAT_JSON}
         import_params = {'start': '2012-12-03',
                          'end': '2012-12-04',
                          'category': 'smth'}
@@ -97,8 +99,7 @@ class TestTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(test.model_id, model.id)
         self.assertFalse(test.error)
         self.assertTrue(test.created_on)
-        # TODO
-        # self.assertEquals(test.created_by['name'], 'User-1')
+        self.assertEquals(test.created_by.name, 'User-2')
         self.assertEquals(test.parameters, import_params)
 
         # This info should be filled after completing running
@@ -122,14 +123,12 @@ class TestTests(BaseDbTestCase, TestChecksMixin):
 
     @mock_s3
     @patch('api.amazon_utils.AmazonS3Helper.save_gz_file')
-    @patch('api.tasks.run_test')
+    @patch('api.model_tests.tasks.run_test')
     def test_post_csv(self, mock_run_test, mock_multipart_upload):
         """
         Checks creating new Test with creating new dataset.
         """
-        data = {
-            'format': DataSet.FORMAT_CSV
-        }
+        data = {'format': DataSet.FORMAT_CSV}
         import_params = {'start': '2012-12-03',
                          'end': '2012-12-04',
                          'category': 'smth'}
@@ -146,7 +145,7 @@ class TestTests(BaseDbTestCase, TestChecksMixin):
         self.assertFalse(test.error)
 
     @mock_s3
-    @patch('api.tasks.run_test')
+    @patch('api.model_tests.tasks.run_test')
     def test_post_with_dataset(self, mock_run_test):
         """
         Tests creating new Test with specifying dataset.
@@ -173,39 +172,23 @@ class TestTests(BaseDbTestCase, TestChecksMixin):
         """
         Tests validation errors, when posting new Test.
         """
-        def _check(post_data, errors=None):
-            resp = self.client.post(self._get_url(), data=post_data,
-                                 headers=HTTP_HEADERS)
-            data = json.loads(resp.data)
-            self.assertEquals(resp.status_code, 400)
-            if errors:
-                err_list = data['response']['error']['errors']
-                errors_dict = dict([(item['name'], item['error'])
-                                    for item in err_list])
-                for field, err_msg in errors.iteritems():
-                    self.assertTrue(field in errors_dict,
-                                    "Should be err for field %s: %s" % (field, err_msg))
-                    self.assertEquals(err_msg, errors_dict[field])
-                self.assertEquals(len(errors_dict), len(errors),
-                                  errors_dict.keys())
-
         data = {}
         errors = {
             'fields': u'One of spot_instance_type, aws_instance is required. \
 One of parameters, dataset is required.'}
-        _check(data, errors)
+        self.check_edit_error(data, errors)
 
         data = {'aws_instance': self.instance.id}
         errors = {
             'fields': 'One of parameters, dataset is required.'}
-        _check(data, errors)
+        self.check_edit_error(data, errors)
 
         data = {'aws_instance': 582,
                 'dataset': 376}
         errors = {
             'aws_instance': u'Instance not found',
             'dataset': 'DataSet not found'}
-        _check(data, errors)
+        self.check_edit_error(data, errors)
 
         data = {'spot_instance_type': 'INVALID',
                 'start': '2013-01-01'}
@@ -214,24 +197,25 @@ One of parameters, dataset is required.'}
                                   " cc2.8xlarge, cr1.8xlarge,"
                                   " hi1.4xlarge, hs1.8xlarge",
             'parameters': 'Parameters category, end are required',
-            'fields': 'One of parameters, dataset is required.'  # TODO: Remove.
+            # TODO: Remove.
+            'fields': 'One of parameters, dataset is required.'
         }
-        _check(data, errors)
+        self.check_edit_error(data, errors)
 
-        # TODO
-#     def test_delete(self):
-#         # self.check_related_docs_existance(self.db.TestExample)
-#         self.check_delete()
-#
-# #         self.check_related_docs_existance(self.db.TestExample, exist=False,
-# #                                           msg='Tests Examples should be \
-# # when remove test')
-#
-#         # Checks whether not all docs was deleted
-#         self.assertTrue(TestResult.query.count(),
-#                         "All tests was deleted!")
-#         self.assertTrue(TestExample.query.count(),
-#                         "All examples was deleted!")
+    def test_delete(self):
+        count = TestResult.query.count()
+        self.assertTrue(count > 1, "Invalid fixtures. Found %s tests" % count)
+        count = TestExample.query.count()
+        self.assertTrue(
+            count > 1, "Invalid fixtures. Found %s examples" % count)
+
+        self.check_delete()
+
+        # Checks whether not all docs was deleted
+        self.assertTrue(TestResult.query.count(),
+                        "All tests was deleted!")
+        self.assertTrue(TestExample.query.count(),
+                        "All examples was deleted!")
 
 
 class TestExamplesTests(BaseDbTestCase, TestChecksMixin):
@@ -324,10 +308,221 @@ class TestExamplesTests(BaseDbTestCase, TestChecksMixin):
         data = json.loads(resp.data)
         self.assertEquals(data['fields'], ['employer->country'])
 
-    @patch('api.tasks.get_csv_results')
+    @patch('api.model_tests.tasks.get_csv_results')
     def test_csv(self, mock_get_csv):
         fields = 'name,id,label,pred_label,prob,data_input.employer->country'
         url = self._get_url(action='csv', show=fields)
         resp = self.client.get(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, 200)
         self.assertTrue(mock_get_csv.delay.called)
+
+
+class TasksTests(BaseDbTestCase):
+    """ Tests celery tasks. """
+    FIXTURES = ('datasets.json', 'models.json', 'tests.json', 'examples.json')
+
+    def setUp(self):
+        super(TasksTests, self).setUp()
+        self.test = TestResult.query.filter_by(name=TestResultData.test_01.name).one()
+        self.test2 = TestResult.query.filter_by(name=TestResultData.test_02.name).one()
+        self.dataset = DataSet.query.first()  # TODO:
+        self.examples_count = TestExample.query.filter_by(
+            test_result=self.test).count()
+
+    def _set_probabilities(self, probabilities):
+        for example in self.db.TestExample.find({'test_name': self.TEST_NAME}):
+            label, prob = probabilities[example['id']]
+            example['test_id'] = str(self.test._id)
+            example['label'] = label
+            example['prob'] = prob
+            example.save()
+
+    def test_calculate_confusion_matrix(self):
+        from api.tasks import calculate_confusion_matrix
+
+        def _assertMatrix(w0, w1, expected):
+            result = calculate_confusion_matrix(self.test._id, w0, w1)
+            self.assertEquals(result, expected)
+            self.assertEquals(self.examples_count, sum([sum(row) for row in result]))
+
+        self._set_probabilities({
+            '1':  ('0', [0.3, 0.7]),
+            '1a': ('0', [0.9, 0.1]),
+            '2':  ('1', [0.3, 0.7]),
+            '4':  ('1', [0.2, 0.8]),
+        })
+
+        _assertMatrix(1, 1, [[1, 1], [0, 2]])
+        _assertMatrix(0.5, 0.5, [[1, 1], [0, 2]])
+
+        _assertMatrix(1, 10, [[0, 2], [0, 2]])
+        _assertMatrix(1, 100, [[0, 2], [0, 2]])
+        _assertMatrix(10, 1, [[2, 0], [2, 0]])
+        _assertMatrix(100, 1, [[2, 0], [2, 0]])
+        _assertMatrix(0, 1, [[0, 2], [0, 2]])
+        _assertMatrix(1, 0, [[2, 0], [2, 0]])
+        _assertMatrix(1, 3, [[1, 1], [0, 2]])
+        _assertMatrix(3, 1, [[2, 0], [1, 1]])
+
+        self.assertRaises(ValueError, calculate_confusion_matrix, self.test._id, 0, 0)
+        self.assertRaises(ValueError, calculate_confusion_matrix, self.test._id, -1, 1)
+        self.assertRaises(ValueError, calculate_confusion_matrix, self.test._id, 1, -1)
+        self.assertRaises(ValueError, calculate_confusion_matrix, ObjectId(), 1, 1)
+
+        self.test.model_id = str(ObjectId())
+        self.test.save()
+        self.assertRaises(ValueError, calculate_confusion_matrix, self.test._id, 2, 1)
+
+    @mock_s3
+    @patch('api.models.DataSet.get_data_stream')
+    def test_get_csv_results(self, mock_get_data_stream):
+        from api.tasks import get_csv_results
+
+        fields = ['label', 'pred_label', 'prob']
+        url = get_csv_results(self.test.model_id, self.test._id, fields)
+
+        test = self.db.Test.find_one({'name': self.TEST_NAME})
+
+        self.assertTrue(url)
+        self.assertEquals(test.exports[0]['url'], url)
+        self.assertEquals(test.exports[0]['fields'], fields)
+        # Data wasn't loaded from s3:
+        self.assertFalse(mock_get_data_stream.called)
+
+        url = get_csv_results(self.test.model_id, self.test2._id, fields)
+
+        test = self.db.Test.find_one({'name': self.TEST_NAME2})
+
+        self.assertTrue(url)
+        self.assertEquals(test.exports[0]['url'], url)
+        self.assertEquals(test.exports[0]['fields'], fields)
+        # Data was loaded from s3:
+        self.assertTrue(mock_get_data_stream.called)
+
+    @mock_s3
+    @patch('api.models.Model.get_trainer')
+    @patch('api.models.DataSet.get_data_stream')
+    @patch('api.tasks.store_examples')
+    def _check_run_test(self, test, _fake_raw_data=None, *mocks):
+        mock_store_examples, mock_get_data_stream, mock_get_trainer = mocks
+        import numpy
+        import scipy
+        from api.tasks import run_test
+
+        if _fake_raw_data is None:
+            _fake_raw_data = [{'application_id': '123',
+                               'hire_outcome': '0',
+                               'title': 'A1'}] * 100
+
+        def _fake_test(self, *args, **kwargs):
+            _fake_test.called = True
+            self._raw_data = _fake_raw_data
+            metrics_mock = MetricsMock()
+            preds = Mock()
+            preds.size = 100
+            preds.__iter__ = Mock(return_value=iter([0] * 100))
+            metrics_mock._preds = preds
+
+            metrics_mock._probs = [numpy.array([0.1, 0.2])] * 100
+
+            metrics_mock._true_data = scipy.sparse.coo_matrix([[0, 0, 0]] * 100)
+
+            return metrics_mock
+
+        mock_apply_async = MagicMock()
+        mock_store_examples.si.return_value = mock_apply_async
+        mocks = list(mocks)
+        mocks.append(mock_apply_async)
+
+        # Set up mock trainer
+        from core.trainer.store import TrainerStorage
+        trainer = TrainerStorage.loads(
+            open('./api/ml_models/model.dat', 'r').read())
+        mock_get_trainer.return_value = trainer
+
+        with patch('core.trainer.trainer.Trainer.test',
+                   _fake_test) as mock_test:
+            mocks.append(mock_test)
+            return run_test([self.dataset._id, ], test._id), mocks
+
+    def test_run_test_with_untrained_model(self):
+        model = self.test.model
+        model.status = model.STATUS_NEW
+        model.save()
+        self.assertRaises(InvalidOperationError, run_test,
+                          [self.dataset._id, ], self.test._id)
+
+    def test_run_test_unicode_encoding(self):
+        unicode_string = u'Привет!'
+        _fake_raw_data = [{'application_id': '123',
+                           'hire_outcome': '0',
+                           'title': 'A1',
+                           'opening_title': unicode_string,
+                           'opening_id': unicode_string}] * 100
+        
+        result, mocks = self._check_run_test(self.test, _fake_raw_data)
+        self.assertEquals(result, 'Test completed')
+        example = TestExample.query.filter_by(
+            test_result=self.test).first()
+        self.assertEquals(example.id, unicode_string)
+        self.assertEquals(example.name, unicode_string)
+
+    def test_run_test(self):
+        self.test.status = self.test.STATUS_QUEUED
+        self.test.save()
+
+        self.assertEquals(
+            app.db.TestExample.find({'test_id': str(test._id)}).count(), 0)
+
+        result, mocks = self._check_run_test(test, None)
+        self.assertEquals(result, 'Test completed')
+
+        mock_store_examples, mock_get_data_stream, mock_get_trainer, \
+            mock_apply_async, mock_run_test = mocks
+        self.assertEquals(1, mock_get_data_stream.call_count,
+                          'Should be cached and called only once')
+        self.assertFalse(
+            mock_store_examples.si.call_count,
+            "Examples placement is MongoDB. We do not need to store it in Amazon S3")
+        self.assertFalse(mock_apply_async.apply.call_count)
+
+        example = app.db.TestExample.find_one({'test_id': str(test._id)})
+        self.assertTrue(example.data_input, 'Raw data should be filled at all')
+        self.assertEquals(example.data_input.keys(), ['hire_outcome', 'application_id'])
+
+    @mock_s3
+    def test_store_examples(self):
+        from api.tasks import store_examples
+
+        _ROW_COUNT = 5
+
+        filename = 'Test_raw_data-{0!s}.dat'.format(str(self.test._id))
+        with open(os.path.join(app.config['DATA_FOLDER'], filename), 'w') as fp:
+            fp.writelines(['{"data": "value"}\n'] * _ROW_COUNT)
+
+        example = self.db.TestExample.find_one({'name': self.EXAMPLE_NAME})
+        example.on_s3 = True
+        example.save()
+
+        result = store_examples(self.test._id, [
+            range(_ROW_COUNT), [str(example._id)] * _ROW_COUNT
+        ])
+        self.assertEquals(result, list(zip(
+            range(_ROW_COUNT), [str(example._id)] * _ROW_COUNT)))
+
+        example.reload()
+        self.assertEquals(example.data_input, {})
+        self.assertEquals(json.loads(example._load_from_s3()), {'data': 'value'})
+
+
+class MetricsMock(MagicMock):
+    accuracy = 0.85
+    classes_set = ['0', '1']
+    _labels = ['0', '1'] * 50
+
+    def get_metrics_dict(self):
+        return {
+            'confusion_matrix': [0, 0],
+            'roc_curve': [[0], [0], [0], [0]],
+            'precision_recall_curve': [[0], [0], [0], [0]],
+        }

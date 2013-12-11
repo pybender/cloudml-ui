@@ -29,7 +29,7 @@ class Model(db.Model, BaseModel):
                 STATUS_REQUESTING_INSTANCE, STATUS_INSTANCE_STARTED,
                 STATUS_TRAINING, STATUS_TRAINED, STATUS_ERROR, STATUS_CANCELED]
 
-    name = db.Column(db.String(200))
+    name = db.Column(db.String(200), nullable=False, unique=True)
     status = db.Column(db.Enum(*STATUSES, name='model_statuses'),
                        default=STATUS_NEW)
     trained_by = db.Column(JSONType)

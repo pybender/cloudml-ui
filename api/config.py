@@ -17,7 +17,10 @@ CELERY_ENABLE_UTC = True
 #BROKER_URL = 'mongodb://localhost:27017/cloudmlqueue'
 BROKER_URL = 'amqp://guest:guest@localhost:5672//'
 CELERY_RESULT_BACKEND = 'amqp://guest:guest@localhost:5672//'
-CELERY_IMPORTS = ('api.models', 'api', 'api.tasks')
+CELERY_IMPORTS = (
+    'api.models', 'api', 'api.import_handlers.tasks',
+    'api.instances.tasks', 'api.ml_models.tasks',
+    'api.model_tests.tasks')
 CELERYD_MAX_TASKS_PER_CHILD = 1
 
 from kombu import Queue

@@ -169,3 +169,21 @@ class TestExampleData(DataSet):
         data_input = {
             'opening_id': "201913099"
         }
+
+    class test_example_06:
+        created_on = "2013-04-19 14:37:23.145000"
+        updated_on = "2013-04-19 14:37:23.145000"
+        name = "Some Example #1-1"
+        pred_label = "1"
+        label = "0"
+        test_name = TestResultData.test_02.name
+        model_name = ModelData.model_01.name
+        weighted_data_input = {}
+        prob = [0.123, 0.5]
+        example_id = "4"
+        num = 0
+        model = ModelData.model_01
+        test_result = TestResultData.test_02
+        data_input = {
+            'opening_id': "201913099"
+        }

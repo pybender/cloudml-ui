@@ -42,17 +42,23 @@ class BaseDbTestCase(TestCase):
             self.exec_db_level_sql(
                 "create database %s" % app.config['DB_NAME'])
 
+        self.db.session.remove()
+        self.db.drop_all()
+
         self.db.metadata.create_all(self.engine)
         self.db.create_all()
 
         # Loading fixtures
         from api.accounts.fixtures import UserData
+        if not UserData in self.datasets:
+            self.datasets = list(self.datasets)
+            self.datasets.append(UserData)
+
         try:
-            self.load_fixtures(UserData)
+            self.load_fixtures(*self.datasets)
         except Exception, exc:
-            logging.error('Exception while load user data: %s', exc)
-        for ds in set(self.datasets):
-            self.load_fixtures(ds)
+            logging.warning(
+                'Problem with load fixture %s: %s', self.datasets, exc)
 
         # Fixing celery config
         from api import celery
@@ -213,6 +219,16 @@ class TestChecksMixin(object):
             return set(fields)
         else:
             return self.RESOURCE.DEFAULT_FIELDS or [u'id', u'name']
+
+    def _check_not_allowed_method(self, method='delete', url=None, data={}):
+        if url is None:
+            url = self.BASE_URL
+
+        mthd = getattr(self.client, method)
+        resp = mthd(url, headers=HTTP_HEADERS, data=data)
+        self.assertEquals(resp.status_code, 400)
+        msg = json.loads(resp.data)['response']['error']['message']
+        self.assertEquals(msg, "%s is not allowed" % method)
 
 
 class BaseMongoTestCase(unittest.TestCase):
