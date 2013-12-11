@@ -5,9 +5,9 @@ from api.import_handlers.fixtures import ImportHandlerData
 
 class ModelData(DataSet):
     class model_01:
-        features_set_id = FeatureSetData.bestmatch.ref('id')
-        test_import_handler_id = ImportHandlerData.import_handler_01.ref('id')
-        train_import_handler_id = ImportHandlerData.import_handler_01.ref('id')
+        features_set = FeatureSetData.bestmatch
+        test_import_handler = ImportHandlerData.import_handler_01
+        train_import_handler = ImportHandlerData.import_handler_01
         created_on = "2013-04-19 14:37:23.145000"
         updated_on = "2013-04-19 14:37:23.145000"
         name = "TrainedModel"
@@ -27,6 +27,9 @@ class ModelData(DataSet):
         }
 
     class model_02:
+        features_set = FeatureSetData.bestmatch
+        test_import_handler = ImportHandlerData.import_handler_01
+        train_import_handler = ImportHandlerData.import_handler_01
         status = "Trained"
         created_on = "2013-04-19 14:37:23.145000"
         updated_on = "2013-04-19 14:37:23.145000"
@@ -35,6 +38,9 @@ class ModelData(DataSet):
         labels = ["0", "1"]
 
     class model_03:
+        features_set = FeatureSetData.bestmatch
+        test_import_handler = ImportHandlerData.import_handler_01
+        train_import_handler = ImportHandlerData.import_handler_01
         status = "New"
         created_on = "2013-04-19 14:37:23.145000"
         updated_on = "2013-04-19 14:37:23.145000"

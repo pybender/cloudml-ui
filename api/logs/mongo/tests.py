@@ -3,7 +3,6 @@ import json
 import urllib
 
 from api import app
-from api.logger import LogMessageHandler
 from api.base.test_utils import BaseMongoTestCase, TestChecksMixin, \
     HTTP_HEADERS, BaseDbTestCase
 from api.logs.views import LogResource
@@ -24,6 +23,7 @@ class LogsTests(BaseMongoTestCase, TestChecksMixin, BaseDbTestCase):
 
     def test_list(self):
         import logging
+        from logger import LogMessageHandler
         logger = logging.getLogger('testing')
         logger.handlers = []
         logger.addHandler(LogMessageHandler(

@@ -175,6 +175,13 @@ class Coverage(Command):
             report_path)
 
 
+class RemPycFiles(Command):
+    CMD = 'find . -name "*.pyc" -exec rm -rf {} \;'
+
+    def run(self):
+        os.system(self.CMD)
+
+
 class RemObsoluteMongoKeys(Command):
     """
     Removes obsolete (hung ups) Tests, Examples, Logs, etc. from
@@ -365,6 +372,7 @@ manager.add_command("shell", Shell(make_context=_make_context))
 manager.add_command("create_db_tables", CreateDbTables())
 manager.add_command("drop_db_tables", DropDbTables())
 manager.add_command("migrate_to_postgresql", MigrateToPosgresql())
+manager.add_command("rem_pyc", RemPycFiles())
 
 if __name__ == "__main__":
     manager.run()
