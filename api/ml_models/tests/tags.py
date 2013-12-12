@@ -1,18 +1,21 @@
-#from utils import BaseTestCase, HTTP_HEADERS
-# from api.views import TagResource
+from api.base.test_utils import BaseDbTestCase, TestChecksMixin
+from ..views import TagResource
+from ..fixtures import TagData
+from ..models import Tag
 
 
-# class TagsTests(BaseTestCase):
-#     """
-#     Tests of the Tags API.
-#     """
-#     FIXTURES = ('tags.json',)
-#     BASE_URL = '/cloudml/tags/'
-#     RESOURCE = TagResource
+class TagsTests(BaseDbTestCase, TestChecksMixin):
+    """
+    Tests of the Tags API.
+    """
+    BASE_URL = '/cloudml/tags/'
+    RESOURCE = TagResource
+    datasets = [TagData, ]
+    Model = Tag
 
-#     def setUp(self):
-#         super(TagsTests, self).setUp()
-#         self.Model = self.db.Tag
-
-#     def test_list(self):
-#         self._check_list(show='text,count')
+    def test_list(self):
+        resp = self.check_list(show='text,count')
+        tag = resp['tags'][0]
+        self.assertEquals(tag['text'], TagData.tag_01.text)
+        self.assertEquals(tag['count'], TagData.tag_01.count)
+        self.assertEquals(len(tag.keys()), 3)  # id also

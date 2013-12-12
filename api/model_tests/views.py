@@ -30,7 +30,7 @@ class TestsResource(BaseResourceSQL):
         return self._render({'tests': tests})
 
     def _get_confusion_matrix_action(self, **kwargs):
-        from api.tasks import calculate_confusion_matrix
+        from tasks import calculate_confusion_matrix
 
         parser = reqparse.RequestParser()
         parser.add_argument('weight0', type=float)
@@ -213,7 +213,7 @@ not contain probabilities')
         """
         logging.info('Download examples in csv')
 
-        from api.tasks import get_csv_results
+        from tasks import get_csv_results
 
         parser = reqparse.RequestParser()
         parser.add_argument('show', type=str)

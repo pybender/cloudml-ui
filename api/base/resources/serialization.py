@@ -30,6 +30,8 @@ def encode_model(obj):
         out = str(obj)
     elif isinstance(obj, ObjectId):
         out = str(obj)
+    elif isinstance(obj, int) or isinstance(obj, float):
+        out = obj
     else:
         try:
             out = str(obj)

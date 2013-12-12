@@ -42,7 +42,7 @@ class DataSetAddForm(BaseForm):
         self.importhandler = ImportHandler.query.get(self.import_handler_id)
 
     def save(self, commit=True):
-        from api.tasks import import_data
+        from tasks import import_data
 
         dataset = super(DataSetAddForm, self).save(commit=False)
 

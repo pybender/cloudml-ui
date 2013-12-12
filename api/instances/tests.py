@@ -113,7 +113,7 @@ class TestInstanceTasks(BaseDbTestCase):
 
     @patch('api.amazon_utils.AmazonEC2Helper.get_instance',
            return_value=Mock(**{'private_ip_address': '8.8.8.8'}))
-    @patch('api.tasks.train_model')
+    @patch('api.ml_models.tasks.train_model')
     def test_get_request_instance(self, mock_get_instance, mock_train):
         model = Model.query.all()[0]
         user = User.query.all()[0]

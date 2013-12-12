@@ -214,7 +214,7 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue('s3.amazonaws.com' in data['url'])
 
     @mock_s3
-    @patch('api.tasks.upload_dataset')
+    @patch('api.import_handlers.tasks.upload_dataset')
     def test_reupload_action(self, mock_upload_dataset):
         """
         Tests reupload to Amazon S3.
@@ -225,20 +225,21 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(resp.status_code, httplib.OK)
         self.assertFalse(mock_upload_dataset.delay.called)
 
-        # TODO: AttributeError: 'DataSet' object has no attribute '_sa_instance_state'
-        # self.obj.status = self.obj.STATUS_ERROR
-        # self.obj.save()
-        #
-        # resp = self.client.put(url, headers=HTTP_HEADERS)
-        # self.assertEquals(resp.status_code, httplib.OK)
-        # data = json.loads(resp.data)
-        # self.assertEquals(data[self.RESOURCE.OBJECT_NAME]['id'], self.obj.id)
-        # self.assertEquals(data[self.RESOURCE.OBJECT_NAME]['status'],
-        #                   DataSet.STATUS_IMPORTING)
-        # mock_upload_dataset.delay.assert_called_once_with(self.obj.id)
+        # TODO: AttributeError: 'DataSet' object
+        # has no attribute '_sa_instance_state'
+        self.obj.status = self.obj.STATUS_ERROR
+        self.obj.save()
+
+        resp = self.client.put(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.OK)
+        data = json.loads(resp.data)
+        self.assertEquals(data[self.RESOURCE.OBJECT_NAME]['id'], self.obj.id)
+        self.assertEquals(data[self.RESOURCE.OBJECT_NAME]['status'],
+                          DataSet.STATUS_IMPORTING)
+        mock_upload_dataset.delay.assert_called_once_with(self.obj.id)
 
     @mock_s3
-    @patch('api.tasks.import_data')
+    @patch('api.import_handlers.tasks.import_data')
     def test_reimport_action(self, mock_import_data):
         """
         Tests re-import.
@@ -258,18 +259,14 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         mock_import_data.delay.assert_called_once_with(dataset_id=self.obj.id)
         mock_import_data.reset_mock()
 
+        # TODO: AttributeError: 'DataSet' object has no 
+        # attribute '_sa_instance_state'
         self.obj.status = DataSet.STATUS_IMPORTING
         self.obj.save()
 
         resp = self.client.put(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.OK)
         self.assertFalse(mock_import_data.delay.called)
-
-    def test_list(self):
-        self.check_list(show='name,status')
-
-    def test_details(self):
-        self.check_details(obj=self.obj, show='name,status')
 
     def test_delete(self):
         test = TestResult.query.filter_by(name='Test-1').first()
@@ -293,3 +290,31 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
 
         self.assertIsNone(test.dataset)
         self.assertEquals([ds.name for ds in model.datasets], ['DS 2'])
+
+
+# class TestTasksTests(BaseTestCase):
+#     """
+#     Tests of the celery tasks.
+#     """
+#     TEST_NAME = 'Test-1'
+#     TEST_NAME2 = 'Test-2'
+#     EXAMPLE_NAME = 'Some Example #1-1'
+#     MODEL_NAME = 'TrainedModel1'
+#     FIXTURES = ('datasets.json', 'models.json', 'tests.json', 'examples.json')
+
+#     @patch('api.amazon_utils.AmazonS3Helper.save_gz_file')
+#     def test_upload_dataset(self, mock_multipart_upload):
+#         from api.tasks import upload_dataset
+#         dataset = self.db.DataSet.find_one()
+#         upload_dataset(str(dataset._id))
+#         mock_multipart_upload.assert_called_once_with(
+#             str(dataset._id),
+#             dataset.filename,
+#             {
+#                 'params': str(dataset.import_params),
+#                 'handler': dataset.import_handler_id,
+#                 'dataset': dataset.name
+#             }
+#         )
+#         dataset.reload()
+#         self.assertEquals(dataset.status, dataset.STATUS_IMPORTED)

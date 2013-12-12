@@ -204,7 +204,7 @@ class FeatureSet(ExportImportMixin, BaseModel, db.Model):
     FEATURES_STRUCT = {'schema-name': '',
                        'features': [],
                        "feature-types": []}
-    schema_name = db.Column(db.String(200), nullable=False)
+    schema_name = db.Column(db.String(200), nullable=False, default='noname')
     target_variable = db.Column(db.String(200))
     features_count = db.Column(db.Integer, default=0)
     features_dict = db.Column(JSONType)

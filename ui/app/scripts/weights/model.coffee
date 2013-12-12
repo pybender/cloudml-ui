@@ -130,7 +130,7 @@ angular.module('app.weights.model', ['app.config'])
         if not modelName then throw new Error "Model is required to load tests"
         $http(
           method: 'GET'
-          url: "#{settings.apiUrl}weights_tree/#{modelName}"
+          url: "#{settings.apiUrl}weights_tree/#{modelName}/"
           headers: settings.apiRequestDefaultHeaders
           params: _.extend {
           }, opts

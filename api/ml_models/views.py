@@ -119,8 +119,10 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
 
     # POST/PUT specific methods
     def _put_train_action(self, **kwargs):
-        from api.tasks import train_model, import_data, \
-            request_spot_instance, get_request_instance
+        from tasks import train_model
+        from api.import_handlers.tasks import import_data
+        from api.instances.tasks import request_spot_instance, \
+            get_request_instance
         from forms import ModelTrainForm
         from celery import chain
         obj = self._get_details_query(None, **kwargs)
@@ -186,7 +188,7 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
             })
 
     def _put_cancel_request_instance_action(self, **kwargs):
-        from api.tasks import cancel_request_spot_instance
+        from api.instances.tasks import cancel_request_spot_instance
         model = self._get_details_query(None, **kwargs)
         request_id = model.spot_instance_request_id
         if request_id and model.status == model.STATUS_REQUESTING_INSTANCE:
@@ -281,5 +283,5 @@ class WeightTreeResource(BaseResourceSQL):
         return self._render(context)
 
 api.add_resource(WeightTreeResource,
-                 '/cloudml/weights_tree/<regex("[\w\.]*"):model_id>',
+                 '/cloudml/weights_tree/<regex("[\w\.]*"):model_id>/',
                  add_standard_urls=False)

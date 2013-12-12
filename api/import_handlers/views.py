@@ -65,7 +65,7 @@ class DataSetResource(BaseResourceSQL):
                              'url': url})
 
     def _put_reupload_action(self, **kwargs):
-        from api.tasks import upload_dataset
+        from api.import_handlers.tasks import upload_dataset
         dataset = self._get_details_query(None, **kwargs)
         if dataset.status == DataSet.STATUS_ERROR:
             dataset.status = DataSet.STATUS_IMPORTING
@@ -74,7 +74,7 @@ class DataSetResource(BaseResourceSQL):
         return self._render({self.OBJECT_NAME: dataset})
 
     def _put_reimport_action(self, **kwargs):
-        from api.tasks import import_data
+        from tasks import import_data
         dataset = self._get_details_query(None, **kwargs)
         if dataset.status not in (DataSet.STATUS_IMPORTING,
                                   DataSet.STATUS_UPLOADING):

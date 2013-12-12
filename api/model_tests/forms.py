@@ -41,7 +41,8 @@ class AddTestForm(BaseChooseInstanceAndDataset):
                 self.model.test_import_handler.get_fields()
         test.save()
 
-        from api.tasks import run_test, import_data
+        from tasks import run_test
+        from api.import_handlers.tasks import import_data
         instance = self.cleaned_data.get('aws_instance', None)
         spot_instance_type = self.cleaned_data.get('spot_instance_type', None)
 

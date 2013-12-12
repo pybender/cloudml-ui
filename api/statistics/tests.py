@@ -5,7 +5,7 @@ from views import StatisticsResource
 
 class StatisticsTests(BaseDbTestCase, TestChecksMixin):
     """ Tests of the Statistics API. """
-    datasets = (ModelData, )  # TODO: TestData, DataSetData
+    datasets = [ModelData, ]  # TODO: TestData, DataSetData
     BASE_URL = '/cloudml/statistics/'
     RESOURCE = StatisticsResource
 
