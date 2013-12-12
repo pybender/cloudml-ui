@@ -252,19 +252,18 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(resp.status_code, httplib.OK)
         data = json.loads(resp.data)
         self.assertEquals(data[self.RESOURCE.OBJECT_NAME]['id'],
-                          self.obj.id)
+                          str(self.obj.id))
         self.assertEquals(data[self.RESOURCE.OBJECT_NAME]['status'],
                           DataSet.STATUS_IMPORTING)
         mock_import_data.delay.assert_called_once_with(dataset_id=self.obj.id)
         mock_import_data.reset_mock()
 
-        # TODO: AttributeError: 'DataSet' object has no attribute '_sa_instance_state'
-        # self.obj.status = DataSet.STATUS_IMPORTING
-        # self.obj.save()
+        self.obj.status = DataSet.STATUS_IMPORTING
+        self.obj.save()
 
-        # resp = self.client.put(url, headers=HTTP_HEADERS)
-        # self.assertEquals(resp.status_code, httplib.OK)
-        # self.assertFalse(mock_import_data.delay.called)
+        resp = self.client.put(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.OK)
+        self.assertFalse(mock_import_data.delay.called)
 
     def test_list(self):
         self.check_list(show='name,status')

@@ -173,7 +173,7 @@ prob,created_on,test_result"
     Data.$loadFieldList($scope.test.model_id,
       $scope.test.id)
     .then ((opts) ->
-      $scope.selectFields = ("data_input->>" + x for x in opts.fields)
+      $scope.selectFields = ("data_input." + x for x in opts.fields)
       $scope.loading_state = false
     ), ((opts) ->
       $scope.setError(opts, 'loading data field list')
