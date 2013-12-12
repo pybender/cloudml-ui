@@ -1,18 +1,15 @@
 # -*- coding: utf8 -*-
-
 import json
-import os
 from mock import patch, MagicMock, Mock
 from moto import mock_s3
 
-from api import app
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS
-from views import TestsResource, TestExamplesResource
+from views import TestsResource, TestExampleResource
 from models import TestResult, TestExample
-from api.ml_models.models import Model, Weight
+from api.ml_models.models import Model
 from api.ml_models.fixtures import ModelData, WeightData
 from api.import_handlers.fixtures import ImportHandlerData, DataSetData
-from api.import_handlers.models import DataSet, ImportHandler
+from api.import_handlers.models import DataSet
 from api.instances.models import Instance
 from api.instances.fixtures import InstanceData
 from tasks import run_test
@@ -20,7 +17,7 @@ from api.base.exceptions import InvalidOperationError
 from fixtures import TestResultData, TestExampleData
 
 
-class TestTests(BaseDbTestCase, TestChecksMixin):
+class TestResourceTests(BaseDbTestCase, TestChecksMixin):
     """ Tests of the Test API. """
     BASE_URL = '/cloudml/models/{0!s}/tests/'
     RESOURCE = TestsResource
@@ -29,20 +26,11 @@ class TestTests(BaseDbTestCase, TestChecksMixin):
                 ModelData, TestResultData, TestExampleData]
 
     def setUp(self):
-        super(TestTests, self).setUp()
+        super(TestResourceTests, self).setUp()
         self.obj = self.Model.query.filter_by(
             name=TestResultData.test_01.name).one()
-
         self.model = Model.query.filter_by(
             name=ModelData.model_01.name).first()
-        handler = ImportHandler.query.filter_by(
-            name=ImportHandlerData.import_handler_01.name).first()
-        self.model.train_import_handler = handler
-        self.model.test_import_handler = handler
-        self.model.save()
-
-        self.obj.model = self.model
-        self.obj.save()
 
         self.BASE_URL = self.BASE_URL.format(self.obj.model.id)
         self.MODEL_PARAMS = {'model_id': self.obj.model.id}
@@ -125,9 +113,7 @@ class TestTests(BaseDbTestCase, TestChecksMixin):
     @patch('api.amazon_utils.AmazonS3Helper.save_gz_file')
     @patch('api.model_tests.tasks.run_test')
     def test_post_csv(self, mock_run_test, mock_multipart_upload):
-        """
-        Checks creating new Test with creating new dataset.
-        """
+        """ Checks creating new Test with creating new dataset. """
         data = {'format': DataSet.FORMAT_CSV}
         import_params = {'start': '2012-12-03',
                          'end': '2012-12-04',
@@ -147,9 +133,7 @@ class TestTests(BaseDbTestCase, TestChecksMixin):
     @mock_s3
     @patch('api.model_tests.tasks.run_test')
     def test_post_with_dataset(self, mock_run_test):
-        """
-        Tests creating new Test with specifying dataset.
-        """
+        """ Tests creating new Test with specifying dataset. """
         dataset = DataSet.query.filter_by(
             name=DataSetData.dataset_01.name).first()
         data = {'dataset': dataset.id}
@@ -169,9 +153,7 @@ class TestTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue(self.RESOURCE.OBJECT_NAME in data)
 
     def test_post_validation(self):
-        """
-        Tests validation errors, when posting new Test.
-        """
+        """ Tests validation errors, when posting new Test. """
         data = {}
         errors = {
             'fields': u'One of spot_instance_type, aws_instance is required. \
@@ -218,42 +200,28 @@ One of parameters, dataset is required.'}
                         "All examples was deleted!")
 
 
-class TestExamplesTests(BaseDbTestCase, TestChecksMixin):
-    """
-    Tests of the Test Examples API.
-    """
-    RESOURCE = TestExamplesResource
+class TestExampleResourceTests(BaseDbTestCase, TestChecksMixin):
+    """ Tests of the Test Examples API. """
+    RESOURCE = TestExampleResource
     Model = TestExample
     datasets = [ImportHandlerData, DataSetData, ModelData, WeightData,
                 TestResultData, TestExampleData]
 
     def setUp(self):
-        super(TestExamplesTests, self).setUp()
+        super(TestExampleResourceTests, self).setUp()
         self.test = TestResult.query.filter_by(
             name=TestResultData.test_01.name).first()
         self.model = self.test.model
-
-        for w in Weight.query.all():
-            w.model = self.model
-            w.save()
-
-        for ex in TestExample.query.all():
-            ex.test_result = self.test
-            ex.save()
         self.obj = self.test.examples[0]
-
-        self.obj.model = self.model
-        self.obj.save()
-
-        self.test.model = self.model
-        self.test.save()
 
         self.BASE_URL = '/cloudml/models/{0!s}/tests/{1!s}/examples/'.format(
             self.model.id, self.test.id
         )
 
     def test_list(self):
-        self.check_list(show='created_on,label,pred_label')
+        self.check_list(
+            show='created_on,label,pred_label',
+            query_params={'test_result': self.test})
 
         url = '{0}?{1}&{2}'.format(
             self.BASE_URL,
@@ -278,24 +246,23 @@ class TestExamplesTests(BaseDbTestCase, TestChecksMixin):
         resp = self.client.get(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, 200)
         self.assertTrue(mock_get_trainer.called)
-        data = json.loads(resp.data)['test_examples']
+        data = json.loads(resp.data)['test_example']
 
         for key in ['css_class', 'model_weight', 'transformed_weight',
                     'value', 'vect_value', 'weight']:
             self.assertTrue(key in data['weighted_data_input']['opening_id'])
 
     def test_groupped(self):
-        for ex in TestExample.query.all():
-            ex.test_result = self.test
-            ex.save()
-
         url = self._get_url(action='groupped',
                             field='opening_id', count='2')
         resp = self.client.get(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, 200)
         data = json.loads(resp.data)
         self.assertEquals(data['field_name'], 'opening_id')
-        item = data['test_exampless']['items'][0]
+        item = data['test_examples']['items'][0]
+        self.assertEquals(
+            TestExample.query.filter_by(test_result=self.test).count(), 5,
+            "Fixtures was changed")
         self.assertEquals(item['count'], 5)
         self.assertEquals(item['group_by_field'], '201913099')
         self.assertTrue(item['avp'] > 0)
@@ -319,7 +286,7 @@ class TestExamplesTests(BaseDbTestCase, TestChecksMixin):
 
 class TasksTests(BaseDbTestCase):
     """ Tests celery tasks. """
-    FIXTURES = ('datasets.json', 'models.json', 'tests.json', 'examples.json')
+    datasets = [DataSetData, TestResultData, TestExampleData]
 
     def setUp(self):
         super(TasksTests, self).setUp()
@@ -338,7 +305,7 @@ class TasksTests(BaseDbTestCase):
             example.save()
 
     def test_calculate_confusion_matrix(self):
-        from api.tasks import calculate_confusion_matrix
+        from tasks import calculate_confusion_matrix
 
         def _assertMatrix(w0, w1, expected):
             result = calculate_confusion_matrix(self.test._id, w0, w1)
@@ -376,12 +343,12 @@ class TasksTests(BaseDbTestCase):
     @mock_s3
     @patch('api.models.DataSet.get_data_stream')
     def test_get_csv_results(self, mock_get_data_stream):
-        from api.tasks import get_csv_results
+        from tasks import get_csv_results
 
         fields = ['label', 'pred_label', 'prob']
-        url = get_csv_results(self.test.model_id, self.test._id, fields)
+        url = get_csv_results(self.test.model_id, self.test.id, fields)
 
-        test = self.db.Test.find_one({'name': self.TEST_NAME})
+        test = Test.find_one({'name': self.TEST_NAME})
 
         self.assertTrue(url)
         self.assertEquals(test.exports[0]['url'], url)
@@ -402,12 +369,11 @@ class TasksTests(BaseDbTestCase):
     @mock_s3
     @patch('api.models.Model.get_trainer')
     @patch('api.models.DataSet.get_data_stream')
-    @patch('api.tasks.store_examples')
-    def _check_run_test(self, test, _fake_raw_data=None, *mocks):
-        mock_store_examples, mock_get_data_stream, mock_get_trainer = mocks
+    def _check_run_test(self, test, _fake_raw_data,
+                        mock_get_data_stream, mock_get_trainer):
+        mocks = [mock_get_data_stream, mock_get_trainer]
         import numpy
         import scipy
-        from api.tasks import run_test
 
         if _fake_raw_data is None:
             _fake_raw_data = [{'application_id': '123',
@@ -429,11 +395,6 @@ class TasksTests(BaseDbTestCase):
 
             return metrics_mock
 
-        mock_apply_async = MagicMock()
-        mock_store_examples.si.return_value = mock_apply_async
-        mocks = list(mocks)
-        mocks.append(mock_apply_async)
-
         # Set up mock trainer
         from core.trainer.store import TrainerStorage
         trainer = TrainerStorage.loads(
@@ -443,16 +404,17 @@ class TasksTests(BaseDbTestCase):
         with patch('core.trainer.trainer.Trainer.test',
                    _fake_test) as mock_test:
             mocks.append(mock_test)
-            return run_test([self.dataset._id, ], test._id), mocks
+            return run_test([self.dataset.id, ], test.id), mocks
 
     def test_run_test_with_untrained_model(self):
         model = self.test.model
         model.status = model.STATUS_NEW
         model.save()
         self.assertRaises(InvalidOperationError, run_test,
-                          [self.dataset._id, ], self.test._id)
+                          [self.dataset.id, ], self.test.id)
 
     def test_run_test_unicode_encoding(self):
+        test = TestResult.query.filter_by(name=TestResultData.test_04.name).first()
         unicode_string = u'Привет!'
         _fake_raw_data = [{'application_id': '123',
                            'hire_outcome': '0',
@@ -460,59 +422,34 @@ class TasksTests(BaseDbTestCase):
                            'opening_title': unicode_string,
                            'opening_id': unicode_string}] * 100
         
-        result, mocks = self._check_run_test(self.test, _fake_raw_data)
+        result, mocks = self._check_run_test(test, _fake_raw_data)
         self.assertEquals(result, 'Test completed')
         example = TestExample.query.filter_by(
-            test_result=self.test).first()
-        self.assertEquals(example.id, unicode_string)
+            test_result=test).first()
+        self.assertEquals(example.data_input.keys(), _fake_raw_data[0].keys())
+        self.assertEquals(
+            example.data_input['opening_id'], unicode_string)
+        self.assertEquals(example.example_id, unicode_string)
         self.assertEquals(example.name, unicode_string)
 
     def test_run_test(self):
-        self.test.status = self.test.STATUS_QUEUED
-        self.test.save()
+        test = TestResult.query.filter_by(name=TestResultData.test_04.name).first()
+        model = test.model
+        self.assertEquals(model.status, model.STATUS_TRAINED, model.__dict__)
 
         self.assertEquals(
-            app.db.TestExample.find({'test_id': str(test._id)}).count(), 0)
+            TestExample.query.filter_by(test_result=test).count(), 0)
 
         result, mocks = self._check_run_test(test, None)
         self.assertEquals(result, 'Test completed')
-
-        mock_store_examples, mock_get_data_stream, mock_get_trainer, \
-            mock_apply_async, mock_run_test = mocks
+        mock_get_data_stream, mock_get_trainer, mock_run_test = mocks
         self.assertEquals(1, mock_get_data_stream.call_count,
                           'Should be cached and called only once')
-        self.assertFalse(
-            mock_store_examples.si.call_count,
-            "Examples placement is MongoDB. We do not need to store it in Amazon S3")
-        self.assertFalse(mock_apply_async.apply.call_count)
 
-        example = app.db.TestExample.find_one({'test_id': str(test._id)})
+        example = TestExample.query.filter_by(test_result=test).first()
         self.assertTrue(example.data_input, 'Raw data should be filled at all')
-        self.assertEquals(example.data_input.keys(), ['hire_outcome', 'application_id'])
-
-    @mock_s3
-    def test_store_examples(self):
-        from api.tasks import store_examples
-
-        _ROW_COUNT = 5
-
-        filename = 'Test_raw_data-{0!s}.dat'.format(str(self.test._id))
-        with open(os.path.join(app.config['DATA_FOLDER'], filename), 'w') as fp:
-            fp.writelines(['{"data": "value"}\n'] * _ROW_COUNT)
-
-        example = self.db.TestExample.find_one({'name': self.EXAMPLE_NAME})
-        example.on_s3 = True
-        example.save()
-
-        result = store_examples(self.test._id, [
-            range(_ROW_COUNT), [str(example._id)] * _ROW_COUNT
-        ])
-        self.assertEquals(result, list(zip(
-            range(_ROW_COUNT), [str(example._id)] * _ROW_COUNT)))
-
-        example.reload()
-        self.assertEquals(example.data_input, {})
-        self.assertEquals(json.loads(example._load_from_s3()), {'data': 'value'})
+        self.assertEquals(example.data_input.keys(),
+                          ['hire_outcome', 'application_id', 'title'])
 
 
 class MetricsMock(MagicMock):

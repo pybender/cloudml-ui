@@ -25,8 +25,8 @@ class TestsResource(BaseResourceSQL):
     def _get_examples_size_action(self, **kwargs):
         fields = ['name', 'model_name', 'model_id', 'examples_size',
                   'created_on', 'created_by']
-        tests = TestResult.query.order_by(desc(TestResult.examples_size)
-        ).limit(10).all()
+        tests = TestResult.query.order_by(
+            desc(TestResult.examples_size)).limit(10).all()
         return self._render({'tests': tests})
 
     def _get_confusion_matrix_action(self, **kwargs):
@@ -70,7 +70,7 @@ api.add_resource(TestsResource,
                  '/cloudml/models/<regex("[\w\.]*"):model_id>/tests/')
 
 
-class TestExamplesResource(BaseResourceSQL):
+class TestExampleResource(BaseResourceSQL):
     """
     """
     Model = TestExample
@@ -85,7 +85,7 @@ class TestExamplesResource(BaseResourceSQL):
             for field in test.dataset.data_fields:
                 field_new = field.replace('.', '->')
                 self.FILTER_PARAMS += (("data_input->>%s" % field_new, str),)
-        return super(TestExamplesResource, self)._list(**kwargs)
+        return super(TestExampleResource, self)._list(**kwargs)
 
     def _get_details_query(self, params, **kwargs):
         load_weights = False
@@ -93,7 +93,7 @@ class TestExamplesResource(BaseResourceSQL):
         #     fields = None  # We need all fields to recalc weights
         load_weights = True
 
-        example = super(TestExamplesResource, self)._get_details_query(
+        example = super(TestExampleResource, self)._get_details_query(
             params, **kwargs)
 
         if example is None:
@@ -101,7 +101,7 @@ class TestExamplesResource(BaseResourceSQL):
 
         if load_weights and not example.is_weights_calculated:
             example.calc_weighted_data()
-            example = super(TestExamplesResource, self)._get_details_query(
+            example = super(TestExampleResource, self)._get_details_query(
                 params, **kwargs)
 
         # TODO: hack
@@ -237,5 +237,5 @@ not contain probabilities')
         test = TestResult.query.get(kwargs.get('test_result_id'))
         return test.dataset.data_fields
 
-api.add_resource(TestExamplesResource, '/cloudml/models/\
+api.add_resource(TestExampleResource, '/cloudml/models/\
 <regex("[\w\.]*"):model_id>/tests/<regex("[\w\.]*"):test_result_id>/examples/')

@@ -20,6 +20,7 @@ class ModelData(DataSet):
         example_label = "opening_title"
         target_variable = "hire_outcome"
         weights_synchronized = False
+        status = "Trained"
         classifier = {
             "name": "Test Classifier",
             "params": {"penalty": "l2"},

@@ -70,6 +70,22 @@ class TestResultData(DataSet):
         model = ModelData.model_01
         dataset = DataSetData.dataset_01
 
+    class test_05:
+        name = "Test-5"
+        status = "Queued"
+        created_on = "2013-04-19 14:37:23.145000"
+        updated_on = "2013-04-19 14:37:23.145000"
+        model_name = ModelData.model_03.name
+        parameters = {}
+        metrics = {}
+        examples_count = 0
+        examples_fields = ["hire_outcome", "application_id"]
+        error = ""
+        classes_set = []
+        accuracy = 0
+        model = ModelData.model_03
+        dataset = DataSetData.dataset_01
+
 
 class TestExampleData(DataSet):
     class test_example_01:
