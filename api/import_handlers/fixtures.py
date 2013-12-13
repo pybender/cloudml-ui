@@ -1,4 +1,3 @@
-<<<<<<< HEAD:api/import_handlers/fixtures.py
 import json
 
 from fixture import DataSet
@@ -29,17 +28,6 @@ class ImportHandlerData(DataSet):
       "name":"retrieve",
       "sql": "SELECT qi.*, 'class' || (trunc(random() * 2) + 1)::char hire_outcome FROM public.ja_quick_info qi where qi.file_provenance_date >= '%(start)s' AND qi.file_provenance_date < '%(end)s' LIMIT(100);",
       "items": [
-=======
-{"ImportHandler": [
- {
-    "_id": "5170dd3a106a6c1631000000",
-    "created_on": "2013-04-19 14:37:23.145000",
-    "updated_on": "2013-04-19 14:37:23.145000",
-    "name": "IH1",
-    "data": {
-      "target_schema":"bestmatch",
-      "datasource":[
->>>>>>> MATCH-1180_refactor_import_handlers:api/fixtures/importhandlers.json
         {
           "name":"odw",
           "type":"sql",
@@ -134,7 +122,6 @@ class ImportHandlerData(DataSet):
           ]
         }
       ]
-<<<<<<< HEAD:api/import_handlers/fixtures.py
     }
   ]
 }
@@ -193,10 +180,3 @@ class DataSetData(DataSet):
         time = 200
         format = "csv"
         import_handler_id = ImportHandlerData.import_handler_01.ref('id')
-=======
-    },
-    "import_params": ["start", "end", "category"]
- }
- ]
-}
->>>>>>> MATCH-1180_refactor_import_handlers:api/fixtures/importhandlers.json

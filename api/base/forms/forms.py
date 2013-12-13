@@ -127,15 +127,9 @@ class BaseForm(InternalForm):
         return not bool(self.errors)
 
     def clean(self):
-<<<<<<< HEAD:api/base/forms/forms.py
         if not self.obj and self.model_name:
             from api import models as all_models
             callable_model = getattr(all_models, self.model_name)
-=======
-        if self.obj is None and self.model_name:
-            from api import app
-            callable_model = getattr(app.db, self.model_name)
->>>>>>> MATCH-1180_refactor_import_handlers:api/base/forms.py
             self.obj = callable_model()
 
         def add_error(name, msg):
@@ -217,11 +211,7 @@ fields %s is required' % ', '.join(fields))
 
         self.obj.updated_on = datetime.now()
         if commit:
-<<<<<<< HEAD:api/base/forms/forms.py
             self.obj.save()
-=======
-            self.obj.save(validate=True, check_keys=False)
->>>>>>> MATCH-1180_refactor_import_handlers:api/base/forms.py
 
         return self.obj
 
