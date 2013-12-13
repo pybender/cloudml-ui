@@ -180,9 +180,6 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(model.name, name)
         self.assertEquals(model.status, model.STATUS_NEW)
         
-        classifier = model.classifier
-        self.assertTrue(classifier, "classifier not set")
-        
         features_set = model.features_set
         self.assertTrue(features_set, "Features set not created")
 

@@ -2,6 +2,7 @@ from moto import mock_s3
 from flask.ext.testing import TestCase
 
 from api.amazon_utils import AmazonS3Helper
+from api import app
 
 
 class AmazonS3HelperTests(TestCase):
@@ -12,6 +13,9 @@ class AmazonS3HelperTests(TestCase):
         self.helper = AmazonS3Helper(
             token='token', secret='secret', bucket_name='bucket_name'
         )
+
+    def create_app(self):
+        return app
 
     @mock_s3
     def test_save_delete_key(self):

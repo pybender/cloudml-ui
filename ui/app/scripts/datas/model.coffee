@@ -10,7 +10,7 @@ angular.module('app.datas.model', ['app.config'])
   ($http, $q, settings, BaseModel, Test) ->
 
     class Data extends BaseModel
-      API_FIELDNAME: 'test_examples'
+      API_FIELDNAME: 'test_example'
 
       id: null
       example_id: null
@@ -88,7 +88,7 @@ angular.module('app.datas.model', ['app.config'])
           {
             field_name: resp.data['field_name']
             mavp: resp.data['mavp']
-            objects: resp.data['test_exampless'].items
+            objects: resp.data['test_examples'].items
           }
         @$make_all_request(url, resolver, opts)
 
