@@ -176,13 +176,13 @@ confusion_matrix_calculations,examples_placement,name,status,created_on,created_
         metrics: {}
       )
 
-    it "should request confusion matrix", inject () ->
-      url = BASE_URL + 'action/confusion_matrix/?weight0=42&weight1=38'
-      $httpBackend.expectGET(url).respond('{"confusion_matrix": [1,2,3,4],
-"test": {}}')
+#     it "should request confusion matrix", inject () ->
+#       url = BASE_URL + 'action/confusion_matrix/?weight0=42&weight1=38'
+#       $httpBackend.expectGET(url).respond('{"confusion_matrix": [1,2,3,4],
+# "test": {}}')
 
-      $rootScope.recalculate(42, 38)
-      $httpBackend.flush()
+#       $rootScope.recalculate(42, 38)
+#       $httpBackend.flush()
 
     it "should reload items", inject () ->
       url = BASE_URL + '?show=' + encodeURIComponent('confusion_matrix_calculations')

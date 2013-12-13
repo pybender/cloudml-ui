@@ -1,0 +1,40 @@
+<h2>
+  DataSource List
+  <div class="actions">
+      <a class="btn btn-info" ng-click="add()">
+        <i class="status-icon icon-plus"></i> Add new data source
+      </a>
+  </div>
+</h2>
+
+<div ng-controller="BaseListCtrl" ng-init="init(true, LIST_MODEL_NAME)">
+	<alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+
+	<alert-message ng-show="objects.length == 0" class="alert-info" msg="No data sources found"></alert-message>
+
+	<table ng-hide="objects.length == 0" class="table table-hover">
+	<thead>
+	  <tr>
+	    <th>Name</th>
+	    <th>Type</th>
+	    <th>Vendor</th>
+	    <th>Connection</th>
+	    <th>Created</th>
+	  </tr>
+	</thead>
+	<tbody>
+	  <tr ng-repeat="ds in objects | orderBy:'name'">
+	    <td>
+	      <a ng-click="edit(ds)">{{ ds.name }}</a>
+	    </td>
+	    <td>{{ ds.type }}</td>
+	    <td>{{ ds.db_settings.vendor }}</td>
+	    <td>{{ ds.db_settings.conn }}</td>
+	    <td>
+	        {{ ds.created_on|format_date }}<br>
+	        <small ng-show="ds.created_by">by {{ ds.created_by.name }} ({{ ds.created_by.uid }})</small>
+	    </td>
+	  </tr>
+	</tbody>
+	</table>
+</div>
