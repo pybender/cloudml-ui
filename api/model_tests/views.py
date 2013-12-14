@@ -62,8 +62,8 @@ class TestsResource(BaseResourceSQL):
             raise NotFound('Test not found')
 
         exports = AsyncTask.get_current_by_object(
-            'api.model_tests.tasks.get_csv_results',
             test,
+            'api.model_tests.tasks.get_csv_results',
             request.user
         )
 
