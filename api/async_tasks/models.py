@@ -42,7 +42,8 @@ class AsyncTask(db.Model, BaseModel):
         cursor = cls.query.filter_by(
             object_type=cls._get_object_type_name(obj),
             object_id=obj.id,
-            status=cls.STATUS_IN_PROGRESS,
+        ).filter(
+            cls.status.in_([cls.STATUS_IN_PROGRESS, cls.STATUS_COMPLETED])
         )
         if task_name:
             cursor = cursor.filter_by(task_name=task_name)

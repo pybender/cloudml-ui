@@ -169,7 +169,7 @@ examples_fields,examples_size'
             $scope.prCurve = {'Precision-Recall curve': [pr[1], pr[0]]}
                
         when 'matrix' then extra_fields = 'metrics,
-confusion_matrix_calculations'
+confusion_matrix_calculations,model'
 
       if 'main' in $scope.LOADED_SECTIONS
         # Do not need load main fields -> only extra

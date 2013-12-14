@@ -64,7 +64,6 @@ class TestsResource(BaseResourceSQL):
         exports = AsyncTask.get_current_by_object(
             test,
             'api.model_tests.tasks.get_csv_results',
-            request.user
         )
 
         return self._render({self.OBJECT_NAME: test.id,

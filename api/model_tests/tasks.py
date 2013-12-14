@@ -201,7 +201,7 @@ def calculate_confusion_matrix(test_id, weight0, weight1):
             max([weighted_prob0, weighted_prob1]))
         matrix[true_value_idx][predicted] += 1
 
-    return matrix
+    return zip(model.labels, matrix)
 
 
 @celery.task

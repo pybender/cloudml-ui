@@ -63,6 +63,22 @@ class TestResult(db.Model, BaseModel):
         if commit:
             self.save()
 
+    @property
+    def exports(self):
+        from api.async_tasks.models import AsyncTask
+        return AsyncTask.get_current_by_object(
+            self,
+            'api.model_tests.tasks.get_csv_results',
+        )
+
+    @property
+    def confusion_matrix_calculations(self):
+        from api.async_tasks.models import AsyncTask
+        return AsyncTask.get_current_by_object(
+            self,
+            'api.model_tests.tasks.calculate_confusion_matrix',
+        )
+
 
 class TestExample(db.Model, BaseModel):
     __tablename__ = 'test_example'
