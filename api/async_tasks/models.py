@@ -1,7 +1,7 @@
 import logging
 
 from sqlalchemy import desc
-from flask.ext.sqlalchemy import models_committed
+from flask.ext.sqlalchemy import before_models_committed
 
 from api.base.models import db, BaseModel, JSONType
 
@@ -58,8 +58,8 @@ class AsyncTask(db.Model, BaseModel):
             logging.exception(e)
 
 
-@models_committed.connect
-def on_models_committed(sender, changes):
+@before_models_committed.connect
+def on_before_models_committed(sender, changes):
     """
     Signal handler to stop all running tasks related to object
     that is being deleted.
@@ -70,9 +70,7 @@ def on_models_committed(sender, changes):
     MODELS_TO_TRACK = ['DataSet', 'Model', 'TestResult']
     dels = [obj for obj, oper in changes
             if oper == 'delete' and obj.__class__.__name__ in MODELS_TO_TRACK]
+    db.session.flush()
     for obj in dels:
         for task in AsyncTask.get_current_by_object(obj):
             task.terminate_task()
-            task.status = AsyncTask.STATUS_ERROR
-            task.save(commit=False)
-    db.session.commit()

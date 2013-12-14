@@ -1,3 +1,4 @@
+from api.logs.mongo.models import LogMessage
 from flask import Response, request
 from flask.ext.restful import reqparse
 from sqlalchemy import or_
@@ -81,7 +82,7 @@ class ModelResource(BaseResourceSQL):
         parser_params = self.GET_PARAMS + (('handler', str), )
         params = self._parse_parameters(parser_params)
         handler_id = params.get('handler')
-        models = Model.filter(or_(
+        models = Model.query.filter(or_(
             Model.train_import_handler_id == handler_id,
             Model.test_import_handler_id == handler_id,
         )).all()
@@ -134,10 +135,7 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
                 'spot_instance_type', None)
 
             tasks_list = []
-            # Removing old log messages
-            # TODO
-            # app.db.LogMessage.collection.remove({'type': 'trainmodel_log',
-            #                                     'params.obj': model._id})
+            LogMessage.delete_related_logs(model)
             if form.params_filled:
                 import_handler = model.train_import_handler
                 params = form.cleaned_data.get('parameters', None)
