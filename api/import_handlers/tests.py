@@ -253,7 +253,7 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(resp.status_code, httplib.OK)
         data = json.loads(resp.data)
         self.assertEquals(data[self.RESOURCE.OBJECT_NAME]['id'],
-                          str(self.obj.id))
+                          self.obj.id)
         self.assertEquals(data[self.RESOURCE.OBJECT_NAME]['status'],
                           DataSet.STATUS_IMPORTING)
         mock_import_data.delay.assert_called_once_with(dataset_id=self.obj.id)
