@@ -12,7 +12,7 @@ class ImportHandlerData(DataSet):
         import_params = ['start', 'end', 'category']
         data = json.loads("""
         {
-  "target-schema":"bestmatch",
+  "target_schema":"bestmatch",
   "datasource":[
     {
       "name":"odw",
@@ -28,20 +28,6 @@ class ImportHandlerData(DataSet):
       "name":"retrieve",
       "sql": "SELECT qi.*, 'class' || (trunc(random() * 2) + 1)::char hire_outcome FROM public.ja_quick_info qi where qi.file_provenance_date >= '%(start)s' AND qi.file_provenance_date < '%(end)s' LIMIT(100);",
       "items": [
-        {
-          "name":"odw",
-          "type":"sql",
-          "db":{
-            "conn":"host='localhost' dbname='cloudml' user='cloudml' password='cloudml'",
-            "vendor":"postgres"
-          }
-        }
-      ],
-      "queries":[
-        {
-          "name":"retrieve",
-          "sql": "SELECT qi.*, 'class' || (trunc(random() * 2) + 1)::char hire_outcome FROM public.ja_quick_info qi where qi.file_provenance_date >= '%(start)s' AND qi.file_provenance_date < '%(end)s' LIMIT(100);",
-          "items": [
             {
               "source": "application",
               "process_as": "string",
@@ -80,7 +66,7 @@ class ImportHandlerData(DataSet):
               "is_required": true,
               "process_as": "json",
               "target_features": [
-                { "name": "contractor.skills", "jsonpath": "$.skills.*.skl_name", "to-csv": true},
+                { "name": "contractor.skills", "jsonpath": "$.skills.*.skl_name", "to_csv": true},
                 { "name": "tsexams", "jsonpath": "$.tsexams", "key_path": "$.*.ts_name", "value_path": "$.*.ts_score" },
                 { "name": "contractor.dev_adj_score_recent", "jsonpath": "$.dev_adj_score_recent"},
                 { "name": "contractor.dev_is_looking", "jsonpath": "$.dev_is_looking" },
@@ -119,8 +105,6 @@ class ImportHandlerData(DataSet):
                 { "name": "country_pair", "expression": {"type": "string", "value": "%(employer.country)s,%(contractor.dev_country)s"}}
               ]
             }
-          ]
-        }
       ]
     }
   ]
@@ -180,3 +164,12 @@ class DataSetData(DataSet):
         time = 200
         format = "csv"
         import_handler_id = ImportHandlerData.import_handler_01.ref('id')
+
+
+class PredefinedDataSourceData(DataSet):
+  class datasource_01:
+    name = "DataSource #1"
+    type = "sql"
+    db = {'conn': 'conn str', 'vendor':'postgres'}
+    created_on = "2013-04-19 14:37:23.145000"
+    updated_on = "2013-04-19 14:37:23.145000"

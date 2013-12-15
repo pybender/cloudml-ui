@@ -127,7 +127,7 @@ class BaseForm(InternalForm):
         return not bool(self.errors)
 
     def clean(self):
-        if not self.obj and self.model_name:
+        if self.obj is None and self.model_name:
             from api import models as all_models
             callable_model = getattr(all_models, self.model_name)
             self.obj = callable_model()
@@ -209,7 +209,7 @@ fields %s is required' % ', '.join(fields))
                 except AttributeError:
                     pass
 
-        self.obj.updated_on = datetime.now()
+        self.obj.updated_on = str(datetime.now())
         if commit:
             self.obj.save()
 

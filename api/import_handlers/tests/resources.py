@@ -4,9 +4,9 @@ from mock import patch
 from moto import mock_s3
 
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS
-from views import ImportHandlerResource, DataSetResource
-from models import ImportHandler, DataSet
-from fixtures import ImportHandlerData, DataSetData
+from ..views import ImportHandlerResource, DataSetResource
+from ..models import ImportHandler, DataSet
+from ..fixtures import ImportHandlerData, DataSetData
 from api.ml_models.fixtures import ModelData
 from api.ml_models.models import Model
 from api.model_tests.fixtures import TestResultData
@@ -19,41 +19,44 @@ class ImportHandlerTests(BaseDbTestCase, TestChecksMixin):
     """
     BASE_URL = '/cloudml/importhandlers/'
     RESOURCE = ImportHandlerResource
-    MODEL_NAME = 'TrainedModel'
+    MODEL_NAME = ModelData.model_01.name
     Model = ImportHandler
     datasets = [ImportHandlerData, DataSetData, ModelData]
 
     def setUp(self):
         super(ImportHandlerTests, self).setUp()
-        self.obj = self.Model.query.filter_by(name='Handler 1').first()
+        self.obj = self.Model.query.filter_by(
+            name=ImportHandlerData.import_handler_01.name).first()
         for ds in DataSet.query.all():
             ds.import_handler = self.obj
             ds.save()
 
     def test_list(self):
-        self.check_list(show='name,type,import_params')
+        self.check_list(show='name')
 
     def test_details(self):
         resp = self.check_details(
             show='name,type,import_params,data', obj=self.obj)
         obj = resp[self.RESOURCE.OBJECT_NAME]
         self.assertEqual(obj['name'], self.obj.name)
-        self.assertEqual(obj['type'], self.obj.type)
         self.assertEqual(obj['import_params'], self.obj.import_params)
         self.assertEqual(
-            obj['data']['target-schema'],
-            self.obj.data['target-schema']
+            obj['data']['target_schema'],
+            self.obj.data['target_schema']
         )
 
-    
     def test_edit_name(self):
+        # TODO:
+        # data = {'name': ''}
+        # self.check_edit_error(data, errors={'fill name': 1}, id=self.obj.id)
+
         data = {"name": "new name"}
-        resp, obj = self._check_put(data, load_model=True)
+        resp, obj = self.check_edit(data, id=self.obj.id)
         self.assertEquals(obj.name, data['name'])
 
     def test_edit_target_schema(self):
         data = {"target_schema": "new-schema"}
-        resp, obj = self._check_put(data, load_model=True)
+        resp, obj = self.check_edit(data, id=self.obj.id)
         self.assertEquals(obj.data['target_schema'], data['target_schema'])
 
     def test_edit_datasource(self):
@@ -62,14 +65,14 @@ class ImportHandlerTests(BaseDbTestCase, TestChecksMixin):
             "datasource.0.type": "request",
             "datasource.0.db": '{"conn": "conn.st", "vendor": "postgress"}'
         }
-        resp, obj = self._check_put(data, load_model=True)
+        resp, obj = self.check_edit(data, id=self.obj.id)
         ds = obj.data['datasource'][0]
         self.assertEquals(ds['name'], "name2")
 
     def test_edit_queries(self):
         data = {'queries.-1.name': 'new query',
                 'queries.-1.sql': 'select * from ...'}
-        resp, obj = self._check_put(data, load_model=True)
+        resp, obj = self.check_edit(data, id=self.obj.id)
         self.assertEquals(len(obj.data['queries']), 2, "Query should be added")
         query = obj.data['queries'][1]
         self.assertEquals(query['name'], 'new query')
@@ -77,26 +80,26 @@ class ImportHandlerTests(BaseDbTestCase, TestChecksMixin):
 
         data = {'queries.1.name': 'new query1',
                 'queries.1.sql': 'select * from t1...'}
-        resp, obj = self._check_put(data, load_model=True)
+        resp, obj = self.check_edit(data, id=self.obj.id)
         self.assertEquals(len(obj.data['queries']), 2, "Query should be updated")
         query = obj.data['queries'][1]
         self.assertEquals(query['name'], 'new query1')
         self.assertEquals(query['sql'], 'select * from t1...')
 
         data = {'queries.1.items.-1.source': 'some-source'}
-        resp, obj = self._check_put(data, load_model=True)
+        resp, obj = self.check_edit(data, id=self.obj.id)
         self.assertEquals(len(obj.data['queries'][1]['items']), 1,
                           "Item should be updated")
         item = obj.data['queries'][1]['items'][0]
         self.assertEquals(item['source'], 'some-source')
 
         data = {'queries.1.items.0.source': 'other-source'}
-        resp, obj = self._check_put(data, load_model=True)
+        resp, obj = self.check_edit(data, id=self.obj.id)
         item = obj.data['queries'][1]['items'][0]
         self.assertEquals(item['source'], 'other-source')
 
         data = {'queries.1.items.0.target_features.-1.name': 'hire_outcome'}
-        resp, obj = self._check_put(data, load_model=True)
+        resp, obj = self.check_edit(data, id=self.obj.id)
         features = obj.data['queries'][1]['items'][0]['target_features']
         self.assertEquals(len(features), 1,
                           "Item should be updated")
@@ -104,7 +107,7 @@ class ImportHandlerTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(feature['name'], 'hire_outcome')
 
         data = {'queries.1.items.0.target_features.0.name': 'hire_outcome2'}
-        resp, obj = self._check_put(data, load_model=True)
+        resp, obj = self.check_edit(data, id=self.obj.id)
         feature = obj.data['queries'][1]['items'][0]['target_features'][0]
         self.assertEquals(feature['name'], 'hire_outcome2')
 
@@ -153,7 +156,7 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
     """
     DS_NAME = 'DS'
     DS_NAME2 = 'DS 2'
-    MODEL_NAME = 'TrainedModel'
+    MODEL_NAME = ModelData.model_01.name
     RESOURCE = DataSetResource
     Model = DataSet
     datasets = [ImportHandlerData, DataSetData, ModelData, TestResultData]
@@ -313,7 +316,7 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         mock_import_data.delay.assert_called_once_with(dataset_id=self.obj.id)
         mock_import_data.reset_mock()
 
-        # TODO: AttributeError: 'DataSet' object has no 
+        # TODO: AttributeError: 'DataSet' object has no
         # attribute '_sa_instance_state'
         self.obj.status = DataSet.STATUS_IMPORTING
         self.obj.save()

@@ -5,28 +5,53 @@ import os
 from os.path import join, exists
 from os import makedirs
 import StringIO
-
-from sqlalchemy.orm import relationship, deferred, backref
+from sqlalchemy.orm import relationship, deferred, backref, validates
 from sqlalchemy.dialects import postgresql
 
 from api import app
 from api.amazon_utils import AmazonS3Helper
-from api.base.models import db, BaseModel, JSONType
+from api.base.models import db, BaseModel, JSONType, assertion_msg
 from api.logs.models import LogMessage
 
 
+class PredefinedDataSource(db.Model, BaseModel):
+    TYPE_REQUEST = 'request'
+    TYPE_SQL = 'sql'
+    TYPES_LIST = (TYPE_REQUEST, TYPE_SQL)
+
+    VENDOR_POSTGRES = 'postgres'
+    VENDORS_LIST = (VENDOR_POSTGRES, )
+
+    name = db.Column(db.String(200), nullable=False, unique=True)
+    type = db.Column(db.Enum(*TYPES_LIST, name='datasource_types'),
+                     default=TYPE_SQL)
+    # sample: {"conn": basestring, "vendor": basestring}
+    db = deferred(db.Column(JSONType))
+
+    @validates('db')
+    def validate_db(self, key, db):
+        assert 'vendor' in db, assertion_msg(key, 'vendor is required')
+        assert db['vendor'] in self.VENDORS_LIST, assertion_msg(
+            key, 'choose vendor from %s' % ', '.join(self.VENDORS_LIST))
+        assert 'conn' in db, assertion_msg(key, 'conn is required')
+        return db
+
+
 class ImportHandler(db.Model, BaseModel):
-    TYPE_DB = 'Db'
-    TYPE_REQUEST = 'Request'
-
-    TYPES = (TYPE_DB, TYPE_REQUEST)
-
-    __tablename__ = 'import_handler'
-
-    name = db.Column(db.String(200))
-    type = db.Column(db.Enum(*TYPES, name='handler_types'))
-    data = deferred(db.Column(JSONType))
+    name = db.Column(db.String(200), nullable=False, unique=True)
     import_params = db.Column(postgresql.ARRAY(db.String))
+
+    data = db.Column(JSONType)
+
+    @validates('data')
+    def validate_data(self, key, data):
+        assert 'target_schema' in data, assertion_msg(
+            key, 'target_schema is required')
+        assert 'datasource' in data, assertion_msg(
+            key, 'datasource is required')
+        assert 'queries' in data, assertion_msg(
+            key, 'queries is required')
+        return data
 
     def get_fields(self):
         from core.importhandler.importhandler import ExtractionPlan
@@ -37,7 +62,7 @@ class ImportHandler(db.Model, BaseModel):
         for query in plan.queries:
             items = query['items']
             for item in items:
-                features = item['target-features']
+                features = item['target_features']
                 for feature in features:
                     test_handler_fields.append(
                         feature['name'].replace('.', '->'))
@@ -55,231 +80,83 @@ class ImportHandler(db.Model, BaseModel):
         dataset.set_file_path()
         return dataset
 
+    def check_sql(self, sql):
+        """
+        Parses sql query structure from text,
+        raises Exception if it's not a SELECT query or invalid sql.
+        """
+        import sqlparse
+
+        query = sqlparse.parse(sql)
+        wrong_sql = False
+        if len(query) < 1:
+            wrong_sql = True
+        else:
+            query = query[0]
+            if query.get_type() != 'SELECT':
+                wrong_sql = True
+
+        if wrong_sql:
+            raise Exception('Invalid sql query')
+        else:
+            return query
+
+    def build_query(self, sql, limit=2):
+        """
+        Parses sql query and changes LIMIT statement value.
+        """
+        import re
+        from sqlparse import parse, tokens
+        from sqlparse.sql import Token
+
+        # It's important to have a whitespace right after every LIMIT
+        pattern = re.compile('limit([^ ])', re.IGNORECASE)
+        sql = pattern.sub(r'LIMIT \1', sql)
+
+        query = parse(sql)[0]
+
+        # Find LIMIT statement
+        token = query.token_next_match(0, tokens.Keyword, 'LIMIT')
+        if token:
+            # Find and replace LIMIT value
+            value = query.token_next(query.token_index(token), skip_ws=True)
+            if value:
+                new_token = Token(value.ttype, str(limit))
+                query.tokens[query.token_index(value)] = new_token
+        else:
+            # If limit is not found, append one
+            new_tokens = [
+                Token(tokens.Whitespace, ' '),
+                Token(tokens.Keyword, 'LIMIT'),
+                Token(tokens.Whitespace, ' '),
+                Token(tokens.Number, str(limit)),
+            ]
+            last_token = query.tokens[-1]
+            if last_token.ttype == tokens.Punctuation:
+                query.tokens.remove(last_token)
+            for new_token in new_tokens:
+                query.tokens.append(new_token)
+
+        return str(query)
+
+    def execute_sql_iter(self, sql, datasource_name):
+        """
+        Executes sql using data source with name datasource_name.
+        Datasource with given name should be in handler's datasource list.
+        Returns iterator.
+        """
+        from core.importhandler import importhandler
+        datasource = next((d for d in self.data['datasource']
+                           if d['name'] == datasource_name))
+
+        iter_func = importhandler.ImportHandler.DB_ITERS.get(
+            datasource['db']['vendor'])
+
+        for row in iter_func([sql], datasource['db']['conn']):
+            yield dict(row)
+
     def __repr__(self):
         return '<Import Handler %r>' % self.name
-
-
-
-# @app.conn.register
-# class ImportHandler(BaseDocument):
-#     __collection__ = 'handlers'
-#     QUERY_STRUCT = {
-#         "name": basestring,
-#         "sql": basestring,
-#         "items": [{"target_features": [{}]}]
-#     }
-
-#     structure = {
-#         'name': basestring,
-#         'error': basestring,
-#         "import_params": list,
-#         'created_on': datetime,
-#         'created_by': dict,
-#         'updated_on': datetime,
-#         'updated_by': dict,
-
-#         # FIXME: Investigate, why when spec struct of dict,
-#         # data always returns using find or find_one mthd.
-#         'data': {
-#             'target_schema': basestring,
-#             'datasource': list,
-#             'queries': list
-#         },
-#         #'data': dict,
-#     }
-
-#     use_dot_notation = True
-#     required_fields = ['name', 'created_on', ]
-#     default_values = {'created_on': datetime.utcnow,
-#                       'updated_on': datetime.utcnow,
-#                       'data.datasource': [],
-#                       'data.queries': [],
-#                       'data.target_schema': ''}
-
-#     def set_target_schema(self, val):
-#         self.data['target_schema'] = val
-
-#     def get_target_schema(self):
-#         return self.data['target_schema']
-
-#     target_schema = property(get_target_schema, set_target_schema)
-
-#     def save(self, *args, **kwargs):
-#         self.error = ''
-#         try:
-#             plan = ExtractionPlan(json.dumps(self.data), is_file=False)
-#             self.import_params = plan.input_params
-#         except Exception as e:
-#             self.error = str(e)
-#         super(ImportHandler, self).save(*args, **kwargs)
-
-#     def from_import_handler_json(self, data):
-#         self.target_schema = data['target_schema']
-#         self.data['queries'] = data['queries']
-#         self.data['datasource'] = data['datasource']
-#         self.save()
-
-#     def validate(self, *args, **kwargs):
-#         def validate_structure(item, struct):
-#             for key, val in struct.iteritems():
-#                 if type(val) == dict:
-#                     validate_structure(item[key], val)
-#                 elif type(val) == list:
-#                     for subitem in item[key]:
-#                         validate_structure(subitem, val[0])
-#                 else:
-#                     assert key in item, '%s is required' % key
-
-#         super(ImportHandler, self).validate(*args, **kwargs)
-#         for query in self.data['queries']:
-#             validate_structure(query, self.QUERY_STRUCT)
-
-#     SYSTEM_FIELDS = ('_id', 'created_on', 'created_by',
-#         'updated_on', 'updated_by', 'import_params', 'error')
-
-#     # @property
-#     # def data(self):
-#     #     from copy import deepcopy
-#     #     data = deepcopy(dict(self))
-#     #     for field in self.SYSTEM_FIELDS:
-#     #         data.pop(field, None)
-
-#     #     for ds in data['datasource']:
-#     #         ds['db'] = ds.pop('db_settings', None)
-#     #     return data
-
-#     # TODO: Denormalize to field!
-#     def get_fields(self):
-#         data = json.dumps(self.data)
-#         plan = ExtractionPlan(data, is_file=False)
-#         test_handler_fields = []
-#         for query in plan.queries:
-#             items = query['items']
-#             for item in items:
-#                 features = item['target_features']
-#                 for feature in features:
-#                     test_handler_fields.append(
-#                         feature['name'].replace('.', '->'))
-#         return test_handler_fields
-
-#     def create_dataset(self, params, run_import_data=True, data_format='json'):
-#         #from api.utils import slugify
-#         dataset = app.db.DataSet()
-#         str_params = "-".join(["%s=%s" % item
-#                               for item in params.iteritems()])
-#         dataset.name = "%s: %s" % (self.name, str_params)
-#         dataset.import_handler_id = str(self._id)
-#         dataset.import_params = params
-#         dataset.format = data_format
-#         # filename = '%s-%s.json' % (slugify(self.name)
-#         # str_params.replace('=', '_'))
-#         # dataset.data = filename
-#         dataset.save(validate=True)
-#         dataset.set_file_path()
-#         return dataset
-
-#     def delete(self):
-#         datasets = app.db.DataSet.find({'import_handler_id': str(self._id)})
-#         for ds in datasets:
-#             ds.delete()
-
-#         expr = {'$or': [{'test_import_handler.$id': self._id},
-#                         {'train_import_handler.$id': self._id}]}
-#         models = app.db.Model.find(expr)
-
-#         def unset(model, handler_type='train'):
-#             handler = getattr(model, '%s_import_handler' % handler_type)
-#             if handler and handler['_id'] == self._id:
-#                 setattr(model, '%s_import_handler' % handler_type, None)
-#                 model.changed = True
-
-#         for model in models:
-#             model.changed = False
-#             unset(model, 'train')
-#             unset(model, 'test')
-#             if model.changed:
-#                 model.save()
-
-#         super(ImportHandler, self).delete()
-
-#     def check_sql(self, sql):
-#         """
-#         Parses sql query structure from text,
-#         raises Exception if it's not a SELECT query or invalid sql.
-#         """
-#         import sqlparse
-
-#         query = sqlparse.parse(sql)
-#         wrong_sql = False
-#         if len(query) < 1:
-#             wrong_sql = True
-#         else:
-#             query = query[0]
-#             if query.get_type() != 'SELECT':
-#                 wrong_sql = True
-
-#         if wrong_sql:
-#             raise Exception('Invalid sql query')
-#         else:
-#             return query
-
-#     def build_query(self, sql, limit=2):
-#         """
-#         Parses sql query and changes LIMIT statement value.
-#         """
-#         import re
-#         from sqlparse import parse, tokens
-#         from sqlparse.sql import Token
-
-#         # It's important to have a whitespace right after every LIMIT
-#         pattern = re.compile('limit([^ ])', re.IGNORECASE)
-#         sql = pattern.sub(r'LIMIT \1', sql)
-
-#         query = parse(sql)[0]
-
-#         # Find LIMIT statement
-#         token = query.token_next_match(0, tokens.Keyword, 'LIMIT')
-#         if token:
-#             # Find and replace LIMIT value
-#             value = query.token_next(query.token_index(token), skip_ws=True)
-#             if value:
-#                 new_token = Token(value.ttype, str(limit))
-#                 query.tokens[query.token_index(value)] = new_token
-#         else:
-#             # If limit is not found, append one
-#             new_tokens = [
-#                 Token(tokens.Whitespace, ' '),
-#                 Token(tokens.Keyword, 'LIMIT'),
-#                 Token(tokens.Whitespace, ' '),
-#                 Token(tokens.Number, str(limit)),
-#             ]
-#             last_token = query.tokens[-1]
-#             if last_token.ttype == tokens.Punctuation:
-#                 query.tokens.remove(last_token)
-#             for new_token in new_tokens:
-#                 query.tokens.append(new_token)
-
-#         return str(query)
-
-#     def execute_sql_iter(self, sql, datasource_name):
-#         """
-#         Executes sql using data source with name datasource_name.
-#         Datasource with given name should be in handler's datasource list.
-#         Returns iterator.
-#         """
-#         from core.importhandler import importhandler
-#         datasource = next((d for d in self.data['datasource']
-#                            if d['name'] == datasource_name))
-
-#         iter_func = importhandler.ImportHandler.DB_ITERS.get(
-#             datasource['db']['vendor'])
-
-#         for row in iter_func([sql], datasource['db']['conn']):
-#             yield dict(row)
-
-#     def __repr__(self):
-#         return '<Import Handler %r>' % self.name
-
 
 
 class DataSet(db.Model, BaseModel):
@@ -369,7 +246,7 @@ class DataSet(db.Model, BaseModel):
                 'dataset': self.name,
                 'params': str(self.import_params)}
         helper = AmazonS3Helper()
-        helper.save_gz_file(str(self.id), self.filename, meta)
+        helper.save_gz_file(self.id, self.filename, meta)
         helper.close()
         self.on_s3 = True
         self.save()

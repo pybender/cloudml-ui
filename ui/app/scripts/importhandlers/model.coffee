@@ -193,7 +193,7 @@ angular.module('app.importhandlers.model', ['app.config'])
       BASE_API_URL: "#{settings.apiUrl}importhandlers/"
       BASE_UI_URL: '/importhandlers/'
       API_FIELDNAME: 'import_handler'
-      @MAIN_FIELDS: 'name,_id,import_params,
+      @MAIN_FIELDS: 'name,id,import_params,
 created_on,created_by,error'
       DEFAULT_FIELDS_TO_SAVE: ['name', 'data']
       @PROCESS_STRATEGIES = ['identity', 'string', 'float',
@@ -211,7 +211,7 @@ created_on,created_by,error'
       data_json: ""
 
       getUrl: =>
-        return "#{@BASE_API_URL}#{@_id || ''}/"
+        return "#{@BASE_API_URL}#{@id || ''}/"
 
       downloadUrl: =>
         return "#{@BASE_API_URL}#{@id}/action/download/"
@@ -261,7 +261,7 @@ created_on,created_by,error'
           params: JSON.stringify(params),
           limit: limit,
         }
-        @$make_request("#{@BASE_API_URL}#{@_id}/action/test_handler/", {},
+        @$make_request("#{@BASE_API_URL}#{@id}/action/test_handler/", {},
           "PUT", data)
 
     return ImportHandler
@@ -285,10 +285,10 @@ created_on,created_by,error'
       @LIST_MODEL_NAME: 'datasources'
       LIST_MODEL_NAME: @LIST_MODEL_NAME
       @$TYPES_LIST: ['sql', ]
-      @MAIN_FIELDS: 'name,_id,type,db_settings,created_on,created_by'
+      @MAIN_FIELDS: 'name,id,type,db_settings,created_on,created_by'
       @$VENDORS_LIST: ['postgres', ]
 
-      _id: null
+      id: null
       name: null
       type: null
       db_settings: {'conn': '', 'vendor': ''}
