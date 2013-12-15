@@ -40,7 +40,12 @@ def task_prerun_handler(sender=None, task_id=None, task=None, args=None,
                         kwargs=None, **kwds):  # pragma: no cover
     obj = get_object_from_task(task, args, kwargs)
     if obj:
-        task_obj = AsyncTask.create_by_task_and_object(task.name, task_id, obj)
+        task_obj = AsyncTask.create_by_task_and_object(
+            task.name,
+            task_id,
+            args,
+            kwargs,
+            obj)
         task_obj.save()
 
 

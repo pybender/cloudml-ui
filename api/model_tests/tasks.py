@@ -219,7 +219,7 @@ def get_csv_results(model_id, test_id, fields):
             writer = csv.writer(fp, delimiter=',',
                                 quoting=csv.QUOTE_ALL)
             writer.writerow(fields)
-            for example in TestExample.get_data(test_id, fields.split(',')):
+            for example in TestExample.get_data(test_id, fields):
                 rows = []
                 for field in fields:
                     if field == '_id':

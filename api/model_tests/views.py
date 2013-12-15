@@ -223,6 +223,7 @@ not contain probabilities')
         parser.add_argument('show', type=str)
         params = parser.parse_args()
         fields = params.get('show', None)
+        fields = fields.split(',')
         logging.info('Use fields %s' % str(fields))
 
         test = TestResult.query.filter_by(

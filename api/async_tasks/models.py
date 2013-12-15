@@ -16,6 +16,8 @@ class AsyncTask(db.Model, BaseModel):
     status = db.Column(db.Enum(*STATUSES, name='async_task_statuses'),
                        default=STATUS_IN_PROGRESS)
     error = db.Column(db.String(300))
+    args = db.Column(JSONType)
+    kwargs = db.Column(JSONType)
     result = db.Column(JSONType)
 
     task_name = db.Column(db.String(300))
@@ -29,12 +31,14 @@ class AsyncTask(db.Model, BaseModel):
         return obj.__class__.__name__
 
     @classmethod
-    def create_by_task_and_object(cls, task_name, task_id, obj):
+    def create_by_task_and_object(cls, task_name, task_id, args, kwargs, obj):
         return cls(
             task_name=task_name,
             task_id=task_id,
             object_type=cls._get_object_type_name(obj),
             object_id=obj.id,
+            args=args,
+            kwargs=kwargs
         )
 
     @classmethod
@@ -71,7 +75,6 @@ def on_before_models_committed(sender, changes):
     MODELS_TO_TRACK = ['DataSet', 'Model', 'TestResult']
     dels = [obj for obj, oper in changes
             if oper == 'delete' and obj.__class__.__name__ in MODELS_TO_TRACK]
-    db.session.flush()
     for obj in dels:
         for task in AsyncTask.get_current_by_object(obj):
             task.terminate_task()
