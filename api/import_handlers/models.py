@@ -191,7 +191,6 @@ class DataSet(db.Model, BaseModel):
     records_count = db.Column(db.Integer)
     time = db.Column(db.Integer)
     data_fields = db.Column(postgresql.ARRAY(db.String))
-    current_task_id = db.Column(db.String(100))
     format = db.Column(db.String(10))
 
     def get_s3_download_url(self, expires_in=3600):

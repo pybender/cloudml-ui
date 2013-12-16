@@ -37,3 +37,4 @@ coverage==3.6
 Flask-Testing
 fixture
 sqlparse==0.1.10
+blinker

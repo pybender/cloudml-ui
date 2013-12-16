@@ -45,7 +45,6 @@ class Model(db.Model, BaseModel):
     spot_instance_request_id = db.Column(db.String(100))
     memory_usage = db.Column(db.Integer)
     train_records_count = db.Column(db.Integer)
-    current_task_id = db.Column(db.String(100))
     training_time = db.Column(db.Integer)
 
     tags = relationship('Tag', secondary=lambda: tags_table, backref='models')

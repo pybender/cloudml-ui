@@ -1,5 +1,7 @@
 import logging
 from datetime import datetime
+from api.async_tasks.models import AsyncTask
+from flask import request
 
 from flask.ext.restful import reqparse
 
@@ -59,8 +61,10 @@ class TestsResource(BaseResourceSQL):
         if not test:
             raise NotFound('Test not found')
 
-        exports = [ex for ex in test.exports
-                   if ex['expires'] > datetime.now()]
+        exports = AsyncTask.get_current_by_object(
+            test,
+            'api.model_tests.tasks.get_csv_results',
+        )
 
         return self._render({self.OBJECT_NAME: test.id,
                              'exports': exports})
@@ -219,6 +223,7 @@ not contain probabilities')
         parser.add_argument('show', type=str)
         params = parser.parse_args()
         fields = params.get('show', None)
+        fields = fields.split(',')
         logging.info('Use fields %s' % str(fields))
 
         test = TestResult.query.filter_by(

@@ -1,4 +1,4 @@
-from ..logger import BaseLogMessageHandler
+from api.logs.logger import BaseLogMessageHandler
 
 
 class LogMessageHandler(BaseLogMessageHandler):

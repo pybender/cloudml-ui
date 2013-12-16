@@ -13,6 +13,7 @@ class User(BaseMixin, db.Model):
                            onupdate=func.current_timestamp())
     name = db.Column(db.String(200), nullable=False)
     uid = db.Column(db.String(200), nullable=False)
+    name = db.Column(db.String(200), nullable=False)
     odesk_url = db.Column(db.String(200), nullable=False)
     email = db.Column(db.String(200), nullable=False)
     portrait_32_img = db.Column(db.String(200), nullable=True)
