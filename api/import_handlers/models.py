@@ -30,11 +30,16 @@ class PredefinedDataSource(db.Model, BaseModel):
 
     @validates('db')
     def validate_db(self, key, db):
-        assert 'vendor' in db, assertion_msg(key, 'vendor is required')
-        assert db['vendor'] in self.VENDORS_LIST, assertion_msg(
-            key, 'choose vendor from %s' % ', '.join(self.VENDORS_LIST))
-        assert 'conn' in db, assertion_msg(key, 'conn is required')
+        self.validate_db_fields(db)
         return db
+
+    @classmethod
+    def validate_db_fields(cls, db):
+        key = 'db'
+        assert 'vendor' in db, assertion_msg(key, 'vendor is required')
+        assert db['vendor'] in cls.VENDORS_LIST, assertion_msg(
+            key, 'choose vendor from %s' % ', '.join(cls.VENDORS_LIST))
+        assert 'conn' in db, assertion_msg(key, 'conn is required')
 
 
 class ImportHandler(db.Model, BaseModel):
@@ -47,10 +52,25 @@ class ImportHandler(db.Model, BaseModel):
     def validate_data(self, key, data):
         assert 'target_schema' in data, assertion_msg(
             key, 'target_schema is required')
+
         assert 'datasource' in data, assertion_msg(
             key, 'datasource is required')
+        for datasource in data['datasource']:
+            assert datasource['type'] in PredefinedDataSource.TYPES_LIST, \
+                assertion_msg(key, 'datasource type is invalid')
+            PredefinedDataSource.validate_db_fields(datasource['db'])
+
         assert 'queries' in data, assertion_msg(
             key, 'queries is required')
+        for query in data['queries']:
+            assert "name" in query and query['name'], \
+                assertion_msg(key, 'query name is required')
+            assert "sql" in query and query['sql'], \
+                assertion_msg(key, 'query sql is required')
+            assert "items" in query and query['items'], \
+                assertion_msg(key, 'query items are required')
+
+            # TODO: If query contains items, validate them
         return data
 
     def get_fields(self):

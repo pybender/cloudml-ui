@@ -13,17 +13,13 @@ class PredefinedDataSourceResourceTests(BaseDbTestCase, TestChecksMixin):
     RESOURCE = PredefinedDataSourceResource
     Model = PredefinedDataSource
 
-    def setUp(self):
-        super(PredefinedDataSourceResourceTests, self).setUp()
-        self.obj = PredefinedDataSource.query.filter_by(
-            name=PredefinedDataSourceData.datasource_01.name).one()
-        self.assertTrue(self.obj)
-
     def test_list(self):
         self.check_list(show='name,db')
 
     def test_details(self):
-        self.check_details(show='name,db')
+        obj = PredefinedDataSource.query.filter_by(
+            name=PredefinedDataSourceData.datasource_01.name).one()
+        self.check_details(show='name,db', obj=obj)
 
     def test_add(self):
         data = {'type': 'sql',
@@ -43,7 +39,9 @@ class PredefinedDataSourceResourceTests(BaseDbTestCase, TestChecksMixin):
 
     # TODO:
     def test_edit(self):
-        pass
+        obj = PredefinedDataSource.query.filter_by(
+            name=PredefinedDataSourceData.datasource_01.name).one()
 
     def test_delete(self):
-        pass
+        obj = PredefinedDataSource.query.filter_by(
+            name=PredefinedDataSourceData.datasource_01.name).one()

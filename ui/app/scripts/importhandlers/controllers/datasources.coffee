@@ -52,3 +52,22 @@ angular.module('app.importhandlers.controllers.datasources', ['app.config', ])
       $scope.openDialog($dialog, ds,
         'partials/base/delete_dialog.html', 'DialogCtrl')
 ])
+
+.controller('DataSourceEditDialogCtrl', [
+  '$scope'
+  '$rootScope'
+  'dialog'
+
+  ($scope, $rootScope, dialog) ->
+    $scope.handler = dialog.extra.handler
+    $scope.model = dialog.extra.ds
+    $scope.DONT_REDIRECT = true
+    $scope.dialog = dialog
+
+    $scope.$on('SaveObjectCtl:save:success', (event, current) ->
+      dialog.close()
+      $scope.handler.$load(
+        show: 'data'
+      ).then (->), (-> $scope.setError(opts, 'loading datasource details'))
+    )
+])

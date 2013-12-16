@@ -208,23 +208,13 @@ created_on,created_by,error'
       import_params: null
       datasource: []
       queries: []
-      data_json: ""
+      data_json: "loading..."
 
       getUrl: =>
         return "#{@BASE_API_URL}#{@id || ''}/"
 
       downloadUrl: =>
         return "#{@BASE_API_URL}#{@id}/action/download/"
-
-      getJsonData: () =>
-        data = super()
-        data['datasource'] = []
-        data['queries'] = []
-        for d in @datasource
-          data['datasource'].push d.getJsonData()
-        for q in @queries
-          data['queries'].push q.getJsonData()
-        return angular.toJson(data, pretty=true)
 
       loadFromJSON: (origData) =>
         super origData
