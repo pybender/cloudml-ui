@@ -1,11 +1,9 @@
 from collections import defaultdict
-from bson import ObjectId
 
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import relationship, deferred, backref
 from sqlalchemy.sql import expression
 
-from api import app
 from api.base.models import db, BaseModel, JSONType, GridfsFile
 from api.logs.models import LogMessage
 from api.ml_models.models import Model
@@ -51,7 +49,6 @@ class TestResult(db.Model, BaseModel):
     accuracy = db.Column(db.Float)
     metrics = db.Column(JSONType)
     memory_usage = db.Column(db.Integer)
-    current_task_id = db.Column(db.String(100))
 
     vect_data = deferred(db.Column(GridfsFile))
 
@@ -65,6 +62,22 @@ class TestResult(db.Model, BaseModel):
         self.status = TestResult.STATUS_ERROR
         if commit:
             self.save()
+
+    @property
+    def exports(self):
+        from api.async_tasks.models import AsyncTask
+        return AsyncTask.get_current_by_object(
+            self,
+            'api.model_tests.tasks.get_csv_results',
+        )
+
+    @property
+    def confusion_matrix_calculations(self):
+        from api.async_tasks.models import AsyncTask
+        return AsyncTask.get_current_by_object(
+            self,
+            'api.model_tests.tasks.calculate_confusion_matrix',
+        )
 
 
 class TestExample(db.Model, BaseModel):
@@ -143,8 +156,6 @@ class TestExample(db.Model, BaseModel):
     def get_data(cls, test_result_id, fields):
         db_fields = []
         for field in fields:
-            if field == '_id':
-                field = 'id'
             if field == 'id':
                 field = 'example_id'
             db_field = getattr(cls, field, None)
@@ -158,9 +169,8 @@ class TestExample(db.Model, BaseModel):
                         field.replace('data_input.', ''))).label(field)
                 )
 
-        cursor = cls.query.filter_by(test_result_id=test_result_id).with_entities(
-            *db_fields
-        )
+        cursor = cls.query.filter_by(
+            test_result_id=test_result_id).with_entities(*db_fields)
 
         for row in cursor.all():
             yield dict(zip(row.keys(), row))

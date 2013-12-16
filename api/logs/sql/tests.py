@@ -58,7 +58,7 @@ class LogsTests(BaseDbTestCase, TestChecksMixin):
 
     def _write_logs(self):
         import logging
-        from api.logs.logger import LogMessageHandler
+        from logger import LogMessageHandler
         logger = logging.getLogger('trainmodel_log')
         logger.handlers = []
         logger.addHandler(LogMessageHandler(

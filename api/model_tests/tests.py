@@ -297,11 +297,11 @@ class TasksTests(BaseDbTestCase):
             test_result=self.test).count()
 
     def _set_probabilities(self, probabilities):
-        for example in self.db.TestExample.find({'test_name': self.TEST_NAME}):
-            label, prob = probabilities[example['id']]
-            example['test_id'] = str(self.test._id)
-            example['label'] = label
-            example['prob'] = prob
+        for example in TestExample.query.all():
+            label, prob = probabilities[example.id]
+            example.test = self.test
+            example.label = label
+            example.prob = prob
             example.save()
 
     def test_calculate_confusion_matrix(self):
@@ -331,14 +331,10 @@ class TasksTests(BaseDbTestCase):
         _assertMatrix(1, 3, [[1, 1], [0, 2]])
         _assertMatrix(3, 1, [[2, 0], [1, 1]])
 
-        self.assertRaises(ValueError, calculate_confusion_matrix, self.test._id, 0, 0)
-        self.assertRaises(ValueError, calculate_confusion_matrix, self.test._id, -1, 1)
-        self.assertRaises(ValueError, calculate_confusion_matrix, self.test._id, 1, -1)
-        self.assertRaises(ValueError, calculate_confusion_matrix, ObjectId(), 1, 1)
-
-        self.test.model_id = str(ObjectId())
-        self.test.save()
-        self.assertRaises(ValueError, calculate_confusion_matrix, self.test._id, 2, 1)
+        self.assertRaises(ValueError, calculate_confusion_matrix, self.test.id, 0, 0)
+        self.assertRaises(ValueError, calculate_confusion_matrix, self.test.id, -1, 1)
+        self.assertRaises(ValueError, calculate_confusion_matrix, self.test.id, 1, -1)
+        self.assertRaises(ValueError, calculate_confusion_matrix, 5646546, 1, 1)
 
     @mock_s3
     @patch('api.models.DataSet.get_data_stream')
@@ -346,25 +342,11 @@ class TasksTests(BaseDbTestCase):
         from tasks import get_csv_results
 
         fields = ['label', 'pred_label', 'prob']
-        url = get_csv_results(self.test.model_id, self.test.id, fields)
-
-        test = Test.find_one({'name': self.TEST_NAME})
+        url = get_csv_results(self.test.model.id, self.test.id, fields)
 
         self.assertTrue(url)
-        self.assertEquals(test.exports[0]['url'], url)
-        self.assertEquals(test.exports[0]['fields'], fields)
-        # Data wasn't loaded from s3:
-        self.assertFalse(mock_get_data_stream.called)
 
-        url = get_csv_results(self.test.model_id, self.test2._id, fields)
-
-        test = self.db.Test.find_one({'name': self.TEST_NAME2})
-
-        self.assertTrue(url)
-        self.assertEquals(test.exports[0]['url'], url)
-        self.assertEquals(test.exports[0]['fields'], fields)
-        # Data was loaded from s3:
-        self.assertTrue(mock_get_data_stream.called)
+        # TODO: check that AsyncTask was created and completed
 
     @mock_s3
     @patch('api.models.Model.get_trainer')

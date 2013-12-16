@@ -1,6 +1,6 @@
 DATABASE_NAME = 'cloudml-test-db'
 DATA_FOLDER = 'test_data'
 
-DB_NAME = 'test-db'
-DB_FORMAT_URI = 'postgresql://postgres:postgres@localhost:5434/%s'
+DB_NAME = 'test_db'
+DB_FORMAT_URI = 'postgresql://postgres:postgres@localhost/%s'
 SQLALCHEMY_DATABASE_URI = DB_FORMAT_URI % DB_NAME

@@ -8,3 +8,5 @@ from api.import_handlers.models import *
 from api.features.models import *
 from api.ml_models.models import *
 from api.model_tests.models import *
+
+from api.async_tasks.models import *

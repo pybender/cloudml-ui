@@ -185,22 +185,10 @@ def calculate_confusion_matrix(test_id, weight0, weight1):
     logging.info('Calculating confusion matrix for test id {!s}'.format(
         test_id))
 
-    calc_id = ObjectId()
-
-    test.confusion_matrix_calculations.append({
-        '_id': calc_id,
-        'weights': dict(zip(model.labels, [weight0, weight1])),
-        'status': TestResult.MATRIX_STATUS_IN_PROGRESS,
-        'datetime': datetime.now(),
-        'result': []
-    })
-    test.save()
-
     matrix = [[0, 0],
               [0, 0]]
 
-    for example in TestExample.query.filter_by(
-            test_id=(str(test.id))).all():
+    for example in test.examples:
         true_value_idx = model.labels.index(example.label)
 
         prob0, prob1 = example.prob[:2]
@@ -213,13 +201,7 @@ def calculate_confusion_matrix(test_id, weight0, weight1):
             max([weighted_prob0, weighted_prob1]))
         matrix[true_value_idx][predicted] += 1
 
-    calc = next((c for c in test.confusion_matrix_calculations
-                 if c['_id'] == calc_id))
-    calc['result'] = zip(model.labels, matrix)
-    calc['status'] = TestResult.MATRIX_STATUS_COMPLETED
-    test.save()
-
-    return matrix
+    return zip(model.labels, matrix)
 
 
 @celery.task
@@ -258,16 +240,6 @@ def get_csv_results(model_id, test_id, fields):
 
     name = 'Examples-{0!s}.csv'.format(uuid.uuid1())
     expires = 60 * 60 * 24 * 7  # 7 days
-    test.exports.append({
-        'name': name,
-        'fields': fields,
-        'status': TestResult.EXPORT_STATUS_IN_PROGRESS,
-        'datetime': datetime.now(),
-        'url': None,
-        'type': 'csv',
-        'expires': datetime.now() + timedelta(seconds=expires)
-    })
-    test.save()
 
     logging.info('Creating file {0}...'.format(name))
 
@@ -280,11 +252,5 @@ def get_csv_results(model_id, test_id, fields):
     s3.close()
     os.remove(filename)
     url = s3.get_download_url(name, expires)
-
-    export = next((ex for ex in test.exports if ex['name'] == name))
-    export['url'] = url
-    export['status'] = TestResult.EXPORT_STATUS_COMPLETED
-    export['expires'] = datetime.now() + timedelta(seconds=expires)
-    test.save()
 
     return url
