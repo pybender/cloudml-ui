@@ -382,7 +382,8 @@ class ModelMigrator(Migrator, UserInfoMixin, UniqueNameMixin):
             print "no features set found! \n\n"
             fset = FeatureSet()
             fset.save()
-            obj.features_set = fset
+
+        obj.features_set = fset
 
         # Looking for import handlers
         if source_obj.test_import_handler:
@@ -396,6 +397,7 @@ class ModelMigrator(Migrator, UserInfoMixin, UniqueNameMixin):
             _id = handler.IDS_MAP.get(s_id, None)
         if _id:
             obj.train_import_handler = ImportHandler.query.get(_id)
+        obj.save()
 
 model = ModelMigrator()
 

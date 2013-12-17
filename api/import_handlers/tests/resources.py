@@ -63,7 +63,7 @@ class ImportHandlerTests(BaseDbTestCase, TestChecksMixin):
         data = {
             "datasource.0.name": "name2",
             "datasource.0.type": "request",
-            "datasource.0.db": '{"conn": "conn.st", "vendor": "postgress"}'
+            "datasource.0.db": '{"conn": "conn.st", "vendor": "postgres"}'
         }
         resp, obj = self.check_edit(data, id=self.obj.id)
         ds = obj.data['datasource'][0]

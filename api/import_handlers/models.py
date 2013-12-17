@@ -67,7 +67,7 @@ class ImportHandler(db.Model, BaseModel):
                 assertion_msg(key, 'query name is required')
             assert "sql" in query and query['sql'], \
                 assertion_msg(key, 'query sql is required')
-            assert "items" in query and query['items'], \
+            assert "items" in query and query['items'] is not None, \
                 assertion_msg(key, 'query items are required')
 
             # TODO: If query contains items, validate them
