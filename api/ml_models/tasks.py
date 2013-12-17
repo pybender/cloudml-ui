@@ -33,11 +33,7 @@ def train_model(dataset_ids, model_id, user_id):
         model.datasets = datasets
         model.status = model.STATUS_TRAINING
         model.error = ""
-        model.trained_by = {
-            'id': user.id,
-            'uid': user.uid,
-            # 'name': user.name # TODO
-        }
+        model.trained_by = user
         model.save()
         feature_model = FeatureModel(model.get_features_json(),
                                      is_file=False)
