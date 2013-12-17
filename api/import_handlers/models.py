@@ -75,7 +75,7 @@ class DataSet(db.Model, BaseModel):
 
     name = db.Column(db.String(200))
     status = db.Column(db.Enum(*STATUSES, name='dataset_statuses'))
-    error = db.Column(db.String(200))
+    error = db.Column(db.String(300))  # TODO: trunc error to 300 symbols
     data = db.Column(db.String(200))
     import_params = db.Column(JSONType)
 

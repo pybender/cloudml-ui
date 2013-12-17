@@ -32,7 +32,10 @@ class Model(db.Model, BaseModel):
     name = db.Column(db.String(200), nullable=False, unique=True)
     status = db.Column(db.Enum(*STATUSES, name='model_statuses'),
                        default=STATUS_NEW)
-    trained_by = db.Column(JSONType)
+    trained_by_id = db.Column(db.ForeignKey('user.id', ondelete='SET NULL'))
+
+    trained_by = relationship("User", foreign_keys='Model.trained_by_id')
+
     error = db.Column(db.String(300))
 
     comparable = db.Column(db.Boolean)

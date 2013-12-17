@@ -21,21 +21,22 @@ class Migrator(object):
     IDS_MAP = {}
 
     def migrate_one(self, source_obj):
-        print "migrate one for", source_obj
-        parent = None
-        i = 0
+	print "migrate one for", source_obj
+	parent = None
+	i = 0
         obj = self.DESTINATION()
         NAME = self.__class__.__name__.replace('Migrator', '')
-        try:
-                self.fill_model(obj, source_obj)
-                if parent is not None:
-                    self.process_parent(obj, parent, source_parent)
-                self.fill_extra(obj, source_obj)
-                print i + 1,
-                obj.save()
-                self.IDS_MAP[str(source_obj._id)] = obj.id
-                print "New %s added" % NAME
-                self.process_inner_migrators(obj, source_obj)
+	try:
+            self.fill_model(obj, source_obj)
+            if parent is not None:
+                self.process_parent(obj, parent, source_parent)
+            self.fill_extra(obj, source_obj)
+            print i + 1,
+        
+            obj.save()
+            self.IDS_MAP[str(source_obj._id)] = obj.id
+            print "New %s added" % NAME
+            self.process_inner_migrators(obj, source_obj)
         except Exception, exc:
             print exc
             app.sql_db.session.rollback()
@@ -54,24 +55,33 @@ class Migrator(object):
         print "Found %s objects" % source_list.count()
 
         for i in xrange(0, source_list.count()):
-            source_obj = source_list[i]
+	    source_obj = source_list[i]
             obj = self.DESTINATION()
-            try:
-                self.fill_model(obj, source_obj)
-                if parent is not None:
-                        self.process_parent(obj, parent, source_parent)
-                self.fill_extra(obj, source_obj)
-                print i + 1, "saving", obj, source_obj._id, obj.id
+#	    print "create", obj, obj.__dict__.keys()
+	    try:
+        	self.fill_model(obj, source_obj)
+        	if parent is not None:
+            	    self.process_parent(obj, parent, source_parent)
+        	self.fill_extra(obj, source_obj)
+        	print i + 1, "saving", obj,
 
-                self.save_obj(obj)
+		self.save_obj(obj)
+#                obj.save()
                 self.IDS_MAP[str(source_obj._id)] = obj.id
                 print "added %s" % NAME
                 self.process_inner_migrators(obj, source_obj)
-            except:
-                raise
-
+	    except:
+		raise
+#            except BaseException, exc:
+#                print "Exc. occures while saving %s" % exc
+#                if self.RAISE_EXC:
+#                    self.print_exc(source_obj, obj, exc)
+#                    raise
+                #print "source %s" % source_obj
+#
+#                app.sql_db.session.rollback()
     def save_obj(self, obj):
-        obj.save()
+	obj.save()
 
     def query_mongo_docs(self, parent=None, source_parent=None):
         return self.SOURCE.find()
@@ -87,8 +97,8 @@ class Migrator(object):
         source_fields = self.get_source_fields()
         for field in source_fields:
             val = source_obj.get(field, None)
-            if val is None:
-                continue
+	    if val is None:
+		continue
             mthd_name = "clean_%s" % field
             if hasattr(self, mthd_name):
                 mthd = getattr(self, mthd_name)
@@ -191,15 +201,15 @@ class FeatureMigrator(Migrator, UserInfoMixin):
 
     def fill_extra(self, obj, source_obj):
         tr = obj.transformer
-        if tr:
+	if tr:
             tr_type = tr['type']
-            tr_dict = {'type': tr_type, 'params': {}}
-            from api.features.config import TRANSFORMERS
-            params_list = TRANSFORMERS[tr_type]['parameters']
-            for param in params_list:
-                val = obj.transformer.get(param, None)
-                if val is not None:
-                    tr_dict['params'][param] = val
+	    tr_dict = {'type': tr_type, 'params': {}}
+    	    from api.features.config import TRANSFORMERS
+    	    params_list = TRANSFORMERS[tr_type]['parameters']
+    	    for param in params_list:
+        	val = obj.transformer.get(param, None)
+        	if val is not None:
+            	    tr_dict['params'][param] = val
             obj.transformer = tr_dict
 
     def process_parent(self, obj, parent, source_parent):
@@ -210,12 +220,12 @@ class FeatureMigrator(Migrator, UserInfoMixin):
         return query
 
     def save_obj(self, obj):
-        from sqlalchemy.exc import IntegrityError
-        try:
-            obj.save()
-        except IntegrityError, exc:
-            print "\n\nERROR", exc
-            app.sql_db.session.rollback()
+	from sqlalchemy.exc import IntegrityError
+	try:
+    	    obj.save()
+	except IntegrityError, exc:
+	    print "\n\nERROR", exc
+	    app.sql_db.session.rollback()
 
 
 feature = FeatureMigrator()
@@ -242,8 +252,13 @@ class DataSetMigrator(Migrator, UserInfoMixin):
             dict(import_handler_id=str(source_parent._id)))
 
     def fill_extra(self, obj, source_obj):
-        obj.name = obj.name[:200]
-        obj.error = obj.error[:300]
+        print "ds\n name:", obj.name
+	obj.name = obj.name[:200]
+	obj.error = obj.error[:300]
+        print "ds\n data:", obj.data
+        print "ds\n filename:", obj.filename
+#	print "ds\n data:", source_obj['data']
+#        obj.error = source_obj['error'][:300]
 
 ds = DataSetMigrator()
 
@@ -268,28 +283,24 @@ tag = TagMigrator()
 class TestMigrator(Migrator, UserInfoMixin):
     SOURCE = app.db.Test
     DESTINATION = TestResult
-    FIELDS_TO_EXCLUDE = ["_id", "model", "exports",
-                         "confusion_matrix_calculations"]
+    FIELDS_TO_EXCLUDE = ["_id", "model", "exports", "confusion_matrix_calculations"]
 
     def process_parent(self, obj, parent, source_obj):
         obj.model = parent
 
     def clean_dataset(self, val):
+	return
         if val:
-            ds_id = ds.IDS_MAP.get(str(val._DBRef__id), None)
+            ds_id = ds.IDS_MAP.get(str(val["_id"]), None)
             if ds_id:
                 return DataSet.query.get(ds_id)
-
-    def query_mongo_docs(self, parent=None, source_parent=None):
-        query = self.SOURCE.find({'model_id': str(source_parent._id)})
-        return query
 
     def fill_extra(self, obj, source_obj):
         memory_usage = source_obj.get('memory_usage', None)
         if memory_usage:
             obj.memory_usage = memory_usage.get('testing', None)
-    else:
-        obj.memory_usage = None
+	else:
+	    obj.memory_usage = None
 
 test = TestMigrator()
 
@@ -322,64 +333,63 @@ class ModelMigrator(Migrator, UserInfoMixin, UniqueNameMixin):
     SOURCE = app.db.Model
     DESTINATION = Model
     RAISE_EXC = True
-    FIELDS_TO_EXCLUDE = ['_id', 'features', 'tags', 'features_set',
-                         'features_set_id',
-                         'test_import_handler', 'train_import_handler']
-    INNER = [test]
+    FIELDS_TO_EXCLUDE = ['_id', 'features', 'tags', 'test_import_handler', 'train_import_handler']
+    INNER = [test,]# weights_category, weights]
 
     def print_exc(self, source_obj, obj, exc):
         print obj.name
 
+    # TODO: Tags!
     def fill_extra(self, obj, source_obj):
-        print "Filling extra data in model", \
-            source_obj._id, obj.name, source_obj.updated_on
-        if source_obj.classifier:
-            obj.classifier = {'type': source_obj.classifier['type'],
-                              'params': source_obj.classifier['params']}
-        else:
-            obj.classifier = None
+	print "extra in model" , source_obj._id, obj.name, source_obj.updated_on
+	if source_obj.classifier:
+            obj.classifier = \
+	        {'type': source_obj.classifier['type'],
+    	         'params': source_obj.classifier['params']}
+	else:
+	    obj.classifier = None
 
         obj.memory_usage = source_obj.memory_usage.get('training', None)
-        if source_obj.tags:
-            print "Searching for model tags", source_obj.tags
-            tags_list = Tag.query.filter(Tag.text.in_(source_obj.tags)).all()
-            print "found", tags_list
-            obj.tags = tags_list
-
+	obj.tags = Tag.query.filter(Tag.text.in_(obj.tags)).all()
         # Looking for feature set
-        _id = source_obj.features_set_id
-        fset = None
-        if _id is not None:
-            from bson import ObjectId
-            mongo_fset = app.db.FeatureSet.find_one({'_id': ObjectId(_id)})
-            if mongo_fset:
-                fset = feature_set.migrate_one(mongo_fset)
-            print "feature set found \n\n\n", fset
+	_id = source_obj.features_set_id
+	fset = None
+	print "looking for feature set by ", _id
+	if _id is not None:
+	    from bson import ObjectId
+	    mongo_fset = app.db.FeatureSet.find_one({'_id': ObjectId(_id)})
+	    if mongo_fset:
+    		fset = feature_set.migrate_one(mongo_fset)
+		print "feature set found \n\n\n", fset
 
-        if fset is None:
-            print "no features set found! \n\n"
-            fset = FeatureSet()
-            fset.save()
-            obj.features_set = fset
+	if fset is None:
+	    print "no features set !!!! \n\n\n\n"
+	    fset =  FeatureSet()
+	    fset.save()
+        obj.features_set = fset
+	#obj.features_set = None
+	#obj.features_set_id = None
+	#obj.test_import_handler = None
+	#obj.train_import_handler = None
 
-        # Looking for import handlers
+        # # Looking for import handlers
         if source_obj.test_import_handler:
-            s_id = str(source_obj.test_import_handler._DBRef__id)
-            _id = handler.IDS_MAP.get(s_id, None)
-        if _id:
-            obj.test_import_handler = ImportHandler.query.get(_id)
-
-        if source_obj.train_import_handler:
-            s_id = str(source_obj.train_import_handler._DBRef__id)
-            _id = handler.IDS_MAP.get(s_id, None)
-        if _id:
-            obj.train_import_handler = ImportHandler.query.get(_id)
+	    s_id = str(source_obj.test_import_handler._DBRef__id)
+	    _id = handler.IDS_MAP.get(s_id, None)
+	    if _id:
+        	obj.test_import_handler = ImportHandler.query.get(_id)
+	if source_obj.train_import_handler:
+	    s_id = str(source_obj.train_import_handler._DBRef__id)
+    	    _id = handler.IDS_MAP.get(s_id, None)#tr(source_obj.train_import_handler._id)]
+	    if _id:
+    		obj.train_import_handler = ImportHandler.query.get(_id)
 
 model = ModelMigrator()
 
 
+#MIGRATOR_PROCESS = [user, handler, feature_set, model]
 MIGRATOR_PROCESS = [user, instance, named_type, classifier, tag,
-                    transformer, scaler, handler,
+                    transformer, scaler, handler,# feature_set,
                     model]
 
 
