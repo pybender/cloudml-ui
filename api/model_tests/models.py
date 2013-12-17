@@ -27,7 +27,7 @@ class TestResult(db.Model, BaseModel):
 
     __tablename__ = 'test_result'
 
-    name = db.Column(db.String(200))
+    name = db.Column(db.String(200), nullable=False)
     status = db.Column(db.Enum(*STATUSES, name='test_statuses'))
     error = db.Column(db.String(300))
 

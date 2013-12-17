@@ -315,7 +315,7 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         self.assertEqual(obj.status, Model.STATUS_TRAINED, obj.error)
         self.assertEqual([d.name for d in obj.datasets], [ds.name])
 
-        self.assertEqual(obj.trained_by['uid'], 'user')
+        self.assertEqual(obj.trained_by.uid, 'user')
         self.assertTrue(obj.memory_usage > 0)
         self.assertEqual(obj.train_records_count, 100)
 
@@ -333,7 +333,7 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         self.assertEqual(obj.status, Model.STATUS_TRAINED, obj.error)
         self.assertEqual([d.name for d in obj.datasets], [ds.name])
 
-        self.assertEqual(obj.trained_by['uid'], 'user')
+        self.assertEqual(obj.trained_by.uid, 'user')
         self.assertTrue(obj.memory_usage > 0)
         self.assertEqual(obj.train_records_count, 100)
 
@@ -359,7 +359,7 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         self.assertEqual(obj.status, Model.STATUS_TRAINED, obj.error)
         self.assertEqual([d.name for d in obj.datasets], [ds1.name, ds2.name])
 
-        self.assertEqual(obj.trained_by['uid'], 'user')
+        self.assertEqual(obj.trained_by.uid, 'user')
         self.assertTrue(obj.memory_usage > 0)
         self.assertEqual(obj.train_records_count, 200)
 
@@ -379,7 +379,7 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         self.assertEqual(obj.status, Model.STATUS_TRAINED, obj.error)
         self.assertIsInstance(obj.datasets[0].id, int)
         self.assertEquals(obj.dataset.format, DataSet.FORMAT_JSON)
-        self.assertEqual(obj.trained_by['uid'], 'user')
+        self.assertEqual(obj.trained_by.uid, 'user')
         self.assertTrue(obj.memory_usage > 0)
         self.assertEqual(obj.train_records_count, 99)
 

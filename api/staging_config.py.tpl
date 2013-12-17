@@ -1,5 +1,8 @@
 SECRET_KEY = 'CHANGE_ME'
-SQLALCHEMY_DATABASE_URI = 'sqlite:////webapps/cloudml/shared/var/cloudml.db'
+#SQLALCHEMY_DATABASE_URI = 
+#'sqlite:////webapps/cloudml/shared/var/cloudml.db'
+SQLALCHEMY_DATABASE_URI = 'postgresql://cloudml:cloudml@localhost:5432/cloudml'
+
 STATIC_ROOT = None
 UPLOAD_FOLDER = 'models'
 MAX_CONTENT_LENGTH = 128 * 1024 * 1024
