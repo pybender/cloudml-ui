@@ -412,9 +412,9 @@ class BaseResourceSQL(BaseResource):
 
     def _build_list_query(self, params, **kwargs):
         # TODO: What about joins?
+        cursor = self._set_list_query_opts(self.Model.query, params)
         filter_params = self._prepare_filter_params(params)
         filter_params.update(kwargs)
-        cursor = self._set_list_query_opts(self.Model.query, params)
         fields = self._get_show_fields(params)
         if fields:
             opts = []

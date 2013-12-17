@@ -198,7 +198,6 @@ filename=importhandler-%s.json' % model.name
                 raise ValidationError(form.error_messages)
 
         if self.updated:
-            print "!!!!!!!!!!!!!!!!"
             self.updated_fields.append('data')
             handler_doc['updated_on'] = str(datetime.now())
         return handler_doc

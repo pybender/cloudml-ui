@@ -31,7 +31,8 @@ class ModelResource(BaseResourceSQL):
     GET_ACTIONS = ('download', 'reload', 'by_importhandler')
     PUT_ACTIONS = ('train', 'tags', 'cancel_request_instance')
     FILTER_PARAMS = (('status', str), ('comparable', str), ('tag', str),
-                    ('created_by', str), ('updated_by', str))
+                    ('created_by', str), ('updated_by_id', int),
+                    ('updated_by', str))
     DEFAULT_FIELDS = ('id', 'name')
     NEED_PAGING = True
 
@@ -76,6 +77,12 @@ class ModelResource(BaseResourceSQL):
     def _set_list_query_opts(self, cursor, params):
         if 'tag' in params and params['tag']:
             cursor = cursor.filter(Model.tags.any(Tag.text == params['tag']))
+        created_by = params.pop('created_by', None)
+        if created_by:
+            cursor = cursor.filter(Model.created_by.has(uid=created_by))
+        updated_by = params.pop('updated_by', None)
+        if updated_by:
+            cursor = cursor.filter(Model.updated_by.has(uid=updated_by))
         return cursor
 
     def _get_by_importhandler_action(self, **kwargs):
