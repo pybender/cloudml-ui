@@ -252,6 +252,28 @@ class ImportHandlerMigrator(Migrator, UserInfoMixin, UniqueNameMixin):
     SOURCE = app.db.ImportHandler
     DESTINATION = ImportHandler
     INNER = [ds]
+    FIELDS_TO_EXCLUDE = ['_id', 'data', 'type']
+
+    def fill_extra(self, obj, source_obj):
+        obj.data = replace(source_obj['data'])
+
+
+REPLACES = {
+    'process-as': 'process_as',
+    'target-features': 'target_features',
+    'to-csv': 'to_csv',
+    'value-path': 'value_path',
+    'target-schema': 'target_schema',
+    'key-path': 'key_path'
+}
+
+def replace(data, replace_dict=REPLACES):
+    data_str = json.dumps(data)
+
+    for key, val in replace_dict.iteritems():
+        data_str = data_str.replace(key, val)
+    return json.loads(data_str)
+        
 
 handler = ImportHandlerMigrator()
 
@@ -288,8 +310,8 @@ class TestMigrator(Migrator, UserInfoMixin):
         memory_usage = source_obj.get('memory_usage', None)
         if memory_usage:
             obj.memory_usage = memory_usage.get('testing', None)
-    else:
-        obj.memory_usage = None
+        else:
+            obj.memory_usage = None
 
 test = TestMigrator()
 
