@@ -25,7 +25,7 @@
           <label class="control-label">Data Source</label>
           <div class="controls"  ng-controller="DataSourcesSelectLoader">
             <select name="datasource" ng-model="model.datasource" ng-required="currentTab=='predefined'">
-              <option ng-repeat="ds in datasources" value="{{ ds._id }}">{{ ds.name }}</option>
+              <option ng-repeat="ds in datasources" value="{{ ds.id }}">{{ ds.name }}</option>
             </select>
             <span ng-show="Form.datasource.$error.required" class="help-inline">*</span>
           </div>

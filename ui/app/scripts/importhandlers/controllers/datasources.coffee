@@ -17,10 +17,10 @@ angular.module('app.importhandlers.controllers.datasources', ['app.config', ])
   ($scope, DataSource) ->
     $scope.datasources = []
     DataSource.$loadAll(
-      show: 'name'
+      show: 'name,id'
     ).then ((opts) ->
       for ds in opts.objects
-        $scope.datasources.push {_id: ds._id, name: ds.name}
+        $scope.datasources.push {id: ds.id, name: ds.name}
     ), ((opts) ->
       $scope.err = $scope.setError(opts, 'loading datasources')
     )

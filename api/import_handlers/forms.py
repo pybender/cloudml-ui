@@ -12,7 +12,8 @@ from core.importhandler.importhandler import ImportHandlerException,\
 
 class PredefinedDataSourceForm(BaseForm):
     name = CharField()
-    type_field = ChoiceField(choices=PredefinedDataSource.TYPES_LIST, name='type')
+    type_field = ChoiceField(
+        choices=PredefinedDataSource.TYPES_LIST, name='type')
     db = JsonField()
 
     def clean_name(self, value, field):
@@ -71,8 +72,27 @@ class BaseInnerDocumentForm(BaseForm):
 
 class HandlerDataSourceForm(BaseInnerDocumentForm):
     name = CharField()
-    type_field = ChoiceField(choices=PredefinedDataSource.TYPES_LIST, name='type')
+    type_field = ChoiceField(
+        choices=PredefinedDataSource.TYPES_LIST, name='type')
     db = JsonField()
+    predefined_selected = BooleanField()
+    datasource = DocumentField(
+        doc=PredefinedDataSource, by_name=False, return_doc=True)
+
+    def validate_data(self):
+        predefined_selected = self.cleaned_data.get(
+            'predefined_selected', False)
+        ds = self.cleaned_data.get('datasource', None)
+        if predefined_selected and ds is None:
+            raise ValidationError('Predefined datasource not found')
+
+    def save(self):
+        predefined_selected = self.cleaned_data.pop(
+            'predefined_selected', False)
+        ds = self.cleaned_data.pop('datasource', None)
+        if predefined_selected:
+            self.cleaned_data = {'name': ds.name, 'type': ds.type, 'db': ds.db}
+        return super(HandlerDataSourceForm, self).save()
 
 
 class QueryForm(BaseInnerDocumentForm):
@@ -92,7 +112,7 @@ class TargetFeatureForm(BaseInnerDocumentForm):
     name = CharField()
     jsonpath = CharField()
     key_path = CharField()
-    value_path = CharField() 
+    value_path = CharField()
     to_csv = BooleanField()
     expression = JsonField()
 
@@ -102,11 +122,13 @@ class ImportHandlerTestForm(BaseForm):
     params = JsonField()
     limit = IntegerField()
 
+
 class QueryTestForm(BaseForm):
     sql = CharField()
     params = JsonField()
     limit = IntegerField()
     datasource = CharField()
+
 
 # DataSet forms
 

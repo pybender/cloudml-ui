@@ -189,19 +189,6 @@ filename=importhandler-%s.json' % model.name
                         raise ValidationError('num is required')
                     del handler_doc['queries'][query_num]['items'][item_num]['target_features'][num]
 
-            if key == 'fill_predefined':
-                num = int(data.get('num', None))
-                datasource_id = data.get('datasource', None)
-                assert datasource_id is not None, assertion_msg(
-                    'data', "predefined datasource id is required")
-                ds = PredefinedDataSource.query.get(datasource_id)
-                handler_doc['datasource'][num] = {
-                    'name': ds.name,
-                    'type': ds.type,
-                    'db': ds.db
-                }
-                self.updated = True
-
         for form in query_forms.values() + item_forms.values() + \
                 feature_forms.values() + datasource_forms.values():
             if form.is_valid():
@@ -211,6 +198,7 @@ filename=importhandler-%s.json' % model.name
                 raise ValidationError(form.error_messages)
 
         if self.updated:
+            print "!!!!!!!!!!!!!!!!"
             self.updated_fields.append('data')
             handler_doc['updated_on'] = str(datetime.now())
         return handler_doc

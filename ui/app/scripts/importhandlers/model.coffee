@@ -270,49 +270,35 @@ created_on,created_by,error'
     ###
     class DataSource  extends BaseModel
       BASE_API_URL: "#{settings.apiUrl}datasources/"
-      API_FIELDNAME: 'datasource'
+      API_FIELDNAME: 'predefined_data_source'
       DEFAULT_FIELDS_TO_SAVE: ['name', 'type']
       @LIST_MODEL_NAME: 'datasources'
       LIST_MODEL_NAME: @LIST_MODEL_NAME
       @$TYPES_LIST: ['sql', ]
-      @MAIN_FIELDS: 'name,id,type,db_settings,created_on,created_by'
+      @MAIN_FIELDS: 'name,id,type,db,created_on,created_by'
       @$VENDORS_LIST: ['postgres', ]
 
       id: null
       name: null
       type: null
-      db_settings: {'conn': '', 'vendor': ''}
+      db: {'conn': '', 'vendor': ''}
       created_on: null
       updated_on: null
 
-      getJsonData: () =>
-        data = {
-          'name': @name,
-          'type': @type
-          'db_settings': {'conn': @db_settings.conn,
-          'vendor': @db_settings.vendor}}
-        return data
-
       $save: (opts={}) =>
         if @handler?
-          if @predefined_selected && @datasource
-            data = {
-              fill_predefined: 1,
-              num: @num,
-              datasource: @datasource}
-          else
-            prefix = 'datasource.' + @num + '.'
-            data = {}
-            for key in opts.only
-              val = eval('this.' + key)
-              if key == 'db'
-                data[prefix + key] = JSON.stringify(val)
-              else
-                data[prefix + key] = val
+          prefix = 'datasource.' + @num + '.'
+          data = {}
+          for key in opts.only
+            val = eval('this.' + key)
+            if key == 'db'
+              data[prefix + key] = JSON.stringify(val)
+            else
+              data[prefix + key] = val
           @$make_request(@handler.getUrl(), {}, "PUT", data)
         else
-          if @db_settings? && typeof(@db_settings) == 'object'
-            @db_settings = JSON.stringify(@db_settings)
+          if @db? && typeof(@db) == 'object'
+            @db = JSON.stringify(@db)
           super opts
 
     return DataSource

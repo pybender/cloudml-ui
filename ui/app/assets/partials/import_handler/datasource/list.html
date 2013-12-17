@@ -22,14 +22,21 @@
 	    <th>Created</th>
 	  </tr>
 	</thead>
-	<tbody>
+	<tbody ng-show="objects.length == 0">
+    <tr>
+      <td colspan="5">
+        <alert-message ng-show="objects.length == 0" class="alert-info" msg="No predefined datasources found"></alert-message>
+      </td>
+    </tr>
+  	</tbody>
+	<tbody ng-hide="objects.length == 0">
 	  <tr ng-repeat="ds in objects | orderBy:'name'">
 	    <td>
 	      <a ng-click="edit(ds)">{{ ds.name }}</a>
 	    </td>
 	    <td>{{ ds.type }}</td>
-	    <td>{{ ds.db_settings.vendor }}</td>
-	    <td>{{ ds.db_settings.conn }}</td>
+	    <td>{{ ds.db.vendor }}</td>
+	    <td>{{ ds.db.conn }}</td>
 	    <td>
 	        {{ ds.created_on|format_date }}<br>
 	        <small ng-show="ds.created_by">by {{ ds.created_by.name }} ({{ ds.created_by.uid }})</small>

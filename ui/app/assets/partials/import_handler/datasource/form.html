@@ -18,8 +18,8 @@
   <div class="control-group" ng-class="{error: Form.vendor.$invalid}">
     <label class="control-label">Vendor</label>
     <div class="controls">
-      <select name="vendor" ng-model="model.db_settings.vendor" required>
-        <option ng-selected="model.db_settings.vendor == name" ng-repeat="name in vendors" value="{{ name }}">{{ name }}</option>
+      <select name="vendor" ng-model="model.db.vendor" required>
+        <option ng-selected="model.db.vendor == name" ng-repeat="name in vendors" value="{{ name }}">{{ name }}</option>
       </select>
       <span ng-show="Form.vendor.$error.required" class="help-inline">*</span>
     </div>
@@ -27,7 +27,7 @@
   <div class="control-group" ng-class="{error: Form.conn.$invalid}">
     <label class="control-label">Connection</label>
     <div class="controls">
-      <input type="text" name="conn" ng-model="model.db_settings.conn" required />
+      <input type="text" name="conn" ng-model="model.db.conn" required />
       <span ng-show="Form.conn.$error.required" class="help-inline">*</span>
     </div>
   </div>
