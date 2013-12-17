@@ -148,9 +148,11 @@ class Coverage(Command):
     """Build test code coverage report."""
 
     def run(self):
-        # import nose
+        import nose
+        app.config.from_object('api.test_config')
+        app.init_db()
         print 'Collecting coverage info...'
-        output_dir = os.path.join('api', 'test', 'cover')
+        output_dir = 'api/test/cover'
         # TODO: why does nose.run show different results?
         # nose.run(argv=[
         #     '',
@@ -158,17 +160,18 @@ class Coverage(Command):
         #     '--cover-html-dir={}'.format(output_dir),
         #     '--cover-package=api'])
         args = [
-            #'with-coverage',
-            'with-xcoverage',
+            'with-coverage',
+            # 'with-xcoverage',
             'cover-erase',
             'cover-html',
             'cover-package=api',
-            'with-xunit',
-            "xunit-file='{0}/report.xml'".format(output_dir),
-            "cover-html-dir='{0}'".format(output_dir),
-            "xcoverage-file='{0}/coverage.xml'".format(output_dir),
+            # 'with-xunit',
+            # "xunit-file={0}/report.xml".format(output_dir),
+            "cover-html-dir={0}".format(output_dir),
+            #"xcoverage-file={0}/coverage.xml".format(output_dir),
         ]
-        os.system('nosetests --{0}'.format(' --'.join(args)))
+        # os.system('nosetests --{0}'.format(' --'.join(args)))
+        nose.run(argv=['', ] + ['--{}'.format(arg) for arg in args])
         report_path = 'file://' + os.path.join(
             os.path.abspath(output_dir), 'index.html')
         print 'Coverage html report has been generated at {}'.format(

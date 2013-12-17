@@ -259,7 +259,7 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         mock_import_data.delay.assert_called_once_with(dataset_id=self.obj.id)
         mock_import_data.reset_mock()
 
-        # TODO: AttributeError: 'DataSet' object has no 
+        # TODO: AttributeError: 'DataSet' object has no
         # attribute '_sa_instance_state'
         self.obj.status = DataSet.STATUS_IMPORTING
         self.obj.save()
@@ -292,29 +292,25 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals([ds.name for ds in model.datasets], ['DS 2'])
 
 
-# class TestTasksTests(BaseTestCase):
-#     """
-#     Tests of the celery tasks.
-#     """
-#     TEST_NAME = 'Test-1'
-#     TEST_NAME2 = 'Test-2'
-#     EXAMPLE_NAME = 'Some Example #1-1'
-#     MODEL_NAME = 'TrainedModel1'
-#     FIXTURES = ('datasets.json', 'models.json', 'tests.json', 'examples.json')
+class TestTasksTests(BaseDbTestCase, TestChecksMixin):
+    """
+    Tests of the celery tasks.
+    """
+    datasets = [ImportHandlerData, DataSetData, ModelData, TestResultData]
 
-#     @patch('api.amazon_utils.AmazonS3Helper.save_gz_file')
-#     def test_upload_dataset(self, mock_multipart_upload):
-#         from api.tasks import upload_dataset
-#         dataset = self.db.DataSet.find_one()
-#         upload_dataset(str(dataset._id))
-#         mock_multipart_upload.assert_called_once_with(
-#             str(dataset._id),
-#             dataset.filename,
-#             {
-#                 'params': str(dataset.import_params),
-#                 'handler': dataset.import_handler_id,
-#                 'dataset': dataset.name
-#             }
-#         )
-#         dataset.reload()
-#         self.assertEquals(dataset.status, dataset.STATUS_IMPORTED)
+    @patch('api.amazon_utils.AmazonS3Helper.save_gz_file')
+    def test_upload_dataset(self, mock_multipart_upload):
+        from api.import_handlers.tasks import upload_dataset
+        dataset = DataSet.query.filter_by(
+            name=DataSetData.dataset_01.name).one()
+        upload_dataset(dataset.id)
+        mock_multipart_upload.assert_called_once_with(
+            str(dataset.id),
+            dataset.filename,
+            {
+                'params': str(dataset.import_params),
+                'handler': dataset.import_handler_id,
+                'dataset': dataset.name
+            }
+        )
+        self.assertEquals(dataset.status, dataset.STATUS_IMPORTED)

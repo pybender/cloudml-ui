@@ -2,6 +2,7 @@
 import json
 from mock import patch, MagicMock, Mock
 from moto import mock_s3
+from sqlalchemy import desc
 
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS
 from views import TestsResource, TestExampleResource
@@ -12,6 +13,7 @@ from api.import_handlers.fixtures import ImportHandlerData, DataSetData
 from api.import_handlers.models import DataSet
 from api.instances.models import Instance
 from api.instances.fixtures import InstanceData
+from api.async_tasks.models import AsyncTask
 from tasks import run_test
 from api.base.exceptions import InvalidOperationError
 from fixtures import TestResultData, TestExampleData
@@ -261,9 +263,9 @@ class TestExampleResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(data['field_name'], 'opening_id')
         item = data['test_examples']['items'][0]
         self.assertEquals(
-            TestExample.query.filter_by(test_result=self.test).count(), 5,
+            TestExample.query.filter_by(test_result=self.test).count(), 4,
             "Fixtures was changed")
-        self.assertEquals(item['count'], 5)
+        self.assertEquals(item['count'], 4)
         self.assertEquals(item['group_by_field'], '201913099')
         self.assertTrue(item['avp'] > 0)
         self.assertTrue(data['mavp'] > 0)
@@ -298,38 +300,41 @@ class TasksTests(BaseDbTestCase):
 
     def _set_probabilities(self, probabilities):
         for example in TestExample.query.all():
-            label, prob = probabilities[example.id]
-            example.test = self.test
-            example.label = label
-            example.prob = prob
-            example.save()
+            params = probabilities.get(example.name)
+            if params:
+                label, prob = params
+                example.test = self.test
+                example.label = label
+                example.prob = prob
+                example.save()
 
     def test_calculate_confusion_matrix(self):
         from tasks import calculate_confusion_matrix
 
         def _assertMatrix(w0, w1, expected):
-            result = calculate_confusion_matrix(self.test._id, w0, w1)
+            result = calculate_confusion_matrix(self.test.id, w0, w1)
+            result = zip(*result)[-1]
             self.assertEquals(result, expected)
             self.assertEquals(self.examples_count, sum([sum(row) for row in result]))
 
         self._set_probabilities({
-            '1':  ('0', [0.3, 0.7]),
-            '1a': ('0', [0.9, 0.1]),
-            '2':  ('1', [0.3, 0.7]),
-            '4':  ('1', [0.2, 0.8]),
+            'Some Example #1-1':  ('0', [0.3, 0.7]),
+            'Some Example #1-2': ('0', [0.9, 0.1]),
+            'Some Example #1-3':  ('1', [0.3, 0.7]),
+            'Some OtherModel Example #1-1':  ('1', [0.2, 0.8]),
         })
 
-        _assertMatrix(1, 1, [[1, 1], [0, 2]])
-        _assertMatrix(0.5, 0.5, [[1, 1], [0, 2]])
+        _assertMatrix(1, 1, ([1, 1], [0, 2]))
+        _assertMatrix(0.5, 0.5, ([1, 1], [0, 2]))
 
-        _assertMatrix(1, 10, [[0, 2], [0, 2]])
-        _assertMatrix(1, 100, [[0, 2], [0, 2]])
-        _assertMatrix(10, 1, [[2, 0], [2, 0]])
-        _assertMatrix(100, 1, [[2, 0], [2, 0]])
-        _assertMatrix(0, 1, [[0, 2], [0, 2]])
-        _assertMatrix(1, 0, [[2, 0], [2, 0]])
-        _assertMatrix(1, 3, [[1, 1], [0, 2]])
-        _assertMatrix(3, 1, [[2, 0], [1, 1]])
+        _assertMatrix(1, 10, ([0, 2], [0, 2]))
+        _assertMatrix(1, 100, ([0, 2], [0, 2]))
+        _assertMatrix(10, 1, ([2, 0], [2, 0]))
+        _assertMatrix(100, 1, ([2, 0], [2, 0]))
+        _assertMatrix(0, 1, ([0, 2], [0, 2]))
+        _assertMatrix(1, 0, ([2, 0], [2, 0]))
+        _assertMatrix(1, 3, ([1, 1], [0, 2]))
+        _assertMatrix(3, 1, ([2, 0], [1, 1]))
 
         self.assertRaises(ValueError, calculate_confusion_matrix, self.test.id, 0, 0)
         self.assertRaises(ValueError, calculate_confusion_matrix, self.test.id, -1, 1)
@@ -342,11 +347,16 @@ class TasksTests(BaseDbTestCase):
         from tasks import get_csv_results
 
         fields = ['label', 'pred_label', 'prob']
-        url = get_csv_results(self.test.model.id, self.test.id, fields)
+        url = get_csv_results.delay(self.test.model.id, self.test.id, fields).get()
 
         self.assertTrue(url)
 
-        # TODO: check that AsyncTask was created and completed
+        # TODO: signals aren't called when CELERY_ALWAYS_EAGER == True. Update Celery?
+        # task = AsyncTask.query.filter_by(
+        #     task_name='api.model_tests.tasks.get_csv_results'
+        # ).order_by(desc(AsyncTask.created_on)).first()
+        # self.assertEqual(task.result, url)
+        # self.assertEqual(task.status, AsyncTask.STATUS_COMPLETED)
 
     @mock_s3
     @patch('api.models.Model.get_trainer')

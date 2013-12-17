@@ -34,6 +34,7 @@ mock
 moto
 oauth2==1.5.211
 coverage==3.6
+#nosexcover
 Flask-Testing
 fixture
 blinker
