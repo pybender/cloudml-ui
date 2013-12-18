@@ -8,6 +8,7 @@ from sqlalchemy.schema import MetaData, Table, DropTable, \
 
 from api.models import *
 from api import app
+from api.mongo.models import Model as OldModel
 
 engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
 
@@ -267,13 +268,14 @@ REPLACES = {
     'key-path': 'key_path'
 }
 
+
 def replace(data, replace_dict=REPLACES):
     data_str = json.dumps(data)
 
     for key, val in replace_dict.iteritems():
         data_str = data_str.replace(key, val)
     return json.loads(data_str)
-        
+
 
 handler = ImportHandlerMigrator()
 
@@ -341,11 +343,11 @@ weights_category = WeightsCategoryMigrator()
 
 
 class ModelMigrator(Migrator, UserInfoMixin, UniqueNameMixin):
-    SOURCE = app.db.Model
+    SOURCE = app.conn.db.Model
     DESTINATION = Model
     RAISE_EXC = True
     FIELDS_TO_EXCLUDE = ['_id', 'features', 'tags', 'features_set',
-                         'features_set_id',
+                         'features_set_id', 'trainer',
                          'test_import_handler', 'train_import_handler']
     INNER = [test]
 
@@ -360,6 +362,19 @@ class ModelMigrator(Migrator, UserInfoMixin, UniqueNameMixin):
                               'params': source_obj.classifier['params']}
         else:
             obj.classifier = None
+
+        source_obj.save()
+        print source_obj, source_obj.fs
+        trainer = source_obj.get_trainer(loaded=False)
+        #if trainer is None and source_obj.fs:
+        #    trainer = source_obj.fs.trainer
+
+        if trainer:
+            obj.set_trainer(trainer)
+        else:
+            if source_obj.status == 'Trained':
+                #import pdb; pdb.set_trace()
+                raise Exception("Trained model should contains trainer field!")
 
         obj.memory_usage = source_obj.memory_usage.get('training', None)
         if source_obj.tags:
