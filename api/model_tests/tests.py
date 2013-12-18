@@ -228,7 +228,8 @@ class TestExampleResourceTests(BaseDbTestCase, TestChecksMixin):
         url = '{0}?{1}&{2}'.format(
             self.BASE_URL,
             'action=examples:list',
-            'data_input.employer->country=United Kingdom'
+            'data_input.employer->country=United Kingdom',
+            'show=id,name,label,pred_label,title,prob,example_id'
         )
         resp = self.client.get(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, 200)

@@ -67,6 +67,11 @@ LOGGING = {
             'level': 'INFO',
             'propagate': True,
         },
+        # 'sqlalchemy.engine': {
+        #     'handlers': ['console'],
+        #     'level': 'INFO',
+        #     'propagate': True,
+        # },
     }
 }
 

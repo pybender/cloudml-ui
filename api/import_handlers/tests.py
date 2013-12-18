@@ -144,8 +144,7 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue(ds.compress)
         self.assertTrue(ds.on_s3)
         self.assertEquals(ds.format, DataSet.FORMAT_JSON)
-        # TODO
-        # self.assertEquals(ds.filename, 'test_data/%s.gz' % ds.id)
+        self.assertEquals(ds.filename, 'test_data/%s.gz' % ds.id)
         self.assertTrue(mock_multipart_upload.called)
 
     @patch('core.importhandler.importhandler.ImportHandler.__init__')
@@ -187,8 +186,7 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue(ds.compress)
         self.assertTrue(ds.on_s3)
         self.assertEquals(ds.format, DataSet.FORMAT_CSV)
-        # TODO
-        # self.assertEquals(ds.filename, 'test_data/%s.gz' % ds.id)
+        self.assertEquals(ds.filename, 'test_data/%s.gz' % ds.id)
         self.assertTrue(mock_multipart_upload.called)
 
     def test_edit_name(self):
@@ -225,8 +223,6 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(resp.status_code, httplib.OK)
         self.assertFalse(mock_upload_dataset.delay.called)
 
-        # TODO: AttributeError: 'DataSet' object
-        # has no attribute '_sa_instance_state'
         self.obj.status = self.obj.STATUS_ERROR
         self.obj.save()
 
@@ -259,8 +255,6 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         mock_import_data.delay.assert_called_once_with(dataset_id=self.obj.id)
         mock_import_data.reset_mock()
 
-        # TODO: AttributeError: 'DataSet' object has no
-        # attribute '_sa_instance_state'
         self.obj.status = DataSet.STATUS_IMPORTING
         self.obj.save()
 

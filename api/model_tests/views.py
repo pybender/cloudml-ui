@@ -92,24 +92,16 @@ class TestExampleResource(BaseResourceSQL):
         return super(TestExampleResource, self)._list(**kwargs)
 
     def _get_details_query(self, params, **kwargs):
-        load_weights = False
-        # if 'weighted_data_input' in fields:
-        #     fields = None  # We need all fields to recalc weights
-        load_weights = True
-
         example = super(TestExampleResource, self)._get_details_query(
             params, **kwargs)
 
         if example is None:
             raise NotFound()
 
-        if load_weights and not example.is_weights_calculated:
+        if not example.is_weights_calculated:
             example.calc_weighted_data()
             example = super(TestExampleResource, self)._get_details_query(
                 params, **kwargs)
-
-        # TODO: hack
-        example.__dict__['test'] = example.test_result
 
         return example
 
