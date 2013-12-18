@@ -22,7 +22,7 @@ class Migrator(object):
     IDS_MAP = {}
 
     def migrate_one(self, source_obj):
-        print "migrate one for", source_obj
+        print "migrate one for"
         parent = None
         i = 0
         obj = self.DESTINATION()
@@ -343,7 +343,7 @@ weights_category = WeightsCategoryMigrator()
 
 
 class ModelMigrator(Migrator, UserInfoMixin, UniqueNameMixin):
-    SOURCE = app.conn.db.Model
+    SOURCE = app.db.Model
     DESTINATION = Model
     RAISE_EXC = True
     FIELDS_TO_EXCLUDE = ['_id', 'features', 'tags', 'features_set',
@@ -363,9 +363,9 @@ class ModelMigrator(Migrator, UserInfoMixin, UniqueNameMixin):
         else:
             obj.classifier = None
 
-        source_obj.save()
-        print source_obj, source_obj.fs
-        trainer = source_obj.get_trainer(loaded=False)
+        #source_obj.save()
+        source_obj = app.db.Model.find_one({'_id': source_obj._id})
+        trainer = source_obj.get_trainer()
         #if trainer is None and source_obj.fs:
         #    trainer = source_obj.fs.trainer
 
@@ -402,13 +402,14 @@ class ModelMigrator(Migrator, UserInfoMixin, UniqueNameMixin):
 
         # Looking for import handlers
         if source_obj.test_import_handler:
-            s_id = str(source_obj.test_import_handler._DBRef__id)
+            print source_obj.test_import_handler
+            s_id = str(source_obj.test_import_handler._id)#_DBRef__id)
             _id = handler.IDS_MAP.get(s_id, None)
         if _id:
             obj.test_import_handler = ImportHandler.query.get(_id)
 
         if source_obj.train_import_handler:
-            s_id = str(source_obj.train_import_handler._DBRef__id)
+            s_id = str(source_obj.train_import_handler._id)
             _id = handler.IDS_MAP.get(s_id, None)
         if _id:
             obj.train_import_handler = ImportHandler.query.get(_id)
