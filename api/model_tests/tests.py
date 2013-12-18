@@ -220,6 +220,9 @@ class TestExampleResourceTests(BaseDbTestCase, TestChecksMixin):
             self.model.id, self.test.id
         )
 
+        # TODO: investigate why does it help
+        self.db.session.expire_all()
+
     def test_list(self):
         self.check_list(
             show='created_on,label,pred_label',
