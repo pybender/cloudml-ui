@@ -163,7 +163,7 @@ class TestExampleData(DataSet):
         on_s3 = True
         num = 0
         model = ModelData.model_01
-        test_result = TestResultData.test_01
+        test_result = TestResultData.test_02
         data_input = {
             'opening_id': "201913099"
         }

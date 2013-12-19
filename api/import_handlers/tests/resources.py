@@ -201,8 +201,7 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue(ds.compress)
         self.assertTrue(ds.on_s3)
         self.assertEquals(ds.format, DataSet.FORMAT_JSON)
-        # TODO
-        # self.assertEquals(ds.filename, 'test_data/%s.gz' % ds.id)
+        self.assertEquals(ds.filename, 'test_data/%s.gz' % ds.id)
         self.assertTrue(mock_multipart_upload.called)
 
     @patch('core.importhandler.importhandler.ImportHandler.__init__')
@@ -244,8 +243,7 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue(ds.compress)
         self.assertTrue(ds.on_s3)
         self.assertEquals(ds.format, DataSet.FORMAT_CSV)
-        # TODO
-        # self.assertEquals(ds.filename, 'test_data/%s.gz' % ds.id)
+        self.assertEquals(ds.filename, 'test_data/%s.gz' % ds.id)
         self.assertTrue(mock_multipart_upload.called)
 
     def test_edit_name(self):
@@ -282,8 +280,6 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(resp.status_code, httplib.OK)
         self.assertFalse(mock_upload_dataset.delay.called)
 
-        # TODO: AttributeError: 'DataSet' object
-        # has no attribute '_sa_instance_state'
         self.obj.status = self.obj.STATUS_ERROR
         self.obj.save()
 
@@ -316,8 +312,6 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         mock_import_data.delay.assert_called_once_with(dataset_id=self.obj.id)
         mock_import_data.reset_mock()
 
-        # TODO: AttributeError: 'DataSet' object has no
-        # attribute '_sa_instance_state'
         self.obj.status = DataSet.STATUS_IMPORTING
         self.obj.save()
 
@@ -347,3 +341,27 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
 
         self.assertIsNone(test.dataset)
         self.assertEquals([ds.name for ds in model.datasets], ['DS 2'])
+
+
+class TestTasksTests(BaseDbTestCase, TestChecksMixin):
+    """
+    Tests of the celery tasks.
+    """
+    datasets = [ImportHandlerData, DataSetData, ModelData, TestResultData]
+
+    @patch('api.amazon_utils.AmazonS3Helper.save_gz_file')
+    def test_upload_dataset(self, mock_multipart_upload):
+        from api.import_handlers.tasks import upload_dataset
+        dataset = DataSet.query.filter_by(
+            name=DataSetData.dataset_01.name).one()
+        upload_dataset(dataset.id)
+        mock_multipart_upload.assert_called_once_with(
+            str(dataset.id),
+            dataset.filename,
+            {
+                'params': str(dataset.import_params),
+                'handler': dataset.import_handler_id,
+                'dataset': dataset.name
+            }
+        )
+        self.assertEquals(dataset.status, dataset.STATUS_IMPORTED)

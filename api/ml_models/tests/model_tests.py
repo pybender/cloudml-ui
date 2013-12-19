@@ -337,9 +337,34 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue(obj.memory_usage > 0)
         self.assertEqual(obj.train_records_count, 100)
 
-    # TODO
-    def test_train_model_with_dataset_other_handler(self):
-        pass
+    @patch('api.ml_models.models.Model.get_features_json')
+    def test_train_model_with_dataset_other_handler(self,
+                                                    mock_get_features_json):
+        with open('./conf/features.json', 'r') as f:
+            mock_get_features_json.return_value = f.read()
+
+        # Dataset from another handler
+        new_handler = ImportHandler()
+        new_handler.name = 'New Hnadler for the only one test'
+        new_handler.type = ImportHandler.TYPE_DB
+        new_handler.import_params = ['start', 'end', 'category']
+        new_handler.data = self.handler.data
+        new_handler.save()
+        ds = DataSet.query.filter_by(name=DataSetData.dataset_02.name).first()
+        ds.import_handler = new_handler
+        ds.save()
+
+        data = {'aws_instance': self.instance.id,
+                'dataset': ds.id}
+        resp, obj = self.check_edit(data, id=self.obj.id, action='train')
+        # NOTE: Make sure that ds.gz file exist in test_data folder
+
+        self.assertEqual(obj.status, Model.STATUS_TRAINED, obj.error)
+        self.assertEqual([d.name for d in obj.datasets], [ds.name])
+
+        self.assertEqual(obj.trained_by.uid, 'user')
+        self.assertTrue(obj.memory_usage > 0)
+        self.assertEqual(obj.train_records_count, 100)
 
     @patch('api.ml_models.models.Model.get_features_json')
     def test_train_model_with_dataset(self, mock_get_features_json):
@@ -467,6 +492,3 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         resp = self.client.put(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.OK)
         self.assertTrue(mock_task.delay.called)
-
-
-# class TasksTests()  # TODO:

@@ -6,3 +6,4 @@ from api.ml_models.views import *
 from api.model_tests.views import *
 from api.features.views import *
 from api.statistics.views import *
+from api.reports.views import *
