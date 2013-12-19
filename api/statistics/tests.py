@@ -1,11 +1,13 @@
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin
 from api.ml_models.fixtures import ModelData
+from api.features.fixtures import FeatureSetData, FeatureData
 from views import StatisticsResource
 
 
 class StatisticsTests(BaseDbTestCase, TestChecksMixin):
     """ Tests of the Statistics API. """
-    datasets = [ModelData, ]  # TODO: TestData, DataSetData
+    datasets = [FeatureData, FeatureSetData,
+                ModelData]  # TODO: TestData, DataSetData
     BASE_URL = '/cloudml/statistics/'
     RESOURCE = StatisticsResource
 

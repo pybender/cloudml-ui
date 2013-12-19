@@ -11,12 +11,14 @@ from ..models import Weight, WeightsCategory
 from ..views import ModelResource
 from api.ml_models.models import Model
 from api.ml_models.fixtures import ModelData
+from api.features.fixtures import FeatureSetData, FeatureData
 
 
 class WeightResourceTests(BaseDbTestCase, TestChecksMixin):
     """ Tests of the WeightResource. """
     MODEL_NAME = 'weights_model'
-    datasets = [ModelData, WeightsCategoryData, WeightData]
+    datasets = [FeatureData, FeatureSetData, ModelData,
+                WeightsCategoryData, WeightData]
 
     def setUp(self):
         super(WeightResourceTests, self).setUp()
@@ -103,7 +105,7 @@ class WeightResourceTests(BaseDbTestCase, TestChecksMixin):
 
 
 class WeightTreeResourceTests(BaseDbTestCase, TestChecksMixin):
-    datasets = [ModelData, WeightData, WeightsCategoryData]
+    datasets = [FeatureData, FeatureSetData, ModelData, WeightData, WeightsCategoryData]
 
     def setUp(self):
         super(WeightTreeResourceTests, self).setUp()
@@ -127,7 +129,7 @@ class WeightTreeResourceTests(BaseDbTestCase, TestChecksMixin):
 
 
 class WeightTasksTests(BaseDbTestCase, TestChecksMixin):
-    datasets = [ModelData]
+    datasets = [FeatureData, FeatureSetData, ModelData]
     Model = Model
     RESOURCE = ModelResource
     BASE_URL = '/cloudml/models/'

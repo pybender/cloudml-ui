@@ -17,6 +17,7 @@ from api.async_tasks.models import AsyncTask
 from tasks import run_test
 from api.base.exceptions import InvalidOperationError
 from fixtures import TestResultData, TestExampleData
+from api.features.fixtures import FeatureSetData, FeatureData
 
 
 class TestResourceTests(BaseDbTestCase, TestChecksMixin):
@@ -24,8 +25,8 @@ class TestResourceTests(BaseDbTestCase, TestChecksMixin):
     BASE_URL = '/cloudml/models/{0!s}/tests/'
     RESOURCE = TestsResource
     Model = TestResult
-    datasets = [InstanceData, ImportHandlerData, DataSetData,
-                ModelData, TestResultData, TestExampleData]
+    datasets = [FeatureData, FeatureSetData, InstanceData, ImportHandlerData,
+                DataSetData, ModelData, TestResultData, TestExampleData]
 
     def setUp(self):
         super(TestResourceTests, self).setUp()
@@ -206,7 +207,8 @@ class TestExampleResourceTests(BaseDbTestCase, TestChecksMixin):
     """ Tests of the Test Examples API. """
     RESOURCE = TestExampleResource
     Model = TestExample
-    datasets = [ImportHandlerData, DataSetData, ModelData, WeightData,
+    datasets = [FeatureData, FeatureSetData, ImportHandlerData,
+                DataSetData, ModelData, WeightData,
                 TestResultData, TestExampleData]
 
     def setUp(self):

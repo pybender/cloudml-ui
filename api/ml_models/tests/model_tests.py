@@ -13,6 +13,7 @@ from api.instances.models import Instance
 from api.instances.fixtures import InstanceData
 from api.model_tests.models import TestResult, TestExample
 from api.model_tests.fixtures import TestResultData, TestExampleData
+from api.features.fixtures import FeatureSetData, FeatureData
 
 
 class ModelsTests(BaseDbTestCase, TestChecksMixin):
@@ -22,8 +23,8 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
     BASE_URL = '/cloudml/models/'
     RESOURCE = ModelResource
     Model = Model
-    datasets = [ImportHandlerData, DataSetData, ModelData,
-                 InstanceData, TestResultData, TestExampleData]
+    datasets = [FeatureData, FeatureSetData, ImportHandlerData, DataSetData,
+                ModelData, InstanceData, TestResultData, TestExampleData]
 
     def setUp(self):
         super(ModelsTests, self).setUp()

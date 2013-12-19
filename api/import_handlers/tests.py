@@ -11,6 +11,7 @@ from api.ml_models.fixtures import ModelData
 from api.ml_models.models import Model
 from api.model_tests.fixtures import TestResultData
 from api.model_tests.models import TestResult
+from api.features.fixtures import FeatureSetData, FeatureData
 
 
 class ImportHandlerTests(BaseDbTestCase, TestChecksMixin):
@@ -102,13 +103,14 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
     MODEL_NAME = 'TrainedModel'
     RESOURCE = DataSetResource
     Model = DataSet
-    datasets = [ImportHandlerData, DataSetData, ModelData, TestResultData]
+    datasets = [FeatureData, FeatureSetData, ImportHandlerData, DataSetData,
+                ModelData, TestResultData]
 
     def setUp(self):
         super(DataSetsTests, self).setUp()
         self.handler = ImportHandler.query.filter_by(name='Handler 1').first()
         self.obj = self.Model.query.filter_by(name=self.DS_NAME).first()
-        self.BASE_URL = '/cloudml/importhandlers/%s/datasets/' % self.obj.id
+        self.BASE_URL = '/cloudml/importhandlers/%s/datasets/' % self.handler.id
         for ds in DataSet.query.all():
             ds.import_handler = self.handler
             ds.save()

@@ -32,21 +32,34 @@ class BaseDbTestCase(TestCase):
     def db(self):
         return self.app.sql_db
 
-    def setUp(self):
-        self.engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
+    @classmethod
+    def setUpClass(cls):
+        cls.engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
         # TODO: do we need this or need to create test db manually?
         try:
-            conn = self.engine.connect()
+            conn = cls.engine.connect()
             conn.close()
         except Exception:  # TODO: catch OperationalError
-            self.exec_db_level_sql(
+            cls.exec_db_level_sql(
                 "create database %s" % app.config['DB_NAME'])
 
-        self.db.session.remove()
-        self.db.drop_all()
+        app.sql_db.session.expunge_all()
+        app.sql_db.drop_all()
+        app.sql_db.metadata.create_all(cls.engine)
+        app.sql_db.create_all()
 
-        self.db.metadata.create_all(self.engine)
-        self.db.create_all()
+    @classmethod
+    def tearDownClass(cls):
+        app.sql_db.session.expunge_all()
+        app.sql_db.session.remove()
+        app.sql_db.drop_all()
+
+    def setUp(self):
+        # Clean all tables
+        for table in reversed(self.db.metadata.sorted_tables):
+            self.db.session.execute(table.delete())
+        self.db.session.commit()
+        self.db.session.expunge_all()
 
         # Loading fixtures
         from api.accounts.fixtures import UserData
@@ -67,10 +80,11 @@ class BaseDbTestCase(TestCase):
 
     def tearDown(self):
         self.db.session.remove()
-        self.db.drop_all()
+        self.db.session.expunge_all()
 
     # Utility methods
-    def exec_db_level_sql(self, sql):
+    @classmethod
+    def exec_db_level_sql(cls, sql):
         pengine = create_engine(app.config['DB_FORMAT_URI'] % "postgres")
         create_db_conn = pengine.connect()
         create_db_conn.execute("commit")

@@ -8,6 +8,7 @@ from api.ml_models.models import Model
 from api.ml_models.fixtures import ModelData
 from api.model_tests.models import TestResult
 from api.model_tests.fixtures import TestResultData, TestExampleData
+from api.features.fixtures import FeatureSetData, FeatureData
 
 
 class CompareReportTests(BaseDbTestCase, TestChecksMixin):
@@ -16,7 +17,8 @@ class CompareReportTests(BaseDbTestCase, TestChecksMixin):
     """
     BASE_URL = '/cloudml/reports/compare/'
     RESOURCE = CompareReportResource
-    datasets = [ModelData, TestResultData, TestExampleData]
+    datasets = [FeatureData, FeatureSetData, ModelData,
+                TestResultData, TestExampleData]
 
     def setUp(self):
         super(CompareReportTests, self).setUp()

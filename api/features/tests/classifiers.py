@@ -9,6 +9,7 @@ from utils import FeaturePredefinedItemsTestMixin
 from ..views import ClassifierResource
 from ..models import PredefinedClassifier
 from ..fixtures import PredefinedClassifierData
+from api.features.fixtures import FeatureSetData, FeatureData
 
 
 class TestClassifierDoc(BaseDbTestCase):
@@ -101,7 +102,8 @@ class ModelClassifierTest(BaseDbTestCase, TestChecksMixin):
     DATA = {'type': 'logistic regression',
             'name': 'My predef classifier',
             'params': "{}"}
-    datasets = (ModelData, PredefinedClassifierData, )
+    datasets = (FeatureData, FeatureSetData, ModelData,
+                PredefinedClassifierData, )
 
     def test_post_validation(self):
         def _check(data, errors):
@@ -117,7 +119,8 @@ class ModelClassifierTest(BaseDbTestCase, TestChecksMixin):
         _check(data, errors={u'model_id': u'Document not found'})
 
         data['predefined_selected'] = 'true'
-        data['model_id'] = 1
+        data['model_id'] = Model.query.filter_by(
+            name=ModelData.model_01.name).one().id
         _check(data, errors={u'classifier': u'classifier is required'})
 
     def test_edit(self):
@@ -127,17 +130,19 @@ class ModelClassifierTest(BaseDbTestCase, TestChecksMixin):
                 'model_id': 1}
 
         self._check(data=data, method='post')
-        model = Model.query.get(1)
+        model = Model.query.filter_by(name=ModelData.model_01.name).one()
         self.assertEqual(model.classifier['type'], data['type'])
         self.assertEqual(model.classifier['params']['C'], 1)
 
     def test_edit_from_predefined(self):
-        classifier = PredefinedClassifier.query.get(1)
+        classifier = PredefinedClassifier.query.filter_by(
+            name=PredefinedClassifierData.lr_classifier.name).one()
+        model = Model.query.filter_by(name=ModelData.model_01.name).one()
         data = {'classifier': classifier.id,
-                'model_id': 1,
+                'model_id': model.id,
                 'predefined_selected': 'true'}
         self._check(data=data, method='post')
-        model = Model.query.get(1)
+        model = Model.query.filter_by(name=ModelData.model_01.name).one()
         self.assertEqual(model.classifier['type'], classifier.type)
         self.assertEqual(model.classifier['params']['penalty'], "l2")
 
