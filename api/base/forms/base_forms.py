@@ -1,3 +1,5 @@
+import sqlalchemy
+
 from api.base.resources import ValidationError
 from api.base.forms import BaseForm, ModelField, ChoiceField, \
     CharField, MultipleModelField
@@ -60,3 +62,86 @@ class BaseChooseInstanceAndDataset(BaseForm):
 
 class BaseChooseInstanceAndDatasetMultiple(BaseChooseInstanceAndDataset):
     dataset = MultipleModelField(model=DataSet, return_model=True)
+
+
+class BasePredefinedForm(BaseForm):
+    """
+    Base form for creating/edditing features specific items, which could be:
+        * predefined item - that could be used when creating/edditing
+            feature item to copy fields from them
+        * feature item like feature transformer, scaler, etc
+            when item fields are specified
+        * feature item copied from predefined item.
+    """
+    # name of the feature field of this item or POST/PUT parameter of the
+    # predefined item to copy fields from, when `predefined_selected`.
+    OBJECT_NAME = None
+    DOC = None
+
+    def clean_feature_id(self, value, field):
+        if value:
+            self.cleaned_data['feature'] = field.doc
+        return value
+
+    def clean_model_id(self, value, field):
+        if value:
+            self.cleaned_data['model'] = field.doc
+        return value
+
+    def validate_data(self):
+        predefined_selected = self.cleaned_data.get(
+            'predefined_selected', False)
+        feature_id = self.cleaned_data.get('feature_id', False)
+        model_id = self.cleaned_data.get('model_id', False)
+
+        # It would be predefined obj, when model, feature not specified
+        # and this form will not used as inner form of another one
+        self.cleaned_data['is_predefined'] = is_predefined = \
+            not (feature_id or model_id or self.inner_name)
+
+        if predefined_selected and is_predefined:
+            raise ValidationError(
+                'item could be predefined or copied from predefined')
+
+        if is_predefined:
+            name = self.cleaned_data.get('name', None)
+            if not name:
+                raise ValidationError('name is required for predefined item')
+
+            items = self.DOC.query.filter_by(name=name)
+            if self.obj.id:
+                items = items.filter(
+                    sqlalchemy.not_(self.DOC.id == self.obj.id))
+            count = items.count()
+
+            if count:
+                raise ValidationError(
+                    'name of predefined item should be unique')
+
+        if predefined_selected:
+            obj = self.cleaned_data.get(self.OBJECT_NAME, None)
+            if obj:
+                self._fill_predefined_values(obj)
+
+    def _fill_predefined_values(self, obj):
+        """
+        Fills fields from predefined obj
+        """
+        self.cleaned_data['name'] = obj.name
+        self.cleaned_data['type'] = obj.type
+        self.cleaned_data['params'] = obj.params
+
+    def save(self, commit=True):
+        commit = self.cleaned_data['is_predefined']
+        obj = super(BasePredefinedForm, self).save(commit)
+        feature = self.cleaned_data.get('feature', None)
+        if feature:
+            setattr(feature, self.OBJECT_NAME, obj.to_dict())
+            feature.save()
+
+        model = self.cleaned_data.get('model', None)
+        if model:
+            setattr(model, self.OBJECT_NAME, obj.to_dict())
+            model.save()
+
+        return obj

@@ -109,7 +109,7 @@ describe "datasets", ->
 
       url = BASE_URL + DS_ID + '/?show=' + encodeURIComponent('name,status,created_on,updated_on,data,
 on_s3,import_params,error,filesize,records_count,
-time,created_by,import_handler_id')
+time,created_by,import_handler_id,format')
       $httpBackend.expectGET(url).respond('{"dataset": {"name": "Some name"}}')
 
       createController "DataSetDetailsCtrl"

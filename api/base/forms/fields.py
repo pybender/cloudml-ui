@@ -29,6 +29,15 @@ class BooleanField(BaseField):
         return None
 
 
+class IntegerField(BaseField):
+    def clean(self, value):
+        value = super(IntegerField, self).clean(value)
+        try:
+            return int(value)
+        except ValueError:
+            raise ValidationError('should be integer number')
+
+
 class ChoiceField(CharField):
     def __init__(self, **kwargs):
         self._choices = kwargs.pop('choices')

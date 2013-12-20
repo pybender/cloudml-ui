@@ -24,6 +24,8 @@ App = angular.module('app', [
   'app.reports.controllers'
   'app.importhandlers.model'
   'app.importhandlers.controllers'
+  'app.importhandlers.controllers.datasources'
+  'app.importhandlers.controllers.handlers'
   'app.datasets.model'
   'app.datasets.controllers'
   'app.weights.model'
@@ -113,6 +115,14 @@ App.config([
       templateUrl: '/partials/import_handler/details.html'
       reloadOnSearch: false
     })
+    .when('/importhandlers/:id/query/add', {
+      controller: 'AddImportHandlerQueryCtrl'
+      templateUrl: '/partials/import_handler/add_query.html'
+    })
+    .when('/importhandlers/:id/query/:num/items/add', {
+      controller: 'AddImportHandlerQueryItemCtrl'
+      templateUrl: '/partials/import_handler/add_query_item.html'
+    })
     .when('/importhandlers/:handler_id/datasets', {
       redirectTo: (params, loc) ->
         return '/importhandlers/' + params.handler_id + '?action=dataset:list'
@@ -193,6 +203,10 @@ App.config([
     .when('/predefined/scalars', {
       controller: "ScalersListCtrl"
       templateUrl: '/partials/features/scalers/list.html'
+    })
+    .when('/predefined/datasources', {
+      controller: "DataSourceListCtrl"
+      templateUrl: '/partials/import_handler/datasource/list.html'
     })
 
     # Catch all

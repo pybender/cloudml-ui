@@ -8,6 +8,7 @@ from sqlalchemy.schema import MetaData, Table, DropTable, \
 
 from api.models import *
 from api import app
+from api.mongo.models import Model as OldModel
 
 engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
 
@@ -21,7 +22,7 @@ class Migrator(object):
     IDS_MAP = {}
 
     def migrate_one(self, source_obj):
-        print "migrate one for", source_obj
+        print "migrate one for"
         parent = None
         i = 0
         obj = self.DESTINATION()
@@ -252,6 +253,29 @@ class ImportHandlerMigrator(Migrator, UserInfoMixin, UniqueNameMixin):
     SOURCE = app.db.ImportHandler
     DESTINATION = ImportHandler
     INNER = [ds]
+    FIELDS_TO_EXCLUDE = ['_id', 'data', 'type']
+
+    def fill_extra(self, obj, source_obj):
+        obj.data = replace(source_obj['data'])
+
+
+REPLACES = {
+    'process-as': 'process_as',
+    'target-features': 'target_features',
+    'to-csv': 'to_csv',
+    'value-path': 'value_path',
+    'target-schema': 'target_schema',
+    'key-path': 'key_path'
+}
+
+
+def replace(data, replace_dict=REPLACES):
+    data_str = json.dumps(data)
+
+    for key, val in replace_dict.iteritems():
+        data_str = data_str.replace(key, val)
+    return json.loads(data_str)
+
 
 handler = ImportHandlerMigrator()
 
@@ -288,8 +312,8 @@ class TestMigrator(Migrator, UserInfoMixin):
         memory_usage = source_obj.get('memory_usage', None)
         if memory_usage:
             obj.memory_usage = memory_usage.get('testing', None)
-    else:
-        obj.memory_usage = None
+        else:
+            obj.memory_usage = None
 
 test = TestMigrator()
 
@@ -323,7 +347,7 @@ class ModelMigrator(Migrator, UserInfoMixin, UniqueNameMixin):
     DESTINATION = Model
     RAISE_EXC = True
     FIELDS_TO_EXCLUDE = ['_id', 'features', 'tags', 'features_set',
-                         'features_set_id',
+                         'features_set_id', 'trainer',
                          'test_import_handler', 'train_import_handler']
     INNER = [test]
 
@@ -338,6 +362,19 @@ class ModelMigrator(Migrator, UserInfoMixin, UniqueNameMixin):
                               'params': source_obj.classifier['params']}
         else:
             obj.classifier = None
+
+        #source_obj.save()
+        source_obj = app.db.Model.find_one({'_id': source_obj._id})
+        trainer = source_obj.get_trainer()
+        #if trainer is None and source_obj.fs:
+        #    trainer = source_obj.fs.trainer
+
+        if trainer:
+            obj.set_trainer(trainer)
+        else:
+            if source_obj.status == 'Trained':
+                #import pdb; pdb.set_trace()
+                raise Exception("Trained model should contains trainer field!")
 
         obj.memory_usage = source_obj.memory_usage.get('training', None)
         if source_obj.tags:
@@ -360,20 +397,23 @@ class ModelMigrator(Migrator, UserInfoMixin, UniqueNameMixin):
             print "no features set found! \n\n"
             fset = FeatureSet()
             fset.save()
-            obj.features_set = fset
+
+        obj.features_set = fset
 
         # Looking for import handlers
         if source_obj.test_import_handler:
-            s_id = str(source_obj.test_import_handler._DBRef__id)
+            print source_obj.test_import_handler
+            s_id = str(source_obj.test_import_handler._id)#_DBRef__id)
             _id = handler.IDS_MAP.get(s_id, None)
         if _id:
             obj.test_import_handler = ImportHandler.query.get(_id)
 
         if source_obj.train_import_handler:
-            s_id = str(source_obj.train_import_handler._DBRef__id)
+            s_id = str(source_obj.train_import_handler._id)
             _id = handler.IDS_MAP.get(s_id, None)
         if _id:
             obj.train_import_handler = ImportHandler.query.get(_id)
+        obj.save()
 
 model = ModelMigrator()
 

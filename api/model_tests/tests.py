@@ -214,10 +214,8 @@ class TestExampleResourceTests(BaseDbTestCase, TestChecksMixin):
     def setUp(self):
         super(TestExampleResourceTests, self).setUp()
         self.test = TestResult.query.filter_by(
-            name=TestResultData.test_01.name).first()
+            name=TestResultData.test_01.name).one()
         self.model = self.test.model
-        self.obj = self.test.examples[0]
-
         self.BASE_URL = '/cloudml/models/{0!s}/tests/{1!s}/examples/'.format(
             self.model.id, self.test.id
         )
@@ -250,7 +248,8 @@ class TestExampleResourceTests(BaseDbTestCase, TestChecksMixin):
 
         mock_get_vect_data.return_value = [0.123, 0.0] * 500
 
-        url = self._get_url(id=self.obj.id, show='id,name,weighted_data_input')
+        obj = self.test.examples[0]
+        url = self._get_url(id=obj.id, show='id,name,weighted_data_input')
         resp = self.client.get(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, 200)
         self.assertTrue(mock_get_trainer.called)

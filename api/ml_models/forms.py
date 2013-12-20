@@ -115,7 +115,6 @@ train_import_handler should be specified for new model')
             handler = ImportHandler()
             action = 'test' if fieldname.startswith('test') else 'train'
             handler.name = '%s handler for %s' % (name, action)
-            handler.type = handler.TYPE_DB
             handler.import_params = self.cleaned_data.pop('%s_import_params' % action)
             handler.data = data
             handler.save()

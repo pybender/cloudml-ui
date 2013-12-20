@@ -27,6 +27,45 @@ angular.module('app.directives', [
   }
 )
 
+.directive("fileDownload", [
+  '$compile'
+
+($compile) ->
+  return {
+    restrict: "E"
+    #templateUrl: 'partials/directives/file_downloader.html',
+    scope:{
+      data:'=data'
+      filename: '=filename'
+      text: '=text'
+      cssClass: '=cssClass'}
+    link: (scope, elm, attrs) ->
+      scope.$watch 'data', (val, oldVal) ->
+        if val?
+          blob = new Blob([val], {type: "application/json"})
+          url = URL.createObjectURL(blob)
+          elm.append($compile(
+            '<a class="btn btn-info" download="' + scope.filename + '"' +
+            'href="' + url + '">' + scope.text + '</a>'
+          )(scope))
+  }
+])
+
+# .directive('fileDownload',
+#   '$compile'
+#   ($compile) ->
+#     return {
+#       # restrict:'E',
+#       # scope:{ getUrlData:'&getData'}
+#       # # link: (scope, elm, attrs) ->
+#       # #   url = URL.createObjectURL(scope.getUrlData())
+#       # #   elm.append($compile(
+#       # #     '<a class="btn" download="data.json" href="' +
+#       # #     url + '">download</a>'
+#       # #   )(scope))
+#     }
+# )
+
 .directive('editable',
 
   () ->

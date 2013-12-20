@@ -144,5 +144,5 @@ api = Api(app)
 
 logging_config.dictConfig(app.config['LOGGING'])
 
-import views
 import models
+import views

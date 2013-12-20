@@ -1,0 +1,39 @@
+<div>
+  <div class="modal-header">
+    <button ng-click="dialog.close()" class="close" data-dismiss="modal">×</button>
+    <h3>Test SQL query</h3>
+  </div>
+
+  <div class="modal-body">
+    <alert-message ng-show="query.test.error" class="alert-error" msg="{{ query.test.error }}" unsafe></alert-message>
+    <form name="Form" class="form-horizontal">
+      <div class="control-group" ng-class="{error: Form.datasource.$invalid}">
+        <label class="control-label">Data Source</label>
+        <div class="controls">
+          <select name="datasource" ng-options="s.name as s.name for s in handler.datasource" ng-model="query.test_datasource" ng-selected="handler.datasource[0].name"></select>
+          <span ng-show="Form.datasource.$error.required" class="help-inline">*</span>
+        </div>
+      </div>
+      <hr ng-show="query.test_params" />
+      <div ng-repeat="param in params" class="control-group">
+          <label class="control-label">{{ param | capfirst }}:</label>
+          <div class="controls"  ng-class="{error: Form.parameters[param].$invalid}">
+            <input ng-model='query.test_params[param]' name="{{ param }}" placeholder='Please input {{ param }}' type='text' required />
+            <span ng-show="Form[param].$error.required" class="help-inline">Required</span>
+          </div>
+        </div>
+      <hr ng-show="query.test_params" />
+      <div class="control-group" ng-class="{error: Form.limit.$invalid}">
+        <label class="control-label">Limit of rows</label>
+        <div class="controls">
+          <input type="text" name="limit" ng-model="query.test_limit" />
+          <span ng-show="Form.limit.$error.required" class="help-inline">*</span>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="modal-footer">
+    <button ng-click="runQuery()" ng-disabled="Form.$invalid" class="btn btn-primary">Run</button>
+  </div>
+</div>

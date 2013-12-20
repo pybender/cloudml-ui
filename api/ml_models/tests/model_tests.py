@@ -347,7 +347,7 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         # Dataset from another handler
         new_handler = ImportHandler()
         new_handler.name = 'New Hnadler for the only one test'
-        new_handler.type = ImportHandler.TYPE_DB
+        #new_handler.type = ImportHandler.TYPE_DB
         new_handler.import_params = ['start', 'end', 'category']
         new_handler.data = self.handler.data
         new_handler.save()
