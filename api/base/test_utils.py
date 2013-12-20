@@ -71,7 +71,7 @@ class BaseDbTestCase(TestCase):
             self.load_fixtures(*self.datasets)
         except Exception, exc:
             logging.warning(
-                'Problem with load fixture %s: %s', self.datasets, exc)
+                'Problem with loading fixture %s: %s', self.datasets, exc)
 
         # Fixing celery config
         from api import celery

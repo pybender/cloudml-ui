@@ -12,7 +12,8 @@ class SqlMethodTests(BaseDbTestCase):
 
     def setUp(self):
         super(SqlMethodTests, self).setUp()
-        self.obj = self.Model.query.get(1)
+        self.obj = self.Model.query.filter_by(
+            name=ImportHandlerData.import_handler_01.name).one()
 
     def create_app(self):
         return app
