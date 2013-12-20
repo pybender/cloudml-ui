@@ -20,6 +20,11 @@ class LogsTests(BaseMongoTestCase, TestChecksMixin, BaseDbTestCase):
         BaseDbTestCase.setUpClass()
         BaseMongoTestCase.setUpClass()
 
+    @classmethod
+    def tearDownClass(cls):
+        BaseDbTestCase.tearDownClass()
+        BaseMongoTestCase.tearDownClass()
+
     def setUp(self):
         BaseDbTestCase.setUp(self)
         BaseMongoTestCase.setUp(self)
