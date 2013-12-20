@@ -15,7 +15,7 @@ from api.logs.models import LogMessage
 
 
 class PredefinedDataSource(db.Model, BaseModel):
-    TYPE_REQUEST = 'request'
+    TYPE_REQUEST = 'http'
     TYPE_SQL = 'sql'
     TYPES_LIST = (TYPE_REQUEST, TYPE_SQL)
 

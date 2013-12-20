@@ -258,6 +258,10 @@ class ImportHandlerMigrator(Migrator, UserInfoMixin, UniqueNameMixin):
     def fill_extra(self, obj, source_obj):
         obj.data = replace(source_obj['data'])
 
+    def query_mongo_docs(self, parent=None, source_parent=None):
+        query = self.SOURCE.find({'type': 'sql'})
+        return query
+
 
 REPLACES = {
     'process-as': 'process_as',
