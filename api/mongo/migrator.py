@@ -35,7 +35,7 @@ class Migrator(object):
                 print i + 1,
                 obj.save()
                 self.IDS_MAP[str(source_obj._id)] = obj.id
-                print "New %s added" % NAME
+                print "New %s added, id %s" % NAME, obj.id
                 self.process_inner_migrators(obj, source_obj)
         except Exception, exc:
             print exc
@@ -369,7 +369,12 @@ class ModelMigrator(Migrator, UserInfoMixin, UniqueNameMixin):
 
         #source_obj.save()
         source_obj = app.db.Model.find_one({'_id': source_obj._id})
-        trainer = source_obj.get_trainer()
+        
+        try:
+            trainer = source_obj.get_trainer()
+        except:
+            trainer = None
+            print "Old version of cloudml"
         #if trainer is None and source_obj.fs:
         #    trainer = source_obj.fs.trainer
 
