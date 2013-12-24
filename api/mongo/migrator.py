@@ -35,7 +35,7 @@ class Migrator(object):
                 print i + 1,
                 obj.save()
                 self.IDS_MAP[str(source_obj._id)] = obj.id
-                print "New %s added" % NAME
+                print "New %s added, id %s" % NAME, obj.id
                 self.process_inner_migrators(obj, source_obj)
         except Exception, exc:
             print exc
@@ -258,6 +258,10 @@ class ImportHandlerMigrator(Migrator, UserInfoMixin, UniqueNameMixin):
     def fill_extra(self, obj, source_obj):
         obj.data = replace(source_obj['data'])
 
+    def query_mongo_docs(self, parent=None, source_parent=None):
+        query = self.SOURCE.find({'type': 'sql'})
+        return query
+
 
 REPLACES = {
     'process-as': 'process_as',
@@ -365,7 +369,12 @@ class ModelMigrator(Migrator, UserInfoMixin, UniqueNameMixin):
 
         #source_obj.save()
         source_obj = app.db.Model.find_one({'_id': source_obj._id})
-        trainer = source_obj.get_trainer()
+        
+        try:
+            trainer = source_obj.get_trainer()
+        except:
+            trainer = None
+            print "Old version of cloudml"
         #if trainer is None and source_obj.fs:
         #    trainer = source_obj.fs.trainer
 
