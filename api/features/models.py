@@ -213,6 +213,9 @@ class FeatureSet(ExportImportMixin, BaseModel, db.Model):
         CheckConstraint(features_count >= 0,
                         name='check_features_count_positive'), {})
 
+    def __repr__(self):
+        return '<Feature Set {0} ({1})>'.format(self.schema_name, self.target_variable)
+
     @property
     def features(self):
         if self.modified:

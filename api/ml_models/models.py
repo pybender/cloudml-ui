@@ -5,7 +5,7 @@ from sqlalchemy.orm import relationship, deferred, backref
 from sqlalchemy.dialects import postgresql
 
 from api.base.models import db, BaseModel, BaseMixin, JSONType, GridfsFile
-from api.models import LogMessage
+from api.logs.models import LogMessage
 
 
 class Model(db.Model, BaseModel):
@@ -74,6 +74,9 @@ class Model(db.Model, BaseModel):
     classifier = deferred(db.Column(JSONType))
 
     trainer = deferred(db.Column(GridfsFile))
+
+    def __repr__(self):
+        return "<Model {0}>".format(self.name)
 
     def set_error(self, error, commit=True):
         self.error = str(error)

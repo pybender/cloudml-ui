@@ -8,16 +8,15 @@ from api.base.models import BaseMixin, db
 class User(BaseMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     uid = db.Column(db.String(200), nullable=False, unique=True)
-    created_on = db.Column(db.DateTime, server_default=func.now())
-    updated_on = db.Column(db.DateTime, server_default=func.now(),
-                           onupdate=func.current_timestamp())
     name = db.Column(db.String(200), nullable=False)
     uid = db.Column(db.String(200), nullable=False)
-    name = db.Column(db.String(200), nullable=False)
     odesk_url = db.Column(db.String(200), nullable=False)
     email = db.Column(db.String(200), nullable=False)
     portrait_32_img = db.Column(db.String(200), nullable=True)
     auth_token = db.Column(db.String(200), nullable=False, unique=True)
+    created_on = db.Column(db.DateTime, server_default=func.now())
+    updated_on = db.Column(db.DateTime, server_default=func.now(),
+                           onupdate=func.current_timestamp())
 
     @validates('email')
     def validate_email(self, key, address):
@@ -68,3 +67,6 @@ class User(BaseMixin, db.Model):
         from auth import OdeskAuth
         auth = OdeskAuth()
         return auth.get_auth_url()
+
+    def __repr__(self):
+        return "%s <%s>" % (self.name, self.uid)
