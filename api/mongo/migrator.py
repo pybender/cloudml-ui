@@ -259,7 +259,7 @@ class ImportHandlerMigrator(Migrator, UserInfoMixin, UniqueNameMixin):
         obj.data = replace(source_obj['data'])
 
     def query_mongo_docs(self, parent=None, source_parent=None):
-        query = self.SOURCE.find({'type': 'sql'})
+        query = self.SOURCE.find({'type': 'Db'})
         return query
 
 
@@ -375,6 +375,8 @@ class ModelMigrator(Migrator, UserInfoMixin, UniqueNameMixin):
         except:
             trainer = None
             print "Old version of cloudml"
+            source_obj.status = "New"
+            obj.status = "New"
         #if trainer is None and source_obj.fs:
         #    trainer = source_obj.fs.trainer
 
@@ -414,14 +416,14 @@ class ModelMigrator(Migrator, UserInfoMixin, UniqueNameMixin):
             print source_obj.test_import_handler
             s_id = str(source_obj.test_import_handler._id)#_DBRef__id)
             _id = handler.IDS_MAP.get(s_id, None)
-        if _id:
-            obj.test_import_handler = ImportHandler.query.get(_id)
+            if _id:
+                obj.test_import_handler = ImportHandler.query.get(_id)
 
         if source_obj.train_import_handler:
             s_id = str(source_obj.train_import_handler._id)
             _id = handler.IDS_MAP.get(s_id, None)
-        if _id:
-            obj.train_import_handler = ImportHandler.query.get(_id)
+            if _id:
+                obj.train_import_handler = ImportHandler.query.get(_id)
         obj.save()
 
 model = ModelMigrator()
