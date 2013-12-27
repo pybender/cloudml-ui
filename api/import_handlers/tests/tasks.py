@@ -15,7 +15,7 @@ class TestTasksTests(BaseDbTestCase):
         dataset = DataSet.query.first()
         upload_dataset(dataset.id)
         mock_multipart_upload.assert_called_once_with(
-            dataset.id,
+            dataset.uid,
             dataset.filename,
             {
                 'params': str(dataset.import_params),

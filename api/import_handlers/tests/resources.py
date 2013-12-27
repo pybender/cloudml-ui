@@ -203,7 +203,7 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue(ds.compress)
         self.assertTrue(ds.on_s3)
         self.assertEquals(ds.format, DataSet.FORMAT_JSON)
-        self.assertEquals(ds.filename, 'test_data/%s.gz' % ds.id)
+        self.assertEquals(ds.filename, 'test_data/%s.gz' % ds.uid)
         self.assertTrue(mock_multipart_upload.called)
 
     @patch('core.importhandler.importhandler.ImportHandler.__init__')
@@ -245,7 +245,7 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue(ds.compress)
         self.assertTrue(ds.on_s3)
         self.assertEquals(ds.format, DataSet.FORMAT_CSV)
-        self.assertEquals(ds.filename, 'test_data/%s.gz' % ds.id)
+        self.assertEquals(ds.filename, 'test_data/%s.gz' % ds.uid)
         self.assertTrue(mock_multipart_upload.called)
 
     def test_edit_name(self):
