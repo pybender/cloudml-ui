@@ -4,7 +4,7 @@ from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import relationship, deferred, backref
 from sqlalchemy.sql import expression
 
-from api.base.models import db, BaseModel, JSONType, GridfsFile
+from api.base.models import db, BaseModel, JSONType, S3File
 from api.logs.models import LogMessage
 from api.ml_models.models import Model
 from api.import_handlers.models import DataSet
@@ -50,11 +50,11 @@ class TestResult(db.Model, BaseModel):
     metrics = db.Column(JSONType)
     memory_usage = db.Column(db.Integer)
 
-    vect_data = deferred(db.Column(GridfsFile))
+    vect_data = deferred(db.Column(S3File))
 
     def get_vect_data(self, num):
         from pickle import loads
-        data = loads(self.vect_data.read())
+        data = loads(self.vect_data)
         return data.getrow(num).todense().tolist()[0]
 
     def set_error(self, error, commit=True):

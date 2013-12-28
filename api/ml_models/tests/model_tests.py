@@ -16,6 +16,7 @@ from api.model_tests.fixtures import TestResultData, TestExampleData
 from api.features.fixtures import FeatureSetData, FeatureData
 
 
+@mock_s3
 class ModelsTests(BaseDbTestCase, TestChecksMixin):
     """
     Tests of the Model API.
@@ -196,7 +197,7 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         resp, model = self.check_edit(post_data)
         self.assertEquals(model.name, name)
         self.assertEquals(model.status, model.STATUS_TRAINED)
-        self.assertTrue(model.trainer.read())
+        self.assertTrue(model.trainer)
 
     def test_edit_model(self):
         # TODO: Add validation to importhandlers

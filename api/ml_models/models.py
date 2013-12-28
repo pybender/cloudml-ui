@@ -4,7 +4,7 @@ import json
 from sqlalchemy.orm import relationship, deferred, backref
 from sqlalchemy.dialects import postgresql
 
-from api.base.models import db, BaseModel, BaseMixin, JSONType, GridfsFile
+from api.base.models import db, BaseModel, BaseMixin, JSONType, S3File
 from api.logs.models import LogMessage
 
 
@@ -73,7 +73,7 @@ class Model(db.Model, BaseModel):
 
     classifier = deferred(db.Column(JSONType))
 
-    trainer = deferred(db.Column(GridfsFile))
+    trainer = deferred(db.Column(S3File))
 
     def __repr__(self):
         return "<Model {0}>".format(self.name)
@@ -87,8 +87,8 @@ class Model(db.Model, BaseModel):
     def get_trainer(self, loaded=True):
         if loaded:
             from core.trainer.store import TrainerStorage
-            return TrainerStorage.loads(self.trainer.read())
-        return self.trainer.read()
+            return TrainerStorage.loads(self.trainer)
+        return self.trainer
 
     @property
     def dataset(self):
