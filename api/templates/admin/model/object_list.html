@@ -1,0 +1,32 @@
+{% extends 'admin/model/list.html' %}
+
+{% macro render_fk_link(model, column) %}
+    {% set val = model.__dict__.get(column) %}
+    {% if val %}
+    <a href="{{ url_for('%sview.edit_view' % val.__class__.__name__.lower(), url=return_url, id=val.id) }}">{{ val }}
+    </a>
+    {% endif %}1
+{% endmacro %}
+
+{% macro render_created(model, column) %}
+    {% if model.created_by %}
+        <a href="{{ url_for('userview.edit_view', url=return_url, id=model.created_by.id) }}">
+            <i class="icon-user"></i>{{ model.created_by }}
+        </a> on {{ model.created_on }}
+    {% endif %}
+{% endmacro %}
+
+{% macro render_updated(model, column) %}
+    {% if model.updated_by %}
+        <a href="{{ url_for('userview.edit_view', url=return_url, id=model.updated_by.id) }}">{{ model.updated_by }}</a> on {{ model.updated_on }}
+    {% endif %}
+{% endmacro %}
+
+{% macro render_link(model, column) %}
+    {% set val = model.__dict__.get(column) %}
+    <a href="{{ val }}) }}">{{ val }}</a>
+{% endmacro %}
+
+{% macro status_with_error(model, column) %}
+    <span title="{{ model.error or 'no errors'}}">{{ model.status }}</span>
+{% endmacro %}
