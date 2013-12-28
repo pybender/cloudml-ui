@@ -13,7 +13,7 @@ from forms import AddTestForm
 from sqlalchemy import desc
 
 
-class TestsResource(BaseResourceSQL):
+class TestResource(BaseResourceSQL):
     """
     Tests API Resource
     """
@@ -70,7 +70,7 @@ class TestsResource(BaseResourceSQL):
                              'exports': exports})
 
 
-api.add_resource(TestsResource,
+api.add_resource(TestResource,
                  '/cloudml/models/<regex("[\w\.]*"):model_id>/tests/')
 
 

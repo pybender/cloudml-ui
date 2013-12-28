@@ -96,7 +96,7 @@ describe "models", ->
       createController "ModelDetailsCtrl"
       $httpBackend.flush()
 
-      expect($rootScope.model._id).toEqual(MODEL_ID)
+      expect($rootScope.model.id).toEqual(MODEL_ID)
       expect($rootScope.LOADED_SECTIONS).toBeDefined()
       expect($rootScope.select2params).toBeDefined()
       expect($rootScope.params).toBeDefined()
@@ -112,7 +112,7 @@ describe "models", ->
 
     it "should request only features", inject () ->
       url = BASE_URL + MODEL_ID + '/' + '?show=' + encodeURIComponent('name,status')
-      $httpBackend.expectGET(url).respond('{"model": [{"_id": "' + MODEL_ID + '"}]}')
+      $httpBackend.expectGET(url).respond('{"model": [{"id": "' + MODEL_ID + '"}]}')
 
       $rootScope.goSection(['features'])
       $httpBackend.flush()
@@ -134,7 +134,7 @@ created_on,status,parameters,accuracy,examples_count,created_by')
       $httpBackend.expectPUT(url).respond('{"tests": []}')
 
       $rootScope.model = Model({
-        _id: MODEL_ID,
+        id: MODEL_ID,
         name: 'Model1',
         status: 'New',
         features: '',

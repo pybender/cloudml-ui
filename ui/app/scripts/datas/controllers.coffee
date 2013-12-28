@@ -128,22 +128,19 @@ angular.module('app.datas.controllers', ['app.config', ])
 
 .controller('ExampleDetailsCtrl', [
   '$scope'
-  '$http'
   '$routeParams'
-  'settings'
   'Data'
 
-($scope, $http, $routeParams, settings, Data) ->
+($scope, $routeParams, TestExample) ->
   if not $scope.data
-    $scope.data = new Data({
+    $scope.data = new TestExample({
       model_id: $routeParams.model_id,
       test_id: $routeParams.test_id,
       id: $routeParams.id
     })
 
   $scope.data.$load(
-    show: "id,test_name,weighted_data_input,
-model,pred_label,label,
+    show: "test_name,weighted_data_input,model,pred_label,label,
 prob,created_on,test_result"
   ).then (->
     ), ((opts)->

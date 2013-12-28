@@ -69,7 +69,7 @@ describe "importhandlers", ->
       $routeParams.id = HANDLER_ID
       $rootScope.initSections = jasmine.createSpy()
 
-      url = BASE_URL + HANDLER_ID + '/?show=' + encodeURIComponent('name,_id,import_params,
+      url = BASE_URL + HANDLER_ID + '/?show=' + encodeURIComponent('name,id,import_params,
 created_on,created_by,error,data')
       $httpBackend.expectGET(url).respond('{"import_handler": {"name": "Some name"}}')
 
@@ -110,11 +110,11 @@ created_on,created_by,error,data')
       createController "ImportHandlerActionsCtrl"
       $rootScope.openDialog = jasmine.createSpy()
 
-      $rootScope.importData({_id: HANDLER_ID})
+      $rootScope.importData({id: HANDLER_ID})
 
       expect($rootScope.openDialog).toHaveBeenCalledWith(
         jasmine.any(Object),
-        {_id: HANDLER_ID},
+        {id: HANDLER_ID},
         'partials/import_handler/load_data.html',
         'LoadDataDialogCtrl'
       )
@@ -123,11 +123,11 @@ created_on,created_by,error,data')
       createController "ImportHandlerActionsCtrl"
       $rootScope.openDialog = jasmine.createSpy()
 
-      $rootScope.delete({_id: HANDLER_ID})
+      $rootScope.delete({id: HANDLER_ID})
 
       expect($rootScope.openDialog).toHaveBeenCalledWith(
         jasmine.any(Object),
-        {_id: HANDLER_ID},
+        {id: HANDLER_ID},
         'partials/base/delete_dialog.html',
         'DeleteImportHandlerCtrl',
         jasmine.any(String), jasmine.any(String), jasmine.any(String)
@@ -137,7 +137,7 @@ created_on,created_by,error,data')
 
     it "should make list query", inject () ->
       url = BASE_URL + '?show=name'
-      $httpBackend.expectGET(url).respond('{"import_handlers": [{"_id": "' + HANDLER_ID + '", "name": "Some Name"
+      $httpBackend.expectGET(url).respond('{"import_handlers": [{"id": "' + HANDLER_ID + '", "name": "Some Name"
 }]}')
 
       createController "ImportHandlerSelectCtrl"

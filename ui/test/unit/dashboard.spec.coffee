@@ -45,8 +45,8 @@ describe "dashboard", ->
       $httpBackend.expectGET(url).respond('{"statistics": []}')
 
       # TODO: why "undefined"?
-      url = settings.apiUrl + 'models/undefined/tests/action/examples_size/?'
-      $httpBackend.expectGET(url).respond('{"tests": []}')
+      # url = settings.apiUrl + 'models/undefined/tests/action/examples_size/?'
+      # $httpBackend.expectGET(url).respond('{"tests": []}')
 
       createController "DashboardCtrl"
       $httpBackend.flush()

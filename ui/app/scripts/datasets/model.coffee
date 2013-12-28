@@ -16,6 +16,8 @@ angular.module('app.datasets.model', ['app.config'])
       STATUS_IMPORTING = 'Importing'
       STATUS_UPLOADING = 'Uploading'
 
+      @MAIN_FIELDS: 'name,status'
+
       id: null
       name: null
       status: 'not loaded'
@@ -28,7 +30,6 @@ angular.module('app.datasets.model', ['app.config'])
       import_handler_id: null
       on_s3: false
       format: 'json'
-
 
       loadFromJSON: (origData) =>
         super origData
@@ -60,6 +61,7 @@ angular.module('app.datasets.model', ['app.config'])
         handler_id = opts.handler_id
         if not handler_id?
           throw new Error "Import Handler is required to load datasets"
+        delete opts['handler_id']
 
         resolver = (resp, Model) ->
           extra = {loaded: true, import_handler_id: handler_id}

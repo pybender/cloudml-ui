@@ -16,9 +16,9 @@ describe "base", ->
     $httpBackend = $injector.get('$httpBackend')
 
     BaseModel.prototype.BASE_API_URL = 'http://host/api/objects/'
-    BaseModel.prototype.MAIN_FIELDS = ['_id', 'name']
+    BaseModel.prototype.MAIN_FIELDS = ['id', 'name']
     BaseModel.prototype.DEFAULT_FIELDS_TO_SAVE = ['name']
-    model = new BaseModel({_id: 'someid'})
+    model = new BaseModel({id: 'someid'})
   ))
 
   afterEach( ->
@@ -30,7 +30,7 @@ describe "base", ->
     it "should load model from JSON", inject(() ->
       model.loadFromJSON({name: 'somename'})
       expect(model.name).toEqual('somename')
-      expect(model._id).toEqual('someid')
+      expect(model.id).toEqual('someid')
       expect(model.other).toBeUndefined()
     )
 
@@ -74,7 +74,7 @@ describe "base", ->
       $httpBackend.expectPOST('http://host/api/objects/null/?')
       .respond('{}')
 
-      model = new BaseModel({_id: null})
+      model = new BaseModel({id: null})
       model.name = 'saved name'
       model.$save({one: 'val1', two: 'val2'})
       $httpBackend.flush()

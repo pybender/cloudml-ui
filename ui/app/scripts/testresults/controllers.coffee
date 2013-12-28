@@ -185,7 +185,7 @@ confusion_matrix_calculations,model'
         'partials/datasets/csv_list_popup.html',
         'CsvDownloadCtrl', 'modal')
 
-  $scope.initSections($scope.goSection, defaultAction='metrics:accuracy')
+  $scope.initSections($scope.goSection, 'metrics:accuracy')
 ])
 
 .controller('TestActionsCtrl', [

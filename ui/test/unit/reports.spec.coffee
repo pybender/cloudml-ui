@@ -72,7 +72,7 @@ describe "reports", ->
       $httpBackend.expectGET(url).respond('{"models": []}')
 
       item = {
-        model: {'_id': 'modelid123'}
+        model: {'id': 'modelid123'}
       }
 
       createController "CompareModelsFormCtl"
@@ -88,12 +88,12 @@ describe "reports", ->
 
       data = [
         {
-          model: {_id: 'model1id'},
-          test: {_id: 'test1id'},
+          model: {id: 'model1id'},
+          test: {id: 'test1id'},
         },
         {
-          model: {_id: 'model2id'},
-          test: {_id: 'test2id'},
+          model: {id: 'model2id'},
+          test: {id: 'test2id'},
         }
       ]
       $rootScope.report = new CompareReport(data)

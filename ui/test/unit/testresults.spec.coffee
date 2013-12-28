@@ -54,7 +54,7 @@ describe "testresults", ->
 
     it "should init controller, make no request", inject () ->
       createController "TestListCtrl"
-      $rootScope.init({_id: 'someid'})
+      $rootScope.init({id: 'someid'})
       expect($rootScope.ACTION).toEqual('loading tests')
       expect($rootScope.FIELDS).toBeDefined()
 
@@ -94,8 +94,7 @@ examples_placement,examples_fields,examples_size,examples_placement,name,status,
 
     it "should load 'metrics' section", inject () ->
       url = BASE_URL + '?show=' + encodeURIComponent('accuracy,
-metrics.precision_recall_curve,
-metrics.roc_curve,metrics.roc_auc,examples_placement,name,status,created_on,created_by')
+metrics,examples_placement,name,status,created_on,created_by')
       $httpBackend.expectGET(url).respond('{"test": {}}')
 
       $rootScope.goSection(['metrics', 'accuracy'])
@@ -104,8 +103,8 @@ metrics.roc_curve,metrics.roc_auc,examples_placement,name,status,created_on,crea
       expect($rootScope.setSection).toHaveBeenCalled()
 
     it "should load 'matrix' section", inject () ->
-      url = BASE_URL + '?show=' + encodeURIComponent('metrics.confusion_matrix,model,
-confusion_matrix_calculations,examples_placement,name,status,created_on,created_by')
+      url = BASE_URL + '?show=' + encodeURIComponent('metrics,
+confusion_matrix_calculations,model,examples_placement,name,status,created_on,created_by')
       $httpBackend.expectGET(url).respond('{"test": {}}')
 
       $rootScope.goSection(['matrix', 'confusion'])
@@ -117,17 +116,17 @@ confusion_matrix_calculations,examples_placement,name,status,created_on,created_
 
     it "should init controller, make no request", inject () ->
       createController "TestActionsCtrl"
-      $rootScope.init({model: {}, test: {_id: 'sometestid'}})
+      $rootScope.init({model: {}, test: {id: 'sometestid'}})
 
-      expect($rootScope.test._id).toEqual('sometestid')
+      expect($rootScope.test.id).toEqual('sometestid')
 
     it "should open delete dialog", inject () ->
       url = 'partials/testresults/delete_popup.html'
       $httpBackend.expectGET(url).respond('')
 
       $rootScope.test = {
-        _id: 'sometestid',
-        model: {_id: 'somemodelid'}
+        id: 'sometestid',
+        model: {id: 'somemodelid'}
       }
       $rootScope.resetError = jasmine.createSpy()
 
@@ -144,7 +143,7 @@ confusion_matrix_calculations,examples_placement,name,status,created_on,created_
       $httpBackend.expectGET(url).respond('{"exports": [{"status": "In Progress"}, {"status": "Completed"}],
  "test": {"dataset": {}}}')
 
-      test = new TestResult({_id: 'sometestid', model_id: 'somemodelid'})
+      test = new TestResult({id: 'sometestid', model_id: 'somemodelid'})
 
       jasmine.Clock.useMock()
 
@@ -171,7 +170,7 @@ confusion_matrix_calculations,examples_placement,name,status,created_on,created_
 
       # Metrics are supposed to be filled
       $rootScope.test = new TestResult({
-        _id: 'sometestid',
+        id: 'sometestid',
         model_id: 'somemodelid'},
         metrics: {}
       )
