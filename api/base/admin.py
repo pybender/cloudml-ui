@@ -1,6 +1,5 @@
 from flask.ext.admin.contrib import sqla
 from flask.ext.admin.model.template import macro
-from flask.ext import login
 
 from api import app
 
@@ -13,7 +12,6 @@ class BaseAdmin(sqla.ModelView):
 
     def is_accessible(self):  # TODO: ?
         return True
-        return login.current_user.is_authenticated()
 
     def __init__(self, *args, **kwargs):
         if self.MIX_METADATA:
