@@ -36,58 +36,51 @@ class WeightResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(data['total'],
                           Weight.query.filter_by(model=self.model).count())
 
-    # def test_search(self):  # TODO: full text search -> moved to other issue
-    #     self.db.Weight.collection.ensure_index(
-    #         [
-    #             ('name', 'text'),
-    #             ('value', 'text')
-    #         ]
-    #     )
+    def test_search(self):
+        url = '{0}?{1}'.format(self.BASE_URL, urllib.urlencode({
+            'is_positive': -1,
+            'order': 'asc',
+            'page': 1,
+            'show': 'name,value,css_class',
+            'sort_by': 'name',
+            'q': 'python'
+        }))
+        resp = self.client.get(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.OK)
+        data = json.loads(resp.data)
+        self.assertFalse(data['has_next'])
+        self.assertFalse(data['has_prev'])
+        self.assertEquals(data['per_page'], 20)
+        self.assertTrue('weights' in data, data)
+        self.assertFalse('tsexams->Ruby on Rails' in resp.data)
+        self.assertTrue(
+            'tsexams->Python 2.x Test' in data['weights'][0]['name'])
 
-    #     url = '{0}?{1}'.format(self.BASE_URL, urllib.urlencode({
-    #         'is_positive': -1,
-    #         'order': 'asc',
-    #         'page': 1,
-    #         'show': 'name,value,css_class',
-    #         'sort_by': 'name',
-    #         'q': 'python'
-    #     }))
-    #     resp = self.app.get(url, headers=HTTP_HEADERS)
-    #     self.assertEquals(resp.status_code, httplib.OK)
-    #     data = json.loads(resp.data)
-    #     self.assertFalse(data['has_next'])
-    #     self.assertFalse(data['has_prev'])
-    #     self.assertEquals(data['per_page'], 20)
-    #     self.assertTrue('weights' in data, data)
-    #     self.assertFalse('tsexams->Ruby on Rails' in resp.data)
-    #     self.assertTrue(
-    #         'tsexams->Python 2.x Test' in data['weights'][0]['name'])
+        url = '{0}?{1}'.format(self.BASE_URL, urllib.urlencode({
+            'is_positive': 0,
+            'order': 'asc',
+            'page': 1,
+            'show': 'name,value,css_class',
+            'sort_by': 'name',
+            'q': 'python'
+        }))
+        resp = self.client.get(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.OK)
+        data = json.loads(resp.data)
+        self.assertTrue(
+            'tsexams->Python 2.x Test' in data['weights'][0]['name'])
 
-    #     url = '{0}?{1}'.format(self.BASE_URL, urllib.urlencode({
-    #         'is_positive': 0,
-    #         'order': 'asc',
-    #         'page': 1,
-    #         'show': 'name,value,css_class',
-    #         'sort_by': 'name',
-    #         'q': 'python'
-    #     }))
-    #     resp = self.app.get(url, headers=HTTP_HEADERS)
-    #     self.assertEquals(resp.status_code, httplib.OK)
-    #     data = json.loads(resp.data)
-    #     self.assertTrue(
-    #         'tsexams->Python 2.x Test' in data['weights'][0]['name'])
-
-    #     url = '{0}?{1}'.format(self.BASE_URL, urllib.urlencode({
-    #         'is_positive': 1,
-    #         'order': 'asc',
-    #         'page': 1,
-    #         'show': 'name,value,css_class',
-    #         'sort_by': 'name',
-    #         'q': 'python'
-    #     }))
-    #     resp = self.app.get(url, headers=HTTP_HEADERS)
-    #     self.assertEquals(resp.status_code, httplib.OK)
-    #     self.assertTrue('tsexams->Python 2.x Test' not in resp.data)
+        url = '{0}?{1}'.format(self.BASE_URL, urllib.urlencode({
+            'is_positive': 1,
+            'order': 'asc',
+            'page': 1,
+            'show': 'name,value,css_class',
+            'sort_by': 'name',
+            'q': 'python'
+        }))
+        resp = self.client.get(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.OK)
+        self.assertTrue('tsexams->Python 2.x Test' not in resp.data)
 
     def test_brief(self):
         data = self._check(action='brief')

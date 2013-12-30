@@ -238,6 +238,14 @@ class WeightResource(BaseResourceSQL):
                 del pdict['is_positive']
         return pdict
 
+    def _set_list_query_opts(self, cursor, params):
+        # Full text search
+        if 'q' in params and params['q']:
+            cursor = cursor.filter(
+                "to_tsvector(name || ' ' || value) @@ to_tsquery(:q)"
+            ).params(q=params['q'])
+        return cursor
+
     def _get_brief_action(self, per_page=50, **kwargs):
         """ Gets list with Model's weighted parameters with pagination. """
 

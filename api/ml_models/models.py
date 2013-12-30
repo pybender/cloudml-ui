@@ -3,6 +3,8 @@ import json
 
 from sqlalchemy.orm import relationship, deferred, backref
 from sqlalchemy.dialects import postgresql
+from sqlalchemy import Index, func
+from sqlalchemy.ext.declarative import declared_attr
 
 from api.base.models import db, BaseModel, BaseMixin, JSONType, S3File
 from api.logs.models import LogMessage
@@ -211,3 +213,13 @@ class Weight(db.Model, BaseMixin):
     model = relationship(Model, backref=backref('weights'))
 
     parent = db.Column(db.String(200))
+
+    # TODO: full text index
+    # @declared_attr
+    # def __table_args__(cls):
+    #     return (
+    #         Index('name_value_index',
+    #               func.to_tsvector('english', cls.name),
+    #               func.to_tsvector('english', cls.value),
+    #               postgresql_using='gin'),
+    #     )

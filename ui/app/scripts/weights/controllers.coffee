@@ -56,7 +56,7 @@ angular.module('app.weights.controllers', ['app.config', ])
     )
 
   $scope.$watch('search_form.page', (page, oldVal, scope) ->
-    if (scope.action[0] == 'weights') and
+    if (scope.action[0] == 'training') and
         (scope.action[1] == 'list') and page
       $scope.loadList()
   , true)
