@@ -245,6 +245,7 @@ class DataSetMigrator(Migrator, UserInfoMixin):
     def fill_extra(self, obj, source_obj):
         obj.name = obj.name[:200]
         obj.error = obj.error[:300]
+        obj.uid = str(source_obj._id)
 
 ds = DataSetMigrator()
 
@@ -361,9 +362,10 @@ class ModelMigrator(Migrator, UserInfoMixin, UniqueNameMixin):
     def fill_extra(self, obj, source_obj):
         print "Filling extra data in model", \
             source_obj._id, obj.name, source_obj.updated_on
-        if source_obj.classifier:
-            obj.classifier = {'type': source_obj.classifier['type'],
-                              'params': source_obj.classifier['params']}
+        classifier = source_obj.get('classifier', None) or source_obj.features.get('classifier', None)
+        if classifier:
+            obj.classifier = {'type': classifier['type'],
+                              'params': classifier['params']}
         else:
             obj.classifier = None
 
@@ -374,7 +376,7 @@ class ModelMigrator(Migrator, UserInfoMixin, UniqueNameMixin):
             trainer = source_obj.get_trainer()
         except:
             trainer = None
-            print "Old version of cloudml"
+            print "ERROR: Old version of cloudml"
             source_obj.status = "New"
             obj.status = "New"
         #if trainer is None and source_obj.fs:
