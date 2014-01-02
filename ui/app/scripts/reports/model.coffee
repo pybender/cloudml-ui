@@ -35,8 +35,8 @@ angular.module('app.reports.model', ['app.config'])
         opts = {}
         i = 1
         for item in @data
-          opts['model' + i] = item['model']["_id"]
-          opts['test' + i] = item['test']["_id"]
+          opts['model' + i] = item['model']["id"]
+          opts['test' + i] = item['test']["id"]
           i += 1
 
         @$make_request(settings.apiUrl + "reports/compare/", opts)

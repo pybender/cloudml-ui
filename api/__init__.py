@@ -2,13 +2,15 @@ import logging
 from logging import config as logging_config
 import re
 from flask import Flask
+from flask.ext import restful
+from flask.ext.admin import Admin
 from werkzeug.routing import BaseConverter
 from mongokit import Connection
 from mongotools.pubsub import Channel
 from pymongo.cursor import _QUERY_OPTIONS
-from flask.ext import restful
 from celery import Celery
 from kombu import Queue
+from flask.ext.sqlalchemy import SQLAlchemy
 
 
 class RegExConverter(BaseConverter):
@@ -72,8 +74,19 @@ class App(Flask):
         for name in self.PUBSUB_CHANNELS.keys():
             self.chan.sub(name)
 
+    @property
+    def sql_db(self):
+        if not hasattr(self, '_sql_db'):
+            self.init_sql_db()
+        return self._sql_db
 
-app = App(__name__)
+    def init_sql_db(self):
+        self._sql_db = SQLAlchemy(self)
+
+def create_app():
+    return App(__name__)
+
+app = create_app()
 
 celery = Celery('cloudml')
 
@@ -81,6 +94,7 @@ for instance in app.db.instances.find():
     app.config['CELERY_QUEUES'].append(Queue(instance['name'],
                                              routing_key='%s.#' % instance['name']))
 celery.add_defaults(lambda: app.config)
+
 
 class Api(restful.Api):
     def add_resource(self, resource, *urls, **kwargs):
@@ -102,7 +116,7 @@ class Api(restful.Api):
         Examples:
             api.add_resource(HelloWorld, '/', '/hello')
         """
-        add_standart_urls = kwargs.get('add_standart_urls', True)
+        add_standard_urls = kwargs.get('add_standard_urls', True)
         endpoint = kwargs.get('endpoint') or resource.__name__.lower()
 
         if endpoint in self.app.view_functions.keys():
@@ -119,17 +133,35 @@ class Api(restful.Api):
         for part in urls:
             base_url = self.prefix + part
             self.app.add_url_rule(base_url, view_func=resource_func)
-            if add_standart_urls:
-                url = base_url + '<regex("[\w\.]*"):_id>/'
+            if add_standard_urls:
+                url = base_url + '<regex("[\w\.]*"):id>/'
                 self.app.add_url_rule(url, view_func=resource_func)
                 url = base_url + 'action/<regex("[\w\.]*"):action>/'
                 self.app.add_url_rule(self.prefix + url, view_func=resource_func)
-                url = base_url + '<regex("[\w\.]*"):_id>/' + 'action/<regex("[\w\.]*"):action>/'
+                url = base_url + '<regex("[\w\.]*"):id>/' + 'action/<regex("[\w\.]*"):action>/'
                 self.app.add_url_rule(self.prefix + url, view_func=resource_func)
 
 api = Api(app)
+admin = Admin(app, 'CloudML Admin Interface')
 
 logging_config.dictConfig(app.config['LOGGING'])
 
-import views
-import models
+APPS = ('accounts', 'features', 'import_handlers', 'instances',
+        'logs', 'ml_models', 'model_tests', 'statistics', 'reports',
+        'async_tasks')
+
+
+def importer(app_name):
+    def imp(name):
+        try:
+            __import__(name)
+        except ImportError:
+            return False
+        else:
+            return True
+    imp('api.%s.admin' % app_name)
+    imp('api.%s.models' % app_name)
+    imp('api.%s.views' % app_name)
+
+for app_name in APPS:
+    importer(app_name)

@@ -1,20 +1,3 @@
-<alert-message ng-show="model.status == 'Queued'" class="alert-info" msg="We queue this model to train. It would be processed soon">
-</alert-message>
-
-<alert-message ng-show="model.status == 'Training'" alert-class="alert-info" msg="Please wait! Model is training now. It could take several minutes.">
-</alert-message>
-
-<alert-message ng-show="model.status == 'New'" class="alert-warning" msg='Model is not trained yet. Please start training.' unsafe>
-</alert-message>
-
-<alert-message ng-show="model.status == 'Error'" class="alert-error" msg='Error occurred while model training. Look at celery tasks for details' unsafe>
-</alert-message>
-
-<alert-message ng-show="model.error" class="alert-error" msg="{{ model.error }}" unsafe></alert-message>
-
-<alert-message ng-show="model.status == 'Trained'" class="alert-success" msg='Model is trained. You could start running tests now.' unsafe>
-</alert-message>
-
 <alert-message ng-show="msg" class="alert-info" msg='{{ msg }}' unsafe>
 </alert-message>
 
@@ -22,76 +5,175 @@
 </alert-message>
 
 <div ng-init="init({model: model})" ng-controller="ModelActionsCtrl">
-  <h2 class="title">
-    <span title="Title"
-      class="title" ng-bind="model.name || 'untitled model'"
-      editable="model" value="model.name"
-      editable-field="name" editable-input="text"
-      editable-placement="right"></span> details
-    <div class="actions">
-      <button ng-show="model.status == 'Trained'" ng-click="test_model(model)" class="btn btn-success">
-        <i title="Apply the classifier to the input provided by the data import handler" class="status-icon icon-play"></i>
-        Run test
-      </button>
-      <button ng-click="train_model(model)" class="btn btn-info">
-        <i title="Train your model" class="icon-tasks"></i>
-        Start training
-      </button>
-      <button ng-click="reload_model(model)" class="btn btn-info">
-        <i title="Reload model" class="icon-tasks"></i>
-        Reload model
-      </button>
-      <a ng-show="model.status == 'Trained'" href="{{ model.downloadUrl() }}?field=trainer" class="btn btn-info">
-          <i title="Download model trainer." class="icon-download-alt"></i> Download Trainer
-      </a>
-      <a style="font-weight: normal;" href="{{ model.downloadUrl() }}?field=features" class="btn btn-info">
-        <i title="Download features JSON file" class="icon-download-alt"></i> Download Features
-      </a>
-      <button ng-click="delete_model(model)" class="btn btn-danger">
-        <i title="Delete your model. Be careful - you could not recover it!" class="icon-remove"></i> Delete model
-      </button>
-    </div>
-  </h2>
-
-<p class="lead">
-  <span title="Description"
-    ng-bind="model.description || 'no description'"
-    editable="model" value="model.description"
-    editable-field="description" editable-input="textarea"
-    editable-placement="right"></span>
-</p>
-<div title="tags" ng-init="obj=model">
-  <span ng-repeat="tag in model.tags">
-    <span class="badge">
-      <a href="#/models/?tag={{ tag }}" style="color: white;">{{ tag }}</a>
-    </span> 
-  </span>
-  <ng-include src="'/partials/parts/created_tags.html'"></ng-include>
-  <i class="icon-status"></i>
-  <span class="badge badge-warning">{{ model.status }}</span>
-</div>
-
+<h2 class="title">
+  <span title="Title"
+    class="title" ng-bind="model.name || 'untitled model'"
+    editable="model" value="model.name"
+    editable-field="name" editable-input="text"
+    editable-placement="right"></span> details
+  <div class="actions">
+    <button ng-show="model.status == 'Trained'" ng-click="test_model(model)" class="btn btn-success">
+      <i title="Apply the classifier to the input provided by the data import handler" class="status-icon icon-play"></i>
+      Run test
+    </button>
+    <button ng-click="train_model(model)" class="btn btn-info">
+      <i title="Train your model" class="icon-tasks"></i>
+      Start training
+    </button>
+    <a ng-show="model.status == 'Trained'" href="{{ model.downloadUrl() }}?field=trainer" class="btn btn-info">
+        <i title="Download model trainer." class="icon-download-alt"></i> Download Trainer
+    </a>
+    <button ng-click="delete_model(model)" class="btn btn-danger">
+      <i title="Delete your model. Be careful - you could not recover it!" class="icon-remove"></i> Delete model
+    </button>
+  </div>
+</h2>
 <p></p>
 <ul class="nav nav-tabs" id="tabs" ng-show="model.loaded">
   <li ng-class="{active: action[0] == 'model'}">
-    <a ng-click="setSection(['model', 'details'])">Details</a> 
+    <a ng-click="setSection(['model', 'details'])">Model</a> 
   </li>
-  <li ng-class="{active: action[0] == 'classifier'}">
-    <a ng-click="setSection(['classifier', 'details'])">Classifier</a>
+  <li ng-class="{active: action[0] == 'training'}">
+    <a ng-click="setSection(['training', 'details'])">Training</a>
   </li>
-  <li ng-class="{active: action[0] == 'features_set'}">
-    <a ng-click="setSection(['features_set', 'list'])">Features</a>
+  <li ng-class="{active: action[0] == 'test'}">
+    <a ng-click="setSection(['test', 'details'])">Test</a>
   </li>
-  <li ng-class="{active: action[0] == 'weights'}"><a  ng-click="setSection(['weights', 'columns'])">Parameters Weights</a></li>
-  <li ng-class="{active: action[0] == 'test'}"><a ng-click="setSection(['test', 'list'])">Tests</a></li>
-  <li ng-class="{active: action[0] == 'features'}"><a ng-click="setSection(['features', 'file'])">Features JSON</a></li>
-  <li ng-class="{active: action[0] == 'log'}"><a ng-click="setSection(['log', 'details'])">Logs</a></li>
+  <li ng-class="{active: action[0] == 'about'}"><a ng-click="setSection(['about', 'details'])">About</a></li>
 </ul>
  
 <div class="tab-content" ng-show="model.loaded">
-  <div ng-show="action[0] == 'model'" ng-controller="ObjEditCtrl">
+  <div ng-show="action[0] == 'model'">
+    <p class="switcher">
+      <b>Switch View: </b>
+      <a ng-class="{active: action[1] == 'details'}" ng-click="setSection(['model', 'details'])">Standard</a> |
+      <a ng-class="{active: action[1] == 'json'}" ng-click="setSection(['model', 'json'])">JSON File</a>
+    </p>
+
+    <!-- Model tab starts here -->
+    <div ng-show="action[1] == 'details'">
+      <div class="row">
+        <div class="span6">
+          <h4>
+            Classifier {{ model.classifier.name }} <span><a ng-click="editClassifier(model)">(edit)</a></span>
+          </h4>
+           <div>
+              Type:
+              <span class="value">{{ model.classifier.type }}</span>
+          </div>
+           <div>
+              Parameters:
+              <span class="value">{{ model.classifier.params }}</span>
+          </div>
+          <div ng-show="model.created_by">
+              Created by:
+              <span class="value">{{ model.classifier.created_by.name }} ({{ model.classifier.created_by.uid }})</span>
+          </div>
+        </div>
+        <div class="span5">
+          <h4>Features</h4>
+          <ng-include src="'/partials/features/sets/details.html'"></ng-include>
+        </div>
+      </div>
+      <div class="row">
+        <div class="span12">
+          <ng-include src="'/partials/features/items/list.html'"></ng-include>
+        </div>
+      </div>
+    </div>
+
+    <div ng-show="action[1] == 'json'">
+      <textarea ui-codemirror="{ mode: {name: 'javascript', readOnly:true, json: true} }" ng-model="model.features"></textarea>
+    </div>
+
+    <div class="row well">
+        <a style="font-weight: normal;" href="{{ model.downloadUrl() }}?field=features" class="btn btn-info">
+          <i title="Download features JSON file" class="icon-download-alt"></i> Download Features
+        </a>
+    </div>
+
+  </div>
+
+  <!-- Training tab starts here -->
+  <div ng-show="action[0] == 'training'" ng-controller="WeightsCtrl">
+    <alert-message ng-show="model.status == 'Queued'" class="alert-info" msg="We queue this model to train. It would be processed soon">
+    </alert-message>
+
+    <alert-message ng-show="model.status == 'Training'" alert-class="alert-info" msg="Please wait! Model is training now. It could take several minutes.">
+    </alert-message>
+
+    <alert-message ng-show="model.status == 'New'" class="alert-warning" msg='Model is not trained yet. Please start training.' unsafe>
+    </alert-message>
+
+    <alert-message ng-show="model.status == 'Error'" class="alert-error" msg='Error occurred while model training. Look at celery tasks for details' unsafe>
+    </alert-message>
+
+    <alert-message ng-show="model.error" class="alert-error" msg="{{ model.error }}" unsafe></alert-message>
+
+    <alert-message ng-show="model.status == 'Trained'" class="alert-success" msg='Model is trained. You could start running tests now.' unsafe>
+    </alert-message>
+
+    <div>
+        Status: <span class="value">{{ model.status }}</span> <a ng-click="showLogs=!showLogs">(logs)</a>
+        <div ng-show="showLogs" class="well" ng-controller="LogMessageListCtrl" ng-init="init('trainmodel_log', model.id, 5)">
+          <div class="message">
+            <ng-include src="'/partials/logmessages/list.html'"></ng-include>
+          </div>
+        </div>
+    </div>
+    <div ng-show="model.status == 'Trained'">
+      Memory used:
+      <span class="value">{{ model.memory_usage.training }} Mb</span>
+    </div>
+    <div ng-show="model.status == 'Trained'">
+        Trained by:
+        <span class=a"value">{{ model.trained_by.name }} ({{ model.trained_by.uid }})</span>
+    </div>
+    <div ng-if="model.status == 'Trained'">
+        Training time:
+        <span class="value">{{ model.training_time|humanize_time }}</span>
+    </div>
+    <hr />
+    <div ng-controller="WeightsCtrl">
+      <h4>Parameters Weights</h4>
+      <p class="switcher">
+        <b>Switch view: </b>
+        <a ng-class="{active: action[1] == 'details'}" ng-click="setSection(['training', 'details'])">Columns</a> | 
+        <a ng-class="{active: action[1] == 'list'}" ng-click="setSection(['training', 'list'])">List</a> |
+        <a ng-class="{active: action[1] == 'tree'}" ng-click="setSection(['training', 'tree'])">Tree</a> &nbsp;
+      </p>
+      <div ng-show="action[1] == 'details'" class="details">
+        <ng-include src="'/partials/weights/columns.html'"></ng-include>
+      </div>
+      <div ng-show="action[1] == 'tree'" class="tree">
+        <ng-include src="'/partials/weights/tree.html'"></ng-include>
+      </div>
+      <div ng-show="action[1] == 'list'" class="list">
+        <ng-include src="'/partials/weights/list.html'"></ng-include>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tests tab -->
+  <div ng-show="action[0] == 'test'" id="tests">
+    <h3>Tests</h3>
+    <div ng-controller="TestListCtrl" ng-init="init(model)">
+      <ng-include src="'/partials/testresults/test_list.html'"></ng-include>
+    </div>
+  </div>
+
+  <!-- About tab -->
+  <div ng-show="action[0] == 'about'" ng-controller="ObjEditCtrl">
+    <div title="tags" ng-init="obj=model">
+      <span ng-repeat="tag in model.tags">
+        <span class="badge">
+          <a href="#/models/?tag={{ tag }}" style="color: white;">{{ tag }}</a>
+        </span> 
+      </span>
+      <ng-include src="'/partials/parts/created_tags.html'"></ng-include>
+    </div>
     <div class="row">
-      <div class="span4">
+      <div class="span6">
         <h5>Edit tags</h5>
         <input ui-select2="select2params" ng-model="params['tags']" /> 
         <input type="button" class="btn btn-info" value="Save" ng-click="updateTags()" style="margin-left: 5px;" />
@@ -100,12 +182,12 @@
           <h5>Import Handlers</h5>
           <div>
             For Train:
-            <span title="Select Train Import Handler" ng-bind="model.train_import_handler_obj.name" editable="model" value="model.train_import_handler_obj._id" editable-field="train_import_handler" editable-input="select" editable-placement="right" source="handlers_list" display="model.train_import_handler_obj.name"></span>
+            <span title="Select Train Import Handler" ng-bind="model.train_import_handler_obj.name" editable="model" value="model.train_import_handler_obj.id" editable-field="train_import_handler" editable-input="select" editable-placement="right" source="handlers_list" display="model.train_import_handler_obj.name"></span>
             <a target="_blank" href="#{{ model.train_import_handler_obj.objectUrl() }}"><i class="icon-arrow-right"></i></a>
           </div>
           <div>
             For Tests:
-            <span title="Select Test Import Handler" ng-bind="model.test_import_handler_obj.name" editable="model" value="model.test_import_handler_obj._id" editable-field="test_import_handler" editable-input="select" editable-placement="right" source="handlers_list" display="model.test_import_handler_obj.name"></span>
+            <span title="Select Test Import Handler" ng-bind="model.test_import_handler_obj.name" editable="model" value="model.test_import_handler_obj.id" editable-field="test_import_handler" editable-input="select" editable-placement="right" source="handlers_list" display="model.test_import_handler_obj.name"></span>
             <a target="_blank" href="#{{ model.test_import_handler_obj.objectUrl() }}"><i class="icon-arrow-right"></i></a>
           </div>
         </div>
@@ -120,7 +202,7 @@
             Records count: <span class="value">{{ model.train_records_count }}</span>
         </div>
       </div>
-      <div class="span4">
+      <div class="span5">
         <h5>Data Examples Titles</h5>
         <div ng-show="model.data_fields.length">
           Examples label field name:
@@ -138,23 +220,19 @@
           Examples id field name:
           <span title="ID Field Name" ng-bind="model.example_id" editable="model" value="model.example_id" editable-field="example_id" editable-placement="right" editable-input="text" source="model.data_fields"></span>
         </div>
-      </div>
-      <div class="span4">
         <div>
             Target variable:
             <span class="value">{{ model.target_variable }}</span>
         </div>
         <div>
             Classes:
-            <span class="value">{{ model.labels }}</span>
+            <span class="value">
+              <span ng-repeat="label in model.labels"><span class="badge badge-info" ng-bind="label" /> </span>
+            </span>
         </div>
         <div>
             Count of features:
             <span class="value">{{ model.feature_count }}</span>
-        </div>
-        <div>
-            Memory used:
-            <span class="value">{{ model.memory_usage.training }} Mb</span>
         </div>
         <div ng-show="model.created_by">
             Created by:
@@ -164,88 +242,8 @@
             Updated by:
             <span class="value">{{ model.updated_by.name }} ({{ model.updated_by.uid }})</span>
         </div>
-        <div ng-show="model.status == 'Trained'">
-            Trained by:
-            <span class="value">{{ model.trained_by.name }} ({{ model.trained_by.uid }})</span>
-        </div>
       </div>
     </div>
-  </div>
-
-  <div ng-show="action[0] == 'classifier'">
-    <h4>
-        {{ model.classifier.name }}
-        <span>
-          <a ng-click="editClassifier(model)">(edit)</a>
-        </span>
-    </h4>
-     <div>
-        Type:
-        <span class="value">{{ model.classifier.type }}</span>
-    </div>
-     <div>
-        Parameters:
-        <span class="value">{{ model.classifier.params }}</span>
-    </div>
-    <div ng-show="model.created_by">
-        Created by:
-        <span class="value">{{ model.classifier.created_by.name }} ({{ model.classifier.created_by.uid }})</span>
-    </div>
-  </div>
-
-  <div ng-show="action[0] == 'features_set'" ng-controller="FeaturesSetDetailsCtrl" ng-init="init(model)">
-    <ng-include src="'/partials/features/sets/details.html'"></ng-include>
-  </div>
-
-  <div ng-show="action[0] == 'log'" ng-controller="LogMessageListCtrl" ng-init="init('trainmodel_log', model._id)">
-    <ng-include src="'/partials/logmessages/list.html'"></ng-include>
-  </div>
-
-  <div ng-show="action[0] == 'test'" id="tests">
-    <h3>Tests</h3>
-    <div ng-controller="TestListCtrl" ng-init="init(model)">
-      <ng-include src="'/partials/testresults/test_list.html'"></ng-include>
-    </div>
-  </div>
-
-  <div ng-show="action[0] == 'weights'" ng-controller="WeightsCtrl">
-    <p class="switcher">
-      <b>Switch View: </b>
-      <a ng-class="{active: action[1] == 'columns'}" ng-click="setSection(['weights', 'columns'])">Columns</a> | 
-      <a ng-class="{active: action[1] == 'list'}" ng-click="setSection(['weights', 'list'])">List</a> |
-      <a ng-class="{active: action[1] == 'tree'}" ng-click="setSection(['weights', 'tree'])">Tree</a>
-    </p>
-    <alert-message ng-show="model.status == 'Trained' && !model.weights_synchronized" class="alert-warning" msg="Please wait! Model parameters weights aren't filled.">
-    </alert-message>
-    <alert-message ng-show="model.status != 'Trained'" class="alert-warning" msg="Please train model to get parameters weights.">
-    </alert-message>
-    <div ng-show="action[1] == 'columns'" class="columns">
-        <div class="row">
-          <div class="span5">
-            <h4>Positive Weights</h4>
-            <weights-table weights="positive">
-            </weights-table>
-            <a class="btn" ng-click="morePositiveWeights()">Load More...</a>
-          </div>
-          <div class="offset1 span5">
-            <h4>Negative Weights</h4>
-            <weights-table weights="negative">
-            </weights-table>
-            <a class="btn" ng-click="moreNegativeWeights()">Load More...</a>
-          </div>
-        </div>
-    </div>
-    <div ng-show="action[1] == 'tree'" class="tree">
-        <ng-include src="'/partials/weights/tree.html'"></ng-include>
-    </div>
-    <div ng-show="action[1] == 'list'" class="list">
-        <ng-include src="'/partials/weights/list.html'"></ng-include>
-    </div>
-  </div>
-  <div ng-show="action[0] == 'features'"  id="features">
-    <a href="{{ model.downloadUrl() }}?field=features"><i title="Download features file" class="icon-download-alt"></i> Download
-      </a>
-    <textarea ui-codemirror="{ mode: {name: 'javascript', json: true} }" ng-model="model.features"> </textarea>
   </div>
 </div>
 </div>

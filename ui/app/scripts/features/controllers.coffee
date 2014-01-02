@@ -61,12 +61,12 @@ angular.module('app.features.controllers', ['app.config', ])
     $scope.ACTION = 'loading features'
 
     $scope.init = (model) ->
-      $scope.model = model
+      $scope.modelObj = model
 
       # TODO: Watch only _id?
-      $scope.$watch('model.featuresSet', (featuresSet, oldVal, scope) ->
-        if featuresSet?
-          $scope.filter_opts = {'features_set_id': featuresSet._id}
+      $scope.$watch('modelObj.features_set_id', (set_id, oldVal, scope) ->
+        if set_id?
+          $scope.filter_opts = {'feature_set_id': set_id}
       , true)
 ])
 

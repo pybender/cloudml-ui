@@ -1,12 +1,16 @@
-Flask==0.9
+Flask==0.10.1
 Flask-RESTful==0.1.6
 Flask-Script==0.5.3
+sqlalchemy==0.8.3
+-e git+https://github.com/mitsuhiko/flask-sqlalchemy#egg=Flask-SQLAlchemy
 Jinja2==2.6
 Werkzeug==0.8.3
 numpy==1.7.1
 gunicorn
 scipy==0.12.0
-scikit-learn==0.13.1
+#scikit-learn==0.13.1
+-e git+https://github.com/nanli0416/scikit-learn.git@new-feat-feature_extraction-text#egg=scikit-learn
+gensim
 psycopg2==2.4.6 # sudo apt-get install libpq-dev python-dev
 jsonpath==0.54
 celery==3.0.22
@@ -20,7 +24,7 @@ Flask-mongokit
 nose
 gevent
 nose-exclude
--e git+https://github.com/odeskdev/cloudml.git#egg=cloudml
+-e git+https://github.com/odeskdev/cloudml.git@MATCH-1180_updating_import_handlers#egg=cloudml
 -e git+https://github.com/rick446/MongoTools.git#egg=mongotools
 translitcodec==0.3
 boto
@@ -30,3 +34,9 @@ mock
 moto
 oauth2==1.5.211
 coverage==3.6
+#nosexcover
+Flask-Testing
+fixture
+sqlparse==0.1.10
+blinker
+flask-admin

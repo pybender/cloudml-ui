@@ -36,10 +36,10 @@ angular.module('app.reports.controllers', ['app.config', ])
             param = get_params[i]
             num = Math.floor(i / 2 + 1)
             if i % 2 == 1
-                val['test'] = {'_id': param}
+                val['test'] = {'id': param}
                 data.push(val)
             else
-                val = {'model': {'_id': param}}
+                val = {'model': {'id': param}}
         $scope.form_data = data
         $scope.report = new CompareReport(data)
 
@@ -59,17 +59,17 @@ angular.module('app.reports.controllers', ['app.config', ])
       ).then ((opts) ->
         $scope.comparable_models = []
         for model in opts.objects
-          $scope.comparable_models.push({'_id': model._id, 'name': model.name})
+          $scope.comparable_models.push({'id': model.id, 'name': model.name})
       ), ((opts) ->
         $scope.setError(opts, 'loading models')
       )
 
     $scope.changeModel = (item) ->
       item.avaiable_tests = []
-      Test.$loadAll(item.model._id, {status: "Completed"}
+      Test.$loadAll({model_id: item.model.id, status: "Completed"}
       ).then ((opts) ->
         for test in opts.objects
-          item.avaiable_tests.push({'_id': test._id, 'name': test.name})
+          item.avaiable_tests.push({'id': test.id, 'name': test.name})
       ), ((opts) ->
         $scope.setError(opts, 'loading tests')
       )
@@ -87,7 +87,7 @@ angular.module('app.reports.controllers', ['app.config', ])
       report = $scope.report
       csv_ids = ''
       for item in $scope.form_data
-        csv_ids += "#{item.model._id},#{item.test._id},"
+        csv_ids += "#{item.model.id},#{item.test.id},"
 
       $scope.action = [action_name, csv_ids]
 

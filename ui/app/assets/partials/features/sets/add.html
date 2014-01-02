@@ -28,7 +28,7 @@
         <label class="control-label">Classifier</label>
         <div class="controls">
           <select name="classifier" ng-model="model.classifier" required>
-            <option ng-repeat="classifier in classifiers" value="{{ classifier._id }}">{{ classifier.name }}</option>
+            <option ng-repeat="classifier in classifiers" value="{{ classifier.id }}">{{ classifier.name }}</option>
           </select>
           <span ng-show="Form.classifier.$error.required" class="help-inline">*</span>
         </div>

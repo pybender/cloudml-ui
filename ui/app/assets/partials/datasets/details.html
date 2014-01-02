@@ -44,6 +44,9 @@
         Import Params: <span class="value">{{ dataset.import_params }}</span>
     </div>
     <div>
+        Data Format: <span class="value">{{ dataset.format|uppercase }}</span>
+    </div>
+    <div>
         File Size: <span class="value">{{ dataset.filesize|bytes }}</span>
     </div>
     <div>
@@ -54,7 +57,7 @@
     </div>
   </div>
 
-  <div ng-show="action[0] == 'log'" ng-controller="LogMessageListCtrl" ng-init="init('importdata_log', dataset._id)">
+  <div ng-show="action[0] == 'log'" ng-controller="LogMessageListCtrl" ng-init="init('importdata_log', dataset.id)">
     <ng-include src="'/partials/logmessages/list.html'"></ng-include>
   </div>
 </div>

@@ -59,7 +59,10 @@
             <span ng-repeat="f in test.examples_fields"><span class="label">{{ f }}</span> </span></span>
         </div>
         <div>
-            Memory used: <span class="value">{{ test.memory_usage.testing }} Mb</span>
+            Memory used: <span class="value">{{ test.memory_usage|number:2 }} Mb</span>
+        </div>
+        <div>
+            Examples Size: <span class="value">{{ test.examples_size|number:2 }} Mb</span>
         </div>
         <div ng-controller="TestExportsCtrl" ng-init="init(test)">
             <div ng-show="exports">
@@ -67,15 +70,15 @@
               <ul class="unstyled">
                 <li class="row well well-small" ng-repeat="export in exports">
                   <div class="span10">
-                    <i class="icon-calendar"></i> created on <span class="badge badge-info">{{ export.datetime|format_date }}</span> 
+                    <i class="icon-calendar"></i> created on <span class="badge badge-info">{{ export.created_on|format_date }}</span>
                     <i class="icon-th"></i><span> fields </span>
-                    <span ng-repeat="field in export.fields">
-                      <span class="label">{{ field }}</span> 
+                    <span ng-repeat="field in export.args[2]">
+                      <span class="label">{{ field }}</span>
                     </span>
                     <span class="badge badge-info">{{ export.status }}</span><br/>
                   </div>
                   <div ng-show="export.status == 'Completed'" class="span1 pull-right">
-                    <a class="btn btn-small" href="{{ export.url }}">Download</a>
+                    <a class="btn btn-small" href="{{ export.result }}">Download</a>
                   </div>
                 </li>
               </ul>
@@ -86,7 +89,7 @@
       <div ng-show="action[0] == 'metrics'">
         <div>
           <div>
-              Classification Accuracy: <span class="value">{{ test.accuracy.toFixed(4) }}</span>
+              Classification Accuracy: <span class="value">{{ test.accuracy|number:4 }}</span>
           </div>
         </div>
         <hr/>
@@ -103,7 +106,10 @@
           <sc-curves xlabel="Recall" ylabel="Precision" curves-dict="prCurve" width="500"></sc-curves>
         </div>
         <hr/>
-        <a ng-show="test.status == 'Completed'" href="#{{ test.avaragePrecisionUrl() }}"><i class="status-icon icon-search"></i> Average precision</a>
+        <div ng-show="test.status == 'Completed'">
+          <alert-message ng-show="test.examples_placement == 'Do not save'" class="alert-info" msg="Examples data isn't stored for this test at all. So average precision could not be calculated." unsafe></alert-message>
+          <a ng-hide="test.examples_placement == 'Do not save'" href="#{{ test.avaragePrecisionUrl() }}"><i class="status-icon icon-search"></i> Average precision</a>
+        </div>
       </div>
 
       <div ng-show="action[0] == 'examples'" ng-controller="TestExamplesCtrl" ng-init="init(test)">
@@ -115,31 +121,59 @@
             <div class="span6">
                 <h4>Confusion Matrix</h4>
 
-                <form name="ConfusionMatrixForm" class="form-inline well">
-
-                  <div class="alert alert-error" ng-show="confusion_matrix_weights.error">
-                      {{ confusion_matrix_weights.error }}
-                  </div>
-
-                  <label>Weight of &quot;{{ test.model.labels[0] }}&quot;: </label>
-                  <input type="text" name="weight0" class="input-mini" ng-model="confusion_matrix_weights.w0" required smart-float>
-
-                  <label>Weight of &quot;{{ test.model.labels[1] }}&quot;: </label>
-
-                  <input type="text" name="weight1" class="input-mini" ng-model="confusion_matrix_weights.w1" required smart-float>
-
-                  <button ng-disabled="ConfusionMatrixForm.$invalid" class="btn" ng-click="recalculateConfusionMatrix(confusion_matrix_weights.w0, confusion_matrix_weights.w1)">
-                      Recalculate with weights
-                  </button>
-                </form>
-
                 <confusion-matrix matrix=test.metrics.confusion_matrix url=test.examplesUrl()></confusion-matrix>
 
             </div>
         </div>
+        <div ng-controller="TestConfusionMatrixCtrl" ng-init="init(test)" class="row">
+            <form name="ConfusionMatrixForm" class="form-inline well">
+
+              <div class="alert alert-error" ng-show="confusion_matrix_weights.error">
+                  {{ confusion_matrix_weights.error }}
+              </div>
+
+              <label>Weight of &quot;{{ test.model.labels[0] }}&quot;: </label>
+              <input type="text" name="weight0" class="input-mini" ng-model="confusion_matrix_weights.w0" required smart-float>
+
+              <label>Weight of &quot;{{ test.model.labels[1] }}&quot;: </label>
+
+              <input type="text" name="weight1" class="input-mini" ng-model="confusion_matrix_weights.w1" required smart-float>
+
+              <button ng-disabled="ConfusionMatrixForm.$invalid" class="btn" ng-click="recalculate(confusion_matrix_weights.w0, confusion_matrix_weights.w1)">
+                  Recalculate with weights
+              </button>
+            </form>
+
+
+            <div class="span10" ng-show="test.confusion_matrix_calculations">
+              <h4>Confusion matrix calculations</h4>
+              <ul class="unstyled">
+                <li class="row well well-small" ng-repeat="calc in test.confusion_matrix_calculations">
+                  <div class="row">
+                    <div class="span5">
+                        <i class="icon-calendar"></i> created on <span class="badge badge-info">{{ calc.created_on|format_date }}</span>
+                        <i class="icon-th"></i><span> weights </span>
+                        <span ng-repeat="label in [calc.args[1], calc.args[2]]">
+                            <span class="label">{{ label }}</span>
+                        </span>
+                        <span class="badge badge-info">{{ calc.status }}</span><br/>
+                    </div>
+                    <div ng-show="calc.status == 'Completed'" class="span2 pull-right">
+                      <button class="btn btn-link" ng-click="showResult(calc.id)">
+                          Show result
+                      </button>
+                    </div>
+                  </div>
+                  <div class="row" ng-show="open_calc_id == calc.id">
+                      <div class="span4"><confusion-matrix matrix=calc.result></confusion-matrix></div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+        </div>
       </div>
 
-      <div ng-show="action[0] == 'logs'" ng-controller="LogMessageListCtrl" ng-init="init('runtest_log', test._id)">
+      <div ng-show="action[0] == 'logs'" ng-controller="LogMessageListCtrl" ng-init="init('runtest_log', test.id)">
         <ng-include src="'/partials/logmessages/list.html'"></ng-include>
       </div>
 

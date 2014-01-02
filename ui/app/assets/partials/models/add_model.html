@@ -33,7 +33,7 @@
       <label class="control-label">Train Import Handler</label>
       <div class="controls">
         <select name="train_import_handler" ng-model="model.train_import_handler">
-          <option ng-repeat="handler in handlers" value="{{ handler._id }}">{{ handler.name }}</option>
+          <option ng-repeat="handler in handlers" value="{{ handler.id }}">{{ handler.name }}</option>
         </select> 
         <span>or</span> 
         <input type="file" name="train_import_handler_file" ng-model="model.train_import_handler_file" json-file />
@@ -44,7 +44,7 @@
       <label class="control-label">Test Import Handler</label>
       <div class="controls">
         <select name="test_import_handler" ng-model="model.test_import_handler">
-            <option ng-repeat="handler in handlers" value="{{ handler._id }}">{{ handler.name }}</option>
+            <option ng-repeat="handler in handlers" value="{{ handler.id }}">{{ handler.name }}</option>
         </select>
         <span>or</span> 
         <input type="file" name="test_import_handler_file" ng-model="model.test_import_handler_file" json-file />
@@ -55,6 +55,6 @@
 
   <br />
   <a href="#/models" class="btn">Cancel</a>
-    <button ng-click="save(['name', 'features', 'test_import_handler', 'train_import_handler', 'train_import_handler_file', 'test_import_handler_file'])" ng-disabled="Form.$invalid || !(model.train_import_handler_file || model.train_import_handler) || !(model.test_import_handler_file || model.test_import_handler)" class="btn btn-primary">Add new model</button> <small>and start training</small>
+    <button ng-click="save(['name', 'features', 'test_import_handler', 'train_import_handler', 'train_import_handler_file', 'test_import_handler_file', 'train_format', 'test_format'])" ng-disabled="Form.$invalid || !(model.train_import_handler_file || model.train_import_handler) || !(model.test_import_handler_file || model.test_import_handler)" class="btn btn-primary">Add new model</button> <small>and start training</small>
   </form>
 </div>

@@ -2,7 +2,27 @@
 
 ### Trained Model specific Controllers ###
 
+FIELDS_BY_SECTION = {
+  'model': 'id,classifier,features_set_id,features'
+  'training': 'id,error,weights_synchronized,memory_usage,
+trained_by,trained_on,training_time'
+  'about': 'id,created_on,target_variable,example_id,example_label,
+labels,updated_on,feature_count,test_import_handler,
+train_import_handler,created_by,datasets,data_fields,
+train_records_count,test_handler_fields,tags'
+  'main': 'id,name,status'
+}
+
 angular.module('app.models.controllers', ['app.config', ])
+
+
+.controller('TagCtrl', [
+  '$scope'
+  '$location'
+
+  ($scope, $location) ->
+    $scope.currentTag = $location.search()['tag']
+])
 
 .controller('ModelListCtrl', [
   '$scope'
@@ -15,11 +35,37 @@ angular.module('app.models.controllers', ['app.config', ])
 updated_on,updated_by,comparable,test_handler_fields'
     $scope.ACTION = 'loading models'
     $scope.currentTag = $location.search()['tag']
-    $scope.kwargs = {'tag': $scope.currentTag}
+    $scope.kwargs = {
+      tag: $scope.currentTag
+      per_page: 5
+      sort_by: 'updated_on'
+      order: 'desc'
+    }
+    $scope.page = 1
     $scope.STATUSES = ['', 'New', 'Queued', 'Importing',
     'Imported', 'Requesting Instance', 'Instance Started',
     'Training', 'Trained', 'Error', 'Canceled']
-    $scope.filter_opts = {}
+
+    $scope.init = (updatedByMe, modelName) ->
+      $scope.modelName = modelName
+      if updatedByMe
+        $scope.$watch('user', (user, oldVal, scope) ->
+          if user?
+            $scope.filter_opts = {
+              'updated_by_id': user.id
+              'status': ''}
+            $scope.$watch('filter_opts', (filter_opts, oldVal, scope) ->
+              $scope.$emit 'BaseListCtrl:start:load', modelName
+            , true)
+        , true)
+      else
+        $scope.filter_opts = {'status': ''}
+
+    $scope.showMore = () ->
+      $scope.page += 1
+      extra = {'page': $scope.page}
+      $scope.$emit('BaseListCtrl:start:load',
+        $scope.modelName, true, extra)
 ])
 
 
@@ -43,7 +89,10 @@ updated_on,updated_by,comparable,test_handler_fields'
   'Model'
 
   ($scope, Model) ->
-    $scope.model = new Model()
+    $scope.formats = [
+      {name: 'JSON', value: 'json'}, {name: 'CSV', value: 'csv'}
+    ]
+    $scope.model = new Model({train_format: 'json', test_format: 'json'})
 ])
 
 # Upload trained model controller
@@ -64,9 +113,58 @@ updated_on,updated_by,comparable,test_handler_fields'
   'Tag'
 
   ($scope, $location, $routeParams, Model, Test, Tag) ->
-    # Configure Select2 widget for model tags edditing
-    # TODO: init data
-    $scope.params = {}
+    if not $routeParams.id
+      throw new Error "Can't initialize without model id"
+
+    $scope.model = new Model({id: $routeParams.id})
+    $scope.LOADED_SECTIONS = []
+    $scope.params = {'tags': []}
+
+    $scope.load = (fields, section) ->
+      if !fields then return
+
+      $scope.model.$load(
+        show: fields
+        ).then (->
+          $scope.LOADED_SECTIONS.push section
+          if $scope.params['tags']?
+            $scope.params['tags'] = []
+            for t in $scope.model.tags
+              $scope.params['tags'].push {'id': t, 'text': t}
+        ), ((opts)->
+          $scope.setError(opts, 'loading model details')
+        )
+
+    $scope.goSection = (section) ->
+      name = section[0]
+      if name == 'test'
+        setTimeout(() ->
+          $scope.$broadcast('loadTest', true)
+          $scope.LOADED_SECTIONS.push name
+        , 100)
+
+      fields = ''
+      if 'main' not in $scope.LOADED_SECTIONS
+        fields = FIELDS_BY_SECTION['main']
+        $scope.LOADED_SECTIONS.push 'main'
+
+      if name not in $scope.LOADED_SECTIONS
+        if FIELDS_BY_SECTION[name]?
+          fields += ',' + FIELDS_BY_SECTION[name]
+
+      $scope.load(fields, name)
+
+    Tag.$loadAll(
+      show: 'text,id'
+    ).then ((opts) ->
+      $scope.tag_list = []
+      for t in opts.objects
+        if t.text?
+          $scope.tag_list.push {'text': t.text, 'id': t.id}
+
+    ), ((opts) ->
+      $scope.setError(opts, 'loading tags')
+    )
 
     $scope.select2params = {
       multiple: true,
@@ -83,80 +181,6 @@ updated_on,updated_by,comparable,test_handler_fields'
         if $(data).filter(cmp).length == 0 then return {id: term, text: term}
     }
 
-    Tag.$loadAll(
-      show: 'text,id'
-    ).then ((opts) ->
-      $scope.tag_list = []
-      for t in opts.objects
-        if t.text?
-          $scope.tag_list.push {'text': t.text, 'id': t.id}
-
-    ), ((opts) ->
-      $scope.setError(opts, 'loading tags')
-    )
-
-    if not $routeParams.id
-      throw new Error "Can't initialize without model id"
-    $scope.model = new Model({_id: $routeParams.id})
-    $scope.LOADED_SECTIONS = []
-
-    $scope.load = (fields, section) ->
-      $scope.model.$load(
-        show: fields
-        ).then (->
-          $scope.LOADED_SECTIONS.push section
-          if $scope.params['tags']?
-            $scope.params['tags'] = []
-            for t in $scope.model.tags
-              $scope.params['tags'].push {'id': t, 'text': t}
-        ), ((opts) ->
-          $scope.setError(opts, 'loading model details')
-        )
-
-    $scope.goTests = () ->
-      setTimeout(() ->
-          $scope.$broadcast('loadTest', true)
-          $scope.LOADED_SECTIONS.push 'test'
-        , 100)
-#      Test.$loadAll(
-#        $scope.model._id,
-#        show: 'name,created_on,status,parameters,accuracy,examples_count,
-#created_by'
-#      ).then ((opts) ->
-#        $scope.tests = opts.objects
-#      ), ((opts) ->
-#        $scope.setError(opts, 'loading tests')
-#      )
-
-    $scope.goSection = (section) ->
-      name = section[0]
-      if name not in $scope.LOADED_SECTIONS
-        extra_fields = ''
-        switch name
-          when 'features_set' then extra_fields = 'features_set_id'
-          when 'classifier' then extra_fields = 'classifier'
-          when 'model'
-            extra_fields = 'created_on,target_variable,
-error,labels,weights_synchronized,example_id,example_label,
-updated_on,feature_count,test_import_handler.name,
-train_import_handler.name,train_import_handler.import_params,tags,
-test_import_handler.import_params,train_import_handler._id,
-test_import_handler._id,memory_usage,created_by,trained_by,datasets,data_fields,
-train_records_count,test_handler_fields'
-          when 'features' then extra_fields = 'features'
-
-        if 'main' in $scope.LOADED_SECTIONS
-          # Do not need load main fields -> only extra
-          if extra_fields != ''
-            $scope.load(extra_fields, name)
-        else
-          $scope.load(extra_fields + ',' + Model.MAIN_FIELDS, name)
-          $scope.LOADED_SECTIONS.push 'main'
-
-        if name == 'test' then $scope.goTests()
-
-    $scope.initSections($scope.goSection)
-
     $scope.updateTags = () ->
       $scope.model.tags = []
       for t in $scope.params['tags']
@@ -164,6 +188,8 @@ train_records_count,test_handler_fields'
 
       $scope.model.$save(only: ['tags']).then (->), (->
         $scope.setError(opts, 'saving model tags'))
+
+    $scope.initSections($scope.goSection)
   ])
 
 
@@ -172,6 +198,10 @@ train_records_count,test_handler_fields'
   '$rootScope'
 
   ($scope, $rootScope) ->
+    $scope.formats = [
+      {name: 'JSON', value: 'json'}, {name: 'CSV', value: 'csv'}
+    ]
+
     $scope.initForm = () ->
       # Form elements initialization
       # dataset section
@@ -181,6 +211,8 @@ train_records_count,test_handler_fields'
       for p in $scope.params
         params[p] = false
       $scope.formElements[$scope.NEW_DATASET] = params
+
+      $scope.formElements[$scope.NEW_DATASET].format = 'json'
 
       $scope.EXISTED_DATASET = 'Existing DataSet'
       $scope.formElements[$scope.EXISTED_DATASET] = {'dataset': false}
@@ -275,9 +307,6 @@ train_records_count,test_handler_fields'
             'partials/testresults/run_test.html',
             'TestDialogController', 'modal large'))
         )
-
-    $scope.reload_model = (model)->
-      model.$reload()
 
     $scope.cancel_request_spot_instance = (model)->
       model.$cancel_request_spot_instance()

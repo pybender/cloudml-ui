@@ -15,6 +15,7 @@ module.exports = function(config) {
     // list of files / patterns to load in the browser
     files: [
       // Application Code //
+      'vendor/scripts/jquery-1.8.3.js',
       'vendor/scripts/angular/angular.js',
       'vendor/scripts/angular/angular-*.js',
       'vendor/scripts/*.js',

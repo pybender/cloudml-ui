@@ -1,5 +1,8 @@
 SECRET_KEY = 'CHANGE_ME'
-SQLALCHEMY_DATABASE_URI = 'sqlite:////webapps/cloudml/shared/var/cloudml.db'
+#SQLALCHEMY_DATABASE_URI = 
+#'sqlite:////webapps/cloudml/shared/var/cloudml.db'
+SQLALCHEMY_DATABASE_URI = 'postgresql://cloudml:cloudml@localhost:5432/cloudml'
+
 STATIC_ROOT = None
 UPLOAD_FOLDER = 'models'
 MAX_CONTENT_LENGTH = 128 * 1024 * 1024
@@ -13,7 +16,11 @@ CELERY_ENABLE_UTC = True
 BROKER_URL = 'amqp://cloudml:cloudml@localhost:5672/cloudml'
 CELERY_RESULT_BACKEND = 'amqp://cloudml:cloudml@localhost:5672/cloudml'
 
-CELERY_IMPORTS = ('api.models', 'api', 'api.tasks')
+
+CELERY_IMPORTS = (
+    'api.models', 'api', 'api.import_handlers.tasks',
+    'api.instances.tasks', 'api.ml_models.tasks',
+    'api.model_tests.tasks')
 
 from kombu import Queue
 
@@ -59,7 +66,11 @@ LOGGING = {
         },
     },
     'loggers': {
+<<<<<<< HEAD
         'root': {
+=======
+        '': {
+>>>>>>> MATCH-1364_getting_rid_of_gridfs
             'handlers': ['console'],
             'level': 'INFO',
             'propagate': True,
@@ -71,4 +82,7 @@ LOGGING = {
         },
     }
 }
+<<<<<<< HEAD
 
+=======
+>>>>>>> MATCH-1364_getting_rid_of_gridfs

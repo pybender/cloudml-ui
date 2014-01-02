@@ -9,7 +9,7 @@
     <div ng-show="currentColumn == 'Existing DataSet'">
       <div class="control-group" ng-class="{error: !formElements[EXISTED_DATASET]['dataset']}">
         <select class="input-xlarge" ui-select2="select2Options" ng-multiple="multiple_dataset" name="dataset" ng-model="formElements[EXISTED_DATASET]['dataset']" ng-change="changeFormData(currentColumn, 'dataset')" required>
-          <option ng-repeat="ds in datasets" value="{{ ds._id }}">{{ ds.name }}</option>
+          <option ng-repeat="ds in datasets" value="{{ ds.id }}">{{ ds.name }}</option>
         </select>&nbsp;<i class="icon-question-sign" title="Choose successfull loaded dataset" />
         <span ng-show="!formElements[EXISTED_DATASET]['dataset']" class="help-inline error">required</span>
       </div>
@@ -22,6 +22,14 @@
       <div ng-repeat="param in params" ng-class="{error: !formElements[NEW_DATASET][param]}" class="control-group">
         <input class="input-xlarge" title="Load dataset using import handler" ng-change="changeFormData(currentColumn, param)" ng-model="formElements[NEW_DATASET][param]" title="Select {{ param }}" name="{{ param }}" placeholder='{{ param }}' type='text' required /> <i class="icon-question-sign" title="Fill {{ param }} parameter" />
         <span ng-show="!formElements[NEW_DATASET][param]" class="help-inline">required</span>
+      </div>
+      <div class="control-group">
+        <label class="control-label" style="text-align: left">Data Format</label>
+        <div class="controls">
+          <select ng-model="formElements[NEW_DATASET].format" required ng-options="v.value as v.name for v in formats" ng-selected='formats[0]'>
+          </select>
+          <span ng-show="Form.format.$error.required" class="help-inline">Required</span>
+        </div>
       </div>
     </div>
   </div>

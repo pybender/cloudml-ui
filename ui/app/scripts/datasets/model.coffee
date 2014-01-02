@@ -11,9 +11,12 @@ angular.module('app.datasets.model', ['app.config'])
     DataSet
     ###
     class DataSet extends BaseModel
-      API_FIELDNAME: 'dataset'
+      API_FIELDNAME: 'data_set'
 
-      _id: null
+      STATUS_IMPORTING = 'Importing'
+      STATUS_UPLOADING = 'Uploading'
+
+      id: null
       name: null
       status: 'not loaded'
       error: ''
@@ -24,6 +27,7 @@ angular.module('app.datasets.model', ['app.config'])
       import_params: null
       import_handler_id: null
       on_s3: false
+      format: 'json'
 
 
       loadFromJSON: (origData) =>
@@ -43,14 +47,14 @@ angular.module('app.datasets.model', ['app.config'])
         return "#{settings.apiUrl}importhandlers/#{handler_id}/datasets/"
 
       $generateS3Url: () =>
-        @$make_request("#{@BASE_API_URL}#{@_id}/action/generate_url/",
+        @$make_request("#{@BASE_API_URL}#{@id}/action/generate_url/",
                        {}, 'GET', {})
 
       $save: (data) =>
         if data.only
           super data
         else
-          @$make_request(@BASE_API_URL, data, 'POST', {})
+          @$make_request(@BASE_API_URL, {}, 'POST', data)
 
       @$loadAll: (opts) ->
         handler_id = opts.handler_id
@@ -68,7 +72,16 @@ angular.module('app.datasets.model', ['app.config'])
         @$make_all_request(DataSet.$get_api_url(handler_id), resolver, opts)
 
       $reupload: =>
-        url = "#{@BASE_API_URL}#{@_id}/action/reupload/"
+        url = "#{@BASE_API_URL}#{@id}/action/reupload/"
+        @$make_request(url, {}, "PUT", {}).then(
+          (resp) =>
+            @status = resp.data.dataset.status)
+
+      $reimport: =>
+        if @status in [@STATUS_IMPORTING, @STATUS_UPLOADING]
+          throw new Error "Can't re-import a dataset that is importing now"
+
+        url = "#{@BASE_API_URL}#{@id}/action/reimport/"
         @$make_request(url, {}, "PUT", {}).then(
           (resp) =>
             @status = resp.data.dataset.status)

@@ -16,7 +16,7 @@ angular.module('app.datas.controllers', ['app.config', ])
   $scope.simple_filters = {} # Filters by label and pred_label
   $scope.data_filters = [] # Filters by data_input.* fields
   $scope.loading_state = false
-  $scope.sort_by = 'id'
+  $scope.sort_by = 'example_id'
   $scope.asc_order = true
 
   $scope.init = (test, extra_params={'action': 'examples:list'}) ->
@@ -28,7 +28,7 @@ angular.module('app.datas.controllers', ['app.config', ])
         $scope.fields = $scope.test.examples_fields
         # Init search form
         for key, val of $scope.filter_opts
-          key_name = key.replace("data_input.", "")
+          key_name = key.replace("data_input->>", "")
           if key_name in $scope.fields
             $scope.data_filters.push({name: key, value: val})
           else if key == 'label' || key == 'pred_label'
@@ -40,7 +40,7 @@ angular.module('app.datas.controllers', ['app.config', ])
         $scope.loading_state = true
     )
 
-    $scope.model = new Model({_id: $scope.test.model_id})
+    $scope.model = new Model({id: $scope.test.model_id})
     $scope.model.$load(show: 'name,labels').then (->
       $scope.labels = $scope.model.labels
     ), ((opts) ->
@@ -51,12 +51,12 @@ angular.module('app.datas.controllers', ['app.config', ])
     (opts) ->
       filter_opts = opts.filter_opts
       delete opts.filter_opts
-      show = 'id,name,label,pred_label,title,probs'
+      show = 'id,name,label,pred_label,title,prob,example_id'
       opts = _.extend({show: show}, opts, filter_opts)
       $scope.loading_state = true
       opts.sort_by = $scope.sort_by
       opts.order = if $scope.asc_order then 'asc' else 'desc'
-      Data.$loadAll($scope.test.model_id, $scope.test._id, opts).then((resp) ->
+      Data.$loadAll($scope.test.model_id, $scope.test.id, opts).then((resp) ->
         $scope.loading_state = false
         return resp
       )
@@ -96,7 +96,7 @@ angular.module('app.datas.controllers', ['app.config', ])
   $scope.loading_state = true
   $scope.test = new Test({
     model_id: $routeParams.model_id,
-    _id: $routeParams.test_id
+    id: $routeParams.test_id
   })
   $scope.test.$load(
       show: 'name,examples_fields'
@@ -113,7 +113,7 @@ angular.module('app.datas.controllers', ['app.config', ])
       return
     $scope.loading_state = true
     Data.$loadAllGroupped($routeParams.model_id, $routeParams.test_id, {
-      field: 'data_input.' + $scope.form.field,
+      field: $scope.form.field,
       count: $scope.form.count})
     .then ((opts) ->
       $scope.field_name = opts.field_name
@@ -138,13 +138,13 @@ angular.module('app.datas.controllers', ['app.config', ])
     $scope.data = new Data({
       model_id: $routeParams.model_id,
       test_id: $routeParams.test_id,
-      _id: $routeParams.id
+      id: $routeParams.id
     })
 
   $scope.data.$load(
     show: "id,test_name,weighted_data_input,
-test.model.target_variable,pred_label,label,
-prob,test.status,created_on,test.classes_set"
+model,pred_label,label,
+prob,created_on,test_result"
   ).then (->
     ), ((opts)->
       $scope.setError(opts, 'loading test example')
@@ -171,7 +171,7 @@ prob,test.status,created_on,test.classes_set"
 
     $scope.test = dialog.model
     Data.$loadFieldList($scope.test.model_id,
-      $scope.test._id)
+      $scope.test.id)
     .then ((opts) ->
       $scope.selectFields = ("data_input." + x for x in opts.fields)
       $scope.loading_state = false

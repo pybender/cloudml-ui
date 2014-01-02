@@ -20,10 +20,9 @@ angular.module('app.features.controllers.classifiers', ['app.config', ])
     $scope.classifiers = []
     Classifier.$loadAll(
       show: 'name'
-      is_predefined: 1
     ).then ((opts) ->
-      for tr in opts.objects
-        $scope.classifiers.push {_id: tr._id, name: tr.name}
+      for classifier in opts.objects
+        $scope.classifiers.push {id: classifier.id, name: classifier.name}
     ), ((opts) ->
       $scope.err = $scope.setError(opts, 'loading classifiers')
     )
@@ -40,38 +39,20 @@ angular.module('app.features.controllers.classifiers', ['app.config', ])
     $scope.ACTION = 'loading classifiers'
     $scope.LIST_MODEL_NAME = Classifier.LIST_MODEL_NAME
 
-    $scope.filter_opts = {'is_predefined': 1}
-
     $scope.edit = (classifier) ->
       $scope.openDialog($dialog, classifier,
         'partials/features/classifiers/edit_predefined.html',
         'ModelWithParamsEditDialogCtrl', 'modal')
 
     $scope.add = () ->
-      classifier = new Classifier({'is_predefined': true})
+      classifier = new Classifier()
       $scope.openDialog($dialog, classifier,
         'partials/features/classifiers/add_predefined.html',
-        'ModelWithParamsEditDialogCtrl', 'modal', 'add transformer',
-        'transformers')
+        'ModelWithParamsEditDialogCtrl', 'modal', 'add classifier',
+        'classifiers')
 
     $scope.delete = (classifier)->
       $scope.openDialog($dialog, classifier,
         'partials/base/delete_dialog.html', 'DialogCtrl',
-        'modal', 'delete predefined transformer')
+        'modal', 'delete predefined classifier')
 ])
-
-
-# .controller('ClassifierDetailsCtrl', [
-#   '$scope'
-#   '$routeParams'
-#   'Classifier'
-
-#   ($scope, $routeParams, Classifier) ->
-#     if not $routeParams.id
-#       err = "Can't initialize without id"
-
-#     $scope.classifier = new Classifier({_id: $routeParams.id})
-#     $scope.classifier.$load(
-#       show: Classifier.MAIN_FIELDS
-#       ).then (->), ((opts)-> $scope.setError(opts, 'loading classifiers'))
-#   ])

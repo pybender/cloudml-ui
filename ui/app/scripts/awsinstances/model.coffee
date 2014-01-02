@@ -17,7 +17,7 @@ angular.module('app.awsinstances.model', ['app.config'])
       DEFAULT_FIELDS_TO_SAVE: ['name', 'type', 'ip',
                                'description', 'is_default']
 
-      _id: null
+      id: null
       created_on: null
       updated_on: null
       name: null

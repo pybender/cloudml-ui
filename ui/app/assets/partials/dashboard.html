@@ -7,13 +7,14 @@
   	</div>
 </h2>
 
+<div class="row">
 <div class="span3">
 	<div class="well">
 	<h2 class="muted">Models</h2>
 	<ul class="unstyled">
-		<li ng-repeat="item in statistics.models.data">
-		{{ item._id }} <span class="pull-right strong">{{ item.count }}</span>
-		<div class="progress progress-{{ STYLES_MAP[item._id] }}">
+		<li ng-repeat="(status, item) in statistics.models.data">
+		{{ status }} <span class="pull-right strong">{{ item.count }}</span>
+		<div class="progress progress-{{ STYLES_MAP[status] }}">
 		<div class="bar" style="width: {{ 100 * item.count / statistics.models.count }}%;"></div>
 		</div>
 		</li>
@@ -47,8 +48,35 @@
 						<small><a href="#{{ statistics.getImportHandlerUrl(item_stat.import_handler_id) }}?action=dataset:list">{{ item_stat.import_handler_id }}</a> <span class="pull-right strong">{{ item_stat.count }}</span></small>
 					</li>
 				</ul>
-				<div class="progress progress-{{ STYLES_MAP[status] }}"><div class="bar" style="width: {{ 100 * data.count / statistics.tests.count }}%;"></div></div>
+				<div class="progress progress-{{ STYLES_MAP[status] }}"><div class="bar" style="width: {{ 100 * data.count / statistics.datasets.count }}%;"></div></div>
 			</li>
 		</ul>
 	</div>
 </div>
+</div>
+
+<!-- <div>
+  <h3 class="text-info">Sizes of Test Examples</h3>
+  <table class="table table-striped">
+  <thead>
+      <tr>
+        <th>Name</th>
+        <th>Model</th>
+        <th>Examples Size</th>
+        <th>Created</th>
+      </tr>
+  </thead>
+  <tbody>
+    <tr ng-repeat="test in testsWithSizes">
+      <td><a href="#{{ test.objectUrl() }}">{{ test.name }}</a></td>
+      <td><a href="#/models/{{ test.model_id }}">{{ test.model_name }}</a></td>
+      <td>{{ test.examples_size }} Mb</td>
+      <td>
+          {{ test.created_on|format_date }}
+          <br>
+          <small ng-show="test.created_by">by {{ test.created_by.name }} ({{ test.created_by.uid }})</small>
+      </td>
+    </tr>
+  </tbody>
+</table>
+</div> -->

@@ -69,8 +69,8 @@ describe "importhandlers", ->
       $routeParams.id = HANDLER_ID
       $rootScope.initSections = jasmine.createSpy()
 
-      url = BASE_URL + HANDLER_ID + '/?show=' + encodeURIComponent('name,type,created_on,updated_on,data,
-import_params,created_by')
+      url = BASE_URL + HANDLER_ID + '/?show=' + encodeURIComponent('name,_id,import_params,
+created_on,created_by,error,data')
       $httpBackend.expectGET(url).respond('{"import_handler": {"name": "Some name"}}')
 
       createController "ImportHandlerDetailsCtrl"

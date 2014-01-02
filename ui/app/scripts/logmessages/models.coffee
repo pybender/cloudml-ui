@@ -11,7 +11,7 @@ angular.module('app.logmessages.model', ['app.config'])
       BASE_API_URL: "#{settings.apiUrl}logs/"
       API_FIELDNAME: 'log'
 
-      _id: null
+      id: null
       level: null
       type: null
       content: null

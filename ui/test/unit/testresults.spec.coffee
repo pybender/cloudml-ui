@@ -83,9 +83,8 @@ describe "testresults", ->
 
     it "should load 'about' section", inject () ->
       url = BASE_URL + '?show=' + encodeURIComponent('classes_set,created_on,
-parameters,error,
-examples_count,dataset,memory_usage,created_by,examples_placement,
-examples_fields,name,status,created_on,created_by')
+parameters,error,examples_count,dataset,memory_usage,created_by,
+examples_placement,examples_fields,examples_size,examples_placement,name,status,created_on,created_by')
       $httpBackend.expectGET(url).respond('{"test": {}}')
 
       $rootScope.goSection(['about', 'details'])
@@ -96,7 +95,7 @@ examples_fields,name,status,created_on,created_by')
     it "should load 'metrics' section", inject () ->
       url = BASE_URL + '?show=' + encodeURIComponent('accuracy,
 metrics.precision_recall_curve,
-metrics.roc_curve,metrics.roc_auc,name,status,created_on,created_by')
+metrics.roc_curve,metrics.roc_auc,examples_placement,name,status,created_on,created_by')
       $httpBackend.expectGET(url).respond('{"test": {}}')
 
       $rootScope.goSection(['metrics', 'accuracy'])
@@ -105,27 +104,14 @@ metrics.roc_curve,metrics.roc_auc,name,status,created_on,created_by')
       expect($rootScope.setSection).toHaveBeenCalled()
 
     it "should load 'matrix' section", inject () ->
-      url = BASE_URL + '?show=' + encodeURIComponent('metrics.confusion_matrix,
-model,name,status,created_on,created_by')
+      url = BASE_URL + '?show=' + encodeURIComponent('metrics.confusion_matrix,model,
+confusion_matrix_calculations,examples_placement,name,status,created_on,created_by')
       $httpBackend.expectGET(url).respond('{"test": {}}')
 
       $rootScope.goSection(['matrix', 'confusion'])
       $httpBackend.flush()
 
       expect($rootScope.setSection).toHaveBeenCalled()
-
-    it "should request confusion matrix", inject () ->
-      url = BASE_URL + 'action/confusion_matrix/?weight0=42&weight1=38'
-      $httpBackend.expectGET(url).respond('{"confusion_matrix": [1,2,3,4],
-"test": {}}')
-
-      # Metrics are supposed to be filled
-      $rootScope.test.metrics = {}
-
-      $rootScope.recalculateConfusionMatrix(42, 38)
-      $httpBackend.flush()
-
-      expect($rootScope.test.metrics.confusion_matrix).toEqual([1, 2, 3, 4])
 
   describe "TestActionsCtrl", ->
 
@@ -177,3 +163,31 @@ model,name,status,created_on,created_by')
 
       expect($rootScope.exports[0].status).toEqual('Completed')
       expect($rootScope.exports[1].status).toEqual('Completed')
+
+  describe "TestConfusionMatrixCtrl", ->
+
+    beforeEach inject (TestResult) ->
+      createController "TestConfusionMatrixCtrl"
+
+      # Metrics are supposed to be filled
+      $rootScope.test = new TestResult({
+        _id: 'sometestid',
+        model_id: 'somemodelid'},
+        metrics: {}
+      )
+
+#     it "should request confusion matrix", inject () ->
+#       url = BASE_URL + 'action/confusion_matrix/?weight0=42&weight1=38'
+#       $httpBackend.expectGET(url).respond('{"confusion_matrix": [1,2,3,4],
+# "test": {}}')
+
+#       $rootScope.recalculate(42, 38)
+#       $httpBackend.flush()
+
+    it "should reload items", inject () ->
+      url = BASE_URL + '?show=' + encodeURIComponent('confusion_matrix_calculations')
+      $httpBackend.expectGET(url).respond('{"test": {"confusion_matrix_calculations": [
+{"status": "Completed", "weights": [42, 38]}]}}')
+
+      $rootScope.reload()
+      $httpBackend.flush()

@@ -8,7 +8,7 @@
 	  <div ng-show="currentColumn == EXISTED_INSTANCE" class="control-group" ng-class="{error: !formElements[EXISTED_INSTANCE]['aws_instance']}">
 	    <select class="input-xlarge" name="aws_instance" ng-change="changeFormData(currentColumn, 'aws_instance')" ng-model="formElements[EXISTED_INSTANCE]['aws_instance']">
 	      <option value="">--- select instance ---</option>
-	      <option ng-repeat="instance in instances" value="{{ instance._id }}" ng-selected="instance.is_default">{{ instance.name }}: {{ instance.ip }}</option>
+	      <option ng-repeat="instance in instances" value="{{ instance.id }}" ng-selected="instance.is_default">{{ instance.name }}: {{ instance.ip }}</option>
 	    </select>&nbsp;<i class="icon-question-sign" title="Choose active amazon instance" />
       <span ng-show="!formElements[EXISTED_INSTANCE]['aws_instance']" class="help-inline">required</span>
 	  </div>

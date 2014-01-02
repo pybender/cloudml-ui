@@ -1,7 +1,7 @@
 <div>
   <h2>
-    <span ng-show="feature._id">Edit</span><span ng-hide="feature._id">New</span> Feature <span ng-show="feature._id">{{ feature.name }}</span>
-    <small><a href="#{{ modelObj.objectUrl() }}?action=features_set:list">(Cancel)</a></small>
+    <span ng-show="feature.id">Edit</span><span ng-hide="feature.id">New</span> Feature <span ng-show="feature.id">{{ feature.name }}</span>
+    <small><a href="#{{ modelObj.objectUrl() }}?action=model:details">(Cancel)</a></small>
   </h2>
 
   <loadindicator title="Save feature..." ng-show="saving" progress="savingProgress"></loadindicator>
@@ -31,5 +31,5 @@
       </div>
     </div>
   </div>
-  <button ng-disabled="FeatureForm.$invalid || TransformerForm.$invalid || ScalerForm.$invalid" ng-click="save(['name', 'type', 'input_format', 'transformer__name', 'transformer__type',  'transformer__params', 'params', 'required', 'scaler__predefined_selected', 'scaler__name','scaler__type', 'scaler__params', 'default', 'features_set_id', 'is_target_variable'])"  class="btn btn-primary"><span ng-show="feature._id">Save</span><span ng-hide="feature._id">Add</span> feature</button>
+  <button ng-disabled="FeatureForm.$invalid || TransformerForm.$invalid || ScalerForm.$invalid" ng-click="save(['name', 'type', 'input_format', 'transformer__name', 'transformer__type',  'transformer__params', 'params', 'required', 'scaler__predefined_selected', 'scaler__name','scaler__type', 'scaler__params', 'default', 'feature_set_id', 'is_target_variable'])"  class="btn btn-primary"><span ng-show="feature.id">Save</span><span ng-hide="feature.id">Add</span> feature</button>
 </div>

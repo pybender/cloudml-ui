@@ -13,12 +13,12 @@ angular.module('app.testresults.model', ['app.config'])
     Trained Model Test
     ###
     class TestResult extends BaseModel
-      API_FIELDNAME: 'test'
+      API_FIELDNAME: 'tests'
       @MAIN_FIELDS: 'name,status,created_on,created_by'
       DEFAULT_FIELDS_TO_SAVE: ['importhandler', 'train_importhandler',
                                 'features', 'trainer', 'name']
 
-      _id: null
+      id: null
       accuracy: null
       created_on: null
       data_count: null
@@ -36,14 +36,17 @@ angular.module('app.testresults.model', ['app.config'])
       @$get_api_url: (model_id) ->
         return "#{settings.apiUrl}models/#{model_id}/tests/"
 
+      objectUrl: =>
+        return @BASE_UI_URL + @id
+
       examplesUrl: =>
-        return "#{@BASE_UI_URL}#{@_id}?action=examples:list"
+        return "#{@BASE_UI_URL}#{@id}?action=examples:list"
 
       examplesCsvUrl: () ->
-        return "#{@BASE_API_URL}#{@_id}/examples/action/csv/"
+        return "#{@BASE_API_URL}#{@id}/examples/action/csv/"
 
       avaragePrecisionUrl: =>
-        return "#{@BASE_UI_URL}#{@_id}/grouped_examples"
+        return "#{@BASE_UI_URL}#{@id}/grouped_examples"
 
       fullName: =>
         if @model? || @model_name
@@ -58,10 +61,10 @@ angular.module('app.testresults.model', ['app.config'])
 
         if origData.dataset?
           @dataset_obj = new DataSet(origData['dataset'])
-          @dataset = @dataset._id
+          @dataset = @dataset.id
 
       $run: (data) =>
-        if @_id?
+        if @id?
           throw new Error "You can run only new test"
 
         @$make_request(@BASE_API_URL, {}, 'POST', data)
@@ -81,9 +84,22 @@ angular.module('app.testresults.model', ['app.config'])
         @$make_all_request(TestResult.$get_api_url(model_id), resolver, opts)
 
       $get_confusion_matrix: (weight0, weight1) ->
-        url = "#{@BASE_API_URL}#{@_id}/action/confusion_matrix/"
+        url = "#{@BASE_API_URL}#{@id}/action/confusion_matrix/"
         data = {weight0: weight0, weight1: weight1}
         @$make_request(url, data, "GET", {})
+
+      @$get_examples_size: (opts) ->
+        url = TestResult.$get_api_url() + "action/examples_size/"
+
+        resolver = (resp, Model) ->
+          {
+            objects: (
+              new TestResult(_.extend(obj, {loaded: true})) \
+              for obj in eval(\
+                "resp.data.#{TestResult.prototype.API_FIELDNAME}s"))
+            _resp: resp
+          }
+        @$make_all_request(url, resolver, opts)
 
       $get_examples_csv: (show) ->
         url = @examplesCsvUrl() + '?show=' + show
@@ -91,7 +107,7 @@ angular.module('app.testresults.model', ['app.config'])
         TestResult.$make_all_request(url, resolver)
 
       $get_exports: () ->
-        url = "#{@BASE_API_URL}#{@_id}/action/exports/"
+        url = "#{@BASE_API_URL}#{@id}/action/exports/"
         @$make_request(url, {}, "GET", {})
 
     return TestResult

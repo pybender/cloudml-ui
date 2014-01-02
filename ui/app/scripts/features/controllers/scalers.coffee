@@ -20,7 +20,6 @@ angular.module('app.features.controllers.scalers', ['app.config', ])
     $scope.scalers = []
     Scaler.$loadAll(
       show: 'name'
-      is_predefined: 1
     ).then ((opts) ->
       for sc in opts.objects
         $scope.scalers.push sc.name
@@ -40,8 +39,6 @@ angular.module('app.features.controllers.scalers', ['app.config', ])
     $scope.ACTION = 'loading scalers'
     $scope.LIST_MODEL_NAME = Scaler.LIST_MODEL_NAME
 
-    $scope.filter_opts = {'is_predefined': 1}
-
     $scope.edit = (scalar) ->
       $scope.openDialog($dialog, scalar,
         'partials/features/scalers/edit_predefined.html',
@@ -49,7 +46,7 @@ angular.module('app.features.controllers.scalers', ['app.config', ])
         'scalars')
 
     $scope.add = () ->
-      scalar = new Scaler({'is_predefined': true})
+      scalar = new Scaler()
       $scope.openDialog($dialog, scalar,
         'partials/features/scalers/add_predefined.html',
         'ModelWithParamsEditDialogCtrl', 'modal', 'add scalar',

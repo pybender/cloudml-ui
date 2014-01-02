@@ -27,6 +27,45 @@ angular.module('app.directives', [
   }
 )
 
+.directive("fileDownload", [
+  '$compile'
+
+($compile) ->
+  return {
+    restrict: "E"
+    #templateUrl: 'partials/directives/file_downloader.html',
+    scope:{
+      data:'=data'
+      filename: '=filename'
+      text: '=text'
+      cssClass: '=cssClass'}
+    link: (scope, elm, attrs) ->
+      scope.$watch 'data', (val, oldVal) ->
+        if val?
+          blob = new Blob([val], {type: "application/json"})
+          url = URL.createObjectURL(blob)
+          elm.append($compile(
+            '<a class="btn btn-info" download="' + scope.filename + '"' +
+            'href="' + url + '">' + scope.text + '</a>'
+          )(scope))
+  }
+])
+
+# .directive('fileDownload',
+#   '$compile'
+#   ($compile) ->
+#     return {
+#       # restrict:'E',
+#       # scope:{ getUrlData:'&getData'}
+#       # # link: (scope, elm, attrs) ->
+#       # #   url = URL.createObjectURL(scope.getUrlData())
+#       # #   elm.append($compile(
+#       # #     '<a class="btn" download="data.json" href="' +
+#       # #     url + '">download</a>'
+#       # #   )(scope))
+#     }
+# )
+
 .directive('editable',
 
   () ->
@@ -415,6 +454,256 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
       )
   }
 )
+
+# Override the default input to update on blur
+.directive('ngModelOnblur', () ->
+  return {
+    restrict: 'A',
+    require: 'ngModel',
+    link: (scope, element, attributes, ctrl) ->
+      if (attributes.type == 'radio' || attributes.type == 'checkbox')
+        return
+      element.unbind('input').unbind('keydown').unbind('change')
+      element.bind 'blur', () ->
+        scope.$apply () ->
+          ctrl.$setViewValue element.val()
+  }
+)
+
+.directive('parametersEditor', ['$compile', ($compile) ->
+  return {
+    restrict: 'E',
+    require: '?ngModel',
+    link: (scope, element, attributes, ngModel) ->
+      TYPE_STRING = 'str'
+      TYPE_OBJECT = 'dict'
+      TYPE_TEXT = 'text'
+
+      scope.getType = (key, value) ->
+        if scope.isTopLevel() && scope.paramsConfig
+          _conf = scope.paramsConfig[key]
+          if _conf
+            _type = _conf.type
+          else
+            _type = TYPE_STRING
+          return _type or TYPE_STRING
+        return TYPE_STRING
+
+      scope.toggleCollapse = () ->
+        if (scope.collapsed)
+          scope.collapsed = false
+          scope.chevron = "icon-chevron-down"
+        else
+          scope.collapsed = true
+          scope.chevron = "icon-chevron-right"
+
+      scope.moveKey = (obj, key, newkey) ->
+        obj[newkey] = obj[key]
+        delete obj[key]
+
+      scope.deleteKey = (obj, key) ->
+        if scope.isRequired(key)
+          alert("Can't delete required parameter")
+          return
+        if(confirm('Delete "'+key+'" ?'))
+            delete obj[key]
+
+      scope.addItem = (obj) ->
+        # check input for key
+        if (scope.keyName == undefined || scope.keyName.length == 0)
+          alert("Please fill in a name")
+        else if (scope.keyName.indexOf("$") == 0)
+          alert("The name may not start with $ (the dollar sign)")
+        else if (scope.keyName.indexOf("_") == 0)
+          alert("The name may not start with _ (the underscore)")
+        else
+          if (obj[scope.keyName])
+            if(!confirm('Parameter is already set'))
+              return
+
+          # add a new item to object
+          _val = ""
+          if scope.valueName then _val = scope.valueName
+          obj[scope.keyName] = _val
+
+          # clean-up
+          scope.keyName = ""
+          scope.valueName = ""
+          scope.showAddKey = false
+
+      scope.isRequired = (key) ->
+        if scope.requiredParams && scope.isTopLevel()
+          _.indexOf(scope.requiredParams, key) > -1
+        else
+          false
+
+      scope.isTopLevel = () ->
+        _.indexOf(_(attributes).keys(), 'inner') < 0
+
+      scope.isEmpty = () ->
+        scope.isTopLevel() && _.isEmpty(scope.paramsEditorData)
+
+      if scope.isTopLevel()
+        scope.type = TYPE_OBJECT
+
+      # Template Generation
+      # recursion
+      switchTemplate =
+        '<span ng-switch on="getType(key, paramsEditorData[key])" >
+        <div ng-switch-when="dict">
+        <parameters-editor ng-model="$parent.paramsEditorData[key]"
+          inner="">
+        </parameters-editor>
+        </div>
+        <span ng-switch-when="text" class="jsonLiteral">
+          <textarea name="params" ng-model="paramsEditorData[key]"
+            class="span5"
+            rows="3"
+            ng-model-onblur>
+          </textarea>
+        </span>
+        <span ng-switch-default class="jsonLiteral">
+          <input type="text" ng-model="paramsEditorData[key]" ng-model-onblur
+            placeholder="Empty" class="input-medium" />
+        </span>
+        </span>'
+
+      # display either "plus button" or "key-value inputs"
+      addItemTemplate =
+        '<div ng-switch on="showAddKey" class="block"
+          ng-init="valueType=\'' + TYPE_STRING + '\'">
+          <span ng-switch-when="true">
+            <input placeholder="Name" type="text"
+              class="input-small addItemKeyInput"
+              ng-model="$parent.keyName" />
+            <span>: &nbsp;</span>
+            <input type="text" placeholder="Value"
+              class="input-medium addItemValueInput"
+              ng-model="$parent.valueName" />
+            <a title="add" ng-click="addItem(paramsEditorData)">
+              <i class="icon-ok"></i>
+            </a>
+            <a title="cancel" ng-click="$parent.showAddKey=false">
+              <i class="icon-remove"></i>
+            </a>
+          </span>
+          <span ng-switch-default>
+            <a
+              title="add new parameter"
+              ng-click="$parent.showAddKey = true">
+              <i class="icon-plus"></i></a>
+          </span>
+        </div>'
+
+      # start template
+      template = '
+      <i class="help_text" ng-show="isEmpty()">
+        There are no parameters to edit
+      </i>
+      <div class="jsonContents">
+      <span class="block" ng-hide="key.indexOf(\'_\') == 0"
+        ng-repeat="(key, value) in paramsEditorData">
+        <label
+          ng-show="isRequired(key)"
+          class="control-label" ng-bind="newkey"
+          ng-init="newkey=key"/>
+        <input ng-hide="isRequired(key)"
+          ng-disabled="isRequired(key)" class="input-small keyinput"
+          type="text"
+          ng-model="newkey"
+          ng-init="newkey=key"
+          ng-change="moveKey(paramsEditorData, key, newkey)"/>
+        <span>: &nbsp;</span>' + switchTemplate + '
+        <i ng-hide="isRequired(key)"
+            class="deleteKeyBtn1 icon-trash"
+            ng-click="deleteKey(paramsEditorData, key)">
+          </i>
+        <i ng-show="isRequired(key)" class="help_text">
+          {{ paramsConfig[key].help_text }}
+        </i>
+        </span><div ng-hide="isTopLevel()">' + addItemTemplate + '</div>
+      </div>'
+
+      ngModel.$formatters.unshift((viewValue) ->
+        if _.isObject(viewValue)
+          for key of viewValue
+            conf = scope.paramsConfig[key]
+            if not conf then continue
+            # Covert "chain" parameter to text
+            if conf.type == TYPE_TEXT && _.isObject(viewValue[key])
+              viewValue[key] = angular.toJson(viewValue[key])
+        return viewValue
+      )
+
+      render = () ->
+        newElement = angular.element(template)
+        $compile(newElement)(scope)
+        element.html(newElement)
+        if scope.isTopLevel()
+          scope.validate()
+
+      ngModel.$render = () ->
+        scope.paramsEditorData = ngModel.$viewValue
+        render()
+
+      scope.$watch 'paramsConfig', (newValue, oldValue) ->
+        render()
+
+      scope.$watch 'requiredParams', (newValue, oldValue) ->
+        render()
+
+      scope.$watch 'optionalParams', (newValue, oldValue) ->
+        render()
+
+      _validateStrParam = (key, data) ->
+        return data != ''
+
+      _validateObjectParam = (name, data) ->
+        # Hack: remove $$hashKey added by angular
+        data = angular.fromJson(angular.toJson(data))
+        if _.isEmpty(data) then return false
+        else
+          for key of data
+            if data[key] == '' then return false
+        return true
+
+      _validateJsonParam = (key, data) ->
+        if data == ''
+          return false
+        try
+          jQuery.parseJSON(data)
+          return true
+        catch e
+          return false
+
+      VALIDATORS = {}
+      VALIDATORS[TYPE_STRING] = _validateStrParam
+      VALIDATORS[TYPE_OBJECT] = _validateObjectParam
+      VALIDATORS[TYPE_TEXT] = _validateJsonParam
+
+      scope.validate = () ->
+        if !scope.paramsEditorData then return
+        errs = []
+
+        for key of scope.paramsEditorData
+          data = scope.paramsEditorData[key]
+          conf = scope.paramsConfig[key]
+          if not conf
+            continue
+          if not scope.isRequired(key)
+            continue
+          validator = VALIDATORS[conf.type]
+          if !validator(key, data)
+              errs.push key
+
+        ngModel.$setValidity('params', errs.length <= 0)
+
+      if scope.isTopLevel()
+        scope.$watch 'paramsEditorData', (newValue, oldValue) ->
+          scope.validate()
+        , true
+  }
+])
 
 # Directives for creating plots
 

@@ -128,21 +128,31 @@ class Test(Command):
             argv.append('--tests')
             argv.append(tests)
         try:
+            logging.debug("Running nosetests with args: %s", argv)
             nose.run(argv=argv)
         finally:
+            if app.config['SQLALCHEMY_DATABASE_URI'].endswith('test_cloudml'):
+                logging.debug("drop tables (%s)", app.config['SQLALCHEMY_DATABASE_URI'])
+                app.sql_db.session.remove()
+                app.sql_db.drop_all()
+
             if app.db.name == 'cloudml-test-db':
+                logging.debug("remove mongo collections from db: %s", app.db.name)
                 for name in app.db.collection_names():
-                    model = getattr(app.db, name)
-                    model.collection.remove()
+                    if not name.startswith('system.'):
+                        model = getattr(app.db, name)
+                        model.drop()
 
 
 class Coverage(Command):
     """Build test code coverage report."""
 
     def run(self):
-        # import nose
+        import nose
+        app.config.from_object('api.test_config')
+        app.init_db()
         print 'Collecting coverage info...'
-        output_dir = os.path.join('api', 'test', 'cover')
+        output_dir = 'api/test/cover'
         # TODO: why does nose.run show different results?
         # nose.run(argv=[
         #     '',
@@ -150,21 +160,29 @@ class Coverage(Command):
         #     '--cover-html-dir={}'.format(output_dir),
         #     '--cover-package=api'])
         args = [
-            #'with-coverage',
-            'with-xcoverage',
+            'with-coverage',
+            # 'with-xcoverage',
             'cover-erase',
             'cover-html',
             'cover-package=api',
-            'with-xunit',
-            "xunit-file='{0}/report.xml'".format(output_dir),
-            "cover-html-dir='{0}'".format(output_dir),
-            "xcoverage-file='{0}/coverage.xml'".format(output_dir),
+            # 'with-xunit',
+            # "xunit-file={0}/report.xml".format(output_dir),
+            "cover-html-dir={0}".format(output_dir),
+            #"xcoverage-file={0}/coverage.xml".format(output_dir),
         ]
-        os.system('nosetests --{0}'.format(' --'.join(args)))
+        # os.system('nosetests --{0}'.format(' --'.join(args)))
+        nose.run(argv=['', ] + ['--{}'.format(arg) for arg in args])
         report_path = 'file://' + os.path.join(
             os.path.abspath(output_dir), 'index.html')
         print 'Coverage html report has been generated at {}'.format(
             report_path)
+
+
+class RemPycFiles(Command):
+    CMD = 'find . -name "*.pyc" -exec rm -rf {} \;'
+
+    def run(self):
+        os.system(self.CMD)
 
 
 class RemObsoluteMongoKeys(Command):
@@ -320,6 +338,29 @@ class RemObsoluteMongoKeys(Command):
         return err_count
 
 
+class CreateDbTables(Command):
+    """Create db tables"""
+
+    def run(self, **kwargs):
+        app.sql_db.create_all()
+        print 'Done.'
+
+
+class DropDbTables(Command):
+    """Drop db tables"""
+
+    def run(self, **kwargs):
+        app.sql_db.drop_all()
+        print 'Dropped.'
+
+
+class MigrateToPosgresql(Command):
+    def run(self, **kwargs):
+        from api.mongo.migrator import migrate as pmigrate
+        pmigrate()
+        print 'Done.'
+
+
 manager = Manager(app)
 manager.add_command("celeryd", Celeryd())
 manager.add_command("celeryw", Celeryw())
@@ -331,6 +372,10 @@ manager.add_command('migrate_old', MigrateOld())
 manager.add_command('run', Run())
 manager.add_command('fix_mongo', RemObsoluteMongoKeys())
 manager.add_command("shell", Shell(make_context=_make_context))
+manager.add_command("create_db_tables", CreateDbTables())
+manager.add_command("drop_db_tables", DropDbTables())
+manager.add_command("migrate_to_postgresql", MigrateToPosgresql())
+manager.add_command("rem_pyc", RemPycFiles())
 
 if __name__ == "__main__":
     manager.run()

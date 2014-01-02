@@ -1,19 +1,18 @@
 <div ng-controller="BaseListCtrl" ng-init="init(true, 'logs')">
-    <div class="row">
-        <div class="span8">
-            <form class="form-inline well">
-            <label>Level:</label>
-            <select ng-options="level for level in log_levels"
-                ng-model="log_level" ng-change="setLogLevel()"></select>
-            </form>
-        </div>
-    </div>
-    <div class="row">
-        <div class="span8">
-            <p ng-repeat="msg in objects">
-              <ng-include src="'/partials/logmessages/item.html'"></ng-include>
-            </p>
-            <a ng-show="has_next" class="btn" ng-click="loadMore()">Load More...</a>
-        </div>
-    </div>
+  <div class="row">
+      <form class="span-5 form-inline">
+        <b>Level:</b>
+          <select ng-options="level for level in log_levels"
+        ng-model="log_level" ng-change="setLogLevel()"></select>
+      </form>
+      <div class="pull-right">
+          <button class="btn" ng-click="refresh()"><i class="icon-refresh"></i></button>
+      </div>
+  </div>
+  <div>
+    <p ng-repeat="msg in objects">
+      <ng-include src="'/partials/logmessages/item.html'"></ng-include>
+    </p>
+    <a ng-show="has_next" class="btn" ng-click="loadMore()">Load More...</a>
+  </div>
 </div>

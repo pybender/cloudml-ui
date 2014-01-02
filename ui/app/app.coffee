@@ -24,6 +24,8 @@ App = angular.module('app', [
   'app.reports.controllers'
   'app.importhandlers.model'
   'app.importhandlers.controllers'
+  'app.importhandlers.controllers.datasources'
+  'app.importhandlers.controllers.handlers'
   'app.datasets.model'
   'app.datasets.controllers'
   'app.weights.model'
@@ -56,10 +58,9 @@ App.config([
       controller: "DashboardCtrl"
       templateUrl: '/partials/dashboard.html'
     })
-
     .when('/models', {
-      controller: "ModelListCtrl"
       templateUrl: '/partials/models/model_list.html'
+      reloadOnSearch: false
     })
     .when('/models/:id', {
       controller: 'ModelDetailsCtrl'
@@ -114,6 +115,14 @@ App.config([
       templateUrl: '/partials/import_handler/details.html'
       reloadOnSearch: false
     })
+    .when('/importhandlers/:id/query/add', {
+      controller: 'AddImportHandlerQueryCtrl'
+      templateUrl: '/partials/import_handler/add_query.html'
+    })
+    .when('/importhandlers/:id/query/:num/items/add', {
+      controller: 'AddImportHandlerQueryItemCtrl'
+      templateUrl: '/partials/import_handler/add_query_item.html'
+    })
     .when('/importhandlers/:handler_id/datasets', {
       redirectTo: (params, loc) ->
         return '/importhandlers/' + params.handler_id + '?action=dataset:list'
@@ -161,6 +170,14 @@ App.config([
       controller: "FeatureEditCtrl"
       templateUrl: '/partials/features/items/edit.html'
     })
+    .when('/models/:model_id/features', {
+      redirectTo: (params, loc) ->
+        return 'models/' + params.model_id + '?action=model:details'
+    })
+    .when('/models/:model_id/features/:set_id', {
+      redirectTo: (params, loc) ->
+        return 'models/' + params.model_id + '?action=model:details'
+    })
     # Feature set list (now used only for debug)
     # .when('/features/sets', {
     #   controller: "FeaturesSetListCtrl"
@@ -187,6 +204,10 @@ App.config([
       controller: "ScalersListCtrl"
       templateUrl: '/partials/features/scalers/list.html'
     })
+    .when('/predefined/datasources', {
+      controller: "DataSourceListCtrl"
+      templateUrl: '/partials/import_handler/datasource/list.html'
+    })
 
     # Catch all
     .otherwise({redirectTo: '/models'})
@@ -199,6 +220,7 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
          '$cookieStore'
 ($rootScope, $routeParams, $location, settings, $auth, $cookieStore) ->
   $rootScope.Math = window.Math
+  $rootScope.Object = Object
   $rootScope.loadingCount = 0
 
   # this will be available to all scope variables

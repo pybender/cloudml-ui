@@ -1,5 +1,5 @@
 {
-  "target-schema":"bestmatch",
+  "target_schema":"bestmatch",
   "datasource":[
     {
       "name":"odw",
@@ -17,32 +17,32 @@
       "items": [
         {
           "source": "application",
-          "process-as": "string",
-          "is-required": true,
-          "target-features": [
+          "process_as": "string",
+          "is_required": true,
+          "target_features": [
             { "name": "application_id" }
           ]
         },
         {
           "source": "opening",
-          "process-as": "string",
-          "is-required": true,
-          "target-features": [
+          "process_as": "string",
+          "is_required": true,
+          "target_features": [
             { "name": "opening_id" }
           ]
         },
         {
           "source": "hire_outcome",
-          "process-as": "string",
-          "is-required": true,
-          "target-features": [
+          "process_as": "string",
+          "is_required": true,
+          "target_features": [
             { "name": "hire_outcome" }
           ]
         },
         { "source": "employer_info",
-          "is-required": true,
-          "process-as": "json",
-          "target-features": [
+          "is_required": true,
+          "process_as": "json",
+          "target_features": [
             { "name": "employer.op_timezone", "jsonpath": "$.op_timezone"},
             { "name": "employer.op_country_tz", "jsonpath": "$.op_country_tz" },
             { "name": "employer.op_tot_jobs_filled", "jsonpath": "$.op_tot_jobs_filled" },
@@ -50,11 +50,11 @@
           ]
         },
         { "source": "contractor_info",
-          "is-required": true,
-          "process-as": "json",
-          "target-features": [
-            { "name": "contractor.skills", "jsonpath": "$.skills.*.skl_name", "to-csv": true},
-            { "name": "tsexams", "jsonpath": "$.tsexams", "key-path": "$.*.ts_name", "value-path": "$.*.ts_score" },
+          "is_required": true,
+          "process_as": "json",
+          "target_features": [
+            { "name": "contractor.skills", "jsonpath": "$.skills.*.skl_name", "to_csv": true},
+            { "name": "tsexams", "jsonpath": "$.tsexams", "key_path": "$.*.ts_name", "value_path": "$.*.ts_score" },
             { "name": "contractor.dev_adj_score_recent", "jsonpath": "$.dev_adj_score_recent"},
             { "name": "contractor.dev_is_looking", "jsonpath": "$.dev_is_looking" },
             { "name": "contractor.dev_recent_rank_percentile", "jsonpath": "$.dev_recent_rank_percentile" },
@@ -87,8 +87,8 @@
           ]
         },
         {
-          "process-as": "composite",
-          "target-features": [
+          "process_as": "composite",
+          "target_features": [
             { "name": "country_pair", "expression": {"type": "string", "value": "%(employer.country)s,%(contractor.dev_country)s"}}
           ]
         }

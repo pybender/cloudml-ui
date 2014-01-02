@@ -24,7 +24,7 @@ created_by'
 
     $scope.init = (model) ->
       $scope.model = model
-      $scope.kwargs = {'model_id': model._id}
+      $scope.kwargs = {'model_id': model.id}
 ])
 
 .controller('TestDialogController', [
@@ -65,7 +65,7 @@ created_by'
 
     $scope.start = (result) ->
       data = $scope.getData()
-      $scope.test = new Test({model_id: $scope.model._id})
+      $scope.test = new Test({model_id: $scope.model.id})
       $scope.test.$run(data).then (->
         dialog.close()
         $location.path $scope.test.objectUrl()
@@ -82,6 +82,11 @@ created_by'
               val = (field['text'] for field in val)
             data[key] = val
       return data
+
+    $scope.renderExampleFields = () ->
+      dict = $scope.formElements[$scope.SETTINGS]
+      if dict['examples_placement'] == 'Mongo DB'
+        dict['examples_fields'] = $scope.test_handler_fields
 ])
 
 .controller('DeleteTestCtrl', [
@@ -125,7 +130,7 @@ without test id and model id"
 
     $scope.test = new Test({
       model_id: $routeParams.model_id,
-      _id: $routeParams.id
+      id: $routeParams.id
     })
 
   $scope.load = (fields, section, callback) ->
@@ -155,37 +160,30 @@ without test id and model id"
         when 'about'
           extra_fields = 'classes_set,created_on,parameters,error,
 examples_count,dataset,memory_usage,created_by,examples_placement,
-examples_fields'
+examples_fields,examples_size'
         when 'metrics'
-          extra_fields = 'accuracy,metrics.precision_recall_curve,
-metrics.roc_curve,metrics.roc_auc'
+          extra_fields = 'accuracy,metrics'
           cb = () =>
             $scope.rocCurve = {'ROC curve': $scope.test.metrics.roc_curve}
             pr = $scope.test.metrics.precision_recall_curve
             $scope.prCurve = {'Precision-Recall curve': [pr[1], pr[0]]}
                
-        when 'matrix' then extra_fields = 'metrics.confusion_matrix,model'
+        when 'matrix' then extra_fields = 'metrics,
+confusion_matrix_calculations,model'
 
       if 'main' in $scope.LOADED_SECTIONS
         # Do not need load main fields -> only extra
         if extra_fields != ''
           $scope.load(extra_fields, name, cb)
       else
-        $scope.load(extra_fields + ',' + Test.MAIN_FIELDS, name, cb)
+        show = extra_fields + ',examples_placement,' + Test.MAIN_FIELDS
+        $scope.load(show, name, cb)
         $scope.LOADED_SECTIONS.push 'main'
 
   $scope.downloadCsvResults = () ->
     $scope.openDialog($dialog, $scope.test,
         'partials/datasets/csv_list_popup.html',
         'CsvDownloadCtrl', 'modal')
-
-  $scope.confusion_matrix_weights = {w0: 1, w1: 1, error: undefined}
-
-  $scope.recalculateConfusionMatrix = (weight0, weight1) ->
-    $scope.test.$get_confusion_matrix(weight0, weight1).then((resp) ->
-      $scope.test.metrics.confusion_matrix = resp.data.confusion_matrix
-      $scope.confusion_matrix_weights.error = resp.data.error
-    )
 
   $scope.initSections($scope.goSection, defaultAction='metrics:accuracy')
 ])
@@ -236,7 +234,43 @@ metrics.roc_curve,metrics.roc_auc'
 
     $scope.$on('exportsChanged', () ->
       window.setTimeout(
-        () ->$scope.reload()
+        () -> $scope.reload()
         1000)
     )
+])
+
+.controller('TestConfusionMatrixCtrl', [
+  '$scope'
+
+  ($scope) ->
+    $scope.open_calc_id = null
+    $scope.confusion_matrix_weights = {w0: 1, w1: 1, error: undefined}
+
+    $scope.init = (test) =>
+      $scope.test = test
+
+    $scope.recalculate = (weight0, weight1) ->
+      $scope.test.$get_confusion_matrix(weight0, weight1).then((resp) ->
+        $scope.confusion_matrix_weights.error = resp.data.error
+        window.setTimeout(
+          () -> $scope.reload()
+          100)
+      )
+
+    $scope.showResult = (id) =>
+      if $scope.open_calc_id == id
+        $scope.open_calc_id = null
+      else
+        $scope.open_calc_id = id
+
+    $scope.reload = () ->
+      $scope.test.$load({show: 'confusion_matrix_calculations'}).then((resp) ->
+        statuses = []
+        statuses.push c.status for c in ($scope.test
+        .confusion_matrix_calculations)
+        if 'In Progress' in statuses
+          window.setTimeout(
+            () -> $scope.reload()
+            1000)
+      )
 ])

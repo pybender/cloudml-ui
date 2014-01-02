@@ -20,7 +20,7 @@
         <span ng-repeat="item in data_filters">
           <select class="input-small" ng-model="data_filters[$index].name">
             <option value=''>-- select field name --</option>
-            <option ng-repeat="field in fields" value="data_input.{{ field }}" ng-selected="'data_input.' + field==item.name">{{ field }}</option>
+            <option ng-repeat="field in fields" value="data_input->>{{ field }}" ng-selected="'data_input->>' + field==item.name">{{ field }}</option>
           </select> : 
           <input type="text" value="{{ item.value }}" ng-model="data_filters[$index].value" />
           &nbsp;
@@ -39,10 +39,10 @@
     <table class="table table-striped ordered">
         <thead>
           <tr>
-            <th ng-class="{active: sort_by == 'id'}" ng-click="sort('id')">
+            <th ng-class="{active: sort_by == 'example_id'}" ng-click="sort('example_id')">
                 Id
-                <i ng-show="sort_by == 'id' && !asc_order" class="icon-arrow-down"></i>
-                <i ng-show="sort_by == 'id' && asc_order" class="icon-arrow-up"></i>
+                <i ng-show="sort_by == 'example_id' && !asc_order" class="icon-arrow-down"></i>
+                <i ng-show="sort_by == 'example_id' && asc_order" class="icon-arrow-up"></i>
             </th>
             <th ng-class="{active: sort_by == 'name'}" ng-click="sort('name')">
                 Name
@@ -73,7 +73,7 @@
         </tbody>
         <tbody ng-show="!loading_state">
           <tr ng-repeat="data in objects | filter:search" ng-class="{success : data.label==data.pred_label, error : !(data.label==data.pred_label)}">
-            <td><a href="#{{ data.objectUrl() }}">{{ data.id }}</a></td>
+            <td><a href="#{{ data.objectUrl() }}">{{ data.example_id }}</a></td>
             <td><a href="#{{ data.objectUrl() }}">{{ data.name }}</a></td>
             <td><span>{{ data.label }}</span></td>
             <td><span>{{ data.pred_label }}</span></td>
