@@ -119,7 +119,7 @@ class DataSetData(DataSet):
         error = ""
         created_on = "2013-04-19 14:37:23.145000"
         updated_on = "2013-04-19 14:37:23.145000"
-        data = "5270dd3a106a6c1631000000.json"
+        data = "8a7d1ae26efc11e395b420107a86d035.json"
         import_params = '{}'
         on_s3 = False
         compress = True
@@ -129,6 +129,7 @@ class DataSetData(DataSet):
         time = 200
         data_fields = ["employer.country"]
         format = "json"
+        uid = '8a7d1ae26efc11e395b420107a86d035'
         import_handler_id = ImportHandlerData.import_handler_01.ref('id')
 
     class dataset_02:
@@ -137,7 +138,7 @@ class DataSetData(DataSet):
         error = ""
         created_on = "2013-04-19 14:37:23.145000"
         updated_on = "2013-04-19 14:37:23.145000"
-        data = "5270dd3a106a6c1631000000.json"
+        data = "8a7d1ae26efc11e395b420107a86d036.json"
         import_params = '{}'
         on_s3 = False
         compress = True
@@ -146,6 +147,7 @@ class DataSetData(DataSet):
         records_count = 100
         time = 200
         format = "json"
+        uid = '8a7d1ae26efc11e395b420107a86d036'
         import_handler_id = ImportHandlerData.import_handler_01.ref('id')
 
     class dataset_03:
@@ -154,7 +156,7 @@ class DataSetData(DataSet):
         error = ""
         created_on = "2013-04-19 14:37:23.145000"
         updated_on = "2013-04-19 14:37:23.145000"
-        data = "5270dd3a106a6c1631000000.csv"
+        data = "8a7d1ae26efc11e395b420107a86d037.csv"
         import_params = '{}'
         on_s3 = False
         compress = True
@@ -163,6 +165,7 @@ class DataSetData(DataSet):
         records_count = 100
         time = 200
         format = "csv"
+        uid = '8a7d1ae26efc11e395b420107a86d037'
         import_handler_id = ImportHandlerData.import_handler_01.ref('id')
 
 

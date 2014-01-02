@@ -1,10 +1,12 @@
 import json
 import logging
-from boto.exception import S3ResponseError
 import os
+import StringIO
+import uuid
 from os.path import join, exists
 from os import makedirs
-import StringIO
+
+from boto.exception import S3ResponseError
 from sqlalchemy.orm import relationship, deferred, backref, validates
 from sqlalchemy.dialects import postgresql
 
@@ -212,13 +214,19 @@ class DataSet(db.Model, BaseModel):
     time = db.Column(db.Integer)
     data_fields = db.Column(postgresql.ARRAY(db.String))
     format = db.Column(db.String(10))
+    uid = db.Column(db.String(200))
+
+    def set_uid(self):
+        if not self.uid:
+            self.uid = uuid.uuid1().hex
 
     def get_s3_download_url(self, expires_in=3600):
         helper = AmazonS3Helper()
-        return helper.get_download_url(str(self.id), expires_in)
+        return helper.get_download_url(self.uid, expires_in)
 
     def set_file_path(self):
-        data = '%s.%s' % (self.id, 'gz' if self.compress else 'json')
+        self.set_uid()
+        data = '%s.%s' % (self.uid, 'gz' if self.compress else 'json')
         self.data = data
         path = app.config['DATA_FOLDER']
         if not exists(path):
@@ -258,14 +266,15 @@ class DataSet(db.Model, BaseModel):
 
     def load_from_s3(self):
         helper = AmazonS3Helper()
-        return helper.load_key(str(self.id))
+        return helper.load_key(self.uid)
 
     def save_to_s3(self):
         meta = {'handler': self.import_handler_id,
                 'dataset': self.name,
                 'params': str(self.import_params)}
+        self.set_uid()
         helper = AmazonS3Helper()
-        helper.save_gz_file(self.id, self.filename, meta)
+        helper.save_gz_file(self.uid, self.filename, meta)
         helper.close()
         self.on_s3 = True
         self.save()
@@ -280,7 +289,6 @@ class DataSet(db.Model, BaseModel):
         # Stop task
         # self.terminate_task()  # TODO
         filename = self.filename
-        ds_id = self.id
         on_s3 = self.on_s3
 
         super(DataSet, self).delete()
@@ -295,7 +303,7 @@ class DataSet(db.Model, BaseModel):
             from api.amazon_utils import AmazonS3Helper
             helper = AmazonS3Helper()
             try:
-                helper.delete_key(str(ds_id))
+                helper.delete_key(self.uid)
             except S3ResponseError as e:
                 logging.exception(str(e))
 
