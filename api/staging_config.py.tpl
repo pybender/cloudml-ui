@@ -66,11 +66,7 @@ LOGGING = {
         },
     },
     'loggers': {
-<<<<<<< HEAD
         'root': {
-=======
-        '': {
->>>>>>> MATCH-1364_getting_rid_of_gridfs
             'handlers': ['console'],
             'level': 'INFO',
             'propagate': True,
@@ -82,7 +78,3 @@ LOGGING = {
         },
     }
 }
-<<<<<<< HEAD
-
-=======
->>>>>>> MATCH-1364_getting_rid_of_gridfs
