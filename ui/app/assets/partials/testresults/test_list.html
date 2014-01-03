@@ -10,7 +10,14 @@
         <th />
       </tr>
   </thead>
-  <tbody>
+  <tbody ng-show="objects.length == 0">
+    <tr>
+      <td colspan="7">
+        <alert-message ng-show="objects.length == 0" class="alert-info" msg="No tests found"></alert-message>
+      </td>
+    </tr>
+  </tbody>
+  <tbody ng-hide="objects.length == 0">
     <tr ng-repeat="test in objects" ng-class="{error : test.status=='Error', warning : test.status=='In Progress', success : test.status =='Completed'}">
       <td><a href="#{{ test.objectUrl() }}">{{ test.name }}</a></td>
       <td title="{{ test.error }}">{{ test.status }}</td>

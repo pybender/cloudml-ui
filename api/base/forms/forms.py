@@ -76,7 +76,7 @@ class BaseForm(InternalForm):
             if not self.group_chooser:
                 raise ValueError('Specify group_chooser')
 
-        if obj:
+        if obj is not None:
             self.obj = obj
             if self.NO_REQUIRED_FOR_EDIT:
                 self.no_required = True
@@ -92,6 +92,10 @@ class BaseForm(InternalForm):
         # Setting extra parameters
         for key, val in kwargs.iteritems():
             setattr(self, key, val)
+
+    def append_data(self, key, val):
+        self.data = self.data or {}
+        self.data[key] = val
 
     def set_data(self, data):
         self.data = data or {}
@@ -123,7 +127,7 @@ class BaseForm(InternalForm):
         return not bool(self.errors)
 
     def clean(self):
-        if not self.obj and self.model_name:
+        if self.obj is None and self.model_name:
             from api import models as all_models
             callable_model = getattr(all_models, self.model_name)
             self.obj = callable_model()
@@ -205,7 +209,7 @@ fields %s is required' % ', '.join(fields))
                 except AttributeError:
                     pass
 
-        self.obj.updated_on = datetime.now()
+        self.obj.updated_on = str(datetime.now())
         if commit:
             self.obj.save()
 

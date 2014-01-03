@@ -143,7 +143,7 @@ class FeatureTransformersTests(FeatureItemsTestMixin):
         data = {'name': 'transformer #1',
                 'type': 'Count',
                 'predefined_selected': 'true',
-                'feature_id': 1}
+                'feature_id': self.feature.id}
         _check(data, errors={'transformer': 'transformer is required'})
 
         transformer = PredefinedTransformer.query.all()[0]

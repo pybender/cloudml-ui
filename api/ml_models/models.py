@@ -4,8 +4,8 @@ import json
 from sqlalchemy.orm import relationship, deferred, backref
 from sqlalchemy.dialects import postgresql
 
-from api.base.models import db, BaseModel, BaseMixin, JSONType, GridfsFile
-from api.models import LogMessage
+from api.base.models import db, BaseModel, BaseMixin, JSONType, S3File
+from api.logs.models import LogMessage
 
 
 class Model(db.Model, BaseModel):
@@ -32,7 +32,10 @@ class Model(db.Model, BaseModel):
     name = db.Column(db.String(200), nullable=False, unique=True)
     status = db.Column(db.Enum(*STATUSES, name='model_statuses'),
                        default=STATUS_NEW)
-    trained_by = db.Column(JSONType)
+    trained_by_id = db.Column(db.ForeignKey('user.id', ondelete='SET NULL'))
+
+    trained_by = relationship("User", foreign_keys='Model.trained_by_id')
+
     error = db.Column(db.String(300))
 
     comparable = db.Column(db.Boolean)
@@ -45,7 +48,6 @@ class Model(db.Model, BaseModel):
     spot_instance_request_id = db.Column(db.String(100))
     memory_usage = db.Column(db.Integer)
     train_records_count = db.Column(db.Integer)
-    current_task_id = db.Column(db.String(100))
     training_time = db.Column(db.Integer)
 
     tags = relationship('Tag', secondary=lambda: tags_table, backref='models')
@@ -71,7 +73,10 @@ class Model(db.Model, BaseModel):
 
     classifier = deferred(db.Column(JSONType))
 
-    trainer = deferred(db.Column(GridfsFile))
+    trainer = deferred(db.Column(S3File))
+
+    def __repr__(self):
+        return "<Model {0}>".format(self.name)
 
     def set_error(self, error, commit=True):
         self.error = str(error)
@@ -82,8 +87,8 @@ class Model(db.Model, BaseModel):
     def get_trainer(self, loaded=True):
         if loaded:
             from core.trainer.store import TrainerStorage
-            return TrainerStorage.loads(self.trainer.read())
-        return self.trainer.read()
+            return TrainerStorage.loads(self.trainer)
+        return self.trainer
 
     @property
     def dataset(self):

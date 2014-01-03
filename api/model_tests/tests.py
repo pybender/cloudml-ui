@@ -2,9 +2,10 @@
 import json
 from mock import patch, MagicMock, Mock
 from moto import mock_s3
+from sqlalchemy import desc
 
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS
-from views import TestsResource, TestExampleResource
+from views import TestResource, TestExampleResource
 from models import TestResult, TestExample
 from api.ml_models.models import Model
 from api.ml_models.fixtures import ModelData, WeightData
@@ -12,18 +13,20 @@ from api.import_handlers.fixtures import ImportHandlerData, DataSetData
 from api.import_handlers.models import DataSet
 from api.instances.models import Instance
 from api.instances.fixtures import InstanceData
+from api.async_tasks.models import AsyncTask
 from tasks import run_test
 from api.base.exceptions import InvalidOperationError
 from fixtures import TestResultData, TestExampleData
+from api.features.fixtures import FeatureSetData, FeatureData
 
 
 class TestResourceTests(BaseDbTestCase, TestChecksMixin):
     """ Tests of the Test API. """
     BASE_URL = '/cloudml/models/{0!s}/tests/'
-    RESOURCE = TestsResource
+    RESOURCE = TestResource
     Model = TestResult
-    datasets = [InstanceData, ImportHandlerData, DataSetData,
-                ModelData, TestResultData, TestExampleData]
+    datasets = [FeatureData, FeatureSetData, InstanceData, ImportHandlerData,
+                DataSetData, ModelData, TestResultData, TestExampleData]
 
     def setUp(self):
         super(TestResourceTests, self).setUp()
@@ -204,19 +207,21 @@ class TestExampleResourceTests(BaseDbTestCase, TestChecksMixin):
     """ Tests of the Test Examples API. """
     RESOURCE = TestExampleResource
     Model = TestExample
-    datasets = [ImportHandlerData, DataSetData, ModelData, WeightData,
+    datasets = [FeatureData, FeatureSetData, ImportHandlerData,
+                DataSetData, ModelData, WeightData,
                 TestResultData, TestExampleData]
 
     def setUp(self):
         super(TestExampleResourceTests, self).setUp()
         self.test = TestResult.query.filter_by(
-            name=TestResultData.test_01.name).first()
+            name=TestResultData.test_01.name).one()
         self.model = self.test.model
-        self.obj = self.test.examples[0]
-
         self.BASE_URL = '/cloudml/models/{0!s}/tests/{1!s}/examples/'.format(
             self.model.id, self.test.id
         )
+
+        # TODO: investigate why does it help
+        self.db.session.expire_all()
 
     def test_list(self):
         self.check_list(
@@ -226,7 +231,8 @@ class TestExampleResourceTests(BaseDbTestCase, TestChecksMixin):
         url = '{0}?{1}&{2}'.format(
             self.BASE_URL,
             'action=examples:list',
-            'data_input.employer->country=United Kingdom'
+            'data_input.employer->country=United Kingdom',
+            'show=id,name,label,pred_label,title,prob,example_id'
         )
         resp = self.client.get(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, 200)
@@ -242,7 +248,8 @@ class TestExampleResourceTests(BaseDbTestCase, TestChecksMixin):
 
         mock_get_vect_data.return_value = [0.123, 0.0] * 500
 
-        url = self._get_url(id=self.obj.id, show='id,name,weighted_data_input')
+        obj = self.test.examples[0]
+        url = self._get_url(id=obj.id, show='id,name,weighted_data_input')
         resp = self.client.get(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, 200)
         self.assertTrue(mock_get_trainer.called)
@@ -261,9 +268,9 @@ class TestExampleResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(data['field_name'], 'opening_id')
         item = data['test_examples']['items'][0]
         self.assertEquals(
-            TestExample.query.filter_by(test_result=self.test).count(), 5,
+            TestExample.query.filter_by(test_result=self.test).count(), 4,
             "Fixtures was changed")
-        self.assertEquals(item['count'], 5)
+        self.assertEquals(item['count'], 4)
         self.assertEquals(item['group_by_field'], '201913099')
         self.assertTrue(item['avp'] > 0)
         self.assertTrue(data['mavp'] > 0)
@@ -297,48 +304,47 @@ class TasksTests(BaseDbTestCase):
             test_result=self.test).count()
 
     def _set_probabilities(self, probabilities):
-        for example in self.db.TestExample.find({'test_name': self.TEST_NAME}):
-            label, prob = probabilities[example['id']]
-            example['test_id'] = str(self.test._id)
-            example['label'] = label
-            example['prob'] = prob
-            example.save()
+        for example in TestExample.query.all():
+            params = probabilities.get(example.name)
+            if params:
+                label, prob = params
+                example.test = self.test
+                example.label = label
+                example.prob = prob
+                example.save()
 
     def test_calculate_confusion_matrix(self):
         from tasks import calculate_confusion_matrix
 
         def _assertMatrix(w0, w1, expected):
-            result = calculate_confusion_matrix(self.test._id, w0, w1)
+            result = calculate_confusion_matrix(self.test.id, w0, w1)
+            result = zip(*result)[-1]
             self.assertEquals(result, expected)
             self.assertEquals(self.examples_count, sum([sum(row) for row in result]))
 
         self._set_probabilities({
-            '1':  ('0', [0.3, 0.7]),
-            '1a': ('0', [0.9, 0.1]),
-            '2':  ('1', [0.3, 0.7]),
-            '4':  ('1', [0.2, 0.8]),
+            'Some Example #1-1':  ('0', [0.3, 0.7]),
+            'Some Example #1-2': ('0', [0.9, 0.1]),
+            'Some Example #1-3':  ('1', [0.3, 0.7]),
+            'Some OtherModel Example #1-1':  ('1', [0.2, 0.8]),
         })
 
-        _assertMatrix(1, 1, [[1, 1], [0, 2]])
-        _assertMatrix(0.5, 0.5, [[1, 1], [0, 2]])
+        _assertMatrix(1, 1, ([1, 1], [0, 2]))
+        _assertMatrix(0.5, 0.5, ([1, 1], [0, 2]))
 
-        _assertMatrix(1, 10, [[0, 2], [0, 2]])
-        _assertMatrix(1, 100, [[0, 2], [0, 2]])
-        _assertMatrix(10, 1, [[2, 0], [2, 0]])
-        _assertMatrix(100, 1, [[2, 0], [2, 0]])
-        _assertMatrix(0, 1, [[0, 2], [0, 2]])
-        _assertMatrix(1, 0, [[2, 0], [2, 0]])
-        _assertMatrix(1, 3, [[1, 1], [0, 2]])
-        _assertMatrix(3, 1, [[2, 0], [1, 1]])
+        _assertMatrix(1, 10, ([0, 2], [0, 2]))
+        _assertMatrix(1, 100, ([0, 2], [0, 2]))
+        _assertMatrix(10, 1, ([2, 0], [2, 0]))
+        _assertMatrix(100, 1, ([2, 0], [2, 0]))
+        _assertMatrix(0, 1, ([0, 2], [0, 2]))
+        _assertMatrix(1, 0, ([2, 0], [2, 0]))
+        _assertMatrix(1, 3, ([1, 1], [0, 2]))
+        _assertMatrix(3, 1, ([2, 0], [1, 1]))
 
-        self.assertRaises(ValueError, calculate_confusion_matrix, self.test._id, 0, 0)
-        self.assertRaises(ValueError, calculate_confusion_matrix, self.test._id, -1, 1)
-        self.assertRaises(ValueError, calculate_confusion_matrix, self.test._id, 1, -1)
-        self.assertRaises(ValueError, calculate_confusion_matrix, ObjectId(), 1, 1)
-
-        self.test.model_id = str(ObjectId())
-        self.test.save()
-        self.assertRaises(ValueError, calculate_confusion_matrix, self.test._id, 2, 1)
+        self.assertRaises(ValueError, calculate_confusion_matrix, self.test.id, 0, 0)
+        self.assertRaises(ValueError, calculate_confusion_matrix, self.test.id, -1, 1)
+        self.assertRaises(ValueError, calculate_confusion_matrix, self.test.id, 1, -1)
+        self.assertRaises(ValueError, calculate_confusion_matrix, 5646546, 1, 1)
 
     @mock_s3
     @patch('api.models.DataSet.get_data_stream')
@@ -346,25 +352,16 @@ class TasksTests(BaseDbTestCase):
         from tasks import get_csv_results
 
         fields = ['label', 'pred_label', 'prob']
-        url = get_csv_results(self.test.model_id, self.test.id, fields)
-
-        test = Test.find_one({'name': self.TEST_NAME})
+        url = get_csv_results.delay(self.test.model.id, self.test.id, fields).get()
 
         self.assertTrue(url)
-        self.assertEquals(test.exports[0]['url'], url)
-        self.assertEquals(test.exports[0]['fields'], fields)
-        # Data wasn't loaded from s3:
-        self.assertFalse(mock_get_data_stream.called)
 
-        url = get_csv_results(self.test.model_id, self.test2._id, fields)
-
-        test = self.db.Test.find_one({'name': self.TEST_NAME2})
-
-        self.assertTrue(url)
-        self.assertEquals(test.exports[0]['url'], url)
-        self.assertEquals(test.exports[0]['fields'], fields)
-        # Data was loaded from s3:
-        self.assertTrue(mock_get_data_stream.called)
+        # TODO: signals aren't called when CELERY_ALWAYS_EAGER == True. Update Celery?
+        # task = AsyncTask.query.filter_by(
+        #     task_name='api.model_tests.tasks.get_csv_results'
+        # ).order_by(desc(AsyncTask.created_on)).first()
+        # self.assertEqual(task.result, url)
+        # self.assertEqual(task.status, AsyncTask.STATUS_COMPLETED)
 
     @mock_s3
     @patch('api.models.Model.get_trainer')

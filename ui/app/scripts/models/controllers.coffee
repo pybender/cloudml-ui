@@ -3,14 +3,14 @@
 ### Trained Model specific Controllers ###
 
 FIELDS_BY_SECTION = {
-  'model': 'id,classifier,features_set_id,features'
-  'training': 'id,error,weights_synchronized,memory_usage,
+  'model': 'classifier,features_set_id,features'
+  'training': 'error,weights_synchronized,memory_usage,
 trained_by,trained_on,training_time'
-  'about': 'id,created_on,target_variable,example_id,example_label,
+  'about': 'created_on,target_variable,example_id,example_label,
 labels,updated_on,feature_count,test_import_handler,
 train_import_handler,created_by,datasets,data_fields,
 train_records_count,test_handler_fields,tags'
-  'main': 'id,name,status'
+  'main': 'name,status'
 }
 
 angular.module('app.models.controllers', ['app.config', ])
@@ -52,7 +52,7 @@ updated_on,updated_by,comparable,test_handler_fields'
         $scope.$watch('user', (user, oldVal, scope) ->
           if user?
             $scope.filter_opts = {
-              'updated_by.uid': user.uid
+              'updated_by_id': user.id
               'status': ''}
             $scope.$watch('filter_opts', (filter_opts, oldVal, scope) ->
               $scope.$emit 'BaseListCtrl:start:load', modelName

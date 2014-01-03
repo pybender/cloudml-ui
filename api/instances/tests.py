@@ -4,6 +4,7 @@ from api.base.test_utils import BaseDbTestCase, TestChecksMixin
 from api.ml_models.fixtures import ModelData
 from api.ml_models.models import Model
 from api.accounts.models import User
+from api.features.fixtures import FeatureSetData, FeatureData
 
 from views import InstanceResource
 from models import Instance
@@ -85,16 +86,17 @@ class InstancesTests(BaseDbTestCase, TestChecksMixin):
 
 
 class TestInstanceTasks(BaseDbTestCase):
-    datasets = [ModelData]
+    datasets = [FeatureData, FeatureSetData, ModelData]
 
     # TODO: Investigate why we can't drop db in tearDown
     # mthd, when testing celery tasks
-    def tearDown(self):
-        pass
+    # def tearDown(self):
+    #     pass
 
     def finish(self):
-        self.db.session.remove()
-        self.db.drop_all()
+        pass
+        # self.db.session.remove()
+        # self.db.drop_all()
 
     """ Tests spot instances specific tasks """
     @patch('api.amazon_utils.AmazonEC2Helper.request_spot_instance',

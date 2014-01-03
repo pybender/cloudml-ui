@@ -72,7 +72,7 @@ describe "weights", ->
       $httpBackend.flush()
 
     it "should load weights tree", inject () ->
-      url = settings.apiUrl + 'weights_tree/somemodelid?show=' +
+      url = settings.apiUrl + 'weights_tree/somemodelid/?show=' +
       encodeURIComponent('name,short_name,parent')
       $httpBackend.expectGET(url).respond('{"weights": [], "categories": []}')
 

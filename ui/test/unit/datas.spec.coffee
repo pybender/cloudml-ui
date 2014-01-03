@@ -72,7 +72,7 @@ describe "test examples", ->
       $httpBackend.expectGET(url).respond('{"model": {"labels": ["0", "1"]}}')
 
       test = new TestResult({
-        _id: TEST_ID,
+        id: TEST_ID,
         model_id: MODEL_ID
       })
 
@@ -92,7 +92,7 @@ describe "test examples", ->
       $httpBackend.expectGET(url).respond('{"model": {"labels": ["0", "1"]}}')
 
       test = new TestResult({
-        _id: TEST_ID,
+        id: TEST_ID,
         model_id: MODEL_ID,
         examples_fields: ['some_field', 'data_field']
       })
@@ -102,7 +102,7 @@ describe "test examples", ->
       $rootScope.filter_opts = {
         label: '0',
         some_field: 'val1',
-        'data_input.data_field': 'val2',
+        'data_field': 'val2',
       }
 
       $rootScope.init(test)
@@ -113,17 +113,17 @@ describe "test examples", ->
       expect($location.search).toHaveBeenCalledWith({
         'label': '0',
         'some_field': 'val1',
-        'data_input.data_field': 'val2',
+        'data_field': 'val2',
         action: 'examples:list',
       })
 
     xit "should make list query", inject () ->
       fields = "id,name,label,pred_label,title,probs"
       url = BASE_URL + '?show=' + encodeURIComponent(fields)
-      $httpBackend.expectGET(url).respond('{"datas": [{"_id": "123"}]}')
+      $httpBackend.expectGET(url).respond('{"datas": [{"id": "123"}]}')
 
       $rootScope.test = {
-        _id: TEST_ID,
+        id: TEST_ID,
         model_id: MODEL_ID
       }
 
@@ -161,10 +161,10 @@ describe "test examples", ->
       $httpBackend.flush()
 
       expect($rootScope.loading_state).toBeFalsy()
-      expect($rootScope.test._id).toEqual(TEST_ID)
+      expect($rootScope.test.id).toEqual(TEST_ID)
 
-      url = BASE_URL + 'action/groupped/?count=2&field=data_input.application_id'
-      $httpBackend.expectGET(url).respond('{"datas": []}')
+      url = BASE_URL + 'action/groupped/?count=2&field=application_id'
+      $httpBackend.expectGET(url).respond('{"test_examples": []}')
 
       $rootScope.form = {
         'field': 'application_id',
@@ -181,11 +181,10 @@ describe "test examples", ->
   describe "ExampleDetailsCtrl", ->
 
     it "should make details request", inject () ->
-      fields = 'id,test_name,weighted_data_input,
-test.model.target_variable,pred_label,label,
-prob,test.status,created_on,test.classes_set,test.examples_placement'
+      fields = 'test_name,weighted_data_input,model,pred_label,
+label,prob,created_on,test_result'
       url = BASE_URL + EXAMPLE_ID + '/?show=' + encodeURIComponent(fields)
-      $httpBackend.expectGET(url).respond('{"data": {"_id": "' + EXAMPLE_ID + '"}}')
+      $httpBackend.expectGET(url).respond('{"data": {"id": "' + EXAMPLE_ID + '"}}')
 
       $routeParams.model_id = MODEL_ID
       $routeParams.test_id = TEST_ID
@@ -194,7 +193,7 @@ prob,test.status,created_on,test.classes_set,test.examples_placement'
       createController "ExampleDetailsCtrl"
       $httpBackend.flush()
 
-      expect($rootScope.data._id).toEqual(EXAMPLE_ID)
+      expect($rootScope.data.id).toEqual(EXAMPLE_ID)
 
   describe "CsvDownloadCtrl", ->
 
@@ -204,7 +203,7 @@ prob,test.status,created_on,test.classes_set,test.examples_placement'
       $httpBackend.expectGET(url).respond('{"fields": ["one", "two"]}')
 
       test = {
-        _id: TEST_ID,
+        id: TEST_ID,
         model_id: MODEL_ID
       }
 

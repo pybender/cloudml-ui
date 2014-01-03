@@ -13,8 +13,10 @@ from api.instances.models import Instance
 from api.instances.fixtures import InstanceData
 from api.model_tests.models import TestResult, TestExample
 from api.model_tests.fixtures import TestResultData, TestExampleData
+from api.features.fixtures import FeatureSetData, FeatureData
 
 
+@mock_s3
 class ModelsTests(BaseDbTestCase, TestChecksMixin):
     """
     Tests of the Model API.
@@ -22,8 +24,8 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
     BASE_URL = '/cloudml/models/'
     RESOURCE = ModelResource
     Model = Model
-    datasets = [ImportHandlerData, DataSetData, ModelData,
-                 InstanceData, TestResultData, TestExampleData]
+    datasets = [FeatureData, FeatureSetData, ImportHandlerData, DataSetData,
+                ModelData, InstanceData, TestResultData, TestExampleData]
 
     def setUp(self):
         super(ModelsTests, self).setUp()
@@ -195,7 +197,7 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         resp, model = self.check_edit(post_data)
         self.assertEquals(model.name, name)
         self.assertEquals(model.status, model.STATUS_TRAINED)
-        self.assertTrue(model.trainer.read())
+        self.assertTrue(model.trainer)
 
     def test_edit_model(self):
         # TODO: Add validation to importhandlers
@@ -315,7 +317,7 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         self.assertEqual(obj.status, Model.STATUS_TRAINED, obj.error)
         self.assertEqual([d.name for d in obj.datasets], [ds.name])
 
-        self.assertEqual(obj.trained_by['uid'], 'user')
+        self.assertEqual(obj.trained_by.uid, 'user')
         self.assertTrue(obj.memory_usage > 0)
         self.assertEqual(obj.train_records_count, 100)
 
@@ -333,13 +335,38 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         self.assertEqual(obj.status, Model.STATUS_TRAINED, obj.error)
         self.assertEqual([d.name for d in obj.datasets], [ds.name])
 
-        self.assertEqual(obj.trained_by['uid'], 'user')
+        self.assertEqual(obj.trained_by.uid, 'user')
         self.assertTrue(obj.memory_usage > 0)
         self.assertEqual(obj.train_records_count, 100)
 
-    # TODO
-    def test_train_model_with_dataset_other_handler(self):
-        pass
+    @patch('api.ml_models.models.Model.get_features_json')
+    def test_train_model_with_dataset_other_handler(self,
+                                                    mock_get_features_json):
+        with open('./conf/features.json', 'r') as f:
+            mock_get_features_json.return_value = f.read()
+
+        # Dataset from another handler
+        new_handler = ImportHandler()
+        new_handler.name = 'New Hnadler for the only one test'
+        #new_handler.type = ImportHandler.TYPE_DB
+        new_handler.import_params = ['start', 'end', 'category']
+        new_handler.data = self.handler.data
+        new_handler.save()
+        ds = DataSet.query.filter_by(name=DataSetData.dataset_02.name).first()
+        ds.import_handler = new_handler
+        ds.save()
+
+        data = {'aws_instance': self.instance.id,
+                'dataset': ds.id}
+        resp, obj = self.check_edit(data, id=self.obj.id, action='train')
+        # NOTE: Make sure that ds.gz file exist in test_data folder
+
+        self.assertEqual(obj.status, Model.STATUS_TRAINED, obj.error)
+        self.assertEqual([d.name for d in obj.datasets], [ds.name])
+
+        self.assertEqual(obj.trained_by.uid, 'user')
+        self.assertTrue(obj.memory_usage > 0)
+        self.assertEqual(obj.train_records_count, 100)
 
     @patch('api.ml_models.models.Model.get_features_json')
     def test_train_model_with_dataset(self, mock_get_features_json):
@@ -359,7 +386,7 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         self.assertEqual(obj.status, Model.STATUS_TRAINED, obj.error)
         self.assertEqual([d.name for d in obj.datasets], [ds1.name, ds2.name])
 
-        self.assertEqual(obj.trained_by['uid'], 'user')
+        self.assertEqual(obj.trained_by.uid, 'user')
         self.assertTrue(obj.memory_usage > 0)
         self.assertEqual(obj.train_records_count, 200)
 
@@ -379,7 +406,7 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         self.assertEqual(obj.status, Model.STATUS_TRAINED, obj.error)
         self.assertIsInstance(obj.datasets[0].id, int)
         self.assertEquals(obj.dataset.format, DataSet.FORMAT_JSON)
-        self.assertEqual(obj.trained_by['uid'], 'user')
+        self.assertEqual(obj.trained_by.uid, 'user')
         self.assertTrue(obj.memory_usage > 0)
         self.assertEqual(obj.train_records_count, 99)
 
@@ -467,6 +494,3 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         resp = self.client.put(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.OK)
         self.assertTrue(mock_task.delay.called)
-
-
-# class TasksTests()  # TODO:

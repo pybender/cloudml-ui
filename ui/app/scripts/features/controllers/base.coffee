@@ -23,7 +23,12 @@ angular.module('app.features.controllers.base', ['app.config', ])
   'dialog'
 
   ($scope, $rootScope, dialog) ->
-    $scope.model = dialog.model
+    if dialog.model?
+      $scope.model = dialog.model
+    else if dialog.extra.handler? && dialog.extra.fieldname?
+      $scope.handler = dialog.extra.handler
+      $scope.model = eval('$scope.handler.' + dialog.extra.fieldname)
+
     $scope.DONT_REDIRECT = true
     $scope.LIST_MODEL_NAME = $scope.model.LIST_MODEL_NAME
     $scope.dialog = dialog

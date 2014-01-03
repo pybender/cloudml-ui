@@ -75,9 +75,9 @@ describe "datasets", ->
       expect($rootScope.openDialog).toHaveBeenCalled()
 
     it "should generate download link", inject (ImportHandler, DataSet) ->
-      $rootScope.handler = new ImportHandler({_id: HANDLER_ID})
+      $rootScope.handler = new ImportHandler({id: HANDLER_ID})
       $rootScope.ds = new DataSet(
-        {_id: DS_ID, on_s3: true, import_handler_id: HANDLER_ID}
+        {id: DS_ID, on_s3: true, import_handler_id: HANDLER_ID}
       )
 
       url = BASE_URL + DS_ID + '/action/generate_url/?'
@@ -109,8 +109,8 @@ describe "datasets", ->
 
       url = BASE_URL + DS_ID + '/?show=' + encodeURIComponent('name,status,created_on,updated_on,data,
 on_s3,import_params,error,filesize,records_count,
-time,created_by,import_handler_id')
-      $httpBackend.expectGET(url).respond('{"dataset": {"name": "Some name"}}')
+time,created_by,import_handler_id,format')
+      $httpBackend.expectGET(url).respond('{"data_set": {"name": "Some name"}}')
 
       createController "DataSetDetailsCtrl"
       $rootScope.go()
@@ -122,20 +122,19 @@ time,created_by,import_handler_id')
   describe "DatasetSelectCtrl", ->
 
     it "should make list query", inject () ->
-      url = BASE_URL + '?handler_id=' + HANDLER_ID + '&show=' +
-      encodeURIComponent('name,_id') + '&status=Imported'
-      $httpBackend.expectGET(url).respond('{"datasets": [{"name": "Some name", "_id": "'+ DS_ID + '"}]}')
+      url = BASE_URL + '?show=name&status=Imported'
+      $httpBackend.expectGET(url).respond('{"data_sets": [{"name": "Some name", "id": "'+ DS_ID + '"}]}')
 
       $rootScope.handler = {
-        _id: HANDLER_ID
+        id: HANDLER_ID
       }
       $rootScope.activateSectionColumn = jasmine.createSpy()
 
       createController "DatasetSelectCtrl"
       $httpBackend.flush()
 
-      expect($rootScope.datasets[0]._id).toEqual('')
-      expect($rootScope.datasets[1]._id).toEqual(DS_ID)
+      expect($rootScope.datasets[0].id).toEqual('')
+      expect($rootScope.datasets[1].id).toEqual(DS_ID)
       expect($rootScope.datasets[1].name).toEqual('Some name')
       expect($rootScope.activateSectionColumn).toHaveBeenCalledWith('dataset', undefined )
 

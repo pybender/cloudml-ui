@@ -1,5 +1,5 @@
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin
-from views import LogResource
+from views import LogSqlResource
 from models import LogMessage
 
 
@@ -7,8 +7,8 @@ class LogsTests(BaseDbTestCase, TestChecksMixin):
     """
     Tests of the Log Messages API.
     """
-    BASE_URL = '/cloudml/logs/'
-    RESOURCE = LogResource
+    BASE_URL = '/cloudml/sql_logs/'
+    RESOURCE = LogSqlResource
     Model = LogMessage
     SHOW = 'level,type,content,params'
 
@@ -45,9 +45,10 @@ class LogsTests(BaseDbTestCase, TestChecksMixin):
             resp = self.check_list(
                 show=self.SHOW,
                 data={'level': level}, count=count)
+            key = self.RESOURCE.OBJECT_NAME + 's'
             for lvl in levels:
                 self.assertTrue(
-                    lvl in [item['level'] for item in resp['logs']], level)
+                    lvl in [item['level'] for item in resp[key]], level)
 
     def test_paging(self):
         for p in xrange(1, 4):
@@ -58,7 +59,7 @@ class LogsTests(BaseDbTestCase, TestChecksMixin):
 
     def _write_logs(self):
         import logging
-        from api.logs.logger import LogMessageHandler
+        from logger import LogMessageHandler
         logger = logging.getLogger('trainmodel_log')
         logger.handlers = []
         logger.addHandler(LogMessageHandler(

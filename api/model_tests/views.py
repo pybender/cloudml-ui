@@ -1,5 +1,7 @@
 import logging
 from datetime import datetime
+from api.async_tasks.models import AsyncTask
+from flask import request
 
 from flask.ext.restful import reqparse
 
@@ -11,7 +13,7 @@ from forms import AddTestForm
 from sqlalchemy import desc
 
 
-class TestsResource(BaseResourceSQL):
+class TestResource(BaseResourceSQL):
     """
     Tests API Resource
     """
@@ -59,14 +61,16 @@ class TestsResource(BaseResourceSQL):
         if not test:
             raise NotFound('Test not found')
 
-        exports = [ex for ex in test.exports
-                   if ex['expires'] > datetime.now()]
+        exports = AsyncTask.get_current_by_object(
+            test,
+            'api.model_tests.tasks.get_csv_results',
+        )
 
         return self._render({self.OBJECT_NAME: test.id,
                              'exports': exports})
 
 
-api.add_resource(TestsResource,
+api.add_resource(TestResource,
                  '/cloudml/models/<regex("[\w\.]*"):model_id>/tests/')
 
 
@@ -88,24 +92,16 @@ class TestExampleResource(BaseResourceSQL):
         return super(TestExampleResource, self)._list(**kwargs)
 
     def _get_details_query(self, params, **kwargs):
-        load_weights = False
-        # if 'weighted_data_input' in fields:
-        #     fields = None  # We need all fields to recalc weights
-        load_weights = True
-
         example = super(TestExampleResource, self)._get_details_query(
             params, **kwargs)
 
         if example is None:
             raise NotFound()
 
-        if load_weights and not example.is_weights_calculated:
+        if not example.is_weights_calculated:
             example.calc_weighted_data()
             example = super(TestExampleResource, self)._get_details_query(
                 params, **kwargs)
-
-        # TODO: hack
-        example.__dict__['test'] = example.test_result
 
         return example
 
@@ -219,6 +215,7 @@ not contain probabilities')
         parser.add_argument('show', type=str)
         params = parser.parse_args()
         fields = params.get('show', None)
+        fields = fields.split(',')
         logging.info('Use fields %s' % str(fields))
 
         test = TestResult.query.filter_by(

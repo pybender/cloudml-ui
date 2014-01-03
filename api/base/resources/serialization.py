@@ -9,7 +9,6 @@ from api.base.models import db
 def encode_model(obj):
     if obj is None:
         return obj
-
     if isinstance(obj, mongokit.Document):
         out = encode_model(dict(obj))
     elif isinstance(obj, mongokit.cursor.Cursor):
@@ -21,7 +20,7 @@ def encode_model(obj):
                 continue
             out[key] = encode_model(val)
     elif isinstance(obj, orm.Query):
-        out = list(obj.all())
+        out = obj.all()
     elif isinstance(obj, list):
         out = [encode_model(item) for item in obj]
     elif isinstance(obj, dict):

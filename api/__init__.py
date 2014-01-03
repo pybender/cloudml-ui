@@ -2,11 +2,12 @@ import logging
 from logging import config as logging_config
 import re
 from flask import Flask
+from flask.ext import restful
+from flask.ext.admin import Admin
 from werkzeug.routing import BaseConverter
 from mongokit import Connection
 from mongotools.pubsub import Channel
 from pymongo.cursor import _QUERY_OPTIONS
-from flask.ext import restful
 from celery import Celery
 from kombu import Queue
 from flask.ext.sqlalchemy import SQLAlchemy
@@ -141,8 +142,28 @@ class Api(restful.Api):
                 self.app.add_url_rule(self.prefix + url, view_func=resource_func)
 
 api = Api(app)
+admin = Admin(app, 'CloudML Admin Interface')
 
 logging_config.dictConfig(app.config['LOGGING'])
 
-import views
-import models
+APPS = ('accounts', 'features', 'import_handlers', 'instances',
+        'logs', 'ml_models', 'model_tests', 'statistics', 'reports',
+        'async_tasks')
+
+
+def importer(app_name):
+    def imp(name):
+        try:
+            __import__(name)
+        except ImportError, exc:
+            if str(exc).startswith('No module named'):
+                return False
+            raise
+        else:
+            return True
+    imp('api.%s.admin' % app_name)
+    imp('api.%s.models' % app_name)
+    imp('api.%s.views' % app_name)
+
+for app_name in APPS:
+    importer(app_name)

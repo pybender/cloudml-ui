@@ -1,0 +1,34 @@
+<form name="Form" class="form-horizontal" ng-controller="DataSourceChoicesLoader">
+  <div class="control-group" ng-class="{error: Form.name.$invalid}">
+    <label class="control-label">Name</label>
+    <div class="controls">
+      <input type="text" name="name" ng-model="model.name" required />
+      <span ng-show="Form.name.$error.required" class="help-inline">*</span>
+    </div>
+  </div>
+  <div class="control-group" ng-class="{error: Form.type.$invalid}">
+    <label class="control-label">Type</label>
+    <div class="controls">
+      <select name="type" ng-model="model.type" required>
+        <option ng-selected="model.type == typeName" ng-repeat="typeName in types" value="{{ typeName }}">{{ typeName }}</option>
+      </select>
+      <span ng-show="Form.type.$error.required" class="help-inline">*</span>
+    </div>
+  </div>
+  <div class="control-group" ng-class="{error: Form.vendor.$invalid}">
+    <label class="control-label">Vendor</label>
+    <div class="controls">
+      <select name="vendor" ng-model="model.db.vendor" required>
+        <option ng-selected="model.db.vendor == name" ng-repeat="name in vendors" value="{{ name }}">{{ name }}</option>
+      </select>
+      <span ng-show="Form.vendor.$error.required" class="help-inline">*</span>
+    </div>
+  </div>
+  <div class="control-group" ng-class="{error: Form.conn.$invalid}">
+    <label class="control-label">Connection</label>
+    <div class="controls">
+      <input type="text" name="conn" ng-model="model.db.conn" required />
+      <span ng-show="Form.conn.$error.required" class="help-inline">*</span>
+    </div>
+  </div>
+</form>

@@ -117,6 +117,11 @@ def shell():
     flask.shell.run()
 
 @task
+def create_db_tables():
+    release.work_on.run(0)
+    flask.manage.run('create_db_tables')
+
+@task
 def migrate():
     release.work_on.run(0)
     flask.migrate.run()

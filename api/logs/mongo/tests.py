@@ -15,6 +15,16 @@ class LogsTests(BaseMongoTestCase, TestChecksMixin, BaseDbTestCase):
     BASE_URL = '/cloudml/logs/'
     RESOURCE = LogResource
 
+    @classmethod
+    def setUpClass(cls):
+        BaseDbTestCase.setUpClass()
+        BaseMongoTestCase.setUpClass()
+
+    @classmethod
+    def tearDownClass(cls):
+        BaseDbTestCase.tearDownClass()
+        BaseMongoTestCase.tearDownClass()
+
     def setUp(self):
         BaseDbTestCase.setUp(self)
         BaseMongoTestCase.setUp(self)
@@ -44,15 +54,14 @@ class LogsTests(BaseMongoTestCase, TestChecksMixin, BaseDbTestCase):
         logger.error('Error message')
         logger.critical('Fatal message')
 
-        # url = '{0}?{1}'.format(self.BASE_URL, urllib.urlencode({
-        #     'params.obj': '123',
-        #     'show': 'level,type,content,params'
-        # }))
-        # resp = self.client.get(url, headers=HTTP_HEADERS)
-        # self.assertEquals(resp.status_code, httplib.OK)
-        # items = json.loads(resp.data)['logs']
-        # self.assertEquals(len(items), 5)
-
+        url = '{0}?{1}'.format(self.BASE_URL, urllib.urlencode({
+            'params.obj': '123',
+            'show': 'level,type,content,params'
+        }))
+        resp = self.client.get(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.OK)
+        items = json.loads(resp.data)['logs']
+        self.assertEquals(len(items), 5)
 
         scenario = [
             ('CRITICAL', 1, ('CRITICAL',)),
@@ -70,9 +79,7 @@ class LogsTests(BaseMongoTestCase, TestChecksMixin, BaseDbTestCase):
             }))
             resp = self.client.get(url, headers=HTTP_HEADERS)
             self.assertEquals(resp.status_code, httplib.OK, level)
-            print resp.data
             items = json.loads(resp.data)['logs']
-            print "l", len(items), count, level
             self.assertEquals(len(items), count, level)
             for lvl in levels:
                 self.assertTrue(

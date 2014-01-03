@@ -273,6 +273,12 @@ class Model(BaseDocument):
                       }
     use_dot_notation = True
     use_autorefs = True
+    def get_trainer(self, loaded=True):
+        trainer = self.trainer or self.fs.trainer
+        if loaded:
+            from core.trainer.store import TrainerStorage
+            return TrainerStorage.loads(trainer)
+        return trainer
 
 
 @app.conn.register

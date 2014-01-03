@@ -4,13 +4,14 @@ from mock import patch
 from moto import mock_s3
 
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS
-from views import ImportHandlerResource, DataSetResource
-from models import ImportHandler, DataSet
-from fixtures import ImportHandlerData, DataSetData
+from ..views import ImportHandlerResource, DataSetResource
+from ..models import ImportHandler, DataSet
+from ..fixtures import ImportHandlerData, DataSetData
 from api.ml_models.fixtures import ModelData
 from api.ml_models.models import Model
 from api.model_tests.fixtures import TestResultData
 from api.model_tests.models import TestResult
+from api.features.fixtures import FeatureSetData, FeatureData
 
 
 class ImportHandlerTests(BaseDbTestCase, TestChecksMixin):
@@ -19,40 +20,97 @@ class ImportHandlerTests(BaseDbTestCase, TestChecksMixin):
     """
     BASE_URL = '/cloudml/importhandlers/'
     RESOURCE = ImportHandlerResource
-    MODEL_NAME = 'TrainedModel'
+    MODEL_NAME = ModelData.model_01.name
     Model = ImportHandler
     datasets = [ImportHandlerData, DataSetData, ModelData]
 
     def setUp(self):
         super(ImportHandlerTests, self).setUp()
-        self.obj = self.Model.query.filter_by(name='Handler 1').first()
+        self.obj = self.Model.query.filter_by(
+            name=ImportHandlerData.import_handler_01.name).first()
         for ds in DataSet.query.all():
             ds.import_handler = self.obj
             ds.save()
 
     def test_list(self):
-        self.check_list(show='name,type,import_params')
+        self.check_list(show='name')
 
     def test_details(self):
         resp = self.check_details(
             show='name,type,import_params,data', obj=self.obj)
         obj = resp[self.RESOURCE.OBJECT_NAME]
         self.assertEqual(obj['name'], self.obj.name)
-        self.assertEqual(obj['type'], self.obj.type)
         self.assertEqual(obj['import_params'], self.obj.import_params)
         self.assertEqual(
-            obj['data']['target-schema'],
-            self.obj.data['target-schema']
+            obj['data']['target_schema'],
+            self.obj.data['target_schema']
         )
 
     def test_edit_name(self):
-        url = self._get_url(id=self.obj.id)
-        data = {'name': 'new name'}
-        resp = self.client.put(url, data=data, headers=HTTP_HEADERS)
-        self.assertEquals(resp.status_code, httplib.OK)
-        self.assertTrue(self.RESOURCE.OBJECT_NAME in resp.data)
-        handler = self.Model.query.get(self.obj.id)
-        self.assertEquals(handler.name, data['name'])
+        # TODO:
+        # data = {'name': ''}
+        # self.check_edit_error(data, errors={'fill name': 1}, id=self.obj.id)
+
+        data = {"name": "new name"}
+        resp, obj = self.check_edit(data, id=self.obj.id)
+        self.assertEquals(obj.name, data['name'])
+
+    def test_edit_target_schema(self):
+        data = {"target_schema": "new-schema"}
+        resp, obj = self.check_edit(data, id=self.obj.id)
+        self.assertEquals(obj.data['target_schema'], data['target_schema'])
+
+    def test_edit_datasource(self):
+        data = {
+            "datasource.0.name": "name2",
+            "datasource.0.type": "sql",
+            "datasource.0.db": '{"conn": "conn.st", "vendor": "postgres"}'
+        }
+        resp, obj = self.check_edit(data, id=self.obj.id)
+        ds = obj.data['datasource'][0]
+        self.assertEquals(ds['name'], "name2")
+
+    def test_edit_queries(self):
+        data = {'queries.-1.name': 'new query',
+                'queries.-1.sql': 'select * from ...'}
+        resp, obj = self.check_edit(data, id=self.obj.id)
+        self.assertEquals(len(obj.data['queries']), 2, "Query should be added")
+        query = obj.data['queries'][1]
+        self.assertEquals(query['name'], 'new query')
+        self.assertEquals(query['sql'], 'select * from ...')
+
+        data = {'queries.1.name': 'new query1',
+                'queries.1.sql': 'select * from t1...'}
+        resp, obj = self.check_edit(data, id=self.obj.id)
+        self.assertEquals(len(obj.data['queries']), 2, "Query should be updated")
+        query = obj.data['queries'][1]
+        self.assertEquals(query['name'], 'new query1')
+        self.assertEquals(query['sql'], 'select * from t1...')
+
+        data = {'queries.1.items.-1.source': 'some-source'}
+        resp, obj = self.check_edit(data, id=self.obj.id)
+        self.assertEquals(len(obj.data['queries'][1]['items']), 1,
+                          "Item should be updated")
+        item = obj.data['queries'][1]['items'][0]
+        self.assertEquals(item['source'], 'some-source')
+
+        data = {'queries.1.items.0.source': 'other-source'}
+        resp, obj = self.check_edit(data, id=self.obj.id)
+        item = obj.data['queries'][1]['items'][0]
+        self.assertEquals(item['source'], 'other-source')
+
+        data = {'queries.1.items.0.target_features.-1.name': 'hire_outcome'}
+        resp, obj = self.check_edit(data, id=self.obj.id)
+        features = obj.data['queries'][1]['items'][0]['target_features']
+        self.assertEquals(len(features), 1,
+                          "Item should be updated")
+        feature = features[0]
+        self.assertEquals(feature['name'], 'hire_outcome')
+
+        data = {'queries.1.items.0.target_features.0.name': 'hire_outcome2'}
+        resp, obj = self.check_edit(data, id=self.obj.id)
+        feature = obj.data['queries'][1]['items'][0]['target_features'][0]
+        self.assertEquals(feature['name'], 'hire_outcome2')
 
     def test_delete(self):
         datasets = DataSet.query.filter_by(import_handler_id=self.obj.id)
@@ -99,16 +157,17 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
     """
     DS_NAME = 'DS'
     DS_NAME2 = 'DS 2'
-    MODEL_NAME = 'TrainedModel'
+    MODEL_NAME = ModelData.model_01.name
     RESOURCE = DataSetResource
     Model = DataSet
-    datasets = [ImportHandlerData, DataSetData, ModelData, TestResultData]
+    datasets = [FeatureData, FeatureSetData, ImportHandlerData, DataSetData,
+                ModelData, TestResultData]
 
     def setUp(self):
         super(DataSetsTests, self).setUp()
         self.handler = ImportHandler.query.filter_by(name='Handler 1').first()
         self.obj = self.Model.query.filter_by(name=self.DS_NAME).first()
-        self.BASE_URL = '/cloudml/importhandlers/%s/datasets/' % self.obj.id
+        self.BASE_URL = '/cloudml/importhandlers/%s/datasets/' % self.handler.id
         for ds in DataSet.query.all():
             ds.import_handler = self.handler
             ds.save()
@@ -144,8 +203,7 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue(ds.compress)
         self.assertTrue(ds.on_s3)
         self.assertEquals(ds.format, DataSet.FORMAT_JSON)
-        # TODO
-        # self.assertEquals(ds.filename, 'test_data/%s.gz' % ds.id)
+        self.assertEquals(ds.filename, 'test_data/%s.gz' % ds.uid)
         self.assertTrue(mock_multipart_upload.called)
 
     @patch('core.importhandler.importhandler.ImportHandler.__init__')
@@ -187,8 +245,7 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue(ds.compress)
         self.assertTrue(ds.on_s3)
         self.assertEquals(ds.format, DataSet.FORMAT_CSV)
-        # TODO
-        # self.assertEquals(ds.filename, 'test_data/%s.gz' % ds.id)
+        self.assertEquals(ds.filename, 'test_data/%s.gz' % ds.uid)
         self.assertTrue(mock_multipart_upload.called)
 
     def test_edit_name(self):
@@ -225,8 +282,6 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(resp.status_code, httplib.OK)
         self.assertFalse(mock_upload_dataset.delay.called)
 
-        # TODO: AttributeError: 'DataSet' object
-        # has no attribute '_sa_instance_state'
         self.obj.status = self.obj.STATUS_ERROR
         self.obj.save()
 
@@ -259,8 +314,6 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         mock_import_data.delay.assert_called_once_with(dataset_id=self.obj.id)
         mock_import_data.reset_mock()
 
-        # TODO: AttributeError: 'DataSet' object has no 
-        # attribute '_sa_instance_state'
         self.obj.status = DataSet.STATUS_IMPORTING
         self.obj.save()
 
@@ -292,29 +345,25 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals([ds.name for ds in model.datasets], ['DS 2'])
 
 
-# class TestTasksTests(BaseTestCase):
-#     """
-#     Tests of the celery tasks.
-#     """
-#     TEST_NAME = 'Test-1'
-#     TEST_NAME2 = 'Test-2'
-#     EXAMPLE_NAME = 'Some Example #1-1'
-#     MODEL_NAME = 'TrainedModel1'
-#     FIXTURES = ('datasets.json', 'models.json', 'tests.json', 'examples.json')
+class TestTasksTests(BaseDbTestCase, TestChecksMixin):
+    """
+    Tests of the celery tasks.
+    """
+    datasets = [ImportHandlerData, DataSetData, ModelData, TestResultData]
 
-#     @patch('api.amazon_utils.AmazonS3Helper.save_gz_file')
-#     def test_upload_dataset(self, mock_multipart_upload):
-#         from api.tasks import upload_dataset
-#         dataset = self.db.DataSet.find_one()
-#         upload_dataset(str(dataset._id))
-#         mock_multipart_upload.assert_called_once_with(
-#             str(dataset._id),
-#             dataset.filename,
-#             {
-#                 'params': str(dataset.import_params),
-#                 'handler': dataset.import_handler_id,
-#                 'dataset': dataset.name
-#             }
-#         )
-#         dataset.reload()
-#         self.assertEquals(dataset.status, dataset.STATUS_IMPORTED)
+    @patch('api.amazon_utils.AmazonS3Helper.save_gz_file')
+    def test_upload_dataset(self, mock_multipart_upload):
+        from api.import_handlers.tasks import upload_dataset
+        dataset = DataSet.query.filter_by(
+            name=DataSetData.dataset_01.name).one()
+        upload_dataset(dataset.id)
+        mock_multipart_upload.assert_called_once_with(
+            str(dataset.id),
+            dataset.filename,
+            {
+                'params': str(dataset.import_params),
+                'handler': dataset.import_handler_id,
+                'dataset': dataset.name
+            }
+        )
+        self.assertEquals(dataset.status, dataset.STATUS_IMPORTED)

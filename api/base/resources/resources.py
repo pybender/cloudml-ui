@@ -85,6 +85,9 @@ class BaseResource(restful.Resource):
         except ValidationError, exc:
             return odesk_error_response(400, ERR_INVALID_DATA,
                                         str(exc), errors=exc.errors)
+        except AssertionError, exc:
+            return odesk_error_response(400, ERR_INVALID_DATA,
+                                        str(exc), errors=exc.message)
 
     def _apply_action(self, action, method='GET', **kwargs):
         if action in getattr(self, '%s_ACTIONS' % method):
@@ -405,34 +408,21 @@ class BaseResourceSQL(BaseResource):
         return cursor
 
     def _prepare_model_list(self, cursor, params):
-        # fields = self._get_show_fields(params)
-        # if fields is not None:
-        #     # magic with converting tuple of fields to dict
-        #     models = []
-        #     for model_fields in cursor:
-        #         model = {field: model_fields[i]
-        #                  for i, field in enumerate(fields)}
-        #         models.append(model)
         return cursor
 
     def _build_list_query(self, params, **kwargs):
         # TODO: What about joins?
+        cursor = self._set_list_query_opts(self.Model.query, params)
         filter_params = self._prepare_filter_params(params)
         filter_params.update(kwargs)
-        cursor = self._set_list_query_opts(self.Model.query, params)
         fields = self._get_show_fields(params)
         if fields:
-            # model_fields = []
-            # for field in fields:
-            #     model_fields.append(getattr(self.Model, field))
-            # cursor = cursor.with_entities(*model_fields)
             opts = []
             for field in self.Model.__table__.columns.keys():
                 if field in fields or field in ('id',):
                     opts.append(undefer(getattr(self.Model, field)))
                 else:
                     opts.append(defer(getattr(self.Model, field)))
-
             relation_properties = filter(
                 lambda p: isinstance(p, properties.RelationshipProperty),
                 self.Model.__mapper__.iterate_properties
@@ -448,6 +438,7 @@ class BaseResourceSQL(BaseResource):
             fltr = self.__build_query_item(name, val)
             if not fltr is None:
                 cursor = cursor.filter(fltr)
+        #print cursor[0]
         return cursor
 
     def _prepare_show_fields_opts(self, Model, fields):

@@ -29,13 +29,15 @@ angular.module('app.datas.model', ['app.config'])
 
       loadFromJSON: (origData) =>
         super origData
-        if origData.test_result?
-          @test_result = new Test(origData['test_result'])
+        if origData?
+          if origData.test_result?
+            @test_result = new Test(origData['test_result'])
 
-          if @prob? && @test_result.classes_set?
-            @probChartData = []
-            for p, i in @prob
-              @probChartData.push {value: p, label: @test_result.classes_set[i]}
+            if @prob? && @test_result.classes_set?
+              @probChartData = []
+              for p, i in @prob
+                @probChartData.push {
+                  value: p, label: @test_result.classes_set[i]}
 
       isLoadedToS3: ->
         if !@loaded

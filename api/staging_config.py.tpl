@@ -1,5 +1,8 @@
 SECRET_KEY = 'CHANGE_ME'
-SQLALCHEMY_DATABASE_URI = 'sqlite:////webapps/cloudml/shared/var/cloudml.db'
+#SQLALCHEMY_DATABASE_URI = 
+#'sqlite:////webapps/cloudml/shared/var/cloudml.db'
+SQLALCHEMY_DATABASE_URI = 'postgresql://cloudml:cloudml@localhost:5432/cloudml'
+
 STATIC_ROOT = None
 UPLOAD_FOLDER = 'models'
 MAX_CONTENT_LENGTH = 128 * 1024 * 1024
@@ -12,6 +15,7 @@ CELERY_ENABLE_UTC = True
 #BROKER_URL = 'sqla+sqlite:////home/cloudml/shared/var/cloudml-celery.db'
 BROKER_URL = 'amqp://cloudml:cloudml@localhost:5672/cloudml'
 CELERY_RESULT_BACKEND = 'amqp://cloudml:cloudml@localhost:5672/cloudml'
+
 
 CELERY_IMPORTS = (
     'api.models', 'api', 'api.import_handlers.tasks',
@@ -62,7 +66,7 @@ LOGGING = {
         },
     },
     'loggers': {
-        '': {
+        'root': {
             'handlers': ['console'],
             'level': 'INFO',
             'propagate': True,

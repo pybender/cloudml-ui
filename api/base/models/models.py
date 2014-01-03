@@ -3,7 +3,6 @@ from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy import func
 from sqlalchemy.orm import relationship
 
-from .fields import JSONType
 from serialization import JsonSerializableMixin
 from api import app
 

@@ -12,7 +12,7 @@ angular.module('app.awsinstances.controllers', ['app.config', ])
 ($scope, $rootScope, AwsInstance) ->
   $scope.load = () ->
     AwsInstance.$loadAll(
-      show: 'id,name,type,created_on,updated_on,ip,is_default,created_by,
+      show: 'name,type,created_on,updated_on,ip,is_default,created_by,
 updated_by'
     ).then ((opts) ->
       $scope.objects = opts.objects

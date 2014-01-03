@@ -13,7 +13,7 @@ angular.module('app.testresults.model', ['app.config'])
     Trained Model Test
     ###
     class TestResult extends BaseModel
-      API_FIELDNAME: 'tests'
+      API_FIELDNAME: 'test'
       @MAIN_FIELDS: 'name,status,created_on,created_by'
       DEFAULT_FIELDS_TO_SAVE: ['importhandler', 'train_importhandler',
                                 'features', 'trainer', 'name']
@@ -26,6 +26,7 @@ angular.module('app.testresults.model', ['app.config'])
       parameters: null
       model: null
       model_name: null
+      confusion_matrix_calculations: null
       loaded: false
 
       constructor: (opts) ->
@@ -55,13 +56,14 @@ angular.module('app.testresults.model', ['app.config'])
 
       loadFromJSON: (origData) =>
         super origData
-        if 'model' in origData
-          @model = new Model(origData['model'])
-          @model_name = origData['model']['name']
+        if origData?
+          if 'model' in origData
+            @model = new Model(origData['model'])
+            @model_name = origData['model']['name']
 
-        if origData.dataset?
-          @dataset_obj = new DataSet(origData['dataset'])
-          @dataset = @dataset.id
+          if origData.dataset?
+            @dataset_obj = new DataSet(origData['dataset'])
+            @dataset = @dataset.id
 
       $run: (data) =>
         if @id?

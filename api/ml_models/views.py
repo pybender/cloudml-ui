@@ -1,3 +1,4 @@
+from api.logs.mongo.models import LogMessage
 from flask import Response, request
 from flask.ext.restful import reqparse
 from sqlalchemy import or_
@@ -30,7 +31,8 @@ class ModelResource(BaseResourceSQL):
     GET_ACTIONS = ('download', 'reload', 'by_importhandler')
     PUT_ACTIONS = ('train', 'tags', 'cancel_request_instance')
     FILTER_PARAMS = (('status', str), ('comparable', str), ('tag', str),
-                    ('created_by', str), ('updated_by', str))
+                    ('created_by', str), ('updated_by_id', int),
+                    ('updated_by', str))
     DEFAULT_FIELDS = ('id', 'name')
     NEED_PAGING = True
 
@@ -75,13 +77,19 @@ class ModelResource(BaseResourceSQL):
     def _set_list_query_opts(self, cursor, params):
         if 'tag' in params and params['tag']:
             cursor = cursor.filter(Model.tags.any(Tag.text == params['tag']))
+        created_by = params.pop('created_by', None)
+        if created_by:
+            cursor = cursor.filter(Model.created_by.has(uid=created_by))
+        updated_by = params.pop('updated_by', None)
+        if updated_by:
+            cursor = cursor.filter(Model.updated_by.has(uid=updated_by))
         return cursor
 
     def _get_by_importhandler_action(self, **kwargs):
         parser_params = self.GET_PARAMS + (('handler', str), )
         params = self._parse_parameters(parser_params)
         handler_id = params.get('handler')
-        models = Model.filter(or_(
+        models = Model.query.filter(or_(
             Model.train_import_handler_id == handler_id,
             Model.test_import_handler_id == handler_id,
         )).all()
@@ -134,10 +142,7 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
                 'spot_instance_type', None)
 
             tasks_list = []
-            # Removing old log messages
-            # TODO
-            # app.db.LogMessage.collection.remove({'type': 'trainmodel_log',
-            #                                     'params.obj': model._id})
+            LogMessage.delete_related_logs(model)
             if form.params_filled:
                 import_handler = model.train_import_handler
                 params = form.cleaned_data.get('parameters', None)
