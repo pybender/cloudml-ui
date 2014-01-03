@@ -1,5 +1,6 @@
 # Models, Tags and Weights goes here
 import json
+from functools import partial
 
 from sqlalchemy.orm import relationship, deferred, backref
 from sqlalchemy.dialects import postgresql
@@ -198,6 +199,18 @@ class WeightsCategory(db.Model, BaseMixin):
     parent = db.Column(db.String(200))
 
 
+def _setup_search(table_name, fields, event, schema_item, bind):
+    bind.execute('alter table {0} add column fts tsvector'.format(table_name))
+    bind.execute('create index {0}_fts_index on {0} using gin(fts)'.format(
+        table_name))
+
+    fields_str = ', '.join(fields)
+    bind.execute("""create trigger {0}_search_update
+        before update or insert on {0} for each row execute procedure
+        tsvector_update_trigger(fts, 'pg_catalog.english', {1})""".format(
+        table_name, fields_str))
+
+
 class Weight(db.Model, BaseMixin):
     """
     Represents Model Parameter Weight
@@ -214,12 +227,6 @@ class Weight(db.Model, BaseMixin):
 
     parent = db.Column(db.String(200))
 
-    # TODO: full text index
-    # @declared_attr
-    # def __table_args__(cls):
-    #     return (
-    #         Index('name_value_index',
-    #               func.to_tsvector('english', cls.name),
-    #               func.to_tsvector('english', cls.value),
-    #               postgresql_using='gin'),
-    #     )
+Weight.__table__.append_ddl_listener(
+    'after-create', partial(_setup_search, Weight.__table__.name,
+                            ['name']))

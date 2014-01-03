@@ -37,6 +37,22 @@ class WeightResourceTests(BaseDbTestCase, TestChecksMixin):
                           Weight.query.filter_by(model=self.model).count())
 
     def test_search(self):
+        trained_model_name = 'Trained Model Full Text'
+
+        with open('./conf/extract.json', 'r') as f:
+            handler = f.read()
+        with open('./api/ml_models/model.dat', 'r') as f:
+            trainer = f.read()
+        post_data = {'test_import_handler_file': handler,
+                     'train_import_handler_file': handler,
+                     'trainer': trainer,
+                     'name': trained_model_name}
+        resp = self.client.post('/cloudml/models/', data=post_data,
+                                headers=HTTP_HEADERS)
+        assert resp.status_code == httplib.CREATED
+        self.model = Model.query.filter_by(name=trained_model_name).one()
+        self.BASE_URL = '/cloudml/weights/%s/' % self.model.id
+
         url = '{0}?{1}'.format(self.BASE_URL, urllib.urlencode({
             'is_positive': -1,
             'order': 'asc',

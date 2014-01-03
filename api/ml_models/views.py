@@ -221,7 +221,6 @@ class WeightResource(BaseResourceSQL):
     """ Model Parameters weights API methods """
     ALLOWED_METHODS = ('get', )
     GET_ACTIONS = ('brief', )
-    ENABLE_FULLTEXT_SEARCH = True
     NEED_PAGING = True
     FILTER_PARAMS = (('is_positive', int), ('q', str), ('parent', str), )
 
@@ -242,7 +241,7 @@ class WeightResource(BaseResourceSQL):
         # Full text search
         if 'q' in params and params['q']:
             cursor = cursor.filter(
-                "to_tsvector(name || ' ' || value) @@ to_tsquery(:q)"
+                "fts @@ plainto_tsquery(:q)"
             ).params(q=params['q'])
         return cursor
 
