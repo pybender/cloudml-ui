@@ -5,7 +5,7 @@ from moto import mock_s3
 from sqlalchemy import desc
 
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS
-from views import TestsResource, TestExampleResource
+from views import TestResource, TestExampleResource
 from models import TestResult, TestExample
 from api.ml_models.models import Model
 from api.ml_models.fixtures import ModelData, WeightData
@@ -23,7 +23,7 @@ from api.features.fixtures import FeatureSetData, FeatureData
 class TestResourceTests(BaseDbTestCase, TestChecksMixin):
     """ Tests of the Test API. """
     BASE_URL = '/cloudml/models/{0!s}/tests/'
-    RESOURCE = TestsResource
+    RESOURCE = TestResource
     Model = TestResult
     datasets = [FeatureData, FeatureSetData, InstanceData, ImportHandlerData,
                 DataSetData, ModelData, TestResultData, TestExampleData]

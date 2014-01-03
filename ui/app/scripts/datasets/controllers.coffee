@@ -111,7 +111,7 @@ filesize,records_count,time,created_by,import_handler_id,format'
       DataSet.$loadAll(
         handler_id: $scope.handler.id,
         status: 'Imported',
-        show: 'name,_id'
+        show: 'name'
       ).then ((opts) ->
         $scope.datasets = opts.objects
         if $scope.datasets.length != 0

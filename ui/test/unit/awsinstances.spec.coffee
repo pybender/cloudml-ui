@@ -55,7 +55,7 @@ updated_by"
       $httpBackend.expectPUT(url).respond('{"instance": []}')
 
       instance = new AwsInstance({
-        _id: id,
+        id: id,
         is_default: false,
         type: {'name': 'some'}
       })
@@ -79,38 +79,12 @@ created_by'
       createController "AwsInstanceDetailsCtrl"
       $httpBackend.flush()
 
-      expect($rootScope.instance._id).toBe(id)
-
-  describe "AddAwsInstanceCtl", ->
-
-    it "should send add query", inject () ->
-      data = {
-        instance: {
-          _id: '5224de2907dbec210daec24e',
-          name: 'Some Name'
-        }
-      }
-
-      url = settings.apiUrl + 'aws_instances/null/?'
-
-      $httpBackend.expectPOST(url).respond(angular.toJson(data))
-
-      createController "AddAwsInstanceCtl"
-      $rootScope.instance.name = 'Some Name'
-      $rootScope.instance.type = {'name': 'small'}
-      $rootScope.instance.ip = '8.8.8.8'
-      $rootScope.instance.description = 'Some descr'
-      $rootScope.add()
-
-      $httpBackend.flush()
-
-      expect($rootScope.saving).toBe(true)
-      expect($rootScope.savingProgress).toBe('100%')
+      expect($rootScope.instance.id).toBe(id)
 
   describe "GetInstanceCtrl", ->
 
     it "should make list query and activate the section", inject () ->
-      fields = "name,_id,ip,is_default"
+      fields = "name,id,ip,is_default"
       url = settings.apiUrl + 'aws_instances/?show=' + encodeURIComponent(fields)
       $httpBackend.expectGET(url).respond('{"instances": []}')
 
