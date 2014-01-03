@@ -155,8 +155,10 @@ def importer(app_name):
     def imp(name):
         try:
             __import__(name)
-        except ImportError:
-            return False
+        except ImportError, exc:
+            if str(exc).startswith('No module named'):
+                return False
+            raise
         else:
             return True
     imp('api.%s.admin' % app_name)

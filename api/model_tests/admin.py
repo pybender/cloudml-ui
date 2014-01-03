@@ -8,8 +8,9 @@ from models import TestResult, TestExample
 class TestResultAdmin(BaseAdmin):
     Model = TestResult
     column_formatters = {
-        'status': macro('status_with_error')}
-    column_list = ['id', 'name', 'status', 'accuracy', 'parameters',
+        'status': macro('status_with_error'),
+        'model': macro('render_fk_link'),}
+    column_list = ['id', 'name', 'status', 'model', 'accuracy', 'parameters',
                    'examples_count', 'examples_size', 'classes_set',
                    'memory_usage']
     column_sortable_list = (

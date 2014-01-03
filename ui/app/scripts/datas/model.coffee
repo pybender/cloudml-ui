@@ -36,7 +36,8 @@ angular.module('app.datas.model', ['app.config'])
             if @prob? && @test_result.classes_set?
               @probChartData = []
               for p, i in @prob
-                @probChartData.push {value: p, label: @test_result.classes_set[i]}
+                @probChartData.push {
+                  value: p, label: @test_result.classes_set[i]}
 
       isLoadedToS3: ->
         if !@loaded

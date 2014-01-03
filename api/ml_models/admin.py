@@ -4,8 +4,8 @@ Administrative views for models: Model, Tag, Weight, WeightsCategory
 from flask.ext.admin.model.template import macro
 
 from api import admin
-from api.base.admin import BaseAdmin, FilterFK
-from api.accounts.models import User
+from api.base.admin import BaseAdmin
+#from api.accounts.models import User
 from models import Model, Tag, WeightsCategory, Weight
 
 

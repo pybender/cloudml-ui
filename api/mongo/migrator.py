@@ -35,7 +35,7 @@ class Migrator(object):
                 print i + 1,
                 obj.save()
                 self.IDS_MAP[str(source_obj._id)] = obj.id
-                print "New %s added, id %s" % NAME, obj.id
+                print "New %s added, id %s" % (NAME, obj.id)
                 self.process_inner_migrators(obj, source_obj)
         except Exception, exc:
             print exc
@@ -404,7 +404,6 @@ class ModelMigrator(Migrator, UserInfoMixin, UniqueNameMixin):
             mongo_fset = app.db.FeatureSet.find_one({'_id': ObjectId(_id)})
             if mongo_fset:
                 fset = feature_set.migrate_one(mongo_fset)
-            print "feature set found \n\n\n", fset
 
         if fset is None:
             print "no features set found! \n\n"
@@ -415,7 +414,6 @@ class ModelMigrator(Migrator, UserInfoMixin, UniqueNameMixin):
 
         # Looking for import handlers
         if source_obj.test_import_handler:
-            print source_obj.test_import_handler
             s_id = str(source_obj.test_import_handler._id)#_DBRef__id)
             _id = handler.IDS_MAP.get(s_id, None)
             if _id:
@@ -446,6 +444,10 @@ def migrate():
     for migrator in MIGRATOR_PROCESS:
         migrator.migrate()
 
+    print "Running celery tasks for model weights sync"
+    from api.ml_models.tasks import fill_model_parameter_weights
+    for model in Model.query.filter_by(status=Model.STATUS_TRAINED):
+        fill_model_parameter_weights.delay(model.id)
 
 def drop_all():
     conn = engine.connect()
