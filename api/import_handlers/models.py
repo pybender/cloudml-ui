@@ -252,7 +252,7 @@ class DataSet(db.Model, BaseModel):
             return open_meth(self.filename, 'r')
         else:
             logging.info('Loading data from Amazon S3')
-            stream = StringIO.StringIO(self.data)
+            stream = StringIO.StringIO(self.loaded_data)
             if self.compress:
                 logging.info('Decompress data')
                 return gzip.GzipFile(fileobj=stream, mode='r')
