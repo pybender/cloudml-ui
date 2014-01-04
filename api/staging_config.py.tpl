@@ -1,13 +1,14 @@
 SECRET_KEY = 'CHANGE_ME'
 #SQLALCHEMY_DATABASE_URI = 
 #'sqlite:////webapps/cloudml/shared/var/cloudml.db'
-SQLALCHEMY_DATABASE_URI = 'postgresql://cloudml:cloudml@localhost:5432/cloudml'
+SQLALCHEMY_DATABASE_URI = 'postgresql://cloudml:W0y137OY@odesk-cloudml-staging.cw38fhqllwnc.us-west-1.rds.amazonaws.com/cloudml_staging'
 
 STATIC_ROOT = None
 UPLOAD_FOLDER = 'models'
 MAX_CONTENT_LENGTH = 128 * 1024 * 1024
 DATABASE_NAME = 'cloudml'
-#DATABASE_HOST = 'localhost'
+DATABASE_HOST = '172.27.77.252'
+DATA_FOLDER = '{{ current_var_link }}/data'
 
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
