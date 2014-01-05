@@ -1,5 +1,6 @@
 import httplib
 import json
+import os
 from mock import patch
 from moto import mock_s3
 
@@ -185,7 +186,8 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
 
     @mock_s3
     @patch('api.amazon_utils.AmazonS3Helper.save_gz_file')
-    def test_post(self, mock_multipart_upload):
+    @patch('api.amazon_utils.AmazonS3Helper.load_key')
+    def test_post(self, mock_load_key, mock_multipart_upload):
         """
         Tests loading dataset using specified import handler
         """
@@ -202,9 +204,21 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(ds.import_params, params)
         self.assertTrue(ds.compress)
         self.assertTrue(ds.on_s3)
+        self.assertTrue(ds.uid)
         self.assertEquals(ds.format, DataSet.FORMAT_JSON)
         self.assertEquals(ds.filename, 'test_data/%s.gz' % ds.uid)
         self.assertTrue(mock_multipart_upload.called)
+
+        # Check created dataset
+        stream = ds.get_data_stream()
+        self.assertTrue(stream)
+        self.assertFalse(mock_load_key.called)
+
+        os.remove(ds.filename)
+        stream = ds.get_data_stream()
+        self.assertTrue(stream)
+        self.assertTrue(mock_load_key.called)
+
 
     @patch('core.importhandler.importhandler.ImportHandler.__init__')
     def test_post_exception(self, mock_handler):
@@ -358,7 +372,7 @@ class TestTasksTests(BaseDbTestCase, TestChecksMixin):
             name=DataSetData.dataset_01.name).one()
         upload_dataset(dataset.id)
         mock_multipart_upload.assert_called_once_with(
-            str(dataset.id),
+            str(dataset.uid),
             dataset.filename,
             {
                 'params': str(dataset.import_params),
