@@ -132,12 +132,12 @@ def fill_model_parameter_weights(model_id):
                             if long_name else sname
                 if i == (count - 1):
                     new_weight = Weight()
-                    new_weight.name = weight['name']
+                    new_weight.name = weight['name'][0:199]
                     new_weight.value = weight['weight']
                     new_weight.is_positive = bool(weight['weight'] > 0)
                     new_weight.css_class = weight['css_class']
                     new_weight.parent = parent
-                    new_weight.short_name = sname
+                    new_weight.short_name = sname[0:199]
                     new_weight.model_name = model.name
                     new_weight.model = model
                     new_weight.save(commit=False)

@@ -63,7 +63,7 @@ class DocumentField(CharField):
     def clean(self, value):
         value = super(DocumentField, self).clean(value)
 
-        if value is not None:
+        if value is not None and value != u'undefined':
             params = {'name' if self.by_name else 'id': value}
             params.update(self.filter_params)
 
