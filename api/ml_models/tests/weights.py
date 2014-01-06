@@ -96,7 +96,47 @@ class WeightResourceTests(BaseDbTestCase, TestChecksMixin):
         }))
         resp = self.client.get(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.OK)
-        self.assertTrue('tsexams->Python 2.x Test' not in resp.data)
+        self.assertTrue('tsexams->Python 2.x Test' in resp.data)
+        self.assertFalse('tsexams->Ruby on Rails' in resp.data)
+
+        url = '{0}?{1}'.format(self.BASE_URL, urllib.urlencode({
+            'is_positive': 1,
+            'order': 'asc',
+            'page': 1,
+            'show': 'name,value,css_class',
+            'sort_by': 'name',
+            'q': 'pythonic'
+        }))
+        resp = self.client.get(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.OK)
+        self.assertTrue('tsexams->Python 2.x Test' in resp.data)
+        self.assertFalse('tsexams->Ruby on Rails' in resp.data)
+
+        url = '{0}?{1}'.format(self.BASE_URL, urllib.urlencode({
+            'is_positive': 1,
+            'order': 'asc',
+            'page': 1,
+            'show': 'name,value,css_class',
+            'sort_by': 'name',
+            'q': 'pyth'
+        }))
+        resp = self.client.get(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.OK)
+        self.assertTrue('tsexams->Python 2.x Test' in resp.data)
+        self.assertFalse('tsexams->Ruby on Rails' in resp.data)
+
+        url = '{0}?{1}'.format(self.BASE_URL, urllib.urlencode({
+            'is_positive': 1,
+            'order': 'asc',
+            'page': 1,
+            'show': 'name,value,css_class',
+            'sort_by': 'name',
+            'q': '2.x'
+        }))
+        resp = self.client.get(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.OK)
+        self.assertTrue('tsexams->Python 2.x Test' in resp.data)
+        self.assertFalse('tsexams->Ruby on Rails' in resp.data)
 
     def test_brief(self):
         data = self._check(action='brief')
