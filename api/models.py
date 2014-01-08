@@ -14,6 +14,7 @@ from flask import request, has_request_context
 
 from api import app, celery
 from api.amazon_utils import AmazonS3Helper
+from core.trainer.transformers import TRANSFORMERS
 
 SYSTEM_FIELDS = ('name', 'created_on', 'updated_on', 'created_by',
                  'updated_by', 'type', 'is_predefined')
@@ -1150,69 +1151,6 @@ class NamedFeatureType(BaseDocument):
         return '<Named Feature Type %r>' % self.name
 
 app.db.NamedFeatureType.collection.ensure_index('name', unique=True)
-
-
-# TODO: move and use it in cloudml project
-TRANSFORMERS = {
-    'Dictionary': {
-        #'mthd': get_dict_vectorizer,
-        'parameters': ['separator', 'sparse'],
-        'default': {},  # default value
-        'defaults': {}  # default values of the parameters
-    },
-    'Count': {
-        #'mthd': get_count_vectorizer,
-        'parameters': ['charset', 'charset_error',
-                       'strip_accents', 'lowercase',
-                       'stop_words', 'token_pattern',
-                       'analyzer', 'max_df', 'min_df',
-                       'max_features', 'vocabulary',
-                       'binary'],
-        'default': '',
-        'defaults': {}
-    },
-    'Tfidf': {
-        #'mthd': get_tfidf_vectorizer,
-        'parameters': ['charset', 'charset_error',
-                       'strip_accents', 'lowercase',
-                       'analyzer', 'stop_words',
-                       'token_pattern', 'max_df',
-                       'min_df', 'max_features',
-                       'vocabulary', 'binary',
-                       'use_idf', 'smooth_idf',
-                       'sublinear_tf'],
-        'default': '',
-        'defaults': {}
-    },
-    'Lda': {
-        #'mthd': get_count_vectorizer,
-        'parameters': ['charset', 'charset_error',
-                        'strip_accents', 'lowercase',
-                        'stop_words', 'token_pattern',
-                        'analyzer', 'max_df', 'min_df',
-                        'max_features', 'vocabulary',
-                        'binary',
-                        'num_topics','id2word', 'alpha',
-                        'eta', 'distributed', 'topic_file'],
-        'default': '',
-        'defaults': {}
-    },
-    'Lsi': {
-        #'mthd': get_count_vectorizer,
-        'parameters': ['charset', 'charset_error',
-                        'strip_accents', 'lowercase',
-                        'stop_words', 'token_pattern',
-                        'analyzer', 'max_df', 'min_df',
-                        'max_features', 'vocabulary',
-                        'binary',
-                        'num_topics','id2word',
-                        'distributed', 'onepass',
-                        'power_iters', 'extra_samples',
-                        'topic_file'],
-        'default': '',
-        'defaults': {}
-    }
-}
 
 
 @app.conn.register
