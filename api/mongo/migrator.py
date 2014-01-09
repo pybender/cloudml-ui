@@ -444,10 +444,10 @@ def migrate():
     for migrator in MIGRATOR_PROCESS:
         migrator.migrate()
 
-    print "Running celery tasks for model weights sync"
-    from api.ml_models.tasks import fill_model_parameter_weights
-    for model in Model.query.filter_by(status=Model.STATUS_TRAINED):
-        fill_model_parameter_weights.delay(model.id)
+    #print "Running celery tasks for model weights sync"
+    #from api.ml_models.tasks import fill_model_parameter_weights
+    #for model in Model.query.filter_by(status=Model.STATUS_TRAINED):
+    #    fill_model_parameter_weights.delay(model.id)
 
 def drop_all():
     conn = engine.connect()

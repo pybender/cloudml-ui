@@ -1,5 +1,5 @@
 SECRET_KEY = 'CHANGE_ME'
-SQLALCHEMY_DATABASE_URI = 'sqlite:///{{ current_var_link }}/cloudml.db'
+SQLALCHEMY_DATABASE_URI = 'postgresql://cloudml:W0y137OY@odesk-cloudml-analytics.cw38fhqllwnc.us-west-1.rds.amazonaws.com/cloudml_analytics'
 STATIC_ROOT = None
 UPLOAD_FOLDER = 'models'
 DATA_FOLDER = '{{ current_var_link }}/data'
