@@ -444,10 +444,22 @@ def migrate():
     # for migrator in MIGRATOR_PROCESS:
     #     migrator.migrate()
 
-    print "Running celery tasks for model weights sync"
-    from api.ml_models.tasks import fill_model_parameter_weights
-    for model in Model.query.filter_by(status=Model.STATUS_TRAINED):
-        fill_model_parameter_weights.delay(model.id)
+    # print "Running celery tasks for model weights sync"
+    # from api.ml_models.tasks import fill_model_parameter_weights
+    # for model in Model.query.filter_by(status=Model.STATUS_TRAINED):
+    #     fill_model_parameter_weights.delay(model.id)
+
+    print "Setting target variable in model's features"
+    for fset in FeatureSet.query.all():
+        print "%s target is %s" % (fset.schema_name, fset.target_variable),
+        if fset.target_variable:
+            features = Feature.query.filter_by(
+                feature_set=fset, name=fset.target_variable)
+            assert features.count() == 1
+            feature = features[0]
+            feature.is_target_variable = True
+            feature.save()
+            print " ---- setted"
 
 def drop_all():
     conn = engine.connect()
