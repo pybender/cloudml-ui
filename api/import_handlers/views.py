@@ -3,6 +3,7 @@ import uuid
 import re
 from flask import Response, request
 from sqlalchemy.orm import undefer
+from psycopg2._psycopg import DatabaseError
 
 from api import api
 from api.base.models import assertion_msg
