@@ -435,19 +435,19 @@ MIGRATOR_PROCESS = [user, instance, named_type, classifier, tag,
 
 
 def migrate():
-    drop_all()
+    # drop_all()
 
-    app.sql_db.metadata.create_all(engine)
-    app.sql_db.create_all()
+    # app.sql_db.metadata.create_all(engine)
+    # app.sql_db.create_all()
 
-    print "Start migration to postgresql"
-    for migrator in MIGRATOR_PROCESS:
-        migrator.migrate()
+    # print "Start migration to postgresql"
+    # for migrator in MIGRATOR_PROCESS:
+    #     migrator.migrate()
 
-    #print "Running celery tasks for model weights sync"
-    #from api.ml_models.tasks import fill_model_parameter_weights
-    #for model in Model.query.filter_by(status=Model.STATUS_TRAINED):
-    #    fill_model_parameter_weights.delay(model.id)
+    print "Running celery tasks for model weights sync"
+    from api.ml_models.tasks import fill_model_parameter_weights
+    for model in Model.query.filter_by(status=Model.STATUS_TRAINED):
+        fill_model_parameter_weights.delay(model.id)
 
 def drop_all():
     conn = engine.connect()
