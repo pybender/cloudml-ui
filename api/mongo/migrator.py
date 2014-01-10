@@ -450,7 +450,9 @@ def migrate():
     #     fill_model_parameter_weights.delay(model.id)
 
     print "Setting target variable in model's features"
-    for fset in FeatureSet.query.all():
+    for model in Model.query.all():
+        print model.id, "model", model.name
+        fset = model.features_set
         print "%s target is %s" % (fset.schema_name, fset.target_variable),
         if fset.target_variable:
             features = Feature.query.filter_by(
@@ -459,7 +461,9 @@ def migrate():
             feature = features[0]
             feature.is_target_variable = True
             feature.save()
-            print " ---- setted"
+            print " ---- setted:", feature.is_target_variable
+        else:
+            print "ERROR: target var not set!"
 
 def drop_all():
     conn = engine.connect()
