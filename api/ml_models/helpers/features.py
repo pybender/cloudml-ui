@@ -17,7 +17,12 @@ def get_features_vect_data(vect_data, features, target_variable):
 
         transformer = feature['transformer']
         preprocessor = feature['type'].preprocessor
-        if transformer is not None:
+        if transformer is not None and hasattr(transformer, 'num_topics'):
+            for j in range(0, transformer.num_topics):
+                name = '%s->Topic #%d' % (feature_name.replace(".", "->"), j)
+                data[name] = vect_data[index + j]
+            index += transformer.num_topics
+        elif transformer is not None and hasattr(transformer, 'get_feature_names'):
             if hasattr(transformer, 'get_feature_names'):
                 data_v = get_data_from_vectorizer(vect_data, feature_name,
                                                   transformer,

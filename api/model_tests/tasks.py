@@ -81,7 +81,7 @@ def run_test(dataset_ids, test_id):
         vect_data = metrics._true_data
         from bson import Binary
         import pickle
-        test.vect_data = Binary(pickle.dumps(vect_data))
+        test.vect_data = pickle.dumps(vect_data)
 
         test.save()
 
