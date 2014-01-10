@@ -451,7 +451,7 @@ def migrate():
 
     print "Setting target variable in model's features"
     for model in Model.query.all():
-        print model.id, "model", model.name
+        print model.id,"model", model.name
         fset = model.features_set
         print "%s target is %s" % (fset.schema_name, fset.target_variable),
         if fset.target_variable:
@@ -459,8 +459,10 @@ def migrate():
                 feature_set=fset, name=fset.target_variable)
             assert features.count() == 1
             feature = features[0]
+            print "current val:", feature.id, feature.is_target_variable
             feature.is_target_variable = True
             feature.save()
+            app.sql_db.session.refresh(feature)
             print " ---- setted:", feature.is_target_variable
         else:
             print "ERROR: target var not set!"
