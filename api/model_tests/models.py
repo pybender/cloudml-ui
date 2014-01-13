@@ -50,8 +50,8 @@ class TestResult(db.Model, BaseModel):
     metrics = db.Column(JSONType)
     memory_usage = db.Column(db.Integer)
 
-    #vect_data = deferred(db.Column(S3File))
-    vect_data = deferred(db.Column(db.LargeBinary))
+    vect_data = deferred(db.Column(S3File))
+    #vect_data = deferred(db.Column(db.LargeBinary))
     
 
     def get_vect_data(self, num):
