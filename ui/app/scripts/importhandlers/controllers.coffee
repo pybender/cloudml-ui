@@ -5,6 +5,10 @@ EXTRA_TARGET_FEATURES_PARAMS = {
   'json': ['jsonpath', 'to_csv', 'key_path', 'value_path'],
   'composite': ['expression']}
 
+READABILITY_TYPES = [
+  'ari', 'flesch_reading_ease', 'flesch_kincaid_grade_level',
+  'gunning_fog_index', 'smog_index', 'coleman_liau_index', 'lix', 'rix']
+
 angular.module('app.importhandlers.controllers', ['app.config', ])
 
 .controller('ImportHandlerListCtrl', [
@@ -240,6 +244,8 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
     extra = EXTRA_TARGET_FEATURES_PARAMS[item.process_as]
     if extra?
       $scope.fields = $scope.fields.concat(extra)
+
+    $scope.readabilityTypes = READABILITY_TYPES
 
     $scope.$on('SaveObjectCtl:save:success', (event, current) ->
       dialog.close()

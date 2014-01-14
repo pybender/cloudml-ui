@@ -24,7 +24,7 @@ Flask-mongokit
 nose
 gevent
 nose-exclude
--e git+https://github.com/odeskdev/cloudml.git@MATCH-1180_updating_import_handlers#egg=cloudml
+-e git+https://github.com/odeskdev/cloudml.git@MATCH-1393_readability_processor#egg=cloudml
 -e git+https://github.com/rick446/MongoTools.git#egg=mongotools
 translitcodec==0.3
 boto
