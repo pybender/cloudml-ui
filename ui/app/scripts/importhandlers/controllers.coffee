@@ -361,7 +361,7 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
   if not $routeParams.num then throw new Error "Specify query number"
   $scope.PROCESS_STRATEGIES = ImportHandler.PROCESS_STRATEGIES
 
-  $scope.handler = new ImportHandler({_id: $routeParams.id})
+  $scope.handler = new ImportHandler({id: $routeParams.id})
   $scope.model = new Item(
     {handler: $scope.handler, query_num: $routeParams.num, num: -1})
 

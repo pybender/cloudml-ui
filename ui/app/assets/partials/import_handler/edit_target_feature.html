@@ -54,7 +54,7 @@
           <label class="control-label">Expression Type</label>
           <div class="controls">
             <select name="type" ng-model="model.expression.type">
-              <option ng-selected="model.expression.type==typeName" ng-repeat="typeName in ['string', 'python']" value="{{ typeName }}">{{ typeName }}</option>
+              <option ng-selected="model.expression.type==typeName" ng-repeat="typeName in ['string', 'python','readability']" value="{{ typeName }}">{{ typeName }}</option>
             </select>
             <span ng-show="Form.type.$error.required" class="help-inline">*</span>
           </div>
