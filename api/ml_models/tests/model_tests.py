@@ -117,7 +117,7 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
                      'name': 'new'}
         self.check_edit_error(
             post_data,
-            {'features': 'Invalid features: schema-name is missing'})
+            {'features': 'Invalid features: schema_name is missing'})
 
     def test_post_with_invalid_trainer(self):
         handler = open('./conf/extract.json', 'r').read()

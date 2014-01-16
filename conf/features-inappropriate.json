@@ -1,5 +1,5 @@
 {
-  "schema-name": "bestmatch",
+  "schema_name": "bestmatch",
   "classifier": {
     "type": "logistic regression",
     "penalty": "l2"

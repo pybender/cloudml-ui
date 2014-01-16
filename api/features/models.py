@@ -201,7 +201,7 @@ class FeatureSet(ExportImportMixin, BaseModel, db.Model):
     """ Represents list of the features with schema name."""
     FIELDS_TO_SERIALIZE = ('schema_name', )
 
-    FEATURES_STRUCT = {'schema-name': '',
+    FEATURES_STRUCT = {'schema_name': '',
                        'features': [],
                        "feature-types": []}
     schema_name = db.Column(db.String(200), nullable=False, default='noname')
@@ -253,7 +253,7 @@ class FeatureSet(ExportImportMixin, BaseModel, db.Model):
         return feature_set
 
     def to_dict(self):
-        features_dict = {'schema-name': self.schema_name,
+        features_dict = {'schema_name': self.schema_name,
                          'features': [],
                          "feature-types": []}
         types = []
@@ -272,7 +272,7 @@ class FeatureSet(ExportImportMixin, BaseModel, db.Model):
         # TODO: Why do default attr of the column not work?
         if self.features_dict is None:
             self.features_dict = self.FEATURES_STRUCT
-        self.features_dict['schema-name'] = self.schema_name
+        self.features_dict['schema_name'] = self.schema_name
         BaseModel.save(self, *args, **kwargs)
 
 

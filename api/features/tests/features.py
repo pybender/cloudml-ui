@@ -238,7 +238,7 @@ class TestFeaturesDocs(BaseDbTestCase):
             'name': u'transformed feature',
             'input-format': u'dict',
             'default': u'smth',
-            'is-required': True,
+            'is_required': True,
             'params': {u'mappings': {u'class2': 0, u'class1': 1}},
             'type': u'map'})
 
@@ -257,7 +257,7 @@ class TestFeaturesDocs(BaseDbTestCase):
         self.assertEquals(fset.features_dict,
                           {'feature-types': [],
                            'features': [],
-                           'schema-name': 'bestmatch'})
+                           'schema_name': 'bestmatch'})
         feature1 = Feature()
         feature1_data = {
             'feature_set': fset,

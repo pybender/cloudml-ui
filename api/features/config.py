@@ -87,7 +87,7 @@ SYSTEM_FIELDS = ('name', 'created_on', 'updated_on', 'created_by',
 
 FIELDS_MAP = {'input_format': 'input-format',
               'is_target_variable': 'is-target-variable',
-              'required': 'is-required',
-              'schema_name': 'schema-name'}
+              'required': 'is_required',
+              'schema_name': 'schema_name'}
 
 #INV_FIELDS_MAP = {v:k for k, v in FIELDS_MAP.items()}
