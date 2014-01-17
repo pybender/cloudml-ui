@@ -1,1 +1,1 @@
-from mongo.tests import *
+from simpledb.tests import *

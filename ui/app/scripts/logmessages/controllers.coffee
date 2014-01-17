@@ -10,23 +10,32 @@ angular.module('app.logmessages.controllers', ['app.config', ])
   'LogMessage'
 
 ($scope, $rootScope, LogMessage) ->
-  $scope.MODEL = LogMessage
-  $scope.FIELDS = 'level,type,content,params,created_on'
-  $scope.ACTION = 'loading logs'
-
   $scope.init = (type, id, per_page=20) ->
-    $scope.kwargs = {'type': type, 'params.obj': id, 'page': 1,
-    'sort_by': 'created_on', 'order': 'desc', 'per_page': per_page}
+    $scope.params = {'type': type, 'object_id': id,
+    'sort_by': 'created_on', 'order': 'desc', 'per_page': per_page,
+    'show': 'level,type,content,params,created_on'}
     $scope.log_levels = ['--any--', 'CRITICAL', 'ERROR',
                          'WARNING', 'INFO', 'DEBUG']
     $scope.log_level = '--any--'
 
+  $scope.load = () ->
+    LogMessage.$loadAll($scope.params).then ((opts) ->
+      $scope.objects = $scope.objects.concat(opts.objects)
+      $scope.next_token = opts.next_token
+    ), ((opts) ->
+      $scope.setError(opts, 'loading logs')
+    )
+
+  $scope.loadMore = () ->
+    $scope.params['next_token'] = $scope.next_token
+    $scope.load()
+
   $scope.setLogLevel = () ->
-    $scope.kwargs['level'] = @log_level
-    $scope.kwargs['page'] = 1
-    @load()
+    $scope.params['level'] = @log_level
+    $scope.params['next_token'] = ''
+    $scope.load()
 
   $scope.refresh = () ->
-    $scope.kwargs['page'] = 1
-    @load()
+    $scope.params['next_token'] = ''
+    $scope.load()
 ])

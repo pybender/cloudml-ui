@@ -1,1 +1,1 @@
-from mongo.models import *
+from simpledb.models import *

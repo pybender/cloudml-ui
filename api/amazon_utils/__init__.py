@@ -151,3 +151,45 @@ class AmazonS3Helper(object):
         if bucket is None:
             bucket = self.conn.create_bucket(self.bucket_name)
         return bucket
+
+
+class AmazonSDBHelper(object):
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super(AmazonSDBHelper, cls).__new__(
+                                cls, *args, **kwargs)
+        return cls._instance
+
+    def __init__(self, token=None, secret=None):
+        from boto import sdb
+        token = token or app.config['AMAZON_ACCESS_TOKEN']
+        secret = secret or app.config['AMAZON_TOKEN_SECRET']
+        self.conn = sdb.connect_to_region(
+            'us-west-2',
+            aws_access_key_id=token,
+            aws_secret_access_key=secret)
+        self._domains = {}
+
+    def get_domain(self, name):
+        if not name in self._domains:
+            try:
+                self._domains['name'] = self.conn.get_domain(name)
+            except Exception, exc:  # TODO: exc. instance_type
+                self._domains['name'] = self.conn.create_domain(name)
+        return self._domains[name]
+
+    def put_item(self, domain_name, *args):
+        domain = self.get_domain(domain_name)
+        domain.put_attributes(*args)
+
+    def get_items(self, domain_name, filter_str, order_by, limit=None, next_token=None):
+        query = 'select * from %s where %s order_by %s' % (domain_name, filter_str, order_by)
+        kwargs = {}
+        if limit is not None:
+            query = '%s LIMIT %d' % (query, limit)
+            kwargs['max_items'] = limit
+        if next_token:
+            kwargs['next_token'] = next_token
+        return dom.select(query, **kwargs)

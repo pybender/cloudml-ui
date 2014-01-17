@@ -21,7 +21,7 @@ class BaseLogMessageHandler(logging.Handler):
 
 
 def init_logger(name, **kwargs):
-    from mongo.logger import LogMessageHandler
+    from simpledb.logger import LogMessageHandler
     logger = logging.getLogger()
     handler = LogMessageHandler(log_type=name, params=kwargs)
     formatter = logging.Formatter(logging.BASIC_FORMAT)

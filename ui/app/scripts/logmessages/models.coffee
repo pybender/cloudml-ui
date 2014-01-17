@@ -15,7 +15,7 @@ angular.module('app.logmessages.model', ['app.config'])
       level: null
       type: null
       content: null
-      params: {}
+      object_id: null
 
     return LogMessage
 ])
