@@ -265,12 +265,13 @@ class ImportHandlerMigrator(Migrator, UserInfoMixin, UniqueNameMixin):
 
 
 REPLACES = {
-    'process-as': 'process_as',
-    'target-features': 'target_features',
-    'to-csv': 'to_csv',
-    'value-path': 'value_path',
-    'target-schema': 'target_schema',
-    'key-path': 'key_path'
+    # 'process-as': 'process_as',
+    # 'target-features': 'target_features',
+    # 'to-csv': 'to_csv',
+    # 'value-path': 'value_path',
+    # 'target-schema': 'target_schema',
+    # 'key-path': 'key_path',
+    'is-required': 'is_required'
 }
 
 
@@ -449,21 +450,27 @@ def migrate():
     # for model in Model.query.filter_by(status=Model.STATUS_TRAINED):
     #     fill_model_parameter_weights.delay(model.id)
 
-    print "Setting target variable in model's features"
-    for model in Model.query.all():
-        print model.id, "model", model.name
-        fset = model.features_set
-        print "%s target is %s" % (fset.schema_name, fset.target_variable),
-        if fset.target_variable:
-            features = Feature.query.filter_by(
-                feature_set=fset, name=fset.target_variable)
-            assert features.count() == 1
-            feature = features[0]
-            print "current val:", feature.id, feature.is_target_variable, feature.name
-            feature.is_target_variable = True
-            app.sql_db.session.add(feature)
-        else:
-            print "ERROR: target var not set!"
+    # print "Setting target variable in model's features"
+    # for model in Model.query.all():
+    #     print model.id, "model", model.name
+    #     fset = model.features_set
+    #     print "%s target is %s" % (fset.schema_name, fset.target_variable),
+    #     if fset.target_variable:
+    #         features = Feature.query.filter_by(
+    #             feature_set=fset, name=fset.target_variable)
+    #         assert features.count() == 1
+    #         feature = features[0]
+    #         print "current val:", feature.id, feature.is_target_variable, feature.name
+    #         feature.is_target_variable = True
+    #         app.sql_db.session.add(feature)
+    #     else:
+    #         print "ERROR: target var not set!"
+
+    print "Migrating IH is-required:"
+    for handler in ImportHandler.query.all():
+        print "\t-", handler.name
+        handler.data = replace(handler.data)
+        app.sql_db.session.add(handler)
     app.sql_db.session.commit()
 
 def drop_all():

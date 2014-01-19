@@ -54,7 +54,7 @@
           <label class="control-label">Expression Type</label>
           <div class="controls">
             <select name="type" ng-model="model.expression.type">
-              <option ng-selected="model.expression.type==typeName" ng-repeat="typeName in ['string', 'python']" value="{{ typeName }}">{{ typeName }}</option>
+              <option ng-selected="model.expression.type==typeName" ng-repeat="typeName in ['string', 'python', 'readability']" value="{{ typeName }}">{{ typeName }}</option>
             </select>
             <span ng-show="Form.type.$error.required" class="help-inline">*</span>
           </div>
@@ -64,6 +64,15 @@
           <div class="controls">
             <input type="text" name="value" ng-model="model.expression.value" />
             <span ng-show="Form.value.$error.required" class="help-inline">*</span>
+          </div>
+        </div>
+        <div ng-show="model.expression.type == 'readability'" class="control-group" ng-class="{error: Form.readability_type.$invalid}">
+          <label class="control-label">Readability Type</label>
+          <div class="controls">
+            <select name="type" ng-model="model.expression.readability_type">
+              <option ng-selected="model.expression.readability_type==rbType" ng-repeat="rbType in readabilityTypes" value="{{ rbType }}">{{ rbType }}</option>
+            </select>
+            <span ng-show="Form.readability_type.$error.required" class="help-inline">*</span>
           </div>
         </div>
       </div>
