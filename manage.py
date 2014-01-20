@@ -41,47 +41,6 @@ class Run(Command):
         http_server.serve_forever()
 
 
-class MigrateOld(Command):
-    """Migrate"""
-
-    def run(self, **kwargs):
-        from bson.objectid import ObjectId
-        from bson.dbref import DBRef
-
-        model_collection = app.db.Model.collection
-        model_list = model_collection.find({})
-
-        def _update(doc, fieldname, collection):
-            if fieldname in doc:
-                val = doc[fieldname]
-                if val and isinstance(val, dict):
-                    _id = val['_id']
-                    doc[fieldname] = DBRef(collection=collection,
-                                           id=ObjectId(_id),
-                                           database=app.config['DATABASE_NAME'])
-
-        for model in model_list:
-            model['spot_instance_request_id'] = ''
-            model_collection.save(model)
-            print 'Model %s was updated' % model['name']
-
-        # print "Adding dbrefs"
-        # for model in model_list:
-        #     _update(model, "test_import_handler", "handlers")
-        #     _update(model, "train_import_handler", "handlers")
-        #     _update(model, "dataset", "dataset")
-        #     model['feature_count'] = -1
-        #     model_collection.save(model)
-        #     print 'Model %s was updated' % model['name']
-
-        # print "Recalc features count"
-        # for model in app.db.Model.find({}):
-        #     trainer = model.get_trainer()
-        #     model.feature_count = len(trainer._feature_model.features.keys())
-        #     model.save()
-        #     print 'Model %s has %s features' % (model.name, model.feature_count)
-
-
 class Migrate(Command):
     """Migrate"""
 
@@ -368,7 +327,6 @@ manager.add_command("flower", Flower())
 manager.add_command('test', Test())
 manager.add_command('coverage', Coverage())
 manager.add_command('migrate', Migrate())
-manager.add_command('migrate_old', MigrateOld())
 manager.add_command('run', Run())
 manager.add_command('fix_mongo', RemObsoluteMongoKeys())
 manager.add_command("shell", Shell(make_context=_make_context))
