@@ -135,7 +135,7 @@ class ImportHandler(db.Model, BaseModel):
         pattern = re.compile('limit([^ ])', re.IGNORECASE)
         sql = pattern.sub(r'LIMIT \1', sql)
 
-        query = parse(sql)[0]
+        query = parse(sql.rstrip(';'))[0]
 
         # Find LIMIT statement
         token = query.token_next_match(0, tokens.Keyword, 'LIMIT')
