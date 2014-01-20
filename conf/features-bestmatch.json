@@ -17,7 +17,7 @@
     }
   ],
   "features":[
-    {"name":"hire_outcome", "type": "map", "params": {"mappings": {"hire": 1, "nothire": 0}}, "is-target-variable":true},
+    {"name":"hire_outcome", "type": "map", "params": {"mappings": {"hire": 1, "nothire": 0}}, "is_target_variable":true},
 
     {"name": "employer.op_timezone", "type": "str_to_timezone"},
     {"name": "employer.op_country_tz", "type": "str_to_timezone"},

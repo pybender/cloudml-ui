@@ -236,7 +236,7 @@ class TestFeaturesDocs(BaseDbTestCase):
                             'name': u'Test count #2 not is_predefined',
                             'type': u'Count'},
             'name': u'transformed feature',
-            'input-format': u'dict',
+            'input_format': u'dict',
             'default': u'smth',
             'is_required': True,
             'params': {u'mappings': {u'class2': 0, u'class1': 1}},

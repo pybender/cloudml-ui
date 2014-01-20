@@ -26,7 +26,7 @@
           "inappropriate": 1
         }
       },
-      "is-target-variable":true
+      "is_target_variable":true
     },
     {
       "name": "title",

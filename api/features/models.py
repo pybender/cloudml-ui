@@ -6,7 +6,7 @@ from sqlalchemy.orm import relationship
 
 from api.base.models import BaseModel, db, JSONType
 from core.trainer.classifier_settings import CLASSIFIERS
-from config import TRANSFORMERS, SCALERS, FIELDS_MAP, SYSTEM_FIELDS
+from config import TRANSFORMERS, SCALERS, SYSTEM_FIELDS
 
 
 class ExportImportMixin(object):
@@ -32,7 +32,6 @@ class ExportImportMixin(object):
         if not obj:
             obj = cls()
             for field in fields_list:
-                dict_field_name = FIELDS_MAP.get(field, field)
                 if cls.NO_PARAMS_KEY and field == 'params':
                     # Fields that would be placed to params dict.
                     params_fields = set(obj_dict.keys()) - \
@@ -40,7 +39,7 @@ class ExportImportMixin(object):
                     value = dict([(name, obj_dict[name])
                                  for name in params_fields])
                 else:
-                    value = obj_dict.get(dict_field_name, None)
+                    value = obj_dict.get(field, None)
                 if value is not None:
                     setattr(obj, field, value)
 
@@ -67,8 +66,7 @@ class ExportImportMixin(object):
                         if not val:
                             continue
 
-                    field_name = FIELDS_MAP.get(field, field)
-                    data[field_name] = val
+                    data[field] = val
         return data
 
 

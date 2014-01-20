@@ -26,7 +26,7 @@
           "class2": 0
         }
       },
-      "is-target-variable":true
+      "is_target_variable":true
     },
     {
       "name":"country_pair",
@@ -35,7 +35,7 @@
     {
       "name":"tsexams",
       "type": "float",
-      "input-format": "dict",
+      "input_format": "dict",
       "default": 0.33,
       "is_required": false
     },
