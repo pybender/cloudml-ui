@@ -5,6 +5,10 @@ EXTRA_TARGET_FEATURES_PARAMS = {
   'json': ['jsonpath', 'to_csv', 'key_path', 'value_path'],
   'composite': ['expression']}
 
+READABILITY_TYPES = [
+  'ari', 'flesch_reading_ease', 'flesch_kincaid_grade_level',
+  'gunning_fog_index', 'smog_index', 'coleman_liau_index', 'lix', 'rix']
+
 angular.module('app.importhandlers.controllers', ['app.config', ])
 
 .controller('ImportHandlerListCtrl', [
@@ -241,6 +245,8 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
     if extra?
       $scope.fields = $scope.fields.concat(extra)
 
+    $scope.readabilityTypes = READABILITY_TYPES
+
     $scope.$on('SaveObjectCtl:save:success', (event, current) ->
       dialog.close()
       if $scope.model.isNew()
@@ -361,7 +367,7 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
   if not $routeParams.num then throw new Error "Specify query number"
   $scope.PROCESS_STRATEGIES = ImportHandler.PROCESS_STRATEGIES
 
-  $scope.handler = new ImportHandler({_id: $routeParams.id})
+  $scope.handler = new ImportHandler({id: $routeParams.id})
   $scope.model = new Item(
     {handler: $scope.handler, query_num: $routeParams.num, num: -1})
 

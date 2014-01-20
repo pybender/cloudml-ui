@@ -2,7 +2,6 @@ import logging
 from os.path import exists
 from os import makedirs
 from datetime import datetime
-from dateutil import parser, tz
 
 from core.trainer.trainer import Trainer
 from core.trainer.config import FeatureModel
@@ -58,12 +57,11 @@ def train_model(dataset_ids, model_id, user_id):
         from memory_profiler import memory_usage
         #mem_usage = memory_usage((trainer.train,
         #                          (train_iter,)), interval=0)
-        train_begin_time = datetime.utcnow().replace(tzinfo=tz.tzutc())
+        train_begin_time = datetime.utcnow()
         trainer.train(train_iter)
 
         mem_usage = memory_usage(-1, interval=0, timeout=None)
         trainer.clear_temp_data()
-        train_end_time = parser.parse(trainer.train_time)
 
         model.status = model.STATUS_TRAINED
         model.set_trainer(trainer)
@@ -71,6 +69,7 @@ def train_model(dataset_ids, model_id, user_id):
         model.memory_usage = max(mem_usage)
         model.train_records_count = int(sum((
             d.records_count for d in model.datasets)))
+        train_end_time = datetime.utcnow()
         model.training_time = int((train_end_time - train_begin_time).seconds)
         model.save()
 

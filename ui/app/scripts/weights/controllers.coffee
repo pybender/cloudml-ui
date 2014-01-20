@@ -34,13 +34,13 @@ angular.module('app.weights.controllers', ['app.config', ])
       $scope.sort_by = sort_by
     $scope.loadList()
 
-  $scope.loadList = () ->
+  $scope.loadList = (page) ->
     Weight.$loadAll(
       $routeParams.id,
       show: 'name,value,css_class',
       q: $scope.search_form.q,
       is_positive: $scope.search_form.is_positive,
-      page: $scope.search_form.page || 1,
+      page: page || $scope.search_form.page || 1,
       sort_by: $scope.sort_by,
       order: if $scope.asc_order then 'asc' else 'desc'
     ).then ((opts) ->
@@ -56,7 +56,7 @@ angular.module('app.weights.controllers', ['app.config', ])
     )
 
   $scope.$watch('search_form.page', (page, oldVal, scope) ->
-    if (scope.action[0] == 'weights') and
+    if (scope.action[0] == 'training') and
         (scope.action[1] == 'list') and page
       $scope.loadList()
   , true)

@@ -221,7 +221,6 @@ class WeightResource(BaseResourceSQL):
     """ Model Parameters weights API methods """
     ALLOWED_METHODS = ('get', )
     GET_ACTIONS = ('brief', )
-    ENABLE_FULLTEXT_SEARCH = True
     NEED_PAGING = True
     FILTER_PARAMS = (('is_positive', int), ('q', str), ('parent', str), )
 
@@ -237,6 +236,18 @@ class WeightResource(BaseResourceSQL):
             else:
                 del pdict['is_positive']
         return pdict
+
+    def _set_list_query_opts(self, cursor, params):
+        if 'q' in params and params['q']:
+
+            # Full text search
+            query = '{0} | {0}:*'.format(params['q'])
+            query_like = '%{0}%'.format(params['q'])
+            cursor = cursor.filter(
+                "fts @@ to_tsquery(:q) OR name LIKE :q_like"
+            ).params(q=query, q_like=query_like)
+
+        return cursor
 
     def _get_brief_action(self, per_page=50, **kwargs):
         """ Gets list with Model's weighted parameters with pagination. """

@@ -124,7 +124,7 @@
         <h5>
           Items
           <div class="actions">
-            <a class="btn btn-info" href="#/importhandlers/{{ handler._id }}/query/{{ query.num }}/items/add">
+            <a class="btn btn-info" href="#/importhandlers/{{ handler.id }}/query/{{ query.num }}/items/add">
               <i class="status-icon icon-plus"></i> Add Item
             </a>
           </div>
@@ -186,6 +186,11 @@
                           <b>Expression Value: </b>
                           {{ feature.expression.value }}
                         </div>
+                        <div ng-show="feature.expression.type == 'readability'">
+                          <b>Readability Type: </b>
+                          {{ feature.expression.readability_type }}
+                        </div>
+                        </div>
                     </td>
                     <td>
                       <a ng-click="editTargetFeature(item, feature)"><i class="icon-edit" title="edit" /></a>
@@ -216,8 +221,7 @@
     <div ng-show="action[1] == 'json'">
       <a href="{{handler.downloadUrl()}}">Download</a>
       <textarea name="data" ui-codemirror="{ mode: {name: 'javascript', json: true, readOnly: true} }" ng-model="handler.data_json"></textarea>
-      {{ handler.data_json}}
-    </div>    
+    </div>
   </div>
 
   <div ng-show="action[0] == 'dataset'">
