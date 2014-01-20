@@ -163,7 +163,7 @@ class Feature(ExportImportMixin, RefFeatureSetMixin,
     type = db.Column(db.String(200), nullable=False)
     input_format = db.Column(db.String(200))
     default = db.Column(JSONType)  # TODO: think about type
-    required = db.Column(db.Boolean, default=True)
+    is_required = db.Column(db.Boolean, default=True)
     is_target_variable = db.Column(db.Boolean, default=False)
 
     params = deferred(db.Column(JSONType, default={}))
