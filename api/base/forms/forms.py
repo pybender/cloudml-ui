@@ -179,7 +179,7 @@ fields %s is required' % ', '.join(fields))
                 form.inner_name = name
                 # TODO: make possible to choose whether form field is required
                 if form.is_valid() and form.filled:
-                    value = form.save(commit=False)
+                    value = form.save_inner()
                     mthd = "clean_%s" % name
                     if hasattr(self, mthd):
                         value = getattr(self, mthd)(value, form)
@@ -198,7 +198,10 @@ fields %s is required' % ', '.join(fields))
 
         return self.cleaned_data
 
-    def save(self, commit=True):
+    def save_inner(self):
+        return self.save(False, True)
+
+    def save(self, commit=True, save=True):
         if not self.is_valid():
             raise ValidationError(self.errors)
 
@@ -210,8 +213,8 @@ fields %s is required' % ', '.join(fields))
                     pass
 
         self.obj.updated_on = str(datetime.now())
-        if commit:
-            self.obj.save()
+        if save:
+            self.obj.save(commit=commit)
 
         return self.obj
 

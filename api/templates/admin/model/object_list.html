@@ -5,7 +5,7 @@
     {% if val %}
     <a href="{{ url_for('%sview.edit_view' % val.__class__.__name__.lower(), url=return_url, id=val.id) }}">{{ val }}
     </a>
-    {% endif %}1
+    {% endif %}
 {% endmacro %}
 
 {% macro render_created(model, column) %}

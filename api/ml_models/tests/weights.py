@@ -3,7 +3,7 @@ import math
 import json
 import random
 import urllib
-
+from moto import mock_s3
 
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS
 from ..fixtures import WeightData, WeightsCategoryData
@@ -36,7 +36,8 @@ class WeightResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(data['total'],
                           Weight.query.filter_by(model=self.model).count())
 
-    def test_search(self):
+    @mock_s3
+    def test_search(self, *mocks):
         trained_model_name = 'Trained Model Full Text'
 
         with open('./conf/extract.json', 'r') as f:
@@ -186,7 +187,8 @@ class WeightTasksTests(BaseDbTestCase, TestChecksMixin):
     def setUp(self):
         super(WeightTasksTests, self).setUp()
 
-    def test_fill_weights(self):
+    @mock_s3
+    def test_fill_weights(self, *mocks):
         name = 'new2'
         handler = open('conf/extract.json', 'r').read()
         trainer = open('./api/ml_models/model.dat', 'r').read()

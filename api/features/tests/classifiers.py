@@ -4,7 +4,7 @@ import json
 
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS
 from api.ml_models.fixtures import ModelData
-from api.ml_models.models import Model
+from api.ml_models.models import Model, db
 from utils import FeaturePredefinedItemsTestMixin
 from ..views import ClassifierResource
 from ..models import PredefinedClassifier
@@ -27,8 +27,10 @@ class TestClassifierDoc(BaseDbTestCase):
 
     def test_from_features(self):
         features = json.loads(open('./conf/features.json', 'r').read())
-        classifier = PredefinedClassifier.from_model_features_dict(
-            "Set", features)
+        classifier = PredefinedClassifier(name = 'Set')
+        classifier.from_dict(features['classifier'])
+
+        db.session.refresh(classifier)
         self.assertTrue(classifier, 'Classifier not set')
         self.assertEquals(classifier.name, 'Set')
         self.assertEquals(classifier.type, 'logistic regression')

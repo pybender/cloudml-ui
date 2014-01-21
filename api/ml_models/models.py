@@ -59,7 +59,7 @@ class Model(db.Model, BaseModel):
     feature_count = db.Column(db.Integer)
 
     features_set_id = db.Column(db.Integer, db.ForeignKey('feature_set.id'))
-    features_set = relationship('FeatureSet')
+    features_set = relationship('FeatureSet', uselist=False)
 
     test_import_handler_id = db.Column(db.ForeignKey('import_handler.id',
                                                      ondelete='SET NULL'))
@@ -80,6 +80,15 @@ class Model(db.Model, BaseModel):
 
     def __repr__(self):
         return "<Model {0}>".format(self.name)
+
+    def save(self, commit=True):
+        if self.features_set is None:
+            from api.features.models import FeatureSet
+            self.features_set = FeatureSet()
+            db.session.add(self.features_set)
+        if self.classifier is None:
+            self.classifier = {}
+        super(Model, self).save(commit)
 
     def set_error(self, error, commit=True):
         self.error = str(error)

@@ -16,7 +16,6 @@ from api.model_tests.fixtures import TestResultData, TestExampleData
 from api.features.fixtures import FeatureSetData, FeatureData
 
 
-@mock_s3
 class ModelsTests(BaseDbTestCase, TestChecksMixin):
     """
     Tests of the Model API.
@@ -36,9 +35,9 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         self.instance = Instance.query.filter_by(
             name=InstanceData.instance_01.name).first()
 
-        self.obj.test_import_handler = self.handler
-        self.obj.train_import_handler = self.handler
-        self.obj.save()
+        # self.obj.test_import_handler = self.handler
+        # self.obj.train_import_handler = self.handler
+        # self.obj.save()
 
     def test_list(self):
         self.check_list(show='')
@@ -92,7 +91,9 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         check('features')
         check('invalid', is_invalid=True)
 
-    def test_post_without_name(self):
+    @mock_s3
+    def test_post_validation(self, *mocks):
+        # No name
         self.check_edit_error(
             {
                 'test_import_handler': self.handler.id,
@@ -100,8 +101,7 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
             },
             {'name': 'name is required'})
 
-    def test_post_with_invalid_features(self):
-        # Features aren't required. Can be added in model details
+        # Invalid features
         handler = open('./conf/extract.json', 'r').read()
         post_data = {'test_import_handler_file': handler,
                      'train_import_handler_file': handler,
@@ -119,8 +119,7 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
             post_data,
             {'features': 'Invalid features: schema_name is missing'})
 
-    def test_post_with_invalid_trainer(self):
-        handler = open('./conf/extract.json', 'r').read()
+        # Invalid trainer
         trainer = open('api/ml_models/invalid_model.dat', 'r').read()
         post_data = {'test_import_handler_file': handler,
                      'train_import_handler_file': handler,
@@ -130,7 +129,8 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
             'trainer': "Invalid trainer: Could not unpickle trainer - 'module' object has no attribute 'TrainerStorage1'"
         })
 
-    def test_post_new_model(self, name='new'):
+    @mock_s3  # trainer saves to amazon S3
+    def test_post_new_model(self, name='new', *mocks):
         handler = open('./conf/extract.json', 'r').read()
         post_data = {'test_import_handler_file': handler,
                      'train_import_handler_file': handler,
@@ -168,7 +168,8 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue(features_set, "Features set not created")
         self.assertEquals(features_set.schema_name, "bestmatch")
 
-    def test_post_new_model_without_features(self):
+    @mock_s3
+    def test_post_new_model_without_features(self, *mocks):
         """
         User could create new model without specifying features
         and then start adding them using UI.
@@ -185,7 +186,8 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         features_set = model.features_set
         self.assertTrue(features_set, "Features set not created")
 
-    def test_post_trained_model(self):
+    @mock_s3
+    def test_post_trained_model(self, *mocks):
         # TODO: what to do with features here?
         name = 'new2'
         handler = open('./conf/extract.json', 'r').read()
@@ -198,6 +200,26 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(model.name, name)
         self.assertEquals(model.status, model.STATUS_TRAINED)
         self.assertTrue(model.trainer)
+
+    @patch('api.ml_models.models.Model.set_trainer')
+    def test_post_with_errors(self, mock_set_trainer):
+        """
+        Checks whether nothing created, when exc. occures while adding models.
+        """
+        model_count = Model.query.count()
+        ih_count = ImportHandler.query.count()
+        mock_set_trainer.side_effect = Exception('My error in set_trainer')
+        handler = open('./conf/extract.json', 'r').read()
+        post_data = {'test_import_handler_file': handler,
+                     'train_import_handler_file': handler,
+                     'features': open('./conf/features.json', 'r').read(),
+                     'name': 'name'}
+        resp = self.client.post(
+            self.BASE_URL, data=post_data, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, 500)
+        self.assertTrue(mock_set_trainer.called)
+        self.assertEquals(model_count, Model.query.count())
+        self.assertEquals(ih_count, ImportHandler.query.count())
 
     def test_edit_model(self):
         # TODO: Add validation to importhandlers
@@ -254,7 +276,8 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         tag3 = Tag.query.filter_by(text='some_new').one()
         self.assertEquals(tag3.count, 1)
 
-    def test_train_model_validation_errors(self):
+    @mock_s3
+    def test_train_model_validation_errors(self, *mocks):
         self.assertTrue(self.obj.status, Model.STATUS_NEW)
         self.check_edit_error({}, {
             'fields': 'One of spot_instance_type, aws_instance is required.'
@@ -288,9 +311,10 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
             'dataset': 'DataSet not found',
         }, id=self.obj.id, action='train')
 
+    @mock_s3
     @patch('api.ml_models.models.Model.get_features_json')
     @patch('core.trainer.trainer.Trainer.__init__')
-    def test_train_model_exception(self, mock_trainer, mock_get_features_json):
+    def test_train_model_exception(self, mock_trainer, mock_get_features_json, *mocks):
         mock_trainer.side_effect = Exception('Some message')
         with open('./conf/features.json', 'r') as f:
             mock_get_features_json.return_value = f.read()
@@ -303,8 +327,9 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         self.assertEqual(obj.status, obj.STATUS_ERROR)
         self.assertEqual(obj.error, 'Some message')
 
+    @mock_s3
     @patch('api.ml_models.models.Model.get_features_json')
-    def test_train_model_with_dataset(self, mock_get_features_json):
+    def test_train_model_with_dataset(self, mock_get_features_json, *mocks):
         with open('./conf/features.json', 'r') as f:
             mock_get_features_json.return_value = f.read()
 
@@ -321,8 +346,9 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue(obj.memory_usage > 0)
         self.assertEqual(obj.train_records_count, 100)
 
+    @mock_s3
     @patch('api.ml_models.models.Model.get_features_json')
-    def test_train_model_with_dataset_csv(self, mock_get_features_json):
+    def test_train_model_with_dataset_csv(self, mock_get_features_json, *mocks):
         with open('./conf/features.json', 'r') as f:
             mock_get_features_json.return_value = f.read()
 
@@ -339,9 +365,11 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue(obj.memory_usage > 0)
         self.assertEqual(obj.train_records_count, 100)
 
+    @mock_s3
     @patch('api.ml_models.models.Model.get_features_json')
     def test_train_model_with_dataset_other_handler(self,
-                                                    mock_get_features_json):
+                                                    mock_get_features_json,
+                                                    *mocks):
         with open('./conf/features.json', 'r') as f:
             mock_get_features_json.return_value = f.read()
 
@@ -368,8 +396,9 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue(obj.memory_usage > 0)
         self.assertEqual(obj.train_records_count, 100)
 
+    @mock_s3
     @patch('api.ml_models.models.Model.get_features_json')
-    def test_train_model_with_dataset(self, mock_get_features_json):
+    def test_train_model_with_dataset(self, mock_get_features_json, *mocks):
         with open('./conf/features.json', 'r') as f:
             mock_get_features_json.return_value = f.read()
 
@@ -390,8 +419,9 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue(obj.memory_usage > 0)
         self.assertEqual(obj.train_records_count, 200)
 
+    @mock_s3
     @patch('api.ml_models.models.Model.get_features_json')
-    def test_train_model_with_load_params(self, mock_get_features_json):
+    def test_train_model_with_load_params(self, mock_get_features_json, *mocks):
         with open('./conf/features.json', 'r') as f:
             mock_get_features_json.return_value = f.read()
 
@@ -410,8 +440,9 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue(obj.memory_usage > 0)
         self.assertEqual(obj.train_records_count, 99)
 
+    @mock_s3
     @patch('api.ml_models.models.Model.get_features_json')
-    def test_train_model_with_load_params_csv(self, mock_get_features_json):
+    def test_train_model_with_load_params_csv(self, mock_get_features_json, *mocks):
         with open('./conf/features.json', 'r') as f:
             mock_get_features_json.return_value = f.read()
 
@@ -479,8 +510,9 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
 
         self.assertEquals(obj.status, 'Trained')
 
+    @mock_s3
     @patch('api.instances.tasks.cancel_request_spot_instance')
-    def test_cancel_request_instance(self, mock_task):
+    def test_cancel_request_instance(self, mock_task, *mocks):
         url = self._get_url(id=self.obj.id, action='cancel_request_instance')
 
         resp = self.client.put(url, headers=HTTP_HEADERS)

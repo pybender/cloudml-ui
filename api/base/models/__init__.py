@@ -1,4 +1,4 @@
-from .models import BaseMixin, BaseModel, db
+from .models import BaseMixin, BaseModel, db, commit_on_success
 from .fields import JSONType, GridfsFile, S3File
 from .serialization import JsonSerializableMixin
 

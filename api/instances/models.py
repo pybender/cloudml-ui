@@ -14,10 +14,11 @@ class Instance(BaseModel, db.Model):
                      nullable=False)
     is_default = db.Column(db.Boolean, default=False)
 
-    def save(self):
-        BaseModel.save(self)
+    def save(self, commit=True):
+        BaseModel.save(self, commit=False)
         if self.is_default:
             Instance.query\
-                .filter(Instance.is_default, Instance.id != self.id)\
+                .filter(Instance.is_default, Instance.name != self.name)\
                 .update({Instance.is_default: False})
+        if commit:
             db.session.commit()

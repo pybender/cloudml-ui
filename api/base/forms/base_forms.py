@@ -131,9 +131,13 @@ class BasePredefinedForm(BaseForm):
         self.cleaned_data['type'] = obj.type
         self.cleaned_data['params'] = obj.params
 
-    def save(self, commit=True):
+    def save_inner(self):
+        obj = self.save()
+        return obj.to_dict()
+
+    def save(self):
         commit = self.cleaned_data['is_predefined']
-        obj = super(BasePredefinedForm, self).save(commit)
+        obj = super(BasePredefinedForm, self).save(commit, commit)
         feature = self.cleaned_data.get('feature', None)
         if feature:
             setattr(feature, self.OBJECT_NAME, obj.to_dict())

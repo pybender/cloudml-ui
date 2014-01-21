@@ -7,7 +7,7 @@ from models import ImportHandler, PredefinedDataSource, DataSet
 
 class ImportHandlerAdmin(BaseAdmin):
     Model = ImportHandler
-    column_list = ['name', 'import_params']
+    column_list = ['id', 'name', 'import_params']
     column_filters = ('name', )
 
 admin.add_view(ImportHandlerAdmin(

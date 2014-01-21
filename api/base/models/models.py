@@ -1,3 +1,4 @@
+from functools import wraps
 from flask import has_request_context, request
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy import func
@@ -19,9 +20,9 @@ class BaseMixin(JsonSerializableMixin):
 
     def _set_user(self, user):
         if user:
-            field = 'updated_by' if self.id else 'created_by'
-            if hasattr(self, field):
-                setattr(self, field, user)
+            self.updated_by = user
+            if self.id is None:
+                self.created_by = user
 
     def save(self, commit=True):
         if has_request_context():
@@ -59,3 +60,22 @@ class BaseModel(BaseMixin):
     def updated_by(cls):
         return relationship(
             "User", foreign_keys='%s.updated_by_id' % cls.__name__)
+
+
+def commit_on_success(func, raise_exc=False):
+    def _commit_on_success(*args, **kw):
+        db = func.func_globals['db']
+        try:
+            return func(*args, **kw)
+        except:
+            if db.session.dirty:
+                db.session.rollback()
+            raise
+        else:
+            if db.session.dirty:
+                try:
+                    db.session.commit()
+                except:
+                    db.session.rollback()
+                    raise
+    return wraps(func)(_commit_on_success)
