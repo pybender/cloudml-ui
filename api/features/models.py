@@ -129,7 +129,7 @@ class RefFeatureSetMixin(object):
 class Feature(ExportImportMixin, RefFeatureSetMixin,
               BaseModel, db.Model):
     FIELDS_TO_SERIALIZE = ('name', 'type', 'input_format', 'params',
-                           'default', 'is_target_variable', 'required',
+                           'default', 'is_target_variable', 'is_required',
                            'transformer', 'scaler')
 
     name = db.Column(db.String(200), nullable=False)
@@ -199,7 +199,7 @@ class FeatureSet(ExportImportMixin, BaseModel, db.Model):
         return self.features_dict
 
     def from_dict(self, features_dict, commit=True):
-        self.schema_name = features_dict['schema-name']
+        self.schema_name = features_dict['schema_name']
 
         type_list = features_dict.get('feature-types', None)
         if type_list:
@@ -244,7 +244,11 @@ class FeatureSet(ExportImportMixin, BaseModel, db.Model):
 
 @event.listens_for(Feature, "after_insert")
 def after_insert_feature(mapper, connection, target):
+    print 'HERE'
+    print target
+    print target.feature_set
     if target.feature_set is not None:
+        print 'UP'
         update_feature_set_on_change_features(
             connection, target.feature_set, target)
 

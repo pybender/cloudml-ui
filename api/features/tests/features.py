@@ -74,14 +74,14 @@ transformer-type: Should be one of Count, Tfidf, Lda, Dictionary, Lsi"})
             "feature_set_id": self.model.features_set_id,
             "input_format": "choice",
             "default": "100",
-            "required": True,
+            "is_required": True,
             "is_target_variable": True
         }
         resp, obj = self.check_edit(data)
         self.assertEquals(obj.name, data['name'])
         self.assertEquals(obj.type, data['type'])
         self.assertEquals(obj.feature_set_id, data['feature_set_id'])
-        self.assertTrue(obj.required)
+        self.assertTrue(obj.is_required)
         self.assertTrue(obj.is_target_variable)
         self.assertEquals(obj.input_format, data['input_format'])
         self.assertEquals(obj.default, data['default'])
@@ -145,9 +145,9 @@ transformer-type: Should be one of Count, Tfidf, Lda, Dictionary, Lsi"})
         resp, obj = self.check_edit(data, id=self.obj.id)
         self.assertEquals(obj.default, data['default'])
 
-        data = {"required": True}
+        data = {"is_required": True}
         resp, obj = self.check_edit(data, id=self.obj.id)
-        self.assertEquals(obj.required, data['required'])
+        self.assertEquals(obj.is_required, data['is_required'])
 
     def test_edit_feature(self):
         """
@@ -217,7 +217,7 @@ class TestFeaturesDocs(BaseDbTestCase):
             'feature_set_id': fset.id,
             'name': 'name',
             'type': 'text',
-            'required': False}
+            'is_required': False}
         fields_from_dict(feature, feature_data)
         feature.save()
         fdict = feature.to_dict()
@@ -247,14 +247,14 @@ class TestFeaturesDocs(BaseDbTestCase):
 
         def expire_fset():
             db.session.expire(
-                fset, ['target_variable','features_count', 'features_dict'])
+                fset, ['target_variable', 'features_count'])
 
         fset.schema_name = 'bestmatch'
         fset.save()
-        self.assertTrue(fset.features_dict)
+        self.assertTrue(fset.features)
         self.assertEquals(fset.features_count, 0)
 
-        self.assertEquals(fset.features_dict,
+        self.assertEquals(fset.features,
                           {'feature-types': [],
                            'features': [],
                            'schema_name': 'bestmatch'})
@@ -269,11 +269,8 @@ class TestFeaturesDocs(BaseDbTestCase):
         expire_fset()
         self.assertFalse(fset.target_variable)
         self.assertEquals(fset.features_count, 1)
-        self.assertEquals(len(fset.features_dict['features']), 0)
-        # Note: features_dict updates after accessing to features property
-        print fset.features
         expire_fset()
-        self.assertEquals(len(fset.features_dict['features']), 1)
+        self.assertEquals(len(fset.features['features']), 1)
 
         feature2 = Feature()
         feature2_data = {
@@ -286,29 +283,26 @@ class TestFeaturesDocs(BaseDbTestCase):
         expire_fset()
         self.assertEquals(fset.features_count, 2)
         self.assertEquals(fset.target_variable, 'hire_outcome')
-        print fset.features
         expire_fset()
-        self.assertEquals(len(fset.features_dict['features']), 2)
+        self.assertEquals(len(fset.features['features']), 2)
 
         feature1 = Feature.query.get(feature1.id)
         feature1.name = 'feature_new_name'
         feature1.save()
 
-        print fset.features
         expire_fset()
         self.assertEquals(fset.features_count, 2)
-        self.assertEquals(len(fset.features_dict['features']), 2)
+        self.assertEquals(len(fset.features['features']), 2)
         self.assertTrue(
-            'feature_new_name' in str(fset.features_dict['features']))
+            'feature_new_name' in str(fset.features['features']))
 
         feature1 = Feature.query.get(feature1.id)
         feature1.delete()
         fset = FeatureSet.query.get(fset.id)
-        print fset.features
         expire_fset()
         self.assertEquals(fset.features_count, 1)
-        self.assertEquals(len(fset.features_dict['features']), 1)
-        self.assertEquals(fset.features_dict['features'][0]['name'],
+        self.assertEquals(len(fset.features['features']), 1)
+        self.assertEquals(fset.features['features'][0]['name'],
                           'hire_outcome')
 
     def test_load_from_features_dict(self):
@@ -355,7 +349,7 @@ class TestFeaturesDocs(BaseDbTestCase):
             'is_target_variable': False,
             'type': 'text',
             'params': {},
-            'required': True}
+            'is_required': True}
         )
         transformer = feature.transformer
         self.assertTrue(feature.transformer)
@@ -376,7 +370,7 @@ class TestFeaturesDocs(BaseDbTestCase):
         feature = _check_feature('contractor.dev_last_worked',
                                  {'default': 946684800})
         feature = _check_feature('contractor.dev_year_exp',
-                                 {'required': False})
+                                 {'is_required': False})
         feature = _check_feature('employer.op_timezone',
                                  {'type': 'str_to_timezone'})
 
