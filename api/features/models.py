@@ -16,39 +16,24 @@ class ExportImportMixin(object):
     """
     NO_PARAMS_KEY = False
 
-    @classmethod
-    def from_dict(cls, obj_dict, extra_fields={},
-                  filter_params=None, save=True, add_new=False, commit=True):
+    def from_dict(self, obj_dict, extra_fields={}, commit=True):
         obj_dict.update(extra_fields)
-        fields_list = list(cls.FIELDS_TO_SERIALIZE) + extra_fields.keys()
-        obj = None
-        if not add_new and save:
-            if filter_params is None:
-                filter_params = {'name': obj_dict['name']}
-            obj_query = cls.query.filter_by(**filter_params)
-            if obj_query.count():
-                obj = obj_query[0]
+        fields_list = list(self.FIELDS_TO_SERIALIZE) + extra_fields.keys()
 
-        if not obj:
-            obj = cls()
-            for field in fields_list:
-                dict_field_name = FIELDS_MAP.get(field, field)
-                if cls.NO_PARAMS_KEY and field == 'params':
-                    # Fields that would be placed to params dict.
-                    params_fields = set(obj_dict.keys()) - \
-                        set(cls.FIELDS_TO_SERIALIZE + SYSTEM_FIELDS)
-                    value = dict([(name, obj_dict[name])
-                                 for name in params_fields])
-                else:
-                    value = obj_dict.get(dict_field_name, None)
-                if value is not None:
-                    setattr(obj, field, value)
+        for field in fields_list:
+            dict_field_name = FIELDS_MAP.get(field, field)
+            if self.NO_PARAMS_KEY and field == 'params':
+                # Fields that would be placed to params dict.
+                params_fields = set(obj_dict.keys()) - \
+                    set(self.FIELDS_TO_SERIALIZE + SYSTEM_FIELDS)
+                value = dict([(name, obj_dict[name])
+                             for name in params_fields])
+            else:
+                value = obj_dict.get(dict_field_name, None)
+            if value is not None:
+                setattr(self, field, value)
 
-            obj.save(commit=commit)
-
-            return obj, True
-
-        return obj, False
+        self.save(commit=commit)
 
     def to_dict(self):
         data = {}
@@ -107,18 +92,6 @@ class PredefinedClassifier(BaseModel, PredefinedItemMixin,
     TYPES_LIST = CLASSIFIERS.keys()
     type = db.Column(
         db.Enum(*TYPES_LIST, name='classifier_types'), nullable=False)
-
-    @classmethod
-    def from_model_features_dict(cls, name, features_dict):
-        if not features_dict:
-            classifier = cls()
-            classifier.name = name
-            return classifier
-
-        classifier, is_new = PredefinedClassifier.from_dict(
-            features_dict['classifier'], add_new=True,
-            extra_fields={'name': name}, commit=False)
-        return classifier
 
 
 class PredefinedTransformer(BaseModel, PredefinedItemMixin, db.Model,
@@ -188,12 +161,13 @@ class Feature(ExportImportMixin, RefFeatureSetMixin,
             return None
         return self.scaler['type']
 
-    def save(self, *args, **kwargs):
-        super(Feature, self).save(*args, **kwargs)
+    def save(self, commit=True):
+        super(Feature, self).save(commit=False)
         if self.is_target_variable:
             Feature.query\
                 .filter(Feature.is_target_variable, Feature.name != self.name)\
                 .update({Feature.is_target_variable: False})
+        if commit:
             db.session.commit()
 
 
@@ -224,33 +198,23 @@ class FeatureSet(ExportImportMixin, BaseModel, db.Model):
             self.save()
         return self.features_dict
 
-    @classmethod
-    def from_model_features_dict(cls, name, features_dict):
-        if not features_dict:
-            feature_set = FeatureSet()
-            feature_set.name = name
-            feature_set.save()
-            return feature_set
-
-        feature_set, is_new = FeatureSet.from_dict(
-            features_dict, add_new=True)
+    def from_dict(self, features_dict, commit=True):
+        self.schema_name = features_dict['schema-name']
 
         type_list = features_dict.get('feature-types', None)
         if type_list:
             for feature_type in type_list:
-                NamedFeatureType.from_dict(feature_type, commit=False)
+                ntype = NamedFeatureType()
+                ntype.from_dict(feature_type, commit=False)
 
         for feature_dict in features_dict['features']:
-            feature, is_new = Feature.from_dict(
-                feature_dict, add_new=True,
-                extra_fields={'feature_set': feature_set},
-                commit=False)
-        db.session.commit()
-
-        db.session.expire(feature_set, ['target_variable',
+            feature = Feature(feature_set=self)
+            feature.from_dict(feature_dict, commit=False)
+        if commit:
+            db.session.commit()
+            db.session.expire(self, ['target_variable',
                                         'features_count',
                                         'features_dict'])
-        return feature_set
 
     def to_dict(self):
         features_dict = {'schema-name': self.schema_name,
@@ -268,12 +232,12 @@ class FeatureSet(ExportImportMixin, BaseModel, db.Model):
 
         return features_dict
 
-    def save(self, *args, **kwargs):
+    def save(self, commit=True):
         # TODO: Why do default attr of the column not work?
         if self.features_dict is None:
             self.features_dict = self.FEATURES_STRUCT
         self.features_dict['schema-name'] = self.schema_name
-        BaseModel.save(self, *args, **kwargs)
+        BaseModel.save(self, commit=commit)
 
 
 @event.listens_for(Feature, "after_insert")

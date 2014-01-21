@@ -32,22 +32,22 @@
     <div class="control-group" ng-class="{error: Form.train_import_handler.$invalid || Form.train_import_handler_file.$invalid}">
       <label class="control-label">Train Import Handler</label>
       <div class="controls">
-        <select name="train_import_handler" ng-model="model.train_import_handler">
+        <select name="train_import_handler" ng-model="model.train_import_handler" ng-required='!model.train_import_handler_file'>
           <option ng-repeat="handler in handlers" value="{{ handler.id }}">{{ handler.name }}</option>
         </select> 
         <span>or</span> 
-        <input type="file" name="train_import_handler_file" ng-model="model.train_import_handler_file" json-file />
+        <input type="file" name="train_import_handler_file" ng-model="model.train_import_handler_file" json-file ng-required='!model.train_import_handler' />
         <span ng-show="Form.train_import_handler_file.$error.jsonFile" class="help-block">Should be a valid json file</span>
       </div>
     </div>
     <div class="control-group" ng-class="{error: Form.test_import_handler.$invalid || Form.test_import_handler_file.$invalid}">
       <label class="control-label">Test Import Handler</label>
       <div class="controls">
-        <select name="test_import_handler" ng-model="model.test_import_handler">
+        <select name="test_import_handler" ng-model="model.test_import_handler" ng-required='!model.test_import_handler_file'>
             <option ng-repeat="handler in handlers" value="{{ handler.id }}">{{ handler.name }}</option>
         </select>
         <span>or</span> 
-        <input type="file" name="test_import_handler_file" ng-model="model.test_import_handler_file" json-file />
+        <input type="file" name="test_import_handler_file" ng-model="model.test_import_handler_file" json-file ng-required='!model.test_import_handler' />
         <span ng-show="Form.test_import_handler_file.$error.jsonFile" class="help-block">Should be a valid json file</span>
       </div>
     </div>
@@ -55,6 +55,6 @@
 
   <br />
   <a href="#/models" class="btn">Cancel</a>
-    <button ng-click="save(['name', 'features', 'test_import_handler', 'train_import_handler', 'train_import_handler_file', 'test_import_handler_file', 'train_format', 'test_format'])" ng-disabled="Form.$invalid || !(model.train_import_handler_file || model.train_import_handler) || !(model.test_import_handler_file || model.test_import_handler)" class="btn btn-primary">Add new model</button> <small>and start training</small>
+    <button ng-click="save(['name', 'features', 'test_import_handler', 'train_import_handler', 'train_import_handler_file', 'test_import_handler_file', 'train_format', 'test_format'])" ng-disabled="Form.$invalid" class="btn btn-primary">Add new model</button> <small>and start training</small>
   </form>
 </div>

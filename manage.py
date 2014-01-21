@@ -122,7 +122,7 @@ class Test(Command):
         import nose
         app.config.from_object('api.test_config')
         app.init_db()
-        argv = ['']
+        argv = ['--with-coverage', '--verbose']
         tests = kwargs.get('tests', None)
         if tests:
             argv.append('--tests')

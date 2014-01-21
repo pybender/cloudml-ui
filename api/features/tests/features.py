@@ -313,12 +313,11 @@ class TestFeaturesDocs(BaseDbTestCase):
 
     def test_load_from_features_dict(self):
         features_json = json.loads(open('./conf/features.json', 'r').read())
-        feature_set = FeatureSet.\
-            from_model_features_dict("Set", features_json)
+        feature_set = FeatureSet()
+        feature_set.from_dict(features_json)
         self.assertTrue(feature_set)
         self.assertEquals(feature_set.schema_name, 'bestmatch')
-        print feature_set.features
-        self.assertEquals(len(feature_set.features_dict['features']), 37)
+        self.assertEquals(len(feature_set.features['features']), 37)
         self.assertEquals(feature_set.features_count, 37)
         self.assertEquals(feature_set.target_variable, 'hire_outcome')
 

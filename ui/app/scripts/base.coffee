@@ -91,7 +91,8 @@ angular.module('app.base', ['app.config', 'app.services'])
           data = $.extend(data, opts.extraData)
 
         method = if @isNew() then "POST" else "PUT"
-        @$make_request(@BASE_API_URL + (@id + "/" or ""), {}, method, data)
+        url = if @id? then @BASE_API_URL + @id + "/" else @BASE_API_URL
+        @$make_request(url, {}, method, data)
 
       # Removes object by id
       $delete: (opts={}) =>

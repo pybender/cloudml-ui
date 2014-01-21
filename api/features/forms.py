@@ -179,12 +179,6 @@ class FeatureForm(BaseForm, FeatureParamsMixin):
                         data_from_request=False)
     remove_scaler = BooleanField()
 
-    def clean_transformer(self, value, form):
-        return value.to_dict()
-
-    def clean_scaler(self, value, form):
-        return value.to_dict()
-
     def clean_type(self, value, field):
         if value and not value in NamedFeatureType.TYPES_LIST:
             # Try to find type in named types
