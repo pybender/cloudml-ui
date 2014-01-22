@@ -252,7 +252,7 @@ class BaseResource(restful.Resource):
         return self._render({self.OBJECT_NAME: model}, code=200)
 
     def _prepare_updated_model(self, model, params):
-        return self._prepare_model_any(model, params)
+        return self._prepare_model(model, params)
 
     ### DELETE ###
 
