@@ -463,6 +463,7 @@ def migrate():
             print "current val:", feature.id, feature.is_target_variable, feature.name
             feature.is_target_variable = True
             app.sql_db.session.add(feature)
+            app.sql_db.commit()
         else:
             print "ERROR: target var not set!"
 
