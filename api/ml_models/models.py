@@ -149,6 +149,7 @@ class Model(db.Model, BaseModel):
         return self.get_features_json()
 
     def delete_metadata(self, delete_log=True):
+        from api.base.models import db
         if delete_log:
             LogMessage.delete_related_logs(self)
 

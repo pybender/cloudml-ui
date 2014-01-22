@@ -21,10 +21,12 @@ def train_model(dataset_ids, model_id, user_id):
     Train new model celery task.
     """
     init_logger('trainmodel_log', obj=int(model_id))
+    logging.info('Start train') 
 
     user = User.query.get(user_id)
     model = Model.query.get(model_id)
     datasets = DataSet.query.filter(DataSet.id.in_(dataset_ids)).all()
+    logging.info('model %s' % model.name)
 
     try:
         model.delete_metadata()
