@@ -1,4 +1,4 @@
-from api import app
+from ..api import app
 
 token = app.config['AMAZON_ACCESS_TOKEN']
 secret = app.config['AMAZON_TOKEN_SECRET']
@@ -55,18 +55,18 @@ conn = boto.ec2.connect_to_region('us-west-2',
 # print req.instance_id
 # print req.state
 
-#inst = conn.start_instances(instance_ids=['i-49a0597d', ])
-# print inst
-# print inst[0].ip_address
+inst = conn.start_instances(instance_ids=['i-49a0597d', ])
+print inst
+print inst[0].ip_address
 
 #conn.stop_instances(instance_ids=['i-49a0597d'])
 # i-07610933 i-fbfcf4cf
 
-inst = conn.get_all_instances(instance_ids=['i-49a0597d',])#instance_ids=['i-49a0597d', ])
-# instance = inst[0].instances[0]
-# ####instance.terminate()
-image = inst[0].instances[0].create_image('cloudml-worker.v2.7')
-print image
+# inst = conn.get_all_instances(instance_ids=['i-49a0597d',])#instance_ids=['i-49a0597d', ])
+# # instance = inst[0].instances[0]
+# # ####instance.terminate()
+# image = inst[0].instances[0].create_image('cloudml-worker.v2.7')
+# print image
 
 # # # # # #print inst[0], dir(inst[0].instances[0])
 # for i in inst:
