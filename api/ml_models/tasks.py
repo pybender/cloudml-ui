@@ -8,34 +8,66 @@ from core.trainer.config import FeatureModel
 
 from api import celery, app
 from api.base.models import db
+from api.base.tasks import SqlAlchemyTask
 from api.base.exceptions import InvalidOperationError
 from api.logs.logger import init_logger
 from api.accounts.models import User
 from api.ml_models.models import Model, Weight, WeightsCategory
+from api.model_tests.models import TestResult, TestExample
 from api.import_handlers.models import DataSet
+from api.logs.models import LogMessage
+
+db_session = db.session
 
 
-@celery.task
+@celery.task(base=SqlAlchemyTask)
 def train_model(dataset_ids, model_id, user_id):
     """
     Train new model celery task.
     """
     init_logger('trainmodel_log', obj=int(model_id))
-    logging.info('Start train') 
+    logging.info('Start training task')
 
     user = User.query.get(user_id)
     model = Model.query.get(model_id)
     datasets = DataSet.query.filter(DataSet.id.in_(dataset_ids)).all()
-    logging.info('model %s' % model.name)
+    logging.info('Model: %s' % model.name)
 
     try:
-        model.delete_metadata()
-
+        delete_metadata = model.status != model.STATUS_NEW
+        model.comparable = False
         model.datasets = datasets
         model.status = model.STATUS_TRAINING
         model.error = ""
         model.trained_by = user
-        model.save()
+        model.save(commit=True)
+
+        if delete_metadata:
+            logging.info('Remove old model data on retrain model')
+            LogMessage.delete_related_logs(model)  # rem logs from mongo
+            count = TestExample.query.filter(
+                TestExample.model_id==model.id).delete(
+                synchronize_session=False)
+            logging.info('%s tests examples to delete' % count)
+            count = TestResult.query.filter(
+                TestResult.model_id==model.id).delete(
+                synchronize_session=False)
+            logging.info('%s tests to delete' % count)
+            db_session.commit()
+
+            count = Weight.query.filter(
+                Weight.model_id==model.id).delete(
+                synchronize_session=False)
+            logging.info('%s weights to delete' % count)
+            db_session.commit()
+
+            count = WeightsCategory.query.filter(
+                WeightsCategory.model_id==model.id).delete(
+                synchronize_session=False)
+            logging.info('%s weight categories to delete' % count)
+            db_session.commit() 
+
+        logging.info('Perform model training')
         feature_model = FeatureModel(model.get_features_json(),
                                      is_file=False)
         trainer = Trainer(feature_model)
@@ -77,9 +109,11 @@ def train_model(dataset_ids, model_id, user_id):
 
         fill_model_parameter_weights.delay(model.id)
     except Exception, exc:
+        db_session.rollback()
+
         logging.exception('Got exception when train model')
         model.status = model.STATUS_ERROR
-        model.error = str(exc)
+        model.error = str(exc)[:299]
         model.save()
         raise
 
@@ -88,7 +122,7 @@ def train_model(dataset_ids, model_id, user_id):
     return msg
 
 
-@celery.task
+@celery.task(base=SqlAlchemyTask)
 def fill_model_parameter_weights(model_id):
     """
     Adds model parameters weights to db.
