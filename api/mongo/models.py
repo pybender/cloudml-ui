@@ -157,7 +157,7 @@ class FeatureSet(BaseDocument):
         'created_on': datetime.utcnow,
         'updated_on': datetime.utcnow,
         'features_count': 0,
-        'features_dict': {'schema_name': '',
+        'features_dict': {'schema-name': '',
                           'features': [],
                           "feature-types": []}
     }

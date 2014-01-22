@@ -255,7 +255,7 @@ class TestFeaturesDocs(BaseDbTestCase):
         self.assertEquals(fset.features_count, 0)
 
         self.assertEquals(fset.features,
-                          {'feature-types': [],
+                          {'feature_types': [],
                            'features': [],
                            'schema_name': 'bestmatch'})
         feature1 = Feature()

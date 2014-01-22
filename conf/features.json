@@ -4,7 +4,7 @@
     "type": "logistic regression",
     "params": {"penalty": "l2"}
   },
-  "feature-types":[
+  "feature_types":[
     {
       "name":"str_to_timezone",
       "type": "composite",

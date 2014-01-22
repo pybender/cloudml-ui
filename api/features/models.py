@@ -177,7 +177,7 @@ class FeatureSet(ExportImportMixin, BaseModel, db.Model):
 
     FEATURES_STRUCT = {'schema_name': '',
                        'features': [],
-                       "feature-types": []}
+                       "feature_types": []}
     schema_name = db.Column(db.String(200), nullable=False, default='noname')
     target_variable = db.Column(db.String(200))
     features_count = db.Column(db.Integer, default=0)
@@ -201,7 +201,7 @@ class FeatureSet(ExportImportMixin, BaseModel, db.Model):
     def from_dict(self, features_dict, commit=True):
         self.schema_name = features_dict['schema_name']
 
-        type_list = features_dict.get('feature-types', None)
+        type_list = features_dict.get('feature_types', None)
         if type_list:
             for feature_type in type_list:
                 count = NamedFeatureType.query.filter_by(name=feature_type['name']).count()
@@ -221,7 +221,7 @@ class FeatureSet(ExportImportMixin, BaseModel, db.Model):
     def to_dict(self):
         features_dict = {'schema_name': self.schema_name,
                          'features': [],
-                         "feature-types": []}
+                         "feature_types": []}
         types = []
         for feature in Feature.query.filter_by(feature_set=self):
             if feature.type not in NamedFeatureType.TYPES_LIST:
@@ -230,7 +230,7 @@ class FeatureSet(ExportImportMixin, BaseModel, db.Model):
 
         for ftype in set(types):
             named_type = NamedFeatureType.query.filter_by(name=ftype).one()
-            features_dict['feature-types'].append(named_type.to_dict())
+            features_dict['feature_types'].append(named_type.to_dict())
 
         return features_dict
 
