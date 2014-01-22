@@ -57,7 +57,7 @@ def task_postrun_handler(sender=None, task_id=None, task=None, args=None,
     if task_obj:
         if isinstance(retval, Exception):
             task_obj.status = AsyncTask.STATUS_ERROR
-            task_obj.error = str(retval)
+            task_obj.error = str(retval)[0:299]
         else:
             task_obj.status = AsyncTask.STATUS_COMPLETED
             task_obj.result = retval

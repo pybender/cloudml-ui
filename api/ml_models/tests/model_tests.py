@@ -472,18 +472,21 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
             name=TestResultData.test_01.name).first()
         test1.model = self.obj
         test1.save()
+        test1_id = test1.id
 
         example1 = TestExample.query.filter_by(
             name=TestExampleData.test_example_01.name).first()
         example1.test_result = test1
         example1.model = self.obj
         example1.save()
+        example1_id = example1.id
 
         example2 = TestExample.query.filter_by(
             name=TestExampleData.test_example_02.name).first()
         example2.test_result = test1
         example2.model = self.obj
         example2.save()
+        example2_id = example2.id
 
         data = {'aws_instance': self.instance.id,
                 'start': '2012-12-03',
@@ -494,9 +497,9 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         resp, obj = self.check_edit(data, id=self.obj.id, action='train')
         self.assertEqual(obj.status, Model.STATUS_TRAINED, obj.error)
 
-        self.assertIsNone(TestResult.query.filter_by(id=test1.id).first())
-        self.assertIsNone(TestExample.query.filter_by(id=example1.id).first())
-        self.assertIsNone(TestExample.query.filter_by(id=example2.id).first())
+        self.assertIsNone(TestResult.query.filter_by(id=test1_id).first())
+        self.assertIsNone(TestExample.query.filter_by(id=example1_id).first())
+        self.assertIsNone(TestExample.query.filter_by(id=example2_id).first())
 
         # Checking weights
         self.assertTrue(obj.weights_synchronized)

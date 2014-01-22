@@ -9,6 +9,7 @@ from os.path import exists
 from datetime import timedelta, datetime
 
 from api import celery, app
+from api.base.tasks import SqlAlchemyTask
 from api.amazon_utils import AmazonS3Helper
 from api.base.exceptions import InvalidOperationError
 from api.logs.logger import init_logger
@@ -17,7 +18,7 @@ from api.ml_models.models import Model
 from api.import_handlers.models import DataSet
 
 
-@celery.task
+@celery.task(base=SqlAlchemyTask)
 def run_test(dataset_ids, test_id):
     """
     Running tests for trained model
@@ -160,7 +161,7 @@ def _add_example_to_db(test, data, label, pred, prob, num):
     return example, new_row
 
 
-@celery.task
+@celery.task(base=SqlAlchemyTask)
 def calculate_confusion_matrix(test_id, weight0, weight1):
     """
     Calculate confusion matrix for test.
@@ -204,7 +205,7 @@ def calculate_confusion_matrix(test_id, weight0, weight1):
     return zip(model.labels, matrix)
 
 
-@celery.task
+@celery.task(base=SqlAlchemyTask)
 def get_csv_results(model_id, test_id, fields):
     """
     Get test classification results using csv format.

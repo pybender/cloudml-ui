@@ -7,13 +7,14 @@ from api import celery, app
 from api.logs.logger import init_logger
 from api.amazon_utils import AmazonEC2Helper
 from api.ml_models.models import Model
+from api.base.tasks import SqlAlchemyTask
 
 
 class InstanceRequestingError(Exception):
     pass
 
 
-@celery.task
+@celery.task(base=SqlAlchemyTask)
 def request_spot_instance(dataset_id=None, instance_type=None, model_id=None):
     init_logger('trainmodel_log', obj=int(model_id))
 
@@ -36,7 +37,7 @@ def request_spot_instance(dataset_id=None, instance_type=None, model_id=None):
     return request.id
 
 
-@celery.task()
+@celery.task(base=SqlAlchemyTask)
 def get_request_instance(request_id,
                          callback=None,
                          dataset_ids=None,
@@ -106,20 +107,20 @@ State is {0!s}, status is {1!s}, {2!s}.'.format(
     return instance.private_ip_address
 
 
-@celery.task
+@celery.task(base=SqlAlchemyTask)
 def terminate_instance(task_id=None, instance_id=None):
     ec2 = AmazonEC2Helper()
     ec2.terminate_instance(instance_id)
     logging.info('Instance %s terminated' % instance_id)
 
 
-@celery.task
+@celery.task(base=SqlAlchemyTask)
 def self_terminate(result=None):  # pragma: no cover
     logging.info('Instance will be terminated')
     system("halt")
 
 
-@celery.task
+@celery.task(base=SqlAlchemyTask)
 def cancel_request_spot_instance(request_id, model_id):
     init_logger('trainmodel_log', obj=int(model_id))
     model = Model.query.get(model_id)

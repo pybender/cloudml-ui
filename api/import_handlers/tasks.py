@@ -8,10 +8,11 @@ from api.logs.logger import init_logger
 from api import celery
 from api.ml_models.models import Model
 from api.model_tests.models import TestResult
+from api.base.tasks import SqlAlchemyTask
 from models import DataSet
 
 
-@celery.task
+@celery.task(base=SqlAlchemyTask)
 def import_data(dataset_id, model_id=None, test_id=None):
     """
     Import data from database.
@@ -97,7 +98,7 @@ with%s compression", importhandler.name, '' if dataset.compress else 'out')
     return [dataset_id]
 
 
-@celery.task
+@celery.task(base=SqlAlchemyTask)
 def upload_dataset(dataset_id):
     """
     Upload dataset to S3.

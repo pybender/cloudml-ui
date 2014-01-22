@@ -4,6 +4,7 @@ STATIC_ROOT = None
 
 SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:postgres@localhost/cloudml_data'
 
+
 UPLOAD_FOLDER = 'models'
 DATA_FOLDER = './data'
 MAX_CONTENT_LENGTH = 128 * 1024 * 1024

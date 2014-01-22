@@ -55,6 +55,7 @@ class App(Flask):
         #self.config.from_envvar('CLOUDML_CONFIG', silent=True)
         self.conn = Connection(host=self.config.get('DATABASE_HOST', 'localhost'))
         self.url_map.converters['regex'] = RegExConverter
+        self.init_sql_db()
 
     @property
     def db(self):
@@ -76,8 +77,6 @@ class App(Flask):
 
     @property
     def sql_db(self):
-        if not hasattr(self, '_sql_db'):
-            self.init_sql_db()
         return self._sql_db
 
     def init_sql_db(self):
