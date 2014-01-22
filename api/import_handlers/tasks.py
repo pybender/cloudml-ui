@@ -8,6 +8,7 @@ from api.logs.logger import init_logger
 from api import celery
 from api.ml_models.models import Model
 from api.model_tests.models import TestResult
+from api.base.tasks import SqlAlchemyTask
 from models import DataSet
 
 
