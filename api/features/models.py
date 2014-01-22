@@ -244,11 +244,7 @@ class FeatureSet(ExportImportMixin, BaseModel, db.Model):
 
 @event.listens_for(Feature, "after_insert")
 def after_insert_feature(mapper, connection, target):
-    print 'HERE'
-    print target
-    print target.feature_set
     if target.feature_set is not None:
-        print 'UP'
         update_feature_set_on_change_features(
             connection, target.feature_set, target)
 
