@@ -7,6 +7,7 @@ from models import TestResult, TestExample
 
 class TestResultAdmin(BaseAdmin):
     Model = TestResult
+    form_excluded_columns = ('examples', )
     column_formatters = {
         'status': macro('status_with_error'),
         'model': macro('render_fk_link'),}

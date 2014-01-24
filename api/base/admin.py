@@ -9,6 +9,13 @@ class BaseAdmin(sqla.ModelView):
     column_display_pk = True
     MIX_METADATA = True
     list_template = 'admin/model/object_list.html'
+    column_default_sort = 'id'
+    form_widget_args = {
+        'created_by': {'disabled':True},
+        'created_on': {'disabled':True},
+        'updated_by': {'disabled':True},
+        'updated_on': {'disabled':True}
+    }
 
     def is_accessible(self):  # TODO: ?
         return True
