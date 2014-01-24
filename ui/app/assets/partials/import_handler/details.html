@@ -220,7 +220,7 @@
     </div>
     <div ng-show="action[1] == 'json'">
       <a href="{{handler.downloadUrl()}}">Download</a>
-      <textarea name="data" ui-codemirror="{ mode: {name: 'javascript', json: true, readOnly: true} }" ng-model="handler.data_json"></textarea>
+      <textarea name="data" ui-codemirror="codemirrorOptions" ui-refresh="action" ng-model="handler.data_json"></textarea>
     </div>
   </div>
 

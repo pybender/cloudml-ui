@@ -47,8 +47,9 @@ angular.module('app.models.model', ['app.config'])
 
         if origData?
           # TODO:
-          @features = angular.toJson(
-            angular.fromJson(origData['features']), pretty=true)
+          if origData.features?
+            @features = angular.toJson(
+              angular.fromJson(origData['features']), pretty=true)
           if origData.test_import_handler?
             @test_import_handler_obj = new ImportHandler(
               origData['test_import_handler'])

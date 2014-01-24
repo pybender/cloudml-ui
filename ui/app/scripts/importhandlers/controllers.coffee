@@ -37,6 +37,10 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
     $scope.LOADED_SECTIONS = []
     $scope.PROCESS_STRATEGIES = ImportHandler.PROCESS_STRATEGIES
 
+    $scope.codemirrorOptions = {
+      mode: 'javascript', readOnly: true, json: true
+    }
+
     $scope.go = (section) ->
       fields = ''
       mainSection = section[0]
