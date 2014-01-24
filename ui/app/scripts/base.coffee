@@ -84,6 +84,13 @@ angular.module('app.base', ['app.config', 'app.services'])
         for name in opts.only
           val = eval("this." + name)
           if typeIsArray val then val = JSON.stringify(val)
+          if name == 'params' && typeof(val) == 'object'
+            params = {}
+            for k, p of @params
+              if p? && p != ''
+                params[k] = p
+            @params = params
+            val = JSON.stringify(@params)
 
           if val? then data[name] = val
 

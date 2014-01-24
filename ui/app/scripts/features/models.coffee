@@ -39,11 +39,6 @@ angular.module('app.features.models', ['app.config'])
         @$make_request("#{@BASE_API_URL}#{@id}/action/configuration/",
                        load=false)
 
-      $save: (opts={}) =>
-        if @params? && typeof(@params) == 'object'
-          @params = JSON.stringify(@params)
-        super opts
-
       constructor: (opts) ->
         _.extend @, opts
  
@@ -71,11 +66,6 @@ angular.module('app.features.models', ['app.config'])
       $getConfiguration: (opts={}) =>
         @$make_request("#{@BASE_API_URL}#{@id}/action/configuration/",
                        load=false)
-
-      $save: (opts={}) =>
-        if @params? && typeof(@params) == 'object'
-          @params = JSON.stringify(@params)
-        super opts
 
       constructor: (opts) ->
         _.extend @, opts
@@ -115,11 +105,6 @@ angular.module('app.features.models', ['app.config'])
       $getConfiguration: (opts={}) =>
         @$make_request("#{@BASE_API_URL}#{@id}/action/configuration/",
                        load=false)
-
-      $save: (opts={}) =>
-        if @params? && typeof(@params) == 'object'
-          @params = JSON.stringify(@params)
-        super opts
 
     return Classifier
 ])
