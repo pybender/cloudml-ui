@@ -18,6 +18,7 @@ def classifier_type_formatter(view, context, model, name):
 class ModelAdmin(BaseAdmin):
     Model = Model
     column_searchable_list = ('name', )
+    form_excluded_columns = ('trainer', 'weights', 'weight_categories')
     column_formatters = {
         'features_set': macro('render_fk_link'),
         'test_import_handler': macro('render_fk_link'),

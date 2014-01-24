@@ -7,6 +7,7 @@ from models import ImportHandler, PredefinedDataSource, DataSet
 
 class ImportHandlerAdmin(BaseAdmin):
     Model = ImportHandler
+    form_excluded_columns = ('datasets', )
     column_list = ['id', 'name', 'import_params']
     column_filters = ('name', )
 
