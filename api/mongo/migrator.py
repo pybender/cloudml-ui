@@ -271,7 +271,8 @@ REPLACES = {
     # 'value-path': 'value_path',
     # 'target-schema': 'target_schema',
     # 'key-path': 'key_path',
-    'is-required': 'is_required'
+    'is-required': 'is_required',
+    'schema-name': 'schema_name',
 }
 
 

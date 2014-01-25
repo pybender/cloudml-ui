@@ -1,10 +1,10 @@
 {
-  "schema-name": "bestmatch",
+  "schema_name": "bestmatch",
   "classifier": {
     "type": "logistic regression",
     "params": {"penalty": "l2"}
   },
-  "feature-types":[
+  "feature_types":[
     {
       "name":"str_to_timezone",
       "type": "composite",
@@ -26,7 +26,7 @@
           "class2": 0
         }
       },
-      "is-target-variable":true
+      "is_target_variable":true
     },
     {
       "name":"country_pair",
@@ -35,9 +35,9 @@
     {
       "name":"tsexams",
       "type": "float",
-      "input-format": "dict",
+      "input_format": "dict",
       "default": 0.33,
-      "is-required": false
+      "is_required": false
     },
     {
       "name":"employer.op_timezone",
@@ -120,7 +120,7 @@
     {
       "name":"contractor.dev_recent_hourly_jobs",
       "type":"int",
-      "is-required": false
+      "is_required": false
     },
     {
       "name":"contractor.dev_bill_rate",
@@ -133,7 +133,7 @@
     {
       "name":"contractor.dev_expose_full_name",
       "type":"float",
-      "is-required": false
+      "is_required": false
     },
     {
       "name":"contractor.dev_total_hours_rounded",
@@ -142,7 +142,7 @@
     {
       "name":"contractor.dev_year_exp",
       "type":"int",
-      "is-required": false
+      "is_required": false
     },
     {
       "name":"contractor.dev_portfolio_items_count",

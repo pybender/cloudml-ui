@@ -1,10 +1,10 @@
 {
-  "schema-name": "bestmatch",
+  "schema_name": "bestmatch",
   "classifier": {
     "type": "logistic regression",
     "penalty": "l1"
   },
-  "feature-types":[
+  "feature_types":[
     {
       "name":"str_to_timezone",
       "type": "composite",
@@ -17,7 +17,7 @@
     }
   ],
   "features":[
-    {"name":"hire_outcome", "type": "map", "params": {"mappings": {"hire": 1, "nothire": 0}}, "is-target-variable":true},
+    {"name":"hire_outcome", "type": "map", "params": {"mappings": {"hire": 1, "nothire": 0}}, "is_target_variable":true},
 
     {"name": "employer.op_timezone", "type": "str_to_timezone"},
     {"name": "employer.op_country_tz", "type": "str_to_timezone"},
@@ -32,7 +32,7 @@
 
     {"name": "contractor.dev_recent_fp_jobs", "type": "int"},
     {"name": "contractor.dev_total_fp_jobs", "type": "int"},
-    {"name": "contractor.dev_recent_hourly_jobs", "type":"int","is-required": false},
+    {"name": "contractor.dev_recent_hourly_jobs", "type":"int","is_required": false},
     {"name": "contractor.dev_total_hourly_jobs", "type": "int"},
     {"name": "contractor.dev_recent_hours", "type": "int"},
     {"name": "contractor.dev_total_hours_rounded", "type": "int"},
@@ -58,8 +58,8 @@
     {"name": "contractor.job_categories", "transformer": {"type": "Count", "token_pattern": "[^,]+"}},
 
     {"name": "contractor.dev_bill_rate", "type": "float"},
-    {"name": "contractor.dev_expose_full_name", "type": "float", "is-required": false},
-    {"name": "contractor.dev_year_exp","type": "int", "is-required": false},
+    {"name": "contractor.dev_expose_full_name", "type": "float", "is_required": false},
+    {"name": "contractor.dev_year_exp","type": "int", "is_required": false},
     {"name": "contractor.dev_portfolio_items_count", "type": "int"},
     {"name": "contractor.dev_eng_skill", "type": "int"},
     {"name": "contractor.dev_timezone","type": "str_to_timezone"},
