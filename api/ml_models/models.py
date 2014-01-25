@@ -140,7 +140,7 @@ class Model(db.Model, BaseModel):
             self.labels = map(str, trainer._classifier.classes_.tolist())
 
     def get_features_json(self):
-        data = self.features_set.to_dict()
+        data = self.features_set.features
         data['classifier'] = self.classifier
         return json.dumps(data)
 
