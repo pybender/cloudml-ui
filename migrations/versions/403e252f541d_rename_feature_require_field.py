@@ -1,14 +1,14 @@
-"""rename feature require field
+"""rename_feature_require_field
 
-Revision ID: 12db82ee74ee
-Revises: 3173cd355cbc
-Create Date: 2014-01-20 20:06:32.341146
+Revision ID: 403e252f541d
+Revises: None
+Create Date: 2014-01-25 11:48:53.565872
 
 """
 
 # revision identifiers, used by Alembic.
-revision = '12db82ee74ee'
-down_revision = '3173cd355cbc'
+revision = '403e252f541d'
+down_revision = None
 
 from alembic import op
 import sqlalchemy as sa
