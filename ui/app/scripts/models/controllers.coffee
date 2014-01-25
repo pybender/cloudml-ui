@@ -8,7 +8,7 @@ FIELDS_BY_SECTION = {
 trained_by,trained_on,training_time'
   'about': 'created_on,target_variable,example_id,example_label,
 labels,updated_on,feature_count,test_import_handler,
-train_import_handler,created_by,datasets,data_fields,
+train_import_handler,created_by_name,datasets,data_fields,
 train_records_count,test_handler_fields,tags'
   'main': 'name,status'
 }
@@ -31,8 +31,8 @@ angular.module('app.models.controllers', ['app.config', ])
 
   ($scope, $location, Model) ->
     $scope.MODEL = Model
-    $scope.FIELDS = Model.MAIN_FIELDS + ',tags,created_on,created_by,
-updated_on,updated_by,comparable,test_handler_fields'
+    $scope.FIELDS = Model.MAIN_FIELDS + ',tags,created_on,created_by_name,
+updated_on,updated_by_name,comparable,test_handler_fields'
     $scope.ACTION = 'loading models'
     $scope.currentTag = $location.search()['tag']
     $scope.kwargs = {

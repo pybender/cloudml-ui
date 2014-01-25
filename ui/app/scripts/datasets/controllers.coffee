@@ -20,7 +20,7 @@ angular.module('app.datasets.controllers', ['app.config', ])
   ($scope, $dialog, $rootScope, DataSet, $window) ->
     $scope.MODEL = DataSet
     $scope.FIELDS = 'name,created_on,status,error,data,import_params,on_s3,
-filesize,records_count,time,created_by,updated_by'
+filesize,records_count,time,created_by_name,updated_by_name'
     $scope.ACTION = 'loading datasets'
 
     $scope.$on('loadDataSet', (event, opts) ->
@@ -89,7 +89,7 @@ filesize,records_count,time,created_by,updated_by'
     $scope.go = (section) ->
       $scope.dataset.$load(
         show: 'name,status,created_on,updated_on,data,on_s3,import_params,error,
-filesize,records_count,time,created_by,import_handler_id,format'
+filesize,records_count,time,created_by_name,import_handler_id,format'
       ).then (->), ((opts) ->
         $scope.setError(opts, 'loading dataset details')
       )

@@ -13,7 +13,7 @@ angular.module('app.testresults.controllers', ['app.config', ])
   ($scope, $dialog, $rootScope, TestResult) ->
     $scope.MODEL = TestResult
     $scope.FIELDS = 'name,created_on,status,parameters,accuracy,examples_count,
-created_by'
+created_by_name'
     $scope.ACTION = 'loading tests'
 
     $scope.$on('loadTest', (event, opts) ->
@@ -159,7 +159,7 @@ without test id and model id"
       switch section_name
         when 'about'
           extra_fields = 'classes_set,created_on,parameters,error,
-examples_count,dataset,memory_usage,created_by,examples_placement,
+examples_count,dataset,memory_usage,created_by_name,examples_placement,
 examples_fields,examples_size'
         when 'metrics'
           extra_fields = 'accuracy,metrics'

@@ -63,11 +63,11 @@
       <td title="{{ model.error }}">{{ model.status }}</td>
       <td>
           {{ model.created_on|format_date }}<br>
-          <small ng-show="model.created_by">by {{ model.created_by.name }} ({{ model.created_by.uid }})</small>
+          <small ng-show="model.created_by_name">by {{ model.created_by_name }}</small>
       </td>
       <td>
           {{ model.updated_on|format_date }}<br>
-          <small ng-show="model.updated_by">by {{ model.updated_by.name }} ({{ model.updated_by.uid }})</small>
+          <small ng-show="model.updated_by_name">by {{ model.updated_by_name }}</small>
       </td>
       <td>
         <i ng-hide="model.comparable" title="This model don't contains any successfull tests" class="icon-remove"></i>

@@ -40,7 +40,7 @@
 	    </td>
 	    <td>
 	        {{ transformer.created_on|format_date }}<br>
-	        <small ng-show="transformer.created_by">by {{ transformer.created_by.name }} ({{ transformer.created_by.uid }})</small>
+	        <small ng-show="transformer.created_by_name">by {{ transformer.created_by_name }}</small>
 	    </td>
 	    <td>
 	    	<button ng-click="delete(transformer)" class="btn btn-danger"><i title="Delete predefined transformer. Be careful - you could not recover it!" class="icon-remove"></i></button>

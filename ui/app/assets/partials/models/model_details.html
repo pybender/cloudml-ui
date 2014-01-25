@@ -65,9 +65,9 @@
               Parameters:
               <span class="value">{{ model.classifier.params }}</span>
           </div>
-          <div ng-show="model.created_by">
+          <div ng-show="model.created_by_name">
               Created by:
-              <span class="value">{{ model.classifier.created_by.name }} ({{ model.classifier.created_by.uid }})</span>
+              <span class="value">{{ model.classifier.created_by_name }}</span>
           </div>
         </div>
         <div class="span5">
@@ -234,13 +234,13 @@
             Count of features:
             <span class="value">{{ model.feature_count }}</span>
         </div>
-        <div ng-show="model.created_by">
+        <div ng-show="model.created_by_name">
             Created by:
-            <span class="value">{{ model.created_by.name }} ({{ model.created_by.uid }})</span>
+            <span class="value">{{ model.created_by_name }}</span>
         </div>
-        <div ng-show="model.updated_by">
+        <div ng-show="model.updated_by_name">
             Updated by:
-            <span class="value">{{ model.updated_by.name }} ({{ model.updated_by.uid }})</span>
+            <span class="value">{{ model.updated_by_name }}</span>
         </div>
       </div>
     </div>

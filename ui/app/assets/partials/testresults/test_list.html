@@ -24,7 +24,7 @@
       <td>
           {{ test.created_on|format_date }}
           <br>
-          <small ng-show="test.created_by">by {{ test.created_by.name }} ({{ test.created_by.uid }})</small>
+          <small ng-show="test.created_by_name">by {{ test.created_by_name }}</small>
       </td>
       <td><span class="value" ng-repeat="(key, val) in test.parameters">{{ key }}={{ val }}</span></td>
       <td>{{ test.accuracy.toFixed(4) }}</td>

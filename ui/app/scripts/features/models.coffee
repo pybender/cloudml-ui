@@ -27,7 +27,7 @@ angular.module('app.features.models', ['app.config'])
       API_FIELDNAME: 'transformer'
       @LIST_MODEL_NAME: 'transformers'
       LIST_MODEL_NAME: @LIST_MODEL_NAME
-      @MAIN_FIELDS: 'id,name,type,params,created_on,created_by'
+      @MAIN_FIELDS: 'id,name,type,params,created_on,created_by_name'
       @$TYPES_LIST: ['Dictionary', 'Count', 'Tfidf', 'Lda', 'Lsi']
 
       id: null
@@ -58,7 +58,7 @@ angular.module('app.features.models', ['app.config'])
       API_FIELDNAME: 'scaler'
       @LIST_MODEL_NAME: 'scalers'
       LIST_MODEL_NAME: @LIST_MODEL_NAME
-      @MAIN_FIELDS: 'id,name,type,params,created_on,created_by'
+      @MAIN_FIELDS: 'id,name,type,params,created_on,created_by_name'
       @$TYPES_LIST: ['MinMaxScaler', 'StandardScaler']
 
       id: null
@@ -86,7 +86,7 @@ angular.module('app.features.models', ['app.config'])
       API_FIELDNAME: 'classifier'
       @LIST_MODEL_NAME: 'classifiers'
       LIST_MODEL_NAME: @LIST_MODEL_NAME
-      @MAIN_FIELDS: 'id,name,type,created_on,created_by,params'
+      @MAIN_FIELDS: 'id,name,type,created_on,created_by_name,params'
       @$TYPES_LIST: ['stochastic gradient descent classifier',
       'support vector regression', 'logistic regression']
 
@@ -143,7 +143,7 @@ angular.module('app.features.models', ['app.config'])
     class Feature extends BaseModel
       API_FIELDNAME: 'feature'
       @MAIN_FIELDS: 'id,name,type,input_format,transformer,params,
-scaler,default,is_target_variable,created_on,created_by,required'
+scaler,default,is_target_variable,created_on,created_by_name,required'
 
       id: null
       name: null
@@ -280,7 +280,8 @@ scaler,default,is_target_variable,created_on,created_by,required'
       BASE_API_URL: "#{settings.apiUrl}features/named_types/"
       BASE_UI_URL: "/features/types/"
       API_FIELDNAME: 'named_type'
-      @MAIN_FIELDS: 'id,name,type,input_format,params,created_on,created_by'
+      @MAIN_FIELDS: 'id,name,type,input_format,params,
+created_on,created_by_name'
       @$TYPES_LIST: ['boolean', 'int', 'float', 'numeric', 'date',
                    'map', 'categorical_label', 'categorical',
                    'text', 'regex', 'composite']

@@ -14,7 +14,7 @@ angular.module('app.testresults.model', ['app.config'])
     ###
     class TestResult extends BaseModel
       API_FIELDNAME: 'test'
-      @MAIN_FIELDS: 'name,status,created_on,created_by'
+      @MAIN_FIELDS: 'name,status,created_on,created_by_name'
       DEFAULT_FIELDS_TO_SAVE: ['importhandler', 'train_importhandler',
                                 'features', 'trainer', 'name']
 
