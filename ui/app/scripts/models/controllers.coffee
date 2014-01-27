@@ -181,6 +181,10 @@ updated_on,updated_by,comparable,test_handler_fields'
         if $(data).filter(cmp).length == 0 then return {id: term, text: term}
     }
 
+    $scope.codemirrorOptions = {
+      mode: 'javascript', readOnly: true, json: true
+    }
+
     $scope.updateTags = () ->
       $scope.model.tags = []
       for t in $scope.params['tags']

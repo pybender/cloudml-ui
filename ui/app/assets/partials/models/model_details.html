@@ -83,7 +83,7 @@
     </div>
 
     <div ng-show="action[1] == 'json'">
-      <textarea ui-codemirror="{ mode: {name: 'javascript', readOnly:true, json: true} }" ng-model="model.features"></textarea>
+      <textarea ng-model="model.features" ui-codemirror="codemirrorOptions" ui-refresh="action"></textarea>
     </div>
 
     <div class="row well">
@@ -123,11 +123,11 @@
     </div>
     <div ng-show="model.status == 'Trained'">
       Memory used:
-      <span class="value">{{ model.memory_usage.training }} Mb</span>
+      <span class="value">{{ model.memory_usage }} Mb</span>
     </div>
     <div ng-show="model.status == 'Trained'">
         Trained by:
-        <span class=a"value">{{ model.trained_by.name }} ({{ model.trained_by.uid }})</span>
+        <span class="value">{{ model.trained_by.name }} ({{ model.trained_by.uid }})</span>
     </div>
     <div ng-if="model.status == 'Trained'">
         Training time:
@@ -227,7 +227,7 @@
         <div>
             Classes:
             <span class="value">
-              <span ng-repeat="label in model.labels"><span class="badge badge-info" ng-bind="label" /> </span>
+              <span ng-repeat="label in model.labels"><span class="badge badge-info" ng-bind="label"></span> </span>
             </span>
         </div>
         <div>
