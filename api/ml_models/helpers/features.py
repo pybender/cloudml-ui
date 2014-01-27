@@ -1,5 +1,7 @@
 def get_data_from_vectorizer(vect_data, feature_name, vectorizer, offset):
     data = {}
+    if not hasattr(vectorizer, 'vocabulary_') or len(vectorizer.vocabulary_) == 0:
+        return data
     feature_names = vectorizer.get_feature_names()
     for j in range(0, len(feature_names)):
         name = '%s->%s' % (feature_name.replace(".", "->"), feature_names[j])
