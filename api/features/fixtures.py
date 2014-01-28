@@ -4,6 +4,7 @@ from fixture import DataSet
 class FeatureSetData(DataSet):
     class bestmatch:
         schema_name = 'bestmatch'
+        features_dict = {"schema-name": "bestmatch", "features": [], "feature-types": []}
 
 
 class FeatureData(DataSet):
