@@ -70,9 +70,7 @@ describe "base", ->
     )
 
     it "should save new object", inject((BaseModel) ->
-      # TODO: avoid of '/null/'
-      $httpBackend.expectPOST('http://host/api/objects/null/?')
-      .respond('{}')
+      $httpBackend.expectPOST('http://host/api/objects/?').respond('{}')
 
       model = new BaseModel({id: null})
       model.name = 'saved name'
