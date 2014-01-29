@@ -5,11 +5,10 @@
 FIELDS_BY_SECTION = {
   'model': 'classifier,features_set_id,features'
   'training': 'error,weights_synchronized,memory_usage,
-trained_by,trained_on,training_time'
+trained_by,trained_on,training_time,datasets,train_records_count,trainer_size'
   'about': 'created_on,target_variable,example_id,example_label,
 labels,updated_on,feature_count,test_import_handler,
-train_import_handler,created_by,datasets,data_fields,
-train_records_count,test_handler_fields,tags'
+train_import_handler,created_by,data_fields,test_handler_fields,tags'
   'main': 'name,status'
 }
 

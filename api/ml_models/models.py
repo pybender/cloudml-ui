@@ -77,6 +77,7 @@ class Model(db.Model, BaseModel):
     classifier = deferred(db.Column(JSONType))
 
     trainer = deferred(db.Column(S3File))
+    trainer_size = db.Column(db.Integer, default=0)
 
     def __repr__(self):
         return "<Model {0}>".format(self.name)
@@ -133,7 +134,9 @@ class Model(db.Model, BaseModel):
     def set_trainer(self, trainer):
         from bson import Binary
         from core.trainer.store import TrainerStorage
-        self.trainer = Binary(TrainerStorage(trainer).dumps())
+        trainer_data = Binary(TrainerStorage(trainer).dumps())
+        self.trainer = trainer_data
+        self.trainer_size = len(trainer_data)
         self.target_variable = trainer._feature_model.target_variable
         self.feature_count = len(trainer._feature_model.features.keys())
         if self.status == self.STATUS_TRAINED:

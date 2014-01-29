@@ -113,25 +113,47 @@
     <alert-message ng-show="model.status == 'Trained'" class="alert-success" msg='Model is trained. You could start running tests now.' unsafe>
     </alert-message>
 
-    <div>
-        Status: <span class="value">{{ model.status }}</span> <a ng-click="showLogs=!showLogs">(logs)</a>
-        <div ng-show="showLogs" class="well" ng-controller="LogMessageListCtrl" ng-init="init('trainmodel_log', model.id, 5)">
-          <div class="message">
-            <ng-include src="'/partials/logmessages/list.html'"></ng-include>
-          </div>
+    <div class="row">
+        <div class="span12">
+            Status: <span class="value">{{ model.status }}</span> <a ng-click="showLogs=!showLogs">(logs)</a>
+            <div ng-show="showLogs" class="well" ng-controller="LogMessageListCtrl" ng-init="init('trainmodel_log', model.id, 5)">
+              <div class="message">
+                <ng-include src="'/partials/logmessages/list.html'"></ng-include>
+              </div>
+            </div>
         </div>
     </div>
-    <div ng-show="model.status == 'Trained'">
-      Memory used:
-      <span class="value">{{ model.memory_usage }} Mb</span>
-    </div>
-    <div ng-show="model.status == 'Trained'">
-        Trained by:
-        <span class="value">{{ model.trained_by.name }} ({{ model.trained_by.uid }})</span>
-    </div>
-    <div ng-if="model.status == 'Trained'">
-        Training time:
-        <span class="value">{{ model.training_time|humanize_time }}</span>
+    <div class="row">
+      <div class="span4">
+        <div ng-show="model.status == 'Trained'">
+          Memory used:
+          <span class="value">{{ model.memory_usage }} Mb</span>
+        </div>
+        <div ng-show="model.status == 'Trained'">
+            Trained by:
+            <span class="value">{{ model.trained_by.name }} ({{ model.trained_by.uid }})</span>
+        </div>
+        <div ng-if="model.status == 'Trained'">
+            Training time:
+            <span class="value">{{ model.training_time|humanize_time }}</span>
+        </div>
+        <div ng-if="model.status == 'Trained'">
+            Trainer file size:
+            <span class="value">{{ model.trainer_size|bytes }}</span>
+        </div>
+      </div>
+      <div class="span4">
+          <div ng-show="model.datasets" title="Data sets which was used for training">
+            Data sets:
+            <div ng-repeat="ds in model.datasets_obj">
+                <span class="value">
+                  <a href="#{{ ds.objectUrl() }}">
+                  {{ ds.name }}</a>
+                </span>
+            </div>
+            Records count: <span class="value">{{ model.train_records_count }}</span>
+          </div>
+      </div>
     </div>
     <hr />
     <div ng-controller="WeightsCtrl">
@@ -190,16 +212,6 @@
             <span title="Select Test Import Handler" ng-bind="model.test_import_handler_obj.name || 'not specified'" editable="model" value="model.test_import_handler_obj.id" editable-field="test_import_handler" editable-input="select" editable-placement="right" source="handlers_list" display="model.test_import_handler_obj.name"></span>
             <a target="_blank" href="#{{ model.test_import_handler_obj.objectUrl() }}"><i class="icon-arrow-right"></i></a>
           </div>
-        </div>
-        <div ng-show="model.datasets" title="Data sets which was used for training">
-            Data sets:
-            <div ng-repeat="ds in model.datasets_obj">
-                <span class="value">
-                  <a href="#{{ ds.objectUrl() }}">
-                  {{ ds.name }}</a>
-                </span>
-            </div>
-            Records count: <span class="value">{{ model.train_records_count }}</span>
         </div>
       </div>
       <div class="span5">
