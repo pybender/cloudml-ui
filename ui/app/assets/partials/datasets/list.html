@@ -26,7 +26,7 @@
       <td>{{ ds.on_s3 }}</td>
       <td>
           {{ ds.created_on|format_date }}<br>
-          <small ng-show="ds.created_by">by {{ ds.created_by.name }} ({{ ds.created_by.uid }})</small>
+          <small ng-show="ds.created_by_name">by {{ ds.created_by_name }}</small>
       </td>
       <td>{{ ds.filesize|bytes }}</td>
       <td>{{ ds.records_count|number }}</td>

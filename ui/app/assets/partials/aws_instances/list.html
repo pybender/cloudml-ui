@@ -36,11 +36,11 @@
     <td>{{ instance.type }}</td>
     <td>
         {{ instance.created_on|format_date }}<br>
-        <small ng-show="instance.created_by">by {{ instance.created_by.name }} ({{ instance.created_by.uid }})</small>
+        <small ng-show="instance.created_by_name">by {{ instance.created_by_name }}</small>
     </td>
     <td>
         {{ instance.updated_on|format_date }}<br>
-        <small ng-show="instance.updated_by">by {{ instance.updated_by.name }} ({{ instance.updated_by.uid }})</small>
+        <small ng-show="instance.updated_by_name">by {{ instance.updated_by_name }}</small>
     </td>
     <td ng-controller="InstanceActionsCtrl">
       <a ng-click="makeDefault(instance)" title="Make default" ng-hide="instance.is_default" class="btn btn-info"><i class="icon-check"></i></a>

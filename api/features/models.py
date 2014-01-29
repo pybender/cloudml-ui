@@ -6,7 +6,7 @@ from sqlalchemy.orm import relationship
 
 from api.base.models import BaseModel, db, JSONType
 from core.trainer.classifier_settings import CLASSIFIERS
-from config import TRANSFORMERS, SCALERS, FIELDS_MAP, SYSTEM_FIELDS
+from config import TRANSFORMERS, SCALERS, SYSTEM_FIELDS
 
 
 class ExportImportMixin(object):
@@ -21,7 +21,6 @@ class ExportImportMixin(object):
         fields_list = list(self.FIELDS_TO_SERIALIZE) + extra_fields.keys()
 
         for field in fields_list:
-            dict_field_name = FIELDS_MAP.get(field, field)
             if self.NO_PARAMS_KEY and field == 'params':
                 # Fields that would be placed to params dict.
                 params_fields = set(obj_dict.keys()) - \
@@ -29,7 +28,7 @@ class ExportImportMixin(object):
                 value = dict([(name, obj_dict[name])
                              for name in params_fields])
             else:
-                value = obj_dict.get(dict_field_name, None)
+                value = obj_dict.get(field, None)
             if value is not None:
                 setattr(self, field, value)
 
@@ -52,8 +51,7 @@ class ExportImportMixin(object):
                         if not val:
                             continue
 
-                    field_name = FIELDS_MAP.get(field, field)
-                    data[field_name] = val
+                    data[field] = val
         return data
 
 
@@ -131,14 +129,14 @@ class RefFeatureSetMixin(object):
 class Feature(ExportImportMixin, RefFeatureSetMixin,
               BaseModel, db.Model):
     FIELDS_TO_SERIALIZE = ('name', 'type', 'input_format', 'params',
-                           'default', 'is_target_variable', 'required',
+                           'default', 'is_target_variable', 'is_required',
                            'transformer', 'scaler')
 
     name = db.Column(db.String(200), nullable=False)
     type = db.Column(db.String(200), nullable=False)
     input_format = db.Column(db.String(200))
     default = db.Column(JSONType)  # TODO: think about type
-    required = db.Column(db.Boolean, default=True)
+    is_required = db.Column(db.Boolean, default=True)
     is_target_variable = db.Column(db.Boolean, default=False)
 
     params = deferred(db.Column(JSONType, default={}))
@@ -177,9 +175,9 @@ class FeatureSet(ExportImportMixin, BaseModel, db.Model):
     """ Represents list of the features with schema name."""
     FIELDS_TO_SERIALIZE = ('schema_name', )
 
-    FEATURES_STRUCT = {'schema-name': '',
+    FEATURES_STRUCT = {'schema_name': '',
                        'features': [],
-                       "feature-types": []}
+                       "feature_types": []}
     schema_name = db.Column(db.String(200), nullable=False, default='noname')
     target_variable = db.Column(db.String(200))
     features_count = db.Column(db.Integer, default=0)
@@ -201,9 +199,9 @@ class FeatureSet(ExportImportMixin, BaseModel, db.Model):
         return self.features_dict
 
     def from_dict(self, features_dict, commit=True):
-        self.schema_name = features_dict['schema-name']
+        self.schema_name = features_dict['schema_name']
 
-        type_list = features_dict.get('feature-types', None)
+        type_list = features_dict.get('feature_types', None)
         if type_list:
             for feature_type in type_list:
                 count = NamedFeatureType.query.filter_by(name=feature_type['name']).count()
@@ -221,9 +219,9 @@ class FeatureSet(ExportImportMixin, BaseModel, db.Model):
                                         'features_dict'])
 
     def to_dict(self):
-        features_dict = {'schema-name': self.schema_name,
+        features_dict = {'schema_name': self.schema_name,
                          'features': [],
-                         "feature-types": []}
+                         "feature_types": []}
         types = []
         for feature in Feature.query.filter_by(feature_set=self):
             if feature.type not in NamedFeatureType.TYPES_LIST:
@@ -232,7 +230,7 @@ class FeatureSet(ExportImportMixin, BaseModel, db.Model):
 
         for ftype in set(types):
             named_type = NamedFeatureType.query.filter_by(name=ftype).one()
-            features_dict['feature-types'].append(named_type.to_dict())
+            features_dict['feature_types'].append(named_type.to_dict())
 
         return features_dict
 
@@ -240,7 +238,7 @@ class FeatureSet(ExportImportMixin, BaseModel, db.Model):
         # TODO: Why do default attr of the column not work?
         if self.features_dict is None:
             self.features_dict = self.FEATURES_STRUCT
-        self.features_dict['schema-name'] = self.schema_name
+        self.features_dict['schema_name'] = self.schema_name
         BaseModel.save(self, commit=commit)
 
 

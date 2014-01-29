@@ -194,7 +194,7 @@ angular.module('app.importhandlers.model', ['app.config'])
       BASE_UI_URL: '/importhandlers/'
       API_FIELDNAME: 'import_handler'
       @MAIN_FIELDS: 'name,id,import_params,
-created_on,created_by,error'
+created_on,created_by_name,error'
       DEFAULT_FIELDS_TO_SAVE: ['name', 'data']
       @PROCESS_STRATEGIES = ['identity', 'string', 'float',
         'boolean', 'integer', 'json', 'composite']
@@ -275,7 +275,7 @@ created_on,created_by,error'
       @LIST_MODEL_NAME: 'datasources'
       LIST_MODEL_NAME: @LIST_MODEL_NAME
       @$TYPES_LIST: ['sql', ]
-      @MAIN_FIELDS: 'name,id,type,db,created_on,created_by'
+      @MAIN_FIELDS: 'name,id,type,db,created_on,created_by_name'
       @$VENDORS_LIST: ['postgres', ]
 
       id: null

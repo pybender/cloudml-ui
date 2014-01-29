@@ -21,8 +21,10 @@ class BaseMixin(JsonSerializableMixin):
     def _set_user(self, user):
         if user:
             self.updated_by = user
+            self.updated_by_name = "{} ({})".format(user.name, user.uid)
             if self.id is None:
                 self.created_by = user
+                self.created_by_name = "{} ({})".format(user.name, user.uid)
 
     def save(self, commit=True):
         if has_request_context():
@@ -40,6 +42,8 @@ class BaseModel(BaseMixin):
     created_on = db.Column(db.DateTime, server_default=func.now())
     updated_on = db.Column(db.DateTime, server_default=func.now(),
                            onupdate=func.current_timestamp())
+    created_by_name = db.Column(db.String(200))
+    updated_by_name = db.Column(db.String(200))
 
     @declared_attr
     def created_by_id(cls):

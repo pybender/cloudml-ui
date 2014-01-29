@@ -81,6 +81,14 @@ class App(Flask):
 
     def init_sql_db(self):
         self._sql_db = SQLAlchemy(self)
+        debug = self.config.get('SQLALCHEMY_DEBUG', False)
+        if debug:
+            from sqlalchemy import event
+            from events import before_cursor_execute, after_cursor_execute
+            engine = self._sql_db.get_engine(self)
+            #print "engine", engine
+            event.listen(engine, "before_cursor_execute", before_cursor_execute)
+            event.listen(engine, "after_cursor_execute", after_cursor_execute)
 
 def create_app():
     return App(__name__)

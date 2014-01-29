@@ -300,6 +300,12 @@ class BaseResource(restful.Resource):
             logging.error(msg)
             return odesk_error_response(500, ERR_INVALID_DATA, msg)
 
+        if app.config.get('SQLALCHEMY_RECORD_QUERIES', False):
+            print "\n\n!!!!!!!!render %s!!!!!!!!!\n" % self
+            from flask.ext.sqlalchemy import get_debug_queries
+            print "Debugging queries while rendering in %s" % self
+            for i, q in enumerate(get_debug_queries()):
+                print "#%s %s" % (i + 1, q)
         return app.response_class(content,
                                   mimetype='application/json'), code
 
