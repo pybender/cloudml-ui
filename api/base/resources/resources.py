@@ -386,6 +386,8 @@ class BaseResourceMongo(BaseResource):
 
 class BaseResourceSQL(BaseResource):
     """ Base REST resource for SQL models. """
+    NULL = '<<NULL>>'
+    NOT_NULL = '<<NOT NULL>>'
 
     ### GET ###
 
@@ -473,7 +475,12 @@ class BaseResourceSQL(BaseResource):
             return "%s->>'%s'='%s'" % (field, key, val)
         else:
             if hasattr(self.Model, name):
-                return getattr(self.Model, name) == val
+                if val == BaseResourceSQL.NOT_NULL:
+                    return (getattr(self.Model, name) != None)
+                elif val == BaseResourceSQL.NULL:
+                    return (getattr(self.Model, name) == None)
+                else:
+                    return getattr(self.Model, name) == val
             else:
                 return None
 

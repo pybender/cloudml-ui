@@ -10,6 +10,9 @@
     <alert-message ng-show="info" class="alert-error" msg="Transformer fields in features (that use this transformer) would not be changed." unsafe></alert-message>
 
     <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+
+    <alert-message ng-show="model.vocabulary_size" class="alert-info" msg="This transformer contains fitted vocabulary of {{ model.vocabulary_size }} bytes"></alert-message>
+
     <form name="TransformerForm" class="form-horizontal">
     <ng-include src="'/partials/features/transformers/form.html'"></ng-include>
     </form>

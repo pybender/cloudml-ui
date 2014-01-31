@@ -27,7 +27,8 @@ angular.module('app.features.models', ['app.config'])
       API_FIELDNAME: 'transformer'
       @LIST_MODEL_NAME: 'transformers'
       LIST_MODEL_NAME: @LIST_MODEL_NAME
-      @MAIN_FIELDS: 'id,name,type,params,created_on,created_by_name'
+      @MAIN_FIELDS: 'id,name,type,params,created_on,created_by_name,
+vocabulary_size'
       @$TYPES_LIST: ['Dictionary', 'Count', 'Tfidf', 'Lda', 'Lsi']
 
       id: null
@@ -38,6 +39,15 @@ angular.module('app.features.models', ['app.config'])
       $getConfiguration: (opts={}) =>
         @$make_request("#{@BASE_API_URL}#{@id}/action/configuration/",
                        load=false)
+
+      $copyFromTrainer: () =>
+        data = {
+          name: @name,
+          model: @model,
+          feature: @feature
+        }
+        @$make_request("#{@BASE_API_URL}action/copy_from_trainer/", {},
+                       'POST', data)
 
       constructor: (opts) ->
         _.extend @, opts

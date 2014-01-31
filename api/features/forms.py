@@ -157,6 +157,14 @@ class TransformerForm(BasePredefinedForm):
                                return_doc=False)
 
 
+class CopyTransformerForm(BaseForm):
+    required_fields = ('name', 'model', 'feature')
+    name = CharField()
+    model = DocumentField(doc=Model, return_doc=True,
+                          filter_params={'status': Model.STATUS_TRAINED})
+    feature = DocumentField(doc=Feature, return_doc=True)
+
+
 class FeatureForm(BaseForm, FeatureParamsMixin):
     NO_REQUIRED_FOR_EDIT = True
     required_fields = ('name', 'type', 'feature_set_id')
@@ -197,6 +205,7 @@ class FeatureForm(BaseForm, FeatureParamsMixin):
         remove_transformer = self.cleaned_data.get('remove_transformer', False)
         if remove_transformer and self.obj.transformer:
             self.obj.transformer = None
+            self.obj.transformer_vocabulary = None
 
         remove_scaler = self.cleaned_data.get('remove_scaler', False)
         if remove_scaler and self.obj.scaler:

@@ -1,0 +1,44 @@
+<div>
+  <div class="modal-header">
+    <button ng-click="dialog.close()" class="close" data-dismiss="modal">×</button>
+    <h3>Copy transformer from trainer</h3>
+  </div>
+
+  <div class="modal-body">
+    <loadindicator title="Adding feature transformer..." ng-show="saving" progress="savingProgress"></loadindicator>
+    <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+    <form name="TransformerForm" class="form-horizontal">
+
+      <div class="control-group" ng-class="{error: TransformerForm.name.$invalid}">
+        <label class="control-label">Name</label>
+        <div class="controls">
+          <input type="text" name="name" ng-model="model.name" ng-required="currentTab == null || currentTab=='custom'" />
+          <span ng-show="TransformerForm.name.$error.required" class="help-inline">*</span>
+        </div>
+      </div>
+
+      <div class="control-group" ng-class="{error: TransformerForm.model.$invalid}">
+        <label class="control-label">Model</label>
+        <div class="controls">
+            <select ng-change="loadFeatures(model.model)" ng-model="model.model" name="model" ng-options="m.id as m.name for m in models" required>
+                <option value="">--- select model ---</option>
+            </select>
+        </div>
+      </div>
+
+      <div class="control-group" ng-class="{error: TransformerForm.feature.$invalid}">
+        <label class="control-label">Feature</label>
+        <div class="controls">
+            <select ng-model="model.feature" name="feature" ng-options="f.id as f.name for f in features" required>
+                <option value="">--- select feature ---</option>
+            </select>
+        </div>
+      </div>
+
+    </form>
+  </div>
+
+  <div class="modal-footer">
+    <button ng-click="save()" ng-disabled="Form.$invalid" class="btn btn-primary">Add new transformer</button> <small>and start using it in features</small>
+  </div>
+</div>

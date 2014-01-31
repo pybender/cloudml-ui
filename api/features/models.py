@@ -4,7 +4,7 @@ from sqlalchemy.schema import CheckConstraint, UniqueConstraint
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship
 
-from api.base.models import BaseModel, db, JSONType
+from api.base.models import BaseModel, db, JSONType, S3File
 from core.trainer.classifier_settings import CLASSIFIERS
 from config import TRANSFORMERS, SCALERS, SYSTEM_FIELDS
 
@@ -101,6 +101,8 @@ class PredefinedTransformer(BaseModel, PredefinedItemMixin, db.Model,
     TYPES_LIST = TRANSFORMERS.keys()
     type = db.Column(
         db.Enum(*TYPES_LIST, name='transformer_types'), nullable=False)
+    vocabulary = deferred(db.Column(S3File))
+    vocabulary_size = db.Column(db.Integer, default=0)
 
 
 class PredefinedScaler(BaseModel, PredefinedItemMixin, db.Model,
@@ -141,6 +143,7 @@ class Feature(ExportImportMixin, RefFeatureSetMixin,
 
     params = deferred(db.Column(JSONType, default={}))
     transformer = deferred(db.Column(JSONType))
+    transformer_vocabulary = deferred(db.Column(S3File))
     scaler = deferred(db.Column(JSONType))
 
     __table_args__ = (UniqueConstraint(

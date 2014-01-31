@@ -4,6 +4,9 @@
       <a class="btn btn-info" ng-click="add()">
         <i class="status-icon icon-plus"></i> Add new transformer
       </a>
+      <a class="btn btn-info" ng-click="copyFromTrainer()">
+        <i class="status-icon icon-plus"></i> Copy fitted transformer from trainer
+      </a>
   </div>
 </h2>
 
@@ -18,6 +21,7 @@
 		<col style="width: 15%;" />
 	    <col style="width: 40%; text-overflow: ellipsis;" />
 	    <col style="width: 15%;" />
+	    <col style="width: 15%;" />
 	    <col style="width: 60px;"/>
 	</colgroup>
 	<thead>
@@ -25,6 +29,7 @@
 	    <th>Name</th>
 	    <th>Type</th>
 	    <th>Params</th>
+	    <th>Vocabulary</th>
 	    <th>Created</th>
 	    <th>Actions</th>
 	  </tr>
@@ -38,6 +43,7 @@
 	    <td ng-init="params = transformer.params">
 	    	<ng-include src="'/partials/parts/params_list.html'"></ng-include>
 	    </td>
+        <td><span ng-show="transformer.vocabulary_size">{{ transformer.vocabulary_size }} bytes</span></td>
 	    <td>
 	        {{ transformer.created_on|format_date }}<br>
 	        <small ng-show="transformer.created_by_name">by {{ transformer.created_by_name }}</small>
