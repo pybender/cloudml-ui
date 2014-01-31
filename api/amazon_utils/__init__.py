@@ -153,21 +153,21 @@ class AmazonS3Helper(object):
         return bucket
 
 
-class AmazonSDBHelper(object):
+class AmazonDynamoDBHelper(object):
     _instance = None
 
     def __new__(cls, *args, **kwargs):
         if not cls._instance:
-            cls._instance = super(AmazonSDBHelper, cls).__new__(
+            cls._instance = super(AmazonDynamoDBHelper, cls).__new__(
                                 cls, *args, **kwargs)
         return cls._instance
 
     def __init__(self, token=None, secret=None):
-        from boto import sdb
+        from boto import dynamodb
         token = token or app.config['AMAZON_ACCESS_TOKEN']
         secret = secret or app.config['AMAZON_TOKEN_SECRET']
-        self.conn = sdb.connect_to_region(
-            'us-west-2',
+        self.conn = dynamodb.connect_to_region(
+            'us-west-1',
             aws_access_key_id=token,
             aws_secret_access_key=secret)
         self._domains = {}
