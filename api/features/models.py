@@ -1,5 +1,8 @@
+import json
+import logging
+
 from sqlalchemy import event
-from sqlalchemy.orm import deferred
+from sqlalchemy.orm import deferred, undefer
 from sqlalchemy.schema import CheckConstraint, UniqueConstraint
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship
@@ -144,6 +147,7 @@ class Feature(ExportImportMixin, RefFeatureSetMixin,
     params = deferred(db.Column(JSONType, default={}))
     transformer = deferred(db.Column(JSONType))
     transformer_vocabulary = deferred(db.Column(S3File))
+    transformer_vocabulary_size = db.Column(db.Integer)
     scaler = deferred(db.Column(JSONType))
 
     __table_args__ = (UniqueConstraint(
@@ -193,13 +197,46 @@ class FeatureSet(ExportImportMixin, BaseModel, db.Model):
     def __repr__(self):
         return '<Feature Set {0} ({1})>'.format(self.schema_name, self.target_variable)
 
+    def _prepare_features_dict(self, features_dict):
+        """
+        Append saved fitted transformers to features dict if presented
+        :param features_dict:
+        :return:
+        """
+        features_db = {}
+        features_query = Feature.query \
+            .filter_by(feature_set=self) \
+            .filter(Feature.transformer_vocabulary_size > 0) \
+            .options(undefer('transformer_vocabulary'))
+        for feature in features_query:
+            features_db[feature.name] = (
+                feature.transformer_vocabulary,
+                feature.transformer_vocabulary_size)
+
+        for feature in features_dict['features']:
+            if not feature.get('transformer'):
+                continue
+            vocab, vocab_size = features_db[feature['name']] \
+                if feature['name'] in features_db else (None, None)
+            if vocab:
+                if not 'params' in feature['transformer']:
+                    feature['transformer']['params'] = {}
+                feature['transformer']['params']['vocabulary'] =\
+                    json.loads(vocab)
+                logging.info('Saved vocabulary has been applied for '
+                             'transformer {0} of feature {1}, size {2}'.format(
+                    feature['transformer']['type'], feature['name'], vocab_size
+                ))
+
+        return features_dict
+
     @property
     def features(self):
         if self.modified:
             self.features_dict = self.to_dict()
             self.modified = False
             self.save()
-        return self.features_dict
+        return self._prepare_features_dict(self.features_dict)
 
     def from_dict(self, features_dict, commit=True):
         self.schema_name = features_dict['schema_name']
