@@ -143,7 +143,7 @@ class Model(db.Model, BaseModel):
         data = self.features_set.features
         if data is None:
             self.features_set.modified = True
-            data = self.features_set.features()
+            data = self.features_set.features
         data['classifier'] = self.classifier
         return json.dumps(data)
 
