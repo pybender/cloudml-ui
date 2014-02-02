@@ -63,6 +63,19 @@ class FeatureData(DataSet):
         type = "map"
         feature_set_id = FeatureSetData.bestmatch.ref('id')
 
+    class transformed_feature:
+        name = "contractor.dev_blurb"
+        transformer = {
+            "name": "Test count #2 not is_predefined",
+            "type": "Tfidf",
+            "params": {
+                "min_df": 3,
+            }
+        }
+        is_target_variable = False
+        type = "text"
+        feature_set = FeatureSetData.bestmatch
+
 
 class PredefinedTransformerData(DataSet):
     class transformer_01:

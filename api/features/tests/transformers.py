@@ -1,9 +1,15 @@
 import logging
+import json
+
+from mock import patch
+from moto import mock_s3
 
 from utils import FeaturePredefinedItemsTestMixin, FeatureItemsTestMixin
 from ..views import TransformerResource
 from ..models import Feature, PredefinedTransformer
 from ..fixtures import PredefinedTransformerData, FeatureData
+from api.ml_models.models import Model
+from api.ml_models.fixtures import ModelData
 
 
 class PredefinedTransformersTests(FeaturePredefinedItemsTestMixin):
@@ -13,7 +19,7 @@ class PredefinedTransformersTests(FeaturePredefinedItemsTestMixin):
     BASE_URL = '/cloudml/features/transformers/'
     RESOURCE = TransformerResource
     Model = PredefinedTransformer
-    datasets = (PredefinedTransformerData, )
+    datasets = (PredefinedTransformerData, ModelData, FeatureData)
 
     OBJECT_NAME = 'transformer'
     DATA = {'type': 'Count',
@@ -74,6 +80,32 @@ class PredefinedTransformersTests(FeaturePredefinedItemsTestMixin):
                 'type': 'Count'}
         _check(data, errors={
             'fields': 'name of predefined item should be unique'})
+
+    @patch('api.amazon_utils.AmazonS3Helper.load_key')
+    @patch('api.amazon_utils.AmazonS3Helper.save_key_string')
+    @patch('api.ml_models.models.Model.get_trainer')
+    def test_copy_from_trainer(self, mock_get_trainer, mock_save_key_string,
+                               mock_load_key):
+        from core.trainer.store import TrainerStorage
+        with open('api/ml_models/model.dat', 'r') as f:
+            trainer = TrainerStorage.loads(f.read())
+
+        mock_get_trainer.return_value = trainer
+        mock_load_key.return_value = 'some'
+
+        data = {
+            'name': 'Copied From Trainer #1',
+            'model': Model.query.filter_by(
+                name=ModelData.model_01.name).one().id,
+            'feature': Feature.query.filter_by(
+                name=FeatureData.transformed_feature.name).one().id,
+        }
+        resp, obj = self.check_edit(data, action='copy_from_trainer')
+        self.assertTrue(mock_save_key_string.called)
+        uid, vocab = mock_save_key_string.mock_calls[0][1]
+        vocab = json.loads(vocab)
+        self.assertEqual(vocab['professional'], 54)
+        self.assertEqual(obj.vocabulary_size, 1086)
 
     def test_edit(self):
         self._test_edit()

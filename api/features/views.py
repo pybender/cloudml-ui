@@ -111,7 +111,9 @@ class TransformerResource(BaseResourceSQL):
             new_transformer.params = feature.transformer['params']
             new_transformer.save()
 
-            return self._render({'id': new_transformer.id})
+            return self._render(
+                {'transformer': self._prepare_model(new_transformer, kwargs)},
+                code=201)
 
 api.add_resource(TransformerResource, '/cloudml/features/transformers/')
 
