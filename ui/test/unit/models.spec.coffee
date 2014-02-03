@@ -159,3 +159,22 @@ created_on,status,parameters,accuracy,examples_count,created_by')
 
       expect($rootScope.select2Options).toBeDefined()
       expect(_.keys($rootScope.formElements).length).toBeGreaterThan(2)
+
+  describe "ModelActionsCtrl", ->
+
+    # TODO: solve the issue with "TypeError: 'undefined' is not an object (evaluating 'fn.apply')"
+    xit "should call upload_predict action", inject () ->
+      createController "ModelActionsCtrl"
+
+      url = BASE_URL + MODEL_ID + '/action/upload_predict/'
+      $httpBackend.expectPUT(url).respond('{"model": {"id": 1, "name": "Name", "status": "Trained"}}')
+
+      model = Model({
+        id: MODEL_ID,
+        name: 'Model1',
+        status: 'New',
+        features: '',
+        weights_synchronized: true
+      })
+
+      $rootScope.uploadModelToPredict(model)

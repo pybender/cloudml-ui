@@ -570,3 +570,19 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         resp = self.client.put(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.OK)
         self.assertTrue(mock_task.delay.called)
+
+    @mock_s3
+    @patch('api.ml_models.tasks.upload_model_for_predict')
+    def test_upload_predict(self, mock_task, *mocks):
+        url = self._get_url(id=self.obj.id, action='upload_predict')
+
+        resp = self.client.put(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.OK)
+        self.assertTrue(mock_task.delay.called)
+        self.assertTrue('status' in json.loads(resp.data))
+
+        self.obj.status = Model.STATUS_NEW
+        self.obj.save()
+
+        resp = self.client.put(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.BAD_REQUEST)
