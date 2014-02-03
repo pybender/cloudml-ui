@@ -212,8 +212,8 @@ def upload_model_for_predict(model_id, user_id):
     user = User.query.get(user_id)
     model = Model.query.get(model_id)
 
-    # TODO: Shall we use another bucket?
-    s3 = AmazonS3Helper()
+    # TODO: Shall we use another account?
+    s3 = AmazonS3Helper(bucket_name=app.config['CLOUDML_PREDICT_BUCKET_NAME'])
     path = '{0}/{1}_{2}.dat'.format(
         app.config.get('CLOUDML_PREDICT_FOLDER_MODELS'),
         str(model.id),
