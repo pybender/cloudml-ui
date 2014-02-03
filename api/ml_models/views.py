@@ -8,7 +8,7 @@ from werkzeug.datastructures import FileStorage
 from api import api
 from api.import_handlers.models import DataSet
 from api.base.resources import BaseResourceSQL, NotFound, ValidationError, \
-    public_actions
+    public_actions, ERR_INVALID_DATA, odesk_error_response
 from models import Model, Tag, Weight, WeightsCategory
 from forms import ModelAddForm, ModelEditForm
 
@@ -29,7 +29,8 @@ class ModelResource(BaseResourceSQL):
     Models API methods
     """
     GET_ACTIONS = ('download', 'reload', 'by_importhandler')
-    PUT_ACTIONS = ('train', 'tags', 'cancel_request_instance')
+    PUT_ACTIONS = ('train', 'tags', 'cancel_request_instance',
+                   'upload_predict')
     FILTER_PARAMS = (('status', str), ('comparable', str), ('tag', str),
                     ('created_by', str), ('updated_by_id', int),
                     ('updated_by', str))
@@ -206,6 +207,23 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
                 'id': model.id,
                 'status': model.status
             }
+        })
+
+    def _put_upload_predict_action(self, **kwargs):
+        from .tasks import upload_model_for_predict
+
+        model = self._get_details_query(None, **kwargs)
+        if model.status != Model.STATUS_TRAINED:
+            return odesk_error_response(400, ERR_INVALID_DATA,
+                                        'Model is not yet trained')
+
+        upload_model_for_predict.delay(model.id, request.user.id)
+
+        return self._render({
+            self.OBJECT_NAME: model,
+            'status': 'Model "{0}" will be uploaded to cloudml-predict'.format(
+                model.name
+            )
         })
 
 api.add_resource(ModelResource, '/cloudml/models/')

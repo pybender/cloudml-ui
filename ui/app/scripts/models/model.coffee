@@ -98,6 +98,10 @@ angular.module('app.models.model', ['app.config'])
           (resp) =>
             @status = resp.data.model.status)
 
+      $uploadPredict: =>
+        url = "#{@BASE_API_URL}#{@id}/action/upload_predict/"
+        @$make_request(url, {}, "PUT", {})
+
     return Model
 ])
 

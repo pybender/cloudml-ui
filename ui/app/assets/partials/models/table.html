@@ -84,6 +84,9 @@
           <a ng-show="model.status == 'Trained'" href="{{ model.downloadUrl() }}?field=trainer" class="btn btn-info">
             <i title="Download model trainer." class="icon-download-alt"></i>
           </a>
+          <button ng-show="model.status == 'Trained'" ng-click="uploadModelToPredict(model)" class="btn btn-info">
+            <i title="Upload for Predict" class="icon-upload"></i>
+          </button>
           <button ng-show="model.status == 'Requesting Instance'" ng-click="cancel_request_spot_instance(model)" class="btn btn-danger">
             Cancel requesting instance
           </button>

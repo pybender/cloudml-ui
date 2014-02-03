@@ -23,6 +23,9 @@
     <a ng-show="model.status == 'Trained'" href="{{ model.downloadUrl() }}?field=trainer" class="btn btn-info">
         <i title="Download model trainer." class="icon-download-alt"></i> Download Trainer
     </a>
+    <button ng-show="model.status == 'Trained'" ng-click="uploadModelToPredict(model)" class="btn btn-info">
+        <i class="icon-upload"></i> Upload for Predict
+    </button>
     <button ng-click="delete_model(model)" class="btn btn-danger">
       <i title="Delete your model. Be careful - you could not recover it!" class="icon-remove"></i> Delete model
     </button>
