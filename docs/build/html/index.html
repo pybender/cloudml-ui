@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="oDesk CloudML 0.0.1 documentation" href="#" />
-    <link rel="next" title="Deployment" href="deployment.html" /> 
+    <link rel="next" title="Get Started With CloudML" href="get_started.html" /> 
   </head>
   <body>
     <div class="related">
@@ -34,7 +34,7 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="deployment.html" title="Deployment"
+          <a href="get_started.html" title="Get Started With CloudML"
              accesskey="N">next</a> |</li>
         <li><a href="#">oDesk CloudML 0.0.1 documentation</a> &raquo;</li> 
       </ul>
@@ -51,6 +51,20 @@
 <p>Contents:</p>
 <div class="toctree-wrapper compound">
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="get_started.html">Get Started With CloudML</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="get_started.html#creating-the-model">Creating the model</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="get_started.html#new-model">New model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="get_started.html#upload-your-model">Upload your model</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="import_handler.html">Import_handler.json file format</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="import_handler.html#defining-data-sources">Defining data sources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="import_handler.html#defining-queries">Defining queries</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Feature json file format</a></li>
 <li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="deployment.html#setup-project-to-new-instance">Setup project to new instance</a></li>
 <li class="toctree-l2"><a class="reference internal" href="deployment.html#deploy-new-version">Deploy new version</a></li>
@@ -70,10 +84,28 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="settings.html">Settings</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="settings.html#db-settings">DB settings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="settings.html#db-settings">DB settings</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="settings.html#database-name">DATABASE_NAME</a></li>
+<li class="toctree-l3"><a class="reference internal" href="settings.html#database-host">DATABASE_HOST</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="settings.html#amazon-settings">Amazon settings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="settings.html#odesk-settings">Odesk settings</a></li>
-<li class="toctree-l2"><a class="reference internal" href="settings.html#main-settings">Main settings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="settings.html#main-settings">Main settings</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="settings.html#data-folder">DATA_FOLDER</a></li>
+<li class="toctree-l3"><a class="reference internal" href="settings.html#examples-chunk-size">EXAMPLES_CHUNK_SIZE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="settings.html#multipart-upload-chunk-size">MULTIPART_UPLOAD_CHUNK_SIZE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="settings.html#broker-url">BROKER_URL</a></li>
+<li class="toctree-l3"><a class="reference internal" href="settings.html#celery-result-backend">CELERY_RESULT_BACKEND</a></li>
+<li class="toctree-l3"><a class="reference internal" href="settings.html#requesting-instance-max-retries">REQUESTING_INSTANCE_MAX_RETRIES</a></li>
+<li class="toctree-l3"><a class="reference internal" href="settings.html#requesting-instance-countdown">REQUESTING_INSTANCE_COUNTDOWN</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="changes.html">Changes in JSON files</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="changes.html#features">Features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changes.html#import-handler">Import Handler</a></li>
 </ul>
 </li>
 </ul>
@@ -83,7 +115,8 @@
 <ul class="last simple">
 <li><a class="reference external" href="http://jira.odesk.com/browse/MATCH/component/11626">Jira project</a></li>
 <li><a class="reference external" href="https://github.com/odeskdev/odeskdev-cloudml">Github repository</a></li>
-<li>Production <a class="reference external" href="http://172.27.77.242">http://172.27.77.242</a></li>
+<li>Production <a class="reference external" href="http://172.27.77.141">http://172.27.77.141</a></li>
+<li>Temprary worker 172.27.133.33</li>
 <li>Staging <a class="reference external" href="http://172.27.67.106:5000">http://172.27.67.106:5000</a></li>
 <li>Developers: Nikolay Melnik &lt;<a class="reference external" href="mailto:nmelnik&#37;&#52;&#48;odesk&#46;com">nmelnik<span>&#64;</span>odesk<span>&#46;</span>com</a>&gt;, Mikhail Medvedev &lt;<a class="reference external" href="mailto:moorcock&#37;&#52;&#48;odesk&#46;com">moorcock<span>&#64;</span>odesk<span>&#46;</span>com</a>&gt;</li>
 </ul>
@@ -113,8 +146,8 @@
 </ul>
 
   <h4>Next topic</h4>
-  <p class="topless"><a href="deployment.html"
-                        title="next chapter">Deployment</a></p>
+  <p class="topless"><a href="get_started.html"
+                        title="next chapter">Get Started With CloudML</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/index.txt"
@@ -144,7 +177,7 @@
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="deployment.html" title="Deployment"
+          <a href="get_started.html" title="Get Started With CloudML"
              >next</a> |</li>
         <li><a href="#">oDesk CloudML 0.0.1 documentation</a> &raquo;</li> 
       </ul>

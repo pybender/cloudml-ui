@@ -1,0 +1,111 @@
+.. _import_handler:
+
+===============================
+Import_handler.json file format
+===============================
+
+Import handler aims to offer a flexible way for retrieving data from various data sources.
+
+Now we have two types of import handlers:
+
+* ``database`` -- it is used to describe database connection details, the query to execute, and instructions on which data should be extracted from the query and in which manner.
+* ``request``
+
+.. note::
+
+	CloudML UI now supports only database datasources. Current version of the import handler will offer the functionality to extract data from single SQL queries. 
+
+
+The extraction plan is a configuration file describing the data to be
+extracted. It is a JSON object, with a specific structure.
+An example of such file is the following::
+
+	{
+	  "target_schema":"bestmatch",
+	  "datasource":[
+	    {
+	      "name":"cloudml",
+	      "type":"sql",
+	      "db":{
+	        "conn":"host='localhost' dbname='cloudml' user='postgres' password='postgres'",
+	        "vendor":"postgres"
+	      }
+	    }
+	  ],
+	  "queries":[
+	    {
+	      "name":"retrieve",
+	      "sql": "SELECT * FROM table;",
+	      "items": [
+	        {
+	          "source": "hire_outcome",
+	          "process_as": "string",
+	          "is_required": true,
+	          "target_features": [
+	            { "name": "hire_outcome" }
+	          ]
+	        },
+	        { "source": "contractor_info",
+	          "is_required": true,
+	          "process_as": "json",
+	          "target_features": [
+	            { "name": "contractor.skills", "jsonpath": "$.skills.*.skl_name", "to_csv": true},
+	            { "name": "tsexams", "jsonpath": "$.tsexams", "key_path": "$.*.ts_name", "value_path": "$.*.ts_score" }
+	          ]
+	        },
+	        {
+	          "process_as": "composite",
+	          "target_features": [
+	            { "name": "country_pair", "expression": {"type": "string", "value": "%(employer.country)s,%(contractor.dev_country)s"}}
+	          ]
+	        }
+	      ]
+	    }
+	  ]
+	}
+
+
+.. note::
+
+	You could find samples of import handlers files in 
+	https://github.com/odeskdataproducts/cloudml-ui/blob/master/conf/
+
+.. warning::
+
+	If you migrating your old import handler files take a look to
+	:ref:`changes in json files <json_changes>`
+
+So Import Handler Json file should countains following sections:
+
+* ``target_schema`` - defines target schema name
+* ``datasource`` - contains information about datasources (list). For more info about section go to the        :ref:`datasources section <features-datasources>`
+* ``queries`` - contains information about queries (list). For more info about section go to the        :ref:`queries section <features-queries>`
+
+.. _features-datasources:
+
+Defining data sources
+---------------------
+
+This part of the configuration contains information about the database to
+connect to in order to execute the query defined later. It may contain one map with the following fields:
+
+
+============  ========   ===========
+Name          Required   Description
+============  ========   ===========
+name          yes        A name uniquely identifying this database. In the future this should be required so that queries can refer to which DB connection to use for executing
+type   		  yes        Currently only 'sql' is supported.
+db.conn       yes        This is field 'conn' defined A connection string containing the DB connection details
+db.vendor     yes        The name of the database's vendor. Currently only 'postgres' is supported.
+============  ========   ===========
+
+.. _features-queries:
+
+Defining queries
+----------------
+
+The 'queries' section contains an array of objects describing each individual
+query. Currently only a single query is supported. Each query might contain
+the following fields:
+
+TODO:

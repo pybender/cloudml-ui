@@ -1,0 +1,236 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Import_handler.json file format &mdash; oDesk CloudML 0.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="oDesk CloudML 0.0.1 documentation" href="index.html" />
+    <link rel="next" title="Feature json file format" href="features.html" />
+    <link rel="prev" title="Get Started With CloudML" href="get_started.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="features.html" title="Feature json file format"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="get_started.html" title="Get Started With CloudML"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="import-handler-json-file-format">
+<span id="import-handler"></span><h1>Import_handler.json file format<a class="headerlink" href="#import-handler-json-file-format" title="Permalink to this headline">¶</a></h1>
+<p>Import handler aims to offer a flexible way for retrieving data from various data sources.</p>
+<p>Now we have two types of import handlers:</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">database</span></tt> &#8211; it is used to describe database connection details, the query to execute, and instructions on which data should be extracted from the query and in which manner.</li>
+<li><tt class="docutils literal"><span class="pre">request</span></tt></li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">CloudML UI now supports only database datasources. Current version of the import handler will offer the functionality to extract data from single SQL queries.</p>
+</div>
+<p>The extraction plan is a configuration file describing the data to be
+extracted. It is a JSON object, with a specific structure.
+An example of such file is the following:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+  <span class="s">&quot;target_schema&quot;</span><span class="p">:</span><span class="s">&quot;bestmatch&quot;</span><span class="p">,</span>
+  <span class="s">&quot;datasource&quot;</span><span class="p">:[</span>
+    <span class="p">{</span>
+      <span class="s">&quot;name&quot;</span><span class="p">:</span><span class="s">&quot;cloudml&quot;</span><span class="p">,</span>
+      <span class="s">&quot;type&quot;</span><span class="p">:</span><span class="s">&quot;sql&quot;</span><span class="p">,</span>
+      <span class="s">&quot;db&quot;</span><span class="p">:{</span>
+        <span class="s">&quot;conn&quot;</span><span class="p">:</span><span class="s">&quot;host=&#39;localhost&#39; dbname=&#39;cloudml&#39; user=&#39;postgres&#39; password=&#39;postgres&#39;&quot;</span><span class="p">,</span>
+        <span class="s">&quot;vendor&quot;</span><span class="p">:</span><span class="s">&quot;postgres&quot;</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+  <span class="p">],</span>
+  <span class="s">&quot;queries&quot;</span><span class="p">:[</span>
+    <span class="p">{</span>
+      <span class="s">&quot;name&quot;</span><span class="p">:</span><span class="s">&quot;retrieve&quot;</span><span class="p">,</span>
+      <span class="s">&quot;sql&quot;</span><span class="p">:</span> <span class="s">&quot;SELECT * FROM table;&quot;</span><span class="p">,</span>
+      <span class="s">&quot;items&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span>
+          <span class="s">&quot;source&quot;</span><span class="p">:</span> <span class="s">&quot;hire_outcome&quot;</span><span class="p">,</span>
+          <span class="s">&quot;process_as&quot;</span><span class="p">:</span> <span class="s">&quot;string&quot;</span><span class="p">,</span>
+          <span class="s">&quot;is_required&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+          <span class="s">&quot;target_features&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="p">{</span> <span class="s">&quot;name&quot;</span><span class="p">:</span> <span class="s">&quot;hire_outcome&quot;</span> <span class="p">}</span>
+          <span class="p">]</span>
+        <span class="p">},</span>
+        <span class="p">{</span> <span class="s">&quot;source&quot;</span><span class="p">:</span> <span class="s">&quot;contractor_info&quot;</span><span class="p">,</span>
+          <span class="s">&quot;is_required&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+          <span class="s">&quot;process_as&quot;</span><span class="p">:</span> <span class="s">&quot;json&quot;</span><span class="p">,</span>
+          <span class="s">&quot;target_features&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="p">{</span> <span class="s">&quot;name&quot;</span><span class="p">:</span> <span class="s">&quot;contractor.skills&quot;</span><span class="p">,</span> <span class="s">&quot;jsonpath&quot;</span><span class="p">:</span> <span class="s">&quot;$.skills.*.skl_name&quot;</span><span class="p">,</span> <span class="s">&quot;to_csv&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">},</span>
+            <span class="p">{</span> <span class="s">&quot;name&quot;</span><span class="p">:</span> <span class="s">&quot;tsexams&quot;</span><span class="p">,</span> <span class="s">&quot;jsonpath&quot;</span><span class="p">:</span> <span class="s">&quot;$.tsexams&quot;</span><span class="p">,</span> <span class="s">&quot;key_path&quot;</span><span class="p">:</span> <span class="s">&quot;$.*.ts_name&quot;</span><span class="p">,</span> <span class="s">&quot;value_path&quot;</span><span class="p">:</span> <span class="s">&quot;$.*.ts_score&quot;</span> <span class="p">}</span>
+          <span class="p">]</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+          <span class="s">&quot;process_as&quot;</span><span class="p">:</span> <span class="s">&quot;composite&quot;</span><span class="p">,</span>
+          <span class="s">&quot;target_features&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="p">{</span> <span class="s">&quot;name&quot;</span><span class="p">:</span> <span class="s">&quot;country_pair&quot;</span><span class="p">,</span> <span class="s">&quot;expression&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s">&quot;type&quot;</span><span class="p">:</span> <span class="s">&quot;string&quot;</span><span class="p">,</span> <span class="s">&quot;value&quot;</span><span class="p">:</span> <span class="s">&quot;%(employer.country)s,%(contractor.dev_country)s&quot;</span><span class="p">}}</span>
+          <span class="p">]</span>
+        <span class="p">}</span>
+      <span class="p">]</span>
+    <span class="p">}</span>
+  <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">You could find samples of import handlers files in
+<a class="reference external" href="https://github.com/odeskdataproducts/cloudml-ui/blob/master/conf/">https://github.com/odeskdataproducts/cloudml-ui/blob/master/conf/</a></p>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">If you migrating your old import handler files take a look to
+<a class="reference internal" href="changes.html#json-changes"><em>changes in json files</em></a></p>
+</div>
+<p>So Import Handler Json file should countains following sections:</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">target_schema</span></tt> - defines target schema name</li>
+<li><tt class="docutils literal"><span class="pre">datasource</span></tt> - contains information about datasources (list). For more info about section go to the        <a class="reference internal" href="#features-datasources"><em>datasources section</em></a></li>
+<li><tt class="docutils literal"><span class="pre">queries</span></tt> - contains information about queries (list). For more info about section go to the        <a class="reference internal" href="#features-queries"><em>queries section</em></a></li>
+</ul>
+<div class="section" id="defining-data-sources">
+<span id="features-datasources"></span><h2>Defining data sources<a class="headerlink" href="#defining-data-sources" title="Permalink to this headline">¶</a></h2>
+<p>This part of the configuration contains information about the database to
+connect to in order to execute the query defined later. It may contain one map with the following fields:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="7%" />
+<col width="5%" />
+<col width="88%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Required</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>name</td>
+<td>yes</td>
+<td>A name uniquely identifying this database. In the future this should be required so that queries can refer to which DB connection to use for executing</td>
+</tr>
+<tr class="row-odd"><td>type</td>
+<td>yes</td>
+<td>Currently only &#8216;sql&#8217; is supported.</td>
+</tr>
+<tr class="row-even"><td>db.conn</td>
+<td>yes</td>
+<td>This is field &#8216;conn&#8217; defined A connection string containing the DB connection details</td>
+</tr>
+<tr class="row-odd"><td>db.vendor</td>
+<td>yes</td>
+<td>The name of the database&#8217;s vendor. Currently only &#8216;postgres&#8217; is supported.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="defining-queries">
+<span id="features-queries"></span><h2>Defining queries<a class="headerlink" href="#defining-queries" title="Permalink to this headline">¶</a></h2>
+<p>The &#8216;queries&#8217; section contains an array of objects describing each individual
+query. Currently only a single query is supported. Each query might contain
+the following fields:</p>
+<p>TODO:</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Import_handler.json file format</a><ul>
+<li><a class="reference internal" href="#defining-data-sources">Defining data sources</a></li>
+<li><a class="reference internal" href="#defining-queries">Defining queries</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="get_started.html"
+                        title="previous chapter">Get Started With CloudML</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="features.html"
+                        title="next chapter">Feature json file format</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/import_handler.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="features.html" title="Feature json file format"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="get_started.html" title="Get Started With CloudML"
+             >previous</a> |</li>
+        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Nikolay Melnik.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b2.
+    </div>
+  </body>
+</html>

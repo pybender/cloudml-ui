@@ -55,22 +55,19 @@
 <h2>Setup project to new instance<a class="headerlink" href="#setup-project-to-new-instance" title="Permalink to this headline">¶</a></h2>
 <p>We are going to deploy using:</p>
 <ul class="simple">
-<li>Apache</li>
+<li>Nginx</li>
 <li>Fabdeploy</li>
 <li>Virtualenv</li>
 <li>Supervisor</li>
 <li>EC2 instance with Ubuntu</li>
 </ul>
 <p>Create virtual env locally:</p>
-<div class="highlight-python"><pre>$ virtualenv --no-site-packages ve
+<div class="highlight-python"><pre>$ sudo apt-get install virtualenvwrapper
+
+$ virtualenv --no-site-packages ve
 $ . ve/bin/activate
-$ pip install -r requirements.txt</pre>
-</div>
-<p>Installing jgit:</p>
-<div class="highlight-python"><pre>$ wget .....</pre>
-</div>
-<p>Configure jgit:</p>
-<div class="highlight-python"><pre>$ git remote add s3 amazon-s3://.jgit@odesk-match-cloudml/cloudml.git/</pre>
+
+$ pip install -r deploy_requirements.txt</pre>
 </div>
 <p>Note:</p>
 <div class="highlight-python"><pre>Create OATH API keys using https://www.odesk.com/services/api/apply. Callback URL is http://{{host}}/#/auth/callback</pre>
@@ -156,6 +153,9 @@ match and cloudml chief recipets.</p>
 </div>
 <p>Deploy new version:</p>
 <div class="highlight-python"><pre>$ fab worker deployw</pre>
+</div>
+<p>Create image:</p>
+<div class="highlight-python"><pre>$</pre>
 </div>
 </div>
 </div>

@@ -10,12 +10,16 @@ CloudML is a declarative machine learning classifier project
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    
+   get_started
+   import_handler
+   features
    deployment
    development
    api
    settings
+   changes
 
 
 .. seealso::

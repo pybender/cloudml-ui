@@ -1,0 +1,37 @@
+.. _json_changes:
+
+=====================
+Changes in JSON files
+=====================
+
+Features
+--------
+Please migrate features file by wrapping entity parameters to `params` section.
+
+So you need to do it with:
+
+* classifier
+* all feature transformers
+* all feature scalers
+
+
+.. note::
+
+    Parameters of name feature types was wrapped with `params` before, so no changes here needed.
+
+
+Import Handler
+--------------
+For migrating import handler file you need to make some changes.
+
+In queries -> items:
+
+* ``is-required`` renamed to ``is_required``
+* ``process-as`` renamed to ``process_as``
+* ``target-features`` renamed to ``target_features``
+
+In queries -> items -> target_features:
+
+* ``key-path`` renamed to ``key_path``
+* ``value-path`` renamed to ``value_path``
+* ``to-csv`` renamed to ``to_csv``
