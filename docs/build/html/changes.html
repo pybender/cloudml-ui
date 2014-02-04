@@ -6,9 +6,9 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Changes in JSON files &mdash; oDesk CloudML 0.0.1 documentation</title>
+    <title>Migrating JSON files &mdash; oDesk CloudML 0.0.1 documentation</title>
     
-    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
@@ -24,7 +24,8 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="oDesk CloudML 0.0.1 documentation" href="index.html" />
-    <link rel="prev" title="Settings" href="settings.html" /> 
+    <link rel="next" title="Deployment" href="deployment.html" />
+    <link rel="prev" title="Feature JSON file format" href="features.html" /> 
   </head>
   <body>
     <div class="related">
@@ -34,19 +35,62 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="settings.html" title="Settings"
+          <a href="deployment.html" title="Deployment"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="features.html" title="Feature JSON file format"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li> 
+    <li><a href="http://cloudml.int.odesk.com/">CloudML UI</a> &raquo;</li>
+    
+        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li>
+ 
       </ul>
-    </div>  
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Migrating JSON files</a><ul>
+<li><a class="reference internal" href="#features">Features</a></li>
+<li><a class="reference internal" href="#import-handler">Import Handler</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="features.html"
+                        title="previous chapter">Feature JSON file format</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="deployment.html"
+                        title="next chapter">Deployment</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/changes.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="changes-in-json-files">
-<span id="json-changes"></span><h1>Changes in JSON files<a class="headerlink" href="#changes-in-json-files" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="migrating-json-files">
+<span id="json-changes"></span><h1>Migrating JSON files<a class="headerlink" href="#migrating-json-files" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="features">
 <h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
 <p>Please migrate features file by wrapping entity parameters to <cite>params</cite> section.</p>
@@ -56,6 +100,18 @@
 <li>all feature transformers</li>
 <li>all feature scalers</li>
 </ul>
+<p>For example:</p>
+<div class="highlight-python"><pre>"classifier": {
+  "type": "logistic regression",
+  "penalty": "l2"
+}</pre>
+</div>
+<p>should be changed to:</p>
+<div class="highlight-python"><pre>"classifier": {
+  "type": "logistic regression",
+  "params": {"penalty": "l2"}
+}</pre>
+</div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Parameters of name feature types was wrapped with <cite>params</cite> before, so no changes here needed.</p>
@@ -83,40 +139,6 @@
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar">
-        <div class="sphinxsidebarwrapper">
-  <h3><a href="index.html">Table Of Contents</a></h3>
-  <ul>
-<li><a class="reference internal" href="#">Changes in JSON files</a><ul>
-<li><a class="reference internal" href="#features">Features</a></li>
-<li><a class="reference internal" href="#import-handler">Import Handler</a></li>
-</ul>
-</li>
-</ul>
-
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="settings.html"
-                        title="previous chapter">Settings</a></p>
-  <h3>This Page</h3>
-  <ul class="this-page-menu">
-    <li><a href="_sources/changes.txt"
-           rel="nofollow">Show Source</a></li>
-  </ul>
-<div id="searchbox" style="display: none">
-  <h3>Quick search</h3>
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
-    </p>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
-      </div>
       <div class="clearer"></div>
     </div>
     <div class="related">
@@ -126,13 +148,19 @@
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="settings.html" title="Settings"
+          <a href="deployment.html" title="Deployment"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="features.html" title="Feature JSON file format"
              >previous</a> |</li>
-        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li> 
+    <li><a href="http://cloudml.int.odesk.com/">CloudML UI</a> &raquo;</li>
+    
+        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li>
+ 
       </ul>
     </div>
     <div class="footer">
-        &copy; Copyright 2013, Nikolay Melnik.
+        &copy; Copyright 2013, oDesk.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b2.
     </div>
   </body>

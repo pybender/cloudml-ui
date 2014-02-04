@@ -6,9 +6,9 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Import_handler.json file format &mdash; oDesk CloudML 0.0.1 documentation</title>
+    <title>Import handler JSON file format &mdash; oDesk CloudML 0.0.1 documentation</title>
     
-    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="oDesk CloudML 0.0.1 documentation" href="index.html" />
-    <link rel="next" title="Feature json file format" href="features.html" />
+    <link rel="next" title="Feature JSON file format" href="features.html" />
     <link rel="prev" title="Get Started With CloudML" href="get_started.html" /> 
   </head>
   <body>
@@ -35,14 +35,54 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="features.html" title="Feature json file format"
+          <a href="features.html" title="Feature JSON file format"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="get_started.html" title="Get Started With CloudML"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li> 
+    <li><a href="http://cloudml.int.odesk.com/">CloudML UI</a> &raquo;</li>
+    
+        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li>
+ 
       </ul>
-    </div>  
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Import handler JSON file format</a><ul>
+<li><a class="reference internal" href="#defining-data-sources">Defining data sources</a></li>
+<li><a class="reference internal" href="#defining-queries">Defining queries</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="get_started.html"
+                        title="previous chapter">Get Started With CloudML</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="features.html"
+                        title="next chapter">Feature JSON file format</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/import_handler.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
 
     <div class="document">
       <div class="documentwrapper">
@@ -50,7 +90,7 @@
           <div class="body">
             
   <div class="section" id="import-handler-json-file-format">
-<span id="import-handler"></span><h1>Import_handler.json file format<a class="headerlink" href="#import-handler-json-file-format" title="Permalink to this headline">¶</a></h1>
+<span id="import-handler"></span><h1>Import handler JSON file format<a class="headerlink" href="#import-handler-json-file-format" title="Permalink to this headline">¶</a></h1>
 <p>Import handler aims to offer a flexible way for retrieving data from various data sources.</p>
 <p>Now we have two types of import handlers:</p>
 <ul class="simple">
@@ -114,8 +154,8 @@ An example of such file is the following:</p>
 <p class="last">You could find samples of import handlers files in
 <a class="reference external" href="https://github.com/odeskdataproducts/cloudml-ui/blob/master/conf/">https://github.com/odeskdataproducts/cloudml-ui/blob/master/conf/</a></p>
 </div>
-<div class="admonition warning">
-<p class="first admonition-title">Warning</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
 <p class="last">If you migrating your old import handler files take a look to
 <a class="reference internal" href="changes.html#json-changes"><em>changes in json files</em></a></p>
 </div>
@@ -163,52 +203,126 @@ connect to in order to execute the query defined later. It may contain one map w
 </div>
 <div class="section" id="defining-queries">
 <span id="features-queries"></span><h2>Defining queries<a class="headerlink" href="#defining-queries" title="Permalink to this headline">¶</a></h2>
-<p>The &#8216;queries&#8217; section contains an array of objects describing each individual
-query. Currently only a single query is supported. Each query might contain
-the following fields:</p>
-<p>TODO:</p>
+<p>The &#8216;queries&#8217; section contains an array of objects describing each individual query. Currently only a single query is supported. Each query might contain the following fields:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="6%" />
+<col width="4%" />
+<col width="91%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Required</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>name</td>
+<td>yes</td>
+<td>A name uniquely identifying this query</td>
+</tr>
+<tr class="row-odd"><td>sql</td>
+<td>yes</td>
+<td>The SQL query to execute. It may contain parameters to be replaced by user input (i.e. either coming from a HTTP request or command line option). These parameters must be in the form %(name)s.</td>
+</tr>
+<tr class="row-even"><td>items</td>
+<td>yes</td>
+<td>An array of objects describing which items (and how) to extract from each row in the query&#8217;s result. The possible types of items is described below.</td>
+</tr>
+</tbody>
+</table>
+<p>Three types of query items are supported so far (<tt class="docutils literal"><span class="pre">process_as</span></tt> field):</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">identity</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">string</span></tt> - string query items, that read the value from a field defined in the SQL query, and store it to a single item</li>
+<li><tt class="docutils literal"><span class="pre">float</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">boolean</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">integer</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">json</span></tt> &#8211; JSON query items, that parse the data from a field and allow extracting multiple items using JSONPath expressions</li>
+<li><tt class="docutils literal"><span class="pre">composite</span></tt> &#8211; expression query items, which use data from other query items to produce new items</li>
+</ul>
+<p>Query items have following parameters:</p>
+<p>Query target_features objects should contains parameters:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="27%" />
+<col width="14%" />
+<col width="59%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Required</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>name</td>
+<td>yes</td>
+<td>The name of the resulting feature</td>
+</tr>
+</tbody>
+</table>
+<p>In case of <tt class="docutils literal"><span class="pre">json</span></tt> query items, the target_feature objects may contain the following fields:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="5%" />
+<col width="2%" />
+<col width="93%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Required</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>name</td>
+<td>yes</td>
+<td>The name of the resulting feature</td>
+</tr>
+<tr class="row-odd"><td>jsonpath</td>
+<td>yes</td>
+<td>A JSONPath expression that dictates the location of the value.</td>
+</tr>
+<tr class="row-even"><td>to_csv</td>
+<td>no</td>
+<td>Can be either true or false. If it is set to true and the result of the JSONPath expression is a list, it will be converted to a CSV value using &#8216;,&#8217; as a separator.</td>
+</tr>
+<tr class="row-odd"><td>key_path, value_path</td>
+<td>no</td>
+<td>Both should contain a JSONPath expression. If both are defined, then a dictionary will be created as a value. key_path defines the expression for the dictionary&#8217;s keys, while value-path defines the expression for the dictionary&#8217;s value. Note that those two expressions are executed not on the entire JSON object, but on the part resulting from applying the expression in jsonpath.</td>
+</tr>
+</tbody>
+</table>
+<p>Finally, the <tt class="docutils literal"><span class="pre">expression</span></tt> item target_features objects may contain the following fields:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="6%" />
+<col width="3%" />
+<col width="91%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Required</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>name</td>
+<td>yes</td>
+<td>The name of the resulting feature</td>
+</tr>
+<tr class="row-odd"><td>expression</td>
+<td>yes</td>
+<td>A string expression describing how the resulting value will be formatted. The string may include parameters in the format %(name)s. Possible values for name might be any feature extracted in previous query items. If any of the input parameters is not set, then the result will be null</td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 
 
           </div>
-        </div>
-      </div>
-      <div class="sphinxsidebar">
-        <div class="sphinxsidebarwrapper">
-  <h3><a href="index.html">Table Of Contents</a></h3>
-  <ul>
-<li><a class="reference internal" href="#">Import_handler.json file format</a><ul>
-<li><a class="reference internal" href="#defining-data-sources">Defining data sources</a></li>
-<li><a class="reference internal" href="#defining-queries">Defining queries</a></li>
-</ul>
-</li>
-</ul>
-
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="get_started.html"
-                        title="previous chapter">Get Started With CloudML</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="features.html"
-                        title="next chapter">Feature json file format</a></p>
-  <h3>This Page</h3>
-  <ul class="this-page-menu">
-    <li><a href="_sources/import_handler.txt"
-           rel="nofollow">Show Source</a></li>
-  </ul>
-<div id="searchbox" style="display: none">
-  <h3>Quick search</h3>
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
-    </p>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -220,16 +334,19 @@ the following fields:</p>
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="features.html" title="Feature json file format"
+          <a href="features.html" title="Feature JSON file format"
              >next</a> |</li>
         <li class="right" >
           <a href="get_started.html" title="Get Started With CloudML"
              >previous</a> |</li>
-        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li> 
+    <li><a href="http://cloudml.int.odesk.com/">CloudML UI</a> &raquo;</li>
+    
+        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li>
+ 
       </ul>
     </div>
     <div class="footer">
-        &copy; Copyright 2013, Nikolay Melnik.
+        &copy; Copyright 2013, oDesk.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b2.
     </div>
   </body>

@@ -15,19 +15,18 @@ Contents:
    get_started
    import_handler
    features
+   changes
    deployment
    development
    api
    settings
-   changes
 
 
 .. seealso::
 
    * `Jira project <http://jira.odesk.com/browse/MATCH/component/11626>`_
    * `Github repository <https://github.com/odeskdev/odeskdev-cloudml>`_
-   * Production http://172.27.77.141
-   * Temprary worker 172.27.133.33
+   * Production http://cloudml.int.odesk.com/
    * Staging http://172.27.67.106:5000
    * Developers: Nikolay Melnik <nmelnik@odesk.com>, Mikhail Medvedev <moorcock@odesk.com>
 

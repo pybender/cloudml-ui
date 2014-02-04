@@ -64,7 +64,7 @@ extracted. It is a JSON object, with a specific structure. An example of such fi
 	}
 
 
-Note::
+.. note::
 
 	You could find samples of import handlers files in 
 	https://github.com/odeskdataproducts/cloudml-ui/blob/master/conf/

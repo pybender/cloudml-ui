@@ -1,8 +1,8 @@
 .. _json_changes:
 
-=====================
-Changes in JSON files
-=====================
+====================
+Migrating JSON files
+====================
 
 Features
 --------
@@ -14,6 +14,20 @@ So you need to do it with:
 * all feature transformers
 * all feature scalers
 
+
+For example::
+
+  "classifier": {
+    "type": "logistic regression",
+    "penalty": "l2"
+  }
+
+should be changed to::
+
+  "classifier": {
+    "type": "logistic regression",
+    "params": {"penalty": "l2"}
+  }
 
 .. note::
 

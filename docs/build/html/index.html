@@ -8,7 +8,7 @@
     
     <title>Welcome to oDesk CloudML’s documentation! &mdash; oDesk CloudML 0.0.1 documentation</title>
     
-    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
@@ -36,9 +36,45 @@
         <li class="right" >
           <a href="get_started.html" title="Get Started With CloudML"
              accesskey="N">next</a> |</li>
-        <li><a href="#">oDesk CloudML 0.0.1 documentation</a> &raquo;</li> 
+    <li><a href="http://cloudml.int.odesk.com/">CloudML UI</a> &raquo;</li>
+    
+        <li><a href="#">oDesk CloudML 0.0.1 documentation</a> &raquo;</li>
+ 
       </ul>
-    </div>  
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Welcome to oDesk CloudML&#8217;s documentation!</a><ul>
+</ul>
+</li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+
+  <h4>Next topic</h4>
+  <p class="topless"><a href="get_started.html"
+                        title="next chapter">Get Started With CloudML</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/index.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
 
     <div class="document">
       <div class="documentwrapper">
@@ -59,12 +95,32 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="import_handler.html">Import_handler.json file format</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="import_handler.html">Import handler JSON file format</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="import_handler.html#defining-data-sources">Defining data sources</a></li>
 <li class="toctree-l2"><a class="reference internal" href="import_handler.html#defining-queries">Defining queries</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="features.html">Feature json file format</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Feature JSON file format</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="features.html#classifier">Classifier</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="features.html#logistic-regression">Logistic Regression</a></li>
+<li class="toctree-l3"><a class="reference internal" href="features.html#support-vector-regression">Support Vector Regression</a></li>
+<li class="toctree-l3"><a class="reference internal" href="features.html#stochastic-gradient-descent-classifier">Stochastic Gradient Descent Classifier</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="features.html#named-feature-types">Named feature types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="features.html#features-list">Features</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="features.html#feature-types-defined-in-cloudml-core">Feature types defined in CloudML core</a></li>
+<li class="toctree-l3"><a class="reference internal" href="features.html#feature-scalers">Feature Scalers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="features.html#feature-transformers">Feature Transformers</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="changes.html">Migrating JSON files</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="changes.html#features">Features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changes.html#import-handler">Import Handler</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="deployment.html#setup-project-to-new-instance">Setup project to new instance</a></li>
 <li class="toctree-l2"><a class="reference internal" href="deployment.html#deploy-new-version">Deploy new version</a></li>
@@ -103,11 +159,6 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="changes.html">Changes in JSON files</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="changes.html#features">Features</a></li>
-<li class="toctree-l2"><a class="reference internal" href="changes.html#import-handler">Import Handler</a></li>
-</ul>
-</li>
 </ul>
 </div>
 <div class="admonition seealso">
@@ -115,8 +166,7 @@
 <ul class="last simple">
 <li><a class="reference external" href="http://jira.odesk.com/browse/MATCH/component/11626">Jira project</a></li>
 <li><a class="reference external" href="https://github.com/odeskdev/odeskdev-cloudml">Github repository</a></li>
-<li>Production <a class="reference external" href="http://172.27.77.141">http://172.27.77.141</a></li>
-<li>Temprary worker 172.27.133.33</li>
+<li>Production <a class="reference external" href="http://cloudml.int.odesk.com/">http://cloudml.int.odesk.com/</a></li>
 <li>Staging <a class="reference external" href="http://172.27.67.106:5000">http://172.27.67.106:5000</a></li>
 <li>Developers: Nikolay Melnik &lt;<a class="reference external" href="mailto:nmelnik&#37;&#52;&#48;odesk&#46;com">nmelnik<span>&#64;</span>odesk<span>&#46;</span>com</a>&gt;, Mikhail Medvedev &lt;<a class="reference external" href="mailto:moorcock&#37;&#52;&#48;odesk&#46;com">moorcock<span>&#64;</span>odesk<span>&#46;</span>com</a>&gt;</li>
 </ul>
@@ -135,39 +185,6 @@
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar">
-        <div class="sphinxsidebarwrapper">
-  <h3><a href="#">Table Of Contents</a></h3>
-  <ul>
-<li><a class="reference internal" href="#">Welcome to oDesk CloudML&#8217;s documentation!</a><ul>
-</ul>
-</li>
-<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
-</ul>
-
-  <h4>Next topic</h4>
-  <p class="topless"><a href="get_started.html"
-                        title="next chapter">Get Started With CloudML</a></p>
-  <h3>This Page</h3>
-  <ul class="this-page-menu">
-    <li><a href="_sources/index.txt"
-           rel="nofollow">Show Source</a></li>
-  </ul>
-<div id="searchbox" style="display: none">
-  <h3>Quick search</h3>
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
-    </p>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
-      </div>
       <div class="clearer"></div>
     </div>
     <div class="related">
@@ -179,11 +196,14 @@
         <li class="right" >
           <a href="get_started.html" title="Get Started With CloudML"
              >next</a> |</li>
-        <li><a href="#">oDesk CloudML 0.0.1 documentation</a> &raquo;</li> 
+    <li><a href="http://cloudml.int.odesk.com/">CloudML UI</a> &raquo;</li>
+    
+        <li><a href="#">oDesk CloudML 0.0.1 documentation</a> &raquo;</li>
+ 
       </ul>
     </div>
     <div class="footer">
-        &copy; Copyright 2013, Nikolay Melnik.
+        &copy; Copyright 2013, oDesk.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b2.
     </div>
   </body>
