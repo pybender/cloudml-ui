@@ -4,55 +4,33 @@
   <small><a ng-href="#" href="#">(Cancel)</a></small>
 </h2>
 
-<loadindicator title="Saving changes..." ng-show="saving" progress="savingProgress"></loadindicator>
-
-<alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+<ng-include src="'/partials/parts/save_form_messages.html'"></ng-include>
 
 <form name="Form" class="form-horizontal">
   <p class="lead">
-    Please upload pickled trained model and define import handler.
+    Please upload pickled trained model and define import handler
   </p>
-  <div class="control-group" ng-class="{error: Form.name.$invalid}">
+  <div class="control-group" ng-class="{error: Form.name.$invalid || errorList.name}">
     <label class="control-label">Name</label>
     <div class="controls">
       <input type="text" name="name" ng-model="model.name" required>
-      <span ng-show="Form.name.$error.required" class="help-inline">*</span>
+      <span ng-show="errorList.name" class="help-block" ng-bind="errorList.name" />
+      <span ng-show="Form.name.$error.required" class="help-block">Model name is required and should be unique</span>
     </div>
   </div>
-  <div class="control-group" ng-class="{error: Form.trainer.$invalid}">
+  <div class="control-group" ng-class="{error: Form.trainer.$invalid || errorList.trainer}">
     <label class="control-label">Model File Name</label>
     <div class="controls">
       <input type="file" name="trainer" ng-model="model.trainer" required-file required />
-      <span ng-show="Form.trainer.$error.required" class="help-inline">*</span>
-      <span class="help-block">pickled trained model file</span>
+      <span class="help-block" ng-show="Form.trainer.$invalid">Define pickled trained model file</span>
+      <span ng-show="errorList.trainer" class="help-block" ng-bind="errorList.trainer" />
     </div>
   </div>
 
   <div ng-controller="ImportHandlerSelectCtrl">
-    <div class="control-group" ng-class="{error: Form.train_import_handler.$invalid || Form.train_import_handler_file.$invalid}">
-      <label class="control-label">Train Import Handler</label>
-      <div class="controls">
-        <select ng-model="model.train_import_handler">
-          <option ng-repeat="handler in handlers" value="{{ handler.id }}">{{ handler.name }}</option>
-        </select>
-        <span>or</span> 
-        <input type="file" name="train_import_handler_file" ng-model="model.train_import_handler_file" json-file  />
-        <span ng-show="Form.train_import_handler_file.$error.jsonFile" class="help-block">Should be a valid json file</span>
-      </div>
-    </div>
-    <div class="control-group" ng-class="{error: Form.test_import_handler.$invalid || Form.test_import_handler_file.$invalid}">
-      <label class="control-label">Test Import Handler</label>
-      <div class="controls">
-        <select ng-model="model.test_import_handler">
-          <option ng-repeat="handler in handlers" value="{{ handler.id }}">{{ handler.name }}</option>
-        </select>
-        <span>or</span> 
-        <input type="file" name="test_import_handler_file" ng-model="model.test_import_handler_file" json-file />
-        <span ng-show="Form.test_import_handler_file.$error.jsonFile" class="help-block">Should be a valid json file</span>
-      </div>
-    </div>
+    <ng-include src="'/partials/models/form/train_import_handler.html'"></ng-include>
+    <ng-include src="'/partials/models/form/test_import_handler.html'"></ng-include>
   </div>
-  
   <a href="#/models" class="btn">Cancel</a>
   <button ng-click="save(['name', 'trainer', 'test_import_handler', 'train_import_handler', 'train_import_handler_file', 'test_import_handler_file'])" ng-disabled="Form.$invalid || !(model.test_import_handler_file || model.test_import_handler)" class="btn btn-primary">Upload</button>
 </form>

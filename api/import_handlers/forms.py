@@ -17,13 +17,13 @@ class PredefinedDataSourceForm(BaseForm):
     db = JsonField()
 
     def clean_name(self, value, field):
-        if self.cleaned_data.get('is_predefined'):
-            kwargs = {'name': value}
-            if '_id' in self.obj and self.obj._id:
-                kwargs['_id'] = {'$ne': self.obj._id}
-            count = PredefinedDataSource.find(kwargs).count()
-            if count:
-                raise ValidationError('name should be unique')
+        query = PredefinedDataSource.query.filter_by(name=value)
+        if self.obj.id:
+            query = query.filter(PredefinedDataSource.id != self.obj.id)
+        count = query.count()
+        if count:
+            raise ValidationError(
+                'Data Source with name "%s" already exist. Please choose another one.' % value)
         return value
 
 
@@ -38,7 +38,7 @@ class BaseImportHandlerForm(BaseForm):
             plan = ExtractionPlan(json.dumps(value), is_file=False)
             self.cleaned_data['import_params'] = plan.input_params
         except (ValueError, ImportHandlerException) as exc:
-            raise ValidationError('Invalid importhandler: %s' % exc)
+            raise ValidationError('Import Handler JSON file is invalid: %s' % exc)
 
         return value
 
@@ -47,6 +47,13 @@ class ImportHandlerAddForm(BaseImportHandlerForm):
     name = CharField()
     data = JsonField()
     import_params = JsonField()
+
+    def clean_name(self, value, field):
+        count = ImportHandler.query.filter_by(name=value).count()
+        if count:
+            raise ValidationError(
+                'Import Handler with name "%s" already exist. Please choose another one.' % value)
+        return value
 
 
 class HandlerForm(BaseForm):

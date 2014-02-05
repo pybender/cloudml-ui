@@ -5,25 +5,23 @@
       <a ng-href="#/import_handlers">(Cancel)</a>
   </small>
 </h2>
-
-<alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
-
+<ng-include src="'/partials/parts/save_form_messages.html'"></ng-include>
 <form name="Form" class="form-horizontal">
-  <div class="control-group" ng-class="{error: Form.name.$invalid}">
+  <div class="control-group" ng-class="{error: Form.name.$invalid || errorList.name}">
     <label class="control-label">Name</label>
     <div class="controls">
-      <input type="text" name="name" ng-model="model.name" required>
-      <span ng-show="Form.name.$error.required" class="help-inline">Required</span>
-      <span class="help-block">name should be without spaces</span>
+      <input type="text" name="name" ng-model="model.name"  ng-change="setFieldError('name')" required />
+      <span ng-show="Form.name.$error.required" class="help-block">Import Handler name is required and should be unique</span>
+      <span ng-show="errorList.name" class="help-block" ng-bind="errorList.name" />
     </div>
   </div>
-  <div class="control-group" ng-class="{error: Form.data.$invalid}">
+  <div class="control-group" ng-class="{error: Form.data.$invalid || errorList.data}">
     <label class="control-label">JSON file</label>
     <div class="controls">
       <input type="file" name="data" ng-model="model.data" json-file>
-      <span ng-show="Form.data.$error.required" class="help-inline">Required</span>
       <span ng-show="Form.data.$error.jsonFile" class="help-block">Should be a valid json file</span>
-      <span class="help-block">json file with import data details</span>
+      <span class="help-block">You could choose JSON file in valid format <go-to-docs page="import_handler"></go-to-docs></span>
+      <span ng-show="errorList.data" class="help-block" ng-bind="errorList.data" />
     </div>
   </div>
   <br />

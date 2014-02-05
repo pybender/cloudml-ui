@@ -153,7 +153,7 @@ class JsonField(CharField):
             try:
                 return json.loads(value)
             except ValueError:
-                raise ValidationError('invalid json: %s' % value)
+                raise ValidationError('JSON file is corrupted. Can not load it: %s' % value)
 
 
 class ImportHandlerFileField(BaseField):
@@ -167,12 +167,12 @@ class ImportHandlerFileField(BaseField):
         try:
             data = json.loads(value)
         except ValueError, exc:
-            raise ValidationError('Invalid data: %s' % exc)
+            raise ValidationError('Import Handler JSON file is corrupted. Can not load it: %s' % exc)
 
         try:
             plan = ExtractionPlan(value, is_file=False)
             self.import_params = plan.input_params
         except (ValueError, ImportHandlerException) as exc:
-            raise ValidationError('Invalid importhandler: %s' % exc)
+            raise ValidationError('Import Handler JSON file is invalid: %s' % exc)
 
         return data
