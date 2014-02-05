@@ -3,7 +3,7 @@
 ### Trained Model specific Controllers ###
 
 FIELDS_BY_SECTION = {
-  'model': 'classifier,features_set_id,features'
+  'model': 'classifier,features_set_id'
   'training': 'error,weights_synchronized,memory_usage,
 trained_by,trained_on,training_time,datasets,train_records_count,trainer_size'
   'about': 'created_on,target_variable,example_id,example_label,
@@ -136,11 +136,14 @@ updated_on,updated_by_name,comparable,test_handler_fields'
 
     $scope.goSection = (section) ->
       name = section[0]
+      subsection = section[1]
       if name == 'test'
         setTimeout(() ->
           $scope.$broadcast('loadTest', true)
           $scope.LOADED_SECTIONS.push name
         , 100)
+      if name == 'model' && subsection == 'json'
+        $scope.load('features', name + subsection)
 
       fields = ''
       if 'main' not in $scope.LOADED_SECTIONS

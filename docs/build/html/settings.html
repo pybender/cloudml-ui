@@ -8,7 +8,7 @@
     
     <title>Settings &mdash; oDesk CloudML 0.0.1 documentation</title>
     
-    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
@@ -36,9 +36,61 @@
         <li class="right" >
           <a href="api.html" title="Api"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li> 
+    <li><a href="http://cloudml.int.odesk.com/">CloudML UI</a> &raquo;</li>
+    
+        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li>
+ 
       </ul>
-    </div>  
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Settings</a><ul>
+<li><a class="reference internal" href="#db-settings">DB settings</a><ul>
+<li><a class="reference internal" href="#database-name">DATABASE_NAME</a></li>
+<li><a class="reference internal" href="#database-host">DATABASE_HOST</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#amazon-settings">Amazon settings</a></li>
+<li><a class="reference internal" href="#odesk-settings">Odesk settings</a></li>
+<li><a class="reference internal" href="#main-settings">Main settings</a><ul>
+<li><a class="reference internal" href="#data-folder">DATA_FOLDER</a></li>
+<li><a class="reference internal" href="#examples-chunk-size">EXAMPLES_CHUNK_SIZE</a></li>
+<li><a class="reference internal" href="#multipart-upload-chunk-size">MULTIPART_UPLOAD_CHUNK_SIZE</a></li>
+<li><a class="reference internal" href="#broker-url">BROKER_URL</a></li>
+<li><a class="reference internal" href="#celery-result-backend">CELERY_RESULT_BACKEND</a></li>
+<li><a class="reference internal" href="#requesting-instance-max-retries">REQUESTING_INSTANCE_MAX_RETRIES</a></li>
+<li><a class="reference internal" href="#requesting-instance-countdown">REQUESTING_INSTANCE_COUNTDOWN</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="api.html"
+                        title="previous chapter">Api</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/settings.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
 
     <div class="document">
       <div class="documentwrapper">
@@ -105,55 +157,6 @@ ODESK_OAUTH_SECRET</p>
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar">
-        <div class="sphinxsidebarwrapper">
-  <h3><a href="index.html">Table Of Contents</a></h3>
-  <ul>
-<li><a class="reference internal" href="#">Settings</a><ul>
-<li><a class="reference internal" href="#db-settings">DB settings</a><ul>
-<li><a class="reference internal" href="#database-name">DATABASE_NAME</a></li>
-<li><a class="reference internal" href="#database-host">DATABASE_HOST</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#amazon-settings">Amazon settings</a></li>
-<li><a class="reference internal" href="#odesk-settings">Odesk settings</a></li>
-<li><a class="reference internal" href="#main-settings">Main settings</a><ul>
-<li><a class="reference internal" href="#data-folder">DATA_FOLDER</a></li>
-<li><a class="reference internal" href="#examples-chunk-size">EXAMPLES_CHUNK_SIZE</a></li>
-<li><a class="reference internal" href="#multipart-upload-chunk-size">MULTIPART_UPLOAD_CHUNK_SIZE</a></li>
-<li><a class="reference internal" href="#broker-url">BROKER_URL</a></li>
-<li><a class="reference internal" href="#celery-result-backend">CELERY_RESULT_BACKEND</a></li>
-<li><a class="reference internal" href="#requesting-instance-max-retries">REQUESTING_INSTANCE_MAX_RETRIES</a></li>
-<li><a class="reference internal" href="#requesting-instance-countdown">REQUESTING_INSTANCE_COUNTDOWN</a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="api.html"
-                        title="previous chapter">Api</a></p>
-  <h3>This Page</h3>
-  <ul class="this-page-menu">
-    <li><a href="_sources/settings.txt"
-           rel="nofollow">Show Source</a></li>
-  </ul>
-<div id="searchbox" style="display: none">
-  <h3>Quick search</h3>
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
-    </p>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
-      </div>
       <div class="clearer"></div>
     </div>
     <div class="related">
@@ -165,11 +168,14 @@ ODESK_OAUTH_SECRET</p>
         <li class="right" >
           <a href="api.html" title="Api"
              >previous</a> |</li>
-        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li> 
+    <li><a href="http://cloudml.int.odesk.com/">CloudML UI</a> &raquo;</li>
+    
+        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li>
+ 
       </ul>
     </div>
     <div class="footer">
-        &copy; Copyright 2013, Nikolay Melnik.
+        &copy; Copyright 2013, oDesk.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b2.
     </div>
   </body>

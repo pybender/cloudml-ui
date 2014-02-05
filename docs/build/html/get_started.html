@@ -1,0 +1,158 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Get Started With CloudML &mdash; oDesk CloudML 0.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="oDesk CloudML 0.0.1 documentation" href="index.html" />
+    <link rel="next" title="Import handler JSON file format" href="import_handler.html" />
+    <link rel="prev" title="Welcome to oDesk CloudML’s documentation!" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="import_handler.html" title="Import handler JSON file format"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to oDesk CloudML’s documentation!"
+             accesskey="P">previous</a> |</li>
+    <li><a href="http://cloudml.int.odesk.com/">CloudML UI</a> &raquo;</li>
+    
+        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Get Started With CloudML</a><ul>
+<li><a class="reference internal" href="#creating-the-model">Creating the model</a><ul>
+<li><a class="reference internal" href="#new-model">New model</a></li>
+<li><a class="reference internal" href="#upload-your-model">Upload your model</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Welcome to oDesk CloudML&#8217;s documentation!</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="import_handler.html"
+                        title="next chapter">Import handler JSON file format</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/get_started.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="get-started-with-cloudml">
+<span id="get-started"></span><h1>Get Started With CloudML<a class="headerlink" href="#get-started-with-cloudml" title="Permalink to this headline">¶</a></h1>
+<p>CloudML aims to provide a set of tools that allow building a classifier on the cloud.</p>
+<p>CloudML UI is user iterface, that simplyfies using CloudML.
+It countains following entities:</p>
+<ol class="arabic simple">
+<li>Models, which receives data from the import handler and trains a classifier to produce a classification model. Then user could run tests for models to compare metrics and real data with predicted one.</li>
+<li>Import handlers, that are responsible for feeding the model and tests with data.</li>
+<li>Instances, that represents AWS Instances to be used in model training and tests.</li>
+<li>Predefined entities (classifiers, datasources, feature transformers, scalers, etc.)</li>
+</ol>
+<div class="section" id="creating-the-model">
+<h2>Creating the model<a class="headerlink" href="#creating-the-model" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="new-model">
+<h3>New model<a class="headerlink" href="#new-model" title="Permalink to this headline">¶</a></h3>
+<p>For creating new untrained model you need to navigate to Add new model page: <a class="reference external" href="http://cloudml.int.odesk.com/#/add_model">http://cloudml.int.odesk.com/#/add_model</a>
+Model name (should be unique) and import handlers are required.
+You could choose import handler from a lise or specify json file (format is described
+<a class="reference internal" href="import_handler.html#import-handler"><em>here</em></a>)
+You could also specify features.json file if you have.
+Json file format is described
+<a class="reference internal" href="features.html#features"><em>here</em></a></p>
+</div>
+<div class="section" id="upload-your-model">
+<h3>Upload your model<a class="headerlink" href="#upload-your-model" title="Permalink to this headline">¶</a></h3>
+<p>For uploading the model you need to navigate to Add new model page: <a class="reference external" href="http://cloudml.int.odesk.com/#/upload_model">http://cloudml.int.odesk.com/#/upload_model</a>
+Model name (should be unique) and import handlers are required.
+You could choose import handler from a lise or specify json file (format is described
+<a class="reference internal" href="import_handler.html#import-handler"><em>here</em></a>)
+Also defining model file is required. It&#8217;s pickled trainer class. You could download model trainer from existing model by clicking &#8220;download trainer&#8221; in model details page.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="import_handler.html" title="Import handler JSON file format"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to oDesk CloudML’s documentation!"
+             >previous</a> |</li>
+    <li><a href="http://cloudml.int.odesk.com/">CloudML UI</a> &raquo;</li>
+    
+        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, oDesk.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b2.
+    </div>
+  </body>
+</html>
