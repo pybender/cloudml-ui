@@ -133,12 +133,23 @@ class QueryTestForm(BaseForm):
 # DataSet forms
 
 class DataSetAddForm(BaseForm):
-    required_fields = ('format', 'import_params')
+    required_fields = ('format', )
     format = ChoiceField(choices=DataSet.FORMATS)
     import_params = JsonField()
 
     def before_clean(self):
         self.importhandler = ImportHandler.query.get(self.import_handler_id)
+
+    def clean_import_params(self, value, field):
+        if not isinstance(value, dict):
+            raise ValidationError('Should be a dict')
+
+        for param in self.importhandler.import_params:
+            if param not in value:
+                raise ValidationError(
+                    '{0!s} not found in import_params'.format(param))
+
+        return value
 
     def save(self, commit=True):
         from tasks import import_data

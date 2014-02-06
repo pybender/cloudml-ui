@@ -149,7 +149,10 @@ angular.module('app.importhandlers.model', ['app.config'])
         data = {}
         for key in opts.only
           data[prefix + key] = eval('this.' + key)
-        @$make_request(@handler.getUrl(), {}, "PUT", data)
+        _handler = @handler
+        @$make_request(@handler.getUrl(), {}, "PUT", data).then((resp) ->
+          _handler.loadFromJSON(resp.data['import_handler'])
+        )
 
       $remove: () ->
         data = {'remove_query': 1, 'num': @num}
