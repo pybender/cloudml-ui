@@ -15,6 +15,7 @@ from api.base.resources import BaseResourceSQL, NotFound, public_actions, \
 from models import ImportHandler, DataSet, PredefinedDataSource
 from forms import ImportHandlerAddForm, DataSetAddForm, \
     DataSetEditForm, PredefinedDataSourceForm
+from api.servers.forms import ChooseServerForm
 
 
 class PredefinedDataSourceResource(BaseResourceSQL):
@@ -39,7 +40,7 @@ class ImportHandlerResource(BaseResourceSQL):
 
     post_form = ImportHandlerAddForm
     GET_ACTIONS = ('download', )
-    PUT_ACTIONS = ('run_sql', 'test_handler')
+    PUT_ACTIONS = ('run_sql', 'test_handler', 'upload_to_server')
 
     HANDLER_REGEXP = re.compile('^[a-zA-Z_]+$')
     DATASOURCE_REGEXP = re.compile('^datasource.[-\d]+.[a-zA-Z_]+')
@@ -325,6 +326,24 @@ filename=importhandler-%s.json' % model.name
         name = '{!s}.txt'.format(uuid.uuid4())
         helper.save_key_string(name, content)
         return self._render({'url': helper.get_download_url(name, 3600)})
+
+    def _put_upload_to_server_action(self, **kwargs):
+        from api.servers.tasks import upload_import_handler_to_server
+
+        handler = self._get_details_query(None, **kwargs)
+
+        form = ChooseServerForm()
+        if form.is_valid():
+            server = form.cleaned_data['server']
+            upload_import_handler_to_server.delay(server.id, handler.id,
+                                                  request.user.id)
+
+            return self._render({
+                self.OBJECT_NAME: handler,
+                'status': 'Import Handler "{0}" will be uploaded to server'.format(
+                    handler.name
+                )
+            })
 
 api.add_resource(ImportHandlerResource, '/cloudml/importhandlers/')
 

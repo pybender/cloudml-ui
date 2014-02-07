@@ -17,6 +17,7 @@ from api.ml_models.models import Model, Weight, WeightsCategory
 from api.model_tests.models import TestResult, TestExample
 from api.import_handlers.models import DataSet
 from api.logs.models import LogMessage
+from api.servers.models import Server
 
 db_session = db.session
 
@@ -199,35 +200,3 @@ def fill_model_parameter_weights(model_id):
         logging.exception('Got exception when fill_model_parameter: %s', exc)
         raise
     return msg
-
-
-@celery.task
-def upload_model_for_predict(model_id, user_id):
-    """
-    Upload model to S3 for cloudml-predict.
-    """
-    init_logger('trainmodel_log', obj=int(model_id))
-    logging.info('Starting uploading to cloudml_predict')
-
-    user = User.query.get(user_id)
-    model = Model.query.get(model_id)
-
-    # TODO: Shall we use another account?
-    s3 = AmazonS3Helper(bucket_name=app.config['CLOUDML_PREDICT_BUCKET_NAME'])
-    path = '{0}/{1}.dat'.format(
-        app.config.get('CLOUDML_PREDICT_FOLDER_MODELS'),
-        str(model.id)
-    )
-    meta = {
-        'model_id': model.id,
-        'model_name': model.name,
-        'user_id': user.id,
-        'user_name': user.name,
-        'uploaded_on': str(datetime.now())
-    }
-
-    trainer_data = model.trainer
-    s3.save_key_string(path, trainer_data, meta)
-    s3.close()
-
-    logging.info('Model has been uploaded: %s' % model.name)

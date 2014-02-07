@@ -11,6 +11,7 @@ from api.base.resources import BaseResourceSQL, NotFound, ValidationError, \
     public_actions, ERR_INVALID_DATA, odesk_error_response
 from models import Model, Tag, Weight, WeightsCategory
 from forms import ModelAddForm, ModelEditForm
+from api.servers.forms import ChooseServerForm
 
 
 model_parser = reqparse.RequestParser()
@@ -30,7 +31,7 @@ class ModelResource(BaseResourceSQL):
     """
     GET_ACTIONS = ('download', 'reload', 'by_importhandler')
     PUT_ACTIONS = ('train', 'tags', 'cancel_request_instance',
-                   'upload_predict')
+                   'upload_to_server')
     FILTER_PARAMS = (('status', str), ('comparable', str), ('tag', str),
                     ('created_by', str), ('updated_by_id', int),
                     ('updated_by', str))
@@ -209,22 +210,26 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
             }
         })
 
-    def _put_upload_predict_action(self, **kwargs):
-        from .tasks import upload_model_for_predict
+    def _put_upload_to_server_action(self, **kwargs):
+        from api.servers.tasks import upload_model_to_server
 
         model = self._get_details_query(None, **kwargs)
         if model.status != Model.STATUS_TRAINED:
             return odesk_error_response(400, ERR_INVALID_DATA,
                                         'Model is not yet trained')
 
-        upload_model_for_predict.delay(model.id, request.user.id)
+        form = ChooseServerForm()
+        if form.is_valid():
+            server = form.cleaned_data['server']
+            upload_model_to_server.delay(server.id, model.id,
+                                         request.user.id)
 
-        return self._render({
-            self.OBJECT_NAME: model,
-            'status': 'Model "{0}" will be uploaded to cloudml-predict'.format(
-                model.name
-            )
-        })
+            return self._render({
+                self.OBJECT_NAME: model,
+                'status': 'Model "{0}" will be uploaded to server'.format(
+                    model.name
+                )
+            })
 
 api.add_resource(ModelResource, '/cloudml/models/')
 

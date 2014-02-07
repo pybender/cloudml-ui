@@ -2,6 +2,7 @@ import json
 from api.base.forms.base_forms import BaseChooseInstanceAndDatasetMultiple
 from api.import_handlers.models import DataSet
 from api.instances.models import Instance
+from api.servers.models import Server
 
 from core.trainer.store import load_trainer
 from core.trainer.trainer import Trainer, InvalidTrainerFile

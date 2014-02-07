@@ -10,3 +10,4 @@ from api.ml_models.models import *
 from api.model_tests.models import *
 
 from api.async_tasks.models import *
+from api.servers.models import *

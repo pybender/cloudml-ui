@@ -160,7 +160,7 @@ if app.config.get('SEND_ERROR_EMAILS'):
 
 APPS = ('accounts', 'features', 'import_handlers', 'instances',
         'logs', 'ml_models', 'model_tests', 'statistics', 'reports',
-        'async_tasks')
+        'async_tasks', 'servers')
 
 
 def importer(app_name):
