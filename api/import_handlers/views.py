@@ -5,7 +5,8 @@ from flask import Response, request
 from sqlalchemy.orm import undefer
 from psycopg2._psycopg import DatabaseError
 
-from core.importhandler.importhandler import DecimalEncoder
+from core.importhandler.importhandler import DecimalEncoder, \
+    ImportHandlerException
 
 from api import api
 from api.base.models import assertion_msg
@@ -81,6 +82,7 @@ filename=importhandler-%s.json' % model.name
         self.updated_fields = ['id', ]
         obj = self._update_handler_fields(obj, request.form)
         obj.data = self._get_updated_json_document(obj, request.form)
+        obj.import_params = self._get_updated_import_params(obj)
 
         obj.save()
 
@@ -91,6 +93,15 @@ filename=importhandler-%s.json' % model.name
             return obj_dict
 
         return self._render({self.OBJECT_NAME: serialize(obj, self.updated_fields)})
+
+    def _get_updated_import_params(self, handler):
+        from core.importhandler.importhandler import ExtractionPlan
+
+        try:
+            plan = ExtractionPlan(json.dumps(handler.data), is_file=False)
+        except ImportHandlerException:
+            return []
+        return plan.input_params
 
     def _get_updated_json_document(self, handler, data):
         """
@@ -202,6 +213,7 @@ filename=importhandler-%s.json' % model.name
 
         if self.updated:
             self.updated_fields.append('data')
+            self.updated_fields.append('import_params')
             handler_doc['updated_on'] = str(datetime.now())
         return handler_doc
 
