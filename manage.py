@@ -5,7 +5,7 @@ from flask.ext.script import Manager, Command, Shell, Option
 import logging
 from bson.objectid import ObjectId
 from mongokit.mongo_exceptions import AutoReferenceError
-
+from flask.ext.migrate import Migrate, MigrateCommand
 
 from api import app
 
@@ -41,7 +41,7 @@ class Run(Command):
         http_server.serve_forever()
 
 
-class Migrate(Command):
+class MongoMigrate(Command):
     """Migrate"""
 
     def get_options(self):
@@ -321,12 +321,14 @@ class MigrateToPosgresql(Command):
 
 
 manager = Manager(app)
+migrate = Migrate(app, app.sql_db)
+manager.add_command('db', MigrateCommand)
 manager.add_command("celeryd", Celeryd())
 manager.add_command("celeryw", Celeryw())
 manager.add_command("flower", Flower())
 manager.add_command('test', Test())
 manager.add_command('coverage', Coverage())
-manager.add_command('migrate', Migrate())
+manager.add_command('migrate', MongoMigrate())
 manager.add_command('run', Run())
 manager.add_command('fix_mongo', RemObsoluteMongoKeys())
 manager.add_command("shell", Shell(make_context=_make_context))
