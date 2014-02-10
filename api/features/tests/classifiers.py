@@ -82,13 +82,13 @@ support vector regression, logistic regression'})
 
         data['type'] = 'logistic regression'
         data["params"] = 'hello!'
-        _check(data, errors={'params': 'invalid json: hello!'})
+        _check(data, errors={'params': 'JSON file is corrupted. Can not load it: hello!'})
 
         classifier = self.obj
         data = {'name': classifier.name,
                 'type': 'logistic regression'}
         _check(data, errors={
-            'fields': 'name of predefined item should be unique'})
+            'name': 'Predefined classifier with same name already exist. Please choose another one.'})
 
     def test_edit(self):
         self._test_edit()

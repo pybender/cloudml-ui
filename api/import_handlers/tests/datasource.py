@@ -25,7 +25,7 @@ class PredefinedDataSourceResourceTests(BaseDbTestCase, TestChecksMixin):
         data = {'type': 'sql',
                 'name': 'new',
                 'db': 'invalid'}
-        self.check_edit_error(data, {"db": "invalid json: invalid"})
+        self.check_edit_error(data, {"db": "JSON file is corrupted. Can not load it: invalid"})
 
         data['db'] = json.dumps({"a": "1"})
         self.check_edit_error(data, {"db": "vendor is required"})

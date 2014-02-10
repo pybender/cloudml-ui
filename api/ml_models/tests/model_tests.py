@@ -109,7 +109,7 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
                      'name': 'new'}
         self.check_edit_error(
             post_data,
-            {'features': 'invalid json: smth'})
+            {'features': 'JSON file is corrupted. Can not load it: smth'})
 
         post_data = {'test_import_handler_file': handler,
                      'train_import_handler_file': handler,
@@ -117,7 +117,7 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
                      'name': 'new'}
         self.check_edit_error(
             post_data,
-            {'features': 'Invalid features: schema-name is missing'})
+            {'features': 'Features JSON file is invalid: schema-name is missing'})
 
         # Invalid trainer
         trainer = open('api/ml_models/invalid_model.dat', 'r').read()
@@ -126,7 +126,7 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
                      'trainer': trainer,
                      'name': 'new'}
         self.check_edit_error(post_data, {
-            'trainer': "Invalid trainer: Could not unpickle trainer - 'module' object has no attribute 'TrainerStorage1'"
+            'trainer': "Pickled trainer model is invalid: Could not unpickle trainer - 'module' object has no attribute 'TrainerStorage1'"
         })
 
     @mock_s3  # trainer saves to amazon S3

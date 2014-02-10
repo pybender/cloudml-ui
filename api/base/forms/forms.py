@@ -132,13 +132,6 @@ class BaseForm(InternalForm):
             callable_model = getattr(all_models, self.model_name)
             self.obj = callable_model()
 
-        def add_error(name, msg):
-            if self.inner_name:
-                field_name = '%s-%s' % (self.inner_name, name)
-            else:
-                field_name = name
-            self.errors.append({'name': field_name, 'error': msg})
-
         self.cleaned_data = {}
         self.before_clean()
 
@@ -150,7 +143,7 @@ class BaseForm(InternalForm):
                 if hasattr(self, mthd):
                     value = getattr(self, mthd)(value, field)
             except ValidationError, exc:
-                add_error(name, str(exc))
+                self.add_error(name, str(exc))
 
             if value is not None:
                 self.cleaned_data[name] = value
@@ -159,7 +152,7 @@ class BaseForm(InternalForm):
         try:
             self.validate_data()
         except ValidationError, exc:
-            add_error("fields", str(exc))
+            self.add_error("fields", str(exc))
 
         if not self.no_required:
             # Check required fields
@@ -168,9 +161,9 @@ class BaseForm(InternalForm):
                 if not is_valid:
                     if isinstance(fields, str):
                         field = fields
-                        add_error(field, '%s is required' % field)
+                        self.add_error(field, '%s is required' % field)
                     else:
-                        add_error("fields", 'either one of \
+                        self.add_error("fields", 'either one of \
 fields %s is required' % ', '.join(fields))
 
         for name, form in self.forms.iteritems():
@@ -197,6 +190,13 @@ fields %s is required' % ', '.join(fields))
         self.after_clean()
 
         return self.cleaned_data
+
+    def add_error(self, name, msg):
+        if self.inner_name:
+            field_name = '%s-%s' % (self.inner_name, name)
+        else:
+            field_name = name
+        self.errors.append({'name': field_name, 'error': msg})
 
     def save_inner(self):
         return self.save(False, True)

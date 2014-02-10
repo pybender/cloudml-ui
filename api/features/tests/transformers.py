@@ -58,7 +58,7 @@ class PredefinedTransformersTests(FeaturePredefinedItemsTestMixin):
 
         data['type'] = 'Count'
         data["params"] = 'hello!'
-        _check(data, errors={'params': 'invalid json: hello!'})
+        _check(data, errors={'params': 'JSON file is corrupted. Can not load it: hello!'})
 
         # TODO: check that valid parameters filled
         # _check({"type": "Tfidf", "params": '{"a": 1}'}, errors={
@@ -73,7 +73,7 @@ class PredefinedTransformersTests(FeaturePredefinedItemsTestMixin):
         data = {'name': transformer.name,
                 'type': 'Count'}
         _check(data, errors={
-            'fields': 'name of predefined item should be unique'})
+            'name': 'Predefined transformer with same name already exist. Please choose another one.'})
 
     def test_edit(self):
         self._test_edit()
@@ -150,4 +150,4 @@ class FeatureTransformersTests(FeatureItemsTestMixin):
         data = {'name': transformer.name,
                 'type': 'Count'}
         _check(data, errors={
-            'fields': 'name of predefined item should be unique'})
+            'name': 'Predefined transformer with same name already exist. Please choose another one.'})

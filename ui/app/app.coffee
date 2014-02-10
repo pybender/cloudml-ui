@@ -200,7 +200,7 @@ App.config([
       controller: "TransformersListCtrl"
       templateUrl: '/partials/features/transformers/list.html'
     })
-    .when('/predefined/scalars', {
+    .when('/predefined/scalers', {
       controller: "ScalersListCtrl"
       templateUrl: '/partials/features/scalers/list.html'
     })

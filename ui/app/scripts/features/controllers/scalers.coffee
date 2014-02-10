@@ -39,18 +39,18 @@ angular.module('app.features.controllers.scalers', ['app.config', ])
     $scope.ACTION = 'loading scalers'
     $scope.LIST_MODEL_NAME = Scaler.LIST_MODEL_NAME
 
-    $scope.edit = (scalar) ->
-      $scope.openDialog($dialog, scalar,
+    $scope.edit = (scaler) ->
+      $scope.openDialog($dialog, scaler,
         'partials/features/scalers/edit_predefined.html',
-        'ModelWithParamsEditDialogCtrl', 'modal', 'edit scalars',
-        'scalars')
+        'ModelWithParamsEditDialogCtrl', 'modal', 'edit scalers',
+        'scalers')
 
     $scope.add = () ->
       scalar = new Scaler()
       $scope.openDialog($dialog, scalar,
         'partials/features/scalers/add_predefined.html',
-        'ModelWithParamsEditDialogCtrl', 'modal', 'add scalar',
-        'scalars')
+        'ModelWithParamsEditDialogCtrl', 'modal', 'add scaler',
+        'scalers')
 
     $scope.delete = (scalar)->
       $scope.openDialog($dialog, scalar,

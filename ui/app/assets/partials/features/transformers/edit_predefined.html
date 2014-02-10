@@ -5,11 +5,8 @@
   </div>
 
   <div class="modal-body">
-    <loadindicator title="Editing transformer..." ng-show="saving" progress="savingProgress"></loadindicator>
-
     <alert-message ng-show="info" class="alert-error" msg="Transformer fields in features (that use this transformer) would not be changed." unsafe></alert-message>
-
-    <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+    <ng-include src="'/partials/parts/save_form_messages.html'"></ng-include>
     <form name="TransformerForm" class="form-horizontal">
     <ng-include src="'/partials/features/transformers/form.html'"></ng-include>
     </form>

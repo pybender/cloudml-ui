@@ -289,7 +289,7 @@ scaler,default,is_target_variable,created_on,created_by,required'
 
       id: null
       name: null
-      type: 'int'
+      type: null
       input_format: null
       params: null
       paramsDict: null
