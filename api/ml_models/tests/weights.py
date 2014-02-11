@@ -45,7 +45,7 @@ class WeightResourceTests(BaseDbTestCase, TestChecksMixin):
         with open('./api/ml_models/model.dat', 'r') as f:
             trainer = f.read()
         post_data = {'test_import_handler_file': handler,
-                     'train_import_handler_file': handler,
+                     'import_handler_file': handler,
                      'trainer': trainer,
                      'name': trained_model_name}
         resp = self.client.post('/cloudml/models/', data=post_data,
@@ -193,7 +193,7 @@ class WeightTasksTests(BaseDbTestCase, TestChecksMixin):
         handler = open('conf/extract.json', 'r').read()
         trainer = open('./api/ml_models/model.dat', 'r').read()
         post_data = {'test_import_handler_file': handler,
-                     'train_import_handler_file': handler,
+                     'import_handler_file': handler,
                      'trainer': trainer,
                      'name': name}
         resp, model = self.check_edit(post_data)

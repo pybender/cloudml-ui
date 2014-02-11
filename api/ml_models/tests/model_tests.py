@@ -97,14 +97,14 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         self.check_edit_error(
             {
                 'test_import_handler': self.handler.id,
-                'train_import_handler': self.handler.id,
+                'import_handler': self.handler.id,
             },
             {'name': 'name is required'})
 
         # Invalid features
         handler = open('./conf/extract.json', 'r').read()
         post_data = {'test_import_handler_file': handler,
-                     'train_import_handler_file': handler,
+                     'import_handler_file': handler,
                      'features': 'smth',
                      'name': 'new'}
         self.check_edit_error(
@@ -112,7 +112,7 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
             {'features': 'JSON file is corrupted. Can not load it: smth'})
 
         post_data = {'test_import_handler_file': handler,
-                     'train_import_handler_file': handler,
+                     'import_handler_file': handler,
                      'features': '{"a": "1"}',
                      'name': 'new'}
         self.check_edit_error(
@@ -122,7 +122,7 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         # Invalid trainer
         trainer = open('api/ml_models/invalid_model.dat', 'r').read()
         post_data = {'test_import_handler_file': handler,
-                     'train_import_handler_file': handler,
+                     'import_handler_file': handler,
                      'trainer': trainer,
                      'name': 'new'}
         self.check_edit_error(post_data, {
@@ -133,7 +133,7 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
     def test_post_new_model(self, name='new', *mocks):
         handler = open('./conf/extract.json', 'r').read()
         post_data = {'test_import_handler_file': handler,
-                     'train_import_handler_file': handler,
+                     'import_handler_file': handler,
                      'features': open('./conf/features.json', 'r').read(),
                      'name': name}
         resp, model = self.check_edit(post_data)
@@ -143,6 +143,7 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
                         "Test import handler was not set")
         self.assertTrue(model.train_import_handler,
                         "Train import handler was not set")
+        self.assertNotEquals(model.test_import_handler.id, model.train_import_handler.id)
         # TODO
         # self.assertTrue(model.features, "Features was not set")
         self.assertEquals(model.labels, [],
@@ -168,6 +169,33 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue(features_set, "Features set not created")
         self.assertEquals(features_set.schema_name, "bestmatch")
 
+    @mock_s3  # trainer saves to amazon S3
+    def test_post_new_model_with_same_handlers(self, *mocks):
+        name = 'new'
+        handler = open('./conf/extract.json', 'r').read()
+        post_data = {'import_handler_file': handler,
+                     'name': name}
+        resp, model = self.check_edit(post_data)
+        self.assertEquals(model.name, name)
+        self.assertTrue(model.test_import_handler,
+                        "Test import handler was not set")
+        self.assertTrue(model.train_import_handler,
+                        "Train import handler was not set")
+        self.assertEquals(model.test_import_handler.id, model.train_import_handler.id)
+
+        handler = ImportHandler.query.first()
+        name = 'another'
+        post_data = {'import_handler': handler.id,
+                     'name': name}
+        resp, model = self.check_edit(post_data)
+        self.assertEquals(model.name, name)
+        self.assertTrue(model.test_import_handler,
+                        "Test import handler was not set")
+        self.assertTrue(model.train_import_handler,
+                        "Train import handler was not set")
+        self.assertEquals(handler.id, model.train_import_handler.id)
+        self.assertEquals(model.test_import_handler.id, handler.id)
+
     @mock_s3
     def test_post_new_model_without_features(self, *mocks):
         """
@@ -177,7 +205,7 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         name = 'test one'
         handler = open('./conf/extract.json', 'r').read()
         post_data = {'test_import_handler_file': handler,
-                     'train_import_handler_file': handler,
+                     'import_handler_file': handler,
                      'name': name}
         resp, model = self.check_edit(post_data)
         self.assertEquals(model.name, name)
@@ -193,7 +221,7 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         handler = open('./conf/extract.json', 'r').read()
         trainer = open('./api/ml_models/model.dat', 'r').read()
         post_data = {'test_import_handler_file': handler,
-                     'train_import_handler_file': handler,
+                     'import_handler_file': handler,
                      'trainer': trainer,
                      'name': name}
         resp, model = self.check_edit(post_data)
@@ -211,7 +239,7 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         mock_set_trainer.side_effect = Exception('My error in set_trainer')
         handler = open('./conf/extract.json', 'r').read()
         post_data = {'test_import_handler_file': handler,
-                     'train_import_handler_file': handler,
+                     'import_handler_file': handler,
                      'features': open('./conf/features.json', 'r').read(),
                      'name': 'name'}
         resp = self.client.post(

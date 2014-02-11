@@ -25,12 +25,11 @@
       <span class="help-block">There should be JSON file with features <go-to-docs page="features"></go-to-docs></span>
     </div>
   </div>
-  <div ng-controller="ImportHandlerSelectCtrl" ng-init="train_import_handler_required=1">
-    <ng-include src="'/partials/models/form/train_import_handler.html'"></ng-include>
-    <ng-include src="'/partials/models/form/test_import_handler.html'"></ng-include>
+  <div ng-controller="ImportHandlerSelectCtrl">
+    <ng-include src="'/partials/models/form/import_handlers.html'"></ng-include>
   </div>
   <br />
   <a href="#/models" class="btn">Cancel</a>
-    <button ng-click="save(['name', 'features', 'test_import_handler', 'train_import_handler', 'train_import_handler_file', 'test_import_handler_file', 'train_format', 'test_format'])" ng-disabled="Form.$invalid" class="btn btn-primary">Add new model</button> <small>and start training</small>
+    <button ng-click="save(['name', 'features', 'test_import_handler', 'import_handler', 'import_handler_file', 'test_import_handler_file', 'train_format', 'test_format'])" ng-disabled="Form.$invalid" class="btn btn-primary">Add new model</button> <small>and start training</small>
   </form>
 </div>
