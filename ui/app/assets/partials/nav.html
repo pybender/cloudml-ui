@@ -5,7 +5,7 @@
   <li ng-class="getClass('/importhandlers')"><a ng-href="#/importhandlers">import handlers</a></li>
   <li ng-class="getClass('/aws/instances')"><a ng-href="#/aws/instances">instances</a></li>
   <li ng-class="getClass('/features')" class="dropdown">
-    <a class="dropdown-toggle" data-toggle="dropdown">predefined models <b class="caret"></b></a>
+    <a class="dropdown-toggle" data-toggle="dropdown">predefined entities <b class="caret"></b></a>
     <ul class="dropdown-menu">
       <li ng-class="getClass('/predefined/datasources')">
         <a ng-href="#/predefined/datasources">datasources</a>
@@ -19,11 +19,13 @@
       <li ng-class="getClass('/predefined/transformers')">
         <a ng-href="#/predefined/transformers">feature transformers</a>
       </li>
-      <li ng-class="getClass('/predefined/scalars')">
-        <a ng-href="#/predefined/scalars">feature scalars</a>
+      <li ng-class="getClass('/predefined/scalers')">
+        <a ng-href="#/predefined/scalers">feature scalers</a>
       </li>
     </ul>
   </li>
+  <li><a href="/docs/">docs</a></li>
+  <li><a href="/flower/">flower</a></li>
 </ul>
 
 <ul class="nav pull-right" ng-include="'/partials/login/user.html'" ng-controller="UserCtl" ng-init="init()"></ul>

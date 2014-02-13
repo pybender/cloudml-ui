@@ -6,7 +6,7 @@ Setup project to new instance
 
 We are going to deploy using:
 
-- Apache
+- Nginx
 - Fabdeploy
 - Virtualenv
 - Supervisor
@@ -14,17 +14,12 @@ We are going to deploy using:
 
 Create virtual env locally::
 
+    $ sudo apt-get install virtualenvwrapper
+
     $ virtualenv --no-site-packages ve
     $ . ve/bin/activate
-    $ pip install -r requirements.txt
 
-Installing jgit::
-
-    $ wget .....
-
-Configure jgit::
-
-    $ git remote add s3 amazon-s3://.jgit@odesk-match-cloudml/cloudml.git/
+    $ pip install -r deploy_requirements.txt
 
 Note::
 
@@ -135,6 +130,10 @@ Setup cloudml worker::
 Deploy new version::
 
     $ fab worker deployw
+
+Create image::
+
+    $ 
 
 
 

@@ -115,8 +115,7 @@ class BasePredefinedForm(BaseForm):
             count = items.count()
 
             if count:
-                raise ValidationError(
-                    'name of predefined item should be unique')
+                self.add_error('name', 'Predefined %s with same name already exist. Please choose another one.' % self.OBJECT_NAME)
 
         if predefined_selected:
             obj = self.cleaned_data.get(self.OBJECT_NAME, None)

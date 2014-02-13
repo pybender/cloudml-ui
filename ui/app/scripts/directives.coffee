@@ -161,6 +161,19 @@ angular.module('app.directives', [
 )
 
 
+.directive('goToDocs', () ->
+  return {
+    restrict: 'E',
+    templateUrl: 'partials/directives/go_to_docs.html',
+    replace: true,
+    transclude : true,
+    link: (scope, el, attrs) ->
+      scope.url = "http://cloudml.int.odesk.com/docs/" + \
+      attrs.page + ".html#" + (attrs.section || '')
+      scope.title = attrs.title || 'click and read the docs for more info'
+  }
+)
+
 .directive('weightedDataParameters', () ->
   return {
     restrict: 'E',

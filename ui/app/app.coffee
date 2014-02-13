@@ -200,7 +200,7 @@ App.config([
       controller: "TransformersListCtrl"
       templateUrl: '/partials/features/transformers/list.html'
     })
-    .when('/predefined/scalars', {
+    .when('/predefined/scalers', {
       controller: "ScalersListCtrl"
       templateUrl: '/partials/features/scalers/list.html'
     })
@@ -222,6 +222,10 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
   $rootScope.Math = window.Math
   $rootScope.Object = Object
   $rootScope.loadingCount = 0
+  $rootScope.errorList = {}
+  $rootScope.setFieldError = (name, msg='') ->
+      $rootScope.errorList[name] = msg
+
 
   # this will be available to all scope variables
   $rootScope.includeLibraries = true
@@ -294,6 +298,12 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
 
   $rootScope.resetError = ->
     $rootScope.err = ''
+    $rootScope.statusCode = null
+    $rootScope.errorList = {}
+
+  $rootScope.$on('$routeChangeStart', (next, current) ->
+      $rootScope.resetError()
+  )
 
   $rootScope.setError = (opts, message=null) ->
     if !message?
@@ -302,9 +312,12 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
     if opts.data
       $rootScope.err = "Error while #{message}: server responded
  with #{opts.status} (#{opts.data.response.error.message or "no message"})."
+      for item in opts.data.response.error.errors
+          $rootScope.setFieldError(item.name, item.error)
     else
-      $rootScope.err = "Error while #{message}."
+      $rootScope.err = "Unkown error while #{message}."
 
+    $rootScope.statusCode = opts.status
     if opts.status == 401  # Unauthorized
       $auth.logout()
       return $location.path("/auth/login")

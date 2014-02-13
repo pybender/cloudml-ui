@@ -7,7 +7,7 @@
   <div class="modal-body">
     <loadindicator title="Saving classifier..." ng-show="saving" progress="savingProgress"></loadindicator>
 
-    <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+    <ng-include src="'/partials/parts/save_form_messages.html'"></ng-include>
 
     <ul ng-init="model.predefined_selected=false;currentTab='custom'" class="nav nav-pills" ng-init="currentTab='custom'">
       <li ng-class="{active: currentTab == 'custom'}">

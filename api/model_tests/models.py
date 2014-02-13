@@ -57,6 +57,9 @@ class TestResult(db.Model, BaseModel):
     def get_vect_data(self, num):
         from pickle import loads
         data = loads(self.vect_data)
+        import numpy
+        if isinstance(data, numpy.ndarray):
+            return data[num]
         return data.getrow(num).todense().tolist()[0]
 
     def set_error(self, error, commit=True):

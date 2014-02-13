@@ -5,15 +5,14 @@
       <a ng-href="#/aws/instances">(Cancel)</a>
   </small>
 </h2>
-
-<alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
-
+<ng-include src="'/partials/parts/save_form_messages.html'"></ng-include>
 <form name="UploadInstanceForm" class="form-horizontal">
-  <div class="control-group" ng-class="{error: UploadInstanceForm.name.$invalid}">
+  <div class="control-group" ng-class="{error: UploadInstanceForm.name.$invalid || errorList.name}">
     <label class="control-label">Name</label>
     <div class="controls">
-      <input type="text" name="name" ng-model="model.name" required>
-      <span ng-show="UploadInstanceForm.name.$error.required" class="help-inline">Required</span>
+      <input type="text" name="name" ng-model="model.name"  ng-change="setFieldError('name')" required />
+      <span ng-show="UploadInstanceForm.name.$error.required" class="help-block">Instance name is required and should be unique</span>
+      <span ng-show="errorList.name" class="help-block" ng-bind="errorList.name" />
     </div>
   </div>
   <div class="control-group" ng-class="{error: UploadInstanceForm.description.$invalid}">
@@ -23,19 +22,21 @@
       </textarea>
     </div>
   </div>
-  <div class="control-group" ng-class="{error: UploadInstanceForm.ip.$invalid}">
+  <div class="control-group" ng-class="{error: UploadInstanceForm.ip.$invalid || errorList.ip}">
     <label class="control-label">IP</label>
     <div class="controls">
-      <input type="text" name="name" ng-model="model.ip" required>
-      <span ng-show="UploadInstanceForm.name.$error.required" class="help-inline">Required</span>
+      <input type="text" name="ip" ng-model="model.ip" required />
+      <span ng-show="UploadInstanceForm.ip.$error.required" class="help-block">Please enter valid IP address</span>
+      <span ng-show="errorList.ip" class="help-block" ng-bind="errorList.ip" />
     </div>
   </div>
-  <div class="control-group" ng-class="{error: UploadInstanceForm.type.$invalid}">
+  <div class="control-group" ng-class="{error: UploadInstanceForm.type.$invalid || errorList.type}">
     <label class="control-label">Type</label>
     <div class="controls">
-      <select ng-model="model.type" required ng-options="value.name for value in types" ng-selected='types[0]'>
+      <select ng-model="model.type" name="type" required ng-options="value.name for value in types">
       </select>
-      <span ng-show="UploadInstanceForm.type.$error.required" class="help-inline">Required</span>
+      <span ng-show="UploadInstanceForm.type.$error.required" class="help-block">Select instance type</span>
+      <span ng-show="errorList.type" class="help-block" ng-bind="errorList.type" />
     </div>
   </div>
   <div class="control-group" ng-class="{error: UploadInstanceForm.is_default.$invalid}">

@@ -67,6 +67,19 @@ class NamedFeatureTypeAddForm(BaseForm, FeatureParamsMixin):
     input_format = CharField()
     params = JsonField()
 
+    def clean_name(self, value, field):
+        if not value:
+            raise ValidationError('name is required field')
+
+        query = NamedFeatureType.query.filter_by(name=value)
+        if self.obj.id:
+            query = query.filter(NamedFeatureType.id != self.obj.id)
+        count = query.count()
+        if count:
+            raise ValidationError(
+                'Named feature type with name "%s" already exist. Please choose another one.' % value)
+        return value
+
 
 class FeatureSetForm(BaseForm):
     schema_name = CharField()

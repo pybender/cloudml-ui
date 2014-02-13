@@ -1,32 +1,36 @@
-<div class="control-group" ng-class="{error: Form.name.$invalid}">
+
+<div class="control-group" ng-class="{error: Form.name.$invalid || errorList.name}">
   <label class="control-label">Name</label>
   <div class="controls">
     <input type="text" name="name" ng-model="model.name" required />
-    <span ng-show="Form.name.$error.required" class="help-inline">*</span>
+    <span ng-show="Form.name.$error.required" class="help-block">name is required and should be unique</span>
+    <span ng-show="errorList.name" class="help-block" ng-bind="errorList.name" />
   </div>
 </div>
-<div class="control-group" ng-class="{error: Form.type.$invalid}">
+<div class="control-group" ng-class="{error: Form.type.$invalid || errorList.type}">
   <label class="control-label">Type</label>
   <div class="controls" ng-controller="NamedFeatureTypesSelectsLoader">
     <select name="type" ng-model="model.type" required>
       <option ng-selected="model.type == typeName" ng-repeat="typeName in TYPES_LIST" value="{{ typeName }}">{{ typeName }}</option>
     </select>
-    <span ng-show="Form.type.$error.required" class="help-inline">*</span>
+    <span ng-show="Form.name.$error.required" class="help-block">type is required <go-to-docs page="features" section="classifier"></go-to-docs></span>
+    <span ng-show="errorList.type" class="help-block" ng-bind="errorList.type" />
   </div>
 </div>
-<div class="control-group" ng-class="{error: Form.input_format.$invalid}">
+<div class="control-group" ng-class="{error: Form.input_format.$invalid || errorList.input_format}">
   <label class="control-label">Input Format</label>
   <div class="controls">
     <input type="text" name="input_format" ng-model="model.input_format" />
-    <span ng-show="Form.input_format.$error.required" class="help-inline">*</span>
+    <span ng-show="errorList.input_format" class="help-block" ng-bind="errorList.input_format" />
   </div>
 </div>
-<div class="control-group" ng-class="{error: Form.params.$invalid}">
+<div class="control-group" ng-class="{error: Form.params.$invalid || errorList.params}">
   <label class="control-label">Parameters</label>
   <div class="controls">
     <div class="jsonView">
         <parameters-editor ng-model="model.paramsDict" name="params"></parameters-editor>
     </div>
     <span ng-show="Form.params.$error.required" class="help-inline">*</span>
+    <span ng-show="errorList.params" class="help-block" ng-bind="errorList.params" />
   </div>
 </div>

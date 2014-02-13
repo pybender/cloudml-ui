@@ -17,13 +17,13 @@ class PredefinedDataSourceForm(BaseForm):
     db = JsonField()
 
     def clean_name(self, value, field):
-        if self.cleaned_data.get('is_predefined'):
-            kwargs = {'name': value}
-            if '_id' in self.obj and self.obj._id:
-                kwargs['_id'] = {'$ne': self.obj._id}
-            count = PredefinedDataSource.find(kwargs).count()
-            if count:
-                raise ValidationError('name should be unique')
+        query = PredefinedDataSource.query.filter_by(name=value)
+        if self.obj.id:
+            query = query.filter(PredefinedDataSource.id != self.obj.id)
+        count = query.count()
+        if count:
+            raise ValidationError(
+                'Data Source with name "%s" already exist. Please choose another one.' % value)
         return value
 
 
@@ -38,7 +38,7 @@ class BaseImportHandlerForm(BaseForm):
             plan = ExtractionPlan(json.dumps(value), is_file=False)
             self.cleaned_data['import_params'] = plan.input_params
         except (ValueError, ImportHandlerException) as exc:
-            raise ValidationError('Invalid importhandler: %s' % exc)
+            raise ValidationError('Import Handler JSON file is invalid: %s' % exc)
 
         return value
 
@@ -47,6 +47,13 @@ class ImportHandlerAddForm(BaseImportHandlerForm):
     name = CharField()
     data = JsonField()
     import_params = JsonField()
+
+    def clean_name(self, value, field):
+        count = ImportHandler.query.filter_by(name=value).count()
+        if count:
+            raise ValidationError(
+                'Import Handler with name "%s" already exist. Please choose another one.' % value)
+        return value
 
 
 class HandlerForm(BaseForm):
@@ -133,12 +140,23 @@ class QueryTestForm(BaseForm):
 # DataSet forms
 
 class DataSetAddForm(BaseForm):
-    required_fields = ('format', 'import_params')
+    required_fields = ('format', )
     format = ChoiceField(choices=DataSet.FORMATS)
     import_params = JsonField()
 
     def before_clean(self):
         self.importhandler = ImportHandler.query.get(self.import_handler_id)
+
+    def clean_import_params(self, value, field):
+        if not isinstance(value, dict):
+            raise ValidationError('Should be a dict')
+
+        for param in self.importhandler.import_params:
+            if param not in value:
+                raise ValidationError(
+                    '{0!s} not found in import_params'.format(param))
+
+        return value
 
     def save(self, commit=True):
         from tasks import import_data

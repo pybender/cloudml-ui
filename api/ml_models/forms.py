@@ -62,13 +62,12 @@ class ModelAddForm(BaseForm):
     """
     NO_REQUIRED_FOR_EDIT = True
     required_fields = ('name',
-                       ('test_import_handler', 'test_import_handler_file'),
-                       ('train_import_handler', 'train_import_handler_file'))
+                       ('import_handler', 'import_handler_file'))
 
     name = CharField()
-    train_import_handler = ModelField(model=ImportHandler, by_name=False,
+    import_handler = ModelField(model=ImportHandler, by_name=False,
                                          return_model=True)
-    train_import_handler_file = ImportHandlerFileField()
+    import_handler_file = ImportHandlerFileField()
     test_import_handler = ModelField(model=ImportHandler, by_name=False,
                                          return_model=True)
     test_import_handler_file = ImportHandlerFileField()
@@ -77,15 +76,20 @@ class ModelAddForm(BaseForm):
 
     def clean_name(self, value, field):
         if not value:
-            raise ValidationError('name is required')
+            raise ValidationError('specify name of the model')
 
         count = Model.query.filter_by(name=value).count()
         if count:
-            raise ValidationError('name should be unique')
+            raise ValidationError(
+                'Model with name "%s" already exist. Please choose another one.' % value)
 
         return value
 
-    def clean_train_import_handler_file(self, value, field):
+    def clean_import_handler(self, value, field):
+        self.cleaned_data['train_import_handler'] = value
+        return value
+
+    def clean_import_handler_file(self, value, field):
         self.cleaned_data['train_import_params'] = field.import_params
         return value
 
@@ -100,7 +104,7 @@ class ModelAddForm(BaseForm):
                 feature_model = FeatureModel(json.dumps(value), is_file=False)
                 self.cleaned_data['trainer'] = Trainer(feature_model)
             except SchemaException, exc:
-                raise ValidationError('Invalid features: %s' % exc)
+                raise ValidationError('Features JSON file is invalid: %s' % exc)
         return value
 
     def clean_trainer(self, value, field):
@@ -112,13 +116,15 @@ class ModelAddForm(BaseForm):
                 self.cleaned_data['status'] = Model.STATUS_TRAINED
                 return trainer_obj
             except Exception as exc:
-                raise ValidationError('Invalid trainer: {0!s}'.format(exc))
+                raise ValidationError('Pickled trainer model is invalid: {0!s}'.format(exc))
 
     def save(self, *args, **kwargs):
         name = self.cleaned_data['name']
         try:
-            self._save_importhandler('train_import_handler_file', name)
+            self._save_importhandler('import_handler_file', name)
             self._save_importhandler('test_import_handler_file', name)
+            if not 'test_import_handler' in self.cleaned_data:
+                self.cleaned_data['test_import_handler'] = self.cleaned_data['train_import_handler']
 
             model = super(ModelAddForm, self).save(commit=False)
             trainer = self.cleaned_data.get('trainer')
@@ -145,11 +151,25 @@ class ModelAddForm(BaseForm):
         Adds new import handler to the system, if it was specified in file field.
         Use it in the model.
         """
+        def determine_name(name, action):
+            if action == 'train':
+                name = "%s import handler" % name
+            else:
+                name = "%s test import handler" % name
+            
+            while True:
+                count = ImportHandler.query.filter_by(name=name).count()
+                if not count:
+                    return name
+                name += '_'
+
+            return name
+
         data = self.cleaned_data.pop(fieldname, None)
         if data is not None:
             handler = ImportHandler()
             action = 'test' if fieldname.startswith('test') else 'train'
-            handler.name = '%s handler for %s' % (name, action)
+            handler.name = determine_name(name, action)
             handler.import_params = self.cleaned_data.pop('%s_import_params' % action)
             handler.data = data
             self.cleaned_data['%s_import_handler' % action] = handler

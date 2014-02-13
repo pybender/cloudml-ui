@@ -16,6 +16,8 @@ TRANSFORMERS = {
                        'stop_words', 'token_pattern',
                        'analyzer', 'max_df', 'min_df',
                        'max_features', 'vocabulary',
+                       'ngram_range_min',
+                       'ngram_range_max',
                        'binary'],
         'default': '',
         'defaults': {}
@@ -29,6 +31,8 @@ TRANSFORMERS = {
                        'min_df', 'max_features',
                        'vocabulary', 'binary',
                        'use_idf', 'smooth_idf',
+                       'ngram_range_min',
+                       'ngram_range_max',
                        'sublinear_tf'],
         'default': '',
         'defaults': {}

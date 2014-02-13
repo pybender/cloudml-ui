@@ -3,58 +3,33 @@
     Add New Model
     <small><a ng-href="#" href="#">(Cancel)</a></small>
   </h2>
-
-  <loadindicator title="Adding model..." ng-show="saving" progress="savingProgress"></loadindicator>
-
-  <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
-
+  <ng-include src="'/partials/parts/save_form_messages.html'"></ng-include>
   <form name="Form" class="form-horizontal">
   <p class="lead">
-    Please upload features and define import handlers.
+    Adding new untrained model
   </p>
-  <div class="control-group" ng-class="{error: Form.name.$invalid}">
+  <div class="control-group" ng-class="{error: Form.name.$invalid || errorList.name}">
     <label class="control-label">Name</label>
     <div class="controls">
-      <input type="text" name="name" ng-model="model.name" required>
-      <span ng-show="Form.name.$error.required" class="help-inline">*</span>
+      <input type="text" name="name" ng-model="model.name" ng-change="setFieldError('name')" required />
+      <span ng-show="Form.name.$error.required" class="help-block">Model name is required and should be unique</span>
+      <span ng-show="errorList.name" class="help-block" ng-bind="errorList.name" />
     </div>
   </div>
-  <div class="control-group" ng-class="{error: Form.features.$invalid}">
+  <div class="control-group" ng-class="{error: Form.features.$invalid || errorList.features}">
     <label class="control-label">Features</label>
     <div class="controls">
       <input type="file" name="features" ng-model="model.features" json-file />
-      <span ng-show="Form.features.$error.required" class="help-inline">*</span>
+      <span ng-show="errorList.features" class="help-block" ng-bind="errorList.features" />
       <span ng-show="Form.features.$error.jsonFile" class="help-block">Should be a valid json file</span>
-      <span class="help-block">json file with features</span>
+      <span class="help-block">There should be JSON file with features <go-to-docs page="features"></go-to-docs></span>
     </div>
   </div>
   <div ng-controller="ImportHandlerSelectCtrl">
-    <div class="control-group" ng-class="{error: Form.train_import_handler.$invalid || Form.train_import_handler_file.$invalid}">
-      <label class="control-label">Train Import Handler</label>
-      <div class="controls">
-        <select name="train_import_handler" ng-model="model.train_import_handler" ng-required='!model.train_import_handler_file'>
-          <option ng-repeat="handler in handlers" value="{{ handler.id }}">{{ handler.name }}</option>
-        </select> 
-        <span>or</span> 
-        <input type="file" name="train_import_handler_file" ng-model="model.train_import_handler_file" json-file ng-required='!model.train_import_handler' />
-        <span ng-show="Form.train_import_handler_file.$error.jsonFile" class="help-block">Should be a valid json file</span>
-      </div>
-    </div>
-    <div class="control-group" ng-class="{error: Form.test_import_handler.$invalid || Form.test_import_handler_file.$invalid}">
-      <label class="control-label">Test Import Handler</label>
-      <div class="controls">
-        <select name="test_import_handler" ng-model="model.test_import_handler" ng-required='!model.test_import_handler_file'>
-            <option ng-repeat="handler in handlers" value="{{ handler.id }}">{{ handler.name }}</option>
-        </select>
-        <span>or</span> 
-        <input type="file" name="test_import_handler_file" ng-model="model.test_import_handler_file" json-file ng-required='!model.test_import_handler' />
-        <span ng-show="Form.test_import_handler_file.$error.jsonFile" class="help-block">Should be a valid json file</span>
-      </div>
-    </div>
+    <ng-include src="'/partials/models/form/import_handlers.html'"></ng-include>
   </div>
-
   <br />
   <a href="#/models" class="btn">Cancel</a>
-    <button ng-click="save(['name', 'features', 'test_import_handler', 'train_import_handler', 'train_import_handler_file', 'test_import_handler_file', 'train_format', 'test_format'])" ng-disabled="Form.$invalid" class="btn btn-primary">Add new model</button> <small>and start training</small>
+    <button ng-click="save(['name', 'features', 'test_import_handler', 'import_handler', 'import_handler_file', 'test_import_handler_file', 'train_format', 'test_format'])" ng-disabled="Form.$invalid" class="btn btn-primary">Add new model</button> <small>and start training</small>
   </form>
 </div>
