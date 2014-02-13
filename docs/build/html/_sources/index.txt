@@ -16,6 +16,9 @@ Contents:
    import_handler
    features
    changes
+   trainer
+   test_metrics
+   instances
    deployment
    development
    api

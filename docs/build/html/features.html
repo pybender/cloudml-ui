@@ -620,6 +620,30 @@ keys and values</p>
 </div>
 <div class="section" id="feature-scalers">
 <span id="id4"></span><h3>Feature Scalers<a class="headerlink" href="#feature-scalers" title="Permalink to this headline">¶</a></h3>
+<p>Scalers allow standardize features by removing the mean and scaling to unit variance. The following table contains a list of available scalers</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="7%" />
+<col width="20%" />
+<col width="72%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Parameters</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>StandartScaler</td>
+<td>feature_range_min, feature_range_max, copy</td>
+<td>underlying implementation is <a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html">scikit-learn&#8217;s StandartScaler</a></td>
+</tr>
+<tr class="row-odd"><td>MinMaxScaler</td>
+<td>copy, with_std, with_mean</td>
+<td>underlying implementation is <a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MinMaxScaler.html">scikit-learn&#8217;s MinMaxScaler</a></td>
+</tr>
+</tbody>
+</table>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">You could add feature scalers to be used system wide in the <a class="reference external" href="http://cloudml.int.odesk.com/#/predefined/scalers">Predefined feature scalers page</a>.</p>
@@ -627,10 +651,7 @@ keys and values</p>
 </div>
 <div class="section" id="feature-transformers">
 <span id="id5"></span><h3>Feature Transformers<a class="headerlink" href="#feature-transformers" title="Permalink to this headline">¶</a></h3>
-<p>Transformers allow creating multiple features from a single one. Each feature
-might have only one transformer. You can define a transformer by specifying
-key &#8220;name&#8221; and any of the appropriate parameters for the transformer. The
-following table contains a list of available transformers</p>
+<p>Transformers allow creating multiple features from a single one. Each feature might have only one transformer. You can define a transformer by specifying key &#8220;name&#8221; and any of the appropriate parameters for the transformer. The following table contains a list of available transformers</p>
 <table border="1" class="docutils">
 <colgroup>
 <col width="14%" />

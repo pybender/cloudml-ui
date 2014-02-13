@@ -1,0 +1,148 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Instances &mdash; oDesk CloudML 0.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="oDesk CloudML 0.0.1 documentation" href="index.html" />
+    <link rel="next" title="Deployment" href="deployment.html" />
+    <link rel="prev" title="Test Metrics" href="test_metrics.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="deployment.html" title="Deployment"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="test_metrics.html" title="Test Metrics"
+             accesskey="P">previous</a> |</li>
+    <li><a href="http://cloudml.int.odesk.com/">CloudML UI</a> &raquo;</li>
+    
+        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Instances</a><ul>
+<li><a class="reference internal" href="#on-demand-instances">On-Demand Instances</a></li>
+<li><a class="reference internal" href="#spot-instances">Spot Instances</a></li>
+<li><a class="reference internal" href="#instance-types">Instance Types</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="test_metrics.html"
+                        title="previous chapter">Test Metrics</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="deployment.html"
+                        title="next chapter">Deployment</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/instances.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="instances">
+<span id="id1"></span><h1>Instances<a class="headerlink" href="#instances" title="Permalink to this headline">¶</a></h1>
+<p>Instance - it&#8217;s a Amazon EC2 instance with runned celery worker.
+Now two types of the instances used in the system:</p>
+<ul class="simple">
+<li>On-Demand Instances</li>
+<li>Spot Instances</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Now system supports only training in different types of instances. Model testing always will run on main celery worker.</p>
+</div>
+<div class="section" id="on-demand-instances">
+<span id="id2"></span><h2>On-Demand Instances<a class="headerlink" href="#on-demand-instances" title="Permalink to this headline">¶</a></h2>
+<p>List of the On-Demand Instances could be found in <a href="#id5"><span class="problematic" id="id6">`the instance list page&lt;http://cloudml.int.odesk.com/#/aws/instances/&gt;`_</span></a>.</p>
+</div>
+<div class="section" id="spot-instances">
+<span id="id3"></span><h2>Spot Instances<a class="headerlink" href="#spot-instances" title="Permalink to this headline">¶</a></h2>
+<p>System could use <a class="reference external" href="http://aws.amazon.com/ec2/purchasing-options/spot-instances/">Amazon EC2 Spot Instances</a> for traing model.</p>
+</div>
+<div class="section" id="instance-types">
+<span id="id4"></span><h2>Instance Types<a class="headerlink" href="#instance-types" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="http://aws.amazon.com/ec2/instance-types/">Here</a> could be found the specifications for each Amazon EC2 Instance Type.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="deployment.html" title="Deployment"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="test_metrics.html" title="Test Metrics"
+             >previous</a> |</li>
+    <li><a href="http://cloudml.int.odesk.com/">CloudML UI</a> &raquo;</li>
+    
+        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, oDesk.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b2.
+    </div>
+  </body>
+</html>

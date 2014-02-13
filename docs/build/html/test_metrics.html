@@ -1,0 +1,184 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Test Metrics &mdash; oDesk CloudML 0.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="oDesk CloudML 0.0.1 documentation" href="index.html" />
+    <link rel="next" title="Instances" href="instances.html" />
+    <link rel="prev" title="Trainer" href="trainer.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="instances.html" title="Instances"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="trainer.html" title="Trainer"
+             accesskey="P">previous</a> |</li>
+    <li><a href="http://cloudml.int.odesk.com/">CloudML UI</a> &raquo;</li>
+    
+        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Test Metrics</a><ul>
+<li><a class="reference internal" href="#classifier-test-metrics">Classifier Test Metrics</a></li>
+<li><a class="reference internal" href="#regression-test-metrics">Regression Test Metrics</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="trainer.html"
+                        title="previous chapter">Trainer</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="instances.html"
+                        title="next chapter">Instances</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/test_metrics.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="test-metrics">
+<span id="id1"></span><h1>Test Metrics<a class="headerlink" href="#test-metrics" title="Permalink to this headline">¶</a></h1>
+<p>After testing the model user gets a set of test metrics.
+Different
+<a class="reference internal" href="features.html#classifier"><em>classifier</em></a>
+has different metrics.</p>
+<div class="section" id="classifier-test-metrics">
+<h2>Classifier Test Metrics<a class="headerlink" href="#classifier-test-metrics" title="Permalink to this headline">¶</a></h2>
+<p>Logistic regression and stochastic gradient descent classifier&#8217;s tests will have following metrics:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="50%" />
+<col width="50%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>roc_curve</td>
+<td>ROC curve</td>
+</tr>
+<tr class="row-odd"><td>roc_auc</td>
+<td>Area under ROC curve</td>
+</tr>
+<tr class="row-even"><td>confusion_matrix</td>
+<td>Confusion Matrix</td>
+</tr>
+<tr class="row-odd"><td>accuracy</td>
+<td>Accuracy</td>
+</tr>
+<tr class="row-even"><td>avarage_precision</td>
+<td>Avarage Precision</td>
+</tr>
+<tr class="row-odd"><td>precision_recall_curve</td>
+<td>Precision-recall curve</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="regression-test-metrics">
+<h2>Regression Test Metrics<a class="headerlink" href="#regression-test-metrics" title="Permalink to this headline">¶</a></h2>
+<p>Support vector regression tests will have following metrics:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="20%" />
+<col width="80%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>rsme</td>
+<td>Root square mean error</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="instances.html" title="Instances"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="trainer.html" title="Trainer"
+             >previous</a> |</li>
+    <li><a href="http://cloudml.int.odesk.com/">CloudML UI</a> &raquo;</li>
+    
+        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, oDesk.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b2.
+    </div>
+  </body>
+</html>

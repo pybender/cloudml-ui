@@ -276,6 +276,18 @@ text
 Feature Scalers
 ---------------
 
+Scalers allow standardize features by removing the mean and scaling to unit variance. The following table contains a list of available scalers
+
+
++----------------+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Name           | Parameters                                 | Description                                                                                                                                                |
++================+============================================+============================================================================================================================================================+
+| StandartScaler | feature_range_min, feature_range_max, copy | underlying implementation is `scikit-learn's StandartScaler <http://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html>`_ |
++----------------+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| MinMaxScaler   | copy, with_std, with_mean                  | underlying implementation is `scikit-learn's MinMaxScaler <http://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MinMaxScaler.html>`_     |
++----------------+--------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+
 .. note::
     
     You could add feature scalers to be used system wide in the `Predefined feature scalers page <http://cloudml.int.odesk.com/#/predefined/scalers>`_.
@@ -285,11 +297,7 @@ Feature Scalers
 Feature Transformers
 --------------------
 
-Transformers allow creating multiple features from a single one. Each feature
-might have only one transformer. You can define a transformer by specifying
-key "name" and any of the appropriate parameters for the transformer. The
-following table contains a list of available transformers
-
+Transformers allow creating multiple features from a single one. Each feature might have only one transformer. You can define a transformer by specifying key "name" and any of the appropriate parameters for the transformer. The following table contains a list of available transformers
 
 +------------+-------------------------+----------------------------------------------+ 
 | Name       | Parameters              | Description                                  | 
