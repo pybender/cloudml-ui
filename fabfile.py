@@ -124,7 +124,7 @@ def create_db_tables():
 @task
 def migrate():
     release.work_on.run(0)
-    flask.migrate.run()
+    flask.manage.run('db upgrade')
 
 
 @task
