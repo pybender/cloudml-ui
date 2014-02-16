@@ -1,27 +1,26 @@
 <div ng-controller="GetInstanceCtrl">
   <ul class="nav nav-pills">
-    <li ng-repeat="column in activeColumns" ng-class="{active: currentColumn == column}"><a ng-click="activateColumn(column)">{{ column }}</a></li>
-    <li ng-show="activeColumns.indexOf(EXISTED_INSTANCE) == -1"class="disabled"><a title="There aren't active instances">{{ EXISTED_INSTANCE }}</a></li>
+    <li ng-class="{active: data.existing_instance_selected}"><a ng-click="data.existing_instance_selected=1">Existing Instance</a></li>
+    <li ng-hide="datasets.length == 0" ng-class="{active: !data.existing_instance_selected}"><a ng-click="data.existing_instance_selected=0">Request Spot Instance</a></li>
   </ul>
 
-  <div ng-hide="activeColumns.indexOf(EXISTED_INSTANCE) == -1">
-	  <div ng-show="currentColumn == EXISTED_INSTANCE" class="control-group" ng-class="{error: !formElements[EXISTED_INSTANCE]['aws_instance']}">
-	    <select class="input-xlarge" name="aws_instance" ng-change="changeFormData(currentColumn, 'aws_instance')" ng-model="formElements[EXISTED_INSTANCE]['aws_instance']">
-	      <option value="">--- select instance ---</option>
-	      <option ng-repeat="instance in instances" value="{{ instance.id }}" ng-selected="instance.is_default">{{ instance.name }}: {{ instance.ip }}</option>
+  <div ng-show="data.existing_instance_selected">
+	  <div class="control-group" ng-class="{error: Form.aws_instance.$invalid || errorList.aws_instance}">
+	    <select class="input-xlarge" name="aws_instance" ng-model="data.aws_instance" ng-required="data.existing_instance_selected">
+	      <option ng-repeat="instance in instances" ng-selected="instance.id == data.aws_instance" value="{{ instance.id }}">{{ instance.name }}: {{ instance.ip }}</option>
 	    </select>&nbsp;<i class="icon-question-sign" title="Choose active amazon instance" />
-      <span ng-show="!formElements[EXISTED_INSTANCE]['aws_instance']" class="help-inline">required</span>
+      <span ng-show="Form.aws_instance.$error.required" class="help-inline">*</span>
 	  </div>
   </div>
 
-  <div ng-show="currentColumn == REQUEST_SPOT_INSTANCE">
+  <div ng-hide="data.existing_instance_selected">
     <div ng-controller="SpotInstanceRequestCtrl">
-      <div class="control-group" ng-class="{error: !formElements[REQUEST_SPOT_INSTANCE]['spot_instance_type']}">
-        <select class="input-xlarge" title="Choose instance type, when you want to request spot instance." name="spot_instance_type" ng-change="changeFormData(currentColumn, 'spot_instance_type')" ng-model="formElements[REQUEST_SPOT_INSTANCE]['spot_instance_type']">
+      <div class="control-group" ng-class="{error: Form.spot_instance_type.$invalid || errorList.spot_instance_type}">
+        <select class="input-xlarge" title="Choose instance type, when you want to request spot instance." name="spot_instance_type" ng-model="data.spot_instance_type" ng-required="!data.existing_instance_selected">
           <option value="" selected>--- select type ---</option>
           <option ng-repeat="type in types" value="{{type}}">{{ type }}</option>
         </select>&nbsp;<i class="icon-question-sign" title="Choose instance type, when you want to request spot instance." />
-        <span ng-show="!formElements[REQUEST_SPOT_INSTANCE]['spot_instance_type']" class="help-inline">required</span>
+        <span ng-show="Form.spot_instance_type.$error.required" class="help-inline">*</span>
       </div>
       </div>
   </div>

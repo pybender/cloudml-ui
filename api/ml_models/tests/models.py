@@ -16,6 +16,12 @@ from api.model_tests.fixtures import TestResultData, TestExampleData
 from api.features.fixtures import FeatureSetData, FeatureData
 
 
+TRAIN_PARAMS = json.dumps(
+    {'start': '2012-12-03',
+     'end': '2012-12-04',
+     'category': '1'})
+
+
 class ModelsTests(BaseDbTestCase, TestChecksMixin):
     """
     Tests of the Model API.
@@ -307,32 +313,30 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
     @mock_s3
     def test_train_model_validation_errors(self, *mocks):
         self.assertTrue(self.obj.status, Model.STATUS_NEW)
-        self.check_edit_error({}, {
-            'fields': 'One of spot_instance_type, aws_instance is required.'
-                      ' One of parameters, dataset is required.'
-        }, id=self.obj.id, action='train')
-
         data = {
-            'aws_instance': self.instance.id,
-            'start': '2012-12-03',
-            'format': DataSet.FORMAT_JSON
+            'existing_instance_selected': True,
+            'new_dataset_selected': True,
+            'params': '{}'
         }
         self.check_edit_error(data, {
-            'parameters': 'Parameters category, end are required',
-            'fields': 'One of parameters, dataset is required.'
-        }, id=self.obj.id, action='train')
+                u'aws_instance': u'Please select instance with a worker',
+                u'parameters': u'Some parameters are missing: category, start, end',
+                u'format': u'Please select format of the Data Set'}, id=self.obj.id, action='train')
 
         data = {
-            'aws_instance': self.instance.id,
-            'format': DataSet.FORMAT_JSON
+            'existing_instance_selected': False,
+            'new_dataset_selected': False
         }
         self.check_edit_error(data, {
-            'fields': 'One of parameters, dataset is required.'
-        }, id=self.obj.id, action='train')
+            u'spot_instance_type': u'Please select Spot instance type',
+            u'dataset': u'Please select Data Set'},
+            id=self.obj.id, action='train')
 
         # Tests specifying dataset
         data = {
-            'dataset': 786,
+            'dataset': "11999,786",
+            'existing_instance_selected': True,
+            'new_dataset_selected': False,
             'aws_instance': self.instance.id,
         }
         self.check_edit_error(data, {
@@ -349,6 +353,8 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
 
         ds = DataSet.query.filter_by(name=DataSetData.dataset_01.name).first()
         data = {'aws_instance': self.instance.id,
+                'existing_instance_selected': True,
+                'new_dataset_selected': False,
                 'dataset': ds.id}
 
         resp, obj = self.check_edit(data, id=self.obj.id, action='train')
@@ -363,6 +369,8 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
 
         ds = DataSet.query.filter_by(name=DataSetData.dataset_01.name).first()
         data = {'aws_instance': self.instance.id,
+                'existing_instance_selected': True,
+                'new_dataset_selected': False,
                 'dataset': ds.id}
         resp, obj = self.check_edit(data, id=self.obj.id, action='train')
         # NOTE: Make sure that ds.gz file exist in test_data folder
@@ -382,6 +390,8 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
 
         ds = DataSet.query.filter_by(name=DataSetData.dataset_03.name).first()
         data = {'aws_instance': self.instance.id,
+                'existing_instance_selected': True,
+                'new_dataset_selected': False,
                 'dataset': ds.id}
         resp, obj = self.check_edit(data, id=self.obj.id, action='train')
         # NOTE: Make sure that ds.gz file exist in test_data folder
@@ -413,6 +423,8 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         ds.save()
 
         data = {'aws_instance': self.instance.id,
+                'existing_instance_selected': True,
+                'new_dataset_selected': False,
                 'dataset': ds.id}
         resp, obj = self.check_edit(data, id=self.obj.id, action='train')
         # NOTE: Make sure that ds.gz file exist in test_data folder
@@ -435,6 +447,8 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
 
         data = {
             'aws_instance': self.instance.id,
+            'existing_instance_selected': True,
+            'new_dataset_selected': False,
             'dataset': ','.join([str(ds1.id), str(ds2.id)])
         }
         resp, obj = self.check_edit(data, id=self.obj.id, action='train')
@@ -454,11 +468,10 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
             mock_get_features_json.return_value = f.read()
 
         data = {'aws_instance': self.instance.id,
-                'start': '2012-12-03',
-                'end': '2012-12-04',
-                'category': '1',
-                'format': DataSet.FORMAT_JSON
-                }
+                'existing_instance_selected': True,
+                'new_dataset_selected': True,
+                'parameters': TRAIN_PARAMS,
+                'format': DataSet.FORMAT_JSON}
         resp, obj = self.check_edit(data, id=self.obj.id, action='train')
 
         self.assertEqual(obj.status, Model.STATUS_TRAINED, obj.error)
@@ -475,9 +488,9 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
             mock_get_features_json.return_value = f.read()
 
         data = {'aws_instance': self.instance.id,
-                'start': '2012-12-03',
-                'end': '2012-12-04',
-                'category': '1',
+                'existing_instance_selected': True,
+                'new_dataset_selected': True,
+                'parameters': TRAIN_PARAMS,
                 'format': DataSet.FORMAT_CSV
                 }
         resp, obj = self.check_edit(data, id=self.obj.id, action='train')
@@ -517,9 +530,9 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         example2_id = example2.id
 
         data = {'aws_instance': self.instance.id,
-                'start': '2012-12-03',
-                'end': '2012-12-04',
-                'category': '1',
+                'existing_instance_selected': True,
+                'new_dataset_selected': True,
+                'parameters': TRAIN_PARAMS,
                 'format': DataSet.FORMAT_CSV
                 }
         resp, obj = self.check_edit(data, id=self.obj.id, action='train')

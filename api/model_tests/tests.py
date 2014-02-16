@@ -20,6 +20,10 @@ from fixtures import TestResultData, TestExampleData
 from api.features.fixtures import FeatureSetData, FeatureData
 
 
+IMPORT_PARAMS = json.dumps({'start': '2012-12-03',
+                            'end': '2012-12-04',
+                            'category': 'smth'})
+
 class TestResourceTests(BaseDbTestCase, TestChecksMixin):
     """ Tests of the Test API. """
     BASE_URL = '/cloudml/models/{0!s}/tests/'
@@ -41,7 +45,11 @@ class TestResourceTests(BaseDbTestCase, TestChecksMixin):
                                'model_id': self.obj.model.id}
         self.instance = Instance.query.filter_by(
             name=InstanceData.instance_01.name).one()
-        self.POST_DATA = {'aws_instance': self.instance.id}
+        self.POST_DATA = {
+            'aws_instance': self.instance.id,
+            'existing_instance_selected': True,
+            'new_dataset_selected': True
+        }
 
     def test_list(self):
         self.check_list(show='', query_params=self.MODEL_PARAMS)
@@ -74,12 +82,8 @@ class TestResourceTests(BaseDbTestCase, TestChecksMixin):
         """
         Checks creating new Test with creating new dataset.
         """
-        data = {'format': DataSet.FORMAT_JSON}
-        import_params = {'start': '2012-12-03',
-                         'end': '2012-12-04',
-                         'category': 'smth'}
+        data = {'format': DataSet.FORMAT_JSON, 'parameters': IMPORT_PARAMS}
         data.update(self.POST_DATA)
-        data.update(import_params)
         data, test = self.check_edit(data, load_json=True)
 
         self.assertEquals(test.status, test.STATUS_IMPORTED)
@@ -91,7 +95,7 @@ class TestResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertFalse(test.error)
         self.assertTrue(test.created_on)
         self.assertEquals(test.created_by.name, 'User-2')
-        self.assertEquals(test.parameters, import_params)
+        self.assertEquals(test.parameters, json.loads(IMPORT_PARAMS))
 
         # This info should be filled after completing running
         # run_test celery task, which is mocked
@@ -117,12 +121,8 @@ class TestResourceTests(BaseDbTestCase, TestChecksMixin):
     @patch('api.model_tests.tasks.run_test')
     def test_post_csv(self, mock_run_test, mock_multipart_upload):
         """ Checks creating new Test with creating new dataset. """
-        data = {'format': DataSet.FORMAT_CSV}
-        import_params = {'start': '2012-12-03',
-                         'end': '2012-12-04',
-                         'category': 'smth'}
+        data = {'format': DataSet.FORMAT_CSV, 'parameters': IMPORT_PARAMS}
         data.update(self.POST_DATA)
-        data.update(import_params)
         resp, test = self.check_edit(data)
 
         self.assertEquals(test.status, test.STATUS_IMPORTED)
@@ -141,6 +141,7 @@ class TestResourceTests(BaseDbTestCase, TestChecksMixin):
             name=DataSetData.dataset_01.name).first()
         data = {'dataset': dataset.id}
         data.update(self.POST_DATA)
+        data['new_dataset_selected'] = False
         resp = self.client.post(self._get_url(), data=data,
                                 headers=HTTP_HEADERS)
         data = json.loads(resp.data)
@@ -157,33 +158,12 @@ class TestResourceTests(BaseDbTestCase, TestChecksMixin):
 
     def test_post_validation(self):
         """ Tests validation errors, when posting new Test. """
-        data = {}
-        errors = {
-            'fields': u'One of spot_instance_type, aws_instance is required. \
-One of parameters, dataset is required.'}
-        self.check_edit_error(data, errors)
-
-        data = {'aws_instance': self.instance.id}
-        errors = {
-            'fields': 'One of parameters, dataset is required.'}
-        self.check_edit_error(data, errors)
-
-        data = {'aws_instance': 582,
-                'dataset': 376}
-        errors = {
-            'aws_instance': u'Instance not found',
-            'dataset': 'DataSet not found'}
-        self.check_edit_error(data, errors)
-
         data = {'spot_instance_type': 'INVALID',
-                'start': '2013-01-01'}
+                'existing_instance_selected': False,
+                'new_dataset_selected': False}
         errors = {
-            'spot_instance_type': "Should be one of m3.xlarge, m3.2xlarge,"
-                                  " cc2.8xlarge, cr1.8xlarge,"
-                                  " hi1.4xlarge, hs1.8xlarge",
-            'parameters': 'Parameters category, end are required',
-            # TODO: Remove.
-            'fields': 'One of parameters, dataset is required.'
+            u'dataset': u'Please select Data Set',
+            u'spot_instance_type': u'Should be one of m3.xlarge, m3.2xlarge, cc2.8xlarge, cr1.8xlarge, hi1.4xlarge, hs1.8xlarge'
         }
         self.check_edit_error(data, errors)
 

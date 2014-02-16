@@ -88,6 +88,7 @@ angular.module('app.models.model', ['app.config'])
       $train: (opts={}) =>
         data = {}
         for key, val of opts
+          if key == 'parameters' then val = JSON.stringify(val)
           data[key] = val
         @$make_request("#{@BASE_API_URL}#{@id}/action/train/", {}, "PUT", data)
 

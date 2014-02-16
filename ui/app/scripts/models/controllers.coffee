@@ -204,6 +204,10 @@ updated_on,updated_by,comparable,test_handler_fields'
   '$rootScope'
 
   ($scope, $rootScope) ->
+    $scope.data.format = 'json'
+    $scope.data.new_dataset_selected = 0
+    $scope.data.existing_instance_selected = 1
+
     $scope.formats = [
       {name: 'JSON', value: 'json'}, {name: 'CSV', value: 'csv'}
     ]
@@ -211,26 +215,6 @@ updated_on,updated_by,comparable,test_handler_fields'
     $scope.initForm = () ->
       # Form elements initialization
       # dataset section
-      $scope.NEW_DATASET = 'New DataSet'
-      params = {}
-      $scope.formValid = false
-      for p in $scope.params
-        params[p] = false
-      $scope.formElements[$scope.NEW_DATASET] = params
-
-      $scope.formElements[$scope.NEW_DATASET].format = 'json'
-
-      $scope.EXISTED_DATASET = 'Existing DataSet'
-      $scope.formElements[$scope.EXISTED_DATASET] = {'dataset': false}
-
-      # instance section
-      $scope.REQUEST_SPOT_INSTANCE = 'Request Spot Instance'
-      $scope.formElements[$scope.REQUEST_SPOT_INSTANCE] = \
-      {'spot_instance_type': false}
-
-      $scope.EXISTED_INSTANCE = 'Existing Instance'
-      $scope.formElements[$scope.EXISTED_INSTANCE] = {'aws_instance': false}
-
       if $scope.multiple_dataset
         $scope.select2Options = {
           allowClear: true,
@@ -240,25 +224,14 @@ updated_on,updated_by,comparable,test_handler_fields'
       else
         $scope.select2Options = {allowClear: true}
 
-    if $scope.handler?
-      $scope.params = $scope.handler.import_params
-      $scope.initForm()
+      if $scope.handler?
+        $scope.params = $scope.handler.import_params
 
-    $scope.changeFormData = (column, param) ->
-      $scope.formValid = $scope.isDataSetDataValid()
-
-    $scope.activateSectionColumn = (section, name) ->
-      $scope.currentColumns[section] = name
-      $scope.formValid = $scope.isDataSetDataValid()
-
-    $scope.isDataSetDataValid = () ->
-      for section, tab of $scope.currentColumns
-        for key, val of $scope.formElements[tab]
-          if !val then return false
-      return true
+    $scope.initForm()
 
     $scope.close = ->
       $scope.dialog.close()
+      $scope.resetError()
 ])
 
 .controller('TrainModelCtrl', [
@@ -270,29 +243,17 @@ updated_on,updated_by,comparable,test_handler_fields'
     $scope.dialog = dialog
     $scope.resetError()
     $scope.model = dialog.model
+    $scope.data = {}
+
     $scope.handler = $scope.model.train_import_handler_obj
     $scope.multiple_dataset = true
 
-    # Form elements for each tab in the section with values
-    $scope.formElements = {}
-    # Columns by section
-    $scope.currentColumns = {'dataset': null, 'instance': null}
-
     $scope.start = (result) ->
-      data = $scope.getData()
-      dialog.model.$train(data).then (() ->
+      dialog.model.$train($scope.data).then (() ->
         dialog.close()
       ), ((opts) ->
         $scope.setError(opts, 'starting model training')
       )
-
-    # TODO: Remove code duplication
-    $scope.getData = () ->
-      data = {}
-      for section, tab of $scope.currentColumns
-        for key, val of $scope.formElements[tab]
-          if val then data[key] = val
-      return data
 ])
 
 .controller('ModelActionsCtrl', [
@@ -344,7 +305,7 @@ updated_on,updated_by,comparable,test_handler_fields'
           show: action + '_import_handler'
           ).then (->
             fn(model)
-          ), (->
+          ), ((opts) ->
             $scope.setError(opts, 'loading import handler details')
           )
 ])

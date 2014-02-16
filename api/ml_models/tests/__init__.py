@@ -1,3 +1,3 @@
-from model_tests import *
+from models import *
 from weights import *
 from tags import *

@@ -1,35 +1,35 @@
 <div ng-controller="DatasetSelectCtrl">
-  <ul class="nav nav-pills">
-    <li ng-repeat="column in activeColumns" ng-class="{active: currentColumn == column}"><a ng-click="activateColumn(column)">{{ column }}</a></li>
-    <li ng-show="activeColumns.indexOf(EXISTED_DATASET) == -1"class="disabled"><a title="There aren't successfully loaded datasets">Existing DataSet</a></li>
+  <ul class="nav nav-pills" ng-init="datasets.length == 0">
+    <li ng-class="{active: data.new_dataset_selected}"><a ng-click="data.new_dataset_selected=1">New Data Set</a></li>
+    <li ng-hide="datasets.length == 0" ng-class="{active: !data.new_dataset_selected}"><a ng-click="data.new_dataset_selected=0">Existing Data Set</a></li>
+    <li ng-show="datasets.length == 0" class="disabled"><a title="There aren't successfully loaded datasets">Existing Data Set</a></li>
   </ul>
 
   <!-- Existing dataset  -->
-  <div ng-hide="activeColumns.indexOf(EXISTED_DATASET) == -1">
-    <div ng-show="currentColumn == 'Existing DataSet'">
-      <div class="control-group" ng-class="{error: !formElements[EXISTED_DATASET]['dataset']}">
-        <select class="input-xlarge" ui-select2="select2Options" ng-multiple="multiple_dataset" name="dataset" ng-model="formElements[EXISTED_DATASET]['dataset']" ng-change="changeFormData(currentColumn, 'dataset')" required>
-          <option ng-repeat="ds in datasets" value="{{ ds.id }}">{{ ds.name }}</option>
-        </select>&nbsp;<i class="icon-question-sign" title="Choose successfull loaded dataset" />
-        <span ng-show="!formElements[EXISTED_DATASET]['dataset']" class="help-inline error">required</span>
-      </div>
+  <div ng-hide="data.new_dataset_selected">
+    <div class="control-group" ng-class="{error: Form.dataset.$invalid || errorList.dataset}">
+      <select class="input-xlarge" ui-select2="select2Options" ng-multiple="multiple_dataset" name="dataset" ng-model="data.dataset" ng-required="!data.new_dataset_selected">
+        <option ng-repeat="ds in datasets" value="{{ ds.id }}">{{ ds.name }}</option>
+      </select>
+      <span ng-show="Form.dataset.$error.required" class="help-block">Choose successfull loaded dataset</span>
+      <span ng-show="errorList.dataset" class="help-block" ng-bind="errorList.dataset" />
     </div>
   </div>
 
   <!-- New Dataset -->
-  <div ng-hide="activeColumns.indexOf(NEW_DATASET) == -1">
-    <div ng-show="currentColumn == NEW_DATASET">
-      <div ng-repeat="param in params" ng-class="{error: !formElements[NEW_DATASET][param]}" class="control-group">
-        <input class="input-xlarge" title="Load dataset using import handler" ng-change="changeFormData(currentColumn, param)" ng-model="formElements[NEW_DATASET][param]" title="Select {{ param }}" name="{{ param }}" placeholder='{{ param }}' type='text' required /> <i class="icon-question-sign" title="Fill {{ param }} parameter" />
-        <span ng-show="!formElements[NEW_DATASET][param]" class="help-inline">required</span>
-      </div>
-      <div class="control-group">
-        <label class="control-label" style="text-align: left">Data Format</label>
-        <div class="controls">
-          <select ng-model="formElements[NEW_DATASET].format" required ng-options="v.value as v.name for v in formats" ng-selected='formats[0]'>
-          </select>
-          <span ng-show="Form.format.$error.required" class="help-inline">Required</span>
-        </div>
+  <div ng-show="data.new_dataset_selected" ng-init="data.parameters = {}">
+    <span ng-show="errorList.parameters" class="error_message" class="help-block" ng-bind="errorList.parameters" />
+    <div ng-repeat="param in params" class="control-group">
+      <input class="input-xlarge" title="Load dataset using import handler" ng-model="data.parameters[param]" title="Select {{ param }}" name="{{ param }}" placeholder='{{ param }}' type='text' ng-required="data.new_dataset_selected" /> <i class="icon-question-sign" title="Fill {{ param }} parameter" />
+      <span ng-show="!data.parameters[param]" class="help-inline">*</span>
+    </div>
+    <hr ng-show="params.length" />
+    <div class="control-group" ng-class="{error: errorList.format}">
+      <label class="control-label" style="text-align: left">Data Format</label>
+      <div class="controls">
+        <select ng-model="data.format" name="format" ng-options="v.value as v.name for v in formats" ng-selected="data.format" ng-required="data.new_dataset_selected"></select>
+        <span ng-show="Form.format.$error.required" class="help-inline">*</span>
+        <span ng-show="errorList.format" class="help-block" ng-bind="errorList.format" />
       </div>
     </div>
   </div>

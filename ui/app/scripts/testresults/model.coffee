@@ -65,9 +65,14 @@ angular.module('app.testresults.model', ['app.config'])
             @dataset_obj = new DataSet(origData['dataset'])
             @dataset = @dataset.id
 
-      $run: (data) =>
+      $run: (opts) =>
         if @id?
           throw new Error "You can run only new test"
+
+        data = {}
+        for key, val of opts
+          if key == 'parameters' then val = JSON.stringify(val)
+          data[key] = val
 
         @$make_request(@BASE_API_URL, {}, 'POST', data)
 

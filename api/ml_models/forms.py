@@ -177,13 +177,6 @@ class ModelAddForm(BaseForm):
 
 
 class ModelTrainForm(BaseChooseInstanceAndDatasetMultiple):
-    aws_instance = ModelField(model=Instance, return_model=True)
-    dataset = MultipleModelField(model=DataSet, return_model=True)
-    parameters = CharField()
-    spot_instance_type = ChoiceField(
-        choices=BaseChooseInstanceAndDatasetMultiple.TYPE_CHOICES)
-    format = ChoiceField(choices=DataSet.FORMATS)
-
     def __init__(self, *args, **kwargs):
         self.model = kwargs.get('obj', None)
         super(ModelTrainForm, self).__init__(*args, **kwargs)

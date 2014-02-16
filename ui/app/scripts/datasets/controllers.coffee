@@ -103,10 +103,6 @@ filesize,records_count,time,created_by,import_handler_id,format'
   'DataSet'
 
   ($scope, DataSet) ->
-    $scope.SECTION_NAME = 'dataset'
-    $scope.dataset_options = []
-    $scope.activeColumns = [$scope.NEW_DATASET]
-
     if $scope.handler?
       DataSet.$loadAll(
         handler_id: $scope.handler.id,
@@ -114,10 +110,8 @@ filesize,records_count,time,created_by,import_handler_id,format'
         show: 'name'
       ).then ((opts) ->
         $scope.datasets = opts.objects
-        if $scope.datasets.length != 0
-          $scope.activeColumns.push $scope.EXISTED_DATASET
-        else
-          $scope.activateColumn($scope.NEW_DATASET)
+        if $scope.data? && $scope.datasets? && $scope.datasets.length == 0
+          $scope.data.new_dataset_selected = 1
 
         if $scope.datasets? and not $scope.multiple_dataset
           $scope.datasets.unshift({
@@ -128,12 +122,6 @@ filesize,records_count,time,created_by,import_handler_id,format'
       ), ((opts) ->
         $scope.setError(opts, 'loading datasets')
       )
-
-    $scope.activateColumn = (name) ->
-      $scope.activateSectionColumn($scope.SECTION_NAME, name)
-      $scope.currentColumn = name
-
-    $scope.activateColumn($scope.EXISTED_DATASET)
 ])
 
 .controller('LoadDataDialogCtrl', [

@@ -136,14 +136,16 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
         obj = self._get_details_query(None, **kwargs)
         form = ModelTrainForm(obj=obj, **kwargs)
         if form.is_valid():
-            model = form.save()
+            model = form.save()  # set status to queued
+            new_dataset_selected = form.cleaned_data.get('new_dataset_selected')
+            existing_instance_selected = form.cleaned_data.get('existing_instance_selected')
             instance = form.cleaned_data.get('aws_instance', None)
             spot_instance_type = form.cleaned_data.get(
                 'spot_instance_type', None)
 
             tasks_list = []
             LogMessage.delete_related_logs(model)
-            if form.params_filled:
+            if new_dataset_selected:
                 import_handler = model.train_import_handler
                 params = form.cleaned_data.get('parameters', None)
                 dataset = import_handler.create_dataset(
@@ -158,7 +160,7 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
 
             dataset_ids = [ds.id for ds in dataset]
 
-            if not spot_instance_type is None:
+            if not existing_instance_selected:  # request spot instance
                 tasks_list.append(request_spot_instance.s(
                     instance_type=spot_instance_type,
                     model_id=model.id
@@ -178,8 +180,8 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
                         'interval_start': 5,
                         'interval_step': 5,
                         'interval_max': 10}))
-            elif not instance is None:
-                if form.params_filled:
+            else:
+                if new_dataset_selected:
                     train_model_args = (model.id, request.user.id)
                 else:
                     train_model_args = (dataset_ids, model.id, request.user.id)

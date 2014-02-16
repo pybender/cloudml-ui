@@ -39,15 +39,7 @@ created_by'
     $scope.model = dialog.model
     $scope.handler = $scope.model.test_import_handler_obj
 
-    # Form elements for each tab in the section with values
-    $scope.formElements = {}
-    $scope.SETTINGS = 'Settings'
-    # Columns by section
-    $scope.currentColumns = {
-      dataset: null
-      instance: null
-      settings: $scope.SETTINGS
-    }
+    $scope.data = {}
 
     # Choose examples fields select options
     $scope.test_handler_fields = []
@@ -59,34 +51,15 @@ created_by'
       simple_tags: true,
       tags: $scope.model.test_handler_fields
     }
-    $scope.formElements[$scope.SETTINGS] = {
-      'examples_fields': [],
-      'examples_placement': 'Amazon S3'}
 
     $scope.start = (result) ->
-      data = $scope.getData()
       $scope.test = new Test({model_id: $scope.model.id})
-      $scope.test.$run(data).then (->
+      $scope.test.$run($scope.data).then (->
         dialog.close()
         $location.path $scope.test.objectUrl()
       ), ((opts) ->
         $scope.setError(opts, 'running test')
       )
-
-    $scope.getData = () ->
-      data = {}
-      for section, tab of $scope.currentColumns
-        for key, val of $scope.formElements[tab]
-          if val
-            if key == 'examples_fields'
-              val = (field['text'] for field in val)
-            data[key] = val
-      return data
-
-    $scope.renderExampleFields = () ->
-      dict = $scope.formElements[$scope.SETTINGS]
-      if dict['examples_placement'] == 'Mongo DB'
-        dict['examples_fields'] = $scope.test_handler_fields
 ])
 
 .controller('DeleteTestCtrl', [

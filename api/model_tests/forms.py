@@ -7,12 +7,6 @@ from api.models import DataSet, TestResult, Instance, Model
 class AddTestForm(BaseChooseInstanceAndDataset):
     HANDLER_TYPE = 'test'
 
-    aws_instance = ModelField(model=Instance, return_model=True)
-    dataset = ModelField(model=DataSet, return_model=True)
-    parameters = CharField()
-    spot_instance_type = ChoiceField(choices=BaseChooseInstanceAndDataset.TYPE_CHOICES)
-    format = ChoiceField(choices=DataSet.FORMATS)
-
     name = CharField()
     model_id = CharField()
 
@@ -28,7 +22,7 @@ class AddTestForm(BaseChooseInstanceAndDataset):
             raise ValidationError('Model not found')
 
         if not self.model.example_id:
-            raise ValidationError('Please fill in "Examples id field name"')
+            self.add_error("fields", "Field name of test examples did not filled in the model")
 
         self.cleaned_data['model_name'] = self.model.name
         self.cleaned_data['model_id'] = self.model_id
@@ -43,11 +37,9 @@ class AddTestForm(BaseChooseInstanceAndDataset):
 
         from tasks import run_test
         from api.import_handlers.tasks import import_data
+        new_dataset_selected = self.cleaned_data.get('new_dataset_selected')
         instance = self.cleaned_data.get('aws_instance', None)
-        spot_instance_type = self.cleaned_data.get('spot_instance_type', None)
-
-        if self.params_filled:
-            # load and train
+        if new_dataset_selected:  # load and test
             import_handler = test.model.test_import_handler
             params = self.cleaned_data.get('parameters', None)
             dataset = import_handler.create_dataset(
@@ -59,11 +51,9 @@ class AddTestForm(BaseChooseInstanceAndDataset):
                                             'test_id': test.id},
                                     link=run_test.subtask(args=(test.id, ),
                                     options={'queue': instance.name}))
-        else:
-            # test using dataset
-            dataset = self.cleaned_data.get('dataset', None)
+        else:  # run test with existing dataset
+            dataset = self.cleaned_data.get('dataset')
             run_test.apply_async(([dataset.id],
                                   test.id,),
                                   queue=instance.name)
-
         return test

@@ -5,9 +5,9 @@
   </div>
 
   <div class="modal-body">
-    <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+    <ng-include src="'/partials/parts/save_form_messages.html'"></ng-include>
     <alert-message ng-hide="handler" class="alert-error" msg="Please define Test Import Handler in model details before!" unsafe></alert-message>
-    <alert-message ng-hide="formValid" class="alert-error" msg="Not all required fields are filled" unsafe></alert-message>
+    <alert-message ng-show="Form.$invalid" class="alert-error" msg="Not all required fields are filled" unsafe></alert-message>
 
     <form name="Form" class="form-horizontal" ng-show="handler">
       <h4 class="text-center">Choose way of getting testing data</h4>
@@ -19,39 +19,10 @@
       <div class="well">
         <ng-include src="'/partials/aws_instances/instance_fields.html'"></ng-include>
       </div>
-
-      <!--
-      <h4 class="text-center">Settings</h4>
-      <div class="well">
-        <div ng-class="{error: !formElements[SETTINGS]['examples_placement']}" class="control-group">
-          <label class="control-label" style="text-align: left;">Examples Placement: </label>
-          <div class="controls">
-            <select class="input-xlarge" name="examples_placement" ng-change="changeFormData(SETTINGS, 'examples_placement'); renderExampleFields()" ng-model="formElements[SETTINGS]['examples_placement']">
-              <option value="">--- select examples storage ---</option>
-              <option value="Amazon S3">Amazon S3</option>
-              <option value="Mongo DB">Mongo DB</option>
-              <option value="Do not save">Don't save</option>
-            </select>&nbsp;<i class="icon-question-sign" title="Choose test examples placement" />
-            <span ng-show="!formElements[SETTINGS]['examples_placement']" class="help-inline">required</span>
-          </div>
-        </div>
-        <div ng-show="['Amazon S3', 'Mongo DB'].indexOf(formElements[SETTINGS]['examples_placement']) > -1" ng-class="{error: !formElements[SETTINGS]['examples_fields']}" class="control-group">
-          <label>
-            Please select fields which you plan to use for calculate MAP <a ng-hide="formElements[SETTINGS]['examples_fields'].length == test_handler_fields.length" ng-click="formElements[SETTINGS]['examples_fields']=test_handler_fields">select all</a> <a ng-show="formElements[SETTINGS]['examples_fields']" ng-click="formElements[SETTINGS]['examples_fields']=[]">deselect all</a> :
-          </label>
-          <alert-message ng-show="formElements[SETTINGS]['examples_fields'].length == test_handler_fields.length" class="alert-warning" msg="Be careful when selecting 'Mongo DB': all data fields would be stored to MongoDB. Check that examples aren't very large." unsafe></alert-message>
-          <div>
-            <input class="input-xxlarge" type="text" ui-select2="select2params" ng-model="formElements[SETTINGS]['examples_fields']" data-placeholder="Select fields" />
-            &nbsp;<i class="icon-question-sign" title="Choose test examples fields list" />
-            <span ng-show="!formElements[SETTINGS]['examples_fields']" class="help-inline">required</span>
-          </div>
-        </div>
-      </div>
-      -->
     </form>
   </div>
 
   <div class="modal-footer">
-    <button ng-click="start(result)" ng-disabled="!formValid" class="btn btn-primary" >Start test</button>
+    <button ng-click="start(result)" ng-disabled="Form.$invalid" class="btn btn-primary" >Start test</button>
   </div>
 </div>

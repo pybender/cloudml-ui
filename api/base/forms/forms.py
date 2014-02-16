@@ -34,6 +34,15 @@ class DeclarativeFieldsMetaclass(type):
     """
     def __new__(cls, name, bases, attrs):
         attrs['base_fields'] = get_declared_items(bases, attrs)
+        field_list = dict(attrs['base_fields']).keys()
+        for base in bases:
+            if hasattr(base, 'base_fields'):
+                for f in base.base_fields:
+                    field_name = f[0]
+                    if not field_name in field_list:
+                        field_list.append(field_name)
+                        attrs['base_fields'].append(f)
+
         attrs['base_forms'] = get_declared_items(
             bases, attrs, cls=InternalForm)
         return super(DeclarativeFieldsMetaclass,
@@ -134,7 +143,6 @@ class BaseForm(InternalForm):
 
         self.cleaned_data = {}
         self.before_clean()
-
         for name, field in self.fields.iteritems():
             value = self.data.get(self.prefix + name, None)
             try:
