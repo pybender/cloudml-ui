@@ -45,6 +45,10 @@ REQUESTING_INSTANCE_MAX_RETRIES = 30
 
 EXAMPLES_CHUNK_SIZE = 10
 
+# Enables error emails.
+CELERY_SEND_TASK_ERROR_EMAILS = True
+SEND_ERROR_EMAILS = True
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': True,

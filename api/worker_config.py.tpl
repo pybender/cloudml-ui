@@ -43,6 +43,10 @@ ODESK_OAUTH_SECRET = '{{ odesk_secret_key }}'
 REQUESTING_INSTANCE_COUNTDOWN = 20
 REQUESTING_INSTANCE_MAX_RETRIES = 30
 
+# Enables error emails.
+CELERY_SEND_TASK_ERROR_EMAILS = True
+SEND_ERROR_EMAILS = True
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': True,

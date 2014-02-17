@@ -145,6 +145,19 @@ admin = Admin(app, 'CloudML Admin Interface')
 
 logging_config.dictConfig(app.config['LOGGING'])
 
+if app.config.get('SEND_ERROR_EMAILS'):
+    from logging.handlers import SMTPHandler
+    mail_handler = SMTPHandler(
+        mailhost=(app.config['EMAIL_HOST'], app.config['EMAIL_PORT']),
+        fromaddr=app.config['SERVER_EMAIL'],
+        toaddrs=[email for name, email in app.config['ADMINS']],
+        subject='Cloud ML Error',
+        credentials=(
+            app.config['EMAIL_HOST_USER'], app.config['EMAIL_HOST_PASSWORD'])
+    )
+    mail_handler.setLevel(logging.ERROR)
+    app.logger.addHandler(mail_handler)
+
 APPS = ('accounts', 'features', 'import_handlers', 'instances',
         'logs', 'ml_models', 'model_tests', 'statistics', 'reports',
         'async_tasks')
