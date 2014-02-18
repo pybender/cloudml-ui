@@ -320,7 +320,30 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
         {handler: $scope.handler}
       )
 
+  $scope.uploadHandlerToPredict = (model) ->
+      $scope.openDialog($dialog, model, 'partials/servers/choose.html',
+        'ImportHandlerUploadToServerCtrl', 'modal')
+
 ])
+
+.controller('ImportHandlerUploadToServerCtrl', [
+  '$scope'
+  '$rootScope'
+  'dialog'
+
+  ($scope, $rootScope, dialog) ->
+    $scope.dialog = dialog
+    $scope.resetError()
+    $scope.model = dialog.model
+    $scope.model.server = null
+
+    $scope.upload = () ->
+      $scope.model.$uploadPredict($scope.model.server).then((resp) ->
+        $rootScope.msg = resp.data.status
+      )
+      dialog.close()
+])
+
 
 .controller('ImportHandlerSelectCtrl', [
   '$scope'

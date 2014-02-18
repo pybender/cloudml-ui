@@ -45,6 +45,8 @@ App = angular.module('app', [
   'app.features.controllers.base'
   'app.features.controllers.scalers'
   'app.features.controllers.features'
+  'app.servers.model'
+  'app.servers.controllers'
 ])
 
 App.config([

@@ -8,7 +8,7 @@
 </h2>
 
 <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
-
+<alert-message ng-show="msg" class="alert-info" msg='{{ msg }}' unsafe></alert-message>
 <alert-message ng-show="objects.length == 0" class="alert-info" msg="No import handlers found"></alert-message>
 
 <table ng-controller="BaseListCtrl" ng-init="init(true, 'importhandler')" ng-hide="objects.length == 0" class="table table-hover">
@@ -33,6 +33,9 @@
     <td ng-controller="ImportHandlerActionsCtrl">
       <button ng-show="handler.type == 'Db'" ng-click="importData(handler)" class="btn btn-info">
         <i title="Import Data" class="icon-tasks"></i>
+      </button>
+      <button ng-click="uploadHandlerToPredict(handler)" class="btn btn-info">
+        <i title="Upload for Predict" class="icon-upload"></i>
       </button>
       <button ng-click="delete(handler)" class="btn btn-danger">
         <i title="Delete your handler. Be careful - you could not recover it!" class="icon-remove"></i>

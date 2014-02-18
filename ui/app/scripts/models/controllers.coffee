@@ -299,9 +299,8 @@ updated_on,updated_by,comparable,test_handler_fields'
       )
 
     $scope.uploadModelToPredict = (model) ->
-      model.$uploadPredict().then((resp) ->
-        $rootScope.msg = resp.data.status
-      )
+      $scope.openDialog($dialog, model, 'partials/servers/choose.html',
+        'ModelUploadToServerCtrl', 'modal')
 
     $scope._showModelActionDialog = (model, action, fn)->
       if eval('model.' + action + '_import_handler_obj')?
@@ -314,4 +313,22 @@ updated_on,updated_by,comparable,test_handler_fields'
           ), ((opts) ->
             $scope.setError(opts, 'loading import handler details')
           )
+])
+
+.controller('ModelUploadToServerCtrl', [
+  '$scope'
+  '$rootScope'
+  'dialog'
+
+  ($scope, $rootScope, dialog) ->
+    $scope.dialog = dialog
+    $scope.resetError()
+    $scope.model = dialog.model
+    $scope.model.server = null
+
+    $scope.upload = () ->
+      $scope.model.$uploadPredict($scope.model.server).then((resp) ->
+        $rootScope.msg = resp.data.status
+      )
+      dialog.close()
 ])

@@ -98,9 +98,9 @@ angular.module('app.models.model', ['app.config'])
           (resp) =>
             @status = resp.data.model.status)
 
-      $uploadPredict: =>
-        url = "#{@BASE_API_URL}#{@id}/action/upload_predict/"
-        @$make_request(url, {}, "PUT", {})
+      $uploadPredict: (server) =>
+        url = "#{@BASE_API_URL}#{@id}/action/upload_to_server/"
+        @$make_request(url, {}, "PUT", {'server': server})
 
     return Model
 ])

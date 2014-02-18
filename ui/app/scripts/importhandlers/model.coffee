@@ -257,6 +257,10 @@ created_on,created_by,error'
         @$make_request("#{@BASE_API_URL}#{@id}/action/test_handler/", {},
           "PUT", data)
 
+      $uploadPredict: (server) =>
+        url = "#{@BASE_API_URL}#{@id}/action/upload_to_server/"
+        @$make_request(url, {}, "PUT", {'server': server})
+
     return ImportHandler
 ])
 
