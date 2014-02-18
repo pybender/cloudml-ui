@@ -58,7 +58,7 @@ def upload_import_handler_to_server(server_id, handler_id, user_id):
 
     # TODO: Shall we use another account?
     s3 = AmazonS3Helper(bucket_name=app.config['CLOUDML_PREDICT_BUCKET_NAME'])
-    path = '{0}/models/{1}.json'.format(
+    path = '{0}/importhandlers/{1}.json'.format(
         server.folder.strip('/'),
         str(handler.name)
     )

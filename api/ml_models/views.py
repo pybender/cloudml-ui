@@ -218,7 +218,7 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
             return odesk_error_response(400, ERR_INVALID_DATA,
                                         'Model is not yet trained')
 
-        form = ChooseServerForm()
+        form = ChooseServerForm(obj=model)
         if form.is_valid():
             server = form.cleaned_data['server']
             upload_model_to_server.delay(server.id, model.id,

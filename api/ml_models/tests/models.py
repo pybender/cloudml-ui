@@ -14,6 +14,8 @@ from api.instances.fixtures import InstanceData
 from api.model_tests.models import TestResult, TestExample
 from api.model_tests.fixtures import TestResultData, TestExampleData
 from api.features.fixtures import FeatureSetData, FeatureData
+from api.servers.models import Server
+from api.servers.fixtures import ServerData
 
 
 TRAIN_PARAMS = json.dumps(
@@ -30,7 +32,8 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
     RESOURCE = ModelResource
     Model = Model
     datasets = [FeatureData, FeatureSetData, ImportHandlerData, DataSetData,
-                ModelData, InstanceData, TestResultData, TestExampleData]
+                ModelData, InstanceData, TestResultData, TestExampleData,
+                ServerData]
 
     def setUp(self):
         super(ModelsTests, self).setUp()
@@ -572,11 +575,13 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue(mock_task.delay.called)
 
     @mock_s3
-    @patch('api.ml_models.tasks.upload_model_for_predict')
-    def test_upload_predict(self, mock_task, *mocks):
-        url = self._get_url(id=self.obj.id, action='upload_predict')
+    @patch('api.servers.tasks.upload_model_to_server')
+    def test_upload_to_server(self, mock_task):
+        url = self._get_url(id=self.obj.id, action='upload_to_server')
+        server = Server.query.filter_by(name=ServerData.server_01.name).one()
 
-        resp = self.client.put(url, headers=HTTP_HEADERS)
+        resp = self.client.put(url, data={'server': server.id},
+                               headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.OK)
         self.assertTrue(mock_task.delay.called)
         self.assertTrue('status' in json.loads(resp.data))

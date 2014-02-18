@@ -13,6 +13,8 @@ from api.ml_models.models import Model
 from api.model_tests.fixtures import TestResultData
 from api.model_tests.models import TestResult
 from api.features.fixtures import FeatureSetData, FeatureData
+from api.servers.models import Server
+from api.servers.fixtures import ServerData
 
 
 class ImportHandlerTests(BaseDbTestCase, TestChecksMixin):
@@ -23,7 +25,7 @@ class ImportHandlerTests(BaseDbTestCase, TestChecksMixin):
     RESOURCE = ImportHandlerResource
     MODEL_NAME = ModelData.model_01.name
     Model = ImportHandler
-    datasets = [ImportHandlerData, DataSetData, ModelData]
+    datasets = [ImportHandlerData, DataSetData, ModelData, ServerData]
 
     def setUp(self):
         super(ImportHandlerTests, self).setUp()
@@ -150,6 +152,18 @@ class ImportHandlerTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(resp.headers['Content-Disposition'],
                           'attachment; filename=importhandler-%s.json' %
                           self.obj.name)
+
+    @mock_s3
+    @patch('api.servers.tasks.upload_import_handler_to_server')
+    def test_upload_to_server(self, mock_task):
+        url = self._get_url(id=self.obj.id, action='upload_to_server')
+        server = Server.query.filter_by(name=ServerData.server_01.name).one()
+
+        resp = self.client.put(url, data={'server': server.id},
+                               headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.OK)
+        self.assertTrue(mock_task.delay.called)
+        self.assertTrue('status' in json.loads(resp.data))
 
 
 class DataSetsTests(BaseDbTestCase, TestChecksMixin):
