@@ -149,6 +149,14 @@ App.config([
       controller: 'AwsInstanceDetailsCtrl'
       templateUrl: '/partials/aws_instances/details.html'
     })
+    .when('/servers', {
+      controller: "ServerListCtrl"
+      templateUrl: '/partials/servers/list.html'
+    })
+    .when('/servers/:id', {
+      controller: 'ServerDetailsCtrl'
+      templateUrl: '/partials/servers/details.html'
+    })
 
     # auth
     .when('/auth/login', {

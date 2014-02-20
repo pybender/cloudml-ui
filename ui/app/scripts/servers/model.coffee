@@ -22,5 +22,14 @@ angular.module('app.servers.model', ['app.config'])
       getUrl: =>
         return "#{@BASE_API_URL}#{@id || ''}/"
 
+      $getFiles: (folder) ->
+        url = "#{@BASE_API_URL}#{@id}/action/list/?folder=#{folder}"
+        return @$make_request(url, {}, 'GET', data={}, load=false)
+
+      $removeFile: (fileName) ->
+        url = "#{@BASE_API_URL}#{@id}/action/remove/"
+        return @$make_request(url, {}, 'PUT',
+          data={filename: fileName}, load=false)
+
     return Server
 ])

@@ -1,0 +1,26 @@
+<h2>
+  Servers List
+</h2>
+
+<alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+
+<alert-message ng-show="objects.length == 0" class="alert-info" msg="No AWS instances found"></alert-message>
+
+<table ng-controller="BaseListCtrl" ng-init="init(true, 'server')" class="table table-hover">
+<thead>
+  <tr>
+    <th>Name</th>
+    <th>IP</th>
+    <th>Folder</th>
+  </tr>
+</thead>
+<tbody>
+  <tr ng-repeat="server in objects">
+    <td>
+      <a href="#{{ server.objectUrl() }}">{{ server.name }}</a>
+    </td>
+    <td>{{ server.ip }}</td>
+    <td>{{ server.folder }}</td>
+  </tr>
+</tbody>
+</table>

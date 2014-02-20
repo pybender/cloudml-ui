@@ -134,6 +134,7 @@ angular.module('app.base', ['app.config', 'app.services'])
             @loadFromJSON(eval("resp.data.#{@API_FIELDNAME}"))
             return resp
           )
+        return res
 
       @$make_all_request: (url, resolver, opts={}) ->
         dfd = $q.defer()

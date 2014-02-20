@@ -63,6 +63,9 @@ class AmazonS3Helper(object):
         key.key = name
         return key.generate_url(expires_in)
 
+    def list_keys(self, prefix):
+        return self.bucket.list(prefix)
+
     def load_key(self, name):
         # for i in self.bucket.list():
         #     logging.info(i)
