@@ -1,6 +1,6 @@
 from sqlalchemy.orm import deferred
 
-from api.base.models import BaseModel, db, JSONType
+from api.base.models import BaseModel, db
 
 
 class Server(BaseModel, db.Model):
@@ -10,7 +10,6 @@ class Server(BaseModel, db.Model):
     ip = db.Column(db.String(200), nullable=False)
     folder = db.Column(db.String(600), nullable=False)
     is_default = db.Column(db.Boolean, default=False)
-    data = db.Column(JSONType)
 
     def save(self, commit=True):
         BaseModel.save(self, commit=False)

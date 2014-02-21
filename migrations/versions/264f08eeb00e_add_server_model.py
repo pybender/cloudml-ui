@@ -14,8 +14,6 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.sql import table, column
 
-from api.base.models import JSONType
-
 
 def upgrade():
     op.create_table('server',
@@ -27,7 +25,6 @@ def upgrade():
         sa.Column('ip', sa.String(length=200), nullable=False),
         sa.Column('folder', sa.String(length=600), nullable=False),
         sa.Column('is_default', sa.Boolean(), nullable=True),
-        sa.Column('data', JSONType, nullable=True),
         sa.Column('updated_by_id', sa.Integer(), nullable=True),
         sa.Column('created_by_id', sa.Integer(), nullable=True),
         sa.ForeignKeyConstraint(['created_by_id'], ['user.id'], ondelete='SET NULL'),
