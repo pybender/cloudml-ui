@@ -1,6 +1,5 @@
 import logging
 import json
-from api.amazon_utils import AmazonS3Helper
 from datetime import datetime
 
 from api import celery, app
@@ -9,6 +8,8 @@ from api.logs.logger import init_logger
 from api.accounts.models import User
 from api.ml_models.models import Model
 from api.servers.models import Server
+from api.amazon_utils import AmazonS3Helper
+from .config import FOLDER_MODELS, FOLDER_IMPORT_HANDLERS
 
 
 @celery.task
@@ -25,8 +26,9 @@ def upload_model_to_server(server_id, model_id, user_id):
 
     # TODO: Shall we use another account?
     s3 = AmazonS3Helper(bucket_name=app.config['CLOUDML_PREDICT_BUCKET_NAME'])
-    path = '{0}/models/{1}.model'.format(
+    path = '{0}/{1}/{2}.model'.format(
         server.folder.strip('/'),
+        FOLDER_MODELS,
         str(model.name)
     )
     meta = {
@@ -58,8 +60,9 @@ def upload_import_handler_to_server(server_id, handler_id, user_id):
 
     # TODO: Shall we use another account?
     s3 = AmazonS3Helper(bucket_name=app.config['CLOUDML_PREDICT_BUCKET_NAME'])
-    path = '{0}/importhandlers/{1}.json'.format(
+    path = '{0}/{1}/{2}.json'.format(
         server.folder.strip('/'),
+        FOLDER_IMPORT_HANDLERS,
         str(handler.name)
     )
     meta = {
@@ -75,3 +78,34 @@ def upload_import_handler_to_server(server_id, handler_id, user_id):
     s3.close()
 
     logging.info('Import Handler has been uploaded: %s' % handler.name)
+
+
+@celery.task
+def update_at_server(server_id, file_name):
+    """
+    Update given file at cloudml-predict.
+    """
+    import requests
+    logging.info('Starting requesting cloudml_predict')
+
+    server = Server.query.get(server_id)
+    pieces = file_name.split('/')
+    name = pieces[-1]
+    folder = pieces[-2]
+
+    parts = {
+        FOLDER_MODELS: 'model',
+        FOLDER_IMPORT_HANDLERS: 'import/handler'
+    }
+    part = parts.get(folder)
+    if not part:
+        raise Exception('Wrong folder')
+
+    url = 'http://{0}/cloudml/{1}/{2}/reload'.format(server.ip, part, name)
+
+    logging.info(url)
+
+    # TODO: handle response
+    requests.post(url, {})
+
+    logging.info('File has been updated: %s' % file_name)

@@ -43,3 +43,4 @@ sqlparse==0.1.10
 blinker
 flask-admin
 nltk
+requests

@@ -4,7 +4,8 @@ from flask import request
 from api import api, app
 from api.amazon_utils import AmazonS3Helper
 from api.base.resources import BaseResourceSQL, NotFound, odesk_error_response
-from models import Server
+from .models import Server
+from .config import FOLDER_MODELS, FOLDER_IMPORT_HANDLERS
 
 
 class ServerResource(BaseResourceSQL):
@@ -12,9 +13,9 @@ class ServerResource(BaseResourceSQL):
     Model = Server
     ALLOWED_METHODS = ('get', 'options', 'put')
     GET_ACTIONS = ('list',)
-    PUT_ACTIONS = ('remove',)
+    PUT_ACTIONS = ('remove', 'update_at_server')
 
-    ALLOWED_FOLDERS = ['models', 'importhandlers']
+    ALLOWED_FOLDERS = [FOLDER_MODELS, FOLDER_IMPORT_HANDLERS]
 
     def _get_list_action(self, **kwargs):
         server = self._get_details_query(None, **kwargs)
@@ -58,6 +59,23 @@ class ServerResource(BaseResourceSQL):
             s3.delete_key('{0}/{1}'.format(server.folder, file_name))
         except S3ResponseError as err:
             return odesk_error_response(500, 1006, str(err))
+
+        return self._render({
+            'status': 'ok'
+        })
+
+    def _put_update_at_server_action(self, **kwargs):
+        server = self._get_details_query(None, **kwargs)
+        if server is None:
+            raise NotFound(self.MESSAGE404 % kwargs)
+
+        file_name = request.form.get('filename')
+        if not file_name:
+            raise NotFound(self.MESSAGE404 % kwargs)
+
+        from .tasks import update_at_server
+
+        update_at_server.delay(server.id, file_name)
 
         return self._render({
             'status': 'ok'

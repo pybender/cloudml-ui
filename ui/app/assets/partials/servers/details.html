@@ -9,6 +9,8 @@
 
 <alert-message ng-show="err" class="alert-error" msg='{{ err }}' unsafe>
 </alert-message>
+<alert-message ng-show="msg" class="alert-info" msg='{{ msg }}' unsafe>
+</alert-message>
 
 <p>{{ server.description }}</p>
 <div>IP: <span class="value">{{ server.ip }}</span></div>
@@ -32,7 +34,10 @@
     <td>{{ file.last_modified|format_date }}</td>
     <td>
       <button ng-click="removeFile(file.name)" class="btn btn-danger">
-        <i title="Upload for Predict" class="icon-remove"></i>
+        <i title="Remove file" class="icon-remove"></i>
+      </button>
+      <button ng-click="updateFileAtServer(file.name)" class="btn btn-info">
+        <i title="Update at Predict" class="icon-upload"></i>
       </button>
     </td>
   </tr>
@@ -57,7 +62,10 @@
     <td>{{ file.last_modified|format_date }}</td>
     <td>
       <button ng-click="removeFile(file.name)" class="btn btn-danger">
-        <i title="Upload for Predict" class="icon-remove"></i>
+        <i title="Remove file" class="icon-remove"></i>
+      </button>
+      <button ng-click="updateFileAtServer(file.name)" class="btn btn-info">
+        <i title="Update at Predict" class="icon-upload"></i>
       </button>
     </td>
   </tr>

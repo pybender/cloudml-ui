@@ -44,6 +44,14 @@ angular.module('app.servers.controllers', ['app.config', ])
           $scope.setError(opts, 'removing file')
         )
 
+    $scope.updateFileAtServer = (fileName) ->
+      path = $scope.folder + '/' + fileName
+      $scope.server.$updateFileAtServer(path).then((resp) ->
+        $rootScope.msg = 'File "' + fileName + '" will be updated at server'
+      , (opts) ->
+        $scope.setError(opts, 'removing file')
+      )
+
     $rootScope.$on('ServerFileListCtrl:server_loaded',
     (event, name, append=false, extra={}) ->
       $scope.load()
