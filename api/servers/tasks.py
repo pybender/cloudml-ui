@@ -85,12 +85,13 @@ def update_at_server(server_id, file_name):
     """
     Update given file at cloudml-predict.
     """
+    import os
     import requests
     logging.info('Starting requesting cloudml_predict')
 
     server = Server.query.get(server_id)
     pieces = file_name.split('/')
-    name = pieces[-1]
+    name = os.path.splitext(pieces[-1])[0]
     folder = pieces[-2]
 
     parts = {
