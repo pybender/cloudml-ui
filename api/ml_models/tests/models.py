@@ -502,9 +502,14 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
     @mock_s3
     @patch('api.ml_models.models.Model.get_features_json')
     @patch('api.amazon_utils.AmazonS3Helper.save_gz_file')
-    def test_retrain_model(self, mock_multipart_upload, mock_get_features_json):
+    @patch('api.amazon_utils.AmazonS3Helper.load_key')
+    def test_retrain_model(self, mock_load_key,
+                           mock_multipart_upload, mock_get_features_json):
         with open('./conf/features.json', 'r') as f:
             mock_get_features_json.return_value = f.read()
+
+        with open('./api/ml_models/model.dat', 'r') as f:
+            mock_load_key.return_value = f.read()
 
         self.obj.status = Model.STATUS_TRAINED
         self.obj.save()
