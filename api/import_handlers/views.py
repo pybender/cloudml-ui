@@ -190,11 +190,13 @@ filename=importhandler-%s.json' % model.name
                     if num is None or query_num is None:
                         raise ValidationError('num and query_num are required')
                     del handler_doc['queries'][query_num]['items'][num]
+                    self.updated = True
                 elif 'remove_query' in data:
                     num = int(data.get('num', None))
                     if num is None:
                         raise ValidationError('num is required')
                     del handler_doc['queries'][num]
+                    self.updated = True
                 elif 'remove_feature' in data:
                     num = int(data.get('num', None))
                     query_num = int(data.get('query_num', None))
@@ -202,6 +204,7 @@ filename=importhandler-%s.json' % model.name
                     if num is None:
                         raise ValidationError('num is required')
                     del handler_doc['queries'][query_num]['items'][item_num]['target_features'][num]
+                    self.updated = True
 
         for form in query_forms.values() + item_forms.values() + \
                 feature_forms.values() + datasource_forms.values():
