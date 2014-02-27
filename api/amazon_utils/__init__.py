@@ -1,6 +1,7 @@
 import logging
 
 import boto.ec2
+from boto.exception import JSONResponseError
 from boto.s3.key import Key
 
 from api import app
@@ -163,33 +164,60 @@ class AmazonDynamoDBHelper(object):
         return cls._instance
 
     def __init__(self, token=None, secret=None):
-        from boto import dynamodb
+        from boto import dynamodb2
+        from boto.dynamodb2.layer1 import DynamoDBConnection
+
         token = token or app.config['AMAZON_ACCESS_TOKEN']
         secret = secret or app.config['AMAZON_TOKEN_SECRET']
-        self.conn = dynamodb.connect_to_region(
-            'us-west-1',
-            aws_access_key_id=token,
-            aws_secret_access_key=secret)
-        self._domains = {}
 
-    def get_domain(self, name):
-        if not name in self._domains:
+        if app.config['DEBUG']:
+            # Local DynamoDB
+            self.conn = DynamoDBConnection(
+                host='localhost',
+                port=8000,
+                aws_access_key_id=token,
+                aws_secret_access_key=secret,
+                is_secure=False
+            )
+        else:
+            # Real DynamoDB connection
+            self.conn = dynamodb2.connect_to_region(
+                'us-west-1',
+                aws_access_key_id=token,
+                aws_secret_access_key=secret)
+        self._tables = {}
+
+    def _get_table(self, table_name):
+        from boto.dynamodb2.fields import HashKey, RangeKey
+        from boto.dynamodb2.types import NUMBER, STRING
+        from boto.dynamodb2.table import Table
+        if not self._tables.get(table_name):
+            # TODO: move from here
+            schema = [
+                HashKey('type', data_type=STRING),
+                RangeKey('object_id', data_type=NUMBER)
+            ]
             try:
-                self._domains['name'] = self.conn.get_domain(name)
-            except Exception, exc:  # TODO: exc. instance_type
-                self._domains['name'] = self.conn.create_domain(name)
-        return self._domains[name]
+                Table.create(table_name, connection=self.conn, schema=schema)
+            except JSONResponseError as ex:
+                print str(ex)
+            self._tables[table_name] = Table(table_name, connection=self.conn,
+                                             schema=schema)
+        return self._tables[table_name]
 
-    def put_item(self, domain_name, *args):
-        domain = self.get_domain(domain_name)
-        domain.put_attributes(*args)
+    def put_item(self, table_name, data):
+        table = self._get_table(table_name)
+        return table.put_item(data=data)
 
-    def get_items(self, domain_name, filter_str, order_by, limit=None, next_token=None):
-        query = 'select * from %s where %s order_by %s' % (domain_name, filter_str, order_by)
-        kwargs = {}
-        if limit is not None:
-            query = '%s LIMIT %d' % (query, limit)
-            kwargs['max_items'] = limit
-        if next_token:
-            kwargs['next_token'] = next_token
-        return dom.select(query, **kwargs)
+    def batch_write(self, table_name, data_list):
+        table = self._get_table(table_name)
+        with table.batch_write() as batch:
+            for data in data_list:
+                batch.put_item(data=data)
+
+    def get_items(self, table_name, params, limit=None):
+        table = self._get_table(table_name)
+        return table.query(
+            limit=limit,
+            **params
+        )

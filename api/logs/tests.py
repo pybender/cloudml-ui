@@ -1,1 +1,1 @@
-from simpledb.tests import *
+from dynamodb.tests import *
