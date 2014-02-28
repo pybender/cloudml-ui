@@ -24,9 +24,10 @@ class LogResource(BaseResource):
         next_token = params.get('next_token', None)
         level = params.get('level', None)
         limit = params.get('per_page', 10)
-        res = LogMessage.filter_by_object(
+        logs, next_token = LogMessage.filter_by_object(
             type_, object_id,
             level,
-            limit=limit)
-        logs = [log.to_dict() for log in res]
-        return self._render({'logs': logs, 'next_token': None})
+            limit=limit,
+            next_token=next_token
+        )
+        return self._render({'logs': logs, 'next_token': next_token})

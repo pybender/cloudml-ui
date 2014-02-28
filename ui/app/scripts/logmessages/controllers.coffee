@@ -17,10 +17,15 @@ angular.module('app.logmessages.controllers', ['app.config', ])
     $scope.log_levels = ['--any--', 'CRITICAL', 'ERROR',
                          'WARNING', 'INFO', 'DEBUG']
     $scope.log_level = '--any--'
+    $scope.objects = []
+    $scope.load()
 
-  $scope.load = () ->
+  $scope.load = (concat) ->
     LogMessage.$loadAll($scope.params).then ((opts) ->
-      $scope.objects = $scope.objects.concat(opts.objects)
+      if $scope.params['next_token']
+        $scope.objects = $scope.objects.concat(opts.objects)
+      else
+        $scope.objects = opts.objects
       $scope.next_token = opts.next_token
     ), ((opts) ->
       $scope.setError(opts, 'loading logs')

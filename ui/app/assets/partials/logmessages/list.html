@@ -13,6 +13,6 @@
     <p ng-repeat="msg in objects">
       <ng-include src="'/partials/logmessages/item.html'"></ng-include>
     </p>
-    <a ng-show="has_next" class="btn" ng-click="loadMore()">Load More...</a>
+    <a ng-show="next_token" class="btn" ng-click="loadMore()">Load More...</a>
   </div>
 </div>

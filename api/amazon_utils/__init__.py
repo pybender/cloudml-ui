@@ -1,4 +1,5 @@
 import logging
+import uuid
 
 import boto.ec2
 from boto.exception import JSONResponseError
@@ -186,6 +187,7 @@ class AmazonDynamoDBHelper(object):
                 aws_access_key_id=token,
                 aws_secret_access_key=secret)
         self._tables = {}
+        self._queries = {}
 
     def _get_table(self, table_name):
         from boto.dynamodb2.fields import HashKey, RangeKey
@@ -194,8 +196,8 @@ class AmazonDynamoDBHelper(object):
         if not self._tables.get(table_name):
             # TODO: move from here
             schema = [
-                HashKey('type', data_type=STRING),
-                RangeKey('object_id', data_type=NUMBER)
+                HashKey('object_id', data_type=NUMBER),
+                RangeKey('id', data_type=STRING)
             ]
             try:
                 Table.create(table_name, connection=self.conn, schema=schema)
@@ -207,7 +209,7 @@ class AmazonDynamoDBHelper(object):
 
     def put_item(self, table_name, data):
         table = self._get_table(table_name)
-        return table.put_item(data=data)
+        return table.put_item(data=data, overwrite=True)
 
     def batch_write(self, table_name, data_list):
         table = self._get_table(table_name)
@@ -215,9 +217,28 @@ class AmazonDynamoDBHelper(object):
             for data in data_list:
                 batch.put_item(data=data)
 
-    def get_items(self, table_name, params, limit=None):
+    def get_items(self, table_name, limit=None, reverse=True,
+                  next_token=None, **kwargs):
         table = self._get_table(table_name)
-        return table.query(
-            limit=limit,
-            **params
-        )
+        next_token = next_token or None
+        res = self._queries.get(next_token) if next_token else None
+
+        if not res:
+            res = table.query(
+                max_page_size=limit,
+                reverse=reverse,
+                **kwargs
+            )
+            next_token = str(uuid.uuid1())
+            self._queries[next_token] = res
+
+        items = []
+        for i in range(limit):
+            try:
+                item = next(res)
+            except StopIteration:
+                next_token = None
+                break
+            items.append(item._data)
+
+        return items, next_token
