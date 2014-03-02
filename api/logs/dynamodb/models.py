@@ -1,4 +1,3 @@
-import uuid
 import time
 import datetime
 
@@ -21,8 +20,7 @@ class LogMessage(object):
     TABLE_NAME = 'logs'
 
     def __init__(self, type_, content, object_id=None, level='INFO'):
-        uid = str(uuid.uuid1())
-        self.id = '{0}:{1}'.format(type_, uid)
+        self.id = '{0}:{1}'.format(type_, str(time.time()))
         self.type = type_
         self.content = content
         self.object_id = object_id
@@ -51,6 +49,7 @@ class LogMessage(object):
             'id__beginswith': log_type
         }
 
+        # TODO: it is not possible to filter by list without full table scan
         if level is not None:
             idx = cls.LEVELS_LIST.index(level)
             levels = ["'%s'" % l for i, l in enumerate(cls.LEVELS_LIST)
@@ -62,16 +61,34 @@ class LogMessage(object):
             LogMessage.TABLE_NAME,
             limit=limit,
             next_token=next_token,
-            reverse=True,
+            reverse=False,
             **params
         )
         for item in res:
-            item['created_on'] = datetime.datetime.fromtimestamp(
-                item['created_on'])
+            try:
+                item['created_on'] = datetime.datetime.fromtimestamp(
+                    item['created_on'])
+            except TypeError:
+                pass
             items.append(item)
         return items, next_token
 
     @classmethod
     def delete_related_logs(cls, obj, level=None):
-        # TODO: implement
-        pass
+        db.delete_items(LogMessage.TABLE_NAME, object_id__eq=obj.id)
+
+
+# TODO: refactor
+from boto.dynamodb2.table import Table
+from boto.dynamodb2.fields import HashKey, RangeKey
+from boto.dynamodb2.types import NUMBER, STRING
+from boto.exception import JSONResponseError
+if not db._tables.get(LogMessage.TABLE_NAME):
+    schema = [
+        HashKey('object_id', data_type=NUMBER),
+        RangeKey('id', data_type=STRING)
+    ]
+    try:
+        Table.create(LogMessage.TABLE_NAME, connection=db.conn, schema=schema)
+    except JSONResponseError as ex:
+        print str(ex)

@@ -2,7 +2,6 @@ import logging
 import uuid
 
 import boto.ec2
-from boto.exception import JSONResponseError
 from boto.s3.key import Key
 
 from api import app
@@ -190,26 +189,20 @@ class AmazonDynamoDBHelper(object):
         self._queries = {}
 
     def _get_table(self, table_name):
-        from boto.dynamodb2.fields import HashKey, RangeKey
-        from boto.dynamodb2.types import NUMBER, STRING
         from boto.dynamodb2.table import Table
-        if not self._tables.get(table_name):
-            # TODO: move from here
-            schema = [
-                HashKey('object_id', data_type=NUMBER),
-                RangeKey('id', data_type=STRING)
-            ]
-            try:
-                Table.create(table_name, connection=self.conn, schema=schema)
-            except JSONResponseError as ex:
-                print str(ex)
-            self._tables[table_name] = Table(table_name, connection=self.conn,
-                                             schema=schema)
+        self._tables[table_name] = Table(table_name, connection=self.conn)
         return self._tables[table_name]
 
     def put_item(self, table_name, data):
         table = self._get_table(table_name)
         return table.put_item(data=data, overwrite=True)
+
+    def delete_items(self, table_name, **kwargs):
+        table = self._get_table(table_name)
+        res = table.query(**kwargs)
+        with table.batch_write() as batch:
+            for item in res:
+                batch.delete_item(**item.get_keys())
 
     def batch_write(self, table_name, data_list):
         table = self._get_table(table_name)
