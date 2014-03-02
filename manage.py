@@ -7,7 +7,8 @@ from bson.objectid import ObjectId
 from mongokit.mongo_exceptions import AutoReferenceError
 from flask.ext.migrate import Migrate, MigrateCommand
 
-from api import app
+import api
+app = api.app
 
 
 class Celeryd(Command):

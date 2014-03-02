@@ -1,5 +1,11 @@
 import time
 import datetime
+import logging
+
+from boto.dynamodb2.table import Table
+from boto.dynamodb2.fields import HashKey, RangeKey
+from boto.dynamodb2.types import NUMBER, STRING
+from boto.exception import JSONResponseError
 
 from api.amazon_utils import AmazonDynamoDBHelper
 
@@ -17,7 +23,13 @@ class LogMessage(object):
     LEVELS_LIST = ['CRITICAL', 'ERROR', 'WARN', 'WARNING',
                    'INFO', 'DEBUG', 'NOTSET']
 
-    TABLE_NAME = 'logs'
+    TABLE_NAME = 'cloudml-log'
+
+    # TODO: add indexes (by level etc.)
+    SCHEMA = [
+        HashKey('object_id', data_type=NUMBER),
+        RangeKey('id', data_type=STRING)
+    ]
 
     def __init__(self, type_, content, object_id=None, level='INFO'):
         self.id = '{0}:{1}'.format(type_, str(time.time()))
@@ -33,13 +45,21 @@ class LogMessage(object):
             'type': self.type,
             'content': self.content,
             'object_id': self.object_id,
-            'level': self.level,
+            'level': self.LEVELS_LIST.index(self.level),
             'created_on': self.created_on
         }
 
     def save(self):
         data = self.to_dict()
-        db.put_item(LogMessage.TABLE_NAME, data)
+        db.put_item(self.TABLE_NAME, data)
+
+    @classmethod
+    def create_table(cls):
+        try:
+            Table.create(cls.TABLE_NAME, connection=db.conn,
+                         schema=cls.SCHEMA)
+        except JSONResponseError as ex:
+            logging.exception(str(ex))
 
     @classmethod
     def filter_by_object(cls, log_type, object_id,
@@ -49,16 +69,14 @@ class LogMessage(object):
             'id__beginswith': log_type
         }
 
-        # TODO: it is not possible to filter by list without full table scan
+        # TODO: There are too many conditions in this query (create index?)
         if level is not None:
             idx = cls.LEVELS_LIST.index(level)
-            levels = ["'%s'" % l for i, l in enumerate(cls.LEVELS_LIST)
-                      if i <= idx]
-            params['level__in'] = levels
+            params['level__le'] = idx
 
         items = []
         res, next_token = db.get_items(
-            LogMessage.TABLE_NAME,
+            cls.TABLE_NAME,
             limit=limit,
             next_token=next_token,
             reverse=False,
@@ -68,6 +86,7 @@ class LogMessage(object):
             try:
                 item['created_on'] = datetime.datetime.fromtimestamp(
                     item['created_on'])
+                item['level'] = cls.LEVELS_LIST[int(item['level'])]
             except TypeError:
                 pass
             items.append(item)
@@ -75,20 +94,4 @@ class LogMessage(object):
 
     @classmethod
     def delete_related_logs(cls, obj, level=None):
-        db.delete_items(LogMessage.TABLE_NAME, object_id__eq=obj.id)
-
-
-# TODO: refactor
-from boto.dynamodb2.table import Table
-from boto.dynamodb2.fields import HashKey, RangeKey
-from boto.dynamodb2.types import NUMBER, STRING
-from boto.exception import JSONResponseError
-if not db._tables.get(LogMessage.TABLE_NAME):
-    schema = [
-        HashKey('object_id', data_type=NUMBER),
-        RangeKey('id', data_type=STRING)
-    ]
-    try:
-        Table.create(LogMessage.TABLE_NAME, connection=db.conn, schema=schema)
-    except JSONResponseError as ex:
-        print str(ex)
+        db.delete_items(cls.TABLE_NAME, object_id__eq=obj.id)

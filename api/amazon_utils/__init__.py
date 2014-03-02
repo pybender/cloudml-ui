@@ -171,12 +171,12 @@ class AmazonDynamoDBHelper(object):
         secret = secret or app.config['AMAZON_TOKEN_SECRET']
 
         if app.config['DEBUG']:
-            # Local DynamoDB
+            # Local DynamoDB (see dynamodb_local.sh)
             self.conn = DynamoDBConnection(
                 host='localhost',
                 port=8000,
-                aws_access_key_id=token,
-                aws_secret_access_key=secret,
+                aws_access_key_id='any',
+                aws_secret_access_key='any',
                 is_secure=False
             )
         else:
@@ -226,12 +226,15 @@ class AmazonDynamoDBHelper(object):
             self._queries[next_token] = res
 
         items = []
-        for i in range(limit):
-            try:
-                item = next(res)
-            except StopIteration:
-                next_token = None
-                break
-            items.append(item._data)
+        if limit:
+            for i in range(limit):
+                try:
+                    item = next(res)
+                except StopIteration:
+                    next_token = None
+                    break
+                items.append(item._data)
+        else:
+            items = [item._data for item in res]
 
         return items, next_token
