@@ -73,11 +73,11 @@ class Query(db.Model, BaseMixin):
 
 
 class Entity(db.Model, BaseMixin, RefXmlImportHandlerMixin):
+    id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
     entity_id = db.Column(db.ForeignKey('entity.id',
                                         ondelete='SET NULL'))
-    entity = relationship('Entity',
-                          foreign_keys=[entity_id])
+    entity = relationship('Entity', remote_side=[id], backref='entities')
 
     datasource_id = db.Column(db.ForeignKey('xml_data_source.id',
                                             ondelete='SET NULL'))
@@ -106,4 +106,4 @@ class Field(db.Model, BaseMixin):
     script = relationship('Script', foreign_keys=[script_id])
 
     entity_id = db.Column(db.ForeignKey('entity.id', ondelete='SET NULL'))
-    entity = relationship('Entity', foreign_keys=[entity_id])
+    entity = relationship('Entity', foreign_keys=[entity_id], backref='fields')
