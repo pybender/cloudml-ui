@@ -68,7 +68,7 @@ class Script(db.Model, BaseMixin, RefXmlImportHandlerMixin):
 class Query(db.Model, BaseMixin):
     target = db.Column(db.String(200))
     text = deferred(db.Column(db.Text))
-    entity_id = db.Column(db.ForeignKey('entity.id', ondelete='SET NULL'))
+    entity_id = db.Column(db.ForeignKey('entity.id', ondelete='CASCADE'))
     entity = relationship('Entity', foreign_keys=[entity_id])
 
 
@@ -76,11 +76,11 @@ class Entity(db.Model, BaseMixin, RefXmlImportHandlerMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
     entity_id = db.Column(db.ForeignKey('entity.id',
-                                        ondelete='SET NULL'))
+                                        ondelete='CASCADE'))
     entity = relationship('Entity', remote_side=[id], backref='entities')
 
     datasource_id = db.Column(db.ForeignKey('xml_data_source.id',
-                                            ondelete='SET NULL'))
+                                            ondelete='CASCADE'))
     datasource = relationship('XmlDataSource',
                               foreign_keys=[datasource_id])
 
@@ -102,8 +102,8 @@ class Field(db.Model, BaseMixin):
         db.Enum(*TRANSFORM_TYPES, name='xml_transform_types'))
     headers = db.Column(db.String(200))
 
-    script_id = db.Column(db.ForeignKey('script.id', ondelete='SET NULL'))
+    script_id = db.Column(db.ForeignKey('script.id', ondelete='CASCADE'))
     script = relationship('Script', foreign_keys=[script_id])
 
-    entity_id = db.Column(db.ForeignKey('entity.id', ondelete='SET NULL'))
+    entity_id = db.Column(db.ForeignKey('entity.id', ondelete='CASCADE'))
     entity = relationship('Entity', foreign_keys=[entity_id], backref='fields')
