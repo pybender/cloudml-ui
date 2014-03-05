@@ -26,6 +26,8 @@ App = angular.module('app', [
   'app.importhandlers.controllers'
   'app.importhandlers.controllers.datasources'
   'app.importhandlers.controllers.handlers'
+  'app.xml_importhandlers.models'
+  'app.xml_importhandlers.controllers'
   'app.datasets.model'
   'app.datasets.controllers'
   'app.weights.model'
@@ -101,6 +103,19 @@ App.config([
     .when('/compare_models', {
       templateUrl: '/partials/reports/compare_models_form.html'
       controller: 'CompareModelsFormCtl'
+    })
+    .when('/xml_importhandlers', {
+      controller: "XmlImportHandlerListCtrl"
+      templateUrl: '/partials/xml_import_handlers/list.html'
+    })
+    .when('/xml_importhandlers/add', {
+      controller: "AddXmlImportHandlerCtl"
+      templateUrl: '/partials/xml_import_handlers/add.html'
+    })
+    .when('/xml_importhandlers/:id', {
+      controller: 'XmlImportHandlerDetailsCtrl'
+      templateUrl: '/partials/xml_import_handlers/details.html'
+      reloadOnSearch: false
     })
     .when('/importhandlers', {
       controller: "ImportHandlerListCtrl"

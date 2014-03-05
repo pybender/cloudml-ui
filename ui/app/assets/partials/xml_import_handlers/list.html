@@ -1,0 +1,38 @@
+<h2>
+  Import Handler List (XML)
+  <div class="actions">
+      <a class="btn btn-info" href="#/xml_importhandlers/add">
+        <i class="status-icon icon-plus"></i> Add new import handler
+      </a>
+  </div>
+</h2>
+
+<alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+<alert-message ng-show="objects.length == 0" class="alert-info" msg="No import handlers found"></alert-message>
+
+<table ng-controller="BaseListCtrl" ng-init="init(true, 'xml_import_handlers')" ng-hide="objects.length == 0" class="table table-hover">
+<thead>
+  <tr>
+    <th>Name</th>
+    <th>Created</th>
+    <th>Actions</th>
+  </tr>
+</thead>
+<tbody>
+  <tr ng-repeat="handler in objects">
+    <td><a href="#{{ handler.objectUrl() }}">{{ handler.name }}</a></td>
+    <td>
+        {{ handler.created_on|format_date }}<br>
+        <small ng-show="handler.created_by">by {{ handler.created_by.name }} ({{ handler.created_by.uid }})</small>
+    </td>
+    <td ng-controller="ImportHandlerActionsCtrl">
+      <button ng-show="handler.type == 'Db'" ng-click="importData(handler)" class="btn btn-info">
+        <i title="Import Data" class="icon-tasks"></i>
+      </button>
+      <button ng-click="delete(handler)" class="btn btn-danger">
+        <i title="Delete your handler. Be careful - you could not recover it!" class="icon-remove"></i>
+      </button>
+    </td>
+  </tr>
+</tbody>
+</table>
