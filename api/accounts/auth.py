@@ -72,7 +72,8 @@ class OdeskAuth(Auth):
     AUTHORIZE_URL = 'https://www.odesk.com/services/api/auth'
 
     # TODO: httpS
-    GET_INFO_URL = 'http://www.odesk.com/api/auth/v1/info'
+    GET_INFO_URL = 'http://www.odesk.com/api/hr/v2/users/me'
+    GET_USER_INFO_URL = 'http://www.odesk.com/api/auth/v1/info'
 
     def __init__(self):
         super(OdeskAuth, self).__init__(
@@ -95,5 +96,9 @@ class OdeskAuth(Auth):
 
     def get_my_info(self, oauth_token, oauth_token_secret, oauth_verifier):
         return self.api_request(self.GET_INFO_URL, 'GET',
+                                oauth_token, oauth_token_secret,
+                                oauth_verifier)
+    def get_user_info(self, oauth_token, oauth_token_secret, oauth_verifier):
+        return self.api_request(self.GET_USER_INFO_URL, 'GET',
                                 oauth_token, oauth_token_secret,
                                 oauth_verifier)
