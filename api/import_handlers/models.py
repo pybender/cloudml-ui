@@ -292,7 +292,7 @@ class DataSet(db.Model, BaseModel):
         on_s3 = self.on_s3
 
         super(DataSet, self).delete()
-        LogMessage.delete_related_logs(self)
+        LogMessage.delete_related_logs(self.id)
 
         # TODO: check import handler type
         try:

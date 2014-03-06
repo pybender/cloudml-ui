@@ -12,3 +12,5 @@ AMAZON_BUCKET_NAME = '{{ amazon_bucket_name }}'
 # OAuth keys
 ODESK_OAUTH_KEY = '{{ odesk api key }}'
 ODESK_OAUTH_SECRET = '{{ odesk secret key }}'
+
+LOCAL_DYNAMODB = True

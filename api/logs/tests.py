@@ -1,1 +1,0 @@
-from dynamodb.tests import *

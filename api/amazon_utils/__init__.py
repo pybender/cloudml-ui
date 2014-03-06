@@ -164,29 +164,34 @@ class AmazonDynamoDBHelper(object):
         return cls._instance
 
     def __init__(self, token=None, secret=None):
-        from boto import dynamodb2
-        from boto.dynamodb2.layer1 import DynamoDBConnection
-
-        token = token or app.config['AMAZON_ACCESS_TOKEN']
-        secret = secret or app.config['AMAZON_TOKEN_SECRET']
-
-        if True:  #app.config['DEBUG']:
-            # Local DynamoDB (see dynamodb_local.sh)
-            self.conn = DynamoDBConnection(
-                host='localhost',
-                port=8000,
-                aws_access_key_id='any',
-                aws_secret_access_key='any',
-                is_secure=False
-            )
-        else:
-            # Real DynamoDB connection
-            self.conn = dynamodb2.connect_to_region(
-                'us-west-1',
-                aws_access_key_id=token,
-                aws_secret_access_key=secret)
+        self.token = token or app.config['AMAZON_ACCESS_TOKEN']
+        self.secret = secret or app.config['AMAZON_TOKEN_SECRET']
+        self._conn = None
         self._tables = {}
         self._queries = {}
+
+    @property
+    def conn(self):
+        if not self._conn:
+            from boto import dynamodb2
+            from boto.dynamodb2.layer1 import DynamoDBConnection
+
+            if app.config.get('LOCAL_DYNAMODB'):
+                # Local DynamoDB (see dynamodb_local.sh)
+                self._conn = DynamoDBConnection(
+                    host='localhost',
+                    port=8000,
+                    aws_access_key_id='any',
+                    aws_secret_access_key='any',
+                    is_secure=False
+                )
+            else:
+                # Real DynamoDB connection
+                self._conn = dynamodb2.connect_to_region(
+                    'us-west-1',
+                    aws_access_key_id=self.token,
+                    aws_secret_access_key=self.secret)
+        return self._conn
 
     def _get_table(self, table_name):
         from boto.dynamodb2.table import Table

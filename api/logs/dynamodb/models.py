@@ -1,6 +1,7 @@
 import time
 import datetime
 import logging
+import uuid
 
 from boto.dynamodb2.table import Table
 from boto.dynamodb2.fields import HashKey, RangeKey
@@ -32,7 +33,8 @@ class LogMessage(object):
     ]
 
     def __init__(self, type_, content, object_id=None, level='INFO'):
-        self.id = '{0}:{1}'.format(type_, str(time.time()))
+        uid = str(uuid.uuid1().hex)
+        self.id = '{0}:{1}:{2}'.format(type_, str(time.time()), uid)
         self.type = type_
         self.content = content
         self.object_id = object_id
@@ -92,5 +94,5 @@ class LogMessage(object):
         return items, next_token
 
     @classmethod
-    def delete_related_logs(cls, obj, level=None):
-        db.delete_items(cls.TABLE_NAME, object_id__eq=obj.id)
+    def delete_related_logs(cls, object_id, level=None):
+        db.delete_items(cls.TABLE_NAME, object_id__eq=object_id)

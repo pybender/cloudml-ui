@@ -44,7 +44,7 @@ def train_model(dataset_ids, model_id, user_id):
 
         if delete_metadata:
             logging.info('Remove old model data on retrain model')
-            LogMessage.delete_related_logs(model)  # rem logs from mongo
+            LogMessage.delete_related_logs(model.id)  # rem logs from mongo
             count = TestExample.query.filter(
                 TestExample.model_id==model.id).delete(
                 synchronize_session=False)
