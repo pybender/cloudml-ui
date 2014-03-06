@@ -170,7 +170,7 @@ class AmazonDynamoDBHelper(object):
         token = token or app.config['AMAZON_ACCESS_TOKEN']
         secret = secret or app.config['AMAZON_TOKEN_SECRET']
 
-        if app.config['DEBUG']:
+        if True:  #app.config['DEBUG']:
             # Local DynamoDB (see dynamodb_local.sh)
             self.conn = DynamoDBConnection(
                 host='localhost',
@@ -217,11 +217,20 @@ class AmazonDynamoDBHelper(object):
         res = self._queries.get(next_token) if next_token else None
 
         if not res:
-            res = table.query(
-                max_page_size=limit,
-                reverse=reverse,
-                **kwargs
-            )
+            # This is a hack for
+            # "There are too many conditions in this query" issue
+            if len(kwargs.keys()) > 2:
+                # Slow!
+                res = table.scan(
+                    max_page_size=limit,
+                    **kwargs
+                )
+            else:
+                res = table.query(
+                    max_page_size=limit,
+                    reverse=reverse,
+                    **kwargs
+                )
             next_token = str(uuid.uuid1())
             self._queries[next_token] = res
 

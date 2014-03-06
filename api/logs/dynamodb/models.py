@@ -69,10 +69,9 @@ class LogMessage(object):
             'id__beginswith': log_type
         }
 
-        # TODO: There are too many conditions in this query (create index?)
-        if level is not None:
+        if level is not None and level in cls.LEVELS_LIST:
             idx = cls.LEVELS_LIST.index(level)
-            params['level__le'] = idx
+            params['level__lte'] = idx
 
         items = []
         res, next_token = db.get_items(
