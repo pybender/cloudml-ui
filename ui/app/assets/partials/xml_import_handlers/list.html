@@ -8,9 +8,8 @@
 </h2>
 
 <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
-<alert-message ng-show="objects.length == 0" class="alert-info" msg="No import handlers found"></alert-message>
 
-<table ng-controller="BaseListCtrl" ng-init="init(true, 'xml_import_handlers')" ng-hide="objects.length == 0" class="table table-hover">
+<table ng-controller="BaseListCtrl" ng-init="init(true, 'xml_import_handlers')" class="table table-hover">
 <thead>
   <tr>
     <th>Name</th>
@@ -35,4 +34,7 @@
     </td>
   </tr>
 </tbody>
+<tfoot ng-hide="objects">
+  <tr><td colspan="3">No import handlers found</td></tr>
+</tfoot>
 </table>

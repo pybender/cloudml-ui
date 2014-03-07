@@ -246,6 +246,35 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
   }
 ])
 
+.directive("entitiesTree", [ ->
+  return {
+    scope: {entities: '=', innerLoad: '&customClick'}
+    # replace: true
+    restrict: 'E'
+    transclude : true
+    templateUrl:'partials/directives/import_tree.html'
+  }
+])
+
+.directive("entitiesRecursive", [
+  '$compile'
+
+($compile) ->
+  return {
+    restrict: "EACM"
+    priority: 100000
+    compile: (tElement, tAttr) ->
+      contents = tElement.contents().remove()
+      compiledContents = undefined
+      return (scope, iElement, iAttr) ->
+        if not compiledContents
+          compiledContents = $compile(contents)
+        iElement.append(
+          compiledContents(scope, (clone) -> return clone))
+  }
+])
+
+
 .directive("paramsEditor", [ ->
   return {
     scope: {params: '='}

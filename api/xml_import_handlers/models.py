@@ -43,7 +43,7 @@ class XmlDataSource(db.Model, BaseMixin, RefXmlImportHandlerMixin):
 
     # TODO: unique for XmlImportHandler
     name = db.Column(db.String(200), nullable=False)
-    type_ = db.Column(db.Enum(*TYPES, name='xml_datasource_types'))
+    type = db.Column(db.Enum(*TYPES, name='xml_datasource_types'))
     params = db.Column(JSONType)
 
     @validates('params')
@@ -56,7 +56,7 @@ class InputParameter(db.Model, BaseMixin, RefXmlImportHandlerMixin):
 
     # TODO: unique for XmlImportHandler
     name = db.Column(db.String(200), nullable=False)
-    type_ = db.Column(db.Enum(*TYPES, name='xml_input_types'))
+    type = db.Column(db.Enum(*TYPES, name='xml_input_types'))
     regex = db.Column(db.String(200))
     format = db.Column(db.String(200))
 
@@ -68,8 +68,6 @@ class Script(db.Model, BaseMixin, RefXmlImportHandlerMixin):
 class Query(db.Model, BaseMixin):
     target = db.Column(db.String(200))
     text = deferred(db.Column(db.Text))
-    entity_id = db.Column(db.ForeignKey('entity.id', ondelete='CASCADE'))
-    entity = relationship('Entity', foreign_keys=[entity_id])
 
 
 class Entity(db.Model, BaseMixin, RefXmlImportHandlerMixin):
@@ -83,6 +81,8 @@ class Entity(db.Model, BaseMixin, RefXmlImportHandlerMixin):
                                             ondelete='CASCADE'))
     datasource = relationship('XmlDataSource',
                               foreign_keys=[datasource_id])
+    query_id = db.Column(db.ForeignKey('query.id', ondelete='CASCADE'))
+    query = relationship('Query', foreign_keys=[query_id])
 
 
 class Field(db.Model, BaseMixin):
@@ -90,7 +90,7 @@ class Field(db.Model, BaseMixin):
     TRANSFORM_TYPES = ['json', 'csv']
 
     name = db.Column(db.String(200), nullable=False)
-    type_ = db.Column(db.Enum(*TYPES, name='xml_field_types'))
+    type = db.Column(db.Enum(*TYPES, name='xml_field_types'))
     column = db.Column(db.String(200))
     jsonpath = db.Column(db.String(200))
     join = db.Column(db.String(200))

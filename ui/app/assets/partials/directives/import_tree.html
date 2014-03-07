@@ -1,0 +1,80 @@
+<ul ng-repeat="item in entities">
+  <li>
+    <h4>
+      {{ item.entity.name }}
+      <div class="actions">
+        <a class="btn btn-info" href="#/xml_importhandlers/{{ handler._id }}/datasources/add">
+          <i class="status-icon icon-plus"></i> add entity
+        </a>
+        <a class="btn btn-info" href="#/xml_importhandlers/{{ handler._id }}/datasources/add">
+          <i class="status-icon icon-plus"></i> add field
+        </a>
+      </div>
+    </h4>
+    <div ng-show="item.entity.datasource">
+      <i class="icon-hdd"></i> {{ item.entity.datasource.name }} ({{ item.entity.datasource.type }})
+    </div>
+    <h5>Fields</h5>
+    <table>
+      <thead>
+        <tr>
+          <th>name</th>
+          <th>type</th>
+          <th>column</th>
+          <th>jsonpath</th>
+          <th>join</th>
+          <th>regex</th>
+          <th>split</th>
+          <th>dateFormat</th>
+          <th>template</th>
+          <th>transform</th>
+          <th>headers</th>
+          <th>script</th>
+        </tr>
+      </thead>
+      <tbody>
+      <tr ng-repeat="field in item.entity.fields">
+        <td>
+          <span title="name" class="name" ng-bind="field.name || 'no name'" editable="field" value="field.name" editable-field="name" editable-input="text" editable-placement="right"></span>
+        </td>
+        <td>
+          <span title="type" class="type" ng-bind="field.type || 'no type'" editable="field" value="field.type" editable-field="type" editable-input="text" editable-placement="right"></span>
+        </td>
+        <td>
+          <span title="column" class="column" ng-bind="field.column || 'no column'" editable="field" value="field.column" editable-field="column" editable-input="text" editable-placement="right"></span>
+        </td>
+        <td>
+          <span title="jsonpath" class="jsonpath" ng-bind="field.jsonpath || 'no jsonpath'" editable="field" value="field.jsonpath" editable-field="jsonpath" editable-input="text" editable-placement="right"></span>
+        </td>
+        <td>
+          <span title="join" class="join" ng-bind="field.join || 'no join'" editable="field" value="field.join" editable-field="join" editable-input="text" editable-placement="right"></span>
+        </td>
+        <td>
+          <span title="regex" class="regex" ng-bind="field.regex || 'no regex'" editable="field" value="field.regex" editable-field="regex" editable-input="text" editable-placement="right"></span>
+        </td>
+        <td>
+          <span title="split" class="split" ng-bind="field.split || 'no split'" editable="field" value="field.split" editable-field="split" editable-input="text" editable-placement="right"></span>
+        </td>
+        <td>
+          <span title="dateFormat" class="dateFormat" ng-bind="field.dateFormat || 'no dateFormat'" editable="field" value="field.dateFormat" editable-field="dateFormat" editable-input="text" editable-placement="right"></span>
+        </td>
+        <td>
+          <span title="template" class="template" ng-bind="field.template || 'no template'" editable="field" value="field.template" editable-field="template" editable-input="text" editable-placement="right"></span>
+        </td>
+        <td>
+          <span title="transform" class="transform" ng-bind="field.transform || 'no transform'" editable="field" value="field.transform" editable-field="transform" editable-input="text" editable-placement="right"></span>
+        </td>
+        <td>
+          <span title="headers" class="headers" ng-bind="field.headers || 'no headers'" editable="field" value="field.regex" editable-field="headers" editable-input="text" editable-placement="right"></span>
+        </td>
+        <td>
+          <span title="script" class="script" ng-bind="field.script || 'no script'" editable="field" value="field.script" editable-field="script" editable-input="text" editable-placement="right"></span>
+        </td>
+      </tr>
+    </tbody>
+    </table>
+    <entities-recursive>
+      <entities-tree entities="item.entities"></entities-tree>
+    </entities-recursive>
+  </li>
+</ul>

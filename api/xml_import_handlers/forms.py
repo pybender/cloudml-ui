@@ -34,7 +34,7 @@ exist. Please choose another one.' % value)
                 for datasource in plan.datasources.values():
                     ds = XmlDataSource(
                         name=datasource.name,
-                        type_=datasource.type,
+                        type=datasource.type,
                         import_handler=import_handler,
                         params={})
                     ds_dict[datasource.name] = ds
@@ -43,7 +43,7 @@ exist. Please choose another one.' % value)
                 for inp in plan.inputs.values():
                     param = InputParameter(
                         name=inp.name,
-                        type_=inp.type,
+                        type=inp.type,
                         regex=inp.regex,
                         format=inp.format,
                         import_handler=import_handler)
@@ -64,16 +64,16 @@ exist. Please choose another one.' % value)
                     if entity.query:
                         qr = Query(
                             text=entity.query,
-                            target=entity.query_target,
-                            entity=db_entity)
+                            target=entity.query_target)
                         db.session.add(qr)
+                        db_entity.query = qr
                     return None
 
                 def load_entity_items(entity, db_entity):
                     for field in entity.fields.values():
                         fld = Field(
                             name=field.name,
-                            type_=field.type,
+                            type=field.type,
                             column=field.column,
                             jsonpath=field.jsonpath,
                             join=field.join,
