@@ -38,11 +38,11 @@
  
 <div class="tab-content" ng-show="handler.loaded">
   <div ng-show="action[0] == 'model'">
-    <p class="switcher">
+<!--     <p class="switcher">
       <b>Switch View: </b>
       <a ng-class="{active: action[1] == 'details'}" ng-click="setSection(['model', 'details'])">Standart</a> | 
-      <a ng-class="{active: action[1] == 'json'}" ng-click="setSection(['model', 'json']);">JSON File</a>
-    </p>
+      <a ng-class="{active: action[1] == 'xml'}" ng-click="setSection(['model', 'xml']);">XML File</a>
+    </p> -->
     <div ng-show="action[1] == 'details'">
       <div class="accordion">
         <!-- datasources -->
@@ -52,11 +52,11 @@
           </div>
           <div id="datasouces" class="accordion-body collapse in">
             <div class="accordion-inner">
-              <div class="actions">
+              <!-- <div class="actions">
                 <a class="btn btn-info" href="#/xml_importhandlers/{{ handler._id }}/datasources/add">
                   <i class="status-icon icon-plus"></i> add datasource
                 </a>
-              </div>
+              </div> -->
               <div class="clearfix">
                 <table class="table table-hover">
                   <thead>
@@ -70,10 +70,11 @@
                   <tbody>
                     <tr ng-repeat="item in handler.xml_data_sources">
                       <td>
-                        <span title="name" class="name" ng-bind="item.name || 'no name'" editable="item" value="item.name" editable-field="name" editable-input="text" editable-placement="right"></span>
+                        {{ item.name }}
+                       <!--  <span title="name" class="name" ng-bind="item.name || 'no name'" editable="item" value="item.name" editable-field="name" editable-input="text" editable-placement="right"></span> -->
                       </td>
                       <td>
-                        <span title="type" class="type" ng-bind="item.type || 'no type'" editable="item" value="item.type" editable-field="type" editable-input="text" editable-placement="right"></span>
+                        {{ item.type }}
                       </td>
                       <td>
                         {{ item.parameters }}
@@ -97,11 +98,11 @@
           </div>
           <div id="inputs" class="accordion-body collapse in">
             <div class="accordion-inner">
-              <div class="actions">
+             <!--  <div class="actions">
                 <a class="btn btn-info" href="#/xml_importhandlers/{{ handler._id }}/datasources/add">
                   <i class="status-icon icon-plus"></i> add datasource
                 </a>
-              </div>
+              </div> -->
               <div class="clearfix">
                 <table class="table table-hover">
                   <thead>
@@ -116,16 +117,19 @@
                   <tbody>
                     <tr ng-repeat="item in handler.input_parameters">
                       <td>
-                        <span title="name" class="name" ng-bind="item.name || 'no name'" editable="item" value="item.name" editable-field="name" editable-input="text" editable-placement="right"></span>
+                        <!-- <span title="name" class="name" ng-bind="item.name || 'no name'" editable="item" value="item.name" editable-field="name" editable-input="text" editable-placement="right"></span> -->
+                        {{ item.name }}
                       </td>
                       <td>
-                        <span title="type" class="type" ng-bind="item.type || 'no type'" editable="type" value="item.type" editable-field="type" editable-input="text" editable-placement="right"></span>
+                        {{ item.type }}
                       </td>
                       <td>
-                        <span title="regex" class="regex" ng-bind="item.regex || 'no name'" editable="regex" value="item.regex" editable-field="regex" editable-input="text" editable-placement="right"></span>
+                       <!--  <span title="regex" class="regex" ng-bind="item.regex || 'no name'" editable="regex" value="item.regex" editable-field="regex" editable-input="text" editable-placement="right"></span> -->
+                       {{ item.regex }}
                       </td>
                       <td>
-                        <span title="format" class="format" ng-bind="item.format || 'no format'" editable="format" value="item.format" editable-field="format" editable-input="text" editable-placement="right"></span>
+                        <!-- <span title="format" class="format" ng-bind="item.format || 'no format'" editable="format" value="item.format" editable-field="format" editable-input="text" editable-placement="right"></span> -->
+                        {{ item.format }}
                       </td>
                       <td></td>
                     </tr>
@@ -176,6 +180,10 @@
       </div> -->
     </div>
   </div>
+
+<!--   <div ng-show="action[1] == 'xml'">
+    Not implemented
+  </div> -->
 
   <div ng-show="action[0] == 'dataset'">
     <h3>DataSets</h3>

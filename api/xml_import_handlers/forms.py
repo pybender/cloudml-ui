@@ -66,7 +66,7 @@ exist. Please choose another one.' % value)
                             text=entity.query,
                             target=entity.query_target)
                         db.session.add(qr)
-                        db_entity.query = qr
+                        db_entity.query_obj = qr
                     return None
 
                 def load_entity_items(entity, db_entity):

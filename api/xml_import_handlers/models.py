@@ -67,7 +67,7 @@ class Script(db.Model, BaseMixin, RefXmlImportHandlerMixin):
 
 class Query(db.Model, BaseMixin):
     target = db.Column(db.String(200))
-    text = deferred(db.Column(db.Text))
+    text = db.Column(db.Text)
 
 
 class Entity(db.Model, BaseMixin, RefXmlImportHandlerMixin):
@@ -82,7 +82,7 @@ class Entity(db.Model, BaseMixin, RefXmlImportHandlerMixin):
     datasource = relationship('XmlDataSource',
                               foreign_keys=[datasource_id])
     query_id = db.Column(db.ForeignKey('query.id', ondelete='CASCADE'))
-    query = relationship('Query', foreign_keys=[query_id])
+    query_obj = relationship('Query', foreign_keys=[query_id])
 
 
 class Field(db.Model, BaseMixin):

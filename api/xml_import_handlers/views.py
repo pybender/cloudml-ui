@@ -24,7 +24,8 @@ class XmlImportHandlerResource(BaseResourceSQL):
                 return Entity.query\
                     .options(
                         joinedload_all(Entity.fields),
-                        joinedload(Entity.datasource)).filter_by(
+                        joinedload(Entity.datasource),
+                        joinedload(Entity.query_obj)).filter_by(
                             import_handler=model,
                             entity=parent)
 
