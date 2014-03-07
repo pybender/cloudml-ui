@@ -143,6 +143,7 @@ class DataSetAddForm(BaseForm):
     required_fields = ('format', )
     format = ChoiceField(choices=DataSet.FORMATS)
     import_params = JsonField()
+    handler_type = ChoiceField(choices=('XML', 'Simple'))
 
     def before_clean(self):
         self.importhandler = ImportHandler.query.get(self.import_handler_id)

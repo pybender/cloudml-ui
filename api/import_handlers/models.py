@@ -181,6 +181,12 @@ class ImportHandler(db.Model, BaseModel):
         return '<Import Handler %r>' % self.name
 
 
+# TODO: move it xml_import_handlers
+
+class XmlImportHandler(db.Model, BaseModel):
+    name = db.Column(db.String(200), nullable=False, unique=True)
+
+
 class DataSet(db.Model, BaseModel):
     LOG_TYPE = LogMessage.IMPORT_DATA
 
@@ -201,9 +207,15 @@ class DataSet(db.Model, BaseModel):
     data = db.Column(db.String(200))
     import_params = db.Column(JSONType)
 
+    # We will delete old IH in the future
     import_handler_id = db.Column(db.Integer,
                                   db.ForeignKey('import_handler.id'))
     import_handler = relationship('ImportHandler', backref=backref(
+        'datasets', cascade='all,delete'))
+
+    import_handler_xml_id = db.Column(
+        db.Integer, db.ForeignKey('xml_import_handler.id'))
+    import_handler_xml = relationship('XmlImportHandler', backref=backref(
         'datasets', cascade='all,delete'))
 
     on_s3 = db.Column(db.Boolean)

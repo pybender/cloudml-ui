@@ -150,6 +150,7 @@ filesize,records_count,time,created_by,import_handler_id,format'
       data = {
         import_params: JSON.stringify($scope.parameters),
         format: $scope.format
+        handler_type: $scope.handler.TYPE
       }
       $scope.dataset.$save(data).then (() ->
         $scope.close()

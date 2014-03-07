@@ -202,6 +202,7 @@ created_on,created_by,error'
       @PROCESS_STRATEGIES = ['identity', 'string', 'float',
         'boolean', 'integer', 'json', 'composite']
       DATA_FIELDS: ['target_schema']
+      TYPE: 'Simple'
 
       id: null
       created_on: null

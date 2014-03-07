@@ -18,10 +18,8 @@ from api.logs.models import LogMessage
 from core.xmlimporthandler.inputs import Input
 from core.xmlimporthandler.entities import Field
 from core.xmlimporthandler.datasources import DataSource
+from api.import_handlers.models import XmlImportHandler
 
-
-class XmlImportHandler(db.Model, BaseModel):
-    name = db.Column(db.String(200), nullable=False, unique=True)
 
 
 class RefXmlImportHandlerMixin(object):

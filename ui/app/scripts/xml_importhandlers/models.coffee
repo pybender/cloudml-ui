@@ -13,6 +13,7 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
       @LIST_MODEL_NAME: 'xml_import_handlers'
       LIST_MODEL_NAME: @LIST_MODEL_NAME
       @MAIN_FIELDS: 'id,name,created_on,created_by'
+      TYPE: 'XML'
 
       id: null
       name: null
