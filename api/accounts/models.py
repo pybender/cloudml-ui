@@ -38,14 +38,16 @@ class User(BaseMixin, db.Model):
             oauth_token, oauth_token_secret, oauth_verifier)
         info = auth.get_my_info(_oauth_token, _oauth_token_secret,
                                 oauth_verifier)
+        user_info = auth.get_user_info(_oauth_token, _oauth_token_secret,
+                                oauth_verifier)
         logging.info(
-            'User Auth: authenticating user %s', info['auth_user']['uid'])
+            'User Auth: authenticating user %s', info['user']['id'])
         try:
             user = User.query.filter_by(
-                uid=info['auth_user']['uid']).one()
+                uid=info['user']['id']).one()
         except orm_exc.NoResultFound:
             user = User()
-            user.uid = info['auth_user']['uid']
+            user.uid = info['user']['id']
             logging.debug('User Auth: new user %s added', user.uid)
 
         import uuid
@@ -55,9 +57,9 @@ class User(BaseMixin, db.Model):
         user.name = '{0} {1}'.format(
             info['auth_user']['first_name'],
             info['auth_user']['last_name'])
-        user.odesk_url = info['info']['profile_url']
-        user.portrait_32_img = info['info']['portrait_32_img']
-        user.email = info['auth_user']['mail']
+        user.odesk_url = user_info['info']['profile_url']
+        user.portrait_32_img = user_info['info']['portrait_32_img']
+        user.email = info['user']['email']
 
         user.save()
         return auth_token, user
