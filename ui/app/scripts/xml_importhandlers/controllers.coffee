@@ -38,7 +38,7 @@ angular.module('app.xml_importhandlers.controllers', ['app.config', ])
       if mainSection not in $scope.LOADED_SECTIONS
         # is not already loaded
         fields = ImportHandler.MAIN_FIELDS + ',xml_data_sources,
-input_parameters,scripts,entities'
+input_parameters,scripts,entities,import_params'
         if mainSection == 'dataset'
           setTimeout(() ->
             $scope.$broadcast('loadDataSet', true)

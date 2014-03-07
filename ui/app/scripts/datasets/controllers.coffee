@@ -15,13 +15,18 @@ angular.module('app.datasets.controllers', ['app.config', ])
   '$dialog'
   '$rootScope'
   'DataSet'
-  '$window'
+  '$location'
 
-  ($scope, $dialog, $rootScope, DataSet, $window) ->
+  ($scope, $dialog, $rootScope, DataSet, $location) ->
     $scope.MODEL = DataSet
     $scope.FIELDS = 'name,created_on,status,error,data,import_params,on_s3,
 filesize,records_count,time,created_by,updated_by'
     $scope.ACTION = 'loading datasets'
+    if $location.$$path.indexOf('xml') != -1
+      handler_type = 'XML'
+    else
+      handler_type = 'Simple'
+    $scope.filter_opts = {'import_handler_type': handler_type}
 
     $scope.$on('loadDataSet', (event, opts) ->
       setTimeout(() ->
@@ -74,17 +79,28 @@ filesize,records_count,time,created_by,updated_by'
 .controller('DataSetDetailsCtrl', [
   '$scope'
   '$routeParams'
+  '$location'
   'DataSet'
   'ImportHandler'
 
-  ($scope, $routeParams, DataSet, ImportHandler) ->
+  ($scope, $routeParams, $location, DataSet, ImportHandler) ->
+    if $location.$$path.indexOf('xml') != -1
+      handler_type = 'XML'
+    else
+      handler_type = 'Simple'
+
     if not $routeParams.id
       err = "Can't initialize without id"
 
-    $scope.dataset = new DataSet({id: $routeParams.id,
-    import_handler_id: $routeParams.handler_id})
-    $scope.handler = new ImportHandler(
-          {id: $routeParams.handler_id})
+    $scope.handler = new ImportHandler({
+      id: $routeParams.handler_id,
+      import_handler_type: handler_type
+    })
+
+    $scope.dataset = new DataSet({
+      id: $routeParams.id
+      import_handler: $scope.handler
+    })
 
     $scope.go = (section) ->
       $scope.dataset.$load(
@@ -146,6 +162,7 @@ filesize,records_count,time,created_by,import_handler_id,format'
     $scope.start = (result) ->
       $scope.dataset = new DataSet({
         'import_handler_id': $scope.handler.id
+        'import_handler_type': $scope.handler.TYPE
       })
       data = {
         import_params: JSON.stringify($scope.parameters),

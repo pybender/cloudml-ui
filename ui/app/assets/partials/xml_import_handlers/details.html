@@ -1,5 +1,5 @@
 <h2>
-  Import Handler
+  XML Import Handler
   <small title="Title"
     class="title" ng-bind="model.name || 'untitled handler'"
     editable="handler" value="handler.name"
@@ -184,9 +184,9 @@
 <!--   <div ng-show="action[1] == 'xml'">
     Not implemented
   </div> -->
+  </div>
 
   <div ng-show="action[0] == 'dataset'">
-    <h3>DataSets</h3>
     <div ng-controller="DatasetListCtrl" ng-init="init(handler)">
       <ng-include src="'/partials/datasets/list.html'"></ng-include>
     </div>

@@ -186,6 +186,10 @@ class ImportHandler(db.Model, BaseModel):
 class XmlImportHandler(db.Model, BaseModel):
     name = db.Column(db.String(200), nullable=False, unique=True)
 
+    @property
+    def import_params(self):
+        return [p.name for p in self.input_parameters]
+
 
 class DataSet(db.Model, BaseModel):
     LOG_TYPE = LogMessage.IMPORT_DATA

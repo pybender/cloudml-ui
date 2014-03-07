@@ -117,6 +117,15 @@ App.config([
       templateUrl: '/partials/xml_import_handlers/details.html'
       reloadOnSearch: false
     })
+    .when('/xml_importhandlers/:handler_id/datasets', {
+      redirectTo: (p, loc) ->
+        return '/xml_importhandlers/' + p.handler_id + '?action=dataset:list'
+    })
+    .when('/xml_importhandlers/:handler_id/datasets/:id', {
+      controller: 'DataSetDetailsCtrl'
+      templateUrl: '/partials/datasets/details.html'
+      reloadOnSearch: false
+    })
     .when('/importhandlers', {
       controller: "ImportHandlerListCtrl"
       templateUrl: '/partials/import_handler/list.html'

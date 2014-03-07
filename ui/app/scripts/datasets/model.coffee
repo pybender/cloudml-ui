@@ -30,11 +30,15 @@ angular.module('app.datasets.model', ['app.config'])
       import_handler_id: null
       on_s3: false
       format: 'json'
+      import_handler_type: 'Simple'
 
       loadFromJSON: (origData) =>
         super origData
 
         if origData?
+          if origData.import_handler?
+            @import_handler_id = origData.import_handler.id
+            @import_handler_type = origData.import_handler.TYPE
           if origData.on_s3?
             if typeof(origData.on_s3) != "boolean"
               @on_s3 = origData.on_s3 == 'True'
@@ -42,7 +46,9 @@ angular.module('app.datasets.model', ['app.config'])
       constructor: (opts) ->
         super
         @BASE_API_URL = DataSet.$get_api_url(@import_handler_id)
-        @BASE_UI_URL = "/importhandlers/#{@import_handler_id}/datasets/"
+        if @import_handler_type == 'XML' then prefix = "xml_" else prefix = ''
+        @BASE_UI_URL = "/#{prefix}importhandlers/#{@import_handler_id}
+/datasets/"
 
       @$get_api_url: (handler_id) ->
         return "#{settings.apiUrl}importhandlers/#{handler_id}/datasets/"

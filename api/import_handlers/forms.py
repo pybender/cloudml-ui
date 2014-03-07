@@ -3,7 +3,7 @@ import json
 from api.base.forms import BaseForm, CharField, JsonField, \
     ChoiceField, ValidationError, BooleanField, IntegerField, \
     DocumentField
-from models import DataSet, ImportHandler, PredefinedDataSource
+from models import DataSet, ImportHandler, PredefinedDataSource, XmlImportHandler
 from core.importhandler.importhandler import ImportHandlerException,\
     ExtractionPlan
 
@@ -145,8 +145,15 @@ class DataSetAddForm(BaseForm):
     import_params = JsonField()
     handler_type = ChoiceField(choices=('XML', 'Simple'))
 
+    @property
+    def is_xml(self):
+        return self.data.get('handler_type') == 'XML'
+
     def before_clean(self):
-        self.importhandler = ImportHandler.query.get(self.import_handler_id)
+        if self.is_xml:
+            self.importhandler = XmlImportHandler.query.get(self.import_handler_id)
+        else:
+            self.importhandler = ImportHandler.query.get(self.import_handler_id)
 
     def clean_import_params(self, value, field):
         if not isinstance(value, dict):
@@ -167,7 +174,10 @@ class DataSetAddForm(BaseForm):
         str_params = "-".join(["%s=%s" % item
                               for item in dataset.import_params.iteritems()])
         dataset.name = "%s: %s" % (self.importhandler.name, str_params)
-        dataset.import_handler_id = self.importhandler.id
+        if self.is_xml:
+            dataset.import_handler_xml_id = self.importhandler.id
+        else:
+            dataset.import_handler_id = self.importhandler.id
         dataset.compress = True
         dataset.save()
         dataset.set_file_path()
