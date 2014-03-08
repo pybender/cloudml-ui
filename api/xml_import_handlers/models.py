@@ -10,6 +10,7 @@ from boto.exception import S3ResponseError
 from sqlalchemy.orm import relationship, deferred, backref, validates
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy.orm import undefer, joinedload_all, joinedload
 
 from api import app
 from api.amazon_utils import AmazonS3Helper
@@ -19,7 +20,6 @@ from core.xmlimporthandler.inputs import Input
 from core.xmlimporthandler.entities import Field
 from core.xmlimporthandler.datasources import DataSource
 from api.import_handlers.models import XmlImportHandler
-
 
 
 class RefXmlImportHandlerMixin(object):
@@ -50,6 +50,7 @@ class XmlDataSource(db.Model, BaseMixin, RefXmlImportHandlerMixin):
 
 
 class InputParameter(db.Model, BaseMixin, RefXmlImportHandlerMixin):
+    FIELDS_TO_SERIALIZE = ['name', 'type', 'regex', 'format']
     TYPES = Input.PROCESS_STRATEGIES.keys()
 
     # TODO: unique for XmlImportHandler
@@ -64,6 +65,7 @@ class Script(db.Model, BaseMixin, RefXmlImportHandlerMixin):
 
 
 class Query(db.Model, BaseMixin):
+    FIELDS_TO_SERIALIZE = ['target', ]
     target = db.Column(db.String(200))
     text = db.Column(db.Text)
 
@@ -82,10 +84,19 @@ class Entity(db.Model, BaseMixin, RefXmlImportHandlerMixin):
     query_id = db.Column(db.ForeignKey('query.id', ondelete='CASCADE'))
     query_obj = relationship('Query', foreign_keys=[query_id])
 
+    def to_dict(self):
+        ent = {'name': self.name}
+        if self.datasource:
+            ent['datasource'] = self.datasource.name
+        return ent
+
 
 class Field(db.Model, BaseMixin):
     TYPES = Field.PROCESS_STRATEGIES.keys()
     TRANSFORM_TYPES = ['json', 'csv']
+    FIELDS_TO_SERIALIZE = ['name', 'type', 'column', 'jsonpath', 'join',
+                           'regex', 'split', 'dateFormat', 'template',
+                           'transform', 'headers', 'script']
 
     name = db.Column(db.String(200), nullable=False)
     type = db.Column(db.Enum(*TYPES, name='xml_field_types'))
@@ -105,3 +116,23 @@ class Field(db.Model, BaseMixin):
 
     entity_id = db.Column(db.ForeignKey('entity.id', ondelete='CASCADE'))
     entity = relationship('Entity', foreign_keys=[entity_id], backref='fields')
+
+
+def get_entity_tree(handler):
+    def load_ent(parent=None):
+        return Entity.query\
+            .options(
+                joinedload_all(Entity.fields),
+                joinedload(Entity.datasource),
+                joinedload(Entity.query_obj)).filter_by(
+                    import_handler=handler,
+                    entity=parent)
+
+    def new_ent(entity):
+        res = {'entity': entity, 'entities': {}}
+        for sub_ent in load_ent(entity):
+            res['entities'][sub_ent.name] = new_ent(sub_ent)
+        return res
+
+    entity = load_ent().one()
+    return {entity.name: new_ent(entity)}

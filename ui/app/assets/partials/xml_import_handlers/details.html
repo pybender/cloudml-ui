@@ -38,11 +38,11 @@
  
 <div class="tab-content" ng-show="handler.loaded">
   <div ng-show="action[0] == 'model'">
-<!--     <p class="switcher">
+    <p class="switcher">
       <b>Switch View: </b>
       <a ng-class="{active: action[1] == 'details'}" ng-click="setSection(['model', 'details'])">Standart</a> | 
       <a ng-class="{active: action[1] == 'xml'}" ng-click="setSection(['model', 'xml']);">XML File</a>
-    </p> -->
+    </p>
     <div ng-show="action[1] == 'details'">
       <div class="accordion">
         <!-- datasources -->
@@ -181,9 +181,14 @@
     </div>
   </div>
 
-<!--   <div ng-show="action[1] == 'xml'">
-    Not implemented
-  </div> -->
+  <div ng-show="action[1] == 'xml'">
+    <textarea name="data" ui-codemirror="{
+      lineNumbers: true,
+      indentWithTabs: true,
+      theme:'twilight',
+      mode: 'xml'
+    }" ui-refresh="action" ng-model="handler.xml"></textarea>
+  </div>
   </div>
 
   <div ng-show="action[0] == 'dataset'">

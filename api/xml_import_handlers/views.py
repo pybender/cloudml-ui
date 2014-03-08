@@ -1,5 +1,3 @@
-from sqlalchemy.orm import undefer, joinedload_all, joinedload
-
 from api.base.resources import BaseResourceSQL
 from api import api
 from models import XmlImportHandler, Field, Entity
@@ -19,24 +17,13 @@ class XmlImportHandlerResource(BaseResourceSQL):
     def _prepare_model(self, model, params):
         res = super(XmlImportHandlerResource, self)._prepare_model(
             model, params)
-        if 'entities' in self._get_show_fields(params):
-            def load_ent(parent=None):
-                return Entity.query\
-                    .options(
-                        joinedload_all(Entity.fields),
-                        joinedload(Entity.datasource),
-                        joinedload(Entity.query_obj)).filter_by(
-                            import_handler=model,
-                            entity=parent)
+        show = self._get_show_fields(params)
+        if 'xml' in show:
+            res['xml'] = model.to_xml()
 
-            def new_ent(entity):
-                res = {'entity': entity, 'entities': {}}
-                for sub_ent in load_ent(entity):
-                    res['entities'][sub_ent.name] = new_ent(sub_ent)
-                return res
-
-            entity = load_ent().one()
-            res['entities'] = {entity.name: new_ent(entity)}
+        if 'entities' in show:
+            from api.xml_import_handlers.models import get_entity_tree
+            res['entities'] = get_entity_tree(model)
 
         return res
 

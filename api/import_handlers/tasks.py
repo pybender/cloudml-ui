@@ -20,7 +20,13 @@ def import_data(dataset_id, model_id=None, test_id=None):
     from core.importhandler.importhandler import ExtractionPlan, ImportHandler
     try:
         dataset = DataSet.query.get(dataset_id)
-        importhandler = dataset.import_handler
+        if dataset.xml_import_handler:
+            importhandler = dataset.xml_import_handler
+            is_xml = True
+        else:
+            importhandler = dataset.import_handler
+            is_xml = False
+
         if dataset is None or importhandler is None:
             raise ValueError('DataSet or Import Handler not found')
         obj = None
@@ -39,7 +45,12 @@ def import_data(dataset_id, model_id=None, test_id=None):
 
         logging.info("Import dataset using import handler '%s' \
 with%s compression", importhandler.name, '' if dataset.compress else 'out')
-        handler = json.dumps(importhandler.data)
+
+        if is_xml:
+            handler = importhandler.to_xml()
+        else:
+            handler = json.dumps(importhandler.data)
+
         plan = ExtractionPlan(handler, is_file=False)
         handler = ImportHandler(plan, dataset.import_params)
         logging.info('The dataset will be stored to file %s', dataset.filename)

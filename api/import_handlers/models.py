@@ -186,6 +186,45 @@ class ImportHandler(db.Model, BaseModel):
 class XmlImportHandler(db.Model, BaseModel):
     name = db.Column(db.String(200), nullable=False, unique=True)
 
+    def to_xml(self):
+        from lxml import etree
+        plan = etree.Element("plan")
+
+        for scr in self.scripts:
+            scr_tag = etree.SubElement(plan, 'script')
+            scr_tag.text = scr.data
+
+        inputs = etree.SubElement(plan, "inputs")
+        for param in self.input_parameters:
+            etree.SubElement(inputs, "param", **param.to_dict())
+
+        datasources = etree.SubElement(plan, "datasources")
+        for ds in self.xml_data_sources:
+            etree.SubElement(
+                datasources, ds.type, name=ds.name, **ds.params)
+
+        import_ = etree.SubElement(plan, "import")
+        from api.xml_import_handlers.models import get_entity_tree
+        tree = get_entity_tree(self)
+
+        def build_tree(entity):
+            ent = etree.SubElement(import_, "entity", **entity.to_dict())
+            if entity.query_obj:
+                query = etree.SubElement(
+                    ent, "query", **entity.query_obj.to_dict())
+                query.text = entity.query_obj.text
+
+            for field in entity.fields:
+                etree.SubElement(ent, "field", **field.to_dict())
+            for subentity in entity.entities:
+                build_tree(subentity)
+
+        for item_dict in tree.values():
+            entity = item_dict['entity']
+            build_tree(entity)
+
+        return etree.tostring(plan, pretty_print=True)
+
     @property
     def import_params(self):
         return [p.name for p in self.input_parameters]
