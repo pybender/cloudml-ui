@@ -256,9 +256,9 @@ class DataSet(db.Model, BaseModel):
     import_handler = relationship('ImportHandler', backref=backref(
         'datasets', cascade='all,delete'))
 
-    import_handler_xml_id = db.Column(
+    xml_import_handler_id = db.Column(
         db.Integer, db.ForeignKey('xml_import_handler.id'))
-    import_handler_xml = relationship('XmlImportHandler', backref=backref(
+    xml_import_handler = relationship('XmlImportHandler', backref=backref(
         'datasets', cascade='all,delete'))
 
     on_s3 = db.Column(db.Boolean)

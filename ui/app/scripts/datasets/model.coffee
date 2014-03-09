@@ -68,9 +68,13 @@ angular.module('app.datasets.model', ['app.config'])
         if not handler_id?
           throw new Error "Import Handler is required to load datasets"
         delete opts['handler_id']
+        import_handler_type = opts.import_handler_type || 'Simple'
 
         resolver = (resp, Model) ->
-          extra = {loaded: true, import_handler_id: handler_id}
+          extra = {
+            loaded: true
+            import_handler_id: handler_id
+            import_handler_type: import_handler_type}
           {
             objects: (
               new DataSet(_.extend(obj, extra)) \

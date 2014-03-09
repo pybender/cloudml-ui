@@ -61,7 +61,7 @@ class InputParameter(db.Model, BaseMixin, RefXmlImportHandlerMixin):
 
 
 class Script(db.Model, BaseMixin, RefXmlImportHandlerMixin):
-    data = db.Column(db.String(200))
+    data = db.Column(db.Text)
 
 
 class Query(db.Model, BaseMixin):
@@ -110,9 +110,7 @@ class Field(db.Model, BaseMixin):
     transform = db.Column(
         db.Enum(*TRANSFORM_TYPES, name='xml_transform_types'))
     headers = db.Column(db.String(200))
-
-    script_id = db.Column(db.ForeignKey('script.id', ondelete='CASCADE'))
-    script = relationship('Script', foreign_keys=[script_id])
+    script = db.Column(db.Text)
 
     entity_id = db.Column(db.ForeignKey('entity.id', ondelete='CASCADE'))
     entity = relationship('Entity', foreign_keys=[entity_id], backref='fields')

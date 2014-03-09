@@ -17,7 +17,7 @@ admin.add_view(ImportHandlerAdmin(
 class XmlDataSourceAdmin(BaseAdmin):
     MIX_METADATA = False
     Model = XmlDataSource
-    column_list = ['id', 'name']
+    column_list = ['id', 'name', 'type', 'params']
     column_filters = ('name', )
 
 admin.add_view(XmlDataSourceAdmin(

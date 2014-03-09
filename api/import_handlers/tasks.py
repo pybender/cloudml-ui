@@ -17,7 +17,6 @@ def import_data(dataset_id, model_id=None, test_id=None):
     """
     Import data from database.
     """
-    from core.importhandler.importhandler import ExtractionPlan, ImportHandler
     try:
         dataset = DataSet.query.get(dataset_id)
         if dataset.xml_import_handler:
@@ -47,12 +46,16 @@ def import_data(dataset_id, model_id=None, test_id=None):
 with%s compression", importhandler.name, '' if dataset.compress else 'out')
 
         if is_xml:
-            handler = importhandler.to_xml()
+            from core.xmlimporthandler.importhandler import ExtractionPlan, \
+                ImportHandler
+            plan = ExtractionPlan(importhandler.to_xml(), is_file=False)
+            handler = ImportHandler(plan, dataset.import_params)
         else:
+            from core.importhandler.importhandler import ExtractionPlan, \
+                ImportHandler
             handler = json.dumps(importhandler.data)
-
-        plan = ExtractionPlan(handler, is_file=False)
-        handler = ImportHandler(plan, dataset.import_params)
+            plan = ExtractionPlan(handler, is_file=False)
+            handler = ImportHandler(plan, dataset.import_params)
         logging.info('The dataset will be stored to file %s', dataset.filename)
 
         if dataset.format == dataset.FORMAT_CSV:

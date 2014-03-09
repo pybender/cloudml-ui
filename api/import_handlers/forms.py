@@ -175,7 +175,7 @@ class DataSetAddForm(BaseForm):
                               for item in dataset.import_params.iteritems()])
         dataset.name = "%s: %s" % (self.importhandler.name, str_params)
         if self.is_xml:
-            dataset.import_handler_xml_id = self.importhandler.id
+            dataset.xml_import_handler_id = self.importhandler.id
         else:
             dataset.import_handler_id = self.importhandler.id
         dataset.compress = True

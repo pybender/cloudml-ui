@@ -4,6 +4,7 @@ from api.base.forms import BaseForm, CharField, JsonField, \
 from models import XmlImportHandler, XmlDataSource, InputParameter, Script, \
     Entity, Field, Query
 from api import app
+from core.xmlimporthandler.exceptions import ImportHandlerException
 
 db = app.sql_db
 
@@ -21,22 +22,28 @@ class XmlImportHandlerAddForm(BaseForm):
 exist. Please choose another one.' % value)
         return value
 
+    def clean_data(self, value, field):
+        try:
+            from core.xmlimporthandler.importhandler import ExtractionPlan
+            return ExtractionPlan(value, is_file=False)
+        except ImportHandlerException, exc:
+            raise ValidationError(exc)
+
     def save(self):
         try:
             import_handler = XmlImportHandler(name=self.cleaned_data['name'])
             db.session.add(import_handler)
-
-            data = self.cleaned_data.get('data')
-            if data is not None:  # Loading import handler from XML file
-                from core.xmlimporthandler.importhandler import ExtractionPlan
-                plan = ExtractionPlan(data, is_file=False)
+            plan = self.cleaned_data.get('data')
+            if plan is not None:  # Loading import handler from XML file
                 ds_dict = {}
                 for datasource in plan.datasources.values():
+                    POSSIBLE_PARAMS = ['host', 'dbname', 'port',
+                                       'user', 'password', 'vender']
                     ds = XmlDataSource(
                         name=datasource.name,
                         type=datasource.type,
                         import_handler=import_handler,
-                        params={})
+                        params=datasource.get_params())
                     ds_dict[datasource.name] = ds
                     db.session.add(ds)
 
