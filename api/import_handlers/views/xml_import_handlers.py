@@ -1,7 +1,7 @@
 from api.base.resources import BaseResourceSQL
 from api import api
-from models import XmlImportHandler, Field, Entity
-from forms import XmlImportHandlerAddForm
+from api.import_handlers.models import XmlImportHandler
+from api.import_handlers.forms import XmlImportHandlerAddForm
 
 
 class XmlImportHandlerResource(BaseResourceSQL):

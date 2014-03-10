@@ -1,8 +1,8 @@
 from api.base.forms import BaseForm, CharField, JsonField, \
     ChoiceField, ValidationError, BooleanField, IntegerField, \
     DocumentField
-from models import XmlImportHandler, XmlDataSource, InputParameter, Script, \
-    Entity, Field, Query
+from api.import_handlers.models import XmlImportHandler, XmlDataSource, \
+    XmlInputParameter, XmlScript, XmlEntity, XmlField, XmlQuery
 from api import app
 from core.xmlimporthandler.exceptions import ImportHandlerException
 
@@ -48,7 +48,7 @@ exist. Please choose another one.' % value)
                     db.session.add(ds)
 
                 for inp in plan.inputs.values():
-                    param = InputParameter(
+                    param = XmlInputParameter(
                         name=inp.name,
                         type=inp.type,
                         regex=inp.regex,
@@ -57,7 +57,7 @@ exist. Please choose another one.' % value)
                     db.session.add(param)
 
                 for scr in plan.data.xpath("script"):
-                    script = Script(
+                    script = XmlScript(
                         data=scr.text, import_handler=import_handler)
                     db.session.add(script)
 
@@ -69,7 +69,7 @@ exist. Please choose another one.' % value)
 
                 def load_query(entity, db_entity):
                     if entity.query:
-                        qr = Query(
+                        qr = XmlQuery(
                             text=entity.query,
                             target=entity.query_target)
                         db.session.add(qr)
@@ -78,7 +78,7 @@ exist. Please choose another one.' % value)
 
                 def load_entity_items(entity, db_entity):
                     for field in entity.fields.values():
-                        fld = Field(
+                        fld = XmlField(
                             name=field.name,
                             type=field.type,
                             column=field.column,
@@ -97,7 +97,7 @@ exist. Please choose another one.' % value)
                     sub_entities = entity.nested_entities_field_ds.values() + \
                         entity.nested_entities_global_ds
                     for sub_entity in sub_entities:
-                        sub_ent = Entity(
+                        sub_ent = XmlEntity(
                             name=sub_entity.name,
                             import_handler=import_handler)
                         sub_ent.entity = db_entity
@@ -106,7 +106,7 @@ exist. Please choose another one.' % value)
                         load_query(sub_entity, db_entity=sub_ent)
                         load_entity_items(sub_entity, db_entity=sub_ent)
 
-                ent = Entity(
+                ent = XmlEntity(
                     name=plan.entity.name,
                     import_handler=import_handler,
                     datasource=get_datasource(plan.entity))

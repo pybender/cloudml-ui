@@ -160,7 +160,7 @@ if app.config.get('SEND_ERROR_EMAILS'):
 
 APPS = ('accounts', 'features', 'import_handlers', 'instances',
         'logs', 'ml_models', 'model_tests', 'statistics', 'reports',
-        'async_tasks', 'xml_import_handlers')
+        'async_tasks')
 
 
 def importer(app_name):
@@ -168,7 +168,9 @@ def importer(app_name):
         try:
             __import__(name)
         except ImportError, exc:
-            if str(exc).startswith('No module named'):
+            exc_msg = str(exc)
+            mod = name.split('.')[2]
+            if exc_msg.startswith('No module named') and mod in exc_msg:
                 return False
             raise
         else:

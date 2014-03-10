@@ -2,7 +2,8 @@ from flask.ext.admin.model.template import macro
 
 from api import admin
 from api.base.admin import BaseAdmin
-from models import *
+from api.import_handlers.models import XmlScript, XmlQuery, XmlEntity, XmlField, \
+    XmlImportHandler, XmlDataSource, XmlInputParameter
 
 
 class ImportHandlerAdmin(BaseAdmin):
@@ -11,7 +12,7 @@ class ImportHandlerAdmin(BaseAdmin):
     column_filters = ('name', )
 
 admin.add_view(ImportHandlerAdmin(
-    name='XML Import Handler', category='XML Import Handlers'))
+    name='XML Import Handler', category='Import Handlers'))
 
 
 class XmlDataSourceAdmin(BaseAdmin):
@@ -21,51 +22,51 @@ class XmlDataSourceAdmin(BaseAdmin):
     column_filters = ('name', )
 
 admin.add_view(XmlDataSourceAdmin(
-    name='XML Data Source', category='XML Import Handlers'))
+    name='XML Data Source', category='Import Handlers'))
 
 
 class InputParameterAdmin(BaseAdmin):
     MIX_METADATA = False
-    Model = InputParameter
+    Model = XmlInputParameter
     column_list = ['id', 'name']
     column_filters = ('name', )
 
 admin.add_view(InputParameterAdmin(
-    name='Input Parameter', category='XML Import Handlers'))
+    name='XML Input Parameter', category='Import Handlers'))
 
 
 class ScriptAdmin(BaseAdmin):
     MIX_METADATA = False
-    Model = Script
+    Model = XmlScript
     column_list = ['id']
 
 admin.add_view(ScriptAdmin(
-    name='Script', category='XML Import Handlers'))
+    name='XML Script', category='Import Handlers'))
 
 
 class QueryAdmin(BaseAdmin):
     MIX_METADATA = False
-    Model = Query
+    Model = XmlQuery
     column_list = ['id']
 
 admin.add_view(QueryAdmin(
-    name='Query', category='XML Import Handlers'))
+    name='XML Query', category='Import Handlers'))
 
 
 class EntityAdmin(BaseAdmin):
     MIX_METADATA = False
-    Model = Entity
+    Model = XmlEntity
     column_list = ['id', 'name']
 
 admin.add_view(EntityAdmin(
-    name='Entity', category='XML Import Handlers'))
+    name='XML Entity', category='Import Handlers'))
 
 
 class FieldAdmin(BaseAdmin):
     MIX_METADATA = False
-    Model = Field
+    Model = XmlField
     column_list = ['id', 'name']
     column_filters = ('name', )
 
 admin.add_view(FieldAdmin(
-    name='Entity Field', category='XML Import Handlers'))
+    name='XML Entity Field', category='Import Handlers'))

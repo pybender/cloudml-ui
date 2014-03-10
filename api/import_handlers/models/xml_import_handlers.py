@@ -1,25 +1,69 @@
-import json
-import logging
-import os
-import StringIO
-import uuid
-from os.path import join, exists
-from os import makedirs
-
-from boto.exception import S3ResponseError
+from lxml import etree
 from sqlalchemy.orm import relationship, deferred, backref, validates
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import undefer, joinedload_all, joinedload
 
-from api import app
-from api.amazon_utils import AmazonS3Helper
-from api.base.models import db, BaseModel, JSONType, assertion_msg, BaseMixin
-from api.logs.models import LogMessage
+from import_handlers import ImportHandlerMixin
+from api.base.models import db, BaseMixin, JSONType
 from core.xmlimporthandler.inputs import Input
 from core.xmlimporthandler.entities import Field
 from core.xmlimporthandler.datasources import DataSource
-from api.import_handlers.models import XmlImportHandler
+
+
+class XmlImportHandler(db.Model, ImportHandlerMixin):
+    TYPE = 'XML'
+
+    def get_plan_config(self):
+        plan = etree.Element("plan")
+
+        for scr in self.scripts:
+            scr_tag = etree.SubElement(plan, 'script')
+            scr_tag.text = scr.data
+
+        inputs = etree.SubElement(plan, "inputs")
+        for param in self.input_parameters:
+            etree.SubElement(inputs, "param", **param.to_dict())
+
+        datasources = etree.SubElement(plan, "datasources")
+        for ds in self.xml_data_sources:
+            etree.SubElement(
+                datasources, ds.type, name=ds.name, **ds.params)
+
+        import_ = etree.SubElement(plan, "import")
+        from api.xml_import_handlers.models import get_entity_tree
+        tree = get_entity_tree(self)
+
+        def build_tree(entity):
+            ent = etree.SubElement(import_, "entity", **entity.to_dict())
+            if entity.query_obj:
+                query = etree.SubElement(
+                    ent, "query", **entity.query_obj.to_dict())
+                query.text = entity.query_obj.text
+
+            for field in entity.fields:
+                etree.SubElement(ent, "field", **field.to_dict())
+            for subentity in entity.entities:
+                build_tree(subentity)
+
+        for item_dict in tree.values():
+            entity = item_dict['entity']
+            build_tree(entity)
+
+        return etree.tostring(plan, pretty_print=True)
+
+    def get_extraction_plan(self):
+        from core.xmlimporthandler.importhandler import ExtractionPlan
+        return ExtractionPlan(importhandler.get_plan_config(), is_file=False)
+
+    def get_fields(self):
+        """
+        Returns list of the field names
+        """
+        return []
+
+    def get_import_params(self):
+        return [p.name for p in self.input_parameters]
 
 
 class RefXmlImportHandlerMixin(object):
@@ -49,7 +93,7 @@ class XmlDataSource(db.Model, BaseMixin, RefXmlImportHandlerMixin):
         return params
 
 
-class InputParameter(db.Model, BaseMixin, RefXmlImportHandlerMixin):
+class XmlInputParameter(db.Model, BaseMixin, RefXmlImportHandlerMixin):
     FIELDS_TO_SERIALIZE = ['name', 'type', 'regex', 'format']
     TYPES = Input.PROCESS_STRATEGIES.keys()
 
@@ -60,29 +104,29 @@ class InputParameter(db.Model, BaseMixin, RefXmlImportHandlerMixin):
     format = db.Column(db.String(200))
 
 
-class Script(db.Model, BaseMixin, RefXmlImportHandlerMixin):
+class XmlScript(db.Model, BaseMixin, RefXmlImportHandlerMixin):
     data = db.Column(db.Text)
 
 
-class Query(db.Model, BaseMixin):
+class XmlQuery(db.Model, BaseMixin):
     FIELDS_TO_SERIALIZE = ['target', ]
     target = db.Column(db.String(200))
     text = db.Column(db.Text)
 
 
-class Entity(db.Model, BaseMixin, RefXmlImportHandlerMixin):
+class XmlEntity(db.Model, BaseMixin, RefXmlImportHandlerMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
-    entity_id = db.Column(db.ForeignKey('entity.id',
+    entity_id = db.Column(db.ForeignKey('xml_entity.id',
                                         ondelete='CASCADE'))
-    entity = relationship('Entity', remote_side=[id], backref='entities')
+    entity = relationship('XmlEntity', remote_side=[id], backref='entities')
 
     datasource_id = db.Column(db.ForeignKey('xml_data_source.id',
                                             ondelete='CASCADE'))
     datasource = relationship('XmlDataSource',
                               foreign_keys=[datasource_id])
-    query_id = db.Column(db.ForeignKey('query.id', ondelete='CASCADE'))
-    query_obj = relationship('Query', foreign_keys=[query_id])
+    query_id = db.Column(db.ForeignKey('xml_query.id', ondelete='CASCADE'))
+    query_obj = relationship('XmlQuery', foreign_keys=[query_id])
 
     def to_dict(self):
         ent = {'name': self.name}
@@ -91,7 +135,7 @@ class Entity(db.Model, BaseMixin, RefXmlImportHandlerMixin):
         return ent
 
 
-class Field(db.Model, BaseMixin):
+class XmlField(db.Model, BaseMixin):
     TYPES = Field.PROCESS_STRATEGIES.keys()
     TRANSFORM_TYPES = ['json', 'csv']
     FIELDS_TO_SERIALIZE = ['name', 'type', 'column', 'jsonpath', 'join',
@@ -112,17 +156,18 @@ class Field(db.Model, BaseMixin):
     headers = db.Column(db.String(200))
     script = db.Column(db.Text)
 
-    entity_id = db.Column(db.ForeignKey('entity.id', ondelete='CASCADE'))
-    entity = relationship('Entity', foreign_keys=[entity_id], backref='fields')
+    entity_id = db.Column(db.ForeignKey('xml_entity.id', ondelete='CASCADE'))
+    entity = relationship(
+        'XmlEntity', foreign_keys=[entity_id], backref='fields')
 
 
 def get_entity_tree(handler):
     def load_ent(parent=None):
-        return Entity.query\
+        return XmlEntity.query\
             .options(
-                joinedload_all(Entity.fields),
-                joinedload(Entity.datasource),
-                joinedload(Entity.query_obj)).filter_by(
+                joinedload_all(XmlEntity.fields),
+                joinedload(XmlEntity.datasource),
+                joinedload(XmlEntity.query_obj)).filter_by(
                     import_handler=handler,
                     entity=parent)
 
