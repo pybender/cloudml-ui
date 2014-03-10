@@ -1,5 +1,5 @@
 """# DataSet forms"""
-from api.import_handlers.models import DataSet, ImportHandler
+from api.import_handlers.models import DataSet, ImportHandler, XmlImportHandler
 from api.base.forms import BaseForm, CharField, JsonField, \
     ChoiceField, ValidationError, BooleanField, IntegerField, \
     DocumentField
@@ -9,17 +9,18 @@ class DataSetAddForm(BaseForm):
     required_fields = ('format', )
     format = ChoiceField(choices=DataSet.FORMATS)
     import_params = JsonField()
-    handler_type = ChoiceField(choices=('XML', 'Simple'))
+    handler_type = ChoiceField(choices=('XML', 'JSON'))
 
     @property
-    def is_xml(self):
-        return self.data.get('handler_type') == 'XML'
+    def import_handler_cls(self):
+        if self.data.get('handler_type') == 'XML':
+            return XmlImportHandler
+        else:
+            return ImportHandler
 
     def before_clean(self):
-        if self.is_xml:
-            self.importhandler = XmlImportHandler.query.get(self.import_handler_id)
-        else:
-            self.importhandler = ImportHandler.query.get(self.import_handler_id)
+        self.importhandler = self.import_handler_cls.query.get(
+            self.import_handler_id)
 
     def clean_import_params(self, value, field):
         if not isinstance(value, dict):
@@ -34,20 +35,12 @@ class DataSetAddForm(BaseForm):
 
     def save(self, commit=True):
         from api.import_handlers.tasks import import_data
-
-        dataset = super(DataSetAddForm, self).save(commit=False)
-
-        str_params = "-".join(["%s=%s" % item
-                              for item in dataset.import_params.iteritems()])
-        dataset.name = "%s: %s" % (self.importhandler.name, str_params)
-        if self.is_xml:
-            dataset.xml_import_handler_id = self.importhandler.id
-        else:
-            dataset.import_handler_id = self.importhandler.id
-        dataset.compress = True
+        dataset = self.importhandler.create_dataset(
+            params=self.cleaned_data['import_params'],
+            data_format=self.cleaned_data['format'],
+            compress=True)
         dataset.save()
-        dataset.set_file_path()
-        import_data.delay(str(dataset.id))
+        import_data.delay(dataset.id)
         return dataset
 
 

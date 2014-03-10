@@ -12,18 +12,18 @@ from core.xmlimporthandler.datasources import DataSource
 
 
 class XmlImportHandler(db.Model, ImportHandlerMixin):
-    TYPE = 'XML'
+    TYPE = 'xml'
 
-    def get_plan_config(self):
+    def get_plan_config(self, pretty_print=True):
         plan = etree.Element("plan")
 
-        for scr in self.scripts:
-            scr_tag = etree.SubElement(plan, 'script')
-            scr_tag.text = scr.data
-
         inputs = etree.SubElement(plan, "inputs")
-        for param in self.input_parameters:
+        for param in self.xml_input_parameters:
             etree.SubElement(inputs, "param", **param.to_dict())
+
+        for scr in self.xml_scripts:
+            scr_tag = etree.SubElement(plan, 'script')
+            scr_tag.text = etree.CDATA(scr.data)
 
         datasources = etree.SubElement(plan, "datasources")
         for ds in self.xml_data_sources:
@@ -31,7 +31,6 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
                 datasources, ds.type, name=ds.name, **ds.params)
 
         import_ = etree.SubElement(plan, "import")
-        from api.xml_import_handlers.models import get_entity_tree
         tree = get_entity_tree(self)
 
         def build_tree(entity):
@@ -39,7 +38,7 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
             if entity.query_obj:
                 query = etree.SubElement(
                     ent, "query", **entity.query_obj.to_dict())
-                query.text = entity.query_obj.text
+                query.text = etree.CDATA(entity.query_obj.text)
 
             for field in entity.fields:
                 etree.SubElement(ent, "field", **field.to_dict())
@@ -50,11 +49,13 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
             entity = item_dict['entity']
             build_tree(entity)
 
-        return etree.tostring(plan, pretty_print=True)
+        return etree.tostring(plan, pretty_print=pretty_print)
 
-    def get_extraction_plan(self):
-        from core.xmlimporthandler.importhandler import ExtractionPlan
-        return ExtractionPlan(importhandler.get_plan_config(), is_file=False)
+    def get_iterator(self, params):
+        from core.xmlimporthandler.importhandler import ExtractionPlan, \
+            ImportHandler as CoreImportHandler
+        plan = ExtractionPlan(self.get_plan_config(), is_file=False)
+        return CoreImportHandler(plan, params)
 
     def get_fields(self):
         """
@@ -117,6 +118,7 @@ class XmlQuery(db.Model, BaseMixin):
 class XmlEntity(db.Model, BaseMixin, RefXmlImportHandlerMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
+    datasource_name = db.Column(db.String(200), nullable=True)
     entity_id = db.Column(db.ForeignKey('xml_entity.id',
                                         ondelete='CASCADE'))
     entity = relationship('XmlEntity', remote_side=[id], backref='entities')
@@ -129,7 +131,7 @@ class XmlEntity(db.Model, BaseMixin, RefXmlImportHandlerMixin):
     query_obj = relationship('XmlQuery', foreign_keys=[query_id])
 
     def to_dict(self):
-        ent = {'name': self.name}
+        ent = {'name': self.name, 'datasource': self.datasource_name}
         if self.datasource:
             ent['datasource'] = self.datasource.name
         return ent

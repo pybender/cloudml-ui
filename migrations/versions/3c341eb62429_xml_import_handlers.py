@@ -88,6 +88,7 @@ def upgrade():
         'xml_entity',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('name', sa.String(length=200), nullable=False),
+        sa.Column('datasource_name', sa.String(length=200), nullable=True)
         sa.Column('entity_id', sa.Integer(), nullable=True),
         sa.Column('datasource_id', sa.Integer(), nullable=True),
         sa.Column('query_id', sa.Integer(), nullable=True),
@@ -122,6 +123,7 @@ def upgrade():
                                 ['xml_entity.id'], ondelete='CASCADE'),
         sa.PrimaryKeyConstraint('id')
     )
+    op.create_unique_constraint(None, 'xml_import_handler', ['name'])
 
 
 def downgrade():
@@ -132,6 +134,7 @@ def downgrade():
     op.drop_table('xml_script')
     op.drop_table('xml_import_handler')
     op.drop_table('xml_query')
+    op.create_index('xml_import_handler_name_key', 'xml_import_handler', [u'name'], unique=True)
     delete_enum_types()
 
 

@@ -119,12 +119,7 @@ App.config([
     })
     .when('/handlers/xml/:handler_id/datasets', {
       redirectTo: (p, loc) ->
-        return '/xml_importhandlers/' + p.handler_id + '?action=dataset:list'
-    })
-    .when('/handlers/xml/:handler_id/datasets/:id', {
-      controller: 'DataSetDetailsCtrl'
-      templateUrl: '/partials/datasets/details.html'
-      reloadOnSearch: false
+        return '/handlers/xml/' + p.handler_id + '?action=dataset:list'
     })
     .when('/handlers/json', {
       controller: "ImportHandlerListCtrl"
@@ -151,7 +146,7 @@ App.config([
       redirectTo: (params, loc) ->
         return '/importhandlers/' + params.handler_id + '?action=dataset:list'
     })
-    .when('/handlers/json/:handler_id/datasets/:id', {
+    .when('/handlers/:import_handler_type/:import_handler_id/datasets/:id', {
       controller: 'DataSetDetailsCtrl'
       templateUrl: '/partials/datasets/details.html'
       reloadOnSearch: false

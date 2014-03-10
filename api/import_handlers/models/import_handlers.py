@@ -4,6 +4,9 @@ from sqlalchemy.ext.declarative import declared_attr
 from api.base.models import db, BaseModel
 
 
+IMPORT_HANDLER_TYPES = ('xml', 'json')
+
+
 class ImportHandlerMixin(BaseModel):
     TYPE = 'N/A'
 
@@ -19,8 +22,8 @@ class ImportHandlerMixin(BaseModel):
         """ Returns config that would be used for creating Extraction Plan """
         return ""
 
-    def get_extraction_plan(self):
-        raise Exception('Not implemented')
+    def get_iterator(self, params):
+        raise Exception('not inplemented')
 
     def get_fields(self):
         """
@@ -28,15 +31,17 @@ class ImportHandlerMixin(BaseModel):
         """
         return []
 
-    def create_dataset(self, params, data_format='json'):
+    def create_dataset(self, params, data_format='json', compress=True):
         from data_sets import DataSet
         dataset = DataSet()
         str_params = "-".join(["%s=%s" % item
                                for item in params.iteritems()])
         dataset.name = "%s: %s" % (self.name, str_params)
         dataset.import_handler_id = self.id
+        dataset.import_handler_type = self.TYPE
         dataset.import_params = params
         dataset.format = data_format
+        dataset.compress = compress
         dataset.save()
         dataset.set_file_path()
         return dataset

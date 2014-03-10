@@ -22,11 +22,6 @@ angular.module('app.datasets.controllers', ['app.config', ])
     $scope.FIELDS = 'name,created_on,status,error,data,import_params,on_s3,
 filesize,records_count,time,created_by,updated_by'
     $scope.ACTION = 'loading datasets'
-    if $location.$$path.indexOf('xml') != -1
-      handler_type = 'XML'
-    else
-      handler_type = 'Simple'
-    $scope.filter_opts = {'import_handler_type': handler_type}
 
     $scope.$on('loadDataSet', (event, opts) ->
       setTimeout(() ->
@@ -35,7 +30,9 @@ filesize,records_count,time,created_by,updated_by'
     )
 
     $scope.init = (handler) ->
-      $scope.kwargs = {'handler_id': handler.id}
+      $scope.kwargs = {
+        'import_handler_id': handler.id
+        'import_handler_type': handler.TYPE}
 ])
 
 
@@ -82,19 +79,25 @@ filesize,records_count,time,created_by,updated_by'
   '$location'
   'DataSet'
   'ImportHandler'
+  'XmlImportHandler'
 
-  ($scope, $routeParams, $location, DataSet, ImportHandler) ->
-    if $location.$$path.indexOf('xml') != -1
-      handler_type = 'XML'
-    else
-      handler_type = 'Simple'
-
+  ($scope, $routeParams, $location, DataSet, ImportHandler, XmlImportHandler) ->
     if not $routeParams.id
-      err = "Can't initialize without id"
+      throw new Error "Can't initialize without id"
 
-    $scope.handler = new ImportHandler({
-      id: $routeParams.handler_id,
-      import_handler_type: handler_type
+    if not $routeParams.import_handler_type
+      throw new Error "Can't initialize without import_handler_type"
+
+    if not $routeParams.import_handler_id
+      throw new Error "Can't initialize without import_handler_id"
+
+    if $routeParams.import_handler_type == 'xml'
+      cls = XmlImportHandler
+    else
+      cls = ImportHandler
+
+    $scope.handler = new cls({
+      id: $routeParams.import_handler_id
     })
 
     $scope.dataset = new DataSet({

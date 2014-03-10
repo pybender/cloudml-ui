@@ -194,7 +194,7 @@ angular.module('app.importhandlers.model', ['app.config'])
     ###
     class ImportHandler  extends BaseModel
       BASE_API_URL: "#{settings.apiUrl}importhandlers/"
-      BASE_UI_URL: '/importhandlers/'
+      BASE_UI_URL: '/handlers/json/'
       API_FIELDNAME: 'import_handler'
       @MAIN_FIELDS: 'name,id,import_params,
 created_on,created_by,error'
@@ -202,7 +202,7 @@ created_on,created_by,error'
       @PROCESS_STRATEGIES = ['identity', 'string', 'float',
         'boolean', 'integer', 'json', 'composite']
       DATA_FIELDS: ['target_schema']
-      TYPE: 'Simple'
+      TYPE: 'JSON'
 
       id: null
       created_on: null

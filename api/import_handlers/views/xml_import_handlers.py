@@ -19,10 +19,10 @@ class XmlImportHandlerResource(BaseResourceSQL):
             model, params)
         show = self._get_show_fields(params)
         if 'xml' in show:
-            res['xml'] = model.to_xml()
+            res['xml'] = model.get_plan_config()
 
         if 'entities' in show:
-            from api.xml_import_handlers.models import get_entity_tree
+            from ..models import get_entity_tree
             res['entities'] = get_entity_tree(model)
 
         return res

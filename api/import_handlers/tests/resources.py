@@ -29,9 +29,9 @@ class ImportHandlerTests(BaseDbTestCase, TestChecksMixin):
         super(ImportHandlerTests, self).setUp()
         self.obj = self.Model.query.filter_by(
             name=ImportHandlerData.import_handler_01.name).first()
-        for ds in DataSet.query.all():
-            ds.import_handler = self.obj
-            ds.save()
+        # for ds in DataSet.query.all():
+        #     ds.import_handler = self.obj
+        #     ds.save()
 
     def test_list(self):
         self.check_list(show='name')

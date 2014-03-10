@@ -7,13 +7,15 @@ from os.path import join, exists
 from os import makedirs
 
 from boto.exception import S3ResponseError
-from sqlalchemy.orm import relationship, deferred, backref, validates
+from sqlalchemy.orm import relationship, deferred, backref, validates, foreign, remote
 from sqlalchemy.dialects import postgresql
+from sqlalchemy import event, and_
 
 from api import app
 from api.amazon_utils import AmazonS3Helper
 from api.base.models import db, BaseModel, JSONType, assertion_msg
 from api.logs.models import LogMessage
+from import_handlers import IMPORT_HANDLER_TYPES, ImportHandlerMixin
 
 
 class DataSet(db.Model, BaseModel):
@@ -36,16 +38,14 @@ class DataSet(db.Model, BaseModel):
     data = db.Column(db.String(200))
     import_params = db.Column(JSONType)
 
-    # We will delete old IH in the future
-    import_handler_id = db.Column(db.Integer,
-                                  db.ForeignKey('import_handler.id'))
-    import_handler = relationship('ImportHandler', backref=backref(
-        'datasets', cascade='all,delete'))
+    # Generic relation to import handler
+    import_handler_id = db.Column(db.Integer, nullable=False)
+    import_handler_type = db.Column(db.String(200))
 
-    xml_import_handler_id = db.Column(
-        db.Integer, db.ForeignKey('xml_import_handler.id'))
-    xml_import_handler = relationship('XmlImportHandler', backref=backref(
-        'datasets', cascade='all,delete'))
+    # import_handler_id = db.Column(db.Integer,
+    #                               db.ForeignKey('import_handler.id'))
+    # import_handler = relationship('ImportHandler', backref=backref(
+    #     'datasets', cascade='all,delete'))
 
     on_s3 = db.Column(db.Boolean)
     compress = db.Column(db.Boolean)
@@ -56,6 +56,13 @@ class DataSet(db.Model, BaseModel):
     data_fields = db.Column(postgresql.ARRAY(db.String))
     format = db.Column(db.String(10))
     uid = db.Column(db.String(200))
+
+    @property
+    def import_handler(self):
+        """Provides in-Python access to the "parent" by choosing
+        the appropriate relationship.
+        """
+        return getattr(self, "parent_%s" % self.import_handler_type)
 
     def set_uid(self):
         if not self.uid:
@@ -155,3 +162,20 @@ class DataSet(db.Model, BaseModel):
 
     def __repr__(self):
         return '<Dataset %r>' % self.name
+
+
+@event.listens_for(ImportHandlerMixin, "mapper_configured", propagate=True)
+def setup_listener(mapper, class_):
+    import_handler_type = class_.TYPE
+    class_.import_handler = relationship(
+        DataSet,
+        primaryjoin=and_(
+            class_.id == foreign(remote(DataSet.import_handler_id)),
+            DataSet.import_handler_type == import_handler_type
+        ),
+        backref=backref(
+            "parent_%s" % import_handler_type,
+            cascade='all,delete',
+            primaryjoin=remote(class_.id) == foreign(DataSet.import_handler_id)
+        )
+    )

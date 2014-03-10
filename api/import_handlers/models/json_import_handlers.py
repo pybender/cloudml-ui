@@ -45,7 +45,8 @@ class PredefinedDataSource(db.Model, BaseModel):
 
 
 class ImportHandler(db.Model, ImportHandlerMixin):
-    TYPE = 'JSON'
+    TYPE = 'json'
+
     data = db.Column(JSONType)
 
     @validates('data')
@@ -77,9 +78,11 @@ class ImportHandler(db.Model, ImportHandlerMixin):
         """ Returns config that would be used for creating Extraction Plan """
         return json.dumps(self.data)
 
-    def get_extraction_plan(self):
-        from core.importhandler.importhandler import ExtractionPlan
-        return ExtractionPlan(self.get_plan_config(), is_file=False)
+    def get_iterator(self, params):
+        from core.importhandler.importhandler import ExtractionPlan, \
+            ImportHandler as CoreImportHandler
+        plan = ExtractionPlan(self.get_plan_config(), is_file=False)
+        return CoreImportHandler(plan, params)
 
     def get_fields(self):
         from core.importhandler.importhandler import ExtractionPlan

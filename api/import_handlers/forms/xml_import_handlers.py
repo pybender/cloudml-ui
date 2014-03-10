@@ -31,7 +31,9 @@ exist. Please choose another one.' % value)
 
     def save(self):
         try:
-            import_handler = XmlImportHandler(name=self.cleaned_data['name'])
+            import_handler = XmlImportHandler(
+                name=self.cleaned_data['name'],
+                import_params=[])
             db.session.add(import_handler)
             plan = self.cleaned_data.get('data')
             if plan is not None:  # Loading import handler from XML file
@@ -55,6 +57,7 @@ exist. Please choose another one.' % value)
                         format=inp.format,
                         import_handler=import_handler)
                     db.session.add(param)
+                    import_handler.import_params.append(inp.name)
 
                 for scr in plan.data.xpath("script"):
                     script = XmlScript(
@@ -99,6 +102,7 @@ exist. Please choose another one.' % value)
                     for sub_entity in sub_entities:
                         sub_ent = XmlEntity(
                             name=sub_entity.name,
+                            datasource_name=sub_entity.datasource_name,
                             import_handler=import_handler)
                         sub_ent.entity = db_entity
                         sub_ent.datasource = get_datasource(sub_entity)
@@ -108,6 +112,7 @@ exist. Please choose another one.' % value)
 
                 ent = XmlEntity(
                     name=plan.entity.name,
+                    datasource_name=plan.entity.datasource_name,
                     import_handler=import_handler,
                     datasource=get_datasource(plan.entity))
                 db.session.add(ent)

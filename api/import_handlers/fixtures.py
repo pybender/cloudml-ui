@@ -5,7 +5,7 @@ from fixture import DataSet
 
 class ImportHandlerData(DataSet):
     class import_handler_01:
-        name = "Handler 1"
+        name = "Import Handler 1"
         type = "Db"
         created_on = "2013-04-19 14:37:23.145000"
         updated_on = "2013-04-19 14:37:23.145000"
@@ -130,7 +130,8 @@ class DataSetData(DataSet):
         data_fields = ["employer.country"]
         format = "json"
         uid = '8a7d1ae26efc11e395b420107a86d035'
-        import_handler_id = ImportHandlerData.import_handler_01.ref('id')
+        import_handler_id = 1
+        import_handler_type = 'json'
 
     class dataset_02:
         name = "DS 2"
@@ -148,7 +149,8 @@ class DataSetData(DataSet):
         time = 200
         format = "json"
         uid = '8a7d1ae26efc11e395b420107a86d036'
-        import_handler_id = ImportHandlerData.import_handler_01.ref('id')
+        import_handler_id = 1
+        import_handler_type = 'json'
 
     class dataset_03:
         name = "DS 3 (csv)"
@@ -166,7 +168,8 @@ class DataSetData(DataSet):
         time = 200
         format = "csv"
         uid = '8a7d1ae26efc11e395b420107a86d037'
-        import_handler_id = ImportHandlerData.import_handler_01.ref('id')
+        import_handler_id = 1
+        import_handler_type = 'json'
 
 
 class PredefinedDataSourceData(DataSet):

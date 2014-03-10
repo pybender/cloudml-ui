@@ -14,6 +14,9 @@
     <div ng-show="item.entity.datasource">
       <i class="icon-hdd"></i> {{ item.entity.datasource.name }} ({{ item.entity.datasource.type }})
     </div>
+    <div ng-show="item.entity.datasource_name">
+      <i class="icon-hdd"></i> {{ item.entity.datasource_name }} (transforming field)
+    </div>
     <div ng-show="item.entity.query_obj">
       <i class=" icon-magnet"></i> {{ item.entity.query_obj.text }} <span ng-show="item.entity.query_obj.target">({{ item.entity.query_obj.target }})</span>
     </div>

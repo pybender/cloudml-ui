@@ -115,7 +115,7 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr ng-repeat="item in handler.input_parameters">
+                    <tr ng-repeat="item in handler.xml_input_parameters">
                       <td>
                         <!-- <span title="name" class="name" ng-bind="item.name || 'no name'" editable="item" value="item.name" editable-field="name" editable-input="text" editable-placement="right"></span> -->
                         {{ item.name }}
@@ -134,7 +134,7 @@
                       <td></td>
                     </tr>
                   </tbody>
-                  <tfoot ng-hide="handler.input_parameters">
+                  <tfoot ng-hide="handler.xml_input_parameters">
                     <tr><td colspan="5">No input parameters found</td></tr>
                   </tfoot>
                 </table>
@@ -150,7 +150,7 @@
           </div>
           <div id="scripts" class="accordion-body collapse in">
             <div class="accordion-inner">
-              <div ng-repeat="item in handler.scripts" class="well">
+              <div ng-repeat="item in handler.xml_scripts" class="well">
                 {{ item.data }}
               </div>
             </div>

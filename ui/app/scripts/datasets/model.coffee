@@ -16,7 +16,7 @@ angular.module('app.datasets.model', ['app.config'])
       STATUS_IMPORTING = 'Importing'
       STATUS_UPLOADING = 'Uploading'
 
-      @MAIN_FIELDS: 'name,status'
+      @MAIN_FIELDS: 'name,status,import_handler_type,import_handler_id'
 
       id: null
       name: null
@@ -30,7 +30,7 @@ angular.module('app.datasets.model', ['app.config'])
       import_handler_id: null
       on_s3: false
       format: 'json'
-      import_handler_type: 'Simple'
+      import_handler_type: 'JSON'
 
       loadFromJSON: (origData) =>
         super origData
@@ -45,13 +45,14 @@ angular.module('app.datasets.model', ['app.config'])
 
       constructor: (opts) ->
         super
-        @BASE_API_URL = DataSet.$get_api_url(@import_handler_id)
-        if @import_handler_type == 'XML' then prefix = "xml_" else prefix = ''
-        @BASE_UI_URL = "/#{prefix}importhandlers/#{@import_handler_id}
-/datasets/"
+        @BASE_API_URL = DataSet.$get_api_url(
+          @import_handler_id, @import_handler_type)
+        @BASE_UI_URL = "/handlers/
+#{@import_handler_type.toLowerCase()}/#{@import_handler_id}/datasets/"
 
-      @$get_api_url: (handler_id) ->
-        return "#{settings.apiUrl}importhandlers/#{handler_id}/datasets/"
+      @$get_api_url: (handler_id, handler_type) ->
+        return "#{settings.apiUrl}importhandlers/#{handler_type.toLowerCase()}\
+/#{handler_id}/datasets/"
 
       $generateS3Url: () =>
         @$make_request("#{@BASE_API_URL}#{@id}/action/generate_url/",
@@ -64,24 +65,23 @@ angular.module('app.datasets.model', ['app.config'])
           @$make_request(@BASE_API_URL, {}, 'POST', data)
 
       @$loadAll: (opts) ->
-        handler_id = opts.handler_id
-        if not handler_id?
+        if not opts.import_handler_id? || not opts.import_handler_id?
           throw new Error "Import Handler is required to load datasets"
-        delete opts['handler_id']
-        import_handler_type = opts.import_handler_type || 'Simple'
 
         resolver = (resp, Model) ->
           extra = {
             loaded: true
-            import_handler_id: handler_id
-            import_handler_type: import_handler_type}
+            import_handler_id: opts.import_handler_id
+            import_handler_type: opts.import_handler_type}
           {
             objects: (
               new DataSet(_.extend(obj, extra)) \
               for obj in eval("resp.data.#{DataSet.prototype.API_FIELDNAME}s"))
             _resp: resp
           }
-        @$make_all_request(DataSet.$get_api_url(handler_id), resolver, opts)
+        url = DataSet.$get_api_url(
+          opts.import_handler_id, opts.import_handler_type)
+        @$make_all_request(url, resolver, opts)
 
       $reupload: =>
         url = "#{@BASE_API_URL}#{@id}/action/reupload/"

@@ -27,20 +27,6 @@ class DataSetResource(BaseResourceSQL):
     PUT_ACTIONS = ('reupload', 'reimport')
     post_form = DataSetAddForm
     put_form = DataSetEditForm
-    GET_PARAMS = (('show', str), ('import_handler_type', str))
-
-    def _get_list_query(self, params, **kwargs):
-        handler_type = params.get('import_handler_type', 'Simple')
-        if handler_type == 'XML':
-            kwargs['xml_import_handler_id'] = kwargs['import_handler_id']
-            del kwargs['import_handler_id']
-        return super(DataSetResource, self)._get_list_query(params, **kwargs)
-
-    def _get_details_query(self, params, **kwargs):
-        ds = DataSet.query.get(kwargs['id'])
-        h_id = int(kwargs['import_handler_id'])
-        if ds.xml_import_handler_id == h_id or ds.import_handler_id == h_id:
-            return ds
 
     def _get_generate_url_action(self, **kwargs):
         ds = self._get_details_query({}, **kwargs)
@@ -71,4 +57,5 @@ class DataSetResource(BaseResourceSQL):
         return self._render({self.OBJECT_NAME: dataset})
 
 api.add_resource(DataSetResource, '/cloudml/importhandlers/\
-<regex("[\w\.]*"):import_handler_id>/datasets/')
+<regex("[\w\.]*"):import_handler_type>/<regex("[\w\.]*"):import_handler_id>\
+/datasets/')
