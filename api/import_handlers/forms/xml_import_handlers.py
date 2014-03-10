@@ -23,6 +23,7 @@ exist. Please choose another one.' % value)
         return value
 
     def clean_data(self, value, field):
+        value = value.encode('utf-8')
         try:
             from core.xmlimporthandler.importhandler import ExtractionPlan
             return ExtractionPlan(value, is_file=False)

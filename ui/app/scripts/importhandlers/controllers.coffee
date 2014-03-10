@@ -363,7 +363,7 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
 ($scope, $routeParams, $location, ImportHandler, Query) ->
   if not $routeParams.id then throw new Error "Specify id"
 
-  $scope.handler = new ImportHandler({_id: $routeParams.id})
+  $scope.handler = new ImportHandler({id: $routeParams.id})
   $scope.model = new Query(
     {handler: $scope.handler, num: -1})
 

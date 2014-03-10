@@ -175,7 +175,7 @@ def setup_listener(mapper, class_):
         ),
         backref=backref(
             "parent_%s" % import_handler_type,
-            cascade='all,delete',
+            # cascade='all,delete',  # TODO: it removes Importhandelr when removing DataSet
             primaryjoin=remote(class_.id) == foreign(DataSet.import_handler_id)
         )
     )

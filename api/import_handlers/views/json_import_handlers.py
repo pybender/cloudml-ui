@@ -250,7 +250,7 @@ filename=importhandler-%s.json' % model.name
         """
         Run sql query for testing
         """
-        from forms import QueryTestForm
+        from api.import_handlers.forms import QueryTestForm
         model = self._get_details_query({}, **kwargs)
         if model is None:
             raise NotFound(self.MESSAGE404 % kwargs)
@@ -292,7 +292,7 @@ filename=importhandler-%s.json' % model.name
         """
         Run importing data for testing
         """
-        from forms import ImportHandlerTestForm
+        from api.import_handlers.forms import ImportHandlerTestForm
         from core.importhandler.importhandler import ExtractionPlan,\
             ImportHandler
 

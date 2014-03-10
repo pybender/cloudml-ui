@@ -104,6 +104,10 @@ App.config([
       templateUrl: '/partials/reports/compare_models_form.html'
       controller: 'CompareModelsFormCtl'
     })
+    .when('/handlers', {
+      redirectTo: (params, loc) ->
+        return '/handlers/xml'
+    })
     .when('/handlers/xml', {
       controller: "XmlImportHandlerListCtrl"
       templateUrl: '/partials/xml_import_handlers/list.html'
@@ -144,7 +148,7 @@ App.config([
     })
     .when('/handlers/json/:handler_id/datasets', {
       redirectTo: (params, loc) ->
-        return '/importhandlers/' + params.handler_id + '?action=dataset:list'
+        return '/handlers/json/' + params.handler_id + '?action=dataset:list'
     })
     .when('/handlers/:import_handler_type/:import_handler_id/datasets/:id', {
       controller: 'DataSetDetailsCtrl'
