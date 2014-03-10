@@ -104,54 +104,54 @@ App.config([
       templateUrl: '/partials/reports/compare_models_form.html'
       controller: 'CompareModelsFormCtl'
     })
-    .when('/xml_importhandlers', {
+    .when('/handlers/xml', {
       controller: "XmlImportHandlerListCtrl"
       templateUrl: '/partials/xml_import_handlers/list.html'
     })
-    .when('/xml_importhandlers/add', {
+    .when('/handlers/xml/add', {
       controller: "AddXmlImportHandlerCtl"
       templateUrl: '/partials/xml_import_handlers/add.html'
     })
-    .when('/xml_importhandlers/:id', {
+    .when('/handlers/xml/:id', {
       controller: 'XmlImportHandlerDetailsCtrl'
       templateUrl: '/partials/xml_import_handlers/details.html'
       reloadOnSearch: false
     })
-    .when('/xml_importhandlers/:handler_id/datasets', {
+    .when('/handlers/xml/:handler_id/datasets', {
       redirectTo: (p, loc) ->
         return '/xml_importhandlers/' + p.handler_id + '?action=dataset:list'
     })
-    .when('/xml_importhandlers/:handler_id/datasets/:id', {
+    .when('/handlers/xml/:handler_id/datasets/:id', {
       controller: 'DataSetDetailsCtrl'
       templateUrl: '/partials/datasets/details.html'
       reloadOnSearch: false
     })
-    .when('/importhandlers', {
+    .when('/handlers/json', {
       controller: "ImportHandlerListCtrl"
       templateUrl: '/partials/import_handler/list.html'
     })
-    .when('/importhandlers/add', {
+    .when('/handlers/json/add', {
       controller: "AddImportHandlerCtl"
       templateUrl: '/partials/import_handler/add.html'
     })
-    .when('/importhandlers/:id', {
+    .when('/handlers/json/:id', {
       controller: 'ImportHandlerDetailsCtrl'
       templateUrl: '/partials/import_handler/details.html'
       reloadOnSearch: false
     })
-    .when('/importhandlers/:id/query/add', {
+    .when('/handlers/json/:id/query/add', {
       controller: 'AddImportHandlerQueryCtrl'
       templateUrl: '/partials/import_handler/add_query.html'
     })
-    .when('/importhandlers/:id/query/:num/items/add', {
+    .when('/handlers/json/:id/query/:num/items/add', {
       controller: 'AddImportHandlerQueryItemCtrl'
       templateUrl: '/partials/import_handler/add_query_item.html'
     })
-    .when('/importhandlers/:handler_id/datasets', {
+    .when('/handlers/json/:handler_id/datasets', {
       redirectTo: (params, loc) ->
         return '/importhandlers/' + params.handler_id + '?action=dataset:list'
     })
-    .when('/importhandlers/:handler_id/datasets/:id', {
+    .when('/handlers/json/:handler_id/datasets/:id', {
       controller: 'DataSetDetailsCtrl'
       templateUrl: '/partials/datasets/details.html'
       reloadOnSearch: false

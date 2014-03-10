@@ -1,7 +1,7 @@
 <h2>
   Import Handler List (XML)
   <div class="actions">
-      <a class="btn btn-info" href="#/xml_importhandlers/add">
+      <a class="btn btn-info" href="#/handlers/xml/add">
         <i class="status-icon icon-plus"></i> Add new import handler
       </a>
   </div>
@@ -13,6 +13,7 @@
 <thead>
   <tr>
     <th>Name</th>
+    <th>Import Parameters</th>
     <th>Created</th>
     <th>Actions</th>
   </tr>
@@ -20,6 +21,7 @@
 <tbody>
   <tr ng-repeat="handler in objects">
     <td><a href="#{{ handler.objectUrl() }}">{{ handler.name }}</a></td>
+    <td></td>
     <td>
         {{ handler.created_on|format_date }}<br>
         <small ng-show="handler.created_by">by {{ handler.created_by.name }} ({{ handler.created_by.uid }})</small>

@@ -325,8 +325,9 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
 .controller('ImportHandlerSelectCtrl', [
   '$scope'
   'ImportHandler'
+  'XmlImportHandler'
 
-  ($scope, ImportHandler) ->
+  ($scope, ImportHandler, XmlImportHandler) ->
     ImportHandler.$loadAll(
       show: 'name'
     ).then ((opts) ->
@@ -335,6 +336,14 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
       for h in $scope.handlers
         $scope.handlers_list.push {value: h.id, text: h.name}
 
+      XmlImportHandler.$loadAll(
+        show: 'name'
+      ).then ((opts) ->
+        for h in opts.objects
+          $scope.handlers_list.push {value: h.id + "xml", text: h.name}
+      ), ((opts) ->
+        $scope.setError(opts, 'loading xml import handler list')
+      )
     ), ((opts) ->
       $scope.setError(opts, 'loading import handler list')
     )
