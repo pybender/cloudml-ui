@@ -11,7 +11,7 @@ from core.importhandler.importhandler import ExtractionPlan, \
 from api.base.forms import BaseForm, ValidationError, ModelField, \
     CharField, JsonField, ImportHandlerFileField, MultipleModelField, \
     ChoiceField
-from api.models import Tag, ImportHandler, Model
+from api.models import Tag, ImportHandler, XmlImportHandler, Model
 from api.features.models import FeatureSet, PredefinedClassifier
 from api import app
 
@@ -65,11 +65,9 @@ class ModelAddForm(BaseForm):
                        ('import_handler', 'import_handler_file'))
 
     name = CharField()
-    import_handler = ModelField(model=ImportHandler, by_name=False,
-                                         return_model=True)
+    import_handler = CharField()
     import_handler_file = ImportHandlerFileField()
-    test_import_handler = ModelField(model=ImportHandler, by_name=False,
-                                         return_model=True)
+    test_import_handler = CharField()
     test_import_handler_file = ImportHandlerFileField()
     features = JsonField()
     trainer = CharField()
@@ -86,8 +84,22 @@ class ModelAddForm(BaseForm):
         return value
 
     def clean_import_handler(self, value, field):
-        self.cleaned_data['train_import_handler'] = value
-        return value
+        handler = self._clean_import_handler(value)
+        self.cleaned_data['train_import_handler'] = handler
+        return handler
+
+    def clean_test_import_handler(self, value, field):
+        return self._clean_import_handler(value)
+
+    def _clean_import_handler(self, value):
+        if value is None:
+            return
+
+        hander = get_import_handler(*value.split('_'))
+        if hander is None:
+            raise ValidationError('Import Handler not found')
+
+        return hander
 
     def clean_import_handler_file(self, value, field):
         self.cleaned_data['train_import_params'] = field.import_params
@@ -125,8 +137,9 @@ class ModelAddForm(BaseForm):
             self._save_importhandler('test_import_handler_file', name)
             if not 'test_import_handler' in self.cleaned_data:
                 self.cleaned_data['test_import_handler'] = self.cleaned_data['train_import_handler']
-
             model = super(ModelAddForm, self).save(commit=False)
+            model.train_import_handler = self.cleaned_data['train_import_handler']
+            model.test_import_handler = self.cleaned_data['test_import_handler']
             trainer = self.cleaned_data.get('trainer')
             if trainer:
                 model.set_trainer(trainer)
@@ -185,3 +198,11 @@ class ModelTrainForm(BaseChooseInstanceAndDatasetMultiple):
         self.obj.status = Model.STATUS_QUEUED
         self.obj.save()
         return self.obj
+
+
+def get_import_handler(id_, type_):
+    if type_ == 'xml':
+        cls = XmlImportHandler
+    else:
+        cls = ImportHandler
+    return cls.query.get(id_)

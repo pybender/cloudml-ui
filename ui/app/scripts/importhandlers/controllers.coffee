@@ -322,31 +322,35 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
 
 ])
 
+
+.factory('ImportHandlerSelector', [
+  'settings'
+  'BaseModel'
+  
+  (settings, BaseModel) ->
+    class ImportHandlerSelector extends BaseModel
+      BASE_API_URL: "#{settings.apiUrl}import_handler_selector/"
+
+      @$loadAll: (opts) ->
+        resolver = (resp, Model) ->
+          { objects: resp.data.import_handlers }
+        @$make_all_request("#{@prototype.BASE_API_URL}", resolver, opts)
+
+    return ImportHandlerSelector
+])
+
 .controller('ImportHandlerSelectCtrl', [
   '$scope'
+  'ImportHandlerSelector'
   'ImportHandler'
   'XmlImportHandler'
 
-  ($scope, ImportHandler, XmlImportHandler) ->
-    ImportHandler.$loadAll(
-      show: 'name'
-    ).then ((opts) ->
-      $scope.handlers = opts.objects
-      $scope.handlers_list  = []
-      for h in $scope.handlers
-        $scope.handlers_list.push {value: h.id, text: h.name}
-
-      XmlImportHandler.$loadAll(
-        show: 'name'
-      ).then ((opts) ->
-        for h in opts.objects
-          $scope.handlers_list.push {value: h.id + "xml", text: h.name}
-      ), ((opts) ->
-        $scope.setError(opts, 'loading xml import handler list')
-      )
-    ), ((opts) ->
-      $scope.setError(opts, 'loading import handler list')
-    )
+($scope, ImportHandlerSelector, ImportHandler, XmlImportHandler) ->
+  ImportHandlerSelector.$loadAll().then ((opts) ->
+    $scope.handlers = opts.objects
+  ), ((opts) ->
+    $scope.setError(opts, 'loading import handler list')
+  )
 ])
 
 .controller('AddImportHandlerQueryCtrl', [

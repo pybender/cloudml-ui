@@ -4,11 +4,13 @@ from functools import partial
 
 from sqlalchemy.orm import relationship, deferred, backref
 from sqlalchemy.dialects import postgresql
-from sqlalchemy import Index, func
+from sqlalchemy.orm import relationship, deferred, backref, validates, foreign, remote
+from sqlalchemy import Index, func, event, and_
 from sqlalchemy.ext.declarative import declared_attr
 
 from api.base.models import db, BaseModel, BaseMixin, JSONType, S3File
 from api.logs.models import LogMessage
+from api.import_handlers.models.import_handlers import ImportHandlerMixin
 
 
 class Model(db.Model, BaseModel):
@@ -61,15 +63,10 @@ class Model(db.Model, BaseModel):
     features_set_id = db.Column(db.Integer, db.ForeignKey('feature_set.id'))
     features_set = relationship('FeatureSet', uselist=False)
 
-    test_import_handler_id = db.Column(db.ForeignKey('import_handler.id',
-                                                     ondelete='SET NULL'))
-    test_import_handler = relationship('ImportHandler',
-                                       foreign_keys=[test_import_handler_id])
-
-    train_import_handler_id = db.Column(db.ForeignKey('import_handler.id',
-                                                      ondelete='SET NULL'))
-    train_import_handler = relationship('ImportHandler',
-                                        foreign_keys=[train_import_handler_id])
+    test_import_handler_id = db.Column(db.Integer)
+    test_import_handler_type = db.Column(db.String(10))
+    train_import_handler_id = db.Column(db.Integer)
+    train_import_handler_type = db.Column(db.String(10))
 
     datasets = relationship('DataSet',
                             secondary=lambda: data_sets_table)
@@ -81,6 +78,30 @@ class Model(db.Model, BaseModel):
 
     def __repr__(self):
         return "<Model {0}>".format(self.name)
+
+    @property
+    def test_import_handler(self):
+        """Provides in-Python access to the "parent" by choosing
+        the appropriate relationship.
+        """
+        return getattr(self, "test_import_handler_%s" % self.test_import_handler_type)
+
+    @test_import_handler.setter
+    def test_import_handler(self, value):
+        self.test_import_handler_id = value.id
+        self.test_import_handler_type = value.TYPE
+
+    @property
+    def train_import_handler(self):
+        """Provides in-Python access to the "parent" by choosing
+        the appropriate relationship.
+        """
+        return getattr(self, "train_import_handler_%s" % self.train_import_handler_type)
+
+    @train_import_handler.setter
+    def train_import_handler(self, value):
+        self.train_import_handler_id = value.id
+        self.train_import_handler_type = value.TYPE
 
     def save(self, commit=True):
         if self.features_set is None:
@@ -187,6 +208,36 @@ data_sets_table = db.Table(
     db.Column('data_set_id', db.Integer, db.ForeignKey(
         'data_set.id', ondelete='CASCADE', onupdate='CASCADE'))
 )
+
+
+@event.listens_for(ImportHandlerMixin, "mapper_configured", propagate=True)
+def setup_listener(mapper, class_):
+    import_handler_type = class_.TYPE
+    class_.test_import_handler = relationship(
+        Model,
+        primaryjoin=and_(
+            class_.id == foreign(remote(Model.test_import_handler_id)),
+            Model.test_import_handler_type == import_handler_type
+        ),
+        backref=backref(
+            "test_import_handler_%s" % import_handler_type,
+            cascade='all,delete',
+            primaryjoin=remote(class_.id) == foreign(Model.test_import_handler_id)
+        )
+    )
+    class_.train_import_handler = relationship(
+        Model,
+        primaryjoin=and_(
+            class_.id == foreign(remote(Model.train_import_handler_id)),
+            Model.train_import_handler_type == import_handler_type
+        ),
+        backref=backref(
+            "train_import_handler_%s" % import_handler_type,
+            cascade='all,delete',
+            primaryjoin=remote(class_.id) == foreign(Model.train_import_handler_id)
+        )
+    )
+
 
 
 class Tag(db.Model, BaseMixin):
