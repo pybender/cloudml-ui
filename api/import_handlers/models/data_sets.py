@@ -138,6 +138,7 @@ class DataSet(db.Model, BaseModel):
         # self.terminate_task()  # TODO
         filename = self.filename
         on_s3 = self.on_s3
+        uid = self.uid
 
         super(DataSet, self).delete()
         LogMessage.delete_related_logs(self)
@@ -151,7 +152,7 @@ class DataSet(db.Model, BaseModel):
             from api.amazon_utils import AmazonS3Helper
             helper = AmazonS3Helper()
             try:
-                helper.delete_key(self.uid)
+                helper.delete_key(uid)
             except S3ResponseError as e:
                 logging.exception(str(e))
 
@@ -173,9 +174,9 @@ def setup_listener(mapper, class_):
             class_.id == foreign(remote(DataSet.import_handler_id)),
             DataSet.import_handler_type == import_handler_type
         ),
+        cascade='all,delete',
         backref=backref(
             "parent_%s" % import_handler_type,
-            # cascade='all,delete',  # TODO: it removes Importhandelr when removing DataSet
             primaryjoin=remote(class_.id) == foreign(DataSet.import_handler_id)
         )
     )

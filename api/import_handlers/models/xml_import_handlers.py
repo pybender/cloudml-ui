@@ -14,6 +14,17 @@ from core.xmlimporthandler.datasources import DataSource
 class XmlImportHandler(db.Model, ImportHandlerMixin):
     TYPE = 'xml'
 
+    DATASOURCES_ORDER = ['db', 'csv', 'http', 'pig']
+
+    def _get_in_order(self, items, field, order):
+        from collections import OrderedDict
+        data = OrderedDict([(key, []) for key in order])
+        for item in items:
+            data[getattr(item, field)].append(item)
+        for key in data:
+            for item in data[key]:
+                yield item
+
     def get_plan_config(self, pretty_print=True):
         plan = etree.Element("plan")
 
@@ -26,7 +37,8 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
             scr_tag.text = etree.CDATA(scr.data)
 
         datasources = etree.SubElement(plan, "datasources")
-        for ds in self.xml_data_sources:
+        for ds in self._get_in_order(self.xml_data_sources, 'type',
+                                     self.DATASOURCES_ORDER):
             etree.SubElement(
                 datasources, ds.type, name=ds.name, **ds.params)
 
