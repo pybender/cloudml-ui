@@ -54,7 +54,7 @@ def install():
 
     pip.install.run(app='virtualenv', upgrade=True)
     system.package_install.run(packages='liblapack-dev gfortran libpq-dev\
- libevent-dev python-dev mongodb')
+ libevent-dev python-dev mongodb libxml2-dev libxslt-dev libv8-dev scons libboost-python-dev libboost-thread-dev libboost-all-dev')
 
     # Install nodejs from source
     sudo("wget http://nodejs.org/dist/v0.10.18/node-v0.10.18.tar.gz")
