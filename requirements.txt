@@ -45,5 +45,5 @@ flask-admin
 nltk
 
 # for xml import handlers
-lxml
-PyV8
+lxml==3.3.3
+#PyV8
