@@ -172,6 +172,8 @@ angular.module('app.controllers', ['app.config', ])
         $scope.close()
         $scope.$emit('modelDeleted', [$scope.model])
         $scope.$broadcast('modelDeleted', [$scope.model])
+        if $scope.LIST_MODEL_NAME?
+            $scope.$emit 'BaseListCtrl:start:load', $scope.LIST_MODEL_NAME
         if $scope.path?
           $location.path $scope.path
       ), ((opts) ->

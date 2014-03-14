@@ -126,3 +126,28 @@ exist. Please choose another one.' % value)
             db.session.commit()
 
         return import_handler
+
+
+class XmlInputParameterForm(BaseForm):
+    required_fields = ('name', 'type', 'import_handler_id')
+    NO_REQUIRED_FOR_EDIT = True
+
+    name = CharField()
+    type_field = ChoiceField(choices=XmlInputParameter.TYPES, name='type')
+    format = CharField()
+    regex = CharField()
+    import_handler_id = DocumentField(
+        doc=XmlImportHandler, by_name=False, return_doc=False)
+
+    def clean_name(self, value, field):
+        if not ((self.NO_REQUIRED_FOR_EDIT and self.obj.id) or value):
+            raise ValidationError('name is required field')
+
+        query = XmlInputParameter.query.filter_by(name=value)
+        if self.obj.id:
+            query = query.filter(XmlInputParameter.id != self.obj.id)
+        count = query.count()
+        if count:
+            raise ValidationError('Input parameter with name "%s" already \
+exist. Please choose another one.' % value)
+        return value

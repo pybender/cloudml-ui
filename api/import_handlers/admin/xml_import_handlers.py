@@ -2,8 +2,8 @@ from flask.ext.admin.model.template import macro
 
 from api import admin
 from api.base.admin import BaseAdmin
-from api.import_handlers.models import XmlScript, XmlQuery, XmlEntity, XmlField, \
-    XmlImportHandler, XmlDataSource, XmlInputParameter
+from api.import_handlers.models import XmlScript, XmlQuery, XmlEntity, \
+    XmlField, XmlImportHandler, XmlDataSource, XmlInputParameter
 
 
 class ImportHandlerAdmin(BaseAdmin):
@@ -28,7 +28,8 @@ admin.add_view(XmlDataSourceAdmin(
 class InputParameterAdmin(BaseAdmin):
     MIX_METADATA = False
     Model = XmlInputParameter
-    column_list = ['id', 'name']
+    column_formatters = {'import_handler': macro('render_fk_link'), }
+    column_list = ['id', 'name', 'type', 'regex', 'format', 'import_handler']
     column_filters = ('name', )
 
 admin.add_view(InputParameterAdmin(

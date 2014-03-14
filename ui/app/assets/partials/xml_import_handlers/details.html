@@ -92,19 +92,19 @@
         </div>
 
         <!-- inputs -->
-        <div class="accordion-group">
+        <div class="accordion-group" ng-controller="InputParametersListCtrl" ng-init="init(handler)">
           <div class="accordion-heading">
             <a class="accordion-toggle" data-toggle="collapse" href="#inputs">Input Parameters</a>
           </div>
           <div id="inputs" class="accordion-body collapse in">
             <div class="accordion-inner">
-             <!--  <div class="actions">
-                <a class="btn btn-info" href="#/xml_importhandlers/{{ handler.id }}/datasources/add">
-                  <i class="status-icon icon-plus"></i> add datasource
+              <div class="actions">
+                <a class="btn btn-info" ng-click="add(handler)">
+                  <i class="status-icon icon-plus"></i> add parameter
                 </a>
-              </div> -->
+              </div>
               <div class="clearfix">
-                <table class="table table-hover">
+                <table class="table table-hover" ng-controller="BaseListCtrl" ng-init="init(false, 'input_parameters', false)">
                   <thead>
                     <tr>
                       <th>Name</th>
@@ -115,23 +115,22 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr ng-repeat="item in handler.xml_input_parameters">
+                    <tr ng-repeat="item in objects | orderBy:'name'">
                       <td>
-                        <!-- <span title="name" class="name" ng-bind="item.name || 'no name'" editable="item" value="item.name" editable-field="name" editable-input="text" editable-placement="right"></span> -->
-                        {{ item.name }}
+                        <span title="name" class="name" ng-bind="item.name || 'no name'" editable="item" value="item.name" editable-field="name" editable-input="text" editable-placement="right"></span>
+                      </td>
+                      <td ng-controller="InputParameterTypesLoader">
+                        <span title="Input Format Type" ng-bind="item.type" editable="item" value="item.type" editable-field="type" editable-placement="right" editable-input="select" source="types"></span>
                       </td>
                       <td>
-                        {{ item.type }}
+                        <span title="Input Parameter Regex" class="regex" ng-bind="item.regex" editable="item" value="item.regex" editable-field="regex" editable-input="text" editable-placement="right"></span>
                       </td>
                       <td>
-                       <!--  <span title="regex" class="regex" ng-bind="item.regex || 'no name'" editable="regex" value="item.regex" editable-field="regex" editable-input="text" editable-placement="right"></span> -->
-                       {{ item.regex }}
+                        <span title="format" class="format" ng-bind="item.format || 'no format'" editable="item" value="item.format" editable-field="format" editable-input="text" editable-placement="right"></span>
                       </td>
                       <td>
-                        <!-- <span title="format" class="format" ng-bind="item.format || 'no format'" editable="format" value="item.format" editable-field="format" editable-input="text" editable-placement="right"></span> -->
-                        {{ item.format }}
+                        <button ng-click="delete(item)" class="btn btn-danger"><i title="Delete your input parameter. Be careful - you could not recover it!" class="icon-remove"></i></button>
                       </td>
-                      <td></td>
                     </tr>
                   </tbody>
                   <tfoot ng-hide="handler.xml_input_parameters">

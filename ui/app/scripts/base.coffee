@@ -153,5 +153,18 @@ angular.module('app.base', ['app.config', 'app.services'])
 
         dfd.promise
 
+      $getConfiguration: (opts={}) =>
+        @$make_request("#{@BASE_API_URL}#{@id}/action/configuration/",
+                       load=false)
+
+      @$getConfiguration: (opts) ->
+        resolver = (resp, Model) ->
+          {
+            configuration: resp.data.configuration
+            _resp: resp
+          }
+        @$make_all_request(
+          "#{@prototype.BASE_API_URL}action/configuration/", resolver, opts)
+
     return BaseModel
 ])
