@@ -21,15 +21,14 @@ class ModelAdmin(BaseAdmin):
     form_excluded_columns = ('trainer', 'weights', 'weight_categories')
     column_formatters = {
         'features_set': macro('render_fk_link'),
-        # 'test_import_handler': macro('render_fk_link'),
-        # 'train_import_handler': macro('render_fk_link'),
+        'test_import_handler': macro('render_fk_link'),
+        'train_import_handler': macro('render_fk_link'),
         'status': macro('status_with_error'),
         'classifier': classifier_type_formatter}
     column_list = [
         'id', 'name', 'status', 'classifier',
         'features_set', 'feature_count', 'target_variable', 'memory_usage',
-        'training_time', 'test_import_handler_id', 'train_import_handler_id',
-        'test_import_handler_type', 'train_import_handler_type']
+        'training_time', 'test_import_handler', 'train_import_handler']
     column_sortable_list = (
         ('id', Model.id),
         ('name', Model.name),

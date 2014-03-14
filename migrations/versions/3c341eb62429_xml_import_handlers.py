@@ -88,7 +88,7 @@ def upgrade():
         'xml_entity',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('name', sa.String(length=200), nullable=False),
-        sa.Column('datasource_name', sa.String(length=200), nullable=True),
+        sa.Column('datasource_name', sa.String(length=200), nullable=True)
         sa.Column('entity_id', sa.Integer(), nullable=True),
         sa.Column('datasource_id', sa.Integer(), nullable=True),
         sa.Column('query_id', sa.Integer(), nullable=True),
