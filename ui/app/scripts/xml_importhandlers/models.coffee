@@ -61,3 +61,27 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
 
     return InputParameter
 ])
+
+.factory('Datasource', [
+  'settings'
+  'BaseModel'
+
+  (settings, BaseModel) ->
+    class Datasource extends BaseModel
+      BASE_API_URL: "#{settings.apiUrl}xml_import_handlers/datasources/"
+      API_FIELDNAME: 'xml_datasource'
+      @LIST_MODEL_NAME: 'datasources'
+      LIST_MODEL_NAME: @LIST_MODEL_NAME
+      @MAIN_FIELDS: 'id,name,type,params'
+
+      id: null
+      name: null
+      type: null
+      params: {}
+
+      $getConfiguration: (opts={}) =>
+        @$make_request("#{@BASE_API_URL}#{@id}/action/configuration/",
+                       load=false)
+
+    return Datasource
+])

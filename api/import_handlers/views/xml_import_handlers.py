@@ -1,8 +1,9 @@
 from api.base.resources import BaseResourceSQL
 from api import api
-from api.import_handlers.models import XmlImportHandler, XmlInputParameter
+from api.import_handlers.models import XmlImportHandler, XmlInputParameter,\
+    XmlDataSource
 from api.import_handlers.forms import XmlImportHandlerAddForm, \
-    XmlInputParameterForm
+    XmlInputParameterForm, XmlDataSourceForm
 
 
 class XmlImportHandlerResource(BaseResourceSQL):
@@ -47,3 +48,21 @@ class XmlInputParameterResource(BaseResourceSQL):
 api.add_resource(
     XmlInputParameterResource,
     '/cloudml/xml_import_handlers/input_parameters/')
+
+
+class XmlDataSourceResource(BaseResourceSQL):
+    """
+    XmlDataSource API methods
+    """
+    put_form = post_form = XmlDataSourceForm
+    Model = XmlDataSource
+    GET_ACTIONS = ('configuration', )
+
+    def _get_configuration_action(self, **kwargs):
+        from core.xmlimporthandler.importhandler import ExtractionPlan
+        conf = ExtractionPlan.get_datasources_config()
+        return self._render({'configuration': conf})
+
+api.add_resource(
+    XmlDataSourceResource,
+    '/cloudml/xml_import_handlers/datasources/')

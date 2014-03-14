@@ -45,18 +45,19 @@
     </p>
     <div ng-show="action[1] == 'details'">
       <div class="accordion">
-        <!-- datasources -->
-        <div class="accordion-group">
+
+          <!-- datasources -->
+        <div class="accordion-group" ng-controller="DatasourcesListCtrl" ng-init="init(handler)">
           <div class="accordion-heading">
             <a class="accordion-toggle" data-toggle="collapse" href="#datasouces">DataSources</a>
           </div>
           <div id="datasouces" class="accordion-body collapse in">
             <div class="accordion-inner">
-              <!-- <div class="actions">
-                <a class="btn btn-info" href="#/xml_importhandlers/{{ handler.id }}/datasources/add">
+              <div class="actions">
+                <a class="btn btn-info" ng-click="add()">
                   <i class="status-icon icon-plus"></i> add datasource
                 </a>
-              </div> -->
+              </div>
               <div class="clearfix">
                 <table class="table table-hover">
                   <thead>
@@ -71,7 +72,6 @@
                     <tr ng-repeat="item in handler.xml_data_sources">
                       <td>
                         {{ item.name }}
-                       <!--  <span title="name" class="name" ng-bind="item.name || 'no name'" editable="item" value="item.name" editable-field="name" editable-input="text" editable-placement="right"></span> -->
                       </td>
                       <td>
                         {{ item.type }}
@@ -79,7 +79,14 @@
                       <td>
                         {{ item.params }}
                       </td>
-                      <td></td>
+                      <td>
+                          <button ng-click="edit(item)" class="btn btn-info">
+                            <i title="Edit datasource" class="icon-edit"></i>
+                          </button>
+                          <button ng-click="delete(item)" class="btn btn-danger">
+                            <i title="Delete datasource. Be careful - you could not recover it!" class="icon-remove"></i>
+                          </button>
+                      </td>
                     </tr>
                   </tbody>
                   <tfoot ng-hide="handler.xml_data_sources">

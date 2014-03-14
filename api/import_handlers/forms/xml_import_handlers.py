@@ -151,3 +151,19 @@ class XmlInputParameterForm(BaseForm):
             raise ValidationError('Input parameter with name "%s" already \
 exist. Please choose another one.' % value)
         return value
+
+
+def _get_ds_types():
+    from core.xmlimporthandler.importhandler import ExtractionPlan
+    return ExtractionPlan.get_datasources_config().keys()
+
+
+class XmlDataSourceForm(BaseForm):
+    required_fields = ('name', 'type', 'params', 'import_handler_id')
+    NO_REQUIRED_FOR_EDIT = True
+
+    name = CharField()
+    type_field = ChoiceField(choices=_get_ds_types(), name='type')
+    params = JsonField()
+    import_handler_id = DocumentField(
+        doc=XmlImportHandler, by_name=False, return_doc=False)
