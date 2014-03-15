@@ -151,3 +151,36 @@ class XmlInputParameterForm(BaseForm):
             raise ValidationError('Input parameter with name "%s" already \
 exist. Please choose another one.' % value)
         return value
+
+
+class XmlEntityForm(BaseForm):
+    required_fields = ('name', )
+    NO_REQUIRED_FOR_EDIT = True
+
+    name = CharField()
+    import_handler_id = DocumentField(
+        doc=XmlImportHandler, by_name=False, return_doc=False)
+    entity_id = DocumentField(
+        doc=XmlEntity, by_name=False, return_doc=False)
+
+
+class XmlFieldForm(BaseForm):
+    required_fields = ('name', )
+    NO_REQUIRED_FOR_EDIT = True
+
+    name = CharField()
+    type = ChoiceField(choices=XmlField.TYPES)
+    column = CharField()
+    jsonpath = CharField()
+    join = CharField()
+    regex = CharField()
+    split = CharField()
+    dateFormat = CharField()
+    template = CharField()
+    transform = ChoiceField(choices=XmlField.TRANSFORM_TYPES)
+    headers = CharField()
+    script = CharField()
+    entity_id = DocumentField(
+        doc=XmlEntity, by_name=False, return_doc=False)
+    import_handler_id = DocumentField(
+        doc=XmlImportHandler, by_name=False, return_doc=False)

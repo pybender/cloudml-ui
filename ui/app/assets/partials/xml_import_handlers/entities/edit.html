@@ -1,0 +1,44 @@
+<div ng-controller="SaveObjectCtl">
+  <div class="modal-header">
+    <button ng-click="dialog.close()" class="close" data-dismiss="modal">×</button>
+    <h3>Add Entity</h3>
+  </div>
+
+  <div class="modal-body">
+    <ng-include src="'/partials/parts/save_form_messages.html'"></ng-include>
+    <div class="control-group">
+      <form name="Form" class="form-horizontal">
+        <div class="control-group" ng-class="{error: Form.name.$invalid || errorList.name}">
+          <label class="control-label">Name</label>
+          <div class="controls">
+            <input type="text" name="name" ng-model="model.name" ng-change="setFieldError('name')" required />
+            <span ng-show="Form.name.$error.required" class="help-inline">*</span>
+            <span ng-show="errorList.name" class="help-block" ng-bind="errorList.name" />
+          </div>
+        </div>
+        <div class="control-group" ng-class="{error: Form.datasource.$invalid || errorList.datasource}">
+          <label class="control-label">DataSource</label>
+          <div class="controls">
+            <select ng-disabled="model.datasource_name" name="datasource" ng-model="model.datasource">
+              <option value="1">odw</option>
+            </select>
+            <span ng-show="Form.datasource.$error.required" class="help-inline">*</span>
+            <span ng-show="errorList.datasource" class="help-block" ng-bind="errorList.datasource" />
+          </div>
+        </div>
+        <div class="control-group" ng-class="{error: Form.datasource_name.$invalid || errorList.datasource_name}">
+          <label class="control-label">Transformed Field (TODO)</label>
+          <div class="controls">
+            <input ng-disabled="model.datasource" type="text" name="datasource_name" ng-model="model.datasource_name" />
+            <span ng-show="Form.datasource_name.$error.required" class="help-inline">*</span>
+            <span ng-show="errorList.datasource_name" class="help-block" ng-bind="errorList.datasource_name" />
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-footer">
+    <button ng-click="save(['name', 'datasource_name', 'datasource', 'entity_id', 'import_handler_id'])" ng-disabled="Form.$invalid" class="btn btn-primary">Save</button>
+  </div>
+</div>

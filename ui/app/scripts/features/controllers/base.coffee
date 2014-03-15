@@ -29,8 +29,12 @@ angular.module('app.features.controllers.base', ['app.config', ])
       $scope.handler = dialog.extra.handler
       $scope.model = eval('$scope.handler.' + dialog.extra.fieldname)
 
+    if dialog.list_model_name?
+      $scope.LIST_MODEL_NAME = dialog.list_model_name
+    else
+      $scope.LIST_MODEL_NAME = $scope.model.LIST_MODEL_NAME
+
     $scope.DONT_REDIRECT = true
-    $scope.LIST_MODEL_NAME = $scope.model.LIST_MODEL_NAME
     $scope.dialog = dialog
 
     $scope.$on('SaveObjectCtl:save:success', (event, current) ->

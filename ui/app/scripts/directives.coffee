@@ -248,11 +248,20 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
 
 .directive("entitiesTree", [ ->
   return {
-    scope: {entities: '=', innerLoad: '&customClick'}
+    scope: {
+      entity: '=',
+      addEntity: '&addEntity',
+      addField: '&addField',
+      deleteEntity: '&deleteEntity',
+      deleteField: '&deleteField', }
     # replace: true
     restrict: 'E'
     transclude : true
     templateUrl:'partials/directives/import_tree.html'
+    link: (scope, el, attrs) ->
+      1
+      #console.log scope.entity.n, scope.addEntity(
+      #scope.addEnt = scope.addEntity()
   }
 ])
 

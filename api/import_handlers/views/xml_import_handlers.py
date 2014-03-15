@@ -1,8 +1,9 @@
 from api.base.resources import BaseResourceSQL
 from api import api
-from api.import_handlers.models import XmlImportHandler, XmlInputParameter
+from api.import_handlers.models import XmlImportHandler, XmlInputParameter, \
+    XmlEntity, XmlField
 from api.import_handlers.forms import XmlImportHandlerAddForm, \
-    XmlInputParameterForm
+    XmlInputParameterForm, XmlEntityForm, XmlFieldForm
 
 
 class XmlImportHandlerResource(BaseResourceSQL):
@@ -24,7 +25,7 @@ class XmlImportHandlerResource(BaseResourceSQL):
 
         if 'entities' in show:
             from ..models import get_entity_tree
-            res['entities'] = get_entity_tree(model)
+            res['entity'] = get_entity_tree(model)
 
         return res
 
@@ -47,3 +48,27 @@ class XmlInputParameterResource(BaseResourceSQL):
 api.add_resource(
     XmlInputParameterResource,
     '/cloudml/xml_import_handlers/input_parameters/')
+
+
+class XmlEntityResource(BaseResourceSQL):
+    """
+    XmlEntity API methods
+    """
+    put_form = post_form = XmlEntityForm
+    Model = XmlEntity
+
+api.add_resource(
+    XmlEntityResource,
+    '/cloudml/xml_import_handlers/entities/')
+
+
+class XmlFieldResource(BaseResourceSQL):
+    """
+    XmlField API methods
+    """
+    put_form = post_form = XmlFieldForm
+    Model = XmlField
+
+api.add_resource(
+    XmlFieldResource,
+    '/cloudml/xml_import_handlers/fields/')

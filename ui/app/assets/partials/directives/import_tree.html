@@ -1,26 +1,26 @@
-<ul ng-repeat="item in entities" class="list-style">
+<ul class="list-style">
   <li>
     <h4>
-      {{ item.entity.name }}
-<!--       <div class="actions">
-        <a class="btn btn-info" href="#/xml_importhandlers/{{ handler.id }}/datasources/add">
-          <i class="status-icon icon-plus"></i> add entity
-        </a>
-        <a class="btn btn-info" href="#/xml_importhandlers/{{ handler.id }}/datasources/add">
-          <i class="status-icon icon-plus"></i> add field
-        </a>
-      </div> -->
+      <span title="name" class="name" ng-bind="entity.name || 'no name'" editable="entity" value="entity.name" editable-field="name" editable-input="text" editable-placement="right"></span>
+      <a ng-show="entity.entity_id" ng-click="deleteEntity()(entity)">
+        <i class="status-icon icon-remove"></i>
+      </a>
     </h4>
-    <div ng-show="item.entity.datasource">
-      <i class="icon-hdd"></i> {{ item.entity.datasource.name }} ({{ item.entity.datasource.type }})
+    <div ng-show="entity.datasource">
+      <i class="icon-hdd"></i> {{ entity.datasource.name }} ({{ entity.datasource.type }})
     </div>
-    <div ng-show="item.entity.datasource_name">
-      <i class="icon-hdd"></i> {{ item.entity.datasource_name }} (transforming field)
+    <div ng-show="entity.datasource_name">
+      <i class="icon-hdd"></i> {{ entity.datasource_name }} (transforming field)
     </div>
-    <div ng-show="item.entity.query_obj">
-      <i class=" icon-magnet"></i> {{ item.entity.query_obj.text }} <span ng-show="item.entity.query_obj.target">({{ item.entity.query_obj.target }})</span>
+    <div ng-show="entity.query_obj">
+      <i class=" icon-magnet"></i> Query<span ng-show="entity.query_obj.target"> (<span title="target" class="target" ng-bind="entity.query_obj.target" editable="entity.query_obj" value="entity.query_obj.target" editable-field="target" editable-input="text" editable-placement="right"></span>)</span>:<textarea ui-codemirror="{mode: 'text/x-mysql', indentWithTabs: true, smartIndent: true, lineNumbers: true, matchBrackets : true, height: '30px'}" ng-model="entity.query_obj.text"></textarea>
     </div>
-    <h5>Fields</h5>
+    <h5>
+      Fields
+      <a ng-click="addField()(entity);">
+        <i class="status-icon icon-plus"></i>
+      </a>
+    </h5>
     <table class="table table-hover">
       <thead>
         <tr>
@@ -39,37 +39,30 @@
         </tr>
       </thead>
       <tbody>
-      <tr ng-repeat="field in item.entity.fields">
+      <tr ng-repeat="field in entity.fields">
         <td>
-          <!-- <span title="name" class="name" ng-bind="field.name || 'no name'" editable="field" value="field.name" editable-field="name" editable-input="text" editable-placement="right"></span> -->
-          {{ field.name }}
+          <span title="name" class="name" ng-bind="field.name || 'no name'" editable="field" value="field.name" editable-field="name" editable-input="text" editable-placement="right"></span>
         </td>
         <td>
-          {{ field.type }}
+          <span title="Type" ng-bind="field.type" editable="field" value="field.type" editable-field="type" editable-placement="right" editable-input="select" source="field.TYPES_LIST"></span>
         </td>
         <td>
-          <!-- <span title="column" class="column" ng-bind="field.column || 'no column'" editable="field" value="field.column" editable-field="column" editable-input="text" editable-placement="right"></span> -->
-          {{ field.column }}
+          <span title="column" class="column" ng-bind="field.column || 'no column'" editable="field" value="field.column" editable-field="column" editable-input="text" editable-placement="right"></span>
         </td>
         <td>
-          <!-- <span title="jsonpath" class="jsonpath" ng-bind="field.jsonpath || 'no jsonpath'" editable="field" value="field.jsonpath" editable-field="jsonpath" editable-input="text" editable-placement="right"></span> -->
-          {{ field.jsonpath }}
+          <span title="jsonpath" class="jsonpath" ng-bind="field.jsonpath || 'no jsonpath'" editable="field" value="field.jsonpath" editable-field="jsonpath" editable-input="text" editable-placement="right"></span>
         </td>
         <td>
-          <!-- <span title="join" class="join" ng-bind="field.join || 'no join'" editable="field" value="field.join" editable-field="join" editable-input="text" editable-placement="right"></span> -->
-          {{ field.join }}
+          <span title="join" class="join" ng-bind="field.join || 'no join'" editable="field" value="field.join" editable-field="join" editable-input="text" editable-placement="right"></span>
         </td>
         <td>
-          <!-- <span title="regex" class="regex" ng-bind="field.regex || 'no regex'" editable="field" value="field.regex" editable-field="regex" editable-input="text" editable-placement="right"></span> -->
-          {{ field.regex }}
+          <span title="regex" class="regex" ng-bind="field.regex || 'no regex'" editable="field" value="field.regex" editable-field="regex" editable-input="text" editable-placement="right"></span>
         </td>
         <td>
-          <!-- <span title="split" class="split" ng-bind="field.split || 'no split'" editable="field" value="field.split" editable-field="split" editable-input="text" editable-placement="right"></span> -->
-          {{ field.split }}
+          <span title="split" class="split" ng-bind="field.split || 'no split'" editable="field" value="field.split" editable-field="split" editable-input="text" editable-placement="right"></span>
         </td>
         <td>
-          <!-- <span title="dateFormat" class="dateFormat" ng-bind="field.dateFormat || 'no dateFormat'" editable="field" value="field.dateFormat" editable-field="dateFormat" editable-input="text" editable-placement="right"></span> -->
-          {{ field.dateFormat }}
+          <span title="dateFormat" class="dateFormat" ng-bind="field.dateFormat || 'no dateFormat'" editable="field" value="field.dateFormat" editable-field="dateFormat" editable-input="text" editable-placement="right"></span>
         </td>
         <td>
          <!--  <span title="template" class="template" ng-bind="field.template || 'no template'" editable="field" value="field.template" editable-field="template" editable-input="text" editable-placement="right"></span> -->
@@ -80,7 +73,7 @@
           {{ field.transform }}
         </td>
         <td>
-          <!-- <span title="headers" class="headers" ng-bind="field.headers || 'no headers'" editable="field" value="field.regex" editable-field="headers" editable-input="text" editable-placement="right"></span> -->
+          <span title="headers" class="headers" ng-bind="field.headers || 'no headers'" editable="field" value="field.regex" editable-field="headers" editable-input="text" editable-placement="right"></span>
           {{ field.headers }}
         </td>
         <td>
@@ -90,8 +83,14 @@
       </tr>
     </tbody>
     </table>
+    <h5>
+      Entities
+      <a ng-click="addEntity()(entity);">
+        <i class="status-icon icon-plus"></i>
+      </a>
+    </h5>
     <entities-recursive>
-      <entities-tree entities="item.entities"></entities-tree>
+      <entities-tree entity="sub" ng-repeat="sub in entity.entities" add-entity="addEntity()" add-field="addField()"></entities-tree>
     </entities-recursive>
   </li>
 </ul>

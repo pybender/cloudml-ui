@@ -12,11 +12,11 @@ angular.module(
   ($scope, InputParameter) ->
     $scope.types = ["boolean","integer","float","date","string"]
     # TODO:!
-    InputParameter.$getConfiguration().then ((opts)->
-      $scope.types = opts.configuration.types
-    ), ((opts)->
-      $scope.setError(opts, 'loading input parameter types')
-    )
+    # InputParameter.$getConfiguration().then ((opts)->
+    #   $scope.types = opts.configuration.types
+    # ), ((opts)->
+    #   $scope.setError(opts, 'loading input parameter types')
+    # )
 ])
 
 .controller('InputParametersListCtrl', [
@@ -40,7 +40,7 @@ angular.module(
       param = new InputParameter({'import_handler_id': handler.id})
       $scope.openDialog($dialog, param,
         'partials/xml_import_handlers/input_parameters/edit.html',
-        'ModelWithParamsEditDialogCtrl', 'modal', 'add input parameter',
+        'ModelEditDialogCtrl', 'modal', 'add input parameter',
         InputParameter.LIST_MODEL_NAME)
 
     $scope.delete = (param)->

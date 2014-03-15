@@ -29,6 +29,7 @@ App = angular.module('app', [
   'app.xml_importhandlers.models'
   'app.xml_importhandlers.controllers'
   'app.xml_importhandlers.controllers.input_parameters'
+  'app.xml_importhandlers.controllers.entities'
   'app.datasets.model'
   'app.datasets.controllers'
   'app.weights.model'
@@ -284,7 +285,7 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
 
   $rootScope.openDialog = ($dialog, model, template, ctrlName,
                            cssClass='modal', action='', path=null,
-                           extra={}) ->
+                           extra={}, list_model_name=null) ->
     d = $dialog.dialog(
       modalFade: false
       dialogClass: cssClass
@@ -294,6 +295,7 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
     d.path = path
     d.open(template, ctrlName)
     d.extra = extra
+    d.list_model_name = list_model_name
     return d
 
   DEFAULT_ACTION = "model:details"

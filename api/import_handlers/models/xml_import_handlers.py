@@ -57,9 +57,7 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
             for subentity in entity.entities:
                 build_tree(subentity)
 
-        for item_dict in tree.values():
-            entity = item_dict['entity']
-            build_tree(entity)
+        build_tree(tree)
 
         return etree.tostring(plan, pretty_print=pretty_print)
 
@@ -143,7 +141,9 @@ class XmlEntity(db.Model, BaseMixin, RefXmlImportHandlerMixin):
     query_obj = relationship('XmlQuery', foreign_keys=[query_id])
 
     def to_dict(self):
-        ent = {'name': self.name, 'datasource': self.datasource_name}
+        ent = {'name': self.name}
+        if self.datasource_name:
+            ent['datasource'] = self.datasource_name
         if self.datasource:
             ent['datasource'] = self.datasource.name
         return ent
@@ -176,20 +176,12 @@ class XmlField(db.Model, BaseMixin):
 
 
 def get_entity_tree(handler):
-    def load_ent(parent=None):
-        return XmlEntity.query\
-            .options(
-                joinedload_all(XmlEntity.fields),
-                joinedload(XmlEntity.datasource),
-                joinedload(XmlEntity.query_obj)).filter_by(
-                    import_handler=handler,
-                    entity=parent)
-
-    def new_ent(entity):
-        res = {'entity': entity, 'entities': {}}
-        for sub_ent in load_ent(entity):
-            res['entities'][sub_ent.name] = new_ent(sub_ent)
-        return res
-
-    entity = load_ent().one()
-    return {entity.name: new_ent(entity)}
+    entity = XmlEntity.query\
+        .options(
+            joinedload_all(XmlEntity.fields),
+            joinedload_all(XmlEntity.entities),
+            joinedload(XmlEntity.datasource),
+            joinedload(XmlEntity.query_obj)).filter_by(
+                import_handler=handler,
+                entity=None).one()
+    return entity

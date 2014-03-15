@@ -157,12 +157,12 @@
         </div>
 
         <!-- imports -->
-        <div class="accordion-group">
+        <div class="accordion-group" ng-controller="EntitiesTreeCtrl" ng-init="init(handler)">
           <div class="accordion-heading">
             <a class="accordion-toggle" data-toggle="collapse" href="#imports">Import</a>
           </div>
           <div id="imports" class="accordion-body collapse in">
-            <entities-tree entities="handler.entities"></entities-tree>
+            <entities-tree entity="objects" add-entity="addEntity" add-field="addField" delete-entity="deleteEntity"></entities-tree>
           </div>
         </div>
 
