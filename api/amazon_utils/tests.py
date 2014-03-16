@@ -22,4 +22,4 @@ class AmazonS3HelperTests(TestCase):
         self.helper.save_key_string('some_name', 'test')
         self.helper.delete_key('some_name')
         self.assertIsNone(
-            self.helper.conn.get_bucket('bucket_name').get_key('some_name'))
+            self.helper.bucket.get_key('some_name'))

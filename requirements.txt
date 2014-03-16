@@ -33,7 +33,8 @@ boto
 psutil==1.0.1
 memory-profiler==0.27
 mock
-moto
+moto==0.2.18
+httpretty==0.7.1  # To fix the utf-8 issue
 oauth2==1.5.211
 coverage==3.6
 #nosexcover

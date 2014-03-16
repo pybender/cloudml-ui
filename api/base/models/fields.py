@@ -91,6 +91,6 @@ class S3File(TypeDecorator):
             value = helper.load_key(value)
 
             with open(filename, 'w') as f:
-                f.write(value)
+                f.write(str(value))
 
         return value
