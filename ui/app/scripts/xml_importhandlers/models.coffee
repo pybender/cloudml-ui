@@ -64,12 +64,28 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
     return Field
 ])
 
+.factory('Query', [
+  'settings'
+  'BaseModel'
+  
+  (settings, BaseModel) ->
+    class Query extends BaseModel
+      BASE_API_URL: "#{settings.apiUrl}xml_import_handlers/queries/"
+      API_FIELDNAME: 'query'
+      @MAIN_FIELDS: 'id,text,target'
+
+      id: Query
+
+    return Query
+])
+
 .factory('Entity', [
   'settings'
   'BaseModel'
   'Field'
+  'Query'
   
-  (settings, BaseModel, Field) ->
+  (settings, BaseModel, Field, Query) ->
     class Entity extends BaseModel
       BASE_API_URL: "#{settings.apiUrl}xml_import_handlers/entities/"
       API_FIELDNAME: 'entity'
@@ -105,6 +121,10 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
             @entities = []
             for data in origData.entities
               @entities.push new Entity(_.extend data, defaults)
+
+          if origData.query_obj?
+            @query_obj = new Query(_.extend origData.query_obj, defaults)
+            @query_id = @query_id || @query_obj.id
     return Entity
 ])
 
@@ -127,4 +147,24 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
       format: null
 
     return InputParameter
+])
+
+.factory('Datasource', [
+  'settings'
+  'BaseModel'
+
+  (settings, BaseModel) ->
+    class Datasource extends BaseModel
+      BASE_API_URL: "#{settings.apiUrl}xml_import_handlers/datasources/"
+      API_FIELDNAME: 'xml_data_source'
+      @LIST_MODEL_NAME: 'datasources'
+      LIST_MODEL_NAME: @LIST_MODEL_NAME
+      @MAIN_FIELDS: 'id,name,type,params'
+
+      id: null
+      name: null
+      type: null
+      params: {}
+
+    return Datasource
 ])

@@ -10,10 +10,12 @@ angular.module(
   '$rootScope'
   '$dialog'
   'Entity'
+  'Field'
 
-  ($scope, $rootScope, $dialog, Entity) ->
+  ($scope, $rootScope, $dialog, Entity, Field) ->
     $scope.init = (handler) ->
       $scope.handler = handler
+      $scope.dialog = $dialog
       $rootScope.$on('BaseListCtrl:start:load', (event, name) ->
         if name == 'entities' then $scope.load()
       )
@@ -24,7 +26,7 @@ angular.module(
       )
 
     $scope.load = () ->
-      $scope.handler.$load({'show': 'entities,xml'}).then (
+      $scope.handler.$load({'show': 'entities'}).then (
         (opts) ->), ((opts) ->
         $scope.setError(opts, "loading entities tree")
       )
@@ -34,23 +36,34 @@ angular.module(
         'import_handler_id': entity.import_handler_id
         'entity_id': entity.id
       })
-      $scope.openDialog($dialog, ent,
-        'partials/xml_import_handlers/entities/edit.html',
-        'ModelEditDialogCtrl', 'modal', 'add entity',
-        list_model_name="entities")
+      $scope.openDialog({
+        $dialog: $dialog
+        model: ent
+        template: 'partials/xml_import_handlers/entities/edit.html'
+        ctrlName: 'ModelEditDialogCtrl'
+        list_model_name: "entities"
+      })
 
     $scope.addField = (entity) ->
       field = new Field({
         'import_handler_id': entity.import_handler_id
         'entity_id': entity.id
       })
-      $scope.openDialog($dialog, field,
-        'partials/xml_import_handlers/fields/edit.html',
-        'ModelEditDialogCtrl', 'modal', 'add field',
-        list_model_name="entities")
+      $scope.openDialog({
+        $dialog: $dialog
+        model: field
+        template: 'partials/xml_import_handlers/fields/edit.html'
+        ctrlName: 'ModelWithParamsEditDialogCtrl'
+        list_model_name: "entities"
+      })
 
     $scope.delete = (item)->
-      $scope.openDialog($dialog, item,
-        'partials/base/delete_dialog.html', 'DialogCtrl',
-        'modal', 'delete', list_model_name="entities")
+      $scope.openDialog({
+        $dialog: $dialog
+        model: item
+        template: 'partials/base/delete_dialog.html'
+        ctrlName: 'DialogCtrl'
+        list_model_name: "entities"
+        action: 'delete'
+      })
 ])

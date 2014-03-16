@@ -40,20 +40,32 @@ angular.module('app.features.controllers.transformers', ['app.config', ])
     $scope.LIST_MODEL_NAME = Transformer.LIST_MODEL_NAME
 
     $scope.edit = (transformer) ->
-      $scope.openDialog($dialog, transformer,
-        'partials/features/transformers/edit_predefined.html',
-        'ModelWithParamsEditDialogCtrl', 'modal', 'edit transformer',
-        'transformers')
+      $scope.openDialog({
+        $dialog: $dialog
+        model: transformer
+        template: 'partials/features/transformers/edit_predefined.html'
+        ctrlName: 'ModelWithParamsEditDialogCtrl'
+        action: 'edit transformer'
+        path: 'transformers'
+      })
 
     $scope.add = () ->
       transformer = new Transformer()
-      $scope.openDialog($dialog, transformer,
-        'partials/features/transformers/add_predefined.html',
-        'ModelWithParamsEditDialogCtrl', 'modal', 'add transformer',
-        'transformers')
+      $scope.openDialog({
+        $dialog: $dialog
+        model: transformer
+        template: 'partials/features/transformers/add_predefined.html'
+        ctrlName: 'ModelWithParamsEditDialogCtrl'
+        action: "add transformer"
+        path: 'transformers'
+      })
 
-    $scope.delete = (transformer)->
-      $scope.openDialog($dialog, transformer,
-        'partials/base/delete_dialog.html', 'DialogCtrl',
-        'modal', 'delete predefined transformer')
+    $scope.delete = (transformer) ->
+      $scope.openDialog({
+        $dialog: $dialog
+        model: transformer
+        template: 'partials/base/delete_dialog.html'
+        ctrlName: 'DialogCtrl'
+        action: 'delete transformer'
+      })
 ])

@@ -118,32 +118,37 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
       )
 
     $scope.editDataSource = (handler, ds) ->
-      $scope.openDialog($dialog, null,
-        'partials/import_handler/datasource/edit_handler_datasource.html',
-          'DataSourceEditDialogCtrl',
-        'modal', 'edit data source', 'data source',
-        {handler: handler, ds: ds}
-      )
+      $scope.openDialog({
+        $dialog: $dialog
+        model: null
+        template: \
+          'partials/import_handler/datasource/edit_handler_datasource.html'
+        ctrlName: 'DataSourceEditDialogCtrl'
+        action: 'add data source'
+        extra: {handler: handler, ds: ds}
+      })
 
     $scope.editTargetFeature = (item, feature) ->
-      $scope.openDialog($dialog, null,
-        'partials/import_handler/edit_target_feature.html',
-          'TargetFeatureEditDialogCtrl',
-        'modal', 'edit target feature', 'target feature',
-        {handler: item.handler, feature: feature, item: item}
-      )
+      $scope.openDialog({
+        $dialog: $dialog
+        model: null
+        template: 'partials/import_handler/edit_target_feature.html'
+        ctrlName: 'TargetFeatureEditDialogCtrl'
+        extra: {handler: item.handler, feature: feature, item: item}
+        action: 'edit target feature'
+      })
 
     $scope.runQuery = (query) ->
-      $scope.openDialog($dialog, null,
-        'partials/import_handler/test_query.html',
-          'QueryTestDialogCtrl',
-        'modal', 'test import handler query', 'query',
-        {handler: $scope.handler, query: query}
-      )
+      $scope.openDialog({
+        $dialog: $dialog
+        model: null
+        template: 'partials/import_handler/test_query.html'
+        ctrlName: 'QueryTestDialogCtrl'
+        extra: {handler: $scope.handler, query: query}
+        action: 'test import handler query'
+      })
 
     $scope.initSections($scope.go)
-    #$scope.initLogMessages("channel=importdata_log&model=" +
-    #$scope.handler._id)
 ])
 
 .controller('QueryTestDialogCtrl', [
@@ -304,22 +309,31 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
   '$dialog'
 ($scope, $dialog) ->
   $scope.importData = (handler) ->
-    $scope.openDialog($dialog, handler,
-    'partials/import_handler/load_data.html', 'LoadDataDialogCtrl')
+    $scope.openDialog({
+      $dialog: $dialog
+      model: handler
+      template: 'partials/import_handler/load_data.html'
+      ctrlName: 'LoadDataDialogCtrl'
+    })
 
   $scope.delete = (handler) ->
-    $scope.openDialog($dialog, handler,
-    'partials/base/delete_dialog.html', 'DeleteImportHandlerCtrl',
-    "modal", "delete import handler", "/importhandlers")
+    $scope.openDialog({
+      $dialog: $dialog
+      model: handler
+      template: 'partials/base/delete_dialog.html'
+      ctrlName: 'DeleteImportHandlerCtrl'
+      action: 'delete import handler'
+      path: "/importhandlers"
+    })
 
   $scope.testHandler = (handler) ->
-    $scope.openDialog($dialog, null,
-        'partials/import_handler/test_handler.html',
-          'ImportTestDialogCtrl',
-        'modal', 'test import handler', 'handler',
-        {handler: $scope.handler}
-      )
-
+    $scope.openDialog({
+      $dialog: $dialog
+      template: 'partials/import_handler/test_handler.html'
+      ctrlName: 'ImportTestDialogCtrl'
+      action: 'test import handler'
+      extra: {handler: $scope.handler}
+    })
 ])
 
 .controller('ImportHandlerSelectCtrl', [

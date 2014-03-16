@@ -16,11 +16,11 @@
             <span ng-show="errorList.name" class="help-block" ng-bind="errorList.name" />
           </div>
         </div>
-        <div class="control-group" ng-class="{error: Form.datasource.$invalid || errorList.datasource}">
+        <div class="control-group" ng-class="{error: Form.datasource.$invalid || errorList.datasource}" ng-controller="XmlDataSourceSelectCtrl">
           <label class="control-label">DataSource</label>
           <div class="controls">
-            <select ng-disabled="model.datasource_name" name="datasource" ng-model="model.datasource">
-              <option value="1">odw</option>
+            <select name="datasource" ng-model="model.datasource">
+              <option value="{{ ds.id }}" ng-repeat="ds in datasources">{{ ds.name }}</option>
             </select>
             <span ng-show="Form.datasource.$error.required" class="help-inline">*</span>
             <span ng-show="errorList.datasource" class="help-block" ng-bind="errorList.datasource" />
@@ -29,7 +29,7 @@
         <div class="control-group" ng-class="{error: Form.datasource_name.$invalid || errorList.datasource_name}">
           <label class="control-label">Transformed Field (TODO)</label>
           <div class="controls">
-            <input ng-disabled="model.datasource" type="text" name="datasource_name" ng-model="model.datasource_name" />
+            <input type="text" name="datasource_name" ng-model="model.datasource_name" />
             <span ng-show="Form.datasource_name.$error.required" class="help-inline">*</span>
             <span ng-show="errorList.datasource_name" class="help-block" ng-bind="errorList.datasource_name" />
           </div>

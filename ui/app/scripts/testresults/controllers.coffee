@@ -154,9 +154,12 @@ confusion_matrix_calculations,model'
         $scope.LOADED_SECTIONS.push 'main'
 
   $scope.downloadCsvResults = () ->
-    $scope.openDialog($dialog, $scope.test,
-        'partials/datasets/csv_list_popup.html',
-        'CsvDownloadCtrl', 'modal')
+    $scope.openDialog({
+        $dialog: $dialog
+        model: $scope.test
+        template: 'partials/datasets/csv_list_popup.html'
+        ctrlName: 'CsvDownloadCtrl'
+    })
 
   $scope.initSections($scope.goSection, 'metrics:accuracy')
 ])

@@ -76,6 +76,9 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
     def get_import_params(self):
         return [p.name for p in self.input_parameters]
 
+    def __repr__(self):
+        return "<Import Handler %s>" % self.name
+
 
 class RefXmlImportHandlerMixin(object):
     @declared_attr
@@ -103,6 +106,9 @@ class XmlDataSource(db.Model, BaseMixin, RefXmlImportHandlerMixin):
     def validate_params(self, key, params):  # TODO:
         return params
 
+    def __repr__(self):
+        return "<DataSource %s>" % self.name
+
 
 class XmlInputParameter(db.Model, BaseMixin, RefXmlImportHandlerMixin):
     FIELDS_TO_SERIALIZE = ['name', 'type', 'regex', 'format']
@@ -124,6 +130,9 @@ class XmlQuery(db.Model, BaseMixin):
     target = db.Column(db.String(200))
     text = db.Column(db.Text)
 
+    def __repr__(self):
+        return "<Query %s>" % self.text
+
 
 class XmlEntity(db.Model, BaseMixin, RefXmlImportHandlerMixin):
     id = db.Column(db.Integer, primary_key=True)
@@ -139,6 +148,9 @@ class XmlEntity(db.Model, BaseMixin, RefXmlImportHandlerMixin):
                               foreign_keys=[datasource_id])
     query_id = db.Column(db.ForeignKey('xml_query.id', ondelete='CASCADE'))
     query_obj = relationship('XmlQuery', foreign_keys=[query_id])
+
+    def __repr__(self):
+        return "<Entity %s>" % self.name
 
     def to_dict(self):
         ent = {'name': self.name}
@@ -178,10 +190,19 @@ class XmlField(db.Model, BaseMixin):
 def get_entity_tree(handler):
     entity = XmlEntity.query\
         .options(
-            joinedload_all(XmlEntity.fields),
-            joinedload_all(XmlEntity.entities),
-            joinedload(XmlEntity.datasource),
-            joinedload(XmlEntity.query_obj)).filter_by(
+            joinedload_all('fields'),
+            joinedload_all('entities', 'entities', 'entities'),
+            joinedload('entities.fields'),
+            joinedload('entities.entities.fields'),
+            joinedload('entities.entities.entities.fields'),
+            joinedload('datasource'),
+            joinedload('entities.datasource'),
+            joinedload('entities.entities.datasource'),
+            joinedload('entities.entities.entities.datasource'),
+            joinedload('query_obj'),
+            joinedload('entities.query_obj'),
+            joinedload('entities.entities.query_obj'),
+            joinedload('entities.entities.entities.query_obj')).filter_by(
                 import_handler=handler,
                 entity=None).one()
     return entity

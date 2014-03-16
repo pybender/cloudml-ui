@@ -70,7 +70,11 @@ angular.module('app.features.controllers.base', ['app.config', ])
     else
       throw new Excepion "Please spec model or feature and field name"
 
-    $scope.LIST_MODEL_NAME = $scope.model.LIST_MODEL_NAME
+    if dialog.list_model_name?
+      $scope.LIST_MODEL_NAME = dialog.list_model_name
+    else
+      $scope.LIST_MODEL_NAME = $scope.model.LIST_MODEL_NAME
+
     $scope.params = {}
     $scope.model.$getConfiguration(
     ).then ((opts)->

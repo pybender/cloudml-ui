@@ -13,7 +13,10 @@
       <i class="icon-hdd"></i> {{ entity.datasource_name }} (transforming field)
     </div>
     <div ng-show="entity.query_obj">
-      <i class=" icon-magnet"></i> Query<span ng-show="entity.query_obj.target"> (<span title="target" class="target" ng-bind="entity.query_obj.target" editable="entity.query_obj" value="entity.query_obj.target" editable-field="target" editable-input="text" editable-placement="right"></span>)</span>:<textarea ui-codemirror="{mode: 'text/x-mysql', indentWithTabs: true, smartIndent: true, lineNumbers: true, matchBrackets : true, height: '30px'}" ng-model="entity.query_obj.text"></textarea>
+      <i class=" icon-magnet"></i> Query<span ng-show="entity.query_obj.target"> (<span title="target" class="target" ng-bind="entity.query_obj.target" editable="entity.query_obj" value="entity.query_obj.target" editable-field="target" editable-input="text" editable-placement="right"></span>)</span>:<textarea class="small" ui-codemirror="{mode: 'text/x-mysql', indentWithTabs: true, smartIndent: true, lineNumbers: true, matchBrackets : true, height: '30px'}" ng-model="entity.query_obj.text"></textarea>
+      <a ng-click="saveQueryText(entity.query_obj);" class="btn btn-info">
+        <i class="status-icon icon-plus"></i> save
+      </a>
     </div>
     <h5>
       Fields
@@ -21,21 +24,22 @@
         <i class="status-icon icon-plus"></i>
       </a>
     </h5>
-    <table class="table table-hover">
+    <table class="table table-hover" ng-show="entity.fields">
       <thead>
         <tr>
-          <th>name</th>
-          <th>type</th>
-          <th>column</th>
-          <th>jsonpath</th>
-          <th>join</th>
-          <th>regex</th>
-          <th>split</th>
-          <th>dateFormat</th>
-          <th>template</th>
-          <th>transform</th>
-          <th>headers</th>
-          <th>script</th>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Column</th>
+          <th>Jsonpath</th>
+          <th>Join</th>
+          <th>Regex</th>
+          <th>Split</th>
+          <th>Date Format</th>
+          <th>Template</th>
+          <th>Transform</th>
+          <th>Headers</th>
+          <th>Script</th>
+          <th width="50px">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -65,20 +69,21 @@
           <span title="dateFormat" class="dateFormat" ng-bind="field.dateFormat || 'no dateFormat'" editable="field" value="field.dateFormat" editable-field="dateFormat" editable-input="text" editable-placement="right"></span>
         </td>
         <td>
-         <!--  <span title="template" class="template" ng-bind="field.template || 'no template'" editable="field" value="field.template" editable-field="template" editable-input="text" editable-placement="right"></span> -->
-         {{ field.template }}
+          <span title="template" class="template" ng-bind="field.template || 'no template'" editable="field" value="field.template" editable-field="template" editable-input="textarea" editable-placement="left"></span>
         </td>
         <td>
-         <!--  <span title="transform" class="transform" ng-bind="field.transform || 'no transform'" editable="field" value="field.transform" editable-field="transform" editable-input="text" editable-placement="right"></span> -->
-          {{ field.transform }}
+          <span title="transform" ng-bind="field.transform" editable="field" value="field.transform" editable-field="transform" editable-placement="left" editable-input="select" source="field.TRANSFORM_LIST"></span>
         </td>
         <td>
-          <span title="headers" class="headers" ng-bind="field.headers || 'no headers'" editable="field" value="field.regex" editable-field="headers" editable-input="text" editable-placement="right"></span>
-          {{ field.headers }}
+          <span title="headers" class="headers" ng-bind="field.headers || 'no headers'" editable="field" value="field.regex" editable-field="headers" editable-input="textarea" editable-placement="left"></span>
         </td>
         <td>
-          <!-- <span title="script" class="script" ng-bind="field.script || 'no script'" editable="field" value="field.script" editable-field="script" editable-input="text" editable-placement="right"></span> -->
-          {{ field.script }}
+          <span title="script" class="script" ng-bind="field.script || 'no script'" editable="field" value="field.script" editable-field="script" editable-input="textarea" editable-placement="left"></span>
+        </td>
+        <td>
+          <button ng-click="deleteField()(field);" class="btn btn-danger">
+            <i title="Delete field. Be careful - you could not recover it!" class="icon-remove"></i>
+          </button>
         </td>
       </tr>
     </tbody>
@@ -90,7 +95,7 @@
       </a>
     </h5>
     <entities-recursive>
-      <entities-tree entity="sub" ng-repeat="sub in entity.entities" add-entity="addEntity()" add-field="addField()"></entities-tree>
+      <entities-tree entity="sub" ng-repeat="sub in entity.entities" add-entity="addEntity()" add-field="addField()" delete-entity="deleteEntity()" delete-field="deleteField()"></entities-tree>
     </entities-recursive>
   </li>
 </ul>

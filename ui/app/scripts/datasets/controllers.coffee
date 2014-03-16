@@ -54,9 +54,14 @@ filesize,records_count,time,created_by,updated_by'
       $scope.handler = opts.handler
 
     $scope.delete = ()->
-      $scope.openDialog($dialog, $scope.ds,
-        'partials/base/delete_dialog.html', 'DialogCtrl',
-        "modal", "delete dataset", $scope.handler.objectUrl())
+      $scope.openDialog({
+        $dialog: $scope.ds
+        model: datasource
+        template: 'partials/base/delete_dialog.html'
+        ctrlName: 'DialogCtrl'
+        action: 'delete datasource'
+        path: $scope.handler.dataset()
+      })
 
     $scope.download = () ->
       if $scope.ds.on_s3

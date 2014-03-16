@@ -84,7 +84,6 @@ angular.module('app.controllers', ['app.config', ])
 
         _.delay (->
           $scope.$emit 'SaveObjectCtl:save:success', $scope.model
-
           if $scope.LIST_MODEL_NAME?
             $scope.$emit 'BaseListCtrl:start:load', $scope.LIST_MODEL_NAME
 

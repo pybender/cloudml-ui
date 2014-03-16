@@ -154,7 +154,8 @@ exist. Please choose another one.' % value)
 
 
 class XmlEntityForm(BaseForm):
-    required_fields = ('name', )
+    required_fields = ('name', 'import_handler_id',
+                       'entity_id', ('datasource', 'datasource_name'))
     NO_REQUIRED_FOR_EDIT = True
 
     name = CharField()
@@ -162,6 +163,17 @@ class XmlEntityForm(BaseForm):
         doc=XmlImportHandler, by_name=False, return_doc=False)
     entity_id = DocumentField(
         doc=XmlEntity, by_name=False, return_doc=False)
+    datasource = DocumentField(
+        doc=XmlDataSource, by_name=False, return_doc=True)
+    datasource_name = CharField()
+
+    def save(self):  # TODO: transaction!
+        entity = super(XmlEntityForm, self).save(commit=False)
+        query = XmlQuery(text="select * from tbl")
+        query.save()
+        entity.query_obj = query
+        entity.save()
+        return entity
 
 
 class XmlFieldForm(BaseForm):
@@ -180,6 +192,34 @@ class XmlFieldForm(BaseForm):
     transform = ChoiceField(choices=XmlField.TRANSFORM_TYPES)
     headers = CharField()
     script = CharField()
+    entity_id = DocumentField(
+        doc=XmlEntity, by_name=False, return_doc=False)
+    import_handler_id = DocumentField(
+        doc=XmlImportHandler, by_name=False, return_doc=False)
+
+
+def _get_ds_types():
+    from core.xmlimporthandler.importhandler import ExtractionPlan
+    return ExtractionPlan.get_datasources_config().keys()
+
+
+class XmlDataSourceForm(BaseForm):
+    required_fields = ('name', 'type', 'params', 'import_handler_id')
+    NO_REQUIRED_FOR_EDIT = True
+
+    name = CharField()
+    type_field = ChoiceField(choices=_get_ds_types(), name='type')
+    params = JsonField()
+    import_handler_id = DocumentField(
+        doc=XmlImportHandler, by_name=False, return_doc=False)
+
+
+class XmlQueryForm(BaseForm):
+    required_fields = ('text', 'entity_id', 'import_handler_id')
+    NO_REQUIRED_FOR_EDIT = True
+
+    text = CharField()
+    target = CharField()
     entity_id = DocumentField(
         doc=XmlEntity, by_name=False, return_doc=False)
     import_handler_id = DocumentField(

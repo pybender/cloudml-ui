@@ -30,6 +30,7 @@ App = angular.module('app', [
   'app.xml_importhandlers.controllers'
   'app.xml_importhandlers.controllers.input_parameters'
   'app.xml_importhandlers.controllers.entities'
+  'app.xml_importhandlers.controllers.datasources'
   'app.datasets.model'
   'app.datasets.controllers'
   'app.weights.model'
@@ -283,19 +284,25 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
           $rootScope.log_messages.push(data['data']['msg']))
     log_sse.addEventListener('message', handleCallback)
 
-  $rootScope.openDialog = ($dialog, model, template, ctrlName,
-                           cssClass='modal', action='', path=null,
-                           extra={}, list_model_name=null) ->
+  $rootScope.openDialog = (opts) ->
+    $dialog = opts.$dialog
+    if !$dialog?
+      throw new Error('$dialog is required')
+
+    template = opts.template
+    if !template?
+      throw new Error('template is required')
+
     d = $dialog.dialog(
       modalFade: false
-      dialogClass: cssClass
+      dialogClass: opts.cssClass || 'modal'
     )
-    d.model = model
-    d.action = action
-    d.path = path
-    d.open(template, ctrlName)
-    d.extra = extra
-    d.list_model_name = list_model_name
+    d.model = opts.model
+    d.action = opts.action || ''
+    d.path = opts.path
+    d.open(template, opts.ctrlName)
+    d.extra = opts.extra || {}
+    d.list_model_name = opts.list_model_name
     return d
 
   DEFAULT_ACTION = "model:details"
