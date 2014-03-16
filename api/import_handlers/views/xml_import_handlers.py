@@ -96,7 +96,7 @@ class XmlDataSourceResource(BaseResourceSQL):
 
 api.add_resource(
     XmlDataSourceResource,
-    '/cloudml/xml_import_handlers/datasources/')
+    '/cloudml/xml_import_handlers/<regex("[\w\.]*"):import_handler_id>/datasources/')
 
 
 class XmlQueryResource(BaseResourceSQL):
