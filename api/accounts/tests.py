@@ -201,6 +201,12 @@ class UserModelTests(BaseDbTestCase):
             'last_name': 'Tolstoy',
             'mail': 'somenew@mail.com'
         },
+        'user': {
+            'id': 'somebody',
+            'email': 'somenew@mail.com'
+        }
+    }
+    INFO_RETURN_VALUE_3 = {
         'info': {
             'profile_url': 'http://profile1.com',
             'portrait_32_img': 'http://image.com/image1.jpg',
@@ -213,6 +219,12 @@ class UserModelTests(BaseDbTestCase):
             'last_name': 'Dostoevsky',
             'mail': 'someother@mail.com'
         },
+        'user': {
+            'id': 'someother',
+            'email': 'someother@mail.com'
+        }
+    }
+    INFO_RETURN_VALUE_4 = {
         'info': {
             'profile_url': 'http://profile2.com',
             'portrait_32_img': 'http://image.com/image2.jpg',
@@ -224,26 +236,30 @@ class UserModelTests(BaseDbTestCase):
     def test_authenticate(self):
         with patch('api.accounts.auth.OdeskAuth.get_my_info',
                    Mock(return_value=self.INFO_RETURN_VALUE_1)):
-            token, user = User.authenticate('123', '345', '567')
-            self.assertTrue(token)
-            self.assertEqual(user.uid, 'somebody')
-            self.assertEqual(user.name, 'Alexey Tolstoy')
-            self.assertEqual(user.email, 'somenew@mail.com')
-            self.assertEqual(user.odesk_url, 'http://profile1.com')
-            self.assertEqual(user.portrait_32_img,
-                             'http://image.com/image1.jpg')
+            with patch('api.accounts.auth.OdeskAuth.get_user_info',
+                   Mock(return_value=self.INFO_RETURN_VALUE_3)):
+                token, user = User.authenticate('123', '345', '567')
+                self.assertTrue(token)
+                self.assertEqual(user.uid, 'somebody')
+                self.assertEqual(user.name, 'Alexey Tolstoy')
+                self.assertEqual(user.email, 'somenew@mail.com')
+                self.assertEqual(user.odesk_url, 'http://profile1.com')
+                self.assertEqual(user.portrait_32_img,
+                                 'http://image.com/image1.jpg')
 
         with patch('api.accounts.auth.OdeskAuth.get_my_info',
                    Mock(return_value=self.INFO_RETURN_VALUE_2)):
-            token, user = User.authenticate('123', '345', '567')
-            self.assertTrue(token)
-            self.assertTrue(str(user.id))
-            self.assertEqual(user.uid, 'someother')
-            self.assertEqual(user.name, 'Fiodor Dostoevsky')
-            self.assertEqual(user.email, 'someother@mail.com')
-            self.assertEqual(user.odesk_url, 'http://profile2.com')
-            self.assertEqual(user.portrait_32_img,
-                             'http://image.com/image2.jpg')
+            with patch('api.accounts.auth.OdeskAuth.get_user_info',
+                   Mock(return_value=self.INFO_RETURN_VALUE_4)):
+                token, user = User.authenticate('123', '345', '567')
+                self.assertTrue(token)
+                self.assertTrue(str(user.id))
+                self.assertEqual(user.uid, 'someother')
+                self.assertEqual(user.name, 'Fiodor Dostoevsky')
+                self.assertEqual(user.email, 'someother@mail.com')
+                self.assertEqual(user.odesk_url, 'http://profile2.com')
+                self.assertEqual(user.portrait_32_img,
+                                 'http://image.com/image2.jpg')
 
     @patch('api.accounts.auth.OdeskAuth.get_auth_url',
            Mock(return_value='some_url'))

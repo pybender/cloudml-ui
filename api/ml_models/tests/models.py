@@ -419,7 +419,8 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         new_handler.data = self.handler.data
         new_handler.save()
         ds = DataSet.query.filter_by(name=DataSetData.dataset_02.name).first()
-        ds.import_handler = new_handler
+        ds.import_handler_id = new_handler.id
+        ds.import_handler_type = new_handler.TYPE
         ds.save()
 
         data = {'aws_instance': self.instance.id,
