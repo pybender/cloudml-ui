@@ -173,3 +173,26 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
 
     return Datasource
 ])
+
+.factory('Script', [
+  'settings'
+  'BaseModel'
+
+  (settings, BaseModel) ->
+    class Script extends BaseModel
+      API_FIELDNAME: 'xml_script'
+      @LIST_MODEL_NAME: 'xml_scripts'
+      LIST_MODEL_NAME: @LIST_MODEL_NAME
+      @MAIN_FIELDS: 'id,import_handler_id,data'
+
+      id: null
+      import_handler_id: null
+      data: null
+
+      constructor: (opts) ->
+        super
+        @BASE_API_URL = "#{settings.apiUrl}xml_import_handlers
+/#{@import_handler_id}/scripts/"
+
+    return Script
+])

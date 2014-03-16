@@ -224,3 +224,12 @@ class XmlQueryForm(BaseForm):
         doc=XmlEntity, by_name=False, return_doc=False)
     import_handler_id = DocumentField(
         doc=XmlImportHandler, by_name=False, return_doc=False)
+
+
+class XmlScriptForm(BaseForm):
+    required_fields = ('data', 'import_handler_id')
+    NO_REQUIRED_FOR_EDIT = True
+
+    data = CharField()
+    import_handler_id = DocumentField(
+        doc=XmlImportHandler, by_name=False, return_doc=False)
