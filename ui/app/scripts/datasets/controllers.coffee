@@ -55,12 +55,11 @@ filesize,records_count,time,created_by,updated_by'
 
     $scope.delete = ()->
       $scope.openDialog({
-        $dialog: $scope.ds
-        model: datasource
+        $dialog: $dialog
+        model: $scope.ds
         template: 'partials/base/delete_dialog.html'
         ctrlName: 'DialogCtrl'
-        action: 'delete datasource'
-        path: $scope.handler.dataset()
+        action: 'delete dataset'
       })
 
     $scope.download = () ->

@@ -143,7 +143,13 @@ class XmlInputParameterForm(BaseForm):
         if not ((self.NO_REQUIRED_FOR_EDIT and self.obj.id) or value):
             raise ValidationError('name is required field')
 
-        query = XmlInputParameter.query.filter_by(name=value)
+        import_handler_id = self.obj.import_handler_id if \
+            self.obj.id else self.data['import_handler_id']
+
+        query = XmlInputParameter.query.filter_by(
+            name=value,
+            import_handler_id=import_handler_id
+        )
         if self.obj.id:
             query = query.filter(XmlInputParameter.id != self.obj.id)
         count = query.count()

@@ -128,6 +128,11 @@ class XmlInputParameter(db.Model, BaseMixin, RefXmlImportHandlerMixin):
         super(XmlInputParameter, self).save(*args, **kwargs)
         self.import_handler.update_import_params()
 
+    def delete(self, *args, **kwargs):
+        handler = self.import_handler
+        super(XmlInputParameter, self).delete(*args, **kwargs)
+        handler.update_import_params()
+
 
 class XmlScript(db.Model, BaseMixin, RefXmlImportHandlerMixin):
     data = db.Column(db.Text)
