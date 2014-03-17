@@ -34,7 +34,7 @@ angular.module('app.xml_importhandlers.controllers', ['app.config', ])
       if mainSection not in $scope.LOADED_SECTIONS
         # is not already loaded
         fields = ImportHandler.MAIN_FIELDS + ',xml_data_sources,
-xml_input_parameters,xml_scripts,entities,import_params,xml'
+xml_input_parameters,xml_scripts,entities,import_params'
         if mainSection == 'dataset'
           setTimeout(() ->
             $scope.$broadcast('loadDataSet', true)
@@ -51,16 +51,6 @@ xml_input_parameters,xml_scripts,entities,import_params,xml'
         )
 
     $scope.initSections($scope.go)
-
-    $rootScope.$on('SaveObjectCtl:save:success', (event, current) ->
-      $scope.LOADED_SECTIONS = []
-      $scope.go('')
-    )
-
-    $rootScope.$on('modelDeleted', (event, current) ->
-      $scope.LOADED_SECTIONS = []
-      $scope.go('')
-    )
 ])
 
 

@@ -16,11 +16,11 @@
             <span ng-show="errorList.name" class="help-block" ng-bind="errorList.name" />
           </div>
         </div>
-        <div class="control-group" ng-class="{error: Form.datasource.$invalid || errorList.datasource}">
+        <div class="control-group" ng-class="{error: Form.datasource.$invalid || errorList.datasource}" ng-controller="XmlDataSourceSelectCtrl">
           <label class="control-label">DataSource</label>
           <div class="controls">
             <select name="datasource" ng-model="model.datasource">
-              <option value="{{ ds.id }}" ng-repeat="ds in dialog.extra.handler.xml_data_sources">{{ ds.name }}</option>
+              <option value="{{ ds.id }}" ng-repeat="ds in datasources">{{ ds.name }}</option>
             </select>
             <span ng-show="Form.datasource.$error.required" class="help-inline">*</span>
             <span ng-show="errorList.datasource" class="help-block" ng-bind="errorList.datasource" />

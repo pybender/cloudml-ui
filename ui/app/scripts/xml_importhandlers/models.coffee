@@ -155,21 +155,16 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
 
   (settings, BaseModel) ->
     class Datasource extends BaseModel
+      BASE_API_URL: "#{settings.apiUrl}xml_import_handlers/datasources/"
       API_FIELDNAME: 'xml_data_source'
       @LIST_MODEL_NAME: 'datasources'
       LIST_MODEL_NAME: @LIST_MODEL_NAME
-      @MAIN_FIELDS: 'id,import_handler_id,name,type,params'
+      @MAIN_FIELDS: 'id,name,type,params'
 
       id: null
-      import_handler_id: null
       name: null
       type: null
       params: {}
-
-      constructor: (opts) ->
-        super
-        @BASE_API_URL = "#{settings.apiUrl}xml_import_handlers
-/#{@import_handler_id}/datasources/"
 
     return Datasource
 ])
