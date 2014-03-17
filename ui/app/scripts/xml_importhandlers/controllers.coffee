@@ -41,6 +41,8 @@ xml_input_parameters,xml_scripts,entities,import_params'
             $scope.LOADED_SECTIONS.push mainSection
           , 100)
 
+      if section[1] == 'xml' then fields = 'xml'
+
       if fields != ''
         $scope.handler.$load(
             show: fields

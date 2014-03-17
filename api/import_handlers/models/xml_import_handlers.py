@@ -45,8 +45,8 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
         import_ = etree.SubElement(plan, "import")
         tree = get_entity_tree(self)
 
-        def build_tree(entity):
-            ent = etree.SubElement(import_, "entity", **entity.to_dict())
+        def build_tree(entity, parent):
+            ent = etree.SubElement(parent, "entity", **entity.to_dict())
             if entity.query_obj:
                 query = etree.SubElement(
                     ent, "query", **entity.query_obj.to_dict())
@@ -55,9 +55,9 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
             for field in entity.fields:
                 etree.SubElement(ent, "field", **field.to_dict())
             for subentity in entity.entities:
-                build_tree(subentity)
+                build_tree(subentity, parent=ent)
 
-        build_tree(tree)
+        build_tree(tree, import_)
 
         return etree.tostring(plan, pretty_print=pretty_print)
 

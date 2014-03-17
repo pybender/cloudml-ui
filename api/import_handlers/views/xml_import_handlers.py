@@ -119,9 +119,18 @@ class XmlQueryResource(BaseResourceSQL):
     Model = XmlQuery
     DEFAULT_FIELDS = ['id', 'text', 'target']
 
+    def _get_details_query(self, params, **kwargs):
+        try:
+            handler_id = kwargs.pop('import_handler_id')
+            entity_id = kwargs.pop('entity_id')
+            return self._build_details_query(params, **kwargs)
+        except orm_exc.NoResultFound:
+            return None
+
 api.add_resource(
     XmlQueryResource, '/cloudml/xml_import_handlers/\
-<regex("[\w\.]*"):import_handler_id>/<regex("[\w\.]*"):entity_id>/queries/')
+<regex("[\w\.]*"):import_handler_id>/entities/\
+<regex("[\w\.]*"):entity_id>/queries/')
 
 
 class XmlScriptResource(BaseResourceSQL):

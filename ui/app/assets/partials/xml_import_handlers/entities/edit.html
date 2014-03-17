@@ -16,7 +16,6 @@
             <span ng-show="errorList.name" class="help-block" ng-bind="errorList.name" />
           </div>
         </div>
-
         <div class="control-group" ng-class="{error: Form.datasource.$invalid || errorList.datasource}" ng-controller="XmlDataSourceSelectCtrl" ng-init="init(model.import_handler_id)">
               <label class="control-label">Data Source (global)</label>
               <div class="controls">
