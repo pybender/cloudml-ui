@@ -31,6 +31,7 @@ App = angular.module('app', [
   'app.xml_importhandlers.controllers.input_parameters'
   'app.xml_importhandlers.controllers.entities'
   'app.xml_importhandlers.controllers.datasources'
+  'app.xml_importhandlers.controllers.scripts'
   'app.datasets.model'
   'app.datasets.controllers'
   'app.weights.model'

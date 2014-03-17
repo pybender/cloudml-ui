@@ -76,6 +76,10 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
     def get_import_params(self):
         return [p.name for p in self.input_parameters]
 
+    def update_import_params(self):
+        self.import_params = [p.name for p in self.xml_input_parameters]
+        self.save()
+
     def __repr__(self):
         return "<Import Handler %s>" % self.name
 
@@ -119,6 +123,15 @@ class XmlInputParameter(db.Model, BaseMixin, RefXmlImportHandlerMixin):
     type = db.Column(db.Enum(*TYPES, name='xml_input_types'))
     regex = db.Column(db.String(200))
     format = db.Column(db.String(200))
+
+    def save(self, *args, **kwargs):
+        super(XmlInputParameter, self).save(*args, **kwargs)
+        self.import_handler.update_import_params()
+
+    def delete(self, *args, **kwargs):
+        handler = self.import_handler
+        super(XmlInputParameter, self).delete(*args, **kwargs)
+        handler.update_import_params()
 
 
 class XmlScript(db.Model, BaseMixin, RefXmlImportHandlerMixin):
@@ -212,8 +225,8 @@ class XmlEntity(db.Model, BaseMixin, RefXmlImportHandlerMixin):
 
     def to_dict(self):
         ent = {'name': self.name}
-        if self.datasource_name:
-            ent['datasource'] = self.datasource_name
+        if self.transformed_field:
+            ent['datasource'] = self.transformed_field.name
         if self.datasource:
             ent['datasource'] = self.datasource.name
         return ent

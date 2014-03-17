@@ -42,6 +42,7 @@ angular.module(
         template: 'partials/xml_import_handlers/entities/edit.html'
         ctrlName: 'ModelEditDialogCtrl'
         list_model_name: "entities"
+        extra: {'handler': $scope.handler}
       })
 
     $scope.addField = (entity) ->

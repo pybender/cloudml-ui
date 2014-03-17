@@ -1,8 +1,8 @@
 import httplib
-import math
 import json
 import random
 import urllib
+from mock import patch
 from moto import mock_s3
 
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS
@@ -37,13 +37,16 @@ class WeightResourceTests(BaseDbTestCase, TestChecksMixin):
                           Weight.query.filter_by(model=self.model).count())
 
     @mock_s3
-    def test_search(self, *mocks):
+    @patch('api.amazon_utils.AmazonS3Helper.load_key')
+    def test_search(self, mock_load_key):
         trained_model_name = 'Trained Model Full Text'
 
         with open('./conf/extract.json', 'r') as f:
             handler = f.read()
         with open('./api/ml_models/model.dat', 'r') as f:
             trainer = f.read()
+        mock_load_key.return_value = trainer
+
         post_data = {'test_import_handler_file': handler,
                      'import_handler_file': handler,
                      'trainer': trainer,
@@ -188,10 +191,16 @@ class WeightTasksTests(BaseDbTestCase, TestChecksMixin):
         super(WeightTasksTests, self).setUp()
 
     @mock_s3
-    def test_fill_weights(self, *mocks):
+    @patch('api.amazon_utils.AmazonS3Helper.load_key')
+    def test_fill_weights(self, mock_load_key):
         name = 'new2'
-        handler = open('conf/extract.json', 'r').read()
-        trainer = open('./api/ml_models/model.dat', 'r').read()
+
+        with open('conf/extract.json', 'r') as f:
+            handler = f.read()
+        with open('./api/ml_models/model.dat', 'r') as f:
+            trainer = f.read()
+        mock_load_key.return_value = trainer
+
         post_data = {'test_import_handler_file': handler,
                      'import_handler_file': handler,
                      'trainer': trainer,

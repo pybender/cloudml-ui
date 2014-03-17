@@ -59,7 +59,7 @@
                 </a>
               </div>
               <div class="clearfix">
-                <table class="table table-hover" ng-controller="BaseListCtrl" ng-init="init(false, 'datasources', false)">
+                <table class="table table-hover">
                   <thead>
                     <tr>
                       <th>Name</th>
@@ -111,7 +111,7 @@
                 </a>
               </div>
               <div class="clearfix">
-                <table class="table table-hover" ng-controller="BaseListCtrl" ng-init="init(false, 'input_parameters', false)">
+                <table class="table table-hover">
                   <thead>
                     <tr>
                       <th>Name</th>
@@ -150,15 +150,42 @@
         </div>
 
         <!-- scripts -->
-        <div class="accordion-group">
+        <div class="accordion-group" ng-controller="ScriptsListCtrl" ng-init="init(handler)">
           <div class="accordion-heading">
             <a class="accordion-toggle" data-toggle="collapse" href="#scripts">Scripts</a>
           </div>
           <div id="scripts" class="accordion-body collapse in">
             <div class="accordion-inner">
-              <div ng-repeat="item in handler.xml_scripts" class="well">
-                {{ item.data }}
+
+              <div class="actions">
+                <a class="btn btn-info" ng-click="add(handler)">
+                  <i class="status-icon icon-plus"></i> add script
+                </a>
               </div>
+
+              <div class="clearfix">
+                <table class="table table-hover">
+                  <tbody>
+                    <tr ng-repeat="item in handler.xml_scripts">
+                      <td style="border-top: none;">
+                        <div class="well">{{ item.data }}</div>
+                      </td>
+                      <td style="border-top: none;">
+                          <button ng-click="edit(item)" class="btn btn-info">
+                            <i title="Edit script" class="icon-edit"></i>
+                          </button>
+                          <button ng-click="delete(item)" class="btn btn-danger">
+                            <i title="Delete script. Be careful - you could not recover it!" class="icon-remove"></i>
+                          </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                  <tfoot ng-hide="handler.xml_scripts">
+                    <tr><td colspan="2">No scripts found</td></tr>
+                  </tfoot>
+                </table>
+              </div>
+
             </div>
           </div>
         </div>

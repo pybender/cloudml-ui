@@ -69,6 +69,7 @@ angular.module(
 ])
 
 
+# TODO: Remove it?
 .controller('XmlDataSourceSelectCtrl', [
   '$scope'
   'Datasource'

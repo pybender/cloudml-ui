@@ -1,10 +1,10 @@
 from api.base.resources import BaseResourceSQL
 from api import api
 from api.import_handlers.models import XmlImportHandler, XmlInputParameter, \
-    XmlEntity, XmlField, XmlDataSource, XmlQuery
+    XmlEntity, XmlField, XmlDataSource, XmlQuery, XmlScript
 from api.import_handlers.forms import XmlImportHandlerAddForm, \
     XmlInputParameterForm, XmlEntityForm, XmlFieldForm, XmlDataSourceForm, \
-    XmlQueryForm
+    XmlQueryForm, XmlScriptForm
 
 
 class XmlImportHandlerResource(BaseResourceSQL):
@@ -96,7 +96,7 @@ class XmlDataSourceResource(BaseResourceSQL):
 
 api.add_resource(
     XmlDataSourceResource,
-    '/cloudml/xml_import_handlers/datasources/')
+    '/cloudml/xml_import_handlers/<regex("[\w\.]*"):import_handler_id>/datasources/')
 
 
 class XmlQueryResource(BaseResourceSQL):
@@ -110,3 +110,15 @@ class XmlQueryResource(BaseResourceSQL):
 api.add_resource(
     XmlQueryResource,
     '/cloudml/xml_import_handlers/queries/')
+
+
+class XmlScriptResource(BaseResourceSQL):
+    """
+    XmlScript API methods
+    """
+    put_form = post_form = XmlScriptForm
+    Model = XmlScript
+
+api.add_resource(
+    XmlScriptResource,
+    '/cloudml/xml_import_handlers/<regex("[\w\.]*"):import_handler_id>/scripts/')
