@@ -58,18 +58,16 @@ angular.module('app.base', ['app.config', 'app.services'])
       # Loads list of objects related methods
       #
       @$loadAll: (opts) ->
-        @$beforeLoadAll(opts)
-        resolver = @$buildLoadAllResolver(opts)
+        extra = @$beforeLoadAll(opts)
+        resolver = @$buildLoadAllResolver(opts, extra)
         url = @$get_api_url(opts)
         @$make_all_request(url, resolver, opts)
 
       @$beforeLoadAll: (opts) ->
         # Use it to validate opts
-        return
+        return {}
 
-      @$buildLoadAllResolver: (opts) ->
-        # Use it to validate opts
-        extra = opts || {}
+      @$buildLoadAllResolver: (opts, extra) ->
         return (resp, Model) ->
           {
             total: resp.data.total

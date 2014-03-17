@@ -16,7 +16,7 @@
             <span ng-show="errorList.name" class="help-block" ng-bind="errorList.name" />
           </div>
         </div>
-        <div class="control-group" ng-class="{error: Form.datasource.$invalid || errorList.datasource}" ng-controller="XmlDataSourceSelectCtrl" ng-init="init(1)">
+        <!-- <div class="control-group" ng-class="{error: Form.datasource.$invalid || errorList.datasource}" ng-controller="XmlDataSourceSelectCtrl" ng-init="init(1)">
           <label class="control-label">DataSource</label>
           <div class="controls">
             <select name="datasource" ng-model="model.datasource">
@@ -33,12 +33,12 @@
             <span ng-show="Form.datasource_name.$error.required" class="help-inline">*</span>
             <span ng-show="errorList.datasource_name" class="help-block" ng-bind="errorList.datasource_name" />
           </div>
-        </div>
+        </div> -->
       </form>
     </div>
   </div>
 
   <div class="modal-footer">
-    <button ng-click="save(['name', 'datasource_name', 'datasource', 'entity_id', 'import_handler_id'])" ng-disabled="Form.$invalid" class="btn btn-primary">Save</button>
+    <button ng-click="save(['name', 'entity_id', 'import_handler_id'])" ng-disabled="Form.$invalid" class="btn btn-primary">Save</button>
   </div>
 </div>

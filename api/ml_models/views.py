@@ -157,7 +157,6 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
                 dataset = [dataset]
             else:
                 dataset = form.cleaned_data.get('dataset', None)
-
             dataset_ids = [ds.id for ds in dataset]
 
             if not existing_instance_selected:  # request spot instance

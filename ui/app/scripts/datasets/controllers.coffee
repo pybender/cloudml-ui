@@ -127,11 +127,12 @@ filesize,records_count,time,created_by,import_handler_id,format'
 
   ($scope, DataSet) ->
     if $scope.handler?
-      DataSet.$loadAll(
-        handler_id: $scope.handler.id,
+      DataSet.$loadAll({
+        import_handler_id: $scope.handler.id,
+        import_handler_type: $scope.handler.TYPE,
         status: 'Imported',
         show: 'name'
-      ).then ((opts) ->
+      }).then ((opts) ->
         $scope.datasets = opts.objects
         if $scope.data? && $scope.datasets? && $scope.datasets.length == 0
           $scope.data.new_dataset_selected = 1

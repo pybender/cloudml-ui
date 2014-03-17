@@ -31,10 +31,14 @@ angular.module('app.testresults.model', ['app.config'])
 
       constructor: (opts) ->
         super opts
-        @BASE_API_URL = TestResult.$get_api_url(@model_id)
+        @BASE_API_URL = TestResult.$get_api_url({
+          'model_id': @model_id}, @)
         @BASE_UI_URL = "/models/#{@model_id}/tests/"
 
-      @$get_api_url: (model_id) ->
+      @$get_api_url: (opts, model) ->
+        model_id = opts.model_id
+        if model? then model_id = model_id || model.model_id
+        if not model_id then throw new Error 'model_id is required'
         return "#{settings.apiUrl}models/#{model_id}/tests/"
 
       objectUrl: =>
@@ -88,7 +92,8 @@ angular.module('app.testresults.model', ['app.config'])
               for obj in eval("resp.data.#{Model.prototype.API_FIELDNAME}s"))
             _resp: resp
           }
-        @$make_all_request(TestResult.$get_api_url(model_id), resolver, opts)
+        @$make_all_request(
+          TestResult.$get_api_url({'model_id': model_id}), resolver, opts)
 
       $get_confusion_matrix: (weight0, weight1) ->
         url = "#{@BASE_API_URL}#{@id}/action/confusion_matrix/"

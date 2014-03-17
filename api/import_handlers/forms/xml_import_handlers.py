@@ -23,6 +23,9 @@ exist. Please choose another one.' % value)
         return value
 
     def clean_data(self, value, field):
+        if value is None:
+            return
+
         value = value.encode('utf-8')
         try:
             from core.xmlimporthandler.importhandler import ExtractionPlan
@@ -37,7 +40,12 @@ exist. Please choose another one.' % value)
                 import_params=[])
             db.session.add(import_handler)
             plan = self.cleaned_data.get('data')
-            if plan is not None:  # Loading import handler from XML file
+            if plan is None:
+                ent = XmlEntity(
+                    name=import_handler.name,
+                    import_handler=import_handler)
+                ent.save()
+            else:  # Loading import handler from XML file
                 ds_dict = {}
                 for datasource in plan.datasources.values():
                     POSSIBLE_PARAMS = ['host', 'dbname', 'port',
@@ -172,8 +180,7 @@ exist. Please choose another one.' % value)
 
 
 class XmlEntityForm(BaseForm):
-    required_fields = ('name', 'import_handler_id',
-                       'entity_id', ('datasource', 'datasource_name'))
+    required_fields = ('name', 'import_handler_id', 'entity_id')
     NO_REQUIRED_FOR_EDIT = True
 
     name = CharField()
@@ -181,15 +188,9 @@ class XmlEntityForm(BaseForm):
         doc=XmlImportHandler, by_name=False, return_doc=False)
     entity_id = DocumentField(
         doc=XmlEntity, by_name=False, return_doc=False)
-    datasource = DocumentField(
-        doc=XmlDataSource, by_name=False, return_doc=True)
-    datasource_name = CharField()
 
     def save(self):  # TODO: transaction!
         entity = super(XmlEntityForm, self).save(commit=False)
-        query = XmlQuery(text="select * from tbl")
-        query.save()
-        entity.query_obj = query
         entity.save()
         return entity
 

@@ -111,7 +111,7 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
     return Field
 ])
 
-.factory('Query', [
+.factory('XmlQuery', [
   'settings'
   'BaseModel'
 
@@ -135,7 +135,7 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
           entity_id = opts.entity_id
 
         return "#{settings.apiUrl}xml_import_handlers/\
-#{handler_id}/entities/#{entity_id}/"
+#{handler_id}/entities/#{entity_id}/queries/"
 
       @$beforeLoadAll: (opts) ->
         if not opts.import_handler_id
@@ -151,7 +151,7 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
   'settings'
   'BaseImportHandlerItem'
   'Field'
-  'Query'
+  'XmlQuery'
 
   (settings, BaseImportHandlerItem, Field, Query) ->
     class Entity extends BaseImportHandlerItem
