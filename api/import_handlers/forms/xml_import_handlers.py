@@ -183,6 +183,8 @@ class XmlEntityForm(BaseForm):
     required_fields = ('name', 'import_handler_id',
                        'entity_id', ('datasource', 'transformed_field'))
     NO_REQUIRED_FOR_EDIT = True
+    DATASOURCE_MESSAGE = 'Can be only one of either datasource or' \
+                         ' transformed_field'
 
     name = CharField()
     import_handler_id = DocumentField(
@@ -193,6 +195,16 @@ class XmlEntityForm(BaseForm):
         doc=XmlDataSource, by_name=False, return_doc=True)
     transformed_field = DocumentField(
         doc=XmlField, by_name=False, return_doc=True)
+
+    def clean_datasource(self, value, field):
+        if value and self.data.get('transformed_field'):
+            raise ValidationError(self.DATASOURCE_MESSAGE)
+        return value
+
+    def clean_transformed_field(self, value, field):
+        if value and self.data.get('datasource'):
+            raise ValidationError(self.DATASOURCE_MESSAGE)
+        return value
 
     def save(self):  # TODO: transaction!
         entity = super(XmlEntityForm, self).save(commit=False)
