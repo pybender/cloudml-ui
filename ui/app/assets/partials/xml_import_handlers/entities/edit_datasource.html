@@ -1,28 +1,22 @@
 <div ng-controller="SaveObjectCtl">
   <div class="modal-header">
     <button ng-click="dialog.close()" class="close" data-dismiss="modal">×</button>
-    <h3>Add Entity</h3>
+    <h3>Entity "{{ model.name }}" DataSource</h3>
   </div>
 
   <div class="modal-body">
     <ng-include src="'/partials/parts/save_form_messages.html'"></ng-include>
     <div class="control-group">
       <form name="Form" class="form-horizontal">
-        <div class="control-group" ng-class="{error: Form.name.$invalid || errorList.name}">
-          <label class="control-label">Name</label>
-          <div class="controls">
-            <input type="text" name="name" ng-model="model.name" ng-change="setFieldError('name')" required />
-            <span ng-show="Form.name.$error.required" class="help-inline">*</span>
-            <span ng-show="errorList.name" class="help-block" ng-bind="errorList.name" />
-          </div>
-        </div>
 
-        <div class="control-group" ng-class="{error: Form.datasource.$invalid || errorList.datasource}" ng-controller="XmlDataSourceSelectCtrl" ng-init="init(model.import_handler_id)">
+          <div class="control-group" ng-class="{error: Form.datasource.$invalid || errorList.datasource}" ng-controller="XmlDataSourceSelectCtrl" ng-init="init(model.import_handler_id)">
               <label class="control-label">Data Source (global)</label>
               <div class="controls">
                 <select name="datasource" ng-model="model.datasource" ng-change="model.transformed_field = undefined">
                   <option ng-selected="ds.id == model.datasource" value="{{ ds.id }}" ng-repeat="ds in datasources">{{ ds.name }}</option>
                 </select>
+                <span ng-show="Form.datasource.$error.required" class="help-inline">*</span>
+                <span ng-show="errorList.datasource" class="help-block" ng-bind="errorList.datasource" />
               </div>
             </div>
 
@@ -36,6 +30,8 @@
                 <select name="transformed_field" ng-model="model.transformed_field" ng-change="model.datasource = undefined">
                   <option ng-selected="field.id == model.transformed_field" value="{{ field.id }}" ng-repeat="field in transformed_fields">{{ field.name }}</option>
                 </select>
+                <span ng-show="Form.transformed_field.$error.required" class="help-inline">*</span>
+                <span ng-show="errorList.transformed_field" class="help-block" ng-bind="errorList.transformed_field" />
               </div>
             </div>
 
@@ -44,6 +40,6 @@
   </div>
 
   <div class="modal-footer">
-    <button ng-click="save(['name', 'datasource', 'transformed_field', 'entity_id', 'import_handler_id'])" ng-disabled="Form.$invalid || !(model.datasource || model.transformed_field)" class="btn btn-primary">Save</button>
+    <button ng-click="save(['datasource', 'transformed_field'])" ng-disabled="Form.$invalid" class="btn btn-primary">Save</button>
   </div>
 </div>

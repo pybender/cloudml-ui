@@ -69,6 +69,7 @@ class XmlFieldResource(BaseResourceSQL):
     put_form = post_form = XmlFieldForm
     Model = XmlField
     GET_ACTIONS = ('configuration', )
+    FILTER_PARAMS = (('transformed', str),)
 
     def _get_details_query(self, params, **kwargs):
         try:
@@ -76,6 +77,11 @@ class XmlFieldResource(BaseResourceSQL):
             return self._build_details_query(params, **kwargs)
         except orm_exc.NoResultFound:
             return None
+
+    def _set_list_query_opts(self, cursor, params):
+        if 'transformed' in params and params['transformed']:
+            cursor = cursor.filter(XmlField.transform.in_(XmlField.TRANSFORM_TYPES))
+        return cursor
 
     def _get_configuration_action(self, **kwargs):
         return self._render({'configuration': {

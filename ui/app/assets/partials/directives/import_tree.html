@@ -18,7 +18,7 @@
     <div>
       <h5>
         <i class="icon-hdd"></i> DataSource
-        <a ng-click="editDataSource(entity)">
+        <a ng-click="editDataSource()(entity)">
           <i title="Edit Data Source" class="icon-edit"></i>
         </a>
       </h5>
@@ -135,7 +135,7 @@
     <hr />
     <div ng-show="entity.entities">
       <entities-recursive>
-        <entities-tree entity="sub" ng-repeat="sub in entity.entities" add-entity="addEntity()" add-field="addField()" delete-entity="deleteEntity()" delete-field="deleteField()"></entities-tree>
+        <entities-tree entity="sub" ng-repeat="sub in entity.entities" add-entity="addEntity()" add-field="addField()" delete-entity="deleteEntity()" delete-field="deleteField()" edit-data-source="editDataSource()"></entities-tree>
       </entities-recursive>
     </div>
   </div>

@@ -253,7 +253,9 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
       addEntity: '&addEntity',
       addField: '&addField',
       deleteEntity: '&deleteEntity',
-      deleteField: '&deleteField'}
+      deleteField: '&deleteField',
+      editDataSource: '&editDataSource',
+    }
     # replace: true
     restrict: 'E'
     transclude : true

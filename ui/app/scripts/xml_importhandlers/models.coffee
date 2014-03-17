@@ -77,7 +77,7 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
   (settings, BaseModel) ->
     class Field extends BaseModel
       BASE_API_URL: "#{settings.apiUrl}xml_import_handlers/fields/"
-      API_FIELDNAME: 'field'
+      API_FIELDNAME: 'xml_field'
       @LIST_MODEL_NAME: 'fields'
       LIST_MODEL_NAME: @LIST_MODEL_NAME
       @MAIN_FIELDS: 'id,name'

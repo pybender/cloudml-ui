@@ -173,7 +173,7 @@ exist. Please choose another one.' % value)
 
 class XmlEntityForm(BaseForm):
     required_fields = ('name', 'import_handler_id',
-                       'entity_id', ('datasource', 'datasource_name'))
+                       'entity_id', ('datasource', 'transformed_field'))
     NO_REQUIRED_FOR_EDIT = True
 
     name = CharField()
@@ -183,7 +183,8 @@ class XmlEntityForm(BaseForm):
         doc=XmlEntity, by_name=False, return_doc=False)
     datasource = DocumentField(
         doc=XmlDataSource, by_name=False, return_doc=True)
-    datasource_name = CharField()
+    transformed_field = DocumentField(
+        doc=XmlField, by_name=False, return_doc=True)
 
     def save(self):  # TODO: transaction!
         entity = super(XmlEntityForm, self).save(commit=False)

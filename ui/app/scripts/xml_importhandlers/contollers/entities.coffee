@@ -57,7 +57,7 @@ angular.module(
         list_model_name: "entities"
       })
 
-    $scope.delete = (item)->
+    $scope.delete = (item) ->
       $scope.openDialog({
         $dialog: $dialog
         model: item
@@ -66,4 +66,46 @@ angular.module(
         list_model_name: "entities"
         action: 'delete'
       })
+
+    $scope.editDataSource = (entity) ->
+      entity = new Entity({
+        id: entity.id
+        name: entity.name
+        import_handler_id: entity.import_handler_id
+        datasource: entity.datasource_id
+        transformed_field: entity.transformed_field_id
+        entity_id: entity.entity_id
+      })
+      $scope.openDialog({
+        $dialog: $dialog
+        model: entity
+        template: 'partials/xml_import_handlers/entities/edit_datasource.html'
+        ctrlName: 'ModelEditDialogCtrl'
+        list_model_name: "entities"
+      })
+])
+
+.controller('XmlTransformedFieldSelectCtrl', [
+  '$scope'
+  'Field'
+
+  ($scope, Field) ->
+    $scope.init = (entity) ->
+      $scope.entity = entity
+      if $scope.entity.entity_id
+        $scope.load()
+      else
+        $scope.transformed_fields = []
+
+    $scope.load = () ->
+      Field.$loadAll(
+        show: 'name'
+        import_handler_id: $scope.entity.import_handler_id
+        entity_id: $scope.entity.entity_id
+        transformed: true
+      ).then ((opts) ->
+        $scope.transformed_fields = opts.objects
+      ), ((opts) ->
+        $scope.setError(opts, 'loading transformed fields')
+      )
 ])
