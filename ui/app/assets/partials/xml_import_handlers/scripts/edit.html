@@ -23,6 +23,7 @@
   </div>
 
   <div class="modal-footer">
-    <button ng-click="save(['data', 'import_handler_id'])" ng-disabled="Form.data.$error.required" class="btn btn-primary">Save</button>
+    <!-- TODO: disable button -->
+    <button ng-click="save(['data', 'import_handler_id'])" todo-ng-disabled="Form.$invalid" class="btn btn-primary">Save</button>
   </div>
 </div>
