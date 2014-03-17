@@ -70,6 +70,13 @@ class XmlFieldResource(BaseResourceSQL):
     Model = XmlField
     GET_ACTIONS = ('configuration', )
 
+    def _get_details_query(self, params, **kwargs):
+        try:
+            handler_id = kwargs.pop('import_handler_id')
+            return self._build_details_query(params, **kwargs)
+        except orm_exc.NoResultFound:
+            return None
+
     def _get_configuration_action(self, **kwargs):
         return self._render({'configuration': {
             'types': XmlField.TYPES,

@@ -55,11 +55,10 @@
     <div ng-show="entity.query_obj">
       <div>
         Target:
-        <span title="target" class="target" ng-bind="entity.query_obj.target" editable="entity.query_obj" value="entity.query_obj.target" editable-field="target" editable-input="text" editable-placement="right"></span>
+        <span title="target" class="target value" ng-bind="entity.query_obj.target" editable="entity.query_obj" value="entity.query_obj.target" editable-field="target" editable-input="text" editable-placement="right"></span>
       </div>
       <div>
-        Text:
-        <span ng-show="entity.query_obj.target"> ()</span>:<textarea class="small" ui-codemirror="{mode: 'text/x-mysql', indentWithTabs: true, smartIndent: true, lineNumbers: true, matchBrackets : true, height: '30px'}" ng-model="entity.query_obj.text"></textarea>
+        Text:<textarea class="small" ui-codemirror="{mode: 'text/x-mysql', indentWithTabs: true, smartIndent: true, lineNumbers: true, matchBrackets : true, height: '30px'}" ng-model="entity.query_obj.text"></textarea>
         <a ng-click="saveQueryText(entity.query_obj);" class="btn btn-info">
           <i class="status-icon icon-plus"></i> save
         </a>
