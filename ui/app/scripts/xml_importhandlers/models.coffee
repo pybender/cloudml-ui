@@ -87,6 +87,27 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
 
       id: null
 
+      @$get_api_url: (opts, model) ->
+        if model?
+          handler_id = model.import_handler_id
+        else
+          handler_id = opts.import_handler_id
+
+        if model?
+          entity_id = model.entity_id
+        else
+          entity_id = opts.entity_id
+
+        return "#{settings.apiUrl}xml_import_handlers/\
+#{handler_id}/entities/#{entity_id}/fields/"
+
+      @$beforeLoadAll: (opts) ->
+        if not opts.import_handler_id
+          throw new Error "import_handler_id is required"
+
+        if not opts.entity_id
+          throw new Error "entity_id is required"
+
     return Field
 ])
 
@@ -102,22 +123,43 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
 
       id: Query
 
+      @$get_api_url: (opts, model) ->
+        if model?
+          handler_id = model.import_handler_id
+        else
+          handler_id = opts.import_handler_id
+
+        if model?
+          entity_id = model.entity_id
+        else
+          entity_id = opts.entity_id
+
+        return "#{settings.apiUrl}xml_import_handlers/\
+#{handler_id}/entities/#{entity_id}/"
+
+      @$beforeLoadAll: (opts) ->
+        if not opts.import_handler_id
+          throw new Error "import_handler_id is required"
+
+        if not opts.entity_id
+          throw new Error "entity_id is required"
+
     return Query
 ])
 
 .factory('Entity', [
   'settings'
-  'BaseModel'
+  'BaseImportHandlerItem'
   'Field'
   'Query'
-  
-  (settings, BaseModel, Field, Query) ->
-    class Entity extends BaseModel
-      BASE_API_URL: "#{settings.apiUrl}xml_import_handlers/entities/"
+
+  (settings, BaseImportHandlerItem, Field, Query) ->
+    class Entity extends BaseImportHandlerItem
       API_FIELDNAME: 'entity'
       @LIST_MODEL_NAME: 'entities'
       LIST_MODEL_NAME: @LIST_MODEL_NAME
       @MAIN_FIELDS: 'id,name'
+      @ITEM_NAME: 'entities'
 
       id: null
       datasource: null

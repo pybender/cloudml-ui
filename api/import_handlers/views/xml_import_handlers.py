@@ -75,8 +75,8 @@ class XmlFieldResource(BaseResourceSQL):
             'types': XmlField.TYPES,
             'transform': XmlField.TRANSFORM_TYPES}})
 
-api.add_resource(XmlFieldResource, '/cloudml/xml_import_handlers\
-<regex("[\w\.]*"):import_handler_id>/<regex("[\w\.]*"):entity_id>\
+api.add_resource(XmlFieldResource, '/cloudml/xml_import_handlers/\
+<regex("[\w\.]*"):import_handler_id>/entities/<regex("[\w\.]*"):entity_id>\
 /fields/')
 
 
@@ -107,8 +107,8 @@ class XmlQueryResource(BaseResourceSQL):
     DEFAULT_FIELDS = ['id', 'text', 'target']
 
 api.add_resource(
-    XmlQueryResource,
-    '/cloudml/xml_import_handlers/queries/')
+    XmlQueryResource, '/cloudml/xml_import_handlers/\
+<regex("[\w\.]*"):import_handler_id>/<regex("[\w\.]*"):entity_id>/queries/')
 
 
 class XmlScriptResource(BaseResourceSQL):
