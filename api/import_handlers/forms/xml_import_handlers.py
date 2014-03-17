@@ -80,6 +80,9 @@ exist. Please choose another one.' % value)
                         db_entity.query_obj = qr
                     return None
 
+                TRANSFORMED_FIELDS = {}
+                ENTITIES_WITHOUT_DS = []
+
                 def load_entity_items(entity, db_entity):
                     for field in entity.fields.values():
                         fld = XmlField(
@@ -94,8 +97,10 @@ exist. Please choose another one.' % value)
                             template=field.template,
                             script=field.script,
                             transform=field.transform,
-                            headers=field.headers,
-                            entity=db_entity)
+                            headers=field.headers)
+                        db_entity.fields.append(fld)
+                        if field.transform:
+                            TRANSFORMED_FIELDS[field.name] = fld
                         db.session.add(fld)
 
                     sub_entities = entity.nested_entities_field_ds.values() + \
@@ -103,22 +108,29 @@ exist. Please choose another one.' % value)
                     for sub_entity in sub_entities:
                         sub_ent = XmlEntity(
                             name=sub_entity.name,
-                            datasource_name=sub_entity.datasource_name,
                             import_handler=import_handler)
                         sub_ent.entity = db_entity
                         sub_ent.datasource = get_datasource(sub_entity)
+                        if not sub_ent.datasource:
+                            ENTITIES_WITHOUT_DS.append(
+                                [sub_ent, sub_entity.datasource_name])
                         db.session.add(sub_ent)
                         load_query(sub_entity, db_entity=sub_ent)
                         load_entity_items(sub_entity, db_entity=sub_ent)
 
                 ent = XmlEntity(
                     name=plan.entity.name,
-                    datasource_name=plan.entity.datasource_name,
                     import_handler=import_handler,
                     datasource=get_datasource(plan.entity))
+                if not ent.datasource:
+                    ENTITIES_WITHOUT_DS.append(
+                        [ent, plan.entity.datasource_name])
                 db.session.add(ent)
                 load_query(plan.entity, db_entity=ent)
                 load_entity_items(plan.entity, db_entity=ent)
+                for ent, field_name in ENTITIES_WITHOUT_DS:
+                    ent.transformed_field = TRANSFORMED_FIELDS[field_name]
+
         except Exception, exc:
             db.session.rollback()
             raise

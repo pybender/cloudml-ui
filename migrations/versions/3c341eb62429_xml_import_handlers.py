@@ -43,7 +43,8 @@ def upgrade():
         sa.Column('name', sa.String(length=200), nullable=False),
         sa.Column('updated_by_id', sa.Integer(), nullable=True),
         sa.Column('created_by_id', sa.Integer(), nullable=True),
-        sa.Column('import_params', postgresql.ARRAY(sa.String()), nullable=True),
+        sa.Column(
+            'import_params', postgresql.ARRAY(sa.String()), nullable=True),
         sa.ForeignKeyConstraint(['created_by_id'], ['user.id'],
                                 ondelete='SET NULL'),
         sa.ForeignKeyConstraint(['updated_by_id'], ['user.id'],
@@ -88,13 +89,17 @@ def upgrade():
         'xml_entity',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('name', sa.String(length=200), nullable=False),
-        sa.Column('datasource_name', sa.String(length=200), nullable=True)
+        sa.Column('datasource_name', sa.String(length=200), nullable=True),
         sa.Column('entity_id', sa.Integer(), nullable=True),
+        sa.Column('transformed_field_id', sa.Integer(), nullable=True),
         sa.Column('datasource_id', sa.Integer(), nullable=True),
         sa.Column('query_id', sa.Integer(), nullable=True),
         sa.Column('import_handler_id', sa.Integer(), nullable=True),
         sa.ForeignKeyConstraint(['datasource_id'],
                                 ['xml_data_source.id'], ondelete='CASCADE'),
+        sa.ForeignKeyConstraint(
+            ['transformed_field_id'], ['xml_field.id'],
+            name='fk_transformed_field', ondelete='SET NULL', use_alter=True),
         sa.ForeignKeyConstraint(['entity_id'],
                                 ['xml_entity.id'], ondelete='CASCADE'),
         sa.ForeignKeyConstraint(['import_handler_id'],
@@ -119,8 +124,8 @@ def upgrade():
         sa.Column('headers', sa.String(length=200), nullable=True),
         sa.Column('script', sa.Text(), nullable=True),
         sa.Column('entity_id', sa.Integer(), nullable=True),
-        sa.ForeignKeyConstraint(['entity_id'],
-                                ['xml_entity.id'], ondelete='CASCADE'),
+        sa.ForeignKeyConstraint(['entity_id'], ['xml_entity.id'],
+                                ondelete='CASCADE'),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_unique_constraint(None, 'xml_import_handler', ['name'])
@@ -134,7 +139,6 @@ def downgrade():
     op.drop_table('xml_script')
     op.drop_table('xml_import_handler')
     op.drop_table('xml_query')
-    op.create_index('xml_import_handler_name_key', 'xml_import_handler', [u'name'], unique=True)
     delete_enum_types()
 
 

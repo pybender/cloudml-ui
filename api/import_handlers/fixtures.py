@@ -5,7 +5,7 @@ from fixture import DataSet
 
 class ImportHandlerData(DataSet):
     class import_handler_01:
-        name = "Import Handler 1"
+        name = "Handler 1"
         type = "Db"
         created_on = "2013-04-19 14:37:23.145000"
         updated_on = "2013-04-19 14:37:23.145000"

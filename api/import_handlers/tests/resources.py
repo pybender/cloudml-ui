@@ -168,7 +168,8 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         super(DataSetsTests, self).setUp()
         self.handler = ImportHandler.query.filter_by(name='Handler 1').first()
         self.obj = self.Model.query.filter_by(name=self.DS_NAME).first()
-        self.BASE_URL = '/cloudml/importhandlers/%s/datasets/' % self.handler.id
+        self.BASE_URL = '/cloudml/importhandlers/%s/%s/datasets/' \
+            % (self.handler.TYPE, self.handler.id)
         for ds in DataSet.query.all():
             ds.import_handler = self.handler
             ds.save()

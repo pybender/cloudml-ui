@@ -7,7 +7,8 @@ from os.path import join, exists
 from os import makedirs
 
 from boto.exception import S3ResponseError
-from sqlalchemy.orm import relationship, deferred, backref, validates, foreign, remote
+from sqlalchemy.orm import relationship, deferred, backref, validates, \
+    foreign, remote
 from sqlalchemy.dialects import postgresql
 from sqlalchemy import event, and_
 
@@ -63,6 +64,11 @@ class DataSet(db.Model, BaseModel):
         the appropriate relationship.
         """
         return getattr(self, "parent_%s" % self.import_handler_type)
+
+    @import_handler.setter
+    def import_handler(self, handler):
+        self.import_handler_id = handler.id
+        self.import_handler_type = handler.TYPE
 
     def set_uid(self):
         if not self.uid:

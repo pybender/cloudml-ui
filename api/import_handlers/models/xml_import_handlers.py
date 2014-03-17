@@ -134,33 +134,6 @@ class XmlQuery(db.Model, BaseMixin):
         return "<Query %s>" % self.text
 
 
-class XmlEntity(db.Model, BaseMixin, RefXmlImportHandlerMixin):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(200), nullable=False)
-    datasource_name = db.Column(db.String(200), nullable=True)
-    entity_id = db.Column(db.ForeignKey('xml_entity.id',
-                                        ondelete='CASCADE'))
-    entity = relationship('XmlEntity', remote_side=[id], backref='entities')
-
-    datasource_id = db.Column(db.ForeignKey('xml_data_source.id',
-                                            ondelete='CASCADE'))
-    datasource = relationship('XmlDataSource',
-                              foreign_keys=[datasource_id])
-    query_id = db.Column(db.ForeignKey('xml_query.id', ondelete='CASCADE'))
-    query_obj = relationship('XmlQuery', foreign_keys=[query_id])
-
-    def __repr__(self):
-        return "<Entity %s>" % self.name
-
-    def to_dict(self):
-        ent = {'name': self.name}
-        if self.datasource_name:
-            ent['datasource'] = self.datasource_name
-        if self.datasource:
-            ent['datasource'] = self.datasource.name
-        return ent
-
-
 class XmlField(db.Model, BaseMixin):
     TYPES = Field.PROCESS_STRATEGIES.keys()
     TRANSFORM_TYPES = ['json', 'csv']
@@ -183,8 +156,8 @@ class XmlField(db.Model, BaseMixin):
     script = db.Column(db.Text)
 
     entity_id = db.Column(db.ForeignKey('xml_entity.id', ondelete='CASCADE'))
-    entity = relationship(
-        'XmlEntity', foreign_keys=[entity_id], backref='fields')
+    # entity = relationship(
+    #     'XmlEntity', foreign_keys=[entity_id], backref='fields')
 
 
 def get_entity_tree(handler):
@@ -197,6 +170,7 @@ def get_entity_tree(handler):
             joinedload('entities.entities.entities.fields'),
             joinedload('datasource'),
             joinedload('entities.datasource'),
+            joinedload('entities.transformed_field'),
             joinedload('entities.entities.datasource'),
             joinedload('entities.entities.entities.datasource'),
             joinedload('query_obj'),
@@ -206,3 +180,40 @@ def get_entity_tree(handler):
                 import_handler=handler,
                 entity=None).one()
     return entity
+
+
+class XmlEntity(db.Model, BaseMixin, RefXmlImportHandlerMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+
+    fields = relationship(XmlField, primaryjoin=id == XmlField.entity_id)
+    # JSON or CSV field as datasource
+    transformed_field_id = db.Column(db.ForeignKey(
+        'xml_field.id', use_alter=True,
+        name="fk_transformed_field", ondelete='SET NULL'))
+    transformed_field = relationship('XmlField', post_update=True,
+                                     foreign_keys=[transformed_field_id],
+                                     backref='entities_for_field_ds')
+    # Sub entity
+    entity_id = db.Column(db.ForeignKey('xml_entity.id',
+                                        ondelete='CASCADE'))
+    entity = relationship('XmlEntity', remote_side=[id], backref='entities')
+
+    # Global datasource
+    datasource_id = db.Column(db.ForeignKey('xml_data_source.id',
+                                            ondelete='CASCADE'))
+    datasource = relationship('XmlDataSource',
+                              foreign_keys=[datasource_id])
+    query_id = db.Column(db.ForeignKey('xml_query.id', ondelete='CASCADE'))
+    query_obj = relationship('XmlQuery', foreign_keys=[query_id])
+
+    def __repr__(self):
+        return "<Entity %s>" % self.name
+
+    def to_dict(self):
+        ent = {'name': self.name}
+        if self.datasource_name:
+            ent['datasource'] = self.datasource_name
+        if self.datasource:
+            ent['datasource'] = self.datasource.name
+        return ent
