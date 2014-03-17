@@ -27,6 +27,7 @@ angular.module(
 
     $scope.init = (handler) ->
       $scope.handler = handler
+      $scope.kwargs = {'import_handler_id': handler.id}
       $scope.$watch('handler.xml_data_sources', (datasources, old, scope) ->
         if datasources?
           $scope.objects = datasources
@@ -75,11 +76,17 @@ angular.module(
   'Datasource'
 
   ($scope, Datasource) ->
-    Datasource.$loadAll(
-      show: 'name'
-    ).then ((opts) ->
-      $scope.datasources = opts.objects
-    ), ((opts) ->
-      $scope.setError(opts, 'loading datasources')
-    )
+    $scope.init = (handler_id) ->
+      $scope.handler_id = handler_id
+      $scope.load()
+
+    $scope.load = () ->
+      Datasource.$loadAll(
+        show: 'name'
+        import_handler_id: $scope.handler_id
+      ).then ((opts) ->
+        $scope.datasources = opts.objects
+      ), ((opts) ->
+        $scope.setError(opts, 'loading datasources')
+      )
 ])

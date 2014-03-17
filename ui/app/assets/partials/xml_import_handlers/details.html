@@ -69,7 +69,7 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr ng-repeat="item in objects">
+                    <tr ng-repeat="item in objects | orderBy:'name'">
                       <td>
                         {{ item.name }}
                       </td>
@@ -155,8 +155,7 @@
             <a class="accordion-toggle" data-toggle="collapse" href="#scripts">Scripts</a>
           </div>
           <div id="scripts" class="accordion-body collapse in">
-            <div class="accordion-inner">
-
+            <div class="accordion-inner" ng-controller="BaseListCtrl" ng-init="init(false, 'xml_scripts', false)">
               <div class="actions">
                 <a class="btn btn-info" ng-click="add(handler)">
                   <i class="status-icon icon-plus"></i> add script
@@ -166,7 +165,7 @@
               <div class="clearfix">
                 <table class="table table-hover">
                   <tbody>
-                    <tr ng-repeat="item in handler.xml_scripts">
+                    <tr ng-repeat="item in objects">
                       <td style="border-top: none;">
                         <div class="well">{{ item.data }}</div>
                       </td>

@@ -46,9 +46,8 @@ class XmlInputParameterResource(BaseResourceSQL):
         return self._render({'configuration': {
             'types': XmlInputParameter.TYPES}})
 
-api.add_resource(
-    XmlInputParameterResource,
-    '/cloudml/xml_import_handlers/input_parameters/')
+api.add_resource(XmlInputParameterResource, '/cloudml/xml_import_handlers/\
+<regex("[\w\.]*"):import_handler_id>/input_parameters/')
 
 
 class XmlEntityResource(BaseResourceSQL):
@@ -59,8 +58,8 @@ class XmlEntityResource(BaseResourceSQL):
     Model = XmlEntity
 
 api.add_resource(
-    XmlEntityResource,
-    '/cloudml/xml_import_handlers/entities/')
+    XmlEntityResource, '/cloudml/xml_import_handlers/\
+<regex("[\w\.]*"):import_handler_id>/entities/')
 
 
 class XmlFieldResource(BaseResourceSQL):
@@ -76,9 +75,9 @@ class XmlFieldResource(BaseResourceSQL):
             'types': XmlField.TYPES,
             'transform': XmlField.TRANSFORM_TYPES}})
 
-api.add_resource(
-    XmlFieldResource,
-    '/cloudml/xml_import_handlers/fields/')
+api.add_resource(XmlFieldResource, '/cloudml/xml_import_handlers\
+<regex("[\w\.]*"):import_handler_id>/<regex("[\w\.]*"):entity_id>\
+/fields/')
 
 
 class XmlDataSourceResource(BaseResourceSQL):
@@ -95,8 +94,8 @@ class XmlDataSourceResource(BaseResourceSQL):
         return self._render({'configuration': conf})
 
 api.add_resource(
-    XmlDataSourceResource,
-    '/cloudml/xml_import_handlers/datasources/')
+    XmlDataSourceResource, '/cloudml/xml_import_handlers/\
+<regex("[\w\.]*"):import_handler_id>/datasources/')
 
 
 class XmlQueryResource(BaseResourceSQL):
@@ -120,5 +119,5 @@ class XmlScriptResource(BaseResourceSQL):
     Model = XmlScript
 
 api.add_resource(
-    XmlScriptResource,
-    '/cloudml/xml_import_handlers/<regex("[\w\.]*"):import_handler_id>/scripts/')
+    XmlScriptResource, '/cloudml/xml_import_handlers/\
+<regex("[\w\.]*"):import_handler_id>/scripts/')

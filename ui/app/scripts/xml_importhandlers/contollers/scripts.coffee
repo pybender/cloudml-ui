@@ -15,6 +15,7 @@ angular.module(
 
     $scope.init = (handler) ->
       $scope.handler = handler
+      $scope.kwargs = {'import_handler_id': handler.id}
       $scope.$watch('handler.xml_scripts', (scripts, old, scope) ->
         if scripts?
           $scope.objects = scripts

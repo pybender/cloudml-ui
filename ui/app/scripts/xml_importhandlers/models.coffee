@@ -1,5 +1,30 @@
 angular.module('app.xml_importhandlers.models', ['app.config'])
 
+# TODO: create a mixin
+# http://coffeescriptcookbook.com/chapters/classes_and_objects/mixins
+.factory('BaseImportHandlerItem', [
+  'settings'
+  'BaseModel'
+  
+  (settings, BaseModel) ->
+    class BaseImportHandlerItem extends BaseModel
+      @ITEM_NAME: 'item'
+
+      @$get_api_url: (opts, model) ->
+        if model?
+          handler_id = model.import_handler_id
+        else
+          handler_id = opts.import_handler_id
+
+        return "#{settings.apiUrl}xml_import_handlers/\
+#{handler_id}/#{@ITEM_NAME}/"
+
+      @$beforeLoadAll: (opts) ->
+        if not opts.import_handler_id
+          throw new Error "import_handler_id is required"
+
+    return BaseImportHandlerItem
+])
 
 .factory('XmlImportHandler', [
   'settings'
@@ -40,6 +65,7 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
             for paramData in origData.xml_input_parameters
               @xml_input_parameters.push new InputParameter(
                 _.extend paramData, defaults)
+
           
     return XmlImportHandler
 ])
@@ -67,7 +93,7 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
 .factory('Query', [
   'settings'
   'BaseModel'
-  
+
   (settings, BaseModel) ->
     class Query extends BaseModel
       BASE_API_URL: "#{settings.apiUrl}xml_import_handlers/queries/"
@@ -130,12 +156,12 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
 
 .factory('InputParameter', [
   'settings'
-  'BaseModel'
+  'BaseImportHandlerItem'
   
-  (settings, BaseModel) ->
-    class InputParameter extends BaseModel
-      BASE_API_URL: "#{settings.apiUrl}xml_import_handlers/input_parameters/"
+  (settings, BaseImportHandlerItem) ->
+    class InputParameter extends BaseImportHandlerItem
       API_FIELDNAME: 'xml_input_parameter'
+      @ITEM_NAME: 'input_parameters'
       @LIST_MODEL_NAME: 'input_parameters'
       LIST_MODEL_NAME: @LIST_MODEL_NAME
       @MAIN_FIELDS: 'id,name,type,regex,format'
@@ -151,14 +177,14 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
 
 .factory('Datasource', [
   'settings'
-  'BaseModel'
+  'BaseImportHandlerItem'
 
-  (settings, BaseModel) ->
-    class Datasource extends BaseModel
-      BASE_API_URL: "#{settings.apiUrl}xml_import_handlers/datasources/"
+  (settings, BaseImportHandlerItem) ->
+    class Datasource extends BaseImportHandlerItem
       API_FIELDNAME: 'xml_data_source'
       @LIST_MODEL_NAME: 'datasources'
       LIST_MODEL_NAME: @LIST_MODEL_NAME
+      @ITEM_NAME: 'datasources'
       @MAIN_FIELDS: 'id,name,type,params'
 
       id: null
@@ -171,23 +197,19 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
 
 .factory('Script', [
   'settings'
-  'BaseModel'
+  'BaseImportHandlerItem'
 
-  (settings, BaseModel) ->
-    class Script extends BaseModel
+  (settings, BaseImportHandlerItem) ->
+    class Script extends BaseImportHandlerItem
       API_FIELDNAME: 'xml_script'
       @LIST_MODEL_NAME: 'xml_scripts'
       LIST_MODEL_NAME: @LIST_MODEL_NAME
       @MAIN_FIELDS: 'id,import_handler_id,data'
+      @ITEM_NAME: 'scripts'
 
       id: null
       import_handler_id: null
       data: null
-
-      constructor: (opts) ->
-        super
-        @BASE_API_URL = "#{settings.apiUrl}xml_import_handlers
-/#{@import_handler_id}/scripts/"
 
     return Script
 ])

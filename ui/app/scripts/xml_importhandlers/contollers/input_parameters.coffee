@@ -31,6 +31,7 @@ angular.module(
 
     $scope.init = (handler) ->
       $scope.handler = handler
+      $scope.kwargs = {'import_handler_id': handler.id}
       $scope.$watch('handler.xml_input_parameters', (params, old, scope) ->
         if params?
           $scope.objects = params
@@ -47,7 +48,7 @@ angular.module(
         list_model_name: InputParameter.LIST_MODEL_NAME
       })
 
-    $scope.delete = (param)->
+    $scope.delete = (param) ->
       $scope.openDialog({
         $dialog: $dialog
         model: param

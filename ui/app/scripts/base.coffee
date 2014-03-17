@@ -51,26 +51,46 @@ angular.module('app.base', ['app.config', 'app.services'])
             data[key] = val
         return data
 
-      # Loads list of objects
+      @$get_api_url: (opts, model) ->
+        return @prototype.BASE_API_URL
+
+      #
+      # Loads list of objects related methods
+      #
       @$loadAll: (opts) ->
-        resolver = (resp, Model) ->
+        @$beforeLoadAll(opts)
+        resolver = @$buildLoadAllResolver(opts)
+        url = @$get_api_url(opts)
+        @$make_all_request(url, resolver, opts)
+
+      @$beforeLoadAll: (opts) ->
+        # Use it to validate opts
+        return
+
+      @$buildLoadAllResolver: (opts) ->
+        # Use it to validate opts
+        extra = opts || {}
+        return (resp, Model) ->
           {
             total: resp.data.total
             pages: resp.data.pages
             has_prev: resp.data.has_prev
             has_next: resp.data.has_next
             objects: (
-              new Model(_.extend(obj, {loaded: true})) \
+              new Model(_.extend(obj, {loaded: true}, extra)) \
               for obj in eval("resp.data.#{Model.prototype.API_FIELDNAME}s"))
             _resp: resp
           }
-        @$make_all_request("#{@prototype.BASE_API_URL}", resolver, opts)
 
+      #
       # Loads specific object details
+      #
       $load: (opts) ->
         if @id == null
           throw new Error "Can't load model without id"
-        @$make_request("#{@BASE_API_URL}#{@id}/", opts)
+
+        base_url = @constructor.$get_api_url(opts, @)
+        @$make_request("#{base_url}#{@id}/", opts)
 
       # Saves or creates the object
       $save: (opts={}) =>
@@ -98,16 +118,21 @@ angular.module('app.base', ['app.config', 'app.services'])
           data = $.extend(data, opts.extraData)
 
         method = if @isNew() then "POST" else "PUT"
-        url = if @id? then @BASE_API_URL + @id + "/" else @BASE_API_URL
+        base_url = @constructor.$get_api_url(opts, @)
+        url = if @id? then base_url + @id + "/" else base_url
         @$make_request(url, {}, method, data)
 
       # Removes object by id
       $delete: (opts={}) =>
+        if @id == null
+          throw new Error "Can't delete model without id"
+
+        base_url = @constructor.$get_api_url(opts, @)
         $http(
           method: "DELETE"
           headers: {'Content-Type':undefined, 'X-Requested-With': null,
           'X-Auth-Token': auth.get_auth_token()}
-          url: "#{@BASE_API_URL}#{@id}/"
+          url: "#{base_url}#{@id}/"
           transformRequest: angular.identity
         )
 
@@ -153,8 +178,9 @@ angular.module('app.base', ['app.config', 'app.services'])
 
         dfd.promise
 
-      $getConfiguration: (opts={}) =>
-        @$make_request("#{@BASE_API_URL}#{@id}/action/configuration/",
+      $getConfiguration: (opts={}) =>  # TODO: into mixin
+        base_url = @constructor.$get_api_url(opts, @)
+        @$make_request("#{base_url}#{@id}/action/configuration/",
                        load=false)
 
       @$getConfiguration: (opts) ->
