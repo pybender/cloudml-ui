@@ -27,7 +27,7 @@ exist. Please choose another one.' % value)
         try:
             from core.xmlimporthandler.importhandler import ExtractionPlan
             return ExtractionPlan(value, is_file=False)
-        except ImportHandlerException, exc:
+        except Exception as exc:
             raise ValidationError(exc)
 
     def save(self):
@@ -222,7 +222,7 @@ def _get_ds_types():
 
 
 class XmlDataSourceForm(BaseForm):
-    required_fields = ('name', 'type', 'params', 'import_handler_id')
+    required_fields = ('name', 'type', 'import_handler_id')
     NO_REQUIRED_FOR_EDIT = True
 
     name = CharField()
@@ -230,6 +230,21 @@ class XmlDataSourceForm(BaseForm):
     params = JsonField()
     import_handler_id = DocumentField(
         doc=XmlImportHandler, by_name=False, return_doc=False)
+
+    def clean_params(self, value, field):
+        from core.xmlimporthandler.importhandler import ExtractionPlan
+        conf = ExtractionPlan.get_datasources_config().get(
+            self.data.get('type'))
+        params_errors = []
+        if conf:
+            for param in conf:
+                if param['required'] and param['name'] not in value:
+                    params_errors.append(param['name'])
+        if params_errors:
+            raise ValidationError(
+                'These params are required: {}'.format(', '.join(params_errors))
+            )
+        return value
 
 
 class XmlQueryForm(BaseForm):

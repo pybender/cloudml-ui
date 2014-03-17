@@ -23,17 +23,21 @@
             <select name="type" ng-model="model.type" ng-change="loadParameters(true);model.params={}" required>
               <option ng-selected="model.type == typeName" ng-repeat="typeName in types" value="{{ typeName }}">{{ typeName }}</option>
             </select>
-            <span ng-show="Form.name.$error.required" class="help-block">type is required <go-to-docs page="features" section="classifier"></go-to-docs></span>
+            <span ng-show="Form.name.$error.required" class="help-block">type is required</span>
             <span ng-show="errorList.type" class="help-block" ng-bind="errorList.type" />
           </div>
         </div>
 
         <div ng-show="model.config">
             <h4>Datasource Parameters</h4>
-            <div ng-repeat="param in model.config" class="control-group">
-            <label class="control-label">{{ param.name }}</label>
-            <div class="controls">
-                <input ng-model="model.params[param.name]" name="{{ param.name }}" type='text' />
+            <div class="control-group" ng-class="{error: Form.params.$invalid || errorList.params}">
+                <span ng-show="errorList.params" class="help-block" ng-bind="errorList.params" />
+                <div ng-repeat="param in model.config" class="control-group">
+                <label class="control-label">{{ param.name }}</label>
+                <div class="controls">
+                    <input ng-model="model.params[param.name]" name="{{ param.name }}" type='text' />
+                    <span ng-show="param.required" class="help-inline" title="required">*</span>
+                </div>
             </div>
         </div>
       </div>
