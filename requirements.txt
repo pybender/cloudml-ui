@@ -29,7 +29,7 @@ nose-exclude
 -e git+https://github.com/odeskdev/cloudml.git@New_import_handler#egg=cloudml
 -e git+https://github.com/rick446/MongoTools.git#egg=mongotools
 translitcodec==0.3
-boto
+boto==2.26.0
 psutil==1.0.1
 memory-profiler==0.27
 mock
