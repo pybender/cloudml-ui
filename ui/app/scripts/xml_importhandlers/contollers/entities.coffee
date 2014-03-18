@@ -24,6 +24,7 @@ angular.module(
         if entity?
           $scope.objects = entity
       )
+      $scope.query_msg = {}
 
     $scope.load = () ->
       $scope.handler.$load({'show': 'entities'}).then (
@@ -83,6 +84,26 @@ angular.module(
         ctrlName: 'ModelEditDialogCtrl'
         list_model_name: "entities"
       })
+
+    $scope.addQuery = (entity) ->
+      query = new Query({
+        'import_handler_id': entity.import_handler_id
+        'entity_id': entity.id
+      })
+#      $scope.openDialog({
+#        $dialog: $dialog
+#        model: field
+#        template: 'partials/xml_import_handlers/fields/edit.html'
+#        ctrlName: 'ModelWithParamsEditDialogCtrl'
+#        list_model_name: "entities"
+#      })
+
+    $scope.saveQueryText = (query) ->
+      query.loading_state = true
+      query.$save({only: ['text']}).then((opts) ->
+        query.loading_state = false
+        query.msg = 'Query has been saved'
+      )
 ])
 
 .controller('XmlTransformedFieldSelectCtrl', [
