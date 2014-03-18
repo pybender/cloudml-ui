@@ -131,6 +131,9 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
         if not @target?
           @target = undefined
 
+        if not @text
+          @err = 'Please enter the query text'
+
       @$get_api_url: (opts, model) ->
         if model?
           handler_id = model.import_handler_id

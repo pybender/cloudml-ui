@@ -85,24 +85,16 @@ angular.module(
         list_model_name: "entities"
       })
 
-    $scope.addQuery = (entity) ->
-      query = new Query({
-        'import_handler_id': entity.import_handler_id
-        'entity_id': entity.id
-      })
-#      $scope.openDialog({
-#        $dialog: $dialog
-#        model: field
-#        template: 'partials/xml_import_handlers/fields/edit.html'
-#        ctrlName: 'ModelWithParamsEditDialogCtrl'
-#        list_model_name: "entities"
-#      })
-
     $scope.saveQueryText = (query) ->
+      if not query.text
+        query.edit_err = 'Please enter the query text'
+        return
       query.loading_state = true
       query.$save({only: ['text']}).then((opts) ->
         query.loading_state = false
         query.msg = 'Query has been saved'
+        query.edit_err = null
+        query.err = null
       )
 ])
 

@@ -20,11 +20,13 @@
               </div>
             </div>
 
+            <div ng-controller="XmlTransformedFieldSelectCtrl" ng-init="init(model)" ng-show="transformed_fields">
+
             <div class="control-group">
               <label class="control-label">or</label>
             </div>
 
-            <div class="control-group" ng-class="{error: Form.transformed_field.$invalid || errorList.transformed_field}" ng-controller="XmlTransformedFieldSelectCtrl" ng-init="init(model)">
+            <div class="control-group" ng-class="{error: Form.transformed_field.$invalid || errorList.transformed_field}">
               <label class="control-label">Transformed field</label>
               <div class="controls">
                 <select name="transformed_field" ng-model="model.transformed_field" ng-change="model.datasource = undefined">
@@ -33,6 +35,8 @@
                 <span ng-show="Form.transformed_field.$error.required" class="help-inline">*</span>
                 <span ng-show="errorList.transformed_field" class="help-block" ng-bind="errorList.transformed_field" />
               </div>
+            </div>
+
             </div>
 
       </form>

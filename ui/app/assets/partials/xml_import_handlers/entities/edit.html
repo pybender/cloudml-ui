@@ -17,26 +17,30 @@
           </div>
         </div>
         <div class="control-group" ng-class="{error: Form.datasource.$invalid || errorList.datasource}" ng-controller="XmlDataSourceSelectCtrl" ng-init="init(model.import_handler_id)">
-              <label class="control-label">Data Source (global)</label>
-              <div class="controls">
-                <select name="datasource" ng-model="model.datasource" ng-change="model.transformed_field = undefined">
-                  <option ng-selected="ds.id == model.datasource" value="{{ ds.id }}" ng-repeat="ds in datasources">{{ ds.name }}</option>
-                </select>
-              </div>
-            </div>
+          <label class="control-label">Data Source (global)</label>
+          <div class="controls">
+            <select name="datasource" ng-model="model.datasource" ng-change="model.transformed_field = undefined">
+              <option ng-selected="ds.id == model.datasource" value="{{ ds.id }}" ng-repeat="ds in datasources">{{ ds.name }}</option>
+            </select>
+          </div>
+        </div>
 
-            <div class="control-group">
-              <label class="control-label">or</label>
-            </div>
+        <div ng-controller="XmlTransformedFieldSelectCtrl" ng-init="init(model)" ng-show="transformed_fields">
 
-            <div class="control-group" ng-class="{error: Form.transformed_field.$invalid || errorList.transformed_field}" ng-controller="XmlTransformedFieldSelectCtrl" ng-init="init(model)">
-              <label class="control-label">Transformed field</label>
-              <div class="controls">
-                <select name="transformed_field" ng-model="model.transformed_field" ng-change="model.datasource = undefined">
-                  <option ng-selected="field.id == model.transformed_field" value="{{ field.id }}" ng-repeat="field in transformed_fields">{{ field.name }}</option>
-                </select>
-              </div>
-            </div>
+        <div class="control-group">
+          <label class="control-label">or</label>
+        </div>
+
+        <div class="control-group" ng-class="{error: Form.transformed_field.$invalid || errorList.transformed_field}">
+          <label class="control-label">Transformed field</label>
+          <div class="controls">
+            <select name="transformed_field" ng-model="model.transformed_field" ng-change="model.datasource = undefined">
+              <option ng-selected="field.id == model.transformed_field" value="{{ field.id }}" ng-repeat="field in transformed_fields">{{ field.name }}</option>
+            </select>
+          </div>
+        </div>
+
+        </div>
 
       </form>
     </div>

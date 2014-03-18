@@ -206,9 +206,33 @@ class XmlEntityForm(BaseForm):
             raise ValidationError(self.DATASOURCE_MESSAGE)
         return value
 
-    def save(self):  # TODO: transaction!
-        entity = super(XmlEntityForm, self).save(commit=False)
-        entity.save()
+    def save(self, *args, **kwargs):
+        try:
+            entity = super(XmlEntityForm, self).save(commit=False)
+            db.session.commit()
+
+            if self.cleaned_data.get('transformed_field') and \
+                    entity.datasource:
+                entity.datasource = None
+            if self.cleaned_data.get('datasource') and \
+                    entity.transformed_field:
+                entity.transformed_field = None
+            db.session.add(entity)
+
+            if entity.transformed_field and entity.query_obj:
+                db.session.delete(entity.query_obj)
+            elif entity.datasource and not entity.query_obj:
+                query = XmlQuery()
+                db.session.add(query)
+                entity.query_obj = query
+                db.session.add(entity)
+
+        except Exception:
+            db.session.rollback()
+            raise
+        else:
+            db.session.commit()
+
         return entity
 
 

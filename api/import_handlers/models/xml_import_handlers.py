@@ -217,8 +217,9 @@ class XmlEntity(db.Model, BaseMixin, RefXmlImportHandlerMixin):
                                             ondelete='CASCADE'))
     datasource = relationship('XmlDataSource',
                               foreign_keys=[datasource_id])
-    query_id = db.Column(db.ForeignKey('xml_query.id', ondelete='CASCADE'))
-    query_obj = relationship('XmlQuery', foreign_keys=[query_id])
+    query_id = db.Column(db.ForeignKey('xml_query.id'))
+    query_obj = relationship('XmlQuery', foreign_keys=[query_id],
+                             cascade='all,delete', backref='parent_entity')
 
     def __repr__(self):
         return "<Entity %s>" % self.name
