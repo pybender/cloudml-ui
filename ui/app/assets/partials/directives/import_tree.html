@@ -88,6 +88,7 @@
             <th>Transform</th>
             <th>Headers</th>
             <th>Script</th>
+            <th title="Required">Req</th>
             <th width="50px">Actions</th>
           </tr>
         </thead>
@@ -128,6 +129,9 @@
           </td>
           <td>
             <span title="script" class="script" ng-bind="field.script || 'no script'" editable="field" value="field.script" editable-field="script" editable-input="textarea" editable-placement="left"></span>
+          </td>
+          <td>
+            <input title="required" type="checkbox" ng-checked="field.required" ng-model="field.required" ng-change="field.$save({only: ['required']})" />
           </td>
           <td>
             <button ng-click="deleteField()(field);" class="btn btn-danger">

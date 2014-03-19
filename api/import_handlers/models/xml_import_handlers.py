@@ -152,7 +152,7 @@ class XmlField(db.Model, BaseMixin):
     TRANSFORM_TYPES = ['json', 'csv']
     FIELDS_TO_SERIALIZE = ['name', 'type', 'column', 'jsonpath', 'join',
                            'regex', 'split', 'dateFormat', 'template',
-                           'transform', 'headers', 'script']
+                           'transform', 'headers', 'script', 'required']
 
     name = db.Column(db.String(200), nullable=False)
     type = db.Column(db.Enum(*TYPES, name='xml_field_types'))
@@ -167,10 +167,20 @@ class XmlField(db.Model, BaseMixin):
         db.Enum(*TRANSFORM_TYPES, name='xml_transform_types'))
     headers = db.Column(db.String(200))
     script = db.Column(db.Text)
+    required = db.Column(db.Boolean, default=False)
 
     entity_id = db.Column(db.ForeignKey('xml_entity.id', ondelete='CASCADE'))
     # entity = relationship(
     #     'XmlEntity', foreign_keys=[entity_id], backref='fields')
+
+    def to_dict(self):
+        field = super(XmlField, self).to_dict()
+        if 'required' in field:
+            if field['required']:
+                field['required'] = 'true'
+            else:
+                del field['required']
+        return field
 
 
 def get_entity_tree(handler):
