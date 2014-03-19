@@ -62,6 +62,12 @@ angular.module('app.datasets.model', ['app.config'])
         return "#{settings.apiUrl}importhandlers/#{handler_type.toLowerCase()}\
 /#{handler_id}/datasets/"
 
+      @$beforeLoadAll: (opts) ->
+        return {
+          'import_handler_id': opts.import_handler_id
+          'import_handler_type': opts.import_handler_type
+        }
+
       $generateS3Url: () =>
         base_url = @constructor.$get_api_url({}, @)
         @$make_request("#{base_url}#{@id}/action/generate_url/",
