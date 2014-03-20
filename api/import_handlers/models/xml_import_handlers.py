@@ -53,7 +53,17 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
                 query.text = etree.CDATA(entity.query_obj.text)
 
             for field in entity.fields:
-                etree.SubElement(ent, "field", **field.to_dict())
+                field_dict = field.to_dict()
+                script = field_dict.get('script')
+                script_text = None
+                if script and (len(script.splitlines()) > 1
+                               or len(script) > 50):
+                    del field_dict['script']
+                    script_text = script
+                field_el = etree.SubElement(ent, "field", **field_dict)
+                if script_text:
+                    script_tag = etree.SubElement(field_el, "script")
+                    script_tag.text = etree.CDATA(script_text)
             for subentity in entity.entities:
                 build_tree(subentity, parent=ent)
 
