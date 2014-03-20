@@ -45,27 +45,33 @@
         </div>
       </div>
     </div>
-    <hr />
-    <h5>
-      <i class=" icon-magnet"></i> Query
-      <a ng-hide="entity.query_obj" ng-hide="entity.query_obj" ng-click="addQuery(entity)">
-          <i title="add query" class="icon-plus"></i>
-      </a>
-    </h5>
     <div ng-show="entity.query_obj">
+    <hr />
+    <h5><i class=" icon-magnet"></i> Query</h5>
+    <div>
+      <alert-message ng-show="entity.query_obj.msg" class="alert-info" msg="{{ entity.query_obj.msg }}"></alert-message>
+      <alert-message ng-show="entity.query_obj.err" class="alert-error" msg="{{ entity.query_obj.err }}"></alert-message>
+      <alert-message ng-show="entity.query_obj.edit_err" class="alert-error" msg="{{ entity.query_obj.edit_err }}"></alert-message>
       <div>
         Target:
         <span title="target" class="target value" ng-bind="entity.query_obj.target" editable="entity.query_obj" value="entity.query_obj.target" editable-field="target" editable-input="text" editable-placement="right"></span>
       </div>
       <div>
-        Text:<textarea class="small" ui-codemirror="{mode: 'text/x-mysql', indentWithTabs: true, smartIndent: true, lineNumbers: true, matchBrackets : true, height: '30px'}" ng-model="entity.query_obj.text"></textarea>
-        <a ng-click="saveQueryText(entity.query_obj);" class="btn btn-info">
-          <i class="status-icon icon-plus"></i> save
+        Text:<textarea class="small" ui-codemirror="{
+            mode: 'text/x-mysql',
+            indentWithTabs: true,
+            smartIndent: true,
+            lineNumbers: true,
+            matchBrackets: true,
+            height: '30px'}" ng-model="entity.query_obj.text" ui-refresh="entity.query_obj" />
+        <a ng-disabled="entity.query_obj.loading_state" ng-click="saveQueryText()(entity.query_obj);" class="btn btn-info">
+          <i class="status-icon icon-edit"></i> save text
         </a>
       </div>
     </div>
-    <hr />
-    <div  ng-show="entity.fields">
+    </div>
+    <div ng-show="entity.fields">
+      <hr />
       <h5>Fields</h5>
       <table class="table table-hover">
         <thead>
@@ -132,10 +138,16 @@
       </tbody>
       </table>
     </div>
-    <hr />
     <div ng-show="entity.entities">
+      <hr />
       <entities-recursive>
-        <entities-tree entity="sub" ng-repeat="sub in entity.entities" add-entity="addEntity()" add-field="addField()" delete-entity="deleteEntity()" delete-field="deleteField()" edit-data-source="editDataSource()"></entities-tree>
+        <entities-tree entity="sub" ng-repeat="sub in entity.entities"
+                       add-entity="addEntity()"
+                       add-field="addField()"
+                       delete-entity="deleteEntity()"
+                       delete-field="deleteField()"
+                       edit-data-source="editDataSource()"
+                       save-query-text="saveQueryText()"></entities-tree>
       </entities-recursive>
     </div>
   </div>

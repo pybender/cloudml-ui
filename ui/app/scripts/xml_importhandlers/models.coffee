@@ -121,7 +121,18 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
       API_FIELDNAME: 'query'
       @MAIN_FIELDS: 'id,text,target'
 
-      id: Query
+      id: null
+      text: null
+      target: null
+
+      loadFromJSON: (origData) =>
+        super origData
+
+        if not @target?
+          @target = undefined
+
+        if not @text
+          @err = 'Please enter the query text'
 
       @$get_api_url: (opts, model) ->
         if model?

@@ -183,6 +183,8 @@ class XmlEntityForm(BaseForm):
     required_fields = ('name', 'import_handler_id',
                        'entity_id', ('datasource', 'transformed_field'))
     NO_REQUIRED_FOR_EDIT = True
+    DATASOURCE_MESSAGE = 'Can be only one of either datasource or' \
+                         ' transformed_field'
 
     name = CharField()
     import_handler_id = DocumentField(
@@ -194,9 +196,43 @@ class XmlEntityForm(BaseForm):
     transformed_field = DocumentField(
         doc=XmlField, by_name=False, return_doc=True)
 
-    def save(self):  # TODO: transaction!
-        entity = super(XmlEntityForm, self).save(commit=False)
-        entity.save()
+    def clean_datasource(self, value, field):
+        if value and self.data.get('transformed_field'):
+            raise ValidationError(self.DATASOURCE_MESSAGE)
+        return value
+
+    def clean_transformed_field(self, value, field):
+        if value and self.data.get('datasource'):
+            raise ValidationError(self.DATASOURCE_MESSAGE)
+        return value
+
+    def save(self, *args, **kwargs):
+        try:
+            entity = super(XmlEntityForm, self).save(commit=False)
+            db.session.commit()
+
+            if self.cleaned_data.get('transformed_field') and \
+                    entity.datasource:
+                entity.datasource = None
+            if self.cleaned_data.get('datasource') and \
+                    entity.transformed_field:
+                entity.transformed_field = None
+            db.session.add(entity)
+
+            if entity.transformed_field and entity.query_obj:
+                db.session.delete(entity.query_obj)
+            elif entity.datasource and not entity.query_obj:
+                query = XmlQuery()
+                db.session.add(query)
+                entity.query_obj = query
+                db.session.add(entity)
+
+        except Exception:
+            db.session.rollback()
+            raise
+        else:
+            db.session.commit()
+
         return entity
 
 

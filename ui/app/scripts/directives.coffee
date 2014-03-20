@@ -255,13 +255,12 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
       deleteEntity: '&deleteEntity',
       deleteField: '&deleteField',
       editDataSource: '&editDataSource',
+      saveQueryText: '&saveQueryText',
     }
     # replace: true
     restrict: 'E'
     transclude : true
     templateUrl:'partials/directives/import_tree.html'
-    link: (scope, el, attrs) ->
-      scope.saveQueryText = (query) -> query.$save({only: ['text']})
   }
 ])
 

@@ -24,6 +24,7 @@ angular.module(
         if entity?
           $scope.objects = entity
       )
+      $scope.query_msg = {}
 
     $scope.load = () ->
       $scope.handler.$load({'show': 'entities'}).then (
@@ -83,6 +84,18 @@ angular.module(
         ctrlName: 'ModelEditDialogCtrl'
         list_model_name: "entities"
       })
+
+    $scope.saveQueryText = (query) ->
+      if not query.text
+        query.edit_err = 'Please enter the query text'
+        return
+      query.loading_state = true
+      query.$save({only: ['text']}).then((opts) ->
+        query.loading_state = false
+        query.msg = 'Query has been saved'
+        query.edit_err = null
+        query.err = null
+      )
 ])
 
 .controller('XmlTransformedFieldSelectCtrl', [
