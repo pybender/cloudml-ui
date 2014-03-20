@@ -148,6 +148,19 @@ exist. Please choose another one.' % value)
         return import_handler
 
 
+class XmlImportHandlerEditForm(BaseForm):
+    required_fields = ('name', )
+
+    name = CharField()
+
+    def clean_name(self, value, field):
+        count = XmlImportHandler.query.filter_by(name=value).count()
+        if count:
+            raise ValidationError('Import Handler with name "%s" already \
+exist. Please choose another one.' % value)
+        return value
+
+
 class XmlInputParameterForm(BaseForm):
     required_fields = ('name', 'type', 'import_handler_id')
     NO_REQUIRED_FOR_EDIT = True
