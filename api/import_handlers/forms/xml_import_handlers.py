@@ -252,6 +252,7 @@ class XmlFieldForm(BaseForm):
     transform = ChoiceField(choices=XmlField.TRANSFORM_TYPES)
     headers = CharField()
     script = CharField()
+    required = BooleanField()
     entity_id = DocumentField(
         doc=XmlEntity, by_name=False, return_doc=False)
     import_handler_id = DocumentField(
