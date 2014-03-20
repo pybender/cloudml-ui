@@ -1,14 +1,14 @@
-"""empty message
+"""Adding required field to the Field table
 
 Revision ID: 28da10c6b129
-Revises: 111b32f9fe34
+Revises: 23f079dfe4ee
 Create Date: 2014-03-20 00:14:11.711892
 
 """
 
 # revision identifiers, used by Alembic.
 revision = '28da10c6b129'
-down_revision = '111b32f9fe34'
+down_revision = '23f079dfe4ee'
 
 from alembic import op
 import sqlalchemy as sa
