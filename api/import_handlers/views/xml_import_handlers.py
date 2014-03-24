@@ -4,7 +4,7 @@ from api.import_handlers.models import XmlImportHandler, XmlInputParameter, \
     XmlEntity, XmlField, XmlDataSource, XmlQuery, XmlScript
 from api.import_handlers.forms import XmlImportHandlerAddForm, \
     XmlInputParameterForm, XmlEntityForm, XmlFieldForm, XmlDataSourceForm, \
-    XmlQueryForm, XmlScriptForm
+    XmlQueryForm, XmlScriptForm, XmlImportHandlerEditForm
 
 
 class XmlImportHandlerResource(BaseResourceSQL):
@@ -12,6 +12,7 @@ class XmlImportHandlerResource(BaseResourceSQL):
     XmlImportHandler API methods
     """
     post_form = XmlImportHandlerAddForm
+    put_form = XmlImportHandlerEditForm
 
     @property
     def Model(self):
