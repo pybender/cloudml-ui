@@ -54,12 +54,9 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
 
             for field in entity.fields:
                 field_dict = field.to_dict()
-                script = field_dict.get('script')
-                script_text = None
-                if script and (len(script.splitlines()) > 1
-                               or len(script) > 50):
+                script_text = field_dict.get('script')
+                if script_text:
                     del field_dict['script']
-                    script_text = script
                 field_el = etree.SubElement(ent, "field", **field_dict)
                 if script_text:
                     script_tag = etree.SubElement(field_el, "script")
