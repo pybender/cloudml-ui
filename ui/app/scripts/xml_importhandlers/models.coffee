@@ -31,8 +31,10 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
   'BaseModel'
   'InputParameter'
   'Entity'
-  
-  (settings, BaseModel, InputParameter, Entity) ->
+  'Script'
+  'Datasource'
+
+  (settings, BaseModel, InputParameter, Entity, Script, Datasource) ->
     class XmlImportHandler extends BaseModel
       BASE_API_URL: "#{settings.apiUrl}xml_import_handlers/"
       BASE_UI_URL: "/handlers/xml/"
@@ -65,6 +67,16 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
             for paramData in origData.xml_input_parameters
               @xml_input_parameters.push new InputParameter(
                 _.extend paramData, defaults)
+          if origData.xml_scripts?
+            @xml_scripts = []
+            for scriptData in origData.xml_scripts
+              @xml_scripts.push new Script(
+                _.extend scriptData, defaults)
+          if origData.xml_data_sources?
+            @xml_data_sources = []
+            for dsData in origData.xml_data_sources
+              @xml_data_sources.push new Datasource(
+                _.extend dsData, defaults)
 
           
     return XmlImportHandler

@@ -317,7 +317,6 @@ class XmlQueryForm(BaseForm):
 
 class XmlScriptForm(BaseForm):
     required_fields = ('data', 'import_handler_id')
-    NO_REQUIRED_FOR_EDIT = True
 
     data = CharField()
     import_handler_id = DocumentField(

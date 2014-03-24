@@ -35,7 +35,6 @@ angular.module(
       })
 
     $scope.edit = (script)->
-      script = new Script(script)
       $scope.openDialog({
         $dialog: $dialog
         model: script
@@ -45,7 +44,6 @@ angular.module(
       })
 
     $scope.delete = (script)->
-      script = new Script(script)
       $scope.openDialog({
         $dialog: $dialog
         model: script

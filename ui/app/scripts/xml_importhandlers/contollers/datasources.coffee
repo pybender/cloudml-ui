@@ -48,7 +48,6 @@ angular.module(
       })
 
     $scope.edit = (datasource)->
-      datasource = new Datasource(datasource)
       $scope.openDialog({
         $dialog: $dialog
         model: datasource
@@ -59,7 +58,6 @@ angular.module(
       })
 
     $scope.delete = (datasource)->
-      datasource = new Datasource(datasource)
       $scope.openDialog({
         $dialog: $dialog
         model: datasource

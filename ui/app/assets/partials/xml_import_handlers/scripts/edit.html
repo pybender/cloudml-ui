@@ -12,8 +12,8 @@
             <textarea rows="8" ui-codemirror="{
       lineNumbers: true,
       indentWithTabs: true,
-      mode: 'javascript'
-    }" ui-refresh="model.data" name="data" ng-model="model.data" ng-change="setFieldError('data')" required></textarea>
+      mode: 'python'
+    }" name="data" ng-model="model.data" ng-change="setFieldError('data')" required></textarea>
             <span ng-show="Form.data.$error.required" class="help-inline">*</span>
             <span ng-show="errorList.data" class="help-block" ng-bind="errorList.data" />
         </div>

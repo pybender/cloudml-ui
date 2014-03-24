@@ -156,35 +156,31 @@
           </div>
           <div id="scripts" class="accordion-body collapse in">
             <div class="accordion-inner" ng-controller="BaseListCtrl" ng-init="init(false, 'xml_scripts', false)">
+              <div class="row">
               <div class="actions">
                 <a class="btn btn-info" ng-click="add(handler)">
                   <i class="status-icon icon-plus"></i> add script
                 </a>
               </div>
-
-              <div class="clearfix">
-                <table class="table table-hover">
-                  <tbody>
-                    <tr ng-repeat="item in objects">
-                      <td style="border-top: none;">
-                        <div class="well">{{ item.data }}</div>
-                      </td>
-                      <td style="border-top: none;">
-                          <button ng-click="edit(item)" class="btn btn-info">
-                            <i title="Edit script" class="icon-edit"></i>
-                          </button>
-                          <button ng-click="delete(item)" class="btn btn-danger">
-                            <i title="Delete script. Be careful - you could not recover it!" class="icon-remove"></i>
-                          </button>
-                      </td>
-                    </tr>
-                  </tbody>
-                  <tfoot ng-hide="objects">
-                    <tr><td colspan="2">No scripts found</td></tr>
-                  </tfoot>
-                </table>
               </div>
-
+                <div class="row" ng-repeat="item in objects">
+                  <div class="span9" style="max-height: 80px">
+                    <textarea class="small" rows="4" ui-codemirror="{
+                        lineNumbers: true,
+                        readOnly: 'nocursor',
+                        mode: 'python',
+                        height: '20px'
+                    }" ui-refresh="item.data" ng-model="item.data"></textarea>
+                  </div>
+                  <div class="span2" style="min-height: 80px">
+                      <button ng-click="edit(item)" class="btn btn-info">
+                        <i title="Edit script" class="icon-edit"></i>
+                      </button>
+                      <button ng-click="delete(item)" class="btn btn-danger">
+                        <i title="Delete script. Be careful - you could not recover it!" class="icon-remove"></i>
+                      </button>
+                  </div>
+                </div>
             </div>
           </div>
         </div>
