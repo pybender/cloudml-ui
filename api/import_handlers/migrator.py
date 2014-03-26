@@ -4,7 +4,7 @@ import json
 from models import ImportHandler, XmlImportHandler, db, XmlDataSource, \
     XmlEntity, XmlQuery, XmlField, XmlInputParameter, XmlScript
 
-DATASOURCE_PARAMS_REGEX = re.compile("((\w+)=['\"]+(\w+)['\"]+)", re.VERBOSE)
+DATASOURCE_PARAMS_REGEX = re.compile("((\w+)=['\"]+([\w.]+)['\"]+)", re.VERBOSE)
 
 
 def xml_migrate():
@@ -25,7 +25,7 @@ def xml_migrate():
             logging.warning('json import handler %s:%s is empty',
                             json_handler.name, json_handler.id)
             continue
-        handler = XmlImportHandler(name=json_handler.name + '3')
+        handler = XmlImportHandler(name=json_handler.name)
         db.session.add(handler)
 
         logging.info('Parsing datasources')
