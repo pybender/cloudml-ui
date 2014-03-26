@@ -103,9 +103,10 @@ class RefXmlImportHandlerMixin(object):
     @declared_attr
     def import_handler(cls):
         from api.base.utils import convert_name, pluralize
-        backref = pluralize(convert_name(cls.__name__))
+        backref_name = pluralize(convert_name(cls.__name__))
         return relationship(
-            "XmlImportHandler", backref=backref)
+            "XmlImportHandler", backref=backref(backref_name,
+                                                cascade='all,delete'))
 
 
 class XmlDataSource(db.Model, BaseMixin, RefXmlImportHandlerMixin):
@@ -179,9 +180,10 @@ class XmlField(db.Model, BaseMixin):
     script = db.Column(db.Text)
     required = db.Column(db.Boolean, default=False)
 
-    entity_id = db.Column(db.ForeignKey('xml_entity.id', ondelete='CASCADE'))
-    # entity = relationship(
-    #     'XmlEntity', foreign_keys=[entity_id], backref='fields')
+    entity_id = db.Column(db.ForeignKey('xml_entity.id'))
+    entity = relationship(
+        'XmlEntity', foreign_keys=[entity_id], backref=backref(
+            'fields', cascade='all,delete'))
 
     def to_dict(self):
         field = super(XmlField, self).to_dict()
@@ -219,7 +221,6 @@ class XmlEntity(db.Model, BaseMixin, RefXmlImportHandlerMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
 
-    fields = relationship(XmlField, primaryjoin=id == XmlField.entity_id)
     # JSON or CSV field as datasource
     transformed_field_id = db.Column(db.ForeignKey(
         'xml_field.id', use_alter=True,
@@ -228,9 +229,9 @@ class XmlEntity(db.Model, BaseMixin, RefXmlImportHandlerMixin):
                                      foreign_keys=[transformed_field_id],
                                      backref='entities_for_field_ds')
     # Sub entity
-    entity_id = db.Column(db.ForeignKey('xml_entity.id',
-                                        ondelete='CASCADE'))
-    entity = relationship('XmlEntity', remote_side=[id], backref='entities')
+    entity_id = db.Column(db.ForeignKey('xml_entity.id'))
+    entity = relationship('XmlEntity', remote_side=[id],
+                          backref=backref('entities', cascade='all,delete'))
 
     # Global datasource
     datasource_id = db.Column(db.ForeignKey('xml_data_source.id',

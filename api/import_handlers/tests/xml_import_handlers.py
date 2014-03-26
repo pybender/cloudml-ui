@@ -49,18 +49,23 @@ class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(obj.name, data['name'])
 
     def test_delete(self):
-        def _check_models(models_to_check):
-            for model, count in models_to_check:
-                self.assertEqual(model.query.filter_by(
-                    import_handler_id=self.obj.id).count(), count)
+        models_to_check = [
+            (XmlDataSource, 3, XmlDataSource.query.count()),
+            (XmlEntity, 3, XmlEntity.query.count()),
+            (XmlInputParameter, 2, XmlInputParameter.query.count()),
+            (XmlScript, 1, XmlScript.query.count())
+        ]
 
-        _check_models([(XmlDataSource, 3), (XmlEntity, 3),
-                       (XmlInputParameter, 2), (XmlScript, 1)])
+        for model, count, count_all in models_to_check:
+            self.assertEqual(model.query.filter_by(
+                import_handler_id=self.obj.id).count(), count)
 
         self.check_delete()
 
-        _check_models([(XmlDataSource, 0), (XmlEntity, 0),
-                       (XmlInputParameter, 0), (XmlScript, 0)])
+        for model, count, count_all in models_to_check:
+            self.assertEqual(model.query.filter_by(
+                import_handler_id=self.obj.id).count(), 0)
+            self.assertEqual(model.query.count(), count_all - count)
 
 
 class XmlEntityTests(BaseDbTestCase, TestChecksMixin):
@@ -90,6 +95,10 @@ class XmlEntityTests(BaseDbTestCase, TestChecksMixin):
                                               name='application').one()
 
     def test_delete(self):
+        field_count = XmlField.query.count()
+        entity_count = XmlEntity.query.count()
+        query_count = XmlQuery.query.count()
+
         self.assertEqual(XmlField.query.filter_by(
             entity_id=self.obj.id).count(), 3)
         self.assertEqual(XmlEntity.query.filter_by(
@@ -103,3 +112,7 @@ class XmlEntityTests(BaseDbTestCase, TestChecksMixin):
         self.assertEqual(XmlEntity.query.filter_by(
             entity_id=self.obj.id).count(), 0)
         self.assertEqual(XmlQuery.query.filter_by(id=query_id).count(), 0)
+
+        self.assertEqual(XmlField.query.count(), field_count - 11)
+        self.assertEqual(XmlEntity.query.count(), entity_count - 3)
+        self.assertEqual(XmlQuery.query.count(), query_count - 1)
