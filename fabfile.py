@@ -77,7 +77,7 @@ def setup():
     git.init.run()
     git.push.run()
 
-    supervisor.push_init_config.run()
+    #supervisor.push_init_config.run()
     supervisor.push_d_config.run()
     supervisor.push_configs.run()
     supervisor.d.run()

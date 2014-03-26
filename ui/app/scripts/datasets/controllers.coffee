@@ -43,7 +43,7 @@ filesize,records_count,time,created_by,updated_by'
   'DataSet'
 
   ($scope, $dialog, $window, DataSet) ->
-    $scope.init = (opts={}) =>
+    $scope.init = (opts={}) ->
       if not opts.dataset
         throw new Error "Please specify dataset"
 

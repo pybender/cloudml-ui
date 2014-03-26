@@ -54,7 +54,7 @@ angular.module('app.reports.controllers', ['app.config', ])
         if actionString == FORM_ACTION then ""
         else "action=#{actionString}")
 
-    $scope.initForm = () =>
+    $scope.initForm = () ->
       Model.$loadAll({comparable: 1, show: "name"}
       ).then ((opts) ->
         $scope.comparable_models = []
@@ -77,13 +77,13 @@ angular.module('app.reports.controllers', ['app.config', ])
     $scope.is_form = ->
       $scope.action[0] == 'form'
 
-    $scope.backToForm = () =>
+    $scope.backToForm = () ->
       $scope.toogleAction("form")
 
-    $scope.toogleReport = () =>
+    $scope.toogleReport = () ->
       $scope.toogleAction("report", "metrics")
 
-    $scope.toogleAction = (action_name) =>
+    $scope.toogleAction = (action_name) ->
       report = $scope.report
       csv_ids = ''
       for item in $scope.form_data
@@ -91,10 +91,10 @@ angular.module('app.reports.controllers', ['app.config', ])
 
       $scope.action = [action_name, csv_ids]
 
-    $scope.toogleReportSection = (section) =>
+    $scope.toogleReportSection = (section) ->
       $scope.section = section
 
-    $scope.generate = () =>
+    $scope.generate = ->
       $scope.generating = true
       $scope.generatingProgress = '0%'
       $scope.generatingError = null

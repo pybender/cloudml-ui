@@ -28,7 +28,7 @@ angular.module('app.weights.model', ['app.config'])
           params: _.extend {
           }, opts
         )
-        .then ((resp) =>
+        .then ((resp) ->
           dfd.resolve {
             pages: resp.data.pages
             page: resp.data.page
@@ -53,7 +53,7 @@ angular.module('app.weights.model', ['app.config'])
           params: _.extend {
           }, opts
         )
-        .then ((resp) =>
+        .then ((resp) ->
           dfd.resolve {
             pages: resp.data.pages
             page: resp.data.page
@@ -90,7 +90,7 @@ angular.module('app.weights.model', ['app.config'])
       short_name: null
       parent: null
 
-      loadFromJSON: (origData) =>
+      loadFromJSON: (origData) ->
         data = _.extend {}, origData
         _.extend @, data
 
@@ -120,7 +120,7 @@ angular.module('app.weights.model', ['app.config'])
 
       ### API methods ###
 
-      loadFromJSON: (origData) =>
+      loadFromJSON: (origData) ->
         data = _.extend {}, origData
         _.extend @, data
 
@@ -135,7 +135,7 @@ angular.module('app.weights.model', ['app.config'])
           params: _.extend {
           }, opts
         )
-        .then ((resp) =>
+        .then ((resp) ->
           dfd.resolve {
             categories: (new Category(obj) for obj in resp.data.categories)
             weights: (new Weight(obj) for obj in resp.data.weights)

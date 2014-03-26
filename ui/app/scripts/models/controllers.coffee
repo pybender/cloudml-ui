@@ -261,8 +261,8 @@ updated_on,updated_by,comparable,test_handler_fields'
   '$dialog'
 
   ($scope, $dialog) ->
-    $scope.init = (opts={}) =>
-      if not opts.model
+    $scope.init = (opts) ->
+      if !opts || !opts.model
         throw new Error "Please specify model"
 
       $scope.model = opts.model
