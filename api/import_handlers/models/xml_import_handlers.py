@@ -53,6 +53,7 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
                 query.text = etree.CDATA(entity.query_obj.text)
 
             for field in entity.fields:
+                print field.name
                 field_dict = field.to_dict()
                 script = field_dict.get('script')
                 script_text = None
@@ -183,7 +184,7 @@ class XmlField(db.Model, BaseMixin):
     entity_id = db.Column(db.ForeignKey('xml_entity.id'))
     entity = relationship(
         'XmlEntity', foreign_keys=[entity_id], backref=backref(
-            'fields', cascade='all,delete'))
+            'fields', cascade='all,delete', order_by='XmlField.id'))
 
     def to_dict(self):
         field = super(XmlField, self).to_dict()
