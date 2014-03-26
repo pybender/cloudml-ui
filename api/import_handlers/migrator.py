@@ -8,6 +8,7 @@ DATASOURCE_PARAMS_REGEX = re.compile("((\w+)=['\"]+(\w+)['\"]+)", re.VERBOSE)
 
 
 def xml_migrate():
+    XmlImportHandler.query.delete()
     logging.info('Start migrations')
     for json_handler in ImportHandler.query.all():
         logging.info('Processing json import handler %s:%s',
@@ -144,6 +145,8 @@ def get_datasource_params(data):
 
 
 def get_query_text(text, input_params):
+    if isinstance(text, basestring):
+        text = text[0]
     for param in input_params:
         text = text.replace("%({0})s".format(param), "#{%s}" % param)
     return text
