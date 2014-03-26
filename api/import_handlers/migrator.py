@@ -5,6 +5,7 @@ from models import ImportHandler, XmlImportHandler, db, XmlDataSource, \
     XmlEntity, XmlQuery, XmlField, XmlInputParameter, XmlScript
 
 DATASOURCE_PARAMS_REGEX = re.compile("((\w+)=['\"]+(\w+)['\"]+)", re.VERBOSE)
+SCRIPT_PARAMETER_PATTERN = r'%\(([^()]+)\)s'
 
 
 def xml_migrate():
@@ -57,21 +58,22 @@ def xml_migrate():
                 datasource=ds)
             db.session.add(entity)
             # Adding scripts for composite type
-            script = XmlScript(import_handler=handler, data="""
-def composite_string(expression_value, value):
-    res = expression_value % value
-    return res.decode('utf8', 'ignore')
-
-def composite_python(expression_value, value):
-    res = composite_string(expression_value, value)
-    return eval(res)
-
-def composite_readability(expression_value, value):
-    res = composite_string(expression_value, value)
-    return res
-
-""")
-            script = XmlScript()
+#             script = XmlScript(import_handler=handler, data="""
+# def composite_string(expression_value, value):
+#     res = expression_value % value
+#     return res.decode('utf8', 'ignore')
+#
+# def composite_python(expression_value, value):
+#     res = composite_string(expression_value, value)
+#     return eval(res)
+#
+# def composite_readability(expression_value, value):
+#     res = composite_string(expression_value, value)
+#     return res
+#
+# """)
+            script = XmlScript(import_handler=handler, data='')
+            db.session.add(script)
             for item_data in query_data['items']:
                 process_as = item_data.get('process_as', 'string')
                 if process_as == 'identity':
@@ -103,7 +105,10 @@ def composite_readability(expression_value, value):
                         field = XmlField(
                             name=feature_data['name'],
                             jsonpath=feature_data['jsonpath'])
-                        # TODO: think about key_path, value_path
+                        if 'key_path' in feature_data and 'value_path' in feature_data:
+                            field.script = 'process_key_value("%s", "%s", #{value})' % (
+                                feature_data['key_path'], feature_data['value_path']
+                            )
                         if feature_data.get('to_csv'):
                             field.join = ','
                         db.session.add(field)
@@ -112,21 +117,19 @@ def composite_readability(expression_value, value):
                     for feature in item_data['target_features']:
                         expression_type = feature['expression']['type']
                         expression_value = feature['expression']['value']
+                        script_text = None
                         if expression_type == 'string':
-                            script_text = 'composite_string(%s, #{value})' % expression_value
-                            field = XmlField(
-                                name=feature['name'],
-                                script=script_text)
+                            script_text = 'composite_string("%s", #{value}, row_data)' % expression_value
                         elif expression_type == 'python':
-                            script_text = 'composite_python(%s, #{value})' % expression_value
-                            field = XmlField(
-                                name=feature['name'],
-                                script=script_text)
+                            script_text = 'composite_python("%s", #{value}, row_data)' % expression_value
                         elif expression_type == 'readability':
-                            script_text = 'composite_readability(%s, #{value})' % expression_value
-                            field = XmlField(
-                                name=feature['name'],
-                                script=script_text)
+                            r_type = feature['expression']['readability_type']
+                            script_text = 'composite_readability("%s", #{value}, "%s", row_data)' % (expression_value, r_type)
+                        if script_text:
+                            field = XmlField(name=feature['name'],
+                                             script=script_text)
+                            db.session.add(field)
+                            entity.fields.append(field)
             handler.update_import_params()
         db.session.commit()
 
