@@ -8,6 +8,12 @@ DATASOURCE_PARAMS_REGEX = re.compile("((\w+)=['\"]+(\w+)['\"]+)", re.VERBOSE)
 
 
 def xml_migrate():
+    XmlField.query.delete()
+    XmlEntity.query.delete()
+    XmlQuery.query.delete()
+    XmlInputParameter.query.delete()
+    XmlScript.query.delete()
+    XmlDataSource.query.delete()
     XmlImportHandler.query.delete()
     logging.info('Start migrations')
     for json_handler in ImportHandler.query.all():
