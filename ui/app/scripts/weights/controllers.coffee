@@ -120,11 +120,11 @@ angular.module('app.weights.controllers', ['app.config', ])
         $scope.err = opts
       )
 
-  $scope.morePositiveWeights  = =>
+  $scope.morePositiveWeights  = ->
     $scope.ppage += 1
     $scope.loadColumns(true, false)
 
-  $scope.moreNegativeWeights  = =>
+  $scope.moreNegativeWeights  = ->
     $scope.npage += 1
     $scope.loadColumns(false, true)
 

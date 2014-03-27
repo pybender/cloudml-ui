@@ -38,7 +38,7 @@ services.factory('auth', ['$http'
           url: url
           transformRequest: angular.identity
           params: {}
-        ).then ((resp) =>
+        ).then ((resp) ->
           resp
         )
 
@@ -53,7 +53,7 @@ services.factory('auth', ['$http'
             oauth_token: oauth_token,
             oauth_verifier: oauth_verifier
           }
-        ).then ((resp) =>
+        ).then ((resp) ->
           token = resp.data.auth_token
           _put_auth_token(token)
 
@@ -80,7 +80,7 @@ services.factory('auth', ['$http'
           url: url
           transformRequest: angular.identity
           params: {}
-        ).then ((resp) =>
+        ).then ((resp) ->
           $rootScope.user = resp.data.user
           resp
         )

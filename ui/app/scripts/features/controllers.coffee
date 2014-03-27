@@ -133,7 +133,7 @@ angular.module('app.features.controllers', ['app.config', ])
   'Scaler'
 
   ($scope, $dialog, Transformer, Scaler) ->
-    $scope.init = (opts={}) =>
+    $scope.init = (opts={}) ->
       if not opts.model
         throw new Error "Please specify feature model"
 

@@ -17,11 +17,11 @@ angular.module('app.dashboard.model', ['app.config'])
       $load: (opts) ->
         @$make_request("#{@BASE_API_URL}/", opts)
 
-      getModelUrl: (id) =>
+      getModelUrl: (id) ->
         model = new Model({'id': id})
         return model.objectUrl()
 
-      getImportHandlerUrl: (id) =>
+      getImportHandlerUrl: (id) ->
         model = new ImportHandler({'id': id})
         return model.objectUrl()
 

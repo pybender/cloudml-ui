@@ -55,7 +55,7 @@ angular.module('app.controllers', ['app.config', ])
   '$scope'
 
   ($scope) ->
-    $scope.save = (fields) =>
+    $scope.save = (fields) ->
       $scope.model.$save(only: fields).then (() ->
         $scope.editMode = false
       ), ((opts) ->
@@ -122,7 +122,7 @@ angular.module('app.controllers', ['app.config', ])
     $scope.objects = []
     $scope.loading = false
 
-    $scope.init = (opts={}) =>
+    $scope.init = (opts={}) ->
       if not _.isFunction(opts.objectLoader)
         throw new Error "Invalid object loader supplied to ObjectListCtrl"
 
@@ -135,7 +135,7 @@ angular.module('app.controllers', ['app.config', ])
         $scope.load()
       , true)
 
-    $scope.load = =>
+    $scope.load = ->
       if $scope.loading
         return false
 

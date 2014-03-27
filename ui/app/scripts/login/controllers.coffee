@@ -14,7 +14,7 @@ angular.module('app.login.controllers', ['app.config', 'app.services'])
     $scope.is_authenticated = auth.is_authenticated()
     $scope.loading_state = false
 
-    $scope.authenticate = () =>
+    $scope.authenticate = ->
       $location.path("/auth/authenticate")
 ])
 
@@ -73,7 +73,7 @@ angular.module('app.login.controllers', ['app.config', 'app.services'])
   'auth'
 
   ($scope, $http, $location, $routeParams, settings, auth) ->
-    $scope.init = () =>
+    $scope.init = ->
       user = auth.get_user()
       if user
         user.then ((resp) ->
@@ -81,7 +81,7 @@ angular.module('app.login.controllers', ['app.config', 'app.services'])
           resp
         )
 
-    $scope.logout = () =>
+    $scope.logout = ->
       auth.logout()
       location.reload()
 ])
