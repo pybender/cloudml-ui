@@ -38,16 +38,18 @@ def xml_migrate():
                 params=get_datasource_params(ds_data))
             db.session.add(ds)
 
+        logging.info('Getting import params')
+        from core.importhandler.importhandler import ExtractionPlan
+        plan = ExtractionPlan(json.dumps(data), is_file=False)
+        for name in plan.input_params:
+            param = XmlInputParameter(
+                import_handler=handler,
+                name=name,
+                type='string')
+            db.session.add(param)
+
         logging.info('Parsing queries')
         for query_data in data['queries']:
-            from core.importhandler.importhandler import ExtractionPlan
-            plan = ExtractionPlan(json.dumps(data), is_file=False)
-            for name in plan.input_params:
-                param = XmlInputParameter(
-                    import_handler=handler,
-                    name=name,
-                    type='string')
-                db.session.add(param)
             print "working with %s" % json_handler.id
             sql = get_query_text(query_data['sql'], plan.input_params)
             query_target = get_query_target(query_data['sql'])
