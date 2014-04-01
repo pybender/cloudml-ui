@@ -52,7 +52,7 @@ def xml_migrate():
         for query_data in data['queries']:
             print "working with %s" % json_handler.id
             sql = get_query_text(query_data['sql'], plan.input_params)
-            query_target = get_query_target(query_data['sql'])
+            #query_target = get_query_target(query_data['sql'])
             query_obj = XmlQuery(text=sql)
             entity = XmlEntity(
                 name=query_data['name'],
@@ -160,7 +160,7 @@ def get_datasource_params(data):
 
 def get_query_text(text, input_params):
     if not isinstance(text, basestring):
-        text = text[0]
+        text = "".join(text)
     for param in input_params:
         text = text.replace("%({0})s".format(param), "#{%s}" % param)
     return text
