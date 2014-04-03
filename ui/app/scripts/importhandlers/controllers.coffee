@@ -336,8 +336,12 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
     })
 
   $scope.uploadHandlerToPredict = (model) ->
-      $scope.openDialog($dialog, model, 'partials/servers/choose.html',
-        'ImportHandlerUploadToServerCtrl', 'modal')
+    $scope.openDialog({
+      $dialog: $dialog
+      model: model
+      template: 'partials/servers/choose.html'
+      ctrlName: 'ImportHandlerUploadToServerCtrl'
+    })
 ])
 
 .controller('ImportHandlerUploadToServerCtrl', [
