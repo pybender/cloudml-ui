@@ -38,19 +38,30 @@ angular.module('app.importhandlers.controllers.datasources', ['app.config', ])
     $scope.LIST_MODEL_NAME = DataSource.LIST_MODEL_NAME
 
     $scope.edit = (ds) ->
-      $scope.openDialog($dialog, ds,
-        'partials/import_handler/datasource/edit.html',
-        'ModelEditDialogCtrl')
+      $scope.openDialog({
+        $dialog: $dialog
+        model: ds
+        template: 'partials/import_handler/datasource/edit.html'
+        ctrlName: 'ModelEditDialogCtrl'
+      })
 
     $scope.add = () ->
       ds = new DataSource()
-      $scope.openDialog($dialog, ds,
-        'partials/import_handler/datasource/add.html',
-        'ModelEditDialogCtrl')
+      $scope.openDialog({
+        $dialog: $dialog
+        model: ds
+        template: 'partials/import_handler/datasource/add.html'
+        ctrlName: 'ModelEditDialogCtrl'
+      })
 
     $scope.delete = (ds)->
-      $scope.openDialog($dialog, ds,
-        'partials/base/delete_dialog.html', 'DialogCtrl')
+      $scope.openDialog({
+        $dialog: $dialog
+        model: ds
+        template: 'partials/base/delete_dialog.html'
+        ctrlName: 'DialogCtrl'
+        action: 'delete data source'
+      })
 ])
 
 .controller('DataSourceEditDialogCtrl', [

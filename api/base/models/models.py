@@ -24,6 +24,14 @@ class BaseMixin(JsonSerializableMixin):
             if self.id is None:
                 self.created_by = user
 
+    def to_dict(self):
+        kwargs = {}
+        for f in self.FIELDS_TO_SERIALIZE:
+            val = getattr(self, f)
+            if val is not None:
+                kwargs[f] = val
+        return kwargs
+
     def save(self, commit=True):
         if has_request_context():
             self._set_user(getattr(request, 'user', None))

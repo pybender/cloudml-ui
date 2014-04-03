@@ -1,0 +1,236 @@
+<h2>
+  XML Import Handler
+  <small title="Title"
+    class="title" ng-bind="model.name || 'untitled handler'"
+    editable="handler" value="handler.name"
+    editable-field="name" editable-input="text"
+    editable-placement="right"></small>
+  <div class="actions" ng-controller="ImportHandlerActionsCtrl">
+    <div ng-init="init({handler: handler})">
+      <button ng-click="importData(handler)" class="btn btn-info">
+        <i title="Load data" class="icon-tasks"></i>
+        Import DataSet
+      </button>
+      <!-- <button class="btn btn-info" ng-click="testHandler(handler)"><i class="icon-play"></i> Test Import Handler</button> -->
+      <!-- <button ng-click="delete(handler)" class="btn btn-danger">
+        <i title="Delete your handler. Be careful - you could not recover it!" class="icon-remove"></i>
+        Delete
+      </button> -->
+    </div>
+  </div>
+</h2>
+
+<div title="quick info" ng-init="obj=handler">
+  <ng-include src="'/partials/parts/created_tags.html'"></ng-include>
+</div>
+<p></p>
+
+<alert-message ng-show="msg" class="alert-info" msg='{{ msg }}' unsafe></alert-message>
+<alert-message ng-show="err" class="alert-error" msg='{{ err }}' unsafe></alert-message>
+<alert-message ng-show="handler.error" class="alert-error" msg="{{ handler.error }}" unsafe></alert-message>
+
+<ul class="nav nav-tabs" ng-show="handler.loaded">
+  <li ng-class="{active: action[0] == 'model'}">
+    <a ng-click="setSection(['model', 'details'])">Details</a> 
+  </li>
+  <li ng-class="{active: action[0] == 'dataset'}"><a ng-click="setSection(['dataset', 'list'])">DataSets</a></li>
+</ul>
+ 
+<div class="tab-content" ng-show="handler.loaded">
+  <div ng-show="action[0] == 'model'">
+    <p class="switcher">
+      <b>Switch View: </b>
+      <a ng-class="{active: action[1] == 'details'}" ng-click="setSection(['model', 'details'])">Standart</a> | 
+      <a ng-class="{active: action[1] == 'xml'}" ng-click="setSection(['model', 'xml']);">XML File</a>
+    </p>
+    <div ng-show="action[1] == 'details'">
+      <div class="accordion">
+
+          <!-- datasources -->
+        <div class="accordion-group" ng-controller="DatasourcesListCtrl" ng-init="init(handler)">
+          <div class="accordion-heading">
+            <a class="accordion-toggle" data-toggle="collapse" href="#datasouces">DataSources</a>
+          </div>
+          <div id="datasouces" class="accordion-body collapse in">
+            <div class="accordion-inner">
+              <div class="actions">
+                <a class="btn btn-info" ng-click="add()">
+                  <i class="status-icon icon-plus"></i> add datasource
+                </a>
+              </div>
+              <div class="clearfix">
+                <table class="table table-hover" ng-controller="BaseListCtrl" ng-init="init(false, 'datasources', false)">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Parameters</th>
+                      <th width="100px">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr ng-repeat="item in objects | orderBy:'name'">
+                      <td>
+                        {{ item.name }}
+                      </td>
+                      <td>
+                        {{ item.type }}
+                      </td>
+                      <td>
+                        {{ item.params }}
+                      </td>
+                      <td>
+                          <button ng-click="edit(item)" class="btn btn-info">
+                            <i title="Edit datasource" class="icon-edit"></i>
+                          </button>
+                          <button ng-click="delete(item)" class="btn btn-danger">
+                            <i title="Delete datasource. Be careful - you could not recover it!" class="icon-remove"></i>
+                          </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                  <tfoot ng-hide="objects">
+                    <tr><td colspan="4">No datasources found</td></tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- inputs -->
+        <div class="accordion-group" ng-controller="InputParametersListCtrl" ng-init="init(handler)">
+          <div class="accordion-heading">
+            <a class="accordion-toggle" data-toggle="collapse" href="#inputs">Input Parameters</a>
+          </div>
+          <div id="inputs" class="accordion-body collapse in">
+            <div class="accordion-inner">
+              <div class="actions">
+                <a class="btn btn-info" ng-click="add(handler)">
+                  <i class="status-icon icon-plus"></i> add parameter
+                </a>
+              </div>
+              <div class="clearfix">
+                <table class="table table-hover" ng-controller="BaseListCtrl" ng-init="init(false, 'input_parameters', false)">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Regex</th>
+                      <th>Format</th>
+                      <th width="100px">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr ng-repeat="item in objects | orderBy:'name'">
+                      <td>
+                        <span title="name" class="name" ng-bind="item.name || 'no name'" editable="item" value="item.name" editable-field="name" editable-input="text" editable-placement="right"></span>
+                      </td>
+                      <td ng-controller="InputParameterTypesLoader">
+                        <span title="Input Format Type" ng-bind="item.type" editable="item" value="item.type" editable-field="type" editable-placement="right" editable-input="select" source="types"></span>
+                      </td>
+                      <td>
+                        <span title="Input Parameter Regex" class="regex" ng-bind="item.regex" editable="item" value="item.regex" editable-field="regex" editable-input="text" editable-placement="right"></span>
+                      </td>
+                      <td>
+                        <span title="format" class="format" ng-bind="item.format || 'no format'" editable="item" value="item.format" editable-field="format" editable-input="text" editable-placement="right"></span>
+                      </td>
+                      <td>
+                        <button ng-click="delete(item)" class="btn btn-danger"><i title="Delete your input parameter. Be careful - you could not recover it!" class="icon-remove"></i></button>
+                      </td>
+                    </tr>
+                  </tbody>
+                  <tfoot ng-hide="objects">
+                    <tr><td colspan="5">No input parameters found</td></tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- scripts -->
+        <div class="accordion-group" ng-controller="ScriptsListCtrl" ng-init="init(handler)">
+          <div class="accordion-heading">
+            <a class="accordion-toggle" data-toggle="collapse" href="#scripts">Scripts</a>
+          </div>
+          <div id="scripts" class="accordion-body collapse in">
+            <div class="accordion-inner" ng-controller="BaseListCtrl" ng-init="init(false, 'xml_scripts', false)">
+              <div class="actions">
+                <a class="btn btn-info" ng-click="add(handler)">
+                  <i class="status-icon icon-plus"></i> add script
+                </a>
+              </div>
+
+              <div class="clearfix">
+                <table class="table table-hover">
+                  <tbody>
+                    <tr ng-repeat="item in objects">
+                      <td style="border-top: none;">
+                        <div class="well">{{ item.data }}</div>
+                      </td>
+                      <td style="border-top: none;">
+                          <button ng-click="edit(item)" class="btn btn-info">
+                            <i title="Edit script" class="icon-edit"></i>
+                          </button>
+                          <button ng-click="delete(item)" class="btn btn-danger">
+                            <i title="Delete script. Be careful - you could not recover it!" class="icon-remove"></i>
+                          </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                  <tfoot ng-hide="objects">
+                    <tr><td colspan="2">No scripts found</td></tr>
+                  </tfoot>
+                </table>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- imports -->
+        <div class="accordion-group" ng-controller="EntitiesTreeCtrl" ng-init="init(handler)">
+          <div class="accordion-heading">
+            <a class="accordion-toggle" data-toggle="collapse" href="#imports">Import</a>
+          </div>
+          <div id="imports" class="accordion-body collapse in">
+            <entities-tree entity="objects"
+                           add-entity="addEntity"
+                           add-field="addField"
+                           delete-entity="delete"
+                           delete-field="delete"
+                           edit-data-source="editDataSource"
+                           save-query-text="saveQueryText"></entities-tree>
+          </div>
+        </div>
+
+        <!-- predict -->
+        <!-- <div class="accordion-group">
+          <div class="accordion-heading">
+            <a class="accordion-toggle" data-toggle="collapse" href="#predict">Predict</a>
+          </div>
+          <div id="predict" class="accordion-body collapse in">
+            <div class="accordion-inner">
+            </div>
+          </div>
+        </div>
+      </div> -->
+    </div>
+  </div>
+
+  <div ng-show="action[1] == 'xml'">
+    <textarea name="data" ui-codemirror="{
+      lineNumbers: true,
+      indentWithTabs: true,
+      mode: 'xml'
+    }" ui-refresh="action" ng-model="handler.xml"></textarea>
+  </div>
+  </div>
+
+  <div ng-show="action[0] == 'dataset'">
+    <div ng-controller="DatasetListCtrl" ng-init="init(handler)">
+      <ng-include src="'/partials/datasets/list.html'"></ng-include>
+    </div>
+  </div>
+</div>

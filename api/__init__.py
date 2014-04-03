@@ -168,7 +168,9 @@ def importer(app_name):
         try:
             __import__(name)
         except ImportError, exc:
-            if str(exc).startswith('No module named'):
+            exc_msg = str(exc)
+            mod = name.split('.')[2]
+            if exc_msg.startswith('No module named') and mod in exc_msg:
                 return False
             raise
         else:

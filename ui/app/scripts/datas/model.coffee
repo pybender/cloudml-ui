@@ -24,7 +24,9 @@ angular.module('app.datas.model', ['app.config'])
 
       constructor: (opts) ->
         super opts
-        @BASE_API_URL = Data.$get_api_url(@model_id, @test_id)
+        @BASE_API_URL = Data.$get_api_url({
+          'model_id': @model_id
+          'test_id': @test_id}, @)
         @BASE_UI_URL = "/models/#{@model_id}/tests/#{@test_id}/examples/"
 
       loadFromJSON: (origData) =>
@@ -51,14 +53,23 @@ angular.module('app.datas.model', ['app.config'])
             return true
         return @test_result.status != 'Storing'
 
-      @$get_api_url: (model_id, test_id) ->
+      @$get_api_url: (opts, model) ->
+        model_id = opts.model_id
+        test_id = opts.test_id
+        if model?
+          model_id = model_id || model.model_id
+          test_id = test_id || model.test_id
+        if not model_id then throw Error 'model_id is required'
+        if not test_id then throw Error 'test_id is required'
         return "#{settings.apiUrl}models/#{model_id}/tests/#{test_id}/examples/"
 
       @$loadAll: (model_id, test_id, opts) ->
         if not model_id or not test_id
           throw new Error "Model and Test ids are required to load examples"
 
-        url = Data.$get_api_url(model_id, test_id)
+        url = Data.$get_api_url({
+          'model_id': model_id
+          'test_id': test_id})
         resolver = (resp, Model) ->
           extra_data = {loaded: true, model_id: model_id, test_id: test_id}
           {
@@ -77,7 +88,9 @@ angular.module('app.datas.model', ['app.config'])
         if not model_id or not test_id
           throw new Error "Model and Test ids are required to load data fields"
 
-        url = Data.$get_api_url(model_id, test_id) + 'action/datafields/'
+        url = Data.$get_api_url({
+          'model_id': model_id
+          'test_id': test_id}) + 'action/datafields/'
         resolver = (resp) -> { fields: resp.data['fields'] }
         @$make_all_request(url, resolver, {})
 
@@ -85,7 +98,9 @@ angular.module('app.datas.model', ['app.config'])
         if not model_id or not test_id
           throw new Error "Model and Test ids are required to load examples"
 
-        url = Data.$get_api_url(model_id, test_id) + 'action/groupped/'
+        url = Data.$get_api_url({
+          'model_id': model_id
+          'test_id': test_id}) + 'action/groupped/'
         resolver = (resp, Model) ->
           {
             field_name: resp.data['field_name']

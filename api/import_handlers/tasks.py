@@ -17,37 +17,50 @@ def import_data(dataset_id, model_id=None, test_id=None):
     """
     Import data from database.
     """
-    from core.importhandler.importhandler import ExtractionPlan, ImportHandler
-    try:
-        dataset = DataSet.query.get(dataset_id)
-        importhandler = dataset.import_handler
-        if dataset is None or importhandler is None:
-            raise ValueError('DataSet or Import Handler not found')
-        obj = None
+    def get_parent_object():
         if not model_id is None:
-            obj = Model.query.get(model_id)
+            return Model.query.get(model_id)
         if not test_id is None:
-            obj = TestResult.query.get(test_id)
+            return TestResult.query.get(test_id)
 
-        if obj:
-            obj.status = obj.STATUS_IMPORTING
-            obj.save()
+    def set_error(err, ds=None, parent=None):
+        if ds is not None:
+            ds.set_error(err)
+        if parent is not None:
+            parent.set_error(err)
+
+    obj = get_parent_object()
+    dataset = DataSet.query.get(dataset_id)
+    if dataset is None:
+        set_error("Dataset with id %s not found" % dataset_id, parent=obj)
+
+    import_handler = dataset.import_handler
+    if import_handler is None:
+        set_error("Import handler for dataset %s not found" %
+                  dataset_id, ds=dataset, parent=obj)
+    if obj:
+        obj.status = obj.STATUS_IMPORTING
+        obj.save()
+
+    try:
         init_logger('importdata_log', obj=dataset.id)
         logging.info('Loading dataset %s' % dataset.id)
 
         import_start_time = datetime.now()
 
         logging.info("Import dataset using import handler '%s' \
-with%s compression", importhandler.name, '' if dataset.compress else 'out')
-        handler = json.dumps(importhandler.data)
-        plan = ExtractionPlan(handler, is_file=False)
-        handler = ImportHandler(plan, dataset.import_params)
+with%s compression", import_handler.name, '' if dataset.compress else 'out')
+
+        handler_iterator = import_handler.get_iterator(dataset.import_params)
+
         logging.info('The dataset will be stored to file %s', dataset.filename)
 
         if dataset.format == dataset.FORMAT_CSV:
-            handler.store_data_csv(dataset.filename, dataset.compress)
+            handler_iterator.store_data_csv(
+                dataset.filename, dataset.compress)
         else:
-            handler.store_data_json(dataset.filename, dataset.compress)
+            handler_iterator.store_data_json(
+                dataset.filename, dataset.compress)
 
         logging.info('Import dataset completed')
 
@@ -70,7 +83,7 @@ with%s compression", importhandler.name, '' if dataset.compress else 'out')
         logging.info('Dataset fields: {0!s}'.format(dataset.data_fields))
 
         dataset.filesize = long(os.path.getsize(dataset.filename))
-        dataset.records_count = handler.count
+        dataset.records_count = handler_iterator.count
         dataset.status = dataset.STATUS_UPLOADING
         dataset.save()
 
@@ -89,12 +102,10 @@ with%s compression", importhandler.name, '' if dataset.compress else 'out')
         logging.info('DataSet was loaded')
     except Exception, exc:
         logging.exception('Got exception when import dataset')
-        dataset.set_error(exc)
-        if obj:
-            obj.set_error(exc)
+        set_error(exc, ds=dataset, parent=obj)
         raise
 
-    logging.info("Dataset using %s imported.", importhandler.name)
+    logging.info("Dataset using %s imported.", import_handler.name)
     return [dataset_id]
 
 

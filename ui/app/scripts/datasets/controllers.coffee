@@ -15,9 +15,9 @@ angular.module('app.datasets.controllers', ['app.config', ])
   '$dialog'
   '$rootScope'
   'DataSet'
-  '$window'
+  '$location'
 
-  ($scope, $dialog, $rootScope, DataSet, $window) ->
+  ($scope, $dialog, $rootScope, DataSet, $location) ->
     $scope.MODEL = DataSet
     $scope.FIELDS = 'name,created_on,status,error,data,import_params,on_s3,
 filesize,records_count,time,created_by,updated_by'
@@ -30,7 +30,9 @@ filesize,records_count,time,created_by,updated_by'
     )
 
     $scope.init = (handler) ->
-      $scope.kwargs = {'handler_id': handler.id}
+      $scope.kwargs = {
+        'import_handler_id': handler.id
+        'import_handler_type': handler.TYPE}
 ])
 
 
@@ -41,7 +43,7 @@ filesize,records_count,time,created_by,updated_by'
   'DataSet'
 
   ($scope, $dialog, $window, DataSet) ->
-    $scope.init = (opts={}) =>
+    $scope.init = (opts={}) ->
       if not opts.dataset
         throw new Error "Please specify dataset"
 
@@ -52,9 +54,13 @@ filesize,records_count,time,created_by,updated_by'
       $scope.handler = opts.handler
 
     $scope.delete = ()->
-      $scope.openDialog($dialog, $scope.ds,
-        'partials/base/delete_dialog.html', 'DialogCtrl',
-        "modal", "delete dataset", $scope.handler.objectUrl())
+      $scope.openDialog({
+        $dialog: $dialog
+        model: $scope.ds
+        template: 'partials/base/delete_dialog.html'
+        ctrlName: 'DialogCtrl'
+        action: 'delete dataset'
+      })
 
     $scope.download = () ->
       if $scope.ds.on_s3
@@ -74,17 +80,34 @@ filesize,records_count,time,created_by,updated_by'
 .controller('DataSetDetailsCtrl', [
   '$scope'
   '$routeParams'
+  '$location'
   'DataSet'
   'ImportHandler'
+  'XmlImportHandler'
 
-  ($scope, $routeParams, DataSet, ImportHandler) ->
+  ($scope, $routeParams, $location, DataSet, ImportHandler, XmlImportHandler) ->
     if not $routeParams.id
-      err = "Can't initialize without id"
+      throw new Error "Can't initialize without id"
 
-    $scope.dataset = new DataSet({id: $routeParams.id,
-    import_handler_id: $routeParams.handler_id})
-    $scope.handler = new ImportHandler(
-          {id: $routeParams.handler_id})
+    if not $routeParams.import_handler_type
+      throw new Error "Can't initialize without import_handler_type"
+
+    if not $routeParams.import_handler_id
+      throw new Error "Can't initialize without import_handler_id"
+
+    if $routeParams.import_handler_type == 'xml'
+      cls = XmlImportHandler
+    else
+      cls = ImportHandler
+
+    $scope.handler = new cls({
+      id: $routeParams.import_handler_id
+    })
+
+    $scope.dataset = new DataSet({
+      id: $routeParams.id
+      import_handler: $scope.handler
+    })
 
     $scope.go = (section) ->
       $scope.dataset.$load(
@@ -104,11 +127,12 @@ filesize,records_count,time,created_by,import_handler_id,format'
 
   ($scope, DataSet) ->
     if $scope.handler?
-      DataSet.$loadAll(
-        handler_id: $scope.handler.id,
+      DataSet.$loadAll({
+        import_handler_id: $scope.handler.id,
+        import_handler_type: $scope.handler.TYPE,
         status: 'Imported',
         show: 'name'
-      ).then ((opts) ->
+      }).then ((opts) ->
         $scope.datasets = opts.objects
         if $scope.data? && $scope.datasets? && $scope.datasets.length == 0
           $scope.data.new_dataset_selected = 1
@@ -146,10 +170,12 @@ filesize,records_count,time,created_by,import_handler_id,format'
     $scope.start = (result) ->
       $scope.dataset = new DataSet({
         'import_handler_id': $scope.handler.id
+        'import_handler_type': $scope.handler.TYPE
       })
       data = {
         import_params: JSON.stringify($scope.parameters),
         format: $scope.format
+        handler_type: $scope.handler.TYPE
       }
       $scope.dataset.$save(data).then (() ->
         $scope.close()

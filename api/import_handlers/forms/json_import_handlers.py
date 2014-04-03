@@ -3,7 +3,7 @@ import json
 from api.base.forms import BaseForm, CharField, JsonField, \
     ChoiceField, ValidationError, BooleanField, IntegerField, \
     DocumentField
-from models import DataSet, ImportHandler, PredefinedDataSource
+from api.import_handlers.models import ImportHandler, PredefinedDataSource, XmlImportHandler
 from core.importhandler.importhandler import ImportHandlerException,\
     ExtractionPlan
 
@@ -135,44 +135,3 @@ class QueryTestForm(BaseForm):
     params = JsonField()
     limit = IntegerField()
     datasource = CharField()
-
-
-# DataSet forms
-
-class DataSetAddForm(BaseForm):
-    required_fields = ('format', )
-    format = ChoiceField(choices=DataSet.FORMATS)
-    import_params = JsonField()
-
-    def before_clean(self):
-        self.importhandler = ImportHandler.query.get(self.import_handler_id)
-
-    def clean_import_params(self, value, field):
-        if not isinstance(value, dict):
-            raise ValidationError('Should be a dict')
-
-        for param in self.importhandler.import_params:
-            if param not in value:
-                raise ValidationError(
-                    '{0!s} not found in import_params'.format(param))
-
-        return value
-
-    def save(self, commit=True):
-        from tasks import import_data
-
-        dataset = super(DataSetAddForm, self).save(commit=False)
-
-        str_params = "-".join(["%s=%s" % item
-                              for item in dataset.import_params.iteritems()])
-        dataset.name = "%s: %s" % (self.importhandler.name, str_params)
-        dataset.import_handler_id = self.importhandler.id
-        dataset.compress = True
-        dataset.save()
-        dataset.set_file_path()
-        import_data.delay(str(dataset.id))
-        return dataset
-
-
-class DataSetEditForm(BaseForm):
-    name = CharField()

@@ -12,8 +12,8 @@ from api import api
 from api.base.models import assertion_msg
 from api.base.resources import BaseResourceSQL, NotFound, public_actions, \
     ValidationError, odesk_error_response, ERR_INVALID_DATA
-from models import ImportHandler, DataSet, PredefinedDataSource
-from forms import ImportHandlerAddForm, DataSetAddForm, \
+from api.import_handlers.models import ImportHandler, DataSet, PredefinedDataSource
+from api.import_handlers.forms import ImportHandlerAddForm, DataSetAddForm, \
     DataSetEditForm, PredefinedDataSourceForm
 from api.servers.forms import ChooseServerForm
 
@@ -116,7 +116,7 @@ filename=importhandler-%s.json' % model.name
         """
         from copy import copy
         from datetime import datetime
-        from forms import QueryForm, QueryItemForm, TargetFeatureForm, \
+        from ..forms import QueryForm, QueryItemForm, TargetFeatureForm, \
             HandlerDataSourceForm
         self.updated = False
         handler_doc = copy(handler.data)
@@ -230,7 +230,7 @@ filename=importhandler-%s.json' % model.name
         data
           PUT data
         """
-        from forms import HandlerForm
+        from api.import_handlers.forms import HandlerForm
         form = None
         for key, val in data.iteritems():
             match = self.HANDLER_REGEXP.search(key)
@@ -251,7 +251,7 @@ filename=importhandler-%s.json' % model.name
         """
         Run sql query for testing
         """
-        from forms import QueryTestForm
+        from api.import_handlers.forms import QueryTestForm
         model = self._get_details_query({}, **kwargs)
         if model is None:
             raise NotFound(self.MESSAGE404 % kwargs)
@@ -293,7 +293,7 @@ filename=importhandler-%s.json' % model.name
         """
         Run importing data for testing
         """
-        from forms import ImportHandlerTestForm
+        from api.import_handlers.forms import ImportHandlerTestForm
         from core.importhandler.importhandler import ExtractionPlan,\
             ImportHandler
 
@@ -346,47 +346,3 @@ filename=importhandler-%s.json' % model.name
             })
 
 api.add_resource(ImportHandlerResource, '/cloudml/importhandlers/')
-
-
-class DataSetResource(BaseResourceSQL):
-    """
-    DataSet API methods
-    """
-    Model = DataSet
-
-    FILTER_PARAMS = (('status', str), )
-    GET_ACTIONS = ('generate_url', )
-    PUT_ACTIONS = ('reupload', 'reimport')
-    post_form = DataSetAddForm
-    put_form = DataSetEditForm
-
-    def _get_generate_url_action(self, **kwargs):
-        ds = self._get_details_query({}, **kwargs)
-        if ds is None:
-            raise NotFound('DataSet not found')
-        url = ds.get_s3_download_url()
-        return self._render({self.OBJECT_NAME: ds.id,
-                             'url': url})
-
-    def _put_reupload_action(self, **kwargs):
-        from api.import_handlers.tasks import upload_dataset
-        dataset = self._get_details_query({}, **kwargs)
-        if dataset.status == DataSet.STATUS_ERROR:
-            dataset.status = DataSet.STATUS_IMPORTING
-            dataset.save()
-            upload_dataset.delay(dataset.id)
-        return self._render({self.OBJECT_NAME: dataset})
-
-    def _put_reimport_action(self, **kwargs):
-        from tasks import import_data
-        dataset = self._get_details_query({}, **kwargs)
-        if dataset.status not in (DataSet.STATUS_IMPORTING,
-                                  DataSet.STATUS_UPLOADING):
-            dataset.status = DataSet.STATUS_IMPORTING
-            dataset.save()
-            import_data.delay(dataset_id=dataset.id)
-
-        return self._render({self.OBJECT_NAME: dataset})
-
-api.add_resource(DataSetResource, '/cloudml/importhandlers/\
-<regex("[\w\.]*"):import_handler_id>/datasets/')

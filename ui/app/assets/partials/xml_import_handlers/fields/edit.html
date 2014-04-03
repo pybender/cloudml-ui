@@ -1,0 +1,127 @@
+<div ng-controller="SaveObjectCtl">
+  <div class="modal-header">
+    <button ng-click="dialog.close()" class="close" data-dismiss="modal">×</button>
+    <h3>Add Field</h3>
+  </div>
+
+  <div class="modal-body">
+    <ng-include src="'/partials/parts/save_form_messages.html'"></ng-include>
+    <div class="control-group">
+      <form name="Form" class="form-horizontal">
+        <div class="control-group" ng-class="{error: Form.name.$invalid || errorList.name}">
+          <label class="control-label">Name</label>
+          <div class="controls">
+            <input type="text" name="name" ng-model="model.name" ng-change="setFieldError('name')" required />
+            <span ng-show="Form.name.$error.required" class="help-inline">*</span>
+            <span ng-show="errorList.name" class="help-block" ng-bind="errorList.name" />
+          </div>
+        </div>
+        <div class="control-group" ng-class="{error: Form.type.$invalid || errorList.type}">
+          <label class="control-label">Type</label>
+          <div class="controls">
+            <select name="type" ng-model="model.type" required>
+              <option ng-selected="model.type == typeName" ng-repeat="typeName in configuration.types" value="{{ typeName }}">{{ typeName }}</option>
+            </select>
+            <span ng-show="Form.type.$error.required" class="help-inline">*</span>
+            <span ng-show="errorList.type" class="help-block" ng-bind="errorList.type" />
+          </div>
+        </div>
+        <div class="control-group" ng-class="{error: Form.column.$invalid || errorList.column}">
+          <label class="control-label">Column</label>
+          <div class="controls">
+            <input type="text" name="column" ng-model="model.column" ng-change="setFieldError('column')" />
+            <span ng-show="Form.column.$error.required" class="help-inline">*</span>
+            <span ng-show="errorList.column" class="help-block" ng-bind="errorList.column" />
+          </div>
+        </div>
+        <div class="control-group" ng-class="{error: Form.jsonpath.$invalid || errorList.jsonpath}">
+          <label class="control-label">Jsonpath</label>
+          <div class="controls">
+            <input type="text" name="jsonpath" ng-model="model.jsonpath" ng-change="setFieldError('jsonpath')" />
+            <span ng-show="Form.jsonpath.$error.required" class="help-inline">*</span>
+            <span ng-show="errorList.jsonpath" class="help-block" ng-bind="errorList.jsonpath" />
+          </div>
+        </div>
+        <div class="control-group" ng-class="{error: Form.join.$invalid || errorList.join}">
+          <label class="control-label">Join</label>
+          <div class="controls">
+            <input type="text" name="join" ng-model="model.join" ng-change="setFieldError('join')" />
+            <span ng-show="Form.join.$error.required" class="help-inline">*</span>
+            <span ng-show="errorList.join" class="help-block" ng-bind="errorList.join" />
+          </div>
+        </div>
+        <div class="control-group" ng-class="{error: Form.regex.$invalid || errorList.regex}">
+          <label class="control-label">Regex</label>
+          <div class="controls">
+            <input type="text" name="regex" ng-model="model.regex" ng-change="setFieldError('regex')" />
+            <span ng-show="Form.regex.$error.required" class="help-inline">*</span>
+            <span ng-show="errorList.regex" class="help-block" ng-bind="errorList.regex" />
+          </div>
+        </div>
+        <div class="control-group" ng-class="{error: Form.split.$invalid || errorList.split}">
+          <label class="control-label">Split</label>
+          <div class="controls">
+            <input type="text" name="split" ng-model="model.split" ng-change="setFieldError('split')" />
+            <span ng-show="Form.split.$error.required" class="help-inline">*</span>
+            <span ng-show="errorList.split" class="help-block" ng-bind="errorList.split" />
+          </div>
+        </div>
+        <div class="control-group" ng-class="{error: Form.dateFormat.$invalid || errorList.dateFormat}">
+          <label class="control-label">Date Format</label>
+          <div class="controls">
+            <input type="text" name="dateFormat" ng-model="model.dateFormat" ng-change="setFieldError('dateFormat')" />
+            <span ng-show="Form.dateFormat.$error.required" class="help-inline">*</span>
+            <span ng-show="errorList.dateFormat" class="help-block" ng-bind="errorList.dateFormat" />
+          </div>
+        </div>
+        <div class="control-group" ng-class="{error: Form.template.$invalid || errorList.template}">
+          <label class="control-label">Template</label>
+          <div class="controls">
+            <textarea name="template" ng-model="model.template">
+            </textarea>
+            <span ng-show="Form.template.$error.required" class="help-inline">*</span>
+            <span ng-show="errorList.template" class="help-block" ng-bind="errorList.template" />
+          </div>
+        </div>
+        <div class="control-group" ng-class="{error: Form.transform.$invalid || errorList.transform}">
+          <label class="control-label">Transform</label>
+          <div class="controls">
+            <select name="transform" ng-model="model.transform">
+              <option ng-selected="model.transform == tr" ng-repeat="tr in configuration.transform" value="{{ tr }}">{{ tr }}</option>
+            </select>
+            <span ng-show="Form.transform.$error.required" class="help-inline">*</span>
+            <span ng-show="errorList.transform" class="help-block" ng-bind="errorList.transform" />
+          </div>
+        </div>
+        <div class="control-group" ng-class="{error: Form.headers.$invalid || errorList.headers}">
+          <label class="control-label">Headers</label>
+          <div class="controls">
+            <input type="text" name="headers" ng-model="model.headers" ng-change="setFieldError('headers')" />
+            <span ng-show="Form.headers.$error.required" class="help-inline">*</span>
+            <span ng-show="errorList.headers" class="help-block" ng-bind="errorList.headers" />
+          </div>
+        </div>
+        <div class="control-group" ng-class="{error: Form.script.$invalid || errorList.script}">
+          <label class="control-label">Script</label>
+          <div class="controls">
+            <textarea name="script" ng-model="model.script">
+            </textarea>
+            <span ng-show="Form.script.$error.required" class="help-inline">*</span>
+            <span ng-show="errorList.script" class="help-block" ng-bind="errorList.script" />
+          </div>
+        </div>
+        <div class="control-group" ng-class="{error: Form.required.$invalid || errorList.required}">
+          <label class="control-label">Required</label>
+          <div class="controls">
+            <input type="checkbox" name="required" ng-model="model.required" />
+          </div>
+        </div>
+      </form>
+    </div>
+
+  </div>
+
+  <div class="modal-footer">
+    <button ng-click="save(['name', 'type','column', 'jsonpath', 'join', 'regex', 'split', 'template', 'dateFormat', 'template', 'transform', 'headers', 'script', 'required', 'entity_id', 'import_handler_id'])" ng-disabled="Form.$invalid" class="btn btn-primary">Save</button>
+  </div>
+</div>

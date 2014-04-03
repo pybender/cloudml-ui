@@ -246,6 +246,43 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
   }
 ])
 
+.directive("entitiesTree", [ ->
+  return {
+    scope: {
+      entity: '=',
+      addEntity: '&addEntity',
+      addField: '&addField',
+      deleteEntity: '&deleteEntity',
+      deleteField: '&deleteField',
+      editDataSource: '&editDataSource',
+      saveQueryText: '&saveQueryText',
+    }
+    # replace: true
+    restrict: 'E'
+    transclude : true
+    templateUrl:'partials/directives/import_tree.html'
+  }
+])
+
+.directive("entitiesRecursive", [
+  '$compile'
+
+($compile) ->
+  return {
+    restrict: "EACM"
+    priority: 100000
+    compile: (tElement, tAttr) ->
+      contents = tElement.contents().remove()
+      compiledContents = undefined
+      return (scope, iElement, iAttr) ->
+        if not compiledContents
+          compiledContents = $compile(contents)
+        iElement.append(
+          compiledContents(scope, (clone) -> return clone))
+  }
+])
+
+
 .directive("paramsEditor", [ ->
   return {
     scope: {params: '='}
@@ -417,6 +454,24 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
           reader.onload = (e) ->
             control.$setViewValue(e.target.result)
             control.$render()
+
+          reader.readAsText(element[0].files[0])
+        )
+      )
+  }
+)
+
+.directive('notRequiredFile', () ->
+  return {
+    require: 'ngModel',
+    restrict: 'A',
+    link: (scope, element, attrs, control) ->
+      element.change((e) ->
+        scope.$apply( () ->
+          reader = new FileReader()
+
+          reader.onload = (e) ->
+            control.$setViewValue(e.target.result)
 
           reader.readAsText(element[0].files[0])
         )

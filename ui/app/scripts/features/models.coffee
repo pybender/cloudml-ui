@@ -191,9 +191,15 @@ scaler,default,is_target_variable,created_on,created_by,required'
 
       constructor: (opts) ->
         super opts
-        @BASE_API_URL = Feature.$get_api_url(@feature_set_id)
+        @BASE_API_URL = Feature.$get_api_url({
+          'feature_set_id': @feature_set_id})
 
-      @$get_api_url: (feature_set_id) ->
+      @$get_api_url: (opts, model) ->
+        feature_set_id = opts.feature_set_id
+        if model?
+          feature_set_id = feature_set_id || model.feature_set_id
+        if not feature_set_id
+          throw new Error 'feature_set_id is required'
         return "#{settings.apiUrl}features/#{feature_set_id}/items/"
 
       @$loadAll: (opts) ->
@@ -209,7 +215,8 @@ scaler,default,is_target_variable,created_on,created_by,required'
               for obj in eval("resp.data.#{Model.prototype.API_FIELDNAME}s"))
             _resp: resp
           }
-        @$make_all_request(Feature.$get_api_url(feature_set_id),
+        @$make_all_request(Feature.$get_api_url({
+          'feature_set_id': feature_set_id}),
                            resolver, opts)
 
       $save: (opts={}) =>

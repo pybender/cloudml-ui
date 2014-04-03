@@ -262,8 +262,8 @@ updated_on,updated_by,comparable,test_handler_fields'
   '$rootScope'
 
   ($scope, $dialog, $rootScope) ->
-    $scope.init = (opts={}) =>
-      if not opts.model
+    $scope.init = (opts) ->
+      if !opts || !opts.model
         throw new Error "Please specify model"
 
       $scope.model = opts.model
@@ -271,9 +271,13 @@ updated_on,updated_by,comparable,test_handler_fields'
     $scope.test_model = (model)->
       $scope._showModelActionDialog(model, 'test', (model) ->
         model.$load(show: 'test_handler_fields').then (->
-          $scope.openDialog($dialog, model,
-            'partials/testresults/run_test.html',
-            'TestDialogController', 'modal large'))
+          $scope.openDialog({
+            $dialog: $dialog
+            model: model
+            template: 'partials/testresults/run_test.html'
+            ctrlName: 'TestDialogController'
+            cssClass: 'modal large'
+          }))
         )
 
     $scope.cancel_request_spot_instance = (model)->
@@ -281,22 +285,31 @@ updated_on,updated_by,comparable,test_handler_fields'
 
     $scope.train_model = (model)->
       $scope._showModelActionDialog(model, 'train', (model) ->
-        $scope.openDialog($dialog, model,
-            'partials/models/model_train_popup.html',
-            'TrainModelCtrl', 'modal'))
+        $scope.openDialog({
+          $dialog: $dialog
+          model: model
+          template: 'partials/models/model_train_popup.html'
+          ctrlName: 'TrainModelCtrl'
+        }))
 
     $scope.delete_model = (model) ->
-      $scope.openDialog($dialog, model,
-        'partials/base/delete_dialog.html', 'DialogCtrl',
-        'modal', 'delete model', 'models')
+      $scope.openDialog({
+        $dialog: $dialog
+        model: model
+        template: 'partials/base/delete_dialog.html'
+        ctrlName: 'DialogCtrl'
+        action: 'delete model'
+      })
 
     $scope.editClassifier = (model) ->
-      $scope.openDialog($dialog, null,
-        'partials/features/classifiers/edit.html',
-          'ModelWithParamsEditDialogCtrl',
-        'modal', 'edit classifier', 'classifiers',
-        {model: model, fieldname: 'classifier'}
-      )
+      $scope.openDialog({
+        $dialog: $dialog
+        model: null
+        template: 'partials/features/classifiers/edit.html'
+        ctrlName: 'ModelWithParamsEditDialogCtrl'
+        action: 'edit classifier'
+        extra: {model: model, fieldname: 'classifier'}
+      })
 
     $scope.uploadModelToPredict = (model) ->
       $scope.openDialog($dialog, model, 'partials/servers/choose.html',

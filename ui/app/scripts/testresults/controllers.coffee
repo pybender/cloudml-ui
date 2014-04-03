@@ -136,7 +136,7 @@ examples_count,dataset,memory_usage,created_by,examples_placement,
 examples_fields,examples_size'
         when 'metrics'
           extra_fields = 'accuracy,metrics'
-          cb = () =>
+          cb = () ->
             $scope.rocCurve = {'ROC curve': $scope.test.metrics.roc_curve}
             pr = $scope.test.metrics.precision_recall_curve
             $scope.prCurve = {'Precision-Recall curve': [pr[1], pr[0]]}
@@ -154,9 +154,12 @@ confusion_matrix_calculations,model'
         $scope.LOADED_SECTIONS.push 'main'
 
   $scope.downloadCsvResults = () ->
-    $scope.openDialog($dialog, $scope.test,
-        'partials/datasets/csv_list_popup.html',
-        'CsvDownloadCtrl', 'modal')
+    $scope.openDialog({
+        $dialog: $dialog
+        model: $scope.test
+        template: 'partials/datasets/csv_list_popup.html'
+        ctrlName: 'CsvDownloadCtrl'
+    })
 
   $scope.initSections($scope.goSection, 'metrics:accuracy')
 ])
@@ -166,7 +169,7 @@ confusion_matrix_calculations,model'
   '$dialog'
 
   ($scope, $dialog) ->
-    $scope.init = (opts) =>
+    $scope.init = (opts) ->
       test = opts.test
       model = opts.model
       if not test || not model
@@ -175,7 +178,7 @@ confusion_matrix_calculations,model'
       opts.test.model = model
       $scope.test = test
 
-    $scope.delete_test = (model)->
+    $scope.delete_test = (model) ->
       d = $dialog.dialog(
         modalFade: false
       )
@@ -190,7 +193,7 @@ confusion_matrix_calculations,model'
   ($scope) ->
     $scope.exports = []
 
-    $scope.init = (test) =>
+    $scope.init = (test) ->
       $scope.test = test
       $scope.reload()
 
@@ -219,7 +222,7 @@ confusion_matrix_calculations,model'
     $scope.open_calc_id = null
     $scope.confusion_matrix_weights = {w0: 1, w1: 1, error: undefined}
 
-    $scope.init = (test) =>
+    $scope.init = (test) ->
       $scope.test = test
 
     $scope.recalculate = (weight0, weight1) ->
@@ -230,7 +233,7 @@ confusion_matrix_calculations,model'
           100)
       )
 
-    $scope.showResult = (id) =>
+    $scope.showResult = (id) ->
       if $scope.open_calc_id == id
         $scope.open_calc_id = null
       else

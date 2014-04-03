@@ -16,7 +16,7 @@ angular.module('app.datasets.model', ['app.config'])
       STATUS_IMPORTING = 'Importing'
       STATUS_UPLOADING = 'Uploading'
 
-      @MAIN_FIELDS: 'name,status'
+      @MAIN_FIELDS: 'name,status,import_handler_type,import_handler_id'
 
       id: null
       name: null
@@ -30,60 +30,69 @@ angular.module('app.datasets.model', ['app.config'])
       import_handler_id: null
       on_s3: false
       format: 'json'
+      import_handler_type: 'JSON'
 
       loadFromJSON: (origData) =>
         super origData
 
         if origData?
+          if origData.import_handler?
+            @import_handler_id = origData.import_handler.id
+            @import_handler_type = origData.import_handler.TYPE
           if origData.on_s3?
             if typeof(origData.on_s3) != "boolean"
               @on_s3 = origData.on_s3 == 'True'
 
       constructor: (opts) ->
         super
-        @BASE_API_URL = DataSet.$get_api_url(@import_handler_id)
-        @BASE_UI_URL = "/importhandlers/#{@import_handler_id}/datasets/"
+        #@BASE_API_URL = DataSet.$get_api_url({}, @)
+        @BASE_UI_URL = "/handlers/
+#{@import_handler_type.toLowerCase()}/#{@import_handler_id}/datasets/"
 
-      @$get_api_url: (handler_id) ->
-        return "#{settings.apiUrl}importhandlers/#{handler_id}/datasets/"
+      @$get_api_url: (opts, model) ->
+        handler_id = opts.import_handler_id
+        handler_type = opts.import_handler_type
+        if model?
+          handler_id = handler_id || model.import_handler_id
+          handler_type = handler_type || model.import_handler_type
+
+        if not (handler_id && handler_type)
+          throw new Error('import handler details are required')
+
+        return "#{settings.apiUrl}importhandlers/#{handler_type.toLowerCase()}\
+/#{handler_id}/datasets/"
+
+      @$beforeLoadAll: (opts) ->
+        return {
+          'import_handler_id': opts.import_handler_id
+          'import_handler_type': opts.import_handler_type
+        }
 
       $generateS3Url: () =>
-        @$make_request("#{@BASE_API_URL}#{@id}/action/generate_url/",
+        base_url = @constructor.$get_api_url({}, @)
+        @$make_request("#{base_url}#{@id}/action/generate_url/",
                        {}, 'GET', {})
 
-      $save: (data) =>
-        if data.only
-          super data
+      $save: (opts) =>
+        if opts.only
+          super opts
         else
-          @$make_request(@BASE_API_URL, {}, 'POST', data)
-
-      @$loadAll: (opts) ->
-        handler_id = opts.handler_id
-        if not handler_id?
-          throw new Error "Import Handler is required to load datasets"
-        delete opts['handler_id']
-
-        resolver = (resp, Model) ->
-          extra = {loaded: true, import_handler_id: handler_id}
-          {
-            objects: (
-              new DataSet(_.extend(obj, extra)) \
-              for obj in eval("resp.data.#{DataSet.prototype.API_FIELDNAME}s"))
-            _resp: resp
-          }
-        @$make_all_request(DataSet.$get_api_url(handler_id), resolver, opts)
+          base_url = @constructor.$get_api_url(opts, @)
+          @$make_request(base_url, {}, 'POST', opts)
 
       $reupload: =>
-        url = "#{@BASE_API_URL}#{@id}/action/reupload/"
+        base_url = @constructor.$get_api_url({}, @)
+        url = "#{base_url}#{@id}/action/reupload/"
         @$make_request(url, {}, "PUT", {}).then(
           (resp) =>
             @status = resp.data.dataset.status)
 
       $reimport: =>
+        base_url = @constructor.$get_api_url({}, @)
         if @status in [@STATUS_IMPORTING, @STATUS_UPLOADING]
           throw new Error "Can't re-import a dataset that is importing now"
 
-        url = "#{@BASE_API_URL}#{@id}/action/reimport/"
+        url = "#{base_url}#{@id}/action/reimport/"
         @$make_request(url, {}, "PUT", {}).then(
           (resp) =>
             @status = resp.data.dataset.status)
