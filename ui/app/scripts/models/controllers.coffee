@@ -312,8 +312,12 @@ updated_on,updated_by,comparable,test_handler_fields'
       })
 
     $scope.uploadModelToPredict = (model) ->
-      $scope.openDialog($dialog, model, 'partials/servers/choose.html',
-        'ModelUploadToServerCtrl', 'modal')
+      $scope.openDialog({
+        $dialog: $dialog
+        model: model
+        template: 'partials/servers/choose.html'
+        ctrlName: 'ModelUploadToServerCtrl'
+      })
 
     $scope._showModelActionDialog = (model, action, fn)->
       if eval('model.' + action + '_import_handler_obj')?
