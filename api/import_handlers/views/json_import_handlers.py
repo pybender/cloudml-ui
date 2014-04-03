@@ -335,7 +335,9 @@ filename=importhandler-%s.json' % model.name
         form = ChooseServerForm(obj=handler)
         if form.is_valid():
             server = form.cleaned_data['server']
-            upload_import_handler_to_server.delay(server.id, handler.id,
+            upload_import_handler_to_server.delay(server.id,
+                                                  ImportHandler.TYPE,
+                                                  handler.id,
                                                   request.user.id)
 
             return self._render({

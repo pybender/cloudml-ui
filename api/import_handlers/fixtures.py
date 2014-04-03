@@ -173,9 +173,25 @@ class DataSetData(DataSet):
 
 
 class PredefinedDataSourceData(DataSet):
-  class datasource_01:
-    name = "DataSource #1"
-    type = "sql"
-    db = {'conn': 'conn str', 'vendor':'postgres'}
-    created_on = "2013-04-19 14:37:23.145000"
-    updated_on = "2013-04-19 14:37:23.145000"
+    class datasource_01:
+        name = "DataSource #1"
+        type = "sql"
+        db = {'conn': 'conn str', 'vendor':'postgres'}
+        created_on = "2013-04-19 14:37:23.145000"
+        updated_on = "2013-04-19 14:37:23.145000"
+
+
+class XmlImportHandlerData(DataSet):
+    class xml_import_handler_01:
+        name = "Xml Handler 1"
+        created_on = "2013-04-19 14:37:23.145000"
+        updated_on = "2013-04-19 14:37:23.145000"
+        import_params = ['start', 'end', 'category']
+
+
+class XmlEntityData(DataSet):
+    class xml_entity_01:
+        name = "something"
+        import_handler = XmlImportHandlerData.xml_import_handler_01
+        created_on = "2013-04-19 14:37:23.145000"
+        updated_on = "2013-04-19 14:37:23.145000"

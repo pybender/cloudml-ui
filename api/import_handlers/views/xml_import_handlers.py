@@ -1,3 +1,6 @@
+from flask import request
+from sqlalchemy.orm.exc import NoResultFound
+
 from api.base.resources import BaseResourceSQL
 from api import api
 from api.import_handlers.models import XmlImportHandler, XmlInputParameter, \
@@ -5,6 +8,7 @@ from api.import_handlers.models import XmlImportHandler, XmlInputParameter, \
 from api.import_handlers.forms import XmlImportHandlerAddForm, \
     XmlInputParameterForm, XmlEntityForm, XmlFieldForm, XmlDataSourceForm, \
     XmlQueryForm, XmlScriptForm, XmlImportHandlerEditForm
+from api.servers.forms import ChooseServerForm
 
 
 class XmlImportHandlerResource(BaseResourceSQL):
@@ -13,6 +17,8 @@ class XmlImportHandlerResource(BaseResourceSQL):
     """
     post_form = XmlImportHandlerAddForm
     put_form = XmlImportHandlerEditForm
+
+    PUT_ACTIONS = ('upload_to_server', )
 
     @property
     def Model(self):
@@ -30,6 +36,26 @@ class XmlImportHandlerResource(BaseResourceSQL):
             res['entity'] = get_entity_tree(model)
 
         return res
+
+    def _put_upload_to_server_action(self, **kwargs):
+        from api.servers.tasks import upload_import_handler_to_server
+
+        handler = self._get_details_query(None, **kwargs)
+
+        form = ChooseServerForm(obj=handler)
+        if form.is_valid():
+            server = form.cleaned_data['server']
+            upload_import_handler_to_server.delay(server.id,
+                                                  XmlImportHandler.TYPE,
+                                                  handler.id,
+                                                  request.user.id)
+
+            return self._render({
+                self.OBJECT_NAME: handler,
+                'status': 'Import Handler "{0}" will be uploaded to server'.format(
+                    handler.name
+                )
+            })
 
 api.add_resource(
     XmlImportHandlerResource, '/cloudml/xml_import_handlers/')
@@ -76,7 +102,7 @@ class XmlFieldResource(BaseResourceSQL):
         try:
             handler_id = kwargs.pop('import_handler_id')
             return self._build_details_query(params, **kwargs)
-        except orm_exc.NoResultFound:
+        except NoResultFound:
             return None
 
     def _set_list_query_opts(self, cursor, params):
@@ -125,7 +151,7 @@ class XmlQueryResource(BaseResourceSQL):
             handler_id = kwargs.pop('import_handler_id')
             entity_id = kwargs.pop('entity_id')
             return self._build_details_query(params, **kwargs)
-        except orm_exc.NoResultFound:
+        except NoResultFound:
             return None
 
 api.add_resource(

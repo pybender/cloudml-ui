@@ -3,7 +3,7 @@ import json
 from datetime import datetime
 
 from api import celery, app
-from api.import_handlers.models import ImportHandler
+from api.import_handlers.models import ImportHandler, XmlImportHandler
 from api.logs.logger import init_logger
 from api.accounts.models import User
 from api.ml_models.models import Model
@@ -47,7 +47,8 @@ def upload_model_to_server(server_id, model_id, user_id):
 
 
 @celery.task
-def upload_import_handler_to_server(server_id, handler_id, user_id):
+def upload_import_handler_to_server(server_id, handler_type, handler_id,
+                                    user_id):
     """
     Upload importhandler to S3 for cloudml-predict.
     """
@@ -56,14 +57,19 @@ def upload_import_handler_to_server(server_id, handler_id, user_id):
 
     server = Server.query.get(server_id)
     user = User.query.get(user_id)
-    handler = ImportHandler.query.get(handler_id)
+
+    _model = (XmlImportHandler if handler_type == XmlImportHandler.TYPE
+              else ImportHandler)
+
+    handler = _model.query.get(handler_id)
 
     # TODO: Shall we use another account?
     s3 = AmazonS3Helper(bucket_name=app.config['CLOUDML_PREDICT_BUCKET_NAME'])
-    path = '{0}/{1}/{2}.json'.format(
+    path = '{0}/{1}/{2}.{3}'.format(
         server.folder.strip('/'),
         FOLDER_IMPORT_HANDLERS,
-        str(handler.name)
+        str(handler.name),
+        'xml' if handler_type == XmlImportHandler.TYPE else 'json'
     )
     meta = {
         'handler_id': handler.id,
@@ -73,7 +79,11 @@ def upload_import_handler_to_server(server_id, handler_id, user_id):
         'uploaded_on': str(datetime.now())
     }
 
-    handler_data = json.dumps(handler.data)
+    if handler_type == XmlImportHandler.TYPE:
+        handler_data = handler.get_plan_config()
+    else:
+        handler_data = json.dumps(handler.data)
+
     s3.save_key_string(path, handler_data, meta)
     s3.close()
 

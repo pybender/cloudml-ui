@@ -5,8 +5,10 @@ from api.base.test_utils import BaseDbTestCase
 from .fixtures import ServerData
 from .models import Server
 from .tasks import upload_import_handler_to_server, upload_model_to_server
-from api.import_handlers.fixtures import ImportHandlerData
-from api.import_handlers.models import ImportHandler
+from api.import_handlers.fixtures import ImportHandlerData,\
+    XmlImportHandlerData, XmlEntityData
+from api.import_handlers.models import ImportHandler, XmlImportHandler,\
+    XmlEntity
 from api.ml_models.fixtures import ModelData
 from api.ml_models.models import Model
 from api.accounts.models import User
@@ -14,7 +16,8 @@ from api.accounts.models import User
 
 class ServersTasksTests(BaseDbTestCase):
     """ Tests of the celery tasks. """
-    datasets = [ModelData, ImportHandlerData, ServerData]
+    datasets = [ModelData, ImportHandlerData, XmlImportHandlerData,
+                XmlEntityData, ServerData]
 
     @mock_s3
     @patch('api.amazon_utils.AmazonS3Helper.save_key_string')
@@ -45,7 +48,8 @@ class ServersTasksTests(BaseDbTestCase):
             name=ImportHandlerData.import_handler_01.name).one()
         user = User.query.first()
 
-        upload_import_handler_to_server(server.id, handler.id, user.id)
+        upload_import_handler_to_server(server.id, ImportHandler.TYPE,
+                                        handler.id, user.id)
 
         mock_save_key_string.assert_called_once_with(
             'odesk-match-cloudml/analytics/importhandlers/Handler 1.json',
@@ -54,6 +58,29 @@ class ServersTasksTests(BaseDbTestCase):
                 'handler_id': handler.id,
                 'user_id': user.id,
                 'handler_name': 'Handler 1',
+                'user_name': 'User-1',
+                'uploaded_on': ANY,
+            }
+        )
+
+    @mock_s3
+    @patch('api.amazon_utils.AmazonS3Helper.save_key_string')
+    def test_upload_xml_import_handler(self, mock_save_key_string):
+        server = Server.query.filter_by(name=ServerData.server_01.name).one()
+        handler = XmlImportHandler.query.filter_by(
+            name=XmlImportHandlerData.xml_import_handler_01.name).one()
+        user = User.query.first()
+
+        upload_import_handler_to_server(server.id, XmlImportHandler.TYPE,
+                                        handler.id, user.id)
+
+        mock_save_key_string.assert_called_once_with(
+            'odesk-match-cloudml/analytics/importhandlers/Xml Handler 1.xml',
+            ANY,
+            {
+                'handler_id': handler.id,
+                'user_id': user.id,
+                'handler_name': 'Xml Handler 1',
                 'user_name': 'User-1',
                 'uploaded_on': ANY,
             }

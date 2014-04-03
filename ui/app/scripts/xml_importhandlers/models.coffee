@@ -66,7 +66,10 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
               @xml_input_parameters.push new InputParameter(
                 _.extend paramData, defaults)
 
-          
+      $uploadPredict: (server) =>
+        url = "#{@BASE_API_URL}#{@id}/action/upload_to_server/"
+        @$make_request(url, {}, "PUT", {'server': server})
+
     return XmlImportHandler
 ])
 
