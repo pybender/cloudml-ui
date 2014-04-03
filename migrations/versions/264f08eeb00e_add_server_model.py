@@ -1,14 +1,14 @@
 """Add Server model
 
 Revision ID: 264f08eeb00e
-Revises: 1cb1aef8263f
+Revises: 28da10c6b129
 Create Date: 2014-02-18 16:15:13.398127
 
 """
 
 # revision identifiers, used by Alembic.
 revision = '264f08eeb00e'
-down_revision = '1cb1aef8263f'
+down_revision = '28da10c6b129'
 
 from alembic import op
 import sqlalchemy as sa
