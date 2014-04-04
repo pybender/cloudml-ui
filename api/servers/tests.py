@@ -58,6 +58,7 @@ class ServersTasksTests(BaseDbTestCase):
                 'handler_id': handler.id,
                 'user_id': user.id,
                 'handler_name': 'Handler 1',
+                'handler_type': ImportHandler.TYPE,
                 'user_name': 'User-1',
                 'uploaded_on': ANY,
             }
@@ -81,6 +82,7 @@ class ServersTasksTests(BaseDbTestCase):
                 'handler_id': handler.id,
                 'user_id': user.id,
                 'handler_name': 'Xml Handler 1',
+                'handler_type': XmlImportHandler.TYPE,
                 'user_name': 'User-1',
                 'uploaded_on': ANY,
             }

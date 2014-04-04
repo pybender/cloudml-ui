@@ -74,15 +74,13 @@ def upload_import_handler_to_server(server_id, handler_type, handler_id,
     meta = {
         'handler_id': handler.id,
         'handler_name': handler.name,
+        'handler_type': handler.TYPE,
         'user_id': user.id,
         'user_name': user.name,
         'uploaded_on': str(datetime.now())
     }
 
-    if handler_type == XmlImportHandler.TYPE:
-        handler_data = handler.get_plan_config()
-    else:
-        handler_data = json.dumps(handler.data)
+    handler_data = handler.get_plan_config()
 
     s3.save_key_string(path, handler_data, meta)
     s3.close()
