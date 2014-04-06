@@ -8,6 +8,7 @@ conn = boto.ec2.connect_to_region('us-west-2',
                                    aws_access_key_id=token,
                                    aws_secret_access_key=secret)
 
+
 # inst = conn.run_instance(image_id="ami-f3b320c3",
 # security_group_ids=["sg-1dc1dc71",],
 # placement="us-west-2a",
