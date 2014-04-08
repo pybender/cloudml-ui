@@ -1,7 +1,12 @@
 import uuid
 import json
 
+from mock import patch
+from moto import mock_s3
+
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS
+from api.servers.fixtures import ServerData
+from api.servers.models import Server
 from ..views import XmlImportHandlerResource, XmlEntityResource,\
     XmlDataSourceResource, XmlInputParameterResource, XmlFieldResource,\
     XmlQueryResource, XmlScriptResource
@@ -16,6 +21,7 @@ class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
     BASE_URL = '/cloudml/xml_import_handlers/'
     RESOURCE = XmlImportHandlerResource
     Model = XmlImportHandler
+    datasets = [ServerData]
 
     def setUp(self):
         super(XmlImportHandlerTests, self).setUp()
@@ -74,6 +80,16 @@ class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
             self.assertEqual(model.query.filter_by(
                 import_handler_id=self.obj.id).count(), 0)
             self.assertEqual(model.query.count(), count_all - count)
+
+    @mock_s3
+    @patch('api.servers.tasks.upload_import_handler_to_server')
+    def test_upload_to_server(self, mock_task):
+        server = Server.query.filter_by(name=ServerData.server_01.name).one()
+        resp = self._check(method='put', action='upload_to_server', data={
+            'server': server.id
+        })
+        self.assertTrue(mock_task.delay.called)
+        self.assertTrue('status' in resp)
 
 
 class IHLoadMixin(object):
@@ -136,6 +152,7 @@ class XmlEntityTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
     def test_details(self):
         resp = self.check_details(show='name', obj=self.obj)
         obj = resp[self.RESOURCE.OBJECT_NAME]
+        self.assertEqual(obj['name'], self.obj.name)
 
 
 class XmlDataSourceTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
@@ -160,6 +177,7 @@ class XmlDataSourceTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
     def test_details(self):
         resp = self.check_details(show='name', obj=self.obj)
         obj = resp[self.RESOURCE.OBJECT_NAME]
+        self.assertEqual(obj['name'], self.obj.name)
 
 
 class XmlInputParameterTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
@@ -184,6 +202,12 @@ class XmlInputParameterTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
     def test_details(self):
         resp = self.check_details(show='name', obj=self.obj)
         obj = resp[self.RESOURCE.OBJECT_NAME]
+        self.assertEqual(obj['name'], self.obj.name)
+
+    def test_configuration(self):
+        resp = self._check(method='get', action='configuration')
+        self.assertTrue('configuration' in resp)
+        self.assertTrue('types' in resp['configuration'])
 
 
 class XmlScriptTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
@@ -207,6 +231,7 @@ class XmlScriptTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
     def test_details(self):
         resp = self.check_details(show='data', obj=self.obj)
         obj = resp[self.RESOURCE.OBJECT_NAME]
+        self.assertEqual(obj['data'], self.obj.data)
 
 
 class XmlFieldTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
@@ -235,6 +260,13 @@ class XmlFieldTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
     def test_details(self):
         resp = self.check_details(show='name', obj=self.obj)
         obj = resp[self.RESOURCE.OBJECT_NAME]
+        self.assertEqual(obj['name'], self.obj.name)
+
+    def test_configuration(self):
+        resp = self._check(method='get', action='configuration')
+        self.assertTrue('configuration' in resp)
+        self.assertTrue('types' in resp['configuration'])
+        self.assertTrue('transform' in resp['configuration'])
 
 
 class XmlQueryTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
@@ -260,3 +292,4 @@ class XmlQueryTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
     def test_details(self):
         resp = self.check_details(show='text', obj=self.obj)
         obj = resp[self.RESOURCE.OBJECT_NAME]
+        self.assertEqual(obj['text'], self.obj.text)
