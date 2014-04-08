@@ -1,0 +1,660 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Generic Import Handler Format (XML) &mdash; oDesk CloudML 0.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="oDesk CloudML 0.0.1 documentation" href="index.html" />
+    <link rel="next" title="Feature JSON file format" href="features.html" />
+    <link rel="prev" title="Import handler JSON file format" href="import_handler.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="features.html" title="Feature JSON file format"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="import_handler.html" title="Import handler JSON file format"
+             accesskey="P">previous</a> |</li>
+    <li><a href="http://cloudml.int.odesk.com/">CloudML UI</a> &raquo;</li>
+    
+        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Generic Import Handler Format (XML)</a><ul>
+<li><a class="reference internal" href="#top-level-element">Top level element</a></li>
+<li><a class="reference internal" href="#script">Script</a></li>
+<li><a class="reference internal" href="#inputs">Inputs</a></li>
+<li><a class="reference internal" href="#datasources">Datasources</a><ul>
+<li><a class="reference internal" href="#database-connections">Database connections</a></li>
+<li><a class="reference internal" href="#csv-files">CSV files</a></li>
+<li><a class="reference internal" href="#http">HTTP</a></li>
+<li><a class="reference internal" href="#pig">Pig</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#import">Import</a><ul>
+<li><a class="reference internal" href="#queries">Queries</a></li>
+<li><a class="reference internal" href="#fields">Fields</a></li>
+<li><a class="reference internal" href="#sqoop">Sqoop</a></li>
+<li><a class="reference internal" href="#nested-entities">Nested entities</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#predict">Predict</a><ul>
+<li><a class="reference internal" href="#model">Model</a></li>
+<li><a class="reference internal" href="#positive-label">positive_label</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="import_handler.html"
+                        title="previous chapter">Import handler JSON file format</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="features.html"
+                        title="next chapter">Feature JSON file format</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/xml_import_handlers.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="generic-import-handler-format-xml">
+<span id="xml-import-handlers"></span><h1>Generic Import Handler Format (XML)<a class="headerlink" href="#generic-import-handler-format-xml" title="Permalink to this headline">¶</a></h1>
+<p>CloudML predict uses two different approaches for importing data:</p>
+<ul>
+<li><dl class="first docutils">
+<dt><strong>DB Import Handler</strong> is used for importing data from database while training a classifier. Although we refer it as a &#8220;database&#8221; handler, we&#8217;d like to add functionality for importing data from additional data sources, like:</dt>
+<dd><ul class="first last simple">
+<li>CSV files</li>
+<li>HTTP with JSON or XML data</li>
+<li>Files containing a JSON document per row</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p class="first"><strong>Web Import Handler</strong> is used for importing data and feeding them to a trained classifier in order to get result.</p>
+</li>
+</ul>
+<p>Both handlers may need to perform some transforming logic on their
+import in order to produce the final results.</p>
+<p>Although both handlers prepare data for the same classification model,
+their formats are different. The goal of this document is to describe a
+new format that can be used for both handlers.</p>
+<p>The new format will be in XML format, from JSON format currently in
+production. The rest of the document provides details of the format.</p>
+<div class="section" id="top-level-element">
+<h2>Top level element<a class="headerlink" href="#top-level-element" title="Permalink to this headline">¶</a></h2>
+<p>Top level element is <tt class="docutils literal"><span class="pre">&lt;plan&gt;</span></tt>. There&#8217;s no attributes expected for this
+element. Plan may contain the following elements:</p>
+<ul class="simple">
+<li><a class="reference internal" href="#script"><em>script</em></a> (any)</li>
+<li><a class="reference internal" href="#inputs"><em>inputs</em></a> (one or zero)</li>
+<li><a class="reference internal" href="#datasources"><em>datasources</em></a> (exactly one)</li>
+<li><a class="reference internal" href="#import"><em>import</em></a> (exactly one)</li>
+<li><a class="reference internal" href="#predict"><em>predict</em></a> (should be present only if we are in testing mode).</li>
+</ul>
+</div>
+<div class="section" id="script">
+<span id="id1"></span><h2>Script<a class="headerlink" href="#script" title="Permalink to this headline">¶</a></h2>
+<p>A <tt class="docutils literal"><span class="pre">script</span></tt> element is used to define python functions that can be
+used to transform data. Code inside the script tag will be added
+whenever a python function is call. It is a good idea to wrap
+scripts in &lt;![CDATA[ ...]]&gt; elements.</p>
+<p>Example:</p>
+<div class="highlight-python"><pre>&lt;script&gt;
+&lt;![CDATA[
+    def intToBoolean(a):
+        return a == 1
+]]&gt;
+&lt;/script&gt;</pre>
+</div>
+<p>It is also possible to reference external Python files. This can be
+done to ease development. Scripts should be expected in the same
+directory as the XML file.</p>
+<p>Example:</p>
+<div class="highlight-python"><pre>&lt;script src="functions.py" /&gt;</pre>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Scripts from external python files functionality is not implemented yet.</p>
+</div>
+</div>
+<div class="section" id="inputs">
+<span id="id2"></span><h2>Inputs<a class="headerlink" href="#inputs" title="Permalink to this headline">¶</a></h2>
+<p>Tag <tt class="docutils literal"><span class="pre">&lt;inputs&gt;</span></tt> groups all input parameters required to execute the import handler. Input parameters are defined in <tt class="docutils literal"><span class="pre">&lt;param&gt;</span></tt> tags.</p>
+<p>Each param may have one of the following attributes:</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">name</span></tt> (<strong>required</strong>) - the name of the parameter.</li>
+<li><tt class="docutils literal"><span class="pre">type</span></tt> - the type of the input parameter. If ommited, it should be considered string.</li>
+<li><tt class="docutils literal"><span class="pre">format</span></tt> - formating instructions for the parameter (i.e. date format etc).</li>
+<li><tt class="docutils literal"><span class="pre">regex</span></tt> - a regular expression that can be used to validate input parameter value</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Format could be applied only to the date input parameter using python&#8217;s <cite>strptime</cite> method. More details about format string could be found in
+<a class="reference external" href="https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior">python documetation</a></p>
+</div>
+<p>Example:</p>
+<div class="highlight-python"><pre>&lt;inputs&gt;
+    &lt;!-- Define an integer parameter. Use regex to dictate only positive integers --&gt;
+    &lt;param name="application" type="int" regex="\d+" /&gt;
+
+    &lt;!-- Date parameter with instructions on how to interpret date--&gt;
+    &lt;param name="year" type="date" format="%Y"/&gt;
+
+    &lt;!-- Boolean parameter --&gt;
+    &lt;param name="only_fjp" type="boolean" /&gt;
+&lt;/inputs&gt;</pre>
+</div>
+</div>
+<div class="section" id="datasources">
+<span id="id3"></span><h2>Datasources<a class="headerlink" href="#datasources" title="Permalink to this headline">¶</a></h2>
+<p>Data is fed to the system using various datasources. The <tt class="docutils literal"><span class="pre">&lt;datasources&gt;</span></tt> part of the handler contains the connection details.</p>
+<p>Datasources may be:</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">Database</span> <span class="pre">connections</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">CSV</span> <span class="pre">files</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">HTTP</span> <span class="pre">GET/POST</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">Hadoop</span> <span class="pre">with</span> <span class="pre">Pig</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">...</span></tt> (more to be added)</li>
+</ul>
+<p>Datasources are identified by their unique names and can be accessed by
+at any point in the file. Each datasource is using a different tag to
+configure it.</p>
+<div class="section" id="database-connections">
+<h3>Database connections<a class="headerlink" href="#database-connections" title="Permalink to this headline">¶</a></h3>
+<p>Database connections can be defined either by directly inserting the
+connection details or by referencing a named connection. In both cases,
+the element used is <tt class="docutils literal"><span class="pre">&lt;db&gt;</span></tt>.</p>
+<p>Here are the possible attributes:</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">name</span></tt> (<strong>required</strong>) - a unique name for this datasource</li>
+<li><tt class="docutils literal"><span class="pre">name-ref</span></tt> - a reference to the named connection (not supported now)</li>
+<li><tt class="docutils literal"><span class="pre">host</span></tt> - the name of host to connect to</li>
+<li><tt class="docutils literal"><span class="pre">dbname</span></tt> - the database name</li>
+<li><tt class="docutils literal"><span class="pre">user</span></tt> - the username to use for connecting to the database</li>
+<li><tt class="docutils literal"><span class="pre">password</span></tt> - the password to use for connecting to the database</li>
+<li><tt class="docutils literal"><span class="pre">port</span></tt> - the port number to connect to at the server host</li>
+<li><tt class="docutils literal"><span class="pre">vendor</span></tt> - the DB&#8217;s vendor (mysql, postgres etc)</li>
+</ul>
+<p>Note that name is required in both cases. For named connections, only name-ref should be also present. When defining the DB connection details in handler&#8217;s file, name-ref, host, dbname and vendor should be present.</p>
+<p>Examples:</p>
+<div class="highlight-python"><pre>&lt;!--
+-- Defines a named connection with name "namedDBConnection"
+-- that uses connection details defined in myODWConnection.
+--&gt;
+&lt;db name="namedDBConnection" name-ref="myODWConnection" /&gt;
+
+&lt;!-- Defines a database connection. --&gt;
+&lt;db name="odw"
+    host="localhost"
+    dbname="odw"
+    user="postgres"
+    password="postgres"
+    vendor="postgres" /&gt;</pre>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Named connections aren&#8217;t implemented yet.</p>
+</div>
+</div>
+<div class="section" id="csv-files">
+<h3>CSV files<a class="headerlink" href="#csv-files" title="Permalink to this headline">¶</a></h3>
+<p>CSV file can be used for importing data from local files. It is possible
+to reuse headers from CSV file, or define aliases for the column names
+in the import handler.</p>
+<p>The related tag is <tt class="docutils literal"><span class="pre">csv</span></tt>, and the possible attributes are:</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">name</span></tt> (<strong>required</strong>) - a unique name for this datasource</li>
+<li><tt class="docutils literal"><span class="pre">src</span></tt> (<strong>required</strong>) - the path to the CSV file</li>
+</ul>
+<p>Header information can be defined by adding child <tt class="docutils literal"><span class="pre">&lt;header&gt;</span></tt> elements
+to the <tt class="docutils literal"><span class="pre">&lt;csv&gt;</span></tt> element. Each <tt class="docutils literal"><span class="pre">&lt;header&gt;</span></tt> element must contain exactly
+two fields:</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">name</span></tt> - the name of the column</li>
+<li><tt class="docutils literal"><span class="pre">index</span></tt> - the column&#8217;s index (columns are zero-indexed).</li>
+</ul>
+<p>Examples:</p>
+<div class="highlight-python"><pre>&lt;!-- Defines a CSV datasource with headers in file. --&gt;
+&lt;csv name="csvDataSource" src="stats.csv" /&gt;
+
+&lt;!-- Defines a CSV datasource with headers in handler. --&gt;
+&lt;csv name="csvDataSource" src="stats.csv"&gt;
+    &lt;!-- Note that some columns are ignored --&gt;
+    &lt;header name="id" index="0" /&gt;
+    &lt;header name="name" index="2" /&gt;
+    &lt;header name="score" index="7" /&gt;
+&lt;/csv&gt;</pre>
+</div>
+</div>
+<div class="section" id="http">
+<h3>HTTP<a class="headerlink" href="#http" title="Permalink to this headline">¶</a></h3>
+<p>HTTP requests are used for importing JSON data from remote HTTP
+services.</p>
+<p>The tag used for defining them is <tt class="docutils literal"><span class="pre">&lt;http&gt;</span></tt>, and the possible attributes are:</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">name</span></tt> (<strong>required</strong>) - a unique name for this datasource</li>
+<li><tt class="docutils literal"><span class="pre">method</span></tt> - the HTTP method to use (GET, POST, PUT, DELETE - default is GET)</li>
+<li><tt class="docutils literal"><span class="pre">url</span></tt> (<strong>required</strong>) - the base URL to use</li>
+</ul>
+<p>Example:</p>
+<div class="highlight-python"><pre>&lt;http name="jar"
+    method="GET"
+    url="http://d-postgres.odesk.com:11000/jar/" /&gt;</pre>
+</div>
+<p>When using this datasource with RESTful services, try to define the base
+URL. If you need to query for specific entities, you can define query
+parameters later during the import phase.</p>
+</div>
+<div class="section" id="pig">
+<h3>Pig<a class="headerlink" href="#pig" title="Permalink to this headline">¶</a></h3>
+<p>Pig is a tool for analyzing large data sets based on Hadoop. Pig Latin
+is the language that allows querying and/or transforming the data. A Pig
+datasource is a connection to a remote Hadoop/Pig cluster. It is defined
+using <tt class="docutils literal"><span class="pre">&lt;pig&gt;</span></tt> tag. Possible attributes are:</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">name</span></tt> (<strong>required</strong>) - a unique name for this datasource</li>
+<li><tt class="docutils literal"><span class="pre">connection</span></tt> (<strong>required</strong>) - connection to Hadoop/Pig cluster</li>
+<li><tt class="docutils literal"><span class="pre">jobid</span></tt> (optional) - define job flow id, if you want to use existing cluster</li>
+<li><tt class="docutils literal"><span class="pre">amazon_access_token</span></tt> (<strong>required</strong>)</li>
+<li><tt class="docutils literal"><span class="pre">amazon_token_secret</span></tt> (<strong>required</strong>)</li>
+<li><tt class="docutils literal"><span class="pre">pig_version</span></tt> (optional)</li>
+<li><tt class="docutils literal"><span class="pre">bucket_name</span></tt> (optional) - Amazon S3 bucket name for saving results, logs, etc.</li>
+</ul>
+<p>Example:</p>
+<div class="highlight-python"><pre>&lt;pig name="pig3" jobid="job-id" amazon_access_token="token" amazon_token_secret="secret"/&gt;</pre>
+</div>
+</div>
+</div>
+<div class="section" id="import">
+<span id="id4"></span><h2>Import<a class="headerlink" href="#import" title="Permalink to this headline">¶</a></h2>
+<p>After defining the datasources, the import handler need to define how to
+translate data from each datasource input. This is done within the
+<tt class="docutils literal"><span class="pre">&lt;import&gt;</span></tt> element. In order to be able to understand how the mapping
+is done, we need to introduce the concept of entity.</p>
+<p>An entity models data coming from various datasources. I.e. an entity
+might describe the data coming from a database table or view. Each
+entity is associated with a datasource and (possibly) some query
+parameters. For example, a database entity might use a SQL query, while
+an HTTP entity might add some path and query parameters to the
+datasource&#8217;s URL. An entity describes multiple entity &#8220;instances&#8221;. I.e.
+if an entity describes a database table, an entity &#8220;instance&#8221; describes
+a row in the database.</p>
+<p>An entity is defined using the <tt class="docutils literal"><span class="pre">&lt;entity&gt;</span></tt> tag. The possible attributes
+of the element are the following:</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">name</span></tt> (<strong>required</strong>) - a unique name to identify the entity</li>
+<li><tt class="docutils literal"><span class="pre">datasource</span></tt> (<strong>required</strong>) - the datasource to use for importing data</li>
+<li><tt class="docutils literal"><span class="pre">query</span></tt> - a string that provides instructions on how to query a datasource (i.e. a SQL query or a path template). Queries can be also defined as child elements (to be discussed later).</li>
+</ul>
+<p>Examples:</p>
+<div class="highlight-python"><pre>&lt;!-- An entity that uses a DB connection --&gt;
+&lt;entity name="employer" datasource="mysqlConn" query="SELECT * FROM table"&gt;
+    ...
+&lt;/entity&gt;
+
+&lt;!-- An entity that uses an HTTP datasource --&gt;
+&lt;entity name="employer" datasource="odr" query="opening/f/#{opening}.json"&gt;
+    ...
+&lt;/entity&gt;</pre>
+</div>
+<div class="section" id="queries">
+<h3>Queries<a class="headerlink" href="#queries" title="Permalink to this headline">¶</a></h3>
+<p>The first possible child of a <tt class="docutils literal"><span class="pre">&lt;entity&gt;</span></tt> is a query. This can be used
+to improve readability of the XML file and replace the query attribute
+of the entity. It is also useful if the query doesn&#8217;t return data, but
+actually triggers data calculation. Examples of such cases include
+running a set of SQL queries that create tables or executing a Pig
+script. In this case, attribute <tt class="docutils literal"><span class="pre">target</span></tt> needs to be defined inside
+the <tt class="docutils literal"><span class="pre">&lt;query&gt;</span></tt> tag. The value of this attribute provides details on
+where to look for the actual data.</p>
+<p>Examples:</p>
+<div class="highlight-python"><pre>&lt;!-- An entity that uses a DB connection --&gt;
+&lt;entity name="employer" datasource="mysqlConn"&gt;
+    &lt;query&gt;
+        &lt;![CDATA[
+            SELECT *
+            FROM table t1 JOIN table t2 ON t1.id = t2.reference
+            WHERE t2.creation_time &lt; '#{start_date}'
+        ]]&gt;
+    &lt;/query&gt;
+    ...
+&lt;/entity&gt;
+
+&lt;!-- An entity that uses an HTTP datasource --&gt;
+&lt;entity name="employer" datasource="odr"&gt;
+ &lt;query&gt;
+        &lt;![CDATA[
+            opening/f/#{opening}.json
+        ]]&gt;
+    &lt;/query&gt;
+    ...
+&lt;/entity&gt;</pre>
+</div>
+<p>Query strings depend on the datasource:</p>
+<ul class="simple">
+<li>Database datasource requires SQL queries.</li>
+<li>HTTP datasources can add values to the path.</li>
+<li>CSV datasources do not support queries.</li>
+</ul>
+<p>It is possible to use variables in queries using the notation <tt class="docutils literal"><span class="pre">#{variable}</span></tt>. This will be replaced either by an input parameter with name equal to the variable.</p>
+</div>
+<div class="section" id="fields">
+<h3>Fields<a class="headerlink" href="#fields" title="Permalink to this headline">¶</a></h3>
+<p>Fields are used to define how to extract data from each entity
+&#8220;instance&#8221;. They are defined using the <tt class="docutils literal"><span class="pre">&lt;field&gt;</span></tt> tag, and can define
+the following attributes:</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">name</span></tt> (<strong>required</strong>) a unique name for the field</li>
+<li><tt class="docutils literal"><span class="pre">column</span></tt> - if entity is using a DB or CSV datasource, it will use data from this column</li>
+<li><tt class="docutils literal"><span class="pre">jsonpath</span></tt> - if entity is a JSON datasource, it will use this jsonpath to extract data</li>
+<li><tt class="docutils literal"><span class="pre">type</span></tt> - can be integer, boolean, string, float. If defined, the value will be converted to the given type. If it&#8217;s not possible, then the resulting value will be null.</li>
+<li><tt class="docutils literal"><span class="pre">key_path</span></tt> - a JSON path expression for identifying the keys of a map. Used together with <tt class="docutils literal"><span class="pre">value_path</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">value_path</span></tt> - JSON path expression for identifying the values of a map. Used together with <tt class="docutils literal"><span class="pre">key_path</span></tt>.</li>
+<li><tt class="docutils literal"><span class="pre">regex</span></tt> - applies the given regular expression and assigns the first match to the value</li>
+<li><tt class="docutils literal"><span class="pre">split</span></tt> - splits the value to an array of values using the provided regular expression</li>
+<li><tt class="docutils literal"><span class="pre">dateFormat</span></tt> - transforms value to a date using the given date/time format</li>
+<li><tt class="docutils literal"><span class="pre">join</span></tt> - concatenates values using the defined separator. Used together with <tt class="docutils literal"><span class="pre">jsonpath</span></tt> only.</li>
+<li><tt class="docutils literal"><span class="pre">template</span></tt> - used to define a template for strings. May use variables.</li>
+<li><tt class="docutils literal"><span class="pre">script</span></tt> - call the python script defined in this element and assign the result to this field. May use any of the built-in functions or any one defined in a <a href="#id6"><span class="problematic" id="id7">`Script &lt;&gt;`_</span></a> element. Variables can also be used in script elements. Also could be defined as inner &lt;script&gt; tag.</li>
+<li><tt class="docutils literal"><span class="pre">transform</span></tt> - transforms this field to a datasource. For example, it can be used to parse JSON or CSV data stored in a DB column. Its values can be either <tt class="docutils literal"><span class="pre">json</span></tt> or <tt class="docutils literal"><span class="pre">csv</span></tt>.</li>
+<li><tt class="docutils literal"><span class="pre">headers</span></tt> - used only if <tt class="docutils literal"><span class="pre">transform=&quot;csv&quot;</span></tt>. Defines the header names for each item in the CSV field.</li>
+<li><tt class="docutils literal"><span class="pre">required</span></tt> - whether this field is required to have a value or not. If not defined, default is false.</li>
+</ul>
+<p>Examples:</p>
+<div class="highlight-python"><pre>&lt;!-- HTTP JSON entity --&gt;
+&lt;entity name="jar_application" datasource="jar" query="get_s/#{employer}/#{application}.json"&gt;
+    &lt;field name="ja.bid_rate" type="float" jsonpath="$.result.hr_pay_rate" /&gt;
+    &lt;field name="ja.bid_amount" type="float" jsonpath="$.result.fp_pay_amount" /&gt;
+    &lt;field name="opening.pref_count" type="int" jsonpath="$.result.job_pref_matches.prefs_match" /&gt;
+    &lt;field name="application.creation_time" jsonpath="$.result.creation_time" dateFormat="YYYY-mm-DD" /&gt;
+
+&lt;/entity&gt;
+
+&lt;!-- HTTP JSON entity --&gt;
+&lt;entity name="contractor" datasource="odr" query="opening/f/#{opening}.json"&gt;
+    &lt;field name="contractor.skills" path="$.skills.*.skl_name" join="," /&gt;
+    &lt;field name="contractor.greeting" template="Hello #{contractor.name}" /&gt;
+    &lt;field name="matches_pref_english" script="#{contractor.dev_eng_skill}&gt; #{pref_english})" /&gt;
+&lt;/entity&gt;
+
+&lt;!-- DB entity --&gt;
+&lt;entity name="dbentity" datasource="mysqlConnection"&gt;
+    &lt;query&gt;
+        &lt;![CDATA[
+            SELECT *
+            FROM table t1 JOIN table t2 ON t1.id = t2.reference
+            WHERE t2.creation_time &lt; '#{start_date}'
+        ]]&gt;
+    &lt;/query&gt;
+    &lt;field name="id" column="t1.id" /&gt;
+    &lt;field name="name" column="t1.full_name" /&gt;
+    &lt;field name="category" column="t2.category" /&gt;
+    &lt;field name="active" type="boolean" column="t2.is_active" /&gt;
+    &lt;field name="opening.segment" script="getSegment('#{category}')" /&gt;
+&lt;/entity&gt;
+
+
+&lt;!-- DB entity where results should be read by table --&gt;
+&lt;entity name="dbentity" datasource="mysqlConnection"&gt;
+    &lt;query target="data"&gt;
+        &lt;![CDATA[
+            CREATE TEMP TABLE data AS (
+            SELECT *
+            FROM table t1 JOIN table t2 ON t1.id = t2.reference
+            WHERE t2.creation_time &lt; '#{start_date}')
+        ]]&gt;
+    &lt;/query&gt;
+    &lt;field name="id" column="t1.id" /&gt;
+    &lt;field name="name" column="t1.full_name" /&gt;
+    &lt;field name="category" column="t2.category" /&gt;
+    &lt;field name="active" type="boolean" column="t2.is_active" /&gt;
+    &lt;field name="opening.segment" script="getSegment('#{category}')" /&gt;
+&lt;/entity&gt;
+
+&lt;!-- Pig entity --&gt;
+&lt;entity name="dbentity" datasource="pigConnection"&gt;
+    &lt;query target="output"&gt;
+        &lt;![CDATA[
+            batting = load 'Batting.csv' using PigStorage(',');
+            runs = FOREACH batting GENERATE $0 as playerID, $1 as year, $8 as runs;
+            grp_data = GROUP runs by (year);
+            STORE grp_data INTO 'output';
+        ]]&gt;
+    &lt;/query&gt;
+    &lt;field name="id" column="t1.id" /&gt;
+    &lt;field name="name" column="t1.full_name" /&gt;
+    &lt;field name="category" column="t2.category" /&gt;
+    &lt;field name="active" type="boolean" column="t2.is_active" /&gt;
+    &lt;field name="opening.segment" script="getSegment('#{category}')" /&gt;
+&lt;/entity&gt;</pre>
+</div>
+</div>
+<div class="section" id="sqoop">
+<h3>Sqoop<a class="headerlink" href="#sqoop" title="Permalink to this headline">¶</a></h3>
+<p>Tag sqoop instructs import handler to run a Sqoop import. It should be
+used only on entities that have a pig datasource. A sqoop tag may
+contain the following attributes:</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">target</span></tt> (<strong>required</strong>) the target file to save imported data on HDFS.</li>
+<li><tt class="docutils literal"><span class="pre">datasource</span></tt> (<strong>required</strong>) a reference to the DB datasource to use for importing the data</li>
+<li><tt class="docutils literal"><span class="pre">table</span></tt> (<strong>required</strong>) the name of the table to import its data.</li>
+<li><tt class="docutils literal"><span class="pre">where</span></tt> - an expression that might be passed to the table for filtering the rows to import</li>
+<li><tt class="docutils literal"><span class="pre">direct</span></tt> - whether to use direct import (see <a class="reference external" href="https://sqoop.apache.org/docs/1.4.4/SqoopUserGuide.html#_importing_views_in_direct_mode">Sqoop documentation</a> on &#8211;direct for more details)</li>
+<li><tt class="docutils literal"><span class="pre">mappers</span></tt> - an integer number with the mappers to use for importing data.If table is a view or doesn&#8217;t have a key it should be 1. Default value is 1.</li>
+</ul>
+<p>If the sqoop tag contains body, then it should be valid SQL statements.
+These statements will be executed on the database before the Sqoop
+import. This feature is particularly useful if you want to run:</p>
+<div class="highlight-python"><pre>&lt;entity name="myEntity" datasource="pigConnection"&gt;
+    &lt;query target="output"&gt;
+    &lt;![CDATA[
+        batting = load 'Batting.csv' using PigStorage(',');
+        runs = FOREACH batting GENERATE $0 as playerID, $1 as year, $8 as runs;
+        grp_data = GROUP runs by (year);
+        STORE grp_data INTO 'output';
+    ]]&gt;
+    &lt;/query&gt;
+    &lt;!-- Transfer table dataset to HDFS --&gt;
+    &lt;sqoop target="dataset" table="dataset" datasource="sqoop_db_datasource" /&gt;
+
+    &lt;!-- Query inside sqoop tag needs to be executed on the DB before running the sqoop command --&gt;
+    &lt;!-- We should also allow multiple sqoop tags in case we require more than one imports --&gt;
+    &lt;sqoop target="new_data" table="temp_table" datasource="sqoop_db_datasource" direct="true" mappers="1"&gt;
+    &lt;![CDATA[
+        CREATE TEMP TABLE target_openings AS SELECT * FROM openings WHERE creation_time BETWEEN #{start} AND #{end};
+        CREATE TABLE temp_table AS SELECT to.*, e.* FROM target_openings to JOIN employer e ON to.employer=e."Record ID#";
+    ]]&gt;
+    &lt;/sqoop&gt;
+    &lt;!-- Fields --&gt;
+    &lt;field ... /&gt;
+&lt;/entity&gt;</pre>
+</div>
+</div>
+<div class="section" id="nested-entities">
+<h3>Nested entities<a class="headerlink" href="#nested-entities" title="Permalink to this headline">¶</a></h3>
+<p>It might be possible that not all data required might originate from one
+entity, or it might be possible to gather data from more than one
+datasources. For example, consider the following use case:</p>
+<div class="highlight-python"><pre>A really important feature is application ranking.
+In order to rank the application, data regarding the application,
+the employer, the job opening and the contractor are required.
+However, these data may come from different HTTP URLs.</pre>
+</div>
+<p>A solution to this problem is to use nested entities. A nested entity is a normal entity, with the benefit that it can use data from it&#8217;s parent entity to formulate the query. A nested entity may result in two ways:</p>
+<ul class="simple">
+<li>querying a &#8216;global&#8217; datasource (i.e. querying a different table in DB, calling a different HTTP service)</li>
+<li>converting one of the parent entity&#8217;s field to a new entity (i.e. parsing the data of a DB column as a JSON document). In this case, the field acts as a datasource.</li>
+</ul>
+<p>A nested entity is defined inside another <tt class="docutils literal"><span class="pre">&lt;entity&gt;</span></tt> and follows exactly the same syntax. However, it might also use the values of parent entity as variables, in addition to the input parameter values.</p>
+<p>Example:</p>
+<div class="highlight-python"><pre>&lt;entity name="application" datasource="ods" query="job_application/pa/#{application}.json"&gt;
+    &lt;field name="opening" jsonpath="$.result.#{application}.opening_ref" /&gt;
+    &lt;field name="contractor" jsonpath="$.result.#{application}.developer_ref" /&gt;
+    &lt;field name="employer" jsonpath="$.result.#{application}.team_ref" /&gt;
+
+    &lt;!-- Nested entity using a global datasource --&gt;
+    &lt;entity name="opening" datasource="odr" query="opening/f/#{opening}.json"&gt;
+        &lt;field name="opening.title" jsonpath="$.op_title" /&gt;
+        &lt;field name="opening.description" jsonpath="$.op_job" /&gt;
+    &lt;/entity&gt;
+&lt;/entity&gt;</pre>
+</div>
+<p>The second option is to convert one of the parent entity&#8217;s fields to a
+new entity. This is useful if a field in the parent entity contains CSV
+or JSON data. To do this, two things need to be done:</p>
+<ul class="simple">
+<li>Define property &#8216;transform&#8217; in parent entity field, using the appropriate type. This creates a datasource accessible from all child entities. The datasource&#8217;s name is the field&#8217;s name, while the datasource type depends on the the value of the transform entity</li>
+<li>In the new entity, define as datasource name the name of the parent entity&#8217;s field.</li>
+</ul>
+<p>Example:</p>
+<div class="highlight-python"><pre>&lt;!-- Parent entity --&gt;
+&lt;entity name="user" datasource="dbEntity" query="SELECT * FROM users"&gt;
+    &lt;!-- Convert field to CSV datasource --&gt;
+    &lt;field name="permissions" transform="csv" headers="read,write,execute"/&gt;
+    &lt;!-- Nested entity using data from CSV field --&gt;
+    &lt;entity name="permissionEntity" datasource="permissions"&gt;
+        &lt;field name="user.read" column="read" /&gt;
+        &lt;field name="user.execute" column="execute" /&gt;
+    &lt;/entity&gt;
+
+    &lt;
+    &lt;!-- Convert field to JSON datasource --&gt;
+    &lt;field name="profile" transform="json" /&gt;
+
+    &lt;!-- Nested entity using data from JSON field --&gt;
+    &lt;entity name="profileEntity" datasource="profile"&gt;
+        &lt;field name="score" jsonpath="$.score" /&gt;
+    &lt;/entity&gt;
+&lt;/entity&gt;</pre>
+</div>
+</div>
+</div>
+<div class="section" id="predict">
+<span id="id5"></span><h2>Predict<a class="headerlink" href="#predict" title="Permalink to this headline">¶</a></h2>
+<p>The last part of the data import handler describes which models to
+invoke and how to formulate the response. While the old import handler
+was used with a single model, the new version should allow to use
+multiple binary classifier models, provided that they expect the same
+input vector.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Predict functionality is not implemented yet.</p>
+</div>
+<p>Response format is defined inside <tt class="docutils literal"><span class="pre">&lt;predict&gt;</span></tt> tag. Predict tag needs
+to have the following sub-elements:</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">&lt;model&gt;</span></tt> - defines parameters for using a model with the data from the <tt class="docutils literal"><span class="pre">&lt;import&gt;</span></tt> part of the handler</li>
+<li><tt class="docutils literal"><span class="pre">&lt;result&gt;</span></tt> - defines how to formulate the response</li>
+</ul>
+<div class="section" id="model">
+<h3>Model<a class="headerlink" href="#model" title="Permalink to this headline">¶</a></h3>
+<p>In order to calculate the result of a prediction, one or more models
+need to be invoked together with the data from the import handler. Each
+model invocation is defined using a <tt class="docutils literal"><span class="pre">&lt;model&gt;</span></tt> tag. A model tag may
+have the following attributes:</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">name</span></tt> (<strong>required</strong>) - a name to uniquely identify the results of this model</li>
+<li><tt class="docutils literal"><span class="pre">value</span></tt> - holds the name of the model to use.</li>
+<li><tt class="docutils literal"><span class="pre">script</span></tt> - calls Javascript code to decide the name of the model to use.</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Either value or script attribute need to be defined. Declaring none on both should raise an error.</p>
+</div>
+<p>In addition, it should be able to finetune details of model invocation
+using some additional child elements:</p>
+</div>
+<div class="section" id="positive-label">
+<h3>positive_label<a class="headerlink" href="#positive-label" title="Permalink to this headline">¶</a></h3>
+<p>Allows overriding which label to use as positive label. If not defined, true is considered as positive label. Example:</p>
+<div class="highlight-python"><pre>&lt;model name="rank" value="BestMatch.v31"&gt;
+    &lt;positive_label values="false"/&gt;
+&lt;/model&gt;</pre>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="features.html" title="Feature JSON file format"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="import_handler.html" title="Import handler JSON file format"
+             >previous</a> |</li>
+    <li><a href="http://cloudml.int.odesk.com/">CloudML UI</a> &raquo;</li>
+    
+        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, oDesk.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b2.
+    </div>
+  </body>
+</html>

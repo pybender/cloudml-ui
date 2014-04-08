@@ -14,6 +14,7 @@ Contents:
    
    get_started
    import_handler
+   xml_import_handlers
    features
    changes
    trainer
