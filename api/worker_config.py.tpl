@@ -18,7 +18,7 @@ CELERY_RESULT_BACKEND = 'amqp://cloudml:cloudml@172.27.77.141:5672/cloudml'
 CELERY_IMPORTS = (
     'api.models', 'api', 'api.import_handlers.tasks',
     'api.instances.tasks', 'api.ml_models.tasks',
-    'api.model_tests.tasks')
+    'api.model_tests.tasks', 'api.servers.tasks's)
 
 from kombu import Queue
 
