@@ -45,11 +45,11 @@ class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue('<field jsonpath="$.op_country" name="employer.country" type="string"/>'
                         in obj['xml'])
 
-        resp = self.check_details(show='name,entities', obj=self.obj)
+        resp = self._check(show='name,entities', id=self.obj.id)
         obj = resp[self.RESOURCE.OBJECT_NAME]
         self.assertTrue('fields' in obj['entity'])
-        self.assertEqual(2, len(obj['entity']['fields']))
-        self.assertEqual(3, len(obj['entity']['entities']))
+        self.assertEqual(3, len(obj['entity']['fields']))
+        self.assertEqual(2, len(obj['entity']['entities']))
 
     def test_edit_name(self):
         data = {"name": "new name"}
