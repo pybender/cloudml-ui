@@ -6,19 +6,18 @@
 
   <div class="modal-body">
     <form name="Form" class="form-horizontal" ng-controller="ServersSelectLoader">
-      <div class="control-group" ng-class="{error: Form.server.$invalid || errorList.server}">
+      <div class="control-group" ng-class="{error: !model.server}">
         <label class="control-label">Server</label>
         <div class="controls">
             <select name="server" ng-model="model.server" ng-required>
               <option ng-selected="s.is_default" ng-repeat="s in servers" value="{{ s.id }}">{{ s.name }}</option>
             </select>
-          <span ng-show="Form.server.$error.required" class="help-inline">*</span>
         </div>
       </div>
     </form>
   </div>
 
   <div class="modal-footer">
-    <button ng-click="upload()" ng-disabled="Form.$invalid || !model.server" class="btn btn-primary">Upload</button>
+    <button ng-click="upload()" ng-disabled="!model.server" class="btn btn-primary">Upload</button>
   </div>
 </div>
