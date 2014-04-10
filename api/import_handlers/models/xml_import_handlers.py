@@ -64,6 +64,12 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
                 if script_text:
                     script_tag = etree.SubElement(field_el, "script")
                     script_tag.text = etree.CDATA(script_text)
+
+            for sqoop in entity.sqoop_imports:
+                sqoop_el = etree.SubElement(ent, "sqoop", **sqoop.to_dict())
+                if sqoop.text:
+                    sqoop_el.text = etree.CDATA(sqoop.text)
+
             for subentity in entity.entities:
                 build_tree(subentity, parent=ent)
 
@@ -195,10 +201,31 @@ class XmlField(db.Model, BaseMixin):
         return field
 
 
+class XmlSqoop(db.Model, BaseMixin):
+    target = db.Column(db.String(200), nullable=False)
+    table = db.Column(db.String(200), nullable=False)
+    where = db.Column(db.String(200), nullable=True)
+    direct = db.Column(db.String(200), nullable=True)
+    mappers = db.Column(db.String(200), nullable=True)
+    text = db.Column(db.Text, nullable=True)
+
+    # Global datasource
+    datasource_id = db.Column(db.ForeignKey('xml_data_source.id',
+                                            ondelete='SET NULL'))
+    datasource = relationship('XmlDataSource',
+                              foreign_keys=[datasource_id])
+
+    entity_id = db.Column(db.ForeignKey('xml_entity.id'))
+    entity = relationship(
+        'XmlEntity', foreign_keys=[entity_id], backref=backref(
+            'sqoop_imports', cascade='all,delete', order_by='XmlSqoop.id'))
+
+
 def get_entity_tree(handler):
     entity = XmlEntity.query\
         .options(
             joinedload_all('fields'),
+            joinedload_all('sqoop_imports'),
             joinedload_all('entities', 'entities', 'entities'),
             joinedload('entities.fields'),
             joinedload('entities.entities.fields'),

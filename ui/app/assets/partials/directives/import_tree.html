@@ -45,6 +45,30 @@
         </div>
       </div>
     </div>
+    <div ng-repeat="sqoop in entity.sqoop_imports">
+    <hr />
+    <h5><i class="icon-magnet"></i> Sqoop</h5>
+    <div>
+      <div>
+        Target:
+        <span title="target" class="target value" ng-bind="sqoop.target" editable="sqoop" value="sqoop.target" editable-field="target" editable-input="text" editable-placement="right"></span>
+      </div>
+      <div>
+        Table:
+        <span title="table" class="table value" ng-bind="sqoop.table" editable="sqoop" value="sqoop.table" editable-field="table" editable-input="text" editable-placement="right"></span>
+      </div>
+      <div>
+        Text:<textarea class="small" ui-codemirror="{
+            mode: 'text/x-mysql',
+            indentWithTabs: true,
+            smartIndent: true,
+            lineNumbers: true,
+            matchBrackets: true,
+            height: '30px'}" ng-model="sqoop.text" ui-refresh="sqoop" />
+
+      </div>
+    </div>
+    </div>
     <div ng-show="entity.query_obj">
     <hr />
     <h5><i class=" icon-magnet"></i> Query</h5>

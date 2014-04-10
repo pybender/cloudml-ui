@@ -4,10 +4,10 @@ from sqlalchemy.orm.exc import NoResultFound
 from api.base.resources import BaseResourceSQL
 from api import api
 from api.import_handlers.models import XmlImportHandler, XmlInputParameter, \
-    XmlEntity, XmlField, XmlDataSource, XmlQuery, XmlScript
+    XmlEntity, XmlField, XmlDataSource, XmlQuery, XmlScript, XmlSqoop
 from api.import_handlers.forms import XmlImportHandlerAddForm, \
     XmlInputParameterForm, XmlEntityForm, XmlFieldForm, XmlDataSourceForm, \
-    XmlQueryForm, XmlScriptForm, XmlImportHandlerEditForm
+    XmlQueryForm, XmlScriptForm, XmlImportHandlerEditForm, XmlSqoopForm
 from api.servers.forms import ChooseServerForm
 
 
@@ -170,3 +170,15 @@ class XmlScriptResource(BaseResourceSQL):
 api.add_resource(
     XmlScriptResource, '/cloudml/xml_import_handlers/\
 <regex("[\w\.]*"):import_handler_id>/scripts/')
+
+
+class XmlSqoopResource(BaseResourceSQL):
+    """
+    XmlSqoop API methods
+    """
+    put_form = post_form = XmlSqoopForm
+    Model = XmlSqoop
+
+api.add_resource(XmlSqoopResource, '/cloudml/xml_import_handlers/\
+<regex("[\w\.]*"):import_handler_id>/entities/<regex("[\w\.]*"):entity_id>\
+/sqoop/')

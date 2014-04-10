@@ -2,7 +2,7 @@ from api.base.forms import BaseForm, CharField, JsonField, \
     ChoiceField, ValidationError, BooleanField, IntegerField, \
     DocumentField
 from api.import_handlers.models import XmlImportHandler, XmlDataSource, \
-    XmlInputParameter, XmlScript, XmlEntity, XmlField, XmlQuery
+    XmlInputParameter, XmlScript, XmlEntity, XmlField, XmlQuery, XmlSqoop
 from api import app
 from core.xmlimporthandler.exceptions import ImportHandlerException
 
@@ -110,6 +110,19 @@ exist. Please choose another one.' % value)
                         if field.transform:
                             TRANSFORMED_FIELDS[field.name] = fld
                         db.session.add(fld)
+
+                    for sqoop in entity.sqoop_imports:
+                        sqoop_obj = XmlSqoop(
+                            target=sqoop.target,
+                            table=sqoop.table,
+                            where=sqoop.where,
+                            direct=sqoop.direct,
+                            mappers=sqoop.mappers,
+                            text=sqoop.query
+                        )
+                        # TODO: Datasource
+                        db_entity.sqoop_imports.append(sqoop_obj)
+                        db.session.add(sqoop_obj)
 
                     sub_entities = entity.nested_entities_field_ds.values() + \
                         entity.nested_entities_global_ds
@@ -322,3 +335,17 @@ class XmlScriptForm(BaseForm):
     data = CharField()
     import_handler_id = DocumentField(
         doc=XmlImportHandler, by_name=False, return_doc=False)
+
+
+class XmlSqoopForm(BaseForm):
+    required_fields = ('import_handler_id', 'target', 'table')
+    NO_REQUIRED_FOR_EDIT = True
+
+    import_handler_id = DocumentField(
+        doc=XmlImportHandler, by_name=False, return_doc=False)
+    target = CharField()
+    table = CharField()
+    where = CharField()
+    direct = CharField()
+    mappers = CharField()
+    text = CharField()
