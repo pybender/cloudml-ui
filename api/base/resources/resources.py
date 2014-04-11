@@ -408,7 +408,8 @@ class BaseResourceSQL(BaseResource):
         return cursor
 
     def _prepare_model_list(self, cursor, params):
-        return cursor
+        # return cursor
+        return [self._prepare_model(model, params) for model in cursor]
 
     def _build_list_query(self, params, **kwargs):
         # TODO: What about joins?

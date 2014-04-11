@@ -53,7 +53,6 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
                 query.text = etree.CDATA(entity.query_obj.text)
 
             for field in entity.fields:
-                print field.name
                 field_dict = field.to_dict()
                 script = field_dict.get('script')
                 script_text = None
