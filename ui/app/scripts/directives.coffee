@@ -257,6 +257,8 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
       deleteField: '&deleteField',
       editDataSource: '&editDataSource',
       saveQueryText: '&saveQueryText',
+      addSqoop: '&addSqoop',
+      deleteSqoop: '&deleteSqoop',
     }
     # replace: true
     restrict: 'E'
@@ -264,7 +266,7 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
     templateUrl:'partials/directives/import_tree.html'
 
     link: (scope, el, attrs) ->
-      scope.pigDatasources = () ->
+      scope.getDatasources = () ->
         options = []
         for ds in scope.handler.xml_data_sources
           options.push({

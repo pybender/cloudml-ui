@@ -9,9 +9,9 @@ from api.servers.fixtures import ServerData
 from api.servers.models import Server
 from ..views import XmlImportHandlerResource, XmlEntityResource,\
     XmlDataSourceResource, XmlInputParameterResource, XmlFieldResource,\
-    XmlQueryResource, XmlScriptResource
+    XmlQueryResource, XmlScriptResource, XmlSqoopResource
 from ..models import XmlImportHandler, XmlDataSource,\
-    XmlScript, XmlField, XmlEntity, XmlInputParameter, XmlQuery
+    XmlScript, XmlField, XmlEntity, XmlInputParameter, XmlQuery, XmlSqoop
 
 
 class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
@@ -93,9 +93,9 @@ class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
 
 
 class IHLoadMixin(object):
-    def load_import_handler(self):
+    def load_import_handler(self, filename='conf/extract.xml'):
         name = str(uuid.uuid1())
-        with open('conf/extract.xml', 'r') as fp:
+        with open(filename, 'r') as fp:
             resp_data = self.client.post(
                 '/cloudml/xml_import_handlers/',
                 data={
@@ -293,3 +293,32 @@ class XmlQueryTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
         resp = self.check_details(show='text', obj=self.obj)
         obj = resp[self.RESOURCE.OBJECT_NAME]
         self.assertEqual(obj['text'], self.obj.text)
+
+
+class XmlSqoopTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
+    """
+    Tests of the XML Sqoop API.
+    """
+    BASE_URL = ''
+    RESOURCE = XmlSqoopResource
+    Model = XmlSqoop
+
+    def setUp(self):
+        super(XmlSqoopTests, self).setUp()
+        handler_id = self.load_import_handler(
+            'api/import_handlers/tests/pig-train-import-handler.xml')
+        self.entity = XmlEntity.query.filter_by(import_handler_id=handler_id,
+                                                name='application').one()
+        self.BASE_URL = '/cloudml/xml_import_handlers/{0!s}/entities/{1!s}/sqoop_imports/'.format(
+            handler_id, self.entity.id)
+        self.obj = self.entity.sqoop_imports[0]
+
+    def test_list(self):
+        self.check_list(show='table,datasource,text')
+
+    def test_details(self):
+        resp = self.check_details(show='table,datasource,text', obj=self.obj)
+        obj = resp[self.RESOURCE.OBJECT_NAME]
+        self.assertEqual(obj['text'], self.obj.text)
+        self.assertEqual(obj['table'], self.obj.table)
+        self.assertEqual(obj['datasource']['name'], 'sqoop_db_datasource')

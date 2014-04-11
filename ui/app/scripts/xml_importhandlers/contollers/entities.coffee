@@ -11,8 +11,9 @@ angular.module(
   '$dialog'
   'Entity'
   'Field'
+  'Sqoop'
 
-  ($scope, $rootScope, $dialog, Entity, Field) ->
+  ($scope, $rootScope, $dialog, Entity, Field, Sqoop) ->
     $scope.init = (handler) ->
       $scope.handler = handler
       $scope.dialog = $dialog
@@ -96,6 +97,19 @@ angular.module(
         query.edit_err = null
         query.err = null
       )
+
+    $scope.addSqoop = (entity) ->
+      sqoop = new Sqoop({
+        'import_handler_id': entity.import_handler_id
+        'entity': entity.id
+      })
+      $scope.openDialog({
+        $dialog: $dialog
+        model: sqoop
+        template: 'partials/xml_import_handlers/sqoop/edit.html'
+        ctrlName: 'ModelEditDialogCtrl'
+        list_model_name: "entities"
+      })
 ])
 
 .controller('XmlTransformedFieldSelectCtrl', [

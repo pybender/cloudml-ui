@@ -341,6 +341,8 @@ class XmlSqoopForm(BaseForm):
     required_fields = ('entity', 'target', 'table', 'datasource')
     NO_REQUIRED_FOR_EDIT = True
 
+    MAX_ITEMS_BY_ENTITY = 3
+
     entity = DocumentField(
         doc=XmlEntity, by_name=False, return_doc=True)
     datasource = DocumentField(
@@ -351,3 +353,12 @@ class XmlSqoopForm(BaseForm):
     direct = CharField()
     mappers = CharField()
     text = CharField()
+
+    def clean_entity(self, value, field):
+        if value and not self.is_edit:
+            query = XmlSqoop.query.filter_by(entity=value)
+            if query.count() >= self.MAX_ITEMS_BY_ENTITY:
+                raise ValidationError(
+                    'There can be no more than {0} elements'.format(
+                        self.MAX_ITEMS_BY_ENTITY))
+        return value
