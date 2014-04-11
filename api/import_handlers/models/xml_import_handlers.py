@@ -47,6 +47,12 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
 
         def build_tree(entity, parent):
             ent = etree.SubElement(parent, "entity", **entity.to_dict())
+
+            for sqoop in entity.sqoop_imports:
+                sqoop_el = etree.SubElement(ent, "sqoop", **sqoop.to_dict())
+                if sqoop.text:
+                    sqoop_el.text = etree.CDATA(sqoop.text)
+
             if entity.query_obj:
                 query = etree.SubElement(
                     ent, "query", **entity.query_obj.to_dict())
@@ -64,11 +70,6 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
                 if script_text:
                     script_tag = etree.SubElement(field_el, "script")
                     script_tag.text = etree.CDATA(script_text)
-
-            for sqoop in entity.sqoop_imports:
-                sqoop_el = etree.SubElement(ent, "sqoop", **sqoop.to_dict())
-                if sqoop.text:
-                    sqoop_el.text = etree.CDATA(sqoop.text)
 
             for subentity in entity.entities:
                 build_tree(subentity, parent=ent)
@@ -209,6 +210,8 @@ class XmlSqoop(db.Model, BaseMixin):
     mappers = db.Column(db.String(200), nullable=True)
     text = db.Column(db.Text, nullable=True)
 
+    FIELDS_TO_SERIALIZE = ['target', 'table', 'where', 'direct', 'mappers']
+
     # Global datasource
     datasource_id = db.Column(db.ForeignKey('xml_data_source.id',
                                             ondelete='SET NULL'))
@@ -220,12 +223,19 @@ class XmlSqoop(db.Model, BaseMixin):
         'XmlEntity', foreign_keys=[entity_id], backref=backref(
             'sqoop_imports', cascade='all,delete', order_by='XmlSqoop.id'))
 
+    def to_dict(self):
+        sqoop = super(XmlSqoop, self).to_dict()
+        if self.datasource:
+            sqoop['datasource'] = self.datasource.name
+        return sqoop
+
 
 def get_entity_tree(handler):
     entity = XmlEntity.query\
         .options(
             joinedload_all('fields'),
             joinedload_all('sqoop_imports'),
+            joinedload('sqoop_imports.datasource'),
             joinedload_all('entities', 'entities', 'entities'),
             joinedload('entities.fields'),
             joinedload('entities.entities.fields'),

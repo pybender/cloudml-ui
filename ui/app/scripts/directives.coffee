@@ -249,6 +249,7 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
 .directive("entitiesTree", [ ->
   return {
     scope: {
+      handler: '=',
       entity: '=',
       addEntity: '&addEntity',
       addField: '&addField',
@@ -261,6 +262,16 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
     restrict: 'E'
     transclude : true
     templateUrl:'partials/directives/import_tree.html'
+
+    link: (scope, el, attrs) ->
+      scope.pigDatasources = () ->
+        options = []
+        for ds in scope.handler.xml_data_sources
+          options.push({
+            value: ds.id,
+            text: ds.name
+          })
+        return options
   }
 ])
 

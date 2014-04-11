@@ -179,6 +179,13 @@ class XmlSqoopResource(BaseResourceSQL):
     put_form = post_form = XmlSqoopForm
     Model = XmlSqoop
 
+    def _get_details_query(self, params, **kwargs):
+        try:
+            handler_id = kwargs.pop('import_handler_id')
+            return self._build_details_query(params, **kwargs)
+        except NoResultFound:
+            return None
+
 api.add_resource(XmlSqoopResource, '/cloudml/xml_import_handlers/\
 <regex("[\w\.]*"):import_handler_id>/entities/<regex("[\w\.]*"):entity_id>\
-/sqoop/')
+/sqoop_imports/')

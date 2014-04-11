@@ -47,17 +47,45 @@
     </div>
     <div ng-repeat="sqoop in entity.sqoop_imports">
     <hr />
-    <h5><i class="icon-magnet"></i> Sqoop</h5>
+    <h5><i class="icon-wrench"></i> Sqoop</h5>
     <div>
-      <div>
-        Target:
-        <span title="target" class="target value" ng-bind="sqoop.target" editable="sqoop" value="sqoop.target" editable-field="target" editable-input="text" editable-placement="right"></span>
+      <alert-message ng-show="sqoop.msg" class="alert-info" msg="{{ sqoop.msg }}"></alert-message>
+      <alert-message ng-show="sqoop.err" class="alert-error" msg="{{ sqoop.err }}"></alert-message>
+      <alert-message ng-show="sqoop.edit_err" class="alert-error" msg="{{ sqoop.edit_err }}"></alert-message>
+      <div class="row">
+      <div class="span3">
+          <div>
+            Target:
+            <span title="target" class="target value" ng-bind="sqoop.target" editable="sqoop" value="sqoop.target" editable-field="target" editable-input="text" editable-placement="right"></span>
+          </div>
+          <div>
+            Table:
+            <span title="table" class="table value" ng-bind="sqoop.table" editable="sqoop" value="sqoop.table" editable-field="table" editable-input="text" editable-placement="right"></span>
+          </div>
       </div>
-      <div>
-        Table:
-        <span title="table" class="table value" ng-bind="sqoop.table" editable="sqoop" value="sqoop.table" editable-field="table" editable-input="text" editable-placement="right"></span>
+      <div class="span3">
+          <div>
+            Where:
+            <span title="where" class="where value" ng-bind="sqoop.where" editable="sqoop" value="sqoop.where" editable-field="where" editable-input="text" editable-placement="right"></span>
+          </div>
+          <div>
+            Direct:
+            <span title="direct" class="direct value" ng-bind="sqoop.direct" editable="sqoop" value="sqoop.direct" editable-field="direct" editable-input="text" editable-placement="right"></span>
+          </div>
       </div>
-      <div>
+      <div class="span3">
+          <div>
+            Mappers:
+            <span title="mappers" class="mappers value" ng-bind="sqoop.mappers" editable="sqoop" value="sqoop.mappers" editable-field="mappers" editable-input="text" editable-placement="right"></span>
+          </div>
+          <div>
+            Datasource:
+            <span title="datasource" class="datasource value" ng-bind="sqoop.datasource_id" editable="sqoop" value="sqoop.datasource_id" editable-field="datasource" editable-input="select" source="pigDatasources()"></span>
+          </div>
+      </div>
+      </div>
+      <div class="row">
+        <div class="span11">
         Text:<textarea class="small" ui-codemirror="{
             mode: 'text/x-mysql',
             indentWithTabs: true,
@@ -65,8 +93,11 @@
             lineNumbers: true,
             matchBrackets: true,
             height: '30px'}" ng-model="sqoop.text" ui-refresh="sqoop" />
-
+        </div>
       </div>
+      <a ng-disabled="sqoop.loading_state" ng-click="sqoop.saveText()" class="btn btn-info">
+          <i class="status-icon icon-edit"></i> save text
+        </a>
     </div>
     </div>
     <div ng-show="entity.query_obj">
@@ -169,7 +200,7 @@
     <div ng-show="entity.entities">
       <hr />
       <entities-recursive>
-        <entities-tree entity="sub" ng-repeat="sub in entity.entities"
+        <entities-tree handler="handler" entity="sub" ng-repeat="sub in entity.entities"
                        add-entity="addEntity()"
                        add-field="addField()"
                        delete-entity="deleteEntity()"

@@ -114,6 +114,58 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
     return Field
 ])
 
+.factory('Sqoop', [
+  'settings'
+  'BaseModel'
+
+  (settings, BaseModel) ->
+    class Sqoop extends BaseModel
+      BASE_API_URL: "#{settings.apiUrl}xml_import_handlers/sqoop_imports/"
+      API_FIELDNAME: 'sqoop_import'
+      @LIST_MODEL_NAME: 'sqoop_imports'
+      LIST_MODEL_NAME: @LIST_MODEL_NAME
+      @MAIN_FIELDS: 'id,text,target,table,where,direct,mappers,datasource,
+datasource_id,entity_id'
+
+      id: null
+
+      @$get_api_url: (opts, model) ->
+        if model?
+          handler_id = model.import_handler_id
+        else
+          handler_id = opts.import_handler_id
+
+        if model?
+          entity_id = model.entity_id
+        else
+          entity_id = opts.entity_id
+
+        return "#{settings.apiUrl}xml_import_handlers/\
+#{handler_id}/entities/#{entity_id}/sqoop_imports/"
+
+      @$beforeLoadAll: (opts) ->
+        if not opts.import_handler_id
+          throw new Error "import_handler_id is required"
+
+        if not opts.entity_id
+          throw new Error "entity_id is required"
+
+      saveText: () =>
+        if not @text
+          @edit_err = 'Please enter a text'
+          return
+        @loading_state = true
+        self = @
+        @$save({only: ['text']}).then((opts) ->
+          self.loading_state = false
+          self.msg = 'Sqoop item has been saved'
+          self.edit_err = null
+          self.err = null
+        )
+
+    return Sqoop
+])
+
 .factory('XmlQuery', [
   'settings'
   'BaseModel'
@@ -166,8 +218,9 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
   'BaseImportHandlerItem'
   'Field'
   'XmlQuery'
+  'Sqoop'
 
-  (settings, BaseImportHandlerItem, Field, Query) ->
+  (settings, BaseImportHandlerItem, Field, Query, Sqoop) ->
     class Entity extends BaseImportHandlerItem
       API_FIELDNAME: 'entity'
       @LIST_MODEL_NAME: 'entities'
@@ -207,6 +260,12 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
           if origData.query_obj?
             @query_obj = new Query(_.extend origData.query_obj, defaults)
             @query_id = @query_id || @query_obj.id
+
+          if origData.sqoop_imports?
+            @sqoop_imports = []
+            for data in origData.sqoop_imports
+              @sqoop_imports.push new Sqoop(_.extend data, defaults)
+
     return Entity
 ])
 

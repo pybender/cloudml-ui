@@ -118,9 +118,9 @@ exist. Please choose another one.' % value)
                             where=sqoop.where,
                             direct=sqoop.direct,
                             mappers=sqoop.mappers,
-                            text=sqoop.query
+                            text=sqoop.query,
+                            datasource=ds_dict.get(sqoop.datasource_name)
                         )
-                        # TODO: Datasource
                         db_entity.sqoop_imports.append(sqoop_obj)
                         db.session.add(sqoop_obj)
 
@@ -338,11 +338,13 @@ class XmlScriptForm(BaseForm):
 
 
 class XmlSqoopForm(BaseForm):
-    required_fields = ('import_handler_id', 'target', 'table')
+    required_fields = ('entity', 'target', 'table', 'datasource')
     NO_REQUIRED_FOR_EDIT = True
 
-    import_handler_id = DocumentField(
-        doc=XmlImportHandler, by_name=False, return_doc=False)
+    entity = DocumentField(
+        doc=XmlEntity, by_name=False, return_doc=True)
+    datasource = DocumentField(
+        doc=XmlDataSource, by_name=False, return_doc=True)
     target = CharField()
     table = CharField()
     where = CharField()
