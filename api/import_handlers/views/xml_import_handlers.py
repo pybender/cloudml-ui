@@ -127,6 +127,7 @@ class XmlDataSourceResource(BaseResourceSQL):
     put_form = post_form = XmlDataSourceForm
     Model = XmlDataSource
     GET_ACTIONS = ('configuration', )
+    FILTER_PARAMS = (('type', str), )
 
     def _get_configuration_action(self, **kwargs):
         from core.xmlimporthandler.importhandler import ExtractionPlan

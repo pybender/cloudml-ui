@@ -12,7 +12,7 @@
             <span class="help-block" ng-bind="errorList.entity" />
           </div>
 
-          <div class="control-group" ng-class="{error: Form.datasource.$invalid || errorList.datasource}" ng-controller="XmlDataSourceSelectCtrl" ng-init="init(model.import_handler_id)">
+          <div class="control-group" ng-class="{error: Form.datasource.$invalid || errorList.datasource}" ng-controller="XmlDataSourceSelectCtrl" ng-init="init(model.import_handler_id, 'db')">
               <label class="control-label">Data Source</label>
               <div class="controls">
                 <select name="datasource" ng-model="model.datasource" required>

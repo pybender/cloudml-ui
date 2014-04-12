@@ -237,6 +237,8 @@ def get_entity_tree(handler):
             joinedload_all('sqoop_imports'),
             joinedload('sqoop_imports.datasource'),
             joinedload_all('entities', 'entities', 'entities'),
+            joinedload('entities.sqoop_imports'),
+            joinedload('entities.sqoop_imports.datasource'),
             joinedload('entities.fields'),
             joinedload('entities.entities.fields'),
             joinedload('entities.entities.entities.fields'),

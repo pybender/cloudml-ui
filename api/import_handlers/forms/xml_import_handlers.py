@@ -234,8 +234,7 @@ class XmlEntityForm(BaseForm):
 
     def save(self, *args, **kwargs):
         try:
-            entity = super(XmlEntityForm, self).save(commit=False)
-            db.session.commit()
+            entity = super(XmlEntityForm, self).save()
 
             if self.cleaned_data.get('transformed_field') and \
                     entity.datasource:
@@ -252,6 +251,11 @@ class XmlEntityForm(BaseForm):
                 db.session.add(query)
                 entity.query_obj = query
                 db.session.add(entity)
+
+            ds = entity.datasource
+            if not ds or (ds and ds.type != 'pig'):
+                for sqoop in entity.sqoop_imports:
+                    db.session.delete(sqoop)
 
         except Exception:
             db.session.rollback()
@@ -355,10 +359,19 @@ class XmlSqoopForm(BaseForm):
     text = CharField()
 
     def clean_entity(self, value, field):
+        if value:
+            if not (value.datasource and value.datasource.type == 'pig'):
+                raise ValidationError('Only "pig" entity is allowed')
         if value and not self.is_edit:
             query = XmlSqoop.query.filter_by(entity=value)
             if query.count() >= self.MAX_ITEMS_BY_ENTITY:
                 raise ValidationError(
                     'There can be no more than {0} elements'.format(
                         self.MAX_ITEMS_BY_ENTITY))
+        return value
+
+    def clean_datasource(self, value, field):
+        if value:
+            if value.type != 'db':
+                raise ValidationError('Only "db" datasources are allowed')
         return value

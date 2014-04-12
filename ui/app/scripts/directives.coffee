@@ -266,9 +266,11 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
     templateUrl:'partials/directives/import_tree.html'
 
     link: (scope, el, attrs) ->
-      scope.getDatasources = () ->
+      scope.getDatasources = (ds_type) ->
         options = []
         for ds in scope.handler.xml_data_sources
+          if ds_type and ds.type != ds_type
+            continue
           options.push({
             value: ds.id,
             text: ds.name

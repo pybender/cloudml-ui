@@ -101,6 +101,7 @@ angular.module(
     $scope.addSqoop = (entity) ->
       sqoop = new Sqoop({
         'import_handler_id': entity.import_handler_id
+        'entity_id': entity.id
         'entity': entity.id
       })
       $scope.openDialog({

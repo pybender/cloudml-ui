@@ -13,7 +13,7 @@
         <a ng-show="entity.entity_id" class="btn btn-danger" ng-click="deleteEntity()(entity)">
           <i class="status-icon icon-remove"></i> delete entity
         </a>
-        <button ng-click="addSqoop()(entity);" class="btn btn-info" ng-disabled="entity.sqoop_imports.length >= 3">
+        <button ng-click="addSqoop()(entity);" class="btn btn-info" ng-show="entity.datasource && entity.datasource.type == 'pig'" ng-disabled="entity.sqoop_imports.length >= 3">
           <i class="status-icon icon-wrench"></i> add sqoop import
         </button>
       </div>
@@ -83,7 +83,7 @@
           </div>
           <div>
             Datasource:
-            <span title="datasource" class="datasource value" ng-bind="sqoop.datasource_id" editable="sqoop" value="sqoop.datasource_id" editable-field="datasource" editable-input="select" source="getDatasources()"></span>
+            <span title="datasource" class="datasource value" ng-bind="sqoop.datasource_id" editable="sqoop" value="sqoop.datasource_id" editable-field="datasource" editable-input="select" source="getDatasources('db')"></span>
           </div>
       </div>
       </div>

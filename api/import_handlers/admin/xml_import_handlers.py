@@ -3,7 +3,7 @@ from flask.ext.admin.model.template import macro
 from api import admin
 from api.base.admin import BaseAdmin
 from api.import_handlers.models import XmlScript, XmlQuery, XmlEntity, \
-    XmlField, XmlImportHandler, XmlDataSource, XmlInputParameter
+    XmlField, XmlImportHandler, XmlDataSource, XmlInputParameter, XmlSqoop
 
 
 class ImportHandlerAdmin(BaseAdmin):
@@ -75,3 +75,16 @@ class FieldAdmin(BaseAdmin):
 
 admin.add_view(FieldAdmin(
     name='XML Entity Field', category='Import Handlers'))
+
+
+class SqoopAdmin(BaseAdmin):
+    MIX_METADATA = False
+    Model = XmlSqoop
+    column_list = ['id', 'entity', 'target', 'table', 'datasource']
+    column_formatters = {
+        'entity': macro('render_fk_link'),
+        'datasource': macro('render_fk_link')
+    }
+
+admin.add_view(SqoopAdmin(
+    name='XML Sqoop Import', category='Import Handlers'))
