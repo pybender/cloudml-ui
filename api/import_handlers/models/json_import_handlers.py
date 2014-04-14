@@ -86,7 +86,8 @@ class ImportHandler(db.Model, ImportHandlerMixin):
 
     def get_fields(self):
         from core.importhandler.importhandler import ExtractionPlan
-
+        if self.data is None:
+            return []
         data = json.dumps(self.data)
         plan = ExtractionPlan(data, is_file=False)
         test_handler_fields = []
