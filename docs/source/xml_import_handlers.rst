@@ -236,6 +236,10 @@ Example::
 
     <pig name="pig3" jobid="job-id" amazon_access_token="token" amazon_token_secret="secret"/>
 
+For store results we should use '$output' parameter as output dir. For example::
+
+    C = FOREACH B GENERATE application, opening;
+    STORE C INTO '$output' USING JsonStorage();
 
 .. _import:
 
