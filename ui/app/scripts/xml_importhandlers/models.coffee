@@ -237,6 +237,7 @@ datasource_id,entity_id'
       name: null
       query_id: null
       query_obj: null
+      entity_id: null
       entities: []
 
       loadFromJSON: (origData) =>
@@ -265,6 +266,14 @@ datasource_id,entity_id'
             @sqoop_imports = []
             for data in origData.sqoop_imports
               @sqoop_imports.push new Sqoop(_.extend data, defaults)
+
+      isRoot: () =>
+        return @entity_id == null
+
+      excludeDs: () =>
+        # TODO: ternary operator has been introduced to templates
+        # since Angular 1.1.5
+        if @isRoot() then null else 'pig'
 
     return Entity
 ])

@@ -8,8 +8,7 @@
     <ng-include src="'/partials/parts/save_form_messages.html'"></ng-include>
     <div class="control-group">
       <form name="Form" class="form-horizontal">
-
-          <div class="control-group" ng-class="{error: Form.datasource.$invalid || errorList.datasource}" ng-controller="XmlDataSourceSelectCtrl" ng-init="init(model.import_handler_id)">
+          <div class="control-group" ng-class="{error: Form.datasource.$invalid || errorList.datasource}" ng-controller="XmlDataSourceSelectCtrl" ng-init="init(model.import_handler_id, null, model.excludeDs())">
               <label class="control-label">Data Source (global)</label>
               <div class="controls">
                 <select name="datasource" ng-model="model.datasource" ng-change="model.transformed_field = undefined">

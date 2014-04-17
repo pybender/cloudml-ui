@@ -225,6 +225,12 @@ class XmlEntityForm(BaseForm):
     def clean_datasource(self, value, field):
         if value and self.data.get('transformed_field'):
             raise ValidationError(self.DATASOURCE_MESSAGE)
+
+        entity = self.obj
+        if entity and value and value.type == 'pig':
+            if not entity.is_root:
+                raise ValidationError('Only root pig entity is allowed')
+
         return value
 
     def clean_transformed_field(self, value, field):

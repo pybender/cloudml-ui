@@ -274,6 +274,10 @@ class XmlEntity(db.Model, BaseMixin, RefXmlImportHandlerMixin):
     query_obj = relationship('XmlQuery', foreign_keys=[query_id],
                              cascade='all,delete', backref='parent_entity')
 
+    @property
+    def is_root(self):
+        return not self.entity_id
+
     def __repr__(self):
         return "<Entity %s>" % self.name
 

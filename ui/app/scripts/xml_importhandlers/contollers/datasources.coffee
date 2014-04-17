@@ -75,20 +75,26 @@ angular.module(
   'Datasource'
 
   ($scope, Datasource) ->
-    $scope.init = (handler_id, ds_type) ->
+    $scope.init = (handler_id, ds_type, exclude_ds_type) ->
       $scope.handler_id = handler_id
       $scope.ds_type = ds_type
+      $scope.exclude_type = exclude_ds_type
       $scope.load()
 
     $scope.load = () ->
       opts = {
-        show: 'name'
+        show: 'name,type'
         import_handler_id: $scope.handler_id
       }
       if $scope.ds_type
         opts.type = $scope.ds_type
       Datasource.$loadAll(opts).then ((opts) ->
-        $scope.datasources = opts.objects
+        if not $scope.exclude_type
+          $scope.datasources = opts.objects
+        else
+          $scope.datasources = (
+            item for item in opts.objects when item.type != $scope.exclude_type
+          )
       ), ((opts) ->
         $scope.setError(opts, 'loading datasources')
       )
