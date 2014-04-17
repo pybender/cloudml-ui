@@ -316,6 +316,10 @@ using <tt class="docutils literal"><span class="pre">&lt;pig&gt;</span></tt> tag
 <p>Example:</p>
 <div class="highlight-python"><pre>&lt;pig name="pig3" jobid="job-id" amazon_access_token="token" amazon_token_secret="secret"/&gt;</pre>
 </div>
+<p>For store results we should use &#8216;$output&#8217; parameter as output dir. For example:</p>
+<div class="highlight-python"><pre>C = FOREACH B GENERATE application, opening;
+STORE C INTO '$output' USING JsonStorage();</pre>
+</div>
 </div>
 </div>
 <div class="section" id="import">
@@ -399,8 +403,8 @@ the following attributes:</p>
 <ul class="simple">
 <li><tt class="docutils literal"><span class="pre">name</span></tt> (<strong>required</strong>) a unique name for the field</li>
 <li><tt class="docutils literal"><span class="pre">column</span></tt> - if entity is using a DB or CSV datasource, it will use data from this column</li>
-<li><tt class="docutils literal"><span class="pre">jsonpath</span></tt> - if entity is a JSON datasource, it will use this jsonpath to extract data</li>
-<li><tt class="docutils literal"><span class="pre">type</span></tt> - can be integer, boolean, string, float. If defined, the value will be converted to the given type. If it&#8217;s not possible, then the resulting value will be null.</li>
+<li><tt class="docutils literal"><span class="pre">jsonpath</span></tt> - if entity is a JSON datasource, or field type is json, it will use this jsonpath to extract data</li>
+<li><tt class="docutils literal"><span class="pre">type</span></tt> - can be integer, boolean, string, float or json. If defined, the value will be converted to the given type. If it&#8217;s not possible, then the resulting value will be null.</li>
 <li><tt class="docutils literal"><span class="pre">key_path</span></tt> - a JSON path expression for identifying the keys of a map. Used together with <tt class="docutils literal"><span class="pre">value_path</span></tt></li>
 <li><tt class="docutils literal"><span class="pre">value_path</span></tt> - JSON path expression for identifying the values of a map. Used together with <tt class="docutils literal"><span class="pre">key_path</span></tt>.</li>
 <li><tt class="docutils literal"><span class="pre">regex</span></tt> - applies the given regular expression and assigns the first match to the value</li>
