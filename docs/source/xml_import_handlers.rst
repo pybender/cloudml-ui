@@ -335,8 +335,8 @@ the following attributes:
 
 - ``name`` (**required**) a unique name for the field
 - ``column`` - if entity is using a DB or CSV datasource, it will use data from this column
-- ``jsonpath`` - if entity is a JSON datasource, it will use this jsonpath to extract data
-- ``type`` - can be integer, boolean, string, float. If defined, the value will be converted to the given type. If it's not possible, then the resulting value will be null.
+- ``jsonpath`` - if entity is a JSON datasource, or field type is json, it will use this jsonpath to extract data
+- ``type`` - can be integer, boolean, string, float or json. If defined, the value will be converted to the given type. If it's not possible, then the resulting value will be null.
 - ``key_path`` - a JSON path expression for identifying the keys of a map. Used together with ``value_path``
 - ``value_path`` - JSON path expression for identifying the values of a map. Used together with ``key_path``. 
 - ``regex`` - applies the given regular expression and assigns the first match to the value
