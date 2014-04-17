@@ -85,7 +85,7 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
       LIST_MODEL_NAME: @LIST_MODEL_NAME
       @MAIN_FIELDS: 'id,name'
 
-      TYPES_LIST: ['integer', 'boolean', 'string', 'float']
+      TYPES_LIST: ['integer', 'boolean', 'string', 'float', 'json']
       TRANSFORM_LIST: ['csv', 'json']
 
       id: null
