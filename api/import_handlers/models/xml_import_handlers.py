@@ -170,7 +170,8 @@ class XmlField(db.Model, BaseMixin):
     TRANSFORM_TYPES = ['json', 'csv']
     FIELDS_TO_SERIALIZE = ['name', 'type', 'column', 'jsonpath', 'join',
                            'regex', 'split', 'dateFormat', 'template',
-                           'transform', 'headers', 'script', 'required']
+                           'transform', 'headers', 'script', 'required',
+                           'multipart']
 
     name = db.Column(db.String(200), nullable=False)
     type = db.Column(db.Enum(*TYPES, name='xml_field_types'))
@@ -186,20 +187,12 @@ class XmlField(db.Model, BaseMixin):
     headers = db.Column(db.String(200))
     script = db.Column(db.Text)
     required = db.Column(db.Boolean, default=False)
+    multipart = db.Column(db.Boolean, default=False)
 
     entity_id = db.Column(db.ForeignKey('xml_entity.id'))
     entity = relationship(
         'XmlEntity', foreign_keys=[entity_id], backref=backref(
             'fields', cascade='all,delete', order_by='XmlField.id'))
-
-    def to_dict(self):
-        field = super(XmlField, self).to_dict()
-        if 'required' in field:
-            if field['required']:
-                field['required'] = 'true'
-            else:
-                del field['required']
-        return field
 
 
 class XmlSqoop(db.Model, BaseMixin):

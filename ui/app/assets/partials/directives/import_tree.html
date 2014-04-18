@@ -134,74 +134,85 @@
     <div ng-show="entity.fields">
       <hr />
       <h5>Fields</h5>
-      <table class="table table-hover">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Column</th>
-            <th>Jsonpath</th>
-            <th>Join</th>
-            <th>Regex</th>
-            <th>Split</th>
-            <th>Date Format</th>
-            <th>Template</th>
-            <th>Transform</th>
-            <th>Headers</th>
-            <th>Script</th>
-            <th title="Required">Req</th>
-            <th width="50px">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-        <tr ng-repeat="field in entity.fields">
-          <td>
-            <span title="name" class="name" ng-bind="field.name || 'no name'" editable="field" value="field.name" editable-field="name" editable-input="text" editable-placement="right"></span>
-          </td>
-          <td>
-            <span title="Type" ng-bind="field.type" editable="field" value="field.type" editable-field="type" editable-placement="right" editable-input="select" source="field.TYPES_LIST"></span>
-          </td>
-          <td>
-            <span title="column" class="column" ng-bind="field.column || 'no column'" editable="field" value="field.column" editable-field="column" editable-input="text" editable-placement="right"></span>
-          </td>
-          <td>
-            <span title="jsonpath" class="jsonpath" ng-bind="field.jsonpath || 'no jsonpath'" editable="field" value="field.jsonpath" editable-field="jsonpath" editable-input="text" editable-placement="right"></span>
-          </td>
-          <td>
-            <span title="join" class="join" ng-bind="field.join || 'no join'" editable="field" value="field.join" editable-field="join" editable-input="text" editable-placement="right"></span>
-          </td>
-          <td>
-            <span title="regex" class="regex" ng-bind="field.regex || 'no regex'" editable="field" value="field.regex" editable-field="regex" editable-input="text" editable-placement="right"></span>
-          </td>
-          <td>
-            <span title="split" class="split" ng-bind="field.split || 'no split'" editable="field" value="field.split" editable-field="split" editable-input="text" editable-placement="right"></span>
-          </td>
-          <td>
-            <span title="dateFormat" class="dateFormat" ng-bind="field.dateFormat || 'no dateFormat'" editable="field" value="field.dateFormat" editable-field="dateFormat" editable-input="text" editable-placement="right"></span>
-          </td>
-          <td>
-            <span title="template" class="template" ng-bind="field.template || 'no template'" editable="field" value="field.template" editable-field="template" editable-input="textarea" editable-placement="left"></span>
-          </td>
-          <td>
-            <span title="transform" ng-bind="field.transform" editable="field" value="field.transform" editable-field="transform" editable-placement="left" editable-input="select" source="field.TRANSFORM_LIST"></span>
-          </td>
-          <td>
-            <span title="headers" class="headers" ng-bind="field.headers || 'no headers'" editable="field" value="field.regex" editable-field="headers" editable-input="textarea" editable-placement="left"></span>
-          </td>
-          <td>
-            <span title="script" class="script" ng-bind="field.script || 'no script'" editable="field" value="field.script" editable-field="script" editable-input="textarea" editable-placement="left"></span>
-          </td>
-          <td>
-            <input title="required" type="checkbox" ng-checked="field.required" ng-model="field.required" ng-change="field.$save({only: ['required']})" />
-          </td>
-          <td>
-            <button ng-click="deleteField()(field);" class="btn btn-danger">
-              <i title="Delete field. Be careful - you could not recover it!" class="icon-remove"></i>
-            </button>
-          </td>
-        </tr>
-      </tbody>
-      </table>
+      <div class="scrollable">
+        <div class="outer">
+          <div class="inner">
+            <table class="table">
+              <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th width="80px">Type</th>
+                    <th>Column</th>
+                    <th>Jsonpath</th>
+                    <th>Join</th>
+                    <th>Regex</th>
+                    <th>Split</th>
+                    <th title="Date Format">Format</th>
+                    <th title="Template">Template</th>
+                    <th>Transform</th>
+                    <th>Headers</th>
+                    <th>Script</th>
+                    <th width="50px" title="Multipart">Multipart</th>
+                    <th width="50px" title="Required">Required</th>
+                    <th width="50px">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr ng-repeat="field in entity.fields">
+                    <th>
+                      <span title="name" class="name" ng-bind="field.name || 'no name'" editable="field" value="field.name" editable-field="name" editable-input="text" editable-placement="right"></span>
+                    </th>
+                    <td>
+                      <span title="Type" ng-bind="field.type" editable="field" value="field.type" editable-field="type" editable-placement="right" editable-input="select" source="field.TYPES_LIST"></span>
+                    </td>
+                    <td>
+                      <span title="column" class="column" ng-bind="field.column || 'no column'" editable="field" value="field.column" editable-field="column" editable-input="text" editable-placement="right"></span>
+                    </td>
+                    <td>
+                      <span title="jsonpath" class="jsonpath" ng-bind="field.jsonpath || 'no jsonpath'" editable="field" value="field.jsonpath" editable-field="jsonpath" editable-input="text" editable-placement="right"></span>
+                    </td>
+                    <td>
+                      <span title="join" class="join" ng-bind="field.join || 'no join'" editable="field" value="field.join" editable-field="join" editable-input="text" editable-placement="right"></span>
+                    </td>
+                    <td>
+                      <span title="regex" class="regex" ng-bind="field.regex || 'no regex'" editable="field" value="field.regex" editable-field="regex" editable-input="text" editable-placement="right"></span>
+                    </td>
+                    <td>
+                      <span title="split" class="split" ng-bind="field.split || 'no split'" editable="field" value="field.split" editable-field="split" editable-input="text" editable-placement="right"></span>
+                    </td>
+                    <td>
+                      <span title="dateFormat" class="dateFormat" ng-bind="field.dateFormat || 'no dateFormat'" editable="field" value="field.dateFormat" editable-field="dateFormat" editable-input="text" editable-placement="right"></span>
+                    </td>
+                    <td>
+                      <span title="template" class="template" ng-bind="field.template || 'no template'" editable="field" value="field.template" editable-field="template" editable-input="textarea" editable-placement="left"></span>
+                    </td>
+                    <td>
+                      <span title="transform" ng-bind="field.transform" editable="field" value="field.transform" editable-field="transform" editable-placement="left" editable-input="select" source="field.TRANSFORM_LIST"></span>
+                    </td>
+                    <td>
+                      <span title="headers" class="headers" ng-bind="field.headers || 'no headers'" editable="field" value="field.regex" editable-field="headers" editable-input="textarea" editable-placement="left"></span>
+                    </td>
+                    <td>
+                      <span title="script" class="script" ng-bind="field.script || 'no script'" editable="field" value="field.script" editable-field="script" editable-input="textarea" editable-placement="left"></span>
+                    </td>
+                    <td>
+                      <input title="multipart" type="checkbox" ng-checked="field.multipart" ng-model="field.multipart" ng-change="field.$save({only: ['multipart']})" />
+                    </td>
+                    <td>
+                      <input title="required" type="checkbox" ng-checked="field.required" ng-model="field.required" ng-change="field.$save({only: ['required']})" />
+                    </td>
+                    <td>
+                      <button ng-click="deleteField()(field);" class="btn btn-danger">
+                        <i title="Delete field. Be careful - you could not recover it!" class="icon-remove"></i>
+                      </button>
+                    </td>
+                  </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div style="clear: both;float:none;"></div>
     </div>
     <div ng-show="entity.entities">
       <hr />

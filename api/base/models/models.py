@@ -29,6 +29,10 @@ class BaseMixin(JsonSerializableMixin):
         for f in self.FIELDS_TO_SERIALIZE:
             val = getattr(self, f)
             if val is not None:
+                column = self.__table__.columns.get(f, None)
+                if not column is None:
+                    if val and isinstance(column.type, db.Boolean):
+                        val = str(val).lower()
                 kwargs[f] = val
         return kwargs
 

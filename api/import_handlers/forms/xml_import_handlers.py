@@ -283,6 +283,7 @@ class XmlFieldForm(BaseForm):
     headers = CharField()
     script = CharField()
     required = BooleanField()
+    multipart = BooleanField()
     entity_id = DocumentField(
         doc=XmlEntity, by_name=False, return_doc=False)
     import_handler_id = DocumentField(
@@ -315,7 +316,8 @@ class XmlDataSourceForm(BaseForm):
                     params_errors.append(param['name'])
         if params_errors:
             raise ValidationError(
-                'These params are required: {}'.format(', '.join(params_errors))
+                'These params are required: {}'.format(
+                    ', '.join(params_errors))
             )
         return value
 
