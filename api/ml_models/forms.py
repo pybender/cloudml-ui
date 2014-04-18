@@ -12,7 +12,7 @@ from core.importhandler.importhandler import ExtractionPlan, \
 from api.base.forms import BaseForm, ValidationError, ModelField, \
     CharField, JsonField, ImportHandlerFileField, MultipleModelField, \
     ChoiceField
-from api.models import Tag, ImportHandler, Model
+from api.models import Tag, ImportHandler, Model, XmlImportHandler
 from api.features.models import FeatureSet, PredefinedClassifier
 from api import app
 
@@ -21,13 +21,21 @@ db = app.sql_db
 
 class ModelEditForm(BaseForm):
     name = CharField()
-    train_import_handler = ModelField(model=ImportHandler, by_name=False,
-                                         return_model=True)
-    test_import_handler = ModelField(model=ImportHandler, by_name=False,
-                                         return_model=True)
+    train_import_handler = CharField()
+    test_import_handler = CharField()
     example_id = CharField()
     example_label = CharField()
     tags = JsonField()
+
+    def clean_import_handler(self, value, field):
+        if value:
+            if 'xml' in value:
+                value = XmlImportHandler.query.get(value.replace('xml', ''))
+            value = ImportHandler.query.get(value)
+        return value
+
+    clean_train_import_handler = clean_import_handler
+    clean_test_import_handler = clean_import_handler
 
     def save(self, commit=True):
         old_tags = [t.text for t in self.obj.tags]

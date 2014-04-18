@@ -61,15 +61,20 @@ class Model(db.Model, BaseModel):
     features_set_id = db.Column(db.Integer, db.ForeignKey('feature_set.id'))
     features_set = relationship('FeatureSet', uselist=False)
 
-    test_import_handler_id = db.Column(db.ForeignKey('import_handler.id',
-                                                     ondelete='SET NULL'))
-    test_import_handler = relationship('ImportHandler',
-                                       foreign_keys=[test_import_handler_id])
+    test_import_handler_id = db.Column(db.Integer, nullable=False)
+    test_import_handler_type = db.Column(db.String(200))
 
-    train_import_handler_id = db.Column(db.ForeignKey('import_handler.id',
-                                                      ondelete='SET NULL'))
-    train_import_handler = relationship('ImportHandler',
-                                        foreign_keys=[train_import_handler_id])
+    train_import_handler_id = db.Column(db.Integer, nullable=False)
+    train_import_handler_type = db.Column(db.String(200))
+    # test_import_handler_id = db.Column(db.ForeignKey('import_handler.id',
+    #                                                  ondelete='SET NULL'))
+    # test_import_handler = relationship('ImportHandler',
+    #                                    foreign_keys=[test_import_handler_id])
+
+    # train_import_handler_id = db.Column(db.ForeignKey('import_handler.id',
+    #                                                   ondelete='SET NULL'))
+    # train_import_handler = relationship('ImportHandler',
+    #                                     foreign_keys=[train_import_handler_id])
 
     datasets = relationship('DataSet',
                             secondary=lambda: data_sets_table)
@@ -78,6 +83,30 @@ class Model(db.Model, BaseModel):
 
     trainer = deferred(db.Column(S3File))
     trainer_size = db.Column(db.Integer, default=0)
+
+    @property
+    def test_import_handler(self):
+        """Provides in-Python access to the "parent" by choosing
+        the appropriate relationship.
+        """
+        return getattr(self, "parent_%s" % self.import_handler_type)
+
+    @test_import_handler.setter
+    def test_import_handler(self, handler):
+        self.test_import_handler_id = handler.id
+        self.test_import_handler_type = handler.TYPE
+
+    @property
+    def train_import_handler(self):
+        """Provides in-Python access to the "parent" by choosing
+        the appropriate relationship.
+        """
+        return getattr(self, "parent_%s" % self.import_handler_type)
+
+    @train_import_handler.setter
+    def train_import_handler(self, handler):
+        self.train_import_handler_id = handler.id
+        self.train_import_handler_type = handler.TYPE
 
     def __repr__(self):
         return "<Model {0}>".format(self.name)
