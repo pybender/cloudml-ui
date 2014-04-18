@@ -3,6 +3,7 @@ from flask import has_request_context, request
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy import func
 from sqlalchemy.orm import relationship
+from sqlalchemy.types import Boolean
 
 from serialization import JsonSerializableMixin
 from api import app
@@ -31,7 +32,7 @@ class BaseMixin(JsonSerializableMixin):
             if val is not None:
                 column = self.__table__.columns.get(f, None)
                 if not column is None:
-                    if val and isinstance(column.type, db.Boolean):
+                    if isinstance(column.type, Boolean):
                         val = str(val).lower()
                 kwargs[f] = val
         return kwargs
