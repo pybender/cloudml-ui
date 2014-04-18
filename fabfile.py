@@ -138,7 +138,7 @@ def cdeploy():
 @task
 def deployui():
     release.work_on.run(0)
-   # git.push.run()
+    git.push.run()
     angularjs.activate.run()
     angularjs.push_config.run()
     angularjs.build.run()

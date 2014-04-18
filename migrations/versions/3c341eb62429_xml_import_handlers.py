@@ -13,14 +13,14 @@ down_revision = '1cb1aef8263f'
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
-
+#ALTER TYPE xml_field_types ADD VALUE 'json'
 
 input_types = sa.Enum(
     'boolean', 'integer', 'float', 'date', 'string', name='xml_input_types')
 datasource_type = sa.Enum(
     'http', 'db', 'pig', 'csv', name='xml_datasource_types')
 field_type = sa.Enum(
-    'boolean', 'integer', 'float', 'string', name='xml_field_types')
+    'boolean', 'integer', 'float', 'string','json', name='xml_field_types')
 field_transform_type = sa.Enum(
     'json', 'csv', name='xml_transform_types')
 
