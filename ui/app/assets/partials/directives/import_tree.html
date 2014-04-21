@@ -98,12 +98,14 @@
             height: '30px'}" ng-model="sqoop.text" ui-refresh="sqoop" />
         </div>
       </div>
+      <div class="top-buffer">
       <a ng-disabled="sqoop.loading_state" ng-click="sqoop.saveText()" class="btn btn-info">
           <i class="status-icon icon-edit"></i> save text
         </a>
         <button ng-click="deleteSqoop()(sqoop);" class="btn btn-danger">
               <i title="Delete item. Be careful - you could not recover it!" class="icon-remove"></i>
             </button>
+      </div>
     </div>
     </div>
     <div ng-show="entity.query_obj">
@@ -125,10 +127,12 @@
             lineNumbers: true,
             matchBrackets: true,
             height: '30px'}" ng-model="entity.query_obj.text" ui-refresh="entity.query_obj" />
+        </div>
+        <div class="top-buffer">
         <a ng-disabled="entity.query_obj.loading_state" ng-click="saveQueryText()(entity.query_obj);" class="btn btn-info">
           <i class="status-icon icon-edit"></i> save text
         </a>
-      </div>
+        </div>
     </div>
     </div>
     <div ng-show="entity.fields">
