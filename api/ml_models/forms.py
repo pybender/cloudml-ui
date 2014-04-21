@@ -31,7 +31,8 @@ class ModelEditForm(BaseForm):
         if value:
             if 'xml' in value:
                 value = XmlImportHandler.query.get(value.replace('xml', ''))
-            value = ImportHandler.query.get(value)
+            else:
+                value = ImportHandler.query.get(value)
         return value
 
     clean_train_import_handler = clean_import_handler

@@ -1,13 +1,15 @@
 from fixture import DataSet
 from api.features.fixtures import FeatureSetData
-from api.import_handlers.fixtures import ImportHandlerData
+from api.import_handlers.fixtures import ImportHandlerData, XmlImportHandlerData
 
 
 class ModelData(DataSet):
     class model_01:
         features_set = FeatureSetData.bestmatch
-        test_import_handler = ImportHandlerData.import_handler_01
-        train_import_handler = ImportHandlerData.import_handler_01
+        test_import_handler_id = 1
+        test_import_handler_type = 'json'
+        train_import_handler_id = 1
+        train_import_handler_type = 'json'
         created_on = "2013-04-19 14:37:23.145000"
         updated_on = "2013-04-19 14:37:23.145000"
         name = "TrainedModel"
@@ -29,8 +31,10 @@ class ModelData(DataSet):
 
     class model_02:
         features_set = FeatureSetData.bestmatch
-        test_import_handler = ImportHandlerData.import_handler_01
-        train_import_handler = ImportHandlerData.import_handler_01
+        test_import_handler_id = 1
+        test_import_handler_type = 'json'
+        train_import_handler_id = 1
+        train_import_handler_type = 'json'
         status = "Trained"
         created_on = "2013-04-19 14:37:23.145000"
         updated_on = "2013-04-19 14:37:23.145000"
@@ -40,8 +44,10 @@ class ModelData(DataSet):
 
     class model_03:
         features_set = FeatureSetData.bestmatch
-        test_import_handler = ImportHandlerData.import_handler_01
-        train_import_handler = ImportHandlerData.import_handler_01
+        test_import_handler_id = 1
+        test_import_handler_type = 'json'
+        train_import_handler_id = 1
+        train_import_handler_type = 'json'
         status = "New"
         created_on = "2013-04-19 14:37:23.145000"
         updated_on = "2013-04-19 14:37:23.145000"

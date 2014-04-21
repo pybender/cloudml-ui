@@ -71,8 +71,8 @@ class ModelResource(BaseResourceSQL):
             cursor = cursor.options(joinedload_all(Model.features_set))
             cursor = cursor.options(undefer(Model.classifier))
 
-        if fields and 'test_handler_fields' in fields:
-            cursor = cursor.options(joinedload_all(Model.test_import_handler))
+        # if fields and 'test_handler_fields' in fields:
+        #     cursor = cursor.options(joinedload_all(Model.test_import_handler))
 
         return cursor
 

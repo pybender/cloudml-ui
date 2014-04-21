@@ -2,10 +2,11 @@
 import json
 from functools import partial
 
-from sqlalchemy.orm import relationship, deferred, backref
+from sqlalchemy.orm import relationship, deferred, backref, foreign, remote
 from sqlalchemy.dialects import postgresql
 from sqlalchemy import Index, func
 from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy import event, and_
 
 from api.base.models import db, BaseModel, BaseMixin, JSONType, S3File
 from api.logs.models import LogMessage
@@ -61,11 +62,11 @@ class Model(db.Model, BaseModel):
     features_set_id = db.Column(db.Integer, db.ForeignKey('feature_set.id'))
     features_set = relationship('FeatureSet', uselist=False)
 
-    test_import_handler_id = db.Column(db.Integer, nullable=False)
-    test_import_handler_type = db.Column(db.String(200))
+    test_import_handler_id = db.Column(db.Integer, nullable=True)
+    test_import_handler_type = db.Column(db.String(200), default='json')
 
-    train_import_handler_id = db.Column(db.Integer, nullable=False)
-    train_import_handler_type = db.Column(db.String(200))
+    train_import_handler_id = db.Column(db.Integer, nullable=True)
+    train_import_handler_type = db.Column(db.String(200), default='json')
     # test_import_handler_id = db.Column(db.ForeignKey('import_handler.id',
     #                                                  ondelete='SET NULL'))
     # test_import_handler = relationship('ImportHandler',
@@ -86,10 +87,8 @@ class Model(db.Model, BaseModel):
 
     @property
     def test_import_handler(self):
-        """Provides in-Python access to the "parent" by choosing
-        the appropriate relationship.
-        """
-        return getattr(self, "parent_%s" % self.import_handler_type)
+        return getattr(
+            self, "rel_test_import_handler_%s" % self.test_import_handler_type)
 
     @test_import_handler.setter
     def test_import_handler(self, handler):
@@ -98,10 +97,8 @@ class Model(db.Model, BaseModel):
 
     @property
     def train_import_handler(self):
-        """Provides in-Python access to the "parent" by choosing
-        the appropriate relationship.
-        """
-        return getattr(self, "parent_%s" % self.import_handler_type)
+        return getattr(
+            self, "rel_train_import_handler_%s" % self.train_import_handler_type)
 
     @train_import_handler.setter
     def train_import_handler(self, handler):
@@ -216,6 +213,36 @@ data_sets_table = db.Table(
     db.Column('data_set_id', db.Integer, db.ForeignKey(
         'data_set.id', ondelete='CASCADE', onupdate='CASCADE'))
 )
+
+from api.import_handlers.models import ImportHandlerMixin
+
+@event.listens_for(ImportHandlerMixin, "mapper_configured", propagate=True)
+def setup_listener(mapper, class_):
+    import_handler_type = class_.TYPE
+    class_.test_import_handler = relationship(
+        Model,
+        primaryjoin=and_(
+            class_.id == foreign(remote(Model.test_import_handler_id)),
+            Model.test_import_handler_type == import_handler_type
+        ),
+        cascade='all,delete',
+        backref=backref(
+            "rel_test_import_handler_%s" % import_handler_type,
+            primaryjoin=remote(class_.id) == foreign(Model.test_import_handler_id)
+        )
+    )
+    class_.train_import_handler = relationship(
+        Model,
+        primaryjoin=and_(
+            class_.id == foreign(remote(Model.train_import_handler_id)),
+            Model.train_import_handler_type == import_handler_type
+        ),
+        cascade='all,delete',
+        backref=backref(
+            "rel_train_import_handler_%s" % import_handler_type,
+            primaryjoin=remote(class_.id) == foreign(Model.train_import_handler_id)
+        )
+    )
 
 
 class Tag(db.Model, BaseMixin):

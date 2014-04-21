@@ -7,8 +7,8 @@ from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS, F
 from ..views import ModelResource
 from ..models import Model, Tag, db
 from ..fixtures import ModelData
-from api.import_handlers.fixtures import ImportHandlerData, DataSetData
-from api.import_handlers.models import DataSet, ImportHandler
+from api.import_handlers.fixtures import ImportHandlerData, DataSetData, XmlImportHandlerData
+from api.import_handlers.models import DataSet, ImportHandler, XmlImportHandler
 from api.instances.models import Instance
 from api.instances.fixtures import InstanceData
 from api.model_tests.models import TestResult, TestExample
@@ -16,6 +16,24 @@ from api.model_tests.fixtures import TestResultData, TestExampleData
 from api.features.fixtures import FeatureSetData, FeatureData
 from api.servers.models import Server
 from api.servers.fixtures import ServerData
+
+
+class MlModelsTests(BaseDbTestCase):
+    datasets = [FeatureData, FeatureSetData, ImportHandlerData, DataSetData,
+                ModelData, XmlImportHandlerData]
+
+    def test_gen_relation(self):
+        model = Model.query.first()
+        handler = ImportHandler.query.first()
+        xml_handler = XmlImportHandler.query.first()
+        model.test_import_handler = handler
+        model.train_import_handler = xml_handler
+        model.save()
+
+        self.assertEqual(model.test_import_handler, handler)
+        self.assertEqual(model.test_import_handler_type, 'json')
+        self.assertEqual(model.train_import_handler, xml_handler)
+        self.assertEqual(model.train_import_handler_type, 'xml')
 
 
 TRAIN_PARAMS = json.dumps(
