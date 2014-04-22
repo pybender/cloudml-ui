@@ -381,7 +381,8 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
         show: 'name'
       ).then ((opts) ->
         for h in opts.objects
-          $scope.handlers_list.push {value: h.id + "xml", text: h.name}
+          item = {value: h.id + "xml", text: h.name + "(xml)"}
+          $scope.handlers_list.push item
       ), ((opts) ->
         $scope.setError(opts, 'loading xml import handler list')
       )

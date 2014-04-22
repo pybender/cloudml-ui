@@ -212,13 +212,11 @@ fields %s is required' % ', '.join(fields))
     def save(self, commit=True, save=True):
         if not self.is_valid():
             raise ValidationError(self.errors)
-
         for name, val in self.cleaned_data.iteritems():
-            if hasattr(self.obj, name):
-                try:
-                    setattr(self.obj, name, val)
-                except AttributeError:
-                    pass
+            try:
+                setattr(self.obj, name, val)
+            except AttributeError:
+                pass
 
         self.obj.updated_on = str(datetime.now())
         if save:
