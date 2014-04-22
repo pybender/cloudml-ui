@@ -125,8 +125,8 @@ class ImportHandlerTests(BaseDbTestCase, TestChecksMixin):
             shutil.copy2(dataset.filename, dataset.filename + '.bak')
 
         model = Model.query.filter_by(name=self.MODEL_NAME).first()
-        model.test_import_handler_id = self.obj.id
-        model.train_import_handler_id = self.obj.id
+        model.test_import_handler = self.obj
+        model.train_import_handler = self.obj
         model.save()
 
         url = self._get_url(id=self.obj.id)

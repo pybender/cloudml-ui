@@ -181,6 +181,7 @@ class ImportHandlerFileField(BaseField):
                     ImportHandlerException
                 plan = ExtractionPlan(value, is_file=False)
                 self.import_params = plan.input_params
+                return data
             except (ValueError, ImportHandlerException) as exc:
                 raise ValidationError(
                     'Import Handler JSON file is invalid: %s' % exc)

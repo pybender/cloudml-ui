@@ -48,7 +48,8 @@ class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue('<plan>' in obj['xml'])
         self.assertTrue('<entity datasource="odw" name="application">'
                         in obj['xml'])
-        self.assertTrue('<field jsonpath="$.op_country" name="employer.country" type="string"/>'
+        print obj['xml']
+        self.assertTrue('field jsonpath="$.op_country" multipart="false" name="employer.country"'
                         in obj['xml'])
 
         resp = self._check(show='name,entities', id=self.obj.id)

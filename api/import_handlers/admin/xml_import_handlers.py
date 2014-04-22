@@ -58,7 +58,7 @@ class EntityAdmin(BaseAdmin):
     MIX_METADATA = False
     Model = XmlEntity
     column_list = ['id', 'name', 'datasource',
-                   'datasource_name']
+                   'datasource_name', 'entity', 'import_handler']
     column_formatters = {
         'datasource': macro('render_fk_link')}
 

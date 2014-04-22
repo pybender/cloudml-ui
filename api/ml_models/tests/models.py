@@ -19,10 +19,13 @@ from api.servers.fixtures import ServerData
 
 
 class MlModelsTests(BaseDbTestCase):
+    """
+    Tests for api.ml_models.models.Model class.
+    """
     datasets = [FeatureData, FeatureSetData, ImportHandlerData, DataSetData,
                 ModelData, XmlImportHandlerData]
 
-    def test_gen_relation(self):
+    def test_generic_relation_to_import_handler(self):
         model = Model.query.first()
         handler = ImportHandler.query.first()
         xml_handler = XmlImportHandler.query.first()
@@ -31,9 +34,20 @@ class MlModelsTests(BaseDbTestCase):
         model.save()
 
         self.assertEqual(model.test_import_handler, handler)
+        self.assertEqual(model.test_import_handler_id, handler.id)
         self.assertEqual(model.test_import_handler_type, 'json')
         self.assertEqual(model.train_import_handler, xml_handler)
+        self.assertEqual(model.train_import_handler_id, xml_handler.id)
         self.assertEqual(model.train_import_handler_type, 'xml')
+
+        model.test_import_handler = xml_handler
+        model.train_import_handler = handler
+        model.save()
+
+        self.assertEqual(model.train_import_handler, handler)
+        self.assertEqual(model.train_import_handler_type, 'json')
+        self.assertEqual(model.test_import_handler, xml_handler)
+        self.assertEqual(model.test_import_handler_type, 'xml')
 
 
 TRAIN_PARAMS = json.dumps(
@@ -51,20 +65,23 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
     Model = Model
     datasets = [FeatureData, FeatureSetData, ImportHandlerData, DataSetData,
                 ModelData, InstanceData, TestResultData, TestExampleData,
-                ServerData]
+                ServerData, XmlImportHandlerData]
 
     def setUp(self):
         super(ModelsTests, self).setUp()
         self.obj = Model.query.filter_by(
             name=ModelData.model_01.name).first()
+
         self.handler = ImportHandler.query.filter_by(
             name=ImportHandlerData.import_handler_01.name).first()
         self.instance = Instance.query.filter_by(
             name=InstanceData.instance_01.name).first()
 
-        # self.obj.test_import_handler = self.handler
-        # self.obj.train_import_handler = self.handler
-        # self.obj.save()
+        # TODO: Why we need it? Could we create link to import handler
+        # using fixtures. Investigate why refs to another fixtures doesn't
+        # works
+        self.obj.train_import_handler = self.handler
+        self.obj.save()
 
     def test_list(self):
         self.check_list(show='')
@@ -155,6 +172,33 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         self.check_edit_error(post_data, {
             'trainer': "Pickled trainer model is invalid: Could not unpickle trainer - 'module' object has no attribute 'TrainerStorage1'"
         })
+
+    @mock_s3
+    def test_post_model_with_existing_xml_import_handler(
+            self, name='xml ih model', *mocks):
+        # XML import handler from the list
+        xml_handler = XmlImportHandler.query.first()
+        post_data = {'import_handler': '%sxml' % xml_handler.id,
+                     'name': name}
+        resp, model = self.check_edit(post_data)
+        self.assertEquals(model.name, name)
+        self.assertEquals(model.status, model.STATUS_NEW)
+        self.assertEquals(model.test_import_handler, xml_handler)
+        self.assertEquals(model.train_import_handler, xml_handler)
+
+    @mock_s3
+    def test_post_model_with_xml_import_handler_from_file(
+            self, name='xml ih model', *mocks):
+        # XML import handler file
+        xml_handler = open('./conf/extract.xml', 'r').read()
+        post_data = {'import_handler_file': xml_handler,
+                     'features': open('./conf/features.json', 'r').read(),
+                     'name': name}
+        resp, model = self.check_edit(post_data)
+        self.assertEquals(model.name, name)
+        self.assertEquals(model.status, model.STATUS_NEW)
+        self.assertTrue(model.test_import_handler)
+        self.assertTrue(model.train_import_handler)
 
     @mock_s3  # trainer saves to amazon S3
     def test_post_new_model(self, name='new', *mocks):
@@ -247,8 +291,7 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         name = 'new2'
         handler = open('./conf/extract.json', 'r').read()
         trainer = open('./api/ml_models/model.dat', 'r').read()
-        post_data = {'test_import_handler_file': handler,
-                     'import_handler_file': handler,
+        post_data = {'import_handler_file': handler,
                      'trainer': trainer,
                      'name': name}
         resp, model = self.check_edit(post_data)
@@ -275,6 +318,10 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue(mock_set_trainer.called)
         self.assertEquals(model_count, Model.query.count())
         self.assertEquals(ih_count, ImportHandler.query.count())
+
+    ############
+    # Test PUT #
+    ############
 
     def test_edit_model(self):
         # TODO: Add validation to importhandlers
@@ -334,6 +381,8 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
     @mock_s3
     def test_train_model_validation_errors(self, *mocks):
         self.assertTrue(self.obj.status, Model.STATUS_NEW)
+        self.assertTrue(self.obj.train_import_handler,
+                        "Train import handler should be filled")
         data = {
             'existing_instance_selected': True,
             'new_dataset_selected': True,
@@ -377,7 +426,8 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
                 'existing_instance_selected': True,
                 'new_dataset_selected': False,
                 'dataset': ds.id}
-
+        self.assertTrue(self.obj.train_import_handler,
+                        "Train import handler should be filled")
         resp, obj = self.check_edit(data, id=self.obj.id, action='train')
         self.assertEqual(obj.status, obj.STATUS_ERROR)
         self.assertEqual(obj.error, 'Some message')
@@ -393,6 +443,8 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
                 'existing_instance_selected': True,
                 'new_dataset_selected': False,
                 'dataset': ds.id}
+        self.assertTrue(self.obj.train_import_handler,
+                        "Train import handler should be filled")
         resp, obj = self.check_edit(data, id=self.obj.id, action='train')
         # NOTE: Make sure that ds.gz file exist in test_data folder
 
@@ -414,6 +466,8 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
                 'existing_instance_selected': True,
                 'new_dataset_selected': False,
                 'dataset': ds.id}
+        self.assertTrue(self.obj.train_import_handler,
+                        "Train import handler should be filled")
         resp, obj = self.check_edit(data, id=self.obj.id, action='train')
         # NOTE: Make sure that ds.gz file exist in test_data folder
 
@@ -473,6 +527,8 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
             'new_dataset_selected': False,
             'dataset': ','.join([str(ds1.id), str(ds2.id)])
         }
+        self.assertTrue(self.obj.train_import_handler,
+                        "Train import handler should be filled")
         resp, obj = self.check_edit(data, id=self.obj.id, action='train')
         # NOTE: Make sure that ds.gz file exist in test_data folder
 
@@ -494,6 +550,8 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
                 'new_dataset_selected': True,
                 'parameters': TRAIN_PARAMS,
                 'format': DataSet.FORMAT_JSON}
+        self.assertTrue(self.obj.train_import_handler,
+                        "Train import handler should be filled")
         resp, obj = self.check_edit(data, id=self.obj.id, action='train')
 
         self.assertEqual(obj.status, Model.STATUS_TRAINED, obj.error)
@@ -515,6 +573,8 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
                 'parameters': TRAIN_PARAMS,
                 'format': DataSet.FORMAT_CSV
                 }
+        self.assertTrue(self.obj.train_import_handler,
+                        "Train import handler should be filled")
         resp, obj = self.check_edit(data, id=self.obj.id, action='train')
 
         self.assertEqual(obj.status, Model.STATUS_TRAINED, obj.error)
@@ -527,6 +587,9 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
     @patch('api.amazon_utils.AmazonS3Helper.load_key')
     def test_retrain_model(self, mock_load_key,
                            mock_multipart_upload, mock_get_features_json):
+        self.assertTrue(self.obj.train_import_handler,
+                        "Train import handler should be filled")
+
         with open('./conf/features.json', 'r') as f:
             mock_get_features_json.return_value = f.read()
 

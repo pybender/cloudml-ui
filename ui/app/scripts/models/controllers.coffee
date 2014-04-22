@@ -8,7 +8,8 @@ FIELDS_BY_SECTION = {
 trained_by,trained_on,training_time,datasets,train_records_count,trainer_size'
   'about': 'created_on,target_variable,example_id,example_label,
 labels,updated_on,feature_count,test_import_handler,
-train_import_handler,created_by,data_fields,test_handler_fields,tags'
+train_import_handler,created_by,data_fields,test_handler_fields,tags,
+train_import_handler_type,test_import_handler_type'
   'main': 'name,status'
 }
 

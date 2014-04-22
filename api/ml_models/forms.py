@@ -121,13 +121,16 @@ class ModelAddForm(BaseForm):
 
     def save(self, *args, **kwargs):
         name = self.cleaned_data['name']
+        created_handlers = []
         try:
-            self._save_importhandler(
-                'import_handler_file', name,
-                handler_type=self.train_import_handler_type)
-            self._save_importhandler(
-                'test_import_handler_file', name,
-                handler_type=self.test_import_handler_type)
+            if self.cleaned_data.get('import_handler_file'):
+                created_handlers.append(self._save_importhandler(
+                    'import_handler_file', name,
+                    handler_type=self.train_import_handler_type))
+            if self.cleaned_data.get('test_import_handler_file'):
+                created_handlers.append(self._save_importhandler(
+                    'test_import_handler_file', name,
+                    handler_type=self.test_import_handler_type))
             if not 'test_import_handler' in self.cleaned_data:
                 self.cleaned_data['test_import_handler'] = \
                     self.cleaned_data['train_import_handler']
@@ -142,6 +145,9 @@ class ModelAddForm(BaseForm):
                 model.classifier = features['classifier']
         except Exception, exc:
             db.session.rollback()
+            for handler in created_handlers:
+                db.session.delete(handler)
+                db.session.commit()
             raise
         else:
             db.session.commit()
@@ -188,7 +194,8 @@ class ModelAddForm(BaseForm):
             handler.data = data
             self.cleaned_data['%s_import_handler' % action] = handler
             db.session.add(handler)
-            db.session.commit()  # TODO: remove it
+            db.session.commit()
+            return handler
 
 
 class ModelTrainForm(BaseChooseInstanceAndDatasetMultiple):

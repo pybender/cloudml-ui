@@ -6,12 +6,13 @@ angular.module('app.models.model', ['app.config'])
   'settings'
   'BaseModel'
   'ImportHandler'
+  'XmlImportHandler'
   'DataSet'
   'FeaturesSet'
   'Classifier'
   
-  ($http, $q, settings, BaseModel, ImportHandler, DataSet,
-    FeaturesSet, Classifier) ->
+  ($http, $q, settings, BaseModel, ImportHandler, XmlImportHandler,
+    DataSet, FeaturesSet, Classifier) ->
     ###
     Model
     ###
@@ -50,14 +51,25 @@ angular.module('app.models.model', ['app.config'])
           if origData.features?
             @features = angular.toJson(
               angular.fromJson(origData['features']), pretty=true)
+
           if origData.test_import_handler?
-            @test_import_handler_obj = new ImportHandler(
+            if origData.test_import_handler_type == 'xml'
+              cls = XmlImportHandler
+            else
+              cls = ImportHandler
+            @test_import_handler_obj = new cls(
               origData['test_import_handler'])
             @test_import_handler = @test_import_handler_obj.id
+
           if origData.train_import_handler?
-            @train_import_handler_obj = new ImportHandler(
+            if origData.train_import_handler_type == 'xml'
+              cls = XmlImportHandler
+            else
+              cls = ImportHandler
+            @train_import_handler_obj = new cls(
               origData['train_import_handler'])
             @train_import_handler = @train_import_handler_obj.id
+
           if origData.datasets?
             @datasets_obj = for row in origData['datasets']
               new DataSet(row)

@@ -165,6 +165,7 @@ class BaseForm(InternalForm):
         if not self.no_required:
             # Check required fields
             for fields in self.required_fields:
+                print "self.cleaned_data", self.cleaned_data
                 is_valid = check_required(fields, self.cleaned_data)
                 if not is_valid:
                     if isinstance(fields, str):

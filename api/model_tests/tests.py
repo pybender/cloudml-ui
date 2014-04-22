@@ -10,7 +10,7 @@ from models import TestResult, TestExample
 from api.ml_models.models import Model
 from api.ml_models.fixtures import ModelData, WeightData
 from api.import_handlers.fixtures import ImportHandlerData, DataSetData
-from api.import_handlers.models import DataSet
+from api.import_handlers.models import DataSet, ImportHandler
 from api.instances.models import Instance
 from api.instances.fixtures import InstanceData
 from api.async_tasks.models import AsyncTask
@@ -36,8 +36,11 @@ class TestResourceTests(BaseDbTestCase, TestChecksMixin):
         super(TestResourceTests, self).setUp()
         self.obj = self.Model.query.filter_by(
             name=TestResultData.test_01.name).one()
+        self.handler = ImportHandler.query.first()
         self.model = Model.query.filter_by(
             name=ModelData.model_01.name).first()
+        self.model.test_import_handler = self.handler
+        self.model.save()
 
         self.BASE_URL = self.BASE_URL.format(self.obj.model.id)
         self.MODEL_PARAMS = {'model_id': self.obj.model.id}
