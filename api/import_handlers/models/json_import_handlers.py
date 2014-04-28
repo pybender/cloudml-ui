@@ -78,7 +78,7 @@ class ImportHandler(db.Model, ImportHandlerMixin):
         """ Returns config that would be used for creating Extraction Plan """
         return json.dumps(self.data)
 
-    def get_iterator(self, params):
+    def get_iterator(self, params, callback=None):
         from core.importhandler.importhandler import ExtractionPlan, \
             ImportHandler as CoreImportHandler
         plan = ExtractionPlan(self.get_plan_config(), is_file=False)
