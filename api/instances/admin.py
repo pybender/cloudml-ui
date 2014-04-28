@@ -1,6 +1,6 @@
 from api import admin
 from api.base.admin import BaseAdmin
-from models import Instance
+from models import Instance, Cluster
 
 
 class InstanceAdmin(BaseAdmin):
@@ -12,5 +12,15 @@ class InstanceAdmin(BaseAdmin):
         ('is_default', Instance.is_default),
     )
 
+
+class ClusterAdmin(BaseAdmin):
+    Model = Cluster
+    column_list = ['id', 'jobflow_id', 'port', 'status',
+                   'master_node_dns', 'is_default']
+
+
 admin.add_view(InstanceAdmin(
-    name='Instance', category='Instances'))
+    name='Instances', category='Instances'))
+
+admin.add_view(ClusterAdmin(
+    name='Clusters', category='Instances'))

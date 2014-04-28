@@ -9,7 +9,13 @@
       <li ng-class="getClass('/handlers/xml')"><a ng-href="#/handlers/xml">xml</a></li>
     </ul>
   </li>
-  <li ng-class="getClass('/aws/instances')"><a ng-href="#/aws/instances">instances</a></li>
+  <li ng-class="getClass('/aws/instances')" class="dropdown">
+    <a class="dropdown-toggle" data-toggle="dropdown">instances <b class="caret"></b></a>
+    <ul class="dropdown-menu">
+      <li ng-class="getClass('/aws/instances')"><a ng-href="#/aws/instances">instances</a></li>
+      <li ng-class="getClass('/aws/clusters')"><a ng-href="#/aws/clusters">clusters</a></li>
+    </ul>
+  </li>
   <li ng-class="getClass('/servers')"><a ng-href="#/servers">servers</a></li>
   <li ng-class="getClass('/features')" class="dropdown">
     <a class="dropdown-toggle" data-toggle="dropdown">predefined entities <b class="caret"></b></a>

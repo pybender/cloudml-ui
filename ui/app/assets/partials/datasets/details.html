@@ -58,6 +58,9 @@
   </div>
 
   <div ng-show="action[0] == 'log'" ng-controller="LogMessageListCtrl" ng-init="init('importdata_log', dataset.id)">
+    <p ng-show="dataset.cluster"><a href="#{{ dataset.cluster.objectUrl() }}">
+        Cluster {{ dataset.cluster.jobflow_id }} details
+      </a></p>
     <ng-include src="'/partials/logmessages/list.html'"></ng-include>
   </div>
 </div>

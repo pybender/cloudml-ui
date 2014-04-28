@@ -1,13 +1,14 @@
 """ Spot instances tasks """
 import logging
 from boto.exception import EC2ResponseError
-from os import system
+from os import system, popen
 
 from api import celery, app
 from api.logs.logger import init_logger
 from api.amazon_utils import AmazonEC2Helper
 from api.ml_models.models import Model
 from api.base.tasks import SqlAlchemyTask
+
 
 
 class InstanceRequestingError(Exception):
@@ -138,3 +139,36 @@ cancelled for model id {1!s}'.format(request_id, model_id))
     except EC2ResponseError as e:
         model.set_error(e.error_message)
         raise Exception(e.error_message)
+
+
+@celery.task(base=SqlAlchemyTask)
+def run_ssh_tunnel(cluster_id):
+    from api.instances.models import Cluster
+    cluster = Cluster.query.get(cluster_id)
+    import subprocess, shlex
+    import atexit, signal, os
+    ssh_command = "ssh -L %(port)d:%(dns)s:9026 hadoop@%(dns)s -i /home/atmel/.ssh/nmelnik.pem" \
+        % {"dns": cluster.master_node_dns, "port": cluster.port}
+    args = shlex.split(ssh_command)
+    p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    #p = popen(ssh_command)
+    #atexit.register(p.kill)
+    cluster.pid = p.pid
+    cluster.save()
+
+    # oldsig = signal.getsignal(signal.SIGTERM) 
+
+    # def propagate_signals(signum, frame): 
+    #     try: 
+    #         oldsig(signum, frame) 
+    #     except TypeError: 
+    #         pass 
+    #     os.kill(signum, p.pid) 
+
+    # signal.signal(signal.SIGTERM, propagate_signals) 
+
+    for line in p.stdout.readlines():
+        logging.info(line)
+    retval = p.wait()
+
+    #subprocess.call(ssh_command, shell=True)

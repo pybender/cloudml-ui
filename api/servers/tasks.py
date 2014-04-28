@@ -118,3 +118,4 @@ def update_at_server(server_id, file_name):
     requests.post(url, {})
 
     logging.info('File has been updated: %s' % file_name)
+

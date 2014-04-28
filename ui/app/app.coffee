@@ -38,6 +38,8 @@ App = angular.module('app', [
   'app.weights.controllers'
   'app.awsinstances.model'
   'app.awsinstances.controllers'
+  'app.clusters.models'
+  'app.clusters.controllers'
   'app.logmessages.model'
   'app.logmessages.controllers'
   'app.login.controllers'
@@ -175,6 +177,14 @@ App.config([
     .when('/aws/instances/:id', {
       controller: 'AwsInstanceDetailsCtrl'
       templateUrl: '/partials/aws_instances/details.html'
+    })
+    .when('/aws/clusters', {
+      controller: "ClusterListCtrl"
+      templateUrl: '/partials/clusters/list.html'
+    })
+    .when('/aws/clusters/:id', {
+      controller: 'ClusterDetailsCtrl'
+      templateUrl: '/partials/clusters/details.html'
     })
     .when('/servers', {
       controller: "ServerListCtrl"

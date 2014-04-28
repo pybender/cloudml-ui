@@ -9,6 +9,7 @@ from api import celery
 from api.ml_models.models import Model
 from api.model_tests.models import TestResult
 from api.base.tasks import SqlAlchemyTask
+from api.instances.models import Cluster
 from models import DataSet
 
 
@@ -47,11 +48,21 @@ def import_data(dataset_id, model_id=None, test_id=None):
         logging.info('Loading dataset %s' % dataset.id)
 
         import_start_time = datetime.now()
+        def callback(jobflow_id, master_dns):
+            cluster = Cluster.query.filter(Cluster.jobflow_id==jobflow_id).first()
+            if cluster is None:
+                cluster = Cluster(jobflow_id=jobflow_id, master_node_dns=master_dns)
+                cluster.save()
+            dataset.cluster = cluster
+            dataset.save()
+            logging.info('Master dns %s' % master_dns)
+            cluster.create_ssh_tunnel()
+
 
         logging.info("Import dataset using import handler '%s' \
 with%s compression", import_handler.name, '' if dataset.compress else 'out')
 
-        handler_iterator = import_handler.get_iterator(dataset.import_params)
+        handler_iterator = import_handler.get_iterator(dataset.import_params, callback)
 
         logging.info('The dataset will be stored to file %s', dataset.filename)
 

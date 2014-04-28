@@ -48,6 +48,11 @@ class DataSet(db.Model, BaseModel):
     # import_handler = relationship('ImportHandler', backref=backref(
     #     'datasets', cascade='all,delete'))
 
+    cluster_id = db.Column(db.Integer,
+                                   db.ForeignKey('cluster.id', ondelete='SET NULL'))
+    cluster = relationship('Cluster', backref=backref(
+         'datasets'))
+
     on_s3 = db.Column(db.Boolean)
     compress = db.Column(db.Boolean)
     filename = db.Column(db.String(200))

@@ -86,11 +86,11 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
 
         return etree.tostring(plan, pretty_print=pretty_print)
 
-    def get_iterator(self, params):
+    def get_iterator(self, params, callback=None):
         from core.xmlimporthandler.importhandler import ExtractionPlan, \
             ImportHandler as CoreImportHandler
         plan = ExtractionPlan(self.get_plan_config(), is_file=False)
-        return CoreImportHandler(plan, params)
+        return CoreImportHandler(plan, params, callback=callback)
 
     def get_fields(self):
         """
