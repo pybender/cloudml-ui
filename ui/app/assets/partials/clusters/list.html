@@ -28,7 +28,7 @@
     </td>
     <td>{{ cluster.master_node_dns }}</td>
     <td>
-      <a ng-show="cluster.active_tunnel && cluster.active_tunnel != -1" href="http://{{ host }}:{{ cluster.port }}" target="_blank">Link</a>
+      <a ng-show="cluster.active_tunnel && cluster.active_tunnel != -1" href="http://172.27.77.141:{{ cluster.port }}" target="_blank">Link</a>
       <span ng-hide="cluster.active_tunnel && cluster.active_tunnel != -1">not available</span>
     </td>
     <td>{{ cluster.status }}</td>
