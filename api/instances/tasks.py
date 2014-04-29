@@ -147,7 +147,7 @@ def run_ssh_tunnel(cluster_id):
     cluster = Cluster.query.get(cluster_id)
     import subprocess, shlex
     import atexit, signal, os
-    ssh_command = "ssh -L %(port)d:%(dns)s:9026 hadoop@%(dns)s -i /home/cloudml/.ssh/nmelnik.pem" \
+    ssh_command = "ssh -g -L %(port)d:%(dns)s:9026 hadoop@%(dns)s -i /home/cloudml/.ssh/nmelnik.pem" \
         % {"dns": cluster.master_node_dns, "port": cluster.port}
     args = shlex.split(ssh_command)
     p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
