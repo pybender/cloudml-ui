@@ -147,28 +147,12 @@ def run_ssh_tunnel(cluster_id):
     cluster = Cluster.query.get(cluster_id)
     import subprocess, shlex
     import atexit, signal, os
-    ssh_command = "ssh -L %(port)d:%(dns)s:9026 hadoop@%(dns)s -i /home/atmel/.ssh/nmelnik.pem" \
+    ssh_command = "ssh -L %(port)d:%(dns)s:9026 hadoop@%(dns)s -i /home/cloudml/.ssh/nmelnik.pem" \
         % {"dns": cluster.master_node_dns, "port": cluster.port}
     args = shlex.split(ssh_command)
     p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    #p = popen(ssh_command)
-    #atexit.register(p.kill)
     cluster.pid = p.pid
     cluster.save()
-
-    # oldsig = signal.getsignal(signal.SIGTERM) 
-
-    # def propagate_signals(signum, frame): 
-    #     try: 
-    #         oldsig(signum, frame) 
-    #     except TypeError: 
-    #         pass 
-    #     os.kill(signum, p.pid) 
-
-    # signal.signal(signal.SIGTERM, propagate_signals) 
-
     for line in p.stdout.readlines():
         logging.info(line)
     retval = p.wait()
-
-    #subprocess.call(ssh_command, shell=True)
