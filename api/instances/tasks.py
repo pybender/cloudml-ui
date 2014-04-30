@@ -144,15 +144,18 @@ cancelled for model id {1!s}'.format(request_id, model_id))
 @celery.task(base=SqlAlchemyTask)
 def run_ssh_tunnel(cluster_id):
     from api.instances.models import Cluster
-    cluster = Cluster.query.get(cluster_id)
     import subprocess, shlex
-    import atexit, signal, os
-    ssh_command = "ssh -g -L %(port)d:%(dns)s:9026 hadoop@%(dns)s -i /home/cloudml/.ssh/nmelnik.pem" \
-        % {"dns": cluster.master_node_dns, "port": cluster.port}
-    args = shlex.split(ssh_command)
-    p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    cluster.pid = p.pid
-    cluster.save()
-    for line in p.stdout.readlines():
-        logging.info(line)
-    retval = p.wait()
+    cluster = Cluster.query.get(cluster_id)
+    try:      
+        ssh_command = "ssh -g -L %(port)d:%(dns)s:9026 hadoop@%(dns)s -i /home/cloudml/.ssh/nmelnik.pem" \
+            % {"dns": cluster.master_node_dns, "port": cluster.port}
+        args = shlex.split(ssh_command)
+        p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        cluster.pid = p.pid
+        cluster.save()
+        for line in p.stdout.readlines():
+            logging.info(line)
+        retval = p.wait()
+    except:
+        cluster.pid = None
+        cluster.save()

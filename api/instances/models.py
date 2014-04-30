@@ -34,6 +34,8 @@ class Cluster(BaseModel, db.Model):
     STATUS_ERROR = 'Error'
     STATUS_TERMINATED = 'Terminated'
 
+    PENDING = -1
+
     PORT_RANGE = (9000, 9010)
 
     STATUSES = [STATUS_NEW, STATUS_STARTING, STATUS_RUNNING, STATUS_WAITING,
@@ -76,9 +78,12 @@ class Cluster(BaseModel, db.Model):
 
     def create_ssh_tunnel(self):
         from api.instances.tasks import run_ssh_tunnel
-        run_ssh_tunnel.delay(self.id)
-        self.pid = -1  # task delayed
-        self.save()
+        if self.pid is None:
+            # task delayed
+            self.pid = self.PENDING
+            self.save()
+            run_ssh_tunnel.delay(self.id)
+            
 
     def terminate_ssh_tunnel(self):
         import os
