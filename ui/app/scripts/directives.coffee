@@ -819,6 +819,29 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
   }
 ])
 
+.directive('inp', [ ->
+  return {
+    # restrict: 'A',
+    # require: '?ngModel',
+    scope: {model: '=', config: '='}
+    transclude : true
+    templateUrl:'partials/directives/input_param.html'
+  }
+])
+
+.directive('ngName', [ ->
+  return {
+    restrict: 'A',
+    require: '?ngModel',
+    link: {
+      pre: (scope, element, attrs, ctrl) ->
+        if ctrl?
+          ctrl.$name = scope.$eval(attrs.ngName)
+          attrs.$set('name', ctrl.$name)
+    }
+  }
+])
+
 createSVG = (scope, element, width=400, height=300) ->
   scope.margin = {top: 20, right: 20, bottom: 30, left: 210}
   if not scope.svg?

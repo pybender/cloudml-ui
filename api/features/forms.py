@@ -7,6 +7,7 @@ from models import NamedFeatureType, PredefinedClassifier, PredefinedScaler, \
     PredefinedTransformer, FeatureSet, Feature
 from api.ml_models.models import Model
 from api.base.forms.base_forms import BasePredefinedForm
+from api.features.models import CLASSIFIERS
 
 
 class FeatureParamsMixin(object):
@@ -147,6 +148,39 @@ class ClassifierForm(BasePredefinedForm):
     classifier = DocumentField(
         doc=PredefinedClassifier, by_name=False, return_doc=True)
     model_id = DocumentField(doc=Model, by_name=False, return_doc=False)
+
+    def validate_data(self):
+        from config import CLASSIFIERS
+        super(ClassifierForm, self).validate_data()
+
+        def convert_auto_dict(val):
+            if val != 'auto':
+                val = json.loads(val)
+            return val
+
+        def convert(val, val_type):
+            TYPE_CONVERTORS = {
+                'string': lambda a: a,
+                'boolean': lambda a: a in ('True', 1, True),
+                'float': lambda a: float(a),
+                'integer': lambda a: int(a),
+                'auto_dict': convert_auto_dict
+            }
+            return TYPE_CONVERTORS[val_type](val)
+
+        params = self.cleaned_data.get('params')
+        if params:
+            type_ = self.cleaned_data['type']
+            config = CLASSIFIERS[type_]['parameters']
+            for param_config in config:
+                name = param_config.get('name')
+                if name in params:
+                    try:
+                        params[name] = convert(
+                            params[name], param_config.get('type'))
+                    except ValueError, exc:
+                        raise ValidationError(
+                            'Invalid parameter %s value: %s' % (name, exc))
 
 
 class TransformerForm(BasePredefinedForm):

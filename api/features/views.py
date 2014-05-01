@@ -4,6 +4,7 @@ from api.base.resources import BaseResourceSQL, public_actions
 
 from models import *
 from forms import *
+from config import CLASSIFIERS
 
 
 class FeatureSetResource(BaseResourceSQL):
@@ -43,7 +44,6 @@ class ClassifierResource(BaseResourceSQL):
     Model = PredefinedClassifier
 
     def _get_configuration_action(self, **kwargs):
-        from core.trainer.classifier_settings import CLASSIFIERS
         return self._render({'configuration': CLASSIFIERS})
 
 api.add_resource(ClassifierResource, '/cloudml/features/classifiers/')

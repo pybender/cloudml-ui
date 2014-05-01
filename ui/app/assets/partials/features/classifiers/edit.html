@@ -31,7 +31,7 @@
 
     <div ng-show="currentTab=='custom'" class="control-group">
       <form name="Form" class="form-horizontal">
-        <div class="control-group" ng-class="{error: Form.type.$invalid}">
+        <div class="control-group" ng-class="{error: Form.type.$invalid && !model.type}">
           <label class="control-label">Type</label>
           <div class="controls">
             <select ng-change="loadParameters(true)" name="type" ng-model="model.type" required>
@@ -42,19 +42,39 @@
         </div>
         <div ng-show="model.config.parameters">
           <h4>Classifier Parameters</h4>
-          <div ng-repeat="name in model.config.parameters" class="control-group">
-            <label class="control-label">{{ name }}</label>
+          <div ng-repeat="item in model.config.parameters" class="control-group">
+            <label class="control-label" title="Please input {{ item.name }}. Type: {{ item.type }}">{{ item.name }}</label>
             <div class="controls">
-              <input ng-model="model.params[name]" name="{{ name }}" type='text' />
+              <!-- no choices -->
+              <div ng-hide="item.choices">
+                <!-- string params -->
+                <div ng-show="item.type == 'string'">
+                  <input ng-model="model.params[item.name]" ng-name="item.name" type='text' />
+                </div>
+                <!-- boolean params -->
+                <select  ng-show="item.type == 'boolean'" ng-model="model.params[item.name]" ng-options="choice for choice in [true, false]" ng-name="item.name"></select>
+                <!-- float params -->
+                <input ng-show="item.type == 'float'" ng-model="model.params[item.name]" type='text' smart-float ng-name="item.name" />
+                <!-- auto_dict params -->
+                <div ng-show="item.type == 'auto_dict'" title="not implemented yet" ng-name="item.name">
+                  auto
+                  <!-- <textarea placeholder="dict or 'auto'" ng-show="item.type == 'auto_dict'" ng-model="model.params[item.name]"></textarea> -->
+                </div>
+                <!-- integer -->
+                <input ng-show="item.type == 'integer'" ng-model="model.params[item.name]" type='text' ng-pattern='/^\d+$/' ng-name="item.name" />
+              </div>
+              <!-- choices param - render select -->
+              <select ng-show="item.choices" ng-model="model.params[item.name]" ng-options="choice for choice in item.choices" ng-name="item.name"></select>
+              <span ng-show="item.required" class="help-inline">*</span>
+              <span class="help-block" ng-show="Form[item.name].$invalid">invalid</span>
             </div>
           </div>
         </div>
       </form>
     </div>
-
   </div>
 
-  <div class="modal-footer">
-    <button ng-click="save(['name', 'type', 'params', 'model_id', 'predefined_selected', 'classifier', 'is_predefined'])" ng-disabled="Form.$invalid" class="btn btn-primary">Save</button>
+  <div class="modal-footer" title="{{ Form.$error}}">
+    <button ng-click="save(['name', 'type', 'params', 'model_id', 'predefined_selected', 'classifier', 'is_predefined'])" class="btn btn-primary">Save</button>
   </div>
 </div>

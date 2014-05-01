@@ -128,6 +128,7 @@ class ImportHandlerTests(BaseDbTestCase, TestChecksMixin):
         model.test_import_handler = self.obj
         model.train_import_handler = self.obj
         model.save()
+        model_id = model.id
 
         url = self._get_url(id=self.obj.id)
         resp = self.client.delete(url, headers=HTTP_HEADERS)
@@ -140,7 +141,8 @@ class ImportHandlerTests(BaseDbTestCase, TestChecksMixin):
         for filename in files:
             shutil.move(filename + '.bak', filename)
 
-        model = Model.query.filter_by(name=self.MODEL_NAME).first()
+        model = Model.query.get(model_id)
+        self.assertTrue(model)
         self.assertIsNone(model.test_import_handler, 'Ref should be removed')
         self.assertIsNone(model.train_import_handler, 'Ref should be removed')
 

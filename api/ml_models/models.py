@@ -225,7 +225,7 @@ def setup_listener(mapper, class_):
             class_.id == foreign(remote(Model.test_import_handler_id)),
             Model.test_import_handler_type == import_handler_type
         ),
-        cascade='all,delete',
+        #cascade='all,delete',
         backref=backref(
             "rel_test_import_handler_%s" % import_handler_type,
             primaryjoin=remote(class_.id) == foreign(Model.test_import_handler_id)
@@ -237,7 +237,7 @@ def setup_listener(mapper, class_):
             class_.id == foreign(remote(Model.train_import_handler_id)),
             Model.train_import_handler_type == import_handler_type
         ),
-        cascade='all,delete',
+        #cascade='all,delete',
         backref=backref(
             "rel_train_import_handler_%s" % import_handler_type,
             primaryjoin=remote(class_.id) == foreign(Model.train_import_handler_id)
