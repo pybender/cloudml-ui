@@ -56,9 +56,8 @@
                 <!-- float params -->
                 <input ng-show="item.type == 'float'" ng-model="model.params[item.name]" type='text' smart-float ng-name="item.name" />
                 <!-- auto_dict params -->
-                <div ng-show="item.type == 'auto_dict'" title="not implemented yet" ng-name="item.name">
-                  auto
-                  <!-- <textarea placeholder="dict or 'auto'" ng-show="item.type == 'auto_dict'" ng-model="model.params[item.name]"></textarea> -->
+                <div ng-show="item.type == 'auto_dict'">
+                  <ng-dict-input name="item.name" ng-model="model.params[item.name]"></ng-dict-input>
                 </div>
                 <!-- integer -->
                 <input ng-show="item.type == 'integer'" ng-model="model.params[item.name]" type='text' ng-pattern='/^\d+$/' ng-name="item.name" />

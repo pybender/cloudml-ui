@@ -153,9 +153,10 @@ class ClassifierForm(BasePredefinedForm):
         from config import CLASSIFIERS
         super(ClassifierForm, self).validate_data()
 
+        # TODO: move from here
         def convert_auto_dict(val):
-            if val != 'auto':
-                val = json.loads(val)
+            import ast
+            #if val != 'auto':  
             return val
 
         def convert(val, val_type):

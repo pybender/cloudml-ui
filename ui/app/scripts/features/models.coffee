@@ -102,6 +102,14 @@ angular.module('app.features.models', ['app.config'])
         super opts
         @TYPES_LIST = Classifier.$TYPES_LIST
 
+      loadFromJSON: (origData) =>
+        super origData
+
+        # # TODO: quick fix: need better input to edit dict parameter
+        # if origData? && origData.params? && origData.params.class_weight
+        #   @params['class_weight'] =
+        #   JSON.stringify(origData.params.class_weight)
+
       $getConfiguration: (opts={}) =>
         @$make_request("#{@BASE_API_URL}#{@id}/action/configuration/",
                        load=false)

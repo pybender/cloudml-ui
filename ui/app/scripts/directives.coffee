@@ -821,13 +821,41 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
 
 .directive('inp', [ ->
   return {
-    # restrict: 'A',
+    restrict: 'AE',
     # require: '?ngModel',
     scope: {model: '=', config: '='}
     transclude : true
     templateUrl:'partials/directives/input_param.html'
   }
 ])
+
+
+.directive('ngDictInput', [ ->
+  return {
+    restrict: 'E',
+    require: 'ngModel',
+    scope: {
+      name: '='
+      value: '=ngModel'
+    }
+    transclude : true
+    replace: false
+    templateUrl:'partials/directives/dict_input.html'
+
+    link: (scope, element, attrs, ngModel) ->
+      if !ngModel then return
+      #console.log scope.value
+      scope.displayValue = JSON.stringify(scope.value)
+
+      scope.change = () ->
+        #console.log scope.displayValue
+        if scope.displayValue != 'auto'
+          scope.value = JSON.parse(scope.displayValue)
+        else
+          scope.value = scope.displayValue
+  }
+])
+
 
 .directive('ngName', [ ->
   return {
