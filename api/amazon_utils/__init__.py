@@ -140,6 +140,18 @@ class AmazonS3Helper(object):
             key.set_metadata(meta_key, meta_val)
         key.set_contents_from_string(data)
 
+    def set_key_metadata(self, name, meta):
+        key = self.bucket.lookup(name)
+        for meta_key, meta_val in meta.iteritems():
+            key.set_metadata(meta_key, meta_val)
+        #key.metadata.update(meta)
+        #print key, key.metadata
+        key.copy(
+            key.bucket.name, 
+            key.name, 
+            key.metadata
+        )
+
     def delete_key(self, name):
         key = Key(self.bucket)
         key.key = name

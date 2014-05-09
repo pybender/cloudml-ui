@@ -33,6 +33,10 @@ class ServerResource(BaseResourceSQL):
             bucket_name=app.config['CLOUDML_PREDICT_BUCKET_NAME'])
         for key in s3.list_keys(path):
             name = key.name.split('/')[-1]
+            key = s3.bucket.get_key(key.name)
+            if key.get_metadata('hide') == 'True':
+                continue
+
             objects.append({
                 'name': name,
                 'size': key.size,
@@ -56,7 +60,9 @@ class ServerResource(BaseResourceSQL):
             bucket_name=app.config['CLOUDML_PREDICT_BUCKET_NAME'])
 
         try:
-            s3.delete_key('{0}/{1}'.format(server.folder, file_name))
+            #s3.delete_key('{0}/{1}'.format(server.folder, file_name))
+            s3.set_key_metadata('{0}/{1}'.format(server.folder, file_name),
+                                {'hide': "True"})
         except S3ResponseError as err:
             return odesk_error_response(500, 1006, str(err))
 
