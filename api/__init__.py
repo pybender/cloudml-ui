@@ -137,7 +137,7 @@ class Api(restful.Api):
                 self.app.add_url_rule(url, view_func=resource_func)
                 url = base_url + 'action/<regex("[\w\.]*"):action>/'
                 self.app.add_url_rule(self.prefix + url, view_func=resource_func)
-                url = base_url + '<regex("[\w\.]*"):id>/' + 'action/<regex("[\w\.]*"):action>/'
+                url = base_url + '<regex("[\W\w\.]*"):id>/' + 'action/<regex("[\w\.]*"):action>/'
                 self.app.add_url_rule(self.prefix + url, view_func=resource_func)
 
 api = Api(app)

@@ -18,6 +18,21 @@ angular.module('app.servers.controllers', ['app.config', ])
     )
 ])
 
+.controller('FileListCtrl', [
+  '$scope'
+  'ModelFile'
+
+  ($scope, ModelFile) ->
+    $scope.MODEL = ModelFile
+    $scope.FIELDS = ''
+    $scope.ACTION = 'loading files info from Amazon S3'
+
+    $scope.init = (server, folder) ->
+      $scope.server = server
+      $scope.folder = folder
+      $scope.kwargs = {'server_id': server.id, 'folder': folder}
+])
+
 .controller('ServerFileListCtrl', [
   '$scope'
   'Server'
@@ -31,8 +46,10 @@ angular.module('app.servers.controllers', ['app.config', ])
       $scope.folder = folder
 
     $scope.load = () ->
-      $scope.server.$getFiles($scope.folder).then((resp) ->
-        $scope.objects = resp.data.list
+      $scope.server.$getFiles($scope.folder)
+      .then((resp) ->
+        server = $scope.server
+        $scope.objects = eval("server." + $scope.folder + "_list")
       )
 
     $scope.removeFile = (fileName) ->

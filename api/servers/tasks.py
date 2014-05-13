@@ -32,10 +32,11 @@ def upload_model_to_server(server_id, model_id, user_id):
         str(model.name)
     )
     meta = {
-        'model_id': model.id,
-        'model_name': model.name,
+        'id': model.id,
+        'name': model.name,
         'user_id': user.id,
         'user_name': user.name,
+        'hide': "False",
         'uploaded_on': str(datetime.now())
     }
 
@@ -72,11 +73,12 @@ def upload_import_handler_to_server(server_id, handler_type, handler_id,
         'xml' if handler_type == XmlImportHandler.TYPE else 'json'
     )
     meta = {
-        'handler_id': handler.id,
-        'handler_name': handler.name,
-        'handler_type': handler.TYPE,
+        'id': handler.id,
+        'name': handler.name,
+        'type': handler.TYPE,
         'user_id': user.id,
         'user_name': user.name,
+        'hide': "False",
         'uploaded_on': str(datetime.now())
     }
 

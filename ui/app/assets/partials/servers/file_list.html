@@ -1,0 +1,31 @@
+<table class="table table-hover">
+<thead>
+  <tr>
+    <th>Name</th>
+    <th title="stored in Amazon S3 key metadata">Metadata Name</th>
+    <th>Size</th>
+    <th>Updated</th>
+    <th>Actions</th>
+  </tr>
+</thead>
+<tbody>
+  <tr ng-repeat="file in objects">
+    <td>
+      <a href="#{{ file.obj.objectUrl() }}">{{ file.obj.name }}</a>
+    </td>
+    <td>
+      <span title="Name" class="name" ng-bind="file.name" editable="file" value="file.name" editable-field="name" editable-input="text" editable-placement="right"></span>
+    </td>
+    <td>{{ file.size|bytes }}</td>
+    <td>{{ file.last_modified|format_date }}</td>
+    <td>
+      <button ng-click="removeFile(file.name)" class="btn btn-danger">
+        <i title="Remove file" class="icon-remove"></i>
+      </button>
+      <button ng-click="updateFileAtServer(file.name)" class="btn btn-info">
+        <i title="Update at Predict" class="icon-upload"></i>
+      </button>
+    </td>
+  </tr>
+</tbody>
+</table>
