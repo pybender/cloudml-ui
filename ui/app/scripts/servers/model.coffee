@@ -10,10 +10,11 @@ angular.module('app.servers.model', ['app.config'])
     class ModelFile extends BaseModel
       API_FIELDNAME: 'server_file'
 
+      id: null  # guid
       server_id: null
 
       # Model details
-      id: null
+      object_id: null
       obj: null
       object_name: null
 
@@ -25,7 +26,7 @@ angular.module('app.servers.model', ['app.config'])
       @$get_api_url: (opts, model) ->
         server_id = opts.server_id || model.server_id
         if not server_id then throw new Error 'server_id is required'
-        return "#{settings.apiUrl}servers/#{server_id}/files/"
+        return "#{settings.apiUrl}servers/#{server_id}/files/models/"
 
       loadFromJSON: (origData) =>
         super origData
@@ -46,9 +47,12 @@ angular.module('app.servers.model', ['app.config'])
   
   (BaseModel, ImportHandler) ->
     class ImportHandlerFile extends BaseModel
+      id: null  # guid
+      server_id: null
+
       # Import Handler details
       object_id: null
-      type: null
+      object_type: null
       object_name: null
       obj: null
 
@@ -59,7 +63,7 @@ angular.module('app.servers.model', ['app.config'])
       @$get_api_url: (opts, model) ->
         server_id = opts.server_id || model.server_id
         if not server_id then throw new Error 'server_id is required'
-        return "#{settings.apiUrl}servers/#{server_id}/files/"
+        return "#{settings.apiUrl}servers/#{server_id}/files/importhandlers/"
 
       loadFromJSON: (origData) =>
         super origData

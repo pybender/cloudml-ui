@@ -20,9 +20,10 @@ angular.module('app.servers.controllers', ['app.config', ])
 
 .controller('FileListCtrl', [
   '$scope'
+  '$dialog'
   'ModelFile'
 
-  ($scope, ModelFile) ->
+  ($scope, $dialog, ModelFile) ->
     $scope.MODEL = ModelFile
     $scope.FIELDS = ''
     $scope.ACTION = 'loading files info from Amazon S3'
@@ -31,6 +32,15 @@ angular.module('app.servers.controllers', ['app.config', ])
       $scope.server = server
       $scope.folder = folder
       $scope.kwargs = {'server_id': server.id, 'folder': folder}
+
+    $scope.deleteFile = (file) ->
+      $scope.openDialog({
+        $dialog: $dialog
+        model: file
+        template: 'partials/base/delete_dialog.html'
+        ctrlName: 'DialogCtrl'
+        action: 'delete file'
+      })
 ])
 
 .controller('ServerFileListCtrl', [
