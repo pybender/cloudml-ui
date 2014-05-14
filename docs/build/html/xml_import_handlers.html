@@ -312,6 +312,12 @@ using <tt class="docutils literal"><span class="pre">&lt;pig&gt;</span></tt> tag
 <li><tt class="docutils literal"><span class="pre">amazon_token_secret</span></tt> (<strong>required</strong>)</li>
 <li><tt class="docutils literal"><span class="pre">pig_version</span></tt> (optional)</li>
 <li><tt class="docutils literal"><span class="pre">bucket_name</span></tt> (optional) - Amazon S3 bucket name for saving results, logs, etc.</li>
+<li><tt class="docutils literal"><span class="pre">ec2_keyname</span></tt> (optional) - EC2 key used for the instances</li>
+<li><tt class="docutils literal"><span class="pre">keep_alive</span></tt> (optional)(bool) – Denotes whether the cluster should stay alive upon completion</li>
+<li><tt class="docutils literal"><span class="pre">hadoop_params</span></tt> (optional)</li>
+<li><tt class="docutils literal"><span class="pre">num_instances</span></tt> (optional) – Number of instances in the Hadoop cluster</li>
+<li><tt class="docutils literal"><span class="pre">master_instance_type</span></tt> (optional) - EC2 instance type of the master</li>
+<li><tt class="docutils literal"><span class="pre">slave_instance_type</span></tt> (optional) – EC2 instance type of the slave nodes</li>
 </ul>
 <p>Example:</p>
 <div class="highlight-python"><pre>&lt;pig name="pig3" jobid="job-id" amazon_access_token="token" amazon_token_secret="secret"/&gt;</pre>

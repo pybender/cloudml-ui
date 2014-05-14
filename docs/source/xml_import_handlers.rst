@@ -230,6 +230,13 @@ using ``<pig>`` tag. Possible attributes are:
 - ``amazon_token_secret`` (**required**)
 - ``pig_version`` (optional)
 - ``bucket_name`` (optional) - Amazon S3 bucket name for saving results, logs, etc.
+- ``ec2_keyname`` (optional) - EC2 key used for the instances
+- ``keep_alive`` (optional)(bool) – Denotes whether the cluster should stay alive upon completion
+- ``hadoop_params`` (optional)
+- ``num_instances`` (optional) – Number of instances in the Hadoop cluster
+- ``master_instance_type`` (optional) - EC2 instance type of the master
+- ``slave_instance_type`` (optional) – EC2 instance type of the slave nodes
+
 
 
 Example::
