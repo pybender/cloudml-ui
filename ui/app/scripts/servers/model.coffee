@@ -1,27 +1,40 @@
 angular.module('app.servers.model', ['app.config'])
 
-
-.factory('ModelFile', [
+.factory('ServerFile', [
   'BaseModel'
-  'Model'
   'settings'
   
-  (BaseModel, Model, settings) ->
-    class ModelFile extends BaseModel
+  (BaseModel, settings) ->
+    class ServerFile extends BaseModel
       API_FIELDNAME: 'server_file'
 
       id: null  # guid
       server_id: null
 
-      # Model details
+      # Object (import handler or model) details
       object_id: null
-      obj: null
+      object_type: null
       object_name: null
+      obj: null
 
-      # Metadata from amazon
       name: null
       size: null
       updated: null
+
+      $reload: () ->
+        base_url = @constructor.$get_api_url({}, @)
+        return @$make_request("#{base_url}#{@id}/action/reload/", {}, 'PUT')
+
+    return ServerFile
+])
+
+.factory('ModelFile', [
+  'ServerFile'
+  'Model'
+  'settings'
+  
+  (ServerFile, Model, settings) ->
+    class ModelFile extends ServerFile
 
       @$get_api_url: (opts, model) ->
         server_id = opts.server_id || model.server_id
@@ -42,23 +55,13 @@ angular.module('app.servers.model', ['app.config'])
 ])
 
 .factory('ImportHandlerFile', [
-  'BaseModel'
+  'ServerFile'
   'ImportHandler'
+  'XmlImportHandler'
+  'settings'
   
-  (BaseModel, ImportHandler) ->
-    class ImportHandlerFile extends BaseModel
-      id: null  # guid
-      server_id: null
-
-      # Import Handler details
-      object_id: null
-      object_type: null
-      object_name: null
-      obj: null
-
-      name: null
-      size: null
-      updated: null
+  (ServerFile, ImportHandler, XmlImportHandler, settings) ->
+    class ImportHandlerFile extends ServerFile
 
       @$get_api_url: (opts, model) ->
         server_id = opts.server_id || model.server_id
@@ -70,11 +73,16 @@ angular.module('app.servers.model', ['app.config'])
 
         if origData?
           if origData.object_id?
-            @obj = new ImportHandler({
-              id: origData.object_id
-              name: origData.object_name
-              type: origData.type
-            })
+            if origData.object_type == 'xml'
+              @obj = new XmlImportHandler({
+                id: origData.object_id
+                name: origData.object_name
+              })
+            else
+              @obj = new ImportHandler({
+                id: origData.object_id
+                name: origData.object_name
+              })
 
     return ImportHandlerFile
 ])
@@ -99,23 +107,6 @@ angular.module('app.servers.model', ['app.config'])
       # This info could be loaded usign `getFiles` method
       models_list: null
       importhandlers_list: null
-
-      getUrl: =>
-        return "#{@BASE_API_URL}#{@id || ''}/"
-
-      $getFiles: (folder) ->
-        url = "#{@BASE_API_URL}#{@id}/action/list/?folder=#{folder}"
-        return @$make_request(url, {}, 'GET')
-
-      $removeFile: (fileName) ->
-        url = "#{@BASE_API_URL}#{@id}/action/remove/"
-        return @$make_request(url, {}, 'PUT',
-          data={filename: fileName}, load=false)
-
-      $updateFileAtServer: (fileName) ->
-        url = "#{@BASE_API_URL}#{@id}/action/update_at_server/"
-        return @$make_request(url, {}, 'PUT',
-          data={filename: fileName}, load=false)
 
     return Server
 ])

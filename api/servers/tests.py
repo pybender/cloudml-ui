@@ -21,7 +21,10 @@ class ServersTasksTests(BaseDbTestCase):
 
     @mock_s3
     @patch('api.amazon_utils.AmazonS3Helper.save_key_string')
-    def test_upload_model(self, mock_save_key_string):
+    @patch('uuid.uuid1')
+    def test_upload_model(self, uuid, mock_save_key_string):
+        guid = '7686f8b8-dc26-11e3-af6a-20689d77b543'
+        uuid.return_value = guid
         server = Server.query.filter_by(name=ServerData.server_01.name).one()
         model = Model.query.filter_by(name=ModelData.model_01.name).one()
         user = User.query.first()
@@ -29,20 +32,25 @@ class ServersTasksTests(BaseDbTestCase):
         upload_model_to_server(server.id, model.id, user.id)
 
         mock_save_key_string.assert_called_once_with(
-            'odesk-match-cloudml/analytics/models/TrainedModel.model',
+            'odesk-match-cloudml/analytics/models/%s.model' % guid,
             ANY,
             {
-                'model_id': model.id,
+                'id': model.id,
+                'object_name': model.name,
+                'name': model.name,
                 'user_id': user.id,
-                'model_name': 'TrainedModel',
-                'user_name': 'User-1',
-                'uploaded_on': ANY,
+                'user_name': user.name,
+                'hide': "False",
+                'uploaded_on': ANY
             }
         )
 
     @mock_s3
     @patch('api.amazon_utils.AmazonS3Helper.save_key_string')
-    def test_upload_import_handler(self, mock_save_key_string):
+    @patch('uuid.uuid1')
+    def test_upload_import_handler(self, uuid, mock_save_key_string):
+        guid = '7686f8b8-dc26-11e3-af6a-20689d77b543'
+        uuid.return_value = guid
         server = Server.query.filter_by(name=ServerData.server_01.name).one()
         handler = ImportHandler.query.filter_by(
             name=ImportHandlerData.import_handler_01.name).one()
@@ -52,21 +60,26 @@ class ServersTasksTests(BaseDbTestCase):
                                         handler.id, user.id)
 
         mock_save_key_string.assert_called_once_with(
-            'odesk-match-cloudml/analytics/importhandlers/Handler 1.json',
+            'odesk-match-cloudml/analytics/importhandlers/%s.json' % guid,
             ANY,
             {
-                'handler_id': handler.id,
+                'id': handler.id,
+                'name': handler.name,
+                'object_name': handler.name,
+                'type': handler.TYPE,
                 'user_id': user.id,
-                'handler_name': 'Handler 1',
-                'handler_type': ImportHandler.TYPE,
-                'user_name': 'User-1',
-                'uploaded_on': ANY,
+                'user_name': user.name,
+                'hide': "False",
+                'uploaded_on': ANY
             }
         )
 
     @mock_s3
     @patch('api.amazon_utils.AmazonS3Helper.save_key_string')
-    def test_upload_xml_import_handler(self, mock_save_key_string):
+    @patch('uuid.uuid1')
+    def test_upload_xml_import_handler(self, uuid, mock_save_key_string):
+        guid = '7686f8b8-dc26-11e3-af6a-20689d77b543'
+        uuid.return_value = guid
         server = Server.query.filter_by(name=ServerData.server_01.name).one()
         handler = XmlImportHandler.query.filter_by(
             name=XmlImportHandlerData.xml_import_handler_01.name).one()
@@ -76,14 +89,16 @@ class ServersTasksTests(BaseDbTestCase):
                                         handler.id, user.id)
 
         mock_save_key_string.assert_called_once_with(
-            'odesk-match-cloudml/analytics/importhandlers/Xml Handler 1.xml',
+            'odesk-match-cloudml/analytics/importhandlers/%s.xml' % guid,
             ANY,
             {
-                'handler_id': handler.id,
+                'id': handler.id,
+                'name': handler.name,
+                'object_name': handler.name,
+                'type': handler.TYPE,
                 'user_id': user.id,
-                'handler_name': 'Xml Handler 1',
-                'handler_type': XmlImportHandler.TYPE,
-                'user_name': 'User-1',
-                'uploaded_on': ANY,
+                'user_name': user.name,
+                'hide': "False",
+                'uploaded_on': ANY
             }
         )

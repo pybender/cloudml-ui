@@ -11,112 +11,18 @@ from .config import FOLDER_MODELS, FOLDER_IMPORT_HANDLERS
 class ServerResource(BaseResourceSQL):
     """ Servers API methods """
     Model = Server
-    ALLOWED_METHODS = ('get', 'options', 'put')
-    # GET_ACTIONS = ('list', )
-    # PUT_ACTIONS = ('remove', 'update_at_server', 'edit_file')
-
-    # ALLOWED_FOLDERS = [FOLDER_MODELS, FOLDER_IMPORT_HANDLERS]
-
-    # def _get_list_action(self, **kwargs):
-    #     server = self._get_details_query(None, **kwargs)
-    #     if server is None:
-    #         raise NotFound(self.MESSAGE404 % kwargs)
-
-    #     path = server.folder.strip('/')
-    #     if request.args.get('folder'):
-    #         folder = request.args.get('folder')
-    #         if folder in self.ALLOWED_FOLDERS:
-    #             path += '/{0!s}'.format(folder)
-
-    #     objects = []
-    #     s3 = AmazonS3Helper(
-    #         bucket_name=app.config['CLOUDML_PREDICT_BUCKET_NAME'])
-    #     for key in s3.list_keys(path):
-    #         name = key.name.split('/')[-1]
-    #         key = s3.bucket.get_key(key.name)
-    #         if key.get_metadata('hide') == 'True':
-    #             continue
-    #         objects.append({
-    #             'object_name': name,
-    #             'size': key.size,
-    #             'last_modified': key.last_modified,
-    #             'name': key.get_metadata('name'),
-    #             'id': key.get_metadata('id'),
-    #             'type': key.get_metadata('type')
-    #         })
-
-    #     return self._render({self.OBJECT_NAME: {
-    #         "%s_list" % folder: objects
-    #     }})
-
-    # def _put_edit_file_action(self, **kwargs):
-    #     server = self._get_details_query(None, **kwargs)
-    #     if server is None:
-    #         raise NotFound(self.MESSAGE404 % kwargs)
-
-    #     file_name = request.form.get('filename')
-    #     if not file_name:
-    #         raise NotFound(self.MESSAGE404 % kwargs)
-
-    #     key = request.form.get('key')
-    #     value = request.form.get('value')
-    #     try:
-    #         s3.set_key_metadata('{0}/{1}'.format(server.folder, file_name),
-    #                             {key: value})
-    #     except S3ResponseError as err:
-    #         return odesk_error_response(500, 1006, str(err))
-
-    #     return self._render({
-    #         'status': 'ok'
-    #     })
-
-    # def _put_remove_action(self, **kwargs):
-    #     server = self._get_details_query(None, **kwargs)
-    #     if server is None:
-    #         raise NotFound(self.MESSAGE404 % kwargs)
-
-    #     file_name = request.form.get('filename')
-    #     if not file_name:
-    #         raise NotFound(self.MESSAGE404 % kwargs)
-
-    #     s3 = AmazonS3Helper(
-    #         bucket_name=app.config['CLOUDML_PREDICT_BUCKET_NAME'])
-
-    #     try:
-    #         #s3.delete_key('{0}/{1}'.format(server.folder, file_name))
-    #         s3.set_key_metadata('{0}/{1}'.format(server.folder, file_name),
-    #                             {'hide': "True"})
-    #     except S3ResponseError as err:
-    #         return odesk_error_response(500, 1006, str(err))
-
-    #     return self._render({
-    #         'status': 'ok'
-    #     })
-
-    # def _put_update_at_server_action(self, **kwargs):
-    #     server = self._get_details_query(None, **kwargs)
-    #     if server is None:
-    #         raise NotFound(self.MESSAGE404 % kwargs)
-
-    #     file_name = request.form.get('filename')
-    #     if not file_name:
-    #         raise NotFound(self.MESSAGE404 % kwargs)
-
-    #     from .tasks import update_at_server
-
-    #     update_at_server.delay(server.id, file_name)
-
-    #     return self._render({
-    #         'status': 'ok'
-    #     })
+    ALLOWED_METHODS = ('get', )
 
 api.add_resource(ServerResource, '/cloudml/servers/')
 
 
 class ServerFileResource(BaseResource):
+    """
+    Amazon S3 file (model or import handler) resource.
+    """
     ALLOWED_FOLDERS = [FOLDER_MODELS, FOLDER_IMPORT_HANDLERS]
     ALLOWED_METADATA_KEY_NAMES = ['name']
-    PUT_ACTIONS = ('update_at_server', )
+    PUT_ACTIONS = ('reload', )
 
     def _list(self, extra_params=(), **kwargs):
         server = self._get_server(kwargs)
@@ -124,6 +30,9 @@ class ServerFileResource(BaseResource):
         return self._render({"%ss" % self.OBJECT_NAME: objects})
 
     def put(self, action=None, **kwargs):
+        if action:
+            return self._apply_action(action, method='PUT', **kwargs)
+
         server = self._get_server(kwargs)
         uid = self._get_uid(kwargs)
         folder = self._get_folder(kwargs)
@@ -137,18 +46,21 @@ class ServerFileResource(BaseResource):
 
         return self._render({self.OBJECT_NAME: {'id': uid}})
 
-    def _put_update_at_server_action(self, **kwargs):
+    def _put_reload_action(self, **kwargs):
+        """
+        Reloads model or import handler on predict.
+        Needed when user manualy move it to Amazon S3.
+        """
         server = self._get_server(kwargs)
         uid = self._get_uid(kwargs)
         folder = self._get_folder(kwargs)
 
         from .tasks import update_at_server
+        file_name = '{0}/{1}'.format(folder, uid)
 
         update_at_server.delay(server.id, file_name)
 
-        return self._render({
-            'status': 'ok'
-        })
+        return self._render({self.OBJECT_NAME: {'id': uid}})
 
     def delete(self, action=None, **kwargs):
         server = self._get_server(kwargs)
@@ -185,4 +97,3 @@ class ServerFileResource(BaseResource):
 
 api.add_resource(ServerFileResource,
                  '/cloudml/servers/<regex("[\w\.]*"):server_id>/files/<regex("[\w\.]*"):folder>/')
-

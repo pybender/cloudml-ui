@@ -20,18 +20,30 @@ angular.module('app.servers.controllers', ['app.config', ])
 
 .controller('FileListCtrl', [
   '$scope'
+  '$rootScope'
   '$dialog'
   'ModelFile'
+  'ImportHandlerFile'
 
-  ($scope, $dialog, ModelFile) ->
-    $scope.MODEL = ModelFile
+  ($scope, $rootScope, $dialog, ModelFile, ImportHandlerFile) ->
     $scope.FIELDS = ''
     $scope.ACTION = 'loading files info from Amazon S3'
 
     $scope.init = (server, folder) ->
       $scope.server = server
       $scope.folder = folder
+      if folder == 'models'
+        $scope.MODEL = ModelFile
+      else
+        $scope.MODEL = ImportHandlerFile
       $scope.kwargs = {'server_id': server.id, 'folder': folder}
+
+    $scope.reloadFile = (file) ->
+      file.$reload().then((resp) ->
+        $rootScope.msg = 'File "' + fileName + '" will be updated at server'
+      , (opts) ->
+        $scope.setError(opts, 'reloading file on Predict')
+      )
 
     $scope.deleteFile = (file) ->
       $scope.openDialog({
@@ -41,49 +53,6 @@ angular.module('app.servers.controllers', ['app.config', ])
         ctrlName: 'DialogCtrl'
         action: 'delete file'
       })
-])
-
-.controller('ServerFileListCtrl', [
-  '$scope'
-  'Server'
-  '$rootScope'
-
-  ($scope, Server, $rootScope) ->
-    $scope.objects = []
-    $scope.folder = ''
-
-    $scope.init = (folder) ->
-      $scope.folder = folder
-
-    $scope.load = () ->
-      $scope.server.$getFiles($scope.folder)
-      .then((resp) ->
-        server = $scope.server
-        $scope.objects = eval("server." + $scope.folder + "_list")
-      )
-
-    $scope.removeFile = (fileName) ->
-      if confirm('Remove file "' + fileName + '" from server?')
-        path = $scope.folder + '/' + fileName
-        $scope.server.$removeFile(path).then((resp) ->
-          $scope.load()
-        , (opts) ->
-          $scope.setError(opts, 'removing file')
-        )
-
-    $scope.updateFileAtServer = (fileName) ->
-      path = $scope.folder + '/' + fileName
-      $scope.server.$updateFileAtServer(path).then((resp) ->
-        $rootScope.msg = 'File "' + fileName + '" will be updated at server'
-      , (opts) ->
-        $scope.setError(opts, 'removing file')
-      )
-
-    $rootScope.$on('ServerFileListCtrl:server_loaded',
-    (event, name, append=false, extra={}) ->
-      $scope.load()
-    )
-
 ])
 
 .controller('ServerListCtrl', [

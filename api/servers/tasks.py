@@ -115,7 +115,7 @@ def update_at_server(server_id, file_name):
     }
     part = parts.get(folder)
     if not part:
-        raise Exception('Wrong folder')
+        raise Exception('Wrong folder: %s' % folder)
 
     url = 'http://{0}/cloudml/{1}/{2}/reload'.format(server.ip, part, name)
 
