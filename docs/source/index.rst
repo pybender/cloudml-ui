@@ -20,6 +20,7 @@ Contents:
    trainer
    test_metrics
    instances
+   deploy_on_predict
    deployment
    development
    api

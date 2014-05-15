@@ -1,6 +1,7 @@
 import logging
 import json
 from datetime import datetime
+import uuid
 
 from api import celery, app
 from api.import_handlers.models import ImportHandler, XmlImportHandler
@@ -23,19 +24,22 @@ def upload_model_to_server(server_id, model_id, user_id):
     server = Server.query.get(server_id)
     user = User.query.get(user_id)
     model = Model.query.get(model_id)
+    uid = uuid.uuid1()
 
     # TODO: Shall we use another account?
     s3 = AmazonS3Helper(bucket_name=app.config['CLOUDML_PREDICT_BUCKET_NAME'])
     path = '{0}/{1}/{2}.model'.format(
         server.folder.strip('/'),
         FOLDER_MODELS,
-        str(model.name)
+        uid
     )
     meta = {
-        'model_id': model.id,
-        'model_name': model.name,
+        'id': model.id,
+        'object_name': model.name,
+        'name': model.name,
         'user_id': user.id,
         'user_name': user.name,
+        'hide': "False",
         'uploaded_on': str(datetime.now())
     }
 
@@ -63,20 +67,23 @@ def upload_import_handler_to_server(server_id, handler_type, handler_id,
 
     handler = _model.query.get(handler_id)
 
+    uid = uuid.uuid1()
     # TODO: Shall we use another account?
     s3 = AmazonS3Helper(bucket_name=app.config['CLOUDML_PREDICT_BUCKET_NAME'])
     path = '{0}/{1}/{2}.{3}'.format(
         server.folder.strip('/'),
         FOLDER_IMPORT_HANDLERS,
-        str(handler.name),
+        uid,
         'xml' if handler_type == XmlImportHandler.TYPE else 'json'
     )
     meta = {
-        'handler_id': handler.id,
-        'handler_name': handler.name,
-        'handler_type': handler.TYPE,
+        'id': handler.id,
+        'name': handler.name,
+        'object_name': handler.name,
+        'type': handler.TYPE,
         'user_id': user.id,
         'user_name': user.name,
+        'hide': "False",
         'uploaded_on': str(datetime.now())
     }
 
@@ -108,7 +115,7 @@ def update_at_server(server_id, file_name):
     }
     part = parts.get(folder)
     if not part:
-        raise Exception('Wrong folder')
+        raise Exception('Wrong folder: %s' % folder)
 
     url = 'http://{0}/cloudml/{1}/{2}/reload'.format(server.ip, part, name)
 

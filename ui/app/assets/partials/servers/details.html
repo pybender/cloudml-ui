@@ -17,57 +17,15 @@
 <div>Folder: <span class="value">{{ server.folder }}</span></div>
 
 <h3>Models</h3>
+<div ng-controller="FileListCtrl" ng-init="init(server, 'models')">
+  <div ng-controller="BaseListCtrl" ng-init="init(true, 'model_files')">
+    <ng-include src="'/partials/servers/file_list.html'"></ng-include>
+  </div>
+</div>
 
-<table ng-controller="ServerFileListCtrl" ng-init="init('models')" class="table table-hover">
-<thead>
-  <tr>
-    <th>Name</th>
-    <th>Size</th>
-    <th>Updated</th>
-    <th>Actions</th>
-  </tr>
-</thead>
-<tbody>
-  <tr ng-repeat="file in objects">
-    <td>{{ file.name }}</td>
-    <td>{{ file.size|bytes }}</td>
-    <td>{{ file.last_modified|format_date }}</td>
-    <td>
-      <button ng-click="removeFile(file.name)" class="btn btn-danger">
-        <i title="Remove file" class="icon-remove"></i>
-      </button>
-      <button ng-click="updateFileAtServer(file.name)" class="btn btn-info">
-        <i title="Update at Predict" class="icon-upload"></i>
-      </button>
-    </td>
-  </tr>
-</tbody>
-</table>
-
-<h3>Import handlers</h3>
-
-<table ng-controller="ServerFileListCtrl" ng-init="init('importhandlers')" class="table table-hover">
-<thead>
-  <tr>
-    <th>Name</th>
-    <th>Size</th>
-    <th>Updated</th>
-    <th>Actions</th>
-  </tr>
-</thead>
-<tbody>
-  <tr ng-repeat="file in objects">
-    <td>{{ file.name }}</td>
-    <td>{{ file.size|bytes }}</td>
-    <td>{{ file.last_modified|format_date }}</td>
-    <td>
-      <button ng-click="removeFile(file.name)" class="btn btn-danger">
-        <i title="Remove file" class="icon-remove"></i>
-      </button>
-      <button ng-click="updateFileAtServer(file.name)" class="btn btn-info">
-        <i title="Update at Predict" class="icon-upload"></i>
-      </button>
-    </td>
-  </tr>
-</tbody>
-</table>
+<h3>Import Handlers</h3>
+<div ng-controller="FileListCtrl" ng-init="init(server, 'importhandlers')">
+  <div ng-controller="BaseListCtrl" ng-init="init(true, 'importhandlers_files')">
+    <ng-include src="'/partials/servers/file_list.html'"></ng-include>
+  </div>
+</div>

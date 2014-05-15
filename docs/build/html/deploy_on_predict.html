@@ -1,0 +1,152 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Deployment the model or import handler to predict server &mdash; oDesk CloudML 0.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="oDesk CloudML 0.0.1 documentation" href="index.html" />
+    <link rel="next" title="Deployment" href="deployment.html" />
+    <link rel="prev" title="Instances" href="instances.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="deployment.html" title="Deployment"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="instances.html" title="Instances"
+             accesskey="P">previous</a> |</li>
+    <li><a href="http://cloudml.int.odesk.com/">CloudML UI</a> &raquo;</li>
+    
+        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Deployment the model or import handler to predict server</a><ul>
+<li><a class="reference internal" href="#uploading-to-predict-server">Uploading to predict server</a></li>
+<li><a class="reference internal" href="#reloading-the-model-or-import-handler-on-predict-server">Reloading the model or import handler on predict server</a></li>
+<li><a class="reference internal" href="#deleting-the-model-or-import-handler-file">Deleting the model or import handler file</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="instances.html"
+                        title="previous chapter">Instances</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="deployment.html"
+                        title="next chapter">Deployment</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/deploy_on_predict.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="deployment-the-model-or-import-handler-to-predict-server">
+<span id="deploy-on-predict"></span><h1>Deployment the model or import handler to predict server<a class="headerlink" href="#deployment-the-model-or-import-handler-to-predict-server" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="uploading-to-predict-server">
+<h2>Uploading to predict server<a class="headerlink" href="#uploading-to-predict-server" title="Permalink to this headline">¶</a></h2>
+<p>You could upload model or import handler to predict server by clicking to  &#8220;Upload for Predict&#8221; button in the details page. In popup you will need to
+specify the server.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">List of available servers you could find in the <a class="reference external" href="http://cloudml.int.odesk.com/#/servers">server list page</a>.</p>
+</div>
+</div>
+<div class="section" id="reloading-the-model-or-import-handler-on-predict-server">
+<h2>Reloading the model or import handler on predict server<a class="headerlink" href="#reloading-the-model-or-import-handler-on-predict-server" title="Permalink to this headline">¶</a></h2>
+<p>To use the uploaded model in predict you need to reload the model on the predict server. For it go to the server details page. Find corresponding model or import handler in the list and click on &#8220;reload&#8221; button in the actions column.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If you moved model/import handler file to Amazon S3 manually, you could simply find it in corresponding server details page and load it to use for predict (by clicking to reload button).</p>
+</div>
+</div>
+<div class="section" id="deleting-the-model-or-import-handler-file">
+<h2>Deleting the model or import handler file<a class="headerlink" href="#deleting-the-model-or-import-handler-file" title="Permalink to this headline">¶</a></h2>
+<p>You can delete the model or import handler file from predict by clicking to delete button in models/import handlers files table in server details page.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Actually system doesn&#8217;t delete the model or import handler from Amazon S3.
+It sets metadata&#8217;s key &#8216;hide&#8217;, so the model or import handler becomes invisible in CloudML UI and unavailable in CloudML Predict.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="deployment.html" title="Deployment"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="instances.html" title="Instances"
+             >previous</a> |</li>
+    <li><a href="http://cloudml.int.odesk.com/">CloudML UI</a> &raquo;</li>
+    
+        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, oDesk.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b2.
+    </div>
+  </body>
+</html>
