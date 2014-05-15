@@ -39,6 +39,8 @@ class Server(BaseModel, db.Model):
                 'name': key.get_metadata('name'),
                 'object_id': key.get_metadata('id'),
                 'object_type': key.get_metadata('type'),
+                'user_id': key.get_metadata('user_id'),
+                'user_name': key.get_metadata('user_name'),
                 'server_id': self.id
             })
         return objects

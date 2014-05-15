@@ -4,6 +4,7 @@
     <th>Name</th>
     <th title="stored in Amazon S3 key metadata">Metadata Name</th>
     <th>Size</th>
+    <th>User</th>
     <th>Updated</th>
     <th>Actions</th>
   </tr>
@@ -17,6 +18,9 @@
       <span title="Name" class="name" ng-bind="file.name" editable="file" value="file.name" editable-field="name" editable-input="text" editable-placement="right"></span>
     </td>
     <td>{{ file.size|bytes }}</td>
+    <td>
+      <span title="User id is {{ file.user_id }}">{{ file.user_name }}</span>
+    </td>
     <td>{{ file.last_modified|format_date }}</td>
     <td>
       <button ng-click="reloadFile(file)" class="btn btn-info">
