@@ -41,6 +41,9 @@ class ServerFileResource(BaseResource):
             for key, val in request.form.iteritems():
                 if key in self.ALLOWED_METADATA_KEY_NAMES:
                     server.set_key_metadata(uid, folder, key, val)
+            from .tasks import update_at_server
+            file_name = '{0}/{1}'.format(folder, uid)
+            update_at_server.delay(server.id, file_name)
         except S3ResponseError as err:
             return odesk_error_response(500, 1006, str(err))
 
@@ -69,6 +72,9 @@ class ServerFileResource(BaseResource):
 
         try:
             server.set_key_metadata(uid, folder, 'hide', 'True')
+            from .tasks import update_at_server
+            file_name = '{0}/{1}'.format(folder, uid)
+            update_at_server.delay(server.id, file_name)
         except S3ResponseError as err:
             return odesk_error_response(500, 1006, str(err))
         return '', 204

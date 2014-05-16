@@ -1,6 +1,7 @@
 import logging
 import json
 from datetime import datetime
+import base64
 import uuid
 
 from api import celery, app
@@ -13,6 +14,10 @@ from api.amazon_utils import AmazonS3Helper
 from .config import FOLDER_MODELS, FOLDER_IMPORT_HANDLERS
 
 
+def get_a_Uuid():
+    r_uuid = base64.urlsafe_b64encode(uuid.uuid4().bytes)
+    return r_uuid.replace('=', '').replace('-', '')
+
 @celery.task
 def upload_model_to_server(server_id, model_id, user_id):
     """
@@ -24,7 +29,7 @@ def upload_model_to_server(server_id, model_id, user_id):
     server = Server.query.get(server_id)
     user = User.query.get(user_id)
     model = Model.query.get(model_id)
-    uid = uuid.uuid1()
+    uid = get_a_Uuid()
 
     # TODO: Shall we use another account?
     s3 = AmazonS3Helper(bucket_name=app.config['CLOUDML_PREDICT_BUCKET_NAME'])
@@ -67,7 +72,7 @@ def upload_import_handler_to_server(server_id, handler_type, handler_id,
 
     handler = _model.query.get(handler_id)
 
-    uid = uuid.uuid1()
+    uid = get_a_Uuid()
     # TODO: Shall we use another account?
     s3 = AmazonS3Helper(bucket_name=app.config['CLOUDML_PREDICT_BUCKET_NAME'])
     path = '{0}/{1}/{2}.{3}'.format(
