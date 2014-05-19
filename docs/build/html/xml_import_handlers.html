@@ -306,13 +306,12 @@ datasource is a connection to a remote Hadoop/Pig cluster. It is defined
 using <tt class="docutils literal"><span class="pre">&lt;pig&gt;</span></tt> tag. Possible attributes are:</p>
 <ul class="simple">
 <li><tt class="docutils literal"><span class="pre">name</span></tt> (<strong>required</strong>) - a unique name for this datasource</li>
-<li><tt class="docutils literal"><span class="pre">connection</span></tt> (<strong>required</strong>) - connection to Hadoop/Pig cluster</li>
 <li><tt class="docutils literal"><span class="pre">jobid</span></tt> (optional) - define job flow id, if you want to use existing cluster</li>
-<li><tt class="docutils literal"><span class="pre">amazon_access_token</span></tt> (<strong>required</strong>)</li>
-<li><tt class="docutils literal"><span class="pre">amazon_token_secret</span></tt> (<strong>required</strong>)</li>
+<li><tt class="docutils literal"><span class="pre">amazon_access_token</span></tt> (optional) - by default use cloudml-control api keys</li>
+<li><tt class="docutils literal"><span class="pre">amazon_token_secret</span></tt> (optional) - by default use cloudml-control api keys</li>
 <li><tt class="docutils literal"><span class="pre">pig_version</span></tt> (optional)</li>
 <li><tt class="docutils literal"><span class="pre">bucket_name</span></tt> (optional) - Amazon S3 bucket name for saving results, logs, etc.</li>
-<li><tt class="docutils literal"><span class="pre">ec2_keyname</span></tt> (optional) - EC2 key used for the instances</li>
+<li><tt class="docutils literal"><span class="pre">ec2_keyname</span></tt> (optional) - EC2 key used for the start instances, by default use cloudml-control keypair</li>
 <li><tt class="docutils literal"><span class="pre">keep_alive</span></tt> (optional)(bool) – Denotes whether the cluster should stay alive upon completion</li>
 <li><tt class="docutils literal"><span class="pre">hadoop_params</span></tt> (optional)</li>
 <li><tt class="docutils literal"><span class="pre">num_instances</span></tt> (optional) – Number of instances in the Hadoop cluster</li>

@@ -59,15 +59,16 @@ class ImportHandler(db.Model, ImportHandlerMixin):
         for datasource in data['datasource']:
             assert datasource['type'] in PredefinedDataSource.TYPES_LIST, \
                 assertion_msg(key, 'datasource type is invalid')
-            PredefinedDataSource.validate_db_fields(datasource['db'])
+            if datasource['type'] == PredefinedDataSource.TYPE_SQL:
+                PredefinedDataSource.validate_db_fields(datasource['db'])
 
         assert 'queries' in data, assertion_msg(
             key, 'queries is required')
         for query in data['queries']:
             assert "name" in query and query['name'], \
                 assertion_msg(key, 'query name is required')
-            assert "sql" in query and query['sql'], \
-                assertion_msg(key, 'query sql is required')
+            #assert "sql" in query and query['sql'], \
+            #    assertion_msg(key, 'query sql is required')
             assert "items" in query and query['items'] is not None, \
                 assertion_msg(key, 'query items are required')
 

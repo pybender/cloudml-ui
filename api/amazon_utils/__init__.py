@@ -140,9 +140,12 @@ class AmazonS3Helper(object):
             key.set_metadata(meta_key, meta_val)
         key.set_contents_from_string(data)
 
-    def set_key_metadata(self, name, meta):
+    def set_key_metadata(self, name, meta, store_previous=False):
         key = self.bucket.lookup(name)
         for meta_key, meta_val in meta.iteritems():
+            if store_previous:
+                previous_value = key.get_metadata(meta_key)
+                key.set_metadata("previous_" + meta_key, previous_value)
             key.set_metadata(meta_key, meta_val)
         #key.metadata.update(meta)
         #print key, key.metadata

@@ -49,7 +49,13 @@ class Server(BaseModel, db.Model):
         key_name = '{0}/{1}/{2}'.format(self.folder, folder, uid)
         s3 = AmazonS3Helper(
             bucket_name=app.config['CLOUDML_PREDICT_BUCKET_NAME'])
-        s3.set_key_metadata(key_name, {key: value})
+        s3.set_key_metadata(key_name, {key: value}, True)
+
+    def get_key_metadata(self, uid, folder, key):
+        key_name = '{0}/{1}/{2}'.format(self.folder, folder, uid)
+        s3 = AmazonS3Helper(
+            bucket_name=app.config['CLOUDML_PREDICT_BUCKET_NAME'])
+        return s3.get_key_metadata(key_name, key)
 
     def save(self, commit=True):
         BaseModel.save(self, commit=False)

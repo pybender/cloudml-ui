@@ -123,7 +123,7 @@ def update_at_server(server_id, file_name):
         raise Exception('Wrong folder: %s' % folder)
 
     url = 'http://{0}/cloudml/{1}/{2}/reload'.format(server.ip, part, name)
-
+    #url = 'http://{0}/cloudml/{1}/reload-all'.format(server.ip, part)
     logging.info(url)
 
     # TODO: handle response

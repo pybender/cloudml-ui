@@ -224,13 +224,12 @@ datasource is a connection to a remote Hadoop/Pig cluster. It is defined
 using ``<pig>`` tag. Possible attributes are:
 
 - ``name`` (**required**) - a unique name for this datasource
-- ``connection`` (**required**) - connection to Hadoop/Pig cluster
 - ``jobid`` (optional) - define job flow id, if you want to use existing cluster
-- ``amazon_access_token`` (**required**)
-- ``amazon_token_secret`` (**required**)
+- ``amazon_access_token`` (optional) - by default use cloudml-control api keys
+- ``amazon_token_secret`` (optional) - by default use cloudml-control api keys
 - ``pig_version`` (optional)
 - ``bucket_name`` (optional) - Amazon S3 bucket name for saving results, logs, etc.
-- ``ec2_keyname`` (optional) - EC2 key used for the instances
+- ``ec2_keyname`` (optional) - EC2 key used for the start instances, by default use cloudml-control keypair
 - ``keep_alive`` (optional)(bool) – Denotes whether the cluster should stay alive upon completion
 - ``hadoop_params`` (optional)
 - ``num_instances`` (optional) – Number of instances in the Hadoop cluster
