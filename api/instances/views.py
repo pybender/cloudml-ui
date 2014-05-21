@@ -31,4 +31,9 @@ class ClusterResource(BaseResourceSQL):
         data = {'active_tunnel': cluster.active_tunnel}
         return self._render({self.OBJECT_NAME: data})
 
+    def _delete_validataion(self, model):
+        """ Terminate cluster """
+        model.terminate_ssh_tunnel()
+        model.terminate()
+
 api.add_resource(ClusterResource, '/cloudml/instances/clusters/')

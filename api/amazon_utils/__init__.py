@@ -6,6 +6,19 @@ from boto.s3.key import Key
 from api import app
 
 
+class AmazonEMRHelper(object):    # pragma: no cover
+    def __init__(self, token=None, secret=None, region='us-west-1'):
+        token = token or app.config['AMAZON_ACCESS_TOKEN']
+        secret = secret or app.config['AMAZON_TOKEN_SECRET']
+        self.conn = boto.emr.connect_to_region(
+            region,
+            aws_access_key_id=token,
+            aws_secret_access_key=secret)
+
+    def terminate_jobflow(self, jobflowid):
+        self.conn.terminate_jobflow(jobflowid)
+
+
 class AmazonEC2Helper(object):    # pragma: no cover
     def __init__(self, token=None, secret=None, region='us-west-2'):
         token = token or app.config['AMAZON_ACCESS_TOKEN']

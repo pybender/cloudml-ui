@@ -3,6 +3,7 @@ import random
 from sqlalchemy.orm import deferred
 
 from api.base.models import BaseModel, db
+from api.amazon_utils import AmazonEMRHelper
 
 
 class Instance(BaseModel, db.Model):
@@ -89,10 +90,17 @@ class Cluster(BaseModel, db.Model):
         import os
         import signal
         if self.pid is not None:
-            os.kill(self.pid, signal.SIGKILL)
+            try:
+                os.kill(self.pid, signal.SIGKILL)
+            except:
+                pass
             self.pid = None
             self.save()
             #self.active_tunnel.terminate_task()
+
+    def terminate(self):
+        emr = AmazonEMRHelper()
+        emr.terminate_jobflow(self.jobflow_id)
 
     def save(self, commit=True):
         if self.port is None:
