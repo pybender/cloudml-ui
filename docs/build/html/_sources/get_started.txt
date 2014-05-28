@@ -30,19 +30,17 @@ You could create a dataset to be used for model training/testing by clicking `Im
 Creating the model
 ==================
 
-The could creating the model by adding new model or uploading untrained one.
+You can create a model by adding new model or uploading untrained one.
 
 New model
 ---------
 
 For creating new untrained model you need to navigate to Add new model page: http://cloudml.int.odesk.com/#/add_model
 Model name (should be unique) and import handlers are required.
-You could choose import handler from a lise or specify json file (format is described 
+You could choose import handler from a list or specify json file (format is described 
 :ref:`here <import_handler>`)
-You could also specify features.json file if you have.
-Json file format is described 
-:ref:`here <features>`
-
+You could also specify features.json file if you have (format is described 
+:ref:`here <features>`).
 
 Upload your model
 -----------------
@@ -68,7 +66,7 @@ The information about model organizes to few tabs:
 Testing the model
 =================
 
-The user could perform testing of the trained model by clicking `Run test` in model details page. Then user should to either define datasets containing data to be used for testing the model, or specify the required parameters to invoke the import handler and retrieve the data. Also he/she need to define instance that would be used for processing test.
+The user could perform testing of the trained model by clicking `Run test` in model details page. Then the user should either define datasets containing data to be used for testing the model, or specify the required parameters to invoke the import handler and retrieve the data. Also he/she need to define instance that would be used for processing test.
 
-The result of the test is a set of metrics and a data with predicted and actual values and feature weights. More information could be found in
+The result of the test is a set of metrics and data with predicted and actual values and feature weights. More information could be found in
 :ref:`here <test_metrics>`
