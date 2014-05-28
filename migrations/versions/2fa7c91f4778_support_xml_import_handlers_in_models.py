@@ -30,9 +30,9 @@ def upgrade():
 def downgrade():
     op.create_foreign_key(
         "model_test_import_handler_id_fkey", "model",
-        "import_handler", ["import_handler_id"], ["id"])
+        "import_handler", ["test_import_handler_id"], ["id"])
     op.create_foreign_key(
         "model_ttrain_import_handler_id_fkey", "model",
-        "import_handler", ["import_handler_id"], ["id"])
+        "import_handler", ["train_import_handler_id"], ["id"])
     op.drop_column('model', 'train_import_handler_type')
     op.drop_column('model', 'test_import_handler_type')
