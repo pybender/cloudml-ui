@@ -21,6 +21,8 @@ class Auth(object):
         self.consumer = Consumer(consumer_key, consumer_secret)
 
     def get_auth_url(self):
+        # TODO: If odesk changes its urls, a redir will happen and AuthException will be raised. Causing false CORS violation
+        # on frontend/ui side
         client = Client(self.consumer)
         resp, content = client.request(
             self.REQUEST_TOKEN_URL,
@@ -63,17 +65,15 @@ class Auth(object):
 
 
 class OdeskAuth(Auth):
-    # TODO: httpS
-    REQUEST_TOKEN_URL = 'http://www.odesk.com/api/auth/v1/oauth/token/request'
+    REQUEST_TOKEN_URL = 'https://www.odesk.com/api/auth/v1/oauth/token/request'
     REQUEST_TOKEN_METHOD = 'POST'
-    # TODO: httpS
-    ACCESS_TOKEN_URL = 'http://www.odesk.com/api/auth/v1/oauth/token/access'
+
+    ACCESS_TOKEN_URL = 'https://www.odesk.com/api/auth/v1/oauth/token/access'
     ACCESS_TOKEN_METHOD = 'POST'
     AUTHORIZE_URL = 'https://www.odesk.com/services/api/auth'
 
-    # TODO: httpS
-    GET_INFO_URL = 'http://www.odesk.com/api/hr/v2/users/me'
-    GET_USER_INFO_URL = 'http://www.odesk.com/api/auth/v1/info'
+    GET_INFO_URL = 'https://www.odesk.com/api/hr/v2/users/me'
+    GET_USER_INFO_URL = 'https://www.odesk.com/api/auth/v1/info'
 
     def __init__(self):
         super(OdeskAuth, self).__init__(
