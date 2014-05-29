@@ -18,8 +18,8 @@ from sqlalchemy.sql import table, column
 def upgrade():
     op.create_table('server',
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('created_on', sa.DateTime(), server_default='now()', nullable=True),
-        sa.Column('updated_on', sa.DateTime(), server_default='now()', nullable=True),
+        sa.Column('created_on', sa.DateTime(), server_default=sa.func.now(), nullable=True),
+        sa.Column('updated_on', sa.DateTime(), server_default=sa.func.now(), nullable=True),
         sa.Column('name', sa.String(length=200), nullable=False),
         sa.Column('description', sa.Text(), nullable=True),
         sa.Column('ip', sa.String(length=200), nullable=False),

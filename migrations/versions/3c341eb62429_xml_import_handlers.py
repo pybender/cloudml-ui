@@ -37,9 +37,9 @@ def upgrade():
         'xml_import_handler',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('created_on', sa.DateTime(),
-                  server_default='now()', nullable=True),
+                  server_default=sa.func.now(), nullable=True),
         sa.Column('updated_on', sa.DateTime(),
-                  server_default='now()', nullable=True),
+                  server_default=sa.func.now(), nullable=True),
         sa.Column('name', sa.String(length=200), nullable=False),
         sa.Column('updated_by_id', sa.Integer(), nullable=True),
         sa.Column('created_by_id', sa.Integer(), nullable=True),
@@ -97,9 +97,6 @@ def upgrade():
         sa.Column('import_handler_id', sa.Integer(), nullable=True),
         sa.ForeignKeyConstraint(['datasource_id'],
                                 ['xml_data_source.id'], ondelete='CASCADE'),
-        sa.ForeignKeyConstraint(
-            ['transformed_field_id'], ['xml_field.id'],
-            name='fk_transformed_field', ondelete='SET NULL', use_alter=True),
         sa.ForeignKeyConstraint(['entity_id'],
                                 ['xml_entity.id'], ondelete='CASCADE'),
         sa.ForeignKeyConstraint(['import_handler_id'],
@@ -130,8 +127,14 @@ def upgrade():
     )
     op.create_unique_constraint(None, 'xml_import_handler', ['name'])
 
+    # we need to create the xml_entity.fk_transform_field -> xml_field.id after 
+    # creating the xml_field. as alembic having bad time creating that constraint
+    op.create_foreign_key('fk_transformed_field', 'xml_entity', 'xml_field', 
+        ['transformed_field_id'], ['id'], ondelete='SET NULL')
+
 
 def downgrade():
+    op.drop_constraint('fk_transformed_field', 'xml_entity')
     op.drop_table('xml_field')
     op.drop_table('xml_entity')
     op.drop_table('xml_data_source')
