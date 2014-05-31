@@ -296,10 +296,19 @@ class OdeskAuthTests(BaseDbTestCase):
         url, token, secret = auth.get_auth_url()
         self.assertEquals(
             url,
-            'https://www.odesk.com/services/api/auth?oauth_token=123'
+            'http://www.odesk.com/services/api/auth?oauth_token=123'
         )
         self.assertEquals(token, '123')
         self.assertEquals(secret, '345')
+
+    def test_integration_odesk_auth_request_token(self):
+        from api.accounts.auth import OdeskAuth
+        auth = OdeskAuth()
+
+        url, token, secret = auth.get_auth_url()
+        self.assertTrue('//www.odesk.com/services/api/auth?oauth_token=' in url)
+        self.assertTrue(token)
+        self.assertTrue(secret)
 
     @patch('oauth2.Client.request', Mock(return_value=OAUTH_RESPONSE_ERROR))
     def test_odesk_auth_request_token_error(self):
@@ -337,3 +346,15 @@ class OdeskAuthTests(BaseDbTestCase):
         auth = OdeskAuth()
         self.assertRaises(AuthException, auth.get_my_info,
                           '123', '345', '567')
+
+    def test_stripOauthSignature(self):
+        from api.accounts.auth import OAuthClient
+
+        url = 'http://www.something.com'
+        self.assertEqual(url, OAuthClient._stripOauthSignature(url))
+
+        url = 'http://www.something.com?q=a'
+        self.assertEqual(url, OAuthClient._stripOauthSignature(url))
+
+        url = 'http://www.something.com?oauth_token=a'
+        self.assertEqual('http://www.something.com', OAuthClient._stripOauthSignature(url))
