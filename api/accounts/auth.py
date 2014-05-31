@@ -69,7 +69,7 @@ class OdeskAuth(Auth):
     # TODO: httpS
     ACCESS_TOKEN_URL = 'http://www.odesk.com/api/auth/v1/oauth/token/access'
     ACCESS_TOKEN_METHOD = 'POST'
-    AUTHORIZE_URL = 'https://www.odesk.com/services/api/auth'
+    AUTHORIZE_URL = 'http://www.odesk.com/services/api/auth'
 
     # TODO: httpS
     GET_INFO_URL = 'http://www.odesk.com/api/hr/v2/users/me'
