@@ -294,10 +294,7 @@ class OdeskAuthTests(BaseDbTestCase):
         auth = OdeskAuth()
 
         url, token, secret = auth.get_auth_url()
-        self.assertEquals(
-            url,
-            'http://www.odesk.com/services/api/auth?oauth_token=123'
-        )
+        self.assertEquals(url, OdeskAuth.AUTHORIZE_URL + '?oauth_token=123')
         self.assertEquals(token, '123')
         self.assertEquals(secret, '345')
 
