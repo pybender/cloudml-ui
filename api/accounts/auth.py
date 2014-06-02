@@ -64,15 +64,15 @@ class Auth(object):
             access_token['oauth_token_secret'])
 
 class OdeskAuth(Auth):
-    REQUEST_TOKEN_URL = 'http://www.odesk.com/api/auth/v1/oauth/token/request'
+    REQUEST_TOKEN_URL = 'https://www.odesk.com/api/auth/v1/oauth/token/request'
     REQUEST_TOKEN_METHOD = 'POST'
 
-    ACCESS_TOKEN_URL = 'http://www.odesk.com/api/auth/v1/oauth/token/access'
+    ACCESS_TOKEN_URL = 'https://www.odesk.com/api/auth/v1/oauth/token/access'
     ACCESS_TOKEN_METHOD = 'POST'
-    AUTHORIZE_URL = 'http://www.odesk.com/services/api/auth'
+    AUTHORIZE_URL = 'https://www.odesk.com/services/api/auth'
 
-    GET_INFO_URL = 'http://www.odesk.com/api/hr/v2/users/me'
-    GET_USER_INFO_URL = 'http://www.odesk.com/api/auth/v1/info'
+    GET_INFO_URL = 'https://www.odesk.com/api/hr/v2/users/me'
+    GET_USER_INFO_URL = 'https://www.odesk.com/api/auth/v1/info'
 
     def __init__(self):
         super(OdeskAuth, self).__init__(
