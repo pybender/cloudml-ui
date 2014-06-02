@@ -1,5 +1,7 @@
+import logging
 import urlparse
 import json
+import httplib2
 
 from oauth2 import Consumer, Client, Token
 
@@ -8,7 +10,6 @@ from api import app
 
 class AuthException(Exception):
     pass
-
 
 class Auth(object):
     REQUEST_TOKEN_URL = ''
@@ -21,9 +22,7 @@ class Auth(object):
         self.consumer = Consumer(consumer_key, consumer_secret)
 
     def get_auth_url(self):
-        # TODO: If odesk changes its urls, a redir will happen and AuthException will be raised. Causing false CORS violation
-        # on frontend/ui side
-        client = Client(self.consumer)
+        client = OAuthClient(self.consumer)
         resp, content = client.request(
             self.REQUEST_TOKEN_URL,
             self.REQUEST_TOKEN_METHOD
@@ -50,19 +49,19 @@ class Auth(object):
     def authenticate(self, oauth_token, oauth_token_secret, oauth_verifier):
         token = Token(oauth_token, oauth_token_secret)
         token.set_verifier(oauth_verifier)
-        client = Client(self.consumer, token)
 
+        client = OAuthClient(self.consumer, token)
         resp, content = client.request(
             self.ACCESS_TOKEN_URL,
             self.ACCESS_TOKEN_METHOD
         )
         if resp['status'] != '200':
             raise AuthException('Authentication failed: {0!s}'.format(content))
+
         access_token = dict(urlparse.parse_qsl(content))
         return (
             access_token['oauth_token'],
             access_token['oauth_token_secret'])
-
 
 class OdeskAuth(Auth):
     REQUEST_TOKEN_URL = 'http://www.odesk.com/api/auth/v1/oauth/token/request'
@@ -85,13 +84,16 @@ class OdeskAuth(Auth):
                     oauth_verifier):
         token = Token(oauth_token, oauth_token_secret)
         token.set_verifier(oauth_verifier)
-        client = Client(self.consumer, token)
+
+        client = OAuthClient(self.consumer, token)
         resp, content = client.request(
             '{0}.json'.format(url),
             method
         )
         if resp['status'] != '200':
-            raise AuthException('Getting info failed: {0!s}'.format(content))
+            raise AuthException('Getting info failed url:{0!s} content: {1!s}'.
+                format(url, content))
+
         return json.loads(content)
 
     def get_my_info(self, oauth_token, oauth_token_secret, oauth_verifier):
@@ -102,3 +104,33 @@ class OdeskAuth(Auth):
         return self.api_request(self.GET_USER_INFO_URL, 'GET',
                                 oauth_token, oauth_token_secret,
                                 oauth_verifier)
+
+class OAuthClient(Client):
+    '''
+    We encounter redirects with odesk. Though httplib2 has follow_all_redirects
+    that allows us to simply solve the problem. It has 2 major problems
+    1. Unsolicited POST redirects poses secruity danger.
+    2. A bug in oauth2 as per https://github.com/simplegeo/python-oauth2/issues/157
+    So we have to manage the request redirection ourselves, still we didn't 
+    solve issue #1 above
+    '''
+    def __init__(self, consumer, token=None, cache=None, timeout=None, proxy_info=None):
+        super(OAuthClient, self).__init__(consumer, token, cache, timeout, proxy_info)
+        self.follow_all_redirects = True
+        self.follow_redirects = True
+
+    def request(self, uri, method="GET", body='', headers=None, 
+        redirections=httplib2.DEFAULT_MAX_REDIRECTS, connection_type=None):
+        return super(OAuthClient, self).request(
+            OAuthClient._stripOauthSignature(uri), 
+            method, body, headers, redirections, connection_type
+        )
+
+    @staticmethod
+    def _stripOauthSignature(uri):
+        scheme, netloc, path, query, fragment = urlparse.urlsplit(uri)
+        query = dict(urlparse.parse_qsl(query))
+        if query.has_key('oauth_token'):
+            return urlparse.urlunparse((scheme, netloc, path, None, None, None))
+        else:
+            return uri
