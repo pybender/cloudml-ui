@@ -166,7 +166,8 @@ class Model(db.Model, BaseModel):
         self.target_variable = trainer._feature_model.target_variable
         self.feature_count = len(trainer._feature_model.features.keys())
         if self.status == self.STATUS_TRAINED:
-            self.labels = map(str, trainer._classifier.classes_.tolist())
+            segment = trainer._classifier.keys()[1]
+            self.labels = map(str, trainer._classifier[segment].classes_.tolist())
 
     def get_features_json(self):
         data = self.features_set.features

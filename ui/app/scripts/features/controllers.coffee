@@ -40,12 +40,11 @@ angular.module('app.features.controllers', ['app.config', ])
     $scope.init = (model) ->
       $scope.modelObj = model
       $scope.$watch('modelObj.featuresSet', (featuresSet, oldVal, scope) ->
-        if featuresSet?
+        if !$scope.featuresSet? && featuresSet? && featuresSet.id?
           $scope.featuresSet = featuresSet
           featuresSet.$load(
-            show: FeaturesSet.MAIN_FIELDS
+            show: FeaturesSet.MAIN_FIELDS + ',group_by'
           ).then (->), ((opts)-> $scope.setError(opts, 'loading featuresSet'))
-
       , true)
       
     $scope.addFeature = () ->
@@ -79,6 +78,36 @@ angular.module('app.features.controllers', ['app.config', ])
           $scope.filter_opts = {'feature_set_id': set_id}
       , true)
 ])
+
+.controller('GroupBySelector', [
+  '$scope'
+  '$rootScope'
+  '$timeout'
+
+  ($scope, $rootScope, $timeout) ->
+    $scope.group_by_opts = {
+      multiple: true,
+      query: (query) ->
+        # TODO: Looks like we need to update version of Select2
+        # to use option 'text'
+        data = {results: [], text: 'name'}
+        angular.forEach($scope.objects, (item, key) ->
+          data.results.push(id: item['id'], text: item['name'])
+        )
+        query.callback(data)
+    }
+
+    $scope.updateGroupBy = () ->
+      $scope.modelObj.featuresSet.$save(only: ['group_by']).then (->
+        $rootScope.segmentationMsg = "Group by fields have been saved"
+        $timeout($scope.clear, 4000)
+      ), (->
+        $scope.setError(opts, 'saving group by fields'))
+
+    $scope.clear = () ->
+      $rootScope.segmentationMsg = null
+])
+
 
 # .controller('AddFeatureDialogCtrl', [
 #   '$scope'
