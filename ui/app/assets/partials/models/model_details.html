@@ -54,33 +54,32 @@
     </p>
 
     <!-- Model tab starts here -->
-    <div ng-show="action[1] == 'details'">
-      <div class="row">
-        <div class="span6">
-          <h4>
-            Classifier {{ model.classifier.name }} <span><a ng-click="editClassifier(model)">(edit)</a></span>
-          </h4>
-           <div>
-              Type:
-              <span class="value">{{ model.classifier.type }}</span>
+    <div ng-show="action[1] == 'details'" ng-controller="FeaturesListCtrl" ng-init="init(model)">
+      <div ng-controller="BaseListCtrl" ng-init="init(false, 'features')">
+        <div class="row">
+          <div class="span4">
+            <h4>
+              Classifier {{ model.classifier.name }} <span><a ng-click="editClassifier(model)">(edit)</a></span>
+            </h4>
+             <div>
+                Type:
+                <span class="value">{{ model.classifier.type }}</span>
+            </div>
+             <div>
+                Parameters:
+                <span class="value">{{ model.classifier.params }}</span>
+            </div>
+            <div ng-show="model.created_by">
+                Created by:
+                <span class="value">{{ model.classifier.created_by.name }} ({{ model.classifier.created_by.uid }})</span>
+            </div>
           </div>
-           <div>
-              Parameters:
-              <span class="value">{{ model.classifier.params }}</span>
-          </div>
-          <div ng-show="model.created_by">
-              Created by:
-              <span class="value">{{ model.classifier.created_by.name }} ({{ model.classifier.created_by.uid }})</span>
-          </div>
+            <ng-include src="'/partials/features/sets/details.html'"></ng-include>
         </div>
-        <div class="span5">
-          <h4>Features</h4>
-          <ng-include src="'/partials/features/sets/details.html'"></ng-include>
-        </div>
-      </div>
-      <div class="row">
-        <div class="span12">
-          <ng-include src="'/partials/features/items/list.html'"></ng-include>
+        <div class="row">
+          <div class="span12">
+            <ng-include src="'/partials/features/items/list.html'"></ng-include>
+          </div>
         </div>
       </div>
     </div>

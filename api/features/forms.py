@@ -84,6 +84,15 @@ class NamedFeatureTypeAddForm(BaseForm, FeatureParamsMixin):
 
 class FeatureSetForm(BaseForm):
     schema_name = CharField()
+    group_by = JsonField()
+
+    def clean_group_by(self, value, field):
+        ids = [feature['id'] for feature in value]
+        return Feature.query.filter(Feature.id.in_(ids)).all()
+
+    def save(self):
+        self.cleaned_data['modified'] = True
+        return super(FeatureSetForm, self).save()
 
 
 class FeatureSetAddForm(BaseForm):

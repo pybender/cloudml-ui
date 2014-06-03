@@ -120,8 +120,9 @@ angular.module('app.features.models', ['app.config'])
 .factory('FeaturesSet', [
   'settings'
   'BaseModel'
+  'Feature'
   
-  (settings, BaseModel) ->
+  (settings, BaseModel, Feature) ->
     class FeaturesSet extends BaseModel
       BASE_API_URL: "#{settings.apiUrl}features/sets/"
       BASE_UI_URL: "/features/sets/"
@@ -132,6 +133,15 @@ angular.module('app.features.models', ['app.config'])
       schema_name: null
       features_count: 0
       target_variable: null
+
+      loadFromJSON: (origData) =>
+        super origData
+        if origData?
+          if origData.group_by?
+            @group_by = []
+            for feature in origData.group_by
+              @group_by.push {id: feature.id, text: feature.name}
+            console.log @group_by
 
       downloadUrl: =>
         return "#{@BASE_API_URL}#{@id}/action/download/"
@@ -168,7 +178,7 @@ scaler,default,is_target_variable,created_on,created_by,required'
 
       loadFromJSON: (origData) =>
         super origData
-        
+        @text = @name
         if origData?
           defaultData = {'feature_id': @id}
           if origData.transformer? && Object.keys(origData.transformer).length

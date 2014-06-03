@@ -1,4 +1,4 @@
-<div ng-controller="FeaturesListCtrl" ng-init="init(model)">
+<div>
 <h4>Features List
 	<div class="actions">
       <a class="btn btn-info" href="#/models/{{ modelObj.id }}/features/{{ modelObj.features_set_id }}/add">
@@ -8,7 +8,7 @@
 </h4>
 
 <div ng-controller="NamedFeatureTypesSelectsLoader">
-<table ng-controller="BaseListCtrl" ng-init="init(false, 'features')" class="table table-hover">
+<table class="table table-hover">
 	<thead>
 	<tr>
 		<th>Name</th>
