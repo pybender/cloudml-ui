@@ -34,7 +34,7 @@ class ModelResource(BaseResourceSQL):
                    'upload_to_server')
     FILTER_PARAMS = (('status', str), ('comparable', str), ('tag', str),
                     ('created_by', str), ('updated_by_id', int),
-                    ('updated_by', str))
+                    ('updated_by', str), ('name', str))
     DEFAULT_FIELDS = ('id', 'name')
     NEED_PAGING = True
 
@@ -79,12 +79,16 @@ class ModelResource(BaseResourceSQL):
     def _set_list_query_opts(self, cursor, params):
         if 'tag' in params and params['tag']:
             cursor = cursor.filter(Model.tags.any(Tag.text == params['tag']))
+        name = params.pop('name', None)
+        if name:
+            cursor = cursor.filter(Model.name == name)
         created_by = params.pop('created_by', None)
         if created_by:
             cursor = cursor.filter(Model.created_by.has(uid=created_by))
         updated_by = params.pop('updated_by', None)
         if updated_by:
             cursor = cursor.filter(Model.updated_by.has(uid=updated_by))
+            
         return cursor
 
     def _get_by_importhandler_action(self, **kwargs):
