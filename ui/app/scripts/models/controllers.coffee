@@ -3,7 +3,7 @@
 ### Trained Model specific Controllers ###
 
 FIELDS_BY_SECTION = {
-  'model': 'classifier,features_set_id'
+  'model': 'classifier,features_set_id,segments'
   'training': 'error,weights_synchronized,memory_usage,
 trained_by,trained_on,training_time,datasets,train_records_count,trainer_size'
   'about': 'created_on,target_variable,example_id,example_label,

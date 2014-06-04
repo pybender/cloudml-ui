@@ -105,6 +105,11 @@ class Model(db.Model, BaseModel):
         self.train_import_handler_id = handler.id
         self.train_import_handler_type = handler.TYPE
 
+    @property
+    def segments(self):
+        trainer = self.get_trainer()
+        return trainer._get_segments_info()
+
     def __repr__(self):
         return "<Model {0}>".format(self.name)
 

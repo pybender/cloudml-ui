@@ -56,7 +56,7 @@
     <!-- Model tab starts here -->
     <div ng-show="action[1] == 'details'" ng-controller="FeaturesListCtrl" ng-init="init(model)">
       <div ng-controller="BaseListCtrl" ng-init="init(false, 'features')">
-        <div class="row">
+        <div class="row" ng-controller="FeaturesSetDetailsCtrl" ng-init="init(model)">
           <div class="span4">
             <h4>
               Classifier {{ model.classifier.name }} <span><a ng-click="editClassifier(model)">(edit)</a></span>
@@ -74,7 +74,29 @@
                 <span class="value">{{ model.classifier.created_by.name }} ({{ model.classifier.created_by.uid }})</span>
             </div>
           </div>
-            <ng-include src="'/partials/features/sets/details.html'"></ng-include>
+          <div class="span4">
+            <h4>Features</h4>
+            <div>
+              Schema Name:
+              <span title="Schema Name" class="title" ng-bind="featuresSet.schema_name || 'schema name here'" editable="featuresSet" value="featuresSet.schema_name" editable-field="schema_name" editable-input="text" editable-placement="right"></span>
+            </div>
+            <div>Target Variable: <span class="value">{{ featuresSet.target_variable }}</span></div>
+            <div>Features Count: <span class="value">{{ featuresSet.features_count }}</span></div>
+          </div>
+          <div class="span3">
+            <h4>Segmentation</h4>
+            <alert-message ng-show="segmentationMsg" class="alert-info" msg="{{segmentationMsg}}" unsafe></alert-message>
+            <div ng-controller="GroupBySelector">
+              Group By:
+              <input ui-select2="group_by_opts" ng-model="modelObj.featuresSet.group_by" /> 
+              <input type="button" class="btn btn-info" value="Save" ng-click="updateGroupBy()" style="margin-left: 5px;" />
+            </div>
+            <div ng-show="modelObj.status == 'Trained'">
+              <div ng-repeat="segment in modelObj.segments">
+                {{ segment }}
+              </div>
+            </div>
+          </div>
         </div>
         <div class="row">
           <div class="span12">
