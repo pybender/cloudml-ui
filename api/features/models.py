@@ -216,10 +216,11 @@ class FeatureSet(ExportImportMixin, BaseModel, db.Model):
                     ntype = NamedFeatureType()
                     ntype.from_dict(feature_type, commit=False)
 
+        group_by_exist = 'group-by' in features_dict
         for feature_dict in features_dict['features']:
             feature = Feature(feature_set=self)
             feature.from_dict(feature_dict, commit=False)
-            if feature.name in features_dict['group_by']:
+            if group_by_exist and feature.name in features_dict['group-by']:
                 self.group_by.append(feature)
 
         if commit:
@@ -230,7 +231,7 @@ class FeatureSet(ExportImportMixin, BaseModel, db.Model):
 
     def to_dict(self):
         features_dict = {'schema-name': self.schema_name,
-                         'group_by': [f.name for f in self.group_by],
+                         'group-by': [f.name for f in self.group_by],
                          'features': [],
                          "feature-types": []}
         types = []
