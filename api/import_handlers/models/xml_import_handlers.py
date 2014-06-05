@@ -180,6 +180,14 @@ class XmlField(db.Model, BaseMixin):
                            'regex', 'split', 'dateFormat', 'template',
                            'transform', 'headers', 'script', 'required',
                            'multipart']
+    
+    def to_dict(self):
+        fieldDict = super(XmlField, self).to_dict()
+        if fieldDict['multipart'] == 'false':
+            fieldDict.pop('multipart')
+        if fieldDict['required'] == 'false':
+            fieldDict.pop('required')
+        return fieldDict
 
     name = db.Column(db.String(200), nullable=False)
     type = db.Column(db.Enum(*TYPES, name='xml_field_types'))
@@ -365,7 +373,9 @@ def fill_import_handler(import_handler, xml_data=None):
                     template=field.template,
                     script=field.script,
                     transform=field.transform,
-                    headers=field.headers)
+                    headers=field.headers,
+                    required=field.required,
+                    multipart=field.multipart)
                 db_entity.fields.append(fld)
                 if field.transform:
                     TRANSFORMED_FIELDS[field.name] = fld

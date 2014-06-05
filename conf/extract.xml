@@ -52,9 +52,9 @@
 
             <entity name="employer_info" datasource="employer_info">
                 <field name="employer.op_timezone" jsonpath="$.op_timezone" />
-                <field name="employer.op_country_tz" jsonpath="$.op_country_tz" />
-                <field name="employer.op_tot_jobs_filled" jsonpath="$.op_tot_jobs_filled" />
-                <field name="employer.country" jsonpath="$.op_country" />
+                <field name="employer.op_country_tz" jsonpath="$.op_country_tz" required="false" multipart="false" />
+                <field name="employer.op_tot_jobs_filled" jsonpath="$.op_tot_jobs_filled" multipart="true" />
+                <field name="employer.country" jsonpath="$.op_country" required="true"/>
             </entity>
 
             <entity name="contractor_info" datasource="contractor_info">
