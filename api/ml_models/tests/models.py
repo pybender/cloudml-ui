@@ -89,8 +89,7 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
 
     def test_filter(self):
         self.check_list(data={'status': 'New'}, query_params={'status': 'New'})
-        # No name filter - all models should be returned
-        self.check_list(data={'name': 'TrainedModel'}, 
+        self.check_list(data={'name': 'Trained'}, 
                         query_params={'name': 'TrainedModel'})
 
         # Comparable filter

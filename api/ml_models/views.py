@@ -81,7 +81,7 @@ class ModelResource(BaseResourceSQL):
             cursor = cursor.filter(Model.tags.any(Tag.text == params['tag']))
         name = params.pop('name', None)
         if name:
-            cursor = cursor.filter(Model.name == name)
+            cursor = cursor.filter(Model.name.ilike('%{0}%'.format(name)))
         created_by = params.pop('created_by', None)
         if created_by:
             cursor = cursor.filter(Model.created_by.has(uid=created_by))
