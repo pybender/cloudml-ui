@@ -21,7 +21,7 @@ class ServersTasksTests(BaseDbTestCase):
 
     @mock_s3
     @patch('api.amazon_utils.AmazonS3Helper.save_key_string')
-    @patch('uuid.uuid1')
+    @patch('api.servers.tasks.get_a_Uuid')
     def test_upload_model(self, uuid, mock_save_key_string):
         guid = '7686f8b8-dc26-11e3-af6a-20689d77b543'
         uuid.return_value = guid
@@ -47,7 +47,7 @@ class ServersTasksTests(BaseDbTestCase):
 
     @mock_s3
     @patch('api.amazon_utils.AmazonS3Helper.save_key_string')
-    @patch('uuid.uuid1')
+    @patch('api.servers.tasks.get_a_Uuid')
     def test_upload_import_handler(self, uuid, mock_save_key_string):
         guid = '7686f8b8-dc26-11e3-af6a-20689d77b543'
         uuid.return_value = guid
@@ -76,9 +76,9 @@ class ServersTasksTests(BaseDbTestCase):
 
     @mock_s3
     @patch('api.amazon_utils.AmazonS3Helper.save_key_string')
-    @patch('uuid.uuid1')
+    @patch('api.servers.tasks.get_a_Uuid')
     def test_upload_xml_import_handler(self, uuid, mock_save_key_string):
-        guid = '7686f8b8-dc26-11e3-af6a-20689d77b543'
+        guid = 'pbnehzuEQlGTeQO7I6P8_w'
         uuid.return_value = guid
         server = Server.query.filter_by(name=ServerData.server_01.name).one()
         handler = XmlImportHandler.query.filter_by(

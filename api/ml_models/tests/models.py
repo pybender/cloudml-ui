@@ -299,6 +299,10 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(model.name, name)
         self.assertEquals(model.status, model.STATUS_TRAINED)
         self.assertTrue(model.trainer)
+        self.assertEquals(model.labels, ['0', '1'])
+        self.assertEquals(model.target_variable, 'hire_outcome')
+        self.assertEquals(model.feature_count, 37)
+        self.assertFalse(model.error)
 
     @patch('api.ml_models.models.Model.set_trainer')
     def test_post_with_errors(self, mock_set_trainer):
@@ -378,6 +382,24 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
 
         tag3 = Tag.query.filter_by(text='some_new').one()
         self.assertEquals(tag3.count, 1)
+
+    @mock_s3
+    @patch('api.ml_models.models.Model.get_features_json')
+    def test_train_model_task(self, mock_get_features_json, *mocks):
+        from api.ml_models.tasks import train_model
+        ds = DataSet.query.filter_by(
+            name=DataSetData.dataset_03.name).first()
+
+        def check_train(features_file_name='features.json'):
+            with open('./conf/%s' % features_file_name, 'r') as f:
+                mock_get_features_json.return_value = f.read()
+            res = train_model.run(
+                dataset_ids=[ds.id], model_id=self.obj.id, user_id=1)
+            self.assertTrue('Model trained' in res)
+            self.assertEqual(self.obj.status, Model.STATUS_TRAINED, self.obj.error)
+        
+        check_train()
+        check_train('features_with_segmentation.json')
 
     @mock_s3
     def test_train_model_validation_errors(self, *mocks):
