@@ -55,6 +55,7 @@
 <li><a class="reference internal" href="#">Development</a><ul>
 <li><a class="reference internal" href="#backend">Backend</a></li>
 <li><a class="reference internal" href="#frontend">Frontend</a></li>
+<li><a class="reference internal" href="#cloudml-core">Cloudml <em>CORE</em></a></li>
 </ul>
 </li>
 </ul>
@@ -150,6 +151,26 @@ $ ./scripts/init.sh</pre>
 <div class="highlight-python"><pre>$ cd ui
 $ ./scripts/server.sh</pre>
 </div>
+</div>
+<div class="section" id="cloudml-core">
+<h2>Cloudml <em>CORE</em><a class="headerlink" href="#cloudml-core" title="Permalink to this headline">¶</a></h2>
+<p>If you use pip install -r requirements.txt to set up your development environment
+as described above, you wouldn&#8217;t need to do much to setup your environment for the
+core Cloudml. But just in case</p>
+<p>Install requirements</p>
+<blockquote>
+<div>$ pip install requirements.txt</div></blockquote>
+<p>To install nltk/punkt you need to hid to <a class="reference external" href="http://www.nltk.org/data.html">http://www.nltk.org/data.html</a> and follow
+the direction. After nltk.download() choose to download punkt.</p>
+<p>Testing cloudml</p>
+<blockquote>
+<div>$ nosetests</div></blockquote>
+<p>To use your local version of cloudml, instead of the one coming from requirements.txt
+of cloudml-ui project:</p>
+<ol class="arabic simple">
+<li>pip uninstall cloudml</li>
+<li>let PYTHONPATH point to your cloudml root directory</li>
+</ol>
 </div>
 </div>
 

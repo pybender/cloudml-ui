@@ -73,3 +73,27 @@ Run ui dev server::
 
     $ cd ui
     $ ./scripts/server.sh
+
+Cloudml *CORE*
+--------------
+
+If you use pip install -r requirements.txt to set up your development environment
+as described above, you wouldn't need to do much to setup your environment for the 
+core Cloudml. But just in case
+
+Install requirements
+
+    $ pip install requirements.txt
+
+To install nltk/punkt you need to hid to http://www.nltk.org/data.html and follow
+the direction. After nltk.download() choose to download punkt. 
+
+Testing cloudml
+
+    $ nosetests
+
+To use your local version of cloudml, instead of the one coming from requirements.txt
+of cloudml-ui project:
+
+1. pip uninstall cloudml
+2. let PYTHONPATH point to your cloudml root directory
