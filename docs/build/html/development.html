@@ -56,6 +56,7 @@
 <li><a class="reference internal" href="#backend">Backend</a></li>
 <li><a class="reference internal" href="#frontend">Frontend</a></li>
 <li><a class="reference internal" href="#cloudml-core">Cloudml <em>CORE</em></a></li>
+<li><a class="reference internal" href="#training-your-first-model">Training Your First Model</a></li>
 </ul>
 </li>
 </ul>
@@ -128,7 +129,7 @@ $ rabbitmqctl set_permissions cloudml cloudml "*" "*" "*
 <p>Run dev server:</p>
 <div class="highlight-python"><pre>$ python manage.py runserver</pre>
 </div>
-<p>Run celery:</p>
+<p id="celery">Run celery:</p>
 <div class="highlight-python"><pre>$ python manage.py celeryd</pre>
 </div>
 <p>Run flower (celery monitor):</p>
@@ -171,6 +172,30 @@ of cloudml-ui project:</p>
 <li>pip uninstall cloudml</li>
 <li>let PYTHONPATH point to your cloudml root directory</li>
 </ol>
+</div>
+<div class="section" id="training-your-first-model">
+<h2>Training Your First Model<a class="headerlink" href="#training-your-first-model" title="Permalink to this headline">¶</a></h2>
+<p><strong>Prepare Default Instance:</strong> Go to instances, click &#8220;Add new AWS instance&#8221;,
+in the IP use 127.0.0.1, in the type choose small.
+Finally make sure <strong>Is Default?</strong> checkbox is checked.</p>
+<p><strong>Create JSON import handler:</strong> Go to import handlers/json, &#8220;Add new import handler&#8221;,
+give it a name, choose the file <strong>extract.json</strong> from cloudml-ui/conf directory. After
+creation look for the &#8220;Data Sources&#8221; section of the just created import handler, and
+edit it to reflect where the table called <strong>ja_quick_info</strong> resides. You will also
+need to populate that table, so <strong>ask</strong> any team member to give you a dump of that table.
+Now <strong>Run Query</strong> on that import handler. When asked for start/end use 2012-12-03 and 2012-12-04 respectively.
+Now you should get couple of rows to make sure your import handler configuration is good.</p>
+<p><strong>Import Data Set:</strong> You need to make sure that celeryd is running as indicated in <a class="reference internal" href="#celery">celery</a>.
+Then in the import handler you&#8217;ve just created, click &#8220;Import DataSet&#8221;, for start/end
+use 2012-12-03 and 2012-12-04 respectively. Now click &#8220;Logs&#8221;, you should see some logs with no
+errors. Go to &#8220;Details&#8221; you should see &#8220;Records Count&#8221; to be 99.</p>
+<p><strong>Create &amp; Train a Model:</strong> Go to models, and click &#8220;Add New Model&#8221;, give it a name,
+and use the file cloudml-ui/conf/features.json and the import handler you&#8217;ve just created.
+After adding the model, click &#8220;Start Training&#8221;, select the dataset you imported in previous step,
+and the default instance should be created by default. Now click &#8220;Start Training&#8221;.
+Navigate back to models to refresh the status of the models. You should now see that your
+created model is <strong>Trained</strong>.</p>
+<p><strong>Congratulations You have Trained your FIRST model</strong></p>
 </div>
 </div>
 
