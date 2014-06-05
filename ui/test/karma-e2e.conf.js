@@ -18,11 +18,13 @@ module.exports = function(config){
 
     singleRun: true,
 
-    proxies : {
-      '/': 'http://localhost:3333/'
-    },
-
     urlRoot: '/__karma__/',
+
+    // compile coffee scripts
+    preprocessors: {
+      'app/**/*.coffee': ['coffee'],  //, 'coverage'],
+      'test/e2e/**/*.coffee': ['coffee']
+    },
 
     plugins: [
       // these plugins will be require() by Karma

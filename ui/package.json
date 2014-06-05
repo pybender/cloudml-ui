@@ -38,6 +38,10 @@
     "karma-phantomjs-launcher": "*",
     "karma-ng-scenario": "*",
     "karma-spec-reporter": "*",
-    "jsdom": "~0.10.5"
+    "jsdom": "~0.10.5",
+    "karma-chrome-launcher": "~0.1.4",
+    "karma-firefox-launcher": "~0.1.3",
+    "karma-jasmine": "~0.1.5",
+    "karma-coffee-preprocessor": "~0.2.1"
   }
 }
