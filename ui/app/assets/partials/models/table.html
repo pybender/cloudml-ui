@@ -1,7 +1,12 @@
 <table class="table table-hover">
   <thead>
     <tr>
-      <th>Name</th>
+      <th>Name
+        <a ng-click="showNameFilter=!showNameFilter"><i class="icon-search"></i></a>
+        <div ng-show="showNameFilter || filter_opts['name']">
+          <input class="input-medium" name="name" ng-model="filter_opts['name']" placeholder="filter by name" />
+        </div>
+      </th>
       <th>
         Status
         <a ng-click="showStatusFilter=!showStatusFilter"><i class="icon-search"></i></a>
