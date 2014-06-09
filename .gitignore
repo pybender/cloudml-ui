@@ -40,3 +40,4 @@ api/test_config.py
 api/test/cover/*
 *_topics.txt
 api/test_config.py
+.pydevproject

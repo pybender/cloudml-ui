@@ -144,6 +144,9 @@ api = Api(app)
 admin = Admin(app, 'CloudML Admin Interface')
 
 logging_config.dictConfig(app.config['LOGGING'])
+# to see sqlalchemy SQL statements, uncomment the following, and watch out 
+# for the logs will be huge
+#logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 if app.config.get('SEND_ERROR_EMAILS'):
     from logging.handlers import SMTPHandler

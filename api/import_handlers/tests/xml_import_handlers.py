@@ -13,6 +13,7 @@ from ..views import XmlImportHandlerResource, XmlEntityResource,\
 from ..models import XmlImportHandler, XmlDataSource,\
     XmlScript, XmlField, XmlEntity, XmlInputParameter, XmlQuery, XmlSqoop
 
+from lxml import etree
 
 class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
     """
@@ -45,12 +46,36 @@ class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
 
         resp = self.check_details(show='name,xml', obj=self.obj)
         obj = resp[self.RESOURCE.OBJECT_NAME]
-        self.assertTrue('<plan>' in obj['xml'])
-        self.assertTrue('<entity datasource="odw" name="application">'
-                        in obj['xml'])
+        
         print obj['xml']
-        self.assertTrue('field jsonpath="$.op_country" multipart="false" name="employer.country"'
-                        in obj['xml'])
+        xmlRoot = etree.fromstring(obj['xml'])
+        self.assertEqual(xmlRoot.tag, 'plan')
+        xmlEntities = xmlRoot.xpath('./import/entity[@datasource="odw"][@name="application"]')
+        self.assertEqual(1, len(xmlEntities))
+        
+        fields = xmlEntities[0].xpath('./entity[@datasource="employer_info"][@name="employer_info"]/\
+            field[@name="employer.op_country_tz"]')
+        self.assertEqual(1, len(fields))
+        self.assertEqual('$.op_country_tz', fields[0].attrib.get('jsonpath'))
+        self.assertEqual('string', fields[0].attrib.get('type'))
+        self.assertEqual(None, fields[0].attrib.get('multipart'))
+        self.assertEqual(None, fields[0].attrib.get('required'))
+        
+        fields = xmlEntities[0].xpath('./entity[@datasource="employer_info"][@name="employer_info"]/\
+            field[@name="employer.op_tot_jobs_filled"]')
+        self.assertEqual(1, len(fields))
+        self.assertEqual('$.op_tot_jobs_filled', fields[0].attrib.get('jsonpath'))
+        self.assertEqual('string', fields[0].attrib.get('type'))
+        self.assertEqual('true', fields[0].attrib.get('multipart'))
+        self.assertEqual(None, fields[0].attrib.get('required'))
+        
+        fields = xmlEntities[0].xpath('./entity[@datasource="employer_info"][@name="employer_info"]/\
+            field[@name="employer.country"]')
+        self.assertEqual(1, len(fields))
+        self.assertEqual('$.op_country', fields[0].attrib.get('jsonpath'))
+        self.assertEqual('string', fields[0].attrib.get('type'))
+        self.assertEqual(None, fields[0].attrib.get('multipart'))
+        self.assertEqual('true', fields[0].attrib.get('required'))
 
         resp = self._check(show='name,entities', id=self.obj.id)
         obj = resp[self.RESOURCE.OBJECT_NAME]
@@ -268,6 +293,20 @@ class XmlFieldTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
         self.assertTrue('configuration' in resp)
         self.assertTrue('types' in resp['configuration'])
         self.assertTrue('transform' in resp['configuration'])
+        
+    def test_required_mutlipart_serialization(self):
+        field = XmlField.query.filter_by(name='employer.op_timezone').one()
+        self.assertFalse(field.required)
+        self.assertFalse(field.multipart)
+        field = XmlField.query.filter_by(name='employer.op_country_tz').one()
+        self.assertFalse(field.required)
+        self.assertFalse(field.multipart)
+        field = XmlField.query.filter_by(name='employer.op_tot_jobs_filled').one()
+        self.assertFalse(field.required)
+        self.assertTrue(field.multipart)
+        field = XmlField.query.filter_by(name='employer.country').one()
+        self.assertTrue(field.required)
+        self.assertFalse(field.multipart)
 
 
 class XmlQueryTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
