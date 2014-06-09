@@ -199,8 +199,8 @@ angular.module('app.importhandlers.model', ['app.config'])
       @MAIN_FIELDS: 'name,id,import_params,
 created_on,created_by,error'
       DEFAULT_FIELDS_TO_SAVE: ['name', 'data']
-      @PROCESS_STRATEGIES = ['identity', 'string', 'float',
-        'boolean', 'integer', 'json', 'composite']
+      @PROCESS_STRATEGIES = _.sortBy ['identity', 'string', 'float',
+        'boolean', 'integer', 'json', 'composite'], (s)-> s
       DATA_FIELDS: ['target_schema']
       TYPE: 'JSON'
 

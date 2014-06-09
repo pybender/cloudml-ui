@@ -26,7 +26,8 @@ angular.module('app.xml_importhandlers.controllers', ['app.config', ])
 
     $scope.handler = new ImportHandler({id: $routeParams.id})
     $scope.LOADED_SECTIONS = []
-    $scope.PROCESS_STRATEGIES = ImportHandler.PROCESS_STRATEGIES
+    $scope.PROCESS_STRATEGIES =
+      _.sortBy ImportHandler.PROCESS_STRATEGIES, (s)-> s
 
     $scope.go = (section) ->
       fields = ''

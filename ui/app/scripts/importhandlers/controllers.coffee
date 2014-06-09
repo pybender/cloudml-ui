@@ -35,7 +35,8 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
 
     $scope.handler = new ImportHandler({id: $routeParams.id})
     $scope.LOADED_SECTIONS = []
-    $scope.PROCESS_STRATEGIES = ImportHandler.PROCESS_STRATEGIES
+    $scope.PROCESS_STRATEGIES =
+      _.sortBy ImportHandler.PROCESS_STRATEGIES, (s)-> s
 
     $scope.codemirrorOptions = {
       mode: 'javascript', readOnly: true, json: true
@@ -420,7 +421,8 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
 ($scope, $routeParams, $location, ImportHandler, Item) ->
   if not $routeParams.id then throw new Error "Specify id"
   if not $routeParams.num then throw new Error "Specify query number"
-  $scope.PROCESS_STRATEGIES = ImportHandler.PROCESS_STRATEGIES
+  $scope.PROCESS_STRATEGIES =
+    _.sortBy ImportHandler.PROCESS_STRATEGIES, (s)-> s
 
   $scope.handler = new ImportHandler({id: $routeParams.id})
   $scope.model = new Item(
