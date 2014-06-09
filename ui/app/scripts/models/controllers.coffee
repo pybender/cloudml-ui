@@ -4,7 +4,7 @@
 
 FIELDS_BY_SECTION = {
   'model': 'classifier,features_set_id,segments'
-  'training': 'error,weights_synchronized,memory_usage,
+  'training': 'error,weights_synchronized,memory_usage,segments,
 trained_by,trained_on,training_time,datasets,train_records_count,trainer_size'
   'about': 'created_on,target_variable,example_id,example_label,
 labels,updated_on,feature_count,test_import_handler,

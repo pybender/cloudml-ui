@@ -91,11 +91,6 @@
               <input ui-select2="group_by_opts" ng-model="modelObj.featuresSet.group_by" /> 
               <input type="button" class="btn btn-info" value="Save" ng-click="updateGroupBy()" style="margin-left: 5px;" />
             </div>
-            <div ng-show="modelObj.status == 'Trained'">
-              <div ng-repeat="segment in modelObj.segments">
-                {{ segment }}
-              </div>
-            </div>
           </div>
         </div>
         <div class="row">
@@ -178,6 +173,16 @@
             Records count: <span class="value">{{ model.train_records_count }}</span>
           </div>
       </div>
+      <div class="span4">
+        <div ng-show="model.status == 'Trained'">
+              Segments:
+              <div ng-repeat="(segment, records) in model.segments">
+                <span class="value">
+                  "{{ segment }}" - {{records}} records
+                </span>
+              </div>
+            </div>
+        </div>
     </div>
     <hr />
     <div ng-controller="WeightsCtrl">
