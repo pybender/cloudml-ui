@@ -42,8 +42,9 @@ angular.module('app.models.model', ['app.config'])
       train_import_handler: null
       test_import_handler: null
       datasets: []
+      sorted_data_fields: null
 
-      loadFromJSON: (origData) =>
+      loadFromJSON: (origData) ->
         super origData
 
         if origData?
@@ -81,11 +82,13 @@ angular.module('app.models.model', ['app.config'])
           if origData.tags?
             @tags = for tag in origData['tags']
               tag['text']
+          if origData.data_fields?
+            @sorted_data_fields = _.sortBy origData['data_fields'], (s)-> s
 
-      downloadUrl: =>
+      downloadUrl: ->
         return "#{@BASE_API_URL}#{@id}/action/download/"
 
-      @$by_handler: (opts) =>
+      @$by_handler: (opts) ->
         resolver = (resp, Model) ->
           {
             total: resp.data.found
@@ -97,20 +100,20 @@ angular.module('app.models.model', ['app.config'])
         @$make_all_request("#{@prototype.BASE_API_URL}action/by_importhandler/",
                            resolver, opts)
 
-      $train: (opts={}) =>
+      $train: (opts={}) ->
         data = {}
         for key, val of opts
           if key == 'parameters' then val = JSON.stringify(val)
           data[key] = val
         @$make_request("#{@BASE_API_URL}#{@id}/action/train/", {}, "PUT", data)
 
-      $cancel_request_spot_instance: =>
+      $cancel_request_spot_instance: ->
         url = "#{@BASE_API_URL}#{@id}/action/cancel_request_instance/"
         @$make_request(url, {}, "PUT", {}).then(
-          (resp) =>
+          (resp) ->
             @status = resp.data.model.status)
 
-      $uploadPredict: (server) =>
+      $uploadPredict: (server) ->
         url = "#{@BASE_API_URL}#{@id}/action/upload_to_server/"
         @$make_request(url, {}, "PUT", {'server': server})
 

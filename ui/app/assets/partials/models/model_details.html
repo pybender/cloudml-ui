@@ -218,21 +218,21 @@
       </div>
       <div class="span5">
         <h5>Data Examples Titles</h5>
-        <div ng-show="model.data_fields.length">
+        <div ng-show="model.sorted_data_fields.length">
           Examples label field name:
-          <span title="Label Field Name" ng-bind="model.example_label || 'not specified'" editable="model" value="model.example_label" editable-field="example_label" editable-placement="right" editable-input="select" source="model.data_fields"></span>
+          <span title="Label Field Name" ng-bind="model.example_label || 'not specified'" editable="model" value="model.example_label" editable-field="example_label" editable-placement="right" editable-input="select" source="model.sorted_data_fields"></span>
         </div>
-        <div ng-show="!model.data_fields.length">
+        <div ng-show="!model.sorted_data_fields.length">
           Examples label field name:
-          <span title="Label Field Name" ng-bind="model.example_label || 'not specified'" editable="model" value="model.example_label" editable-field="example_label" editable-placement="right" editable-input="text" source="model.data_fields"></span>
+          <span title="Label Field Name" ng-bind="model.example_label || 'not specified'" editable="model" value="model.example_label" editable-field="example_label" editable-placement="right" editable-input="text" source="model.sorted_data_fields"></span>
         </div>
-        <div ng-show="model.data_fields.length">
+        <div ng-show="model.sorted_data_fields.length">
           Examples id field name:
-          <span title="ID Field Name" ng-bind="model.example_id" editable="model" value="model.example_id" editable-field="example_id" editable-placement="right" editable-input="select" source="model.data_fields"></span>
+          <span title="ID Field Name" ng-bind="model.example_id" editable="model" value="model.example_id" editable-field="example_id" editable-placement="right" editable-input="select" source="model.sorted_data_fields"></span>
         </div>
-        <div ng-show="!model.data_fields.length">
+        <div ng-show="!model.sorted_data_fields.length">
           Examples id field name:
-          <span title="ID Field Name" ng-bind="model.example_id" editable="model" value="model.example_id" editable-field="example_id" editable-placement="right" editable-input="text" source="model.data_fields"></span>
+          <span title="ID Field Name" ng-bind="model.example_id" editable="model" value="model.example_id" editable-field="example_id" editable-placement="right" editable-input="text" source="model.sorted_data_fields"></span>
         </div>
         <div>
             Target variable:
