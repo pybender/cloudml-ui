@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -15,7 +13,7 @@
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
+        URL_ROOT:    './',
         VERSION:     '0.0.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
@@ -311,7 +309,7 @@ using <tt class="docutils literal"><span class="pre">&lt;pig&gt;</span></tt> tag
 <li><tt class="docutils literal"><span class="pre">jobid</span></tt> (optional) - define job flow id, if you want to use existing cluster</li>
 <li><tt class="docutils literal"><span class="pre">amazon_access_token</span></tt> (optional) - by default use cloudml-control api keys</li>
 <li><tt class="docutils literal"><span class="pre">amazon_token_secret</span></tt> (optional) - by default use cloudml-control api keys</li>
-<li><tt class="docutils literal"><span class="pre">pig_version</span></tt> (optional)</li>
+<li><tt class="docutils literal"><span class="pre">ami_version</span></tt> (optional)(3.0.4) -  3.0.4 support pig 0.11.1, 3.1.0 - support pig 0.12</li>
 <li><tt class="docutils literal"><span class="pre">bucket_name</span></tt> (optional) - Amazon S3 bucket name for saving results, logs, etc.</li>
 <li><tt class="docutils literal"><span class="pre">ec2_keyname</span></tt> (optional) - EC2 key used for the start instances, by default use cloudml-control keypair</li>
 <li><tt class="docutils literal"><span class="pre">keep_alive</span></tt> (optional)(bool) – Denotes whether the cluster should stay alive upon completion</li>
@@ -665,7 +663,7 @@ using some additional child elements:</p>
     </div>
     <div class="footer">
         &copy; Copyright 2013, oDesk.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b2.
     </div>
   </body>
 </html>
