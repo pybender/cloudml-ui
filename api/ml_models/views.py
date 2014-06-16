@@ -9,7 +9,7 @@ from api import api
 from api.import_handlers.models import DataSet
 from api.base.resources import BaseResourceSQL, NotFound, ValidationError, \
     public_actions, ERR_INVALID_DATA, odesk_error_response
-from models import Model, Tag, Weight, WeightsCategory
+from models import Model, Tag, Weight, WeightsCategory, Segment
 from forms import ModelAddForm, ModelEditForm
 from api.servers.forms import ChooseServerForm
 
@@ -250,7 +250,9 @@ class WeightResource(BaseResourceSQL):
     ALLOWED_METHODS = ('get', )
     GET_ACTIONS = ('brief', )
     NEED_PAGING = True
-    FILTER_PARAMS = (('is_positive', int), ('q', str), ('parent', str), )
+    FILTER_PARAMS = (('is_positive', int), ('q', str),
+                     ('parent', str), ('segment', str), 
+                     ('segment_id', str), )
 
     Model = Weight
 
@@ -272,30 +274,36 @@ class WeightResource(BaseResourceSQL):
             query = '{0} | {0}:*'.format(params['q'])
             query_like = '%{0}%'.format(params['q'])
             cursor = cursor.filter(
-                "fts @@ to_tsquery(:q) OR name LIKE :q_like"
+                "(fts @@ to_tsquery(:q) OR weight.name LIKE :q_like)"
             ).params(q=query, q_like=query_like)
 
         return cursor
 
     def _get_brief_action(self, per_page=50, **kwargs):
         """ Gets list with Model's weighted parameters with pagination. """
+        model_id = kwargs.get('model_id')
 
-        def get_weights(is_positive, page):
-            model_id = kwargs.get('model_id')
-            return self.Model.query.filter(Weight.model_id == model_id,
-                                           Weight.is_positive == is_positive).\
-                order_by(Weight.value.desc()
+        def get_weights(segment, is_positive, page):
+            qry = self.Model.query.filter(Weight.model_id == model_id,
+                                           Weight.is_positive == is_positive)
+            if segment is not None:
+                qry = qry.filter(Weight.segment_id == segment)
+
+            return qry.order_by(Weight.value.desc()
                          if is_positive else Weight.value).\
                 offset((page - 1) * per_page).limit(per_page)
 
         paging_params = (('ppage', int), ('npage', int),)
-        params = self._parse_parameters(self.GET_PARAMS + paging_params)
+        params = self._parse_parameters(
+            self.GET_PARAMS + paging_params + self.FILTER_PARAMS)
 
         # Paginate weights
         ppage = params.get('ppage') or 1
         npage = params.get('npage') or 1
-        context = {'positive_weights': get_weights(True, ppage),
-                   'negative_weights': get_weights(False, npage)}
+        segment = get_segment(model_id, params.get('segment'))
+        segment_id = segment.id if segment else None
+        context = {'positive_weights': get_weights(segment_id, True, ppage),
+                   'negative_weights': get_weights(segment_id, False, npage)}
         return self._render(context)
 
 api.add_resource(WeightResource, '/cloudml/weights/\
@@ -308,12 +316,15 @@ class WeightTreeResource(BaseResourceSQL):
 
     NOTE: it used for constructing tree of model parameters.
     """
-    FILTER_PARAMS = (('parent', str), )
+    FILTER_PARAMS = (('parent', str), ('segment', str))
     ALLOWED_METHODS = ('get', )
 
     def _list(self, **kwargs):
         params = self._parse_parameters(self.FILTER_PARAMS)
+        model_id = kwargs.get('model_id')
         kwargs['parent'] = params.get('parent') or ''
+        segment = get_segment(model_id, params.get('segment'))
+        kwargs['segment_id'] = segment.id if segment else None
 
         opts = self._prepare_show_fields_opts(
             WeightsCategory, ('short_name', 'name'))
@@ -321,7 +332,7 @@ class WeightTreeResource(BaseResourceSQL):
             *opts).filter_by(**kwargs)
 
         opts = self._prepare_show_fields_opts(
-            Weight, ('short_name', 'name', 'css_class', 'value'))
+            Weight, ('short_name', 'name', 'css_class', 'value', 'segment_id'))
         weights = Weight.query.options(*opts).filter_by(**kwargs)
         context = {'categories': categories, 'weights': weights}
         return self._render(context)
@@ -329,3 +340,10 @@ class WeightTreeResource(BaseResourceSQL):
 api.add_resource(WeightTreeResource,
                  '/cloudml/weights_tree/<regex("[\w\.]*"):model_id>/',
                  add_standard_urls=False)
+
+
+def get_segment(model_id, name=None):
+    if name is None:
+        return Segment.query.filter_by(model_id=model_id).first()
+    else:
+        return Segment.query.filter_by(model_id=model_id, name=name).one()

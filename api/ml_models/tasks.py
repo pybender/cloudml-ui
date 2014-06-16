@@ -13,7 +13,7 @@ from api.base.tasks import SqlAlchemyTask
 from api.base.exceptions import InvalidOperationError
 from api.logs.logger import init_logger
 from api.accounts.models import User
-from api.ml_models.models import Model, Weight, WeightsCategory
+from api.ml_models.models import Model, Weight, WeightsCategory, Segment
 from api.model_tests.models import TestResult, TestExample
 from api.import_handlers.models import DataSet
 from api.logs.models import LogMessage
@@ -109,7 +109,10 @@ def train_model(dataset_ids, model_id, user_id):
         model.training_time = int((train_end_time - train_begin_time).seconds)
         model.save()
 
-        fill_model_parameter_weights.delay(model.id)
+        model.create_segments(trainer._get_segments_info())
+
+        for segment in model.segments:
+            fill_model_parameter_weights.delay(model.id, segment.id)
     except Exception, exc:
         db_session.rollback()
 
@@ -125,18 +128,24 @@ def train_model(dataset_ids, model_id, user_id):
 
 
 @celery.task(base=SqlAlchemyTask)
-def fill_model_parameter_weights(model_id):
+def fill_model_parameter_weights(model_id, segment_id=None):
     """
     Adds model parameters weights to db.
     """
     init_logger('trainmodel_log', obj=int(model_id))
-    logging.info("Starting to fill model weights")
-    try:
-        model = Model.query.get(model_id)
-        if model is None:
-            raise ValueError('Model not found: %s' % model_id)
+    logging.info("Starting to fill model weights" )
+    
+    model = Model.query.get(model_id)
+    if model is None:
+        raise ValueError('Model not found: %s' % model_id)
 
-        weights = model.get_trainer().get_weights()
+    segment = Segment.query.get(segment_id)
+    if segment is None:
+        raise ValueError('Segment not found: %s' % segment_id)
+    logging.info("Model: %s , Segment: %s" % (model.name, segment.name) )
+
+    try:
+        weights = model.get_trainer().get_weights(segment.name)
         positive = weights['positive']
         negative = weights['negative']
         weights = model.weights
@@ -177,6 +186,7 @@ def fill_model_parameter_weights(model_id):
                     new_weight.short_name = sname[0:199]
                     new_weight.model_name = model.name
                     new_weight.model = model
+                    new_weight.segment = segment
                     new_weight.save(commit=False)
                 else:
                     if sname not in category_names:
@@ -188,6 +198,7 @@ def fill_model_parameter_weights(model_id):
                         category.short_name = sname
                         category.model_name = model.name
                         category.model = model
+                        category.segment = segment
                         category.save(commit=False)
         db.session.commit()
 

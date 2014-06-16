@@ -18,11 +18,6 @@ angular.module('app.weights.controllers', ['app.config', ])
     throw new Error "Can't initialize without model id"
 
   $scope.model_id = $routeParams.id
-  $scope.sort_by = 'name'
-  $scope.asc_order = true
-
-  # List search parameters and methods
-  $scope.search_form = {'q': '', 'is_positive': 0}
 
   $scope.sort = (sort_by) ->
     if $scope.sort_by == sort_by
@@ -37,12 +32,13 @@ angular.module('app.weights.controllers', ['app.config', ])
   $scope.loadList = (page) ->
     Weight.$loadAll(
       $routeParams.id,
-      show: 'name,value,css_class',
+      show: 'name,value,css_class,segment',
       q: $scope.search_form.q,
       is_positive: $scope.search_form.is_positive,
       page: page || $scope.search_form.page || 1,
       sort_by: $scope.sort_by,
       order: if $scope.asc_order then 'asc' else 'desc'
+      segment_id: $scope.search_form.segment
     ).then ((opts) ->
       $scope.weights = opts.objects
       $scope.total = opts.total
@@ -84,6 +80,7 @@ angular.module('app.weights.controllers', ['app.config', ])
       $routeParams.id,
       show: 'name,short_name,parent',
       parent: parent
+      segment: $scope.action[2]
     ).then ((opts) ->
       for details in opts.categories
         val = {'categories': {}, 'details': details, 'weights': {}}
@@ -100,15 +97,11 @@ angular.module('app.weights.controllers', ['app.config', ])
     )
 
   # Columns view parameters and methods
-  $scope.ppage = 1
-  $scope.npage = 1
-  $scope.positive = []
-  $scope.negative = []
-
-  $scope.loadColumns = (morePositive, moreNegative) ->
+  $scope.loadColumns = (segment, morePositive, moreNegative) ->
     Weight.$loadBriefList(
       $scope.model_id,
-      show: 'name,value,css_class'
+      segment: segment,
+      show: 'name,value,css_class,segment_id'
       ppage: $scope.ppage
       npage: $scope.npage
       ).then ((opts) ->
@@ -122,22 +115,36 @@ angular.module('app.weights.controllers', ['app.config', ])
 
   $scope.morePositiveWeights  = ->
     $scope.ppage += 1
-    $scope.loadColumns(true, false)
+    $scope.loadColumns($scope.action[2], true, false)
 
   $scope.moreNegativeWeights  = ->
     $scope.npage += 1
-    $scope.loadColumns(false, true)
+    $scope.loadColumns($scope.action[2], false, true)
 
   # Switching modes methods
-  $scope.$watch 'action', (action) ->
-    if action[0] == SECTION_NAME
+  $scope.$watch 'action', (action, oldVal, scope) ->
+    #console.log "in watch", action, oldVal, scope
+    if action? && action[0] == SECTION_NAME
+      $scope.clearViews()
       actionString = action.join(':')
       $location.search("action=#{actionString}")
       view = action[1]
+      segment = action[2]
       switch view
-        when "details"
-          if ($scope.positive.length + $scope.negative.length) == 0
-            $scope.loadColumns(true, true)
-        when "list" then  $scope.loadList('', 1)
+        when "details" then $scope.loadColumns(segment, true, true)
+        when "list" then  $scope.loadList(segment, '', 1)
         when "tree" then $scope.loadTreeNode('', true)
+
+  $scope.clearViews = ->
+    $scope.ppage = 1
+    $scope.npage = 1
+    $scope.positive = []
+    $scope.negative = []
+    $scope.sort_by = 'name'
+    $scope.asc_order = true
+
+    # List search parameters and methods
+    $scope.search_form = {'q': '', 'is_positive': 0}
+
+  $scope.clearViews()
 ])

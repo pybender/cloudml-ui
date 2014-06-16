@@ -176,27 +176,32 @@
       <div class="span4">
         <div ng-show="model.status == 'Trained'">
               Segments:
-              <div ng-repeat="(segment, records) in model.segments">
+              <div ng-repeat="segment in model.segments">
                 <span class="value">
-                  "{{ segment }}" - {{records}} records
+                  "{{ segment.name }}" - {{segment.records}} records
                 </span>
               </div>
             </div>
         </div>
     </div>
     <hr />
-    <div ng-controller="WeightsCtrl">
+    <div ng-controller="WeightsCtrl" ng-show="model.status == 'Trained'">
       <h4>Parameters Weights</h4>
-      <p class="switcher">
-        <b>Switch view: </b>
-        <a ng-class="{active: action[1] == 'details'}" ng-click="setSection(['training', 'details'])">Columns</a> | 
-        <a ng-class="{active: action[1] == 'list'}" ng-click="setSection(['training', 'list'])">List</a> |
-        <a ng-class="{active: action[1] == 'tree'}" ng-click="setSection(['training', 'tree'])">Tree</a> &nbsp;
-      </p>
+      <ul class="nav nav-tabs" id="weights-tabs">
+        <li ng-class="{active: action[1] == 'details'}">
+          <a ng-click="setSection(['training', 'details'])">Columns</a> 
+        </li>
+        <li ng-class="{active: action[1] == 'list'}">
+          <a ng-click="setSection(['training', 'list'])">List</a>
+        </li>
+        <li ng-class="{active: action[1] == 'tree'}">
+          <a ng-click="setSection(['training', 'tree'])">Tree</a>
+        </li>
+      </ul>
       <div ng-show="action[1] == 'details'" class="details">
         <ng-include src="'/partials/weights/columns.html'"></ng-include>
       </div>
-      <div ng-show="action[1] == 'tree'" class="tree">
+      <div ng-show="action[1] == 'tree'" class="weights-tree">
         <ng-include src="'/partials/weights/tree.html'"></ng-include>
       </div>
       <div ng-show="action[1] == 'list'" class="list">

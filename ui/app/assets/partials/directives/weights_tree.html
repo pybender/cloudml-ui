@@ -6,6 +6,6 @@
       </recursive>
   </li>
   <li ng-repeat="(name, w) in tree['weights']">
-    {{ w.name }} <div class="badge" ng-class="w.css_class">{{ w.value }}</div>
+    <span title="Segment ID {{ w.segment_id }}">{{ w.name }}</span> <div class="badge" ng-class="w.css_class">{{ w.value }}</div>
   </li>
 </ul>

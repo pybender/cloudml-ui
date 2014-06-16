@@ -1,14 +1,15 @@
+<ng-include ng-init="view='details'" src="'/partials/weights/segment_switcher.html'"></ng-include>
 <div class="row">
   <div class="span5">
     <b>Positive Weights</b>
     <weights-table weights="positive">
     </weights-table>
-    <a ng-click="morePositiveWeights()">Load More...</a>
+    <a title="Loaded {{ positive.length }} positive weights" ng-click="morePositiveWeights()">Load More...</a>
   </div>
   <div class="offset1 span5">
     <b>Negative Weights</b>
     <weights-table weights="negative">
     </weights-table>
-    <a ng-click="moreNegativeWeights()">Load More...</a>
+    <a title="Loaded {{ negative.length }} negative weights" ng-click="moreNegativeWeights()">Load More...</a>
   </div>
 </div>

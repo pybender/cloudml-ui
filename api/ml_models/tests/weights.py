@@ -63,6 +63,7 @@ class WeightResourceTests(BaseDbTestCase, TestChecksMixin):
             'page': 1,
             'show': 'name,value,css_class',
             'sort_by': 'name',
+            'segments': 'default',
             'q': 'python'
         }))
         resp = self.client.get(url, headers=HTTP_HEADERS)
