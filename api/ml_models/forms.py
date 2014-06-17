@@ -151,10 +151,13 @@ class ModelAddForm(BaseForm):
             raise
         else:
             db.session.commit()
-
         if model.status == Model.STATUS_TRAINED:
             from api.ml_models.tasks import fill_model_parameter_weights
-            fill_model_parameter_weights.delay(model.id)
+            model.create_segments(trainer._get_segments_info())
+
+            for segment in model.segments:
+                fill_model_parameter_weights.delay(model.id, segment.id)
+
 
         return model
 

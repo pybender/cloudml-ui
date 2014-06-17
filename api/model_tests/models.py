@@ -119,8 +119,18 @@ class TestExample(db.Model, BaseModel):
         from api.ml_models.helpers.features import get_features_vect_data
         model = self.model
         feature_model = model.get_trainer()._feature_model
-        data = get_features_vect_data(self.test_result.get_vect_data(self.num),
-                                      feature_model.features.items(),
+        vect_data = self.test_result.get_vect_data(self.num)
+        print model.get_trainer().with_segmentation
+        if len(model.get_trainer().with_segmentation) == 1 :
+            features = model.get_trainer().features['default'].items()
+        elif len(model.get_trainer().with_segmentation) == 0 :
+            features = feature_model.features.items()
+        else:
+            vect_data = vect_data[feature_model.group_by[0]]
+            
+        
+        data = get_features_vect_data(vect_data,
+                                      features,
                                       feature_model.target_variable)
 
         from api.ml_models.helpers.weights import get_example_params

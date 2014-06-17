@@ -58,12 +58,11 @@ class WeightResourceTests(BaseDbTestCase, TestChecksMixin):
         self.BASE_URL = '/cloudml/weights/%s/' % self.model.id
 
         url = '{0}?{1}'.format(self.BASE_URL, urllib.urlencode({
-            'is_positive': -1,
+            'is_positive': 0,
             'order': 'asc',
             'page': 1,
             'show': 'name,value,css_class',
             'sort_by': 'name',
-            'segments': 'default',
             'q': 'python'
         }))
         resp = self.client.get(url, headers=HTTP_HEADERS)
@@ -74,6 +73,7 @@ class WeightResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(data['per_page'], 20)
         self.assertTrue('weights' in data, data)
         self.assertFalse('tsexams->Ruby on Rails' in resp.data)
+        
         self.assertTrue(
             'tsexams->Python 2.x Test' in data['weights'][0]['name'])
 
@@ -253,5 +253,5 @@ class WeightTasksTests(BaseDbTestCase, TestChecksMixin):
         check_weight('contractor->dev_blurb->best',
                      {'is_positive': False,
                       'short_name': 'best',
-                      'css_class': 'red dark',
+                      'css_class': 'red light',
                       'parent': 'contractor.dev_blurb'})
