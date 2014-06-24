@@ -130,6 +130,8 @@ without test id and model id"
     if name not in $scope.LOADED_SECTIONS
       extra_fields = ''
       switch section_name
+        when 'examples'
+          extra_fields = 'classes_set'
         when 'about'
           extra_fields = 'classes_set,created_on,parameters,error,
 examples_count,dataset,memory_usage,created_by,examples_placement,
