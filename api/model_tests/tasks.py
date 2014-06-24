@@ -86,9 +86,13 @@ def run_test(dataset_ids, test_id):
 
         test.save()
 
+        data = []
+        for segment, d in raw_data.iteritems():
+            data = data + d
+
         logging.info('Storing test examples')
-        examples = izip(range(len(raw_data)),
-                        raw_data,
+        examples = izip(range(len(data)),
+                        data,
                         metrics._labels,
                         metrics._preds,
                         metrics._probs)

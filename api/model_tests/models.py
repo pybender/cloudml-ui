@@ -6,7 +6,7 @@ from sqlalchemy.sql import expression
 
 from api.base.models import db, BaseModel, JSONType, S3File
 from api.logs.models import LogMessage
-from api.ml_models.models import Model
+from api.ml_models.models import Model, Segment
 from api.import_handlers.models import DataSet
 
 
@@ -54,13 +54,18 @@ class TestResult(db.Model, BaseModel):
     #vect_data = deferred(db.Column(db.LargeBinary))
     
 
-    def get_vect_data(self, num):
+    def get_vect_data(self, num, segment):
         from pickle import loads
         data = loads(self.vect_data)
+        offset = 0
+        for k, v in data.items():
+            offset += v.shape[0]
+            if k == segment:
+                break
         import numpy
-        if isinstance(data, numpy.ndarray):
-            return data[num]
-        return data.getrow(num).todense().tolist()[0]
+        if isinstance(data[segment], numpy.ndarray):
+            return data[num - offset]
+        return data[segment].getrow(num - offset).todense().tolist()[0]
 
     def set_error(self, error, commit=True):
         self.error = str(error)[:299]
@@ -119,22 +124,33 @@ class TestExample(db.Model, BaseModel):
         from api.ml_models.helpers.features import get_features_vect_data
         model = self.model
         feature_model = model.get_trainer()._feature_model
-        vect_data = self.test_result.get_vect_data(self.num)
-        print model.get_trainer().with_segmentation
-        if len(model.get_trainer().with_segmentation) == 1 :
-            features = model.get_trainer().features['default'].items()
-        elif len(model.get_trainer().with_segmentation) == 0 :
-            features = feature_model.features.items()
+        segment = 'default'
+        if len(model.get_trainer().with_segmentation) > 0 :
+            ndata = dict([(key.replace('->', '.'), val)
+                 for key, val in self.data_input.iteritems()])
+            data = model.get_trainer()._apply_feature_types(ndata)
+            segment =  "_".join(
+                [str(data[feature_name]) for feature_name in
+                model.get_trainer()._feature_model.group_by])
+            features = model.get_trainer().features[segment]
+            for feature_name in model.get_trainer()._feature_model.group_by:
+                features.pop(feature_name)
         else:
-            vect_data = vect_data[feature_model.group_by[0]]
+            try:
+                features = model.get_trainer().features[segment]
+            except:
+                features = feature_model.features
+
+        vect_data = self.test_result.get_vect_data(self.num, segment)
             
         
         data = get_features_vect_data(vect_data,
-                                      features,
+                                      features.items(),
                                       feature_model.target_variable)
 
         from api.ml_models.helpers.weights import get_example_params
-        model_weights = list(model.weights)
+        segment = Segment.query.filter(Segment.name == segment, Segment.model == model)[0]
+        model_weights = list(segment.weights)
         weighted_data = dict(get_example_params(
             model_weights, self.data_input, data))
         self.weighted_data_input = weighted_data
