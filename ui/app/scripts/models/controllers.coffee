@@ -146,7 +146,8 @@ updated_on,updated_by,comparable,test_handler_fields'
       if name == 'model' && subsection == 'json'
         $scope.load('features', name + subsection)
 
-      fields = ''
+      fields = 'test_import_handler,train_import_handler,
+train_import_handler_type,test_import_handler_type'
       if 'main' not in $scope.LOADED_SECTIONS
         fields = FIELDS_BY_SECTION['main']
         $scope.LOADED_SECTIONS.push 'main'
