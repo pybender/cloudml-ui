@@ -50,11 +50,20 @@ class ModelData(DataSet):
         labels = ["0", "1"]
 
 
+class SegmentData(DataSet):
+
+    class segment_01:
+        name = "default"
+        records = 87
+        model = ModelData.model_01
+
+
 class WeightData(DataSet):
     class weight_01:
         name = "opening_id"
         model_name = ModelData.model_01.name
         model = ModelData.model_01
+        segment = SegmentData.segment_01
         short_name = "opening_id"
         value = 0.4444
         is_positive = True
@@ -65,6 +74,7 @@ class WeightData(DataSet):
         name = "contractor->dev_blurb->Over"
         model_name = ModelData.model_01.name
         model = ModelData.model_01
+        segment = SegmentData.segment_01
         short_name = "Over"
         value = 0.022345208915455828
         is_positive = True
@@ -75,6 +85,7 @@ class WeightData(DataSet):
         name = "opening"
         model_name = ModelData.model_01.name
         model = ModelData.model_01
+        segment = SegmentData.segment_01
         short_name = "opening"
         value = -0.022345208915455828
         is_positive = False

@@ -219,11 +219,18 @@ def get_csv_results(model_id, test_id, fields):
         if not exists(path):
             makedirs(path)
         filename = os.path.join(path, name)
+        header = list(fields)
+        if 'prob' in header:
+            prob_index = header.index('prob')
+            for label in test.classes_set:
+                header.insert(prob_index, 'prob_%s' % label)
+            header.remove('prob')
+
 
         with open(filename, 'w') as fp:
             writer = csv.writer(fp, delimiter=',',
                                 quoting=csv.QUOTE_ALL)
-            writer.writerow(fields)
+            writer.writerow(header)
             for example in TestExample.get_data(test_id, fields):
                 rows = []
                 for field in fields:
@@ -232,7 +239,10 @@ def get_csv_results(model_id, test_id, fields):
                     if field == 'id':
                         field = 'example_id'
                     val = example[field] if field in example else ''
-                    rows.append(val)
+                    if field == 'prob':
+                        rows += val
+                    else:
+                        rows.append(val)
                 writer.writerow(rows)
         return filename
 
