@@ -3,6 +3,7 @@ import os
 import csv
 import json
 from datetime import datetime
+import gzip
 
 from api.logs.logger import init_logger
 from api import celery
@@ -93,7 +94,7 @@ with%s compression", import_handler.name, '' if dataset.compress else 'out')
 
         logging.info('Dataset fields: {0!s}'.format(dataset.data_fields))
 
-        dataset.filesize = long(os.path.getsize(dataset.filename))
+        dataset.filesize = long(_get_uncompressed_filesize(dataset.filename))
         dataset.records_count = handler_iterator.count
         dataset.status = dataset.STATUS_UPLOADING
         dataset.save()
@@ -151,3 +152,17 @@ def upload_dataset(dataset_id):
 
     logging.info("Dataset using {0!s} uploaded.".format(dataset))
     return [dataset_id]
+
+
+def _get_uncompressed_filesize(filename):
+    """
+    copied from gzip.py as per
+    http://www.gzip.org/zlib/rfc-gzip.html#header-trailer
+    http://stackoverflow.com/a/1704576/161718 and
+    https://gist.github.com/ozanturksever/4968827
+    :param filename: the name of gzipped file
+    :return the size of uncompressed file:
+    """
+    with open(filename, 'rb') as gzfile:
+        gzfile.seek(-4, 2)
+        return gzip.read32(gzfile)   # may exceed 2GB
