@@ -2,15 +2,17 @@
 
 ### Trained Model specific Controllers ###
 
+# Main model fields and which ones that are required for train/test dialogs
+MODEL_FIELDS = 'name,status,test_import_handler,train_import_handler,
+train_import_handler_type,test_import_handler_type,test_handler_fields'
+
 FIELDS_BY_SECTION = {
-  'model': 'classifier,features_set_id'
-  'training': 'error,weights_synchronized,memory_usage,
+  'model': 'classifier,features_set_id,segments'
+  'training': 'error,weights_synchronized,memory_usage,segments,
 trained_by,trained_on,training_time,datasets,train_records_count,trainer_size'
   'about': 'created_on,target_variable,example_id,example_label,
-labels,updated_on,feature_count,test_import_handler,
-train_import_handler,created_by,data_fields,test_handler_fields,tags,
-train_import_handler_type,test_import_handler_type'
-  'main': 'name,status'
+labels,updated_on,feature_count,created_by,data_fields,test_handler_fields,tags'
+  'main': MODEL_FIELDS
 }
 
 angular.module('app.models.controllers', ['app.config', ])
@@ -31,8 +33,8 @@ angular.module('app.models.controllers', ['app.config', ])
 
   ($scope, $location, Model) ->
     $scope.MODEL = Model
-    $scope.FIELDS = Model.MAIN_FIELDS + ',tags,created_on,created_by,
-updated_on,updated_by,comparable,test_handler_fields'
+    $scope.FIELDS = MODEL_FIELDS + ',tags,created_on,created_by,
+updated_on,updated_by,comparable'
     $scope.ACTION = 'loading models'
     $scope.currentTag = $location.search()['tag']
     $scope.kwargs = {

@@ -105,6 +105,22 @@ class Model(db.Model, BaseModel):
         self.train_import_handler_id = handler.id
         self.train_import_handler_type = handler.TYPE
 
+    # @property
+    # def segments(self):
+    #     trainer = self.get_trainer()
+    #     return trainer._get_segments_info()
+
+    def create_segments(self, segments):
+        count = Segment.query.filter(
+                Segment.model_id==self.id).delete(
+                synchronize_session=False)
+        for name, records in segments.iteritems():
+            segment = Segment()
+            segment.name = name
+            segment.records = records
+            segment.model = self
+            segment.save()
+
     def __repr__(self):
         return "<Model {0}>".format(self.name)
 
@@ -253,6 +269,16 @@ class Tag(db.Model, BaseMixin):
     count = db.Column(db.Integer)
 
 
+class Segment(db.Model, BaseMixin):
+    __tablename__ = 'segment'
+
+    name = db.Column(db.String(200))
+    records = db.Column(db.Integer)
+
+    model_id = db.Column(db.Integer, db.ForeignKey('model.id'))
+    model = relationship(Model, backref=backref('segments'))
+
+
 class WeightsCategory(db.Model, BaseMixin):
     """
     Represents Model Parameter Weights Category.
@@ -267,6 +293,9 @@ class WeightsCategory(db.Model, BaseMixin):
 
     model_id = db.Column(db.Integer, db.ForeignKey('model.id'))
     model = relationship(Model, backref=backref('weight_categories'))
+
+    segment_id = db.Column(db.Integer, db.ForeignKey('segment.id'))
+    segment = relationship(Segment, backref=backref('weight_categories'))
 
     parent = db.Column(db.String(200))
 
@@ -296,6 +325,9 @@ class Weight(db.Model, BaseMixin):
 
     model_id = db.Column(db.Integer, db.ForeignKey('model.id'))
     model = relationship(Model, backref=backref('weights'))
+
+    segment_id = db.Column(db.Integer, db.ForeignKey('segment.id'))
+    segment = relationship(Segment, backref=backref('weights'))
 
     parent = db.Column(db.String(200))
 

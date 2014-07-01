@@ -7,7 +7,7 @@
   </thead> -->
   <tbody>
     <tr ng-repeat="row in weights">
-      <td>{{ row.name }}</td>
+      <td title="Segment ID {{ row.segment_id }}">{{ row.name }}</td>
       <td>
         <div class="badge" ng-class="row.css_class">{{ row.value }}</div>
       </td>

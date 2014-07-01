@@ -227,7 +227,7 @@ using ``<pig>`` tag. Possible attributes are:
 - ``jobid`` (optional) - define job flow id, if you want to use existing cluster
 - ``amazon_access_token`` (optional) - by default use cloudml-control api keys
 - ``amazon_token_secret`` (optional) - by default use cloudml-control api keys
-- ``pig_version`` (optional)
+- ``ami_version`` (optional)(3.0.4) -  3.0.4 support pig 0.11.1, 3.1.0 - support pig 0.12 
 - ``bucket_name`` (optional) - Amazon S3 bucket name for saving results, logs, etc.
 - ``ec2_keyname`` (optional) - EC2 key used for the start instances, by default use cloudml-control keypair
 - ``keep_alive`` (optional)(bool) – Denotes whether the cluster should stay alive upon completion

@@ -223,7 +223,9 @@ class BaseResource(restful.Resource):
         return self._render({self.OBJECT_NAME: model}, code=201)
 
     def _prepare_new_model(self, model, params):
-        return self._prepare_model_any(model, params)
+        #return self._prepare_model_any(model, params)
+        return self._prepare_model(model, params)
+        
 
     ### PUT ###
 

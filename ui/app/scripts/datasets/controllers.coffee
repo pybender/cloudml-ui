@@ -127,7 +127,14 @@ filesize,records_count,time,created_by,import_handler_id,format,cluster'
   'DataSet'
 
   ($scope, DataSet) ->
-    if $scope.handler?
+    $scope.init = (handler) ->
+      if handler?
+        $scope.handler = handler
+        $scope.load()
+      else
+        throw Error('Specify import handler')
+
+    $scope.load = ->
       DataSet.$loadAll({
         import_handler_id: $scope.handler.id,
         import_handler_type: $scope.handler.TYPE,

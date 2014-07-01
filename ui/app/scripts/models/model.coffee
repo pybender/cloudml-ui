@@ -65,8 +65,10 @@ angular.module('app.models.model', ['app.config'])
           if origData.train_import_handler?
             if origData.train_import_handler_type == 'xml'
               cls = XmlImportHandler
-            else
+            else if origData.train_import_handler_type == 'json'
               cls = ImportHandler
+            else
+              throw new Error('Need to load import handler type')
             @train_import_handler_obj = new cls(
               origData['train_import_handler'])
             @train_import_handler = @train_import_handler_obj.id

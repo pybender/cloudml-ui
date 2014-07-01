@@ -8,7 +8,7 @@ from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS
 from views import TestResource, TestExampleResource
 from models import TestResult, TestExample
 from api.ml_models.models import Model
-from api.ml_models.fixtures import ModelData, WeightData
+from api.ml_models.fixtures import ModelData, WeightData, SegmentData
 from api.import_handlers.fixtures import ImportHandlerData, DataSetData
 from api.import_handlers.models import DataSet, ImportHandler
 from api.instances.models import Instance
@@ -192,7 +192,7 @@ class TestExampleResourceTests(BaseDbTestCase, TestChecksMixin):
     Model = TestExample
     datasets = [FeatureData, FeatureSetData, ImportHandlerData,
                 DataSetData, ModelData, WeightData,
-                TestResultData, TestExampleData]
+                TestResultData, TestExampleData, SegmentData]
 
     def setUp(self):
         super(TestExampleResourceTests, self).setUp()
@@ -356,9 +356,9 @@ class TasksTests(BaseDbTestCase):
         import scipy
 
         if _fake_raw_data is None:
-            _fake_raw_data = [{'application_id': '123',
+            _fake_raw_data = {"default": [{'application_id': '123',
                                'hire_outcome': '0',
-                               'title': 'A1'}] * 100
+                               'title': 'A1'}] * 100}
 
         def _fake_test(self, *args, **kwargs):
             _fake_test.called = True
@@ -396,17 +396,17 @@ class TasksTests(BaseDbTestCase):
     def test_run_test_unicode_encoding(self):
         test = TestResult.query.filter_by(name=TestResultData.test_04.name).first()
         unicode_string = u'Привет!'
-        _fake_raw_data = [{'application_id': '123',
+        _fake_raw_data = {'default': [{'application_id': '123',
                            'hire_outcome': '0',
                            'title': 'A1',
                            'opening_title': unicode_string,
-                           'opening_id': unicode_string}] * 100
+                           'opening_id': unicode_string}] * 100 }
         
         result, mocks = self._check_run_test(test, _fake_raw_data)
         self.assertEquals(result, 'Test completed')
         example = TestExample.query.filter_by(
             test_result=test).first()
-        self.assertEquals(example.data_input.keys(), _fake_raw_data[0].keys())
+        self.assertEquals(example.data_input.keys(), _fake_raw_data['default'][0].keys())
         self.assertEquals(
             example.data_input['opening_id'], unicode_string)
         self.assertEquals(example.example_id, unicode_string)
