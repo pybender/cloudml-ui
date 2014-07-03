@@ -265,26 +265,33 @@ group_by_table = db.Table(
 
 @event.listens_for(Feature, "after_insert")
 def after_insert_feature(mapper, connection, target):
-    if target.feature_set is not None:
-        update_feature_set_on_change_features(
-            connection, target.feature_set, target)
+    update_feature_set_on_change_features(connection,
+                                          _get_feature_set_for_update(target), target)
 
 
 @event.listens_for(Feature, "after_update")
 def after_update_feature(mapper, connection, target):
-    if target.feature_set is not None:
-        update_feature_set_on_change_features(
-            connection, target.feature_set, target)
+    update_feature_set_on_change_features(connection,
+                                          _get_feature_set_for_update(target), target)
 
 
 @event.listens_for(Feature, "after_delete")
 def after_delete_feature(mapper, connection, target):
-    if target.feature_set is not None:
-        update_feature_set_on_change_features(
-            connection, target.feature_set, None)
+    update_feature_set_on_change_features(connection,
+                                          _get_feature_set_for_update(target), None)
 
+
+def _get_feature_set_for_update(target):
+    feature_set = target.feature_set
+    if feature_set is None and target.feature_set_id is not None:
+        feature_set = FeatureSet.query.get(target.feature_set_id)
+
+    return feature_set
 
 def update_feature_set_on_change_features(connection, fset, feature):
+    if fset is None:
+        return
+
     count = Feature.query.filter_by(feature_set=fset).count()
     values = {'features_count': count,
               'modified': True}
@@ -294,3 +301,8 @@ def update_feature_set_on_change_features(connection, fset, feature):
     connection.execute(
         FeatureSet.__table__.update().
         where(FeatureSet.id == fset.id).values(**values))
+
+    from api.ml_models.models import Model as MLModel
+    connection.execute(
+        MLModel.__table__.update().
+        where(FeatureSet.id == fset.id).values(**{'feature_count': count}))

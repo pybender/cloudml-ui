@@ -199,6 +199,47 @@ transformer-type: Should be one of Count, Tfidf, Lda, Dictionary, Lsi"})
         for f in features:
             self.assertFalse(f.is_target_variable)
 
+    def test_features_count(self):
+        """ Tests features counts in features set, model for add/update/delete operations"""
+        data = {
+            "name": "features count",
+            "type": "text",
+            "feature_set_id": self.model.features_set_id,
+            "transformer-type": "Count",
+            "scaler-type": "MinMaxScaler"
+        }
+        expected_feature_set_count = self.model.features_set.features_count + 1
+        expected_model_feature_count = self.model.feature_count + 1
+
+        resp, obj = self.check_edit(data)
+        self.assertEquals(obj.name, data['name'])
+        # nsoliman 20140703 : we need these following tests in conjunction with feature addition
+        # tests in TestFeaturesDocs, because of the different ways a feature is being added using
+        # forms in the RESTful endpoint
+        self.assertEqual(expected_feature_set_count, self.model.features_set.features_count)
+        self.assertEqual(expected_model_feature_count, self.model.feature_count)
+
+        expected_feature_set_count = self.model.features_set.features_count
+        expected_model_feature_count = self.model.feature_count
+        data = {"name": "features count",
+                "type": "text",
+                "feature_set_id": self.model.features_set_id,
+                "remove_transformer": True,
+                "remove_scaler": True}
+        resp, obj = self.check_edit(data, id=obj.id)
+        self.assertFalse(obj.transformer,
+                         "Transformer should be rem (%s)" % obj.transformer)
+        self.assertFalse(obj.scaler, "scaler should be removed")
+        self.assertEqual(expected_feature_set_count, self.model.features_set.features_count)
+        self.assertEqual(expected_model_feature_count, self.model.feature_count)
+
+        expected_feature_set_count = self.model.features_set.features_count - 1
+        expected_model_feature_count = self.model.feature_count - 1
+        self.check_delete(obj)
+        self.assertIsNone(Feature.query.get(obj.id))
+        self.assertEqual(expected_feature_set_count, self.model.features_set.features_count)
+        self.assertEqual(expected_model_feature_count, self.model.feature_count)
+
 
 class TestFeaturesDocs(BaseDbTestCase):
     """
