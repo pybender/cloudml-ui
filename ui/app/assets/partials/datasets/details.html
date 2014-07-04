@@ -66,4 +66,15 @@
       </a></p>
     <ng-include src="'/partials/logmessages/list.html'"></ng-include>
   </div>
+  <div ng-show="dataset.samples">
+    <h3>Sample Data</h3>
+    <table>
+      <thead>
+        <tr>
+          <th ng-repeat="column in dataset.samples.columns">{{column}}</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
 </div>

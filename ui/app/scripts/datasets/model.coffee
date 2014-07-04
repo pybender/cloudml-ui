@@ -31,6 +31,7 @@ angular.module('app.datasets.model', ['app.config'])
       on_s3: false
       format: 'json'
       import_handler_type: 'JSON'
+      samples: null
 
       loadFromJSON: (origData) =>
         super origData
@@ -96,6 +97,12 @@ angular.module('app.datasets.model', ['app.config'])
         @$make_request(url, {}, "PUT", {}).then(
           (resp) =>
             @status = resp.data.dataset.status)
+
+      $getSampleData: ->
+        base_url = @constructor.$get_api_url({}, @)
+        @$make_request("#{base_url}#{@id}/action/sample_data/",
+                       {}, 'GET', {size:15})
+
 
     return DataSet
 ])
