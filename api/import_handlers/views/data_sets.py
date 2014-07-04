@@ -16,7 +16,6 @@ from api.base.resources import BaseResourceSQL, NotFound, public_actions, \
     ValidationError, odesk_error_response, ERR_INVALID_DATA
 from api.import_handlers.models import DataSet
 from api.import_handlers.forms import DataSetAddForm, DataSetEditForm
-from api.base.utils import json_list_to_table
 
 
 class DataSetResource(BaseResourceSQL):
@@ -75,8 +74,8 @@ class DataSetResource(BaseResourceSQL):
         with open_fn(ds.filename, 'rb') as f:
             line = f.readline()
             while line and len(lines) < sample_size:
-                lines.append(line)
-        return self._render(json_list_to_table(lines))
+                lines.append(json.loads(line))
+        return self._render(lines)
 
 
 api.add_resource(DataSetResource, '/cloudml/importhandlers/\

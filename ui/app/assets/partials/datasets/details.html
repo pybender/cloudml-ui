@@ -68,13 +68,8 @@
   </div>
   <div ng-show="dataset.samples">
     <h3>Sample Data</h3>
-    <table>
-      <thead>
-        <tr>
-          <th ng-repeat="column in dataset.samples.columns">{{column}}</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+    <div ng-repeat="sample in dataset.samples">
+      <code>{{sample}}</code>
+    </div>
   </div>
 </div>

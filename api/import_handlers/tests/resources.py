@@ -383,16 +383,14 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         resp = self.client.get(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.OK)
         data = json.loads(resp.data)
-        self.assertTrue(data.has_key('columns'))
-        self.assertEqual(10, len(data['rows']))
+        self.assertEqual(10, len(data))
 
         # 2. test getting sample of size 5
         url = self._get_url(id=self.obj.id, action='sample_data', size=5)
         resp = self.client.get(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.OK)
         data = json.loads(resp.data)
-        self.assertTrue(data.has_key('columns'))
-        self.assertEqual(5, len(data['rows']))
+        self.assertEqual(5, len(data))
 
         # 3. dataset not found
         url = self._get_url(id=1010, action='sample_data')
