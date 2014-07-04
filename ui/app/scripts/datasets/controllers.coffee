@@ -119,7 +119,6 @@ filesize,records_count,time,created_by,import_handler_id,format,cluster'
 
       $scope.dataset.$getSampleData()
       .then (resp)->
-        console.log resp.data
         $scope.dataset.samples = resp.data
       , ()->
         $scope.setError(opts, 'error loading dataset sample data')
