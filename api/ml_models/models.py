@@ -204,7 +204,7 @@ class Model(db.Model, BaseModel):
             self.features_set.modified = True
             data = self.features_set.features
         data['classifier'] = self.classifier
-        return json.dumps(data)
+        return json.dumps(data, indent=4)
 
     @property
     def features(self):

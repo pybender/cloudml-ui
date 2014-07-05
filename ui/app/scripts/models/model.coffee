@@ -44,6 +44,8 @@ angular.module('app.models.model', ['app.config'])
       datasets: []
       sorted_data_fields: null
 
+      trainer_s3_url: null
+
       loadFromJSON: (origData) ->
         super origData
 
@@ -87,8 +89,8 @@ angular.module('app.models.model', ['app.config'])
           if origData.data_fields?
             @sorted_data_fields = _.sortBy origData['data_fields'], (s)-> s
 
-      downloadUrl: ->
-        return "#{@BASE_API_URL}#{@id}/action/download/"
+      downloadFeaturesUrl: ->
+        return "#{@BASE_API_URL}#{@id}/action/features_download/?"
 
       @$by_handler: (opts) ->
         resolver = (resp, Model) ->

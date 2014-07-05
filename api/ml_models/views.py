@@ -29,7 +29,7 @@ class ModelResource(BaseResourceSQL):
     """
     Models API methods
     """
-    GET_ACTIONS = ('download', 'reload', 'by_importhandler', 'trainer_download_s3url')
+    GET_ACTIONS = ('reload', 'by_importhandler', 'trainer_download_s3url', 'features_download')
     PUT_ACTIONS = ('train', 'tags', 'cancel_request_instance',
                    'upload_to_server')
     FILTER_PARAMS = (('status', str), ('comparable', str), ('tag', str),
@@ -43,8 +43,6 @@ class ModelResource(BaseResourceSQL):
     post_form = ModelAddForm
     put_form = ModelEditForm
 
-    DOWNLOAD_FIELDS = ('trainer', 'features')
-
     Model = Model
 
     def _get_model_parser(self, **kwargs):
@@ -55,7 +53,7 @@ class ModelResource(BaseResourceSQL):
 
     # GET specific methods
 
-    @public_actions(['download'])
+    @public_actions(['features_download'])
     def get(self, *args, **kwargs):
         return super(ModelResource, self).get(*args, **kwargs)
 
@@ -101,34 +99,16 @@ class ModelResource(BaseResourceSQL):
         )).all()
         return self._render({"%ss" % self.OBJECT_NAME: models})
 
-    def _get_download_action(self, **kwargs):
-        """
-        Downloads trained model, importhandler or features
-        (specified in GET param `field`) file.
-        """
+    def _get_features_download_action(self, **kwargs):
         model = self._get_details_query(None, **kwargs)
         if model is None:
             raise NotFound(self.MESSAGE404 % kwargs)
 
-        params = self._parse_parameters((('field', str), ))
-        field = params.get('field', 'trainer')
-
-        if not field in self.DOWNLOAD_FIELDS:
-            raise ValidationError('Invalid field specified. \
-Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
-
-        if field == 'trainer':
-            content = model.get_trainer(loaded=False).encode('zlib')
-        else:
-            content = model.get_features_json()
-
-        filename = "%s-%s.%s" % (model.name, field,
-                                 'dat.gz' if field == 'trainer' else 'json')
-
+        content = model.get_features_json()
         resp = Response(content)
-        resp.headers['Content-Type'] = 'text/plain'
+        resp.headers['Content-Type'] = 'application/json'
         resp.headers['Content-Disposition'] = \
-            'attachment; filename=%s' % filename
+            'attachment; filename=%s-features.json' % model.name
         return resp
 
     def _get_trainer_download_s3url_action(self, **kwargs):

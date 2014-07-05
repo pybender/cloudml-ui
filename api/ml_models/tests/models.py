@@ -140,21 +140,13 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         resp = self.check_details(show='name,data_fields')
         self.assertEquals(resp['model']['data_fields'], ['employer.country'])
 
-    def test_download(self):
-        def check(field, is_invalid=False):
-            url = self._get_url(id=self.obj.id, action='download',
-                                field=field)
-            resp = self.client.get(url, headers=HTTP_HEADERS)
-            if not is_invalid:
-                self.assertEquals(resp.status_code, httplib.OK)
-                self.assertEquals(resp.mimetype, 'text/plain')
-                self.assertEquals(resp.headers['Content-Disposition'],
-                                  'attachment; filename=%s-%s.json' %
-                                  (self.obj.name, field))
-            else:
-                self.assertEquals(resp.status_code, 400)
-        check('features')
-        check('invalid', is_invalid=True)
+    def test_get_features_download_action(self):
+        url = self._get_url(id=self.obj.id, action='features_download')
+        resp = self.client.get(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.OK)
+        self.assertEquals(resp.mimetype, 'application/json')
+        self.assertEquals(resp.headers['Content-Disposition'],
+                          'attachment; filename=%s-features.json' % (self.obj.name,))
 
     def test_get_trainer_download_s3url_action(self):
         model = Model.query.filter_by(name='TrainedModel').first()
