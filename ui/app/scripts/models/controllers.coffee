@@ -133,6 +133,12 @@ updated_on,updated_by,comparable'
             $scope.params['tags'] = []
             for t in $scope.model.tags
               $scope.params['tags'].push {'id': t, 'text': t}
+            if $scope.model.status is 'Trained'
+              $scope.model.$getTrainS3Url()
+              .then (resp)->
+                $scope.model.trainer_s3_url = resp.data.url
+              , (opts)->
+                $scope.setError(opts, 'loading tags list')
         ), ((opts)->
           $scope.setError(opts, 'loading model details')
         )

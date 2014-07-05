@@ -20,7 +20,7 @@
       <i title="Train your model" class="icon-tasks"></i>
       Start training
     </button>
-    <a ng-show="model.status == 'Trained'" href="{{ model.downloadUrl() }}?field=trainer" class="btn btn-info">
+    <a ng-show="model.status == 'Trained' && model.trainer_s3_url" href="{{ model.trainer_s3_url }}" class="btn btn-info">
         <i title="Download model trainer." class="icon-download-alt"></i> Download Trainer
     </a>
     <button ng-show="model.status == 'Trained'" ng-click="uploadModelToPredict(model)" class="btn btn-info">

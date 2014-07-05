@@ -119,6 +119,10 @@ angular.module('app.models.model', ['app.config'])
         url = "#{@BASE_API_URL}#{@id}/action/upload_to_server/"
         @$make_request(url, {}, "PUT", {'server': server})
 
+      $getTrainS3Url: ()->
+        url = "#{@BASE_API_URL}#{@id}/action/trainer_download_s3url/"
+        @$make_request(url, {}, "GET", {})
+
     return Model
 ])
 

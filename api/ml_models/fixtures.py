@@ -21,6 +21,7 @@ class ModelData(DataSet):
         target_variable = "hire_outcome"
         weights_synchronized = False
         status = "Trained"
+        trainer = "trainer_file"
         classifier = {
             "name": "Test Classifier",
             "params": {"penalty": "l2"},
@@ -37,6 +38,7 @@ class ModelData(DataSet):
         name = "OtherModel"
         comparable = True
         labels = ["0", "1"]
+        trainer = None
 
     class model_03:
         features_set = FeatureSetData.bestmatch

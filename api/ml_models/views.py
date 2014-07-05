@@ -29,7 +29,7 @@ class ModelResource(BaseResourceSQL):
     """
     Models API methods
     """
-    GET_ACTIONS = ('download', 'reload', 'by_importhandler')
+    GET_ACTIONS = ('download', 'reload', 'by_importhandler', 'trainer_download_s3url')
     PUT_ACTIONS = ('train', 'tags', 'cancel_request_instance',
                    'upload_to_server')
     FILTER_PARAMS = (('status', str), ('comparable', str), ('tag', str),
@@ -130,6 +130,13 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
         resp.headers['Content-Disposition'] = \
             'attachment; filename=%s' % filename
         return resp
+
+    def _get_trainer_download_s3url_action(self, **kwargs):
+        model = self._get_details_query(None, **kwargs)
+        if model is None:
+            raise NotFound(self.MESSAGE404 % kwargs)
+        url = model.get_trainer_s3url()
+        return self._render({'trainer_file_for': model.id, 'url': url})
 
     # POST/PUT specific methods
     def _put_train_action(self, **kwargs):
