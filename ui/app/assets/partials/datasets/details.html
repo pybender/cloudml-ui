@@ -67,9 +67,59 @@
     <ng-include src="'/partials/logmessages/list.html'"></ng-include>
   </div>
   <div ng-show="dataset.samples">
-    <h3>Sample Data</h3>
+    <h3>Sample Data <small>(UI Sample #1)</small></h3>
+    <ul>
+      <li ng-repeat="sample in dataset.samples" class="json_sample" style="list-style-type: none;">
+        <a ng-click="toggleSampleJson($event)"><i class="icon-plus"></i>Item #{{$index+1}}</a>
+        <div style="display: none;">
+          <ul>
+            <li ng-repeat="(key, value) in sample" style="list-style-type: none;">
+              <p><b>{{key}} :</b> {{value}}</p>
+            </li>
+          </ul>
+        </div>
+      </li>
+    </ul>
+  </div>
+  <div ng-show="dataset.samples">
+    <h3>Sample Data <small>(UI Sample #2)</small></h3>
     <div ng-repeat="sample in dataset.samples">
       <code>{{sample}}</code>
     </div>
+  </div>
+  <div ng-show="dataset.samples_json">
+    <h3>Sample Data <small>(UI Sample #3)</small></h3>
+    <textarea ui-codemirror="{mode: 'javascript', readOnly: true, json: true}" ng-model="dataset.samples_json"></textarea>
+  </div>
+  <style>
+    /* TODO: nsoliman 20140706 until we select a presentation */
+    .ds_sample_table table {
+      border-collapse: collapse;
+    }
+
+    .ds_sample_table table, .ds_sample_table th,  .ds_sample_table td {
+      border: 1px solid grey;
+    }
+
+    .ds_sample_table th div, .ds_sample_table td div {
+      overflow:auto;
+      max-width:300px;
+      max-height:100px;
+    }
+  </style>
+  <div ng-show="dataset.tabular_samples" class="ds_sample_table">
+      <h3>Sample Data <small>(UI Sample #4)</small></h3>
+      <table>
+        <thead>
+          <tr>
+            <th ng-repeat="column in dataset.tabular_samples.columns"><div>{{column}}</div></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="row in dataset.tabular_samples.rows">
+            <td ng-repeat="column in dataset.tabular_samples.columns"><div>{{row[column]}}</div></td>
+          </tr>
+        </tbody>
+      </table>
   </div>
 </div>

@@ -384,6 +384,8 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(resp.status_code, httplib.OK)
         data = json.loads(resp.data)
         self.assertEqual(10, len(data))
+        self.assertNotEqual(data[0], data[-1])
+        self.assertNotEqual(data[1], data[-2])
 
         # 2. test getting sample of size 5
         url = self._get_url(id=self.obj.id, action='sample_data', size=5)
@@ -412,6 +414,15 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
             self.assertEquals(resp.status_code, httplib.BAD_REQUEST)
             self.assertTrue('unknown file type' in resp.data)
 
+        # 6. tabular format
+        url = self._get_url(id=self.obj.id, action='sample_data', size=5, tabular=True)
+        resp = self.client.get(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.OK)
+        data = json.loads(resp.data)
+        self.assertEqual(39, len(data['columns']))
+        self.assertEqual(5, len(data['rows']))
+        self.assertNotEqual(data['rows'][0], data['rows'][-1])
+        self.assertNotEqual(data['rows'][1], data['rows'][-2])
 
 class TestTasksTests(BaseDbTestCase, TestChecksMixin):
     """

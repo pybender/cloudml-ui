@@ -32,6 +32,7 @@ angular.module('app.datasets.model', ['app.config'])
       format: 'json'
       import_handler_type: 'JSON'
       samples: null
+      samples_json: 'loading ...'
 
       loadFromJSON: (origData) =>
         super origData
@@ -101,8 +102,12 @@ angular.module('app.datasets.model', ['app.config'])
       $getSampleData: ->
         base_url = @constructor.$get_api_url({}, @)
         @$make_request("#{base_url}#{@id}/action/sample_data/",
-                       {}, 'GET', {size:15})
+          {size:15}, 'GET')
 
+      $getSampleDataTabular: ->
+        base_url = @constructor.$get_api_url({}, @)
+        @$make_request("#{base_url}#{@id}/action/sample_data/",
+          {size:15, tabular:true}, 'GET')
 
     return DataSet
 ])

@@ -14,6 +14,7 @@ from api import api
 from api.base.models import assertion_msg
 from api.base.resources import BaseResourceSQL, NotFound, public_actions, \
     ValidationError, odesk_error_response, ERR_INVALID_DATA
+from api.base.utils import dict_list_to_table
 from api.import_handlers.models import DataSet
 from api.import_handlers.forms import DataSetAddForm, DataSetEditForm
 
@@ -69,13 +70,19 @@ class DataSetResource(BaseResourceSQL):
         if not open_fn:
             raise ValidationError('DataSet has unknown file type')
         lines = []
-        params = self._parse_parameters([('size', int)])
+        params = self._parse_parameters([('size', int), ('tabular', bool)])
         sample_size = params.get('size') or 10
+        tabular_format = params.get('tabular') or False
         with open_fn(ds.filename, 'rb') as f:
             line = f.readline()
             while line and len(lines) < sample_size:
                 lines.append(json.loads(line))
-        return self._render(lines)
+                line = f.readline()
+        if not tabular_format:
+            return self._render(lines)
+        else:
+            return self._render(dict_list_to_table(lines))
+
 
 
 api.add_resource(DataSetResource, '/cloudml/importhandlers/\

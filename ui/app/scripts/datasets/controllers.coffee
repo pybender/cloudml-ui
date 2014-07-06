@@ -120,12 +120,28 @@ filesize,records_count,time,created_by,import_handler_id,format,cluster'
       $scope.dataset.$getSampleData()
       .then (resp)->
         $scope.dataset.samples = resp.data
+        $scope.dataset.samples_json = angular.toJson(resp.data, pretty=true)
       , ()->
         $scope.setError(opts, 'error loading dataset sample data')
 
+      $scope.dataset.$getSampleDataTabular()
+      .then (resp)->
+        $scope.dataset.tabular_samples = resp.data
+        console.log $scope.dataset.tabular_samples
+      , ()->
+        $scope.setError(opts, 'error loading dataset sample data')
 
     $scope.initSections($scope.go, "model:details", simple=true)
     $scope.host = $location.host()
+    $scope.toggleSampleJson = (ev)->
+      if $(ev.target).hasClass 'icon-minus'
+        $('div', $(ev.target).parent()).hide(600)
+        $(ev.target).removeClass 'icon-minus'
+        $(ev.target).addClass 'icon-plus'
+      else
+        $('div', $(ev.target).parent()).show(600)
+        $(ev.target).removeClass 'icon-plus'
+        $(ev.target).addClass 'icon-minus'
 ])
 
 
