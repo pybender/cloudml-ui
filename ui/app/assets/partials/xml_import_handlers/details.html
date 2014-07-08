@@ -154,38 +154,47 @@
 
         <!-- scripts -->
         <div class="accordion-group" ng-controller="ScriptsListCtrl" ng-init="init(handler)">
+          <!--
+            TODO: nader20140708 this is the new form of accordion headers with button in the head if needed.
+            please propagate when needed
+          -->
           <div class="accordion-heading">
-            <a class="accordion-toggle" data-toggle="collapse" href="#scripts">Scripts</a>
+            <div class="row">
+              <div class="span8">
+                <a class="accordion-toggle" data-toggle="collapse" href="#scripts">Scripts</a>
+              </div>
+              <div class="span3 pull-right">
+                <div class="actions button-in-header">
+                  <a class="btn btn-info" ng-click="add(handler)">
+                    <i class="status-icon icon-plus"></i> add script
+                  </a>
+                </div>
+              </div>
+            </div>
           </div>
           <div id="scripts" class="accordion-body collapse in">
             <div class="accordion-inner" ng-controller="BaseListCtrl" ng-init="init(false, 'xml_scripts', false)">
-              <div class="actions">
-                <a class="btn btn-info" ng-click="add(handler)">
-                  <i class="status-icon icon-plus"></i> add script
-                </a>
-              </div>
-
-              <div class="clearfix">
-                <table class="table table-hover">
-                  <tbody>
-                    <tr ng-repeat="item in objects">
-                      <td style="border-top: none;">
-                        <div class="well">{{ item.data }}</div>
-                      </td>
-                      <td style="border-top: none;">
-                          <button ng-click="edit(item)" class="btn btn-info">
-                            <i title="Edit script" class="icon-edit"></i>
-                          </button>
-                          <button ng-click="delete(item)" class="btn btn-danger">
-                            <i title="Delete script. Be careful - you could not recover it!" class="icon-remove"></i>
-                          </button>
-                      </td>
-                    </tr>
-                  </tbody>
-                  <tfoot ng-hide="objects">
-                    <tr><td colspan="2">No scripts found</td></tr>
-                  </tfoot>
-                </table>
+              <div ng-repeat="item in objects">
+                <div class="row">
+                  <div class="span9">
+                    <textarea class="small" ui-codemirror="{mode: 'text/x-python',
+                                                            smartIndent: true,
+                                                            lineNumbers: true,
+                                                            matchBrackets: true,
+                                                            readOnly: 'nocursor'}" ng-model="item.data" />
+                  </div>
+                  <div class="span2">
+                    <button ng-click="edit(item)" class="btn btn-info">
+                      <i title="Edit script" class="icon-edit"></i>
+                    </button>
+                    <button ng-click="delete(item)" class="btn btn-danger">
+                      <i title="Delete script. Be careful - you could not recover it!" class="icon-remove"></i>
+                    </button>
+                  </div>
+                  <div class="row" ng-show="!$last">
+                    <div class="span11"><hr/></div>
+                  </div>
+                </div>
               </div>
 
             </div>
