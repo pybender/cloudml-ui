@@ -140,8 +140,9 @@ angular.module('app.datas.controllers', ['app.config', ])
     })
 
   $scope.data.$load(
-    show: "test_name,weighted_data_input,model,pred_label,label,
-prob,created_on,test_result"
+    show: ['test_name','weighted_data_input','model',
+           'pred_label','label','prob','created_on','test_result'
+    ].join(',')
   ).then (->
     ), ((opts)->
       $scope.setError(opts, 'loading test example')

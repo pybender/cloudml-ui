@@ -14,6 +14,8 @@ describe "importhandlers", ->
 
   beforeEach(module "app.importhandlers.model")
   beforeEach(module "app.importhandlers.controllers")
+  beforeEach(module "app.xml_importhandlers.models")
+  beforeEach(module "app.xml_importhandlers.controllers")
 
   $httpBackend = null
   $rootScope = null
@@ -106,39 +108,45 @@ created_on,created_by,error,data')
     it "should make no query", inject () ->
       createController "ImportHandlerActionsCtrl"
 
-    it "should open import dialog", inject () ->
+    it "should open import dialog", inject ($dialog) ->
       createController "ImportHandlerActionsCtrl"
-      $rootScope.openDialog = jasmine.createSpy()
+      $rootScope.openDialog = jasmine.createSpy('openDialogSpy')
 
       $rootScope.importData({id: HANDLER_ID})
 
       expect($rootScope.openDialog).toHaveBeenCalledWith(
-        jasmine.any(Object),
-        {id: HANDLER_ID},
-        'partials/import_handler/load_data.html',
-        'LoadDataDialogCtrl'
+        $dialog: $dialog
+        model:
+          id: HANDLER_ID
+        template: 'partials/import_handler/load_data.html'
+        ctrlName: 'LoadDataDialogCtrl'
       )
 
-    it "should open delete dialog", inject () ->
+    it "should open delete dialog", inject ($dialog) ->
       createController "ImportHandlerActionsCtrl"
       $rootScope.openDialog = jasmine.createSpy()
 
-      $rootScope.delete({id: HANDLER_ID})
+      $rootScope.delete({id: HANDLER_ID, TYPE: 'json'})
 
       expect($rootScope.openDialog).toHaveBeenCalledWith(
-        jasmine.any(Object),
-        {id: HANDLER_ID},
-        'partials/base/delete_dialog.html',
-        'DeleteImportHandlerCtrl',
-        jasmine.any(String), jasmine.any(String), jasmine.any(String)
+        $dialog: $dialog
+        model:
+          id: HANDLER_ID
+          TYPE: 'json'
+        template: 'partials/base/delete_dialog.html',
+        ctrlName: 'DeleteImportHandlerCtrl'
+        action: 'delete import handler'
+        path : '/handlers/json'
       )
 
   describe "ImportHandlerSelectCtrl", ->
 
     it "should make list query", inject () ->
       url = BASE_URL + '?show=name'
-      $httpBackend.expectGET(url).respond('{"import_handlers": [{"id": "' + HANDLER_ID + '", "name": "Some Name"
-}]}')
+      xml_ih_url = settings.apiUrl + 'xml_import_handlers/' + '?show=name'
+      HANDLER_ID_XML = '123321'
+      $httpBackend.expectGET(url).respond('{"import_handlers": [{"id": "' + HANDLER_ID + '", "name": "Some Name"}]}')
+      $httpBackend.expectGET(xml_ih_url).respond('{"xml_import_handlers": [{"id": "' + HANDLER_ID_XML + '", "name": "Some Name"}]}')
 
       createController "ImportHandlerSelectCtrl"
       $httpBackend.flush()
@@ -146,3 +154,5 @@ created_on,created_by,error,data')
       expect($rootScope.handlers.length).toBe(1)
       expect($rootScope.handlers_list[0].value).toBe(HANDLER_ID)
       expect($rootScope.handlers_list[0].text).toBe("Some Name")
+      expect($rootScope.handlers_list[1].value).toBe(HANDLER_ID_XML+'xml')
+      expect($rootScope.handlers_list[1].text).toBe("Some Name(xml)")

@@ -1,7 +1,6 @@
 'use strict'
 
 ### Tests specific Controllers ###
-
 angular.module('app.testresults.controllers', ['app.config', ])
 
 .controller('TestListCtrl', [
@@ -133,9 +132,7 @@ without test id and model id"
         when 'examples'
           extra_fields = 'classes_set'
         when 'about'
-          extra_fields = 'classes_set,created_on,parameters,error,
-examples_count,dataset,memory_usage,created_by,examples_placement,
-examples_fields,examples_size'
+          extra_fields = Test.EXTRA_FIELDS
         when 'metrics'
           extra_fields = 'accuracy,metrics'
           cb = () ->
@@ -143,8 +140,7 @@ examples_fields,examples_size'
             pr = $scope.test.metrics.precision_recall_curve
             $scope.prCurve = {'Precision-Recall curve': [pr[1], pr[0]]}
                
-        when 'matrix' then extra_fields = 'metrics,
-confusion_matrix_calculations,model'
+        when 'matrix' then extra_fields = Test.MATRIX_FIELDS
 
       if 'main' in $scope.LOADED_SECTIONS
         # Do not need load main fields -> only extra

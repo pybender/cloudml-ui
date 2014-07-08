@@ -88,12 +88,8 @@ created_by'
       url = settings.apiUrl + 'aws_instances/?show=' + encodeURIComponent(fields)
       $httpBackend.expectGET(url).respond('{"instances": []}')
 
-      $rootScope.activateSectionColumn = jasmine.createSpy()
-
       createController "GetInstanceCtrl"
       $httpBackend.flush()
-
-      expect($rootScope.activateSectionColumn).toHaveBeenCalledWith('instance', undefined)
 
   describe "SpotInstanceRequestCtrl", ->
 
