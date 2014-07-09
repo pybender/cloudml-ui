@@ -18,7 +18,8 @@ angular.module('app.datasets.model', ['app.config'])
 
       @MAIN_FIELDS: 'name,status,import_handler_type,import_handler_id'
       @EXTRA_FIELDS: ['created_on,updated_on','data','on_s3','import_params',
-                      'error','filesize','records_count','time','created_by','format']
+                      'error','filesize','records_count','time','created_by',
+                      'format']
 
       id: null
       name: null
