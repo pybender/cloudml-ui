@@ -37,8 +37,8 @@ describe "awsinstances", ->
   describe "AwsInstanceListCtrl", ->
 
     it "should make list query", inject () ->
-      fields = "name,type,created_on,updated_on,ip,is_default,created_by,
-updated_by"
+      fields = ['name','type','created_on','updated_on','ip','is_default',
+                'created_by','updated_by'].join(',')
       url = settings.apiUrl + 'aws_instances/?show=' + encodeURIComponent(fields)
       $httpBackend.expectGET(url).respond('{"instances": []}')
 
@@ -69,8 +69,8 @@ updated_by"
 
     it "should make details query", inject () ->
       id = '5224de2907dbec210daec24e'
-      fields = 'name,type,created_on,updated_on,ip,description,is_default,
-created_by'
+      fields = ['name','type','created_on','updated_on','ip','description',
+                'is_default','created_by'].join(',')
 
       url = settings.apiUrl + 'aws_instances/' + id + '/?show=' + encodeURIComponent(fields)
       $httpBackend.expectGET(url).respond('{"instance": {}}')
@@ -88,12 +88,8 @@ created_by'
       url = settings.apiUrl + 'aws_instances/?show=' + encodeURIComponent(fields)
       $httpBackend.expectGET(url).respond('{"instances": []}')
 
-      $rootScope.activateSectionColumn = jasmine.createSpy()
-
       createController "GetInstanceCtrl"
       $httpBackend.flush()
-
-      expect($rootScope.activateSectionColumn).toHaveBeenCalledWith('instance', undefined)
 
   describe "SpotInstanceRequestCtrl", ->
 

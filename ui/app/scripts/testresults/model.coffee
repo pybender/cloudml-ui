@@ -15,6 +15,14 @@ angular.module('app.testresults.model', ['app.config'])
     class TestResult extends BaseModel
       API_FIELDNAME: 'test'
       @MAIN_FIELDS: 'name,status,created_on,created_by'
+      @MATRIX_FIELDS: ['metrics','confusion_matrix_calculations',
+                       'model'].join(',')
+      @EXTRA_FIELDS: ['classes_set', 'created_on','parameters','error',
+                           'examples_count','dataset','memory_usage',
+                           'created_by', 'examples_placement','examples_fields',
+                           'examples_size'].join(',')
+
+
       DEFAULT_FIELDS_TO_SAVE: ['importhandler', 'train_importhandler',
                                 'features', 'trainer', 'name']
 

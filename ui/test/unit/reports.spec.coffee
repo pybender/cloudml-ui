@@ -15,6 +15,7 @@ describe "reports", ->
 
   beforeEach(module "app.models.model")
   beforeEach(module "app.importhandlers.model")
+  beforeEach(module "app.xml_importhandlers.models")
   beforeEach(module "app.datasets.model")
   beforeEach(module "app.testresults.model")
   beforeEach(module "app.datas.model")

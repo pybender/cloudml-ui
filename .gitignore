@@ -42,3 +42,6 @@ api/test/cover/*
 *_topics.txt
 api/test_config.py
 .pydevproject
+
+bower_components
+cloudml_test

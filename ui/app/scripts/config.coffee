@@ -31,3 +31,12 @@ angular.module('app.config', []).config(['$provide', ($provide) ->
 
   $provide.constant 'settings', $.extend SETTINGS, local_settings
 ])
+
+###
+  Global Functions for Easy spying on window functions
+###
+$cml_window_location_reload = ->
+  window.location.reload()
+
+$cml_window_location_replace = (v)->
+  window.location.replace()
