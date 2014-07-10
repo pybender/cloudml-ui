@@ -14,6 +14,7 @@ describe "models", ->
   beforeEach(module "app.controllers")
 
   beforeEach(module "app.importhandlers.model")
+  beforeEach(module "app.xml_importhandlers.models")
   beforeEach(module "app.datasets.model")
   beforeEach(module "app.testresults.model")
   beforeEach(module "app.weights.model")
@@ -104,22 +105,21 @@ describe "models", ->
       expect($rootScope.tag_list[0].text).toEqual('smth')
 
     it "should make details request", inject () ->
-      url = BASE_URL + MODEL_ID + '/' + '?show=' + encodeURIComponent('name,status,classifier,features_set_id,features')
+      url = BASE_URL + MODEL_ID + '/' + '?show=' + encodeURIComponent(MODEL_FIELDS + ',' + FIELDS_BY_SECTION['model'])
       $httpBackend.expectGET(url).respond('{"model": [{"_id": "' + MODEL_ID + '"}]}')
 
       $rootScope.goSection(['model'])
       $httpBackend.flush()
 
     it "should request only features", inject () ->
-      url = BASE_URL + MODEL_ID + '/' + '?show=' + encodeURIComponent('name,status')
+      url = BASE_URL + MODEL_ID + '/' + '?show=' + encodeURIComponent(FIELDS_BY_SECTION['main'])
       $httpBackend.expectGET(url).respond('{"model": [{"id": "' + MODEL_ID + '"}]}')
 
       $rootScope.goSection(['features'])
       $httpBackend.flush()
 
     xit "should load tests", inject () ->
-      url = BASE_URL + MODEL_ID + '/tests/?show=' + encodeURIComponent('name,
-created_on,status,parameters,accuracy,examples_count,created_by')
+      url = BASE_URL + MODEL_ID + '/tests/?show=' + encodeURIComponent('name,created_on,status,parameters,accuracy,examples_count,created_by')
       $httpBackend.expectGET(url).respond('{"tests": []}')
 
       $rootScope.LOADED_SECTIONS.push 'main'
@@ -153,12 +153,14 @@ created_on,status,parameters,accuracy,examples_count,created_by')
       $rootScope.handler = {
         import_params: {from: '', to: ''}
       }
-      $rootScope.formElements = {}
+      # TODO: nader20140708 : I don't if scope should have data object from elsewhere !
+      # but looks like formElements has changed to be data
+      $rootScope.data = {}
 
       createController "BaseModelDataSetActionCtrl"
 
       expect($rootScope.select2Options).toBeDefined()
-      expect(_.keys($rootScope.formElements).length).toBeGreaterThan(2)
+      expect(_.keys($rootScope.data).length).toBeGreaterThan(2)
 
   describe "ModelActionsCtrl", ->
 

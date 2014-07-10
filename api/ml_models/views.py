@@ -118,12 +118,12 @@ class ModelResource(BaseResourceSQL):
 Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
 
         if field == 'trainer':
-            content = model.get_trainer(loaded=False)
+            content = model.get_trainer(loaded=False).encode('zlib')
         else:
             content = model.get_features_json()
 
         filename = "%s-%s.%s" % (model.name, field,
-                                 'dat' if field == 'trainer' else 'json')
+                                 'dat.gz' if field == 'trainer' else 'json')
 
         resp = Response(content)
         resp.headers['Content-Type'] = 'text/plain'
