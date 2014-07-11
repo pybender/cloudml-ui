@@ -1,10 +1,11 @@
 from flask import request
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.orm import joinedload, joinedload_all
 
 from api.base.resources import BaseResourceSQL
 from api import api
 from api.import_handlers.models import XmlImportHandler, XmlInputParameter, \
-    XmlEntity, XmlField, XmlDataSource, XmlQuery, XmlScript, XmlSqoop
+    XmlEntity, XmlField, XmlDataSource, XmlQuery, XmlScript, XmlSqoop, Predict
 from api.import_handlers.forms import XmlImportHandlerAddForm, \
     XmlInputParameterForm, XmlEntityForm, XmlFieldForm, XmlDataSourceForm, \
     XmlQueryForm, XmlScriptForm, XmlImportHandlerEditForm, XmlSqoopForm
@@ -24,6 +25,18 @@ class XmlImportHandlerResource(BaseResourceSQL):
     def Model(self):
         return XmlImportHandler
 
+    def _modify_details_query(self, cursor, params):
+        show = self._get_show_fields(params)
+        if 'predict' in show:
+            cursor = cursor.options(
+                joinedload_all('predict.models'),
+                joinedload('predict.models.positive_label'),
+                joinedload('predict.label'),
+                joinedload('predict.probability'),
+                joinedload('predict.label.predict_model'),
+                joinedload('predict.probability.predict_model'))
+        return cursor
+
     def _prepare_model(self, model, params):
         res = super(XmlImportHandlerResource, self)._prepare_model(
             model, params)
@@ -35,6 +48,13 @@ class XmlImportHandlerResource(BaseResourceSQL):
             from ..models import get_entity_tree
             res['entity'] = get_entity_tree(model)
 
+        # if 'predict' in show:
+        #     if model.predicts:
+        #         predict = model.predict
+        #         print predict.models
+        #         res['predict'] = predict
+        #     else:
+        #         res['predict'] = None
         return res
 
     def _put_upload_to_server_action(self, **kwargs):
