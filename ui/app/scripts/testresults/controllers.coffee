@@ -164,16 +164,15 @@ without test id and model id"
       for c in classes
         label =  if classes.length > 1 then 'ROC Curve For Class (' + c + ')'\
           else 'ROC Curve'
-        # we fpr @ index 0, tpr @ index 1, we transpose, because we have
-        # axises flipped
         curve = {}
-        curve[label] = [
-          metrics.roc_curve[c][1]
-          metrics.roc_curve[c][0]
-        ]
+        curve[label] = metrics.roc_curve[c]
         $scope.rocCurves[c] = {curve: curve, roc_auc: metrics.roc_auc[c]}
-      if classes.length is 1 # binary classifier publishes for one label
+      if classes.length is 1 # only binary classifier publishes PR curve
         $scope.prCurves =
+          # we are switching precision/recall positions. The dictionary
+          # publishes them as [precision recall] while the chart has
+          # precision @ y-axis and recall @ x-axis, and chart expects
+          # [x-axis y-axis] soo we need the flip
           'Precision-Recall curve': [
             metrics.precision_recall_curve[1],
             metrics.precision_recall_curve[0]
