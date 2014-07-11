@@ -483,24 +483,23 @@ class TasksRunTestTests(BaseDbTestCase):
         # any new metric added, you should add corresponding asserts
         self.assertEqual(6, len(test.metrics.keys()))
 
-        self.assertTrue(test.metrics.has_key('roc_curve'))
-        self.assertEqual(2, len(test.metrics['roc_curve']))
-        self.assertIsInstance(test.metrics['roc_curve'][0], list)
-        self.assertIsInstance(test.metrics['roc_curve'][1], list)
-
         self.assertTrue(test.metrics.has_key('confusion_matrix'))
         self.assertEqual(len(test.classes_set), len(test.metrics['confusion_matrix']))
         for i, v in enumerate(test.metrics['confusion_matrix']):
             self.assertIsInstance(v, list, 'cofusion matrix @ index:%s is not tuple/list' % (i,))
             self.assertEqual(2, len(v))
 
-        self.assertTrue(test.metrics.has_key('precision_recall_curve'))
-        self.assertEqual(2, len(test.metrics['precision_recall_curve']))
-        self.assertIsInstance(test.metrics['precision_recall_curve'][0], list)
-        self.assertIsInstance(test.metrics['precision_recall_curve'][1], list)
+        pos_label = test.classes_set[1]
+        self.assertTrue(test.metrics.has_key('roc_curve'))
+        self.assertIsInstance(test.metrics['roc_curve'], dict)
+        self.assertTrue(test.metrics['roc_curve'].has_key(pos_label))
+        self.assertEqual(2, len(test.metrics['roc_curve'][pos_label]))
+        self.assertIsInstance(test.metrics['roc_curve'][pos_label][0], list)
+        self.assertIsInstance(test.metrics['roc_curve'][pos_label][1], list)
 
         self.assertTrue(test.metrics.has_key('roc_auc'))
-        self.assertIsInstance(test.metrics['roc_auc'], float)
+        self.assertTrue(test.metrics['roc_auc'].has_key(pos_label))
+        self.assertIsInstance(test.metrics['roc_auc'][pos_label], float)
 
         self.assertTrue(test.metrics.has_key('accuracy'))
         self.assertIsInstance(test.metrics['accuracy'], float)
@@ -528,12 +527,19 @@ class TasksRunTestTests(BaseDbTestCase):
         self.assertIsInstance(test.classes_set, list)
 
         # any new metric added, you should add corresponding asserts
-        self.assertEqual(3, len(test.metrics.keys()))
+        self.assertEqual(4, len(test.metrics.keys()))
 
-        self.assertTrue(test.metrics.has_key('roc_curve'))
-        self.assertEqual(2, len(test.metrics['roc_curve']))
-        self.assertIsInstance(test.metrics['roc_curve'][0], list)
-        self.assertIsInstance(test.metrics['roc_curve'][1], list)
+        for pos_label in test.classes_set:
+            self.assertTrue(test.metrics.has_key('roc_curve'))
+            self.assertIsInstance(test.metrics['roc_curve'], dict)
+            self.assertTrue(test.metrics['roc_curve'].has_key(pos_label))
+            self.assertEqual(2, len(test.metrics['roc_curve'][pos_label]))
+            self.assertIsInstance(test.metrics['roc_curve'][pos_label][0], list)
+            self.assertIsInstance(test.metrics['roc_curve'][pos_label][1], list)
+
+            self.assertTrue(test.metrics.has_key('roc_auc'))
+            self.assertTrue(test.metrics['roc_auc'].has_key(pos_label))
+            self.assertIsInstance(test.metrics['roc_auc'][pos_label], float)
 
         self.assertTrue(test.metrics.has_key('confusion_matrix'))
         self.assertEqual(len(test.classes_set), len(test.metrics['confusion_matrix']))
@@ -547,23 +553,28 @@ class TasksRunTestTests(BaseDbTestCase):
 
 class MetricsMockBinaryClassifier(MagicMock):
     accuracy = 0.85
-    classes_set = ['0', '1']
-    _labels = ['0', '1'] * 50
+    classes_set = ['a', 'b']
+    classes_count = len(classes_set)
+    _labels = ['a', 'b'] * 50
 
     def get_metrics_dict(self):
         return {
             'confusion_matrix': [0, 0],
-            'roc_curve': [[0], [0], [0], [0]],
+            'roc_curve': {'b': [[0], [1]]},
+            'roc_auc': {'b': 0.1},
             'precision_recall_curve': [[0], [0], [0], [0]],
         }
 
 
 class MetricsMockNDimClassifier(MagicMock):
     accuracy = 0.85
-    classes_set = ['0', '1', '2']
-    _labels = ['0', '1', '2'] * 50
+    classes_set = ['a', 'b', 'c']
+    classes_count = len(classes_set)
+    _labels = ['a', 'b', 'c'] * 50
 
     def get_metrics_dict(self):
         return {
-            'confusion_matrix': [0, 0, 0]
+            'confusion_matrix': [0, 0, 0],
+            'roc_curve': {'a': [[0], [1]], 'b': [[1], [0]], 'c': [[0], [0]]},
+            'roc_auc': {'a': 0.2, 'b': 0.1}
         }

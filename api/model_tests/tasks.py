@@ -60,12 +60,18 @@ def run_test(dataset_ids, test_id):
 
         n = len(metrics._labels) / 100 or 1
         if metrics.classes_count == 2:
-            metrics_dict['roc_curve'][1] = metrics_dict['roc_curve'][1][0::n]
-            metrics_dict['roc_curve'][0] = metrics_dict['roc_curve'][0][0::n]
             metrics_dict['precision_recall_curve'][1] = \
                 metrics_dict['precision_recall_curve'][1][0::n]
             metrics_dict['precision_recall_curve'][0] = \
                 metrics_dict['precision_recall_curve'][0][0::n]
+
+        calc_range = [1] if metrics.classes_count == 2 else range(len(metrics.classes_set))
+        for i in calc_range:
+            label = metrics.classes_set[i]
+            sub_fpr = metrics_dict['roc_curve'][label][0][0::n]
+            sub_tpr = metrics_dict['roc_curve'][label][1][0::n]
+            metrics_dict['roc_curve'][label] = [sub_fpr, sub_tpr]
+
         test.metrics = metrics_dict
         test.classes_set = list(metrics.classes_set)
         test.status = TestResult.STATUS_STORING
