@@ -34,7 +34,8 @@ angular.module('app.login.controllers', ['app.config', 'app.services'])
     $scope.status = 'Getting data. Please wait...'
     auth.login().then ((resp) ->
       $scope.status = 'Redirecting to oDesk. Please wait...'
-      $cml_window_location_replace(resp.data.auth_url)
+      alert(resp.data.auth_url)
+      window.location.replace(resp.data.auth_url)
     ), ((resp) ->
       $scope.setError(resp, 'logging in')
     )
@@ -58,7 +59,7 @@ angular.module('app.login.controllers', ['app.config', 'app.services'])
     oauth_verifier = $location.search().oauth_verifier
     auth.authorize(oauth_token, oauth_verifier).then ((resp) ->
       $scope.status = 'Authorized'
-      $cml_window_location_reload()
+      window.location.reload()
     ), ((resp) ->
       $scope.setError(resp, 'authorizing')
     )
