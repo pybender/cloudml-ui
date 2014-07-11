@@ -1,7 +1,6 @@
 ###
   This is responses to different url snatched from production for accurate testing
 ###
-# TODO: we need too configure brunch to exclude this file from the code generation
 
 map_url_to_response = (url, key)->
   """
