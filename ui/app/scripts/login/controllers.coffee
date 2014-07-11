@@ -34,7 +34,6 @@ angular.module('app.login.controllers', ['app.config', 'app.services'])
     $scope.status = 'Getting data. Please wait...'
     auth.login().then ((resp) ->
       $scope.status = 'Redirecting to oDesk. Please wait...'
-      alert(resp.data.auth_url)
       window.location.replace(resp.data.auth_url)
     ), ((resp) ->
       $scope.setError(resp, 'logging in')
