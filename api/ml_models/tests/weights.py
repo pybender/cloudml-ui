@@ -193,7 +193,7 @@ class WeightTasksTests(BaseDbTestCase, TestChecksMixin):
 
     @mock_s3
     @patch('api.amazon_utils.AmazonS3Helper.load_key')
-    def test_fill_weights(self, mock_load_key):
+    def test_fill_weights_binary_classifier(self, mock_load_key):
         name = 'new2'
 
         with open('conf/extract.json', 'r') as f:
@@ -212,7 +212,7 @@ class WeightTasksTests(BaseDbTestCase, TestChecksMixin):
 
         # Fill weights
         trainer = model.get_trainer()
-        trainer_weights = trainer.get_weights()
+        trainer_weights = trainer.get_weights()[1]
         trainer_weight_list = trainer_weights['positive'] \
             + trainer_weights['negative']
 
@@ -239,6 +239,7 @@ class WeightTasksTests(BaseDbTestCase, TestChecksMixin):
                 model=model, name=weight_dict['name']).one()
             self.assertEquals(round(weight.value, 2),
                               round(weight_dict['weight'], 2))
+            self.assertEqual('1', weight.class_label)
 
         for i in xrange(5):
             check_random_weight()
@@ -255,3 +256,87 @@ class WeightTasksTests(BaseDbTestCase, TestChecksMixin):
                       'short_name': 'best',
                       'css_class': 'red light',
                       'parent': 'contractor.dev_blurb'})
+
+    @mock_s3
+    @patch('api.amazon_utils.AmazonS3Helper.load_key')
+    def test_fill_weights_multiclass_classifier(self, mock_load_key):
+        name = 'new2'
+
+        with open('conf/extract.json', 'r') as f:
+            handler = f.read()
+        with open('./api/ml_models/multiclass-trainer.dat', 'r') as f:
+            trainer = f.read()
+        mock_load_key.return_value = trainer
+
+        post_data = {'test_import_handler_file': handler,
+                     'import_handler_file': handler,
+                     'trainer': trainer,
+                     'name': name}
+        resp, model = self.check_edit(post_data)
+        self.assertEquals(model.name, name)
+        self.assertEquals(model.status, model.STATUS_TRAINED)
+
+        # Check weights in db
+        def check_random_weight():
+            weight_dict = trainer_weight_list[
+                random.choice(xrange(len(trainer_weight_list)))]
+            weight = Weight.query.filter_by(
+                model=model, name=weight_dict['name'],
+                class_label=str(class_label)).one()
+            self.assertEquals(round(weight.value, 2),
+                              round(weight_dict['weight'], 2))
+            self.assertEqual(class_label, weight.class_label)
+
+
+        def check_weight(name, params):
+            wgh = Weight.query.filter_by(
+                model=model, name=name, class_label=str(class_label)).one()
+            self.assertTrue(wgh)
+            for key, val in params.iteritems():
+                self.assertEquals(getattr(wgh, key), val)
+
+        # # we need to wait for celery task to start and finish
+        # # since it is started delayed see `api/ml_models/forms.py`
+        # import time
+        # weights_count = Weight.query.filter_by(model=model).count()
+        # wait_count = 0
+        # while weights_count == 0 and wait_count < 5:
+        #     time.sleep(5)
+        #     weights_count = Weight.query.filter_by(model=model).count()
+        #     wait_count += 1
+
+        # Fill weights
+        trainer = model.get_trainer()
+        weights = trainer.get_weights()
+        self.assertEqual(3, len(weights.keys()))
+        for class_label in weights.keys():
+            trainer_weights = weights[class_label]
+            trainer_weight_list = trainer_weights['positive'] \
+                                  + trainer_weights['negative']
+
+            list_count = len(trainer_weight_list)
+            db_count = Weight.query.filter_by(model=model,
+                                              class_label=str(class_label)).count()
+            self.assertEquals(list_count, db_count,
+                              'class_label:%s, list_count:%s, db_count:%s' %
+                              (class_label, list_count, db_count))
+
+            # Check categories in db
+            cat = WeightsCategory.query.filter_by(
+                model=model, name='contractor').one()
+            self.assertEquals(cat.parent, '')
+            self.assertEquals(cat.short_name, 'contractor')
+
+            cat = WeightsCategory.query.filter_by(
+                model=model, name='contractor.dev_profile_title').one()
+            self.assertEquals(cat.parent, 'contractor')
+            self.assertEquals(cat.short_name, 'dev_profile_title')
+
+            for i in xrange(5):
+                check_random_weight()
+
+            # check_weight('contractor->dev_blurb->best',
+            #              {'is_positive': True,
+            #               'short_name': 'best',
+            #               'css_class': 'green darker',
+            #               'parent': 'contractor.dev_blurb'})

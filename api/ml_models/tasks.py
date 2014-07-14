@@ -142,10 +142,17 @@ def fill_model_parameter_weights(model_id, segment_id=None):
     segment = Segment.query.get(segment_id)
     if segment is None:
         raise ValueError('Segment not found: %s' % segment_id)
-    logging.info("Model: %s , Segment: %s" % (model.name, segment.name) )
 
-    try:
-        weights = model.get_trainer().get_weights(segment.name)
+    weights_dict = None
+
+    def process_weights_for_class(class_label):
+        weights_added = 0
+        categories_added = 0
+
+        weights = weights_dict[class_label]
+        logging.info("Model: %s , Segment: %s, Class: %s" %
+                     (model.name, segment.name, class_label))
+
         positive = weights['positive']
         negative = weights['negative']
         weights = model.weights
@@ -175,7 +182,7 @@ def fill_model_parameter_weights(model_id, segment_id=None):
             for i, sname in enumerate(splitted_name):
                 parent = long_name
                 long_name = '%s.%s' % (long_name, sname) \
-                            if long_name else sname
+                    if long_name else sname
                 if i == (count - 1):
                     new_weight = Weight()
                     new_weight.name = weight['name'][0:199]
@@ -187,7 +194,9 @@ def fill_model_parameter_weights(model_id, segment_id=None):
                     new_weight.model_name = model.name
                     new_weight.model = model
                     new_weight.segment = segment
+                    new_weight.class_label = class_label
                     new_weight.save(commit=False)
+                    weights_added += 1
                 else:
                     if sname not in category_names:
                         # Adding a category, if it has not already added
@@ -200,13 +209,29 @@ def fill_model_parameter_weights(model_id, segment_id=None):
                         category.model = model
                         category.segment = segment
                         category.save(commit=False)
-        db.session.commit()
+                        categories_added += 1
+        return categories_added, weights_added
 
+    try:
+        weights_dict = model.get_trainer().get_weights(segment.name)
+
+        weights_added = 0
+        categories_added = 0
+        classes_processed = 0
+        for clazz in weights_dict.keys():
+            c, w = process_weights_for_class(clazz)
+            categories_added += c
+            weights_added += w
+            classes_processed += 1
+
+        db.session.commit()
         model.weights_synchronized = True
         model.save()
-        msg = 'Model %s parameters weights was added to db: %s' % \
-            (model.name, len(weight_list))
+        msg = 'Model %s parameters weights was added to db. %s weights, ' \
+              'in %s categories for %s classes' % \
+              (model.name, weights_added, categories_added, classes_processed)
         logging.info(msg)
+
     except Exception, exc:
         logging.exception('Got exception when fill_model_parameter: %s', exc)
         raise
