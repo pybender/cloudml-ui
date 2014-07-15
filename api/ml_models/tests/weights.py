@@ -194,6 +194,11 @@ class WeightTasksTests(BaseDbTestCase, TestChecksMixin):
     @mock_s3
     @patch('api.amazon_utils.AmazonS3Helper.load_key')
     def test_fill_weights_binary_classifier(self, mock_load_key):
+        """
+        Tests mainly api/ml_models/tests/tasks.py:fill_model_parameter_weights
+        for binary classifer
+        :param mock_load_key:
+        """
         name = 'new2'
 
         with open('conf/extract.json', 'r') as f:
@@ -260,6 +265,11 @@ class WeightTasksTests(BaseDbTestCase, TestChecksMixin):
     @mock_s3
     @patch('api.amazon_utils.AmazonS3Helper.load_key')
     def test_fill_weights_multiclass_classifier(self, mock_load_key):
+        """
+        Tests mainly api/ml_models/tests/tasks.py:fill_model_parameter_weights
+        for multiclass classifier
+        :param mock_load_key:
+        """
         name = 'new2'
 
         with open('conf/extract.json', 'r') as f:
@@ -285,8 +295,7 @@ class WeightTasksTests(BaseDbTestCase, TestChecksMixin):
                 class_label=str(class_label)).one()
             self.assertEquals(round(weight.value, 2),
                               round(weight_dict['weight'], 2))
-            self.assertEqual(class_label, weight.class_label)
-
+            self.assertEqual(str(class_label), weight.class_label)
 
         def check_weight(name, params):
             wgh = Weight.query.filter_by(
@@ -294,16 +303,6 @@ class WeightTasksTests(BaseDbTestCase, TestChecksMixin):
             self.assertTrue(wgh)
             for key, val in params.iteritems():
                 self.assertEquals(getattr(wgh, key), val)
-
-        # # we need to wait for celery task to start and finish
-        # # since it is started delayed see `api/ml_models/forms.py`
-        # import time
-        # weights_count = Weight.query.filter_by(model=model).count()
-        # wait_count = 0
-        # while weights_count == 0 and wait_count < 5:
-        #     time.sleep(5)
-        #     weights_count = Weight.query.filter_by(model=model).count()
-        #     wait_count += 1
 
         # Fill weights
         trainer = model.get_trainer()
@@ -315,8 +314,9 @@ class WeightTasksTests(BaseDbTestCase, TestChecksMixin):
                                   + trainer_weights['negative']
 
             list_count = len(trainer_weight_list)
-            db_count = Weight.query.filter_by(model=model,
-                                              class_label=str(class_label)).count()
+            query = Weight.query.filter_by(model=model,
+                                           class_label=str(class_label))
+            db_count = query.count()
             self.assertEquals(list_count, db_count,
                               'class_label:%s, list_count:%s, db_count:%s' %
                               (class_label, list_count, db_count))
@@ -334,9 +334,3 @@ class WeightTasksTests(BaseDbTestCase, TestChecksMixin):
 
             for i in xrange(5):
                 check_random_weight()
-
-            # check_weight('contractor->dev_blurb->best',
-            #              {'is_positive': True,
-            #               'short_name': 'best',
-            #               'css_class': 'green darker',
-            #               'parent': 'contractor.dev_blurb'})

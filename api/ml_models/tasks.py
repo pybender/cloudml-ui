@@ -134,7 +134,7 @@ def fill_model_parameter_weights(model_id, segment_id=None):
     """
     init_logger('trainmodel_log', obj=int(model_id))
     logging.info("Starting to fill model weights" )
-    
+
     model = Model.query.get(model_id)
     if model is None:
         raise ValueError('Model not found: %s' % model_id)
@@ -143,23 +143,29 @@ def fill_model_parameter_weights(model_id, segment_id=None):
     if segment is None:
         raise ValueError('Segment not found: %s' % segment_id)
 
+    count = len(model.weights)
+    if count > 0:
+        raise InvalidOperationError('Weights for model %s already  filled: %s' %
+                                    (model_id, count))
+
     weights_dict = None
+    categories_names = []
 
     def process_weights_for_class(class_label):
-        weights_added = 0
-        categories_added = 0
-
+        """
+        Adds weights for specific class, also adds new categories not found
+        in `categories_names`
+        :param class_label: class_label of the weights to process
+        :return:
+        """
+        w_added = 0
+        cat_added = 0
         weights = weights_dict[class_label]
         logging.info("Model: %s , Segment: %s, Class: %s" %
                      (model.name, segment.name, class_label))
 
         positive = weights['positive']
         negative = weights['negative']
-        weights = model.weights
-        count = len(weights)
-        if count > 0:
-            raise InvalidOperationError('Weights for model %s already \
-    filled: %s' % (model_id, count))
 
         from api.ml_models.helpers.weights import calc_weights_css
         positive_weights = []
@@ -173,7 +179,6 @@ def fill_model_parameter_weights(model_id, segment_id=None):
         weight_list.reverse()
 
         # Adding weights and weights categories to db
-        category_names = []
         for weight in weight_list:
             name = weight['name']
             splitted_name = name.split('->')
@@ -196,11 +201,11 @@ def fill_model_parameter_weights(model_id, segment_id=None):
                     new_weight.segment = segment
                     new_weight.class_label = class_label
                     new_weight.save(commit=False)
-                    weights_added += 1
+                    w_added += 1
                 else:
-                    if sname not in category_names:
+                    if sname not in categories_names:
                         # Adding a category, if it has not already added
-                        category_names.append(sname)
+                        categories_names.append(sname)
                         category = WeightsCategory()
                         category.name = long_name
                         category.parent = parent
@@ -209,8 +214,8 @@ def fill_model_parameter_weights(model_id, segment_id=None):
                         category.model = model
                         category.segment = segment
                         category.save(commit=False)
-                        categories_added += 1
-        return categories_added, weights_added
+                        cat_added += 1
+        return cat_added, w_added
 
     try:
         weights_dict = model.get_trainer().get_weights(segment.name)
