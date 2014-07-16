@@ -148,6 +148,8 @@ class Model(db.Model, BaseModel):
         return self.trainer
 
     def get_trainer_filename(self):
+        # we don't use sqlalchemy to avoid auto loading of trainer file
+        # intoo trainer object
         sql = text("SELECT trainer from model where id=:id")
         trainer_filename, = db.engine.execute(sql, id=self.id).first()
         return trainer_filename
