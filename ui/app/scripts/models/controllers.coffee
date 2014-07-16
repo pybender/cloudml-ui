@@ -3,15 +3,18 @@
 ### Trained Model specific Controllers ###
 
 # Main model fields and which ones that are required for train/test dialogs
-MODEL_FIELDS = 'name,status,test_import_handler,train_import_handler,
-train_import_handler_type,test_import_handler_type,test_handler_fields'
+MODEL_FIELDS = ['name','status','test_import_handler',
+                'train_import_handler', 'train_import_handler_type',
+                'test_import_handler_type','test_handler_fields'].join(',')
 
 FIELDS_BY_SECTION = {
-  'model': 'classifier,features_set_id,segments'
-  'training': 'error,weights_synchronized,memory_usage,segments,
-trained_by,trained_on,training_time,datasets,train_records_count,trainer_size'
-  'about': 'created_on,target_variable,example_id,example_label,
-labels,updated_on,feature_count,created_by,data_fields,test_handler_fields,tags'
+  'model': ['classifier','features_set_id','segments'].join(',')
+  'training': ['error','weights_synchronized','memory_usage','segments',
+              'trained_by','trained_on','training_time','datasets',
+              'train_records_count','trainer_size'].join(',')
+  'about': ['created_on','target_variable','example_id','example_label',
+            'labels','updated_on','feature_count','created_by','data_fields',
+            'test_handler_fields','tags'].join(',')
   'main': MODEL_FIELDS
 }
 
@@ -33,8 +36,9 @@ angular.module('app.models.controllers', ['app.config', ])
 
   ($scope, $location, Model) ->
     $scope.MODEL = Model
-    $scope.FIELDS = MODEL_FIELDS + ',tags,created_on,created_by,
-updated_on,updated_by,comparable'
+    $scope.FIELDS = MODEL_FIELDS + ',' + ['tags','created_on','created_by',
+                                          'updated_on','updated_by',
+                                          'comparable'].join(',')
     $scope.ACTION = 'loading models'
     $scope.currentTag = $location.search()['tag']
     $scope.kwargs = {

@@ -60,14 +60,14 @@ describe "login", ->
       url = settings.apiUrl + 'auth/get_auth_url?'
       $httpBackend.expectPOST(url).respond('{"auth_url": "http://odesk.com/_fake"}')
 
-      spyOn(window.location, 'replace').andCallFake(() -> null)
+      spyOn(window, '$cml_window_location_replace').andCallFake(() -> null)
 
       createController "AuthCtl"
       expect($rootScope.status).toBe('Getting data. Please wait...')
 
       $httpBackend.flush()
       expect($rootScope.status).toBe('Redirecting to oDesk. Please wait...')
-      expect(window.location.replace).toHaveBeenCalledWith('http://odesk.com/_fake')
+      expect($cml_window_location_replace).toHaveBeenCalledWith('http://odesk.com/_fake')
 
     it "should make no query if already logged in", inject ($cookieStore) ->
       $cookieStore.put('auth-token', 'auth_token')
@@ -79,7 +79,7 @@ describe "login", ->
   describe "AuthCallbackCtl", ->
 
     it "should authorize and reload the page", inject (auth) ->
-      spyOn(window.location, 'reload').andCallFake(() -> null)
+      spyOn(window, '$cml_window_location_reload').andCallFake(() -> null)
       spyOn($location, 'search').andReturn({
         oauth_token: 'oauth_token',
         oauth_verifier: 'oauth_verifier'
@@ -94,7 +94,7 @@ describe "login", ->
 
       $httpBackend.flush()
       expect($rootScope.status).toBe('Authorized')
-      expect(window.location.reload).toHaveBeenCalled()
+      expect($cml_window_location_reload).toHaveBeenCalled()
       expect(auth.is_authenticated()).toBeTruthy()
 
     it "should make no query if already logged in", inject ($cookieStore) ->

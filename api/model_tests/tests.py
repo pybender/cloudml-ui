@@ -349,7 +349,7 @@ class TasksTests(BaseDbTestCase):
     @mock_s3
     @patch('api.models.Model.get_trainer')
     @patch('api.models.DataSet.get_data_stream')
-    def _check_run_test(self, test, _fake_raw_data,
+    def _check_run_test(self, test, metrics_mock_class, _fake_raw_data,
                         mock_get_data_stream, mock_get_trainer):
         mocks = [mock_get_data_stream, mock_get_trainer]
         import numpy
@@ -363,7 +363,7 @@ class TasksTests(BaseDbTestCase):
         def _fake_test(self, *args, **kwargs):
             _fake_test.called = True
             self._raw_data = _fake_raw_data
-            metrics_mock = MetricsMock()
+            metrics_mock = metrics_mock_class()
             preds = Mock()
             preds.size = 100
             preds.__iter__ = Mock(return_value=iter([0] * 100))
@@ -402,7 +402,7 @@ class TasksTests(BaseDbTestCase):
                            'opening_title': unicode_string,
                            'opening_id': unicode_string}] * 100 }
         
-        result, mocks = self._check_run_test(test, _fake_raw_data)
+        result, mocks = self._check_run_test(test, MetricsMockBinaryClassifier, _fake_raw_data)
         self.assertEquals(result, 'Test completed')
         example = TestExample.query.filter_by(
             test_result=test).first()
@@ -420,7 +420,7 @@ class TasksTests(BaseDbTestCase):
         self.assertEquals(
             TestExample.query.filter_by(test_result=test).count(), 0)
 
-        result, mocks = self._check_run_test(test, None)
+        result, mocks = self._check_run_test(test, MetricsMockBinaryClassifier, None)
         self.assertEquals(result, 'Test completed')
         mock_get_data_stream, mock_get_trainer, mock_run_test = mocks
         self.assertEquals(1, mock_get_data_stream.call_count,
@@ -432,7 +432,26 @@ class TasksTests(BaseDbTestCase):
                           ['hire_outcome', 'application_id', 'title'])
 
 
-class MetricsMock(MagicMock):
+    def test_run_test_ndim_classifier(self):
+        test = TestResult.query.filter_by(name=TestResultData.test_04.name).first()
+        model = test.model
+        self.assertEquals(model.status, model.STATUS_TRAINED, model.__dict__)
+
+        self.assertEquals(
+            TestExample.query.filter_by(test_result=test).count(), 0)
+
+        result, mocks = self._check_run_test(test, MetricsMockNDimClassifier, None)
+        self.assertEquals(result, 'Test completed')
+        mock_get_data_stream, mock_get_trainer, mock_run_test = mocks
+        self.assertEquals(1, mock_get_data_stream.call_count,
+                          'Should be cached and called only once')
+
+        example = TestExample.query.filter_by(test_result=test).first()
+        self.assertTrue(example.data_input, 'Raw data should be filled at all')
+        self.assertEquals(example.data_input.keys(),
+                          ['hire_outcome', 'application_id', 'title'])
+
+class MetricsMockBinaryClassifier(MagicMock):
     accuracy = 0.85
     classes_set = ['0', '1']
     _labels = ['0', '1'] * 50
@@ -442,4 +461,15 @@ class MetricsMock(MagicMock):
             'confusion_matrix': [0, 0],
             'roc_curve': [[0], [0], [0], [0]],
             'precision_recall_curve': [[0], [0], [0], [0]],
+        }
+
+
+class MetricsMockNDimClassifier(MagicMock):
+    accuracy = 0.85
+    classes_set = ['0', '1', '2']
+    _labels = ['0', '1', '2'] * 50
+
+    def get_metrics_dict(self):
+        return {
+            'confusion_matrix': [0, 0, 0]
         }

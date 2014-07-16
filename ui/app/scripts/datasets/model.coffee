@@ -17,6 +17,9 @@ angular.module('app.datasets.model', ['app.config'])
       STATUS_UPLOADING = 'Uploading'
 
       @MAIN_FIELDS: 'name,status,import_handler_type,import_handler_id'
+      @EXTRA_FIELDS: ['created_on,updated_on','data','on_s3','import_params',
+                      'error','filesize','records_count','time','created_by',
+                      'format']
 
       id: null
       name: null
@@ -46,8 +49,8 @@ angular.module('app.datasets.model', ['app.config'])
       constructor: (opts) ->
         super
         #@BASE_API_URL = DataSet.$get_api_url({}, @)
-        @BASE_UI_URL = "/handlers/
-#{@import_handler_type.toLowerCase()}/#{@import_handler_id}/datasets/"
+        @BASE_UI_URL = """/handlers/
+#{@import_handler_type.toLowerCase()}/#{@import_handler_id}/datasets/"""
 
       @$get_api_url: (opts, model) ->
         handler_id = opts.import_handler_id

@@ -1,0 +1,25 @@
+{
+  "name": "cloudml-ui-frontend",
+  "version": "0.0.0",
+  "homepage": "https://github.com/odeskdataproducts/cloudml-ui",
+  "authors": [
+    "TEAM oDesk/CloudML"
+  ],
+  "description": "Frontend of cloudml-ui based on AngularJS, bootstrap",
+  "main": "index.html",
+  "moduleType": [
+    "globals"
+  ],
+  "license": "Private",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "codemirror": "~4.3.0"
+  }
+}
