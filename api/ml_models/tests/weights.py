@@ -144,13 +144,62 @@ class WeightResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertFalse('tsexams->Ruby on Rails' in resp.data)
 
     def test_brief(self):
+        data = None
+
+        def check_data(pos_len, neg_len, class_label):
+            self.assertTrue('negative_weights' in data, data)
+            self.assertTrue('positive_weights' in data, data)
+            positive = data['positive_weights']
+            negative = data['negative_weights']
+            self.assertEquals(len(positive), pos_len)
+            self.assertEquals(len(negative), neg_len)
+            self.assertEqual(class_label, data['class_label'])
+
+        #
+        # model with no labels in field label
+        #
+        self.model = Model.query.filter_by(
+            name=ModelData.model_02.name).one()
+        self.BASE_URL = '/cloudml/weights/%s/' % self.model.id
         data = self._check(action='brief')
-        self.assertTrue('negative_weights' in data, data)
-        self.assertTrue('positive_weights' in data, data)
-        positive = data['positive_weights']
-        negative = data['negative_weights']
-        self.assertEquals(len(positive), 2)
-        self.assertEquals(len(negative), 1)
+        check_data(1, 2, '1')
+
+        #
+        # model with explict binary labels
+        #
+        self.model = Model.query.filter_by(name=ModelData.model_01.name).one()
+        self.BASE_URL = '/cloudml/weights/%s/' % self.model.id
+
+        # label 1 default
+        data = self._check(action='brief')
+        check_data(2, 1, '1')
+
+        # label 1 explicit
+        data = self._check(action='brief', class_label='1')
+        check_data(2, 1, '1')
+
+        # label 0, label 1 retrieved explicit
+        data = self._check(action='brief', class_label='0')
+        check_data(2, 1, '1')
+
+        #
+        # multiclass model
+        #
+        self.model = Model.query.filter_by(
+            name=ModelData.model_multiclass.name).one()
+        self.BASE_URL = '/cloudml/weights/%s/' % self.model.id
+
+        # class '1' / default
+        data = self._check(action='brief')
+        check_data(1, 0, '1')
+
+        # class '2'
+        data = self._check(action='brief', class_label='2')
+        check_data(0, 1, '2')
+
+        # class '3'
+        data = self._check(action='brief', class_label='3')
+        check_data(1, 1, '3')
 
     def test_invalid_methods(self):
         self._check_not_allowed_method('post')
@@ -175,6 +224,20 @@ class WeightTreeResourceTests(BaseDbTestCase, TestChecksMixin):
         data = self._check(parent='contractor.dev_blurb')
         self.assertEquals(data['weights'][0]['name'], WeightData.weight_02.name)
         self.assertEquals(len(data['weights']), 1)
+
+        # test multiclass case
+        self.model = Model.query.filter_by(
+            name=ModelData.model_multiclass.name).one()
+        self.BASE_URL = '/cloudml/weights/%s/' % self.model.id
+
+        data = self._check(class_label='2')
+        self.assertEquals(data['weights'][0]['name'], WeightData.weight_multiclass_02.name)
+        self.assertEquals(len(data['weights']), 1)
+
+        data = self._check(class_label='3')
+        self.assertEquals(data['weights'][0]['name'], WeightData.weight_multiclass_03.name)
+        self.assertEquals(len(data['weights']), 2)
+
 
     def test_invalid_methods(self):
         self._check_not_allowed_method('post')

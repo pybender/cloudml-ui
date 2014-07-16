@@ -43,6 +43,7 @@ angular.module('app.models.model', ['app.config'])
       test_import_handler: null
       datasets: []
       sorted_data_fields: null
+      labels: null
 
       loadFromJSON: (origData) ->
         super origData

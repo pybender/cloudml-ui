@@ -106,7 +106,9 @@ describe "models", ->
 
     it "should make details request", inject () ->
       url = BASE_URL + MODEL_ID + '/' + '?show=' + encodeURIComponent(MODEL_FIELDS + ',' + FIELDS_BY_SECTION['model'])
-      $httpBackend.expectGET(url).respond('{"model": [{"_id": "' + MODEL_ID + '"}]}')
+      $httpBackend.expectGET(url)
+      .respond.apply @, map_url_to_response(url,
+        'multiclass model main fields')
 
       $rootScope.goSection(['model'])
       $httpBackend.flush()
