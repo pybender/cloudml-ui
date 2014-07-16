@@ -49,6 +49,27 @@ class MlModelsTests(BaseDbTestCase):
         self.assertEqual(model.test_import_handler, xml_handler)
         self.assertEqual(model.test_import_handler_type, 'xml')
 
+    def test_get_trainer_s3url(self):
+        model = Model.query.filter_by(name='TrainedModel').first()
+        self.assertTrue(model)
+        url = model.get_trainer_s3url()
+        trainer_filename = model.get_trainer_filename()
+        self.assertTrue(trainer_filename)
+        self.assertTrue('s3.amazonaws.com/%s?Signature' % (trainer_filename,) in url)
+        self.assertTrue(url.startswith('https://'))
+
+        # trainer file not yet uploaoded
+        model = Model.query.filter_by(name='OtherModel').first()
+        self.assertTrue(model)
+        url = model.get_trainer_s3url()
+        self.assertEqual(None, url)
+
+        # not trained
+        model = Model.query.filter_by(name='NewModel').first()
+        self.assertTrue(model)
+        url = model.get_trainer_s3url()
+        self.assertEqual(None, url)
+
 
 TRAIN_PARAMS = json.dumps(
     {'start': '2012-12-03',
@@ -119,21 +140,47 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         resp = self.check_details(show='name,data_fields')
         self.assertEquals(resp['model']['data_fields'], ['employer.country'])
 
-    def test_download(self):
-        def check(field, is_invalid=False):
-            url = self._get_url(id=self.obj.id, action='download',
-                                field=field)
-            resp = self.client.get(url, headers=HTTP_HEADERS)
-            if not is_invalid:
-                self.assertEquals(resp.status_code, httplib.OK)
-                self.assertEquals(resp.mimetype, 'text/plain')
-                self.assertEquals(resp.headers['Content-Disposition'],
-                                  'attachment; filename=%s-%s.json' %
-                                  (self.obj.name, field))
-            else:
-                self.assertEquals(resp.status_code, 400)
-        check('features')
-        check('invalid', is_invalid=True)
+    def test_get_features_download_action(self):
+        url = self._get_url(id=self.obj.id, action='features_download')
+        resp = self.client.get(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.OK)
+        self.assertEquals(resp.mimetype, 'application/json')
+        self.assertEquals(resp.headers['Content-Disposition'],
+                          'attachment; filename=%s-features.json' % (self.obj.name,))
+
+    def test_get_trainer_download_s3url_action(self):
+        model = Model.query.filter_by(name='TrainedModel').first()
+        self.assertTrue(model)
+        url = self._get_url(id=model.id, action='trainer_download_s3url')
+        resp = self.client.get(url, headers=HTTP_HEADERS)
+        self.assertEqual(resp.status_code, httplib.OK)
+        resp_obj = json.loads(resp.data)
+        self.assertEqual(resp_obj['trainer_file_for'], model.id)
+        trainer_url = resp_obj['url']
+        trainer_filename = model.get_trainer_filename()
+        self.assertTrue(trainer_filename)
+        self.assertTrue('s3.amazonaws.com/%s?Signature' % (trainer_filename,) in trainer_url)
+        self.assertTrue(trainer_url.startswith('https://'))
+
+        # trainer file not yet uploaoded
+        model = Model.query.filter_by(name='OtherModel').first()
+        self.assertTrue(model)
+        url = self._get_url(id=model.id, action='trainer_download_s3url')
+        resp = self.client.get(url, headers=HTTP_HEADERS)
+        self.assertEqual(resp.status_code, httplib.OK)
+        resp_obj = json.loads(resp.data)
+        self.assertEqual(resp_obj['trainer_file_for'], model.id)
+        self.assertTrue(resp_obj['url'] is None)
+
+        # not trained
+        model = Model.query.filter_by(name='NewModel').first()
+        self.assertTrue(model)
+        url = self._get_url(id=model.id, action='trainer_download_s3url')
+        resp = self.client.get(url, headers=HTTP_HEADERS)
+        self.assertEqual(resp.status_code, httplib.OK)
+        resp_obj = json.loads(resp.data)
+        self.assertEqual(resp_obj['trainer_file_for'], model.id)
+        self.assertTrue(resp_obj['url'] is None)
 
     @mock_s3
     def test_post_validation(self, *mocks):
