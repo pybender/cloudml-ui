@@ -220,16 +220,100 @@
         </div>
 
         <!-- predict -->
-        <!-- <div class="accordion-group">
+        <div class="accordion-group">
           <div class="accordion-heading">
             <a class="accordion-toggle" data-toggle="collapse" href="#predict">Predict</a>
           </div>
-          <div id="predict" class="accordion-body collapse in">
+          <div id="predict" class="accordion-body collapse in" ng-controller="PredictCtrl" ng-init="init(handler)">
             <div class="accordion-inner">
+              <h4 title="Defines parameters for using a model with the data from the <import> part of the handler">
+                Models
+                <div class="actions" ng-hide="1">
+                  <a class="btn btn-info" ng-click="addPredictModel()">
+                    <i class="status-icon icon-plus"></i> add predict model
+                  </a>
+                </div>
+              </h4>
+              <table class="table table-hover" ng-controller="BaseListCtrl" ng-init="init(false, 'predict_models', false)">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Value</th>
+                    <th>Script</th>
+                    <th>Positive Label</th>
+                    <th>Weights</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr ng-repeat="item in predict_models | orderBy:'name'">
+                    <td>
+                      {{ item.name }}
+                    </td>
+                    <td>
+                      {{ item.value }}
+                    </td>
+                    <td>
+                      {{ item.script }} 
+                    </td>
+                    <td>
+                    </td>
+                    <td>
+                    </td>
+                    <td>
+                      -
+                    </td>
+                  </tr>
+                </tbody>
+                <tfoot ng-hide="predict_models">
+                  <tr><td colspan="6">No models found</td></tr>
+                </tfoot>
+              </table>
+              <hr />
+              <h4 title="Defines how to formulate the response.">Result</h4>
+              <div class="span5">
+                <h5>Label</h5>
+                <alert-message ng-hide="label.predict_model.name || label.script" class="alert-warning" msg="Please define predict model or script which determines it." unsafe></alert-message>
+                <div>
+                  Predict Model:
+                  <span class="value">
+                    {{ label.predict_model.name }}
+                  <span />
+                </div>
+                <div>
+                  Script:
+                  <span class="value">
+                    {{ label.script }}
+                  <span />
+                </div>
+              </div>
+              <div class="span5">
+                <h5>Probability</h5>
+                <alert-message ng-hide="probability.predict_model.name || probability.script" class="alert-warning" msg="Please define predict model or script which determines it." unsafe></alert-message>
+                <div>
+                  Predict Model:
+                  <span class="value">
+                    {{ probability.predict_model.name }}
+                  <span />
+                </div>
+                <div>
+                  Script:
+                  <span class="value">
+                    {{ probability.script }}
+                  <span />
+                </div>
+                <div>
+                  Label:
+                  <span class="value">
+                    {{ probability.label }}
+                  <span />
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div> -->
+
+      </div>
     </div>
   </div>
 

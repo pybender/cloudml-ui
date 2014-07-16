@@ -22,6 +22,7 @@ angular.module('app.testresults.model', ['app.config'])
                            'created_by', 'examples_placement','examples_fields',
                            'examples_size'].join(',')
 
+
       DEFAULT_FIELDS_TO_SAVE: ['importhandler', 'train_importhandler',
                                 'features', 'trainer', 'name']
 

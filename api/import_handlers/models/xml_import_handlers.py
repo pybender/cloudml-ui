@@ -16,6 +16,10 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
 
     DATASOURCES_ORDER = ['db', 'csv', 'http', 'pig']
 
+    predict_id = db.Column(db.ForeignKey('predict.id',
+                                         ondelete='CASCADE'))
+    predict = relationship('Predict', foreign_keys=[predict_id])
+
     @property
     def data(self):
         return self.get_plan_config()
@@ -83,6 +87,20 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
                 build_tree(subentity, parent=ent)
 
         build_tree(tree, import_)
+
+        if self.predict is not None:
+            predict = etree.SubElement(plan, "predict")
+            for model in self.predict.models:
+                predict_model = etree.SubElement(
+                    predict, "model", **model.to_dict())
+
+            if self.predict.label or self.predict.probability:
+                result = etree.SubElement(predict, "result")
+                etree.SubElement(
+                    result, "label", **self.predict.label.to_dict())
+                etree.SubElement(
+                    result, "probability",
+                    **self.predict.probability.to_dict())
 
         return etree.tostring(plan, pretty_print=pretty_print)
 
@@ -180,7 +198,7 @@ class XmlField(db.Model, BaseMixin):
                            'regex', 'split', 'dateFormat', 'template',
                            'transform', 'headers', 'script', 'required',
                            'multipart']
-    
+
     def to_dict(self):
         fieldDict = super(XmlField, self).to_dict()
         if fieldDict['multipart'] == 'false':
@@ -302,6 +320,100 @@ class XmlEntity(db.Model, BaseMixin, RefXmlImportHandlerMixin):
         return ent
 
 
+# Predict section
+
+class Predict(db.Model, BaseMixin):
+    models = relationship(
+        'PredictModel',
+        secondary=lambda: predict_models_table, backref='predict_section')
+
+    # Results
+    label_id = db.Column(db.ForeignKey('predict_result_label.id'))
+    label = relationship('PredictResultLabel', foreign_keys=[label_id],
+                         cascade='all,delete', backref='results')
+
+    probability_id = db.Column(db.ForeignKey('predict_result_probability.id'))
+    probability = relationship(
+        'PredictResultProbability', foreign_keys=[probability_id],
+        cascade='all,delete', backref='probabilities')
+
+
+class PredictModelPositiveLabel(db.Model, BaseMixin):
+    FIELDS_TO_SERIALIZE = ('value', 'script')
+
+    value = db.Column(db.String(200), name='value')
+    script = db.Column(db.Text, name='script')
+
+
+class PredictModel(db.Model, BaseMixin):
+    FIELDS_TO_SERIALIZE = ('name', 'value', 'script')
+
+    name = db.Column(db.String(200), nullable=False, name='name')
+    value = db.Column(db.String(200), name='value')
+    script = db.Column(db.Text, name='script')
+
+    positive_label_id = db.Column(
+        db.ForeignKey('predict_model_positive_label.id'))
+    positive_label = relationship(
+        'PredictModelPositiveLabel',
+        foreign_keys=[positive_label_id],
+        cascade='all,delete', backref='model')
+
+
+predict_models_table = db.Table(
+    'predict_models_table', db.Model.metadata,
+    db.Column('predict_model_id', db.Integer, db.ForeignKey(
+        'predict_model.id', ondelete='CASCADE', onupdate='CASCADE')),
+    db.Column('predict_id', db.Integer, db.ForeignKey(
+        'predict.id', ondelete='CASCADE', onupdate='CASCADE'))
+)
+
+
+class RefPredictModelMixin(BaseMixin):
+    @declared_attr
+    def predict_model_id(cls):
+        return db.Column(
+            'predict_model_id', db.ForeignKey('predict_model.id'))
+
+    @declared_attr
+    def predict_model(cls):
+        from api.base.utils import convert_name, pluralize
+        backref_name = pluralize(convert_name(cls.__name__))
+        return relationship(
+            "PredictModel",
+            backref=backref(backref_name, cascade='all,delete'))
+
+    def to_dict(self):
+        res = super(RefPredictModelMixin, self).to_dict()
+        if 'predict_model' in res:
+            del res['predict_model']
+            res['model'] = self.predict_model.name
+        return res
+
+
+class PredictModelWeight(db.Model, RefPredictModelMixin):
+    FIELDS_TO_SERIALIZE = ('label', 'value', 'script')
+
+    value = db.Column(db.String(200), name='value')
+    script = db.Column(db.Text, name='script')
+    label = db.Column(db.Boolean, default=True)
+
+
+# Predict Result
+
+class PredictResultLabel(db.Model, RefPredictModelMixin):
+    FIELDS_TO_SERIALIZE = ('script', 'predict_model')
+
+    script = db.Column(db.Text)
+
+
+class PredictResultProbability(db.Model, RefPredictModelMixin):
+    FIELDS_TO_SERIALIZE = ('label', 'script', 'predict_model')
+
+    script = db.Column(db.Text)
+    label = db.Column(db.Boolean, default=True)
+
+
 def fill_import_handler(import_handler, xml_data=None):
     plan = None
     if xml_data:
@@ -313,6 +425,9 @@ def fill_import_handler(import_handler, xml_data=None):
             name=import_handler.name,
             import_handler=import_handler)
         ent.save()
+        import_handler.predict = Predict()
+        import_handler.predict.label = PredictResultLabel()
+        import_handler.predict.probability = PredictResultProbability()
     else:  # Loading import handler from XML file
         ds_dict = {}
         for datasource in plan.datasources.values():
@@ -421,3 +536,30 @@ def fill_import_handler(import_handler, xml_data=None):
         load_entity_items(plan.entity, db_entity=ent)
         for ent, field_name in ENTITIES_WITHOUT_DS:
             ent.transformed_field = TRANSFORMED_FIELDS[field_name]
+
+        # Fill predict section
+        if plan.predict is not None:
+            models_dict = {}
+            predict = Predict()
+            for model in plan.predict.models:
+                predict_model = PredictModel(
+                    name=model.name,
+                    value=model.value,
+                    script=model.script)
+                db.session.add(predict_model)
+                predict.models.append(predict_model)
+                models_dict[model.name] = predict_model
+
+            config_label = plan.predict.result.label
+            predict.label = PredictResultLabel(
+                script=config_label.script,
+                predict_model=models_dict.get(config_label.model, None))
+
+            config_probability = plan.predict.result.probability
+            predict.probability = PredictResultProbability(
+                script=config_probability.script,
+                label=config_probability.label,
+                predict_model=models_dict.get(config_probability.model, None))
+
+            db.session.add(predict)
+            import_handler.predict = predict
