@@ -12,8 +12,8 @@ angular.module('app.awsinstances.controllers', ['app.config', ])
 ($scope, $rootScope, AwsInstance) ->
   $scope.load = () ->
     AwsInstance.$loadAll(
-      show: 'name,type,created_on,updated_on,ip,is_default,created_by,
-updated_by'
+      show: ['name','type','created_on','updated_on','ip','is_default',
+             'created_by','updated_by'].join(',')
     ).then ((opts) ->
       $scope.objects = opts.objects
     ), ((opts) ->
@@ -52,8 +52,8 @@ updated_by'
   $scope.instance = new AwsInstance({id: $routeParams.id})
 
   $scope.instance.$load(
-    show: 'name,type,created_on,updated_on,ip,description,is_default,
-created_by'
+    show: ['name','type','created_on','updated_on','ip','description',
+           'is_default','created_by'].join(',')
     ).then (->), ((opts)-> $scope.setError(opts, 'loading instance'))
 ])
 

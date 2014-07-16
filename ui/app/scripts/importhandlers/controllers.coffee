@@ -324,7 +324,7 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
       template: 'partials/base/delete_dialog.html'
       ctrlName: 'DeleteImportHandlerCtrl'
       action: 'delete import handler'
-      path: "/handlers/#{handler.TYPE.toLowerCase()}"
+      path: "/handlers/#{handler.TYPE}"
     })
 
   $scope.testHandler = (handler) ->

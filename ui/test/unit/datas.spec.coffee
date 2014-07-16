@@ -15,6 +15,7 @@ describe "test examples", ->
   beforeEach(module "app.models.model")
   beforeEach(module "app.testresults.model")
   beforeEach(module "app.importhandlers.model")
+  beforeEach(module "app.xml_importhandlers.models")
   beforeEach(module "app.datasets.model")
   beforeEach(module "app.features.models")
 
@@ -181,8 +182,9 @@ describe "test examples", ->
   describe "ExampleDetailsCtrl", ->
 
     it "should make details request", inject () ->
-      fields = 'test_name,weighted_data_input,model,pred_label,
-label,prob,created_on,test_result'
+      fields = ['test_name','weighted_data_input','model',
+                'pred_label','label','prob','created_on','test_result'
+      ].join(',')
       url = BASE_URL + EXAMPLE_ID + '/?show=' + encodeURIComponent(fields)
       $httpBackend.expectGET(url).respond('{"data": {"id": "' + EXAMPLE_ID + '"}}')
 

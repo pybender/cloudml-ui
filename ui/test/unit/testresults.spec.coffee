@@ -15,6 +15,7 @@ describe "testresults", ->
 
   beforeEach(module "app.models.model")
   beforeEach(module "app.importhandlers.model")
+  beforeEach(module "app.xml_importhandlers.models")
   beforeEach(module "app.datasets.model")
   beforeEach(module "app.features.models")
   beforeEach(module "app.testresults.model")
@@ -81,10 +82,8 @@ describe "testresults", ->
 
       createController "TestDetailsCtrl"
 
-    it "should load 'about' section", inject () ->
-      url = BASE_URL + '?show=' + encodeURIComponent('classes_set,created_on,
-parameters,error,examples_count,dataset,memory_usage,created_by,
-examples_placement,examples_fields,examples_size,examples_placement,name,status,created_on,created_by')
+    it "should load 'about' section", inject (TestResult) ->
+      url = BASE_URL + '?show=' + encodeURIComponent(TestResult.EXTRA_FIELDS + ',examples_placement,' + TestResult.MAIN_FIELDS)
       $httpBackend.expectGET(url).respond('{"test": {}}')
 
       $rootScope.goSection(['about', 'details'])
@@ -92,9 +91,8 @@ examples_placement,examples_fields,examples_size,examples_placement,name,status,
 
       expect($rootScope.setSection).toHaveBeenCalled()
 
-    it "should load 'metrics' section", inject () ->
-      url = BASE_URL + '?show=' + encodeURIComponent('accuracy,
-metrics,examples_placement,name,status,created_on,created_by')
+    it "should load 'metrics' section", inject (TestResult) ->
+      url = BASE_URL + '?show=' + encodeURIComponent('accuracy,metrics' + ',examples_placement,' + TestResult.MAIN_FIELDS)
       $httpBackend.expectGET(url).respond('{"test": {}}')
 
       $rootScope.goSection(['metrics', 'accuracy'])
@@ -102,9 +100,8 @@ metrics,examples_placement,name,status,created_on,created_by')
 
       expect($rootScope.setSection).toHaveBeenCalled()
 
-    it "should load 'matrix' section", inject () ->
-      url = BASE_URL + '?show=' + encodeURIComponent('metrics,
-confusion_matrix_calculations,model,examples_placement,name,status,created_on,created_by')
+    it "should load 'matrix' section", inject (TestResult) ->
+      url = BASE_URL + '?show=' + encodeURIComponent(TestResult.MATRIX_FIELDS + ',examples_placement,' + TestResult.MAIN_FIELDS)
       $httpBackend.expectGET(url).respond('{"test": {}}')
 
       $rootScope.goSection(['matrix', 'confusion'])
