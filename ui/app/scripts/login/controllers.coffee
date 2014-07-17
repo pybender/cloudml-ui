@@ -20,13 +20,9 @@ angular.module('app.login.controllers', ['app.config', 'app.services'])
 
 .controller('AuthCtl', [
   '$scope'
-  '$http'
-  '$location'
-  '$routeParams'
-  'settings'
   'auth'
 
-  ($scope, $http, $location, $routeParams, settings, auth) ->
+  ($scope, auth) ->
     $scope.is_authenticated = auth.is_authenticated()
     if $scope.is_authenticated
       $scope.status = 'Already logged in'
@@ -34,7 +30,7 @@ angular.module('app.login.controllers', ['app.config', 'app.services'])
     $scope.status = 'Getting data. Please wait...'
     auth.login().then ((resp) ->
       $scope.status = 'Redirecting to oDesk. Please wait...'
-      window.location.replace(resp.data.auth_url)
+      $cml_window_location_replace resp.data.auth_url
     ), ((resp) ->
       $scope.setError(resp, 'logging in')
     )
@@ -58,7 +54,7 @@ angular.module('app.login.controllers', ['app.config', 'app.services'])
     oauth_verifier = $location.search().oauth_verifier
     auth.authorize(oauth_token, oauth_verifier).then ((resp) ->
       $scope.status = 'Authorized'
-      window.location.reload()
+      $cml_window_location_reload()
     ), ((resp) ->
       $scope.setError(resp, 'authorizing')
     )
