@@ -109,29 +109,3 @@ def pluralize(singular):
         suffix = 's'
     plural = root + suffix
     return plural
-
-
-# TODO: nsoliman 20140704 should we move these functions to the frontend instead?
-def json_list_to_table(json_list):
-    """
-    Converts a list of json string to table structure, see :func: _dict_list_to_table
-    :param json_list:
-    :return:
-    """
-    return dict_list_to_table([json.loads(item) for item in json_list])
-
-
-def dict_list_to_table(dict_list):
-    """
-    converts dict_list to a table structure, table structure is simply
-    a dictionary with two keys, columns: these are the collective keys
-    of all dictionary items. rows: these are the dictionary items themselves.
-    This structure  is helpful client side to build html table out of list of
-    json string
-    :param dict_list:
-    :return: {'columns':['c1', 'c2', ...], 'rows':[{}, {}, ...]}
-    """
-    columns = set()
-    for item in dict_list:
-        columns.update(item.keys())
-    return {'columns': list(columns), 'rows': dict_list}

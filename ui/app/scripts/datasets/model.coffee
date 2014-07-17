@@ -107,10 +107,5 @@ angular.module('app.datasets.model', ['app.config'])
         @$make_request("#{base_url}#{@id}/action/sample_data/",
           {size:15}, 'GET')
 
-      $getSampleDataTabular: ->
-        base_url = @constructor.$get_api_url({}, @)
-        @$make_request("#{base_url}#{@id}/action/sample_data/",
-          {size:15, tabular:true}, 'GET')
-
     return DataSet
 ])

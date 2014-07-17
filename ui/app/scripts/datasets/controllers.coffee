@@ -118,15 +118,7 @@ filesize,records_count,time,created_by,updated_by'
 
       $scope.dataset.$getSampleData()
       .then (resp)->
-        $scope.dataset.samples = resp.data
-        $scope.dataset.samples_json = angular.toJson(resp.data, pretty=true)
-      , ()->
-        $scope.setError(opts, 'error loading dataset sample data')
-
-      $scope.dataset.$getSampleDataTabular()
-      .then (resp)->
-        $scope.dataset.tabular_samples = resp.data
-        console.log $scope.dataset.tabular_samples
+        $scope.dataset.samples_json = angular.toJson(resp.data, true)
       , ()->
         $scope.setError(opts, 'error loading dataset sample data')
 
