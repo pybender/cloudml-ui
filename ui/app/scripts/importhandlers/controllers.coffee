@@ -38,10 +38,6 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
     $scope.PROCESS_STRATEGIES =
       _.sortBy ImportHandler.PROCESS_STRATEGIES, (s)-> s
 
-    $scope.codemirrorOptions = {
-      mode: 'javascript', readOnly: true, json: true
-    }
-
     $scope.go = (section) ->
       fields = ''
       mainSection = section[0]

@@ -177,11 +177,7 @@
               <div ng-repeat="item in objects">
                 <div class="row">
                   <div class="span9">
-                    <textarea class="small" ui-codemirror="{mode: 'text/x-python',
-                                                            smartIndent: true,
-                                                            lineNumbers: true,
-                                                            matchBrackets: true,
-                                                            readOnly: 'nocursor'}" ng-model="item.data" />
+                    <textarea class="small" ui-codemirror="codeMirrorConfigs('nocursor')['python']" ng-model="item.data" />
                   </div>
                   <div class="span2">
                     <button ng-click="edit(item)" class="btn btn-info">
