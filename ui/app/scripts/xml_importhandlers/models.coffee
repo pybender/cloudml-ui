@@ -47,7 +47,6 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
       created_on: null
       created_by: null
 
-      datasources: []
       xml_input_parameters: []
       scripts: []
       entities: []
@@ -209,6 +208,27 @@ datasource_id,entity_id'
 
         if not opts.entity_id
           throw new Error "entity_id is required"
+
+      getParams: () ->
+        expr = /%\((\w+)\)s/gi
+        params = []
+        matches = expr.exec(@text)
+        while matches
+          params.push matches[1]
+          matches = expr.exec(@text)
+        return params
+
+      $run: (limit, params) ->
+        data = {
+          sql: @text,
+          params: JSON.stringify(params),
+          limit: limit,
+        }
+        url = Query.$get_api_url
+          import_handler_id: @import_handler_id
+          entity_id: @entity_id
+        , null
+        @$make_request("#{url}#{@id}/action/run_sql/", {}, "PUT", data)
 
     return Query
 ])

@@ -84,3 +84,35 @@ xml_input_parameters,xml_scripts,entities,import_params,predict'
           $scope.probability = predict.probability
       )
 ])
+
+
+
+.controller('XmlQueryTestDialogCtrl', [
+    '$scope'
+    'dialog'
+
+    ($scope, dialog) ->
+      $scope.handler = dialog.extra.handler
+      $scope.query = dialog.extra.query
+      $scope.params = $scope.query.getParams()
+      $scope.dialog = dialog
+
+      if !$scope.query.test_params
+        $scope.query.test_params = {}
+      if !$scope.query.test_limit
+        $scope.query.test_limit = 2
+      if !$scope.query.test_datasource
+        $scope.query.test_datasource = $scope.handler.xml_data_sources[0].name
+
+      $scope.runQuery = () ->
+        $scope.query.test = {}
+        $scope.query.$run($scope.query.test_limit, $scope.query.test_params
+        ).then((resp) ->
+          $scope.query.test.columns = resp.data.columns
+          $scope.query.test.data = resp.data.data
+          $scope.query.test.sql = resp.data.sql
+          dialog.close()
+        , ((opts) ->
+            $scope.query.test.error = $scope.setError(opts, 'testing sql query')
+          ))
+  ])

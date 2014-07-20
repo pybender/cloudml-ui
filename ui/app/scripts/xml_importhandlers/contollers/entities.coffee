@@ -98,6 +98,16 @@ angular.module(
         query.err = null
       )
 
+    $scope.runQuery = (queryObj) ->
+      $scope.openDialog({
+        $dialog: $dialog
+        model: null
+        template: 'partials/xml_import_handlers/test_query.html'
+        ctrlName: 'XmlQueryTestDialogCtrl'
+        extra: {handler: $scope.handler, query: queryObj}
+        action: 'test xml import handler query'
+      })
+
     $scope.addSqoop = (entity) ->
       sqoop = new Sqoop({
         'import_handler_id': entity.import_handler_id

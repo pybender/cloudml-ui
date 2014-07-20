@@ -118,15 +118,21 @@
         <span title="target" class="target value" ng-bind="entity.query_obj.target" editable="entity.query_obj" value="entity.query_obj.target" editable-field="target" editable-input="text" editable-placement="right"></span>
       </div>
       <div>
-        Text:<textarea class="small" ui-codemirror="{
+        SQL:
+        <p>
+        <textarea class="small" ui-codemirror="{
             mode: 'text/x-mysql',
             indentWithTabs: true,
             smartIndent: true,
             lineNumbers: true,
             matchBrackets: true,
             height: '30px'}" ng-model="entity.query_obj.text" ui-refresh="entity.query_obj" />
+        </p>
         <a ng-disabled="entity.query_obj.loading_state" ng-click="saveQueryText()(entity.query_obj);" class="btn btn-info">
           <i class="status-icon icon-edit"></i> save text
+        </a>
+        <a ng-disabled="entity.query_obj.loading_state" ng-click="runQuery({'queryObj':entity.query_obj});" class="btn btn-info">
+          <i class="icon-play"></i> Run Query
         </a>
       </div>
     </div>

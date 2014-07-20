@@ -43,8 +43,10 @@ describe "importhandlers", ->
 
     BASE_URL = settings.apiUrl + 'importhandlers/'
 
-    createController = (ctrl) ->
-       $controller(ctrl, {'$scope' : $rootScope })
+    createController = (ctrl, extras) ->
+      injected = extras or {}
+      _.extend injected, {'$scope' : $rootScope }
+      $controller(ctrl, injected)
   ))
 
   afterEach( ->
@@ -156,3 +158,63 @@ created_on,created_by,error,data')
       expect($rootScope.handlers_list[0].text).toBe("Some Name")
       expect($rootScope.handlers_list[1].value).toBe(HANDLER_ID_XML+'xml')
       expect($rootScope.handlers_list[1].text).toBe("Some Name(xml)")
+
+  describe "XmlQuery", ->
+
+    it "should properly parse parameters", inject((XmlQuery)->
+      queryText = "SELECT * FROM some_table WHERE qi.file_provenance_date >= '%(start)s' AND qi.file_provenance_date < '%(end)s'"
+      query = new XmlQuery({text: queryText})
+      expect(query).toBeDefined()
+      expect(query.text).toEqual queryText
+      params = query.getParams()
+      expect(params).toEqual ['start', 'end']
+    )
+
+  describe "XmlQueryTestDialogCtrl and run query", ->
+
+    it "should initialize scope",
+      inject ($rootScope, $dialog, XmlQuery, XmlImportHandler, Entity)->
+        queryText = "SELECT * FROM some_table WHERE qi.file_provenance_date >= '%(start)s' AND qi.file_provenance_date < '%(end)s'"
+        handler = new XmlImportHandler(
+          xml_data_sources: [
+            import_handler_id: 456654
+            type: 'db'
+            name: 'odw'
+            id: 321
+            params:
+              host: 'localhost'
+              password: 'cloudml'
+              vendor: 'postgres'
+              dbname: 'cloudml'
+              user: 'cloudml'
+        ])
+        query = new XmlQuery(
+          id: 123321
+          text: queryText
+          import_handler_id: 456654
+          entity_id: 789987
+        )
+
+        dialog =
+          extra:
+            handler: handler
+            query: query
+          close: jasmine.createSpy()
+        createController "XmlQueryTestDialogCtrl", {'dialog': dialog}
+
+        expect($rootScope.query).toEqual query
+        expect($rootScope.params).toEqual ['start', 'end']
+        expect($rootScope.dialog).toEqual dialog
+        expect($rootScope.query.test_params).toEqual {}
+        expect($rootScope.query.test_limit).toEqual 2
+        expect($rootScope.query.test_datasource).toEqual handler.xml_data_sources[0].name
+        expect($rootScope.runQuery).toBeDefined()
+
+        url = "#{settings.apiUrl}xml_import_handlers/#{query.import_handler_id}/entities/#{query.entity_id}/queries/#{query.id}/action/run_sql/?"
+        $httpBackend.expectPUT(url).respond('{"import_handlers": [{"id": "' + HANDLER_ID + '", "name": "Some Name"}]}')
+
+        $rootScope.runQuery()
+        $httpBackend.flush()
+
+        expect(dialog.close).toHaveBeenCalled()
+        expect($rootScope.query.test.error).toBeUndefined()
