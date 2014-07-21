@@ -66,4 +66,24 @@
       </a></p>
     <ng-include src="'/partials/logmessages/list.html'"></ng-include>
   </div>
+  <div ng-show="dataset.samples_json">
+    <h3>Sample Data</small></h3>
+    <textarea ui-codemirror="codeMirrorConfigs(true)['json']" ng-model="dataset.samples_json"></textarea>
+  </div>
+  <style>
+    /* TODO: nsoliman 20140706 until we select a presentation */
+    .ds_sample_table table {
+      border-collapse: collapse;
+    }
+
+    .ds_sample_table table, .ds_sample_table th,  .ds_sample_table td {
+      border: 1px solid grey;
+    }
+
+    .ds_sample_table th div, .ds_sample_table td div {
+      overflow:auto;
+      max-width:300px;
+      max-height:100px;
+    }
+  </style>
 </div>

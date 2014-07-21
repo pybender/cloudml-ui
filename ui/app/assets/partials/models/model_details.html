@@ -102,7 +102,7 @@
     </div>
 
     <div ng-show="action[1] == 'json'">
-      <textarea ng-model="model.features" ui-codemirror="codemirrorOptions" ui-refresh="action"></textarea>
+      <textarea ng-model="model.features" ui-codemirror="codeMirrorConfigs(true)['json']" ui-refresh="action"></textarea>
     </div>
 
     <div class="row well">

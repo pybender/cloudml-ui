@@ -325,7 +325,6 @@ class BaseMongoTestCase(unittest.TestCase):
             collection = _get_collection(collection_name)
             collection.remove()
 
-
 def _get_collection(name):
     callable_model = getattr(app.db, name)
     return callable_model.collection

@@ -113,15 +113,25 @@ describe "datasets", ->
       $routeParams.import_handler_type = 'json'
       $rootScope.initSections = jasmine.createSpy()
 
-      url = BASE_URL + DS_ID + '/?show=' + encodeURIComponent(DataSet.MAIN_FIELDS + ',' + DataSet.EXTRA_FIELDS)
-      $httpBackend.expectGET(url).respond('{"data_set": {"name": "Some name"}}')
+      url1 = BASE_URL + DS_ID + '/?show=' + encodeURIComponent(DataSet.MAIN_FIELDS + ',' + DataSet.EXTRA_FIELDS)
+      url2 = BASE_URL + DS_ID + '/action/sample_data/?size=15'
+      $httpBackend.expectGET(url1).respond('{"data_set": {"name": "Some name"}}')
+      $httpBackend.expectGET(url2).respond('[{"contractor.dev_skill_test_passed_count": "18", "contractor.dev_bill_rate": "5.56"}]')
 
       createController "DataSetDetailsCtrl"
+      expect($rootScope.initSections).toHaveBeenCalledWith(
+        $rootScope.go, "model:details", simple=true
+      )
+
       $rootScope.go()
       $httpBackend.flush()
 
       expect($rootScope.dataset).toBeDefined()
       expect($rootScope.dataset.name).toBe('Some name')
+      expect($rootScope.dataset.samples_json).toEqual angular.toJson([
+        'contractor.dev_skill_test_passed_count': '18'
+        'contractor.dev_bill_rate': '5.56'
+      ], true)
 
   describe "DatasetSelectCtrl", ->
 

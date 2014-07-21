@@ -1,3 +1,5 @@
+import os
+import gzip
 import json
 import uuid
 import re
@@ -23,7 +25,7 @@ class DataSetResource(BaseResourceSQL):
     Model = DataSet
 
     FILTER_PARAMS = (('status', str), )
-    GET_ACTIONS = ('generate_url', )
+    GET_ACTIONS = ('generate_url', 'sample_data', )
     PUT_ACTIONS = ('reupload', 'reimport')
     post_form = DataSetAddForm
     put_form = DataSetEditForm
@@ -55,6 +57,28 @@ class DataSetResource(BaseResourceSQL):
             import_data.delay(dataset_id=dataset.id)
 
         return self._render({self.OBJECT_NAME: dataset})
+
+    def _get_sample_data_action(self, **kwargs):
+        ds = self._get_details_query({}, **kwargs)
+        if ds is None:
+            raise NotFound('DataSet not found')
+        if not os.path.exists(ds.filename):
+            raise NotFound('DataSet file cannot be found')
+        _, ext = os.path.splitext(ds.filename)
+        open_fn = gzip.open if ext == '.gz' else open if ext == '' else None
+        if not open_fn:
+            raise ValidationError('DataSet has unknown file type')
+        lines = []
+        params = self._parse_parameters([('size', int)])
+        sample_size = params.get('size') or 10
+        with open_fn(ds.filename, 'rb') as f:
+            line = f.readline()
+            while line and len(lines) < sample_size:
+                lines.append(json.loads(line))
+                line = f.readline()
+        return self._render(lines)
+
+
 
 api.add_resource(DataSetResource, '/cloudml/importhandlers/\
 <regex("[\w\.]*"):import_handler_type>/<regex("[\w\.]*"):import_handler_id>\

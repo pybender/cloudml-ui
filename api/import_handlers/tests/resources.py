@@ -377,6 +377,42 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         self.assertIsNone(test.dataset)
         self.assertEquals([ds.name for ds in model.datasets], ['DS 2'])
 
+    def test_sample_data_action(self):
+        # 1. getting sample of default size 10
+        url = self._get_url(id=self.obj.id, action='sample_data')
+        resp = self.client.get(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.OK)
+        data = json.loads(resp.data)
+        self.assertEqual(10, len(data))
+        self.assertNotEqual(data[0], data[-1])
+        self.assertNotEqual(data[1], data[-2])
+
+        # 2. test getting sample of size 5
+        url = self._get_url(id=self.obj.id, action='sample_data', size=5)
+        resp = self.client.get(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.OK)
+        data = json.loads(resp.data)
+        self.assertEqual(5, len(data))
+
+        # 3. dataset not found
+        url = self._get_url(id=1010, action='sample_data')
+        resp = self.client.get(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.NOT_FOUND)
+
+        # 4. file not found
+        with patch('os.path.exists') as path_exists_mock:
+            path_exists_mock.return_value = False
+            url = self._get_url(id=self.obj.id, action='sample_data')
+            resp = self.client.get(url, headers=HTTP_HEADERS)
+            self.assertEquals(resp.status_code, httplib.NOT_FOUND)
+
+        # 5. unknown file type
+        with patch('os.path.splitext') as path_splitext_mock:
+            path_splitext_mock.return_value = ('filename', '.zip')
+            url = self._get_url(id=self.obj.id, action='sample_data')
+            resp = self.client.get(url, headers=HTTP_HEADERS)
+            self.assertEquals(resp.status_code, httplib.BAD_REQUEST)
+            self.assertTrue('unknown file type' in resp.data)
 
 class TestTasksTests(BaseDbTestCase, TestChecksMixin):
     """
