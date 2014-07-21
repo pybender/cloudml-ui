@@ -1,7 +1,8 @@
 import uuid
 import json
+from datetime import datetime
 
-from mock import patch
+from mock import patch, MagicMock
 from moto import mock_s3
 
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS
@@ -117,6 +118,42 @@ class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue(mock_task.delay.called)
         self.assertTrue('status' in resp)
 
+    def test_put_run_sql_action(self):
+        url = self._get_url(id=self.obj.id, action='run_sql')
+
+        # forms validation error
+        resp = self.client.put(url, headers=HTTP_HEADERS)
+        resp_obj = json.loads(resp.data)
+        self.assertTrue(resp_obj.has_key('response'))
+        self.assertTrue(resp_obj['response'].has_key('error'))
+
+        # no parameters
+        resp = self.client.put(url,
+                               data={'sql': 'SELECT NOW() WHERE %(something)s',
+                                     'limit': 2,
+                                     'datasource': 'odw'},
+                               headers=HTTP_HEADERS)
+        resp_obj = json.loads(resp.data)
+        self.assertTrue(resp_obj.has_key('response'))
+        self.assertTrue(resp_obj['response'].has_key('error'))
+
+        # good
+        iter_mock = MagicMock()
+        iter_mock.return_value = [{'now': datetime(2014, 7, 21, 15, 52, 5, 308936)}]
+        with patch.dict('api.import_handlers.models.import_handlers.CoreImportHandler.DB_ITERS', {'postgres': iter_mock}):
+            resp = self.client.put(url,
+                                   data={'sql': 'SELECT NOW() WHERE %(something)s',
+                                         'limit': 2,
+                                         'datasource': 'odw',
+                                         'params': json.dumps({'something': 'TRUE'})},
+                                   headers=HTTP_HEADERS)
+            resp_obj = json.loads(resp.data)
+            self.assertTrue(resp_obj.has_key('data'))
+            self.assertTrue(resp_obj['data'][0].has_key('now'))
+            self.assertTrue(resp_obj.has_key('sql'))
+            iter_mock.assert_called_with(['SELECT NOW() WHERE TRUE LIMIT 2'],
+                                         "host='localhost' dbname='odw' "
+                                         "user='postgres' password='postgres'")
 
 class IHLoadMixin(object):
     def load_import_handler(self, filename='conf/extract.xml'):

@@ -218,17 +218,14 @@ datasource_id,entity_id'
           matches = expr.exec(@text)
         return params
 
-      $run: (limit, params) ->
+      $run: (limit, params, datasource, handlerUrl) ->
         data = {
           sql: @text,
           params: JSON.stringify(params),
           limit: limit,
+          datasource: datasource
         }
-        url = Query.$get_api_url
-          import_handler_id: @import_handler_id
-          entity_id: @entity_id
-        , null
-        @$make_request("#{url}#{@id}/action/run_sql/", {}, "PUT", data)
+        @$make_request("#{handlerUrl}/action/run_sql/", {}, "PUT", data)
 
     return Query
 ])

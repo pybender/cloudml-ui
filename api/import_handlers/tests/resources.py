@@ -1,7 +1,9 @@
 import httplib
 import json
 import os
-from mock import patch
+from datetime import datetime
+
+from mock import patch, MagicMock
 from moto import mock_s3
 
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS
@@ -187,16 +189,22 @@ class ImportHandlerTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue(resp_obj['response'].has_key('error'))
 
         # good
-        resp = self.client.put(url,
-                               data={'sql': 'SELECT NOW() WHERE %(something)s',
-                                     'limit': 2,
-                                     'datasource': 'odw',
-                                     'params': json.dumps({'something': 'TRUE'})},
-                               headers=HTTP_HEADERS)
-        resp_obj = json.loads(resp.data)
-        self.assertTrue(resp_obj.has_key('data'))
-        self.assertTrue(resp_obj['data'][0].has_key('now'))
-        self.assertTrue(resp_obj.has_key('sql'))
+        iter_mock = MagicMock()
+        iter_mock.return_value = [{'now': datetime(2014, 7, 21, 15, 52, 5, 308936)}]
+        with patch.dict('api.import_handlers.models.import_handlers.CoreImportHandler.DB_ITERS', {'postgres': iter_mock}):
+            resp = self.client.put(url,
+                                   data={'sql': 'SELECT NOW() WHERE %(something)s',
+                                         'limit': 2,
+                                         'datasource': 'odw',
+                                         'params': json.dumps({'something': 'TRUE'})},
+                                   headers=HTTP_HEADERS)
+            resp_obj = json.loads(resp.data)
+            self.assertTrue(resp_obj.has_key('data'))
+            self.assertTrue(resp_obj['data'][0].has_key('now'))
+            self.assertTrue(resp_obj.has_key('sql'))
+            iter_mock.assert_called_with(['SELECT NOW() WHERE TRUE LIMIT 2'],
+                                         "host='localhost' dbname='cloudml' "
+                                         "user='cloudml' password='cloudml'")
 
 
 class DataSetsTests(BaseDbTestCase, TestChecksMixin):

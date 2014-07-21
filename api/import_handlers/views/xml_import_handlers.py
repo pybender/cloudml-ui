@@ -1,8 +1,10 @@
 from flask import request
+from psycopg2._psycopg import DatabaseError
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm import joinedload, joinedload_all
 
-from api.base.resources import BaseResourceSQL
+from api.base.resources import BaseResourceSQL, NotFound, odesk_error_response, \
+    ERR_INVALID_DATA
 from api import api
 from api.import_handlers.models import XmlImportHandler, XmlInputParameter, \
     XmlEntity, XmlField, XmlDataSource, XmlQuery, XmlScript, XmlSqoop, Predict
@@ -11,7 +13,6 @@ from api.import_handlers.forms import XmlImportHandlerAddForm, \
     XmlQueryForm, XmlScriptForm, XmlImportHandlerEditForm, XmlSqoopForm
 from api.servers.forms import ChooseServerForm
 
-
 class XmlImportHandlerResource(BaseResourceSQL):
     """
     XmlImportHandler API methods
@@ -19,7 +20,7 @@ class XmlImportHandlerResource(BaseResourceSQL):
     post_form = XmlImportHandlerAddForm
     put_form = XmlImportHandlerEditForm
 
-    PUT_ACTIONS = ('upload_to_server', )
+    PUT_ACTIONS = ('upload_to_server', 'run_sql')
 
     @property
     def Model(self):
@@ -76,6 +77,50 @@ class XmlImportHandlerResource(BaseResourceSQL):
                     handler.name
                 )
             })
+
+    # TODO: nader20140721: we need to refactor this one with the same one
+    # in `api.import_handlers.views.json_import_handlers.py`
+    def _put_run_sql_action(self, **kwargs):
+        """
+        Run sql query for testing
+        """
+        from api.import_handlers.forms import QueryTestForm
+        model = self._get_details_query({}, **kwargs)
+        if model is None:
+            raise NotFound(self.MESSAGE404 % kwargs)
+
+        form = QueryTestForm(obj={})
+        if not form.is_valid():
+            return self._render({'error': form.error_messages})
+
+        sql = form.cleaned_data['sql']
+        limit = form.cleaned_data['limit']
+        params = form.cleaned_data.get('params', {})
+        datasource_name = form.cleaned_data['datasource']
+        try:
+            sql = sql % params
+        except (KeyError, ValueError):
+            return odesk_error_response(400, ERR_INVALID_DATA,
+                                        'Wrong query parameters')
+
+        try:
+            model.check_sql(sql)
+        except Exception as e:
+            return odesk_error_response(400, ERR_INVALID_DATA, str(e))
+
+        # Change query LIMIT
+        sql = model.build_query(sql, limit=limit)
+
+        try:
+            data = list(model.execute_sql_iter(sql, datasource_name))
+        except DatabaseError as e:
+            return odesk_error_response(400, ERR_INVALID_DATA, str(e))
+
+        columns = []
+        if len(data) > 0:
+            columns = data[0].keys()
+
+        return self._render({'data': data, 'columns': columns, 'sql': sql})
 
 api.add_resource(
     XmlImportHandlerResource, '/cloudml/xml_import_handlers/')
