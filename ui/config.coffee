@@ -64,6 +64,7 @@ exports.config =
   plugins:
     jade:
       pretty: yes # Adds pretty-indentation whitespaces to output (false by default)
+  sourceMaps: false
 
   # Enable or disable minifying of result js / css files.
   # minify: true

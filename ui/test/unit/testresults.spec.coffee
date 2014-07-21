@@ -40,7 +40,7 @@ describe "testresults", ->
     $httpBackend = $injector.get('$httpBackend')
     $routeParams = $injector.get('$routeParams')
 
-    BASE_URL = settings.apiUrl + 'models/somemodelid/tests/sometestid/'
+    BASE_URL = settings.apiUrl + 'models/1234/tests/4321/'
 
     createController = (ctrl) ->
       $controller(ctrl, {'$scope' : $rootScope })
@@ -55,7 +55,7 @@ describe "testresults", ->
 
     it "should init controller, make no request", inject () ->
       createController "TestListCtrl"
-      $rootScope.init({id: 'someid'})
+      $rootScope.init({id: '123'})
       expect($rootScope.ACTION).toEqual('loading tests')
       expect($rootScope.FIELDS).toBeDefined()
 
@@ -74,8 +74,8 @@ describe "testresults", ->
   describe "TestDetailsCtrl", ->
 
     beforeEach ->
-      $routeParams.model_id = 'somemodelid'
-      $routeParams.id = 'sometestid'
+      $routeParams.model_id = '1234'
+      $routeParams.id = '4321'
 
       $rootScope.initSections = jasmine.createSpy()
       $rootScope.setSection = jasmine.createSpy()
@@ -100,6 +100,66 @@ describe "testresults", ->
 
       expect($rootScope.setSection).toHaveBeenCalled()
 
+    it "should load 'metrics' section, old list format, binary classifier",
+      inject (TestResult) ->
+        url = BASE_URL + '?show=' + encodeURIComponent('accuracy,metrics' +
+          ',examples_placement,' + TestResult.MAIN_FIELDS)
+        $httpBackend.expectGET(url)
+        .respond.apply @, map_url_to_response(url,
+          'binary classification arrays format (before 20140710)')
+
+        $rootScope.goSection(['metrics', 'accuracy'])
+        $httpBackend.flush()
+
+        expect($rootScope.rocCurves).toBeDefined()
+        expect(_.keys($rootScope.rocCurves).length).toEqual 1
+        expect($rootScope.rocCurves[1]).toBeDefined()
+        expect($rootScope.rocCurves[1]['curve']).toBeDefined()
+        expect($rootScope.rocCurves[1]['roc_auc']).toBeDefined()
+        expect($rootScope.prCurves).toBeDefined()
+        expect($rootScope.prCurves['Precision-Recall curve']).toBeDefined()
+
+    it "should load 'metrics' section for multiclass classifier, new dict format",
+      inject (TestResult) ->
+        url = BASE_URL + '?show=' + encodeURIComponent('accuracy,metrics' +
+          ',examples_placement,' + TestResult.MAIN_FIELDS)
+        $httpBackend.expectGET(url)
+        .respond.apply @, map_url_to_response(url,
+            'multiclass classification model dict format (after 20140710)')
+
+        $rootScope.goSection(['metrics', 'accuracy'])
+        $httpBackend.flush()
+
+
+        expect($rootScope.rocCurves).toBeDefined()
+        expect(_.keys($rootScope.rocCurves).length).toEqual 3
+        for key in _.keys($rootScope.rocCurves)
+          expect($rootScope.rocCurves[key]['curve']).toBeDefined()
+          expect($rootScope.rocCurves[key]['roc_auc']).toBeDefined()
+
+        expect($rootScope.prCurves).toBeUndefined() # multiclass has no pr
+
+    it "should load 'metrics' section for binary classifer, new dict format",
+      inject (TestResult) ->
+        url = BASE_URL + '?show=' + encodeURIComponent('accuracy,metrics' +
+          ',examples_placement,' + TestResult.MAIN_FIELDS)
+        $httpBackend.expectGET(url)
+        .respond.apply @, map_url_to_response(url,
+          'binary classification model dict format (after 20140710)')
+
+        $rootScope.goSection(['metrics', 'accuracy'])
+        $httpBackend.flush()
+
+        expect($rootScope.prCurves).toBeDefined() # binary classification has pr
+
+        expect($rootScope.rocCurves).toBeDefined()
+        expect(_.keys($rootScope.rocCurves).length).toEqual 1
+        expect($rootScope.rocCurves[1]).toBeDefined()
+        expect($rootScope.rocCurves[1]['curve']).toBeDefined()
+        expect($rootScope.rocCurves[1]['roc_auc']).toBeDefined()
+        expect($rootScope.prCurves).toBeDefined()
+        expect($rootScope.prCurves['Precision-Recall curve']).toBeDefined()
+
     it "should load 'matrix' section", inject (TestResult) ->
       url = BASE_URL + '?show=' + encodeURIComponent(TestResult.MATRIX_FIELDS + ',examples_placement,' + TestResult.MAIN_FIELDS)
       $httpBackend.expectGET(url).respond('{"test": {}}')
@@ -113,17 +173,17 @@ describe "testresults", ->
 
     it "should init controller, make no request", inject () ->
       createController "TestActionsCtrl"
-      $rootScope.init({model: {}, test: {id: 'sometestid'}})
+      $rootScope.init({model: {}, test: {id: '1234'}})
 
-      expect($rootScope.test.id).toEqual('sometestid')
+      expect($rootScope.test.id).toEqual('1234')
 
     it "should open delete dialog", inject () ->
       url = 'partials/testresults/delete_popup.html'
       $httpBackend.expectGET(url).respond('')
 
       $rootScope.test = {
-        id: 'sometestid',
-        model: {id: 'somemodelid'}
+        id: '4321',
+        model: {id: '1234'}
       }
       $rootScope.resetError = jasmine.createSpy()
 
@@ -140,7 +200,7 @@ describe "testresults", ->
       $httpBackend.expectGET(url).respond('{"exports": [{"status": "In Progress"}, {"status": "Completed"}],
  "test": {"dataset": {}}}')
 
-      test = new TestResult({id: 'sometestid', model_id: 'somemodelid'})
+      test = new TestResult({id: '4321', model_id: '1234'})
 
       jasmine.Clock.useMock()
 
@@ -167,8 +227,8 @@ describe "testresults", ->
 
       # Metrics are supposed to be filled
       $rootScope.test = new TestResult({
-        id: 'sometestid',
-        model_id: 'somemodelid'},
+        id: '4321',
+        model_id: '1234'},
         metrics: {}
       )
 
