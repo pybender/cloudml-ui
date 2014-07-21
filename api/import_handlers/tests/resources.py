@@ -167,6 +167,37 @@ class ImportHandlerTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue(mock_task.delay.called)
         self.assertTrue('status' in json.loads(resp.data))
 
+    def test_run_sql_action(self):
+        url = self._get_url(id=self.obj.id, action='run_sql')
+
+        # forms validation error
+        resp = self.client.put(url, headers=HTTP_HEADERS)
+        resp_obj = json.loads(resp.data)
+        self.assertTrue(resp_obj.has_key('response'))
+        self.assertTrue(resp_obj['response'].has_key('error'))
+
+        # no parameters
+        resp = self.client.put(url,
+                               data={'sql': 'SELECT NOW() WHERE %(something)s',
+                                     'limit': 2,
+                                     'datasource': 'odw'},
+                               headers=HTTP_HEADERS)
+        resp_obj = json.loads(resp.data)
+        self.assertTrue(resp_obj.has_key('response'))
+        self.assertTrue(resp_obj['response'].has_key('error'))
+
+        # good
+        resp = self.client.put(url,
+                               data={'sql': 'SELECT NOW() WHERE %(something)s',
+                                     'limit': 2,
+                                     'datasource': 'odw',
+                                     'params': json.dumps({'something': 'TRUE'})},
+                               headers=HTTP_HEADERS)
+        resp_obj = json.loads(resp.data)
+        self.assertTrue(resp_obj.has_key('data'))
+        self.assertTrue(resp_obj['data'][0].has_key('now'))
+        self.assertTrue(resp_obj.has_key('sql'))
+
 
 class DataSetsTests(BaseDbTestCase, TestChecksMixin):
     """

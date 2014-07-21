@@ -262,7 +262,7 @@ filename=importhandler-%s.json' % model.name
 
         sql = form.cleaned_data['sql']
         limit = form.cleaned_data['limit']
-        params = form.cleaned_data['params']
+        params = form.cleaned_data.get('params', {})
         datasource_name = form.cleaned_data['datasource']
         try:
             sql = sql % params
