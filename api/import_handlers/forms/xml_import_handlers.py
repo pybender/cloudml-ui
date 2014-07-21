@@ -266,3 +266,20 @@ class XmlSqoopForm(BaseForm):
             if value.type != 'db':
                 raise ValidationError('Only "db" datasources are allowed')
         return value
+
+
+class PredictModelForm(BaseForm):
+    required_fields = ('name', 'value', 'import_handler_id', 'script')
+    NO_REQUIRED_FOR_EDIT = True
+
+    name = CharField()
+    value = CharField()
+    script = CharField()
+    import_handler_id = DocumentField(
+        doc=XmlImportHandler, by_name=False, return_doc=True)
+
+    def save(self, *args, **kwargs):
+        model = super(PredictModelForm, self).save(commit=False)
+        predict = self.cleaned_data['import_handler_id'].predict
+        predict.models.append(model)
+        predict.save()

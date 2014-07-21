@@ -31,8 +31,9 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
   'BaseModel'
   'InputParameter'
   'Entity'
+  'PredictModel'
   
-  (settings, BaseModel, InputParameter, Entity) ->
+  (settings, BaseModel, InputParameter, Entity, PredictModel) ->
     class XmlImportHandler extends BaseModel
       BASE_API_URL: "#{settings.apiUrl}xml_import_handlers/"
       BASE_UI_URL: "/handlers/xml/"
@@ -65,6 +66,9 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
             for paramData in origData.xml_input_parameters
               @xml_input_parameters.push new InputParameter(
                 _.extend paramData, defaults)
+          if origData.predict?
+            @predict.models = (new PredictModel(_.extend mod, defaults) \
+              for mod in origData.predict.models)
 
       $uploadPredict: (server) =>
         url = "#{@BASE_API_URL}#{@id}/action/upload_to_server/"
@@ -327,4 +331,26 @@ datasource_id,entity_id'
       data: null
 
     return Script
+])
+
+# predict models
+
+.factory('PredictModel', [
+  'settings'
+  'BaseImportHandlerItem'
+
+  (settings, BaseImportHandlerItem) ->
+    class PredictModel extends BaseImportHandlerItem
+      API_FIELDNAME: 'predict_model'
+      @LIST_MODEL_NAME: 'predict_models'
+      LIST_MODEL_NAME: @LIST_MODEL_NAME
+      @ITEM_NAME: 'predict_models'
+      @MAIN_FIELDS: 'id,name,value,script'
+
+      id: null
+      name: null
+      value: null
+      script: null
+
+    return PredictModel
 ])

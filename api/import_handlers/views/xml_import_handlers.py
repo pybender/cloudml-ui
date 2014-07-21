@@ -5,10 +5,12 @@ from sqlalchemy.orm import joinedload, joinedload_all
 from api.base.resources import BaseResourceSQL
 from api import api
 from api.import_handlers.models import XmlImportHandler, XmlInputParameter, \
-    XmlEntity, XmlField, XmlDataSource, XmlQuery, XmlScript, XmlSqoop, Predict
+    XmlEntity, XmlField, XmlDataSource, XmlQuery, XmlScript, XmlSqoop, \
+    Predict, PredictModel
 from api.import_handlers.forms import XmlImportHandlerAddForm, \
     XmlInputParameterForm, XmlEntityForm, XmlFieldForm, XmlDataSourceForm, \
-    XmlQueryForm, XmlScriptForm, XmlImportHandlerEditForm, XmlSqoopForm
+    XmlQueryForm, XmlScriptForm, XmlImportHandlerEditForm, XmlSqoopForm, \
+    PredictModelForm
 from api.servers.forms import ChooseServerForm
 
 
@@ -30,7 +32,6 @@ class XmlImportHandlerResource(BaseResourceSQL):
         if 'predict' in show:
             cursor = cursor.options(
                 joinedload_all('predict.models'),
-                joinedload('predict.models.positive_label'),
                 joinedload('predict.label'),
                 joinedload('predict.probability'),
                 joinedload('predict.label.predict_model'),
@@ -210,3 +211,22 @@ class XmlSqoopResource(BaseResourceSQL):
 api.add_resource(XmlSqoopResource, '/cloudml/xml_import_handlers/\
 <regex("[\w\.]*"):import_handler_id>/entities/<regex("[\w\.]*"):entity_id>\
 /sqoop_imports/')
+
+
+class PredictModelResource(BaseResourceSQL):
+    """
+    Predict section of XML import handler API methods
+    """
+    put_form = post_form = PredictModelForm
+    Model = PredictModel
+
+    def _get_details_query(self, params, **kwargs):
+        try:
+            handler_id = kwargs.pop('import_handler_id')
+            return self._build_details_query(params, **kwargs)
+        except NoResultFound:
+            return None
+
+api.add_resource(
+    PredictModelResource, '/cloudml/xml_import_handlers/\
+<regex("[\w\.]*"):import_handler_id>/predict_models/')

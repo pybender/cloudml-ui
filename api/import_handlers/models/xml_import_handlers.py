@@ -338,13 +338,6 @@ class Predict(db.Model, BaseMixin):
         cascade='all,delete', backref='probabilities')
 
 
-class PredictModelPositiveLabel(db.Model, BaseMixin):
-    FIELDS_TO_SERIALIZE = ('value', 'script')
-
-    value = db.Column(db.String(200), name='value')
-    script = db.Column(db.Text, name='script')
-
-
 class PredictModel(db.Model, BaseMixin):
     FIELDS_TO_SERIALIZE = ('name', 'value', 'script')
 
@@ -352,12 +345,8 @@ class PredictModel(db.Model, BaseMixin):
     value = db.Column(db.String(200), name='value')
     script = db.Column(db.Text, name='script')
 
-    positive_label_id = db.Column(
-        db.ForeignKey('predict_model_positive_label.id'))
-    positive_label = relationship(
-        'PredictModelPositiveLabel',
-        foreign_keys=[positive_label_id],
-        cascade='all,delete', backref='model')
+    positive_label_value = db.Column(db.String(200))
+    positive_label_script = db.Column(db.Text)
 
 
 predict_models_table = db.Table(

@@ -3,7 +3,8 @@ from flask.ext.admin.model.template import macro
 from api import admin
 from api.base.admin import BaseAdmin
 from api.import_handlers.models import XmlScript, XmlQuery, XmlEntity, \
-    XmlField, XmlImportHandler, XmlDataSource, XmlInputParameter, XmlSqoop
+    XmlField, XmlImportHandler, XmlDataSource, XmlInputParameter, XmlSqoop, \
+    Predict, PredictModel
 
 
 class ImportHandlerAdmin(BaseAdmin):
@@ -90,3 +91,24 @@ class SqoopAdmin(BaseAdmin):
 
 admin.add_view(SqoopAdmin(
     name='XML Sqoop Import', category='Import Handlers'))
+
+
+class PredictAdmin(BaseAdmin):
+    MIX_METADATA = False
+    Model = Predict
+    column_list = ['id', ]
+    column_formatters = {
+        'xml_import_handler': macro('render_fk_link')
+    }
+
+admin.add_view(PredictAdmin(
+    name='Predict', category='Import Handlers'))
+
+
+class PredictModelAdmin(BaseAdmin):
+    MIX_METADATA = False
+    Model = PredictModel
+    column_list = ['id', 'name', 'value', 'script', ]
+
+admin.add_view(PredictModelAdmin(
+    name='Predict Model', category='Import Handlers'))

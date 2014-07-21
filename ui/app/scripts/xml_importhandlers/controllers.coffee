@@ -65,22 +65,3 @@ xml_input_parameters,xml_scripts,entities,import_params,predict'
     $scope.types = [{name: 'Db'}, {name: 'Request'}]
     $scope.model = new ImportHandler()
 ])
-
-
-.controller('PredictCtrl', [
-  '$scope'
-  'XmlImportHandler'
-
-  ($scope, ImportHandler) ->
-    $scope.init = (handler) ->
-      $scope.handler = handler
-      $scope.kwargs = {'import_handler_id': handler.id}
-      $scope.$watch('handler.predict', (predict, old, scope) ->
-        if predict?
-          console.log handler, 12
-          $scope.predict_models = predict.models
-          $scope.predict = predict
-          $scope.label = predict.label
-          $scope.probability = predict.probability
-      )
-])
