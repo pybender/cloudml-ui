@@ -210,6 +210,7 @@
                            delete-field="delete"
                            edit-data-source="editDataSource"
                            save-query-text="saveQueryText"
+                           run-query="runQuery(queryObj)"
                            add-sqoop="addSqoop"
                            delete-sqoop="delete"></entities-tree>
           </div>
@@ -314,11 +315,7 @@
   </div>
 
   <div ng-show="action[1] == 'xml'">
-    <textarea name="data" ui-codemirror="{
-      lineNumbers: true,
-      indentWithTabs: true,
-      mode: 'xml'
-    }" ui-refresh="action" ng-model="handler.xml"></textarea>
+    <textarea name="data" ui-codemirror="codeMirrorConfigs(true)['xml']" ui-refresh="action" ng-model="handler.xml"></textarea>
   </div>
   </div>
 

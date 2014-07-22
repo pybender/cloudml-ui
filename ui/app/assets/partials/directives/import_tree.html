@@ -89,13 +89,7 @@
       </div>
       <div class="row">
         <div class="span11">
-        Text:<textarea class="small" ui-codemirror="{
-            mode: 'text/x-mysql',
-            indentWithTabs: true,
-            smartIndent: true,
-            lineNumbers: true,
-            matchBrackets: true,
-            height: '30px'}" ng-model="sqoop.text" ui-refresh="sqoop" />
+        Text:<textarea class="small" ui-codemirror="$root.codeMirrorConfigs(false)['sql']" ng-model="sqoop.text" ui-refresh="sqoop" />
         </div>
       </div>
       <a ng-disabled="sqoop.loading_state" ng-click="sqoop.saveText()" class="btn btn-info">
@@ -117,17 +111,44 @@
         Target:
         <span title="target" class="target value" ng-bind="entity.query_obj.target" editable="entity.query_obj" value="entity.query_obj.target" editable-field="target" editable-input="text" editable-placement="right"></span>
       </div>
-      <div>
-        Text:<textarea class="small" ui-codemirror="{
-            mode: 'text/x-mysql',
-            indentWithTabs: true,
-            smartIndent: true,
-            lineNumbers: true,
-            matchBrackets: true,
-            height: '30px'}" ng-model="entity.query_obj.text" ui-refresh="entity.query_obj" />
+      <div ng-init="queries_run_sql={}">
+        SQL:
+        <p>
+        <textarea class="small" ui-codemirror="$root.codeMirrorConfigs(false)['sql']" ng-model="entity.query_obj.text" ui-refresh="entity.query_obj" />
+        </p>
         <a ng-disabled="entity.query_obj.loading_state" ng-click="saveQueryText()(entity.query_obj);" class="btn btn-info">
           <i class="status-icon icon-edit"></i> save text
         </a>
+        <a ng-disabled="entity.query_obj.loading_state" ng-click="runQuery({'queryObj':entity.query_obj});" class="btn btn-info">
+          <i class="icon-play"></i> Run Query
+        </a>
+      </div>
+      <hr />
+      <div class="query-results" ng-show="entity.query_obj.test">
+        <h5 ng-init="queries_run_sql[entity.query_obj.num]=1">
+          <a ng-click="queries_run_sql[entity.query_obj.num]=!queries_run_sql[entity.query_obj.num]">
+            <span ng-hide="queries_run_sql[entity.query_obj.num]" ng-bind="'Show'" />
+            <span ng-show="queries_run_sql[entity.query_obj.num]" ng-bind="'Hide'" /> SQL Query Result</a>
+        </h5>
+        <div style="overflow: auto;" ng-show="queries_run_sql[entity.query_obj.num]">
+          <table class="table table-bordered table-hovered" style="background: white;"
+                 ng-hide="!entity.query_obj.test.data || entity.query_obj.test.error">
+            <tr><th ng-repeat="col in entity.query_obj.test.columns">{{ col }}</th></tr>
+            <tr ng-repeat="row in entity.query_obj.test.data">
+              <td ng-repeat="col in entity.query_obj.test.columns">
+                <div style="max-height: 200px; overflow: auto">
+                  {{ row[col] }}
+                </div>
+              </td>
+            </tr>
+          </table>
+          <div ng-hide="entity.query_obj.test.data || entity.query_obj.test.error">
+            <h4 class="text-warning">Query Resulted in 0 Records</h4></div>
+          <div ng-hide="!entity.query_obj.test.error">
+            <h4 class="text-error">Query Error:</h4>
+            <p class="text-error"> {{entity.query_obj.test.error}}</p>
+          </div>
+        </div>
       </div>
     </div>
     </div>

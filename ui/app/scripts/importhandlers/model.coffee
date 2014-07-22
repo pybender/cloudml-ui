@@ -167,14 +167,14 @@ angular.module('app.importhandlers.model', ['app.config'])
           matches = expr.exec(@sql)
         return params
 
-      $run: (limit, params, datasource) ->
+      $run: (limit, params, datasource, handlerUrl) ->
         data = {
           sql: @sql,
           params: JSON.stringify(params),
           limit: limit,
           datasource: datasource
         }
-        @$make_request(@handler.getUrl() + 'action/run_sql/', {}, "PUT", data)
+        @$make_request("#{handlerUrl}action/run_sql/", {}, "PUT", data)
 
     return Query
 ])

@@ -16,6 +16,7 @@ describe "importhandlers", ->
   beforeEach(module "app.importhandlers.controllers")
   beforeEach(module "app.xml_importhandlers.models")
   beforeEach(module "app.xml_importhandlers.controllers")
+  beforeEach(module "app.xml_importhandlers.controllers.entities")
 
   $httpBackend = null
   $rootScope = null
@@ -43,8 +44,10 @@ describe "importhandlers", ->
 
     BASE_URL = settings.apiUrl + 'importhandlers/'
 
-    createController = (ctrl) ->
-       $controller(ctrl, {'$scope' : $rootScope })
+    createController = (ctrl, extras) ->
+      injected = extras or {}
+      _.extend injected, {'$scope' : $rootScope }
+      $controller(ctrl, injected)
   ))
 
   afterEach( ->
@@ -89,6 +92,30 @@ created_on,created_by,error,data')
 
       $rootScope.saveData()
       $httpBackend.flush()
+
+    it "should call runQuery to open dialog with proper parameters",
+      inject ()->
+        handler = getJsonHandler()
+        query = getJsonQuery()
+        url = "#{settings.apiUrl}importhandlers/#{handler.id}/"
+
+        $rootScope.initSections = jasmine.createSpy()
+        $rootScope.openDialog = jasmine.createSpy('$scope.openDialog')
+
+        createController "ImportHandlerDetailsCtrl", {$dialog: $dialog}
+
+        $rootScope.handler = handler
+        $rootScope.runQuery query
+        expect($rootScope.openDialog).toHaveBeenCalledWith
+          $dialog: $dialog
+          model: null
+          template: 'partials/import_handler/test_query.html'
+          ctrlName: 'QueryTestDialogCtrl'
+          extra:
+            handlerUrl: url
+            datasources: handler.datasource,
+            query: query
+          action: 'test import handler query'
 
   describe "AddImportHandlerCtl", ->
 
@@ -156,3 +183,162 @@ created_on,created_by,error,data')
       expect($rootScope.handlers_list[0].text).toBe("Some Name")
       expect($rootScope.handlers_list[1].value).toBe(HANDLER_ID_XML+'xml')
       expect($rootScope.handlers_list[1].text).toBe("Some Name(xml)")
+
+  describe "Query", ->
+
+    it "should properly parse parameters", inject((Query)->
+      queryText = "SELECT * FROM some_table WHERE qi.file_provenance_date >= '%(start)s' AND qi.file_provenance_date < '%(end)s'"
+      query = new Query({sql: queryText})
+      expect(query).toBeDefined()
+      expect(query.sql).toEqual queryText
+      params = query.getParams()
+      expect(params).toEqual ['start', 'end']
+
+      url = "someurl/"
+      data =
+        sql: queryText
+        params: JSON.stringify(params)
+        limit: 2
+        datasource: 'ds_name'
+      query.$make_request = jasmine.createSpy()
+      query.$run 2, ['start', 'end'], 'ds_name', url
+      expect(query.$make_request).toHaveBeenCalledWith url + "action/run_sql/", {}, "PUT", data
+    )
+
+  describe "XmlQuery", ->
+
+    it "should properly parse parameters", inject((XmlQuery)->
+      queryText = "SELECT * FROM some_table WHERE qi.file_provenance_date >= '%(start)s' AND qi.file_provenance_date < '%(end)s'"
+      query = new XmlQuery({text: queryText})
+      expect(query).toBeDefined()
+      expect(query.text).toEqual queryText
+      params = query.getParams()
+      expect(params).toEqual ['start', 'end']
+
+      url = "someurl"
+      data =
+        sql: queryText
+        params: JSON.stringify(params)
+        limit: 2
+        datasource: 'ds_name'
+      query.$make_request = jasmine.createSpy()
+      query.$run 2, ['start', 'end'], 'ds_name', url
+      expect(query.$make_request).toHaveBeenCalledWith url + "/action/run_sql/", {}, "PUT", data
+    )
+
+  describe "QueryTestDialogCtrl and run query", ->
+
+    it "should initialize scope",
+      inject (XmlQuery, XmlImportHandler)->
+        handler = getXmlHandler()
+        query = getXmlQuery()
+
+        dialog =
+          extra:
+            handlerUrl: "#{settings.apiUrl}xml_import_handlers/#{handler.id}"
+            datasources: handler.xml_data_sources
+            query: query
+          close: jasmine.createSpy()
+        createController "QueryTestDialogCtrl", {'dialog': dialog}
+
+        expect($rootScope.query).toEqual query
+        expect($rootScope.params).toEqual ['start', 'end']
+        expect($rootScope.dialog).toEqual dialog
+        expect($rootScope.query.test_params).toEqual {}
+        expect($rootScope.query.test_limit).toEqual 2
+        expect($rootScope.query.test_datasource).toEqual handler.xml_data_sources[0].name
+        expect($rootScope.runQuery).toBeDefined()
+
+        url = "#{settings.apiUrl}xml_import_handlers/#{handler.id}/action/run_sql/?"
+        $httpBackend.expectPUT(url).respond('{"import_handlers": [{"id": "' + handler.id + '", "name": "Some Name"}]}')
+
+        $rootScope.runQuery()
+        $httpBackend.flush()
+
+        expect(dialog.close).toHaveBeenCalled()
+        expect($rootScope.query.test.error).toBeUndefined()
+
+  describe "EntitiesTreeCtrl", ->
+    it "Should call open dialog for runQuery with proper arguments",
+      inject (()->
+        handler = getXmlHandler()
+        query = getXmlQuery()
+        url = "#{settings.apiUrl}xml_import_handlers/#{handler.id}"
+
+        $rootScope.openDialog = jasmine.createSpy('$scope.openDialog')
+        $rootScope.handler = handler
+        createController "EntitiesTreeCtrl", {$dialog: $dialog}
+
+        $rootScope.runQuery query
+        expect($rootScope.openDialog).toHaveBeenCalledWith
+          $dialog: $dialog
+          model: null
+          template: 'partials/import_handler/test_query.html'
+          ctrlName: 'QueryTestDialogCtrl'
+          extra:
+            handlerUrl: url
+            datasources: handler.xml_data_sources
+            query: query
+          action: 'test xml import handler query'
+      )
+
+  getXmlHandler = ->
+    handler = null
+    inject( (XmlImportHandler) ->
+      handler = new XmlImportHandler()
+      handler.loadFromJSON
+        id: 110011
+        xml_data_sources: [
+          import_handler_id: 456654
+          type: 'db'
+          name: 'odw'
+          id: 321
+          params:
+            host: 'localhost'
+            password: 'cloudml'
+            vendor: 'postgres'
+            dbname: 'cloudml'
+            user: 'cloudml'
+        ]
+    )
+    handler
+
+  getXmlQuery = ->
+    query = null
+    inject( (XmlQuery)->
+      queryText = "SELECT * FROM some_table WHERE qi.file_provenance_date >= '%(start)s' AND qi.file_provenance_date < '%(end)s'"
+      query = new XmlQuery()
+      query.loadFromJSON
+        id: 123321
+        text: queryText
+        import_handler_id: 456654
+        entity_id: 789987
+    )
+    query
+
+  getJsonHandler = ->
+    handler = null
+    inject( (ImportHandler) ->
+      handler = new ImportHandler()
+      handler.loadFromJSON
+        id: 220022
+        datasource: [
+          db:
+              vendor: "postgres"
+              conn: "host='localhost' dbname='cloudml' user='cloudml' password='cloudml'"
+            type: "sql",
+            name: "odw"
+        ]
+    )
+    handler
+
+  getJsonQuery = ->
+    query = null
+    inject( (Query)->
+      queryText = "SELECT * FROM some_table WHERE qi.file_provenance_date >= '%(start)s' AND qi.file_provenance_date < '%(end)s'"
+      query = new Query()
+      query.loadFromJSON
+        id: 321123
+    )
+    query
+

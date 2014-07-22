@@ -366,8 +366,9 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
     if opts.data
       $rootScope.err = "Error while #{message}: server responded
  with #{opts.status} (#{opts.data.response.error.message or "no message"})."
-      for item in opts.data.response.error.errors
-          $rootScope.setFieldError(item.name, item.error)
+      if opts.data.response.error.errors?
+        for item in opts.data.response.error.errors
+            $rootScope.setFieldError(item.name, item.error)
     else
       $rootScope.err = "Unkown error while #{message}."
 
