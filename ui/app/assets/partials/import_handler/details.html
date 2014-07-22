@@ -104,7 +104,7 @@
       </div>
       <div>
         SQL:
-        <p><textarea ui-codemirror="{mode: 'text/x-mysql', indentWithTabs: true, smartIndent: true, lineNumbers: true, matchBrackets : true, height: '100px'}" ng-model="query.sql"></textarea></p>
+        <p><textarea ui-codemirror="codeMirrorConfigs(false)['sql']" ng-model="query.sql"></textarea></p>
         <button class="btn btn-primary" ng-click="query.$save({only: ['sql']})">Save</button>
         <button class="btn btn-info" ng-click="runQuery(query)"><i class="icon-play"></i> Run Query</button>
       </div>

@@ -19,7 +19,7 @@
     <div class="control-group" ng-class="{error: QueryItemForm.sql.$invalid}">
       <label class="control-label">SQL</label>
       <div class="controls">
-        <textarea ui-codemirror="{mode: 'text/x-mysql', indentWithTabs: true, smartIndent: true, matchBrackets : true, height: '100px'}" ng-model="model.sql"></textarea>
+        <textarea ui-codemirror="codeMirrorConfigs(false)['sql']" ng-model="model.sql"></textarea>
         <span ng-show="QueryItemForm.sql.$error.required" class="help-inline">*</span>
       </div>
     </div>
