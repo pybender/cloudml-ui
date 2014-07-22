@@ -12,8 +12,9 @@ angular.module(
   'Entity'
   'Field'
   'Sqoop'
+  'XmlImportHandler'
 
-  ($scope, $rootScope, $dialog, Entity, Field, Sqoop) ->
+  ($scope, $rootScope, $dialog, Entity, Field, Sqoop, XmlImportHandler) ->
     $scope.init = (handler) ->
       $scope.handler = handler
       $scope.dialog = $dialog
@@ -97,6 +98,19 @@ angular.module(
         query.edit_err = null
         query.err = null
       )
+
+    $scope.runQuery = (queryObj) ->
+      $scope.openDialog({
+        $dialog: $dialog
+        model: null
+        template: 'partials/import_handler/test_query.html'
+        ctrlName: 'QueryTestDialogCtrl'
+        extra:
+          handlerUrl: "#{$scope.handler.BASE_API_URL}#{$scope.handler.id}"
+          datasources: $scope.handler.xml_data_sources
+          query: queryObj
+        action: 'test xml import handler query'
+      })
 
     $scope.addSqoop = (entity) ->
       sqoop = new Sqoop({

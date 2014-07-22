@@ -1,6 +1,8 @@
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.declarative import declared_attr
 
+from core.importhandler.importhandler import ImportHandler as CoreImportHandler
+
 from api.base.models import db, BaseModel
 
 
@@ -111,15 +113,14 @@ class ImportHandlerMixin(BaseModel):
         Datasource with given name should be in handler's datasource list.
         Returns iterator.
         """
-        from core.importhandler import importhandler
-        datasource = next((d for d in self.data['datasource']
-                           if d['name'] == datasource_name))
+        vendor, conn = self._get_ds_details_for_query(datasource_name)
+        iter_func = CoreImportHandler.DB_ITERS.get(vendor)
 
-        iter_func = importhandler.ImportHandler.DB_ITERS.get(
-            datasource['db']['vendor'])
-
-        for row in iter_func([sql], datasource['db']['conn']):
+        for row in iter_func([sql], conn):
             yield dict(row)
+
+    def _get_ds_details_for_query(self, ds_name):
+        raise NotImplementedError()
 
     def __repr__(self):
         return '<%s Import Handler %r>' % (self.TYPE, self.name)

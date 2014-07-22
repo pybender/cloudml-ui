@@ -10,7 +10,7 @@
       <div class="control-group" ng-class="{error: Form.datasource.$invalid}">
         <label class="control-label">Data Source</label>
         <div class="controls">
-          <select name="datasource" ng-options="s.name as s.name for s in handler.datasource" ng-model="query.test_datasource" ng-selected="handler.datasource[0].name"></select>
+          <select name="datasource" ng-options="s.name as s.name for s in datasources" ng-model="query.test_datasource" ng-selected="datasources[0].name"></select>
           <span ng-show="Form.datasource.$error.required" class="help-inline">*</span>
         </div>
       </div>
