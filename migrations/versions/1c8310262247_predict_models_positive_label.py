@@ -1,14 +1,14 @@
 """predict models positive label
 
 Revision ID: 1c8310262247
-Revises: 2b86c9ec2345
+Revises: 194ec8738e52
 Create Date: 2014-07-13 18:19:17.038931
 
 """
 
 # revision identifiers, used by Alembic.
 revision = '1c8310262247'
-down_revision = '2b86c9ec2345'
+down_revision = '194ec8738e52'
 
 from alembic import op
 import sqlalchemy as sa

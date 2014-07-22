@@ -5,6 +5,7 @@ from sqlalchemy.orm import joinedload, joinedload_all
 
 from api.base.resources import BaseResourceSQL, NotFound, odesk_error_response, \
     ERR_INVALID_DATA
+from api.base.resources import ValidationError
 from api import api
 from api.import_handlers.models import XmlImportHandler, XmlInputParameter, \
     XmlEntity, XmlField, XmlDataSource, XmlQuery, XmlScript, XmlSqoop, \
@@ -271,6 +272,21 @@ class PredictModelResource(BaseResourceSQL):
             return self._build_details_query(params, **kwargs)
         except NoResultFound:
             return None
+
+    def _get_list_query(self, params, **kwargs):
+        handler = self._get_handler(kwargs.pop('import_handler_id'))
+        cursor = super(PredictModelResource, self)._get_list_query(params, **kwargs)
+        return cursor.filter(
+            PredictModel.predict_section.any(id=handler.predict.id))
+
+    def _get_handler(self, handler_id):
+        if handler_id is None:
+            raise ValidationError('Please specify import handler')
+
+        handler = XmlImportHandler.query.get(handler_id)
+        if handler is None:
+            raise NotFound()
+        return handler
 
 api.add_resource(
     PredictModelResource, '/cloudml/xml_import_handlers/\

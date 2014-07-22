@@ -18,7 +18,9 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
 
     predict_id = db.Column(db.ForeignKey('predict.id',
                                          ondelete='CASCADE'))
-    predict = relationship('Predict', foreign_keys=[predict_id])
+    predict = relationship(
+        'Predict',
+        foreign_keys=[predict_id], backref="import_handler")
 
     @property
     def data(self):
@@ -546,7 +548,19 @@ def fill_import_handler(import_handler, xml_data=None):
                     name=model.name,
                     value=model.value,
                     script=model.script)
+                if model.positive_label is not None:
+                    predict_model.positive_label_script = model.positive_label.script
+                    predict_model.positive_label_value = model.positive_label.value
                 db.session.add(predict_model)
+
+                for weight in model.weights:
+                    model_weight = PredictModelWeight(
+                        label=weight.label,
+                        script=weight.script,
+                        value=weight.value,
+                        predict_model=predict_model)
+                    db.session.add(model_weight)
+
                 predict.models.append(predict_model)
                 models_dict[model.name] = predict_model
 

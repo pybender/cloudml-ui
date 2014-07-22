@@ -10,11 +10,13 @@ from api.servers.fixtures import ServerData
 from api.servers.models import Server
 from ..views import XmlImportHandlerResource, XmlEntityResource,\
     XmlDataSourceResource, XmlInputParameterResource, XmlFieldResource,\
-    XmlQueryResource, XmlScriptResource, XmlSqoopResource
+    XmlQueryResource, XmlScriptResource, XmlSqoopResource, PredictModelResource
 from ..models import XmlImportHandler, XmlDataSource,\
-    XmlScript, XmlField, XmlEntity, XmlInputParameter, XmlQuery, XmlSqoop
+    XmlScript, XmlField, XmlEntity, XmlInputParameter, XmlQuery, XmlSqoop, \
+    PredictModel
 
 from lxml import etree
+
 
 class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
     """
@@ -47,13 +49,13 @@ class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
 
         resp = self.check_details(show='name,xml', obj=self.obj)
         obj = resp[self.RESOURCE.OBJECT_NAME]
-        
-        print obj['xml']
+
         xmlRoot = etree.fromstring(obj['xml'])
         self.assertEqual(xmlRoot.tag, 'plan')
-        xmlEntities = xmlRoot.xpath('./import/entity[@datasource="odw"][@name="application"]')
+        xmlEntities = xmlRoot.xpath(
+            './import/entity[@datasource="odw"][@name="application"]')
         self.assertEqual(1, len(xmlEntities))
-        
+
         fields = xmlEntities[0].xpath('./entity[@datasource="employer_info"][@name="employer_info"]/\
             field[@name="employer.op_country_tz"]')
         self.assertEqual(1, len(fields))
@@ -61,7 +63,7 @@ class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
         self.assertEqual('string', fields[0].attrib.get('type'))
         self.assertEqual(None, fields[0].attrib.get('multipart'))
         self.assertEqual(None, fields[0].attrib.get('required'))
-        
+
         fields = xmlEntities[0].xpath('./entity[@datasource="employer_info"][@name="employer_info"]/\
             field[@name="employer.op_tot_jobs_filled"]')
         self.assertEqual(1, len(fields))
@@ -69,7 +71,7 @@ class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
         self.assertEqual('string', fields[0].attrib.get('type'))
         self.assertEqual('true', fields[0].attrib.get('multipart'))
         self.assertEqual(None, fields[0].attrib.get('required'))
-        
+
         fields = xmlEntities[0].xpath('./entity[@datasource="employer_info"][@name="employer_info"]/\
             field[@name="employer.country"]')
         self.assertEqual(1, len(fields))
@@ -155,7 +157,10 @@ class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
                                          "host='localhost' dbname='odw' "
                                          "user='postgres' password='postgres'")
 
+
 class IHLoadMixin(object):
+    PIG_IMPORT_HANDLER = 'api/import_handlers/tests/pig-train-import-handler.xml'
+
     def load_import_handler(self, filename='conf/extract.xml'):
         name = str(uuid.uuid1())
         with open(filename, 'r') as fp:
@@ -330,7 +335,7 @@ class XmlFieldTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
         self.assertTrue('configuration' in resp)
         self.assertTrue('types' in resp['configuration'])
         self.assertTrue('transform' in resp['configuration'])
-        
+
     def test_required_mutlipart_serialization(self):
         field = XmlField.query.filter_by(name='employer.op_timezone').one()
         self.assertFalse(field.required)
@@ -382,8 +387,7 @@ class XmlSqoopTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
 
     def setUp(self):
         super(XmlSqoopTests, self).setUp()
-        handler_id = self.load_import_handler(
-            'api/import_handlers/tests/pig-train-import-handler.xml')
+        handler_id = self.load_import_handler(self.PIG_IMPORT_HANDLER)
         self.entity = XmlEntity.query.filter_by(import_handler_id=handler_id,
                                                 name='application').one()
         self.BASE_URL = '/cloudml/xml_import_handlers/{0!s}/entities/{1!s}/sqoop_imports/'.format(
@@ -399,3 +403,54 @@ class XmlSqoopTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
         self.assertEqual(obj['text'], self.obj.text)
         self.assertEqual(obj['table'], self.obj.table)
         self.assertEqual(obj['datasource']['name'], 'sqoop_db_datasource')
+
+
+class PredictModelTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
+    """
+    Tests of the models in predict section of the xml import handlers.
+    """
+    BASE_URL = ''
+    RESOURCE = PredictModelResource
+    Model = PredictModel
+
+    def setUp(self):
+        super(PredictModelTests, self).setUp()
+        # Trying to load the import handler with predict models twice.
+        self.load_import_handler()
+        handler_id = self.load_import_handler()
+        self.BASE_URL = '/cloudml/xml_import_handlers/{0!s}/\
+predict_models/'.format(handler_id)
+        self.handler = XmlImportHandler.query.get(handler_id)
+        self.obj = self.handler.predict.models[0]
+
+    def test_predict_models_loaded_from_xml(self):
+        model = self.handler.predict.models[0]
+        self.assertEquals(model.name, 'autohide')
+        self.assertEquals(model.value, 'BestMatch.v31')
+        self.assertFalse(model.script)
+        self.assertEquals(model.positive_label_value, 'false')
+        self.assertFalse(model.positive_label_script)
+        weights = model.predict_model_weights
+        self.assertEquals(len(weights), 2)
+        weight = weights[0]
+        self.assertEquals(weight.value, '1.23543')
+        self.assertTrue(weight.label)
+        self.assertFalse(weight.script)
+
+    def test_list(self):
+        resp = self.check_list(
+            show='id,name,script,value,positive_label_value',
+            count=1)
+        model = resp['predict_models'][0]
+        db_model = self.handler.predict.models[0]
+        self.assertEquals(model['name'], db_model.name)
+        self.assertEquals(model['value'], db_model.value)
+        self.assertEquals(model['script'], db_model.script)
+        self.assertEquals(model['positive_label_value'], db_model.positive_label_value)
+
+    def test_list_invalid_handler(self):
+        import sys
+        url = '/cloudml/xml_import_handlers/{0!s}/\
+predict_models/'.format(sys.maxint)
+        resp = self.client.get(url)
+        self.assertEquals(resp.status_code, 401)
