@@ -247,6 +247,8 @@ describe "importhandlers", ->
         expect($rootScope.query.test_limit).toEqual 2
         expect($rootScope.query.test_datasource).toEqual handler.xml_data_sources[0].name
         expect($rootScope.runQuery).toBeDefined()
+        expect($rootScope.datasources.length).toEqual 1
+        expect($rootScope.datasources[0].type).toEqual 'db'
 
         url = "#{settings.apiUrl}xml_import_handlers/#{handler.id}/action/run_sql/?"
         $httpBackend.expectPUT(url).respond('{"import_handlers": [{"id": "' + handler.id + '", "name": "Some Name"}]}')
@@ -298,6 +300,13 @@ describe "importhandlers", ->
             vendor: 'postgres'
             dbname: 'cloudml'
             user: 'cloudml'
+        ,
+          import_handler_id: 456654
+          type: 'http'
+          name: 'http'
+          id: 321
+          params:
+            url: 'anything for now'
         ]
     )
     handler

@@ -158,7 +158,8 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
 
   ($scope, $rootScope, dialog) ->
     $scope.handlerUrl = dialog.extra.handlerUrl
-    $scope.datasources = dialog.extra.datasources
+    $scope.datasources = (ds for ds in dialog.extra.datasources when \
+      ds.type is 'sql' or ds.type is 'db')
     $scope.query = dialog.extra.query
     $scope.params = $scope.query.getParams()
     $scope.dialog = dialog
