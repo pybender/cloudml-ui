@@ -119,7 +119,10 @@
         <a ng-disabled="entity.query_obj.loading_state" ng-click="saveQueryText()(entity.query_obj);" class="btn btn-info">
           <i class="status-icon icon-edit"></i> save text
         </a>
-        <a ng-disabled="entity.query_obj.loading_state" ng-click="runQuery({'queryObj':entity.query_obj});" class="btn btn-info">
+        <a class="btn btn-info"
+           ng-disabled="entity.query_obj.loading_state"
+           ng-click="runQuery({'queryObj':entity.query_obj});"
+           ng-show="entity.datasource.type == 'db'">
           <i class="icon-play"></i> Run Query
         </a>
       </div>
