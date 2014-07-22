@@ -129,7 +129,7 @@ class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
 
         # no parameters
         resp = self.client.put(url,
-                               data={'sql': 'SELECT NOW() WHERE %(something)s',
+                               data={'sql': 'SELECT NOW() WHERE #{something}',
                                      'limit': 2,
                                      'datasource': 'odw'},
                                headers=HTTP_HEADERS)
@@ -142,7 +142,7 @@ class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
         iter_mock.return_value = [{'now': datetime(2014, 7, 21, 15, 52, 5, 308936)}]
         with patch.dict('api.import_handlers.models.import_handlers.CoreImportHandler.DB_ITERS', {'postgres': iter_mock}):
             resp = self.client.put(url,
-                                   data={'sql': 'SELECT NOW() WHERE %(something)s',
+                                   data={'sql': 'SELECT NOW() WHERE #{something}',
                                          'limit': 2,
                                          'datasource': 'odw',
                                          'params': json.dumps({'something': 'TRUE'})},
