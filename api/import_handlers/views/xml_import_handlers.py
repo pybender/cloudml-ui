@@ -1,3 +1,5 @@
+import re
+
 from flask import request
 from psycopg2._psycopg import DatabaseError
 from sqlalchemy.orm.exc import NoResultFound
@@ -98,6 +100,7 @@ class XmlImportHandlerResource(BaseResourceSQL):
         params = form.cleaned_data.get('params', {})
         datasource_name = form.cleaned_data['datasource']
         try:
+            sql = re.sub('#{(\w+)}', '%(\\1)s', sql)
             sql = sql % params
         except (KeyError, ValueError):
             return odesk_error_response(400, ERR_INVALID_DATA,

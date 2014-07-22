@@ -210,7 +210,7 @@ datasource_id,entity_id'
           throw new Error "entity_id is required"
 
       getParams: () ->
-        expr = /%\((\w+)\)s/gi
+        expr = /#{(\w+)}/gi
         params = []
         matches = expr.exec(@text)
         while matches

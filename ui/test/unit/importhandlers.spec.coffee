@@ -74,8 +74,7 @@ describe "importhandlers", ->
       $routeParams.id = HANDLER_ID
       $rootScope.initSections = jasmine.createSpy()
 
-      url = BASE_URL + HANDLER_ID + '/?show=' + encodeURIComponent('name,id,import_params,
-created_on,created_by,error,data')
+      url = BASE_URL + HANDLER_ID + '/?show=' + encodeURIComponent('name,id,import_params,created_on,created_by,error,data')
       $httpBackend.expectGET(url).respond('{"import_handler": {"name": "Some name"}}')
 
       createController "ImportHandlerDetailsCtrl"
@@ -208,7 +207,7 @@ created_on,created_by,error,data')
   describe "XmlQuery", ->
 
     it "should properly parse parameters", inject((XmlQuery)->
-      queryText = "SELECT * FROM some_table WHERE qi.file_provenance_date >= '%(start)s' AND qi.file_provenance_date < '%(end)s'"
+      queryText = "SELECT * FROM some_table WHERE qi.file_provenance_date >= '\#\{start\}' AND qi.file_provenance_date < '\#\{end\}'"
       query = new XmlQuery({text: queryText})
       expect(query).toBeDefined()
       expect(query.text).toEqual queryText
@@ -306,7 +305,7 @@ created_on,created_by,error,data')
   getXmlQuery = ->
     query = null
     inject( (XmlQuery)->
-      queryText = "SELECT * FROM some_table WHERE qi.file_provenance_date >= '%(start)s' AND qi.file_provenance_date < '%(end)s'"
+      queryText = "SELECT * FROM some_table WHERE qi.file_provenance_date >= '\#\{start\}' AND qi.file_provenance_date < '\#\{end\}'"
       query = new XmlQuery()
       query.loadFromJSON
         id: 123321
