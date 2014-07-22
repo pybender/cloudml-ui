@@ -196,8 +196,7 @@ angular.module('app.importhandlers.model', ['app.config'])
       BASE_API_URL: "#{settings.apiUrl}importhandlers/"
       BASE_UI_URL: '/handlers/json/'
       API_FIELDNAME: 'import_handler'
-      @MAIN_FIELDS: 'name,id,import_params,
-created_on,created_by,error'
+      @MAIN_FIELDS: 'name,id,import_params,created_on,created_by,error'
       DEFAULT_FIELDS_TO_SAVE: ['name', 'data']
       @PROCESS_STRATEGIES = _.sortBy ['identity', 'string', 'float',
         'boolean', 'integer', 'json', 'composite'], (s)-> s

@@ -124,7 +124,7 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
       API_FIELDNAME: 'sqoop_import'
       @LIST_MODEL_NAME: 'sqoop_imports'
       LIST_MODEL_NAME: @LIST_MODEL_NAME
-      @MAIN_FIELDS: 'id,text,target,table,where,direct,mappers,datasource,
+      @MAIN_FIELDS: 'id,text,target,table,where,direct,mappers,datasource,\
 datasource_id,entity_id'
 
       id: null

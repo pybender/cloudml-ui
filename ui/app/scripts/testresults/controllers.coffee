@@ -11,7 +11,7 @@ angular.module('app.testresults.controllers', ['app.config', ])
 
   ($scope, $dialog, $rootScope, TestResult) ->
     $scope.MODEL = TestResult
-    $scope.FIELDS = 'name,created_on,status,parameters,accuracy,examples_count,
+    $scope.FIELDS = 'name,created_on,status,parameters,accuracy,examples_count,\
 created_by'
     $scope.ACTION = 'loading tests'
 

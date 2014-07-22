@@ -1,6 +1,6 @@
 'use strict'
 
-FIELDS = 'jobflow_id,master_node_dns,port,status,ip,is_default,
+FIELDS = 'jobflow_id,master_node_dns,port,status,ip,is_default,\
 created_on,created_by,active_tunnel'
 
 angular.module('app.clusters.controllers', ['app.config', ])
