@@ -148,8 +148,7 @@ angular.module('app.base', ['app.config', 'app.services'])
           data: fd
           transformRequest: transformRequest
           transformResponse: transformResponse
-          params: _.extend {
-          }, opts
+          params: _.extend {}, opts
         )
         if load
           res.then ((resp) =>

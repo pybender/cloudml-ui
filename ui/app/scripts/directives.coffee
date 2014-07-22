@@ -791,7 +791,7 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
 
 # Directives for creating plots
 
-.directive('scCurves', [ ->
+.directive('scCurves', [ '$timeout', ($timeout)->
   return {
     restrict: 'E',
     scope: { curvesDict: '=',
@@ -803,7 +803,8 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
     },
     link: (scope, element, attrs) ->
       createSVG(scope, element, attrs.width, attrs.height)
-      scope.$watch('curvesDict', updateCurves)
+      $timeout ->
+        scope.$watch('curvesDict', updateCurves)
   }
 ])
 
@@ -883,6 +884,7 @@ updateCurves = (curvesDict, oldVal, scope) ->
   if !curvesDict
     return
   chart = nv.models.lineChart()
+  console.log 'now updating xLabel with', scope.xLabel
   chart.xAxis.orient('bottom')
     .axisLabel(scope.xLabel)
     .tickFormat(d3.format(',r'))
@@ -923,6 +925,8 @@ zip = () ->
 getPlotData = (curvesDict, addLine) ->
   plots_data = []
   for plotName, plotData of curvesDict
+    if plotName[0] is '$'
+      continue
     if plotData? && plotData[0]? && plotData[1]?
       data = zip(plotData[0], plotData[1])
       step = 1 / data.length

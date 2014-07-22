@@ -338,6 +338,7 @@ class Weight(db.Model, BaseMixin):
     value = db.Column(db.Float)
     is_positive = db.Column(db.Boolean)
     css_class = db.Column(db.String)
+    class_label = db.Column(db.String(100), nullable=True)
 
     model_id = db.Column(db.Integer, db.ForeignKey('model.id'))
     model = relationship(Model, backref=backref('weights'))
