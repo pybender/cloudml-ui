@@ -39,4 +39,4 @@ $cml_window_location_reload = ->
   window.location.reload()
 
 $cml_window_location_replace = (v)->
-  window.location.replace()
+  window.location.replace(v)

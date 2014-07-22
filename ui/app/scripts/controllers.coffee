@@ -49,6 +49,36 @@ angular.module('app.controllers', ['app.config', ])
       return 'active'
     else
       return ''
+
+  $rootScope.codeMirrorConfigs = (readOnly)->
+    json:
+      mode: 'application/json'
+      readOnly: readOnly
+      json: true
+      lineWrapping: true
+      lineNumbers: true
+    python:
+      mode: 'text/x-python'
+      smartIndent: true
+      lineNumbers: true
+      matchBrackets: true
+      readOnly: readOnly
+    sql:
+      mode: 'text/x-mysql'
+      indentWithTabs: true
+      smartIndent: true
+      lineNumbers: true
+      matchBrackets: true
+      lineWrapping: true
+      readOnly: readOnly
+    xml:
+      mode: 'application/xml'
+      indentWithTabs: true
+      smartIndent: true
+      lineNumbers: true
+      matchBrackets: true
+      lineWrapping: true
+      readOnly: readOnly
 ])
 
 .controller('ObjEditCtrl', [

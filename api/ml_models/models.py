@@ -4,12 +4,14 @@ from functools import partial
 
 from sqlalchemy.orm import relationship, deferred, backref, foreign, remote
 from sqlalchemy.dialects import postgresql
+from sqlalchemy.sql import text
 from sqlalchemy import Index, func
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy import event, and_
 
 from api.base.models import db, BaseModel, BaseMixin, JSONType, S3File
 from api.logs.models import LogMessage
+from api.amazon_utils import AmazonS3Helper
 
 
 class Model(db.Model, BaseModel):
@@ -145,6 +147,20 @@ class Model(db.Model, BaseModel):
             return TrainerStorage.loads(self.trainer)
         return self.trainer
 
+    def get_trainer_filename(self):
+        # we don't use sqlalchemy to avoid auto loading of trainer file
+        # intoo trainer object
+        sql = text("SELECT trainer from model where id=:id")
+        trainer_filename, = db.engine.execute(sql, id=self.id).first()
+        return trainer_filename
+
+    def get_trainer_s3url(self, expires_in=3600):
+        trainer_filename = self.get_trainer_filename()
+        if self.status != self.STATUS_TRAINED or not trainer_filename:
+            return None
+        helper = AmazonS3Helper()
+        return helper.get_download_url(trainer_filename, expires_in)
+
     @property
     def dataset(self):
         return self.datasets[0] if len(self.datasets) else None
@@ -190,7 +206,7 @@ class Model(db.Model, BaseModel):
             self.features_set.modified = True
             data = self.features_set.features
         data['classifier'] = self.classifier
-        return json.dumps(data)
+        return json.dumps(data, indent=4)
 
     @property
     def features(self):
@@ -322,6 +338,7 @@ class Weight(db.Model, BaseMixin):
     value = db.Column(db.Float)
     is_positive = db.Column(db.Boolean)
     css_class = db.Column(db.String)
+    class_label = db.Column(db.String(100), nullable=True)
 
     model_id = db.Column(db.Integer, db.ForeignKey('model.id'))
     model = relationship(Model, backref=backref('weights'))

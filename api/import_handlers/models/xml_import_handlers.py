@@ -123,6 +123,17 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
         self.import_params = [p.name for p in self.xml_input_parameters]
         self.save()
 
+    def _get_ds_details_for_query(self, ds_name):
+        """
+        from a dataset name returns vendor and connection string
+        :param ds_name:
+        :return: tuple (vendor, connection string)
+        """
+        ds = next((d for d in self.xml_data_sources if d.name == ds_name))
+        conn = "host='{host:s}' dbname='{dbname:s}' user='{user:s}' " \
+               "password='{password:s}'".format(**ds.params)
+        return ds.params['vendor'], conn
+
     def __repr__(self):
         return "<Import Handler %s>" % self.name
 

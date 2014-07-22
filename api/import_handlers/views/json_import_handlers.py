@@ -247,6 +247,8 @@ filename=importhandler-%s.json' % model.name
                 raise ValidationError(form.error_messages)
         return handler
 
+    # TODO: nader20140721: we need to refactor this one with the same one
+    # in `api.import_handlers.views.xml_import_handlers.py`
     def _put_run_sql_action(self, **kwargs):
         """
         Run sql query for testing
@@ -262,7 +264,7 @@ filename=importhandler-%s.json' % model.name
 
         sql = form.cleaned_data['sql']
         limit = form.cleaned_data['limit']
-        params = form.cleaned_data['params']
+        params = form.cleaned_data.get('params', {})
         datasource_name = form.cleaned_data['datasource']
         try:
             sql = sql % params

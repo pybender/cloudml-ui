@@ -91,21 +91,31 @@
           <div>
               Classification Accuracy: <span class="value">{{ test.accuracy|number:4 }}</span>
           </div>
+          <hr/>
         </div>
-        <hr/>
         <div>
           <h4>Receiver operating characteristic</h4>
-          <p>The Area Under an ROC Curve: 
-              <span>{{ test.metrics.roc_auc.toFixed(4) }}</span>
-          </p>
-          <sc-curves xlabel="False-positive rate" ylabel="True-positive rate" curves-dict="rocCurve" show-line="1" width="500"></sc-curves>
+          <div class="row">
+            <div class="span5" ng-repeat="(clazz, obj) in rocCurves">
+              <div class="row">
+                <div class="span5">
+                  <p>The Area Under an ROC Curve:
+                    <span>{{ obj.roc_auc.toFixed(4) }}</span>
+                  </p>
+                </div>
+                <div class="span5">
+                  <sc-curves xlabel="False-positive rate" ylabel="True-positive rate" curves-dict="obj.curve" show-line="1" width="450"></sc-curves>
+                </div>
+              </div>
+            </div>
+          </div>
+          <hr/>
         </div>
-        <hr/>
-        <div>
+        <div ng-show="prCurve || prCurves">
           <h4>Precision-Recall</h4>
-          <sc-curves xlabel="Recall" ylabel="Precision" curves-dict="prCurve" width="500"></sc-curves>
+          <sc-curves xlabel="Recall" ylabel="Precision" curves-dict="prCurves" width="500"></sc-curves>
+          <hr/>
         </div>
-        <hr/>
         <div ng-show="test.status == 'Completed'">
           <alert-message ng-show="test.examples_placement == 'Do not save'" class="alert-info" msg="Examples data isn't stored for this test at all. So average precision could not be calculated." unsafe></alert-message>
           <a ng-hide="test.examples_placement == 'Do not save'" href="#{{ test.avaragePrecisionUrl() }}"><i class="status-icon icon-search"></i> Average precision</a>

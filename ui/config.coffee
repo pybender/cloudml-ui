@@ -16,6 +16,7 @@ exports.config =
             'bower_components/codemirror/mode/sql/sql.js'
             'bower_components/codemirror/mode/xml/xml.js'
             'bower_components/codemirror/mode/python/python.js'
+            'bower_components/codemirror/mode/javascript/javascript.js'
         ]
         'test/scenarios.js': /^test(\/|\\)e2e/
       order:
@@ -63,6 +64,7 @@ exports.config =
   plugins:
     jade:
       pretty: yes # Adds pretty-indentation whitespaces to output (false by default)
+  sourceMaps: false
 
   # Enable or disable minifying of result js / css files.
   # minify: true

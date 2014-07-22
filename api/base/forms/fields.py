@@ -35,7 +35,7 @@ class IntegerField(BaseField):
         value = super(IntegerField, self).clean(value)
         try:
             return int(value)
-        except ValueError:
+        except (ValueError, TypeError):
             raise ValidationError('should be integer number')
 
 

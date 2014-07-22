@@ -43,6 +43,9 @@ angular.module('app.models.model', ['app.config'])
       test_import_handler: null
       datasets: []
       sorted_data_fields: null
+      labels: null
+
+      trainer_s3_url: null
 
       loadFromJSON: (origData) ->
         super origData
@@ -87,8 +90,8 @@ angular.module('app.models.model', ['app.config'])
           if origData.data_fields?
             @sorted_data_fields = _.sortBy origData['data_fields'], (s)-> s
 
-      downloadUrl: ->
-        return "#{@BASE_API_URL}#{@id}/action/download/"
+      downloadFeaturesUrl: ->
+        return "#{@BASE_API_URL}#{@id}/action/features_download/?"
 
       @$by_handler: (opts) ->
         resolver = (resp, Model) ->
@@ -118,6 +121,10 @@ angular.module('app.models.model', ['app.config'])
       $uploadPredict: (server) ->
         url = "#{@BASE_API_URL}#{@id}/action/upload_to_server/"
         @$make_request(url, {}, "PUT", {'server': server})
+
+      $getTrainS3Url: ()->
+        url = "#{@BASE_API_URL}#{@id}/action/trainer_download_s3url/"
+        @$make_request(url, {}, "GET", {})
 
     return Model
 ])

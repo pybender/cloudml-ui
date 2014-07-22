@@ -48,7 +48,6 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
       created_on: null
       created_by: null
 
-      datasources: []
       xml_input_parameters: []
       scripts: []
       entities: []
@@ -128,7 +127,7 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
       API_FIELDNAME: 'sqoop_import'
       @LIST_MODEL_NAME: 'sqoop_imports'
       LIST_MODEL_NAME: @LIST_MODEL_NAME
-      @MAIN_FIELDS: 'id,text,target,table,where,direct,mappers,datasource,
+      @MAIN_FIELDS: 'id,text,target,table,where,direct,mappers,datasource,\
 datasource_id,entity_id'
 
       id: null
@@ -213,6 +212,24 @@ datasource_id,entity_id'
 
         if not opts.entity_id
           throw new Error "entity_id is required"
+
+      getParams: () ->
+        expr = /%\((\w+)\)s/gi
+        params = []
+        matches = expr.exec(@text)
+        while matches
+          params.push matches[1]
+          matches = expr.exec(@text)
+        return params
+
+      $run: (limit, params, datasource, handlerUrl) ->
+        data = {
+          sql: @text,
+          params: JSON.stringify(params),
+          limit: limit,
+          datasource: datasource
+        }
+        @$make_request("#{handlerUrl}/action/run_sql/", {}, "PUT", data)
 
     return Query
 ])

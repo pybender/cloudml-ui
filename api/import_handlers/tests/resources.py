@@ -1,7 +1,9 @@
 import httplib
 import json
 import os
-from mock import patch
+from datetime import datetime
+
+from mock import patch, MagicMock
 from moto import mock_s3
 
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS
@@ -166,6 +168,43 @@ class ImportHandlerTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(resp.status_code, httplib.OK)
         self.assertTrue(mock_task.delay.called)
         self.assertTrue('status' in json.loads(resp.data))
+
+    def test_run_sql_action(self):
+        url = self._get_url(id=self.obj.id, action='run_sql')
+
+        # forms validation error
+        resp = self.client.put(url, headers=HTTP_HEADERS)
+        resp_obj = json.loads(resp.data)
+        self.assertTrue(resp_obj.has_key('response'))
+        self.assertTrue(resp_obj['response'].has_key('error'))
+
+        # no parameters
+        resp = self.client.put(url,
+                               data={'sql': 'SELECT NOW() WHERE %(something)s',
+                                     'limit': 2,
+                                     'datasource': 'odw'},
+                               headers=HTTP_HEADERS)
+        resp_obj = json.loads(resp.data)
+        self.assertTrue(resp_obj.has_key('response'))
+        self.assertTrue(resp_obj['response'].has_key('error'))
+
+        # good
+        iter_mock = MagicMock()
+        iter_mock.return_value = [{'now': datetime(2014, 7, 21, 15, 52, 5, 308936)}]
+        with patch.dict('api.import_handlers.models.import_handlers.CoreImportHandler.DB_ITERS', {'postgres': iter_mock}):
+            resp = self.client.put(url,
+                                   data={'sql': 'SELECT NOW() WHERE %(something)s',
+                                         'limit': 2,
+                                         'datasource': 'odw',
+                                         'params': json.dumps({'something': 'TRUE'})},
+                                   headers=HTTP_HEADERS)
+            resp_obj = json.loads(resp.data)
+            self.assertTrue(resp_obj.has_key('data'))
+            self.assertTrue(resp_obj['data'][0].has_key('now'))
+            self.assertTrue(resp_obj.has_key('sql'))
+            iter_mock.assert_called_with(['SELECT NOW() WHERE TRUE LIMIT 2'],
+                                         "host='localhost' dbname='cloudml' "
+                                         "user='cloudml' password='cloudml'")
 
 
 class DataSetsTests(BaseDbTestCase, TestChecksMixin):
@@ -377,6 +416,42 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         self.assertIsNone(test.dataset)
         self.assertEquals([ds.name for ds in model.datasets], ['DS 2'])
 
+    def test_sample_data_action(self):
+        # 1. getting sample of default size 10
+        url = self._get_url(id=self.obj.id, action='sample_data')
+        resp = self.client.get(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.OK)
+        data = json.loads(resp.data)
+        self.assertEqual(10, len(data))
+        self.assertNotEqual(data[0], data[-1])
+        self.assertNotEqual(data[1], data[-2])
+
+        # 2. test getting sample of size 5
+        url = self._get_url(id=self.obj.id, action='sample_data', size=5)
+        resp = self.client.get(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.OK)
+        data = json.loads(resp.data)
+        self.assertEqual(5, len(data))
+
+        # 3. dataset not found
+        url = self._get_url(id=1010, action='sample_data')
+        resp = self.client.get(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.NOT_FOUND)
+
+        # 4. file not found
+        with patch('os.path.exists') as path_exists_mock:
+            path_exists_mock.return_value = False
+            url = self._get_url(id=self.obj.id, action='sample_data')
+            resp = self.client.get(url, headers=HTTP_HEADERS)
+            self.assertEquals(resp.status_code, httplib.NOT_FOUND)
+
+        # 5. unknown file type
+        with patch('os.path.splitext') as path_splitext_mock:
+            path_splitext_mock.return_value = ('filename', '.zip')
+            url = self._get_url(id=self.obj.id, action='sample_data')
+            resp = self.client.get(url, headers=HTTP_HEADERS)
+            self.assertEquals(resp.status_code, httplib.BAD_REQUEST)
+            self.assertTrue('unknown file type' in resp.data)
 
 class TestTasksTests(BaseDbTestCase, TestChecksMixin):
     """

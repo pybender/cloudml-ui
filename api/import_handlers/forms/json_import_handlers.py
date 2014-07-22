@@ -131,6 +131,7 @@ class ImportHandlerTestForm(BaseForm):
 
 
 class QueryTestForm(BaseForm):
+    required_fields = ('sql', 'limit', 'datasource')
     sql = CharField()
     params = JsonField()
     limit = IntegerField()

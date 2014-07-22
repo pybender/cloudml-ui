@@ -11,7 +11,7 @@ angular.module('app.testresults.controllers', ['app.config', ])
 
   ($scope, $dialog, $rootScope, TestResult) ->
     $scope.MODEL = TestResult
-    $scope.FIELDS = 'name,created_on,status,parameters,accuracy,examples_count,
+    $scope.FIELDS = 'name,created_on,status,parameters,accuracy,examples_count,\
 created_by'
     $scope.ACTION = 'loading tests'
 
@@ -135,16 +135,12 @@ without test id and model id"
           extra_fields = Test.EXTRA_FIELDS
         when 'metrics'
           extra_fields = 'accuracy,metrics'
-          cb = () ->
-            $scope.rocCurve = {'ROC curve': $scope.test.metrics.roc_curve}
-            pr = $scope.test.metrics.precision_recall_curve
-            $scope.prCurve = {'Precision-Recall curve': [pr[1], pr[0]]}
-               
+          cb = addMetricsToScope
         when 'matrix' then extra_fields = Test.MATRIX_FIELDS
 
       if 'main' in $scope.LOADED_SECTIONS
         # Do not need load main fields -> only extra
-        if extra_fields != ''
+        if extra_fields isnt ''
           $scope.load(extra_fields, name, cb)
       else
         show = extra_fields + ',examples_placement,' + Test.MAIN_FIELDS
@@ -158,6 +154,36 @@ without test id and model id"
         template: 'partials/datasets/csv_list_popup.html'
         ctrlName: 'CsvDownloadCtrl'
     })
+
+  addMetricsToScope = ->
+    metrics = $scope.test.metrics
+    $scope.rocCurves = {}
+    if not _.isArray(metrics.roc_curve)
+      # new dict formate after 20140710
+      classes = _.keys(metrics.roc_curve)
+      for c in classes
+        label =  if classes.length > 1 then 'ROC Curve For Class (' + c + ')'\
+          else 'ROC Curve'
+        curve = {}
+        curve[label] = metrics.roc_curve[c]
+        $scope.rocCurves[c] = {curve: curve, roc_auc: metrics.roc_auc[c]}
+      if classes.length is 1 # only binary classifier publishes PR curve
+        $scope.prCurves =
+          # we are switching precision/recall positions. The dictionary
+          # publishes them as [precision recall] while the chart has
+          # precision @ y-axis and recall @ x-axis, and chart expects
+          # [x-axis y-axis] soo we need the flip
+          'Precision-Recall curve': [
+            metrics.precision_recall_curve[1],
+            metrics.precision_recall_curve[0]
+          ]
+    else
+      # old list fooormat
+      $scope.rocCurves[1] =
+        curve: {'ROC curve': $scope.test.metrics.roc_curve}
+        roc_auc: metrics.roc_auc
+      pr = $scope.test.metrics.precision_recall_curve
+      $scope.prCurves = {'Precision-Recall curve': [pr[1], pr[0]]}
 
   $scope.initSections($scope.goSection, 'metrics:accuracy')
 ])
