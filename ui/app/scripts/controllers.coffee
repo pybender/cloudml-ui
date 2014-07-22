@@ -63,22 +63,6 @@ angular.module('app.controllers', ['app.config', ])
       lineNumbers: true
       matchBrackets: true
       readOnly: readOnly
-    sql:
-      mode: 'text/x-mysql'
-      indentWithTabs: true
-      smartIndent: true
-      lineNumbers: true
-      matchBrackets: true
-      lineWrapping: true
-      readOnly: readOnly
-    xml:
-      mode: 'application/xml'
-      indentWithTabs: true
-      smartIndent: true
-      lineNumbers: true
-      matchBrackets: true
-      lineWrapping: true
-      readOnly: readOnly
 ])
 
 .controller('ObjEditCtrl', [

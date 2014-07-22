@@ -257,7 +257,6 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
       deleteField: '&deleteField',
       editDataSource: '&editDataSource',
       saveQueryText: '&saveQueryText',
-      runQuery: '&runQuery',
       addSqoop: '&addSqoop',
       deleteSqoop: '&deleteSqoop',
     }

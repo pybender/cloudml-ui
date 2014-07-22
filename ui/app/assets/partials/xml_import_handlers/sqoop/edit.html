@@ -65,7 +65,14 @@
           <div class="row">
               <div class="span4">
                   <p>Text</p>
-                  <textarea rows="4" ui-codemirror="codeMirrorConfigs(false)['sql']" ui-refresh="model.text" name="text" ng-model="model.text"></textarea>
+                  <textarea rows="4" ui-codemirror="{
+                    mode: 'text/x-mysql',
+                    indentWithTabs: true,
+                    smartIndent: true,
+                    lineNumbers: true,
+                    matchBrackets: true,
+                    height: '30px'
+                }" ui-refresh="model.text" name="text" ng-model="model.text"></textarea>
               </div>
           </div>
 

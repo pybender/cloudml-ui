@@ -104,16 +104,14 @@
       </div>
       <div>
         SQL:
-        <p><textarea ui-codemirror="codeMirrorConfigs(false)['sql']" ng-model="query.sql"></textarea></p>
+        <p><textarea ui-codemirror="{mode: 'text/x-mysql', indentWithTabs: true, smartIndent: true, lineNumbers: true, matchBrackets : true, height: '100px'}" ng-model="query.sql"></textarea></p>
         <button class="btn btn-primary" ng-click="query.$save({only: ['sql']})">Save</button>
         <button class="btn btn-info" ng-click="runQuery(query)"><i class="icon-play"></i> Run Query</button>
       </div>
-      <hr />
       <div class="query-results" ng-show="query.test">
         <h5 ng-init="queries_run_sql[query.num]=1"><a ng-click="queries_run_sql[query.num]=!queries_run_sql[query.num]"><span ng-hide="queries_run_sql[query.num]" ng-bind="'Show'" /><span ng-show="queries_run_sql[query.num]" ng-bind="'Hide'" /> SQL Query Result</a></h5>
         <div style="overflow: auto;" ng-show="queries_run_sql[query.num]">
-          <table class="table table-bordered table-hovered" style="background: white;"
-                 ng-hide="!query.test.data || query.test.error">
+          <table class="table table-bordered table-hovered" style="background: white;">
               <tr><th ng-repeat="col in query.test.columns">{{ col }}</th></tr>
               <tr ng-repeat="row in query.test.data">
                   <td ng-repeat="col in query.test.columns">
@@ -123,11 +121,6 @@
                   </td>
               </tr>
           </table>
-          <div ng-hide="query.test.data || query.test.error"><h4 class="text-warning">Query Resulted in 0 Records</h4></div>
-          <div ng-hide="!query.test.error">
-            <h4 class="text-error">Query Error:</h4>
-            <p class="text-error"> {{query.test.error}}</p>
-          </div>
         </div>
       </div>
       <div>

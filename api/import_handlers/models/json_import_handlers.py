@@ -100,13 +100,3 @@ class ImportHandler(db.Model, ImportHandlerMixin):
                     test_handler_fields.append(
                         feature['name'].replace('.', '->'))
         return test_handler_fields
-
-    def _get_ds_details_for_query(self, ds_name):
-        """
-        from a dataset name returns vendor and connection string
-        :param ds_name:
-        :return: tuple (vendor, connection string)
-        """
-        ds = next((d for d in self.data['datasource']
-                   if d['name'] == ds_name))
-        return ds['db']['vendor'], ds['db']['conn']

@@ -141,10 +141,7 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
         model: null
         template: 'partials/import_handler/test_query.html'
         ctrlName: 'QueryTestDialogCtrl'
-        extra:
-          handlerUrl: $scope.handler.getUrl()
-          datasources: $scope.handler.datasource,
-          query: query
+        extra: {handler: $scope.handler, query: query}
         action: 'test import handler query'
       })
 
@@ -157,8 +154,8 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
   'dialog'
 
   ($scope, $rootScope, dialog) ->
-    $scope.handlerUrl = dialog.extra.handlerUrl
-    $scope.datasources = dialog.extra.datasources
+    $scope.handler = dialog.extra.handler
+#    $scope.params = $scope.handler.import_params
     $scope.query = dialog.extra.query
     $scope.params = $scope.query.getParams()
     $scope.dialog = dialog
@@ -168,12 +165,12 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
     if !$scope.query.test_limit
       $scope.query.test_limit = 2
     if !$scope.query.test_datasource
-      $scope.query.test_datasource = $scope.datasources[0].name
+      $scope.query.test_datasource = $scope.handler.datasource[0].name
 
     $scope.runQuery = () ->
       $scope.query.test = {}
       $scope.query.$run($scope.query.test_limit, $scope.query.test_params,
-        $scope.query.test_datasource, $scope.handlerUrl
+        $scope.query.test_datasource
       ).then((resp) ->
         $scope.query.test.columns = resp.data.columns
         $scope.query.test.data = resp.data.data
