@@ -250,12 +250,24 @@
           <h5>Import Handlers</h5>
           <div>
             For Train:
-            <span title="Select Train Import Handler" ng-bind="model.train_import_handler_obj.name || 'not specified'" editable="model" value="model.train_import_handler_obj.id" editable-field="train_import_handler" editable-input="select" editable-placement="right" is-empty="_isEmpty" source="handlers_list" display="model.train_import_handler_obj.name"></span>
+            <span title="Select Train Import Handler"
+                  ng-bind="model.train_import_handler_obj.name || 'not specified'"
+                  editable="model" value="model.train_import_handler_obj.id"
+                  editable-field="train_import_handler" editable-input="select"
+                  editable-placement="right" is-empty="_isEmpty"
+                  source="handlers_list"
+                  display="model.train_import_handler_obj.name"></span>
             <a target="_blank" href="#{{ model.train_import_handler_obj.objectUrl() }}"><i class="icon-arrow-right"></i></a>
           </div>
           <div>
             For Tests:
-            <span title="Select Test Import Handler" ng-bind="model.test_import_handler_obj.name || 'not specified'" editable="model" value="model.test_import_handler_obj.id" editable-field="test_import_handler" editable-input="select" editable-placement="right" source="handlers_list" display="model.test_import_handler_obj.name"></span>
+            <span title="Select Test Import Handler"
+                  ng-bind="model.test_import_handler_obj.name || 'not specified'"
+                  editable="model" value="model.test_import_handler_obj.id"
+                  editable-field="test_import_handler" editable-input="select"
+                  editable-placement="right"
+                  source="handlers_list"
+                  display="model.test_import_handler_obj.name"></span>
             <a target="_blank" href="#{{ model.test_import_handler_obj.objectUrl() }}"><i class="icon-arrow-right"></i></a>
           </div>
         </div>

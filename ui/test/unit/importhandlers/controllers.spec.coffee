@@ -169,17 +169,17 @@ describe "app.importhandlers.controllers", ->
       url = BASE_URL + '?show=name'
       xml_ih_url = settings.apiUrl + 'xml_import_handlers/' + '?show=name'
       HANDLER_ID_XML = '123321'
-      $httpBackend.expectGET(url).respond('{"import_handlers": [{"id": "' + HANDLER_ID + '", "name": "Some Name"}]}')
-      $httpBackend.expectGET(xml_ih_url).respond('{"xml_import_handlers": [{"id": "' + HANDLER_ID_XML + '", "name": "Some Name"}]}')
+      $httpBackend.expectGET(url).respond('{"import_handlers": [{"id": "' + HANDLER_ID + '", "name": "Z Some Name"}]}')
+      $httpBackend.expectGET(xml_ih_url).respond('{"xml_import_handlers": [{"id": "' + HANDLER_ID_XML + '", "name": "A Some Name"}]}')
 
       createController "ImportHandlerSelectCtrl"
       $httpBackend.flush()
 
-      expect($rootScope.handlers.length).toBe(1)
-      expect($rootScope.handlers_list[0].value).toBe(HANDLER_ID)
-      expect($rootScope.handlers_list[0].text).toBe("Some Name")
-      expect($rootScope.handlers_list[1].value).toBe(HANDLER_ID_XML+'xml')
-      expect($rootScope.handlers_list[1].text).toBe("Some Name(xml)")
+      expect($rootScope.handlers.length).toBe(2)
+      expect($rootScope.handlers_list[0].value).toBe(HANDLER_ID_XML+'xml')
+      expect($rootScope.handlers_list[0].text).toBe("A Some Name(xml)")
+      expect($rootScope.handlers_list[1].value).toBe(HANDLER_ID)
+      expect($rootScope.handlers_list[1].text).toBe("Z Some Name")
 
   describe "QueryTestDialogCtrl and run query", ->
 
