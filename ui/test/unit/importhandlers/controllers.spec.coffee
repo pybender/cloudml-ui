@@ -1,8 +1,6 @@
 'use strict'
 
-# jasmine specs for importhandlers
-
-describe "importhandlers", ->
+describe "app.importhandlers.controllers", ->
 
   beforeEach(module "ngCookies")
   beforeEach(module "ui")
@@ -182,48 +180,6 @@ describe "importhandlers", ->
       expect($rootScope.handlers_list[0].text).toBe("Some Name")
       expect($rootScope.handlers_list[1].value).toBe(HANDLER_ID_XML+'xml')
       expect($rootScope.handlers_list[1].text).toBe("Some Name(xml)")
-
-  describe "Query", ->
-
-    it "should properly parse parameters", inject((Query)->
-      queryText = "SELECT * FROM some_table WHERE qi.file_provenance_date >= '%(start)s' AND qi.file_provenance_date < '%(end)s'"
-      query = new Query({sql: queryText})
-      expect(query).toBeDefined()
-      expect(query.sql).toEqual queryText
-      params = query.getParams()
-      expect(params).toEqual ['start', 'end']
-
-      url = "someurl/"
-      data =
-        sql: queryText
-        params: JSON.stringify(params)
-        limit: 2
-        datasource: 'ds_name'
-      query.$make_request = jasmine.createSpy()
-      query.$run 2, ['start', 'end'], 'ds_name', url
-      expect(query.$make_request).toHaveBeenCalledWith url + "action/run_sql/", {}, "PUT", data
-    )
-
-  describe "XmlQuery", ->
-
-    it "should properly parse parameters", inject((XmlQuery)->
-      queryText = "SELECT * FROM some_table WHERE qi.file_provenance_date >= '\#\{start\}' AND qi.file_provenance_date < '\#\{end\}'"
-      query = new XmlQuery({text: queryText})
-      expect(query).toBeDefined()
-      expect(query.text).toEqual queryText
-      params = query.getParams()
-      expect(params).toEqual ['start', 'end']
-
-      url = "someurl"
-      data =
-        sql: queryText
-        params: JSON.stringify(params)
-        limit: 2
-        datasource: 'ds_name'
-      query.$make_request = jasmine.createSpy()
-      query.$run 2, ['start', 'end'], 'ds_name', url
-      expect(query.$make_request).toHaveBeenCalledWith url + "/action/run_sql/", {}, "PUT", data
-    )
 
   describe "QueryTestDialogCtrl and run query", ->
 
