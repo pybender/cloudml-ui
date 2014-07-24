@@ -7,7 +7,7 @@
   <alert-message class="alert-info" msg='Export to CSV is background operation. You could see pending and completed exports in the About tab' unsafe></alert-message>
   <div class="row">
     <div class="span5">
-      <label>Standard Fields: </label>
+      <label>Standard Fields ({{stdFields.length}}): </label>
       <div class="alert-info well">
         <span ng-repeat="f in stdFields">
           <span class="label label-info">{{f}}</span>
@@ -18,11 +18,12 @@
   <div class="row">
     <div class="span5">
       <form class="form-inline">
-      <label>Extra Fields: </label>
+      <label>Extra Fields ({{extraFields.length}}): </label>
       <div class="input-append">
         <select ng-model="csvField" ng-disabled="loading_state || !selectFields.length">
           <option value=''>
-            {{ {true:'-- Select Field Name --', false:'-- All Fields Selected --'}[selectFields.length > 0] }}
+            {{ {true:'-- Select Field Name (' + selectFields.length + ') --',
+                false:'-- All Fields Selected --'}[selectFields.length > 0] }}
           </option>
           <option ng-repeat="field in selectFields" value="{{ field }}">{{ field }}</option>
         </select>
