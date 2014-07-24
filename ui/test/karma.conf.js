@@ -28,7 +28,7 @@ module.exports = function(config) {
       'test/vendor/angular/angular-mocks.js',
       'test/unit/canned_responses.coffee',
 
-      'test/unit/*.spec.coffee'
+      'test/unit/**/*.spec.coffee'
     ],
 
 
@@ -40,7 +40,7 @@ module.exports = function(config) {
     // compile coffee scripts
     preprocessors: {
       'app/**/*.coffee': ['coffee'],  //, 'coverage'],
-      'test/unit/*.coffee': 'coffee'
+      'test/unit/**/*.coffee': 'coffee'
     },
 
     // test results reporter to use

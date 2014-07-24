@@ -107,15 +107,42 @@ angular.module('app.importhandlers.model', ['app.config'])
     return Item
 ])
 
+.factory('BaseQueryModel', [
+    'BaseModel'
+    (BaseModel)->
+      class BaseQueryModel extends BaseModel
+        @PARAMS_PERCENT_REGEX: "%\\((\\w+)\\)s"
+        @PARAMS_HASH_REGEX: '#{(\\w+)}'
+
+        _getParams: (exp, sql) ->
+          params = []
+          regex = new RegExp(exp, 'gi')
+          matches = regex.exec(sql)
+          while matches
+            if matches[1] not in params
+              params.push matches[1]
+            matches = regex.exec(sql)
+          return params
+
+        _runSql: (sql, params, datasource, limit, handlerUrl) ->
+          data =
+            sql: sql,
+            params: JSON.stringify(params),
+            limit: limit,
+            datasource: datasource
+          @$make_request handlerUrl, {}, "PUT", data
+
+  ])
+
 .factory('Query', [
   '$http'
   '$q'
   'settings'
-  'BaseModel'
+  'BaseQueryModel'
   'Item'
   
-  ($http, $q, settings, BaseModel, Item) ->
-    class Query  extends BaseModel
+  ($http, $q, settings, BaseQueryModel, Item) ->
+    class Query  extends BaseQueryModel
       DATA_FIELDS: ['name', 'sql']
       name: null
       sql: null
@@ -154,27 +181,16 @@ angular.module('app.importhandlers.model', ['app.config'])
           _handler.loadFromJSON(resp.data['import_handler'])
         )
 
-      $remove: () ->
+      $remove: ->
         data = {'remove_query': 1, 'num': @num}
         @$make_request(@handler.getUrl(), {}, "PUT", data)
 
-      getParams: () ->
-        expr = /%\((\w+)\)s/gi
-        params = []
-        matches = expr.exec(@sql)
-        while matches
-          params.push matches[1]
-          matches = expr.exec(@sql)
-        return params
+      getParams: ->
+        @_getParams BaseQueryModel.PARAMS_PERCENT_REGEX, @sql
 
       $run: (limit, params, datasource, handlerUrl) ->
-        data = {
-          sql: @sql,
-          params: JSON.stringify(params),
-          limit: limit,
-          datasource: datasource
-        }
-        @$make_request("#{handlerUrl}action/run_sql/", {}, "PUT", data)
+        @_runSql @sql, params, datasource, limit,
+          "#{handlerUrl}action/run_sql/"
 
     return Query
 ])
