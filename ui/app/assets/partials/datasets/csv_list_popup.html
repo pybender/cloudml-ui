@@ -4,31 +4,54 @@
 </div>
 <div class="modal-body">
   <div class='alert alert-error' ng-show='err'>{{ err }}</div>
-  <form class="form-horizontal">
-    <alert-message class="alert-info" msg='Export to CSV is background operation. You could see pending and completed exports in the About tab' unsafe></alert-message>
-    <div class="alert-info well">
-      <b>Fields: </b>
-      <span ng-repeat="f in csvFields">
-        <span class="label label-info">
-          {{ f.replace('data_input.', '') }} <a ng-click="removeField(f)"><i class="icon-remove"></i></a>
+  <alert-message class="alert-info" msg='Export to CSV is background operation. You could see pending and completed exports in the About tab' unsafe></alert-message>
+  <div class="row">
+    <div class="span5">
+      <label>Standard Fields: </label>
+      <div class="alert-info well">
+        <span ng-repeat="f in stdFields">
+          <span class="label label-info">{{f}}</span>
         </span>
-      </span> 
+      </div>
     </div>
-    <label class="control-label">Field: </label>
-    <div class="controls">
+  </div>
+  <div class="row">
+    <div class="span5">
+      <form class="form-inline">
+      <label>Extra Fields: </label>
       <div class="input-append">
-        <select ng-model="csvField">
-          <option value=''>-- select field name --</option>
-          <option ng-repeat="field in selectFields" value="{{ field }}">{{ field.replace('data_input.', '') }}</option>
+        <select ng-model="csvField" ng-disabled="loading_state || !selectFields.length">
+          <option value=''>
+            {{ {true:'-- Select Field Name --', false:'-- All Fields Selected --'}[selectFields.length > 0] }}
+          </option>
+          <option ng-repeat="field in selectFields" value="{{ field }}">{{ field }}</option>
         </select>
-
-        <a ng-click="appendField()" ng-disabled="loading_state" class="btn btn-info">
-          <i class="icon-plus"></i>
+        <a class="btn btn-info"
+           ng-click="appendField()" ng-disabled="loading_state || !csvField">
+            <i class="icon-plus"></i>
         </a>
+        <a class="btn btn-info"
+           ng-click="addAll()"
+           ng-disabled="loading_state || !selectFields.length">Add All</a>
+        <a class="btn btn-info"
+           ng-click="removeAll()"
+           ng-disabled="loading_state || !extraFields.length">Remove All</a>
       </div>
       <span ng-show="loading_state">Loading...</span>
+      </form>
     </div>
-  </form>
+  </div>
+  <div class="row" ng-show="extraFields.length">
+    <div class="span5">
+      <div class="alert-info well">
+        <span ng-repeat="f in extraFields">
+          <span class="label label-info">
+            {{ f }} <a ng-click="removeField(f)"><i class="icon-remove"></i></a>
+          </span>
+        </span>
+      </div>
+    </div>
+  </div>
 </div>
 <div class="modal-footer">
   <button ng-click="close()" class="btn">Cancel</button>
