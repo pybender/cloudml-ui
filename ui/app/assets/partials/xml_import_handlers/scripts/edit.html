@@ -1,0 +1,26 @@
+<div ng-controller="SaveObjectCtl">
+  <div class="modal-header">
+    <button ng-click="dialog.close()" class="close" data-dismiss="modal">×</button>
+    <h3>Script</h3>
+  </div>
+
+  <div class="modal-body">
+    <ng-include src="'/partials/parts/save_form_messages.html'"></ng-include>
+    <div class="control-group">
+      <form name="Form" class="form-horizontal">
+        <div class="control-group" ng-class="{error: Form.data.$invalid || errorList.data}">
+            <textarea rows="8" ui-codemirror="codeMirrorConfigs(false)['python']"
+                      ui-refresh="model.data" name="data" ng-model="model.data" ng-change="setFieldError('data')" required></textarea>
+            <span ng-show="Form.data.$error.required" class="help-inline">*</span>
+            <span ng-show="errorList.data" class="help-block" ng-bind="errorList.data" />
+        </div>
+      </form>
+    </div>
+
+  </div>
+
+  <div class="modal-footer">
+    <!-- TODO: disable button -->
+    <button ng-click="save(['data', 'import_handler_id'])" todo-ng-disabled="Form.$invalid" class="btn btn-primary">Save</button>
+  </div>
+</div>

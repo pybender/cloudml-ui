@@ -12,7 +12,7 @@ gunicorn
 scipy==0.12.0
 #scikit-learn==0.13.1
 -e git+https://github.com/nanli0416/scikit-learn.git@new-feat-feature_extraction-text#egg=scikit-learn
-gensim
+gensim==0.8.9
 psycopg2==2.4.6 # sudo apt-get install libpq-dev python-dev
 jsonpath==0.54
 celery==3.0.22
@@ -29,11 +29,11 @@ nose-exclude
 -e git+https://github.com/odeskdev/cloudml.git#egg=cloudml
 -e git+https://github.com/rick446/MongoTools.git#egg=mongotools
 translitcodec==0.3
-boto
+boto==2.26.0
 psutil==1.0.1
 memory-profiler==0.27
 mock
-moto==0.2.18
+moto==0.2.19
 httpretty==0.7.1  # To fix the utf-8 issue
 oauth2==1.5.211
 coverage==3.6
@@ -44,3 +44,8 @@ sqlparse==0.1.10
 blinker
 flask-admin
 nltk
+requests
+
+# for xml import handlers
+lxml==3.3.3
+#PyV8

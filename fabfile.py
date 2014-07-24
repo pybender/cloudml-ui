@@ -54,7 +54,7 @@ def install():
 
     pip.install.run(app='virtualenv', upgrade=True)
     system.package_install.run(packages='liblapack-dev gfortran libpq-dev\
- libevent-dev python-dev mongodb')
+ libevent-dev python-dev mongodb libxml2-dev libxslt-dev libv8-dev scons libboost-python-dev libboost-thread-dev libboost-all-dev')
 
     # Install nodejs from source
     sudo("wget http://nodejs.org/dist/v0.10.18/node-v0.10.18.tar.gz")
@@ -77,7 +77,7 @@ def setup():
     git.init.run()
     git.push.run()
 
-    supervisor.push_init_config.run()
+    #supervisor.push_init_config.run()
     supervisor.push_d_config.run()
     supervisor.push_configs.run()
     supervisor.d.run()
@@ -138,7 +138,7 @@ def cdeploy():
 @task
 def deployui():
     release.work_on.run(0)
-   # git.push.run()
+    git.push.run()
     angularjs.activate.run()
     angularjs.push_config.run()
     angularjs.build.run()

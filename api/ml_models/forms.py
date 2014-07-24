@@ -2,6 +2,7 @@ import json
 from api.base.forms.base_forms import BaseChooseInstanceAndDatasetMultiple
 from api.import_handlers.models import DataSet
 from api.instances.models import Instance
+from api.servers.models import Server
 
 from core.trainer.store import load_trainer
 from core.trainer.trainer import Trainer, InvalidTrainerFile
@@ -10,8 +11,8 @@ from core.importhandler.importhandler import ExtractionPlan, \
     ImportHandlerException
 from api.base.forms import BaseForm, ValidationError, ModelField, \
     CharField, JsonField, ImportHandlerFileField, MultipleModelField, \
-    ChoiceField
-from api.models import Tag, ImportHandler, Model
+    ChoiceField, ImportHandlerField
+from api.models import Tag, ImportHandler, Model, XmlImportHandler
 from api.features.models import FeatureSet, PredefinedClassifier
 from api import app
 
@@ -20,10 +21,8 @@ db = app.sql_db
 
 class ModelEditForm(BaseForm):
     name = CharField()
-    train_import_handler = ModelField(model=ImportHandler, by_name=False,
-                                         return_model=True)
-    test_import_handler = ModelField(model=ImportHandler, by_name=False,
-                                         return_model=True)
+    train_import_handler = ImportHandlerField()
+    test_import_handler = ImportHandlerField()
     example_id = CharField()
     example_label = CharField()
     tags = JsonField()
@@ -65,11 +64,9 @@ class ModelAddForm(BaseForm):
                        ('import_handler', 'import_handler_file'))
 
     name = CharField()
-    import_handler = ModelField(model=ImportHandler, by_name=False,
-                                         return_model=True)
+    import_handler = ImportHandlerField()
     import_handler_file = ImportHandlerFileField()
-    test_import_handler = ModelField(model=ImportHandler, by_name=False,
-                                         return_model=True)
+    test_import_handler = ImportHandlerField()
     test_import_handler_file = ImportHandlerFileField()
     features = JsonField()
     trainer = CharField()
@@ -91,10 +88,12 @@ class ModelAddForm(BaseForm):
 
     def clean_import_handler_file(self, value, field):
         self.cleaned_data['train_import_params'] = field.import_params
+        self.train_import_handler_type = field.import_handler_type
         return value
 
     def clean_test_import_handler_file(self, value, field):
         self.cleaned_data['test_import_params'] = field.import_params
+        self.test_import_handler_type = field.import_handler_type
         return value
 
     def clean_features(self, value, field):
@@ -104,7 +103,8 @@ class ModelAddForm(BaseForm):
                 feature_model = FeatureModel(json.dumps(value), is_file=False)
                 self.cleaned_data['trainer'] = Trainer(feature_model)
             except SchemaException, exc:
-                raise ValidationError('Features JSON file is invalid: %s' % exc)
+                raise ValidationError(
+                    'Features JSON file is invalid: %s' % exc)
         return value
 
     def clean_trainer(self, value, field):
@@ -116,15 +116,24 @@ class ModelAddForm(BaseForm):
                 self.cleaned_data['status'] = Model.STATUS_TRAINED
                 return trainer_obj
             except Exception as exc:
-                raise ValidationError('Pickled trainer model is invalid: {0!s}'.format(exc))
+                raise ValidationError(
+                    'Pickled trainer model is invalid: {0!s}'.format(exc))
 
     def save(self, *args, **kwargs):
         name = self.cleaned_data['name']
+        created_handlers = []
         try:
-            self._save_importhandler('import_handler_file', name)
-            self._save_importhandler('test_import_handler_file', name)
+            if self.cleaned_data.get('import_handler_file'):
+                created_handlers.append(self._save_importhandler(
+                    'import_handler_file', name,
+                    handler_type=self.train_import_handler_type))
+            if self.cleaned_data.get('test_import_handler_file'):
+                created_handlers.append(self._save_importhandler(
+                    'test_import_handler_file', name,
+                    handler_type=self.test_import_handler_type))
             if not 'test_import_handler' in self.cleaned_data:
-                self.cleaned_data['test_import_handler'] = self.cleaned_data['train_import_handler']
+                self.cleaned_data['test_import_handler'] = \
+                    self.cleaned_data['train_import_handler']
 
             model = super(ModelAddForm, self).save(commit=False)
             trainer = self.cleaned_data.get('trainer')
@@ -136,19 +145,26 @@ class ModelAddForm(BaseForm):
                 model.classifier = features['classifier']
         except Exception, exc:
             db.session.rollback()
+            for handler in created_handlers:
+                db.session.delete(handler)
+                db.session.commit()
             raise
         else:
             db.session.commit()
-
         if model.status == Model.STATUS_TRAINED:
             from api.ml_models.tasks import fill_model_parameter_weights
-            fill_model_parameter_weights.delay(model.id)
+            model.create_segments(trainer._get_segments_info())
+
+            for segment in model.segments:
+                fill_model_parameter_weights.delay(model.id, segment.id)
+
 
         return model
 
-    def _save_importhandler(self, fieldname, name):
+    def _save_importhandler(self, fieldname, name, handler_type='json'):
         """
-        Adds new import handler to the system, if it was specified in file field.
+        Adds new import handler to the system,
+        if it was specified in file field.
         Use it in the model.
         """
         def determine_name(name, action):
@@ -156,7 +172,7 @@ class ModelAddForm(BaseForm):
                 name = "%s import handler" % name
             else:
                 name = "%s test import handler" % name
-            
+
             while True:
                 count = ImportHandler.query.filter_by(name=name).count()
                 if not count:
@@ -167,13 +183,22 @@ class ModelAddForm(BaseForm):
 
         data = self.cleaned_data.pop(fieldname, None)
         if data is not None:
-            handler = ImportHandler()
+            if handler_type == 'xml':
+                from api.import_handlers.models import XmlImportHandler
+                cls = XmlImportHandler
+            else:
+                cls = ImportHandler
+
+            handler = cls()
             action = 'test' if fieldname.startswith('test') else 'train'
             handler.name = determine_name(name, action)
-            handler.import_params = self.cleaned_data.pop('%s_import_params' % action)
+            handler.import_params = self.cleaned_data.pop(
+                '%s_import_params' % action)
             handler.data = data
             self.cleaned_data['%s_import_handler' % action] = handler
             db.session.add(handler)
+            db.session.commit()
+            return handler
 
 
 class ModelTrainForm(BaseChooseInstanceAndDatasetMultiple):

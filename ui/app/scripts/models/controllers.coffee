@@ -2,14 +2,28 @@
 
 ### Trained Model specific Controllers ###
 
+# Main model fields and which ones that are required for train/test dialogs
+MODEL_FIELDS = [
+  'name','status','test_import_handler', 'train_import_handler',
+  'train_import_handler_type', 'test_import_handler_type',
+  'test_handler_fields', 'labels'
+].join(',')
+
 FIELDS_BY_SECTION = {
-  'model': 'classifier,features_set_id'
-  'training': 'error,weights_synchronized,memory_usage,
-trained_by,trained_on,training_time,datasets,train_records_count,trainer_size'
-  'about': 'created_on,target_variable,example_id,example_label,
-labels,updated_on,feature_count,test_import_handler,
-train_import_handler,created_by,data_fields,test_handler_fields,tags'
-  'main': 'name,status'
+  'model': [
+    'classifier','features_set_id','segments'
+  ].join(',')
+  'training': [
+    'error','weights_synchronized','memory_usage','segments', 'trained_by',
+    'trained_on','training_time','datasets', 'train_records_count',
+    'trainer_size'
+  ].join(',')
+  'about': [
+    'created_on','target_variable','example_id','example_label',
+    'updated_on','feature_count','created_by','data_fields',
+    'test_handler_fields','tags'
+  ].join(',')
+  'main': MODEL_FIELDS
 }
 
 angular.module('app.models.controllers', ['app.config', ])
@@ -30,8 +44,9 @@ angular.module('app.models.controllers', ['app.config', ])
 
   ($scope, $location, Model) ->
     $scope.MODEL = Model
-    $scope.FIELDS = Model.MAIN_FIELDS + ',tags,created_on,created_by,
-updated_on,updated_by,comparable,test_handler_fields'
+    $scope.FIELDS = MODEL_FIELDS + ',' + ['tags','created_on','created_by',
+                                          'updated_on','updated_by',
+                                          'comparable'].join(',')
     $scope.ACTION = 'loading models'
     $scope.currentTag = $location.search()['tag']
     $scope.kwargs = {
@@ -130,6 +145,12 @@ updated_on,updated_by,comparable,test_handler_fields'
             $scope.params['tags'] = []
             for t in $scope.model.tags
               $scope.params['tags'].push {'id': t, 'text': t}
+            if $scope.model.status is 'Trained'
+              $scope.model.$getTrainS3Url()
+              .then (resp)->
+                $scope.model.trainer_s3_url = resp.data.url
+              , (opts)->
+                $scope.setError(opts, 'loading tags list')
         ), ((opts)->
           $scope.setError(opts, 'loading model details')
         )
@@ -181,10 +202,6 @@ updated_on,updated_by,comparable,test_handler_fields'
         cmp = () ->
           return this.text.localeCompare(term) == 0
         if $(data).filter(cmp).length == 0 then return {id: term, text: term}
-    }
-
-    $scope.codemirrorOptions = {
-      mode: 'javascript', readOnly: true, json: true
     }
 
     $scope.updateTags = () ->
@@ -259,10 +276,11 @@ updated_on,updated_by,comparable,test_handler_fields'
 .controller('ModelActionsCtrl', [
   '$scope'
   '$dialog'
+  '$rootScope'
 
-  ($scope, $dialog) ->
-    $scope.init = (opts={}) =>
-      if not opts.model
+  ($scope, $dialog, $rootScope) ->
+    $scope.init = (opts) ->
+      if !opts || !opts.model
         throw new Error "Please specify model"
 
       $scope.model = opts.model
@@ -270,9 +288,13 @@ updated_on,updated_by,comparable,test_handler_fields'
     $scope.test_model = (model)->
       $scope._showModelActionDialog(model, 'test', (model) ->
         model.$load(show: 'test_handler_fields').then (->
-          $scope.openDialog($dialog, model,
-            'partials/testresults/run_test.html',
-            'TestDialogController', 'modal large'))
+          $scope.openDialog({
+            $dialog: $dialog
+            model: model
+            template: 'partials/testresults/run_test.html'
+            ctrlName: 'TestDialogController'
+            cssClass: 'modal large'
+          }))
         )
 
     $scope.cancel_request_spot_instance = (model)->
@@ -280,22 +302,39 @@ updated_on,updated_by,comparable,test_handler_fields'
 
     $scope.train_model = (model)->
       $scope._showModelActionDialog(model, 'train', (model) ->
-        $scope.openDialog($dialog, model,
-            'partials/models/model_train_popup.html',
-            'TrainModelCtrl', 'modal'))
+        $scope.openDialog({
+          $dialog: $dialog
+          model: model
+          template: 'partials/models/model_train_popup.html'
+          ctrlName: 'TrainModelCtrl'
+        }))
 
     $scope.delete_model = (model) ->
-      $scope.openDialog($dialog, model,
-        'partials/base/delete_dialog.html', 'DialogCtrl',
-        'modal', 'delete model', 'models')
+      $scope.openDialog({
+        $dialog: $dialog
+        model: model
+        template: 'partials/base/delete_dialog.html'
+        ctrlName: 'DialogCtrl'
+        action: 'delete model'
+      })
 
     $scope.editClassifier = (model) ->
-      $scope.openDialog($dialog, null,
-        'partials/features/classifiers/edit.html',
-          'ModelWithParamsEditDialogCtrl',
-        'modal', 'edit classifier', 'classifiers',
-        {model: model, fieldname: 'classifier'}
-      )
+      $scope.openDialog({
+        $dialog: $dialog
+        model: null
+        template: 'partials/features/classifiers/edit.html'
+        ctrlName: 'ModelWithParamsEditDialogCtrl'
+        action: 'edit classifier'
+        extra: {model: model, fieldname: 'classifier'}
+      })
+
+    $scope.uploadModelToPredict = (model) ->
+      $scope.openDialog({
+        $dialog: $dialog
+        model: model
+        template: 'partials/servers/choose.html'
+        ctrlName: 'ModelUploadToServerCtrl'
+      })
 
     $scope._showModelActionDialog = (model, action, fn)->
       if eval('model.' + action + '_import_handler_obj')?
@@ -308,4 +347,22 @@ updated_on,updated_by,comparable,test_handler_fields'
           ), ((opts) ->
             $scope.setError(opts, 'loading import handler details')
           )
+])
+
+.controller('ModelUploadToServerCtrl', [
+  '$scope'
+  '$rootScope'
+  'dialog'
+
+  ($scope, $rootScope, dialog) ->
+    $scope.dialog = dialog
+    $scope.resetError()
+    $scope.model = dialog.model
+    $scope.model.server = null
+
+    $scope.upload = () ->
+      $scope.model.$uploadPredict($scope.model.server).then((resp) ->
+        $rootScope.msg = resp.data.status
+      )
+      dialog.close()
 ])

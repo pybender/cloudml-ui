@@ -321,6 +321,12 @@ class MigrateToPosgresql(Command):
         print 'Done.'
 
 
+class MigrateToXmlImportHandlers(Command):
+    def run(self, **kwargs):
+        from api.import_handlers.migrator import xml_migrate
+        xml_migrate()
+
+
 manager = Manager(app)
 migrate = Migrate(app, app.sql_db)
 manager.add_command('db', MigrateCommand)
@@ -336,6 +342,7 @@ manager.add_command("shell", Shell(make_context=_make_context))
 manager.add_command("create_db_tables", CreateDbTables())
 manager.add_command("drop_db_tables", DropDbTables())
 manager.add_command("migrate_to_postgresql", MigrateToPosgresql())
+manager.add_command("migrate_xml_ih", MigrateToXmlImportHandlers())
 manager.add_command("rem_pyc", RemPycFiles())
 
 if __name__ == "__main__":

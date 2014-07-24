@@ -21,7 +21,7 @@ CELERY_RESULT_BACKEND = 'amqp://guest:guest@localhost:5672//'
 CELERY_IMPORTS = (
     'api.models', 'api', 'api.import_handlers.tasks',
     'api.instances.tasks', 'api.ml_models.tasks',
-    'api.model_tests.tasks')
+    'api.model_tests.tasks', 'api.servers.tasks')
 CELERYD_MAX_TASKS_PER_CHILD = 1
 
 from kombu import Queue

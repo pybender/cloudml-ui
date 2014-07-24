@@ -8,9 +8,9 @@ from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS
 from views import TestResource, TestExampleResource
 from models import TestResult, TestExample
 from api.ml_models.models import Model
-from api.ml_models.fixtures import ModelData, WeightData
+from api.ml_models.fixtures import ModelData, WeightData, SegmentData
 from api.import_handlers.fixtures import ImportHandlerData, DataSetData
-from api.import_handlers.models import DataSet
+from api.import_handlers.models import DataSet, ImportHandler
 from api.instances.models import Instance
 from api.instances.fixtures import InstanceData
 from api.async_tasks.models import AsyncTask
@@ -36,8 +36,11 @@ class TestResourceTests(BaseDbTestCase, TestChecksMixin):
         super(TestResourceTests, self).setUp()
         self.obj = self.Model.query.filter_by(
             name=TestResultData.test_01.name).one()
+        self.handler = ImportHandler.query.first()
         self.model = Model.query.filter_by(
             name=ModelData.model_01.name).first()
+        self.model.test_import_handler = self.handler
+        self.model.save()
 
         self.BASE_URL = self.BASE_URL.format(self.obj.model.id)
         self.MODEL_PARAMS = {'model_id': self.obj.model.id}
@@ -189,7 +192,7 @@ class TestExampleResourceTests(BaseDbTestCase, TestChecksMixin):
     Model = TestExample
     datasets = [FeatureData, FeatureSetData, ImportHandlerData,
                 DataSetData, ModelData, WeightData,
-                TestResultData, TestExampleData]
+                TestResultData, TestExampleData, SegmentData]
 
     def setUp(self):
         super(TestExampleResourceTests, self).setUp()
@@ -346,21 +349,21 @@ class TasksTests(BaseDbTestCase):
     @mock_s3
     @patch('api.models.Model.get_trainer')
     @patch('api.models.DataSet.get_data_stream')
-    def _check_run_test(self, test, _fake_raw_data,
+    def _check_run_test(self, test, metrics_mock_class, _fake_raw_data,
                         mock_get_data_stream, mock_get_trainer):
         mocks = [mock_get_data_stream, mock_get_trainer]
         import numpy
         import scipy
 
         if _fake_raw_data is None:
-            _fake_raw_data = [{'application_id': '123',
+            _fake_raw_data = {"default": [{'application_id': '123',
                                'hire_outcome': '0',
-                               'title': 'A1'}] * 100
+                               'title': 'A1'}] * 100}
 
         def _fake_test(self, *args, **kwargs):
             _fake_test.called = True
             self._raw_data = _fake_raw_data
-            metrics_mock = MetricsMock()
+            metrics_mock = metrics_mock_class()
             preds = Mock()
             preds.size = 100
             preds.__iter__ = Mock(return_value=iter([0] * 100))
@@ -393,17 +396,17 @@ class TasksTests(BaseDbTestCase):
     def test_run_test_unicode_encoding(self):
         test = TestResult.query.filter_by(name=TestResultData.test_04.name).first()
         unicode_string = u'Привет!'
-        _fake_raw_data = [{'application_id': '123',
+        _fake_raw_data = {'default': [{'application_id': '123',
                            'hire_outcome': '0',
                            'title': 'A1',
                            'opening_title': unicode_string,
-                           'opening_id': unicode_string}] * 100
+                           'opening_id': unicode_string}] * 100 }
         
-        result, mocks = self._check_run_test(test, _fake_raw_data)
+        result, mocks = self._check_run_test(test, MetricsMockBinaryClassifier, _fake_raw_data)
         self.assertEquals(result, 'Test completed')
         example = TestExample.query.filter_by(
             test_result=test).first()
-        self.assertEquals(example.data_input.keys(), _fake_raw_data[0].keys())
+        self.assertEquals(example.data_input.keys(), _fake_raw_data['default'][0].keys())
         self.assertEquals(
             example.data_input['opening_id'], unicode_string)
         self.assertEquals(example.example_id, unicode_string)
@@ -417,7 +420,7 @@ class TasksTests(BaseDbTestCase):
         self.assertEquals(
             TestExample.query.filter_by(test_result=test).count(), 0)
 
-        result, mocks = self._check_run_test(test, None)
+        result, mocks = self._check_run_test(test, MetricsMockBinaryClassifier, None)
         self.assertEquals(result, 'Test completed')
         mock_get_data_stream, mock_get_trainer, mock_run_test = mocks
         self.assertEquals(1, mock_get_data_stream.call_count,
@@ -429,14 +432,149 @@ class TasksTests(BaseDbTestCase):
                           ['hire_outcome', 'application_id', 'title'])
 
 
-class MetricsMock(MagicMock):
+    def test_run_test_ndim_classifier(self):
+        test = TestResult.query.filter_by(name=TestResultData.test_04.name).first()
+        model = test.model
+        self.assertEquals(model.status, model.STATUS_TRAINED, model.__dict__)
+
+        self.assertEquals(
+            TestExample.query.filter_by(test_result=test).count(), 0)
+
+        result, mocks = self._check_run_test(test, MetricsMockNDimClassifier, None)
+        self.assertEquals(result, 'Test completed')
+        mock_get_data_stream, mock_get_trainer, mock_run_test = mocks
+        self.assertEquals(1, mock_get_data_stream.call_count,
+                          'Should be cached and called only once')
+
+        example = TestExample.query.filter_by(test_result=test).first()
+        self.assertTrue(example.data_input, 'Raw data should be filled at all')
+        self.assertEquals(example.data_input.keys(),
+                          ['hire_outcome', 'application_id', 'title'])
+
+
+class TasksRunTestTests(BaseDbTestCase):
+    """
+    Testing celery task run_test end-to-end with minimal mocking
+    """
+    datasets = [DataSetData, TestResultData, TestExampleData]
+    def setUp(self):
+        super(TasksRunTestTests, self).setUp()
+        self.dataset = DataSet.query.first()
+
+    @patch('api.models.Model.get_trainer')
+    @patch('api.models.DataSet.get_data_stream')
+    def run_real_test_binary_classifier(self, mock_get_data_stream, mock_get_trainer):
+        test = TestResult.query.filter_by(name=TestResultData.test_04.name).first()
+        self.assertEqual({}, test.metrics)
+        self.assertEquals(test.model.status, test.model.STATUS_TRAINED, test.model.__dict__)
+
+        from core.trainer.store import TrainerStorage
+        trainer = TrainerStorage.loads(open('./api/ml_models/model.dat', 'r').read())
+        mock_get_trainer.return_value = trainer
+
+        import gzip
+        mock_get_data_stream.return_value = gzip.open('./api/import_handlers/ds.gz', 'r')
+
+        result = run_test([self.dataset.id, ], test.id)
+        self.assertEqual(result, 'Test completed')
+        self.assertEqual(2, len(test.classes_set))
+        self.assertIsInstance(test.classes_set, list)
+
+        # any new metric added, you should add corresponding asserts
+        self.assertEqual(6, len(test.metrics.keys()))
+
+        self.assertTrue(test.metrics.has_key('confusion_matrix'))
+        self.assertEqual(len(test.classes_set), len(test.metrics['confusion_matrix']))
+        for i, v in enumerate(test.metrics['confusion_matrix']):
+            self.assertIsInstance(v, list, 'cofusion matrix @ index:%s is not tuple/list' % (i,))
+            self.assertEqual(2, len(v))
+
+        pos_label = test.classes_set[1]
+        self.assertTrue(test.metrics.has_key('roc_curve'))
+        self.assertIsInstance(test.metrics['roc_curve'], dict)
+        self.assertTrue(test.metrics['roc_curve'].has_key(pos_label))
+        self.assertEqual(2, len(test.metrics['roc_curve'][pos_label]))
+        self.assertIsInstance(test.metrics['roc_curve'][pos_label][0], list)
+        self.assertIsInstance(test.metrics['roc_curve'][pos_label][1], list)
+
+        self.assertTrue(test.metrics.has_key('roc_auc'))
+        self.assertTrue(test.metrics['roc_auc'].has_key(pos_label))
+        self.assertIsInstance(test.metrics['roc_auc'][pos_label], float)
+
+        self.assertTrue(test.metrics.has_key('accuracy'))
+        self.assertIsInstance(test.metrics['accuracy'], float)
+
+        self.assertTrue(test.metrics.has_key('avarage_precision'))
+        self.assertIsInstance(test.metrics['avarage_precision'], float)
+
+    @patch('api.models.Model.get_trainer')
+    @patch('api.models.DataSet.get_data_stream')
+    def run_real_test_multiclass_classifier(self, mock_get_data_stream, mock_get_trainer):
+        test = TestResult.query.filter_by(name=TestResultData.test_04.name).first()
+        self.assertEqual({}, test.metrics)
+        self.assertEquals(test.model.status, test.model.STATUS_TRAINED, test.model.__dict__)
+
+        from core.trainer.store import TrainerStorage
+        trainer = TrainerStorage.loads(open('./api/ml_models/multiclass-trainer.dat', 'r').read())
+        mock_get_trainer.return_value = trainer
+
+        import gzip
+        mock_get_data_stream.return_value = gzip.open('./api/import_handlers/multiclass_ds.gz', 'r')
+
+        result = run_test([self.dataset.id, ], test.id)
+        self.assertEqual(result, 'Test completed')
+        self.assertEqual(3, len(test.classes_set))
+        self.assertIsInstance(test.classes_set, list)
+
+        # any new metric added, you should add corresponding asserts
+        self.assertEqual(4, len(test.metrics.keys()))
+
+        for pos_label in test.classes_set:
+            self.assertTrue(test.metrics.has_key('roc_curve'))
+            self.assertIsInstance(test.metrics['roc_curve'], dict)
+            self.assertTrue(test.metrics['roc_curve'].has_key(pos_label))
+            self.assertEqual(2, len(test.metrics['roc_curve'][pos_label]))
+            self.assertIsInstance(test.metrics['roc_curve'][pos_label][0], list)
+            self.assertIsInstance(test.metrics['roc_curve'][pos_label][1], list)
+
+            self.assertTrue(test.metrics.has_key('roc_auc'))
+            self.assertTrue(test.metrics['roc_auc'].has_key(pos_label))
+            self.assertIsInstance(test.metrics['roc_auc'][pos_label], float)
+
+        self.assertTrue(test.metrics.has_key('confusion_matrix'))
+        self.assertEqual(len(test.classes_set), len(test.metrics['confusion_matrix']))
+        for i, v in enumerate(test.metrics['confusion_matrix']):
+            self.assertIsInstance(v, list, 'cofusion matrix @ index:%s is not tuple/list' % (i,))
+            self.assertEqual(2, len(v))
+
+        self.assertTrue(test.metrics.has_key('accuracy'))
+        self.assertIsInstance(test.metrics['accuracy'], float)
+
+
+class MetricsMockBinaryClassifier(MagicMock):
     accuracy = 0.85
-    classes_set = ['0', '1']
-    _labels = ['0', '1'] * 50
+    classes_set = ['a', 'b']
+    classes_count = len(classes_set)
+    _labels = ['a', 'b'] * 50
 
     def get_metrics_dict(self):
         return {
             'confusion_matrix': [0, 0],
-            'roc_curve': [[0], [0], [0], [0]],
+            'roc_curve': {'b': [[0], [1]]},
+            'roc_auc': {'b': 0.1},
             'precision_recall_curve': [[0], [0], [0], [0]],
+        }
+
+
+class MetricsMockNDimClassifier(MagicMock):
+    accuracy = 0.85
+    classes_set = ['a', 'b', 'c']
+    classes_count = len(classes_set)
+    _labels = ['a', 'b', 'c'] * 50
+
+    def get_metrics_dict(self):
+        return {
+            'confusion_matrix': [0, 0, 0],
+            'roc_curve': {'a': [[0], [1]], 'b': [[1], [0]], 'c': [[0], [0]]},
+            'roc_auc': {'a': 0.2, 'b': 0.1}
         }

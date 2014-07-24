@@ -181,6 +181,8 @@ class FeatureSet(ExportImportMixin, BaseModel, db.Model):
                        'features': [],
                        "feature-types": []}
     schema_name = db.Column(db.String(200), nullable=False, default='noname')
+    group_by = relationship('Feature', secondary=lambda: group_by_table,
+                            backref='group_by_feature_set')
     target_variable = db.Column(db.String(200))
     features_count = db.Column(db.Integer, default=0)
     features_dict = db.Column(JSONType)
@@ -190,7 +192,8 @@ class FeatureSet(ExportImportMixin, BaseModel, db.Model):
                         name='check_features_count_positive'), {})
 
     def __repr__(self):
-        return '<Feature Set {0} ({1})>'.format(self.schema_name, self.target_variable)
+        return '<Feature Set {0} ({1})>'.format(
+            self.schema_name, self.target_variable)
 
     @property
     def features(self):
@@ -202,26 +205,33 @@ class FeatureSet(ExportImportMixin, BaseModel, db.Model):
 
     def from_dict(self, features_dict, commit=True):
         self.schema_name = features_dict['schema-name']
+        self.group_by = []
 
         type_list = features_dict.get('feature-types', None)
         if type_list:
             for feature_type in type_list:
-                count = NamedFeatureType.query.filter_by(name=feature_type['name']).count()
+                count = NamedFeatureType.query.filter_by(
+                    name=feature_type['name']).count()
                 if not count:
                     ntype = NamedFeatureType()
                     ntype.from_dict(feature_type, commit=False)
 
+        group_by_exist = 'group-by' in features_dict
         for feature_dict in features_dict['features']:
             feature = Feature(feature_set=self)
             feature.from_dict(feature_dict, commit=False)
+            if group_by_exist and feature.name in features_dict['group-by']:
+                self.group_by.append(feature)
+
         if commit:
             db.session.commit()
             db.session.expire(self, ['target_variable',
-                                        'features_count',
-                                        'features_dict'])
+                                     'features_count',
+                                     'features_dict'])
 
     def to_dict(self):
         features_dict = {'schema-name': self.schema_name,
+                         'group-by': [f.name for f in self.group_by],
                          'features': [],
                          "feature-types": []}
         types = []
@@ -242,6 +252,15 @@ class FeatureSet(ExportImportMixin, BaseModel, db.Model):
             self.features_dict = self.FEATURES_STRUCT
         self.features_dict['schema-name'] = self.schema_name
         BaseModel.save(self, commit=commit)
+
+
+group_by_table = db.Table(
+    'group_by_table', db.Model.metadata,
+    db.Column('feature_set_id', db.Integer, db.ForeignKey(
+        'feature_set.id', ondelete='CASCADE', onupdate='CASCADE')),
+    db.Column('feature_id', db.Integer, db.ForeignKey(
+        'feature.id', ondelete='CASCADE', onupdate='CASCADE'))
+)
 
 
 @event.listens_for(Feature, "after_insert")

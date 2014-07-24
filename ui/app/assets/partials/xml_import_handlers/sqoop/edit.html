@@ -1,0 +1,79 @@
+<div ng-controller="SaveObjectCtl">
+  <div class="modal-header">
+    <button ng-click="dialog.close()" class="close" data-dismiss="modal">×</button>
+    <h3>Add Sqoop Import</h3>
+  </div>
+
+  <div class="modal-body">
+    <ng-include src="'/partials/parts/save_form_messages.html'"></ng-include>
+    <div class="control-group">
+      <form name="Form" class="form-horizontal">
+          <div ng-show="errorList.entity" class="control-group" ng-class="{error: Form.entity.$invalid || errorList.entity}">
+            <span class="help-block" ng-bind="errorList.entity" />
+          </div>
+
+          <div class="control-group" ng-class="{error: Form.datasource.$invalid || errorList.datasource}" ng-controller="XmlDataSourceSelectCtrl" ng-init="init(model.import_handler_id, 'db')">
+              <label class="control-label">Data Source</label>
+              <div class="controls">
+                <select name="datasource" ng-model="model.datasource" required>
+                  <option ng-selected="ds.id == model.datasource" value="{{ ds.id }}" ng-repeat="ds in datasources">{{ ds.name }}</option>
+                </select>
+                <span ng-show="Form.datasource.$error.required" class="help-inline">*</span>
+                <span ng-show="errorList.datasource" class="help-block" ng-bind="errorList.datasource" />
+              </div>
+            </div>
+
+          <div class="control-group" ng-class="{error: Form.target.$invalid || errorList.target}">
+              <label class="control-label">Target</label>
+              <div class="controls">
+                <input type="text" name="target" ng-model="model.target" ng-change="setFieldError('target')" required />
+                <span ng-show="Form.target.$error.required" class="help-inline">*</span>
+                <span ng-show="errorList.target" class="help-block" ng-bind="errorList.target" />
+              </div>
+          </div>
+
+          <div class="control-group" ng-class="{error: Form.table.$invalid || errorList.table}">
+              <label class="control-label">Table</label>
+              <div class="controls">
+                <input type="text" name="table" ng-model="model.table" ng-change="setFieldError('table')" required />
+                <span ng-show="Form.table.$error.required" class="help-inline">*</span>
+                <span ng-show="errorList.table" class="help-block" ng-bind="errorList.table" />
+              </div>
+          </div>
+
+          <div class="control-group">
+              <label class="control-label">Where</label>
+              <div class="controls">
+                <input type="text" name="where" ng-model="model.where" />
+              </div>
+          </div>
+
+          <div class="control-group">
+              <label class="control-label">Direct</label>
+              <div class="controls">
+                <input type="text" name="direct" ng-model="model.direct" />
+              </div>
+          </div>
+
+          <div class="control-group">
+              <label class="control-label">Mappers</label>
+              <div class="controls">
+                <input type="text" name="mappers" ng-model="model.mappers" />
+              </div>
+          </div>
+
+          <div class="row">
+              <div class="span4">
+                  <p>Text</p>
+                  <textarea rows="4" ui-codemirror="codeMirrorConfigs(false)['sql']" ui-refresh="model.text" name="text" ng-model="model.text"></textarea>
+              </div>
+          </div>
+
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-footer">
+    <button ng-click="save(['entity', 'datasource', 'target', 'table', 'where', 'direct', 'mappers', 'text'])" ng-disabled="Form.$invalid" class="btn btn-primary">Save</button>
+  </div>
+</div>

@@ -14,11 +14,13 @@ Contents:
    
    get_started
    import_handler
+   xml_import_handlers
    features
    changes
    trainer
    test_metrics
    instances
+   deploy_on_predict
    deployment
    development
    api

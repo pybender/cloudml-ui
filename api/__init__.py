@@ -133,17 +133,20 @@ class Api(restful.Api):
             base_url = self.prefix + part
             self.app.add_url_rule(base_url, view_func=resource_func)
             if add_standard_urls:
-                url = base_url + '<regex("[\w\.]*"):id>/'
+                url = base_url + '<regex("[\w\.-]*"):id>/'
                 self.app.add_url_rule(url, view_func=resource_func)
                 url = base_url + 'action/<regex("[\w\.]*"):action>/'
                 self.app.add_url_rule(self.prefix + url, view_func=resource_func)
-                url = base_url + '<regex("[\w\.]*"):id>/' + 'action/<regex("[\w\.]*"):action>/'
+                url = base_url + '<regex("[\w\.-]*"):id>/' + 'action/<regex("[\w\.]*"):action>/'
                 self.app.add_url_rule(self.prefix + url, view_func=resource_func)
 
 api = Api(app)
 admin = Admin(app, 'CloudML Admin Interface')
 
 logging_config.dictConfig(app.config['LOGGING'])
+# to see sqlalchemy SQL statements, uncomment the following, and watch out 
+# for the logs will be huge
+#logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 if app.config.get('SEND_ERROR_EMAILS'):
     from logging.handlers import SMTPHandler
@@ -160,7 +163,7 @@ if app.config.get('SEND_ERROR_EMAILS'):
 
 APPS = ('accounts', 'features', 'import_handlers', 'instances',
         'logs', 'ml_models', 'model_tests', 'statistics', 'reports',
-        'async_tasks')
+        'async_tasks', 'servers')
 
 
 def importer(app_name):
@@ -168,7 +171,9 @@ def importer(app_name):
         try:
             __import__(name)
         except ImportError, exc:
-            if str(exc).startswith('No module named'):
+            exc_msg = str(exc)
+            mod = name.split('.')[2]
+            if exc_msg.startswith('No module named') and mod in exc_msg:
                 return False
             raise
         else:
@@ -179,3 +184,5 @@ def importer(app_name):
 
 for app_name in APPS:
     importer(app_name)
+
+

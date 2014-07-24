@@ -1,7 +1,9 @@
 import httplib
 import json
 import os
-from mock import patch
+from datetime import datetime
+
+from mock import patch, MagicMock
 from moto import mock_s3
 
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS
@@ -13,6 +15,8 @@ from api.ml_models.models import Model
 from api.model_tests.fixtures import TestResultData
 from api.model_tests.models import TestResult
 from api.features.fixtures import FeatureSetData, FeatureData
+from api.servers.models import Server
+from api.servers.fixtures import ServerData
 
 
 class ImportHandlerTests(BaseDbTestCase, TestChecksMixin):
@@ -23,15 +27,15 @@ class ImportHandlerTests(BaseDbTestCase, TestChecksMixin):
     RESOURCE = ImportHandlerResource
     MODEL_NAME = ModelData.model_01.name
     Model = ImportHandler
-    datasets = [ImportHandlerData, DataSetData, ModelData]
+    datasets = [ImportHandlerData, DataSetData, ModelData, ServerData]
 
     def setUp(self):
         super(ImportHandlerTests, self).setUp()
         self.obj = self.Model.query.filter_by(
             name=ImportHandlerData.import_handler_01.name).first()
-        for ds in DataSet.query.all():
-            ds.import_handler = self.obj
-            ds.save()
+        # for ds in DataSet.query.all():
+        #     ds.import_handler = self.obj
+        #     ds.save()
 
     def test_list(self):
         self.check_list(show='name')
@@ -124,9 +128,10 @@ class ImportHandlerTests(BaseDbTestCase, TestChecksMixin):
             shutil.copy2(dataset.filename, dataset.filename + '.bak')
 
         model = Model.query.filter_by(name=self.MODEL_NAME).first()
-        model.test_import_handler_id = self.obj.id
-        model.train_import_handler_id = self.obj.id
+        model.test_import_handler = self.obj
+        model.train_import_handler = self.obj
         model.save()
+        model_id = model.id
 
         url = self._get_url(id=self.obj.id)
         resp = self.client.delete(url, headers=HTTP_HEADERS)
@@ -139,7 +144,8 @@ class ImportHandlerTests(BaseDbTestCase, TestChecksMixin):
         for filename in files:
             shutil.move(filename + '.bak', filename)
 
-        model = Model.query.filter_by(name=self.MODEL_NAME).first()
+        model = Model.query.get(model_id)
+        self.assertTrue(model)
         self.assertIsNone(model.test_import_handler, 'Ref should be removed')
         self.assertIsNone(model.train_import_handler, 'Ref should be removed')
 
@@ -151,6 +157,55 @@ class ImportHandlerTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(resp.headers['Content-Disposition'],
                           'attachment; filename=importhandler-%s.json' %
                           self.obj.name)
+
+    @mock_s3
+    @patch('api.servers.tasks.upload_import_handler_to_server')
+    def test_upload_to_server(self, mock_task):
+        url = self._get_url(id=self.obj.id, action='upload_to_server')
+        server = Server.query.filter_by(name=ServerData.server_01.name).one()
+
+        resp = self.client.put(url, data={'server': server.id},
+                               headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.OK)
+        self.assertTrue(mock_task.delay.called)
+        self.assertTrue('status' in json.loads(resp.data))
+
+    def test_run_sql_action(self):
+        url = self._get_url(id=self.obj.id, action='run_sql')
+
+        # forms validation error
+        resp = self.client.put(url, headers=HTTP_HEADERS)
+        resp_obj = json.loads(resp.data)
+        self.assertTrue(resp_obj.has_key('response'))
+        self.assertTrue(resp_obj['response'].has_key('error'))
+
+        # no parameters
+        resp = self.client.put(url,
+                               data={'sql': 'SELECT NOW() WHERE %(something)s',
+                                     'limit': 2,
+                                     'datasource': 'odw'},
+                               headers=HTTP_HEADERS)
+        resp_obj = json.loads(resp.data)
+        self.assertTrue(resp_obj.has_key('response'))
+        self.assertTrue(resp_obj['response'].has_key('error'))
+
+        # good
+        iter_mock = MagicMock()
+        iter_mock.return_value = [{'now': datetime(2014, 7, 21, 15, 52, 5, 308936)}]
+        with patch.dict('api.import_handlers.models.import_handlers.CoreImportHandler.DB_ITERS', {'postgres': iter_mock}):
+            resp = self.client.put(url,
+                                   data={'sql': 'SELECT NOW() WHERE %(something)s',
+                                         'limit': 2,
+                                         'datasource': 'odw',
+                                         'params': json.dumps({'something': 'TRUE'})},
+                                   headers=HTTP_HEADERS)
+            resp_obj = json.loads(resp.data)
+            self.assertTrue(resp_obj.has_key('data'))
+            self.assertTrue(resp_obj['data'][0].has_key('now'))
+            self.assertTrue(resp_obj.has_key('sql'))
+            iter_mock.assert_called_with(['SELECT NOW() WHERE TRUE LIMIT 2'],
+                                         "host='localhost' dbname='cloudml' "
+                                         "user='cloudml' password='cloudml'")
 
 
 class DataSetsTests(BaseDbTestCase, TestChecksMixin):
@@ -167,11 +222,14 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
 
     def setUp(self):
         super(DataSetsTests, self).setUp()
-        self.handler = ImportHandler.query.filter_by(name='Handler 1').first()
+        self.handler = ImportHandler.query.filter_by(
+            name=ImportHandlerData.import_handler_01.name).first()
         self.obj = self.Model.query.filter_by(name=self.DS_NAME).first()
-        self.BASE_URL = '/cloudml/importhandlers/%s/datasets/' % self.handler.id
+        self.BASE_URL = '/cloudml/importhandlers/%s/%s/datasets/' \
+            % (self.handler.TYPE, self.handler.id)
         for ds in DataSet.query.all():
-            ds.import_handler = self.handler
+            ds.import_handler_id = self.handler.id
+            ds.import_handler_type = self.handler.TYPE
             ds.save()
 
     def test_list(self):
@@ -207,7 +265,7 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue(ds.on_s3)
         self.assertTrue(ds.uid)
         self.assertEquals(ds.format, DataSet.FORMAT_JSON)
-        self.assertEquals(ds.filename, 'test_data/%s.gz' % ds.uid)
+        self.assertEquals(ds.filename, 'cloudml_test/%s.gz' % ds.uid)
         self.assertTrue(mock_multipart_upload.called)
 
         # Check created dataset
@@ -260,7 +318,7 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue(ds.compress)
         self.assertTrue(ds.on_s3)
         self.assertEquals(ds.format, DataSet.FORMAT_CSV)
-        self.assertEquals(ds.filename, 'test_data/%s.gz' % ds.uid)
+        self.assertEquals(ds.filename, 'cloudml_test/%s.gz' % ds.uid)
         self.assertTrue(mock_multipart_upload.called)
 
     def test_edit_name(self):
@@ -360,6 +418,42 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         self.assertIsNone(test.dataset)
         self.assertEquals([ds.name for ds in model.datasets], ['DS 2'])
 
+    def test_sample_data_action(self):
+        # 1. getting sample of default size 10
+        url = self._get_url(id=self.obj.id, action='sample_data')
+        resp = self.client.get(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.OK)
+        data = json.loads(resp.data)
+        self.assertEqual(10, len(data))
+        self.assertNotEqual(data[0], data[-1])
+        self.assertNotEqual(data[1], data[-2])
+
+        # 2. test getting sample of size 5
+        url = self._get_url(id=self.obj.id, action='sample_data', size=5)
+        resp = self.client.get(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.OK)
+        data = json.loads(resp.data)
+        self.assertEqual(5, len(data))
+
+        # 3. dataset not found
+        url = self._get_url(id=1010, action='sample_data')
+        resp = self.client.get(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.NOT_FOUND)
+
+        # 4. file not found
+        with patch('os.path.exists') as path_exists_mock:
+            path_exists_mock.return_value = False
+            url = self._get_url(id=self.obj.id, action='sample_data')
+            resp = self.client.get(url, headers=HTTP_HEADERS)
+            self.assertEquals(resp.status_code, httplib.NOT_FOUND)
+
+        # 5. unknown file type
+        with patch('os.path.splitext') as path_splitext_mock:
+            path_splitext_mock.return_value = ('filename', '.zip')
+            url = self._get_url(id=self.obj.id, action='sample_data')
+            resp = self.client.get(url, headers=HTTP_HEADERS)
+            self.assertEquals(resp.status_code, httplib.BAD_REQUEST)
+            self.assertTrue('unknown file type' in resp.data)
 
 class TestTasksTests(BaseDbTestCase, TestChecksMixin):
     """

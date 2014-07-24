@@ -130,7 +130,8 @@ class DataSetData(DataSet):
         data_fields = ["employer.country"]
         format = "json"
         uid = '8a7d1ae26efc11e395b420107a86d035'
-        import_handler_id = ImportHandlerData.import_handler_01.ref('id')
+        import_handler_id = 1
+        import_handler_type = 'json'
 
     class dataset_02:
         name = "DS 2"
@@ -148,7 +149,8 @@ class DataSetData(DataSet):
         time = 200
         format = "json"
         uid = '8a7d1ae26efc11e395b420107a86d036'
-        import_handler_id = ImportHandlerData.import_handler_01.ref('id')
+        import_handler_id = 1
+        import_handler_type = 'json'
 
     class dataset_03:
         name = "DS 3 (csv)"
@@ -166,13 +168,30 @@ class DataSetData(DataSet):
         time = 200
         format = "csv"
         uid = '8a7d1ae26efc11e395b420107a86d037'
-        import_handler_id = ImportHandlerData.import_handler_01.ref('id')
+        import_handler_id = 1
+        import_handler_type = 'json'
 
 
 class PredefinedDataSourceData(DataSet):
-  class datasource_01:
-    name = "DataSource #1"
-    type = "sql"
-    db = {'conn': 'conn str', 'vendor':'postgres'}
-    created_on = "2013-04-19 14:37:23.145000"
-    updated_on = "2013-04-19 14:37:23.145000"
+    class datasource_01:
+        name = "DataSource #1"
+        type = "sql"
+        db = {'conn': 'conn str', 'vendor':'postgres'}
+        created_on = "2013-04-19 14:37:23.145000"
+        updated_on = "2013-04-19 14:37:23.145000"
+
+
+class XmlImportHandlerData(DataSet):
+    class xml_import_handler_01:
+        name = "Xml Handler 1"
+        created_on = "2013-04-19 14:37:23.145000"
+        updated_on = "2013-04-19 14:37:23.145000"
+        import_params = ['start', 'end', 'category']
+
+
+class XmlEntityData(DataSet):
+    class xml_entity_01:
+        name = "something"
+        import_handler = XmlImportHandlerData.xml_import_handler_01
+        created_on = "2013-04-19 14:37:23.145000"
+        updated_on = "2013-04-19 14:37:23.145000"

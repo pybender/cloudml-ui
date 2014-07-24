@@ -1,4 +1,5 @@
 import logging
+from api.amazon_utils import AmazonS3Helper
 from os.path import exists
 from os import makedirs
 from datetime import datetime
@@ -12,10 +13,11 @@ from api.base.tasks import SqlAlchemyTask
 from api.base.exceptions import InvalidOperationError
 from api.logs.logger import init_logger
 from api.accounts.models import User
-from api.ml_models.models import Model, Weight, WeightsCategory
+from api.ml_models.models import Model, Weight, WeightsCategory, Segment
 from api.model_tests.models import TestResult, TestExample
 from api.import_handlers.models import DataSet
 from api.logs.models import LogMessage
+from api.servers.models import Server
 
 db_session = db.session
 
@@ -107,7 +109,10 @@ def train_model(dataset_ids, model_id, user_id):
         model.training_time = int((train_end_time - train_begin_time).seconds)
         model.save()
 
-        fill_model_parameter_weights.delay(model.id)
+        model.create_segments(trainer._get_segments_info())
+
+        for segment in model.segments:
+            fill_model_parameter_weights.delay(model.id, segment.id)
     except Exception, exc:
         db_session.rollback()
 
@@ -123,25 +128,44 @@ def train_model(dataset_ids, model_id, user_id):
 
 
 @celery.task(base=SqlAlchemyTask)
-def fill_model_parameter_weights(model_id):
+def fill_model_parameter_weights(model_id, segment_id=None):
     """
     Adds model parameters weights to db.
     """
     init_logger('trainmodel_log', obj=int(model_id))
-    logging.info("Starting to fill model weights")
-    try:
-        model = Model.query.get(model_id)
-        if model is None:
-            raise ValueError('Model not found: %s' % model_id)
+    logging.info("Starting to fill model weights" )
 
-        weights = model.get_trainer().get_weights()
+    model = Model.query.get(model_id)
+    if model is None:
+        raise ValueError('Model not found: %s' % model_id)
+
+    segment = Segment.query.get(segment_id)
+    if segment is None:
+        raise ValueError('Segment not found: %s' % segment_id)
+
+    count = len(model.weights)
+    if count > 0:
+        raise InvalidOperationError('Weights for model %s already  filled: %s' %
+                                    (model_id, count))
+
+    weights_dict = None
+    categories_names = []
+
+    def process_weights_for_class(class_label):
+        """
+        Adds weights for specific class, also adds new categories not found
+        in `categories_names`
+        :param class_label: class_label of the weights to process
+        :return:
+        """
+        w_added = 0
+        cat_added = 0
+        weights = weights_dict[class_label]
+        logging.info("Model: %s , Segment: %s, Class: %s" %
+                     (model.name, segment.name, class_label))
+
         positive = weights['positive']
         negative = weights['negative']
-        weights = model.weights
-        count = len(weights)
-        if count > 0:
-            raise InvalidOperationError('Weights for model %s already \
-    filled: %s' % (model_id, count))
 
         from api.ml_models.helpers.weights import calc_weights_css
         positive_weights = []
@@ -155,7 +179,6 @@ def fill_model_parameter_weights(model_id):
         weight_list.reverse()
 
         # Adding weights and weights categories to db
-        category_names = []
         for weight in weight_list:
             name = weight['name']
             splitted_name = name.split('->')
@@ -164,7 +187,7 @@ def fill_model_parameter_weights(model_id):
             for i, sname in enumerate(splitted_name):
                 parent = long_name
                 long_name = '%s.%s' % (long_name, sname) \
-                            if long_name else sname
+                    if long_name else sname
                 if i == (count - 1):
                     new_weight = Weight()
                     new_weight.name = weight['name'][0:199]
@@ -175,25 +198,45 @@ def fill_model_parameter_weights(model_id):
                     new_weight.short_name = sname[0:199]
                     new_weight.model_name = model.name
                     new_weight.model = model
+                    new_weight.segment = segment
+                    new_weight.class_label = class_label
                     new_weight.save(commit=False)
+                    w_added += 1
                 else:
-                    if sname not in category_names:
+                    if sname not in categories_names:
                         # Adding a category, if it has not already added
-                        category_names.append(sname)
+                        categories_names.append(sname)
                         category = WeightsCategory()
                         category.name = long_name
                         category.parent = parent
                         category.short_name = sname
                         category.model_name = model.name
                         category.model = model
+                        category.segment = segment
                         category.save(commit=False)
-        db.session.commit()
+                        cat_added += 1
+        return cat_added, w_added
 
+    try:
+        weights_dict = model.get_trainer().get_weights(segment.name)
+
+        weights_added = 0
+        categories_added = 0
+        classes_processed = 0
+        for clazz in weights_dict.keys():
+            c, w = process_weights_for_class(clazz)
+            categories_added += c
+            weights_added += w
+            classes_processed += 1
+
+        db.session.commit()
         model.weights_synchronized = True
         model.save()
-        msg = 'Model %s parameters weights was added to db: %s' % \
-            (model.name, len(weight_list))
+        msg = 'Model %s parameters weights was added to db. %s weights, ' \
+              'in %s categories for %s classes' % \
+              (model.name, weights_added, categories_added, classes_processed)
         logging.info(msg)
+
     except Exception, exc:
         logging.exception('Got exception when fill_model_parameter: %s', exc)
         raise

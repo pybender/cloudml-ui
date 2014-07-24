@@ -18,7 +18,7 @@ CELERY_RESULT_BACKEND = 'amqp://cloudml:cloudml@172.27.77.141:5672/cloudml'
 CELERY_IMPORTS = (
     'api.models', 'api', 'api.import_handlers.tasks',
     'api.instances.tasks', 'api.ml_models.tasks',
-    'api.model_tests.tasks')
+    'api.model_tests.tasks', 'api.servers.tasks's)
 
 from kombu import Queue
 
@@ -33,6 +33,8 @@ CELERY_DEFAULT_ROUTING_KEY = 'task.default'
 AMAZON_ACCESS_TOKEN = '{{ amazon_access_token }}'
 AMAZON_TOKEN_SECRET = '{{ amazon_token_secret }}'
 AMAZON_BUCKET_NAME = '{{ amazon_bucket_name }}'
+
+CLOUDML_PREDICT_BUCKET_NAME = '{{ amazon_bucket_name }}'
 
 EXAMPLES_CHUNK_SIZE = 10
 

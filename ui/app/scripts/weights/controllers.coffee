@@ -18,11 +18,24 @@ angular.module('app.weights.controllers', ['app.config', ])
     throw new Error "Can't initialize without model id"
 
   $scope.model_id = $routeParams.id
-  $scope.sort_by = 'name'
-  $scope.asc_order = true
+  $scope.class_label = null
 
-  # List search parameters and methods
-  $scope.search_form = {'q': '', 'is_positive': 0}
+  $scope.$watch 'model.loaded', (loaded) ->
+    if loaded and $scope.model.labels and $scope.model.labels.length > 2
+      $scope.class_label = $scope.model.labels[0]
+
+  # Switching modes methods
+  $scope.$watch 'action', (action, oldVal, scope) ->
+    #console.log "in watch", action, oldVal, scope
+    $scope.executeAction action
+
+  $scope.$watch('search_form.page', (page, oldVal, scope) ->
+    if (scope.action[0] == 'training') and (scope.action[1] == 'list') and page
+      $scope.loadList()
+  , true)
+
+  # Tree params & methods
+  $scope.tree_dict = {'weights': {}, 'categories': {}}
 
   $scope.sort = (sort_by) ->
     if $scope.sort_by == sort_by
@@ -35,14 +48,15 @@ angular.module('app.weights.controllers', ['app.config', ])
     $scope.loadList()
 
   $scope.loadList = (page) ->
-    Weight.$loadAll(
-      $routeParams.id,
-      show: 'name,value,css_class',
+    Weight.$loadAll($routeParams.id,
+      show: 'name,value,css_class,segment',
       q: $scope.search_form.q,
       is_positive: $scope.search_form.is_positive,
       page: page || $scope.search_form.page || 1,
       sort_by: $scope.sort_by,
       order: if $scope.asc_order then 'asc' else 'desc'
+      segment_id: $scope.search_form.segment
+      class_label: $scope.class_label
     ).then ((opts) ->
       $scope.weights = opts.objects
       $scope.total = opts.total
@@ -54,15 +68,6 @@ angular.module('app.weights.controllers', ['app.config', ])
         "server responded with " + "#{opts.status} " +
         "(#{opts.data.response.error.message or "no message"}). "
     )
-
-  $scope.$watch('search_form.page', (page, oldVal, scope) ->
-    if (scope.action[0] == 'training') and
-        (scope.action[1] == 'list') and page
-      $scope.loadList()
-  , true)
-
-  # Tree params & methods
-  $scope.tree_dict = {'weights': {}, 'categories': {}}
 
   $scope.loadTreeNode = (parent, show) ->
     if not show
@@ -84,6 +89,7 @@ angular.module('app.weights.controllers', ['app.config', ])
       $routeParams.id,
       show: 'name,short_name,parent',
       parent: parent
+      segment: $scope.action[2]
     ).then ((opts) ->
       for details in opts.categories
         val = {'categories': {}, 'details': details, 'weights': {}}
@@ -100,18 +106,14 @@ angular.module('app.weights.controllers', ['app.config', ])
     )
 
   # Columns view parameters and methods
-  $scope.ppage = 1
-  $scope.npage = 1
-  $scope.positive = []
-  $scope.negative = []
-
-  $scope.loadColumns = (morePositive, moreNegative) ->
-    Weight.$loadBriefList(
-      $scope.model_id,
-      show: 'name,value,css_class'
+  $scope.loadColumns = (segment, morePositive, moreNegative) ->
+    Weight.$loadBriefList($scope.model_id,
+      segment: segment,
+      show: 'name,value,css_class,segment_id'
       ppage: $scope.ppage
       npage: $scope.npage
-      ).then ((opts) ->
+      class_label: $scope.class_label
+    ).then ((opts) ->
         if morePositive
           $scope.positive.push.apply($scope.positive, opts.positive)
         if moreNegative
@@ -120,24 +122,42 @@ angular.module('app.weights.controllers', ['app.config', ])
         $scope.err = opts
       )
 
-  $scope.morePositiveWeights  = =>
+  $scope.morePositiveWeights  = ->
     $scope.ppage += 1
-    $scope.loadColumns(true, false)
+    $scope.loadColumns($scope.action[2], true, false)
 
-  $scope.moreNegativeWeights  = =>
+  $scope.moreNegativeWeights  = ->
     $scope.npage += 1
-    $scope.loadColumns(false, true)
+    $scope.loadColumns($scope.action[2], false, true)
 
-  # Switching modes methods
-  $scope.$watch 'action', (action) ->
-    if action[0] == SECTION_NAME
+  $scope.executeAction = (action) ->
+    if action? && action[0] == SECTION_NAME
+      $scope.clearViews()
       actionString = action.join(':')
       $location.search("action=#{actionString}")
       view = action[1]
+      segment = action[2]
       switch view
-        when "details"
-          if ($scope.positive.length + $scope.negative.length) == 0
-            $scope.loadColumns(true, true)
-        when "list" then  $scope.loadList('', 1)
+        when "details" then $scope.loadColumns(segment, true, true)
+        when "list" then  $scope.loadList(segment, '', 1)
         when "tree" then $scope.loadTreeNode('', true)
+
+  $scope.switchToClassLabel = (e, newLabel) ->
+    $scope.clearViews()
+    $scope.class_label = newLabel
+    $scope.executeAction $scope.action
+    $('.class_label').dropdown('toggle')
+
+  $scope.clearViews = ->
+    $scope.ppage = 1
+    $scope.npage = 1
+    $scope.positive = []
+    $scope.negative = []
+    $scope.sort_by = 'name'
+    $scope.asc_order = true
+
+    # List search parameters and methods
+    $scope.search_form = {'q': '', 'is_positive': 0}
+
+  $scope.clearViews()
 ])

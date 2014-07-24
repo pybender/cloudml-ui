@@ -1,9 +1,22 @@
 
 <ul class="nav nav-pills" ng-show="user">
-	<li ng-class="getClass('/dashboard')"><a ng-href="#/dashboard">dashboard</a></li>
+  <li ng-class="getClass('/dashboard')"><a ng-href="#/dashboard">dashboard</a></li>
   <li ng-class="getClass('/models')"><a ng-href="#/models">models</a></li>
-  <li ng-class="getClass('/importhandlers')"><a ng-href="#/importhandlers">import handlers</a></li>
-  <li ng-class="getClass('/aws/instances')"><a ng-href="#/aws/instances">instances</a></li>
+  <li ng-class="getClass('/handlers')" class="dropdown">
+    <a class="dropdown-toggle" data-toggle="dropdown">import handlers <b class="caret"></b></a>
+    <ul class="dropdown-menu">
+      <li ng-class="getClass('/handlers/json')"><a ng-href="#/handlers/json">json</a></li>
+      <li ng-class="getClass('/handlers/xml')"><a ng-href="#/handlers/xml">xml</a></li>
+    </ul>
+  </li>
+  <li ng-class="getClass('/aws/instances')" class="dropdown">
+    <a class="dropdown-toggle" data-toggle="dropdown">instances <b class="caret"></b></a>
+    <ul class="dropdown-menu">
+      <li ng-class="getClass('/aws/instances')"><a ng-href="#/aws/instances">instances</a></li>
+      <li ng-class="getClass('/aws/clusters')"><a ng-href="#/aws/clusters">clusters</a></li>
+    </ul>
+  </li>
+  <li ng-class="getClass('/servers')"><a ng-href="#/servers">servers</a></li>
   <li ng-class="getClass('/features')" class="dropdown">
     <a class="dropdown-toggle" data-toggle="dropdown">predefined entities <b class="caret"></b></a>
     <ul class="dropdown-menu">

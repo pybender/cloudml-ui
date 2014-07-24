@@ -35,11 +35,8 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
 
     $scope.handler = new ImportHandler({id: $routeParams.id})
     $scope.LOADED_SECTIONS = []
-    $scope.PROCESS_STRATEGIES = ImportHandler.PROCESS_STRATEGIES
-
-    $scope.codemirrorOptions = {
-      mode: 'javascript', readOnly: true, json: true
-    }
+    $scope.PROCESS_STRATEGIES =
+      _.sortBy ImportHandler.PROCESS_STRATEGIES, (s)-> s
 
     $scope.go = (section) ->
       fields = ''
@@ -118,32 +115,40 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
       )
 
     $scope.editDataSource = (handler, ds) ->
-      $scope.openDialog($dialog, null,
-        'partials/import_handler/datasource/edit_handler_datasource.html',
-          'DataSourceEditDialogCtrl',
-        'modal', 'edit data source', 'data source',
-        {handler: handler, ds: ds}
-      )
+      $scope.openDialog({
+        $dialog: $dialog
+        model: null
+        template: \
+          'partials/import_handler/datasource/edit_handler_datasource.html'
+        ctrlName: 'DataSourceEditDialogCtrl'
+        action: 'add data source'
+        extra: {handler: handler, ds: ds}
+      })
 
     $scope.editTargetFeature = (item, feature) ->
-      $scope.openDialog($dialog, null,
-        'partials/import_handler/edit_target_feature.html',
-          'TargetFeatureEditDialogCtrl',
-        'modal', 'edit target feature', 'target feature',
-        {handler: item.handler, feature: feature, item: item}
-      )
+      $scope.openDialog({
+        $dialog: $dialog
+        model: null
+        template: 'partials/import_handler/edit_target_feature.html'
+        ctrlName: 'TargetFeatureEditDialogCtrl'
+        extra: {handler: item.handler, feature: feature, item: item}
+        action: 'edit target feature'
+      })
 
     $scope.runQuery = (query) ->
-      $scope.openDialog($dialog, null,
-        'partials/import_handler/test_query.html',
-          'QueryTestDialogCtrl',
-        'modal', 'test import handler query', 'query',
-        {handler: $scope.handler, query: query}
-      )
+      $scope.openDialog({
+        $dialog: $dialog
+        model: null
+        template: 'partials/import_handler/test_query.html'
+        ctrlName: 'QueryTestDialogCtrl'
+        extra:
+          handlerUrl: $scope.handler.getUrl()
+          datasources: $scope.handler.datasource,
+          query: query
+        action: 'test import handler query'
+      })
 
     $scope.initSections($scope.go)
-    #$scope.initLogMessages("channel=importdata_log&model=" +
-    #$scope.handler._id)
 ])
 
 .controller('QueryTestDialogCtrl', [
@@ -152,8 +157,9 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
   'dialog'
 
   ($scope, $rootScope, dialog) ->
-    $scope.handler = dialog.extra.handler
-#    $scope.params = $scope.handler.import_params
+    $scope.handlerUrl = dialog.extra.handlerUrl
+    $scope.datasources = (ds for ds in dialog.extra.datasources when \
+      ds.type is 'sql' or ds.type is 'db')
     $scope.query = dialog.extra.query
     $scope.params = $scope.query.getParams()
     $scope.dialog = dialog
@@ -163,12 +169,12 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
     if !$scope.query.test_limit
       $scope.query.test_limit = 2
     if !$scope.query.test_datasource
-      $scope.query.test_datasource = $scope.handler.datasource[0].name
+      $scope.query.test_datasource = $scope.datasources[0].name
 
     $scope.runQuery = () ->
       $scope.query.test = {}
       $scope.query.$run($scope.query.test_limit, $scope.query.test_params,
-        $scope.query.test_datasource
+        $scope.query.test_datasource, $scope.handlerUrl
       ).then((resp) ->
         $scope.query.test.columns = resp.data.columns
         $scope.query.test.data = resp.data.data
@@ -304,40 +310,82 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
   '$dialog'
 ($scope, $dialog) ->
   $scope.importData = (handler) ->
-    $scope.openDialog($dialog, handler,
-    'partials/import_handler/load_data.html', 'LoadDataDialogCtrl')
+    $scope.openDialog({
+      $dialog: $dialog
+      model: handler
+      template: 'partials/import_handler/load_data.html'
+      ctrlName: 'LoadDataDialogCtrl'
+    })
 
   $scope.delete = (handler) ->
-    $scope.openDialog($dialog, handler,
-    'partials/base/delete_dialog.html', 'DeleteImportHandlerCtrl',
-    "modal", "delete import handler", "/importhandlers")
+    $scope.openDialog({
+      $dialog: $dialog
+      model: handler
+      template: 'partials/base/delete_dialog.html'
+      ctrlName: 'DeleteImportHandlerCtrl'
+      action: 'delete import handler'
+      path: "/handlers/#{handler.TYPE}"
+    })
 
   $scope.testHandler = (handler) ->
-    $scope.openDialog($dialog, null,
-        'partials/import_handler/test_handler.html',
-          'ImportTestDialogCtrl',
-        'modal', 'test import handler', 'handler',
-        {handler: $scope.handler}
-      )
+    $scope.openDialog({
+      $dialog: $dialog
+      template: 'partials/import_handler/test_handler.html'
+      ctrlName: 'ImportTestDialogCtrl'
+      action: 'test import handler'
+      extra: {handler: $scope.handler}
+    })
 
+  $scope.uploadHandlerToPredict = (model) ->
+    $scope.openDialog({
+      $dialog: $dialog
+      model: model
+      template: 'partials/servers/choose.html'
+      ctrlName: 'ImportHandlerUploadToServerCtrl'
+    })
 ])
+
+.controller('ImportHandlerUploadToServerCtrl', [
+  '$scope'
+  '$rootScope'
+  'dialog'
+
+  ($scope, $rootScope, dialog) ->
+    $scope.dialog = dialog
+    $scope.resetError()
+    $scope.model = dialog.model
+    $scope.model.server = null
+
+    $scope.upload = () ->
+      $scope.model.$uploadPredict($scope.model.server).then((resp) ->
+        $rootScope.msg = resp.data.status
+      )
+      dialog.close()
+])
+
 
 .controller('ImportHandlerSelectCtrl', [
   '$scope'
   'ImportHandler'
+  'XmlImportHandler'
 
-  ($scope, ImportHandler) ->
-    ImportHandler.$loadAll(
-      show: 'name'
-    ).then ((opts) ->
-      $scope.handlers = opts.objects
-      $scope.handlers_list  = []
+  ($scope, ImportHandler, XmlImportHandler) ->
+    ImportHandler.$loadAll show: 'name'
+    .then (opts) ->
+      $scope.handlers = []
+      $scope.handlers_list = []
+      $scope.handlers = $scope.handlers.concat opts.objects
       for h in $scope.handlers
         $scope.handlers_list.push {value: h.id, text: h.name}
-
-    ), ((opts) ->
+      XmlImportHandler.$loadAll show: 'name'
+    .then (opts) ->
+      $scope.handlers = $scope.handlers.concat opts.objects
+      for h in opts.objects
+        item = {value: h.id + "xml", text: h.name + "(xml)"}
+        $scope.handlers_list.push item
+      $scope.handlers_list = _.sortBy $scope.handlers_list, (o)-> o.text
+    , (opts) ->
       $scope.setError(opts, 'loading import handler list')
-    )
 ])
 
 .controller('AddImportHandlerQueryCtrl', [
@@ -350,7 +398,7 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
 ($scope, $routeParams, $location, ImportHandler, Query) ->
   if not $routeParams.id then throw new Error "Specify id"
 
-  $scope.handler = new ImportHandler({_id: $routeParams.id})
+  $scope.handler = new ImportHandler({id: $routeParams.id})
   $scope.model = new Query(
     {handler: $scope.handler, num: -1})
 
@@ -369,7 +417,8 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
 ($scope, $routeParams, $location, ImportHandler, Item) ->
   if not $routeParams.id then throw new Error "Specify id"
   if not $routeParams.num then throw new Error "Specify query number"
-  $scope.PROCESS_STRATEGIES = ImportHandler.PROCESS_STRATEGIES
+  $scope.PROCESS_STRATEGIES =
+    _.sortBy ImportHandler.PROCESS_STRATEGIES, (s)-> s
 
   $scope.handler = new ImportHandler({id: $routeParams.id})
   $scope.model = new Item(

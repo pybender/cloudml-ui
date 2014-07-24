@@ -23,6 +23,7 @@ fabconf.py
 .idea/*
 
 ui/node_modules/*
+ui/bower_components
 npm-debug.log
 local.json
 
@@ -34,8 +35,13 @@ target
 data
 test_data
 api/local_config.py
+api/test_config.py
 
 .coverage
 api/test/cover/*
 *_topics.txt
 api/test_config.py
+.pydevproject
+
+bower_components
+cloudml_test

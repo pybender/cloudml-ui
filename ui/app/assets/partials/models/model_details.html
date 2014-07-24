@@ -20,9 +20,12 @@
       <i title="Train your model" class="icon-tasks"></i>
       Start training
     </button>
-    <a ng-show="model.status == 'Trained'" href="{{ model.downloadUrl() }}?field=trainer" class="btn btn-info">
+    <a ng-show="model.status == 'Trained' && model.trainer_s3_url" href="{{ model.trainer_s3_url }}" class="btn btn-info">
         <i title="Download model trainer." class="icon-download-alt"></i> Download Trainer
     </a>
+    <button ng-show="model.status == 'Trained'" ng-click="uploadModelToPredict(model)" class="btn btn-info">
+        <i class="icon-upload"></i> Upload for Predict
+    </button>
     <button ng-click="delete_model(model)" class="btn btn-danger">
       <i title="Delete your model. Be careful - you could not recover it!" class="icon-remove"></i> Delete model
     </button>
@@ -51,43 +54,59 @@
     </p>
 
     <!-- Model tab starts here -->
-    <div ng-show="action[1] == 'details'">
-      <div class="row">
-        <div class="span6">
-          <h4>
-            Classifier {{ model.classifier.name }} <span><a ng-click="editClassifier(model)">(edit)</a></span>
-          </h4>
-           <div>
-              Type:
-              <span class="value">{{ model.classifier.type }}</span>
+    <div ng-show="action[1] == 'details'" ng-controller="FeaturesListCtrl" ng-init="init(model)">
+      <div ng-controller="BaseListCtrl" ng-init="init(false, 'features')">
+        <div class="row" ng-controller="FeaturesSetDetailsCtrl" ng-init="init(model)">
+          <div class="span4">
+            <h4>
+              Classifier {{ model.classifier.name }} <span><a ng-click="editClassifier(model)">(edit)</a></span>
+            </h4>
+             <div>
+                Type:
+                <span class="value">{{ model.classifier.type }}</span>
+            </div>
+             <div>
+                Parameters:
+                <span class="value">{{ model.classifier.params }}</span>
+            </div>
+            <div ng-show="model.created_by">
+                Created by:
+                <span class="value">{{ model.classifier.created_by.name }} ({{ model.classifier.created_by.uid }})</span>
+            </div>
           </div>
-           <div>
-              Parameters:
-              <span class="value">{{ model.classifier.params }}</span>
+          <div class="span4">
+            <h4>Features</h4>
+            <div>
+              Schema Name:
+              <span title="Schema Name" class="title" ng-bind="featuresSet.schema_name || 'schema name here'" editable="featuresSet" value="featuresSet.schema_name" editable-field="schema_name" editable-input="text" editable-placement="right"></span>
+            </div>
+            <div>Target Variable: <span class="value">{{ featuresSet.target_variable }}</span></div>
+            <div>Features Count: <span class="value">{{ featuresSet.features_count }}</span></div>
           </div>
-          <div ng-show="model.created_by">
-              Created by:
-              <span class="value">{{ model.classifier.created_by.name }} ({{ model.classifier.created_by.uid }})</span>
+          <div class="span3">
+            <h4>Segmentation</h4>
+            <alert-message ng-show="segmentationMsg" class="alert-info" msg="{{segmentationMsg}}" unsafe></alert-message>
+            <div ng-controller="GroupBySelector">
+              Group By:
+              <input ui-select2="group_by_opts" ng-model="modelObj.featuresSet.group_by" /> 
+              <input type="button" class="btn btn-info" value="Save" ng-click="updateGroupBy()" style="margin-left: 5px;" />
+            </div>
           </div>
         </div>
-        <div class="span5">
-          <h4>Features</h4>
-          <ng-include src="'/partials/features/sets/details.html'"></ng-include>
-        </div>
-      </div>
-      <div class="row">
-        <div class="span12">
-          <ng-include src="'/partials/features/items/list.html'"></ng-include>
+        <div class="row">
+          <div class="span12">
+            <ng-include src="'/partials/features/items/list.html'"></ng-include>
+          </div>
         </div>
       </div>
     </div>
 
     <div ng-show="action[1] == 'json'">
-      <textarea ng-model="model.features" ui-codemirror="codemirrorOptions" ui-refresh="action"></textarea>
+      <textarea ng-model="model.features" ui-codemirror="codeMirrorConfigs(true)['json']" ui-refresh="action"></textarea>
     </div>
 
     <div class="row well">
-        <a style="font-weight: normal;" href="{{ model.downloadUrl() }}?field=features" class="btn btn-info">
+        <a style="font-weight: normal;" href="{{ model.downloadFeaturesUrl() }}" class="btn btn-info">
           <i title="Download features JSON file" class="icon-download-alt"></i> Download Features
         </a>
     </div>
@@ -154,20 +173,47 @@
             Records count: <span class="value">{{ model.train_records_count }}</span>
           </div>
       </div>
+      <div class="span4">
+        <div ng-show="model.status == 'Trained'">
+              Segments:
+              <div ng-repeat="segment in model.segments">
+                <span class="value">
+                  "{{ segment.name }}" - {{segment.records}} records
+                </span>
+              </div>
+            </div>
+        </div>
     </div>
     <hr />
-    <div ng-controller="WeightsCtrl">
-      <h4>Parameters Weights</h4>
-      <p class="switcher">
-        <b>Switch view: </b>
-        <a ng-class="{active: action[1] == 'details'}" ng-click="setSection(['training', 'details'])">Columns</a> | 
-        <a ng-class="{active: action[1] == 'list'}" ng-click="setSection(['training', 'list'])">List</a> |
-        <a ng-class="{active: action[1] == 'tree'}" ng-click="setSection(['training', 'tree'])">Tree</a> &nbsp;
-      </p>
+    <div ng-show="model.status == 'Trained'">
+      <h4>
+        Parameters Weights<span ng-show="model.labels && model.labels.length > 2"> For : </span>
+        <div ng-show="model.labels && model.labels.length > 2" class="btn-group">
+          <a class="btn dropdown-toggle class_label" data-toggle="dropdown" href="#">
+            Class Label {{class_label}}
+            <span class="caret"></span>
+          </a>
+          <ul class="dropdown-menu">
+            <li ng-repeat="label in model.labels" ng-show="label != class_label">
+              <a ng-click="switchToClassLabel($event, label)">Class Label {{label}}</a></li>
+          </ul>
+        </div>
+      </h4>
+      <ul class="nav nav-tabs" id="weights-tabs">
+        <li ng-class="{active: action[1] == 'details'}">
+          <a ng-click="setSection(['training', 'details'])">Columns</a> 
+        </li>
+        <li ng-class="{active: action[1] == 'list'}">
+          <a ng-click="setSection(['training', 'list'])">List</a>
+        </li>
+        <li ng-class="{active: action[1] == 'tree'}">
+          <a ng-click="setSection(['training', 'tree'])">Tree</a>
+        </li>
+      </ul>
       <div ng-show="action[1] == 'details'" class="details">
         <ng-include src="'/partials/weights/columns.html'"></ng-include>
       </div>
-      <div ng-show="action[1] == 'tree'" class="tree">
+      <div ng-show="action[1] == 'tree'" class="weights-tree">
         <ng-include src="'/partials/weights/tree.html'"></ng-include>
       </div>
       <div ng-show="action[1] == 'list'" class="list">
@@ -204,33 +250,45 @@
           <h5>Import Handlers</h5>
           <div>
             For Train:
-            <span title="Select Train Import Handler" ng-bind="model.train_import_handler_obj.name || 'not specified'" editable="model" value="model.train_import_handler_obj.id" editable-field="train_import_handler" editable-input="select" editable-placement="right" is-empty="_isEmpty" source="handlers_list" display="model.train_import_handler_obj.name"></span>
+            <span title="Select Train Import Handler"
+                  ng-bind="model.train_import_handler_obj.name || 'not specified'"
+                  editable="model" value="model.train_import_handler_obj.id"
+                  editable-field="train_import_handler" editable-input="select"
+                  editable-placement="right" is-empty="_isEmpty"
+                  source="handlers_list"
+                  display="model.train_import_handler_obj.name"></span>
             <a target="_blank" href="#{{ model.train_import_handler_obj.objectUrl() }}"><i class="icon-arrow-right"></i></a>
           </div>
           <div>
             For Tests:
-            <span title="Select Test Import Handler" ng-bind="model.test_import_handler_obj.name || 'not specified'" editable="model" value="model.test_import_handler_obj.id" editable-field="test_import_handler" editable-input="select" editable-placement="right" source="handlers_list" display="model.test_import_handler_obj.name"></span>
+            <span title="Select Test Import Handler"
+                  ng-bind="model.test_import_handler_obj.name || 'not specified'"
+                  editable="model" value="model.test_import_handler_obj.id"
+                  editable-field="test_import_handler" editable-input="select"
+                  editable-placement="right"
+                  source="handlers_list"
+                  display="model.test_import_handler_obj.name"></span>
             <a target="_blank" href="#{{ model.test_import_handler_obj.objectUrl() }}"><i class="icon-arrow-right"></i></a>
           </div>
         </div>
       </div>
       <div class="span5">
         <h5>Data Examples Titles</h5>
-        <div ng-show="model.data_fields.length">
+        <div ng-show="model.sorted_data_fields.length">
           Examples label field name:
-          <span title="Label Field Name" ng-bind="model.example_label || 'not specified'" editable="model" value="model.example_label" editable-field="example_label" editable-placement="right" editable-input="select" source="model.data_fields"></span>
+          <span title="Label Field Name" ng-bind="model.example_label || 'not specified'" editable="model" value="model.example_label" editable-field="example_label" editable-placement="right" editable-input="select" source="model.sorted_data_fields"></span>
         </div>
-        <div ng-show="!model.data_fields.length">
+        <div ng-show="!model.sorted_data_fields.length">
           Examples label field name:
-          <span title="Label Field Name" ng-bind="model.example_label || 'not specified'" editable="model" value="model.example_label" editable-field="example_label" editable-placement="right" editable-input="text" source="model.data_fields"></span>
+          <span title="Label Field Name" ng-bind="model.example_label || 'not specified'" editable="model" value="model.example_label" editable-field="example_label" editable-placement="right" editable-input="text" source="model.sorted_data_fields"></span>
         </div>
-        <div ng-show="model.data_fields.length">
+        <div ng-show="model.sorted_data_fields.length">
           Examples id field name:
-          <span title="ID Field Name" ng-bind="model.example_id" editable="model" value="model.example_id" editable-field="example_id" editable-placement="right" editable-input="select" source="model.data_fields"></span>
+          <span title="ID Field Name" ng-bind="model.example_id" editable="model" value="model.example_id" editable-field="example_id" editable-placement="right" editable-input="select" source="model.sorted_data_fields"></span>
         </div>
-        <div ng-show="!model.data_fields.length">
+        <div ng-show="!model.sorted_data_fields.length">
           Examples id field name:
-          <span title="ID Field Name" ng-bind="model.example_id" editable="model" value="model.example_id" editable-field="example_id" editable-placement="right" editable-input="text" source="model.data_fields"></span>
+          <span title="ID Field Name" ng-bind="model.example_id" editable="model" value="model.example_id" editable-field="example_id" editable-placement="right" editable-input="text" source="model.sorted_data_fields"></span>
         </div>
         <div>
             Target variable:

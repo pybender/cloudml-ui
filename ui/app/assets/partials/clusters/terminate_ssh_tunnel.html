@@ -1,0 +1,17 @@
+<div>
+  <div class="modal-header">
+    <button ng-click="close()" class="close" data-dismiss="modal">×</button>
+    <h3>Terminate SSH Tunnel</h3>
+  </div>
+
+  <div class="modal-body">
+    <ng-include src="'/partials/parts/save_form_messages.html'"></ng-include>
+  	<p>
+	    Do you really want to terminate SSH tunnel of the cluster (<a href="http://{{ host }}:{{ cluster.port }}" target="_blank">Web UI Link</a>)?
+	</p>
+  </div>
+
+  <div class="modal-footer">
+    <button ng-click="terminate()" class="btn btn-danger">Terminate</button>
+  </div>
+</div>

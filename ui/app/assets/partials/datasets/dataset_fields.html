@@ -1,5 +1,5 @@
-<div ng-controller="DatasetSelectCtrl">
-  <ul class="nav nav-pills" ng-init="datasets.length == 0">
+<div ng-controller="DatasetSelectCtrl" ng-init="init(handler)">
+  <ul class="nav nav-pills">
     <li ng-class="{active: data.new_dataset_selected}"><a ng-click="data.new_dataset_selected=1">New Data Set</a></li>
     <li ng-hide="datasets.length == 0" ng-class="{active: !data.new_dataset_selected}"><a ng-click="data.new_dataset_selected=0">Existing Data Set</a></li>
     <li ng-show="datasets.length == 0" class="disabled"><a title="There aren't successfully loaded datasets">Existing Data Set</a></li>

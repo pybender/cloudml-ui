@@ -13,6 +13,7 @@ describe "datasets", ->
   beforeEach(module "app.services")
 
   beforeEach(module "app.importhandlers.model")
+  beforeEach(module "app.xml_importhandlers.models")
   beforeEach(module "app.datasets.model")
 
   beforeEach(module "app.datasets.model")
@@ -42,7 +43,7 @@ describe "datasets", ->
 
     spyOn($window.location, 'replace')
 
-    BASE_URL = settings.apiUrl + 'importhandlers/' + HANDLER_ID + '/datasets/'
+    BASE_URL = settings.apiUrl + 'importhandlers/json/' + HANDLER_ID + '/datasets/'
 
     createController = (ctrl) ->
        $controller(ctrl, {'$scope' : $rootScope })
@@ -75,6 +76,9 @@ describe "datasets", ->
       expect($rootScope.openDialog).toHaveBeenCalled()
 
     it "should generate download link", inject (ImportHandler, DataSet) ->
+      spyOn window, '$cml_window_location_replace'
+      .andCallFake () -> null
+
       $rootScope.handler = new ImportHandler({id: HANDLER_ID})
       $rootScope.ds = new DataSet(
         {id: DS_ID, on_s3: true, import_handler_id: HANDLER_ID}
@@ -87,13 +91,14 @@ describe "datasets", ->
       $rootScope.download()
       $httpBackend.flush()
 
-      expect($window.location.replace).toHaveBeenCalledWith('http://amazon/ds_path')
+      expect($cml_window_location_replace).toHaveBeenCalledWith('http://amazon/ds_path')
 
   describe "DataSetDetailsCtrl", ->
 
     it "should init sections", inject () ->
-      $routeParams.handler_id = HANDLER_ID
+      $routeParams.import_handler_id = HANDLER_ID
       $routeParams.id = DS_ID
+      $routeParams.import_handler_type = 'json'
 
       $rootScope.initSections = jasmine.createSpy()
 
@@ -102,41 +107,49 @@ describe "datasets", ->
         $rootScope.go, "model:details", simple=true
       )
 
-    it "should make details query", inject () ->
-      $routeParams.handler_id = HANDLER_ID
+    it "should make details query", inject (DataSet) ->
+      $routeParams.import_handler_id = HANDLER_ID
       $routeParams.id = DS_ID
+      $routeParams.import_handler_type = 'json'
       $rootScope.initSections = jasmine.createSpy()
 
-      url = BASE_URL + DS_ID + '/?show=' + encodeURIComponent('name,status,created_on,updated_on,data,
-on_s3,import_params,error,filesize,records_count,
-time,created_by,import_handler_id,format')
-      $httpBackend.expectGET(url).respond('{"data_set": {"name": "Some name"}}')
+      url1 = BASE_URL + DS_ID + '/?show=' + encodeURIComponent(DataSet.MAIN_FIELDS + ',' + DataSet.EXTRA_FIELDS)
+      url2 = BASE_URL + DS_ID + '/action/sample_data/?size=15'
+      $httpBackend.expectGET(url1).respond('{"data_set": {"name": "Some name"}}')
+      $httpBackend.expectGET(url2).respond('[{"contractor.dev_skill_test_passed_count": "18", "contractor.dev_bill_rate": "5.56"}]')
 
       createController "DataSetDetailsCtrl"
+      expect($rootScope.initSections).toHaveBeenCalledWith(
+        $rootScope.go, "model:details", simple=true
+      )
+
       $rootScope.go()
       $httpBackend.flush()
 
       expect($rootScope.dataset).toBeDefined()
       expect($rootScope.dataset.name).toBe('Some name')
+      expect($rootScope.dataset.samples_json).toEqual angular.toJson([
+        'contractor.dev_skill_test_passed_count': '18'
+        'contractor.dev_bill_rate': '5.56'
+      ], true)
 
   describe "DatasetSelectCtrl", ->
 
     it "should make list query", inject () ->
-      url = BASE_URL + '?show=name&status=Imported'
+      url = settings.apiUrl + 'importhandlers/json/' + HANDLER_ID +
+        '/datasets/?import_handler_id=522333333344445d26c73315&import_handler_type=json&show=name&status=Imported'
+
       $httpBackend.expectGET(url).respond('{"data_sets": [{"name": "Some name", "id": "'+ DS_ID + '"}]}')
 
-      $rootScope.handler = {
-        id: HANDLER_ID
-      }
-      $rootScope.activateSectionColumn = jasmine.createSpy()
-
       createController "DatasetSelectCtrl"
+      $rootScope.init
+        id: HANDLER_ID
+        TYPE: 'json'
       $httpBackend.flush()
 
       expect($rootScope.datasets[0].id).toEqual('')
       expect($rootScope.datasets[1].id).toEqual(DS_ID)
       expect($rootScope.datasets[1].name).toEqual('Some name')
-      expect($rootScope.activateSectionColumn).toHaveBeenCalledWith('dataset', undefined )
 
   # TODO: solve the "Unknown provider: dialogProvider" issue and test
   xdescribe "LoadDataDialogCtrl", ->

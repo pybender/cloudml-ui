@@ -6,12 +6,13 @@ angular.module('app.models.model', ['app.config'])
   'settings'
   'BaseModel'
   'ImportHandler'
+  'XmlImportHandler'
   'DataSet'
   'FeaturesSet'
   'Classifier'
   
-  ($http, $q, settings, BaseModel, ImportHandler, DataSet,
-    FeaturesSet, Classifier) ->
+  ($http, $q, settings, BaseModel, ImportHandler, XmlImportHandler,
+    DataSet, FeaturesSet, Classifier) ->
     ###
     Model
     ###
@@ -41,8 +42,12 @@ angular.module('app.models.model', ['app.config'])
       train_import_handler: null
       test_import_handler: null
       datasets: []
+      sorted_data_fields: null
+      labels: null
 
-      loadFromJSON: (origData) =>
+      trainer_s3_url: null
+
+      loadFromJSON: (origData) ->
         super origData
 
         if origData?
@@ -50,14 +55,27 @@ angular.module('app.models.model', ['app.config'])
           if origData.features?
             @features = angular.toJson(
               angular.fromJson(origData['features']), pretty=true)
+
           if origData.test_import_handler?
-            @test_import_handler_obj = new ImportHandler(
+            if origData.test_import_handler_type == 'xml'
+              cls = XmlImportHandler
+            else
+              cls = ImportHandler
+            @test_import_handler_obj = new cls(
               origData['test_import_handler'])
             @test_import_handler = @test_import_handler_obj.id
+
           if origData.train_import_handler?
-            @train_import_handler_obj = new ImportHandler(
+            if origData.train_import_handler_type == 'xml'
+              cls = XmlImportHandler
+            else if origData.train_import_handler_type == 'json'
+              cls = ImportHandler
+            else
+              throw new Error('Need to load import handler type')
+            @train_import_handler_obj = new cls(
               origData['train_import_handler'])
             @train_import_handler = @train_import_handler_obj.id
+
           if origData.datasets?
             @datasets_obj = for row in origData['datasets']
               new DataSet(row)
@@ -69,11 +87,13 @@ angular.module('app.models.model', ['app.config'])
           if origData.tags?
             @tags = for tag in origData['tags']
               tag['text']
+          if origData.data_fields?
+            @sorted_data_fields = _.sortBy origData['data_fields'], (s)-> s
 
-      downloadUrl: =>
-        return "#{@BASE_API_URL}#{@id}/action/download/"
+      downloadFeaturesUrl: ->
+        return "#{@BASE_API_URL}#{@id}/action/features_download/?"
 
-      @$by_handler: (opts) =>
+      @$by_handler: (opts) ->
         resolver = (resp, Model) ->
           {
             total: resp.data.found
@@ -85,18 +105,26 @@ angular.module('app.models.model', ['app.config'])
         @$make_all_request("#{@prototype.BASE_API_URL}action/by_importhandler/",
                            resolver, opts)
 
-      $train: (opts={}) =>
+      $train: (opts={}) ->
         data = {}
         for key, val of opts
           if key == 'parameters' then val = JSON.stringify(val)
           data[key] = val
         @$make_request("#{@BASE_API_URL}#{@id}/action/train/", {}, "PUT", data)
 
-      $cancel_request_spot_instance: =>
+      $cancel_request_spot_instance: ->
         url = "#{@BASE_API_URL}#{@id}/action/cancel_request_instance/"
         @$make_request(url, {}, "PUT", {}).then(
-          (resp) =>
+          (resp) ->
             @status = resp.data.model.status)
+
+      $uploadPredict: (server) ->
+        url = "#{@BASE_API_URL}#{@id}/action/upload_to_server/"
+        @$make_request(url, {}, "PUT", {'server': server})
+
+      $getTrainS3Url: ()->
+        url = "#{@BASE_API_URL}#{@id}/action/trainer_download_s3url/"
+        @$make_request(url, {}, "GET", {})
 
     return Model
 ])

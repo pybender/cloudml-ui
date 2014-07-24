@@ -107,15 +107,42 @@ angular.module('app.importhandlers.model', ['app.config'])
     return Item
 ])
 
+.factory('BaseQueryModel', [
+    'BaseModel'
+    (BaseModel)->
+      class BaseQueryModel extends BaseModel
+        @PARAMS_PERCENT_REGEX: "%\\((\\w+)\\)s"
+        @PARAMS_HASH_REGEX: '#{(\\w+)}'
+
+        _getParams: (exp, sql) ->
+          params = []
+          regex = new RegExp(exp, 'gi')
+          matches = regex.exec(sql)
+          while matches
+            if matches[1] not in params
+              params.push matches[1]
+            matches = regex.exec(sql)
+          return params
+
+        _runSql: (sql, params, datasource, limit, handlerUrl) ->
+          data =
+            sql: sql,
+            params: JSON.stringify(params),
+            limit: limit,
+            datasource: datasource
+          @$make_request handlerUrl, {}, "PUT", data
+
+  ])
+
 .factory('Query', [
   '$http'
   '$q'
   'settings'
-  'BaseModel'
+  'BaseQueryModel'
   'Item'
   
-  ($http, $q, settings, BaseModel, Item) ->
-    class Query  extends BaseModel
+  ($http, $q, settings, BaseQueryModel, Item) ->
+    class Query  extends BaseQueryModel
       DATA_FIELDS: ['name', 'sql']
       name: null
       sql: null
@@ -154,27 +181,16 @@ angular.module('app.importhandlers.model', ['app.config'])
           _handler.loadFromJSON(resp.data['import_handler'])
         )
 
-      $remove: () ->
+      $remove: ->
         data = {'remove_query': 1, 'num': @num}
         @$make_request(@handler.getUrl(), {}, "PUT", data)
 
-      getParams: () ->
-        expr = /%\((\w+)\)s/gi
-        params = []
-        matches = expr.exec(@sql)
-        while matches
-          params.push matches[1]
-          matches = expr.exec(@sql)
-        return params
+      getParams: ->
+        @_getParams BaseQueryModel.PARAMS_PERCENT_REGEX, @sql
 
-      $run: (limit, params, datasource) ->
-        data = {
-          sql: @sql,
-          params: JSON.stringify(params),
-          limit: limit,
-          datasource: datasource
-        }
-        @$make_request(@handler.getUrl() + 'action/run_sql/', {}, "PUT", data)
+      $run: (limit, params, datasource, handlerUrl) ->
+        @_runSql @sql, params, datasource, limit,
+          "#{handlerUrl}action/run_sql/"
 
     return Query
 ])
@@ -194,14 +210,14 @@ angular.module('app.importhandlers.model', ['app.config'])
     ###
     class ImportHandler  extends BaseModel
       BASE_API_URL: "#{settings.apiUrl}importhandlers/"
-      BASE_UI_URL: '/importhandlers/'
+      BASE_UI_URL: '/handlers/json/'
       API_FIELDNAME: 'import_handler'
-      @MAIN_FIELDS: 'name,id,import_params,
-created_on,created_by,error'
+      @MAIN_FIELDS: 'name,id,import_params,created_on,created_by,error'
       DEFAULT_FIELDS_TO_SAVE: ['name', 'data']
-      @PROCESS_STRATEGIES = ['identity', 'string', 'float',
-        'boolean', 'integer', 'json', 'composite']
+      @PROCESS_STRATEGIES = _.sortBy ['identity', 'string', 'float',
+        'boolean', 'integer', 'json', 'composite'], (s)-> s
       DATA_FIELDS: ['target_schema']
+      TYPE: 'JSON'
 
       id: null
       created_on: null
@@ -256,6 +272,10 @@ created_on,created_by,error'
         }
         @$make_request("#{@BASE_API_URL}#{@id}/action/test_handler/", {},
           "PUT", data)
+
+      $uploadPredict: (server) =>
+        url = "#{@BASE_API_URL}#{@id}/action/upload_to_server/"
+        @$make_request(url, {}, "PUT", {'server': server})
 
     return ImportHandler
 ])

@@ -7,7 +7,7 @@ from api.accounts.models import User
 from api.features.fixtures import FeatureSetData, FeatureData
 
 from views import InstanceResource
-from models import Instance
+from models import Instance, Cluster
 from fixtures import InstanceData
 from tasks import *
 
@@ -120,17 +120,17 @@ class TestInstanceTasks(BaseDbTestCase):
         model = Model.query.all()[0]
         user = User.query.all()[0]
 
-        with patch('api.amazon_utils.AmazonEC2Helper.get_request_spot_instance',
-                   return_value=Mock(**{
-                       'state': 'active',
-                       'status.code': '200',
-                       'status.message': 'Msg',
-                   })):
-            res = get_request_instance('some_id',
-                         callback='train',
-                         dataset_ids=['dataset_id'],
-                         model_id=model.id,
-                         user_id=user.id)
+        with patch(
+            'api.amazon_utils.AmazonEC2Helper.get_request_spot_instance',
+            return_value=Mock(**{'state': 'active',
+                                 'status.code': '200',
+                                 'status.message': 'Msg'})):
+            res = get_request_instance(
+                'some_id',
+                callback='train',
+                dataset_ids=['dataset_id'],
+                model_id=model.id,
+                user_id=user.id)
             self.assertEquals(res, '8.8.8.8')
             self.assertTrue(mock_train.apply_async)
 
@@ -173,11 +173,12 @@ class TestInstanceTasks(BaseDbTestCase):
             'status.message': 'Msg',
         })
 
-        res = get_request_instance('some_id',
-                         callback='train',
-                         dataset_ids=['dataset_id'],
-                         model_id=model.id,
-                         user_id=user.id)
+        res = get_request_instance(
+            'some_id',
+            callback='train',
+            dataset_ids=['dataset_id'],
+            model_id=model.id,
+            user_id=user.id)
         self.assertIsNone(res)
 
         model = Model.query.get(model.id)
@@ -219,3 +220,28 @@ class TestInstanceTasks(BaseDbTestCase):
         mock_cancel_request_spot_instance.assert_called_with('some req id')
         model = Model.query.get(model.id)
         self.assertEquals(model.status, model.STATUS_CANCELED)
+
+
+# class ClusterTests(BaseDbTestCase, TestChecksMixin):
+#     """
+#     Tests of the Clusters API.
+#     """
+#     BASE_URL = '/cloudml/aws_instances/'
+#     RESOURCE = InstanceResource
+#     Model = Cluster
+#     datasets = [InstanceData, ]
+
+#     def test_list(self):
+#         resp = self.check_list(show='name,type')
+#         self.assertTrue(resp['instances'][0]['type'])
+#         self.assertTrue(resp['instances'][0]['name'])
+
+#     def test_details(self):
+#         instance = self.Model.query.filter_by(name='Instance 1')[0]
+#         resp = self.check_details(
+#             show='name,ip,is_default,type', obj=instance)
+#         instance_resp = resp['instance']
+#         self.assertEqual(instance_resp['name'], instance.name)
+#         self.assertEqual(instance_resp['type'], instance.type)
+#         self.assertEqual(instance_resp['ip'], instance.ip)
+#         self.assertEqual(instance_resp['is_default'], False)

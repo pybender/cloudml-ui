@@ -25,6 +25,8 @@
     </span>
   </div>
 
+  <alert-message ng-show="msg" class="alert-info" msg="{{ msg }}"></alert-message>
+
   <h4>My recently updated</h4>
   <div ng-controller="ModelListCtrl" ng-init="init(true, 'my_models')">
     <ng-include ng-controller="BaseListCtrl" ng-init="init(false, 'my_models', false)" src="'/partials/models/table.html'"></ng-include>

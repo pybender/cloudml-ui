@@ -1,0 +1,257 @@
+<ul class="list-style tree">
+  <li>
+  <div>
+    <h4>
+      <span title="name" class="name" ng-bind="entity.name || 'no name'" editable="entity" value="entity.name" editable-field="name" editable-input="text" editable-placement="right"></span>
+      <div class="actions">
+        <a ng-click="addEntity()(entity);" class="btn btn-info">
+          <i class="status-icon icon-plus"></i> add sub entity
+        </a>
+        <a ng-click="addField()(entity);" class="btn btn-info">
+          <i class="status-icon icon-plus"></i> add field
+        </a>
+        <a ng-show="entity.entity_id" class="btn btn-danger" ng-click="deleteEntity()(entity)">
+          <i class="status-icon icon-remove"></i> delete entity
+        </a>
+        <button ng-click="addSqoop()(entity);" class="btn btn-info" ng-show="entity.datasource && entity.datasource.type == 'pig'" ng-disabled="entity.sqoop_imports.length >= 3">
+          <i class="status-icon icon-wrench"></i> add sqoop import
+        </button>
+      </div>
+    </h4>
+    <div>
+      <h5>
+        <i class="icon-hdd"></i> DataSource
+        <a ng-click="editDataSource()(entity)">
+          <i title="Edit Data Source" class="icon-edit"></i>
+        </a>
+      </h5>
+      <div>
+        <div ng-show="entity.datasource">
+          <div>
+            Name:
+            <span class="value">{{ entity.datasource.name }}</span>
+          </div>
+          <div>
+            Type:
+            <span class="value">{{ entity.datasource.type }} (global)</span>
+          </div>
+        </div>
+        <div ng-show="entity.transformed_field">
+          <div>
+            Field Name:
+            <span class="value">{{ entity.transformed_field.name }}</span>
+          </div>
+          <div>
+            Transformed Type:
+            <span class="value">{{ entity.transformed_field.transform }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div ng-repeat="sqoop in entity.sqoop_imports">
+    <hr />
+    <h5><i class="icon-wrench"></i> Sqoop</h5>
+    <div>
+      <alert-message ng-show="sqoop.msg" class="alert-info" msg="{{ sqoop.msg }}"></alert-message>
+      <alert-message ng-show="sqoop.err" class="alert-error" msg="{{ sqoop.err }}"></alert-message>
+      <alert-message ng-show="sqoop.edit_err" class="alert-error" msg="{{ sqoop.edit_err }}"></alert-message>
+      <div class="row">
+      <div class="span3">
+          <div>
+            Target:
+            <span title="target" class="target value" ng-bind="sqoop.target" editable="sqoop" value="sqoop.target" editable-field="target" editable-input="text" editable-placement="right"></span>
+          </div>
+          <div>
+            Table:
+            <span title="table" class="table value" ng-bind="sqoop.table" editable="sqoop" value="sqoop.table" editable-field="table" editable-input="text" editable-placement="right"></span>
+          </div>
+      </div>
+      <div class="span3">
+          <div>
+            Where:
+            <span title="where" class="where value" ng-bind="sqoop.where" editable="sqoop" value="sqoop.where" editable-field="where" editable-input="text" editable-placement="right"></span>
+          </div>
+          <div>
+            Direct:
+            <span title="direct" class="direct value" ng-bind="sqoop.direct" editable="sqoop" value="sqoop.direct" editable-field="direct" editable-input="text" editable-placement="right"></span>
+          </div>
+      </div>
+      <div class="span3">
+          <div>
+            Mappers:
+            <span title="mappers" class="mappers value" ng-bind="sqoop.mappers" editable="sqoop" value="sqoop.mappers" editable-field="mappers" editable-input="text" editable-placement="right"></span>
+          </div>
+          <div>
+            Datasource:
+            <span title="datasource" class="datasource value" ng-bind="sqoop.datasource_id" editable="sqoop" value="sqoop.datasource_id" editable-field="datasource" editable-input="select" source="getDatasources('db')"></span>
+          </div>
+      </div>
+      </div>
+      <div class="row">
+        <div class="span11">
+        Text:<textarea class="small" ui-codemirror="$root.codeMirrorConfigs(false)['sql']" ng-model="sqoop.text" ui-refresh="sqoop" />
+        </div>
+      </div>
+      <a ng-disabled="sqoop.loading_state" ng-click="sqoop.saveText()" class="btn btn-info">
+          <i class="status-icon icon-edit"></i> save text
+        </a>
+        <button ng-click="deleteSqoop()(sqoop);" class="btn btn-danger">
+              <i title="Delete item. Be careful - you could not recover it!" class="icon-remove"></i>
+            </button>
+    </div>
+    </div>
+    <div ng-show="entity.query_obj">
+    <hr />
+    <h5><i class=" icon-magnet"></i> Query</h5>
+    <div>
+      <alert-message ng-show="entity.query_obj.msg" class="alert-info" msg="{{ entity.query_obj.msg }}"></alert-message>
+      <alert-message ng-show="entity.query_obj.err" class="alert-error" msg="{{ entity.query_obj.err }}"></alert-message>
+      <alert-message ng-show="entity.query_obj.edit_err" class="alert-error" msg="{{ entity.query_obj.edit_err }}"></alert-message>
+      <div>
+        Target:
+        <span title="target" class="target value" ng-bind="entity.query_obj.target" editable="entity.query_obj" value="entity.query_obj.target" editable-field="target" editable-input="text" editable-placement="right"></span>
+      </div>
+      <div ng-init="queries_run_sql={}">
+        SQL:
+        <p>
+        <textarea class="small" ui-codemirror="$root.codeMirrorConfigs(false)['sql']" ng-model="entity.query_obj.text" ui-refresh="entity.query_obj" />
+        </p>
+        <a ng-disabled="entity.query_obj.loading_state" ng-click="saveQueryText()(entity.query_obj);" class="btn btn-info">
+          <i class="status-icon icon-edit"></i> save text
+        </a>
+        <a class="btn btn-info"
+           ng-disabled="entity.query_obj.loading_state"
+           ng-click="runQuery({'queryObj':entity.query_obj});"
+           ng-show="entity.datasource.type == 'db'">
+          <i class="icon-play"></i> Run Query
+        </a>
+      </div>
+      <hr />
+      <div class="query-results" ng-show="entity.query_obj.test">
+        <h5 ng-init="queries_run_sql[entity.query_obj.num]=1">
+          <a ng-click="queries_run_sql[entity.query_obj.num]=!queries_run_sql[entity.query_obj.num]">
+            <span ng-hide="queries_run_sql[entity.query_obj.num]" ng-bind="'Show'" />
+            <span ng-show="queries_run_sql[entity.query_obj.num]" ng-bind="'Hide'" /> SQL Query Result</a>
+        </h5>
+        <div style="overflow: auto;" ng-show="queries_run_sql[entity.query_obj.num]">
+          <table class="table table-bordered table-hovered" style="background: white;"
+                 ng-hide="!entity.query_obj.test.data || entity.query_obj.test.error">
+            <tr><th ng-repeat="col in entity.query_obj.test.columns">{{ col }}</th></tr>
+            <tr ng-repeat="row in entity.query_obj.test.data">
+              <td ng-repeat="col in entity.query_obj.test.columns">
+                <div style="max-height: 200px; overflow: auto">
+                  {{ row[col] }}
+                </div>
+              </td>
+            </tr>
+          </table>
+          <div ng-hide="entity.query_obj.test.data || entity.query_obj.test.error">
+            <h4 class="text-warning">Query Resulted in 0 Records</h4></div>
+          <div ng-hide="!entity.query_obj.test.error">
+            <h4 class="text-error">Query Error:</h4>
+            <p class="text-error"> {{entity.query_obj.test.error}}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+    <div ng-show="entity.fields">
+      <hr />
+      <h5>Fields</h5>
+      <div class="scrollable">
+        <div class="outer">
+          <div class="inner">
+            <table class="table">
+              <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th width="80px">Type</th>
+                    <th>Column</th>
+                    <th>Jsonpath</th>
+                    <th>Join</th>
+                    <th>Regex</th>
+                    <th>Split</th>
+                    <th title="Date Format">Format</th>
+                    <th title="Template">Template</th>
+                    <th>Transform</th>
+                    <th>Headers</th>
+                    <th>Script</th>
+                    <th width="50px" title="Multipart">Multipart</th>
+                    <th width="50px" title="Required">Required</th>
+                    <th width="50px">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr ng-repeat="field in entity.fields">
+                    <th>
+                      <span title="name" class="name" ng-bind="field.name || 'no name'" editable="field" value="field.name" editable-field="name" editable-input="text" editable-placement="right"></span>
+                    </th>
+                    <td>
+                      <span title="Type" ng-bind="field.type" editable="field" value="field.type" editable-field="type" editable-placement="right" editable-input="select" source="field.TYPES_LIST"></span>
+                    </td>
+                    <td>
+                      <span title="column" class="column" ng-bind="field.column || 'no column'" editable="field" value="field.column" editable-field="column" editable-input="text" editable-placement="right"></span>
+                    </td>
+                    <td>
+                      <span title="jsonpath" class="jsonpath" ng-bind="field.jsonpath || 'no jsonpath'" editable="field" value="field.jsonpath" editable-field="jsonpath" editable-input="text" editable-placement="right"></span>
+                    </td>
+                    <td>
+                      <span title="join" class="join" ng-bind="field.join || 'no join'" editable="field" value="field.join" editable-field="join" editable-input="text" editable-placement="right"></span>
+                    </td>
+                    <td>
+                      <span title="regex" class="regex" ng-bind="field.regex || 'no regex'" editable="field" value="field.regex" editable-field="regex" editable-input="text" editable-placement="right"></span>
+                    </td>
+                    <td>
+                      <span title="split" class="split" ng-bind="field.split || 'no split'" editable="field" value="field.split" editable-field="split" editable-input="text" editable-placement="right"></span>
+                    </td>
+                    <td>
+                      <span title="dateFormat" class="dateFormat" ng-bind="field.dateFormat || 'no dateFormat'" editable="field" value="field.dateFormat" editable-field="dateFormat" editable-input="text" editable-placement="right"></span>
+                    </td>
+                    <td>
+                      <span title="template" class="template" ng-bind="field.template || 'no template'" editable="field" value="field.template" editable-field="template" editable-input="textarea" editable-placement="left"></span>
+                    </td>
+                    <td>
+                      <span title="transform" ng-bind="field.transform" editable="field" value="field.transform" editable-field="transform" editable-placement="left" editable-input="select" source="field.TRANSFORM_LIST"></span>
+                    </td>
+                    <td>
+                      <span title="headers" class="headers" ng-bind="field.headers || 'no headers'" editable="field" value="field.regex" editable-field="headers" editable-input="textarea" editable-placement="left"></span>
+                    </td>
+                    <td>
+                      <span title="script" class="script" ng-bind="field.script || 'no script'" editable="field" value="field.script" editable-field="script" editable-input="textarea" editable-placement="left"></span>
+                    </td>
+                    <td>
+                      <input title="multipart" type="checkbox" ng-checked="field.multipart" ng-model="field.multipart" ng-change="field.$save({only: ['multipart']})" />
+                    </td>
+                    <td>
+                      <input title="required" type="checkbox" ng-checked="field.required" ng-model="field.required" ng-change="field.$save({only: ['required']})" />
+                    </td>
+                    <td>
+                      <button ng-click="deleteField()(field);" class="btn btn-danger">
+                        <i title="Delete field. Be careful - you could not recover it!" class="icon-remove"></i>
+                      </button>
+                    </td>
+                  </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div style="clear: both;float:none;"></div>
+    </div>
+    <div ng-show="entity.entities">
+      <hr />
+      <entities-recursive>
+        <entities-tree handler="handler" entity="sub" ng-repeat="sub in entity.entities"
+                       add-entity="addEntity()"
+                       add-field="addField()"
+                       delete-entity="deleteEntity()"
+                       delete-field="deleteField()"
+                       edit-data-source="editDataSource()"
+                       save-query-text="saveQueryText()"
+                       add-sqoop="addSqoop()"
+                       delete-sqoop="deleteSqoop()"></entities-tree>
+      </entities-recursive>
+    </div>
+  </div>
+  </li>
+</ul>

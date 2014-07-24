@@ -25,7 +25,8 @@ class BooleanField(BaseField):
     def clean(self, value):
         value = super(BooleanField, self).clean(value)
         if value is not None:
-            return value == 'true' or value == 'True' or value == True or value == '1' or value == u'1'
+            return value == 'true' or value == 'True'\
+                or value is True or value == '1' or value == u'1'
         return None
 
 
@@ -34,7 +35,7 @@ class IntegerField(BaseField):
         value = super(IntegerField, self).clean(value)
         try:
             return int(value)
-        except ValueError:
+        except (ValueError, TypeError):
             raise ValidationError('should be integer number')
 
 
@@ -47,7 +48,8 @@ class ChoiceField(CharField):
         value = super(ChoiceField, self).clean(value)
 
         if value and not value in self._choices:
-            raise ValidationError('Should be one of %s' % ', '.join(self._choices))
+            raise ValidationError(
+                'Should be one of %s' % ', '.join(self._choices))
 
         return value
 
@@ -153,26 +155,56 @@ class JsonField(CharField):
             try:
                 return json.loads(value)
             except ValueError:
-                raise ValidationError('JSON file is corrupted. Can not load it: %s' % value)
+                raise ValidationError(
+                    'JSON file is corrupted. Can not load it: %s' % value)
 
 
 class ImportHandlerFileField(BaseField):
     def clean(self, value):
         self.import_params = None
+        self.import_handler_type = 'json'
+
         if not value:
             return
 
-        from core.importhandler.importhandler import ExtractionPlan, \
-            ImportHandlerException
+        # parsing the json import handler
+        json_parsed = False
         try:
             data = json.loads(value)
+            json_parsed = True
         except ValueError, exc:
-            raise ValidationError('Import Handler JSON file is corrupted. Can not load it: %s' % exc)
+            pass
 
-        try:
-            plan = ExtractionPlan(value, is_file=False)
-            self.import_params = plan.input_params
-        except (ValueError, ImportHandlerException) as exc:
-            raise ValidationError('Import Handler JSON file is invalid: %s' % exc)
+        if json_parsed:
+            try:
+                from core.importhandler.importhandler import ExtractionPlan, \
+                    ImportHandlerException
+                plan = ExtractionPlan(value, is_file=False)
+                self.import_params = plan.input_params
+                return data
+            except (ValueError, ImportHandlerException) as exc:
+                raise ValidationError(
+                    'Import Handler JSON file is invalid: %s' % exc)
+        else:
+            value = value.encode('utf-8')
+            try:
+                from core.xmlimporthandler.importhandler import ExtractionPlan
+                plan = ExtractionPlan(value, is_file=False)
+                self.import_params = plan.inputs.keys()
+                self.import_handler_type = 'xml'
+            except Exception as exc:
+                raise ValidationError(exc)
+        return value
 
-        return data
+
+class ImportHandlerField(CharField):
+    def clean(self, value):
+        if value:
+            if 'xml' in value:
+                from api.models import XmlImportHandler
+                value = XmlImportHandler.query.get(
+                    value.replace('xml', ''))
+            else:
+                from api.models import ImportHandler
+                value = ImportHandler.query.get(value)
+        return value

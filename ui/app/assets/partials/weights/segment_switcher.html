@@ -1,0 +1,5 @@
+<p class="switcher" ng-show="model.segments.length">
+  <b>Segment: </b>
+  <span ng-repeat="segment in model.segments">
+    <a ng-class="{active: action[2] == segment.name || action[2] == undefined && $first}" ng-click="setSection(['training', view, segment.name])">{{segment.name}}</a> <span ng-hide="$last">|</span></span>
+</p>

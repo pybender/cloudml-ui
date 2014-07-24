@@ -26,12 +26,20 @@ App = angular.module('app', [
   'app.importhandlers.controllers'
   'app.importhandlers.controllers.datasources'
   'app.importhandlers.controllers.handlers'
+  'app.xml_importhandlers.models'
+  'app.xml_importhandlers.controllers'
+  'app.xml_importhandlers.controllers.input_parameters'
+  'app.xml_importhandlers.controllers.entities'
+  'app.xml_importhandlers.controllers.datasources'
+  'app.xml_importhandlers.controllers.scripts'
   'app.datasets.model'
   'app.datasets.controllers'
   'app.weights.model'
   'app.weights.controllers'
   'app.awsinstances.model'
   'app.awsinstances.controllers'
+  'app.clusters.models'
+  'app.clusters.controllers'
   'app.logmessages.model'
   'app.logmessages.controllers'
   'app.login.controllers'
@@ -45,6 +53,8 @@ App = angular.module('app', [
   'app.features.controllers.base'
   'app.features.controllers.scalers'
   'app.features.controllers.features'
+  'app.servers.model'
+  'app.servers.controllers'
 ])
 
 App.config([
@@ -102,32 +112,53 @@ App.config([
       templateUrl: '/partials/reports/compare_models_form.html'
       controller: 'CompareModelsFormCtl'
     })
-    .when('/importhandlers', {
+    .when('/handlers', {
+      redirectTo: (params, loc) ->
+        return '/handlers/xml'
+    })
+    .when('/handlers/xml', {
+      controller: "XmlImportHandlerListCtrl"
+      templateUrl: '/partials/xml_import_handlers/list.html'
+    })
+    .when('/handlers/xml/add', {
+      controller: "AddXmlImportHandlerCtl"
+      templateUrl: '/partials/xml_import_handlers/add.html'
+    })
+    .when('/handlers/xml/:id', {
+      controller: 'XmlImportHandlerDetailsCtrl'
+      templateUrl: '/partials/xml_import_handlers/details.html'
+      reloadOnSearch: false
+    })
+    .when('/handlers/xml/:handler_id/datasets', {
+      redirectTo: (p, loc) ->
+        return '/handlers/xml/' + p.handler_id + '?action=dataset:list'
+    })
+    .when('/handlers/json', {
       controller: "ImportHandlerListCtrl"
       templateUrl: '/partials/import_handler/list.html'
     })
-    .when('/importhandlers/add', {
+    .when('/handlers/json/add', {
       controller: "AddImportHandlerCtl"
       templateUrl: '/partials/import_handler/add.html'
     })
-    .when('/importhandlers/:id', {
+    .when('/handlers/json/:id', {
       controller: 'ImportHandlerDetailsCtrl'
       templateUrl: '/partials/import_handler/details.html'
       reloadOnSearch: false
     })
-    .when('/importhandlers/:id/query/add', {
+    .when('/handlers/json/:id/query/add', {
       controller: 'AddImportHandlerQueryCtrl'
       templateUrl: '/partials/import_handler/add_query.html'
     })
-    .when('/importhandlers/:id/query/:num/items/add', {
+    .when('/handlers/json/:id/query/:num/items/add', {
       controller: 'AddImportHandlerQueryItemCtrl'
       templateUrl: '/partials/import_handler/add_query_item.html'
     })
-    .when('/importhandlers/:handler_id/datasets', {
+    .when('/handlers/json/:handler_id/datasets', {
       redirectTo: (params, loc) ->
-        return '/importhandlers/' + params.handler_id + '?action=dataset:list'
+        return '/handlers/json/' + params.handler_id + '?action=dataset:list'
     })
-    .when('/importhandlers/:handler_id/datasets/:id', {
+    .when('/handlers/:import_handler_type/:import_handler_id/datasets/:id', {
       controller: 'DataSetDetailsCtrl'
       templateUrl: '/partials/datasets/details.html'
       reloadOnSearch: false
@@ -146,6 +177,22 @@ App.config([
     .when('/aws/instances/:id', {
       controller: 'AwsInstanceDetailsCtrl'
       templateUrl: '/partials/aws_instances/details.html'
+    })
+    .when('/aws/clusters', {
+      controller: "ClusterListCtrl"
+      templateUrl: '/partials/clusters/list.html'
+    })
+    .when('/aws/clusters/:id', {
+      controller: 'ClusterDetailsCtrl'
+      templateUrl: '/partials/clusters/details.html'
+    })
+    .when('/servers', {
+      controller: "ServerListCtrl"
+      templateUrl: '/partials/servers/list.html'
+    })
+    .when('/servers/:id', {
+      controller: 'ServerDetailsCtrl'
+      templateUrl: '/partials/servers/details.html'
     })
 
     # auth
@@ -258,18 +305,25 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
           $rootScope.log_messages.push(data['data']['msg']))
     log_sse.addEventListener('message', handleCallback)
 
-  $rootScope.openDialog = ($dialog, model, template, ctrlName,
-                           cssClass='modal', action='', path=null,
-                           extra={}) ->
+  $rootScope.openDialog = (opts) ->
+    $dialog = opts.$dialog
+    if !$dialog?
+      throw new Error('$dialog is required')
+
+    template = opts.template
+    if !template?
+      throw new Error('template is required')
+
     d = $dialog.dialog(
       modalFade: false
-      dialogClass: cssClass
+      dialogClass: opts.cssClass || 'modal'
     )
-    d.model = model
-    d.action = action
-    d.path = path
-    d.open(template, ctrlName)
-    d.extra = extra
+    d.model = opts.model
+    d.action = opts.action || ''
+    d.path = opts.path
+    d.open(template, opts.ctrlName)
+    d.extra = opts.extra || {}
+    d.list_model_name = opts.list_model_name
     return d
 
   DEFAULT_ACTION = "model:details"
@@ -312,8 +366,9 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
     if opts.data
       $rootScope.err = "Error while #{message}: server responded
  with #{opts.status} (#{opts.data.response.error.message or "no message"})."
-      for item in opts.data.response.error.errors
-          $rootScope.setFieldError(item.name, item.error)
+      if opts.data.response.error.errors?
+        for item in opts.data.response.error.errors
+            $rootScope.setFieldError(item.name, item.error)
     else
       $rootScope.err = "Unkown error while #{message}."
 

@@ -21,7 +21,7 @@ CELERY_RESULT_BACKEND = 'amqp://cloudml:cloudml@localhost:5672/cloudml'
 CELERY_IMPORTS = (
     'api.models', 'api', 'api.import_handlers.tasks',
     'api.instances.tasks', 'api.ml_models.tasks',
-    'api.model_tests.tasks')
+    'api.model_tests.tasks', 'api.servers.tasks')
 
 from kombu import Queue
 
@@ -38,6 +38,8 @@ CELERYD_MAX_TASKS_PER_CHILD = 1
 AMAZON_ACCESS_TOKEN = '{{ amazon_access_token }}'
 AMAZON_TOKEN_SECRET = '{{ amazon_token_secret }}'
 AMAZON_BUCKET_NAME = '{{ amazon_bucket_name }}'
+
+CLOUDML_PREDICT_BUCKET_NAME = '{{ amazon_bucket_name }}'
 
 # OAuth keys
 ODESK_OAUTH_KEY = '{{ odesk_api_key }}'

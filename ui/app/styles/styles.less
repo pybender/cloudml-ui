@@ -224,3 +224,53 @@ textarea.params {
 .error_message {
   color: #b94a48;
 }
+.modal-body form.form-horizontal .help-block {
+  margin-top: 0px;
+}
+
+#imports .CodeMirror {
+  height: 100px;
+}
+
+.tree li {
+  border: 1px solid #e5e5e5;
+  margin-bottom: 10px;
+}
+
+.tree li, .weights-tree li {
+  list-style-type: none;
+}
+.tree li>div {
+  padding: 10px;
+  padding-top: 0px;
+}
+.tree h4 {
+  
+}
+
+/* scrollable table with fixed first column */
+@th_width: 250px;
+.scrollable table {
+
+  width: 100%;
+  *margin-left: -@th_width;/*ie7*/
+}
+.scrollable thead tr th:first-child {
+  position:absolute;
+  *position: relative; /*ie7*/
+  left:0; 
+  width:@th_width;
+}
+.scrollable tbody tr th {
+  position:absolute;
+  *position: relative; /*ie7*/
+  left:0; 
+  width:@th_width;
+}
+.scrollable .outer {position:relative}
+.scrollable .inner {
+  overflow-x:scroll;
+  overflow-y:visible;
+  width:850px; 
+  margin-left:@th_width;
+}

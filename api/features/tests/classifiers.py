@@ -107,6 +107,20 @@ class ModelClassifierTest(BaseDbTestCase, TestChecksMixin):
     datasets = (FeatureData, FeatureSetData, ModelData,
                 PredefinedClassifierData, )
 
+    def test_classifier_parameters_types_convertion(self):
+        data = {"name": "classifier name",
+                'type': 'logistic regression',
+                'model_id': 1,
+                'params': json.dumps({
+                    'C': '1.5',
+                    'dual': 'True'
+                })}
+        self._check(data=data, method='post')
+        model = Model.query.filter_by(name=ModelData.model_01.name).one()
+        self.assertEqual(model.classifier['type'], data['type'])
+        self.assertEqual(model.classifier['params']['C'], 1.5)
+        self.assertEqual(model.classifier['params']['dual'], True)
+
     def test_post_validation(self):
         def _check(data, errors):
             """
@@ -126,10 +140,12 @@ class ModelClassifierTest(BaseDbTestCase, TestChecksMixin):
         _check(data, errors={u'classifier': u'classifier is required'})
 
     def test_edit(self):
+        model = Model.query.filter_by(name=ModelData.model_01.name).one()
+        self.assertTrue(model)
         data = {'name': 'new classifier name',
                 'type': 'logistic regression',
                 'params': '{"C": 1}',
-                'model_id': 1}
+                'model_id': model.id}
 
         self._check(data=data, method='post')
         model = Model.query.filter_by(name=ModelData.model_01.name).one()

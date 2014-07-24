@@ -26,8 +26,9 @@ module.exports = function(config) {
 
       // Javascript //
       'test/vendor/angular/angular-mocks.js',
+      'test/unit/canned_responses.coffee',
 
-      'test/unit/*.spec.coffee'
+      'test/unit/**/*.spec.coffee'
     ],
 
 
@@ -39,7 +40,7 @@ module.exports = function(config) {
     // compile coffee scripts
     preprocessors: {
       'app/**/*.coffee': ['coffee'],  //, 'coverage'],
-      'test/unit/*.spec.coffee': 'coffee'
+      'test/unit/**/*.coffee': 'coffee'
     },
 
     // test results reporter to use
@@ -77,7 +78,7 @@ module.exports = function(config) {
     // - Safari (only Mac)
     // - PhantomJS
     // - IE (only Windows)
-    browsers: ['PhantomJS'],
+    browsers: ['Chrome'],
 
     plugins: [
       // these plugins will be require() by Karma

@@ -102,7 +102,15 @@ angular.module('app.features.models', ['app.config'])
         super opts
         @TYPES_LIST = Classifier.$TYPES_LIST
 
-      $getConfiguration: (opts={}) =>
+      loadFromJSON: (origData) ->
+        super origData
+
+        # # TODO: quick fix: need better input to edit dict parameter
+        # if origData? && origData.params? && origData.params.class_weight
+        #   @params['class_weight'] =
+        #   JSON.stringify(origData.params.class_weight)
+
+      $getConfiguration: (opts={}) ->
         @$make_request("#{@BASE_API_URL}#{@id}/action/configuration/",
                        load=false)
 
@@ -112,8 +120,9 @@ angular.module('app.features.models', ['app.config'])
 .factory('FeaturesSet', [
   'settings'
   'BaseModel'
+  'Feature'
   
-  (settings, BaseModel) ->
+  (settings, BaseModel, Feature) ->
     class FeaturesSet extends BaseModel
       BASE_API_URL: "#{settings.apiUrl}features/sets/"
       BASE_UI_URL: "/features/sets/"
@@ -124,6 +133,15 @@ angular.module('app.features.models', ['app.config'])
       schema_name: null
       features_count: 0
       target_variable: null
+
+      loadFromJSON: (origData) =>
+        super origData
+        if origData?
+          if origData.group_by?
+            @group_by = []
+            for feature in origData.group_by
+              @group_by.push {id: feature.id, text: feature.name}
+            console.log @group_by
 
       downloadUrl: =>
         return "#{@BASE_API_URL}#{@id}/action/download/"
@@ -142,7 +160,7 @@ angular.module('app.features.models', ['app.config'])
   (settings, $filter, BaseModel, NamedFeatureType, Transformer, Scaler) ->
     class Feature extends BaseModel
       API_FIELDNAME: 'feature'
-      @MAIN_FIELDS: 'id,name,type,input_format,transformer,params,
+      @MAIN_FIELDS: 'id,name,type,input_format,transformer,params,\
 scaler,default,is_target_variable,created_on,created_by,required'
 
       id: null
@@ -160,7 +178,7 @@ scaler,default,is_target_variable,created_on,created_by,required'
 
       loadFromJSON: (origData) =>
         super origData
-        
+        @text = @name
         if origData?
           defaultData = {'feature_id': @id}
           if origData.transformer? && Object.keys(origData.transformer).length
@@ -191,9 +209,15 @@ scaler,default,is_target_variable,created_on,created_by,required'
 
       constructor: (opts) ->
         super opts
-        @BASE_API_URL = Feature.$get_api_url(@feature_set_id)
+        @BASE_API_URL = Feature.$get_api_url({
+          'feature_set_id': @feature_set_id})
 
-      @$get_api_url: (feature_set_id) ->
+      @$get_api_url: (opts, model) ->
+        feature_set_id = opts.feature_set_id
+        if model?
+          feature_set_id = feature_set_id || model.feature_set_id
+        if not feature_set_id
+          throw new Error 'feature_set_id is required'
         return "#{settings.apiUrl}features/#{feature_set_id}/items/"
 
       @$loadAll: (opts) ->
@@ -209,7 +233,8 @@ scaler,default,is_target_variable,created_on,created_by,required'
               for obj in eval("resp.data.#{Model.prototype.API_FIELDNAME}s"))
             _resp: resp
           }
-        @$make_all_request(Feature.$get_api_url(feature_set_id),
+        @$make_all_request(Feature.$get_api_url({
+          'feature_set_id': feature_set_id}),
                            resolver, opts)
 
       $save: (opts={}) =>

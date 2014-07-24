@@ -246,6 +246,59 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
   }
 ])
 
+.directive("entitiesTree", [ ->
+  return {
+    scope: {
+      handler: '=',
+      entity: '=',
+      addEntity: '&addEntity',
+      addField: '&addField',
+      deleteEntity: '&deleteEntity',
+      deleteField: '&deleteField',
+      editDataSource: '&editDataSource',
+      saveQueryText: '&saveQueryText',
+      runQuery: '&runQuery',
+      addSqoop: '&addSqoop',
+      deleteSqoop: '&deleteSqoop',
+    }
+    # replace: true
+    restrict: 'E'
+    transclude : true
+    templateUrl:'partials/directives/import_tree.html'
+
+    link: (scope, el, attrs) ->
+      scope.getDatasources = (ds_type) ->
+        options = []
+        for ds in scope.handler.xml_data_sources
+          if ds_type and ds.type != ds_type
+            continue
+          options.push({
+            value: ds.id,
+            text: ds.name
+          })
+        return options
+  }
+])
+
+.directive("entitiesRecursive", [
+  '$compile'
+
+($compile) ->
+  return {
+    restrict: "EACM"
+    priority: 100000
+    compile: (tElement, tAttr) ->
+      contents = tElement.contents().remove()
+      compiledContents = undefined
+      return (scope, iElement, iAttr) ->
+        if not compiledContents
+          compiledContents = $compile(contents)
+        iElement.append(
+          compiledContents(scope, (clone) -> return clone))
+  }
+])
+
+
 .directive("paramsEditor", [ ->
   return {
     scope: {params: '='}
@@ -417,6 +470,24 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
           reader.onload = (e) ->
             control.$setViewValue(e.target.result)
             control.$render()
+
+          reader.readAsText(element[0].files[0])
+        )
+      )
+  }
+)
+
+.directive('notRequiredFile', () ->
+  return {
+    require: 'ngModel',
+    restrict: 'A',
+    link: (scope, element, attrs, control) ->
+      element.change((e) ->
+        scope.$apply( () ->
+          reader = new FileReader()
+
+          reader.onload = (e) ->
+            control.$setViewValue(e.target.result)
 
           reader.readAsText(element[0].files[0])
         )
@@ -720,7 +791,7 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
 
 # Directives for creating plots
 
-.directive('scCurves', [ ->
+.directive('scCurves', [ '$timeout', ($timeout)->
   return {
     restrict: 'E',
     scope: { curvesDict: '=',
@@ -732,7 +803,8 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
     },
     link: (scope, element, attrs) ->
       createSVG(scope, element, attrs.width, attrs.height)
-      scope.$watch('curvesDict', updateCurves)
+      $timeout ->
+        scope.$watch('curvesDict', updateCurves)
   }
 ])
 
@@ -749,6 +821,57 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
   }
 ])
 
+.directive('inp', [ ->
+  return {
+    restrict: 'AE',
+    # require: '?ngModel',
+    scope: {model: '=', config: '='}
+    transclude : true
+    templateUrl:'partials/directives/input_param.html'
+  }
+])
+
+
+.directive('ngDictInput', [ ->
+  return {
+    restrict: 'E',
+    require: 'ngModel',
+    scope: {
+      name: '='
+      value: '=ngModel'
+    }
+    transclude : true
+    replace: false
+    templateUrl:'partials/directives/dict_input.html'
+
+    link: (scope, element, attrs, ngModel) ->
+      if !ngModel then return
+      #console.log scope.value
+      scope.displayValue = JSON.stringify(scope.value)
+
+      scope.change = () ->
+        #console.log scope.displayValue
+        if scope.displayValue != 'auto'
+          scope.value = JSON.parse(scope.displayValue)
+        else
+          scope.value = scope.displayValue
+  }
+])
+
+
+.directive('ngName', [ ->
+  return {
+    restrict: 'A',
+    require: '?ngModel',
+    link: {
+      pre: (scope, element, attrs, ctrl) ->
+        if ctrl?
+          ctrl.$name = scope.$eval(attrs.ngName)
+          attrs.$set('name', ctrl.$name)
+    }
+  }
+])
+
 createSVG = (scope, element, width=400, height=300) ->
   scope.margin = {top: 20, right: 20, bottom: 30, left: 210}
   if not scope.svg?
@@ -761,6 +884,7 @@ updateCurves = (curvesDict, oldVal, scope) ->
   if !curvesDict
     return
   chart = nv.models.lineChart()
+  console.log 'now updating xLabel with', scope.xLabel
   chart.xAxis.orient('bottom')
     .axisLabel(scope.xLabel)
     .tickFormat(d3.format(',r'))
@@ -801,6 +925,8 @@ zip = () ->
 getPlotData = (curvesDict, addLine) ->
   plots_data = []
   for plotName, plotData of curvesDict
+    if plotName[0] is '$'
+      continue
     if plotData? && plotData[0]? && plotData[1]?
       data = zip(plotData[0], plotData[1])
       step = 1 / data.length

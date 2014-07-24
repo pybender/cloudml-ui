@@ -223,7 +223,9 @@ class BaseResource(restful.Resource):
         return self._render({self.OBJECT_NAME: model}, code=201)
 
     def _prepare_new_model(self, model, params):
-        return self._prepare_model_any(model, params)
+        #return self._prepare_model_any(model, params)
+        return self._prepare_model(model, params)
+        
 
     ### PUT ###
 
@@ -408,7 +410,8 @@ class BaseResourceSQL(BaseResource):
         return cursor
 
     def _prepare_model_list(self, cursor, params):
-        return cursor
+        # return cursor
+        return [self._prepare_model(model, params) for model in cursor]
 
     def _build_list_query(self, params, **kwargs):
         # TODO: What about joins?

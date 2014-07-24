@@ -3,6 +3,7 @@ from flask import has_request_context, request
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy import func
 from sqlalchemy.orm import relationship
+from sqlalchemy.types import Boolean
 
 from serialization import JsonSerializableMixin
 from api import app
@@ -23,6 +24,18 @@ class BaseMixin(JsonSerializableMixin):
             self.updated_by = user
             if self.id is None:
                 self.created_by = user
+
+    def to_dict(self):
+        kwargs = {}
+        for f in self.FIELDS_TO_SERIALIZE:
+            val = getattr(self, f)
+            if val is not None:
+                column = self.__table__.columns.get(f, None)
+                if not column is None:
+                    if isinstance(column.type, Boolean):
+                        val = str(val).lower()
+                kwargs[f] = val
+        return kwargs
 
     def save(self, commit=True):
         if has_request_context():

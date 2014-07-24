@@ -3,7 +3,7 @@ from mock import patch
 from api.base.test_utils import BaseDbTestCase
 from ..fixtures import DataSetData
 from ..models import DataSet, db
-from ..tasks import upload_dataset
+from ..tasks import upload_dataset, _get_uncompressed_filesize
 
 
 class TestTasksTests(BaseDbTestCase):
@@ -26,3 +26,9 @@ class TestTasksTests(BaseDbTestCase):
         )
         db.session.expire(dataset)
         self.assertEquals(dataset.status, dataset.STATUS_IMPORTED)
+
+    def test_get_uncompressed_filesize(self):
+        self.assertEquals(258447, _get_uncompressed_filesize('api/import_handlers/ds.gz'))
+
+        # a speical test for crossing 2GB limit
+        #self.assertEquals(2447003648, _get_uncompressed_filesize('/home/nader/host-share/toolarge.gz'))

@@ -40,19 +40,30 @@ angular.module('app.features.controllers.classifiers', ['app.config', ])
     $scope.LIST_MODEL_NAME = Classifier.LIST_MODEL_NAME
 
     $scope.edit = (classifier) ->
-      $scope.openDialog($dialog, classifier,
-        'partials/features/classifiers/edit_predefined.html',
-        'ModelWithParamsEditDialogCtrl', 'modal')
+      $scope.openDialog({
+        $dialog: $dialog
+        model: classifier
+        template: 'partials/features/classifiers/edit_predefined.html'
+        ctrlName: 'ModelWithParamsEditDialogCtrl'
+      })
 
     $scope.add = () ->
       classifier = new Classifier()
-      $scope.openDialog($dialog, classifier,
-        'partials/features/classifiers/add_predefined.html',
-        'ModelWithParamsEditDialogCtrl', 'modal', 'add classifier',
-        'classifiers')
+      $scope.openDialog({
+        $dialog: $dialog
+        model: classifier
+        template: 'partials/features/classifiers/add_predefined.html'
+        ctrlName: 'ModelWithParamsEditDialogCtrl'
+        action: 'add classifier'
+        path: "classifiers"
+      })
 
-    $scope.delete = (classifier)->
-      $scope.openDialog($dialog, classifier,
-        'partials/base/delete_dialog.html', 'DialogCtrl',
-        'modal', 'delete predefined classifier')
+    $scope.delete = (classifier) ->
+      $scope.openDialog({
+        $dialog: $dialog
+        model: classifier
+        template: 'partials/base/delete_dialog.html'
+        ctrlName: 'DialogCtrl'
+        action: 'delete predefined classifier'
+      })
 ])

@@ -7,9 +7,10 @@ from itertools import izip
 from bson.objectid import ObjectId
 from os.path import exists
 from datetime import timedelta, datetime
+from sqlalchemy.exc import SQLAlchemyError
 
 from api import celery, app
-from api.base.tasks import SqlAlchemyTask
+from api.base.tasks import SqlAlchemyTask, db_session
 from api.amazon_utils import AmazonS3Helper
 from api.base.exceptions import InvalidOperationError
 from api.logs.logger import init_logger
@@ -58,12 +59,19 @@ def run_test(dataset_ids, test_id):
         metrics_dict['confusion_matrix'] = confusion_matrix_ex
 
         n = len(metrics._labels) / 100 or 1
-        metrics_dict['roc_curve'][1] = metrics_dict['roc_curve'][1][0::n]
-        metrics_dict['roc_curve'][0] = metrics_dict['roc_curve'][0][0::n]
-        metrics_dict['precision_recall_curve'][1] = \
-            metrics_dict['precision_recall_curve'][1][0::n]
-        metrics_dict['precision_recall_curve'][0] = \
-            metrics_dict['precision_recall_curve'][0][0::n]
+        if metrics.classes_count == 2:
+            metrics_dict['precision_recall_curve'][1] = \
+                metrics_dict['precision_recall_curve'][1][0::n]
+            metrics_dict['precision_recall_curve'][0] = \
+                metrics_dict['precision_recall_curve'][0][0::n]
+
+        calc_range = [1] if metrics.classes_count == 2 else range(len(metrics.classes_set))
+        for i in calc_range:
+            label = metrics.classes_set[i]
+            sub_fpr = metrics_dict['roc_curve'][label][0][0::n]
+            sub_tpr = metrics_dict['roc_curve'][label][1][0::n]
+            metrics_dict['roc_curve'][label] = [sub_fpr, sub_tpr]
+
         test.metrics = metrics_dict
         test.classes_set = list(metrics.classes_set)
         test.status = TestResult.STATUS_STORING
@@ -86,9 +94,13 @@ def run_test(dataset_ids, test_id):
 
         test.save()
 
+        data = []
+        for segment, d in raw_data.iteritems():
+            data = data + d
+
         logging.info('Storing test examples')
-        examples = izip(range(len(raw_data)),
-                        raw_data,
+        examples = izip(range(len(data)),
+                        data,
                         metrics._labels,
                         metrics._preds,
                         metrics._probs)
@@ -112,9 +124,15 @@ def run_test(dataset_ids, test_id):
         logging.info('Test %s completed' % test.name)
 
     except Exception, exc:
+        if isinstance(exc, SQLAlchemyError):
+            db_session.rollback()
         logging.exception('Got exception when tests model')
         test.status = test.STATUS_ERROR
-        test.error = str(exc)
+        error_column_size = TestResult.error.type.length
+        str_exc = str(exc)
+        msg = ' ... TRUNCATED'
+        test.error = str_exc if len(str_exc) <= error_column_size else \
+            (str_exc[:error_column_size - len(msg)] + msg)
         test.save()
         raise
     return 'Test completed'
@@ -215,11 +233,18 @@ def get_csv_results(model_id, test_id, fields):
         if not exists(path):
             makedirs(path)
         filename = os.path.join(path, name)
+        header = list(fields)
+        if 'prob' in header:
+            prob_index = header.index('prob')
+            for label in test.classes_set:
+                header.insert(prob_index, 'prob_%s' % label)
+            header.remove('prob')
+
 
         with open(filename, 'w') as fp:
             writer = csv.writer(fp, delimiter=',',
                                 quoting=csv.QUOTE_ALL)
-            writer.writerow(fields)
+            writer.writerow(header)
             for example in TestExample.get_data(test_id, fields):
                 rows = []
                 for field in fields:
@@ -228,7 +253,10 @@ def get_csv_results(model_id, test_id, fields):
                     if field == 'id':
                         field = 'example_id'
                     val = example[field] if field in example else ''
-                    rows.append(val)
+                    if field == 'prob':
+                        rows += val
+                    else:
+                        rows.append(val)
                 writer.writerow(rows)
         return filename
 

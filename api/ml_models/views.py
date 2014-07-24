@@ -6,11 +6,13 @@ from sqlalchemy.orm import undefer, joinedload_all
 from werkzeug.datastructures import FileStorage
 
 from api import api
+from api.base.models import db
 from api.import_handlers.models import DataSet
 from api.base.resources import BaseResourceSQL, NotFound, ValidationError, \
-    public_actions
-from models import Model, Tag, Weight, WeightsCategory
+    public_actions, ERR_INVALID_DATA, odesk_error_response
+from models import Model, Tag, Weight, WeightsCategory, Segment
 from forms import ModelAddForm, ModelEditForm
+from api.servers.forms import ChooseServerForm
 
 
 model_parser = reqparse.RequestParser()
@@ -23,16 +25,16 @@ model_parser.add_argument('name', type=str, default=None)
 model_parser.add_argument('example_id', type=str, default=None)
 model_parser.add_argument('example_label', type=str, default=None)
 
-
 class ModelResource(BaseResourceSQL):
     """
     Models API methods
     """
-    GET_ACTIONS = ('download', 'reload', 'by_importhandler')
-    PUT_ACTIONS = ('train', 'tags', 'cancel_request_instance')
+    GET_ACTIONS = ('reload', 'by_importhandler', 'trainer_download_s3url', 'features_download')
+    PUT_ACTIONS = ('train', 'tags', 'cancel_request_instance',
+                   'upload_to_server')
     FILTER_PARAMS = (('status', str), ('comparable', str), ('tag', str),
                     ('created_by', str), ('updated_by_id', int),
-                    ('updated_by', str))
+                    ('updated_by', str), ('name', str))
     DEFAULT_FIELDS = ('id', 'name')
     NEED_PAGING = True
 
@@ -40,8 +42,6 @@ class ModelResource(BaseResourceSQL):
 
     post_form = ModelAddForm
     put_form = ModelEditForm
-
-    DOWNLOAD_FIELDS = ('trainer', 'features')
 
     Model = Model
 
@@ -53,7 +53,7 @@ class ModelResource(BaseResourceSQL):
 
     # GET specific methods
 
-    @public_actions(['download'])
+    @public_actions(['features_download'])
     def get(self, *args, **kwargs):
         return super(ModelResource, self).get(*args, **kwargs)
 
@@ -69,20 +69,24 @@ class ModelResource(BaseResourceSQL):
             cursor = cursor.options(joinedload_all(Model.features_set))
             cursor = cursor.options(undefer(Model.classifier))
 
-        if fields and 'test_handler_fields' in fields:
-            cursor = cursor.options(joinedload_all(Model.test_import_handler))
+        # if fields and 'test_handler_fields' in fields:
+        #     cursor = cursor.options(joinedload_all(Model.test_import_handler))
 
         return cursor
 
     def _set_list_query_opts(self, cursor, params):
         if 'tag' in params and params['tag']:
             cursor = cursor.filter(Model.tags.any(Tag.text == params['tag']))
+        name = params.pop('name', None)
+        if name:
+            cursor = cursor.filter(Model.name.ilike('%{0}%'.format(name)))
         created_by = params.pop('created_by', None)
         if created_by:
             cursor = cursor.filter(Model.created_by.has(uid=created_by))
         updated_by = params.pop('updated_by', None)
         if updated_by:
             cursor = cursor.filter(Model.updated_by.has(uid=updated_by))
+            
         return cursor
 
     def _get_by_importhandler_action(self, **kwargs):
@@ -95,35 +99,24 @@ class ModelResource(BaseResourceSQL):
         )).all()
         return self._render({"%ss" % self.OBJECT_NAME: models})
 
-    def _get_download_action(self, **kwargs):
-        """
-        Downloads trained model, importhandler or features
-        (specified in GET param `field`) file.
-        """
+    def _get_features_download_action(self, **kwargs):
         model = self._get_details_query(None, **kwargs)
         if model is None:
             raise NotFound(self.MESSAGE404 % kwargs)
 
-        params = self._parse_parameters((('field', str), ))
-        field = params.get('field', 'trainer')
-
-        if not field in self.DOWNLOAD_FIELDS:
-            raise ValidationError('Invalid field specified. \
-Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
-
-        if field == 'trainer':
-            content = model.get_trainer(loaded=False)
-        else:
-            content = model.get_features_json()
-
-        filename = "%s-%s.%s" % (model.name, field,
-                                 'dat' if field == 'trainer' else 'json')
-
+        content = model.get_features_json()
         resp = Response(content)
-        resp.headers['Content-Type'] = 'text/plain'
+        resp.headers['Content-Type'] = 'application/json'
         resp.headers['Content-Disposition'] = \
-            'attachment; filename=%s' % filename
+            'attachment; filename=%s-features.json' % model.name
         return resp
+
+    def _get_trainer_download_s3url_action(self, **kwargs):
+        model = self._get_details_query(None, **kwargs)
+        if model is None:
+            raise NotFound(self.MESSAGE404 % kwargs)
+        url = model.get_trainer_s3url()
+        return self._render({'trainer_file_for': model.id, 'url': url})
 
     # POST/PUT specific methods
     def _put_train_action(self, **kwargs):
@@ -157,7 +150,6 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
                 dataset = [dataset]
             else:
                 dataset = form.cleaned_data.get('dataset', None)
-
             dataset_ids = [ds.id for ds in dataset]
 
             if not existing_instance_selected:  # request spot instance
@@ -208,6 +200,27 @@ Valid values are %s' % ','.join(self.DOWNLOAD_FIELDS))
             }
         })
 
+    def _put_upload_to_server_action(self, **kwargs):
+        from api.servers.tasks import upload_model_to_server
+
+        model = self._get_details_query(None, **kwargs)
+        if model.status != Model.STATUS_TRAINED:
+            return odesk_error_response(400, ERR_INVALID_DATA,
+                                        'Model is not yet trained')
+
+        form = ChooseServerForm(obj=model)
+        if form.is_valid():
+            server = form.cleaned_data['server']
+            upload_model_to_server.delay(server.id, model.id,
+                                         request.user.id)
+
+            return self._render({
+                self.OBJECT_NAME: model,
+                'status': 'Model "{0}" will be uploaded to server'.format(
+                    model.name
+                )
+            })
+
 api.add_resource(ModelResource, '/cloudml/models/')
 
 
@@ -224,7 +237,9 @@ class WeightResource(BaseResourceSQL):
     ALLOWED_METHODS = ('get', )
     GET_ACTIONS = ('brief', )
     NEED_PAGING = True
-    FILTER_PARAMS = (('is_positive', int), ('q', str), ('parent', str), )
+    FILTER_PARAMS = (('is_positive', int), ('q', str), ('parent', str),
+                     ('segment', str), ('segment_id', str),
+                     ('class_label', str))
 
     Model = Weight
 
@@ -246,30 +261,41 @@ class WeightResource(BaseResourceSQL):
             query = '{0} | {0}:*'.format(params['q'])
             query_like = '%{0}%'.format(params['q'])
             cursor = cursor.filter(
-                "fts @@ to_tsquery(:q) OR name LIKE :q_like"
+                "(fts @@ to_tsquery(:q) OR weight.name LIKE :q_like)"
             ).params(q=query, q_like=query_like)
 
         return cursor
 
     def _get_brief_action(self, per_page=50, **kwargs):
         """ Gets list with Model's weighted parameters with pagination. """
-
-        def get_weights(is_positive, page):
-            model_id = kwargs.get('model_id')
-            return self.Model.query.filter(Weight.model_id == model_id,
-                                           Weight.is_positive == is_positive).\
-                order_by(Weight.value.desc()
-                         if is_positive else Weight.value).\
-                offset((page - 1) * per_page).limit(per_page)
-
+        model_id = kwargs.get('model_id')
         paging_params = (('ppage', int), ('npage', int),)
-        params = self._parse_parameters(self.GET_PARAMS + paging_params)
+        params = self._parse_parameters(
+            self.GET_PARAMS + paging_params + self.FILTER_PARAMS)
 
         # Paginate weights
         ppage = params.get('ppage') or 1
         npage = params.get('npage') or 1
-        context = {'positive_weights': get_weights(True, ppage),
-                   'negative_weights': get_weights(False, npage)}
+        segment = get_segment(model_id, params.get('segment'))
+        segment_id = segment.id if segment else None
+        class_label, class_query = get_class_label(model_id, params)
+
+        def get_weights(is_positive):
+            qry = self.Model.query.filter(Weight.model_id == model_id,
+                                           Weight.is_positive == is_positive)
+            if segment_id is not None:
+                qry = qry.filter(Weight.segment_id == segment_id)
+            if class_query is True:
+                qry = qry.filter(Weight.class_label == class_label)
+
+            page = ppage if is_positive else npage
+            direction = Weight.value.desc() if is_positive else Weight.value.asc()
+            return qry.order_by(direction).offset((page - 1) * per_page)\
+                .limit(per_page)
+
+        context = {'positive_weights': get_weights(True),
+                   'negative_weights': get_weights(False),
+                   'class_label': class_label}
         return self._render(context)
 
 api.add_resource(WeightResource, '/cloudml/weights/\
@@ -282,20 +308,27 @@ class WeightTreeResource(BaseResourceSQL):
 
     NOTE: it used for constructing tree of model parameters.
     """
-    FILTER_PARAMS = (('parent', str), )
+    FILTER_PARAMS = (('parent', str), ('segment', str))
     ALLOWED_METHODS = ('get', )
 
     def _list(self, **kwargs):
         params = self._parse_parameters(self.FILTER_PARAMS)
+        model_id = kwargs.get('model_id')
         kwargs['parent'] = params.get('parent') or ''
+        segment = get_segment(model_id, params.get('segment'))
+        kwargs['segment_id'] = segment.id if segment else None
 
         opts = self._prepare_show_fields_opts(
             WeightsCategory, ('short_name', 'name'))
         categories = WeightsCategory.query.options(
             *opts).filter_by(**kwargs)
 
+        class_label, class_query = get_class_label(model_id, params)
+        if class_query:
+            kwargs['class_label'] = class_label
+
         opts = self._prepare_show_fields_opts(
-            Weight, ('short_name', 'name', 'css_class', 'value'))
+            Weight, ('short_name', 'name', 'css_class', 'value', 'segment_id'))
         weights = Weight.query.options(*opts).filter_by(**kwargs)
         context = {'categories': categories, 'weights': weights}
         return self._render(context)
@@ -303,3 +336,38 @@ class WeightTreeResource(BaseResourceSQL):
 api.add_resource(WeightTreeResource,
                  '/cloudml/weights_tree/<regex("[\w\.]*"):model_id>/',
                  add_standard_urls=False)
+
+
+def get_segment(model_id, name=None):
+    if name is None:
+        return Segment.query.filter_by(model_id=model_id).first()
+    else:
+        return Segment.query.filter_by(model_id=model_id, name=name).one()
+
+
+def get_class_label(model_id, params):
+    """
+    Default behavior for getting class_label for weights querying.
+    :param model_id:
+    :param params: params parsed from query string
+    :return: tuple (class_label, class_query), `class_label` the class label
+    based on the passed QS parameters if any, the type of model (binary,
+    multiclass). `class_query`, a boolean flag to include the class_label retuned
+    when queyring for weights (true) or not (false)
+    """
+    ml_model = Model.query.get(model_id)
+
+    if ml_model.labels is None or len(ml_model.labels) == 0:
+        # take care of edge case, of old models without labels field
+        class_label = '1'
+        class_query = False
+    elif len(ml_model.labels) == 2:
+        # binary classifer
+        class_label = '1'
+        class_query = False
+    else:
+        # multiclass
+        class_label = params.get('class_label') or ml_model.labels[0]
+        class_query = True
+
+    return class_label, class_query

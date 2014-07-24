@@ -49,13 +49,43 @@ angular.module('app.controllers', ['app.config', ])
       return 'active'
     else
       return ''
+
+  $rootScope.codeMirrorConfigs = (readOnly)->
+    json:
+      mode: 'application/json'
+      readOnly: readOnly
+      json: true
+      lineWrapping: true
+      lineNumbers: true
+    python:
+      mode: 'text/x-python'
+      smartIndent: true
+      lineNumbers: true
+      matchBrackets: true
+      readOnly: readOnly
+    sql:
+      mode: 'text/x-mysql'
+      indentWithTabs: true
+      smartIndent: true
+      lineNumbers: true
+      matchBrackets: true
+      lineWrapping: true
+      readOnly: readOnly
+    xml:
+      mode: 'application/xml'
+      indentWithTabs: true
+      smartIndent: true
+      lineNumbers: true
+      matchBrackets: true
+      lineWrapping: true
+      readOnly: readOnly
 ])
 
 .controller('ObjEditCtrl', [
   '$scope'
 
   ($scope) ->
-    $scope.save = (fields) =>
+    $scope.save = (fields) ->
       $scope.model.$save(only: fields).then (() ->
         $scope.editMode = false
       ), ((opts) ->
@@ -84,7 +114,6 @@ angular.module('app.controllers', ['app.config', ])
 
         _.delay (->
           $scope.$emit 'SaveObjectCtl:save:success', $scope.model
-
           if $scope.LIST_MODEL_NAME?
             $scope.$emit 'BaseListCtrl:start:load', $scope.LIST_MODEL_NAME
 
@@ -123,7 +152,7 @@ angular.module('app.controllers', ['app.config', ])
     $scope.objects = []
     $scope.loading = false
 
-    $scope.init = (opts={}) =>
+    $scope.init = (opts={}) ->
       if not _.isFunction(opts.objectLoader)
         throw new Error "Invalid object loader supplied to ObjectListCtrl"
 
@@ -136,7 +165,7 @@ angular.module('app.controllers', ['app.config', ])
         $scope.load()
       , true)
 
-    $scope.load = =>
+    $scope.load = ->
       if $scope.loading
         return false
 
@@ -172,6 +201,8 @@ angular.module('app.controllers', ['app.config', ])
         $scope.close()
         $scope.$emit('modelDeleted', [$scope.model])
         $scope.$broadcast('modelDeleted', [$scope.model])
+        if $scope.LIST_MODEL_NAME?
+            $scope.$emit 'BaseListCtrl:start:load', $scope.LIST_MODEL_NAME
         if $scope.path?
           $location.path $scope.path
       ), ((opts) ->

@@ -12,6 +12,9 @@
         Import DataSet
       </button>
       <button class="btn btn-info" ng-click="testHandler(handler)"><i class="icon-play"></i> Test Import Handler</button>
+      <button ng-click="uploadHandlerToPredict(handler)" class="btn btn-info">
+        <i title="Upload for Predict" class="icon-upload"></i> Upload for Predict
+      </button>
       <button ng-click="delete(handler)" class="btn btn-danger">
         <i title="Delete your handler. Be careful - you could not recover it!" class="icon-remove"></i>
         Delete
@@ -85,7 +88,7 @@
     <h4>
       Queries
       <div class="actions">
-        <a class="btn btn-info" href="#/importhandlers/{{ handler._id }}/query/add">
+        <a class="btn btn-info" href="#/handlers/json/{{ handler.id }}/query/add">
           <i class="status-icon icon-plus"></i> Add Query
         </a>
       </div>
@@ -101,14 +104,16 @@
       </div>
       <div>
         SQL:
-        <p><textarea ui-codemirror="{mode: 'text/x-mysql', indentWithTabs: true, smartIndent: true, lineNumbers: true, matchBrackets : true, height: '100px'}" ng-model="query.sql"></textarea></p>
+        <p><textarea ui-codemirror="codeMirrorConfigs(false)['sql']" ng-model="query.sql"></textarea></p>
         <button class="btn btn-primary" ng-click="query.$save({only: ['sql']})">Save</button>
         <button class="btn btn-info" ng-click="runQuery(query)"><i class="icon-play"></i> Run Query</button>
       </div>
+      <hr />
       <div class="query-results" ng-show="query.test">
         <h5 ng-init="queries_run_sql[query.num]=1"><a ng-click="queries_run_sql[query.num]=!queries_run_sql[query.num]"><span ng-hide="queries_run_sql[query.num]" ng-bind="'Show'" /><span ng-show="queries_run_sql[query.num]" ng-bind="'Hide'" /> SQL Query Result</a></h5>
         <div style="overflow: auto;" ng-show="queries_run_sql[query.num]">
-          <table class="table table-bordered table-hovered" style="background: white;">
+          <table class="table table-bordered table-hovered" style="background: white;"
+                 ng-hide="!query.test.data || query.test.error">
               <tr><th ng-repeat="col in query.test.columns">{{ col }}</th></tr>
               <tr ng-repeat="row in query.test.data">
                   <td ng-repeat="col in query.test.columns">
@@ -118,13 +123,18 @@
                   </td>
               </tr>
           </table>
+          <div ng-hide="query.test.data || query.test.error"><h4 class="text-warning">Query Resulted in 0 Records</h4></div>
+          <div ng-hide="!query.test.error">
+            <h4 class="text-error">Query Error:</h4>
+            <p class="text-error"> {{query.test.error}}</p>
+          </div>
         </div>
       </div>
       <div>
         <h5>
           Items
           <div class="actions">
-            <a class="btn btn-info" href="#/importhandlers/{{ handler.id }}/query/{{ query.num }}/items/add">
+            <a class="btn btn-info" href="#/handlers/json/{{ handler.id }}/query/{{ query.num }}/items/add">
               <i class="status-icon icon-plus"></i> Add Item
             </a>
           </div>
@@ -220,7 +230,7 @@
     </div>
     <div ng-show="action[1] == 'json'">
       <a href="{{handler.downloadUrl()}}">Download</a>
-      <textarea name="data" ui-codemirror="codemirrorOptions" ui-refresh="action" ng-model="handler.data_json"></textarea>
+      <textarea name="data" ui-codemirror="codeMirrorConfigs(true)['json']" ui-refresh="action" ng-model="handler.data_json"></textarea>
     </div>
   </div>
 

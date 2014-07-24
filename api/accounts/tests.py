@@ -201,6 +201,12 @@ class UserModelTests(BaseDbTestCase):
             'last_name': 'Tolstoy',
             'mail': 'somenew@mail.com'
         },
+        'user': {
+            'id': 'somebody',
+            'email': 'somenew@mail.com'
+        }
+    }
+    INFO_RETURN_VALUE_3 = {
         'info': {
             'profile_url': 'http://profile1.com',
             'portrait_32_img': 'http://image.com/image1.jpg',
@@ -213,6 +219,12 @@ class UserModelTests(BaseDbTestCase):
             'last_name': 'Dostoevsky',
             'mail': 'someother@mail.com'
         },
+        'user': {
+            'id': 'someother',
+            'email': 'someother@mail.com'
+        }
+    }
+    INFO_RETURN_VALUE_4 = {
         'info': {
             'profile_url': 'http://profile2.com',
             'portrait_32_img': 'http://image.com/image2.jpg',
@@ -224,26 +236,30 @@ class UserModelTests(BaseDbTestCase):
     def test_authenticate(self):
         with patch('api.accounts.auth.OdeskAuth.get_my_info',
                    Mock(return_value=self.INFO_RETURN_VALUE_1)):
-            token, user = User.authenticate('123', '345', '567')
-            self.assertTrue(token)
-            self.assertEqual(user.uid, 'somebody')
-            self.assertEqual(user.name, 'Alexey Tolstoy')
-            self.assertEqual(user.email, 'somenew@mail.com')
-            self.assertEqual(user.odesk_url, 'http://profile1.com')
-            self.assertEqual(user.portrait_32_img,
-                             'http://image.com/image1.jpg')
+            with patch('api.accounts.auth.OdeskAuth.get_user_info',
+                   Mock(return_value=self.INFO_RETURN_VALUE_3)):
+                token, user = User.authenticate('123', '345', '567')
+                self.assertTrue(token)
+                self.assertEqual(user.uid, 'somebody')
+                self.assertEqual(user.name, 'Alexey Tolstoy')
+                self.assertEqual(user.email, 'somenew@mail.com')
+                self.assertEqual(user.odesk_url, 'http://profile1.com')
+                self.assertEqual(user.portrait_32_img,
+                                 'http://image.com/image1.jpg')
 
         with patch('api.accounts.auth.OdeskAuth.get_my_info',
                    Mock(return_value=self.INFO_RETURN_VALUE_2)):
-            token, user = User.authenticate('123', '345', '567')
-            self.assertTrue(token)
-            self.assertTrue(str(user.id))
-            self.assertEqual(user.uid, 'someother')
-            self.assertEqual(user.name, 'Fiodor Dostoevsky')
-            self.assertEqual(user.email, 'someother@mail.com')
-            self.assertEqual(user.odesk_url, 'http://profile2.com')
-            self.assertEqual(user.portrait_32_img,
-                             'http://image.com/image2.jpg')
+            with patch('api.accounts.auth.OdeskAuth.get_user_info',
+                   Mock(return_value=self.INFO_RETURN_VALUE_4)):
+                token, user = User.authenticate('123', '345', '567')
+                self.assertTrue(token)
+                self.assertTrue(str(user.id))
+                self.assertEqual(user.uid, 'someother')
+                self.assertEqual(user.name, 'Fiodor Dostoevsky')
+                self.assertEqual(user.email, 'someother@mail.com')
+                self.assertEqual(user.odesk_url, 'http://profile2.com')
+                self.assertEqual(user.portrait_32_img,
+                                 'http://image.com/image2.jpg')
 
     @patch('api.accounts.auth.OdeskAuth.get_auth_url',
            Mock(return_value='some_url'))
@@ -285,6 +301,15 @@ class OdeskAuthTests(BaseDbTestCase):
         self.assertEquals(token, '123')
         self.assertEquals(secret, '345')
 
+    def test_integration_odesk_auth_request_token(self):
+        from api.accounts.auth import OdeskAuth
+        auth = OdeskAuth()
+
+        url, token, secret = auth.get_auth_url()
+        self.assertTrue('//www.odesk.com/services/api/auth?oauth_token=' in url)
+        self.assertTrue(token)
+        self.assertTrue(secret)
+
     @patch('oauth2.Client.request', Mock(return_value=OAUTH_RESPONSE_ERROR))
     def test_odesk_auth_request_token_error(self):
         from api.accounts.auth import OdeskAuth, AuthException
@@ -321,3 +346,15 @@ class OdeskAuthTests(BaseDbTestCase):
         auth = OdeskAuth()
         self.assertRaises(AuthException, auth.get_my_info,
                           '123', '345', '567')
+
+    def test_stripOauthSignature(self):
+        from api.accounts.auth import OAuthClient
+
+        url = 'http://www.something.com'
+        self.assertEqual(url, OAuthClient._stripOauthSignature(url))
+
+        url = 'http://www.something.com?q=a'
+        self.assertEqual(url, OAuthClient._stripOauthSignature(url))
+
+        url = 'http://www.something.com?oauth_token=a'
+        self.assertEqual('http://www.something.com', OAuthClient._stripOauthSignature(url))

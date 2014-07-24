@@ -1,7 +1,12 @@
 <table class="table table-hover">
   <thead>
     <tr>
-      <th>Name</th>
+      <th>Name
+        <a ng-click="showNameFilter=!showNameFilter"><i class="icon-search"></i></a>
+        <div ng-show="showNameFilter || filter_opts['name']">
+          <input class="input-medium" name="name" ng-model="filter_opts['name']" placeholder="filter by name" />
+        </div>
+      </th>
       <th>
         Status
         <a ng-click="showStatusFilter=!showStatusFilter"><i class="icon-search"></i></a>
@@ -84,6 +89,9 @@
           <a ng-show="model.status == 'Trained'" href="{{ model.downloadUrl() }}?field=trainer" class="btn btn-info">
             <i title="Download model trainer." class="icon-download-alt"></i>
           </a>
+          <button ng-show="model.status == 'Trained'" ng-click="uploadModelToPredict(model)" class="btn btn-info">
+            <i title="Upload for Predict" class="icon-upload"></i>
+          </button>
           <button ng-show="model.status == 'Requesting Instance'" ng-click="cancel_request_spot_instance(model)" class="btn btn-danger">
             Cancel requesting instance
           </button>

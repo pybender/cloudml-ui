@@ -5,6 +5,7 @@ from api.async_tasks.models import AsyncTask
 from api.import_handlers.models import DataSet
 from api.ml_models.models import Model
 from api.model_tests.models import TestResult
+from api.instances.models import Cluster
 
 
 def get_object_from_task(task_name, args, kwargs):  # pragma: no cover
@@ -29,6 +30,9 @@ def get_object_from_task(task_name, args, kwargs):  # pragma: no cover
     elif task_name == 'api.model_tests.tasks.calculate_confusion_matrix':
         cls = TestResult
         obj_id = args[0] if len(args) else kwargs['test_id']
+    elif task_name == 'api.instances.tasks.run_ssh_tunnel':
+        cls = Cluster
+        obj_id = args[0] if len(args) else kwargs['cluster_id']
 
     return cls.query.filter_by(id=int(obj_id)).first() \
         if cls and obj_id \

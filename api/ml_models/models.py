@@ -2,13 +2,16 @@
 import json
 from functools import partial
 
-from sqlalchemy.orm import relationship, deferred, backref
+from sqlalchemy.orm import relationship, deferred, backref, foreign, remote
 from sqlalchemy.dialects import postgresql
+from sqlalchemy.sql import text
 from sqlalchemy import Index, func
 from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy import event, and_
 
 from api.base.models import db, BaseModel, BaseMixin, JSONType, S3File
 from api.logs.models import LogMessage
+from api.amazon_utils import AmazonS3Helper
 
 
 class Model(db.Model, BaseModel):
@@ -61,15 +64,20 @@ class Model(db.Model, BaseModel):
     features_set_id = db.Column(db.Integer, db.ForeignKey('feature_set.id'))
     features_set = relationship('FeatureSet', uselist=False)
 
-    test_import_handler_id = db.Column(db.ForeignKey('import_handler.id',
-                                                     ondelete='SET NULL'))
-    test_import_handler = relationship('ImportHandler',
-                                       foreign_keys=[test_import_handler_id])
+    test_import_handler_id = db.Column(db.Integer, nullable=True)
+    test_import_handler_type = db.Column(db.String(200), default='json')
 
-    train_import_handler_id = db.Column(db.ForeignKey('import_handler.id',
-                                                      ondelete='SET NULL'))
-    train_import_handler = relationship('ImportHandler',
-                                        foreign_keys=[train_import_handler_id])
+    train_import_handler_id = db.Column(db.Integer, nullable=True)
+    train_import_handler_type = db.Column(db.String(200), default='json')
+    # test_import_handler_id = db.Column(db.ForeignKey('import_handler.id',
+    #                                                  ondelete='SET NULL'))
+    # test_import_handler = relationship('ImportHandler',
+    #                                    foreign_keys=[test_import_handler_id])
+
+    # train_import_handler_id = db.Column(db.ForeignKey('import_handler.id',
+    #                                                   ondelete='SET NULL'))
+    # train_import_handler = relationship('ImportHandler',
+    #                                     foreign_keys=[train_import_handler_id])
 
     datasets = relationship('DataSet',
                             secondary=lambda: data_sets_table)
@@ -78,6 +86,42 @@ class Model(db.Model, BaseModel):
 
     trainer = deferred(db.Column(S3File))
     trainer_size = db.Column(db.Integer, default=0)
+
+    @property
+    def test_import_handler(self):
+        return getattr(
+            self, "rel_test_import_handler_%s" % self.test_import_handler_type)
+
+    @test_import_handler.setter
+    def test_import_handler(self, handler):
+        self.test_import_handler_id = handler.id
+        self.test_import_handler_type = handler.TYPE
+
+    @property
+    def train_import_handler(self):
+        return getattr(
+            self, "rel_train_import_handler_%s" % self.train_import_handler_type)
+
+    @train_import_handler.setter
+    def train_import_handler(self, handler):
+        self.train_import_handler_id = handler.id
+        self.train_import_handler_type = handler.TYPE
+
+    # @property
+    # def segments(self):
+    #     trainer = self.get_trainer()
+    #     return trainer._get_segments_info()
+
+    def create_segments(self, segments):
+        count = Segment.query.filter(
+                Segment.model_id==self.id).delete(
+                synchronize_session=False)
+        for name, records in segments.iteritems():
+            segment = Segment()
+            segment.name = name
+            segment.records = records
+            segment.model = self
+            segment.save()
 
     def __repr__(self):
         return "<Model {0}>".format(self.name)
@@ -102,6 +146,20 @@ class Model(db.Model, BaseModel):
             from core.trainer.store import TrainerStorage
             return TrainerStorage.loads(self.trainer)
         return self.trainer
+
+    def get_trainer_filename(self):
+        # we don't use sqlalchemy to avoid auto loading of trainer file
+        # intoo trainer object
+        sql = text("SELECT trainer from model where id=:id")
+        trainer_filename, = db.engine.execute(sql, id=self.id).first()
+        return trainer_filename
+
+    def get_trainer_s3url(self, expires_in=3600):
+        trainer_filename = self.get_trainer_filename()
+        if self.status != self.STATUS_TRAINED or not trainer_filename:
+            return None
+        helper = AmazonS3Helper()
+        return helper.get_download_url(trainer_filename, expires_in)
 
     @property
     def dataset(self):
@@ -140,7 +198,7 @@ class Model(db.Model, BaseModel):
         self.target_variable = trainer._feature_model.target_variable
         self.feature_count = len(trainer._feature_model.features.keys())
         if self.status == self.STATUS_TRAINED:
-            self.labels = map(str, trainer._classifier.classes_.tolist())
+            self.labels = trainer._get_labels()
 
     def get_features_json(self):
         data = self.features_set.features
@@ -148,7 +206,7 @@ class Model(db.Model, BaseModel):
             self.features_set.modified = True
             data = self.features_set.features
         data['classifier'] = self.classifier
-        return json.dumps(data)
+        return json.dumps(data, indent=4)
 
     @property
     def features(self):
@@ -188,6 +246,36 @@ data_sets_table = db.Table(
         'data_set.id', ondelete='CASCADE', onupdate='CASCADE'))
 )
 
+from api.import_handlers.models import ImportHandlerMixin
+
+@event.listens_for(ImportHandlerMixin, "mapper_configured", propagate=True)
+def setup_listener(mapper, class_):
+    import_handler_type = class_.TYPE
+    class_.test_import_handler = relationship(
+        Model,
+        primaryjoin=and_(
+            class_.id == foreign(remote(Model.test_import_handler_id)),
+            Model.test_import_handler_type == import_handler_type
+        ),
+        #cascade='all,delete',
+        backref=backref(
+            "rel_test_import_handler_%s" % import_handler_type,
+            primaryjoin=remote(class_.id) == foreign(Model.test_import_handler_id)
+        )
+    )
+    class_.train_import_handler = relationship(
+        Model,
+        primaryjoin=and_(
+            class_.id == foreign(remote(Model.train_import_handler_id)),
+            Model.train_import_handler_type == import_handler_type
+        ),
+        #cascade='all,delete',
+        backref=backref(
+            "rel_train_import_handler_%s" % import_handler_type,
+            primaryjoin=remote(class_.id) == foreign(Model.train_import_handler_id)
+        )
+    )
+
 
 class Tag(db.Model, BaseMixin):
     """
@@ -195,6 +283,16 @@ class Tag(db.Model, BaseMixin):
     """
     text = db.Column(db.String(200))
     count = db.Column(db.Integer)
+
+
+class Segment(db.Model, BaseMixin):
+    __tablename__ = 'segment'
+
+    name = db.Column(db.String(200))
+    records = db.Column(db.Integer)
+
+    model_id = db.Column(db.Integer, db.ForeignKey('model.id'))
+    model = relationship(Model, backref=backref('segments'))
 
 
 class WeightsCategory(db.Model, BaseMixin):
@@ -211,6 +309,9 @@ class WeightsCategory(db.Model, BaseMixin):
 
     model_id = db.Column(db.Integer, db.ForeignKey('model.id'))
     model = relationship(Model, backref=backref('weight_categories'))
+
+    segment_id = db.Column(db.Integer, db.ForeignKey('segment.id'))
+    segment = relationship(Segment, backref=backref('weight_categories'))
 
     parent = db.Column(db.String(200))
 
@@ -237,9 +338,13 @@ class Weight(db.Model, BaseMixin):
     value = db.Column(db.Float)
     is_positive = db.Column(db.Boolean)
     css_class = db.Column(db.String)
+    class_label = db.Column(db.String(100), nullable=True)
 
     model_id = db.Column(db.Integer, db.ForeignKey('model.id'))
     model = relationship(Model, backref=backref('weights'))
+
+    segment_id = db.Column(db.Integer, db.ForeignKey('segment.id'))
+    segment = relationship(Segment, backref=backref('weights'))
 
     parent = db.Column(db.String(200))
 

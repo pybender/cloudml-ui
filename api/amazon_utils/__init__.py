@@ -7,6 +7,19 @@ from boto.s3.key import Key
 from api import app
 
 
+class AmazonEMRHelper(object):    # pragma: no cover
+    def __init__(self, token=None, secret=None, region='us-west-1'):
+        token = token or app.config['AMAZON_ACCESS_TOKEN']
+        secret = secret or app.config['AMAZON_TOKEN_SECRET']
+        self.conn = boto.emr.connect_to_region(
+            region,
+            aws_access_key_id=token,
+            aws_secret_access_key=secret)
+
+    def terminate_jobflow(self, jobflowid):
+        self.conn.terminate_jobflow(jobflowid)
+
+
 class AmazonEC2Helper(object):    # pragma: no cover
     def __init__(self, token=None, secret=None, region='us-west-2'):
         token = token or app.config['AMAZON_ACCESS_TOKEN']
@@ -63,6 +76,9 @@ class AmazonS3Helper(object):
         key = Key(self.bucket)
         key.key = name
         return key.generate_url(expires_in)
+
+    def list_keys(self, prefix):
+        return self.bucket.list(prefix)
 
     def load_key(self, name):
         # for i in self.bucket.list():
@@ -137,6 +153,21 @@ class AmazonS3Helper(object):
         for meta_key, meta_val in meta.iteritems():
             key.set_metadata(meta_key, meta_val)
         key.set_contents_from_string(data)
+
+    def set_key_metadata(self, name, meta, store_previous=False):
+        key = self.bucket.lookup(name)
+        for meta_key, meta_val in meta.iteritems():
+            if store_previous:
+                previous_value = key.get_metadata(meta_key)
+                key.set_metadata("previous_" + meta_key, previous_value)
+            key.set_metadata(meta_key, meta_val)
+        #key.metadata.update(meta)
+        #print key, key.metadata
+        key.copy(
+            key.bucket.name, 
+            key.name, 
+            key.metadata
+        )
 
     def delete_key(self, name):
         key = Key(self.bucket)

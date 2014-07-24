@@ -1,0 +1,31 @@
+<h2>
+    {{ server.name|capfirst }} Details
+</h2>
+
+<div title="quick info" ng-init="obj=server">
+  <ng-include src="'/partials/parts/created_tags.html'"></ng-include>
+</div>
+<p></p>
+
+<alert-message ng-show="err" class="alert-error" msg='{{ err }}' unsafe>
+</alert-message>
+<alert-message ng-show="msg" class="alert-info" msg='{{ msg }}' unsafe>
+</alert-message>
+
+<p>{{ server.description }}</p>
+<div>IP: <span class="value">{{ server.ip }}</span></div>
+<div>Folder: <span class="value">{{ server.folder }}</span></div>
+
+<h3>Models</h3>
+<div ng-controller="FileListCtrl" ng-init="init(server, 'models')">
+  <div ng-controller="BaseListCtrl" ng-init="init(true, 'model_files')">
+    <ng-include src="'/partials/servers/file_list.html'"></ng-include>
+  </div>
+</div>
+
+<h3>Import Handlers</h3>
+<div ng-controller="FileListCtrl" ng-init="init(server, 'importhandlers')">
+  <div ng-controller="BaseListCtrl" ng-init="init(true, 'importhandlers_files')">
+    <ng-include src="'/partials/servers/file_list.html'"></ng-include>
+  </div>
+</div>
