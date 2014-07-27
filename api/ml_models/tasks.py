@@ -3,6 +3,8 @@ from api.amazon_utils import AmazonS3Helper
 from os.path import exists
 from os import makedirs
 from datetime import datetime
+import numpy
+import tempfile
 
 from core.trainer.trainer import Trainer
 from core.trainer.config import FeatureModel
@@ -241,3 +243,30 @@ def fill_model_parameter_weights(model_id, segment_id=None):
         logging.exception('Got exception when fill_model_parameter: %s', exc)
         raise
     return msg
+
+
+@celery.task(base=SqlAlchemyTask)
+def transform_dataset_for_download(model_id, dataset_id):
+    model = Model.query.get(model_id)
+    dataset = DataSet.query.get(dataset_id)
+
+    init_logger('transform_for_download_log', obj=int(dataset_id))
+    logging.info('Starting Transform For Download Task')
+
+    transformed = model.transform_dataset(dataset)
+
+    logging.info('Saving transformed data to disk')
+    temp_file = tempfile.NamedTemporaryFile()
+    numpy.savez_compressed(temp_file, **transformed)
+
+    s3_filename = "dataset_{0}_vectorized_for_model_{1}.npz".format(
+        dataset.id, model.id)
+
+    s3 = AmazonS3Helper()
+    logging.info('Uploading file {0} to s3 with name {1}...'.format(
+        temp_file.name, s3_filename))
+    s3.save_key(s3_filename, temp_file.name, {
+        'model_id': model.id,
+        'dataset_id': dataset.id}, compressed=False)
+    s3.close()
+    return s3.get_download_url(s3_filename, 60 * 60 * 24 * 7)

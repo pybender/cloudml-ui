@@ -2,8 +2,14 @@ import httplib
 import json
 from mock import patch
 from moto import mock_s3
+import tempfile
+from mock import patch, MagicMock
+import urllib
+from scipy.sparse import coo_matrix
+import numpy
 
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS, FEATURE_COUNT, TARGET_VARIABLE
+from api.ml_models.tasks import transform_dataset_for_download
 from ..views import ModelResource
 from ..models import Model, Tag, db
 from ..fixtures import ModelData
@@ -79,7 +85,7 @@ TRAIN_PARAMS = json.dumps(
 
 class ModelsTests(BaseDbTestCase, TestChecksMixin):
     """
-    Tests of the Model API.
+    Tests of the Model API & Tasks
     """
     BASE_URL = '/cloudml/models/'
     RESOURCE = ModelResource
@@ -747,3 +753,30 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
 
         resp = self.client.put(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.BAD_REQUEST)
+
+    @patch('api.ml_models.models.Model.get_trainer')
+    def test_transform_dataset_for_download_task(self, get_trainer_mock):
+        model = Model.query.filter_by(name=ModelData.model_01.name).first()
+        dataset = DataSet.query.first()
+
+        from core.trainer.store import TrainerStorage
+        trainer = TrainerStorage.loads(
+            open('./api/ml_models/multiclass-trainer.dat', 'r').read())
+        get_trainer_mock.return_value = trainer
+
+        direct_transform = model.transform_dataset(dataset)
+
+        url = transform_dataset_for_download(model.id, dataset.id)
+
+        temp_file = tempfile.NamedTemporaryFile()
+        urllib.urlretrieve(url, temp_file.name)
+        temp_file.seek(0)
+
+        s3_transform = numpy.load(temp_file)
+
+        self.assertEqual(len(s3_transform.files), len(direct_transform))
+        for segment in s3_transform:
+            s3_segment = s3_transform[segment].tolist()
+            direct_segment = direct_transform[segment]
+            self.assertEqual(s3_segment['Y'], direct_segment['Y'])
+            self.assertTrue((s3_segment['X'].toarray() == direct_segment['X'].toarray()).all())

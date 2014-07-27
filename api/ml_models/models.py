@@ -189,6 +189,14 @@ class Model(db.Model, BaseModel):
         trainer.clear_temp_data()
         return metrics, raw_data
 
+    def transform_dataset(self, dataset):
+        trainer = self.get_trainer()
+        fp = dataset.get_data_stream()
+        try:
+            return trainer.transform(dataset.get_iterator(fp))
+        finally:
+            fp.close()
+
     def set_trainer(self, trainer):
         from bson import Binary
         from core.trainer.store import TrainerStorage
