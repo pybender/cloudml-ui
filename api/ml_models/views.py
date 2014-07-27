@@ -1,3 +1,5 @@
+import os
+
 from api.logs.mongo.models import LogMessage
 from flask import Response, request
 from flask.ext.restful import reqparse
@@ -29,7 +31,8 @@ class ModelResource(BaseResourceSQL):
     """
     Models API methods
     """
-    GET_ACTIONS = ('reload', 'by_importhandler', 'trainer_download_s3url', 'features_download')
+    GET_ACTIONS = ('reload', 'by_importhandler', 'trainer_download_s3url',
+                   'features_download', 'download_transformed_dataset')
     PUT_ACTIONS = ('train', 'tags', 'cancel_request_instance',
                    'upload_to_server')
     FILTER_PARAMS = (('status', str), ('comparable', str), ('tag', str),
@@ -220,6 +223,25 @@ class ModelResource(BaseResourceSQL):
                     model.name
                 )
             })
+
+    def _get_download_transformed_dataset_action(self, **kwargs):
+        model = self._get_details_query(None, **kwargs)
+        if model.status != Model.STATUS_TRAINED:
+            return odesk_error_response(400, ERR_INVALID_DATA,
+                                        'Model is not yet trained')
+
+        params = self._parse_parameters([('dataset_id', int)])
+        dataset_id = params.get('dataset_id') or -1
+        dataset = DataSet.query.get(dataset_id)
+
+        if dataset is None:
+            raise NotFound('DataSet not found')
+        if not os.path.exists(dataset.filename):
+            raise NotFound('DataSet file cannot be found')
+
+        from api.ml_models.tasks import transform_dataset_for_download
+        transform_dataset_for_download.delay(model.id, dataset.id)
+        return self._render({})
 
 api.add_resource(ModelResource, '/cloudml/models/')
 

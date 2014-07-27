@@ -780,3 +780,37 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
             direct_segment = direct_transform[segment]
             self.assertEqual(s3_segment['Y'], direct_segment['Y'])
             self.assertTrue((s3_segment['X'].toarray() == direct_segment['X'].toarray()).all())
+
+    def test_get_download_transformed_dataset(self):
+        # No dataset id provided
+        url = self._get_url(id=self.obj.id, action='download_transformed_dataset')
+        resp = self.client.get(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.NOT_FOUND)
+
+        # bogus dataset_id provided
+        url = self._get_url(id=self.obj.id, action='download_transformed_dataset', dataset_id='bogus')
+        resp = self.client.get(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, 400)
+
+        # non existing dataset id
+        url = self._get_url(id=self.obj.id, action='download_transformed_dataset', dataset_id='99009900')
+        resp = self.client.get(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.NOT_FOUND)
+
+        with patch('api.ml_models.tasks.transform_dataset_for_download') as transform_dataset_for_download:
+            dataset = DataSet.query.filter_by(name=DataSetData.dataset_01.name).first()
+
+            # model not trained
+            self.obj.status = Model.STATUS_TRAINING
+            url = self._get_url(id=self.obj.id, action='download_transformed_dataset', dataset_id=dataset.id)
+            resp = self.client.get(url, headers=HTTP_HEADERS)
+            self.assertEquals(resp.status_code, 400)
+
+            # model is trained
+            self.obj.status = Model.STATUS_TRAINED
+            url = self._get_url(id=self.obj.id, action='download_transformed_dataset', dataset_id=dataset.id)
+            resp = self.client.get(url, headers=HTTP_HEADERS)
+            self.assertEquals(resp.status_code, httplib.OK)
+
+            transform_dataset_for_download.delay.assert_called_with(self.obj.id, dataset.id)
+
