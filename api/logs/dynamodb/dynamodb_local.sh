@@ -1,1 +1,1 @@
-java -Djava.library.path=~/dynamodb_local/DynamoDBLocal_lib -jar ~/dynamodb_local/DynamoDBLocal.jar -port 8000 -inMemory
+java -Djava.library.path=~/dynamodb/DynamoDBLocal_lib -jar ~/dynamodb/DynamoDBLocal.jar -port 8000 -inMemory
