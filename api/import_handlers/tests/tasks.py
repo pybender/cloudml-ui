@@ -10,8 +10,9 @@ class TestTasksTests(BaseDbTestCase):
     """ Tests of the celery tasks. """
     datasets = [DataSetData]
 
+    @patch('api.logs.models.LogMessage')
     @patch('api.amazon_utils.AmazonS3Helper.save_gz_file')
-    def test_upload_dataset(self, mock_multipart_upload):
+    def test_upload_dataset(self, mock_multipart_upload, *mocks):
         dataset = DataSet.query.first()
         upload_dataset(dataset.id)
         mock_multipart_upload.assert_called_once_with(

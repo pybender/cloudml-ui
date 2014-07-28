@@ -1,4 +1,5 @@
 import logging
+import uuid
 
 import boto.ec2
 from boto.s3.key import Key
@@ -182,3 +183,103 @@ class AmazonS3Helper(object):
         if bucket is None:
             bucket = self.conn.create_bucket(self.bucket_name)
         return bucket
+
+
+class AmazonDynamoDBHelper(object):
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super(AmazonDynamoDBHelper, cls).__new__(
+                                cls, *args, **kwargs)
+        return cls._instance
+
+    def __init__(self, token=None, secret=None):
+        self.token = token or app.config['AMAZON_ACCESS_TOKEN']
+        self.secret = secret or app.config['AMAZON_TOKEN_SECRET']
+        self._conn = None
+        self._tables = {}
+        self._queries = {}
+
+    @property
+    def conn(self):
+        if not self._conn:
+            from boto import dynamodb2
+            from boto.dynamodb2.layer1 import DynamoDBConnection
+
+            if app.config.get('LOCAL_DYNAMODB'):
+                # Local DynamoDB (see dynamodb_local.sh)
+                self._conn = DynamoDBConnection(
+                    host='localhost',
+                    port=8000,
+                    aws_access_key_id='any',
+                    aws_secret_access_key='any',
+                    is_secure=False
+                )
+            else:
+                # Real DynamoDB connection
+                self._conn = dynamodb2.connect_to_region(
+                    'us-west-1',
+                    aws_access_key_id=self.token,
+                    aws_secret_access_key=self.secret)
+        return self._conn
+
+    def _get_table(self, table_name):
+        from boto.dynamodb2.table import Table
+        self._tables[table_name] = Table(table_name, connection=self.conn)
+        return self._tables[table_name]
+
+    def put_item(self, table_name, data):
+        table = self._get_table(table_name)
+        return table.put_item(data=data, overwrite=True)
+
+    def delete_items(self, table_name, **kwargs):
+        table = self._get_table(table_name)
+        res = table.query(**kwargs)
+        with table.batch_write() as batch:
+            for item in res:
+                batch.delete_item(**item.get_keys())
+
+    def batch_write(self, table_name, data_list):
+        table = self._get_table(table_name)
+        with table.batch_write() as batch:
+            for data in data_list:
+                batch.put_item(data=data)
+
+    def get_items(self, table_name, limit=None, reverse=True,
+                  next_token=None, **kwargs):
+        table = self._get_table(table_name)
+        next_token = next_token or None
+        res = self._queries.get(next_token) if next_token else None
+
+        if not res:
+            # This is a hack for
+            # "There are too many conditions in this query" issue
+            if len(kwargs.keys()) > 2:
+                # Slow!
+                res = table.scan(
+                    max_page_size=limit,
+                    **kwargs
+                )
+            else:
+                res = table.query(
+                    max_page_size=limit,
+                    reverse=reverse,
+                    **kwargs
+                )
+            next_token = str(uuid.uuid1())
+            self._queries[next_token] = res
+
+        items = []
+        if limit:
+            for i in range(limit):
+                try:
+                    item = next(res)
+                except StopIteration:
+                    next_token = None
+                    break
+                items.append(item._data)
+        else:
+            items = [item._data for item in res]
+
+        return items, next_token

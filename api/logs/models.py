@@ -1,1 +1,1 @@
-from mongo.models import *
+from dynamodb.models import LogMessage
