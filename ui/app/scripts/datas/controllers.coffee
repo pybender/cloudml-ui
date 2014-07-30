@@ -16,7 +16,7 @@ angular.module('app.datas.controllers', ['app.config', ])
   $scope.simple_filters = {} # Filters by label and pred_label
   $scope.data_filters = [] # Filters by data_input.* fields
   $scope.loading_state = false
-  $scope.sort_by = 'example_id'
+  $scope.sort_by = ''
   $scope.asc_order = true
 
   $scope.init = (test, extra_params={'action': 'examples:list'}) ->
