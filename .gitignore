@@ -45,3 +45,4 @@ api/test_config.py
 
 bower_components
 cloudml_test
+coverage*

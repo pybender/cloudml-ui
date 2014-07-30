@@ -51,9 +51,11 @@ describe "logmessages", ->
 
     it "should set options", inject () ->
       createController "LogMessageListCtrl"
+      $rootScope.load = jasmine.createSpy()
       $rootScope.init()
       expect($rootScope.log_levels).toBeDefined()
       expect($rootScope.log_level).toBeDefined()
+      expect($rootScope.load).toHaveBeenCalled()
 
     it "should call 'load' method", inject () ->
       createController "LogMessageListCtrl"
@@ -64,5 +66,5 @@ describe "logmessages", ->
       $rootScope.log_level = 'WARNING'
       $rootScope.setLogLevel()
 
-      expect($rootScope.kwargs['level']).toBe('WARNING')
+      expect($rootScope.params['level']).toBe('WARNING')
       expect($rootScope.load).toHaveBeenCalled()
