@@ -1,8 +1,6 @@
 'use strict'
 
-# jasmine specs for importhandlers
-
-describe "importhandlers", ->
+describe "app.importhandlers.controllers", ->
 
   beforeEach(module "ngCookies")
   beforeEach(module "ui")
@@ -74,8 +72,7 @@ describe "importhandlers", ->
       $routeParams.id = HANDLER_ID
       $rootScope.initSections = jasmine.createSpy()
 
-      url = BASE_URL + HANDLER_ID + '/?show=' + encodeURIComponent('name,id,import_params,
-created_on,created_by,error,data')
+      url = BASE_URL + HANDLER_ID + '/?show=' + encodeURIComponent('name,id,import_params,created_on,created_by,error,data')
       $httpBackend.expectGET(url).respond('{"import_handler": {"name": "Some name"}}')
 
       createController "ImportHandlerDetailsCtrl"
@@ -172,59 +169,17 @@ created_on,created_by,error,data')
       url = BASE_URL + '?show=name'
       xml_ih_url = settings.apiUrl + 'xml_import_handlers/' + '?show=name'
       HANDLER_ID_XML = '123321'
-      $httpBackend.expectGET(url).respond('{"import_handlers": [{"id": "' + HANDLER_ID + '", "name": "Some Name"}]}')
-      $httpBackend.expectGET(xml_ih_url).respond('{"xml_import_handlers": [{"id": "' + HANDLER_ID_XML + '", "name": "Some Name"}]}')
+      $httpBackend.expectGET(url).respond('{"import_handlers": [{"id": "' + HANDLER_ID + '", "name": "Z Some Name"}]}')
+      $httpBackend.expectGET(xml_ih_url).respond('{"xml_import_handlers": [{"id": "' + HANDLER_ID_XML + '", "name": "A Some Name"}]}')
 
       createController "ImportHandlerSelectCtrl"
       $httpBackend.flush()
 
-      expect($rootScope.handlers.length).toBe(1)
-      expect($rootScope.handlers_list[0].value).toBe(HANDLER_ID)
-      expect($rootScope.handlers_list[0].text).toBe("Some Name")
-      expect($rootScope.handlers_list[1].value).toBe(HANDLER_ID_XML+'xml')
-      expect($rootScope.handlers_list[1].text).toBe("Some Name(xml)")
-
-  describe "Query", ->
-
-    it "should properly parse parameters", inject((Query)->
-      queryText = "SELECT * FROM some_table WHERE qi.file_provenance_date >= '%(start)s' AND qi.file_provenance_date < '%(end)s'"
-      query = new Query({sql: queryText})
-      expect(query).toBeDefined()
-      expect(query.sql).toEqual queryText
-      params = query.getParams()
-      expect(params).toEqual ['start', 'end']
-
-      url = "someurl/"
-      data =
-        sql: queryText
-        params: JSON.stringify(params)
-        limit: 2
-        datasource: 'ds_name'
-      query.$make_request = jasmine.createSpy()
-      query.$run 2, ['start', 'end'], 'ds_name', url
-      expect(query.$make_request).toHaveBeenCalledWith url + "action/run_sql/", {}, "PUT", data
-    )
-
-  describe "XmlQuery", ->
-
-    it "should properly parse parameters", inject((XmlQuery)->
-      queryText = "SELECT * FROM some_table WHERE qi.file_provenance_date >= '%(start)s' AND qi.file_provenance_date < '%(end)s'"
-      query = new XmlQuery({text: queryText})
-      expect(query).toBeDefined()
-      expect(query.text).toEqual queryText
-      params = query.getParams()
-      expect(params).toEqual ['start', 'end']
-
-      url = "someurl"
-      data =
-        sql: queryText
-        params: JSON.stringify(params)
-        limit: 2
-        datasource: 'ds_name'
-      query.$make_request = jasmine.createSpy()
-      query.$run 2, ['start', 'end'], 'ds_name', url
-      expect(query.$make_request).toHaveBeenCalledWith url + "/action/run_sql/", {}, "PUT", data
-    )
+      expect($rootScope.handlers.length).toBe(2)
+      expect($rootScope.handlers_list[0].value).toBe(HANDLER_ID_XML+'xml')
+      expect($rootScope.handlers_list[0].text).toBe("A Some Name(xml)")
+      expect($rootScope.handlers_list[1].value).toBe(HANDLER_ID)
+      expect($rootScope.handlers_list[1].text).toBe("Z Some Name")
 
   describe "QueryTestDialogCtrl and run query", ->
 
@@ -248,6 +203,8 @@ created_on,created_by,error,data')
         expect($rootScope.query.test_limit).toEqual 2
         expect($rootScope.query.test_datasource).toEqual handler.xml_data_sources[0].name
         expect($rootScope.runQuery).toBeDefined()
+        expect($rootScope.datasources.length).toEqual 1
+        expect($rootScope.datasources[0].type).toEqual 'db'
 
         url = "#{settings.apiUrl}xml_import_handlers/#{handler.id}/action/run_sql/?"
         $httpBackend.expectPUT(url).respond('{"import_handlers": [{"id": "' + handler.id + '", "name": "Some Name"}]}')
@@ -299,6 +256,13 @@ created_on,created_by,error,data')
             vendor: 'postgres'
             dbname: 'cloudml'
             user: 'cloudml'
+        ,
+          import_handler_id: 456654
+          type: 'http'
+          name: 'http'
+          id: 321
+          params:
+            url: 'anything for now'
         ]
     )
     handler
@@ -306,7 +270,7 @@ created_on,created_by,error,data')
   getXmlQuery = ->
     query = null
     inject( (XmlQuery)->
-      queryText = "SELECT * FROM some_table WHERE qi.file_provenance_date >= '%(start)s' AND qi.file_provenance_date < '%(end)s'"
+      queryText = "SELECT * FROM some_table WHERE qi.file_provenance_date >= '\#\{start\}' AND qi.file_provenance_date < '\#\{end\}'"
       query = new XmlQuery()
       query.loadFromJSON
         id: 123321

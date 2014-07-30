@@ -7,7 +7,8 @@ from bson.objectid import ObjectId
 from mongokit.mongo_exceptions import AutoReferenceError
 from flask.ext.migrate import Migrate, MigrateCommand
 
-from api import app
+import api
+app = api.app
 
 
 class Celeryd(Command):
@@ -305,6 +306,14 @@ class CreateDbTables(Command):
         print 'Done.'
 
 
+class CreateDtnamoDbTables(Command):
+    """Create db tables"""
+
+    def run(self, **kwargs):
+        from api.logs.dynamodb.models import LogMessage
+        LogMessage.create_table()
+        print 'Done.'
+
 class DropDbTables(Command):
     """Drop db tables"""
 
@@ -339,6 +348,7 @@ manager.add_command('run', Run())
 manager.add_command('fix_mongo', RemObsoluteMongoKeys())
 manager.add_command("shell", Shell(make_context=_make_context))
 manager.add_command("create_db_tables", CreateDbTables())
+manager.add_command("create_dynamodb_tables", CreateDtnamoDbTables())
 manager.add_command("drop_db_tables", DropDbTables())
 manager.add_command("migrate_to_postgresql", MigrateToPosgresql())
 manager.add_command("migrate_xml_ih", MigrateToXmlImportHandlers())

@@ -16,7 +16,7 @@ angular.module('app.datas.controllers', ['app.config', ])
   $scope.simple_filters = {} # Filters by label and pred_label
   $scope.data_filters = [] # Filters by data_input.* fields
   $scope.loading_state = false
-  $scope.sort_by = 'example_id'
+  $scope.sort_by = ''
   $scope.asc_order = true
 
   $scope.init = (test, extra_params={'action': 'examples:list'}) ->
@@ -162,44 +162,63 @@ angular.module('app.datas.controllers', ['app.config', ])
     $scope.selectFields = []
 
     $scope.csvField = ''
-    $scope.csvFields = ['name', 'id', 'label', 'pred_label', 'prob']
-    $scope.show = 'name,id,label,pred_label,prob'
+    $scope.stdFields = ['name', 'id', 'label', 'pred_label', 'prob']
+    $scope.extraFields = []
 
     $scope.loading_state = true
 
     $scope.test = dialog.model
     Data.$loadFieldList($scope.test.model_id,
       $scope.test.id)
-    .then ((opts) ->
-      $scope.selectFields = ("data_input." + x for x in opts.fields)
+    .then (opts) ->
+      $scope.extraFields = opts.fields
+      $scope.selectFields = []
       $scope.loading_state = false
-    ), ((opts) ->
+    , (opts) ->
       $scope.setError(opts, 'loading data field list')
       $scope.loading_state = false
-    )
 
     $scope.appendField = () ->
-      if !!$scope.csvField
-        $scope.csvFields.push $scope.csvField
-        $scope.show = $scope.csvFields.join(',')
+      if !!$scope.csvField and $scope.csvField not in $scope.extraFields and
+          $scope.csvField in $scope.selectFields
+        $scope.extraFields.push $scope.csvField
         $scope.selectFields = $scope.selectFields.filter (f) ->
             f isnt $scope.csvField
+        $scope.selectFields = _.sortBy $scope.selectFields, (f)-> f
         $scope.csvField = ''
 
+    $scope.addAll = ()->
+      for field in $scope.selectFields
+        if field not in $scope.extraFields
+          $scope.extraFields.push field
+      $scope.selectFields = []
+
     $scope.removeField = (fieldname) ->
-      $scope.csvFields = $scope.csvFields.filter (f) ->
+      $scope.extraFields = $scope.extraFields.filter (f) ->
         f isnt fieldname
-      $scope.show = $scope.csvFields.join(',')
-      $scope.selectFields.push fieldname
+      if fieldname not in  $scope.selectFields
+        $scope.selectFields.push fieldname
+        $scope.selectFields = _.sortBy $scope.selectFields, (f)-> f
+
+    $scope.removeAll = ()->
+      for field in $scope.extraFields
+        if field not in  $scope.selectFields
+          $scope.selectFields.push field
+      $scope.extraFields = []
+      $scope.selectFields = _.sortBy $scope.selectFields, (f)-> f
 
     $scope.getExamplesCsv = () ->
       $scope.loading_state = true
-      @test.$get_examples_csv(@show).then((resp) ->
+      show = $scope.stdFields.join(',') + ',' + $scope.extraFields.join(',')
+      $scope.test.$get_examples_csv(show)
+      .then () ->
         $scope.loading_state = false
         $location.search('action=about:details')
         $scope.close()
         $rootScope.$broadcast 'exportsChanged'
-      )
+      , (opts) ->
+        $scope.setError(opts, 'failed submitting csv generation request')
+        $scope.loading_state = false
 
     $scope.close = () ->
       dialog.close()

@@ -167,10 +167,10 @@ datasource_id,entity_id'
 
 .factory('XmlQuery', [
   'settings'
-  'BaseModel'
+  'BaseQueryModel'
 
-  (settings, BaseModel) ->
-    class Query extends BaseModel
+  (settings, BaseQueryModel) ->
+    class Query extends BaseQueryModel
       BASE_API_URL: "#{settings.apiUrl}xml_import_handlers/queries/"
       API_FIELDNAME: 'query'
       @MAIN_FIELDS: 'id,text,target'
@@ -209,23 +209,12 @@ datasource_id,entity_id'
         if not opts.entity_id
           throw new Error "entity_id is required"
 
-      getParams: () ->
-        expr = /%\((\w+)\)s/gi
-        params = []
-        matches = expr.exec(@text)
-        while matches
-          params.push matches[1]
-          matches = expr.exec(@text)
-        return params
+      getParams: ->
+        @_getParams BaseQueryModel.PARAMS_HASH_REGEX, @text
 
       $run: (limit, params, datasource, handlerUrl) ->
-        data = {
-          sql: @text,
-          params: JSON.stringify(params),
-          limit: limit,
-          datasource: datasource
-        }
-        @$make_request("#{handlerUrl}/action/run_sql/", {}, "PUT", data)
+        @_runSql @text, params, datasource, limit,
+          "#{handlerUrl}/action/run_sql/"
 
     return Query
 ])

@@ -158,7 +158,8 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
 
   ($scope, $rootScope, dialog) ->
     $scope.handlerUrl = dialog.extra.handlerUrl
-    $scope.datasources = dialog.extra.datasources
+    $scope.datasources = (ds for ds in dialog.extra.datasources when \
+      ds.type is 'sql' or ds.type is 'db')
     $scope.query = dialog.extra.query
     $scope.params = $scope.query.getParams()
     $scope.dialog = dialog
@@ -369,26 +370,22 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
   'XmlImportHandler'
 
   ($scope, ImportHandler, XmlImportHandler) ->
-    ImportHandler.$loadAll(
-      show: 'name'
-    ).then ((opts) ->
-      $scope.handlers = opts.objects
-      $scope.handlers_list  = []
+    ImportHandler.$loadAll show: 'name'
+    .then (opts) ->
+      $scope.handlers = []
+      $scope.handlers_list = []
+      $scope.handlers = $scope.handlers.concat opts.objects
       for h in $scope.handlers
         $scope.handlers_list.push {value: h.id, text: h.name}
-
-      XmlImportHandler.$loadAll(
-        show: 'name'
-      ).then ((opts) ->
-        for h in opts.objects
-          item = {value: h.id + "xml", text: h.name + "(xml)"}
-          $scope.handlers_list.push item
-      ), ((opts) ->
-        $scope.setError(opts, 'loading xml import handler list')
-      )
-    ), ((opts) ->
+      XmlImportHandler.$loadAll show: 'name'
+    .then (opts) ->
+      $scope.handlers = $scope.handlers.concat opts.objects
+      for h in opts.objects
+        item = {value: h.id + "xml", text: h.name + "(xml)"}
+        $scope.handlers_list.push item
+      $scope.handlers_list = _.sortBy $scope.handlers_list, (o)-> o.text
+    , (opts) ->
       $scope.setError(opts, 'loading import handler list')
-    )
 ])
 
 .controller('AddImportHandlerQueryCtrl', [

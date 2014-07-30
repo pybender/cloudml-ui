@@ -223,7 +223,7 @@ class Model(db.Model, BaseModel):
     def delete_metadata(self, delete_log=True):
         from api.base.models import db
         if delete_log:
-            LogMessage.delete_related_logs(self)
+            LogMessage.delete_related_logs(self.id)
 
         def _del(items):
             for item in items:

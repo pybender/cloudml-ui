@@ -50,8 +50,10 @@ describe "test examples", ->
 
     BASE_URL = settings.apiUrl + 'models/' + MODEL_ID + '/tests/' + TEST_ID + '/examples/'
 
-    createController = (ctrl) ->
-       $controller(ctrl, {'$scope' : $rootScope })
+    createController = (ctrl, extras) ->
+      injected = extras or {}
+      _.extend injected, {'$scope' : $rootScope }
+      $controller(ctrl, injected)
   ))
 
   afterEach( ->
@@ -199,18 +201,96 @@ describe "test examples", ->
 
   describe "CsvDownloadCtrl", ->
 
-    # TODO: find a way to inject dialog
-    xit "should load data fields", inject () ->  # disabled
-      url = BASE_URL + 'action/datafields/?'
-      $httpBackend.expectGET(url).respond('{"fields": ["one", "two"]}')
+    it "should load data fields",
+      inject (TestResult) ->
+        url = BASE_URL + 'action/datafields/?'
+        $httpBackend.expectGET(url).respond('{"fields": ["2two", "1one", "4four", "3three"]}')
 
-      test = {
-        id: TEST_ID,
-        model_id: MODEL_ID
-      }
+        dialog =
+          model: new TestResult {id: TEST_ID, model_id: MODEL_ID}
 
-      createController "CsvDownloadCtrl"
-      $httpBackend.flush()
+        createController "CsvDownloadCtrl", {'dialog': dialog}
+        $httpBackend.flush()
 
-      expect($rootScope.selectFields).toEqual(['data_input.one', 'data_input.two'])
-      expect($rootScope.loading_state).toBeFalsy()
+        # retrieve fields without reordering
+        expect($rootScope.stdFields).toEqual(['name', 'id', 'label', 'pred_label', 'prob'])
+        expect($rootScope.extraFields).toEqual(['2two', '1one', '4four', '3three'])
+        expect($rootScope.selectFields).toEqual []
+        expect($rootScope.loading_state).toBeFalsy()
+
+        # removing a field
+        $rootScope.removeField '4four'
+        expect($rootScope.stdFields).toEqual(['name', 'id', 'label', 'pred_label', 'prob'])
+        expect($rootScope.extraFields).toEqual(['2two', '1one', '3three'])
+        expect($rootScope.selectFields).toEqual ['4four']
+
+        # removing a field (again just to make sure)
+        $rootScope.removeField '4four'
+        expect($rootScope.stdFields).toEqual(['name', 'id', 'label', 'pred_label', 'prob'])
+        expect($rootScope.extraFields).toEqual(['2two', '1one', '3three'])
+        expect($rootScope.selectFields).toEqual ['4four']
+
+        # removing another field, should reorder selectFields
+        $rootScope.removeField '1one'
+        expect($rootScope.stdFields).toEqual(['name', 'id', 'label', 'pred_label', 'prob'])
+        expect($rootScope.extraFields).toEqual(['2two', '3three'])
+        expect($rootScope.selectFields).toEqual ['1one', '4four']
+
+        # append a field
+        $rootScope.csvField = '1one'
+        $rootScope.appendField()
+        expect($rootScope.stdFields).toEqual(['name', 'id', 'label', 'pred_label', 'prob'])
+        expect($rootScope.extraFields).toEqual(['2two', '3three', '1one'])
+        expect($rootScope.selectFields).toEqual ['4four']
+
+        # append the same field again
+        $rootScope.csvField = '1one'
+        $rootScope.appendField()
+        expect($rootScope.stdFields).toEqual(['name', 'id', 'label', 'pred_label', 'prob'])
+        expect($rootScope.extraFields).toEqual(['2two', '3three', '1one'])
+        expect($rootScope.selectFields).toEqual ['4four']
+
+        # append a bogus
+        $rootScope.csvField = 'bogus'
+        $rootScope.appendField()
+        expect($rootScope.stdFields).toEqual(['name', 'id', 'label', 'pred_label', 'prob'])
+        expect($rootScope.extraFields).toEqual(['2two', '3three', '1one'])
+        expect($rootScope.selectFields).toEqual ['4four']
+
+        # remove all
+        $rootScope.removeAll()
+        expect($rootScope.stdFields).toEqual(['name', 'id', 'label', 'pred_label', 'prob'])
+        expect($rootScope.extraFields).toEqual([])
+        expect($rootScope.selectFields).toEqual ['1one', '2two', '3three', '4four']
+
+        # add all
+        $rootScope.addAll()
+        expect($rootScope.stdFields).toEqual(['name', 'id', 'label', 'pred_label', 'prob'])
+        expect($rootScope.extraFields).toEqual(['1one', '2two', '3three', '4four'])
+        expect($rootScope.selectFields).toEqual []
+
+        # get csv
+        $rootScope.$broadcast = jasmine.createSpy('$scope.$broadcast')
+        $rootScope.close = jasmine.createSpy('$scope.close')
+        $location.search = jasmine.createSpy('$location.search')
+        url = BASE_URL + "action/csv/?show=#{$rootScope.stdFields.join(',')},#{$rootScope.extraFields.join(',')}&"
+        $httpBackend.expectGET(url).respond("{\"url\":\"#{url}\"}")
+
+        $rootScope.getExamplesCsv()
+        $httpBackend.flush()
+        expect($rootScope.loading_state).toBe false
+        expect($location.search).toHaveBeenCalledWith 'action=about:details'
+        expect($rootScope.close).toHaveBeenCalled()
+        expect($rootScope.$broadcast).toHaveBeenCalledWith 'exportsChanged'
+
+        # get csv, something went bad
+        $rootScope.setError = jasmine.createSpy('$scope.setError')
+        $rootScope.close = jasmine.createSpy('$scope.close')
+        $location.search = jasmine.createSpy('$location.search')
+        url = BASE_URL + "action/csv/?show=#{$rootScope.stdFields.join(',')},#{$rootScope.extraFields.join(',')}&"
+        $httpBackend.expectGET(url).respond(400)
+
+        $rootScope.getExamplesCsv()
+        $httpBackend.flush()
+        expect($rootScope.loading_state).toBe false
+        expect($rootScope.setError).toHaveBeenCalled()

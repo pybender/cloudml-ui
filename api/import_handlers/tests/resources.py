@@ -117,7 +117,8 @@ class ImportHandlerTests(BaseDbTestCase, TestChecksMixin):
         feature = obj.data['queries'][1]['items'][0]['target_features'][0]
         self.assertEquals(feature['name'], 'hire_outcome2')
 
-    def test_delete(self):
+    @patch('api.amazon_utils.AmazonDynamoDBHelper')
+    def test_delete(self, mock_aws):
         datasets = DataSet.query.filter_by(import_handler_id=self.obj.id)
         self.assertEquals(datasets.count(), 3, 'Invalid fixtures')
         import shutil
@@ -264,7 +265,7 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue(ds.on_s3)
         self.assertTrue(ds.uid)
         self.assertEquals(ds.format, DataSet.FORMAT_JSON)
-        self.assertEquals(ds.filename, 'cloudml_test/%s.gz' % ds.uid)
+        self.assertEquals(ds.filename, 'test_data/%s.gz' % ds.uid)
         self.assertTrue(mock_multipart_upload.called)
 
         # Check created dataset
@@ -317,7 +318,7 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue(ds.compress)
         self.assertTrue(ds.on_s3)
         self.assertEquals(ds.format, DataSet.FORMAT_CSV)
-        self.assertEquals(ds.filename, 'cloudml_test/%s.gz' % ds.uid)
+        self.assertEquals(ds.filename, 'test_data/%s.gz' % ds.uid)
         self.assertTrue(mock_multipart_upload.called)
 
     def test_edit_name(self):
@@ -393,7 +394,8 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(resp.status_code, httplib.OK)
         self.assertFalse(mock_import_data.delay.called)
 
-    def test_delete(self):
+    @patch('api.logs.models.LogMessage')
+    def test_delete(self, *mocks):
         test = TestResult.query.filter_by(name='Test-1').first()
         test.dataset = self.obj
         test.save()
@@ -459,8 +461,9 @@ class TestTasksTests(BaseDbTestCase, TestChecksMixin):
     """
     datasets = [ImportHandlerData, DataSetData, ModelData, TestResultData]
 
+    @patch('api.logs.models.LogMessage')
     @patch('api.amazon_utils.AmazonS3Helper.save_gz_file')
-    def test_upload_dataset(self, mock_multipart_upload):
+    def test_upload_dataset(self, mock_multipart_upload, *mocks):
         from api.import_handlers.tasks import upload_dataset
         dataset = DataSet.query.filter_by(
             name=DataSetData.dataset_01.name).one()
