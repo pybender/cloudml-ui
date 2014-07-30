@@ -366,3 +366,36 @@ angular.module('app.models.controllers', ['app.config', ])
       )
       dialog.close()
 ])
+
+.controller('ModelDataSetDownloadCtrl', [
+    '$scope'
+    'Model'
+    '$rootScope'
+
+    ($scope, Model, $rootScope) ->
+      $scope.getDataSetsDownloads = (modelId) ->
+        model = $scope.model or new Model({id: modelId})
+        model.$getDataSetDownloads()
+        .then (opts) ->
+          $scope.queuedIds = _.map opts.data.downloads, (download) ->
+            parseInt download.dataset.id
+          $scope.downloads = opts.data.downloads
+        , (opts) ->
+          $scope.setError(opts, 'loading dataset downloads request')
+
+      $scope.requestDataSetDownload = (datasetId, modelId)->
+        model = $scope.model or new Model({id: modelId})
+        if datasetId in $scope.queuedIds
+          $scope.setError {},
+            "dataset #{datasetId} was already requested for download"
+        else
+          model.$putDataSetDownload(datasetId)
+          .then (opts)->
+            $scope.queuedIds.push datasetId
+            $rootScope.msg = "DataSet has been queued for
+            transformation/vectorization. Check Model > About for when
+            it is ready for download"
+          , (opts) ->
+            $scope.setError opts,
+              "requesting dataset #{datasetId} for download"
+])

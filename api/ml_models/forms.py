@@ -11,7 +11,7 @@ from core.importhandler.importhandler import ExtractionPlan, \
     ImportHandlerException
 from api.base.forms import BaseForm, ValidationError, ModelField, \
     CharField, JsonField, ImportHandlerFileField, MultipleModelField, \
-    ChoiceField, ImportHandlerField
+    ChoiceField, ImportHandlerField, IntegerField
 from api.models import Tag, ImportHandler, Model, XmlImportHandler
 from api.features.models import FeatureSet, PredefinedClassifier
 from api import app
@@ -210,3 +210,8 @@ class ModelTrainForm(BaseChooseInstanceAndDatasetMultiple):
         self.obj.status = Model.STATUS_QUEUED
         self.obj.save()
         return self.obj
+
+
+class TransformDataSetForm(BaseForm):
+    required_fields = ('dataset',)
+    dataset = ModelField(model=DataSet, return_model=True)

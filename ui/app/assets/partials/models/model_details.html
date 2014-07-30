@@ -165,10 +165,20 @@
           <div ng-show="model.datasets" title="Data sets which was used for training">
             Data sets:
             <div ng-repeat="ds in model.datasets_obj">
-                <span class="value">
+                <span class="value" >
                   <a href="#{{ ds.objectUrl() }}">
                   {{ ds.name }}</a>
                 </span>
+                <a class="btn btn-info btn-mini"
+                   ng-init="getDataSetsDownloads(ds.id)"
+                   ng-controller="ModelDataSetDownloadCtrl"
+                   ng-hide="angular.isUndefined(queuedIds)"
+                   title="{{ {true: 'DataSet already Transformed, Check Model &gt; About for list of datasets transformed using this model and ready for download',
+                          false: 'Download Tranformed DataSet'}[queuedIds.indexOf(ds.id) >= 0] }}"
+                   ng-disabled="queuedIds.indexOf(ds.id) >= 0"
+                   ng-click="requestDataSetDownload(ds.id, model.id)">
+                  <i class="icon-download-alt"></i> Download
+                </a>
             </div>
             Records count: <span class="value">{{ model.train_records_count }}</span>
           </div>
@@ -299,6 +309,24 @@
         <div ng-show="model.updated_by">
             Updated by:
             <span class="value">{{ model.updated_by.name }} ({{ model.updated_by.uid }})</span>
+        </div>
+      </div>
+    </div>
+    <div ng-controller="ModelDataSetDownloadCtrl"
+         ng-init="getDataSetsDownloads(model.id)"
+         ng-show="queuedIds && queuedIds.length > 0">
+      <hr/>
+      <div class="row">
+        <div class="span10">
+          <h4>DataSet Transform Requests</h4>
+          <div class="row" ng-repeat="download in downloads">
+            <div class="span10 well">
+              <i class="icon-calendar"></i> created on <span class="badge badge-info">{{ download.task.created_on|format_date }}</span>
+              <i class="icon-th"></i>dataset <span class="label">{{ download.dataset.name }}</span>
+              <span class="badge badge-info">{{ download.task.status }}</span>
+              <a class="btn btn-small" href="{{ download.task.result }}" target="_blank">Download</a>
+            </div>
+          </div>
         </div>
       </div>
     </div>

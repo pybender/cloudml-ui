@@ -49,8 +49,10 @@ describe "models", ->
 
     spyOn($location, 'path')
 
-    createController = (ctrl) ->
-      $controller(ctrl, {'$scope' : $rootScope })
+    createController = (ctrl, extras) ->
+      injected = extras or {}
+      _.extend injected, {'$scope' : $rootScope }
+      $controller(ctrl, injected)
   ))
 
   afterEach( ->
@@ -188,3 +190,98 @@ created_on,status,parameters,accuracy,examples_count,created_by')
       })
 
       $rootScope.uploadModelToPredict(model)
+
+  describe "ModelDataSetDownloadCtrl", ->
+
+    it "should have no downloads", ->
+      inject (Model) ->
+        createController 'ModelDataSetDownloadCtrl', Model
+        expect($rootScope.queuedIds).toBeUndefined()
+
+        downloads = {}
+        url = BASE_URL + MODEL_ID + '/action/dataset_download/?'
+        $httpBackend.expectGET(url).respond angular.toJson
+          model: MODEL_ID
+          downloads: downloads
+
+        $rootScope.getDataSetsDownloads MODEL_ID
+        $httpBackend.flush()
+
+        expect($rootScope.downloads).toEqual downloads
+        expect($rootScope.queuedIds).toEqual []
+
+    it "should have two downloads", ->
+      inject (Model) ->
+        createController 'ModelDataSetDownloadCtrl', Model
+        expect($rootScope.queuedIds).toBeUndefined()
+
+        downloads = [{dataset: {id: 1}, task: {}}, {dataset: {id: 2}, task: {}}]
+        url = BASE_URL + MODEL_ID + '/action/dataset_download/?'
+        $httpBackend.expectGET(url).respond angular.toJson
+          model: MODEL_ID
+          downloads: downloads
+
+        $rootScope.getDataSetsDownloads MODEL_ID
+        $httpBackend.flush()
+
+        expect($rootScope.downloads).toEqual downloads
+        expect($rootScope.queuedIds.length).toEqual 2
+        expect($rootScope.queuedIds).toEqual [1, 2]
+
+    it "should put new download request", ->
+      inject (Model) ->
+        model = new Model({id: MODEL_ID})
+        downloads = [{dataset: {id: 1}, task: {}}, {dataset: {id: 2}, task: {}}]
+        url = BASE_URL + MODEL_ID + '/action/dataset_download/?'
+        $httpBackend.expectGET(url).respond angular.toJson
+          model: MODEL_ID
+          downloads: downloads
+
+        $rootScope.model = model
+        createController 'ModelDataSetDownloadCtrl'
+        $rootScope.getDataSetsDownloads()
+        $httpBackend.flush()
+
+        url = BASE_URL + MODEL_ID + '/action/dataset_download/?'
+        $httpBackend.expectPUT(url).respond angular.toJson {dataset: 3}
+
+        $rootScope.requestDataSetDownload 3
+        $httpBackend.flush()
+
+        expect($rootScope.queuedIds.length).toEqual 3
+        expect($rootScope.queuedIds).toEqual [1, 2, 3]
+
+    it "should refuse to put new download request", ->
+      inject (Model) ->
+        model = new Model({id: MODEL_ID})
+        downloads = [{dataset: {id: 1}, task: {}},
+          {dataset: {id: 2}, task: {}},
+          {dataset: {id: 3}, task: {}}]
+        url = BASE_URL + MODEL_ID + '/action/dataset_download/?'
+        $httpBackend.expectGET(url).respond angular.toJson
+          model: MODEL_ID
+          downloads: downloads
+
+        $rootScope.setError = jasmine.createSpy()
+        $rootScope.model = model
+        createController 'ModelDataSetDownloadCtrl'
+        $rootScope.getDataSetsDownloads()
+        $httpBackend.flush()
+
+        url = BASE_URL + MODEL_ID + '/action/dataset_download/?'
+        $rootScope.requestDataSetDownload 3
+
+        expect($rootScope.setError).toHaveBeenCalledWith({}, 'dataset 3 was already requested for download')
+
+    it "should set scope error on getting dataset downloads",
+      inject (Model) ->
+        model = new Model({id: MODEL_ID})
+        url = BASE_URL + MODEL_ID + '/action/dataset_download/?'
+        $httpBackend.expectGET(url).respond 400, "{}"
+        $rootScope.setError = jasmine.createSpy()
+        $rootScope.model = model
+        createController 'ModelDataSetDownloadCtrl'
+        $rootScope.getDataSetsDownloads()
+        $httpBackend.flush()
+
+        expect($rootScope.setError).toHaveBeenCalled()

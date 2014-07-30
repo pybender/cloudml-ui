@@ -1,11 +1,9 @@
 import httplib
 import json
-from mock import patch
 from moto import mock_s3
 import tempfile
-from mock import patch, MagicMock
+from mock import patch
 import urllib
-from scipy.sparse import coo_matrix
 import numpy
 
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS, FEATURE_COUNT, TARGET_VARIABLE
@@ -21,6 +19,7 @@ from api.model_tests.models import TestResult, TestExample
 from api.model_tests.fixtures import TestResultData, TestExampleData
 from api.features.fixtures import FeatureSetData, FeatureData
 from api.servers.models import Server
+from api.async_tasks.models import AsyncTask
 from api.servers.fixtures import ServerData
 
 
@@ -781,36 +780,62 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
             self.assertEqual(s3_segment['Y'], direct_segment['Y'])
             self.assertTrue((s3_segment['X'].toarray() == direct_segment['X'].toarray()).all())
 
-    def test_get_download_transformed_dataset(self):
-        # No dataset id provided
-        url = self._get_url(id=self.obj.id, action='download_transformed_dataset')
-        resp = self.client.get(url, headers=HTTP_HEADERS)
+        # TODO : Requires prerun or some how waiting for task to run
+        # downloads = AsyncTask.get_current_by_object(
+        #     model, 'api.ml_models.tasks.transform_dataset_for_download')
+        # self.assertEqual(1, len(downloads))
+
+    @patch('api.ml_models.tasks.transform_dataset_for_download')
+    def test_put_dataset_download_action(self, transform_mock):
+        dataset = DataSet.query.filter_by(name=DataSetData.dataset_01.name).first()
+
+        # bogus model
+        self.obj.status = Model.STATUS_TRAINING
+        url = self._get_url(id=101010,
+                            action='dataset_download')
+        resp = self.client.put(url, headers=HTTP_HEADERS,
+                               data={'dataset': dataset.id})
         self.assertEquals(resp.status_code, httplib.NOT_FOUND)
 
-        # bogus dataset_id provided
-        url = self._get_url(id=self.obj.id, action='download_transformed_dataset', dataset_id='bogus')
-        resp = self.client.get(url, headers=HTTP_HEADERS)
+        # model not trained
+        self.obj.status = Model.STATUS_TRAINING
+        url = self._get_url(id=self.obj.id,
+                            action='dataset_download')
+        resp = self.client.put(url, headers=HTTP_HEADERS,
+                               data={'dataset': dataset.id})
         self.assertEquals(resp.status_code, 400)
 
-        # non existing dataset id
-        url = self._get_url(id=self.obj.id, action='download_transformed_dataset', dataset_id='99009900')
+        # model is trained
+        self.obj.status = Model.STATUS_TRAINED
+        url = self._get_url(id=self.obj.id,
+                            action='dataset_download')
+        resp = self.client.put(url, headers=HTTP_HEADERS,
+                               data={'dataset': dataset.id})
+        self.assertEquals(resp.status_code, httplib.OK)
+
+        transform_mock.delay.assert_called_with(self.obj.id, dataset.id)
+
+    @patch('api.ml_models.views.AsyncTask.get_current_by_object')
+    def test_get_dataset_download_action(self, async_get_object_mock):
+        # bogus model
+        url = self._get_url(id=101010,
+                            action='dataset_download')
         resp = self.client.get(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.NOT_FOUND)
 
-        with patch('api.ml_models.tasks.transform_dataset_for_download') as transform_dataset_for_download:
-            dataset = DataSet.query.filter_by(name=DataSetData.dataset_01.name).first()
-
-            # model not trained
-            self.obj.status = Model.STATUS_TRAINING
-            url = self._get_url(id=self.obj.id, action='download_transformed_dataset', dataset_id=dataset.id)
-            resp = self.client.get(url, headers=HTTP_HEADERS)
-            self.assertEquals(resp.status_code, 400)
-
-            # model is trained
-            self.obj.status = Model.STATUS_TRAINED
-            url = self._get_url(id=self.obj.id, action='download_transformed_dataset', dataset_id=dataset.id)
-            resp = self.client.get(url, headers=HTTP_HEADERS)
-            self.assertEquals(resp.status_code, httplib.OK)
-
-            transform_dataset_for_download.delay.assert_called_with(self.obj.id, dataset.id)
-
+        # existing model
+        dataset = DataSet.query.filter_by(name=DataSetData.dataset_01.name).first()
+        task = AsyncTask()
+        task.args = [self.obj.id, dataset.id]
+        task.object_id = self.obj.id
+        async_get_object_mock.return_value = [task]
+        self.obj.status = Model.STATUS_TRAINING
+        url = self._get_url(id=self.obj.id,
+                            action='dataset_download')
+        resp = self.client.get(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.OK)
+        resp_obj = json.loads(resp.data)
+        self.assertEqual(async_get_object_mock.call_args_list[0][0][1],
+                         'api.ml_models.tasks.transform_dataset_for_download')
+        self.assertTrue(resp_obj.has_key('downloads'))
+        self.assertEqual(resp_obj['downloads'][0]['dataset']['id'], dataset.id)

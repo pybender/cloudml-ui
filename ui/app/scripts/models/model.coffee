@@ -126,6 +126,14 @@ angular.module('app.models.model', ['app.config'])
         url = "#{@BASE_API_URL}#{@id}/action/trainer_download_s3url/"
         @$make_request(url, {}, "GET", {})
 
+      $getDataSetDownloads: ()->
+        url = "#{@BASE_API_URL}#{@id}/action/dataset_download/"
+        @$make_request(url, {}, "GET", {})
+
+      $putDataSetDownload: (datasetId)->
+        url = "#{@BASE_API_URL}#{@id}/action/dataset_download/"
+        @$make_request(url, {}, "PUT", {dataset: datasetId})
+
     return Model
 ])
 

@@ -1,3 +1,9 @@
+<alert-message ng-show="msg" class="alert-info" msg='{{ msg }}' unsafe>
+</alert-message>
+
+<alert-message ng-show="err" class="alert-error" msg='{{ err }}' unsafe>
+</alert-message>
+
 <h2 ng-show="test.loaded">
   {{ test.name|capfirst }} Details
   <div class="actions">
@@ -47,6 +53,16 @@
             <a href="#{{ test.dataset_obj.objectUrl() }}">
             {{ test.dataset_obj.name }}</a>
           </span>
+          <a class="btn btn-info btn-mini"
+             ng-init="getDataSetsDownloads(test.model_id)"
+             ng-controller="ModelDataSetDownloadCtrl"
+             ng-hide="angular.isUndefined(queuedIds)"
+             title="{{ {true: 'DataSet already Transformed, Check Model &gt; About for list of datasets transformed using this model and ready for download',
+                        false: 'Download Tranformed DataSet'}[queuedIds.indexOf(test.dataset_obj.id) >= 0] }}"
+             ng-disabled="queuedIds.indexOf(test.dataset_obj.id) >= 0"
+             ng-click="requestDataSetDownload(test.dataset_obj.id, test.model_id)">
+            <i class="icon-download-alt"></i> Download
+          </a>
         </div>
         <div>
             Examples count: <span class="value">{{ test.examples_count }}</span>

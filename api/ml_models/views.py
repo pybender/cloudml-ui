@@ -1,4 +1,5 @@
 import os
+from api.async_tasks.models import AsyncTask
 
 from api.logs.mongo.models import LogMessage
 from flask import Response, request
@@ -13,7 +14,7 @@ from api.import_handlers.models import DataSet
 from api.base.resources import BaseResourceSQL, NotFound, ValidationError, \
     public_actions, ERR_INVALID_DATA, odesk_error_response
 from models import Model, Tag, Weight, WeightsCategory, Segment
-from forms import ModelAddForm, ModelEditForm
+from forms import ModelAddForm, ModelEditForm, TransformDataSetForm
 from api.servers.forms import ChooseServerForm
 
 
@@ -32,9 +33,9 @@ class ModelResource(BaseResourceSQL):
     Models API methods
     """
     GET_ACTIONS = ('reload', 'by_importhandler', 'trainer_download_s3url',
-                   'features_download', 'download_transformed_dataset')
+                   'features_download', 'dataset_download')
     PUT_ACTIONS = ('train', 'tags', 'cancel_request_instance',
-                   'upload_to_server')
+                   'upload_to_server', 'dataset_download')
     FILTER_PARAMS = (('status', str), ('comparable', str), ('tag', str),
                     ('created_by', str), ('updated_by_id', int),
                     ('updated_by', str), ('name', str))
@@ -224,24 +225,41 @@ class ModelResource(BaseResourceSQL):
                 )
             })
 
-    def _get_download_transformed_dataset_action(self, **kwargs):
+    def _put_dataset_download_action(self, **kwargs):
         model = self._get_details_query(None, **kwargs)
+        if model is None:
+            raise NotFound('Model not found')
         if model.status != Model.STATUS_TRAINED:
             return odesk_error_response(400, ERR_INVALID_DATA,
-                                        'Model is not yet trained')
+                                        'Model is not trained')
 
-        params = self._parse_parameters([('dataset_id', int)])
-        dataset_id = params.get('dataset_id') or -1
-        dataset = DataSet.query.get(dataset_id)
+        form = TransformDataSetForm(obj=model)
+        if not form.is_valid():
+            return
 
-        if dataset is None:
-            raise NotFound('DataSet not found')
-        if not os.path.exists(dataset.filename):
-            raise NotFound('DataSet file cannot be found')
+        dataset = form.cleaned_data['dataset']
 
         from api.ml_models.tasks import transform_dataset_for_download
         transform_dataset_for_download.delay(model.id, dataset.id)
         return self._render({})
+
+    def _get_dataset_download_action(self, **kwargs):
+        model = self._get_details_query(None, **kwargs)
+        if model is None:
+            raise NotFound('Model not found')
+
+        tasks = AsyncTask.get_current_by_object(model,
+            'api.ml_models.tasks.transform_dataset_for_download')
+
+        downloads = []
+        for task in tasks:
+            downloads.append({
+                'dataset': DataSet.query.get(task.args[1]),
+                'task': task
+            })
+
+        return self._render({self.OBJECT_NAME: model.id,
+                             'downloads': downloads})
 
 api.add_resource(ModelResource, '/cloudml/models/')
 
