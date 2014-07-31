@@ -45,8 +45,10 @@ describe "datasets", ->
 
     BASE_URL = settings.apiUrl + 'importhandlers/json/' + HANDLER_ID + '/datasets/'
 
-    createController = (ctrl) ->
-       $controller(ctrl, {'$scope' : $rootScope })
+    createController = (ctrl, extras) ->
+      injected = extras or {}
+      _.extend injected, {'$scope' : $rootScope }
+      $controller(ctrl, injected)
   ))
 
   afterEach( ->
@@ -151,8 +153,66 @@ describe "datasets", ->
       expect($rootScope.datasets[1].id).toEqual(DS_ID)
       expect($rootScope.datasets[1].name).toEqual('Some name')
 
-  # TODO: solve the "Unknown provider: dialogProvider" issue and test
-  xdescribe "LoadDataDialogCtrl", ->
+  describe "LoadDataDialogCtrl", ->
 
-    it "should make no query", inject () ->
-      createController "LoadDataDialogCtrl"
+    it "should POST save and redirect", inject(
+      ($location, DataSet) ->
+        handlerType = 'xml'
+        dialog =
+          model:
+            id: HANDLER_ID
+            TYPE: handlerType
+            import_params: ['start', 'end']
+          close: jasmine.createSpy('dialog.close')
+
+        $rootScope.close =
+        $location.path = jasmine.createSpy('$location.path')
+        url = "#{settings.apiUrl}importhandlers/#{handlerType}/#{HANDLER_ID}/datasets/?"
+        $httpBackend.expectPOST(url).respond angular.toJson
+          data_set:
+            id: DS_ID
+            name: "dataset name"
+
+        createController "LoadDataDialogCtrl",
+          $location: $location
+          dialog: dialog
+          DataSet: DataSet
+
+        $rootScope.start()
+        $httpBackend.flush()
+
+        expect(dialog.close).toHaveBeenCalled()
+        expect($location.path).toHaveBeenCalledWith("/handlers/xml/#{HANDLER_ID}/datasets/#{DS_ID}")
+    )
+
+  describe "DataSet", ->
+
+    it "should reimport", inject(
+      (DataSet)->
+
+        handlerType = 'xml'
+        url = "#{settings.apiUrl}importhandlers/#{handlerType}/#{HANDLER_ID}/datasets/#{DS_ID}/action/reimport/?"
+        $httpBackend.expectPUT(url).respond angular.toJson
+          data_set:
+            uid: "d8e99ac218fa11e4aa9a000c29e3f35c"
+            records_count: null
+            id: DS_ID
+            status: DataSet.STATUS_IMPORTING
+
+        ds = new DataSet
+          id: DS_ID
+          import_handler_id: HANDLER_ID
+          import_handler_type: 'xml'
+          status: 'nothing'
+        ds.$reimport()
+        $httpBackend.flush()
+        expect(ds.status).toEqual DataSet.STATUS_IMPORTING
+
+        # should refuse to import
+        ds = new DataSet
+          id: DS_ID
+          import_handler_id: HANDLER_ID
+          import_handler_type: 'xml'
+          status: DataSet.STATUS_IMPORTING
+        expect(ds.$reimport).toThrow Error "Can't re-import a dataset that is importing now"
+    )
