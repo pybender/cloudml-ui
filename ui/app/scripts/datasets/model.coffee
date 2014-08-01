@@ -13,8 +13,8 @@ angular.module('app.datasets.model', ['app.config'])
     class DataSet extends BaseModel
       API_FIELDNAME: 'data_set'
 
-      STATUS_IMPORTING = 'Importing'
-      STATUS_UPLOADING = 'Uploading'
+      @STATUS_IMPORTING = 'Importing'
+      @STATUS_UPLOADING = 'Uploading'
 
       @MAIN_FIELDS: 'name,status,import_handler_type,import_handler_id'
       @EXTRA_FIELDS: ['created_on,updated_on','data','on_s3','import_params',
@@ -35,7 +35,7 @@ angular.module('app.datasets.model', ['app.config'])
       format: 'json'
       import_handler_type: 'JSON'
       samples: null
-      samples_json: 'loading ...'
+      samples_json: null
 
       loadFromJSON: (origData) =>
         super origData
@@ -96,7 +96,7 @@ angular.module('app.datasets.model', ['app.config'])
       $reimport: =>
         me = @
         base_url = @constructor.$get_api_url({}, @)
-        if @status in [@STATUS_IMPORTING, @STATUS_UPLOADING]
+        if @status in [DataSet.STATUS_IMPORTING, DataSet.STATUS_UPLOADING]
           throw new Error "Can't re-import a dataset that is importing now"
 
         url = "#{base_url}#{@id}/action/reimport/"
@@ -107,7 +107,7 @@ angular.module('app.datasets.model', ['app.config'])
       $getSampleData: ->
         base_url = @constructor.$get_api_url({}, @)
         @$make_request("#{base_url}#{@id}/action/sample_data/",
-          {size:15}, 'GET')
+          {size:5}, 'GET')
 
     return DataSet
 ])

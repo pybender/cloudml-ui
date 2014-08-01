@@ -116,7 +116,7 @@ describe "datasets", ->
       $rootScope.initSections = jasmine.createSpy()
 
       url1 = BASE_URL + DS_ID + '/?show=' + encodeURIComponent(DataSet.MAIN_FIELDS + ',' + DataSet.EXTRA_FIELDS)
-      url2 = BASE_URL + DS_ID + '/action/sample_data/?size=15'
+      url2 = BASE_URL + DS_ID + '/action/sample_data/?size=5'
       $httpBackend.expectGET(url1).respond('{"data_set": {"name": "Some name"}}')
       $httpBackend.expectGET(url2).respond('[{"contractor.dev_skill_test_passed_count": "18", "contractor.dev_bill_rate": "5.56"}]')
 
@@ -134,6 +134,66 @@ describe "datasets", ->
         'contractor.dev_skill_test_passed_count': '18'
         'contractor.dev_bill_rate': '5.56'
       ], true)
+
+    it "should handle load errors", inject (DataSet)->
+      $routeParams.import_handler_id = HANDLER_ID
+      $routeParams.id = DS_ID
+      $routeParams.import_handler_type = 'json'
+      $rootScope.initSections = jasmine.createSpy()
+
+      url1 = BASE_URL + DS_ID + '/?show=' + encodeURIComponent(DataSet.MAIN_FIELDS + ',' + DataSet.EXTRA_FIELDS)
+      $httpBackend.expectGET(url1).respond(400)
+
+      $rootScope.setError = jasmine.createSpy '$rootScope.setError'
+      createController "DataSetDetailsCtrl"
+
+      $rootScope.go()
+      $httpBackend.flush()
+
+      expect($rootScope.setError.callCount).toBe 1
+      expect($rootScope.dataset.samples_json).toBe null
+
+    it "should handle get sample error", inject (DataSet)->
+      $routeParams.import_handler_id = HANDLER_ID
+      $routeParams.id = DS_ID
+      $routeParams.import_handler_type = 'json'
+      $rootScope.initSections = jasmine.createSpy()
+
+      url1 = BASE_URL + DS_ID + '/?show=' + encodeURIComponent(DataSet.MAIN_FIELDS + ',' + DataSet.EXTRA_FIELDS)
+      url2 = BASE_URL + DS_ID + '/action/sample_data/?size=5'
+      $httpBackend.expectGET(url1).respond angular.toJson
+        data_set:
+          name: "Some name"
+          status: "Imported"
+      $httpBackend.expectGET(url2).respond(400)
+
+      $rootScope.setError = jasmine.createSpy '$rootScope.setError'
+      createController "DataSetDetailsCtrl"
+
+      $rootScope.go()
+      $httpBackend.flush()
+
+      expect($rootScope.setError.callCount).toBe 1
+      expect($rootScope.dataset.samples_json).toBe null
+
+    it "should not request sample if dataset status is importing", inject (DataSet)->
+      $routeParams.import_handler_id = HANDLER_ID
+      $routeParams.id = DS_ID
+      $routeParams.import_handler_type = 'json'
+      $rootScope.initSections = jasmine.createSpy()
+
+      url1 = BASE_URL + DS_ID + '/?show=' + encodeURIComponent(DataSet.MAIN_FIELDS + ',' + DataSet.EXTRA_FIELDS)
+      $httpBackend.expectGET(url1).respond angular.toJson
+        data_set:
+          name: "Some name"
+          status: DataSet.STATUS_IMPORTING
+
+      createController "DataSetDetailsCtrl"
+
+      $rootScope.go()
+      $httpBackend.flush()
+
+      expect($rootScope.dataset.samples_json).toBe null
 
   describe "DatasetSelectCtrl", ->
 
@@ -166,7 +226,7 @@ describe "datasets", ->
           close: jasmine.createSpy('dialog.close')
 
         $rootScope.close =
-        $location.path = jasmine.createSpy('$location.path')
+        $location.url = jasmine.createSpy('$location.url')
         url = "#{settings.apiUrl}importhandlers/#{handlerType}/#{HANDLER_ID}/datasets/?"
         $httpBackend.expectPOST(url).respond angular.toJson
           data_set:
@@ -182,7 +242,7 @@ describe "datasets", ->
         $httpBackend.flush()
 
         expect(dialog.close).toHaveBeenCalled()
-        expect($location.path).toHaveBeenCalledWith("/handlers/xml/#{HANDLER_ID}/datasets/#{DS_ID}")
+        expect($location.url).toHaveBeenCalledWith("/handlers/xml/#{HANDLER_ID}/datasets/#{DS_ID}")
     )
 
   describe "DataSet", ->
