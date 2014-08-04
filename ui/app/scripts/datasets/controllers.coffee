@@ -110,17 +110,18 @@ filesize,records_count,time,created_by,updated_by'
     })
 
     $scope.go = (section) ->
-      $scope.dataset.$load(
+      $scope.dataset.$load
         show: DataSet.MAIN_FIELDS + ',' + DataSet.EXTRA_FIELDS
-      ).then (->), ((opts) ->
+      .then ->
+        if $scope.dataset.status and
+            $scope.dataset.status isnt DataSet.STATUS_IMPORTING
+          $scope.dataset.$getSampleData()
+          .then (resp)->
+            $scope.dataset.samples_json = angular.toJson(resp.data, true)
+          , (opts)->
+            $scope.setError(opts, 'error loading dataset sample data')
+      , (opts) ->
         $scope.setError(opts, 'loading dataset details')
-      )
-
-      $scope.dataset.$getSampleData()
-      .then (resp)->
-        $scope.dataset.samples_json = angular.toJson(resp.data, true)
-      , ()->
-        $scope.setError(opts, 'error loading dataset sample data')
 
     $scope.initSections($scope.go, "model:details", simple=true)
     $scope.host = $location.host()
@@ -199,10 +200,10 @@ filesize,records_count,time,created_by,updated_by'
         format: $scope.format
         handler_type: $scope.handler.TYPE
       }
-      $scope.dataset.$save(data).then (() ->
+      $scope.dataset.$save(data)
+      .then ->
         $scope.close()
-        $location.path $scope.dataset.objectUrl()
-      ), ((opts) ->
+        $location.url $scope.dataset.objectUrl()
+      , (opts) ->
         $scope.setError(opts, 'creating dataset')
-      )
 ])

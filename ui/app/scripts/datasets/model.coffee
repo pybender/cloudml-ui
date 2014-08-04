@@ -13,8 +13,8 @@ angular.module('app.datasets.model', ['app.config'])
     class DataSet extends BaseModel
       API_FIELDNAME: 'data_set'
 
-      STATUS_IMPORTING = 'Importing'
-      STATUS_UPLOADING = 'Uploading'
+      @STATUS_IMPORTING = 'Importing'
+      @STATUS_UPLOADING = 'Uploading'
 
       @MAIN_FIELDS: 'name,status,import_handler_type,import_handler_id'
       @EXTRA_FIELDS: ['created_on,updated_on','data','on_s3','import_params',
@@ -35,7 +35,7 @@ angular.module('app.datasets.model', ['app.config'])
       format: 'json'
       import_handler_type: 'JSON'
       samples: null
-      samples_json: 'loading ...'
+      samples_json: null
 
       loadFromJSON: (origData) =>
         super origData
@@ -51,8 +51,8 @@ angular.module('app.datasets.model', ['app.config'])
       constructor: (opts) ->
         super
         #@BASE_API_URL = DataSet.$get_api_url({}, @)
-        @BASE_UI_URL = """/handlers/
-#{@import_handler_type.toLowerCase()}/#{@import_handler_id}/datasets/"""
+        @BASE_UI_URL = "/handlers/#{@import_handler_type.toLowerCase()}/" +
+                      "#{@import_handler_id}/datasets/"
 
       @$get_api_url: (opts, model) ->
         handler_id = opts.import_handler_id
@@ -86,26 +86,28 @@ angular.module('app.datasets.model', ['app.config'])
           @$make_request(base_url, {}, 'POST', opts)
 
       $reupload: =>
+        me = @
         base_url = @constructor.$get_api_url({}, @)
         url = "#{base_url}#{@id}/action/reupload/"
-        @$make_request(url, {}, "PUT", {}).then(
-          (resp) =>
-            @status = resp.data.dataset.status)
+        @$make_request(url, {}, "PUT", {})
+        .then (resp) ->
+          me.status = resp.data.dataset.status
 
       $reimport: =>
+        me = @
         base_url = @constructor.$get_api_url({}, @)
-        if @status in [@STATUS_IMPORTING, @STATUS_UPLOADING]
+        if @status in [DataSet.STATUS_IMPORTING, DataSet.STATUS_UPLOADING]
           throw new Error "Can't re-import a dataset that is importing now"
 
         url = "#{base_url}#{@id}/action/reimport/"
-        @$make_request(url, {}, "PUT", {}).then(
-          (resp) =>
-            @status = resp.data.dataset.status)
+        @$make_request url, {}, "PUT", {}
+        .then (resp) ->
+          me.status = resp.data.data_set.status
 
       $getSampleData: ->
         base_url = @constructor.$get_api_url({}, @)
         @$make_request("#{base_url}#{@id}/action/sample_data/",
-          {size:15}, 'GET')
+          {size:5}, 'GET')
 
     return DataSet
 ])
