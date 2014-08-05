@@ -132,6 +132,8 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
         ds = next((d for d in self.xml_data_sources if d.name == ds_name))
         conn = "host='{host:s}' dbname='{dbname:s}' user='{user:s}' " \
                "password='{password:s}'".format(**ds.params)
+        if ds.params.has_key('port'):
+            conn += " port={port:s}".format(**ds.params)
         return ds.params['vendor'], conn
 
     def __repr__(self):

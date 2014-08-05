@@ -45,8 +45,10 @@ describe "datasets", ->
 
     BASE_URL = settings.apiUrl + 'importhandlers/json/' + HANDLER_ID + '/datasets/'
 
-    createController = (ctrl) ->
-       $controller(ctrl, {'$scope' : $rootScope })
+    createController = (ctrl, extras) ->
+      injected = extras or {}
+      _.extend injected, {'$scope' : $rootScope }
+      $controller(ctrl, injected)
   ))
 
   afterEach( ->
@@ -114,7 +116,7 @@ describe "datasets", ->
       $rootScope.initSections = jasmine.createSpy()
 
       url1 = BASE_URL + DS_ID + '/?show=' + encodeURIComponent(DataSet.MAIN_FIELDS + ',' + DataSet.EXTRA_FIELDS)
-      url2 = BASE_URL + DS_ID + '/action/sample_data/?size=15'
+      url2 = BASE_URL + DS_ID + '/action/sample_data/?size=5'
       $httpBackend.expectGET(url1).respond('{"data_set": {"name": "Some name"}}')
       $httpBackend.expectGET(url2).respond('[{"contractor.dev_skill_test_passed_count": "18", "contractor.dev_bill_rate": "5.56"}]')
 
@@ -132,6 +134,66 @@ describe "datasets", ->
         'contractor.dev_skill_test_passed_count': '18'
         'contractor.dev_bill_rate': '5.56'
       ], true)
+
+    it "should handle load errors", inject (DataSet)->
+      $routeParams.import_handler_id = HANDLER_ID
+      $routeParams.id = DS_ID
+      $routeParams.import_handler_type = 'json'
+      $rootScope.initSections = jasmine.createSpy()
+
+      url1 = BASE_URL + DS_ID + '/?show=' + encodeURIComponent(DataSet.MAIN_FIELDS + ',' + DataSet.EXTRA_FIELDS)
+      $httpBackend.expectGET(url1).respond(400)
+
+      $rootScope.setError = jasmine.createSpy '$rootScope.setError'
+      createController "DataSetDetailsCtrl"
+
+      $rootScope.go()
+      $httpBackend.flush()
+
+      expect($rootScope.setError.callCount).toBe 1
+      expect($rootScope.dataset.samples_json).toBe null
+
+    it "should handle get sample error", inject (DataSet)->
+      $routeParams.import_handler_id = HANDLER_ID
+      $routeParams.id = DS_ID
+      $routeParams.import_handler_type = 'json'
+      $rootScope.initSections = jasmine.createSpy()
+
+      url1 = BASE_URL + DS_ID + '/?show=' + encodeURIComponent(DataSet.MAIN_FIELDS + ',' + DataSet.EXTRA_FIELDS)
+      url2 = BASE_URL + DS_ID + '/action/sample_data/?size=5'
+      $httpBackend.expectGET(url1).respond angular.toJson
+        data_set:
+          name: "Some name"
+          status: "Imported"
+      $httpBackend.expectGET(url2).respond(400)
+
+      $rootScope.setError = jasmine.createSpy '$rootScope.setError'
+      createController "DataSetDetailsCtrl"
+
+      $rootScope.go()
+      $httpBackend.flush()
+
+      expect($rootScope.setError.callCount).toBe 1
+      expect($rootScope.dataset.samples_json).toBe null
+
+    it "should not request sample if dataset status is importing", inject (DataSet)->
+      $routeParams.import_handler_id = HANDLER_ID
+      $routeParams.id = DS_ID
+      $routeParams.import_handler_type = 'json'
+      $rootScope.initSections = jasmine.createSpy()
+
+      url1 = BASE_URL + DS_ID + '/?show=' + encodeURIComponent(DataSet.MAIN_FIELDS + ',' + DataSet.EXTRA_FIELDS)
+      $httpBackend.expectGET(url1).respond angular.toJson
+        data_set:
+          name: "Some name"
+          status: DataSet.STATUS_IMPORTING
+
+      createController "DataSetDetailsCtrl"
+
+      $rootScope.go()
+      $httpBackend.flush()
+
+      expect($rootScope.dataset.samples_json).toBe null
 
   describe "DatasetSelectCtrl", ->
 
@@ -151,8 +213,66 @@ describe "datasets", ->
       expect($rootScope.datasets[1].id).toEqual(DS_ID)
       expect($rootScope.datasets[1].name).toEqual('Some name')
 
-  # TODO: solve the "Unknown provider: dialogProvider" issue and test
-  xdescribe "LoadDataDialogCtrl", ->
+  describe "LoadDataDialogCtrl", ->
 
-    it "should make no query", inject () ->
-      createController "LoadDataDialogCtrl"
+    it "should POST save and redirect", inject(
+      ($location, DataSet) ->
+        handlerType = 'xml'
+        dialog =
+          model:
+            id: HANDLER_ID
+            TYPE: handlerType
+            import_params: ['start', 'end']
+          close: jasmine.createSpy('dialog.close')
+
+        $rootScope.close =
+        $location.url = jasmine.createSpy('$location.url')
+        url = "#{settings.apiUrl}importhandlers/#{handlerType}/#{HANDLER_ID}/datasets/?"
+        $httpBackend.expectPOST(url).respond angular.toJson
+          data_set:
+            id: DS_ID
+            name: "dataset name"
+
+        createController "LoadDataDialogCtrl",
+          $location: $location
+          dialog: dialog
+          DataSet: DataSet
+
+        $rootScope.start()
+        $httpBackend.flush()
+
+        expect(dialog.close).toHaveBeenCalled()
+        expect($location.url).toHaveBeenCalledWith("/handlers/xml/#{HANDLER_ID}/datasets/#{DS_ID}")
+    )
+
+  describe "DataSet", ->
+
+    it "should reimport", inject(
+      (DataSet)->
+
+        handlerType = 'xml'
+        url = "#{settings.apiUrl}importhandlers/#{handlerType}/#{HANDLER_ID}/datasets/#{DS_ID}/action/reimport/?"
+        $httpBackend.expectPUT(url).respond angular.toJson
+          data_set:
+            uid: "d8e99ac218fa11e4aa9a000c29e3f35c"
+            records_count: null
+            id: DS_ID
+            status: DataSet.STATUS_IMPORTING
+
+        ds = new DataSet
+          id: DS_ID
+          import_handler_id: HANDLER_ID
+          import_handler_type: 'xml'
+          status: 'nothing'
+        ds.$reimport()
+        $httpBackend.flush()
+        expect(ds.status).toEqual DataSet.STATUS_IMPORTING
+
+        # should refuse to import
+        ds = new DataSet
+          id: DS_ID
+          import_handler_id: HANDLER_ID
+          import_handler_type: 'xml'
+          status: DataSet.STATUS_IMPORTING
+        expect(ds.$reimport).toThrow Error "Can't re-import a dataset that is importing now"
+    )

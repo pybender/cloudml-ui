@@ -236,7 +236,7 @@ def get_csv_results(model_id, test_id, fields):
         header = list(fields)
         if 'prob' in header:
             prob_index = header.index('prob')
-            for label in test.classes_set:
+            for label in reversed(test.classes_set):
                 header.insert(prob_index, 'prob_%s' % label)
             header.remove('prob')
 

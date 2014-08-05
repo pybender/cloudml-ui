@@ -143,8 +143,10 @@ class Model(db.Model, BaseModel):
 
     def get_trainer(self, loaded=True):
         if loaded:
-            from core.trainer.store import TrainerStorage
-            return TrainerStorage.loads(self.trainer)
+            if not hasattr(self, 'loaded_trainer'):
+                from core.trainer.store import TrainerStorage
+                self.loaded_trainer = TrainerStorage.loads(self.trainer)
+            return self.loaded_trainer
         return self.trainer
 
     def get_trainer_filename(self):
