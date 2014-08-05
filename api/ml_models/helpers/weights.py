@@ -14,9 +14,12 @@ def calc_weights_css(weights, css_cls):
     """
     cmp_func = lambda a: abs(a['weight'])
 
-    def get_min_no_zero(weights):
-        no_zero_weights = [w for w in weights if w['weight'] != 0]
-        return min(no_zero_weights, key=cmp_func)['weight']
+    def get_min_none_zero(weights):
+        none_zero_weights = [w for w in weights if w['weight'] != 0]
+        if len(none_zero_weights) > 0:
+            return min(none_zero_weights, key=cmp_func)['weight']
+        else:
+            return 0.0
 
     def normalize_weights(weights, min_weight):
         weights = [{'name': item['name'],
@@ -30,8 +33,8 @@ def calc_weights_css(weights, css_cls):
             weights.reverse()
         return weights
 
-    min_weight = get_min_no_zero(weights)
-    weights = normalize_weights(weights, min_weight)
+    min_none_zero_weight = get_min_none_zero(weights)
+    weights = normalize_weights(weights, min_none_zero_weight)
     tones = ['lightest', 'lighter', 'light', 'dark', 'darker', 'darkest']
     tones_count = len(tones)
     cmp_func = lambda a: abs(a['transformed_weight'])
