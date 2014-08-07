@@ -27,11 +27,11 @@ class MlModelsTests(BaseDbTestCase):
     """
     Tests for api.ml_models.models.Model class.
     """
-    datasets = [FeatureData, FeatureSetData, ImportHandlerData, DataSetData,
+    datasets = [ImportHandlerData, DataSetData,
                 ModelData, XmlImportHandlerData]
 
     def test_generic_relation_to_import_handler(self):
-        model = Model.query.first()
+        model = Model(name="test1")
         handler = ImportHandler.query.first()
         xml_handler = XmlImportHandler.query.first()
         model.test_import_handler = handler
@@ -54,13 +54,17 @@ class MlModelsTests(BaseDbTestCase):
         self.assertEqual(model.test_import_handler, xml_handler)
         self.assertEqual(model.test_import_handler_type, 'xml')
 
-    def test_get_trainer_s3url(self):
-        model = Model.query.filter_by(name='TrainedModel').first()
-        self.assertTrue(model)
+    @mock_s3
+    @patch('api.amazon_utils.AmazonS3Helper.save_key_string')
+    @patch('api.amazon_utils.AmazonS3Helper.load_key')
+    def test_get_trainer_s3url(self, *mocks):
+        model = Model(name="test", trainer='trainer file', status=Model.STATUS_TRAINED)
+        model.save()
         url = model.get_trainer_s3url()
         trainer_filename = model.get_trainer_filename()
         self.assertTrue(trainer_filename)
-        self.assertTrue('s3.amazonaws.com/%s?Signature' % (trainer_filename,) in url)
+        self.assertTrue(url)
+        self.assertTrue('s3.amazonaws.com/%s?Signature' % trainer_filename in url)
         self.assertTrue(url.startswith('https://'))
 
         # trainer file not yet uploaoded

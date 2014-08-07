@@ -27,7 +27,7 @@ def init_logger(name, **kwargs):
     formatter = logging.Formatter(logging.BASIC_FORMAT)
     handler.setFormatter(formatter)
     logger.handlers = []
-    logger.addHandler(handler)
+    #logger.addHandler(handler)
     logger.setLevel(logging.DEBUG)
     logger.propagate = True
     return logger
