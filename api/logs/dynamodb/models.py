@@ -95,4 +95,6 @@ class LogMessage(object):
 
     @classmethod
     def delete_related_logs(cls, object_id, level=None):
-        db.delete_items(cls.TABLE_NAME, object_id__eq=object_id)
+        from api import app
+        if not app.config['TEST_MODE']:
+            db.delete_items(cls.TABLE_NAME, object_id__eq=object_id)
