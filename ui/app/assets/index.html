@@ -8,6 +8,7 @@
     <meta name="author" content="">
     <title ng-bind-template="{{pageTitle}}"></title>
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/2.3.0/css/bootstrap.min.css">
+    <link href="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.4.4/bootstrap-editable/css/bootstrap-editable.min.css" rel="stylesheet"/>
     <!-- endbuild -->
     <!--[if lte IE 7]>
     <script src="http://cdnjs.cloudflare.com/ajax/libs/json2/20110223/json2.js"></script>
@@ -25,7 +26,10 @@
     <link rel="stylesheet" href="/.tmp/css/app.css">
     <link rel="stylesheet" href="/.tmp/css/json_edit.css">
     <link rel="stylesheet" href="/.tmp/css/styles.css">
-    <link rel="stylesheet" href="/bower_components/angular-ui-OLDREPO/build/angular-ui.css">
+    <link rel="stylesheet" href="/bower_components/select2/select2.css">
+    <link rel="stylesheet" href="/bower_components/codemirror/lib/codemirror.css">
+    <link rel="stylesheet" href="/bower_components/codemirror/theme/monokai.css">
+    <!-- endbuild -->
   </head>
   <body ng-controller="AppCtrl">
     <div class="wrapper">
@@ -76,10 +80,15 @@
         <p><small>oDesk 2013-2014 CloudML v<span app-version></span></small></p>
       </div>
     </footer>
-    <script src="//code.jquery.com/jquery-1.8.3.min.js"></script>
-    <script src="//maxcdn.bootstrapcdn.com/bootstrap/2.3.0/js/bootstrap.min.js"></script>
-    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.3/angular.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/lodash.js/2.4.1/lodash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/2.4.1/lodash.min.js"></script>
+    <script src="https://code.jquery.com/jquery-1.8.3.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/2.3.0/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/x-editable/1.4.4/bootstrap-editable/js/bootstrap-editable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.4.11/d3.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.20/angular.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.20/angular-route.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.20/angular-resource.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.20/angular-cookies.min.js"></script>
 
     <!-- build:js(../../) js/vendor.js -->
     <script src="/vendor/scripts/console-helper.js"></script>
@@ -87,221 +96,24 @@
     <script src="/vendor/scripts/angular/angular-resource.js"></script>
     <script src="/vendor/scripts/angular/angular-cookies.js"></script>
 
-    <script src="/bower_components/angular-ui-OLDREPO/build/angular-ui.js"></script>
-    <script src="/bower_components/angular-bootstrap/ui-bootstrap-tpls-0.2.0.js"></script>
+    <script src="/bower_components/angular-bootstrap/ui-bootstrap-tpls-0.11.0.js"></script>
     <script src="/bower_components/angular-ui-select2/src/select2.js"></script>
+
+    <script src="/bower_components/moment/moment.js"></script>
 
     <script src="/bower_components/codemirror/lib/codemirror.js"></script>
     <script src="/bower_components/codemirror/mode/sql/sql.js"></script>
     <script src="/bower_components/codemirror/mode/xml/xml.js"></script>
     <script src="/bower_components/codemirror/mode/python/python.js"></script>
     <script src="/bower_components/codemirror/mode/javascript/javascript.js"></script>
+    <script type="text/javascript" src="/bower_components/angular-ui-codemirror/ui-codemirror.js"></script>
     <!-- endbuild -->
 
     <!-- build:js(.tmp/js) js/app.js -->
-    <script src="/js/config.js"></script>
-    <script src="/js/services.js"></script>
-    <script src="/js/filters.js"></script>
-    <script src="/js/directives.js"></script>
-    <script src="/js/controllers.js"></script>
-    <script src="/js/base.js"></script>
 
-    <script src="/js/awsinstances/controllers.js"></script>
-    <script src="/js/awsinstances/models.js"></script>
-
-    <script src="/js/clusters/controllers.js"></script>
-    <script src="/js/clusters/models.js"></script>
-
-    <script src="/js/dashboard/controllers.js"></script>
-    <script src="/js/dashboard/models.js"></script>
-
-    <script src="/js/datas/controllers.js"></script>
-    <script src="/js/datas/models.js"></script>
-
-    <script src="/js/datasets/controllers.js"></script>
-    <script src="/js/datasets/models.js"></script>
-
-    <script src="/js/features/controllers.js"></script>
-    <script src="/js/features/models.js"></script>
-    <script src="/js/features/controllers/base.js"></script>
-    <script src="/js/features/controllers/classifiers.js"></script>
-    <script src="/js/features/controllers/features.js"></script>
-    <script src="/js/features/controllers/named_types.js"></script>
-    <script src="/js/features/controllers/scalers.js"></script>
-    <script src="/js/features/controllers/transformers.js"></script>
-
-    <script src="/js/importhandlers/controllers.js"></script>
-    <script src="/js/importhandlers/models.js"></script>
-    <script src="/js/importhandlers/controllers/datasources.js"></script>
-    <script src="/js/importhandlers/controllers/handlers.js"></script>
-
-    <script src="/js/login/controllers.js"></script>
-
-    <script src="/js/logmessages/controllers.js"></script>
-    <script src="/js/logmessages/models.js"></script>
-
-    <script src="/js/models/controllers.js"></script>
-    <script src="/js/models/models.js"></script>
-
-    <script src="/js/reports/controllers.js"></script>
-    <script src="/js/reports/models.js"></script>
-
-    <script src="/js/servers/controllers.js"></script>
-    <script src="/js/servers/models.js"></script>
-
-    <script src="/js/testresults/controllers.js"></script>
-    <script src="/js/testresults/models.js"></script>
-
-    <script src="/js/weights/controllers.js"></script>
-    <script src="/js/weights/models.js"></script>
-
-    <script src="/js/xml_importhandlers/controllers.js"></script>
-    <script src="/js/xml_importhandlers/models.js"></script>
-    <script src="/js/xml_importhandlers/controllers/datasources.js"></script>
-    <script src="/js/xml_importhandlers/controllers/entities.js"></script>
-    <script src="/js/xml_importhandlers/controllers/input_parameters.js"></script>
-    <script src="/js/xml_importhandlers/controllers/scripts.js"></script>
-
-    <script src="/js/app.js"></script>
+    <!-- compiled cofffescript files goes here usgin grunt build_index -->
+    <!-- grunt build_index DONT ALTER -->
     <!-- endbuild -->
 
-    <!-- build:js(.tmp/js/partials) js/app.html.js -->
-    <script src="/js.html/dashboard.html.js"></script>
-    <script src="/js.html/modal.html.js"></script>
-    <script src="/js.html/nav.html.js"></script>
-
-    <script src="/js.html/aws_instances/add.html.js"></script>
-    <script src="/js.html/aws_instances/details.html.js"></script>
-    <script src="/js.html/aws_instances/instance_fields.html.js"></script>
-    <script src="/js.html/aws_instances/list.html.js"></script>
-
-    <script src="/js.html/base/delete_dialog.html.js"></script>
-
-    <script src="/js.html/clusters/create_ssh_tunnel.html.js"></script>
-    <script src="/js.html/clusters/details.html.js"></script>
-    <script src="/js.html/clusters/list.html.js"></script>
-    <script src="/js.html/clusters/terminate_ssh_tunnel.html.js"></script>
-
-    <script src="/js.html/datasets/csv_list_popup.html.js"></script>
-    <script src="/js.html/datasets/dataset_fields.html.js"></script>
-    <script src="/js.html/datasets/delete_dataset_popup.html.js"></script>
-    <script src="/js.html/datasets/details.html.js"></script>
-    <script src="/js.html/datasets/list.html.js"></script>
-
-    <script src="/js.html/directives/confusion_matrix.html.js"></script>
-    <script src="/js.html/directives/dict_input.html.js"></script>
-    <script src="/js.html/directives/file_downloader.html.js"></script>
-    <script src="/js.html/directives/go_to_docs.html.js"></script>
-    <script src="/js.html/directives/import_tree.html.js"></script>
-    <script src="/js.html/directives/input_param.html.js"></script>
-    <script src="/js.html/directives/params_editor.html.js"></script>
-    <script src="/js.html/directives/weights_table.html.js"></script>
-    <script src="/js.html/directives/weights_tree.html.js"></script>
-
-    <script src="/js.html/examples/example_details.html.js"></script>
-    <script src="/js.html/examples/example_list.html.js"></script>
-    <script src="/js.html/examples/grouped_examples.html.js"></script>
-
-    <script src="/js.html/features/classifier/add_predefined.html.js"></script>
-    <script src="/js.html/features/classifier/details.html.js"></script>
-    <script src="/js.html/features/classifier/edit.html.js"></script>
-    <script src="/js.html/features/classifier/edit_predefined.html.js"></script>
-    <script src="/js.html/features/classifier/form.html.js"></script>
-    <script src="/js.html/features/classifier/list.html.js"></script>
-
-    <script src="/js.html/features/items/edit.html.js"></script>
-    <script src="/js.html/features/items/form.html.js"></script>
-    <script src="/js.html/features/items/list.html.js"></script>
-
-    <script src="/js.html/features/named_types/add.html.js"></script>
-    <script src="/js.html/features/named_types/edit.html.js"></script>
-    <script src="/js.html/features/named_types/form.html.js"></script>
-    <script src="/js.html/features/named_types/list.html.js"></script>
-
-    <script src="/js.html/features/scalers/add_predefined.html.js"></script>
-    <script src="/js.html/features/scalers/edit_feature_scaler.html.js"></script>
-    <script src="/js.html/features/scalers/edit_feature_scaler_body.html.js"></script>
-    <script src="/js.html/features/scalers/edit_predefined.html.js"></script>
-    <script src="/js.html/features/scalers/form.html.js"></script>
-    <script src="/js.html/features/scalers/list.html.js"></script>
-
-    <script src="/js.html/features/sets/add.html.js"></script>
-    <script src="/js.html/features/sets/list.html.js"></script>
-
-    <script src="/js.html/features/transformers/add_predefined.html.js"></script>
-    <script src="/js.html/features/transformers/edit_feature_transformer.html.js"></script>
-    <script src="/js.html/features/transformers/edit_predefined.html.js"></script>
-    <script src="/js.html/features/transformers/form.html.js"></script>
-    <script src="/js.html/features/transformers/list.html.js"></script>
-
-    <script src="/js.html/import_handler/add.html.js"></script>
-    <script src="/js.html/import_handler/add_query.html.js"></script>
-    <script src="/js.html/import_handler/add_query_item.html.js"></script>
-    <script src="/js.html/import_handler/details.html.js"></script>
-    <script src="/js.html/import_handler/edit_target_feature.html.js"></script>
-    <script src="/js.html/import_handler/extra_delete.html.js"></script>
-    <script src="/js.html/import_handler/list.html.js"></script>
-    <script src="/js.html/import_handler/load_data.html.js"></script>
-    <script src="/js.html/import_handler/test_handler.html.js"></script>
-    <script src="/js.html/import_handler/test_query.html.js"></script>
-
-    <script src="/js.html/import_handler/datasource/add.html.js"></script>
-    <script src="/js.html/import_handler/datasource/edit.html.js"></script>
-    <script src="/js.html/import_handler/datasource/edit_handler_datasource.html.js"></script>
-    <script src="/js.html/import_handler/datasource/form.html.js"></script>
-    <script src="/js.html/import_handler/datasource/list.html.js"></script>
-
-    <script src="/js.html/login/auth.html.js"></script>
-    <script src="/js.html/login/login.html.js"></script>
-    <script src="/js.html/login/user.html.js"></script>
-
-    <script src="/js.html/models/add_model.html.js"></script>
-    <script src="/js.html/models/delete_model_popup.html.js"></script>
-    <script src="/js.html/models/model_details.html.js"></script>
-    <script src="/js.html/models/model_list.html.js"></script>
-    <script src="/js.html/models/model_train_popup.html.js"></script>
-    <script src="/js.html/models/table.html.js"></script>
-    <script src="/js.html/models/upload_model.html.js"></script>
-
-    <script src="/js.html/models/form/import_handlers.html.js"></script>
-
-    <script src="/js.html/parts/created_tags.html.js"></script>
-    <script src="/js.html/parts/params_list.html.js"></script>
-    <script src="/js.html/parts/save_from_messages.html.js"></script>
-
-    <script src="/js.html/reports/compare_models_form.html.js"></script>
-
-    <script src="/js.html/servers/choose.html.js"></script>
-    <script src="/js.html/servers/details.html.js"></script>
-    <script src="/js.html/servers/file_list.html.js"></script>
-    <script src="/js.html/servers/list.html.js"></script>
-
-    <script src="/js.html/testresults/delete_popup.html.js"></script>
-    <script src="/js.html/testresults/run_test.html.js"></script>
-    <script src="/js.html/testresults/test_details.html.js"></script>
-    <script src="/js.html/testresults/test_list.html.js"></script>
-
-    <script src="/js.html/weights/columns.html.js"></script>
-    <script src="/js.html/weights/list.html.js"></script>
-    <script src="/js.html/weights/segment_switcher.html.js"></script>
-    <script src="/js.html/weights/tree.html.js"></script>
-
-    <script src="/js.html/xml_import_handlers/add.html.js"></script>
-    <script src="/js.html/xml_import_handlers/details.html.js"></script>
-    <script src="/js.html/xml_import_handlers/list.html.js"></script>
-
-    <script src="/js.html/xml_import_handlers/datasources/edit.html.js"></script>
-
-    <script src="/js.html/xml_import_handlers/entities/edit.html.js"></script>
-    <script src="/js.html/xml_import_handlers/entities/edit_datasource.html.js"></script>
-
-    <script src="/js.html/xml_import_handlers/fields/edit.html.js"></script>
-
-    <script src="/js.html/xml_import_handlers/input_parameters/edit.html.js"></script>
-
-    <script src="/js.html/xml_import_handlers/scripts/edit.html.js"></script>
-
-    <script src="/js.html/xml_import_handlers/scoop/edit.html.js"></script>
-    <!-- endbuild -->
   </body>
 </html>

@@ -30,10 +30,10 @@ angular.module('app.features.controllers.classifiers', ['app.config', ])
 
 .controller('ClassifiersListCtrl', [
   '$scope'
-  '$dialog'
+  '$modal'
   'Classifier'
 
-  ($scope, $dialog, Classifier) ->
+  ($scope, $modal, Classifier) ->
     $scope.MODEL = Classifier
     $scope.FIELDS = Classifier.MAIN_FIELDS
     $scope.ACTION = 'loading classifiers'
@@ -41,7 +41,7 @@ angular.module('app.features.controllers.classifiers', ['app.config', ])
 
     $scope.edit = (classifier) ->
       $scope.openDialog({
-        $dialog: $dialog
+        $modal: $modal
         model: classifier
         template: 'partials/features/classifiers/edit_predefined.html'
         ctrlName: 'ModelWithParamsEditDialogCtrl'
@@ -50,7 +50,7 @@ angular.module('app.features.controllers.classifiers', ['app.config', ])
     $scope.add = () ->
       classifier = new Classifier()
       $scope.openDialog({
-        $dialog: $dialog
+        $modal: $modal
         model: classifier
         template: 'partials/features/classifiers/add_predefined.html'
         ctrlName: 'ModelWithParamsEditDialogCtrl'
@@ -60,7 +60,7 @@ angular.module('app.features.controllers.classifiers', ['app.config', ])
 
     $scope.delete = (classifier) ->
       $scope.openDialog({
-        $dialog: $dialog
+        $modal: $modal
         model: classifier
         template: 'partials/base/delete_dialog.html'
         ctrlName: 'DialogCtrl'

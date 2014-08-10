@@ -9,7 +9,6 @@ SETTINGS = {
 
   apiRequestDefaultHeaders: {
     'Content-Type': 'application/x-www-form-urlencoded'
-    'X-Requested-With': null
   }
 
 }

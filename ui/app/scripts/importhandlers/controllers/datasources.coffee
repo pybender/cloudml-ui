@@ -28,10 +28,10 @@ angular.module('app.importhandlers.controllers.datasources', ['app.config', ])
 
 .controller('DataSourceListCtrl', [
   '$scope'
-  '$dialog'
+  '$modal'
   'DataSource'
 
-  ($scope, $dialog, DataSource) ->
+  ($scope, $modal, DataSource) ->
     $scope.MODEL = DataSource
     $scope.FIELDS = DataSource.MAIN_FIELDS
     $scope.ACTION = 'loading datasources'
@@ -39,7 +39,7 @@ angular.module('app.importhandlers.controllers.datasources', ['app.config', ])
 
     $scope.edit = (ds) ->
       $scope.openDialog({
-        $dialog: $dialog
+        $modal: $modal
         model: ds
         template: 'partials/import_handler/datasource/edit.html'
         ctrlName: 'ModelEditDialogCtrl'
@@ -48,7 +48,7 @@ angular.module('app.importhandlers.controllers.datasources', ['app.config', ])
     $scope.add = () ->
       ds = new DataSource()
       $scope.openDialog({
-        $dialog: $dialog
+        $modal: $modal
         model: ds
         template: 'partials/import_handler/datasource/add.html'
         ctrlName: 'ModelEditDialogCtrl'
@@ -56,7 +56,7 @@ angular.module('app.importhandlers.controllers.datasources', ['app.config', ])
 
     $scope.delete = (ds)->
       $scope.openDialog({
-        $dialog: $dialog
+        $modal: $modal
         model: ds
         template: 'partials/base/delete_dialog.html'
         ctrlName: 'DialogCtrl'

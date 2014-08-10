@@ -5,10 +5,10 @@ angular.module(
 
 .controller('ScriptsListCtrl', [
   '$scope'
-  '$dialog'
+  '$modal'
   'Script'
 
-  ($scope, $dialog, Script) ->
+  ($scope, $modal, Script) ->
     $scope.MODEL = Script
     $scope.FIELDS = Script.MAIN_FIELDS
     $scope.ACTION = 'loading scripts'
@@ -27,7 +27,7 @@ angular.module(
         data: ''
       })
       $scope.openDialog({
-        $dialog: $dialog
+        $modal: $modal
         model: script
         template: 'partials/xml_import_handlers/scripts/edit.html'
         ctrlName: 'ModelEditDialogCtrl'
@@ -37,7 +37,7 @@ angular.module(
     $scope.edit = (script)->
       script = new Script(script)
       $scope.openDialog({
-        $dialog: $dialog
+        $modal: $modal
         model: script
         template: 'partials/xml_import_handlers/scripts/edit.html'
         ctrlName: 'ModelEditDialogCtrl'
@@ -47,7 +47,7 @@ angular.module(
     $scope.delete = (script)->
       script = new Script(script)
       $scope.openDialog({
-        $dialog: $dialog
+        $modal: $modal
         model: script
         template: 'partials/base/delete_dialog.html'
         ctrlName: 'DialogCtrl'

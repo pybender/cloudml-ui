@@ -8,10 +8,10 @@ angular.module('app.features.controllers', ['app.config', ])
 
 .controller('FeaturesSetListCtrl', [
   '$scope'
-  '$dialog'
+  '$modal'
   'FeaturesSet'
 
-  ($scope, $dialog, FeaturesSet) ->
+  ($scope, $modal, FeaturesSet) ->
     $scope.MODEL = FeaturesSet
     $scope.FIELDS = FeaturesSet.MAIN_FIELDS
     $scope.ACTION = 'loading feature sets'
@@ -19,7 +19,7 @@ angular.module('app.features.controllers', ['app.config', ])
     $scope.add = () ->
       set = new FeaturesSet()
       $scope.openDialog({
-        $dialog: $dialog
+        $modal: $modal
         model: set
         template: 'partials/features/sets/add.html'
         ctrlName: 'AddFeatureSetDialogCtrl'
@@ -31,10 +31,10 @@ angular.module('app.features.controllers', ['app.config', ])
 .controller('FeaturesSetDetailsCtrl', [
   '$scope'
   '$routeParams'
-  '$dialog'
+  '$modal'
   'FeaturesSet'
 
-  ($scope, $routeParams, $dialog, FeaturesSet) ->
+  ($scope, $routeParams, $modal, FeaturesSet) ->
     # if not $routeParams.id then err = "Can't initialize without instance id"
     # $scope.featuresSet = new FeaturesSet({_id: $routeParams.id})
     $scope.init = (model) ->
@@ -49,7 +49,7 @@ angular.module('app.features.controllers', ['app.config', ])
       
     $scope.addFeature = () ->
       $scope.openDialog({
-        $dialog: $dialog
+        $modal: $modal
         model: $scope.featuresSet
         template: 'partials/features/items/add.html'
         ctrlName: 'AddFeatureDialogCtrl'
@@ -60,11 +60,11 @@ angular.module('app.features.controllers', ['app.config', ])
 
 .controller('FeaturesListCtrl', [
   '$scope'
-  '$dialog'
+  '$modal'
   'Feature'
   'NamedFeatureType'
 
-  ($scope, $dialog, Feature, NamedFeatureType) ->
+  ($scope, $modal, Feature, NamedFeatureType) ->
     $scope.MODEL = Feature
     $scope.FIELDS = Feature.MAIN_FIELDS
     $scope.ACTION = 'loading features'
@@ -157,11 +157,11 @@ angular.module('app.features.controllers', ['app.config', ])
 
 .controller('FeatureActionsCtrl', [
   '$scope'
-  '$dialog'
+  '$modal'
   'Transformer'
   'Scaler'
 
-  ($scope, $dialog, Transformer, Scaler) ->
+  ($scope, $modal, Transformer, Scaler) ->
     $scope.init = (opts={}) ->
       if not opts.model
         throw new Error "Please specify feature model"
@@ -170,7 +170,7 @@ angular.module('app.features.controllers', ['app.config', ])
 
     $scope.deleteModel = (model) ->
       $scope.openDialog({
-        $dialog: $dialog
+        $modal: $modal
         model: model
         template: 'partials/base/delete_dialog.html'
         ctrlName: 'DialogCtrl'
@@ -197,7 +197,7 @@ angular.module('app.features.controllers', ['app.config', ])
 
     $scope.editScaler = (feature) ->
       $scope.openDialog({
-        $dialog: $dialog
+        $modal: $modal
         model: null
         template: 'partials/features/scalers/edit_feature_scaler.html'
         ctrlName: 'ModelWithParamsEditDialogCtrl'
@@ -206,7 +206,7 @@ angular.module('app.features.controllers', ['app.config', ])
 
     $scope.editTransformer = (feature) ->
       $scope.openDialog({
-        $dialog: $dialog
+        $modal: $modal
         model: null
         template: 'partials/features/transformers/edit_feature_transformer.html'
         ctrlName: 'ModelWithParamsEditDialogCtrl'

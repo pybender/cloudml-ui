@@ -26,10 +26,10 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
   '$scope'
   '$rootScope'
   '$routeParams'
-  '$dialog'
+  '$modal'
   'ImportHandler'
 
-  ($scope, $rootScope, $routeParams, $dialog, ImportHandler) ->
+  ($scope, $rootScope, $routeParams, $modal, ImportHandler) ->
     if not $routeParams.id
       err = "Can't initialize without import handler id"
 
@@ -116,7 +116,7 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
 
     $scope.editDataSource = (handler, ds) ->
       $scope.openDialog({
-        $dialog: $dialog
+        $modal: $modal
         model: null
         template: \
           'partials/import_handler/datasource/edit_handler_datasource.html'
@@ -127,7 +127,7 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
 
     $scope.editTargetFeature = (item, feature) ->
       $scope.openDialog({
-        $dialog: $dialog
+        $modal: $modal
         model: null
         template: 'partials/import_handler/edit_target_feature.html'
         ctrlName: 'TargetFeatureEditDialogCtrl'
@@ -137,7 +137,7 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
 
     $scope.runQuery = (query) ->
       $scope.openDialog({
-        $dialog: $dialog
+        $modal: $modal
         model: null
         template: 'partials/import_handler/test_query.html'
         ctrlName: 'QueryTestDialogCtrl'
@@ -307,11 +307,11 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
 
 .controller('ImportHandlerActionsCtrl', [
   '$scope'
-  '$dialog'
-($scope, $dialog) ->
+  '$modal'
+($scope, $modal) ->
   $scope.importData = (handler) ->
     $scope.openDialog({
-      $dialog: $dialog
+      $modal: $modal
       model: handler
       template: 'partials/import_handler/load_data.html'
       ctrlName: 'LoadDataDialogCtrl'
@@ -319,7 +319,7 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
 
   $scope.delete = (handler) ->
     $scope.openDialog({
-      $dialog: $dialog
+      $modal: $modal
       model: handler
       template: 'partials/base/delete_dialog.html'
       ctrlName: 'DeleteImportHandlerCtrl'
@@ -329,7 +329,7 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
 
   $scope.testHandler = (handler) ->
     $scope.openDialog({
-      $dialog: $dialog
+      $modal: $modal
       template: 'partials/import_handler/test_handler.html'
       ctrlName: 'ImportTestDialogCtrl'
       action: 'test import handler'
@@ -338,7 +338,7 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
 
   $scope.uploadHandlerToPredict = (model) ->
     $scope.openDialog({
-      $dialog: $dialog
+      $modal: $modal
       model: model
       template: 'partials/servers/choose.html'
       ctrlName: 'ImportHandlerUploadToServerCtrl'

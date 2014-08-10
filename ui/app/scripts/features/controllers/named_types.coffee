@@ -83,10 +83,10 @@ angular.module('app.features.controllers.named_types', ['app.config', ])
 
 .controller('FeatureTypeListCtrl', [
   '$scope'
-  '$dialog'
+  '$modal'
   'NamedFeatureType'
 
-  ($scope, $dialog, NamedFeatureType) ->
+  ($scope, $modal, NamedFeatureType) ->
     $scope.MODEL = NamedFeatureType
     $scope.FIELDS = NamedFeatureType.MAIN_FIELDS
     $scope.ACTION = 'loading named feature types'
@@ -96,7 +96,7 @@ angular.module('app.features.controllers.named_types', ['app.config', ])
 
     $scope.edit = (namedType) ->
       $scope.openDialog({
-        $dialog: $dialog
+        $modal: $modal
         model: namedType
         template: 'partials/features/named_types/edit.html'
         ctrlName: 'ModelEditDialogCtrl'
@@ -105,7 +105,7 @@ angular.module('app.features.controllers.named_types', ['app.config', ])
     $scope.add = () ->
       namedType = new NamedFeatureType()
       $scope.openDialog({
-        $dialog: $dialog
+        $modal: $modal
         model: namedType
         template: 'partials/features/named_types/add.html'
         ctrlName: 'ModelEditDialogCtrl'
@@ -113,7 +113,7 @@ angular.module('app.features.controllers.named_types', ['app.config', ])
 
     $scope.delete = (namedType) ->
       $scope.openDialog({
-        $dialog: $dialog
+        $modal: $modal
         model: namedType
         template: 'partials/base/delete_dialog.html'
         ctrlName: 'DialogCtrl'

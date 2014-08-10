@@ -5,11 +5,11 @@ angular.module('app.testresults.controllers', ['app.config', ])
 
 .controller('TestListCtrl', [
   '$scope'
-  '$dialog'
+  '$modal'
   '$rootScope'
   'TestResult'
 
-  ($scope, $dialog, $rootScope, TestResult) ->
+  ($scope, $modal, $rootScope, TestResult) ->
     $scope.MODEL = TestResult
     $scope.FIELDS = 'name,created_on,status,parameters,accuracy,examples_count,\
 created_by'
@@ -91,9 +91,9 @@ created_by'
   'TestResult'
   '$location'
   '$rootScope'
-  '$dialog'
+  '$modal'
 
-($scope, $routeParams, Test, $location, $rootScope, $dialog) ->
+($scope, $routeParams, Test, $location, $rootScope, $modal) ->
   $scope.LOADED_SECTIONS = []
   if not $scope.test
     if not ($routeParams.model_id and $routeParams.id)
@@ -149,7 +149,7 @@ without test id and model id"
 
   $scope.downloadCsvResults = () ->
     $scope.openDialog({
-        $dialog: $dialog
+        $modal: $modal
         model: $scope.test
         template: 'partials/datasets/csv_list_popup.html'
         ctrlName: 'CsvDownloadCtrl'
@@ -190,9 +190,9 @@ without test id and model id"
 
 .controller('TestActionsCtrl', [
   '$scope'
-  '$dialog'
+  '$modal'
 
-  ($scope, $dialog) ->
+  ($scope, $modal) ->
     $scope.init = (opts) ->
       test = opts.test
       model = opts.model
@@ -203,7 +203,7 @@ without test id and model id"
       $scope.test = test
 
     $scope.delete_test = (model) ->
-      d = $dialog.dialog(
+      d = $modal.dialog(
         modalFade: false
       )
       d.test = $scope.test

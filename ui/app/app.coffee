@@ -2,9 +2,9 @@
 
 # Declare app level module which depends on filters, and services
 App = angular.module('app', [
-  'ui'
   'ngCookies'
   'ngResource'
+  'ngRoute'
   'app.config'
   'app.controllers'
   'app.directives'
@@ -306,15 +306,15 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
     log_sse.addEventListener('message', handleCallback)
 
   $rootScope.openDialog = (opts) ->
-    $dialog = opts.$dialog
-    if !$dialog?
-      throw new Error('$dialog is required')
+    $modal = opts.$modal
+    if !$modal?
+      throw new Error('$modal is required')
 
     template = opts.template
     if !template?
       throw new Error('template is required')
 
-    d = $dialog.dialog(
+    d = $modal.dialog(
       modalFade: false
       dialogClass: opts.cssClass || 'modal'
     )

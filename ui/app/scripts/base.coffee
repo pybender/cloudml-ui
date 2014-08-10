@@ -128,7 +128,7 @@ angular.module('app.base', ['app.config', 'app.services'])
         base_url = @constructor.$get_api_url(opts, @)
         $http(
           method: "DELETE"
-          headers: {'Content-Type':undefined, 'X-Requested-With': null,
+          headers: {'Content-Type':undefined,
           'X-Auth-Token': auth.get_auth_token()}
           url: "#{base_url}#{@id}/"
           transformRequest: angular.identity
@@ -142,7 +142,7 @@ angular.module('app.base', ['app.config', 'app.services'])
         res = $http(
           method: method
           #headers: settings.apiRequestDefaultHeaders
-          headers: {'Content-Type': undefined, 'X-Requested-With': null,
+          headers: {'Content-Type': undefined,
           'X-Auth-Token': auth.get_auth_token()}
           url: url
           data: fd
