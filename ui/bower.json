@@ -20,6 +20,10 @@
     "tests"
   ],
   "dependencies": {
-    "codemirror": "~4.3.0"
+    "codemirror": "~4.3.0",
+    "angular-ui-OLDREPO": "git@github.com:angular-ui/angular-ui-OLDREPO.git#~0.4.0",
+    "bootstrap": "2.3.0",
+    "angular-bootstrap": "git@github.com:angular-ui/bootstrap.git#gh-pages",
+    "angular-ui-select2": "~0.0.5"
   }
 }

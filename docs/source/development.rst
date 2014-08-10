@@ -66,6 +66,14 @@ Install nodejs and nmp(nodejs==0.8.6)::
 
     $ sudo apt-get install nodejs npm
 
+Install grunt-cli globally
+
+    $ sudo npm install grunt-cli -g
+
+Install bower dependencies
+
+    $ bower install
+
 Init ui dev enviropment::
     
     $ cd ui
