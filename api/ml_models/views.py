@@ -1,7 +1,7 @@
 import os
 from api.async_tasks.models import AsyncTask
 
-from api.logs.mongo.models import LogMessage
+from api.logs.dynamodb.models import LogMessage
 from flask import Response, request
 from flask.ext.restful import reqparse
 from sqlalchemy import or_
