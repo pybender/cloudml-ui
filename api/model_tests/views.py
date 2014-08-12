@@ -98,6 +98,20 @@ class TestExampleResource(BaseResourceSQL):
         if example is None:
             raise NotFound()
 
+        fields = self._get_show_fields(params)
+        if 'next' in fields or 'previous' in fields:
+            from sqlalchemy import desc
+            filter_params = kwargs.copy()
+            filter_params.pop('id')
+            example.previous = TestExample.query.with_entities(
+                TestExample.id).filter_by(**filter_params).filter(
+                    TestExample.id < kwargs['id']
+                ).order_by(desc(TestExample.id)).limit(1).first()
+            example.next = TestExample.query.with_entities(
+                TestExample.id).filter_by(**filter_params).filter(
+                    TestExample.id > kwargs['id']).order_by(
+                        TestExample.id).limit(1).first()
+
         if not example.is_weights_calculated:
             example.calc_weighted_data()
             example = super(TestExampleResource, self)._get_details_query(

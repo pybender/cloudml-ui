@@ -1,3 +1,5 @@
+<ng-include src="'/partials/parts/pager.html'"></ng-include>
+
 <h2>
   Test Example <span ng-show="data.loaded">"{{ data.test_name|capfirst }}:{{ data.example_id }}"</span> Details
 </h2>
@@ -68,3 +70,5 @@
   </table>
 </div>
 </div>
+
+<ng-include ng-show="data.loaded" src="'/partials/parts/pager.html'"></ng-include>

@@ -129,24 +129,55 @@ angular.module('app.datas.controllers', ['app.config', ])
 .controller('ExampleDetailsCtrl', [
   '$scope'
   '$routeParams'
+  '$location'
   'Data'
 
-($scope, $routeParams, TestExample) ->
+($scope, $routeParams, $location, TestExample) ->
   if not $scope.data
     $scope.data = new TestExample({
       model_id: $routeParams.model_id,
       test_id: $routeParams.test_id,
       id: $routeParams.id
     })
+  $scope.filter_params = ""  # used for getting next/prev example ids
 
   $scope.data.$load(
     show: ['test_name','weighted_data_input','model',
-           'pred_label','label','prob','created_on','test_result'
+           'pred_label','label','prob','created_on','test_result',
+           'next', 'previous'
     ].join(',')
+    filter_params: $scope.filter_params
   ).then (->
     ), ((opts)->
       $scope.setError(opts, 'loading test example')
     )
+
+  $scope.next = ->
+    $scope.redir({
+      next: true
+    })
+
+  $scope.previous = ->
+    $scope.redir({
+      next: false
+    })
+
+  $scope.redir = (opts) ->
+    if opts.next
+      example_id = $scope.data.next
+    else
+      example_id = $scope.data.previous
+
+    if !example_id?
+      throw new Error('ERR: Prev or Next should be disabled!')
+
+    example = new TestExample({
+      model_id: $routeParams.model_id,
+      test_id: $routeParams.test_id,
+      id: example_id
+    })
+    $location.url example.objectUrl()
+
 ])
 
 # Choose fields to download classification results in CSV dialog controller
