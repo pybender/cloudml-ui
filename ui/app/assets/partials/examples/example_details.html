@@ -37,7 +37,7 @@
   <div><sc-chart chart-dict="data.probChartData" width="150" height="150"></sc-chart></div>
 </div>
 
-<div ng-show="Object.keys(data.weighted_data_input).length">
+<div ng-show="data.weighted_data_input && Object.keys(data.weighted_data_input).length">
   <h4>Parameters with Weights</h4>
   <table class="table">
       <thead>
