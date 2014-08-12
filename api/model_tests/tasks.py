@@ -87,10 +87,10 @@ def run_test(dataset_ids, test_id):
         test.examples_count = all_count
         test.memory_usage = max(mem_usage)
 
-        vect_data = metrics._true_data
-        from bson import Binary
-        import pickle
-        test.vect_data = pickle.dumps(vect_data)
+        # vect_data = metrics._true_data
+        # from bson import Binary
+        # import pickle
+        # test.vect_data = pickle.dumps(vect_data)
 
         test.save()
 
