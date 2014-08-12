@@ -93,7 +93,7 @@ celery = Celery('cloudml')
 # for instance in app.db.instances.find():
 #     app.config['CELERY_QUEUES'].append(Queue(instance['name'],
 #                                              routing_key='%s.#' % instance['name']))
-# celery.add_defaults(lambda: app.config)
+celery.add_defaults(lambda: app.config)
 
 
 class Api(restful.Api):

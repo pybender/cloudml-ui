@@ -1,8 +1,61 @@
 import logging
+import uuid
+import time
 from sqlalchemy import func
 from sqlalchemy.orm import exc as orm_exc, validates
 
 from api.base.models import BaseMixin, db
+
+from boto.dynamodb2.table import Table
+from boto.dynamodb2.fields import HashKey, RangeKey
+from boto.dynamodb2.types import NUMBER, STRING
+from boto.exception import JSONResponseError
+
+from api.amazon_utils import AmazonDynamoDBHelper
+
+
+dynamodb = AmazonDynamoDBHelper()
+
+
+class AuthToken(object):
+    TABLE_NAME = 'auth_tokens'
+
+    SCHEMA = [
+        HashKey('id', data_type=STRING)
+    ]
+
+    def __init__(self, oauth_token, oauth_token_secret):
+        self.id = oauth_token
+        self.oauth_token = oauth_token
+        self.oauth_token_secret = oauth_token_secret
+
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'oauth_token': self.oauth_token,
+            'oauth_token_secret': self.oauth_token_secret
+        }
+
+    def save(self):
+        data = self.to_dict()
+        dynamodb.put_item(self.TABLE_NAME, data)
+
+    @classmethod
+    def create_table(cls):
+        try:
+            Table.create(cls.TABLE_NAME, connection=dynamodb.conn,
+                         schema=cls.SCHEMA)
+        except JSONResponseError as ex:
+            logging.exception(str(ex))
+
+    @classmethod
+    def get_auth(cls, auth_token):
+        return dynamodb.get_item(cls.TABLE_NAME, id=auth_token)
+
+    @classmethod
+    def delete(cls, auth_token):
+        dynamodb.delete_items(cls.TABLE_NAME, id__eq=auth_token)
 
 
 class User(BaseMixin, db.Model):

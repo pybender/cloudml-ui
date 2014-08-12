@@ -246,6 +246,11 @@ class AmazonDynamoDBHelper(object):
             for data in data_list:
                 batch.put_item(data=data)
 
+    def get_item(self, table_name, **kwargs):
+        table = self._get_table(table_name)
+        return table.get_item(**kwargs)._data
+
+
     def get_items(self, table_name, limit=None, reverse=True,
                   next_token=None, **kwargs):
         table = self._get_table(table_name)
