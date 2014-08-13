@@ -102,7 +102,7 @@ class TestExampleResource(BaseResourceSQL):
         if not test.dataset is None:
             for field in test.dataset.data_fields:
                 field_new = field.replace('.', '->')
-                self.FILTER_PARAMS += (("data_input->>%s" % field_new, str),)
+                self.FILTER_PARAMS += (("data_input->>%s" % field_new, str), )
 
     def _get_details_query(self, params, **kwargs):
         example = super(TestExampleResource, self)._get_details_query(

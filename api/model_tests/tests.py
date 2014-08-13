@@ -24,6 +24,7 @@ IMPORT_PARAMS = json.dumps({'start': '2012-12-03',
                             'end': '2012-12-04',
                             'category': 'smth'})
 
+
 class TestResourceTests(BaseDbTestCase, TestChecksMixin):
     """ Tests of the Test API. """
     BASE_URL = '/cloudml/models/{0!s}/tests/'
@@ -219,6 +220,60 @@ class TestExampleResourceTests(BaseDbTestCase, TestChecksMixin):
         )
         resp = self.client.get(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, 200)
+
+    def test_filter(self):
+        def check_filter(data, count=None):
+            if count is not None:
+                query_params = None
+            else:
+                query_params = {'test_result': self.test}
+                query_params.update(data)
+            resp = self.check_list(
+                data=data,
+                show='label,pred_label,data_input',
+                query_params=query_params,
+                count=count)
+            return resp
+
+        check_filter({'pred_label': '1'})
+        check_filter({'data_input->>opening_id': '1'}, count=1)
+        resp = check_filter(
+            {'data_input->>employer->country': 'USA'}, count=2)
+        self.assertEquals(
+            resp['test_examples'][0]['data_input']['employer->country'], 'USA')
+
+    def test_ordering(self):
+        def check_prob_order(data, prob_0):
+            query_params = {'test_result': self.test}
+            resp = self.check_list(
+                    data=data,
+                    show='prob',
+                    query_params=query_params)
+
+            actual_prob_0 = []
+            actual_prob_1 = []
+            for ex in resp['test_examples']:
+                actual_prob_0.append(ex['prob'][0])
+                actual_prob_1.append(ex['prob'][1])
+            self.assertEquals(actual_prob_0, prob_0)
+            prob_1 = [1 - prob for prob in prob_0]
+            self.assertEquals(actual_prob_1, prob_1)
+
+        # Note: we are checking ordering by prob_0
+        # psql arrays have numeration from 1
+        right_data = [0.6, 0.5, 0.1, 0.05]
+        data = {
+            'sort_by': 'prob[1]',
+            'order': 'desc'}
+        check_prob_order(
+            data, right_data)
+
+        data = {
+            'sort_by': 'prob[1]',
+            'order': 'asc'}
+        right_data.reverse()
+        check_prob_order(
+            data, right_data)
 
     @mock_s3
     @patch('api.model_tests.models.TestResult.get_vect_data')

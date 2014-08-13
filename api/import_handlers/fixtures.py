@@ -127,7 +127,7 @@ class DataSetData(DataSet):
         filesize = 100
         records_count = 100
         time = 200
-        data_fields = ["employer.country"]
+        data_fields = ["employer.country", "opening_id"]
         format = "json"
         uid = '8a7d1ae26efc11e395b420107a86d035'
         import_handler_id = 1
