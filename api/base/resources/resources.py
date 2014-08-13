@@ -1,4 +1,5 @@
 import json
+import re
 import logging
 import math
 from flask.ext import restful
@@ -225,7 +226,6 @@ class BaseResource(restful.Resource):
     def _prepare_new_model(self, model, params):
         #return self._prepare_model_any(model, params)
         return self._prepare_model(model, params)
-        
 
     ### PUT ###
 
@@ -398,11 +398,18 @@ class BaseResourceSQL(BaseResource):
         cursor = self._build_list_query(params, **kwargs)
 
         # Models ordering
-        sort_by = params.get('sort_by', None)
-        if sort_by:
+        sort_by_expr = params.get('sort_by', None)
+        if sort_by_expr is not None:
             order = get_order()
-            sort_by = getattr(self.Model, sort_by, None)
-            if sort_by:
+            splitted_sort_by = re.split('\W', sort_by_expr)
+            if len(splitted_sort_by) == 1:  # Simply field name
+                sort_by = getattr(self.Model, splitted_sort_by[0], None)
+            else:
+                sort_by = sort_by_expr  # ORDER BY expression
+
+            if sort_by is None:
+                logging.warning('Ignoring sorting by %s', sort_by_expr)
+            else:
                 if order < 0:
                     sort_by = desc(sort_by)
                 cursor = cursor.order_by(sort_by)
