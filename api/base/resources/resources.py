@@ -438,7 +438,7 @@ class BaseResourceSQL(BaseResource):
                 cursor = cursor.options(*opts)
 
         for name, val in filter_params.iteritems():
-            fltr = self.__build_query_item(name, val)
+            fltr = self._build_query_item(name, val)
             if not fltr is None:
                 cursor = cursor.filter(fltr)
         #print cursor[0]
@@ -460,7 +460,7 @@ class BaseResourceSQL(BaseResource):
         paginator = cursor.paginate(page, per_page)
         return paginator.total, paginator.items
 
-    def __build_query_item(self, name, val):
+    def _build_query_item(self, name, val):
         if '.' in name:
             keys = name.split('.')
             field = getattr(self.Model, keys[0])

@@ -73,8 +73,8 @@
         </tbody>
         <tbody ng-show="!loading_state">
           <tr ng-repeat="data in objects | filter:search" ng-class="{success : data.label==data.pred_label, error : !(data.label==data.pred_label)}">
-            <td><a href="#{{ data.objectUrl() }}">{{ data.example_id }}</a></td>
-            <td><a href="#{{ data.objectUrl() }}">{{ data.name }}</a></td>
+            <td><a ng-click="details(data)">{{ data.example_id }}</a></td>
+            <td><a ng-click="details(data)">{{ data.name }}</a></td>
             <td><span>{{ data.label }}</span></td>
             <td><span>{{ data.pred_label }}</span></td>
             <td ng-repeat="label in labels">{{ data.prob[$index] }}</td>

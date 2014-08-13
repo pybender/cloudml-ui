@@ -444,8 +444,8 @@ def fill_import_handler(import_handler, xml_data=None):
     else:  # Loading import handler from XML file
         ds_dict = {}
         for datasource in plan.datasources.values():
-            if datasource.type == 'input':
-                continue
+            # if datasource.name == 'input':
+            #      continue
             POSSIBLE_PARAMS = ['host', 'dbname', 'port',
                                'user', 'password', 'vender']
             ds = XmlDataSource(

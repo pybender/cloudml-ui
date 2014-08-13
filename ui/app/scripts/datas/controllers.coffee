@@ -83,6 +83,10 @@ angular.module('app.datas.controllers', ['app.config', ])
     $scope.filter_opts = _.extend($scope.simple_filters, data_filters,
                                   $scope.extra_params)
     $location.search($scope.filter_opts)
+
+  $scope.details = (example) ->
+    delete $scope.filter_opts['action']
+    $location.url(example.objectUrl()).search($scope.filter_opts)
 ])
 
 .controller('GroupedExamplesCtrl', [
@@ -139,14 +143,15 @@ angular.module('app.datas.controllers', ['app.config', ])
       test_id: $routeParams.test_id,
       id: $routeParams.id
     })
-  $scope.filter_params = ""  # used for getting next/prev example ids
+
+  # used for getting next/prev example ids
+  $scope.filter_opts = $location.search()
 
   $scope.data.$load(
-    show: ['test_name','weighted_data_input','model',
+    _.extend({show: ['test_name','weighted_data_input','model',
            'pred_label','label','prob','created_on','test_result',
-           'next', 'previous'
-    ].join(',')
-    filter_params: $scope.filter_params
+           'next', 'previous'].join(',')},
+             $scope.filter_opts)
   ).then (->
     ), ((opts)->
       $scope.setError(opts, 'loading test example')
@@ -162,6 +167,10 @@ angular.module('app.datas.controllers', ['app.config', ])
       next: false
     })
 
+  $scope.back = ->
+    $location.url($scope.data.listUrl())\
+      .search(_.extend({action: 'examples:list'}, $scope.filter_opts))
+
   $scope.redir = (opts) ->
     if opts.next
       example_id = $scope.data.next
@@ -176,7 +185,7 @@ angular.module('app.datas.controllers', ['app.config', ])
       test_id: $routeParams.test_id,
       id: example_id
     })
-    $location.url example.objectUrl()
+    $location.url(example.objectUrl()).search($scope.filter_opts)
 
 ])
 
