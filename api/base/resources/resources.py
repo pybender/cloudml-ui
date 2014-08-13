@@ -401,9 +401,11 @@ class BaseResourceSQL(BaseResource):
         sort_by = params.get('sort_by', None)
         if sort_by:
             order = get_order()
-            if order < 0:
-                sort_by = desc(sort_by)
-            cursor = cursor.order_by(sort_by)
+            sort_by = getattr(self.Model, sort_by, None)
+            if sort_by:
+                if order < 0:
+                    sort_by = desc(sort_by)
+                cursor = cursor.order_by(sort_by)
 
         return cursor
 
