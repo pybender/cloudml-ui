@@ -318,7 +318,7 @@ class TestExampleResourceTests(BaseDbTestCase, TestChecksMixin):
         resp = self.client.get(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, 200)
         data = json.loads(resp.data)
-        self.assertEquals(data['fields'], ['employer->country'])
+        self.assertEquals(data['fields'], ['employer->country', 'opening_id'])
 
     @patch('api.model_tests.tasks.get_csv_results')
     def test_csv(self, mock_get_csv):

@@ -14,7 +14,7 @@ from core.xmlimporthandler.datasources import DataSource
 class XmlImportHandler(db.Model, ImportHandlerMixin):
     TYPE = 'xml'
 
-    DATASOURCES_ORDER = ['db', 'csv', 'http', 'pig']
+    DATASOURCES_ORDER = ['db', 'csv', 'http', 'pig', 'input']
 
     predict_id = db.Column(db.ForeignKey('predict.id',
                                          ondelete='CASCADE'))
