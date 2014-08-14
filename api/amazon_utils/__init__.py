@@ -1,7 +1,9 @@
 import logging
 import uuid
+from boto.dynamodb2.table import Table
 
 import boto.ec2
+from boto.exception import JSONResponseError
 from boto.s3.key import Key
 
 from api import app
@@ -207,15 +209,18 @@ class AmazonDynamoDBHelper(object):
             from boto import dynamodb2
             from boto.dynamodb2.layer1 import DynamoDBConnection
 
-            if app.config.get('LOCAL_DYNAMODB'):
+            if app.config.get('TEST_MODE'):
+                self._conn = boto.dynamodb2.connect_to_region(
+                    'us-west-2', aws_access_key_id="ak",
+                    aws_secret_access_key="sk")
+            elif app.config.get('LOCAL_DYNAMODB'):
                 # Local DynamoDB (see dynamodb_local.sh)
                 self._conn = DynamoDBConnection(
                     host='localhost',
                     port=8000,
                     aws_access_key_id='any',
                     aws_secret_access_key='any',
-                    is_secure=False
-                )
+                    is_secure=False)
             else:
                 # Real DynamoDB connection
                 self._conn = dynamodb2.connect_to_region(
@@ -225,9 +230,17 @@ class AmazonDynamoDBHelper(object):
         return self._conn
 
     def _get_table(self, table_name):
-        from boto.dynamodb2.table import Table
-        self._tables[table_name] = Table(table_name, connection=self.conn)
+        if not table_name in self._tables:
+            self._refresh_tables_list()
+
         return self._tables[table_name]
+
+    def _refresh_tables_list(self):
+        from boto.dynamodb2.table import Table
+        self._tables = {}
+        for table_name in self.conn.list_tables()['TableNames']:
+            self._tables[table_name] = Table(table_name,
+                                             connection=self.conn)
 
     def put_item(self, table_name, data):
         table = self._get_table(table_name)
@@ -249,7 +262,6 @@ class AmazonDynamoDBHelper(object):
     def get_item(self, table_name, **kwargs):
         table = self._get_table(table_name)
         return table.get_item(**kwargs)._data
-
 
     def get_items(self, table_name, limit=None, reverse=True,
                   next_token=None, **kwargs):
@@ -288,3 +300,13 @@ class AmazonDynamoDBHelper(object):
             items = [item._data for item in res]
 
         return items, next_token
+
+    def create_table(self, table_name, schema):
+        self._refresh_tables_list()
+        if not table_name in self._tables:
+            try:
+                Table.create(table_name, connection=self.conn, schema=schema)
+                self._tables[table_name] = Table(table_name,
+                                                 connection=self.conn)
+            except JSONResponseError as ex:
+                logging.exception(str(ex))

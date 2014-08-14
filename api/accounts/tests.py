@@ -6,7 +6,7 @@ from api import app
 
 from api.base.test_utils import BaseDbTestCase
 from api.base.test_utils import SOMEBODY_HTTP_HEADERS as HTTP_HEADERS
-from models import User
+from models import AuthToken, User
 
 
 class AuthDecoratorsTests(BaseDbTestCase):
@@ -119,6 +119,17 @@ class AuthResourceTests(BaseDbTestCase):
 
     BASE_URL = '/cloudml/auth'
 
+    def setUp(self):
+        BaseDbTestCase.setUp(self)
+        self.dynamodb_mock = mock_dynamodb2()
+        self.dynamodb_mock.start()
+        AuthToken.create_table()
+
+    def tearDown(self):
+        BaseDbTestCase.tearDown(self)
+        self.dynamodb_mock.stop()
+
+
     @patch('api.accounts.models.User.get_auth_url',
            return_value=('url', '1', '2'))
     @patch('api.accounts.models.AuthToken.save')
@@ -134,33 +145,29 @@ class AuthResourceTests(BaseDbTestCase):
         #self.assertIsNotNone(secret)
         #self.assertEquals(secret.get('oauth_token_secret'), '2')
 
-    @patch('api.accounts.models.AuthToken.get_auth',
-           return_value={'oauth_token':'124', 'oauth_token_secret': '999'})
     @patch('api.accounts.models.AuthToken.delete')
-    def test_authenticate(self, mock_delete, mock_get_auth):
-        with patch(
-            'api.accounts.models.User.authenticate',
-            return_value=(
-                '123',
-                User.query.filter_by(uid='somebody').one()
-            )
-        ) as mock_auth:
+    def test_authenticate(self, mock_delete):
+        url = '{0}/authenticate?oauth_token={1}&oauth_verifier={2}'.format(
+            self.BASE_URL, '123', '345'
+        )
 
-            url = '{0}/authenticate?oauth_token={1}&oauth_verifier={2}'.format(
-                self.BASE_URL, '123', '345'
-            )
+        # Wrong token
+        resp = self.client.post(url, data={})
+        self.assertEquals(resp.status_code, 500)
+        self.assertEquals(resp.headers['X-Odesk-Error-Message'],
+                          'Wrong token: 123')
 
-            # Wrong token
-            resp = self.client.post(url, data={})
-            self.assertEquals(resp.status_code, 500)
-            self.assertEquals(resp.headers['X-Odesk-Error-Message'],
-                              'Wrong token: 123')
+        with patch('api.accounts.models.User.authenticate',
+                   return_value=('123', User.query.filter_by(
+                           uid='somebody').one())) as mock_auth:
 
             # Proper token
-            app.db['auth_tokens'].insert({
-                'oauth_token': '123',
-                'oauth_token_secret': '999',
-            })
+            # app.db['auth_tokens'].insert({
+            #     'oauth_token': '123',
+            #     'oauth_token_secret': '999',
+            # })
+            auth_token = AuthToken('123', '999')
+            auth_token.save()
 
             resp = self.client.post(url, data={})
             self.assertEquals(mock_auth.call_count, 1)

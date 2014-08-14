@@ -112,7 +112,7 @@ class Coverage(Command):
         app.config.from_object('api.test_config')
         app.init_db()
         print 'Collecting coverage info...'
-        output_dir = 'api/test/cover'
+        output_dir = 'coverage'
         # TODO: why does nose.run show different results?
         # nose.run(argv=[
         #     '',
@@ -312,7 +312,9 @@ class CreateDtnamoDbTables(Command):
     def run(self, **kwargs):
         from api.logs.dynamodb.models import LogMessage
         from api.accounts.models import AuthToken
-        #LogMessage.create_table()
+        from api.amazon_utils import AmazonDynamoDBHelper
+
+        LogMessage.create_table()
         AuthToken.create_table()
         print 'Done.'
 

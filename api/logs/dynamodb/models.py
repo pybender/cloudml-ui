@@ -57,11 +57,7 @@ class LogMessage(object):
 
     @classmethod
     def create_table(cls):
-        try:
-            Table.create(cls.TABLE_NAME, connection=db.conn,
-                         schema=cls.SCHEMA)
-        except JSONResponseError as ex:
-            logging.exception(str(ex))
+        db.create_table(cls.TABLE_NAME, cls.SCHEMA)
 
     @classmethod
     def filter_by_object(cls, log_type, object_id,
