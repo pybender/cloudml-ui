@@ -49,7 +49,7 @@ def init_logger(name, **kwargs):
         handler = LogMessageHandler(log_type=name, params=kwargs)
         formatter = logging.Formatter(logging.BASIC_FORMAT)
         handler.setFormatter(formatter)
-        patchAsyncEmit(handler)
+        #patchAsyncEmit(handler)
         logger.addHandler(handler)
         logger.setLevel(logging.DEBUG)
         logger.propagate = True

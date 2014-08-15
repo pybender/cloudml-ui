@@ -93,7 +93,7 @@ App.config([
     # TODO: it doesn't work (angular bug?)
     .when('/models/:model_id/tests/:test_id/examples', {
       redirectTo: (params, loc) ->
-        return '/models/' + params.model_id + '/tests/' + params.test_id
+        return '/models/' + params.model_id + '/tests/' + params.test_id \
         + '?action=examples:list'
     })
     .when('/models/:model_id/tests/:test_id/examples/:id', {
