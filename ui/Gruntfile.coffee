@@ -1,7 +1,8 @@
 
 cmlConfig =
-  buildDir: './.tmp'
+  tmpDir: './.tmp'
   appDir: './app'
+  buildDir: './_public'
   vendorDir: './vendor'
   reloadPort: 35729
   servePort: 3333
@@ -29,10 +30,10 @@ module.exports = (grunt)->
         files: [
           '<%= cmlConfig.appDir %>/**/*'
         ]
-      html2js:
-        files: ['<%= cmlConfig.appDir %>/assets/partials/**/*.html']
-        tasks: ['html2js:compile', 'index:local']
-      index_html:
+#      html2js:
+#        files: ['<%= cmlConfig.appDir %>/assets/partials/**/*.html']
+#        tasks: ['html2js:compile', 'index:local']
+      index_local:
         files: ['<%= cmlConfig.appDir %>/assets/index.html']
         tasks: ['index:local']
 
@@ -44,28 +45,28 @@ module.exports = (grunt)->
           expand: true,
           cwd: '<%= cmlConfig.appDir %>'
           src: ['app.coffee']
-          dest: '<%= cmlConfig.buildDir %>/js'
+          dest: '<%= cmlConfig.tmpDir %>/js'
           ext: '.js'
         ,
           expand: true,
           cwd: '<%= cmlConfig.appDir %>/scripts'
           src: ['**/*.coffee']
-          dest: '<%= cmlConfig.buildDir %>/js'
+          dest: '<%= cmlConfig.tmpDir %>/js'
           ext: '.js'
         ]
 
-    html2js:
-      compile:
-        options:
-          module: null # no bundle module for all the html2js templates
-          base: '<%= cmlConfig.appDir %>/assets/'
-        files: [
-          expand: true
-          cwd: '<%= cmlConfig.appDir %>/assets/partials/'
-          src: ['**/*.html']
-          dest: '<%= cmlConfig.buildDir %>/js.html'
-          ext: '.html.js'
-        ]
+#    html2js:
+#      compile:
+#        options:
+#          module: false
+#          base: '<%= cmlConfig.appDir %>/assets/'
+#        files: [
+#          expand: true
+#          cwd: '<%= cmlConfig.appDir %>/assets/partials/'
+#          src: ['**/*.html']
+#          dest: '<%= cmlConfig.tmpDir %>/htmljs'
+#          ext: '.html.js'
+#        ]
 
     less:
       compile:
@@ -73,51 +74,64 @@ module.exports = (grunt)->
           expand: true,
           cwd: '<%= cmlConfig.appDir %>/styles'
           src: ['*.less']
-          dest: '<%= cmlConfig.buildDir %>/css'
+          dest: '<%= cmlConfig.tmpDir %>/css'
           ext: '.css'
         ]
 
     copy:
       compile:
         files: [
-          src: '<%= cmlConfig.appDir %>/assets/img/books-icon.png'
-          dest: '<%= cmlConfig.buildDir %>/img/'
-          expand: true
-          flatten: true
-        ,
-          src: 'bower_components/select2/select2.png'
-          dest: '<%= cmlConfig.buildDir %>/img/'
-          expand: true
-          flatten: true
-        ,
           src: 'bower_components/bootstrap/img/glyphicons-halflings.png'
-          dest: '<%= cmlConfig.buildDir %>/img/'
+          dest: '<%= cmlConfig.tmpDir %>/img/'
           expand: true
           flatten: true
         ,
           src: 'bower_components/bootstrap/img/glyphicons-halflings-white.png'
-          dest: '<%= cmlConfig.buildDir %>/img/'
-          expand: true
-          flatten: true
-        ,
-          src: '<%= cmlConfig.appDir %>/assets/font/*'
-          dest: '<%= cmlConfig.buildDir %>/font/'
+          dest: '<%= cmlConfig.tmpDir %>/img/'
           expand: true
           flatten: true
         ]
+      build:
+        files: [
+          src: 'bower_components/select2/select2.png'
+          dest: '<%= cmlConfig.buildDir %>/css'
+          expand: true
+          flatten: true
+        ,
+          expand: true
+          cwd: '<%= cmlConfig.tmpDir %>/img'
+          dest: '<%= cmlConfig.buildDir %>/img'
+          src: ['*']
+        ,
+          expand: true
+          cwd: '<%= cmlConfig.appDir %>/assets'
+          dest: '<%= cmlConfig.buildDir %>/'
+          src: ['{img,font,partials}/**/*']
+        ,
+          src: '<%= cmlConfig.tmpDir %>/index.html'
+          dest: '<%= cmlConfig.buildDir %>/index.html'
+        ]
 
     useminPrepare:
-      html: ['<%= cmlConfig.appDir %>/assets/index.html']
+      html: ['<%= cmlConfig.tmpDir %>/index.html']
       options:
         dest: '<%= cmlConfig.buildDir %>'
+        staging: '<%= cmlConfig.buildDir %>/'
 
     usemin:
-      html: ['<%= cmlConfig.buildDir %>/index.html']
-      #css: ['<%= yeoman.dist %>/styles/{,*/}*.css']
-      options:
-        dirs: ['<%= cmlConfig.buildDir %>']
+      html: ['<%= cmlConfig.tmpDir %>/index.html']
+
+    uglify:
+      generated:
+        options:
+          sourceMap: true
 
     clean:
+      server:
+        files: [
+          dot: true,
+          src: ['<%= cmlConfig.tmpDir %>']
+        ]
       build:
         files: [
           dot: true,
@@ -133,7 +147,7 @@ module.exports = (grunt)->
           middleware: (connect) ->
             return [
               lrSnippet
-              mountFolder(connect, cmlConfig.buildDir)
+              mountFolder(connect, cmlConfig.tmpDir)
               mountFolder(connect, '.')
               mountFolder(connect, './app/assets')
             ]
@@ -145,55 +159,91 @@ module.exports = (grunt)->
       compile: [
         'coffee'
         'less'
-        'copy'
+        'copy:compile'
+#        'html2js'
       ]
       options:
-        limit: 3
+        limit: 4
         logConcurrentOutput: true
 
   grunt.initConfig gruntConfig
 
-  grunt.registerTask 'index', (target)->
-    ###
+  grunt.registerTask 'index'
+  , """
+    Task to build the index file out of development JS file for
+    usemin/useminprepare and server to function properly. Instead of adding
+    every file manually
     instead of writing every coffee file manually in the index.html for
     usemin, we collect them and write them automatically
-    ###
+    """
+  , (target)->
     fs = require('fs')
     globule = require('globule')
-    files = [
+    # order is very important here
+    files = []
+    if target is 'local'
+      files.splice(1, 0, '/js/local_config.js')
+    else if target is 'production'
+      files.splice(1, 0, '/js/prod_config.js')
+    else if target is 'staging'
+      files.splice(1, 0, '/js/staging_config.js')
+    else
+      throw Error("Unkown target:#{target}")
+
+#    # partials first for quicker rendering of first page
+#    globule.find("#{cmlConfig.appDir}/assets/partials/**/*.html").forEach (file)->
+#      newFile = file.replace("#{cmlConfig.appDir}/assets/partials/", 'htmljs/')
+#      if newFile not in files
+#        files.push newFile.replace('.html', '.html.js')
+
+    files = files.concat [
       '/js/config.js'
       '/js/services.js'
       '/js/filters.js'
       '/js/directives.js'
       '/js/controllers.js'
       '/js/base.js'
-      '/js/app.js'
     ]
-    if target is 'local'
-      files.splice(1, 0, '/js/local_config.js')
-    else if target is 'prod'
-      files.splice(1, 0, '/js/prod_config.js')
-    else if target is 'staging'
-      files.splice(1, 0, '/js/staging_config.js')
-    else
-      throw Error("Unkown target:#{target}")
+
+    # coffeescript files
     globule.find("#{cmlConfig.appDir}/scripts/**/*.coffee").forEach (file)->
-      newFile = file.replace('./app/scripts/', 'js/')
-      newFile = newFile.replace('.coffee', '.js')
+      newFile = file.replace("#{cmlConfig.appDir}/scripts/", 'js/')
       if newFile not in files
-        files.splice(files.length - 1, 0, newFile)
+        files.push newFile.replace('.coffee', '.js')
+
+    files.push '/js/app.js'
+
     filesString = ''
     files.forEach (file)->
       filesString += "        <script src=\"#{file}\"></script>\n"
     index = fs.readFileSync "#{cmlConfig.appDir}/assets/index.html", 'utf8'
     index = index.replace '<!-- grunt build_index DONT ALTER -->', filesString
-    fs.writeFileSync "#{cmlConfig.buildDir}/index.html", index
+    fs.writeFileSync "#{cmlConfig.tmpDir}/index.html", index
 
-  grunt.registerTask 'server', [
-      'clean'
+  grunt.registerTask 'server'
+  , """Builds and run a development server"""
+  , [
+      'clean:server'
       'concurrent:compile'
       'index:local'
       'connect:livereload'
       'open:server'
       'watch'
+    ]
+
+  grunt.registerTask 'build'
+  , """ Builds a production or staging (targets) to destination:
+        #{cmlConfig.buildDir}
+    """
+  , (target) ->
+    grunt.task.run [
+      'clean'
+      'concurrent:compile'
+      'index:' + target
+      'useminPrepare'
+      'concat:generated'
+      'cssmin:generated'
+      'uglify:generated'
+      'usemin'
+      'copy:build'
     ]
