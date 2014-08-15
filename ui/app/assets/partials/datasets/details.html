@@ -13,7 +13,7 @@
       </div>
   </h2>
   <div class="date-created" ng-init="obj=dataset">
-    <ng-include src="'/partials/parts/created_tags.html'"></ng-include>
+    <ng-include src="'partials/parts/created_tags.html'"></ng-include>
     <i class="icon-status"></i>
     <span class="badge badge-warning">{{ dataset.status }}</span>
   </div>
@@ -64,7 +64,7 @@
     <p ng-show="dataset.cluster"><a href="http://172.27.77.141:{{ dataset.cluster.port }}/logs/steps/">
         Step logs
       </a></p>
-    <ng-include src="'/partials/logmessages/list.html'"></ng-include>
+    <ng-include src="'partials/logmessages/list.html'"></ng-include>
   </div>
   <div ng-show="dataset.samples_json">
     <h3>Sample Data</small></h3>

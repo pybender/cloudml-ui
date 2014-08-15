@@ -10,6 +10,7 @@ App = angular.module('app', [
   'app.directives'
   'app.filters'
   'app.services'
+  'app.templates'
   'ui.bootstrap'
   'ui.select2'
 
@@ -66,15 +67,15 @@ App.config([
   $routeProvider
     .when('/dashboard', {
       controller: "DashboardCtrl"
-      templateUrl: '/partials/dashboard.html'
+      templateUrl: 'partials/dashboard.html'
     })
     .when('/models', {
-      templateUrl: '/partials/models/model_list.html'
+      templateUrl: 'partials/models/model_list.html'
       reloadOnSearch: false
     })
     .when('/models/:id', {
       controller: 'ModelDetailsCtrl'
-      templateUrl: '/partials/models/model_details.html'
+      templateUrl: 'partials/models/model_details.html'
       reloadOnSearch: false
     })
     .when('/models/:model_id/tests', {
@@ -83,12 +84,12 @@ App.config([
     })
     .when('/models/:model_id/tests/:id', {
       controller: 'TestDetailsCtrl'
-      templateUrl: '/partials/testresults/test_details.html'
+      templateUrl: 'partials/testresults/test_details.html'
       reloadOnSearch: false
     })
     .when('/models/:model_id/tests/:test_id/grouped_examples', {
       controller: 'GroupedExamplesCtrl'
-      templateUrl: '/partials/examples/grouped_examples.html'
+      templateUrl: 'partials/examples/grouped_examples.html'
     })
     # TODO: it doesn't work (angular bug?)
     .when('/models/:model_id/tests/:test_id/examples', {
@@ -98,18 +99,18 @@ App.config([
     })
     .when('/models/:model_id/tests/:test_id/examples/:id', {
       controller: 'ExampleDetailsCtrl'
-      templateUrl: '/partials/examples/example_details.html'
+      templateUrl: 'partials/examples/example_details.html'
     })
     .when('/upload_model', {
-      templateUrl: '/partials/models/upload_model.html'
+      templateUrl: 'partials/models/upload_model.html'
       controller: 'UploadModelCtl'
     })
     .when('/add_model', {
-      templateUrl: '/partials/models/add_model.html'
+      templateUrl: 'partials/models/add_model.html'
       controller: 'AddModelCtl'
     })
     .when('/compare_models', {
-      templateUrl: '/partials/reports/compare_models_form.html'
+      templateUrl: 'partials/reports/compare_models_form.html'
       controller: 'CompareModelsFormCtl'
     })
     .when('/handlers', {
@@ -118,15 +119,15 @@ App.config([
     })
     .when('/handlers/xml', {
       controller: "XmlImportHandlerListCtrl"
-      templateUrl: '/partials/xml_import_handlers/list.html'
+      templateUrl: 'partials/xml_import_handlers/list.html'
     })
     .when('/handlers/xml/add', {
       controller: "AddXmlImportHandlerCtl"
-      templateUrl: '/partials/xml_import_handlers/add.html'
+      templateUrl: 'partials/xml_import_handlers/add.html'
     })
     .when('/handlers/xml/:id', {
       controller: 'XmlImportHandlerDetailsCtrl'
-      templateUrl: '/partials/xml_import_handlers/details.html'
+      templateUrl: 'partials/xml_import_handlers/details.html'
       reloadOnSearch: false
     })
     .when('/handlers/xml/:handler_id/datasets', {
@@ -135,24 +136,24 @@ App.config([
     })
     .when('/handlers/json', {
       controller: "ImportHandlerListCtrl"
-      templateUrl: '/partials/import_handler/list.html'
+      templateUrl: 'partials/import_handler/list.html'
     })
     .when('/handlers/json/add', {
       controller: "AddImportHandlerCtl"
-      templateUrl: '/partials/import_handler/add.html'
+      templateUrl: 'partials/import_handler/add.html'
     })
     .when('/handlers/json/:id', {
       controller: 'ImportHandlerDetailsCtrl'
-      templateUrl: '/partials/import_handler/details.html'
+      templateUrl: 'partials/import_handler/details.html'
       reloadOnSearch: false
     })
     .when('/handlers/json/:id/query/add', {
       controller: 'AddImportHandlerQueryCtrl'
-      templateUrl: '/partials/import_handler/add_query.html'
+      templateUrl: 'partials/import_handler/add_query.html'
     })
     .when('/handlers/json/:id/query/:num/items/add', {
       controller: 'AddImportHandlerQueryItemCtrl'
-      templateUrl: '/partials/import_handler/add_query_item.html'
+      templateUrl: 'partials/import_handler/add_query_item.html'
     })
     .when('/handlers/json/:handler_id/datasets', {
       redirectTo: (params, loc) ->
@@ -160,7 +161,7 @@ App.config([
     })
     .when('/handlers/:import_handler_type/:import_handler_id/datasets/:id', {
       controller: 'DataSetDetailsCtrl'
-      templateUrl: '/partials/datasets/details.html'
+      templateUrl: 'partials/datasets/details.html'
       reloadOnSearch: false
     })
     .when('/aws', {
@@ -168,54 +169,54 @@ App.config([
     })
     .when('/aws/instances', {
       controller: "AwsInstanceListCtrl"
-      templateUrl: '/partials/aws_instances/list.html'
+      templateUrl: 'partials/aws_instances/list.html'
     })
     .when('/aws/instances/add', {
       controller: "AddAwsInstanceCtl"
-      templateUrl: '/partials/aws_instances/add.html'
+      templateUrl: 'partials/aws_instances/add.html'
     })
     .when('/aws/instances/:id', {
       controller: 'AwsInstanceDetailsCtrl'
-      templateUrl: '/partials/aws_instances/details.html'
+      templateUrl: 'partials/aws_instances/details.html'
     })
     .when('/aws/clusters', {
       controller: "ClusterListCtrl"
-      templateUrl: '/partials/clusters/list.html'
+      templateUrl: 'partials/clusters/list.html'
     })
     .when('/aws/clusters/:id', {
       controller: 'ClusterDetailsCtrl'
-      templateUrl: '/partials/clusters/details.html'
+      templateUrl: 'partials/clusters/details.html'
     })
     .when('/servers', {
       controller: "ServerListCtrl"
-      templateUrl: '/partials/servers/list.html'
+      templateUrl: 'partials/servers/list.html'
     })
     .when('/servers/:id', {
       controller: 'ServerDetailsCtrl'
-      templateUrl: '/partials/servers/details.html'
+      templateUrl: 'partials/servers/details.html'
     })
 
     # auth
     .when('/auth/login', {
       controller: 'LoginCtl'
-      templateUrl: '/partials/login/login.html'
+      templateUrl: 'partials/login/login.html'
     })
     .when('/auth/authenticate', {
       controller: 'AuthCtl'
-      templateUrl: '/partials/login/auth.html'
+      templateUrl: 'partials/login/auth.html'
     })
     .when('/auth/callback', {
       controller: 'AuthCallbackCtl'
-      templateUrl: '/partials/login/auth.html'
+      templateUrl: 'partials/login/auth.html'
     })
 
     .when('/models/:model_id/features/:set_id/add', {
       controller: "FeatureEditCtrl"
-      templateUrl: '/partials/features/items/edit.html'
+      templateUrl: 'partials/features/items/edit.html'
     })
     .when('/models/:model_id/features/:set_id/edit/:feature_id', {
       controller: "FeatureEditCtrl"
-      templateUrl: '/partials/features/items/edit.html'
+      templateUrl: 'partials/features/items/edit.html'
     })
     .when('/models/:model_id/features', {
       redirectTo: (params, loc) ->
@@ -228,7 +229,7 @@ App.config([
     # Feature set list (now used only for debug)
     # .when('/features/sets', {
     #   controller: "FeaturesSetListCtrl"
-    #   templateUrl: '/partials/features/sets/list.html'
+    #   templateUrl: 'partials/features/sets/list.html'
     # })
 
     # Predefined feature objects
@@ -237,23 +238,23 @@ App.config([
     })
     .when('/predefined/types', {
       controller: "FeatureTypeListCtrl"
-      templateUrl: '/partials/features/named_types/list.html'
+      templateUrl: 'partials/features/named_types/list.html'
     })
     .when('/predefined/classifiers', {
       controller: "ClassifiersListCtrl"
-      templateUrl: '/partials/features/classifiers/list.html'
+      templateUrl: 'partials/features/classifiers/list.html'
     })
     .when('/predefined/transformers', {
       controller: "TransformersListCtrl"
-      templateUrl: '/partials/features/transformers/list.html'
+      templateUrl: 'partials/features/transformers/list.html'
     })
     .when('/predefined/scalers', {
       controller: "ScalersListCtrl"
-      templateUrl: '/partials/features/scalers/list.html'
+      templateUrl: 'partials/features/scalers/list.html'
     })
     .when('/predefined/datasources', {
       controller: "DataSourceListCtrl"
-      templateUrl: '/partials/import_handler/datasource/list.html'
+      templateUrl: 'partials/import_handler/datasource/list.html'
     })
 
     # Catch all

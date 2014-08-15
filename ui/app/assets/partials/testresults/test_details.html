@@ -14,7 +14,7 @@
 </h2>
 
 <div title="quick info" ng-init="obj=test">
-  <ng-include src="'/partials/parts/created_tags.html'"></ng-include>
+  <ng-include src="'partials/parts/created_tags.html'"></ng-include>
   <i class="icon-status"></i>
   <span class="badge badge-warning">{{ test.status }}</span>
 </div>
@@ -139,7 +139,7 @@
       </div>
 
       <div ng-show="action[0] == 'examples'" ng-controller="TestExamplesCtrl" ng-init="init(test)">
-        <ng-include src="'/partials/examples/example_list.html'"></ng-include>
+        <ng-include src="'partials/examples/example_list.html'"></ng-include>
       </div>
 
       <div ng-show="action[0] == 'matrix'">
@@ -200,7 +200,7 @@
       </div>
 
       <div ng-show="action[0] == 'logs'" ng-controller="LogMessageListCtrl" ng-init="init('runtest_log', test.id)">
-        <ng-include src="'/partials/logmessages/list.html'"></ng-include>
+        <ng-include src="'partials/logmessages/list.html'"></ng-include>
       </div>
 
     </div>

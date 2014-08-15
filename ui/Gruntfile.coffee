@@ -30,9 +30,9 @@ module.exports = (grunt)->
         files: [
           '<%= cmlConfig.appDir %>/**/*'
         ]
-#      html2js:
-#        files: ['<%= cmlConfig.appDir %>/assets/partials/**/*.html']
-#        tasks: ['html2js:compile', 'index:local']
+      html2js:
+        files: ['<%= cmlConfig.appDir %>/assets/partials/**/*.html']
+        tasks: ['html2js:compile', 'index:local']
       index_local:
         files: ['<%= cmlConfig.appDir %>/assets/index.html']
         tasks: ['index:local']
@@ -55,18 +55,16 @@ module.exports = (grunt)->
           ext: '.js'
         ]
 
-#    html2js:
-#      compile:
-#        options:
-#          module: false
-#          base: '<%= cmlConfig.appDir %>/assets/'
-#        files: [
-#          expand: true
-#          cwd: '<%= cmlConfig.appDir %>/assets/partials/'
-#          src: ['**/*.html']
-#          dest: '<%= cmlConfig.tmpDir %>/htmljs'
-#          ext: '.html.js'
-#        ]
+    html2js:
+      options:
+        module: 'app.templates'
+        base: '<%= cmlConfig.appDir %>/assets'
+#        rename: (moduleName) ->
+#          # our codebase uses url starting with slash
+#          '/' + moduleName
+      compile:
+        src: ['<%= cmlConfig.appDir %>/assets/partials/**/*.html'],
+        dest: '<%= cmlConfig.tmpDir %>/js/partials.html.js'
 
     less:
       compile:
@@ -90,6 +88,11 @@ module.exports = (grunt)->
           dest: '<%= cmlConfig.tmpDir %>/img/'
           expand: true
           flatten: true
+        ,
+          expand: true
+          cwd: '<%= cmlConfig.appDir %>/assets'
+          dest: '<%= cmlConfig.tmpDir %>/'
+          src: ['{img,font}/**/*']
         ]
       build:
         files: [
@@ -99,14 +102,9 @@ module.exports = (grunt)->
           flatten: true
         ,
           expand: true
-          cwd: '<%= cmlConfig.tmpDir %>/img'
-          dest: '<%= cmlConfig.buildDir %>/img'
-          src: ['*']
-        ,
-          expand: true
-          cwd: '<%= cmlConfig.appDir %>/assets'
-          dest: '<%= cmlConfig.buildDir %>/'
-          src: ['{img,font,partials}/**/*']
+          cwd: '<%= cmlConfig.tmpDir %>'
+          dest: '<%= cmlConfig.buildDir %>'
+          src: ['{img,font}/**/*']
         ,
           src: '<%= cmlConfig.tmpDir %>/index.html'
           dest: '<%= cmlConfig.buildDir %>/index.html'
@@ -149,7 +147,6 @@ module.exports = (grunt)->
               lrSnippet
               mountFolder(connect, cmlConfig.tmpDir)
               mountFolder(connect, '.')
-              mountFolder(connect, './app/assets')
             ]
     open:
       server:
@@ -160,7 +157,7 @@ module.exports = (grunt)->
         'coffee'
         'less'
         'copy:compile'
-#        'html2js'
+        'html2js'
       ]
       options:
         limit: 4
@@ -180,7 +177,16 @@ module.exports = (grunt)->
     fs = require('fs')
     globule = require('globule')
     # order is very important here
-    files = []
+    files = [
+      '/js/partials.html.js'
+      '/js/config.js'
+      '/js/services.js'
+      '/js/filters.js'
+      '/js/directives.js'
+      '/js/controllers.js'
+      '/js/base.js'
+    ]
+
     if target is 'local'
       files.splice(1, 0, '/js/local_config.js')
     else if target is 'production'
@@ -189,21 +195,6 @@ module.exports = (grunt)->
       files.splice(1, 0, '/js/staging_config.js')
     else
       throw Error("Unkown target:#{target}")
-
-#    # partials first for quicker rendering of first page
-#    globule.find("#{cmlConfig.appDir}/assets/partials/**/*.html").forEach (file)->
-#      newFile = file.replace("#{cmlConfig.appDir}/assets/partials/", 'htmljs/')
-#      if newFile not in files
-#        files.push newFile.replace('.html', '.html.js')
-
-    files = files.concat [
-      '/js/config.js'
-      '/js/services.js'
-      '/js/filters.js'
-      '/js/directives.js'
-      '/js/controllers.js'
-      '/js/base.js'
-    ]
 
     # coffeescript files
     globule.find("#{cmlConfig.appDir}/scripts/**/*.coffee").forEach (file)->
@@ -236,6 +227,7 @@ module.exports = (grunt)->
         #{cmlConfig.buildDir}
     """
   , (target) ->
+    target = if target then target else 'production'
     grunt.task.run [
       'clean'
       'concurrent:compile'

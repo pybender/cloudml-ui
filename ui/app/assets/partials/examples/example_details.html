@@ -1,4 +1,4 @@
-<ng-include src="'/partials/parts/pager.html'"></ng-include>
+<ng-include src="'partials/parts/pager.html'"></ng-include>
 
 <h2>
   Test Example <span ng-show="data.loaded">"{{ data.test_name|capfirst }}:{{ data.example_id }}"</span> Details
@@ -9,7 +9,7 @@
       <a href="#/models/?tag={{ tag }}" style="color: white;">{{ tag }}</a>
     </span> 
   </span>
-  <ng-include src="'/partials/parts/created_tags.html'"></ng-include>
+  <ng-include src="'partials/parts/created_tags.html'"></ng-include>
   <i class="icon-status"></i>
   <span class="badge badge-warning">{{ model.status }}</span>
   </div>
@@ -71,4 +71,4 @@
 </div>
 </div>
 
-<ng-include ng-show="data.loaded" src="'/partials/parts/pager.html'"></ng-include>
+<ng-include ng-show="data.loaded" src="'partials/parts/pager.html'"></ng-include>

@@ -286,7 +286,7 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
     $scope.model = dialog.model
     $scope.path = dialog.path
     $scope.action = dialog.action
-    $scope.extra_template = '/partials/import_handler/extra_delete.html'
+    $scope.extra_template = 'partials/import_handler/extra_delete.html'
 
     $scope.loadModels = () ->
       Model.$by_handler(
