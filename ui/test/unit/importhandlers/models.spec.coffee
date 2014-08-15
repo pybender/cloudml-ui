@@ -3,7 +3,6 @@
 describe "app.importhandlers.model", ->
 
   beforeEach(module "ngCookies")
-  beforeEach(module "ui")
   beforeEach(module "ui.bootstrap")
 
   beforeEach(module "app.base")

@@ -12,9 +12,9 @@ mountFolder = (connect, dir) ->
   return connect.static(require('path').resolve(dir))
 
 module.exports = (grunt)->
-
   #load all grunt tasks
   require('matchdep').filter('grunt-*').forEach(grunt.loadNpmTasks)
+  require('matchdep').filterDev('grunt-*').forEach(grunt.loadNpmTasks)
 
   gruntConfig =
     cmlConfig: cmlConfig
@@ -169,6 +169,10 @@ module.exports = (grunt)->
         limit: 4
         logConcurrentOutput: true
 
+    karma:
+      unit:
+        configFile: 'test/karma/base.coffee'
+
   grunt.initConfig gruntConfig
 
   grunt.registerTask 'index'
@@ -194,11 +198,11 @@ module.exports = (grunt)->
     ]
 
     if target is 'local'
-      files.splice(1, 0, '/js/local_config.js')
+      files.splice(2, 0, '/js/local_config.js')
     else if target is 'production'
-      files.splice(1, 0, '/js/prod_config.js')
+      files.splice(2, 0, '/js/prod_config.js')
     else if target is 'staging'
-      files.splice(1, 0, '/js/staging_config.js')
+      files.splice(2, 0, '/js/staging_config.js')
     else
       throw Error("Unkown target:#{target}")
 

@@ -5,7 +5,7 @@
 describe "logmessages", ->
 
   beforeEach(module "ngCookies")
-  beforeEach(module "ui")
+  beforeEach(module "ngRoute")
   beforeEach(module "ui.bootstrap")
 
   beforeEach(module "app.base")

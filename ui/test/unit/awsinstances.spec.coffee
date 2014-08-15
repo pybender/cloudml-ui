@@ -5,6 +5,7 @@
 describe "awsinstances", ->
 
   beforeEach(module "ngCookies")
+  beforeEach(module "ngRoute")
   beforeEach(module "app.config")
   beforeEach(module "app.services")
   beforeEach(module "app.base")

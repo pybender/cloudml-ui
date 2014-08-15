@@ -26,5 +26,18 @@
     "angular-ui-select2": "~0.0.5",
     "moment": "2.1.0",
     "angular-ui-codemirror": "~0.1.6"
+  },
+  "devDependencies": {
+    "lodash": "2.4.1",
+    "jquery": "1.8.3",
+    "bootstrap": "2.3.0",
+    "d3": "3.4.11",
+    "x-editable": "1.4.4",
+    "angular": "1.2.20",
+    "angular-route": "1.2.20",
+    "angular-cookies": "1.2.20",
+    "angular-mocks": "1.2.20",
+    "angular-resource": "1.2.20",
+    "angular-sanitize": "1.2.20"
   }
 }
