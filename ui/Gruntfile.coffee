@@ -59,9 +59,6 @@ module.exports = (grunt)->
       options:
         module: 'app.templates'
         base: '<%= cmlConfig.appDir %>/assets'
-#        rename: (moduleName) ->
-#          # our codebase uses url starting with slash
-#          '/' + moduleName
       compile:
         src: ['<%= cmlConfig.appDir %>/assets/partials/**/*.html'],
         dest: '<%= cmlConfig.tmpDir %>/js/partials.html.js'
@@ -111,18 +108,27 @@ module.exports = (grunt)->
         ]
 
     useminPrepare:
-      html: ['<%= cmlConfig.tmpDir %>/index.html']
+      html: ['<%= cmlConfig.buildDir %>/index.html']
       options:
         dest: '<%= cmlConfig.buildDir %>'
         staging: '<%= cmlConfig.buildDir %>/'
 
     usemin:
-      html: ['<%= cmlConfig.tmpDir %>/index.html']
+      html: '<%= cmlConfig.buildDir %>/index.html'
 
     uglify:
       generated:
         options:
           sourceMap: true
+
+    filerev:
+      source:
+        files: [
+          src: [
+            '<%= cmlConfig.buildDir %>/js/*.js'
+            '<%= cmlConfig.buildDir %>/css/*.css'
+          ]
+        ]
 
     clean:
       server:
@@ -232,10 +238,11 @@ module.exports = (grunt)->
       'clean'
       'concurrent:compile'
       'index:' + target
+      'copy:build'
       'useminPrepare'
       'concat:generated'
       'cssmin:generated'
       'uglify:generated'
+      'filerev'
       'usemin'
-      'copy:build'
     ]
