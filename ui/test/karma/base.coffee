@@ -34,7 +34,7 @@ module.exports = (karma)->
 
       {pattern: 'app/**/*.coffee', watched:true, included:true, served:true}
 
-      {pattern: 'app/assets/partials/{,*/}*.html', watched:true, included:true, served:true}
+      {pattern: 'app/assets/partials/**/*.html', watched:true, included:true, served:true}
 
       # Testing
       'test/unit/canned_responses.coffee',
@@ -47,12 +47,13 @@ module.exports = (karma)->
     ]
 
     preprocessors:
-      '../**/*.coffee': ['coffee']
-      '**/*.html': ['ng-html2js']
+      'app/**/*.coffee': ['coverage']
+      'test/**/*.coffee': ['coffee']
+      'app/assets/partials/**/*.html': ['ng-html2js']
 
     # test results reporter to use
     # possible values: 'dots', 'progress', 'junit', 'growl', 'coverage'
-    reporters: ['spec']
+    reporters: ['spec', 'coverage']
 
     # enable / disable colors in the output (reporters and logs)
     colors: true
@@ -61,23 +62,22 @@ module.exports = (karma)->
     # possible values: karma.LOG_DISABLE || karma.LOG_ERROR || karma.LOG_WARN || karma.LOG_INFO || karma.LOG_DEBUG
     logLevel: karma.LOG_INFO
 
-    # enable / disable watching file and executing tests whenever any file changes
-    autoWatch: true
-
     # If browser does not capture in given timeout [ms], kill it
     captureTimeout: 60000
-
-    # Continuous Integration mode
-    # if true, it capture browsers, run tests and exit
-    singleRun: false
-
-    browsers: ['Chrome']
 
     coffeePreprocessor:
       # options passed to the coffee compiler
       options:
         bare: true
         sourceMap: true
+
+    browsers: ['Chrome']
+    singleRun: true
+    autoWatch: false
+    coverageReporter:
+      type : 'html',
+      dir : 'coverage/'
+
 # transforming the filenames
 #transformPath: (path)->
 #  return path.replace(/\.js$/, '.coffee')

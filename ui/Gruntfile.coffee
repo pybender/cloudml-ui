@@ -171,6 +171,8 @@ module.exports = (grunt)->
 
     karma:
       unit:
+        configFile: 'test/karma/unit.coffee'
+      coverage:
         configFile: 'test/karma/base.coffee'
 
   grunt.initConfig gruntConfig

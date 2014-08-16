@@ -29,13 +29,16 @@
     "connect-livereload": "^0.4.0",
     "grunt-html2js": "^0.2.8",
     "grunt-karma": "^0.8.3",
+    "install": "^0.1.7",
     "karma": "^0.12.21",
     "karma-chrome-launcher": "^0.1.4",
     "karma-coffee-preprocessor": "^0.2.1",
-    "karma-coverage": "^0.2.6",
+    "karma-coverage": "git+https://github.com/nadersoliman/karma-coverage.git",
     "karma-jasmine": "^0.1.5",
     "karma-ng-html2js-preprocessor": "^0.1.0",
+    "karma-phantomjs-launcher": "^0.1.4",
     "karma-spec-reporter": "0.0.13",
+    "npm": "^1.4.23",
     "phantomjs": "*"
   }
 }
