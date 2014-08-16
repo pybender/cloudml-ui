@@ -1,4 +1,20 @@
 module.exports = (karma)->
+  vendorConfig = require '../../vendor.config.coffee'
+  vendorFiles = []
+  for cdnObj in vendorConfig.cdn
+    vendorFiles.push
+      pattern: cdnObj.local
+      watched: false
+      included: true
+      served: true
+
+  for bundled in vendorConfig.bundled
+    vendorFiles.push
+      pattern: bundled
+      watched: false
+      included: true
+      served: true
+
   karma.set
     # base path, that will be used to resolve files and exclude
     basePath: '../../'
@@ -7,32 +23,7 @@ module.exports = (karma)->
     frameworks: ['jasmine']
 
     # list of files / patterns to load in the browser
-    files: [
-      # CDN served files same order as found in app/assets/index.html
-      {pattern: 'bower_components/lodash/dist/lodash.js', watched:false, included:true, served:true}
-      {pattern: 'bower_components/jquery/jquery.js', watched:false, included:true, served:true}
-      #{pattern: 'bootstrap here', watched:false, included:true, served:true}
-      #{pattern: 'x-editable here', watched:false, included:true, served:true}
-      {pattern: 'bower_components/d3/d3.js', watched:false, included:true, served:true}
-      {pattern: 'bower_components/angular/angular.js', watched:false, included:true, served:true}
-      {pattern: 'bower_components/angular-route/angular-route.js', watched:false, included:true, served:true}
-      {pattern: 'bower_components/angular-resource/angular-resource.js', watched:false, included:true, served:true}
-      {pattern: 'bower_components/angular-cookies/angular-cookies.js', watched:false, included:true, served:true}
-      {pattern: 'bower_components/angular-sanitize/angular-sanitize.js', watched:false, included:true, served:true}
-
-      # non CDN files/ served using bower
-      {pattern: 'vendor/scripts/console-helper.js', watched:false, included:true, served:true}
-      {pattern: 'bower_components/select2/select2.js', watched:false, included:true, served:true}
-      {pattern: 'bower_components/angular-bootstrap/ui-bootstrap-tpls-0.11.0.js', watched:false, included:true, served:true}
-      {pattern: 'bower_components/angular-ui-select2/src/select2.js', watched:false, included:true, served:true}
-      {pattern: 'bower_components/moment/moment.js', watched:false, included:true, served:true}
-      {pattern: 'bower_components/codemirror/lib/codemirror.js', watched:false, included:true, served:true}
-      {pattern: 'bower_components/codemirror/mode/sql/sql.js', watched:false, included:true, served:true}
-      {pattern: 'bower_components/codemirror/mode/xml/xml.js', watched:false, included:true, served:true}
-      {pattern: 'bower_components/codemirror/mode/python/python.js', watched:false, included:false, served:true}
-      {pattern: 'bower_components/codemirror/mode/javascript/javascript.js', watched:false, included:false, served:true}
-      {pattern: 'bower_components/angular-ui-codemirror/ui-codemirror.js', watched:false, included:false, served:true}
-
+    files: vendorFiles.concat [
       {pattern: 'app/scripts/config.coffee', watched:true, included:true, served:true}
       {pattern: 'app/scripts/local_config.coffee', watched:true, included:true, served:true}
       {pattern: 'app/scripts/services.coffee', watched:true, included:true, served:true}
@@ -46,6 +37,7 @@ module.exports = (karma)->
       {pattern: 'app/assets/partials/{,*/}*.html', watched:true, included:true, served:true}
 
       # Testing
+      'test/unit/canned_responses.coffee',
       {pattern: 'bower_components/angular-mocks/angular-mocks.js', watched:false, included:true, served:true}
       'test/unit/**/weights.spec.coffee',
     ]
@@ -84,8 +76,8 @@ module.exports = (karma)->
     coffeePreprocessor:
       # options passed to the coffee compiler
       options:
-        bare: false
-        sourceMap: false
+        bare: true
+        sourceMap: true
 # transforming the filenames
 #transformPath: (path)->
 #  return path.replace(/\.js$/, '.coffee')

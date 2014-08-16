@@ -178,48 +178,75 @@ module.exports = (grunt)->
   grunt.registerTask 'index'
   , """
     Task to build the index file out of development JS file for
-    usemin/useminprepare and server to function properly. Instead of adding
-    every file manually
-    instead of writing every coffee file manually in the index.html for
-    usemin, we collect them and write them automatically
+    usemin/useminprepare and the server target to function properly.
+    Instead of adding every file manually in the index.html for usemin, we
+    collect them and write them automatically.
+    It also supplies CDN and bundled files as per vendor.config.coffee
+    The files will be resolved against ./.tmp where they are generated
     """
   , (target)->
     fs = require('fs')
-    globule = require('globule')
-    # order is very important here
-    files = [
-      '/js/partials.html.js'
-      '/js/config.js'
-      '/js/services.js'
-      '/js/filters.js'
-      '/js/directives.js'
-      '/js/controllers.js'
-      '/js/base.js'
-    ]
+    indexFileStr = fs.readFileSync "#{cmlConfig.appDir}/assets/index.html", 'utf8'
+    vendorConfig = require './vendor.config.coffee'
 
-    if target is 'local'
-      files.splice(2, 0, '/js/local_config.js')
-    else if target is 'production'
-      files.splice(2, 0, '/js/prod_config.js')
-    else if target is 'staging'
-      files.splice(2, 0, '/js/staging_config.js')
-    else
-      throw Error("Unkown target:#{target}")
+    replaceTokenWith = (token, replacement) ->
+      indexFileStr = indexFileStr.replace token, replacement
 
-    # coffeescript files
-    globule.find("#{cmlConfig.appDir}/scripts/**/*.coffee").forEach (file)->
-      newFile = file.replace("#{cmlConfig.appDir}/scripts/", 'js/')
-      if newFile not in files
-        files.push newFile.replace('.coffee', '.js')
+    putConvertedFiles = ->
+      globule = require('globule')
+      # order is very important here
+      files = [
+        '/js/partials.html.js'
+        '/js/config.js'
+        '/js/services.js'
+        '/js/filters.js'
+        '/js/directives.js'
+        '/js/controllers.js'
+        '/js/base.js'
+      ]
 
-    files.push '/js/app.js'
+      if target is 'local'
+        files.splice(2, 0, '/js/local_config.js')
+      else if target is 'production'
+        files.splice(2, 0, '/js/prod_config.js')
+      else if target is 'staging'
+        files.splice(2, 0, '/js/staging_config.js')
+      else
+        throw Error("Unkown target:#{target}")
 
-    filesString = ''
-    files.forEach (file)->
-      filesString += "        <script src=\"#{file}\"></script>\n"
-    index = fs.readFileSync "#{cmlConfig.appDir}/assets/index.html", 'utf8'
-    index = index.replace '<!-- grunt build_index DONT ALTER -->', filesString
-    fs.writeFileSync "#{cmlConfig.tmpDir}/index.html", index
+      # coffeescript files
+      globule.find("#{cmlConfig.appDir}/scripts/**/*.coffee").forEach (file)->
+        newFile = file.replace("#{cmlConfig.appDir}/scripts/", 'js/')
+        if newFile not in files
+          files.push newFile.replace('.coffee', '.js')
+
+      files.push '/js/app.js'
+
+      filesString = ''
+      for file in files
+        preamble = if file is files[0] then '' else '    '
+        filesString += "#{preamble}<script src=\"#{file}\"></script>\n"
+
+      replaceTokenWith /<!-- TAG_CONVERTED -->[^]+TAG_CONVERTED -->/g, filesString
+
+    putVendorCDNFiles = ->
+      filesString = ''
+      for cdnObj in vendorConfig.cdn
+        preamble = if cdnObj is vendorConfig.cdn[0] then '' else '    '
+        filesString += "#{preamble}<script src=\"#{cdnObj.external}\"></script>\n"
+      replaceTokenWith /<!-- TAG_CDN -->[^]+TAG_CDN -->/g, filesString
+
+    putVendorBundledFiles = ->
+      filesString = ''
+      for bundled in vendorConfig.bundled
+        preamble = if bundled is vendorConfig.bundled[0] then '' else '    '
+        filesString += "#{preamble}<script src=\"../#{bundled}\"></script>\n"
+      replaceTokenWith /<!-- TAG_BUNDLED -->[^]+TAG_BUNDLED -->/g, filesString
+
+    putConvertedFiles()
+    putVendorCDNFiles()
+    putVendorBundledFiles()
+    fs.writeFileSync "#{cmlConfig.tmpDir}/index.html", indexFileStr
 
   grunt.registerTask 'server'
   , """Builds and run a development server"""
