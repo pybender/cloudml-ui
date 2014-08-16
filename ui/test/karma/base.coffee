@@ -23,37 +23,18 @@ module.exports = (karma)->
     frameworks: ['jasmine']
 
     # list of files / patterns to load in the browser
-    files: vendorFiles.concat [
-      {pattern: 'app/scripts/config.coffee', watched:true, included:true, served:true}
-      {pattern: 'app/scripts/local_config.coffee', watched:true, included:true, served:true}
-      {pattern: 'app/scripts/services.coffee', watched:true, included:true, served:true}
-      {pattern: 'app/scripts/filters.coffee', watched:true, included:true, served:true}
-      {pattern: 'app/scripts/directives.coffee', watched:true, included:true, served:true}
-      {pattern: 'app/scripts/controllers.coffee', watched:true, included:true, served:true}
-      {pattern: 'app/scripts/base.coffee', watched:true, included:true, served:true}
-
-      {pattern: 'app/**/*.coffee', watched:true, included:true, served:true}
-
-      {pattern: 'app/assets/partials/**/*.html', watched:true, included:true, served:true}
-
-      # Testing
-      'test/unit/canned_responses.coffee',
-      {pattern: 'bower_components/angular-mocks/angular-mocks.js', watched:false, included:true, served:true}
-      'test/unit/**/weights.spec.coffee',
-    ]
+    files: vendorFiles
 
   # list of files to exclude
-    exclude: [
-    ]
+    exclude: []
 
     preprocessors:
-      'app/**/*.coffee': ['coverage']
-      'test/**/*.coffee': ['coffee']
+      '**/*.coffee': ['coffee']
       'app/assets/partials/**/*.html': ['ng-html2js']
 
     # test results reporter to use
     # possible values: 'dots', 'progress', 'junit', 'growl', 'coverage'
-    reporters: ['spec', 'coverage']
+    reporters: ['spec']
 
     # enable / disable colors in the output (reporters and logs)
     colors: true
@@ -70,13 +51,6 @@ module.exports = (karma)->
       options:
         bare: true
         sourceMap: true
-
-    browsers: ['Chrome']
-    singleRun: true
-    autoWatch: false
-    coverageReporter:
-      type : 'html',
-      dir : 'coverage/'
 
 # transforming the filenames
 #transformPath: (path)->

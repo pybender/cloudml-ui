@@ -173,7 +173,7 @@ module.exports = (grunt)->
       unit:
         configFile: 'test/karma/unit.coffee'
       coverage:
-        configFile: 'test/karma/base.coffee'
+        configFile: 'test/karma/coverage.coffee'
 
   grunt.initConfig gruntConfig
 
@@ -278,4 +278,38 @@ module.exports = (grunt)->
       'uglify:generated'
       'filerev'
       'usemin'
+    ]
+
+  grunt.registerTask 'coverage'
+  , """
+    Creates coverage report on compiled JS files
+    """
+  , [
+      'clean:server'
+      'concurrent:compile'
+      'karma:coverage'
+    ]
+
+  grunt.registerTask 'unit'
+  , """
+    Runs Karma Unit Tests
+    """
+  , [
+      'karma:unit'
+    ]
+
+  grunt.registerTask 'e2e'
+  , """
+    Runs Karma E2E Tests
+    """
+  , [
+      'karma:unit'
+    ]
+
+  grunt.registerTask 'ci'
+  , """
+    Runs Karma Continuous Integration Tests
+    """
+  , [
+      'karma:unit'
     ]
