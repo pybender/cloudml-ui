@@ -6,7 +6,7 @@ from sqlalchemy.sql import expression
 
 from api.base.models import db, BaseModel, JSONType, S3File
 from api.logs.models import LogMessage
-from api.ml_models.models import Model, Segment
+from api.ml_models.models import Model, Segment, Weight
 from api.import_handlers.models import DataSet
 
 
@@ -141,7 +141,18 @@ class TestExample(db.Model, BaseModel):
             except:
                 features = feature_model.features
 
-        vect_data = self.test_result.get_vect_data(self.num, segment)
+        #vect_data = self.test_result.get_vect_data(self.num, segment)
+        ndata = dict([(key.replace('->', '.'), val)
+                 for key, val in self.data_input.iteritems()])
+        trainer = model.get_trainer()
+        trainer._prepare_data(
+                iter([ndata, ]),
+                callback=None,
+                save_raw=False)
+        vect_data1 = trainer._get_vectorized_data(
+            segment, trainer._test_prepare_feature)
+        import scipy
+        vect_data = scipy.sparse.hstack(vect_data1).todense().tolist()[0]
             
         
         data = get_features_vect_data(vect_data,
@@ -150,7 +161,7 @@ class TestExample(db.Model, BaseModel):
 
         from api.ml_models.helpers.weights import get_example_params
         segment = Segment.query.filter(Segment.name == segment, Segment.model == model)[0]
-        model_weights = list(segment.weights)
+        model_weights = Weight.query.with_entities(Weight.name, Weight.value).filter(Weight.segment_id == segment.id)
         weighted_data = dict(get_example_params(
             model_weights, self.data_input, data))
         self.weighted_data_input = weighted_data

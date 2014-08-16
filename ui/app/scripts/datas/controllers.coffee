@@ -83,6 +83,10 @@ angular.module('app.datas.controllers', ['app.config', ])
     $scope.filter_opts = _.extend($scope.simple_filters, data_filters,
                                   $scope.extra_params)
     $location.search($scope.filter_opts)
+
+  $scope.details = (example) ->
+    delete $scope.filter_opts['action']
+    $location.url(example.objectUrl()).search($scope.filter_opts)
 ])
 
 .controller('GroupedExamplesCtrl', [
@@ -129,9 +133,10 @@ angular.module('app.datas.controllers', ['app.config', ])
 .controller('ExampleDetailsCtrl', [
   '$scope'
   '$routeParams'
+  '$location'
   'Data'
 
-($scope, $routeParams, TestExample) ->
+($scope, $routeParams, $location, TestExample) ->
   if not $scope.data
     $scope.data = new TestExample({
       model_id: $routeParams.model_id,
@@ -139,14 +144,49 @@ angular.module('app.datas.controllers', ['app.config', ])
       id: $routeParams.id
     })
 
+  # used for getting next/prev example ids
+  $scope.filter_opts = $location.search()
+
   $scope.data.$load(
-    show: ['test_name','weighted_data_input','model',
-           'pred_label','label','prob','created_on','test_result'
-    ].join(',')
+    _.extend({show: ['test_name','weighted_data_input','model',
+           'pred_label','label','prob','created_on','test_result',
+           'next', 'previous'].join(',')},
+             $scope.filter_opts)
   ).then (->
     ), ((opts)->
       $scope.setError(opts, 'loading test example')
     )
+
+  $scope.next = ->
+    $scope.redir({
+      next: true
+    })
+
+  $scope.previous = ->
+    $scope.redir({
+      next: false
+    })
+
+  $scope.back = ->
+    $location.url($scope.data.listUrl())\
+      .search(_.extend({action: 'examples:list'}, $scope.filter_opts))
+
+  $scope.redir = (opts) ->
+    if opts.next
+      example_id = $scope.data.next
+    else
+      example_id = $scope.data.previous
+
+    if !example_id?
+      throw new Error('ERR: Prev or Next should be disabled!')
+
+    example = new TestExample({
+      model_id: $routeParams.model_id,
+      test_id: $routeParams.test_id,
+      id: example_id
+    })
+    $location.url(example.objectUrl()).search($scope.filter_opts)
+
 ])
 
 # Choose fields to download classification results in CSV dialog controller

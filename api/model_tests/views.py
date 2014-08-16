@@ -84,12 +84,25 @@ class TestExampleResource(BaseResourceSQL):
     FILTER_PARAMS = (('label', str), ('pred_label', str))
 
     def _list(self, **kwargs):
+        self.populate_filter_params(kwargs)
+        return super(TestExampleResource, self)._list(**kwargs)
+
+    # Support advanced filtering in details page
+    # for getting next/previous links
+    def _details(self, **kwargs):
+        self.populate_filter_params(kwargs)
+        return super(TestExampleResource, self)._details(**kwargs)
+
+    def _get_details_parameters(self, extra_params):
+        return self._parse_parameters(
+            extra_params + self.GET_PARAMS + self.FILTER_PARAMS)
+
+    def populate_filter_params(self, kwargs):
         test = TestResult.query.get(kwargs.get('test_result_id'))
         if not test.dataset is None:
             for field in test.dataset.data_fields:
                 field_new = field.replace('.', '->')
-                self.FILTER_PARAMS += (("data_input->>%s" % field_new, str),)
-        return super(TestExampleResource, self)._list(**kwargs)
+                self.FILTER_PARAMS += (("data_input->>%s" % field_new, str), )
 
     def _get_details_query(self, params, **kwargs):
         example = super(TestExampleResource, self)._get_details_query(
@@ -97,6 +110,33 @@ class TestExampleResource(BaseResourceSQL):
 
         if example is None:
             raise NotFound()
+
+        fields = self._get_show_fields(params)
+        if 'next' in fields or 'previous' in fields:
+            from sqlalchemy import desc
+            filter_params = kwargs.copy()
+            filter_params.update(self._prepare_filter_params(params))
+            filter_params.pop('id')
+
+            def get_pager_item(next=True):
+                cursor = TestExample.query.with_entities(
+                    TestExample.id)
+                if next:
+                    cursor = cursor.filter(TestExample.id > kwargs['id'])
+                else:
+                    cursor = cursor.filter(TestExample.id < kwargs['id'])
+                for name, val in filter_params.iteritems():
+                    fltr = self._build_query_item(name, val)
+                    if not fltr is None:
+                        cursor = cursor.filter(fltr)
+                if next:
+                    cursor = cursor.order_by(TestExample.id)
+                else:
+                    cursor = cursor.order_by(desc(TestExample.id))
+                return cursor.limit(1).first()
+
+            example.previous = get_pager_item(next=False)
+            example.next = get_pager_item()
 
         if not example.is_weights_calculated:
             example.calc_weighted_data()

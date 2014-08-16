@@ -1,7 +1,7 @@
 import os
 from api.async_tasks.models import AsyncTask
 
-from api.logs.mongo.models import LogMessage
+from api.logs.dynamodb.models import LogMessage
 from flask import Response, request
 from flask.ext.restful import reqparse
 from sqlalchemy import or_
@@ -141,7 +141,7 @@ class ModelResource(BaseResourceSQL):
                 'spot_instance_type', None)
 
             tasks_list = []
-            LogMessage.delete_related_logs(model)
+            LogMessage.delete_related_logs(model.id)
             if new_dataset_selected:
                 import_handler = model.train_import_handler
                 params = form.cleaned_data.get('parameters', None)

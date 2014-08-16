@@ -112,5 +112,8 @@ angular.module('app.datas.model', ['app.config'])
       objectUrl: =>
         return @BASE_UI_URL + @id
 
+      listUrl: =>
+        return "/models/#{@model_id}/tests/#{@test_id}?action=examples:list"
+
     return Data
 ])

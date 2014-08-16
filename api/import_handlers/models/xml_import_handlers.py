@@ -14,7 +14,7 @@ from core.xmlimporthandler.datasources import DataSource
 class XmlImportHandler(db.Model, ImportHandlerMixin):
     TYPE = 'xml'
 
-    DATASOURCES_ORDER = ['db', 'csv', 'http', 'pig']
+    DATASOURCES_ORDER = ['db', 'csv', 'http', 'pig', 'input']
 
     predict_id = db.Column(db.ForeignKey('predict.id',
                                          ondelete='CASCADE'))
@@ -51,8 +51,9 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
         datasources = etree.SubElement(plan, "datasources")
         for ds in self._get_in_order(self.xml_data_sources, 'type',
                                      self.DATASOURCES_ORDER):
-            etree.SubElement(
-                datasources, ds.type, name=ds.name, **ds.params)
+            if ds.name != "input":
+                etree.SubElement(
+                    datasources, ds.type, name=ds.name, **ds.params)
 
         import_ = etree.SubElement(plan, "import")
         tree = get_entity_tree(self)
@@ -444,6 +445,8 @@ def fill_import_handler(import_handler, xml_data=None):
     else:  # Loading import handler from XML file
         ds_dict = {}
         for datasource in plan.datasources.values():
+            # if datasource.name == 'input':
+            #      continue
             POSSIBLE_PARAMS = ['host', 'dbname', 'port',
                                'user', 'password', 'vender']
             ds = XmlDataSource(
