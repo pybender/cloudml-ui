@@ -33,7 +33,7 @@
     "karma": "^0.12.21",
     "karma-chrome-launcher": "^0.1.4",
     "karma-coffee-preprocessor": "^0.2.1",
-    "karma-coverage": "git+https://github.com/nadersoliman/karma-coverage.git",
+    "karma-coverage": "^0.2.6",
     "karma-jasmine": "^0.1.5",
     "karma-ng-html2js-preprocessor": "^0.1.0",
     "karma-phantomjs-launcher": "^0.1.4",

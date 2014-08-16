@@ -21,7 +21,7 @@ describe "logmessages", ->
   settings = null
   $routeParams = null
   $location = null
-  $dialog = null
+  $modal = null
   createController = null
 
   beforeEach(inject(($injector) ->
@@ -31,7 +31,7 @@ describe "logmessages", ->
     $controller = $injector.get('$controller')
     $routeParams = $injector.get('$routeParams')
     $location = $injector.get('$location')
-    $dialog = $injector.get('$dialog')
+    $modal = $injector.get('$modal')
 
     spyOn($location, 'path')
 

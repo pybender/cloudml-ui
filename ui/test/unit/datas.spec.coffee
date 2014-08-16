@@ -27,7 +27,7 @@ describe "test examples", ->
   settings = null
   $routeParams = null
   $location = null
-  $dialog = null
+  $modal = null
   createController = null
 
   MODEL_ID = '52231c7c07dbec2d26c73315'
@@ -43,7 +43,7 @@ describe "test examples", ->
     $controller = $injector.get('$controller')
     $routeParams = $injector.get('$routeParams')
     $location = $injector.get('$location')
-    $dialog = $injector.get('$dialog')
+    $modal = $injector.get('$modal')
 
     spyOn($location, 'path')
     spyOn($location, 'search')
@@ -67,11 +67,11 @@ describe "test examples", ->
       createController "TestExamplesCtrl"
 
     it "should make initialization requests", inject (TestResult) ->
-      url = settings.apiUrl + 'models/' + MODEL_ID + '/tests/' + TEST_ID + '/?show=' + encodeURIComponent('name,examples_fields')
+      url = settings.apiUrl + 'models/' + MODEL_ID + '/tests/' + TEST_ID + '/?show=' + 'name,examples_fields'
       $httpBackend.expectGET(url).respond('{"test": {"name": "Some"}}')
 
       # TODO: Can we get rid of this request?
-      url = settings.apiUrl + 'models/' + MODEL_ID + '/?show=' + encodeURIComponent('name,labels')
+      url = settings.apiUrl + 'models/' + MODEL_ID + '/?show=' + 'name,labels'
       $httpBackend.expectGET(url).respond('{"model": {"labels": ["0", "1"]}}')
 
       test = new TestResult({
@@ -87,11 +87,11 @@ describe "test examples", ->
       expect($rootScope.labels).toEqual(['0', '1'])
 
     it "should make initialization requests using filters", inject (TestResult) ->
-      url = settings.apiUrl + 'models/' + MODEL_ID + '/tests/' + TEST_ID + '/?show=' + encodeURIComponent('name,examples_fields')
+      url = settings.apiUrl + 'models/' + MODEL_ID + '/tests/' + TEST_ID + '/?show=' + 'name,examples_fields'
       $httpBackend.expectGET(url).respond('{"test": {"name": "Some"}}')
 
       # TODO: Can we get rid of this request?
-      url = settings.apiUrl + 'models/' + MODEL_ID + '/?show=' + encodeURIComponent('name,labels')
+      url = settings.apiUrl + 'models/' + MODEL_ID + '/?show=' + 'name,labels'
       $httpBackend.expectGET(url).respond('{"model": {"labels": ["0", "1"]}}')
 
       test = new TestResult({
@@ -122,7 +122,7 @@ describe "test examples", ->
 
     xit "should make list query", inject () ->
       fields = "id,name,label,pred_label,title,probs"
-      url = BASE_URL + '?show=' + encodeURIComponent(fields)
+      url = BASE_URL + '?show=' + fields
       $httpBackend.expectGET(url).respond('{"datas": [{"id": "123"}]}')
 
       $rootScope.test = {
@@ -152,7 +152,7 @@ describe "test examples", ->
   describe "GroupedExamplesCtrl", ->
 
     it "should make requests", inject () ->
-      url = settings.apiUrl + 'models/' + MODEL_ID + '/tests/' + TEST_ID + '/?show=' + encodeURIComponent('name,examples_fields')
+      url = settings.apiUrl + 'models/' + MODEL_ID + '/tests/' + TEST_ID + '/?show=' + 'name,examples_fields'
       $httpBackend.expectGET(url).respond('{"test": {"name": "Some"}}')
 
       $routeParams.model_id = MODEL_ID
@@ -187,7 +187,7 @@ describe "test examples", ->
       fields = ['test_name','weighted_data_input','model',
                 'pred_label','label','prob','created_on','test_result'
       ].join(',')
-      url = BASE_URL + EXAMPLE_ID + '/?show=' + encodeURIComponent(fields)
+      url = BASE_URL + EXAMPLE_ID + '/?show=' + fields
       $httpBackend.expectGET(url).respond('{"data": {"id": "' + EXAMPLE_ID + '"}}')
 
       $routeParams.model_id = MODEL_ID
@@ -203,7 +203,7 @@ describe "test examples", ->
 
     it "should load data fields",
       inject (TestResult) ->
-        url = BASE_URL + 'action/datafields/?'
+        url = BASE_URL + 'action/datafields/'
         $httpBackend.expectGET(url).respond('{"fields": ["2two", "1one", "4four", "3three"]}')
 
         dialog =

@@ -31,7 +31,7 @@ describe "service", ->
 
   describe "auth", ->
     it "should request oauth url", inject((auth) ->
-      url = settings.apiUrl + 'auth/get_auth_url?'
+      url = settings.apiUrl + 'auth/get_auth_url'
       $httpBackend.expectPOST(url).respond('{"auth_url": "http://odesk.com/_fake"}')
 
       auth.login()

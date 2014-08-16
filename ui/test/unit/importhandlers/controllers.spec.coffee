@@ -21,7 +21,7 @@ describe "app.importhandlers.controllers", ->
   settings = null
   $routeParams = null
   $location = null
-  $dialog = null
+  $modal = null
   createController = null
 
   HANDLER_ID = '522333333344445d26c73315'
@@ -35,7 +35,7 @@ describe "app.importhandlers.controllers", ->
     $controller = $injector.get('$controller')
     $routeParams = $injector.get('$routeParams')
     $location = $injector.get('$location')
-    $dialog = $injector.get('$dialog')
+    $modal = $injector.get('$modal')
 
     spyOn($location, 'path')
     spyOn($location, 'search')
@@ -72,7 +72,7 @@ describe "app.importhandlers.controllers", ->
       $routeParams.id = HANDLER_ID
       $rootScope.initSections = jasmine.createSpy()
 
-      url = BASE_URL + HANDLER_ID + '/?show=' + encodeURIComponent('name,id,import_params,created_on,created_by,error,data')
+      url = BASE_URL + HANDLER_ID + '/?show=' + 'name,id,import_params,created_on,created_by,error,data'
       $httpBackend.expectGET(url).respond('{"import_handler": {"name": "Some name"}}')
 
       createController "ImportHandlerDetailsCtrl"
@@ -84,7 +84,7 @@ describe "app.importhandlers.controllers", ->
 
       $rootScope.handler.type = {'name': 'some'}
 
-      url = BASE_URL + HANDLER_ID + '/?'
+      url = BASE_URL + HANDLER_ID + '/'
       $httpBackend.expectPUT(url).respond('{"import_handler": {"name": "Some name"}}')
 
       $rootScope.saveData()
@@ -99,12 +99,12 @@ describe "app.importhandlers.controllers", ->
         $rootScope.initSections = jasmine.createSpy()
         $rootScope.openDialog = jasmine.createSpy('$scope.openDialog')
 
-        createController "ImportHandlerDetailsCtrl", {$dialog: $dialog}
+        createController "ImportHandlerDetailsCtrl", {$modal: $modal}
 
         $rootScope.handler = handler
         $rootScope.runQuery query
         expect($rootScope.openDialog).toHaveBeenCalledWith
-          $dialog: $dialog
+          $modal: $modal
           model: null
           template: 'partials/import_handler/test_query.html'
           ctrlName: 'QueryTestDialogCtrl'
@@ -132,28 +132,28 @@ describe "app.importhandlers.controllers", ->
     it "should make no query", inject () ->
       createController "ImportHandlerActionsCtrl"
 
-    it "should open import dialog", inject ($dialog) ->
+    it "should open import dialog", inject ($modal) ->
       createController "ImportHandlerActionsCtrl"
       $rootScope.openDialog = jasmine.createSpy('openDialogSpy')
 
       $rootScope.importData({id: HANDLER_ID})
 
       expect($rootScope.openDialog).toHaveBeenCalledWith(
-        $dialog: $dialog
+        $modal: $modal
         model:
           id: HANDLER_ID
         template: 'partials/import_handler/load_data.html'
         ctrlName: 'LoadDataDialogCtrl'
       )
 
-    it "should open delete dialog", inject ($dialog) ->
+    it "should open delete dialog", inject ($modal) ->
       createController "ImportHandlerActionsCtrl"
       $rootScope.openDialog = jasmine.createSpy()
 
       $rootScope.delete({id: HANDLER_ID, TYPE: 'json'})
 
       expect($rootScope.openDialog).toHaveBeenCalledWith(
-        $dialog: $dialog
+        $modal: $modal
         model:
           id: HANDLER_ID
           TYPE: 'json'
@@ -206,7 +206,7 @@ describe "app.importhandlers.controllers", ->
         expect($rootScope.datasources.length).toEqual 1
         expect($rootScope.datasources[0].type).toEqual 'db'
 
-        url = "#{settings.apiUrl}xml_import_handlers/#{handler.id}/action/run_sql/?"
+        url = "#{settings.apiUrl}xml_import_handlers/#{handler.id}/action/run_sql/"
         $httpBackend.expectPUT(url).respond('{"import_handlers": [{"id": "' + handler.id + '", "name": "Some Name"}]}')
 
         $rootScope.runQuery()
@@ -224,11 +224,11 @@ describe "app.importhandlers.controllers", ->
 
         $rootScope.openDialog = jasmine.createSpy('$scope.openDialog')
         $rootScope.handler = handler
-        createController "EntitiesTreeCtrl", {$dialog: $dialog}
+        createController "EntitiesTreeCtrl", {$modal: $modal}
 
         $rootScope.runQuery query
         expect($rootScope.openDialog).toHaveBeenCalledWith
-          $dialog: $dialog
+          $modal: $modal
           model: null
           template: 'partials/import_handler/test_query.html'
           ctrlName: 'QueryTestDialogCtrl'

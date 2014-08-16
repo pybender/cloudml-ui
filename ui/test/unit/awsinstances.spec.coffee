@@ -40,7 +40,7 @@ describe "awsinstances", ->
     it "should make list query", inject () ->
       fields = ['name','type','created_on','updated_on','ip','is_default',
                 'created_by','updated_by'].join(',')
-      url = settings.apiUrl + 'aws_instances/?show=' + encodeURIComponent(fields)
+      url = settings.apiUrl + 'aws_instances/?show=' + fields
       $httpBackend.expectGET(url).respond('{"instances": []}')
 
       createController "AwsInstanceListCtrl"
@@ -52,7 +52,7 @@ describe "awsinstances", ->
     it "should send save query", inject (AwsInstance) ->
       id = '5224de2907dbec210daec24e'
 
-      url = settings.apiUrl + 'aws_instances/' + id + '/?'
+      url = settings.apiUrl + 'aws_instances/' + id + '/'
       $httpBackend.expectPUT(url).respond('{"instance": []}')
 
       instance = new AwsInstance({
@@ -73,7 +73,7 @@ describe "awsinstances", ->
       fields = ['name','type','created_on','updated_on','ip','description',
                 'is_default','created_by'].join(',')
 
-      url = settings.apiUrl + 'aws_instances/' + id + '/?show=' + encodeURIComponent(fields)
+      url = settings.apiUrl + 'aws_instances/' + id + '/?show=' + fields
       $httpBackend.expectGET(url).respond('{"instance": {}}')
 
       $routeParams.id = id
@@ -86,7 +86,7 @@ describe "awsinstances", ->
 
     it "should make list query and activate the section", inject () ->
       fields = "name,id,ip,is_default"
-      url = settings.apiUrl + 'aws_instances/?show=' + encodeURIComponent(fields)
+      url = settings.apiUrl + 'aws_instances/?show=' + fields
       $httpBackend.expectGET(url).respond('{"instances": []}')
 
       createController "GetInstanceCtrl"

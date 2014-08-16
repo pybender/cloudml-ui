@@ -28,7 +28,7 @@ describe "models", ->
   settings = null
   $routeParams = null
   $location = null
-  $dialog = null
+  $modal = null
   createController = null
   Model = null
 
@@ -42,7 +42,7 @@ describe "models", ->
     $controller = $injector.get('$controller')
     $routeParams = $injector.get('$routeParams')
     $location = $injector.get('$location')
-    $dialog = $injector.get('$dialog')
+    $modal = $injector.get('$modal')
     Model = $injector.get('Model')
 
     BASE_URL = settings.apiUrl + 'models/'
@@ -68,7 +68,7 @@ describe "models", ->
   describe "TagCloudCtrl", ->
 
     it "should make tag list query", inject () ->
-      url = settings.apiUrl + 'tags/?show=' + encodeURIComponent('text,count')
+      url = settings.apiUrl + 'tags/?show=' + 'text,count'
       $httpBackend.expectGET(url).respond('{"tags": [{"text": "smth"}]}')
 
       createController "TagCloudCtrl"
@@ -90,7 +90,7 @@ describe "models", ->
 
   describe "ModelDetailsCtrl", ->
     beforeEach ->
-      url = settings.apiUrl + 'tags/?show=' + encodeURIComponent('text,id')
+      url = settings.apiUrl + 'tags/?show=' + 'text,id'
       $httpBackend.expectGET(url).respond('{"tags": [{"text": "smth"}]}')
 
       $routeParams.id = MODEL_ID
@@ -107,11 +107,11 @@ describe "models", ->
       expect($rootScope.tag_list[0].text).toEqual('smth')
 
     it "should make details request", inject () ->
-      url = BASE_URL + MODEL_ID + '/' + '?show=' + encodeURIComponent(MODEL_FIELDS + ',' + FIELDS_BY_SECTION['model'])
+      url = BASE_URL + MODEL_ID + '/' + '?show=' + MODEL_FIELDS + ',' + FIELDS_BY_SECTION['model']
       $httpBackend.expectGET(url)
       .respond.apply @, map_url_to_response(url, 'multiclass model main fields')
 
-      s3_url = "#{BASE_URL}#{$rootScope.model.id}/action/trainer_download_s3url/?"
+      s3_url = "#{BASE_URL}#{$rootScope.model.id}/action/trainer_download_s3url/"
       $httpBackend.expectGET(s3_url)
       .respond """
 {"trainer_file_for": #{MODEL_ID}, "url": "https://.s3.amazonaws.com/9c4012780c0111e4968b000c29e3f35c?Signature=%2FO7%2BaUv4Fk84ioxWigRwkcdgVM0"}
@@ -122,14 +122,14 @@ describe "models", ->
       expect($rootScope.model.trainer_s3_url).toEqual 'https://.s3.amazonaws.com/9c4012780c0111e4968b000c29e3f35c?Signature=%2FO7%2BaUv4Fk84ioxWigRwkcdgVM0'
 
     it "should request only features", inject () ->
-      url = BASE_URL + MODEL_ID + '/' + '?show=' + encodeURIComponent(FIELDS_BY_SECTION['main'])
+      url = BASE_URL + MODEL_ID + '/' + '?show=' + FIELDS_BY_SECTION['main']
       $httpBackend.expectGET(url).respond('{"model": [{"id": "' + MODEL_ID + '"}]}')
 
       $rootScope.goSection(['features'])
       $httpBackend.flush()
 
     xit "should load tests", inject () ->
-      url = BASE_URL + MODEL_ID + '/tests/?show=' + encodeURIComponent('name,created_on,status,parameters,accuracy,examples_count,created_by')
+      url = BASE_URL + MODEL_ID + '/tests/?show=' + 'name,created_on,status,parameters,accuracy,examples_count,created_by'
       $httpBackend.expectGET(url).respond('{"tests": []}')
 
       $rootScope.LOADED_SECTIONS.push 'main'
@@ -139,8 +139,7 @@ describe "models", ->
 
     # TODO: solve the issue with "TypeError: 'undefined' is not an object (evaluating 'fn.apply')"
     xit "should send tags update query", inject () ->
-      url = BASE_URL + MODEL_ID + '/tests/?show=' + encodeURIComponent('name,
-created_on,status,parameters,accuracy,examples_count,created_by')
+      url = BASE_URL + MODEL_ID + '/tests/?show=' + 'name,created_on,status,parameters,accuracy,examples_count,created_by'
       $httpBackend.expectPUT(url).respond('{"tests": []}')
 
       $rootScope.model = Model({
@@ -199,7 +198,7 @@ created_on,status,parameters,accuracy,examples_count,created_by')
         expect($rootScope.queuedIds).toBeUndefined()
 
         downloads = {}
-        url = BASE_URL + MODEL_ID + '/action/dataset_download/?'
+        url = BASE_URL + MODEL_ID + '/action/dataset_download/'
         $httpBackend.expectGET(url).respond angular.toJson
           model: MODEL_ID
           downloads: downloads
@@ -216,7 +215,7 @@ created_on,status,parameters,accuracy,examples_count,created_by')
         expect($rootScope.queuedIds).toBeUndefined()
 
         downloads = [{dataset: {id: 1}, task: {}}, {dataset: {id: 2}, task: {}}]
-        url = BASE_URL + MODEL_ID + '/action/dataset_download/?'
+        url = BASE_URL + MODEL_ID + '/action/dataset_download/'
         $httpBackend.expectGET(url).respond angular.toJson
           model: MODEL_ID
           downloads: downloads
@@ -232,7 +231,7 @@ created_on,status,parameters,accuracy,examples_count,created_by')
       inject (Model) ->
         model = new Model({id: MODEL_ID})
         downloads = [{dataset: {id: 1}, task: {}}, {dataset: {id: 2}, task: {}}]
-        url = BASE_URL + MODEL_ID + '/action/dataset_download/?'
+        url = BASE_URL + MODEL_ID + '/action/dataset_download/'
         $httpBackend.expectGET(url).respond angular.toJson
           model: MODEL_ID
           downloads: downloads
@@ -242,7 +241,7 @@ created_on,status,parameters,accuracy,examples_count,created_by')
         $rootScope.getDataSetsDownloads()
         $httpBackend.flush()
 
-        url = BASE_URL + MODEL_ID + '/action/dataset_download/?'
+        url = BASE_URL + MODEL_ID + '/action/dataset_download/'
         $httpBackend.expectPUT(url).respond angular.toJson {dataset: 3}
 
         $rootScope.requestDataSetDownload 3
@@ -257,7 +256,7 @@ created_on,status,parameters,accuracy,examples_count,created_by')
         downloads = [{dataset: {id: 1}, task: {}},
           {dataset: {id: 2}, task: {}},
           {dataset: {id: 3}, task: {}}]
-        url = BASE_URL + MODEL_ID + '/action/dataset_download/?'
+        url = BASE_URL + MODEL_ID + '/action/dataset_download/'
         $httpBackend.expectGET(url).respond angular.toJson
           model: MODEL_ID
           downloads: downloads
@@ -268,7 +267,7 @@ created_on,status,parameters,accuracy,examples_count,created_by')
         $rootScope.getDataSetsDownloads()
         $httpBackend.flush()
 
-        url = BASE_URL + MODEL_ID + '/action/dataset_download/?'
+        url = BASE_URL + MODEL_ID + '/action/dataset_download/'
         $rootScope.requestDataSetDownload 3
 
         expect($rootScope.setError).toHaveBeenCalledWith({}, 'dataset 3 was already requested for download')
@@ -276,7 +275,7 @@ created_on,status,parameters,accuracy,examples_count,created_by')
     it "should set scope error on getting dataset downloads",
       inject (Model) ->
         model = new Model({id: MODEL_ID})
-        url = BASE_URL + MODEL_ID + '/action/dataset_download/?'
+        url = BASE_URL + MODEL_ID + '/action/dataset_download/'
         $httpBackend.expectGET(url).respond 400, "{}"
         $rootScope.setError = jasmine.createSpy()
         $rootScope.model = model

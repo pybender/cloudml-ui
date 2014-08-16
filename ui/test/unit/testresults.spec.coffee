@@ -83,7 +83,7 @@ describe "testresults", ->
       createController "TestDetailsCtrl"
 
     it "should load 'about' section", inject (TestResult) ->
-      url = BASE_URL + '?show=' + encodeURIComponent(TestResult.EXTRA_FIELDS + ',examples_placement,' + TestResult.MAIN_FIELDS)
+      url = BASE_URL + '?show=' + TestResult.EXTRA_FIELDS + ',examples_placement,' + TestResult.MAIN_FIELDS
       $httpBackend.expectGET(url).respond('{"test": {}}')
 
       $rootScope.goSection(['about', 'details'])
@@ -92,7 +92,7 @@ describe "testresults", ->
       expect($rootScope.setSection).toHaveBeenCalled()
 
     it "should load 'metrics' section", inject (TestResult) ->
-      url = BASE_URL + '?show=' + encodeURIComponent('accuracy,metrics' + ',examples_placement,' + TestResult.MAIN_FIELDS)
+      url = BASE_URL + '?show=' + 'accuracy,metrics' + ',examples_placement,' + TestResult.MAIN_FIELDS
       $httpBackend.expectGET(url).respond('{"test": {}}')
 
       $rootScope.goSection(['metrics', 'accuracy'])
@@ -102,8 +102,8 @@ describe "testresults", ->
 
     it "should load 'metrics' section, old list format, binary classifier",
       inject (TestResult) ->
-        url = BASE_URL + '?show=' + encodeURIComponent('accuracy,metrics' +
-          ',examples_placement,' + TestResult.MAIN_FIELDS)
+        url = BASE_URL + '?show=' + 'accuracy,metrics' +
+          ',examples_placement,' + TestResult.MAIN_FIELDS
         $httpBackend.expectGET(url)
         .respond.apply @, map_url_to_response(url,
           'binary classification arrays format (before 20140710)')
@@ -121,8 +121,8 @@ describe "testresults", ->
 
     it "should load 'metrics' section for multiclass classifier, new dict format",
       inject (TestResult) ->
-        url = BASE_URL + '?show=' + encodeURIComponent('accuracy,metrics' +
-          ',examples_placement,' + TestResult.MAIN_FIELDS)
+        url = BASE_URL + '?show=' + 'accuracy,metrics' +
+          ',examples_placement,' + TestResult.MAIN_FIELDS
         $httpBackend.expectGET(url)
         .respond.apply @, map_url_to_response(url,
             'multiclass classification model dict format (after 20140710)')
@@ -141,8 +141,8 @@ describe "testresults", ->
 
     it "should load 'metrics' section for binary classifer, new dict format",
       inject (TestResult) ->
-        url = BASE_URL + '?show=' + encodeURIComponent('accuracy,metrics' +
-          ',examples_placement,' + TestResult.MAIN_FIELDS)
+        url = BASE_URL + '?show=' + 'accuracy,metrics' +
+          ',examples_placement,' + TestResult.MAIN_FIELDS
         $httpBackend.expectGET(url)
         .respond.apply @, map_url_to_response(url,
           'binary classification model dict format (after 20140710)')
@@ -161,7 +161,7 @@ describe "testresults", ->
         expect($rootScope.prCurves['Precision-Recall curve']).toBeDefined()
 
     it "should load 'matrix' section", inject (TestResult) ->
-      url = BASE_URL + '?show=' + encodeURIComponent(TestResult.MATRIX_FIELDS + ',examples_placement,' + TestResult.MAIN_FIELDS)
+      url = BASE_URL + '?show=' + TestResult.MATRIX_FIELDS + ',examples_placement,' + TestResult.MAIN_FIELDS
       $httpBackend.expectGET(url).respond('{"test": {}}')
 
       $rootScope.goSection(['matrix', 'confusion'])
@@ -196,7 +196,7 @@ describe "testresults", ->
   describe "TestExportsCtrl", ->
 
     it "should init controller, request current exports", inject (TestResult) ->
-      url = BASE_URL + 'action/exports/?'
+      url = BASE_URL + 'action/exports/'
       $httpBackend.expectGET(url).respond('{"exports": [{"status": "In Progress"}, {"status": "Completed"}],
  "test": {"dataset": {}}}')
 
@@ -241,7 +241,7 @@ describe "testresults", ->
 #       $httpBackend.flush()
 
     it "should reload items", inject () ->
-      url = BASE_URL + '?show=' + encodeURIComponent('confusion_matrix_calculations')
+      url = BASE_URL + '?show=' + 'confusion_matrix_calculations'
       $httpBackend.expectGET(url).respond('{"test": {"confusion_matrix_calculations": [
 {"status": "Completed", "weights": [42, 38]}]}}')
 

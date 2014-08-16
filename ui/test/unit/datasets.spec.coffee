@@ -24,7 +24,7 @@ describe "datasets", ->
   settings = null
   $routeParams = null
   $window = null
-  $dialog = null
+  $modal = null
   createController = null
 
   HANDLER_ID = '522333333344445d26c73315'
@@ -39,7 +39,7 @@ describe "datasets", ->
     $controller = $injector.get('$controller')
     $routeParams = $injector.get('$routeParams')
     $window = $injector.get('$window')
-    $dialog = $injector.get('$dialog')
+    $modal = $injector.get('$modal')
 
     spyOn($window.location, 'replace')
 
@@ -86,7 +86,7 @@ describe "datasets", ->
         {id: DS_ID, on_s3: true, import_handler_id: HANDLER_ID}
       )
 
-      url = BASE_URL + DS_ID + '/action/generate_url/?'
+      url = BASE_URL + DS_ID + '/action/generate_url/'
       $httpBackend.expectGET(url).respond('{"url": "http://amazon/ds_path"}')
 
       createController "DatasetActionsCtrl"
@@ -115,7 +115,7 @@ describe "datasets", ->
       $routeParams.import_handler_type = 'json'
       $rootScope.initSections = jasmine.createSpy()
 
-      url1 = BASE_URL + DS_ID + '/?show=' + encodeURIComponent(DataSet.MAIN_FIELDS + ',' + DataSet.EXTRA_FIELDS)
+      url1 = BASE_URL + DS_ID + '/?show=' + DataSet.MAIN_FIELDS + ',' + DataSet.EXTRA_FIELDS
       url2 = BASE_URL + DS_ID + '/action/sample_data/?size=5'
       $httpBackend.expectGET(url1).respond('{"data_set": {"name": "Some name"}}')
       $httpBackend.expectGET(url2).respond('[{"contractor.dev_skill_test_passed_count": "18", "contractor.dev_bill_rate": "5.56"}]')
@@ -141,7 +141,7 @@ describe "datasets", ->
       $routeParams.import_handler_type = 'json'
       $rootScope.initSections = jasmine.createSpy()
 
-      url1 = BASE_URL + DS_ID + '/?show=' + encodeURIComponent(DataSet.MAIN_FIELDS + ',' + DataSet.EXTRA_FIELDS)
+      url1 = BASE_URL + DS_ID + '/?show=' + DataSet.MAIN_FIELDS + ',' + DataSet.EXTRA_FIELDS
       $httpBackend.expectGET(url1).respond(400)
 
       $rootScope.setError = jasmine.createSpy '$rootScope.setError'
@@ -159,7 +159,7 @@ describe "datasets", ->
       $routeParams.import_handler_type = 'json'
       $rootScope.initSections = jasmine.createSpy()
 
-      url1 = BASE_URL + DS_ID + '/?show=' + encodeURIComponent(DataSet.MAIN_FIELDS + ',' + DataSet.EXTRA_FIELDS)
+      url1 = BASE_URL + DS_ID + '/?show=' + DataSet.MAIN_FIELDS + ',' + DataSet.EXTRA_FIELDS
       url2 = BASE_URL + DS_ID + '/action/sample_data/?size=5'
       $httpBackend.expectGET(url1).respond angular.toJson
         data_set:
@@ -182,7 +182,7 @@ describe "datasets", ->
       $routeParams.import_handler_type = 'json'
       $rootScope.initSections = jasmine.createSpy()
 
-      url1 = BASE_URL + DS_ID + '/?show=' + encodeURIComponent(DataSet.MAIN_FIELDS + ',' + DataSet.EXTRA_FIELDS)
+      url1 = BASE_URL + DS_ID + '/?show=' + DataSet.MAIN_FIELDS + ',' + DataSet.EXTRA_FIELDS
       $httpBackend.expectGET(url1).respond angular.toJson
         data_set:
           name: "Some name"
@@ -227,7 +227,7 @@ describe "datasets", ->
 
         $rootScope.close =
         $location.url = jasmine.createSpy('$location.url')
-        url = "#{settings.apiUrl}importhandlers/#{handlerType}/#{HANDLER_ID}/datasets/?"
+        url = "#{settings.apiUrl}importhandlers/#{handlerType}/#{HANDLER_ID}/datasets/"
         $httpBackend.expectPOST(url).respond angular.toJson
           data_set:
             id: DS_ID
@@ -251,7 +251,7 @@ describe "datasets", ->
       (DataSet)->
 
         handlerType = 'xml'
-        url = "#{settings.apiUrl}importhandlers/#{handlerType}/#{HANDLER_ID}/datasets/#{DS_ID}/action/reimport/?"
+        url = "#{settings.apiUrl}importhandlers/#{handlerType}/#{HANDLER_ID}/datasets/#{DS_ID}/action/reimport/"
         $httpBackend.expectPUT(url).respond angular.toJson
           data_set:
             uid: "d8e99ac218fa11e4aa9a000c29e3f35c"
