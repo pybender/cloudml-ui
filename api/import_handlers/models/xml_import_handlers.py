@@ -51,8 +51,9 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
         datasources = etree.SubElement(plan, "datasources")
         for ds in self._get_in_order(self.xml_data_sources, 'type',
                                      self.DATASOURCES_ORDER):
-            etree.SubElement(
-                datasources, ds.type, name=ds.name, **ds.params)
+            if ds.name != "input":
+                etree.SubElement(
+                    datasources, ds.type, name=ds.name, **ds.params)
 
         import_ = etree.SubElement(plan, "import")
         tree = get_entity_tree(self)
