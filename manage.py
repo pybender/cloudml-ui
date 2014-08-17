@@ -312,7 +312,7 @@ class CreateDtnamoDbTables(Command):
     def run(self, **kwargs):
         from api.logs.dynamodb.models import LogMessage
         from api.accounts.models import AuthToken
-        #LogMessage.create_table()
+        LogMessage.create_table()
         AuthToken.create_table()
         print 'Done.'
 
