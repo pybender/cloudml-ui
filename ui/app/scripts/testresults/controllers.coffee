@@ -63,16 +63,16 @@ created_by'
 
 .controller('DeleteTestCtrl', [
   '$scope'
-  'dialog'
+  '$modal'
   '$location'
 
   ($scope, dialog, location) ->
-    $scope.test = dialog.test
-    $scope.model = dialog.test.model
+#    $scope.test = dialog.test
+#    $scope.model = dialog.test.model
     $scope.resetError()
 
     $scope.close = ->
-      dialog.close()
+      $modal.$close()
 
     $scope.delete = (result) ->
       $scope.test.$delete().then (() ->
@@ -203,12 +203,16 @@ without test id and model id"
       $scope.test = test
 
     $scope.delete_test = (model) ->
-      d = $modal.dialog(
-        modalFade: false
-      )
-      d.test = $scope.test
-      d.open('partials/testresults/delete_popup.html', 'DeleteTestCtrl')
-  
+#      d = $modal.dialog(
+#        modalFade: false
+#      )
+#      d.test = $scope.test
+#      d.open('partials/testresults/delete_popup.html', 'DeleteTestCtrl')
+      $modal.open
+        templateUrl: 'partials/testresults/delete_popup.html'
+        controller: 'DeleteTestCtrl'
+        backdrop: 'static'
+        scope: $scope
 ])
 
 .controller('TestExportsCtrl', [

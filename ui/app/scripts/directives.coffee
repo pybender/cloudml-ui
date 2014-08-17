@@ -558,6 +558,12 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
   return {
     restrict: 'E',
     require: '?ngModel',
+    scope:
+      paramsConfig: '='
+      requiredParams: '='
+      optionalParams: '='
+      keyName: '='    # only used in maps sub items
+      valueName: '='  # only used in maps sub items
     link: (scope, element, attributes, ngModel) ->
       TYPE_STRING = 'str'
       TYPE_OBJECT = 'dict'
@@ -616,13 +622,15 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
           scope.showAddKey = false
 
       scope.isRequired = (key) ->
-        if scope.requiredParams && scope.isTopLevel()
-          _.indexOf(scope.requiredParams, key) > -1
-        else
-          false
+#        if scope.requiredParams && scope.isTopLevel()
+#          _.indexOf(scope.requiredParams, key) > -1
+#        else
+#          false
+        scope.requiredParams and key in scope.requiredParams
 
       scope.isTopLevel = () ->
-        _.indexOf(_(attributes).keys(), 'inner') < 0
+        #_.indexOf(_(attributes).keys(), 'inner') < 0
+        true
 
       scope.isEmpty = () ->
         scope.isTopLevel() && _.isEmpty(scope.paramsEditorData)
@@ -635,20 +643,21 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
       switchTemplate =
         '<span ng-switch on="getType(key, paramsEditorData[key])" >
         <div ng-switch-when="dict">
-        <parameters-editor ng-model="$parent.paramsEditorData[key]"
-          inner="">
-        </parameters-editor>
+          <parameters-editor name="{{key}}" ng-model="paramsEditorData[key]"
+          key-name="key" key-value="paramsEditorData[key]">
+          </parameters-editor>
         </div>
         <span ng-switch-when="text" class="jsonLiteral">
-          <textarea name="params" ng-model="paramsEditorData[key]"
+          <textarea name="{{key}}" ng-model="paramsEditorData[key]"
             class="span5"
             rows="3"
-            ng-model-onblur>
+            ng-model-onblur
+            name="{{key}}">
           </textarea>
         </span>
         <span ng-switch-default class="jsonLiteral">
           <input type="text" ng-model="paramsEditorData[key]" ng-model-onblur
-            placeholder="Empty" class="input-medium" />
+            placeholder="Empty" class="input-medium" name="{{key}}" />
         </span>
         </span>'
 
@@ -659,11 +668,11 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
           <span ng-switch-when="true">
             <input placeholder="Name" type="text"
               class="input-small addItemKeyInput"
-              ng-model="$parent.keyName" />
+              ng-model="keyName" name="{{keyName}}" />
             <span>: &nbsp;</span>
             <input type="text" placeholder="Value"
               class="input-medium addItemValueInput"
-              ng-model="$parent.valueName" />
+              ng-model="valueName" name="{{valueName}}" />
             <a title="add" ng-click="addItem(paramsEditorData)">
               <i class="icon-ok"></i>
             </a>
@@ -696,7 +705,8 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
           type="text"
           ng-model="newkey"
           ng-init="newkey=key"
-          ng-change="moveKey(paramsEditorData, key, newkey)"/>
+          ng-change="moveKey(paramsEditorData, key, newkey)"
+          name="{{newkey}}"/>
         <span>: &nbsp;</span>' + switchTemplate + '
         <i ng-hide="isRequired(key)"
             class="deleteKeyBtn1 icon-trash"
@@ -709,7 +719,7 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
       </div>'
 
       ngModel.$formatters.unshift((viewValue) ->
-        if _.isObject(viewValue)
+        if _.isObject(viewValue) and scope.paramsConfig
           for key of viewValue
             conf = scope.paramsConfig[key]
             if not conf then continue
@@ -766,19 +776,20 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
       VALIDATORS[TYPE_TEXT] = _validateJsonParam
 
       scope.validate = () ->
-        if !scope.paramsEditorData then return
         errs = []
 
-        for key of scope.paramsEditorData
+        keys = _.keys(scope.paramsConfig)
+        for key in keys
           data = scope.paramsEditorData[key]
           conf = scope.paramsConfig[key]
           if not conf
             continue
-          if not scope.isRequired(key)
+          if scope.isRequired(key) and not data
+            errs.push key
             continue
           validator = VALIDATORS[conf.type]
           if !validator(key, data)
-              errs.push key
+            errs.push key
 
         ngModel.$setValidity('params', errs.length <= 0)
 

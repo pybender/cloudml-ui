@@ -18,16 +18,32 @@ describe "directives", ->
 
   describe "parameters-editor", ->
 
-    it "should create parameters editor control with string parameter", ->
+    xit "should create parameters editor control with string parameter", ->
       inject ($compile, $rootScope) ->
-        $rootScope.params = {"str_param": "value"}
 
         $rootScope.paramsConfig = {"str_param": {"type": "str"}}
         $rootScope.requiredParams = ["str_param"]
         $rootScope.optionalParams = []
 
-        element = $compile('<parameters-editor ng-model="params"></parameters-editor>')($rootScope)
+        # invlaid
+        $rootScope.params = {}
+        element = $compile("""
+<form name="myForm">
+<parameters-editor name="params" ng-model="params"
+  params-config="paramsConfig"
+  required-params="requiredParams"
+  optional-params="optionalParams"></parameters-editor>
+</form>
+""")($rootScope)
         $rootScope.$digest()
+        expect($rootScope.myForm.params.$valid).toBe false
+        expect($rootScope.myForm.$valid).toBe false
+
+        # valid
+        $rootScope.params = {"str_param": "value"}
+        $rootScope.$digest()
+        expect($rootScope.myForm.params.$valid).toBe true
+        expect($rootScope.myForm.$valid).toBe true
 
         expect(element.html()).toContain('<div class="jsonContents ng-scope">')
         expect(element.html()).toContain('<input ng-hide="isRequired(key)" ng-disabled="isRequired(key)"')
@@ -35,16 +51,30 @@ describe "directives", ->
 
     it "should create parameters editor control with object parameter", ->
       inject ($compile, $rootScope) ->
-        $rootScope.params = {
-          "map_param": {one: 'one_val', two: 'two_val'}
-        }
 
         $rootScope.paramsConfig = {"map_param": {"type": "dict"}}
         $rootScope.requiredParams = ["map_param"]
         $rootScope.optionalParams = []
 
-        element = $compile('<parameters-editor ng-model="params"></parameters-editor>')($rootScope)
+        # invlaid
+        $rootScope.params = {}
+        element = $compile("""
+<form name="myForm">
+<parameters-editor name="params" ng-model="params"
+  params-config="paramsConfig"
+  required-params="requiredParams"
+  optional-params="optionalParams"></parameters-editor>
+</form>
+""")($rootScope)
         $rootScope.$digest()
+        expect($rootScope.myForm.params.$valid).toBe false
+        expect($rootScope.myForm.$valid).toBe false
+
+        # valid
+        $rootScope.params = {map_param: {one: 'one_val', two: 'two_val'}}
+        $rootScope.$digest()
+        expect($rootScope.myForm.params.$valid).toBe true
+        expect($rootScope.myForm.$valid).toBe true
 
         expect(element.html()).toContain('<div class="jsonContents ng-scope">')
         expect(element.html()).toContain('<input ng-hide="isRequired(key)" ng-disabled="isRequired(key)"')
@@ -61,18 +91,43 @@ describe "directives", ->
         $rootScope.requiredParams = ["text_param"]
         $rootScope.optionalParams = []
 
-        element = $compile('<parameters-editor ng-model="params"></parameters-editor>')($rootScope)
+        # invlaid
+        $rootScope.params = {}
+        element = $compile("""
+<form name="myForm">
+<parameters-editor name="params" ng-model="params"
+  params-config="paramsConfig"
+  required-params="requiredParams"
+  optional-params="optionalParams"></parameters-editor>
+</form>
+""")($rootScope)
         $rootScope.$digest()
+        expect($rootScope.myForm.params.$valid).toBe false
+        expect($rootScope.myForm.$valid).toBe false
+
+        # invalid json
+        $rootScope.params = {text_param: 'invalid{"key":"value"}json'}
+        $rootScope.$digest()
+        expect($rootScope.myForm.params.$valid).toBe false
+        expect($rootScope.myForm.$valid).toBe false
+
+        # valid
+        $rootScope.params = {text_param: '{"key":"value"}'}
+        $rootScope.$digest()
+        expect($rootScope.myForm.params.$valid).toBe true
+        expect($rootScope.myForm.$valid).toBe true
 
         expect(element.html()).toContain('<div class="jsonContents ng-scope">')
         expect(element.html()).toContain('<input ng-hide="isRequired(key)" ng-disabled="isRequired(key)"')
         expect(element.html()).toContain('>text_param</label>')
-        expect(element.html()).toContain('<textarea name="params" ng-model="paramsEditorData[key]"')
+        expect(element.html()).toContain('<textarea name="text_param" ng-model="paramsEditorData[key]"')
 
     it "should validate items", ->
       inject ($compile, $rootScope) ->
-        $rootScope.params = {}
-
+        """
+        Attention: As of Anguular 1.2.20 no need to call validate exciplictly
+        as calling scope.digest() implicitly calls the validate
+        """
         $rootScope.paramsConfig = {
           "str_param": {"type": "str"},
           "map_param": {"type": "dict"},
@@ -81,65 +136,98 @@ describe "directives", ->
         $rootScope.requiredParams = ["str_param", "map_param", "text_param"]
         $rootScope.optionalParams = []
 
-        $compile('<form name="form">
-<parameters-editor ng-model="params" name="params"></parameters-editor>
-</form>')($rootScope)
+        # empty params
+        $rootScope.params = {}
+        $compile("""
+<form name="myForm">
+<parameters-editor name="params" ng-model="params"
+  params-config="paramsConfig"
+  required-params="requiredParams"
+  optional-params="optionalParams"></parameters-editor>
+</form>
+""")($rootScope)
         $rootScope.$digest()
+        expect($rootScope.myForm.params.$valid).toBe false
+        expect($rootScope.myForm.$valid).toBe false
 
-        $rootScope.params = {"map_param": {one: 'one_val', two: 'two_val'}}
+        buildValidParams = ->
+          $rootScope.params =
+            map_param: {one: 'one_val', two: 'two_val'}
+            str_param: "value"
+            text_param: '{"key": "value"}'
+          $rootScope.$digest()
+          expect($rootScope.myForm.params.$valid).toBe true
+          expect($rootScope.myForm.$valid).toBe true
+
+        buildValidParams()
+        $rootScope.params.map_param = {one: '', two: 'two_val'}
         $rootScope.$digest()
-        $rootScope.validate()
-        expect($rootScope.form.params.$valid).toBe(true);
+        expect($rootScope.myForm.params.$valid).toBe false
+        expect($rootScope.myForm.$valid).toBe false
 
-        $rootScope.params = {"map_param": {one: '', two: 'two_val'}}
+        buildValidParams()
+        $rootScope.params.map_param = {}
         $rootScope.$digest()
-        $rootScope.validate()
-        expect($rootScope.form.params.$valid).toBe(false);
+        expect($rootScope.myForm.params.$valid).toBe false
+        expect($rootScope.myForm.$valid).toBe false
 
-        $rootScope.params = {"map_param": {}}
+        buildValidParams()
+        delete $rootScope.params['map_param']
         $rootScope.$digest()
-        $rootScope.validate()
-        expect($rootScope.form.params.$valid).toBe(false);
+        expect($rootScope.myForm.params.$valid).toBe false
+        expect($rootScope.myForm.$valid).toBe false
 
-        $rootScope.params = {"str_param": "value"}
+        buildValidParams()
+        $rootScope.params.str_param = ""
         $rootScope.$digest()
-        $rootScope.validate()
-        expect($rootScope.form.params.$valid).toBe(true);
+        expect($rootScope.myForm.params.$valid).toBe false
+        expect($rootScope.myForm.$valid).toBe false
 
-        $rootScope.params = {"str_param": ""}
+        buildValidParams()
+        delete $rootScope.params['str_param']
         $rootScope.$digest()
-        $rootScope.validate()
-        expect($rootScope.form.params.$valid).toBe(false);
+        expect($rootScope.myForm.params.$valid).toBe false
+        expect($rootScope.myForm.$valid).toBe false
 
-        $rootScope.params = {"text_param": '{"key": "value"}'}
+        buildValidParams()
+        $rootScope.params.text_param = 'wrong{"key": "value"}json'
         $rootScope.$digest()
-        $rootScope.validate()
-        expect($rootScope.form.params.$valid).toBe(true);
+        expect($rootScope.myForm.params.$valid).toBe false
+        expect($rootScope.myForm.$valid).toBe false
 
-        $rootScope.params = {"text_param": 'wrong{"key": "value"}json'}
+        buildValidParams()
+        $rootScope.params.text_param = ""
         $rootScope.$digest()
-        $rootScope.validate()
-        expect($rootScope.form.params.$valid).toBe(false);
+        expect($rootScope.myForm.params.$valid).toBe false
+        expect($rootScope.myForm.$valid).toBe false
 
-        $rootScope.params = {"text_param": ""}
+        buildValidParams()
+        delete $rootScope.params['text_param']
         $rootScope.$digest()
-        $rootScope.validate()
-        expect($rootScope.form.params.$valid).toBe(false);
+        expect($rootScope.myForm.params.$valid).toBe false
+        expect($rootScope.myForm.$valid).toBe false
 
-    it "should correctly add a new string item to object", ->
+    # TODO: nader20140817: we need to work on adding new item after adopting
+    # isloate scopes
+    xit "should correctly add a new string item to object", ->
       inject ($compile, $rootScope) ->
-        $rootScope.params = {
-          "map_param": {one: 'one_val', two: 'two_val'}
-        }
 
         $rootScope.paramsConfig = {"map_param": {"type": "dict"}}
         $rootScope.requiredParams = ["map_param"]
         $rootScope.optionalParams = []
 
-        element = $compile('<parameters-editor ng-model="params"></parameters-editor>')($rootScope)
+        $rootScope.params = {map_param: {one: 'one_val', two: 'two_val'}}
+        element = $compile("""
+<form name="myForm">
+<parameters-editor name="params" ng-model="params"
+  params-config="paramsConfig"
+  required-params="requiredParams"
+  optional-params="optionalParams"></parameters-editor>
+</form>
+""")($rootScope)
         $rootScope.$digest()
 
-        addItem = $rootScope.addItem
+        addItem = angular.element(element.children().children()[0]).scope().addItem
         $rootScope.keyName = 'new_key'
         $rootScope.valueName = 'new_value'
         $rootScope.valueType = 'str'

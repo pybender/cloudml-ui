@@ -57,7 +57,7 @@ describe "login", ->
   describe "AuthCtl", ->
 
     it "should redirect to oDesk authorization", inject () ->
-      url = settings.apiUrl + 'auth/get_auth_url?'
+      url = settings.apiUrl + 'auth/get_auth_url'
       $httpBackend.expectPOST(url).respond('{"auth_url": "http://odesk.com/_fake"}')
 
       spyOn(window, '$cml_window_location_replace').andCallFake(() -> null)
@@ -114,7 +114,7 @@ describe "login", ->
       $cookieStore.put('auth-token', 'auth_token')
       createController "UserCtl"
 
-      url = settings.apiUrl + 'auth/get_user?'
+      url = settings.apiUrl + 'auth/get_user'
       $httpBackend.expectPOST(url).respond('{"user": {"name": "Fiodor", "uid": "somebody"}}')
 
       $rootScope.init()

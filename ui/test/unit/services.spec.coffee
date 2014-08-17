@@ -58,7 +58,7 @@ describe "service", ->
     it "should request user info", inject((auth) ->
       $cookieStore.put('auth-token', 'auth_token')
 
-      url = settings.apiUrl + 'auth/get_user?'
+      url = settings.apiUrl + 'auth/get_user'
       $httpBackend.expectPOST(url).respond('{"user": {"name": "Fiodor", "uid": "somebody"}}')
 
       auth.get_user()

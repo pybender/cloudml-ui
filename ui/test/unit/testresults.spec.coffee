@@ -177,7 +177,7 @@ describe "testresults", ->
 
       expect($rootScope.test.id).toEqual('1234')
 
-    it "should open delete dialog", inject () ->
+    it "should open delete dialog", ->
       url = 'partials/testresults/delete_popup.html'
       $httpBackend.expectGET(url).respond('')
 

@@ -4,17 +4,16 @@ module.exports = (karma)->
 
   karma.set
     files: karma.files.concat [
-      {pattern: 'app/scripts/config.coffee', watched:true, included:true, served:true}
-      {pattern: 'app/scripts/local_config.coffee', watched:true, included:true, served:true}
-      {pattern: 'app/scripts/services.coffee', watched:true, included:true, served:true}
-      {pattern: 'app/scripts/filters.coffee', watched:true, included:true, served:true}
-      {pattern: 'app/scripts/directives.coffee', watched:true, included:true, served:true}
-      {pattern: 'app/scripts/controllers.coffee', watched:true, included:true, served:true}
-      {pattern: 'app/scripts/base.coffee', watched:true, included:true, served:true}
+      'app/scripts/config.coffee'
+      'app/scripts/local_config.coffee'
+      'app/scripts/services.coffee'
+      'app/scripts/filters.coffee'
+      'app/scripts/directives.coffee'
+      'app/scripts/controllers.coffee'
+      'app/scripts/base.coffee'
 
-      {pattern: 'app/**/*.coffee', watched:true, included:true, served:true}
-
-      {pattern: 'app/assets/partials/**/*.html', watched:true, included:true, served:true}
+      'app/**/*.coffee'
+      'app/assets/partials/**/*.html'
 
       # Tests
       'test/unit/canned_responses.coffee',

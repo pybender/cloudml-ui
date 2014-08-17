@@ -185,8 +185,8 @@ describe "test examples", ->
 
     it "should make details request", inject () ->
       fields = ['test_name','weighted_data_input','model',
-                'pred_label','label','prob','created_on','test_result'
-      ].join(',')
+                'pred_label','label','prob','created_on','test_result',
+                'next', 'previous'].join(',')
       url = BASE_URL + EXAMPLE_ID + '/?show=' + fields
       $httpBackend.expectGET(url).respond('{"data": {"id": "' + EXAMPLE_ID + '"}}')
 
@@ -273,7 +273,7 @@ describe "test examples", ->
         $rootScope.$broadcast = jasmine.createSpy('$scope.$broadcast')
         $rootScope.close = jasmine.createSpy('$scope.close')
         $location.search = jasmine.createSpy('$location.search')
-        url = BASE_URL + "action/csv/?show=#{$rootScope.stdFields.join(',')},#{$rootScope.extraFields.join(',')}&"
+        url = BASE_URL + "action/csv/?show=#{$rootScope.stdFields.join(',')},#{$rootScope.extraFields.join(',')}"
         $httpBackend.expectGET(url).respond("{\"url\":\"#{url}\"}")
 
         $rootScope.getExamplesCsv()
@@ -287,7 +287,7 @@ describe "test examples", ->
         $rootScope.setError = jasmine.createSpy('$scope.setError')
         $rootScope.close = jasmine.createSpy('$scope.close')
         $location.search = jasmine.createSpy('$location.search')
-        url = BASE_URL + "action/csv/?show=#{$rootScope.stdFields.join(',')},#{$rootScope.extraFields.join(',')}&"
+        url = BASE_URL + "action/csv/?show=#{$rootScope.stdFields.join(',')},#{$rootScope.extraFields.join(',')}"
         $httpBackend.expectGET(url).respond(400)
 
         $rootScope.getExamplesCsv()
