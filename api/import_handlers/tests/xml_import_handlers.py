@@ -91,7 +91,7 @@ class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
 
     def test_delete(self):
         models_to_check = [
-            (XmlDataSource, 3, XmlDataSource.query.count()),
+            (XmlDataSource, 4, XmlDataSource.query.count()),
             (XmlEntity, 3, XmlEntity.query.count()),
             (XmlInputParameter, 2, XmlInputParameter.query.count()),
             (XmlScript, 1, XmlScript.query.count())

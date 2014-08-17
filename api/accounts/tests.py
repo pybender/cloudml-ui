@@ -135,7 +135,7 @@ class AuthResourceTests(BaseDbTestCase):
         #self.assertEquals(secret.get('oauth_token_secret'), '2')
 
     @patch('api.accounts.models.AuthToken.get_auth',
-           return_value={'oauth_token':'124', 'oauth_token_secret': '999'})
+           return_value=None)
     @patch('api.accounts.models.AuthToken.delete')
     def test_authenticate(self, mock_delete, mock_get_auth):
         with patch(
@@ -157,10 +157,10 @@ class AuthResourceTests(BaseDbTestCase):
                               'Wrong token: 123')
 
             # Proper token
-            app.db['auth_tokens'].insert({
+            mock_get_auth.return_value = {
                 'oauth_token': '123',
                 'oauth_token_secret': '999',
-            })
+            }
 
             resp = self.client.post(url, data={})
             self.assertEquals(mock_auth.call_count, 1)

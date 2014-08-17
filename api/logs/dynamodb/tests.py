@@ -17,8 +17,10 @@ class LogsTests(BaseDbTestCase, TestChecksMixin):
 
     def setUp(self):
         BaseDbTestCase.setUp(self)
-        from models import LogMessage
-        LogMessage.delete_related_logs(self.OBJECT_ID)
+        from api.amazon_utils import AmazonDynamoDBHelper
+        from api.logs.dynamodb.models import LogMessage
+        db = AmazonDynamoDBHelper()
+        db.delete_items(LogMessage.TABLE_NAME, object_id__eq=self.OBJECT_ID)
 
     def test_list(self):
         import logging
