@@ -32,7 +32,7 @@ class AuthResource(BaseResourceSQL):
             auth.save()
 
             logging.debug(
-                "User Auth: oauth token %s added to mongo", oauth_token)
+                "User Auth: oauth token %s added", oauth_token)
             return self._render({'auth_url': auth_url})
 
         if action == 'authenticate':
@@ -48,6 +48,7 @@ class AuthResource(BaseResourceSQL):
                 "User Auth: trying to authenticate with token %s", oauth_token)
             # TODO: Use redis?
             auth = AuthToken.get_auth(oauth_token)
+            print "sssss",auth
             if not auth:
                 logging.error('User Auth: token %s not found', oauth_token)
                 return odesk_error_response(
@@ -59,7 +60,7 @@ class AuthResource(BaseResourceSQL):
                 oauth_token, oauth_token_secret, oauth_verifier)
 
             logging.debug(
-                'User Auth: Removing token %s from mongo', oauth_token)
+                'User Auth: Removing token %s', oauth_token)
             AuthToken.delete(auth.get('oauth_token'))
 
             return self._render({

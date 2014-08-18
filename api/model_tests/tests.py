@@ -236,7 +236,7 @@ class TestExampleResourceTests(BaseDbTestCase, TestChecksMixin):
             return resp
 
         check_filter({'pred_label': '1'})
-        check_filter({'data_input->>opening_id': '1'}, count=1)
+        check_filter({'data_input->>opening_id': '201913099'}, count=4)
         resp = check_filter(
             {'data_input->>employer->country': 'USA'}, count=2)
         self.assertEquals(
@@ -318,7 +318,7 @@ class TestExampleResourceTests(BaseDbTestCase, TestChecksMixin):
         resp = self.client.get(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, 200)
         data = json.loads(resp.data)
-        self.assertEquals(data['fields'], ['employer->country'])
+        self.assertEquals(data['fields'], ['employer->country', 'opening_id'])
 
     @patch('api.model_tests.tasks.get_csv_results')
     def test_csv(self, mock_get_csv):

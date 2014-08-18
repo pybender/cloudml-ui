@@ -145,8 +145,11 @@ class AuthResourceTests(BaseDbTestCase):
         #self.assertIsNotNone(secret)
         #self.assertEquals(secret.get('oauth_token_secret'), '2')
 
+
+    @patch('api.accounts.models.AuthToken.get_auth',
+           return_value=None)
     @patch('api.accounts.models.AuthToken.delete')
-    def test_authenticate(self, mock_delete):
+    def test_authenticate(self, mock_delete, mock_get_auth):
         url = '{0}/authenticate?oauth_token={1}&oauth_verifier={2}'.format(
             self.BASE_URL, '123', '345'
         )
@@ -162,12 +165,11 @@ class AuthResourceTests(BaseDbTestCase):
                            uid='somebody').one())) as mock_auth:
 
             # Proper token
-            # app.db['auth_tokens'].insert({
-            #     'oauth_token': '123',
-            #     'oauth_token_secret': '999',
-            # })
-            auth_token = AuthToken('123', '999')
-            auth_token.save()
+
+            mock_get_auth.return_value = {
+                'oauth_token': '123',
+                'oauth_token_secret': '999',
+            }
 
             resp = self.client.post(url, data={})
             self.assertEquals(mock_auth.call_count, 1)
