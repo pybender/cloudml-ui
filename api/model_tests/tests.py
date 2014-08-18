@@ -236,7 +236,7 @@ class TestExampleResourceTests(BaseDbTestCase, TestChecksMixin):
             return resp
 
         check_filter({'pred_label': '1'})
-        check_filter({'data_input->>opening_id': '1'}, count=1)
+        check_filter({'data_input->>opening_id': '201913099'}, count=4)
         resp = check_filter(
             {'data_input->>employer->country': 'USA'}, count=2)
         self.assertEquals(

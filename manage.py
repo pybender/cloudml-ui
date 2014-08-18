@@ -112,7 +112,7 @@ class Coverage(Command):
         app.config.from_object('api.test_config')
         app.init_db()
         print 'Collecting coverage info...'
-        output_dir = 'api/test/cover'
+        output_dir = 'coverage'
         # TODO: why does nose.run show different results?
         # nose.run(argv=[
         #     '',

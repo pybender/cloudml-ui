@@ -410,7 +410,7 @@ class PredictModelWeight(db.Model, RefPredictModelMixin):
 
     value = db.Column(db.String(200), name='value')
     script = db.Column(db.Text, name='script')
-    label = db.Column(db.Boolean, default=True)
+    label = db.Column(db.String(200))
 
 
 # Predict Result
@@ -425,7 +425,7 @@ class PredictResultProbability(db.Model, RefPredictModelMixin):
     FIELDS_TO_SERIALIZE = ('label', 'script', 'predict_model')
 
     script = db.Column(db.Text)
-    label = db.Column(db.Boolean, default=True)
+    label = db.Column(db.String(200))
 
 
 def fill_import_handler(import_handler, xml_data=None):

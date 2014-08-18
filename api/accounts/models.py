@@ -43,15 +43,17 @@ class AuthToken(object):
 
     @classmethod
     def create_table(cls):
-        try:
-            Table.create(cls.TABLE_NAME, connection=dynamodb.conn,
-                         schema=cls.SCHEMA)
-        except JSONResponseError as ex:
-            logging.exception(str(ex))
+        dynamodb.create_table(cls.TABLE_NAME, cls.SCHEMA)
 
     @classmethod
     def get_auth(cls, auth_token):
-        return dynamodb.get_item(cls.TABLE_NAME, id=auth_token)
+        try:
+            return dynamodb.get_item(cls.TABLE_NAME, id=auth_token)
+        except JSONResponseError as ex:
+            if ex.status == 404:
+                return None
+            else:
+                raise ex
 
     @classmethod
     def delete(cls, auth_token):
