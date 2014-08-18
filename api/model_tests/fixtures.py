@@ -135,6 +135,9 @@ class TestExampleData(DataSet):
             'opening_id': "201913099",
             'employer->country': 'Canada'
         }
+        weighted_data_input = {
+            'opening_id': "201913099",
+            'employer->country': 'Canada'}
 
     class test_example_03:
         created_on = "2013-04-19 14:37:23.145000"

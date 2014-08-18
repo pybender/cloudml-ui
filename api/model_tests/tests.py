@@ -275,10 +275,26 @@ class TestExampleResourceTests(BaseDbTestCase, TestChecksMixin):
         check_prob_order(
             data, right_data)
 
+    def test_details_weight(self):
+        obj = self.test.examples[0]
+        data = self.go_details(obj, "id,name,weighted_data_input", {})
+        for key in ['css_class', 'model_weight', 'transformed_weight',
+                    'value', 'vect_value', 'weight']:
+            self.assertTrue(key in data['weighted_data_input']['opening_id'])
+
+    def test_details_prev_next(self):
+        prev = self.test.examples[0]
+        example = self.test.examples[1]
+        next = self.test.examples[2]
+        data = self.go_details(example, "previous,next", {})
+        self.assertEquals(data['previous'], prev.id)
+        self.assertEquals(data['next'], next.id)
+
     @mock_s3
     @patch('api.model_tests.models.TestResult.get_vect_data')
     @patch('api.ml_models.models.Model.get_trainer')
-    def test_details_weight(self, mock_get_trainer, mock_get_vect_data):
+    def go_details(self, obj, show, data, mock_get_trainer, mock_get_vect_data):
+        should_called = not obj.is_weights_calculated
         from core.trainer.store import TrainerStorage
         trainer = TrainerStorage.loads(
             open('api/ml_models/model.dat', 'r').read())
@@ -286,16 +302,11 @@ class TestExampleResourceTests(BaseDbTestCase, TestChecksMixin):
 
         mock_get_vect_data.return_value = [0.123, 0.0] * 500
 
-        obj = self.test.examples[0]
-        url = self._get_url(id=obj.id, show='id,name,weighted_data_input')
+        url = self._get_url(id=obj.id, show=show, data=data)
         resp = self.client.get(url, headers=HTTP_HEADERS)
-        self.assertEquals(resp.status_code, 200)
-        self.assertTrue(mock_get_trainer.called)
-        data = json.loads(resp.data)['test_example']
-
-        for key in ['css_class', 'model_weight', 'transformed_weight',
-                    'value', 'vect_value', 'weight']:
-            self.assertTrue(key in data['weighted_data_input']['opening_id'])
+        self.assertEquals(resp.status_code, 200, url)
+        self.assertEquals(mock_get_trainer.called, should_called)
+        return json.loads(resp.data)['test_example']
 
     def test_groupped(self):
         url = self._get_url(action='groupped',
