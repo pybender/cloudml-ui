@@ -115,7 +115,30 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
         """
         Returns list of the field names
         """
-        return []
+        if self.data is None:
+            return []
+
+        def get_entity_fields(entity):
+            fields = []
+            entity = plan.entity
+            for name, field in entity.fields.iteritems():
+                if not field.is_datasource_field:
+                    fields.append(field.name)
+            for sub_entity in entity.nested_entities_field_ds:
+                fields += get_entity_fields(sub_entity)
+            for sub_entity in entity.nested_entities_global_ds:
+                fields += get_entity_fields(sub_entity)
+            return fields
+
+        from core.xmlimporthandler.importhandler import ExtractionPlan, \
+            ImportHandler as CoreImportHandler
+        # TODO: try .. except after check this with real import handlers
+        try:
+            plan = ExtractionPlan(self.data, is_file=False)
+            return get_entity_fields(plan.entity)
+        except Exception, exc:
+            logging.error(exc)
+
 
     def get_import_params(self):
         return [p.name for p in self.input_parameters]

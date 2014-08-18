@@ -13,8 +13,24 @@ from ..views import XmlImportHandlerResource, XmlEntityResource,\
     XmlQueryResource, XmlScriptResource, XmlSqoopResource
 from ..models import XmlImportHandler, XmlDataSource,\
     XmlScript, XmlField, XmlEntity, XmlInputParameter, XmlQuery, XmlSqoop
+from ..fixtures import XmlImportHandlerData, XmlEntityData, XmlFieldData, \
+    XmlDataSourceData
 
 from lxml import etree
+
+
+class XmlImportHandlerModelTests(BaseDbTestCase):
+    datasets = [
+        XmlImportHandlerData,
+        XmlEntityData,
+        XmlFieldData,
+        XmlDataSourceData
+    ]
+
+    def test_get_fields(self):
+        handler = XmlImportHandler.query.filter_by(name="Xml Handler 1").one()
+        self.assertEqual(handler.get_fields(), ['opening_id'])
+
 
 class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
     """
