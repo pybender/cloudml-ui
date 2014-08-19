@@ -175,7 +175,12 @@ class Model(db.Model, BaseModel):
     @property
     def test_handler_fields(self):
         handler = self.test_import_handler
-        return handler.get_fields() if handler else []
+        if handler:
+            try:
+                return handler.get_fields()
+            except:
+                pass
+        return []
 
     def run_test(self, dataset, callback=None):
         trainer = self.get_trainer()
