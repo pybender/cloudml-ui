@@ -230,7 +230,6 @@ class TestChecksMixin(object):
             if key == 'id':
                 self.assertTrue(obj['id'])
                 continue
-
             self.assertEquals(getattr(fixture_cls, key), obj[key])
 
     def _check_errors(self, err_data, errors):
