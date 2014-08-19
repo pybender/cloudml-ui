@@ -21,6 +21,21 @@ from api.ml_models.models import Model
 from api.accounts.models import User
 
 
+class ServerModelTests(BaseDbTestCase):
+    datasets = [ServerData]
+
+    def test_server_is_default(self):
+        srv = Server.query.filter_by(is_default=False)[0]
+        srv.is_default = True
+        srv.save()
+
+        db.session.refresh(srv)
+
+        self.assertTrue(srv.is_default)
+        defaults = Server.query.filter_by(is_default=True)
+        self.assertEquals(defaults.count(), 1, list(defaults))
+
+
 class ServerResourceTests(BaseDbTestCase, TestChecksMixin):
     """
     Tests of the Servers API.
@@ -60,6 +75,11 @@ class ServerFileResourceTests(BaseDbTestCase, TestChecksMixin):
         super(ServerFileResourceTests, self).setUp()
         self.server = Server.query.first()
         self.BASE_URL = self.BASE_URL.format(self.server.id, FOLDER_MODELS)
+
+    def test_invalid_folder(self):
+        url = self.BASE_URL.format(self.server.id, 'invalid_folder')
+        resp = self.client.get(url, headers=HTTP_HEADERS)
+        self.assertEqual(resp.status_code, 404)
 
     #@patch('api.servers.models.Server.list_keys')
     #@mock_s3

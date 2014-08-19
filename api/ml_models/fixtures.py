@@ -21,7 +21,7 @@ class ModelData(DataSet):
         target_variable = "hire_outcome"
         weights_synchronized = False
         status = "Trained"
-        #trainer = "trainer_file"
+        trainer = "trainer_file"
         classifier = {
             "name": "Test Classifier",
             "params": {"penalty": "l2"},

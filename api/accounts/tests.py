@@ -9,33 +9,6 @@ from api.base.test_utils import SOMEBODY_HTTP_HEADERS as HTTP_HEADERS
 from models import AuthToken, User
 
 
-class AuthTokenModelTests(BaseDbTestCase):
-    def setUp(self):
-        super(AuthTokenModelTests, self).setUp()
-        self.dynamodb_mock = mock_dynamodb2()
-        self.dynamodb_mock.start()
-        AuthToken.create_table()
-
-    def tearDown(self):
-        BaseDbTestCase.tearDown(self)
-        self.dynamodb_mock.stop()
-
-    def test_token(self):
-        TOKEN = '394c46b8902fb5e8fc9268f3cfd84539'
-        SECRET = '394c46b8902fb5e8fc9268f3cfd84538'
-        token_dict = dict(oauth_token=TOKEN, oauth_token_secret=SECRET,
-                          id=TOKEN)
-
-        token = AuthToken(
-            oauth_token=TOKEN,
-            oauth_token_secret=SECRET)
-        self.assertEquals(token.to_dict(), token_dict)
-        token.save()
-
-        self.assertEquals(AuthToken.get_auth('invalid'), None)
-        self.assertEquals(AuthToken.get_auth(TOKEN), token_dict)
-
-
 class AuthDecoratorsTests(BaseDbTestCase):
     """
     Tests of the authentication system.
@@ -137,6 +110,33 @@ class AuthDecoratorsTests(BaseDbTestCase):
 
             res = view('sample', action='some_other')
             self.assertEquals(res.status_code, 401)
+
+
+class AuthTokenModelTests(BaseDbTestCase):
+    def setUp(self):
+        super(AuthTokenModelTests, self).setUp()
+        self.dynamodb_mock = mock_dynamodb2()
+        self.dynamodb_mock.start()
+        AuthToken.create_table()
+
+    def tearDown(self):
+        BaseDbTestCase.tearDown(self)
+        self.dynamodb_mock.stop()
+
+    def test_token(self):
+        TOKEN = '394c46b8902fb5e8fc9268f3cfd84539'
+        SECRET = '394c46b8902fb5e8fc9268f3cfd84538'
+        token_dict = dict(oauth_token=TOKEN, oauth_token_secret=SECRET,
+                          id=TOKEN)
+
+        token = AuthToken(
+            oauth_token=TOKEN,
+            oauth_token_secret=SECRET)
+        self.assertEquals(token.to_dict(), token_dict)
+        token.save()
+
+        self.assertEquals(AuthToken.get_auth('invalid'), None)
+        self.assertEquals(AuthToken.get_auth(TOKEN), token_dict)
 
 
 class AuthResourceTests(BaseDbTestCase):
