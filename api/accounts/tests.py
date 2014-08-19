@@ -9,6 +9,33 @@ from api.base.test_utils import SOMEBODY_HTTP_HEADERS as HTTP_HEADERS
 from models import AuthToken, User
 
 
+class AuthTokenModelTests(BaseDbTestCase):
+    def setUp(self):
+        super(AuthTokenModelTests, self).setUp()
+        self.dynamodb_mock = mock_dynamodb2()
+        self.dynamodb_mock.start()
+        AuthToken.create_table()
+
+    def tearDown(self):
+        BaseDbTestCase.tearDown(self)
+        self.dynamodb_mock.stop()
+
+    def test_token(self):
+        TOKEN = '394c46b8902fb5e8fc9268f3cfd84539'
+        SECRET = '394c46b8902fb5e8fc9268f3cfd84538'
+        token_dict = dict(oauth_token=TOKEN, oauth_token_secret=SECRET,
+                          id=TOKEN)
+
+        token = AuthToken(
+            oauth_token=TOKEN,
+            oauth_token_secret=SECRET)
+        self.assertEquals(token.to_dict(), token_dict)
+        token.save()
+
+        self.assertEquals(AuthToken.get_auth('invalid'), None)
+        self.assertEquals(AuthToken.get_auth(TOKEN), token_dict)
+
+
 class AuthDecoratorsTests(BaseDbTestCase):
     """
     Tests of the authentication system.
@@ -129,7 +156,6 @@ class AuthResourceTests(BaseDbTestCase):
         BaseDbTestCase.tearDown(self)
         self.dynamodb_mock.stop()
 
-
     @patch('api.accounts.models.User.get_auth_url',
            return_value=('url', '1', '2'))
     @patch('api.accounts.models.AuthToken.save')
@@ -145,6 +171,21 @@ class AuthResourceTests(BaseDbTestCase):
         #self.assertIsNotNone(secret)
         #self.assertEquals(secret.get('oauth_token_secret'), '2')
 
+    def test_invalid_action_or_method(self):
+        url = '{0}/invalid_action?oauth_token={1}&oauth_verifier={2}'.format(
+            self.BASE_URL, '123', '345'
+        )
+
+        resp = self.client.post(url, data={})
+        self.assertEquals(resp.status_code, 404)
+
+        url = '{0}/get_auth_url'.format(self.BASE_URL)
+        resp = self.client.get(url, data={})
+        self.assertEquals(resp.status_code, 400)
+
+        url = '{0}/get_auth_url'.format(self.BASE_URL)
+        resp = self.client.put(url, data={})
+        self.assertEquals(resp.status_code, 400)
 
     @patch('api.accounts.models.AuthToken.get_auth',
            return_value=None)

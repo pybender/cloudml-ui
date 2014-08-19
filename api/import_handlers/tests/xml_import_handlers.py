@@ -14,9 +14,26 @@ from ..views import XmlImportHandlerResource, XmlEntityResource,\
 from ..models import XmlImportHandler, XmlDataSource,\
     XmlScript, XmlField, XmlEntity, XmlInputParameter, XmlQuery, XmlSqoop
 from ..fixtures import XmlImportHandlerData, XmlEntityData, XmlFieldData, \
-    XmlDataSourceData
+    XmlDataSourceData, XmlInputParameterData
 
 from lxml import etree
+
+
+HANDLER1_DATA = """<plan>
+  <inputs>
+    <param name="start_date" type="date"/>
+    <param name="end_date" type="date"/>
+  </inputs>
+  <datasources>
+    <db dbname="odw" host="localhost" name="ds" password="postgres" user="postgres" vendor="postgres"/>
+  </datasources>
+  <import>
+    <entity datasource="ds" name="something">
+      <field name="opening_id" type="integer"/>
+    </entity>
+  </import>
+</plan>
+"""
 
 
 class XmlImportHandlerModelTests(BaseDbTestCase):
@@ -24,12 +41,50 @@ class XmlImportHandlerModelTests(BaseDbTestCase):
         XmlImportHandlerData,
         XmlEntityData,
         XmlFieldData,
-        XmlDataSourceData
+        XmlDataSourceData,
+        XmlInputParameterData
     ]
 
+    def setUp(self):
+        super(XmlImportHandlerModelTests, self).setUp()
+        self.handler = XmlImportHandler.query.filter_by(
+            name="Xml Handler 1").one()
+
+    def test_get_plan_config(self):
+        self.assertEquals(HANDLER1_DATA, self.handler.get_plan_config())
+        self.assertEquals(HANDLER1_DATA, self.handler.data)
+
+    def test_load_import_handler(self):
+        data = open('./conf/extract.xml', 'r').read()
+        handler = XmlImportHandler(name='xml ih')
+        handler.save()
+        handler.data = data
+
+        self.assertEquals(len(handler.xml_input_parameters), 2)
+        self.assertEquals(len(handler.xml_scripts), 1)
+        # 3 ds defined in the file + one extra input datasource
+        self.assertEquals(
+            len(handler.xml_data_sources), 4, handler.xml_data_sources)
+        self.assertItemsEqual(
+            handler.get_fields(),
+            ['application_id',
+             'employer.op_timezone',
+             'employer.op_country_tz',
+             'employer.op_tot_jobs_filled',
+             'employer.country',
+             'contractor.dev_is_looking',
+             'contractor.dev_is_looking_week',
+             'contractor.dev_active_interviews',
+             'contractor.dev_availability'])
+
     def test_get_fields(self):
-        handler = XmlImportHandler.query.filter_by(name="Xml Handler 1").one()
-        self.assertEqual(handler.get_fields(), ['opening_id'])
+        self.assertEqual(self.handler.get_fields(), ['opening_id'])
+
+    def test_get_ds_details_for_query(self):
+        vendor, conn = self.handler._get_ds_details_for_query('ds')
+        self.assertEqual(vendor, 'postgres')
+        self.assertEqual(conn, "host='localhost' dbname='odw' \
+user='postgres' password='postgres'")
 
 
 class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):

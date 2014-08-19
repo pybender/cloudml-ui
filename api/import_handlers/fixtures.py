@@ -188,10 +188,16 @@ class XmlImportHandlerData(DataSet):
         updated_on = "2013-04-19 14:37:23.145000"
         import_params = ['start', 'end', 'category']
 
+    class xml_import_handler_02:
+        name = "Xml Handler 2"
+        created_on = "2013-04-19 14:37:23.145000"
+        updated_on = "2013-04-19 14:37:23.145000"
+        import_params = ['start', 'end', 'category']
+
 
 class XmlDataSourceData(DataSet):
     class xml_datasource_01:
-        name = "something"
+        name = "ds"
         import_handler = XmlImportHandlerData.xml_import_handler_01
         type = "db"
         params = dict(host="localhost", dbname="odw", vendor="postgres",
@@ -212,3 +218,17 @@ class XmlFieldData(DataSet):
         name = "opening_id"
         type = "integer"
         entity = XmlEntityData.xml_entity_01
+
+
+class XmlInputParameterData(DataSet):
+      class xml_parameter_01:
+        name = "start_date"
+        type = 'date'
+        import_handler = XmlImportHandlerData.xml_import_handler_01
+        datasource = XmlDataSourceData.xml_datasource_01
+
+      class xml_parameter_02:
+        name = "end_date"
+        type = 'date'
+        import_handler = XmlImportHandlerData.xml_import_handler_01
+        datasource = XmlDataSourceData.xml_datasource_01

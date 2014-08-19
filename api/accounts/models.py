@@ -1,14 +1,11 @@
 import logging
-import uuid
-import time
 from sqlalchemy import func
 from sqlalchemy.orm import exc as orm_exc, validates
 
 from api.base.models import BaseMixin, db
 
-from boto.dynamodb2.table import Table
-from boto.dynamodb2.fields import HashKey, RangeKey
-from boto.dynamodb2.types import NUMBER, STRING
+from boto.dynamodb2.fields import HashKey
+from boto.dynamodb2.types import STRING
 from boto.exception import JSONResponseError
 
 from api.amazon_utils import AmazonDynamoDBHelper
@@ -28,7 +25,6 @@ class AuthToken(object):
         self.id = oauth_token
         self.oauth_token = oauth_token
         self.oauth_token_secret = oauth_token_secret
-
 
     def to_dict(self):
         return {
@@ -94,7 +90,7 @@ class User(BaseMixin, db.Model):
         info = auth.get_my_info(_oauth_token, _oauth_token_secret,
                                 oauth_verifier)
         user_info = auth.get_user_info(_oauth_token, _oauth_token_secret,
-                                oauth_verifier)
+                                       oauth_verifier)
         logging.info(
             'User Auth: authenticating user %s', info['user']['id'])
         try:

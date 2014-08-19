@@ -1,7 +1,7 @@
 from datetime import datetime, date, time
 
 
-class JsonSerializableMixin(object):
+class JsonSerializableMixin(object):  # pragma: no cover
 
     def __json__(self):
         """
