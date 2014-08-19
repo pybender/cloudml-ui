@@ -35,6 +35,9 @@ class BaseDbTestCase(TestCase):
     @classmethod
     def setUpClass(cls):
         app.config.from_object('api.test_config')
+        if hasattr(cls, 'RESOURCE') and not hasattr(cls, 'Model'):
+            cls.Model = cls.RESOURCE.Model
+
         cls.engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
         # TODO: do we need this or need to create test db manually?
         try:
@@ -136,7 +139,8 @@ class TestChecksMixin(object):
 
         return resp_data
 
-    def check_details(self, obj=None, show='', data={}):
+    def check_details(self, obj=None, show='', data={},
+                      fixture_cls=None):
         if obj:
             self.obj = obj
         key = self.RESOURCE.OBJECT_NAME
@@ -148,6 +152,9 @@ class TestChecksMixin(object):
         self.assertEquals(len(fields), len(obj.keys()))
         for field in fields:
             self.assertTrue(field in obj.keys())
+
+        if fixture_cls:
+            self._check_object_with_fixture_class(obj, fixture_cls)
 
         return resp_data
 
@@ -189,6 +196,42 @@ class TestChecksMixin(object):
         self.assertEquals(resp.status_code, 204)
 
         self.assertFalse(self.Model.query.filter_by(id=obj.id).count())
+
+    def check_readonly(self):
+        url = self._get_url(id=self.obj.id)
+
+        # Deleting
+        resp = self.client.delete(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.BAD_REQUEST)
+
+        # Edditing
+        post_data = {'name': 'test'}
+        resp = getattr(self.client, 'put')(
+            url, data=post_data, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.BAD_REQUEST)
+
+        # Adding
+        url = self._get_url()
+        resp = getattr(self.client, 'post')(
+            url, data=post_data, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.BAD_REQUEST)
+
+    def _get_resp_object(self, resp_data, is_list=True, num=-1):
+        if is_list:
+            key = "%ss" % self.RESOURCE.OBJECT_NAME
+            obj_resp = resp_data[key]
+            return obj_resp[num]
+        else:
+            return resp_data[self.RESOURCE.OBJECT_NAME]
+
+    def _check_object_with_fixture_class(self, obj, fixture_cls):
+        print obj, obj.keys()
+        for key, val in obj.iteritems():
+            if key == 'id':
+                self.assertTrue(obj['id'])
+                continue
+
+            self.assertEquals(getattr(fixture_cls, key), obj[key])
 
     def _check_errors(self, err_data, errors):
         err_list = err_data['errors']
