@@ -1,5 +1,3 @@
-from api.mongo.models import *
-
 from api.accounts.models import *
 from api.instances.models import *
 from api.logs.models import *

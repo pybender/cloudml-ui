@@ -24,6 +24,7 @@ IMPORT_PARAMS = json.dumps({'start': '2012-12-03',
                             'end': '2012-12-04',
                             'category': 'smth'})
 
+
 class TestResourceTests(BaseDbTestCase, TestChecksMixin):
     """ Tests of the Test API. """
     BASE_URL = '/cloudml/models/{0!s}/tests/'
@@ -220,10 +221,80 @@ class TestExampleResourceTests(BaseDbTestCase, TestChecksMixin):
         resp = self.client.get(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, 200)
 
+    def test_filter(self):
+        def check_filter(data, count=None):
+            if count is not None:
+                query_params = None
+            else:
+                query_params = {'test_result': self.test}
+                query_params.update(data)
+            resp = self.check_list(
+                data=data,
+                show='label,pred_label,data_input',
+                query_params=query_params,
+                count=count)
+            return resp
+
+        check_filter({'pred_label': '1'})
+        check_filter({'data_input->>opening_id': '201913099'}, count=4)
+        resp = check_filter(
+            {'data_input->>employer->country': 'USA'}, count=2)
+        self.assertEquals(
+            resp['test_examples'][0]['data_input']['employer->country'], 'USA')
+
+    def test_ordering(self):
+        def check_prob_order(data, prob_0):
+            query_params = {'test_result': self.test}
+            resp = self.check_list(
+                    data=data,
+                    show='prob',
+                    query_params=query_params)
+
+            actual_prob_0 = []
+            actual_prob_1 = []
+            for ex in resp['test_examples']:
+                actual_prob_0.append(ex['prob'][0])
+                actual_prob_1.append(ex['prob'][1])
+            self.assertEquals(actual_prob_0, prob_0)
+            prob_1 = [1 - prob for prob in prob_0]
+            self.assertEquals(actual_prob_1, prob_1)
+
+        # Note: we are checking ordering by prob_0
+        # psql arrays have numeration from 1
+        right_data = [0.6, 0.5, 0.1, 0.05]
+        data = {
+            'sort_by': 'prob[1]',
+            'order': 'desc'}
+        check_prob_order(
+            data, right_data)
+
+        data = {
+            'sort_by': 'prob[1]',
+            'order': 'asc'}
+        right_data.reverse()
+        check_prob_order(
+            data, right_data)
+
+    def test_details_weight(self):
+        obj = self.test.examples[0]
+        data = self.go_details(obj, "id,name,weighted_data_input", {})
+        for key in ['css_class', 'model_weight', 'transformed_weight',
+                    'value', 'vect_value', 'weight']:
+            self.assertTrue(key in data['weighted_data_input']['opening_id'])
+
+    def test_details_prev_next(self):
+        prev = self.test.examples[0]
+        example = self.test.examples[1]
+        next = self.test.examples[2]
+        data = self.go_details(example, "previous,next", {})
+        self.assertEquals(data['previous'], prev.id)
+        self.assertEquals(data['next'], next.id)
+
     @mock_s3
     @patch('api.model_tests.models.TestResult.get_vect_data')
     @patch('api.ml_models.models.Model.get_trainer')
-    def test_details_weight(self, mock_get_trainer, mock_get_vect_data):
+    def go_details(self, obj, show, data, mock_get_trainer, mock_get_vect_data):
+        should_called = not obj.is_weights_calculated
         from core.trainer.store import TrainerStorage
         trainer = TrainerStorage.loads(
             open('api/ml_models/model.dat', 'r').read())
@@ -231,16 +302,11 @@ class TestExampleResourceTests(BaseDbTestCase, TestChecksMixin):
 
         mock_get_vect_data.return_value = [0.123, 0.0] * 500
 
-        obj = self.test.examples[0]
-        url = self._get_url(id=obj.id, show='id,name,weighted_data_input')
+        url = self._get_url(id=obj.id, show=show, data=data)
         resp = self.client.get(url, headers=HTTP_HEADERS)
-        self.assertEquals(resp.status_code, 200)
-        self.assertTrue(mock_get_trainer.called)
-        data = json.loads(resp.data)['test_example']
-
-        for key in ['css_class', 'model_weight', 'transformed_weight',
-                    'value', 'vect_value', 'weight']:
-            self.assertTrue(key in data['weighted_data_input']['opening_id'])
+        self.assertEquals(resp.status_code, 200, url)
+        self.assertEquals(mock_get_trainer.called, should_called)
+        return json.loads(resp.data)['test_example']
 
     def test_groupped(self):
         url = self._get_url(action='groupped',
@@ -263,7 +329,8 @@ class TestExampleResourceTests(BaseDbTestCase, TestChecksMixin):
         resp = self.client.get(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, 200)
         data = json.loads(resp.data)
-        self.assertEquals(data['fields'], ['employer->country'])
+        self.assertEquals(
+            data['fields'], ['employer->country', 'opening_id'])
 
     @patch('api.model_tests.tasks.get_csv_results')
     def test_csv(self, mock_get_csv):

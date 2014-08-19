@@ -1,3 +1,5 @@
+<ng-include src="'/partials/parts/pager.html'"></ng-include>
+
 <h2>
   Test Example <span ng-show="data.loaded">"{{ data.test_name|capfirst }}:{{ data.example_id }}"</span> Details
 </h2>
@@ -37,7 +39,7 @@
   <div><sc-chart chart-dict="data.probChartData" width="150" height="150"></sc-chart></div>
 </div>
 
-<div ng-show="Object.keys(data.weighted_data_input).length">
+<div ng-show="data.weighted_data_input && Object.keys(data.weighted_data_input).length">
   <h4>Parameters with Weights</h4>
   <table class="table">
       <thead>
@@ -68,3 +70,5 @@
   </table>
 </div>
 </div>
+
+<ng-include ng-show="data.loaded" src="'/partials/parts/pager.html'"></ng-include>

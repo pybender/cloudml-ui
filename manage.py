@@ -96,12 +96,12 @@ class Test(Command):
                 app.sql_db.session.remove()
                 app.sql_db.drop_all()
 
-            if app.db.name == 'cloudml-test-db':
-                logging.debug("remove mongo collections from db: %s", app.db.name)
-                for name in app.db.collection_names():
-                    if not name.startswith('system.'):
-                        model = getattr(app.db, name)
-                        model.drop()
+            # if app.db.name == 'cloudml-test-db':
+            #     logging.debug("remove mongo collections from db: %s", app.db.name)
+            #     for name in app.db.collection_names():
+            #         if not name.startswith('system.'):
+            #             model = getattr(app.db, name)
+            #             model.drop()
 
 
 class Coverage(Command):
@@ -112,7 +112,7 @@ class Coverage(Command):
         app.config.from_object('api.test_config')
         app.init_db()
         print 'Collecting coverage info...'
-        output_dir = 'api/test/cover'
+        output_dir = 'coverage'
         # TODO: why does nose.run show different results?
         # nose.run(argv=[
         #     '',
@@ -311,7 +311,9 @@ class CreateDtnamoDbTables(Command):
 
     def run(self, **kwargs):
         from api.logs.dynamodb.models import LogMessage
+        from api.accounts.models import AuthToken
         LogMessage.create_table()
+        AuthToken.create_table()
         print 'Done.'
 
 class DropDbTables(Command):

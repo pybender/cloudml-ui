@@ -147,7 +147,7 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         ]
         self.obj.save()
         resp = self.check_details(show='name,data_fields')
-        self.assertEquals(resp['model']['data_fields'], ['employer.country'])
+        self.assertEquals(resp['model']['data_fields'], ['employer.country', 'opening_id'])
 
     def test_get_features_download_action(self):
         url = self._get_url(id=self.obj.id, action='features_download')

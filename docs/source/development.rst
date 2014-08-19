@@ -39,6 +39,9 @@ Configure rabbitmq(celery broker)::
     $ rabbitmqctl add_vhost cloudml
     $ rabbitmqctl set_permissions cloudml cloudml "*" "*" "*
     "
+Run local dynamodb::
+    
+    $ ./api/logs/dynamodb/dynamodb_local.sh
 
 Run dev server::
 

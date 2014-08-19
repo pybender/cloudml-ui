@@ -53,7 +53,7 @@ class App(Flask):
         super(App, self).__init__(*args, **kwargs)
         self.config.from_object('api.config')
         #self.config.from_envvar('CLOUDML_CONFIG', silent=True)
-        self.conn = Connection(host=self.config.get('DATABASE_HOST', 'localhost'))
+        #self.conn = Connection(host=self.config.get('DATABASE_HOST', 'localhost'))
         self.url_map.converters['regex'] = RegExConverter
         self.init_sql_db()
 
@@ -65,15 +65,15 @@ class App(Flask):
 
     def init_db(self):
         db_name = self.config['DATABASE_NAME']
-        self._db = getattr(self.conn, db_name)
+        #self._db = getattr(self.conn, db_name)
         #from pymongo.son_manipulator import AutoReference, NamespaceInjector
         #self._db.add_son_manipulator(NamespaceInjector()) # inject _ns
         #self._db.add_son_manipulator(AutoReference(self._db))
 
-        self.chan = LogChannel(self._db, 'log')
-        self.chan.ensure_channel()
-        for name in self.PUBSUB_CHANNELS.keys():
-            self.chan.sub(name)
+        # self.chan = LogChannel(self._db, 'log')
+        # self.chan.ensure_channel()
+        # for name in self.PUBSUB_CHANNELS.keys():
+        #     self.chan.sub(name)
 
     @property
     def sql_db(self):
@@ -89,9 +89,10 @@ app = create_app()
 
 celery = Celery('cloudml')
 
-for instance in app.db.instances.find():
-    app.config['CELERY_QUEUES'].append(Queue(instance['name'],
-                                             routing_key='%s.#' % instance['name']))
+# need update to use postgres
+# for instance in app.db.instances.find():
+#     app.config['CELERY_QUEUES'].append(Queue(instance['name'],
+#                                              routing_key='%s.#' % instance['name']))
 celery.add_defaults(lambda: app.config)
 
 

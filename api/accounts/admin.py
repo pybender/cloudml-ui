@@ -5,7 +5,7 @@ from api.base.admin import BaseAdmin
 from api.accounts.models import User
 
 
-class UserAdmin(BaseAdmin):
+class UserAdmin(BaseAdmin):  # pragma: no cover
     Model = User
     MIX_METADATA = False
     column_searchable_list = ('name', 'uid')

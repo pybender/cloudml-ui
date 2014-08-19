@@ -1,11 +1,39 @@
 import json
 from mock import patch, Mock
+from moto import mock_dynamodb2
 
 from api import app
 
 from api.base.test_utils import BaseDbTestCase
 from api.base.test_utils import SOMEBODY_HTTP_HEADERS as HTTP_HEADERS
-from models import User
+from models import AuthToken, User
+
+
+class AuthTokenModelTests(BaseDbTestCase):
+    def setUp(self):
+        super(AuthTokenModelTests, self).setUp()
+        self.dynamodb_mock = mock_dynamodb2()
+        self.dynamodb_mock.start()
+        AuthToken.create_table()
+
+    def tearDown(self):
+        BaseDbTestCase.tearDown(self)
+        self.dynamodb_mock.stop()
+
+    def test_token(self):
+        TOKEN = '394c46b8902fb5e8fc9268f3cfd84539'
+        SECRET = '394c46b8902fb5e8fc9268f3cfd84538'
+        token_dict = dict(oauth_token=TOKEN, oauth_token_secret=SECRET,
+                          id=TOKEN)
+
+        token = AuthToken(
+            oauth_token=TOKEN,
+            oauth_token_secret=SECRET)
+        self.assertEquals(token.to_dict(), token_dict)
+        token.save()
+
+        self.assertEquals(AuthToken.get_auth('invalid'), None)
+        self.assertEquals(AuthToken.get_auth(TOKEN), token_dict)
 
 
 class AuthDecoratorsTests(BaseDbTestCase):
@@ -118,9 +146,20 @@ class AuthResourceTests(BaseDbTestCase):
 
     BASE_URL = '/cloudml/auth'
 
+    def setUp(self):
+        BaseDbTestCase.setUp(self)
+        self.dynamodb_mock = mock_dynamodb2()
+        self.dynamodb_mock.start()
+        AuthToken.create_table()
+
+    def tearDown(self):
+        BaseDbTestCase.tearDown(self)
+        self.dynamodb_mock.stop()
+
     @patch('api.accounts.models.User.get_auth_url',
            return_value=('url', '1', '2'))
-    def test_get_auth_url(self, mock_auth):
+    @patch('api.accounts.models.AuthToken.save')
+    def test_get_auth_url(self, mock, mock_auth):
         url = '{0}/get_auth_url'.format(self.BASE_URL)
         resp = self.client.post(url, data={})
         self.assertEquals(resp.status_code, 200)
@@ -128,34 +167,50 @@ class AuthResourceTests(BaseDbTestCase):
         data = json.loads(resp.data)
         self.assertTrue('auth_url' in data)
         self.assertEquals(data['auth_url'], 'url')
-        secret = app.db['auth_tokens'].find_one({'oauth_token': '1'})
-        self.assertIsNotNone(secret)
-        self.assertEquals(secret.get('oauth_token_secret'), '2')
+        #secret = app.db['auth_tokens'].find_one({'oauth_token': '1'})
+        #self.assertIsNotNone(secret)
+        #self.assertEquals(secret.get('oauth_token_secret'), '2')
 
-    def test_authenticate(self):
-        with patch(
-            'api.accounts.models.User.authenticate',
-            return_value=(
-                '123',
-                User.query.filter_by(uid='somebody').one()
-            )
-        ) as mock_auth:
+    def test_invalid_action_or_method(self):
+        url = '{0}/invalid_action?oauth_token={1}&oauth_verifier={2}'.format(
+            self.BASE_URL, '123', '345'
+        )
 
-            url = '{0}/authenticate?oauth_token={1}&oauth_verifier={2}'.format(
-                self.BASE_URL, '123', '345'
-            )
+        resp = self.client.post(url, data={})
+        self.assertEquals(resp.status_code, 404)
 
-            # Wrong token
-            resp = self.client.post(url, data={})
-            self.assertEquals(resp.status_code, 500)
-            self.assertEquals(resp.headers['X-Odesk-Error-Message'],
-                              'Wrong token: 123')
+        url = '{0}/get_auth_url'.format(self.BASE_URL)
+        resp = self.client.get(url, data={})
+        self.assertEquals(resp.status_code, 400)
+
+        url = '{0}/get_auth_url'.format(self.BASE_URL)
+        resp = self.client.put(url, data={})
+        self.assertEquals(resp.status_code, 400)
+
+    @patch('api.accounts.models.AuthToken.get_auth',
+           return_value=None)
+    @patch('api.accounts.models.AuthToken.delete')
+    def test_authenticate(self, mock_delete, mock_get_auth):
+        url = '{0}/authenticate?oauth_token={1}&oauth_verifier={2}'.format(
+            self.BASE_URL, '123', '345'
+        )
+
+        # Wrong token
+        resp = self.client.post(url, data={})
+        self.assertEquals(resp.status_code, 500)
+        self.assertEquals(resp.headers['X-Odesk-Error-Message'],
+                          'Wrong token: 123')
+
+        with patch('api.accounts.models.User.authenticate',
+                   return_value=('123', User.query.filter_by(
+                           uid='somebody').one())) as mock_auth:
 
             # Proper token
-            app.db['auth_tokens'].insert({
+
+            mock_get_auth.return_value = {
                 'oauth_token': '123',
                 'oauth_token_secret': '999',
-            })
+            }
 
             resp = self.client.post(url, data={})
             self.assertEquals(mock_auth.call_count, 1)
