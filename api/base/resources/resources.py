@@ -306,7 +306,7 @@ class BaseResource(restful.Resource):
                                   mimetype='application/json'), code
 
 
-class BaseResourceMongo(BaseResource):
+class BaseResourceMongo(BaseResource):  # pragma: no cover
 
     def _get_list_query(self, params, **kwargs):
         fields = self._get_show_fields(params)

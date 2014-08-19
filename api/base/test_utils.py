@@ -34,6 +34,7 @@ class BaseDbTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
+        app.config.from_object('api.test_config')
         cls.engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
         # TODO: do we need this or need to create test db manually?
         try:

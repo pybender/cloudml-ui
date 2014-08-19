@@ -2,7 +2,7 @@ from api.base.resources import BaseResourceMongo
 from api import app
 
 
-class LogResource(BaseResourceMongo):
+class LogResource(BaseResourceMongo):  # pragma: no cover
     """ Log API methods """
     FILTER_PARAMS = (('type', str), ('level', str), ('params.obj', int))
     NEED_PAGING = True

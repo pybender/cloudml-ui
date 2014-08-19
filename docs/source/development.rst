@@ -61,6 +61,9 @@ Run shell::
 
     $ python manage.py shell
 
+Check unittests coverage:
+
+    $ nosetests --with-coverage --cover-package=api.accounts --verbose --tests api.accounts.tests --cover-html-dir=coverage --cover-html
 
 Frontend
 --------

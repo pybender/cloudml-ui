@@ -11,7 +11,7 @@ from api.servers.models import Server
 from ..views import XmlImportHandlerResource, XmlEntityResource,\
     XmlDataSourceResource, XmlInputParameterResource, XmlFieldResource,\
     XmlQueryResource, XmlScriptResource, XmlSqoopResource
-from ..models import XmlImportHandler, XmlDataSource,\
+from ..models import XmlImportHandler, XmlDataSource, db, \
     XmlScript, XmlField, XmlEntity, XmlInputParameter, XmlQuery, XmlSqoop
 from ..fixtures import XmlImportHandlerData, XmlEntityData, XmlFieldData, \
     XmlDataSourceData, XmlInputParameterData
@@ -85,6 +85,20 @@ class XmlImportHandlerModelTests(BaseDbTestCase):
         self.assertEqual(vendor, 'postgres')
         self.assertEqual(conn, "host='localhost' dbname='odw' \
 user='postgres' password='postgres'")
+
+    def test_update_import_params(self):
+        param = XmlInputParameter(
+            name='param', type='string', import_handler=self.handler)
+        param.save()
+        db.session.refresh(self.handler)
+        self.assertItemsEqual(
+            self.handler.import_params,
+            ['start_date', 'end_date', 'param'])
+
+        param.delete()
+        db.session.refresh(self.handler)
+        self.assertItemsEqual(
+            self.handler.import_params, ['start_date', 'end_date'])
 
 
 class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):

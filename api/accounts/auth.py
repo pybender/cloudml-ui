@@ -11,6 +11,7 @@ from api import app
 class AuthException(Exception):
     pass
 
+
 class Auth(object):
     REQUEST_TOKEN_URL = ''
     REQUEST_TOKEN_METHOD = 'GET'
