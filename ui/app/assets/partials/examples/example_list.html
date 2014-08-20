@@ -33,7 +33,7 @@
     <pagination boundary-links="true" max-size="8" num-pages="pages" current-page="page" style="margin:0;"></pagination>
 
     <small ng-show="total">
-      <p>Total examples : {{ total }}</p>
+      <p>Total examples : {{ total }}. Pages: {{ pages }}</p>
     </small>
 
     <table class="table table-striped ordered">
@@ -73,16 +73,14 @@
         </tbody>
         <tbody ng-show="!loading_state">
           <tr ng-repeat="data in objects | filter:search" ng-class="{success : data.label==data.pred_label, error : !(data.label==data.pred_label)}">
-            <td><a ng-click="details(data)">{{ data.example_id }}</a></td>
-            <td><a ng-click="details(data)">{{ data.name }}</a></td>
+            <td><a href="#{{ getExampleUrl(data) }}">{{ data.example_id }}</a></td>
+            <td><a href="#{{ getExampleUrl(data) }}">{{ data.name }}</a></td>
             <td><span>{{ data.label }}</span></td>
             <td><span>{{ data.pred_label }}</span></td>
             <td ng-repeat="label in labels">{{ data.prob[$index] }}</td>
           </tr>
         </tbody>
     </table>
-    pages: {{ pages }}
-    page: {{ page }}
     <pagination boundary-links="true" num-pages="pages" max-size="8" current-page="page"></pagination>
   </div>
 </div>

@@ -95,7 +95,7 @@ class TestExampleResource(BaseResourceSQL):
 
     def _get_details_parameters(self, extra_params):
         return self._parse_parameters(
-            extra_params + self.GET_PARAMS + self.FILTER_PARAMS)
+            extra_params + self.GET_PARAMS + self.FILTER_PARAMS + self.SORT_PARAMS)
 
     def populate_filter_params(self, kwargs):
         test = TestResult.query.get(kwargs.get('test_result_id'))
@@ -114,29 +114,39 @@ class TestExampleResource(BaseResourceSQL):
         fields = self._get_show_fields(params)
         if 'next' in fields or 'previous' in fields:
             from sqlalchemy import desc
+            from sqlalchemy.sql import select, func, text, bindparam
+            from models import db
+
             filter_params = kwargs.copy()
             filter_params.update(self._prepare_filter_params(params))
             filter_params.pop('id')
 
-            def get_pager_item(next=True):
-                cursor = TestExample.query.with_entities(
-                    TestExample.id)
-                if next:
-                    cursor = cursor.filter(TestExample.id > kwargs['id'])
-                else:
-                    cursor = cursor.filter(TestExample.id < kwargs['id'])
-                for name, val in filter_params.iteritems():
-                    fltr = self._build_query_item(name, val)
-                    if not fltr is None:
-                        cursor = cursor.filter(fltr)
-                if next:
-                    cursor = cursor.order_by(TestExample.id)
-                else:
-                    cursor = cursor.order_by(desc(TestExample.id))
-                return cursor.limit(1).first()
-
-            example.previous = get_pager_item(next=False)
-            example.next = get_pager_item()
+            sort_by = params.get('sort_by', None) or 'id'
+            is_desc = params.get('order', None) == 'desc'
+            fields_to_select = [TestExample.id]
+            # TODO: simplify query with specifying WINDOW w
+            if 'previous' in fields:
+                fields_to_select.append(
+                    func.lag(TestExample.id).over(
+                        order_by=[sort_by, 'id']).label('prev'))
+            if 'next' in fields:
+                fields_to_select.append(
+                    func.lead(TestExample.id).over(
+                        order_by=[sort_by, 'id']).label('next'))
+            tbl = select(fields_to_select)
+            for name, val in filter_params.iteritems():
+                if '->>' in name:  # TODO: refactor this
+                    try:
+                        splitted = name.split('->>')
+                        name = "%s->>'%s'" % (splitted[0], splitted[1])
+                    except:
+                        logging.warning('Invalid GET param %s', name)
+                tbl.append_whereclause("%s='%s'" % (name, val))
+            tbl = tbl.cte('tbl')
+            select1 = select(['id', 'prev', 'next']).where(
+                tbl.c.id == kwargs['id'])
+            res = db.engine.execute(select1, id_1=kwargs['id'])
+            id_, example.previous, example.next = res.fetchone()
 
         if not example.is_weights_calculated:
             example.calc_weighted_data()

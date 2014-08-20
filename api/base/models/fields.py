@@ -92,5 +92,4 @@ class S3File(TypeDecorator):
 
             with open(filename, 'w') as f:
                 f.write(str(value))
-
         return value

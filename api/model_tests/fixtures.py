@@ -103,11 +103,14 @@ class TestExampleData(DataSet):
         model = ModelData.model_01
         test_result = TestResultData.test_01
         data_input = {
-            'opening_id': "1",
+            'opening_id': "201913099",
             'employer->country': 'USA',
             'contractor->dev_blurb': "Over ten years experience successfully "
                                      "performing a number of data entry"
                                      " and clerical tasks.",
+            'contractor->dev_timezone': "",
+            "employer->op_country_tz": "",
+            "employer->op_timezone": "",
             'tsexams': {
                 'Some Exam': 5.0
             }
@@ -129,9 +132,12 @@ class TestExampleData(DataSet):
         model = ModelData.model_01
         test_result = TestResultData.test_01
         data_input = {
-            'opening_id': "2",
+            'opening_id': "201913099",
             'employer->country': 'Canada'
         }
+        weighted_data_input = {
+            'opening_id': "201913099",
+            'employer->country': 'Canada'}
 
     class test_example_03:
         created_on = "2013-04-19 14:37:23.145000"
@@ -148,7 +154,7 @@ class TestExampleData(DataSet):
         model = ModelData.model_01
         test_result = TestResultData.test_01
         data_input = {
-            'opening_id': "3",
+            'opening_id': "201913099",
             'employer->country': 'USA'
         }
 

@@ -10,6 +10,26 @@ from views import InstanceResource
 from models import Instance, Cluster
 from fixtures import InstanceData
 from tasks import *
+from api.base.models import db
+
+
+class InstanceModelTests(BaseDbTestCase):
+    datasets = [InstanceData]
+
+    def test_set_default(self):
+        instance = Instance.query.filter_by(is_default=False)[0]
+        instance.is_default = True
+        instance.save()
+
+        db.session.refresh(instance)
+
+        self.assertTrue(instance.is_default)
+        defaults = Instance.query.filter_by(is_default=True)
+        self.assertEquals(defaults.count(), 1, list(defaults))
+
+
+class ClusterModelTest(BaseDbTestCase):
+    pass
 
 
 class InstancesTests(BaseDbTestCase, TestChecksMixin):

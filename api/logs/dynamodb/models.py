@@ -57,11 +57,7 @@ class LogMessage(object):
 
     @classmethod
     def create_table(cls):
-        try:
-            Table.create(cls.TABLE_NAME, connection=db.conn,
-                         schema=cls.SCHEMA)
-        except JSONResponseError as ex:
-            logging.exception(str(ex))
+        db.create_table(cls.TABLE_NAME, cls.SCHEMA)
 
     @classmethod
     def filter_by_object(cls, log_type, object_id,
@@ -97,4 +93,4 @@ class LogMessage(object):
     def delete_related_logs(cls, object_id, level=None):
         from api import app
         if not app.config['TEST_MODE']:
-            db.delete_items(cls.TABLE_NAME, object_id=object_id)
+            db.delete_items(cls.TABLE_NAME, object_id__eq=object_id)

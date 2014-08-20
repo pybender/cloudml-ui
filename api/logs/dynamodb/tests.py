@@ -1,6 +1,7 @@
 import httplib
 import json
 import urllib
+from moto import mock_dynamodb2
 
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS
 from api.logs.views import LogResource
@@ -17,10 +18,14 @@ class LogsTests(BaseDbTestCase, TestChecksMixin):
 
     def setUp(self):
         BaseDbTestCase.setUp(self)
-        from api.amazon_utils import AmazonDynamoDBHelper
-        from api.logs.dynamodb.models import LogMessage
-        db = AmazonDynamoDBHelper()
-        db.delete_items(LogMessage.TABLE_NAME, object_id__eq=self.OBJECT_ID)
+        from models import LogMessage
+        self.dynamodb_mock = mock_dynamodb2()
+        self.dynamodb_mock.start()
+        LogMessage.create_table()
+
+    def tearDown(self):
+        BaseDbTestCase.tearDown(self)
+        self.dynamodb_mock.stop()
 
     def test_list(self):
         import logging
