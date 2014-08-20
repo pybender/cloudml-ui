@@ -87,7 +87,6 @@ class ServerFileResource(BaseResource):
 
     def _get_folder(self, kwargs):
         folder = kwargs.get('folder')
-        print folder
         if folder not in self.ALLOWED_FOLDERS:
             raise NotFound(self.MESSAGE404 % kwargs)
         return folder
