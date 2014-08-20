@@ -5,7 +5,7 @@ from api import app
 
 
 @app.conn.register
-class LogMessage(Document):
+class LogMessage(Document):  # pragma: no cover
     TRAIN_MODEL = 'trainmodel_log'
     IMPORT_DATA = 'importdata_log'
     RUN_TEST = 'runtest_log'

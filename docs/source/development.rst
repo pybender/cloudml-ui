@@ -39,6 +39,9 @@ Configure rabbitmq(celery broker)::
     $ rabbitmqctl add_vhost cloudml
     $ rabbitmqctl set_permissions cloudml cloudml "*" "*" "*
     "
+Run local dynamodb::
+    
+    $ ./api/logs/dynamodb/dynamodb_local.sh
 
 Run dev server::
 
@@ -58,6 +61,9 @@ Run shell::
 
     $ python manage.py shell
 
+Check unittests coverage:
+
+    $ nosetests --with-coverage --cover-package=api.accounts --verbose --tests api.accounts.tests --cover-html-dir=coverage --cover-html
 
 Frontend
 --------

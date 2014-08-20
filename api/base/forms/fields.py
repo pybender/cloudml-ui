@@ -5,28 +5,28 @@ from sqlalchemy.orm.exc import NoResultFound
 
 
 class BaseField(object):
-    DEFAULT_VALUE = None
 
-    def __init__(self, default=None, name=None):
+    def __init__(self, name=None):
         self.value = None
         self.name = name
-        self._default = default or self.DEFAULT_VALUE
 
     def clean(self, value):
         self.value = value
         return self.value
 
 
+# TODO: convert to string?
 class CharField(BaseField):
     pass
 
 
 class BooleanField(BaseField):
+    TRUE_VALUES = ['true', 'True', 1, '1', u'1']
+
     def clean(self, value):
         value = super(BooleanField, self).clean(value)
         if value is not None:
-            return value == 'true' or value == 'True'\
-                or value is True or value == '1' or value == u'1'
+            return value in self.TRUE_VALUES
         return None
 
 
@@ -54,7 +54,8 @@ class ChoiceField(CharField):
         return value
 
 
-class DocumentField(CharField):
+# TODO: could we use ModelField?
+class DocumentField(CharField):  # pragma: no cover
     def __init__(self, **kwargs):
         self.Model = kwargs.pop('doc')
         self.by_name = kwargs.pop('by_name', False)
@@ -83,68 +84,45 @@ class DocumentField(CharField):
 
 class ModelField(CharField):
     def __init__(self, **kwargs):
+        self.model = None
         self.Model = kwargs.pop('model')
-        self.by_name = kwargs.pop('by_name', False)
         self.return_model = kwargs.pop('return_model', False)
-        self.filter_params = kwargs.pop('filter_params', {})
         super(ModelField, self).__init__(**kwargs)
 
     def clean(self, value):
         value = super(ModelField, self).clean(value)
 
-        if value is not None:
-            query = self.Model.query
+        if value is None:
+            return None
 
-            if self.by_name:
-                query = query.filter_by(name=value)
-            else:
-                query = query.filter_by(id=value)
-            try:
-                obj = query.one()
-            except NoResultFound:
-                obj = None
-            if obj is None:
-                raise ValidationError('{0} not found'.format(
-                    self.Model.__name__))
+        self.model = self.Model.query.get(value)
+        if self.model is None:
+            raise ValidationError(
+                '{0} not found'.format(self.Model.__name__))
 
-            if self.return_model:
-                return obj
-            else:
-                self.model = obj
-                return value
+        return self.model if self.return_model else value
 
 
 class MultipleModelField(CharField):
     def __init__(self, **kwargs):
+        self.models = []
         self.Model = kwargs.pop('model')
-        self.by_name = kwargs.pop('by_name', False)
         self.return_model = kwargs.pop('return_model', False)
-        self.filter_params = kwargs.pop('filter_params', {})
         super(MultipleModelField, self).__init__(**kwargs)
 
     def clean(self, value):
         value = super(MultipleModelField, self).clean(value)
+
         if not value:
             return None
 
-        ids = value.split(',')
-
-        query = self.Model.query
-
-        if self.by_name:
-            query = query.filter(self.Model.name.in_(ids))
-        else:
-            query = query.filter(self.Model.id.in_(ids))
-        objects = query.all()
-        if not objects:
+        self.models = self.Model.query.filter(
+            self.Model.id.in_(value.split(','))).all()
+        if not self.models:
             raise ValidationError('{0} not found'.format(
                 self.Model.__name__))
 
-        if self.return_model:
-            return objects
-        else:
-            self.model = objects
-            return value
+        return self.models if self.return_model else value
 
 
 class JsonField(CharField):
@@ -197,7 +175,8 @@ class ImportHandlerFileField(BaseField):
         return value
 
 
-class ImportHandlerField(CharField):
+# TODO: Use ModelField after removing JSON Import handlers
+class ImportHandlerField(CharField):  # pragma: no cover
     def clean(self, value):
         if value:
             if 'xml' in value:

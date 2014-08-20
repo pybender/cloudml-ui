@@ -16,8 +16,8 @@ angular.module('app.datas.controllers', ['app.config', ])
   $scope.simple_filters = {} # Filters by label and pred_label
   $scope.data_filters = [] # Filters by data_input.* fields
   $scope.loading_state = false
-  $scope.sort_by = ''
-  $scope.asc_order = true
+  $scope.sort_by = $scope.filter_opts['sort_by'] or ''
+  $scope.asc_order = $scope.filter_opts['order'] != 'desc'
 
   $scope.init = (test, extra_params={'action': 'examples:list'}) ->
     $scope.extra_params = extra_params
@@ -69,6 +69,7 @@ angular.module('app.datas.controllers', ['app.config', ])
       # Change sort by field
       $scope.asc_order = true
       $scope.sort_by = sort_by
+    $location.search($scope.getParamsDict())
     @load()
 
   $scope.addFilter = () ->
@@ -82,11 +83,26 @@ angular.module('app.datas.controllers', ['app.config', ])
         data_filters[item.name] = item.value
     $scope.filter_opts = _.extend($scope.simple_filters, data_filters,
                                   $scope.extra_params)
-    $location.search($scope.filter_opts)
+    $location.search($scope.getParamsDict())
 
   $scope.details = (example) ->
-    delete $scope.filter_opts['action']
-    $location.url(example.objectUrl()).search($scope.filter_opts)
+    sort_opts = {
+      sort_by: $scope.sort_by
+      order: if $scope.asc_order then 'asc' else 'desc'
+    }
+    $location.url(example.objectUrl()).search($scope.getParamsDict())
+
+  $scope.getParamsDict = () ->
+    sort_opts = {
+      sort_by: $scope.sort_by
+      order: if $scope.asc_order then 'asc' else 'desc'
+    }
+    res = _.extend(sort_opts, $scope.filter_opts)
+    delete res['action']
+    return res
+
+  $scope.getExampleUrl = (example) ->
+    example.objectUrl() + '?' + $.param($scope.getParamsDict())
 ])
 
 .controller('GroupedExamplesCtrl', [

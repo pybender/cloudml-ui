@@ -11,10 +11,95 @@ from api.servers.models import Server
 from ..views import XmlImportHandlerResource, XmlEntityResource,\
     XmlDataSourceResource, XmlInputParameterResource, XmlFieldResource,\
     XmlQueryResource, XmlScriptResource, XmlSqoopResource
-from ..models import XmlImportHandler, XmlDataSource,\
+from ..models import XmlImportHandler, XmlDataSource, db, \
     XmlScript, XmlField, XmlEntity, XmlInputParameter, XmlQuery, XmlSqoop
+from ..fixtures import XmlImportHandlerData, XmlEntityData, XmlFieldData, \
+    XmlDataSourceData, XmlInputParameterData
 
 from lxml import etree
+
+
+HANDLER1_DATA = """<plan>
+  <inputs>
+    <param name="start_date" type="date"/>
+    <param name="end_date" type="date"/>
+  </inputs>
+  <datasources>
+    <db dbname="odw" host="localhost" name="ds" password="postgres" user="postgres" vendor="postgres"/>
+  </datasources>
+  <import>
+    <entity datasource="ds" name="something">
+      <field name="opening_id" type="integer"/>
+    </entity>
+  </import>
+</plan>
+"""
+
+
+class XmlImportHandlerModelTests(BaseDbTestCase):
+    datasets = [
+        XmlImportHandlerData,
+        XmlEntityData,
+        XmlFieldData,
+        XmlDataSourceData,
+        XmlInputParameterData
+    ]
+
+    def setUp(self):
+        super(XmlImportHandlerModelTests, self).setUp()
+        self.handler = XmlImportHandler.query.filter_by(
+            name="Xml Handler 1").one()
+
+    def test_get_plan_config(self):
+        self.assertEquals(HANDLER1_DATA, self.handler.get_plan_config())
+        self.assertEquals(HANDLER1_DATA, self.handler.data)
+
+    def test_load_import_handler(self):
+        data = open('./conf/extract.xml', 'r').read()
+        handler = XmlImportHandler(name='xml ih')
+        handler.save()
+        handler.data = data
+
+        self.assertEquals(len(handler.xml_input_parameters), 2)
+        self.assertEquals(len(handler.xml_scripts), 1)
+        # 3 ds defined in the file + one extra input datasource
+        self.assertEquals(
+            len(handler.xml_data_sources), 4, handler.xml_data_sources)
+        self.assertItemsEqual(
+            handler.get_fields(),
+            ['application_id',
+             'employer.op_timezone',
+             'employer.op_country_tz',
+             'employer.op_tot_jobs_filled',
+             'employer.country',
+             'contractor.dev_is_looking',
+             'contractor.dev_is_looking_week',
+             'contractor.dev_active_interviews',
+             'contractor.dev_availability'])
+
+    def test_get_fields(self):
+        self.assertEqual(self.handler.get_fields(), ['opening_id'])
+
+    def test_get_ds_details_for_query(self):
+        vendor, conn = self.handler._get_ds_details_for_query('ds')
+        self.assertEqual(vendor, 'postgres')
+        self.assertEqual(conn, "host='localhost' dbname='odw' \
+user='postgres' password='postgres'")
+
+    def test_update_import_params(self):
+        param = XmlInputParameter(
+            name='param', type='string', import_handler=self.handler)
+        param.save()
+        db.session.refresh(self.handler)
+        self.assertItemsEqual(
+            self.handler.import_params,
+            ['start_date', 'end_date', 'param'])
+
+        param.delete()
+        db.session.refresh(self.handler)
+        self.assertItemsEqual(
+            self.handler.import_params, ['start_date', 'end_date'])
+
 
 class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
     """
@@ -47,30 +132,34 @@ class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
 
         resp = self.check_details(show='name,xml', obj=self.obj)
         obj = resp[self.RESOURCE.OBJECT_NAME]
-        
-        print obj['xml']
+
         xmlRoot = etree.fromstring(obj['xml'])
         self.assertEqual(xmlRoot.tag, 'plan')
-        xmlEntities = xmlRoot.xpath('./import/entity[@datasource="odw"][@name="application"]')
+        xmlEntities = xmlRoot.xpath(
+            './import/entity[@datasource="odw"][@name="application"]')
         self.assertEqual(1, len(xmlEntities))
-        
-        fields = xmlEntities[0].xpath('./entity[@datasource="employer_info"][@name="employer_info"]/\
+
+        fields = xmlEntities[0].xpath(
+            './entity[@datasource="employer_info"][@name="employer_info"]/\
             field[@name="employer.op_country_tz"]')
         self.assertEqual(1, len(fields))
         self.assertEqual('$.op_country_tz', fields[0].attrib.get('jsonpath'))
         self.assertEqual('string', fields[0].attrib.get('type'))
         self.assertEqual(None, fields[0].attrib.get('multipart'))
         self.assertEqual(None, fields[0].attrib.get('required'))
-        
-        fields = xmlEntities[0].xpath('./entity[@datasource="employer_info"][@name="employer_info"]/\
+
+        fields = xmlEntities[0].xpath(
+            './entity[@datasource="employer_info"][@name="employer_info"]/\
             field[@name="employer.op_tot_jobs_filled"]')
         self.assertEqual(1, len(fields))
-        self.assertEqual('$.op_tot_jobs_filled', fields[0].attrib.get('jsonpath'))
+        self.assertEqual(
+            '$.op_tot_jobs_filled', fields[0].attrib.get('jsonpath'))
         self.assertEqual('string', fields[0].attrib.get('type'))
         self.assertEqual('true', fields[0].attrib.get('multipart'))
         self.assertEqual(None, fields[0].attrib.get('required'))
-        
-        fields = xmlEntities[0].xpath('./entity[@datasource="employer_info"][@name="employer_info"]/\
+
+        fields = xmlEntities[0].xpath(
+            './entity[@datasource="employer_info"][@name="employer_info"]/\
             field[@name="employer.country"]')
         self.assertEqual(1, len(fields))
         self.assertEqual('$.op_country', fields[0].attrib.get('jsonpath'))
@@ -154,6 +243,7 @@ class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
             iter_mock.assert_called_with(['SELECT NOW() WHERE TRUE LIMIT 2'],
                                          "host='localhost' dbname='odw' "
                                          "user='postgres' password='postgres'")
+
 
 class IHLoadMixin(object):
     def load_import_handler(self, filename='conf/extract.xml'):
@@ -256,8 +346,9 @@ class XmlInputParameterTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
         handler_id = self.load_import_handler()
         self.BASE_URL = '/cloudml/xml_import_handlers/{0!s}/input_parameters/'.format(
             handler_id)
-        self.obj = XmlInputParameter.query.filter_by(import_handler_id=handler_id,
-                                                     name='start').one()
+        self.obj = XmlInputParameter.query.filter_by(
+            import_handler_id=handler_id,
+            name='start').one()
 
     def test_list(self):
         self.check_list(show='name')
@@ -330,18 +421,22 @@ class XmlFieldTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
         self.assertTrue('configuration' in resp)
         self.assertTrue('types' in resp['configuration'])
         self.assertTrue('transform' in resp['configuration'])
-        
+
     def test_required_mutlipart_serialization(self):
-        field = XmlField.query.filter_by(name='employer.op_timezone').one()
+        field = XmlField.query.filter_by(
+            name='employer.op_timezone').one()
         self.assertFalse(field.required)
         self.assertFalse(field.multipart)
-        field = XmlField.query.filter_by(name='employer.op_country_tz').one()
+        field = XmlField.query.filter_by(
+            name='employer.op_country_tz').one()
         self.assertFalse(field.required)
         self.assertFalse(field.multipart)
-        field = XmlField.query.filter_by(name='employer.op_tot_jobs_filled').one()
+        field = XmlField.query.filter_by(
+            name='employer.op_tot_jobs_filled').one()
         self.assertFalse(field.required)
         self.assertTrue(field.multipart)
-        field = XmlField.query.filter_by(name='employer.country').one()
+        field = XmlField.query.filter_by(
+            name='employer.country').one()
         self.assertTrue(field.required)
         self.assertFalse(field.multipart)
 

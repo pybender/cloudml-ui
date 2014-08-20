@@ -48,7 +48,6 @@ class AuthResource(BaseResourceSQL):
                 "User Auth: trying to authenticate with token %s", oauth_token)
             # TODO: Use redis?
             auth = AuthToken.get_auth(oauth_token)
-            print "sssss",auth
             if not auth:
                 logging.error('User Auth: token %s not found', oauth_token)
                 return odesk_error_response(

@@ -1,3 +1,4 @@
+import logging
 from lxml import etree
 from sqlalchemy.orm import relationship, deferred, backref, validates
 from sqlalchemy.dialects import postgresql
@@ -26,6 +27,12 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
 
     @data.setter
     def data(self, val):
+        has_root_ent = XmlEntity.query.filter_by(
+            import_handler=self,
+            entity=None).count()
+        if has_root_ent:
+            raise ValueError("Import Handler isn't empty")
+
         fill_import_handler(self, val)
 
     def _get_in_order(self, items, field, order):
@@ -115,10 +122,33 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
         """
         Returns list of the field names
         """
-        return []
+        if self.data is None:
+            return []
 
-    def get_import_params(self):
-        return [p.name for p in self.input_parameters]
+        def get_entity_fields(entity):
+            fields = []
+            for name, field in entity.fields.iteritems():
+                if not field.is_datasource_field:
+                    fields.append(field.name)
+            for sub_entity in entity.nested_entities_field_ds.values():
+                fields += get_entity_fields(sub_entity)
+            for sub_entity in entity.nested_entities_global_ds:
+                fields += get_entity_fields(sub_entity)
+            return fields
+
+        from core.xmlimporthandler.importhandler import ExtractionPlan, \
+            ImportHandler as CoreImportHandler
+        # TODO: try .. except after check this with real import handlers
+        try:
+            plan = ExtractionPlan(self.data, is_file=False)
+            return get_entity_fields(plan.entity)
+        except Exception, exc:
+            raise
+            logging.error(exc)
+
+    # TODO: looks like obsolete
+    # def get_import_params(self):
+    #     return [p.name for p in self.input_parameters]
 
     def update_import_params(self):
         self.import_params = [p.name for p in self.xml_input_parameters]
@@ -457,6 +487,7 @@ def fill_import_handler(import_handler, xml_data=None):
             ds_dict[datasource.name] = ds
             db.session.add(ds)
 
+        import_handler.import_params = []
         for inp in plan.inputs.values():
             param = XmlInputParameter(
                 name=inp.name,

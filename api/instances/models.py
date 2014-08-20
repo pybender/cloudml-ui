@@ -26,6 +26,9 @@ class Instance(BaseModel, db.Model):
         if commit:
             db.session.commit()
 
+    def __repr__(self):
+        return "<Instance %s>" % self.name
+
 
 class Cluster(BaseModel, db.Model):
     STATUS_NEW = 'New'

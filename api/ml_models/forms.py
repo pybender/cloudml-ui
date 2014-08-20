@@ -10,7 +10,7 @@ from core.trainer.config import FeatureModel, SchemaException
 from core.importhandler.importhandler import ExtractionPlan, \
     ImportHandlerException
 from api.base.forms import BaseForm, ValidationError, ModelField, \
-    CharField, JsonField, ImportHandlerFileField, MultipleModelField, \
+    CharField, JsonField, ImportHandlerFileField, \
     ChoiceField, ImportHandlerField, IntegerField
 from api.models import Tag, ImportHandler, Model, XmlImportHandler
 from api.features.models import FeatureSet, PredefinedClassifier

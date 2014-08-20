@@ -27,8 +27,11 @@ class Server(BaseModel, db.Model):
         s3 = AmazonS3Helper(
             bucket_name=app.config['CLOUDML_PREDICT_BUCKET_NAME'])
         for key in s3.list_keys(path):
+            print "!!!!!!!!!!!1", key, key.name
             uid = key.name.split('/')[-1]
+            print "uid", uid
             key = s3.bucket.get_key(key.name)
+            print "buk", key
 
             if key.get_metadata('hide') == 'True':
                 continue
