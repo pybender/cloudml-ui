@@ -1,5 +1,5 @@
 import time
-import datetime
+from datetime import datetime, timedelta
 import logging
 import uuid
 
@@ -33,8 +33,7 @@ class LogMessage(object):
     ]
 
     def __init__(self, type_, content, object_id=None, level='INFO'):
-        uid = str(uuid.uuid1().hex)
-        self.id = '{0}:{1}:{2}'.format(type_, str(time.time()), uid)
+        self.id = '{0}:{1}'.format(type_, str(time.time()))
         self.type = type_
         self.content = content
         self.object_id = object_id
@@ -60,34 +59,47 @@ class LogMessage(object):
         db.create_table(cls.TABLE_NAME, cls.SCHEMA)
 
     @classmethod
-    def filter_by_object(cls, log_type, object_id,
-                         level=None, limit=None, next_token=None):
+    def filter_by_object(cls, log_type, object_id, next_token, order_str,
+                         level=None, limit=None):
+        query_filter = {}
         params = {
             'object_id__eq': object_id,
             'id__beginswith': log_type
         }
 
+        order_asc = True if order_str == 'asc' else False
+        try:
+            next_token = float(next_token)
+        except (ValueError, TypeError):
+            next_token = None
+
+        if order_asc:
+            next_token = next_token if not next_token is None else 0
+            query_filter['created_on__gt'] = next_token
+        else:
+            day_ahead = datetime.now() + timedelta(1)
+            next_token = next_token if not next_token is None else \
+                time.mktime(day_ahead.timetuple())
+            query_filter['created_on__lt'] = next_token
+
         if level is not None and level in cls.LEVELS_LIST:
             idx = cls.LEVELS_LIST.index(level)
-            params['level__lte'] = idx
+            query_filter['level__lte'] = idx
 
         items = []
-        res, next_token = db.get_items(
-            cls.TABLE_NAME,
-            limit=limit,
-            next_token=next_token,
-            reverse=False,
-            **params
-        )
+        res = db.get_items(cls.TABLE_NAME, limit=limit, reverse=not order_asc,
+                           query_filter=query_filter, **params)
+        new_next_token = None
         for item in res:
             try:
-                item['created_on'] = datetime.datetime.fromtimestamp(
-                    item['created_on'])
+                new_next_token = item['created_on']
+                item['created_on'] = datetime.fromtimestamp(item['created_on'])
                 item['level'] = cls.LEVELS_LIST[int(item['level'])]
             except TypeError:
                 pass
             items.append(item)
-        return items, next_token
+        new_next_token = None if len(items) < limit else new_next_token
+        return items, new_next_token
 
     @classmethod
     def delete_related_logs(cls, object_id, level=None):
