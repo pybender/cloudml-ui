@@ -364,7 +364,7 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
       link: (scope, el, attrs) ->
 
         # Show progress bar if progress attribute is specified
-        if attrs.progress
+        if attrs.cmlProgress
           tmpl = '''
             <div class="progress progress-striped active">
               <div class="bar" style="width: 100%;"></div>

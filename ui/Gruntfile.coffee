@@ -27,14 +27,14 @@ module.exports = (grunt)->
       livereload:
         options:
           livereload: cmlConfig.reloadPort
-        files: [
-          '<%= cmlConfig.appDir %>/**/*'
-        ]
+        files: ['<%= cmlConfig.appDir %>/**/*',
+                'vendor.config.coffee']
       html2js:
         files: ['<%= cmlConfig.appDir %>/assets/partials/**/*.html']
         tasks: ['html2js:compile', 'index:local']
       index_local:
-        files: ['<%= cmlConfig.appDir %>/assets/index.html']
+        files: ['<%= cmlConfig.appDir %>/assets/index.html',
+                'vendor.config.coffee']
         tasks: ['index:local']
 
     coffee:
@@ -235,7 +235,8 @@ module.exports = (grunt)->
       filesString = ''
       for cdnObj in vendorConfig.cdn
         preamble = if cdnObj is vendorConfig.cdn[0] then '' else '    '
-        filesString += "#{preamble}<script src=\"#{cdnObj.external}\"></script>\n"
+        cdnUrl = if target is 'local' then cdnObj.notmin else cdnObj.external
+        filesString += "#{preamble}<script src=\"#{cdnUrl}\"></script>\n"
       replaceTokenWith /<!-- TAG_CDN -->[^]+TAG_CDN -->/g, filesString
 
     putVendorBundledFiles = ->
