@@ -8,12 +8,29 @@ from api.logs.logger import init_logger
 from api.amazon_utils import AmazonEC2Helper
 from api.ml_models.models import Model
 from api.base.tasks import SqlAlchemyTask
-
+from api.instances.models import Cluster
+from api.amazon_utils import AmazonEMRHelper
 
 
 class InstanceRequestingError(Exception):
     pass
 
+
+@celery.task(base=SqlAlchemyTask)
+def synchronyze_cluster_list():
+    clusters = Cluster.query.all()
+    emr = AmazonEMRHelper()
+    for cluster in clusters:
+        status = emr.describe_jobflow(cluster.jobflow_id).state
+        if status == 'terminated':
+            logging.info('Cluster %s terminated, it will be deleted' % cluster.jobflow_id)
+            cluster.delete()
+        if status in Cluster.STATUSES:
+            claster.status = status
+            claster.save()
+        else:
+            logging.info('Unknown jobflow status %s' % status)
+    
 
 @celery.task(base=SqlAlchemyTask)
 def request_spot_instance(dataset_id=None, instance_type=None, model_id=None):
