@@ -248,10 +248,14 @@ class AmazonDynamoDBHelper(object):
 
     def delete_items(self, table_name, **kwargs):
         table = self._get_table(table_name)
-        res = table.query(**kwargs)
+        res = table.query_2(**kwargs)
         with table.batch_write() as batch:
             for item in res:
                 batch.delete_item(**item.get_keys())
+
+    def delete_item(self, table_name, **kwargs):
+        table = self._get_table(table_name)
+        table.delete_item(**kwargs)
 
     def batch_write(self, table_name, data_list):
         table = self._get_table(table_name)
