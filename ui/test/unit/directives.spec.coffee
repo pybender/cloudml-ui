@@ -18,7 +18,7 @@ describe "directives", ->
 
   describe "parameters-editor", ->
 
-    xit "should create parameters editor control with string parameter", ->
+    it "should create parameters editor control with string parameter", ->
       inject ($compile, $rootScope) ->
 
         $rootScope.paramsConfig = {"str_param": {"type": "str"}}
@@ -236,3 +236,31 @@ describe "directives", ->
         addItem(obj)
 
         expect(obj.new_key).toEqual('new_value')
+
+  describe "loadindicator", ->
+
+    it "should create progress", inject(($compile, $rootScope) ->
+      element = $compile("""
+<loadindicator title="Adding model..." cml-progress="savingProgress"></loadindicator>
+""")($rootScope)
+
+      $rootScope.savingProgress = '0%'
+      $rootScope.$digest()
+      expect(element.html()).toContain('<div class="progress progress-striped active">')
+      expect(element.html()).toContain('<div class="bar" style="width: 0%;"></div>')
+
+      $rootScope.savingProgress = '10%'
+      $rootScope.$digest()
+      expect(element.html()).toContain('<div class="bar" style="width: 10%;"></div>')
+    )
+
+
+    it "should create spinner", inject(($compile, $rootScope) ->
+      element = $compile("""
+<loadindicator title="Adding model..."></loadindicator>
+""")($rootScope)
+
+      $rootScope.$digest()
+      expect(element[0].outerHTML).toContain('loading-indicator-spin')
+      expect(element.html()).toContain('<img src="/img/ajax-loader.gif">')
+    )

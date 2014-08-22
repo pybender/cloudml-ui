@@ -375,8 +375,9 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
           el.find('.bar').css width: '0%'
           # Progress attribute value is expected to be a valid watchExpression
           # because it is going to be watched for changes
-          scope.$watch attrs.progress, (newVal, oldVal, scope) ->
+          scope.$watch attrs.cmlProgress, (newVal, oldVal, scope) ->
             el.find('.bar').css width: newVal
+            return 0
 
         # Spinner otherwise
         else
