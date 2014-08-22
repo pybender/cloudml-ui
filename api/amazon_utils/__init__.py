@@ -21,6 +21,9 @@ class AmazonEMRHelper(object):    # pragma: no cover
     def terminate_jobflow(self, jobflowid):
         self.conn.terminate_jobflow(jobflowid)
 
+    def describe_jobflow(self, jobflowid):
+        return self.conn.describe_jobflow(jobflowid)
+
 
 class AmazonEC2Helper(object):    # pragma: no cover
     def __init__(self, token=None, secret=None, region='us-west-2'):
