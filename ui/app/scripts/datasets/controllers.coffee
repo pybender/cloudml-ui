@@ -38,11 +38,9 @@ filesize,records_count,time,created_by,updated_by'
 
 .controller('DatasetActionsCtrl', [
   '$scope'
-  '$modal'
-  '$window'
   'DataSet'
 
-  ($scope, $modal, $window, DataSet) ->
+  ($scope, DataSet) ->
     $scope.init = (opts={}) ->
       if not opts.dataset
         throw new Error "Please specify dataset"
@@ -55,11 +53,11 @@ filesize,records_count,time,created_by,updated_by'
 
     $scope.delete = ()->
       $scope.openDialog({
-        $modal: $modal
         model: $scope.ds
         template: 'partials/base/delete_dialog.html'
         ctrlName: 'DialogCtrl'
         action: 'delete dataset'
+        path: $scope.handler.objectUrl()
       })
 
     $scope.download = () ->
@@ -187,9 +185,6 @@ filesize,records_count,time,created_by,updated_by'
       {name: 'JSON', value: 'json'}, {name: 'CSV', value: 'csv'}
     ]
 
-    $scope.close = ->
-      $scope.$close()
-
     $scope.start = (result) ->
       $scope.dataset = new DataSet({
         'import_handler_id': $scope.handler.id
@@ -202,7 +197,7 @@ filesize,records_count,time,created_by,updated_by'
       }
       $scope.dataset.$save(data)
       .then ->
-        $scope.close()
+        $scope.$close(true)
         $location.url $scope.dataset.objectUrl()
       , (opts) ->
         $scope.setError(opts, 'creating dataset')

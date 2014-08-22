@@ -67,15 +67,21 @@ describe "datasets", ->
       createController "DatasetActionsCtrl"
 
     it "should open delete dialog", inject (ImportHandler, DataSet) ->
-      $rootScope.handler = new ImportHandler()
-      $rootScope.ds = new DataSet()
 
       $rootScope.openDialog = jasmine.createSpy()
 
       createController "DatasetActionsCtrl"
+      $rootScope.handler = new ImportHandler()
+      $rootScope.handler.id = HANDLER_ID
+      $rootScope.ds = new DataSet()
       $rootScope.delete()
 
-      expect($rootScope.openDialog).toHaveBeenCalled()
+      expect($rootScope.openDialog).toHaveBeenCalledWith
+        model: $rootScope.ds
+        template: 'partials/base/delete_dialog.html'
+        ctrlName: 'DialogCtrl'
+        action: 'delete dataset'
+        path: $rootScope.handler.objectUrl()
 
     it "should generate download link", inject (ImportHandler, DataSet) ->
       spyOn window, '$cml_window_location_replace'
@@ -218,14 +224,13 @@ describe "datasets", ->
     it "should POST save and redirect", inject(
       ($location, DataSet) ->
         handlerType = 'xml'
-        dialog =
+        openOptions =
           model:
             id: HANDLER_ID
             TYPE: handlerType
             import_params: ['start', 'end']
-          close: jasmine.createSpy('dialog.close')
 
-        $rootScope.close =
+        $rootScope.$close = jasmine.createSpy('$scope.$close')
         $location.url = jasmine.createSpy('$location.url')
         url = "#{settings.apiUrl}importhandlers/#{handlerType}/#{HANDLER_ID}/datasets/"
         $httpBackend.expectPOST(url).respond angular.toJson
@@ -235,13 +240,13 @@ describe "datasets", ->
 
         createController "LoadDataDialogCtrl",
           $location: $location
-          dialog: dialog
+          openOptions: openOptions
           DataSet: DataSet
 
         $rootScope.start()
         $httpBackend.flush()
 
-        expect(dialog.close).toHaveBeenCalled()
+        expect($rootScope.$close).toHaveBeenCalled()
         expect($location.url).toHaveBeenCalledWith("/handlers/xml/#{HANDLER_ID}/datasets/#{DS_ID}")
     )
 

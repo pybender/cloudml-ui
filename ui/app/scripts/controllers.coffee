@@ -204,7 +204,7 @@ angular.module('app.controllers', ['app.config', ])
         if $scope.LIST_MODEL_NAME?
             $scope.$emit 'BaseListCtrl:start:load', $scope.LIST_MODEL_NAME
         if $scope.path?
-          $location.path $scope.path
+          $location.url $scope.path
       ), ((opts) ->
         $scope.setError(opts, $scope.action + ' ' + $scope.model.name)
       )
