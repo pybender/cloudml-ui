@@ -198,7 +198,7 @@ angular.module('app.controllers', ['app.config', ])
 
     $scope.delete = (result) ->
       $scope.model.$delete().then (() ->
-        $scope.close()
+        $scope.$close(true)
         $scope.$emit('modelDeleted', [$scope.model])
         $scope.$broadcast('modelDeleted', [$scope.model])
         if $scope.LIST_MODEL_NAME?
@@ -212,18 +212,14 @@ angular.module('app.controllers', ['app.config', ])
 
 .controller('DialogCtrl', [
   '$scope'
-  '$location'
-  'dialog'
+  'openOptions'
 
-  ($scope, $location, dialog) ->
+  ($scope, openOptions) ->
     $scope.resetError()
-    $scope.MESSAGE = dialog.action
-    $scope.model = dialog.model
-    $scope.path = dialog.path
-    $scope.action = dialog.action
-
-    $scope.close = ->
-      dialog.close()
+    $scope.MESSAGE = openOptions.action
+    $scope.model = openOptions.model
+    $scope.path = openOptions.path
+    $scope.action = openOptions.action
 ])
 
 .controller('BaseListCtrl', [

@@ -174,12 +174,12 @@ filesize,records_count,time,created_by,updated_by'
 .controller('LoadDataDialogCtrl', [
   '$scope'
   '$location'
-  'dialog'
+  'openOptions'
   'DataSet'
 
-  ($scope, $location, dialog, DataSet) ->
+  ($scope, $location, openOptions, DataSet) ->
     $scope.parameters = {}
-    handler = dialog.model
+    handler = openOptions.model
     $scope.handler = handler
     $scope.params = handler.import_params
     $scope.format = 'json'
@@ -188,7 +188,7 @@ filesize,records_count,time,created_by,updated_by'
     ]
 
     $scope.close = ->
-      dialog.close()
+      $scope.$close()
 
     $scope.start = (result) ->
       $scope.dataset = new DataSet({

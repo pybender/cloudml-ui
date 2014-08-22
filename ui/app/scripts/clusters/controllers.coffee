@@ -32,14 +32,13 @@ angular.module('app.clusters.controllers', ['app.config', ])
 .controller('SshTunnelCtrl', [
   '$scope'
   '$rootScope'
-  'dialog'
+  'openOptions'
   '$location'
   '$timeout'
 
-  ($scope, $rootScope, dialog, $location, $timeout) ->
-    $scope.dialog = dialog
+  ($scope, $rootScope, openOptions, $location, $timeout) ->
     $scope.resetError()
-    $scope.cluster = dialog.model
+    $scope.cluster = openOptions.model
     $scope.host = $location.host()
 
     $scope.create = (result) ->
@@ -67,7 +66,7 @@ angular.module('app.clusters.controllers', ['app.config', ])
 
     $scope.close = ->
       $scope.resetError()
-      dialog.close()
+      $scope.$close(true)
 
     $scope.$on("$destroy", (event) ->
       $timeout.cancel($scope.timer)

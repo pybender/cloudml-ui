@@ -26,10 +26,9 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
   '$scope'
   '$rootScope'
   '$routeParams'
-  '$modal'
   'ImportHandler'
 
-  ($scope, $rootScope, $routeParams, $modal, ImportHandler) ->
+  ($scope, $rootScope, $routeParams, ImportHandler) ->
     if not $routeParams.id
       err = "Can't initialize without import handler id"
 
@@ -116,7 +115,6 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
 
     $scope.editDataSource = (handler, ds) ->
       $scope.openDialog({
-        $modal: $modal
         model: null
         template: \
           'partials/import_handler/datasource/edit_handler_datasource.html'
@@ -127,7 +125,6 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
 
     $scope.editTargetFeature = (item, feature) ->
       $scope.openDialog({
-        $modal: $modal
         model: null
         template: 'partials/import_handler/edit_target_feature.html'
         ctrlName: 'TargetFeatureEditDialogCtrl'
@@ -137,7 +134,6 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
 
     $scope.runQuery = (query) ->
       $scope.openDialog({
-        $modal: $modal
         model: null
         template: 'partials/import_handler/test_query.html'
         ctrlName: 'QueryTestDialogCtrl'
@@ -153,16 +149,14 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
 
 .controller('QueryTestDialogCtrl', [
   '$scope'
-  '$rootScope'
-  'dialog'
+  'openOptions'
 
-  ($scope, $rootScope, dialog) ->
-    $scope.handlerUrl = dialog.extra.handlerUrl
-    $scope.datasources = (ds for ds in dialog.extra.datasources when \
+  ($scope, openOptions) ->
+    $scope.handlerUrl = openOptions.extra.handlerUrl
+    $scope.datasources = (ds for ds in openOptions.extra.datasources when \
       ds.type is 'sql' or ds.type is 'db')
-    $scope.query = dialog.extra.query
+    $scope.query = openOptions.extra.query
     $scope.params = $scope.query.getParams()
-    $scope.dialog = dialog
 
     if !$scope.query.test_params
       $scope.query.test_params = {}
@@ -179,7 +173,7 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
         $scope.query.test.columns = resp.data.columns
         $scope.query.test.data = resp.data.data
         $scope.query.test.sql = resp.data.sql
-        dialog.close()
+        $scope.$close(true)
       , ((opts) ->
         $scope.query.test.error = $scope.setError(opts, 'testing sql query')
       ))
@@ -187,57 +181,57 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
 
 .controller('ImportTestDialogCtrl', [
   '$scope'
-  '$rootScope'
-  'dialog'
+  'openOptions'
 
-  ($scope, $rootScope, dialog) ->
-    $scope.handler = dialog.extra.handler
+  ($scope, openOptions) ->
+    $scope.handler = openOptions.extra.handler
     $scope.params = $scope.handler.import_params
     $scope.parameters = {}
     $scope.test_limit = 2
-    $scope.dialog = dialog
     $scope.err = ''
 
     $scope.runTestImport = () ->
       $scope.handler.$getTestImportUrl($scope.parameters, $scope.test_limit
       ).then((resp) ->
-        dialog.close()
+        $scope.$close(true)
         window.location = resp.data.url
       , ((opts) ->
         $scope.err = $scope.setError(opts, 'testing import handler')
       ))
 ])
 
-.controller('DataSourceEditDialogCtrl', [
-  '$scope'
-  '$rootScope'
-  'dialog'
-
-  ($scope, $rootScope, dialog) ->
-    $scope.handler = dialog.extra.handler
-    $scope.model = dialog.extra.ds
-    $scope.DONT_REDIRECT = true
-    $scope.dialog = dialog
-
-    $scope.$on('SaveObjectCtl:save:success', (event, current) ->
-      dialog.close()
-      $scope.handler.$load(
-        show: 'datasource'
-      ).then (->), (-> $scope.setError(opts, 'loading datasource details'))
-    )
-])
+# TODO: nader220082014, this controller already defined in
+# app/scripts/importhandlers/controllers/datasource.coffee whith a very
+# slight difference
+#.controller('DataSourceEditDialogCtrl', [
+#  '$scope'
+#  'openOptions'
+#
+#  ($scope, openOptions) ->
+#    $scope.handler = openOptions.extra.handler
+#    $scope.model = openOptions.extra.ds
+#    $scope.DONT_REDIRECT = true
+#
+#    $scope.$on('SaveObjectCtl:save:success', (event, current) ->
+#      $scope.$close(true)
+#      $scope.handler.$load
+#        show: 'datasource'
+#      .then (->)
+#      , ->
+#        $scope.setError(opts, 'loading datasource details')
+#    )
+#])
 
 
 .controller('TargetFeatureEditDialogCtrl', [
   '$scope'
-  '$rootScope'
-  'dialog'
+  'openOptions'
   'TargetFeature'
 
-  ($scope, $rootScope, dialog, TargetFeature) ->
-    $scope.handler = dialog.extra.handler
-    feature = dialog.extra.feature
-    item = dialog.extra.item
+  ($scope, openOptions, TargetFeature) ->
+    $scope.handler = openOptions.extra.handler
+    feature = openOptions.extra.feature
+    item = openOptions.extra.item
     if !feature?
         feature = new TargetFeature({
           handler: $scope.handler,
@@ -248,7 +242,6 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
     $scope.model = feature
     $scope.item = item
     $scope.DONT_REDIRECT = true
-    $scope.dialog = dialog
 
     $scope.fields = ['name']
     extra = EXTRA_TARGET_FEATURES_PARAMS[item.process_as]
@@ -258,7 +251,7 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
     $scope.readabilityTypes = READABILITY_TYPES
 
     $scope.$on('SaveObjectCtl:save:success', (event, current) ->
-      dialog.close()
+      $scope.$close(true)
       if $scope.model.isNew()
         $scope.model.num = $scope.item.target_features.length
         $scope.item.target_features.push $scope.model
@@ -277,15 +270,16 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
 .controller('DeleteImportHandlerCtrl', [
   '$scope'
   '$location'
-  'dialog'
   'Model'
+  '$modalInstance'
+  'openOptions'
 
-  ($scope, $location, dialog, Model) ->
+  ($scope, $location, Model, $modalInstance, openOptions) ->
     $scope.resetError()
-    $scope.MESSAGE = dialog.action
-    $scope.model = dialog.model
-    $scope.path = dialog.path
-    $scope.action = dialog.action
+    $scope.MESSAGE = openOptions.action
+    $scope.model = openOptions.model
+    $scope.path = openOptions.path
+    $scope.action = openOptions.action
     $scope.extra_template = 'partials/import_handler/extra_delete.html'
 
     $scope.loadModels = () ->
@@ -299,68 +293,52 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
       )
 
     $scope.loadModels()
-
-    $scope.close = ->
-      dialog.close()
 ])
 
 
-.controller('ImportHandlerActionsCtrl', [
-  '$scope'
-  '$modal'
-($scope, $modal) ->
+.controller('ImportHandlerActionsCtrl', ['$scope', ($scope) ->
   $scope.importData = (handler) ->
-    $scope.openDialog({
-      $modal: $modal
+    $scope.openDialog
       model: handler
       template: 'partials/import_handler/load_data.html'
       ctrlName: 'LoadDataDialogCtrl'
-    })
 
   $scope.delete = (handler) ->
-    $scope.openDialog({
-      $modal: $modal
+    $scope.openDialog
       model: handler
       template: 'partials/base/delete_dialog.html'
       ctrlName: 'DeleteImportHandlerCtrl'
       action: 'delete import handler'
       path: "/handlers/#{handler.TYPE}"
-    })
 
   $scope.testHandler = (handler) ->
-    $scope.openDialog({
-      $modal: $modal
+    $scope.openDialog
       template: 'partials/import_handler/test_handler.html'
       ctrlName: 'ImportTestDialogCtrl'
       action: 'test import handler'
       extra: {handler: $scope.handler}
-    })
 
   $scope.uploadHandlerToPredict = (model) ->
-    $scope.openDialog({
-      $modal: $modal
+    $scope.openDialog
       model: model
       template: 'partials/servers/choose.html'
       ctrlName: 'ImportHandlerUploadToServerCtrl'
-    })
 ])
 
 .controller('ImportHandlerUploadToServerCtrl', [
   '$scope'
-  '$rootScope'
-  'dialog'
+  'openOptions'
 
-  ($scope, $rootScope, dialog) ->
-    $scope.dialog = dialog
+  ($scope, openOptions) ->
     $scope.resetError()
-    $scope.model = dialog.model
+    $scope.model = openOptions.model
     $scope.model.server = null
 
     $scope.upload = () ->
       $scope.model.$uploadPredict($scope.model.server).then((resp) ->
         $rootScope.msg = resp.data.status
       )
-      dialog.close()
+      $scope.$close(true)
 ])
 
 

@@ -1,6 +1,6 @@
 <div ng-controller="BaseDeleteCtrl">
 <div class="modal-header">
-    <button ng-click="close()" class="close" data-dismiss="modal">×</button>
+    <button ng-click="$dismiss('cancel')" class="close" data-dismiss="modal">×</button>
 <h3>{{ MESSAGE|capfirst }}</h3>
 <p class="lead">
     Do you really want to {{ MESSAGE }} {{ model.name }}?
@@ -14,7 +14,7 @@
     </div>
 </div>
 <div class="modal-footer">
-<button ng-click="close()" class="btn">Cancel</button>
+<button ng-click="$dismiss('cancel')" class="btn">Cancel</button>
 <button ng-click="delete()" class="btn btn-primary">Delete</button>
 </div>
 </div>

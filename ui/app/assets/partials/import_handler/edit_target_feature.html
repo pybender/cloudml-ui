@@ -1,6 +1,6 @@
 <div ng-controller="SaveObjectCtl">
   <div class="modal-header">
-    <button ng-click="dialog.close()" class="close" data-dismiss="modal">×</button>
+    <button ng-click="$dismiss('cancel')" class="close" data-dismiss="modal">×</button>
     <h3><span ng-hide="model.isNew()">Edit</span><span ng-show="model.isNew()">Add</span> target feature</h3>
   </div>
 

@@ -13,6 +13,7 @@ App = angular.module('app', [
   'app.templates'
   'ui.bootstrap'
   'ui.select2'
+  'ui.codemirror'
 
   'app.base'
   'app.models.model'
@@ -265,8 +266,8 @@ App.config([
 ])
 
 App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
-         '$cookieStore'
-($rootScope, $routeParams, $location, settings, $auth, $cookieStore) ->
+         '$cookieStore', '$modal'
+($rootScope, $routeParams, $location, settings, $auth, $cookieStore, $modal) ->
   $rootScope.Math = window.Math
   $rootScope.Object = Object
   $rootScope.loadingCount = 0
@@ -307,25 +308,17 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
     log_sse.addEventListener('message', handleCallback)
 
   $rootScope.openDialog = (opts) ->
-    $modal = opts.$modal
-    if !$modal?
-      throw new Error('$modal is required')
-
     template = opts.template
     if !template?
       throw new Error('template is required')
 
-    d = $modal.dialog(
-      modalFade: false
-      dialogClass: opts.cssClass || 'modal'
-    )
-    d.model = opts.model
-    d.action = opts.action || ''
-    d.path = opts.path
-    d.open(template, opts.ctrlName)
-    d.extra = opts.extra || {}
-    d.list_model_name = opts.list_model_name
-    return d
+    $modal.open
+      templateUrl: opts.template
+      controller: opts.ctrlName
+      windowClass: opts.cssClass
+      resolve:
+        openOptions: ->
+          return opts
 
   DEFAULT_ACTION = "model:details"
 

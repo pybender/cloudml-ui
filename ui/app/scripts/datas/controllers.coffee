@@ -208,12 +208,12 @@ angular.module('app.datas.controllers', ['app.config', ])
 # Choose fields to download classification results in CSV dialog controller
 .controller('CsvDownloadCtrl', [
   '$scope'
-  'dialog'
+  'openOptions'
   'Data'
   '$location'
   '$rootScope'
 
-  ($scope, dialog, Data, $location, $rootScope) ->
+  ($scope, openOptions, Data, $location, $rootScope) ->
     # Field list to be displayed in choose field select
     $scope.selectFields = []
 
@@ -223,7 +223,7 @@ angular.module('app.datas.controllers', ['app.config', ])
 
     $scope.loading_state = true
 
-    $scope.test = dialog.model
+    $scope.test = openOptions.model
     Data.$loadFieldList($scope.test.model_id,
       $scope.test.id)
     .then (opts) ->
@@ -277,5 +277,5 @@ angular.module('app.datas.controllers', ['app.config', ])
         $scope.loading_state = false
 
     $scope.close = () ->
-      dialog.close()
+      $scope.$close(true)
   ])

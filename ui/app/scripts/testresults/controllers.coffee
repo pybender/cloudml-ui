@@ -31,11 +31,11 @@ created_by'
   'dialog'
   '$location'
   'TestResult'
+  'openOptions'
 
-  ($scope, dialog, $location, Test) ->
-    $scope.dialog = dialog
+  ($scope, dialog, $location, Test, openOptions) ->
     $scope.resetError()
-    $scope.model = dialog.model
+    $scope.model = openOptions.model
     $scope.handler = $scope.model.test_import_handler_obj
 
     $scope.data = {}
@@ -54,7 +54,7 @@ created_by'
     $scope.start = (result) ->
       $scope.test = new Test({model_id: $scope.model.id})
       $scope.test.$run($scope.data).then (->
-        dialog.close()
+        $scope.$close(true)
         $location.path $scope.test.objectUrl()
       ), ((opts) ->
         $scope.setError(opts, 'running test')

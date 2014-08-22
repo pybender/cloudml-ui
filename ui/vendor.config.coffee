@@ -26,7 +26,7 @@ module.exports =
       notmin:
         "https://cdnjs.cloudflare.com/ajax/libs/x-editable/1.4.4/bootstrap-editable/js/bootstrap-editable.js"
       local:
-        "bower_compnents/x-editable/dist/bootstrap-editable/js/bootstrap-editable.js"
+        "bower_components/x-editable/dist/bootstrap-editable/js/bootstrap-editable.js"
     ,
       external:
         "https://cdnjs.cloudflare.com/ajax/libs/d3/3.4.11/d3.min.js"

@@ -5,7 +5,7 @@ cmlConfig =
   buildDir: './_public'
   vendorDir: './vendor'
   reloadPort: 35729
-  servePort: 3333
+  servePort: 3334
 
 lrSnippet = require('connect-livereload')({ port: cmlConfig.reloadPort })
 mountFolder = (connect, dir) ->
@@ -41,6 +41,7 @@ module.exports = (grunt)->
       compile:
         options:
           bare: true
+          sourceMap: true
         files: [
           expand: true,
           cwd: '<%= cmlConfig.appDir %>'
@@ -156,7 +157,7 @@ module.exports = (grunt)->
             ]
     open:
       server:
-        url: 'http://127.0.0.1:<%= connect.options.port %>'
+        url: 'http://127.0.0.1:<%= cmlConfig.servePort %>'
 
     concurrent:
       compile: [
@@ -186,7 +187,7 @@ module.exports = (grunt)->
     It also supplies CDN and bundled files as per vendor.config.coffee
     The files will be resolved against ./.tmp where they are generated
     """
-  , (target)->
+  , (target, nocdn)->
     fs = require('fs')
     indexFileStr = fs.readFileSync "#{cmlConfig.appDir}/assets/index.html", 'utf8'
     vendorConfig = require './vendor.config.coffee'
@@ -235,7 +236,12 @@ module.exports = (grunt)->
       filesString = ''
       for cdnObj in vendorConfig.cdn
         preamble = if cdnObj is vendorConfig.cdn[0] then '' else '    '
-        cdnUrl = if target is 'local' then cdnObj.notmin else cdnObj.external
+        if target is 'local' and nocdn is 'nocdn'
+          cdnUrl = cdnObj.local
+        else if target is 'local'
+          cdnUrl = cdnObj.notmin
+        else
+          cdnUrl = cdnObj.external
         filesString += "#{preamble}<script src=\"#{cdnUrl}\"></script>\n"
       replaceTokenWith /<!-- TAG_CDN -->[^]+TAG_CDN -->/g, filesString
 
@@ -256,7 +262,7 @@ module.exports = (grunt)->
   , [
       'clean:server'
       'concurrent:compile'
-      'index:local'
+      'index:local:nocdn'
       'connect:livereload'
       'open:server'
       'watch'

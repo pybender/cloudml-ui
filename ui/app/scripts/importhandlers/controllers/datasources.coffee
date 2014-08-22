@@ -28,10 +28,9 @@ angular.module('app.importhandlers.controllers.datasources', ['app.config', ])
 
 .controller('DataSourceListCtrl', [
   '$scope'
-  '$modal'
   'DataSource'
 
-  ($scope, $modal, DataSource) ->
+  ($scope, DataSource) ->
     $scope.MODEL = DataSource
     $scope.FIELDS = DataSource.MAIN_FIELDS
     $scope.ACTION = 'loading datasources'
@@ -39,7 +38,6 @@ angular.module('app.importhandlers.controllers.datasources', ['app.config', ])
 
     $scope.edit = (ds) ->
       $scope.openDialog({
-        $modal: $modal
         model: ds
         template: 'partials/import_handler/datasource/edit.html'
         ctrlName: 'ModelEditDialogCtrl'
@@ -48,7 +46,6 @@ angular.module('app.importhandlers.controllers.datasources', ['app.config', ])
     $scope.add = () ->
       ds = new DataSource()
       $scope.openDialog({
-        $modal: $modal
         model: ds
         template: 'partials/import_handler/datasource/add.html'
         ctrlName: 'ModelEditDialogCtrl'
@@ -56,7 +53,6 @@ angular.module('app.importhandlers.controllers.datasources', ['app.config', ])
 
     $scope.delete = (ds)->
       $scope.openDialog({
-        $modal: $modal
         model: ds
         template: 'partials/base/delete_dialog.html'
         ctrlName: 'DialogCtrl'
@@ -66,17 +62,15 @@ angular.module('app.importhandlers.controllers.datasources', ['app.config', ])
 
 .controller('DataSourceEditDialogCtrl', [
   '$scope'
-  '$rootScope'
-  'dialog'
+  'openOptions'
 
-  ($scope, $rootScope, dialog) ->
-    $scope.handler = dialog.extra.handler
-    $scope.model = dialog.extra.ds
+  ($scope, openOptions) ->
+    $scope.handler = openOptions.extra.handler
+    $scope.model = openOptions.extra.ds
     $scope.DONT_REDIRECT = true
-    $scope.dialog = dialog
 
     $scope.$on('SaveObjectCtl:save:success', (event, current) ->
-      dialog.close()
+      $scope.$close(true)
       $scope.handler.$load(
         show: 'data'
       ).then (->), (-> $scope.setError(opts, 'loading datasource details'))

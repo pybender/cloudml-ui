@@ -247,7 +247,7 @@ angular.module('app.models.controllers', ['app.config', ])
     $scope.initForm()
 
     $scope.close = ->
-      $scope.dialog.close()
+      $scope.$close(true)
       $scope.resetError()
 ])
 

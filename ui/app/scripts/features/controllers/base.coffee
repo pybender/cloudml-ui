@@ -20,25 +20,24 @@ angular.module('app.features.controllers.base', ['app.config', ])
 .controller('ModelEditDialogCtrl', [
   '$scope'
   '$rootScope'
-  'dialog'
+  'openOptions'
 
-  ($scope, $rootScope, dialog) ->
-    if dialog.model?
-      $scope.model = dialog.model
-    else if dialog.extra.handler? && dialog.extra.fieldname?
-      $scope.handler = dialog.extra.handler
+  ($scope, $rootScope, openOptions) ->
+    if openOptions.model?
+      $scope.model = openOptions.model
+    else if openOptions.extra.handler? && openOptions.extra.fieldname?
+      $scope.handler = openOptions.extra.handler
       $scope.model = eval('$scope.handler.' + dialog.extra.fieldname)
 
-    if dialog.list_model_name?
-      $scope.LIST_MODEL_NAME = dialog.list_model_name
+    if openOptions.list_model_name?
+      $scope.LIST_MODEL_NAME = openOptions.list_model_name
     else
       $scope.LIST_MODEL_NAME = $scope.model.LIST_MODEL_NAME
 
     $scope.DONT_REDIRECT = true
-    $scope.dialog = dialog
 
     $scope.$on('SaveObjectCtl:save:success', (event, current) ->
-      dialog.close()
+      $scope.$close(true)
     )
 ])
 
