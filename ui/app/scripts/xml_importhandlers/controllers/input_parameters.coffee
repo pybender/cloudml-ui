@@ -21,10 +21,9 @@ angular.module(
 
 .controller('InputParametersListCtrl', [
   '$scope'
-  '$modal'
   'InputParameter'
 
-  ($scope, $modal, InputParameter) ->
+  ($scope, InputParameter) ->
     $scope.MODEL = InputParameter
     $scope.FIELDS = InputParameter.MAIN_FIELDS
     $scope.ACTION = 'loading input parameters'
@@ -40,7 +39,6 @@ angular.module(
     $scope.add = (handler) ->
       param = new InputParameter({'import_handler_id': handler.id})
       $scope.openDialog({
-        $modal: $modal
         model: param
         template: 'partials/xml_import_handlers/input_parameters/edit.html'
         ctrlName: 'ModelEditDialogCtrl'
@@ -50,7 +48,6 @@ angular.module(
 
     $scope.delete = (param) ->
       $scope.openDialog({
-        $modal: $modal
         model: param
         template: 'partials/base/delete_dialog.html'
         ctrlName: 'DialogCtrl'

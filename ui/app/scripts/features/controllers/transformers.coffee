@@ -30,10 +30,9 @@ angular.module('app.features.controllers.transformers', ['app.config', ])
 
 .controller('TransformersListCtrl', [
   '$scope'
-  '$modal'
   'Transformer'
 
-  ($scope, $modal, Transformer) ->
+  ($scope, Transformer) ->
     $scope.MODEL = Transformer
     $scope.FIELDS = Transformer.MAIN_FIELDS
     $scope.ACTION = 'loading transformers'
@@ -41,7 +40,6 @@ angular.module('app.features.controllers.transformers', ['app.config', ])
 
     $scope.edit = (transformer) ->
       $scope.openDialog({
-        $modal: $modal
         model: transformer
         template: 'partials/features/transformers/edit_predefined.html'
         ctrlName: 'ModelWithParamsEditDialogCtrl'
@@ -52,7 +50,6 @@ angular.module('app.features.controllers.transformers', ['app.config', ])
     $scope.add = () ->
       transformer = new Transformer()
       $scope.openDialog({
-        $modal: $modal
         model: transformer
         template: 'partials/features/transformers/add_predefined.html'
         ctrlName: 'ModelWithParamsEditDialogCtrl'
@@ -62,7 +59,6 @@ angular.module('app.features.controllers.transformers', ['app.config', ])
 
     $scope.delete = (transformer) ->
       $scope.openDialog({
-        $modal: $modal
         model: transformer
         template: 'partials/base/delete_dialog.html'
         ctrlName: 'DialogCtrl'

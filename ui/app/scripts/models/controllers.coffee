@@ -254,20 +254,19 @@ angular.module('app.models.controllers', ['app.config', ])
 .controller('TrainModelCtrl', [
   '$scope'
   '$rootScope'
-  'dialog'
+  'openOptions'
 
-  ($scope, $rootScope, dialog) ->
-    $scope.dialog = dialog
+  ($scope, $rootScope, openOptions) ->
     $scope.resetError()
-    $scope.model = dialog.model
+    $scope.model = openOptions.model
     $scope.data = {}
 
     $scope.handler = $scope.model.train_import_handler_obj
     $scope.multiple_dataset = true
 
     $scope.start = (result) ->
-      dialog.model.$train($scope.data).then (() ->
-        dialog.close()
+      openOptions.model.$train($scope.data).then (() ->
+        $scope.$close(true)
       ), ((opts) ->
         $scope.setError(opts, 'starting model training')
       )
@@ -275,10 +274,9 @@ angular.module('app.models.controllers', ['app.config', ])
 
 .controller('ModelActionsCtrl', [
   '$scope'
-  '$modal'
   '$rootScope'
 
-  ($scope, $modal, $rootScope) ->
+  ($scope, $rootScope) ->
     $scope.init = (opts) ->
       if !opts || !opts.model
         throw new Error "Please specify model"
@@ -289,7 +287,6 @@ angular.module('app.models.controllers', ['app.config', ])
       $scope._showModelActionDialog(model, 'test', (model) ->
         model.$load(show: 'test_handler_fields').then (->
           $scope.openDialog({
-            $modal: $modal
             model: model
             template: 'partials/testresults/run_test.html'
             ctrlName: 'TestDialogController'
@@ -303,7 +300,6 @@ angular.module('app.models.controllers', ['app.config', ])
     $scope.train_model = (model)->
       $scope._showModelActionDialog(model, 'train', (model) ->
         $scope.openDialog({
-          $modal: $modal
           model: model
           template: 'partials/models/model_train_popup.html'
           ctrlName: 'TrainModelCtrl'
@@ -311,7 +307,6 @@ angular.module('app.models.controllers', ['app.config', ])
 
     $scope.delete_model = (model) ->
       $scope.openDialog({
-        $modal: $modal
         model: model
         template: 'partials/base/delete_dialog.html'
         ctrlName: 'DialogCtrl'
@@ -320,7 +315,6 @@ angular.module('app.models.controllers', ['app.config', ])
 
     $scope.editClassifier = (model) ->
       $scope.openDialog({
-        $modal: $modal
         model: null
         template: 'partials/features/classifiers/edit.html'
         ctrlName: 'ModelWithParamsEditDialogCtrl'
@@ -330,7 +324,6 @@ angular.module('app.models.controllers', ['app.config', ])
 
     $scope.uploadModelToPredict = (model) ->
       $scope.openDialog({
-        $modal: $modal
         model: model
         template: 'partials/servers/choose.html'
         ctrlName: 'ModelUploadToServerCtrl'
@@ -352,19 +345,18 @@ angular.module('app.models.controllers', ['app.config', ])
 .controller('ModelUploadToServerCtrl', [
   '$scope'
   '$rootScope'
-  'dialog'
+  'openOptions'
 
-  ($scope, $rootScope, dialog) ->
-    $scope.dialog = dialog
+  ($scope, $rootScope, openOptions) ->
     $scope.resetError()
-    $scope.model = dialog.model
+    $scope.model = openOptions.model
     $scope.model.server = null
 
     $scope.upload = () ->
       $scope.model.$uploadPredict($scope.model.server).then((resp) ->
         $rootScope.msg = resp.data.status
       )
-      dialog.close()
+      $scope.$close(true)
 ])
 
 .controller('ModelDataSetDownloadCtrl', [

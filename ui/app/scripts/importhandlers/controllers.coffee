@@ -271,10 +271,9 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
   '$scope'
   '$location'
   'Model'
-  '$modalInstance'
   'openOptions'
 
-  ($scope, $location, Model, $modalInstance, openOptions) ->
+  ($scope, $location, Model, openOptions) ->
     $scope.resetError()
     $scope.MESSAGE = openOptions.action
     $scope.model = openOptions.model

@@ -17,10 +17,9 @@ angular.module(
 
 .controller('DatasourcesListCtrl', [
   '$scope'
-  '$modal'
   'Datasource'
 
-  ($scope, $modal, Datasource) ->
+  ($scope, Datasource) ->
     $scope.MODEL = Datasource
     $scope.FIELDS = Datasource.MAIN_FIELDS
     $scope.ACTION = 'loading datasources'
@@ -39,7 +38,6 @@ angular.module(
         params: {}
       })
       $scope.openDialog({
-        $modal: $modal
         model: datasource
         template: 'partials/xml_import_handlers/datasources/edit.html'
         ctrlName: 'ModelWithParamsEditDialogCtrl'
@@ -50,7 +48,6 @@ angular.module(
     $scope.edit = (datasource)->
       datasource = new Datasource(datasource)
       $scope.openDialog({
-        $modal: $modal
         model: datasource
         template: 'partials/xml_import_handlers/datasources/edit.html'
         ctrlName: 'ModelWithParamsEditDialogCtrl'
@@ -61,7 +58,6 @@ angular.module(
     $scope.delete = (datasource)->
       datasource = new Datasource(datasource)
       $scope.openDialog({
-        $modal: $modal
         model: datasource
         template: 'partials/base/delete_dialog.html'
         ctrlName: 'DialogCtrl'

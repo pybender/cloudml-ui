@@ -75,13 +75,11 @@ angular.module('app.clusters.controllers', ['app.config', ])
 
 .controller('ClusterActionsCtrl', [
   '$scope'
-  '$modal'
   'Cluster'
 
-  ($scope, $modal, Cluster) ->
+  ($scope, Cluster) ->
     $scope.createSshTunnel = (cluster) ->
       $scope.openDialog({
-        $modal: $modal
         model: cluster
         template: 'partials/clusters/create_ssh_tunnel.html'
         ctrlName: 'SshTunnelCtrl'
@@ -89,7 +87,6 @@ angular.module('app.clusters.controllers', ['app.config', ])
 
     $scope.terminateSshTunnel = (cluster) ->
       $scope.openDialog({
-        $modal: $modal
         model: cluster
         template: 'partials/clusters/terminate_ssh_tunnel.html'
         ctrlName: 'SshTunnelCtrl'
@@ -97,7 +94,6 @@ angular.module('app.clusters.controllers', ['app.config', ])
 
     $scope.terminateCluster = (cluster) ->
       $scope.openDialog({
-        $modal: $modal
         model: cluster
         template: 'partials/base/delete_dialog.html'
         ctrlName: 'DialogCtrl'

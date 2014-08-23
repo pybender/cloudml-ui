@@ -178,20 +178,21 @@ describe "testresults", ->
       expect($rootScope.test.id).toEqual('1234')
 
     it "should open delete dialog", ->
-      url = 'partials/testresults/delete_popup.html'
-      $httpBackend.expectGET(url).respond('')
 
       $rootScope.test = {
         id: '4321',
         model: {id: '1234'}
       }
-      $rootScope.resetError = jasmine.createSpy()
+      $rootScope.resetError = jasmine.createSpy('$scope.resetError')
+      $rootScope.openDialog = jasmine.createSpy('$scope.openDialog')
 
       createController "TestActionsCtrl"
       $rootScope.delete_test()
-      $httpBackend.flush()
 
-      expect($rootScope.resetError).toHaveBeenCalled()
+      expect($rootScope.openDialog).toHaveBeenCalledWith
+        templateUrl: 'partials/testresults/delete_popup.html'
+        controller: 'DeleteTestCtrl'
+        test: $rootScope.test
 
   describe "TestExportsCtrl", ->
 

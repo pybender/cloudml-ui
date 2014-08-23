@@ -12,7 +12,7 @@ angular.module('app.datas.controllers', ['app.config', ])
   'Model'
 
 ($scope, $rootScope, $location, Data, Model) ->
-  $scope.filter_opts = $location.search() # Used in ObjectListCtrl.
+  $scope.filter_opts = $location.search() or {} # Used in ObjectListCtrl.
   $scope.simple_filters = {} # Filters by label and pred_label
   $scope.data_filters = [] # Filters by data_input.* fields
   $scope.loading_state = false

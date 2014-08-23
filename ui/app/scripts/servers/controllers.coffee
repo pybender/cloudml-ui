@@ -21,11 +21,10 @@ angular.module('app.servers.controllers', ['app.config', ])
 .controller('FileListCtrl', [
   '$scope'
   '$rootScope'
-  '$modal'
   'ModelFile'
   'ImportHandlerFile'
 
-  ($scope, $rootScope, $modal, ModelFile, ImportHandlerFile) ->
+  ($scope, $rootScope, ModelFile, ImportHandlerFile) ->
     $scope.FIELDS = ''
     $scope.ACTION = 'loading files info from Amazon S3'
 
@@ -47,7 +46,6 @@ angular.module('app.servers.controllers', ['app.config', ])
 
     $scope.deleteFile = (file) ->
       $scope.openDialog({
-        $modal: $modal
         model: file
         template: 'partials/base/delete_dialog.html'
         ctrlName: 'DialogCtrl'

@@ -247,11 +247,13 @@ describe "directives", ->
       $rootScope.savingProgress = '0%'
       $rootScope.$digest()
       expect(element.html()).toContain('<div class="progress progress-striped active">')
-      expect(element.html()).toContain('<div class="bar" style="width: 0%;"></div>')
+      expect(element.html()).toContain('class="bar"')
+      expect(element.html()).toContain('width: 0%;')
 
       $rootScope.savingProgress = '10%'
       $rootScope.$digest()
-      expect(element.html()).toContain('<div class="bar" style="width: 10%;"></div>')
+      expect(element.html()).toContain('class="bar"')
+      expect(element.html()).toContain('width: 10%;')
     )
 
 

@@ -52,25 +52,24 @@ angular.module('app.features.controllers.base', ['app.config', ])
 .controller('ModelWithParamsEditDialogCtrl', [
   '$scope'
   '$rootScope'
-  'dialog'
+  'openOptions'
 
-  ($scope, $rootScope, dialog) ->
+  ($scope, $rootScope, openOptions) ->
     $scope.DONT_REDIRECT = true
-    $scope.dialog = dialog
 
-    if dialog.model?
-      $scope.model = dialog.model
-    else if dialog.extra.feature? && dialog.extra.fieldname?
-      $scope.feature = dialog.extra.feature
-      $scope.model = eval('$scope.feature.' + dialog.extra.fieldname)
-    else if dialog.extra.model?
-      $scope.target_model = dialog.extra.model
-      $scope.model = eval('$scope.target_model.' + dialog.extra.fieldname)
+    if openOptions.model?
+      $scope.model = openOptions.model
+    else if openOptions.extra.feature? && openOptions.extra.fieldname?
+      $scope.feature = openOptions.extra.feature
+      $scope.model = eval('$scope.feature.' + openOptions.extra.fieldname)
+    else if openOptions.extra.model?
+      $scope.target_model = openOptions.extra.model
+      $scope.model = eval('$scope.target_model.' + openOptions.extra.fieldname)
     else
       throw new Excepion "Please spec model or feature and field name"
 
-    if dialog.list_model_name?
-      $scope.LIST_MODEL_NAME = dialog.list_model_name
+    if openOptions.list_model_name?
+      $scope.LIST_MODEL_NAME = openOptions.list_model_name
     else
       $scope.LIST_MODEL_NAME = $scope.model.LIST_MODEL_NAME
 
@@ -89,7 +88,7 @@ angular.module('app.features.controllers.base', ['app.config', ])
       loadParameters(model, $scope.configuration, setDefault)
 
     $scope.$on('SaveObjectCtl:save:success', (event, current) ->
-      dialog.close()
+      $scope.$close(true)
     )
 ])
 

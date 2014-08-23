@@ -17,10 +17,9 @@ angular.module('app.xml_importhandlers.controllers', ['app.config', ])
   '$scope'
   '$rootScope'
   '$routeParams'
-  '$modal'
   'XmlImportHandler'
 
-  ($scope, $rootScope, $routeParams, $modal, ImportHandler) ->
+  ($scope, $rootScope, $routeParams, ImportHandler) ->
     if not $routeParams.id
       err = "Can't initialize without import handler id"
 

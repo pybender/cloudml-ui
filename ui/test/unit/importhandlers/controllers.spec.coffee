@@ -104,7 +104,6 @@ describe "app.importhandlers.controllers", ->
         $rootScope.handler = handler
         $rootScope.runQuery query
         expect($rootScope.openDialog).toHaveBeenCalledWith
-          $modal: $modal
           model: null
           template: 'partials/import_handler/test_query.html'
           ctrlName: 'QueryTestDialogCtrl'
@@ -134,12 +133,11 @@ describe "app.importhandlers.controllers", ->
 
     it "should open import dialog", inject ($modal) ->
       createController "ImportHandlerActionsCtrl"
-      $rootScope.openDialog = jasmine.createSpy('openDialogSpy')
+      $rootScope.openDialog = jasmine.createSpy('$scope.openDialog')
 
       $rootScope.importData({id: HANDLER_ID})
 
       expect($rootScope.openDialog).toHaveBeenCalledWith(
-        $modal: $modal
         model:
           id: HANDLER_ID
         template: 'partials/import_handler/load_data.html'
@@ -148,12 +146,11 @@ describe "app.importhandlers.controllers", ->
 
     it "should open delete dialog", inject ($modal) ->
       createController "ImportHandlerActionsCtrl"
-      $rootScope.openDialog = jasmine.createSpy()
+      $rootScope.openDialog = jasmine.createSpy('$scope.openDialog')
 
       $rootScope.delete({id: HANDLER_ID, TYPE: 'json'})
 
-      expect($rootScope.openDialog).toHaveBeenCalledWith(
-        $modal: $modal
+      expect($rootScope.openDialog).toHaveBeenCalledWith
         model:
           id: HANDLER_ID
           TYPE: 'json'
@@ -161,7 +158,6 @@ describe "app.importhandlers.controllers", ->
         ctrlName: 'DeleteImportHandlerCtrl'
         action: 'delete import handler'
         path : '/handlers/json'
-      )
 
   describe "ImportHandlerSelectCtrl", ->
 
@@ -188,17 +184,16 @@ describe "app.importhandlers.controllers", ->
         handler = getXmlHandler()
         query = getXmlQuery()
 
-        dialog =
+        $rootScope.$close = jasmine.createSpy '$scope.$close'
+        openOptions =
           extra:
             handlerUrl: "#{settings.apiUrl}xml_import_handlers/#{handler.id}"
             datasources: handler.xml_data_sources
             query: query
-          close: jasmine.createSpy()
-        createController "QueryTestDialogCtrl", {'dialog': dialog}
+        createController "QueryTestDialogCtrl", {'openOptions': openOptions}
 
         expect($rootScope.query).toEqual query
         expect($rootScope.params).toEqual ['start', 'end']
-        expect($rootScope.dialog).toEqual dialog
         expect($rootScope.query.test_params).toEqual {}
         expect($rootScope.query.test_limit).toEqual 2
         expect($rootScope.query.test_datasource).toEqual handler.xml_data_sources[0].name
@@ -212,7 +207,7 @@ describe "app.importhandlers.controllers", ->
         $rootScope.runQuery()
         $httpBackend.flush()
 
-        expect(dialog.close).toHaveBeenCalled()
+        expect($rootScope.$close).toHaveBeenCalled()
         expect($rootScope.query.test.error).toBeUndefined()
 
   describe "EntitiesTreeCtrl", ->
@@ -228,7 +223,6 @@ describe "app.importhandlers.controllers", ->
 
         $rootScope.runQuery query
         expect($rootScope.openDialog).toHaveBeenCalledWith
-          $modal: $modal
           model: null
           template: 'partials/import_handler/test_query.html'
           ctrlName: 'QueryTestDialogCtrl'

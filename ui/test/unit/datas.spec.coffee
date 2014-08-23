@@ -113,12 +113,12 @@ describe "test examples", ->
 
       expect($rootScope.test).toEqual(test)
       expect($rootScope.labels).toEqual(['0', '1'])
-      expect($location.search).toHaveBeenCalledWith({
-        'label': '0',
-        'some_field': 'val1',
-        'data_field': 'val2',
-        action: 'examples:list',
-      })
+      expect($location.search).toHaveBeenCalledWith
+        sort_by: ''
+        order: 'asc'
+        label: '0'
+        some_field: 'val1'
+        data_field: 'val2'
 
     xit "should make list query", inject () ->
       fields = "id,name,label,pred_label,title,probs"
@@ -144,10 +144,11 @@ describe "test examples", ->
       $rootScope.data_filters = [{name: 'field', value: 'val'}]
       $rootScope.filter()
 
-      expect($location.search).toHaveBeenCalledWith({
-        'label': '1',
-        'field': 'val'
-      })
+      expect($location.search).toHaveBeenCalledWith
+        sort_by: ''
+        order: 'asc'
+        label: '1'
+        field: 'val'
 
   describe "GroupedExamplesCtrl", ->
 
@@ -206,10 +207,10 @@ describe "test examples", ->
         url = BASE_URL + 'action/datafields/'
         $httpBackend.expectGET(url).respond('{"fields": ["2two", "1one", "4four", "3three"]}')
 
-        dialog =
+        openOptions =
           model: new TestResult {id: TEST_ID, model_id: MODEL_ID}
 
-        createController "CsvDownloadCtrl", {'dialog': dialog}
+        createController "CsvDownloadCtrl", {'openOptions': openOptions}
         $httpBackend.flush()
 
         # retrieve fields without reordering

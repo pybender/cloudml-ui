@@ -8,16 +8,14 @@ angular.module(
 .controller('EntitiesTreeCtrl', [
   '$scope'
   '$rootScope'
-  '$modal'
   'Entity'
   'Field'
   'Sqoop'
   'XmlImportHandler'
 
-  ($scope, $rootScope, $modal, Entity, Field, Sqoop, XmlImportHandler) ->
+  ($scope, $rootScope, Entity, Field, Sqoop, XmlImportHandler) ->
     $scope.init = (handler) ->
       $scope.handler = handler
-      $scope.dialog = $modal
       $rootScope.$on('BaseListCtrl:start:load', (event, name) ->
         if name == 'entities' then $scope.load()
       )
@@ -40,7 +38,6 @@ angular.module(
         'entity_id': entity.id
       })
       $scope.openDialog({
-        $modal: $modal
         model: ent
         template: 'partials/xml_import_handlers/entities/edit.html'
         ctrlName: 'ModelEditDialogCtrl'
@@ -53,7 +50,6 @@ angular.module(
         'entity_id': entity.id
       })
       $scope.openDialog({
-        $modal: $modal
         model: field
         template: 'partials/xml_import_handlers/fields/edit.html'
         ctrlName: 'ModelWithParamsEditDialogCtrl'
@@ -62,7 +58,6 @@ angular.module(
 
     $scope.delete = (item) ->
       $scope.openDialog({
-        $modal: $modal
         model: item
         template: 'partials/base/delete_dialog.html'
         ctrlName: 'DialogCtrl'
@@ -80,7 +75,6 @@ angular.module(
         entity_id: entity.entity_id
       })
       $scope.openDialog({
-        $modal: $modal
         model: entity
         template: 'partials/xml_import_handlers/entities/edit_datasource.html'
         ctrlName: 'ModelEditDialogCtrl'
@@ -101,7 +95,6 @@ angular.module(
 
     $scope.runQuery = (queryObj) ->
       $scope.openDialog({
-        $modal: $modal
         model: null
         template: 'partials/import_handler/test_query.html'
         ctrlName: 'QueryTestDialogCtrl'
@@ -119,7 +112,6 @@ angular.module(
         'entity': entity.id
       })
       $scope.openDialog({
-        $modal: $modal
         model: sqoop
         template: 'partials/xml_import_handlers/sqoop/edit.html'
         ctrlName: 'ModelEditDialogCtrl'

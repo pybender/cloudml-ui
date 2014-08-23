@@ -12,12 +12,11 @@ angular.module('app.datasets.controllers', ['app.config', ])
 
 .controller('DatasetListCtrl', [
   '$scope'
-  '$modal'
   '$rootScope'
   'DataSet'
   '$location'
 
-  ($scope, $modal, $rootScope, DataSet, $location) ->
+  ($scope, $rootScope, DataSet, $location) ->
     $scope.MODEL = DataSet
     $scope.FIELDS = 'name,created_on,status,error,data,import_params,on_s3,
 filesize,records_count,time,created_by,updated_by'

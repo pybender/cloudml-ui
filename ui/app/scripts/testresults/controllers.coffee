@@ -5,11 +5,10 @@ angular.module('app.testresults.controllers', ['app.config', ])
 
 .controller('TestListCtrl', [
   '$scope'
-  '$modal'
   '$rootScope'
   'TestResult'
 
-  ($scope, $modal, $rootScope, TestResult) ->
+  ($scope, $rootScope, TestResult) ->
     $scope.MODEL = TestResult
     $scope.FIELDS = 'name,created_on,status,parameters,accuracy,examples_count,\
 created_by'
@@ -28,12 +27,11 @@ created_by'
 
 .controller('TestDialogController', [
   '$scope'
-  'dialog'
   '$location'
   'TestResult'
   'openOptions'
 
-  ($scope, dialog, $location, Test, openOptions) ->
+  ($scope, $location, Test, openOptions) ->
     $scope.resetError()
     $scope.model = openOptions.model
     $scope.handler = $scope.model.test_import_handler_obj
@@ -63,20 +61,17 @@ created_by'
 
 .controller('DeleteTestCtrl', [
   '$scope'
-  '$modal'
   '$location'
+  'openOptions'
 
-  ($scope, dialog, location) ->
-#    $scope.test = dialog.test
-#    $scope.model = dialog.test.model
+  ($scope, location, openOptions) ->
+    $scope.test = openOptions.test
+    $scope.model = openOptions.test.model
     $scope.resetError()
-
-    $scope.close = ->
-      $modal.$close()
 
     $scope.delete = (result) ->
       $scope.test.$delete().then (() ->
-        $scope.close()
+        $scope.$close(true)
 #        location.search('action=test:list&any=' + Math.random())
         $scope.$emit('modelDeleted', [$scope.model])
         $scope.$broadcast('modelDeleted', [$scope.model])
@@ -91,9 +86,8 @@ created_by'
   'TestResult'
   '$location'
   '$rootScope'
-  '$modal'
 
-($scope, $routeParams, Test, $location, $rootScope, $modal) ->
+($scope, $routeParams, Test, $location, $rootScope) ->
   $scope.LOADED_SECTIONS = []
   if not $scope.test
     if not ($routeParams.model_id and $routeParams.id)
@@ -149,7 +143,6 @@ without test id and model id"
 
   $scope.downloadCsvResults = () ->
     $scope.openDialog({
-        $modal: $modal
         model: $scope.test
         template: 'partials/datasets/csv_list_popup.html'
         ctrlName: 'CsvDownloadCtrl'
@@ -190,9 +183,8 @@ without test id and model id"
 
 .controller('TestActionsCtrl', [
   '$scope'
-  '$modal'
 
-  ($scope, $modal) ->
+  ($scope) ->
     $scope.init = (opts) ->
       test = opts.test
       model = opts.model
@@ -203,16 +195,10 @@ without test id and model id"
       $scope.test = test
 
     $scope.delete_test = (model) ->
-#      d = $modal.dialog(
-#        modalFade: false
-#      )
-#      d.test = $scope.test
-#      d.open('partials/testresults/delete_popup.html', 'DeleteTestCtrl')
-      $modal.open
+      $scope.openDialog
         templateUrl: 'partials/testresults/delete_popup.html'
         controller: 'DeleteTestCtrl'
-        backdrop: 'static'
-        scope: $scope
+        test: $scope.test
 ])
 
 .controller('TestExportsCtrl', [
