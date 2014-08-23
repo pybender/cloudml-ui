@@ -73,7 +73,7 @@ module.exports =
   bundled: [
     "vendor/scripts/console-helper.js"
     "bower_components/select2/select2.js"
-    "bower_components/angular-bootstrap/ui-bootstrap-tpls-0.10.0.js"
+    "bower_components/angular-bootstrap/ui-bootstrap-tpls-0.8.0.js"
     "bower_components/angular-ui-select2/src/select2.js"
     "bower_components/moment/moment.js"
     "bower_components/codemirror/lib/codemirror.js"
