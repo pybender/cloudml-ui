@@ -85,7 +85,7 @@ class Model(db.Model, BaseModel):
     classifier = deferred(db.Column(JSONType))
 
     trainer = deferred(db.Column(S3File))
-    trainer_size = db.Column(db.Integer, default=0)
+    trainer_size = db.Column(db.BigInteger, default=0)
 
     @property
     def test_import_handler(self):
