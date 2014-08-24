@@ -4,8 +4,11 @@ cmlConfig =
   appDir: './app'
   buildDir: './_public'
   vendorDir: './vendor'
-  reloadPort: 35729
-  servePort: 3334
+  reloadPort: 35729 # port for reloading frontend on watch trigger
+  servePort: 3333   # port for serving frontend
+  backendPort: '5001' # RESTful API backend port, will be running on http:/127.0.0.1:5005
+  backendRoot: '../'
+  backendPython: '/home/nader/.venvs/odesk_dev/bin/python' # use full path to virtualenv python
 
 lrSnippet = require('connect-livereload')({ port: cmlConfig.reloadPort })
 mountFolder = (connect, dir) ->
@@ -166,6 +169,10 @@ module.exports = (grunt)->
         'copy:compile'
         'html2js'
       ]
+      e2e: [
+        'protractor_webdriver:e2e'
+        #'backend' run the backend yourself :)
+      ]
       options:
         limit: 4
         logConcurrentOutput: true
@@ -175,6 +182,23 @@ module.exports = (grunt)->
         configFile: 'test/karma/unit.coffee'
       coverage:
         configFile: 'test/karma/coverage.coffee'
+
+    protractor_webdriver:
+      options:
+        path: './node_modules/grunt-protractor-runner/node_modules/.bin/'
+      e2e:
+        {}
+
+    protractor:
+      options:
+        keepAlive: true # If false, the grunt process stops when the test fails.
+        noColor: false
+      e2e:
+        options:
+          configFile: './test/protractor/conf.coffee'
+          #debug: true
+          args:
+            baseUrl: "http://127.0.0.1:#{cmlConfig.servePort}"
 
   grunt.initConfig gruntConfig
 
@@ -257,6 +281,27 @@ module.exports = (grunt)->
     putVendorBundledFiles()
     fs.writeFileSync "#{cmlConfig.tmpDir}/index.html", indexFileStr
 
+  grunt.registerTask 'backend'
+  , """Runs backend for E2E tests"""
+  , ->
+    # TODO: we need to figure out away to kill the process after grunt finishes
+    spawn = require('child_process').spawn
+    args = ["#{cmlConfig.backendRoot}manage.py", 'runserver',
+            '-p', cmlConfig.backendPort]
+    grunt.log.writeln("Starting backend with #{cmlConfig.backendPython} and
+ arguments: #{args}")
+    PIPE = {stdio: 'inherit'}
+    child = spawn cmlConfig.backendPython, args, PIPE
+#    process.on 'removeListener', (event, fn) ->
+#      # Grunt uses node-exit [0], which eats process 'exit' event handlers.
+#      # Instead, listen for an implementation detail: When Grunt shuts down, it
+#      # removes some 'uncaughtException' event handlers that contain the string
+#      # 'TASK_FAILURE'. Super hacky, but it works.
+#      # [0]: https://github.com/cowboy/node-exit
+#      if event is 'uncaughtException' and fn.toString().match(/TASK_FAILURE/)
+#        grunt.log.writeln 'killing backend server'
+#        child.kill()
+
   grunt.registerTask 'server'
   , """Builds and run a development server"""
   , [
@@ -310,7 +355,8 @@ module.exports = (grunt)->
     Runs Karma E2E Tests
     """
   , [
-      'karma:unit'
+      'concurrent:e2e'
+      'protractor:e2e'
     ]
 
   grunt.registerTask 'ci'

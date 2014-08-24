@@ -151,3 +151,13 @@ fetch the changes and merge them into your project with git.
             _overrides.less
             _variables.less
 
+## Development & Testsing
+
+### Installing global modules
+
+    - grunt-cli
+    - bower
+
+### Installing local modules
+    
+    - updating webdirve from protractor grunt runner
