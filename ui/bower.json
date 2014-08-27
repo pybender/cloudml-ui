@@ -28,7 +28,7 @@
     "angular-ui-codemirror": "~0.1.6",
     "nvd3": "~1.1.15-beta",
     "lodash": "2.4.1",
-    "d3": "3.4.11",
+    "d3": "3.3.13",
     "x-editable": "~1.5.1",
     "angular": "1.2.20",
     "angular-route": "1.2.20",

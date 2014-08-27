@@ -1,4 +1,7 @@
 module.exports =
+  # The following files will be served from CDN generally speaking
+  # grunt build:production, grunt build:staging will use external entry
+  # grunt server will use local entry, grunt server:usecdn will use notmin entry
   cdn: [
       external:
         "https://cdnjs.cloudflare.com/ajax/libs/lodash.js/2.4.1/lodash.min.js"
@@ -70,6 +73,7 @@ module.exports =
       local:
         "bower_components/angular-sanitize/angular-sanitize.js"
   ]
+  # The following files will be minified and uglified into vendor.js
   bundled: [
     "vendor/scripts/console-helper.js"
     "bower_components/select2/select2.js"

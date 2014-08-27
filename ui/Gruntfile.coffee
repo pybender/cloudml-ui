@@ -6,7 +6,7 @@ cmlConfig =
   vendorDir: './vendor'
   reloadPort: 35729 # port for reloading frontend on watch trigger
   servePort: 3333   # port for serving frontend
-  backendPort: '5001' # RESTful API backend port, will be running on http:/127.0.0.1:5005
+  backendPort: '5000' # RESTful API backend port, will be running on http:/127.0.0.1:5001
   backendRoot: '../'
   backendPython: '/home/nader/.venvs/odesk_dev/bin/python' # use full path to virtualenv python
 
@@ -171,7 +171,7 @@ module.exports = (grunt)->
       ]
       e2e: [
         'protractor_webdriver:e2e'
-        #'backend' run the backend yourself :)
+        #'backend' #run the backend yourself :)
       ]
       options:
         limit: 4
@@ -185,7 +185,7 @@ module.exports = (grunt)->
 
     protractor_webdriver:
       options:
-        path: './node_modules/grunt-protractor-runner/node_modules/.bin/'
+        path: './node_modules/protractor/bin/'
       e2e:
         {}
 
@@ -210,8 +210,11 @@ module.exports = (grunt)->
     collect them and write them automatically.
     It also supplies CDN and bundled files as per vendor.config.coffee
     The files will be resolved against ./.tmp where they are generated
+
+    @target: can be one of local, production, staging
+    @usecdn: can be usecdn, valid only for local target, default ''
     """
-  , (target, nocdn)->
+  , (target, usecdn)->
     fs = require('fs')
     indexFileStr = fs.readFileSync "#{cmlConfig.appDir}/assets/index.html", 'utf8'
     vendorConfig = require './vendor.config.coffee'
@@ -260,10 +263,10 @@ module.exports = (grunt)->
       filesString = ''
       for cdnObj in vendorConfig.cdn
         preamble = if cdnObj is vendorConfig.cdn[0] then '' else '    '
-        if target is 'local' and nocdn is 'nocdn'
-          cdnUrl = cdnObj.local
-        else if target is 'local'
+        if target is 'local' and usecdn is 'usecdn'
           cdnUrl = cdnObj.notmin
+        else if target is 'local'
+          cdnUrl = cdnObj.local
         else
           cdnUrl = cdnObj.external
         filesString += "#{preamble}<script src=\"#{cdnUrl}\"></script>\n"
@@ -281,33 +284,35 @@ module.exports = (grunt)->
     putVendorBundledFiles()
     fs.writeFileSync "#{cmlConfig.tmpDir}/index.html", indexFileStr
 
-  grunt.registerTask 'backend'
-  , """Runs backend for E2E tests"""
-  , ->
-    # TODO: we need to figure out away to kill the process after grunt finishes
-    spawn = require('child_process').spawn
-    args = ["#{cmlConfig.backendRoot}manage.py", 'runserver',
-            '-p', cmlConfig.backendPort]
-    grunt.log.writeln("Starting backend with #{cmlConfig.backendPython} and
- arguments: #{args}")
-    PIPE = {stdio: 'inherit'}
-    child = spawn cmlConfig.backendPython, args, PIPE
-#    process.on 'removeListener', (event, fn) ->
-#      # Grunt uses node-exit [0], which eats process 'exit' event handlers.
-#      # Instead, listen for an implementation detail: When Grunt shuts down, it
-#      # removes some 'uncaughtException' event handlers that contain the string
-#      # 'TASK_FAILURE'. Super hacky, but it works.
-#      # [0]: https://github.com/cowboy/node-exit
-#      if event is 'uncaughtException' and fn.toString().match(/TASK_FAILURE/)
-#        grunt.log.writeln 'killing backend server'
-#        child.kill()
+#  grunt.registerTask 'backend'
+#  , """Runs backend for E2E tests"""
+#  , ->
+#    # TODO: we need to figure out away to kill the process after grunt finishes
+#    spawn = require('child_process').spawn
+#    args = ["#{cmlConfig.backendRoot}manage.py", 'runserver',
+#            '-p', cmlConfig.backendPort]
+#    grunt.log.writeln("Starting backend with #{cmlConfig.backendPython} and
+#arguments: #{args}")
+#    PIPE = {stdio: 'inherit'}
+#    child = spawn cmlConfig.backendPython, args, PIPE
+##    process.on 'removeListener', (event, fn) ->
+##      # Grunt uses node-exit [0], which eats process 'exit' event handlers.
+##      # Instead, listen for an implementation detail: When Grunt shuts down, it
+##      # removes some 'uncaughtException' event handlers that contain the string
+##      # 'TASK_FAILURE'. Super hacky, but it works.
+##      # [0]: https://github.com/cowboy/node-exit
+##      if event is 'uncaughtException' and fn.toString().match(/TASK_FAILURE/)
+##        grunt.log.writeln 'killing backend server'
+##        child.kill()
 
   grunt.registerTask 'server'
   , """Builds and run a development server"""
-  , [
+  , (target)->
+    target = if target is 'usecdn' then ':usecdn' else ''
+    grunt.task.run [
       'clean:server'
       'concurrent:compile'
-      'index:local:nocdn'
+      'index:local' + target
       'connect:livereload'
       'open:server'
       'watch'
@@ -352,7 +357,8 @@ module.exports = (grunt)->
 
   grunt.registerTask 'e2e'
   , """
-    Runs Karma E2E Tests
+    Runs Protractor E2E Tests, you should be running backend server at port:#{cmlConfig.backendPort}
+    and running frontend server at port:#{cmlConfig.servePort}
     """
   , [
       'concurrent:e2e'
