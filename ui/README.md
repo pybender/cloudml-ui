@@ -50,6 +50,8 @@ usually need `sudo`
 
 Change directory to your local cloudml-ui/ui directory and do the following:
 
+`rm -r node_modules bower_components`
+
 `npm install`
 
 `bower cache clean`
