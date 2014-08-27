@@ -26,11 +26,12 @@ configuration you should only have the following modules in
 - grunt-cli
 - npm
 
-Along similar lines of clean installation. Make sure on production boxes you
+~~Along similar lines of clean installation. Make sure on production boxes you
 do `npm install --production`, never forgetting the **--production** flag to 
 avoid installing development dependencies that are not needed on production box.
 Same goes with `bower install --production`, to avoid installing bower development
-dependencies.
+dependencies.~~ We might need dev dependencies if we want to run unit tests on the
+production box before releasing.
 
 ## Global Modules Installation
 
