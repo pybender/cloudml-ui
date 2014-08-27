@@ -90,7 +90,11 @@ This should launch a browser/chrome and run the unit tests. It _should_ all pass
 
 **Make sure you are running your local backend**
 
-launched E2E tests
+launch local frontend server
+
+`grunt server`
+
+launch E2E tests
 
 `grunt e2e`
 
@@ -107,9 +111,9 @@ You can also do
 
 `grunt server:usecdn` 
 
-If you want to run again CDN version of 3rd parties. By default `grun server` will
-run against local 3rd parties files for speed (look at ./vendor.config.coffee for
-more details on this)
+If you want to run against CDN version of 3rd parties. By default `grunt server` 
+will run against local 3rd parties files for speed 
+(look at ./vendor.config.coffee for more details on this)
 
 #### Building \_public
 

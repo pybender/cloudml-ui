@@ -8,5 +8,6 @@ exports.config =
     browserName: 'chrome'
   onPrepare: ->
     global.By = global.by
+  #rootElement: 'html'
 
 
