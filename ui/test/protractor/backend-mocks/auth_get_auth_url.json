@@ -1,0 +1,12 @@
+{
+    "request": {
+        "path": "/cloudml/auth/get_auth_url",
+        "method": "POST"
+    },
+    "response": {
+        "data": {
+            "auth_url": "https://www.odesk.com/login?redir=%2Fservices%2Fapi%2Fauth%3Foauth_token%3Df0a32ec8cd4b07b7db76c18854803cde"
+        },
+        "status": 200
+    }
+}

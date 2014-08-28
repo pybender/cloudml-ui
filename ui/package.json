@@ -43,6 +43,7 @@
     "karma-spec-reporter": "0.0.13",
     "npm": "^1.4.23",
     "phantomjs": "*",
-    "protractor": "^1.1.1"
+    "protractor": "^1.1.1",
+    "protractor-http-mock": "git+https://github.com/nadersoliman/protractor-http-mock.git#make_protractor_config_file_configurable"
   }
 }
