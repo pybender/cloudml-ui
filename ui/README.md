@@ -58,6 +58,26 @@ Change directory to your local cloudml-ui/ui directory and do the following:
 
 `bower install`
 
+## Building 3rd party
+
+Not all third party requires building, only few and declining.
+
+### Building x-editable
+
+version 1.4.4 of x-editable doesn't yet come with pre-build redistributable so 
+you have to build it yourself.
+
+Change directory to your local cloudml-ui/ui directory and do the following:
+
+`cd bower_components/x-editable`
+
+`npm install`
+
+`grunt build`
+
+Now you have `bower_components/x-editable/dist` directory to serve x-editable
+locally, note that x-editable on production is served through CDN.
+
 ## Updating Webdrive
 Change directory to your local cloudml-ui/ui directory
 
