@@ -9,7 +9,7 @@ from api import api
 from api.base.resources import BaseResourceSQL, NotFound, \
     odesk_error_response, ERR_INVALID_DATA
 from models import TestResult, TestExample, Model
-from forms import AddTestForm
+from forms import AddTestForm, SelectFieldsForCSVForm
 from sqlalchemy import desc
 
 
@@ -81,6 +81,7 @@ class TestExampleResource(BaseResourceSQL):
 
     NEED_PAGING = True
     GET_ACTIONS = ('groupped', 'csv', 'datafields')
+    PUT_ACTIONS = ('csv_task')
     FILTER_PARAMS = (('label', str), ('pred_label', str))
 
     def _list(self, **kwargs):
@@ -253,32 +254,25 @@ not contain probabilities')
                   self._get_datafields(**kwargs)]
         return self._render({'fields': fields})
 
-    def _get_csv_action(self, **kwargs):
+    def _put_csv_task_action(self, model_id, test_result_id):
         """
-        Returns list of examples in csv format
+        Schedules a task to generate examples in CSV format
         """
-        logging.info('Download examples in csv')
-
-        from tasks import get_csv_results
-
-        parser = reqparse.RequestParser()
-        parser.add_argument('show', type=str)
-        params = parser.parse_args()
-        fields = params.get('show', None)
-        fields = fields.split(',')
-        logging.info('Use fields %s' % str(fields))
-
-        test = TestResult.query.filter_by(
-            id=kwargs.get('test_result_id'),
-            model_id=kwargs.get('model_id')).one()
+        test = TestResult.query.get(test_result_id)
         if not test:
             raise NotFound('Test not found')
 
-        get_csv_results.delay(
-            test.model_id, test.id,
-            fields
-        )
-        return self._render({})
+        form = SelectFieldsForCSVForm(obj=test)
+        if form.is_valid():
+            fields = form.cleaned_data['fields']
+            if isinstance(fields, list) and len(fields) > 0:
+                from tasks import get_csv_results
+                logging.info('Download examples in csv')
+                get_csv_results.delay(test.model_id, test.id, fields)
+                return self._render({})
+
+        return odesk_error_response(400, ERR_INVALID_DATA,
+                                    'Fields of the CSV export is required')
 
     def _get_datafields(self, **kwargs):
         test = TestResult.query.get(kwargs.get('test_result_id'))

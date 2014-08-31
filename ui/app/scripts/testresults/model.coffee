@@ -56,7 +56,7 @@ angular.module('app.testresults.model', ['app.config'])
         return "#{@BASE_UI_URL}#{@id}?action=examples:list"
 
       examplesCsvUrl: () ->
-        return "#{@BASE_API_URL}#{@id}/examples/action/csv/"
+        return "#{@BASE_API_URL}#{@id}/examples/action/csv_task/"
 
       avaragePrecisionUrl: =>
         return "#{@BASE_UI_URL}#{@id}/grouped_examples"
@@ -121,10 +121,14 @@ angular.module('app.testresults.model', ['app.config'])
           }
         @$make_all_request(url, resolver, opts)
 
-      $get_examples_csv: (show) ->
-        url = @examplesCsvUrl() + '?show=' + show
+      $get_examples_csv: (fields) ->
+        """
+        @fields: array of strings of fields to export to csv
+        """
+        url = @examplesCsvUrl()
         resolver = (resp) -> { url: resp.data['url'] }
-        TestResult.$make_all_request(url, resolver)
+        @$make_request(url, {}, 'PUT',
+          {fields: angular.toJson(fields)}, false)
 
       $get_exports: () ->
         url = "#{@BASE_API_URL}#{@id}/action/exports/"

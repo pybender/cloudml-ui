@@ -113,12 +113,12 @@ describe "test examples", ->
 
       expect($rootScope.test).toEqual(test)
       expect($rootScope.labels).toEqual(['0', '1'])
-      expect($location.search).toHaveBeenCalledWith({
-        'label': '0',
-        'some_field': 'val1',
-        'data_field': 'val2',
-        action: 'examples:list',
-      })
+      expect($location.search).toHaveBeenCalledWith
+        label: '0'
+        some_field: 'val1'
+        data_field: 'val2'
+        order: 'asc'
+        sort_by: ''
 
     xit "should make list query", inject () ->
       fields = "id,name,label,pred_label,title,probs"
@@ -144,10 +144,11 @@ describe "test examples", ->
       $rootScope.data_filters = [{name: 'field', value: 'val'}]
       $rootScope.filter()
 
-      expect($location.search).toHaveBeenCalledWith({
-        'label': '1',
-        'field': 'val'
-      })
+      expect($location.search).toHaveBeenCalledWith
+        label: '1'
+        field: 'val'
+        sort_by: ''
+        order: 'asc'
 
   describe "GroupedExamplesCtrl", ->
 
@@ -185,8 +186,8 @@ describe "test examples", ->
 
     it "should make details request", inject () ->
       fields = ['test_name','weighted_data_input','model',
-                'pred_label','label','prob','created_on','test_result'
-      ].join(',')
+                'pred_label','label','prob','created_on','test_result', 'next',
+                'previous'].join(',')
       url = BASE_URL + EXAMPLE_ID + '/?show=' + encodeURIComponent(fields)
       $httpBackend.expectGET(url).respond('{"data": {"id": "' + EXAMPLE_ID + '"}}')
 
@@ -273,8 +274,12 @@ describe "test examples", ->
         $rootScope.$broadcast = jasmine.createSpy('$scope.$broadcast')
         $rootScope.close = jasmine.createSpy('$scope.close')
         $location.search = jasmine.createSpy('$location.search')
-        url = BASE_URL + "action/csv/?show=#{$rootScope.stdFields.join(',')},#{$rootScope.extraFields.join(',')}&"
-        $httpBackend.expectGET(url).respond("{\"url\":\"#{url}\"}")
+        url = BASE_URL + "action/csv_task/?"
+        appendSpy = jasmine.createSpy('FormData.append')
+        spyOn(window, 'FormData').andReturn
+          'append': appendSpy
+        #fd.append 'fields', angular.toJson($rootScope.stdFields.concat($rootScope.extraFields))
+        $httpBackend.expectPUT(url).respond(200, "{}")
 
         $rootScope.getExamplesCsv()
         $httpBackend.flush()
@@ -282,13 +287,14 @@ describe "test examples", ->
         expect($location.search).toHaveBeenCalledWith 'action=about:details'
         expect($rootScope.close).toHaveBeenCalled()
         expect($rootScope.$broadcast).toHaveBeenCalledWith 'exportsChanged'
+        expect(appendSpy).toHaveBeenCalledWith 'fields', angular.toJson($rootScope.stdFields.concat($rootScope.extraFields))
 
         # get csv, something went bad
         $rootScope.setError = jasmine.createSpy('$scope.setError')
         $rootScope.close = jasmine.createSpy('$scope.close')
         $location.search = jasmine.createSpy('$location.search')
-        url = BASE_URL + "action/csv/?show=#{$rootScope.stdFields.join(',')},#{$rootScope.extraFields.join(',')}&"
-        $httpBackend.expectGET(url).respond(400)
+        url = BASE_URL + "action/csv_task/?"
+        $httpBackend.expectPUT(url).respond(400)
 
         $rootScope.getExamplesCsv()
         $httpBackend.flush()

@@ -12,7 +12,7 @@ angular.module('app.datas.controllers', ['app.config', ])
   'Model'
 
 ($scope, $rootScope, $location, Data, Model) ->
-  $scope.filter_opts = $location.search() # Used in ObjectListCtrl.
+  $scope.filter_opts = $location.search() || {} # Used in ObjectListCtrl.
   $scope.simple_filters = {} # Filters by label and pred_label
   $scope.data_filters = [] # Filters by data_input.* fields
   $scope.loading_state = false
@@ -265,8 +265,8 @@ angular.module('app.datas.controllers', ['app.config', ])
 
     $scope.getExamplesCsv = () ->
       $scope.loading_state = true
-      show = $scope.stdFields.join(',') + ',' + $scope.extraFields.join(',')
-      $scope.test.$get_examples_csv(show)
+      fields = $scope.stdFields.concat $scope.extraFields
+      $scope.test.$get_examples_csv(fields)
       .then () ->
         $scope.loading_state = false
         $location.search('action=about:details')

@@ -335,10 +335,38 @@ class TestExampleResourceTests(BaseDbTestCase, TestChecksMixin):
     @patch('api.model_tests.tasks.get_csv_results')
     def test_csv(self, mock_get_csv):
         fields = 'name,id,label,pred_label,prob,data_input.employer->country'
-        url = self._get_url(action='csv', show=fields)
-        resp = self.client.get(url, headers=HTTP_HEADERS)
+        data = {'fields': json.dumps(fields.split(','))}
+        url = self._get_url(action='csv_task')
+        resp = self.client.put(url, data=data, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, 200)
         self.assertTrue(mock_get_csv.delay.called)
+        mock_get_csv.delay.assert_called_with(
+            self.model.id, self.test.id,
+            'name,id,label,pred_label,prob,data_input.employer->country'.split(','))
+
+    @patch('api.model_tests.tasks.get_csv_results')
+    def test_csv_invalid_things(self, mock_get_csv):
+        # invalid id
+        import re
+        fields = 'name,id,label,pred_label,prob,data_input.employer->country'
+        data = {'fields': json.dumps(fields.split(','))}
+        url = self._get_url(action='csv_task')
+        url = re.sub('/tests/\d+/', '/tests/123321/', url)
+        resp = self.client.put(url, data=data, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, 404)
+
+        # empty fields
+        data = {'fields': json.dumps([])}
+        url = self._get_url(action='csv_task')
+        resp = self.client.put(url, data=data, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, 400)
+
+        # absent fields
+        fields = 'name,id,label,pred_label,prob,data_input.employer->country'
+        data = {'zozo': json.dumps(fields.split(','))}
+        url = self._get_url(action='csv_task')
+        resp = self.client.put(url, data=data, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, 400)
 
 
 class TasksTests(BaseDbTestCase):

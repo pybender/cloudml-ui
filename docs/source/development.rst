@@ -110,7 +110,8 @@ Training Your First Model
 -------------------------
 
 **Prepare Default Instance:** Go to instances, click "Add new AWS instance", 
-in the IP use 127.0.0.1, in the type choose small. 
+name it **default**, otherwise rabbitmq/celery wouldn't pick training and testing
+tasks, in the IP use 127.0.0.1, in the type choose small.
 Finally make sure **Is Default?** checkbox is checked.
 
 **Create JSON import handler:** Go to import handlers/json, "Add new import handler",

@@ -2,7 +2,7 @@ from api.base.forms.base_forms import BaseChooseInstanceAndDataset, \
     CharField, ModelField, ChoiceField
 from api.base.resources import ValidationError
 from api.models import DataSet, TestResult, Instance, Model
-
+from api.base.forms import BaseForm, JsonField
 
 class AddTestForm(BaseChooseInstanceAndDataset):
     HANDLER_TYPE = 'test'
@@ -54,3 +54,11 @@ class AddTestForm(BaseChooseInstanceAndDataset):
                                   test.id,),
                                   queue=instance.name)
         return test
+
+class SelectFieldsForCSVForm(BaseForm):
+    """
+    Form containing one json entry called fields which is an array of fields to
+    use for generating test examples csv in _put_csv_task_action
+    """
+    required_fields = ('fields',)
+    fields = JsonField()
