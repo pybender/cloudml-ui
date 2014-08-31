@@ -75,7 +75,6 @@ module.exports =
   ]
   # The following files will be minified and uglified into vendor.js
   bundled: [
-    "vendor/scripts/console-helper.js"
     "bower_components/select2/select2.js"
     "bower_components/angular-bootstrap/ui-bootstrap-tpls-0.8.0.js"
     "bower_components/angular-ui-select2/src/select2.js"
