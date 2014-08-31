@@ -129,7 +129,11 @@
         </div>
         <div ng-show="prCurve || prCurves">
           <h4>Precision-Recall</h4>
-          <sc-curves xlabel="Recall" ylabel="Precision" curves-dict="prCurves" width="500"></sc-curves>
+          <div class="row">
+            <div class="span5">
+              <sc-curves xlabel="Recall" ylabel="Precision" curves-dict="prCurves" width="450"></sc-curves>
+            </div>
+          </div>
           <hr/>
         </div>
         <div ng-show="test.status == 'Completed'">
