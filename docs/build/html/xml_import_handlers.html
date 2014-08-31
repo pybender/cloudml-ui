@@ -152,18 +152,20 @@ used to transform data. Code inside the script tag will be added
 whenever a python function is call. It is a good idea to wrap
 scripts in &lt;![CDATA[ ...]]&gt; elements.</p>
 <p>Example:</p>
-<div class="highlight-python"><pre>&lt;script&gt;
+<div class="highlight-python"><div class="highlight"><pre>&lt;script&gt;
 &lt;![CDATA[
     def intToBoolean(a):
         return a == 1
 ]]&gt;
-&lt;/script&gt;</pre>
+&lt;/script&gt;
+</pre></div>
 </div>
 <p>It is also possible to reference external Python files. This can be
 done to ease development. Scripts should be expected in the same
 directory as the XML file.</p>
 <p>Example:</p>
-<div class="highlight-python"><pre>&lt;script src="functions.py" /&gt;</pre>
+<div class="highlight-python"><div class="highlight"><pre>&lt;script src=&quot;functions.py&quot; /&gt;
+</pre></div>
 </div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -186,16 +188,17 @@ directory as the XML file.</p>
 <a class="reference external" href="https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior">python documetation</a></p>
 </div>
 <p>Example:</p>
-<div class="highlight-python"><pre>&lt;inputs&gt;
+<div class="highlight-python"><div class="highlight"><pre>&lt;inputs&gt;
     &lt;!-- Define an integer parameter. Use regex to dictate only positive integers --&gt;
-    &lt;param name="application" type="int" regex="\d+" /&gt;
+    &lt;param name=&quot;application&quot; type=&quot;int&quot; regex=&quot;\d+&quot; /&gt;
 
     &lt;!-- Date parameter with instructions on how to interpret date--&gt;
-    &lt;param name="year" type="date" format="%Y"/&gt;
+    &lt;param name=&quot;year&quot; type=&quot;date&quot; format=&quot;%Y&quot;/&gt;
 
     &lt;!-- Boolean parameter --&gt;
-    &lt;param name="only_fjp" type="boolean" /&gt;
-&lt;/inputs&gt;</pre>
+    &lt;param name=&quot;only_fjp&quot; type=&quot;boolean&quot; /&gt;
+&lt;/inputs&gt;
+</pre></div>
 </div>
 </div>
 <div class="section" id="datasources">
@@ -230,19 +233,20 @@ the element used is <tt class="docutils literal"><span class="pre">&lt;db&gt;</s
 </ul>
 <p>Note that name is required in both cases. For named connections, only name-ref should be also present. When defining the DB connection details in handler&#8217;s file, name-ref, host, dbname and vendor should be present.</p>
 <p>Examples:</p>
-<div class="highlight-python"><pre>&lt;!--
--- Defines a named connection with name "namedDBConnection"
+<div class="highlight-python"><div class="highlight"><pre>&lt;!--
+-- Defines a named connection with name &quot;namedDBConnection&quot;
 -- that uses connection details defined in myODWConnection.
 --&gt;
-&lt;db name="namedDBConnection" name-ref="myODWConnection" /&gt;
+&lt;db name=&quot;namedDBConnection&quot; name-ref=&quot;myODWConnection&quot; /&gt;
 
 &lt;!-- Defines a database connection. --&gt;
-&lt;db name="odw"
-    host="localhost"
-    dbname="odw"
-    user="postgres"
-    password="postgres"
-    vendor="postgres" /&gt;</pre>
+&lt;db name=&quot;odw&quot;
+    host=&quot;localhost&quot;
+    dbname=&quot;odw&quot;
+    user=&quot;postgres&quot;
+    password=&quot;postgres&quot;
+    vendor=&quot;postgres&quot; /&gt;
+</pre></div>
 </div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -267,16 +271,17 @@ two fields:</p>
 <li><tt class="docutils literal"><span class="pre">index</span></tt> - the column&#8217;s index (columns are zero-indexed).</li>
 </ul>
 <p>Examples:</p>
-<div class="highlight-python"><pre>&lt;!-- Defines a CSV datasource with headers in file. --&gt;
-&lt;csv name="csvDataSource" src="stats.csv" /&gt;
+<div class="highlight-python"><div class="highlight"><pre>&lt;!-- Defines a CSV datasource with headers in file. --&gt;
+&lt;csv name=&quot;csvDataSource&quot; src=&quot;stats.csv&quot; /&gt;
 
 &lt;!-- Defines a CSV datasource with headers in handler. --&gt;
-&lt;csv name="csvDataSource" src="stats.csv"&gt;
+&lt;csv name=&quot;csvDataSource&quot; src=&quot;stats.csv&quot;&gt;
     &lt;!-- Note that some columns are ignored --&gt;
-    &lt;header name="id" index="0" /&gt;
-    &lt;header name="name" index="2" /&gt;
-    &lt;header name="score" index="7" /&gt;
-&lt;/csv&gt;</pre>
+    &lt;header name=&quot;id&quot; index=&quot;0&quot; /&gt;
+    &lt;header name=&quot;name&quot; index=&quot;2&quot; /&gt;
+    &lt;header name=&quot;score&quot; index=&quot;7&quot; /&gt;
+&lt;/csv&gt;
+</pre></div>
 </div>
 </div>
 <div class="section" id="http">
@@ -290,9 +295,10 @@ services.</p>
 <li><tt class="docutils literal"><span class="pre">url</span></tt> (<strong>required</strong>) - the base URL to use</li>
 </ul>
 <p>Example:</p>
-<div class="highlight-python"><pre>&lt;http name="jar"
-    method="GET"
-    url="http://d-postgres.odesk.com:11000/jar/" /&gt;</pre>
+<div class="highlight-python"><div class="highlight"><pre>&lt;http name=&quot;jar&quot;
+    method=&quot;GET&quot;
+    url=&quot;http://d-postgres.odesk.com:11000/jar/&quot; /&gt;
+</pre></div>
 </div>
 <p>When using this datasource with RESTful services, try to define the base
 URL. If you need to query for specific entities, you can define query
@@ -319,11 +325,13 @@ using <tt class="docutils literal"><span class="pre">&lt;pig&gt;</span></tt> tag
 <li><tt class="docutils literal"><span class="pre">slave_instance_type</span></tt> (optional) – EC2 instance type of the slave nodes</li>
 </ul>
 <p>Example:</p>
-<div class="highlight-python"><pre>&lt;pig name="pig3" jobid="job-id" amazon_access_token="token" amazon_token_secret="secret"/&gt;</pre>
+<div class="highlight-python"><div class="highlight"><pre>&lt;pig name=&quot;pig3&quot; jobid=&quot;job-id&quot; amazon_access_token=&quot;token&quot; amazon_token_secret=&quot;secret&quot;/&gt;
+</pre></div>
 </div>
 <p>For store results we should use &#8216;$output&#8217; parameter as output dir. For example:</p>
-<div class="highlight-python"><pre>C = FOREACH B GENERATE application, opening;
-STORE C INTO '$output' USING JsonStorage();</pre>
+<div class="highlight-python"><div class="highlight"><pre>C = FOREACH B GENERATE application, opening;
+STORE C INTO &#39;$output&#39; USING JsonStorage();
+</pre></div>
 </div>
 </div>
 </div>
@@ -349,15 +357,16 @@ of the element are the following:</p>
 <li><tt class="docutils literal"><span class="pre">query</span></tt> - a string that provides instructions on how to query a datasource (i.e. a SQL query or a path template). Queries can be also defined as child elements (to be discussed later).</li>
 </ul>
 <p>Examples:</p>
-<div class="highlight-python"><pre>&lt;!-- An entity that uses a DB connection --&gt;
-&lt;entity name="employer" datasource="mysqlConn" query="SELECT * FROM table"&gt;
+<div class="highlight-python"><div class="highlight"><pre>&lt;!-- An entity that uses a DB connection --&gt;
+&lt;entity name=&quot;employer&quot; datasource=&quot;mysqlConn&quot; query=&quot;SELECT * FROM table&quot;&gt;
     ...
 &lt;/entity&gt;
 
 &lt;!-- An entity that uses an HTTP datasource --&gt;
-&lt;entity name="employer" datasource="odr" query="opening/f/#{opening}.json"&gt;
+&lt;entity name=&quot;employer&quot; datasource=&quot;odr&quot; query=&quot;opening/f/#{opening}.json&quot;&gt;
     ...
-&lt;/entity&gt;</pre>
+&lt;/entity&gt;
+</pre></div>
 </div>
 <div class="section" id="queries">
 <h3>Queries<a class="headerlink" href="#queries" title="Permalink to this headline">¶</a></h3>
@@ -370,27 +379,28 @@ script. In this case, attribute <tt class="docutils literal"><span class="pre">t
 the <tt class="docutils literal"><span class="pre">&lt;query&gt;</span></tt> tag. The value of this attribute provides details on
 where to look for the actual data.</p>
 <p>Examples:</p>
-<div class="highlight-python"><pre>&lt;!-- An entity that uses a DB connection --&gt;
-&lt;entity name="employer" datasource="mysqlConn"&gt;
+<div class="highlight-python"><div class="highlight"><pre>&lt;!-- An entity that uses a DB connection --&gt;
+&lt;entity name=&quot;employer&quot; datasource=&quot;mysqlConn&quot;&gt;
     &lt;query&gt;
         &lt;![CDATA[
             SELECT *
             FROM table t1 JOIN table t2 ON t1.id = t2.reference
-            WHERE t2.creation_time &lt; '#{start_date}'
+            WHERE t2.creation_time &lt; &#39;#{start_date}&#39;
         ]]&gt;
     &lt;/query&gt;
     ...
 &lt;/entity&gt;
 
 &lt;!-- An entity that uses an HTTP datasource --&gt;
-&lt;entity name="employer" datasource="odr"&gt;
+&lt;entity name=&quot;employer&quot; datasource=&quot;odr&quot;&gt;
  &lt;query&gt;
         &lt;![CDATA[
             opening/f/#{opening}.json
         ]]&gt;
     &lt;/query&gt;
     ...
-&lt;/entity&gt;</pre>
+&lt;/entity&gt;
+</pre></div>
 </div>
 <p>Query strings depend on the datasource:</p>
 <ul class="simple">
@@ -423,72 +433,73 @@ the following attributes:</p>
 <li><tt class="docutils literal"><span class="pre">required</span></tt> - whether this field is required to have a value or not. If not defined, default is false.</li>
 </ul>
 <p>Examples:</p>
-<div class="highlight-python"><pre>&lt;!-- HTTP JSON entity --&gt;
-&lt;entity name="jar_application" datasource="jar" query="get_s/#{employer}/#{application}.json"&gt;
-    &lt;field name="ja.bid_rate" type="float" jsonpath="$.result.hr_pay_rate" /&gt;
-    &lt;field name="ja.bid_amount" type="float" jsonpath="$.result.fp_pay_amount" /&gt;
-    &lt;field name="opening.pref_count" type="int" jsonpath="$.result.job_pref_matches.prefs_match" /&gt;
-    &lt;field name="application.creation_time" jsonpath="$.result.creation_time" dateFormat="YYYY-mm-DD" /&gt;
+<div class="highlight-python"><div class="highlight"><pre>&lt;!-- HTTP JSON entity --&gt;
+&lt;entity name=&quot;jar_application&quot; datasource=&quot;jar&quot; query=&quot;get_s/#{employer}/#{application}.json&quot;&gt;
+    &lt;field name=&quot;ja.bid_rate&quot; type=&quot;float&quot; jsonpath=&quot;$.result.hr_pay_rate&quot; /&gt;
+    &lt;field name=&quot;ja.bid_amount&quot; type=&quot;float&quot; jsonpath=&quot;$.result.fp_pay_amount&quot; /&gt;
+    &lt;field name=&quot;opening.pref_count&quot; type=&quot;int&quot; jsonpath=&quot;$.result.job_pref_matches.prefs_match&quot; /&gt;
+    &lt;field name=&quot;application.creation_time&quot; jsonpath=&quot;$.result.creation_time&quot; dateFormat=&quot;YYYY-mm-DD&quot; /&gt;
 
 &lt;/entity&gt;
 
 &lt;!-- HTTP JSON entity --&gt;
-&lt;entity name="contractor" datasource="odr" query="opening/f/#{opening}.json"&gt;
-    &lt;field name="contractor.skills" path="$.skills.*.skl_name" join="," /&gt;
-    &lt;field name="contractor.greeting" template="Hello #{contractor.name}" /&gt;
-    &lt;field name="matches_pref_english" script="#{contractor.dev_eng_skill}&gt; #{pref_english})" /&gt;
+&lt;entity name=&quot;contractor&quot; datasource=&quot;odr&quot; query=&quot;opening/f/#{opening}.json&quot;&gt;
+    &lt;field name=&quot;contractor.skills&quot; path=&quot;$.skills.*.skl_name&quot; join=&quot;,&quot; /&gt;
+    &lt;field name=&quot;contractor.greeting&quot; template=&quot;Hello #{contractor.name}&quot; /&gt;
+    &lt;field name=&quot;matches_pref_english&quot; script=&quot;#{contractor.dev_eng_skill}&gt; #{pref_english})&quot; /&gt;
 &lt;/entity&gt;
 
 &lt;!-- DB entity --&gt;
-&lt;entity name="dbentity" datasource="mysqlConnection"&gt;
+&lt;entity name=&quot;dbentity&quot; datasource=&quot;mysqlConnection&quot;&gt;
     &lt;query&gt;
         &lt;![CDATA[
             SELECT *
             FROM table t1 JOIN table t2 ON t1.id = t2.reference
-            WHERE t2.creation_time &lt; '#{start_date}'
+            WHERE t2.creation_time &lt; &#39;#{start_date}&#39;
         ]]&gt;
     &lt;/query&gt;
-    &lt;field name="id" column="t1.id" /&gt;
-    &lt;field name="name" column="t1.full_name" /&gt;
-    &lt;field name="category" column="t2.category" /&gt;
-    &lt;field name="active" type="boolean" column="t2.is_active" /&gt;
-    &lt;field name="opening.segment" script="getSegment('#{category}')" /&gt;
+    &lt;field name=&quot;id&quot; column=&quot;t1.id&quot; /&gt;
+    &lt;field name=&quot;name&quot; column=&quot;t1.full_name&quot; /&gt;
+    &lt;field name=&quot;category&quot; column=&quot;t2.category&quot; /&gt;
+    &lt;field name=&quot;active&quot; type=&quot;boolean&quot; column=&quot;t2.is_active&quot; /&gt;
+    &lt;field name=&quot;opening.segment&quot; script=&quot;getSegment(&#39;#{category}&#39;)&quot; /&gt;
 &lt;/entity&gt;
 
 
 &lt;!-- DB entity where results should be read by table --&gt;
-&lt;entity name="dbentity" datasource="mysqlConnection"&gt;
-    &lt;query target="data"&gt;
+&lt;entity name=&quot;dbentity&quot; datasource=&quot;mysqlConnection&quot;&gt;
+    &lt;query target=&quot;data&quot;&gt;
         &lt;![CDATA[
             CREATE TEMP TABLE data AS (
             SELECT *
             FROM table t1 JOIN table t2 ON t1.id = t2.reference
-            WHERE t2.creation_time &lt; '#{start_date}')
+            WHERE t2.creation_time &lt; &#39;#{start_date}&#39;)
         ]]&gt;
     &lt;/query&gt;
-    &lt;field name="id" column="t1.id" /&gt;
-    &lt;field name="name" column="t1.full_name" /&gt;
-    &lt;field name="category" column="t2.category" /&gt;
-    &lt;field name="active" type="boolean" column="t2.is_active" /&gt;
-    &lt;field name="opening.segment" script="getSegment('#{category}')" /&gt;
+    &lt;field name=&quot;id&quot; column=&quot;t1.id&quot; /&gt;
+    &lt;field name=&quot;name&quot; column=&quot;t1.full_name&quot; /&gt;
+    &lt;field name=&quot;category&quot; column=&quot;t2.category&quot; /&gt;
+    &lt;field name=&quot;active&quot; type=&quot;boolean&quot; column=&quot;t2.is_active&quot; /&gt;
+    &lt;field name=&quot;opening.segment&quot; script=&quot;getSegment(&#39;#{category}&#39;)&quot; /&gt;
 &lt;/entity&gt;
 
 &lt;!-- Pig entity --&gt;
-&lt;entity name="dbentity" datasource="pigConnection"&gt;
-    &lt;query target="output"&gt;
+&lt;entity name=&quot;dbentity&quot; datasource=&quot;pigConnection&quot;&gt;
+    &lt;query target=&quot;output&quot;&gt;
         &lt;![CDATA[
-            batting = load 'Batting.csv' using PigStorage(',');
+            batting = load &#39;Batting.csv&#39; using PigStorage(&#39;,&#39;);
             runs = FOREACH batting GENERATE $0 as playerID, $1 as year, $8 as runs;
             grp_data = GROUP runs by (year);
-            STORE grp_data INTO 'output';
+            STORE grp_data INTO &#39;output&#39;;
         ]]&gt;
     &lt;/query&gt;
-    &lt;field name="id" column="t1.id" /&gt;
-    &lt;field name="name" column="t1.full_name" /&gt;
-    &lt;field name="category" column="t2.category" /&gt;
-    &lt;field name="active" type="boolean" column="t2.is_active" /&gt;
-    &lt;field name="opening.segment" script="getSegment('#{category}')" /&gt;
-&lt;/entity&gt;</pre>
+    &lt;field name=&quot;id&quot; column=&quot;t1.id&quot; /&gt;
+    &lt;field name=&quot;name&quot; column=&quot;t1.full_name&quot; /&gt;
+    &lt;field name=&quot;category&quot; column=&quot;t2.category&quot; /&gt;
+    &lt;field name=&quot;active&quot; type=&quot;boolean&quot; column=&quot;t2.is_active&quot; /&gt;
+    &lt;field name=&quot;opening.segment&quot; script=&quot;getSegment(&#39;#{category}&#39;)&quot; /&gt;
+&lt;/entity&gt;
+</pre></div>
 </div>
 </div>
 <div class="section" id="sqoop">
@@ -507,29 +518,30 @@ contain the following attributes:</p>
 <p>If the sqoop tag contains body, then it should be valid SQL statements.
 These statements will be executed on the database before the Sqoop
 import. This feature is particularly useful if you want to run:</p>
-<div class="highlight-python"><pre>&lt;entity name="myEntity" datasource="pigConnection"&gt;
-    &lt;query target="output"&gt;
+<div class="highlight-python"><div class="highlight"><pre>&lt;entity name=&quot;myEntity&quot; datasource=&quot;pigConnection&quot;&gt;
+    &lt;query target=&quot;output&quot;&gt;
     &lt;![CDATA[
-        batting = load 'Batting.csv' using PigStorage(',');
+        batting = load &#39;Batting.csv&#39; using PigStorage(&#39;,&#39;);
         runs = FOREACH batting GENERATE $0 as playerID, $1 as year, $8 as runs;
         grp_data = GROUP runs by (year);
-        STORE grp_data INTO 'output';
+        STORE grp_data INTO &#39;output&#39;;
     ]]&gt;
     &lt;/query&gt;
     &lt;!-- Transfer table dataset to HDFS --&gt;
-    &lt;sqoop target="dataset" table="dataset" datasource="sqoop_db_datasource" /&gt;
+    &lt;sqoop target=&quot;dataset&quot; table=&quot;dataset&quot; datasource=&quot;sqoop_db_datasource&quot; /&gt;
 
     &lt;!-- Query inside sqoop tag needs to be executed on the DB before running the sqoop command --&gt;
     &lt;!-- We should also allow multiple sqoop tags in case we require more than one imports --&gt;
-    &lt;sqoop target="new_data" table="temp_table" datasource="sqoop_db_datasource" direct="true" mappers="1"&gt;
+    &lt;sqoop target=&quot;new_data&quot; table=&quot;temp_table&quot; datasource=&quot;sqoop_db_datasource&quot; direct=&quot;true&quot; mappers=&quot;1&quot;&gt;
     &lt;![CDATA[
         CREATE TEMP TABLE target_openings AS SELECT * FROM openings WHERE creation_time BETWEEN #{start} AND #{end};
-        CREATE TABLE temp_table AS SELECT to.*, e.* FROM target_openings to JOIN employer e ON to.employer=e."Record ID#";
+        CREATE TABLE temp_table AS SELECT to.*, e.* FROM target_openings to JOIN employer e ON to.employer=e.&quot;Record ID#&quot;;
     ]]&gt;
     &lt;/sqoop&gt;
     &lt;!-- Fields --&gt;
     &lt;field ... /&gt;
-&lt;/entity&gt;</pre>
+&lt;/entity&gt;
+</pre></div>
 </div>
 </div>
 <div class="section" id="nested-entities">
@@ -537,10 +549,11 @@ import. This feature is particularly useful if you want to run:</p>
 <p>It might be possible that not all data required might originate from one
 entity, or it might be possible to gather data from more than one
 datasources. For example, consider the following use case:</p>
-<div class="highlight-python"><pre>A really important feature is application ranking.
+<div class="highlight-python"><div class="highlight"><pre>A really important feature is application ranking.
 In order to rank the application, data regarding the application,
 the employer, the job opening and the contractor are required.
-However, these data may come from different HTTP URLs.</pre>
+However, these data may come from different HTTP URLs.
+</pre></div>
 </div>
 <p>A solution to this problem is to use nested entities. A nested entity is a normal entity, with the benefit that it can use data from it&#8217;s parent entity to formulate the query. A nested entity may result in two ways:</p>
 <ul class="simple">
@@ -549,17 +562,18 @@ However, these data may come from different HTTP URLs.</pre>
 </ul>
 <p>A nested entity is defined inside another <tt class="docutils literal"><span class="pre">&lt;entity&gt;</span></tt> and follows exactly the same syntax. However, it might also use the values of parent entity as variables, in addition to the input parameter values.</p>
 <p>Example:</p>
-<div class="highlight-python"><pre>&lt;entity name="application" datasource="ods" query="job_application/pa/#{application}.json"&gt;
-    &lt;field name="opening" jsonpath="$.result.#{application}.opening_ref" /&gt;
-    &lt;field name="contractor" jsonpath="$.result.#{application}.developer_ref" /&gt;
-    &lt;field name="employer" jsonpath="$.result.#{application}.team_ref" /&gt;
+<div class="highlight-python"><div class="highlight"><pre>&lt;entity name=&quot;application&quot; datasource=&quot;ods&quot; query=&quot;job_application/pa/#{application}.json&quot;&gt;
+    &lt;field name=&quot;opening&quot; jsonpath=&quot;$.result.#{application}.opening_ref&quot; /&gt;
+    &lt;field name=&quot;contractor&quot; jsonpath=&quot;$.result.#{application}.developer_ref&quot; /&gt;
+    &lt;field name=&quot;employer&quot; jsonpath=&quot;$.result.#{application}.team_ref&quot; /&gt;
 
     &lt;!-- Nested entity using a global datasource --&gt;
-    &lt;entity name="opening" datasource="odr" query="opening/f/#{opening}.json"&gt;
-        &lt;field name="opening.title" jsonpath="$.op_title" /&gt;
-        &lt;field name="opening.description" jsonpath="$.op_job" /&gt;
+    &lt;entity name=&quot;opening&quot; datasource=&quot;odr&quot; query=&quot;opening/f/#{opening}.json&quot;&gt;
+        &lt;field name=&quot;opening.title&quot; jsonpath=&quot;$.op_title&quot; /&gt;
+        &lt;field name=&quot;opening.description&quot; jsonpath=&quot;$.op_job&quot; /&gt;
     &lt;/entity&gt;
-&lt;/entity&gt;</pre>
+&lt;/entity&gt;
+</pre></div>
 </div>
 <p>The second option is to convert one of the parent entity&#8217;s fields to a
 new entity. This is useful if a field in the parent entity contains CSV
@@ -569,25 +583,26 @@ or JSON data. To do this, two things need to be done:</p>
 <li>In the new entity, define as datasource name the name of the parent entity&#8217;s field.</li>
 </ul>
 <p>Example:</p>
-<div class="highlight-python"><pre>&lt;!-- Parent entity --&gt;
-&lt;entity name="user" datasource="dbEntity" query="SELECT * FROM users"&gt;
+<div class="highlight-python"><div class="highlight"><pre>&lt;!-- Parent entity --&gt;
+&lt;entity name=&quot;user&quot; datasource=&quot;dbEntity&quot; query=&quot;SELECT * FROM users&quot;&gt;
     &lt;!-- Convert field to CSV datasource --&gt;
-    &lt;field name="permissions" transform="csv" headers="read,write,execute"/&gt;
+    &lt;field name=&quot;permissions&quot; transform=&quot;csv&quot; headers=&quot;read,write,execute&quot;/&gt;
     &lt;!-- Nested entity using data from CSV field --&gt;
-    &lt;entity name="permissionEntity" datasource="permissions"&gt;
-        &lt;field name="user.read" column="read" /&gt;
-        &lt;field name="user.execute" column="execute" /&gt;
+    &lt;entity name=&quot;permissionEntity&quot; datasource=&quot;permissions&quot;&gt;
+        &lt;field name=&quot;user.read&quot; column=&quot;read&quot; /&gt;
+        &lt;field name=&quot;user.execute&quot; column=&quot;execute&quot; /&gt;
     &lt;/entity&gt;
 
     &lt;
     &lt;!-- Convert field to JSON datasource --&gt;
-    &lt;field name="profile" transform="json" /&gt;
+    &lt;field name=&quot;profile&quot; transform=&quot;json&quot; /&gt;
 
     &lt;!-- Nested entity using data from JSON field --&gt;
-    &lt;entity name="profileEntity" datasource="profile"&gt;
-        &lt;field name="score" jsonpath="$.score" /&gt;
+    &lt;entity name=&quot;profileEntity&quot; datasource=&quot;profile&quot;&gt;
+        &lt;field name=&quot;score&quot; jsonpath=&quot;$.score&quot; /&gt;
     &lt;/entity&gt;
-&lt;/entity&gt;</pre>
+&lt;/entity&gt;
+</pre></div>
 </div>
 </div>
 </div>
@@ -629,9 +644,10 @@ using some additional child elements:</p>
 <div class="section" id="positive-label">
 <h3>positive_label<a class="headerlink" href="#positive-label" title="Permalink to this headline">¶</a></h3>
 <p>Allows overriding which label to use as positive label. If not defined, true is considered as positive label. Example:</p>
-<div class="highlight-python"><pre>&lt;model name="rank" value="BestMatch.v31"&gt;
-    &lt;positive_label values="false"/&gt;
-&lt;/model&gt;</pre>
+<div class="highlight-python"><div class="highlight"><pre>&lt;model name=&quot;rank&quot; value=&quot;BestMatch.v31&quot;&gt;
+    &lt;positive_label values=&quot;false&quot;/&gt;
+&lt;/model&gt;
+</pre></div>
 </div>
 </div>
 </div>
@@ -663,7 +679,7 @@ using some additional child elements:</p>
     </div>
     <div class="footer">
         &copy; Copyright 2013, oDesk.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>
 </html>

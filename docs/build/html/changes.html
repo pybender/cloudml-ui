@@ -101,16 +101,18 @@
 <li>all feature scalers</li>
 </ul>
 <p>For example:</p>
-<div class="highlight-python"><pre>"classifier": {
-  "type": "logistic regression",
-  "penalty": "l2"
-}</pre>
+<div class="highlight-python"><div class="highlight"><pre>&quot;classifier&quot;: {
+  &quot;type&quot;: &quot;logistic regression&quot;,
+  &quot;penalty&quot;: &quot;l2&quot;
+}
+</pre></div>
 </div>
 <p>should be changed to:</p>
-<div class="highlight-python"><pre>"classifier": {
-  "type": "logistic regression",
-  "params": {"penalty": "l2"}
-}</pre>
+<div class="highlight-python"><div class="highlight"><pre>&quot;classifier&quot;: {
+  &quot;type&quot;: &quot;logistic regression&quot;,
+  &quot;params&quot;: {&quot;penalty&quot;: &quot;l2&quot;}
+}
+</pre></div>
 </div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -161,7 +163,7 @@
     </div>
     <div class="footer">
         &copy; Copyright 2013, oDesk.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>
 </html>

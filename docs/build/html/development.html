@@ -96,59 +96,80 @@
 <div class="section" id="backend">
 <h2>Backend<a class="headerlink" href="#backend" title="Permalink to this headline">¶</a></h2>
 <p>Install system requirements(mongodb==2.4.6):</p>
-<div class="highlight-python"><pre>$ sudo apt-get install liblapack-dev gfortran libpq-dev libevent-dev python-dev mongo-server</pre>
+<div class="highlight-python"><div class="highlight"><pre>$ sudo apt-get install liblapack-dev gfortran libpq-dev libevent-dev python-dev mongo-server
+</pre></div>
 </div>
 <p>Create virtual env:</p>
-<div class="highlight-python"><pre>$ virtualenv --no-site-packages ve
-$ . ve/bin/activate</pre>
+<div class="highlight-python"><div class="highlight"><pre>$ virtualenv --no-site-packages ve
+$ . ve/bin/activate
+</pre></div>
 </div>
 <p>Install numpy and scipy:</p>
-<div class="highlight-python"><pre>$ export LAPACK=/usr/lib/liblapack.so
+<div class="highlight-python"><div class="highlight"><pre>$ export LAPACK=/usr/lib/liblapack.so
 $ export ATLAS=/usr/lib/libatlas.so
 $ export BLAS=/usr/lib/libblas.so
 $ pip install numpy
-$ pip install scipy</pre>
+$ pip install scipy
+</pre></div>
 </div>
 <p>Install python requirements:</p>
-<div class="highlight-python"><pre>$ pip install -r requirements.txt</pre>
+<div class="highlight-python"><div class="highlight"><pre>$ pip install -r requirements.txt
+</pre></div>
 </div>
 <p>Create local config:</p>
-<div class="highlight-python"><pre>$ cp api/local_config.py.tpl api/local_config.py</pre>
+<div class="highlight-python"><div class="highlight"><pre>$ cp api/local_config.py.tpl api/local_config.py
+</pre></div>
 </div>
 <p>Note:</p>
-<div class="highlight-python"><pre>Create OATH API keys using https://www.odesk.com/services/api/apply. Callback URL is http://127.0.0.1:3333/#/auth/callback</pre>
+<div class="highlight-python"><div class="highlight"><pre>Create OATH API keys using https://www.odesk.com/services/api/apply. Callback URL is http://127.0.0.1:3333/#/auth/callback
+</pre></div>
 </div>
 <p>Configure rabbitmq(celery broker):</p>
-<div class="highlight-python"><pre>$ rabbitmqctl add_user cloudml {{password}}
+<div class="highlight-python"><div class="highlight"><pre>$ rabbitmqctl add_user cloudml {{password}}
 $ rabbitmqctl add_vhost cloudml
-$ rabbitmqctl set_permissions cloudml cloudml "*" "*" "*
-"</pre>
+$ rabbitmqctl set_permissions cloudml cloudml &quot;*&quot; &quot;*&quot; &quot;*
+&quot;
+</pre></div>
+</div>
+<p>Run local dynamodb:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ ./api/logs/dynamodb/dynamodb_local.sh
+</pre></div>
 </div>
 <p>Run dev server:</p>
-<div class="highlight-python"><pre>$ python manage.py runserver</pre>
+<div class="highlight-python"><div class="highlight"><pre>$ python manage.py runserver
+</pre></div>
 </div>
 <p id="celery">Run celery:</p>
-<div class="highlight-python"><pre>$ python manage.py celeryd</pre>
+<div class="highlight-python"><div class="highlight"><pre>$ python manage.py celeryd
+</pre></div>
 </div>
 <p>Run flower (celery monitor):</p>
-<div class="highlight-python"><pre>$ python manage.py flower</pre>
+<div class="highlight-python"><div class="highlight"><pre>$ python manage.py flower
+</pre></div>
 </div>
 <p>Run shell:</p>
-<div class="highlight-python"><pre>$ python manage.py shell</pre>
+<div class="highlight-python"><div class="highlight"><pre>$ python manage.py shell
+</pre></div>
 </div>
+<p>Check unittests coverage:</p>
+<blockquote>
+<div>$ nosetests &#8211;with-coverage &#8211;cover-package=api.accounts &#8211;verbose &#8211;tests api.accounts.tests &#8211;cover-html-dir=coverage &#8211;cover-html</div></blockquote>
 </div>
 <div class="section" id="frontend">
 <h2>Frontend<a class="headerlink" href="#frontend" title="Permalink to this headline">¶</a></h2>
 <p>Install nodejs and nmp(nodejs==0.8.6):</p>
-<div class="highlight-python"><pre>$ sudo apt-get install nodejs npm</pre>
+<div class="highlight-python"><div class="highlight"><pre>$ sudo apt-get install nodejs npm
+</pre></div>
 </div>
 <p>Init ui dev enviropment:</p>
-<div class="highlight-python"><pre>$ cd ui
-$ ./scripts/init.sh</pre>
+<div class="highlight-python"><div class="highlight"><pre>$ cd ui
+$ ./scripts/init.sh
+</pre></div>
 </div>
 <p>Run ui dev server:</p>
-<div class="highlight-python"><pre>$ cd ui
-$ ./scripts/server.sh</pre>
+<div class="highlight-python"><div class="highlight"><pre>$ cd ui
+$ ./scripts/server.sh
+</pre></div>
 </div>
 </div>
 <div class="section" id="cloudml-core">
@@ -174,7 +195,8 @@ of cloudml-ui project:</p>
 <div class="section" id="training-your-first-model">
 <h2>Training Your First Model<a class="headerlink" href="#training-your-first-model" title="Permalink to this headline">¶</a></h2>
 <p><strong>Prepare Default Instance:</strong> Go to instances, click &#8220;Add new AWS instance&#8221;,
-in the IP use 127.0.0.1, in the type choose small.
+name it <strong>default</strong>, otherwise rabbitmq/celery wouldn&#8217;t pick training and testing
+tasks, in the IP use 127.0.0.1, in the type choose small.
 Finally make sure <strong>Is Default?</strong> checkbox is checked.</p>
 <p><strong>Create JSON import handler:</strong> Go to import handlers/json, &#8220;Add new import handler&#8221;,
 give it a name, choose the file <strong>extract.json</strong> from cloudml-ui/conf directory. After
@@ -223,7 +245,7 @@ created model is <strong>Trained</strong>.</p>
     </div>
     <div class="footer">
         &copy; Copyright 2013, oDesk.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>
 </html>
