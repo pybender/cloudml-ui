@@ -59,26 +59,28 @@ created_by'
       )
 ])
 
-.controller('DeleteTestCtrl', [
-  '$scope'
-  '$location'
-  'openOptions'
-
-  ($scope, location, openOptions) ->
-    $scope.test = openOptions.test
-    $scope.model = openOptions.test.model
-    $scope.resetError()
-
-    $scope.delete = (result) ->
-      $scope.test.$delete().then (() ->
-        $scope.$close(true)
-#        location.search('action=test:list&any=' + Math.random())
-        $scope.$emit('modelDeleted', [$scope.model])
-        $scope.$broadcast('modelDeleted', [$scope.model])
-      ), ((opts) ->
-        $scope.setError(opts, 'deleting test')
-      )
-])
+# TODO: nader20140901 - should be removed along with partials/testresults/delete_popup.html
+# we are now using DialogCtrl (see TestActionsCtrl)
+#.controller('DeleteTestCtrl', [
+#  '$scope'
+#  '$location'
+#  'openOptions'
+#
+#  ($scope, location, openOptions) ->
+#    $scope.test = openOptions.test
+#    $scope.model = openOptions.test.model
+#    $scope.resetError()
+#
+#    $scope.delete = (result) ->
+#      $scope.test.$delete().then (() ->
+#        $scope.$close(true)
+##        location.search('action=test:list&any=' + Math.random())
+#        $scope.$emit('modelDeleted', [$scope.model])
+#        $scope.$broadcast('modelDeleted', [$scope.model])
+#      ), ((opts) ->
+#        $scope.setError(opts, 'deleting test')
+#      )
+#])
 
 .controller('TestDetailsCtrl', [
   '$scope'
@@ -196,9 +198,12 @@ without test id and model id"
 
     $scope.delete_test = (model) ->
       $scope.openDialog
-        templateUrl: 'partials/testresults/delete_popup.html'
-        controller: 'DeleteTestCtrl'
-        test: $scope.test
+        model: $scope.test
+        template: 'partials/base/delete_dialog.html'
+        ctrlName: 'DialogCtrl'
+        action: 'delete Test'
+        path: $scope.test.model.objectUrl()
+        ownerScope: $scope
 ])
 
 .controller('TestExportsCtrl', [

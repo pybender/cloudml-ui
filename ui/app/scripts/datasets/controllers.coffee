@@ -55,8 +55,9 @@ filesize,records_count,time,created_by,updated_by'
         model: $scope.ds
         template: 'partials/base/delete_dialog.html'
         ctrlName: 'DialogCtrl'
-        action: 'delete dataset'
+        action: 'delete DataSet'
         path: $scope.handler.objectUrl()
+        ownerScope: $scope
       })
 
     $scope.download = () ->

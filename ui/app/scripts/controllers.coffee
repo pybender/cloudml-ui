@@ -199,8 +199,8 @@ angular.module('app.controllers', ['app.config', ])
     $scope.delete = (result) ->
       $scope.model.$delete().then (() ->
         $scope.$close(true)
-        $scope.$emit('modelDeleted', [$scope.model])
-        $scope.$broadcast('modelDeleted', [$scope.model])
+        $scope.ownerScope.$emit('modelDeleted', [$scope.model])
+        #$scope.ownerScope.$broadcast('modelDeleted', [$scope.model])
         if $scope.LIST_MODEL_NAME?
             $scope.$emit 'BaseListCtrl:start:load', $scope.LIST_MODEL_NAME
         if $scope.path?
@@ -220,6 +220,7 @@ angular.module('app.controllers', ['app.config', ])
     $scope.model = openOptions.model
     $scope.path = openOptions.path
     $scope.action = openOptions.action
+    $scope.ownerScope = openOptions.ownerScope
 ])
 
 .controller('BaseListCtrl', [
@@ -269,12 +270,13 @@ angular.module('app.controllers', ['app.config', ])
       $scope.kwargs['page'] += 1
       $scope.load(true)
 
-    $rootScope.$on('modelDeleted', () ->
+    $scope.$on('modelDeleted', () ->
       $scope.load()
     )
-    $rootScope.$on('modelCreated', () ->
-      $scope.load()
-    )
+# TODO: nader20140901 consider removing never emitted or broadcasted
+#    $scope.$on('modelCreated', () ->
+#      $scope.load()
+#    )
     $rootScope.$on('modelChanged', () ->
       $scope.load()
     )

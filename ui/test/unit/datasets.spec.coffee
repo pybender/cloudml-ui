@@ -68,7 +68,7 @@ describe "datasets", ->
 
     it "should open delete dialog", inject (ImportHandler, DataSet) ->
 
-      $rootScope.openDialog = jasmine.createSpy()
+      $rootScope.openDialog = jasmine.createSpy('$scope.openDialog')
 
       createController "DatasetActionsCtrl"
       $rootScope.handler = new ImportHandler()
@@ -80,8 +80,9 @@ describe "datasets", ->
         model: $rootScope.ds
         template: 'partials/base/delete_dialog.html'
         ctrlName: 'DialogCtrl'
-        action: 'delete dataset'
+        action: 'delete DataSet'
         path: $rootScope.handler.objectUrl()
+        ownerScope: $rootScope
 
     it "should generate download link", inject (ImportHandler, DataSet) ->
       spyOn window, '$cml_window_location_replace'

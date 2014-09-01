@@ -181,7 +181,7 @@ describe "testresults", ->
 
       $rootScope.test = {
         id: '4321',
-        model: {id: '1234'}
+        model: {id: '1234', objectUrl: -> 'zinger'}
       }
       $rootScope.resetError = jasmine.createSpy('$scope.resetError')
       $rootScope.openDialog = jasmine.createSpy('$scope.openDialog')
@@ -190,9 +190,12 @@ describe "testresults", ->
       $rootScope.delete_test()
 
       expect($rootScope.openDialog).toHaveBeenCalledWith
-        templateUrl: 'partials/testresults/delete_popup.html'
-        controller: 'DeleteTestCtrl'
-        test: $rootScope.test
+        model: $rootScope.test
+        template: 'partials/base/delete_dialog.html'
+        ctrlName: 'DialogCtrl'
+        action: 'delete Test'
+        path: $rootScope.test.model.objectUrl()
+        ownerScope: $rootScope
 
   describe "TestExportsCtrl", ->
 
