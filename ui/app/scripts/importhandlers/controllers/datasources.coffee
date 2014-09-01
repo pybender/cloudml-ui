@@ -69,10 +69,12 @@ angular.module('app.importhandlers.controllers.datasources', ['app.config', ])
     $scope.model = openOptions.extra.ds
     $scope.DONT_REDIRECT = true
 
-    $scope.$on('SaveObjectCtl:save:success', (event, current) ->
+    $scope.$on('SaveObjectCtl:save:success', ->
       $scope.$close(true)
-      $scope.handler.$load(
+      $scope.handler.$load
         show: 'data'
-      ).then (->), (-> $scope.setError(opts, 'loading datasource details'))
+      .then (->)
+      , (opts)->
+        $scope.setError(opts, 'loading datasource details')
     )
 ])
