@@ -12,7 +12,10 @@ angular.module('app.servers.controllers', ['app.config', ])
       show: 'name,id,is_default'
     ).then ((opts) ->
       for server in opts.objects
-        $scope.servers.push {id: server.id, name: server.name}
+        $scope.servers.push
+          id: server.id
+          name: server.name
+          is_default: server.is_default
     ), ((opts) ->
       $scope.err = $scope.setError(opts, 'loading servers')
     )
@@ -39,7 +42,7 @@ angular.module('app.servers.controllers', ['app.config', ])
 
     $scope.reloadFile = (file) ->
       file.$reload().then((resp) ->
-        $rootScope.msg = 'File "' + fileName + '" will be updated at server'
+        $rootScope.msg = 'File "' + file.name + '" will be updated at server'
       , (opts) ->
         $scope.setError(opts, 'reloading file on Predict')
       )
