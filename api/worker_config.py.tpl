@@ -49,6 +49,19 @@ REQUESTING_INSTANCE_MAX_RETRIES = 30
 CELERY_SEND_TASK_ERROR_EMAILS = True
 SEND_ERROR_EMAILS = True
 
+ADMINS = (
+    ("Nikolay Melnik", "nmelnik@odesk.com"),
+)
+
+# Email address used as sender (From field).
+SERVER_EMAIL = "no-reply@cloudml.int.odesk.com"
+
+# Mailserver configuration
+EMAIL_HOST = "localhost"
+EMAIL_PORT = 25
+EMAIL_HOST_USER = ""
+EMAIL_HOST_PASSWORD = ""
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': True,

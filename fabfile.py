@@ -178,7 +178,7 @@ def deploy():
 
 @task
 def setupw():
-    supervisor.push_init_config.run()
+    #supervisor.push_init_config.run()
 
     fabd.mkdirs.run()
     for app in ['supervisor']:
@@ -186,9 +186,9 @@ def setupw():
 
     pip.install.run(app='virtualenv', upgrade=True)
     system.package_install.run(packages='liblapack-dev gfortran libpq-dev\
- libevent-dev cloud-utils jgit-cli')
-    upload_init_template('supervisordw.conf')
-    supervisor.push_init_config.run()
+ libevent-dev cloud-utils')
+    #upload_init_template('supervisordw.conf')
+    #supervisor.push_init_config.run()
     supervisor.push_d_config.run()
     supervisor.push_configs.run()
     supervisor.d.run()
@@ -207,7 +207,7 @@ def setupw():
 
 @task
 def deployw():
-    #release.work_on.run(0)
+    release.work_on.run(0)
     #upload_init_template(name='supervisordw.conf', name_to='supervisord.conf')
     fabd.mkdirs.run()
 
