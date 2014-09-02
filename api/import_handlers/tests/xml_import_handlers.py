@@ -178,6 +178,26 @@ class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
         resp, obj = self.check_edit(data, id=self.obj.id)
         self.assertEquals(obj.name, data['name'])
 
+    def test_upload_obsolete_import_handler(self):
+        name = str(uuid.uuid1())
+        # Obsolete import handler uploading
+        # Check comportability
+        with open('conf/obsolete_extract.xml', 'r') as fp:
+            resp_data = self._check(method='post', data={
+                'name': name,
+                'data': fp.read()
+            })
+        handler = self.Model.query.filter_by(name=name).first()
+        
+        ent = XmlEntity.query.filter_by(
+            import_handler=handler, name='application').one()
+        joined = XmlField.query.filter_by(
+            entity=ent, name='joined_field').one()
+        delimited = XmlField.query.filter_by(
+            entity=ent, name='delimited_field').one()
+        self.assertEquals(joined.delimiter, ";")
+        self.assertEquals(delimited.delimiter, ";")
+
     def test_delete(self):
         models_to_check = [
             (XmlDataSource, 4, XmlDataSource.query.count()),
