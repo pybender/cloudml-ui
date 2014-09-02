@@ -51,7 +51,7 @@ Feature, Transformer, Scaler, Parameters) ->
     )
 
   $scope.loadFeatureParameters = () ->
-    if !$scope.feature.type || !$scope.configuration
+    if not $scope.feature.type or not $scope.configuration
       return
 
     config = $scope.configuration.types[$scope.feature.type]

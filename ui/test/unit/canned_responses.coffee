@@ -95,4 +95,13 @@ CANNED_RESPONSES = [
   type: 'json'
   status: 'OK'
   statusCode: 200
+,
+  key: 'load parameters configuration'
+  url_regex: new RegExp '^.+/cloudml/features/params/'
+  data: """
+{"configuration": {"params": {"pattern": {"help_text": "Please enter a pattern", "type": "str"}, "chain": {"help_text": "Please enter valid json", "type": "text"}, "mappings": {"help_text": "Please add parameters to dictionary", "type": "dict"}, "split_pattern": {"help_text": "Please enter a pattern", "type": "str"}, "min_df": {"help_text": "Please enter a int value", "type": "int"}}, "defaults": {"date": 946684800}, "types": {"regex": {"optional_params": [], "type": "", "default_params": [], "required_params": ["pattern"]}, "map": {"optional_params": [], "type": "", "default_params": [], "required_params": ["mappings"]}, "categorical": {"optional_params": ["split_pattern", "min_df"], "type": "", "default_params": [], "required_params": []}, "composite": {"optional_params": [], "type": "", "default_params": [], "required_params": ["chain"]}, "text": {"optional_params": [], "type": "<type 'str'>", "default_params": [], "required_params": []}, "float": {"optional_params": [], "type": "<type 'float'>", "default_params": [], "required_params": []}, "numeric": {"optional_params": [], "type": "<type 'float'>", "default_params": [], "required_params": []}, "int": {"optional_params": [], "type": "<type 'int'>", "default_params": [], "required_params": []}, "categorical_label": {"optional_params": ["split_pattern", "min_df"], "type": "", "default_params": [], "required_params": []}, "boolean": {"optional_params": [], "type": "<type 'bool'>", "default_params": [], "required_params": []}, "date": {"optional_params": [], "type": "", "default_params": [], "required_params": ["pattern"]}}}}
+"""
+  type: 'json'
+  status: 'OK'
+  statusCode: 200
 ]
