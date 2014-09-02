@@ -21,13 +21,9 @@ angular.module('app.features.controllers.named_types', ['app.config', ])
 # Controller for adding/edditing feature types with dialog.
 .controller('FeatureTypeEditCtrl', [
   '$scope'
-  '$routeParams'
-  '$filter'
-  '$location'
-  'NamedFeatureType'
   'Parameters'
 
-($scope, $routeParams, $filter, $location, NamedFeatureType, Parameters) ->
+($scope, Parameters) ->
   $scope.config = {}
   $scope.paramsConfig = {}
   $scope.requiredParams = []
@@ -106,6 +102,7 @@ angular.module('app.features.controllers.named_types', ['app.config', ])
         model: namedType
         template: 'partials/features/named_types/add.html'
         ctrlName: 'ModelEditDialogCtrl'
+        action: 'add new named feature type'
       })
 
     $scope.delete = (namedType) ->
