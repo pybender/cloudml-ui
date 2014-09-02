@@ -1,8 +1,5 @@
 'use strict'
 
-FIELDS = 'jobflow_id,master_node_dns,port,status,ip,is_default,\
-created_on,created_by,active_tunnel'
-
 angular.module('app.clusters.controllers', ['app.config', ])
 
 .controller('ClusterListCtrl', [
@@ -15,7 +12,7 @@ angular.module('app.clusters.controllers', ['app.config', ])
   $scope.load = () ->
     $scope.host = $location.host()
     Cluster.$loadAll(
-      show: FIELDS
+      show: ['jobflow_id','master_node_dns','port','status','ip','is_default','created_on','created_by','active_tunnel'].join(',')
     ).then ((opts) ->
       $scope.objects = opts.objects
     ), ((opts) ->
@@ -31,12 +28,11 @@ angular.module('app.clusters.controllers', ['app.config', ])
 
 .controller('SshTunnelCtrl', [
   '$scope'
-  '$rootScope'
   'openOptions'
   '$location'
   '$timeout'
 
-  ($scope, $rootScope, openOptions, $location, $timeout) ->
+  ($scope, openOptions, $location, $timeout) ->
     $scope.resetError()
     $scope.cluster = openOptions.model
     $scope.host = $location.host()
@@ -50,12 +46,14 @@ angular.module('app.clusters.controllers', ['app.config', ])
       )
 
     $scope.checkTunnelStatus = () ->
-      $scope.cluster.$load(show: 'active_tunnel').then ((opts) ->
-          if $scope.cluster.active_tunnel == -1
-            $scope.timer = $timeout($scope.checkTunnelStatus, 1000)), (
-        (opts) ->
-          $scope.setError(opts, 'loading cluster ssh tunnel details')
-        )
+      $scope.cluster.$load(show: 'active_tunnel')
+      .then (opts) ->
+        if $scope.cluster.active_tunnel is -1
+          $scope.timer = $timeout($scope.checkTunnelStatus, 1000)
+        else
+          $scope.timer = null
+      , (opts) ->
+        $scope.setError(opts, 'loading cluster ssh tunnel details')
 
     $scope.terminate = (result) ->
       $scope.cluster.$terminateSshTunnel().then (() ->
@@ -69,15 +67,16 @@ angular.module('app.clusters.controllers', ['app.config', ])
       $scope.$close(true)
 
     $scope.$on("$destroy", (event) ->
-      $timeout.cancel($scope.timer)
+      if $scope.timer
+        $timeout.cancel($scope.timer)
+        $scope.timer = null
     )
 ])
 
 .controller('ClusterActionsCtrl', [
   '$scope'
-  'Cluster'
 
-  ($scope, Cluster) ->
+  ($scope) ->
     $scope.createSshTunnel = (cluster) ->
       $scope.openDialog({
         model: cluster
@@ -101,6 +100,7 @@ angular.module('app.clusters.controllers', ['app.config', ])
       })
 ])
 
+# TODO: Cover
 .controller('ClusterDetailsCtrl', [
   '$scope'
   '$routeParams'
@@ -108,10 +108,10 @@ angular.module('app.clusters.controllers', ['app.config', ])
   'Cluster'
 
 ($scope, $routeParams, $location, Cluster) ->
-  if not $routeParams.id then err = "Can't initialize without cluster id"
+  if not $routeParams.id? then throw new Error("Can't initialize without cluster id")
   $scope.cluster = new Cluster({id: $routeParams.id})
   $scope.host = $location.host()
   $scope.cluster.$load(
-    show: FIELDS
+    show: ['jobflow_id','master_node_dns','port','status','ip','is_default','created_on','created_by','active_tunnel'].join(',')
     ).then (->), ((opts)-> $scope.setError(opts, 'loading cluster details'))
 ])
