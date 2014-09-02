@@ -5,9 +5,8 @@ angular.module(
 
 .controller('DatasourcesTypesLoader', [
   '$scope'
-  'Datasource'
 
-  ($scope, Datasource) ->
+  ($scope) ->
     $scope.types = []
     $scope.$watch('configuration', (params, old, scope) ->
         if $scope.configuration
