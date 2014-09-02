@@ -18,7 +18,7 @@ CELERY_RESULT_BACKEND = 'amqp://cloudml:cloudml@172.27.77.141:5672/cloudml'
 CELERY_IMPORTS = (
     'api.models', 'api', 'api.import_handlers.tasks',
     'api.instances.tasks', 'api.ml_models.tasks',
-    'api.model_tests.tasks', 'api.servers.tasks's)
+    'api.model_tests.tasks', 'api.servers.tasks')
 
 from kombu import Queue
 
@@ -48,6 +48,19 @@ REQUESTING_INSTANCE_MAX_RETRIES = 30
 # Enables error emails.
 CELERY_SEND_TASK_ERROR_EMAILS = True
 SEND_ERROR_EMAILS = True
+
+ADMINS = (
+    ("Nikolay Melnik", "nmelnik@odesk.com"),
+)
+
+# Email address used as sender (From field).
+SERVER_EMAIL = "no-reply@cloudml.int.odesk.com"
+
+# Mailserver configuration
+EMAIL_HOST = "localhost"
+EMAIL_PORT = 25
+EMAIL_HOST_USER = ""
+EMAIL_HOST_PASSWORD = ""
 
 LOGGING = {
     'version': 1,
