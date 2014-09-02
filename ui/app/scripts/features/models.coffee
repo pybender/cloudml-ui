@@ -160,8 +160,9 @@ angular.module('app.features.models', ['app.config'])
   (settings, $filter, BaseModel, NamedFeatureType, Transformer, Scaler) ->
     class Feature extends BaseModel
       API_FIELDNAME: 'feature'
-      @MAIN_FIELDS: 'id,name,type,input_format,transformer,params,\
-scaler,default,is_target_variable,created_on,created_by,required'
+      @MAIN_FIELDS: ['id','name','type','input_format','transformer','params',
+                     'scaler','default','is_target_variable','created_on',
+                     'created_by','required'].join(',')
 
       id: null
       name: null
