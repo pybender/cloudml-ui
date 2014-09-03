@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plan>
+
+    <!--Inputs required for this import handler to run -->
+    <inputs>
+        <param name="start" type="date" />
+        <param name="end" type="date" />
+    </inputs>
+    <script>
+    <![CDATA[def always99(a): return 99]]>
+    </script>
+
+    <datasources>
+        <!--
+            Define data sources to be used. Data sources
+        -->
+        <db name="odw" 
+            host="localhost"
+            dbname="odw"
+            user="postgres"
+            password="postgres"
+            vendor="postgres" />
+        <db name="datasource" 
+            host="localhost"
+            dbname="odw"
+            user="postgres"
+            password="postgres"
+            vendor="postgres" />
+
+
+        <pig name="pig"
+             jobid="jobid"
+             amazon_access_token="something"
+             amazon_token_secret="something" />
+
+    </datasources>
+
+    <import>
+        <entity name="application" datasource="odw">
+            <query target="results">
+                <![CDATA[CREATE TABLE results AS
+  SELECT qi.*, 'class' || (trunc(random() * 2) + 1)::char hire_outcome 
+  FROM public.ja_quick_info qi where qi.file_provenance_date >= '#{start}'
+  AND qi.file_provenance_date < '#{end}' 
+  LIMIT(100);
+  ]]>
+            </query>
+            <!-- "Convert" fields to datasources -->
+            <field name="employer_info" transform="json" column="employer_info"/>
+            <field name="contractor_info" transform="json" column="contractor_info"/>
+            <field name="application_id" type="integer" column="application"/>
+            <field name="joined_field" type="integer" join=";" />
+            <field name="delimited_field" type="integer" delimiter=";" />
+
+            <entity name="employer_info" datasource="employer_info">
+                <field name="employer.op_timezone" jsonpath="$.op_timezone" />
+                <field name="employer.op_country_tz" jsonpath="$.op_country_tz" required="false" multipart="false" />
+                <field name="employer.op_tot_jobs_filled" jsonpath="$.op_tot_jobs_filled" multipart="true" />
+                <field name="employer.country" jsonpath="$.op_country" required="true" />
+            </entity>
+
+            <entity name="contractor_info" datasource="contractor_info">
+              <field name="contractor.dev_is_looking" jsonpath="$.dev_is_looking" />
+              <field name="contractor.dev_is_looking_week" jsonpath="$.dev_is_looking_week" />
+              <field name="contractor.dev_active_interviews" jsonpath="$.dev_active_interviews" />
+              <field name="contractor.dev_availability" type="integer" jsonpath="$.dev_availability" />
+            </entity>
+        </entity>
+    </import>
+</plan>
