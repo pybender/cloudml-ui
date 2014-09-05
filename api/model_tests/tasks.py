@@ -41,8 +41,8 @@ def run_test(dataset_ids, test_id):
 
         logging.info('Getting metrics and raw data')
         from memory_profiler import memory_usage
-        mem_usage, result = memory_usage((Model.run_test, (model, dataset, )),
-                                         interval=0, retval=True)
+        result = Model.run_test(model, dataset)
+
         metrics, raw_data = result
         test.accuracy = metrics.accuracy
         logging.info('Accuracy: %f', test.accuracy)
@@ -85,13 +85,10 @@ def run_test(dataset_ids, test_id):
         all_count = metrics._preds.size
         test.dataset = dataset
         test.examples_count = all_count
-        test.memory_usage = max(mem_usage)
+        test.memory_usage = memory_usage(-1, interval=0, timeout=None)[0]
 
         vect_data = metrics._true_data
         from bson import Binary
-        import pickle
-        test.vect_data = pickle.dumps(vect_data)
-
         test.save()
 
         data = []

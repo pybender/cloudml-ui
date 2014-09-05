@@ -89,7 +89,7 @@ angular.module('app.controllers', ['app.config', ])
       $scope.model.$save(only: fields).then (() ->
         $scope.editMode = false
       ), ((opts) ->
-         $scope.err = $scope.setError(opts, 'saving model')
+        $scope.err = $scope.setError(opts, 'saving model')
       )
 ])
 
