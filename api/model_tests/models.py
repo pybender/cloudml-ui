@@ -122,7 +122,10 @@ class TestExample(db.Model, BaseModel):
         def go_tree(params, prefix=''):
             for name, val in params.iteritems():
                 if 'weight' in val and val['weight'] != 0:
-                    val['name'] = '{0}->{1}'.format(prefix, name)
+                    if prefix:
+                        val['name'] = '{0}->{1}'.format(prefix, name)
+                    else:
+                        val['name'] = name
                     res.append(val)
                 if 'weights' in val:
                     go_tree(val['weights'], prefix=name)

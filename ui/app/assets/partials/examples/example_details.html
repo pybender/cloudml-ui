@@ -32,17 +32,17 @@
 <div ng-show="data.loaded">
   <ul class="nav nav-tabs" id="tabs">
     <li ng-class="{active: action[0] == 'model'}">
-      <a ng-click="setSection(['model', 'details'])">Parameters Table</a>
+      <a ng-click="setSection(['model', 'details'])">Features</a>
     </li>
     <li ng-class="{active: action[0] == 'weighted'}">
-      <a ng-click="setSection(['weighted', 'details'])">Weighted Data</a>
+      <a ng-click="setSection(['weighted', 'details'])">Raw Data</a>
     </li>
     <li ng-class="{active: action[0] == 'about'}"><a ng-click="setSection(['about', 'details'])">About</a></li>
   </ul>
   <div class="tab-content">
     <!-- Parameters table view -->
     <div ng-show="action[0] == 'model'">
-      <h4>Parameters Weights Table</h4>
+      <h4>Features</h4>
       <table class="table">
         <thead>
         <tr>
@@ -73,7 +73,7 @@
 
     <!-- Weighted parameters -->
     <div ng-show="action[0] == 'weighted'">
-      <h4>Parameters with Weights</h4>
+      <h4>Raw data</h4>
       <table class="table">
       <thead>
           <tr>
