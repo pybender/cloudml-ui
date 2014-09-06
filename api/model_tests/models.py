@@ -98,7 +98,6 @@ class TestExample(db.Model, BaseModel):
     label = db.Column(db.String(100))
     pred_label = db.Column(db.String(100))
     num = db.Column(db.Integer)
-
     prob = db.Column(postgresql.ARRAY(db.Float))
 
     data_input = db.Column(JSONType)
@@ -112,6 +111,27 @@ class TestExample(db.Model, BaseModel):
     model_id = db.Column(db.Integer, db.ForeignKey('model.id'))
     model = relationship('Model')
     model_name = db.Column(db.String(200))
+
+    @property
+    def parameters_weights(self):
+        res = []
+
+        def sort_by_weight(val):
+            return -val['weight']
+
+        def go_tree(params, prefix=''):
+            for name, val in params.iteritems():
+                if 'weight' in val and val['weight'] != 0:
+                    val['name'] = '{0}->{1}'.format(prefix, name)
+                    res.append(val)
+                if 'weights' in val:
+                    go_tree(val['weights'], prefix=name)
+            return res
+
+        go_tree(self.weighted_data_input)
+
+        res.sort(key=sort_by_weight)
+        return res
 
     @property
     def is_weights_calculated(self):

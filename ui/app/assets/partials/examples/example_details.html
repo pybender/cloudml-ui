@@ -12,6 +12,13 @@
   <ng-include src="'/partials/parts/created_tags.html'"></ng-include>
   <i class="icon-status"></i>
   <span class="badge badge-warning">{{ model.status }}</span>
+  <i class="icon-screenshot"></i> target variable
+  <span class="badge badge-info">{{ data.model.target_variable }}</span>
+  <i class="icon-screenshot"></i> label
+  <span class="badge badge-info">{{ data.label }}</span>
+  <i class="icon-screenshot"></i> predicted label
+  <span ng-show="data.label == data.pred_label" class="badge badge-success">{{ data.pred_label }}</span>
+  <span title="predicted invalid value" ng-show="data.label != data.pred_label" class="badge badge-important">{{ data.pred_label }}</span>
   </div>
 </div>
 <p/>
@@ -23,25 +30,51 @@
 <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
 
 <div ng-show="data.loaded">
-<div class="well">
-  <div>
-    Target Variable: <span class="value">{{ data.model.target_variable }}</span>
-  </div>
-  <div>
-    Label: <span class="value">{{ data.label }}</span>
-  </div>
-  <div>
-    Predicted Label: <span class="value">{{ data.pred_label }}</span>
-  </div>
-  <div>
-    Probabilities: <span class="value">{{ data.prob }}</span>
-  </div>
-  <div><sc-chart chart-dict="data.probChartData" width="150" height="150"></sc-chart></div>
-</div>
+  <ul class="nav nav-tabs" id="tabs">
+    <li ng-class="{active: action[0] == 'model'}">
+      <a ng-click="setSection(['model', 'details'])">Parameters Table</a>
+    </li>
+    <li ng-class="{active: action[0] == 'weighted'}">
+      <a ng-click="setSection(['weighted', 'details'])">Weighted Data</a>
+    </li>
+    <li ng-class="{active: action[0] == 'about'}"><a ng-click="setSection(['about', 'details'])">About</a></li>
+  </ul>
+  <div class="tab-content">
+    <!-- Parameters table view -->
+    <div ng-show="action[0] == 'model'">
+      <h4>Parameters Weights Table</h4>
+      <table class="table">
+        <thead>
+        <tr>
+          <th>Name</th>
+          <th>Model Weight</th>
+          <th>Vectorized Value</th>
+          <th>Weight</th>
+        </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="val in data.parameters_weights">
+            <td>
+              {{ val.name }}
+            </td>
+            <td>
+              {{ val.model_weight }}
+            </td>
+            <td>
+              {{ val.vect_value }}
+            </td>
+            <td>
+              <span class="badge {{ val.css_class }}">{{ val.weight }}</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
-<div ng-show="data.weighted_data_input && Object.keys(data.weighted_data_input).length">
-  <h4>Parameters with Weights</h4>
-  <table class="table">
+    <!-- Weighted parameters -->
+    <div ng-show="action[0] == 'weighted'">
+      <h4>Parameters with Weights</h4>
+      <table class="table">
       <thead>
           <tr>
             <th class="span2">Parameter</th>
@@ -67,8 +100,23 @@
             </td>
           </tr>
       </tbody>
-  </table>
-</div>
+      </table>
+    </div>
+
+    <!-- About Tab -->
+    <div ng-show="action[0] == 'about'">
+      <div>
+        Label: <span class="value">{{ data.label }}</span>
+      </div>
+      <div>
+        Predicted Label: <span class="value">{{ data.pred_label }}</span>
+      </div>
+      <div>
+        Probabilities: <span class="value">{{ data.prob }}</span>
+      </div>
+      <div><sc-chart chart-dict="data.probChartData" width="150" height="150"></sc-chart></div>
+    </div>
+  </div>
 </div>
 
 <ng-include ng-show="data.loaded" src="'/partials/parts/pager.html'"></ng-include>
