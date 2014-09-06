@@ -22,7 +22,8 @@
       <td><a href="#{{ test.objectUrl() }}">{{ test.name }}</a></td>
       <td title="{{ test.error }}">{{ test.status }}</td>
       <td>
-          {{ test.created_on|format_date }}
+          <span title="dates in GMT">{{ test.created_on|format_date }}
+          </span>
           <br>
           <small ng-show="test.created_by">by {{ test.created_by.name }} ({{ test.created_by.uid }})</small>
       </td>

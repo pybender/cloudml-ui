@@ -21,7 +21,7 @@
     <td>
       <span title="User id is {{ file.user_id }}">{{ file.user_name }}</span>
     </td>
-    <td>{{ file.last_modified|format_date }}</td>
+    <td title="dates in GMT">{{ file.last_modified|format_date }}</td>
     <td>
       <button ng-click="reloadFile(file)" class="btn btn-info">
         <i title="Reloads this file at Predict" class="icon-upload"></i>

@@ -25,7 +25,8 @@
       <td>{{ ds.data }}</td>
       <td>{{ ds.on_s3 }}</td>
       <td>
-          {{ ds.created_on|format_date }}<br>
+          <span title="dates in GMT">{{ ds.created_on|format_date }}
+          </span><br>
           <small ng-show="ds.created_by">by {{ ds.created_by.name }} ({{ ds.created_by.uid }})</small>
       </td>
       <td>{{ ds.filesize|bytes }}</td>

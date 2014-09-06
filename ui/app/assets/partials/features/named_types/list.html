@@ -33,7 +33,7 @@
 	    	<ng-include src="'/partials/parts/params_list.html'"></ng-include>
 	    </td>
 	    <td>
-	        {{ namedType.created_on|format_date }}<br>
+	        <span title="dates in GMT">{{ namedType.created_on|format_date }}</span><br>
 	        <small ng-show="namedType.created_by">by {{ namedType.created_by.name }} ({{ namedType.created_by.uid }})</small>
 	    </td>
 	  </tr>
