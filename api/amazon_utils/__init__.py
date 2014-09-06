@@ -204,7 +204,6 @@ class AmazonDynamoDBHelper(object):
         self.secret = secret or app.config['AMAZON_TOKEN_SECRET']
         self._conn = None
         self._tables = {}
-        self._queries = {}
 
     @property
     def conn(self):
@@ -242,8 +241,9 @@ class AmazonDynamoDBHelper(object):
         from boto.dynamodb2.table import Table
         self._tables = {}
         for table_name in self.conn.list_tables()['TableNames']:
-            self._tables[table_name] = Table(table_name,
-                                             connection=self.conn)
+            table = Table(table_name, connection=self.conn)
+            table.describe()
+            self._tables[table_name] = table
 
     def put_item(self, table_name, data):
         table = self._get_table(table_name)
@@ -251,10 +251,14 @@ class AmazonDynamoDBHelper(object):
 
     def delete_items(self, table_name, **kwargs):
         table = self._get_table(table_name)
-        res = table.query(**kwargs)
+        res = table.query_2(**kwargs)
         with table.batch_write() as batch:
             for item in res:
                 batch.delete_item(**item.get_keys())
+
+    def delete_item(self, table_name, **kwargs):
+        table = self._get_table(table_name)
+        table.delete_item(**kwargs)
 
     def batch_write(self, table_name, data_list):
         table = self._get_table(table_name)
@@ -266,50 +270,21 @@ class AmazonDynamoDBHelper(object):
         table = self._get_table(table_name)
         return table.get_item(**kwargs)._data
 
-    def get_items(self, table_name, limit=None, reverse=True,
-                  next_token=None, **kwargs):
+    def get_items(self, table_name, limit=None, reverse=True, query_filter=None,
+                  **kwargs):
         table = self._get_table(table_name)
-        next_token = next_token or None
-        res = self._queries.get(next_token) if next_token else None
+        res = table.query_2(reverse=reverse, limit=limit,
+                            max_page_size=100, query_filter=query_filter,
+                            consistent=True, **kwargs)
 
-        if not res:
-            # This is a hack for
-            # "There are too many conditions in this query" issue
-            if len(kwargs.keys()) > 2:
-                # Slow!
-                res = table.scan(
-                    max_page_size=limit,
-                    **kwargs
-                )
-            else:
-                res = table.query(
-                    max_page_size=limit,
-                    reverse=reverse,
-                    **kwargs
-                )
-            next_token = str(uuid.uuid1())
-            self._queries[next_token] = res
-
-        items = []
-        if limit:
-            for i in range(limit):
-                try:
-                    item = next(res)
-                except StopIteration:
-                    next_token = None
-                    break
-                items.append(item._data)
-        else:
-            items = [item._data for item in res]
-
-        return items, next_token
+        return [i._data for i in res]
 
     def create_table(self, table_name, schema):
         self._refresh_tables_list()
         if not table_name in self._tables:
             try:
-                Table.create(table_name, connection=self.conn, schema=schema)
-                self._tables[table_name] = Table(table_name,
-                                                 connection=self.conn)
+                table = Table.create(table_name, connection=self.conn,
+                                     schema=schema)
+                self._tables[table_name] = table
             except JSONResponseError as ex:
                 logging.exception(str(ex))

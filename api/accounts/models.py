@@ -53,7 +53,7 @@ class AuthToken(object):
 
     @classmethod
     def delete(cls, auth_token):
-        dynamodb.delete_items(cls.TABLE_NAME, id__eq=auth_token)
+        dynamodb.delete_item(cls.TABLE_NAME, id=auth_token)
 
 
 class User(BaseMixin, db.Model):

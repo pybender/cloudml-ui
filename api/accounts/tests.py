@@ -136,8 +136,13 @@ class AuthTokenModelTests(BaseDbTestCase):
         token.save()
 
         self.assertEquals(AuthToken.get_auth('invalid'), None)
+
+        # get_item
         self.assertEquals(AuthToken.get_auth(TOKEN), token_dict)
 
+        # delete
+        AuthToken.delete(TOKEN)
+        self.assertEquals(AuthToken.get_auth('invalid'), None)
 
 class AuthResourceTests(BaseDbTestCase):
     """
