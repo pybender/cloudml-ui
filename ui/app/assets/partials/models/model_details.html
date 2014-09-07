@@ -333,7 +333,7 @@
           <h4>DataSet Transform Requests</h4>
           <div class="row" ng-repeat="download in downloads">
             <div class="span10 well">
-              <i class="icon-calendar"></i> created on <span class="badge badge-info">{{ download.task.created_on|format_date }}</span>
+              <i class="icon-calendar"></i> created on <span class="badge badge-info" title="dates in GMT">{{ download.task.created_on|format_date }}</span>
               <i class="icon-th"></i>dataset <span class="label">{{ download.dataset.name }}</span>
               <span class="badge badge-info">{{ download.task.status }}</span>
               <a class="btn btn-small" href="{{ download.task.result }}" target="_blank">Download</a>

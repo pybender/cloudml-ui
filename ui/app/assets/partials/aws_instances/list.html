@@ -35,11 +35,12 @@
     </td>
     <td>{{ instance.type }}</td>
     <td>
-        {{ instance.created_on|format_date }}<br>
+        <span title="dates in GMT">{{ instance.created_on|format_date }}</span>
+        <br>
         <small ng-show="instance.created_by">by {{ instance.created_by.name }} ({{ instance.created_by.uid }})</small>
     </td>
     <td>
-        {{ instance.updated_on|format_date }}<br>
+        <span title="dates in GMT">{{ instance.updated_on|format_date }}</span><br>
         <small ng-show="instance.updated_by">by {{ instance.updated_by.name }} ({{ instance.updated_by.uid }})</small>
     </td>
     <td ng-controller="InstanceActionsCtrl">

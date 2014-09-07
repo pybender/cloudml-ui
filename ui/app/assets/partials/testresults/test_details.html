@@ -86,7 +86,7 @@
               <ul class="unstyled">
                 <li class="row well well-small" ng-repeat="export in exports">
                   <div class="span10">
-                    <i class="icon-calendar"></i> created on <span class="badge badge-info">{{ export.created_on|format_date }}</span>
+                    <i class="icon-calendar"></i> created on <span class="badge badge-info" title="dates in GMT">{{ export.created_on|format_date }}</span>
                     <i class="icon-th"></i><span> fields </span>
                     <span ng-repeat="field in export.args[2]">
                       <span class="label">{{ field }}</span>
@@ -177,7 +177,7 @@
                 <li class="row well well-small" ng-repeat="calc in test.confusion_matrix_calculations">
                   <div class="row">
                     <div class="span5">
-                        <i class="icon-calendar"></i> created on <span class="badge badge-info">{{ calc.created_on|format_date }}</span>
+                        <i class="icon-calendar"></i> created on <span class="badge badge-info" title="dates in GMT">{{ calc.created_on|format_date }}</span>
                         <i class="icon-th"></i><span> weights </span>
                         <span ng-repeat="label in [calc.args[1], calc.args[2]]">
                             <span class="label">{{ label }}</span>

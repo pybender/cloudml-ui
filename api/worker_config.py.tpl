@@ -8,6 +8,7 @@ DATABASE_HOST = '172.27.77.252'
 
 SQLALCHEMY_DATABASE_URI = 'postgresql://cloudml:W0y137OY@odesk-cloudml-analytics.cw38fhqllwnc.us-west-1.rds.amazonaws.com/cloudml_analytics'
 #SQLALCHEMY_ECHO = True
+TEST_MODE = False
 
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'

@@ -72,6 +72,7 @@ def run_test(dataset_ids, test_id):
             sub_tpr = metrics_dict['roc_curve'][label][1][0::n]
             metrics_dict['roc_curve'][label] = [sub_fpr, sub_tpr]
 
+        test.roc_auc = metrics_dict.pop('roc_auc')
         test.metrics = metrics_dict
         test.classes_set = list(metrics.classes_set)
         test.status = TestResult.STATUS_STORING

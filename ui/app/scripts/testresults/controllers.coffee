@@ -12,7 +12,7 @@ angular.module('app.testresults.controllers', ['app.config', ])
   ($scope, $dialog, $rootScope, TestResult) ->
     $scope.MODEL = TestResult
     $scope.FIELDS = 'name,created_on,status,parameters,accuracy,examples_count,\
-created_by'
+created_by,roc_auc'
     $scope.ACTION = 'loading tests'
 
     $scope.$on('loadTest', (event, opts) ->
@@ -134,7 +134,7 @@ without test id and model id"
         when 'about'
           extra_fields = Test.EXTRA_FIELDS
         when 'metrics'
-          extra_fields = 'accuracy,metrics'
+          extra_fields = 'accuracy,metrics,roc_auc'
           cb = addMetricsToScope
         when 'matrix' then extra_fields = Test.MATRIX_FIELDS
 
@@ -166,7 +166,7 @@ without test id and model id"
           else 'ROC Curve'
         curve = {}
         curve[label] = metrics.roc_curve[c]
-        $scope.rocCurves[c] = {curve: curve, roc_auc: metrics.roc_auc[c]}
+        $scope.rocCurves[c] = {curve: curve, roc_auc: $scope.test.roc_auc[c]}
       if classes.length is 1 # only binary classifier publishes PR curve
         $scope.prCurves =
           # we are switching precision/recall positions. The dictionary
@@ -181,7 +181,7 @@ without test id and model id"
       # old list fooormat
       $scope.rocCurves[1] =
         curve: {'ROC curve': $scope.test.metrics.roc_curve}
-        roc_auc: metrics.roc_auc
+        roc_auc: $scope.test.roc_auc
       pr = $scope.test.metrics.precision_recall_curve
       $scope.prCurves = {'Precision-Recall curve': [pr[1], pr[0]]}
 
