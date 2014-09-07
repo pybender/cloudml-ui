@@ -47,6 +47,7 @@ class TestResult(db.Model, BaseModel):
     parameters = db.Column(JSONType)
     classes_set = db.Column(postgresql.ARRAY(db.String))
     accuracy = db.Column(db.Float)
+    roc_auc = db.Column(JSONType)
     metrics = db.Column(JSONType)
     memory_usage = db.Column(db.Integer)
 

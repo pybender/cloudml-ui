@@ -6,6 +6,7 @@
         <th>Created</th>
         <th>Filter Parameters</th>
         <th>Accuracy</th>
+        <th>AUC</th>
         <th>Examples count</th>
         <th />
       </tr>
@@ -29,6 +30,15 @@
       </td>
       <td><span class="value" ng-repeat="(key, val) in test.parameters">{{ key }}={{ val }}</span></td>
       <td>{{ test.accuracy.toFixed(4) }}</td>
+      <td ng-init="keys = Object.keys(test.roc_auc || {})">
+        <span ng-show="keys.length == 1" ng-init="label=keys[0]">
+          {{ test.roc_auc[label].toFixed(4) }}</span>
+        <div ng-show="keys.length > 1">
+          <div ng-repeat="(label, val) in test.roc_auc">
+            <span ng-bind="label" />: <span ng-bind="val.toFixed(4)" />
+          </div>
+        </div>
+      </td>
       <td><a href="#{{ test.examplesUrl() }}">{{ test.examples_count }}</a></td>
       <td ng-controller="TestActionsCtrl">
         <div ng-init="init({test: test, model: model})">
