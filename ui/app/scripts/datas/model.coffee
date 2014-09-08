@@ -32,6 +32,9 @@ angular.module('app.datas.model', ['app.config'])
       loadFromJSON: (origData) =>
         super origData
         if origData?
+          if origData.data_input?
+            @raw_data = angular.toJson(
+              angular.fromJson(origData.data_input), pretty=true)
           if origData.test_result?
             @test_result = new Test(origData['test_result'])
 

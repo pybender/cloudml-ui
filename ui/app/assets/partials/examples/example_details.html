@@ -28,21 +28,22 @@
 <alert-message ng-show="data.test_result.examples_placement == 'Do not save'" class="alert-info" msg="Examples data isn't stored for this test at all." unsafe></alert-message>
 
 <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
-
+<sc-chart chart-dict="data.probChartData" width="150" height="150"></sc-chart>
 <div ng-show="data.loaded">
   <ul class="nav nav-tabs" id="tabs">
     <li ng-class="{active: action[0] == 'model'}">
       <a ng-click="setSection(['model', 'details'])">Features</a>
     </li>
     <li ng-class="{active: action[0] == 'weighted'}">
-      <a ng-click="setSection(['weighted', 'details'])">Raw Data</a>
+      <a ng-click="setSection(['weighted', 'details'])">Weighted Data</a>
     </li>
-    <li ng-class="{active: action[0] == 'about'}"><a ng-click="setSection(['about', 'details'])">About</a></li>
+    <li ng-class="{active: action[0] == 'raw'}">
+      <a ng-click="setSection(['raw', 'details'])">Raw Data</a>
+    </li>
   </ul>
   <div class="tab-content">
     <!-- Parameters table view -->
     <div ng-show="action[0] == 'model'">
-      <h4>Features</h4>
       <table class="table">
         <thead>
         <tr>
@@ -73,7 +74,6 @@
 
     <!-- Weighted parameters -->
     <div ng-show="action[0] == 'weighted'">
-      <h4>Raw data</h4>
       <table class="table">
       <thead>
           <tr>
@@ -103,20 +103,9 @@
       </table>
     </div>
 
-    <!-- About Tab -->
-    <div ng-show="action[0] == 'about'">
-      <div>
-        Label: <span class="value">{{ data.label }}</span>
-      </div>
-      <div>
-        Predicted Label: <span class="value">{{ data.pred_label }}</span>
-      </div>
-      <div>
-        Probabilities: <span class="value">{{ data.prob }}</span>
-      </div>
-      <div><sc-chart chart-dict="data.probChartData" width="150" height="150"></sc-chart></div>
+    <div ng-show="action[0] == 'raw'">
+      <textarea name="data" ui-codemirror="codeMirrorConfigs(true)['json']" ui-refresh="action" ng-model="data.raw_data"></textarea>
     </div>
-  </div>
 </div>
 
 <ng-include ng-show="data.loaded" src="'/partials/parts/pager.html'"></ng-include>

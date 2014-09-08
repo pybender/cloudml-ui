@@ -171,7 +171,7 @@ angular.module('app.datas.controllers', ['app.config', ])
     $scope.data.$load(
       _.extend({show: ['test_name','weighted_data_input','model',
              'pred_label','label','prob','created_on','test_result',
-             'next', 'previous', 'parameters_weights'].join(',')},
+             'next', 'previous', 'parameters_weights', 'data_input'].join(',')},
                $scope.filter_opts)
     ).then (->
       ), ((opts)->
