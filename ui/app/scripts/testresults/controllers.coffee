@@ -155,6 +155,14 @@ without test id and model id"
         ctrlName: 'CsvDownloadCtrl'
     })
 
+  $scope.exportResultsToDb = () ->
+    $scope.openDialog({
+        $dialog: $dialog
+        model: $scope.test
+        template: 'partials/testresults/export_to_db_popup.html'
+        ctrlName: 'CsvDownloadCtrl'
+    })
+
   addMetricsToScope = ->
     metrics = $scope.test.metrics
     $scope.rocCurves = {}
@@ -224,12 +232,18 @@ without test id and model id"
     $scope.reload = () ->
       $scope.test.$get_exports().then((resp) ->
         $scope.exports = resp.data.exports
-        statuses = []
-        statuses.push e.status for e in $scope.exports
-        if 'In Progress' in statuses
-          $timeout ->
-            $scope.reload()
-          , 8000
+        $scope.db_exports = resp.data.db_exports
+
+        reloadInProgressTasks = (tasks) ->
+          statuses = []
+          statuses.push e.status for e in tasks
+          if 'In Progress' in statuses
+            $timeout ->
+              $scope.reload()
+            , 8000
+
+        reloadInProgressTasks($scope.exports)
+        reloadInProgressTasks($scope.db_exports)
       )
 
     $scope.$on('exportsChanged', () ->

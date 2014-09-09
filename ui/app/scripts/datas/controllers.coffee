@@ -205,6 +205,7 @@ angular.module('app.datas.controllers', ['app.config', ])
 
 ])
 
+# TODO: rename because it used for export to DB elso
 # Choose fields to download classification results in CSV dialog controller
 .controller('CsvDownloadCtrl', [
   '$scope'
@@ -214,11 +215,12 @@ angular.module('app.datas.controllers', ['app.config', ])
   '$rootScope'
 
   ($scope, dialog, Data, $location, $rootScope) ->
+    $scope.extraData = {}
     # Field list to be displayed in choose field select
     $scope.selectFields = []
 
     $scope.csvField = ''
-    $scope.stdFields = ['name', 'id', 'label', 'pred_label', 'prob']
+    $scope.stdFields = ['label', 'pred_label', 'prob']
     $scope.extraFields = []
 
     $scope.loading_state = true
@@ -234,7 +236,9 @@ angular.module('app.datas.controllers', ['app.config', ])
       $scope.setError(opts, 'loading data field list')
       $scope.loading_state = false
 
-    $scope.appendField = () ->
+    $scope.appendField = (csvField) ->
+      # TODO: Why do we not see csvField from scope in the controller?
+      $scope.csvField = csvField
       if !!$scope.csvField and $scope.csvField not in $scope.extraFields and
           $scope.csvField in $scope.selectFields
         $scope.extraFields.push $scope.csvField
@@ -274,6 +278,20 @@ angular.module('app.datas.controllers', ['app.config', ])
         $rootScope.$broadcast 'exportsChanged'
       , (opts) ->
         $scope.setError(opts, 'failed submitting csv generation request')
+        $scope.loading_state = false
+
+    $scope.exportExamplesToDb = () ->
+      $scope.loading_state = true
+      fields = $scope.stdFields.concat $scope.extraFields
+      $scope.test.$get_examples_db(
+        _.extend {'fields': fields}, $scope.extraData)
+      .then () ->
+        $scope.loading_state = false
+        $location.search('action=about:details')
+        $scope.close()
+        $rootScope.$broadcast 'exportsChanged'
+      , (opts) ->
+        $scope.setError(opts, 'failed submitting export to db request')
         $scope.loading_state = false
 
     $scope.close = () ->

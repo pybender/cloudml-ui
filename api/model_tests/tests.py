@@ -9,8 +9,9 @@ from views import TestResource, TestExampleResource
 from models import TestResult, TestExample
 from api.ml_models.models import Model
 from api.ml_models.fixtures import ModelData, WeightData, SegmentData
-from api.import_handlers.fixtures import ImportHandlerData, DataSetData
-from api.import_handlers.models import DataSet, ImportHandler
+from api.import_handlers.fixtures import ImportHandlerData, DataSetData, \
+    PredefinedDataSourceData
+from api.import_handlers.models import DataSet, ImportHandler, PredefinedDataSource
 from api.instances.models import Instance
 from api.instances.fixtures import InstanceData
 from api.async_tasks.models import AsyncTask
@@ -193,7 +194,8 @@ class TestExampleResourceTests(BaseDbTestCase, TestChecksMixin):
     Model = TestExample
     datasets = [FeatureData, FeatureSetData, ImportHandlerData,
                 DataSetData, ModelData, WeightData,
-                TestResultData, TestExampleData, SegmentData]
+                TestResultData, TestExampleData, SegmentData,
+                PredefinedDataSourceData]
 
     def setUp(self):
         super(TestExampleResourceTests, self).setUp()
@@ -368,6 +370,23 @@ class TestExampleResourceTests(BaseDbTestCase, TestChecksMixin):
         resp = self.client.put(url, data=data, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, 400)
 
+    @patch('api.model_tests.tasks.export_results_to_db')
+    def test_db(self, mock_export_results_to_db):
+        datasource = PredefinedDataSource.query.first()
+        fields = 'label,pred_label,prob,data_input.employer->country'
+        data = {
+            'fields': json.dumps(fields.split(',')),
+            'datasource': datasource.id,
+            'tablename': 'exports_tlb'
+        }
+        url = self._get_url(action='db_task')
+        resp = self.client.put(url, data=data, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, 200)
+        self.assertTrue(mock_get_csv.delay.called)
+        mock_export_results_to_db.delay.assert_called_with(
+            self.model.id, self.test.id, datasource.id, 'exports_tlb',
+            'label,pred_label,prob,data_input.employer->country'.split(','))
+
 
 class TasksTests(BaseDbTestCase):
     """ Tests celery tasks. """
@@ -440,6 +459,16 @@ class TasksTests(BaseDbTestCase):
         # ).order_by(desc(AsyncTask.created_on)).first()
         # self.assertEqual(task.result, url)
         # self.assertEqual(task.status, AsyncTask.STATUS_COMPLETED)
+
+    @mock_s3
+    @patch('psycopg2.connect')
+    def test_export_results_to_db(self, *mocks):
+        from tasks import export_results_to_db
+        datasource = PredefinedDataSource.query.first()
+        fields = ['label', 'pred_label', 'prob']
+        export_results_to_db.delay(
+            self.test.model.id, self.test.id,
+            datasource.id, 'exports_tlb', fields).get()
 
     @mock_s3
     @patch('api.models.Model.get_trainer')
