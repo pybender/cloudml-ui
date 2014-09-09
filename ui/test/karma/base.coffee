@@ -2,9 +2,6 @@ module.exports = (karma)->
   vendorConfig = require '../../vendor.config.coffee'
   vendorFiles = []
   for cdnObj in vendorConfig.cdn
-    # TODO: figure out why bootstrap blows up unit tests with jquery
-    if cdnObj.local.indexOf('/bootstrap.js') > 0 or cdnObj.local.indexOf('/bootstrap-editable.js') > 0
-      continue
     vendorFiles.push
       pattern: cdnObj.local
       watched: false
