@@ -523,12 +523,16 @@ def fill_import_handler(import_handler, xml_data=None):
 
         def load_entity_items(entity, db_entity):
             for field in entity.fields.values():
+                if hasattr(field, 'delimiter')
+                    delimiter = field.delimiter
+                else:
+                    delimiter = field.join
                 fld = XmlField(
                     name=field.name,
                     type=field.type,
                     column=field.column,
                     jsonpath=field.jsonpath,
-                    delimiter=field.delimiter,
+                    delimiter=delimiter,
                     regex=field.regex,
                     split=field.split,
                     dateFormat=field.dateFormat,
