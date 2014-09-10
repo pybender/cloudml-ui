@@ -382,7 +382,7 @@ class TestExampleResourceTests(BaseDbTestCase, TestChecksMixin):
         url = self._get_url(action='db_task')
         resp = self.client.put(url, data=data, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, 200)
-        self.assertTrue(mock_get_csv.delay.called)
+        self.assertTrue(mock_export_results_to_db.delay.called)
         mock_export_results_to_db.delay.assert_called_with(
             self.model.id, self.test.id, datasource.id, 'exports_tlb',
             'label,pred_label,prob,data_input.employer->country'.split(','))
@@ -390,7 +390,7 @@ class TestExampleResourceTests(BaseDbTestCase, TestChecksMixin):
 
 class TasksTests(BaseDbTestCase):
     """ Tests celery tasks. """
-    datasets = [DataSetData, TestResultData, TestExampleData]
+    datasets = [DataSetData, TestResultData, TestExampleData, PredefinedDataSourceData]
 
     def setUp(self):
         super(TasksTests, self).setUp()
@@ -466,6 +466,7 @@ class TasksTests(BaseDbTestCase):
         from tasks import export_results_to_db
         datasource = PredefinedDataSource.query.first()
         fields = ['label', 'pred_label', 'prob']
+        print self.test.model, self.test, datasource
         export_results_to_db.delay(
             self.test.model.id, self.test.id,
             datasource.id, 'exports_tlb', fields).get()

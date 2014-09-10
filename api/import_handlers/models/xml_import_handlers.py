@@ -523,7 +523,7 @@ def fill_import_handler(import_handler, xml_data=None):
 
         def load_entity_items(entity, db_entity):
             for field in entity.fields.values():
-                if hasattr(field, 'delimiter')
+                if hasattr(field, 'delimiter'):
                     delimiter = field.delimiter
                 else:
                     delimiter = field.join
