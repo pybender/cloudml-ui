@@ -78,7 +78,7 @@ def weights2tree(weights):  # pragma: no cover
 
 def get_example_params(model_weights, row, vect_row):
     """ Adds weights and color tones to each test example parameter.
-    Note: Uses real data data when calculating this values:
+    Note: Uses real data when calculating this values:
         weight = model parameter weight * parameter value.
 
     :param model_weights:

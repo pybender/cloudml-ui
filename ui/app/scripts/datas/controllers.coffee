@@ -162,16 +162,23 @@ angular.module('app.datas.controllers', ['app.config', ])
 
   # used for getting next/prev example ids
   $scope.filter_opts = $location.search()
+  $scope.loaded = false
 
-  $scope.data.$load(
-    _.extend({show: ['test_name','weighted_data_input','model',
-           'pred_label','label','prob','created_on','test_result',
-           'next', 'previous'].join(',')},
-             $scope.filter_opts)
-  ).then (->
-    ), ((opts)->
-      $scope.setError(opts, 'loading test example')
-    )
+  $scope.goSection = () ->
+    if $scope.loaded
+      return
+
+    $scope.data.$load(
+      _.extend({show: ['test_name','weighted_data_input','model',
+             'pred_label','label','prob','created_on','test_result',
+             'next', 'previous', 'parameters_weights', 'data_input'].join(',')},
+               $scope.filter_opts)
+    ).then (->
+      ), ((opts)->
+        $scope.setError(opts, 'loading test example')
+      )
+
+  $scope.initSections($scope.goSection)
 
   $scope.next = ->
     $scope.redir({
@@ -202,7 +209,6 @@ angular.module('app.datas.controllers', ['app.config', ])
       id: example_id
     })
     $location.url(example.objectUrl()).search($scope.filter_opts)
-
 ])
 
 # Choose fields to download classification results in CSV dialog controller
