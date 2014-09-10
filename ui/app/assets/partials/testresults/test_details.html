@@ -7,6 +7,9 @@
 <h2 ng-show="test.loaded">
   {{ test.name|capfirst }} Details
   <div class="actions">
+    <a ng-show="test.status == 'Completed'" class="btn btn-info" ng-click="exportResultsToDb()">
+      <i title="Export test examples to db" class="icon-share"></i> Export Classification Results in DB
+    </a>
     <a ng-show="test.status == 'Completed'" class="btn btn-info" ng-click="downloadCsvResults()">
       <i title="Download test examples" class="icon-download-alt"></i> Classification Results in CSV
     </a>
@@ -95,6 +98,24 @@
                   </div>
                   <div ng-show="export.status == 'Completed'" class="span1 pull-right">
                     <a class="btn btn-small" href="{{ export.result }}">Download</a>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div ng-show="db_exports">
+              <h4>DB Exports</h4>
+              <ul class="unstyled">
+                <li class="row well well-small" ng-repeat="export in db_exports">
+                  <div class="span10">
+                    <i class="icon-calendar"></i> created on <span class="badge badge-info" title="dates in GMT">{{ export.created_on|format_date }}</span>&nbsp;
+                    <i class="icon-hdd"></i> <a title="datasource used to connect to the database" target="_blank" href="#/predefined/datasources/?id={{ export.args[2] }}" class="badge badge-info">datasource</a>&nbsp;
+                    <i class=" icon-th-list"></i> table <span class="badge badge-info" title="name of the table to store results">{{ export.args[3]}}</span>&nbsp;
+                    <i class="icon-th"></i><span> fields </span>
+                    <span ng-repeat="field in export.args[4]">
+                      <span class="label">{{ field }}</span>
+                    </span>
+                    <span title="status of the exporting" class="badge badge-info">{{ export.status }}</span>
+                    <br/>
                   </div>
                 </li>
               </ul>

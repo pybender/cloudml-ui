@@ -83,6 +83,14 @@ class TestResult(db.Model, BaseModel):
         )
 
     @property
+    def db_exports(self):
+        from api.async_tasks.models import AsyncTask
+        return AsyncTask.get_current_by_object(
+            self,
+            'api.model_tests.tasks.export_results_to_db',
+        )
+
+    @property
     def confusion_matrix_calculations(self):
         from api.async_tasks.models import AsyncTask
         return AsyncTask.get_current_by_object(
