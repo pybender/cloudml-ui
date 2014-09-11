@@ -8,6 +8,7 @@ describe "directives", ->
   $scope = null
   $provide = null
   $httpBackend = null
+  $window = null
 
   beforeEach ->
     module 'ngCookies'
@@ -33,6 +34,9 @@ describe "directives", ->
       $compile = $injector.get('$compile')
       $scope = $rootScope.$new()
       $httpBackend = $injector.get('$httpBackend')
+      $window = $injector.get('$window')
+      $window.alert = jasmine.createSpy '$window.alert'
+      $window.confirm = jasmine.createSpy('$window.confirm')
 
   describe "app-version", ->
 
@@ -166,7 +170,7 @@ editable-placement="right" display="instance.obj.name"></span>
         $httpBackend.flush()
         # TODO: nader20140910 following line should be the case,
         # look in the comments of directives.coffee#editable directive
-        # for description of the bug
+        # for xdescription of the bug
         #expect($(elem).text()).toEqual 'one'
 
 
@@ -375,15 +379,23 @@ editable-placement="right" display="instance.obj.name"></span>
       if elem
         elem.remove()
 
-    it 'it should render', ->
+    it 'it should render with row', ->
 
-      $scope.row = {row: {full_name: 'zinger'}}
+      $scope.row = {full_name: 'zinger'}
       elem = $compile('<recursive>something</recursive>')($scope)
       $(document.body).append(elem)
       $scope.$digest()
 
-      expect(elem.html()).toContain '<span class="ng-scope">something</span>'
+      expect(elem.html()).toEqual ''
 
+    it 'it should render without row', ->
+
+      $scope.row = {row: {full_name: 'bringer'}}
+      elem = $compile('<recursive>another thing</recursive>')($scope)
+      $(document.body).append(elem)
+      $scope.$digest()
+
+      expect(elem.html()).toContain '<span class="ng-scope">another thing</span>'
 
   describe 'tree', ->
     elem = null
@@ -402,7 +414,7 @@ editable-placement="right" display="instance.obj.name"></span>
         expect(elem.html()).toContain v
 
 
-  # TODO: nader20140911 need to figure away to test html output on this massive
+  # TODO: nader20140911 need to figure a way to test html output on this massive
   # template
   describe 'entitiesTree', ->
     elem = null
@@ -410,11 +422,27 @@ editable-placement="right" display="instance.obj.name"></span>
       elem.remove()
 
     it 'should render', ->
-      $scope.row = {value: 'zozo'}
-      $scope.click = jasmine.createSpy '$scope.click'
-      elem = $compile('<entities-tree></entities-tree>')($scope)
+      $scope.handler =
+        xml_data_sources: [
+          type: 'ds'
+          name: 'ds1'
+          id: 111
+        ,
+          type: 'ds'
+          name: 'ds2'
+          id: 222
+        ,
+          type: 'another_type'
+          name: 'ds3'
+          id: 333
+        ]
+      elem = $compile('<entities-tree handler="handler"></entities-tree>')($scope)
       $(document.body).append(elem)
       $scope.$digest()
+
+      treeScope = $('>ul', elem).scope()
+      expect(treeScope.getDatasources('ds')).toEqual [{text: 'ds1', value: 111}, {text: 'ds2', value: 222}]
+      expect(treeScope.getDatasources('another_type')).toEqual [{text: 'ds3', value: 333}]
 
 
   describe 'entitiesRecursive', ->
@@ -448,12 +476,19 @@ editable-placement="right" display="instance.obj.name"></span>
     afterEach ->
       elem.remove()
 
-    it 'should render', ->
+    it 'should render with object', ->
       $scope.val = {}
       elem = $compile('<params-recursive>zinger</params-recursive>')($scope)
       $(document.body).append(elem)
       $scope.$digest()
       expect(elem.html()).toEqual '<span class="ng-scope">zinger</span>'
+
+    it 'should render without object', ->
+      $scope.val = 'string'
+      elem = $compile('<params-recursive>zinger</params-recursive>')($scope)
+      $(document.body).append(elem)
+      $scope.$digest()
+      expect(elem.html()).toEqual ''
 
 
   describe "loadindicator", ->
@@ -534,9 +569,6 @@ editable-placement="right" display="instance.obj.name"></span>
       expect(elem.html()).not.toContain '<first-message>'
       expect(elem.html()).toContain '<second-message>'
 
-  # TODO: nader20140911 we cannot enable these tests for PhantomJS it throws something like
-  # TypeError: '[object BlobConstructor]' is not a constructor (evaluating 'new Blob(['same way...']
-  # figure our something else to test it
   describe 'files manipulation', ->
 
     elem = null
@@ -567,11 +599,9 @@ editable-placement="right" display="instance.obj.name"></span>
       $scope.$digest()
 
     describe 'jsonFile', ->
-
       it 'should render and handels file uploads with errors', inject ($timeout)->
-        $scope.model = {file: {}}
-        $scope.htmlclass = 'first-class'
-        prepareContext '<form name="myForm"><input type="file" name="some_file" ng-model="model.file" json-file></form>'
+        $scope.some_file = ''
+        prepareContext '<form name="myForm"><input json-file type="file" name="some_file" ng-model="some_file"></form>'
 
         inputElem = $('>input', elem)
         inputElem.triggerHandler
@@ -590,8 +620,8 @@ editable-placement="right" display="instance.obj.name"></span>
     describe 'notRequiredFile', ->
 
       it 'should compile', ->
-        $scope.model = {file: {}}
-        elem = prepareContext('<form name="myForm"><input type="file" name="some_file" ng-model="model.file" not-required-file/></form>')
+        $scope.some_file = ''
+        prepareContext '<form name="myForm"><input not-required-file type="file" name="some_file" ng-model="some_file"/></form>'
 
         inputElem = $('>input', elem)
         inputElem.triggerHandler
@@ -606,7 +636,7 @@ editable-placement="right" display="instance.obj.name"></span>
 
       it 'should compile', ->
         $scope.model = {file: {}}
-        elem = prepareContext('<form name="myForm"><input type="file" name="some_file" ng-model="model.file" required-file/></form>')
+        prepareContext('<form name="myForm"><input type="file" name="some_file" ng-model="model.file" required-file/></form>')
 
         inputElem = $('>input', elem)
         inputElem.triggerHandler
@@ -647,50 +677,138 @@ editable-placement="right" display="instance.obj.name"></span>
         elem.remove()
 
     it 'should work', ->
-      $scope.model = {tofloat: ''}
-      elem = $compile('<form name="myform"><input name="tofloat" ng-model="model.tofloat" type="text" ng-model-onblur></form>')($scope)
+      $scope.text = ''
+      elem = $compile('<form name="myform"><input name="text" ng-model="text" type="text" ng-model-onblur></form>')($scope)
       $(document.body).append(elem)
       $scope.$digest()
 
-    it 'should work', ->
-      $scope.model = {tofloat: ''}
-      elem = $compile('<form name="myform"><input name="tofloat" ng-model="model.tofloat" type="checkbox" ng-model-onblur></form>')($scope)
-      $(document.body).append(elem)
+      $('>input', elem).val 'something'
+      $('>input', elem).trigger 'blur'
+      expect($scope.text).toEqual 'something'
+
+
+
+  describe "parametersEditor", ->
+
+    elem = null
+    innerScope = null
+    afterEach ->
+      if elem
+        elem.remove()
+
+    prepareContext = (html)->
+      elem = $compile(html)($scope)
+      $(document.body).append elem
       $scope.$digest()
-
-
-
-  describe "parameters-editor", ->
+      innerScope = $('>parameters-editor', elem).children().scope()
 
     it "should create parameters editor control with string parameter", ->
 
-      $scope.paramsConfig = {"str_param": {"type": "str"}}
+      $scope.paramsConfig = {"str_param": {"type": "str"}, strange: {type: null}}
       $scope.requiredParams = ["str_param"]
       $scope.optionalParams = []
 
       # invlaid
       $scope.params = {}
-      element = $compile("""
+      prepareContext """
 <form name="myForm">
 <parameters-editor name="params" ng-model="params"
 params-config="paramsConfig"
 required-params="requiredParams"
 optional-params="optionalParams"></parameters-editor>
 </form>
-""")($scope)
-      $scope.$digest()
+"""
       expect($scope.myForm.params.$valid).toBe false
       expect($scope.myForm.$valid).toBe false
 
+      # get type -- we are doing it here to be able to get the invalid type strange
+      expect(innerScope.getType 'str_param').toEqual 'str'
+      expect(innerScope.getType 'zinger').toEqual 'str'
+      expect(innerScope.getType 'strange').toEqual 'str'
+
       # valid
+      $scope.paramsConfig = {"str_param": {"type": "str"}}
       $scope.params = {"str_param": "value"}
       $scope.$digest()
       expect($scope.myForm.params.$valid).toBe true
       expect($scope.myForm.$valid).toBe true
 
-      expect(element.html()).toContain('<div class="jsonContents ng-scope">')
-      expect(element.html()).toContain('<input ng-hide="isRequired(key)" ng-disabled="isRequired(key)"')
-      expect(element.html()).toContain('>str_param</label>')
+      expect(elem.html()).toContain('<div class="jsonContents ng-scope">')
+      expect(elem.html()).toContain('<input ng-hide="isRequired(key)" ng-disabled="isRequired(key)"')
+      expect(elem.html()).toContain('>str_param</label>')
+
+      # toggle collapse
+      expect($scope.collapsed).toBeUndefined()
+      innerScope.toggleCollapse()
+      expect(innerScope.collapsed).toBe true
+      expect(innerScope.chevron).toEqual 'icon-chevron-right'
+      innerScope.toggleCollapse()
+      expect(innerScope.collapsed).toBe false
+      expect(innerScope.chevron).toEqual 'icon-chevron-down'
+
+
+    it "should manipulate parameters", ->
+
+      $scope.paramsConfig = {"str_param": {"type": "str"}, "dict_param": {"type": "dict"}}
+      $scope.requiredParams = ["str_param"]
+      $scope.optionalParams = []
+
+      $rootScope.showAddKey = true
+      $scope.params = {str_param: 'some string', dict_param: {}}
+      prepareContext """
+<form name="myForm">
+<parameters-editor name="params" ng-model="params"
+params-config="paramsConfig"
+required-params="requiredParams"
+optional-params="optionalParams"></parameters-editor>
+</form>
+"""
+      expect(innerScope.isTopLevel()).toEqual true
+
+      # moving str_param to dict_param will delete dict_param
+      innerScope.moveKey innerScope.paramsEditorData, 'str_param', 'dict_param'
+      expect(innerScope.paramsEditorData).toEqual {dict_param: 'some string'}
+
+      # resetting
+      $scope.params = {str_param: 'some string', dict_param: {}}
+      $scope.$digest()
+
+      # trying to delete required parameter fails
+      innerScope.deleteKey innerScope.paramsEditorData, 'str_param'
+      expect(innerScope.isRequired 'str_param').toBe true
+      expect($window.alert).toHaveBeenCalled()
+      expect(innerScope.paramsEditorData).toEqual {str_param: 'some string', dict_param: {}}
+
+      # trying to delete non-required parameter and confirm false
+      innerScope.deleteKey innerScope.paramsEditorData, 'dict_param'
+      expect(innerScope.isRequired 'dict_param').toBe false
+      expect($window.confirm).toHaveBeenCalled()
+      expect(innerScope.paramsEditorData).toEqual {str_param: 'some string', dict_param: {}}
+
+      # trying to delete non-required parameter and confirm true
+      $window.confirm.andReturn true
+      innerScope.deleteKey innerScope.paramsEditorData, 'dict_param'
+      expect(innerScope.isRequired 'dict_param').toBe false
+      expect($window.confirm).toHaveBeenCalled()
+      expect(innerScope.paramsEditorData).toEqual {str_param: 'some string'}
+
+      # adding item no key name
+      innerScope.addItem innerScope.paramsEditorData
+      expect($window.alert).toHaveBeenCalledWith 'Please fill in a name'
+
+# TODO: nader20140912, continue adding new parameter logic
+#      # adding item key name supplied, the click to trigger showAddKey = true
+#      # there are two, we don't care which
+#      expect($('a', elem).attr('title')).toEqual 'add new parameter'
+#      $('a', elem).click()
+#
+#      expect($('.input-small .addItemKeyInput', elem).length).toEqual 1
+#      expect($('.input-medium .addItemValueInput', elem)).length.toEqual 1
+#      $('.input-small .addItemKeyInput', elem).val 'new key to test'
+#      $('.input-medium .addItemValueInput', elem).val 'new key to test'
+#      $('a', elem).scope().addItem innerScope.paramsEditorData
+#      expect(innerScope.paramsEditorData).toEqual ''
+
 
     it "should create parameters editor control with object parameter", ->
 
@@ -700,14 +818,14 @@ optional-params="optionalParams"></parameters-editor>
 
       # invlaid
       $scope.params = {}
-      element = $compile("""
+      prepareContext """
 <form name="myForm">
 <parameters-editor name="params" ng-model="params"
 params-config="paramsConfig"
 required-params="requiredParams"
 optional-params="optionalParams"></parameters-editor>
 </form>
-""")($scope)
+"""
       $scope.$digest()
       expect($scope.myForm.params.$valid).toBe false
       expect($scope.myForm.$valid).toBe false
@@ -718,10 +836,10 @@ optional-params="optionalParams"></parameters-editor>
       expect($scope.myForm.params.$valid).toBe true
       expect($scope.myForm.$valid).toBe true
 
-      expect(element.html()).toContain('<div class="jsonContents ng-scope">')
-      expect(element.html()).toContain('<input ng-hide="isRequired(key)" ng-disabled="isRequired(key)"')
-      expect(element.html()).toContain('>map_param</label>')
-      expect(element.html()).toContain('<a title="add new parameter" ng-click="$parent.showAddKey = true"')
+      expect(elem.html()).toContain('<div class="jsonContents ng-scope">')
+      expect(elem.html()).toContain('<input ng-hide="isRequired(key)" ng-disabled="isRequired(key)"')
+      expect(elem.html()).toContain('>map_param</label>')
+      expect(elem.html()).toContain('<a title="add new parameter" ng-click="$parent.showAddKey = true"')
 
     it "should create parameters editor control with text parameter", ->
       $scope.params = {
@@ -734,14 +852,14 @@ optional-params="optionalParams"></parameters-editor>
 
       # invlaid
       $scope.params = {}
-      element = $compile("""
+      prepareContext """
 <form name="myForm">
 <parameters-editor name="params" ng-model="params"
 params-config="paramsConfig"
 required-params="requiredParams"
 optional-params="optionalParams"></parameters-editor>
 </form>
-""")($scope)
+"""
       $scope.$digest()
       expect($scope.myForm.params.$valid).toBe false
       expect($scope.myForm.$valid).toBe false
@@ -758,11 +876,12 @@ optional-params="optionalParams"></parameters-editor>
       expect($scope.myForm.params.$valid).toBe true
       expect($scope.myForm.$valid).toBe true
 
-      expect(element.html()).toContain('<div class="jsonContents ng-scope">')
-      expect(element.html()).toContain('<input ng-hide="isRequired(key)" ng-disabled="isRequired(key)"')
-      expect(element.html()).toContain('>text_param</label>')
-      expect(element.html()).toContain('<textarea name="text_param" ng-model="paramsEditorData[key]"')
+      expect(elem.html()).toContain('<div class="jsonContents ng-scope">')
+      expect(elem.html()).toContain('<input ng-hide="isRequired(key)" ng-disabled="isRequired(key)"')
+      expect(elem.html()).toContain('>text_param</label>')
+      expect(elem.html()).toContain('<textarea name="text_param" ng-model="paramsEditorData[key]"')
 
+    # TODO: this test takes too long
     it "should validate items", ->
       """
       Attention: As of Anguular 1.2.20 no need to call validate exciplictly
@@ -778,14 +897,14 @@ optional-params="optionalParams"></parameters-editor>
 
       # empty params
       $scope.params = {}
-      $compile("""
+      prepareContext """
 <form name="myForm">
 <parameters-editor name="params" ng-model="params"
 params-config="paramsConfig"
 required-params="requiredParams"
 optional-params="optionalParams"></parameters-editor>
 </form>
-""")($scope)
+"""
       $scope.$digest()
       expect($scope.myForm.params.$valid).toBe false
       expect($scope.myForm.$valid).toBe false
@@ -883,7 +1002,7 @@ optional-params="optionalParams"></parameters-editor>
       if elem
         elem.remove()
 
-    it 'should work', ->
+    it 'should work', inject ($timeout)->
       $scope.curvesDict = {}
       elem = $compile('<sc-curves xlabel="False-positive rate" ylabel="True-positive rate" curves-dict="curvesDict" show-line="1" width="500"></sc-curves>')($scope)
       $(document.body).append(elem)
@@ -891,6 +1010,7 @@ optional-params="optionalParams"></parameters-editor>
 
       $scope.curvesDict = {1:1}
       $scope.$digest()
+      $timeout.flush()
 
 
   describe 'scChart', ->
@@ -899,7 +1019,7 @@ optional-params="optionalParams"></parameters-editor>
       if elem
         elem.remove()
 
-    it 'should work', ->
+    it 'should work', inject ($timeout) ->
       $scope.chartDict = {}
       elem = $compile('<sc-chart chart-dict="chartDict" width="150" height="150"></sc-chart>')($scope)
       $(document.body).append(elem)
@@ -907,6 +1027,7 @@ optional-params="optionalParams"></parameters-editor>
 
       $scope.chartDict = {}
       $scope.$digest()
+      $timeout.flush()
 
 
   describe 'ngDictInput', ->
@@ -916,15 +1037,26 @@ optional-params="optionalParams"></parameters-editor>
         elem.remove()
 
     it 'should work', ->
-      $scope.model = {dictItem: {}}
-      elem = $compile('<form name="myform"><ng-dict-input name="dictIte" ng-model="model.dictIte"></ng-dict-input></form>')($scope)
+      $scope.dictItem = {}
+      elem = $compile('<form name="myform"><ng-dict-input name="dictItem" ng-model="dictItem"></ng-dict-input></form>')($scope)
       $(document.body).append(elem)
       $scope.$digest()
-      expect($scope.displayValue).toBeUndefined()
+      textAreaElem = $('>ng-dict-input>textarea', elem)
+      textAreaScope = textAreaElem.scope()
+      expect(textAreaScope.displayValue).toBe '{}'
 
-      $scope.displayValue = angular.toJson({some: 'json'})
+      textAreaScope.displayValue = angular.toJson {some: 'json'}
+      textAreaScope.change() # I don't know what's automatically calls change()
       $scope.$digest()
-      expect($scope.displayValue).toEqual '{"some":"json"}'
+      expect(textAreaScope.value).toEqual {some: 'json'}
+      expect($scope.dictItem).toEqual {some: 'json'}
+
+      # auto
+      textAreaScope.displayValue = 'auto'
+      textAreaScope.change() # I don't know what's automatically calls change()
+      $scope.$digest()
+      expect(textAreaScope.value).toEqual 'auto'
+      expect($scope.dictItem).toEqual 'auto'
 
 
   describe 'ngName', ->

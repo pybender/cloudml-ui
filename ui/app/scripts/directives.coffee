@@ -478,13 +478,14 @@ angular.module('app.directives', [
     restrict: 'A',
     link: (scope, element, attrs, control) ->
       element.change((e) ->
+        changeEvt = e
         scope.$apply( () ->
           reader = new FileReader()
 
           reader.onload = (e) ->
             control.$setViewValue(e.target.result)
 
-          reader.readAsText(element[0].files[0])
+          reader.readAsText(changeEvt.target.files[0])
         )
       )
   }
@@ -504,13 +505,14 @@ angular.module('app.directives', [
       )
 
       element.change((e) ->
+        changeEvt = e
         scope.$apply( () ->
           reader = new FileReader()
 
           reader.onload = (e) ->
             control.$setViewValue(e.target.result)
 
-          reader.readAsText(element[0].files[0])
+          reader.readAsText(changeEvt.target.files[0])
         )
       )
   }
@@ -549,7 +551,7 @@ angular.module('app.directives', [
   }
 )
 
-.directive('parametersEditor', ['$compile', ($compile) ->
+.directive('parametersEditor', ['$compile', '$window', ($compile, $window) ->
   return {
     restrict: 'E',
     require: '?ngModel',
@@ -582,13 +584,16 @@ angular.module('app.directives', [
           scope.collapsed = true
           scope.chevron = "icon-chevron-right"
 
+      # TODO: nader20140912, moving a required parameter to a non-required parameter
+      # will not update required-params and hence the required parameter is not
+      # required anymore. -- how many required in the previous sentence :)
       scope.moveKey = (obj, key, newkey) ->
         obj[newkey] = obj[key]
         delete obj[key]
 
       scope.deleteKey = (obj, key) ->
         if scope.isRequired(key)
-          alert("Can't delete required parameter")
+          $window.alert("Can't delete required parameter")
           return
         if(confirm('Delete "'+key+'" ?'))
             delete obj[key]
@@ -783,7 +788,9 @@ angular.module('app.directives', [
             errs.push key
             continue
           validator = VALIDATORS[conf.type]
-          if !validator(key, data)
+          if not validator
+            errs.push key
+          else if !validator(key, data)
             errs.push key
 
         ngModel.$setValidity('params', errs.length <= 0)
@@ -827,15 +834,16 @@ angular.module('app.directives', [
   }
 ])
 
-.directive('inp', [ ->
-  return {
-    restrict: 'AE',
-    # require: '?ngModel',
-    scope: {model: '=', config: '='}
-    transclude : true
-    templateUrl:'partials/directives/input_param.html'
-  }
-])
+# TODO: nader20140911, not used any where
+#.directive('inp', [ ->
+#  return {
+#    restrict: 'AE',
+#    # require: '?ngModel',
+#    scope: {model: '=', config: '='}
+#    transclude : true
+#    templateUrl:'partials/directives/input_param.html'
+#  }
+#])
 
 
 .directive('ngDictInput', [ ->
@@ -851,12 +859,10 @@ angular.module('app.directives', [
     templateUrl:'partials/directives/dict_input.html'
 
     link: (scope, element, attrs, ngModel) ->
-      if !ngModel then return
       #console.log scope.value
       scope.displayValue = JSON.stringify(scope.value)
 
       scope.change = () ->
-        #console.log scope.displayValue
         if scope.displayValue != 'auto'
           scope.value = JSON.parse(scope.displayValue)
         else
