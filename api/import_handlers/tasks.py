@@ -7,7 +7,7 @@ import gzip
 
 from api.logs.logger import init_logger
 from api import celery
-from api.ml_models.models import Model
+from api.ml_models.models import Model, Transformer
 from api.model_tests.models import TestResult
 from api.base.tasks import SqlAlchemyTask
 from api.instances.models import Cluster
@@ -15,7 +15,7 @@ from models import DataSet
 
 
 @celery.task(base=SqlAlchemyTask)
-def import_data(dataset_id, model_id=None, test_id=None):
+def import_data(dataset_id, model_id=None, test_id=None, transformer_id=None):
     """
     Import data from database.
     """
@@ -24,6 +24,8 @@ def import_data(dataset_id, model_id=None, test_id=None):
             return Model.query.get(model_id)
         if not test_id is None:
             return TestResult.query.get(test_id)
+        if not transformer_id is None:
+            return Transformer.query.get(transformer_id)
 
     def set_error(err, ds=None, parent=None):
         if ds is not None:
