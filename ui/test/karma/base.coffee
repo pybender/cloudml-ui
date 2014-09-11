@@ -54,6 +54,8 @@ module.exports = (karma)->
 
     ngHtml2JsPreprocessor:
       moduleName: 'app.templates'
+      stripPrefix: 'app/assets/' # this is very important to avoid directives specs
+                                 # from issuing http requests to load the template
 
 # transforming the filenames
 #transformPath: (path)->

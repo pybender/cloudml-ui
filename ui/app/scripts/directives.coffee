@@ -17,39 +17,41 @@ angular.module('app.directives', [
     elm.text(version)
 ])
 
-.directive('showtab', () ->
-  return {
-    link: (scope, element, attrs) ->
-      element.click((e) ->
-        e.preventDefault()
-        $(element).tab('show')
-      )
-  }
-)
+# TODO: nader20140909 not used anywhere, schedule for removal
+#.directive('showtab', () ->
+#  return {
+#    link: (scope, element, attrs) ->
+#      element.click((e) ->
+#        e.preventDefault()
+#        $(element).tab('show')
+#      )
+#  }
+#)
 
-.directive("fileDownload", [
-  '$compile'
-
-($compile) ->
-  return {
-    restrict: "E"
-    #templateUrl: 'partials/directives/file_downloader.html',
-    scope:{
-      data:'=data'
-      filename: '=filename'
-      text: '=text'
-      cssClass: '=cssClass'}
-    link: (scope, elm, attrs) ->
-      scope.$watch 'data', (val, oldVal) ->
-        if val?
-          blob = new Blob([val], {type: "application/json"})
-          url = URL.createObjectURL(blob)
-          elm.append($compile(
-            '<a class="btn btn-info" download="' + scope.filename + '"' +
-            'href="' + url + '">' + scope.text + '</a>'
-          )(scope))
-  }
-])
+# TODO: nader20140909 not used anywhere, schedule for removal
+#.directive("fileDownload", [
+#  '$compile'
+#
+#($compile) ->
+#  return {
+#    restrict: "E"
+#    #templateUrl: 'partials/directives/file_downloader.html',
+#    scope:{
+#      data:'=data'
+#      filename: '=filename'
+#      text: '=text'
+#      cssClass: '=cssClass'}
+#    link: (scope, elm, attrs) ->
+#      scope.$watch 'data', (val, oldVal) ->
+#        if val?
+#          blob = new Blob([val], {type: "application/json"})
+#          url = URL.createObjectURL(blob)
+#          elm.append($compile(
+#            '<a class="btn btn-info" download="' + scope.filename + '"' +
+#            'href="' + url + '">' + scope.text + '</a>'
+#          )(scope))
+#  }
+#])
 
 # .directive('fileDownload',
 #   '$compile'
@@ -109,6 +111,7 @@ angular.module('app.directives', [
           return scope.obj.$save only: [fieldName]
 
         previousValue = null
+        previousDisplay = null
 
         successHandler = (obj) ->
           previousValue = obj[fieldName]
@@ -119,10 +122,12 @@ angular.module('app.directives', [
 
         errorHandler = ->
           # Revert changed value
+          # TODO: nader20140910 the following line will break the select
+          # type. the value is instance.object.id, the field is instance.object
+          # assigning the id of the object to instance.object will break it
           scope.obj[fieldName] = previousValue
           $(el).editable 'setValue', previousValue
-          if attrs.displayValue then $(el).text attrs.displayValue
-          #throw new Error "Error saving job information"
+          #if attrs.display then $(el).text scope.display
 
         promiseHandler = (promise) ->
           promise.then successHandler, errorHandler
@@ -141,7 +146,11 @@ angular.module('app.directives', [
         $(el).editable editableOpts
 
         scope.$watch scope.value, (newVal, oldVal) ->
-          previousValue = newVal
+          if not newVal
+            # and edge condition happens with select types when there is a failure
+            # in the save request, we protect both prevoiusValue and the input
+            return
+          previousValue = oldVal
           $(el).editable 'setValue', newVal
           if attrs.display then $(el).text scope.display
 
@@ -177,26 +186,7 @@ angular.module('app.directives', [
 .directive('weightedDataParameters', () ->
   return {
     restrict: 'E',
-    template: """<span>
-<span ng-show="!val.weights" title="weight={{ val.weight }}"
-class="badge {{ val.css_class }}">{{ val.value }}</span>
-
-<div ng-show="val.weights">
-  <span  ng-show="val.type == 'List'"
-  ng-init="lword=word.toLowerCase()"
-  ng-repeat="word in val.value|words">
-    <span ng-show="val.weights[lword].weight"
-    title="weight={{ val.weights[lword].weight }}"
-    class="badge {{ val.weights[lword].css_class }}">{{ word }}</span>
-    <span ng-show="!val.weights[lword].weight">{{ word }}</span></span>
-
-  <span ng-show="val.type == 'Dictionary'"
-  ng-repeat="(key, dval) in val.weights">
-    <span title="weight={{ dval.weight }}"
-    class="badge {{ dval.css_class }}">
-      {{ key }}={{ dval.value }}</span></span>
-</div>
-</span>""",
+    templateUrl: 'partials/directives/weighted_data_params.html',
     replace: true,
     transclude : true,
     scope: { val: '=' }
@@ -322,7 +312,7 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
       contents = tElement.contents().remove()
       compiledContents = undefined
       return (scope, iElement, iAttr) ->
-        console.log scope.key, scope.val, typeof(scope.val)
+        #console.log scope.key, scope.val, typeof(scope.val)
         #if value instanceof Array
         if typeof(scope.val) != 'object'
           return
@@ -422,22 +412,23 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
 
       link: (scope, el, attrs) ->
 
-        unsafe = attrs.unsafe
-        _meth = if unsafe is undefined then 'text' else 'html'
+        _meth = if attrs.unsafe? then 'text' else 'html'
 
         el.find('.message')[_meth] ''
         attrs.$observe 'msg', (newVal, oldVal, scope) ->
           if newVal
             el.find('.message')[_meth] newVal
 
+        oldHtmlClass = null
         attrs.$observe 'htmlclass', (newVal, oldVal, scope) ->
           alert = el
 
-          if oldVal
-            alert.removeClass oldVal
+          if oldHtmlClass
+            alert.removeClass oldHtmlClass
 
           if newVal
             alert.addClass newVal
+            oldHtmlClass = newVal
     }
 )
 
@@ -458,6 +449,7 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
           catch e
             isValid = false
 
+          #console.log '3' # look at the unit test for why the console.log
           control.$setValidity('jsonFile', isValid)
           control.$render()
         )
@@ -465,14 +457,16 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
       )
 
       element.change((e) ->
+        changeEvt = e
         scope.$apply( () ->
           reader = new FileReader()
 
           reader.onload = (e) ->
+            #console.log '2' # look at the unit test for why the console.log
             control.$setViewValue(e.target.result)
             control.$render()
 
-          reader.readAsText(element[0].files[0])
+          reader.readAsText(changeEvt.target.files[0])
         )
       )
   }
@@ -896,7 +890,7 @@ updateCurves = (curvesDict, oldVal, scope) ->
   if !curvesDict
     return
   chart = nv.models.lineChart()
-  console.log 'now updating xLabel with', scope.xLabel
+  #console.log 'now updating xLabel with', scope.xLabel
   chart.xAxis.orient('bottom')
     .axisLabel(scope.xLabel)
     .tickFormat(d3.format(',r'))

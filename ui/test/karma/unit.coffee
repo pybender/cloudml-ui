@@ -18,7 +18,7 @@ module.exports = (karma)->
       # Tests
       'test/unit/canned_responses.coffee',
       {pattern: 'bower_components/angular-mocks/angular-mocks.js', watched:false, included:true, served:true}
-      'test/unit/**/*.spec.coffee',
+      'test/unit/directives.spec.coffee',
     ]
     browsers: ['Chrome']
     singleRun: false

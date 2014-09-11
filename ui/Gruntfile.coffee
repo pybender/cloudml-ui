@@ -319,8 +319,8 @@ module.exports = (grunt)->
     ]
 
   grunt.registerTask 'build'
-  , """ Builds a production or staging (targets) to destination:
-        #{cmlConfig.buildDir}
+  , """ Builds frontend to destination: #{cmlConfig.buildDir},
+  target can be one of local, production, staging
     """
   , (target) ->
     target = if target then target else 'production'
