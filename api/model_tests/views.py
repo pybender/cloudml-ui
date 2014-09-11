@@ -1,6 +1,5 @@
 import logging
 from datetime import datetime
-from api.async_tasks.models import AsyncTask
 from flask import request
 
 from flask.ext.restful import reqparse
@@ -9,7 +8,7 @@ from api import api
 from api.base.resources import BaseResourceSQL, NotFound, \
     odesk_error_response, ERR_INVALID_DATA
 from models import TestResult, TestExample, Model
-from forms import AddTestForm, SelectFieldsForCSVForm
+from forms import AddTestForm, SelectFieldsForCSVForm, ExportToDbForm
 from sqlalchemy import desc
 
 
@@ -61,13 +60,9 @@ class TestResource(BaseResourceSQL):
         if not test:
             raise NotFound('Test not found')
 
-        exports = AsyncTask.get_current_by_object(
-            test,
-            'api.model_tests.tasks.get_csv_results',
-        )
-
         return self._render({self.OBJECT_NAME: test.id,
-                             'exports': exports})
+                             'exports': test.exports,
+                             'db_exports': test.db_exports})
 
 
 api.add_resource(TestResource,
@@ -81,7 +76,7 @@ class TestExampleResource(BaseResourceSQL):
 
     NEED_PAGING = True
     GET_ACTIONS = ('groupped', 'csv', 'datafields')
-    PUT_ACTIONS = ('csv_task')
+    PUT_ACTIONS = ('csv_task', 'db_task')
     FILTER_PARAMS = (('label', str), ('pred_label', str))
 
     def _list(self, **kwargs):
@@ -273,6 +268,29 @@ not contain probabilities')
 
         return odesk_error_response(400, ERR_INVALID_DATA,
                                     'Fields of the CSV export is required')
+
+    def _put_db_task_action(self, model_id, test_result_id):
+        """
+        Schedules a task to export examples to the specified DB
+        """
+        test = TestResult.query.get(test_result_id)
+        if not test:
+            raise NotFound('Test not found')
+
+        form = ExportToDbForm(obj=test)
+        if form.is_valid():
+            fields = form.cleaned_data['fields']
+            datasource = form.cleaned_data['datasource']
+            tablename = form.cleaned_data['tablename']
+            if isinstance(fields, list) and len(fields) > 0:
+                from tasks import export_results_to_db
+                logging.info('Export examples to db')
+                export_results_to_db.delay(
+                    test.model_id, test.id, datasource.id, tablename, fields)
+                return self._render({})
+
+        return odesk_error_response(400, ERR_INVALID_DATA,
+                                    'Fields of the DB export is required')
 
     def _get_datafields(self, **kwargs):
         test = TestResult.query.get(kwargs.get('test_result_id'))

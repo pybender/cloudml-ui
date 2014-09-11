@@ -20,7 +20,7 @@ def upgrade():
     op.alter_column('model', 'trainer_size',
                existing_type=sa.INTEGER(),
                type_=sa.BigInteger(),
-               nullable=False)
+               nullable=True)
     
     ### end Alembic commands ###
 

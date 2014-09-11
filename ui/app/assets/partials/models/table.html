@@ -67,11 +67,11 @@
       </td>
       <td title="{{ model.error }}">{{ model.status }}</td>
       <td>
-          {{ model.created_on|format_date }}<br>
+          <span title="dates in GMT">{{ model.created_on|format_date }}</span><br>
           <small ng-show="model.created_by">by {{ model.created_by.name }} ({{ model.created_by.uid }})</small>
       </td>
       <td>
-          {{ model.updated_on|format_date }}<br>
+          <span title="dates in GMT">{{ model.updated_on|format_date }}</span><br>
           <small ng-show="model.updated_by">by {{ model.updated_by.name }} ({{ model.updated_by.uid }})</small>
       </td>
       <td>

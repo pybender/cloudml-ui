@@ -23,7 +23,8 @@
     <td><a href="#{{ handler.objectUrl() }}">{{ handler.name }}</a></td>
     <td></td>
     <td>
-        {{ handler.created_on|format_date }}<br>
+        <span title="dates in GMT">{{ handler.created_on|format_date }}
+        </span><br>
         <small ng-show="handler.created_by">by {{ handler.created_by.name }} ({{ handler.created_by.uid }})</small>
     </td>
     <td ng-controller="ImportHandlerActionsCtrl">

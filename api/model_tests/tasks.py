@@ -17,6 +17,7 @@ from api.logs.logger import init_logger
 from api.model_tests.models import TestResult, TestExample
 from api.ml_models.models import Model
 from api.import_handlers.models import DataSet
+from api.models import PredefinedDataSource
 
 
 @celery.task(base=SqlAlchemyTask)
@@ -72,6 +73,7 @@ def run_test(dataset_ids, test_id):
             sub_tpr = metrics_dict['roc_curve'][label][1][0::n]
             metrics_dict['roc_curve'][label] = [sub_fpr, sub_tpr]
 
+        test.roc_auc = metrics_dict.pop('roc_auc')
         test.metrics = metrics_dict
         test.classes_set = list(metrics.classes_set)
         test.status = TestResult.STATUS_STORING
@@ -221,6 +223,66 @@ def calculate_confusion_matrix(test_id, weight0, weight1):
 
 
 @celery.task(base=SqlAlchemyTask)
+def export_results_to_db(model_id, test_id,
+                         datasource_id, table_name, fields):
+    """
+    Export classification results to database.
+    """
+    init_logger('runtest_log', obj=int(test_id))
+    import psycopg2
+    import psycopg2.extras
+    test = TestResult.query.filter_by(
+        model_id=model_id, id=test_id).first()
+    if not test:
+        logging.error('Test not found')
+        return None
+
+    datasource = PredefinedDataSource.query.get(datasource_id)
+    if not datasource:
+        logging.error('Datasource not found')
+        return None
+    db_fields = []
+    for field in fields:
+        if 'prob' == field:
+            for label in reversed(test.classes_set):
+                db_fields.append("prob_%s varchar(25)" % label)
+        else:
+            db_fields.append("%s varchar(25)" % field.replace('->', '__'))
+
+    logging.info('Creating db connection %s' % datasource.db)
+    conn = psycopg2.connect(datasource.db['conn'])
+    query = "drop table if exists %s;" % table_name
+    cursor = conn.cursor().execute(query)
+    logging.info('Creating table %s' % table_name)
+    query = "CREATE TABLE %s (%s);" % (table_name, ','.join(db_fields))
+    cursor = conn.cursor().execute(query)
+
+    count = 0
+    for example in TestExample.get_data(test_id, fields):
+        rows = []
+        if count % 10 == 0:
+            logging.info('Processed %s rows so far' % (count, ))
+        for field in fields:
+            if field == '_id':
+                field = 'id'
+            if field == 'id':
+                field = 'example_id'
+            val = example[field] if field in example else ''
+            if field == 'prob':
+                rows += val
+            else:
+                rows.append(val)
+        rows = map(lambda x: "'%s'" % x, rows)
+        query = "INSERT INTO %s VALUES (%s)" % (table_name, ",".join(rows))
+        cursor = conn.cursor().execute(query)
+        count += 1
+    conn.commit()
+    logging.info('Export completed.')
+
+    return
+
+
+@celery.task(base=SqlAlchemyTask)
 def get_csv_results(model_id, test_id, fields):
     """
     Get test classification results using csv format.
@@ -236,7 +298,6 @@ def get_csv_results(model_id, test_id, fields):
             for label in reversed(test.classes_set):
                 header.insert(prob_index, 'prob_%s' % label)
             header.remove('prob')
-
 
         with open(filename, 'w') as fp:
             writer = csv.writer(fp, delimiter=',',

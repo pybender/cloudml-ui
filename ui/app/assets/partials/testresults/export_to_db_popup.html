@@ -1,0 +1,31 @@
+<div class="modal-header">
+<button ng-click="close()" class="close" data-dismiss="modal">×</button>
+<h3>Export Classification Results to DB</h3>
+</div>
+<div class="modal-body">
+  <div class='alert alert-error' ng-show='err'>{{ err }}</div>
+  <alert-message class="alert-info" msg='Export to DB is background operation. You could see pending and completed exports in the About tab' unsafe></alert-message>
+  <form name="Form">
+    <div class="controls" ng-controller="DataSourcesSelectLoader">
+      <h4>Database settings</h4>
+    	<label>Select Data Source: </label>
+      <select name="datasource" ng-model="extraData.datasource" required>
+        <option ng-repeat="ds in datasources" value="{{ ds.id }}">{{ ds.name }}</option>
+      </select>
+      <span ng-show="Form.datasource.$error.required" class="help-inline">*</span>
+      <span class="help-block">You could add predefined datasources <a href="#/predefined/datasources" target="_blank">here</a></span>
+    </div>
+    <div class="controls">
+      <label>Table Name: </label>
+      <input type="text" name="tablename" ng-model="extraData.tablename" required />
+      <span ng-show="Form.tablename.$error.required" class="help-inline">*</span>
+    </div>
+    <hr />
+    <h4>Fields settings</h4>
+    <ng-include src="'/partials/testresults/export_fields.html'"></ng-include>
+  </form>
+</div>
+<div class="modal-footer">
+  <button ng-click="close()" class="btn">Cancel</button>
+  <a ng-click="exportExamplesToDb()" ng-disabled="loading_state || Form.$invalid" class="btn btn-primary">Start export</a>
+</div>

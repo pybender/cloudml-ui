@@ -12,7 +12,7 @@ angular.module('app.testresults.controllers', ['app.config', ])
   ($scope, $dialog, $rootScope, TestResult) ->
     $scope.MODEL = TestResult
     $scope.FIELDS = 'name,created_on,status,parameters,accuracy,examples_count,\
-created_by'
+created_by,roc_auc'
     $scope.ACTION = 'loading tests'
 
     $scope.$on('loadTest', (event, opts) ->
@@ -134,7 +134,7 @@ without test id and model id"
         when 'about'
           extra_fields = Test.EXTRA_FIELDS
         when 'metrics'
-          extra_fields = 'accuracy,metrics'
+          extra_fields = 'accuracy,metrics,roc_auc'
           cb = addMetricsToScope
         when 'matrix' then extra_fields = Test.MATRIX_FIELDS
 
@@ -155,6 +155,14 @@ without test id and model id"
         ctrlName: 'CsvDownloadCtrl'
     })
 
+  $scope.exportResultsToDb = () ->
+    $scope.openDialog({
+        $dialog: $dialog
+        model: $scope.test
+        template: 'partials/testresults/export_to_db_popup.html'
+        ctrlName: 'CsvDownloadCtrl'
+    })
+
   addMetricsToScope = ->
     metrics = $scope.test.metrics
     $scope.rocCurves = {}
@@ -166,7 +174,7 @@ without test id and model id"
           else 'ROC Curve'
         curve = {}
         curve[label] = metrics.roc_curve[c]
-        $scope.rocCurves[c] = {curve: curve, roc_auc: metrics.roc_auc[c]}
+        $scope.rocCurves[c] = {curve: curve, roc_auc: $scope.test.roc_auc[c]}
       if classes.length is 1 # only binary classifier publishes PR curve
         $scope.prCurves =
           # we are switching precision/recall positions. The dictionary
@@ -181,7 +189,7 @@ without test id and model id"
       # old list fooormat
       $scope.rocCurves[1] =
         curve: {'ROC curve': $scope.test.metrics.roc_curve}
-        roc_auc: metrics.roc_auc
+        roc_auc: $scope.test.roc_auc
       pr = $scope.test.metrics.precision_recall_curve
       $scope.prCurves = {'Precision-Recall curve': [pr[1], pr[0]]}
 
@@ -224,12 +232,18 @@ without test id and model id"
     $scope.reload = () ->
       $scope.test.$get_exports().then((resp) ->
         $scope.exports = resp.data.exports
-        statuses = []
-        statuses.push e.status for e in $scope.exports
-        if 'In Progress' in statuses
-          $timeout ->
-            $scope.reload()
-          , 8000
+        $scope.db_exports = resp.data.db_exports
+
+        reloadInProgressTasks = (tasks) ->
+          statuses = []
+          statuses.push e.status for e in tasks
+          if 'In Progress' in statuses
+            $timeout ->
+              $scope.reload()
+            , 8000
+
+        reloadInProgressTasks($scope.exports)
+        reloadInProgressTasks($scope.db_exports)
       )
 
     $scope.$on('exportsChanged', () ->
