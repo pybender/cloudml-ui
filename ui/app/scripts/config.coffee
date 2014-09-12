@@ -54,6 +54,8 @@ angular.module('app.config', []).config(['$provide', ($provide) ->
 ###
   Global Functions for Easy spying on window functions
 ###
+# TODO: nader20140912, we need to remove these and use $window instead and spy
+# on it in tests
 $cml_window_location_reload = ->
   window.location.reload()
 

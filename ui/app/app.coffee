@@ -268,44 +268,49 @@ App.config([
 App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
          '$cookieStore', '$modal'
 ($rootScope, $routeParams, $location, settings, $auth, $cookieStore, $modal) ->
-  $rootScope.Math = window.Math
-  $rootScope.Object = Object
+  # TODO: nader20140912, not user anywhere schedule for removal
+  # $rootScope.Math = window.Math
+  # $rootScope.Object = Object
   $rootScope.loadingCount = 0
   $rootScope.errorList = {}
   $rootScope.setFieldError = (name, msg='') ->
       $rootScope.errorList[name] = msg
 
 
-  # this will be available to all scope variables
-  $rootScope.includeLibraries = true
+# TODO: nader20140912, not user anywhere schedule for removal
+#  # this will be available to all scope variables
+#  $rootScope.includeLibraries = true
+#
+#  # this method will be available to all scope variables as well
+#  $rootScope.include = (libraries) ->
+#    scope = this
+#    # attach each of the libraries directly to the scope variable
+#    for key of libraries
+#      scope[key] = getLibrary(key)
+#    return scope
 
-  # this method will be available to all scope variables as well
-  $rootScope.include = (libraries) ->
-    scope = this
-    # attach each of the libraries directly to the scope variable
-    for key of libraries
-      scope[key] = getLibrary(key)
-    return scope
+# TODO: nader20140912, not user anywhere schedule for removal
+#  $rootScope.getEventSource = (params='') ->
+#    if not $rootScope.sse?
+#      $rootScope.sse = new EventSource("#{settings.logUrl}log/?" + params)
+#    return $rootScope.sse
 
-  $rootScope.getEventSource = (params='') ->
-    if not $rootScope.sse?
-      $rootScope.sse = new EventSource("#{settings.logUrl}log/?" + params)
-    return $rootScope.sse
+# TODO: nader20140912, not user anywhere schedule for removal
+#  $rootScope.getEventSourceTest = (params='') ->
+#    if not $rootScope.sse_test?
+#      $rootScope.sse_test = new EventSource("#{settings.logUrl}log/?" + params)
+#    return $rootScope.sse_test
 
-  $rootScope.getEventSourceTest = (params='') ->
-    if not $rootScope.sse_test?
-      $rootScope.sse_test = new EventSource("#{settings.logUrl}log/?" + params)
-    return $rootScope.sse_test
-
-  $rootScope.initLogMessages = (channel) ->
-    $rootScope.log_messages = []
-    log_sse = $rootScope.getEventSource(params=channel)
-    handleCallback = (msg) ->
-      $rootScope.$apply(() ->
-        if msg?
-          data = JSON.parse(msg.data)
-          $rootScope.log_messages.push(data['data']['msg']))
-    log_sse.addEventListener('message', handleCallback)
+# TODO: nader20140912, not user anywhere schedule for removal
+#  $rootScope.initLogMessages = (channel) ->
+#    $rootScope.log_messages = []
+#    log_sse = $rootScope.getEventSource(params=channel)
+#    handleCallback = (msg) ->
+#      $rootScope.$apply(() ->
+#        if msg?
+#          data = JSON.parse(msg.data)
+#          $rootScope.log_messages.push(data['data']['msg']))
+#    log_sse.addEventListener('message', handleCallback)
 
   $rootScope.openDialog = (opts) ->
     template = opts.template
@@ -342,7 +347,8 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
 
     if needGo
       $rootScope.goSection action
-      $rootScope.initializedSections.push(actionString)
+      if actionString not in $rootScope.initializedSections
+        $rootScope.initializedSections.push actionString
 
   $rootScope.resetError = ->
     $rootScope.err = ''
@@ -360,7 +366,7 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
     if opts.data
       $rootScope.err = "Error while #{message}: server responded
  with #{opts.status} (#{opts.data.response.error.message or "no message"})."
-      if opts.data.response.error.errors?
+      if opts.data.response?.error?.errors?
         for item in opts.data.response.error.errors
             $rootScope.setFieldError(item.name, item.error)
     else
