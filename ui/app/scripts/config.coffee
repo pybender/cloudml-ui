@@ -50,14 +50,3 @@ angular.module('app.config', []).config(['$provide', ($provide) ->
     ].join(',')
     main: MODEL_FIELDS
 ])
-
-###
-  Global Functions for Easy spying on window functions
-###
-# TODO: nader20140912, we need to remove these and use $window instead and spy
-# on it in tests
-$cml_window_location_reload = ->
-  window.location.reload()
-
-$cml_window_location_replace = (v)->
-  window.location.replace(v)

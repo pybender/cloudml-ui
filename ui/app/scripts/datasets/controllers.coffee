@@ -37,9 +37,10 @@ filesize,records_count,time,created_by,updated_by'
 
 .controller('DatasetActionsCtrl', [
   '$scope'
+  '$window'
   'DataSet'
 
-  ($scope, DataSet) ->
+  ($scope, $window, DataSet) ->
     $scope.init = (opts={}) ->
       if not opts.dataset
         throw new Error "Please specify dataset"
@@ -63,7 +64,7 @@ filesize,records_count,time,created_by,updated_by'
     $scope.download = () ->
       if $scope.ds.on_s3
         generateS3Url($scope.ds, ((opts) ->
-          $cml_window_location_replace opts.url
+          $window.location.replace(opts.url)
         ), $scope.setError)
 
     $scope.reupload = () ->
