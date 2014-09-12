@@ -21,7 +21,7 @@ angular.module('app.xml_importhandlers.controllers', ['app.config', ])
 
   ($scope, $rootScope, $routeParams, ImportHandler) ->
     if not $routeParams.id
-      err = "Can't initialize without import handler id"
+      throw new Error "Can't initialize without import handler id"
 
     $scope.handler = new ImportHandler({id: $routeParams.id})
     $scope.LOADED_SECTIONS = []
@@ -33,24 +33,21 @@ angular.module('app.xml_importhandlers.controllers', ['app.config', ])
       mainSection = section[0]
       if mainSection not in $scope.LOADED_SECTIONS
         # is not already loaded
-        fields = ImportHandler.MAIN_FIELDS + ',xml_data_sources,\
-xml_input_parameters,xml_scripts,entities,import_params,predict'
-        if mainSection == 'dataset'
-          setTimeout(() ->
-            $scope.$broadcast('loadDataSet', true)
-            $scope.LOADED_SECTIONS.push mainSection
-          , 100)
+        extraFields = ['xml_data_sources', 'xml_input_parameters', 'xml_scripts',
+                       'entities', 'import_params', 'predict'].join(',')
+        fields = "#{ImportHandler.MAIN_FIELDS},#{extraFields}"
 
       if section[1] == 'xml' then fields = 'xml'
 
-      if fields != ''
-        $scope.handler.$load(
+      if fields isnt ''
+        $scope.handler.$load
             show: fields
-        ).then (->
+        .then ->
           $scope.LOADED_SECTIONS.push mainSection
-        ), ((opts) ->
+          if mainSection is 'dataset'
+            $scope.$broadcast('loadDataSet', true)
+        , (opts) ->
           $scope.setError(opts, 'loading handler details')
-        )
 
     $scope.initSections($scope.go)
 ])
@@ -68,15 +65,14 @@ xml_input_parameters,xml_scripts,entities,import_params,predict'
 
 .controller('PredictCtrl', [
   '$scope'
-  'XmlImportHandler'
 
-  ($scope, ImportHandler) ->
+  ($scope) ->
     $scope.init = (handler) ->
       $scope.handler = handler
       $scope.kwargs = {'import_handler_id': handler.id}
       $scope.$watch('handler.predict', (predict, old, scope) ->
         if predict?
-          console.log handler, 12
+          #console.log handler, 12
           $scope.predict_models = predict.models
           $scope.predict = predict
           $scope.label = predict.label
