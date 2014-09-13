@@ -13,8 +13,9 @@ from api.base.models import db
 from api.import_handlers.models import DataSet
 from api.base.resources import BaseResourceSQL, NotFound, ValidationError, \
     public_actions, ERR_INVALID_DATA, odesk_error_response
-from models import Model, Tag, Weight, WeightsCategory, Segment
-from forms import ModelAddForm, ModelEditForm, TransformDataSetForm, ModelTrainForm
+from models import Model, Tag, Weight, WeightsCategory, Segment, Transformer
+from forms import ModelAddForm, ModelEditForm, TransformDataSetForm, TrainForm, \
+    TransformerForm, FeatureTransformerForm
 from api.servers.forms import ChooseServerForm
 
 
@@ -161,7 +162,7 @@ class ModelResource(BaseTrainedEntityResource):
 
     post_form = ModelAddForm
     put_form = ModelEditForm
-    train_form = ModelTrainForm
+    train_form = TrainForm
 
     Model = Model
 
@@ -291,6 +292,36 @@ class ModelResource(BaseTrainedEntityResource):
                              'downloads': downloads})
 
 api.add_resource(ModelResource, '/cloudml/models/')
+
+
+class TransformerResource(BaseTrainedEntityResource):
+    """ Pretrained transformer API methods """
+    Model = Transformer
+    GET_ACTIONS = BaseTrainedEntityResource.GET_ACTIONS + ['configuration']
+    ALL_FIELDS_IN_POST = True
+    ENTITY_TYPE = 'transformer'
+    put_form = TransformerForm
+    train_form = TrainForm
+
+    @property
+    def post_form(self):
+        from flask import request
+        feature_id = request.form.get("feature_id", None)
+        if feature_id is not None:
+            return FeatureTransformerForm
+
+        return TransformerForm  # adds pretrained transformer
+
+    @property
+    def train_entity_task(self):
+        from tasks import train_transformer
+        return train_transformer
+
+    def _get_configuration_action(self, **kwargs):
+        from config import TRANSFORMERS
+        return self._render({'configuration': TRANSFORMERS})
+
+api.add_resource(TransformerResource, '/cloudml/transformers/')
 
 
 class TagResource(BaseResourceSQL):

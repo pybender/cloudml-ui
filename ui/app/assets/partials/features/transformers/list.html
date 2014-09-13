@@ -32,7 +32,7 @@
 	<tbody>
 	  <tr ng-repeat="transformer in objects | orderBy:'name'">
 	    <td>
-	      <a ng-click="edit(transformer)">{{ transformer.name }}</a>
+	      <a href="#{{ transformer.objectUrl() }}">{{ transformer.name }}</a>
 	    </td>
 	    <td>{{ transformer.type }}</td>
 	    <td ng-init="params = transformer.params">

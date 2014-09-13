@@ -134,6 +134,9 @@ class BaseTrainedEntity(object):
         helper = AmazonS3Helper()
         return helper.get_download_url(trainer_filename, expires_in)
 
+    def train(*args, **kwargs):
+        pass
+
 
 class Model(db.Model, BaseModel, BaseTrainedEntity):
     """
@@ -308,10 +311,61 @@ class Transformer(BaseModel, BaseTrainedEntity, db.Model):
     from api.features.config import TRANSFORMERS
     TYPES_LIST = TRANSFORMERS.keys()
     params = db.Column(JSONType)
+    field_name = db.Column(db.String(100))
+    feature_type = db.Column(db.String(100))
     type = db.Column(
-        db.Enum(*TYPES_LIST, name='pretrained_transformer_types'), nullable=False)
+        db.Enum(*TYPES_LIST, name='pretrained_transformer_types'),
+                nullable=False)
     datasets = relationship('DataSet',
                             secondary=lambda: transformer_data_sets_table)
+
+    def train(self, iterator, *args, **kwargs):
+        from core.transformers.transformer import Transformer
+        transformer = Transformer(json.dumps(self.json), is_file=False)
+        transformer.train(iterator)
+
+    def set_trainer(self, transformer):
+        from bson import Binary
+        import cPickle as pickle
+        trainer_data = Binary(pickle.dumps(transformer))
+        self.trainer = trainer_data
+        self.trainer_size = len(trainer_data)
+
+    def get_trainer(self):
+        import cPickle as pickle
+        return pickle.loads(self.trainer)
+
+    @property
+    def json(self):
+        return {
+            "transformer-name": self.name,
+            "field-name": self.field_name,
+            "type": self.feature_type,
+            "transformer": {
+                "type": self.type,
+                "params": self.params
+            }
+        }
+
+    def load_from_json(self, json):
+        self.name = json.get("transformer-name")
+        self.field_name = json.get("field-name")
+        self.feature_type = json.get("type")
+
+        if "transformer" in json and json["transformer"]:
+            transformer_config = json["transformer"]
+            self.type = transformer_config.get("type")
+            self.params = transformer_config.get("params")
+
+
+def get_transformer(name):
+    transformer = Transformer.query.filter(Transformer.name == name).one()
+    if transformer is None:
+        raise Exception('Transformer "%s" not found ' % name)
+    if transformer.status != Transformer.STATUS_TRAINED:
+        raise Exception('Transformer "%s" not trained' % name)
+    transformer = transformer.get_trainer()
+    return transformer.feature['transformer']
 
 
 from api.import_handlers.models import ImportHandlerMixin

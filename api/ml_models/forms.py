@@ -11,9 +11,10 @@ from core.importhandler.importhandler import ExtractionPlan, \
     ImportHandlerException
 from api.base.forms import BaseForm, ValidationError, ModelField, \
     CharField, JsonField, ImportHandlerFileField, \
-    ChoiceField, ImportHandlerField, IntegerField
-from api.models import Tag, ImportHandler, Model, XmlImportHandler
-from api.features.models import FeatureSet, PredefinedClassifier
+    ChoiceField, ImportHandlerField, IntegerField, BooleanField
+from api.models import Tag, ImportHandler, Model, XmlImportHandler, \
+    Transformer, BaseTrainedEntity
+from api.features.models import FeatureSet, PredefinedClassifier, Feature
 from api import app
 
 db = app.sql_db
@@ -78,7 +79,8 @@ class ModelAddForm(BaseForm):
         count = Model.query.filter_by(name=value).count()
         if count:
             raise ValidationError(
-                'Model with name "%s" already exist. Please choose another one.' % value)
+                'Model with name "%s" already exist. \
+Please choose another one.' % value)
 
         return value
 
@@ -158,7 +160,6 @@ class ModelAddForm(BaseForm):
             for segment in model.segments:
                 fill_model_parameter_weights.delay(model.id, segment.id)
 
-
         return model
 
     def _save_importhandler(self, fieldname, name, handler_type='json'):
@@ -201,13 +202,13 @@ class ModelAddForm(BaseForm):
             return handler
 
 
-class ModelTrainForm(BaseChooseInstanceAndDatasetMultiple):
+class TrainForm(BaseChooseInstanceAndDatasetMultiple):
     def __init__(self, *args, **kwargs):
         self.model = kwargs.get('obj', None)
-        super(ModelTrainForm, self).__init__(*args, **kwargs)
+        super(TrainForm, self).__init__(*args, **kwargs)
 
     def save(self, *args, **kwargs):
-        self.obj.status = Model.STATUS_QUEUED
+        self.obj.status = BaseTrainedEntity.STATUS_QUEUED
         self.obj.save()
         return self.obj
 
@@ -215,3 +216,86 @@ class ModelTrainForm(BaseChooseInstanceAndDatasetMultiple):
 class TransformDataSetForm(BaseForm):
     required_fields = ('dataset',)
     dataset = ModelField(model=DataSet, return_model=True)
+
+
+class TransformerForm(BaseForm):
+    """
+    Adds/Edits Pretrained transformer form
+    """
+    REQUIRED_FIELDS = ['train_import_handler']
+    FORM_REQUIRED_FIELDS = REQUIRED_FIELDS + \
+        ['name', 'type', 'feature_type', 'field_name']
+    group_chooser = 'json_selected'
+    required_fields_groups = {'true': REQUIRED_FIELDS + ['json'],
+                              'false': FORM_REQUIRED_FIELDS,
+                              None: FORM_REQUIRED_FIELDS}
+
+    name = CharField()
+    feature_type = CharField()
+    field_name = CharField()
+    type_field = ChoiceField(
+        choices=Transformer.TYPES_LIST, name='type')
+    params = JsonField()
+    json = JsonField()
+    json_selected = BooleanField()
+    train_import_handler = ImportHandlerField()
+
+    def clean_name(self, value, field):
+        if value:
+            self.check_name_availability(value)
+
+        return value
+
+    def save(self, commit=True):
+        if self.cleaned_data.get('json_selected'):
+            json = self.cleaned_data['json']
+            transformer = Transformer()
+            transformer.load_from_json(json)
+            self.check_name_availability(transformer.name)
+            transformer.train_import_handler = \
+                self.cleaned_data['train_import_handler']
+            transformer.save(commit=commit)
+        else:
+            return super(TransformerForm, self).save(commit)
+
+    def check_name_availability(self, name):
+        if Transformer.query.filter_by(name=name).count():
+            raise ValidationError('Transformer with name {0}\
+already exist'.format(name))
+
+
+class FeatureTransformerForm(BaseForm):
+    """
+    Adds/edits feature transformer form.
+    """
+    group_chooser = 'predefined_selected'
+    REQUIRED_FORM = ['feature_id', 'type']
+    REQUIRED_PRETRAINED = ['feature_id', 'transformer']
+    required_fields_groups = {
+        'true': REQUIRED_PRETRAINED,
+        'false': REQUIRED_FORM,
+        None: REQUIRED_FORM}
+
+    predefined_selected = BooleanField()
+    feature_id = ModelField(model=Feature, return_model=True)
+
+    type_field = ChoiceField(
+        choices=Transformer.TYPES_LIST, name='type')
+    params = JsonField()
+
+    transformer = ModelField(model=Transformer, return_model=True)
+
+    def save(self):
+        feature = self.cleaned_data.get('feature_id', None)
+        is_pretrained = self.cleaned_data.get('predefined_selected', False)
+        if is_pretrained:
+            transformer = self.cleaned_data.get('transformer')
+            feature.transformer = {'type': transformer.name}
+        else:
+            transformer = {
+                "type": self.cleaned_data.get('type'),
+                "params": self.cleaned_data.get('params')
+            }
+            feature.transformer = transformer
+        feature.save()
+        return transformer
