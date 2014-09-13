@@ -208,8 +208,9 @@ without test id and model id"
 
 .controller('TestExportsCtrl', [
   '$scope'
+  '$timeout'
 
-  ($scope) ->
+  ($scope, $timeout) ->
     $scope.exports = []
 
     $scope.init = (test) ->
@@ -222,15 +223,15 @@ without test id and model id"
         statuses = []
         statuses.push e.status for e in $scope.exports
         if 'In Progress' in statuses
-          window.setTimeout(
-            () ->$scope.reload()
-            1000)
+          $timeout ->
+            $scope.reload()
+          , 1000
       )
 
     $scope.$on('exportsChanged', () ->
-      window.setTimeout(
-        () -> $scope.reload()
-        1000)
+      $timeout ->
+        $scope.reload()
+      , 1000
     )
 ])
 

@@ -106,7 +106,7 @@ describe 'xml_importhandlers/controllers/input_parameters.coffee', ->
         ctrlName: 'ModelEditDialogCtrl'
         action: 'add input parameter'
         list_model_name: InputParameter.LIST_MODEL_NAME
-      expect($scope.openDialog.mostRecentCall.args[0].model.import_handler_id).toEqual handler.id
+      expect($scope.openDialog.calls.mostRecent().args[0].model.import_handler_id).toEqual handler.id
 
     it 'should openDialog to delete', ->
       $scope.openDialog = jasmine.createSpy '$scope.openDialog'

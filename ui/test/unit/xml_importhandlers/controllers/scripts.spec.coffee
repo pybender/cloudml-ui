@@ -79,7 +79,7 @@ describe 'xml_importhandlers/controllers/scripts.coffee', ->
         # add dialog
         $scope.add()
         expect($scope.openDialog).toHaveBeenCalled()
-        openOptions = $scope.openDialog.mostRecentCall.args[0]
+        openOptions = $scope.openDialog.calls.mostRecent().args[0]
         expect(openOptions.model.import_handler_id).toEqual 111
         expect(openOptions.model.data).toEqual ''
         expect(openOptions.template).toEqual 'partials/xml_import_handlers/scripts/edit.html'
@@ -90,7 +90,7 @@ describe 'xml_importhandlers/controllers/scripts.coffee', ->
         script = new Script {id: 999, import_handler_id: 888, data: 'to edit'}
         $scope.edit(script)
         expect($scope.openDialog).toHaveBeenCalled()
-        openOptions = $scope.openDialog.mostRecentCall.args[0]
+        openOptions = $scope.openDialog.calls.mostRecent().args[0]
         expect(openOptions.model.import_handler_id).toEqual script.import_handler_id
         expect(openOptions.model.id).toEqual script.id
         expect(openOptions.model.data).toEqual script.data
@@ -102,7 +102,7 @@ describe 'xml_importhandlers/controllers/scripts.coffee', ->
         script = new Script {id: 888, import_handler_id: 777, data: 'to delete'}
         $scope.delete(script)
         expect($scope.openDialog).toHaveBeenCalled()
-        openOptions = $scope.openDialog.mostRecentCall.args[0]
+        openOptions = $scope.openDialog.calls.mostRecent().args[0]
         expect(openOptions.model.import_handler_id).toEqual script.import_handler_id
         expect(openOptions.model.id).toEqual script.id
         expect(openOptions.model.data).toEqual script.data

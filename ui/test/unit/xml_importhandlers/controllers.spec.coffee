@@ -101,7 +101,7 @@ describe 'app.xml_importhandlers.controllers', ->
 
       expect($scope.LOADED_SECTIONS).toEqual []
       expect($scope.$broadcast).not.toHaveBeenCalled()
-      expect($scope.setError.mostRecentCall.args[1]).toEqual 'loading handler details'
+      expect($scope.setError.calls.mostRecent().args[1]).toEqual 'loading handler details'
 
     it 'should initialize scope and load with all fields and broadcast', inject (XmlImportHandler)->
 

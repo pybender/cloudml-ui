@@ -97,26 +97,26 @@ describe 'xml_importhandlers/controllers/datasources.coffee', ->
         # add dialog
         $scope.add()
         expect($scope.openDialog).toHaveBeenCalled
-        expect($scope.openDialog.mostRecentCall.args[0].model.import_handler_id).toEqual handler.id
-        expect($scope.openDialog.mostRecentCall.args[0].template).toEqual 'partials/xml_import_handlers/datasources/edit.html'
-        expect($scope.openDialog.mostRecentCall.args[0].ctrlName).toEqual 'ModelWithParamsEditDialogCtrl'
-        expect($scope.openDialog.mostRecentCall.args[0].action).toEqual 'add datasource'
+        expect($scope.openDialog.calls.mostRecent().args[0].model.import_handler_id).toEqual handler.id
+        expect($scope.openDialog.calls.mostRecent().args[0].template).toEqual 'partials/xml_import_handlers/datasources/edit.html'
+        expect($scope.openDialog.calls.mostRecent().args[0].ctrlName).toEqual 'ModelWithParamsEditDialogCtrl'
+        expect($scope.openDialog.calls.mostRecent().args[0].action).toEqual 'add datasource'
 
         # edit dialog
         $scope.edit(new Datasource {id: 777, name: 'ds777'})
         expect($scope.openDialog).toHaveBeenCalled
-        expect($scope.openDialog.mostRecentCall.args[0].model.id).toEqual 777
-        expect($scope.openDialog.mostRecentCall.args[0].template).toEqual 'partials/xml_import_handlers/datasources/edit.html'
-        expect($scope.openDialog.mostRecentCall.args[0].ctrlName).toEqual 'ModelWithParamsEditDialogCtrl'
-        expect($scope.openDialog.mostRecentCall.args[0].action).toEqual 'edit datasource'
+        expect($scope.openDialog.calls.mostRecent().args[0].model.id).toEqual 777
+        expect($scope.openDialog.calls.mostRecent().args[0].template).toEqual 'partials/xml_import_handlers/datasources/edit.html'
+        expect($scope.openDialog.calls.mostRecent().args[0].ctrlName).toEqual 'ModelWithParamsEditDialogCtrl'
+        expect($scope.openDialog.calls.mostRecent().args[0].action).toEqual 'edit datasource'
 
         # delete dialog
         $scope.delete(new Datasource {id: 666, name: 'ds777'})
         expect($scope.openDialog).toHaveBeenCalled
-        expect($scope.openDialog.mostRecentCall.args[0].model.id).toEqual 666
-        expect($scope.openDialog.mostRecentCall.args[0].template).toEqual 'partials/base/delete_dialog.html'
-        expect($scope.openDialog.mostRecentCall.args[0].ctrlName).toEqual 'DialogCtrl'
-        expect($scope.openDialog.mostRecentCall.args[0].action).toEqual 'delete datasource'
+        expect($scope.openDialog.calls.mostRecent().args[0].model.id).toEqual 666
+        expect($scope.openDialog.calls.mostRecent().args[0].template).toEqual 'partials/base/delete_dialog.html'
+        expect($scope.openDialog.calls.mostRecent().args[0].ctrlName).toEqual 'DialogCtrl'
+        expect($scope.openDialog.calls.mostRecent().args[0].action).toEqual 'delete datasource'
 
 
   describe 'XmlDataSourceSelectCtrl', ->

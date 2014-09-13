@@ -66,7 +66,7 @@ describe 'clusters/controllers.coffee', ->
       expect($scope.objects[1].name).toEqual 'cluster2'
 
       # with error
-      $scope.setError = jasmine.createSpy('$scope.setError').andReturn 'an error'
+      $scope.setError = jasmine.createSpy('$scope.setError').and.returnValue 'an error'
       $httpBackend.expectGET("#{cluster.BASE_API_URL}?show=" +
         ['jobflow_id','master_node_dns','port','status','ip','is_default','created_on','created_by','active_tunnel'].join(','))
       .respond 400

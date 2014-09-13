@@ -34,8 +34,8 @@ describe "app", ->
     spyOn $auth, 'is_authenticated'
     spyOn $cookieStore, 'put'
     spyOn $cookieStore, 'get'
-    spyOn($location, 'url').andCallThrough()
-    spyOn($location, 'path').andCallThrough()
+    spyOn($location, 'url').and.callThrough()
+    spyOn($location, 'path').and.callThrough()
 
   afterEach ->
      $httpBackend.verifyNoOutstandingExpectation()
@@ -129,37 +129,37 @@ describe "app", ->
         goFn = jasmine.createSpy 'goFn'
         $scope.initSections goFn, 'model:details', simpleTabs
 
-        goFn.reset()
+        goFn.calls.reset()
         $scope.setSection ['model', 'details'] # this value coming from DEFAULT_ACTION in app.coffee
 
         expect($scope.action).toEqual ['model', 'details']
         expect($location.search()).toEqual {}
         expect($scope.initializedSections).toEqual ['model:details']
-        expect($scope.goSection.callCount).toEqual 1
+        expect($scope.goSection.calls.count()).toEqual 1
 
         # going to another section
-        goFn.reset()
+        goFn.calls.reset()
         $scope.setSection ['new', 'section']
         expect($scope.action).toEqual ['new', 'section']
         expect($location.search()).toEqual { action : 'new:section' }
         expect($scope.initializedSections).toEqual ['model:details', 'new:section']
-        expect($scope.goSection.callCount).toEqual 1
+        expect($scope.goSection.calls.count()).toEqual 1
 
         # back to model:datails, going will depend on simpleTabs=true
-        goFn.reset()
+        goFn.calls.reset()
         $scope.setSection ['model', 'details']
         expect($scope.action).toEqual ['model', 'details']
         expect($location.search()).toEqual { }
         expect($scope.initializedSections).toEqual ['model:details', 'new:section']
-        expect($scope.goSection.callCount).toEqual if simpleTabs then 0 else 1
+        expect($scope.goSection.calls.count()).toEqual if simpleTabs then 0 else 1
 
         # back too model:datails
-        goFn.reset()
+        goFn.calls.reset()
         $scope.setSection ['new', 'section']
         expect($scope.action).toEqual ['new', 'section']
         expect($location.search()).toEqual { action : 'new:section' }
         expect($scope.initializedSections).toEqual ['model:details', 'new:section']
-        expect($scope.goSection.callCount).toEqual if simpleTabs then 0 else 1
+        expect($scope.goSection.calls.count()).toEqual if simpleTabs then 0 else 1
 
       it 'simpletabs case, should go to section or not based on initialized sections and update $location.search accordingly', ->
 
@@ -217,7 +217,7 @@ describe "app", ->
         , 'the_message'
         expect(retErr).toContain ' the_message'
         expect(retErr).toContain ' the_status'
-        expect($scope.setFieldError.callCount).toEqual 3
+        expect($scope.setFieldError.calls.count()).toEqual 3
         expect($scope.err).toEqual retErr
         expect($scope.statusCode).toEqual 'the_status'
 
@@ -229,7 +229,7 @@ describe "app", ->
     describe '$routeChangeStart authentication log', ->
 
       it 'not authenticated going to protected resource', ->
-        $auth.is_authenticated.andReturn false
+        $auth.is_authenticated.and.returnValue false
 
         $location.url '/some/location/protected'
         $scope.$emit '$routeChangeStart', {$route: {controller: 'zinger'}}
@@ -237,7 +237,7 @@ describe "app", ->
         expect($location.path()).toEqual '/auth/login'
 
       it 'authenticated going to protected resource but not from authentication controllers', ->
-        $auth.is_authenticated.andReturn true
+        $auth.is_authenticated.and.returnValue true
 
         $location.url '/some/location/protected'
         $scope.$emit '$routeChangeStart', {$route: {controller: 'zinger'}}
@@ -247,7 +247,7 @@ describe "app", ->
 
       describe 'not authenticated going to login resource, one with controller LoginCtl, AuthCtl, AuthCallbackCtl', ->
         beforeEach ->
-          $auth.is_authenticated.andReturn false
+          $auth.is_authenticated.and.returnValue false
 
         doSpec = (ctrl)->
           $location.url '/auth/login/for/login'
@@ -267,12 +267,12 @@ describe "app", ->
 
       describe 'authenticated going to login resource, one with controller LoginCtl, AuthCtl, AuthCallbackCtl', ->
         beforeEach ->
-          $auth.is_authenticated.andReturn true
+          $auth.is_authenticated.and.returnValue true
 
 
         doSpec = (ctrl, cookieUrl=null)->
           if cookieUrl
-            $cookieStore.get.andReturn cookieUrl
+            $cookieStore.get.and.returnValue cookieUrl
           $location.url '/auth/login/for/login'
           $scope.$emit '$routeChangeStart', {$route: {controller: ctrl}}
           expect($cookieStore.get).toHaveBeenCalled()

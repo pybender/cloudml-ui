@@ -114,7 +114,7 @@ describe "app.importhandlers.controllers", ->
 
       $scope.go ['main']
       $httpBackend.flush()
-      expect($scope.setError.mostRecentCall.args[1]).toEqual 'loading handler details'
+      expect($scope.setError.calls.mostRecent().args[1]).toEqual 'loading handler details'
       expect($scope.LOADED_SECTIONS).toEqual []
 
       # good http loading
@@ -170,7 +170,7 @@ describe "app.importhandlers.controllers", ->
       $scope.save ['some','fields']
       $httpBackend.flush()
 
-      expect($scope.setError.mostRecentCall.args[1]).toEqual 'saving import handler'
+      expect($scope.setError.calls.mostRecent().args[1]).toEqual 'saving import handler'
 
       # $scope.saveData case
       response = {}
@@ -187,7 +187,7 @@ describe "app.importhandlers.controllers", ->
       $scope.saveData()
       $httpBackend.flush()
 
-      expect($scope.setError.mostRecentCall.args[1]).toEqual 'saving handler details'
+      expect($scope.setError.calls.mostRecent().args[1]).toEqual 'saving handler details'
 
     it 'should handle making and item required, along with errors', inject (Item)->
       prepareContext()
@@ -211,7 +211,7 @@ describe "app.importhandlers.controllers", ->
       $scope.makeRequired item, true
       $httpBackend.flush()
 
-      expect($scope.setError.mostRecentCall.args[1]).toEqual 'error toggling required on query item'
+      expect($scope.setError.calls.mostRecent().args[1]).toEqual 'error toggling required on query item'
 
 
     testDeleteSomethingFromList = (thing1, thing2, thing3, deleteFn)->
@@ -281,7 +281,7 @@ describe "app.importhandlers.controllers", ->
       $scope.deleteQuery [query1, query2, query3], query2
       $httpBackend.flush()
 
-      expect($scope.setError.mostRecentCall.args[1]).toEqual 'error deleting query'
+      expect($scope.setError.calls.mostRecent().args[1]).toEqual 'error deleting query'
 
     it 'should handle delete item with handling any errors', inject (Item)->
       prepareContext()
@@ -313,7 +313,7 @@ describe "app.importhandlers.controllers", ->
       $scope.deleteItem [item1, item2, item3], item2
       $httpBackend.flush()
 
-      expect($scope.setError.mostRecentCall.args[1]).toEqual 'error deleting item'
+      expect($scope.setError.calls.mostRecent().args[1]).toEqual 'error deleting item'
 
     it 'should handle delete feature with handling any errors', inject (TargetFeature)->
       prepareContext()
@@ -348,7 +348,7 @@ describe "app.importhandlers.controllers", ->
       $scope.deleteFeature [feature1, feature2, feature3], feature2
       $httpBackend.flush()
 
-      expect($scope.setError.mostRecentCall.args[1]).toEqual 'error deleting feature'
+      expect($scope.setError.calls.mostRecent().args[1]).toEqual 'error deleting feature'
 
     it 'should call onto open dialog to edit datasource', ->
 
@@ -420,7 +420,7 @@ describe "app.importhandlers.controllers", ->
       query = getXmlQuery()
 
       $rootScope.$close = jasmine.createSpy '$rootScope.$close'
-      $rootScope.setError = jasmine.createSpy('$rootScope.setError').andReturn 'some error'
+      $rootScope.setError = jasmine.createSpy('$rootScope.setError').and.returnValue 'some error'
       openOptions =
         extra:
           handlerUrl: "#{settings.apiUrl}xml_import_handlers/#{handler.id}"
@@ -452,7 +452,7 @@ describe "app.importhandlers.controllers", ->
 
       $scope.runQuery()
       $httpBackend.flush()
-      expect($rootScope.setError.mostRecentCall.args[1]).toEqual 'testing sql query'
+      expect($rootScope.setError.calls.mostRecent().args[1]).toEqual 'testing sql query'
       expect($scope.query.test.error).toEqual 'some error'
 
 
@@ -460,7 +460,7 @@ describe "app.importhandlers.controllers", ->
 
     it 'should init scope, run test import and handle errors', inject (ImportHandler)->
 
-      $rootScope.setError = jasmine.createSpy('$rootScope.setError').andReturn 'an error'
+      $rootScope.setError = jasmine.createSpy('$rootScope.setError').and.returnValue 'an error'
       $rootScope.$close = jasmine.createSpy '$rootScope.$close'
       $window = {location: {replace: jasmine.createSpy '$window.location.replace'}}
 
@@ -492,7 +492,7 @@ describe "app.importhandlers.controllers", ->
       $scope.runTestImport()
       $httpBackend.flush()
 
-      expect($rootScope.setError.mostRecentCall.args[1]).toEqual 'testing import handler'
+      expect($rootScope.setError.calls.mostRecent().args[1]).toEqual 'testing import handler'
       expect($scope.err).toEqual 'an error'
 
 
@@ -507,7 +507,7 @@ describe "app.importhandlers.controllers", ->
         feature = null
         item = null
 
-        $rootScope.setError = jasmine.createSpy('$rootScope.setError').andReturn 'an error'
+        $rootScope.setError = jasmine.createSpy('$rootScope.setError').and.returnValue 'an error'
         $rootScope.$close = jasmine.createSpy '$rootScope.$close'
 
         handler = new ImportHandler
@@ -617,7 +617,7 @@ describe "app.importhandlers.controllers", ->
       .respond 400
       createController 'DeleteImportHandlerCtrl', {$location: $location, Model: Model, openOptions}
       $httpBackend.flush()
-      expect($rootScope.setError.mostRecentCall.args[1]).toEqual 'loading models that use import handler'
+      expect($rootScope.setError.calls.mostRecent().args[1]).toEqual 'loading models that use import handler'
 
 
   describe "ImportHandlerActionsCtrl", ->
@@ -683,7 +683,7 @@ describe "app.importhandlers.controllers", ->
     it 'should init scope and upload with handling errors', inject (ImportHandler)->
       $rootScope.resetError = jasmine.createSpy '$rootScope.resetError'
       $rootScope.$close = jasmine.createSpy '$rootScope.$close'
-      $rootScope.setError = jasmine.createSpy('$rootScope.resetError').andReturn 'an error for upload'
+      $rootScope.setError = jasmine.createSpy('$rootScope.resetError').and.returnValue 'an error for upload'
 
       handler = new ImportHandler
         id: 999
@@ -710,7 +710,7 @@ describe "app.importhandlers.controllers", ->
       $scope.upload()
       $httpBackend.flush()
 
-      expect($scope.setError.mostRecentCall.args[1]).toEqual 'error uploading to predict'
+      expect($scope.setError.calls.mostRecent().args[1]).toEqual 'error uploading to predict'
       expect($rootScope.msg).toEqual 'an error for upload'
 
 
@@ -738,14 +738,14 @@ describe "app.importhandlers.controllers", ->
       $httpBackend.expectGET(url).respond 400
       createController "ImportHandlerSelectCtrl"
       $httpBackend.flush()
-      expect($rootScope.setError.mostRecentCall.args[1]).toEqual 'loading import handler list'
+      expect($rootScope.setError.calls.mostRecent().args[1]).toEqual 'loading import handler list'
 
       # error handling 2
       $httpBackend.expectGET(url).respond('{"import_handlers": [{"id": "' + HANDLER_ID + '", "name": "Z Some Name"}]}')
       $httpBackend.expectGET(xml_ih_url).respond 400
       createController "ImportHandlerSelectCtrl"
       $httpBackend.flush()
-      expect($rootScope.setError.mostRecentCall.args[1]).toEqual 'loading import handler list'
+      expect($rootScope.setError.calls.mostRecent().args[1]).toEqual 'loading import handler list'
 
 
   describe 'AddImportHandlerQueryCtrl', ->
@@ -776,12 +776,12 @@ describe "app.importhandlers.controllers", ->
       $routeParams = {num: 1}
       expect(->
         createController 'AddImportHandlerQueryItemCtrl', {$routeParams: $routeParams}
-      ).toThrow 'Specify id'
+      ).toThrow new Error 'Specify id'
 
       $routeParams = {id: 888}
       expect(->
         createController 'AddImportHandlerQueryItemCtrl', {$routeParams: $routeParams}
-      ).toThrow 'Specify query number'
+      ).toThrow new Error 'Specify query number'
 
       $routeParams = {id: 888, num: 1}
       createController 'AddImportHandlerQueryItemCtrl', {$routeParams: $routeParams}

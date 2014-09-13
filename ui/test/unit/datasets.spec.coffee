@@ -148,7 +148,7 @@ describe "datasets", ->
       $scope.go()
       $httpBackend.flush()
 
-      expect($scope.setError.callCount).toBe 1
+      expect($scope.setError.calls.count()).toBe 1
       expect($scope.dataset.samples_json).toBe null
 
     it "should handle get sample error", inject (DataSet)->
@@ -165,7 +165,7 @@ describe "datasets", ->
       $scope.go()
       $httpBackend.flush()
 
-      expect($scope.setError.callCount).toBe 1
+      expect($scope.setError.calls.count()).toBe 1
       expect($scope.dataset.samples_json).toBe null
 
     it "should not request sample if dataset status is importing", inject (DataSet)->

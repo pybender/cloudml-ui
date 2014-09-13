@@ -786,7 +786,7 @@ optional-params="optionalParams"></parameters-editor>
       expect(innerScope.paramsEditorData).toEqual {str_param: 'some string', dict_param: {}}
 
       # trying to delete non-required parameter and confirm true
-      $window.confirm.andReturn true
+      $window.confirm.and.returnValue true
       innerScope.deleteKey innerScope.paramsEditorData, 'dict_param'
       expect(innerScope.isRequired 'dict_param').toBe false
       expect($window.confirm).toHaveBeenCalled()

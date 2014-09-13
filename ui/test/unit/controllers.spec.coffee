@@ -100,7 +100,7 @@ describe 'controllers.coffee', ->
         $httpBackend.flush()
 
         # error
-        $scope.setError = jasmine.createSpy('$scope.setError').andReturn 'An Err'
+        $scope.setError = jasmine.createSpy('$scope.setError').and.returnValue 'An Err'
         $httpBackend.expectPUT "#{handler.BASE_API_URL}#{handler.id}/"
         .respond 400
         $scope.save ['id', 'name']
@@ -134,14 +134,14 @@ describe 'controllers.coffee', ->
 
         expect($scope.savingProgress).toEqual '100%'
         expect($scope.saving).toBe true
-        expect($scope.$emit.calls[0].args[0]).toEqual 'SaveObjectCtl:save:success'
-        expect($scope.$emit.calls[0].args[1]).toEqual handler
-        expect($scope.$emit.calls[1].args[0]).toEqual 'BaseListCtrl:start:load'
-        expect($scope.$emit.calls[1].args[1]).toEqual $scope.LIST_MODEL_NAME
+        expect($scope.$emit.calls.argsFor(0)[0]).toEqual 'SaveObjectCtl:save:success'
+        expect($scope.$emit.calls.argsFor(0)[1]).toEqual handler
+        expect($scope.$emit.calls.argsFor(1)[0]).toEqual 'BaseListCtrl:start:load'
+        expect($scope.$emit.calls.argsFor(1)[1]).toEqual $scope.LIST_MODEL_NAME
         expect($location.path()).toEqual $location.path()
 
         # error
-        $scope.setError = jasmine.createSpy('$scope.setError').andReturn 'An Err'
+        $scope.setError = jasmine.createSpy('$scope.setError').and.returnValue 'An Err'
         $httpBackend.expectPUT "#{handler.BASE_API_URL}#{handler.id}/"
         .respond 400
         $scope.save ['id', 'name']
@@ -189,8 +189,8 @@ describe 'controllers.coffee', ->
             return resp
           )
 
-        spyOn($scope, 'load').andCallThrough()
-        spyOn($scope, '$broadcast').andCallThrough()
+        spyOn($scope, 'load').and.callThrough()
+        spyOn($scope, '$broadcast').and.callThrough()
 
         url = "#{data.BASE_API_URL}?order=#{order}&page=#{$scope.page}&show=#{show}"
         response = angular.fromJson(map_url_to_response(url, 'loading examples of a test with paging')[1])
@@ -248,7 +248,7 @@ describe 'controllers.coffee', ->
         expect($scope.per_page).toBe 20 # look at canned_responses response
         expect($scope.objects).toEqual jasmine.any(Array)
         expect($scope.$broadcast).toHaveBeenCalled()
-        expect($scope.$broadcast.mostRecentCall.args[0]).toEqual 'ObjectListCtrl:load:error'
+        expect($scope.$broadcast.calls.mostRecent().args[0]).toEqual 'ObjectListCtrl:load:error'
 
         # changing filter options
         page = 2 # the latest success retrieval
@@ -290,7 +290,7 @@ describe 'controllers.coffee', ->
         expect($scope.pages).toBe 174  # look at canned_responses response
         expect($scope.per_page).toBe 20 # look at canned_responses response
         expect($scope.objects).toEqual jasmine.any(Array)
-        expect($scope.$broadcast.mostRecentCall.args[0]).toEqual 'ObjectListCtrl:load:error'
+        expect($scope.$broadcast.calls.mostRecent().args[0]).toEqual 'ObjectListCtrl:load:error'
         expect($scope.filter_opts).toEqual {zozo: 'zaza'}
 
   describe 'BaseDeleteCtrl', ->
@@ -325,9 +325,9 @@ describe 'controllers.coffee', ->
 
         # error delete
         $scope.setError = jasmine.createSpy '$scope.setError'
-        $scope.$close.reset()
-        $scope.$emit.reset()
-        $scope.ownerScope.$emit.reset()
+        $scope.$close.calls.reset()
+        $scope.$emit.calls.reset()
+        $scope.ownerScope.$emit.calls.reset()
         $httpBackend.expectDELETE "#{handler.BASE_API_URL}#{handler.id}/"
         .respond 400
         $scope.delete()
@@ -371,7 +371,7 @@ describe 'controllers.coffee', ->
           name: 'handler111'
         $scope.MODEL = XmlImportHandler
 
-        spyOn($scope, '$emit').andCallThrough()
+        spyOn($scope, '$emit').and.callThrough()
         createController 'BaseListCtrl', {$rootScope: $rootScope}
 
         expect($scope.init).toBeDefined()
@@ -379,7 +379,7 @@ describe 'controllers.coffee', ->
         expect($scope.loadMore).toBeDefined()
 
         # init & load error
-        $scope.$emit.reset()
+        $scope.$emit.calls.reset()
         $scope.setError = jasmine.createSpy '$scope.setError'
         $httpBackend.expectGET "#{handler.BASE_API_URL}"
         .respond 400
@@ -398,7 +398,7 @@ describe 'controllers.coffee', ->
           name: 'handler111'
           $scope.MODEL = XmlImportHandler
 
-        spyOn($scope, '$emit').andCallThrough()
+        spyOn($scope, '$emit').and.callThrough()
         createController 'BaseListCtrl', {$rootScope: $rootScope}
 
         expect($scope.init).toBeDefined()
@@ -476,7 +476,7 @@ describe 'controllers.coffee', ->
           expect(({id: x.id, name: x.name} for x in $scope.objects)).toEqual [{id: 333, name: 'handler333'}]
 
       it 'should respond to BaseListCtrl:start:load', inject (XmlImportHandler)->
-          $scope.$emit.reset()
+          $scope.$emit.calls.reset()
           $scope.kwargs =
             page: 4
           handler4 = new XmlImportHandler

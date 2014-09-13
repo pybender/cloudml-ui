@@ -62,7 +62,7 @@ describe 'importhandlers/controllers/datasources.coffee', ->
       # handling errors
       $httpBackend.expectGET("#{settings.apiUrl}datasources/?show=name,id")
       .respond 400
-      $scope.setError = jasmine.createSpy('$scope.setError').andReturn('an error')
+      $scope.setError = jasmine.createSpy('$scope.setError').and.returnValue('an error')
       createController 'DataSourcesSelectLoader', {DataSource: DataSource}
       $httpBackend.flush()
 
@@ -88,7 +88,7 @@ describe 'importhandlers/controllers/datasources.coffee', ->
         ctrlName: 'ModelEditDialogCtrl'
 
       $scope.add()
-      obj = $scope.openDialog.mostRecentCall.args[0]
+      obj = $scope.openDialog.calls.mostRecent().args[0]
       expect(obj.template).toEqual 'partials/import_handler/datasource/add.html'
       expect(obj.ctrlName).toEqual 'ModelEditDialogCtrl'
       expect(obj.model).toBeDefined()

@@ -63,7 +63,7 @@ describe 'servers/controllers.coffee', ->
       expect($scope.servers).toEqual response[server.API_FIELDNAME + 's']
 
       # with error
-      $scope.setError = jasmine.createSpy('$scope.setError').andReturn 'an error'
+      $scope.setError = jasmine.createSpy('$scope.setError').and.returnValue 'an error'
       $httpBackend.expectGET("#{server.BASE_API_URL}?show=name,id,is_default")
       .respond 400
       createController 'ServersSelectLoader', {Server: Server}

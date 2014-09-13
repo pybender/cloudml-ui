@@ -67,7 +67,7 @@ describe "login", ->
       $window =
         location:
           replace: jasmine.createSpy 'window.location.replace'
-      spyOn(auth, 'is_authenticated').andReturn false
+      spyOn(auth, 'is_authenticated').and.returnValue false
 
       createController "AuthCtl", {$window: $window, auth: auth}
       expect($scope.status).toBe('Getting data. Please wait...')
@@ -75,7 +75,7 @@ describe "login", ->
       $httpBackend.flush()
       expect($scope.status).toBe('Redirecting to oDesk. Please wait...')
       expect($window.location.replace).toHaveBeenCalledWith('http://odesk.com/_fake')
-      expect(auth.is_authenticated.callCount).toBe 1
+      expect(auth.is_authenticated.calls.count()).toBe 1
 
     it "should make no query if already logged in", inject ($cookieStore) ->
       $cookieStore.put('auth-token', 'auth_token')
@@ -87,7 +87,7 @@ describe "login", ->
   describe "AuthCallbackCtl", ->
 
     it "should authorize and reload the page", inject (auth) ->
-      spyOn($location, 'search').andReturn({
+      spyOn($location, 'search').and.returnValue({
         oauth_token: 'oauth_token',
         oauth_verifier: 'oauth_verifier'
       })

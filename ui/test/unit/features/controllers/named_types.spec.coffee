@@ -57,7 +57,7 @@ describe 'features/controllers/named_types.coffee', ->
         expect($scope.types).toEqual NamedFeatureType.$TYPES_LIST.concat ['type 111', 'type 222']
 
         # handles error
-        $scope.setError = jasmine.createSpy('$scope.setError').andReturn 'an Error'
+        $scope.setError = jasmine.createSpy('$scope.setError').and.returnValue 'an Error'
         $httpBackend.expectGET("#{namedTypes[0].BASE_API_URL}?show=name")
         .respond 400
         createController 'NamedFeatureTypesSelectsLoader', {NamedFeatureType: NamedFeatureType}
@@ -167,7 +167,7 @@ describe 'features/controllers/named_types.coffee', ->
         # add dialog
         $scope.add()
         expect($scope.openDialog).toHaveBeenCalled()
-        openOptions = $scope.openDialog.mostRecentCall.args[0]
+        openOptions = $scope.openDialog.calls.mostRecent().args[0]
         expect(openOptions.model).toEqual jasmine.any(NamedFeatureType)
         expect(openOptions.template).toEqual 'partials/features/named_types/add.html'
         expect(openOptions.ctrlName).toEqual 'ModelEditDialogCtrl'

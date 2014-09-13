@@ -92,12 +92,12 @@ describe 'models/controllers.coffee', ->
       #change filter options
       $scope.filter_opts = {}
       $scope.$digest()
-      expect($scope.$emit.mostRecentCall.args).toEqual ['BaseListCtrl:start:load', 'some_model_name']
+      expect($scope.$emit.calls.mostRecent().args).toEqual ['BaseListCtrl:start:load', 'some_model_name']
 
       # showMore
       $scope.page = 2
       $scope.showMore()
-      expect($scope.$emit.mostRecentCall.args).toEqual ['BaseListCtrl:start:load', 'some_model_name', true, {'page': 3}]
+      expect($scope.$emit.calls.mostRecent().args).toEqual ['BaseListCtrl:start:load', 'some_model_name', true, {'page': 3}]
 
     it  'should init scope, no updatedByMe', ->
       $scope.$digest()
@@ -249,7 +249,7 @@ describe 'models/controllers.coffee', ->
 
     it  'should handle errors loading tags', inject (Model, MODEL_FIELDS)->
       prepareContext(true)
-      expect($rootScope.setError.mostRecentCall.args[1]).toEqual 'loading tags'
+      expect($rootScope.setError.calls.mostRecent().args[1]).toEqual 'loading tags'
 
     it  'should handle no fields case', inject (Model, MODEL_FIELDS)->
       prepareContext()
@@ -350,13 +350,13 @@ describe 'models/controllers.coffee', ->
         expect($scope.model.tags).toEqual ['tag111', 'tag222']
 
         # saving tags error
-        $rootScope.setError.reset()
+        $rootScope.setError.calls.reset()
         $httpBackend.expectPUT "#{model.BASE_API_URL}#{$scope.model.id}/"
         .respond 400
         $scope.updateTags()
         $httpBackend.flush()
 
-        expect($rootScope.setError.mostRecentCall.args[1]).toEqual 'saving model tags'
+        expect($rootScope.setError.calls.mostRecent().args[1]).toEqual 'saving model tags'
 
         # clearing tags
         $scope.params.tags = []
@@ -386,7 +386,7 @@ describe 'models/controllers.coffee', ->
         $httpBackend.flush()
 
         expect($scope.LOADED_SECTIONS).toEqual []
-        expect($scope.setError.mostRecentCall.args[1]).toEqual 'loading model details'
+        expect($scope.setError.calls.mostRecent().args[1]).toEqual 'loading model details'
 
     it  'should handle getting s3 url of model error',
       inject (Model, MODEL_FIELDS, FIELDS_BY_SECTION)->
@@ -410,7 +410,7 @@ describe 'models/controllers.coffee', ->
         $httpBackend.flush()
 
         expect($scope.LOADED_SECTIONS).toEqual ['training', 'main']
-        expect($scope.setError.mostRecentCall.args[1]).toEqual 'loading trainer s3 url'
+        expect($scope.setError.calls.mostRecent().args[1]).toEqual 'loading trainer s3 url'
 
 
   describe 'BaseModelDataSetActionCtrl', ->
@@ -488,7 +488,7 @@ describe 'models/controllers.coffee', ->
       .respond 400
       $scope.start()
       $httpBackend.flush()
-      expect($rootScope.setError.mostRecentCall.args[1]).toEqual 'error starting model training'
+      expect($rootScope.setError.calls.mostRecent().args[1]).toEqual 'error starting model training'
 
 
   describe 'ModelActionsCtrl', ->
@@ -530,10 +530,10 @@ describe 'models/controllers.coffee', ->
       $scope.test_model model
       $httpBackend.flush()
 
-      expect($rootScope.openDialog.mostRecentCall.args[0].model.id).toEqual 999
-      expect($rootScope.openDialog.mostRecentCall.args[0].template).toEqual 'partials/testresults/run_test.html'
-      expect($rootScope.openDialog.mostRecentCall.args[0].ctrlName).toEqual 'TestDialogController'
-      expect($rootScope.openDialog.mostRecentCall.args[0].cssClass).toEqual 'modal large'
+      expect($rootScope.openDialog.calls.mostRecent().args[0].model.id).toEqual 999
+      expect($rootScope.openDialog.calls.mostRecent().args[0].template).toEqual 'partials/testresults/run_test.html'
+      expect($rootScope.openDialog.calls.mostRecent().args[0].ctrlName).toEqual 'TestDialogController'
+      expect($rootScope.openDialog.calls.mostRecent().args[0].cssClass).toEqual 'modal large'
 
     it  'should work with a model and open testing dialog but with calling model.test_import_handler_obj',
       inject (Model, XmlImportHandler)->
@@ -553,10 +553,10 @@ describe 'models/controllers.coffee', ->
         $scope.test_model model
         $httpBackend.flush()
 
-        expect($rootScope.openDialog.mostRecentCall.args[0].model.id).toEqual 999
-        expect($rootScope.openDialog.mostRecentCall.args[0].template).toEqual 'partials/testresults/run_test.html'
-        expect($rootScope.openDialog.mostRecentCall.args[0].ctrlName).toEqual 'TestDialogController'
-        expect($rootScope.openDialog.mostRecentCall.args[0].cssClass).toEqual 'modal large'
+        expect($rootScope.openDialog.calls.mostRecent().args[0].model.id).toEqual 999
+        expect($rootScope.openDialog.calls.mostRecent().args[0].template).toEqual 'partials/testresults/run_test.html'
+        expect($rootScope.openDialog.calls.mostRecent().args[0].ctrlName).toEqual 'TestDialogController'
+        expect($rootScope.openDialog.calls.mostRecent().args[0].cssClass).toEqual 'modal large'
 
     it  'should cancel request spot instance', inject (Model)->
       model = new Model
@@ -582,9 +582,9 @@ describe 'models/controllers.coffee', ->
       $scope.train_model model
       $httpBackend.flush()
 
-      expect($rootScope.openDialog.mostRecentCall.args[0].model.id).toEqual 999
-      expect($rootScope.openDialog.mostRecentCall.args[0].template).toEqual 'partials/models/model_train_popup.html'
-      expect($rootScope.openDialog.mostRecentCall.args[0].ctrlName).toEqual 'TrainModelCtrl'
+      expect($rootScope.openDialog.calls.mostRecent().args[0].model.id).toEqual 999
+      expect($rootScope.openDialog.calls.mostRecent().args[0].template).toEqual 'partials/models/model_train_popup.html'
+      expect($rootScope.openDialog.calls.mostRecent().args[0].ctrlName).toEqual 'TrainModelCtrl'
 
     it  'should handle errors retrieving train_import_handler', inject (Model)->
       model = new Model
@@ -595,7 +595,7 @@ describe 'models/controllers.coffee', ->
       .respond 400
       $scope.train_model model
       $httpBackend.flush()
-      expect($rootScope.setError.mostRecentCall.args[1]).toEqual 'loading import handler details'
+      expect($rootScope.setError.calls.mostRecent().args[1]).toEqual 'loading import handler details'
 
     it  'should open delete model dialog', inject (Model)->
       model = new Model
@@ -604,10 +604,10 @@ describe 'models/controllers.coffee', ->
 
       $scope.delete_model model
 
-      expect($rootScope.openDialog.mostRecentCall.args[0].model.id).toEqual 999
-      expect($rootScope.openDialog.mostRecentCall.args[0].template).toEqual 'partials/base/delete_dialog.html'
-      expect($rootScope.openDialog.mostRecentCall.args[0].ctrlName).toEqual 'DialogCtrl'
-      expect($rootScope.openDialog.mostRecentCall.args[0].action).toEqual 'delete model'
+      expect($rootScope.openDialog.calls.mostRecent().args[0].model.id).toEqual 999
+      expect($rootScope.openDialog.calls.mostRecent().args[0].template).toEqual 'partials/base/delete_dialog.html'
+      expect($rootScope.openDialog.calls.mostRecent().args[0].ctrlName).toEqual 'DialogCtrl'
+      expect($rootScope.openDialog.calls.mostRecent().args[0].action).toEqual 'delete model'
 
     it  'should open edit classifier dialog', inject (Model)->
       model = new Model
@@ -616,12 +616,12 @@ describe 'models/controllers.coffee', ->
 
       $scope.editClassifier model
 
-      expect($rootScope.openDialog.mostRecentCall.args[0].model).toBe null
-      expect($rootScope.openDialog.mostRecentCall.args[0].template).toEqual 'partials/features/classifiers/edit.html'
-      expect($rootScope.openDialog.mostRecentCall.args[0].ctrlName).toEqual 'ModelWithParamsEditDialogCtrl'
-      expect($rootScope.openDialog.mostRecentCall.args[0].action).toEqual 'edit classifier'
-      expect($rootScope.openDialog.mostRecentCall.args[0].extra.model.id).toBe 999
-      expect($rootScope.openDialog.mostRecentCall.args[0].extra.fieldname).toEqual 'classifier'
+      expect($rootScope.openDialog.calls.mostRecent().args[0].model).toBe null
+      expect($rootScope.openDialog.calls.mostRecent().args[0].template).toEqual 'partials/features/classifiers/edit.html'
+      expect($rootScope.openDialog.calls.mostRecent().args[0].ctrlName).toEqual 'ModelWithParamsEditDialogCtrl'
+      expect($rootScope.openDialog.calls.mostRecent().args[0].action).toEqual 'edit classifier'
+      expect($rootScope.openDialog.calls.mostRecent().args[0].extra.model.id).toBe 999
+      expect($rootScope.openDialog.calls.mostRecent().args[0].extra.fieldname).toEqual 'classifier'
 
     it  'should open upload to predict', inject (Model)->
       model = new Model
@@ -630,9 +630,9 @@ describe 'models/controllers.coffee', ->
 
       $scope.uploadModelToPredict model
 
-      expect($rootScope.openDialog.mostRecentCall.args[0].model.id).toEqual 999
-      expect($rootScope.openDialog.mostRecentCall.args[0].template).toEqual 'partials/servers/choose.html'
-      expect($rootScope.openDialog.mostRecentCall.args[0].ctrlName).toEqual 'ModelUploadToServerCtrl'
+      expect($rootScope.openDialog.calls.mostRecent().args[0].model.id).toEqual 999
+      expect($rootScope.openDialog.calls.mostRecent().args[0].template).toEqual 'partials/servers/choose.html'
+      expect($rootScope.openDialog.calls.mostRecent().args[0].ctrlName).toEqual 'ModelUploadToServerCtrl'
 
 
   describe 'ModelUploadToServerCtrl', ->
@@ -735,7 +735,7 @@ describe 'models/controllers.coffee', ->
         $scope.requestDataSetDownload 3
         $httpBackend.flush()
 
-        expect($scope.setError.mostRecentCall.args[1]).toEqual 'requesting dataset 3 for download'
+        expect($scope.setError.calls.mostRecent().args[1]).toEqual 'requesting dataset 3 for download'
         expect($scope.queuedIds).toEqual []
 
     it  "should refuse to put new download request", ->

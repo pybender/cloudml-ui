@@ -199,14 +199,12 @@ describe "testresults", ->
 
   describe "TestExportsCtrl", ->
 
-    it "should init controller, request current exports", inject (TestResult) ->
+    it "should init controller, request current exports", inject (TestResult, $timeout) ->
       url = BASE_URL + 'action/exports/'
       $httpBackend.expectGET(url).respond('{"exports": [{"status": "In Progress"}, {"status": "Completed"}],
  "test": {"dataset": {}}}')
 
       test = new TestResult({id: '4321', model_id: '1234'})
-
-      jasmine.Clock.useMock()
 
       createController "TestExportsCtrl"
       $rootScope.init(test)
@@ -218,7 +216,7 @@ describe "testresults", ->
       $httpBackend.expectGET(url).respond('{"exports": [{"status": "Completed"}, {"status": "Completed"}],
  "test": {"dataset": {}}}')
 
-      jasmine.Clock.tick(1001)
+      $timeout.flush()
       $httpBackend.flush()
 
       expect($rootScope.exports[0].status).toEqual('Completed')
