@@ -323,6 +323,7 @@ class Transformer(BaseModel, BaseTrainedEntity, db.Model):
         from core.transformers.transformer import Transformer
         transformer = Transformer(json.dumps(self.json), is_file=False)
         transformer.train(iterator)
+        return transformer
 
     def set_trainer(self, transformer):
         from bson import Binary

@@ -321,7 +321,7 @@ def train_transformer(dataset_ids, transformer_id, user_id):
 
         from memory_profiler import memory_usage
         train_begin_time = datetime.utcnow()
-        transformer.train(train_iter)
+        trainer = transformer.train(train_iter)
 
         mem_usage = memory_usage(-1, interval=0, timeout=None)
         #trainer.clear_temp_data()
