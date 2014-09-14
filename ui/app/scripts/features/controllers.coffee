@@ -38,10 +38,12 @@ angular.module('app.features.controllers', ['app.config', ])
       $scope.modelObj = model
       $scope.$watch('modelObj.featuresSet', (featuresSet, oldVal, scope) ->
         if !$scope.featuresSet? && featuresSet? && featuresSet.id?
-          $scope.featuresSet = featuresSet
-          featuresSet.$load(
+          featuresSet.$load
             show: FeaturesSet.MAIN_FIELDS + ',group_by'
-          ).then (->), ((opts)-> $scope.setError(opts, 'loading featuresSet'))
+          .then ->
+            $scope.featuresSet = featuresSet
+          , (opts)->
+            $scope.setError opts, 'loading featuresSet'
       , true)
       
     $scope.addFeature = () ->
@@ -93,11 +95,12 @@ angular.module('app.features.controllers', ['app.config', ])
     }
 
     $scope.updateGroupBy = () ->
-      $scope.modelObj.featuresSet.$save(only: ['group_by']).then (->
+      $scope.modelObj.featuresSet.$save(only: ['group_by'])
+      .then ->
         $rootScope.segmentationMsg = "Group by fields have been saved"
         $timeout($scope.clear, 4000)
-      ), (->
-        $scope.setError(opts, 'saving group by fields'))
+      , (opts) ->
+        $scope.setError opts, 'saving group by fields'
 
     $scope.clear = () ->
       $rootScope.segmentationMsg = null
@@ -156,8 +159,8 @@ angular.module('app.features.controllers', ['app.config', ])
   'Scaler'
 
   ($scope, Transformer, Scaler) ->
-    $scope.init = (opts={}) ->
-      if not opts.model
+    $scope.init = (opts) ->
+      if not opts?.model
         throw new Error "Please specify feature model"
 
       $scope.model = opts.model
