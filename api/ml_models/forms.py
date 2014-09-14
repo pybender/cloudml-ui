@@ -222,6 +222,7 @@ class TransformerForm(BaseForm):
     """
     Adds/Edits Pretrained transformer form
     """
+    NO_REQUIRED_FOR_EDIT = True
     REQUIRED_FIELDS = ['train_import_handler']
     FORM_REQUIRED_FIELDS = REQUIRED_FIELDS + \
         ['name', 'type', 'feature_type', 'field_name']
@@ -240,28 +241,34 @@ class TransformerForm(BaseForm):
     json_selected = BooleanField()
     train_import_handler = ImportHandlerField()
 
-    def clean_name(self, value, field):
-        if value:
-            self.check_name_availability(value)
-
-        return value
+    def validate_data(self):
+        name = self.cleaned_data.get('name')
+        json_selected = self.cleaned_data.get('json_selected')
+        if json_selected:
+            json = self.cleaned_data.get('json')
+            name = json['transformer-name']
+            self.is_name_available(name, field_name='json')
+        else:
+            self.is_name_available(name)
 
     def save(self, commit=True):
         if self.cleaned_data.get('json_selected'):
             json = self.cleaned_data['json']
             transformer = Transformer()
             transformer.load_from_json(json)
-            self.check_name_availability(transformer.name)
             transformer.train_import_handler = \
                 self.cleaned_data['train_import_handler']
             transformer.save(commit=commit)
         else:
             return super(TransformerForm, self).save(commit)
 
-    def check_name_availability(self, name):
+    def is_name_available(self, name, field_name='name'):
         if Transformer.query.filter_by(name=name).count():
-            raise ValidationError('Transformer with name {0}\
+            print field_name
+            self.add_error(field_name, 'Transformer with name {0} \
 already exist'.format(name))
+            return False
+        return True
 
 
 class FeatureTransformerForm(BaseForm):

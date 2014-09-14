@@ -15,9 +15,6 @@
       <i title="Train your transformer" class="icon-tasks"></i>
       Start training
     </button>
-    <a ng-show="transformer.status == 'Trained'" href="{{ transformer.trainer_s3_url }}" class="btn btn-info">
-        <i title="Download transformer's trainer." class="icon-download-alt"></i> Download Trainer
-    </a>
     <button ng-click="delete(transformer)" class="btn btn-danger">
       <i title="Delete your transformer. Be careful - you could not recover it!" class="icon-remove"></i> Delete transformer
     </button>
@@ -25,12 +22,8 @@
 </h2>
 
 <div title="tags" ng-init="obj=transformer">
-  <span ng-repeat="tag in transformer.tags">
-    <span class="badge">
-      <a href="#/models/?tag={{ tag }}" style="color: white;">{{ tag }}</a>
-    </span> 
-  </span>
   <ng-include src="'/partials/parts/created_tags.html'"></ng-include>
+  <span class="badge">{{ transformer.status }}</span> 
 </div>
 
 <p></p>
@@ -96,11 +89,11 @@
     <div ng-show="action[1] == 'details'">
       <div>
           Field Name:
-          <span class="value">{{ transformer.field_name }}</span>
+          <span title="Field Name" class="title" ng-bind="transformer.field_name" editable="transformer" value="transformer.field_name" editable-field="field_name" editable-input="text" editable-placement="right"></span>
       </div>
       <div>
           Feature Type:
-          <span class="value">{{ transformer.feature_type }}</span>
+          <span title="Field Name" class="title" ng-bind="transformer.feature_type" editable="transformer" value="transformer.feature_type" editable-field="feature_type" editable-input="text" editable-placement="right"></span>
       </div>
       <div>
           Type:
@@ -110,7 +103,7 @@
           Parameters:
           <span ng-repeat="(key, val) in transformer.params"><span class="badge badge-info">{{ key }}={{ val }}</span> </span>
       </div>
-      <div>
+      <div ng-controller="ImportHandlerSelectCtrl">
         <span title="Used for filling vectorizer to be used ">Import Handler</span>
         <span title="Select Train Import Handler"
               ng-bind="transformer.train_import_handler_obj.name || 'not specified'"

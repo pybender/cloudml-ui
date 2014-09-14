@@ -36,16 +36,6 @@ angular.module('app.features.controllers.transformers', ['app.config', ])
     $scope.ACTION = 'loading transformers'
     $scope.LIST_MODEL_NAME = Transformer.LIST_MODEL_NAME
 
-    $scope.edit = (transformer) ->
-      $scope.openDialog({
-        $dialog: $dialog
-        model: transformer
-        template: 'partials/features/transformers/edit_predefined.html'
-        ctrlName: 'ModelWithParamsEditDialogCtrl'
-        action: 'edit transformer'
-        path: 'transformers'
-      })
-
     $scope.add = () ->
       transformer = new Transformer()
       $scope.openDialog({
@@ -55,15 +45,6 @@ angular.module('app.features.controllers.transformers', ['app.config', ])
         ctrlName: 'ModelWithParamsEditDialogCtrl'
         action: "add transformer"
         path: 'transformers'
-      })
-
-    $scope.delete = (transformer) ->
-      $scope.openDialog({
-        $dialog: $dialog
-        model: transformer
-        template: 'partials/base/delete_dialog.html'
-        ctrlName: 'DialogCtrl'
-        action: 'delete transformer'
       })
 ])
 
@@ -99,14 +80,16 @@ without id"
 
   $scope.goSection = (section) ->
     FIELDS_BY_SECTION = {
-      'training': ['error'].join(',')
+      'training': [
+        'error', 'memory_usage', 'trainer_size', 'training_time',
+        'trained_by'
+      ].join(',')
       'about': [
-        'type','params', 'train_import_handler',
-        'field_name', 'feature_type',
-        'train_import_handler_type', 'json'].join(',')
+        'type','params', 'field_name', 'feature_type', 'json'].join(',')
       'main': [
-        'updated_on', 'created_on', 'status', 'name', 'created_by',
-        'updated_by'].join(',')
+        'updated_on', 'created_on', 'status', 'name',
+        'created_by', 'updated_by',
+        'train_import_handler_type', 'train_import_handler'].join(',')
     }
     name = section[0]
     subsection = section[1]
@@ -118,6 +101,7 @@ without id"
     if name not in $scope.LOADED_SECTIONS
       if FIELDS_BY_SECTION[name]?
         fields += ',' + FIELDS_BY_SECTION[name]
+      $scope.LOADED_SECTIONS.push name
 
     $scope.load(fields, name)
 
@@ -137,14 +121,19 @@ without id"
 
       $scope.transformer = opts.transformer
 
-    $scope.train = (transformer)->
-      $scope._showModelActionDialog(transformer, 'train', (model) ->
+    $scope.train = (transformer) ->
+      transformer.$load(
+        show: 'train_import_handler,train_import_handler_type'
+      ).then (->
         $scope.openDialog({
           $dialog: $dialog
           model: transformer
           template: 'partials/models/model_train_popup.html'
           ctrlName: 'TrainModelCtrl'
-        }))
+        })
+      ), ((opts) ->
+        $scope.setError(opts, 'loading import handler details')
+      )
 
     $scope.delete = (transformer) ->
       $scope.openDialog({
@@ -154,16 +143,4 @@ without id"
         ctrlName: 'DialogCtrl'
         action: 'delete transformer'
       })
-
-    $scope._showModelActionDialog = (model, action, fn)->
-      if eval('model.' + action + '_import_handler_obj')?
-        fn(model)
-      else
-        model.$load(
-          show: action + '_import_handler'
-          ).then (->
-            fn(model)
-          ), ((opts) ->
-            $scope.setError(opts, 'loading import handler details')
-          )
 ])

@@ -1,5 +1,5 @@
 <h2>
-  Predefined Transformers List
+  Pretrained Transformers List
   <div class="actions">
       <a class="btn btn-info" ng-click="add()">
         <i class="status-icon icon-plus"></i> Add new transformer
@@ -16,13 +16,15 @@
 	<colgroup>
 		<col />
 		<col style="width: 15%;" />
-	    <col style="width: 40%; text-overflow: ellipsis;" />
+		<col style="width: 10%;" />
+	    <col style="width: 30%; text-overflow: ellipsis;" />
 	    <col style="width: 15%;" />
-	    <col style="width: 60px;"/>
+	    <col style="width: 120px;"/>
 	</colgroup>
 	<thead>
 	  <tr>
 	    <th>Name</th>
+	    <th>Status</th>
 	    <th>Type</th>
 	    <th>Params</th>
 	    <th>Created</th>
@@ -34,6 +36,7 @@
 	    <td>
 	      <a href="#{{ transformer.objectUrl() }}">{{ transformer.name }}</a>
 	    </td>
+	    <td>{{ transformer.status }}</td>
 	    <td>{{ transformer.type }}</td>
 	    <td ng-init="params = transformer.params">
 	    	<ng-include src="'/partials/parts/params_list.html'"></ng-include>
@@ -42,7 +45,10 @@
 	        <span title="dates in GMT">{{ transformer.created_on|format_date }}</span><br>
 	        <small ng-show="transformer.created_by">by {{ transformer.created_by.name }} ({{ transformer.created_by.uid }})</small>
 	    </td>
-	    <td>
+	    <td ng-init="init({transformer: transformer})" ng-controller="TransformerActionsCtrl">
+	    	<button ng-click="train(transformer)" class="btn btn-info">
+		      <i title="Train your transformer" class="icon-tasks"></i>
+		    </button>
 	    	<button ng-click="delete(transformer)" class="btn btn-danger"><i title="Delete predefined transformer. Be careful - you could not recover it!" class="icon-remove"></i></button>
 	    </td>
 	  </tr>

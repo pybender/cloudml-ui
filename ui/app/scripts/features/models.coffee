@@ -29,7 +29,8 @@ angular.module('app.features.models', ['app.config'])
       API_FIELDNAME: 'transformer'
       @LIST_MODEL_NAME: 'transformers'
       LIST_MODEL_NAME: @LIST_MODEL_NAME
-      @MAIN_FIELDS: 'id,name,type,params,created_on,created_by'
+      @MAIN_FIELDS: 'id,name,type,params,created_on,created_by,status,\
+train_import_handler_type,train_import_handler'
       @$TYPES_LIST: ['Dictionary', 'Count', 'Tfidf', 'Lda', 'Lsi']
 
       id: null
