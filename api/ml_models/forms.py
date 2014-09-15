@@ -259,6 +259,7 @@ class TransformerForm(BaseForm):
             transformer.train_import_handler = \
                 self.cleaned_data['train_import_handler']
             transformer.save(commit=commit)
+            return transformer
         else:
             return super(TransformerForm, self).save(commit)
 
