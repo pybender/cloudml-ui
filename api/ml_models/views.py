@@ -300,6 +300,7 @@ class TransformerResource(BaseTrainedEntityResource):
     GET_ACTIONS = BaseTrainedEntityResource.GET_ACTIONS + ['configuration']
     ALL_FIELDS_IN_POST = True
     ENTITY_TYPE = 'transformer'
+    DEFAULT_FIELDS = ['name', 'type']
     put_form = TransformerForm
     train_form = TrainForm
 

@@ -527,8 +527,13 @@ class BaseResourceSQL(BaseResource):
 
     def _prepare_model(self, model, params):
         fields = self._get_show_fields(params)
-        return dict([(field, getattr(model, field, None))
-                     for field in fields])
+        res = {}
+        for field in fields:
+            val = getattr(model, field, None)
+            if val is None and hasattr(model, "get"):
+                val = model.get(field, None)
+            res[field] = val
+        return res
 
     def _prepare_model_any(self, model, params):
         fields = self._get_all_fields()

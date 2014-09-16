@@ -289,18 +289,24 @@ class FeatureTransformerForm(BaseForm):
     predefined_selected = BooleanField()
     feature_id = ModelField(model=Feature, return_model=True)
 
-    type_field = ChoiceField(
-        choices=Transformer.TYPES_LIST, name='type')
+    type_field = CharField(name='type')
     params = JsonField()
 
     transformer = ModelField(model=Transformer, return_model=True)
+
+    def validate_data(self):
+        type_ = self.cleaned_data.get('type')
+        pretrained_selected = self.cleaned_data.get('predefined_selected')
+        if not pretrained_selected and type_ not in Transformer.TYPES_LIST:
+            raise ValidationError('type is invalid')
 
     def save(self):
         feature = self.cleaned_data.get('feature_id', None)
         is_pretrained = self.cleaned_data.get('predefined_selected', False)
         if is_pretrained:
-            transformer = self.cleaned_data.get('transformer')
-            feature.transformer = {'type': transformer.name}
+            pretrained_transformer = self.cleaned_data.get('transformer')
+            transformer = {'type': pretrained_transformer.name}
+            feature.transformer = transformer
         else:
             transformer = {
                 "type": self.cleaned_data.get('type'),
