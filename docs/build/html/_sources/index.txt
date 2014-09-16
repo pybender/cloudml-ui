@@ -18,6 +18,7 @@ Contents:
    features
    changes
    trainer
+   transformers
    test_metrics
    instances
    deploy_on_predict
@@ -30,10 +31,10 @@ Contents:
 .. seealso::
 
    * `Jira project <http://jira.odesk.com/browse/MATCH/component/11626>`_
-   * `Github repository <https://github.com/odeskdev/odeskdev-cloudml>`_
+   * `Github repository <https://github.com/odeskdataproducts/cloudml-ui>`_
    * Production http://cloudml.int.odesk.com/
-   * Staging http://172.27.67.106:5000
-   * Developers: Nikolay Melnik <nmelnik@odesk.com>, Mikhail Medvedev <moorcock@odesk.com>
+   * Staging http://172.27.77.182/
+   * Developers: Nikolay Melnik <nmelnik@odesk.com>, Nader Soliman <nsoliman@odesk.com>
 
 
 

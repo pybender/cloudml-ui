@@ -264,8 +264,10 @@ class TransformerForm(BaseForm):
             return super(TransformerForm, self).save(commit)
 
     def is_name_available(self, name, field_name='name'):
+        if self.obj and self.obj.id:
+            return True  # edit
+
         if Transformer.query.filter_by(name=name).count():
-            print field_name
             self.add_error(field_name, 'Transformer with name {0} \
 already exist'.format(name))
             return False

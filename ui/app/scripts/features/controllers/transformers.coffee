@@ -135,6 +135,14 @@ without id"
         $scope.setError(opts, 'loading import handler details')
       )
 
+    $scope.changeType = (transformer) ->
+      $scope.openDialog({
+        $dialog: $dialog
+        model: transformer
+        template: 'partials/features/transformers/edit_type.html'
+        ctrlName: 'ModelWithParamsEditDialogCtrl'
+      })
+
     $scope.delete = (transformer) ->
       $scope.openDialog({
         $dialog: $dialog

@@ -1,0 +1,183 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Transformer JSON file format &mdash; oDesk CloudML 0.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="oDesk CloudML 0.0.1 documentation" href="index.html" />
+    <link rel="next" title="Test Metrics" href="test_metrics.html" />
+    <link rel="prev" title="Trainer" href="trainer.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="test_metrics.html" title="Test Metrics"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="trainer.html" title="Trainer"
+             accesskey="P">previous</a> |</li>
+    <li><a href="http://cloudml.int.odesk.com/">CloudML UI</a> &raquo;</li>
+    
+        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="trainer.html"
+                        title="previous chapter">Trainer</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="test_metrics.html"
+                        title="next chapter">Test Metrics</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/transformers.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="transformer-json-file-format">
+<span id="transforrmers"></span><h1>Transformer JSON file format<a class="headerlink" href="#transformer-json-file-format" title="Permalink to this headline">¶</a></h1>
+<p>An example of such file is the following:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+  <span class="s">&quot;transformer-name&quot;</span><span class="p">:</span> <span class="s">&quot;bestmatch&quot;</span><span class="p">,</span>
+  <span class="s">&quot;field-name&quot;</span><span class="p">:</span> <span class="s">&quot;contractor.dev_title&quot;</span><span class="p">,</span>
+  <span class="s">&quot;type&quot;</span><span class="p">:</span> <span class="s">&quot;text&quot;</span><span class="p">,</span>
+  <span class="s">&quot;transformer&quot;</span><span class="p">:{</span>
+        <span class="s">&quot;type&quot;</span><span class="p">:</span> <span class="s">&quot;Tfidf&quot;</span><span class="p">,</span>
+        <span class="s">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s">&quot;ngram_range_min&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="s">&quot;ngram_range_max&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="s">&quot;min_df&quot;</span><span class="p">:</span> <span class="mi">5</span>
+                <span class="p">}</span>
+      <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Available transformer types:</p>
+<blockquote>
+<div><ul class="simple">
+<li>Dictionary</li>
+<li>Count</li>
+<li>Tfidf</li>
+<li>Lda</li>
+<li>Lsi</li>
+</ul>
+</div></blockquote>
+<p>You can run the train transformer using:</p>
+<div class="highlight-python"><pre>python transformer.py [-h] [-V] [-o output] [-i input-file] [-e extraction-plan-file] [-I train-param] path</pre>
+</div>
+<p>The detials of the parameters passed to trainer.py are the following:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="13%" />
+<col width="87%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>-h, &#8211;help</td>
+<td>Prints help message</td>
+</tr>
+<tr class="row-odd"><td>-V, &#8211;version</td>
+<td>Prints version message</td>
+</tr>
+<tr class="row-even"><td>-o output, &#8211;output output</td>
+<td>Saves trained transformer and related data to this file.</td>
+</tr>
+<tr class="row-odd"><td>-i input-data, &#8211;input input-data</td>
+<td>Read train data from file &#8216;input-data&#8217;. Input file may contain multiple JSON objects, each one containing the feature data for each row data.</td>
+</tr>
+<tr class="row-even"><td>-e extraction-plan</td>
+<td>Use the extraction plan defined in the given path. If -i has been defined, it will be ignored.</td>
+</tr>
+<tr class="row-odd"><td>-I key=value</td>
+<td>Allows user defined parameters. The given parameters will be used to replace parameters in the SQL query. Can have multiple values. Will be used only if flag -e is defined. These values will be used for extracting train data.</td>
+</tr>
+<tr class="row-even"><td>path</td>
+<td>Path pointing to transformer.json configuration file.</td>
+</tr>
+</tbody>
+</table>
+<p>Train transformer using existing data:</p>
+<div class="highlight-python"><pre>$ python transformer.py ./testdata/transformers/transformer.json -i ./testdata/transformers/train.data.json</pre>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="test_metrics.html" title="Test Metrics"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="trainer.html" title="Trainer"
+             >previous</a> |</li>
+    <li><a href="http://cloudml.int.odesk.com/">CloudML UI</a> &raquo;</li>
+    
+        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, oDesk.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b2.
+    </div>
+  </body>
+</html>

@@ -221,7 +221,7 @@ class TransformerData(DataSet):
     class transformer_01:
         name = "bestmatch"
         status = "New"
-        field_name = "contractor.dev_title"
+        field_name = "contractor.dev_blurb"
         feature_type = "text"
         type = "Tfidf"
         params = {
