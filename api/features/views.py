@@ -57,7 +57,7 @@ class NamedTypeResource(BaseResourceSQL):
 api.add_resource(NamedTypeResource, '/cloudml/features/named_types/')
 
 
-class TransformerResource(BaseResourceSQL):
+class PredefinedTransformerResource(BaseResourceSQL):
     """ Transformer API methods """
     put_form = post_form = TransformerForm
     GET_ACTIONS = ('configuration', )
@@ -68,7 +68,7 @@ class TransformerResource(BaseResourceSQL):
         from config import TRANSFORMERS
         return self._render({'configuration': TRANSFORMERS})
 
-api.add_resource(TransformerResource, '/cloudml/features/transformers/')
+api.add_resource(PredefinedTransformerResource, '/cloudml/features/transformers/')
 
 
 class ScalerResource(BaseResourceSQL):

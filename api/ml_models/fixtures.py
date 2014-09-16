@@ -1,6 +1,7 @@
 from fixture import DataSet
 from api.features.fixtures import FeatureSetData
-from api.import_handlers.fixtures import ImportHandlerData, XmlImportHandlerData
+from api.import_handlers.fixtures import ImportHandlerData, \
+    XmlImportHandlerData
 
 
 class ModelData(DataSet):
@@ -196,6 +197,7 @@ class WeightData(DataSet):
         parent = ''
         class_label = "3"
 
+
 class WeightsCategoryData(DataSet):
     class weightcategory_01:
         name = "contractor"
@@ -214,3 +216,17 @@ class TagData(DataSet):
         text = "tag2"
         count = 3
 
+
+class TransformerData(DataSet):
+    class transformer_01:
+        name = "bestmatch"
+        status = "New"
+        field_name = "contractor.dev_blurb"
+        feature_type = "text"
+        type = "Tfidf"
+        params = {
+            "ngram_range_min": 1,
+            "ngram_range_max": 1,
+            "min_df": 5
+        }
+        train_import_handler = ImportHandlerData.import_handler_01

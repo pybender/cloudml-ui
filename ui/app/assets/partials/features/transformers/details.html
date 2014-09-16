@@ -1,0 +1,121 @@
+<alert-message ng-show="msg" class="alert-info" msg='{{ msg }}' unsafe>
+</alert-message>
+
+<alert-message ng-show="err" class="alert-error" msg='{{ err }}' unsafe></alert-message>
+
+<div ng-init="init({transformer: transformer})" ng-controller="TransformerActionsCtrl">
+<h2 class="title">
+  <span title="Title"
+    class="title" ng-bind="transformer.name || 'untitled transformer'"
+    editable="transformer" value="transformer.name"
+    editable-field="name" editable-input="text"
+    editable-placement="right"></span> details
+  <div class="actions">
+    <button ng-click="train(transformer)" class="btn btn-info">
+      <i title="Train your transformer" class="icon-tasks"></i>
+      Start training
+    </button>
+    <button ng-click="delete(transformer)" class="btn btn-danger">
+      <i title="Delete your transformer. Be careful - you could not recover it!" class="icon-remove"></i> Delete transformer
+    </button>
+  </div>
+</h2>
+
+<div title="tags" ng-init="obj=transformer">
+  <ng-include src="'/partials/parts/created_tags.html'"></ng-include>
+  <span class="badge">{{ transformer.status }}</span> 
+</div>
+
+<p></p>
+<ul class="nav nav-tabs" id="tabs" ng-show="transformer.loaded">
+  <li ng-class="{active: action[0] == 'about'}"><a ng-click="setSection(['about', 'details'])">Transformer</a></li>
+  <li ng-class="{active: action[0] == 'training'}">
+    <a ng-click="setSection(['training', 'details'])">Training</a>
+  </li>
+</ul>
+ 
+<div class="tab-content" ng-show="transformer.loaded">
+  <!-- Training tab starts here -->
+  <div ng-show="action[0] == 'training'">
+    <alert-message ng-show="transformer.status == 'Queued'" class="alert-info" msg="We queue this transformer to fit. It would be processed soon"></alert-message>
+
+    <alert-message ng-show="transformer.status == 'Training'" alert-class="alert-info" msg="Please wait! Transformer is fitting now. It could take several minutes."></alert-message>
+
+    <alert-message ng-show="transformer.status == 'New'" class="alert-warning" msg='Transformer is not fitted yet. Please start training.' unsafe></alert-message>
+
+    <alert-message ng-show="transformer.status == 'Error'" class="alert-error" msg='Error occurred while transformer training. Look at celery tasks for details' unsafe></alert-message>
+
+    <alert-message ng-show="transformer.error" class="alert-error" msg="{{ transformer.error }}" unsafe></alert-message>
+
+    <alert-message ng-show="transformer.status == 'Trained'" class="alert-success" msg='Transformer is trained. You could use it in the model.' unsafe></alert-message>
+
+    <div>
+        Status: <span class="value">{{ transformer.status }}</span> <a ng-click="showLogs=!showLogs">(logs)</a>
+        <div ng-show="showLogs" class="well" ng-controller="LogMessageListCtrl" ng-init="init('traintransformer_log', transformer.id, 50)">
+          <div class="message">
+            <ng-include src="'/partials/logmessages/list.html'"></ng-include>
+          </div>
+        </div>
+    </div>
+    <div ng-show="transformer.status == 'Trained'">
+      <div>
+        Memory used:
+        <span class="value">{{ transformer.memory_usage }} Mb</span>
+      </div>
+      <div>
+          Trained by:
+          <span class="value">{{ transformer.trained_by.name }} ({{ transformer.trained_by.uid }})</span>
+      </div>
+      <div>
+          Training time:
+          <span class="value">{{ transformer.training_time|humanize_time }}</span>
+      </div>
+      <div>
+          Trainer file size:
+          <span class="value">{{ transformer.trainer_size|bytes }}</span>
+      </div>
+    </div>
+  </div>
+  <!-- Transformer tab -->
+  <div ng-show="action[0] == 'about'" ng-controller="ObjEditCtrl">
+    <p class="switcher">
+      <b>Switch View: </b>
+      <a ng-class="{active: action[1] == 'details'}" ng-click="setSection(['about', 'details'])">Standard</a> |
+      <a ng-class="{active: action[1] == 'json'}" ng-click="setSection(['about', 'json'])">JSON File</a>
+    </p>
+    <div ng-show="action[1] == 'json'">
+      <textarea ng-model="transformer.json" ui-codemirror="codeMirrorConfigs(true)['json']" ui-refresh="action"></textarea>
+    </div>
+    <div ng-show="action[1] == 'details'">
+      <div>
+          Field Name:
+          <span title="Field Name" class="title" ng-bind="transformer.field_name" editable="transformer" value="transformer.field_name" editable-field="field_name" editable-input="text" editable-placement="right"></span>
+      </div>
+      <div>
+          Feature Type:
+          <span title="Field Name" class="title" ng-bind="transformer.feature_type" editable="transformer" value="transformer.feature_type" editable-field="feature_type" editable-input="text" editable-placement="right"></span>
+      </div>
+      <div>
+          Type:
+          <span class="value">{{ transformer.type }} <a ng-click="changeType(transformer)">(edit)</a></span>
+      </div>
+      <div>
+          Parameters:
+          <span ng-repeat="(key, val) in transformer.params"><span class="badge badge-info">{{ key }}={{ val }}</span> </span>
+      </div>
+      <div ng-controller="ImportHandlerSelectCtrl">
+        <span title="Used for filling vectorizer to be used ">Import Handler</span>
+        <span title="Select Train Import Handler"
+              ng-bind="transformer.train_import_handler_obj.name || 'not specified'"
+              editable="transformer" value="transformer.train_import_handler_obj.id"
+              editable-field="train_import_handler" editable-input="select"
+              editable-placement="right" is-empty="_isEmpty"
+              source="handlers_list"
+              display="transformer.train_import_handler_obj.name"></span>
+        <a target="_blank" href="#{{ transformer.train_import_handler_obj.objectUrl() }}"><i class="icon-arrow-right"></i></a>
+      </div>
+    </div>
+  </div>
+
+ </div>
+</div>
