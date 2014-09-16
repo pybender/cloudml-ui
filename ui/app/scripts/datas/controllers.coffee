@@ -22,6 +22,7 @@ angular.module('app.datas.controllers', ['app.config', ])
   $scope.init = (test, extra_params={'action': 'examples:list'}) ->
     $scope.extra_params = extra_params
     $scope.test = test
+    $scope.loading_state = true
     $scope.test.$load(
         show: 'name,examples_fields'
     ).then ((opts) ->
@@ -37,7 +38,7 @@ angular.module('app.datas.controllers', ['app.config', ])
         $scope.loading_state = false
     ), ((opts) ->
         $scope.setError(opts, 'loading test details')
-        $scope.loading_state = true
+        $scope.loading_state = false
     )
 
     $scope.model = new Model({id: $scope.test.model_id})
@@ -56,10 +57,12 @@ angular.module('app.datas.controllers', ['app.config', ])
       $scope.loading_state = true
       opts.sort_by = $scope.sort_by
       opts.order = if $scope.asc_order then 'asc' else 'desc'
-      Data.$loadAll($scope.test.model_id, $scope.test.id, opts).then((resp) ->
+      Data.$loadAll($scope.test.model_id, $scope.test.id, opts)
+      .then (resp) ->
         $scope.loading_state = false
         return resp
-      )
+      , ->
+        $scope.loading_state = false
 
   $scope.sort = (sort_by) ->
     if $scope.sort_by == sort_by
@@ -70,6 +73,7 @@ angular.module('app.datas.controllers', ['app.config', ])
       $scope.asc_order = true
       $scope.sort_by = sort_by
     $location.search($scope.getParamsDict())
+    # TODO: nader20140916, what is this? @
     @load()
 
   $scope.addFilter = () ->
@@ -86,10 +90,6 @@ angular.module('app.datas.controllers', ['app.config', ])
     $location.search($scope.getParamsDict())
 
   $scope.details = (example) ->
-    sort_opts = {
-      sort_by: $scope.sort_by
-      order: if $scope.asc_order then 'asc' else 'desc'
-    }
     $location.url(example.objectUrl()).search($scope.getParamsDict())
 
   $scope.getParamsDict = () ->
