@@ -298,11 +298,12 @@ class TransformerResource(BaseTrainedEntityResource):
     """ Pretrained transformer API methods """
     Model = Transformer
     GET_ACTIONS = BaseTrainedEntityResource.GET_ACTIONS + ['configuration']
-    ALL_FIELDS_IN_POST = True
     ENTITY_TYPE = 'transformer'
     DEFAULT_FIELDS = ['name', 'type']
+    FILTER_PARAMS = (('status', str), )
     put_form = TransformerForm
     train_form = TrainForm
+    NEED_PAGING = False
 
     @property
     def post_form(self):
