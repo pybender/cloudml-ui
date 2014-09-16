@@ -238,7 +238,7 @@ class XmlQuery(db.Model, BaseMixin):
 class XmlField(db.Model, BaseMixin):
     TYPES = Field.PROCESS_STRATEGIES.keys()
     TRANSFORM_TYPES = ['json', 'csv']
-    FIELDS_TO_SERIALIZE = ['name', 'type', 'column', 'jsonpath', 'join',
+    FIELDS_TO_SERIALIZE = ['name', 'type', 'column', 'jsonpath', 'delimiter',
                            'regex', 'split', 'dateFormat', 'template',
                            'transform', 'headers', 'script', 'required',
                            'multipart']
@@ -255,7 +255,7 @@ class XmlField(db.Model, BaseMixin):
     type = db.Column(db.Enum(*TYPES, name='xml_field_types'))
     column = db.Column(db.String(200))
     jsonpath = db.Column(db.String(200))
-    join = db.Column(db.String(200))
+    delimiter = db.Column(db.String(200))
     regex = db.Column(db.String(200))
     split = db.Column(db.String(200))
     dateFormat = db.Column(db.String(200))
@@ -523,12 +523,16 @@ def fill_import_handler(import_handler, xml_data=None):
 
         def load_entity_items(entity, db_entity):
             for field in entity.fields.values():
+                if hasattr(field, 'delimiter'):
+                    delimiter = field.delimiter
+                else:
+                    delimiter = field.join
                 fld = XmlField(
                     name=field.name,
                     type=field.type,
                     column=field.column,
                     jsonpath=field.jsonpath,
-                    join=field.join,
+                    delimiter=delimiter,
                     regex=field.regex,
                     split=field.split,
                     dateFormat=field.dateFormat,

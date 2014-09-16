@@ -1,4 +1,3 @@
-from api import api
 from api.base.resources import BaseResource, ValidationError
 from .models import LogMessage
 
@@ -21,13 +20,12 @@ class LogResource(BaseResource):
 
         type_ = _get_required('type')
         object_id = _get_required('object_id')
-        next_token = params.get('next_token', None)
+        order_ = params['order'] if not params['order'] is None else 'asc'
+        next_token = params['next_token']
         level = params.get('level', None)
         limit = params.get('per_page', 10)
-        logs, next_token = LogMessage.filter_by_object(
-            type_, object_id,
-            level,
-            limit=limit,
-            next_token=next_token
-        )
-        return self._render({'logs': logs, 'next_token': next_token})
+
+        logs, new_next_token = LogMessage.filter_by_object(
+            type_, object_id, next_token, order_,
+            level=level, limit=limit)
+        return self._render({'logs': logs, 'next_token': new_next_token})

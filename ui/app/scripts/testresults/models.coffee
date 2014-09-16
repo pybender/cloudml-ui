@@ -56,7 +56,10 @@ angular.module('app.testresults.model', ['app.config'])
         return "#{@BASE_UI_URL}#{@id}?action=examples:list"
 
       examplesCsvUrl: () ->
-        return "#{@BASE_API_URL}#{@id}/examples/action/csv/"
+        return "#{@BASE_API_URL}#{@id}/examples/action/csv_task/"
+
+      examplesDbUrl: () ->
+        return "#{@BASE_API_URL}#{@id}/examples/action/db_task/"
 
       avaragePrecisionUrl: =>
         return "#{@BASE_UI_URL}#{@id}/grouped_examples"
@@ -121,10 +124,24 @@ angular.module('app.testresults.model', ['app.config'])
           }
         @$make_all_request(url, resolver, opts)
 
-      $get_examples_csv: (show) ->
-        url = @examplesCsvUrl() + '?show=' + show
+      $get_examples_csv: (fields) ->
+        """
+        @fields: array of strings of fields to export to csv
+        """
+        url = @examplesCsvUrl()
         resolver = (resp) -> { url: resp.data['url'] }
-        TestResult.$make_all_request(url, resolver)
+        @$make_request(url, {}, 'PUT',
+          {fields: angular.toJson(fields)}, false)
+
+      $get_examples_db: (opts) ->
+        """
+        @opts.fields: array of strings of fields to export to database
+        @opts.datasource: predefined datasource to use to connect to db
+        """
+        opts.fields = angular.toJson(opts.fields)
+        url = @examplesDbUrl()
+        resolver = (resp) -> { url: resp.data['url'] }
+        @$make_request(url, {}, 'PUT', opts, false)
 
       $get_exports: () ->
         url = "#{@BASE_API_URL}#{@id}/action/exports/"

@@ -5,6 +5,30 @@ from flask.ext.script import Manager, Command, Shell, Option
 from flask.ext.migrate import Migrate, MigrateCommand
 
 from api import app
+import boto.ec2
+
+
+class CreateWorkerImage(Command):
+    """Create worker image."""
+    def get_options(self):
+        return (
+            Option('-v', '--version',
+                   dest='version',
+                   default='cloudml-worker.v3.0',
+                   help='For example cloudml-worker.v3.0'),
+        )
+
+    def run(self, **kwargs):
+        version = kwargs.get('version')
+        token = app.config['AMAZON_ACCESS_TOKEN']
+        secret = app.config['AMAZON_TOKEN_SECRET']
+        conn = boto.ec2.connect_to_region('us-west-2',
+                                           aws_access_key_id=token,
+                                           aws_secret_access_key=secret)
+        inst = conn.get_all_instances(instance_ids=['i-49a0597d',])
+        image = inst[0].instances[0].create_image(version)
+        print "Created image: %s" % image
+
 
 
 class Celeryd(Command):
@@ -186,6 +210,8 @@ manager.add_command("drop_db_tables", DropDbTables())
 manager.add_command("migrate_to_postgresql", MigrateToPosgresql())
 manager.add_command("migrate_xml_ih", MigrateToXmlImportHandlers())
 manager.add_command("rem_pyc", RemPycFiles())
+manager.add_command("create_image", CreateWorkerImage())
+
 
 if __name__ == "__main__":
     manager.run()

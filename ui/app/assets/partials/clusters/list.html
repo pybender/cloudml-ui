@@ -34,7 +34,8 @@
     <td>{{ cluster.status }}</td>
     <td>{{ cluster.is_default }}</td>
     <td>
-        {{ cluster.created_on|format_date }}<br>
+        <span title="dates in GMT">{{ cluster.created_on|format_date }}
+        </span><br>
         <small ng-show="cluster.created_by">by {{ cluster.created_by.name }} ({{ cluster.created_by.uid }})</small>
     </td>
     <td ng-controller="ClusterActionsCtrl">

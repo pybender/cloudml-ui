@@ -163,7 +163,7 @@ class XmlFieldForm(BaseForm):
     type = ChoiceField(choices=XmlField.TYPES)
     column = CharField()
     jsonpath = CharField()
-    join = CharField()
+    delimiter = CharField()
     regex = CharField()
     split = CharField()
     dateFormat = CharField()

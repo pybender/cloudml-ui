@@ -39,7 +39,7 @@
 	    	<ng-include src="'partials/parts/params_list.html'"></ng-include>
 	    </td>
 	    <td>
-	        {{ transformer.created_on|format_date }}<br>
+	        <span title="dates in GMT">{{ transformer.created_on|format_date }}</span><br>
 	        <small ng-show="transformer.created_by">by {{ transformer.created_by.name }} ({{ transformer.created_by.uid }})</small>
 	    </td>
 	    <td>

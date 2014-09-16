@@ -62,6 +62,9 @@
   </div>
 
   <div ng-show="action[0] == 'log'" ng-controller="LogMessageListCtrl" ng-init="init('importdata_log', dataset.id)">
+    <p ng-show="dataset.cluster"><a href="#/aws/clusters/{{ dataset.cluster.id }}">
+        {{ dataset.cluster.jobflow_id }} cluster
+      </a></p>
     <p ng-show="dataset.cluster"><a href="http://172.27.77.141:{{ dataset.cluster.port }}">
         Hadoop Web Ui of {{ dataset.cluster.jobflow_id }} cluster 
       </a></p>

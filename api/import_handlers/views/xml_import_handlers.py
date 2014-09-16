@@ -5,8 +5,8 @@ from psycopg2._psycopg import DatabaseError
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm import joinedload, joinedload_all
 
-from api.base.resources import BaseResourceSQL, NotFound, odesk_error_response, \
-    ERR_INVALID_DATA
+from api.base.resources import BaseResourceSQL, NotFound, \
+    odesk_error_response, ERR_INVALID_DATA
 from api import api
 from api.import_handlers.models import XmlImportHandler, XmlInputParameter, \
     XmlEntity, XmlField, XmlDataSource, XmlQuery, XmlScript, XmlSqoop, Predict
@@ -14,6 +14,7 @@ from api.import_handlers.forms import XmlImportHandlerAddForm, \
     XmlInputParameterForm, XmlEntityForm, XmlFieldForm, XmlDataSourceForm, \
     XmlQueryForm, XmlScriptForm, XmlImportHandlerEditForm, XmlSqoopForm
 from api.servers.forms import ChooseServerForm
+
 
 class XmlImportHandlerResource(BaseResourceSQL):
     """
@@ -175,7 +176,8 @@ class XmlFieldResource(BaseResourceSQL):
 
     def _set_list_query_opts(self, cursor, params):
         if 'transformed' in params and params['transformed']:
-            cursor = cursor.filter(XmlField.transform.in_(XmlField.TRANSFORM_TYPES))
+            cursor = cursor.filter(
+                XmlField.transform.in_(XmlField.TRANSFORM_TYPES))
         return cursor
 
     def _get_configuration_action(self, **kwargs):

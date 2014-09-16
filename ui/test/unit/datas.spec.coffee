@@ -283,6 +283,7 @@ describe "test examples", ->
         expect($location.search).toHaveBeenCalledWith 'action=about:details'
         expect($rootScope.close).toHaveBeenCalled()
         expect($rootScope.$broadcast).toHaveBeenCalledWith 'exportsChanged'
+        expect(appendSpy).toHaveBeenCalledWith 'fields', angular.toJson($rootScope.stdFields.concat($rootScope.extraFields))
 
         # get csv, something went bad
         $rootScope.setError = jasmine.createSpy('$scope.setError')

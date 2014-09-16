@@ -58,6 +58,17 @@ angular.module('app.importhandlers.controllers.datasources', ['app.config', ])
         ctrlName: 'DialogCtrl'
         action: 'delete data source'
       })
+
+    if $routeParams.id
+      ds = new DataSource({id: $routeParams.id})
+      ds.$load(
+        show: DataSource.MAIN_FIELDS
+      ).then (->
+        $scope.edit(ds)
+      ), (->
+        $scope.setError(opts, 'loading datasource details')
+      )
+      
 ])
 
 .controller('DataSourceEditDialogCtrl', [

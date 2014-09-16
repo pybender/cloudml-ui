@@ -30,6 +30,9 @@ def get_object_from_task(task_name, args, kwargs):  # pragma: no cover
     elif task_name == 'api.model_tests.tasks.get_csv_results':
         cls = TestResult
         obj_id = args[1] if len(args) else kwargs['test_id']
+    elif task_name == 'api.model_tests.tasks.export_results_to_db':
+        cls = TestResult
+        obj_id = args[1] if len(args) else kwargs['test_id']
     elif task_name == 'api.model_tests.tasks.calculate_confusion_matrix':
         cls = TestResult
         obj_id = args[0] if len(args) else kwargs['test_id']

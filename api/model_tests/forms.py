@@ -1,7 +1,9 @@
 from api.base.forms.base_forms import BaseChooseInstanceAndDataset, \
     CharField, ModelField, ChoiceField
 from api.base.resources import ValidationError
-from api.models import DataSet, TestResult, Instance, Model
+from api.models import DataSet, TestResult, Instance, Model, \
+    PredefinedDataSource
+from api.base.forms import BaseForm, JsonField
 
 
 class AddTestForm(BaseChooseInstanceAndDataset):
@@ -29,7 +31,7 @@ class AddTestForm(BaseChooseInstanceAndDataset):
         test = super(AddTestForm, self).save(commit=False)
         test.status = test.STATUS_QUEUED
         test.examples_fields = \
-                self.model.test_import_handler.get_fields()
+            self.model.test_import_handler.get_fields()
         test.save()
 
         from tasks import run_test
@@ -50,7 +52,26 @@ class AddTestForm(BaseChooseInstanceAndDataset):
                                     options={'queue': instance.name}))
         else:  # run test with existing dataset
             dataset = self.cleaned_data.get('dataset')
-            run_test.apply_async(([dataset.id],
-                                  test.id,),
-                                  queue=instance.name)
+            run_test.apply_async(
+                ([dataset.id], test.id, ), queue=instance.name)
         return test
+
+
+class SelectFieldsForCSVForm(BaseForm):
+    """
+    Form containing one json entry called fields which is an array of fields to
+    use for generating test examples csv in _put_csv_task_action
+    """
+    required_fields = ('fields',)
+    fields = JsonField()
+
+
+class ExportToDbForm(SelectFieldsForCSVForm):
+    """
+    Form containing:
+    - json entry called fields which is an array of fields to
+    use for generating test examples to db in _put_db_task_action
+    - datasource, used to connect to db
+    """
+    datasource = ModelField(model=PredefinedDataSource, return_model=True)
+    tablename = CharField()

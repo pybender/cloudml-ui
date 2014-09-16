@@ -47,6 +47,7 @@ class TestResult(db.Model, BaseModel):
     parameters = db.Column(JSONType)
     classes_set = db.Column(postgresql.ARRAY(db.String))
     accuracy = db.Column(db.Float)
+    roc_auc = db.Column(JSONType)
     metrics = db.Column(JSONType)
     memory_usage = db.Column(db.Integer)
 
@@ -82,6 +83,14 @@ class TestResult(db.Model, BaseModel):
         )
 
     @property
+    def db_exports(self):
+        from api.async_tasks.models import AsyncTask
+        return AsyncTask.get_current_by_object(
+            self,
+            'api.model_tests.tasks.export_results_to_db',
+        )
+
+    @property
     def confusion_matrix_calculations(self):
         from api.async_tasks.models import AsyncTask
         return AsyncTask.get_current_by_object(
@@ -98,7 +107,6 @@ class TestExample(db.Model, BaseModel):
     label = db.Column(db.String(100))
     pred_label = db.Column(db.String(100))
     num = db.Column(db.Integer)
-
     prob = db.Column(postgresql.ARRAY(db.Float))
 
     data_input = db.Column(JSONType)
@@ -112,6 +120,30 @@ class TestExample(db.Model, BaseModel):
     model_id = db.Column(db.Integer, db.ForeignKey('model.id'))
     model = relationship('Model')
     model_name = db.Column(db.String(200))
+
+    @property
+    def parameters_weights(self):
+        res = []
+
+        def sort_by_weight(val):
+            return -val['weight']
+
+        def go_tree(params, prefix=''):
+            for name, val in params.iteritems():
+                if 'weight' in val and val['weight'] != 0:
+                    if prefix:
+                        val['name'] = '{0}->{1}'.format(prefix, name)
+                    else:
+                        val['name'] = name
+                    res.append(val)
+                if 'weights' in val:
+                    go_tree(val['weights'], prefix=name)
+            return res
+
+        go_tree(self.weighted_data_input)
+
+        res.sort(key=sort_by_weight)
+        return res
 
     @property
     def is_weights_calculated(self):
