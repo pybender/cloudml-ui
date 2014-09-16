@@ -29,6 +29,7 @@ describe "test examples", ->
   $location = null
   $modal = null
   createController = null
+  $scope = null
 
   MODEL_ID = '52231c7c07dbec2d26c73315'
   TEST_ID = '522456a107dbec1e3dd700b7'
@@ -50,9 +51,12 @@ describe "test examples", ->
 
     BASE_URL = settings.apiUrl + 'models/' + MODEL_ID + '/tests/' + TEST_ID + '/examples/'
 
+    $rootScope.setError = jasmine.createSpy '$rootScope.setErr'
+
     createController = (ctrl, extras) ->
+      $scope = $rootScope.$new()
       injected = extras or {}
-      _.extend injected, {'$scope' : $rootScope }
+      _.extend injected, {'$scope' : $scope }
       $controller(ctrl, injected)
   ))
 
@@ -80,11 +84,11 @@ describe "test examples", ->
       })
 
       createController "TestExamplesCtrl"
-      $rootScope.init(test)
+      $scope.init(test)
       $httpBackend.flush()
 
-      expect($rootScope.test).toEqual(test)
-      expect($rootScope.labels).toEqual(['0', '1'])
+      expect($scope.test).toEqual(test)
+      expect($scope.labels).toEqual(['0', '1'])
 
     it "should make initialization requests using filters", inject (TestResult) ->
       url = settings.apiUrl + 'models/' + MODEL_ID + '/tests/' + TEST_ID + '/?show=' + 'name,examples_fields'
@@ -102,17 +106,17 @@ describe "test examples", ->
 
       createController "TestExamplesCtrl"
 
-      $rootScope.filter_opts = {
+      $scope.filter_opts = {
         label: '0',
         some_field: 'val1',
         'data_field': 'val2',
       }
 
-      $rootScope.init(test)
+      $scope.init(test)
       $httpBackend.flush()
 
-      expect($rootScope.test).toEqual(test)
-      expect($rootScope.labels).toEqual(['0', '1'])
+      expect($scope.test).toEqual(test)
+      expect($scope.labels).toEqual(['0', '1'])
       expect($location.search).toHaveBeenCalledWith
         sort_by: ''
         order: 'asc'
@@ -120,29 +124,30 @@ describe "test examples", ->
         some_field: 'val1'
         data_field: 'val2'
 
-    xit "should make list query", inject () ->
-      fields = "id,name,label,pred_label,title,probs"
-      url = BASE_URL + '?show=' + fields
-      $httpBackend.expectGET(url).respond('{"datas": [{"id": "123"}]}')
+    it "should make list query", inject (Data) ->
+      d = new Data {id: 123, model_id: MODEL_ID, test_id: TEST_ID}
+      response = {}
+      response[d.API_FIELDNAME + 's'] = [d]
+      $httpBackend.expectGET "#{d.BASE_API_URL}?order=asc&show=id,name,label,pred_label,title,prob,example_id&sort_by="
+      .respond 200, angular.toJson response
 
-      $rootScope.test = {
+      createController "TestExamplesCtrl"
+      $scope.test = {
         id: TEST_ID,
         model_id: MODEL_ID
       }
-
-      createController "TestExamplesCtrl"
-      $rootScope.loadDatas()({filter_opts: {}})
-      expect($rootScope.loading_state).toBeTruthy()
+      $scope.loadDatas()({filter_opts: {}})
+      expect($scope.loading_state).toBeTruthy()
 
       $httpBackend.flush()
 
-      expect($rootScope.loading_state).toBeFalsy()
+      expect($scope.loading_state).toBeFalsy()
 
     it "should make filter params", inject () ->
       createController "TestExamplesCtrl"
-      $rootScope.simple_filters = {'label': '1'}
-      $rootScope.data_filters = [{name: 'field', value: 'val'}]
-      $rootScope.filter()
+      $scope.simple_filters = {'label': '1'}
+      $scope.data_filters = [{name: 'field', value: 'val'}]
+      $scope.filter()
 
       expect($location.search).toHaveBeenCalledWith
         sort_by: ''
@@ -160,34 +165,34 @@ describe "test examples", ->
       $routeParams.test_id = TEST_ID
 
       createController "GroupedExamplesCtrl"
-      expect($rootScope.loading_state).toBeTruthy()
+      expect($scope.loading_state).toBeTruthy()
 
       $httpBackend.flush()
 
-      expect($rootScope.loading_state).toBeFalsy()
-      expect($rootScope.test.id).toEqual(TEST_ID)
+      expect($scope.loading_state).toBeFalsy()
+      expect($scope.test.id).toEqual(TEST_ID)
 
       url = BASE_URL + 'action/groupped/?count=2&field=application_id'
       $httpBackend.expectGET(url).respond('{"test_examples": []}')
 
-      $rootScope.form = {
+      $scope.form = {
         'field': 'application_id',
         'count': 2
       }
 
-      $rootScope.update()
-      expect($rootScope.loading_state).toBeTruthy()
+      $scope.update()
+      expect($scope.loading_state).toBeTruthy()
 
       $httpBackend.flush()
 
-      expect($rootScope.loading_state).toBeFalsy()
+      expect($scope.loading_state).toBeFalsy()
 
   describe "ExampleDetailsCtrl", ->
 
     it "should make details request", inject () ->
-      fields = ['test_name','weighted_data_input','model',
-                'pred_label','label','prob','created_on','test_result',
-                'next', 'previous'].join(',')
+      fields = ['test_name','weighted_data_input','model', 'pred_label',
+                'label','prob','created_on','test_result', 'next', 'previous',
+                'parameters_weights', 'data_input'].join(',')
       url = BASE_URL + EXAMPLE_ID + '/?show=' + fields
       $httpBackend.expectGET(url).respond('{"data": {"id": "' + EXAMPLE_ID + '"}}')
 
@@ -195,12 +200,15 @@ describe "test examples", ->
       $routeParams.test_id = TEST_ID
       $routeParams.id = EXAMPLE_ID
 
+      $rootScope.initSections = jasmine.createSpy '$rootScope.initSections'
       createController "ExampleDetailsCtrl"
+      expect($rootScope.initSections).toHaveBeenCalledWith $scope.goSection
+      $scope.goSection()
       $httpBackend.flush()
 
-      expect($rootScope.data.id).toEqual(EXAMPLE_ID)
+      expect($scope.data.id).toEqual(EXAMPLE_ID)
 
-  describe "CsvDownloadCtrl", ->
+  xdescribe "CsvDownloadCtrl", ->
 
     it "should load data fields",
       inject (TestResult) ->

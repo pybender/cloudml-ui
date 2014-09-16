@@ -31,7 +31,7 @@ map_url_to_response = (url, key)->
 CANNED_RESPONSES = [
   key: 'multiclass classification model dict format (after 20140710)'
   url_regex: new RegExp '^.+/cloudml/models/\\d+/tests/\\d+/\\?show=' +
-                        'accuracy,metrics,examples_placement,name' +
+                        'accuracy,metrics,roc_auc,examples_placement,name' +
                         ',status,created_on,created_by?'
   data: """
 {"test": {"status": "Completed", "name": "Test1", "examples_placement": null,
@@ -51,7 +51,7 @@ CANNED_RESPONSES = [
 ,
   key: 'binary classification model dict format (after 20140710)'
   url_regex: new RegExp '^.+/cloudml/models/\\d+/tests/\\d+/\\?show=' +
-    'accuracy,metrics,examples_placement,name' +
+    'accuracy,metrics,roc_auc,examples_placement,name' +
     ',status,created_on,created_by?'
   data: """
 {"test": {"status": "Completed", "name": "Test2", "examples_placement": null,
@@ -70,7 +70,7 @@ CANNED_RESPONSES = [
 ,
   key: 'binary classification arrays format (before 20140710)'
   url_regex: new RegExp '^.+/cloudml/models/\\d+/tests/\\d+/\\?show=' +
-    'accuracy,metrics,examples_placement,name' +
+    'accuracy,metrics,roc_auc,examples_placement,name' +
     ',status,created_on,created_by?'
   data: """
 {"test": {"status": "Completed", "name": "Test1", "examples_placement": null,

@@ -4,6 +4,30 @@
 
 angular.module('app.models.controllers', ['app.config', ])
 
+.constant('MODEL_FIELDS',
+  [ 'name','status','test_import_handler', 'train_import_handler',
+    'train_import_handler_type', 'test_import_handler_type',
+    'test_handler_fields', 'labels'].join(',')
+)
+
+.factory('FIELDS_BY_SECTION', [
+  'MODEL_FIELDS'
+
+  (MODEL_FIELDS) ->
+    model: ['classifier','features_set_id','segments'].join(',')
+    training: [
+      'error','weights_synchronized','memory_usage','segments', 'trained_by',
+      'trained_on','training_time','datasets', 'train_records_count',
+      'trainer_size'
+    ].join(',')
+    about: [
+      'created_on','target_variable','example_id','example_label',
+      'updated_on','feature_count','created_by','data_fields',
+      'test_handler_fields','tags'
+    ].join(',')
+    main: MODEL_FIELDS
+])
+
 .controller('TagCtrl', [
   '$scope'
   '$location'
@@ -16,6 +40,7 @@ angular.module('app.models.controllers', ['app.config', ])
   '$scope'
   '$location'
   'Model'
+  'MODEL_FIELDS'
 
   ($scope, $location, Model, MODEL_FIELDS) ->
     $scope.MODEL = Model

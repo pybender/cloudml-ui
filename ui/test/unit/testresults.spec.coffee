@@ -59,18 +59,6 @@ describe "testresults", ->
       expect($rootScope.ACTION).toEqual('loading tests')
       expect($rootScope.FIELDS).toBeDefined()
 
-  describe "TestDialogController", ->
-
-    # TODO: find a way to inject dialog
-    xit "should init controller, make no request", inject () ->
-      createController "TestDialogController"
-
-  describe "DeleteTestCtrl", ->
-
-    # TODO: find a way to inject dialog
-    xit "should init controller, make no request", inject () ->
-      createController "DeleteTestCtrl"
-
   describe "TestDetailsCtrl", ->
 
     beforeEach ->
@@ -92,7 +80,7 @@ describe "testresults", ->
       expect($rootScope.setSection).toHaveBeenCalled()
 
     it "should load 'metrics' section", inject (TestResult) ->
-      url = BASE_URL + '?show=' + 'accuracy,metrics' + ',examples_placement,' + TestResult.MAIN_FIELDS
+      url = BASE_URL + '?show=' + 'accuracy,metrics,roc_auc' + ',examples_placement,' + TestResult.MAIN_FIELDS
       $httpBackend.expectGET(url).respond('{"test": {}}')
 
       $rootScope.goSection(['metrics', 'accuracy'])
@@ -102,7 +90,7 @@ describe "testresults", ->
 
     it "should load 'metrics' section, old list format, binary classifier",
       inject (TestResult) ->
-        url = BASE_URL + '?show=' + 'accuracy,metrics' +
+        url = BASE_URL + '?show=' + 'accuracy,metrics,roc_auc' +
           ',examples_placement,' + TestResult.MAIN_FIELDS
         $httpBackend.expectGET(url)
         .respond.apply @, map_url_to_response(url,
@@ -121,7 +109,7 @@ describe "testresults", ->
 
     it "should load 'metrics' section for multiclass classifier, new dict format",
       inject (TestResult) ->
-        url = BASE_URL + '?show=' + 'accuracy,metrics' +
+        url = BASE_URL + '?show=' + 'accuracy,metrics,roc_auc' +
           ',examples_placement,' + TestResult.MAIN_FIELDS
         $httpBackend.expectGET(url)
         .respond.apply @, map_url_to_response(url,
@@ -139,9 +127,9 @@ describe "testresults", ->
 
         expect($rootScope.prCurves).toBeUndefined() # multiclass has no pr
 
-    it "should load 'metrics' section for binary classifer, new dict format",
+    it "should load 'metrics' section for binary classifier, new dict format",
       inject (TestResult) ->
-        url = BASE_URL + '?show=' + 'accuracy,metrics' +
+        url = BASE_URL + '?show=' + 'accuracy,metrics,roc_auc' +
           ',examples_placement,' + TestResult.MAIN_FIELDS
         $httpBackend.expectGET(url)
         .respond.apply @, map_url_to_response(url,
@@ -201,8 +189,11 @@ describe "testresults", ->
 
     it "should init controller, request current exports", inject (TestResult, $timeout) ->
       url = BASE_URL + 'action/exports/'
-      $httpBackend.expectGET(url).respond('{"exports": [{"status": "In Progress"}, {"status": "Completed"}],
- "test": {"dataset": {}}}')
+      response =
+        exports: [{status: 'In Progress'}, {status: 'Completed'}]
+        db_exports: [{status: 'Nothing'}, {status: 'In Progress'}]
+        test: {dataset: {}}
+      $httpBackend.expectGET(url).respond 200, angular.toJson response
 
       test = new TestResult({id: '4321', model_id: '1234'})
 
@@ -212,15 +203,24 @@ describe "testresults", ->
 
       expect($rootScope.exports[0].status).toEqual('In Progress')
       expect($rootScope.exports[1].status).toEqual('Completed')
+      expect($rootScope.db_exports[0].status).toEqual('Nothing')
+      expect($rootScope.db_exports[1].status).toEqual('In Progress')
+      expect($rootScope.test).toEqual test
 
-      $httpBackend.expectGET(url).respond('{"exports": [{"status": "Completed"}, {"status": "Completed"}],
- "test": {"dataset": {}}}')
+      response =
+        exports: [{status: 'Completed'}, {status: 'Completed'}]
+        db_exports: [{status: 'Nothing'}, {status: 'Completed'}]
+        test: {dataset: {}}
+      $httpBackend.expectGET(url).respond 200, angular.toJson response
 
       $timeout.flush()
       $httpBackend.flush()
 
       expect($rootScope.exports[0].status).toEqual('Completed')
       expect($rootScope.exports[1].status).toEqual('Completed')
+      expect($rootScope.db_exports[0].status).toEqual('Nothing')
+      expect($rootScope.db_exports[1].status).toEqual('Completed')
+      expect($rootScope.test).toEqual test
 
   describe "TestConfusionMatrixCtrl", ->
 

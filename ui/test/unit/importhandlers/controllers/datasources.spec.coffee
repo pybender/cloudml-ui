@@ -4,17 +4,20 @@
 
 describe 'importhandlers/controllers/datasources.coffee', ->
 
-  beforeEach(module 'ngCookies')
+  beforeEach ->
+    module 'ngCookies'
+    module 'ngRoute'
 
-  beforeEach(module 'app.base')
-  beforeEach(module 'app.config')
-  beforeEach(module 'app.services')
+    module 'app.base'
+    module 'app.config'
+    module 'app.services'
 
-  beforeEach(module 'app.importhandlers.model')
-  beforeEach(module 'app.importhandlers.controllers.datasources')
+    module 'app.importhandlers.model'
+    module 'app.importhandlers.controllers.datasources'
 
   $httpBackend = null
   $scope = null
+  $rootScope = null
   settings = null
   $window = null
   createController = null
@@ -22,11 +25,12 @@ describe 'importhandlers/controllers/datasources.coffee', ->
   beforeEach inject ($injector) ->
     settings = $injector.get('settings')
     $httpBackend = $injector.get('$httpBackend')
-    $scope = $injector.get('$rootScope')
+    $rootScope = $injector.get('$rootScope')
     $controller = $injector.get('$controller')
     $window = $injector.get('$window')
 
     createController = (ctrl, extras) ->
+      $scope = $rootScope.$new()
       injected = extras or {}
       _.extend injected, {'$scope' : $scope }
       $controller(ctrl, injected)
@@ -43,6 +47,9 @@ describe 'importhandlers/controllers/datasources.coffee', ->
       expect($scope.vendors).toEqual DataSource.$VENDORS_LIST
 
   describe 'DataSourcesSelectLoader', ->
+
+    beforeEach ->
+      $rootScope.setError = jasmine.createSpy('$rootScope.setError').and.returnValue 'an error'
 
     it 'should load datasources', inject (DataSource)->
       objects = [
@@ -72,9 +79,45 @@ describe 'importhandlers/controllers/datasources.coffee', ->
 
   describe 'DataSourceListCtrl', ->
 
-    it 'should load prepare $scope', inject (DataSource)->
+    beforeEach ->
+      $rootScope.openDialog = jasmine.createSpy '$rootScope.openDialog'
+      $rootScope.setError = jasmine.createSpy '$rootScope.setError'
+
+    it 'should prepare load datasource and handle errors', inject (DataSource)->
+      # will just do nothing
       createController 'DataSourceListCtrl', {DataSource: DataSource}
-      $scope.openDialog = jasmine.createSpy '$scope.openDialog'
+
+      # success will call $scope.edit which opens the dialog
+      ds = new DataSource {id: 999}
+      response = []
+      response[ds.API_FIELDNAME] = ds
+      $httpBackend.expectGET "#{ds.BASE_API_URL}#{ds.id}/?show=name,id,type,db,created_on,created_by"
+      .respond 200, angular.toJson response
+      $routeParams = {id: ds.id}
+      createController 'DataSourceListCtrl',
+        $routeParams: $routeParams
+        DataSource: DataSource
+      $httpBackend.flush()
+
+      expect($scope.openDialog).toHaveBeenCalledWith
+        model: jasmine.any DataSource
+        template: 'partials/import_handler/datasource/edit.html'
+        ctrlName: 'ModelEditDialogCtrl'
+      expect($scope.openDialog.calls.mostRecent().args[0].model.id).toEqual 999
+
+      # error in http will call setError
+      $httpBackend.expectGET "#{ds.BASE_API_URL}#{ds.id}/?show=name,id,type,db,created_on,created_by"
+      .respond 400
+      $routeParams = {id: ds.id}
+      createController 'DataSourceListCtrl',
+        $routeParams: $routeParams
+        DataSource: DataSource
+      $httpBackend.flush()
+
+      expect($scope.setError).toHaveBeenCalledWith jasmine.any(Object), 'loading datasource details'
+
+    it 'should prepare $scope functions', inject (DataSource)->
+      createController 'DataSourceListCtrl', {DataSource: DataSource}
 
       expect($scope.MODEL).toEqual DataSource
       expect($scope.FIELDS).toEqual DataSource.MAIN_FIELDS
@@ -102,13 +145,16 @@ describe 'importhandlers/controllers/datasources.coffee', ->
 
   describe 'DataSourceEditDialogCtrl', ->
 
+    beforeEach ->
+      $rootScope.setError = jasmine.createSpy '$rootScope.setError'
+      $rootScope.$close = jasmine.createSpy '$rootScope.$close'
+
     it 'should load prepare $scope', inject (ImportHandler)->
       openOptions =
         extra:
           handler: new ImportHandler({id:123321, name: 'handler'})
           ds: {some: 'ds'}
 
-      $scope.$close = jasmine.createSpy '$scope.$close'
       createController 'DataSourceEditDialogCtrl', {openOptions: openOptions}
 
       expect($scope.handler).toEqual openOptions.extra.handler
@@ -122,12 +168,14 @@ describe 'importhandlers/controllers/datasources.coffee', ->
       $scope.$emit 'SaveObjectCtl:save:success'
       $scope.$digest()
       $httpBackend.flush()
+      expect($scope.$close).toHaveBeenCalledWith true
 
       # with errror
-      $scope.setError = jasmine.createSpy '$scope.setError'
+      $scope.$close.calls.reset()
       $httpBackend.expectGET("#{settings.apiUrl}importhandlers/123321/?show=data")
       .respond 400
       $scope.$emit 'SaveObjectCtl:save:success'
       $scope.$digest()
       $httpBackend.flush()
-      expect($scope.setError).toHaveBeenCalled()
+      expect($scope.setError).toHaveBeenCalledWith jasmine.any(Object), 'loading datasource details'
+      #expect($scope.$close).not.toHaveBeenCalled()

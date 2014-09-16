@@ -169,7 +169,7 @@ without test id and model id"
           else 'ROC Curve'
         curve = {}
         curve[label] = metrics.roc_curve[c]
-        $scope.rocCurves[c] = {curve: curve, roc_auc: $scope.test.roc_auc[c]}
+        $scope.rocCurves[c] = {curve: curve, roc_auc: $scope.test.metrics.roc_auc[c]}
       if classes.length is 1 # only binary classifier publishes PR curve
         $scope.prCurves =
           # we are switching precision/recall positions. The dictionary
@@ -181,10 +181,10 @@ without test id and model id"
             metrics.precision_recall_curve[0]
           ]
     else
-      # old list fooormat
+      # old list format
       $scope.rocCurves[1] =
         curve: {'ROC curve': $scope.test.metrics.roc_curve}
-        roc_auc: $scope.test.roc_auc
+        roc_auc: $scope.test.metrics.roc_auc
       pr = $scope.test.metrics.precision_recall_curve
       $scope.prCurves = {'Precision-Recall curve': [pr[1], pr[0]]}
 
@@ -220,6 +220,7 @@ without test id and model id"
 
   ($scope, $timeout) ->
     $scope.exports = []
+    $scope.db_exports = []
 
     $scope.init = (test) ->
       $scope.test = test
@@ -238,8 +239,7 @@ without test id and model id"
               $scope.reload()
             , 8000
 
-        reloadInProgressTasks($scope.exports)
-        reloadInProgressTasks($scope.db_exports)
+        reloadInProgressTasks $scope.exports.concat($scope.db_exports)
       )
 
     $scope.$on('exportsChanged', () ->
