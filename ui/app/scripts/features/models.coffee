@@ -141,7 +141,7 @@ angular.module('app.features.models', ['app.config'])
             @group_by = []
             for feature in origData.group_by
               @group_by.push {id: feature.id, text: feature.name}
-            console.log @group_by
+            #console.log @group_by
 
       downloadUrl: =>
         return "#{@BASE_API_URL}#{@id}/action/download/"

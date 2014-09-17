@@ -87,10 +87,6 @@ angular.module('app.features.controllers.base', ['app.config', ])
     $scope.loadParameters = () ->
       model = $scope.model
       loadParameters(model, $scope.configuration, false)
-
-    $scope.$on('SaveObjectCtl:save:success', ->
-      $scope.$close(true)
-    )
 ])
 
 .controller('ConfigurationLoaderCtrl', [

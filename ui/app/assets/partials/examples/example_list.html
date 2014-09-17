@@ -30,7 +30,7 @@
       <a class="btn btn-info" ng-click="filter()">Filter</a>
     </form>
 
-    <pagination boundary-links="true" max-size="8" num-pages="pages" current-page="page" style="margin:0;"></pagination>
+    <pagination boundary-links="true" max-size="8" total-items="pages" page="page" style="margin:0;"></pagination>
 
     <small ng-show="total">
       <p>Total examples : {{ total }}. Pages: {{ pages }}</p>
@@ -81,6 +81,6 @@
           </tr>
         </tbody>
     </table>
-    <pagination boundary-links="true" num-pages="pages" max-size="8" current-page="page"></pagination>
+    <pagination boundary-links="true" total-items="total" max-size="8" page="page"></pagination>
   </div>
 </div>

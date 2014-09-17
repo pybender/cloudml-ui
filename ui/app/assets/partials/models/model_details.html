@@ -294,11 +294,11 @@
         </div>
         <div ng-show="model.sorted_data_fields.length">
           Examples id field name:
-          <span title="ID Field Name" ng-bind="model.example_id" editable="model" value="model.example_id" editable-field="example_id" editable-placement="right" editable-input="select" source="model.sorted_data_fields"></span>
+          <span title="ID Field Name" ng-bind="model.example_id || 'not specified'" editable="model" value="model.example_id" editable-field="example_id" editable-placement="right" editable-input="select" source="model.sorted_data_fields"></span>
         </div>
         <div ng-show="!model.sorted_data_fields.length">
           Examples id field name:
-          <span title="ID Field Name" ng-bind="model.example_id" editable="model" value="model.example_id" editable-field="example_id" editable-placement="right" editable-input="text" source="model.sorted_data_fields"></span>
+          <span title="ID Field Name" ng-bind="model.example_id || 'not specified'" editable="model" value="model.example_id" editable-field="example_id" editable-placement="right" editable-input="text" source="model.sorted_data_fields"></span>
         </div>
         <div>
             Target variable:

@@ -37,6 +37,9 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
     $scope.PROCESS_STRATEGIES =
       _.sortBy ImportHandler.PROCESS_STRATEGIES, (s)-> s
 
+    $scope.$on 'modelDeleted', (deletedModel) ->
+      $scope.LOADED_SECTIONS = []
+
     $scope.go = (section) ->
       fields = ''
       mainSection = section[0]
@@ -123,7 +126,7 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
       )
 
     $scope.editDataSource = (handler, ds) ->
-      $scope.openDialog({
+      $scope.openDialog($scope, {
         model: null
         template: \
           'partials/import_handler/datasource/edit_handler_datasource.html'
@@ -133,7 +136,7 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
       })
 
     $scope.editTargetFeature = (item, feature) ->
-      $scope.openDialog({
+      $scope.openDialog($scope, {
         model: null
         template: 'partials/import_handler/edit_target_feature.html'
         ctrlName: 'TargetFeatureEditDialogCtrl'
@@ -142,7 +145,7 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
       })
 
     $scope.runQuery = (query) ->
-      $scope.openDialog({
+      $scope.openDialog($scope, {
         model: null
         template: 'partials/import_handler/test_query.html'
         ctrlName: 'QueryTestDialogCtrl'
@@ -307,13 +310,13 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
 
 .controller('ImportHandlerActionsCtrl', ['$scope', ($scope) ->
   $scope.importData = (handler) ->
-    $scope.openDialog
+    $scope.openDialog $scope,
       model: handler
       template: 'partials/import_handler/load_data.html'
       ctrlName: 'LoadDataDialogCtrl'
 
   $scope.delete = (handler) ->
-    $scope.openDialog
+    $scope.openDialog $scope,
       model: handler
       template: 'partials/base/delete_dialog.html'
       ctrlName: 'DeleteImportHandlerCtrl'
@@ -321,14 +324,14 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
       path: "/handlers/#{handler.TYPE}"
 
   $scope.testHandler = (handler) ->
-    $scope.openDialog
+    $scope.openDialog $scope,
       template: 'partials/import_handler/test_handler.html'
       ctrlName: 'ImportTestDialogCtrl'
       action: 'test import handler'
       extra: {handler: $scope.handler}
 
   $scope.uploadHandlerToPredict = (model) ->
-    $scope.openDialog
+    $scope.openDialog $scope,
       model: model
       template: 'partials/servers/choose.html'
       ctrlName: 'ImportHandlerUploadToServerCtrl'

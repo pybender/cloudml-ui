@@ -110,14 +110,17 @@ angular.module('app.controllers', ['app.config', ])
       $scope.model.$save(only: fields).then (->
         $scope.savingProgress = '100%'
 
-        $timeout ->
-          $scope.$emit 'SaveObjectCtl:save:success', $scope.model
-          if $scope.LIST_MODEL_NAME?
-            $scope.$emit 'BaseListCtrl:start:load', $scope.LIST_MODEL_NAME
+        $scope.$emit 'SaveObjectCtl:save:success', $scope.model
+        if $scope.LIST_MODEL_NAME?
+          $scope.$emit 'BaseListCtrl:start:load', $scope.LIST_MODEL_NAME
 
-          if $scope.model.BASE_UI_URL && !$scope.DONT_REDIRECT
-            $location.path $scope.model.objectUrl()
-        , 300
+        if $scope.model.BASE_UI_URL && !$scope.DONT_REDIRECT
+          $location.path $scope.model.objectUrl()
+        # timeout the close a little bit late, to make sure listeners have
+        # heared the emitted events, or else the transcluded scope of the $modal
+        # will be destroyed and no events will be handled
+        $timeout ->
+          $scope.$close(true)
 
       ), ((opts) ->
         $scope.err = $scope.setError(opts, "saving")
@@ -218,19 +221,30 @@ angular.module('app.controllers', ['app.config', ])
 .controller('BaseDeleteCtrl', [
   '$scope'
   '$location'
+  '$timeout'
 
-  ($scope, $location) ->
+  ($scope, $location, $timeout) ->
     $scope.resetError()
 
     $scope.delete = (result) ->
       $scope.model.$delete().then (() ->
-        $scope.$close(true)
-        $scope.ownerScope.$emit('modelDeleted', [$scope.model])
-        #$scope.ownerScope.$broadcast('modelDeleted', [$scope.model])
+        $scope.$emit('modelDeleted', [$scope.model])
+        #$scope.$broadcast('modelDeleted', [$scope.model])
+
         if $scope.LIST_MODEL_NAME?
-            $scope.$emit 'BaseListCtrl:start:load', $scope.LIST_MODEL_NAME
+          LIST_MODEL_NAME = $scope.LIST_MODEL_NAME
+        else if $scope.model?.LIST_MODEL_NAME?
+          LIST_MODEL_NAME = $scope.model.LIST_MODEL_NAME
+
+        if LIST_MODEL_NAME?
+            $scope.$emit 'BaseListCtrl:start:load', LIST_MODEL_NAME
         if $scope.path?
           $location.url $scope.path
+        # timeout the close a little bit late, to make sure listeners have
+        # heared the emitted events, or else the transcluded scope of the $modal
+        # will be destroyed and no events will be handled
+        $timeout ->
+          $scope.$close(true)
       ), ((opts) ->
         $scope.setError(opts, $scope.action + ' ' + $scope.model.name)
       )
@@ -246,7 +260,6 @@ angular.module('app.controllers', ['app.config', ])
     $scope.model = openOptions.model
     $scope.path = openOptions.path
     $scope.action = openOptions.action
-    $scope.ownerScope = openOptions.ownerScope
 ])
 
 .controller('BaseListCtrl', [
@@ -276,7 +289,8 @@ angular.module('app.controllers', ['app.config', ])
         , true)
 
     $scope.load = (append=false, extra={}) ->
-      params = $.extend({'show': $scope.FIELDS},
+      show = "#{$scope.FIELDS},#{_.keys($scope.kwargs)}"
+      params = $.extend({'show': show},
                          $scope.kwargs || {},
                          $scope.filter_opts, extra)
       $scope.MODEL.$loadAll(params).then ((opts) ->
@@ -296,13 +310,6 @@ angular.module('app.controllers', ['app.config', ])
       $scope.kwargs['page'] += 1
       $scope.load(true)
 
-    $scope.$on('modelDeleted', () ->
-      $scope.load()
-    )
-# TODO: nader20140901 consider removing never emitted or broadcasted
-#    $scope.$on('modelCreated', () ->
-#      $scope.load()
-#    )
     $rootScope.$on('modelChanged', () ->
       $scope.load()
     )

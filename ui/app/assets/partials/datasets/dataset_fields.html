@@ -19,7 +19,7 @@
   <!-- New Dataset -->
   <div ng-show="data.new_dataset_selected" ng-init="data.parameters = {}">
     <span ng-show="errorList.parameters" class="error_message" class="help-block" ng-bind="errorList.parameters" />
-    <div ng-repeat="param in params" class="control-group">
+    <div ng-repeat="param in params track by $index" class="control-group">
       <input class="input-xlarge" title="Load dataset using import handler" ng-model="data.parameters[param]" title="Select {{ param }}" name="{{ param }}" placeholder='{{ param }}' type='text' ng-required="data.new_dataset_selected" /> <i class="icon-question-sign" title="Fill {{ param }} parameter" />
       <span ng-show="!data.parameters[param]" class="help-inline">*</span>
     </div>

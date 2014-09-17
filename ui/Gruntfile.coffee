@@ -39,6 +39,9 @@ module.exports = (grunt)->
         files: ['<%= cmlConfig.appDir %>/assets/index.html',
                 'vendor.config.coffee']
         tasks: ['index:local']
+      less:
+        files: ['<%= cmlConfig.appDir %>/styles/**/*.less']
+        tasks: ['less:compile']
 
     coffee:
       compile:
@@ -87,6 +90,11 @@ module.exports = (grunt)->
         ,
           src: 'bower_components/bootstrap/img/glyphicons-halflings-white.png'
           dest: '<%= cmlConfig.tmpDir %>/img/'
+          expand: true
+          flatten: true
+        ,
+          src: 'bower_components/select2/select2.png'
+          dest: '<%= cmlConfig.tmpDir %>/img'
           expand: true
           flatten: true
         ,

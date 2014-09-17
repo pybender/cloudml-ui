@@ -24,7 +24,7 @@
   <tr ng-repeat="handler in objects">
     <td><a href="#{{ handler.objectUrl() }}">{{ handler.name }}</a></td>
     <td>
-      <span ng-repeat="param in handler.import_params">{{ param }} </span>
+      <span ng-repeat="param in handler.import_params track by $index">{{ param }} </span>
     </td>
     <td>
         <span title="dates in GMT">{{ handler.created_on|format_date }}
