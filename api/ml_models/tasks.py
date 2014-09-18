@@ -244,6 +244,9 @@ def fill_model_parameter_weights(model_id, segment_id=None):
         raise
     return msg
 
+        
+            
+
 
 @celery.task(base=SqlAlchemyTask)
 def transform_dataset_for_download(model_id, dataset_id):

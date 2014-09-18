@@ -1,4 +1,6 @@
 from collections import defaultdict
+import math
+import scipy
 
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import relationship, deferred, backref
@@ -183,9 +185,9 @@ class TestExample(db.Model, BaseModel):
                 save_raw=False)
         vect_data1 = trainer._get_vectorized_data(
             segment, trainer._test_prepare_feature)
-        import scipy
-        vect_data = scipy.sparse.hstack(vect_data1).todense().tolist()[0]
-            
+        
+        vect = scipy.sparse.hstack(vect_data1)
+        vect_data = vect.todense().tolist()[0]
         
         data = get_features_vect_data(vect_data,
                                       features.items(),
