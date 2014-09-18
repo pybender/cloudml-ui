@@ -884,6 +884,14 @@ angular.module('app.directives', [
   }
 ])
 
+
+.directive('stopEvent', ->
+  restrict: 'A'
+  link: (scope, element, attr) ->
+    element.bind attr.stopEvent, (e)->
+      e.stopPropagation()
+)
+
 createSVG = (scope, element, width=400, height=300) ->
   scope.margin = {top: 20, right: 20, bottom: 30, left: 210}
   if not scope.svg?
