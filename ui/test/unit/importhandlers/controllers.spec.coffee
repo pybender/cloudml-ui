@@ -591,6 +591,7 @@ describe "app.importhandlers.controllers", ->
         action: 'some action'
         model: {some: 'model'}
         path: 'some/path'
+        ownerScope: {some: 'owner_scope'}
 
       models = [
         new Model
@@ -610,6 +611,7 @@ describe "app.importhandlers.controllers", ->
       expect($scope.path).toEqual openOptions.path
       expect($scope.action).toEqual openOptions.action
       expect($scope.extra_template).toEqual 'partials/import_handler/extra_delete.html'
+      expect($scope.ownerScope).toEqual openOptions.ownerScope
       expect(({id: x.id, name: x.name} for x in $scope.umodels)).toEqual [{name: 'attached model', id: 99}]
 
       # error handling

@@ -82,7 +82,7 @@ angular.module('app.features.models', ['app.config'])
   ($http, $q, settings, BaseModel) ->
     class Classifier extends BaseModel
       BASE_API_URL: "#{settings.apiUrl}features/classifiers/"
-      BASE_UI_URL: "/features/classifiers/"
+      BASE_UI_URL: "/features/classifiers"
       API_FIELDNAME: 'classifier'
       @LIST_MODEL_NAME: 'classifiers'
       LIST_MODEL_NAME: @LIST_MODEL_NAME
@@ -125,7 +125,7 @@ angular.module('app.features.models', ['app.config'])
   (settings, BaseModel, Feature) ->
     class FeaturesSet extends BaseModel
       BASE_API_URL: "#{settings.apiUrl}features/sets/"
-      BASE_UI_URL: "/features/sets/"
+      BASE_UI_URL: "/features/sets"
       API_FIELDNAME: 'feature_set'
       @MAIN_FIELDS: 'id,schema_name,features_count,target_variable'
 
@@ -304,7 +304,7 @@ angular.module('app.features.models', ['app.config'])
   ($http, $q, settings, $filter, BaseModel, Param) ->
     class NamedFeatureType extends BaseModel
       BASE_API_URL: "#{settings.apiUrl}features/named_types/"
-      BASE_UI_URL: "/features/types/"
+      BASE_UI_URL: "/features/types"
       API_FIELDNAME: 'named_type'
       @MAIN_FIELDS: 'id,name,type,input_format,params,created_on,created_by'
       @$TYPES_LIST: ['boolean', 'int', 'float', 'numeric', 'date',

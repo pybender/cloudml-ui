@@ -17,7 +17,7 @@ angular.module('app.features.controllers', ['app.config', ])
 
     $scope.add = () ->
       set = new FeaturesSet()
-      $scope.openDialog({
+      $scope.openDialog($scope, {
         model: set
         template: 'partials/features/sets/add.html'
         ctrlName: 'AddFeatureSetDialogCtrl'
@@ -47,7 +47,7 @@ angular.module('app.features.controllers', ['app.config', ])
       , true)
       
     $scope.addFeature = () ->
-      $scope.openDialog({
+      $scope.openDialog($scope, {
         model: $scope.featuresSet
         template: 'partials/features/items/add.html'
         ctrlName: 'AddFeatureDialogCtrl'
@@ -166,11 +166,12 @@ angular.module('app.features.controllers', ['app.config', ])
       $scope.model = opts.model
 
     $scope.deleteModel = (model) ->
-      $scope.openDialog({
+      $scope.openDialog($scope, {
         model: model
         template: 'partials/base/delete_dialog.html'
         ctrlName: 'DialogCtrl'
         action: 'delete feature'
+        list_model_name: 'features'
       })
 
     $scope.makeRequired = (feature, is_required) ->
@@ -192,7 +193,7 @@ angular.module('app.features.controllers', ['app.config', ])
       )
 
     $scope.editScaler = (feature) ->
-      $scope.openDialog({
+      $scope.openDialog($scope, {
         model: null
         template: 'partials/features/scalers/edit_feature_scaler.html'
         ctrlName: 'ModelWithParamsEditDialogCtrl'
@@ -200,7 +201,7 @@ angular.module('app.features.controllers', ['app.config', ])
       })
 
     $scope.editTransformer = (feature) ->
-      $scope.openDialog({
+      $scope.openDialog($scope, {
         model: null
         template: 'partials/features/transformers/edit_feature_transformer.html'
         ctrlName: 'ModelWithParamsEditDialogCtrl'

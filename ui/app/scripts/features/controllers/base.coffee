@@ -36,10 +36,6 @@ angular.module('app.features.controllers.base', ['app.config', ])
       $scope.LIST_MODEL_NAME = $scope.model.LIST_MODEL_NAME
 
     $scope.DONT_REDIRECT = true
-
-    $scope.$on('SaveObjectCtl:save:success', ->
-      $scope.$close(true)
-    )
 ])
 
 # TODO: nader20140901, subject for removal cannot find any usage for it

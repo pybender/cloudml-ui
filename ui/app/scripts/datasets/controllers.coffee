@@ -52,13 +52,12 @@ filesize,records_count,time,created_by,updated_by'
       $scope.handler = opts.handler
 
     $scope.delete = ()->
-      $scope.openDialog({
+      $scope.openDialog($scope, {
         model: $scope.ds
         template: 'partials/base/delete_dialog.html'
         ctrlName: 'DialogCtrl'
         action: 'delete DataSet'
         path: $scope.handler.objectUrl()
-        ownerScope: $scope
       })
 
     $scope.download = () ->
@@ -180,6 +179,9 @@ filesize,records_count,time,created_by,updated_by'
     $scope.parameters = {}
     handler = openOptions.model
     $scope.handler = handler
+    # TODO: nader20140917, json IH has the tendency of accepting duplicate
+    # parameters which affects the repeater in load_data.html and also affects
+    # the number of fields in the dataset import dialog bog
     $scope.params = handler.import_params
     $scope.format = 'json'
     $scope.formats = [

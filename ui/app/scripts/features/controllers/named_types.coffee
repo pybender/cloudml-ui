@@ -90,7 +90,7 @@ angular.module('app.features.controllers.named_types', ['app.config', ])
     $scope.filter_opts = {'is_predefined': 1}
 
     $scope.edit = (namedType) ->
-      $scope.openDialog({
+      $scope.openDialog($scope, {
         model: namedType
         template: 'partials/features/named_types/edit.html'
         ctrlName: 'ModelEditDialogCtrl'
@@ -98,7 +98,7 @@ angular.module('app.features.controllers.named_types', ['app.config', ])
 
     $scope.add = () ->
       namedType = new NamedFeatureType()
-      $scope.openDialog({
+      $scope.openDialog($scope, {
         model: namedType
         template: 'partials/features/named_types/add.html'
         ctrlName: 'ModelEditDialogCtrl'
@@ -106,10 +106,11 @@ angular.module('app.features.controllers.named_types', ['app.config', ])
       })
 
     $scope.delete = (namedType) ->
-      $scope.openDialog({
+      $scope.openDialog($scope, {
         model: namedType
         template: 'partials/base/delete_dialog.html'
         ctrlName: 'DialogCtrl'
         action: 'delete named feature type'
+        path: namedType.BASE_UI_URL
       })
 ])

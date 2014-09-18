@@ -78,29 +78,29 @@ angular.module('app.clusters.controllers', ['app.config', ])
 
   ($scope) ->
     $scope.createSshTunnel = (cluster) ->
-      $scope.openDialog({
+      $scope.openDialog($scope, {
         model: cluster
         template: 'partials/clusters/create_ssh_tunnel.html'
         ctrlName: 'SshTunnelCtrl'
       })
 
     $scope.terminateSshTunnel = (cluster) ->
-      $scope.openDialog({
+      $scope.openDialog($scope, {
         model: cluster
         template: 'partials/clusters/terminate_ssh_tunnel.html'
         ctrlName: 'SshTunnelCtrl'
       })
 
     $scope.terminateCluster = (cluster) ->
-      $scope.openDialog({
+      $scope.openDialog($scope, {
         model: cluster
         template: 'partials/base/delete_dialog.html'
         ctrlName: 'DialogCtrl'
         action: 'delete cluster'
+        path: cluster.BASE_UI_URL
       })
 ])
 
-# TODO: Cover
 .controller('ClusterDetailsCtrl', [
   '$scope'
   '$routeParams'

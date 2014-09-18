@@ -33,7 +33,7 @@ angular.module('app.base', ['app.config', 'app.services'])
 
       # Returns object details url in UI
       objectUrl: =>
-        return @BASE_UI_URL + @id
+        return "#{@BASE_UI_URL}/#{@id}"
 
       # Checks whether object saved to db
       isNew: -> if @id == null then true else false

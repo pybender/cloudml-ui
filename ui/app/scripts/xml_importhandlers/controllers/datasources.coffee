@@ -26,6 +26,10 @@ angular.module(
     $scope.init = (handler) ->
       $scope.handler = handler
       $scope.kwargs = {'import_handler_id': handler.id}
+      # TODO: nader20140917, this watch never triggers, since the datasource
+      # saved in a detached manner from the import handler, better is to listen
+      # to SaveObjectCtl:save:success. and actually the BaseListCtrl
+      # takes care of reloading listening to SaveObjectCtl:save:success
       $scope.$watch('handler.xml_data_sources', (datasources, old, scope) ->
         if datasources?
           $scope.objects = datasources
@@ -36,27 +40,25 @@ angular.module(
         import_handler_id: $scope.handler.id,
         params: {}
       })
-      $scope.openDialog({
+      $scope.openDialog($scope, {
         model: datasource
         template: 'partials/xml_import_handlers/datasources/edit.html'
         ctrlName: 'ModelWithParamsEditDialogCtrl'
         action: 'add datasource'
-        #path: Datasource.LIST_MODEL_NAME
       })
 
     $scope.edit = (datasource)->
       datasource = new Datasource(datasource)
-      $scope.openDialog({
+      $scope.openDialog($scope, {
         model: datasource
         template: 'partials/xml_import_handlers/datasources/edit.html'
         ctrlName: 'ModelWithParamsEditDialogCtrl'
         action: 'edit datasource'
-        #path: Datasource.LIST_MODEL_NAME
       })
 
     $scope.delete = (datasource)->
       datasource = new Datasource(datasource)
-      $scope.openDialog({
+      $scope.openDialog($scope, {
         model: datasource
         template: 'partials/base/delete_dialog.html'
         ctrlName: 'DialogCtrl'

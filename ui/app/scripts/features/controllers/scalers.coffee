@@ -39,7 +39,7 @@ angular.module('app.features.controllers.scalers', ['app.config', ])
     $scope.LIST_MODEL_NAME = Scaler.LIST_MODEL_NAME
 
     $scope.edit = (scaler) ->
-      $scope.openDialog({
+      $scope.openDialog($scope, {
         model: scaler
         template: 'partials/features/scalers/edit_predefined.html'
         ctrlName: 'ModelWithParamsEditDialogCtrl'
@@ -49,7 +49,7 @@ angular.module('app.features.controllers.scalers', ['app.config', ])
 
     $scope.add = () ->
       scalar = new Scaler()
-      $scope.openDialog({
+      $scope.openDialog($scope, {
         model: scalar
         template: 'partials/features/scalers/add_predefined.html'
         ctrlName: 'ModelWithParamsEditDialogCtrl'
@@ -58,10 +58,11 @@ angular.module('app.features.controllers.scalers', ['app.config', ])
       })
 
     $scope.delete = (scalar) ->
-      $scope.openDialog({
+      $scope.openDialog($scope, {
         model: scalar
         template: 'partials/base/delete_dialog.html'
         ctrlName: 'DialogCtrl'
         action: 'delete predefined scaler'
+        path: scalar.BASE_UI_URL
       })
 ])

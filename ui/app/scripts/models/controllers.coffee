@@ -303,7 +303,7 @@ angular.module('app.models.controllers', ['app.config', ])
     $scope.test_model = (model)->
       $scope._showModelActionDialog(model, 'test', (model) ->
         model.$load(show: 'test_handler_fields').then (->
-          $scope.openDialog({
+          $scope.openDialog($scope, {
             model: model
             template: 'partials/testresults/run_test.html'
             ctrlName: 'TestDialogController'
@@ -316,22 +316,23 @@ angular.module('app.models.controllers', ['app.config', ])
 
     $scope.train_model = (model)->
       $scope._showModelActionDialog(model, 'train', (model) ->
-        $scope.openDialog({
+        $scope.openDialog($scope, {
           model: model
           template: 'partials/models/model_train_popup.html'
           ctrlName: 'TrainModelCtrl'
         }))
 
     $scope.delete_model = (model) ->
-      $scope.openDialog({
+      $scope.openDialog($scope, {
         model: model
         template: 'partials/base/delete_dialog.html'
         ctrlName: 'DialogCtrl'
         action: 'delete model'
+        path: model.BASE_UI_URL
       })
 
     $scope.editClassifier = (model) ->
-      $scope.openDialog({
+      $scope.openDialog($scope, {
         model: null
         template: 'partials/features/classifiers/edit.html'
         ctrlName: 'ModelWithParamsEditDialogCtrl'
@@ -340,7 +341,7 @@ angular.module('app.models.controllers', ['app.config', ])
       })
 
     $scope.uploadModelToPredict = (model) ->
-      $scope.openDialog({
+      $scope.openDialog($scope, {
         model: model
         template: 'partials/servers/choose.html'
         ctrlName: 'ModelUploadToServerCtrl'

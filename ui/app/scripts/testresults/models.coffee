@@ -41,7 +41,7 @@ angular.module('app.testresults.model', ['app.config'])
         super opts
         @BASE_API_URL = TestResult.$get_api_url({
           'model_id': @model_id}, @)
-        @BASE_UI_URL = "/models/#{@model_id}/tests/"
+        @BASE_UI_URL = "/models/#{@model_id}/tests"
 
       @$get_api_url: (opts, model) ->
         model_id = opts.model_id
@@ -50,10 +50,10 @@ angular.module('app.testresults.model', ['app.config'])
         return "#{settings.apiUrl}models/#{model_id}/tests/"
 
       objectUrl: =>
-        return @BASE_UI_URL + @id
+        return "#{@BASE_UI_URL}/#{@id}"
 
       examplesUrl: =>
-        return "#{@BASE_UI_URL}#{@id}?action=examples:list"
+        return "#{@BASE_UI_URL}/#{@id}?action=examples:list"
 
       examplesCsvUrl: () ->
         return "#{@BASE_API_URL}#{@id}/examples/action/csv_task/"
@@ -62,7 +62,7 @@ angular.module('app.testresults.model', ['app.config'])
         return "#{@BASE_API_URL}#{@id}/examples/action/db_task/"
 
       avaragePrecisionUrl: =>
-        return "#{@BASE_UI_URL}#{@id}/grouped_examples"
+        return "#{@BASE_UI_URL}/#{@id}/grouped_examples"
 
       fullName: =>
         if @model? || @model_name

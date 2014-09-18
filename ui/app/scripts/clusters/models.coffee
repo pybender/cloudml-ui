@@ -9,7 +9,7 @@ angular.module('app.clusters.models', ['app.config'])
   ($http, $q, settings, BaseModel) ->
     class Cluster  extends BaseModel
       BASE_API_URL: "#{settings.apiUrl}instances/clusters/"
-      BASE_UI_URL: '/aws/clusters/'
+      BASE_UI_URL: '/aws/clusters'
       API_FIELDNAME: 'cluster'
 
       $createSshTunnel: (opts={}) =>

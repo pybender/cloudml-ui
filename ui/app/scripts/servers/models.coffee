@@ -96,7 +96,7 @@ angular.module('app.servers.model', ['app.config'])
   ($http, $q, settings, BaseModel) ->
     class Server extends BaseModel
       BASE_API_URL: "#{settings.apiUrl}servers/"
-      BASE_UI_URL: '/servers/'
+      BASE_UI_URL: '/servers'
       API_FIELDNAME: 'server'
       @MAIN_FIELDS: 'id,name,ip'
 

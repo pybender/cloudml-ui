@@ -25,7 +25,7 @@ angular.module(
         import_handler_id: $scope.handler.id,
         data: ''
       })
-      $scope.openDialog({
+      $scope.openDialog($scope, {
         model: script
         template: 'partials/xml_import_handlers/scripts/edit.html'
         ctrlName: 'ModelEditDialogCtrl'
@@ -34,7 +34,7 @@ angular.module(
 
     $scope.edit = (script)->
       script = new Script(script)
-      $scope.openDialog({
+      $scope.openDialog($scope, {
         model: script
         template: 'partials/xml_import_handlers/scripts/edit.html'
         ctrlName: 'ModelEditDialogCtrl'
@@ -43,7 +43,7 @@ angular.module(
 
     $scope.delete = (script)->
       script = new Script(script)
-      $scope.openDialog({
+      $scope.openDialog($scope, {
         model: script
         template: 'partials/base/delete_dialog.html'
         ctrlName: 'DialogCtrl'

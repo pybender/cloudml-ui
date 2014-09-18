@@ -18,13 +18,15 @@ angular.module('app.models.model', ['app.config'])
     ###
     class Model extends BaseModel
       BASE_API_URL: "#{settings.apiUrl}models/"
-      BASE_UI_URL: '/models/'
+      BASE_UI_URL: '/models'
       API_FIELDNAME: 'model'
       DEFAULT_FIELDS_TO_SAVE: ['train_import_handler', 'features',
                                'trainer', 'test_import_handler', 'name',
                                'test_import_handler_file',
                                'train_import_handler_file']
       @MAIN_FIELDS: 'name,id,status'
+      @LIST_MODEL_NAME: 'models'
+      LIST_MODEL_NAME: @LIST_MODEL_NAME
 
       id: null
       name: null

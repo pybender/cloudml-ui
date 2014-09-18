@@ -144,14 +144,14 @@ without test id and model id"
         $scope.LOADED_SECTIONS.push 'main'
 
   $scope.downloadCsvResults = () ->
-    $scope.openDialog({
+    $scope.openDialog($scope, {
         model: $scope.test
         template: 'partials/datasets/csv_list_popup.html'
         ctrlName: 'CsvDownloadCtrl'
     })
 
   $scope.exportResultsToDb = () ->
-    $scope.openDialog({
+    $scope.openDialog($scope, {
         $dialog: $dialog
         model: $scope.test
         template: 'partials/testresults/export_to_db_popup.html'
@@ -169,7 +169,7 @@ without test id and model id"
           else 'ROC Curve'
         curve = {}
         curve[label] = metrics.roc_curve[c]
-        $scope.rocCurves[c] = {curve: curve, roc_auc: $scope.test.metrics.roc_auc[c]}
+        $scope.rocCurves[c] = {curve: curve, roc_auc: $scope.test.roc_auc[c]}
       if classes.length is 1 # only binary classifier publishes PR curve
         $scope.prCurves =
           # we are switching precision/recall positions. The dictionary
@@ -184,7 +184,7 @@ without test id and model id"
       # old list format
       $scope.rocCurves[1] =
         curve: {'ROC curve': $scope.test.metrics.roc_curve}
-        roc_auc: $scope.test.metrics.roc_auc
+        roc_auc: $scope.test.roc_auc
       pr = $scope.test.metrics.precision_recall_curve
       $scope.prCurves = {'Precision-Recall curve': [pr[1], pr[0]]}
 
@@ -205,13 +205,12 @@ without test id and model id"
       $scope.test = test
 
     $scope.delete_test = (model) ->
-      $scope.openDialog
+      $scope.openDialog $scope,
         model: $scope.test
         template: 'partials/base/delete_dialog.html'
         ctrlName: 'DialogCtrl'
         action: 'delete Test'
         path: $scope.test.model.objectUrl()
-        ownerScope: $scope
 ])
 
 .controller('TestExportsCtrl', [

@@ -19,7 +19,6 @@ angular.module(
       $rootScope.$on('BaseListCtrl:start:load', (event, name) ->
         if name == 'entities' then $scope.load()
       )
-      $rootScope.$on('modelDeleted', () -> $scope.load())
       $scope.$watch('handler.entity', (entity, old, scope) ->
         if entity?
           $scope.objects = entity
@@ -37,7 +36,7 @@ angular.module(
         'import_handler_id': entity.import_handler_id
         'entity_id': entity.id
       })
-      $scope.openDialog({
+      $scope.openDialog($scope, {
         model: ent
         template: 'partials/xml_import_handlers/entities/edit.html'
         ctrlName: 'ModelEditDialogCtrl'
@@ -49,7 +48,7 @@ angular.module(
         'import_handler_id': entity.import_handler_id
         'entity_id': entity.id
       })
-      $scope.openDialog({
+      $scope.openDialog($scope, {
         model: field
         template: 'partials/xml_import_handlers/fields/edit.html'
         ctrlName: 'ModelWithParamsEditDialogCtrl'
@@ -57,7 +56,7 @@ angular.module(
       })
 
     $scope.delete = (item) ->
-      $scope.openDialog({
+      $scope.openDialog($scope, {
         model: item
         template: 'partials/base/delete_dialog.html'
         ctrlName: 'DialogCtrl'
@@ -74,7 +73,7 @@ angular.module(
         transformed_field: entity.transformed_field_id
         entity_id: entity.entity_id
       })
-      $scope.openDialog({
+      $scope.openDialog($scope, {
         model: entity
         template: 'partials/xml_import_handlers/entities/edit_datasource.html'
         ctrlName: 'ModelEditDialogCtrl'
@@ -94,7 +93,7 @@ angular.module(
       )
 
     $scope.runQuery = (queryObj) ->
-      $scope.openDialog({
+      $scope.openDialog($scope, {
         model: null
         template: 'partials/import_handler/test_query.html'
         ctrlName: 'QueryTestDialogCtrl'
@@ -111,7 +110,7 @@ angular.module(
         'entity_id': entity.id
         'entity': entity.id
       })
-      $scope.openDialog({
+      $scope.openDialog($scope, {
         model: sqoop
         template: 'partials/xml_import_handlers/sqoop/edit.html'
         ctrlName: 'ModelEditDialogCtrl'

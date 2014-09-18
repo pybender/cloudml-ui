@@ -113,7 +113,7 @@ angular.module('app.datas.model', ['app.config'])
         @$make_all_request(url, resolver, opts)
 
       objectUrl: =>
-        return @BASE_UI_URL + @id
+        return "#{@BASE_UI_URL}/#{@id}"
 
       listUrl: =>
         return "/models/#{@model_id}/tests/#{@test_id}?action=examples:list"

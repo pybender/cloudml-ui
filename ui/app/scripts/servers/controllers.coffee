@@ -48,7 +48,7 @@ angular.module('app.servers.controllers', ['app.config', ])
       )
 
     $scope.deleteFile = (file) ->
-      $scope.openDialog({
+      $scope.openDialog($scope, {
         model: file
         template: 'partials/base/delete_dialog.html'
         ctrlName: 'DialogCtrl'

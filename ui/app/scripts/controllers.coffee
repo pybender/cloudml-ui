@@ -112,15 +112,23 @@ angular.module('app.controllers', ['app.config', ])
 
         $scope.$emit 'SaveObjectCtl:save:success', $scope.model
         if $scope.LIST_MODEL_NAME?
-          $scope.$emit 'BaseListCtrl:start:load', $scope.LIST_MODEL_NAME
+          LIST_MODEL_NAME = $scope.LIST_MODEL_NAME
+        else if $scope.model?.LIST_MODEL_NAME?
+          LIST_MODEL_NAME = $scope.model.LIST_MODEL_NAME
+
+        if LIST_MODEL_NAME?
+          $scope.$emit 'BaseListCtrl:start:load', LIST_MODEL_NAME
 
         if $scope.model.BASE_UI_URL && !$scope.DONT_REDIRECT
           $location.path $scope.model.objectUrl()
         # timeout the close a little bit late, to make sure listeners have
         # heared the emitted events, or else the transcluded scope of the $modal
-        # will be destroyed and no events will be handled
-        $timeout ->
-          $scope.$close(true)
+        # will be destroyed and no events will be handled. Also SaveObjCtrl some
+        # times work outside of a modal, like editing or saving a model and
+        # hence there is no modal to close
+        if $scope.$close
+          $timeout ->
+            $scope.$close(true)
 
       ), ((opts) ->
         $scope.err = $scope.setError(opts, "saving")
@@ -222,14 +230,14 @@ angular.module('app.controllers', ['app.config', ])
   '$scope'
   '$location'
   '$timeout'
+  '$route'
 
-  ($scope, $location, $timeout) ->
+  ($scope, $location, $timeout, $route) ->
     $scope.resetError()
 
     $scope.delete = (result) ->
       $scope.model.$delete().then (() ->
         $scope.$emit('modelDeleted', [$scope.model])
-        #$scope.$broadcast('modelDeleted', [$scope.model])
 
         if $scope.LIST_MODEL_NAME?
           LIST_MODEL_NAME = $scope.LIST_MODEL_NAME
@@ -240,6 +248,7 @@ angular.module('app.controllers', ['app.config', ])
             $scope.$emit 'BaseListCtrl:start:load', LIST_MODEL_NAME
         if $scope.path?
           $location.url $scope.path
+          $route.reload()
         # timeout the close a little bit late, to make sure listeners have
         # heared the emitted events, or else the transcluded scope of the $modal
         # will be destroyed and no events will be handled
@@ -260,6 +269,7 @@ angular.module('app.controllers', ['app.config', ])
     $scope.model = openOptions.model
     $scope.path = openOptions.path
     $scope.action = openOptions.action
+    $scope.LIST_MODEL_NAME = openOptions.list_model_name
 ])
 
 .controller('BaseListCtrl', [

@@ -86,7 +86,7 @@ describe 'app.xml_importhandlers.models', ->
     it 'can create an instance with predefined properties set', inject (XmlImportHandler)->
       handler = new XmlImportHandler
       expect(handler.BASE_API_URL).toEqual "#{settings.apiUrl}xml_import_handlers/"
-      expect(handler.BASE_UI_URL).toEqual "/handlers/xml/"
+      expect(handler.BASE_UI_URL).toEqual "/handlers/xml"
       expect(handler.API_FIELDNAME).toEqual 'xml_import_handler'
       expect(handler.LIST_MODEL_NAME).toEqual XmlImportHandler.LIST_MODEL_NAME
       expect(handler.TYPE).toEqual 'XML'

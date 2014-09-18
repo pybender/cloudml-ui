@@ -38,7 +38,7 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
   (settings, BaseModel, InputParameter, Entity) ->
     class XmlImportHandler extends BaseModel
       BASE_API_URL: "#{settings.apiUrl}xml_import_handlers/"
-      BASE_UI_URL: "/handlers/xml/"
+      BASE_UI_URL: "/handlers/xml"
       API_FIELDNAME: 'xml_import_handler'
       @LIST_MODEL_NAME: 'xml_import_handlers'
       LIST_MODEL_NAME: @LIST_MODEL_NAME
