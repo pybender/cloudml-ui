@@ -27,7 +27,7 @@ angular.module('app.datas.model', ['app.config'])
         @BASE_API_URL = Data.$get_api_url({
           'model_id': @model_id
           'test_id': @test_id}, @)
-        @BASE_UI_URL = "/models/#{@model_id}/tests/#{@test_id}/examples/"
+        @BASE_UI_URL = "/models/#{@model_id}/tests/#{@test_id}/examples"
 
       loadFromJSON: (origData) =>
         super origData

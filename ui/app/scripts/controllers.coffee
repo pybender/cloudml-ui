@@ -299,7 +299,7 @@ angular.module('app.controllers', ['app.config', ])
         , true)
 
     $scope.load = (append=false, extra={}) ->
-      show = "#{$scope.FIELDS},#{_.keys($scope.kwargs)}"
+      show = [$scope.FIELDS or []].concat(_.keys($scope.kwargs)).join ','
       params = $.extend({'show': show},
                          $scope.kwargs || {},
                          $scope.filter_opts, extra)

@@ -76,13 +76,13 @@ describe "datasets", ->
       $scope.ds = new DataSet()
       $scope.delete()
 
-      expect($scope.openDialog).toHaveBeenCalledWith
+      expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
         model: $scope.ds
         template: 'partials/base/delete_dialog.html'
         ctrlName: 'DialogCtrl'
         action: 'delete DataSet'
         path: $scope.handler.objectUrl()
-        ownerScope: $scope
+      expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 
     it "should generate download link", inject (ImportHandler, DataSet) ->
 

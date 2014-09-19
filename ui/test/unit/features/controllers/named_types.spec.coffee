@@ -166,26 +166,29 @@ describe 'features/controllers/named_types.coffee', ->
 
         # add dialog
         $scope.add()
-        expect($scope.openDialog).toHaveBeenCalled()
-        openOptions = $scope.openDialog.calls.mostRecent().args[0]
-        expect(openOptions.model).toEqual jasmine.any(NamedFeatureType)
-        expect(openOptions.template).toEqual 'partials/features/named_types/add.html'
-        expect(openOptions.ctrlName).toEqual 'ModelEditDialogCtrl'
-        expect(openOptions.action).toEqual 'add new named feature type'
+        expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
+          model: jasmine.any(NamedFeatureType)
+          template: 'partials/features/named_types/add.html'
+          ctrlName: 'ModelEditDialogCtrl'
+          action: 'add new named feature type'
+        expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 
         # edit dialog
         namedType = new NamedFeatureType {id: 999, name: 'type 999'}
         $scope.edit(namedType)
-        expect($scope.openDialog).toHaveBeenCalledWith
+        expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
           model: namedType
           template: 'partials/features/named_types/edit.html'
           ctrlName: 'ModelEditDialogCtrl'
+        expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 
         # delete dialog
         namedType = new NamedFeatureType {id: 777, name: 'type 777'}
         $scope.delete(namedType)
-        expect($scope.openDialog).toHaveBeenCalledWith
+        expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
           model: namedType
           template: 'partials/base/delete_dialog.html'
           ctrlName: 'DialogCtrl'
           action: 'delete named feature type'
+          path: namedType.BASE_UI_URL
+        expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope

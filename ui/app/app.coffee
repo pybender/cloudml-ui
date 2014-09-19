@@ -312,19 +312,21 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
 #          $rootScope.log_messages.push(data['data']['msg']))
 #    log_sse.addEventListener('message', handleCallback)
 
-  $rootScope.openDialog = ($scope, opts) ->
-    """
+  $rootScope.openDialog = (scope, opts) ->
+    ###
     Opens a modal dialog
     param $scope: is the parent scope from which the new dialog scope will inherit
     param opts: modal dialog options that will be passed to the controller with
     name openOptions
-    """
-    template = opts.template
-    if !template?
+    ###
+    if not scope
+      throw new Error('scope is required')
+
+    if not opts?.template
       throw new Error('template is required')
 
     $modal.open
-      scope: $scope
+      scope: scope
       templateUrl: opts.template
       controller: opts.ctrlName
       windowClass: opts.cssClass

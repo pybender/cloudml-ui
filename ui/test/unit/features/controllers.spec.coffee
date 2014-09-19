@@ -57,12 +57,13 @@ describe 'app.features.controllers', ->
       createController 'FeaturesSetListCtrl'
 
       $scope.add()
-      expect($scope.openDialog).toHaveBeenCalledWith
+      expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
         model: jasmine.any FeaturesSet
         template: 'partials/features/sets/add.html'
         ctrlName: 'AddFeatureSetDialogCtrl'
         action: 'add feature set'
         list_model_name: "FeaturesSets"
+      expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 
 
   describe 'FeaturesSetDetailsCtrl', ->
@@ -129,12 +130,13 @@ describe 'app.features.controllers', ->
       $scope.featuresSet = new FeaturesSet
       $scope.addFeature()
 
-      expect($scope.openDialog).toHaveBeenCalledWith
+      expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
         model: $scope.featuresSet
         template: 'partials/features/items/add.html'
         ctrlName: 'AddFeatureDialogCtrl'
         action: 'add feature'
         path: "feature"
+      expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 
 
   describe 'FeaturesListCtrl', ->
@@ -266,11 +268,13 @@ describe 'app.features.controllers', ->
 
       $scope.deleteModel(model)
 
-      expect($scope.openDialog).toHaveBeenCalledWith
+      expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
         model: model
         template: 'partials/base/delete_dialog.html'
         ctrlName: 'DialogCtrl'
         action: 'delete feature'
+        list_model_name: 'features'
+      expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 
     it 'should toggle feature is_required and handle http errors', ->
       createController 'FeatureActionsCtrl'
@@ -335,11 +339,12 @@ describe 'app.features.controllers', ->
 
       $scope.editScaler(feature)
 
-      expect($scope.openDialog).toHaveBeenCalledWith
+      expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
         model: null
         template: 'partials/features/scalers/edit_feature_scaler.html'
         ctrlName: 'ModelWithParamsEditDialogCtrl'
         extra: {'feature': feature, 'fieldname': 'scaler'}
+      expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 
     it 'should call unto openDialog to edit transformer', ->
       createController 'FeatureActionsCtrl'
@@ -347,11 +352,12 @@ describe 'app.features.controllers', ->
 
       $scope.editTransformer(feature)
 
-      expect($scope.openDialog).toHaveBeenCalledWith
+      expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
         model: null
         template: 'partials/features/transformers/edit_feature_transformer.html'
         ctrlName: 'ModelWithParamsEditDialogCtrl'
         extra: {'feature': feature, 'fieldname': 'transformer'}
+      expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 
     it 'should delete transformer', ->
       createController 'FeatureActionsCtrl'

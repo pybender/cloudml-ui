@@ -177,13 +177,13 @@ describe "testresults", ->
       createController "TestActionsCtrl"
       $rootScope.delete_test()
 
-      expect($rootScope.openDialog).toHaveBeenCalledWith
+      expect($rootScope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
         model: $rootScope.test
         template: 'partials/base/delete_dialog.html'
         ctrlName: 'DialogCtrl'
         action: 'delete Test'
         path: $rootScope.test.model.objectUrl()
-        ownerScope: $rootScope
+      expect($rootScope.openDialog.calls.mostRecent().args[0]).toEqual $rootScope
 
   describe "TestExportsCtrl", ->
 

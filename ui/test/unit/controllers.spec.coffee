@@ -2,6 +2,7 @@ describe 'controllers.coffee', ->
 
   beforeEach ->
     module 'ngCookies'
+    module 'ngRoute'
 
     module 'app.base'
     module 'app.config'
@@ -296,20 +297,19 @@ describe 'controllers.coffee', ->
   describe 'BaseDeleteCtrl', ->
 
     it 'should init scope & calls delete',
-      inject (XmlImportHandler, $location)->
+      inject (XmlImportHandler, $location, $timeout)->
 
         handler = new XmlImportHandler
           id: 999
         $scope.resetError = jasmine.createSpy '$scope.resetError'
         $scope.$close = jasmine.createSpy '$scope.$close'
         $scope.$emit = jasmine.createSpy '$scope.$emit'
-        $scope.ownerScope =
-          $emit: jasmine.createSpy '$scope.ownerScope.$emit'
         $scope.model = handler
         $scope.LIST_MODEL_NAME = 'something'
         $scope.path = '/new/path'
 
         createController 'BaseDeleteCtrl'
+        $scope.$emit = jasmine.createSpy '$scope.ownerScope.$emit'
         expect($scope.resetError).toHaveBeenCalled()
 
         # successful delete
@@ -317,9 +317,10 @@ describe 'controllers.coffee', ->
         .respond 200
         $scope.delete()
         $httpBackend.flush()
+        $timeout.flush()
 
         expect($scope.$close).toHaveBeenCalled()
-        expect($scope.ownerScope.$emit).toHaveBeenCalledWith 'modelDeleted', [handler]
+        expect($scope.$emit).toHaveBeenCalledWith 'modelDeleted', [handler]
         expect($scope.$emit).toHaveBeenCalledWith 'BaseListCtrl:start:load', 'something'
         expect($location.url()).toEqual $scope.path
 
@@ -327,14 +328,15 @@ describe 'controllers.coffee', ->
         $scope.setError = jasmine.createSpy '$scope.setError'
         $scope.$close.calls.reset()
         $scope.$emit.calls.reset()
-        $scope.ownerScope.$emit.calls.reset()
+        $scope.$emit.calls.reset()
         $httpBackend.expectDELETE "#{handler.BASE_API_URL}#{handler.id}/"
         .respond 400
         $scope.delete()
         $httpBackend.flush()
+        $timeout.flush()
 
         expect($scope.$close).not.toHaveBeenCalled()
-        expect($scope.ownerScope.$emit).not.toHaveBeenCalledWith 'modelDeleted', [handler]
+        expect($scope.$emit).not.toHaveBeenCalledWith 'modelDeleted', [handler]
         expect($scope.$emit).not.toHaveBeenCalledWith 'BaseListCtrl:start:load', 'something'
         expect($scope.setError).toHaveBeenCalled()
 
@@ -369,6 +371,7 @@ describe 'controllers.coffee', ->
         handler = new XmlImportHandler
           id: 111
           name: 'handler111'
+        $scope.FIELDS = 'id,name'
         $scope.MODEL = XmlImportHandler
 
         spyOn($scope, '$emit').and.callThrough()
@@ -381,7 +384,7 @@ describe 'controllers.coffee', ->
         # init & load error
         $scope.$emit.calls.reset()
         $scope.setError = jasmine.createSpy '$scope.setError'
-        $httpBackend.expectGET "#{handler.BASE_API_URL}"
+        $httpBackend.expectGET "#{handler.BASE_API_URL}?show=id,name"
         .respond 400
         $scope.init()
         $httpBackend.flush()
@@ -396,7 +399,8 @@ describe 'controllers.coffee', ->
         handler = new XmlImportHandler
           id: 111
           name: 'handler111'
-          $scope.MODEL = XmlImportHandler
+        $scope.FIELDS = 'id,name'
+        $scope.MODEL = XmlImportHandler
 
         spyOn($scope, '$emit').and.callThrough()
         createController 'BaseListCtrl', {$rootScope: $rootScope}
@@ -410,7 +414,7 @@ describe 'controllers.coffee', ->
           pages: 2
           has_next: true
         response[handler.API_FIELDNAME + 's'] = [handler]
-        $httpBackend.expectGET "#{handler.BASE_API_URL}"
+        $httpBackend.expectGET "#{handler.BASE_API_URL}?show=id,name"
         .respond 200, angular.toJson(response)
         $scope.init()
         $httpBackend.flush()
@@ -432,7 +436,7 @@ describe 'controllers.coffee', ->
             pages: 2
             has_next: true
           response[handler.API_FIELDNAME + 's'] = [handler2]
-          $httpBackend.expectGET "#{handler.BASE_API_URL}?page=2"
+          $httpBackend.expectGET "#{handler.BASE_API_URL}?page=2&show=id,name,page"
           .respond 200, angular.toJson(response)
           $scope.loadMore()
           $httpBackend.flush()
@@ -442,8 +446,7 @@ describe 'controllers.coffee', ->
           ]
           expect($scope.$emit).toHaveBeenCalledWith 'BaseListCtrl:load:success', $scope.objects
 
-      it 'should respond to modelDeleted', inject (XmlImportHandler)->
-          # modelDeleted event should reload with no concat
+      it 'should respond to BaseListCtrl:start:load', inject (XmlImportHandler)->
           handler3 = new XmlImportHandler
             id: 333
             name: 'handler333'
@@ -452,10 +455,11 @@ describe 'controllers.coffee', ->
           response =
             pages: 2
             has_next: true
+          $scope.modelName = XmlImportHandler.LIST_MODEL_NAME
           response[handler.API_FIELDNAME + 's'] = [handler3]
-          $httpBackend.expectGET "#{handler.BASE_API_URL}?page=1"
+          $httpBackend.expectGET "#{handler.BASE_API_URL}?page=1&show=id,name,page"
           .respond 200, angular.toJson(response)
-          $scope.$emit 'modelDeleted'
+          $scope.$emit 'BaseListCtrl:start:load', XmlImportHandler.LIST_MODEL_NAME
           $httpBackend.flush()
           expect(({id: x.id, name: x.name} for x in $scope.objects)).toEqual [{id: 333, name: 'handler333'}]
 
@@ -469,7 +473,7 @@ describe 'controllers.coffee', ->
             pages: 2
             has_next: true
           response[handler.API_FIELDNAME + 's'] = [handler3]
-          $httpBackend.expectGET "#{handler.BASE_API_URL}?page=1"
+          $httpBackend.expectGET "#{handler.BASE_API_URL}?page=1&show=id,name,page"
           .respond 200, angular.toJson(response)
           $scope.$emit 'modelChanged'
           $httpBackend.flush()
@@ -484,7 +488,7 @@ describe 'controllers.coffee', ->
             name: 'handler444'
           response = {}
           response[handler.API_FIELDNAME + 's'] = [handler4]
-          $httpBackend.expectGET "#{handler.BASE_API_URL}?page=4"
+          $httpBackend.expectGET "#{handler.BASE_API_URL}?page=4&show=id,name,page"
           .respond 200, angular.toJson(response)
           $scope.$emit 'BaseListCtrl:start:load', 'noname'
           $httpBackend.flush()
@@ -497,7 +501,7 @@ describe 'controllers.coffee', ->
             name: 'handler444'
           response = {}
           response[handler.API_FIELDNAME + 's'] = [handler4]
-          $httpBackend.expectGET "#{handler.BASE_API_URL}?zinger=zaza"
+          $httpBackend.expectGET "#{handler.BASE_API_URL}?show=id,name&zinger=zaza"
           .respond 200, angular.toJson(response)
           $scope.filter_opts = {zinger: 'zaza'}
           $scope.$digest()

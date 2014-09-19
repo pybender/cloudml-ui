@@ -225,23 +225,27 @@ describe 'clusters/controllers.coffee', ->
       $scope.openDialog = jasmine.createSpy '$scope.openDialog'
 
       $scope.createSshTunnel(cluster)
-      expect($scope.openDialog).toHaveBeenCalledWith
+      expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
         model: cluster
         template: 'partials/clusters/create_ssh_tunnel.html'
         ctrlName: 'SshTunnelCtrl'
+      expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 
       $scope.terminateSshTunnel(cluster)
-      expect($scope.openDialog).toHaveBeenCalledWith
+      expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
         model: cluster
         template: 'partials/clusters/terminate_ssh_tunnel.html'
         ctrlName: 'SshTunnelCtrl'
+      expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 
       $scope.terminateCluster(cluster)
-      expect($scope.openDialog).toHaveBeenCalledWith
+      expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
         model: cluster
         template: 'partials/base/delete_dialog.html'
         ctrlName: 'DialogCtrl'
         action: 'delete cluster'
+        path: cluster.BASE_UI_URL
+      expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 
   describe 'ClusterDetailsCtrl', ->
 

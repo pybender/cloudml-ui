@@ -116,11 +116,12 @@ describe 'servers/controllers.coffee', ->
       $scope.openDialog = jasmine.createSpy '$scope.openDialog'
 
       $scope.deleteFile {some: 'file'}
-      expect($scope.openDialog).toHaveBeenCalledWith
+      expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
         model: {some: 'file'}
         template: 'partials/base/delete_dialog.html'
         ctrlName: 'DialogCtrl'
         action: 'delete file'
+      expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 
 
   describe 'ServerListCtrl', ->

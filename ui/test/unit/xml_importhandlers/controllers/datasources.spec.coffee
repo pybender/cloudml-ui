@@ -96,27 +96,31 @@ describe 'xml_importhandlers/controllers/datasources.coffee', ->
 
         # add dialog
         $scope.add()
-        expect($scope.openDialog).toHaveBeenCalled
-        expect($scope.openDialog.calls.mostRecent().args[0].model.import_handler_id).toEqual handler.id
-        expect($scope.openDialog.calls.mostRecent().args[0].template).toEqual 'partials/xml_import_handlers/datasources/edit.html'
-        expect($scope.openDialog.calls.mostRecent().args[0].ctrlName).toEqual 'ModelWithParamsEditDialogCtrl'
-        expect($scope.openDialog.calls.mostRecent().args[0].action).toEqual 'add datasource'
+        expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
+          model: jasmine.any(Datasource)
+          template: 'partials/xml_import_handlers/datasources/edit.html'
+          ctrlName: 'ModelWithParamsEditDialogCtrl'
+          action: 'add datasource'
+        expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 
         # edit dialog
-        $scope.edit(new Datasource {id: 777, name: 'ds777'})
-        expect($scope.openDialog).toHaveBeenCalled
-        expect($scope.openDialog.calls.mostRecent().args[0].model.id).toEqual 777
-        expect($scope.openDialog.calls.mostRecent().args[0].template).toEqual 'partials/xml_import_handlers/datasources/edit.html'
-        expect($scope.openDialog.calls.mostRecent().args[0].ctrlName).toEqual 'ModelWithParamsEditDialogCtrl'
-        expect($scope.openDialog.calls.mostRecent().args[0].action).toEqual 'edit datasource'
+        datasource = new Datasource {id: 777, name: 'ds777'}
+        $scope.edit(datasource)
+        expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
+          model: datasource
+          template: 'partials/xml_import_handlers/datasources/edit.html'
+          ctrlName: 'ModelWithParamsEditDialogCtrl'
+          action: 'edit datasource'
+        expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 
         # delete dialog
-        $scope.delete(new Datasource {id: 666, name: 'ds777'})
-        expect($scope.openDialog).toHaveBeenCalled
-        expect($scope.openDialog.calls.mostRecent().args[0].model.id).toEqual 666
-        expect($scope.openDialog.calls.mostRecent().args[0].template).toEqual 'partials/base/delete_dialog.html'
-        expect($scope.openDialog.calls.mostRecent().args[0].ctrlName).toEqual 'DialogCtrl'
-        expect($scope.openDialog.calls.mostRecent().args[0].action).toEqual 'delete datasource'
+        $scope.delete(datasource)
+        expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
+          model: datasource
+          template: 'partials/base/delete_dialog.html'
+          ctrlName: 'DialogCtrl'
+          action: 'delete datasource'
+        expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 
 
   describe 'XmlDataSourceSelectCtrl', ->

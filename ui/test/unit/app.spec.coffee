@@ -61,9 +61,13 @@ describe "app", ->
 
     describe 'openDialog', ->
 
-      it 'should raise error when no template', ->
+      it 'should raise error when no scope or no template', ->
         expect ->
-          $scope.openDialog {}
+          $scope.openDialog()
+        .toThrow new Error('scope is required')
+
+        expect ->
+          $scope.openDialog {}, {}
         .toThrow new Error('template is required')
 
       it 'should call $modal.open', ->
@@ -73,9 +77,10 @@ describe "app", ->
           template: '/some/template/or/url'
           ctrlName: 'SomeControllerName'
           cssClass: 'windowCSSClass'
-        $scope.openDialog opts
+        $scope.openDialog $scope, opts
 
         expect($modal.open).toHaveBeenCalledWith
+          scope: $scope
           templateUrl: opts.template
           controller: opts.ctrlName
           windowClass: opts.cssClass

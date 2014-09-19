@@ -530,10 +530,12 @@ describe 'models/controllers.coffee', ->
       $scope.test_model model
       $httpBackend.flush()
 
-      expect($rootScope.openDialog.calls.mostRecent().args[0].model.id).toEqual 999
-      expect($rootScope.openDialog.calls.mostRecent().args[0].template).toEqual 'partials/testresults/run_test.html'
-      expect($rootScope.openDialog.calls.mostRecent().args[0].ctrlName).toEqual 'TestDialogController'
-      expect($rootScope.openDialog.calls.mostRecent().args[0].cssClass).toEqual 'modal large'
+      expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
+        model: model
+        template: 'partials/testresults/run_test.html'
+        ctrlName: 'TestDialogController'
+        cssClass: 'modal large'
+      expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 
     it  'should work with a model and open testing dialog but with calling model.test_import_handler_obj',
       inject (Model, XmlImportHandler)->
@@ -553,10 +555,12 @@ describe 'models/controllers.coffee', ->
         $scope.test_model model
         $httpBackend.flush()
 
-        expect($rootScope.openDialog.calls.mostRecent().args[0].model.id).toEqual 999
-        expect($rootScope.openDialog.calls.mostRecent().args[0].template).toEqual 'partials/testresults/run_test.html'
-        expect($rootScope.openDialog.calls.mostRecent().args[0].ctrlName).toEqual 'TestDialogController'
-        expect($rootScope.openDialog.calls.mostRecent().args[0].cssClass).toEqual 'modal large'
+        expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
+          model: model
+          template: 'partials/testresults/run_test.html'
+          ctrlName: 'TestDialogController'
+          cssClass: 'modal large'
+        expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 
     it  'should cancel request spot instance', inject (Model)->
       model = new Model
@@ -582,9 +586,11 @@ describe 'models/controllers.coffee', ->
       $scope.train_model model
       $httpBackend.flush()
 
-      expect($rootScope.openDialog.calls.mostRecent().args[0].model.id).toEqual 999
-      expect($rootScope.openDialog.calls.mostRecent().args[0].template).toEqual 'partials/models/model_train_popup.html'
-      expect($rootScope.openDialog.calls.mostRecent().args[0].ctrlName).toEqual 'TrainModelCtrl'
+      expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
+        model: model
+        template: 'partials/models/model_train_popup.html'
+        ctrlName: 'TrainModelCtrl'
+      expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 
     it  'should handle errors retrieving train_import_handler', inject (Model)->
       model = new Model
@@ -604,10 +610,13 @@ describe 'models/controllers.coffee', ->
 
       $scope.delete_model model
 
-      expect($rootScope.openDialog.calls.mostRecent().args[0].model.id).toEqual 999
-      expect($rootScope.openDialog.calls.mostRecent().args[0].template).toEqual 'partials/base/delete_dialog.html'
-      expect($rootScope.openDialog.calls.mostRecent().args[0].ctrlName).toEqual 'DialogCtrl'
-      expect($rootScope.openDialog.calls.mostRecent().args[0].action).toEqual 'delete model'
+      expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
+        model: model
+        template: 'partials/base/delete_dialog.html'
+        ctrlName: 'DialogCtrl'
+        action: 'delete model'
+        path: model.BASE_UI_URL
+      expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 
     it  'should open edit classifier dialog', inject (Model)->
       model = new Model
@@ -616,12 +625,13 @@ describe 'models/controllers.coffee', ->
 
       $scope.editClassifier model
 
-      expect($rootScope.openDialog.calls.mostRecent().args[0].model).toBe null
-      expect($rootScope.openDialog.calls.mostRecent().args[0].template).toEqual 'partials/features/classifiers/edit.html'
-      expect($rootScope.openDialog.calls.mostRecent().args[0].ctrlName).toEqual 'ModelWithParamsEditDialogCtrl'
-      expect($rootScope.openDialog.calls.mostRecent().args[0].action).toEqual 'edit classifier'
-      expect($rootScope.openDialog.calls.mostRecent().args[0].extra.model.id).toBe 999
-      expect($rootScope.openDialog.calls.mostRecent().args[0].extra.fieldname).toEqual 'classifier'
+      expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
+        model: null
+        template: 'partials/features/classifiers/edit.html'
+        ctrlName: 'ModelWithParamsEditDialogCtrl'
+        action: 'edit classifier'
+        extra: {model: model, fieldname: 'classifier'}
+      expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 
     it  'should open upload to predict', inject (Model)->
       model = new Model
@@ -630,9 +640,11 @@ describe 'models/controllers.coffee', ->
 
       $scope.uploadModelToPredict model
 
-      expect($rootScope.openDialog.calls.mostRecent().args[0].model.id).toEqual 999
-      expect($rootScope.openDialog.calls.mostRecent().args[0].template).toEqual 'partials/servers/choose.html'
-      expect($rootScope.openDialog.calls.mostRecent().args[0].ctrlName).toEqual 'ModelUploadToServerCtrl'
+      expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
+        model: model
+        template: 'partials/servers/choose.html'
+        ctrlName: 'ModelUploadToServerCtrl'
+      expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 
 
   describe 'ModelUploadToServerCtrl', ->

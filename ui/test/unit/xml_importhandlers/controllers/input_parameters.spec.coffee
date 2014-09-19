@@ -100,21 +100,22 @@ describe 'xml_importhandlers/controllers/input_parameters.coffee', ->
 
       $scope.openDialog = jasmine.createSpy '$scope.openDialog'
       $scope.add(handler)
-      expect($scope.openDialog).toHaveBeenCalledWith
+      expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
         model: jasmine.any(InputParameter)
         template: 'partials/xml_import_handlers/input_parameters/edit.html'
         ctrlName: 'ModelEditDialogCtrl'
         action: 'add input parameter'
-        list_model_name: InputParameter.LIST_MODEL_NAME
-      expect($scope.openDialog.calls.mostRecent().args[0].model.import_handler_id).toEqual handler.id
+      expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
+      expect($scope.openDialog.calls.mostRecent().args[1].model.import_handler_id).toEqual handler.id
 
     it 'should openDialog to delete', ->
       $scope.openDialog = jasmine.createSpy '$scope.openDialog'
       param =
         some: 'params'
       $scope.delete(param)
-      expect($scope.openDialog).toHaveBeenCalledWith
+      expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
         model: param
         template: 'partials/base/delete_dialog.html'
         ctrlName: 'DialogCtrl'
         action: 'delete input parameter'
+      expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope

@@ -72,16 +72,6 @@ describe 'Features Controllers', ->
         createController 'ModelEditDialogCtrl', {openOptions: {}}
       .toThrow new Error "Please specify a model or handler and fieldname"
 
-    it 'should handle SaveObjectCtl:save:success event', ->
-      openOptions =
-        model:
-          LIST_MODEL_NAME: 'some model name'
-      $scope.$close = jasmine.createSpy '$scope.$close'
-      createController 'ModelEditDialogCtrl', {openOptions: openOptions}
-      $scope.$emit 'SaveObjectCtl:save:success'
-      $scope.$digest()
-      expect($scope.$close).toHaveBeenCalledWith true
-
 
   describe 'ModelWithParamsEditDialogCtrl', ->
 
@@ -187,17 +177,6 @@ describe 'Features Controllers', ->
       expect ->
         createController 'ModelWithParamsEditDialogCtrl', {openOptions: {}}
       .toThrow new Error "Please specify a model or feature and field name"
-
-    it 'should handle SaveObjectCtl:save:success event', ->
-      openOptions =
-        model:
-          $getConfiguration: ->
-            {then: ()->}
-      $scope.$close = jasmine.createSpy '$scope.$close'
-      createController 'ModelWithParamsEditDialogCtrl', {openOptions: openOptions}
-      $scope.$emit 'SaveObjectCtl:save:success'
-      $scope.$digest()
-      expect($scope.$close).toHaveBeenCalledWith true
 
 
   describe 'ConfigurationLoaderCtrl', ->

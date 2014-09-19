@@ -161,7 +161,7 @@ without test id and model id"
   addMetricsToScope = ->
     metrics = $scope.test.metrics
     $scope.rocCurves = {}
-    if not _.isArray(metrics.roc_curve)
+    if _.isObject(metrics.roc_auc)
       # new dict formate after 20140710
       classes = _.keys(metrics.roc_curve)
       for c in classes
@@ -169,7 +169,7 @@ without test id and model id"
           else 'ROC Curve'
         curve = {}
         curve[label] = metrics.roc_curve[c]
-        $scope.rocCurves[c] = {curve: curve, roc_auc: $scope.test.roc_auc[c]}
+        $scope.rocCurves[c] = {curve: curve, roc_auc: $scope.test.metrics.roc_auc[c]}
       if classes.length is 1 # only binary classifier publishes PR curve
         $scope.prCurves =
           # we are switching precision/recall positions. The dictionary
@@ -184,7 +184,7 @@ without test id and model id"
       # old list format
       $scope.rocCurves[1] =
         curve: {'ROC curve': $scope.test.metrics.roc_curve}
-        roc_auc: $scope.test.roc_auc
+        roc_auc: $scope.test.metrics.roc_auc
       pr = $scope.test.metrics.precision_recall_curve
       $scope.prCurves = {'Precision-Recall curve': [pr[1], pr[0]]}
 

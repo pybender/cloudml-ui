@@ -63,7 +63,7 @@ describe 'xml_importhandlers/controllers/entities', ->
         createController "EntitiesTreeCtrl"
 
         $scope.runQuery query
-        expect($rootScope.openDialog).toHaveBeenCalledWith
+        expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
           model: null
           template: 'partials/import_handler/test_query.html'
           ctrlName: 'QueryTestDialogCtrl'
@@ -72,3 +72,5 @@ describe 'xml_importhandlers/controllers/entities', ->
             datasources: handler.xml_data_sources
             query: query
           action: 'test xml import handler query'
+        expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
+

@@ -99,11 +99,12 @@ describe 'importhandlers/controllers/datasources.coffee', ->
         DataSource: DataSource
       $httpBackend.flush()
 
-      expect($scope.openDialog).toHaveBeenCalledWith
+      expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
         model: jasmine.any DataSource
         template: 'partials/import_handler/datasource/edit.html'
         ctrlName: 'ModelEditDialogCtrl'
-      expect($scope.openDialog.calls.mostRecent().args[0].model.id).toEqual 999
+      expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
+      expect($scope.openDialog.calls.mostRecent().args[1].model.id).toEqual 999
 
       # error in http will call setError
       $httpBackend.expectGET "#{ds.BASE_API_URL}#{ds.id}/?show=name,id,type,db,created_on,created_by"
@@ -125,23 +126,25 @@ describe 'importhandlers/controllers/datasources.coffee', ->
       expect($scope.LIST_MODEL_NAME).toEqual DataSource.LIST_MODEL_NAME
 
       $scope.edit({some: 'ds'})
-      expect($scope.openDialog).toHaveBeenCalledWith
+      expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
         model: {some: 'ds'}
         template: 'partials/import_handler/datasource/edit.html'
         ctrlName: 'ModelEditDialogCtrl'
+      expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 
       $scope.add()
-      obj = $scope.openDialog.calls.mostRecent().args[0]
+      obj = $scope.openDialog.calls.mostRecent().args[1]
       expect(obj.template).toEqual 'partials/import_handler/datasource/add.html'
       expect(obj.ctrlName).toEqual 'ModelEditDialogCtrl'
       expect(obj.model).toBeDefined()
 
       $scope.delete({some: 'ds'})
-      expect($scope.openDialog).toHaveBeenCalledWith
+      expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
         model: {some: 'ds'}
         template: 'partials/base/delete_dialog.html'
         ctrlName: 'DialogCtrl'
         action: 'delete data source'
+      expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 
   describe 'DataSourceEditDialogCtrl', ->
 

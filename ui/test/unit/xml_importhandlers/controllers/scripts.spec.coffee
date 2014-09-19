@@ -78,34 +78,42 @@ describe 'xml_importhandlers/controllers/scripts.coffee', ->
 
         # add dialog
         $scope.add()
-        expect($scope.openDialog).toHaveBeenCalled()
-        openOptions = $scope.openDialog.calls.mostRecent().args[0]
+        expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
+          model: jasmine.any Script
+          template: 'partials/xml_import_handlers/scripts/edit.html'
+          ctrlName: 'ModelEditDialogCtrl'
+          action: 'add script'
+        expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
+        openOptions = $scope.openDialog.calls.mostRecent().args[1]
         expect(openOptions.model.import_handler_id).toEqual 111
         expect(openOptions.model.data).toEqual ''
-        expect(openOptions.template).toEqual 'partials/xml_import_handlers/scripts/edit.html'
-        expect(openOptions.ctrlName).toEqual 'ModelEditDialogCtrl'
-        expect(openOptions.action).toEqual 'add script'
 
         # edit dialog
         script = new Script {id: 999, import_handler_id: 888, data: 'to edit'}
         $scope.edit(script)
-        expect($scope.openDialog).toHaveBeenCalled()
-        openOptions = $scope.openDialog.calls.mostRecent().args[0]
+        expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
+          model: jasmine.any Script
+          template: 'partials/xml_import_handlers/scripts/edit.html'
+          ctrlName: 'ModelEditDialogCtrl'
+          action: 'edit script'
+        expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
+
+        openOptions = $scope.openDialog.calls.mostRecent().args[1]
         expect(openOptions.model.import_handler_id).toEqual script.import_handler_id
         expect(openOptions.model.id).toEqual script.id
         expect(openOptions.model.data).toEqual script.data
-        expect(openOptions.template).toEqual 'partials/xml_import_handlers/scripts/edit.html'
-        expect(openOptions.ctrlName).toEqual 'ModelEditDialogCtrl'
-        expect(openOptions.action).toEqual 'edit script'
+
 
         # delete dialog
         script = new Script {id: 888, import_handler_id: 777, data: 'to delete'}
         $scope.delete(script)
-        expect($scope.openDialog).toHaveBeenCalled()
-        openOptions = $scope.openDialog.calls.mostRecent().args[0]
+        expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
+          model: script
+          template: 'partials/base/delete_dialog.html'
+          ctrlName: 'DialogCtrl'
+          action: 'delete script'
+        expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
+        openOptions = $scope.openDialog.calls.mostRecent().args[1]
         expect(openOptions.model.import_handler_id).toEqual script.import_handler_id
         expect(openOptions.model.id).toEqual script.id
         expect(openOptions.model.data).toEqual script.data
-        expect(openOptions.template).toEqual 'partials/base/delete_dialog.html'
-        expect(openOptions.ctrlName).toEqual 'DialogCtrl'
-        expect(openOptions.action).toEqual 'delete script'

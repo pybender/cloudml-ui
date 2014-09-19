@@ -356,12 +356,13 @@ describe "app.importhandlers.controllers", ->
 
       $scope.editDataSource $scope.handler, {some: 'dataset'}
 
-      expect($scope.openDialog).toHaveBeenCalledWith
+      expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
         model: null
         template: 'partials/import_handler/datasource/edit_handler_datasource.html'
         ctrlName: 'DataSourceEditDialogCtrl'
         action: 'add data source'
         extra: {handler: $scope.handler, ds: {some: 'dataset'}}
+      expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 
     it 'should call onto open dialog to edit target feature',
       inject (TargetFeature, Item)->
@@ -383,12 +384,13 @@ describe "app.importhandlers.controllers", ->
 
         $scope.editTargetFeature item, feature
 
-        expect($scope.openDialog).toHaveBeenCalledWith
+        expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
           model: null
           template: 'partials/import_handler/edit_target_feature.html'
           ctrlName: 'TargetFeatureEditDialogCtrl'
           extra: {handler: item.handler, feature: feature, item: item}
           action: 'edit target feature'
+        expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 
     it 'should call onto open dialog to run query', inject (Query)->
 
@@ -402,7 +404,7 @@ describe "app.importhandlers.controllers", ->
 
       $scope.runQuery query
 
-      expect($scope.openDialog).toHaveBeenCalledWith
+      expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
         model: null
         template: 'partials/import_handler/test_query.html'
         ctrlName: 'QueryTestDialogCtrl'
@@ -411,6 +413,7 @@ describe "app.importhandlers.controllers", ->
           datasources: $scope.handler.datasource,
           query: query
         action: 'test import handler query'
+      expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 
 
   describe "QueryTestDialogCtrl and run query", ->
@@ -611,7 +614,6 @@ describe "app.importhandlers.controllers", ->
       expect($scope.path).toEqual openOptions.path
       expect($scope.action).toEqual openOptions.action
       expect($scope.extra_template).toEqual 'partials/import_handler/extra_delete.html'
-      expect($scope.ownerScope).toEqual openOptions.ownerScope
       expect(({id: x.id, name: x.name} for x in $scope.umodels)).toEqual [{name: 'attached model', id: 99}]
 
       # error handling
@@ -633,12 +635,12 @@ describe "app.importhandlers.controllers", ->
 
       $scope.importData({id: HANDLER_ID})
 
-      expect($scope.openDialog).toHaveBeenCalledWith(
+      expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
         model:
           id: HANDLER_ID
         template: 'partials/import_handler/load_data.html'
         ctrlName: 'LoadDataDialogCtrl'
-      )
+      expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 
     it "should open delete dialog", ->
       $rootScope.openDialog = jasmine.createSpy('$scope.openDialog')
@@ -646,7 +648,7 @@ describe "app.importhandlers.controllers", ->
 
       $scope.delete({id: HANDLER_ID, TYPE: 'json'})
 
-      expect($scope.openDialog).toHaveBeenCalledWith
+      expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
         model:
           id: HANDLER_ID
           TYPE: 'json'
@@ -654,6 +656,7 @@ describe "app.importhandlers.controllers", ->
         ctrlName: 'DeleteImportHandlerCtrl'
         action: 'delete import handler'
         path : '/handlers/json'
+      expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 
     it "should open test handler dialog", ->
       $rootScope.openDialog = jasmine.createSpy('$scope.openDialog')
@@ -662,11 +665,12 @@ describe "app.importhandlers.controllers", ->
       $scope.handler = {id: HANDLER_ID, TYPE: 'json'}
       $scope.testHandler()
 
-      expect($scope.openDialog).toHaveBeenCalledWith
+      expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
         template: 'partials/import_handler/test_handler.html'
         ctrlName: 'ImportTestDialogCtrl'
         action: 'test import handler'
         extra: {handler: $scope.handler}
+      expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 
     it "should open upload to predict dialog", ->
       $rootScope.openDialog = jasmine.createSpy('$scope.openDialog')
@@ -674,10 +678,11 @@ describe "app.importhandlers.controllers", ->
 
       $scope.uploadHandlerToPredict({some: 'model'})
 
-      expect($scope.openDialog).toHaveBeenCalledWith
+      expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
         model: {some: 'model'}
         template: 'partials/servers/choose.html'
         ctrlName: 'ImportHandlerUploadToServerCtrl'
+      expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 
 
   describe 'ImportHandlerUploadToServerCtrl', ->
