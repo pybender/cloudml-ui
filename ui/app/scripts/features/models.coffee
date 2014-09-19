@@ -28,7 +28,7 @@ angular.module('app.features.models', ['app.config'])
       @LIST_MODEL_NAME: 'transformers'
       LIST_MODEL_NAME: @LIST_MODEL_NAME
       @MAIN_FIELDS: 'id,name,type,params,created_on,created_by'
-      @$TYPES_LIST: ['Dictionary', 'Count', 'Tfidf', 'Lda', 'Lsi']
+      @$TYPES_LIST: ['Dictionary', 'Count', 'Tfidf', 'Lda', 'Lsi', 'Ntile']
 
       id: null
       name: null
