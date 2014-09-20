@@ -1,0 +1,12 @@
+{
+  "transformer-name": "new-bestmatch",
+  "field-name":"contractor.dev_title",
+  "type": "text",
+  "transformer":{
+        "type":"Tfidf",
+        "params": {
+          "ngram_range_min":1,
+          "ngram_range_max":1,
+          "min_df":5}
+      }
+}

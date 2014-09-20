@@ -19,25 +19,52 @@ angular.module('app.features.models', ['app.config'])
   '$q'
   'settings'
   'BaseModel'
+  'XmlImportHandler'
+  'ImportHandler'
   
-  ($http, $q, settings, BaseModel) ->
+  ($http, $q, settings, BaseModel, XmlImportHandler, ImportHandler) ->
     class Transformer extends BaseModel
-      BASE_API_URL: "#{settings.apiUrl}features/transformers/"
-      #BASE_UI_URL: "/features/transformers/"
+      BASE_API_URL: "#{settings.apiUrl}transformers/"
+      BASE_UI_URL: "/predefined/transformers/"
       API_FIELDNAME: 'transformer'
       @LIST_MODEL_NAME: 'transformers'
       LIST_MODEL_NAME: @LIST_MODEL_NAME
-      @MAIN_FIELDS: 'id,name,type,params,created_on,created_by'
+      @MAIN_FIELDS: 'id,name,type,params,created_on,created_by,status,\
+train_import_handler_type,train_import_handler'
       @$TYPES_LIST: ['Dictionary', 'Count', 'Tfidf', 'Lda', 'Lsi', 'Ntile']
+
 
       id: null
       name: null
       type: null
       params: null
 
+      loadFromJSON: (origData) ->
+        super origData
+
+        if origData?
+          if origData.train_import_handler?
+            if origData.train_import_handler_type == 'xml'
+              cls = XmlImportHandler
+            else if origData.train_import_handler_type == 'json'
+              cls = ImportHandler
+            else
+              throw new Error('Need to load import handler type')
+            @train_import_handler_obj = new cls(
+              origData['train_import_handler'])
+            @train_import_handler = @train_import_handler_obj.id
+          if origData.json?
+            @json = angular.toJson(origData.json, pretty=true)
+
       $getConfiguration: (opts={}) =>
         @$make_request("#{@BASE_API_URL}#{@id}/action/configuration/",
                        load=false)
+      $train: (opts={}) ->
+        data = {}
+        for key, val of opts
+          if key == 'parameters' then val = JSON.stringify(val)
+          data[key] = val
+        @$make_request("#{@BASE_API_URL}#{@id}/action/train/", {}, "PUT", data)
 
       constructor: (opts) ->
         _.extend @, opts

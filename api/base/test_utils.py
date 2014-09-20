@@ -168,6 +168,7 @@ class TestChecksMixin(object):
                           self.Model.query.count())
 
         obj_id = resp_data[self.RESOURCE.OBJECT_NAME]['id']
+        self.assertTrue(obj_id, "Invalid response: {0}".format(resp_data))
         obj = self.Model.query.get(obj_id)
         return resp_data, obj
 
@@ -215,6 +216,17 @@ class TestChecksMixin(object):
         resp = getattr(self.client, 'post')(
             url, data=post_data, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.BAD_REQUEST)
+
+    def assertDictEqual(self, d1, d2, msg=None):  # assertEqual uses for dicts
+        for k, v1 in d1.iteritems():
+            self.assertIn(k, d2, msg)
+            v2 = d2[k]
+            if(isinstance(v1, collections.Iterable) and
+               not isinstance(v1, basestring)):
+                self.assertItemsEqual(v1, v2, msg)
+            else:
+                self.assertEqual(v1, v2, msg)
+        return True
 
     def _get_resp_object(self, resp_data, is_list=True, num=-1):
         if is_list:
@@ -367,6 +379,7 @@ class BaseMongoTestCase(unittest.TestCase):
         for collection_name in cls._LOADED_COLLECTIONS:
             collection = _get_collection(collection_name)
             collection.remove()
+
 
 def _get_collection(name):
     callable_model = getattr(app.db, name)
