@@ -24,6 +24,7 @@ def calc_weights_css(weights, css_cls):
     def normalize_weights(weights, min_weight):
         weights = [{'name': item['name'],
                     'weight': item['weight'],
+                    'feature_weight': item['feature_weight'],
                     'transformed_weight': math.log(
                         abs(item['weight'] / min_weight))
                     if item['weight'] != 0 else 0}

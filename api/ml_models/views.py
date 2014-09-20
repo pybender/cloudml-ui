@@ -430,7 +430,8 @@ class WeightTreeResource(BaseResourceSQL):
             kwargs['class_label'] = class_label
 
         opts = self._prepare_show_fields_opts(
-            Weight, ('short_name', 'name', 'css_class', 'value', 'segment_id'))
+            Weight, ('short_name', 'name', 'css_class',
+                     'value', 'segment_id', 'value2'))
         weights = Weight.query.options(*opts).filter_by(**kwargs)
         context = {'categories': categories, 'weights': weights}
         return self._render(context)

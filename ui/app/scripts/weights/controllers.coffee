@@ -49,7 +49,7 @@ angular.module('app.weights.controllers', ['app.config', ])
 
   $scope.loadList = (page) ->
     Weight.$loadAll($routeParams.id,
-      show: 'name,value,css_class,segment',
+      show: 'name,value,css_class,segment,value2',
       q: $scope.search_form.q,
       is_positive: $scope.search_form.is_positive,
       page: page || $scope.search_form.page || 1,
@@ -87,7 +87,7 @@ angular.module('app.weights.controllers', ['app.config', ])
 
     WeightsTree.$loadNode(
       $routeParams.id,
-      show: 'name,short_name,parent',
+      show: 'name,short_name,parent,value2',
       parent: parent
       segment: $scope.action[2]
     ).then ((opts) ->
