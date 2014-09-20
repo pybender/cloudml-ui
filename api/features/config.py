@@ -64,6 +64,11 @@ TRANSFORMERS = {
                        'topic_file'],
         'default': '',
         'defaults': {}
+    },
+    'Ntile': {
+        'parameters': ['number_tile'],
+        'default': '',
+        'defaults': {}
     }
 }
 
