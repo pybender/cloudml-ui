@@ -29,7 +29,7 @@ map_url_to_response = (url, key)->
   ]
 
 CANNED_RESPONSES = [
-  key: 'multiclass classification model dict format (after 20140710)'
+  key: 'multiclass classification model dict format after 20140710'
   url_regex: new RegExp '^.+/cloudml/models/\\d+/tests/\\d+/\\?show=' +
                         'accuracy,metrics,roc_auc,examples_placement,name' +
                         ',status,created_on,created_by?'
@@ -49,24 +49,63 @@ CANNED_RESPONSES = [
         email: "nsoliman@odesk.com"
         name: "Nader Soliman"
       metrics:
-        roc_auc:
-          1: 1.0
-          3: 1.0
-          2: 0.99658203125
         confusion_matrix: [["1", [29, 0, 0]],["2", [1, 31, 0]], ["3", [0, 0, 35]]],
         roc_curve:
           1: [[0.0, 0.0, 0.0, 0.0], [0.034, 0.06, 0.10, 0.13]]
           3: [[0.0, 0.0, 0.0, 0.0], [0.028, 0.05, 0.08, 0.11]]
           2: [[0.0, 0.0, 0.0, 0.0], [0.031, 0.06, 0.09, 0.125]]
         accuracy: 0.98
-        created_on: "2014-07-11"
-        id: 38
-        accuracy: 0.98
+        roc_auc:
+          1: 1.0
+          3: 1.0
+          2: 0.99658203125
+      accuracy: 0.98
+      created_on: "2014-07-11"
+      id: 38
+      accuracy: 0.98
   type: 'json'
   status: 'OK'
   statusCode: 200
 ,
-  key: 'binary classification model dict format (after 20140710)'
+  key: 'multiclass classification model dict format after 20140907'
+  url_regex: new RegExp '^.+/cloudml/models/\\d+/tests/\\d+/\\?show=' +
+    'accuracy,metrics,roc_auc,examples_placement,name' +
+    ',status,created_on,created_by?'
+  data: angular.toJson
+    test:
+      status: "Completed"
+      name: "Test1"
+      examples_placement: null
+      created_by:
+        portrait_32_img: "url1"
+        uid: "nsoliman"
+        auth_token: "authtoken2"
+        odesk_url: "url2"
+        id: 1
+        created_on: "2014-06-04"
+        updated_on: "2014-07-01"
+        email: "nsoliman@odesk.com"
+        name: "Nader Soliman"
+      metrics:
+        confusion_matrix: [["1", [29, 0, 0]],["2", [1, 31, 0]], ["3", [0, 0, 35]]],
+        roc_curve:
+          1: [[0.0, 0.0, 0.0, 0.0], [0.034, 0.06, 0.10, 0.13]]
+          3: [[0.0, 0.0, 0.0, 0.0], [0.028, 0.05, 0.08, 0.11]]
+          2: [[0.0, 0.0, 0.0, 0.0], [0.031, 0.06, 0.09, 0.125]]
+        accuracy: 0.98
+      roc_auc:
+        1: 1.0
+        3: 1.0
+        2: 0.99658203125
+      accuracy: 0.98
+      created_on: "2014-07-11"
+      id: 38
+      accuracy: 0.98
+  type: 'json'
+  status: 'OK'
+  statusCode: 200
+,
+  key: 'binary classification model dict format after 20140710'
   url_regex: new RegExp '^.+/cloudml/models/\\d+/tests/\\d+/\\?show=' +
     'accuracy,metrics,roc_auc,examples_placement,name' +
     ',status,created_on,created_by?'
@@ -101,7 +140,42 @@ CANNED_RESPONSES = [
   status: 'OK'
   statusCode: 200
 ,
-  key: 'binary classification arrays format (before 20140710)'
+  key: 'binary classification model dict format after 20140907'
+  url_regex: new RegExp '^.+/cloudml/models/\\d+/tests/\\d+/\\?show=' +
+    'accuracy,metrics,roc_auc,examples_placement,name' +
+    ',status,created_on,created_by?'
+  data: angular.toJson
+    test:
+      status: "Completed"
+      name: "Test2"
+      examples_placement: null
+      created_by:
+        portrait_32_img: "url1"
+        uid: "nsoliman"
+        auth_token: "authtoken1"
+        odesk_url: "url2"
+        id: 1
+        created_on: "2014-06-04"
+        updated_on: "2014-07-01"
+        email: "nsoliman@odesk.com"
+        name: "Nader Soliman"
+      metrics:
+        avarage_precision: 0.0
+        roc_curve:
+          1: [[0.0, 0.0, 0.0, 0.0], [0.02, 0.04, 0.06, 0.08]]
+        confusion_matrix: [["0", [45, 1]], ["1", [0, 50]]]
+        precision_recall_curve: [[1.0, 1.0, 1.0, 1.0], [1.0, 0.98, 0.96, 0.94]]
+        accuracy: 0.98
+      roc_auc:
+        1: 1.0
+      created_on: "2014-07-11"
+      id: 37
+      accuracy: 0.98
+  type: 'json'
+  status: 'OK'
+  statusCode: 200
+,
+  key: 'binary classification arrays format before 20140710'
   url_regex: new RegExp '^.+/cloudml/models/\\d+/tests/\\d+/\\?show=' +
     'accuracy,metrics,roc_auc,examples_placement,name' +
     ',status,created_on,created_by?'

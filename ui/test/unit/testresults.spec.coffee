@@ -88,13 +88,13 @@ describe "testresults", ->
 
       expect($rootScope.setSection).toHaveBeenCalled()
 
-    it "should load 'metrics' section, old list format, binary classifier",
+    it "should load 'metrics' section, old list format, binary classifier before 20140710",
       inject (TestResult) ->
         url = BASE_URL + '?show=' + 'accuracy,metrics,roc_auc' +
           ',examples_placement,' + TestResult.MAIN_FIELDS
         $httpBackend.expectGET(url)
         .respond.apply @, map_url_to_response(url,
-          'binary classification arrays format (before 20140710)')
+          'binary classification arrays format before 20140710')
 
         $rootScope.goSection(['metrics', 'accuracy'])
         $httpBackend.flush()
@@ -107,13 +107,13 @@ describe "testresults", ->
         expect($rootScope.prCurves).toBeDefined()
         expect($rootScope.prCurves['Precision-Recall curve']).toBeDefined()
 
-    it "should load 'metrics' section for multiclass classifier, new dict format",
+    it "should load 'metrics' section for multiclass classifier format after 20140710",
       inject (TestResult) ->
         url = BASE_URL + '?show=' + 'accuracy,metrics,roc_auc' +
           ',examples_placement,' + TestResult.MAIN_FIELDS
         $httpBackend.expectGET(url)
         .respond.apply @, map_url_to_response(url,
-            'multiclass classification model dict format (after 20140710)')
+            'multiclass classification model dict format after 20140710')
 
         $rootScope.goSection(['metrics', 'accuracy'])
         $httpBackend.flush()
@@ -127,13 +127,54 @@ describe "testresults", ->
 
         expect($rootScope.prCurves).toBeUndefined() # multiclass has no pr
 
-    it "should load 'metrics' section for binary classifier, new dict format",
+    it "should load 'metrics' section for multiclass classifier format after 20140907",
       inject (TestResult) ->
         url = BASE_URL + '?show=' + 'accuracy,metrics,roc_auc' +
           ',examples_placement,' + TestResult.MAIN_FIELDS
         $httpBackend.expectGET(url)
         .respond.apply @, map_url_to_response(url,
-          'binary classification model dict format (after 20140710)')
+          'multiclass classification model dict format after 20140710')
+
+        $rootScope.goSection(['metrics', 'accuracy'])
+        $httpBackend.flush()
+
+
+        expect($rootScope.rocCurves).toBeDefined()
+        expect(_.keys($rootScope.rocCurves).length).toEqual 3
+        for key in _.keys($rootScope.rocCurves)
+          expect($rootScope.rocCurves[key]['curve']).toBeDefined()
+          expect($rootScope.rocCurves[key]['roc_auc']).toBeDefined()
+
+        expect($rootScope.prCurves).toBeUndefined() # multiclass has no pr
+
+    it "should load 'metrics' section for binary classifier, format after 20140710",
+      inject (TestResult) ->
+        url = BASE_URL + '?show=' + 'accuracy,metrics,roc_auc' +
+          ',examples_placement,' + TestResult.MAIN_FIELDS
+        $httpBackend.expectGET(url)
+        .respond.apply @, map_url_to_response(url,
+          'binary classification model dict format after 20140710')
+
+        $rootScope.goSection(['metrics', 'accuracy'])
+        $httpBackend.flush()
+
+        expect($rootScope.prCurves).toBeDefined() # binary classification has pr
+
+        expect($rootScope.rocCurves).toBeDefined()
+        expect(_.keys($rootScope.rocCurves).length).toEqual 1
+        expect($rootScope.rocCurves[1]).toBeDefined()
+        expect($rootScope.rocCurves[1]['curve']).toBeDefined()
+        expect($rootScope.rocCurves[1]['roc_auc']).toBeDefined()
+        expect($rootScope.prCurves).toBeDefined()
+        expect($rootScope.prCurves['Precision-Recall curve']).toBeDefined()
+
+    it "should load 'metrics' section for binary classifier, format after 20140907",
+      inject (TestResult) ->
+        url = BASE_URL + '?show=' + 'accuracy,metrics,roc_auc' +
+          ',examples_placement,' + TestResult.MAIN_FIELDS
+        $httpBackend.expectGET(url)
+        .respond.apply @, map_url_to_response(url,
+          'binary classification model dict format after 20140907')
 
         $rootScope.goSection(['metrics', 'accuracy'])
         $httpBackend.flush()
