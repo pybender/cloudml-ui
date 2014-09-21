@@ -821,7 +821,7 @@ angular.module('app.directives', [
   }
 ])
 
-.directive('scChart', [ ->
+.directive('scChart', [ '$timeout', ($timeout) ->
   return {
     restrict: 'E',
     scope: { chartDict: '=',
@@ -830,7 +830,8 @@ angular.module('app.directives', [
     },
     link: (scope, element, attrs) ->
       createSVG(scope, element, attrs.width, attrs.height)
-      scope.$watch('chartDict', updateChart)
+      $timeout ->
+        scope.$watch('chartDict', updateChart)
   }
 ])
 
@@ -897,8 +898,7 @@ createSVG = (scope, element, width=400, height=300) ->
   if not scope.svg?
     scope.svg = d3.select(element[0])
     .append("svg")
-    .attr("width", width)
-    .attr("height", height)
+    .style {width: "#{width}px", height: "#{height}px"}
 
 updateCurves = (curvesDict, oldVal, scope) ->
   if !curvesDict
@@ -922,12 +922,13 @@ updateChart = (chartDict, oldVal, scope) ->
     return
 
   getChartData = (chartDict) ->
-    return [{ key: "Probabilities", values: chartDict}]
+    return chartDict
 
   chart = nv.models.pieChart()
   chart.x((d) -> d.label)
   .y((d) -> d.value)
   .showLabels(true)
+  .labelType("percent")
   .labelThreshold(.05)
 
   scope.svg.datum(getChartData(chartDict))

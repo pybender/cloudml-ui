@@ -386,6 +386,7 @@ describe 'app.datas.controllers', ->
       .respond 400
       $httpBackend.flush()
       expect($scope.setError).toHaveBeenCalledWith jasmine.any(Object), 'loading test example'
+      expect($scope.loaded).toBe false
 
       $scope.goSection()
       response = {}
@@ -393,6 +394,7 @@ describe 'app.datas.controllers', ->
       $httpBackend.expectGET "#{d1.BASE_API_URL}#{d1.id}/?filter_name=filter_value&show=test_name,weighted_data_input,model,pred_label,label,prob,created_on,test_result,next,previous,parameters_weights,data_input"
       .respond 200, angular.toJson response
       $httpBackend.flush()
+      expect($scope.loaded).toBe true
 
     it 'should respond to next,previous and back', inject (Data)->
       $routeParams = {id: 777, model_id: 999, test_id: 888}

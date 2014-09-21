@@ -168,15 +168,16 @@ angular.module('app.datas.controllers', ['app.config', ])
     if $scope.loaded
       return
 
-    $scope.data.$load(
-      _.extend({show: ['test_name','weighted_data_input','model',
-             'pred_label','label','prob','created_on','test_result',
-             'next', 'previous', 'parameters_weights', 'data_input'].join(',')},
-               $scope.filter_opts)
-    ).then (->
-      ), ((opts)->
-        $scope.setError(opts, 'loading test example')
-      )
+    loadParams = _.extend(
+      {show: ['test_name','weighted_data_input','model', 'pred_label',
+              'label','prob', 'created_on', 'test_result', 'next', 'previous',
+              'parameters_weights', 'data_input'].join(',')}, $scope.filter_opts)
+    $scope.data.$load loadParams
+    .then ->
+      $scope.loaded = true
+    , (opts)->
+      $scope.loaded = false
+      $scope.setError(opts, 'loading test example')
 
   $scope.initSections($scope.goSection)
 

@@ -1025,7 +1025,7 @@ optional-params="optionalParams"></parameters-editor>
       $(document.body).append(elem)
       $scope.$digest()
 
-      $scope.chartDict = {}
+      $scope.chartDict = [{label: 'x', value: 10}]
       $scope.$digest()
       $timeout.flush()
 
