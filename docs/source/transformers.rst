@@ -1,4 +1,14 @@
-.. _transforrmers:
+********-+.. _transforrmers:
+
+=======================
+Pretrained transformers
+=======================
+
+Cloudml have possibility to define and train transformers without train model.
+Trained transformers stored to amazon s3 to folder wich defined in settings.
+
+For train transformers you can use import handlers and imported datasets as for train models.
+
 
 ===============================
 Transformer JSON file format
@@ -20,6 +30,10 @@ An example of such file is the following::
 	      }
 	}
 
+
+"field-name" is field which will be use for train transformer.
+"type" is type of field.
+
 Available transformer types:
 
  - Dictionary
@@ -27,6 +41,8 @@ Available transformer types:
  - Tfidf
  - Lda
  - Lsi
+ - Ntile
+
 
 You can run the train transformer using::
 
@@ -36,7 +52,7 @@ The detials of the parameters passed to trainer.py are the following:
 
 
 +-----------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Parameter                         | Description                                                                                                                                                                                                                       |
+| Paramete-+++++++++r                         | Description                                                                                                                                                                                                                       |
 +===================================+===================================================================================================================================================================================================================================+
 | -h, --help                        | Prints help message                                                                                                                                                                                                               |
 +-----------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
