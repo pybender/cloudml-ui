@@ -279,8 +279,8 @@ class FeatureTransformerForm(BaseForm):
     Adds/edits feature transformer form.
     """
     group_chooser = 'predefined_selected'
-    REQUIRED_FORM = ['feature_id', 'type']
-    REQUIRED_PRETRAINED = ['feature_id', 'transformer']
+    REQUIRED_FORM = ['type']
+    REQUIRED_PRETRAINED = ['transformer']
     required_fields_groups = {
         'true': REQUIRED_PRETRAINED,
         'false': REQUIRED_FORM,
@@ -298,20 +298,20 @@ class FeatureTransformerForm(BaseForm):
         type_ = self.cleaned_data.get('type')
         pretrained_selected = self.cleaned_data.get('predefined_selected')
         if not pretrained_selected and type_ not in Transformer.TYPES_LIST:
-            raise ValidationError('type is invalid')
+            self.add_error('type', 'type is invalid')
 
-    def save(self):
+    def save(self, commit=True, save=True):
         feature = self.cleaned_data.get('feature_id', None)
         is_pretrained = self.cleaned_data.get('predefined_selected', False)
         if is_pretrained:
             pretrained_transformer = self.cleaned_data.get('transformer')
             transformer = {'type': pretrained_transformer.name}
-            feature.transformer = transformer
         else:
             transformer = {
                 "type": self.cleaned_data.get('type'),
                 "params": self.cleaned_data.get('params')
             }
+        if not feature is None:
             feature.transformer = transformer
-        feature.save()
+            feature.save()
         return transformer

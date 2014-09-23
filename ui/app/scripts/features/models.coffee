@@ -284,8 +284,8 @@ scaler,default,is_target_variable,created_on,created_by,required'
               opts.extraData['scaler-' + field] = val
               isScalerFilled = true
 
-        if isTransformerFilled
-          opts.extraData['transformer-is_predefined'] = false
+        if @transformer.transformer?
+          opts.extraData['transformer-predefined_selected'] = true
         else if removeItems
           opts.extraData['remove_transformer'] = true
 

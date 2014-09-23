@@ -110,7 +110,8 @@ class BaseForm(InternalForm):
         self.data = data or {}
         if data:
             if self.required_fields_groups:
-                self.current_group = self.data.get(self.group_chooser)
+                self.current_group = self.data.get(
+                    self.prefix + self.group_chooser)
                 self.required_fields = \
                     self.required_fields_groups[self.current_group]
 
@@ -176,7 +177,7 @@ fields %s is required' % ', '.join(fields))
 
         for name, form in self.forms.iteritems():
             try:
-                #form.no_required = True
+                form.no_required = True
                 form.inner_name = name
                 # TODO: make possible to choose whether form field is required
                 if form.is_valid() and form.filled:

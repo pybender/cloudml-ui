@@ -4,8 +4,9 @@ from api.base.forms import BaseForm, CharField, ChoiceField, BooleanField, \
     JsonField, DocumentField
 from api.base.resources import ValidationError
 from models import NamedFeatureType, PredefinedClassifier, PredefinedScaler, \
-    PredefinedTransformer, FeatureSet, Feature
-from api.ml_models.models import Model
+    FeatureSet, Feature
+from api.ml_models.models import Model, Transformer
+from api.ml_models.forms import FeatureTransformerForm
 from api.base.forms.base_forms import BasePredefinedForm
 from api.features.models import CLASSIFIERS
 
@@ -78,7 +79,8 @@ class NamedFeatureTypeAddForm(BaseForm, FeatureParamsMixin):
         count = query.count()
         if count:
             raise ValidationError(
-                'Named feature type with name "%s" already exist. Please choose another one.' % value)
+                'Named feature type with name "%s" already exist. \
+Please choose another one.' % value)
         return value
 
 
@@ -112,7 +114,6 @@ class FeatureSetAddForm(BaseForm):
             raise ValidationError('classifier not found')
 
         return classifier
-
 
 
 class ScalerForm(BasePredefinedForm):
@@ -165,7 +166,7 @@ class ClassifierForm(BasePredefinedForm):
         # TODO: move from here
         def convert_auto_dict(val):
             import ast
-            #if val != 'auto':  
+            #if val != 'auto':
             return val
 
         def convert(val, val_type):
@@ -193,27 +194,6 @@ class ClassifierForm(BasePredefinedForm):
                             'Invalid parameter %s value: %s' % (name, exc))
 
 
-class TransformerForm(BasePredefinedForm):
-    OBJECT_NAME = 'transformer'
-    DOC = PredefinedTransformer
-
-    group_chooser = 'predefined_selected'
-    required_fields_groups = {
-        'true': ('transformer', ),
-        'false': ('type', ),
-        None: ('type', )}
-
-    name = CharField()
-    type_field = ChoiceField(
-        choices=PredefinedTransformer.TYPES_LIST, name='type')
-    params = JsonField()
-    predefined_selected = BooleanField()
-    transformer = DocumentField(
-        doc=PredefinedTransformer, by_name=True, return_doc=True)
-    feature_id = DocumentField(doc=Feature, by_name=False,
-                               return_doc=False)
-
-
 class FeatureForm(BaseForm, FeatureParamsMixin):
     NO_REQUIRED_FOR_EDIT = True
     required_fields = ('name', 'type', 'feature_set_id')
@@ -228,13 +208,27 @@ class FeatureForm(BaseForm, FeatureParamsMixin):
     feature_set_id = DocumentField(doc=FeatureSet, by_name=False,
                                    return_doc=False)
 
-    transformer = TransformerForm(
-        Model=PredefinedTransformer,
+    transformer = FeatureTransformerForm(
+        Model=Transformer,
         prefix='transformer-', data_from_request=False)
     remove_transformer = BooleanField()
     scaler = ScalerForm(Model=PredefinedScaler, prefix='scaler-',
                         data_from_request=False)
     remove_scaler = BooleanField()
+
+    def validate_data(self):
+        feature_set_id = self.cleaned_data.get('feature_set_id')
+        name = self.cleaned_data.get('name')
+        query = Feature.query.filter_by(
+            name=name,
+            feature_set_id=feature_set_id)
+        if self.obj.id:
+            query = query.filter(Feature.id != self.obj.id)
+        count = query.count()
+        if count:
+            self.add_error('name', 'Feature with name "%s" already \
+exist. Please choose another one.' % name)
+        return name
 
     def clean_type(self, value, field):
         if value and not value in NamedFeatureType.TYPES_LIST:
