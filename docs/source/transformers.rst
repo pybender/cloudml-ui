@@ -1,4 +1,4 @@
-********-+.. _transforrmers:
+.. _transforrmers:
 
 =======================
 Pretrained transformers
@@ -10,9 +10,8 @@ Trained transformers stored to amazon s3 to folder wich defined in settings.
 For train transformers you can use import handlers and imported datasets as for train models.
 
 
-===============================
 Transformer JSON file format
-===============================
+----------------------------
 
 An example of such file is the following::
 
@@ -31,8 +30,8 @@ An example of such file is the following::
 	}
 
 
-"field-name" is field which will be use for train transformer.
-"type" is type of field.
+- ``field-name`` is field which will be use for train transformer.
+- ``type`` is type of field.
 
 Available transformer types:
 
@@ -73,3 +72,24 @@ The detials of the parameters passed to trainer.py are the following:
 Train transformer using existing data::
 
 	$ python transformer.py ./testdata/transformers/transformer.json -i ./testdata/transformers/train.data.json 
+
+
+Using Pretrained Transformers in UI
+-----------------------------------
+
+-----------------------
+Fitting new transformer
+-----------------------
+
+You could add new pretrained transformer by clicking to `Add new transformer` button `transformers list page <http://cloudml.int.odesk.com/#/predefined/transformers>`_.
+After this you need to fit it. To do this, go to the details page and click to `Start training` button.
+
+.. note::
+    
+    You could find training logs in transformer details page, tab `Training`.
+
+---------------------------------------------------
+Using pretrained transformer in the model's feature
+---------------------------------------------------
+
+Once the transformer would be trained it could be used in the models. For using pretrained transformer in the feature you need to switch to `Pretrained` tab in the feature transformer edditing popup.
