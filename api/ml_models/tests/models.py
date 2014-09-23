@@ -9,7 +9,7 @@ import numpy
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS, FEATURE_COUNT, TARGET_VARIABLE
 from api.ml_models.tasks import transform_dataset_for_download
 from ..views import ModelResource
-from ..models import Model, Tag, db
+from ..models import Model, Tag, db, Segment, Weight
 from ..fixtures import ModelData
 from api.import_handlers.fixtures import ImportHandlerData, DataSetData, XmlImportHandlerData
 from api.import_handlers.models import DataSet, ImportHandler, XmlImportHandler
@@ -445,16 +445,35 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         ds = DataSet.query.filter_by(
             name=DataSetData.dataset_03.name).first()
 
-        def check_train(features_file_name='features.json'):
-            with open('./conf/%s' % features_file_name, 'r') as f:
-                mock_get_features_json.return_value = f.read()
-            res = train_model.run(
-                dataset_ids=[ds.id], model_id=self.obj.id, user_id=1)
-            self.assertTrue('Model trained' in res)
-            self.assertEqual(self.obj.status, Model.STATUS_TRAINED, self.obj.error)
-        
-        check_train()
-        check_train('features_with_segmentation.json')
+        with open('./conf/features.json', 'r') as f:
+            mock_get_features_json.return_value = f.read()
+        res = train_model.run(
+            dataset_ids=[ds.id], model_id=self.obj.id, user_id=1)
+        self.assertTrue('Model trained' in res)
+        self.assertEqual(self.obj.status, Model.STATUS_TRAINED, self.obj.error)
+
+    @mock_s3
+    @patch('api.ml_models.models.Model.get_features_json')
+    def test_model_segmentation(self, mock_get_features_json, *mocks):
+        from api.ml_models.tasks import train_model
+        ds = DataSet.query.filter_by(
+            name=DataSetData.dataset_03.name).first()
+
+        with open('./conf/features_with_segmentation.json', 'r') as f:
+            mock_get_features_json.return_value = f.read()
+        res = train_model.run(
+            dataset_ids=[ds.id], model_id=self.obj.id, user_id=1)
+        self.assertTrue('Model trained' in res)
+        self.assertEqual(self.obj.status, Model.STATUS_TRAINED, self.obj.error)
+        self.assertTrue(self.obj.weights_synchronized)
+        segments = Segment.query.filter_by(model=self.obj)
+        self.assertEquals(segments.count(), 2)
+        self.assertEqual(
+            Weight.query.count(), 357)
+        self.assertTrue(
+            Weight.query.filter_by(segment=segments[0]).count())
+        self.assertTrue(
+            Weight.query.filter_by(segment=segments[1]).count())
 
     @mock_s3
     def test_train_model_validation_errors(self, *mocks):

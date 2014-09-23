@@ -180,9 +180,6 @@ class Model(db.Model, BaseModel, BaseTrainedEntity):
         self.test_import_handler_type = handler.TYPE
 
     def create_segments(self, segments):
-        count = Segment.query.filter(
-                Segment.model_id==self.id).delete(
-                synchronize_session=False)
         for name, records in segments.iteritems():
             segment = Segment()
             segment.name = name

@@ -49,26 +49,31 @@ def train_model(dataset_ids, model_id, user_id, delete_metadata=False):
             logging.info('Remove old model data on retrain model')
             LogMessage.delete_related_logs(model.id)  # rem logs from mongo
             count = TestExample.query.filter(
-                TestExample.model_id==model.id).delete(
-                synchronize_session=False)
+                TestExample.model_id == model.id).delete(
+                    synchronize_session=False)
             logging.info('%s tests examples to delete' % count)
             count = TestResult.query.filter(
-                TestResult.model_id==model.id).delete(
-                synchronize_session=False)
+                TestResult.model_id == model.id).delete(
+                    synchronize_session=False)
             logging.info('%s tests to delete' % count)
             db_session.commit()
 
             count = Weight.query.filter(
-                Weight.model_id==model.id).delete(
-                synchronize_session=False)
+                Weight.model_id == model.id).delete(
+                    synchronize_session=False)
             logging.info('%s weights to delete' % count)
             db_session.commit()
 
             count = WeightsCategory.query.filter(
-                WeightsCategory.model_id==model.id).delete(
-                synchronize_session=False)
+                WeightsCategory.model_id == model.id).delete(
+                    synchronize_session=False)
             logging.info('%s weight categories to delete' % count)
-            db_session.commit() 
+
+            count = Segment.query.filter(
+                Segment.model_id == model_id).delete(
+                    synchronize_session=False)
+            logging.info('%s segments to delete' % count)
+            db_session.commit()
 
         logging.info('Perform model training')
         feature_model = FeatureModel(model.get_features_json(),
@@ -136,7 +141,7 @@ def fill_model_parameter_weights(model_id, segment_id=None):
     Adds model parameters weights to db.
     """
     init_logger('trainmodel_log', obj=int(model_id))
-    logging.info("Starting to fill model weights" )
+    logging.info("Starting to fill model weights")
 
     model = Model.query.get(model_id)
     if model is None:
@@ -146,10 +151,11 @@ def fill_model_parameter_weights(model_id, segment_id=None):
     if segment is None:
         raise ValueError('Segment not found: %s' % segment_id)
 
-    count = len(model.weights)
+    count = len(segment.weights)
     if count > 0:
-        raise InvalidOperationError('Weights for model %s already  filled: %s' %
-                                    (model_id, count))
+        raise InvalidOperationError(
+            'Weights for model %s already  filled: %s' %
+            (model_id, count))
 
     weights_dict = None
     categories_names = []
@@ -246,9 +252,6 @@ def fill_model_parameter_weights(model_id, segment_id=None):
         raise
     return msg
 
-        
-            
-
 
 @celery.task(base=SqlAlchemyTask)
 def transform_dataset_for_download(model_id, dataset_id):
@@ -278,7 +281,8 @@ def transform_dataset_for_download(model_id, dataset_id):
 
 
 @celery.task(base=SqlAlchemyTask)
-def train_transformer(dataset_ids, transformer_id, user_id, delete_metadata=False):
+def train_transformer(dataset_ids, transformer_id, user_id,
+                      delete_metadata=False):
     """
     Train the transformer celery task.
     """
@@ -297,9 +301,10 @@ def train_transformer(dataset_ids, transformer_id, user_id, delete_metadata=Fals
         transformer.trained_by = user
         transformer.save(commit=True)
 
-        if delete_metadata:  # TODO: what about models that use this transformer?
+        # TODO: what about models that use this transformer?
+        if delete_metadata:
             logging.info('Remove logs on retrain transformer')
-            LogMessage.delete_related_logs(transformer.id)  # rem logs from mongo
+            LogMessage.delete_related_logs(transformer.id)
 
         logging.info('Perform transformer training')
         path = app.config['DATA_FOLDER']
@@ -307,6 +312,7 @@ def train_transformer(dataset_ids, transformer_id, user_id, delete_metadata=Fals
             makedirs(path)
 
         trainer = {}
+
         def _chain_datasets(ds_list):
             fp = None
             for d in ds_list:
@@ -334,7 +340,8 @@ def train_transformer(dataset_ids, transformer_id, user_id, delete_metadata=Fals
         transformer.train_records_count = int(sum((
             d.records_count for d in transformer.datasets)))
         train_end_time = datetime.utcnow()
-        transformer.training_time = int((train_end_time - train_begin_time).seconds)
+        transformer.training_time = int(
+            (train_end_time - train_begin_time).seconds)
         transformer.save()
     except Exception, exc:
         db_session.rollback()
