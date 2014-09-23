@@ -471,6 +471,7 @@ class Weight(db.Model, BaseMixin):
     short_name = db.Column(db.String(200))
     model_name = db.Column(db.String(200))
     value = db.Column(db.Float)
+    value2 = db.Column(db.Float)
     is_positive = db.Column(db.Boolean)
     css_class = db.Column(db.String)
     class_label = db.Column(db.String(100), nullable=True)

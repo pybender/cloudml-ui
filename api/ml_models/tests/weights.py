@@ -258,7 +258,7 @@ class WeightTasksTests(BaseDbTestCase, TestChecksMixin):
     @patch('api.amazon_utils.AmazonS3Helper.load_key')
     def test_fill_weights_binary_classifier(self, mock_load_key):
         """
-        Tests mainly api/ml_models/tests/tasks.py:fill_model_parameter_weights
+        test_fill_weights_binary_classifier
         for binary classifer
         :param mock_load_key:
         """
@@ -329,7 +329,7 @@ class WeightTasksTests(BaseDbTestCase, TestChecksMixin):
     @patch('api.amazon_utils.AmazonS3Helper.load_key')
     def test_fill_weights_multiclass_classifier(self, mock_load_key):
         """
-        Tests mainly api/ml_models/tests/tasks.py:fill_model_parameter_weights
+        fill_model_parameter_weights
         for multiclass classifier
         :param mock_load_key:
         """

@@ -18,6 +18,7 @@ angular.module('app.features.controllers.transformers', ['app.config', ])
     $scope.transformers = []
     Transformer.$loadAll(
       show: 'name'
+      status: 'Trained'
     ).then ((opts) ->
       $scope.transformers = opts.objects
     ), ((opts) ->

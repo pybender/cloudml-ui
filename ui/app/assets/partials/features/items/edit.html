@@ -31,5 +31,5 @@
       </div>
     </div>
   </div>
-  <button ng-disabled="FeatureForm.$invalid || TransformerForm.$invalid || ScalerForm.$invalid" ng-click="save(['name', 'type', 'input_format', 'transformer__name', 'transformer__type',  'transformer__params', 'params', 'required', 'scaler__predefined_selected', 'scaler__name','scaler__type', 'scaler__params', 'default', 'feature_set_id', 'is_target_variable'])"  class="btn btn-primary"><span ng-show="feature.id">Save</span><span ng-hide="feature.id">Add</span> feature</button>
+  <button ng-disabled="FeatureForm.$invalid || TransformerForm.$invalid || ScalerForm.$invalid" ng-click="save(['name', 'type', 'input_format', 'transformer__name', 'transformer__type',  'transformer__params', 'transformer__transformer', 'params', 'required', 'scaler__predefined_selected', 'scaler__name','scaler__type', 'scaler__params', 'default', 'feature_set_id', 'is_target_variable'])"  class="btn btn-primary"><span ng-show="feature.id">Save</span><span ng-hide="feature.id">Add</span> feature</button>
 </div>

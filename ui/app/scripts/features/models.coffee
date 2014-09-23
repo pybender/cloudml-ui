@@ -31,7 +31,8 @@ angular.module('app.features.models', ['app.config'])
       LIST_MODEL_NAME: @LIST_MODEL_NAME
       @MAIN_FIELDS: 'id,name,type,params,created_on,created_by,status,\
 train_import_handler_type,train_import_handler'
-      @$TYPES_LIST: ['Dictionary', 'Count', 'Tfidf', 'Lda', 'Lsi']
+      @$TYPES_LIST: ['Dictionary', 'Count', 'Tfidf', 'Lda', 'Lsi', 'Ntile']
+
 
       id: null
       name: null
@@ -283,8 +284,8 @@ scaler,default,is_target_variable,created_on,created_by,required'
               opts.extraData['scaler-' + field] = val
               isScalerFilled = true
 
-        if isTransformerFilled
-          opts.extraData['transformer-is_predefined'] = false
+        if @transformer.transformer?
+          opts.extraData['transformer-predefined_selected'] = true
         else if removeItems
           opts.extraData['remove_transformer'] = true
 

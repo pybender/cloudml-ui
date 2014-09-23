@@ -298,10 +298,12 @@ class TransformerResource(BaseTrainedEntityResource):
     """ Pretrained transformer API methods """
     Model = Transformer
     GET_ACTIONS = BaseTrainedEntityResource.GET_ACTIONS + ['configuration']
-    ALL_FIELDS_IN_POST = True
     ENTITY_TYPE = 'transformer'
+    DEFAULT_FIELDS = ['name', 'type']
+    FILTER_PARAMS = (('status', str), )
     put_form = TransformerForm
     train_form = TrainForm
+    NEED_PAGING = False
 
     @property
     def post_form(self):
@@ -428,7 +430,8 @@ class WeightTreeResource(BaseResourceSQL):
             kwargs['class_label'] = class_label
 
         opts = self._prepare_show_fields_opts(
-            Weight, ('short_name', 'name', 'css_class', 'value', 'segment_id'))
+            Weight, ('short_name', 'name', 'css_class',
+                     'value', 'segment_id', 'value2'))
         weights = Weight.query.options(*opts).filter_by(**kwargs)
         context = {'categories': categories, 'weights': weights}
         return self._render(context)

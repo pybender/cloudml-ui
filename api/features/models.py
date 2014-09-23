@@ -94,17 +94,6 @@ class PredefinedClassifier(BaseModel, PredefinedItemMixin,
         db.Enum(*TYPES_LIST, name='classifier_types'), nullable=False)
 
 
-class PredefinedTransformer(BaseModel, PredefinedItemMixin, db.Model,
-                            ExportImportMixin):
-    """ Represents predefined feature transformer """
-    FIELDS_TO_SERIALIZE = ('type', 'params')
-    NO_PARAMS_KEY = False
-
-    TYPES_LIST = TRANSFORMERS.keys()
-    type = db.Column(
-        db.Enum(*TYPES_LIST, name='transformer_types'), nullable=False)
-
-
 class PredefinedScaler(BaseModel, PredefinedItemMixin, db.Model,
                        ExportImportMixin):
     """ Represents predefined feature scaler """
