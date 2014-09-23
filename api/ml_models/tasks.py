@@ -19,14 +19,14 @@ from api.ml_models.models import Model, Weight, WeightsCategory, Segment, \
     Transformer, get_transformer
 from api.model_tests.models import TestResult, TestExample
 from api.import_handlers.models import DataSet
-from api.logs.models import LogMessage
+from api.logs.dynamodb.models import LogMessage
 from api.servers.models import Server
 
 db_session = db.session
 
 
 @celery.task(base=SqlAlchemyTask)
-def train_model(dataset_ids, model_id, user_id):
+def train_model(dataset_ids, model_id, user_id, delete_metadata=False):
     """
     Train new model celery task.
     """
@@ -37,9 +37,7 @@ def train_model(dataset_ids, model_id, user_id):
     model = Model.query.get(model_id)
     datasets = DataSet.query.filter(DataSet.id.in_(dataset_ids)).all()
     logging.info('Model: %s' % model.name)
-
     try:
-        delete_metadata = model.status != model.STATUS_NEW
         model.comparable = False
         model.datasets = datasets
         model.status = model.STATUS_TRAINING
@@ -280,7 +278,7 @@ def transform_dataset_for_download(model_id, dataset_id):
 
 
 @celery.task(base=SqlAlchemyTask)
-def train_transformer(dataset_ids, transformer_id, user_id):
+def train_transformer(dataset_ids, transformer_id, user_id, delete_metadata=False):
     """
     Train the transformer celery task.
     """
@@ -293,7 +291,6 @@ def train_transformer(dataset_ids, transformer_id, user_id):
     logging.info('Transformer: %s' % transformer.name)
 
     try:
-        delete_metadata = transformer.status != transformer.STATUS_NEW
         transformer.datasets = datasets
         transformer.status = transformer.STATUS_TRAINING
         transformer.error = ""

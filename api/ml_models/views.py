@@ -57,6 +57,7 @@ class BaseTrainedEntityResource(BaseResourceSQL):
             get_request_instance
         from celery import chain
         obj = self._get_details_query(None, **kwargs)
+        delete_metadata = obj.status != obj.STATUS_NEW
         form = self.train_form(obj=obj, **kwargs)
         if form.is_valid():
             entity = form.save()  # set status to queued
@@ -68,7 +69,6 @@ class BaseTrainedEntityResource(BaseResourceSQL):
                 'spot_instance_type', None)
 
             tasks_list = []
-            LogMessage.delete_related_logs(entity.id)
             if new_dataset_selected:
                 import_handler = entity.train_import_handler
                 params = form.cleaned_data.get('parameters', None)
@@ -113,11 +113,11 @@ class BaseTrainedEntityResource(BaseResourceSQL):
             else:
                 opts = {
                     entity_key: entity.id,
-                    'user_id': request.user.id
+                    'user_id': request.user.id,
+                    'delete_metadata': delete_metadata
                 }
                 if not new_dataset_selected:
                     opts['dataset_ids'] = dataset_ids
-
                 tasks_list.append(self.train_entity_task.subtask(
                     None, opts, queue=instance.name))
 
