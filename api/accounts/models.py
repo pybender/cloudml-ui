@@ -1,4 +1,5 @@
 import logging
+from boto.dynamodb2.exceptions import ItemNotFound
 from sqlalchemy import func
 from sqlalchemy.orm import exc as orm_exc, validates
 
@@ -45,6 +46,8 @@ class AuthToken(object):
     def get_auth(cls, auth_token):
         try:
             return dynamodb.get_item(cls.TABLE_NAME, id=auth_token)
+        except ItemNotFound:
+            return None
         except JSONResponseError as ex:
             if ex.status == 404:
                 return None

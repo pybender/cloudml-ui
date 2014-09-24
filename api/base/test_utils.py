@@ -10,6 +10,10 @@ from sqlalchemy import create_engine
 
 from api import app
 
+from moto import mock_dynamodb2, mock_s3
+from api.accounts.models import AuthToken
+from api.logs.dynamodb.models import LogMessage
+
 SOMEBODY_AUTH_TOKEN = '123'
 SOMEBODY_HTTP_HEADERS = [('X-Auth-Token', SOMEBODY_AUTH_TOKEN)]
 
@@ -27,6 +31,9 @@ class BaseDbTestCase(TestCase):
     """
     TESTING = True
     datasets = []
+
+    s3_mock = None
+    dynamodb_mock = None
 
     @property
     def db(self):
@@ -52,11 +59,20 @@ class BaseDbTestCase(TestCase):
         app.sql_db.metadata.create_all(cls.engine)
         app.sql_db.create_all()
 
+        cls.dynamodb_mock = mock_dynamodb2()
+        cls.dynamodb_mock.start()
+        cls.s3_mock = mock_s3()
+        cls.s3_mock.start()
+        AuthToken.create_table()
+        LogMessage.create_table()
+
     @classmethod
     def tearDownClass(cls):
         app.sql_db.session.expunge_all()
         app.sql_db.session.remove()
         app.sql_db.drop_all()
+        cls.dynamodb_mock.stop()
+        cls.s3_mock.stop()
 
     def setUp(self):
         # Clean all tables
