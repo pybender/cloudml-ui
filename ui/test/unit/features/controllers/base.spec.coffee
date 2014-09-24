@@ -4,16 +4,19 @@
 
 describe 'Features Controllers', ->
 
-  beforeEach(module 'ngCookies')
-  beforeEach(module 'ngRoute')
-  beforeEach(module 'ui.bootstrap')
+  beforeEach ->
+    module 'ngCookies'
+    module 'ngRoute'
+    module 'ui.bootstrap'
 
-  beforeEach(module 'app.base')
-  beforeEach(module 'app.config')
-  beforeEach(module 'app.services')
+    module 'app.base'
+    module 'app.config'
+    module 'app.services'
 
-  beforeEach(module 'app.features.models')
-  beforeEach(module 'app.features.controllers.base')
+    module 'app.features.models'
+    module 'app.features.controllers.base'
+    module 'app.importhandlers.model'
+    module 'app.xml_importhandlers.models'
 
   $httpBackend = null
   $scope = null
@@ -88,10 +91,10 @@ describe 'Features Controllers', ->
 
         prepareTestContext = (failGET) ->
           if not failGET
-            $httpBackend.expectGET("#{settings.apiUrl}features/transformers/#{openOptions.model.id}/action/configuration/")
+            $httpBackend.expectGET("#{settings.apiUrl}transformers/#{openOptions.model.id}/action/configuration/")
             .respond 200, angular.toJson(TRANSFORMERS)
           else
-            $httpBackend.expectGET("#{settings.apiUrl}features/transformers/#{openOptions.model.id}/action/configuration/")
+            $httpBackend.expectGET("#{settings.apiUrl}transformers/#{openOptions.model.id}/action/configuration/")
             .respond 400
 
           window.loadParameters = jasmine.createSpy('loadParameters')
@@ -127,7 +130,7 @@ describe 'Features Controllers', ->
 
         TRANSFORMERS = {configuration: {dictionary: defaults: {x: 1}}}
 
-        $httpBackend.expectGET("#{settings.apiUrl}features/transformers/#{openOptions.extra.feature.some_field.id}/action/configuration/")
+        $httpBackend.expectGET("#{settings.apiUrl}transformers/#{openOptions.extra.feature.some_field.id}/action/configuration/")
         .respond 200, angular.toJson(TRANSFORMERS)
 
         window.loadParameters = jasmine.createSpy('loadParameters')
@@ -158,7 +161,7 @@ describe 'Features Controllers', ->
 
         TRANSFORMERS = {configuration: {dictionary: defaults: {x: 1}}}
 
-        $httpBackend.expectGET("#{settings.apiUrl}features/transformers/#{openOptions.extra.model.some_field.id}/action/configuration/")
+        $httpBackend.expectGET("#{settings.apiUrl}transformers/#{openOptions.extra.model.some_field.id}/action/configuration/")
         .respond 200, angular.toJson(TRANSFORMERS)
 
         window.loadParameters = jasmine.createSpy('loadParameters')
@@ -195,10 +198,10 @@ describe 'Features Controllers', ->
 
       prepareTestContext = (failGET) ->
         if not failGET
-          $httpBackend.expectGET("#{settings.apiUrl}features/transformers/#{feature.transformer.id}/action/configuration/")
+          $httpBackend.expectGET("#{settings.apiUrl}transformers/#{feature.transformer.id}/action/configuration/")
           .respond 200, angular.toJson(TRANSFORMERS)
         else
-          $httpBackend.expectGET("#{settings.apiUrl}features/transformers/#{feature.transformer.id}/action/configuration/")
+          $httpBackend.expectGET("#{settings.apiUrl}transformers/#{feature.transformer.id}/action/configuration/")
           .respond 400
 
         window.loadParameters = jasmine.createSpy('loadParameters')
@@ -223,7 +226,7 @@ describe 'Features Controllers', ->
       feature.transformer = null
       $scope.$digest()
 
-      $httpBackend.expectGET("#{settings.apiUrl}features/transformers/#{transformer.id}/action/configuration/")
+      $httpBackend.expectGET("#{settings.apiUrl}transformers/#{transformer.id}/action/configuration/")
       .respond 200, angular.toJson(TRANSFORMERS)
       feature.transformer = transformer
       $scope.$digest()

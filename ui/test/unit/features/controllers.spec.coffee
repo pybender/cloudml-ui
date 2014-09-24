@@ -13,6 +13,8 @@ describe 'app.features.controllers', ->
 
     module 'app.features.models'
     module 'app.features.controllers'
+    module 'app.importhandlers.model'
+    module 'app.xml_importhandlers.models'
 
   $httpBackend = null
   $rootScope = null

@@ -62,7 +62,7 @@ describe "weights", ->
 
     it "should load weights list", inject () ->
       url = settings.apiUrl + 'weights/somemodelid/?is_positive=0&order=asc&page=1&q=&show=' +
-      'name,value,css_class,segment' + '&sort_by=name'
+      'name,value,css_class,segment,value2' + '&sort_by=name'
       $httpBackend.expectGET(url).respond('{"weights": []}')
 
       # TODO: there're two same requests when action is weights:list
@@ -73,7 +73,7 @@ describe "weights", ->
 
     it "should load weights tree", inject () ->
       url = settings.apiUrl + 'weights_tree/somemodelid/?show=' +
-      'name,short_name,parent'
+      'name,short_name,parent,value2'
       $httpBackend.expectGET(url).respond('{"weights": [], "categories": []}')
 
       $rootScope.action = ['weights', '']
