@@ -4,7 +4,7 @@
     "type": "logistic regression",
     "params": {"penalty": "l2"}
   },
-  "group_by": ["contractor.dev_is_looking"],
+  "group-by": ["contractor.dev_is_looking"],
   "feature-types":[
     {
       "name":"str_to_timezone",
