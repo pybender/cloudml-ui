@@ -15,7 +15,8 @@ from api.base.tasks import SqlAlchemyTask
 from api.base.exceptions import InvalidOperationError
 from api.logs.logger import init_logger
 from api.accounts.models import User
-from api.ml_models.models import Model, Weight, WeightsCategory, Segment
+from api.ml_models.models import Model, Weight, WeightsCategory, Segment, \
+    Transformer, get_transformer
 from api.model_tests.models import TestResult, TestExample
 from api.import_handlers.models import DataSet
 from api.logs.models import LogMessage
@@ -96,6 +97,8 @@ def train_model(dataset_ids, model_id, user_id):
         #mem_usage = memory_usage((trainer.train,
         #                          (train_iter,)), interval=0)
         train_begin_time = datetime.utcnow()
+
+        trainer.set_transformer_getter(get_transformer)
         trainer.train(train_iter)
 
         mem_usage = memory_usage(-1, interval=0, timeout=None)
@@ -194,6 +197,7 @@ def fill_model_parameter_weights(model_id, segment_id=None):
                     new_weight = Weight()
                     new_weight.name = weight['name'][0:199]
                     new_weight.value = weight['weight']
+                    new_weight.value2 = weight['feature_weight']
                     new_weight.is_positive = bool(weight['weight'] > 0)
                     new_weight.css_class = weight['css_class']
                     new_weight.parent = parent
@@ -244,6 +248,9 @@ def fill_model_parameter_weights(model_id, segment_id=None):
         raise
     return msg
 
+        
+            
+
 
 @celery.task(base=SqlAlchemyTask)
 def transform_dataset_for_download(model_id, dataset_id):
@@ -270,3 +277,77 @@ def transform_dataset_for_download(model_id, dataset_id):
         'dataset_id': dataset.id}, compressed=False)
     s3.close()
     return s3.get_download_url(s3_filename, 60 * 60 * 24 * 7)
+
+
+@celery.task(base=SqlAlchemyTask)
+def train_transformer(dataset_ids, transformer_id, user_id):
+    """
+    Train the transformer celery task.
+    """
+    init_logger('traintransformer_log', obj=int(transformer_id))
+    logging.info('Start training transformer task')
+
+    user = User.query.get(user_id)
+    transformer = Transformer.query.get(transformer_id)
+    datasets = DataSet.query.filter(DataSet.id.in_(dataset_ids)).all()
+    logging.info('Transformer: %s' % transformer.name)
+
+    try:
+        delete_metadata = transformer.status != transformer.STATUS_NEW
+        transformer.datasets = datasets
+        transformer.status = transformer.STATUS_TRAINING
+        transformer.error = ""
+        transformer.trained_by = user
+        transformer.save(commit=True)
+
+        if delete_metadata:  # TODO: what about models that use this transformer?
+            logging.info('Remove logs on retrain transformer')
+            LogMessage.delete_related_logs(transformer.id)  # rem logs from mongo
+
+        logging.info('Perform transformer training')
+        path = app.config['DATA_FOLDER']
+        if not exists(path):
+            makedirs(path)
+
+        trainer = {}
+        def _chain_datasets(ds_list):
+            fp = None
+            for d in ds_list:
+                if fp:
+                    fp.close()
+                fp = d.get_data_stream()
+                for row in d.get_iterator(fp):
+                    yield row
+            if fp:
+                fp.close()
+
+        train_iter = _chain_datasets(datasets)
+
+        from memory_profiler import memory_usage
+        train_begin_time = datetime.utcnow()
+        trainer = transformer.train(train_iter)
+
+        mem_usage = memory_usage(-1, interval=0, timeout=None)
+        #trainer.clear_temp_data()
+
+        transformer.status = transformer.STATUS_TRAINED
+        transformer.set_trainer(trainer)
+        transformer.save()
+        transformer.memory_usage = max(mem_usage)
+        transformer.train_records_count = int(sum((
+            d.records_count for d in transformer.datasets)))
+        train_end_time = datetime.utcnow()
+        transformer.training_time = int((train_end_time - train_begin_time).seconds)
+        transformer.save()
+    except Exception, exc:
+        db_session.rollback()
+
+        logging.exception('Got exception when train transformer')
+        transformer.status = transformer.STATUS_ERROR
+        transformer.error = str(exc)[:299]
+        transformer.save()
+        raise
+
+    msg = "Transformer trained"
+    logging.info(msg)
+    return msg

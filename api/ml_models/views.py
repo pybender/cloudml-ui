@@ -13,8 +13,9 @@ from api.base.models import db
 from api.import_handlers.models import DataSet
 from api.base.resources import BaseResourceSQL, NotFound, ValidationError, \
     public_actions, ERR_INVALID_DATA, odesk_error_response
-from models import Model, Tag, Weight, WeightsCategory, Segment
-from forms import ModelAddForm, ModelEditForm, TransformDataSetForm
+from models import Model, Tag, Weight, WeightsCategory, Segment, Transformer
+from forms import ModelAddForm, ModelEditForm, TransformDataSetForm, TrainForm, \
+    TransformerForm, FeatureTransformerForm
 from api.servers.forms import ChooseServerForm
 
 
@@ -28,7 +29,123 @@ model_parser.add_argument('name', type=str, default=None)
 model_parser.add_argument('example_id', type=str, default=None)
 model_parser.add_argument('example_label', type=str, default=None)
 
-class ModelResource(BaseResourceSQL):
+
+class BaseTrainedEntityResource(BaseResourceSQL):
+    PUT_ACTIONS = ['train']
+    GET_ACTIONS = ['trainer_download_s3url']
+    DEFAULT_FIELDS = ('id', 'name')
+    ENTITY_TYPE = 'model'
+
+    @property
+    def train_entity_task(self):
+        raise NotImplemented()
+
+    @property
+    def train_form(self):
+        raise NotImplemented()
+
+    def _get_trainer_download_s3url_action(self, **kwargs):
+        entity = self._get_details_query(None, **kwargs)
+        if entity is None:
+            raise NotFound(self.MESSAGE404 % kwargs)
+        url = entity.get_trainer_s3url()
+        return self._render({'trainer_file_for': entity.id, 'url': url})
+
+    def _put_train_action(self, **kwargs):
+        from api.import_handlers.tasks import import_data
+        from api.instances.tasks import request_spot_instance, \
+            get_request_instance
+        from celery import chain
+        obj = self._get_details_query(None, **kwargs)
+        form = self.train_form(obj=obj, **kwargs)
+        if form.is_valid():
+            entity = form.save()  # set status to queued
+            entity_key = '{0}_id'.format(self.ENTITY_TYPE)
+            new_dataset_selected = form.cleaned_data.get('new_dataset_selected')
+            existing_instance_selected = form.cleaned_data.get('existing_instance_selected')
+            instance = form.cleaned_data.get('aws_instance', None)
+            spot_instance_type = form.cleaned_data.get(
+                'spot_instance_type', None)
+
+            tasks_list = []
+            LogMessage.delete_related_logs(entity.id)
+            if new_dataset_selected:
+                import_handler = entity.train_import_handler
+                params = form.cleaned_data.get('parameters', None)
+                dataset = import_handler.create_dataset(
+                    params,
+                    data_format=form.cleaned_data.get(
+                        'format', DataSet.FORMAT_JSON)
+                )
+                opts = {
+                    'dataset_id': dataset.id,
+                    entity_key: entity.id
+                }
+                tasks_list.append(import_data.s(**opts))
+                dataset = [dataset]
+            else:
+                dataset = form.cleaned_data.get('dataset', None)
+            dataset_ids = [ds.id for ds in dataset]
+
+            if not existing_instance_selected:  # request spot instance
+                if self.ENTITY_TYPE != 'model':
+                    raise NotImplemented()
+
+                tasks_list.append(request_spot_instance.s(
+                    instance_type=spot_instance_type,
+                    model_id=entity.id
+                ))
+                tasks_list.append(get_request_instance.subtask(
+                    (),
+                    {
+                        'callback': 'train',
+                        'dataset_ids': dataset_ids,
+                        'model_id': entity.id,
+                        'user_id': request.user.id,
+                    },
+                    retry=True,
+                    countdown=10,
+                    retry_policy={
+                        'max_retries': 3,
+                        'interval_start': 5,
+                        'interval_step': 5,
+                        'interval_max': 10}))
+            else:
+                opts = {
+                    entity_key: entity.id,
+                    'user_id': request.user.id
+                }
+                if not new_dataset_selected:
+                    opts['dataset_ids'] = dataset_ids
+
+                tasks_list.append(self.train_entity_task.subtask(
+                    None, opts, queue=instance.name))
+
+            chain(tasks_list).apply_async()
+            return self._render({
+                self.OBJECT_NAME: {
+                    'id': entity.id
+                }
+            })
+
+    def _put_cancel_request_instance_action(self, **kwargs):
+        if self.ENTITY_TYPE != 'model':
+            raise NotImplemented()
+        from api.instances.tasks import cancel_request_spot_instance
+        model = self._get_details_query(None, **kwargs)
+        request_id = model.spot_instance_request_id
+        if request_id and model.status == model.STATUS_REQUESTING_INSTANCE:
+            cancel_request_spot_instance.delay(request_id, model.id)
+            model.status = model.STATUS_CANCELED
+        return self._render({
+            self.OBJECT_NAME: {
+                'id': model.id,
+                'status': model.status
+            }
+        })
+
+
+class ModelResource(BaseTrainedEntityResource):
     """
     Models API methods
     """
@@ -39,15 +156,20 @@ class ModelResource(BaseResourceSQL):
     FILTER_PARAMS = (('status', str), ('comparable', str), ('tag', str),
                     ('created_by', str), ('updated_by_id', int),
                     ('updated_by', str), ('name', str))
-    DEFAULT_FIELDS = ('id', 'name')
     NEED_PAGING = True
 
     MESSAGE404 = "Model with name %(_id)s doesn't exist"
 
     post_form = ModelAddForm
     put_form = ModelEditForm
+    train_form = TrainForm
 
     Model = Model
+
+    @property
+    def train_entity_task(self):
+        from tasks import train_model
+        return train_model
 
     def _get_model_parser(self, **kwargs):
         """
@@ -72,9 +194,6 @@ class ModelResource(BaseResourceSQL):
         if fields and 'features' in fields:
             cursor = cursor.options(joinedload_all(Model.features_set))
             cursor = cursor.options(undefer(Model.classifier))
-
-        # if fields and 'test_handler_fields' in fields:
-        #     cursor = cursor.options(joinedload_all(Model.test_import_handler))
 
         return cursor
 
@@ -114,95 +233,6 @@ class ModelResource(BaseResourceSQL):
         resp.headers['Content-Disposition'] = \
             'attachment; filename=%s-features.json' % model.name
         return resp
-
-    def _get_trainer_download_s3url_action(self, **kwargs):
-        model = self._get_details_query(None, **kwargs)
-        if model is None:
-            raise NotFound(self.MESSAGE404 % kwargs)
-        url = model.get_trainer_s3url()
-        return self._render({'trainer_file_for': model.id, 'url': url})
-
-    # POST/PUT specific methods
-    def _put_train_action(self, **kwargs):
-        from tasks import train_model
-        from api.import_handlers.tasks import import_data
-        from api.instances.tasks import request_spot_instance, \
-            get_request_instance
-        from forms import ModelTrainForm
-        from celery import chain
-        obj = self._get_details_query(None, **kwargs)
-        form = ModelTrainForm(obj=obj, **kwargs)
-        if form.is_valid():
-            model = form.save()  # set status to queued
-            new_dataset_selected = form.cleaned_data.get('new_dataset_selected')
-            existing_instance_selected = form.cleaned_data.get('existing_instance_selected')
-            instance = form.cleaned_data.get('aws_instance', None)
-            spot_instance_type = form.cleaned_data.get(
-                'spot_instance_type', None)
-
-            tasks_list = []
-            LogMessage.delete_related_logs(model.id)
-            if new_dataset_selected:
-                import_handler = model.train_import_handler
-                params = form.cleaned_data.get('parameters', None)
-                dataset = import_handler.create_dataset(
-                    params,
-                    data_format=form.cleaned_data.get(
-                        'format', DataSet.FORMAT_JSON)
-                )
-                tasks_list.append(import_data.s(dataset.id, model.id))
-                dataset = [dataset]
-            else:
-                dataset = form.cleaned_data.get('dataset', None)
-            dataset_ids = [ds.id for ds in dataset]
-
-            if not existing_instance_selected:  # request spot instance
-                tasks_list.append(request_spot_instance.s(
-                    instance_type=spot_instance_type,
-                    model_id=model.id
-                ))
-                tasks_list.append(get_request_instance.subtask(
-                    (),
-                    {
-                        'callback': 'train',
-                        'dataset_ids': dataset_ids,
-                        'model_id': model.id,
-                        'user_id': request.user.id,
-                    },
-                    retry=True,
-                    countdown=10,
-                    retry_policy={
-                        'max_retries': 3,
-                        'interval_start': 5,
-                        'interval_step': 5,
-                        'interval_max': 10}))
-            else:
-                if new_dataset_selected:
-                    train_model_args = (model.id, request.user.id)
-                else:
-                    train_model_args = (dataset_ids, model.id, request.user.id)
-                tasks_list.append(train_model.subtask(train_model_args, {},
-                                                      queue=instance.name))
-            chain(tasks_list).apply_async()
-            return self._render({
-                self.OBJECT_NAME: {
-                    'id': model.id
-                }
-            })
-
-    def _put_cancel_request_instance_action(self, **kwargs):
-        from api.instances.tasks import cancel_request_spot_instance
-        model = self._get_details_query(None, **kwargs)
-        request_id = model.spot_instance_request_id
-        if request_id and model.status == model.STATUS_REQUESTING_INSTANCE:
-            cancel_request_spot_instance.delay(request_id, model.id)
-            model.status = model.STATUS_CANCELED
-        return self._render({
-            self.OBJECT_NAME: {
-                'id': model.id,
-                'status': model.status
-            }
-        })
 
     def _put_upload_to_server_action(self, **kwargs):
         from api.servers.tasks import upload_model_to_server
@@ -262,6 +292,38 @@ class ModelResource(BaseResourceSQL):
                              'downloads': downloads})
 
 api.add_resource(ModelResource, '/cloudml/models/')
+
+
+class TransformerResource(BaseTrainedEntityResource):
+    """ Pretrained transformer API methods """
+    Model = Transformer
+    GET_ACTIONS = BaseTrainedEntityResource.GET_ACTIONS + ['configuration']
+    ENTITY_TYPE = 'transformer'
+    DEFAULT_FIELDS = ['name', 'type']
+    FILTER_PARAMS = (('status', str), )
+    put_form = TransformerForm
+    train_form = TrainForm
+    NEED_PAGING = False
+
+    @property
+    def post_form(self):
+        from flask import request
+        feature_id = request.form.get("feature_id", None)
+        if feature_id is not None:
+            return FeatureTransformerForm
+
+        return TransformerForm  # adds pretrained transformer
+
+    @property
+    def train_entity_task(self):
+        from tasks import train_transformer
+        return train_transformer
+
+    def _get_configuration_action(self, **kwargs):
+        from config import TRANSFORMERS
+        return self._render({'configuration': TRANSFORMERS})
+
+api.add_resource(TransformerResource, '/cloudml/transformers/')
 
 
 class TagResource(BaseResourceSQL):
@@ -368,7 +430,8 @@ class WeightTreeResource(BaseResourceSQL):
             kwargs['class_label'] = class_label
 
         opts = self._prepare_show_fields_opts(
-            Weight, ('short_name', 'name', 'css_class', 'value', 'segment_id'))
+            Weight, ('short_name', 'name', 'css_class',
+                     'value', 'segment_id', 'value2'))
         weights = Weight.query.options(*opts).filter_by(**kwargs)
         context = {'categories': categories, 'weights': weights}
         return self._render(context)

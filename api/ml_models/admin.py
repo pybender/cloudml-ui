@@ -6,7 +6,7 @@ from flask.ext.admin.model.template import macro
 from api import admin
 from api.base.admin import BaseAdmin
 #from api.accounts.models import User
-from models import Model, Tag, WeightsCategory, Weight, Segment
+from models import Model, Tag, WeightsCategory, Weight, Segment, Transformer
 
 
 def classifier_type_formatter(view, context, model, name):
@@ -42,6 +42,13 @@ class ModelAdmin(BaseAdmin):
 
 admin.add_view(ModelAdmin(
     name='Model', category='Models'))
+
+
+class TransformerAdmin(BaseAdmin):
+    Model = Transformer
+
+admin.add_view(TransformerAdmin(
+    name='Transformer', category='Models'))
 
 
 class TagAdmin(BaseAdmin):

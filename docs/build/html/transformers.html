@@ -1,0 +1,189 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Pretrained transformers &mdash; oDesk CloudML 0.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="oDesk CloudML 0.0.1 documentation" href="index.html" />
+    <link rel="next" title="Test Metrics" href="test_metrics.html" />
+    <link rel="prev" title="Trainer" href="trainer.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="test_metrics.html" title="Test Metrics"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="trainer.html" title="Trainer"
+             accesskey="P">previous</a> |</li>
+    <li><a href="http://cloudml.int.odesk.com/">CloudML UI</a> &raquo;</li>
+    
+        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Pretrained transformers</a><ul>
+<li><a class="reference internal" href="#transformer-json-file-format">Transformer JSON file format</a></li>
+<li><a class="reference internal" href="#using-pretrained-transformers-in-ui">Using Pretrained Transformers in UI</a><ul>
+<li><a class="reference internal" href="#fitting-new-transformer">Fitting new transformer</a></li>
+<li><a class="reference internal" href="#using-pretrained-transformer-in-the-model-s-feature">Using pretrained transformer in the model&#8217;s feature</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="trainer.html"
+                        title="previous chapter">Trainer</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="test_metrics.html"
+                        title="next chapter">Test Metrics</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/transformers.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="pretrained-transformers">
+<span id="transforrmers"></span><h1>Pretrained transformers<a class="headerlink" href="#pretrained-transformers" title="Permalink to this headline">¶</a></h1>
+<p>Cloudml have possibility to define and train transformers without train model.
+Trained transformers stored to amazon s3 to folder wich defined in settings.</p>
+<p>For train transformers you can use import handlers and imported datasets as for train models.</p>
+<div class="section" id="transformer-json-file-format">
+<h2>Transformer JSON file format<a class="headerlink" href="#transformer-json-file-format" title="Permalink to this headline">¶</a></h2>
+<p>An example of such file is the following:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+  <span class="s">&quot;transformer-name&quot;</span><span class="p">:</span> <span class="s">&quot;bestmatch&quot;</span><span class="p">,</span>
+  <span class="s">&quot;field-name&quot;</span><span class="p">:</span> <span class="s">&quot;contractor.dev_title&quot;</span><span class="p">,</span>
+  <span class="s">&quot;type&quot;</span><span class="p">:</span> <span class="s">&quot;text&quot;</span><span class="p">,</span>
+  <span class="s">&quot;transformer&quot;</span><span class="p">:{</span>
+        <span class="s">&quot;type&quot;</span><span class="p">:</span> <span class="s">&quot;Tfidf&quot;</span><span class="p">,</span>
+        <span class="s">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s">&quot;ngram_range_min&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="s">&quot;ngram_range_max&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="s">&quot;min_df&quot;</span><span class="p">:</span> <span class="mi">5</span>
+                <span class="p">}</span>
+      <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">field-name</span></tt> is field which will be use for train transformer.</li>
+<li><tt class="docutils literal"><span class="pre">type</span></tt> is type of field.</li>
+</ul>
+<p>Available transformer types:</p>
+<blockquote>
+<div><ul class="simple">
+<li>Dictionary</li>
+<li>Count</li>
+<li>Tfidf</li>
+<li>Lda</li>
+<li>Lsi</li>
+<li>Ntile</li>
+</ul>
+</div></blockquote>
+<p>You can run the train transformer using:</p>
+<div class="highlight-python"><pre>python transformer.py [-h] [-V] [-o output] [-i input-file] [-e extraction-plan-file] [-I train-param] path</pre>
+</div>
+<p>The detials of the parameters passed to trainer.py are the following:</p>
+<p>Train transformer using existing data:</p>
+<div class="highlight-python"><pre>$ python transformer.py ./testdata/transformers/transformer.json -i ./testdata/transformers/train.data.json</pre>
+</div>
+</div>
+<div class="section" id="using-pretrained-transformers-in-ui">
+<h2>Using Pretrained Transformers in UI<a class="headerlink" href="#using-pretrained-transformers-in-ui" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="fitting-new-transformer">
+<h3>Fitting new transformer<a class="headerlink" href="#fitting-new-transformer" title="Permalink to this headline">¶</a></h3>
+<p>You could add new pretrained transformer by clicking to <cite>Add new transformer</cite> button <a class="reference external" href="http://cloudml.int.odesk.com/#/predefined/transformers">transformers list page</a>.
+After this you need to fit it. To do this, go to the details page and click to <cite>Start training</cite> button.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">You could find training logs in transformer details page, tab <cite>Training</cite>.</p>
+</div>
+</div>
+<div class="section" id="using-pretrained-transformer-in-the-model-s-feature">
+<h3>Using pretrained transformer in the model&#8217;s feature<a class="headerlink" href="#using-pretrained-transformer-in-the-model-s-feature" title="Permalink to this headline">¶</a></h3>
+<p>Once the transformer would be trained it could be used in the models. For using pretrained transformer in the feature you need to switch to <cite>Pretrained</cite> tab in the feature transformer edditing popup.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="test_metrics.html" title="Test Metrics"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="trainer.html" title="Trainer"
+             >previous</a> |</li>
+    <li><a href="http://cloudml.int.odesk.com/">CloudML UI</a> &raquo;</li>
+    
+        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, oDesk.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b2.
+    </div>
+  </body>
+</html>

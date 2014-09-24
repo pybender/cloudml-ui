@@ -16,6 +16,7 @@ angular.module('app.weights.model', ['app.config'])
       model_name: null
       model_id: null
       value: null
+      value2: null
 
       @$loadAll: (model_id, opts) ->
         dfd = $q.defer()

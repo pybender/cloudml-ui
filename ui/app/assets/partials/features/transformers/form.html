@@ -1,30 +1,80 @@
-<div>
-  <div class="control-group" ng-class="{error: Form.name.$invalid || errorList.name}">
-    <label class="control-label">Name</label>
-    <div class="controls">
-      <input type="text" name="name" ng-model="model.name" ng-required="currentTab == null || currentTab=='custom'" />
-      <span ng-show="Form.name.$error.required" class="help-block">name is required and should be unique</span>
-      <span ng-show="errorList.name" class="help-block" ng-bind="errorList.name" />
+<ul class="nav nav-tabs" ng-init="model.json_selected=true">
+  <li ng-class="{active: model.json_selected == true}">
+    <a ng-click="model.json_selected=true">From JSON file</a>
+  </li>
+  <li ng-class="{active: model.json_selected == false}">
+    <a ng-click="model.json_selected=false">Form</a>
+  </li>
+</ul>
+
+<div class="tab-content">
+  <div ng-hide="model.json_selected">
+    <div class="control-group" ng-class="{error: Form.name.$invalid || errorList.name}">
+      <label class="control-label">Name</label>
+      <div class="controls">
+        <input type="text" name="name" ng-model="model.name" ng-required="model.json_selected == false" />
+        <span ng-show="Form.name.$error.required" class="help-block">name is required and should be unique</span>
+        <span ng-show="errorList.name" class="help-block" ng-bind="errorList.name" />
+      </div>
+    </div>
+    <div class="control-group" ng-class="{error: Form.field_name.$invalid || errorList.field_name}">
+      <label class="control-label">Field Name</label>
+      <div class="controls">
+        <input type="text" name="field_name" ng-model="model.field_name" ng-required="model.json_selected == false" />
+        <span ng-show="Form.field_name.$error.required" class="help-block">field name is required</span>
+        <span ng-show="errorList.field_name" class="help-block" ng-bind="errorList.field_name" />
+      </div>
+    </div>
+    <div class="control-group" ng-class="{error: Form.feature_type.$invalid || errorList.feature_type}">
+      <label class="control-label">Feature Type</label>
+      <div class="controls">
+        <input type="text" name="feature_type" ng-model="model.feature_type" ng-required="model.json_selected == false" />
+        <span ng-show="Form.feature_type.$error.required" class="help-block">feature type is required</span>
+        <span ng-show="errorList.feature_type" class="help-block" ng-bind="errorList.feature_type" />
+      </div>
+    </div>
+    <div class="control-group" ng-class="{error: Form.type.$invalid || errorList.type}">
+      <label class="control-label">Type</label>
+      <div class="controls" ng-controller="TransformersTypesLoader">
+        <select ng-change="loadParameters()" name="type" ng-model="model.type" ng-required="model.json_selected == false">
+          <option ng-selected="typeName == model.type" ng-repeat="typeName in types" value="{{ typeName }}">{{ typeName }}</option>
+        </select>
+        <span ng-show="Form.type.$error.required" class="help-block">type is required</span>
+        <span ng-show="errorList.type" class="help-block" ng-bind="errorList.type" />
+      </div>
+    </div>
+    <div ng-show="model.config.parameters">
+      <h4>Transformer Parameters</h4>
+      <div ng-repeat="name in model.config.parameters" class="control-group">
+        <label class="control-label">{{ name }}</label>
+        <div class="controls">
+          <input ng-model="model.params[name]" name="{{ name }}" type='text' />
+        </div>
+        <span ng-show="errorList.params" class="help-block" ng-bind="errorList.params" />
+      </div>
+    </div>
+  </div>
+
+  <div ng-show="model.json_selected">
+    <div class="control-group" ng-class="{error: Form.json.$invalid || errorList.json}">
+      <label class="control-label">JSON Config</label>
+      <div class="controls">
+        <input type="file" name="json" ng-model="model.json" json-file ng-required="model.json_selected" />
+        <span ng-show="Form.json.$error.jsonFile" class="help-block">Should be a valid json file</span>
+        <span class="help-block">There should be JSON file with transformer config</span>
+        <span ng-show="errorList.json" class="help-block" ng-bind="errorList.json" />
+      </div>
     </div>
   </div>
 </div>
-  <div class="control-group" ng-class="{error: Form.type.$invalid|| errorList.type}">
-    <label class="control-label">Type</label>
-    <div class="controls" ng-controller="TransformersTypesLoader">
-      <select ng-change="loadParameters()" name="type" ng-model="model.type" ng-required="currentTab == null || currentTab=='custom'">
-        <option ng-selected="typeName == model.type" ng-repeat="typeName in types" value="{{ typeName }}">{{ typeName }}</option>
-      </select>
-      <span ng-show="Form.type.$error.required" class="help-block">type is required <go-to-docs page="features" section="feature-types-defined-in-cloudml-core"></go-to-docs></span>
-      <span ng-show="errorList.type" class="help-block" ng-bind="errorList.type" />
-    </div>
-  </div>
-  <div ng-show="model.config.parameters">
-    <h4>Transformer Parameters</h4>
-    <div ng-repeat="name in model.config.parameters" class="control-group">
-      <label class="control-label">{{ name }}</label>
-      <div class="controls">
-        <input ng-model="model.params[name]" name="{{ name }}" type='text' />
-      </div>
-    </div>
+<hr />
+<div ng-controller="ImportHandlerSelectCtrl" class="control-group" ng-class="{error: Form.train_import_handler.$invalid}">
+  <label class="control-label">Import Handler</label>
+  <div class="controls">
+    <select name="train_import_handler" ng-model="model.train_import_handler" required>
+      <option ng-repeat="handler in handlers_list" value="{{ handler.value }}">{{ handler.text }}</option>
+    </select>
+    <span ng-show="Form.train_import_handler.$invalid" class="help-block">Please select existing import handler</span>
+    <span ng-show="errorList.train_import_handler" class="help-block" ng-bind="errorList.train_import_handler" />
   </div>
 </div>
