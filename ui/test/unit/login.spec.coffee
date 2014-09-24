@@ -4,22 +4,30 @@
 
 describe "login", ->
 
-  beforeEach(module "ngCookies")
-  beforeEach(module "ngRoute")
-  beforeEach(module "ui.bootstrap")
+  beforeEach ->
+    module "ngCookies"
+    module "ngRoute"
+    module "ui.bootstrap"
 
-  beforeEach(module "app.base")
-  beforeEach(module "app.config")
-  beforeEach(module "app.services")
+    module "app.base"
+    module "app.config"
+    module "app.services"
+    module 'app'
 
-  beforeEach(module "app.login.controllers")
+    module "app.login.controllers"
+
+    # the following just to inject Model
+    module 'app.models.model'
+    module 'app.importhandlers.model'
+    module 'app.xml_importhandlers.models'
+    module 'app.datasets.model'
+    module 'app.features.models'
 
   $httpBackend = null
   $rootScope = null
   settings = null
   $routeParams = null
   $location = null
-  $modal = null
   $scope = null
   createController = null
 
@@ -30,9 +38,6 @@ describe "login", ->
     $controller = $injector.get('$controller')
     $routeParams = $injector.get('$routeParams')
     $location = $injector.get('$location')
-    $modal = $injector.get('$modal')
-
-    spyOn($location, 'path')
 
     createController = (ctrl, extras) ->
       $scope = $rootScope.$new()
@@ -53,10 +58,11 @@ describe "login", ->
       expect($scope.is_authenticated).toBeFalsy()
 
     it "should do redirect", inject () ->
+
       createController "LoginCtl"
       $scope.authenticate()
 
-      expect($location.path).toHaveBeenCalledWith('/auth/authenticate')
+      expect($location.path()).toEqual '/auth/authenticate'
 
   describe "AuthCtl", ->
 
@@ -107,12 +113,13 @@ describe "login", ->
       expect($window.location.reload).toHaveBeenCalled()
       expect(auth.is_authenticated()).toBeTruthy()
 
-    it "should make no query if already logged in", inject ($cookieStore) ->
+    it "should make no query if already logged in", inject ($cookieStore, Model) ->
       $cookieStore.put('auth-token', 'auth_token')
       createController "AuthCallbackCtl"
 
       expect($scope.status).toBe('Already logged in')
-      expect($scope.is_authenticated).toBeTruthy()
+      model = new Model
+      expect($location.url()).toEqual model.BASE_UI_URL
 
   describe "UserCtl", ->
 

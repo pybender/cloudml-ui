@@ -45,11 +45,14 @@ angular.module('app.login.controllers', ['app.config', 'app.services'])
   '$routeParams'
   'settings'
   'auth'
+  'Model'
 
-  ($scope, $window, $http, $location, $routeParams, settings, auth) ->
+  ($scope, $window, $http, $location, $routeParams, settings, auth, Model) ->
     $scope.is_authenticated = auth.is_authenticated()
     if $scope.is_authenticated
       $scope.status = 'Already logged in'
+      model = new Model
+      $location.url model.BASE_UI_URL
       return
     $scope.status = 'Authorization. Please wait...'
     oauth_token = $location.search().oauth_token
