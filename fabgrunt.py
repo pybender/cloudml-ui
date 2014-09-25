@@ -38,7 +38,8 @@ class PrivateNPM(Task):
     def do(self):
         run('npm cache clean')
         run('rm -r --force %(project_path)s/ui/node_modules' % self.conf)
-        run('cd %(project_path)s/ui; npm install --production' % self.conf)
+        run('cd %(project_path)s/ui; npm install' % self.conf)
+        run('rm -rf %(var_path)s/node_modules' % self.conf)
         run('cp -r %(project_path)s/ui/node_modules %(var_path)s/node_modules' % self.conf)
         run('rm -r --force %(project_path)s/ui/node_modules' % self.conf)
 
@@ -53,7 +54,8 @@ class Bower(Task):
     def do(self):
         run('bower cache clean')
         run('rm -r --force %(project_path)s/ui/bower_components' % self.conf)
-        run('cd %(project_path)s/ui; bower install --production' % self.conf)
+        run('cd %(project_path)s/ui; bower install' % self.conf)
+        run('rm -rf %(var_path)s/bower_components' % self.conf)
         run('cp -r %(project_path)s/ui/bower_components %(var_path)s/bower_components' % self.conf)
         run('rm -r --force %(project_path)s/ui/bower_components' % self.conf)
 
@@ -109,7 +111,7 @@ class Build(Task):
 
     def do(self):
         run('rm -rf %(project_path)s/ui/_public' % self.conf)
-        run('cd %(project_path)s/ui; grunt build:production' % self.conf)
+        run('cd %(project_path)s/ui; grunt build' % self.conf)
 
 build = Build()
 #

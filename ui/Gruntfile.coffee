@@ -223,10 +223,14 @@ module.exports = (grunt)->
     It also supplies CDN and bundled files as per vendor.config.coffee
     The files will be resolved against ./.tmp where they are generated
 
-    @target: can be one of local, production, staging
+    @target: can be local or remote
     @usecdn: can be usecdn, valid only for local target, default ''
     """
   , (target, usecdn)->
+
+    if target not in ['local', 'remote']
+      throw Error("Unkown target:#{target}")
+
     fs = require('fs')
     indexFileStr = fs.readFileSync "#{cmlConfig.appDir}/assets/index.html", 'utf8'
     vendorConfig = require './vendor.config.coffee'
@@ -240,21 +244,13 @@ module.exports = (grunt)->
       files = [
         '/js/partials.html.js'
         '/js/config.js'
+        '/js/local_config.js'
         '/js/services.js'
         '/js/filters.js'
         '/js/directives.js'
         '/js/controllers.js'
         '/js/base.js'
       ]
-
-      if target is 'local'
-        files.splice(2, 0, '/js/local_config.js')
-      else if target is 'production'
-        files.splice(2, 0, '/js/prod_config.js')
-      else if target is 'staging'
-        files.splice(2, 0, '/js/staging_config.js')
-      else
-        throw Error("Unkown target:#{target}")
 
       # coffeescript files
       globule.find("#{cmlConfig.appDir}/scripts/**/*.coffee").forEach (file)->
@@ -331,15 +327,12 @@ module.exports = (grunt)->
     ]
 
   grunt.registerTask 'build'
-  , """ Builds frontend to destination: #{cmlConfig.buildDir},
-  target can be one of local, production, staging
-    """
-  , (target) ->
-    target = if target then target else 'production'
+  , """ Builds frontend to destination: #{cmlConfig.buildDir}"""
+  , () ->
     grunt.task.run [
       'clean'
       'concurrent:compile'
-      'index:' + target
+      'index:remote'
       'copy:build'
       'useminPrepare'
       'concat:generated'
