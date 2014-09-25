@@ -19,59 +19,54 @@ angular.module('app.features.controllers.base', ['app.config', ])
 
 .controller('ModelEditDialogCtrl', [
   '$scope'
-  '$rootScope'
-  'dialog'
+  'openOptions'
 
-  ($scope, $rootScope, dialog) ->
-    if dialog.model?
-      $scope.model = dialog.model
-    else if dialog.extra.handler? && dialog.extra.fieldname?
-      $scope.handler = dialog.extra.handler
-      $scope.model = eval('$scope.handler.' + dialog.extra.fieldname)
+  ($scope, openOptions) ->
+    if openOptions.model?
+      $scope.model = openOptions.model
+    else if openOptions.extra?.handler? && openOptions.extra?.fieldname?
+      $scope.handler = openOptions.extra.handler
+      $scope.model = eval('$scope.handler.' + openOptions.extra.fieldname)
+    else
+      throw new Error "Please specify a model or handler and fieldname"
 
-    if dialog.list_model_name?
-      $scope.LIST_MODEL_NAME = dialog.list_model_name
+    if openOptions.list_model_name?
+      $scope.LIST_MODEL_NAME = openOptions.list_model_name
     else
       $scope.LIST_MODEL_NAME = $scope.model.LIST_MODEL_NAME
 
     $scope.DONT_REDIRECT = true
-    $scope.dialog = dialog
-
-    $scope.$on('SaveObjectCtl:save:success', (event, current) ->
-      dialog.close()
-    )
 ])
 
-.controller('ModelCtrl', [
-  '$scope'
-
-  ($scope) ->
-    $scope.init = (model) ->
-      $scope.model = model
-])
+# TODO: nader20140901, subject for removal cannot find any usage for it
+#.controller('ModelCtrl', [
+#  '$scope'
+#
+#  ($scope) ->
+#    $scope.init = (model) ->
+#      $scope.model = model
+#])
 
 .controller('ModelWithParamsEditDialogCtrl', [
   '$scope'
-  '$rootScope'
-  'dialog'
+  'openOptions'
 
-  ($scope, $rootScope, dialog) ->
+  ($scope, openOptions) ->
     $scope.DONT_REDIRECT = true
-    $scope.dialog = dialog
 
-    if dialog.model?
-      $scope.model = dialog.model
-    else if dialog.extra.feature? && dialog.extra.fieldname?
-      $scope.feature = dialog.extra.feature
-      $scope.model = eval('$scope.feature.' + dialog.extra.fieldname)
-    else if dialog.extra.model?
-      $scope.target_model = dialog.extra.model
-      $scope.model = eval('$scope.target_model.' + dialog.extra.fieldname)
+    if openOptions.model?
+      $scope.model = openOptions.model
+    else if openOptions.extra?.feature? && openOptions.extra?.fieldname?
+      $scope.feature = openOptions.extra.feature
+      $scope.model = eval('$scope.feature.' + openOptions.extra.fieldname)
+    else if openOptions.extra?.model?
+      $scope.target_model = openOptions.extra.model
+      $scope.model = eval('$scope.target_model.' + openOptions.extra.fieldname)
     else
-      throw new Excepion "Please spec model or feature and field name"
+      throw new Error "Please specify a model or feature and field name"
 
-    if dialog.list_model_name?
-      $scope.LIST_MODEL_NAME = dialog.list_model_name
+    if openOptions.list_model_name?
+      $scope.LIST_MODEL_NAME = openOptions.list_model_name
     else
       $scope.LIST_MODEL_NAME = $scope.model.LIST_MODEL_NAME
 
@@ -85,13 +80,9 @@ angular.module('app.features.controllers.base', ['app.config', ])
       $scope.setError(opts, 'loading types and parameters')
     )
 
-    $scope.loadParameters = (setDefault=false) ->
+    $scope.loadParameters = () ->
       model = $scope.model
-      loadParameters(model, $scope.configuration, setDefault)
-
-    $scope.$on('SaveObjectCtl:save:success', (event, current) ->
-      dialog.close()
-    )
+      loadParameters(model, $scope.configuration, false)
 ])
 
 .controller('ConfigurationLoaderCtrl', [
@@ -104,6 +95,7 @@ angular.module('app.features.controllers.base', ['app.config', ])
 
       $scope.$watch('parentModel.' + $scope.fieldname, (model, oldVal, scope) ->
         if model?
+          $scope.configurationLoaded = false
           $scope.loadConfiguration(model)
       , true)
 
@@ -119,8 +111,8 @@ angular.module('app.features.controllers.base', ['app.config', ])
         $scope.setError(opts, 'loading types and parameters')
       )
 
-    $scope.loadParameters = (setDefault=false) ->
+    $scope.loadParameters = ->
       model = eval('$scope.parentModel.' + $scope.fieldname)
-      loadParameters(model, $scope.configuration, setDefault)
+      loadParameters(model, $scope.configuration, false)
 
 ])

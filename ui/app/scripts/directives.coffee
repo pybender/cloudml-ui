@@ -17,39 +17,41 @@ angular.module('app.directives', [
     elm.text(version)
 ])
 
-.directive('showtab', () ->
-  return {
-    link: (scope, element, attrs) ->
-      element.click((e) ->
-        e.preventDefault()
-        $(element).tab('show')
-      )
-  }
-)
+# TODO: nader20140909 not used anywhere, schedule for removal
+#.directive('showtab', () ->
+#  return {
+#    link: (scope, element, attrs) ->
+#      element.click((e) ->
+#        e.preventDefault()
+#        $(element).tab('show')
+#      )
+#  }
+#)
 
-.directive("fileDownload", [
-  '$compile'
-
-($compile) ->
-  return {
-    restrict: "E"
-    #templateUrl: 'partials/directives/file_downloader.html',
-    scope:{
-      data:'=data'
-      filename: '=filename'
-      text: '=text'
-      cssClass: '=cssClass'}
-    link: (scope, elm, attrs) ->
-      scope.$watch 'data', (val, oldVal) ->
-        if val?
-          blob = new Blob([val], {type: "application/json"})
-          url = URL.createObjectURL(blob)
-          elm.append($compile(
-            '<a class="btn btn-info" download="' + scope.filename + '"' +
-            'href="' + url + '">' + scope.text + '</a>'
-          )(scope))
-  }
-])
+# TODO: nader20140909 not used anywhere, schedule for removal
+#.directive("fileDownload", [
+#  '$compile'
+#
+#($compile) ->
+#  return {
+#    restrict: "E"
+#    #templateUrl: 'partials/directives/file_downloader.html',
+#    scope:{
+#      data:'=data'
+#      filename: '=filename'
+#      text: '=text'
+#      cssClass: '=cssClass'}
+#    link: (scope, elm, attrs) ->
+#      scope.$watch 'data', (val, oldVal) ->
+#        if val?
+#          blob = new Blob([val], {type: "application/json"})
+#          url = URL.createObjectURL(blob)
+#          elm.append($compile(
+#            '<a class="btn btn-info" download="' + scope.filename + '"' +
+#            'href="' + url + '">' + scope.text + '</a>'
+#          )(scope))
+#  }
+#])
 
 # .directive('fileDownload',
 #   '$compile'
@@ -109,6 +111,7 @@ angular.module('app.directives', [
           return scope.obj.$save only: [fieldName]
 
         previousValue = null
+        previousDisplay = null
 
         successHandler = (obj) ->
           previousValue = obj[fieldName]
@@ -119,10 +122,12 @@ angular.module('app.directives', [
 
         errorHandler = ->
           # Revert changed value
+          # TODO: nader20140910 the following line will break the select
+          # type. the value is instance.object.id, the field is instance.object
+          # assigning the id of the object to instance.object will break it
           scope.obj[fieldName] = previousValue
           $(el).editable 'setValue', previousValue
-          if attrs.displayValue then $(el).text attrs.displayValue
-          #throw new Error "Error saving job information"
+          #if attrs.display then $(el).text scope.display
 
         promiseHandler = (promise) ->
           promise.then successHandler, errorHandler
@@ -141,7 +146,11 @@ angular.module('app.directives', [
         $(el).editable editableOpts
 
         scope.$watch scope.value, (newVal, oldVal) ->
-          previousValue = newVal
+          if not newVal
+            # and edge condition happens with select types when there is a failure
+            # in the save request, we protect both prevoiusValue and the input
+            return
+          previousValue = oldVal
           $(el).editable 'setValue', newVal
           if attrs.display then $(el).text scope.display
 
@@ -177,26 +186,7 @@ angular.module('app.directives', [
 .directive('weightedDataParameters', () ->
   return {
     restrict: 'E',
-    template: """<span>
-<span ng-show="!val.weights" title="weight={{ val.weight }}"
-class="badge {{ val.css_class }}">{{ val.value }}</span>
-
-<div ng-show="val.weights">
-  <span  ng-show="val.type == 'List'"
-  ng-init="lword=word.toLowerCase()"
-  ng-repeat="word in val.value|words">
-    <span ng-show="val.weights[lword].weight"
-    title="weight={{ val.weights[lword].weight }}"
-    class="badge {{ val.weights[lword].css_class }}">{{ word }}</span>
-    <span ng-show="!val.weights[lword].weight">{{ word }}</span></span>
-
-  <span ng-show="val.type == 'Dictionary'"
-  ng-repeat="(key, dval) in val.weights">
-    <span title="weight={{ dval.weight }}"
-    class="badge {{ dval.css_class }}">
-      {{ key }}={{ dval.value }}</span></span>
-</div>
-</span>""",
+    templateUrl: 'partials/directives/weighted_data_params.html',
     replace: true,
     transclude : true,
     scope: { val: '=' }
@@ -322,7 +312,7 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
       contents = tElement.contents().remove()
       compiledContents = undefined
       return (scope, iElement, iAttr) ->
-        console.log scope.key, scope.val, typeof(scope.val)
+        #console.log scope.key, scope.val, typeof(scope.val)
         #if value instanceof Array
         if typeof(scope.val) != 'object'
           return
@@ -364,7 +354,7 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
       link: (scope, el, attrs) ->
 
         # Show progress bar if progress attribute is specified
-        if attrs.progress
+        if attrs.cmlProgress
           tmpl = '''
             <div class="progress progress-striped active">
               <div class="bar" style="width: 100%;"></div>
@@ -375,8 +365,9 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
           el.find('.bar').css width: '0%'
           # Progress attribute value is expected to be a valid watchExpression
           # because it is going to be watched for changes
-          scope.$watch attrs.progress, (newVal, oldVal, scope) ->
+          scope.$watch attrs.cmlProgress, (newVal, oldVal, scope) ->
             el.find('.bar').css width: newVal
+            return 0
 
         # Spinner otherwise
         else
@@ -421,22 +412,23 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
 
       link: (scope, el, attrs) ->
 
-        unsafe = attrs.unsafe
-        _meth = if unsafe is undefined then 'text' else 'html'
+        _meth = if attrs.unsafe? then 'text' else 'html'
 
         el.find('.message')[_meth] ''
         attrs.$observe 'msg', (newVal, oldVal, scope) ->
           if newVal
             el.find('.message')[_meth] newVal
 
+        oldHtmlClass = null
         attrs.$observe 'htmlclass', (newVal, oldVal, scope) ->
           alert = el
 
-          if oldVal
-            alert.removeClass oldVal
+          if oldHtmlClass
+            alert.removeClass oldHtmlClass
 
           if newVal
             alert.addClass newVal
+            oldHtmlClass = newVal
     }
 )
 
@@ -457,6 +449,7 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
           catch e
             isValid = false
 
+          #console.log '3' # look at the unit test for why the console.log
           control.$setValidity('jsonFile', isValid)
           control.$render()
         )
@@ -464,14 +457,16 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
       )
 
       element.change((e) ->
+        changeEvt = e
         scope.$apply( () ->
           reader = new FileReader()
 
           reader.onload = (e) ->
+            #console.log '2' # look at the unit test for why the console.log
             control.$setViewValue(e.target.result)
             control.$render()
 
-          reader.readAsText(element[0].files[0])
+          reader.readAsText(changeEvt.target.files[0])
         )
       )
   }
@@ -483,13 +478,14 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
     restrict: 'A',
     link: (scope, element, attrs, control) ->
       element.change((e) ->
+        changeEvt = e
         scope.$apply( () ->
           reader = new FileReader()
 
           reader.onload = (e) ->
             control.$setViewValue(e.target.result)
 
-          reader.readAsText(element[0].files[0])
+          reader.readAsText(changeEvt.target.files[0])
         )
       )
   }
@@ -509,13 +505,14 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
       )
 
       element.change((e) ->
+        changeEvt = e
         scope.$apply( () ->
           reader = new FileReader()
 
           reader.onload = (e) ->
             control.$setViewValue(e.target.result)
 
-          reader.readAsText(element[0].files[0])
+          reader.readAsText(changeEvt.target.files[0])
         )
       )
   }
@@ -554,10 +551,16 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
   }
 )
 
-.directive('parametersEditor', ['$compile', ($compile) ->
+.directive('parametersEditor', ['$compile', '$window', ($compile, $window) ->
   return {
     restrict: 'E',
     require: '?ngModel',
+    scope:
+      paramsConfig: '='
+      requiredParams: '='
+      optionalParams: '='
+      keyName: '='    # only used in maps sub items
+      valueName: '='  # only used in maps sub items
     link: (scope, element, attributes, ngModel) ->
       TYPE_STRING = 'str'
       TYPE_OBJECT = 'dict'
@@ -581,13 +584,16 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
           scope.collapsed = true
           scope.chevron = "icon-chevron-right"
 
+      # TODO: nader20140912, moving a required parameter to a non-required parameter
+      # will not update required-params and hence the required parameter is not
+      # required anymore. -- how many required in the previous sentence :)
       scope.moveKey = (obj, key, newkey) ->
         obj[newkey] = obj[key]
         delete obj[key]
 
       scope.deleteKey = (obj, key) ->
         if scope.isRequired(key)
-          alert("Can't delete required parameter")
+          $window.alert("Can't delete required parameter")
           return
         if(confirm('Delete "'+key+'" ?'))
             delete obj[key]
@@ -616,13 +622,15 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
           scope.showAddKey = false
 
       scope.isRequired = (key) ->
-        if scope.requiredParams && scope.isTopLevel()
-          _.indexOf(scope.requiredParams, key) > -1
-        else
-          false
+#        if scope.requiredParams && scope.isTopLevel()
+#          _.indexOf(scope.requiredParams, key) > -1
+#        else
+#          false
+        scope.requiredParams and key in scope.requiredParams
 
       scope.isTopLevel = () ->
-        _.indexOf(_(attributes).keys(), 'inner') < 0
+        #_.indexOf(_(attributes).keys(), 'inner') < 0
+        true
 
       scope.isEmpty = () ->
         scope.isTopLevel() && _.isEmpty(scope.paramsEditorData)
@@ -635,20 +643,21 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
       switchTemplate =
         '<span ng-switch on="getType(key, paramsEditorData[key])" >
         <div ng-switch-when="dict">
-        <parameters-editor ng-model="$parent.paramsEditorData[key]"
-          inner="">
-        </parameters-editor>
+          <parameters-editor name="{{key}}" ng-model="paramsEditorData[key]"
+          key-name="key" key-value="paramsEditorData[key]">
+          </parameters-editor>
         </div>
         <span ng-switch-when="text" class="jsonLiteral">
-          <textarea name="params" ng-model="paramsEditorData[key]"
+          <textarea name="{{key}}" ng-model="paramsEditorData[key]"
             class="span5"
             rows="3"
-            ng-model-onblur>
+            ng-model-onblur
+            name="{{key}}">
           </textarea>
         </span>
         <span ng-switch-default class="jsonLiteral">
           <input type="text" ng-model="paramsEditorData[key]" ng-model-onblur
-            placeholder="Empty" class="input-medium" />
+            placeholder="Empty" class="input-medium" name="{{key}}" />
         </span>
         </span>'
 
@@ -659,11 +668,11 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
           <span ng-switch-when="true">
             <input placeholder="Name" type="text"
               class="input-small addItemKeyInput"
-              ng-model="$parent.keyName" />
+              ng-model="keyName" name="{{keyName}}" />
             <span>: &nbsp;</span>
             <input type="text" placeholder="Value"
               class="input-medium addItemValueInput"
-              ng-model="$parent.valueName" />
+              ng-model="valueName" name="{{valueName}}" />
             <a title="add" ng-click="addItem(paramsEditorData)">
               <i class="icon-ok"></i>
             </a>
@@ -696,7 +705,8 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
           type="text"
           ng-model="newkey"
           ng-init="newkey=key"
-          ng-change="moveKey(paramsEditorData, key, newkey)"/>
+          ng-change="moveKey(paramsEditorData, key, newkey)"
+          name="{{newkey}}"/>
         <span>: &nbsp;</span>' + switchTemplate + '
         <i ng-hide="isRequired(key)"
             class="deleteKeyBtn1 icon-trash"
@@ -709,7 +719,7 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
       </div>'
 
       ngModel.$formatters.unshift((viewValue) ->
-        if _.isObject(viewValue)
+        if _.isObject(viewValue) and scope.paramsConfig
           for key of viewValue
             conf = scope.paramsConfig[key]
             if not conf then continue
@@ -766,19 +776,22 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
       VALIDATORS[TYPE_TEXT] = _validateJsonParam
 
       scope.validate = () ->
-        if !scope.paramsEditorData then return
         errs = []
 
-        for key of scope.paramsEditorData
+        keys = _.keys(scope.paramsConfig)
+        for key in keys
           data = scope.paramsEditorData[key]
           conf = scope.paramsConfig[key]
           if not conf
             continue
-          if not scope.isRequired(key)
+          if scope.isRequired(key) and not data
+            errs.push key
             continue
           validator = VALIDATORS[conf.type]
-          if !validator(key, data)
-              errs.push key
+          if not validator
+            errs.push key
+          else if !validator(key, data)
+            errs.push key
 
         ngModel.$setValidity('params', errs.length <= 0)
 
@@ -808,7 +821,7 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
   }
 ])
 
-.directive('scChart', [ ->
+.directive('scChart', [ '$timeout', ($timeout) ->
   return {
     restrict: 'E',
     scope: { chartDict: '=',
@@ -817,19 +830,21 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
     },
     link: (scope, element, attrs) ->
       createSVG(scope, element, attrs.width, attrs.height)
-      scope.$watch('chartDict', updateChart)
+      $timeout ->
+        scope.$watch('chartDict', updateChart)
   }
 ])
 
-.directive('inp', [ ->
-  return {
-    restrict: 'AE',
-    # require: '?ngModel',
-    scope: {model: '=', config: '='}
-    transclude : true
-    templateUrl:'partials/directives/input_param.html'
-  }
-])
+# TODO: nader20140911, not used any where
+#.directive('inp', [ ->
+#  return {
+#    restrict: 'AE',
+#    # require: '?ngModel',
+#    scope: {model: '=', config: '='}
+#    transclude : true
+#    templateUrl:'partials/directives/input_param.html'
+#  }
+#])
 
 
 .directive('ngDictInput', [ ->
@@ -845,12 +860,10 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
     templateUrl:'partials/directives/dict_input.html'
 
     link: (scope, element, attrs, ngModel) ->
-      if !ngModel then return
       #console.log scope.value
       scope.displayValue = JSON.stringify(scope.value)
 
       scope.change = () ->
-        #console.log scope.displayValue
         if scope.displayValue != 'auto'
           scope.value = JSON.parse(scope.displayValue)
         else
@@ -872,19 +885,26 @@ class="badge {{ val.css_class }}">{{ val.value }}</span>
   }
 ])
 
+
+.directive('stopEvent', ->
+  restrict: 'A'
+  link: (scope, element, attr) ->
+    element.bind attr.stopEvent, (e)->
+      e.stopPropagation()
+)
+
 createSVG = (scope, element, width=400, height=300) ->
   scope.margin = {top: 20, right: 20, bottom: 30, left: 210}
   if not scope.svg?
     scope.svg = d3.select(element[0])
     .append("svg")
-    .attr("width", width)
-    .attr("height", height)
+    .style {width: "#{width}px", height: "#{height}px"}
 
 updateCurves = (curvesDict, oldVal, scope) ->
   if !curvesDict
     return
   chart = nv.models.lineChart()
-  console.log 'now updating xLabel with', scope.xLabel
+  #console.log 'now updating xLabel with', scope.xLabel
   chart.xAxis.orient('bottom')
     .axisLabel(scope.xLabel)
     .tickFormat(d3.format(',r'))
@@ -902,12 +922,13 @@ updateChart = (chartDict, oldVal, scope) ->
     return
 
   getChartData = (chartDict) ->
-    return [{ key: "Probabilities", values: chartDict}]
+    return chartDict
 
   chart = nv.models.pieChart()
   chart.x((d) -> d.label)
   .y((d) -> d.value)
   .showLabels(true)
+  .labelType("percent")
   .labelThreshold(.05)
 
   scope.svg.datum(getChartData(chartDict))

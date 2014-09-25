@@ -24,7 +24,7 @@
 </h2>
 
 <div title="quick info" ng-init="obj=handler">
-  <ng-include src="'/partials/parts/created_tags.html'"></ng-include>
+  <ng-include src="'partials/parts/created_tags.html'"></ng-include>
 </div>
 <p></p>
 
@@ -43,7 +43,7 @@
   <div ng-show="action[0] == 'model'">
   <p class="switcher">
     <b>Switch View: </b>
-    <a ng-class="{active: action[1] == 'details'}" ng-click="setSection(['model', 'details'])">Standart</a> | 
+    <a ng-class="{active: action[1] == 'details'}" ng-click="setSection(['model', 'details'])">Standard</a> |
     <a ng-class="{active: action[1] == 'json'}" ng-click="setSection(['model', 'json']);">JSON File</a>
   </p>
   <div ng-show="action[1] == 'details'">
@@ -52,7 +52,7 @@
       <span title="Target Schema" class="target_schema" ng-bind="handler.data.target_schema || 'untitled target schema'" editable="handler" value="handler.data.target_schema"    editable-field="target_schema" editable-input="text" editable-placement="right"></span>
     </div>
     <div>
-        Import Parameters: <span class="value" ng-repeat="param in handler.import_params">{{ param }}</span>
+        Import Parameters: <span class="value" ng-repeat="param in handler.import_params track by $index">{{ param }}</span>
     </div>
     <div ng-show="handler.error">
         Is Valid: <span class="value" title="{{ handler.error }}">no</span>
@@ -237,7 +237,7 @@
   <div ng-show="action[0] == 'dataset'">
     <h3>DataSets</h3>
     <div ng-controller="DatasetListCtrl" ng-init="init(handler)">
-      <ng-include src="'/partials/datasets/list.html'"></ng-include>
+      <ng-include src="'partials/datasets/list.html'"></ng-include>
     </div>
   </div>
 </div>

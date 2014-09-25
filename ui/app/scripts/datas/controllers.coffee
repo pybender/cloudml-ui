@@ -12,7 +12,7 @@ angular.module('app.datas.controllers', ['app.config', ])
   'Model'
 
 ($scope, $rootScope, $location, Data, Model) ->
-  $scope.filter_opts = $location.search() || {} # Used in ObjectListCtrl.
+  $scope.filter_opts = $location.search() or {} # Used in ObjectListCtrl.
   $scope.simple_filters = {} # Filters by label and pred_label
   $scope.data_filters = [] # Filters by data_input.* fields
   $scope.loading_state = false
@@ -22,6 +22,7 @@ angular.module('app.datas.controllers', ['app.config', ])
   $scope.init = (test, extra_params={'action': 'examples:list'}) ->
     $scope.extra_params = extra_params
     $scope.test = test
+    $scope.loading_state = true
     $scope.test.$load(
         show: 'name,examples_fields'
     ).then ((opts) ->
@@ -37,7 +38,7 @@ angular.module('app.datas.controllers', ['app.config', ])
         $scope.loading_state = false
     ), ((opts) ->
         $scope.setError(opts, 'loading test details')
-        $scope.loading_state = true
+        $scope.loading_state = false
     )
 
     $scope.model = new Model({id: $scope.test.model_id})
@@ -56,10 +57,12 @@ angular.module('app.datas.controllers', ['app.config', ])
       $scope.loading_state = true
       opts.sort_by = $scope.sort_by
       opts.order = if $scope.asc_order then 'asc' else 'desc'
-      Data.$loadAll($scope.test.model_id, $scope.test.id, opts).then((resp) ->
+      Data.$loadAll($scope.test.model_id, $scope.test.id, opts)
+      .then (resp) ->
         $scope.loading_state = false
         return resp
-      )
+      , ->
+        $scope.loading_state = false
 
   $scope.sort = (sort_by) ->
     if $scope.sort_by == sort_by
@@ -70,6 +73,7 @@ angular.module('app.datas.controllers', ['app.config', ])
       $scope.asc_order = true
       $scope.sort_by = sort_by
     $location.search($scope.getParamsDict())
+    # TODO: nader20140916, what is this? @
     @load()
 
   $scope.addFilter = () ->
@@ -86,10 +90,6 @@ angular.module('app.datas.controllers', ['app.config', ])
     $location.search($scope.getParamsDict())
 
   $scope.details = (example) ->
-    sort_opts = {
-      sort_by: $scope.sort_by
-      order: if $scope.asc_order then 'asc' else 'desc'
-    }
     $location.url(example.objectUrl()).search($scope.getParamsDict())
 
   $scope.getParamsDict = () ->
@@ -168,15 +168,16 @@ angular.module('app.datas.controllers', ['app.config', ])
     if $scope.loaded
       return
 
-    $scope.data.$load(
-      _.extend({show: ['test_name','weighted_data_input','model',
-             'pred_label','label','prob','created_on','test_result',
-             'next', 'previous', 'parameters_weights', 'data_input'].join(',')},
-               $scope.filter_opts)
-    ).then (->
-      ), ((opts)->
-        $scope.setError(opts, 'loading test example')
-      )
+    loadParams = _.extend(
+      {show: ['test_name','weighted_data_input','model', 'pred_label',
+              'label','prob', 'created_on', 'test_result', 'next', 'previous',
+              'parameters_weights', 'data_input'].join(',')}, $scope.filter_opts)
+    $scope.data.$load loadParams
+    .then ->
+      $scope.loaded = true
+    , (opts)->
+      $scope.loaded = false
+      $scope.setError(opts, 'loading test example')
 
   $scope.initSections($scope.goSection)
 
@@ -215,13 +216,12 @@ angular.module('app.datas.controllers', ['app.config', ])
 # Choose fields to download classification results in CSV dialog controller
 .controller('CsvDownloadCtrl', [
   '$scope'
-  'dialog'
+  'openOptions'
   'Data'
   '$location'
   '$rootScope'
 
-  ($scope, dialog, Data, $location, $rootScope) ->
-    $scope.extraData = {}
+  ($scope, openOptions, Data, $location, $rootScope) ->
     # Field list to be displayed in choose field select
     $scope.selectFields = []
 
@@ -231,7 +231,7 @@ angular.module('app.datas.controllers', ['app.config', ])
 
     $scope.loading_state = true
 
-    $scope.test = dialog.model
+    $scope.test = openOptions.model
     Data.$loadFieldList($scope.test.model_id,
       $scope.test.id)
     .then (opts) ->
@@ -301,5 +301,5 @@ angular.module('app.datas.controllers', ['app.config', ])
         $scope.loading_state = false
 
     $scope.close = () ->
-      dialog.close()
+      $scope.$close(true)
   ])

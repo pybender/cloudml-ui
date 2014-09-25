@@ -4,13 +4,13 @@
     <small><a href="#{{ modelObj.objectUrl() }}?action=model:details">(Cancel)</a></small>
   </h2>
 
-  <loadindicator title="Save feature..." ng-show="saving" progress="savingProgress"></loadindicator>
+  <loadindicator title="Save feature..." ng-show="saving" cml-progress="savingProgress"></loadindicator>
 
   <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
  
   <div class="row">
     <form name="FeatureForm" class="form-horizontal">
-      <ng-include src="'/partials/features/items/form.html'"></ng-include>
+      <ng-include src="'partials/features/items/form.html'"></ng-include>
     </form>
   </div>
   <div class="row">
@@ -18,7 +18,7 @@
       <h4>Transformer <a ng-click="clearTransformer()"><small>(clear)</small></a></h4>
       <div ng-controller="ConfigurationLoaderCtrl" ng-init="init( feature, 'transformer')">
         <form name="TransformerForm" class="form-horizontal">
-          <ng-include src="'/partials/features/transformers/edit_feature_transformer_body.html'"></ng-include>
+          <ng-include src="'partials/features/transformers/edit_feature_transformer_body.html'"></ng-include>
         </form>
       </div>
     </div>
@@ -26,7 +26,7 @@
       <h4>Scaler <a ng-click="clearScaler()"><small>(clear)</small></a></h4>
       <div ng-controller="ConfigurationLoaderCtrl" ng-init="init( feature, 'scaler')">
         <form name="ScalerForm" class="form-horizontal">
-          <ng-include src="'/partials/features/scalers/edit_feature_scaler_body.html'"></ng-include>
+          <ng-include src="'partials/features/scalers/edit_feature_scaler_body.html'"></ng-include>
         </form>
       </div>
     </div>

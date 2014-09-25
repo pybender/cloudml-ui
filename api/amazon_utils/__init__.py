@@ -211,7 +211,7 @@ class AmazonDynamoDBHelper(object):
             from boto import dynamodb2
             from boto.dynamodb2.layer1 import DynamoDBConnection
 
-            if app.config.get('TEST_MODE'):
+            if app.config.get('TEST_DYNAMODB'):
                 self._conn = boto.dynamodb2.connect_to_region(
                     'us-west-2', aws_access_key_id="ak",
                     aws_secret_access_key="sk")

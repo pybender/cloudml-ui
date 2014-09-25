@@ -2,32 +2,31 @@
 
 ### Trained Model specific Controllers ###
 
-# Main model fields and which ones that are required for train/test dialogs
-MODEL_FIELDS = [
-  'name','status','test_import_handler', 'train_import_handler',
-  'train_import_handler_type', 'test_import_handler_type',
-  'test_handler_fields', 'labels'
-].join(',')
-
-FIELDS_BY_SECTION = {
-  'model': [
-    'classifier','features_set_id','segments'
-  ].join(',')
-  'training': [
-    'error','weights_synchronized','memory_usage','segments', 'trained_by',
-    'trained_on','training_time','datasets', 'train_records_count',
-    'trainer_size'
-  ].join(',')
-  'about': [
-    'created_on','target_variable','example_id','example_label',
-    'updated_on','feature_count','created_by','data_fields',
-    'test_handler_fields','tags'
-  ].join(',')
-  'main': MODEL_FIELDS
-}
-
 angular.module('app.models.controllers', ['app.config', ])
 
+.constant('MODEL_FIELDS',
+  [ 'name','status','test_import_handler', 'train_import_handler',
+    'train_import_handler_type', 'test_import_handler_type',
+    'test_handler_fields', 'labels'].join(',')
+)
+
+.factory('FIELDS_BY_SECTION', [
+  'MODEL_FIELDS'
+
+  (MODEL_FIELDS) ->
+    model: ['classifier','features_set_id','segments'].join(',')
+    training: [
+      'error','weights_synchronized','memory_usage','segments', 'trained_by',
+      'trained_on','training_time','datasets', 'train_records_count',
+      'trainer_size'
+    ].join(',')
+    about: [
+      'created_on','target_variable','example_id','example_label',
+      'updated_on','feature_count','created_by','data_fields',
+      'test_handler_fields','tags'
+    ].join(',')
+    main: MODEL_FIELDS
+])
 
 .controller('TagCtrl', [
   '$scope'
@@ -41,8 +40,9 @@ angular.module('app.models.controllers', ['app.config', ])
   '$scope'
   '$location'
   'Model'
+  'MODEL_FIELDS'
 
-  ($scope, $location, Model) ->
+  ($scope, $location, Model, MODEL_FIELDS) ->
     $scope.MODEL = Model
     $scope.FIELDS = MODEL_FIELDS + ',' + ['tags','created_on','created_by',
                                           'updated_on','updated_by',
@@ -78,8 +78,7 @@ angular.module('app.models.controllers', ['app.config', ])
     $scope.showMore = () ->
       $scope.page += 1
       extra = {'page': $scope.page}
-      $scope.$emit('BaseListCtrl:start:load',
-        $scope.modelName, true, extra)
+      $scope.$emit 'BaseListCtrl:start:load', $scope.modelName, true, extra
 ])
 
 
@@ -125,8 +124,10 @@ angular.module('app.models.controllers', ['app.config', ])
   'Model'
   'TestResult'
   'Tag'
+  'FIELDS_BY_SECTION'
+  '$q'
 
-  ($scope, $location, $routeParams, Model, Test, Tag) ->
+  ($scope, $location, $routeParams, Model, Test, Tag, FIELDS_BY_SECTION, $q) ->
     if not $routeParams.id
       throw new Error "Can't initialize without model id"
 
@@ -135,12 +136,15 @@ angular.module('app.models.controllers', ['app.config', ])
     $scope.params = {'tags': []}
 
     $scope.load = (fields, section) ->
-      if !fields then return
+      deferred = $q.defer()
+
+      if not fields
+        deferred.reject 'empty fields'
+        return deferred.promise
 
       $scope.model.$load(
         show: fields
         ).then (->
-          $scope.LOADED_SECTIONS.push section
           if $scope.params['tags']?
             $scope.params['tags'] = []
             for t in $scope.model.tags
@@ -150,32 +154,45 @@ angular.module('app.models.controllers', ['app.config', ])
               .then (resp)->
                 $scope.model.trainer_s3_url = resp.data.url
               , (opts)->
-                $scope.setError(opts, 'loading tags list')
+                $scope.setError(opts, 'loading trainer s3 url')
+          $scope.LOADED_SECTIONS.push section
+          deferred.resolve 'model loaded'
         ), ((opts)->
           $scope.setError(opts, 'loading model details')
+          deferred.reject 'error loading model details'
         )
+      return deferred.promise
 
     $scope.goSection = (section) ->
       name = section[0]
       subsection = section[1]
-      if name == 'test'
-        setTimeout(() ->
-          $scope.$broadcast('loadTest', true)
-          $scope.LOADED_SECTIONS.push name
-        , 100)
+
+      # TODO: nader20140907 we need to manually test reloading, I am disabling
+      # it for now until I get a chance to test it. The unit test in modesl/controllers.coffee
+      # it  'should load features', having the expectations disabled for now
+      #if name in $scope.LOADED_SECTIONS
+      #  return
+
+      loadedSections = []
       if name == 'model' && subsection == 'json'
         $scope.load('features', name + subsection)
 
       fields = ''
       if 'main' not in $scope.LOADED_SECTIONS
+        loadedSections.push 'main'
         fields = FIELDS_BY_SECTION['main']
-        $scope.LOADED_SECTIONS.push 'main'
 
       if name not in $scope.LOADED_SECTIONS
+        loadedSections.push name
         if FIELDS_BY_SECTION[name]?
           fields += ',' + FIELDS_BY_SECTION[name]
 
-      $scope.load(fields, name)
+      $scope.load(fields, name).then ->
+        for name in loadedSections
+          if name not in $scope.LOADED_SECTIONS
+            $scope.LOADED_SECTIONS.push name
+        if 'test' in loadedSections
+          $scope.$broadcast('loadTest', true)
 
     Tag.$loadAll(
       show: 'text,id'
@@ -209,8 +226,9 @@ angular.module('app.models.controllers', ['app.config', ])
       for t in $scope.params['tags']
         $scope.model.tags.push t['text']
 
-      $scope.model.$save(only: ['tags']).then (->), (->
-        $scope.setError(opts, 'saving model tags'))
+      $scope.model.$save(only: ['tags'])
+      .then (->), (opts)->
+        $scope.setError opts, 'saving model tags'
 
     $scope.initSections($scope.goSection)
   ])
@@ -247,40 +265,37 @@ angular.module('app.models.controllers', ['app.config', ])
     $scope.initForm()
 
     $scope.close = ->
-      $scope.dialog.close()
+      $scope.$close(true)
       $scope.resetError()
 ])
 
 .controller('TrainModelCtrl', [
   '$scope'
   '$rootScope'
-  'dialog'
+  'openOptions'
 
-  ($scope, $rootScope, dialog) ->
-    $scope.dialog = dialog
+  ($scope, $rootScope, openOptions) ->
     $scope.resetError()
-    $scope.model = dialog.model
+    $scope.model = openOptions.model
     $scope.data = {}
 
     $scope.handler = $scope.model.train_import_handler_obj
     $scope.multiple_dataset = true
 
     $scope.start = (result) ->
-      dialog.model.$train($scope.data).then (() ->
-        dialog.close()
+      openOptions.model.$train($scope.data).then (() ->
+        $scope.$close(true)
       ), ((opts) ->
-        $scope.setError(opts, 'starting model training')
+        $scope.setError(opts, 'error starting model training')
       )
 ])
 
 .controller('ModelActionsCtrl', [
   '$scope'
-  '$dialog'
-  '$rootScope'
 
-  ($scope, $dialog, $rootScope) ->
+  ($scope) ->
     $scope.init = (opts) ->
-      if !opts || !opts.model
+      if not opts or not opts.model
         throw new Error "Please specify model"
 
       $scope.model = opts.model
@@ -288,8 +303,7 @@ angular.module('app.models.controllers', ['app.config', ])
     $scope.test_model = (model)->
       $scope._showModelActionDialog(model, 'test', (model) ->
         model.$load(show: 'test_handler_fields').then (->
-          $scope.openDialog({
-            $dialog: $dialog
+          $scope.openDialog($scope, {
             model: model
             template: 'partials/testresults/run_test.html'
             ctrlName: 'TestDialogController'
@@ -302,25 +316,23 @@ angular.module('app.models.controllers', ['app.config', ])
 
     $scope.train_model = (model)->
       $scope._showModelActionDialog(model, 'train', (model) ->
-        $scope.openDialog({
-          $dialog: $dialog
+        $scope.openDialog($scope, {
           model: model
           template: 'partials/models/model_train_popup.html'
           ctrlName: 'TrainModelCtrl'
         }))
 
     $scope.delete_model = (model) ->
-      $scope.openDialog({
-        $dialog: $dialog
+      $scope.openDialog($scope, {
         model: model
         template: 'partials/base/delete_dialog.html'
         ctrlName: 'DialogCtrl'
         action: 'delete model'
+        path: model.BASE_UI_URL
       })
 
     $scope.editClassifier = (model) ->
-      $scope.openDialog({
-        $dialog: $dialog
+      $scope.openDialog($scope, {
         model: null
         template: 'partials/features/classifiers/edit.html'
         ctrlName: 'ModelWithParamsEditDialogCtrl'
@@ -329,8 +341,7 @@ angular.module('app.models.controllers', ['app.config', ])
       })
 
     $scope.uploadModelToPredict = (model) ->
-      $scope.openDialog({
-        $dialog: $dialog
+      $scope.openDialog($scope, {
         model: model
         template: 'partials/servers/choose.html'
         ctrlName: 'ModelUploadToServerCtrl'
@@ -352,19 +363,18 @@ angular.module('app.models.controllers', ['app.config', ])
 .controller('ModelUploadToServerCtrl', [
   '$scope'
   '$rootScope'
-  'dialog'
+  'openOptions'
 
-  ($scope, $rootScope, dialog) ->
-    $scope.dialog = dialog
+  ($scope, $rootScope, openOptions) ->
     $scope.resetError()
-    $scope.model = dialog.model
+    $scope.model = openOptions.model
     $scope.model.server = null
 
     $scope.upload = () ->
       $scope.model.$uploadPredict($scope.model.server).then((resp) ->
         $rootScope.msg = resp.data.status
       )
-      dialog.close()
+      $scope.$close(true)
 ])
 
 .controller('ModelDataSetDownloadCtrl', [

@@ -5,11 +5,10 @@ angular.module('app.testresults.controllers', ['app.config', ])
 
 .controller('TestListCtrl', [
   '$scope'
-  '$dialog'
   '$rootScope'
   'TestResult'
 
-  ($scope, $dialog, $rootScope, TestResult) ->
+  ($scope, $rootScope, TestResult) ->
     $scope.MODEL = TestResult
     $scope.FIELDS = 'name,created_on,status,parameters,accuracy,examples_count,\
 created_by,roc_auc'
@@ -28,14 +27,13 @@ created_by,roc_auc'
 
 .controller('TestDialogController', [
   '$scope'
-  'dialog'
   '$location'
   'TestResult'
+  'openOptions'
 
-  ($scope, dialog, $location, Test) ->
-    $scope.dialog = dialog
+  ($scope, $location, Test, openOptions) ->
     $scope.resetError()
-    $scope.model = dialog.model
+    $scope.model = openOptions.model
     $scope.handler = $scope.model.test_import_handler_obj
 
     $scope.data = {}
@@ -54,36 +52,35 @@ created_by,roc_auc'
     $scope.start = (result) ->
       $scope.test = new Test({model_id: $scope.model.id})
       $scope.test.$run($scope.data).then (->
-        dialog.close()
+        $scope.$close(true)
         $location.path $scope.test.objectUrl()
       ), ((opts) ->
         $scope.setError(opts, 'running test')
       )
 ])
 
-.controller('DeleteTestCtrl', [
-  '$scope'
-  'dialog'
-  '$location'
-
-  ($scope, dialog, location) ->
-    $scope.test = dialog.test
-    $scope.model = dialog.test.model
-    $scope.resetError()
-
-    $scope.close = ->
-      dialog.close()
-
-    $scope.delete = (result) ->
-      $scope.test.$delete().then (() ->
-        $scope.close()
-#        location.search('action=test:list&any=' + Math.random())
-        $scope.$emit('modelDeleted', [$scope.model])
-        $scope.$broadcast('modelDeleted', [$scope.model])
-      ), ((opts) ->
-        $scope.setError(opts, 'deleting test')
-      )
-])
+# TODO: nader20140901 - should be removed along with partials/testresults/delete_popup.html
+# we are now using DialogCtrl (see TestActionsCtrl)
+#.controller('DeleteTestCtrl', [
+#  '$scope'
+#  '$location'
+#  'openOptions'
+#
+#  ($scope, location, openOptions) ->
+#    $scope.test = openOptions.test
+#    $scope.model = openOptions.test.model
+#    $scope.resetError()
+#
+#    $scope.delete = (result) ->
+#      $scope.test.$delete().then (() ->
+#        $scope.$close(true)
+##        location.search('action=test:list&any=' + Math.random())
+#        $scope.$emit('modelDeleted', [$scope.model])
+#        $scope.$broadcast('modelDeleted', [$scope.model])
+#      ), ((opts) ->
+#        $scope.setError(opts, 'deleting test')
+#      )
+#])
 
 .controller('TestDetailsCtrl', [
   '$scope'
@@ -91,9 +88,8 @@ created_by,roc_auc'
   'TestResult'
   '$location'
   '$rootScope'
-  '$dialog'
 
-($scope, $routeParams, Test, $location, $rootScope, $dialog) ->
+($scope, $routeParams, Test, $location, $rootScope) ->
   $scope.LOADED_SECTIONS = []
   if not $scope.test
     if not ($routeParams.model_id and $routeParams.id)
@@ -148,15 +144,14 @@ without test id and model id"
         $scope.LOADED_SECTIONS.push 'main'
 
   $scope.downloadCsvResults = () ->
-    $scope.openDialog({
-        $dialog: $dialog
+    $scope.openDialog($scope, {
         model: $scope.test
         template: 'partials/datasets/csv_list_popup.html'
         ctrlName: 'CsvDownloadCtrl'
     })
 
   $scope.exportResultsToDb = () ->
-    $scope.openDialog({
+    $scope.openDialog($scope, {
         $dialog: $dialog
         model: $scope.test
         template: 'partials/testresults/export_to_db_popup.html'
@@ -165,8 +160,9 @@ without test id and model id"
 
   addMetricsToScope = ->
     metrics = $scope.test.metrics
+    roc_auc = $scope.test.roc_auc or $scope.test.metrics.roc_auc
     $scope.rocCurves = {}
-    if not _.isArray(metrics.roc_curve)
+    if _.isObject(roc_auc)
       # new dict formate after 20140710
       classes = _.keys(metrics.roc_curve)
       for c in classes
@@ -174,7 +170,7 @@ without test id and model id"
           else 'ROC Curve'
         curve = {}
         curve[label] = metrics.roc_curve[c]
-        $scope.rocCurves[c] = {curve: curve, roc_auc: $scope.test.roc_auc[c]}
+        $scope.rocCurves[c] = {curve: curve, roc_auc: roc_auc[c]}
       if classes.length is 1 # only binary classifier publishes PR curve
         $scope.prCurves =
           # we are switching precision/recall positions. The dictionary
@@ -186,10 +182,10 @@ without test id and model id"
             metrics.precision_recall_curve[0]
           ]
     else
-      # old list fooormat
+      # old list format
       $scope.rocCurves[1] =
         curve: {'ROC curve': $scope.test.metrics.roc_curve}
-        roc_auc: $scope.test.roc_auc
+        roc_auc: roc_auc
       pr = $scope.test.metrics.precision_recall_curve
       $scope.prCurves = {'Precision-Recall curve': [pr[1], pr[0]]}
 
@@ -198,9 +194,8 @@ without test id and model id"
 
 .controller('TestActionsCtrl', [
   '$scope'
-  '$dialog'
 
-  ($scope, $dialog) ->
+  ($scope) ->
     $scope.init = (opts) ->
       test = opts.test
       model = opts.model
@@ -211,19 +206,21 @@ without test id and model id"
       $scope.test = test
 
     $scope.delete_test = (model) ->
-      d = $dialog.dialog(
-        modalFade: false
-      )
-      d.test = $scope.test
-      d.open('partials/testresults/delete_popup.html', 'DeleteTestCtrl')
-  
+      $scope.openDialog $scope,
+        model: $scope.test
+        template: 'partials/base/delete_dialog.html'
+        ctrlName: 'DialogCtrl'
+        action: 'delete Test'
+        path: $scope.test.model.objectUrl()
 ])
 
 .controller('TestExportsCtrl', [
-  '$scope',
-  '$timeout',
+  '$scope'
+  '$timeout'
+
   ($scope, $timeout) ->
     $scope.exports = []
+    $scope.db_exports = []
 
     $scope.init = (test) ->
       $scope.test = test
@@ -242,8 +239,7 @@ without test id and model id"
               $scope.reload()
             , 8000
 
-        reloadInProgressTasks($scope.exports)
-        reloadInProgressTasks($scope.db_exports)
+        reloadInProgressTasks $scope.exports.concat($scope.db_exports)
       )
 
     $scope.$on('exportsChanged', () ->

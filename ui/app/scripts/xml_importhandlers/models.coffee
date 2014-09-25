@@ -16,11 +16,14 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
         else
           handler_id = opts.import_handler_id
 
+        if not handler_id
+          throw new Error "import_handler_id:#{handler_id} should be defined"
+
         return "#{settings.apiUrl}xml_import_handlers/\
 #{handler_id}/#{@ITEM_NAME}/"
 
       @$beforeLoadAll: (opts) ->
-        if not opts.import_handler_id
+        if not opts?.import_handler_id
           throw new Error "import_handler_id is required"
 
     return BaseImportHandlerItem
@@ -35,7 +38,7 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
   (settings, BaseModel, InputParameter, Entity) ->
     class XmlImportHandler extends BaseModel
       BASE_API_URL: "#{settings.apiUrl}xml_import_handlers/"
-      BASE_UI_URL: "/handlers/xml/"
+      BASE_UI_URL: "/handlers/xml"
       API_FIELDNAME: 'xml_import_handler'
       @LIST_MODEL_NAME: 'xml_import_handlers'
       LIST_MODEL_NAME: @LIST_MODEL_NAME
@@ -49,6 +52,7 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
 
       xml_input_parameters: []
       scripts: []
+      # TODO: nader201400913, why do we need entities while we fill only entity in loadFromJSON
       entities: []
       predict: []
 
@@ -100,15 +104,15 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
         else
           entity_id = opts.entity_id
 
+        if not entity_id or not handler_id
+          throw new Error "entity_id:#{entity_id}, import_handler_id:#{handler_id} both should be defined"
+
         return "#{settings.apiUrl}xml_import_handlers/\
 #{handler_id}/entities/#{entity_id}/fields/"
 
       @$beforeLoadAll: (opts) ->
-        if not opts.import_handler_id
-          throw new Error "import_handler_id is required"
-
-        if not opts.entity_id
-          throw new Error "entity_id is required"
+        if not opts.entity_id or not opts.import_handler_id
+          throw new Error "entity_id:#{opts.entity_id}, import_handler_id:#{opts.import_handler_id} both should be defined"
 
     return Field
 ])
@@ -123,8 +127,8 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
       API_FIELDNAME: 'sqoop_import'
       @LIST_MODEL_NAME: 'sqoop_imports'
       LIST_MODEL_NAME: @LIST_MODEL_NAME
-      @MAIN_FIELDS: 'id,text,target,table,where,direct,mappers,datasource,\
-datasource_id,entity_id'
+      @MAIN_FIELDS: ['id','text','target','table','where','direct','mappers',
+                     'datasource','datasource_id','entity_id'].join(',')
 
       id: null
 
@@ -139,15 +143,15 @@ datasource_id,entity_id'
         else
           entity_id = opts.entity_id
 
+        if not entity_id or not handler_id
+          throw new Error "entity_id:#{entity_id}, import_handler_id:#{handler_id} both should be defined"
+
         return "#{settings.apiUrl}xml_import_handlers/\
 #{handler_id}/entities/#{entity_id}/sqoop_imports/"
 
       @$beforeLoadAll: (opts) ->
-        if not opts.import_handler_id
-          throw new Error "import_handler_id is required"
-
-        if not opts.entity_id
-          throw new Error "entity_id is required"
+        if not opts.entity_id or not opts.import_handler_id
+          throw new Error "entity_id:#{opts.entity_id}, import_handler_id:#{opts.import_handler_id} both should be defined"
 
       saveText: () =>
         if not @text
@@ -155,12 +159,17 @@ datasource_id,entity_id'
           return
         @loading_state = true
         self = @
-        @$save({only: ['text']}).then((opts) ->
+        @$save {only: ['text']}
+        .then (opts) ->
           self.loading_state = false
           self.msg = 'Sqoop item has been saved'
           self.edit_err = null
           self.err = null
-        )
+        , (opts) ->
+          self.loading_state = false
+          self.msg = 'http error saving Sqoop item'
+          self.edit_err = 'http error saving Sqoop item'
+          self.err = 'http save error'
 
     return Sqoop
 ])
@@ -199,15 +208,15 @@ datasource_id,entity_id'
         else
           entity_id = opts.entity_id
 
+        if not entity_id or not handler_id
+          throw new Error "entity_id:#{entity_id}, import_handler_id:#{handler_id} both should be defined"
+
         return "#{settings.apiUrl}xml_import_handlers/\
 #{handler_id}/entities/#{entity_id}/queries/"
 
       @$beforeLoadAll: (opts) ->
-        if not opts.import_handler_id
-          throw new Error "import_handler_id is required"
-
-        if not opts.entity_id
-          throw new Error "entity_id is required"
+        if not opts.entity_id or not opts.import_handler_id
+          throw new Error "entity_id:#{opts.entity_id}, import_handler_id:#{opts.import_handler_id} both should be defined"
 
       getParams: ->
         @_getParams BaseQueryModel.PARAMS_HASH_REGEX, @text

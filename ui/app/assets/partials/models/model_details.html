@@ -95,7 +95,7 @@
         </div>
         <div class="row">
           <div class="span12">
-            <ng-include src="'/partials/features/items/list.html'"></ng-include>
+            <ng-include src="'partials/features/items/list.html'"></ng-include>
           </div>
         </div>
       </div>
@@ -137,7 +137,7 @@
             Status: <span class="value">{{ model.status }}</span> <a ng-click="showLogs=!showLogs">(logs)</a>
             <div ng-show="showLogs" class="well" ng-controller="LogMessageListCtrl" ng-init="init('trainmodel_log', model.id, 50)">
               <div class="message">
-                <ng-include src="'/partials/logmessages/list.html'"></ng-include>
+                <ng-include src="'partials/logmessages/list.html'"></ng-include>
               </div>
             </div>
         </div>
@@ -221,13 +221,13 @@
         </li>
       </ul>
       <div ng-show="action[1] == 'details'" class="details">
-        <ng-include src="'/partials/weights/columns.html'"></ng-include>
+        <ng-include src="'partials/weights/columns.html'"></ng-include>
       </div>
       <div ng-show="action[1] == 'tree'" class="weights-tree">
-        <ng-include src="'/partials/weights/tree.html'"></ng-include>
+        <ng-include src="'partials/weights/tree.html'"></ng-include>
       </div>
       <div ng-show="action[1] == 'list'" class="list">
-        <ng-include src="'/partials/weights/list.html'"></ng-include>
+        <ng-include src="'partials/weights/list.html'"></ng-include>
       </div>
     </div>
   </div>
@@ -236,7 +236,7 @@
   <div ng-show="action[0] == 'test'" id="tests">
     <h3>Tests</h3>
     <div ng-controller="TestListCtrl" ng-init="init(model)">
-      <ng-include src="'/partials/testresults/test_list.html'"></ng-include>
+      <ng-include src="'partials/testresults/test_list.html'"></ng-include>
     </div>
   </div>
 
@@ -248,7 +248,7 @@
           <a href="#/models/?tag={{ tag }}" style="color: white;">{{ tag }}</a>
         </span> 
       </span>
-      <ng-include src="'/partials/parts/created_tags.html'"></ng-include>
+      <ng-include src="'partials/parts/created_tags.html'"></ng-include>
     </div>
     <div class="row">
       <div class="span6">
@@ -294,11 +294,11 @@
         </div>
         <div ng-show="model.sorted_data_fields.length">
           Examples id field name:
-          <span title="ID Field Name" ng-bind="model.example_id" editable="model" value="model.example_id" editable-field="example_id" editable-placement="right" editable-input="select" source="model.sorted_data_fields"></span>
+          <span title="ID Field Name" ng-bind="model.example_id || 'not specified'" editable="model" value="model.example_id" editable-field="example_id" editable-placement="right" editable-input="select" source="model.sorted_data_fields"></span>
         </div>
         <div ng-show="!model.sorted_data_fields.length">
           Examples id field name:
-          <span title="ID Field Name" ng-bind="model.example_id" editable="model" value="model.example_id" editable-field="example_id" editable-placement="right" editable-input="text" source="model.sorted_data_fields"></span>
+          <span title="ID Field Name" ng-bind="model.example_id || 'not specified'" editable="model" value="model.example_id" editable-field="example_id" editable-placement="right" editable-input="text" source="model.sorted_data_fields"></span>
         </div>
         <div>
             Target variable:

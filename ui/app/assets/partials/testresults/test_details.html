@@ -17,7 +17,7 @@
 </h2>
 
 <div title="quick info" ng-init="obj=test">
-  <ng-include src="'/partials/parts/created_tags.html'"></ng-include>
+  <ng-include src="'partials/parts/created_tags.html'"></ng-include>
   <i class="icon-status"></i>
   <span class="badge badge-warning">{{ test.status }}</span>
 </div>
@@ -150,7 +150,11 @@
         </div>
         <div ng-show="prCurve || prCurves">
           <h4>Precision-Recall</h4>
-          <sc-curves xlabel="Recall" ylabel="Precision" curves-dict="prCurves" width="500"></sc-curves>
+          <div class="row">
+            <div class="span5">
+              <sc-curves xlabel="Recall" ylabel="Precision" curves-dict="prCurves" width="450"></sc-curves>
+            </div>
+          </div>
           <hr/>
         </div>
         <div ng-show="test.status == 'Completed'">
@@ -160,7 +164,7 @@
       </div>
 
       <div ng-show="action[0] == 'examples'" ng-controller="TestExamplesCtrl" ng-init="init(test)">
-        <ng-include src="'/partials/examples/example_list.html'"></ng-include>
+        <ng-include src="'partials/examples/example_list.html'"></ng-include>
       </div>
 
       <div ng-show="action[0] == 'matrix'">
@@ -221,7 +225,7 @@
       </div>
 
       <div ng-show="action[0] == 'logs'" ng-controller="LogMessageListCtrl" ng-init="init('runtest_log', test.id)">
-        <ng-include src="'/partials/logmessages/list.html'"></ng-include>
+        <ng-include src="'partials/logmessages/list.html'"></ng-include>
       </div>
 
     </div>

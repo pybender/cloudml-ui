@@ -5,19 +5,19 @@
   </div>
 
   <div class="modal-body">
-    <ng-include src="'/partials/parts/save_form_messages.html'"></ng-include>
+    <ng-include src="'partials/parts/save_form_messages.html'"></ng-include>
     <alert-message ng-show="model.status == 'Trained'" class="alert-warning" msg='Be carefull. All model metadata will be removed while re-training!' unsafe></alert-message>
     <alert-message ng-hide="handler" class="alert-error" msg="Please define Train Import Handler in the details before!" unsafe></alert-message>
 
     <form name="Form" class="form-horizontal" ng-show="handler">
       <h4 class="text-center">Choose way of getting training data</h4>
       <div class="well">
-        <ng-include src="'/partials/datasets/dataset_fields.html'"></ng-include>
+        <ng-include src="'partials/datasets/dataset_fields.html'"></ng-include>
       </div>
 
       <h4 class="text-center">then choose amazon instance <go-to-docs page="instances"></go-to-docs></h4>
       <div class="well">
-        <ng-include src="'/partials/aws_instances/instance_fields.html'"></ng-include>
+        <ng-include src="'partials/aws_instances/instance_fields.html'"></ng-include>
       </div>
     </form>
   </div>

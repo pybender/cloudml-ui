@@ -28,10 +28,9 @@ angular.module('app.features.controllers.transformers', ['app.config', ])
 
 .controller('TransformersListCtrl', [
   '$scope'
-  '$dialog'
   'Transformer'
 
-  ($scope, $dialog, Transformer) ->
+  ($scope, Transformer) ->
     $scope.MODEL = Transformer
     $scope.FIELDS = Transformer.MAIN_FIELDS
     $scope.ACTION = 'loading transformers'
@@ -39,8 +38,7 @@ angular.module('app.features.controllers.transformers', ['app.config', ])
 
     $scope.add = () ->
       transformer = new Transformer()
-      $scope.openDialog({
-        $dialog: $dialog
+      $scope.openDialog($scope, {
         model: transformer
         template: 'partials/features/transformers/add.html'
         ctrlName: 'ModelWithParamsEditDialogCtrl'
@@ -48,7 +46,6 @@ angular.module('app.features.controllers.transformers', ['app.config', ])
         path: 'transformers'
       })
 ])
-
 
 .controller('TransformerDetailsCtrl', [
   '$scope'
@@ -126,8 +123,7 @@ without id"
       transformer.$load(
         show: 'train_import_handler,train_import_handler_type'
       ).then (->
-        $scope.openDialog({
-          $dialog: $dialog
+        $scope.openDialog($scope, {
           model: transformer
           template: 'partials/models/model_train_popup.html'
           ctrlName: 'TrainModelCtrl'
@@ -137,19 +133,18 @@ without id"
       )
 
     $scope.changeType = (transformer) ->
-      $scope.openDialog({
-        $dialog: $dialog
+      $scope.openDialog($scope, {
         model: transformer
         template: 'partials/features/transformers/edit_type.html'
         ctrlName: 'ModelWithParamsEditDialogCtrl'
       })
 
     $scope.delete = (transformer) ->
-      $scope.openDialog({
-        $dialog: $dialog
+      $scope.openDialog($scope, {
         model: transformer
         template: 'partials/base/delete_dialog.html'
         ctrlName: 'DialogCtrl'
         action: 'delete transformer'
+        path: transformer.BASE_UI_URL
       })
 ])

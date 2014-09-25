@@ -29,8 +29,9 @@ angular.module('app.features.models', ['app.config'])
       API_FIELDNAME: 'transformer'
       @LIST_MODEL_NAME: 'transformers'
       LIST_MODEL_NAME: @LIST_MODEL_NAME
-      @MAIN_FIELDS: 'id,name,type,params,created_on,created_by,status,\
-train_import_handler_type,train_import_handler'
+      @MAIN_FIELDS: ['id', 'name', 'type', 'params', 'created_on', 'created_by',
+                     'status', 'train_import_handler_type',
+                     'train_import_handler'].join(',')
       @$TYPES_LIST: ['Dictionary', 'Count', 'Tfidf', 'Lda', 'Lsi', 'Ntile']
 
 
@@ -109,7 +110,7 @@ train_import_handler_type,train_import_handler'
   ($http, $q, settings, BaseModel) ->
     class Classifier extends BaseModel
       BASE_API_URL: "#{settings.apiUrl}features/classifiers/"
-      BASE_UI_URL: "/features/classifiers/"
+      BASE_UI_URL: "/features/classifiers"
       API_FIELDNAME: 'classifier'
       @LIST_MODEL_NAME: 'classifiers'
       LIST_MODEL_NAME: @LIST_MODEL_NAME
@@ -152,7 +153,7 @@ train_import_handler_type,train_import_handler'
   (settings, BaseModel, Feature) ->
     class FeaturesSet extends BaseModel
       BASE_API_URL: "#{settings.apiUrl}features/sets/"
-      BASE_UI_URL: "/features/sets/"
+      BASE_UI_URL: "/features/sets"
       API_FIELDNAME: 'feature_set'
       @MAIN_FIELDS: 'id,schema_name,features_count,target_variable'
 
@@ -168,7 +169,7 @@ train_import_handler_type,train_import_handler'
             @group_by = []
             for feature in origData.group_by
               @group_by.push {id: feature.id, text: feature.name}
-            console.log @group_by
+            #console.log @group_by
 
       downloadUrl: =>
         return "#{@BASE_API_URL}#{@id}/action/download/"
@@ -187,8 +188,9 @@ train_import_handler_type,train_import_handler'
   (settings, $filter, BaseModel, NamedFeatureType, Transformer, Scaler) ->
     class Feature extends BaseModel
       API_FIELDNAME: 'feature'
-      @MAIN_FIELDS: 'id,name,type,input_format,transformer,params,\
-scaler,default,is_target_variable,created_on,created_by,required'
+      @MAIN_FIELDS: ['id','name','type','input_format','transformer','params',
+                     'scaler','default','is_target_variable','created_on',
+                     'created_by','required'].join(',')
 
       id: null
       name: null
@@ -330,7 +332,7 @@ scaler,default,is_target_variable,created_on,created_by,required'
   ($http, $q, settings, $filter, BaseModel, Param) ->
     class NamedFeatureType extends BaseModel
       BASE_API_URL: "#{settings.apiUrl}features/named_types/"
-      BASE_UI_URL: "/features/types/"
+      BASE_UI_URL: "/features/types"
       API_FIELDNAME: 'named_type'
       @MAIN_FIELDS: 'id,name,type,input_format,params,created_on,created_by'
       @$TYPES_LIST: ['boolean', 'int', 'float', 'numeric', 'date',

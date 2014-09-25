@@ -7,11 +7,9 @@ angular.module('app.controllers', ['app.config', ])
 .controller('AppCtrl', [
   '$scope'
   '$location'
-  '$resource'
   '$rootScope'
-  'settings'
 
-($scope, $location, $resource, $rootScope, settings) ->
+($scope, $location, $rootScope) ->
 
   # Uses the url to determine if the selected
   # menu item should have the class active.
@@ -22,14 +20,13 @@ angular.module('app.controllers', ['app.config', ])
   )
 
   # Breadcrumbs
-  $scope.$on('$routeChangeSuccess', (event, current) ->
+  $scope.$on('$routeChangeSuccess', ->
     pathElements = $location.path().split('/')
     result = []
     path = ''
     pathElements.shift()
-    pathParamsLookup = {}
 
-    for key, pathElement of pathElements
+    for _, pathElement of pathElements
       path += '/' + pathElement
       result.push({name: pathElement, path: path})
 
@@ -44,8 +41,8 @@ angular.module('app.controllers', ['app.config', ])
   #   getClass('/products') # returns 'active'
   #   getClass('/orders') # returns ''
   #
-  $scope.getClass = (id) ->
-    if $scope.activeNavId.substring(0, id.length) == id
+  $scope.getClass = (modelName) ->
+    if $scope.activeNavId.substring(0, modelName.length) == modelName
       return 'active'
     else
       return ''
@@ -96,8 +93,9 @@ angular.module('app.controllers', ['app.config', ])
 .controller('SaveObjectCtl', [
   '$scope'
   '$location'
+  '$timeout'
 
-  ($scope, $location) ->
+  ($scope, $location, $timeout) ->
     $scope.init = (model) ->
       $scope.model = model
 
@@ -112,37 +110,50 @@ angular.module('app.controllers', ['app.config', ])
       $scope.model.$save(only: fields).then (->
         $scope.savingProgress = '100%'
 
-        _.delay (->
-          $scope.$emit 'SaveObjectCtl:save:success', $scope.model
-          if $scope.LIST_MODEL_NAME?
-            $scope.$emit 'BaseListCtrl:start:load', $scope.LIST_MODEL_NAME
+        $scope.$emit 'SaveObjectCtl:save:success', $scope.model
+        if $scope.LIST_MODEL_NAME?
+          LIST_MODEL_NAME = $scope.LIST_MODEL_NAME
+        else if $scope.model?.LIST_MODEL_NAME?
+          LIST_MODEL_NAME = $scope.model.LIST_MODEL_NAME
 
-          if $scope.model.BASE_UI_URL && !$scope.DONT_REDIRECT
-            $location.path $scope.model.objectUrl()
-          $scope.$apply()
-        ), 300
+        if LIST_MODEL_NAME?
+          $scope.$emit 'BaseListCtrl:start:load', LIST_MODEL_NAME
+
+        if $scope.model.BASE_UI_URL && !$scope.DONT_REDIRECT
+          $location.path $scope.model.objectUrl()
+        # timeout the close a little bit late, to make sure listeners have
+        # heared the emitted events, or else the transcluded scope of the $modal
+        # will be destroyed and no events will be handled. Also SaveObjCtrl some
+        # times work outside of a modal, like editing or saving a model and
+        # hence there is no modal to close
+        if $scope.$close
+          $timeout ->
+            $scope.$close(true)
 
       ), ((opts) ->
         $scope.err = $scope.setError(opts, "saving")
         $scope.savingProgress = '0%'
       )
 
-    $scope.readFile = (element, name) ->
-      $scope.$apply ($scope) ->
-        $scope.msg = ""
-        $scope.error = ""
-        $scope.data = element.files[0]
-        reader = new FileReader()
-        reader.onload = (e) ->
-          eval("$scope.model." + name + " = e.target.result")
-        reader.readAsText($scope.data)
+# TODO: nader20140906 never used, see if we can remove it
+#    $scope.readFile = (element, name) ->
+#      $scope.$apply ($scope) ->
+#        $scope.msg = ""
+#        $scope.error = ""
+#        $scope.data = element.files[0]
+#        reader = new FileReader()
+#        reader.onload = (e) ->
+#          eval("$scope.model." + name + " = e.target.result")
+#        reader.readAsText($scope.data)
 ])
 
 # Controller used for UI Bootstrap pagination
 .controller('ObjectListCtrl', [
   '$scope'
+  '$q'
+  '$timeout'
 
-  ($scope) ->
+  ($scope, $q, $timeout) ->
     $scope.pages = 0
     if !$scope.page?
       $scope.page = 1
@@ -157,24 +168,46 @@ angular.module('app.controllers', ['app.config', ])
         throw new Error "Invalid object loader supplied to ObjectListCtrl"
 
       $scope.objectLoader = opts.objectLoader
-      $scope.$watch('page', (page, oldVal, scope) ->
-        $scope.load()
+
+      watchLogic = (watchExp, newVal, oldVal) ->
+        """
+        Since we will be manipulating $watched scope variables, and in case
+        of load error we need to reset to the previous. We need to timeout
+        on reseting the loading flag, to make sure all $digestion and hence
+        watch expression fired wihtout causing the load because of reverting back
+        the value (or setting the value from the response). So we use $timeout
+        to reset the loading flag
+        """
+        if newVal isnt oldVal and not $scope.loading
+          $scope.loading = true
+          $scope.load().then ->
+            $timeout ->
+              $scope.loading = false
+            , 1
+          , ->
+            $scope[watchExp] = oldVal
+            $timeout ->
+              $scope.loading = false
+            , 1
+
+      $scope.$watch('page', (page, oldVal) ->
+        watchLogic 'page', page, oldVal
       , true)
 
-      $scope.$watch('filter_opts ', (filter_opts, oldVal, scope) ->
-        $scope.load()
+      $scope.$watch('filter_opts', (filter_opts, oldVal, scope) ->
+        watchLogic 'filter_opts', filter_opts, oldVal
       , true)
+
+      # trigger the very first load
+      $scope.load()
 
     $scope.load = ->
-      if $scope.loading
-        return false
+      deferred = $q.defer()
 
-      $scope.loading = true
       $scope.objectLoader(
         page: $scope.page,
         filter_opts: $scope.filter_opts,
       ).then ((opts) ->
-        $scope.loading = false
         $scope.total = opts.total
         $scope.page = opts.page || 1
         $scope.pages = opts.pages
@@ -184,27 +217,43 @@ angular.module('app.controllers', ['app.config', ])
         # Notify interested parties by emitting and broadcasting an event
         # Event contains
         $scope.$broadcast 'ObjectListCtrl:load:success', $scope.objects
+        deferred.resolve 'page loadded'
       ), ((opts) ->
         $scope.$broadcast 'ObjectListCtrl:load:error', opts
+        deferred.reject 'error loading page'
       )
+
+      deferred.promise
 ])
 
 .controller('BaseDeleteCtrl', [
   '$scope'
   '$location'
+  '$timeout'
+  '$route'
 
-  ($scope, $location) ->
+  ($scope, $location, $timeout, $route) ->
     $scope.resetError()
 
     $scope.delete = (result) ->
       $scope.model.$delete().then (() ->
-        $scope.close()
         $scope.$emit('modelDeleted', [$scope.model])
-        $scope.$broadcast('modelDeleted', [$scope.model])
+
         if $scope.LIST_MODEL_NAME?
-            $scope.$emit 'BaseListCtrl:start:load', $scope.LIST_MODEL_NAME
+          LIST_MODEL_NAME = $scope.LIST_MODEL_NAME
+        else if $scope.model?.LIST_MODEL_NAME?
+          LIST_MODEL_NAME = $scope.model.LIST_MODEL_NAME
+
+        if LIST_MODEL_NAME?
+            $scope.$emit 'BaseListCtrl:start:load', LIST_MODEL_NAME
         if $scope.path?
-          $location.path $scope.path
+          $location.url $scope.path
+          $route.reload()
+        # timeout the close a little bit late, to make sure listeners have
+        # heared the emitted events, or else the transcluded scope of the $modal
+        # will be destroyed and no events will be handled
+        $timeout ->
+          $scope.$close(true)
       ), ((opts) ->
         $scope.setError(opts, $scope.action + ' ' + $scope.model.name)
       )
@@ -212,18 +261,15 @@ angular.module('app.controllers', ['app.config', ])
 
 .controller('DialogCtrl', [
   '$scope'
-  '$location'
-  'dialog'
+  'openOptions'
 
-  ($scope, $location, dialog) ->
+  ($scope, openOptions) ->
     $scope.resetError()
-    $scope.MESSAGE = dialog.action
-    $scope.model = dialog.model
-    $scope.path = dialog.path
-    $scope.action = dialog.action
-
-    $scope.close = ->
-      dialog.close()
+    $scope.MESSAGE = openOptions.action
+    $scope.model = openOptions.model
+    $scope.path = openOptions.path
+    $scope.action = openOptions.action
+    $scope.LIST_MODEL_NAME = openOptions.list_model_name
 ])
 
 .controller('BaseListCtrl', [
@@ -242,7 +288,7 @@ angular.module('app.controllers', ['app.config', ])
 
       $rootScope.$on(
         'BaseListCtrl:start:load', (event, name, append=false, extra={}) ->
-          if name == $scope.modelName
+          if name is $scope.modelName
             $scope.load(append, extra)
       )
 
@@ -253,7 +299,8 @@ angular.module('app.controllers', ['app.config', ])
         , true)
 
     $scope.load = (append=false, extra={}) ->
-      params = $.extend({'show': $scope.FIELDS},
+      show = [$scope.FIELDS or []].concat(_.keys($scope.kwargs)).join ','
+      params = $.extend({'show': show},
                          $scope.kwargs || {},
                          $scope.filter_opts, extra)
       $scope.MODEL.$loadAll(params).then ((opts) ->
@@ -273,12 +320,6 @@ angular.module('app.controllers', ['app.config', ])
       $scope.kwargs['page'] += 1
       $scope.load(true)
 
-    $rootScope.$on('modelDeleted', () ->
-      $scope.load()
-    )
-    $rootScope.$on('modelCreated', () ->
-      $scope.load()
-    )
     $rootScope.$on('modelChanged', () ->
       $scope.load()
     )

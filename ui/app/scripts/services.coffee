@@ -74,7 +74,6 @@ services.factory('auth', ['$http'
           method: 'POST'
           headers: {
             'Content-Type': undefined,
-            'X-Requested-With': null,
             'X-Auth-Token': token
           }
           url: url

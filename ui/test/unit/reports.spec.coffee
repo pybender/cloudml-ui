@@ -5,7 +5,7 @@
 describe "reports", ->
 
   beforeEach(module "ngCookies")
-  beforeEach(module "ui")
+  beforeEach(module "ngRoute")
   beforeEach(module "ui.bootstrap")
 
   beforeEach(module "app.base")
@@ -57,9 +57,6 @@ describe "reports", ->
       url = settings.apiUrl + 'models/?comparable=1&show=name'
       $httpBackend.expectGET(url).respond('{"models": []}')
 
-      # TODO: Why two times?
-      $httpBackend.expectGET(url).respond('{"models": []}')
-
       createController "CompareModelsFormCtl"
       $rootScope.initForm()
       $httpBackend.flush()
@@ -67,10 +64,6 @@ describe "reports", ->
     it "should init model", inject () ->
       url = settings.apiUrl + 'models/modelid123/tests/?model_id=modelid123&status=Completed'
       $httpBackend.expectGET(url).respond('{"tests": []}')
-
-      # TODO: Why this request?
-      url = settings.apiUrl + 'models/?comparable=1&show=name'
-      $httpBackend.expectGET(url).respond('{"models": []}')
 
       item = {
         model: {'id': 'modelid123'}
@@ -83,9 +76,6 @@ describe "reports", ->
     it "should generate report", inject (CompareReport) ->
       url = settings.apiUrl + 'reports/compare/?model1=model1id&model2=model2id&test1=test1id&test2=test2id'
       $httpBackend.expectGET(url).respond('{"data": []}')
-
-      url = settings.apiUrl + 'models/?comparable=1&show=name'
-      $httpBackend.expectGET(url).respond('{"models": []}')
 
       data = [
         {

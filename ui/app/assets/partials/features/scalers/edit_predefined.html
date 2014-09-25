@@ -1,15 +1,15 @@
 <div ng-controller="SaveObjectCtl">
   <div class="modal-header">
-    <button ng-click="dialog.close()" class="close" data-dismiss="modal">×</button>
+    <button ng-click="$dismiss('cancel')" class="close" data-dismiss="modal">×</button>
     <h3>Edit scaler</h3>
   </div>
 
   <div class="modal-body">
-    <loadindicator title="Editing scaler..." ng-show="saving" progress="savingProgress"></loadindicator>
+    <loadindicator title="Editing scaler..." ng-show="saving" cml-progress="savingProgress"></loadindicator>
 
     <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
     <form name="ScalerForm" class="form-horizontal">
-    <ng-include src="'/partials/features/scalers/form.html'"></ng-include>
+    <ng-include src="'partials/features/scalers/form.html'"></ng-include>
     </form>
   </div>
 

@@ -12,12 +12,11 @@ angular.module('app.datasets.controllers', ['app.config', ])
 
 .controller('DatasetListCtrl', [
   '$scope'
-  '$dialog'
   '$rootScope'
   'DataSet'
   '$location'
 
-  ($scope, $dialog, $rootScope, DataSet, $location) ->
+  ($scope, $rootScope, DataSet, $location) ->
     $scope.MODEL = DataSet
     $scope.FIELDS = 'name,created_on,status,error,data,import_params,on_s3,
 filesize,records_count,time,created_by,updated_by'
@@ -38,11 +37,10 @@ filesize,records_count,time,created_by,updated_by'
 
 .controller('DatasetActionsCtrl', [
   '$scope'
-  '$dialog'
   '$window'
   'DataSet'
 
-  ($scope, $dialog, $window, DataSet) ->
+  ($scope, $window, DataSet) ->
     $scope.init = (opts={}) ->
       if not opts.dataset
         throw new Error "Please specify dataset"
@@ -54,18 +52,18 @@ filesize,records_count,time,created_by,updated_by'
       $scope.handler = opts.handler
 
     $scope.delete = ()->
-      $scope.openDialog({
-        $dialog: $dialog
+      $scope.openDialog($scope, {
         model: $scope.ds
         template: 'partials/base/delete_dialog.html'
         ctrlName: 'DialogCtrl'
-        action: 'delete dataset'
+        action: 'delete DataSet'
+        path: $scope.handler.objectUrl()
       })
 
     $scope.download = () ->
       if $scope.ds.on_s3
         generateS3Url($scope.ds, ((opts) ->
-          $cml_window_location_replace opts.url
+          $window.location.replace(opts.url)
         ), $scope.setError)
 
     $scope.reupload = () ->
@@ -174,21 +172,21 @@ filesize,records_count,time,created_by,updated_by'
 .controller('LoadDataDialogCtrl', [
   '$scope'
   '$location'
-  'dialog'
+  'openOptions'
   'DataSet'
 
-  ($scope, $location, dialog, DataSet) ->
+  ($scope, $location, openOptions, DataSet) ->
     $scope.parameters = {}
-    handler = dialog.model
+    handler = openOptions.model
     $scope.handler = handler
+    # TODO: nader20140917, json IH has the tendency of accepting duplicate
+    # parameters which affects the repeater in load_data.html and also affects
+    # the number of fields in the dataset import dialog bog
     $scope.params = handler.import_params
     $scope.format = 'json'
     $scope.formats = [
       {name: 'JSON', value: 'json'}, {name: 'CSV', value: 'csv'}
     ]
-
-    $scope.close = ->
-      dialog.close()
 
     $scope.start = (result) ->
       $scope.dataset = new DataSet({
@@ -202,7 +200,7 @@ filesize,records_count,time,created_by,updated_by'
       }
       $scope.dataset.$save(data)
       .then ->
-        $scope.close()
+        $scope.$close(true)
         $location.url $scope.dataset.objectUrl()
       , (opts) ->
         $scope.setError(opts, 'creating dataset')

@@ -1,70 +1,158 @@
-### Using Jade
+## Versions
 
-You will find the jade files in the `app` and `app/partials` directories. Upon save the Jade files will be compiled to HTML
-and placed in the `app/assets` folder. Do not modify the files in the `app/assets` folder as they will be overriden with subsequent
-changes to their `*.jade` counter part.
+`node --version`
+v0.10.28
 
-### Using html
+`npm --version`
+1.4.9
 
-By default angular-brunch-seed uses jade templates. If you would prefer to use HTML run the command:
+`grunt --version`
+grunt-cli v0.1.13
 
-```
-./scripts/compile-html.sh
-```
-All Jade file will be compiled to HTML and be placed in the `app/assets` directory. Addtionally, the `*.jade`
-files will be removed from the project. Any changes that you make to the `app/assets/**/*.html` files will now appear in the
-browser.
+`bower --version`
+1.3.9
 
-### Running the app during development
+`coffee --version`
+CoffeeScript version 1.8.0
 
-* `./scripts/server.sh` to serve using **Brunch**
+## Installation Strategy
 
-Then navigate your browser to [http://localhost:3333](http://localhost:3333)
+We are trying to maintain a minimal number of global node modules. In a perfect
+configuration you should only have the following modules in 
+`/usr/local/lib/node_modules`
+ 
+- bower
+- coffee-script
+- grunt-cli
+- npm
 
-NOTE: Occasionally the scripts will not load properly on the initial
-load. If this occurs, refresh the page. Subsequent refresh will render
-correctly.
+~~Along similar lines of clean installation. Make sure on production boxes you
+do `npm install --production`, never forgetting the **--production** flag to 
+avoid installing development dependencies that are not needed on production box.
+Same goes with `bower install --production`, to avoid installing bower development
+dependencies.~~ We might need dev dependencies if we want to run unit tests on the
+production box before releasing.
 
-### Running the app in production
+## Global Modules Installation
 
-* `./scripts/production.sh` to minify javascript and css files.
+This is on as-needed-basis, if you are missing a global dependency listed in
+the [Installation Strategy](#installation-strategy) do the following, you will
+usually need `sudo`
 
-Please be aware of the caveats regarding Angular JS and minification, take a look at [Dependency Injection](http://docs.angularjs.org/guide/di) for information.
+`sudo npm install -g bower@1.3.9`
 
-### Running unit tests
+`sudo npm install -g coffee-script@1.8.0`
 
-* `./scripts/test.sh` to run unit tests with [testacular](https://github.com/vojtajina/testacular)
-* Open the browser you would like to test to [http://localhost:3334](http://localhost:3334)
+`sudo npm install -g grunt-cli@0.1.13`
 
-Notes:
 
-- Testacular will run tests on save. To insure that changes are
-saved be sure to have `./script/server.sh` or `./script/development.sh` running in the console.
-- If you are on OS X you set the browsers that you would like to target
-  in the `/test/testacular_conf.js` file E.g. `browser = ["ChromeCanary", "Firefox"]`
+## Installation
 
-### End to end testing
+Change directory to your local cloudml-ui/ui directory and do the following:
 
-* run the app in development mode as described above using a separate terminal
-* `./scripts/test-e2e.sh` to run e2e tests with [testacular](https://github.com/vojtajina/testacular) using angular's scenario runner
+`rm -r node_modules bower_components`
 
-### Common issues
+`npm install`
 
-Initial load does not render correctly; scripts are not loading. 
-- Occasionally the scripts will not load properly on the initial 
-  load. If this occurs, refresh the page. Subsequent refresh will render
-  correctly.
+`bower cache clean`
 
-`EMFILE` error
-- EMFILE means there are too many open files. Brunch watches all your project files and it's usually a pretty big number. You can fix this error with setting max opened file count to bigger number with command ulimit -n <number> (10000 should be enough).
+`bower install`
 
-The compelete [Brunch FAQ](https://github.com/brunch/brunch/blob/master/docs/faq.rst)
-### Receiving updates from upstream
+## Building 3rd party
 
-When we upgrade angular-seed's repo with newer angular or testing library code, you can just
-fetch the changes and merge them into your project with git.
+Not all third party requires building, only few and declining.
 
-`git pull origin master`
+### Building x-editable
+
+version 1.4.4 of x-editable doesn't yet come with pre-build redistributable so 
+you have to build it yourself.
+
+Change directory to your local cloudml-ui/ui directory and do the following:
+
+`cd bower_components/x-editable`
+
+`npm install`
+
+`grunt build`
+
+Now you have `bower_components/x-editable/dist` directory to serve x-editable
+locally, note that x-editable on production is served through CDN.
+
+## Updating Webdrive
+Change directory to your local cloudml-ui/ui directory
+
+Update webdrive to install chrome driver and selenium standalone server
+
+`./node_modules/protractor/bin/webdriver-manager update`
+
+in case webdrive updates fails for any reason, do the follwoing are retry the update
+
+`rm -r ./node_modules/protractor/selenium`
+
+
+### Grunt Key Tasks and Testing your installation
+
+Change directory to your local cloudml-ui/ui directory
+
+`grunt --help`
+
+This will display grunt available tasks, generally use this when needed.
+
+#### Unit Tests (grunt unit)
+
+`grunt unit`
+
+This should launch a browser/chrome and run the unit tests. It _should_ all pass
+:), when done do `CTRL+C`
+
+
+#### E2E with Protractor (grunt e2e)
+
+**Make sure you are running your local backend**
+
+launch local frontend server
+
+`grunt server`
+
+launch E2E tests
+
+`grunt e2e`
+
+This should launch a browser/chrome and run the E2E tests. It _should_ all pass
+:)
+
+#### Running the app during development (grunt server)
+
+`grunt server`
+
+This will run the application and monitors key files for live reload.
+
+You can also do
+
+`grunt server:usecdn` 
+
+If you want to run against CDN version of 3rd parties. By default `grunt server` 
+will run against local 3rd parties files for speed 
+(look at ./vendor.config.coffee for more details on this)
+
+#### Building \_public
+
+`grunt build`
+
+This will build the distributable files. It will include ./app/scripts/prod_config.coffee 
+by default. You can use staging by grunt build:staging, further more you can try
+out the built files locally by using grunt build:local and launch a simple server
+against _public like
+
+`cd _public`
+`python -m SimpleHTTPServer 8080`
+
+
+#### Coverage
+
+`grunt coverage`
+
+Then open ./coverage/xyz/index.html in browser
 
 ## Directory Layout
 
@@ -78,15 +166,11 @@ fetch the changes and merge them into your project with git.
           fontawesome-webfont.*
         img/                  --> image files
         partials/             --> angular view partials (partial HTML templates)
-          nav.html                If you are using HTML you may modify these files directly.
-          partial1.html           If you are using Jade these file will be update from their *.jade counterpart
+          nav.html                These files will be compiled using html2js
+          partial1.html           These files will be compiled using html2js
           partial2.html
         index.html            --> app layout file (the main html template file of the app).
 
-      partials/               --> Jade partial files. This file will be converted to HTML upon save.
-        nav.jade              If you are using HTML this directory will not be present. You will find the template file
-        partial1.jade         in the `app/assets/partials` directory instead.
-        partial2.jade         If you are using Jade these file will be converted to HTML and copied to `app/assets/partials` upon save.
       scripts/                --> base directory for app scripts
         controllers.js        --> application controllers
         directives.js         --> custom angular directives
@@ -102,45 +186,36 @@ fetch the changes and merge them into your project with git.
             _variables.less   --> bootstrap variables to be used during the compilation process
         app.less              --> a file for importing styles.
       app.coffee              --> application definition and routes.
-      index.jade              --> Index file. This will be converted to assets/index.html on save
-      init.coffee             --> application bootstrap
-
+      
+    bower_components          --> Bower Components
+    coverage                  --> coverage reports when running grunt coverage
     node_modules              --> NodeJS modules
-
-    scripts/                  --> handy shell scripts
-      compile-html.sh         --> compiles *.jade file to *.html file and places them in app/assets
-      compile-tests.sh        --> compiles coffeescript test to javascript
-      development.sh          --> compiles files and watches for changes
-      init.sh                 --> installs node modules
-      production.sh           --> compiles and compresses files for production use
-      server.sh               --> runs a development server at `http://localhost:3333`
-      test.sh                 --> runs all unit tests
 
     test/                     --> test source files and libraries
       e2e/                    -->
-        scenarios.coffee      --> end-to-end specs
+        *.spec.coffee         --> end-to-end specs to run with protractor
+      karma/                 
+        base.coffee           --> base module for karma configurations, all other
+                                  configurations depends on it
+        ci.coffee             --> karma configuration for continuous integration
+        coverage.coffee       --> karma configuration for coverage calculation
+        unit.coffee           --> karma configuration for unit testing
+      protractor/
+        conf.coffee           --> protractor configuration
+        run-webdirve.sh       --> for running local selenium/webdirve instance manually
+                                  generally grunt e2e does that for you
       unit/
         controllers.spec.js   --> specs for controllers
         directives.spec.js    --> specs for directives
         filters.spec.js       --> specs for filters
         services.spec.js      --> specs for services
-      vendor/
-        angular/              --> angular testing libraries
-          angular-mocks.js    --> mocks that replace certain angular services in tests
 
-    vendor/
+    vendor/                   --> This is left for backward compatibility, generally
+                                  speaking all vendor files should be installed
+                                  using bower and referenced in vendor.config.coffee
       scripts/                --> angular and 3rd party javascript libraries
-        angular/                  files are compiled to `vendor.js`
-          angular.js          --> the latest angular js
-          angular-*.js        --> angular add-on modules
-          version.txt         --> version number
-        bootstrap/            --> for responsive layout
-          bootstrap-collapse.js
         console-helper.js     --> makes it safe to do `console.log()` always
-        jquery-1.8.3.js       --> for use with bootstrap-collapse
       styles/                 --> sapling / sapling themes and 3 party CSS
-        bootstrap/            --> boostrap files - **NOTE** the underscore prevents the
-          _*.less                 files from automatically being added to application.css
         sapling               --> extends boostrap
           _*.less
         themes                --> themes to extend Bootstrap
@@ -150,4 +225,13 @@ fetch the changes and merge them into your project with git.
           sapling             --> supplemental theme
             _overrides.less
             _variables.less
-
+    bower.json                --> Bower installed components, always make sure
+                                  to do bower install xyz --save (or --save-dev)
+    Gruntfile.coffee          --> grunt configuration file, use grunt --help to 
+                                  get list of available tasks
+    package.json              --> npm package configuration file, make sure to
+                                  do npm install --save or npm install --save-dev
+    README.md                 --> this file
+    vendor.config.coffee      --> This file is used to configure app/assets/index.html
+                                  with external and local scripts and styles. Read
+                                  its comments for more details

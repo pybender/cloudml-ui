@@ -1,6 +1,6 @@
 import json
+from unittest import TestCase
 from mock import patch, Mock
-from moto import mock_dynamodb2
 
 from api import app
 
@@ -115,13 +115,9 @@ class AuthDecoratorsTests(BaseDbTestCase):
 class AuthTokenModelTests(BaseDbTestCase):
     def setUp(self):
         super(AuthTokenModelTests, self).setUp()
-        self.dynamodb_mock = mock_dynamodb2()
-        self.dynamodb_mock.start()
-        AuthToken.create_table()
 
     def tearDown(self):
         BaseDbTestCase.tearDown(self)
-        self.dynamodb_mock.stop()
 
     def test_token(self):
         TOKEN = '394c46b8902fb5e8fc9268f3cfd84539'
@@ -153,13 +149,9 @@ class AuthResourceTests(BaseDbTestCase):
 
     def setUp(self):
         BaseDbTestCase.setUp(self)
-        self.dynamodb_mock = mock_dynamodb2()
-        self.dynamodb_mock.start()
-        AuthToken.create_table()
 
     def tearDown(self):
         BaseDbTestCase.tearDown(self)
-        self.dynamodb_mock.stop()
 
     @patch('api.accounts.models.User.get_auth_url',
            return_value=('url', '1', '2'))
@@ -327,7 +319,7 @@ class UserModelTests(BaseDbTestCase):
         self.assertEqual(User.get_auth_url(), 'some_url')
 
 
-class OdeskAuthTests(BaseDbTestCase):
+class OdeskAuthTests(TestCase):
     """
     Tests of the authentication system.
     """

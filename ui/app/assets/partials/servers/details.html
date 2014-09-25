@@ -3,7 +3,7 @@
 </h2>
 
 <div title="quick info" ng-init="obj=server">
-  <ng-include src="'/partials/parts/created_tags.html'"></ng-include>
+  <ng-include src="'partials/parts/created_tags.html'"></ng-include>
 </div>
 <p></p>
 
@@ -19,13 +19,13 @@
 <h3>Models</h3>
 <div ng-controller="FileListCtrl" ng-init="init(server, 'models')">
   <div ng-controller="BaseListCtrl" ng-init="init(true, 'model_files')">
-    <ng-include src="'/partials/servers/file_list.html'"></ng-include>
+    <ng-include src="'partials/servers/file_list.html'"></ng-include>
   </div>
 </div>
 
 <h3>Import Handlers</h3>
 <div ng-controller="FileListCtrl" ng-init="init(server, 'importhandlers')">
   <div ng-controller="BaseListCtrl" ng-init="init(true, 'importhandlers_files')">
-    <ng-include src="'/partials/servers/file_list.html'"></ng-include>
+    <ng-include src="'partials/servers/file_list.html'"></ng-include>
   </div>
 </div>

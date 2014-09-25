@@ -4,22 +4,31 @@
 
 describe "login", ->
 
-  beforeEach(module "ngCookies")
-  beforeEach(module "ui")
-  beforeEach(module "ui.bootstrap")
+  beforeEach ->
+    module "ngCookies"
+    module "ngRoute"
+    module "ui.bootstrap"
 
-  beforeEach(module "app.base")
-  beforeEach(module "app.config")
-  beforeEach(module "app.services")
+    module "app.base"
+    module "app.config"
+    module "app.services"
+    module 'app'
 
-  beforeEach(module "app.login.controllers")
+    module "app.login.controllers"
+
+    # the following just to inject Model
+    module 'app.models.model'
+    module 'app.importhandlers.model'
+    module 'app.xml_importhandlers.models'
+    module 'app.datasets.model'
+    module 'app.features.models'
 
   $httpBackend = null
   $rootScope = null
   settings = null
   $routeParams = null
   $location = null
-  $dialog = null
+  $scope = null
   createController = null
 
   beforeEach(inject(($injector) ->
@@ -29,12 +38,12 @@ describe "login", ->
     $controller = $injector.get('$controller')
     $routeParams = $injector.get('$routeParams')
     $location = $injector.get('$location')
-    $dialog = $injector.get('$dialog')
 
-    spyOn($location, 'path')
-
-    createController = (ctrl) ->
-       $controller(ctrl, {'$scope' : $rootScope })
+    createController = (ctrl, extras) ->
+      $scope = $rootScope.$new()
+      injected = extras or {}
+      _.extend injected, {'$scope' : $scope }
+      $controller(ctrl, injected)
   ))
 
   afterEach( ->
@@ -46,63 +55,71 @@ describe "login", ->
 
     it "should make no query", inject () ->
       createController "LoginCtl"
-      expect($rootScope.is_authenticated).toBeFalsy()
+      expect($scope.is_authenticated).toBeFalsy()
 
     it "should do redirect", inject () ->
-      createController "LoginCtl"
-      $rootScope.authenticate()
 
-      expect($location.path).toHaveBeenCalledWith('/auth/authenticate')
+      createController "LoginCtl"
+      $scope.authenticate()
+
+      expect($location.path()).toEqual '/auth/authenticate'
 
   describe "AuthCtl", ->
 
-    it "should redirect to oDesk authorization", inject () ->
-      url = settings.apiUrl + 'auth/get_auth_url?'
+    it "should redirect to oDesk authorization", inject (auth)->
+      url = settings.apiUrl + 'auth/get_auth_url'
       $httpBackend.expectPOST(url).respond('{"auth_url": "http://odesk.com/_fake"}')
 
-      spyOn(window, '$cml_window_location_replace').andCallFake(() -> null)
+      $window =
+        location:
+          replace: jasmine.createSpy 'window.location.replace'
+      spyOn(auth, 'is_authenticated').and.returnValue false
 
-      createController "AuthCtl"
-      expect($rootScope.status).toBe('Getting data. Please wait...')
+      createController "AuthCtl", {$window: $window, auth: auth}
+      expect($scope.status).toBe('Getting data. Please wait...')
 
       $httpBackend.flush()
-      expect($rootScope.status).toBe('Redirecting to oDesk. Please wait...')
-      expect($cml_window_location_replace).toHaveBeenCalledWith('http://odesk.com/_fake')
+      expect($scope.status).toBe('Redirecting to oDesk. Please wait...')
+      expect($window.location.replace).toHaveBeenCalledWith('http://odesk.com/_fake')
+      expect(auth.is_authenticated.calls.count()).toBe 1
 
     it "should make no query if already logged in", inject ($cookieStore) ->
       $cookieStore.put('auth-token', 'auth_token')
       createController "AuthCtl"
 
-      expect($rootScope.status).toBe('Already logged in')
-      expect($rootScope.is_authenticated).toBeTruthy()
+      expect($scope.status).toBe('Already logged in')
+      expect($scope.is_authenticated).toBeTruthy()
 
   describe "AuthCallbackCtl", ->
 
     it "should authorize and reload the page", inject (auth) ->
-      spyOn(window, '$cml_window_location_reload').andCallFake(() -> null)
-      spyOn($location, 'search').andReturn({
+      spyOn($location, 'search').and.returnValue({
         oauth_token: 'oauth_token',
         oauth_verifier: 'oauth_verifier'
       })
+      $window =
+        location:
+          reload: jasmine.createSpy '$window.location.reload'
 
       url = settings.apiUrl + 'auth/authenticate?oauth_token=oauth_token&oauth_verifier=oauth_verifier'
       $httpBackend.expectPOST(url).respond('{"auth_token": "auth_token"}')
 
-      createController "AuthCallbackCtl"
-      expect($rootScope.status).toBe('Authorization. Please wait...')
-      expect($rootScope.is_authenticated).toBeFalsy()
+      createController "AuthCallbackCtl", {$window: $window}
+      expect($scope.status).toBe('Authorization. Please wait...')
+      expect($scope.is_authenticated).toBeFalsy()
 
       $httpBackend.flush()
-      expect($rootScope.status).toBe('Authorized')
-      expect($cml_window_location_reload).toHaveBeenCalled()
+      expect($scope.status).toBe('Authorized')
+      expect($window.location.reload).toHaveBeenCalled()
       expect(auth.is_authenticated()).toBeTruthy()
 
-    it "should make no query if already logged in", inject ($cookieStore) ->
+    it "should make no query if already logged in", inject ($cookieStore, Model) ->
       $cookieStore.put('auth-token', 'auth_token')
       createController "AuthCallbackCtl"
 
-      expect($rootScope.status).toBe('Already logged in')
-      expect($rootScope.is_authenticated).toBeTruthy()
+      expect($scope.status).toBe('Already logged in')
+      model = new Model
+      expect($location.url()).toEqual model.BASE_UI_URL
 
   describe "UserCtl", ->
 
@@ -114,11 +131,11 @@ describe "login", ->
       $cookieStore.put('auth-token', 'auth_token')
       createController "UserCtl"
 
-      url = settings.apiUrl + 'auth/get_user?'
+      url = settings.apiUrl + 'auth/get_user'
       $httpBackend.expectPOST(url).respond('{"user": {"name": "Fiodor", "uid": "somebody"}}')
 
-      $rootScope.init()
+      $scope.init()
       $httpBackend.flush()
 
-      expect($rootScope.user.uid).toBe('somebody')
-      expect($rootScope.user.name).toBe('Fiodor')
+      expect($scope.user.uid).toBe('somebody')
+      expect($scope.user.name).toBe('Fiodor')
