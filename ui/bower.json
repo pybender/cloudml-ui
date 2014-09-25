@@ -34,7 +34,7 @@
     "select2": "3.4.0",
     "x-editable": "1.4.4",
     "nvd3": "~1.1.15-beta",
-    "d3": "~3.4.11",
+    "d3": ">=3.3.13",
     "bootstrap": "2.3.2",
     "angular-bootstrap": "https://github.com/angular-ui/bootstrap.git#gh-pages"
   },
