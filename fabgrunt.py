@@ -17,8 +17,7 @@ __all__ = [
     'bower',
     'activate',
     'push_config',
-    'build',
-    'init'
+    'build'
 ]
 
 
@@ -71,7 +70,7 @@ class Activate(Task):
             '--symbolic '
             '--force '
             '--no-target-directory '
-            '%(var_path)s/bower_components %(project_path)s/ui/bower_components' % self.conf)
+            '%(var_path)s/node_modules %(project_path)s/ui/node_modules' % self.conf)
 
         run('ln '
             '--symbolic '
@@ -109,6 +108,7 @@ class Build(Task):
         return ''
 
     def do(self):
+        run('rm -rf %(project_path)s/ui/_public' % self.conf)
         run('cd %(project_path)s/ui; grunt build:production' % self.conf)
 
 build = Build()
