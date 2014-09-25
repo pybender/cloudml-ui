@@ -21,7 +21,6 @@
   ],
   "dependencies": {
     "codemirror": "4.5.0",
-    "angular-bootstrap": "git@github.com:angular-ui/bootstrap.git#gh-pages",
     "angular-ui-select2": "~0.0.5",
     "moment": "2.1.0",
     "angular-ui-codemirror": "~0.1.6",
@@ -36,7 +35,8 @@
     "x-editable": "1.4.4",
     "nvd3": "~1.1.15-beta",
     "d3": "~3.4.11",
-    "bootstrap": "2.3.2"
+    "bootstrap": "2.3.2",
+    "angular-bootstrap": "https://github.com/angular-ui/bootstrap.git#gh-pages"
   },
   "devDependencies": {
     "angular-mocks": "1.2.20"
