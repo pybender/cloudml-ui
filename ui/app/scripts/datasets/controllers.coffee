@@ -123,15 +123,6 @@ filesize,records_count,time,created_by,updated_by'
 
     $scope.initSections($scope.go, "model:details", simple=true)
     $scope.host = $location.host()
-    $scope.toggleSampleJson = (ev)->
-      if $(ev.target).hasClass 'icon-minus'
-        $('div', $(ev.target).parent()).hide(600)
-        $(ev.target).removeClass 'icon-minus'
-        $(ev.target).addClass 'icon-plus'
-      else
-        $('div', $(ev.target).parent()).show(600)
-        $(ev.target).removeClass 'icon-plus'
-        $(ev.target).addClass 'icon-minus'
 ])
 
 

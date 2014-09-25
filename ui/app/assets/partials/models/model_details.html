@@ -101,8 +101,8 @@
       </div>
     </div>
 
-    <div ng-show="action[1] == 'json'">
-      <textarea ng-model="model.features" ui-codemirror="codeMirrorConfigs(true)['json']" ui-refresh="action"></textarea>
+    <div ng-show="action[1] == 'json'" cml-has-codemirror="action[1] == 'json'">
+      <textarea ng-model="model.features" ui-codemirror="codeMirrorConfigs(true)['json']"></textarea>
     </div>
 
     <div class="row well">
