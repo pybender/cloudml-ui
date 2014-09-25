@@ -89,7 +89,7 @@
       </div>
       <div class="row">
         <div class="span11">
-        Text:<textarea class="small" ui-codemirror="$root.codeMirrorConfigs(false)['sql']" ng-model="sqoop.text" ui-refresh="sqoop" />
+        Text:<textarea class="small cml-codemirror-refresh" ui-codemirror="$root.codeMirrorConfigs(false)['sql']" ng-model="sqoop.text" />
         </div>
       </div>
       <a ng-disabled="sqoop.loading_state" ng-click="sqoop.saveText()" class="btn btn-info">
@@ -114,7 +114,7 @@
       <div ng-init="queries_run_sql={}">
         SQL:
         <p>
-        <textarea class="small" ui-codemirror="$root.codeMirrorConfigs(false)['sql']" ng-model="entity.query_obj.text" ui-refresh="entity.query_obj" />
+        <textarea class="small cml-codemirror-refresh" ui-codemirror="$root.codeMirrorConfigs(false)['sql']" ng-model="entity.query_obj.text" />
         </p>
         <a ng-disabled="entity.query_obj.loading_state" ng-click="saveQueryText()(entity.query_obj);" class="btn btn-info">
           <i class="status-icon icon-edit"></i> save text
