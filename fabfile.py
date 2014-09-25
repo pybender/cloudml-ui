@@ -173,9 +173,15 @@ def deploy():
 
     release.activate.run()
 
-    angularjs.activate.run()
-    angularjs.push_config.run()
-    angularjs.build.run()
+    fabgrunt.private_npm.run()
+    fabgrunt.bower.run()
+    fabgrunt.activate.run()
+    fabgrunt.push_config.run()
+    fabgrunt.build.run()
+
+    # angularjs.activate.run()
+    # angularjs.push_config.run()
+    # angularjs.build.run()
 
     supervisor.update.run()
     supervisor.restart_program.run(program='gunicorn')
