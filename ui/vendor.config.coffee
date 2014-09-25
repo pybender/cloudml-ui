@@ -38,6 +38,13 @@ module.exports =
       local:
         "bower_components/d3/d3.js"
     ,
+    external:
+        "http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=default"
+      notmin:
+        "http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=default"
+      local:
+        "bower_components/MathJax/MathJax.js?config=default"
+    ,
       external:
         "https://ajax.googleapis.com/ajax/libs/angularjs/1.2.20/angular.min.js"
       notmin:
@@ -86,4 +93,5 @@ module.exports =
     "bower_components/codemirror/mode/javascript/javascript.js"
     "bower_components/angular-ui-codemirror/ui-codemirror.js"
     "bower_components/nvd3/nv.d3.js"
+    "bower_components/MathJax/MathJax.js?config=default"
   ]

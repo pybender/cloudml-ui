@@ -280,6 +280,9 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
   $rootScope.setFieldError = (name, msg='') ->
       $rootScope.errorList[name] = msg
 
+  MathJax.Hub.Config({
+    tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}
+  })
 
 # TODO: nader20140912, not user anywhere schedule for removal
 #  # this will be available to all scope variables
