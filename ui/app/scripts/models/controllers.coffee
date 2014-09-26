@@ -139,7 +139,7 @@ angular.module('app.models.controllers', ['app.config', ])
       deferred = $q.defer()
 
       if not fields
-        deferred.reject 'empty fields'
+        deferred.resolve 'empty fields'
         return deferred.promise
 
       $scope.model.$load(
@@ -167,11 +167,8 @@ angular.module('app.models.controllers', ['app.config', ])
       name = section[0]
       subsection = section[1]
 
-      # TODO: nader20140907 we need to manually test reloading, I am disabling
-      # it for now until I get a chance to test it. The unit test in modesl/controllers.coffee
-      # it  'should load features', having the expectations disabled for now
-      #if name in $scope.LOADED_SECTIONS
-      #  return
+      if name in $scope.LOADED_SECTIONS
+        return
 
       loadedSections = []
       if name == 'model' && subsection == 'json'
@@ -182,6 +179,9 @@ angular.module('app.models.controllers', ['app.config', ])
         loadedSections.push 'main'
         fields = FIELDS_BY_SECTION['main']
 
+      if name is 'test'
+        $scope.$broadcast('loadTest', true)
+
       if name not in $scope.LOADED_SECTIONS
         loadedSections.push name
         if FIELDS_BY_SECTION[name]?
@@ -191,8 +191,6 @@ angular.module('app.models.controllers', ['app.config', ])
         for name in loadedSections
           if name not in $scope.LOADED_SECTIONS
             $scope.LOADED_SECTIONS.push name
-        if 'test' in loadedSections
-          $scope.$broadcast('loadTest', true)
 
     Tag.$loadAll(
       show: 'text,id'
