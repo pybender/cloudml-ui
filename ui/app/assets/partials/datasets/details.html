@@ -55,7 +55,7 @@
     <div>
         Loading time: <span class="value">{{ dataset.time|humanize_time }}</span>
     </div>
-    <div ng-show="dataset.samples_json">
+    <div ng-show="dataset.samples_json" cml-has-codemirror="dataset.samples_json">
       <h3>Sample Data</small></h3>
       <textarea ui-codemirror="codeMirrorConfigs(true)['json']" ng-model="dataset.samples_json"></textarea>
     </div>

@@ -302,8 +302,8 @@
     </div>
   </div>
 
-  <div ng-show="action[1] == 'xml'">
-    <textarea name="data" ui-codemirror="codeMirrorConfigs(true)['xml']" ui-refresh="action" ng-model="handler.xml"></textarea>
+  <div ng-show="action[1] == 'xml'" cml-has-codemirror="action[1] == 'xml'">
+    <textarea name="data" ui-codemirror="codeMirrorConfigs(true)['xml']" ng-model="handler.xml"></textarea>
   </div>
   </div>
 

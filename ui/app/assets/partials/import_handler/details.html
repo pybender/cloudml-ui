@@ -104,7 +104,7 @@
       </div>
       <div>
         SQL:
-        <p><textarea ui-codemirror="codeMirrorConfigs(false)['sql']" ng-model="query.sql"></textarea></p>
+        <p><textarea ui-codemirror="codeMirrorConfigs(false)['sql']" ng-model="query.sql" class="cml-codemirror-refresh"></textarea></p>
         <button class="btn btn-primary" ng-click="query.$save({only: ['sql']})">Save</button>
         <button class="btn btn-info" ng-click="runQuery(query)"><i class="icon-play"></i> Run Query</button>
       </div>
@@ -228,9 +228,9 @@
       </div>
     </div>
     </div>
-    <div ng-show="action[1] == 'json'">
+    <div ng-show="action[1] == 'json'" cml-has-codemirror="action[1] == 'json'">
       <a href="{{handler.downloadUrl()}}">Download</a>
-      <textarea name="data" ui-codemirror="codeMirrorConfigs(true)['json']" ui-refresh="action" ng-model="handler.data_json"></textarea>
+      <textarea name="data" ui-codemirror="codeMirrorConfigs(true)['json']" ng-model="handler.data_json"></textarea>
     </div>
   </div>
 
