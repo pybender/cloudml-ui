@@ -154,6 +154,53 @@ against _public like
 
 Then open ./coverage/xyz/index.html in browser
 
+## The role of vendor.config.coffee
+
+The file vendor.config.coffee is centralized place to reference vendor/3rd party
+bower libraries. Currently it works with JS files only. Vendor/3rd party CSS files
+are still added manually in app/assets/index.html. At some point of time we will
+extend vendor.config.coffee to deal with CSS files (vendor.css and CDN serving),
+but that on as needed basis.
+
+vendor.config.coffee contains 2 sections as follow:
+ 
+### CDN Section
+
+This is for 3rd party JS that should be served from CDN on production. It is a list
+of objects, each containing 
+
+* **external**: The CDN url of the library, minified as it should be served in 
+production. This form is used using grunt build. You should use https:// to serve
+3rd parties **and refrain from using any CDN for any library that is not 
+served over CDN to avoid and script injection attacks**
+* **notmin**: The CDN url of the library, nonminified, used create special builds for 
+debugging purposes using grunt server:usecdn
+* **local**: The local path the library like 'bower_components/lib/somehting.js', 
+this will be used generally in development using grunt server
+
+NOTE: when adding a file in vendor.config.coffee watch out for coffee script 
+indentations it should be, notice the indentation of external key after the comma
+
+```coffee-script
+    ,
+      external:
+        "https://cdn/lib/lib.min.js"
+      notmin:
+        "https://cdn/lib/lib.js"
+      local:
+        "bower_components/lib/lib.js"
+```
+
+### Bundled Section
+
+If you don't wish to serve 3rd party library over CDN, like in case there is not
+HTTPS CDN for the library, or it is not being served over CDN, etc. You put the 
+bower path of the library in the bundled section. These files will concat and 
+uglified in production in a file called vendor.js.
+
+ 
+
+
 ## Directory Layout
 
     _public/                  --> Contains generated file for servering the app
