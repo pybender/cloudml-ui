@@ -160,7 +160,15 @@ The file vendor.config.coffee is centralized place to reference vendor/3rd party
 bower libraries. Currently it works with JS files only. Vendor/3rd party CSS files
 are still added manually in app/assets/index.html. At some point of time we will
 extend vendor.config.coffee to deal with CSS files (vendor.css and CDN serving),
-but that on as needed basis.
+but that on as needed basis. 
+
+It should also be noted that, karma will use vendor.config.coffee to build the 
+test environment so all your tests will include the same 3rd party libraries that
+is used in development and production.
+
+Generally all files referenced will be processed in the same order they appear
+int vendor.config.coffee, and some libraries need special care in ordering, like
+angular before angular-route.
 
 vendor.config.coffee contains 2 sections as follow:
  
@@ -176,7 +184,9 @@ served over CDN to avoid and script injection attacks**
 * **notmin**: The CDN url of the library, nonminified, used create special builds for 
 debugging purposes using grunt server:usecdn
 * **local**: The local path the library like 'bower_components/lib/somehting.js', 
-this will be used generally in development using grunt server
+this will be used generally in development using grunt server, also it will be 
+used by karma to construct the test environment.
+
 
 NOTE: when adding a file in vendor.config.coffee watch out for coffee script 
 indentations it should be, notice the indentation of external key after the comma
