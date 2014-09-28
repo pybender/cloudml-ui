@@ -43,7 +43,7 @@ module.exports =
       notmin:
         "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=default"
       local:
-        "bower_components/MathJax/unpacked/MathJax.js?config=default"
+        "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=default"
     ,
       external:
         "https://ajax.googleapis.com/ajax/libs/angularjs/1.2.20/angular.min.js"

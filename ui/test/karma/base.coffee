@@ -6,7 +6,7 @@ module.exports = (karma)->
       pattern: cdnObj.local
       watched: false
       included: true
-      served: true
+      served: cdnObj.local.indexOf('http') isnt 0
 
   for bundled in vendorConfig.bundled
     vendorFiles.push
