@@ -26,13 +26,6 @@ configuration you should only have the following modules in
 - grunt-cli
 - npm
 
-~~Along similar lines of clean installation. Make sure on production boxes you
-do `npm install --production`, never forgetting the **--production** flag to 
-avoid installing development dependencies that are not needed on production box.
-Same goes with `bower install --production`, to avoid installing bower development
-dependencies.~~ We might need dev dependencies if we want to run unit tests on the
-production box before releasing.
-
 ## Global Modules Installation
 
 This is on as-needed-basis, if you are missing a global dependency listed in
@@ -51,6 +44,8 @@ usually need `sudo`
 Change directory to your local cloudml-ui/ui directory and do the following:
 
 `rm -r node_modules bower_components`
+
+`npm cache clean`
 
 `npm install`
 
@@ -189,7 +184,8 @@ used by karma to construct the test environment.
 
 
 NOTE: when adding a file in vendor.config.coffee watch out for coffee script 
-indentations it should be, notice the indentation of external key after the comma
+indentations it should be as follows and notice the indentation of external 
+key after the comma
 
 ```coffee-script
     ,
