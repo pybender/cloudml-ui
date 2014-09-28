@@ -624,15 +624,21 @@ editable-placement="right" display="instance.obj.name"></span>
       if elem
         elem.remove()
 
-    getFileList = ->
+    getFileList = (fileStr)->
       getABlob = ->
         if typeof(Blob) is typeof(Function)
-          return new Blob(['same way...'], {type: 'text/plain'})
+          return new Blob([fileStr], {type: 'text/plain'})
         else
           BlobBuilder = window.BlobBuilder or window.WebKitBlobBuilder or window.MozBlobBuilder or window.MSBlobBuilder
           builder = new BlobBuilder()
-          builder.append 'same way...'
+          builder.append fileStr
           return builder.getBlob()
+
+      if fileStr is null
+        return {
+        length: 0,
+        item: () -> null
+        }
 
       file = getABlob()
       fileList =
@@ -647,7 +653,7 @@ editable-placement="right" display="instance.obj.name"></span>
       $scope.$digest()
 
     describe 'jsonFile', ->
-      it 'should render and handels file uploads with errors', inject ($timeout)->
+      it 'should render and handles file uploads, with bad json', (done)->
         $scope.some_file = ''
         prepareContext '<form name="myForm"><input json-file type="file" name="some_file" ng-model="some_file"></form>'
 
@@ -655,44 +661,170 @@ editable-placement="right" display="instance.obj.name"></span>
         inputElem.triggerHandler
           type: 'change'
           target:
-            files: getFileList()
+            files: getFileList 'bad json'
 
-        #console.log '1'
         $scope.$digest()
-        #console.log '4'
-        # TODO: nader20140911, somehow the reade.onload is triggerd after the test
-        # finishes and thus I cannot really test the validity of the input
-        # enabling the console.log will create 1, 4, 2, 3 !
+        setTimeout ->
+          expect($scope.some_file).toEqual 'bad json'
+          expect($scope.myForm.$valid).toBe false
+          1+1
+          done()
+        , 1000
+
+      it 'should render and handles file uploads, with bad good json', (done)->
+        $scope.some_file = ''
+        prepareContext '<form name="myForm"><input json-file type="file" name="some_file" ng-model="some_file"></form>'
+        inputElem = $('>input', elem)
+
+        good_json = angular.toJson {good: 'json'}
+        inputElem.triggerHandler
+          type: 'change'
+          target:
+            files: getFileList good_json
+
+        $scope.$digest()
+        setTimeout ->
+          expect($scope.some_file).toEqual good_json
+          expect($scope.myForm.$valid).toBe true
+          done()
+        , 1
+
+      it 'should render and handles file with 0 files', (done)->
+        ###
+        This case happens when you select a file, then opt to select another
+        file and hitting cancel
+        ###
+        $scope.some_file = ''
+        prepareContext '<form name="myForm"><input json-file type="file" name="some_file" ng-model="some_file"></form>'
+        inputElem = $('>input', elem)
+
+        inputElem.triggerHandler
+          type: 'change'
+          target:
+            files: getFileList null
+
+        $scope.$digest()
+        setTimeout ->
+          expect($scope.some_file).toEqual ''
+          expect($scope.myForm.$valid).toBe false
+          done()
+        , 1
+
+      it 'should render and handles file uploads', (done)->
+        $scope.some_file = ''
+        prepareContext '<form name="myForm"><input json-file type="file" name="some_file" ng-model="some_file"></form>'
+
+        inputElem = $('>input', elem)
+        inputElem.triggerHandler
+          type: 'change'
+          target:
+            files: getFileList 'bad json'
+
+        $scope.$digest()
+        setTimeout ->
+          expect($scope.some_file).toEqual 'bad json'
+          expect($scope.myForm.$valid).toBe false
+          done()
+        , 1
 
 
     describe 'notRequiredFile', ->
 
-      it 'should compile', ->
+      it 'should render and handles file uploads', (done)->
         $scope.some_file = ''
-        prepareContext '<form name="myForm"><input not-required-file type="file" name="some_file" ng-model="some_file"/></form>'
+        prepareContext '<form name="myForm"><input not-required-file name="some_file" ng-model="some_file"></form>'
 
         inputElem = $('>input', elem)
         inputElem.triggerHandler
           type: 'change'
           target:
-            files: getFileList()
+            files: getFileList 'file text'
 
         $scope.$digest()
+        setTimeout ->
+          expect($scope.some_file).toEqual 'file text'
+          expect($scope.myForm.$valid).toBe true
+          done()
+        , 1000
+
+      it 'should render and handles file with 0 files', (done)->
+        ###
+        This case happens when you select a file, then opt to select another
+        file and hitting cancel
+        ###
+        $scope.some_file = ''
+        prepareContext '<form name="myForm"><input not-required-file name="some_file" ng-model="some_file"></form>'
+        inputElem = $('>input', elem)
+
+        inputElem.triggerHandler
+          type: 'change'
+          target:
+            files: getFileList null
+
+        $scope.$digest()
+        setTimeout ->
+          expect($scope.some_file).toEqual ''
+          expect($scope.myForm.$valid).toBe true
+          done()
+        , 1
 
 
     describe 'requiredFile', ->
 
-      it 'should compile', ->
-        $scope.model = {file: {}}
-        prepareContext('<form name="myForm"><input type="file" name="some_file" ng-model="model.file" required-file/></form>')
+      it 'should render and handles file uploads', (done)->
+        $scope.some_file = ''
+        prepareContext '<form name="myForm"><input required-file name="some_file" ng-model="some_file"></form>'
 
         inputElem = $('>input', elem)
         inputElem.triggerHandler
           type: 'change'
           target:
-            files: getFileList()
+            files: getFileList 'file text'
 
         $scope.$digest()
+        setTimeout ->
+          expect($scope.some_file).toEqual 'file text'
+          expect($scope.myForm.$valid).toBe true
+          done()
+        , 1000
+
+      it 'should render and handles file uploads, empty file is error', (done)->
+        $scope.some_file = ''
+        prepareContext '<form name="myForm"><input required-file name="some_file" ng-model="some_file"></form>'
+
+        inputElem = $('>input', elem)
+        inputElem.triggerHandler
+          type: 'change'
+          target:
+            files: getFileList ''
+
+        $scope.$digest()
+        setTimeout ->
+          expect($scope.some_file).toEqual ''
+          expect($scope.myForm.$valid).toBe false
+          done()
+        , 1000
+
+      it 'should render and handles file with 0 files', (done)->
+        ###
+        This case happens when you select a file, then opt to select another
+        file and hitting cancel
+        ###
+        $scope.some_file = ''
+        prepareContext '<form name="myForm"><input required-file name="some_file" ng-model="some_file"></form>'
+        inputElem = $('>input', elem)
+
+        inputElem.triggerHandler
+          type: 'change'
+          target:
+            files: getFileList null
+
+        $scope.$digest()
+        setTimeout ->
+          expect($scope.some_file).toEqual ''
+          expect($scope.myForm.$valid).toBe false
+          done()
+        , 1
 
 
   describe 'smartFloat', ->
