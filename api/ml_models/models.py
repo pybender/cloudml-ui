@@ -484,3 +484,24 @@ class Weight(db.Model, BaseMixin):
 Weight.__table__.append_ddl_listener(
     'after-create', partial(_setup_search, Weight.__table__.name,
                             ['name']))
+
+
+class ClassifierGridParams(db.Model, BaseModel):
+    STATUS_LIST = ('New', 'Queued', 'Calculating', 'Completed')
+    model_id = db.Column(db.Integer, db.ForeignKey('model.id'))
+    model = relationship(Model, backref=backref('classifier_grid_params'))
+    scoring = db.Column(db.String(100), default='accuracy')
+    status = db.Column(
+        db.Enum(*STATUS_LIST, name='classifier_grid_params_statuses'),
+                nullable=False, default='New')
+
+    train_data_set_id = db.Column(db.Integer, db.ForeignKey('data_set.id',
+                                                     ondelete='SET NULL'))
+    train_dataset = relationship('DataSet', foreign_keys=[train_data_set_id])
+
+    test_data_set_id = db.Column(
+        db.Integer, db.ForeignKey('data_set.id', ondelete='SET NULL'))
+    test_dataset = relationship('DataSet', foreign_keys=[test_data_set_id])
+
+    parameters = db.Column(JSONType)
+    parameters_grid = db.Column(JSONType)

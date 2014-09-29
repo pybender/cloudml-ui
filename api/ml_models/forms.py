@@ -1,4 +1,5 @@
 import json
+import importlib
 from api.base.forms.base_forms import BaseChooseInstanceAndDatasetMultiple
 from api.import_handlers.models import DataSet
 from api.instances.models import Instance
@@ -13,9 +14,10 @@ from api.base.forms import BaseForm, ValidationError, ModelField, \
     CharField, JsonField, ImportHandlerFileField, \
     ChoiceField, ImportHandlerField, IntegerField, BooleanField
 from api.models import Tag, ImportHandler, Model, XmlImportHandler, \
-    Transformer, BaseTrainedEntity
+    Transformer, BaseTrainedEntity, ClassifierGridParams
 from api.features.models import FeatureSet, PredefinedClassifier, Feature
 from api import app
+from api.features.config import CLASSIFIERS
 
 db = app.sql_db
 
@@ -315,3 +317,62 @@ class FeatureTransformerForm(BaseForm):
             feature.transformer = transformer
             feature.save()
         return transformer
+
+
+class GridSearchForm(BaseForm):
+    parameters = JsonField()
+    scoring = CharField()
+    train_dataset = ModelField(model=DataSet, return_model=True)
+    test_dataset = ModelField(model=DataSet, return_model=True)
+
+    def __init__(self, *args, **kwargs):
+        self.model = kwargs.get('model', None)
+        super(GridSearchForm, self).__init__(*args, **kwargs)
+
+    def clean_parameters(self, grid_params, field):
+        params = {}
+        config = CLASSIFIERS[self.model.classifier['type']]
+        config_params = config['parameters']
+        for pconfig in config_params:
+            name = pconfig['name']
+            if name in grid_params:
+                value = grid_params[name]
+                if not value:
+                    continue
+
+                value = value.split(',')
+                type_ = pconfig.get('type', 'string')
+                if type_ == 'integer':
+                    value = [int(item) for item in value]
+                elif type_ == 'float':
+                    value = [float(item) for item in value]
+                elif type_ == 'boolean':
+                    value = [item == 'true' for item in value]
+
+                choices = pconfig.get('choices')
+                if choices:
+                    for item in value:
+                        if not item in choices:
+                            raise ValidationError(
+                                'Invalid {0}: should be one of {1}'.format(
+                                    name, ','.join(choices)))
+
+                params[name] = value
+        #import pdb; pdb.set_trace()
+        return params
+
+    def save(self, *args, **kwargs):
+        obj = super(GridSearchForm, self).save(commit=False)
+        obj.model = self.model
+        obj.save()
+        return obj
+        # parameters = self.cleaned_data['parameters']
+        # train_dataset = self.cleaned_data['train_dataset']
+        # test_dataset = self.cleaned_data['test_dataset']
+        # scoring = self.cleaned_data['scoring']
+        # obj = ClassifierGridParams(
+        #     parameters=parameters,
+        #     train_dataset=train_dataset,
+        #     test_dataset=test_dataset,
+        #     model=self.model)
+        # obj.save()

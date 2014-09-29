@@ -14,7 +14,7 @@ angular.module('app.models.controllers', ['app.config', ])
   'MODEL_FIELDS'
 
   (MODEL_FIELDS) ->
-    model: ['classifier','features_set_id','segments'].join(',')
+    model: ['features_set_id','segments'].join(',')
     training: [
       'error','weights_synchronized','memory_usage','segments', 'trained_by',
       'trained_on','training_time','datasets', 'train_records_count',
@@ -25,7 +25,8 @@ angular.module('app.models.controllers', ['app.config', ])
       'updated_on','feature_count','created_by','data_fields',
       'test_handler_fields','tags'
     ].join(',')
-    main: MODEL_FIELDS
+    main: MODEL_FIELDS + ',classifier',
+    grid_search: 'classifier_grid_params'
 ])
 
 .controller('TagCtrl', [
@@ -290,6 +291,38 @@ angular.module('app.models.controllers', ['app.config', ])
       )
 ])
 
+.controller('GridSearchParametersCtrl', [
+  '$scope'
+  '$rootScope'
+  'openOptions'
+
+  ($scope, $rootScope, openOptions) ->
+    $scope.resetError()
+    $scope.model = openOptions.model
+    $scope.data = {
+      parameters: {}
+    }
+
+    $scope.handler = $scope.model.train_import_handler_obj
+    $scope.multiple_dataset = false
+
+    classifier = $scope.model.classifier
+    classifier.$getConfiguration(
+    ).then ((opts)->
+      $scope.params = opts.data.configuration[classifier.type]["parameters"]
+    ), ((opts)->
+      $scope.setError(opts, 'loading types and parameters')
+    )
+
+    $scope.start = (result) ->
+      console.log $scope.data
+      openOptions.model.$classifierGridSearch($scope.data).then (() ->
+        $scope.$close(true)
+      ), ((opts) ->
+        $scope.setError(opts, 'error starting model training')
+      )
+])
+
 .controller('ModelActionsCtrl', [
   '$scope'
 
@@ -313,6 +346,14 @@ angular.module('app.models.controllers', ['app.config', ])
 
     $scope.cancel_request_spot_instance = (model)->
       model.$cancel_request_spot_instance()
+
+    $scope.grid_search_params = (model)->
+      $scope._showModelActionDialog(model, 'train', (model) ->
+        $scope.openDialog($scope, {
+          model: model
+          template: 'partials/models/grid_search.html'
+          ctrlName: 'GridSearchParametersCtrl'
+        }))
 
     $scope.train_model = (model)->
       $scope._showModelActionDialog(model, 'train', (model) ->

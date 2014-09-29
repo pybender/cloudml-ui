@@ -114,6 +114,14 @@ angular.module('app.models.model', ['app.config'])
           data[key] = val
         @$make_request("#{@BASE_API_URL}#{@id}/action/train/", {}, "PUT", data)
 
+      $classifierGridSearch: (opts={}) ->
+        data = {}
+        for key, val of opts
+          if key == 'parameters' then val = JSON.stringify(val)
+          data[key] = val
+        @$make_request(
+          "#{@BASE_API_URL}#{@id}/action/grid_search/", {}, "PUT", data)
+
       $cancel_request_spot_instance: ->
         url = "#{@BASE_API_URL}#{@id}/action/cancel_request_instance/"
         @$make_request(url, {}, "PUT", {}).then(

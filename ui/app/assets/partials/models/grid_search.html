@@ -1,0 +1,69 @@
+<div ng-controller="DatasetSelectCtrl" ng-init="init(handler)">
+  <div class="modal-header">
+    <button ng-click="close()" class="close" data-dismiss="modal">×</button>
+    <h3>Grid search parameters</h3>
+  </div>
+
+  <div class="modal-body">
+    <ng-include src="'partials/parts/save_form_messages.html'"></ng-include>
+    <form name="Form" class="form-horizontal" ng-show="handler">
+    	<h4 title="Choose lists of parameter settings to try. This enables searching over any sequence of parameter settings.">Grid search parameters</h4>
+    	<div class="control-group error" ng-show="errorList.parameters">
+    		<div class="controls">
+				<span class="help-block" ng-bind="errorList.parameters" />
+			</div>
+		</div>
+		<div ng-repeat="item in params" class="control-group">
+	        <label class="control-label" title="Please input {{ item.name }}. Type: {{ item.type }}">{{ item.name }}</label>
+	        <div class="controls">
+	          <input ng-model="data.parameters[item.name]" ng-name="item.name" type='text' />
+	        </div>
+	    </div>
+	    <hr />
+	    <h4>Data Sets</h4>
+		<div>
+	     	<label class="control-label">Train dataset</label>
+			<div class="controls">
+			    <div class="control-group" ng-class="{error: Form.train_dataset.$invalid || errorList.train_dataset}">
+			      <select class="input-xlarge" ui-select2="select2Options" ng-multiple="multiple_dataset" name="train_dataset" ng-model="data.train_dataset" required>
+			        <option ng-repeat="ds in datasets" value="{{ ds.id }}">{{ ds.name }}</option>
+			      </select>
+			      <span ng-show="Form.train_dataset.$error.required" class="help-block">Choose successfull loaded dataset</span>
+			      <span ng-show="errorList.train_dataset" class="help-block" ng-bind="errorList.train_dataset" />
+			    </div>
+			</div>
+		</div>
+
+		<div>
+	     	<label class="control-label">Test dataset</label>
+			<div class="controls">
+			    <div class="control-group" ng-class="{error: Form.test_dataset.$invalid || errorList.test_dataset}">
+			      <select class="input-xlarge" ui-select2="select2Options" ng-multiple="multiple_dataset" name="test_dataset" ng-model="data.test_dataset" required>
+			        <option ng-repeat="ds in datasets" value="{{ ds.id }}">{{ ds.name }}</option>
+			      </select>
+			      <span ng-show="Form.test_dataset.$error.required" class="help-block">Choose successfull loaded dataset</span>
+			      <span ng-show="errorList.test_dataset" class="help-block" ng-bind="errorList.test_dataset" />
+			    </div>
+			</div>
+		</div>
+
+		<h4>Additional Settings</h4>
+		<div>
+	     	<label class="control-label">Scoring</label>
+			<div class="controls">
+			    <div class="control-group" ng-class="{error: Form.scoring.$invalid || errorList.scoring}">
+			      <select class="input-xlarge" name="scoring" ng-model="data.scoring" required>
+			        <option ng-repeat="val in ['accuracy', 'average_precision', 'f1', 'precision', 'recall', 'roc_auc']" value="{{ val }}">{{ val }}</option>
+			      </select>
+			      <span ng-show="Form.train_dataset.$error.required" class="help-block">Choose successfull loaded dataset</span>
+			      <span ng-show="errorList.train_dataset" class="help-block" ng-bind="errorList.train_dataset" />
+			    </div>
+			</div>
+		</div>
+	</form>
+  </div>
+
+  <div class="modal-footer">
+    <button ng-click="start(result)" ng-disabled="Form.$invalid" class="btn btn-primary" >Grid search parameters</button>
+  </div>
+</div>
