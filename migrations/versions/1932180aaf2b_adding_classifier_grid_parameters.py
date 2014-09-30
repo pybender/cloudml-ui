@@ -41,5 +41,5 @@ def upgrade():
     )
 
 def downgrade():
-    statuses.drop(op.get_bind(), checkfirst=False)
     op.drop_table('classifier_grid_params')
+    statuses.drop(op.get_bind(), checkfirst=False)
