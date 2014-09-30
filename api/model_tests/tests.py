@@ -1,4 +1,4 @@
-# -*- coding: utf8 -*-
+ # -*- coding: utf8 -*-
 import json
 from mock import patch, MagicMock, Mock
 from moto import mock_s3
@@ -706,8 +706,7 @@ class TasksRunTestTests(BaseDbTestCase):
 
         result = do_train(['class2'])
         self.assertEqual(result, 'Test completed')
-
-        self.assertEqual(test.metrics['roc_auc'],
+        self.assertEqual(test.roc_auc,
                          {u'1': 1.0, u'3': 1.0, u'2': 0.0})
         self.assertEqual(test.metrics['confusion_matrix'], [[u'1', [29, 0, 0]],
                                                             [u'2', [0, 0, 0]],
