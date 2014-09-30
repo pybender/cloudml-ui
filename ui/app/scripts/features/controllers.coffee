@@ -85,14 +85,16 @@ angular.module('app.features.controllers', ['app.config', ])
     $scope.group_by_opts = {
       multiple: true,
       query: (query) ->
-        # TODO: Looks like we need to update version of Select2
-        # to use option 'text'
-        data = {results: [], text: 'name'}
-        angular.forEach($scope.objects, (item, key) ->
-          data.results.push(id: item['id'], text: item['name'])
-        )
-        query.callback(data)
+        query.callback
+          results: ({id: f.id, text: f.name} for f in $scope.objects)
     }
+
+    # MATCH-1999: To fix angular-ui-select2 messing the ids and objects
+    $scope.$watch 'modelObj.featuresSet.group_by', (newVal, oldVal)->
+      if angular.isString(newVal)
+        ids = newVal.split(',')
+        $scope.modelObj.featuresSet.group_by =
+          (f for f in $scope.objects when f.id + '' in ids)
 
     $scope.updateGroupBy = () ->
       $scope.modelObj.featuresSet.$save(only: ['group_by'])

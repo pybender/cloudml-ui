@@ -1,0 +1,38 @@
+
+<div>
+  <h1>Select2 - You will need to bower install and integrate angular-ui-select first</h1>
+  <h2>Using New Angular-ui-Select</h2>
+  <p>At the time of writing 20140930, the new angular-ui-select implementation @v0.7.0
+    still having a major stability problems. One blocking issue is
+    <a href="https://github.com/angular-ui/ui-select/pull/198">here</a> and
+    <a href="https://github.com/angular-ui/ui-select/issues/187">here</a>
+
+    Maybe later we can upgrade from the deprected select2 impelmentation to this
+    implementation which doesn't even depend on select2
+  </p>
+
+  <ui-select multiple ng-model="multipleDemo.colors" theme="select2" ng-disabled="disabled" style="width: 300px;">
+    <ui-select-match placeholder="Select colors...">{{$item.name}}</ui-select-match>
+    <ui-select-choices repeat="color in availableColors | filter:$select.search">
+      <div ng-bind-html="color.name | highlight: $select.search"></div>
+    </ui-select-choices>
+  </ui-select>
+  <p><b>Selected Colors</b>:{{multipleDemo.colors}}</p>
+
+
+  <h2>Using old Angular-ui-Select2</h2>
+  <p>angular-ui-select2 worked fine until we upgraded to angular v1.2.2x,
+    the problem is that now angular is more strict with &lt;input&gt; and how
+    it reacts. So we have to use select with ng-repeat despite the adverse
+    effect on performance
+  </p>
+  <select multiple ui-select2 ng-model="multipleDemo.select2Colors" style="width: 400px;" >
+    <option ng-repeat="color in availableColors" value="{{color.id}}">{{color.name}}</option>
+  </select>
+  <p><b>Selected Colors</b>:{{multipleDemo.select2Colors}}</p>
+
+
+  <p> Tags Use Case</p>
+  <input ui-select2="select2params" ng-model="modelTags" style="width: 200px;"/>
+  <p><b>Tags</b>:{{modelTags}}</p>
+</div>

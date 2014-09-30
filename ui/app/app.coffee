@@ -57,6 +57,8 @@ App = angular.module('app', [
   'app.features.controllers.features'
   'app.servers.model'
   'app.servers.controllers'
+
+  'app.play.controllers'
 ])
 
 App.config([
@@ -261,6 +263,10 @@ App.config([
       controller: "DataSourceListCtrl"
       templateUrl: 'partials/import_handler/datasource/list.html'
     })
+  .when('/play', {
+      controller: "PlayCtrl"
+      templateUrl: 'partials/play.html'
+    })
 
     # Catch all
     .otherwise({redirectTo: '/models'})
@@ -280,9 +286,6 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
   $rootScope.setFieldError = (name, msg='') ->
       $rootScope.errorList[name] = msg
 
-  MathJax.Hub.Config({
-    tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}
-  })
 
 # TODO: nader20140912, not user anywhere schedule for removal
 #  # this will be available to all scope variables
