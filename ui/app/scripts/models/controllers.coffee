@@ -167,11 +167,14 @@ angular.module('app.models.controllers', ['app.config', ])
       name = section[0]
       subsection = section[1]
 
+      if name is 'model' && subsection is 'json'
+        name = name + subsection
+
       if name in $scope.LOADED_SECTIONS
         return
 
       loadedSections = []
-      if name == 'model' && subsection == 'json'
+      if name is 'modeljson'
         $scope.load('features', name + subsection)
 
       fields = ''
