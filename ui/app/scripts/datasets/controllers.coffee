@@ -123,15 +123,6 @@ filesize,records_count,time,created_by,updated_by'
 
     $scope.initSections($scope.go, "model:details", simple=true)
     $scope.host = $location.host()
-    $scope.toggleSampleJson = (ev)->
-      if $(ev.target).hasClass 'icon-minus'
-        $('div', $(ev.target).parent()).hide(600)
-        $(ev.target).removeClass 'icon-minus'
-        $(ev.target).addClass 'icon-plus'
-      else
-        $('div', $(ev.target).parent()).show(600)
-        $(ev.target).removeClass 'icon-plus'
-        $(ev.target).addClass 'icon-minus'
 ])
 
 
@@ -182,7 +173,7 @@ filesize,records_count,time,created_by,updated_by'
     # TODO: nader20140917, json IH has the tendency of accepting duplicate
     # parameters which affects the repeater in load_data.html and also affects
     # the number of fields in the dataset import dialog bog
-    $scope.params = handler.import_params
+    $scope.params = _.uniq(handler.import_params)
     $scope.format = 'json'
     $scope.formats = [
       {name: 'JSON', value: 'json'}, {name: 'CSV', value: 'csv'}

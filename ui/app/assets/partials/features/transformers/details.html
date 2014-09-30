@@ -83,8 +83,8 @@
       <a ng-class="{active: action[1] == 'details'}" ng-click="setSection(['about', 'details'])">Standard</a> |
       <a ng-class="{active: action[1] == 'json'}" ng-click="setSection(['about', 'json'])">JSON File</a>
     </p>
-    <div ng-show="action[1] == 'json'">
-      <textarea ng-model="transformer.json" ui-codemirror="codeMirrorConfigs(true)['json']" ui-refresh="action"></textarea>
+    <div ng-show="action[1] == 'json'" cml-has-codemirror="action[1] == 'json'">
+      <textarea ng-model="transformer.json" ui-codemirror="codeMirrorConfigs(true)['json']"></textarea>
     </div>
     <div ng-show="action[1] == 'details'">
       <div>

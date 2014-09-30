@@ -17,6 +17,69 @@ angular.module('app.directives', [
     elm.text(version)
 ])
 
+.directive('cmlHasCodemirror', [
+  '$timeout'
+
+  ($timeout)->
+    ###
+      Apply it to an element subject to be shown or hidden and has a ui-codemirror
+      element that needs to be refreshed accordingly.
+
+      Jira#MATCH-1990
+      http://stackoverflow.com/questions/17086538/codemirror-content-not-visible-in-bootstrap-modal-until-it-is-clicked
+
+      Posted an issue regarding it and possible solution
+      https://github.com/angular-ui/ui-codemirror/issues/68
+
+      usage:
+        <div ng-show="action[1] == 'json'" cml-has-codemirror="action[1] == 'json'">
+          <textarea name="data" ui-codemirror="codeMirrorConfigs(true)['json']" ng-model="handler.data_json"></textarea>
+        </div>
+    ###
+
+    restrict: 'A'
+    link: (scope, element, attrs)->
+      attrs.$observe 'cmlRefreshCm', (value) ->
+        #console.log 'to watch', value
+        scope.$watch attrs.cmlHasCodemirror, (newVal)->
+          #console.log 'cmlHasCodemirror has new value', newVal
+          if newVal
+              for cmElem in $('.CodeMirror', element)
+                $timeout ->
+                  #console.log 'refreshing codemirror element', cmElem
+                  cmElem.CodeMirror.refresh()
+                , 700
+])
+
+.directive('cmlCodemirrorRefresh', [
+  '$timeout'
+
+  ($timeout) ->
+    ###
+      Apply it to ui-codemirror that is not refreshed using ui-refresh of
+      ui-codemirror, don't ask me why it is not refreshing :/
+
+      Jira#MATCH-1990
+      http://stackoverflow.com/questions/17086538/codemirror-content-not-visible-in-bootstrap-modal-until-it-is-clicked
+
+      Posted an issue regarding it and possible solution
+      https://github.com/angular-ui/ui-codemirror/issues/68
+
+      @usage: <textarea ui-codemirror="codeMirrorConfigs(true)['json']" ng-model="dataset.samples_json" class="cml-codemirror-refresh"></textarea>
+    ###
+    restrict: 'C'
+    require: 'ngModel'
+    link: (scope, element, attrs)->
+      attrs.$observe 'ngModel', (value) ->
+        #console.log 'to watch', value
+        scope.$watch value, (newValue)->
+          #console.log 'for ', value, 'got new value', newValue
+          $timeout ->
+            #console.log 'refreshing codemirror element', element.next()
+            element.next()[0].CodeMirror.refresh()
+          , 100
+])
+
 # TODO: nader20140909 not used anywhere, schedule for removal
 #.directive('showtab', () ->
 #  return {
@@ -444,13 +507,14 @@ angular.module('app.directives', [
         scope.$apply( () ->
           isValid = true
 
+          jsonObj = null
+          # jQuery.parseJson('') will return null
           try
-            jQuery.parseJSON(viewValue)
+            jsonObj = jQuery.parseJSON(viewValue)
           catch e
             isValid = false
 
-          #console.log '3' # look at the unit test for why the console.log
-          control.$setValidity('jsonFile', isValid)
+          control.$setValidity('jsonFile', isValid and jsonObj isnt null)
           control.$render()
         )
         return viewValue
@@ -458,11 +522,15 @@ angular.module('app.directives', [
 
       element.change((e) ->
         changeEvt = e
+        if not changeEvt.target.files or not changeEvt.target.files.length
+          control.$setViewValue('')
+          control.$render()
+          return
+
         scope.$apply( () ->
           reader = new FileReader()
 
           reader.onload = (e) ->
-            #console.log '2' # look at the unit test for why the console.log
             control.$setViewValue(e.target.result)
             control.$render()
 
@@ -479,11 +547,17 @@ angular.module('app.directives', [
     link: (scope, element, attrs, control) ->
       element.change((e) ->
         changeEvt = e
+        if not changeEvt.target.files or not changeEvt.target.files.length
+          control.$setViewValue('')
+          control.$render()
+          return
+
         scope.$apply( () ->
           reader = new FileReader()
 
           reader.onload = (e) ->
             control.$setViewValue(e.target.result)
+            control.$render()
 
           reader.readAsText(changeEvt.target.files[0])
         )
@@ -500,12 +574,18 @@ angular.module('app.directives', [
       control.$parsers.unshift((viewValue) ->
         scope.$apply( () ->
           control.$setValidity('requiredFile', viewValue != '')
+          control.$render()
         )
         return viewValue
       )
 
       element.change((e) ->
         changeEvt = e
+        if not changeEvt.target.files or not changeEvt.target.files.length
+          control.$setViewValue('')
+          control.$render()
+          return
+
         scope.$apply( () ->
           reader = new FileReader()
 
