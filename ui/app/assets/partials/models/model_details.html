@@ -74,7 +74,7 @@
                 <span class="value">{{ model.classifier.created_by.name }} ({{ model.classifier.created_by.uid }})</span>
             </div>
           </div>
-          <div class="span4">
+          <div class="span3">
             <h4>Features</h4>
             <div>
               Schema Name:
@@ -83,12 +83,12 @@
             <div>Target Variable: <span class="value">{{ featuresSet.target_variable }}</span></div>
             <div>Features Count: <span class="value">{{ featuresSet.features_count }}</span></div>
           </div>
-          <div class="span3">
+          <div class="span4">
             <h4>Segmentation</h4>
             <alert-message ng-show="segmentationMsg" class="alert-info" msg="{{segmentationMsg}}" unsafe></alert-message>
             <div ng-controller="GroupBySelector">
               Group By:
-              <input ui-select2="group_by_opts" ng-model="modelObj.featuresSet.group_by" /> 
+              <input ui-select2="group_by_opts" ng-model="modelObj.featuresSet.group_by" style="width: 300px" />
               <input type="button" class="btn btn-info" value="Save" ng-click="updateGroupBy()" style="margin-left: 5px;" />
             </div>
           </div>
@@ -253,7 +253,7 @@
     <div class="row">
       <div class="span6">
         <h5>Edit tags</h5>
-        <input ui-select2="select2params" ng-model="params['tags']" /> 
+        <input ui-select2="select2params" ng-model="params['tags']" style="width: 300px" />
         <input type="button" class="btn btn-info" value="Save" ng-click="updateTags()" style="margin-left: 5px;" />
 
         <div ng-controller="ImportHandlerSelectCtrl">

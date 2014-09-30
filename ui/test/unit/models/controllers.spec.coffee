@@ -247,6 +247,22 @@ describe 'models/controllers.coffee', ->
       expect($scope.select2params.createSearchChoice 'zinger', elem)
       .toBeUndefined()
 
+      # trigger a watch
+      expect($scope.params.tags).toEqual []
+      $scope.params.tags = '999'
+      $scope.$digest()
+      expect($scope.params.tags).toEqual [{id: 999, text: 'tag999'}]
+
+      $scope.params.tags = 'new_tag,999'
+      $scope.$digest()
+      expect($scope.params.tags).toEqual [{id: 'new_tag', text: 'new_tag'},
+        {id: 999, text: 'tag999'}]
+
+      $scope.params.tags = 'new_tag,999,888'
+      $scope.$digest()
+      expect($scope.params.tags).toEqual [{id: 'new_tag', text: 'new_tag'},
+        {id: 999, text: 'tag999'}, {id: 888, text: 'tag888'}]
+
     it  'should handle errors loading tags', inject (Model, MODEL_FIELDS)->
       prepareContext(true)
       expect($rootScope.setError.calls.mostRecent().args[1]).toEqual 'loading tags'

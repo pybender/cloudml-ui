@@ -187,6 +187,20 @@ describe 'app.features.controllers', ->
       expect($scope.updateGroupBy).toEqual jasmine.any(Function)
       expect($scope.clear).toEqual jasmine.any(Function)
 
+      # trigger some events
+      $scope.objects = [{id: 111, name: 'feature111'},
+        {id: 222, name: 'feature222'}, {id: 333, name: 'feature333'}]
+      $scope.modelObj = {featuresSet: {group_by: []}}
+      $scope.$digest()
+      expect($scope.modelObj.featuresSet.group_by).toEqual []
+      $scope.modelObj.featuresSet.group_by = '111,333'
+      $scope.$digest()
+      expect($scope.modelObj.featuresSet.group_by).toEqual [
+        {id: 111, name: 'feature111'}, {id: 333, name: 'feature333'}]
+      $scope.modelObj.featuresSet.group_by = '222,zzz'
+      $scope.$digest()
+      expect($scope.modelObj.featuresSet.group_by).toEqual [{id: 222, name: 'feature222'}]
+
     it 'should handle group by commands from select2', ->
 
       createController 'GroupBySelector'
@@ -195,7 +209,7 @@ describe 'app.features.controllers', ->
       $scope.objects = [{id: 111, name: 'name111'}, {id: 222, name: 'name222'}]
       $scope.group_by_opts.query {callback: callbackFn}
 
-      expect(callbackFn).toHaveBeenCalledWith {results: [{id: 111, text: 'name111'}, {id: 222, text: 'name222'}], text: 'name'}
+      expect(callbackFn).toHaveBeenCalledWith {results: [{id: 111, text: 'name111'}, {id: 222, text: 'name222'}]}
 
     it 'updating the group and handling http errors', inject (FeaturesSet, $timeout)->
 

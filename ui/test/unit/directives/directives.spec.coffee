@@ -671,7 +671,7 @@ editable-placement="right" display="instance.obj.name"></span>
           done()
         , 1000
 
-      it 'should render and handles file uploads, with bad good json', (done)->
+      it 'should render and handles file uploads, with good json', (done)->
         $scope.some_file = ''
         prepareContext '<form name="myForm"><input json-file type="file" name="some_file" ng-model="some_file"></form>'
         inputElem = $('>input', elem)

@@ -205,19 +205,28 @@ angular.module('app.models.controllers', ['app.config', ])
     )
 
     $scope.select2params = {
-      multiple: true,
+      multiple: true
       query: (query) ->
-        data = {results: []}
-        angular.forEach($scope.tag_list, (item, key) ->
-          data.results.push(item)
-        )
-        query.callback(data)
+        query.callback
+          results: angular.copy($scope.tag_list)
 
       createSearchChoice: (term, data) ->
         cmp = () ->
           return this.text.localeCompare(term) == 0
         if $(data).filter(cmp).length == 0 then return {id: term, text: term}
     }
+
+    # MATCH-1999: To fix angular-ui-select2 messing the ids and objects
+    $scope.$watch 'params.tags', (newVal, oldVal)->
+      if angular.isString(newVal) and newVal isnt ''
+        ids = newVal.split(',')
+        $scope.params.tags = []
+        for id in ids
+          nId = _.parseInt(id)
+          if nId
+            $scope.params.tags.push (t for t in $scope.tag_list when t.id is nId)[0]
+          else
+            $scope.params.tags.push {id: id, text: id}
 
     $scope.updateTags = () ->
       $scope.model.tags = []
