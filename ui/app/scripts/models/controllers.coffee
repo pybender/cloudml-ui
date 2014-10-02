@@ -169,13 +169,18 @@ angular.module('app.models.controllers', ['app.config', ])
 
       if name is 'model' && subsection is 'json'
         name = name + subsection
+        subsection = ''
 
       if name in $scope.LOADED_SECTIONS
         return
 
       loadedSections = []
       if name is 'modeljson'
-        $scope.load('features', name + subsection)
+        $scope.load('features', 'modeljson').then ->
+          if 'modeljson' not in $scope.LOADED_SECTIONS
+            $scope.LOADED_SECTIONS.push 'modeljson'
+        name = 'model'
+        subsection = 'json'
 
       fields = ''
       if 'main' not in $scope.LOADED_SECTIONS
