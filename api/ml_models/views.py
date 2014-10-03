@@ -153,6 +153,7 @@ class ModelResource(BaseTrainedEntityResource):
                    'features_download', 'dataset_download')
     PUT_ACTIONS = ('train', 'tags', 'cancel_request_instance',
                    'upload_to_server', 'dataset_download')
+    POST_ACTIONS = ('clone', )
     FILTER_PARAMS = (('status', str), ('comparable', str), ('tag', str),
                     ('created_by', str), ('updated_by_id', int),
                     ('updated_by', str), ('name', str))
@@ -233,6 +234,27 @@ class ModelResource(BaseTrainedEntityResource):
         resp.headers['Content-Disposition'] = \
             'attachment; filename=%s-features.json' % model.name
         return resp
+
+    def _post_clone_action(self, **kwargs):
+        from datetime import datetime
+        model = self._get_details_query(None, **kwargs)
+        name = "{0} clone: {1}".format(
+            model.name, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        new_model = Model(
+            name=name,
+            train_import_handler=model.train_import_handler,
+            test_import_handler=model.test_import_handler
+        )
+        new_model.save()
+        new_model.features_set.from_dict(model.features_set.features, commit=False)
+        new_model.classifier = model.classifier
+        new_model.save()
+        return self._render({
+            self.OBJECT_NAME: new_model,
+            'status': 'New model "{0}" created'.format(
+                new_model.name
+            )
+        })
 
     def _put_upload_to_server_action(self, **kwargs):
         from api.servers.tasks import upload_model_to_server

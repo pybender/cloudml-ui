@@ -305,6 +305,27 @@ angular.module('app.models.controllers', ['app.config', ])
       )
 ])
 
+.controller('CloneModelCtrl', [
+  '$scope'
+  '$rootScope'
+  'openOptions'
+  '$location'
+  'Model'
+
+  ($scope, $rootScope, openOptions, $location, Model) ->
+    $scope.resetError()
+    $scope.model = openOptions.model
+
+    $scope.clone = (result) ->
+      openOptions.model.$clone().then ((opts) ->
+        model = new Model(opts.data.model)
+        $scope.$close(true)
+        $location.url(model.objectUrl())
+      ), ((opts) ->
+        $scope.setError(opts, 'error clonning the model')
+      )
+])
+
 .controller('ModelActionsCtrl', [
   '$scope'
 
@@ -345,6 +366,16 @@ angular.module('app.models.controllers', ['app.config', ])
         action: 'delete model'
         path: model.BASE_UI_URL
       })
+
+    $scope.cloneModel = (model) ->
+      $scope.openDialog($scope, {
+        model: model
+        template: 'partials/models/clone_model_popup.html'
+        ctrlName: 'CloneModelCtrl'
+        action: 'clone model'
+        path: model.BASE_UI_URL
+      })
+
 
     $scope.editClassifier = (model) ->
       $scope.openDialog($scope, {
