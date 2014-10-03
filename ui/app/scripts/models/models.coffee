@@ -114,6 +114,9 @@ angular.module('app.models.model', ['app.config'])
           data[key] = val
         @$make_request("#{@BASE_API_URL}#{@id}/action/train/", {}, "PUT", data)
 
+      $clone: (opts={}) ->
+        @$make_request("#{@BASE_API_URL}#{@id}/action/clone/", {}, "POST", {})
+
       $cancel_request_spot_instance: ->
         url = "#{@BASE_API_URL}#{@id}/action/cancel_request_instance/"
         @$make_request(url, {}, "PUT", {}).then(
