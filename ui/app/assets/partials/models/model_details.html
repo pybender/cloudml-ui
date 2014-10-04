@@ -14,31 +14,31 @@
   <div class="actions">
     <button ng-show="model.status == 'Trained'" ng-click="test_model(model)" class="btn btn-success">
       <i title="Apply the classifier to the input provided by the data import handler" class="status-icon icon-play"></i>
-      Run test
+      Test
     </button>
     <button ng-click="train_model(model)" class="btn btn-info">
       <i title="Train your model" class="icon-tasks"></i>
-      Start training
+      Train
     </button>
     <button ng-click="grid_search_params(model)" class="btn btn-info">
       <i title="Grid search classifier parameters" class="icon-tasks"></i>
       Grid search
     </button>
     <a ng-show="model.status == 'Trained' && model.trainer_s3_url" href="{{ model.trainer_s3_url }}" class="btn btn-info">
-        <i title="Download model trainer." class="icon-download-alt"></i> Download Trainer
+        <i title="Download model trainer." class="icon-download-alt"></i> Download
     </a>
     <button ng-show="model.status == 'Trained'" ng-click="uploadModelToPredict(model)" class="btn btn-info">
         <i class="icon-upload"></i> Upload for Predict
     </button>
     <button ng-click="cloneModel(model)" class="btn btn-info">
-      <i title="Clone your model." class="icon-tasks"></i> Clone model
+      <i title="Clone your model." class="icon-tasks"></i> Clone
     </button>
     <button ng-click="delete_model(model)" class="btn btn-danger">
-      <i title="Delete your model. Be careful - you could not recover it!" class="icon-remove"></i> Delete model
+      <i title="Delete your model. Be careful - you could not recover it!" class="icon-remove"></i> Delete
     </button>
   </div>
 </h2>
-<p></p>
+<p class="clear clearfix"></p>
 <ul class="nav nav-tabs" id="tabs" ng-show="model.loaded">
   <li ng-class="{active: action[0] == 'model'}">
     <a ng-click="setSection(['model', 'details'])">Model</a> 
