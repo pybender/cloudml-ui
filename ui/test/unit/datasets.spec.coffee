@@ -209,7 +209,7 @@ describe "datasets", ->
           model:
             id: HANDLER_ID
             TYPE: handlerType
-            import_params: ['start', 'end']
+            import_params: ['start', 'end', 'end']
 
         $rootScope.$close = jasmine.createSpy('$rootScope.$close')
         $location.url = jasmine.createSpy('$location.url')
@@ -224,6 +224,7 @@ describe "datasets", ->
           openOptions: openOptions
           DataSet: DataSet
 
+        expect($scope.params).toEqual ['start', 'end']
         $scope.start()
         $httpBackend.flush()
 

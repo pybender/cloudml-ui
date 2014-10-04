@@ -140,7 +140,7 @@ angular.module('app.models.controllers', ['app.config', ])
       deferred = $q.defer()
 
       if not fields
-        deferred.reject 'empty fields'
+        deferred.resolve 'empty fields'
         return deferred.promise
 
       $scope.model.$load(
@@ -168,20 +168,28 @@ angular.module('app.models.controllers', ['app.config', ])
       name = section[0]
       subsection = section[1]
 
-      # TODO: nader20140907 we need to manually test reloading, I am disabling
-      # it for now until I get a chance to test it. The unit test in modesl/controllers.coffee
-      # it  'should load features', having the expectations disabled for now
-      #if name in $scope.LOADED_SECTIONS
-      #  return
+      if name is 'model' && subsection is 'json'
+        name = name + subsection
+        subsection = ''
+
+      if name in $scope.LOADED_SECTIONS
+        return
 
       loadedSections = []
-      if name == 'model' && subsection == 'json'
-        $scope.load('features', name + subsection)
+      if name is 'modeljson'
+        $scope.load('features', 'modeljson').then ->
+          if 'modeljson' not in $scope.LOADED_SECTIONS
+            $scope.LOADED_SECTIONS.push 'modeljson'
+        name = 'model'
+        subsection = 'json'
 
       fields = ''
       if 'main' not in $scope.LOADED_SECTIONS
         loadedSections.push 'main'
         fields = FIELDS_BY_SECTION['main']
+
+      if name is 'test'
+        $scope.$broadcast('loadTest', true)
 
       if name not in $scope.LOADED_SECTIONS
         loadedSections.push name
@@ -192,8 +200,6 @@ angular.module('app.models.controllers', ['app.config', ])
         for name in loadedSections
           if name not in $scope.LOADED_SECTIONS
             $scope.LOADED_SECTIONS.push name
-        if 'test' in loadedSections
-          $scope.$broadcast('loadTest', true)
 
     Tag.$loadAll(
       show: 'text,id'
@@ -208,19 +214,28 @@ angular.module('app.models.controllers', ['app.config', ])
     )
 
     $scope.select2params = {
-      multiple: true,
+      multiple: true
       query: (query) ->
-        data = {results: []}
-        angular.forEach($scope.tag_list, (item, key) ->
-          data.results.push(item)
-        )
-        query.callback(data)
+        query.callback
+          results: angular.copy($scope.tag_list)
 
       createSearchChoice: (term, data) ->
         cmp = () ->
           return this.text.localeCompare(term) == 0
         if $(data).filter(cmp).length == 0 then return {id: term, text: term}
     }
+
+    # MATCH-1999: To fix angular-ui-select2 messing the ids and objects
+    $scope.$watch 'params.tags', (newVal, oldVal)->
+      if angular.isString(newVal) and newVal isnt ''
+        ids = newVal.split(',')
+        $scope.params.tags = []
+        for id in ids
+          nId = _.parseInt(id)
+          if nId
+            $scope.params.tags.push (t for t in $scope.tag_list when t.id is nId)[0]
+          else
+            $scope.params.tags.push {id: id, text: id}
 
     $scope.updateTags = () ->
       $scope.model.tags = []
@@ -291,6 +306,7 @@ angular.module('app.models.controllers', ['app.config', ])
       )
 ])
 
+
 .controller('GridSearchParametersCtrl', [
   '$scope'
   '$rootScope'
@@ -320,6 +336,28 @@ angular.module('app.models.controllers', ['app.config', ])
         $scope.$close(true)
       ), ((opts) ->
         $scope.setError(opts, 'error starting model training')
+      )
+])
+
+.controller('CloneModelCtrl', [
+  '$scope'
+  '$rootScope'
+  'openOptions'
+  '$location'
+  'Model'
+
+  ($scope, $rootScope, openOptions, $location, Model) ->
+    $scope.resetError()
+    $scope.model = openOptions.model
+
+    $scope.clone = (result) ->
+      openOptions.model.$clone().then ((opts) ->
+        model = new Model(opts.data.model)
+        $scope.$close(true)
+        $location.url(model.objectUrl())
+      ), ((opts) ->
+        $scope.setError(opts, 'error clonning the model')
+
       )
 ])
 
@@ -371,6 +409,16 @@ angular.module('app.models.controllers', ['app.config', ])
         action: 'delete model'
         path: model.BASE_UI_URL
       })
+
+    $scope.cloneModel = (model) ->
+      $scope.openDialog($scope, {
+        model: model
+        template: 'partials/models/clone_model_popup.html'
+        ctrlName: 'CloneModelCtrl'
+        action: 'clone model'
+        path: model.BASE_UI_URL
+      })
+
 
     $scope.editClassifier = (model) ->
       $scope.openDialog($scope, {

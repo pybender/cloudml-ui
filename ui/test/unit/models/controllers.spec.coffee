@@ -247,6 +247,22 @@ describe 'models/controllers.coffee', ->
       expect($scope.select2params.createSearchChoice 'zinger', elem)
       .toBeUndefined()
 
+      # trigger a watch
+      expect($scope.params.tags).toEqual []
+      $scope.params.tags = '999'
+      $scope.$digest()
+      expect($scope.params.tags).toEqual [{id: 999, text: 'tag999'}]
+
+      $scope.params.tags = 'new_tag,999'
+      $scope.$digest()
+      expect($scope.params.tags).toEqual [{id: 'new_tag', text: 'new_tag'},
+        {id: 999, text: 'tag999'}]
+
+      $scope.params.tags = 'new_tag,999,888'
+      $scope.$digest()
+      expect($scope.params.tags).toEqual [{id: 'new_tag', text: 'new_tag'},
+        {id: 999, text: 'tag999'}, {id: 888, text: 'tag888'}]
+
     it  'should handle errors loading tags', inject (Model, MODEL_FIELDS)->
       prepareContext(true)
       expect($rootScope.setError.calls.mostRecent().args[1]).toEqual 'loading tags'
@@ -254,11 +270,10 @@ describe 'models/controllers.coffee', ->
     it  'should handle no fields case', inject (Model, MODEL_FIELDS)->
       prepareContext()
 
-      $scope.load('', '').then (->),
-      (reason)->
-        expect(reason).toEqual 'empty fields'
+      $scope.load('', '')
+      expect($scope.LOADED_SECTIONS).toEqual []
 
-    it  'should load main and test section with tags', inject (Model, MODEL_FIELDS)->
+    it  'should load main and test section with tags and caching', inject (Model, MODEL_FIELDS, FIELDS_BY_SECTION)->
       prepareContext()
 
       expect($scope.initSections).toHaveBeenCalledWith $scope.goSection
@@ -267,18 +282,30 @@ describe 'models/controllers.coffee', ->
         id: $scope.model.id
       response = {}
       response[model.API_FIELDNAME] = model
-      $httpBackend.expectGET "#{model.BASE_API_URL}#{$scope.model.id}/?show=#{MODEL_FIELDS}"
+      $httpBackend.expectGET "#{model.BASE_API_URL}#{$scope.model.id}/?show=#{MODEL_FIELDS},#{FIELDS_BY_SECTION['model']}"
       .respond 200, angular.toJson(response)
 
       $scope.model.tags = ['tag1', 'tag2']
-      $scope.goSection ['test', '']
+      $scope.goSection ['model', 'details']
       $httpBackend.flush()
 
-      expect($scope.LOADED_SECTIONS).toEqual ['test', 'main']
-      expect($scope.$broadcast).toHaveBeenCalledWith 'loadTest', true
+      expect($scope.LOADED_SECTIONS).toEqual ['model', 'main']
+      expect($scope.$broadcast).not.toHaveBeenCalledWith()
       expect($scope.params.tags).toEqual [{id: 'tag1', text: 'tag1'}, {id: 'tag2', text: 'tag2'}]
 
-    it  'should load features', inject (Model, MODEL_FIELDS, FIELDS_BY_SECTION)->
+      $scope.goSection ['test', '']
+      $scope.$digest()
+      expect($scope.LOADED_SECTIONS).toEqual ['model', 'main', 'test']
+      expect($scope.$broadcast).toHaveBeenCalledWith 'loadTest', true
+
+      # cached should not reload tests
+      $scope.$broadcast.calls.reset()
+      $scope.goSection ['test', '']
+      $scope.$digest()
+      expect($scope.LOADED_SECTIONS).toEqual ['model', 'main', 'test']
+      expect($scope.$broadcast).not.toHaveBeenCalledWith()
+
+    it  'should load features and caching', inject (Model, MODEL_FIELDS, FIELDS_BY_SECTION)->
       prepareContext()
 
       expect($scope.initSections).toHaveBeenCalledWith $scope.goSection
@@ -297,13 +324,11 @@ describe 'models/controllers.coffee', ->
 
       expect($scope.LOADED_SECTIONS).toEqual ['modeljson', 'model', 'main']
 
-      # TODO: nader20140907 we need to manually test reloading, I am disabling
-      # it for now until I get a chance to test it
-      # and dont load twice
-      #$scope.goSection ['model', 'json']
-      #expect($scope.LOADED_SECTIONS).toEqual ['modeljson', 'model', 'main']
+      # caching
+      $scope.goSection ['model', 'json']
+      expect($scope.LOADED_SECTIONS).toEqual ['modeljson', 'model', 'main']
 
-    it  'should load main for trained model and update its tags, and handles erros saving tags',
+    it  'should load main for trained model and update its tags, and handles errors saving tags',
       inject (Model, MODEL_FIELDS, FIELDS_BY_SECTION, Tag)->
 
         prepareContext()
@@ -327,6 +352,10 @@ describe 'models/controllers.coffee', ->
 
         expect($scope.LOADED_SECTIONS).toEqual ['training', 'main']
         expect($scope.model.trainer_s3_url).toEqual 'http://something.com/path/to/some/file.dat'
+
+        # caching
+        $scope.goSection ['training', '']
+        expect($scope.LOADED_SECTIONS).toEqual ['training', 'main']
 
         $scope.params.tags = [
           new Tag

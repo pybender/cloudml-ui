@@ -1,4 +1,4 @@
-# -*- coding: utf8 -*-
+ # -*- coding: utf8 -*-
 import json
 from mock import patch, MagicMock, Mock
 from moto import mock_s3
@@ -674,6 +674,50 @@ class TasksRunTestTests(BaseDbTestCase):
 
         self.assertTrue(test.metrics.has_key('accuracy'))
         self.assertIsInstance(test.metrics['accuracy'], float)
+
+
+    @patch('api.models.Model.get_trainer')
+    @patch('api.models.DataSet.get_data_stream')
+    def run_real_test_multiclass_classifier_0_example_for_labels(self, mock_get_data_stream, mock_get_trainer):
+        test = TestResult.query.filter_by(name=TestResultData.test_04.name).first()
+        self.assertEqual({}, test.metrics)
+        self.assertEquals(test.model.status, test.model.STATUS_TRAINED, test.model.__dict__)
+
+        def do_train(exclude_labels):
+            from core.trainer.store import TrainerStorage
+            trainer = TrainerStorage.loads(open('./api/ml_models/multiclass-trainer.dat', 'r').read())
+            mock_get_trainer.return_value = trainer
+
+            import gzip
+            from StringIO import StringIO
+            with gzip.open('./api/import_handlers/multiclass_ds.gz', 'r') as dataset:
+                examples = []
+                for line in dataset.readlines():
+                    example = json.loads(line)
+                    if example['hire_outcome'] in exclude_labels:
+                        continue
+                    examples.append(json.dumps(example))
+                s = StringIO()
+                s.write('\n'.join(examples))
+                s.seek(0)
+                mock_get_data_stream.return_value = s
+
+            return run_test([self.dataset.id, ], test.id)
+
+        result = do_train(['class2'])
+        self.assertEqual(result, 'Test completed')
+        self.assertEqual(test.roc_auc,
+                         {u'1': 1.0, u'3': 1.0, u'2': 0.0})
+        self.assertEqual(test.metrics['confusion_matrix'], [[u'1', [29, 0, 0]],
+                                                            [u'2', [0, 0, 0]],
+                                                            [u'3', [0, 0, 35]]])
+
+        self.assertTrue(test.metrics.has_key('accuracy'))
+        self.assertIsInstance(test.metrics['accuracy'], float)
+
+        # excluding two labels
+        result = do_train(['class3', 'class2'])
+        self.assertEqual(result, 'Test completed')
 
 
 class MetricsMockBinaryClassifier(MagicMock):

@@ -10,7 +10,7 @@
       <form name="Form" class="form-horizontal">
         <div class="control-group" ng-class="{error: Form.data.$invalid || errorList.data}">
             <textarea rows="8" ui-codemirror="codeMirrorConfigs(false)['python']"
-                      ui-refresh="model.data" name="data" ng-model="model.data" ng-change="setFieldError('data')" required></textarea>
+                      name="data" ng-model="model.data" ng-change="setFieldError('data')" required></textarea>
             <span ng-show="Form.data.$error.required" class="help-inline">*</span>
             <span ng-show="errorList.data" class="help-block" ng-bind="errorList.data" />
         </div>

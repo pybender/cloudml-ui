@@ -14,6 +14,7 @@ describe "directives", ->
     module 'ngCookies'
     module 'ngRoute'
     module 'ui.bootstrap'
+    module 'ui.codemirror'
 
     module 'app.base'
     module "app.directives"
@@ -43,6 +44,53 @@ describe "directives", ->
     it "should print current version", ->
       element = $compile("<span app-version></span>")($scope)
       expect(element.text()).toEqual "TEST_VER"
+
+  describe 'cmlHasCodemirror', ->
+
+    it 'should call onto CodeMirror.refresh() expression true', inject ($timeout)->
+
+      $(document.body).append('<div cml-has-codemirror="someValue"><textarea ui-codemirror="" ng-model="someValue"></textarea></div>')
+      $compile(document.body)($scope)
+      $scope.$digest()
+      elem = $('textarea').next()
+      spyOn(elem[0].CodeMirror, 'refresh')
+      $timeout.flush()
+      expect(elem[0].CodeMirror.refresh).not.toHaveBeenCalled()
+
+      $scope.someValue = 'truthy'
+      $scope.$digest()
+      $timeout.flush()
+      expect(elem[0].CodeMirror.refresh).toHaveBeenCalled()
+      elem[0].CodeMirror.refresh.calls.reset()
+
+      $scope.someValue = null
+      $scope.$digest()
+      expect(elem[0].CodeMirror.refresh).not.toHaveBeenCalled()
+
+
+  describe 'cmlCodemirrorRefresh', ->
+
+    it 'should call onto CodeMirror.refresh() on value change', inject ($timeout)->
+
+      $scope.someValue = 'someValue'
+      $(document.body).append('<textarea id="test1" ui-codemirror="" ng-model="someValue" class="cml-codemirror-refresh"></textarea>')
+      $compile(document.body)($scope)
+      $scope.$digest()
+      elem = $('#test1').next()
+      spyOn(elem[0].CodeMirror, 'refresh')
+      $timeout.flush()
+      expect(elem[0].CodeMirror.refresh).toHaveBeenCalled()
+
+    it 'should call onto CodeMirror.refresh() on value change', inject ($timeout)->
+
+      $scope.someObj = {someValue: 'anoterValue'}
+      $(document.body).append('<textarea id="test2" ui-codemirror="" ng-model="someObj.someValue" class="cml-codemirror-refresh"></textarea>')
+      $compile(document.body)($scope)
+      $scope.$digest()
+      elem = $('#test2').next()
+      spyOn(elem[0].CodeMirror, 'refresh')
+      $timeout.flush()
+      expect(elem[0].CodeMirror.refresh).toHaveBeenCalled()
 
   describe 'editable', ->
 
@@ -170,7 +218,7 @@ editable-placement="right" display="instance.obj.name"></span>
         $httpBackend.flush()
         # TODO: nader20140910 following line should be the case,
         # look in the comments of directives.coffee#editable directive
-        # for xdescription of the bug
+        # for description of the bug
         #expect($(elem).text()).toEqual 'one'
 
 
@@ -576,15 +624,21 @@ editable-placement="right" display="instance.obj.name"></span>
       if elem
         elem.remove()
 
-    getFileList = ->
+    getFileList = (fileStr)->
       getABlob = ->
         if typeof(Blob) is typeof(Function)
-          return new Blob(['same way...'], {type: 'text/plain'})
+          return new Blob([fileStr], {type: 'text/plain'})
         else
           BlobBuilder = window.BlobBuilder or window.WebKitBlobBuilder or window.MozBlobBuilder or window.MSBlobBuilder
           builder = new BlobBuilder()
-          builder.append 'same way...'
+          builder.append fileStr
           return builder.getBlob()
+
+      if fileStr is null
+        return {
+        length: 0,
+        item: () -> null
+        }
 
       file = getABlob()
       fileList =
@@ -599,7 +653,7 @@ editable-placement="right" display="instance.obj.name"></span>
       $scope.$digest()
 
     describe 'jsonFile', ->
-      it 'should render and handels file uploads with errors', inject ($timeout)->
+      it 'should render and handles file uploads, with bad json', (done)->
         $scope.some_file = ''
         prepareContext '<form name="myForm"><input json-file type="file" name="some_file" ng-model="some_file"></form>'
 
@@ -607,44 +661,170 @@ editable-placement="right" display="instance.obj.name"></span>
         inputElem.triggerHandler
           type: 'change'
           target:
-            files: getFileList()
+            files: getFileList 'bad json'
 
-        #console.log '1'
         $scope.$digest()
-        #console.log '4'
-        # TODO: nader20140911, somehow the reade.onload is triggerd after the test
-        # finishes and thus I cannot really test the validity of the input
-        # enabling the console.log will create 1, 4, 2, 3 !
+        setTimeout ->
+          expect($scope.some_file).toEqual 'bad json'
+          expect($scope.myForm.$valid).toBe false
+          1+1
+          done()
+        , 1000
+
+      it 'should render and handles file uploads, with good json', (done)->
+        $scope.some_file = ''
+        prepareContext '<form name="myForm"><input json-file type="file" name="some_file" ng-model="some_file"></form>'
+        inputElem = $('>input', elem)
+
+        good_json = angular.toJson {good: 'json'}
+        inputElem.triggerHandler
+          type: 'change'
+          target:
+            files: getFileList good_json
+
+        $scope.$digest()
+        setTimeout ->
+          expect($scope.some_file).toEqual good_json
+          expect($scope.myForm.$valid).toBe true
+          done()
+        , 1
+
+      it 'should render and handles file with 0 files', (done)->
+        ###
+        This case happens when you select a file, then opt to select another
+        file and hitting cancel
+        ###
+        $scope.some_file = ''
+        prepareContext '<form name="myForm"><input json-file type="file" name="some_file" ng-model="some_file"></form>'
+        inputElem = $('>input', elem)
+
+        inputElem.triggerHandler
+          type: 'change'
+          target:
+            files: getFileList null
+
+        $scope.$digest()
+        setTimeout ->
+          expect($scope.some_file).toEqual ''
+          expect($scope.myForm.$valid).toBe false
+          done()
+        , 1
+
+      it 'should render and handles file uploads', (done)->
+        $scope.some_file = ''
+        prepareContext '<form name="myForm"><input json-file type="file" name="some_file" ng-model="some_file"></form>'
+
+        inputElem = $('>input', elem)
+        inputElem.triggerHandler
+          type: 'change'
+          target:
+            files: getFileList 'bad json'
+
+        $scope.$digest()
+        setTimeout ->
+          expect($scope.some_file).toEqual 'bad json'
+          expect($scope.myForm.$valid).toBe false
+          done()
+        , 1
 
 
     describe 'notRequiredFile', ->
 
-      it 'should compile', ->
+      it 'should render and handles file uploads', (done)->
         $scope.some_file = ''
-        prepareContext '<form name="myForm"><input not-required-file type="file" name="some_file" ng-model="some_file"/></form>'
+        prepareContext '<form name="myForm"><input not-required-file name="some_file" ng-model="some_file"></form>'
 
         inputElem = $('>input', elem)
         inputElem.triggerHandler
           type: 'change'
           target:
-            files: getFileList()
+            files: getFileList 'file text'
 
         $scope.$digest()
+        setTimeout ->
+          expect($scope.some_file).toEqual 'file text'
+          expect($scope.myForm.$valid).toBe true
+          done()
+        , 1000
+
+      it 'should render and handles file with 0 files', (done)->
+        ###
+        This case happens when you select a file, then opt to select another
+        file and hitting cancel
+        ###
+        $scope.some_file = ''
+        prepareContext '<form name="myForm"><input not-required-file name="some_file" ng-model="some_file"></form>'
+        inputElem = $('>input', elem)
+
+        inputElem.triggerHandler
+          type: 'change'
+          target:
+            files: getFileList null
+
+        $scope.$digest()
+        setTimeout ->
+          expect($scope.some_file).toEqual ''
+          expect($scope.myForm.$valid).toBe true
+          done()
+        , 1
 
 
     describe 'requiredFile', ->
 
-      it 'should compile', ->
-        $scope.model = {file: {}}
-        prepareContext('<form name="myForm"><input type="file" name="some_file" ng-model="model.file" required-file/></form>')
+      it 'should render and handles file uploads', (done)->
+        $scope.some_file = ''
+        prepareContext '<form name="myForm"><input required-file name="some_file" ng-model="some_file"></form>'
 
         inputElem = $('>input', elem)
         inputElem.triggerHandler
           type: 'change'
           target:
-            files: getFileList()
+            files: getFileList 'file text'
 
         $scope.$digest()
+        setTimeout ->
+          expect($scope.some_file).toEqual 'file text'
+          expect($scope.myForm.$valid).toBe true
+          done()
+        , 1000
+
+      it 'should render and handles file uploads, empty file is error', (done)->
+        $scope.some_file = ''
+        prepareContext '<form name="myForm"><input required-file name="some_file" ng-model="some_file"></form>'
+
+        inputElem = $('>input', elem)
+        inputElem.triggerHandler
+          type: 'change'
+          target:
+            files: getFileList ''
+
+        $scope.$digest()
+        setTimeout ->
+          expect($scope.some_file).toEqual ''
+          expect($scope.myForm.$valid).toBe false
+          done()
+        , 1000
+
+      it 'should render and handles file with 0 files', (done)->
+        ###
+        This case happens when you select a file, then opt to select another
+        file and hitting cancel
+        ###
+        $scope.some_file = ''
+        prepareContext '<form name="myForm"><input required-file name="some_file" ng-model="some_file"></form>'
+        inputElem = $('>input', elem)
+
+        inputElem.triggerHandler
+          type: 'change'
+          target:
+            files: getFileList null
+
+        $scope.$digest()
+        setTimeout ->
+          expect($scope.some_file).toEqual ''
+          expect($scope.myForm.$valid).toBe false
+          done()
+        , 1
 
 
   describe 'smartFloat', ->
@@ -685,316 +865,6 @@ editable-placement="right" display="instance.obj.name"></span>
       $('>input', elem).val 'something'
       $('>input', elem).trigger 'blur'
       expect($scope.text).toEqual 'something'
-
-
-
-  describe "parametersEditor", ->
-
-    elem = null
-    innerScope = null
-    afterEach ->
-      if elem
-        elem.remove()
-
-    prepareContext = (html)->
-      elem = $compile(html)($scope)
-      $(document.body).append elem
-      $scope.$digest()
-      innerScope = $('>parameters-editor', elem).children().scope()
-
-    it "should create parameters editor control with string parameter", ->
-
-      $scope.paramsConfig = {"str_param": {"type": "str"}, strange: {type: null}}
-      $scope.requiredParams = ["str_param"]
-      $scope.optionalParams = []
-
-      # invlaid
-      $scope.params = {}
-      prepareContext """
-<form name="myForm">
-<parameters-editor name="params" ng-model="params"
-params-config="paramsConfig"
-required-params="requiredParams"
-optional-params="optionalParams"></parameters-editor>
-</form>
-"""
-      expect($scope.myForm.params.$valid).toBe false
-      expect($scope.myForm.$valid).toBe false
-
-      # get type -- we are doing it here to be able to get the invalid type strange
-      expect(innerScope.getType 'str_param').toEqual 'str'
-      expect(innerScope.getType 'zinger').toEqual 'str'
-      expect(innerScope.getType 'strange').toEqual 'str'
-
-      # valid
-      $scope.paramsConfig = {"str_param": {"type": "str"}}
-      $scope.params = {"str_param": "value"}
-      $scope.$digest()
-      expect($scope.myForm.params.$valid).toBe true
-      expect($scope.myForm.$valid).toBe true
-
-      expect(elem.html()).toContain('<div class="jsonContents ng-scope">')
-      expect(elem.html()).toContain('<input ng-hide="isRequired(key)" ng-disabled="isRequired(key)"')
-      expect(elem.html()).toContain('>str_param</label>')
-
-      # toggle collapse
-      expect($scope.collapsed).toBeUndefined()
-      innerScope.toggleCollapse()
-      expect(innerScope.collapsed).toBe true
-      expect(innerScope.chevron).toEqual 'icon-chevron-right'
-      innerScope.toggleCollapse()
-      expect(innerScope.collapsed).toBe false
-      expect(innerScope.chevron).toEqual 'icon-chevron-down'
-
-
-    it "should manipulate parameters", ->
-
-      $scope.paramsConfig = {"str_param": {"type": "str"}, "dict_param": {"type": "dict"}}
-      $scope.requiredParams = ["str_param"]
-      $scope.optionalParams = []
-
-      $rootScope.showAddKey = true
-      $scope.params = {str_param: 'some string', dict_param: {}}
-      prepareContext """
-<form name="myForm">
-<parameters-editor name="params" ng-model="params"
-params-config="paramsConfig"
-required-params="requiredParams"
-optional-params="optionalParams"></parameters-editor>
-</form>
-"""
-      expect(innerScope.isTopLevel()).toEqual true
-
-      # moving str_param to dict_param will delete dict_param
-      innerScope.moveKey innerScope.paramsEditorData, 'str_param', 'dict_param'
-      expect(innerScope.paramsEditorData).toEqual {dict_param: 'some string'}
-
-      # resetting
-      $scope.params = {str_param: 'some string', dict_param: {}}
-      $scope.$digest()
-
-      # trying to delete required parameter fails
-      innerScope.deleteKey innerScope.paramsEditorData, 'str_param'
-      expect(innerScope.isRequired 'str_param').toBe true
-      expect($window.alert).toHaveBeenCalled()
-      expect(innerScope.paramsEditorData).toEqual {str_param: 'some string', dict_param: {}}
-
-      # trying to delete non-required parameter and confirm false
-      innerScope.deleteKey innerScope.paramsEditorData, 'dict_param'
-      expect(innerScope.isRequired 'dict_param').toBe false
-      expect($window.confirm).toHaveBeenCalled()
-      expect(innerScope.paramsEditorData).toEqual {str_param: 'some string', dict_param: {}}
-
-      # trying to delete non-required parameter and confirm true
-      $window.confirm.and.returnValue true
-      innerScope.deleteKey innerScope.paramsEditorData, 'dict_param'
-      expect(innerScope.isRequired 'dict_param').toBe false
-      expect($window.confirm).toHaveBeenCalled()
-      expect(innerScope.paramsEditorData).toEqual {str_param: 'some string'}
-
-      # adding item no key name
-      innerScope.addItem innerScope.paramsEditorData
-      expect($window.alert).toHaveBeenCalledWith 'Please fill in a name'
-
-# TODO: nader20140912, continue adding new parameter logic
-#      # adding item key name supplied, the click to trigger showAddKey = true
-#      # there are two, we don't care which
-#      expect($('a', elem).attr('title')).toEqual 'add new parameter'
-#      $('a', elem).click()
-#
-#      expect($('.input-small .addItemKeyInput', elem).length).toEqual 1
-#      expect($('.input-medium .addItemValueInput', elem)).length.toEqual 1
-#      $('.input-small .addItemKeyInput', elem).val 'new key to test'
-#      $('.input-medium .addItemValueInput', elem).val 'new key to test'
-#      $('a', elem).scope().addItem innerScope.paramsEditorData
-#      expect(innerScope.paramsEditorData).toEqual ''
-
-
-    it "should create parameters editor control with object parameter", ->
-
-      $scope.paramsConfig = {"map_param": {"type": "dict"}}
-      $scope.requiredParams = ["map_param"]
-      $scope.optionalParams = []
-
-      # invlaid
-      $scope.params = {}
-      prepareContext """
-<form name="myForm">
-<parameters-editor name="params" ng-model="params"
-params-config="paramsConfig"
-required-params="requiredParams"
-optional-params="optionalParams"></parameters-editor>
-</form>
-"""
-      $scope.$digest()
-      expect($scope.myForm.params.$valid).toBe false
-      expect($scope.myForm.$valid).toBe false
-
-      # valid
-      $scope.params = {map_param: {one: 'one_val', two: 'two_val'}}
-      $scope.$digest()
-      expect($scope.myForm.params.$valid).toBe true
-      expect($scope.myForm.$valid).toBe true
-
-      expect(elem.html()).toContain('<div class="jsonContents ng-scope">')
-      expect(elem.html()).toContain('<input ng-hide="isRequired(key)" ng-disabled="isRequired(key)"')
-      expect(elem.html()).toContain('>map_param</label>')
-      expect(elem.html()).toContain('<a title="add new parameter" ng-click="$parent.showAddKey = true"')
-
-    it "should create parameters editor control with text parameter", ->
-      $scope.params = {
-        "text_param": '{"key": "val"}'
-      }
-
-      $scope.paramsConfig = {"text_param": {"type": "text"}}
-      $scope.requiredParams = ["text_param"]
-      $scope.optionalParams = []
-
-      # invlaid
-      $scope.params = {}
-      prepareContext """
-<form name="myForm">
-<parameters-editor name="params" ng-model="params"
-params-config="paramsConfig"
-required-params="requiredParams"
-optional-params="optionalParams"></parameters-editor>
-</form>
-"""
-      $scope.$digest()
-      expect($scope.myForm.params.$valid).toBe false
-      expect($scope.myForm.$valid).toBe false
-
-      # invalid json
-      $scope.params = {text_param: 'invalid{"key":"value"}json'}
-      $scope.$digest()
-      expect($scope.myForm.params.$valid).toBe false
-      expect($scope.myForm.$valid).toBe false
-
-      # valid
-      $scope.params = {text_param: '{"key":"value"}'}
-      $scope.$digest()
-      expect($scope.myForm.params.$valid).toBe true
-      expect($scope.myForm.$valid).toBe true
-
-      expect(elem.html()).toContain('<div class="jsonContents ng-scope">')
-      expect(elem.html()).toContain('<input ng-hide="isRequired(key)" ng-disabled="isRequired(key)"')
-      expect(elem.html()).toContain('>text_param</label>')
-      expect(elem.html()).toContain('<textarea name="text_param" ng-model="paramsEditorData[key]"')
-
-    # TODO: this test takes too long
-    it "should validate items", ->
-      """
-      Attention: As of Anguular 1.2.20 no need to call validate exciplictly
-      as calling scope.digest() implicitly calls the validate
-      """
-      $scope.paramsConfig = {
-        "str_param": {"type": "str"},
-        "map_param": {"type": "dict"},
-        "text_param": {"type": "text"}
-      }
-      $scope.requiredParams = ["str_param", "map_param", "text_param"]
-      $scope.optionalParams = []
-
-      # empty params
-      $scope.params = {}
-      prepareContext """
-<form name="myForm">
-<parameters-editor name="params" ng-model="params"
-params-config="paramsConfig"
-required-params="requiredParams"
-optional-params="optionalParams"></parameters-editor>
-</form>
-"""
-      $scope.$digest()
-      expect($scope.myForm.params.$valid).toBe false
-      expect($scope.myForm.$valid).toBe false
-
-      buildValidParams = ->
-        $scope.params =
-          map_param: {one: 'one_val', two: 'two_val'}
-          str_param: "value"
-          text_param: '{"key": "value"}'
-        $scope.$digest()
-        expect($scope.myForm.params.$valid).toBe true
-        expect($scope.myForm.$valid).toBe true
-
-      buildValidParams()
-      $scope.params.map_param = {one: '', two: 'two_val'}
-      $scope.$digest()
-      expect($scope.myForm.params.$valid).toBe false
-      expect($scope.myForm.$valid).toBe false
-
-      buildValidParams()
-      $scope.params.map_param = {}
-      $scope.$digest()
-      expect($scope.myForm.params.$valid).toBe false
-      expect($scope.myForm.$valid).toBe false
-
-      buildValidParams()
-      delete $scope.params['map_param']
-      $scope.$digest()
-      expect($scope.myForm.params.$valid).toBe false
-      expect($scope.myForm.$valid).toBe false
-
-      buildValidParams()
-      $scope.params.str_param = ""
-      $scope.$digest()
-      expect($scope.myForm.params.$valid).toBe false
-      expect($scope.myForm.$valid).toBe false
-
-      buildValidParams()
-      delete $scope.params['str_param']
-      $scope.$digest()
-      expect($scope.myForm.params.$valid).toBe false
-      expect($scope.myForm.$valid).toBe false
-
-      buildValidParams()
-      $scope.params.text_param = 'wrong{"key": "value"}json'
-      $scope.$digest()
-      expect($scope.myForm.params.$valid).toBe false
-      expect($scope.myForm.$valid).toBe false
-
-      buildValidParams()
-      $scope.params.text_param = ""
-      $scope.$digest()
-      expect($scope.myForm.params.$valid).toBe false
-      expect($scope.myForm.$valid).toBe false
-
-      buildValidParams()
-      delete $scope.params['text_param']
-      $scope.$digest()
-      expect($scope.myForm.params.$valid).toBe false
-      expect($scope.myForm.$valid).toBe false
-
-    # TODO: nader20140817: we need to work on adding new item after adopting
-    # isloate scopes
-    xit "should correctly add a new string item to object", ->
-
-      $scope.paramsConfig = {"map_param": {"type": "dict"}}
-      $scope.requiredParams = ["map_param"]
-      $scope.optionalParams = []
-
-      $scope.params = {map_param: {one: 'one_val', two: 'two_val'}}
-      element = $compile("""
-<form name="myForm">
-<parameters-editor name="params" ng-model="params"
-params-config="paramsConfig"
-required-params="requiredParams"
-optional-params="optionalParams"></parameters-editor>
-</form>
-""")($scope)
-      $scope.$digest()
-
-      addItem = angular.element(element.children().children()[0]).scope().addItem
-      $scope.keyName = 'new_key'
-      $scope.valueName = 'new_value'
-      $scope.valueType = 'str'
-
-      obj = {}
-      addItem(obj)
-
-      expect(obj.new_key).toEqual('new_value')
-
 
   describe 'scCurves', ->
     elem = null

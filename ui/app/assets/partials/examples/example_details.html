@@ -103,8 +103,8 @@
       </table>
     </div>
 
-    <div ng-show="action[0] == 'raw'">
-      <textarea name="data" ui-codemirror="codeMirrorConfigs(true)['json']" ui-refresh="action" ng-model="data.raw_data"></textarea>
+    <div ng-show="action[0] == 'raw'" cml-has-codemirror="action[0] == 'raw'">
+      <textarea name="data" ui-codemirror="codeMirrorConfigs(true)['json']" ng-model="data.raw_data"></textarea>
     </div>
 </div>
 

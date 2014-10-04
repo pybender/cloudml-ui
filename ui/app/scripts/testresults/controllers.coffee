@@ -152,7 +152,6 @@ without test id and model id"
 
   $scope.exportResultsToDb = () ->
     $scope.openDialog($scope, {
-        $dialog: $dialog
         model: $scope.test
         template: 'partials/testresults/export_to_db_popup.html'
         ctrlName: 'CsvDownloadCtrl'

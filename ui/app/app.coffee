@@ -57,6 +57,8 @@ App = angular.module('app', [
   'app.features.controllers.features'
   'app.servers.model'
   'app.servers.controllers'
+
+  'app.play.controllers'
 ])
 
 App.config([
@@ -260,6 +262,10 @@ App.config([
     .when('/predefined/datasources', {
       controller: "DataSourceListCtrl"
       templateUrl: 'partials/import_handler/datasource/list.html'
+    })
+  .when('/play', {
+      controller: "PlayCtrl"
+      templateUrl: 'partials/play.html'
     })
 
     # Catch all

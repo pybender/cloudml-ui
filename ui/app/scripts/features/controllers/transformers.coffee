@@ -53,9 +53,8 @@ angular.module('app.features.controllers.transformers', ['app.config', ])
   'Transformer'
   '$location'
   '$rootScope'
-  '$dialog'
 
-($scope, $routeParams, Transformer, $location, $rootScope, $dialog) ->
+($scope, $routeParams, Transformer) ->
   $scope.LOADED_SECTIONS = []
   if not $scope.transformer
     if not $routeParams.id
@@ -109,10 +108,8 @@ without id"
 
 .controller('TransformerActionsCtrl', [
   '$scope'
-  '$dialog'
-  '$rootScope'
 
-  ($scope, $dialog, $rootScope) ->
+  ($scope) ->
     $scope.init = (opts) ->
       if !opts || !opts.transformer
         throw new Error "Please specify transformer"

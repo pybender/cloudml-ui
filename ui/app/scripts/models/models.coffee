@@ -122,6 +122,10 @@ angular.module('app.models.model', ['app.config'])
         @$make_request(
           "#{@BASE_API_URL}#{@id}/action/grid_search/", {}, "PUT", data)
 
+      $clone: (opts={}) ->
+        @$make_request("#{@BASE_API_URL}#{@id}/action/clone/", {}, "POST", {})
+
+
       $cancel_request_spot_instance: ->
         url = "#{@BASE_API_URL}#{@id}/action/cancel_request_instance/"
         @$make_request(url, {}, "PUT", {}).then(
