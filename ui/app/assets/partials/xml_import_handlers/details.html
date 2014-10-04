@@ -65,8 +65,8 @@
                     <tr>
                       <th>Name</th>
                       <th>Type</th>
-                      <th>Parameters</th>
-                      <th>Actions</th>
+                      <th ng-show="handler.can_edit">Parameters</th>
+                      <th ng-show="handler.can_edit">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -77,10 +77,10 @@
                       <td>
                         {{ item.type }}
                       </td>
-                      <td>
-                        {{ item.params| json }} 
+                      <td ng-show="handler.can_edit">
+                        {{ item.params | json }} 
                       </td>
-                      <td>
+                      <td ng-show="handler.can_edit">
                           <button ng-click="edit(item)" class="btn btn-info">
                             <i title="Edit datasource" class="icon-edit"></i>
                           </button>

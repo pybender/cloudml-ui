@@ -1,6 +1,7 @@
 import json
 
 from fixture import DataSet
+from api.accounts.fixtures import UserData
 
 
 class ImportHandlerData(DataSet):
@@ -187,12 +188,14 @@ class XmlImportHandlerData(DataSet):
         created_on = "2013-04-19 14:37:23.145000"
         updated_on = "2013-04-19 14:37:23.145000"
         import_params = ['start', 'end', 'category']
+        created_by = UserData.user_01
 
     class xml_import_handler_02:
         name = "Xml Handler 2"
         created_on = "2013-04-19 14:37:23.145000"
         updated_on = "2013-04-19 14:37:23.145000"
         import_params = ['start', 'end', 'category']
+        created_by = UserData.user_02
 
 
 class XmlDataSourceData(DataSet):

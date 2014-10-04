@@ -18,8 +18,17 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
     DATASOURCES_ORDER = ['db', 'csv', 'http', 'pig', 'input']
 
     predict_id = db.Column(db.ForeignKey('predict.id',
-                                         ondelete='CASCADE'))
+                                         ondelete='CASCADE')) 
     predict = relationship('Predict', foreign_keys=[predict_id])
+
+    @property
+    def can_edit(self):
+        if self.created_by is None:
+            return True
+
+        from flask import request
+        user = getattr(request, 'user', None)
+        return user.id == self.created_by.id
 
     @property
     def data(self):
@@ -44,7 +53,7 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
             for item in data[key]:
                 yield item
 
-    def get_plan_config(self, pretty_print=True):
+    def get_plan_config(self, pretty_print=True, secure=True):
         plan = etree.Element("plan")
 
         inputs = etree.SubElement(plan, "inputs")
@@ -59,8 +68,9 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
         for ds in self._get_in_order(self.xml_data_sources, 'type',
                                      self.DATASOURCES_ORDER):
             if ds.name != "input":
+                extra = ds.params if secure else {}
                 etree.SubElement(
-                    datasources, ds.type, name=ds.name, **ds.params)
+                    datasources, ds.type, name=ds.name, **extra)
 
         import_ = etree.SubElement(plan, "import")
         tree = get_entity_tree(self)
@@ -192,7 +202,7 @@ class XmlDataSource(db.Model, BaseMixin, RefXmlImportHandlerMixin):
     # TODO: unique for XmlImportHandler
     name = db.Column(db.String(200), nullable=False)
     type = db.Column(db.Enum(*TYPES, name='xml_datasource_types'))
-    params = db.Column(JSONType)
+    params = deferred(db.Column(JSONType))
 
     @validates('params')
     def validate_params(self, key, params):  # TODO:

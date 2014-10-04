@@ -10,7 +10,7 @@
 <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
 
 <table ng-controller="BaseListCtrl" ng-init="init(true, 'xml_import_handlers')" class="table table-hover">
-<thead>
+<thead ng-show="objects.length">
   <tr>
     <th>Name</th>
     <th>Import Parameters</th>

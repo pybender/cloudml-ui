@@ -3,7 +3,7 @@ import re
 from flask import request
 from psycopg2._psycopg import DatabaseError
 from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy.orm import joinedload, joinedload_all
+from sqlalchemy.orm import joinedload, joinedload_all, undefer
 
 from api.base.resources import BaseResourceSQL, NotFound, \
     odesk_error_response, ERR_INVALID_DATA
@@ -39,26 +39,26 @@ class XmlImportHandlerResource(BaseResourceSQL):
                 joinedload('predict.probability'),
                 joinedload('predict.label.predict_model'),
                 joinedload('predict.probability.predict_model'))
+        if 'xml_data_sources' in show:
+            cursor = cursor.options(
+                undefer('xml_data_sources.params'))
         return cursor
 
-    def _prepare_model(self, model, params):
+    def _prepare_model(self, handler, params):
         res = super(XmlImportHandlerResource, self)._prepare_model(
-            model, params)
+            handler, params)
         show = self._get_show_fields(params)
         if 'xml' in show:
-            res['xml'] = model.get_plan_config()
+            res['xml'] = handler.get_plan_config(secure=handler.can_edit)
 
         if 'entities' in show:
             from ..models import get_entity_tree
-            res['entity'] = get_entity_tree(model)
+            res['entity'] = get_entity_tree(handler)
 
-        # if 'predict' in show:
-        #     if model.predicts:
-        #         predict = model.predict
-        #         print predict.models
-        #         res['predict'] = predict
-        #     else:
-        #         res['predict'] = None
+        if 'xml_data_sources' in show and not handler.can_edit:
+            for ds in handler.xml_data_sources:
+                ds.params = None
+
         return res
 
     def _put_upload_to_server_action(self, **kwargs):

@@ -173,6 +173,35 @@ class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
         self.assertEqual(3, len(obj['entity']['fields']))
         self.assertEqual(2, len(obj['entity']['entities']))
 
+    def test_datasource_credentials(self):
+        def _check(hide=False):
+            resp = self.check_details(
+                show='xml,xml_data_sources', obj=self.obj)
+            obj = resp[self.RESOURCE.OBJECT_NAME]
+            self.assertTrue(len(obj['xml_data_sources']))
+            for ds in obj['xml_data_sources']:
+                if hide:
+                    self.assertFalse(ds['params'])
+                else:
+                    self.assertNotEquals(ds['params'], None)
+            xmlRoot = etree.fromstring(obj['xml'])
+            datasources = xmlRoot.xpath('./datasources/*')
+            self.assertTrue(datasources)
+            ds = datasources[0]
+            self.assertEquals(ds.tag, "db")
+            if hide:
+                self.assertFalse(ds.get('vendor'))
+            else:
+                self.assertTrue(ds.get('vendor'))
+
+        self.obj.created_by_id = 2
+        self.obj.save()
+        _check(hide=False)
+
+        self.obj.created_by_id = 1
+        self.obj.save()
+        _check(hide=True)
+
     def test_edit_name(self):
         data = {"name": "new name"}
         resp, obj = self.check_edit(data, id=self.obj.id)

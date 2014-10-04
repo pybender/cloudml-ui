@@ -39,6 +39,7 @@ exist. Please choose another one.' % value)
             import_handler = XmlImportHandler(
                 name=self.cleaned_data['name'],
                 import_params=[])
+            import_handler._set_user()
             db.session.add(import_handler)
             import_handler.data = self.cleaned_data.get('data')
         except Exception, exc:
