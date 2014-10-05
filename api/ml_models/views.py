@@ -13,9 +13,10 @@ from api.base.models import db
 from api.import_handlers.models import DataSet
 from api.base.resources import BaseResourceSQL, NotFound, ValidationError, \
     public_actions, ERR_INVALID_DATA, odesk_error_response
-from models import Model, Tag, Weight, WeightsCategory, Segment, Transformer
+from models import Model, Tag, Weight, WeightsCategory, Segment, Transformer, \
+    ClassifierGridParams
 from forms import ModelAddForm, ModelEditForm, TransformDataSetForm, TrainForm, \
-    TransformerForm, FeatureTransformerForm
+    TransformerForm, FeatureTransformerForm, GridSearchForm
 from api.servers.forms import ChooseServerForm
 
 
@@ -152,7 +153,7 @@ class ModelResource(BaseTrainedEntityResource):
     GET_ACTIONS = ('reload', 'by_importhandler', 'trainer_download_s3url',
                    'features_download', 'dataset_download')
     PUT_ACTIONS = ('train', 'tags', 'cancel_request_instance',
-                   'upload_to_server', 'dataset_download')
+                   'upload_to_server', 'dataset_download', 'grid_search')
     POST_ACTIONS = ('clone', )
     FILTER_PARAMS = (('status', str), ('comparable', str), ('tag', str),
                     ('created_by', str), ('updated_by_id', int),
@@ -234,6 +235,18 @@ class ModelResource(BaseTrainedEntityResource):
         resp.headers['Content-Disposition'] = \
             'attachment; filename=%s-features.json' % model.name
         return resp
+
+    def _put_grid_search_action(self, **kwargs):
+        model = self._get_details_query(None, **kwargs)
+
+        form = GridSearchForm(model=model, Model=ClassifierGridParams)
+        if form.is_valid():
+            from tasks import get_classifier_parameters_grid
+            params_grid = form.save()
+            get_classifier_parameters_grid.delay(params_grid.id)
+            return self._render({
+                self.OBJECT_NAME: model
+            })
 
     def _post_clone_action(self, **kwargs):
         from datetime import datetime

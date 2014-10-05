@@ -1,4 +1,5 @@
 import logging
+import numpy as np
 from api.amazon_utils import AmazonS3Helper
 from os.path import exists
 from os import makedirs
@@ -16,7 +17,7 @@ from api.base.exceptions import InvalidOperationError
 from api.logs.logger import init_logger
 from api.accounts.models import User
 from api.ml_models.models import Model, Weight, WeightsCategory, Segment, \
-    Transformer, get_transformer
+    Transformer, get_transformer, ClassifierGridParams
 from api.model_tests.models import TestResult, TestExample
 from api.import_handlers.models import DataSet
 from api.logs.dynamodb.models import LogMessage
@@ -133,6 +134,43 @@ def train_model(dataset_ids, model_id, user_id, delete_metadata=False):
     msg = "Model trained at %s" % trainer.train_time
     logging.info(msg)
     return msg
+
+
+@celery.task(base=SqlAlchemyTask)
+def get_classifier_parameters_grid(grid_params_id):
+    grid_params = ClassifierGridParams.query.get(grid_params_id)
+    grid_params.status = 'Calculating'
+    grid_params.save()
+    feature_model = FeatureModel(
+        grid_params.model.get_features_json(), is_file=False)
+    trainer = Trainer(feature_model)
+
+    def _get_iter(dataset):
+        fp = None
+        if fp:
+            fp.close()
+        fp = dataset.get_data_stream()
+        for row in dataset.get_iterator(fp):
+            yield row
+        if fp:
+            fp.close()
+
+    clfs = trainer.grid_search(
+        grid_params.parameters,
+        _get_iter(grid_params.train_dataset),
+        _get_iter(grid_params.test_dataset),
+        score='accuracy')
+    grids = {}
+    for segment, clf in clfs.iteritems():
+        grids[segment] = [{
+            'parameters': item.parameters,
+            'mean': item.mean_validation_score,
+            'std': np.std(item.cv_validation_scores)}
+            for item in clf.grid_scores_]
+    grid_params.parameters_grid = grids
+    grid_params.status = 'Completed'
+    grid_params.save()
+    return "grid_params done"
 
 
 @celery.task(base=SqlAlchemyTask)
