@@ -10,6 +10,7 @@ angular.module('app.testresults.controllers', ['app.config', ])
 
   ($scope, $rootScope, TestResult) ->
     $scope.MODEL = TestResult
+    $scope.keysf = Object.keys
     $scope.FIELDS = 'name,created_on,status,parameters,accuracy,examples_count,\
 created_by,roc_auc'
     $scope.ACTION = 'loading tests'

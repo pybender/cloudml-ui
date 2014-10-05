@@ -30,7 +30,7 @@
       </td>
       <td><span class="value" ng-repeat="(key, val) in test.parameters">{{ key }}={{ val }}</span></td>
       <td>{{ test.accuracy.toFixed(4) }}</td>
-      <td ng-init="keys = Object.keys(test.roc_auc || {})">
+      <td ng-init="keys = keysf(test.roc_auc || {})">
         <span ng-show="keys.length == 1" ng-init="label=keys[0]">
           {{ test.roc_auc[label].toFixed(4) }}</span>
         <div ng-show="keys.length > 1">
