@@ -23,7 +23,10 @@ class XmlImportHandlerResource(BaseResourceSQL):
     post_form = XmlImportHandlerAddForm
     put_form = XmlImportHandlerEditForm
 
+    NEED_PAGING = True
     PUT_ACTIONS = ('upload_to_server', 'run_sql')
+    FILTER_PARAMS = (('created_by', str), ('updated_by_id', int),
+                     ('updated_by', str), ('name', str))
 
     @property
     def Model(self):
@@ -42,6 +45,23 @@ class XmlImportHandlerResource(BaseResourceSQL):
         if 'xml_data_sources' in show:
             cursor = cursor.options(
                 undefer('xml_data_sources.params'))
+        return cursor
+
+    def _set_list_query_opts(self, cursor, params):
+        # if 'tag' in params and params['tag']:
+        #     cursor = cursor.filter(Model.tags.any(Tag.text == params['tag']))
+        name = params.pop('name', None)
+        if name:
+            cursor = cursor.filter(
+                XmlImportHandler.name.ilike('%{0}%'.format(name)))
+        created_by = params.pop('created_by', None)
+        if created_by:
+            cursor = cursor.filter(
+                XmlImportHandler.created_by.has(uid=created_by))
+        updated_by = params.pop('updated_by', None)
+        if updated_by:
+            cursor = cursor.filter(
+                XmlImportHandler.updated_by.has(uid=updated_by))
         return cursor
 
     def _prepare_model(self, handler, params):

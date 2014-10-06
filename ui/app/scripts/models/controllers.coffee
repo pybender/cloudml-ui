@@ -7,7 +7,7 @@ angular.module('app.models.controllers', ['app.config', ])
 .constant('MODEL_FIELDS',
   [ 'name','status','test_import_handler', 'train_import_handler',
     'train_import_handler_type', 'test_import_handler_type',
-    'test_handler_fields', 'labels'].join(',')
+    'test_handler_fields', 'labels', 'classifier'].join(',')
 )
 
 .factory('FIELDS_BY_SECTION', [
@@ -25,7 +25,7 @@ angular.module('app.models.controllers', ['app.config', ])
       'updated_on','feature_count','created_by','data_fields',
       'test_handler_fields','tags'
     ].join(',')
-    main: MODEL_FIELDS + ',classifier',
+    main: MODEL_FIELDS,
     grid_search: 'classifier_grid_params'
 ])
 
