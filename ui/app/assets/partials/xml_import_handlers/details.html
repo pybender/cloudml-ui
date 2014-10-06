@@ -168,7 +168,7 @@
               <div ng-repeat="item in objects">
                 <div class="row">
                   <div class="span9">
-                    <textarea class="small" ui-codemirror="codeMirrorConfigs('nocursor')['python']" ng-model="item.data" />
+                    <textarea class="small" ui-codemirror="codeMirrorConfigs('nocursor')['python']" ng-model="item.data" class="cml-codemirror-refresh" />
                   </div>
                   <div class="span2">
                     <button ng-click="edit(item)" class="btn btn-info">
@@ -303,7 +303,7 @@
   </div>
 
   <div ng-show="action[1] == 'xml'" cml-has-codemirror="action[1] == 'xml'">
-    <textarea name="data" ui-codemirror="codeMirrorConfigs(true)['xml']" ng-model="handler.xml"></textarea>
+    <textarea name="data" ui-codemirror="codeMirrorConfigs(true)['xml']" ng-model="handler.xml" class="cml-codemirror-refresh"></textarea>
   </div>
   </div>
 
