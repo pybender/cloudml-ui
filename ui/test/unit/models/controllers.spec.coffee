@@ -273,7 +273,7 @@ describe 'models/controllers.coffee', ->
       $scope.load('', '')
       expect($scope.LOADED_SECTIONS).toEqual []
 
-    it  'should load main and test section with tags and caching', inject (Model, MODEL_FIELDS, FIELDS_BY_SECTION)->
+    it  'should load main and test section with tags and caching', inject (Model, MODEL_FIELDS, FIELDS_BY_SECTION, $timeout)->
       prepareContext()
 
       expect($scope.initSections).toHaveBeenCalledWith $scope.goSection
@@ -295,6 +295,7 @@ describe 'models/controllers.coffee', ->
 
       $scope.goSection ['test', '']
       $scope.$digest()
+      $timeout.flush()
       expect($scope.LOADED_SECTIONS).toEqual ['model', 'main', 'test']
       expect($scope.$broadcast).toHaveBeenCalledWith 'loadTest', true
 
