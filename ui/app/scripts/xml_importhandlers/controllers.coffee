@@ -53,12 +53,14 @@ angular.module('app.xml_importhandlers.controllers', ['app.config', ])
   '$rootScope'
   '$routeParams'
   'XmlImportHandler'
+  'Tag'
 
-  ($scope, $rootScope, $routeParams, ImportHandler) ->
+  ($scope, $rootScope, $routeParams, ImportHandler, Tag) ->
     if not $routeParams.id
       throw new Error "Can't initialize without import handler id"
 
     $scope.handler = new ImportHandler({id: $routeParams.id})
+    $scope.params = {'tags': []}
     $scope.LOADED_SECTIONS = []
     $scope.PROCESS_STRATEGIES =
       _.sortBy ImportHandler.PROCESS_STRATEGIES, (s)-> s
@@ -69,7 +71,7 @@ angular.module('app.xml_importhandlers.controllers', ['app.config', ])
       if mainSection not in $scope.LOADED_SECTIONS
         # is not already loaded
         extraFields = ['xml_data_sources', 'xml_input_parameters', 'xml_scripts',
-                       'entities', 'import_params', 'predict', 'can_edit'].join(',')
+                       'entities', 'import_params', 'predict', 'can_edit', 'tags'].join(',')
         fields = "#{ImportHandler.MAIN_FIELDS},#{extraFields}"
 
       if section[1] == 'xml' then fields = 'xml'
@@ -77,7 +79,11 @@ angular.module('app.xml_importhandlers.controllers', ['app.config', ])
       if fields isnt ''
         $scope.handler.$load
             show: fields
-        .then ->
+        .then (opts) ->
+          if $scope.params['tags']?
+            $scope.params['tags'] = []
+            for t in $scope.handler.tags
+              $scope.params['tags'].push {'id': t, 'text': t}
           $scope.LOADED_SECTIONS.push mainSection
           if mainSection is 'dataset'
             $scope.$broadcast('loadDataSet', true)
@@ -85,6 +91,50 @@ angular.module('app.xml_importhandlers.controllers', ['app.config', ])
           $scope.setError(opts, 'loading handler details')
 
     $scope.initSections($scope.go)
+
+    $scope.select2params = {
+      multiple: true
+      query: (query) ->
+        query.callback
+          results: angular.copy($scope.tag_list)
+
+      createSearchChoice: (term, data) ->
+        cmp = () ->
+          return this.text.localeCompare(term) == 0
+        if $(data).filter(cmp).length == 0 then return {id: term, text: term}
+    }
+
+    Tag.$loadAll(
+      show: 'text,id'
+    ).then ((opts) ->
+      $scope.tag_list = []
+      for t in opts.objects
+        if t.text?
+          $scope.tag_list.push {'text': t.text, 'id': t.id}
+
+    ), ((opts) ->
+      $scope.setError(opts, 'loading tags')
+    )
+
+    $scope.$watch 'params.tags', (newVal, oldVal)->
+      if angular.isString(newVal) and newVal isnt ''
+        ids = newVal.split(',')
+        $scope.params.tags = []
+        for id in ids
+          nId = _.parseInt(id)
+          if nId
+            $scope.params.tags.push (t for t in $scope.tag_list when t.id is nId)[0]
+          else
+            $scope.params.tags.push {id: id, text: id}
+
+    $scope.updateTags = () ->
+      $scope.handler.tags = []
+      for t in $scope.params['tags']
+        $scope.handler.tags.push t['text']
+
+      $scope.handler.$save(only: ['tags'])
+      .then (->), (opts)->
+        $scope.setError opts, 'saving handler tags'
 ])
 
 

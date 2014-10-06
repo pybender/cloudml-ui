@@ -18,8 +18,10 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
     DATASOURCES_ORDER = ['db', 'csv', 'http', 'pig', 'input']
 
     predict_id = db.Column(db.ForeignKey('predict.id',
-                                         ondelete='CASCADE')) 
+                                         ondelete='CASCADE'))
     predict = relationship('Predict', foreign_keys=[predict_id])
+    tags = relationship(
+        'Tag', secondary=lambda: tags_table, backref='xml_import_handlers')
 
     @property
     def can_edit(self):
@@ -180,6 +182,14 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
     def __repr__(self):
         return "<Import Handler %s>" % self.name
 
+
+tags_table = db.Table(
+    'handler_tag', db.Model.metadata,
+    db.Column('xml_import_handler_id', db.Integer, db.ForeignKey(
+        'xml_import_handler.id', ondelete='CASCADE', onupdate='CASCADE')),
+    db.Column('tag_id', db.Integer, db.ForeignKey(
+        'tag.id', ondelete='CASCADE', onupdate='CASCADE'))
+)
 
 class RefXmlImportHandlerMixin(object):
     @declared_attr

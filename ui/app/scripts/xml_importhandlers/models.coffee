@@ -42,7 +42,7 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
       API_FIELDNAME: 'xml_import_handler'
       @LIST_MODEL_NAME: 'xml_import_handlers'
       LIST_MODEL_NAME: @LIST_MODEL_NAME
-      @MAIN_FIELDS: 'id,name,created_on,created_by,updated_on,updated_by'
+      @MAIN_FIELDS: 'id,name,created_on,created_by,updated_on,updated_by,tags'
       TYPE: 'XML'
 
       id: null
@@ -68,6 +68,9 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
             for paramData in origData.xml_input_parameters
               @xml_input_parameters.push new InputParameter(
                 _.extend paramData, defaults)
+          if origData.tags?
+            @tags = for tag in origData['tags']
+              tag['text']
 
       $uploadPredict: (server) =>
         url = "#{@BASE_API_URL}#{@id}/action/upload_to_server/"

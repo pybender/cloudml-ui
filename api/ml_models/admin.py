@@ -55,7 +55,7 @@ admin.add_view(TransformerAdmin(
 class TagAdmin(BaseAdmin):
     Model = Tag
     MIX_METADATA = False
-    column_list = ['id', 'text', 'count']
+    column_list = ['id', 'text', 'count', 'handlers_count']
     column_sortable_list = (
         ('text', Tag.text),
         ('count', Tag.count)

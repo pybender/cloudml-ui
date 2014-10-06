@@ -89,7 +89,7 @@ angular.module('app.models.controllers', ['app.config', ])
 
   ($scope, Tag) ->
     Tag.$loadAll(
-      show: 'text,count'
+      show: 'text,count,handlers_count'
     ).then ((opts) ->
       $scope.tag_list = opts.objects
     ), ((opts) ->

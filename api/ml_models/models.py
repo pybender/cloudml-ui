@@ -414,7 +414,8 @@ class Tag(db.Model, BaseMixin):
     Model tag.
     """
     text = db.Column(db.String(200))
-    count = db.Column(db.Integer)
+    count = db.Column(db.Integer, default=0)
+    handlers_count = db.Column(db.Integer, default=0)
 
 
 class Segment(db.Model, BaseMixin):

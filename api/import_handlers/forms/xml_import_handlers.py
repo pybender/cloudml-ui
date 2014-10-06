@@ -52,16 +52,29 @@ exist. Please choose another one.' % value)
 
 
 class XmlImportHandlerEditForm(BaseForm):
-    required_fields = ('name', )
-
     name = CharField()
+    tags = JsonField()
 
     def clean_name(self, value, field):
-        count = XmlImportHandler.query.filter_by(name=value).count()
-        if count:
-            raise ValidationError('Import Handler with name "%s" already \
-exist. Please choose another one.' % value)
-        return value
+        if value:
+            count = XmlImportHandler.query.filter_by(name=value).count()
+            if count:
+                raise ValidationError('Import Handler with name "%s" already \
+    exist. Please choose another one.' % value)
+            return value
+
+    def save(self, commit=True):
+        from api.ml_models.helpers.tags import get_tags_list, \
+            recalculate_tags_size
+        old_tags = [t.text for t in self.obj.tags]
+        tags = self.cleaned_data.get('tags', None)
+        tags_updated = tags is not None
+        handler = super(XmlImportHandlerEditForm, self).save(commit=not tags_updated)
+        if tags_updated:
+            handler.tags = get_tags_list(old_tags, tags)
+            handler.save()
+            recalculate_tags_size(old_tags, tags, models=False, handlers=True)
+        return handler
 
 
 class XmlInputParameterForm(BaseForm):

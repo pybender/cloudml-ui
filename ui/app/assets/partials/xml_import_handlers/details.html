@@ -24,6 +24,11 @@
 </h2>
 
 <div title="quick info" ng-init="obj=handler">
+  <span ng-repeat="tag in handler.tags">
+    <span class="badge">
+      <a href="#/handlers/xml/?tag={{ tag }}" style="color: white;">{{ tag }}</a>
+    </span> 
+  </span>
   <ng-include src="'partials/parts/created_tags.html'"></ng-include>
 </div>
 <p></p>
@@ -37,6 +42,7 @@
     <a ng-click="setSection(['model', 'details'])">Details</a> 
   </li>
   <li ng-class="{active: action[0] == 'dataset'}"><a ng-click="setSection(['dataset', 'list'])">DataSets</a></li>
+  <li ng-class="{active: action[0] == 'about'}"><a ng-click="setSection(['about', 'details'])">About</a></li>
 </ul>
  
 <div class="tab-content" ng-show="handler.loaded">
@@ -311,5 +317,10 @@
     <div ng-controller="DatasetListCtrl" ng-init="init(handler)">
       <ng-include src="'partials/datasets/list.html'"></ng-include>
     </div>
+  </div>
+
+  <div ng-show="action[0] == 'about'">
+    <h4>Edit tags</h4>
+    <input ui-select2="select2params" ng-model="params['tags']" style="width: 300px" /><input type="button" class="btn btn-info" value="Save" ng-click="updateTags()" style="margin-left: 5px;" /> 
   </div>
 </div>

@@ -14,6 +14,7 @@ from api.import_handlers.forms import XmlImportHandlerAddForm, \
     XmlInputParameterForm, XmlEntityForm, XmlFieldForm, XmlDataSourceForm, \
     XmlQueryForm, XmlScriptForm, XmlImportHandlerEditForm, XmlSqoopForm
 from api.servers.forms import ChooseServerForm
+from api.ml_models.models import Tag
 
 
 class XmlImportHandlerResource(BaseResourceSQL):
@@ -26,7 +27,7 @@ class XmlImportHandlerResource(BaseResourceSQL):
     NEED_PAGING = True
     PUT_ACTIONS = ('upload_to_server', 'run_sql')
     FILTER_PARAMS = (('created_by', str), ('updated_by_id', int),
-                     ('updated_by', str), ('name', str))
+                     ('updated_by', str), ('tag', str), ('name', str))
 
     @property
     def Model(self):
@@ -48,8 +49,8 @@ class XmlImportHandlerResource(BaseResourceSQL):
         return cursor
 
     def _set_list_query_opts(self, cursor, params):
-        # if 'tag' in params and params['tag']:
-        #     cursor = cursor.filter(Model.tags.any(Tag.text == params['tag']))
+        if 'tag' in params and params['tag']:
+            cursor = cursor.filter(XmlImportHandler.tags.any(Tag.text == params['tag']))
         name = params.pop('name', None)
         if name:
             cursor = cursor.filter(
