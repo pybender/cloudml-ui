@@ -667,9 +667,8 @@ editable-placement="right" display="instance.obj.name"></span>
         setTimeout ->
           expect($scope.some_file).toEqual 'bad json'
           expect($scope.myForm.$valid).toBe false
-          1+1
           done()
-        , 1000
+        , 500
 
       it 'should render and handles file uploads, with good json', (done)->
         $scope.some_file = ''
@@ -687,7 +686,7 @@ editable-placement="right" display="instance.obj.name"></span>
           expect($scope.some_file).toEqual good_json
           expect($scope.myForm.$valid).toBe true
           done()
-        , 1
+        , 500
 
       it 'should render and handles file with 0 files', (done)->
         ###
@@ -708,7 +707,7 @@ editable-placement="right" display="instance.obj.name"></span>
           expect($scope.some_file).toEqual ''
           expect($scope.myForm.$valid).toBe false
           done()
-        , 1
+        , 500
 
       it 'should render and handles file uploads', (done)->
         $scope.some_file = ''
@@ -725,7 +724,7 @@ editable-placement="right" display="instance.obj.name"></span>
           expect($scope.some_file).toEqual 'bad json'
           expect($scope.myForm.$valid).toBe false
           done()
-        , 1
+        , 500
 
 
     describe 'notRequiredFile', ->
@@ -745,7 +744,7 @@ editable-placement="right" display="instance.obj.name"></span>
           expect($scope.some_file).toEqual 'file text'
           expect($scope.myForm.$valid).toBe true
           done()
-        , 1000
+        , 500
 
       it 'should render and handles file with 0 files', (done)->
         ###
@@ -766,7 +765,7 @@ editable-placement="right" display="instance.obj.name"></span>
           expect($scope.some_file).toEqual ''
           expect($scope.myForm.$valid).toBe true
           done()
-        , 1
+        , 500
 
 
     describe 'requiredFile', ->
@@ -786,7 +785,7 @@ editable-placement="right" display="instance.obj.name"></span>
           expect($scope.some_file).toEqual 'file text'
           expect($scope.myForm.$valid).toBe true
           done()
-        , 1000
+        , 500
 
       it 'should render and handles file uploads, empty file is error', (done)->
         $scope.some_file = ''
@@ -803,7 +802,7 @@ editable-placement="right" display="instance.obj.name"></span>
           expect($scope.some_file).toEqual ''
           expect($scope.myForm.$valid).toBe false
           done()
-        , 1000
+        , 500
 
       it 'should render and handles file with 0 files', (done)->
         ###
@@ -824,7 +823,7 @@ editable-placement="right" display="instance.obj.name"></span>
           expect($scope.some_file).toEqual ''
           expect($scope.myForm.$valid).toBe false
           done()
-        , 1
+        , 500
 
 
   describe 'smartFloat', ->

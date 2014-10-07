@@ -25,7 +25,7 @@ angular.module('app.features.models', ['app.config'])
   ($http, $q, settings, BaseModel, XmlImportHandler, ImportHandler) ->
     class Transformer extends BaseModel
       BASE_API_URL: "#{settings.apiUrl}transformers/"
-      BASE_UI_URL: "/predefined/transformers/"
+      BASE_UI_URL: "/predefined/transformers"
       API_FIELDNAME: 'transformer'
       @LIST_MODEL_NAME: 'transformers'
       LIST_MODEL_NAME: @LIST_MODEL_NAME

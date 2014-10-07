@@ -18,11 +18,13 @@ describe "app", ->
   $location = null
   $auth = null
   $cookieStore = null
+  $route = null
 
   beforeEach inject ($injector) ->
     settings = $injector.get('settings')
     $httpBackend = $injector.get('$httpBackend')
     $rootScope = $injector.get('$rootScope')
+    $route = $injector.get('$route')
     $modal = $injector.get('$modal')
     $scope = $rootScope.$new()
     $routeParams = $injector.get('$routeParams')
@@ -42,6 +44,18 @@ describe "app", ->
      $httpBackend.verifyNoOutstandingRequest()
 
   describe '$rootScope', ->
+
+    it 'should have proper routes defined', ->
+
+      routes = $route.routes
+      for key, route of routes
+        if key.lastIndexOf('/') is key.length-1
+          # the redirect rule automagically added by angular
+          expect(route.redirectTo).toEqual key[..key.length-2]
+        else
+          if route.templateUrl
+            #expect(route.templateUrl.indexOf 'partials/').toBe 0
+            expect(route.templateUrl).toMatch '^partials/.+'
 
     it 'should initialize $rootScope', ->
 
