@@ -73,5 +73,6 @@ class ExportToDbForm(SelectFieldsForCSVForm):
     use for generating test examples to db in _put_db_task_action
     - datasource, used to connect to db
     """
+    required_fields = ('fields', 'datasource', 'tablename')
     datasource = ModelField(model=PredefinedDataSource, return_model=True)
     tablename = CharField()
