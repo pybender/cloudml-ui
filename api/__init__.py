@@ -141,6 +141,14 @@ class Api(restful.Api):
                 url = base_url + '<regex("[\w\.-]*"):id>/' + 'action/<regex("[\w\.]*"):action>/'
                 self.app.add_url_rule(self.prefix + url, view_func=resource_func)
 
+    def handle_error(self, e):
+        """ Note this method returns a Flask Response object """
+        from api.base.resources.utils import _add_cors_headers
+
+        resp = super(Api, self).handle_error(e)
+        _add_cors_headers(resp.headers)
+        return resp
+
 api = Api(app)
 admin = Admin(app, 'CloudML Admin Interface')
 
