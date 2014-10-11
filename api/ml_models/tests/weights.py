@@ -329,7 +329,7 @@ class WeightTasksTests(BaseDbTestCase, TestChecksMixin):
     @patch('api.amazon_utils.AmazonS3Helper.load_key')
     def test_fill_weights_multiclass_classifier(self, mock_load_key):
         """
-        fill_model_parameter_weights
+        test_fill_weights_multiclass_classifier
         for multiclass classifier
         :param mock_load_key:
         """
