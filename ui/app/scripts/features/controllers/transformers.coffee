@@ -58,8 +58,7 @@ angular.module('app.features.controllers.transformers', ['app.config', ])
   $scope.LOADED_SECTIONS = []
   if not $scope.transformer
     if not $routeParams.id
-      throw new Error "Can't initialize transformer details controller
-without id"
+      throw new Error "Can't initialize transformer details controller without id"
 
     $scope.transformer = new Transformer({
       id: $routeParams.id
@@ -100,7 +99,8 @@ without id"
         fields += ',' + FIELDS_BY_SECTION[name]
       $scope.LOADED_SECTIONS.push name
 
-    $scope.load(fields, name)
+    if fields isnt '' # otherwise we had those loaded before
+      $scope.load(fields, name)
 
   $scope.initSections($scope.goSection, 'about:details')
 ])

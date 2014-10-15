@@ -423,6 +423,16 @@ describe 'app.datas.controllers', ->
     beforeEach ->
       $rootScope.setError = jasmine.createSpy '$rootScope.setError'
       $rootScope.$close = jasmine.createSpy '$rootScope.$close'
+      spyOn(window, 'FormData').and.returnValue new ()->
+        _data = {}
+        return {
+        append: (key, value)->
+          _data[key] = value
+        getData: ->
+          return angular.copy(_data)
+        toString: ->
+          angular.toJson(_data)
+        }
 
     it "should load data fields", inject (TestResult, Data) ->
 
@@ -511,7 +521,8 @@ describe 'app.datas.controllers', ->
       # get csv
       $scope.getExamplesCsv()
 
-      $httpBackend.expectPUT "#{data.BASE_API_URL}action/csv_task/"
+      $httpBackend.expectPUT "#{data.BASE_API_URL}action/csv_task/", (data)->
+        return angular.toJson(data.getData()) is angular.toJson({fields: '["label","pred_label","prob","2two","1one","4four","3three"]'})
       .respond("{\"url\":\"#{data.BASE_API_URL}\"}")
       $httpBackend.flush()
 
@@ -532,14 +543,19 @@ describe 'app.datas.controllers', ->
 
       openOptions = {model: test}
       createController "CsvDownloadCtrl", {'openOptions': openOptions}
+      expect($scope.extraData).toBeDefined()
+
       $httpBackend.expectGET "#{data.BASE_API_URL}action/datafields/"
       .respond('{"fields": ["2two", "1one", "4four", "3three"]}')
       $httpBackend.flush()
 
-      # get csv
+      # get db
+      $scope.extraData = {datasource: 'ds1', tablename: 'tablename2'}
       $scope.exportExamplesToDb()
 
-      $httpBackend.expectPUT "#{data.BASE_API_URL}action/db_task/"
+      $httpBackend.expectPUT "#{data.BASE_API_URL}action/db_task/", (data)->
+        return angular.toJson(data.getData()) is angular.toJson({fields: '["label","pred_label","prob","2two","1one","4four","3three"]',
+        datasource: 'ds1', tablename: 'tablename2'})
       .respond("{\"url\":\"#{data.BASE_API_URL}\"}")
       $httpBackend.flush()
 
@@ -547,7 +563,7 @@ describe 'app.datas.controllers', ->
       expect($location.search()).toEqual {action : 'about:details'}
       expect($scope.$close).toHaveBeenCalledWith true
 
-      # get csv, something went bad
+      # get db, something went bad
       $scope.exportExamplesToDb()
       $httpBackend.expectPUT("#{data.BASE_API_URL}action/db_task/").respond(400)
       $httpBackend.flush()
