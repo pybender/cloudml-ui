@@ -159,7 +159,7 @@ class Model(db.Model, BaseModel, BaseTrainedEntity):
     feature_count = db.Column(db.Integer)
 
     features_set_id = db.Column(db.Integer, db.ForeignKey('feature_set.id'))
-    features_set = relationship('FeatureSet', uselist=False)
+    features_set = relationship('FeatureSet', uselist=False, backref='model')
 
     test_import_handler_id = db.Column(db.Integer, nullable=True)
     test_import_handler_type = db.Column(db.String(200), default='json')

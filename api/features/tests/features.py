@@ -79,6 +79,7 @@ Can not load it: aaa, transformer-type: type is invalid"})
             "required": True,
             "is_target_variable": True
         }
+        self.assertFalse(data["name"] in self.model.features)
         resp, obj = self.check_edit(data)
         self.assertEquals(obj.name, data['name'])
         self.assertEquals(obj.type, data['type'])
@@ -87,6 +88,9 @@ Can not load it: aaa, transformer-type: type is invalid"})
         self.assertTrue(obj.is_target_variable)
         self.assertEquals(obj.input_format, data['input_format'])
         self.assertEquals(obj.default, data['default'])
+        model = Model.query.get(self.model.id)
+        self.assertTrue(data["name"] in model.features,
+                        "Features.json should be updated")
 
     def test_add_feature(self):
         """
