@@ -227,12 +227,15 @@ def fill_model_parameter_weights(model_id, segment_id=None):
 
         from collections import defaultdict
         tree = defaultdict(dict)
+        tree['weights'] = []
+
         # Adding weights and weights categories to db
         for weight in weight_list:
             name = weight['name']
             splitted_name = name.split('->')
             long_name = ''
             count = len(splitted_name)
+            current = tree
             for i, sname in enumerate(splitted_name):
                 parent = long_name
                 long_name = '%s.%s' % (long_name, sname) \
@@ -253,9 +256,7 @@ def fill_model_parameter_weights(model_id, segment_id=None):
                     new_weight.save(commit=False)
                     w_added += 1
 
-                    if not 'weights' in tree[parent]:
-                        tree[parent]['weights'] = []
-                    tree[parent]['weights'].append(new_weight)
+                    current['weights'].append(new_weight)
                 else:
                     if sname not in categories_names:
                         # Adding a category, if it has not already added
@@ -269,17 +270,28 @@ def fill_model_parameter_weights(model_id, segment_id=None):
                         category.segment = segment
                         category.save(commit=False)
                         cat_added += 1
-                        tree[long_name]['category'] = category
+                        current['subcategories'][category.short_name] = {
+                            'category': category,
+                            'weights': [],
+                            'subcategories': {}}
+                    current = current['subcategories'][sname]
 
         # Calculating categories normalized weight
-        for category_name, item in tree.iteritems():
-            if 'category' in item:
-                category = item['category']
-                normalized_weight = 0
-                for w in item['weights']:
-                    normalized_weight += w.value2
-                    w.category = category
-                category.normalized_weight = normalized_weight
+        def calc_tree_item(tree_item, parent=None):
+            for category_name, item in tree_item.iteritems():
+                if 'category' in item:
+                    category = item['category']
+                    normalized_weight = 0
+                    for w in item['weights']:
+                        normalized_weight += w.value2
+                        w.category = category
+                    category.normalized_weight = normalized_weight
+                    if parent:
+                        parent.normalized_weight += normalized_weight
+                    if 'subcategories' in item:
+                        calc_tree_item(item['subcategories'], category)
+
+        calc_tree_item(tree['subcategories'])
         return cat_added, w_added
 
     try:

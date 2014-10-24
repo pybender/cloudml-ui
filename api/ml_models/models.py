@@ -455,6 +455,9 @@ class WeightsCategory(db.Model, BaseMixin):
     # def normalized_weight(self):
     #     return sa.func.sum(Weight.value2)
 
+    def __repr__(self):
+        return '<Category {0}>'.format(self.name)
+
 
 def _setup_search(table_name, fields, event, schema_item, bind):
     bind.execute('alter table {0} add column fts tsvector'.format(table_name))
