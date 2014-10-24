@@ -176,8 +176,9 @@ class Model(db.Model, BaseModel, BaseTrainedEntity):
 
     @test_import_handler.setter
     def test_import_handler(self, handler):
-        self.test_import_handler_id = handler.id
-        self.test_import_handler_type = handler.TYPE
+        if handler is not None:
+            self.test_import_handler_id = handler.id
+            self.test_import_handler_type = handler.TYPE
 
     def create_segments(self, segments):
         for name, records in segments.iteritems():
@@ -445,7 +446,14 @@ class WeightsCategory(db.Model, BaseMixin):
     segment_id = db.Column(db.Integer, db.ForeignKey('segment.id'))
     segment = relationship(Segment, backref=backref('weight_categories'))
 
+    normalized_weight = db.Column(db.Float)
+
     parent = db.Column(db.String(200))
+
+    # TODO: Maybe have FK Weight to WeightsCategory? 
+    # @aggregated('normalized_weight', sa.Column(sa.Float))
+    # def normalized_weight(self):
+    #     return sa.func.sum(Weight.value2)
 
 
 def _setup_search(table_name, fields, event, schema_item, bind):

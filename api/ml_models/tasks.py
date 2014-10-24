@@ -225,6 +225,8 @@ def fill_model_parameter_weights(model_id, segment_id=None):
         weight_list.sort(key=lambda a: abs(a['weight']))
         weight_list.reverse()
 
+        from collections import defaultdict
+        tree = defaultdict(dict)
         # Adding weights and weights categories to db
         for weight in weight_list:
             name = weight['name']
@@ -250,6 +252,10 @@ def fill_model_parameter_weights(model_id, segment_id=None):
                     new_weight.class_label = class_label
                     new_weight.save(commit=False)
                     w_added += 1
+
+                    if not 'weights' in tree[parent]:
+                        tree[parent]['weights'] = []
+                    tree[parent]['weights'].append(new_weight)
                 else:
                     if sname not in categories_names:
                         # Adding a category, if it has not already added
@@ -263,6 +269,17 @@ def fill_model_parameter_weights(model_id, segment_id=None):
                         category.segment = segment
                         category.save(commit=False)
                         cat_added += 1
+                        tree[long_name]['category'] = category
+
+        # Calculating categories normalized weight
+        for category_name, item in tree.iteritems():
+            if 'category' in item:
+                category = item['category']
+                normalized_weight = 0
+                for w in item['weights']:
+                    normalized_weight += w.value2
+                    w.category = category
+                category.normalized_weight = normalized_weight
         return cat_added, w_added
 
     try:

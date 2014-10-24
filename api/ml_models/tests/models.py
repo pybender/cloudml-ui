@@ -10,7 +10,7 @@ from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS, F
 from api.ml_models.tasks import transform_dataset_for_download
 from ..views import ModelResource
 from ..models import Model, Tag, db, Segment, Weight
-from ..fixtures import ModelData
+from ..fixtures import ModelData, TagData
 from api.import_handlers.fixtures import ImportHandlerData, DataSetData, XmlImportHandlerData
 from api.import_handlers.models import DataSet, ImportHandler, XmlImportHandler
 from api.instances.models import Instance
@@ -95,7 +95,7 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
     Model = Model
     datasets = [FeatureData, FeatureSetData, ImportHandlerData, DataSetData,
                 ModelData, InstanceData, TestResultData, TestExampleData,
-                ServerData, XmlImportHandlerData]
+                ServerData, XmlImportHandlerData, TagData]
 
     def setUp(self):
         super(ModelsTests, self).setUp()
@@ -110,7 +110,7 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         # TODO: Why we need it? Could we create link to import handler
         # using fixtures. Investigate why refs to another fixtures doesn't
         # works
-        self.obj.train_import_handler = self.handler
+        self.obj.test_import_handler = self.obj.train_import_handler = self.handler
         self.obj.save()
 
     def test_list(self):
@@ -378,6 +378,23 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue(mock_set_trainer.called)
         self.assertEquals(model_count, Model.query.count())
         self.assertEquals(ih_count, ImportHandler.query.count())
+
+    @mock_s3
+    def test_clone_the_model(self):
+        self.obj.tags = [Tag.query.first()]
+        old_tag_count = self.obj.tags[0].count
+        self.obj.save()
+        resp_data = self._check(
+            method='post', data={}, id=self.obj.id, action="clone")
+        cloned_model = Model.query.get(resp_data['model']['id'])
+        self.assertEquals(
+            cloned_model.train_import_handler, self.obj.train_import_handler)
+        self.assertEquals(
+            cloned_model.test_import_handler, self.obj.test_import_handler)
+        self.assertEquals(cloned_model.classifier, self.obj.classifier)
+        self.assertItemsEqual(cloned_model.tags, self.obj.tags)
+        # TODO:
+        # self.assertEquals(cloned_model.tags[0].count, old_tag_count + 1)
 
     ############
     # Test PUT #

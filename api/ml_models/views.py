@@ -261,13 +261,14 @@ class ModelResource(BaseTrainedEntityResource):
         new_model.save()
         new_model.features_set.from_dict(model.features_set.features, commit=False)
         new_model.classifier = model.classifier
+        new_model.tags = model.tags
         new_model.save()
         return self._render({
             self.OBJECT_NAME: new_model,
             'status': 'New model "{0}" created'.format(
                 new_model.name
             )
-        })
+        }, code=201)
 
     def _put_upload_to_server_action(self, **kwargs):
         from api.servers.tasks import upload_model_to_server
@@ -456,7 +457,7 @@ class WeightTreeResource(BaseResourceSQL):
         kwargs['segment_id'] = segment.id if segment else None
 
         opts = self._prepare_show_fields_opts(
-            WeightsCategory, ('short_name', 'name'))
+            WeightsCategory, ('short_name', 'name', 'normalized_weight'))
         categories = WeightsCategory.query.options(
             *opts).filter_by(**kwargs)
 

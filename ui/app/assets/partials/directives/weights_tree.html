@@ -1,11 +1,32 @@
-<ul>
+<ul class="category-tree">
   <li ng-show="!row.value" ng-init="show=false" ng-repeat="(key, row) in tree['categories']" >
-      {{ key }} <a ng-click="show=!show;innerLoad()(row['details'].name, show)"><i ng-class="{false:'icon-arrow-right',true:'icon-arrow-down'}[show]"></i></a>
+      <a class="category" ng-click="show=!show;innerLoad()(row['details'].name, show)">
+      	<strong>{{ key }}</strong>
+	      <span title="Sum bi xi by the subfeatures: {{ row['details'].normalized_weight }}">
+	      	<i class="icon-sigma"></i>
+	      	<span class="badge">{{ row['details'].normalized_weight|number:6 }}</span>
+	      </span>
+	      <i ng-class="{false:'icon-arrow-right',true:'icon-arrow-down'}[show]"></i>
+      </a>
       <recursive ng-show="show">
         <span tree="row" custom-click="innerLoad()"></span>
       </recursive>
   </li>
   <li ng-repeat="(name, w) in tree['weights']">
-    <span title="Segment ID {{ w.segment_id }}">{{ w.name }}</span> <div class="badge" ng-class="w.css_class">{{ w.value }}</div> <div class="badge" title="Sum |beta_i * x_i| / m">{{ w.value2 }}</div>
+  	<div class="row">
+	    <em class="span3" title="Segment ID {{ w.segment_id }}">
+	    	{{ w.name }}
+	    </em>
+	    <span class="span1">
+	    	<span class="badge" title="Model coefficient {{ w.value2 }}" ng-class="w.css_class">{{ w.value|number:6 }}</span>
+	    </span>
+	    <span class="span2">
+	    	<i class="icon-hand-right"></i>
+	    	<span class="badge badge-info" title="Sum |beta_i * x_i| / m: {{ w.value2 }}">{{ w.value2|number:6 }}</span>
+	    </span>
+	    <span class="span2" ng-hide="w.value" style="color: red;">
+	    	<i class="icon-flag"></i> zero weight
+	    </span>
+	</div>
   </li>
 </ul>

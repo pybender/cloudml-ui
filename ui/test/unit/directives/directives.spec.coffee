@@ -451,14 +451,16 @@ editable-placement="right" display="instance.obj.name"></span>
       elem.remove()
 
     it 'should render', ->
+      val1 = 0.9512
+      val2 = 0.1234
       $scope.tree = {categories: {__cat1__:{}, __cat2__:{}},
-      weights: {we1: {name: '__we1__', value: '__val1__'}, we2: {name: '__we2__', value: '__val2__'}}}
+      weights: {we1: {name: '__we1__', value: val1}, we2: {name: '__we2__', value: val2}}}
       $scope.click = jasmine.createSpy '$scope.click'
       elem = $compile('<span tree="tree" custom-click="click()"></span>')($scope)
       $(document.body).append(elem)
       $scope.$digest()
 
-      for v in ['__cat1__', '__cat2__', '__we1__', '__we2__', '__val1__', '__val2__']
+      for v in ['__cat1__', '__cat2__', '__we1__', '__we2__', val1, val2]
         expect(elem.html()).toContain v
 
 
