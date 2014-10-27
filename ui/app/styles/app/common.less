@@ -1,0 +1,49 @@
+
+// Sticky Footer
+
+@footerHeight: 92px;
+
+html, body {
+  height: 100%;
+}
+
+.wrapper {
+  min-height: 100%;
+  height: auto !important;
+  height: 100%;
+  margin: 0 auto -@footerHeight;
+}
+
+.push {
+  height: @footerHeight;
+}
+
+.wrapper > .container {
+  padding-top: 24px;
+}
+
+// Responsive
+@import "/bower_components/bootstrap/less/responsive-utilities.less";
+@import "/bower_components/bootstrap/less/responsive-1200px-min.less";
+@import "/bower_components/bootstrap/less/responsive-768px-979px.less";
+@import "/bower_components/bootstrap/less/responsive-767px-max.less";
+@import "/bower_components/bootstrap/less/responsive-navbar.less";
+
+input.ng-dirty.ng-valid {
+  /*.formFieldState(@successText, @successText, @successBackground);*/
+  border-color: @successText;
+}
+
+input.ng-dirty.ng-invalid {
+  /*.formFieldState(@errorText, @errorText, @errorBackground);*/
+  border-color: @errorText;
+}
+
+input.ng-pristine {
+
+}
+
+input.ng-dirty {
+
+}
+

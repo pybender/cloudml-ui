@@ -2,7 +2,7 @@
   <div class="row">
     <div class="span5">
       <label>Standard Fields ({{stdFields.length}}): </label>
-      <div class="alert-info well">
+      <div class="alert alert-info">
         <span ng-repeat="f in stdFields">
           <span class="label label-info">{{f}}</span>
         </span>
@@ -38,7 +38,7 @@
   </div>
   <div class="row" ng-show="extraFields.length">
     <div class="span5">
-      <div class="alert-info well">
+      <div class="alert alert-info">
         <span ng-repeat="f in extraFields">
           <span class="label label-info">
             {{ f }} <a ng-click="removeField(f)"><i class="icon-remove"></i></a>

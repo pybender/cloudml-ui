@@ -17,7 +17,7 @@
 <div>
   <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
 
-  <div ng-hide="tag_list.length == 0" ng-controller="TagCloudCtrl" class="alert-info well">
+  <div ng-hide="tag_list.length == 0" ng-controller="TagCloudCtrl" class="alert alert-info">
     <span ng-repeat="tag in tag_list">
       <span>
         <a href="#/models/?tag={{ tag.text }}">{{ tag.text }} ({{ tag.count }})</a> 

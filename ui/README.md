@@ -263,21 +263,6 @@ uglified in production in a file called vendor.js.
         filters.spec.js       --> specs for filters
         services.spec.js      --> specs for services
 
-    vendor/                   --> This is left for backward compatibility, generally
-                                  speaking all vendor files should be installed
-                                  using bower and referenced in vendor.config.coffee
-      scripts/                --> angular and 3rd party javascript libraries
-        console-helper.js     --> makes it safe to do `console.log()` always
-      styles/                 --> sapling / sapling themes and 3 party CSS
-        sapling               --> extends boostrap
-          _*.less
-        themes                --> themes to extend Bootstrap
-          default             --> the default bootstrap theme
-            _overrides.less
-            _variables.less
-          sapling             --> supplemental theme
-            _overrides.less
-            _variables.less
     bower.json                --> Bower installed components, always make sure
                                   to do bower install xyz --save (or --save-dev)
     Gruntfile.coffee          --> grunt configuration file, use grunt --help to 
