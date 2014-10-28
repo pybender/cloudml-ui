@@ -231,6 +231,8 @@ class Model(db.Model, BaseModel, BaseTrainedEntity):
             fp.close()
         raw_data = trainer._raw_data
         trainer.clear_temp_data()
+        self.set_trainer(trainer)
+        self.save()
         return metrics, raw_data
 
     def transform_dataset(self, dataset):
@@ -447,6 +449,7 @@ class WeightsCategory(db.Model, BaseMixin):
     segment = relationship(Segment, backref=backref('weight_categories'))
 
     normalized_weight = db.Column(db.Float)
+    class_label = db.Column(db.String(100), nullable=True)
 
     parent = db.Column(db.String(200))
 
@@ -470,6 +473,19 @@ def _setup_search(table_name, fields, event, schema_item, bind):
         tsvector_update_trigger(fts, 'pg_catalog.english', {1})""".format(
         table_name, fields_str))
 
+from sqlalchemy.ext.hybrid import hybrid_method
+from sqlalchemy.ext.compiler import compiles
+from sqlalchemy.sql.expression import ColumnClause
+
+
+class TestWeightColumn(ColumnClause):
+    pass
+
+
+@compiles(TestWeightColumn)
+def compile_mycolumn(element, compiler, **kw):
+    return "weight.test_weights->'%s'" % element.name
+
 
 class Weight(db.Model, BaseMixin):
     """
@@ -491,6 +507,12 @@ class Weight(db.Model, BaseMixin):
     segment = relationship(Segment, backref=backref('weights'))
 
     parent = db.Column(db.String(200))
+
+    test_weights = db.Column(JSONType)
+
+    @hybrid_method
+    def test_weight(self, test_id):
+        return TestWeightColumn(test_id)
 
 Weight.__table__.append_ddl_listener(
     'after-create', partial(_setup_search, Weight.__table__.name,

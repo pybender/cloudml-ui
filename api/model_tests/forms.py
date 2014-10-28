@@ -52,8 +52,9 @@ class AddTestForm(BaseChooseInstanceAndDataset):
                                     options={'queue': instance.name}))
         else:  # run test with existing dataset
             dataset = self.cleaned_data.get('dataset')
+            #run_test([dataset.id], test.id)
             run_test.apply_async(
-                ([dataset.id], test.id, ), queue=instance.name)
+                 ([dataset.id], test.id, ), queue=instance.name)
         return test
 
 

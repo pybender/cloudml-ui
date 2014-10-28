@@ -196,7 +196,6 @@ def fill_model_parameter_weights(model_id, segment_id=None):
             (model_id, count))
 
     weights_dict = None
-    categories_names = []
 
     def process_weights_for_class(class_label):
         """
@@ -228,6 +227,7 @@ def fill_model_parameter_weights(model_id, segment_id=None):
         from collections import defaultdict
         tree = defaultdict(dict)
         tree['weights'] = []
+        categories_names = []
 
         # Adding weights and weights categories to db
         for weight in weight_list:
@@ -252,7 +252,7 @@ def fill_model_parameter_weights(model_id, segment_id=None):
                     new_weight.model_name = model.name
                     new_weight.model = model
                     new_weight.segment = segment
-                    new_weight.class_label = class_label
+                    new_weight.class_label = str(class_label)
                     new_weight.save(commit=False)
                     w_added += 1
 
@@ -268,9 +268,10 @@ def fill_model_parameter_weights(model_id, segment_id=None):
                         category.model_name = model.name
                         category.model = model
                         category.segment = segment
+                        category.class_label = str(class_label)
                         category.save(commit=False)
                         cat_added += 1
-                        current['subcategories'][category.short_name] = {
+                        current['subcategories'][sname] = {
                             'category': category,
                             'weights': [],
                             'subcategories': {}}

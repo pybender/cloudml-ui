@@ -386,14 +386,27 @@ class WeightTasksTests(BaseDbTestCase, TestChecksMixin):
 
             # Check categories in db
             cat = WeightsCategory.query.filter_by(
-                model=model, name='contractor').one()
+                model=model, name='contractor',
+                class_label=str(class_label)).one()
             self.assertEquals(cat.parent, '')
             self.assertEquals(cat.short_name, 'contractor')
 
             cat = WeightsCategory.query.filter_by(
-                model=model, name='contractor.dev_profile_title').one()
+                model=model, name='contractor.dev_profile_title',
+                class_label=str(class_label)).one()
             self.assertEquals(cat.parent, 'contractor')
             self.assertEquals(cat.short_name, 'dev_profile_title')
 
             for i in xrange(5):
                 check_random_weight()
+
+
+class WeightModelTests(BaseDbTestCase):
+    def test_model_test_weights(self):
+        weight = Weight(name='my_feature', value=0.023)
+        weight.test_results = {'1': 0.15}
+        weight.save()
+        self.assertEquals(weight.test_results, {'1': 0.15})
+        weight.test_results['2'] = 0.25
+        weight.save()
+        self.assertEquals(weight.test_results, {'1': 0.15, '2': 0.25})
