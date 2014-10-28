@@ -104,7 +104,10 @@ def run_test(dataset_ids, test_id):
                             segment=segment,
                             class_label=str(clazz),
                             name=weight_dict['name']).one()
-                        test_weights = weight.test_weights.copy() or {}
+                        if weight.test_weights is not None:
+                            test_weights = weight.test_weights.copy()
+                        else:
+                            test_weights = {}
                         test_weights[test_id] = weight_dict['feature_weight']
                         weight.test_weights = test_weights
                         weight.save(commit=False)
