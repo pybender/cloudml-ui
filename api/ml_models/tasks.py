@@ -108,7 +108,6 @@ def train_model(dataset_ids, model_id, user_id, delete_metadata=False):
         mem_usage = memory_usage(-1, interval=0, timeout=None)
         trainer.clear_temp_data()
 
-        model.status = model.STATUS_TRAINED
         model.set_trainer(trainer)
         model.save()
         model.memory_usage = max(mem_usage)
@@ -298,6 +297,9 @@ def fill_model_parameter_weights(model_id, segment_id=None):
         calc_tree_item(tree['subcategories'])
         return cat_added, w_added
 
+    model.status = model.STATUS_FILLING_WEIGHTS
+    model.save()
+
     try:
         weights_dict = model.get_trainer().get_weights(segment.name)
 
@@ -311,6 +313,7 @@ def fill_model_parameter_weights(model_id, segment_id=None):
             classes_processed += 1
 
         db.session.commit()
+        model.status = model.STATUS_TRAINED
         model.weights_synchronized = True
         model.save()
         msg = 'Model %s parameters weights was added to db. %s weights, ' \
