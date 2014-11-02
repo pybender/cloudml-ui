@@ -185,7 +185,10 @@ def fill_model_parameter_weights(model_id, segment_id=None):
     if model is None:
         raise ValueError('Model not found: %s' % model_id)
 
-    segment = Segment.query.get(segment_id)
+    if segment_id is None:
+        segment = Segment.query.filter_by(model=model).first()
+    else:
+        segment = Segment.query.get(segment_id)
     if segment is None:
         raise ValueError('Segment not found: %s' % segment_id)
 

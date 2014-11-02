@@ -457,14 +457,14 @@ class WeightTreeResource(BaseResourceSQL):
         segment = get_segment(model_id, params.get('segment'))
         kwargs['segment_id'] = segment.id if segment else None
 
+        class_label, class_query = get_class_label(model_id, params)
+        if class_query:
+            kwargs['class_label'] = class_label
+
         opts = self._prepare_show_fields_opts(
             WeightsCategory, ('short_name', 'name', 'normalized_weight'))
         categories = WeightsCategory.query.options(
             *opts).filter_by(**kwargs)
-
-        class_label, class_query = get_class_label(model_id, params)
-        if class_query:
-            kwargs['class_label'] = class_label
 
         extra_fields = {}
         field_names = ['short_name', 'name', 'css_class',

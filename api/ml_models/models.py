@@ -440,6 +440,7 @@ class WeightsCategory(db.Model, BaseMixin):
 
     name = db.Column(db.String(200))
     short_name = db.Column(db.String(200))
+    # TODO: remove it
     model_name = db.Column(db.String(200))
 
     model_id = db.Column(db.Integer, db.ForeignKey('model.id'))
