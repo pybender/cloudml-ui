@@ -87,7 +87,7 @@ angular.module('app.features.models', ['app.config'])
       @LIST_MODEL_NAME: 'scalers'
       LIST_MODEL_NAME: @LIST_MODEL_NAME
       @MAIN_FIELDS: 'id,name,type,params,created_on,created_by'
-      @$TYPES_LIST: ['MinMaxScaler', 'StandardScaler']
+      @$TYPES_LIST: ['MinMaxScaler', 'StandardScaler', 'NoScaler']
 
       id: null
 
