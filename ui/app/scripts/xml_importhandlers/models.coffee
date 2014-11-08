@@ -42,7 +42,7 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
       API_FIELDNAME: 'xml_import_handler'
       @LIST_MODEL_NAME: 'xml_import_handlers'
       LIST_MODEL_NAME: @LIST_MODEL_NAME
-      @MAIN_FIELDS: 'id,name,created_on,created_by'
+      @MAIN_FIELDS: 'id,name,created_on,created_by,import_params'
       TYPE: 'XML'
 
       id: null

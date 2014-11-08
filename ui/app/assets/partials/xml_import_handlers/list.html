@@ -21,7 +21,7 @@
 <tbody>
   <tr ng-repeat="handler in objects">
     <td><a href="#{{ handler.objectUrl() }}">{{ handler.name }}</a></td>
-    <td></td>
+    <td>{{handler.import_params}}</td>
     <td>
         <span title="dates in GMT">{{ handler.created_on|format_date }}
         </span><br>
