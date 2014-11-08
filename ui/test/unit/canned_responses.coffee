@@ -20,7 +20,7 @@ map_url_to_response = (url, key)->
       resp = v
       break
   if not resp
-    null
+    return null
   return [
     resp.statusCode
     resp.data
@@ -31,7 +31,7 @@ map_url_to_response = (url, key)->
 CANNED_RESPONSES = [
   key: 'multiclass classification model dict format after 20140710'
   url_regex: new RegExp '^.+/cloudml/models/\\d+/tests/\\d+/\\?show=' +
-                        'accuracy,metrics,roc_auc,examples_placement,name' +
+                        'accuracy,metrics,roc_auc,examples_placement,fill_weights,name' +
                         ',status,created_on,created_by?'
   data: angular.toJson
     test:
@@ -69,7 +69,7 @@ CANNED_RESPONSES = [
 ,
   key: 'multiclass classification model dict format after 20140907'
   url_regex: new RegExp '^.+/cloudml/models/\\d+/tests/\\d+/\\?show=' +
-    'accuracy,metrics,roc_auc,examples_placement,name' +
+    'accuracy,metrics,roc_auc,examples_placement,fill_weights,name' +
     ',status,created_on,created_by?'
   data: angular.toJson
     test:
@@ -107,7 +107,7 @@ CANNED_RESPONSES = [
 ,
   key: 'binary classification model dict format after 20140710'
   url_regex: new RegExp '^.+/cloudml/models/\\d+/tests/\\d+/\\?show=' +
-    'accuracy,metrics,roc_auc,examples_placement,name' +
+    'accuracy,metrics,roc_auc,examples_placement,fill_weights,name' +
     ',status,created_on,created_by?'
   data: angular.toJson
     test:
@@ -142,7 +142,7 @@ CANNED_RESPONSES = [
 ,
   key: 'binary classification model dict format after 20140907'
   url_regex: new RegExp '^.+/cloudml/models/\\d+/tests/\\d+/\\?show=' +
-    'accuracy,metrics,roc_auc,examples_placement,name' +
+    'accuracy,metrics,roc_auc,examples_placement,fill_weights,name' +
     ',status,created_on,created_by?'
   data: angular.toJson
     test:
@@ -177,7 +177,7 @@ CANNED_RESPONSES = [
 ,
   key: 'binary classification arrays format before 20140710'
   url_regex: new RegExp '^.+/cloudml/models/\\d+/tests/\\d+/\\?show=' +
-    'accuracy,metrics,roc_auc,examples_placement,name' +
+    'accuracy,metrics,roc_auc,examples_placement,fill_weights,name' +
     ',status,created_on,created_by?'
   data: angular.toJson
     test:
