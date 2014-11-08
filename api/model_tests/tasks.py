@@ -116,11 +116,12 @@ def run_test(dataset_ids, test_id):
                 process_weights(negative)
 
         # Filling test weights
-        trainer = model.get_trainer()
-        for segment in model.segments:
-            logging.info(
-                'Storing test feature weights for segment %s', segment.name)
-            fill_weights(trainer, test, segment)
+        if test.fill_weights:
+            trainer = model.get_trainer()
+            for segment in model.segments:
+                logging.info(
+                    'Storing test feature weights for segment %s', segment.name)
+                fill_weights(trainer, test, segment)
 
         data = []
         for segment, d in raw_data.iteritems():

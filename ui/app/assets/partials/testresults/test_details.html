@@ -35,7 +35,7 @@
     <li ng-show="showdetails" ng-class="{active: action[0] == 'matrix'}"><a ng-click="setSection(['matrix', 'confusion'])">Confusion Matrix</a></li>
     <li ng-show="showdetails" ng-show="test.status == 'Completed'" ng-class="{active: action[0] == 'examples'}"><a ng-click="setSection(['examples', 'list'])">Examples</a></li>
     <li ng-class="{active: action[0] == 'about'}"><a ng-click="setSection(['about', 'details'])">About</a></li>
-    <li ng-class="{active: action[0] == 'weights'}"><a ng-click="setSection(['weights', 'tree'])" ng-show="test.status == 'Completed' || test.status == 'Storing'">Weights</a></li>
+    <li ng-class="{active: action[0] == 'weights'}"><a ng-click="setSection(['weights', 'tree'])" ng-show="(test.status == 'Completed' || test.status == 'Storing') && test.fill_weights">Weights</a></li>
     <li ng-class="{active: action[0] == 'logs'}"><a ng-click="setSection(['logs', 'list'])">Logs</a></li>
   </ul>
 
@@ -84,6 +84,10 @@
         <div>
             Examples Size: <span class="value">{{ test.examples_size|number:2 }} Mb</span>
         </div>
+        <div>
+            Calculate parameters weights: <span class="value">{{ test.fill_weights|true_false }}</span>
+        </div>
+        
         <div ng-controller="TestExportsCtrl" ng-init="init(test)">
             <div ng-show="exports">
               <h4>CSV Exports</h4>
@@ -229,7 +233,7 @@
         <ng-include src="'partials/logmessages/list.html'"></ng-include>
       </div>
 
-      <div ng-show="action[0] == 'weights'"  ng-controller="WeightsCtrl" ng-init="weights_section='weights'; init('weights')">
+      <div ng-show="test.fill_weights && action[0] == 'weights'"  ng-controller="WeightsCtrl" ng-init="weights_section='weights'; init('weights')">
         <h4>
           Parameters Weights<span ng-show="model.labels && model.labels.length > 2"> For : </span>
           <div ng-show="model.labels && model.labels.length > 2" class="btn-group">

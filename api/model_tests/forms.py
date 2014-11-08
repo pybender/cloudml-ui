@@ -1,5 +1,5 @@
 from api.base.forms.base_forms import BaseChooseInstanceAndDataset, \
-    CharField, ModelField, ChoiceField
+    CharField, ModelField, ChoiceField, BooleanField
 from api.base.resources import ValidationError
 from api.models import DataSet, TestResult, Instance, Model, \
     PredefinedDataSource
@@ -11,6 +11,7 @@ class AddTestForm(BaseChooseInstanceAndDataset):
 
     name = CharField()
     model_id = CharField()
+    fill_weights = BooleanField()
 
     def before_clean(self):
         self.model = Model.query.get(self.model_id)

@@ -19,6 +19,16 @@
       <div class="well">
         <ng-include src="'partials/aws_instances/instance_fields.html'"></ng-include>
       </div>
+
+      <div class="alert alert-info">
+        <div class="control-group" ng-class="{error: Form.fill_weights.$invalid || errorList.fill_weights}">
+          <label class="checkbox">
+            <input type="checkbox" ng-model="data.fill_weights" /> I want to save weights of the parameters.
+          </label>
+          <span ng-show="Form.fill_weights.$error.required" class="help-inline">*</span>
+          <span ng-show="errorList.fill_weights" class="help-inline" ng-bind="errorList.fill_weights" />
+        </div>
+      </div>
     </form>
   </div>
 
