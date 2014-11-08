@@ -22,7 +22,7 @@
 </h2>
 
 <div title="tags" ng-init="obj=transformer">
-  <ng-include src="'/partials/parts/created_tags.html'"></ng-include>
+  <ng-include src="'partials/parts/created_tags.html'"></ng-include>
   <span class="badge">{{ transformer.status }}</span> 
 </div>
 
@@ -53,7 +53,7 @@
         Status: <span class="value">{{ transformer.status }}</span> <a ng-click="showLogs=!showLogs">(logs)</a>
         <div ng-show="showLogs" class="well" ng-controller="LogMessageListCtrl" ng-init="init('traintransformer_log', transformer.id, 50)">
           <div class="message">
-            <ng-include src="'/partials/logmessages/list.html'"></ng-include>
+            <ng-include src="'partials/logmessages/list.html'"></ng-include>
           </div>
         </div>
     </div>
@@ -84,7 +84,7 @@
       <a ng-class="{active: action[1] == 'json'}" ng-click="setSection(['about', 'json'])">JSON File</a>
     </p>
     <div ng-show="action[1] == 'json'" cml-has-codemirror="action[1] == 'json'">
-      <textarea ng-model="transformer.json" ui-codemirror="codeMirrorConfigs(true)['json']"></textarea>
+      <textarea ng-model="transformer.json" ui-codemirror="codeMirrorConfigs(true)['json']" class="cml-codemirror-refresh"></textarea>
     </div>
     <div ng-show="action[1] == 'details'">
       <div>

@@ -253,7 +253,7 @@ App.config([
     })
     .when('/predefined/transformers/:id', {
       controller: "TransformerDetailsCtrl"
-      templateUrl: '/partials/features/transformers/details.html'
+      templateUrl: 'partials/features/transformers/details.html'
     })
     .when('/predefined/scalers', {
       controller: "ScalersListCtrl"

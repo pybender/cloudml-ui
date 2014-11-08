@@ -39,13 +39,6 @@ module.exports =
         "bower_components/d3/d3.js"
     ,
       external:
-        "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=default"
-      notmin:
-        "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=default"
-      local:
-        "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=default"
-    ,
-      external:
         "https://ajax.googleapis.com/ajax/libs/angularjs/1.2.20/angular.min.js"
       notmin:
         "https://ajax.googleapis.com/ajax/libs/angularjs/1.2.20/angular.js"

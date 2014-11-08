@@ -108,7 +108,6 @@ def train_model(dataset_ids, model_id, user_id, delete_metadata=False):
         mem_usage = memory_usage(-1, interval=0, timeout=None)
         trainer.clear_temp_data()
 
-        model.status = model.STATUS_TRAINED
         model.set_trainer(trainer)
         model.save()
         model.memory_usage = max(mem_usage)
@@ -185,7 +184,10 @@ def fill_model_parameter_weights(model_id, segment_id=None):
     if model is None:
         raise ValueError('Model not found: %s' % model_id)
 
-    segment = Segment.query.get(segment_id)
+    if segment_id is None:
+        segment = Segment.query.filter_by(model=model).first()
+    else:
+        segment = Segment.query.get(segment_id)
     if segment is None:
         raise ValueError('Segment not found: %s' % segment_id)
 
@@ -196,7 +198,6 @@ def fill_model_parameter_weights(model_id, segment_id=None):
             (model_id, count))
 
     weights_dict = None
-    categories_names = []
 
     def process_weights_for_class(class_label):
         """
@@ -225,12 +226,18 @@ def fill_model_parameter_weights(model_id, segment_id=None):
         weight_list.sort(key=lambda a: abs(a['weight']))
         weight_list.reverse()
 
+        from collections import defaultdict
+        tree = defaultdict(dict)
+        tree['weights'] = []
+        categories_names = []
+
         # Adding weights and weights categories to db
         for weight in weight_list:
             name = weight['name']
             splitted_name = name.split('->')
             long_name = ''
             count = len(splitted_name)
+            current = tree
             for i, sname in enumerate(splitted_name):
                 parent = long_name
                 long_name = '%s.%s' % (long_name, sname) \
@@ -247,9 +254,11 @@ def fill_model_parameter_weights(model_id, segment_id=None):
                     new_weight.model_name = model.name
                     new_weight.model = model
                     new_weight.segment = segment
-                    new_weight.class_label = class_label
+                    new_weight.class_label = str(class_label)
                     new_weight.save(commit=False)
                     w_added += 1
+
+                    current['weights'].append(new_weight)
                 else:
                     if sname not in categories_names:
                         # Adding a category, if it has not already added
@@ -261,9 +270,35 @@ def fill_model_parameter_weights(model_id, segment_id=None):
                         category.model_name = model.name
                         category.model = model
                         category.segment = segment
+                        category.class_label = str(class_label)
                         category.save(commit=False)
                         cat_added += 1
+                        current['subcategories'][sname] = {
+                            'category': category,
+                            'weights': [],
+                            'subcategories': {}}
+                    current = current['subcategories'][sname]
+
+        # Calculating categories normalized weight
+        def calc_tree_item(tree_item, parent=None):
+            for category_name, item in tree_item.iteritems():
+                if 'category' in item:
+                    category = item['category']
+                    normalized_weight = 0
+                    for w in item['weights']:
+                        normalized_weight += w.value2
+                        w.category = category
+                    category.normalized_weight = normalized_weight
+                    if parent:
+                        parent.normalized_weight += normalized_weight
+                    if 'subcategories' in item:
+                        calc_tree_item(item['subcategories'], category)
+
+        calc_tree_item(tree['subcategories'])
         return cat_added, w_added
+
+    model.status = model.STATUS_FILLING_WEIGHTS
+    model.save()
 
     try:
         weights_dict = model.get_trainer().get_weights(segment.name)
@@ -278,6 +313,7 @@ def fill_model_parameter_weights(model_id, segment_id=None):
             classes_processed += 1
 
         db.session.commit()
+        model.status = model.STATUS_TRAINED
         model.weights_synchronized = True
         model.save()
         msg = 'Model %s parameters weights was added to db. %s weights, ' \

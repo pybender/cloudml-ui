@@ -25,7 +25,7 @@ angular.module('app.models.controllers', ['app.config', ])
       'updated_on','feature_count','created_by','data_fields',
       'test_handler_fields','tags'
     ].join(',')
-    main: MODEL_FIELDS,
+    main: MODEL_FIELDS
     grid_search: 'classifier_grid_params'
 ])
 
@@ -127,8 +127,9 @@ angular.module('app.models.controllers', ['app.config', ])
   'Tag'
   'FIELDS_BY_SECTION'
   '$q'
+  '$timeout'
 
-  ($scope, $location, $routeParams, Model, Test, Tag, FIELDS_BY_SECTION, $q) ->
+  ($scope, $location, $routeParams, Model, Test, Tag, FIELDS_BY_SECTION, $q, $timeout) ->
     if not $routeParams.id
       throw new Error "Can't initialize without model id"
 
@@ -189,7 +190,12 @@ angular.module('app.models.controllers', ['app.config', ])
         fields = FIELDS_BY_SECTION['main']
 
       if name is 'test'
-        $scope.$broadcast('loadTest', true)
+        # A broad case is not going to work if we are landing directly, on
+        # tests tab, we need to wait a bit for the tests tab to render before
+        # broadcast an event
+        $timeout ->
+          $scope.$broadcast('loadTest', true)
+        , 1
 
       if name not in $scope.LOADED_SECTIONS
         loadedSections.push name

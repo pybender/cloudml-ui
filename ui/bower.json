@@ -36,8 +36,7 @@
     "nvd3": "~1.1.15-beta",
     "d3": ">=3.3.13",
     "bootstrap": "2.3.2",
-    "angular-bootstrap": "https://github.com/angular-ui/bootstrap.git#gh-pages",
-    "MathJax": "latest"
+    "angular-bootstrap": "https://github.com/angular-ui/bootstrap.git#gh-pages"
   },
   "devDependencies": {
     "angular-mocks": "1.2.20"

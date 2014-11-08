@@ -117,3 +117,14 @@ def get_doc_size(doc):
         doc = json.loads(doc)
 
     return len(BSON.encode(doc))
+
+
+def _select(Cls, field_names, filter_params, extra_fields={}):
+    field_names = ['short_name', 'name', 'css_class',
+                   'value', 'segment_id', 'value2']
+    fields = [getattr(Cls, name) for name in field_names]
+    for name, field in extra_fields.iteritems():
+        fields.append(field)
+        field_names.append(name)
+    objects = app.sql_db.session.query(*fields).filter_by(**filter_params)
+    return [dict(zip(field_names, obj)) for obj in objects]

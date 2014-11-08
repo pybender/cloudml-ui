@@ -1,5 +1,5 @@
 from api.base.forms.base_forms import BaseChooseInstanceAndDataset, \
-    CharField, ModelField, ChoiceField
+    CharField, ModelField, ChoiceField, BooleanField
 from api.base.resources import ValidationError
 from api.models import DataSet, TestResult, Instance, Model, \
     PredefinedDataSource
@@ -11,6 +11,7 @@ class AddTestForm(BaseChooseInstanceAndDataset):
 
     name = CharField()
     model_id = CharField()
+    fill_weights = BooleanField()
 
     def before_clean(self):
         self.model = Model.query.get(self.model_id)
@@ -52,8 +53,9 @@ class AddTestForm(BaseChooseInstanceAndDataset):
                                     options={'queue': instance.name}))
         else:  # run test with existing dataset
             dataset = self.cleaned_data.get('dataset')
+            #run_test([dataset.id], test.id)
             run_test.apply_async(
-                ([dataset.id], test.id, ), queue=instance.name)
+                 ([dataset.id], test.id, ), queue=instance.name)
         return test
 
 
@@ -73,5 +75,6 @@ class ExportToDbForm(SelectFieldsForCSVForm):
     use for generating test examples to db in _put_db_task_action
     - datasource, used to connect to db
     """
+    required_fields = ('fields', 'datasource', 'tablename')
     datasource = ModelField(model=PredefinedDataSource, return_model=True)
     tablename = CharField()

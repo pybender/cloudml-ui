@@ -19,6 +19,7 @@ class PostgresJSON(UserDefinedType):
 ischema_names['json'] = PostgresJSON
 
 
+# TODO: This field doesn't displays in admin part.
 class JSONType(TypeDecorator):
     impl = UnicodeText
 

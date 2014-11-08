@@ -90,14 +90,16 @@ describe 'app.xml_importhandlers.controllers', ->
 
     it 'should initialize scope and load xml only', inject (XmlImportHandler)->
 
-      prepareContext XmlImportHandler, ['something', 'xml'], 'xml', false
+      prepareContext XmlImportHandler, ['something', 'xml'],
+        'id,name,created_on,created_by,updated_on,updated_by,xml_data_sources,xml_input_parameters,xml_scripts,entities,import_params,predict,can_edit,xml', false
 
       expect($scope.LOADED_SECTIONS).toEqual ['something']
       expect($scope.$broadcast).not.toHaveBeenCalled()
 
     it 'should should handle errors', inject (XmlImportHandler)->
 
-      prepareContext XmlImportHandler, ['something', 'xml'], 'xml', true
+      prepareContext XmlImportHandler, ['something', 'xml'],
+        'id,name,created_on,created_by,updated_on,updated_by,xml_data_sources,xml_input_parameters,xml_scripts,entities,import_params,predict,can_edit,xml', true
 
       expect($scope.LOADED_SECTIONS).toEqual []
       expect($scope.$broadcast).not.toHaveBeenCalled()

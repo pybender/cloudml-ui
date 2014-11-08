@@ -9,7 +9,8 @@
     <tr ng-repeat="row in weights">
       <td title="Segment ID {{ row.segment_id }}">{{ row.name }}</td>
       <td>
-        <div class="badge" ng-class="row.css_class">{{ row.value }}</div>
+        <div class="badge" ng-show="options.show_model_weights" ng-class="row.css_class">{{ row.value }}</div>
+        <div class="badge" ng-show="options.show_test_weights" ng-class="row.css_class">{{ row.test_weight }}</div>
       </td>
     </tr>
   </tbody>

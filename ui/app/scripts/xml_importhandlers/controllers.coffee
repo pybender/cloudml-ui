@@ -72,7 +72,7 @@ angular.module('app.xml_importhandlers.controllers', ['app.config', ])
                        'entities', 'import_params', 'predict', 'can_edit'].join(',')
         fields = "#{ImportHandler.MAIN_FIELDS},#{extraFields}"
 
-      if section[1] == 'xml' then fields = 'xml'
+      if section[1] == 'xml' then fields = [fields, 'xml'].join(',')
 
       if fields isnt ''
         $scope.handler.$load

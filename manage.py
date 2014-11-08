@@ -79,7 +79,7 @@ class MongoMigrate(Command):
 
 def _make_context():
     from api import models
-    return dict(app=app, db=app.db, models=models)
+    return dict(app=app, db=app.sql_db, models=models)
 
 
 class Test(Command):
