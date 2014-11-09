@@ -370,7 +370,7 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
       $scope.handlers = $scope.handlers.concat opts.objects
       for h in $scope.handlers
         $scope.handlers_list.push {value: h.id, text: h.name}
-      XmlImportHandler.$loadAll show: 'name'
+      XmlImportHandler.$loadAll show: 'name', per_page: 1000
     .then (opts) ->
       $scope.handlers = $scope.handlers.concat opts.objects
       for h in opts.objects
