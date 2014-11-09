@@ -257,6 +257,8 @@ class Model(db.Model, BaseModel, BaseTrainedEntity):
         if data is None:
             self.features_set.modified = True
             data = self.features_set.features
+        data['features'] = [f for f in data['features']
+                            if f.get('disabled', False) is False]
         data['classifier'] = self.classifier
         return json.dumps(data, indent=4)
 

@@ -190,7 +190,7 @@ angular.module('app.features.models', ['app.config'])
       API_FIELDNAME: 'feature'
       @MAIN_FIELDS: ['id','name','type','input_format','transformer','params',
                      'scaler','default','is_target_variable','created_on',
-                     'created_by','required'].join(',')
+                     'created_by','required', 'disabled'].join(',')
 
       id: null
       name: null

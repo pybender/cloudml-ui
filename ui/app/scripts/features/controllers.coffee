@@ -225,4 +225,14 @@ angular.module('app.features.controllers', ['app.config', ])
       ), ((opts) ->
         $scope.setError(opts, "error while removing scaler")
       )
+
+    $scope.toggleFeatureDisabled = (feature) ->
+      oldVal = feature.disabled
+      feature.disabled = not oldVal
+      feature.$save(only: ['disabled']).then (->
+        $scope.$emit('updateList', [])
+      ), ((opts) ->
+        feature.disabled = oldVal
+        $scope.setError(opts, 'updating feature')
+      )
 ])

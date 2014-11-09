@@ -121,7 +121,7 @@ class Feature(ExportImportMixin, RefFeatureSetMixin,
               BaseModel, db.Model):
     FIELDS_TO_SERIALIZE = ('name', 'type', 'input_format', 'params',
                            'default', 'is_target_variable', 'required',
-                           'transformer', 'scaler')
+                           'transformer', 'scaler', 'disabled')
 
     name = db.Column(db.String(200), nullable=False)
     type = db.Column(db.String(200), nullable=False)
@@ -129,6 +129,8 @@ class Feature(ExportImportMixin, RefFeatureSetMixin,
     default = db.Column(JSONType)  # TODO: think about type
     required = db.Column(db.Boolean, default=True)
     is_target_variable = db.Column(db.Boolean, default=False)
+    disabled = db.Column(db.Boolean, default=False, nullable=False,
+                         server_default='false')
 
     params = deferred(db.Column(JSONType, default={}))
     transformer = deferred(db.Column(JSONType))

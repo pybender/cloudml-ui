@@ -7,6 +7,7 @@ import urllib
 import numpy
 
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS, FEATURE_COUNT, TARGET_VARIABLE
+from api.features.models import FeatureSet, Feature
 from api.ml_models.tasks import transform_dataset_for_download
 from ..views import ModelResource
 from ..models import Model, Tag, db, Segment, Weight
@@ -113,6 +114,20 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         self.obj.test_import_handler = self.obj.train_import_handler = self.handler
         self.obj.save()
 
+        # update features with feature_set id, as ref('id') is not working
+        # also force features_set to update its representation after features
+        # fixtures have been added
+        feature_set = FeatureSet.query.all()[0]
+        for fixture in [FeatureData.smth, FeatureData.hire_outcome_feature,
+                        FeatureData.title_feature, FeatureData.name_feature,
+                        FeatureData.complex_feature, FeatureData.disabled_feature]:
+            feature = Feature.query.filter_by(name=fixture.name).one()
+            feature.feature_set_id = feature_set.id
+            feature.save()
+
+        feature_set.features_dict = feature_set.to_dict()
+        feature_set.save()
+
     def test_list(self):
         self.check_list(show='')
         self.check_list(show='created_on,updated_on,name')
@@ -152,6 +167,11 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
     def test_get_features_download_action(self):
         url = self._get_url(id=self.obj.id, action='features_download')
         resp = self.client.get(url, headers=HTTP_HEADERS)
+
+        feature_set = json.loads(resp.data)
+        self.assertEqual(5, len(feature_set['features']))
+        self.assertTrue(all([f.get('disabled', False) is False
+                             for f in feature_set['features']]))
         self.assertEquals(resp.status_code, httplib.OK)
         self.assertEquals(resp.mimetype, 'application/json')
         self.assertEquals(resp.headers['Content-Disposition'],
