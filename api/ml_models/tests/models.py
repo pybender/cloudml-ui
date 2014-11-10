@@ -177,6 +177,15 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(resp.headers['Content-Disposition'],
                           'attachment; filename=%s-features.json' % (self.obj.name,))
 
+        # disable a feature and regenerate
+        feature = Feature.query.filter_by(name='title').one()
+        feature.disabled = True
+        feature.save()
+        url = self._get_url(id=self.obj.id, action='features_download')
+        resp = self.client.get(url, headers=HTTP_HEADERS)
+        feature_set = json.loads(resp.data)
+        self.assertEqual(4, len(feature_set['features']))
+
     def test_get_trainer_download_s3url_action(self):
         model = Model.query.filter_by(name='TrainedModel').first()
         self.assertTrue(model)

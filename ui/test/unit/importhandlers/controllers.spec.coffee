@@ -727,7 +727,7 @@ describe "app.importhandlers.controllers", ->
       $rootScope.setError = jasmine.createSpy '$rootScope.setError'
 
       url = BASE_URL + '?show=name'
-      xml_ih_url = settings.apiUrl + 'xml_import_handlers/' + '?show=name'
+      xml_ih_url = settings.apiUrl + 'xml_import_handlers/?per_page=1000&show=name'
       HANDLER_ID_XML = '123321'
       $httpBackend.expectGET(url).respond('{"import_handlers": [{"id": "' + HANDLER_ID + '", "name": "Z Some Name"}]}')
       $httpBackend.expectGET(xml_ih_url).respond('{"xml_import_handlers": [{"id": "' + HANDLER_ID_XML + '", "name": "A Some Name"}]}')
