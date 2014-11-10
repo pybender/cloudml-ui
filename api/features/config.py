@@ -1,4 +1,4 @@
-from core.trainer.scalers import MinMaxScaler, StandardScaler
+from core.trainer.scalers import MinMaxScaler, StandardScaler, NoScaler
 
 
 # TODO: move and use it in cloudml project
@@ -74,6 +74,10 @@ TRANSFORMERS = {
 
 
 SCALERS = {
+    'NoScaler': {
+        'class': NoScaler,
+        'defaults': {},
+        'parameters': []},
     'MinMaxScaler': {
         'class': MinMaxScaler,
         'defaults': {

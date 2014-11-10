@@ -140,7 +140,7 @@ without test id and model id"
         if extra_fields isnt ''
           $scope.load(extra_fields, name, cb)
       else
-        show = extra_fields + ',examples_placement,' + Test.MAIN_FIELDS
+        show = extra_fields + ',examples_placement,fill_weights,' + Test.MAIN_FIELDS
         $scope.load(show, name, cb)
         $scope.LOADED_SECTIONS.push 'main'
 

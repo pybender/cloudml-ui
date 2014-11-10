@@ -29,10 +29,12 @@ class BaseTrainedEntity(object):
     STATUS_TRAINED = 'Trained'
     STATUS_ERROR = 'Error'
     STATUS_CANCELED = 'Canceled'
+    STATUS_FILLING_WEIGHTS = 'Filling Weights'
 
     STATUSES = [STATUS_NEW, STATUS_QUEUED, STATUS_IMPORTING, STATUS_IMPORTED,
                 STATUS_REQUESTING_INSTANCE, STATUS_INSTANCE_STARTED,
-                STATUS_TRAINING, STATUS_TRAINED, STATUS_ERROR, STATUS_CANCELED]
+                STATUS_TRAINING, STATUS_FILLING_WEIGHTS, STATUS_TRAINED,
+                STATUS_ERROR, STATUS_CANCELED]
 
     @declared_attr
     def name(cls):
@@ -159,7 +161,7 @@ class Model(db.Model, BaseModel, BaseTrainedEntity):
     feature_count = db.Column(db.Integer)
 
     features_set_id = db.Column(db.Integer, db.ForeignKey('feature_set.id'))
-    features_set = relationship('FeatureSet', uselist=False)
+    features_set = relationship('FeatureSet', uselist=False, backref='model')
 
     test_import_handler_id = db.Column(db.Integer, nullable=True)
     test_import_handler_type = db.Column(db.String(200), default='json')
@@ -176,8 +178,9 @@ class Model(db.Model, BaseModel, BaseTrainedEntity):
 
     @test_import_handler.setter
     def test_import_handler(self, handler):
-        self.test_import_handler_id = handler.id
-        self.test_import_handler_type = handler.TYPE
+        if handler is not None:
+            self.test_import_handler_id = handler.id
+            self.test_import_handler_type = handler.TYPE
 
     def create_segments(self, segments):
         for name, records in segments.iteritems():
@@ -230,6 +233,8 @@ class Model(db.Model, BaseModel, BaseTrainedEntity):
             fp.close()
         raw_data = trainer._raw_data
         trainer.clear_temp_data()
+        self.set_trainer(trainer)
+        self.save()
         return metrics, raw_data
 
     def transform_dataset(self, dataset):
@@ -437,6 +442,7 @@ class WeightsCategory(db.Model, BaseMixin):
 
     name = db.Column(db.String(200))
     short_name = db.Column(db.String(200))
+    # TODO: remove it
     model_name = db.Column(db.String(200))
 
     model_id = db.Column(db.Integer, db.ForeignKey('model.id'))
@@ -445,7 +451,18 @@ class WeightsCategory(db.Model, BaseMixin):
     segment_id = db.Column(db.Integer, db.ForeignKey('segment.id'))
     segment = relationship(Segment, backref=backref('weight_categories'))
 
+    normalized_weight = db.Column(db.Float)
+    class_label = db.Column(db.String(100), nullable=True)
+
     parent = db.Column(db.String(200))
+
+    # TODO: Maybe have FK Weight to WeightsCategory? 
+    # @aggregated('normalized_weight', sa.Column(sa.Float))
+    # def normalized_weight(self):
+    #     return sa.func.sum(Weight.value2)
+
+    def __repr__(self):
+        return '<Category {0}>'.format(self.name)
 
 
 def _setup_search(table_name, fields, event, schema_item, bind):
@@ -458,6 +475,19 @@ def _setup_search(table_name, fields, event, schema_item, bind):
         before update or insert on {0} for each row execute procedure
         tsvector_update_trigger(fts, 'pg_catalog.english', {1})""".format(
         table_name, fields_str))
+
+from sqlalchemy.ext.hybrid import hybrid_method
+from sqlalchemy.ext.compiler import compiles
+from sqlalchemy.sql.expression import ColumnClause
+
+
+class TestWeightColumn(ColumnClause):
+    pass
+
+
+@compiles(TestWeightColumn)
+def compile_mycolumn(element, compiler, **kw):
+    return "weight.test_weights->'%s'" % element.name
 
 
 class Weight(db.Model, BaseMixin):
@@ -480,6 +510,12 @@ class Weight(db.Model, BaseMixin):
     segment = relationship(Segment, backref=backref('weights'))
 
     parent = db.Column(db.String(200))
+
+    test_weights = db.Column(JSONType)
+
+    @hybrid_method
+    def test_weight(self, test_id):
+        return TestWeightColumn(test_id)
 
 Weight.__table__.append_ddl_listener(
     'after-create', partial(_setup_search, Weight.__table__.name,

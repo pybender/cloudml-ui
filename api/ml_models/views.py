@@ -12,7 +12,7 @@ from api import api
 from api.base.models import db
 from api.import_handlers.models import DataSet
 from api.base.resources import BaseResourceSQL, NotFound, ValidationError, \
-    public_actions, ERR_INVALID_DATA, odesk_error_response
+    public_actions, ERR_INVALID_DATA, odesk_error_response, _select
 from models import Model, Tag, Weight, WeightsCategory, Segment, Transformer, \
     ClassifierGridParams
 from forms import ModelAddForm, ModelEditForm, TransformDataSetForm, TrainForm, \
@@ -261,13 +261,14 @@ class ModelResource(BaseTrainedEntityResource):
         new_model.save()
         new_model.features_set.from_dict(model.features_set.features, commit=False)
         new_model.classifier = model.classifier
+        new_model.tags = model.tags
         new_model.save()
         return self._render({
             self.OBJECT_NAME: new_model,
             'status': 'New model "{0}" created'.format(
                 new_model.name
             )
-        })
+        }, code=201)
 
     def _put_upload_to_server_action(self, **kwargs):
         from api.servers.tasks import upload_model_to_server
@@ -445,7 +446,8 @@ class WeightTreeResource(BaseResourceSQL):
 
     NOTE: it used for constructing tree of model parameters.
     """
-    FILTER_PARAMS = (('parent', str), ('segment', str))
+    FILTER_PARAMS = (('parent', str), ('segment', str),
+                     ('test_id', int), ('class_label', str))
     ALLOWED_METHODS = ('get', )
 
     def _list(self, **kwargs):
@@ -455,20 +457,25 @@ class WeightTreeResource(BaseResourceSQL):
         segment = get_segment(model_id, params.get('segment'))
         kwargs['segment_id'] = segment.id if segment else None
 
-        opts = self._prepare_show_fields_opts(
-            WeightsCategory, ('short_name', 'name'))
-        categories = WeightsCategory.query.options(
-            *opts).filter_by(**kwargs)
-
         class_label, class_query = get_class_label(model_id, params)
         if class_query:
             kwargs['class_label'] = class_label
 
         opts = self._prepare_show_fields_opts(
-            Weight, ('short_name', 'name', 'css_class',
-                     'value', 'segment_id', 'value2'))
-        weights = Weight.query.options(*opts).filter_by(**kwargs)
-        context = {'categories': categories, 'weights': weights}
+            WeightsCategory, ('short_name', 'name', 'normalized_weight'))
+        categories = WeightsCategory.query.options(
+            *opts).filter_by(**kwargs)
+
+        extra_fields = {}
+        field_names = ['short_name', 'name', 'css_class',
+                       'value', 'segment_id', 'value2']
+        if params['test_id']:
+            test_weight = Weight.test_weight(str(params['test_id']))
+            extra_fields={'test_weight': test_weight}
+
+        context = {
+            'categories': categories,
+            'weights': _select(Weight, field_names, kwargs, extra_fields)}
         return self._render(context)
 
 api.add_resource(WeightTreeResource,

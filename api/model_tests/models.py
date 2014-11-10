@@ -54,6 +54,7 @@ class TestResult(db.Model, BaseModel):
     memory_usage = db.Column(db.Integer)
 
     vect_data = deferred(db.Column(S3File))
+    fill_weights = db.Column(db.Boolean, default=False)
     #vect_data = deferred(db.Column(db.LargeBinary))
     
 

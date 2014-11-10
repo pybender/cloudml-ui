@@ -254,6 +254,11 @@ group_by_table = db.Table(
 
 @event.listens_for(Feature, "after_insert")
 def after_insert_feature(mapper, connection, target):
+    if target.feature_set is None and target.feature_set_id is not None:
+        from sqlalchemy.orm import joinedload
+        target = target.__class__.query.options(
+            joinedload('feature_set')).get(target.id)
+        #db.session.expire(target, ['feature_set'])
     if target.feature_set is not None:
         update_feature_set_on_change_features(
             connection, target.feature_set, target)

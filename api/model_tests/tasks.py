@@ -15,7 +15,7 @@ from api.amazon_utils import AmazonS3Helper
 from api.base.exceptions import InvalidOperationError
 from api.logs.logger import init_logger
 from api.model_tests.models import TestResult, TestExample
-from api.ml_models.models import Model
+from api.ml_models.models import Model, Weight
 from api.import_handlers.models import DataSet
 from api.models import PredefinedDataSource
 
@@ -92,6 +92,36 @@ def run_test(dataset_ids, test_id):
         vect_data = metrics._true_data
         from bson import Binary
         test.save()
+
+        def fill_weights(trainer, test, segment):
+            for clazz, weights in trainer.get_weights(segment.name).iteritems():
+                positive = weights['positive']
+                negative = weights['negative']
+                def process_weights(weight_list):
+                    for weight_dict in weight_list:
+                        weight = Weight.query.filter_by(
+                            model=model,
+                            segment=segment,
+                            class_label=str(clazz),
+                            name=weight_dict['name']).one()
+                        if weight.test_weights is not None:
+                            test_weights = weight.test_weights.copy()
+                        else:
+                            test_weights = {}
+                        test_weights[test_id] = weight_dict['feature_weight']
+                        weight.test_weights = test_weights
+                        weight.save(commit=False)
+                        app.sql_db.session.add(weight)
+                process_weights(positive)
+                process_weights(negative)
+
+        # Filling test weights
+        if test.fill_weights:
+            trainer = model.get_trainer()
+            for segment in model.segments:
+                logging.info(
+                    'Storing test feature weights for segment %s', segment.name)
+                fill_weights(trainer, test, segment)
 
         data = []
         for segment, d in raw_data.iteritems():

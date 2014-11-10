@@ -228,7 +228,7 @@ angular.module('app.directives', [
     templateUrl: 'partials/directives/weights_table.html',
     replace: true,
     transclude : true,
-    scope: { weights: '=' }
+    scope: { weights: '=',  options: '=' }
   }
 )
 
@@ -289,7 +289,7 @@ angular.module('app.directives', [
 
 .directive("tree", [ ->
   return {
-    scope: {tree: '=', innerLoad: '&customClick'}
+    scope: {tree: '=', innerLoad: '&customClick', options: '='}
     # replace: true
     #restrict: 'E'
     transclude : true

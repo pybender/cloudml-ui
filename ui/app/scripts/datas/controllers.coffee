@@ -224,6 +224,7 @@ angular.module('app.datas.controllers', ['app.config', ])
   ($scope, openOptions, Data, $location, $rootScope) ->
     # Field list to be displayed in choose field select
     $scope.selectFields = []
+    $scope.extraData = {}
 
     $scope.csvField = ''
     $scope.stdFields = ['label', 'pred_label', 'prob']

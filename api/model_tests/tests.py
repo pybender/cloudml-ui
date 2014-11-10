@@ -707,10 +707,10 @@ class TasksRunTestTests(BaseDbTestCase):
         result = do_train(['class2'])
         self.assertEqual(result, 'Test completed')
         self.assertEqual(test.roc_auc,
-                         {u'1': 1.0, u'3': 1.0, u'2': 0.0})
-        self.assertEqual(test.metrics['confusion_matrix'], [[u'1', [29, 0, 0]],
+                         {u'1': 0.460573476702509, u'3': 0.5134408602150538, u'2': 0.0})
+        self.assertEqual(test.metrics['confusion_matrix'], [[u'1', [11, 11, 9]],
                                                             [u'2', [0, 0, 0]],
-                                                            [u'3', [0, 0, 35]]])
+                                                            [u'3', [12, 10, 14]]])
 
         self.assertTrue(test.metrics.has_key('accuracy'))
         self.assertIsInstance(test.metrics['accuracy'], float)
