@@ -243,6 +243,8 @@ def fill_model_parameter_weights(model_id, segment_id=None):
                 long_name = '%s.%s' % (long_name, sname) \
                     if long_name else sname
                 if i == (count - 1):
+                    # The leaf of the split (last element) is not a category,
+                    # it is the actual weight
                     new_weight = Weight()
                     new_weight.name = weight['name'][0:199]
                     new_weight.value = weight['weight']
@@ -260,9 +262,11 @@ def fill_model_parameter_weights(model_id, segment_id=None):
 
                     current['weights'].append(new_weight)
                 else:
-                    if sname not in categories_names:
+                    # Intermediate elements of the split, are actual categories
+                    # except of the last one (which is the actual weight)
+                    if long_name not in categories_names:
                         # Adding a category, if it has not already added
-                        categories_names.append(sname)
+                        categories_names.append(long_name)
                         category = WeightsCategory()
                         category.name = long_name
                         category.parent = parent
