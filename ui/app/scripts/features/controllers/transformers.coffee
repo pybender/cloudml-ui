@@ -7,7 +7,12 @@ angular.module('app.features.controllers.transformers', ['app.config', ])
   'Transformer'
 
   ($scope, Transformer) ->
+    is_editing = $scope.feature.id?
     $scope.types = Transformer.$TYPES_LIST
+    $scope.predefined_selected = is_editing and
+      not ($scope.feature.transformer.type? and
+        $scope.feature.transformer.type isnt {} and
+        $scope.types.indexOf($scope.feature.transformer.type) isnt -1)
 ])
 
 .controller('TransformersSelectLoader', [
