@@ -1,38 +1,43 @@
-<div ng-controller="TransformersTypesLoader" ng-init="feature.transformer.predefined_selected=(types.indexOf(feature.transformer.type) == -1)">
+<div ng-controller="TransformersTypesLoader">
 <ul class="nav nav-pills">
-  <li ng-class="{active: feature.transformer.predefined_selected == false}">
-    <a ng-click="feature.transformer.predefined_selected=false">Custom</a>
+  <li ng-class="{active: predefined_selected == false}">
+    <a ng-click="predefined_selected=false">Custom</a>
   </li>
-  <li ng-class="{active: feature.transformer.predefined_selected}">
-    <a ng-click="feature.transformer.predefined_selected=true">Pretrained</a>
+  <li ng-class="{active: predefined_selected}">
+    <a ng-click="predefined_selected=true">Pretrained</a>
   </li>
 </ul>
 
-<div ng-show="feature.transformer.predefined_selected" class="control-group">
-  <alert-message class="alert-info" msg='Please choose pretrained transformer. You could add other transformers at <a target="_blank" href="#/predefined/transformers/">Transformers List</a> page.' unsafe></alert-message>
+<div ng-show="predefined_selected" class="control-group">
+  <alert-message class="alert-info" msg='Please choose pretrained transformer.
+  You could add other transformers at
+  <a target="_blank" href="#/predefined/transformers/"><b>[Transformers List]</b></a> page.' safe></alert-message>
   <div class="control-group" ng-class="{error: TransformerForm.transformer.$invalid}">
     <label class="control-label">Transformer</label>
     <div class="controls"  ng-controller="TransformersSelectLoader">
-      <select name="transformer" ng-model="feature.transformer.transformer" ng-required="currentTab=='predefined'">
-        <option ng-repeat="transformer in transformers" value="{{ transformer.id }}" ng-selected="transformer.name == feature.transformer.type">{{ transformer.name }}</option>
+      <select name="transformer" ng-change="changePredefinedTransformer()"
+              ng-model="feature.transformer.transformer" ng-required="predefined_selected"
+              ng-options="transformer.id as transformer.name for transformer in transformers">
+        <option value="">- nothing selected -</option>
       </select>
       <span ng-show="TransformerForm.transformer.$error.required" class="help-inline">*</span>
     </div>
   </div>
 </div>
 
-<div ng-hide="feature.transformer.predefined_selected" class="control-group">
+<div ng-show="!predefined_selected" class="control-group">
   <div class="control-group" ng-class="{error: TransformerForm.type.$invalid}">
     <label class="control-label">Type</label>
     <div class="controls">
-      <select ng-change="loadParameters(true);changeTransformerType()" name="type" ng-model="feature.transformer.type">
-        <option value="">-----</option>
-        <option ng-selected="typeName == feature.transformer.type" ng-repeat="typeName in types" value="{{ typeName }}">{{ typeName }}</option>
+      <select name="type" ng-change="loadParameters(true);changeTransformerType()"
+              ng-model="feature.transformer.type"
+              ng-options="typeName for typeName in types">
+        <option value="">- nothing selected -</option>
       </select>
       <span ng-show="TransformerForm.type.$error.required" class="help-inline">*</span>
     </div>
   </div>
-  <div ng-show="feature.transformer.type">
+  <div ng-show="feature.transformer.type && feature.transformer.config">
     <h4>Transformer Parameters</h4>
     <div ng-repeat="name in feature.transformer.config.parameters" class="control-group">
       <label class="control-label">{{ name }}</label>

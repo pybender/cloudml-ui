@@ -9,7 +9,12 @@ angular.module('app.features.controllers.scalers', ['app.config', ])
   'Scaler'
 
   ($scope, Scaler) ->
+    is_editing = $scope.feature.id?
     $scope.types = Scaler.$TYPES_LIST
+    $scope.predefined_selected = is_editing and
+      not ($scope.feature.scaler.type? and
+      $scope.feature.scaler.type isnt {} and
+      $scope.types.indexOf($scope.feature.scaler.type) isnt -1)
 ])
 
 .controller('ScalersSelectLoader', [

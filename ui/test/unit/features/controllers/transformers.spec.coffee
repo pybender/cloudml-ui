@@ -45,9 +45,26 @@ describe 'features/controllers/transformers.coffee', ->
 
     it 'should init scope ', inject (Transformer)->
 
+      # new feature
+      $rootScope.feature = {transformer: {}}
       createController 'TransformersTypesLoader'
       expect(Transformer.$TYPES_LIST.length).toBeGreaterThan 2
       expect($scope.types).toEqual Transformer.$TYPES_LIST
+      expect($scope.predefined_selected).toBe false
+
+      # featured editing with builtin feature
+      $rootScope.feature = {id: 10, transformer: {type: Transformer.$TYPES_LIST[0]}}
+      createController 'TransformersTypesLoader'
+      expect(Transformer.$TYPES_LIST.length).toBeGreaterThan 2
+      expect($scope.types).toEqual Transformer.$TYPES_LIST
+      expect($scope.predefined_selected).toBe false
+
+      # featured editing with predefined transformer
+      $rootScope.feature = {id: 10, transformer: {type: 'zinger'}}
+      createController 'TransformersTypesLoader'
+      expect(Transformer.$TYPES_LIST.length).toBeGreaterThan 2
+      expect($scope.types).toEqual Transformer.$TYPES_LIST
+      expect($scope.predefined_selected).toBe true
 
 
   describe 'TransformersSelectLoader', ->

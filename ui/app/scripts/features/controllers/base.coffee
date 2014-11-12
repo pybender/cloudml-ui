@@ -94,7 +94,7 @@ angular.module('app.features.controllers.base', ['app.config', ])
       $scope.fieldname = fieldname
 
       $scope.$watch('parentModel.' + $scope.fieldname, (model, oldVal, scope) ->
-        if model?
+        if model?.$getConfiguration? # models having no $getConfiguration is ignored
           $scope.configurationLoaded = false
           $scope.loadConfiguration(model)
       , true)

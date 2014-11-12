@@ -90,6 +90,8 @@ angular.module('app.features.models', ['app.config'])
       @$TYPES_LIST: ['MinMaxScaler', 'StandardScaler', 'NoScaler']
 
       id: null
+      name: null
+      type: null
 
       $getConfiguration: (opts={}) =>
         @$make_request("#{@BASE_API_URL}#{@id}/action/configuration/",

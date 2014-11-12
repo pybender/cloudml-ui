@@ -121,7 +121,15 @@ Feature, Transformer, Scaler, Parameters) ->
     if !$scope.feature.transformer.type
       $scope.clearTransformer()
 
+  $scope.changePredefinedTransformer = () ->
+    if not $scope.feature.transformer?.transformer
+      delete $scope.feature.transformer.transformer
+
   $scope.changeScalerType = () ->
     if !$scope.feature.scaler.type
       $scope.clearScaler()
+
+  $scope.changePredefinedScaler = () ->
+    if not $scope.feature.scaler?.scaler
+      delete $scope.feature.scaler.scaler
 ])
