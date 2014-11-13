@@ -1,21 +1,24 @@
-"""predict models positive label
+"""remove Predict.positive_label fk
 
-Revision ID: 1c8310262247
-Revises: 194ec8738e52
-Create Date: 2014-07-13 18:19:17.038931
+Revision ID: 7d25aa6ef60
+Revises: 9f760682819
+Create Date: 2014-11-13 09:07:22.960313
 
 """
 
 # revision identifiers, used by Alembic.
-revision = '1c8310262247'
-down_revision = '194ec8738e52'
+revision = '7d25aa6ef60'
+down_revision = '9f760682819'
 
 from alembic import op
 import sqlalchemy as sa
-
+from sqlalchemy.dialects import postgresql
 
 def upgrade():
-    op.drop_constraint('predict_model_positive_label_id_fkey', 'predict_model')
+    try:
+        op.drop_constraint('predict_model_positive_label_id_fkey', 'predict_model')
+    except:
+        pass
     op.drop_table(u'predict_model_positive_label')
     op.add_column('predict_model', sa.Column('positive_label_script', sa.Text(), nullable=True))
     op.add_column('predict_model', sa.Column('positive_label_value', sa.String(length=200), nullable=True))

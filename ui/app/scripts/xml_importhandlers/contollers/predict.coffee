@@ -24,10 +24,10 @@ angular.module(
 
 .controller('PredictModelListCtrl', [
   '$scope'
-  '$dialog'
+  '$q'
   'PredictModel'
 
-  ($scope, $dialog, PredictModel) ->
+  ($scope, openOptions, PredictModel) ->
     $scope.MODEL = PredictModel
     $scope.FIELDS = PredictModel.MAIN_FIELDS
     $scope.ACTION = 'loading predict models'
