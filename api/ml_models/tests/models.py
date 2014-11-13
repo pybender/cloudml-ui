@@ -341,7 +341,7 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
 
         handler = ImportHandler.query.first()
         name = 'another'
-        post_data = {'import_handler': handler.id,
+        post_data = {'import_handler': '{0}{1}'.format(handler.id, handler.type),
                      'name': name}
         resp, model = self.check_edit(post_data)
         self.assertEquals(model.name, name)
