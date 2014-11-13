@@ -1,4 +1,6 @@
 from collections import defaultdict
+import math
+import scipy
 
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import relationship, deferred, backref
@@ -6,7 +8,7 @@ from sqlalchemy.sql import expression
 
 from api.base.models import db, BaseModel, JSONType, S3File
 from api.logs.models import LogMessage
-from api.ml_models.models import Model, Segment
+from api.ml_models.models import Model, Segment, Weight
 from api.import_handlers.models import DataSet
 
 
@@ -47,10 +49,12 @@ class TestResult(db.Model, BaseModel):
     parameters = db.Column(JSONType)
     classes_set = db.Column(postgresql.ARRAY(db.String))
     accuracy = db.Column(db.Float)
+    roc_auc = db.Column(JSONType)
     metrics = db.Column(JSONType)
     memory_usage = db.Column(db.Integer)
 
     vect_data = deferred(db.Column(S3File))
+    fill_weights = db.Column(db.Boolean, default=False)
     #vect_data = deferred(db.Column(db.LargeBinary))
     
 
@@ -82,6 +86,14 @@ class TestResult(db.Model, BaseModel):
         )
 
     @property
+    def db_exports(self):
+        from api.async_tasks.models import AsyncTask
+        return AsyncTask.get_current_by_object(
+            self,
+            'api.model_tests.tasks.export_results_to_db',
+        )
+
+    @property
     def confusion_matrix_calculations(self):
         from api.async_tasks.models import AsyncTask
         return AsyncTask.get_current_by_object(
@@ -98,7 +110,6 @@ class TestExample(db.Model, BaseModel):
     label = db.Column(db.String(100))
     pred_label = db.Column(db.String(100))
     num = db.Column(db.Integer)
-
     prob = db.Column(postgresql.ARRAY(db.Float))
 
     data_input = db.Column(JSONType)
@@ -112,6 +123,30 @@ class TestExample(db.Model, BaseModel):
     model_id = db.Column(db.Integer, db.ForeignKey('model.id'))
     model = relationship('Model')
     model_name = db.Column(db.String(200))
+
+    @property
+    def parameters_weights(self):
+        res = []
+
+        def sort_by_weight(val):
+            return -val['weight']
+
+        def go_tree(params, prefix=''):
+            for name, val in params.iteritems():
+                if 'weight' in val and val['weight'] != 0:
+                    if prefix:
+                        val['name'] = '{0}->{1}'.format(prefix, name)
+                    else:
+                        val['name'] = name
+                    res.append(val)
+                if 'weights' in val:
+                    go_tree(val['weights'], prefix=name)
+            return res
+
+        go_tree(self.weighted_data_input)
+
+        res.sort(key=sort_by_weight)
+        return res
 
     @property
     def is_weights_calculated(self):
@@ -141,8 +176,19 @@ class TestExample(db.Model, BaseModel):
             except:
                 features = feature_model.features
 
-        vect_data = self.test_result.get_vect_data(self.num, segment)
-            
+        #vect_data = self.test_result.get_vect_data(self.num, segment)
+        ndata = dict([(key.replace('->', '.'), val)
+                 for key, val in self.data_input.iteritems()])
+        trainer = model.get_trainer()
+        trainer._prepare_data(
+                iter([ndata, ]),
+                callback=None,
+                save_raw=False)
+        vect_data1 = trainer._get_vectorized_data(
+            segment, trainer._test_prepare_feature)
+        
+        vect = scipy.sparse.hstack(vect_data1)
+        vect_data = vect.todense().tolist()[0]
         
         data = get_features_vect_data(vect_data,
                                       features.items(),
@@ -150,7 +196,7 @@ class TestExample(db.Model, BaseModel):
 
         from api.ml_models.helpers.weights import get_example_params
         segment = Segment.query.filter(Segment.name == segment, Segment.model == model)[0]
-        model_weights = list(segment.weights)
+        model_weights = Weight.query.with_entities(Weight.name, Weight.value).filter(Weight.segment_id == segment.id)
         weighted_data = dict(get_example_params(
             model_weights, self.data_input, data))
         self.weighted_data_input = weighted_data

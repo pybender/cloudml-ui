@@ -1,8 +1,10 @@
+import logging
 from lxml import etree
 from sqlalchemy.orm import relationship, deferred, backref, validates
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import undefer, joinedload_all, joinedload
+from sqlalchemy.ext.hybrid import hybrid_property
 
 from import_handlers import ImportHandlerMixin
 from api.base.models import db, BaseMixin, JSONType
@@ -14,13 +16,20 @@ from core.xmlimporthandler.datasources import DataSource
 class XmlImportHandler(db.Model, ImportHandlerMixin):
     TYPE = 'xml'
 
-    DATASOURCES_ORDER = ['db', 'csv', 'http', 'pig']
+    DATASOURCES_ORDER = ['db', 'csv', 'http', 'pig', 'input']
 
-    predict_id = db.Column(db.ForeignKey('predict.id',
-                                         ondelete='CASCADE'))
+    predict_id = db.Column(db.ForeignKey('predict.id', ondelete='CASCADE'))
     predict = relationship(
-        'Predict',
-        foreign_keys=[predict_id], backref="import_handler")
+        'Predict', foreign_keys=[predict_id], backref="import_handler")
+
+    @property
+    def can_edit(self):
+        if self.created_by is None:
+            return True
+
+        from flask import request
+        user = getattr(request, 'user', None)
+        return user.id == self.created_by.id
 
     @property
     def data(self):
@@ -28,6 +37,12 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
 
     @data.setter
     def data(self, val):
+        has_root_ent = XmlEntity.query.filter_by(
+            import_handler=self,
+            entity=None).count()
+        if has_root_ent:
+            raise ValueError("Import Handler isn't empty")
+
         fill_import_handler(self, val)
 
     def _get_in_order(self, items, field, order):
@@ -39,7 +54,7 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
             for item in data[key]:
                 yield item
 
-    def get_plan_config(self, pretty_print=True):
+    def get_plan_config(self, pretty_print=True, secure=True):
         plan = etree.Element("plan")
 
         inputs = etree.SubElement(plan, "inputs")
@@ -53,8 +68,10 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
         datasources = etree.SubElement(plan, "datasources")
         for ds in self._get_in_order(self.xml_data_sources, 'type',
                                      self.DATASOURCES_ORDER):
-            etree.SubElement(
-                datasources, ds.type, name=ds.name, **ds.params)
+            if ds.name != "input":
+                extra = ds.params if secure else {}
+                etree.SubElement(
+                    datasources, ds.type, name=ds.name, **extra)
 
         import_ = etree.SubElement(plan, "import")
         tree = get_entity_tree(self)
@@ -116,10 +133,33 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
         """
         Returns list of the field names
         """
-        return []
+        if self.data is None:
+            return []
 
-    def get_import_params(self):
-        return [p.name for p in self.input_parameters]
+        def get_entity_fields(entity):
+            fields = []
+            for name, field in entity.fields.iteritems():
+                if not field.is_datasource_field:
+                    fields.append(field.name)
+            for sub_entity in entity.nested_entities_field_ds.values():
+                fields += get_entity_fields(sub_entity)
+            for sub_entity in entity.nested_entities_global_ds:
+                fields += get_entity_fields(sub_entity)
+            return fields
+
+        from core.xmlimporthandler.importhandler import ExtractionPlan, \
+            ImportHandler as CoreImportHandler
+        # TODO: try .. except after check this with real import handlers
+        try:
+            plan = ExtractionPlan(self.data, is_file=False)
+            return get_entity_fields(plan.entity)
+        except Exception, exc:
+            raise
+            logging.error(exc)
+
+    # TODO: looks like obsolete
+    # def get_import_params(self):
+    #     return [p.name for p in self.input_parameters]
 
     def update_import_params(self):
         self.import_params = [p.name for p in self.xml_input_parameters]
@@ -134,6 +174,8 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
         ds = next((d for d in self.xml_data_sources if d.name == ds_name))
         conn = "host='{host:s}' dbname='{dbname:s}' user='{user:s}' " \
                "password='{password:s}'".format(**ds.params)
+        if ds.params.has_key('port'):
+            conn += " port={port:s}".format(**ds.params)
         return ds.params['vendor'], conn
 
     def __repr__(self):
@@ -161,7 +203,7 @@ class XmlDataSource(db.Model, BaseMixin, RefXmlImportHandlerMixin):
     # TODO: unique for XmlImportHandler
     name = db.Column(db.String(200), nullable=False)
     type = db.Column(db.Enum(*TYPES, name='xml_datasource_types'))
-    params = db.Column(JSONType)
+    params = deferred(db.Column(JSONType))
 
     @validates('params')
     def validate_params(self, key, params):  # TODO:
@@ -207,7 +249,7 @@ class XmlQuery(db.Model, BaseMixin):
 class XmlField(db.Model, BaseMixin):
     TYPES = Field.PROCESS_STRATEGIES.keys()
     TRANSFORM_TYPES = ['json', 'csv']
-    FIELDS_TO_SERIALIZE = ['name', 'type', 'column', 'jsonpath', 'join',
+    FIELDS_TO_SERIALIZE = ['name', 'type', 'column', 'jsonpath', 'delimiter',
                            'regex', 'split', 'dateFormat', 'template',
                            'transform', 'headers', 'script', 'required',
                            'multipart']
@@ -224,7 +266,7 @@ class XmlField(db.Model, BaseMixin):
     type = db.Column(db.Enum(*TYPES, name='xml_field_types'))
     column = db.Column(db.String(200))
     jsonpath = db.Column(db.String(200))
-    join = db.Column(db.String(200))
+    delimiter = db.Column(db.String(200))
     regex = db.Column(db.String(200))
     split = db.Column(db.String(200))
     dateFormat = db.Column(db.String(200))
@@ -398,7 +440,7 @@ class PredictModelWeight(db.Model, RefPredictModelMixin):
 
     value = db.Column(db.String(200), name='value')
     script = db.Column(db.Text, name='script')
-    label = db.Column(db.Boolean, default=True)
+    label = db.Column(db.String(200))
 
 
 # Predict Result
@@ -413,7 +455,7 @@ class PredictResultProbability(db.Model, RefPredictModelMixin):
     FIELDS_TO_SERIALIZE = ('label', 'script', 'predict_model')
 
     script = db.Column(db.Text)
-    label = db.Column(db.Boolean, default=True)
+    label = db.Column(db.String(200))
 
 
 def fill_import_handler(import_handler, xml_data=None):
@@ -433,6 +475,8 @@ def fill_import_handler(import_handler, xml_data=None):
     else:  # Loading import handler from XML file
         ds_dict = {}
         for datasource in plan.datasources.values():
+            # if datasource.name == 'input':
+            #      continue
             POSSIBLE_PARAMS = ['host', 'dbname', 'port',
                                'user', 'password', 'vender']
             ds = XmlDataSource(
@@ -443,6 +487,7 @@ def fill_import_handler(import_handler, xml_data=None):
             ds_dict[datasource.name] = ds
             db.session.add(ds)
 
+        import_handler.import_params = []
         for inp in plan.inputs.values():
             param = XmlInputParameter(
                 name=inp.name,
@@ -478,12 +523,16 @@ def fill_import_handler(import_handler, xml_data=None):
 
         def load_entity_items(entity, db_entity):
             for field in entity.fields.values():
+                if hasattr(field, 'delimiter'):
+                    delimiter = field.delimiter
+                else:
+                    delimiter = field.join
                 fld = XmlField(
                     name=field.name,
                     type=field.type,
                     column=field.column,
                     jsonpath=field.jsonpath,
-                    join=field.join,
+                    delimiter=delimiter,
                     regex=field.regex,
                     split=field.split,
                     dateFormat=field.dateFormat,

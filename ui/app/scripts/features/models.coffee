@@ -19,25 +19,53 @@ angular.module('app.features.models', ['app.config'])
   '$q'
   'settings'
   'BaseModel'
+  'XmlImportHandler'
+  'ImportHandler'
   
-  ($http, $q, settings, BaseModel) ->
+  ($http, $q, settings, BaseModel, XmlImportHandler, ImportHandler) ->
     class Transformer extends BaseModel
-      BASE_API_URL: "#{settings.apiUrl}features/transformers/"
-      #BASE_UI_URL: "/features/transformers/"
+      BASE_API_URL: "#{settings.apiUrl}transformers/"
+      BASE_UI_URL: "/predefined/transformers"
       API_FIELDNAME: 'transformer'
       @LIST_MODEL_NAME: 'transformers'
       LIST_MODEL_NAME: @LIST_MODEL_NAME
-      @MAIN_FIELDS: 'id,name,type,params,created_on,created_by'
-      @$TYPES_LIST: ['Dictionary', 'Count', 'Tfidf', 'Lda', 'Lsi']
+      @MAIN_FIELDS: ['id', 'name', 'type', 'params', 'created_on', 'created_by',
+                     'status', 'train_import_handler_type',
+                     'train_import_handler'].join(',')
+      @$TYPES_LIST: ['Dictionary', 'Count', 'Tfidf', 'Lda', 'Lsi', 'Ntile']
+
 
       id: null
       name: null
       type: null
       params: null
 
+      loadFromJSON: (origData) ->
+        super origData
+
+        if origData?
+          if origData.train_import_handler?
+            if origData.train_import_handler_type == 'xml'
+              cls = XmlImportHandler
+            else if origData.train_import_handler_type == 'json'
+              cls = ImportHandler
+            else
+              throw new Error('Need to load import handler type')
+            @train_import_handler_obj = new cls(
+              origData['train_import_handler'])
+            @train_import_handler = @train_import_handler_obj.id
+          if origData.json?
+            @json = angular.toJson(origData.json, pretty=true)
+
       $getConfiguration: (opts={}) =>
         @$make_request("#{@BASE_API_URL}#{@id}/action/configuration/",
                        load=false)
+      $train: (opts={}) ->
+        data = {}
+        for key, val of opts
+          if key == 'parameters' then val = JSON.stringify(val)
+          data[key] = val
+        @$make_request("#{@BASE_API_URL}#{@id}/action/train/", {}, "PUT", data)
 
       constructor: (opts) ->
         _.extend @, opts
@@ -59,7 +87,7 @@ angular.module('app.features.models', ['app.config'])
       @LIST_MODEL_NAME: 'scalers'
       LIST_MODEL_NAME: @LIST_MODEL_NAME
       @MAIN_FIELDS: 'id,name,type,params,created_on,created_by'
-      @$TYPES_LIST: ['MinMaxScaler', 'StandardScaler']
+      @$TYPES_LIST: ['MinMaxScaler', 'StandardScaler', 'NoScaler']
 
       id: null
 
@@ -82,7 +110,7 @@ angular.module('app.features.models', ['app.config'])
   ($http, $q, settings, BaseModel) ->
     class Classifier extends BaseModel
       BASE_API_URL: "#{settings.apiUrl}features/classifiers/"
-      BASE_UI_URL: "/features/classifiers/"
+      BASE_UI_URL: "/features/classifiers"
       API_FIELDNAME: 'classifier'
       @LIST_MODEL_NAME: 'classifiers'
       LIST_MODEL_NAME: @LIST_MODEL_NAME
@@ -125,7 +153,7 @@ angular.module('app.features.models', ['app.config'])
   (settings, BaseModel, Feature) ->
     class FeaturesSet extends BaseModel
       BASE_API_URL: "#{settings.apiUrl}features/sets/"
-      BASE_UI_URL: "/features/sets/"
+      BASE_UI_URL: "/features/sets"
       API_FIELDNAME: 'feature_set'
       @MAIN_FIELDS: 'id,schema_name,features_count,target_variable'
 
@@ -141,7 +169,7 @@ angular.module('app.features.models', ['app.config'])
             @group_by = []
             for feature in origData.group_by
               @group_by.push {id: feature.id, text: feature.name}
-            console.log @group_by
+            #console.log @group_by
 
       downloadUrl: =>
         return "#{@BASE_API_URL}#{@id}/action/download/"
@@ -160,8 +188,9 @@ angular.module('app.features.models', ['app.config'])
   (settings, $filter, BaseModel, NamedFeatureType, Transformer, Scaler) ->
     class Feature extends BaseModel
       API_FIELDNAME: 'feature'
-      @MAIN_FIELDS: 'id,name,type,input_format,transformer,params,\
-scaler,default,is_target_variable,created_on,created_by,required'
+      @MAIN_FIELDS: ['id','name','type','input_format','transformer','params',
+                     'scaler','default','is_target_variable','created_on',
+                     'created_by','required', 'disabled'].join(',')
 
       id: null
       name: null
@@ -184,13 +213,13 @@ scaler,default,is_target_variable,created_on,created_by,required'
           if origData.transformer? && Object.keys(origData.transformer).length
             @transformer = new Transformer(
               _.extend origData.transformer, defaultData)
-          else
+          else if not @transformer # when partial saving don't reset the transformer
             @transformer = new Transformer(defaultData)
 
           if origData.scaler? && Object.keys(origData.scaler).length
             @scaler = new Scaler(
               _.extend origData.scaler, defaultData)
-          else
+          else if not @scaler # when partial saving don't reset the scaler
             @scaler = new Scaler(defaultData)
 
           if origData.required?
@@ -257,8 +286,8 @@ scaler,default,is_target_variable,created_on,created_by,required'
               opts.extraData['scaler-' + field] = val
               isScalerFilled = true
 
-        if isTransformerFilled
-          opts.extraData['transformer-is_predefined'] = false
+        if @transformer.transformer?
+          opts.extraData['transformer-predefined_selected'] = true
         else if removeItems
           opts.extraData['remove_transformer'] = true
 
@@ -303,7 +332,7 @@ scaler,default,is_target_variable,created_on,created_by,required'
   ($http, $q, settings, $filter, BaseModel, Param) ->
     class NamedFeatureType extends BaseModel
       BASE_API_URL: "#{settings.apiUrl}features/named_types/"
-      BASE_UI_URL: "/features/types/"
+      BASE_UI_URL: "/features/types"
       API_FIELDNAME: 'named_type'
       @MAIN_FIELDS: 'id,name,type,input_format,params,created_on,created_by'
       @$TYPES_LIST: ['boolean', 'int', 'float', 'numeric', 'date',

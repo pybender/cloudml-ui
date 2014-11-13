@@ -59,7 +59,7 @@ describe "base", ->
     )
 
     it "should save existing object", inject(() ->
-      $httpBackend.expectPUT('http://host/api/objects/someid/?')
+      $httpBackend.expectPUT('http://host/api/objects/someid/')
       .respond('{}')
 
       model.name = 'saved name'
@@ -70,7 +70,7 @@ describe "base", ->
     )
 
     it "should save new object", inject((BaseModel) ->
-      $httpBackend.expectPOST('http://host/api/objects/?').respond('{}')
+      $httpBackend.expectPOST('http://host/api/objects/').respond('{}')
 
       model = new BaseModel({id: null})
       model.name = 'saved name'

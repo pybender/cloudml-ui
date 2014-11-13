@@ -1,4 +1,5 @@
 import json
+import importlib
 from api.base.forms.base_forms import BaseChooseInstanceAndDatasetMultiple
 from api.import_handlers.models import DataSet
 from api.instances.models import Instance
@@ -10,11 +11,13 @@ from core.trainer.config import FeatureModel, SchemaException
 from core.importhandler.importhandler import ExtractionPlan, \
     ImportHandlerException
 from api.base.forms import BaseForm, ValidationError, ModelField, \
-    CharField, JsonField, ImportHandlerFileField, MultipleModelField, \
-    ChoiceField, ImportHandlerField
-from api.models import Tag, ImportHandler, Model, XmlImportHandler
-from api.features.models import FeatureSet, PredefinedClassifier
+    CharField, JsonField, ImportHandlerFileField, \
+    ChoiceField, ImportHandlerField, IntegerField, BooleanField
+from api.models import Tag, ImportHandler, Model, XmlImportHandler, \
+    Transformer, BaseTrainedEntity, ClassifierGridParams
+from api.features.models import FeatureSet, PredefinedClassifier, Feature
 from api import app
+from api.features.config import CLASSIFIERS
 
 db = app.sql_db
 
@@ -78,7 +81,8 @@ class ModelAddForm(BaseForm):
         count = Model.query.filter_by(name=value).count()
         if count:
             raise ValidationError(
-                'Model with name "%s" already exist. Please choose another one.' % value)
+                'Model with name "%s" already exist. \
+Please choose another one.' % value)
 
         return value
 
@@ -158,7 +162,6 @@ class ModelAddForm(BaseForm):
             for segment in model.segments:
                 fill_model_parameter_weights.delay(model.id, segment.id)
 
-
         return model
 
     def _save_importhandler(self, fieldname, name, handler_type='json'):
@@ -201,12 +204,175 @@ class ModelAddForm(BaseForm):
             return handler
 
 
-class ModelTrainForm(BaseChooseInstanceAndDatasetMultiple):
+class TrainForm(BaseChooseInstanceAndDatasetMultiple):
     def __init__(self, *args, **kwargs):
         self.model = kwargs.get('obj', None)
-        super(ModelTrainForm, self).__init__(*args, **kwargs)
+        super(TrainForm, self).__init__(*args, **kwargs)
 
     def save(self, *args, **kwargs):
-        self.obj.status = Model.STATUS_QUEUED
+        self.obj.status = BaseTrainedEntity.STATUS_QUEUED
         self.obj.save()
         return self.obj
+
+
+class TransformDataSetForm(BaseForm):
+    required_fields = ('dataset',)
+    dataset = ModelField(model=DataSet, return_model=True)
+
+
+class TransformerForm(BaseForm):
+    """
+    Adds/Edits Pretrained transformer form
+    """
+    NO_REQUIRED_FOR_EDIT = True
+    REQUIRED_FIELDS = ['train_import_handler']
+    FORM_REQUIRED_FIELDS = REQUIRED_FIELDS + \
+        ['name', 'type', 'feature_type', 'field_name']
+    group_chooser = 'json_selected'
+    required_fields_groups = {'true': REQUIRED_FIELDS + ['json'],
+                              'false': FORM_REQUIRED_FIELDS,
+                              None: FORM_REQUIRED_FIELDS}
+
+    name = CharField()
+    feature_type = CharField()
+    field_name = CharField()
+    type_field = ChoiceField(
+        choices=Transformer.TYPES_LIST, name='type')
+    params = JsonField()
+    json = JsonField()
+    json_selected = BooleanField()
+    train_import_handler = ImportHandlerField()
+
+    def validate_data(self):
+        name = self.cleaned_data.get('name')
+        json_selected = self.cleaned_data.get('json_selected')
+        if json_selected:
+            json = self.cleaned_data.get('json')
+            name = json['transformer-name']
+            self.is_name_available(name, field_name='json')
+        else:
+            self.is_name_available(name)
+
+    def save(self, commit=True):
+        if self.cleaned_data.get('json_selected'):
+            json = self.cleaned_data['json']
+            transformer = Transformer()
+            transformer.load_from_json(json)
+            transformer.train_import_handler = \
+                self.cleaned_data['train_import_handler']
+            transformer.save(commit=commit)
+            return transformer
+        else:
+            return super(TransformerForm, self).save(commit)
+
+    def is_name_available(self, name, field_name='name'):
+        if self.obj and self.obj.id:
+            return True  # edit
+
+        if Transformer.query.filter_by(name=name).count():
+            self.add_error(field_name, 'Transformer with name {0} \
+already exist'.format(name))
+            return False
+        return True
+
+
+class FeatureTransformerForm(BaseForm):
+    """
+    Adds/edits feature transformer form.
+    """
+    group_chooser = 'predefined_selected'
+    REQUIRED_FORM = ['type']
+    REQUIRED_PRETRAINED = ['transformer']
+    required_fields_groups = {
+        'true': REQUIRED_PRETRAINED,
+        'false': REQUIRED_FORM,
+        None: REQUIRED_FORM}
+
+    predefined_selected = BooleanField()
+    feature_id = ModelField(model=Feature, return_model=True)
+
+    type_field = CharField(name='type')
+    params = JsonField()
+
+    transformer = ModelField(model=Transformer, return_model=True)
+
+    def validate_data(self):
+        type_ = self.cleaned_data.get('type')
+        pretrained_selected = self.cleaned_data.get('predefined_selected')
+        if not pretrained_selected and type_ not in Transformer.TYPES_LIST:
+            self.add_error('type', 'type is invalid')
+
+    def save(self, commit=True, save=True):
+        feature = self.cleaned_data.get('feature_id', None)
+        is_pretrained = self.cleaned_data.get('predefined_selected', False)
+        if is_pretrained:
+            pretrained_transformer = self.cleaned_data.get('transformer')
+            transformer = {'type': pretrained_transformer.name}
+        else:
+            transformer = {
+                "type": self.cleaned_data.get('type'),
+                "params": self.cleaned_data.get('params')
+            }
+        if not feature is None:
+            feature.transformer = transformer
+            feature.save()
+        return transformer
+
+
+class GridSearchForm(BaseForm):
+    parameters = JsonField()
+    scoring = CharField()
+    train_dataset = ModelField(model=DataSet, return_model=True)
+    test_dataset = ModelField(model=DataSet, return_model=True)
+
+    def __init__(self, *args, **kwargs):
+        self.model = kwargs.get('model', None)
+        super(GridSearchForm, self).__init__(*args, **kwargs)
+
+    def clean_parameters(self, grid_params, field):
+        params = {}
+        config = CLASSIFIERS[self.model.classifier['type']]
+        config_params = config['parameters']
+        for pconfig in config_params:
+            name = pconfig['name']
+            if name in grid_params:
+                value = grid_params[name]
+                if not value:
+                    continue
+
+                value = value.split(',')
+                type_ = pconfig.get('type', 'string')
+                if type_ == 'integer':
+                    value = [int(item) for item in value]
+                elif type_ == 'float':
+                    value = [float(item) for item in value]
+                elif type_ == 'boolean':
+                    value = [item == 'true' for item in value]
+
+                choices = pconfig.get('choices')
+                if choices:
+                    for item in value:
+                        if not item in choices:
+                            raise ValidationError(
+                                'Invalid {0}: should be one of {1}'.format(
+                                    name, ','.join(choices)))
+
+                params[name] = value
+        #import pdb; pdb.set_trace()
+        return params
+
+    def save(self, *args, **kwargs):
+        obj = super(GridSearchForm, self).save(commit=False)
+        obj.model = self.model
+        obj.save()
+        return obj
+        # parameters = self.cleaned_data['parameters']
+        # train_dataset = self.cleaned_data['train_dataset']
+        # test_dataset = self.cleaned_data['test_dataset']
+        # scoring = self.cleaned_data['scoring']
+        # obj = ClassifierGridParams(
+        #     parameters=parameters,
+        #     train_dataset=train_dataset,
+        #     test_dataset=test_dataset,
+        #     model=self.model)
+        # obj.save()

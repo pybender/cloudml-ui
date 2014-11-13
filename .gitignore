@@ -45,3 +45,7 @@ api/test_config.py
 
 bower_components
 cloudml_test
+ui/coverage
+coverage/
+.tmp
+ui/cloudml-ui-ui.iml

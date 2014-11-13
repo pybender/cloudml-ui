@@ -75,6 +75,16 @@ angular.module('app.filters', [])
     return rounded.toFixed(precision) +  ' ' + units[number]
 ])
 
+.filter("asDate", () ->
+  return (input) ->
+    return new Date(input))
+
+.filter('true_false', () ->
+    return (text, length, end) ->
+        if (text) then return 'Yes'
+        return 'No'
+)
+
 add_zero = (val) ->
   if val < 10
     val = '0' + val

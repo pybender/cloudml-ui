@@ -5,7 +5,12 @@ from flask import request
 from api import app, api
 from api.base.resources import BaseResourceSQL, NotFound, \
     odesk_error_response, public
-from models import User
+from models import User, AuthToken
+
+from api.amazon_utils import AmazonDynamoDBHelper
+
+
+db = AmazonDynamoDBHelper()
 
 
 class AuthResource(BaseResourceSQL):
@@ -19,12 +24,15 @@ class AuthResource(BaseResourceSQL):
                 User.get_auth_url()
 
             # TODO: Use redis?
-            app.db['auth_tokens'].insert({
-                'oauth_token': oauth_token,
-                'oauth_token_secret': oauth_token_secret,
-            })
+            # app.db['auth_tokens'].insert({
+            #     'oauth_token': oauth_token,
+            #     'oauth_token_secret': oauth_token_secret,
+            # })
+            auth = AuthToken(oauth_token, oauth_token_secret)
+            auth.save()
+
             logging.debug(
-                "User Auth: oauth token %s added to mongo", oauth_token)
+                "User Auth: oauth token %s added", oauth_token)
             return self._render({'auth_url': auth_url})
 
         if action == 'authenticate':
@@ -39,9 +47,7 @@ class AuthResource(BaseResourceSQL):
             logging.debug(
                 "User Auth: trying to authenticate with token %s", oauth_token)
             # TODO: Use redis?
-            auth = app.db['auth_tokens'].find_one({
-                'oauth_token': oauth_token
-            })
+            auth = AuthToken.get_auth(oauth_token)
             if not auth:
                 logging.error('User Auth: token %s not found', oauth_token)
                 return odesk_error_response(
@@ -53,8 +59,8 @@ class AuthResource(BaseResourceSQL):
                 oauth_token, oauth_token_secret, oauth_verifier)
 
             logging.debug(
-                'User Auth: Removing token %s from mongo', oauth_token)
-            app.db['auth_tokens'].remove({'_id': auth['_id']})
+                'User Auth: Removing token %s', oauth_token)
+            AuthToken.delete(auth.get('oauth_token'))
 
             return self._render({
                 'auth_token': auth_token,

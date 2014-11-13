@@ -24,7 +24,11 @@ angular.module('app.reports.controllers', ['app.config', ])
     $scope.form_data = [{'model': null, 'test': null},
                         {'model': null, 'test': null}]
 
-    $scope.$watch 'action', (action) ->
+    $scope.$watch 'action', (action, oldAction) ->
+      # to avoid the initialization call as per docs
+      if action is oldAction
+        return
+
       # Parsing get parameters:
       #   model_id1,test_id1...model_idN,test_idN
       get_params = []

@@ -39,6 +39,7 @@ exist. Please choose another one.' % value)
             import_handler = XmlImportHandler(
                 name=self.cleaned_data['name'],
                 import_params=[])
+            import_handler._set_user()
             db.session.add(import_handler)
             import_handler.data = self.cleaned_data.get('data')
         except Exception, exc:
@@ -163,7 +164,7 @@ class XmlFieldForm(BaseForm):
     type = ChoiceField(choices=XmlField.TYPES)
     column = CharField()
     jsonpath = CharField()
-    join = CharField()
+    delimiter = CharField()
     regex = CharField()
     split = CharField()
     dateFormat = CharField()

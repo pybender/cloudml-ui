@@ -4,11 +4,10 @@ import logging
 
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin
 from ..views import FeatureResource
-from ..models import Feature, FeatureSet, PredefinedTransformer, \
-    NamedFeatureType
-from ..fixtures import FeatureSetData, FeatureData, PredefinedTransformerData
-from api.ml_models.models import Model
-from api.ml_models.fixtures import ModelData
+from ..models import Feature, FeatureSet, NamedFeatureType
+from ..fixtures import FeatureSetData, FeatureData
+from api.ml_models.models import Model, Transformer
+from api.ml_models.fixtures import ModelData, TransformerData
 from api.base.models import db
 
 
@@ -20,7 +19,7 @@ class TestFeatureResource(BaseDbTestCase, TestChecksMixin):
     RESOURCE = FeatureResource
     Model = Feature
     datasets = (FeatureSetData, FeatureData, ModelData,
-                PredefinedTransformerData)
+                TransformerData)
 
     def setUp(self):
         BaseDbTestCase.setUp(self)
@@ -61,11 +60,14 @@ class TestFeatureResource(BaseDbTestCase, TestChecksMixin):
             "type": "int",
             "feature_set_id": self.model.features_set_id,
             'transformer-type': 'type',
-            'transformer-params': 'aaa'
         }
         _check(data, errors={
-            'transformer': "transformer-params: JSON file is corrupted. Can not load it: aaa, \
-transformer-type: Should be one of Count, Tfidf, Lda, Dictionary, Lsi"})
+            'transformer': "transformer-type: type is invalid"})
+
+        data['transformer-params'] = 'aaa'
+        _check(data, errors={
+            'transformer': "transformer-params: JSON file is corrupted. \
+Can not load it: aaa, transformer-type: type is invalid"})
 
     def test_add_simple_feature(self):
         data = {
@@ -77,6 +79,7 @@ transformer-type: Should be one of Count, Tfidf, Lda, Dictionary, Lsi"})
             "required": True,
             "is_target_variable": True
         }
+        self.assertFalse(data["name"] in self.model.features)
         resp, obj = self.check_edit(data)
         self.assertEquals(obj.name, data['name'])
         self.assertEquals(obj.type, data['type'])
@@ -85,6 +88,9 @@ transformer-type: Should be one of Count, Tfidf, Lda, Dictionary, Lsi"})
         self.assertTrue(obj.is_target_variable)
         self.assertEquals(obj.input_format, data['input_format'])
         self.assertEquals(obj.default, data['default'])
+        model = Model.query.get(self.model.id)
+        self.assertTrue(data["name"] in model.features,
+                        "Features.json should be updated")
 
     def test_add_feature(self):
         """
@@ -106,13 +112,13 @@ transformer-type: Should be one of Count, Tfidf, Lda, Dictionary, Lsi"})
         self.assertTrue(obj.scaler, "Scaler not created")
         self.assertEquals(obj.scaler['type'], data["scaler-type"])
 
-        transformer = PredefinedTransformer.query.all()[0]
+        transformer = Transformer.query.all()[0]
         data = {
             "name": "title",
             "type": "text",
             "feature_set_id": self.model.features_set_id,
-            "transformer-transformer": transformer.name,
-            "transformer-predefined_selected": True
+            "transformer-transformer": transformer.id,
+            "transformer-predefined_selected": 'true'
         }
         resp, obj = self.check_edit(data)
         self.assertEquals(obj.name, data['name'])
@@ -120,9 +126,7 @@ transformer-type: Should be one of Count, Tfidf, Lda, Dictionary, Lsi"})
         self.assertEquals(obj.feature_set_id, data['feature_set_id'])
 
         self.assertTrue(obj.transformer, "Transformer not added to feature")
-        self.assertEquals(obj.transformer['type'], transformer.type)
-        for name, value in transformer.params.iteritems():
-            self.assertEquals(obj.transformer[name], value)
+        self.assertEquals(obj.transformer['type'], transformer.name)
 
     def test_inline_edit_feature(self):
         """
@@ -247,7 +251,7 @@ class TestFeaturesDocs(BaseDbTestCase):
 
         def expire_fset():
             db.session.expire(
-                fset, ['target_variable','features_count', 'features_dict'])
+                fset, ['target_variable', 'features_count', 'features_dict'])
 
         fset.schema_name = 'bestmatch'
         fset.save()

@@ -13,16 +13,50 @@ angular.module('app.xml_importhandlers.controllers', ['app.config', ])
     $scope.ACTION = 'loading handler list'
 ])
 
+.controller('BigListCtrl', [
+  '$scope'
+  '$location'
+
+  ($scope, $location) ->
+    $scope.currentTag = $location.search()['tag']
+    $scope.kwargs = {
+      tag: $scope.currentTag
+      per_page: 5
+      sort_by: 'updated_on'
+      order: 'desc'
+    }
+    $scope.page = 1
+
+    $scope.init = (updatedByMe, listUniqueName) ->
+      $scope.listUniqueName = listUniqueName
+      if updatedByMe
+        $scope.$watch('user', (user, oldVal, scope) ->
+          if user?
+            $scope.filter_opts = {
+              'updated_by_id': user.id
+              'status': ''}
+            $scope.$watch('filter_opts', (filter_opts, oldVal, scope) ->
+              $scope.$emit 'BaseListCtrl:start:load', listUniqueName
+            , true)
+        , true)
+      else
+        $scope.filter_opts = {'status': ''}
+
+    $scope.showMore = () ->
+      $scope.page += 1
+      extra = {'page': $scope.page}
+      $scope.$emit 'BaseListCtrl:start:load', $scope.listUniqueName, true, extra
+])
+
 .controller('XmlImportHandlerDetailsCtrl', [
   '$scope'
   '$rootScope'
   '$routeParams'
-  '$dialog'
   'XmlImportHandler'
 
-  ($scope, $rootScope, $routeParams, $dialog, ImportHandler) ->
+  ($scope, $rootScope, $routeParams, ImportHandler) ->
     if not $routeParams.id
-      err = "Can't initialize without import handler id"
+      throw new Error "Can't initialize without import handler id"
 
     $scope.handler = new ImportHandler({id: $routeParams.id})
     $scope.LOADED_SECTIONS = []
@@ -34,24 +68,21 @@ angular.module('app.xml_importhandlers.controllers', ['app.config', ])
       mainSection = section[0]
       if mainSection not in $scope.LOADED_SECTIONS
         # is not already loaded
-        fields = ImportHandler.MAIN_FIELDS + ',xml_data_sources,\
-xml_input_parameters,xml_scripts,entities,import_params,predict'
-        if mainSection == 'dataset'
-          setTimeout(() ->
-            $scope.$broadcast('loadDataSet', true)
-            $scope.LOADED_SECTIONS.push mainSection
-          , 100)
+        extraFields = ['xml_data_sources', 'xml_input_parameters', 'xml_scripts',
+                       'entities', 'import_params', 'predict', 'can_edit'].join(',')
+        fields = "#{ImportHandler.MAIN_FIELDS},#{extraFields}"
 
-      if section[1] == 'xml' then fields = 'xml'
+      if section[1] == 'xml' then fields = [fields, 'xml'].join(',')
 
-      if fields != ''
-        $scope.handler.$load(
+      if fields isnt ''
+        $scope.handler.$load
             show: fields
-        ).then (->
+        .then ->
           $scope.LOADED_SECTIONS.push mainSection
-        ), ((opts) ->
+          if mainSection is 'dataset'
+            $scope.$broadcast('loadDataSet', true)
+        , (opts) ->
           $scope.setError(opts, 'loading handler details')
-        )
 
     $scope.initSections($scope.go)
 ])
@@ -64,4 +95,21 @@ xml_input_parameters,xml_scripts,entities,import_params,predict'
   ($scope, ImportHandler) ->
     $scope.types = [{name: 'Db'}, {name: 'Request'}]
     $scope.model = new ImportHandler()
+])
+
+.controller('PredictCtrl', [
+  '$scope'
+
+  ($scope) ->
+    $scope.init = (handler) ->
+      $scope.handler = handler
+      $scope.kwargs = {'import_handler_id': handler.id}
+      $scope.$watch('handler.predict', (predict, old, scope) ->
+        if predict?
+          #console.log handler, 12
+          $scope.predict_models = predict.models
+          $scope.predict = predict
+          $scope.label = predict.label
+          $scope.probability = predict.probability
+      )
 ])

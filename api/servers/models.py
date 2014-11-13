@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy.orm import deferred
 
 from api import app
@@ -25,17 +27,26 @@ class Server(BaseModel, db.Model):
         s3 = AmazonS3Helper(
             bucket_name=app.config['CLOUDML_PREDICT_BUCKET_NAME'])
         for key in s3.list_keys(path):
+            print "!!!!!!!!!!!1", key, key.name
             uid = key.name.split('/')[-1]
+            print "uid", uid
             key = s3.bucket.get_key(key.name)
+            print "buk", key
 
             if key.get_metadata('hide') == 'True':
                 continue
 
+            # TODO: last_modified problems with amazon s3 and botoo
+            # https://github.com/boto/boto/issues/466
+            # https://github.com/spulec/moto/issues/146
+            # http://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectGET.html
             objects.append({
                 'id': uid,
                 'object_name': key.get_metadata('object_name'),
                 'size': key.size,
-                'last_modified': key.last_modified,
+                'uploaded_on': key.get_metadata('uploaded_on'),
+                'last_modified': str(datetime.strptime(
+                    key.last_modified, '%a, %d %b %Y %H:%M:%S %Z')),
                 'name': key.get_metadata('name'),
                 'object_id': key.get_metadata('id'),
                 'object_type': key.get_metadata('type'),

@@ -10,6 +10,10 @@ from sqlalchemy import create_engine
 
 from api import app
 
+from moto import mock_dynamodb2, mock_s3
+from api.accounts.models import AuthToken
+from api.logs.dynamodb.models import LogMessage
+
 SOMEBODY_AUTH_TOKEN = '123'
 SOMEBODY_HTTP_HEADERS = [('X-Auth-Token', SOMEBODY_AUTH_TOKEN)]
 
@@ -28,12 +32,19 @@ class BaseDbTestCase(TestCase):
     TESTING = True
     datasets = []
 
+    s3_mock = None
+    dynamodb_mock = None
+
     @property
     def db(self):
         return self.app.sql_db
 
     @classmethod
     def setUpClass(cls):
+        app.config.from_object('api.test_config')
+        if hasattr(cls, 'RESOURCE') and not hasattr(cls, 'Model'):
+            cls.Model = cls.RESOURCE.Model
+
         cls.engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
         # TODO: do we need this or need to create test db manually?
         try:
@@ -48,11 +59,20 @@ class BaseDbTestCase(TestCase):
         app.sql_db.metadata.create_all(cls.engine)
         app.sql_db.create_all()
 
+        cls.dynamodb_mock = mock_dynamodb2()
+        cls.dynamodb_mock.start()
+        cls.s3_mock = mock_s3()
+        cls.s3_mock.start()
+        AuthToken.create_table()
+        LogMessage.create_table()
+
     @classmethod
     def tearDownClass(cls):
         app.sql_db.session.expunge_all()
         app.sql_db.session.remove()
         app.sql_db.drop_all()
+        cls.dynamodb_mock.stop()
+        cls.s3_mock.stop()
 
     def setUp(self):
         # Clean all tables
@@ -135,7 +155,8 @@ class TestChecksMixin(object):
 
         return resp_data
 
-    def check_details(self, obj=None, show='', data={}):
+    def check_details(self, obj=None, show='', data={},
+                      fixture_cls=None):
         if obj:
             self.obj = obj
         key = self.RESOURCE.OBJECT_NAME
@@ -147,6 +168,9 @@ class TestChecksMixin(object):
         self.assertEquals(len(fields), len(obj.keys()))
         for field in fields:
             self.assertTrue(field in obj.keys())
+
+        if fixture_cls:
+            self._check_object_with_fixture_class(obj, fixture_cls)
 
         return resp_data
 
@@ -160,6 +184,7 @@ class TestChecksMixin(object):
                           self.Model.query.count())
 
         obj_id = resp_data[self.RESOURCE.OBJECT_NAME]['id']
+        self.assertTrue(obj_id, "Invalid response: {0}".format(resp_data))
         obj = self.Model.query.get(obj_id)
         return resp_data, obj
 
@@ -188,6 +213,52 @@ class TestChecksMixin(object):
         self.assertEquals(resp.status_code, 204)
 
         self.assertFalse(self.Model.query.filter_by(id=obj.id).count())
+
+    def check_readonly(self):
+        url = self._get_url(id=self.obj.id)
+
+        # Deleting
+        resp = self.client.delete(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.BAD_REQUEST)
+
+        # Edditing
+        post_data = {'name': 'test'}
+        resp = getattr(self.client, 'put')(
+            url, data=post_data, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.BAD_REQUEST)
+
+        # Adding
+        url = self._get_url()
+        resp = getattr(self.client, 'post')(
+            url, data=post_data, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.BAD_REQUEST)
+
+    def assertDictEqual(self, d1, d2, msg=None):  # assertEqual uses for dicts
+        for k, v1 in d1.iteritems():
+            self.assertIn(k, d2, msg)
+            v2 = d2[k]
+            if(isinstance(v1, collections.Iterable) and
+               not isinstance(v1, basestring)):
+                self.assertItemsEqual(v1, v2, msg)
+            else:
+                self.assertEqual(v1, v2, msg)
+        return True
+
+    def _get_resp_object(self, resp_data, is_list=True, num=-1):
+        if is_list:
+            key = "%ss" % self.RESOURCE.OBJECT_NAME
+            obj_resp = resp_data[key]
+            return obj_resp[num]
+        else:
+            return resp_data[self.RESOURCE.OBJECT_NAME]
+
+    def _check_object_with_fixture_class(self, obj, fixture_cls):
+        print obj, obj.keys()
+        for key, val in obj.iteritems():
+            if key == 'id':
+                self.assertTrue(obj['id'])
+                continue
+            self.assertEquals(getattr(fixture_cls, key), obj[key])
 
     def _check_errors(self, err_data, errors):
         err_list = err_data['errors']
@@ -324,6 +395,7 @@ class BaseMongoTestCase(unittest.TestCase):
         for collection_name in cls._LOADED_COLLECTIONS:
             collection = _get_collection(collection_name)
             collection.remove()
+
 
 def _get_collection(name):
     callable_model = getattr(app.db, name)

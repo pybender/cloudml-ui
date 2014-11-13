@@ -71,7 +71,7 @@ admin.add_view(EntityAdmin(
 class FieldAdmin(BaseAdmin):
     MIX_METADATA = False
     Model = XmlField
-    column_list = ['id', 'name', 'type', 'column', 'jsonpath', 'join',
+    column_list = ['id', 'name', 'type', 'column', 'jsonpath', 'delimiter',
                    'regex', 'split', 'dateFormat', 'transform', 'required',
                    'multipart']
     column_filters = ('name', )

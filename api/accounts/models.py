@@ -1,8 +1,62 @@
 import logging
+from boto.dynamodb2.exceptions import ItemNotFound
 from sqlalchemy import func
 from sqlalchemy.orm import exc as orm_exc, validates
 
 from api.base.models import BaseMixin, db
+
+from boto.dynamodb2.fields import HashKey
+from boto.dynamodb2.types import STRING
+from boto.exception import JSONResponseError
+
+from api.amazon_utils import AmazonDynamoDBHelper
+
+
+dynamodb = AmazonDynamoDBHelper()
+
+
+class AuthToken(object):
+    TABLE_NAME = 'auth_tokens'
+
+    SCHEMA = [
+        HashKey('id', data_type=STRING)
+    ]
+
+    def __init__(self, oauth_token, oauth_token_secret):
+        self.id = oauth_token
+        self.oauth_token = oauth_token
+        self.oauth_token_secret = oauth_token_secret
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'oauth_token': self.oauth_token,
+            'oauth_token_secret': self.oauth_token_secret
+        }
+
+    def save(self):
+        data = self.to_dict()
+        dynamodb.put_item(self.TABLE_NAME, data)
+
+    @classmethod
+    def create_table(cls):
+        dynamodb.create_table(cls.TABLE_NAME, cls.SCHEMA)
+
+    @classmethod
+    def get_auth(cls, auth_token):
+        try:
+            return dynamodb.get_item(cls.TABLE_NAME, id=auth_token)
+        except ItemNotFound:
+            return None
+        except JSONResponseError as ex:
+            if ex.status == 404:
+                return None
+            else:
+                raise ex
+
+    @classmethod
+    def delete(cls, auth_token):
+        dynamodb.delete_item(cls.TABLE_NAME, id=auth_token)
 
 
 class User(BaseMixin, db.Model):
@@ -39,7 +93,7 @@ class User(BaseMixin, db.Model):
         info = auth.get_my_info(_oauth_token, _oauth_token_secret,
                                 oauth_verifier)
         user_info = auth.get_user_info(_oauth_token, _oauth_token_secret,
-                                oauth_verifier)
+                                       oauth_verifier)
         logging.info(
             'User Auth: authenticating user %s', info['user']['id'])
         try:

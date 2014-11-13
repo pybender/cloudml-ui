@@ -14,12 +14,11 @@ from api.logs.models import LogMessage
 from api.amazon_utils import AmazonS3Helper
 
 
-class Model(db.Model, BaseModel):
+class BaseTrainedEntity(object):
     """
-    Represents Model details.
+    Base class for entities, that could be trained
+    (models, pretrained transformers).
     """
-    LOG_TYPE = LogMessage.TRAIN_MODEL
-
     STATUS_NEW = 'New'
     STATUS_QUEUED = 'Queued'
     STATUS_IMPORTING = 'Importing'
@@ -30,72 +29,65 @@ class Model(db.Model, BaseModel):
     STATUS_TRAINED = 'Trained'
     STATUS_ERROR = 'Error'
     STATUS_CANCELED = 'Canceled'
+    STATUS_FILLING_WEIGHTS = 'Filling Weights'
 
     STATUSES = [STATUS_NEW, STATUS_QUEUED, STATUS_IMPORTING, STATUS_IMPORTED,
                 STATUS_REQUESTING_INSTANCE, STATUS_INSTANCE_STARTED,
-                STATUS_TRAINING, STATUS_TRAINED, STATUS_ERROR, STATUS_CANCELED]
+                STATUS_TRAINING, STATUS_FILLING_WEIGHTS, STATUS_TRAINED,
+                STATUS_ERROR, STATUS_CANCELED]
 
-    name = db.Column(db.String(200), nullable=False, unique=True)
-    status = db.Column(db.Enum(*STATUSES, name='model_statuses'),
-                       default=STATUS_NEW)
-    trained_by_id = db.Column(db.ForeignKey('user.id', ondelete='SET NULL'))
+    @declared_attr
+    def name(cls):
+        return db.Column(db.String(200), nullable=False, unique=True)
 
-    trained_by = relationship("User", foreign_keys='Model.trained_by_id')
+    @declared_attr
+    def status(cls):
+        from api.base.utils import convert_name
+        name = convert_name(cls.__name__)
+        return db.Column(db.Enum(*cls.STATUSES, name='%s_statuses' % name),
+                         default=cls.STATUS_NEW)
 
-    error = db.Column(db.String(300))
+    @declared_attr
+    def error(cls):
+        return db.Column(db.String(300))
 
-    comparable = db.Column(db.Boolean)
-    weights_synchronized = db.Column(db.Boolean)
+    @declared_attr
+    def spot_instance_request_id(cls):
+        return db.Column(db.String(100))
 
-    labels = db.Column(postgresql.ARRAY(db.String), default=[])
-    example_label = db.Column(db.String(100))
-    example_id = db.Column(db.String(100))
+    @declared_attr
+    def memory_usage(cls):
+        return db.Column(db.Integer)
 
-    spot_instance_request_id = db.Column(db.String(100))
-    memory_usage = db.Column(db.Integer)
-    train_records_count = db.Column(db.Integer)
-    training_time = db.Column(db.Integer)
+    @declared_attr
+    def trainer(cls):
+        return deferred(db.Column(S3File))
 
-    tags = relationship('Tag', secondary=lambda: tags_table, backref='models')
+    @declared_attr
+    def trainer_size(cls):
+        return db.Column(db.BigInteger, default=0)
 
-    target_variable = db.Column(db.Unicode)
-    feature_count = db.Column(db.Integer)
+    @declared_attr
+    def training_time(cls):
+        return db.Column(db.Integer)
 
-    features_set_id = db.Column(db.Integer, db.ForeignKey('feature_set.id'))
-    features_set = relationship('FeatureSet', uselist=False)
+    @declared_attr
+    def trained_by_id(cls):
+        return db.Column(
+            db.ForeignKey('user.id', ondelete='SET NULL'))
 
-    test_import_handler_id = db.Column(db.Integer, nullable=True)
-    test_import_handler_type = db.Column(db.String(200), default='json')
+    @declared_attr
+    def trained_by(cls):
+        return relationship(
+            "User", foreign_keys='%s.trained_by_id' % cls.__name__)
 
-    train_import_handler_id = db.Column(db.Integer, nullable=True)
-    train_import_handler_type = db.Column(db.String(200), default='json')
-    # test_import_handler_id = db.Column(db.ForeignKey('import_handler.id',
-    #                                                  ondelete='SET NULL'))
-    # test_import_handler = relationship('ImportHandler',
-    #                                    foreign_keys=[test_import_handler_id])
+    @declared_attr
+    def train_import_handler_type(cls):
+        return db.Column(db.String(200), default='json')
 
-    # train_import_handler_id = db.Column(db.ForeignKey('import_handler.id',
-    #                                                   ondelete='SET NULL'))
-    # train_import_handler = relationship('ImportHandler',
-    #                                     foreign_keys=[train_import_handler_id])
-
-    datasets = relationship('DataSet',
-                            secondary=lambda: data_sets_table)
-
-    classifier = deferred(db.Column(JSONType))
-
-    trainer = deferred(db.Column(S3File))
-    trainer_size = db.Column(db.Integer, default=0)
-
-    @property
-    def test_import_handler(self):
-        return getattr(
-            self, "rel_test_import_handler_%s" % self.test_import_handler_type)
-
-    @test_import_handler.setter
-    def test_import_handler(self, handler):
-        self.test_import_handler_id = handler.id
-        self.test_import_handler_type = handler.TYPE
+    @declared_attr
+    def train_import_handler_id(cls):
+        return db.Column(db.Integer, nullable=True)
 
     @property
     def train_import_handler(self):
@@ -107,15 +99,90 @@ class Model(db.Model, BaseModel):
         self.train_import_handler_id = handler.id
         self.train_import_handler_type = handler.TYPE
 
-    # @property
-    # def segments(self):
-    #     trainer = self.get_trainer()
-    #     return trainer._get_segments_info()
+    # Fields declaration ended
+
+    def set_error(self, error, commit=True):
+        self.error = str(error)
+        self.status = self.STATUS_ERROR
+        if commit:
+            self.save()
+
+    def get_trainer(self, loaded=True):
+        if loaded:
+            if not hasattr(self, 'loaded_trainer'):
+                from core.trainer.store import TrainerStorage
+                self.loaded_trainer = TrainerStorage.loads(self.trainer)
+            return self.loaded_trainer
+        return self.trainer
+
+    def set_trainer(self, trainer):
+        from bson import Binary
+        from core.trainer.store import TrainerStorage
+        trainer_data = Binary(TrainerStorage(trainer).dumps())
+        self.trainer = trainer_data
+        self.trainer_size = len(trainer_data)
+
+    def get_trainer_filename(self):
+        # we don't use sqlalchemy to avoid auto loading of trainer file
+        # intoo trainer object
+        sql = text("SELECT trainer from model where id=:id")
+        trainer_filename, = db.engine.execute(sql, id=self.id).first()
+        return trainer_filename
+
+    def get_trainer_s3url(self, expires_in=3600):
+        trainer_filename = self.get_trainer_filename()
+        if self.status != self.STATUS_TRAINED or not trainer_filename:
+            return None
+        helper = AmazonS3Helper()
+        return helper.get_download_url(trainer_filename, expires_in)
+
+    def train(*args, **kwargs):
+        pass
+
+
+class Model(db.Model, BaseModel, BaseTrainedEntity):
+    """
+    Represents Model details.
+    """
+    LOG_TYPE = LogMessage.TRAIN_MODEL
+
+    comparable = db.Column(db.Boolean)
+    weights_synchronized = db.Column(db.Boolean)
+
+    labels = db.Column(postgresql.ARRAY(db.String), default=[])
+    example_label = db.Column(db.String(100))
+    example_id = db.Column(db.String(100))
+
+    train_records_count = db.Column(db.Integer)
+
+    tags = relationship('Tag', secondary=lambda: tags_table, backref='models')
+
+    target_variable = db.Column(db.Unicode)
+    feature_count = db.Column(db.Integer)
+
+    features_set_id = db.Column(db.Integer, db.ForeignKey('feature_set.id'))
+    features_set = relationship('FeatureSet', uselist=False, backref='model')
+
+    test_import_handler_id = db.Column(db.Integer, nullable=True)
+    test_import_handler_type = db.Column(db.String(200), default='json')
+
+    datasets = relationship('DataSet',
+                            secondary=lambda: data_sets_table)
+
+    classifier = deferred(db.Column(JSONType))
+
+    @property
+    def test_import_handler(self):
+        return getattr(
+            self, "rel_test_import_handler_%s" % self.test_import_handler_type)
+
+    @test_import_handler.setter
+    def test_import_handler(self, handler):
+        if handler is not None:
+            self.test_import_handler_id = handler.id
+            self.test_import_handler_type = handler.TYPE
 
     def create_segments(self, segments):
-        count = Segment.query.filter(
-                Segment.model_id==self.id).delete(
-                synchronize_session=False)
         for name, records in segments.iteritems():
             segment = Segment()
             segment.name = name
@@ -135,32 +202,6 @@ class Model(db.Model, BaseModel):
             self.classifier = {}
         super(Model, self).save(commit)
 
-    def set_error(self, error, commit=True):
-        self.error = str(error)
-        self.status = self.STATUS_ERROR
-        if commit:
-            self.save()
-
-    def get_trainer(self, loaded=True):
-        if loaded:
-            from core.trainer.store import TrainerStorage
-            return TrainerStorage.loads(self.trainer)
-        return self.trainer
-
-    def get_trainer_filename(self):
-        # we don't use sqlalchemy to avoid auto loading of trainer file
-        # intoo trainer object
-        sql = text("SELECT trainer from model where id=:id")
-        trainer_filename, = db.engine.execute(sql, id=self.id).first()
-        return trainer_filename
-
-    def get_trainer_s3url(self, expires_in=3600):
-        trainer_filename = self.get_trainer_filename()
-        if self.status != self.STATUS_TRAINED or not trainer_filename:
-            return None
-        helper = AmazonS3Helper()
-        return helper.get_download_url(trainer_filename, expires_in)
-
     @property
     def dataset(self):
         return self.datasets[0] if len(self.datasets) else None
@@ -173,7 +214,12 @@ class Model(db.Model, BaseModel):
     @property
     def test_handler_fields(self):
         handler = self.test_import_handler
-        return handler.get_fields() if handler else []
+        if handler:
+            try:
+                return handler.get_fields()
+            except:
+                pass
+        return []
 
     def run_test(self, dataset, callback=None):
         trainer = self.get_trainer()
@@ -187,14 +233,20 @@ class Model(db.Model, BaseModel):
             fp.close()
         raw_data = trainer._raw_data
         trainer.clear_temp_data()
+        self.set_trainer(trainer)
+        self.save()
         return metrics, raw_data
 
+    def transform_dataset(self, dataset):
+        trainer = self.get_trainer()
+        fp = dataset.get_data_stream()
+        try:
+            return trainer.transform(dataset.get_iterator(fp))
+        finally:
+            fp.close()
+
     def set_trainer(self, trainer):
-        from bson import Binary
-        from core.trainer.store import TrainerStorage
-        trainer_data = Binary(TrainerStorage(trainer).dumps())
-        self.trainer = trainer_data
-        self.trainer_size = len(trainer_data)
+        super(Model, self).set_trainer(trainer)
         self.target_variable = trainer._feature_model.target_variable
         self.feature_count = len(trainer._feature_model.features.keys())
         if self.status == self.STATUS_TRAINED:
@@ -205,6 +257,8 @@ class Model(db.Model, BaseModel):
         if data is None:
             self.features_set.modified = True
             data = self.features_set.features
+        data['features'] = [f for f in data['features']
+                            if f.get('disabled', False) is False]
         data['classifier'] = self.classifier
         return json.dumps(data, indent=4)
 
@@ -215,7 +269,7 @@ class Model(db.Model, BaseModel):
     def delete_metadata(self, delete_log=True):
         from api.base.models import db
         if delete_log:
-            LogMessage.delete_related_logs(self)
+            LogMessage.delete_related_logs(self.id)
 
         def _del(items):
             for item in items:
@@ -246,6 +300,79 @@ data_sets_table = db.Table(
         'data_set.id', ondelete='CASCADE', onupdate='CASCADE'))
 )
 
+
+transformer_data_sets_table = db.Table(
+    'transformer_dataset', db.Model.metadata,
+    db.Column('transformer_id', db.Integer, db.ForeignKey(
+        'transformer.id', ondelete='CASCADE', onupdate='CASCADE')),
+    db.Column('data_set_id', db.Integer, db.ForeignKey(
+        'data_set.id', ondelete='CASCADE', onupdate='CASCADE'))
+)
+
+
+class Transformer(BaseModel, BaseTrainedEntity, db.Model):
+    """ Represents pretrained transformer """
+    from api.features.config import TRANSFORMERS
+    TYPES_LIST = TRANSFORMERS.keys()
+    params = db.Column(JSONType)
+    field_name = db.Column(db.String(100))
+    feature_type = db.Column(db.String(100))
+    type = db.Column(
+        db.Enum(*TYPES_LIST, name='pretrained_transformer_types'),
+                nullable=False)
+    datasets = relationship('DataSet',
+                            secondary=lambda: transformer_data_sets_table)
+
+    def train(self, iterator, *args, **kwargs):
+        from core.transformers.transformer import Transformer
+        transformer = Transformer(json.dumps(self.json), is_file=False)
+        transformer.train(iterator)
+        return transformer
+
+    def set_trainer(self, transformer):
+        from bson import Binary
+        import cPickle as pickle
+        trainer_data = Binary(pickle.dumps(transformer))
+        self.trainer = trainer_data
+        self.trainer_size = len(trainer_data)
+
+    def get_trainer(self):
+        import cPickle as pickle
+        return pickle.loads(self.trainer)
+
+    @property
+    def json(self):
+        return {
+            "transformer-name": self.name,
+            "field-name": self.field_name,
+            "type": self.feature_type,
+            "transformer": {
+                "type": self.type,
+                "params": self.params
+            }
+        }
+
+    def load_from_json(self, json):
+        self.name = json.get("transformer-name")
+        self.field_name = json.get("field-name")
+        self.feature_type = json.get("type")
+
+        if "transformer" in json and json["transformer"]:
+            transformer_config = json["transformer"]
+            self.type = transformer_config.get("type")
+            self.params = transformer_config.get("params")
+
+
+def get_transformer(name):
+    transformer = Transformer.query.filter(Transformer.name == name).one()
+    if transformer is None:
+        raise Exception('Transformer "%s" not found ' % name)
+    if transformer.status != Transformer.STATUS_TRAINED:
+        raise Exception('Transformer "%s" not trained' % name)
+    transformer = transformer.get_trainer()
+    return transformer.feature['transformer']
+
+
 from api.import_handlers.models import ImportHandlerMixin
 
 @event.listens_for(ImportHandlerMixin, "mapper_configured", propagate=True)
@@ -273,6 +400,18 @@ def setup_listener(mapper, class_):
         backref=backref(
             "rel_train_import_handler_%s" % import_handler_type,
             primaryjoin=remote(class_.id) == foreign(Model.train_import_handler_id)
+        )
+    )
+    class_.transformers = relationship(
+        Transformer,
+        primaryjoin=and_(
+            class_.id == foreign(remote(Transformer.train_import_handler_id)),
+            Transformer.train_import_handler_type == import_handler_type
+        ),
+        #cascade='all,delete',
+        backref=backref(
+            "rel_train_import_handler_%s" % import_handler_type,
+            primaryjoin=remote(class_.id) == foreign(Transformer.train_import_handler_id)
         )
     )
 
@@ -305,6 +444,7 @@ class WeightsCategory(db.Model, BaseMixin):
 
     name = db.Column(db.String(200))
     short_name = db.Column(db.String(200))
+    # TODO: remove it
     model_name = db.Column(db.String(200))
 
     model_id = db.Column(db.Integer, db.ForeignKey('model.id'))
@@ -313,7 +453,18 @@ class WeightsCategory(db.Model, BaseMixin):
     segment_id = db.Column(db.Integer, db.ForeignKey('segment.id'))
     segment = relationship(Segment, backref=backref('weight_categories'))
 
+    normalized_weight = db.Column(db.Float)
+    class_label = db.Column(db.String(100), nullable=True)
+
     parent = db.Column(db.String(200))
+
+    # TODO: Maybe have FK Weight to WeightsCategory? 
+    # @aggregated('normalized_weight', sa.Column(sa.Float))
+    # def normalized_weight(self):
+    #     return sa.func.sum(Weight.value2)
+
+    def __repr__(self):
+        return '<Category {0}>'.format(self.name)
 
 
 def _setup_search(table_name, fields, event, schema_item, bind):
@@ -327,6 +478,19 @@ def _setup_search(table_name, fields, event, schema_item, bind):
         tsvector_update_trigger(fts, 'pg_catalog.english', {1})""".format(
         table_name, fields_str))
 
+from sqlalchemy.ext.hybrid import hybrid_method
+from sqlalchemy.ext.compiler import compiles
+from sqlalchemy.sql.expression import ColumnClause
+
+
+class TestWeightColumn(ColumnClause):
+    pass
+
+
+@compiles(TestWeightColumn)
+def compile_mycolumn(element, compiler, **kw):
+    return "weight.test_weights->'%s'" % element.name
+
 
 class Weight(db.Model, BaseMixin):
     """
@@ -336,6 +500,7 @@ class Weight(db.Model, BaseMixin):
     short_name = db.Column(db.String(200))
     model_name = db.Column(db.String(200))
     value = db.Column(db.Float)
+    value2 = db.Column(db.Float)
     is_positive = db.Column(db.Boolean)
     css_class = db.Column(db.String)
     class_label = db.Column(db.String(100), nullable=True)
@@ -348,6 +513,33 @@ class Weight(db.Model, BaseMixin):
 
     parent = db.Column(db.String(200))
 
+    test_weights = db.Column(JSONType)
+
+    @hybrid_method
+    def test_weight(self, test_id):
+        return TestWeightColumn(test_id)
+
 Weight.__table__.append_ddl_listener(
     'after-create', partial(_setup_search, Weight.__table__.name,
                             ['name']))
+
+
+class ClassifierGridParams(db.Model, BaseModel):
+    STATUS_LIST = ('New', 'Queued', 'Calculating', 'Completed')
+    model_id = db.Column(db.Integer, db.ForeignKey('model.id'))
+    model = relationship(Model, backref=backref('classifier_grid_params'))
+    scoring = db.Column(db.String(100), default='accuracy')
+    status = db.Column(
+        db.Enum(*STATUS_LIST, name='classifier_grid_params_statuses'),
+                nullable=False, default='New')
+
+    train_data_set_id = db.Column(db.Integer, db.ForeignKey('data_set.id',
+                                                     ondelete='SET NULL'))
+    train_dataset = relationship('DataSet', foreign_keys=[train_data_set_id])
+
+    test_data_set_id = db.Column(
+        db.Integer, db.ForeignKey('data_set.id', ondelete='SET NULL'))
+    test_dataset = relationship('DataSet', foreign_keys=[test_data_set_id])
+
+    parameters = db.Column(JSONType)
+    parameters_grid = db.Column(JSONType)

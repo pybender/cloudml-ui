@@ -12,12 +12,11 @@ angular.module('app.datasets.controllers', ['app.config', ])
 
 .controller('DatasetListCtrl', [
   '$scope'
-  '$dialog'
   '$rootScope'
   'DataSet'
   '$location'
 
-  ($scope, $dialog, $rootScope, DataSet, $location) ->
+  ($scope, $rootScope, DataSet, $location) ->
     $scope.MODEL = DataSet
     $scope.FIELDS = 'name,created_on,status,error,data,import_params,on_s3,
 filesize,records_count,time,created_by,updated_by'
@@ -38,11 +37,10 @@ filesize,records_count,time,created_by,updated_by'
 
 .controller('DatasetActionsCtrl', [
   '$scope'
-  '$dialog'
   '$window'
   'DataSet'
 
-  ($scope, $dialog, $window, DataSet) ->
+  ($scope, $window, DataSet) ->
     $scope.init = (opts={}) ->
       if not opts.dataset
         throw new Error "Please specify dataset"
@@ -54,18 +52,18 @@ filesize,records_count,time,created_by,updated_by'
       $scope.handler = opts.handler
 
     $scope.delete = ()->
-      $scope.openDialog({
-        $dialog: $dialog
+      $scope.openDialog($scope, {
         model: $scope.ds
         template: 'partials/base/delete_dialog.html'
         ctrlName: 'DialogCtrl'
-        action: 'delete dataset'
+        action: 'delete DataSet'
+        path: $scope.handler.objectUrl()
       })
 
     $scope.download = () ->
       if $scope.ds.on_s3
         generateS3Url($scope.ds, ((opts) ->
-          $cml_window_location_replace opts.url
+          $window.location.replace(opts.url)
         ), $scope.setError)
 
     $scope.reupload = () ->
@@ -110,29 +108,21 @@ filesize,records_count,time,created_by,updated_by'
     })
 
     $scope.go = (section) ->
-      $scope.dataset.$load(
+      $scope.dataset.$load
         show: DataSet.MAIN_FIELDS + ',' + DataSet.EXTRA_FIELDS
-      ).then (->), ((opts) ->
+      .then ->
+        if $scope.dataset.status and
+            $scope.dataset.status isnt DataSet.STATUS_IMPORTING
+          $scope.dataset.$getSampleData()
+          .then (resp)->
+            $scope.dataset.samples_json = angular.toJson(resp.data, true)
+          , (opts)->
+            $scope.setError(opts, 'error loading dataset sample data')
+      , (opts) ->
         $scope.setError(opts, 'loading dataset details')
-      )
-
-      $scope.dataset.$getSampleData()
-      .then (resp)->
-        $scope.dataset.samples_json = angular.toJson(resp.data, true)
-      , ()->
-        $scope.setError(opts, 'error loading dataset sample data')
 
     $scope.initSections($scope.go, "model:details", simple=true)
     $scope.host = $location.host()
-    $scope.toggleSampleJson = (ev)->
-      if $(ev.target).hasClass 'icon-minus'
-        $('div', $(ev.target).parent()).hide(600)
-        $(ev.target).removeClass 'icon-minus'
-        $(ev.target).addClass 'icon-plus'
-      else
-        $('div', $(ev.target).parent()).show(600)
-        $(ev.target).removeClass 'icon-plus'
-        $(ev.target).addClass 'icon-minus'
 ])
 
 
@@ -173,21 +163,21 @@ filesize,records_count,time,created_by,updated_by'
 .controller('LoadDataDialogCtrl', [
   '$scope'
   '$location'
-  'dialog'
+  'openOptions'
   'DataSet'
 
-  ($scope, $location, dialog, DataSet) ->
+  ($scope, $location, openOptions, DataSet) ->
     $scope.parameters = {}
-    handler = dialog.model
+    handler = openOptions.model
     $scope.handler = handler
-    $scope.params = handler.import_params
+    # TODO: nader20140917, json IH has the tendency of accepting duplicate
+    # parameters which affects the repeater in load_data.html and also affects
+    # the number of fields in the dataset import dialog bog
+    $scope.params = _.uniq(handler.import_params)
     $scope.format = 'json'
     $scope.formats = [
       {name: 'JSON', value: 'json'}, {name: 'CSV', value: 'csv'}
     ]
-
-    $scope.close = ->
-      dialog.close()
 
     $scope.start = (result) ->
       $scope.dataset = new DataSet({
@@ -199,10 +189,10 @@ filesize,records_count,time,created_by,updated_by'
         format: $scope.format
         handler_type: $scope.handler.TYPE
       }
-      $scope.dataset.$save(data).then (() ->
-        $scope.close()
-        $location.path $scope.dataset.objectUrl()
-      ), ((opts) ->
+      $scope.dataset.$save(data)
+      .then ->
+        $scope.$close(true)
+        $location.url $scope.dataset.objectUrl()
+      , (opts) ->
         $scope.setError(opts, 'creating dataset')
-      )
 ])

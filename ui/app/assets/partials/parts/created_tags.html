@@ -1,8 +1,8 @@
 <i class="icon-calendar"></i>
-created on <span class="badge badge-info">{{ obj.created_on|format_date }}</span>
+created on <span class="badge badge-info" title="dates in GMT">{{ obj.created_on|format_date }}</span>
 <span ng-show="obj.created_by.name"><i class="icon-user"></i>
 created by <span class="badge badge-info">{{ obj.created_by.name }}</span>
 <span>
 <span ng-hide="!obj.updated_on || obj.created_on == obj.updated_on">
-  updated on <span class="badge badge-info">{{ obj.updated_on|format_date }}</span>
+  updated on <span title="dates in GMT" class="badge badge-info">{{ obj.updated_on|format_date }}</span>
 </span>

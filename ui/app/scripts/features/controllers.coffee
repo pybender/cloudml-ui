@@ -8,18 +8,16 @@ angular.module('app.features.controllers', ['app.config', ])
 
 .controller('FeaturesSetListCtrl', [
   '$scope'
-  '$dialog'
   'FeaturesSet'
 
-  ($scope, $dialog, FeaturesSet) ->
+  ($scope, FeaturesSet) ->
     $scope.MODEL = FeaturesSet
     $scope.FIELDS = FeaturesSet.MAIN_FIELDS
     $scope.ACTION = 'loading feature sets'
 
     $scope.add = () ->
       set = new FeaturesSet()
-      $scope.openDialog({
-        $dialog: $dialog
+      $scope.openDialog($scope, {
         model: set
         template: 'partials/features/sets/add.html'
         ctrlName: 'AddFeatureSetDialogCtrl'
@@ -31,25 +29,25 @@ angular.module('app.features.controllers', ['app.config', ])
 .controller('FeaturesSetDetailsCtrl', [
   '$scope'
   '$routeParams'
-  '$dialog'
   'FeaturesSet'
 
-  ($scope, $routeParams, $dialog, FeaturesSet) ->
+  ($scope, $routeParams, FeaturesSet) ->
     # if not $routeParams.id then err = "Can't initialize without instance id"
     # $scope.featuresSet = new FeaturesSet({_id: $routeParams.id})
     $scope.init = (model) ->
       $scope.modelObj = model
       $scope.$watch('modelObj.featuresSet', (featuresSet, oldVal, scope) ->
         if !$scope.featuresSet? && featuresSet? && featuresSet.id?
-          $scope.featuresSet = featuresSet
-          featuresSet.$load(
+          featuresSet.$load
             show: FeaturesSet.MAIN_FIELDS + ',group_by'
-          ).then (->), ((opts)-> $scope.setError(opts, 'loading featuresSet'))
+          .then ->
+            $scope.featuresSet = featuresSet
+          , (opts)->
+            $scope.setError opts, 'loading featuresSet'
       , true)
       
     $scope.addFeature = () ->
-      $scope.openDialog({
-        $dialog: $dialog
+      $scope.openDialog($scope, {
         model: $scope.featuresSet
         template: 'partials/features/items/add.html'
         ctrlName: 'AddFeatureDialogCtrl'
@@ -60,11 +58,10 @@ angular.module('app.features.controllers', ['app.config', ])
 
 .controller('FeaturesListCtrl', [
   '$scope'
-  '$dialog'
   'Feature'
   'NamedFeatureType'
 
-  ($scope, $dialog, Feature, NamedFeatureType) ->
+  ($scope, Feature, NamedFeatureType) ->
     $scope.MODEL = Feature
     $scope.FIELDS = Feature.MAIN_FIELDS
     $scope.ACTION = 'loading features'
@@ -88,21 +85,24 @@ angular.module('app.features.controllers', ['app.config', ])
     $scope.group_by_opts = {
       multiple: true,
       query: (query) ->
-        # TODO: Looks like we need to update version of Select2
-        # to use option 'text'
-        data = {results: [], text: 'name'}
-        angular.forEach($scope.objects, (item, key) ->
-          data.results.push(id: item['id'], text: item['name'])
-        )
-        query.callback(data)
+        query.callback
+          results: ({id: f.id, text: f.name} for f in $scope.objects)
     }
 
+    # MATCH-1999: To fix angular-ui-select2 messing the ids and objects
+    $scope.$watch 'modelObj.featuresSet.group_by', (newVal, oldVal)->
+      if angular.isString(newVal)
+        ids = newVal.split(',')
+        $scope.modelObj.featuresSet.group_by =
+          (f for f in $scope.objects when f.id + '' in ids)
+
     $scope.updateGroupBy = () ->
-      $scope.modelObj.featuresSet.$save(only: ['group_by']).then (->
+      $scope.modelObj.featuresSet.$save(only: ['group_by'])
+      .then ->
         $rootScope.segmentationMsg = "Group by fields have been saved"
         $timeout($scope.clear, 4000)
-      ), (->
-        $scope.setError(opts, 'saving group by fields'))
+      , (opts) ->
+        $scope.setError opts, 'saving group by fields'
 
     $scope.clear = () ->
       $rootScope.segmentationMsg = null
@@ -157,24 +157,23 @@ angular.module('app.features.controllers', ['app.config', ])
 
 .controller('FeatureActionsCtrl', [
   '$scope'
-  '$dialog'
   'Transformer'
   'Scaler'
 
-  ($scope, $dialog, Transformer, Scaler) ->
-    $scope.init = (opts={}) ->
-      if not opts.model
+  ($scope, Transformer, Scaler) ->
+    $scope.init = (opts) ->
+      if not opts?.model
         throw new Error "Please specify feature model"
 
       $scope.model = opts.model
 
     $scope.deleteModel = (model) ->
-      $scope.openDialog({
-        $dialog: $dialog
+      $scope.openDialog($scope, {
         model: model
         template: 'partials/base/delete_dialog.html'
         ctrlName: 'DialogCtrl'
         action: 'delete feature'
+        list_model_name: 'features'
       })
 
     $scope.makeRequired = (feature, is_required) ->
@@ -196,8 +195,7 @@ angular.module('app.features.controllers', ['app.config', ])
       )
 
     $scope.editScaler = (feature) ->
-      $scope.openDialog({
-        $dialog: $dialog
+      $scope.openDialog($scope, {
         model: null
         template: 'partials/features/scalers/edit_feature_scaler.html'
         ctrlName: 'ModelWithParamsEditDialogCtrl'
@@ -205,8 +203,7 @@ angular.module('app.features.controllers', ['app.config', ])
       })
 
     $scope.editTransformer = (feature) ->
-      $scope.openDialog({
-        $dialog: $dialog
+      $scope.openDialog($scope, {
         model: null
         template: 'partials/features/transformers/edit_feature_transformer.html'
         ctrlName: 'ModelWithParamsEditDialogCtrl'
@@ -227,5 +224,15 @@ angular.module('app.features.controllers', ['app.config', ])
         feature.scaler = {}
       ), ((opts) ->
         $scope.setError(opts, "error while removing scaler")
+      )
+
+    $scope.toggleFeatureDisabled = (feature) ->
+      oldVal = feature.disabled
+      feature.disabled = not oldVal
+      feature.$save(only: ['disabled']).then (->
+        $scope.$emit('updateList', [])
+      ), ((opts) ->
+        feature.disabled = oldVal
+        $scope.setError(opts, 'updating feature')
       )
 ])

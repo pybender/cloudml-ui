@@ -39,6 +39,9 @@ Configure rabbitmq(celery broker)::
     $ rabbitmqctl add_vhost cloudml
     $ rabbitmqctl set_permissions cloudml cloudml "*" "*" "*
     "
+Run local dynamodb::
+    
+    $ ./api/logs/dynamodb/dynamodb_local.sh
 
 Run dev server::
 
@@ -58,6 +61,9 @@ Run shell::
 
     $ python manage.py shell
 
+Check unittests coverage:
+
+    $ nosetests --with-coverage --cover-package=api.accounts --verbose --tests api.accounts.tests --cover-html-dir=coverage --cover-html
 
 Frontend
 --------
@@ -65,6 +71,14 @@ Frontend
 Install nodejs and nmp(nodejs==0.8.6)::
 
     $ sudo apt-get install nodejs npm
+
+Install grunt-cli globally
+
+    $ sudo npm install grunt-cli -g
+
+Install bower dependencies
+
+    $ bower install
 
 Init ui dev enviropment::
     
@@ -104,7 +118,8 @@ Training Your First Model
 -------------------------
 
 **Prepare Default Instance:** Go to instances, click "Add new AWS instance", 
-in the IP use 127.0.0.1, in the type choose small. 
+name it **default**, otherwise rabbitmq/celery wouldn't pick training and testing
+tasks, in the IP use 127.0.0.1, in the type choose small.
 Finally make sure **Is Default?** checkbox is checked.
 
 **Create JSON import handler:** Go to import handlers/json, "Add new import handler",

@@ -1,6 +1,15 @@
+<alert-message ng-show="msg" class="alert-info" msg='{{ msg }}' unsafe>
+</alert-message>
+
+<alert-message ng-show="err" class="alert-error" msg='{{ err }}' unsafe>
+</alert-message>
+
 <h2 ng-show="test.loaded">
   {{ test.name|capfirst }} Details
   <div class="actions">
+    <a ng-show="test.status == 'Completed'" class="btn btn-info" ng-click="exportResultsToDb()">
+      <i title="Export test examples to db" class="icon-share"></i> Export Classification Results to DB
+    </a>
     <a ng-show="test.status == 'Completed'" class="btn btn-info" ng-click="downloadCsvResults()">
       <i title="Download test examples" class="icon-download-alt"></i> Classification Results in CSV
     </a>
@@ -8,7 +17,7 @@
 </h2>
 
 <div title="quick info" ng-init="obj=test">
-  <ng-include src="'/partials/parts/created_tags.html'"></ng-include>
+  <ng-include src="'partials/parts/created_tags.html'"></ng-include>
   <i class="icon-status"></i>
   <span class="badge badge-warning">{{ test.status }}</span>
 </div>
@@ -26,6 +35,7 @@
     <li ng-show="showdetails" ng-class="{active: action[0] == 'matrix'}"><a ng-click="setSection(['matrix', 'confusion'])">Confusion Matrix</a></li>
     <li ng-show="showdetails" ng-show="test.status == 'Completed'" ng-class="{active: action[0] == 'examples'}"><a ng-click="setSection(['examples', 'list'])">Examples</a></li>
     <li ng-class="{active: action[0] == 'about'}"><a ng-click="setSection(['about', 'details'])">About</a></li>
+    <li ng-class="{active: action[0] == 'weights'}"><a ng-click="setSection(['weights', 'tree'])" ng-show="(test.status == 'Completed' || test.status == 'Storing') && test.fill_weights">Weights</a></li>
     <li ng-class="{active: action[0] == 'logs'}"><a ng-click="setSection(['logs', 'list'])">Logs</a></li>
   </ul>
 
@@ -47,6 +57,16 @@
             <a href="#{{ test.dataset_obj.objectUrl() }}">
             {{ test.dataset_obj.name }}</a>
           </span>
+          <a class="btn btn-info btn-mini"
+             ng-init="getDataSetsDownloads(test.model_id)"
+             ng-controller="ModelDataSetDownloadCtrl"
+             ng-hide="angular.isUndefined(queuedIds)"
+             title="{{ {true: 'DataSet already Transformed, Check Model &gt; About for list of datasets transformed using this model and ready for download',
+                        false: 'Download Tranformed DataSet'}[queuedIds.indexOf(test.dataset_obj.id) >= 0] }}"
+             ng-disabled="queuedIds.indexOf(test.dataset_obj.id) >= 0"
+             ng-click="requestDataSetDownload(test.dataset_obj.id, test.model_id)">
+            <i class="icon-download-alt"></i> Download
+          </a>
         </div>
         <div>
             Examples count: <span class="value">{{ test.examples_count }}</span>
@@ -64,13 +84,17 @@
         <div>
             Examples Size: <span class="value">{{ test.examples_size|number:2 }} Mb</span>
         </div>
+        <div>
+            Calculate parameters weights: <span class="value">{{ test.fill_weights|true_false }}</span>
+        </div>
+        
         <div ng-controller="TestExportsCtrl" ng-init="init(test)">
             <div ng-show="exports">
               <h4>CSV Exports</h4>
               <ul class="unstyled">
                 <li class="row well well-small" ng-repeat="export in exports">
                   <div class="span10">
-                    <i class="icon-calendar"></i> created on <span class="badge badge-info">{{ export.created_on|format_date }}</span>
+                    <i class="icon-calendar"></i> created on <span class="badge badge-info" title="dates in GMT">{{ export.created_on|format_date }}</span>
                     <i class="icon-th"></i><span> fields </span>
                     <span ng-repeat="field in export.args[2]">
                       <span class="label">{{ field }}</span>
@@ -79,6 +103,24 @@
                   </div>
                   <div ng-show="export.status == 'Completed'" class="span1 pull-right">
                     <a class="btn btn-small" href="{{ export.result }}">Download</a>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div ng-show="db_exports">
+              <h4>DB Exports</h4>
+              <ul class="unstyled">
+                <li class="row well well-small" ng-repeat="export in db_exports">
+                  <div class="span10">
+                    <i class="icon-calendar"></i> created on <span class="badge badge-info" title="dates in GMT">{{ export.created_on|format_date }}</span>&nbsp;
+                    <i class="icon-hdd"></i> <a title="datasource used to connect to the database" target="_blank" href="#/predefined/datasources/?id={{ export.args[2] }}" class="badge badge-info">datasource</a>&nbsp;
+                    <i class=" icon-th-list"></i> table <span class="badge badge-info" title="name of the table to store results">{{ export.args[3]}}</span>&nbsp;
+                    <i class="icon-th"></i><span> fields </span>
+                    <span ng-repeat="field in export.args[4]">
+                      <span class="label">{{ field }}</span>
+                    </span>
+                    <span title="status of the exporting" class="badge badge-info">{{ export.status }}</span>
+                    <br/>
                   </div>
                 </li>
               </ul>
@@ -113,7 +155,11 @@
         </div>
         <div ng-show="prCurve || prCurves">
           <h4>Precision-Recall</h4>
-          <sc-curves xlabel="Recall" ylabel="Precision" curves-dict="prCurves" width="500"></sc-curves>
+          <div class="row">
+            <div class="span5">
+              <sc-curves xlabel="Recall" ylabel="Precision" curves-dict="prCurves" width="450"></sc-curves>
+            </div>
+          </div>
           <hr/>
         </div>
         <div ng-show="test.status == 'Completed'">
@@ -123,7 +169,7 @@
       </div>
 
       <div ng-show="action[0] == 'examples'" ng-controller="TestExamplesCtrl" ng-init="init(test)">
-        <ng-include src="'/partials/examples/example_list.html'"></ng-include>
+        <ng-include src="'partials/examples/example_list.html'"></ng-include>
       </div>
 
       <div ng-show="action[0] == 'matrix'">
@@ -161,7 +207,7 @@
                 <li class="row well well-small" ng-repeat="calc in test.confusion_matrix_calculations">
                   <div class="row">
                     <div class="span5">
-                        <i class="icon-calendar"></i> created on <span class="badge badge-info">{{ calc.created_on|format_date }}</span>
+                        <i class="icon-calendar"></i> created on <span class="badge badge-info" title="dates in GMT">{{ calc.created_on|format_date }}</span>
                         <i class="icon-th"></i><span> weights </span>
                         <span ng-repeat="label in [calc.args[1], calc.args[2]]">
                             <span class="label">{{ label }}</span>
@@ -184,8 +230,26 @@
       </div>
 
       <div ng-show="action[0] == 'logs'" ng-controller="LogMessageListCtrl" ng-init="init('runtest_log', test.id)">
-        <ng-include src="'/partials/logmessages/list.html'"></ng-include>
+        <ng-include src="'partials/logmessages/list.html'"></ng-include>
       </div>
 
+      <div ng-show="test.fill_weights && action[0] == 'weights'"  ng-controller="WeightsCtrl" ng-init="weights_section='weights'; init('weights')">
+        <h4>
+          Parameters Weights<span ng-show="model.labels && model.labels.length > 2"> For : </span>
+          <div ng-show="model.labels && model.labels.length > 2" class="btn-group">
+            <a class="btn dropdown-toggle class_label" data-toggle="dropdown" href="#">
+              Class Label {{class_label}}
+              <span class="caret"></span>
+            </a>
+            <ul class="dropdown-menu">
+              <li ng-repeat="label in model.labels" ng-show="label != class_label">
+                <a ng-click="switchToClassLabel($event, label)">Class Label {{label}}</a></li>
+            </ul>
+          </div>
+        </h4>
+        <div class="weights-tree">
+          <ng-include src="'partials/weights/tree.html'"></ng-include>
+        </div>
+      </div>
     </div>
 </div>

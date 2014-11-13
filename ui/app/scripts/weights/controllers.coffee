@@ -1,7 +1,7 @@
 'use strict'
 
 ### Parameters weights specific Controllers ###
-SECTION_NAME = 'training'
+DEFAULT_SECTION_NAME = 'training'
 
 angular.module('app.weights.controllers', ['app.config', ])
 
@@ -14,10 +14,32 @@ angular.module('app.weights.controllers', ['app.config', ])
   'WeightsTree'
 
 ($scope, $http, $routeParams, $location, Weight, WeightsTree) ->
-  if not $routeParams.id
+  $scope.test_id = null
+  if $routeParams.model_id
+    $scope.model_id = $routeParams.model_id
+    $scope.options = {
+      show_model_weights: false
+      show_test_weights: true
+      show_normalized_model_weights: false
+      show_hints: false
+    }
+    $scope.test_id = $routeParams.id
+  else
+    $scope.model_id = $routeParams.id
+    $scope.options = {
+      show_model_weights: true
+      show_test_weights: false
+      show_normalized_model_weights: true
+      show_hints: true
+    }
+
+  if not $scope.model_id
     throw new Error "Can't initialize without model id"
 
-  $scope.model_id = $routeParams.id
+  $scope.section_name = DEFAULT_SECTION_NAME
+  $scope.init = (section_name) ->
+    $scope.section_name = section_name
+
   $scope.class_label = null
 
   $scope.$watch 'model.loaded', (loaded) ->
@@ -30,7 +52,10 @@ angular.module('app.weights.controllers', ['app.config', ])
     $scope.executeAction action
 
   $scope.$watch('search_form.page', (page, oldVal, scope) ->
-    if (scope.action[0] == 'training') and (scope.action[1] == 'list') and page
+    if page is oldVal
+      return
+
+    if (scope.action[0] == $scope.section_name) and (scope.action[1] == 'list') and page
       $scope.loadList()
   , true)
 
@@ -48,8 +73,8 @@ angular.module('app.weights.controllers', ['app.config', ])
     $scope.loadList()
 
   $scope.loadList = (page) ->
-    Weight.$loadAll($routeParams.id,
-      show: 'name,value,css_class,segment',
+    Weight.$loadAll($scope.model_id,
+      show: 'name,value,css_class,segment,value2',
       q: $scope.search_form.q,
       is_positive: $scope.search_form.is_positive,
       page: page || $scope.search_form.page || 1,
@@ -57,6 +82,7 @@ angular.module('app.weights.controllers', ['app.config', ])
       order: if $scope.asc_order then 'asc' else 'desc'
       segment_id: $scope.search_form.segment
       class_label: $scope.class_label
+      test_id: $scope.test_id
     ).then ((opts) ->
       $scope.weights = opts.objects
       $scope.total = opts.total
@@ -86,10 +112,12 @@ angular.module('app.weights.controllers', ['app.config', ])
         parent_node = $scope.tree_dict
 
     WeightsTree.$loadNode(
-      $routeParams.id,
-      show: 'name,short_name,parent',
+      $scope.model_id,
+      show: 'name,short_name,parent,value2',
       parent: parent
       segment: $scope.action[2]
+      test_id: $scope.test_id
+      class_label: $scope.class_label
     ).then ((opts) ->
       for details in opts.categories
         val = {'categories': {}, 'details': details, 'weights': {}}
@@ -113,6 +141,7 @@ angular.module('app.weights.controllers', ['app.config', ])
       ppage: $scope.ppage
       npage: $scope.npage
       class_label: $scope.class_label
+      test_id: $scope.test_id
     ).then ((opts) ->
         if morePositive
           $scope.positive.push.apply($scope.positive, opts.positive)
@@ -131,7 +160,7 @@ angular.module('app.weights.controllers', ['app.config', ])
     $scope.loadColumns($scope.action[2], false, true)
 
   $scope.executeAction = (action) ->
-    if action? && action[0] == SECTION_NAME
+    if action? && action[0] == $scope.section_name
       $scope.clearViews()
       actionString = action.join(':')
       $location.search("action=#{actionString}")

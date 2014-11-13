@@ -6,7 +6,8 @@ from flask.ext.admin.model.template import macro
 from api import admin
 from api.base.admin import BaseAdmin
 #from api.accounts.models import User
-from models import Model, Tag, WeightsCategory, Weight, Segment
+from models import Model, Tag, WeightsCategory, Weight, Segment, Transformer, \
+    ClassifierGridParams
 
 
 def classifier_type_formatter(view, context, model, name):
@@ -42,6 +43,13 @@ class ModelAdmin(BaseAdmin):
 
 admin.add_view(ModelAdmin(
     name='Model', category='Models'))
+
+
+class TransformerAdmin(BaseAdmin):
+    Model = Transformer
+
+admin.add_view(TransformerAdmin(
+    name='Transformer', category='Models'))
 
 
 class TagAdmin(BaseAdmin):
@@ -96,3 +104,13 @@ class WeightAdmin(BaseAdmin):
 
 admin.add_view(WeightAdmin(
     name='Weight', category='Models'))
+
+
+class ClassifierGridParamsAdmin(BaseAdmin):
+    Model = ClassifierGridParams
+    column_formatters = {'model': macro('render_fk_link')}
+    column_list = ['id', 'model', 'train_dataset', 'scoring', 'status',
+                   'parameters', 'parameters_grid']
+
+admin.add_view(ClassifierGridParamsAdmin(
+    name='ClassifierGridParams', category='Models'))

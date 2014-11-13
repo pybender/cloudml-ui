@@ -1,11 +1,12 @@
+import re
+
 from flask import request
 from psycopg2._psycopg import DatabaseError
 from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy.orm import joinedload, joinedload_all
+from sqlalchemy.orm import joinedload, joinedload_all, undefer
 
-from api.base.resources import BaseResourceSQL, NotFound, odesk_error_response, \
-    ERR_INVALID_DATA
-from api.base.resources import ValidationError
+from api.base.resources import BaseResourceSQL, NotFound, \
+    odesk_error_response, ERR_INVALID_DATA
 from api import api
 from api.import_handlers.models import XmlImportHandler, XmlInputParameter, \
     XmlEntity, XmlField, XmlDataSource, XmlQuery, XmlScript, XmlSqoop, \
@@ -16,6 +17,7 @@ from api.import_handlers.forms import XmlImportHandlerAddForm, \
     PredictModelForm
 from api.servers.forms import ChooseServerForm
 
+
 class XmlImportHandlerResource(BaseResourceSQL):
     """
     XmlImportHandler API methods
@@ -23,7 +25,10 @@ class XmlImportHandlerResource(BaseResourceSQL):
     post_form = XmlImportHandlerAddForm
     put_form = XmlImportHandlerEditForm
 
+    NEED_PAGING = True
     PUT_ACTIONS = ('upload_to_server', 'run_sql')
+    FILTER_PARAMS = (('created_by', str), ('updated_by_id', int),
+                     ('updated_by', str), ('name', str))
 
     @property
     def Model(self):
@@ -38,26 +43,43 @@ class XmlImportHandlerResource(BaseResourceSQL):
                 joinedload('predict.probability'),
                 joinedload('predict.label.predict_model'),
                 joinedload('predict.probability.predict_model'))
+        if 'xml_data_sources' in show:
+            cursor = cursor.options(
+                undefer('xml_data_sources.params'))
         return cursor
 
-    def _prepare_model(self, model, params):
+    def _set_list_query_opts(self, cursor, params):
+        # if 'tag' in params and params['tag']:
+        #     cursor = cursor.filter(Model.tags.any(Tag.text == params['tag']))
+        name = params.pop('name', None)
+        if name:
+            cursor = cursor.filter(
+                XmlImportHandler.name.ilike('%{0}%'.format(name)))
+        created_by = params.pop('created_by', None)
+        if created_by:
+            cursor = cursor.filter(
+                XmlImportHandler.created_by.has(uid=created_by))
+        updated_by = params.pop('updated_by', None)
+        if updated_by:
+            cursor = cursor.filter(
+                XmlImportHandler.updated_by.has(uid=updated_by))
+        return cursor
+
+    def _prepare_model(self, handler, params):
         res = super(XmlImportHandlerResource, self)._prepare_model(
-            model, params)
+            handler, params)
         show = self._get_show_fields(params)
         if 'xml' in show:
-            res['xml'] = model.get_plan_config()
+            res['xml'] = handler.get_plan_config(secure=handler.can_edit)
 
         if 'entities' in show:
             from ..models import get_entity_tree
-            res['entity'] = get_entity_tree(model)
+            res['entity'] = get_entity_tree(handler)
 
-        # if 'predict' in show:
-        #     if model.predicts:
-        #         predict = model.predict
-        #         print predict.models
-        #         res['predict'] = predict
-        #     else:
-        #         res['predict'] = None
+        if 'xml_data_sources' in show and not handler.can_edit:
+            for ds in handler.xml_data_sources:
+                ds.params = None
+
         return res
 
     def _put_upload_to_server_action(self, **kwargs):
@@ -100,6 +122,7 @@ class XmlImportHandlerResource(BaseResourceSQL):
         params = form.cleaned_data.get('params', {})
         datasource_name = form.cleaned_data['datasource']
         try:
+            sql = re.sub('#{(\w+)}', '%(\\1)s', sql)
             sql = sql % params
         except (KeyError, ValueError):
             return odesk_error_response(400, ERR_INVALID_DATA,
@@ -174,7 +197,8 @@ class XmlFieldResource(BaseResourceSQL):
 
     def _set_list_query_opts(self, cursor, params):
         if 'transformed' in params and params['transformed']:
-            cursor = cursor.filter(XmlField.transform.in_(XmlField.TRANSFORM_TYPES))
+            cursor = cursor.filter(
+                XmlField.transform.in_(XmlField.TRANSFORM_TYPES))
         return cursor
 
     def _get_configuration_action(self, **kwargs):

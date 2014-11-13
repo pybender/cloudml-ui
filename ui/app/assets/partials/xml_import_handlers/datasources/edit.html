@@ -1,11 +1,11 @@
 <div ng-controller="SaveObjectCtl">
   <div class="modal-header">
-    <button ng-click="dialog.close()" class="close" data-dismiss="modal">×</button>
+    <button ng-click="$dismiss('cancel')" class="close" data-dismiss="modal">×</button>
     <h3>Datasource</h3>
   </div>
 
   <div class="modal-body">
-    <ng-include src="'/partials/parts/save_form_messages.html'"></ng-include>
+    <ng-include src="'partials/parts/save_form_messages.html'"></ng-include>
     <div class="control-group">
       <form name="Form" class="form-horizontal">
         <div class="control-group" ng-class="{error: Form.name.$invalid || errorList.name}">
@@ -35,7 +35,8 @@
                 <div ng-repeat="param in model.config" class="control-group">
                 <label class="control-label">{{ param.name }}</label>
                 <div class="controls">
-                    <input ng-model="model.params[param.name]" name="{{ param.name }}" type='text' />
+                    <input ng-hide="param.name == 'password'" ng-model="model.params[param.name]" name="{{ param.name }}" type='text' />
+                    <input ng-show="param.name == 'password'" ng-model="model.params[param.name]" name="{{ param.name }}" type='password' />
                     <span ng-show="param.required" class="help-inline" title="required">*</span>
                 </div>
             </div>

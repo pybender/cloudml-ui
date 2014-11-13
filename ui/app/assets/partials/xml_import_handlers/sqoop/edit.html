@@ -1,11 +1,11 @@
 <div ng-controller="SaveObjectCtl">
   <div class="modal-header">
-    <button ng-click="dialog.close()" class="close" data-dismiss="modal">×</button>
+    <button ng-click="$dismiss('cancel')" class="close" data-dismiss="modal">×</button>
     <h3>Add Sqoop Import</h3>
   </div>
 
   <div class="modal-body">
-    <ng-include src="'/partials/parts/save_form_messages.html'"></ng-include>
+    <ng-include src="'partials/parts/save_form_messages.html'"></ng-include>
     <div class="control-group">
       <form name="Form" class="form-horizontal">
           <div ng-show="errorList.entity" class="control-group" ng-class="{error: Form.entity.$invalid || errorList.entity}">
@@ -65,7 +65,7 @@
           <div class="row">
               <div class="span4">
                   <p>Text</p>
-                  <textarea rows="4" ui-codemirror="codeMirrorConfigs(false)['sql']" ui-refresh="model.text" name="text" ng-model="model.text"></textarea>
+                  <textarea rows="4" ui-codemirror="codeMirrorConfigs(false)['sql']" name="text" ng-model="model.text" class="cml-codemirror-refresh"></textarea>
               </div>
           </div>
 

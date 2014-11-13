@@ -1,0 +1,22 @@
+<span>
+  <span ng-show="!val.weights" title="weight={{ val.weight }}"
+        class="badge {{ val.css_class }}">{{ val.value }}</span>
+
+  <div ng-show="val.weights">
+    <span ng-show="val.type == 'List'">
+      <span ng-init="lword=word.toLowerCase()" ng-repeat="word in val.value|words">
+        <span ng-show="val.weights[lword].weight"
+              title="weight={{ val.weights[lword].weight }}"
+              class="badge {{ val.weights[lword].css_class }}">{{ word }}</span>
+        <span ng-show="!val.weights[lword].weight">{{ word }}</span>
+      </span>
+    </span>
+    <span ng-show="val.type == 'Dictionary'">
+      <span ng-repeat="(key, dval) in val.weights">
+        <span title="weight={{ dval.weight }}"
+              class="badge {{ dval.css_class }}">
+          {{ key }}={{ dval.value }}</span>
+      </span>
+    </span>
+  </div>
+</span>

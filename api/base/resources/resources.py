@@ -1,4 +1,5 @@
 import json
+import re
 import logging
 import math
 from flask.ext import restful
@@ -225,7 +226,6 @@ class BaseResource(restful.Resource):
     def _prepare_new_model(self, model, params):
         #return self._prepare_model_any(model, params)
         return self._prepare_model(model, params)
-        
 
     ### PUT ###
 
@@ -306,7 +306,7 @@ class BaseResource(restful.Resource):
                                   mimetype='application/json'), code
 
 
-class BaseResourceMongo(BaseResource):
+class BaseResourceMongo(BaseResource):  # pragma: no cover
 
     def _get_list_query(self, params, **kwargs):
         fields = self._get_show_fields(params)
@@ -398,11 +398,18 @@ class BaseResourceSQL(BaseResource):
         cursor = self._build_list_query(params, **kwargs)
 
         # Models ordering
-        sort_by = params.get('sort_by', None)
-        if sort_by:
+        sort_by_expr = params.get('sort_by', None)
+        if sort_by_expr is not None:
             order = get_order()
-            sort_by = getattr(self.Model, sort_by, None)
-            if sort_by:
+            splitted_sort_by = re.split('\W', sort_by_expr)
+            if len(splitted_sort_by) == 1:  # Simply field name
+                sort_by = getattr(self.Model, splitted_sort_by[0], None)
+            else:
+                sort_by = sort_by_expr  # ORDER BY expression
+
+            if sort_by is None:
+                logging.warning('Ignoring sorting by %s', sort_by_expr)
+            else:
                 if order < 0:
                     sort_by = desc(sort_by)
                 cursor = cursor.order_by(sort_by)
@@ -438,10 +445,29 @@ class BaseResourceSQL(BaseResource):
                 cursor = cursor.options(*opts)
 
         for name, val in filter_params.iteritems():
-            fltr = self.__build_query_item(name, val)
+            fltr = self._build_query_item(name, val)
             if not fltr is None:
                 cursor = cursor.filter(fltr)
         #print cursor[0]
+        return cursor
+
+    def defer_fields(self, Model, cursor, fields):
+        opts = []
+        for field in Model.__table__.columns.keys():
+            if field in fields or field in ('id',):
+                opts.append(undefer(getattr(Model, field)))
+            else:
+                opts.append(defer(getattr(Model, field)))
+        relation_properties = filter(
+            lambda p: isinstance(p, properties.RelationshipProperty),
+            Model.__mapper__.iterate_properties
+        )
+        for field in relation_properties:
+            if field.key in fields:
+                cursor = cursor.options(joinedload_all(
+                    getattr(Model, field.key)))
+        if opts:
+            cursor = cursor.options(*opts)
         return cursor
 
     def _prepare_show_fields_opts(self, Model, fields):
@@ -460,7 +486,7 @@ class BaseResourceSQL(BaseResource):
         paginator = cursor.paginate(page, per_page)
         return paginator.total, paginator.items
 
-    def __build_query_item(self, name, val):
+    def _build_query_item(self, name, val):
         if '.' in name:
             keys = name.split('.')
             field = getattr(self.Model, keys[0])
@@ -520,8 +546,13 @@ class BaseResourceSQL(BaseResource):
 
     def _prepare_model(self, model, params):
         fields = self._get_show_fields(params)
-        return dict([(field, getattr(model, field, None))
-                     for field in fields])
+        res = {}
+        for field in fields:
+            val = getattr(model, field, None)
+            if val is None and hasattr(model, "get"):
+                val = model.get(field, None)
+            res[field] = val
+        return res
 
     def _prepare_model_any(self, model, params):
         fields = self._get_all_fields()

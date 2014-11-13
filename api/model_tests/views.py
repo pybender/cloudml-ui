@@ -1,6 +1,5 @@
 import logging
 from datetime import datetime
-from api.async_tasks.models import AsyncTask
 from flask import request
 
 from flask.ext.restful import reqparse
@@ -9,7 +8,7 @@ from api import api
 from api.base.resources import BaseResourceSQL, NotFound, \
     odesk_error_response, ERR_INVALID_DATA
 from models import TestResult, TestExample, Model
-from forms import AddTestForm
+from forms import AddTestForm, SelectFieldsForCSVForm, ExportToDbForm
 from sqlalchemy import desc
 
 
@@ -61,13 +60,9 @@ class TestResource(BaseResourceSQL):
         if not test:
             raise NotFound('Test not found')
 
-        exports = AsyncTask.get_current_by_object(
-            test,
-            'api.model_tests.tasks.get_csv_results',
-        )
-
         return self._render({self.OBJECT_NAME: test.id,
-                             'exports': exports})
+                             'exports': test.exports,
+                             'db_exports': test.db_exports})
 
 
 api.add_resource(TestResource,
@@ -81,15 +76,29 @@ class TestExampleResource(BaseResourceSQL):
 
     NEED_PAGING = True
     GET_ACTIONS = ('groupped', 'csv', 'datafields')
+    PUT_ACTIONS = ('csv_task', 'db_task')
     FILTER_PARAMS = (('label', str), ('pred_label', str))
 
     def _list(self, **kwargs):
+        self.populate_filter_params(kwargs)
+        return super(TestExampleResource, self)._list(**kwargs)
+
+    # Support advanced filtering in details page
+    # for getting next/previous links
+    def _details(self, **kwargs):
+        self.populate_filter_params(kwargs)
+        return super(TestExampleResource, self)._details(**kwargs)
+
+    def _get_details_parameters(self, extra_params):
+        return self._parse_parameters(
+            extra_params + self.GET_PARAMS + self.FILTER_PARAMS + self.SORT_PARAMS)
+
+    def populate_filter_params(self, kwargs):
         test = TestResult.query.get(kwargs.get('test_result_id'))
         if not test.dataset is None:
             for field in test.dataset.data_fields:
                 field_new = field.replace('.', '->')
-                self.FILTER_PARAMS += (("data_input->>%s" % field_new, str),)
-        return super(TestExampleResource, self)._list(**kwargs)
+                self.FILTER_PARAMS += (("data_input->>%s" % field_new, str), )
 
     def _get_details_query(self, params, **kwargs):
         example = super(TestExampleResource, self)._get_details_query(
@@ -97,6 +106,43 @@ class TestExampleResource(BaseResourceSQL):
 
         if example is None:
             raise NotFound()
+
+        fields = self._get_show_fields(params)
+        if 'next' in fields or 'previous' in fields:
+            from sqlalchemy import desc
+            from sqlalchemy.sql import select, func, text, bindparam
+            from models import db
+
+            filter_params = kwargs.copy()
+            filter_params.update(self._prepare_filter_params(params))
+            filter_params.pop('id')
+
+            sort_by = params.get('sort_by', None) or 'id'
+            is_desc = params.get('order', None) == 'desc'
+            fields_to_select = [TestExample.id]
+            # TODO: simplify query with specifying WINDOW w
+            if 'previous' in fields:
+                fields_to_select.append(
+                    func.lag(TestExample.id).over(
+                        order_by=[sort_by, 'id']).label('prev'))
+            if 'next' in fields:
+                fields_to_select.append(
+                    func.lead(TestExample.id).over(
+                        order_by=[sort_by, 'id']).label('next'))
+            tbl = select(fields_to_select)
+            for name, val in filter_params.iteritems():
+                if '->>' in name:  # TODO: refactor this
+                    try:
+                        splitted = name.split('->>')
+                        name = "%s->>'%s'" % (splitted[0], splitted[1])
+                    except:
+                        logging.warning('Invalid GET param %s', name)
+                tbl.append_whereclause("%s='%s'" % (name, val))
+            tbl = tbl.cte('tbl')
+            select1 = select(['id', 'prev', 'next']).where(
+                tbl.c.id == kwargs['id'])
+            res = db.engine.execute(select1, id_1=kwargs['id'])
+            id_, example.previous, example.next = res.fetchone()
 
         if not example.is_weights_calculated:
             example.calc_weighted_data()
@@ -203,32 +249,48 @@ not contain probabilities')
                   self._get_datafields(**kwargs)]
         return self._render({'fields': fields})
 
-    def _get_csv_action(self, **kwargs):
+    def _put_csv_task_action(self, model_id, test_result_id):
         """
-        Returns list of examples in csv format
+        Schedules a task to generate examples in CSV format
         """
-        logging.info('Download examples in csv')
-
-        from tasks import get_csv_results
-
-        parser = reqparse.RequestParser()
-        parser.add_argument('show', type=str)
-        params = parser.parse_args()
-        fields = params.get('show', None)
-        fields = fields.split(',')
-        logging.info('Use fields %s' % str(fields))
-
-        test = TestResult.query.filter_by(
-            id=kwargs.get('test_result_id'),
-            model_id=kwargs.get('model_id')).one()
+        test = TestResult.query.get(test_result_id)
         if not test:
             raise NotFound('Test not found')
 
-        get_csv_results.delay(
-            test.model_id, test.id,
-            fields
-        )
-        return self._render({})
+        form = SelectFieldsForCSVForm(obj=test)
+        if form.is_valid():
+            fields = form.cleaned_data['fields']
+            if isinstance(fields, list) and len(fields) > 0:
+                from tasks import get_csv_results
+                logging.info('Download examples in csv')
+                get_csv_results.delay(test.model_id, test.id, fields)
+                return self._render({})
+
+        return odesk_error_response(400, ERR_INVALID_DATA,
+                                    'Fields of the CSV export is required')
+
+    def _put_db_task_action(self, model_id, test_result_id):
+        """
+        Schedules a task to export examples to the specified DB
+        """
+        test = TestResult.query.get(test_result_id)
+        if not test:
+            raise NotFound('Test not found')
+
+        form = ExportToDbForm(obj=test)
+        if form.is_valid():
+            fields = form.cleaned_data['fields']
+            datasource = form.cleaned_data['datasource']
+            tablename = form.cleaned_data['tablename']
+            if isinstance(fields, list) and len(fields) > 0:
+                from tasks import export_results_to_db
+                logging.info('Export examples to db')
+                export_results_to_db.delay(
+                    test.model_id, test.id, datasource.id, tablename, fields)
+                return self._render({})
+
+        return odesk_error_response(400, ERR_INVALID_DATA,
+                                    'Fields of the DB export is required')
 
     def _get_datafields(self, **kwargs):
         test = TestResult.query.get(kwargs.get('test_result_id'))

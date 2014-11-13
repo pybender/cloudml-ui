@@ -4,7 +4,7 @@
   <small><a ng-href="#" href="#">(Cancel)</a></small>
 </h2>
 
-<ng-include src="'/partials/parts/save_form_messages.html'"></ng-include>
+<ng-include src="'partials/parts/save_form_messages.html'"></ng-include>
 
 <form name="Form" class="form-horizontal">
   <p class="lead">
@@ -28,7 +28,7 @@
   </div>
 
   <div ng-controller="ImportHandlerSelectCtrl">
-    <ng-include src="'/partials/models/form/import_handlers.html'"></ng-include>
+    <ng-include src="'partials/models/form/import_handlers.html'"></ng-include>
   </div>
   <a href="#/models" class="btn">Cancel</a>
   <button ng-click="save(['name', 'trainer', 'test_import_handler', 'import_handler', 'import_handler_file', 'test_import_handler_file'])" ng-disabled="Form.$invalid" class="btn btn-primary">Upload</button>

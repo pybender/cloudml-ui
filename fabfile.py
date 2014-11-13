@@ -4,7 +4,9 @@ except ImportError:
     from ordereddict import OrderedDict
 
 from fabdeploy import monkey
+import fabgrunt
 monkey.patch_all()
+
 import os
 import posixpath
 from fabric.api import task, env, settings, local, run, sudo, prefix, cd
@@ -93,7 +95,8 @@ def setup():
     virtualenv.create.run()
 
     # init env for build ui
-    angularjs.init.run()
+    #angularjs.init.run()
+    fabgrunt.global_npm.run()
 
     # install numpy and scipy
     with prefix('export LAPACK=/usr/lib/liblapack.so'):
@@ -139,9 +142,14 @@ def cdeploy():
 def deployui():
     release.work_on.run(0)
     git.push.run()
-    angularjs.activate.run()
-    angularjs.push_config.run()
-    angularjs.build.run()
+    fabgrunt.private_npm.run()
+    fabgrunt.bower.run()
+    fabgrunt.activate.run()
+    fabgrunt.push_config.run()
+    fabgrunt.build.run()
+    # angularjs.activate.run()
+    # angularjs.push_config.run()
+    # angularjs.build.run()
 
 
 @task
@@ -165,9 +173,16 @@ def deploy():
 
     release.activate.run()
 
-    angularjs.activate.run()
-    angularjs.push_config.run()
-    angularjs.build.run()
+    # fabgrunt.private_npm.run()
+    # fabgrunt.bower.run()
+    # fabgrunt.activate.run()
+
+    fabgrunt.push_config.run()
+    fabgrunt.build.run()
+
+    # angularjs.activate.run()
+    # angularjs.push_config.run()
+    # angularjs.build.run()
 
     supervisor.update.run()
     supervisor.restart_program.run(program='gunicorn')
@@ -178,7 +193,7 @@ def deploy():
 
 @task
 def setupw():
-    supervisor.push_init_config.run()
+    #supervisor.push_init_config.run()
 
     fabd.mkdirs.run()
     for app in ['supervisor']:
@@ -186,9 +201,9 @@ def setupw():
 
     pip.install.run(app='virtualenv', upgrade=True)
     system.package_install.run(packages='liblapack-dev gfortran libpq-dev\
- libevent-dev cloud-utils jgit-cli')
-    upload_init_template('supervisordw.conf')
-    supervisor.push_init_config.run()
+ libevent-dev cloud-utils')
+    #upload_init_template('supervisordw.conf')
+    #supervisor.push_init_config.run()
     supervisor.push_d_config.run()
     supervisor.push_configs.run()
     supervisor.d.run()
@@ -207,7 +222,7 @@ def setupw():
 
 @task
 def deployw():
-    #release.work_on.run(0)
+    release.work_on.run(0)
     #upload_init_template(name='supervisordw.conf', name_to='supervisord.conf')
     fabd.mkdirs.run()
 

@@ -1,3 +1,5 @@
+<ng-include src="'partials/parts/pager.html'"></ng-include>
+
 <h2>
   Test Example <span ng-show="data.loaded">"{{ data.test_name|capfirst }}:{{ data.example_id }}"</span> Details
 </h2>
@@ -7,9 +9,16 @@
       <a href="#/models/?tag={{ tag }}" style="color: white;">{{ tag }}</a>
     </span> 
   </span>
-  <ng-include src="'/partials/parts/created_tags.html'"></ng-include>
+  <ng-include src="'partials/parts/created_tags.html'"></ng-include>
   <i class="icon-status"></i>
   <span class="badge badge-warning">{{ model.status }}</span>
+  <i class="icon-screenshot"></i> target variable
+  <span class="badge badge-info">{{ data.model.target_variable }}</span>
+  <i class="icon-screenshot"></i> label
+  <span class="badge badge-info">{{ data.label }}</span>
+  <i class="icon-screenshot"></i> predicted label
+  <span ng-show="data.label == data.pred_label" class="badge badge-success">{{ data.pred_label }}</span>
+  <span title="predicted invalid value" ng-show="data.label != data.pred_label" class="badge badge-important">{{ data.pred_label }}</span>
   </div>
 </div>
 <p/>
@@ -19,27 +28,53 @@
 <alert-message ng-show="data.test_result.examples_placement == 'Do not save'" class="alert-info" msg="Examples data isn't stored for this test at all." unsafe></alert-message>
 
 <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
-
+<sc-chart chart-dict="data.probChartData" width="150" height="150"></sc-chart>
 <div ng-show="data.loaded">
-<div class="well">
-  <div>
-    Target Variable: <span class="value">{{ data.model.target_variable }}</span>
-  </div>
-  <div>
-    Label: <span class="value">{{ data.label }}</span>
-  </div>
-  <div>
-    Predicted Label: <span class="value">{{ data.pred_label }}</span>
-  </div>
-  <div>
-    Probabilities: <span class="value">{{ data.prob }}</span>
-  </div>
-  <div><sc-chart chart-dict="data.probChartData" width="150" height="150"></sc-chart></div>
-</div>
+  <ul class="nav nav-tabs" id="tabs">
+    <li ng-class="{active: action[0] == 'model'}">
+      <a ng-click="setSection(['model', 'details'])">Features</a>
+    </li>
+    <li ng-class="{active: action[0] == 'weighted'}">
+      <a ng-click="setSection(['weighted', 'details'])">Weighted Data</a>
+    </li>
+    <li ng-class="{active: action[0] == 'raw'}">
+      <a ng-click="setSection(['raw', 'details'])">Raw Data</a>
+    </li>
+  </ul>
+  <div class="tab-content">
+    <!-- Parameters table view -->
+    <div ng-show="action[0] == 'model'">
+      <table class="table">
+        <thead>
+        <tr>
+          <th>Name</th>
+          <th>Model Weight</th>
+          <th>Vectorized Value</th>
+          <th>Weight</th>
+        </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="val in data.parameters_weights">
+            <td>
+              {{ val.name }}
+            </td>
+            <td>
+              {{ val.model_weight }}
+            </td>
+            <td>
+              {{ val.vect_value }}
+            </td>
+            <td>
+              <span class="badge {{ val.css_class }}">{{ val.weight }}</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
-<div ng-show="Object.keys(data.weighted_data_input).length">
-  <h4>Parameters with Weights</h4>
-  <table class="table">
+    <!-- Weighted parameters -->
+    <div ng-show="action[0] == 'weighted'">
+      <table class="table">
       <thead>
           <tr>
             <th class="span2">Parameter</th>
@@ -53,7 +88,7 @@
               <span ng-show="!val.weights" title="Weight: {{ val.model_weight }}. Vectorized value: {{ val.vect_value }}. Parameters weight: {{ val.weight }}" class="badge {{ val.css_class }}">{{ val.value }}</span>
 
               <div ng-show="val.weights">
-                <span ng-show="val.type == 'list'" ng-init="lword=word.toLowerCase()" ng-repeat="word in val.value|words">
+                <span ng-show="val.type == 'list'" ng-init="lword=word.toLowerCase()" ng-repeat="word in val.value|words track by $index">
                   <span ng-show="val.weights[lword].weight" title="Weight: {{ val.weights[lword].model_weight }}. Vectorized value: {{ val.weights[lword].vect_value }}. Parameters weight: {{ val.weights[lword].weight }}" class="badge {{ val.weights[lword].css_class }}">{{ word }}</span>
                   <span ng-show="!val.weights[lword].weight">{{ word }}</span>
                 </span>
@@ -65,6 +100,12 @@
             </td>
           </tr>
       </tbody>
-  </table>
+      </table>
+    </div>
+
+    <div ng-show="action[0] == 'raw'" cml-has-codemirror="action[0] == 'raw'">
+      <textarea name="data" ui-codemirror="codeMirrorConfigs(true)['json']" ng-model="data.raw_data" class="cml-codemirror-refresh"></textarea>
+    </div>
 </div>
-</div>
+
+<ng-include ng-show="data.loaded" src="'partials/parts/pager.html'"></ng-include>

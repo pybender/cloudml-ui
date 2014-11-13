@@ -2,16 +2,18 @@
 
 # Declare app level module which depends on filters, and services
 App = angular.module('app', [
-  'ui'
   'ngCookies'
   'ngResource'
+  'ngRoute'
   'app.config'
   'app.controllers'
   'app.directives'
   'app.filters'
   'app.services'
+  'app.templates'
   'ui.bootstrap'
   'ui.select2'
+  'ui.codemirror'
 
   'app.base'
   'app.models.model'
@@ -56,6 +58,8 @@ App = angular.module('app', [
   'app.features.controllers.features'
   'app.servers.model'
   'app.servers.controllers'
+
+  'app.play.controllers'
 ])
 
 App.config([
@@ -67,15 +71,15 @@ App.config([
   $routeProvider
     .when('/dashboard', {
       controller: "DashboardCtrl"
-      templateUrl: '/partials/dashboard.html'
+      templateUrl: 'partials/dashboard.html'
     })
     .when('/models', {
-      templateUrl: '/partials/models/model_list.html'
+      templateUrl: 'partials/models/model_list.html'
       reloadOnSearch: false
     })
     .when('/models/:id', {
       controller: 'ModelDetailsCtrl'
-      templateUrl: '/partials/models/model_details.html'
+      templateUrl: 'partials/models/model_details.html'
       reloadOnSearch: false
     })
     .when('/models/:model_id/tests', {
@@ -84,33 +88,33 @@ App.config([
     })
     .when('/models/:model_id/tests/:id', {
       controller: 'TestDetailsCtrl'
-      templateUrl: '/partials/testresults/test_details.html'
+      templateUrl: 'partials/testresults/test_details.html'
       reloadOnSearch: false
     })
     .when('/models/:model_id/tests/:test_id/grouped_examples', {
       controller: 'GroupedExamplesCtrl'
-      templateUrl: '/partials/examples/grouped_examples.html'
+      templateUrl: 'partials/examples/grouped_examples.html'
     })
     # TODO: it doesn't work (angular bug?)
     .when('/models/:model_id/tests/:test_id/examples', {
       redirectTo: (params, loc) ->
-        return '/models/' + params.model_id + '/tests/' + params.test_id
+        return '/models/' + params.model_id + '/tests/' + params.test_id \
         + '?action=examples:list'
     })
     .when('/models/:model_id/tests/:test_id/examples/:id', {
       controller: 'ExampleDetailsCtrl'
-      templateUrl: '/partials/examples/example_details.html'
+      templateUrl: 'partials/examples/example_details.html'
     })
     .when('/upload_model', {
-      templateUrl: '/partials/models/upload_model.html'
+      templateUrl: 'partials/models/upload_model.html'
       controller: 'UploadModelCtl'
     })
     .when('/add_model', {
-      templateUrl: '/partials/models/add_model.html'
+      templateUrl: 'partials/models/add_model.html'
       controller: 'AddModelCtl'
     })
     .when('/compare_models', {
-      templateUrl: '/partials/reports/compare_models_form.html'
+      templateUrl: 'partials/reports/compare_models_form.html'
       controller: 'CompareModelsFormCtl'
     })
     .when('/handlers', {
@@ -119,15 +123,15 @@ App.config([
     })
     .when('/handlers/xml', {
       controller: "XmlImportHandlerListCtrl"
-      templateUrl: '/partials/xml_import_handlers/list.html'
+      templateUrl: 'partials/xml_import_handlers/list.html'
     })
     .when('/handlers/xml/add', {
       controller: "AddXmlImportHandlerCtl"
-      templateUrl: '/partials/xml_import_handlers/add.html'
+      templateUrl: 'partials/xml_import_handlers/add.html'
     })
     .when('/handlers/xml/:id', {
       controller: 'XmlImportHandlerDetailsCtrl'
-      templateUrl: '/partials/xml_import_handlers/details.html'
+      templateUrl: 'partials/xml_import_handlers/details.html'
       reloadOnSearch: false
     })
     .when('/handlers/xml/:handler_id/datasets', {
@@ -136,24 +140,24 @@ App.config([
     })
     .when('/handlers/json', {
       controller: "ImportHandlerListCtrl"
-      templateUrl: '/partials/import_handler/list.html'
+      templateUrl: 'partials/import_handler/list.html'
     })
     .when('/handlers/json/add', {
       controller: "AddImportHandlerCtl"
-      templateUrl: '/partials/import_handler/add.html'
+      templateUrl: 'partials/import_handler/add.html'
     })
     .when('/handlers/json/:id', {
       controller: 'ImportHandlerDetailsCtrl'
-      templateUrl: '/partials/import_handler/details.html'
+      templateUrl: 'partials/import_handler/details.html'
       reloadOnSearch: false
     })
     .when('/handlers/json/:id/query/add', {
       controller: 'AddImportHandlerQueryCtrl'
-      templateUrl: '/partials/import_handler/add_query.html'
+      templateUrl: 'partials/import_handler/add_query.html'
     })
     .when('/handlers/json/:id/query/:num/items/add', {
       controller: 'AddImportHandlerQueryItemCtrl'
-      templateUrl: '/partials/import_handler/add_query_item.html'
+      templateUrl: 'partials/import_handler/add_query_item.html'
     })
     .when('/handlers/json/:handler_id/datasets', {
       redirectTo: (params, loc) ->
@@ -161,7 +165,7 @@ App.config([
     })
     .when('/handlers/:import_handler_type/:import_handler_id/datasets/:id', {
       controller: 'DataSetDetailsCtrl'
-      templateUrl: '/partials/datasets/details.html'
+      templateUrl: 'partials/datasets/details.html'
       reloadOnSearch: false
     })
     .when('/aws', {
@@ -169,54 +173,54 @@ App.config([
     })
     .when('/aws/instances', {
       controller: "AwsInstanceListCtrl"
-      templateUrl: '/partials/aws_instances/list.html'
+      templateUrl: 'partials/aws_instances/list.html'
     })
     .when('/aws/instances/add', {
       controller: "AddAwsInstanceCtl"
-      templateUrl: '/partials/aws_instances/add.html'
+      templateUrl: 'partials/aws_instances/add.html'
     })
     .when('/aws/instances/:id', {
       controller: 'AwsInstanceDetailsCtrl'
-      templateUrl: '/partials/aws_instances/details.html'
+      templateUrl: 'partials/aws_instances/details.html'
     })
     .when('/aws/clusters', {
       controller: "ClusterListCtrl"
-      templateUrl: '/partials/clusters/list.html'
+      templateUrl: 'partials/clusters/list.html'
     })
     .when('/aws/clusters/:id', {
       controller: 'ClusterDetailsCtrl'
-      templateUrl: '/partials/clusters/details.html'
+      templateUrl: 'partials/clusters/details.html'
     })
     .when('/servers', {
       controller: "ServerListCtrl"
-      templateUrl: '/partials/servers/list.html'
+      templateUrl: 'partials/servers/list.html'
     })
     .when('/servers/:id', {
       controller: 'ServerDetailsCtrl'
-      templateUrl: '/partials/servers/details.html'
+      templateUrl: 'partials/servers/details.html'
     })
 
     # auth
     .when('/auth/login', {
       controller: 'LoginCtl'
-      templateUrl: '/partials/login/login.html'
+      templateUrl: 'partials/login/login.html'
     })
     .when('/auth/authenticate', {
       controller: 'AuthCtl'
-      templateUrl: '/partials/login/auth.html'
+      templateUrl: 'partials/login/auth.html'
     })
     .when('/auth/callback', {
       controller: 'AuthCallbackCtl'
-      templateUrl: '/partials/login/auth.html'
+      templateUrl: 'partials/login/auth.html'
     })
 
     .when('/models/:model_id/features/:set_id/add', {
       controller: "FeatureEditCtrl"
-      templateUrl: '/partials/features/items/edit.html'
+      templateUrl: 'partials/features/items/edit.html'
     })
     .when('/models/:model_id/features/:set_id/edit/:feature_id', {
       controller: "FeatureEditCtrl"
-      templateUrl: '/partials/features/items/edit.html'
+      templateUrl: 'partials/features/items/edit.html'
     })
     .when('/models/:model_id/features', {
       redirectTo: (params, loc) ->
@@ -229,7 +233,7 @@ App.config([
     # Feature set list (now used only for debug)
     # .when('/features/sets', {
     #   controller: "FeaturesSetListCtrl"
-    #   templateUrl: '/partials/features/sets/list.html'
+    #   templateUrl: 'partials/features/sets/list.html'
     # })
 
     # Predefined feature objects
@@ -238,23 +242,31 @@ App.config([
     })
     .when('/predefined/types', {
       controller: "FeatureTypeListCtrl"
-      templateUrl: '/partials/features/named_types/list.html'
+      templateUrl: 'partials/features/named_types/list.html'
     })
     .when('/predefined/classifiers', {
       controller: "ClassifiersListCtrl"
-      templateUrl: '/partials/features/classifiers/list.html'
+      templateUrl: 'partials/features/classifiers/list.html'
     })
     .when('/predefined/transformers', {
       controller: "TransformersListCtrl"
-      templateUrl: '/partials/features/transformers/list.html'
+      templateUrl: 'partials/features/transformers/list.html'
+    })
+    .when('/predefined/transformers/:id', {
+      controller: "TransformerDetailsCtrl"
+      templateUrl: 'partials/features/transformers/details.html'
     })
     .when('/predefined/scalers', {
       controller: "ScalersListCtrl"
-      templateUrl: '/partials/features/scalers/list.html'
+      templateUrl: 'partials/features/scalers/list.html'
     })
     .when('/predefined/datasources', {
       controller: "DataSourceListCtrl"
-      templateUrl: '/partials/import_handler/datasource/list.html'
+      templateUrl: 'partials/import_handler/datasource/list.html'
+    })
+  .when('/play', {
+      controller: "PlayCtrl"
+      templateUrl: 'partials/play.html'
     })
 
     # Catch all
@@ -265,67 +277,73 @@ App.config([
 ])
 
 App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
-         '$cookieStore'
-($rootScope, $routeParams, $location, settings, $auth, $cookieStore) ->
-  $rootScope.Math = window.Math
-  $rootScope.Object = Object
+         '$cookieStore', '$modal'
+($rootScope, $routeParams, $location, settings, $auth, $cookieStore, $modal) ->
+  # TODO: nader20140912, not user anywhere schedule for removal
+  # $rootScope.Math = window.Math
+  # $rootScope.Object = Object
   $rootScope.loadingCount = 0
   $rootScope.errorList = {}
   $rootScope.setFieldError = (name, msg='') ->
       $rootScope.errorList[name] = msg
 
 
-  # this will be available to all scope variables
-  $rootScope.includeLibraries = true
+# TODO: nader20140912, not user anywhere schedule for removal
+#  # this will be available to all scope variables
+#  $rootScope.includeLibraries = true
+#
+#  # this method will be available to all scope variables as well
+#  $rootScope.include = (libraries) ->
+#    scope = this
+#    # attach each of the libraries directly to the scope variable
+#    for key of libraries
+#      scope[key] = getLibrary(key)
+#    return scope
 
-  # this method will be available to all scope variables as well
-  $rootScope.include = (libraries) ->
-    scope = this
-    # attach each of the libraries directly to the scope variable
-    for key of libraries
-      scope[key] = getLibrary(key)
-    return scope
+# TODO: nader20140912, not user anywhere schedule for removal
+#  $rootScope.getEventSource = (params='') ->
+#    if not $rootScope.sse?
+#      $rootScope.sse = new EventSource("#{settings.logUrl}log/?" + params)
+#    return $rootScope.sse
 
-  $rootScope.getEventSource = (params='') ->
-    if not $rootScope.sse?
-      $rootScope.sse = new EventSource("#{settings.logUrl}log/?" + params)
-    return $rootScope.sse
+# TODO: nader20140912, not user anywhere schedule for removal
+#  $rootScope.getEventSourceTest = (params='') ->
+#    if not $rootScope.sse_test?
+#      $rootScope.sse_test = new EventSource("#{settings.logUrl}log/?" + params)
+#    return $rootScope.sse_test
 
-  $rootScope.getEventSourceTest = (params='') ->
-    if not $rootScope.sse_test?
-      $rootScope.sse_test = new EventSource("#{settings.logUrl}log/?" + params)
-    return $rootScope.sse_test
+# TODO: nader20140912, not user anywhere schedule for removal
+#  $rootScope.initLogMessages = (channel) ->
+#    $rootScope.log_messages = []
+#    log_sse = $rootScope.getEventSource(params=channel)
+#    handleCallback = (msg) ->
+#      $rootScope.$apply(() ->
+#        if msg?
+#          data = JSON.parse(msg.data)
+#          $rootScope.log_messages.push(data['data']['msg']))
+#    log_sse.addEventListener('message', handleCallback)
 
-  $rootScope.initLogMessages = (channel) ->
-    $rootScope.log_messages = []
-    log_sse = $rootScope.getEventSource(params=channel)
-    handleCallback = (msg) ->
-      $rootScope.$apply(() ->
-        if msg?
-          data = JSON.parse(msg.data)
-          $rootScope.log_messages.push(data['data']['msg']))
-    log_sse.addEventListener('message', handleCallback)
+  $rootScope.openDialog = (scope, opts) ->
+    ###
+    Opens a modal dialog
+    param $scope: is the parent scope from which the new dialog scope will inherit
+    param opts: modal dialog options that will be passed to the controller with
+    name openOptions
+    ###
+    if not scope
+      throw new Error('scope is required')
 
-  $rootScope.openDialog = (opts) ->
-    $dialog = opts.$dialog
-    if !$dialog?
-      throw new Error('$dialog is required')
-
-    template = opts.template
-    if !template?
+    if not opts?.template
       throw new Error('template is required')
 
-    d = $dialog.dialog(
-      modalFade: false
-      dialogClass: opts.cssClass || 'modal'
-    )
-    d.model = opts.model
-    d.action = opts.action || ''
-    d.path = opts.path
-    d.open(template, opts.ctrlName)
-    d.extra = opts.extra || {}
-    d.list_model_name = opts.list_model_name
-    return d
+    $modal.open
+      scope: scope
+      templateUrl: opts.template
+      controller: opts.ctrlName
+      windowClass: opts.cssClass
+      resolve:
+        openOptions: ->
+          return opts
 
   DEFAULT_ACTION = "model:details"
 
@@ -349,7 +367,8 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
 
     if needGo
       $rootScope.goSection action
-      $rootScope.initializedSections.push(actionString)
+      if actionString not in $rootScope.initializedSections
+        $rootScope.initializedSections.push actionString
 
   $rootScope.resetError = ->
     $rootScope.err = ''
@@ -367,7 +386,7 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
     if opts.data
       $rootScope.err = "Error while #{message}: server responded
  with #{opts.status} (#{opts.data.response.error.message or "no message"})."
-      if opts.data.response.error.errors?
+      if opts.data.response?.error?.errors?
         for item in opts.data.response.error.errors
             $rootScope.setFieldError(item.name, item.error)
     else

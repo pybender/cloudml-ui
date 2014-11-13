@@ -12,6 +12,10 @@ IMPORT_HANDLER_TYPES = ('xml', 'json')
 class ImportHandlerMixin(BaseModel):
     TYPE = 'N/A'
 
+    @property
+    def type(self):
+        return self.TYPE
+
     @declared_attr
     def name(cls):
         return db.Column(db.String(200), nullable=False, unique=True)
@@ -56,16 +60,16 @@ class ImportHandlerMixin(BaseModel):
         import sqlparse
 
         query = sqlparse.parse(sql)
-        wrong_sql = False
+        error_msg = None
         if len(query) < 1:
-            wrong_sql = True
+            error_msg = 'Unable to detect a query in the supplied text'
         else:
             query = query[0]
             if query.get_type() != 'SELECT':
-                wrong_sql = True
+                error_msg = 'Only supporting SELECT queries'
 
-        if wrong_sql:
-            raise Exception('Invalid sql query')
+        if not error_msg is None:
+            raise Exception(error_msg)
         else:
             return query
 

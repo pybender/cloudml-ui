@@ -14,30 +14,40 @@
   <div class="actions">
     <button ng-show="model.status == 'Trained'" ng-click="test_model(model)" class="btn btn-success">
       <i title="Apply the classifier to the input provided by the data import handler" class="status-icon icon-play"></i>
-      Run test
+      Test
     </button>
     <button ng-click="train_model(model)" class="btn btn-info">
       <i title="Train your model" class="icon-tasks"></i>
-      Start training
+      Train
+    </button>
+    <button ng-click="grid_search_params(model)" class="btn btn-info">
+      <i title="Grid search classifier parameters" class="icon-tasks"></i>
+      Grid search
     </button>
     <a ng-show="model.status == 'Trained' && model.trainer_s3_url" href="{{ model.trainer_s3_url }}" class="btn btn-info">
-        <i title="Download model trainer." class="icon-download-alt"></i> Download Trainer
+        <i title="Download model trainer." class="icon-download-alt"></i> Download
     </a>
     <button ng-show="model.status == 'Trained'" ng-click="uploadModelToPredict(model)" class="btn btn-info">
         <i class="icon-upload"></i> Upload for Predict
     </button>
+    <button ng-click="cloneModel(model)" class="btn btn-info">
+      <i title="Clone your model." class="icon-tasks"></i> Clone
+    </button>
     <button ng-click="delete_model(model)" class="btn btn-danger">
-      <i title="Delete your model. Be careful - you could not recover it!" class="icon-remove"></i> Delete model
+      <i title="Delete your model. Be careful - you could not recover it!" class="icon-remove"></i> Delete
     </button>
   </div>
 </h2>
-<p></p>
+<p class="clear clearfix"></p>
 <ul class="nav nav-tabs" id="tabs" ng-show="model.loaded">
   <li ng-class="{active: action[0] == 'model'}">
     <a ng-click="setSection(['model', 'details'])">Model</a> 
   </li>
   <li ng-class="{active: action[0] == 'training'}">
     <a ng-click="setSection(['training', 'details'])">Training</a>
+  </li>
+  <li ng-class="{active: action[0] == 'grid_search'}">
+    <a ng-click="setSection(['grid_search', 'details'])">Parameters Search</a>
   </li>
   <li ng-class="{active: action[0] == 'test'}">
     <a ng-click="setSection(['test', 'details'])">Test</a>
@@ -74,7 +84,7 @@
                 <span class="value">{{ model.classifier.created_by.name }} ({{ model.classifier.created_by.uid }})</span>
             </div>
           </div>
-          <div class="span4">
+          <div class="span3">
             <h4>Features</h4>
             <div>
               Schema Name:
@@ -83,26 +93,26 @@
             <div>Target Variable: <span class="value">{{ featuresSet.target_variable }}</span></div>
             <div>Features Count: <span class="value">{{ featuresSet.features_count }}</span></div>
           </div>
-          <div class="span3">
+          <div class="span4">
             <h4>Segmentation</h4>
             <alert-message ng-show="segmentationMsg" class="alert-info" msg="{{segmentationMsg}}" unsafe></alert-message>
             <div ng-controller="GroupBySelector">
               Group By:
-              <input ui-select2="group_by_opts" ng-model="modelObj.featuresSet.group_by" /> 
+              <input ui-select2="group_by_opts" ng-model="modelObj.featuresSet.group_by" style="width: 300px" />
               <input type="button" class="btn btn-info" value="Save" ng-click="updateGroupBy()" style="margin-left: 5px;" />
             </div>
           </div>
         </div>
         <div class="row">
           <div class="span12">
-            <ng-include src="'/partials/features/items/list.html'"></ng-include>
+            <ng-include src="'partials/features/items/list.html'"></ng-include>
           </div>
         </div>
       </div>
     </div>
 
-    <div ng-show="action[1] == 'json'">
-      <textarea ng-model="model.features" ui-codemirror="codeMirrorConfigs(true)['json']" ui-refresh="action"></textarea>
+    <div ng-show="action[1] == 'json'" cml-has-codemirror="action[1] == 'json'">
+      <textarea ng-model="model.features" ui-codemirror="codeMirrorConfigs(true)['json']" class="cml-codemirror-refresh"></textarea>
     </div>
 
     <div class="row well">
@@ -135,9 +145,9 @@
     <div class="row">
         <div class="span12">
             Status: <span class="value">{{ model.status }}</span> <a ng-click="showLogs=!showLogs">(logs)</a>
-            <div ng-show="showLogs" class="well" ng-controller="LogMessageListCtrl" ng-init="init('trainmodel_log', model.id, 5)">
+            <div ng-show="showLogs" class="well" ng-controller="LogMessageListCtrl" ng-init="init('trainmodel_log', model.id, 50)">
               <div class="message">
-                <ng-include src="'/partials/logmessages/list.html'"></ng-include>
+                <ng-include src="'partials/logmessages/list.html'"></ng-include>
               </div>
             </div>
         </div>
@@ -165,10 +175,20 @@
           <div ng-show="model.datasets" title="Data sets which was used for training">
             Data sets:
             <div ng-repeat="ds in model.datasets_obj">
-                <span class="value">
+                <span class="value" >
                   <a href="#{{ ds.objectUrl() }}">
                   {{ ds.name }}</a>
                 </span>
+                <a class="btn btn-info btn-mini"
+                   ng-init="getDataSetsDownloads(ds.id)"
+                   ng-controller="ModelDataSetDownloadCtrl"
+                   ng-hide="angular.isUndefined(queuedIds)"
+                   title="{{ {true: 'DataSet already Transformed, Check Model &gt; About for list of datasets transformed using this model and ready for download',
+                          false: 'Download Tranformed DataSet'}[queuedIds.indexOf(ds.id) >= 0] }}"
+                   ng-disabled="queuedIds.indexOf(ds.id) >= 0"
+                   ng-click="requestDataSetDownload(ds.id, model.id)">
+                  <i class="icon-download-alt"></i> Download
+                </a>
             </div>
             Records count: <span class="value">{{ model.train_records_count }}</span>
           </div>
@@ -185,40 +205,8 @@
         </div>
     </div>
     <hr />
-    <div ng-show="model.status == 'Trained'">
-      <h4>
-        Parameters Weights<span ng-show="model.labels && model.labels.length > 2"> For : </span>
-        <div ng-show="model.labels && model.labels.length > 2" class="btn-group">
-          <a class="btn dropdown-toggle class_label" data-toggle="dropdown" href="#">
-            Class Label {{class_label}}
-            <span class="caret"></span>
-          </a>
-          <ul class="dropdown-menu">
-            <li ng-repeat="label in model.labels" ng-show="label != class_label">
-              <a ng-click="switchToClassLabel($event, label)">Class Label {{label}}</a></li>
-          </ul>
-        </div>
-      </h4>
-      <ul class="nav nav-tabs" id="weights-tabs">
-        <li ng-class="{active: action[1] == 'details'}">
-          <a ng-click="setSection(['training', 'details'])">Columns</a> 
-        </li>
-        <li ng-class="{active: action[1] == 'list'}">
-          <a ng-click="setSection(['training', 'list'])">List</a>
-        </li>
-        <li ng-class="{active: action[1] == 'tree'}">
-          <a ng-click="setSection(['training', 'tree'])">Tree</a>
-        </li>
-      </ul>
-      <div ng-show="action[1] == 'details'" class="details">
-        <ng-include src="'/partials/weights/columns.html'"></ng-include>
-      </div>
-      <div ng-show="action[1] == 'tree'" class="weights-tree">
-        <ng-include src="'/partials/weights/tree.html'"></ng-include>
-      </div>
-      <div ng-show="action[1] == 'list'" class="list">
-        <ng-include src="'/partials/weights/list.html'"></ng-include>
-      </div>
+    <div ng-show="model.status == 'Trained'" ng-init="weights_section='training'">
+      <ng-include src="'partials/weights/weights_view_switcher.html'"></ng-include>
     </div>
   </div>
 
@@ -226,7 +214,43 @@
   <div ng-show="action[0] == 'test'" id="tests">
     <h3>Tests</h3>
     <div ng-controller="TestListCtrl" ng-init="init(model)">
-      <ng-include src="'/partials/testresults/test_list.html'"></ng-include>
+      <ng-include src="'partials/testresults/test_list.html'"></ng-include>
+    </div>
+  </div>
+
+  <div ng-show="action[0] == 'grid_search'" id="grid_search">
+    <h3>Classifier grid search parameters</h3>
+    <div ng-repeat="grid_param in model.classifier_grid_params" class="well">
+      <i class="icon-calendar"></i> created on <span class="badge badge-info" title="dates in GMT">{{ grid_param.created_on|format_date }}</span>
+      scoring <span class="badge badge-info">{{ grid_param.scoring || 'N/A' }}</span>
+      <span class="badge badge-info">{{ grid_param.status }}</span>
+      <div ng-hide="grid_param.parameters_grid">
+        <h4>Parameters</h4>
+        <div ng-repeat="(k,v) in grid_param.parameters">  
+          {{ k }}: <span ng-repeat="val in v">{{ val }} </span>
+        </div>
+      </div>
+      <div ng-show="grid_param.parameters_grid">
+        <div ng-repeat="(segment, grid) in grid_param.parameters_grid">
+          <h4 ng-hide="Object.keys(grid_param.parameters_grid).length == 1">Segment: {{ segment }}</h4>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Parameters</th>
+                <th>Mean</th>
+                <th>Std</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-repeat="item in grid">
+                <td><span  ng-repeat="(k,v) in item.parameters">{{ k }}: <span>{{ v }} </span></span></td>
+                <td>{{ item.mean|number:4 }}</td>
+                <td>{{ item.std|number:4 }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -238,24 +262,36 @@
           <a href="#/models/?tag={{ tag }}" style="color: white;">{{ tag }}</a>
         </span> 
       </span>
-      <ng-include src="'/partials/parts/created_tags.html'"></ng-include>
+      <ng-include src="'partials/parts/created_tags.html'"></ng-include>
     </div>
     <div class="row">
       <div class="span6">
         <h5>Edit tags</h5>
-        <input ui-select2="select2params" ng-model="params['tags']" /> 
+        <input ui-select2="select2params" ng-model="params['tags']" style="width: 300px" />
         <input type="button" class="btn btn-info" value="Save" ng-click="updateTags()" style="margin-left: 5px;" />
 
         <div ng-controller="ImportHandlerSelectCtrl">
           <h5>Import Handlers</h5>
           <div>
             For Train:
-            <span title="Select Train Import Handler" ng-bind="model.train_import_handler_obj.name || 'not specified'" editable="model" value="model.train_import_handler_obj.id" editable-field="train_import_handler" editable-input="select" editable-placement="right" is-empty="_isEmpty" source="handlers_list" display="model.train_import_handler_obj.name"></span>
+            <span title="Select Train Import Handler"
+                  ng-bind="model.train_import_handler_obj.name || 'not specified'"
+                  editable="model" value="model.train_import_handler_obj.id"
+                  editable-field="train_import_handler" editable-input="select"
+                  editable-placement="right" is-empty="_isEmpty"
+                  source="handlers_list"
+                  display="model.train_import_handler_obj.name"></span>
             <a target="_blank" href="#{{ model.train_import_handler_obj.objectUrl() }}"><i class="icon-arrow-right"></i></a>
           </div>
           <div>
             For Tests:
-            <span title="Select Test Import Handler" ng-bind="model.test_import_handler_obj.name || 'not specified'" editable="model" value="model.test_import_handler_obj.id" editable-field="test_import_handler" editable-input="select" editable-placement="right" source="handlers_list" display="model.test_import_handler_obj.name"></span>
+            <span title="Select Test Import Handler"
+                  ng-bind="model.test_import_handler_obj.name || 'not specified'"
+                  editable="model" value="model.test_import_handler_obj.id"
+                  editable-field="test_import_handler" editable-input="select"
+                  editable-placement="right"
+                  source="handlers_list"
+                  display="model.test_import_handler_obj.name"></span>
             <a target="_blank" href="#{{ model.test_import_handler_obj.objectUrl() }}"><i class="icon-arrow-right"></i></a>
           </div>
         </div>
@@ -272,11 +308,11 @@
         </div>
         <div ng-show="model.sorted_data_fields.length">
           Examples id field name:
-          <span title="ID Field Name" ng-bind="model.example_id" editable="model" value="model.example_id" editable-field="example_id" editable-placement="right" editable-input="select" source="model.sorted_data_fields"></span>
+          <span title="ID Field Name" ng-bind="model.example_id || 'not specified'" editable="model" value="model.example_id" editable-field="example_id" editable-placement="right" editable-input="select" source="model.sorted_data_fields"></span>
         </div>
         <div ng-show="!model.sorted_data_fields.length">
           Examples id field name:
-          <span title="ID Field Name" ng-bind="model.example_id" editable="model" value="model.example_id" editable-field="example_id" editable-placement="right" editable-input="text" source="model.sorted_data_fields"></span>
+          <span title="ID Field Name" ng-bind="model.example_id || 'not specified'" editable="model" value="model.example_id" editable-field="example_id" editable-placement="right" editable-input="text" source="model.sorted_data_fields"></span>
         </div>
         <div>
             Target variable:
@@ -299,6 +335,24 @@
         <div ng-show="model.updated_by">
             Updated by:
             <span class="value">{{ model.updated_by.name }} ({{ model.updated_by.uid }})</span>
+        </div>
+      </div>
+    </div>
+    <div ng-controller="ModelDataSetDownloadCtrl"
+         ng-init="getDataSetsDownloads(model.id)"
+         ng-show="queuedIds && queuedIds.length > 0">
+      <hr/>
+      <div class="row">
+        <div class="span10">
+          <h4>DataSet Transform Requests</h4>
+          <div class="row" ng-repeat="download in downloads">
+            <div class="span10 well">
+              <i class="icon-calendar"></i> created on <span class="badge badge-info" title="dates in GMT">{{ download.task.created_on|format_date }}</span>
+              <i class="icon-th"></i>dataset <span class="label">{{ download.dataset.name }}</span>
+              <span class="badge badge-info">{{ download.task.status }}</span>
+              <a class="btn btn-small" href="{{ download.task.result }}" target="_blank">Download</a>
+            </div>
+          </div>
         </div>
       </div>
     </div>

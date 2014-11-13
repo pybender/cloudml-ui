@@ -24,10 +24,11 @@
   <tr ng-repeat="handler in objects">
     <td><a href="#{{ handler.objectUrl() }}">{{ handler.name }}</a></td>
     <td>
-      <span ng-repeat="param in handler.import_params">{{ param }} </span>
+      <span ng-repeat="param in handler.import_params track by $index">{{ param }} </span>
     </td>
     <td>
-        {{ handler.created_on|format_date }}<br>
+        <span title="dates in GMT">{{ handler.created_on|format_date }}
+        </span><br>
         <small ng-show="handler.created_by">by {{ handler.created_by.name }} ({{ handler.created_by.uid }})</small>
     </td>
     <td ng-controller="ImportHandlerActionsCtrl">

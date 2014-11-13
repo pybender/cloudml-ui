@@ -31,7 +31,7 @@ describe "service", ->
 
   describe "auth", ->
     it "should request oauth url", inject((auth) ->
-      url = settings.apiUrl + 'auth/get_auth_url?'
+      url = settings.apiUrl + 'auth/get_auth_url'
       $httpBackend.expectPOST(url).respond('{"auth_url": "http://odesk.com/_fake"}')
 
       auth.login()
@@ -58,7 +58,7 @@ describe "service", ->
     it "should request user info", inject((auth) ->
       $cookieStore.put('auth-token', 'auth_token')
 
-      url = settings.apiUrl + 'auth/get_user?'
+      url = settings.apiUrl + 'auth/get_user'
       $httpBackend.expectPOST(url).respond('{"user": {"name": "Fiodor", "uid": "somebody"}}')
 
       auth.get_user()

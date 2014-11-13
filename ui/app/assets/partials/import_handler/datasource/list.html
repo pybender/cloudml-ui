@@ -38,7 +38,8 @@
 	    <td>{{ ds.db.vendor }}</td>
 	    <td>{{ ds.db.conn }}</td>
 	    <td>
-	        {{ ds.created_on|format_date }}<br>
+	        <span title="dates in GMT">{{ ds.created_on|format_date }}
+	        </span><br>
 	        <small ng-show="ds.created_by">by {{ ds.created_by.name }} ({{ ds.created_by.uid }})</small>
 	    </td>
 	  </tr>

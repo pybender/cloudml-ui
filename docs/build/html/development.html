@@ -124,6 +124,9 @@ $ rabbitmqctl add_vhost cloudml
 $ rabbitmqctl set_permissions cloudml cloudml "*" "*" "*
 "</pre>
 </div>
+<p>Run local dynamodb:</p>
+<div class="highlight-python"><pre>$ ./api/logs/dynamodb/dynamodb_local.sh</pre>
+</div>
 <p>Run dev server:</p>
 <div class="highlight-python"><pre>$ python manage.py runserver</pre>
 </div>
@@ -136,6 +139,9 @@ $ rabbitmqctl set_permissions cloudml cloudml "*" "*" "*
 <p>Run shell:</p>
 <div class="highlight-python"><pre>$ python manage.py shell</pre>
 </div>
+<p>Check unittests coverage:</p>
+<blockquote>
+<div>$ nosetests &#8211;with-coverage &#8211;cover-package=api.accounts &#8211;verbose &#8211;tests api.accounts.tests &#8211;cover-html-dir=coverage &#8211;cover-html</div></blockquote>
 </div>
 <div class="section" id="frontend">
 <h2>Frontend<a class="headerlink" href="#frontend" title="Permalink to this headline">¶</a></h2>
@@ -174,7 +180,8 @@ of cloudml-ui project:</p>
 <div class="section" id="training-your-first-model">
 <h2>Training Your First Model<a class="headerlink" href="#training-your-first-model" title="Permalink to this headline">¶</a></h2>
 <p><strong>Prepare Default Instance:</strong> Go to instances, click &#8220;Add new AWS instance&#8221;,
-in the IP use 127.0.0.1, in the type choose small.
+name it <strong>default</strong>, otherwise rabbitmq/celery wouldn&#8217;t pick training and testing
+tasks, in the IP use 127.0.0.1, in the type choose small.
 Finally make sure <strong>Is Default?</strong> checkbox is checked.</p>
 <p><strong>Create JSON import handler:</strong> Go to import handlers/json, &#8220;Add new import handler&#8221;,
 give it a name, choose the file <strong>extract.json</strong> from cloudml-ui/conf directory. After

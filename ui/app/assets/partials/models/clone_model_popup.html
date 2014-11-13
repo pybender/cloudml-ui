@@ -1,0 +1,18 @@
+<div>
+  <div class="modal-header">
+    <button ng-click="close()" class="close" data-dismiss="modal">×</button>
+    <h3>Clone model</h3>
+  </div>
+
+  <div class="modal-body">
+    <ng-include src="'partials/parts/save_form_messages.html'"></ng-include>
+    <p>
+      You will create a new model with same classifier, features and import handlers. <br />
+      Do you really want to process?
+    </p>
+  </div>
+
+  <div class="modal-footer">
+    <button ng-click="clone()" ng-disabled="Form.$invalid" class="btn btn-primary" >Clone model</button>
+  </div>
+</div>

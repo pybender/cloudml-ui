@@ -1,0 +1,36 @@
+<div ng-controller="SaveObjectCtl">
+  <div class="modal-header">
+    <button ng-click="$dismiss('cancel')" class="close" data-dismiss="modal">×</button>
+    <h3>Edit type and parameters</h3>
+  </div>
+
+  <div class="modal-body">
+    <ng-include src="'partials/parts/save_form_messages.html'"></ng-include>
+    <form name="Form" class="form-horizontal">
+      <div class="control-group" ng-class="{error: Form.type.$invalid || errorList.type}">
+	      <label class="control-label">Type</label>
+	      <div class="controls" ng-controller="TransformersTypesLoader">
+	        <select ng-change="loadParameters(setDefault=true)" name="type" ng-model="model.type" ng-required="model.json_selected == false">
+	          <option ng-selected="typeName == model.type" ng-repeat="typeName in types" value="{{ typeName }}">{{ typeName }}</option>
+	        </select>
+	        <span ng-show="Form.type.$error.required" class="help-block">type is required</span>
+	        <span ng-show="errorList.type" class="help-block" ng-bind="errorList.type" />
+	      </div>
+	    </div>
+	    <div ng-show="model.config.parameters">
+	      <h4>Transformer Parameters</h4>
+	      <div ng-repeat="name in model.config.parameters" class="control-group">
+	        <label class="control-label">{{ name }}</label>
+	        <div class="controls">
+	          <input ng-model="model.params[name]" name="{{ name }}" type='text' />
+	        </div>
+	        <span ng-show="errorList.params" class="help-block" ng-bind="errorList.params" />
+	      </div>
+	    </div>
+    </form>
+  </div>
+
+  <div class="modal-footer">
+    <button ng-click="save(['type', 'params', 'feature_id'])" ng-disabled="Form.$invalid" class="btn btn-primary">Edit type</button> <small>and train it</small>
+  </div>
+</div>

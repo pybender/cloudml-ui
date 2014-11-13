@@ -5,7 +5,7 @@
 describe "logmessages", ->
 
   beforeEach(module "ngCookies")
-  beforeEach(module "ui")
+  beforeEach(module "ngRoute")
   beforeEach(module "ui.bootstrap")
 
   beforeEach(module "app.base")
@@ -21,7 +21,7 @@ describe "logmessages", ->
   settings = null
   $routeParams = null
   $location = null
-  $dialog = null
+  $modal = null
   createController = null
 
   beforeEach(inject(($injector) ->
@@ -31,7 +31,7 @@ describe "logmessages", ->
     $controller = $injector.get('$controller')
     $routeParams = $injector.get('$routeParams')
     $location = $injector.get('$location')
-    $dialog = $injector.get('$dialog')
+    $modal = $injector.get('$modal')
 
     spyOn($location, 'path')
 
@@ -51,9 +51,11 @@ describe "logmessages", ->
 
     it "should set options", inject () ->
       createController "LogMessageListCtrl"
+      $rootScope.load = jasmine.createSpy()
       $rootScope.init()
       expect($rootScope.log_levels).toBeDefined()
       expect($rootScope.log_level).toBeDefined()
+      expect($rootScope.load).toHaveBeenCalled()
 
     it "should call 'load' method", inject () ->
       createController "LogMessageListCtrl"
@@ -64,5 +66,5 @@ describe "logmessages", ->
       $rootScope.log_level = 'WARNING'
       $rootScope.setLogLevel()
 
-      expect($rootScope.kwargs['level']).toBe('WARNING')
+      expect($rootScope.params['level']).toBe('WARNING')
       expect($rootScope.load).toHaveBeenCalled()

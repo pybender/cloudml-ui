@@ -89,7 +89,7 @@
       </div>
       <div class="row">
         <div class="span11">
-        Text:<textarea class="small" ui-codemirror="$root.codeMirrorConfigs(false)['sql']" ng-model="sqoop.text" ui-refresh="sqoop" />
+        Text:<textarea class="small cml-codemirror-refresh" ui-codemirror="$root.codeMirrorConfigs(false)['sql']" ng-model="sqoop.text" />
         </div>
       </div>
       <a ng-disabled="sqoop.loading_state" ng-click="sqoop.saveText()" class="btn btn-info">
@@ -114,12 +114,15 @@
       <div ng-init="queries_run_sql={}">
         SQL:
         <p>
-        <textarea class="small" ui-codemirror="$root.codeMirrorConfigs(false)['sql']" ng-model="entity.query_obj.text" ui-refresh="entity.query_obj" />
+        <textarea class="small cml-codemirror-refresh" ui-codemirror="$root.codeMirrorConfigs(false)['sql']" ng-model="entity.query_obj.text" />
         </p>
         <a ng-disabled="entity.query_obj.loading_state" ng-click="saveQueryText()(entity.query_obj);" class="btn btn-info">
           <i class="status-icon icon-edit"></i> save text
         </a>
-        <a ng-disabled="entity.query_obj.loading_state" ng-click="runQuery({'queryObj':entity.query_obj});" class="btn btn-info">
+        <a class="btn btn-info"
+           ng-disabled="entity.query_obj.loading_state"
+           ng-click="runQuery({'queryObj':entity.query_obj});"
+           ng-show="entity.datasource.type == 'db'">
           <i class="icon-play"></i> Run Query
         </a>
       </div>
@@ -165,7 +168,7 @@
                     <th width="80px">Type</th>
                     <th>Column</th>
                     <th>Jsonpath</th>
-                    <th>Join</th>
+                    <th>Delimiter</th>
                     <th>Regex</th>
                     <th>Split</th>
                     <th title="Date Format">Format</th>
@@ -193,7 +196,7 @@
                       <span title="jsonpath" class="jsonpath" ng-bind="field.jsonpath || 'no jsonpath'" editable="field" value="field.jsonpath" editable-field="jsonpath" editable-input="text" editable-placement="right"></span>
                     </td>
                     <td>
-                      <span title="join" class="join" ng-bind="field.join || 'no join'" editable="field" value="field.join" editable-field="join" editable-input="text" editable-placement="right"></span>
+                      <span title="delimiter (join)" class="delimiter" ng-bind="field.delimiter || 'no delimiter'" editable="field" value="field.delimiter" editable-field="delimiter" editable-input="text" editable-placement="right"></span>
                     </td>
                     <td>
                       <span title="regex" class="regex" ng-bind="field.regex || 'no regex'" editable="field" value="field.regex" editable-field="regex" editable-input="text" editable-placement="right"></span>

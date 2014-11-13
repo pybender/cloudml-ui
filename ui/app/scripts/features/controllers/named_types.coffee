@@ -21,13 +21,9 @@ angular.module('app.features.controllers.named_types', ['app.config', ])
 # Controller for adding/edditing feature types with dialog.
 .controller('FeatureTypeEditCtrl', [
   '$scope'
-  '$routeParams'
-  '$filter'
-  '$location'
-  'NamedFeatureType'
   'Parameters'
 
-($scope, $routeParams, $filter, $location, NamedFeatureType, Parameters) ->
+($scope, Parameters) ->
   $scope.config = {}
   $scope.paramsConfig = {}
   $scope.requiredParams = []
@@ -83,10 +79,9 @@ angular.module('app.features.controllers.named_types', ['app.config', ])
 
 .controller('FeatureTypeListCtrl', [
   '$scope'
-  '$dialog'
   'NamedFeatureType'
 
-  ($scope, $dialog, NamedFeatureType) ->
+  ($scope, NamedFeatureType) ->
     $scope.MODEL = NamedFeatureType
     $scope.FIELDS = NamedFeatureType.MAIN_FIELDS
     $scope.ACTION = 'loading named feature types'
@@ -95,8 +90,7 @@ angular.module('app.features.controllers.named_types', ['app.config', ])
     $scope.filter_opts = {'is_predefined': 1}
 
     $scope.edit = (namedType) ->
-      $scope.openDialog({
-        $dialog: $dialog
+      $scope.openDialog($scope, {
         model: namedType
         template: 'partials/features/named_types/edit.html'
         ctrlName: 'ModelEditDialogCtrl'
@@ -104,19 +98,19 @@ angular.module('app.features.controllers.named_types', ['app.config', ])
 
     $scope.add = () ->
       namedType = new NamedFeatureType()
-      $scope.openDialog({
-        $dialog: $dialog
+      $scope.openDialog($scope, {
         model: namedType
         template: 'partials/features/named_types/add.html'
         ctrlName: 'ModelEditDialogCtrl'
+        action: 'add new named feature type'
       })
 
     $scope.delete = (namedType) ->
-      $scope.openDialog({
-        $dialog: $dialog
+      $scope.openDialog($scope, {
         model: namedType
         template: 'partials/base/delete_dialog.html'
         ctrlName: 'DialogCtrl'
         action: 'delete named feature type'
+        path: namedType.BASE_UI_URL
       })
 ])

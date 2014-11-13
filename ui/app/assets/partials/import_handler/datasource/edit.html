@@ -1,12 +1,12 @@
 <div ng-controller="SaveObjectCtl">
   <div class="modal-header">
-    <button ng-click="dialog.close()" class="close" data-dismiss="modal">×</button>
+    <button ng-click="$dismiss('cancel')" class="close" data-dismiss="modal">×</button>
     <h3>Edit data source <go-to-docs page="import_handler" section="defining-data-sources"></go-to-docs></h3>
   </div>
 
   <div class="modal-body">
-    <ng-include src="'/partials/parts/save_form_messages.html'"></ng-include>
-    <ng-include src="'/partials/import_handler/datasource/form.html'"></ng-include>
+    <ng-include src="'partials/parts/save_form_messages.html'"></ng-include>
+    <ng-include src="'partials/import_handler/datasource/form.html'"></ng-include>
   </div>
 
   <div class="modal-footer">

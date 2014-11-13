@@ -3,7 +3,7 @@ from flask.ext.admin.model.template import macro
 from api import admin
 from api.base.admin import BaseAdmin
 from models import FeatureSet, Feature, NamedFeatureType, \
-    PredefinedClassifier, PredefinedTransformer, PredefinedScaler
+    PredefinedClassifier, PredefinedScaler
 
 
 class FeatureSetAdmin(BaseAdmin):
@@ -69,15 +69,3 @@ class PredefinedScalerAdmin(BaseAdmin):
 
 admin.add_view(PredefinedScalerAdmin(
     name='Scaler', category='Predefined'))
-
-
-class PredefinedTransformerAdmin(BaseAdmin):
-    Model = PredefinedTransformer
-    #column_exclude_list = ('params', )
-    column_formatters = {
-        'created_by': macro('render_fk_link'),
-        'updated_by': macro('render_fk_link'),
-    }
-
-admin.add_view(PredefinedTransformerAdmin(
-    name='Transformer', category='Predefined'))

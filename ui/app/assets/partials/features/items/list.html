@@ -20,6 +20,7 @@
 		<th style="width: 10%;">Is Target</th>
 		<th style="width: 10%;">Required</th>
 		<th style="width: 10%;">Default</th>
+        <th title="feature will not be included in generated JSON, but still active in training and testing">Disabled</th>
 		<th style="width: 100px;min-width:100px;">Actions</th>
 	</tr>
 	</thead>
@@ -59,7 +60,7 @@
 				</div>
 			</td>
 			<td ng-init="params = feature.params">
-		    	<ng-include src="'/partials/parts/params_list.html'"></ng-include>
+		    	<ng-include src="'partials/parts/params_list.html'"></ng-include>
 		    </td>
             <td>
                 <input type="radio" ng-click="makeTarget(feature)" ng-checked="feature.is_target_variable==true" />
@@ -70,12 +71,16 @@
 			<td>
 				<span title="Default Value" class="title" ng-bind="feature.default || ''" editable="feature" value="feature.default || ''" editable-field="default" editable-input="text" editable-placement="right"></span>
 			</td>
-		    <td>
-		    	<a class="btn btn-info" href="#/models/{{ modelObj.id }}/features/{{ modelObj.features_set_id }}/edit/{{ feature.id }}">
-		    		<i class="icon-edit" title="edit" />
-		    	</a>
-			    <button ng-click="deleteModel(feature)" class="btn btn-danger"><i title="Delete your feature. Be careful - you could not recover it!" class="icon-remove"></i></button>
-		    </td>
+      <td>
+        <input type="checkbox" ng-model="feature.disabled" ng-click="toggleFeatureDisabled(feature)"
+               title="feature will not be included in generated JSON, but still active in training and testing">
+      </td>
+      <td>
+        <a class="btn btn-info" href="#/models/{{ modelObj.id }}/features/{{ modelObj.features_set_id }}/edit/{{ feature.id }}">
+          <i class="icon-edit" title="edit" />
+        </a>
+        <button ng-click="deleteModel(feature)" class="btn btn-danger"><i title="Delete your feature. Be careful - you could not recover it!" class="icon-remove"></i></button>
+      </td>
 		</tr>
 	</tbody>
 </table>

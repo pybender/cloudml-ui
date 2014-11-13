@@ -27,10 +27,24 @@
       <th ng-show="model.segments.length">
         Segment
       </th>
-      <th ng-class="{active: sort_by == 'value'}" ng-click="sort('value')">
+      <th ng-class="{active: sort_by == 'value'}" ng-click="sort('value')" ng-show="options.show_model_weights">
         Weight
         <i ng-show="sort_by == 'value' && !asc_order" class="icon-arrow-down"></i>
         <i ng-show="sort_by == 'value' && asc_order" class="icon-arrow-up"></i>
+      </th>
+      <th ng-class="{active: sort_by == 'value2'}" ng-click="sort('value2')" ng-show="options.show_normalized_model_weights">
+        <div style="float:left;">
+          <img src="/img/normalized_weight.png" />
+        </div>
+        <div style="margin-left: 140px;padding: 28px 0;">
+          <i ng-show="sort_by == 'value2' && !asc_order" class="icon-arrow-down"></i>
+          <i ng-show="sort_by == 'value2' && asc_order" class="icon-arrow-up"></i>
+        </div>
+      </th>
+      <th ng-show="options.show_test_weights">
+        <div style="float:left;">
+          Test Weight
+        </div>
       </th>
     </tr>
   </thead>
@@ -40,9 +54,17 @@
       <td ng-show="model.segments.length" title="Segment ID {{ row.segment.id }}">
         {{ row.segment.name }}
       </td>
-      <td>
+      <td ng-show="options.show_model_weights">
         <div class="badge" ng-class="row.css_class">
           {{ row.value }}</div>
+      </td>
+      <td ng-show="options.show_normalized_model_weights">
+        <div class="badge">
+          {{ row.value2 || "N/A" }}</div>
+      </td>
+      <td ng-show="options.show_test_weights">
+        <div class="badge" ng-class="row.css_class">
+          {{ row.test_weight }}</div>
       </td>
     </tr>
   </tbody>
@@ -52,4 +74,4 @@
     </tr>
   </tfoot>
 </table>
-<pagination boundary-links="true" max-size="8" num-pages="pages" current-page="search_form.page"></pagination>
+<pagination boundary-links="true" max-size="8" total-items="pages" page="search_form.page"></pagination>

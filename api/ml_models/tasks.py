@@ -1,8 +1,11 @@
 import logging
+import numpy as np
 from api.amazon_utils import AmazonS3Helper
 from os.path import exists
 from os import makedirs
 from datetime import datetime
+import numpy
+import tempfile
 
 from core.trainer.trainer import Trainer
 from core.trainer.config import FeatureModel
@@ -13,17 +16,18 @@ from api.base.tasks import SqlAlchemyTask
 from api.base.exceptions import InvalidOperationError
 from api.logs.logger import init_logger
 from api.accounts.models import User
-from api.ml_models.models import Model, Weight, WeightsCategory, Segment
+from api.ml_models.models import Model, Weight, WeightsCategory, Segment, \
+    Transformer, get_transformer, ClassifierGridParams
 from api.model_tests.models import TestResult, TestExample
 from api.import_handlers.models import DataSet
-from api.logs.models import LogMessage
+from api.logs.dynamodb.models import LogMessage
 from api.servers.models import Server
 
 db_session = db.session
 
 
 @celery.task(base=SqlAlchemyTask)
-def train_model(dataset_ids, model_id, user_id):
+def train_model(dataset_ids, model_id, user_id, delete_metadata=False):
     """
     Train new model celery task.
     """
@@ -34,9 +38,7 @@ def train_model(dataset_ids, model_id, user_id):
     model = Model.query.get(model_id)
     datasets = DataSet.query.filter(DataSet.id.in_(dataset_ids)).all()
     logging.info('Model: %s' % model.name)
-
     try:
-        delete_metadata = model.status != model.STATUS_NEW
         model.comparable = False
         model.datasets = datasets
         model.status = model.STATUS_TRAINING
@@ -46,28 +48,33 @@ def train_model(dataset_ids, model_id, user_id):
 
         if delete_metadata:
             logging.info('Remove old model data on retrain model')
-            LogMessage.delete_related_logs(model)  # rem logs from mongo
+            LogMessage.delete_related_logs(model.id)  # rem logs from mongo
             count = TestExample.query.filter(
-                TestExample.model_id==model.id).delete(
-                synchronize_session=False)
+                TestExample.model_id == model.id).delete(
+                    synchronize_session=False)
             logging.info('%s tests examples to delete' % count)
             count = TestResult.query.filter(
-                TestResult.model_id==model.id).delete(
-                synchronize_session=False)
+                TestResult.model_id == model.id).delete(
+                    synchronize_session=False)
             logging.info('%s tests to delete' % count)
             db_session.commit()
 
             count = Weight.query.filter(
-                Weight.model_id==model.id).delete(
-                synchronize_session=False)
+                Weight.model_id == model.id).delete(
+                    synchronize_session=False)
             logging.info('%s weights to delete' % count)
             db_session.commit()
 
             count = WeightsCategory.query.filter(
-                WeightsCategory.model_id==model.id).delete(
-                synchronize_session=False)
+                WeightsCategory.model_id == model.id).delete(
+                    synchronize_session=False)
             logging.info('%s weight categories to delete' % count)
-            db_session.commit() 
+
+            count = Segment.query.filter(
+                Segment.model_id == model_id).delete(
+                    synchronize_session=False)
+            logging.info('%s segments to delete' % count)
+            db_session.commit()
 
         logging.info('Perform model training')
         feature_model = FeatureModel(model.get_features_json(),
@@ -94,12 +101,13 @@ def train_model(dataset_ids, model_id, user_id):
         #mem_usage = memory_usage((trainer.train,
         #                          (train_iter,)), interval=0)
         train_begin_time = datetime.utcnow()
+
+        trainer.set_transformer_getter(get_transformer)
         trainer.train(train_iter)
 
         mem_usage = memory_usage(-1, interval=0, timeout=None)
         trainer.clear_temp_data()
 
-        model.status = model.STATUS_TRAINED
         model.set_trainer(trainer)
         model.save()
         model.memory_usage = max(mem_usage)
@@ -128,28 +136,68 @@ def train_model(dataset_ids, model_id, user_id):
 
 
 @celery.task(base=SqlAlchemyTask)
+def get_classifier_parameters_grid(grid_params_id):
+    grid_params = ClassifierGridParams.query.get(grid_params_id)
+    grid_params.status = 'Calculating'
+    grid_params.save()
+    feature_model = FeatureModel(
+        grid_params.model.get_features_json(), is_file=False)
+    trainer = Trainer(feature_model)
+
+    def _get_iter(dataset):
+        fp = None
+        if fp:
+            fp.close()
+        fp = dataset.get_data_stream()
+        for row in dataset.get_iterator(fp):
+            yield row
+        if fp:
+            fp.close()
+
+    clfs = trainer.grid_search(
+        grid_params.parameters,
+        _get_iter(grid_params.train_dataset),
+        _get_iter(grid_params.test_dataset),
+        score='accuracy')
+    grids = {}
+    for segment, clf in clfs.iteritems():
+        grids[segment] = [{
+            'parameters': item.parameters,
+            'mean': item.mean_validation_score,
+            'std': np.std(item.cv_validation_scores)}
+            for item in clf.grid_scores_]
+    grid_params.parameters_grid = grids
+    grid_params.status = 'Completed'
+    grid_params.save()
+    return "grid_params done"
+
+
+@celery.task(base=SqlAlchemyTask)
 def fill_model_parameter_weights(model_id, segment_id=None):
     """
     Adds model parameters weights to db.
     """
     init_logger('trainmodel_log', obj=int(model_id))
-    logging.info("Starting to fill model weights" )
+    logging.info("Starting to fill model weights")
 
     model = Model.query.get(model_id)
     if model is None:
         raise ValueError('Model not found: %s' % model_id)
 
-    segment = Segment.query.get(segment_id)
+    if segment_id is None:
+        segment = Segment.query.filter_by(model=model).first()
+    else:
+        segment = Segment.query.get(segment_id)
     if segment is None:
         raise ValueError('Segment not found: %s' % segment_id)
 
-    count = len(model.weights)
+    count = len(segment.weights)
     if count > 0:
-        raise InvalidOperationError('Weights for model %s already  filled: %s' %
-                                    (model_id, count))
+        raise InvalidOperationError(
+            'Weights for model %s already  filled: %s' %
+            (model_id, count))
 
     weights_dict = None
-    categories_names = []
 
     def process_weights_for_class(class_label):
         """
@@ -178,20 +226,29 @@ def fill_model_parameter_weights(model_id, segment_id=None):
         weight_list.sort(key=lambda a: abs(a['weight']))
         weight_list.reverse()
 
+        from collections import defaultdict
+        tree = defaultdict(dict)
+        tree['weights'] = []
+        categories_names = []
+
         # Adding weights and weights categories to db
         for weight in weight_list:
             name = weight['name']
             splitted_name = name.split('->')
             long_name = ''
             count = len(splitted_name)
+            current = tree
             for i, sname in enumerate(splitted_name):
                 parent = long_name
                 long_name = '%s.%s' % (long_name, sname) \
                     if long_name else sname
                 if i == (count - 1):
+                    # The leaf of the split (last element) is not a category,
+                    # it is the actual weight
                     new_weight = Weight()
                     new_weight.name = weight['name'][0:199]
                     new_weight.value = weight['weight']
+                    new_weight.value2 = weight['feature_weight']
                     new_weight.is_positive = bool(weight['weight'] > 0)
                     new_weight.css_class = weight['css_class']
                     new_weight.parent = parent
@@ -199,13 +256,17 @@ def fill_model_parameter_weights(model_id, segment_id=None):
                     new_weight.model_name = model.name
                     new_weight.model = model
                     new_weight.segment = segment
-                    new_weight.class_label = class_label
+                    new_weight.class_label = str(class_label)
                     new_weight.save(commit=False)
                     w_added += 1
+
+                    current['weights'].append(new_weight)
                 else:
-                    if sname not in categories_names:
+                    # Intermediate elements of the split, are actual categories
+                    # except of the last one (which is the actual weight)
+                    if long_name not in categories_names:
                         # Adding a category, if it has not already added
-                        categories_names.append(sname)
+                        categories_names.append(long_name)
                         category = WeightsCategory()
                         category.name = long_name
                         category.parent = parent
@@ -213,9 +274,35 @@ def fill_model_parameter_weights(model_id, segment_id=None):
                         category.model_name = model.name
                         category.model = model
                         category.segment = segment
+                        category.class_label = str(class_label)
                         category.save(commit=False)
                         cat_added += 1
+                        current['subcategories'][sname] = {
+                            'category': category,
+                            'weights': [],
+                            'subcategories': {}}
+                    current = current['subcategories'][sname]
+
+        # Calculating categories normalized weight
+        def calc_tree_item(tree_item, parent=None):
+            for category_name, item in tree_item.iteritems():
+                if 'category' in item:
+                    category = item['category']
+                    normalized_weight = 0
+                    for w in item['weights']:
+                        normalized_weight += w.value2
+                        w.category = category
+                    category.normalized_weight = normalized_weight
+                    if parent:
+                        parent.normalized_weight += normalized_weight
+                    if 'subcategories' in item:
+                        calc_tree_item(item['subcategories'], category)
+
+        calc_tree_item(tree['subcategories'])
         return cat_added, w_added
+
+    model.status = model.STATUS_FILLING_WEIGHTS
+    model.save()
 
     try:
         weights_dict = model.get_trainer().get_weights(segment.name)
@@ -230,6 +317,7 @@ def fill_model_parameter_weights(model_id, segment_id=None):
             classes_processed += 1
 
         db.session.commit()
+        model.status = model.STATUS_TRAINED
         model.weights_synchronized = True
         model.save()
         msg = 'Model %s parameters weights was added to db. %s weights, ' \
@@ -240,4 +328,108 @@ def fill_model_parameter_weights(model_id, segment_id=None):
     except Exception, exc:
         logging.exception('Got exception when fill_model_parameter: %s', exc)
         raise
+    return msg
+
+
+@celery.task(base=SqlAlchemyTask)
+def transform_dataset_for_download(model_id, dataset_id):
+    model = Model.query.get(model_id)
+    dataset = DataSet.query.get(dataset_id)
+
+    init_logger('transform_for_download_log', obj=int(dataset_id))
+    logging.info('Starting Transform For Download Task')
+
+    transformed = model.transform_dataset(dataset)
+
+    logging.info('Saving transformed data to disk')
+    temp_file = tempfile.NamedTemporaryFile()
+    numpy.savez_compressed(temp_file, **transformed)
+
+    s3_filename = "dataset_{0}_vectorized_for_model_{1}.npz".format(
+        dataset.id, model.id)
+
+    s3 = AmazonS3Helper()
+    logging.info('Uploading file {0} to s3 with name {1}...'.format(
+        temp_file.name, s3_filename))
+    s3.save_key(s3_filename, temp_file.name, {
+        'model_id': model.id,
+        'dataset_id': dataset.id}, compressed=False)
+    s3.close()
+    return s3.get_download_url(s3_filename, 60 * 60 * 24 * 7)
+
+
+@celery.task(base=SqlAlchemyTask)
+def train_transformer(dataset_ids, transformer_id, user_id,
+                      delete_metadata=False):
+    """
+    Train the transformer celery task.
+    """
+    init_logger('traintransformer_log', obj=int(transformer_id))
+    logging.info('Start training transformer task')
+
+    user = User.query.get(user_id)
+    transformer = Transformer.query.get(transformer_id)
+    datasets = DataSet.query.filter(DataSet.id.in_(dataset_ids)).all()
+    logging.info('Transformer: %s' % transformer.name)
+
+    try:
+        transformer.datasets = datasets
+        transformer.status = transformer.STATUS_TRAINING
+        transformer.error = ""
+        transformer.trained_by = user
+        transformer.save(commit=True)
+
+        # TODO: what about models that use this transformer?
+        if delete_metadata:
+            logging.info('Remove logs on retrain transformer')
+            LogMessage.delete_related_logs(transformer.id)
+
+        logging.info('Perform transformer training')
+        path = app.config['DATA_FOLDER']
+        if not exists(path):
+            makedirs(path)
+
+        trainer = {}
+
+        def _chain_datasets(ds_list):
+            fp = None
+            for d in ds_list:
+                if fp:
+                    fp.close()
+                fp = d.get_data_stream()
+                for row in d.get_iterator(fp):
+                    yield row
+            if fp:
+                fp.close()
+
+        train_iter = _chain_datasets(datasets)
+
+        from memory_profiler import memory_usage
+        train_begin_time = datetime.utcnow()
+        trainer = transformer.train(train_iter)
+
+        mem_usage = memory_usage(-1, interval=0, timeout=None)
+        #trainer.clear_temp_data()
+
+        transformer.status = transformer.STATUS_TRAINED
+        transformer.set_trainer(trainer)
+        transformer.save()
+        transformer.memory_usage = max(mem_usage)
+        transformer.train_records_count = int(sum((
+            d.records_count for d in transformer.datasets)))
+        train_end_time = datetime.utcnow()
+        transformer.training_time = int(
+            (train_end_time - train_begin_time).seconds)
+        transformer.save()
+    except Exception, exc:
+        db_session.rollback()
+
+        logging.exception('Got exception when train transformer')
+        transformer.status = transformer.STATUS_ERROR
+        transformer.error = str(exc)[:299]
+        transformer.save()
+        raise
+
+    msg = "Transformer trained"
+    logging.info(msg)
     return msg

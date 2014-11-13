@@ -1,5 +1,5 @@
 <div class="modal-header">
-    <button ng-click="close()" class="close" data-dismiss="modal">×</button>
+    <button ng-click="$dismiss('cancel')" class="close" data-dismiss="modal">×</button>
     <h3>Load Data</h3>
     <p class="lead">Please enter import data parameters.</p>
 </div>
@@ -8,7 +8,7 @@
 
 <div class="modal-body">
 <form name="DialogForm" class="form-horizontal">
-   <div ng-repeat="param in params" class="control-group">
+   <div ng-repeat="param in params track by $index" class="control-group">
       <label class="control-label">{{ param | capfirst }}:</label>
       <div class="controls"  ng-class="{error: DialogForm.parameters[param].$invalid}">
         <input ng-model='parameters[param]' name="{{ param }}" placeholder='Please input {{ param }}' type='text' required />

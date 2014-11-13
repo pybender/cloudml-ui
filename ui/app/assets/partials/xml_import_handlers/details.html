@@ -24,7 +24,7 @@
 </h2>
 
 <div title="quick info" ng-init="obj=handler">
-  <ng-include src="'/partials/parts/created_tags.html'"></ng-include>
+  <ng-include src="'partials/parts/created_tags.html'"></ng-include>
 </div>
 <p></p>
 
@@ -43,19 +43,17 @@
   <div ng-show="action[0] == 'model'">
     <p class="switcher">
       <b>Switch View: </b>
-      <a ng-class="{active: action[1] == 'details'}" ng-click="setSection(['model', 'details'])">Standart</a> | 
+      <a ng-class="{active: action[1] == 'details'}" ng-click="setSection(['model', 'details'])">Standard</a> | 
       <a ng-class="{active: action[1] == 'xml'}" ng-click="setSection(['model', 'xml']);">XML File</a>
     </p>
     <div ng-show="action[1] == 'details'">
-      <div class="accordion">
+      <accordion close-others="false">
 
           <!-- datasources -->
-        <div class="accordion-group" ng-controller="DatasourcesListCtrl" ng-init="init(handler)">
-          <div class="accordion-heading">
-            <a class="accordion-toggle" data-toggle="collapse" href="#datasouces">DataSources</a>
-          </div>
-          <div id="datasouces" class="accordion-body collapse in">
-            <div class="accordion-inner">
+        <accordion-group is-open="true">
+          <accordion-heading>DataSources</accordion-heading>
+          <div id="datasouces" ng-controller="DatasourcesListCtrl" ng-init="init(handler)">
+            <div>
               <div class="actions">
                 <a class="btn btn-info" ng-click="add()">
                   <i class="status-icon icon-plus"></i> add datasource
@@ -67,8 +65,8 @@
                     <tr>
                       <th>Name</th>
                       <th>Type</th>
-                      <th>Parameters</th>
-                      <th>Actions</th>
+                      <th ng-show="handler.can_edit">Parameters</th>
+                      <th ng-show="handler.can_edit">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -79,10 +77,10 @@
                       <td>
                         {{ item.type }}
                       </td>
-                      <td>
-                        {{ item.params| json }} 
+                      <td ng-show="handler.can_edit">
+                        {{ item.params | json }} 
                       </td>
-                      <td>
+                      <td ng-show="handler.can_edit">
                           <button ng-click="edit(item)" class="btn btn-info">
                             <i title="Edit datasource" class="icon-edit"></i>
                           </button>
@@ -99,15 +97,13 @@
               </div>
             </div>
           </div>
-        </div>
+        </accordion-group>
 
         <!-- inputs -->
-        <div class="accordion-group" ng-controller="InputParametersListCtrl" ng-init="init(handler)">
-          <div class="accordion-heading">
-            <a class="accordion-toggle" data-toggle="collapse" href="#inputs">Input Parameters</a>
-          </div>
-          <div id="inputs" class="accordion-body collapse in">
-            <div class="accordion-inner">
+        <accordion-group is-open="true">
+          <accordion-heading>Input Parameters</accordion-heading>
+          <div id="inputs" ng-controller="InputParametersListCtrl" ng-init="init(handler)">
+            <div>
               <div class="actions">
                 <a class="btn btn-info" ng-click="add(handler)">
                   <i class="status-icon icon-plus"></i> add parameter
@@ -150,34 +146,29 @@
               </div>
             </div>
           </div>
-        </div>
+        </accordion-group>
 
         <!-- scripts -->
-        <div class="accordion-group" ng-controller="ScriptsListCtrl" ng-init="init(handler)">
-          <!--
-            TODO: nader20140708 this is the new form of accordion headers with button in the head if needed.
-            please propagate when needed
-          -->
-          <div class="accordion-heading">
+        <accordion-group is-open="true">
+          <div  ng-controller="ScriptsListCtrl" ng-init="init(handler)">
+          <accordion-heading>
             <div class="row">
-              <div class="span8">
-                <a class="accordion-toggle" data-toggle="collapse" href="#scripts">Scripts</a>
-              </div>
+              <div class="span8">Scripts</div>
               <div class="span3 pull-right">
                 <div class="actions button-in-header">
-                  <a class="btn btn-info" ng-click="add(handler)">
+                  <a class="btn btn-info" ng-click="add(handler)" stop-event="click">
                     <i class="status-icon icon-plus"></i> add script
                   </a>
                 </div>
               </div>
             </div>
-          </div>
-          <div id="scripts" class="accordion-body collapse in">
-            <div class="accordion-inner" ng-controller="BaseListCtrl" ng-init="init(false, 'xml_scripts', false)">
+          </accordion-heading>
+          <div id="scripts">
+            <div ng-controller="BaseListCtrl" ng-init="init(false, 'xml_scripts', false)">
               <div ng-repeat="item in objects">
                 <div class="row">
                   <div class="span9">
-                    <textarea class="small" ui-codemirror="codeMirrorConfigs('nocursor')['python']" ng-model="item.data" />
+                    <textarea class="small" ui-codemirror="codeMirrorConfigs('nocursor')['python']" ng-model="item.data" class="cml-codemirror-refresh" />
                   </div>
                   <div class="span2">
                     <button ng-click="edit(item)" class="btn btn-info">
@@ -195,14 +186,13 @@
 
             </div>
           </div>
-        </div>
+          </div>
+        </accordion-group>
 
         <!-- imports -->
-        <div class="accordion-group" ng-controller="EntitiesTreeCtrl" ng-init="init(handler)">
-          <div class="accordion-heading">
-            <a class="accordion-toggle" data-toggle="collapse" href="#imports">Import</a>
-          </div>
-          <div id="imports" class="accordion-body collapse in">
+        <accordion-group is-open="true">
+          <accordion-heading>Import</accordion-heading>
+          <div id="imports" ng-controller="EntitiesTreeCtrl" ng-init="init(handler)">
             <entities-tree handler="handler" entity="objects"
                            add-entity="addEntity"
                            add-field="addField"
@@ -214,7 +204,7 @@
                            add-sqoop="addSqoop"
                            delete-sqoop="delete"></entities-tree>
           </div>
-        </div>
+        </accordion-group>
 
         <!-- predict -->
         <div class="accordion-group">
@@ -279,13 +269,13 @@
                   Predict Model:
                   <span class="value">
                     {{ label.predict_model.name }}
-                  <span />
+                  </span>
                 </div>
                 <div>
                   Script:
                   <span class="value">
                     {{ label.script }}
-                  <span />
+                  </span>
                 </div>
               </div>
               <div class="span5">
@@ -295,37 +285,37 @@
                   Predict Model:
                   <span class="value">
                     {{ probability.predict_model.name }}
-                  <span />
+                  </span>
                 </div>
                 <div>
                   Script:
                   <span class="value">
                     {{ probability.script }}
-                  <span />
+                  </span>
                 </div>
                 <div>
                   Label:
                   <span class="value">
                     {{ probability.label }}
-                  <span />
+                  </span>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        </accordion-group>
 
-      </div>
+      </accordion>
     </div>
   </div>
 
-  <div ng-show="action[1] == 'xml'">
-    <textarea name="data" ui-codemirror="codeMirrorConfigs(true)['xml']" ui-refresh="action" ng-model="handler.xml"></textarea>
+  <div ng-show="action[1] == 'xml'" cml-has-codemirror="action[1] == 'xml'">
+    <textarea name="data" ui-codemirror="codeMirrorConfigs(true)['xml']" ng-model="handler.xml" class="cml-codemirror-refresh"></textarea>
   </div>
   </div>
 
   <div ng-show="action[0] == 'dataset'">
     <div ng-controller="DatasetListCtrl" ng-init="init(handler)">
-      <ng-include src="'/partials/datasets/list.html'"></ng-include>
+      <ng-include src="'partials/datasets/list.html'"></ng-include>
     </div>
   </div>
 </div>

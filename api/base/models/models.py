@@ -19,7 +19,9 @@ class BaseMixin(JsonSerializableMixin):
         from ..utils import convert_name
         return convert_name(cls.__name__)
 
-    def _set_user(self, user):
+    def _set_user(self, user=None):
+        if has_request_context():
+            user = getattr(request, 'user', None)
         if user:
             self.updated_by = user
             if self.id is None:

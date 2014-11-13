@@ -9,6 +9,7 @@ UPLOAD_FOLDER = 'models'
 DATA_FOLDER = './data'
 MAX_CONTENT_LENGTH = 128 * 1024 * 1024
 DEBUG = False
+TEST_MODE = False
 
 # Celery specific settings
 CELERY_TASK_SERIALIZER = 'json'

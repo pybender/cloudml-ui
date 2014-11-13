@@ -97,16 +97,20 @@ class TestExampleData(DataSet):
         test_name = "Test-1"
         model_name = "TrainedModel"
         weighted_data_input = {}
-        prob = [0.123, 0.5]
+        prob = [0.6, 0.4]
         example_id = "1"
         num = 0
         model = ModelData.model_01
         test_result = TestResultData.test_01
         data_input = {
             'opening_id': "201913099",
+            'employer->country': 'USA',
             'contractor->dev_blurb': "Over ten years experience successfully "
                                      "performing a number of data entry"
                                      " and clerical tasks.",
+            'contractor->dev_timezone': "",
+            "employer->op_country_tz": "",
+            "employer->op_timezone": "",
             'tsexams': {
                 'Some Exam': 5.0
             }
@@ -122,14 +126,18 @@ class TestExampleData(DataSet):
         test_name = "Test-1"
         model_name = "TrainedModel"
         weighted_data_input = {}
-        prob = [0.123, 0.5]
+        prob = [0.1, 0.9]
         example_id = "1a"
         num = 1
         model = ModelData.model_01
         test_result = TestResultData.test_01
         data_input = {
-            'opening_id': "201913099"
+            'opening_id': "201913099",
+            'employer->country': 'Canada'
         }
+        weighted_data_input = {
+            'opening_id': "201913099",
+            'employer->country': 'Canada'}
 
     class test_example_03:
         created_on = "2013-04-19 14:37:23.145000"
@@ -140,13 +148,14 @@ class TestExampleData(DataSet):
         test_name = "Test-1"
         model_name = "TrainedModel"
         weighted_data_input = {}
-        prob = [0.123, 0.5]
+        prob = [0.05, 0.95]
         example_id = "2"
         num = 3
         model = ModelData.model_01
         test_result = TestResultData.test_01
         data_input = {
-            'opening_id': "201913099"
+            'opening_id': "201913099",
+            'employer->country': 'USA'
         }
 
     class test_example_04:
@@ -158,14 +167,15 @@ class TestExampleData(DataSet):
         test_name = "Test-2"
         model_name = "TrainedModel"
         weighted_data_input = {}
-        prob = [0.123, 0.5]
+        prob = [0.5, 0.5]
         example_id = "3"
         on_s3 = True
         num = 0
         model = ModelData.model_01
         test_result = TestResultData.test_02
         data_input = {
-            'opening_id': "201913099"
+            'opening_id': "201913099",
+            'employer->country': 'USA'
         }
 
     class test_example_05:
@@ -177,7 +187,7 @@ class TestExampleData(DataSet):
         test_name = "Test-1"
         model_name = "OtherModel"
         weighted_data_input = {}
-        prob = [0.123, 0.5]
+        prob = [0.5, 0.5]
         example_id = "4"
         num = 0
         model = ModelData.model_01
@@ -201,5 +211,6 @@ class TestExampleData(DataSet):
         model = ModelData.model_01
         test_result = TestResultData.test_02
         data_input = {
-            'opening_id': "201913099"
+            'opening_id': "201913099",
+            'employer->country': 'Ukraine'
         }

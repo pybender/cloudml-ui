@@ -1,6 +1,9 @@
 import logging
+import uuid
+from boto.dynamodb2.table import Table
 
 import boto.ec2
+from boto.exception import JSONResponseError
 from boto.s3.key import Key
 
 from api import app
@@ -17,6 +20,9 @@ class AmazonEMRHelper(object):    # pragma: no cover
 
     def terminate_jobflow(self, jobflowid):
         self.conn.terminate_jobflow(jobflowid)
+
+    def describe_jobflow(self, jobflowid):
+        return self.conn.describe_jobflow(jobflowid)
 
 
 class AmazonEC2Helper(object):    # pragma: no cover
@@ -35,7 +41,7 @@ class AmazonEC2Helper(object):    # pragma: no cover
     def request_spot_instance(self, instance_type='m3.xlarge'):
         request = self.conn.request_spot_instances(
             price="1",
-            image_id='ami-4e36567e',#'ami-14c05a24',#'ami-68c85358',#'ami-a068f590',#'ami-78b42948',#'ami-65821055',#'ami-a7f96b97',#"ami-f0af86b5",#"ami-66c8e123",
+            image_id='ami-71d49241',#'ami-4e36567e',#'ami-14c05a24',#'ami-68c85358',#'ami-a068f590',#'ami-78b42948',#'ami-65821055',#'ami-a7f96b97',#"ami-f0af86b5",#"ami-66c8e123",
             security_group_ids=["sg-1dc1dc71",],#["sg-534f5d3f", ],
             instance_type=instance_type,
             placement="us-west-2a",
@@ -182,3 +188,103 @@ class AmazonS3Helper(object):
         if bucket is None:
             bucket = self.conn.create_bucket(self.bucket_name)
         return bucket
+
+
+class AmazonDynamoDBHelper(object):
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super(AmazonDynamoDBHelper, cls).__new__(
+                                cls, *args, **kwargs)
+        return cls._instance
+
+    def __init__(self, token=None, secret=None):
+        self.token = token or app.config['AMAZON_ACCESS_TOKEN']
+        self.secret = secret or app.config['AMAZON_TOKEN_SECRET']
+        self._conn = None
+        self._tables = {}
+
+    @property
+    def conn(self):
+        if not self._conn:
+            from boto import dynamodb2
+            from boto.dynamodb2.layer1 import DynamoDBConnection
+
+            if app.config.get('TEST_DYNAMODB'):
+                self._conn = boto.dynamodb2.connect_to_region(
+                    'us-west-2', aws_access_key_id="ak",
+                    aws_secret_access_key="sk")
+            elif app.config.get('LOCAL_DYNAMODB'):
+                # Local DynamoDB (see dynamodb_local.sh)
+                self._conn = DynamoDBConnection(
+                    host='localhost',
+                    port=8000,
+                    aws_access_key_id='any',
+                    aws_secret_access_key='any',
+                    is_secure=False)
+            else:
+                # Real DynamoDB connection
+                self._conn = dynamodb2.connect_to_region(
+                    'us-west-1',
+                    aws_access_key_id=self.token,
+                    aws_secret_access_key=self.secret)
+        return self._conn
+
+    def _get_table(self, table_name):
+        if not table_name in self._tables:
+            self._refresh_tables_list()
+
+        return self._tables[table_name]
+
+    def _refresh_tables_list(self):
+        from boto.dynamodb2.table import Table
+        self._tables = {}
+        for table_name in self.conn.list_tables()['TableNames']:
+            table = Table(table_name, connection=self.conn)
+            table.describe()
+            self._tables[table_name] = table
+
+    def put_item(self, table_name, data):
+        table = self._get_table(table_name)
+        return table.put_item(data=data, overwrite=True)
+
+    def delete_items(self, table_name, **kwargs):
+        table = self._get_table(table_name)
+        res = table.query_2(**kwargs)
+        with table.batch_write() as batch:
+            for item in res:
+                batch.delete_item(**item.get_keys())
+
+    def delete_item(self, table_name, **kwargs):
+        table = self._get_table(table_name)
+        table.delete_item(**kwargs)
+
+    def batch_write(self, table_name, data_list):
+        table = self._get_table(table_name)
+        with table.batch_write() as batch:
+            for data in data_list:
+                batch.put_item(data=data)
+
+    def get_item(self, table_name, **kwargs):
+        table = self._get_table(table_name)
+        return table.get_item(**kwargs)._data
+
+    def get_items(self, table_name, limit=None, reverse=True, query_filter=None,
+                  **kwargs):
+        table = self._get_table(table_name)
+        res = table.query_2(reverse=reverse, limit=limit,
+                            max_page_size=100, query_filter=query_filter,
+                            consistent=True, **kwargs)
+
+        return [i._data for i in res]
+
+    def create_table(self, table_name, schema):
+        self._refresh_tables_list()
+        if not table_name in self._tables:
+            try:
+                table = Table.create(table_name, connection=self.conn,
+                                     schema=schema)
+                self._tables[table_name] = table
+            except JSONResponseError as ex:
+                logging.exception(str(ex))

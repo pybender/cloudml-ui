@@ -8,6 +8,7 @@ from os import makedirs
 
 from boto.exception import S3ResponseError
 from sqlalchemy.orm import relationship, deferred, backref, validates
+from sqlalchemy.ext.hybrid import hybrid_property
 
 from api import app
 from api.amazon_utils import AmazonS3Helper

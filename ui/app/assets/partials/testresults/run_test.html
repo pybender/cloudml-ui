@@ -5,19 +5,29 @@
   </div>
 
   <div class="modal-body">
-    <ng-include src="'/partials/parts/save_form_messages.html'"></ng-include>
+    <ng-include src="'partials/parts/save_form_messages.html'"></ng-include>
     <alert-message ng-hide="handler" class="alert-error" msg="Please define Test Import Handler in model details before!" unsafe></alert-message>
     <alert-message ng-show="Form.$invalid" class="alert-error" msg="Not all required fields are filled" unsafe></alert-message>
 
     <form name="Form" class="form-horizontal" ng-show="handler">
       <h4 class="text-center">Choose way of getting testing data</h4>
       <div class="well">
-        <ng-include src="'/partials/datasets/dataset_fields.html'"></ng-include>
+        <ng-include src="'partials/datasets/dataset_fields.html'"></ng-include>
       </div>
 
       <h4 class="text-center">then choose amazon instance</h4>
       <div class="well">
-        <ng-include src="'/partials/aws_instances/instance_fields.html'"></ng-include>
+        <ng-include src="'partials/aws_instances/instance_fields.html'"></ng-include>
+      </div>
+
+      <div class="alert alert-info">
+        <div class="control-group" ng-class="{error: Form.fill_weights.$invalid || errorList.fill_weights}">
+          <label class="checkbox">
+            <input type="checkbox" ng-model="data.fill_weights" /> I want to save weights of the parameters.
+          </label>
+          <span ng-show="Form.fill_weights.$error.required" class="help-inline">*</span>
+          <span ng-show="errorList.fill_weights" class="help-inline" ng-bind="errorList.fill_weights" />
+        </div>
       </div>
     </form>
   </div>

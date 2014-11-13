@@ -12,16 +12,17 @@ angular.module('app.datas.controllers', ['app.config', ])
   'Model'
 
 ($scope, $rootScope, $location, Data, Model) ->
-  $scope.filter_opts = $location.search() # Used in ObjectListCtrl.
+  $scope.filter_opts = $location.search() or {} # Used in ObjectListCtrl.
   $scope.simple_filters = {} # Filters by label and pred_label
   $scope.data_filters = [] # Filters by data_input.* fields
   $scope.loading_state = false
-  $scope.sort_by = 'example_id'
-  $scope.asc_order = true
+  $scope.sort_by = $scope.filter_opts['sort_by'] or ''
+  $scope.asc_order = $scope.filter_opts['order'] != 'desc'
 
   $scope.init = (test, extra_params={'action': 'examples:list'}) ->
     $scope.extra_params = extra_params
     $scope.test = test
+    $scope.loading_state = true
     $scope.test.$load(
         show: 'name,examples_fields'
     ).then ((opts) ->
@@ -37,7 +38,7 @@ angular.module('app.datas.controllers', ['app.config', ])
         $scope.loading_state = false
     ), ((opts) ->
         $scope.setError(opts, 'loading test details')
-        $scope.loading_state = true
+        $scope.loading_state = false
     )
 
     $scope.model = new Model({id: $scope.test.model_id})
@@ -56,10 +57,12 @@ angular.module('app.datas.controllers', ['app.config', ])
       $scope.loading_state = true
       opts.sort_by = $scope.sort_by
       opts.order = if $scope.asc_order then 'asc' else 'desc'
-      Data.$loadAll($scope.test.model_id, $scope.test.id, opts).then((resp) ->
+      Data.$loadAll($scope.test.model_id, $scope.test.id, opts)
+      .then (resp) ->
         $scope.loading_state = false
         return resp
-      )
+      , ->
+        $scope.loading_state = false
 
   $scope.sort = (sort_by) ->
     if $scope.sort_by == sort_by
@@ -69,6 +72,8 @@ angular.module('app.datas.controllers', ['app.config', ])
       # Change sort by field
       $scope.asc_order = true
       $scope.sort_by = sort_by
+    $location.search($scope.getParamsDict())
+    # TODO: nader20140916, what is this? @
     @load()
 
   $scope.addFilter = () ->
@@ -82,7 +87,22 @@ angular.module('app.datas.controllers', ['app.config', ])
         data_filters[item.name] = item.value
     $scope.filter_opts = _.extend($scope.simple_filters, data_filters,
                                   $scope.extra_params)
-    $location.search($scope.filter_opts)
+    $location.search($scope.getParamsDict())
+
+  $scope.details = (example) ->
+    $location.url(example.objectUrl()).search($scope.getParamsDict())
+
+  $scope.getParamsDict = () ->
+    sort_opts = {
+      sort_by: $scope.sort_by
+      order: if $scope.asc_order then 'asc' else 'desc'
+    }
+    res = _.extend(sort_opts, $scope.filter_opts)
+    delete res['action']
+    return res
+
+  $scope.getExampleUrl = (example) ->
+    example.objectUrl() + '?' + $.param($scope.getParamsDict())
 ])
 
 .controller('GroupedExamplesCtrl', [
@@ -129,9 +149,10 @@ angular.module('app.datas.controllers', ['app.config', ])
 .controller('ExampleDetailsCtrl', [
   '$scope'
   '$routeParams'
+  '$location'
   'Data'
 
-($scope, $routeParams, TestExample) ->
+($scope, $routeParams, $location, TestExample) ->
   if not $scope.data
     $scope.data = new TestExample({
       model_id: $routeParams.model_id,
@@ -139,68 +160,147 @@ angular.module('app.datas.controllers', ['app.config', ])
       id: $routeParams.id
     })
 
-  $scope.data.$load(
-    show: ['test_name','weighted_data_input','model',
-           'pred_label','label','prob','created_on','test_result'
-    ].join(',')
-  ).then (->
-    ), ((opts)->
+  # used for getting next/prev example ids
+  $scope.filter_opts = $location.search()
+  $scope.loaded = false
+
+  $scope.goSection = () ->
+    if $scope.loaded
+      return
+
+    loadParams = _.extend(
+      {show: ['test_name','weighted_data_input','model', 'pred_label',
+              'label','prob', 'created_on', 'test_result', 'next', 'previous',
+              'parameters_weights', 'data_input'].join(',')}, $scope.filter_opts)
+    $scope.data.$load loadParams
+    .then ->
+      $scope.loaded = true
+    , (opts)->
+      $scope.loaded = false
       $scope.setError(opts, 'loading test example')
-    )
+
+  $scope.initSections($scope.goSection)
+
+  $scope.next = ->
+    $scope.redir({
+      next: true
+    })
+
+  $scope.previous = ->
+    $scope.redir({
+      next: false
+    })
+
+  $scope.back = ->
+    $location.url($scope.data.listUrl())\
+      .search(_.extend({action: 'examples:list'}, $scope.filter_opts))
+
+  $scope.redir = (opts) ->
+    if opts.next
+      example_id = $scope.data.next
+    else
+      example_id = $scope.data.previous
+
+    if !example_id?
+      throw new Error('ERR: Prev or Next should be disabled!')
+
+    example = new TestExample({
+      model_id: $routeParams.model_id,
+      test_id: $routeParams.test_id,
+      id: example_id
+    })
+    $location.url(example.objectUrl()).search($scope.filter_opts)
 ])
 
+# TODO: rename because it used for export to DB elso
 # Choose fields to download classification results in CSV dialog controller
 .controller('CsvDownloadCtrl', [
   '$scope'
-  'dialog'
+  'openOptions'
   'Data'
   '$location'
   '$rootScope'
 
-  ($scope, dialog, Data, $location, $rootScope) ->
+  ($scope, openOptions, Data, $location, $rootScope) ->
     # Field list to be displayed in choose field select
     $scope.selectFields = []
+    $scope.extraData = {}
 
     $scope.csvField = ''
-    $scope.csvFields = ['name', 'id', 'label', 'pred_label', 'prob']
-    $scope.show = 'name,id,label,pred_label,prob'
+    $scope.stdFields = ['label', 'pred_label', 'prob']
+    $scope.extraFields = []
 
     $scope.loading_state = true
 
-    $scope.test = dialog.model
+    $scope.test = openOptions.model
     Data.$loadFieldList($scope.test.model_id,
       $scope.test.id)
-    .then ((opts) ->
-      $scope.selectFields = ("data_input." + x for x in opts.fields)
+    .then (opts) ->
+      $scope.extraFields = opts.fields
+      $scope.selectFields = []
       $scope.loading_state = false
-    ), ((opts) ->
+    , (opts) ->
       $scope.setError(opts, 'loading data field list')
       $scope.loading_state = false
-    )
 
-    $scope.appendField = () ->
-      if !!$scope.csvField
-        $scope.csvFields.push $scope.csvField
-        $scope.show = $scope.csvFields.join(',')
+    $scope.appendField = (csvField) ->
+      # TODO: Why do we not see csvField from scope in the controller?
+      $scope.csvField = csvField
+      if !!$scope.csvField and $scope.csvField not in $scope.extraFields and
+          $scope.csvField in $scope.selectFields
+        $scope.extraFields.push $scope.csvField
         $scope.selectFields = $scope.selectFields.filter (f) ->
             f isnt $scope.csvField
+        $scope.selectFields = _.sortBy $scope.selectFields, (f)-> f
         $scope.csvField = ''
 
+    $scope.addAll = ()->
+      for field in $scope.selectFields
+        if field not in $scope.extraFields
+          $scope.extraFields.push field
+      $scope.selectFields = []
+
     $scope.removeField = (fieldname) ->
-      $scope.csvFields = $scope.csvFields.filter (f) ->
+      $scope.extraFields = $scope.extraFields.filter (f) ->
         f isnt fieldname
-      $scope.show = $scope.csvFields.join(',')
-      $scope.selectFields.push fieldname
+      if fieldname not in  $scope.selectFields
+        $scope.selectFields.push fieldname
+        $scope.selectFields = _.sortBy $scope.selectFields, (f)-> f
+
+    $scope.removeAll = ()->
+      for field in $scope.extraFields
+        if field not in  $scope.selectFields
+          $scope.selectFields.push field
+      $scope.extraFields = []
+      $scope.selectFields = _.sortBy $scope.selectFields, (f)-> f
 
     $scope.getExamplesCsv = () ->
       $scope.loading_state = true
-      @test.$get_examples_csv(@show).then((resp) ->
+      fields = $scope.stdFields.concat $scope.extraFields
+      $scope.test.$get_examples_csv(fields)
+      .then () ->
         $scope.loading_state = false
         $location.search('action=about:details')
         $scope.close()
         $rootScope.$broadcast 'exportsChanged'
-      )
+      , (opts) ->
+        $scope.setError(opts, 'failed submitting csv generation request')
+        $scope.loading_state = false
+
+    $scope.exportExamplesToDb = () ->
+      $scope.loading_state = true
+      fields = $scope.stdFields.concat $scope.extraFields
+      $scope.test.$get_examples_db(
+        _.extend {'fields': fields}, $scope.extraData)
+      .then () ->
+        $scope.loading_state = false
+        $location.search('action=about:details')
+        $scope.close()
+        $rootScope.$broadcast 'exportsChanged'
+      , (opts) ->
+        $scope.setError(opts, 'failed submitting export to db request')
+        $scope.loading_state = false
 
     $scope.close = () ->
-      dialog.close()
+      $scope.$close(true)
   ])

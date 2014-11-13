@@ -1,0 +1,22 @@
+{
+    "request": {
+        "path": "/cloudml/auth/get_user",
+        "method": "POST"
+    },
+    "response": {
+        "data": {
+            "user": {
+                "auth_token": "dbed767974d5ec018f92ec6afdbf9692b47f94f6d151dfe3944bb81b",
+                "created_on": "2014-08-21 19:45:54.473869",
+                "id": 4,
+                "name": "Protractor Bot",
+                "odesk_url": "https://www.odesk.com/users/~protractor_bot",
+                "portrait_32_img": "https://odesk-prod-portraits.s3.amazonaws.com/Users:nsoliman:PortraitUrl_32?AWSAccessKeyId=1XVAX3FNQZAFC9GJCFR2&Expires=2147483647&Signature=0htc2JllMUARy962wuWTa0Qk5RY%3D",
+                "email": "protractorbot@zozo.com",
+                "uid": "nsoliman",
+                "updated_on": "2014-08-28 01:03:27.023390"
+            }
+        },
+        "status": 200
+    }
+}
