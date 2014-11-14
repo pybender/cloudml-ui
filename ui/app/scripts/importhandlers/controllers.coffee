@@ -359,26 +359,28 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
 
 .controller('ImportHandlerSelectCtrl', [
   '$scope'
-  'ImportHandler'
-  'XmlImportHandler'
+  '$http'
+  'settings'
+  'auth'
 
-  ($scope, ImportHandler, XmlImportHandler) ->
-    ImportHandler.$loadAll show: 'name'
-    .then (opts) ->
-      $scope.handlers = []
+  ($scope, $http, settings, auth) ->
+    $http(
+      method: 'GET'
+      url: "#{settings.apiUrl}any_importhandlers/"
+      headers: _.extend(settings.apiRequestDefaultHeaders, {
+        'X-Auth-Token': auth.get_auth_token()})
+      params: {show: 'name,type,id'}
+    )
+    .then ((resp) =>
+      data = resp.data.import_handler_for_any_types
       $scope.handlers_list = []
-      $scope.handlers = $scope.handlers.concat opts.objects
-      for h in $scope.handlers
-        $scope.handlers_list.push {value: h.id, text: h.name}
-      XmlImportHandler.$loadAll show: 'name', per_page: 1000
-    .then (opts) ->
-      $scope.handlers = $scope.handlers.concat opts.objects
-      for h in opts.objects
-        item = {value: h.id + "xml", text: h.name + "(xml)"}
-        $scope.handlers_list.push item
-      $scope.handlers_list = _.sortBy $scope.handlers_list, (o)-> o.text
+      for h in data
+        $scope.handlers_list.push {value: h.id + h.type, text: h.name + '(' + h.type + ')'}
+      $scope.handlers_list = _.sortBy $scope.handlers_list, (o) -> o.text
+      console.log data
+    )
     , (opts) ->
-      $scope.setError(opts, 'loading import handler list')
+        $scope.setError(opts, 'loading import handler list')
 ])
 
 .controller('AddImportHandlerQueryCtrl', [

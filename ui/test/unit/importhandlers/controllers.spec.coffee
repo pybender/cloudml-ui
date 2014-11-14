@@ -726,34 +726,24 @@ describe "app.importhandlers.controllers", ->
     it "should make list query", inject () ->
       $rootScope.setError = jasmine.createSpy '$rootScope.setError'
 
-      url = BASE_URL + '?show=name'
-      xml_ih_url = settings.apiUrl + 'xml_import_handlers/?per_page=1000&show=name'
+      url = settings.apiUrl + 'any_importhandlers/' + '?show=name,type,id'
       HANDLER_ID_XML = '123321'
-      $httpBackend.expectGET(url).respond('{"import_handlers": [{"id": "' + HANDLER_ID + '", "name": "Z Some Name"}]}')
-      $httpBackend.expectGET(xml_ih_url).respond('{"xml_import_handlers": [{"id": "' + HANDLER_ID_XML + '", "name": "A Some Name"}]}')
+      $httpBackend.expectGET(url).respond(
+        '{"import_handler_for_any_types": [{"id": "' + HANDLER_ID_XML + '", "name": "Z Some Name", "type": "xml"}, {"id": "' + HANDLER_ID + '", "name": "J Some Name", "type": "json"}]}')
 
       createController "ImportHandlerSelectCtrl"
       $httpBackend.flush()
 
-      expect($scope.handlers.length).toBe(2)
-      expect($scope.handlers_list[0].value).toBe(HANDLER_ID_XML+'xml')
-      expect($scope.handlers_list[0].text).toBe("A Some Name(xml)")
-      expect($scope.handlers_list[1].value).toBe(HANDLER_ID)
-      expect($scope.handlers_list[1].text).toBe("Z Some Name")
+      expect($scope.handlers_list[1].value).toBe(HANDLER_ID_XML+'xml')
+      expect($scope.handlers_list[1].text).toBe("Z Some Name(xml)")
+      expect($scope.handlers_list[0].value).toBe(HANDLER_ID + 'json')
+      expect($scope.handlers_list[0].text).toBe("J Some Name(json)")
 
-      # error handling 1
+      # error handling
       $httpBackend.expectGET(url).respond 400
       createController "ImportHandlerSelectCtrl"
       $httpBackend.flush()
       expect($rootScope.setError.calls.mostRecent().args[1]).toEqual 'loading import handler list'
-
-      # error handling 2
-      $httpBackend.expectGET(url).respond('{"import_handlers": [{"id": "' + HANDLER_ID + '", "name": "Z Some Name"}]}')
-      $httpBackend.expectGET(xml_ih_url).respond 400
-      createController "ImportHandlerSelectCtrl"
-      $httpBackend.flush()
-      expect($rootScope.setError.calls.mostRecent().args[1]).toEqual 'loading import handler list'
-
 
   describe 'AddImportHandlerQueryCtrl', ->
 

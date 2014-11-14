@@ -4,6 +4,7 @@ from sqlalchemy.orm import relationship, deferred, backref, validates
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import undefer, joinedload_all, joinedload
+from sqlalchemy.ext.hybrid import hybrid_property
 
 from import_handlers import ImportHandlerMixin
 from api.base.models import db, BaseMixin, JSONType
