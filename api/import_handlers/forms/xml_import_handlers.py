@@ -270,12 +270,14 @@ class XmlSqoopForm(BaseForm):
 
 
 class PredictModelForm(BaseForm):
-    required_fields = ('name', 'value', 'import_handler_id', 'script')
+    required_fields = ('name', ('value', 'script'), 'import_handler_id')
     NO_REQUIRED_FOR_EDIT = True
 
     name = CharField()
     value = CharField()
     script = CharField()
+    positive_label_value = CharField()
+    positive_label_script = CharField()
     import_handler_id = DocumentField(
         doc=XmlImportHandler, by_name=False, return_doc=True)
 

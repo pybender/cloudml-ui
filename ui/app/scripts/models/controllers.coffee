@@ -337,7 +337,6 @@ angular.module('app.models.controllers', ['app.config', ])
     )
 
     $scope.start = (result) ->
-      console.log $scope.data
       openOptions.model.$classifierGridSearch($scope.data).then (() ->
         $scope.$close(true)
       ), ((opts) ->

@@ -24,10 +24,9 @@ angular.module(
 
 .controller('PredictModelListCtrl', [
   '$scope'
-  '$q'
   'PredictModel'
 
-  ($scope, openOptions, PredictModel) ->
+  ($scope, PredictModel) ->
     $scope.MODEL = PredictModel
     $scope.FIELDS = PredictModel.MAIN_FIELDS
     $scope.ACTION = 'loading predict models'
@@ -45,8 +44,7 @@ angular.module(
         model = new PredictModel({
           import_handler_id: $scope.handler.id
         })
-        $scope.openDialog({
-          $dialog: $dialog
+        $scope.openDialog($scope, {
           model: model
           template: 'partials/xml_import_handlers/predict/edit_model.html'
           ctrlName: 'ModelEditDialogCtrl'
@@ -54,9 +52,8 @@ angular.module(
           list_model_name: "predict_models"
         })
 
-    $scope.delete = (model)->
-      $scope.openDialog({
-        $dialog: $dialog
+    $scope.delete = (model) ->
+      $scope.openDialog($scope, {
         model: model
         template: 'partials/base/delete_dialog.html'
         ctrlName: 'DialogCtrl'

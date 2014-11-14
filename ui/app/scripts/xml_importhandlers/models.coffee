@@ -360,7 +360,7 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
       @LIST_MODEL_NAME: 'predict_models'
       LIST_MODEL_NAME: @LIST_MODEL_NAME
       @ITEM_NAME: 'predict_models'
-      @MAIN_FIELDS: 'id,name,value,script'
+      @MAIN_FIELDS: 'id,name,value,script,positive_label_value,positive_label_script'
 
       id: null
       name: null

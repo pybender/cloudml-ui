@@ -1,6 +1,6 @@
 <div ng-controller="SaveObjectCtl">
   <div class="modal-header">
-    <button ng-click="dialog.close()" class="close" data-dismiss="modal">×</button>
+    <button ng-click="$dismiss('cancel')" class="close" data-dismiss="modal">×</button>
     <h3>Add Predict Model</h3>
   </div>
 
@@ -52,8 +52,6 @@
             <span ng-show="errorList.positive_label_script" class="help-block" ng-bind="errorList.positive_label_script" />
           </div>
         </div>
-        <hr />
-        <h5>Weights</h5>
       </form>
     </div>
 
