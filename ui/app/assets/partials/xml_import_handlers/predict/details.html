@@ -8,56 +8,137 @@
         </a>
       </div>
     </h4>
-    <div ng-controller="BaseListCtrl" ng-init="init(false, 'predict_models', false)">
-      <div ng-repeat="item in objects | orderBy:'name'" class="well">
+    <br/>
+    <ul class="list-style tree" ng-controller="BaseListCtrl" ng-init="init(false, 'predict_models', false)">
+      <li ng-repeat="item in objects | orderBy:'name'">
         <h5>
-            <span title="name" class="value" ng-bind="item.name || 'no name'" editable="item" value="item.name" editable-field="name" editable-input="text" editable-placement="right"></span> Predict Model
-            <div class="actions">
-              <button  class="btn btn-danger">
-                <i title="Delete predict model. Be careful - you could not recover it!" class="icon-remove"></i>
-              </button>
-            </div>
+          <span title="name" class="value" ng-bind="item.name || 'no name'" editable="item" value="item.name" editable-field="name" editable-input="text" editable-placement="right"></span>
+          <div class="actions">
+            <a class="btn btn-info" ng-click="addWeight()">
+              <i class="status-icon icon-plus"></i> add weight
+            </a>
+            <button class="btn btn-danger" ng-click="delete(item)">
+              <i title="Delete predict model. Be careful - you could not recover it!" class="icon-remove"></i> delete predict model
+            </button>
+          </div>
         </h5>
         <hr />
         <div class="row">
-          <div class="span3">
-            Value
+          <div class="span2">Value</div>
+          <div class="span7">
             <span title="" class="value" ng-bind="item.value || 'no value'" editable="item" value="item.value" editable-field="value" editable-input="text" editable-placement="right"></span>
-            <textarea class="small" ui-codemirror="codeMirrorConfigs('nocursor')['python']" ng-model="item.script" ng-show="item.script" class="cml-codemirror-refresh" />
-          </div>
-          <div class="span3">
-            Positive Label
-            <span title="" class="value" ng-bind="item.value || 'no value'" editable="item" value="item.value" editable-field="value" editable-input="text" editable-placement="right"></span>
-            <textarea class="small" ui-codemirror="codeMirrorConfigs('nocursor')['python']" ng-model="item.positive_label_script" ng-show="item.positive_label_script" class="cml-codemirror-refresh" />
           </div>
         </div>
-      </div>
-                    <!-- <td>
-                      
-                    </td>
-                    <td>
-                      
-                    </td>
-                    <td>
-                      <span title="script" class="" ng-bind="item.script || 'no script'" editable="item" value="item.script" editable-field="script" editable-input="textarea" editable-placement="right"></span>
-                    </td>
-                    <td>
-                      {{ item.positive_label_value }}
-                    </td>
-                    <td>
-                      {{ item.positive_label_script }}
-                    </td>
-                    <td>
-                      <button ng-click="delete(item)" class="btn btn-danger">
-                        <i title="Delete predict model. Be careful - you could not recover it!" class="icon-remove"></i>
-                      </button>
-                    </td>
-                  </tr>
-                </tbody>
-                <tfoot ng-hide="objects">
-                  <tr><td colspan="6">No models found</td></tr>
-                </tfoot>
-              </table> -->
+        <div class="row">
+          <div class="span2">Value's Script</div>
+          <div class="span8">
+            <textarea class="small" ui-codemirror="codeMirrorConfigs('nocursor')['python']" ng-model="item.script" class="cml-codemirror-refresh" />
+          </div>
+          <div class="span1">
+            <button ng-click="editScript(item)" class="btn btn-info"><i title="Edit script" class="icon-edit"></i></button>
+          </div>
+        </div>
+        <div class="row">
+          <div class="span2">Positive Label's Value</div>
+          <div class="span7">
+            <span title="" class="value" ng-bind="item.positive_label_value || 'no value'" editable="item" value="item.positive_label_value" editable-field="positive_label_value" editable-input="text" editable-placement="right"></span>
+          </div>
+        </div>
+        <div class="row">
+          <div class="span2">Positive Label's Script</div>
+          <div class="span8">
+            <textarea rows="2" class="small" ui-codemirror="codeMirrorConfigs('nocursor')['python']" ng-model="item.positive_label_script" class="cml-codemirror-refresh" />
+          </div>
+          <div class="span1">
+            <button ng-click="editPositiveLabelScript(item)" class="btn btn-info"><i title="Edit script" class="icon-edit"></i></button>
+          </div>
+        </div>
+        <h5>Weights</h5>
+        <ul>
+          <li ng-repeat="weight in model.predict_model_weights">
+            <h4>
+              <span title="" class="value" ng-bind="item.label || 'no value'" editable="weight" value="weight.label" editable-field="label" editable-input="text" editable-placement="right"></span>
+              <button type="button" class="close p10">×</button>
+            </h4>
+            <hr />
+            <div class="row">
+              <div class="span2">Value</div>
+              <div class="span7">
+                <span title="" class="value" ng-bind="item.value || 'no value'" editable="weight" value="weight.value" editable-field="value" editable-input="text" editable-placement="right"></span>
+              </div>
+            </div>
+            <div class="row">
+              <div class="span2">
+                Script
+              </div>
+              <div class="span5">
+                <textarea class="small" ui-codemirror="codeMirrorConfigs('nocursor')['python']" ng-model="weight.script" class="cml-codemirror-refresh" />
+              </div>
+              <div class="span2">
+                <button ng-click="edit(item)" class="btn btn-info">
+                  <i title="Edit script" class="icon-edit"></i>
+                </button>
+                <button ng-click="delete(item)" class="btn btn-danger">
+                  <i title="Delete script. Be careful - you could not recover it!" class="icon-remove"></i>
+                </button>
+              </div>
+            </div>
+          </li>
+        </ui>
+
+      </li>
+    </ul>
+  </div>
+  <hr />
+  <h4 title="Defines how to formulate the response.">Result</h4>
+  <h5>Label</h5>
+  <alert-message ng-hide="label.predict_model.name || label.script" class="alert-warning" msg="Please define predict model or script which determines it." unsafe></alert-message>
+  <div class="row">
+    <div class="span2">Predict Model</div>
+    <div class="span7">
+      <span title="" class="value" ng-bind="item.predict_model || 'no value'" editable="item" value="item.predict_model" editable-field="predict_model" editable-input="select" editable-placement="right"></span>
+    </div>
+  </div>
+  <div class="row">
+    <div class="span2">Script</div>
+    <div class="span5">
+      <textarea class="small" ui-codemirror="codeMirrorConfigs('nocursor')['python']" ng-model="item.positive_label_script" class="cml-codemirror-refresh" />
+    </div>
+    <div class="span2">
+      <button ng-click="edit(item)" class="btn btn-info">
+        <i title="Edit script" class="icon-edit"></i>
+      </button>
+      <button ng-click="delete(item)" class="btn btn-danger">
+        <i title="Delete script. Be careful - you could not recover it!" class="icon-remove"></i>
+      </button>
+    </div>
+  </div>
+  <h5>Probability</h5>
+  <alert-message ng-hide="probability.predict_model.name || probability.script" class="alert-warning" msg="Please define predict model or script which determines it." unsafe></alert-message>
+  <div class="row">
+    <div class="span2">Predict Model</div>
+    <div class="span7">
+      <span title="" class="value" ng-bind="item.predict_model || 'no value'" editable="item" value="item.predict_model" editable-field="predict_model" editable-input="select" editable-placement="right"></span>
+    </div>
+  </div>
+  <div class="row">
+    <div class="span2">Label</div>
+    <div class="span7">
+      <span title="" class="value" ng-bind="item.positive_label_value || 'no value'" editable="item" value="item.positive_label_value" editable-field="positive_label_value" editable-input="text" editable-placement="right"></span>
+    </div>
+  </div>
+  <div class="row">
+    <div class="span2">Script</div>
+    <div class="span5">
+      <textarea class="small" ui-codemirror="codeMirrorConfigs('nocursor')['python']" ng-model="item.positive_label_script" class="cml-codemirror-refresh" />
+    </div>
+    <div class="span2">
+      <button ng-click="edit(item)" class="btn btn-info">
+        <i title="Edit script" class="icon-edit"></i>
+      </button>
+      <button ng-click="delete(item)" class="btn btn-danger">
+        <i title="Delete script. Be careful - you could not recover it!" class="icon-remove"></i>
+      </button>
     </div>
   </div>
 </div>

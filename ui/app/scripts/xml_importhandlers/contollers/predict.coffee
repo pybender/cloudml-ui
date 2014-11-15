@@ -36,7 +36,6 @@ angular.module(
       $scope.kwargs = {'import_handler_id': handler.id}
       $scope.$watch('handler.predict', (predict, old, scope) ->
         if predict?
-          console.log predict
           $scope.objects = predict.models
       )
 
@@ -59,5 +58,23 @@ angular.module(
         ctrlName: 'DialogCtrl'
         action: 'delete predict model'
         list_model_name: "predict_models"
+      })
+
+    $scope.editScript = (model) ->
+      model.editPositiveLabel = false
+      $scope.openDialog($scope, {
+        model: model
+        template: 'partials/xml_import_handlers/predict/edit_script.html'
+        ctrlName: 'ModelEditDialogCtrl'
+        action: 'edit script'
+      })
+
+    $scope.editPositiveLabelScript = (model) ->
+      model.editPositiveLabel = true
+      $scope.openDialog($scope, {
+        model: model
+        template: 'partials/xml_import_handlers/predict/edit_script.html'
+        ctrlName: 'ModelEditDialogCtrl'
+        action: 'edit script'
       })
 ])

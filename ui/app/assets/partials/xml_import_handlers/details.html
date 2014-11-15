@@ -214,46 +214,6 @@
           <div id="predict" class="accordion-body collapse in">
             <div class="accordion-inner">
               <ng-include src="'partials/xml_import_handlers/predict/details.html'"></ng-include>
-              <hr />
-              <h4 title="Defines how to formulate the response.">Result</h4>
-              <div class="span5">
-                <h5>Label</h5>
-                <alert-message ng-hide="label.predict_model.name || label.script" class="alert-warning" msg="Please define predict model or script which determines it." unsafe></alert-message>
-                <div>
-                  Predict Model:
-                  <span class="value">
-                    {{ label.predict_model.name }}
-                  </span>
-                </div>
-                <div>
-                  Script:
-                  <span class="value">
-                    {{ label.script }}
-                  </span>
-                </div>
-              </div>
-              <div class="span5">
-                <h5>Probability</h5>
-                <alert-message ng-hide="probability.predict_model.name || probability.script" class="alert-warning" msg="Please define predict model or script which determines it." unsafe></alert-message>
-                <div>
-                  Predict Model:
-                  <span class="value">
-                    {{ probability.predict_model.name }}
-                  </span>
-                </div>
-                <div>
-                  Script:
-                  <span class="value">
-                    {{ probability.script }}
-                  </span>
-                </div>
-                <div>
-                  Label:
-                  <span class="value">
-                    {{ probability.label }}
-                  </span>
-                </div>
-              </div>
             </div>
           </div>
         </accordion-group>

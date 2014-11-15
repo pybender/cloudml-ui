@@ -283,6 +283,9 @@ class PredictModelForm(BaseForm):
 
     def save(self, *args, **kwargs):
         model = super(PredictModelForm, self).save(commit=False)
-        predict = self.cleaned_data['import_handler_id'].predict
-        predict.models.append(model)
-        predict.save()
+        handler = self.cleaned_data.get('import_handler_id')
+        if handler is not None:
+            predict = handler.predict
+            predict.models.append(model)
+            predict.save()
+        return model
