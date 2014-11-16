@@ -112,6 +112,16 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
             for model in self.predict.models:
                 predict_model = etree.SubElement(
                     predict, "model", **model.to_dict())
+                pos_lbl_dict = {}
+                if model.positive_label_value:
+                    pos_lbl_dict['value'] = model.positive_label_value
+                if model.positive_label_script:
+                    pos_lbl_dict['script'] = model.positive_label_script
+                if pos_lbl_dict.keys():
+                    etree.SubElement(predict_model, "positive_label",
+                                     **pos_lbl_dict)
+                for weight in model.predict_model_weights:
+                    etree.SubElement(predict_model, "weight", **weight.to_dict())
 
             if self.predict.label or self.predict.probability:
                 result = etree.SubElement(predict, "result")
