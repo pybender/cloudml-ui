@@ -24,9 +24,9 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
 
       @$beforeLoadAll: (opts) ->
         if opts?
-          if not opts.import_handler_id
-            throw new Error "import_handler_id is required"
-          return {import_handler_id: opts.import_handler_id}
+          if opts.import_handler_id?
+            return {import_handler_id: opts.import_handler_id}
+        throw new Error "import_handler_id is required"
 
     return BaseImportHandlerItem
 ])
