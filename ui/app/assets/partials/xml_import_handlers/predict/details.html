@@ -33,7 +33,7 @@
           <div class="row">
             <div class="span2">Value's Script</div>
             <div class="span8">
-              <textarea class="small" ui-codemirror="codeMirrorConfigs('nocursor')['python']" ng-model="item.script" class="cml-codemirror-refresh" />
+              <textarea class="small" ui-codemirror="codeMirrorConfigs('nocursor', 'auto', 70)['python']" ng-model="item.script" class="cml-codemirror-refresh" />
             </div>
             <div class="span1">
               <button ng-click="editScript(item)" class="btn btn-info"><i title="Edit script" class="icon-edit"></i></button>
@@ -48,7 +48,7 @@
           <div class="row">
             <div class="span2">Positive Label's Script</div>
             <div class="span8">
-              <textarea rows="2" class="small" ui-codemirror="codeMirrorConfigs('nocursor')['python']" ng-model="item.positive_label_script" class="cml-codemirror-refresh" />
+              <textarea rows="2" class="small" ui-codemirror="codeMirrorConfigs('nocursor', 'auto', 70)['python']" ng-model="item.positive_label_script" class="cml-codemirror-refresh" />
             </div>
             <div class="span1">
               <button ng-click="editPositiveLabelScript(item)" class="btn btn-info"><i title="Edit script" class="icon-edit"></i></button>
@@ -78,7 +78,7 @@
                     Script
                   </div>
                   <div class="span5">
-                    <textarea class="small" ui-codemirror="codeMirrorConfigs('nocursor')['python']" ng-model="weight.script" class="cml-codemirror-refresh" />
+                    <textarea class="small" ui-codemirror="codeMirrorConfigs('nocursor', 'auto', 70)['python']" ng-model="weight.script" class="cml-codemirror-refresh" />
                   </div>
                   <div class="span2">
                     <button ng-click="editScript(weight)" class="btn btn-info">
@@ -106,7 +106,7 @@
         <div class="row">
           <div class="span2">Script</div>
           <div class="span5">
-            <textarea class="small" ui-codemirror="codeMirrorConfigs('nocursor')['python']" ng-model="label.script" class="cml-codemirror-refresh" />
+            <textarea ui-codemirror="codeMirrorConfigs('nocursor', 'auto', 70)['python']" ng-model="label.script" class="small cml-codemirror-refresh" />
           </div>
           <div class="span2">
             <button ng-click="editScript(label)" class="btn btn-info">
@@ -132,7 +132,7 @@
       <div class="row">
         <div class="span2">Script</div>
         <div class="span5">
-          <textarea class="small" ui-codemirror="codeMirrorConfigs('nocursor')['python']" ng-model="probability.script" class="cml-codemirror-refresh" />
+          <textarea class="small" ui-codemirror="codeMirrorConfigs('nocursor', 'auto', 70)['python']" ng-model="probability.script" class="cml-codemirror-refresh" />
         </div>
         <div class="span2">
           <button ng-click="editScript(probability)" class="btn btn-info">

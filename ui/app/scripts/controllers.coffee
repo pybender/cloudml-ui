@@ -47,7 +47,7 @@ angular.module('app.controllers', ['app.config', ])
     else
       return ''
 
-  $rootScope.codeMirrorConfigs = (readOnly)->
+  $rootScope.codeMirrorConfigs = (readOnly, width=500, height=300)->
     json:
       mode: 'application/json'
       readOnly: readOnly
@@ -60,6 +60,8 @@ angular.module('app.controllers', ['app.config', ])
       lineNumbers: true
       matchBrackets: true
       readOnly: readOnly
+      onLoad : (cm) ->
+        cm.setSize(width, height)
     sql:
       mode: 'text/x-mysql'
       indentWithTabs: true
