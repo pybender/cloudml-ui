@@ -7,6 +7,7 @@
           <input class="input-medium" name="name" ng-model="filter_opts['name']" placeholder="filter by name" />
         </div>
       </th>
+      <th>Import Parameters</th>
       <th>
         Created
         <a ng-click="showCreatedFilter=!showCreatedFilter"><i class="icon-search"></i></a>
@@ -45,6 +46,7 @@
           </span>
         </div>
       </td>
+      <td>{{handler.import_params}}</td>
       <td>
           <span title="dates in GMT">{{ handler.created_on|format_date }}</span><br>
           <small ng-show="handler.created_by">by {{ handler.created_by.name }} ({{ handler.created_by.uid }})</small>

@@ -54,14 +54,14 @@ angular.module('app.xml_importhandlers.controllers', ['app.config', ])
   '$routeParams'
   'XmlImportHandler'
 
-  ($scope, $rootScope, $routeParams, ImportHandler) ->
+  ($scope, $rootScope, $routeParams, XmlImportHandler) ->
     if not $routeParams.id
       throw new Error "Can't initialize without import handler id"
 
-    $scope.handler = new ImportHandler({id: $routeParams.id})
+    $scope.handler = new XmlImportHandler({id: $routeParams.id})
     $scope.LOADED_SECTIONS = []
     $scope.PROCESS_STRATEGIES =
-      _.sortBy ImportHandler.PROCESS_STRATEGIES, (s)-> s
+      _.sortBy XmlImportHandler.PROCESS_STRATEGIES, (s)-> s
 
     $scope.go = (section) ->
       fields = ''
@@ -69,8 +69,8 @@ angular.module('app.xml_importhandlers.controllers', ['app.config', ])
       if mainSection not in $scope.LOADED_SECTIONS
         # is not already loaded
         extraFields = ['xml_data_sources', 'xml_input_parameters', 'xml_scripts',
-                       'entities', 'import_params', 'predict', 'can_edit'].join(',')
-        fields = "#{ImportHandler.MAIN_FIELDS},#{extraFields}"
+                       'entities', 'predict', 'can_edit'].join(',')
+        fields = "#{XmlImportHandler.MAIN_FIELDS},#{extraFields}"
 
       if section[1] == 'xml' then fields = [fields, 'xml'].join(',')
 
@@ -92,9 +92,9 @@ angular.module('app.xml_importhandlers.controllers', ['app.config', ])
   '$scope'
   'XmlImportHandler'
 
-  ($scope, ImportHandler) ->
+  ($scope, XmlImportHandler) ->
     $scope.types = [{name: 'Db'}, {name: 'Request'}]
-    $scope.model = new ImportHandler()
+    $scope.model = new XmlImportHandler()
 ])
 
 

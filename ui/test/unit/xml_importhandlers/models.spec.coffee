@@ -81,7 +81,7 @@ describe 'app.xml_importhandlers.models', ->
     it 'should have XmlImportHandler properties and methods defined', inject (XmlImportHandler)->
 
       expect(XmlImportHandler.LIST_MODEL_NAME).toEqual 'xml_import_handlers'
-      expect(XmlImportHandler.MAIN_FIELDS).toEqual 'id,name,created_on,created_by,updated_on,updated_by'
+      expect(XmlImportHandler.MAIN_FIELDS).toEqual 'id,name,created_on,created_by,updated_on,updated_by,import_params'
 
     it 'can create an instance with predefined properties set', inject (XmlImportHandler)->
       handler = new XmlImportHandler
