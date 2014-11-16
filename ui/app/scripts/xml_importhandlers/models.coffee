@@ -352,27 +352,6 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
 
 # predict models
 
-.factory('PredictModel', [
-  'settings'
-  'BaseImportHandlerItem'
-
-  (settings, BaseImportHandlerItem) ->
-    class PredictModel extends BaseImportHandlerItem
-      API_FIELDNAME: 'predict_model'
-      @LIST_MODEL_NAME: 'predict_models'
-      LIST_MODEL_NAME: @LIST_MODEL_NAME
-      @ITEM_NAME: 'predict_models'
-      @MAIN_FIELDS: 'id,name,value,script,positive_label_value,positive_label_script'
-
-      id: null
-      name: null
-      value: null
-      script: null
-
-    return PredictModel
-])
-
-
 .factory('PredictModelWeight', [
   'settings'
   'BaseImportHandlerItem'
@@ -410,4 +389,40 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
       script: null
 
     return PredictModelWeight
+])
+
+.factory('PredictModel', [
+  'settings'
+  'BaseImportHandlerItem'
+  'PredictModelWeight'
+
+  (settings, BaseImportHandlerItem, PredictModelWeight) ->
+    class PredictModel extends BaseImportHandlerItem
+      API_FIELDNAME: 'predict_model'
+      @LIST_MODEL_NAME: 'predict_models'
+      LIST_MODEL_NAME: @LIST_MODEL_NAME
+      @ITEM_NAME: 'predict_models'
+      @MAIN_FIELDS: 'id,name,value,script,positive_label_value,positive_label_script'
+
+      id: null
+      name: null
+      value: null
+      script: null
+
+      loadFromJSON: (origData) =>
+        super origData
+        
+        if origData?
+          defaults= {
+            predict_model_id: @id
+            predict_model: @
+            import_handler_id: @import_handler_id
+          }
+          if origData.predict_model_weights?
+            @predict_model_weights = []
+            for data in origData.predict_model_weights
+              @predict_model_weights.push new PredictModelWeight(_.extend data, defaults)
+
+
+    return PredictModel
 ])

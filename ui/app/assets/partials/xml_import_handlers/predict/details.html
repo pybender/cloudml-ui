@@ -59,7 +59,11 @@
             <li ng-repeat="weight in objects">
               <h4>
                 <span title="" class="value" ng-bind="weight.label || 'no value'" editable="weight" value="weight.label" editable-field="label" editable-input="text" editable-placement="right"></span>
-                <button type="button" class="close p10">×</button>
+                <div class="actions">
+                  <button class="btn btn-danger" ng-click="deleteWeight(weight)">
+                    <i title="Delete predict model weight. Be careful - you could not recover it!" class="icon-remove"></i> delete weight
+                  </button>
+                </div>
               </h4>
               <hr />
               <div class="row">

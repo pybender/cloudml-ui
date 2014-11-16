@@ -348,4 +348,4 @@ class PredictModelWeightResource(BaseResourceSQL):
 api.add_resource(
     PredictModelWeightResource, '/cloudml/xml_import_handlers/\
 <regex("[\w\.]*"):import_handler_id>/predict_models/\
-<regex("[\w\.]*"):predict_model_id>/weights')
+<regex("[\w\.]*"):predict_model_id>/weights/')

@@ -1,0 +1,39 @@
+<form name="Form" class="form-horizontal" ng-controller="SaveObjectCtl">
+  <div class="modal-header">
+    <button ng-click="$dismiss('cancel')" class="close" data-dismiss="modal">×</button>
+    <h3>Add Predict Model Weight</h3>
+  </div>
+
+  <div class="modal-body">
+    <ng-include src="'/partials/parts/save_form_messages.html'"></ng-include>
+    <div class="control-group" ng-class="{error: Form.label.$invalid || errorList.label}">
+      <label class="control-label">Label</label>
+      <div class="controls">
+        <input type="text" name="name" ng-model="model.label" ng-change="setFieldError('name')" required />
+        <span ng-show="Form.label.$error.required" class="help-inline">*</span>
+        <span ng-show="errorList.label" class="help-block" ng-bind="errorList.label" />
+      </div>
+    </div>
+    <div class="control-group" ng-class="{error: Form.value.$invalid || errorList.value}">
+      <label class="control-label">Value</label>
+      <div class="controls">
+        <input type="text" name="value" ng-model="model.value" ng-change="setFieldError('value')" />
+        <span ng-show="Form.value.$error.required" class="help-inline">*</span>
+        <span ng-show="errorList.value" class="help-block" ng-bind="errorList.value" />
+      </div>
+    </div>
+    <div class="control-group" ng-class="{error: Form.script.$invalid || errorList.script}">
+      <label class="control-label">Script</label>
+      <div class="controls">
+        <textarea name="script" ng-model="model.script">
+        </textarea>
+        <span ng-show="Form.script.$error.required" class="help-inline">*</span>
+        <span ng-show="errorList.script" class="help-block" ng-bind="errorList.script" />
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-footer">
+    <button ng-click="save(['label', 'value', 'script', 'import_handler_id', 'predict_model_id'])" ng-disabled="Form.$invalid" class="btn btn-primary">Save</button>
+  </div>
+</form>

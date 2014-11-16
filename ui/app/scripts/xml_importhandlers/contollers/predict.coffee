@@ -109,4 +109,13 @@ angular.module(
         predict_model_id: predict_model.id}
       if predict_model?
         $scope.objects = predict_model.predict_model_weights
+
+    $scope.deleteWeight = (weight) ->
+      $scope.openDialog($scope, {
+        model: weight
+        template: 'partials/base/delete_dialog.html'
+        ctrlName: 'DialogCtrl'
+        action: 'delete predict model weight'
+        list_model_name: "predict_model_weights"
+      })
 ])
