@@ -371,3 +371,43 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
 
     return PredictModel
 ])
+
+
+.factory('PredictModelWeight', [
+  'settings'
+  'BaseImportHandlerItem'
+
+  (settings, BaseImportHandlerItem) ->
+    class PredictModelWeight extends BaseImportHandlerItem
+      API_FIELDNAME: 'predict_model_weight'
+      @LIST_MODEL_NAME: 'predict_model_weights'
+      LIST_MODEL_NAME: @LIST_MODEL_NAME
+      @ITEM_NAME: 'predict_model_weights'
+      @MAIN_FIELDS: 'id,label,value,script'
+
+      constructor: (opts) ->
+        super opts
+        @BASE_API_URL = PredictModelWeight.$get_api_url({
+          predict_model_id: @predict_model_id
+          import_handler_id: @import_handler_id
+        }, @)
+
+      @$get_api_url: (opts, self) ->
+        if self?
+          model_id = self.predict_model_id
+          import_handler_id = self.import_handler_id
+        else
+          model_id = opts.predict_model_id
+          import_handler_id = opts.import_handler_id
+        if not model_id then throw new Error 'predict_model_id is required'
+        if not import_handler_id then throw new Error 'import_handler_id is required'
+        return "#{settings.apiUrl}xml_import_handlers/#{import_handler_id}/predict_models/\
+#{model_id}/weights/"
+
+      id: null
+      label: null
+      value: null
+      script: null
+
+    return PredictModelWeight
+])

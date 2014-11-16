@@ -25,10 +25,11 @@ angular.module(
 .controller('PredictModelListCtrl', [
   '$scope'
   'PredictModel'
+  'PredictModelWeight'
 
-  ($scope, PredictModel) ->
+  ($scope, PredictModel, PredictModelWeight) ->
     $scope.MODEL = PredictModel
-    $scope.FIELDS = PredictModel.MAIN_FIELDS
+    $scope.FIELDS = PredictModel.MAIN_FIELDS + ',predict_model_weights'
     $scope.ACTION = 'loading predict models'
 
     $scope.init = (handler) ->
@@ -60,6 +61,19 @@ angular.module(
         list_model_name: "predict_models"
       })
 
+    $scope.addWeight = (model) ->
+      weight = new PredictModelWeight({
+          import_handler_id: $scope.handler.id,
+          predict_model_id: model.id
+        })
+      $scope.openDialog($scope, {
+        model: weight
+        template: 'partials/xml_import_handlers/predict/edit_model_weight.html'
+        ctrlName: 'ModelEditDialogCtrl'
+        action: 'add predict model weight'
+        list_model_name: "predict_model_weights"
+      })
+
     $scope.editScript = (model) ->
       model.editPositiveLabel = false
       $scope.openDialog($scope, {
@@ -77,4 +91,22 @@ angular.module(
         ctrlName: 'ModelEditDialogCtrl'
         action: 'edit script'
       })
+])
+
+.controller('PredictModelWeightListCtrl', [
+  '$scope'
+  'PredictModelWeight'
+
+  ($scope, PredictModelWeight) ->
+    $scope.MODEL = PredictModelWeight
+    $scope.FIELDS = PredictModelWeight.MAIN_FIELDS
+    $scope.ACTION = 'loading predict models weights'
+
+    $scope.init = (predict_model) ->
+      $scope.predict_model = predict_model
+      $scope.kwargs = {
+        import_handler_id: predict_model.import_handler_id
+        predict_model_id: predict_model.id}
+      if predict_model?
+        $scope.objects = predict_model.predict_model_weights
 ])

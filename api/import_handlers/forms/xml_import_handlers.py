@@ -1,8 +1,9 @@
 from api.base.forms import BaseForm, CharField, JsonField, \
     ChoiceField, ValidationError, BooleanField, IntegerField, \
-    DocumentField
+    DocumentField, ModelField
 from api.import_handlers.models import XmlImportHandler, XmlDataSource, \
-    XmlInputParameter, XmlScript, XmlEntity, XmlField, XmlQuery, XmlSqoop
+    XmlInputParameter, XmlScript, XmlEntity, XmlField, XmlQuery, XmlSqoop, \
+    PredictModel
 from api import app
 from core.xmlimporthandler.exceptions import ImportHandlerException
 
@@ -289,3 +290,13 @@ class PredictModelForm(BaseForm):
             predict.models.append(model)
             predict.save()
         return model
+
+
+class PredictModelWeightForm(BaseForm):
+    required_fields = ('label', ('value', 'script'), 'predict_model_id')
+    NO_REQUIRED_FOR_EDIT = True
+
+    label = CharField()
+    value = CharField()
+    script = CharField()
+    predict_model_id = ModelField(model=PredictModel)

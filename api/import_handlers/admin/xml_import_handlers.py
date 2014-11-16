@@ -4,7 +4,7 @@ from api import admin
 from api.base.admin import BaseAdmin
 from api.import_handlers.models import XmlScript, XmlQuery, XmlEntity, \
     XmlField, XmlImportHandler, XmlDataSource, XmlInputParameter, XmlSqoop, \
-    Predict, PredictModel
+    Predict, PredictModel, PredictModelWeight
 
 
 class ImportHandlerAdmin(BaseAdmin):
@@ -112,3 +112,12 @@ class PredictModelAdmin(BaseAdmin):
 
 admin.add_view(PredictModelAdmin(
     name='Predict Model', category='Import Handlers'))
+
+
+class PredictModelWeightAdmin(BaseAdmin):
+    MIX_METADATA = False
+    Model = PredictModelWeight
+    column_list = ['id', 'label', 'value', 'script', 'predict_model']
+
+admin.add_view(PredictModelWeightAdmin(
+    name='Predict Model Weight', category='Import Handlers'))

@@ -10,11 +10,11 @@ from api.base.resources import BaseResourceSQL, NotFound, \
 from api import api
 from api.import_handlers.models import XmlImportHandler, XmlInputParameter, \
     XmlEntity, XmlField, XmlDataSource, XmlQuery, XmlScript, XmlSqoop, \
-    Predict, PredictModel
+    Predict, PredictModel, PredictModelWeight
 from api.import_handlers.forms import XmlImportHandlerAddForm, \
     XmlInputParameterForm, XmlEntityForm, XmlFieldForm, XmlDataSourceForm, \
     XmlQueryForm, XmlScriptForm, XmlImportHandlerEditForm, XmlSqoopForm, \
-    PredictModelForm
+    PredictModelForm, PredictModelWeightForm
 from api.servers.forms import ChooseServerForm
 
 
@@ -41,6 +41,7 @@ class XmlImportHandlerResource(BaseResourceSQL):
                 joinedload_all('predict.models'),
                 joinedload('predict.label'),
                 joinedload('predict.probability'),
+                joinedload('predict.models.predict_model_weights'),
                 joinedload('predict.label.predict_model'),
                 joinedload('predict.probability.predict_model'))
         if 'xml_data_sources' in show:
@@ -315,3 +316,36 @@ class PredictModelResource(BaseResourceSQL):
 api.add_resource(
     PredictModelResource, '/cloudml/xml_import_handlers/\
 <regex("[\w\.]*"):import_handler_id>/predict_models/')
+
+
+class PredictModelWeightResource(BaseResourceSQL):
+    """
+    Predict section of XML import handler API methods
+    """
+    put_form = post_form = PredictModelWeightForm
+    Model = PredictModelWeight
+
+    def _get_details_query(self, params, **kwargs):
+        try:
+            handler_id = kwargs.pop('import_handler_id')
+            return self._build_details_query(params, **kwargs)
+        except NoResultFound:
+            return None
+
+    def _get_list_query(self, params, **kwargs):
+        handler = self._get_handler(kwargs.pop('import_handler_id'))
+        return super(PredictModelWeightResource, self)._get_list_query(params, **kwargs)
+
+    def _get_handler(self, handler_id):
+        if handler_id is None:
+            raise ValidationError('Please specify import handler')
+
+        handler = XmlImportHandler.query.get(handler_id)
+        if handler is None:
+            raise NotFound()
+        return handler
+
+api.add_resource(
+    PredictModelWeightResource, '/cloudml/xml_import_handlers/\
+<regex("[\w\.]*"):import_handler_id>/predict_models/\
+<regex("[\w\.]*"):predict_model_id>/weights')
