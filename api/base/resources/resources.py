@@ -451,6 +451,25 @@ class BaseResourceSQL(BaseResource):
         #print cursor[0]
         return cursor
 
+    def defer_fields(self, Model, cursor, fields):
+        opts = []
+        for field in Model.__table__.columns.keys():
+            if field in fields or field in ('id',):
+                opts.append(undefer(getattr(Model, field)))
+            else:
+                opts.append(defer(getattr(Model, field)))
+        relation_properties = filter(
+            lambda p: isinstance(p, properties.RelationshipProperty),
+            Model.__mapper__.iterate_properties
+        )
+        for field in relation_properties:
+            if field.key in fields:
+                cursor = cursor.options(joinedload_all(
+                    getattr(Model, field.key)))
+        if opts:
+            cursor = cursor.options(*opts)
+        return cursor
+
     def _prepare_show_fields_opts(self, Model, fields):
         opts = []
         for field in Model.__table__.columns.keys():

@@ -71,7 +71,7 @@ describe "testresults", ->
       createController "TestDetailsCtrl"
 
     it "should load 'about' section", inject (TestResult) ->
-      url = BASE_URL + '?show=' + TestResult.EXTRA_FIELDS + ',examples_placement,' + TestResult.MAIN_FIELDS
+      url = BASE_URL + '?show=' + TestResult.EXTRA_FIELDS + ',examples_placement,fill_weights,' + TestResult.MAIN_FIELDS
       $httpBackend.expectGET(url).respond('{"test": {}}')
 
       $rootScope.goSection(['about', 'details'])
@@ -80,7 +80,7 @@ describe "testresults", ->
       expect($rootScope.setSection).toHaveBeenCalled()
 
     it "should load 'metrics' section", inject (TestResult) ->
-      url = BASE_URL + '?show=' + 'accuracy,metrics,roc_auc' + ',examples_placement,' + TestResult.MAIN_FIELDS
+      url = BASE_URL + '?show=' + 'accuracy,metrics,roc_auc' + ',examples_placement,fill_weights,' + TestResult.MAIN_FIELDS
       $httpBackend.expectGET(url).respond('{"test": {}}')
 
       $rootScope.goSection(['metrics', 'accuracy'])
@@ -91,7 +91,7 @@ describe "testresults", ->
     it "should load 'metrics' section, old list format, binary classifier before 20140710",
       inject (TestResult) ->
         url = BASE_URL + '?show=' + 'accuracy,metrics,roc_auc' +
-          ',examples_placement,' + TestResult.MAIN_FIELDS
+          ',examples_placement,fill_weights,' + TestResult.MAIN_FIELDS
         $httpBackend.expectGET(url)
         .respond.apply @, map_url_to_response(url,
           'binary classification arrays format before 20140710')
@@ -110,7 +110,7 @@ describe "testresults", ->
     it "should load 'metrics' section for multiclass classifier format after 20140710",
       inject (TestResult) ->
         url = BASE_URL + '?show=' + 'accuracy,metrics,roc_auc' +
-          ',examples_placement,' + TestResult.MAIN_FIELDS
+          ',examples_placement,fill_weights,' + TestResult.MAIN_FIELDS
         $httpBackend.expectGET(url)
         .respond.apply @, map_url_to_response(url,
             'multiclass classification model dict format after 20140710')
@@ -130,7 +130,7 @@ describe "testresults", ->
     it "should load 'metrics' section for multiclass classifier format after 20140907",
       inject (TestResult) ->
         url = BASE_URL + '?show=' + 'accuracy,metrics,roc_auc' +
-          ',examples_placement,' + TestResult.MAIN_FIELDS
+          ',examples_placement,fill_weights,' + TestResult.MAIN_FIELDS
         $httpBackend.expectGET(url)
         .respond.apply @, map_url_to_response(url,
           'multiclass classification model dict format after 20140710')
@@ -150,7 +150,7 @@ describe "testresults", ->
     it "should load 'metrics' section for binary classifier, format after 20140710",
       inject (TestResult) ->
         url = BASE_URL + '?show=' + 'accuracy,metrics,roc_auc' +
-          ',examples_placement,' + TestResult.MAIN_FIELDS
+          ',examples_placement,fill_weights,' + TestResult.MAIN_FIELDS
         $httpBackend.expectGET(url)
         .respond.apply @, map_url_to_response(url,
           'binary classification model dict format after 20140710')
@@ -171,7 +171,7 @@ describe "testresults", ->
     it "should load 'metrics' section for binary classifier, format after 20140907",
       inject (TestResult) ->
         url = BASE_URL + '?show=' + 'accuracy,metrics,roc_auc' +
-          ',examples_placement,' + TestResult.MAIN_FIELDS
+          ',examples_placement,fill_weights,' + TestResult.MAIN_FIELDS
         $httpBackend.expectGET(url)
         .respond.apply @, map_url_to_response(url,
           'binary classification model dict format after 20140907')
@@ -190,7 +190,7 @@ describe "testresults", ->
         expect($rootScope.prCurves['Precision-Recall curve']).toBeDefined()
 
     it "should load 'matrix' section", inject (TestResult) ->
-      url = BASE_URL + '?show=' + TestResult.MATRIX_FIELDS + ',examples_placement,' + TestResult.MAIN_FIELDS
+      url = BASE_URL + '?show=' + TestResult.MATRIX_FIELDS + ',examples_placement,fill_weights,' + TestResult.MAIN_FIELDS
       $httpBackend.expectGET(url).respond('{"test": {}}')
 
       $rootScope.goSection(['matrix', 'confusion'])

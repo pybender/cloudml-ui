@@ -190,7 +190,7 @@ angular.module('app.features.models', ['app.config'])
       API_FIELDNAME: 'feature'
       @MAIN_FIELDS: ['id','name','type','input_format','transformer','params',
                      'scaler','default','is_target_variable','created_on',
-                     'created_by','required'].join(',')
+                     'created_by','required', 'disabled'].join(',')
 
       id: null
       name: null
@@ -213,13 +213,13 @@ angular.module('app.features.models', ['app.config'])
           if origData.transformer? && Object.keys(origData.transformer).length
             @transformer = new Transformer(
               _.extend origData.transformer, defaultData)
-          else
+          else if not @transformer # when partial saving don't reset the transformer
             @transformer = new Transformer(defaultData)
 
           if origData.scaler? && Object.keys(origData.scaler).length
             @scaler = new Scaler(
               _.extend origData.scaler, defaultData)
-          else
+          else if not @scaler # when partial saving don't reset the scaler
             @scaler = new Scaler(defaultData)
 
           if origData.required?

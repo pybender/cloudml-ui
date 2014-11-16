@@ -4,7 +4,6 @@ from fixture import DataSet
 class FeatureSetData(DataSet):
     class bestmatch:
         schema_name = 'bestmatch'
-        features_dict = {"schema-name": "bestmatch", "features": [], "feature-types": []}
 
 
 class FeatureData(DataSet):
@@ -62,6 +61,13 @@ class FeatureData(DataSet):
         params = {"mappings": {"class2": 0, "class1": 1}}
         type = "map"
         feature_set_id = FeatureSetData.bestmatch.ref('id')
+
+    class disabled_feature:
+        name = 'disabled_feature'
+        type = 'int'
+        #features_set = FeatureSetData.bestmatch
+        feature_set_id = FeatureSetData.bestmatch.ref('id')
+        disabled = True
 
 
 class PredefinedScalerData(DataSet):

@@ -1,0 +1,72 @@
+<table class="table table-hover">
+  <thead>
+    <tr>
+      <th>Name
+        <a ng-click="showNameFilter=!showNameFilter"><i class="icon-search"></i></a>
+        <div ng-show="showNameFilter || filter_opts['name']">
+          <input class="input-medium" name="name" ng-model="filter_opts['name']" placeholder="filter by name" />
+        </div>
+      </th>
+      <th>Import Parameters</th>
+      <th>
+        Created
+        <a ng-click="showCreatedFilter=!showCreatedFilter"><i class="icon-search"></i></a>
+        <div ng-show="showCreatedFilter || filter_opts['created_by']">
+          <input class="input-medium" name="created_by" ng-model="filter_opts['created_by']" placeholder="Input user uid" />
+        </div>
+      </th>
+      <th>
+        Updated
+        <span ng-show="modelName=='xml_import_handlers'">
+        <a ng-click="showUpdatedFilter=!showUpdatedFilter"><i class="icon-search"></i></a>
+        <span ng-show="showUpdatedFilter || filter_opts['updated_by']"><br/>
+          <input name="updated_by" ng-model="filter_opts['updated_by']" class="input-medium" placeholder="Input user uid" />
+        </span>
+        </span>
+      </th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody ng-show="objects.length == 0">
+    <tr>
+      <td colspan="6">
+        <alert-message ng-show="objects.length == 0" class="alert-info" msg="No import handlers found"></alert-message>
+      </td>
+    </tr>
+  </tbody>
+  <tbody ng-hide="objects.length == 0">
+    <tr ng-repeat="handler in objects" ng-class="{success : model.status=='Trained', warning : model.status =='New', info : model.status =='Training', error : model.status =='Error'}">
+      <td>
+        <a href="#{{ handler.objectUrl() }}">{{ handler.name }}</a>
+        <div title="tags">
+          <span ng-repeat="tag in handler.tags">
+            <span class="badge">
+              <a href="#/models/?tag={{ tag }}" style="color: white;">{{ tag }}</a>
+            </span> 
+          </span>
+        </div>
+      </td>
+      <td>{{handler.import_params}}</td>
+      <td>
+          <span title="dates in GMT">{{ handler.created_on|format_date }}</span><br>
+          <small ng-show="handler.created_by">by {{ handler.created_by.name }} ({{ handler.created_by.uid }})</small>
+      </td>
+      <td>
+          <span title="dates in GMT">{{ handler.updated_on|format_date }}</span><br>
+          <small ng-show="handler.updated_by">by {{ handler.updated_by.name }} ({{ handler.updated_by.uid }})</small>
+      </td>
+      <td ng-controller="ImportHandlerActionsCtrl">
+        <button ng-show="handler.type == 'Db'" ng-click="importData(handler)" class="btn btn-info">
+          <i title="Import Data" class="icon-tasks"></i>
+        </button>
+        <button ng-click="uploadHandlerToPredict(handler)" class="btn btn-info">
+          <i title="Upload for Predict" class="icon-upload"></i>
+        </button>
+        <button ng-click="delete(handler)" class="btn btn-danger">
+          <i title="Delete your handler. Be careful - you could not recover it!" class="icon-remove"></i>
+        </button>
+      </td>
+    </tr>
+  </tbody>
+  </table>
+  <a ng-show="has_next" ng-click="showMore()">Load More...</a>

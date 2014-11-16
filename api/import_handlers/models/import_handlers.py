@@ -12,6 +12,10 @@ IMPORT_HANDLER_TYPES = ('xml', 'json')
 class ImportHandlerMixin(BaseModel):
     TYPE = 'N/A'
 
+    @property
+    def type(self):
+        return self.TYPE
+
     @declared_attr
     def name(cls):
         return db.Column(db.String(200), nullable=False, unique=True)

@@ -183,7 +183,7 @@ class ImportHandlerField(CharField):  # pragma: no cover
                 from api.models import XmlImportHandler
                 value = XmlImportHandler.query.get(
                     value.replace('xml', ''))
-            else:
+            elif 'json' in value:
                 from api.models import ImportHandler
-                value = ImportHandler.query.get(value)
+                value = ImportHandler.query.get(value.replace('json', ''))
         return value

@@ -207,6 +207,7 @@ class FeatureForm(BaseForm, FeatureParamsMixin):
     is_target_variable = BooleanField()
     feature_set_id = DocumentField(doc=FeatureSet, by_name=False,
                                    return_doc=False)
+    disabled = BooleanField()
 
     transformer = FeatureTransformerForm(
         Model=Transformer,

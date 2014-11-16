@@ -257,9 +257,9 @@ describe 'app.features.controllers', ->
 
     model = null
     feature = null
-    beforeEach inject (NamedFeatureType)->
+    beforeEach inject (Feature)->
       model = {id: 123, name: 'model123'}
-      feature = new NamedFeatureType {id: 999, name: 'feature_name', is_required: false, feature_set_id: 888}
+      feature = new Feature {id: 999, name: 'feature_name', is_required: false, feature_set_id: 888}
       $rootScope.setError = jasmine.createSpy '$rootScope.setError'
       $rootScope.openDialog = jasmine.createSpy '$rootScope.openDialog'
 
@@ -311,6 +311,48 @@ describe 'app.features.controllers', ->
       .respond 400
       $scope.makeRequired feature, true
       $httpBackend.flush()
+
+      expect($scope.setError.calls.mostRecent().args[1]).toEqual 'updating feature'
+
+    it 'should toggle feature disabled and handle http errors', ->
+      createController 'FeatureActionsCtrl'
+      expect($scope.makeRequired).toEqual jasmine.any(Function)
+      $scope.$emit = jasmine.createSpy '$scope.$emit'
+
+      scaler = {type: 'scaler type'}
+      transformer = {type: 'transformer type'}
+      feature.disabled = true
+      feature.scaler = scaler
+      feature.transformer = transformer
+      response = {}
+      response[feature.API_FIELDNAME] = {"feature": {"id": 999, "name": "feature_name"}}
+      $httpBackend.expectPUT "#{feature.BASE_API_URL}#{feature.id}/"
+      .respond 200, angular.toJson response
+      $scope.toggleFeatureDisabled feature
+      $httpBackend.flush()
+      expect(feature.disabled).toBe false
+      expect(feature.scaler).toEqual scaler
+      expect(transformer).toEqual transformer
+
+      expect($scope.$emit).toHaveBeenCalledWith 'updateList', []
+
+      $httpBackend.expectPUT "#{feature.BASE_API_URL}#{feature.id}/"
+      .respond 200, angular.toJson response
+      $scope.toggleFeatureDisabled feature
+      $httpBackend.flush()
+      expect(feature.disabled).toBe true
+      expect(feature.scaler).toEqual scaler
+      expect(transformer).toEqual transformer
+
+      expect($scope.$emit).toHaveBeenCalledWith 'updateList', []
+
+      # error handling
+      feature.disabled = true
+      $httpBackend.expectPUT ""
+      .respond 400
+      $scope.toggleFeatureDisabled feature
+      $httpBackend.flush()
+      expect(feature.disabled).toBe true
 
       expect($scope.setError.calls.mostRecent().args[1]).toEqual 'updating feature'
 
