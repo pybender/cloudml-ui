@@ -300,3 +300,24 @@ class PredictModelWeightForm(BaseForm):
     value = CharField()
     script = CharField()
     predict_model_id = ModelField(model=PredictModel)
+
+
+class PredictResultLabelForm(BaseForm):
+    required_fields = (('predict_model_id', 'script'), 'import_handler_id')
+    NO_REQUIRED_FOR_EDIT = True
+
+    predict_model_id = ModelField(model=PredictModel, return_model=False)
+    script = CharField()
+    import_handler_id = DocumentField(
+        doc=XmlImportHandler, by_name=False, return_doc=True)
+
+
+class PredictResultProbabilityForm(BaseForm):
+    required_fields = ('label', ('predict_model_id', 'script'), 'import_handler_id')
+    NO_REQUIRED_FOR_EDIT = True
+
+    predict_model_id = ModelField(model=PredictModel, return_model=False)
+    label = CharField()
+    script = CharField()
+    import_handler_id = DocumentField(
+        doc=XmlImportHandler, by_name=False, return_doc=True)

@@ -6,9 +6,10 @@ angular.module(
 .controller('PredictCtrl', [
   '$scope'
   'XmlImportHandler'
-  'PredictModel'
+  'PredictLabel'
+  'PredictProbability'
 
-  ($scope, ImportHandler) ->
+  ($scope, ImportHandler, PredictLabel, PredictProbability) ->
     $scope.init = (handler) ->
       $scope.handler = handler
       $scope.kwargs = {'import_handler_id': handler.id}
@@ -16,10 +17,32 @@ angular.module(
         if predict?
           $scope.objects = predict.models
           $scope.predict = predict
-          $scope.label = predict.label
-          $scope.probability = predict.probability
+          if predict.label?
+            predict.label.import_handler_id = handler.id
+            $scope.label = new PredictLabel(predict.label)
+          if predict.probability?
+            predict.probability.import_handler_id = handler.id
+            $scope.probability = new PredictProbability(predict.probability)
+            console.log $scope.probability
       )
-     
+
+    $scope.getModelsList = (models) ->
+      options = []
+      for model in models
+        options.push({
+          value: model.id,
+          text: model.name
+        })
+      return options
+
+    $scope.editScript = (model) ->
+      model.editPositiveLabel = false
+      $scope.openDialog($scope, {
+        model: model
+        template: 'partials/xml_import_handlers/predict/edit_script.html'
+        ctrlName: 'ModelEditDialogCtrl'
+        action: 'edit script'
+      })
 ])
 
 .controller('PredictModelListCtrl', [
@@ -72,15 +95,6 @@ angular.module(
         ctrlName: 'ModelEditDialogCtrl'
         action: 'add predict model weight'
         list_model_name: "predict_model_weights"
-      })
-
-    $scope.editScript = (model) ->
-      model.editPositiveLabel = false
-      $scope.openDialog($scope, {
-        model: model
-        template: 'partials/xml_import_handlers/predict/edit_script.html'
-        ctrlName: 'ModelEditDialogCtrl'
-        action: 'edit script'
       })
 
     $scope.editPositiveLabelScript = (model) ->

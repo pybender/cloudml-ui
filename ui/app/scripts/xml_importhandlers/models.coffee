@@ -426,3 +426,71 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
 
     return PredictModel
 ])
+
+.factory('PredictLabel', [
+  'settings'
+  'BaseImportHandlerItem'
+  'PredictModel'
+
+  (settings, BaseImportHandlerItem, PredictModel) ->
+    class PredictLabel extends BaseImportHandlerItem
+      API_FIELDNAME: 'predict_label'
+      @LIST_MODEL_NAME: 'predict_labels'
+      LIST_MODEL_NAME: @LIST_MODEL_NAME
+      @ITEM_NAME: 'predict_labels'
+      @MAIN_FIELDS: 'id,predict_model,script'
+
+      id: null
+      predict_model: null
+      script: null
+
+      loadFromJSON: (origData) =>
+        super origData
+        
+        if origData?
+          defaults= {
+            result_label_id: @id
+            result_label: @
+            import_handler_id: @import_handler_id
+          }
+          if origData.predict_model?
+            @predict_model = new PredictModel(_.extend origData.predict_model, defaults)
+
+
+    return PredictLabel
+])
+
+
+.factory('PredictProbability', [
+  'settings'
+  'BaseImportHandlerItem'
+  'PredictModel'
+
+  (settings, BaseImportHandlerItem, PredictModel) ->
+    class PredictProbability extends BaseImportHandlerItem
+      API_FIELDNAME: 'predict_probability'
+      @LIST_MODEL_NAME: 'predict_probabilities'
+      LIST_MODEL_NAME: @LIST_MODEL_NAME
+      @ITEM_NAME: 'predict_probabilities'
+      @MAIN_FIELDS: 'id,predict_model,script, label'
+
+      id: null
+      predict_model: null
+      label: null
+      script: null
+
+      loadFromJSON: (origData) =>
+        super origData
+        
+        if origData?
+          defaults= {
+            result_probability_id: @id
+            result_probability: @
+            import_handler_id: @import_handler_id
+          }
+          if origData.predict_model?
+            @predict_model = new PredictModel(_.extend origData.predict_model, defaults)
+
+
+    return PredictProbability
+])
