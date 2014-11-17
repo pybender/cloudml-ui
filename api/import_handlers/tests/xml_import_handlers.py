@@ -10,10 +10,11 @@ from api.servers.fixtures import ServerData
 from api.servers.models import Server
 from ..views import XmlImportHandlerResource, XmlEntityResource,\
     XmlDataSourceResource, XmlInputParameterResource, XmlFieldResource,\
-    XmlQueryResource, XmlScriptResource, XmlSqoopResource, PredictModelResource
+    XmlQueryResource, XmlScriptResource, XmlSqoopResource, PredictModelResource, \
+    PredictModelWeightResource
 from ..models import XmlImportHandler, XmlDataSource, db, \
     XmlScript, XmlField, XmlEntity, XmlInputParameter, XmlQuery, XmlSqoop, \
-    PredictModel
+    PredictModel, PredictModelWeight
 from ..fixtures import XmlImportHandlerData, XmlEntityData, XmlFieldData, \
     XmlDataSourceData, XmlInputParameterData
 
@@ -596,3 +597,60 @@ predict_models/'.format(handler_id)
 predict_models/'.format(sys.maxint)
         resp = self.client.get(url)
         self.assertEquals(resp.status_code, 401)
+
+
+class PredictModelWeightTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
+    """
+    Tests of the models in predict model's weights section of the xml import handlers.
+    """
+    BASE_URL = ''
+    RESOURCE = PredictModelWeightResource
+    Model = PredictModelWeight
+
+    def setUp(self):
+        super(PredictModelWeightTests, self).setUp()
+        # Trying to load the import handler with predict models twice.
+        self.load_import_handler()
+        handler_id = self.load_import_handler()
+        self.handler = XmlImportHandler.query.get(handler_id)
+        self.predict_model = self.handler.predict.models[0]
+        self.obj = self.predict_model.predict_model_weights[0]
+        self.BASE_URL = '/cloudml/xml_import_handlers/{0!s}/\
+predict_models/{1}/weights/'.format(handler_id, self.predict_model.id)
+
+    def test_list(self):
+        resp = self.check_list(
+            show='id,label,script,value',
+            count=2)
+        model = resp['predict_model_weights'][0]
+        db_weight = self.predict_model.predict_model_weights[0]
+        self.assertEquals(model['label'], db_weight.label)
+        self.assertEquals(model['value'], db_weight.value)
+        self.assertEquals(model['script'], db_weight.script)
+
+    def test_details(self):
+        self.check_details(show='label,value')
+
+    def test_post(self):
+        post_data = {'label': 'the label',
+                     'predict_model_id': self.predict_model.id}
+        resp, obj = self.check_edit(post_data, load_model=True)
+        self.assertEqual(obj.label, post_data['label'])
+        self.assertEqual(obj.predict_model_id, predict_model_id)
+        self.assertEquals(len(obj.predict_model.predict_model_weights), 3)
+
+    def test_edit(self):
+        data = {"label": "new label"}
+        resp, obj = self.check_edit(data, id=self.obj.id)
+        self.assertEquals(obj.label, data['label'])
+
+        data = {"value": "new value"}
+        resp, obj = self.check_edit(data, id=self.obj.id)
+        self.assertEquals(obj.value, data['value'])
+
+        data = {"script": "new script"}
+        resp, obj = self.check_edit(data, id=self.obj.id)
+        self.assertEquals(obj.script, data['script'])
+
+    def test_delete(self):
+        self.check_delete()
