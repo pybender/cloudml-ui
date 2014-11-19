@@ -27,66 +27,67 @@ Feature, Transformer, Scaler, Parameters) ->
     transformer: new Transformer({}),
     scaler: new Scaler({})
   })
-  $scope.config = {}
-  $scope.paramsConfig = {}
-  $scope.requiredParams = []
-  $scope.optionalParams = []
+  #$scope.config = {}
+  #$scope.paramsConfig = {}
+  #$scope.requiredParams = []
+  #$scope.optionalParams = []
 
   if $routeParams.feature_id
     $scope.feature.id = $routeParams.feature_id
     $scope.feature.$load(show: Feature.MAIN_FIELDS
     ).then ((opts) ->
-      $scope.loadFeatureParameters()
+      #$scope.loadFeatureParameters()
     ), ((opts)->
       $scope.setError(opts, 'loading feature details')
     )
 
   $scope.params = new Parameters()
   $scope.params.$load().then ((opts)->
+      console.log 'loaded params configuration'
       $scope.configuration = opts.data.configuration
-      $scope.paramsConfig = $scope.configuration.params
-      $scope.loadFeatureParameters()
+#      $scope.paramsConfig = $scope.configuration.params
+#      $scope.loadFeatureParameters()
     ), ((opts)->
       $scope.setError(opts, 'loading types and parameters')
     )
 
-  $scope.loadFeatureParameters = () ->
-    if not $scope.feature.type or not $scope.configuration
-      return
-
-    config = $scope.configuration.types[$scope.feature.type]
-
-    if not config
-      config = {
-        required_params: [],
-        optional_params: [],
-      }
-
-    $scope.config = config
-    _defaults = []
-
-    _all_params = _.union(config.required_params, config.optional_params)
-
-    for name in _all_params
-      type = $scope.paramsConfig[name].type
-      if type == 'dict'
-        _defaults.push({})
-      else if type == 'text'
-        _defaults.push('')
-      else
-        _defaults.push('')
-    if not $scope.feature.paramsDict
-      $scope.feature.paramsDict = {}
-    $scope.feature.paramsDict = _.extend(
-      _.object(_all_params, _defaults),
-      _.pick($scope.feature.paramsDict, _all_params)
-    )
-    $scope.requiredParams = config.required_params
-    $scope.optionalParams = config.optional_params
-
-  $scope.$watch('feature.type', (type) ->
-    $scope.loadFeatureParameters()
-  )
+#  $scope.loadFeatureParameters = () ->
+#    if not $scope.feature.type or not $scope.configuration
+#      return
+#
+#    config = $scope.configuration.types[$scope.feature.type]
+#
+#    if not config
+#      config = {
+#        required_params: [],
+#        optional_params: [],
+#      }
+#
+#    $scope.config = config
+#    _defaults = []
+#
+#    _all_params = _.union(config.required_params, config.optional_params)
+#
+#    for name in _all_params
+#      type = $scope.paramsConfig[name].type
+#      if type == 'dict'
+#        _defaults.push({})
+#      else if type == 'text'
+#        _defaults.push('')
+#      else
+#        _defaults.push('')
+#    if not $scope.feature.paramsDict
+#      $scope.feature.paramsDict = {}
+#    $scope.feature.paramsDict = _.extend(
+#      _.object(_all_params, _defaults),
+#      _.pick($scope.feature.paramsDict, _all_params)
+#    )
+#    $scope.requiredParams = config.required_params
+#    $scope.optionalParams = config.optional_params
+#
+#  $scope.$watch('feature.type', (type) ->
+#    $scope.loadFeatureParameters()
+#  )
 
   #  TODO: Could we use SaveObjectCtl?
   $scope.save = (fields) ->

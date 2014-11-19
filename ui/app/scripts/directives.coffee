@@ -631,6 +631,7 @@ angular.module('app.directives', [
   }
 )
 
+# nader20141117 - to be retired in favor of parametersEditor2
 .directive('parametersEditor', ['$compile', '$window', ($compile, $window) ->
   return {
     restrict: 'E',
