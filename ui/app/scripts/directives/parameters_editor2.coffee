@@ -9,19 +9,13 @@ angular.module('app.directives')
 #    scope:
 #      configuration: '='
     controller: ($scope)->
-      console.log 'in controller, the directive $scope is', $scope
       $scope.fields = {}
 
       $scope.$watch 'parameterType', (newVal, oldVal)->
-        console.log 'parameter type has changed from:', oldVal, ', to:', newVal
         $scope.typeHasChanged()
 
       $scope.$watch 'configuration', (newVal, oldVal)->
-        console.log 'configuration has changed from:', oldVal, ', to:', newVal
         $scope.typeHasChanged()
-
-      $scope.$watch 'data', (newVal, oldVal) ->
-        console.log 'data has changed from:', newVal, ', to:', oldVal
 
       ###
       Called every time we need to update the parameters fields listing
@@ -37,100 +31,22 @@ angular.module('app.directives')
         for field in builtInFields
           $scope.fields[field] = $scope.configuration.params[field]
         $scope.hasNoFields = _.isEmpty($scope.fields)
-        console.log 'updating parameterFields to:', $scope.fields
-        $scope.validate()
 
       ###
       Checks if the given parameter field is required or not
       ###
       $scope.isRequired = (fieldName) ->
-        return true
         return fieldName in $scope.configuration.types[$scope.parameterType].required_params
 
 
-    link: ($scope, element, attributes, ngModel) ->
-      TYPE_STRING = 'str'
-      TYPE_OBJECT = 'dict'
-      TYPE_TEXT = 'text'
-      TYPE_INT = 'int'
-
-      console.log 'in link, the directive $scope is', $scope
+    link: (scope, element, attributes, ngModel) ->
       attributes.$observe 'parameterType', (val)->
         if not val
           return
-        console.log 'changed parameter type :', val
-        $scope.parameterType = val
+        scope.parameterType = val
 
-      ngModel.$render = () ->
-        $scope.data = ngModel.$viewValue
-        $scope.validate()
-
-      _validateStrParam = (data) ->
-        return data != ''
-
-      _validateObjectParam = (data) ->
-        # Hack: remove $$hashKey added by angular
-        data = angular.fromJson(angular.toJson(data))
-        if _.isEmpty(data) then return false
-        else
-          for key of data
-            if data[key] == '' then return false
-        return true
-
-      _validateJsonParam = (data) ->
-        if data == ''
-          return false
-        try
-          jQuery.parseJSON(data)
-          return true
-        catch e
-          return false
-
-      _validateInt = (data) ->
-        try
-          parseInt(data)
-        catch e
-          return false
-
-      VALIDATORS = {}
-      VALIDATORS[TYPE_STRING] = _validateStrParam
-      VALIDATORS[TYPE_OBJECT] = _validateObjectParam
-      VALIDATORS[TYPE_TEXT] = _validateJsonParam
-      VALIDATORS[TYPE_INT] = _validateInt
-
-      $scope.validate = () ->
-        return
-        errs = []
-
-        for fieldName, field of $scope.fields
-          fieldData = $scope.data[fieldName]
-
-          if fieldData
-            console.log 'validating fieldData:', fieldData, ', for field:', fieldName
-            if not VALIDATORS[field.type](fieldData)
-              errs.push "invalid #{fieldName} of type #{field.type}"
-          else
-            if $scope.isRequired(fieldName)
-              errs.push field.help_text
-
-        ngModel.$setValidity('min_df', errs.length <= 0)
-
-#        keys = _.keys(scope.paramsConfig)
-#        for key in keys
-#          data = scope.paramsEditorData[key]
-#          conf = scope.paramsConfig[key]
-#          if not conf
-#            continue
-#          if scope.isRequired(key) and not data
-#            errs.push key
-#            continue
-#          validator = VALIDATORS[conf.type]
-#          if not validator
-#            errs.push key
-#          else if !validator(key, data)
-#            errs.push key
-
-
+      ngModel.$render = ->
+        scope.data = ngModel.$viewValue
 
       return
 
@@ -236,48 +152,14 @@ angular.module('app.directives')
 #        newElement = angular.element(template)
 #        $compile(newElement)(scope)
 #        element.html(newElement)
-
-        if scope.isTopLevel()
-          scope.validate()
-
-      scope.$watch 'paramsConfig', (newValue, oldValue) ->
-        if newValue is oldValue
-          return
-        render()
-        1+1
-        1+1
-        1+1
-
-      scope.$watch 'requiredParams', (newValue, oldValue) ->
-        if newValue is oldValue
-          return
-        render()
-        1+1
-        1+1
-        1+1
-
-      scope.$watch 'optionalParams', (newValue, oldValue) ->
-        if newValue is oldValue
-          return
-        render()
-        1+1
-        1+1
-        1+1
-
-
-      if scope.isTopLevel()
-        scope.$watch 'paramsEditorData', (newValue, oldValue) ->
-          scope.validate()
-        , true
-
     }
 ])
 
-###
-  Handles validation of an input field for a feature's type parameters
-  Requires parametersEditor2 as a parent
-###
 .directive('parameterValidator', ['$compile', ($compile) ->
+    ###
+      Handles validation of an input field for a feature's type parameters
+      Requires $scope.field
+    ###
     return {
     restrict: 'A'
     require: '?ngModel'
@@ -285,52 +167,59 @@ angular.module('app.directives')
     ]
     link: ($scope, element, attributes, ngModel) ->
 
-      #console.log 'the name was', $scope.$eval(attributes.name)
-
       TYPE_STRING = 'str'
       TYPE_OBJECT = 'dict'
       TYPE_TEXT = 'text'
       TYPE_INT = 'int'
 
       _validateStrParam = (data) ->
-        return data != ''
-
-      _validateObjectParam = (data) ->
-        # Hack: remove $$hashKey added by angular
-        data = angular.fromJson(angular.toJson(data))
-        if _.isEmpty(data) then return false
-        else
-          for key of data
-            if data[key] == '' then return false
+        # string validation is any thing, unless the parameter is required
+        # in which case required attribute will suffice
+        data = if data then data.trim() else ''
+        if $scope.field.required and data is ''
+          return false
         return true
 
       _validateJsonParam = (data) ->
-        if data == ''
-          return false
-        try
-          jQuery.parseJSON(data)
+        data = if data then data.trim() else ''
+        if not $scope.field.required and data is ''
           return true
+
+        try
+          return jQuery.parseJSON(data) isnt null
         catch e
           return false
 
       _validateInt = (data) ->
+        data = if data then data.trim() else ''
+        if not $scope.field.required and data is ''
+          return true
         return not isNaN(parseInt(data))
+
+#      _validateObjectParam = (data) ->
+#        # Hack: remove $$hashKey added by angular
+#        data = angular.fromJson(angular.toJson(data))
+#        if _.isEmpty(data) then return false
+#        else
+#          for key of data
+#            if data[key] == '' then return false
+#        return true
 
       VALIDATORS = {}
       VALIDATORS[TYPE_STRING] = _validateStrParam
-      VALIDATORS[TYPE_OBJECT] = _validateObjectParam
+      #VALIDATORS[TYPE_OBJECT] = _validateObjectParam
       VALIDATORS[TYPE_TEXT] = _validateJsonParam
       VALIDATORS[TYPE_INT] = _validateInt
 
       attributes.$set('required', $scope.field.required)
 
       ngModel.$parsers.push ()->
-        $scope.field.validValue = VALIDATORS[$scope.field.type](ngModel.$viewValue)
-        ngModel.$setValidity('error', $scope.field.validValue)
+        $scope.field.valid = VALIDATORS[$scope.field.type](ngModel.$viewValue)
+        ngModel.$setValidity('error', $scope.field.valid)
         return ngModel.$viewValue
       ngModel.$formatters.push (data)->
-        $scope.field.validValue = VALIDATORS[$scope.field.type](data)
-        ngModel.$setValidity('error', $scope.field.validValue)
+        $scope.field.valid = VALIDATORS[$scope.field.type](data)
+        ngModel.$setValidity('error', $scope.field.valid)
         return data
   }
 ])
@@ -342,7 +231,6 @@ angular.module('app.directives')
     controller : ['$scope', '$element', '$attrs', ($scope, $element, $attrs)->
       name = $parse($attrs.dynamicName)($scope)
       delete($attrs['dynamicName'])
-      $element.removeAttr('data-dynamic-name')
       $element.removeAttr('dynamic-name')
       $attrs.$set('name', name)
     ]

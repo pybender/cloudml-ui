@@ -4,7 +4,7 @@
 
 <div class="jsonContents">
   <div class="block control-group" ng-hide="fieldName.indexOf('_') == 0" ng-repeat="(fieldName, field) in fields"
-       ng-class="{error: !field.validValue}" ng-init="field.validValue=true;field.required=isRequired(fieldName)">
+       ng-class="{error: !field.valid}" ng-init="field.valid=true;field.required=isRequired(fieldName)">
     <label class="control-label">{{fieldName}}<span>: &nbsp;</span></label>
 
     <span ng-switch on="field.type" >
@@ -21,10 +21,10 @@
       <span ng-switch-default class="jsonLiteral">
         <input type="text" ng-model="data[fieldName]" ng-model-onblur
                placeholder="Empty" class="input-medium" dynamic-name="fieldName"
-                parameter-validator/>
+                parameter-validator=""/>
       </span>
-      <span ng-show="field.required && !field.validValue" class="help-inline">*</span>
-      <div ng-hide="field.validValue">
+      <span ng-show="field.required && !field.valid" class="help-inline">*</span>
+      <div ng-hide="field.valid">
         <i class="help_text help-block"> {{ field.help_text }} </i>
       </div>
     </span>

@@ -10,6 +10,11 @@ describe "directives/parametersEditor", ->
   $httpBackend = null
   $window = null
 
+  elem = null
+  afterEach ->
+    if elem
+      elem.remove()
+
   beforeEach ->
     module 'ngCookies'
     module 'ngRoute'
@@ -38,13 +43,228 @@ describe "directives/parametersEditor", ->
       $window.alert = jasmine.createSpy '$window.alert'
       $window.confirm = jasmine.createSpy('$window.confirm')
 
-  describe 'parametersEditor', ->
+  xdescribe 'dynamicName', ->
 
-    elem = null
+    it 'should change the name of the input based on the set dynamic name', ->
+      $scope = $rootScope.$new()
+
+      $scope.inputValue = 'zinger'
+      $scope.filedName = 'theField'
+
+      html = """
+        <form name="myForm">
+          <input type="text" ng-model="inputValue" ng-model-onblur
+          dynamic-name="filedName"/>
+        </form>
+        """
+      elem = $compile(html)($scope)
+      $(document.body).append elem
+      $scope.$digest()
+
+      input = $('input', elem)
+      expect(input.length).toBe 1
+      expect(input.attr('name')).toEqual 'theField'
+      expect(input.attr('dynamic-name')).toBeUndefined()
+      expect(input.val()).toEqual 'zinger'
+      expect($scope.myForm.theField.$viewValue).toEqual 'zinger'
+
+      # setting the value
+      input.val('zozo')
+      input.change()
+      $scope.$digest()
+
+      expect(input.val()).toEqual 'zozo'
+      expect($scope.myForm.theField.$viewValue).toEqual 'zozo'
+      expect($scope.inputValue).toEqual 'zozo'
+
+
+  xdescribe 'parameterValidator', ->
+
+    createContext = (value, field)->
+      $scope = $rootScope.$new()
+
+      $scope.inputValue = value
+      $scope.field = field
+
+      html = """
+        <form name="myForm">
+        <input type="text" ng-model="inputValue" name="theField"
+        parameter-validator=""/>
+         </form>
+        """
+      elem = $compile(html)($scope)
+      $(document.body).append elem
+      $scope.$digest()
+
+    it 'should validate a required int field', ->
+
+      createContext 'zozo',
+        {type: 'int', required: true, help_text: 'help text', valid:true}
+      input = $('input', elem)
+
+      expect($scope.field.valid).toBe false
+      expect($scope.myForm.theField.$invalid).toBe true
+
+      input.val('123')
+      input.change()
+
+      expect($scope.inputValue).toEqual '123'
+      expect($scope.myForm.theField.$viewValue).toEqual '123'
+      expect($scope.field.valid).toBe true
+      expect($scope.myForm.theField.$invalid).toBe false
+
+      input.val('')
+      input.change()
+
+      expect($scope.inputValue).toEqual ''
+      expect($scope.myForm.theField.$viewValue).toEqual ''
+      expect($scope.field.valid).toBe false
+      expect($scope.myForm.theField.$invalid).toBe true
+
+      input.val('xyz')
+      input.change()
+
+      expect($scope.inputValue).toEqual 'xyz'
+      expect($scope.myForm.theField.$viewValue).toEqual 'xyz'
+      expect($scope.field.valid).toBe false
+      expect($scope.myForm.theField.$invalid).toBe true
+
+    it 'should validate a not required int field', ->
+
+      createContext 'zozo',
+        {type: 'int', required: false, help_text: 'help text', valid:true}
+      input = $('input', elem)
+
+      expect($scope.field.valid).toBe false
+      expect($scope.myForm.theField.$invalid).toBe true
+
+      input.val('123')
+      input.change()
+
+      expect($scope.inputValue).toEqual '123'
+      expect($scope.myForm.theField.$viewValue).toEqual '123'
+      expect($scope.field.valid).toBe true
+      expect($scope.myForm.theField.$invalid).toBe false
+
+      input.val('')
+      input.change()
+
+      expect($scope.inputValue).toEqual ''
+      expect($scope.myForm.theField.$viewValue).toEqual ''
+      expect($scope.field.valid).toBe true
+      expect($scope.myForm.theField.$invalid).toBe false
+
+      input.val('xyz')
+      input.change()
+
+      expect($scope.inputValue).toEqual 'xyz'
+      expect($scope.myForm.theField.$viewValue).toEqual 'xyz'
+      expect($scope.field.valid).toBe false
+      expect($scope.myForm.theField.$invalid).toBe true
+
+    it 'should validate a required str field', ->
+
+      createContext '',
+        {type: 'str', required: true, help_text: 'help text', valid:true}
+      input = $('input', elem)
+
+      expect($scope.field.valid).toBe false
+      expect($scope.myForm.theField.$invalid).toBe true
+
+      input.val('abc')
+      input.change()
+
+      expect($scope.inputValue).toEqual 'abc'
+      expect($scope.myForm.theField.$viewValue).toEqual 'abc'
+      expect($scope.field.valid).toBe true
+      expect($scope.myForm.theField.$invalid).toBe false
+
+      input.val('')
+      input.change()
+
+      expect($scope.inputValue).toEqual ''
+      expect($scope.myForm.theField.$viewValue).toEqual ''
+      expect($scope.field.valid).toBe false
+      expect($scope.myForm.theField.$invalid).toBe true
+
+    it 'should validate a not required str field', ->
+
+      createContext '',
+        {type: 'str', required: false, help_text: 'help text', valid:true}
+      input = $('input', elem)
+
+      expect($scope.field.valid).toBe true
+      expect($scope.myForm.theField.$invalid).toBe false
+
+      input.val('abc')
+      input.change()
+
+      expect($scope.inputValue).toEqual 'abc'
+      expect($scope.myForm.theField.$viewValue).toEqual 'abc'
+      expect($scope.field.valid).toBe true
+      expect($scope.myForm.theField.$invalid).toBe false
+
+      input.val('')
+      input.change()
+
+      expect($scope.inputValue).toEqual ''
+      expect($scope.myForm.theField.$viewValue).toEqual ''
+      expect($scope.field.valid).toBe true
+      expect($scope.myForm.theField.$invalid).toBe false
+
+    it 'should validate a required text/json field', ->
+
+      createContext '',
+        {type: 'text', required: true, help_text: 'help text', valid:true}
+      input = $('input', elem)
+
+      expect($scope.field.valid).toBe false
+      expect($scope.myForm.theField.$invalid).toBe true
+
+      input.val('abc')
+      input.change()
+
+      expect($scope.inputValue).toEqual 'abc'
+      expect($scope.myForm.theField.$viewValue).toEqual 'abc'
+      expect($scope.field.valid).toBe false
+      expect($scope.myForm.theField.$invalid).toBe true
+
+      input.val(angular.toJson({some: 'json'}))
+      input.change()
+
+      expect($scope.inputValue).toEqual angular.toJson({some: 'json'})
+      expect($scope.myForm.theField.$viewValue).toEqual angular.toJson({some: 'json'})
+      expect($scope.field.valid).toBe true
+      expect($scope.myForm.theField.$invalid).toBe false
+
+    it 'should validate a not required text/json field', ->
+
+      createContext '',
+        {type: 'text', required: false, help_text: 'help text', valid:true}
+      input = $('input', elem)
+
+      expect($scope.field.valid).toBe true
+      expect($scope.myForm.theField.$invalid).toBe false
+
+      input.val('abc')
+      input.change()
+
+      expect($scope.inputValue).toEqual 'abc'
+      expect($scope.myForm.theField.$viewValue).toEqual 'abc'
+      expect($scope.field.valid).toBe false
+      expect($scope.myForm.theField.$invalid).toBe true
+
+      input.val(angular.toJson({some: 'json'}))
+      input.change()
+
+      expect($scope.inputValue).toEqual angular.toJson({some: 'json'})
+      expect($scope.myForm.theField.$viewValue).toEqual angular.toJson({some: 'json'})
+      expect($scope.field.valid).toBe true
+      expect($scope.myForm.theField.$invalid).toBe false
+
+  xdescribe 'parametersEditor2', ->
+
     editorScope = null
-    afterEach ->
-      if elem
-        elem.remove()
 
     createDirective = (html)->
       elem = $compile(html)($scope)
