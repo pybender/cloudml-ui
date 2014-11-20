@@ -11,17 +11,14 @@
       <div ng-switch-when="dict">
       </div>
       <span ng-switch-when="text" class="jsonLiteral">
-        <textarea name="{{fieldName}}" ng-model="data[fieldName]"
-                  class="span5"
-                  rows="3"
-                  ng-model-onblur
-                  name="{{fieldName}}">
-        </textarea>
+        <textarea class="span5" rows="3"
+                  ng-model="data[fieldName]" ng-model-onblur=""
+                  dynamic-name="fieldName" parameter-validator=""></textarea>
       </span>
       <span ng-switch-default class="jsonLiteral">
-        <input type="text" ng-model="data[fieldName]" ng-model-onblur
-               placeholder="Empty" class="input-medium" dynamic-name="fieldName"
-                parameter-validator=""/>
+        <input type="text" placeholder="Empty" class="input-medium"
+               ng-model="data[fieldName]" ng-model-onblur=""
+               dynamic-name="fieldName" parameter-validator=""/>
       </span>
       <span ng-show="field.required && !field.valid" class="help-inline">*</span>
       <div ng-hide="field.valid">

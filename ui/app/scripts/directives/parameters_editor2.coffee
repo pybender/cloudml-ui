@@ -191,7 +191,7 @@ angular.module('app.directives')
           return false
 
       _validateInt = (data) ->
-        data = if data then data.trim() else ''
+        data = if data then (data + '').trim() else ''
         if not $scope.field.required and data is ''
           return true
         return not isNaN(parseInt(data))

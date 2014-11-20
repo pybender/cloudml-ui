@@ -11,6 +11,12 @@ describe "directives/parametersEditor", ->
   $window = null
 
   elem = null
+
+  changeElemValue = (elem, val)->
+    elem.val(val)
+    elem.change()
+    elem.trigger('blur')
+
   afterEach ->
     if elem
       elem.remove()
@@ -43,7 +49,7 @@ describe "directives/parametersEditor", ->
       $window.alert = jasmine.createSpy '$window.alert'
       $window.confirm = jasmine.createSpy('$window.confirm')
 
-  xdescribe 'dynamicName', ->
+  describe 'dynamicName', ->
 
     it 'should change the name of the input based on the set dynamic name', ->
       $scope = $rootScope.$new()
@@ -69,8 +75,7 @@ describe "directives/parametersEditor", ->
       expect($scope.myForm.theField.$viewValue).toEqual 'zinger'
 
       # setting the value
-      input.val('zozo')
-      input.change()
+      changeElemValue(input, 'zozo')
       $scope.$digest()
 
       expect(input.val()).toEqual 'zozo'
@@ -78,7 +83,7 @@ describe "directives/parametersEditor", ->
       expect($scope.inputValue).toEqual 'zozo'
 
 
-  xdescribe 'parameterValidator', ->
+  describe 'parameterValidator', ->
 
     createContext = (value, field)->
       $scope = $rootScope.$new()
@@ -105,24 +110,24 @@ describe "directives/parametersEditor", ->
       expect($scope.field.valid).toBe false
       expect($scope.myForm.theField.$invalid).toBe true
 
-      input.val('123')
-      input.change()
+      changeElemValue input, '123'
+      $scope.$digest()
 
       expect($scope.inputValue).toEqual '123'
       expect($scope.myForm.theField.$viewValue).toEqual '123'
       expect($scope.field.valid).toBe true
       expect($scope.myForm.theField.$invalid).toBe false
 
-      input.val('')
-      input.change()
+      changeElemValue input, ''
+      $scope.$digest()
 
       expect($scope.inputValue).toEqual ''
       expect($scope.myForm.theField.$viewValue).toEqual ''
       expect($scope.field.valid).toBe false
       expect($scope.myForm.theField.$invalid).toBe true
 
-      input.val('xyz')
-      input.change()
+      changeElemValue input, 'xyz'
+      $scope.$digest()
 
       expect($scope.inputValue).toEqual 'xyz'
       expect($scope.myForm.theField.$viewValue).toEqual 'xyz'
@@ -138,24 +143,24 @@ describe "directives/parametersEditor", ->
       expect($scope.field.valid).toBe false
       expect($scope.myForm.theField.$invalid).toBe true
 
-      input.val('123')
-      input.change()
+      changeElemValue input, '123'
+      $scope.$digest()
 
       expect($scope.inputValue).toEqual '123'
       expect($scope.myForm.theField.$viewValue).toEqual '123'
       expect($scope.field.valid).toBe true
       expect($scope.myForm.theField.$invalid).toBe false
 
-      input.val('')
-      input.change()
+      changeElemValue input, ''
+      $scope.$digest()
 
       expect($scope.inputValue).toEqual ''
       expect($scope.myForm.theField.$viewValue).toEqual ''
       expect($scope.field.valid).toBe true
       expect($scope.myForm.theField.$invalid).toBe false
 
-      input.val('xyz')
-      input.change()
+      changeElemValue input, 'xyz'
+      $scope.$digest()
 
       expect($scope.inputValue).toEqual 'xyz'
       expect($scope.myForm.theField.$viewValue).toEqual 'xyz'
@@ -171,16 +176,16 @@ describe "directives/parametersEditor", ->
       expect($scope.field.valid).toBe false
       expect($scope.myForm.theField.$invalid).toBe true
 
-      input.val('abc')
-      input.change()
+      changeElemValue input, 'abc'
+      $scope.$digest()
 
       expect($scope.inputValue).toEqual 'abc'
       expect($scope.myForm.theField.$viewValue).toEqual 'abc'
       expect($scope.field.valid).toBe true
       expect($scope.myForm.theField.$invalid).toBe false
 
-      input.val('')
-      input.change()
+      changeElemValue input, ''
+      $scope.$digest()
 
       expect($scope.inputValue).toEqual ''
       expect($scope.myForm.theField.$viewValue).toEqual ''
@@ -196,16 +201,16 @@ describe "directives/parametersEditor", ->
       expect($scope.field.valid).toBe true
       expect($scope.myForm.theField.$invalid).toBe false
 
-      input.val('abc')
-      input.change()
+      changeElemValue input, 'abc'
+      $scope.$digest()
 
       expect($scope.inputValue).toEqual 'abc'
       expect($scope.myForm.theField.$viewValue).toEqual 'abc'
       expect($scope.field.valid).toBe true
       expect($scope.myForm.theField.$invalid).toBe false
 
-      input.val('')
-      input.change()
+      changeElemValue input, ''
+      $scope.$digest()
 
       expect($scope.inputValue).toEqual ''
       expect($scope.myForm.theField.$viewValue).toEqual ''
@@ -221,16 +226,16 @@ describe "directives/parametersEditor", ->
       expect($scope.field.valid).toBe false
       expect($scope.myForm.theField.$invalid).toBe true
 
-      input.val('abc')
-      input.change()
+      changeElemValue input, 'abc'
+      $scope.$digest()
 
       expect($scope.inputValue).toEqual 'abc'
       expect($scope.myForm.theField.$viewValue).toEqual 'abc'
       expect($scope.field.valid).toBe false
       expect($scope.myForm.theField.$invalid).toBe true
 
-      input.val(angular.toJson({some: 'json'}))
-      input.change()
+      changeElemValue input, angular.toJson({some: 'json'})
+      $scope.$digest()
 
       expect($scope.inputValue).toEqual angular.toJson({some: 'json'})
       expect($scope.myForm.theField.$viewValue).toEqual angular.toJson({some: 'json'})
@@ -246,16 +251,16 @@ describe "directives/parametersEditor", ->
       expect($scope.field.valid).toBe true
       expect($scope.myForm.theField.$invalid).toBe false
 
-      input.val('abc')
-      input.change()
+      changeElemValue input, 'abc'
+      $scope.$digest()
 
       expect($scope.inputValue).toEqual 'abc'
       expect($scope.myForm.theField.$viewValue).toEqual 'abc'
       expect($scope.field.valid).toBe false
       expect($scope.myForm.theField.$invalid).toBe true
 
-      input.val(angular.toJson({some: 'json'}))
-      input.change()
+      changeElemValue input, angular.toJson({some: 'json'})
+      $scope.$digest()
 
       expect($scope.inputValue).toEqual angular.toJson({some: 'json'})
       expect($scope.myForm.theField.$viewValue).toEqual angular.toJson({some: 'json'})
@@ -282,7 +287,7 @@ describe "directives/parametersEditor", ->
       createDirective html
 
 
-    describe 'adding new feature', ->
+    describe 'simple and complex types with switching', ->
 
       for type in ['text', 'float', 'numeric', 'int', 'boolean']
         do (type)->
@@ -351,50 +356,81 @@ describe "directives/parametersEditor", ->
         expect(noParamsMsg.length).toBe 1
         expect(noParamsMsg.hasClass('ng-hide')).toBe false
 
+    describe 'handling complex types with different parameter types', ->
 
-      xit "should create parameters editor control with string parameter", ->
-
-        $scope.paramsConfig = {"str_param": {"type": "str"}, strange: {type: null}}
-        $scope.requiredParams = ["str_param"]
-        $scope.optionalParams = []
-
-        # invlaid
-        $scope.params = {}
-        prepareContext """
+      testCategorical = (params)->
+        prepareContext {type: 'categorical', params: params}, """
   <form name="myForm">
-  <parameters-editor name="params" ng-model="params"
-  params-config="paramsConfig"
-  required-params="requiredParams"
-  optional-params="optionalParams"></parameters-editor>
+        <parameters-editor2 name="params" ng-model="feature.params"
+                            parameter-type="{{feature.type}}"></parameters-editor2>
   </form>
   """
-        expect($scope.myForm.params.$valid).toBe false
-        expect($scope.myForm.$valid).toBe false
+        inputs = $('input', elem)
+        textareas = $('textarea', elem)
+        expect(inputs.length).toBe 2
+        expect(textareas.length).toBe 0
 
-        # get type -- we are doing it here to be able to get the invalid type strange
-        expect(innerScope.getType 'str_param').toEqual 'str'
-        expect(innerScope.getType 'zinger').toEqual 'str'
-        expect(innerScope.getType 'strange').toEqual 'str'
+        min_df_input = $('input[name="min_df"]', elem)
+        split_pattern_input = $('input[name="split_pattern"]', elem)
 
-        # valid
-        $scope.paramsConfig = {"str_param": {"type": "str"}}
-        $scope.params = {"str_param": "value"}
+        expect(min_df_input.length).toBe 1
+        expect(split_pattern_input.length).toBe 1
+
+        if not _.isEmpty(params)
+          expect(min_df_input.val()).toEqual params.min_df + ''
+          expect(split_pattern_input.val()).toEqual params.split_pattern
+
+        changeElemValue min_df_input, '123'
         $scope.$digest()
-        expect($scope.myForm.params.$valid).toBe true
-        expect($scope.myForm.$valid).toBe true
+        changeElemValue split_pattern_input, 'zozo'
+        $scope.$digest()
 
-        expect(elem.html()).toContain('<div class="jsonContents ng-scope">')
-        expect(elem.html()).toContain('<input ng-hide="isRequired(key)" ng-disabled="isRequired(key)"')
-        expect(elem.html()).toContain('>str_param</label>')
+        expect($scope.feature.params).toEqual {min_df: '123', split_pattern: 'zozo'}
 
-        # toggle collapse
-        expect($scope.collapsed).toBeUndefined()
-        innerScope.toggleCollapse()
-        expect(innerScope.collapsed).toBe true
-        expect(innerScope.chevron).toEqual 'icon-chevron-right'
-        innerScope.toggleCollapse()
-        expect(innerScope.collapsed).toBe false
-        expect(innerScope.chevron).toEqual 'icon-chevron-down'
+        changeElemValue min_df_input, 'abc'
+        $scope.$digest()
+        expect($scope.feature.params).toEqual {min_df: 'abc', split_pattern: 'zozo'}
+
+      testComposite = (params)->
+        prepareContext {type: 'composite', params: params}, """
+  <form name="myForm">
+        <parameters-editor2 name="params" ng-model="feature.params"
+                            parameter-type="{{feature.type}}"></parameters-editor2>
+  </form>
+  """
+        inputs = $('input', elem)
+        textareas = $('textarea', elem)
+        expect(inputs.length).toBe 0
+        expect(textareas.length).toBe 1
+
+        chain_textarea = $('textarea[name="chain"]', elem)
+
+        expect(chain_textarea.length).toBe 1
+
+        if not _.isEmpty(params)
+          expect(chain_textarea.val()).toEqual params.chain + ''
+
+        changeElemValue chain_textarea, angular.toJson({'the': 'json'})
+        $scope.$digest()
+
+        expect($scope.feature.params).toEqual {chain: angular.toJson({'the': 'json'})}
+
+        changeElemValue chain_textarea, 'abc'
+        $scope.$digest()
+
+        expect($scope.feature.params).toEqual {chain: 'abc'}
+
+      it 'should handle parameter type int and str when adding a new categorical feature', ->
+        testCategorical {}
+
+      it 'should handle parameter type int and str when editing a categorical feature', ->
+        testCategorical {min_df: 321, split_pattern: 'this_pattern'}
+
+      it 'should handle parameter type text when adding a new composite feature', ->
+        testComposite {}
+
+      it 'should handle parameter type int and str when editing a categorical feature', ->
+        testComposite {chain: angular.toJson({'this': 'is json'})}
 
     getConfiguration = ->
       return {
