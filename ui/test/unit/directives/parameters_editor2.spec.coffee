@@ -262,7 +262,7 @@ describe "directives/parametersEditor", ->
       expect($scope.field.valid).toBe true
       expect($scope.myForm.theField.$invalid).toBe false
 
-  xdescribe 'parametersEditor2', ->
+  describe 'parametersEditor2', ->
 
     editorScope = null
 
@@ -286,13 +286,14 @@ describe "directives/parametersEditor", ->
 
       for type in ['text', 'float', 'numeric', 'int', 'boolean']
         do (type)->
-          xit "should handle simple types: #{type}", ->
+          it "should handle simple types: #{type}", ->
             prepareContext {type: type, params: {}}, """
       <form name="myForm">
             <parameters-editor2 name="params" ng-model="feature.params"
                                 parameter-type="{{feature.type}}"></parameters-editor2>
       </form>
       """
+            expect($scope.hasNoFields).toBe true
             expect(_.isEmpty(editorScope.fields)).toBe true
             noParamsMsg = $('i[ng-show="hasNoFields"]')
             expect(noParamsMsg.length).toBe 1
@@ -310,13 +311,14 @@ describe "directives/parametersEditor", ->
                                 parameter-type="{{feature.type}}"></parameters-editor2>
       </form>
       """
+            expect($scope.hasNoFields).toBe false
             expect(_.isEmpty(editorScope.fields)).toBe false
             noParamsMsg = $('i[ng-show="hasNoFields"]')
             expect(noParamsMsg.length).toBe 1
             expect(noParamsMsg.hasClass('ng-hide')).toBe true
             expect($('div[class="jsonContents"]').children().length).toBe type.count
 
-      xit 'should handle switching back and forth between simple and complex types', ->
+      it 'should handle switching back and forth between simple and complex types', ->
 
         prepareContext {type: 'int', params: {}}, """
   <form name="myForm">
@@ -325,6 +327,7 @@ describe "directives/parametersEditor", ->
   </form>
   """
 
+        expect($scope.hasNoFields).toBe true
         expect(_.isEmpty(editorScope.fields)).toBe true
         noParamsMsg = $('i[ng-show="hasNoFields"]')
         expect(noParamsMsg.length).toBe 1
@@ -333,6 +336,7 @@ describe "directives/parametersEditor", ->
         $scope.feature.type = 'categorical'
         $scope.$digest()
 
+        expect($scope.hasNoFields).toBe false
         expect(_.isEmpty(editorScope.fields)).toBe false
         noParamsMsg = $('i[ng-show="hasNoFields"]')
         expect(noParamsMsg.length).toBe 1
@@ -341,6 +345,7 @@ describe "directives/parametersEditor", ->
         $scope.feature.type = 'boolean'
         $scope.$digest()
 
+        expect($scope.hasNoFields).toBe true
         expect(_.isEmpty(editorScope.fields)).toBe true
         noParamsMsg = $('i[ng-show="hasNoFields"]')
         expect(noParamsMsg.length).toBe 1
