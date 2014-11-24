@@ -3,7 +3,7 @@ angular.module('app.directives')
 .directive('parametersEditor2', ['$compile', '$window', ($compile, $window) ->
     return {
     restrict: 'E'
-    require: '?ngModel'
+    require: 'ngModel'
     templateUrl: 'partials/directives/parameters_editor2.html'
     replace: false
 #    scope:
@@ -162,10 +162,10 @@ angular.module('app.directives')
     ###
     return {
     restrict: 'A'
-    require: '?ngModel'
+    require: 'ngModel'
     controller: ['$scope', '$attrs', ($scope, $attrs)->
     ]
-    link: ($scope, element, attributes, ngModel) ->
+    link: (scope, element, attributes, ngModel) ->
 
       TYPE_STRING = 'str'
       TYPE_OBJECT = 'dict'
@@ -176,13 +176,13 @@ angular.module('app.directives')
         # string validation is any thing, unless the parameter is required
         # in which case required attribute will suffice
         data = if data then data.trim() else ''
-        if $scope.field.required and data is ''
+        if scope.field.required and data is ''
           return false
         return true
 
       _validateJsonParam = (data) ->
         data = if data then data.trim() else ''
-        if not $scope.field.required and data is ''
+        if not scope.field.required and data is ''
           return true
 
         try
@@ -192,7 +192,7 @@ angular.module('app.directives')
 
       _validateInt = (data) ->
         data = if data then (data + '').trim() else ''
-        if not $scope.field.required and data is ''
+        if not scope.field.required and data is ''
           return true
         return not isNaN(parseInt(data))
 
@@ -211,15 +211,19 @@ angular.module('app.directives')
       VALIDATORS[TYPE_TEXT] = _validateJsonParam
       VALIDATORS[TYPE_INT] = _validateInt
 
-      attributes.$set('required', $scope.field.required)
+      attributes.$set('required', scope.field.required)
 
       ngModel.$parsers.push ()->
-        $scope.field.valid = VALIDATORS[$scope.field.type](ngModel.$viewValue)
-        ngModel.$setValidity('error', $scope.field.valid)
-        return ngModel.$viewValue
+        scope.field.valid = VALIDATORS[scope.field.type](ngModel.$viewValue)
+        ngModel.$setValidity('error', scope.field.valid)
+        if not scope.field.valid
+          return undefined
+        else
+          return ngModel.$viewValue
+
       ngModel.$formatters.push (data)->
-        $scope.field.valid = VALIDATORS[$scope.field.type](data)
-        ngModel.$setValidity('error', $scope.field.valid)
+        scope.field.valid = VALIDATORS[scope.field.type](data)
+        ngModel.$setValidity('error', scope.field.valid)
         return data
   }
 ])

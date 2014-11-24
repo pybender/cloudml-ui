@@ -13,6 +13,17 @@ describe 'features/controllers/features.coffee', ->
     module 'app.datasets.model'
     module 'app.features.models'
     module 'app.features.controllers.features'
+    spyOn(window, 'FormData').and.returnValue new ()->
+      _data = {}
+      return {
+      append: (key, value)->
+        _data[key] = value
+      getData: ->
+        return angular.copy(_data)
+      toString: ->
+        angular.toJson(_data)
+      }
+
 
   $httpBackend = null
   $scope = null
@@ -48,7 +59,8 @@ describe 'features/controllers/features.coffee', ->
         id: feature_id
         feature_set_id: set_id
         name: 'feature'
-        type: 'dict'
+        type: 'categorical'
+        params: angular.toJson({})
       featureLoadResponse = {}
       featureLoadResponse[feature.API_FIELDNAME] = feature
       $httpBackend.expectGET("#{Feature.$get_api_url(feature_set_id: set_id)}#{feature_id}/?show=#{Feature.MAIN_FIELDS}")
@@ -56,7 +68,12 @@ describe 'features/controllers/features.coffee', ->
 
       parameters = new Parameters
       parametersUrl = "#{parameters.BASE_API_URL}/"
-      paramsConfig = JSON.parse(map_url_to_response(parametersUrl, 'load parameters configuration')[1]).configuration.params
+      configuration = JSON.parse(map_url_to_response(parametersUrl, 'load parameters configuration')[1]).configuration
+      expect(_.keys(configuration).length).toEqual 3
+      expect(_.keys(configuration.params).length).toEqual 5
+      expect(_.keys(configuration.defaults).length).toEqual 1
+      expect(_.keys(configuration.types).length).toEqual 11
+
       $httpBackend.expectGET("#{parameters.BASE_API_URL}/")
       .respond.apply @, map_url_to_response(parametersUrl, 'load parameters configuration')
 
@@ -69,7 +86,7 @@ describe 'features/controllers/features.coffee', ->
         Scaler: Scaler
         Parameters: Parameters
       $httpBackend.flush()
-      return [paramsConfig, feature]
+      return [configuration, feature]
 
     it 'should error when route params model_id or set_id is not set',
       inject (Model, Feature, Transformer, Scaler, Parameters)->
@@ -98,7 +115,7 @@ describe 'features/controllers/features.coffee', ->
     it 'should init scope properly with everything',
       inject (Model, Feature, Transformer, Scaler, Parameters)->
         [model_id, set_id, feature_id] = [111, 222, 333]
-        [paramsConfig, feature] = prepareTestContext Model, Feature, Transformer,
+        [configuration, feature] = prepareTestContext Model, Feature, Transformer,
           Scaler, Parameters, model_id, set_id, feature_id
 
         expect($scope.modelObj).toEqual jasmine.any(Model)
@@ -109,56 +126,11 @@ describe 'features/controllers/features.coffee', ->
         expect($scope.feature.feature_set_id).toEqual set_id
         expect($scope.feature.transformer).toEqual jasmine.any(Transformer)
         expect($scope.feature.scaler).toEqual jasmine.any(Scaler)
-
-        expect($scope.config).toEqual {required_params: [], optional_params: []}
-        expect($scope.paramsConfig).toEqual paramsConfig
-        expect($scope.requiredParams).toEqual []
-        expect($scope.optionalParams).toEqual []
+        expect($scope.feature.params).toEqual '{}'
         expect($scope.feature.paramsDict).toEqual {}
 
-        typeTestedCount = 0
-        # change type trigger loading feature parameters
-        for newType in ['text', 'float', 'numeric', 'int', 'boolean']
-          $scope.feature.type = newType
-          $scope.$digest()
-          expect($scope.requiredParams).toEqual []
-          expect($scope.optionalParams).toEqual []
-          expect($scope.feature.paramsDict).toEqual {}
-          typeTestedCount += 1
+        expect($scope.configuration).toEqual configuration
 
-        # special case features
-        for newType in ['date', 'regex']
-          $scope.feature.type = newType
-          $scope.$digest()
-          expect($scope.requiredParams).toEqual [ 'pattern' ]
-          expect($scope.optionalParams).toEqual []
-          expect($scope.feature.paramsDict).toEqual { pattern : '' }
-          typeTestedCount += 1
-
-        for newType in ['categorical_label', 'categorical']
-          $scope.feature.type = 'categorical'
-          $scope.$digest()
-          expect($scope.requiredParams).toEqual []
-          expect($scope.optionalParams).toEqual [ 'split_pattern', 'min_df' ]
-          expect($scope.feature.paramsDict).toEqual { split_pattern : '', min_df : '' }
-          typeTestedCount += 1
-
-        $scope.feature.type = 'composite'
-        $scope.$digest()
-        expect($scope.requiredParams).toEqual  [ 'chain' ]
-        expect($scope.optionalParams).toEqual []
-        expect($scope.feature.paramsDict).toEqual { chain : '' }
-        typeTestedCount += 1
-
-        $scope.feature.type = 'map'
-        $scope.$digest()
-        expect($scope.requiredParams).toEqual  [ 'mappings' ]
-        expect($scope.optionalParams).toEqual []
-        expect($scope.feature.paramsDict).toEqual { mappings : {  } }
-        typeTestedCount += 1
-
-        # As of 20140902: We have 11, and we should have tested them all
-        expect(typeTestedCount).toBe 11
 
     it 'clearing transformer & scaler',
       inject (Model, Feature, Transformer, Scaler, Parameters)->
@@ -183,17 +155,46 @@ describe 'features/controllers/features.coffee', ->
         expect($scope.feature.scaler).toEqual {}
 
     it 'save feature',
-      inject (Model, Feature, Transformer, Scaler, Parameters)->
+      inject (Model, Feature, Transformer, Scaler, Parameters, $filter)->
         [model_id, set_id, feature_id] = [111, 222, 333]
-        [paramsConfig, feature] = prepareTestContext Model, Feature, Transformer,
+        [configuration, feature] = prepareTestContext Model, Feature, Transformer,
           Scaler, Parameters, model_id, set_id, feature_id
 
-        $httpBackend.expectPUT("#{Feature.$get_api_url(feature_set_id: set_id)}#{feature_id}/")
-        .respond 200, angular.toJson({feature: feature})
+        paramsDict = {min_df: 10, split_pattern: 'zozo'}
+        updatedFeature = new Feature
+          id: feature_id
+          feature_set_id: set_id
+          name: 'feature'
+          type: 'categorical_label'
+          params: angular.toJson(paramsDict)
+
+        $httpBackend.expectPUT "#{Feature.$get_api_url(feature_set_id: set_id)}#{feature_id}/"
+        , (data)->
+          featureData = data.getData()
+          valid = featureData['name'] is 'feature' and
+            featureData['type'] is 'categorical_label' and
+            featureData['feature_set_id'] is 222 and
+            featureData['is_target_variable'] is false and
+            featureData['remove_transformer'] is true and
+            featureData['remove_scaler'] is true and
+            featureData['params'] is $filter('json')(paramsDict)
+          if not valid
+            console.log 'the post form was not as expected', data.getData()
+          return valid
+        .respond 200, angular.toJson({feature: updatedFeature})
+
+        $scope.feature.type = 'categorical_label'
+        $scope.feature.paramsDict = paramsDict
+        $scope.$digest()
+
         $scope.save(['name', 'type', 'input_format', 'transformer__name', 'transformer__type',  'transformer__params', 'params', 'required', 'scaler__predefined_selected', 'scaler__name','scaler__type', 'scaler__params', 'default', 'feature_set_id', 'is_target_variable'])
         $httpBackend.flush()
         $scope.$digest()
+
         expect($scope.savingProgress).toEqual '100%'
         expect($location.url()).toEqual "/models/#{model_id}?action=model:details"
+        expect($scope.feature.type).toEqual 'categorical_label'
+        expect($scope.feature.paramsDict).toEqual paramsDict
+        expect($scope.feature.params).toEqual angular.toJson(paramsDict)
 
 

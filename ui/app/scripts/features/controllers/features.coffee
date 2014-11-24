@@ -25,7 +25,8 @@ Feature, Transformer, Scaler, Parameters) ->
   $scope.feature = new Feature({
     feature_set_id: $routeParams.set_id,
     transformer: new Transformer({}),
-    scaler: new Scaler({})
+    scaler: new Scaler({}),
+    params: {}
   })
   #$scope.config = {}
   #$scope.paramsConfig = {}
