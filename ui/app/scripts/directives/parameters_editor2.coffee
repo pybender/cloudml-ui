@@ -6,53 +6,6 @@ angular.module('app.directives')
     require: 'ngModel'
     templateUrl: 'partials/directives/parameters_editor2.html'
     replace: false
-#    scope:
-#      configuration: '='
-    controller: ($scope)->
-#      $scope.fields = {}
-#
-#      $scope.$watch 'parameterType', (newVal, oldVal)->
-#        if not newVal
-#          return
-#
-#        newFields = _.keys($scope.data)
-#        oldFields = _.keys($scope.fields)
-#        if _.difference(newFields, oldFields).length isnt 0
-#          pType = $scope.configuration.types[$scope.parameterType]
-#          builtInFields = _.union(pType.required_params, pType.optional_params,
-#            pType.default_params)
-#          for field in builtInFields
-#            $scope.fields[field] = $scope.configuration.params[field]
-#
-#        $scope.hasNoFields = _.isEmpty($scope.fields)
-
-#        $scope.typeHasChanged()
-
-#      $scope.$watch 'configuration', (newVal, oldVal)->
-#        $scope.typeHasChanged()
-
-      ###
-      Called every time we need to update the parameters fields listing
-      ###
-#      $scope.typeHasChanged = ()->
-#        if not $scope.parameterType or not $scope.configuration
-#          return
-#
-#        $scope.fields = {}
-#        pType = $scope.configuration.types[$scope.parameterType]
-#        builtInFields = _.union(pType.required_params, pType.optional_params,
-#          pType.default_params)
-#        for field in builtInFields
-#          $scope.fields[field] = $scope.configuration.params[field]
-#        $scope.hasNoFields = _.isEmpty($scope.fields)
-
-      ###
-      Checks if the given parameter field is required or not
-      ###
-#      $scope.isRequired = (fieldName) ->
-#        return fieldName in $scope.configuration.types[$scope.parameterType].required_params
-
-
     link: (scope, element, attributes, ngModel) ->
       scope.fields = []
 
@@ -83,119 +36,7 @@ angular.module('app.directives')
 
       scope.$watch 'configuration', ->
         updateFields()
-
-#      ngModel.$formatters.push (value)->
-##        newFields = _.keys(value)
-##        oldFields = _.keys(scope.fields)
-##        #if _.difference(newFields, oldFields).length isnt 0
-#        updateFields()
-
-
-
       return
-
-
-      # special case for mapping, if not set they will be undefined
-      scope.keyName = scope.$eval(attributes.keyName)
-      scope.valueName = scope.$eval(attributes.valueName)
-      console.log 'keyName', scope.keyName, 'valueName', scope.valueName
-
-      scope.getType = (key, value) ->
-        if scope.isTopLevel() && scope.paramsConfig
-          _conf = scope.paramsConfig[key]
-          if _conf
-            _type = _conf.type
-          else
-            _type = TYPE_STRING
-          return _type or TYPE_STRING
-        return TYPE_STRING
-
-      scope.toggleCollapse = () ->
-        if (scope.collapsed)
-          scope.collapsed = false
-          scope.chevron = "icon-chevron-down"
-        else
-          scope.collapsed = true
-          scope.chevron = "icon-chevron-right"
-
-      # TODO: nader20140912, moving a required parameter to a non-required parameter
-      # will not update required-params and hence the required parameter is not
-      # required anymore. -- how many required in the previous sentence :)
-      scope.moveKey = (obj, key, newkey) ->
-        obj[newkey] = obj[key]
-        delete obj[key]
-
-      scope.deleteKey = (obj, key) ->
-        if scope.isRequired(key)
-          $window.alert("Can't delete required parameter")
-          return
-        if(confirm('Delete "'+key+'" ?'))
-          delete obj[key]
-
-      scope.addItem = (obj) ->
-        # check input for key
-        if (scope.keyName == undefined || scope.keyName.length == 0)
-          alert("Please fill in a name")
-        else if (scope.keyName.indexOf("$") == 0)
-          alert("The name may not start with $ (the dollar sign)")
-        else if (scope.keyName.indexOf("_") == 0)
-          alert("The name may not start with _ (the underscore)")
-        else
-          if (obj[scope.keyName])
-            if(!confirm('Parameter is already set'))
-              return
-
-          # add a new item to object
-          _val = ""
-          if scope.valueName then _val = scope.valueName
-          obj[scope.keyName] = _val
-
-          # clean-up
-          scope.keyName = ""
-          scope.valueName = ""
-          scope.showAddKey = false
-
-      scope.isTopLevel = () ->
-        #_.indexOf(_(attributes).keys(), 'inner') < 0
-        false
-
-      scope.isEmpty = () ->
-        scope.isTopLevel() && _.isEmpty(scope.paramsEditorData)
-
-      if scope.isTopLevel()
-        scope.type = TYPE_OBJECT
-
-      # Template Generation
-      # recursion
-      switchTemplate =
-        ''
-
-      # display either "plus button" or "key-value inputs"
-      addItemTemplate =
-          ''
-
-      # start template
-      template = '
-           '
-
-      ngModel.$formatters.unshift((viewValue) ->
-        if _.isObject(viewValue) and scope.paramsConfig
-          for key of viewValue
-            conf = scope.paramsConfig[key]
-            if not conf then continue
-            # Covert "chain" parameter to text
-            if conf.type == TYPE_TEXT && _.isObject(viewValue[key])
-              viewValue[key] = angular.toJson(viewValue[key])
-        return viewValue
-      )
-
-      render = () ->
-        console.log 'scope.paramsEditorData', scope.paramsEditorData
-        console.log 'scope.paramsConfig', scope.paramsConfig
-
-#        newElement = angular.element(template)
-#        $compile(newElement)(scope)
-#        element.html(newElement)
     }
 ])
 
@@ -207,8 +48,6 @@ angular.module('app.directives')
     return {
     restrict: 'A'
     require: 'ngModel'
-    controller: ['$scope', '$attrs', ($scope, $attrs)->
-    ]
     link: (scope, element, attributes, ngModel) ->
 
       TYPE_STRING = 'str'
