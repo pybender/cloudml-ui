@@ -28,10 +28,6 @@ Feature, Transformer, Scaler, Parameters) ->
     scaler: new Scaler({}),
     params: {}
   })
-  #$scope.config = {}
-  #$scope.paramsConfig = {}
-  #$scope.requiredParams = []
-  #$scope.optionalParams = []
 
   if $routeParams.feature_id
     $scope.feature.id = $routeParams.feature_id
@@ -44,13 +40,35 @@ Feature, Transformer, Scaler, Parameters) ->
 
   $scope.params = new Parameters()
   $scope.params.$load().then ((opts)->
-      console.log 'loaded params configuration'
       $scope.configuration = opts.data.configuration
 #      $scope.paramsConfig = $scope.configuration.params
 #      $scope.loadFeatureParameters()
     ), ((opts)->
       $scope.setError(opts, 'loading types and parameters')
     )
+
+  $scope.$watch 'configuration', ->
+    typeHasChanged()
+
+  $scope.$watch 'feature.type', ->
+    typeHasChanged()
+
+  typeHasChanged = ->
+    if not $scope.feature.type or not $scope.configuration
+      return
+
+    pType = $scope.configuration.types[$scope.feature.type]
+    builtInFields = _.union(pType.required_params, pType.optional_params,
+      pType.default_params)
+
+    newParamsDict = {}
+    for field in builtInFields
+      newParamsDict[field] = null
+    for field in _.intersection(builtInFields, _.keys($scope.feature.paramsDict))
+      newParamsDict[field] = $scope.feature.paramsDict[field]
+
+    $scope.feature.paramsDict = newParamsDict
+
 
 #  $scope.loadFeatureParameters = () ->
 #    if not $scope.feature.type or not $scope.configuration

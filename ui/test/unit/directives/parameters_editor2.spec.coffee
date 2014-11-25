@@ -49,7 +49,7 @@ describe "directives/parametersEditor", ->
       $window.alert = jasmine.createSpy '$window.alert'
       $window.confirm = jasmine.createSpy('$window.confirm')
 
-  xdescribe 'dynamicName', ->
+  describe 'dynamicName', ->
 
     it 'should change the name of the input based on the set dynamic name', ->
       $scope = $rootScope.$new()
@@ -83,7 +83,7 @@ describe "directives/parametersEditor", ->
       expect($scope.inputValue).toEqual 'zozo'
 
 
-  xdescribe 'parameterValidator', ->
+  describe 'parameterValidator', ->
 
     createContext = (value, field)->
       $scope = $rootScope.$new()
@@ -274,20 +274,19 @@ describe "directives/parametersEditor", ->
       createDirective html
 
 
-    xdescribe 'simple and complex types with switching', ->
+    describe 'simple and complex types with switching', ->
 
       for type in ['text', 'float', 'numeric', 'int', 'boolean']
         do (type)->
-          xit "should handle simple types: #{type}", ->
-            prepareContext {type: type, params: {}}, """
+          it "should handle simple types: #{type}", ->
+            prepareContext {type: type, paramsDict: {}}, """
       <form name="myForm">
-            <parameters-editor2 name="params" ng-model="feature.params"
+            <parameters-editor2 name="params" ng-model="feature.paramsDict"
                                 parameter-type="{{feature.type}}"></parameters-editor2>
       </form>
       """
-            expect($scope.hasNoFields).toBe true
-            expect(_.isEmpty(editorScope.fields)).toBe true
-            noParamsMsg = $('i[ng-show="hasNoFields"]')
+            expect($scope.fields).toEqual []
+            noParamsMsg = $('i[ng-show="fields.length <= 0"]')
             expect(noParamsMsg.length).toBe 1
             expect(noParamsMsg.hasClass('ng-hide')).toBe false
             expect($('div[class="jsonContents"]').children().length).toBe 0
@@ -297,58 +296,61 @@ describe "directives/parametersEditor", ->
         {name: 'categorical_label', count: 2}, {name: 'date', count: 1}]
         do (type)->
           it "should handle complex types: #{type.name}", ->
-            prepareContext {type: type.name, params: {}}, """
+            prepareContext {type: type.name, paramsDict: {key1: undefined}}, """
       <form name="myForm">
-            <parameters-editor2 name="params" ng-model="feature.params"
+            <parameters-editor2 name="params" ng-model="feature.paramsDict"
                                 parameter-type="{{feature.type}}"></parameters-editor2>
       </form>
       """
-            expect($scope.hasNoFields).toBe false
+            expect($scope.fields.length).toBe type.count + 1
             expect(_.isEmpty(editorScope.fields)).toBe false
-            noParamsMsg = $('i[ng-show="hasNoFields"]')
+            noParamsMsg = $('i[ng-show="fields.length <= 0"]')
             expect(noParamsMsg.length).toBe 1
             expect(noParamsMsg.hasClass('ng-hide')).toBe true
-            expect($('div[class="jsonContents"]').children().length).toBe type.count
+            # The +1 in count is because of the extra field 'key1' passed in prepareContext
+            # above
+            expect($('div[class="jsonContents"]').children().length).toBe type.count + 1
 
       it 'should handle switching back and forth between simple and complex types', ->
 
-        prepareContext {type: 'int', params: {}}, """
+        prepareContext {type: 'int', paramsDict: {}}, """
   <form name="myForm">
-        <parameters-editor2 name="params" ng-model="feature.params"
+        <parameters-editor2 name="params" ng-model="feature.paramsDict"
                             parameter-type="{{feature.type}}"></parameters-editor2>
   </form>
   """
 
-        expect($scope.hasNoFields).toBe true
-        expect(_.isEmpty(editorScope.fields)).toBe true
-        noParamsMsg = $('i[ng-show="hasNoFields"]')
+        expect($scope.fields).toEqual []
+        noParamsMsg = $('i[ng-show="fields.length <= 0"]')
         expect(noParamsMsg.length).toBe 1
         expect(noParamsMsg.hasClass('ng-hide')).toBe false
 
         $scope.feature.type = 'categorical'
+        $scope.feature.paramsDict = {min_df:undefined, split_pattern: undefined}
         $scope.$digest()
 
-        expect($scope.hasNoFields).toBe false
-        expect(_.isEmpty(editorScope.fields)).toBe false
-        noParamsMsg = $('i[ng-show="hasNoFields"]')
+        expect($scope.fields).toEqual [
+          {name: 'split_pattern', help_text : jasmine.any(String), type: 'str', required: false, valid: true, $$hashKey: jasmine.any(String) },
+          {name: 'min_df', help_text : jasmine.any(String), type: 'int', required: false, valid: true, $$hashKey: jasmine.any(String) }]
+        noParamsMsg = $('i[ng-show="fields.length <= 0"]')
         expect(noParamsMsg.length).toBe 1
         expect(noParamsMsg.hasClass('ng-hide')).toBe true
 
         $scope.feature.type = 'boolean'
+        $scope.feature.paramsDict = {}
         $scope.$digest()
 
-        expect($scope.hasNoFields).toBe true
-        expect(_.isEmpty(editorScope.fields)).toBe true
-        noParamsMsg = $('i[ng-show="hasNoFields"]')
+        expect($scope.fields).toEqual []
+        noParamsMsg = $('i[ng-show="fields.length <= 0"]')
         expect(noParamsMsg.length).toBe 1
         expect(noParamsMsg.hasClass('ng-hide')).toBe false
 
     describe 'handling complex types with different parameter types', ->
 
-      testCategorical = (params)->
-        prepareContext {type: 'categorical', params: params}, """
+      testCategorical = (paramsDict)->
+        prepareContext {type: 'categorical', paramsDict: paramsDict}, """
   <form name="myForm">
-        <parameters-editor2 name="params" ng-model="feature.params"
+        <parameters-editor2 name="params" ng-model="feature.paramsDict"
                             parameter-type="{{feature.type}}"></parameters-editor2>
   </form>
   """
@@ -364,9 +366,15 @@ describe "directives/parametersEditor", ->
         expect(min_df_input.length).toBe 1
         expect(split_pattern_input.length).toBe 1
 
-        if not _.isEmpty(params)
-          expect(min_df_input.val()).toEqual params.min_df + ''
-          expect(split_pattern_input.val()).toEqual params.split_pattern
+        if not paramsDict.min_df
+          expect(min_df_input.val()).toEqual ''
+        else
+          expect(min_df_input.val()).toEqual paramsDict.min_df + ''
+
+        if not paramsDict.split_pattern
+          expect(split_pattern_input.val()).toEqual ''
+        else
+          expect(split_pattern_input.val()).toEqual paramsDict.split_pattern
 
         changeElemValue min_df_input, '123'
         $scope.$digest()
@@ -374,16 +382,16 @@ describe "directives/parametersEditor", ->
         changeElemValue split_pattern_input, 'zozo'
         $scope.$digest()
 
-        expect($scope.feature.params).toEqual {min_df: '123', split_pattern: 'zozo'}
+        expect($scope.feature.paramsDict).toEqual {min_df: '123', split_pattern: 'zozo'}
 
         changeElemValue min_df_input, 'abc'
         $scope.$digest()
-        expect($scope.feature.params).toEqual {min_df: undefined, split_pattern: 'zozo'}
+        expect($scope.feature.paramsDict).toEqual {min_df: undefined, split_pattern: 'zozo'}
 
-      testComposite = (params)->
-        prepareContext {type: 'composite', params: params}, """
+      testComposite = (paramsDict)->
+        prepareContext {type: 'composite', paramsDict: paramsDict}, """
   <form name="myForm">
-        <parameters-editor2 name="params" ng-model="feature.params"
+        <parameters-editor2 name="params" ng-model="feature.paramsDict"
                             parameter-type="{{feature.type}}"></parameters-editor2>
   </form>
   """
@@ -396,44 +404,46 @@ describe "directives/parametersEditor", ->
 
         expect(chain_textarea.length).toBe 1
 
-        if not _.isEmpty(params)
-          expect(chain_textarea.val()).toEqual params.chain + ''
+        if not paramsDict.chain
+          expect(chain_textarea.val()).toEqual ''
+        else
+          expect(chain_textarea.val()).toEqual paramsDict.chain
 
         changeElemValue chain_textarea, angular.toJson({'the': 'json'})
         $scope.$digest()
 
-        expect($scope.feature.params).toEqual {chain: angular.toJson({'the': 'json'})}
+        expect($scope.feature.paramsDict).toEqual {chain: angular.toJson({'the': 'json'})}
 
         changeElemValue chain_textarea, 'abc'
         $scope.$digest()
 
-        expect($scope.feature.params).toEqual {chain: undefined}
+        expect($scope.feature.paramsDict).toEqual {chain: undefined}
 
-      xit 'should handle parameter type int and str when adding a new categorical feature', ->
-        testCategorical {}
+      it 'should handle parameter type int and str when adding a new categorical feature', ->
+        testCategorical {min_df: undefined, split_pattern: undefined}
 
-      xit 'should handle parameter type int and str when editing a categorical feature', ->
+      it 'should handle parameter type int and str when editing a categorical feature', ->
         testCategorical {min_df: 321, split_pattern: 'this_pattern'}
 
-      xit 'should handle parameter type text when adding a new composite feature', ->
-        testComposite {}
+      it 'should handle parameter type text when adding a new composite feature', ->
+        testComposite {chain: undefined}
 
-      xit 'should handle parameter type int and str when editing a categorical feature', ->
+      it 'should handle parameter type int and str when editing a categorical feature', ->
         testComposite {chain: angular.toJson({'this': 'is json'})}
 
-      it 'should changes the underlying params dictionary when type changes', ->
-        prepareContext {type: 'categorical', params: {min_df: 321, split_pattern: 'this_pattern'}}, """
+      it 'should handle type cahnges between complex types', ->
+        prepareContext {type: 'categorical', paramsDict: {min_df: 321, split_pattern: 'this_pattern'}}, """
   <form name="myForm">
-        <parameters-editor2 name="params" ng-model="feature.params"
+        <parameters-editor2 name="params" ng-model="feature.paramsDict"
                             parameter-type="{{feature.type}}"></parameters-editor2>
   </form>
   """
 
         $scope.feature.type = 'composite'
+        $scope.feature.paramsDict = {chain: undefined}
         $scope.$digest()
 
-        expect($scope.feature.params).toEqual 'bobo'
-        expect($scope.feature.paramsDict).toEqual 'bobo'
+        expect($scope.fields).toEqual [{name: 'chain', help_text : jasmine.any(String), type: 'text', required: true, valid: false, $$hashKey: jasmine.any(String) }]
 
     getConfiguration = ->
       return {

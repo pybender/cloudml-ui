@@ -9,44 +9,88 @@ angular.module('app.directives')
 #    scope:
 #      configuration: '='
     controller: ($scope)->
-      $scope.fields = {}
+#      $scope.fields = {}
+#
+#      $scope.$watch 'parameterType', (newVal, oldVal)->
+#        if not newVal
+#          return
+#
+#        newFields = _.keys($scope.data)
+#        oldFields = _.keys($scope.fields)
+#        if _.difference(newFields, oldFields).length isnt 0
+#          pType = $scope.configuration.types[$scope.parameterType]
+#          builtInFields = _.union(pType.required_params, pType.optional_params,
+#            pType.default_params)
+#          for field in builtInFields
+#            $scope.fields[field] = $scope.configuration.params[field]
+#
+#        $scope.hasNoFields = _.isEmpty($scope.fields)
 
-      $scope.$watch 'parameterType', (newVal, oldVal)->
-        $scope.typeHasChanged()
+#        $scope.typeHasChanged()
 
-      $scope.$watch 'configuration', (newVal, oldVal)->
-        $scope.typeHasChanged()
+#      $scope.$watch 'configuration', (newVal, oldVal)->
+#        $scope.typeHasChanged()
 
       ###
       Called every time we need to update the parameters fields listing
       ###
-      $scope.typeHasChanged = ()->
-        if not $scope.parameterType or not $scope.configuration
-          return
-
-        $scope.fields = {}
-        pType = $scope.configuration.types[$scope.parameterType]
-        builtInFields = _.union(pType.required_params, pType.optional_params,
-          pType.default_params)
-        for field in builtInFields
-          $scope.fields[field] = $scope.configuration.params[field]
-        $scope.hasNoFields = _.isEmpty($scope.fields)
+#      $scope.typeHasChanged = ()->
+#        if not $scope.parameterType or not $scope.configuration
+#          return
+#
+#        $scope.fields = {}
+#        pType = $scope.configuration.types[$scope.parameterType]
+#        builtInFields = _.union(pType.required_params, pType.optional_params,
+#          pType.default_params)
+#        for field in builtInFields
+#          $scope.fields[field] = $scope.configuration.params[field]
+#        $scope.hasNoFields = _.isEmpty($scope.fields)
 
       ###
       Checks if the given parameter field is required or not
       ###
-      $scope.isRequired = (fieldName) ->
-        return fieldName in $scope.configuration.types[$scope.parameterType].required_params
+#      $scope.isRequired = (fieldName) ->
+#        return fieldName in $scope.configuration.types[$scope.parameterType].required_params
 
 
     link: (scope, element, attributes, ngModel) ->
-      attributes.$observe 'parameterType', (val)->
-        if not val
+      scope.fields = []
+
+      updateFields = ->
+        if not scope.configuration or not ngModel.$modelValue
           return
-        scope.parameterType = val
+
+        configFields = _.keys(ngModel.$modelValue)
+        featureType = scope.feature.type
+        pType = scope.configuration.types[featureType]
+        builtInFields = _.union(pType.required_params, pType.optional_params,
+          pType.default_params)
+
+        scope.fields = []
+        for fieldName in _.union(builtInFields, configFields)
+          field = scope.configuration.params[fieldName]
+          if field
+            field = _.clone(field)
+            field.required = fieldName in pType.required_params
+            field.name = fieldName
+          else
+            field = {required: false, help_text: '', type: 'str', name: fieldName}
+          scope.fields.push field
 
       ngModel.$render = ->
+        updateFields()
         scope.data = ngModel.$viewValue
+
+      scope.$watch 'configuration', ->
+        updateFields()
+
+#      ngModel.$formatters.push (value)->
+##        newFields = _.keys(value)
+##        oldFields = _.keys(scope.fields)
+##        #if _.difference(newFields, oldFields).length isnt 0
+#        updateFields()
+
+
 
       return
 

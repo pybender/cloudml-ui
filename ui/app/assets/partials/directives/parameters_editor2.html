@@ -1,24 +1,24 @@
-<i class="help_text" ng-show="hasNoFields">
+<i class="help_text" ng-show="fields.length <= 0">
   There are no parameters to edit
 </i>
 
 <div class="jsonContents">
-  <div class="block control-group" ng-hide="fieldName.indexOf('_') == 0" ng-repeat="(fieldName, field) in fields"
-       ng-class="{error: !field.valid}" ng-init="field.valid=true;field.required=isRequired(fieldName)">
-    <label class="control-label">{{fieldName}}<span>: &nbsp;</span></label>
+  <div class="block control-group" ng-hide="field.name.indexOf('_') == 0" ng-repeat="field in fields"
+       ng-class="{error: !field.valid}" ng-init="field.valid=true;field.required=field.required">
+    <label class="control-label">{{field.name}}<span>: &nbsp;</span></label>
 
     <span ng-switch on="field.type" >
       <div ng-switch-when="dict">
       </div>
       <span ng-switch-when="text" class="jsonLiteral">
         <textarea class="span3" rows="5"
-                  ng-model="data[fieldName]" ng-model-onblur=""
-                  dynamic-name="fieldName" parameter-validator=""></textarea>
+                  ng-model="data[field.name]" ng-model-onblur=""
+                  dynamic-name="field.name" parameter-validator=""></textarea>
       </span>
       <span ng-switch-default class="jsonLiteral">
         <input type="text" placeholder="Empty" class="input-medium"
-               ng-model="data[fieldName]" ng-model-onblur=""
-               dynamic-name="fieldName" parameter-validator=""/>
+               ng-model="data[field.name]" ng-model-onblur=""
+               dynamic-name="field.name" parameter-validator=""/>
       </span>
       <span ng-show="field.required && !field.valid" class="help-inline">*</span>
       <div ng-hide="field.valid">

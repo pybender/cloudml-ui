@@ -86,6 +86,7 @@ describe 'features/controllers/features.coffee', ->
         Scaler: Scaler
         Parameters: Parameters
       $httpBackend.flush()
+
       return [configuration, feature]
 
     it 'should error when route params model_id or set_id is not set',
@@ -127,7 +128,7 @@ describe 'features/controllers/features.coffee', ->
         expect($scope.feature.transformer).toEqual jasmine.any(Transformer)
         expect($scope.feature.scaler).toEqual jasmine.any(Scaler)
         expect($scope.feature.params).toEqual '{}'
-        expect($scope.feature.paramsDict).toEqual {}
+        expect($scope.feature.paramsDict).toEqual {split_pattern : null, min_df: null }
 
         expect($scope.configuration).toEqual configuration
 
@@ -154,6 +155,27 @@ describe 'features/controllers/features.coffee', ->
         $scope.changeScalerType()
         expect($scope.feature.scaler).toEqual {}
 
+    it 'should update paramsDict when type changes',
+      inject (Model, Feature, Transformer, Scaler, Parameters)->
+        [model_id, set_id, feature_id] = [111, 222, 333]
+        prepareTestContext Model, Feature, Transformer, Scaler,
+          Parameters, model_id, set_id, feature_id
+
+        # it is categorical by default
+        $scope.feature.paramsDict.min_df = 5
+        $scope.feature.paramsDict.split_pattern = 'zinger'
+        $scope.feature.type = 'categorical_label'
+        $scope.$digest()
+        expect($scope.feature.paramsDict).toEqual {min_df: 5, split_pattern: 'zinger'}
+
+        $scope.feature.type = 'composite'
+        $scope.$digest()
+        expect($scope.feature.paramsDict).toEqual {chain: null}
+
+        $scope.feature.type = 'categorical'
+        $scope.$digest()
+        expect($scope.feature.paramsDict).toEqual {min_df: null, split_pattern: null}
+
     it 'save feature',
       inject (Model, Feature, Transformer, Scaler, Parameters, $filter)->
         [model_id, set_id, feature_id] = [111, 222, 333]
@@ -171,13 +193,15 @@ describe 'features/controllers/features.coffee', ->
         $httpBackend.expectPUT "#{Feature.$get_api_url(feature_set_id: set_id)}#{feature_id}/"
         , (data)->
           featureData = data.getData()
+          params = JSON.parse featureData['params']
           valid = featureData['name'] is 'feature' and
             featureData['type'] is 'categorical_label' and
             featureData['feature_set_id'] is 222 and
             featureData['is_target_variable'] is false and
             featureData['remove_transformer'] is true and
             featureData['remove_scaler'] is true and
-            featureData['params'] is $filter('json')(paramsDict)
+            params['min_df'] is paramsDict.min_df and
+            params['split_pattern'] is paramsDict.split_pattern
           if not valid
             console.log 'the post form was not as expected', data.getData()
           return valid
