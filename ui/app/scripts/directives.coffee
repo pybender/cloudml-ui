@@ -621,6 +621,7 @@ angular.module('app.directives', [
   return {
     restrict: 'A',
     require: 'ngModel',
+    priority: 1000
     link: (scope, element, attributes, ctrl) ->
       if (attributes.type == 'radio' || attributes.type == 'checkbox')
         return
