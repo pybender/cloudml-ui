@@ -1,9 +1,9 @@
 <div class="form-inline">
   <div ng-repeat="pair in pairs" class="control-group" ng-class="{error: pair.error.error_key || pair.error.error_value || pair.error.error_duplicate_key}">
-    <div class="controls">
-      <input type="text" ng-model="pair.key" placeholder="key" ng-model-onblur="" ng-class="inputKeyClass"/>
-      <span>&nbsp;:&nbsp;</span>
-      <input type="text" ng-model="pair.value" placeholder="value" ng-model-onblur="" ng-class="inputValueClass"/>
+    <div>
+      <input type="text" ng-model="pair.key" placeholder="key" ng-model-onblur="" ng-class="inputKeyClass" required ng-pattern="/\w+/"/>
+      <span>:</span>
+      <input type="text" ng-model="pair.value" placeholder="value" ng-model-onblur="" ng-class="inputValueClass" required pattern="\w+"/>
       <button title="delete key/value pair" ng-click="deleteKey($index)" class="btn">
         <i class="icon-trash"></i></button>
       <div>

@@ -10,7 +10,7 @@ angular.module('app.directives')
       scope.fields = []
 
       updateFields = ->
-        if not scope.configuration or not ngModel.$modelValue
+        if not scope.configuration or not ngModel.$modelValue or not scope.feature.type
           return
 
         configFields = _.keys(ngModel.$modelValue)
@@ -79,18 +79,19 @@ angular.module('app.directives')
           return true
         return not isNaN(parseInt(data))
 
-#      _validateObjectParam = (data) ->
-#        # Hack: remove $$hashKey added by angular
-#        data = angular.fromJson(angular.toJson(data))
-#        if _.isEmpty(data) then return false
-#        else
-#          for key of data
-#            if data[key] == '' then return false
-#        return true
+      _validateObjectParam = (data) ->
+        return true
+        # Hack: remove $$hashKey added by angular
+        data = angular.fromJson(angular.toJson(data))
+        if _.isEmpty(data) then return false
+        else
+          for key of data
+            if data[key] == '' then return false
+        return true
 
       VALIDATORS = {}
       VALIDATORS[TYPE_STRING] = _validateStrParam
-      #VALIDATORS[TYPE_OBJECT] = _validateObjectParam
+      VALIDATORS[TYPE_OBJECT] = _validateObjectParam
       VALIDATORS[TYPE_TEXT] = _validateJsonParam
       VALIDATORS[TYPE_INT] = _validateInt
 

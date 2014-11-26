@@ -274,6 +274,22 @@ describe "directives/parametersEditor", ->
       createDirective html
 
 
+    describe 'adding a new feature', ->
+
+      it 'should handle new feature screen with no type specified', ->
+        prepareContext {type: undefined, paramsDict: undefined}, """
+      <form name="myForm">
+            <parameters-editor2 name="params" ng-model="feature.paramsDict"
+                                parameter-type="{{feature.type}}"></parameters-editor2>
+      </form>
+      """
+        # we are setting the paramsDict as FeatureEditCtrl would do when
+        # type has been selected, the type is still undefined
+        $scope.feature.paramsDict = {}
+        expect ()->
+          $scope.$digest()
+        .not.toThrow()
+
     describe 'simple and complex types with switching', ->
 
       for type in ['text', 'float', 'numeric', 'int', 'boolean']
@@ -309,7 +325,7 @@ describe "directives/parametersEditor", ->
             expect(noParamsMsg.hasClass('ng-hide')).toBe true
             # The +1 in count is because of the extra field 'key1' passed in prepareContext
             # above
-            expect($('div[class="jsonContents"]').children().length).toBe type.count + 1
+            expect($('div[ng-repeat="field in fields"]').length).toBe type.count + 1
 
       it 'should handle switching back and forth between simple and complex types', ->
 

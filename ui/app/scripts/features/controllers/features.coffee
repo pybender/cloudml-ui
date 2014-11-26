@@ -61,7 +61,9 @@ Feature, Transformer, Scaler, Parameters) ->
 
     newParamsDict = {}
     for field in builtInFields
-      newParamsDict[field] = null
+      # we will need to prepare the dict objects (only used in mappings),
+      # otherwise leave it to the input controls
+      newParamsDict[field] = if $scope.configuration.params[field].type isnt 'dict' then null else {}
     for field in _.intersection(builtInFields, _.keys($scope.feature.paramsDict))
       newParamsDict[field] = $scope.feature.paramsDict[field]
 
