@@ -83,7 +83,8 @@ describe "directives/parametersEditor", ->
 
       expect($('button[ng-click="addKey()"]').is(':enabled')).toBe false
       expect($scope.theDict).toBeUndefined()
-      expect($scope.myForm.model.$viewValue).toEqual [{key: '', value: '', $$hashKey: jasmine.any(String)}]
+      expect($scope.myForm.model.$viewValue).toEqual [{key: '', value: '', $$hashKey: jasmine.any(String),
+      error: {error_key: true, error_value: true, error_duplicate_key: false }}]
 
       # fill in the values and the add button will get enabled
       changeElemValue $('input[ng-model="pair.key"]'), 'the_key'
@@ -91,7 +92,8 @@ describe "directives/parametersEditor", ->
       $scope.$digest()
 
       expect($('button[ng-click="addKey()"]').is(':enabled')).toBe true
-      expect($scope.myForm.model.$viewValue).toEqual [{key: 'the_key', value: 'the_value', $$hashKey: jasmine.any(String)}]
+      expect($scope.myForm.model.$viewValue).toEqual [{key: 'the_key', value: 'the_value', $$hashKey: jasmine.any(String)
+      error: { error_key: false, error_value: false, error_duplicate_key : false }}]
       expect($scope.theDict).toEqual {the_key: 'the_value'}
 
       # click the add button a new row will be added and the add button will be disabled
@@ -100,15 +102,16 @@ describe "directives/parametersEditor", ->
       expect($('button[ng-click="addKey()"]').is(':enabled')).toBe false
       expect($scope.theDict).toBeUndefined()
       expect($scope.myForm.model.$viewValue).toEqual [
-        {key: 'the_key', value: 'the_value', $$hashKey: jasmine.any(String)}
-        {key: '', value: '', $$hashKey: jasmine.any(String)}
+        {key: 'the_key', value: 'the_value', error: {error_key: false, error_value: false, error_duplicate_key: false }, $$hashKey: jasmine.any(String)}
+        {key: '', value: '', error: {error_key : true, error_value: true, error_duplicate_key: false }, $$hashKey: jasmine.any(String)}
       ]
 
       # click the remove button on the new row and everything will be ok
       $('button[ng-click="deleteKey($index)"]:last').click()
       $scope.$digest()
       expect($('button[ng-click="addKey()"]').is(':enabled')).toBe true
-      expect($scope.myForm.model.$viewValue).toEqual [{key: 'the_key', value: 'the_value', $$hashKey: jasmine.any(String)}]
+      expect($scope.myForm.model.$viewValue).toEqual [{key: 'the_key', value: 'the_value', $$hashKey: jasmine.any(String)
+      error: {error_key : false, error_value: false, error_duplicate_key: false }}]
       expect($scope.theDict).toEqual {the_key: 'the_value'}
 
       # add & fill again and everythign will be ok
@@ -117,8 +120,8 @@ describe "directives/parametersEditor", ->
       expect($('button[ng-click="addKey()"]').is(':enabled')).toBe false
       expect($scope.theDict).toBeUndefined()
       expect($scope.myForm.model.$viewValue).toEqual [
-        {key: 'the_key', value: 'the_value', $$hashKey: jasmine.any(String)}
-        {key: '', value: '', $$hashKey: jasmine.any(String)}
+        {key: 'the_key', value: 'the_value', error: {error_key : false, error_value: false, error_duplicate_key: false }, $$hashKey: jasmine.any(String)}
+        {key: '', value: '', error: {error_key : true, error_value: true, error_duplicate_key: false }, $$hashKey: jasmine.any(String)}
       ]
 
       ngRepeatDiv = $('div[ng-repeat="pair in pairs"]:last')
@@ -127,8 +130,8 @@ describe "directives/parametersEditor", ->
       $scope.$digest()
       expect($('button[ng-click="addKey()"]').is(':enabled')).toBe true
       expect($scope.myForm.model.$viewValue).toEqual [
-        {key: 'the_key', value: 'the_value', $$hashKey: jasmine.any(String)}
-        {key: 'the_key2', value: 'the_value2', $$hashKey: jasmine.any(String)}
+        {key: 'the_key', value: 'the_value', error: {error_key : false, error_value: false, error_duplicate_key: false }, $$hashKey: jasmine.any(String)}
+        {key: 'the_key2', value: 'the_value2', error: {error_key : false, error_value: false, error_duplicate_key: false }, $$hashKey: jasmine.any(String)}
       ]
       expect($scope.theDict).toEqual {the_key: 'the_value', the_key2: 'the_value2'}
 
@@ -144,8 +147,8 @@ describe "directives/parametersEditor", ->
       expect($('button[ng-click="addKey()"]').is(':enabled')).toBe false
       expect($scope.theDict).toBeUndefined()
       expect($scope.myForm.model.$viewValue).toEqual [
-        {key: 'the_key', value: 'the_value', $$hashKey: jasmine.any(String)}
-        {key: 'the_key', value: 'the_value2', $$hashKey: jasmine.any(String)}
+        {key: 'the_key', value: 'the_value', error: {error_key : false, error_value: false, error_duplicate_key: true}, $$hashKey: jasmine.any(String)}
+        {key: 'the_key', value: 'the_value2', error: {error_key : false, error_value: false, error_duplicate_key: true}, $$hashKey: jasmine.any(String)}
       ]
       expect($scope.myForm.model.$error).toEqual {error_keys: false, error_values: false, error_no_keys: false, error_duplicate_keys: true}
 

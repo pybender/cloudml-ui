@@ -1,16 +1,16 @@
 angular.module('app.directives')
 
-.directive('dictParameter', ['$compile', '$window', ($compile, $window) ->
+.directive('dictParameter', [ ->
     return {
     restrict: 'E'
     require: 'ngModel'
     templateUrl: 'partials/directives/dict_parameter.html'
     replace: false
-    controller: ['$scope', '$timeout', ($scope, $timeout)->
-      #console.log 'in the controller'
-    ]
     link: (scope, element, attributes, ngModel) ->
       #console.log 'in the link'
+
+      scope.inputKeyClass = if attributes.inputKeyClass then attributes.inputKeyClass else ''
+      scope.inputValueClass = if attributes.inputValueClass then attributes.inputValueClass else ''
 
       isEmpty = (value)->
         if _.isString(value)
@@ -23,12 +23,18 @@ angular.module('app.directives')
         validKeys = true
         validValues = true
 
-        for pair in pairs
-          validKeys = validKeys and not isEmpty(pair.key)
-          validValues = validValues and not isEmpty(pair.value)
+        for pair, index in pairs
+          pair.error = {error_key: false, error_value: false, error_duplicate_key: false}
+          pair.error.error_key = isEmpty(pair.key)
+          pair.error.error_value = isEmpty(pair.value)
+          for pair2, index2 in pairs
+            if pair.key is pair2.key and index isnt index2
+              pair.error.error_duplicate_key = true
+              break
 
-        keys = _.pluck(pairs, 'key')
-        uniqueKeys = _.unique(keys).length is keys.length
+        validKeys = not _.some(_.pluck(_.pluck(pairs, 'error'), 'error_key'))
+        validValues = not _.some(_.pluck(_.pluck(pairs, 'error'), 'error_value'))
+        uniqueKeys = not _.some(_.pluck(_.pluck(pairs, 'error'), 'error_duplicate_key'))
 
         ngModel.$setValidity('error_keys', validKeys)
         ngModel.$setValidity('error_values', validValues)
@@ -48,7 +54,7 @@ angular.module('app.directives')
       scope.addKey = ->
         #console.log 'add key was clicked'
         pairs = _.clone(ngModel.$viewValue)
-        pairs.push {key: '', value: ''}
+        pairs.push {key: '', value: '', error: {error_key: true, error_value: true, error_duplicate_key: false}}
         # it is important to note that the $viewValue will be updated
         # from the watch on pairs
         scope.pairs = pairs

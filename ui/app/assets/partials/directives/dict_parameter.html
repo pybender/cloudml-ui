@@ -1,10 +1,17 @@
-<div>
-  <div ng-repeat="pair in pairs">
-    <input ng-model="pair.key" placeholder="key" ng-model-onblur=""/>
-    <span>&nbsp;:&nbsp;</span>
-    <input ng-model="pair.value" placeholder="value" ng-model-onblur=""/>
-    <button title="delete key/value pair" ng-click="deleteKey($index)" class="btn btn-mini">
-      <i class="icon-trash"></i></button>
+<div class="form-inline">
+  <div ng-repeat="pair in pairs" class="control-group" ng-class="{error: pair.error.error_key || pair.error.error_value || pair.error.error_duplicate_key}">
+    <div class="controls">
+      <input type="text" ng-model="pair.key" placeholder="key" ng-model-onblur="" ng-class="inputKeyClass"/>
+      <span>&nbsp;:&nbsp;</span>
+      <input type="text" ng-model="pair.value" placeholder="value" ng-model-onblur="" ng-class="inputValueClass"/>
+      <button title="delete key/value pair" ng-click="deleteKey($index)" class="btn">
+        <i class="icon-trash"></i></button>
+      <div>
+        <div class="help-block" ng-show="pair.error.error_key">key cannot be empty</div>
+        <div class="help-block" ng-show="pair.error.error_value">value cannot be empty</div>
+        <div class="help-block" ng-show="pair.error.error_duplicate_key">keys must be unique</div>
+      </div>
+    </div>
   </div>
 </div>
 <div>
