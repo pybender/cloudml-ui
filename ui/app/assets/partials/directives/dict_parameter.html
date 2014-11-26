@@ -1,0 +1,13 @@
+<div>
+  <div ng-repeat="pair in pairs">
+    <input ng-model="pair.key" placeholder="key" ng-model-onblur=""/>
+    <span>&nbsp;:&nbsp;</span>
+    <input ng-model="pair.value" placeholder="value" ng-model-onblur=""/>
+    <button title="delete key/value pair" ng-click="deleteKey($index)" class="btn btn-mini">
+      <i class="icon-trash"></i></button>
+  </div>
+</div>
+<div>
+  <button title="add new key/value pair" ng-click="addKey()" class="btn btn-mini" ng-disabled="!canAddNewKey">
+  <i class="icon-plus"></i></button>
+</div>
