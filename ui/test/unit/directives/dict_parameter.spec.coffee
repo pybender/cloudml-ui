@@ -50,25 +50,25 @@ describe "directives/parametersEditor", ->
     it 'should trigger 3 errors based on the modelValue, and disable/enable the add button', ->
 
       prepareContext {}
-      expect($scope.myForm.model.$error).toEqual {error_keys: false, error_values: false, error_no_keys: true }
+      expect($scope.myForm.model.$error).toEqual {error_keys: false, error_values: false, error_no_keys: true, error_duplicate_keys: false}
       expect($('button[ng-click="addKey()"]').is(':enabled')).toBe true
       expect($scope.theDict).toBeUndefined()
 
       $scope.theDict = {'': 'zozo'}
       $scope.$digest()
-      expect($scope.myForm.model.$error).toEqual {error_keys: true, error_values: false, error_no_keys: false }
+      expect($scope.myForm.model.$error).toEqual {error_keys: true, error_values: false, error_no_keys: false, error_duplicate_keys: false}
       expect($('button[ng-click="addKey()"]').is(':enabled')).toBe false
       expect($scope.theDict).toBeUndefined()
 
       $scope.theDict = {'zinger': ''}
       $scope.$digest()
-      expect($scope.myForm.model.$error).toEqual {error_keys: false, error_values: true, error_no_keys: false }
+      expect($scope.myForm.model.$error).toEqual {error_keys: false, error_values: true, error_no_keys: false, error_duplicate_keys: false}
       expect($('button[ng-click="addKey()"]').is(':enabled')).toBe false
       expect($scope.theDict).toBeUndefined()
 
       $scope.theDict = {'': ''}
       $scope.$digest()
-      expect($scope.myForm.model.$error).toEqual {error_keys: true, error_values: true, error_no_keys: false }
+      expect($scope.myForm.model.$error).toEqual {error_keys: true, error_values: true, error_no_keys: false, error_duplicate_keys: false}
       expect($('button[ng-click="addKey()"]').is(':enabled')).toBe false
       expect($scope.theDict).toBeUndefined()
 
@@ -76,7 +76,7 @@ describe "directives/parametersEditor", ->
       prepareContext {}
 
       # make sure we are on the right state
-      expect($scope.myForm.model.$error).toEqual {error_keys: false, error_values: false, error_no_keys: true }
+      expect($scope.myForm.model.$error).toEqual {error_keys: false, error_values: false, error_no_keys: true, error_duplicate_keys: false}
       expect($('button[ng-click="addKey()"]').is(':enabled')).toBe true
       $('button[ng-click="addKey()"]').click()
       $scope.$digest()
@@ -131,5 +131,22 @@ describe "directives/parametersEditor", ->
         {key: 'the_key2', value: 'the_value2', $$hashKey: jasmine.any(String)}
       ]
       expect($scope.theDict).toEqual {the_key: 'the_value', the_key2: 'the_value2'}
+
+    it 'should be invalid when adding 2 keys of the same key name', ->
+      prepareContext {the_key: 'the_value'}
+      $('button[ng-click="addKey()"]').click()
+      $scope.$digest()
+
+      ngRepeatDiv = $('div[ng-repeat="pair in pairs"]:last')
+      changeElemValue $('input[ng-model="pair.key"]', ngRepeatDiv), 'the_key'
+      changeElemValue $('input[ng-model="pair.value"]', ngRepeatDiv), 'the_value2'
+      $scope.$digest()
+      expect($('button[ng-click="addKey()"]').is(':enabled')).toBe false
+      expect($scope.theDict).toBeUndefined()
+      expect($scope.myForm.model.$viewValue).toEqual [
+        {key: 'the_key', value: 'the_value', $$hashKey: jasmine.any(String)}
+        {key: 'the_key', value: 'the_value2', $$hashKey: jasmine.any(String)}
+      ]
+      expect($scope.myForm.model.$error).toEqual {error_keys: false, error_values: false, error_no_keys: false, error_duplicate_keys: true}
 
 

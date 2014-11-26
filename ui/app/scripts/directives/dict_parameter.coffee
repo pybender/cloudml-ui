@@ -27,13 +27,20 @@ angular.module('app.directives')
           validKeys = validKeys and not isEmpty(pair.key)
           validValues = validValues and not isEmpty(pair.value)
 
+        keys = _.pluck(pairs, 'key')
+        uniqueKeys = _.unique(keys).length is keys.length
+
         ngModel.$setValidity('error_keys', validKeys)
         ngModel.$setValidity('error_values', validValues)
         ngModel.$setValidity('error_no_keys', pairs.length > 0)
+        ngModel.$setValidity('error_duplicate_keys', uniqueKeys)
 
-        scope.canAddNewKey = validKeys and validValues
+        # adding a new key is a subset of the model being valid or not
+        # the only excluded condition from validity that still allows
+        # adding a new key is the model having no keys at all
+        scope.canAddNewKey = validKeys and validValues and uniqueKeys
 
-        return validKeys and validValues and pairs.length > 0
+        return scope.canAddNewKey and pairs.length > 0
 
       scope.canAddNewKey = false
       scope.pairs = undefined
