@@ -48,6 +48,7 @@ angular.module('app.directives')
     return {
     restrict: 'A'
     require: 'ngModel'
+    priority: 10000
     link: (scope, element, attributes, ngModel) ->
 
       TYPE_STRING = 'str'
@@ -80,14 +81,9 @@ angular.module('app.directives')
         return not isNaN(parseInt(data))
 
       _validateObjectParam = (data) ->
-        return true
-        # Hack: remove $$hashKey added by angular
-        data = angular.fromJson(angular.toJson(data))
-        if _.isEmpty(data) then return false
-        else
-          for key of data
-            if data[key] == '' then return false
-        return true
+        # we will only tackle the no keys validation and leave the rest
+        # of validation error messages to the dictParameter directive
+        return not ngModel.$error.error_no_keys
 
       VALIDATORS = {}
       VALIDATORS[TYPE_STRING] = _validateStrParam
