@@ -92,19 +92,8 @@ Feature, Transformer, Scaler, Parameters) ->
       $scope.savingProgress = '0%'
     )
 
-  $scope.clearTransformer = () ->
-    $scope.feature.transformer = {}
-
   $scope.clearScaler = () ->
     $scope.feature.scaler = {}
-
-  $scope.changeTransformerType = () ->
-    if !$scope.feature.transformer.type
-      $scope.clearTransformer()
-
-  $scope.changePredefinedTransformer = () ->
-    if not $scope.feature.transformer?.transformer
-      delete $scope.feature.transformer.transformer
 
   $scope.changeScalerType = () ->
     if !$scope.feature.scaler.type

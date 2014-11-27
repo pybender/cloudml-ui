@@ -307,9 +307,11 @@ class FeatureTransformerForm(BaseForm):
         is_pretrained = self.cleaned_data.get('predefined_selected', False)
         if is_pretrained:
             pretrained_transformer = self.cleaned_data.get('transformer')
-            transformer = {'type': pretrained_transformer.name}
+            transformer = {'type': pretrained_transformer.name,
+                           'id': pretrained_transformer.id}
         else:
             transformer = {
+                'id': -1,
                 "type": self.cleaned_data.get('type'),
                 "params": self.cleaned_data.get('params')
             }

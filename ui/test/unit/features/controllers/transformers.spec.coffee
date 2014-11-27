@@ -43,35 +43,42 @@ describe 'features/controllers/transformers.coffee', ->
 
   describe 'TransformersTypesLoader', ->
 
-    it 'should init scope ', inject (Transformer)->
+    prepareContext = (feature) ->
+      $rootScope.feature = feature
+      createController 'TransformersTypesLoader'
+      $scope.$digest()
 
+    it 'should init scope and watch for transformer changes', inject (Transformer)->
       # new feature
-      $rootScope.feature = {transformer: {}}
-      createController 'TransformersTypesLoader'
+      prepareContext {transformer: {}}
+
       expect(Transformer.$TYPES_LIST.length).toBeGreaterThan 2
       expect($scope.types).toEqual Transformer.$TYPES_LIST
       expect($scope.predefined_selected).toBe false
 
-      # featured editing with builtin feature
-      $rootScope.feature = {id: 10, transformer: {type: Transformer.$TYPES_LIST[0]}}
-      createController 'TransformersTypesLoader'
-      expect(Transformer.$TYPES_LIST.length).toBeGreaterThan 2
-      expect($scope.types).toEqual Transformer.$TYPES_LIST
-      expect($scope.predefined_selected).toBe false
-
-      # featured editing with predefined transformer
-      $rootScope.feature = {id: 10, transformer: {type: 'zinger'}}
-      createController 'TransformersTypesLoader'
-      expect(Transformer.$TYPES_LIST.length).toBeGreaterThan 2
-      expect($scope.types).toEqual Transformer.$TYPES_LIST
+      $scope.feature.transformer = {id: 1}
+      $scope.$digest()
       expect($scope.predefined_selected).toBe true
+
+      $scope.feature.transformer = {id: -1}
+      $scope.$digest()
+      expect($scope.predefined_selected).toBe false
+
+    it 'should handle transformer changes', ->
+      prepareContext {transformer: {id: 10, type: 'zaza'}}
+      expect($scope.predefined_selected).toBe true
+
+      $scope.changeTransformer -1, 'zozo'
+
+      expect($scope.feature.transformer.id).toBe -1
+      expect($scope.feature.transformer.type).toEqual 'zozo'
 
 
   describe 'TransformersSelectLoader', ->
 
-    it 'should load all transformers and handle errors', inject (Transformer)->
+    it 'should load all pretrained transformers and handle errors', inject (Transformer)->
 
-      transformer = new Transformer {id: 111}
+      transformer = new Transformer {id: 111, name: 'zozo'}
 
       response = {}
       response[transformer.API_FIELDNAME + 's'] = [transformer]
@@ -80,7 +87,7 @@ describe 'features/controllers/transformers.coffee', ->
       createController 'TransformersSelectLoader'
       $httpBackend.flush()
 
-      expect($scope.transformers).toEqual = [transformer]
+      expect($scope.pretrainedTransformers).toEqual = [transformer]
 
       # error handling
       $rootScope.setError = jasmine.createSpy('$rootScope.setError').and.returnValue 'an error'
@@ -89,7 +96,8 @@ describe 'features/controllers/transformers.coffee', ->
       createController 'TransformersSelectLoader'
       $httpBackend.flush()
 
-      expect($rootScope.setError).toHaveBeenCalledWith jasmine.any(Object), 'loading transformers'
+      expect($rootScope.setError).toHaveBeenCalledWith jasmine.any(Object),
+        'loading pretrained transformers'
       expect($scope.err).toEqual 'an error'
 
 

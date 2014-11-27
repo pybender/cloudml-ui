@@ -273,13 +273,26 @@ angular.module('app.features.models', ['app.config'])
         removeItems = opts.removeItems || false
         isTransformerFilled = false
         isScalerFilled = false
+
+        if 'transformer' in opts.only
+          _.remove opts.only, (x)-> x is 'transformer'
+          transType = @transformer.type
+          transId = @transformer.id
+          transParams = @transformer.params
+
+          if transId is 0
+            opts.extraData['remove_transformer'] = true
+          else
+            opts.extraData['remove_transformer'] = false
+            if transId > 0
+              opts.extraData['transformer-predefined_selected'] = true
+              opts.extraData['transformer-transformer'] = transId
+            else
+              opts.extraData['transformer-predefined_selected'] = false
+              opts.extraData['transformer-type'] = transType
+              opts.extraData['transformer-params'] = angular.toJson(transParams)
+
         for name in opts.only
-          if (name.indexOf "transformer__") == 0 && @transformer
-            field = name.slice 13
-            val = getVal(eval('this.transformer.' + field))
-            if val?
-              opts.extraData['transformer-' + field] = val
-              isTransformerFilled = true
 
           if (name.indexOf "scaler__") == 0 && @scaler
             field = name.slice 8
@@ -287,11 +300,6 @@ angular.module('app.features.models', ['app.config'])
             if val?
               opts.extraData['scaler-' + field] = val
               isScalerFilled = true
-
-        if @transformer.transformer?
-          opts.extraData['transformer-predefined_selected'] = true
-        else if removeItems
-          opts.extraData['remove_transformer'] = true
 
         if isScalerFilled
           opts.extraData['scaler-is_predefined'] = false
