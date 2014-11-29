@@ -1,52 +1,65 @@
 <div ng-controller="ScalersTypesLoader">
-<ul class="nav nav-pills">
-  <li ng-class="{active: predefined_selected == false}">
-    <a ng-click="predefined_selected=false">Custom</a>
-  </li>
-  <li ng-class="{active: predefined_selected}">
-    <a ng-click="predefined_selected=true">Predefined</a>
-  </li>
-</ul>
+  <h4>Scaler <a ng-click="changeScaler(false, null)"><small>(clear)</small></a></h4>
 
-<div ng-show="predefined_selected" class="control-group">
-	<alert-message class="alert-info" msg='Please choose predefined scaler.
+  <ul class="nav nav-pills">
+    <li ng-class="{active: predefined_selected == false}">
+      <a ng-click="changeScaler(false, null)">Built-in</a>
+    </li>
+    <li ng-class="{active: predefined_selected}">
+      <a ng-click="changeScaler(true, null)">Predefined</a>
+    </li>
+  </ul>
+
+  <div ng-show="predefined_selected" class="control-group">
+    <alert-message class="alert-info" msg='Please choose predefined scaler.
 	You could add other predefined scalers at
-	<a target="_blank" href="#/features/scalers/"><b>[Scalers List]</b></a> page.' safe></alert-message>
-	<div class="control-group" ng-class="{error: ScalerForm.scaler.$invalid}">
-	  <label class="control-label">Scaler</label>
-	  <div class="controls"  ng-controller="ScalersSelectLoader">
-	    <select name="scaler" ng-model="feature.scaler.scaler"
-              ng-change="changePredefinedScaler()"
-              ng-required="predefined_selected"
-              ng-options="name for name in scalers">
-        <option value="">- nothing selected -</option>
-	    </select>
-	    <span ng-show="ScalerForm.scaler.$error.required" class="help-inline">*</span>
-	  </div>
-	</div>
-</div>
+	<a target="_blank" href="#/features/scalers/"><b>[Scalers List]</b></a> page.'
+                   safe></alert-message>
+    <div class="control-group" ng-class="{error: ScalerForm.predefinedScaler.$invalid}">
+      <label class="control-label">Scaler</label>
 
-<div ng-show="!predefined_selected" class="control-group">
-	<div class="control-group" ng-class="{error: ScalerForm.type.$invalid}">
-	  <label class="control-label">Type</label>
-	  <div class="controls">
-	    <select name="type" ng-model="feature.scaler.type"
-              ng-change="loadParameters(true);changeScalerType()"
-              ng-options="typeName for typeName in types">
-        <option value="">- nothing selected -</option>
-	    </select>
-	    <span ng-show="ScalerForm.type.$error.required" class="help-inline">*</span>
-	  </div>
-	</div>
-	<div ng-show="feature.scaler.type && feature.scaler.config && feature.scaler.config.parameters && feature.scaler.config.parameters.length > 0">
-	  <h4>Scalar Parameters</h4>
-	  <div ng-repeat="name in feature.scaler.config.parameters" class="control-group">
-	    <label class="control-label">{{ name }}</label>
-	    <div class="controls">
-	      <input ng-model="feature.scaler.params[name]" name="{{ name }}" type='text' />
-	    </div>
-	  </div>
-	</div>
-	</div>
+      <div class="controls" ng-controller="ScalersSelectLoader">
+        <select name="predefinedScaler"
+                ng-model="feature.scaler.name"
+                ng-required="predefined_selected"
+                ng-change="changeScalerType(true, ScalerForm.predefinedScaler.$viewValue)"
+                ng-options="name for name in predefinedScalers">
+          <option value="">- nothing selected -</option>
+        </select>
+        <span ng-show="ScalerForm.predefinedScaler.$error.required"
+              class="help-inline">*</span>
+      </div>
+    </div>
+  </div>
+
+  <div ng-show="!predefined_selected" class="control-group">
+    <div class="control-group" ng-class="{error: ScalerForm.scaler.$invalid}">
+      <label class="control-label">Type</label>
+
+      <div class="controls">
+        <select name="scaler"
+                ng-model="feature.scaler.type"
+                ng-change="changeScalerType(true, ScalerForm.scaler.$viewValue)"
+                ng-options="typeName for typeName in types">
+          <option value="">- nothing selected -</option>
+        </select>
+        <span ng-show="ScalerForm.scaler.$error.required"
+              class="help-inline">*</span>
+      </div>
+    </div>
+    <div ng-show="feature.scaler.type && feature.scaler.config && feature.scaler.config.parameters && feature.scaler.config.parameters.length > 0">
+      <h4>Scalar Parameters</h4>
+
+      <div ng-repeat="name in feature.scaler.config.parameters"
+           class="control-group">
+        <label class="control-label">{{ name }}</label>
+
+        <div class="controls">
+          <input ng-model="feature.scaler.params[name]" name="{{ name }}"
+                 type='text'/>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 </div>

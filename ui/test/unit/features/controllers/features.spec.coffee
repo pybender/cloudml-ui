@@ -198,11 +198,9 @@ describe 'features/controllers/features.coffee', ->
 
         $scope.feature.type = 'categorical_label'
         $scope.feature.paramsDict = paramsDict
-        $scope.feature.transformer.id = 0 # denotes removing transformer
-        $scope.feature.scaler.id = 0      # denotes removing scaler
         $scope.$digest()
 
-        $scope.save(['name', 'type', 'input_format', 'transformer', 'params', 'required', 'scaler__predefined_selected', 'scaler__name','scaler__type', 'scaler__params', 'default', 'feature_set_id', 'is_target_variable'])
+        $scope.save(['name', 'type', 'input_format', 'transformer', 'params', 'required', 'scaler', 'default', 'feature_set_id', 'is_target_variable'])
         $httpBackend.flush()
         $scope.$digest()
 
@@ -244,9 +242,6 @@ describe 'features/controllers/features.coffee', ->
           valid = valid and featureData['transformer-type'] is 'Dictionary'
           valid = valid and 'transformer-transformer' not in _.keys(featureData)
 
-          valid = valid and featureData['remove_scaler'] is true
-          valid = valid and 'scaler' not in _.keys(featureData)
-
           if not valid
             console.log 'the post form was not as expected', data.getData()
           return valid
@@ -256,10 +251,9 @@ describe 'features/controllers/features.coffee', ->
         $scope.feature.transformer.id = -1 # denotes built in transformer
         $scope.feature.transformer.type = 'Dictionary'
         $scope.feature.transformer.params = {'transformer': 'parameters'}
-        $scope.feature.scaler.id = 0      # denotes removing scaler
         $scope.$digest()
 
-        $scope.save(['name', 'type', 'input_format', 'transformer', 'params', 'required', 'scaler__predefined_selected', 'scaler__name','scaler__type', 'scaler__params', 'default', 'feature_set_id', 'is_target_variable'])
+        $scope.save(['name', 'type', 'input_format', 'transformer', 'params', 'required', 'scaler', 'default', 'feature_set_id', 'is_target_variable'])
         $httpBackend.flush()
         $scope.$digest()
 
@@ -300,9 +294,6 @@ describe 'features/controllers/features.coffee', ->
           valid = valid and 'transformer-type' not in _.keys(featureData)
           valid = valid and featureData['transformer-transformer'] is 10
 
-          valid = valid and featureData['remove_scaler'] is true
-          valid = valid and 'scaler' not in _.keys(featureData)
-
           if not valid
             console.log 'the post form was not as expected', data.getData()
           return valid
@@ -311,10 +302,9 @@ describe 'features/controllers/features.coffee', ->
         $scope.feature.type = 'boolean'
         $scope.feature.transformer.id = 10 # denotes pretrained transformer
         $scope.feature.transformer.type = 'Zinger'
-        $scope.feature.scaler.id = 0      # denotes removing scaler
         $scope.$digest()
 
-        $scope.save(['name', 'type', 'input_format', 'transformer', 'params', 'required', 'scaler__predefined_selected', 'scaler__name','scaler__type', 'scaler__params', 'default', 'feature_set_id', 'is_target_variable'])
+        $scope.save(['name', 'type', 'input_format', 'transformer', 'params', 'required', 'scaler', 'default', 'feature_set_id', 'is_target_variable'])
         $httpBackend.flush()
         $scope.$digest()
 
@@ -322,4 +312,249 @@ describe 'features/controllers/features.coffee', ->
         expect($location.url()).toEqual "/models/#{model_id}?action=model:details"
         expect($scope.feature.transformer.type).toEqual 'Zinger'
         expect($scope.feature.transformer.id).toEqual 10
+
+    it 'should handle transformer removal if transformer.id is 0',
+      inject (Model, Feature, Transformer, Scaler, Parameters, $filter)->
+        [model_id, set_id, feature_id] = [111, 222, 333]
+        [configuration, feature] = prepareTestContext Model, Feature, Transformer,
+          Scaler, Parameters, model_id, set_id, feature_id
+
+        updatedFeature = new Feature
+          id: feature_id
+          feature_set_id: set_id
+          name: 'feature'
+          type: 'boolean'
+          params: {}
+          transformer: new Transformer({})
+          scaler: new Scaler({})
+
+        $httpBackend.expectPUT "#{Feature.$get_api_url(feature_set_id: set_id)}#{feature_id}/"
+        , (data)->
+          featureData = data.getData()
+          params = JSON.parse featureData['params']
+          valid = true
+          valid = valid and featureData['name'] is 'feature'
+          valid = valid and featureData['type'] is 'boolean'
+          valid = valid and featureData['feature_set_id'] is 222
+          valid = valid and featureData['is_target_variable'] is false
+          valid = valid and featureData['params'] is $filter('json')({})
+
+          valid = valid and featureData['remove_transformer'] is true
+          valid = valid and 'transformer-predefined_selected' not in _.keys(featureData)
+          valid = valid and 'transformer-params' not in _.keys(featureData)
+          valid = valid and 'transformer-type' not in _.keys(featureData)
+          valid = valid and 'transformer-transformer' not in _.keys(featureData)
+
+          if not valid
+            console.log 'the post form was not as expected', data.getData()
+          return valid
+        .respond 200, angular.toJson({feature: updatedFeature})
+
+        $scope.feature.type = 'boolean'
+        $scope.feature.transformer = new Transformer({id: 0})
+        $scope.$digest()
+
+        $scope.save(['name', 'type', 'input_format', 'transformer', 'params', 'required', 'scaler', 'default', 'feature_set_id', 'is_target_variable'])
+        $httpBackend.flush()
+        $scope.$digest()
+
+        expect($scope.savingProgress).toEqual '100%'
+        expect($location.url()).toEqual "/models/#{model_id}?action=model:details"
+
+    it 'should handle transformer removal if transformer.id is not set',
+      inject (Model, Feature, Transformer, Scaler, Parameters, $filter)->
+        [model_id, set_id, feature_id] = [111, 222, 333]
+        [configuration, feature] = prepareTestContext Model, Feature, Transformer,
+          Scaler, Parameters, model_id, set_id, feature_id
+
+        updatedFeature = new Feature
+          id: feature_id
+          feature_set_id: set_id
+          name: 'feature'
+          type: 'boolean'
+          params: {}
+          transformer: new Transformer({})
+          scaler: new Scaler({})
+
+        $httpBackend.expectPUT "#{Feature.$get_api_url(feature_set_id: set_id)}#{feature_id}/"
+        , (data)->
+          featureData = data.getData()
+          params = JSON.parse featureData['params']
+          valid = true
+          valid = valid and featureData['name'] is 'feature'
+          valid = valid and featureData['type'] is 'boolean'
+          valid = valid and featureData['feature_set_id'] is 222
+          valid = valid and featureData['is_target_variable'] is false
+          valid = valid and featureData['params'] is $filter('json')({})
+
+          valid = valid and featureData['remove_transformer'] is true
+          valid = valid and 'transformer-predefined_selected' not in _.keys(featureData)
+          valid = valid and 'transformer-params' not in _.keys(featureData)
+          valid = valid and 'transformer-type' not in _.keys(featureData)
+          valid = valid and 'transformer-transformer' not in _.keys(featureData)
+
+          if not valid
+            console.log 'the post form was not as expected', data.getData()
+          return valid
+        .respond 200, angular.toJson({feature: updatedFeature})
+
+        $scope.feature.type = 'boolean'
+        $scope.feature.transformer = new Transformer({})
+        $scope.$digest()
+
+        $scope.save(['name', 'type', 'input_format', 'transformer', 'params', 'required', 'scaler', 'default', 'feature_set_id', 'is_target_variable'])
+        $httpBackend.flush()
+        $scope.$digest()
+
+        expect($scope.savingProgress).toEqual '100%'
+        expect($location.url()).toEqual "/models/#{model_id}?action=model:details"
+
+    it 'should handle builtin scaler',
+      inject (Model, Feature, Transformer, Scaler, Parameters, $filter)->
+        [model_id, set_id, feature_id] = [111, 222, 333]
+        [configuration, feature] = prepareTestContext Model, Feature, Transformer,
+          Scaler, Parameters, model_id, set_id, feature_id
+
+        updatedFeature = new Feature
+          id: feature_id
+          feature_set_id: set_id
+          name: 'feature'
+          type: 'boolean'
+          params: {}
+          transformer: new Transformer({})
+          scaler: new Scaler({type: 'MinMaxScaler', params: {'scaler': 'parameters'}})
+
+        $httpBackend.expectPUT "#{Feature.$get_api_url(feature_set_id: set_id)}#{feature_id}/"
+        , (data)->
+          featureData = data.getData()
+          params = JSON.parse featureData['params']
+          valid = true
+          valid = valid and featureData['name'] is 'feature'
+          valid = valid and featureData['type'] is 'boolean'
+          valid = valid and featureData['feature_set_id'] is 222
+          valid = valid and featureData['is_target_variable'] is false
+          valid = valid and featureData['params'] is $filter('json')({})
+
+          valid = valid and featureData['remove_scaler'] is false
+          valid = valid and featureData['scaler-predefined_selected'] is false
+          valid = valid and featureData['scaler-params'] is angular.toJson({'scaler': 'parameters'})
+          valid = valid and featureData['scaler-type'] is 'MinMaxScaler'
+          valid = valid and 'scaler-scaler' not in _.keys(featureData)
+
+          if not valid
+            console.log 'the post form was not as expected', data.getData()
+          return valid
+        .respond 200, angular.toJson({feature: updatedFeature})
+
+        $scope.feature.type = 'boolean'
+        $scope.feature.scaler.type = 'MinMaxScaler'
+        $scope.feature.scaler.params = {'scaler': 'parameters'}
+        $scope.$digest()
+
+        $scope.save(['name', 'type', 'input_format', 'transformer', 'params', 'required', 'scaler', 'default', 'feature_set_id', 'is_target_variable'])
+        $httpBackend.flush()
+        $scope.$digest()
+
+        expect($scope.savingProgress).toEqual '100%'
+        expect($location.url()).toEqual "/models/#{model_id}?action=model:details"
+        expect($scope.feature.scaler.type).toEqual 'MinMaxScaler'
+        expect($scope.feature.scaler.params).toEqual {'scaler': 'parameters'}
+
+    it 'should handle predefined scaler',
+      inject (Model, Feature, Transformer, Scaler, Parameters, $filter)->
+        [model_id, set_id, feature_id] = [111, 222, 333]
+        [configuration, feature] = prepareTestContext Model, Feature, Transformer,
+          Scaler, Parameters, model_id, set_id, feature_id
+
+        updatedFeature = new Feature
+          id: feature_id
+          feature_set_id: set_id
+          name: 'feature'
+          type: 'boolean'
+          params: {}
+          transformer: new Transformer({})
+          scaler: new Scaler({type: 'Zinger'})
+
+        $httpBackend.expectPUT "#{Feature.$get_api_url(feature_set_id: set_id)}#{feature_id}/"
+        , (data)->
+          featureData = data.getData()
+          params = JSON.parse featureData['params']
+          valid = true
+          valid = valid and featureData['name'] is 'feature'
+          valid = valid and featureData['type'] is 'boolean'
+          valid = valid and featureData['feature_set_id'] is 222
+          valid = valid and featureData['is_target_variable'] is false
+          valid = valid and featureData['params'] is $filter('json')({})
+
+          valid = valid and featureData['remove_scaler'] is false
+          valid = valid and featureData['scaler-predefined_selected'] is true
+          valid = valid and 'scaler-params' not in _.keys(featureData)
+          valid = valid and 'scaler-type' not in _.keys(featureData)
+          valid = valid and featureData['scaler-scaler'] is 'Zinger'
+
+          if not valid
+            console.log 'the post form was not as expected', data.getData()
+          return valid
+        .respond 200, angular.toJson({feature: updatedFeature})
+
+        $scope.feature.type = 'boolean'
+        $scope.feature.scaler.name = 'Zinger'
+        $scope.feature.scaler.predefined = true
+        $scope.$digest()
+
+        $scope.save(['name', 'type', 'input_format', 'transformer', 'params', 'required', 'scaler', 'default', 'feature_set_id', 'is_target_variable'])
+        $httpBackend.flush()
+        $scope.$digest()
+
+        expect($scope.savingProgress).toEqual '100%'
+        expect($location.url()).toEqual "/models/#{model_id}?action=model:details"
+        expect($scope.feature.scaler.type).toEqual 'Zinger'
+
+    it 'should handle scaler removal if scaler type and name are not set',
+      inject (Model, Feature, Transformer, Scaler, Parameters, $filter)->
+        [model_id, set_id, feature_id] = [111, 222, 333]
+        [configuration, feature] = prepareTestContext Model, Feature, Transformer,
+          Scaler, Parameters, model_id, set_id, feature_id
+
+        updatedFeature = new Feature
+          id: feature_id
+          feature_set_id: set_id
+          name: 'feature'
+          type: 'boolean'
+          params: {}
+          transformer: new Transformer({})
+          scaler: new Scaler({})
+
+        $httpBackend.expectPUT "#{Feature.$get_api_url(feature_set_id: set_id)}#{feature_id}/"
+        , (data)->
+          featureData = data.getData()
+          params = JSON.parse featureData['params']
+          valid = true
+          valid = valid and featureData['name'] is 'feature'
+          valid = valid and featureData['type'] is 'boolean'
+          valid = valid and featureData['feature_set_id'] is 222
+          valid = valid and featureData['is_target_variable'] is false
+          valid = valid and featureData['params'] is $filter('json')({})
+
+          valid = valid and featureData['remove_scaler'] is true
+          valid = valid and 'scaler-predefined_selected' not in _.keys(featureData)
+          valid = valid and 'scaler-params' not in _.keys(featureData)
+          valid = valid and 'scaler-type' not in _.keys(featureData)
+          valid = valid and 'scaler-scaler' not in _.keys(featureData)
+
+          if not valid
+            console.log 'the post form was not as expected', data.getData()
+          return valid
+        .respond 200, angular.toJson({feature: updatedFeature})
+
+        $scope.feature.type = 'boolean'
+        $scope.feature.scaler = new Scaler({})
+        $scope.$digest()
+
+        $scope.save(['name', 'type', 'input_format', 'transformer', 'params', 'required', 'scaler', 'default', 'feature_set_id', 'is_target_variable'])
+        $httpBackend.flush()
+        $scope.$digest()
+
+        expect($scope.savingProgress).toEqual '100%'
+        expect($location.url()).toEqual "/models/#{model_id}?action=model:details"
 

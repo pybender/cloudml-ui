@@ -43,28 +43,85 @@ describe 'features/controllers/transformers.coffee', ->
 
   describe 'ScalersTypesLoader', ->
 
-    it 'should init scope ', inject (Scaler)->
+    prepareContext = (feature) ->
+      $rootScope.feature = feature
+      createController 'ScalersTypesLoader'
+      $scope.$digest()
 
+    it 'should init scope and watch for scaler changes', inject (Scaler)->
       # new feature
-      $rootScope.feature = {scaler: {}}
-      createController 'ScalersTypesLoader'
+      prepareContext {scaler: {}}
+
       expect(Scaler.$TYPES_LIST.length).toBeGreaterThan 2
       expect($scope.types).toEqual Scaler.$TYPES_LIST
       expect($scope.predefined_selected).toBe false
+      expect($scope.feature.scaler.predefined).toBeUndefined()
 
-      # featured editing with builtin feature
-      $rootScope.feature = {id: 10, scaler: {type: Scaler.$TYPES_LIST[0]}}
-      createController 'ScalersTypesLoader'
-      expect(Scaler.$TYPES_LIST.length).toBeGreaterThan 2
-      expect($scope.types).toEqual Scaler.$TYPES_LIST
-      expect($scope.predefined_selected).toBe false
-
-      # featured editing with predefined scaler
-      $rootScope.feature = {id: 10, scaler: {type: 'zozo'}}
-      createController 'ScalersTypesLoader'
-      expect(Scaler.$TYPES_LIST.length).toBeGreaterThan 2
-      expect($scope.types).toEqual Scaler.$TYPES_LIST
+      $scope.feature.scaler.name = 'Bobo'
+      $scope.$digest()
       expect($scope.predefined_selected).toBe true
+      expect($scope.feature.scaler.predefined).toBe true
 
+      $scope.feature.scaler.type = 'MinMaxScaler'
+      $scope.$digest()
+      expect($scope.predefined_selected).toBe false
+      expect($scope.feature.scaler.predefined).toBe false
 
+    it 'should respond to changing scaler builtin/predefined', inject (Scaler)->
+      # new feature
+      prepareContext {scaler: {type: 'MinMaxScaler'}}
 
+      expect(Scaler.$TYPES_LIST.length).toBeGreaterThan 2
+      expect($scope.types).toEqual Scaler.$TYPES_LIST
+      expect($scope.predefined_selected).toBe false
+      expect($scope.feature.scaler.predefined).toBe false
+
+      $scope.changeScaler(true, 'zozo')
+      expect($scope.predefined_selected).toBe true
+      expect($scope.feature.scaler.predefined).toBe true
+      expect($scope.feature.scaler.name).toEqual 'zozo'
+      expect($scope.feature.scaler.type).toBe null
+
+      $scope.changeScaler(false, 'zaza')
+      expect($scope.predefined_selected).toBe false
+      expect($scope.feature.scaler.predefined).toBe false
+      expect($scope.feature.scaler.type).toEqual 'zaza'
+      expect($scope.feature.scaler.name).toBe null
+
+      $scope.changeScaler(true, null)
+      expect($scope.predefined_selected).toBe true
+      expect($scope.feature.scaler.predefined).toBe true
+      expect($scope.feature.scaler.type).toBe null
+      expect($scope.feature.scaler.name).toBe null
+
+      $scope.changeScaler(false, null)
+      expect($scope.predefined_selected).toBe false
+      expect($scope.feature.scaler.predefined).toBe false
+      expect($scope.feature.scaler.type).toBe null
+      expect($scope.feature.scaler.name).toBe null
+
+  describe 'ScalersSelectLoader', ->
+
+    it 'should load all predefined scalers and handle errors', inject (Scaler)->
+
+      scaler = new Scaler {name: 'zozo'}
+
+      response = {}
+      response[scaler.API_FIELDNAME + 's'] = [scaler]
+      $httpBackend.expectGET "#{scaler.BASE_API_URL}?show=name"
+      .respond 200, angular.toJson response
+      createController 'ScalersSelectLoader'
+      $httpBackend.flush()
+
+      expect($scope.predefinedScalers).toEqual = [scaler]
+
+      # error handling
+      $rootScope.setError = jasmine.createSpy('$rootScope.setError').and.returnValue 'an error'
+      $httpBackend.expectGET "#{scaler.BASE_API_URL}?show=name"
+      .respond 400
+      createController 'ScalersSelectLoader'
+      $httpBackend.flush()
+
+      expect($rootScope.setError).toHaveBeenCalledWith jasmine.any(Object),
+        'loading predefined scalers'
+      expect($scope.err).toEqual 'an error'

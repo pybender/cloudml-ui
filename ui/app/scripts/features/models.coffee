@@ -270,9 +270,6 @@ angular.module('app.features.models', ['app.config'])
 
       $save: (opts={}) =>
         opts.extraData = {}
-        removeItems = opts.removeItems || false
-        isTransformerFilled = false
-        isScalerFilled = false
 
         if 'transformer' in opts.only
           _.remove opts.only, (x)-> x is 'transformer'
@@ -280,7 +277,7 @@ angular.module('app.features.models', ['app.config'])
           transId = @transformer.id
           transParams = @transformer.params
 
-          if transId is 0
+          if not transId or transId is 0
             opts.extraData['remove_transformer'] = true
           else
             opts.extraData['remove_transformer'] = false
@@ -292,19 +289,24 @@ angular.module('app.features.models', ['app.config'])
               opts.extraData['transformer-type'] = transType
               opts.extraData['transformer-params'] = angular.toJson(transParams)
 
-        for name in opts.only
+        if 'scaler' in opts.only
+          _.remove opts.only, (x)-> x is 'scaler'
+          scalerType = @scaler.type
+          scalerName = @scaler.name
+          predefined = @scaler.predefined
+          scalerParams = @scaler.params
 
-          if (name.indexOf "scaler__") == 0 && @scaler
-            field = name.slice 8
-            val = getVal(eval('this.scaler.' + field))
-            if val?
-              opts.extraData['scaler-' + field] = val
-              isScalerFilled = true
-
-        if isScalerFilled
-          opts.extraData['scaler-is_predefined'] = false
-        else if removeItems
-          opts.extraData['remove_scaler'] = true
+          if not scalerType and not scalerName
+            opts.extraData['remove_scaler'] = true
+          else
+            opts.extraData['remove_scaler'] = false
+            if predefined
+              opts.extraData['scaler-predefined_selected'] = true
+              opts.extraData['scaler-scaler'] = scalerName
+            else
+              opts.extraData['scaler-predefined_selected'] = false
+              opts.extraData['scaler-type'] = scalerType
+              opts.extraData['scaler-params'] = angular.toJson(scalerParams)
 
         @params = $filter('json')(@paramsDict)
 
