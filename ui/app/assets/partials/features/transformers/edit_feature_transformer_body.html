@@ -3,10 +3,10 @@
 
   <ul class="nav nav-pills">
     <li ng-class="{active: predefined_selected == false}">
-      <a ng-click="predefined_selected=false">Custom</a>
+      <a ng-click="changeTransformer(-1, '')">Built-in</a>
     </li>
     <li ng-class="{active: predefined_selected}">
-      <a ng-click="predefined_selected=true">Pretrained</a>
+      <a ng-click="changeTransformer(1000, '')">Pretrained</a>
     </li>
   </ul>
 

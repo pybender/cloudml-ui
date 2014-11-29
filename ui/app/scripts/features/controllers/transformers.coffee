@@ -17,8 +17,7 @@ angular.module('app.features.controllers.transformers', ['app.config', ])
       $scope.predefined_selected = newVal.id > 0
 
     $scope.changeTransformer = (id, type)->
-      $scope.feature.transformer.id = id
-      $scope.feature.transformer.type = type
+      $scope.feature.transformer = new Transformer({id: id, type: type})
 ])
 
 .controller('TransformersSelectLoader', [
