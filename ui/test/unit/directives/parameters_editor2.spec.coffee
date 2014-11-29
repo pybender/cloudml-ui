@@ -280,7 +280,7 @@ describe "directives/parametersEditor", ->
         prepareContext {type: undefined, paramsDict: undefined}, """
       <form name="myForm">
             <parameters-editor2 name="params" ng-model="feature.paramsDict"
-                                parameter-type="{{feature.type}}"></parameters-editor2>
+                                cml-model="feature"></parameters-editor2>
       </form>
       """
         # we are setting the paramsDict as FeatureEditCtrl would do when
@@ -298,7 +298,7 @@ describe "directives/parametersEditor", ->
             prepareContext {type: type, paramsDict: {}}, """
       <form name="myForm">
             <parameters-editor2 name="params" ng-model="feature.paramsDict"
-                                parameter-type="{{feature.type}}"></parameters-editor2>
+                                cml-model="feature"></parameters-editor2>
       </form>
       """
             expect($scope.fields).toEqual []
@@ -315,7 +315,7 @@ describe "directives/parametersEditor", ->
             prepareContext {type: type.name, paramsDict: {key1: undefined}}, """
       <form name="myForm">
             <parameters-editor2 name="params" ng-model="feature.paramsDict"
-                                parameter-type="{{feature.type}}"></parameters-editor2>
+                                cml-model="feature"></parameters-editor2>
       </form>
       """
             expect($scope.fields.length).toBe type.count + 1
@@ -332,7 +332,7 @@ describe "directives/parametersEditor", ->
         prepareContext {type: 'int', paramsDict: {}}, """
   <form name="myForm">
         <parameters-editor2 name="params" ng-model="feature.paramsDict"
-                            parameter-type="{{feature.type}}"></parameters-editor2>
+                            cml-model="feature"></parameters-editor2>
   </form>
   """
 
@@ -367,7 +367,7 @@ describe "directives/parametersEditor", ->
         prepareContext {type: 'categorical', paramsDict: paramsDict}, """
   <form name="myForm">
         <parameters-editor2 name="params" ng-model="feature.paramsDict"
-                            parameter-type="{{feature.type}}"></parameters-editor2>
+                            cml-model="feature"></parameters-editor2>
   </form>
   """
         inputs = $('input', elem)
@@ -408,7 +408,7 @@ describe "directives/parametersEditor", ->
         prepareContext {type: 'composite', paramsDict: paramsDict}, """
   <form name="myForm">
         <parameters-editor2 name="params" ng-model="feature.paramsDict"
-                            parameter-type="{{feature.type}}"></parameters-editor2>
+                            cml-model="feature"></parameters-editor2>
   </form>
   """
         inputs = $('input', elem)
@@ -451,7 +451,7 @@ describe "directives/parametersEditor", ->
         prepareContext {type: 'categorical', paramsDict: {min_df: 321, split_pattern: 'this_pattern'}}, """
   <form name="myForm">
         <parameters-editor2 name="params" ng-model="feature.paramsDict"
-                            parameter-type="{{feature.type}}"></parameters-editor2>
+                            cml-model="feature"></parameters-editor2>
   </form>
   """
 

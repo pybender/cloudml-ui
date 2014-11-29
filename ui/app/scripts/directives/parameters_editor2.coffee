@@ -9,12 +9,16 @@ angular.module('app.directives')
     link: (scope, element, attributes, ngModel) ->
       scope.fields = []
 
+      # The cml-model this editor is editing its parameter, either a normal
+      # `Feature`, or a `NamedFeatureType`
+      scope.model = scope.$eval(attributes.cmlModel)
+
       updateFields = ->
-        if not scope.configuration or not ngModel.$modelValue or not scope.feature.type
+        if not scope.configuration or not ngModel.$modelValue or not scope.model.type
           return
 
         configFields = _.keys(ngModel.$modelValue)
-        featureType = scope.feature.type
+        featureType = scope.model.type
         pType = scope.configuration.types[featureType]
         builtInFields = _.union(pType.required_params, pType.optional_params,
           pType.default_params)
