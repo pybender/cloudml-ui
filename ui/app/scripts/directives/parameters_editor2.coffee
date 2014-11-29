@@ -93,18 +93,18 @@ angular.module('app.directives')
 
       attributes.$set('required', scope.field.required)
 
-      ngModel.$parsers.push ()->
-        scope.field.valid = VALIDATORS[scope.field.type](ngModel.$viewValue)
+      ngModel.$parsers.push (viewValue)->
+        scope.field.valid = VALIDATORS[scope.field.type](viewValue)
         ngModel.$setValidity('error', scope.field.valid)
         if not scope.field.valid
           return undefined
         else
-          return ngModel.$viewValue
+          return viewValue
 
-      ngModel.$formatters.push (data)->
-        scope.field.valid = VALIDATORS[scope.field.type](data)
+      ngModel.$formatters.push (modelValue)->
+        scope.field.valid = VALIDATORS[scope.field.type](modelValue)
         ngModel.$setValidity('error', scope.field.valid)
-        return data
+        return modelValue
   }
 ])
 

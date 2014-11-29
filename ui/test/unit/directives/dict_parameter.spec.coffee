@@ -152,4 +152,38 @@ describe "directives/parametersEditor", ->
       ]
       expect($scope.myForm.model.$error).toEqual {error_keys: false, error_values: false, error_no_keys: false, error_duplicate_keys: true}
 
+  describe 'dictParameter with parameterValidator', ->
+
+    prepareContext = (theDict) ->
+      $scope = $rootScope.$new()
+      $scope.theDict = theDict
+      $scope.field = {type: 'dict'}
+
+      html = """
+<form name="myForm">
+  <dict-parameter ng-model="theDict" name="model" parameter-validator=""></dict-parameter>
+</form>
+        """
+
+      elem = $compile(html)($scope)
+      $(document.body).append elem
+      $scope.$digest()
+
+    it 'should allow parameterValidator to intervene without disrupting the modelVale of the dictionary', ->
+      prepareContext {}
+
+      expect($scope.myForm.model.$error).toEqual {error : true, error_keys: false, error_values: false, error_no_keys: true, error_duplicate_keys: false}
+      expect($('button[ng-click="addKey()"]').is(':enabled')).toBe true
+      $('button[ng-click="addKey()"]').click()
+      $scope.$digest()
+
+      ngRepeatDiv = $('div[ng-repeat="pair in pairs"]:last')
+      changeElemValue $('input[ng-model="pair.key"]', ngRepeatDiv), 'the_key'
+      changeElemValue $('input[ng-model="pair.value"]', ngRepeatDiv), 'the_value'
+      $scope.$digest()
+
+      expect($scope.myForm.model.$viewValue).toEqual [{key: 'the_key', value: 'the_value', $$hashKey: jasmine.any(String)
+      error: { error_key: false, error_value: false, error_duplicate_key : false }}]
+      expect($scope.theDict).toEqual {the_key: 'the_value'}
+
 
