@@ -254,6 +254,7 @@ angular.module('app.controllers', ['app.config', ])
         # will be destroyed and no events will be handled
         $timeout ->
           $scope.$close(true)
+        , 100
       ), ((opts) ->
         $scope.setError(opts, $scope.action + ' ' + $scope.model.name)
       )
