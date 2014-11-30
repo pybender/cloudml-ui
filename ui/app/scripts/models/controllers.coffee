@@ -106,6 +106,8 @@ angular.module('app.models.controllers', ['app.config', ])
     $scope.formats = [
       {name: 'JSON', value: 'json'}, {name: 'CSV', value: 'csv'}
     ]
+    # nader20141130 - train_format, test_format is not used anywhere on the back
+    # end should it be removed?
     $scope.model = new Model({train_format: 'json', test_format: 'json'})
 ])
 

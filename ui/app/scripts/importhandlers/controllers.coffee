@@ -377,7 +377,6 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
       for h in data
         $scope.handlers_list.push {value: h.id + h.type, text: h.name + '(' + h.type + ')'}
       $scope.handlers_list = _.sortBy $scope.handlers_list, (o) -> o.text
-      console.log data
     )
     , (opts) ->
         $scope.setError(opts, 'loading import handler list')
