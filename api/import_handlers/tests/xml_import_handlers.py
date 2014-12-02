@@ -633,6 +633,7 @@ predict_models/{1}/weights/'.format(handler_id, self.predict_model.id)
 
     def test_post(self):
         post_data = {'label': 'the label',
+                     'value'
                      'predict_model_id': self.predict_model.id}
         resp, obj = self.check_edit(post_data, load_model=True)
         self.assertEqual(obj.label, post_data['label'])
