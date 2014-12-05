@@ -79,6 +79,9 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
         url = "#{@BASE_API_URL}#{@id}/action/upload_to_server/"
         @$make_request(url, {}, "PUT", {'server': server})
 
+      $clone: (opts={}) ->
+        @$make_request("#{@BASE_API_URL}#{@id}/action/clone/", {}, "POST", {})
+
     return XmlImportHandler
 ])
 

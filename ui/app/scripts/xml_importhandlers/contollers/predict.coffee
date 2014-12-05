@@ -23,7 +23,6 @@ angular.module(
           if predict.probability?
             predict.probability.import_handler_id = handler.id
             $scope.probability = new PredictProbability(predict.probability)
-            console.log $scope.probability
       )
 
     $scope.getModelsList = (models) ->

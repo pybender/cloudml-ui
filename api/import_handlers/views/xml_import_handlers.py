@@ -29,6 +29,7 @@ class XmlImportHandlerResource(BaseResourceSQL):
 
     NEED_PAGING = True
     PUT_ACTIONS = ('upload_to_server', 'run_sql')
+    POST_ACTIONS = ('clone', )
     FILTER_PARAMS = (('created_by', str), ('updated_by_id', int),
                      ('updated_by', str), ('name', str))
 
@@ -150,6 +151,24 @@ class XmlImportHandlerResource(BaseResourceSQL):
 
         return self._render({'data': data, 'columns': columns, 'sql': sql})
 
+    def _post_clone_action(self, **kwargs):
+        from datetime import datetime
+        handler = self._get_details_query(None, **kwargs)
+        name = "{0} clone: {1}".format(
+            handler.name, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        new_handler = XmlImportHandler(name=name)
+        try:
+            new_handler.data = handler.data
+        except Exception, exc:
+            return odesk_error_response(
+                400, ERR_INVALID_DATA, str(exc))
+        new_handler.save()
+        return self._render({
+            self.OBJECT_NAME: new_handler,
+            'status': 'New import handler "{0}" created'.format(
+                new_handler.name
+            )
+        }, code=201)
 api.add_resource(
     XmlImportHandlerResource, '/cloudml/xml_import_handlers/')
 

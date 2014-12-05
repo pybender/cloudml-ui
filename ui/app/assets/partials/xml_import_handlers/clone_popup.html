@@ -1,0 +1,19 @@
+<div>
+  <div class="modal-header">
+    <button ng-click="$dismiss('cancel')" class="close" data-dismiss="modal">×</button>
+    <h3>Clone import handler</h3>
+  </div>
+
+  <div class="modal-body">
+    <loadindicator title="Cloning import handler..." ng-show="saving && savingProgress != '0%'" cml-progress="savingProgress"></loadindicator>
+    <alert-message ng-show="err" class="alert-error" msg="{{err}}" unsafe></alert-message>
+    <p>
+      You will create a new xml import handler with same options. <br />
+      Do you really want to process?
+    </p>
+  </div>
+
+  <div class="modal-footer">
+    <button ng-click="clone()" ng-disabled="Form.$invalid" class="btn btn-primary" >Clone import handler</button>
+  </div>
+</div>
