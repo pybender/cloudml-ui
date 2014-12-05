@@ -59,27 +59,31 @@
       <div class="span3">
           <div>
             Target:
-            <span title="target" class="target value" ng-bind="sqoop.target" editable="sqoop" value="sqoop.target" editable-field="target" editable-input="text" editable-placement="right"></span>
+            <span title="target" class="target value" ng-bind="sqoop.target || 'no target'" editable="sqoop" value="sqoop.target" editable-field="target" editable-input="text" editable-placement="right"></span>
           </div>
           <div>
             Table:
-            <span title="table" class="table value" ng-bind="sqoop.table" editable="sqoop" value="sqoop.table" editable-field="table" editable-input="text" editable-placement="right"></span>
+            <span title="table" class="table value" ng-bind="sqoop.table || 'no table'" editable="sqoop" value="sqoop.table" editable-field="table" editable-input="text" editable-placement="right"></span>
           </div>
       </div>
       <div class="span3">
           <div>
             Where:
-            <span title="where" class="where value" ng-bind="sqoop.where" editable="sqoop" value="sqoop.where" editable-field="where" editable-input="text" editable-placement="right"></span>
+            <span title="where" class="where value" ng-bind="sqoop.where || 'no where'" editable="sqoop" value="sqoop.where" editable-field="where" editable-input="text" editable-placement="right"></span>
           </div>
           <div>
             Direct:
-            <span title="direct" class="direct value" ng-bind="sqoop.direct" editable="sqoop" value="sqoop.direct" editable-field="direct" editable-input="text" editable-placement="right"></span>
+            <span title="direct" class="direct value" ng-bind="sqoop.direct || 'no direct'" editable="sqoop" value="sqoop.direct" editable-field="direct" editable-input="text" editable-placement="right"></span>
+          </div>
+          <div>
+            Options:
+            <span title="options" class="options" ng-bind="sqoop.options || 'no options'" editable="sqoop" value="sqoop.options" editable-field="options" editable-input="text" editable-placement="right"></span>
           </div>
       </div>
       <div class="span3">
           <div>
             Mappers:
-            <span title="mappers" class="mappers value" ng-bind="sqoop.mappers" editable="sqoop" value="sqoop.mappers" editable-field="mappers" editable-input="text" editable-placement="right"></span>
+            <span title="mappers" class="mappers value" ng-bind="sqoop.mappers" editable="sqoop" value="sqoop.mappers  || 'no mappers'" editable-field="mappers" editable-input="text" editable-placement="right"></span>
           </div>
           <div>
             Datasource:

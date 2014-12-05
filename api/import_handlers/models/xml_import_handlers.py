@@ -87,7 +87,7 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
             if entity.query_obj:
                 query = etree.SubElement(
                     ent, "query", **entity.query_obj.to_dict())
-                query.text = etree.CDATA(entity.query_obj.text)
+                query.text = etree.CDATA(entity.query_obj.text or '')
 
             for field in entity.fields:
                 field_dict = field.to_dict()
@@ -300,9 +300,11 @@ class XmlSqoop(db.Model, BaseMixin):
     where = db.Column(db.String(200), nullable=True)
     direct = db.Column(db.String(200), nullable=True)
     mappers = db.Column(db.String(200), nullable=True)
+    options = db.Column(db.String(200), nullable=True)
     text = db.Column(db.Text, nullable=True)
 
-    FIELDS_TO_SERIALIZE = ['target', 'table', 'where', 'direct', 'mappers']
+    FIELDS_TO_SERIALIZE = ['target', 'table', 'where', 'direct',
+                           'mappers', 'options']
 
     # Global datasource
     datasource_id = db.Column(db.ForeignKey('xml_data_source.id',
@@ -564,6 +566,7 @@ def fill_import_handler(import_handler, xml_data=None):
                     where=sqoop.where,
                     direct=sqoop.direct,
                     mappers=sqoop.mappers,
+                    options=sqoop.options,
                     text=sqoop.query,
                     datasource=ds_dict.get(sqoop.datasource_name)
                 )

@@ -249,6 +249,7 @@ class XmlSqoopForm(BaseForm):
     where = CharField()
     direct = CharField()
     mappers = CharField()
+    options = CharField()
     text = CharField()
 
     def clean_entity(self, value, field):
