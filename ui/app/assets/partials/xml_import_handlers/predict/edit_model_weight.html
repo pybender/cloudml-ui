@@ -5,7 +5,7 @@
   </div>
 
   <div class="modal-body">
-    <ng-include src="'/partials/parts/save_form_messages.html'"></ng-include>
+    <ng-include src="'partials/parts/save_form_messages.html'"></ng-include>
     <div class="control-group" ng-class="{error: Form.label.$invalid || errorList.label}">
       <label class="control-label">Label</label>
       <div class="controls">
@@ -17,7 +17,7 @@
     <div class="control-group" ng-class="{error: Form.value.$invalid || errorList.value}">
       <label class="control-label">Value</label>
       <div class="controls">
-        <input type="text" name="value" ng-model="model.value" ng-change="setFieldError('value')" />
+        <input type="text" name="value" ng-model="model.value" ng-change="setFieldError('value')"  ng-required="!model.script" />
         <span ng-show="Form.value.$error.required" class="help-inline">*</span>
         <span ng-show="errorList.value" class="help-block" ng-bind="errorList.value" />
       </div>
@@ -25,7 +25,7 @@
     <div class="control-group" ng-class="{error: Form.script.$invalid || errorList.script}">
       <label class="control-label">Script</label>
       <div class="controls">
-        <textarea name="script" ng-model="model.script">
+        <textarea name="script" ng-model="model.script" ng-required="!model.value">
         </textarea>
         <span ng-show="Form.script.$error.required" class="help-inline">*</span>
         <span ng-show="errorList.script" class="help-block" ng-bind="errorList.script" />
