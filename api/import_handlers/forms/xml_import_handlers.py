@@ -3,7 +3,7 @@ from api.base.forms import BaseForm, CharField, JsonField, \
     DocumentField, ModelField
 from api.import_handlers.models import XmlImportHandler, XmlDataSource, \
     XmlInputParameter, XmlScript, XmlEntity, XmlField, XmlQuery, XmlSqoop, \
-    PredictModel
+    PredictModel, Predict
 from api import app
 from core.xmlimporthandler.exceptions import ImportHandlerException
 
@@ -287,7 +287,10 @@ class PredictModelForm(BaseForm):
         model = super(PredictModelForm, self).save(commit=False)
         handler = self.cleaned_data.get('import_handler_id')
         if handler is not None:
-            predict = handler.predict
+            if handler.predict is None:
+                handler.predict = Predict()
+                handler.save()
+            predict = handler.predict 
             predict.models.append(model)
             predict.save()
         return model
