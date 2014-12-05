@@ -126,10 +126,10 @@
                         <span title="name" class="name" ng-bind="item.name || 'no name'" editable="item" value="item.name" editable-field="name" editable-input="text" editable-placement="right"></span>
                       </td>
                       <td ng-controller="InputParameterTypesLoader">
-                        <span title="Input Format Type" ng-bind="item.type" editable="item" value="item.type" editable-field="type" editable-placement="right" editable-input="select" source="types"></span>
+                        <span title="Input Format Type" ng-bind="item.type || 'not specified'" editable="item" value="item.type" editable-field="type" editable-placement="right" editable-input="select" source="types"></span>
                       </td>
                       <td>
-                        <span title="Input Parameter Regex" class="regex" ng-bind="item.regex" editable="item" value="item.regex" editable-field="regex" editable-input="text" editable-placement="right"></span>
+                        <span title="Input Parameter Regex" class="regex" ng-bind="item.regex || 'not specified'" editable="item" value="item.regex" editable-field="regex" editable-input="text" editable-placement="right"></span>
                       </td>
                       <td>
                         <span title="format" class="format" ng-bind="item.format || 'no format'" editable="item" value="item.format" editable-field="format" editable-input="text" editable-placement="right"></span>

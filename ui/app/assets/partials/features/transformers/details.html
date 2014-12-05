@@ -89,11 +89,11 @@
     <div ng-show="action[1] == 'details'">
       <div>
           Field Name:
-          <span title="Field Name" class="title" ng-bind="transformer.field_name" editable="transformer" value="transformer.field_name" editable-field="field_name" editable-input="text" editable-placement="right"></span>
+          <span title="Field Name" class="title" ng-bind="transformer.field_name || 'no field_name'" editable="transformer" value="transformer.field_name" editable-field="field_name" editable-input="text" editable-placement="right"></span>
       </div>
       <div>
           Feature Type:
-          <span title="Field Name" class="title" ng-bind="transformer.feature_type" editable="transformer" value="transformer.feature_type" editable-field="feature_type" editable-input="text" editable-placement="right"></span>
+          <span title="Field Name" class="title" ng-bind="transformer.feature_type || 'no feature_type'" editable="transformer" value="transformer.feature_type" editable-field="feature_type" editable-input="text" editable-placement="right"></span>
       </div>
       <div>
           Type:
