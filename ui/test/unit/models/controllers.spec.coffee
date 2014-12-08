@@ -524,7 +524,8 @@ describe 'models/controllers.coffee', ->
   describe 'ModelActionsCtrl', ->
 
     beforeEach ->
-      $rootScope.openDialog = jasmine.createSpy '$rootScope.openDialog'
+      $rootScope.openDialog = (->)
+      spyOn($rootScope, 'openDialog').and.returnValue {result: 'then': (->)}
       $rootScope.setError = jasmine.createSpy '$rootScope.setError'
       createController 'ModelActionsCtrl'
       expect($scope.init).toBeDefined()

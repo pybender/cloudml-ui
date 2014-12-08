@@ -427,6 +427,7 @@ angular.module('app.models.controllers', ['app.config', ])
 
 
     $scope.editClassifier = (model) ->
+      $scope.backupClassifier = _.clone(model.classifier)
       $scope.openDialog($scope, {
         model: null
         template: 'partials/features/classifiers/edit.html'
@@ -434,6 +435,12 @@ angular.module('app.models.controllers', ['app.config', ])
         action: 'edit classifier'
         extra: {model: model, fieldname: 'classifier'}
       })
+      .result
+      .then ->
+        $scope.backupClassifier = null
+      , ->
+        model.classifier = $scope.backupClassifier
+        $scope.backupClassifier = null
 
     $scope.uploadModelToPredict = (model) ->
       $scope.openDialog($scope, {

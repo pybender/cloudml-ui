@@ -32,6 +32,9 @@ describe 'app.features.controllers', ->
     $routeParams = $injector.get('$routeParams')
     $location = $injector.get('$location')
 
+    $rootScope.openDialog = (->)
+    spyOn($rootScope, 'openDialog').and.returnValue {result: 'then': (->)}
+
     $scope = $rootScope.$new()
     createController = (ctrl, extras) ->
       injected = extras or {}
@@ -55,7 +58,6 @@ describe 'app.features.controllers', ->
 
     it 'should call on to open add feature dialog', inject (FeaturesSet)->
 
-      $rootScope.openDialog = jasmine.createSpy '$rootScope.openDialog'
       createController 'FeaturesSetListCtrl'
 
       $scope.add()
@@ -124,8 +126,6 @@ describe 'app.features.controllers', ->
       expect($scope.setError.calls.argsFor(0)[1]).toEqual 'loading featuresSet'
 
     it 'should call on open dialog to add feature', inject (FeaturesSet)->
-
-      $rootScope.openDialog = jasmine.createSpy '$rootScope.openDialog'
 
       createController 'FeaturesSetDetailsCtrl'
 
@@ -261,7 +261,6 @@ describe 'app.features.controllers', ->
       model = {id: 123, name: 'model123'}
       feature = new Feature {id: 999, name: 'feature_name', is_required: false, feature_set_id: 888}
       $rootScope.setError = jasmine.createSpy '$rootScope.setError'
-      $rootScope.openDialog = jasmine.createSpy '$rootScope.openDialog'
 
     it 'should initialize scope with model or throw exception', ->
       createController 'FeatureActionsCtrl'
@@ -398,10 +397,9 @@ describe 'app.features.controllers', ->
       $scope.editScaler(feature)
 
       expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
-        model: null
+        model: feature
         template: 'partials/features/scalers/edit_feature_scaler.html'
-        ctrlName: 'ModelWithParamsEditDialogCtrl'
-        extra: {'feature': feature, 'fieldname': 'scaler'}
+        ctrlName: 'DialogCtrl'
       expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 
     it 'should call unto openDialog to edit transformer', ->
@@ -411,13 +409,12 @@ describe 'app.features.controllers', ->
       $scope.editTransformer(feature)
 
       expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
-        model: null
+        model: feature
         template: 'partials/features/transformers/edit_feature_transformer.html'
-        ctrlName: 'ModelWithParamsEditDialogCtrl'
-        extra: {'feature': feature, 'fieldname': 'transformer'}
+        ctrlName: 'DialogCtrl'
       expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 
-    it 'should delete transformer', ->
+    it 'should delete transformer', inject (Transformer)->
       createController 'FeatureActionsCtrl'
       expect($scope.deleteTransformer).toEqual jasmine.any(Function)
 
@@ -429,7 +426,7 @@ describe 'app.features.controllers', ->
       $httpBackend.flush()
 
       expect(feature.remove_transformer).toEqual true
-      expect(feature.transformer).toEqual {}
+      expect(feature.transformer).toEqual jasmine.any(Transformer)
 
       # handles errors
       response = {}
@@ -441,7 +438,7 @@ describe 'app.features.controllers', ->
 
       expect($scope.setError.calls.mostRecent().args[1]).toEqual 'error while removing transformer'
 
-    it 'should delete scalar', ->
+    it 'should delete scalar', inject (Scaler)->
       createController 'FeatureActionsCtrl'
       expect($scope.deleteScaler).toEqual jasmine.any(Function)
 
@@ -453,7 +450,7 @@ describe 'app.features.controllers', ->
       $httpBackend.flush()
 
       expect(feature.remove_scaler).toEqual true
-      expect(feature.scaler).toEqual {}
+      expect(feature.scaler).toEqual jasmine.any(Scaler)
 
       # handles errors
       response = {}
