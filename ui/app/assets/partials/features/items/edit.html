@@ -20,11 +20,9 @@
       </form>
     </div>
     <div class="span5">
-      <div ng-controller="ConfigurationLoaderCtrl" ng-init="init( feature, 'scaler')">
-        <form name="ScalerForm" class="form-horizontal">
-          <ng-include src="'partials/features/scalers/edit_feature_scaler_body.html'"></ng-include>
-        </form>
-      </div>
+      <form name="ScalerForm" class="form-horizontal">
+        <ng-include src="'partials/features/scalers/edit_feature_scaler_body.html'"></ng-include>
+      </form>
     </div>
   </div>
   <button ng-disabled="FeatureForm.$invalid || TransformerForm.$invalid || ScalerForm.$invalid"

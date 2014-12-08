@@ -195,12 +195,17 @@ angular.module('app.features.controllers', ['app.config', ])
       )
 
     $scope.editScaler = (feature) ->
+      $scope.backupScaler = _.clone(feature.scaler)
       $scope.openDialog($scope, {
-        model: null
+        model: feature
         template: 'partials/features/scalers/edit_feature_scaler.html'
-        ctrlName: 'ModelWithParamsEditDialogCtrl'
-        extra: {'feature': feature, 'fieldname': 'scaler'}
-      })
+        ctrlName: 'DialogCtrl'
+      }).result
+      .then ->
+        $scope.backupScaler = null
+      , ->
+        feature.scaler = $scope.backupScaler
+        $scope.backupScaler = null
 
     $scope.editTransformer = (feature) ->
       $scope.backupTransformer = _.clone(feature.transformer)
@@ -208,7 +213,6 @@ angular.module('app.features.controllers', ['app.config', ])
         model: feature
         template: 'partials/features/transformers/edit_feature_transformer.html'
         ctrlName: 'DialogCtrl'
-        extra: {'feature': feature, 'fieldname': 'transformer'}
       }).result
       .then ->
         $scope.backupTransformer = null
