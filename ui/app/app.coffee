@@ -335,7 +335,7 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
     if not opts?.template
       throw new Error('template is required')
 
-    $modal.open
+    return $modal.open
       scope: scope
       templateUrl: opts.template
       controller: opts.ctrlName

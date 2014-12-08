@@ -203,17 +203,23 @@ angular.module('app.features.controllers', ['app.config', ])
       })
 
     $scope.editTransformer = (feature) ->
+      $scope.backupTransformer = _.clone(feature.transformer)
       $scope.openDialog($scope, {
-        model: null
+        model: feature
         template: 'partials/features/transformers/edit_feature_transformer.html'
-        ctrlName: 'ModelWithParamsEditDialogCtrl'
+        ctrlName: 'DialogCtrl'
         extra: {'feature': feature, 'fieldname': 'transformer'}
-      })
+      }).result
+      .then ->
+        $scope.backupTransformer = null
+      , ->
+        feature.transformer = $scope.backupTransformer
+        $scope.backupTransformer = null
 
     $scope.deleteTransformer = (feature) ->
       feature.remove_transformer = true
       feature.$save(only: ['remove_transformer']).then (->
-        feature.transformer = {}
+        feature.transformer = new Transformer({})
       ), ((opts) ->
         $scope.setError(opts, "error while removing transformer")
       )
@@ -221,7 +227,7 @@ angular.module('app.features.controllers', ['app.config', ])
     $scope.deleteScaler = (feature) ->
       feature.remove_scaler = true
       feature.$save(only: ['remove_scaler']).then (->
-        feature.scaler = {}
+        feature.scaler = new Scaler({})
       ), ((opts) ->
         $scope.setError(opts, "error while removing scaler")
       )

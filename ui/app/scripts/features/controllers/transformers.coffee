@@ -34,7 +34,10 @@ angular.module('app.features.controllers.transformers', ['app.config', ])
     ), ((opts) ->
       $scope.err = $scope.setError(opts, 'loading pretrained transformers')
     )
-])
+
+    $scope.pretrainedIdToType = (id)->
+      return _.filter($scope.pretrainedTransformers, { id: id })[0].name
+  ])
 
 .controller('TransformersListCtrl', [
   '$scope'

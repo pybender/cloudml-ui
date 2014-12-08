@@ -15,11 +15,9 @@
   </div>
   <div class="row">
     <div class="span6">
-      <div ng-controller="ConfigurationLoaderCtrl" ng-init="init( feature, 'transformer')">
-        <form name="TransformerForm" class="form-horizontal">
-          <ng-include src="'partials/features/transformers/edit_feature_transformer_body.html'"></ng-include>
-        </form>
-      </div>
+      <form name="TransformerForm" class="form-horizontal">
+        <ng-include src="'partials/features/transformers/edit_feature_transformer_body.html'"></ng-include>
+      </form>
     </div>
     <div class="span5">
       <div ng-controller="ConfigurationLoaderCtrl" ng-init="init( feature, 'scaler')">
