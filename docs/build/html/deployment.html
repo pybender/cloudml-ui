@@ -104,21 +104,25 @@
 <li>EC2 instance with Ubuntu</li>
 </ul>
 <p>Create virtual env locally:</p>
-<div class="highlight-python"><pre>$ sudo apt-get install virtualenvwrapper
+<div class="highlight-python"><div class="highlight"><pre>$ sudo apt-get install virtualenvwrapper
 
 $ virtualenv --no-site-packages ve
 $ . ve/bin/activate
 
-$ pip install -r deploy_requirements.txt</pre>
+$ pip install -r deploy_requirements.txt
+</pre></div>
 </div>
 <p>Note:</p>
-<div class="highlight-python"><pre>Create OATH API keys using https://www.odesk.com/services/api/apply. Callback URL is http://{{host}}/#/auth/callback</pre>
+<div class="highlight-python"><div class="highlight"><pre>Create OATH API keys using https://www.odesk.com/services/api/apply. Callback URL is http://{{host}}/#/auth/callback
+</pre></div>
 </div>
 <p>Create fabsettings:</p>
-<div class="highlight-python"><pre>$ cp fabconf.py.def fabconf.py</pre>
+<div class="highlight-python"><div class="highlight"><pre>$ cp fabconf.py.def fabconf.py
+</pre></div>
 </div>
 <p>Create config:</p>
-<div class="highlight-python"><pre>$ cp api/local_config.py.tpl api/staging_config.py.tpl</pre>
+<div class="highlight-python"><div class="highlight"><pre>$ cp api/local_config.py.tpl api/staging_config.py.tpl
+</pre></div>
 </div>
 <p>Add new configuration. For example:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">StagingConf</span><span class="p">(</span><span class="n">BaseConf</span><span class="p">):</span>
@@ -145,42 +149,52 @@ $ pip install -r deploy_requirements.txt</pre>
 </div>
 <p>Read fabfile.py tasks to be aware of changes that will be made to your system.</p>
 <p>Install packages, create user:</p>
-<div class="highlight-python"><pre>$ fab staging install</pre>
+<div class="highlight-python"><div class="highlight"><pre>$ fab staging install
+</pre></div>
 </div>
 <p>Setup software:</p>
-<div class="highlight-python"><pre>$ fab staging setup</pre>
+<div class="highlight-python"><div class="highlight"><pre>$ fab staging setup
+</pre></div>
 </div>
 <p>Deploy current version:</p>
-<div class="highlight-python"><pre>$ fab staging deploy</pre>
+<div class="highlight-python"><div class="highlight"><pre>$ fab staging deploy
+</pre></div>
 </div>
 <p>For manuall starting supervisor please run:</p>
-<div class="highlight-python"><pre>$ fab staging supervisor.d</pre>
+<div class="highlight-python"><div class="highlight"><pre>$ fab staging supervisor.d
+</pre></div>
 </div>
 <p>For manuall push source code to s3:</p>
-<div class="highlight-python"><pre>$ jgit push s3 master:master</pre>
+<div class="highlight-python"><div class="highlight"><pre>$ jgit push s3 master:master
+</pre></div>
 </div>
 </div>
 <div class="section" id="deploy-new-version">
 <h2>Deploy new version<a class="headerlink" href="#deploy-new-version" title="Permalink to this headline">¶</a></h2>
 <p>Create settings:</p>
-<div class="highlight-python"><pre>$ cp fabconf.py.def fabconf.py</pre>
+<div class="highlight-python"><div class="highlight"><pre>$ cp fabconf.py.def fabconf.py
+</pre></div>
 </div>
 <p>Set <cite>sudo_user</cite> property of config class.</p>
 <p>Add your ssh pub key to projects user:</p>
-<div class="highlight-python"><pre>$ fab staging push_key</pre>
+<div class="highlight-python"><div class="highlight"><pre>$ fab staging push_key
+</pre></div>
 </div>
 <p>Commit changes to <cite>staging</cite> branch</p>
 <p>Deploy:</p>
-<div class="highlight-python"><pre>$ fab staging deploy</pre>
+<div class="highlight-python"><div class="highlight"><pre>$ fab staging deploy
+</pre></div>
 </div>
 </div>
 <div class="section" id="management-supervisor">
 <h2>Management supervisor<a class="headerlink" href="#management-supervisor" title="Permalink to this headline">¶</a></h2>
 <p>Run supervisorctl:</p>
-<div class="highlight-python"><pre>$ fab staging supervisor.ctl</pre>
+<div class="highlight-python"><div class="highlight"><pre>$ fab staging supervisor.ctl
+</pre></div>
 </div>
 <p>Get list of available tasks:</p>
-<div class="highlight-python"><pre>$ fab -l</pre>
+<div class="highlight-python"><div class="highlight"><pre>$ fab -l
+</pre></div>
 </div>
 </div>
 <div class="section" id="creating-image-for-cloudml-node">
@@ -188,16 +202,20 @@ $ pip install -r deploy_requirements.txt</pre>
 <p>For creating image you need use instance 2x.large with support .. and apply
 match and cloudml chief recipets.</p>
 <p>Activate virtualenv:</p>
-<div class="highlight-python"><pre>$ source ./ve/bin/activate</pre>
+<div class="highlight-python"><div class="highlight"><pre>$ source ./ve/bin/activate
+</pre></div>
 </div>
 <p>Setup cloudml worker:</p>
-<div class="highlight-python"><pre>$ fab worker setupw</pre>
+<div class="highlight-python"><div class="highlight"><pre>$ fab worker setupw
+</pre></div>
 </div>
 <p>Deploy new version:</p>
-<div class="highlight-python"><pre>$ fab worker deployw</pre>
+<div class="highlight-python"><div class="highlight"><pre>$ fab worker deployw
+</pre></div>
 </div>
 <p>Create image:</p>
-<div class="highlight-python"><pre>$</pre>
+<div class="highlight-python"><div class="highlight"><pre>$
+</pre></div>
 </div>
 </div>
 </div>
@@ -228,7 +246,7 @@ match and cloudml chief recipets.</p>
     </div>
     <div class="footer">
         &copy; Copyright 2013, oDesk.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>
 </html>
