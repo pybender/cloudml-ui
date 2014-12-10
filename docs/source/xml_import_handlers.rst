@@ -343,17 +343,19 @@ the following attributes:
 - ``column`` - if entity is using a DB or CSV datasource, it will use data from this column
 - ``jsonpath`` - if entity is a JSON datasource, or field type is json, it will use this jsonpath to extract data
 - ``type`` - can be integer, boolean, string, float or json. If defined, the value will be converted to the given type. If it's not possible, then the resulting value will be null.
-- ``key_path`` - a JSON path expression for identifying the keys of a map. Used together with ``value_path``
-- ``value_path`` - JSON path expression for identifying the values of a map. Used together with ``key_path``. 
 - ``regex`` - applies the given regular expression and assigns the first match to the value
 - ``split`` - splits the value to an array of values using the provided regular expression
 - ``dateFormat`` - transforms value to a date using the given date/time format
 - ``join`` - concatenates values using the defined separator. Used together with ``jsonpath`` only.
+- ``delimiter`` - concatenates values using the defined separator. Used together with ``jsonpath`` only.
 - ``template`` - used to define a template for strings. May use variables.
 - ``script`` - call the python script defined in this element and assign the result to this field. May use any of the built-in functions or any one defined in a `Script <>`_ element. Variables can also be used in script elements. Also could be defined as inner <script> tag.
 - ``transform`` - transforms this field to a datasource. For example, it can be used to parse JSON or CSV data stored in a DB column. Its values can be either ``json`` or ``csv``.
 - ``headers`` - used only if ``transform="csv"``. Defines the header names for each item in the CSV field.
 - ``required`` - whether this field is required to have a value or not. If not defined, default is false.
+- ``multipart`` - boolean (true/false), if the results of ``jsonpath`` is complex/multipart value or simple value, Used only with ``jsonpath``
+- ``key_path`` - (**Not Implemented**) a JSON path expression for identifying the keys of a map. Used together with ``value_path``
+- ``value_path`` - (**Not Implemented**) a JSON path expression for identifying the values of a map. Used together with ``key_path``.
 
 Examples::
 
