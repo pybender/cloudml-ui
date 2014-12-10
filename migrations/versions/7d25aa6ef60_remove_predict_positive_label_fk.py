@@ -12,21 +12,31 @@ down_revision = '28e862da77e4'
 
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
+
 
 def upgrade():
+    op.drop_constraint('predict_model_positive_label_id_fkey', 'predict_model')
     op.drop_table(u'predict_model_positive_label')
+    op.drop_column('predict_model', u'positive_label_id')
     op.add_column('predict_model', sa.Column('positive_label_script', sa.Text(), nullable=True))
     op.add_column('predict_model', sa.Column('positive_label_value', sa.String(length=200), nullable=True))
-    op.drop_column('predict_model', u'positive_label_id')
+
 
 def downgrade():
-    op.add_column('predict_model', sa.Column(u'positive_label_id', sa.INTEGER(), nullable=True))
-    op.drop_column('predict_model', 'positive_label_value')
-    op.drop_column('predict_model', 'positive_label_script')
     op.create_table(u'predict_model_positive_label',
-    sa.Column(u'id', sa.INTEGER(), nullable=False),
-    sa.Column(u'value', sa.VARCHAR(length=200), autoincrement=False, nullable=True),
-    sa.Column(u'script', sa.TEXT(), autoincrement=False, nullable=True),
-    sa.PrimaryKeyConstraint(u'id', name=u'predict_model_positive_label_pkey')
-    )
+                    sa.Column(u'id', sa.INTEGER(), nullable=False),
+                    sa.Column(u'value', sa.VARCHAR(length=200), autoincrement=False, nullable=True),
+                    sa.Column(u'script', sa.TEXT(), autoincrement=False, nullable=True),
+                    sa.PrimaryKeyConstraint(u'id', name=u'predict_model_positive_label_pkey'),
+                    )
+    op.add_column('predict_model',
+                  sa.Column(u'positive_label_id', sa.INTEGER(),
+                            sa.ForeignKey(
+                                u'predict_model_positive_label.id',
+                                name=u'predict_model_positive_label_id_fkey'),
+                            nullable=True))
+
+    op.drop_column('predict_model', 'positive_label_script')
+    op.drop_column('predict_model', 'positive_label_value')
+
+
