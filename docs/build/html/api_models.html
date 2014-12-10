@@ -170,19 +170,21 @@
 <div class="section" id="example">
 <h3>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h3>
 <p>cURL:</p>
-<div class="highlight-python"><pre>curl http://127.0.0.1:5000/cloudml/model/</pre>
+<div class="highlight-python"><div class="highlight"><pre>curl http://127.0.0.1:5000/cloudml/model/
+</pre></div>
 </div>
 <p>Response body:</p>
-<div class="highlight-python"><pre>{
-    "models": [
+<div class="highlight-python"><div class="highlight"><pre>{
+    &quot;models&quot;: [
         {
-            "name": "test",
-            "status": "Trained",
-            "created_on": "2013-03-28T05:47:46.566463"
+            &quot;name&quot;: &quot;test&quot;,
+            &quot;status&quot;: &quot;Trained&quot;,
+            &quot;created_on&quot;: &quot;2013-03-28T05:47:46.566463&quot;
             ...
         }
     ]
-}</pre>
+}
+</pre></div>
 </div>
 </div>
 </div>
@@ -229,17 +231,19 @@
 <div class="section" id="id4">
 <h3>Example<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
 <p>cURL:</p>
-<div class="highlight-python"><pre>curl http://127.0.0.1:5000/cloudml/model/test</pre>
+<div class="highlight-python"><div class="highlight"><pre>curl http://127.0.0.1:5000/cloudml/model/test
+</pre></div>
 </div>
 <p>Response body:</p>
-<div class="highlight-python"><pre>{
-    "model": {
-        "name": "test",
-        "status": "Trained",
-        "created_on": "2013-03-28T05:47:46.566463"
+<div class="highlight-python"><div class="highlight"><pre>{
+    &quot;model&quot;: {
+        &quot;name&quot;: &quot;test&quot;,
+        &quot;status&quot;: &quot;Trained&quot;,
+        &quot;created_on&quot;: &quot;2013-03-28T05:47:46.566463&quot;
         ...
     }
-}</pre>
+}
+</pre></div>
 </div>
 </div>
 </div>
@@ -292,12 +296,13 @@
 <div class="section" id="id9">
 <h3>Example<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
 <p>cURL:</p>
-<div class="highlight-python"><pre>curl -XPOST http://127.0.0.1:5000/cloudml/model/1111/qqqq/predict \
---data-urlencode 'hire_outcome=1'
---data-urlencode 'application=app'
---data-urlencode 'opening=232'
---data-urlencode 'employer_info={"country": "Ukrain","op_timezone": "GMT2","op_country_tz": "GMT1"}'\
---data-urlencode 'contractor_info={"country": "Ukrain","dev_timezone": "dev_timezone"}'</pre>
+<div class="highlight-python"><div class="highlight"><pre>curl -XPOST http://127.0.0.1:5000/cloudml/model/1111/qqqq/predict \
+--data-urlencode &#39;hire_outcome=1&#39;
+--data-urlencode &#39;application=app&#39;
+--data-urlencode &#39;opening=232&#39;
+--data-urlencode &#39;employer_info={&quot;country&quot;: &quot;Ukrain&quot;,&quot;op_timezone&quot;: &quot;GMT2&quot;,&quot;op_country_tz&quot;: &quot;GMT1&quot;}&#39;\
+--data-urlencode &#39;contractor_info={&quot;country&quot;: &quot;Ukrain&quot;,&quot;dev_timezone&quot;: &quot;dev_timezone&quot;}&#39;
+</pre></div>
 </div>
 <p>Response body:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
@@ -330,7 +335,7 @@
     </div>
     <div class="footer">
         &copy; Copyright 2013, oDesk.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>
 </html>
