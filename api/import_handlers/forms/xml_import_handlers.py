@@ -1,8 +1,9 @@
 from api.base.forms import BaseForm, CharField, JsonField, \
     ChoiceField, ValidationError, BooleanField, IntegerField, \
-    DocumentField
+    DocumentField, ModelField
 from api.import_handlers.models import XmlImportHandler, XmlDataSource, \
-    XmlInputParameter, XmlScript, XmlEntity, XmlField, XmlQuery, XmlSqoop
+    XmlInputParameter, XmlScript, XmlEntity, XmlField, XmlQuery, XmlSqoop, \
+    PredictModel, Predict
 from api import app
 from core.xmlimporthandler.exceptions import ImportHandlerException
 
@@ -248,6 +249,7 @@ class XmlSqoopForm(BaseForm):
     where = CharField()
     direct = CharField()
     mappers = CharField()
+    options = CharField()
     text = CharField()
 
     def clean_entity(self, value, field):
@@ -267,3 +269,59 @@ class XmlSqoopForm(BaseForm):
             if value.type != 'db':
                 raise ValidationError('Only "db" datasources are allowed')
         return value
+
+
+class PredictModelForm(BaseForm):
+    required_fields = ('name', ('value', 'script'), 'import_handler_id')
+    NO_REQUIRED_FOR_EDIT = True
+
+    name = CharField()
+    value = CharField()
+    script = CharField()
+    positive_label_value = CharField()
+    positive_label_script = CharField()
+    import_handler_id = DocumentField(
+        doc=XmlImportHandler, by_name=False, return_doc=True)
+
+    def save(self, *args, **kwargs):
+        model = super(PredictModelForm, self).save(commit=False)
+        handler = self.cleaned_data.get('import_handler_id')
+        if handler is not None:
+            if handler.predict is None:
+                handler.predict = Predict()
+                handler.save()
+            predict = handler.predict 
+            predict.models.append(model)
+            predict.save()
+        return model
+
+
+class PredictModelWeightForm(BaseForm):
+    required_fields = ('label', ('value', 'script'), 'predict_model_id')
+    NO_REQUIRED_FOR_EDIT = True
+
+    label = CharField()
+    value = CharField()
+    script = CharField()
+    predict_model_id = ModelField(model=PredictModel)
+
+
+class PredictResultLabelForm(BaseForm):
+    required_fields = (('predict_model_id', 'script'), 'import_handler_id')
+    NO_REQUIRED_FOR_EDIT = True
+
+    predict_model_id = ModelField(model=PredictModel, return_model=False)
+    script = CharField()
+    import_handler_id = DocumentField(
+        doc=XmlImportHandler, by_name=False, return_doc=True)
+
+
+class PredictResultProbabilityForm(BaseForm):
+    required_fields = ('label', ('predict_model_id', 'script'), 'import_handler_id')
+    NO_REQUIRED_FOR_EDIT = True
+
+    predict_model_id = ModelField(model=PredictModel, return_model=False)
+    label = CharField()
+    script = CharField()
+    import_handler_id = DocumentField(
+        doc=XmlImportHandler, by_name=False, return_doc=True)

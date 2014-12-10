@@ -3,7 +3,9 @@ from flask.ext.admin.model.template import macro
 from api import admin
 from api.base.admin import BaseAdmin
 from api.import_handlers.models import XmlScript, XmlQuery, XmlEntity, \
-    XmlField, XmlImportHandler, XmlDataSource, XmlInputParameter, XmlSqoop
+    XmlField, XmlImportHandler, XmlDataSource, XmlInputParameter, XmlSqoop, \
+    Predict, PredictModel, PredictModelWeight, PredictResultLabel, \
+    PredictResultProbability
 
 
 class ImportHandlerAdmin(BaseAdmin):
@@ -90,3 +92,51 @@ class SqoopAdmin(BaseAdmin):
 
 admin.add_view(SqoopAdmin(
     name='XML Sqoop Import', category='Import Handlers'))
+
+
+class PredictAdmin(BaseAdmin):
+    MIX_METADATA = False
+    Model = Predict
+    column_list = ['id', ]
+    column_formatters = {
+        'xml_import_handler': macro('render_fk_link')
+    }
+
+admin.add_view(PredictAdmin(
+    name='Predict', category='Import Handlers'))
+
+
+class PredictModelAdmin(BaseAdmin):
+    MIX_METADATA = False
+    Model = PredictModel
+    column_list = ['id', 'name', 'value', 'script', ]
+
+admin.add_view(PredictModelAdmin(
+    name='Predict Model', category='Import Handlers'))
+
+
+class PredictModelWeightAdmin(BaseAdmin):
+    MIX_METADATA = False
+    Model = PredictModelWeight
+    column_list = ['id', 'label', 'value', 'script', 'predict_model']
+
+admin.add_view(PredictModelWeightAdmin(
+    name='Predict Model Weight', category='Import Handlers'))
+
+
+class PredictResultLabelAdmin(BaseAdmin):
+    MIX_METADATA = False
+    Model = PredictResultLabel
+    column_list = ['id', 'script', 'predict_model']
+
+admin.add_view(PredictResultLabelAdmin(
+    name='Predict Result Label', category='Import Handlers'))
+
+
+class PredictResultProbabilityAdmin(BaseAdmin):
+    MIX_METADATA = False
+    Model = PredictResultProbability
+    column_list = ['id', 'label', 'script', 'predict_model']
+
+admin.add_view(PredictResultProbabilityAdmin(
+    name='Predict Result Probability', category='Import Handlers'))

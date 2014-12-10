@@ -18,9 +18,9 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
 
     DATASOURCES_ORDER = ['db', 'csv', 'http', 'pig', 'input']
 
-    predict_id = db.Column(db.ForeignKey('predict.id',
-                                         ondelete='CASCADE')) 
-    predict = relationship('Predict', foreign_keys=[predict_id])
+    predict_id = db.Column(db.ForeignKey('predict.id', ondelete='CASCADE'))
+    predict = relationship(
+        'Predict', foreign_keys=[predict_id], backref="import_handler")
 
     @property
     def can_edit(self):
@@ -87,7 +87,7 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
             if entity.query_obj:
                 query = etree.SubElement(
                     ent, "query", **entity.query_obj.to_dict())
-                query.text = etree.CDATA(entity.query_obj.text)
+                query.text = etree.CDATA(entity.query_obj.text or '')
 
             for field in entity.fields:
                 field_dict = field.to_dict()
@@ -112,6 +112,16 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
             for model in self.predict.models:
                 predict_model = etree.SubElement(
                     predict, "model", **model.to_dict())
+                pos_lbl_dict = {}
+                if model.positive_label_value:
+                    pos_lbl_dict['value'] = model.positive_label_value
+                if model.positive_label_script:
+                    pos_lbl_dict['script'] = model.positive_label_script
+                if pos_lbl_dict.keys():
+                    etree.SubElement(predict_model, "positive_label",
+                                     **pos_lbl_dict)
+                for weight in model.predict_model_weights:
+                    etree.SubElement(predict_model, "weight", **weight.to_dict())
 
             if self.predict.label or self.predict.probability:
                 result = etree.SubElement(predict, "result")
@@ -290,9 +300,11 @@ class XmlSqoop(db.Model, BaseMixin):
     where = db.Column(db.String(200), nullable=True)
     direct = db.Column(db.String(200), nullable=True)
     mappers = db.Column(db.String(200), nullable=True)
+    options = db.Column(db.String(200), nullable=True)
     text = db.Column(db.Text, nullable=True)
 
-    FIELDS_TO_SERIALIZE = ['target', 'table', 'where', 'direct', 'mappers']
+    FIELDS_TO_SERIALIZE = ['target', 'table', 'where', 'direct',
+                           'mappers', 'options']
 
     # Global datasource
     datasource_id = db.Column(db.ForeignKey('xml_data_source.id',
@@ -393,13 +405,6 @@ class Predict(db.Model, BaseMixin):
         cascade='all,delete', backref='probabilities')
 
 
-class PredictModelPositiveLabel(db.Model, BaseMixin):
-    FIELDS_TO_SERIALIZE = ('value', 'script')
-
-    value = db.Column(db.String(200), name='value')
-    script = db.Column(db.Text, name='script')
-
-
 class PredictModel(db.Model, BaseMixin):
     FIELDS_TO_SERIALIZE = ('name', 'value', 'script')
 
@@ -407,12 +412,8 @@ class PredictModel(db.Model, BaseMixin):
     value = db.Column(db.String(200), name='value')
     script = db.Column(db.Text, name='script')
 
-    positive_label_id = db.Column(
-        db.ForeignKey('predict_model_positive_label.id'))
-    positive_label = relationship(
-        'PredictModelPositiveLabel',
-        foreign_keys=[positive_label_id],
-        cascade='all,delete', backref='model')
+    positive_label_value = db.Column(db.String(200))
+    positive_label_script = db.Column(db.Text)
 
 
 predict_models_table = db.Table(
@@ -565,6 +566,7 @@ def fill_import_handler(import_handler, xml_data=None):
                     where=sqoop.where,
                     direct=sqoop.direct,
                     mappers=sqoop.mappers,
+                    options=sqoop.options,
                     text=sqoop.query,
                     datasource=ds_dict.get(sqoop.datasource_name)
                 )
@@ -608,7 +610,19 @@ def fill_import_handler(import_handler, xml_data=None):
                     name=model.name,
                     value=model.value,
                     script=model.script)
+                if model.positive_label is not None:
+                    predict_model.positive_label_script = model.positive_label.script
+                    predict_model.positive_label_value = model.positive_label.value
                 db.session.add(predict_model)
+
+                for weight in model.weights:
+                    model_weight = PredictModelWeight(
+                        label=weight.label,
+                        script=weight.script,
+                        value=weight.value,
+                        predict_model=predict_model)
+                    db.session.add(model_weight)
+
                 predict.models.append(predict_model)
                 models_dict[model.name] = predict_model
 

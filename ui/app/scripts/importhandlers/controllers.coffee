@@ -335,6 +335,15 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
       model: model
       template: 'partials/servers/choose.html'
       ctrlName: 'ImportHandlerUploadToServerCtrl'
+
+  $scope.clone = (model) ->
+      $scope.openDialog($scope, {
+        model: model
+        template: 'partials/xml_import_handlers/clone_popup.html'
+        ctrlName: 'CloneXmlImportHandlerCtrl'
+        action: 'clone xml import handler'
+        path: model.BASE_UI_URL
+      })
 ])
 
 .controller('ImportHandlerUploadToServerCtrl', [
@@ -377,7 +386,6 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
       for h in data
         $scope.handlers_list.push {value: h.id + h.type, text: h.name + '(' + h.type + ')'}
       $scope.handlers_list = _.sortBy $scope.handlers_list, (o) -> o.text
-      console.log data
     )
     , (opts) ->
         $scope.setError(opts, 'loading import handler list')

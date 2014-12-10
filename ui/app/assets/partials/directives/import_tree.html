@@ -59,31 +59,35 @@
       <div class="span3">
           <div>
             Target:
-            <span title="target" class="target value" ng-bind="sqoop.target" editable="sqoop" value="sqoop.target" editable-field="target" editable-input="text" editable-placement="right"></span>
+            <span title="target" class="target value" ng-bind="sqoop.target || 'no target'" editable="sqoop" value="sqoop.target" editable-field="target" editable-input="text" editable-placement="right"></span>
           </div>
           <div>
             Table:
-            <span title="table" class="table value" ng-bind="sqoop.table" editable="sqoop" value="sqoop.table" editable-field="table" editable-input="text" editable-placement="right"></span>
+            <span title="table" class="table value" ng-bind="sqoop.table || 'no table'" editable="sqoop" value="sqoop.table" editable-field="table" editable-input="text" editable-placement="right"></span>
           </div>
       </div>
       <div class="span3">
           <div>
             Where:
-            <span title="where" class="where value" ng-bind="sqoop.where" editable="sqoop" value="sqoop.where" editable-field="where" editable-input="text" editable-placement="right"></span>
+            <span title="where" class="where value" ng-bind="sqoop.where || 'no where'" editable="sqoop" value="sqoop.where" editable-field="where" editable-input="text" editable-placement="right"></span>
           </div>
           <div>
             Direct:
-            <span title="direct" class="direct value" ng-bind="sqoop.direct" editable="sqoop" value="sqoop.direct" editable-field="direct" editable-input="text" editable-placement="right"></span>
+            <span title="direct" class="direct value" ng-bind="sqoop.direct || 'no direct'" editable="sqoop" value="sqoop.direct" editable-field="direct" editable-input="text" editable-placement="right"></span>
+          </div>
+          <div>
+            Options:
+            <span title="options" class="options" ng-bind="sqoop.options || 'no options'" editable="sqoop" value="sqoop.options" editable-field="options" editable-input="text" editable-placement="right"></span>
           </div>
       </div>
       <div class="span3">
           <div>
             Mappers:
-            <span title="mappers" class="mappers value" ng-bind="sqoop.mappers" editable="sqoop" value="sqoop.mappers" editable-field="mappers" editable-input="text" editable-placement="right"></span>
+            <span title="mappers" class="mappers value" ng-bind="sqoop.mappers || 'no mappers'" editable="sqoop" value="sqoop.mappers  || 'no mappers'" editable-field="mappers" editable-input="text" editable-placement="right"></span>
           </div>
           <div>
             Datasource:
-            <span title="datasource" class="datasource value" ng-bind="sqoop.datasource_id" editable="sqoop" value="sqoop.datasource_id" editable-field="datasource" editable-input="select" source="getDatasources('db')"></span>
+            <span title="datasource" class="datasource value" ng-bind="sqoop.datasource_id || 'no datasource'" editable="sqoop" value="sqoop.datasource_id" editable-field="datasource" editable-input="select" source="getDatasources('db')"></span>
           </div>
       </div>
       </div>
@@ -109,7 +113,7 @@
       <alert-message ng-show="entity.query_obj.edit_err" class="alert-error" msg="{{ entity.query_obj.edit_err }}"></alert-message>
       <div>
         Target:
-        <span title="target" class="target value" ng-bind="entity.query_obj.target" editable="entity.query_obj" value="entity.query_obj.target" editable-field="target" editable-input="text" editable-placement="right"></span>
+        <span title="target" class="target value" ng-bind="entity.query_obj.target || 'no target'" editable="entity.query_obj" value="entity.query_obj.target" editable-field="target" editable-input="text" editable-placement="right"></span>
       </div>
       <div ng-init="queries_run_sql={}">
         SQL:
@@ -187,7 +191,7 @@
                       <span title="name" class="name" ng-bind="field.name || 'no name'" editable="field" value="field.name" editable-field="name" editable-input="text" editable-placement="right"></span>
                     </th>
                     <td>
-                      <span title="Type" ng-bind="field.type" editable="field" value="field.type" editable-field="type" editable-placement="right" editable-input="select" source="field.TYPES_LIST"></span>
+                      <span title="Type" ng-bind="field.type || 'no type'" editable="field" value="field.type" editable-field="type" editable-placement="right" editable-input="select" source="field.TYPES_LIST"></span>
                     </td>
                     <td>
                       <span title="column" class="column" ng-bind="field.column || 'no column'" editable="field" value="field.column" editable-field="column" editable-input="text" editable-placement="right"></span>
@@ -211,10 +215,10 @@
                       <span title="template" class="template" ng-bind="field.template || 'no template'" editable="field" value="field.template" editable-field="template" editable-input="textarea" editable-placement="left"></span>
                     </td>
                     <td>
-                      <span title="transform" ng-bind="field.transform" editable="field" value="field.transform" editable-field="transform" editable-placement="left" editable-input="select" source="field.TRANSFORM_LIST"></span>
+                      <span title="transform" ng-bind="field.transform || 'no transform'" editable="field" value="field.transform" editable-field="transform" editable-placement="left" editable-input="select" source="field.TRANSFORM_LIST"></span>
                     </td>
                     <td>
-                      <span title="headers" class="headers" ng-bind="field.headers || 'no headers'" editable="field" value="field.regex" editable-field="headers" editable-input="textarea" editable-placement="left"></span>
+                      <span title="headers" class="headers" ng-bind="field.headers || 'no headers'" editable="field" value="field.headers" editable-field="headers" editable-input="textarea" editable-placement="left"></span>
                     </td>
                     <td>
                       <span title="script" class="script" ng-bind="field.script || 'no script'" editable="field" value="field.script" editable-field="script" editable-input="textarea" editable-placement="left"></span>

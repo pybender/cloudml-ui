@@ -10,9 +10,11 @@ from api.servers.fixtures import ServerData
 from api.servers.models import Server
 from ..views import XmlImportHandlerResource, XmlEntityResource,\
     XmlDataSourceResource, XmlInputParameterResource, XmlFieldResource,\
-    XmlQueryResource, XmlScriptResource, XmlSqoopResource
+    XmlQueryResource, XmlScriptResource, XmlSqoopResource, PredictModelResource, \
+    PredictModelWeightResource
 from ..models import XmlImportHandler, XmlDataSource, db, \
-    XmlScript, XmlField, XmlEntity, XmlInputParameter, XmlQuery, XmlSqoop
+    XmlScript, XmlField, XmlEntity, XmlInputParameter, XmlQuery, XmlSqoop, \
+    PredictModel, PredictModelWeight
 from ..fixtures import XmlImportHandlerData, XmlEntityData, XmlFieldData, \
     XmlDataSourceData, XmlInputParameterData
 
@@ -295,6 +297,8 @@ class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
 
 
 class IHLoadMixin(object):
+    PIG_IMPORT_HANDLER = 'api/import_handlers/tests/pig-train-import-handler.xml'
+
     def load_import_handler(self, filename='conf/extract.xml'):
         name = str(uuid.uuid1())
         with open(filename, 'r') as fp:
@@ -526,8 +530,7 @@ class XmlSqoopTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
 
     def setUp(self):
         super(XmlSqoopTests, self).setUp()
-        handler_id = self.load_import_handler(
-            'api/import_handlers/tests/pig-train-import-handler.xml')
+        handler_id = self.load_import_handler(self.PIG_IMPORT_HANDLER)
         self.entity = XmlEntity.query.filter_by(import_handler_id=handler_id,
                                                 name='application').one()
         self.BASE_URL = '/cloudml/xml_import_handlers/{0!s}/entities/{1!s}/sqoop_imports/'.format(
@@ -543,3 +546,112 @@ class XmlSqoopTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
         self.assertEqual(obj['text'], self.obj.text)
         self.assertEqual(obj['table'], self.obj.table)
         self.assertEqual(obj['datasource']['name'], 'sqoop_db_datasource')
+
+
+class PredictModelTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
+    """
+    Tests of the models in predict section of the xml import handlers.
+    """
+    BASE_URL = ''
+    RESOURCE = PredictModelResource
+    Model = PredictModel
+
+    def setUp(self):
+        super(PredictModelTests, self).setUp()
+        # Trying to load the import handler with predict models twice.
+        self.load_import_handler()
+        handler_id = self.load_import_handler()
+        self.BASE_URL = '/cloudml/xml_import_handlers/{0!s}/\
+predict_models/'.format(handler_id)
+        self.handler = XmlImportHandler.query.get(handler_id)
+        self.obj = self.handler.predict.models[0]
+
+    def test_predict_models_loaded_from_xml(self):
+        model = self.handler.predict.models[0]
+        self.assertEquals(model.name, 'autohide')
+        self.assertEquals(model.value, 'BestMatch.v31')
+        self.assertFalse(model.script)
+        self.assertEquals(model.positive_label_value, 'false')
+        self.assertFalse(model.positive_label_script)
+        weights = model.predict_model_weights
+        self.assertEquals(len(weights), 2)
+        weight = weights[0]
+        self.assertEquals(weight.value, '1.23543')
+        self.assertTrue(weight.label)
+        self.assertFalse(weight.script)
+
+    def test_list(self):
+        resp = self.check_list(
+            show='id,name,script,value,positive_label_value',
+            count=1)
+        model = resp['predict_models'][0]
+        db_model = self.handler.predict.models[0]
+        self.assertEquals(model['name'], db_model.name)
+        self.assertEquals(model['value'], db_model.value)
+        self.assertEquals(model['script'], db_model.script)
+        self.assertEquals(model['positive_label_value'], db_model.positive_label_value)
+
+    def test_list_invalid_handler(self):
+        import sys
+        url = '/cloudml/xml_import_handlers/{0!s}/\
+predict_models/'.format(sys.maxint)
+        resp = self.client.get(url)
+        self.assertEquals(resp.status_code, 401)
+
+
+class PredictModelWeightTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
+    """
+    Tests of the models in predict model's weights section of the xml import handlers.
+    """
+    BASE_URL = ''
+    RESOURCE = PredictModelWeightResource
+    Model = PredictModelWeight
+
+    def setUp(self):
+        super(PredictModelWeightTests, self).setUp()
+        # Trying to load the import handler with predict models twice.
+        self.load_import_handler()
+        handler_id = self.load_import_handler()
+        self.handler = XmlImportHandler.query.get(handler_id)
+        self.predict_model = self.handler.predict.models[0]
+        self.obj = self.predict_model.predict_model_weights[0]
+        self.BASE_URL = '/cloudml/xml_import_handlers/{0!s}/\
+predict_models/{1}/weights/'.format(handler_id, self.predict_model.id)
+
+    def test_list(self):
+        resp = self.check_list(
+            show='id,label,script,value',
+            count=2)
+        model = resp['predict_model_weights'][0]
+        db_weight = self.predict_model.predict_model_weights[0]
+        self.assertEquals(model['label'], db_weight.label)
+        self.assertEquals(model['value'], db_weight.value)
+        self.assertEquals(model['script'], db_weight.script)
+
+    def test_details(self):
+        self.check_details(show='label,value')
+
+    def test_post(self):
+        post_data = {'label': 'the label',
+                     'value': '2',
+                     'predict_model_id': self.predict_model.id}
+        resp, obj = self.check_edit(post_data, load_model=True)
+        self.assertEqual(obj.label, post_data['label'])
+        self.assertEqual(obj.predict_model_id, self.predict_model.id)
+        self.assertEquals(len(obj.predict_model.predict_model_weights), 3)
+
+    def test_edit(self):
+        data = {"label": "new label"}
+        resp, obj = self.check_edit(data, id=self.obj.id)
+        self.assertEquals(obj.label, data['label'])
+
+        data = {"value": "new value"}
+        resp, obj = self.check_edit(data, id=self.obj.id)
+        self.assertEquals(obj.value, data['value'])
+
+        data = {"script": "new script"}
+        resp, obj = self.check_edit(data, id=self.obj.id)
+        self.assertEquals(obj.script, data['script'])
+
+    def test_delete(self):
+        self.check_delete()

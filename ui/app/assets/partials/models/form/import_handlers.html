@@ -1,9 +1,13 @@
 <div class="control-group" ng-class="{error: Form.import_handler.$invalid || Form.import_handler_file.$invalid || errorList.import_handler || errorList.import_handler_file}">
   <label class="control-label">Import Handler</label>
   <div class="controls">
-    <select name="import_handler" ng-model="model.import_handler" ng-required='!model.import_handler_file'>
-      <option ng-repeat="handler in handlers_list" value="{{ handler.value }}">{{ handler.text }}</option>
+    <select name="import_handler"
+            ng-model="model.import_handler"
+            ng-required='!model.import_handler_file'
+            ng-options="handler.value as handler.text for handler in handlers_list">
+      <option value="">- nothing selected -</option>
     </select>
+
     <span>or</span> 
     <input type="file" name="import_handler_file" ng-model="model.import_handler_file" not-required-file ng-required='!model.import_handler' />
     <span ng-show="errorList.import_handler_file" class="help-block" ng-bind="errorList.import_handler_file" />
@@ -16,8 +20,10 @@
 <div ng-show="showTestImportHandler" class="control-group" ng-class="{error: Form.test_import_handler.$invalid || Form.test_import_handler_file.$invalid || errorList.test_import_handler || errorList.test_import_handler_file}">
   <label class="control-label">Test Import Handler</label>
   <div class="controls">
-    <select name="test_import_handler" ng-model="model.test_import_handler">
-      <option ng-repeat="handler in handlers" value="{{ handler.id }}">{{ handler.name }}</option>
+    <select name="test_import_handler"
+            ng-model="model.test_import_handler"
+            ng-options="handler.value as handler.text for handler in handlers_list">
+      <option value="">- nothing selected -</option>
     </select>
     <span>or</span> 
     <input type="file" name="test_import_handler_file" ng-model="model.test_import_handler_file" not-required-file />

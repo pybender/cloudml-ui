@@ -209,7 +209,7 @@ describe 'app.xml_importhandlers.models', ->
     it 'should have Field properties and methods defined', inject (Sqoop)->
 
       expect(Sqoop.LIST_MODEL_NAME).toEqual 'sqoop_imports'
-      expect(Sqoop.MAIN_FIELDS).toEqual 'id,text,target,table,where,direct,mappers,datasource,datasource_id,entity_id'
+      expect(Sqoop.MAIN_FIELDS).toEqual 'id,text,target,table,where,direct,mappers,datasource,datasource_id,entity_id,options'
 
     it 'can create an instance with predefined properties set', inject (Sqoop)->
       sqoop = new Sqoop

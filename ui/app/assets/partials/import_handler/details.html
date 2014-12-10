@@ -212,7 +212,7 @@
               </small>
             </td>
             <td>
-              <span title="Process strategy" ng-bind="item.process_as" editable="item" value="item.process_as" editable-field="process_as" editable-placement="right" editable-input="select" source="PROCESS_STRATEGIES"></span>
+              <span title="Process strategy" ng-bind="item.process_as  || 'no process_as'" editable="item" value="item.process_as" editable-field="process_as" editable-placement="right" editable-input="select" source="PROCESS_STRATEGIES"></span>
             </td>
             <td>
               <a ng-show="item.is_required" ng-click="makeRequired(item, false)"><i class="icon-ok" title="Make not required" /> yes</a> <a ng-click="makeRequired(item, true)" ng-hide="item.is_required"><i class="icon-remove" title="Make required" /> no</a>

@@ -23,8 +23,10 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
 #{handler_id}/#{@ITEM_NAME}/"
 
       @$beforeLoadAll: (opts) ->
-        if not opts?.import_handler_id
-          throw new Error "import_handler_id is required"
+        if opts?
+          if opts.import_handler_id?
+            return {import_handler_id: opts.import_handler_id}
+        throw new Error "import_handler_id is required"
 
     return BaseImportHandlerItem
 ])
@@ -34,8 +36,9 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
   'BaseModel'
   'InputParameter'
   'Entity'
+  'PredictModel'
   
-  (settings, BaseModel, InputParameter, Entity) ->
+  (settings, BaseModel, InputParameter, Entity, PredictModel) ->
     class XmlImportHandler extends BaseModel
       BASE_API_URL: "#{settings.apiUrl}xml_import_handlers/"
       BASE_UI_URL: "/handlers/xml"
@@ -69,10 +72,16 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
             for paramData in origData.xml_input_parameters
               @xml_input_parameters.push new InputParameter(
                 _.extend paramData, defaults)
+          if origData.predict?
+            @predict.models = (new PredictModel(_.extend mod, defaults) \
+              for mod in origData.predict.models)
 
       $uploadPredict: (server) =>
         url = "#{@BASE_API_URL}#{@id}/action/upload_to_server/"
         @$make_request(url, {}, "PUT", {'server': server})
+
+      $clone: (opts={}) ->
+        @$make_request("#{@BASE_API_URL}#{@id}/action/clone/", {}, "POST", {})
 
     return XmlImportHandler
 ])
@@ -129,7 +138,7 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
       @LIST_MODEL_NAME: 'sqoop_imports'
       LIST_MODEL_NAME: @LIST_MODEL_NAME
       @MAIN_FIELDS: ['id','text','target','table','where','direct','mappers',
-                     'datasource','datasource_id','entity_id'].join(',')
+                     'datasource','datasource_id','entity_id', 'options'].join(',')
 
       id: null
 
@@ -343,4 +352,149 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
       data: null
 
     return Script
+])
+
+# predict models
+
+.factory('PredictModelWeight', [
+  'settings'
+  'BaseImportHandlerItem'
+
+  (settings, BaseImportHandlerItem) ->
+    class PredictModelWeight extends BaseImportHandlerItem
+      API_FIELDNAME: 'predict_model_weight'
+      @LIST_MODEL_NAME: 'predict_model_weights'
+      LIST_MODEL_NAME: @LIST_MODEL_NAME
+      @ITEM_NAME: 'predict_model_weights'
+      @MAIN_FIELDS: 'id,label,value,script'
+
+      constructor: (opts) ->
+        super opts
+        @BASE_API_URL = PredictModelWeight.$get_api_url({
+          predict_model_id: @predict_model_id
+          import_handler_id: @import_handler_id
+        }, @)
+
+      @$get_api_url: (opts, self) ->
+        if self?
+          model_id = self.predict_model_id
+          import_handler_id = self.import_handler_id
+        else
+          model_id = opts.predict_model_id
+          import_handler_id = opts.import_handler_id
+        if not model_id then throw new Error 'predict_model_id is required'
+        if not import_handler_id then throw new Error 'import_handler_id is required'
+        return "#{settings.apiUrl}xml_import_handlers/#{import_handler_id}/predict_models/\
+#{model_id}/weights/"
+
+      id: null
+      label: null
+      value: null
+      script: null
+
+    return PredictModelWeight
+])
+
+.factory('PredictModel', [
+  'settings'
+  'BaseImportHandlerItem'
+  'PredictModelWeight'
+
+  (settings, BaseImportHandlerItem, PredictModelWeight) ->
+    class PredictModel extends BaseImportHandlerItem
+      API_FIELDNAME: 'predict_model'
+      @LIST_MODEL_NAME: 'predict_models'
+      LIST_MODEL_NAME: @LIST_MODEL_NAME
+      @ITEM_NAME: 'predict_models'
+      @MAIN_FIELDS: 'id,name,value,script,positive_label_value,positive_label_script'
+
+      id: null
+      name: null
+      value: null
+      script: null
+
+      loadFromJSON: (origData) =>
+        super origData
+        
+        if origData?
+          defaults= {
+            predict_model_id: @id
+            predict_model: @
+            import_handler_id: @import_handler_id
+          }
+          if origData.predict_model_weights?
+            @predict_model_weights = []
+            for data in origData.predict_model_weights
+              @predict_model_weights.push new PredictModelWeight(_.extend data, defaults)
+
+
+    return PredictModel
+])
+
+.factory('PredictLabel', [
+  'settings'
+  'BaseImportHandlerItem'
+  'PredictModel'
+
+  (settings, BaseImportHandlerItem, PredictModel) ->
+    class PredictLabel extends BaseImportHandlerItem
+      API_FIELDNAME: 'predict_label'
+      @LIST_MODEL_NAME: 'predict_labels'
+      LIST_MODEL_NAME: @LIST_MODEL_NAME
+      @ITEM_NAME: 'predict_labels'
+      @MAIN_FIELDS: 'id,predict_model,script'
+
+      id: null
+      predict_model: null
+      script: null
+
+      loadFromJSON: (origData) =>
+        super origData
+        
+        if origData?
+          defaults= {
+            result_label_id: @id
+            result_label: @
+            import_handler_id: @import_handler_id
+          }
+          if origData.predict_model?
+            @predict_model = new PredictModel(_.extend origData.predict_model, defaults)
+
+
+    return PredictLabel
+])
+
+
+.factory('PredictProbability', [
+  'settings'
+  'BaseImportHandlerItem'
+  'PredictModel'
+
+  (settings, BaseImportHandlerItem, PredictModel) ->
+    class PredictProbability extends BaseImportHandlerItem
+      API_FIELDNAME: 'predict_probability'
+      @LIST_MODEL_NAME: 'predict_probabilities'
+      LIST_MODEL_NAME: @LIST_MODEL_NAME
+      @ITEM_NAME: 'predict_probabilities'
+      @MAIN_FIELDS: 'id,predict_model,script, label'
+
+      id: null
+      predict_model: null
+      label: null
+      script: null
+
+      loadFromJSON: (origData) =>
+        super origData
+        
+        if origData?
+          defaults= {
+            result_probability_id: @id
+            result_probability: @
+            import_handler_id: @import_handler_id
+          }
+          if origData.predict_model?
+            @predict_model = new PredictModel(_.extend origData.predict_model, defaults)
+
+
+    return PredictProbability
 ])

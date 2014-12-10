@@ -9,10 +9,14 @@ from api.base.resources import BaseResourceSQL, NotFound, \
     odesk_error_response, ERR_INVALID_DATA
 from api import api
 from api.import_handlers.models import XmlImportHandler, XmlInputParameter, \
-    XmlEntity, XmlField, XmlDataSource, XmlQuery, XmlScript, XmlSqoop, Predict
+    XmlEntity, XmlField, XmlDataSource, XmlQuery, XmlScript, XmlSqoop, \
+    Predict, PredictModel, PredictModelWeight, PredictResultLabel, \
+    PredictResultProbability
 from api.import_handlers.forms import XmlImportHandlerAddForm, \
     XmlInputParameterForm, XmlEntityForm, XmlFieldForm, XmlDataSourceForm, \
-    XmlQueryForm, XmlScriptForm, XmlImportHandlerEditForm, XmlSqoopForm
+    XmlQueryForm, XmlScriptForm, XmlImportHandlerEditForm, XmlSqoopForm, \
+    PredictModelForm, PredictModelWeightForm, PredictResultLabelForm, \
+    PredictResultProbabilityForm
 from api.servers.forms import ChooseServerForm
 
 
@@ -25,6 +29,7 @@ class XmlImportHandlerResource(BaseResourceSQL):
 
     NEED_PAGING = True
     PUT_ACTIONS = ('upload_to_server', 'run_sql')
+    POST_ACTIONS = ('clone', )
     FILTER_PARAMS = (('created_by', str), ('updated_by_id', int),
                      ('updated_by', str), ('name', str))
 
@@ -37,9 +42,9 @@ class XmlImportHandlerResource(BaseResourceSQL):
         if 'predict' in show:
             cursor = cursor.options(
                 joinedload_all('predict.models'),
-                joinedload('predict.models.positive_label'),
                 joinedload('predict.label'),
                 joinedload('predict.probability'),
+                joinedload('predict.models.predict_model_weights'),
                 joinedload('predict.label.predict_model'),
                 joinedload('predict.probability.predict_model'))
         if 'xml_data_sources' in show:
@@ -146,6 +151,24 @@ class XmlImportHandlerResource(BaseResourceSQL):
 
         return self._render({'data': data, 'columns': columns, 'sql': sql})
 
+    def _post_clone_action(self, **kwargs):
+        from datetime import datetime
+        handler = self._get_details_query(None, **kwargs)
+        name = "{0} clone: {1}".format(
+            handler.name, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        new_handler = XmlImportHandler(name=name)
+        try:
+            new_handler.data = handler.data
+        except Exception, exc:
+            return odesk_error_response(
+                400, ERR_INVALID_DATA, str(exc))
+        new_handler.save()
+        return self._render({
+            self.OBJECT_NAME: new_handler,
+            'status': 'New import handler "{0}" created'.format(
+                new_handler.name
+            )
+        }, code=201)
 api.add_resource(
     XmlImportHandlerResource, '/cloudml/xml_import_handlers/')
 
@@ -280,3 +303,138 @@ class XmlSqoopResource(BaseResourceSQL):
 api.add_resource(XmlSqoopResource, '/cloudml/xml_import_handlers/\
 <regex("[\w\.]*"):import_handler_id>/entities/<regex("[\w\.]*"):entity_id>\
 /sqoop_imports/')
+
+
+class PredictModelResource(BaseResourceSQL):
+    """
+    Predict section of XML import handler API methods
+    """
+    put_form = post_form = PredictModelForm
+    Model = PredictModel
+
+    def _get_details_query(self, params, **kwargs):
+        try:
+            handler_id = kwargs.pop('import_handler_id')
+            return self._build_details_query(params, **kwargs)
+        except NoResultFound:
+            return None
+
+    def _get_list_query(self, params, **kwargs):
+        handler = self._get_handler(kwargs.pop('import_handler_id'))
+        cursor = super(PredictModelResource, self)._get_list_query(params, **kwargs)
+        return cursor.filter(
+            PredictModel.predict_section.any(id=handler.predict.id))
+
+    def _get_handler(self, handler_id):
+        if handler_id is None:
+            raise ValidationError('Please specify import handler')
+
+        handler = XmlImportHandler.query.get(handler_id)
+        if handler is None:
+            raise NotFound()
+        return handler
+
+api.add_resource(
+    PredictModelResource, '/cloudml/xml_import_handlers/\
+<regex("[\w\.]*"):import_handler_id>/predict_models/')
+
+
+class PredictModelWeightResource(BaseResourceSQL):
+    """
+    Predict section of XML import handler API methods
+    """
+    put_form = post_form = PredictModelWeightForm
+    Model = PredictModelWeight
+
+    def _get_details_query(self, params, **kwargs):
+        try:
+            handler_id = kwargs.pop('import_handler_id')
+            return self._build_details_query(params, **kwargs)
+        except NoResultFound:
+            return None
+
+    def _get_list_query(self, params, **kwargs):
+        handler = self._get_handler(kwargs.pop('import_handler_id'))
+        return super(PredictModelWeightResource, self)._get_list_query(params, **kwargs)
+
+    def _get_handler(self, handler_id):
+        if handler_id is None:
+            raise ValidationError('Please specify import handler')
+
+        handler = XmlImportHandler.query.get(handler_id)
+        if handler is None:
+            raise NotFound()
+        return handler
+
+api.add_resource(
+    PredictModelWeightResource, '/cloudml/xml_import_handlers/\
+<regex("[\w\.]*"):import_handler_id>/predict_models/\
+<regex("[\w\.]*"):predict_model_id>/weights/')
+
+
+class PredictResultLabelResource(BaseResourceSQL):
+    """
+    Predict section of XML import handler API methods
+    """
+    put_form = post_form = PredictResultLabelForm
+    Model = PredictResultLabel
+
+    def _get_details_query(self, params, **kwargs):
+        try:
+            handler_id = kwargs.pop('import_handler_id')
+            return self._build_details_query(params, **kwargs)
+        except NoResultFound:
+            return None
+
+    def _get_list_query(self, params, **kwargs):
+        handler = self._get_handler(kwargs.pop('import_handler_id'))
+        cursor = super(PredictModelResource, self)._get_list_query(params, **kwargs)
+        return cursor.filter(
+            PredictModel.predict_section.any(id=handler.predict.id))
+
+    def _get_handler(self, handler_id):
+        if handler_id is None:
+            raise ValidationError('Please specify import handler')
+
+        handler = XmlImportHandler.query.get(handler_id)
+        if handler is None:
+            raise NotFound()
+        return handler
+
+api.add_resource(
+    PredictResultLabelResource, '/cloudml/xml_import_handlers/\
+<regex("[\w\.]*"):import_handler_id>/predict_labels/')
+
+
+class PredictResultProbabilityResource(BaseResourceSQL):
+    """
+    Predict section of XML import handler API methods
+    """
+    put_form = post_form = PredictResultProbabilityForm
+    Model = PredictResultProbability
+
+    def _get_details_query(self, params, **kwargs):
+        try:
+            handler_id = kwargs.pop('import_handler_id')
+            return self._build_details_query(params, **kwargs)
+        except NoResultFound:
+            return None
+
+    def _get_list_query(self, params, **kwargs):
+        handler = self._get_handler(kwargs.pop('import_handler_id'))
+        cursor = super(PredictModelResource, self)._get_list_query(params, **kwargs)
+        return cursor.filter(
+            PredictModel.predict_section.any(id=handler.predict.id))
+
+    def _get_handler(self, handler_id):
+        if handler_id is None:
+            raise ValidationError('Please specify import handler')
+
+        handler = XmlImportHandler.query.get(handler_id)
+        if handler is None:
+            raise NotFound()
+        return handler
+
+api.add_resource(
+    PredictResultProbabilityResource, '/cloudml/xml_import_handlers/\
+<regex("[\w\.]*"):import_handler_id>/predict_probabilities/')

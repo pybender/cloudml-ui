@@ -97,7 +97,6 @@ angular.module('app.xml_importhandlers.controllers', ['app.config', ])
     $scope.model = new XmlImportHandler()
 ])
 
-
 .controller('PredictCtrl', [
   '$scope'
 
@@ -112,5 +111,27 @@ angular.module('app.xml_importhandlers.controllers', ['app.config', ])
           $scope.predict = predict
           $scope.label = predict.label
           $scope.probability = predict.probability
+      )
+])
+
+.controller('CloneXmlImportHandlerCtrl', [
+  '$scope'
+  '$rootScope'
+  'openOptions'
+  '$location'
+  'XmlImportHandler'
+
+  ($scope, $rootScope, openOptions, $location, XmlImportHandler) ->
+    $scope.resetError()
+    $scope.handler = openOptions.model
+
+    $scope.clone = (result) ->
+      $scope.handler.$clone().then ((opts) ->
+        handler = new XmlImportHandler(opts.data.xml_import_handler)
+        $scope.$close(true)
+        $location.url(handler.objectUrl())
+      ), ((opts) ->
+        $scope.setError(opts, 'error clonning the xml import handler')
+
       )
 ])
