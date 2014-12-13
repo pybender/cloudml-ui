@@ -150,7 +150,8 @@ class FeatureTransformersTests(BaseDbTestCase, TestChecksMixin):
         feature = Feature.query.get(self.feature.id)
         self.assertDictEqual(feature.transformer, {
             'type': 'Count',
-            'params': {"separator": ","}
+            'params': {"separator": ","},
+            'id': -1
         })
 
     def test_pretrained(self):
@@ -161,5 +162,6 @@ class FeatureTransformersTests(BaseDbTestCase, TestChecksMixin):
         resp = self._check(data=post_data, method='post')
         feature = Feature.query.get(self.feature.id)
         self.assertDictEqual(feature.transformer, {
-            'type': self.transformer.name
+            'type': self.transformer.name,
+            'id': self.transformer.id
         })
