@@ -10,6 +10,32 @@ angular.module('app.features.controllers.scalers', ['app.config', ])
 
   ($scope, Scaler) ->
     $scope.types = Scaler.$TYPES_LIST
+    $scope.predefined_selected = false
+
+    # predefined scalers set the name while built-in sets the type
+    $scope.$watch 'feature.scaler.name', (newVal, oldVal)->
+      if not newVal
+        return
+
+      $scope.predefined_selected = true
+      $scope.feature.scaler.predefined = true
+
+    # built-in scalers set the type while the predefined sets the name
+    $scope.$watch 'feature.scaler.type', (newVal, oldVal)->
+      if not newVal
+        return
+
+      $scope.predefined_selected = false
+      $scope.feature.scaler.predefined = false
+
+    $scope.changeScaler = (predefined, typeOrName)->
+      $scope.predefined_selected = predefined
+      $scope.feature.scaler = new Scaler({})
+      $scope.feature.scaler.predefined = predefined
+      if predefined
+        $scope.feature.scaler.name = typeOrName
+      else
+        $scope.feature.scaler.type = typeOrName
 ])
 
 .controller('ScalersSelectLoader', [
@@ -21,10 +47,11 @@ angular.module('app.features.controllers.scalers', ['app.config', ])
     Scaler.$loadAll(
       show: 'name'
     ).then ((opts) ->
+      $scope.predefinedScalers = []
       for sc in opts.objects
-        $scope.scalers.push sc.name
+        $scope.predefinedScalers.push sc.name
     ), ((opts) ->
-      $scope.err = $scope.setError(opts, 'loading scalers')
+      $scope.err = $scope.setError(opts, 'loading predefined scalers')
     )
 ])
 
