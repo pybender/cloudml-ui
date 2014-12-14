@@ -1,0 +1,49 @@
+<i class="help_text" ng-show="fields.length <= 0">
+  There are no parameters to edit
+</i>
+
+<div>
+  <div class="block control-group" ng-hide="field.name.indexOf('_') == 0"
+       ng-repeat="field in fields"
+       ng-class="{error: !field.valid}"
+       ng-init="field.valid=true;field.required=field.required">
+
+    <span ng-switch on="field.type" >
+      <span ng-switch-when="dict" class="no-horizontal-form-param">
+        <label class="control-label">{{field.name}}
+          <span>:&nbsp;</span>
+          <span ng-show="!field.valid" class="help-inline">*</span>
+        </label>
+        <dict-parameter ng-model="data[field.name]"
+                input-key-class="input-medium"
+                input-value-class="input-medium"
+                parameter-validator=""></dict-parameter>
+        <div ng-hide="field.valid">
+          <i class="help_text help-block"> {{ field.help_text }} </i>
+        </div>
+      </span>
+      <span ng-switch-when="text" class="no-horizontal-form-param">
+        <label class="control-label">{{field.name}}
+          <span>:&nbsp;</span>
+          <span ng-show="field.required && !field.valid" class="help-inline">*</span>
+        </label>
+        <textarea class="span3" rows="5"
+                  ng-model="data[field.name]" ng-model-onblur=""
+                  dynamic-name="field.name" parameter-validator=""></textarea>
+        <div ng-hide="field.valid">
+          <i class="help_text help-block"> {{ field.help_text }} </i>
+        </div>
+      </span>
+      <span ng-switch-default>
+        <label class="control-label">{{field.name}}<span>: &nbsp;</span></label>
+        <input type="text" placeholder="Empty" class="input-medium"
+               ng-model="data[field.name]" ng-model-onblur=""
+               dynamic-name="field.name" parameter-validator=""/>
+        <span ng-show="field.required && !field.valid" class="help-inline">*</span>
+        <div ng-hide="field.valid">
+          <i class="help_text help-block"> {{ field.help_text }} </i>
+        </div>
+      </span>
+    </span>
+  </div>
+</div>

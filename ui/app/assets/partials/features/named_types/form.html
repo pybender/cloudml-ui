@@ -28,7 +28,7 @@
   <label class="control-label">Parameters</label>
   <div class="controls">
     <div class="jsonView">
-        <parameters-editor ng-model="model.paramsDict" name="params"></parameters-editor>
+        <parameters-editor2 ng-model="model.paramsDict" name="params" cml-model="model"></parameters-editor2>
     </div>
     <span ng-show="Form.params.$error.required" class="help-inline">*</span>
     <span ng-show="errorList.params" class="help-block" ng-bind="errorList.params" />

@@ -8,6 +8,16 @@ angular.module('app.features.controllers.transformers', ['app.config', ])
 
   ($scope, Transformer) ->
     $scope.types = Transformer.$TYPES_LIST
+    $scope.predefined_selected = false
+
+    $scope.$watch 'feature.transformer', (newVal, oldVal)->
+      if not newVal
+        return
+
+      $scope.predefined_selected = newVal.id > 0
+
+    $scope.changeTransformer = (id, type)->
+      $scope.feature.transformer = new Transformer({id: id, type: type})
 ])
 
 .controller('TransformersSelectLoader', [
@@ -20,11 +30,14 @@ angular.module('app.features.controllers.transformers', ['app.config', ])
       show: 'name'
       status: 'Trained'
     ).then ((opts) ->
-      $scope.transformers = opts.objects
+      $scope.pretrainedTransformers = opts.objects
     ), ((opts) ->
-      $scope.err = $scope.setError(opts, 'loading transformers')
+      $scope.err = $scope.setError(opts, 'loading pretrained transformers')
     )
-])
+
+    $scope.pretrainedIdToType = (id)->
+      return _.filter($scope.pretrainedTransformers, { id: id })[0].name
+  ])
 
 .controller('TransformersListCtrl', [
   '$scope'

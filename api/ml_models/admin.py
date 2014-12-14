@@ -47,6 +47,7 @@ admin.add_view(ModelAdmin(
 
 class TransformerAdmin(BaseAdmin):
     Model = Transformer
+    column_list = ['id', 'type', 'name']
 
 admin.add_view(TransformerAdmin(
     name='Transformer', category='Models'))

@@ -90,6 +90,8 @@ angular.module('app.features.models', ['app.config'])
       @$TYPES_LIST: ['MinMaxScaler', 'StandardScaler', 'NoScaler']
 
       id: null
+      name: null
+      type: null
 
       $getConfiguration: (opts={}) =>
         @$make_request("#{@BASE_API_URL}#{@id}/action/configuration/",
@@ -228,13 +230,13 @@ angular.module('app.features.models', ['app.config'])
             @is_target_variable = origData.is_target_variable == true || \
               origData.is_target_variable == 'True'
 
-          # if origData.params?
-          #   if _.isObject(@params)
-          #     @paramsDict = _.clone(@params)
-          #   else
-          #     @paramsDict = JSON.parse(@params)
-          # else
-          @paramsDict = {}
+          if origData.params?
+             if _.isObject(@params)
+               @paramsDict = _.clone(@params)
+             else
+               @paramsDict = JSON.parse(@params)
+          else
+            @paramsDict = {}
 
       constructor: (opts) ->
         super opts
@@ -268,33 +270,43 @@ angular.module('app.features.models', ['app.config'])
 
       $save: (opts={}) =>
         opts.extraData = {}
-        removeItems = opts.removeItems || false
-        isTransformerFilled = false
-        isScalerFilled = false
-        for name in opts.only
-          if (name.indexOf "transformer__") == 0 && @transformer
-            field = name.slice 13
-            val = getVal(eval('this.transformer.' + field))
-            if val?
-              opts.extraData['transformer-' + field] = val
-              isTransformerFilled = true
 
-          if (name.indexOf "scaler__") == 0 && @scaler
-            field = name.slice 8
-            val = getVal(eval('this.scaler.' + field))
-            if val?
-              opts.extraData['scaler-' + field] = val
-              isScalerFilled = true
+        if 'transformer' in opts.only
+          _.remove opts.only, (x)-> x is 'transformer'
+          transType = @transformer.type
+          transId = @transformer.id
+          transParams = @transformer.params
 
-        if @transformer.transformer?
-          opts.extraData['transformer-predefined_selected'] = true
-        else if removeItems
-          opts.extraData['remove_transformer'] = true
+          if not transId or transId is 0
+            opts.extraData['remove_transformer'] = true
+          else
+            opts.extraData['remove_transformer'] = false
+            if transId > 0
+              opts.extraData['transformer-predefined_selected'] = true
+              opts.extraData['transformer-transformer'] = transId
+            else
+              opts.extraData['transformer-predefined_selected'] = false
+              opts.extraData['transformer-type'] = transType
+              opts.extraData['transformer-params'] = angular.toJson(transParams)
 
-        if isScalerFilled
-          opts.extraData['scaler-is_predefined'] = false
-        else if removeItems
-          opts.extraData['remove_scaler'] = true
+        if 'scaler' in opts.only
+          _.remove opts.only, (x)-> x is 'scaler'
+          scalerType = @scaler.type
+          scalerName = @scaler.name
+          predefined = @scaler.predefined
+          scalerParams = @scaler.params
+
+          if not scalerType and not scalerName
+            opts.extraData['remove_scaler'] = true
+          else
+            opts.extraData['remove_scaler'] = false
+            if predefined
+              opts.extraData['scaler-predefined_selected'] = true
+              opts.extraData['scaler-scaler'] = scalerName
+            else
+              opts.extraData['scaler-predefined_selected'] = false
+              opts.extraData['scaler-type'] = scalerType
+              opts.extraData['scaler-params'] = angular.toJson(scalerParams)
 
         @params = $filter('json')(@paramsDict)
 
