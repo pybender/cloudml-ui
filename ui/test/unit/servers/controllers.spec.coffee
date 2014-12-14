@@ -44,35 +44,121 @@ describe 'servers/controllers.coffee', ->
 
   describe 'ServersSelectLoader', ->
 
-    it 'should load servers scope', inject (Server)->
+    prepareContext = (Server, withError=false) ->
+      $scope.setError = jasmine.createSpy('$scope.setError').and.returnValue 'an error'
       response = {}
       server = new Server
-      response[server.API_FIELDNAME + 's'] = [
+      servers = [
         id: 1
         name: 'server1'
         is_default: true
+        memory_mb: 100*1024*1024
       ,
         id: 2
         name: 'server2'
         is_default: false
+        memory_mb: 1*1024*1024
       ]
-      $httpBackend.expectGET("#{server.BASE_API_URL}?show=name,id,is_default")
-      .respond 200, angular.toJson(response)
-      createController 'ServersSelectLoader', {Server: Server}
+      response[server.API_FIELDNAME + 's'] = servers
+      if not withError
+        $httpBackend.expectGET("#{server.BASE_API_URL}?show=name,id,is_default,memory_mb")
+        .respond 200, angular.toJson(response)
+      else
+        $httpBackend.expectGET("#{server.BASE_API_URL}?show=name,id,is_default,memory_mb")
+        .respond 400
+      createController 'ServersSelectLoader'
       $httpBackend.flush()
-      expect($scope.servers).toEqual response[server.API_FIELDNAME + 's']
+      return servers
+
+    expectModeFileListHttpGet = (ModelFile, serverId, files, withError=false)->
+      modelFile = new ModelFile()
+      response = {}
+      response[modelFile.API_FIELDNAME + 's'] = files
+      url = ModelFile.$get_api_url {server_id: serverId}
+
+      $httpBackend.expectGET("#{url}?folder=models&server_id=1&show=server_id,folder")
+      .respond 200, angular.toJson(response)
+
+    expectModelHttpGet = (Model, modelDict, withError=false)->
+      model = new Model()
+      response = {}
+      response[model.API_FIELDNAME] = modelDict
+      if not withError
+        $httpBackend.expectGET("#{model.BASE_API_URL}#{modelDict.id}/?show=trainer_size")
+        .respond 200, angular.toJson(response)
+      else
+        $httpBackend.expectGET("#{model.BASE_API_URL}#{modelDict.id}/?show=trainer_size")
+        .respond 400
+
+    it 'should load servers scope', inject (Server)->
+      servers = prepareContext(Server)
+      expect($scope.servers).toEqual servers
+      expect($scope.selectedServer).toBe null
 
       # with error
-      $scope.setError = jasmine.createSpy('$scope.setError').and.returnValue 'an error'
-      $httpBackend.expectGET("#{server.BASE_API_URL}?show=name,id,is_default")
-      .respond 400
-      createController 'ServersSelectLoader', {Server: Server}
-      $httpBackend.flush()
+      prepareContext(Server, true)
       expect($scope.setError).toHaveBeenCalled()
       expect($scope.err).toEqual 'an error'
 
+    it 'should respond to changed server error getting files', inject (Server, Model, ModelFile)->
+      servers = prepareContext(Server)
 
-  describe 'FileListCtrl', ->
+      url = ModelFile.$get_api_url({server_id: 1})
+      $httpBackend.expectGET("#{url}?folder=models&server_id=1&show=server_id,folder")
+      .respond 400
+      $scope.serverChanged 1
+      $httpBackend.flush()
+
+      expect($scope.setError).toHaveBeenCalled()
+      expect($scope.err).toEqual 'an error'
+      expect($scope.selectedServer).toEqual servers[0]
+
+    it 'should respond to changed server and handle errors retrieving models details',
+      inject (Server, Model, ModelFile)->
+        servers = prepareContext(Server)
+
+        expectModeFileListHttpGet ModelFile, 1, [{object_id: 10}, {object_id: 20}]
+
+        # 2 models retrieved one of them fails
+        expectModelHttpGet Model, {id: 10, trainer_size: 10*1024*1024}
+        expectModelHttpGet Model, {id: 20, trainer_size: 20*1024*1024}, true
+
+        $scope.serverChanged 1
+        $httpBackend.flush()
+
+        expect($scope.setError).toHaveBeenCalled()
+        expect($scope.err).toEqual 'an error'
+        expect($scope.selectedServer).toEqual servers[0]
+        expect($scope.selectedServer.models).toBeUndefined()
+        expect($scope.selectedServer.totalTrainers).toBeUndefined()
+        expect($scope.selectedServer.memoryStatsLoaded).toBeUndefined()
+        expect($scope.selectedServer.modelAlreadyUploaded).toBeUndefined()
+        expect($scope.selectedServer.modelWillExceed).toBeUndefined()
+
+    it 'should respond to changed server and current model not in it',
+      inject (Server, Model, ModelFile)->
+        servers = prepareContext(Server)
+
+        $scope.model = new Model({id: 30, trainer_size: 10*1024*1024})
+        expectModeFileListHttpGet ModelFile, 1, [{object_id: 10}, {object_id: 20}]
+
+        # 2 models retrieved one of them fails
+        expectModelHttpGet Model, {id: 10, trainer_size: 10*1024*1024}
+        expectModelHttpGet Model, {id: 20, trainer_size: 20*1024*1024}
+
+        $scope.serverChanged 1
+        $httpBackend.flush()
+
+        expect($scope.setError).not.toHaveBeenCalled()
+        expect($scope.selectedServer.id).toEqual servers[0].id
+        expect($scope.selectedServer.models.length).toEqual 2
+        expect($scope.selectedServer.totalTrainers).toEqual 30
+        expect($scope.selectedServer.memoryStatsLoaded).toEqual true
+        expect($scope.selectedServer.modelAlreadyUploaded).toEqual false
+        expect($scope.selectedServer.modelWillExceed).toEqual false
+
+
+  xdescribe 'FileListCtrl', ->
 
     it 'should init scope', inject (ModelFile, ImportHandlerFile)->
       createController 'FileListCtrl', {ModelFile: ModelFile, ImportHandlerFile: ImportHandlerFile}
@@ -124,7 +210,7 @@ describe 'servers/controllers.coffee', ->
       expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 
 
-  describe 'ServerListCtrl', ->
+  xdescribe 'ServerListCtrl', ->
 
     it 'should init scope', inject (Server)->
       createController 'ServerListCtrl', {Server: Server}
@@ -133,7 +219,7 @@ describe 'servers/controllers.coffee', ->
       expect($scope.ACTION).toEqual 'loading servers'
 
 
-  describe 'ServerDetailsCtrl', ->
+  xdescribe 'ServerDetailsCtrl', ->
 
     it 'should init scope', inject (Server)->
 
