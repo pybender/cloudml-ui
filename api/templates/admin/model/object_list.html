@@ -12,13 +12,21 @@
     {% if model.created_by %}
         <a href="{{ url_for('userview.edit_view', url=return_url, id=model.created_by.id) }}">
             <i class="icon-user"></i>{{ model.created_by }}
-        </a> on {{ model.created_on }}
+        </a> on
+    {% endif %}
+    {% if model.created_on %}
+      {{ model.created_on.strftime('%Y-%m-%d %H:%M') }}
     {% endif %}
 {% endmacro %}
 
 {% macro render_updated(model, column) %}
     {% if model.updated_by %}
-        <a href="{{ url_for('userview.edit_view', url=return_url, id=model.updated_by.id) }}">{{ model.updated_by }}</a> on {{ model.updated_on }}
+        <a href="{{ url_for('userview.edit_view', url=return_url, id=model.updated_by.id) }}">
+          <i class="icon-user"></i>{{ model.updated_by }}
+        </a> on
+    {% endif %}
+    {% if model.updated_on %}
+      {{ model.updated_on.strftime('%Y-%m-%d %H:%M') }}
     {% endif %}
 {% endmacro %}
 

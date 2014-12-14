@@ -17,6 +17,7 @@ class Server(BaseModel, db.Model):
     ip = db.Column(db.String(200), nullable=False)
     folder = db.Column(db.String(600), nullable=False)
     is_default = db.Column(db.Boolean, default=False)
+    memory_mb = db.Column(db.Integer, nullable=False)
 
     def list_keys(self, folder=None):
         path = self.folder.strip('/')
