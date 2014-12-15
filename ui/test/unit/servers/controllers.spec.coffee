@@ -52,12 +52,12 @@ describe 'servers/controllers.coffee', ->
         id: 1
         name: 'server1'
         is_default: true
-        memory_mb: 100*1024*1024
+        memory_mb: 100
       ,
         id: 2
         name: 'server2'
         is_default: false
-        memory_mb: 1*1024*1024
+        memory_mb: 10
       ]
       response[server.API_FIELDNAME + 's'] = servers
       if not withError
@@ -76,7 +76,7 @@ describe 'servers/controllers.coffee', ->
       response[modelFile.API_FIELDNAME + 's'] = files
       url = ModelFile.$get_api_url {server_id: serverId}
 
-      $httpBackend.expectGET("#{url}?folder=models&server_id=1&show=server_id,folder")
+      $httpBackend.expectGET("#{url}?folder=models&server_id=#{serverId}&show=server_id,folder")
       .respond 200, angular.toJson(response)
 
     expectModelHttpGet = (Model, modelDict, withError=false)->
@@ -139,7 +139,7 @@ describe 'servers/controllers.coffee', ->
       inject (Server, Model, ModelFile)->
         servers = prepareContext(Server)
 
-        $scope.model = new Model({id: 30, trainer_size: 10*1024*1024})
+        $scope.model = new Model({id: 30, trainer_size: 30*1024*1024})
         expectModeFileListHttpGet ModelFile, 1, [{object_id: 10}, {object_id: 20}]
 
         # 2 models retrieved one of them fails
@@ -156,6 +156,65 @@ describe 'servers/controllers.coffee', ->
         expect($scope.selectedServer.memoryStatsLoaded).toEqual true
         expect($scope.selectedServer.modelAlreadyUploaded).toEqual false
         expect($scope.selectedServer.modelWillExceed).toEqual false
+
+    it 'should respond to changed server and current model on it',
+      inject (Server, Model, ModelFile)->
+        servers = prepareContext(Server)
+
+        $scope.model = new Model({id: 30, trainer_size: 10*1024*1024})
+        expectModeFileListHttpGet ModelFile, 2, [{object_id: 10}, {object_id: 20}, {object_id: 30}]
+
+        # 3 models retrieved one of them fails
+        expectModelHttpGet Model, {id: 10, trainer_size: 10*1024*1024}
+        expectModelHttpGet Model, {id: 20, trainer_size: 20*1024*1024}
+        expectModelHttpGet Model, {id: 30, trainer_size: 30*1024*1024}
+
+        $scope.serverChanged 2
+        $httpBackend.flush()
+
+        expect($scope.setError).not.toHaveBeenCalled()
+        expect($scope.selectedServer.id).toEqual servers[1].id
+        expect($scope.selectedServer.models.length).toEqual 3
+        expect($scope.selectedServer.totalTrainers).toEqual 60
+        expect($scope.selectedServer.memoryStatsLoaded).toEqual true
+        expect($scope.selectedServer.modelAlreadyUploaded).toEqual true
+        expect($scope.selectedServer.modelWillExceed).toEqual true
+
+    it 'should respond to changed server and empty module list',
+      inject (Server, Model, ModelFile)->
+        servers = prepareContext(Server)
+
+        $scope.model = new Model({id: 30, trainer_size: 10*1024*1024})
+        expectModeFileListHttpGet ModelFile, 2, []
+
+        $scope.serverChanged 2
+        $httpBackend.flush()
+
+        expect($scope.setError).not.toHaveBeenCalled()
+        expect($scope.selectedServer.id).toEqual servers[1].id
+        expect($scope.selectedServer.models.length).toEqual 0
+        expect($scope.selectedServer.totalTrainers).toEqual 0
+        expect($scope.selectedServer.memoryStatsLoaded).toEqual true
+        expect($scope.selectedServer.modelAlreadyUploaded).toEqual false
+        expect($scope.selectedServer.modelWillExceed).toEqual false
+
+    it 'should respond to changed server and empty module list, current module will exceed',
+      inject (Server, Model, ModelFile)->
+        servers = prepareContext(Server)
+
+        $scope.model = new Model({id: 30, trainer_size: 100*1024*1024})
+        expectModeFileListHttpGet ModelFile, 2, []
+
+        $scope.serverChanged 2
+        $httpBackend.flush()
+
+        expect($scope.setError).not.toHaveBeenCalled()
+        expect($scope.selectedServer.id).toEqual servers[1].id
+        expect($scope.selectedServer.models.length).toEqual 0
+        expect($scope.selectedServer.totalTrainers).toEqual 0
+        expect($scope.selectedServer.memoryStatsLoaded).toEqual true
+        expect($scope.selectedServer.modelAlreadyUploaded).toEqual false
+        expect($scope.selectedServer.modelWillExceed).toEqual true
 
 
   xdescribe 'FileListCtrl', ->

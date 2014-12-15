@@ -20,8 +20,15 @@
     </form>
     <hr ng-show="selectedServer"/>
     <div ng-show="selectedServer"><b>Server Memory: </b>{{selectedServer.memory_mb}} MB</div>
-    <div ng-show="selectedServer.memoryStatsLoaded"><b>Models Count: </b>{{selectedServer.models.length}}</div>
-    <div ng-show="selectedServer.memoryStatsLoaded"><b>Models Trainers: </b>{{selectedServer.totalTrainers}} MB</div>
+    <div ng-show="selectedServer && !selectedServer.memoryStatsLoaded">Loading models on selected server ...</div>
+    <div tooltip="Number of models' trainers on selected server"
+         style="cursor: pointer"
+         ng-show="selectedServer.memoryStatsLoaded">
+      <b>Models Count: </b>{{selectedServer.models.length}}</div>
+    <div tooltip="Total memory used for models' trainers on selected server"
+         style="cursor: pointer"
+         ng-show="selectedServer.memoryStatsLoaded">
+      <b>Models Trainers: </b>{{selectedServer.totalTrainers}} MB</div>
     <p ng-show="selectedServer.modelAlreadyUploaded || selectedServer.modelWillExceed">
       <div class="alert alert-warning" ng-show="selectedServer.modelAlreadyUploaded">
         The model <b>{{model.name}}</b> is already uploaded to server <b>{{selectedServer.name}}</b>

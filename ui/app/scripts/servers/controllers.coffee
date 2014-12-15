@@ -35,30 +35,34 @@ angular.module('app.servers.controllers', ['app.config', ])
         modelsSize = 0
         params = {folder: 'models', server_id: serverId, show:'server_id,folder'}
         ModelFile.$loadAll(params).then (opts) ->
-          for obj in opts.objects
-            model = new Model({id: obj.object_id})
-            models.push model
-            promises.push model.$load({show: 'trainer_size'})
-          if models.length <= 0
-            $scope.selectedServer.models = models
-            $scope.selectedServer.totalTrainers = modelsSize
-            $scope.selectedServer.memoryStatsLoaded = true
-            $scope.selectedServer.modelAlreadyUploaded = false
-            $scope.selectedServer.modelWillExceed = false
+          if opts.objects.length <= 0
+            # queue empty promise to consolidate code in $q.all for both cases
+            # of no modules on server and many modules on server
+            promises.push ->
+              return $q (resolve)-> resolve()
           else
-            $q.all(promises).then ->
-              modelsSize = _.reduce models, (acc, model)->
-                return acc + (model.trainer_size or 0)
-              , 0
-              $scope.selectedServer.modelAlreadyUploaded = $scope.model.id + '' in _.pluck models, 'id'
-              $scope.selectedServer.models = models
-              $scope.selectedServer.totalTrainers = Number((modelsSize/1024/1024).toFixed(2))
-              $scope.selectedServer.memoryStatsLoaded = true
-              $scope.selectedServer.modelWillExceed =
-                  ($scope.model.trainer_size/1024/1024) +
-                  $scope.selectedServer.totalTrainers > $scope.selectedServer.memory_mb
-            , (reason)->
-              $scope.err = $scope.setError('', 'loading the server models with reason:' + reason)
+            for obj in opts.objects
+              model = new Model({id: obj.object_id})
+              models.push model
+              promises.push model.$load({show: 'trainer_size'})
+
+          $q.all(promises).then ->
+            modelsSize = _.reduce models, (acc, model)->
+              return acc + (model.trainer_size or 0)
+            , 0
+            $scope.selectedServer.modelAlreadyUploaded =
+              _.reduce models, (acc, model)->
+                return acc or model.id + '' is $scope.model.id + ''
+              , false
+            $scope.selectedServer.models = models
+            $scope.selectedServer.totalTrainers =
+              Number((modelsSize/1024/1024).toFixed(2))
+            $scope.selectedServer.modelWillExceed =
+                ($scope.model.trainer_size/1024/1024) +
+                $scope.selectedServer.totalTrainers > $scope.selectedServer.memory_mb
+            $scope.selectedServer.memoryStatsLoaded = true
+          , (reason)->
+            $scope.err = $scope.setError('', 'loading the server models with reason:' + reason)
         , (opts) ->
           $scope.err = $scope.setError(opts, 'loading models on server')
   ])
