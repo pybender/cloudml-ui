@@ -37,8 +37,10 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
   'InputParameter'
   'Entity'
   'PredictModel'
+  'Script'
+  'Datasource'
   
-  (settings, BaseModel, InputParameter, Entity, PredictModel) ->
+  (settings, BaseModel, InputParameter, Entity, PredictModel, Script, Datasource) ->
     class XmlImportHandler extends BaseModel
       BASE_API_URL: "#{settings.apiUrl}xml_import_handlers/"
       BASE_UI_URL: "/handlers/xml"
@@ -55,9 +57,8 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
       created_by: null
 
       xml_input_parameters: []
-      scripts: []
-      # TODO: nader201400913, why do we need entities while we fill only entity in loadFromJSON
-      entities: []
+      xml_scripts: []
+      xml_data_sources: []
       predict: []
 
       loadFromJSON: (origData) =>
@@ -67,11 +68,23 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
           defaults = {'import_handler_id': @id}
           if origData.entity?
             @entity = new Entity(_.extend origData.entity, defaults)
+
           if origData.xml_input_parameters?
             @xml_input_parameters = []
             for paramData in origData.xml_input_parameters
               @xml_input_parameters.push new InputParameter(
                 _.extend paramData, defaults)
+
+          if origData.xml_scripts?
+            @xml_scripts = []
+            for paramData in origData.xml_scripts
+              @xml_scripts.push new Script(_.extend paramData, defaults)
+
+          if origData.xml_data_sources?
+            @xml_data_sources = []
+            for paramData in origData.xml_data_sources
+              @xml_data_sources.push new Datasource(_.extend paramData, defaults)
+
           if origData.predict?
             @predict.models = (new PredictModel(_.extend mod, defaults) \
               for mod in origData.predict.models)

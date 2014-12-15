@@ -95,8 +95,9 @@ describe 'app.xml_importhandlers.models', ->
       expect(handler.created_on).toBe null
       expect(handler.created_by).toBe null
       expect(handler.xml_input_parameters).toEqual []
-      expect(handler.scripts).toEqual []
-      expect(handler.entities).toEqual []
+      expect(handler.xml_data_sources).toEqual []
+
+      expect(handler.xml_scripts).toEqual []
       expect(handler.predict).toEqual []
 
     it 'constructor filled up', inject (XmlImportHandler)->
@@ -105,7 +106,7 @@ describe 'app.xml_importhandlers.models', ->
 
       expect(handler.id).toEqual 111
       expect(handler.name).toEqual 'test'
-      expect(handler.entities).toEqual []
+      expect(handler.xml_data_sources).toEqual []
       expect(handler.xml_input_parameters).toEqual []
 
     it 'constructor filled up with entities and input parameters', inject (XmlImportHandler)->
@@ -118,7 +119,6 @@ describe 'app.xml_importhandlers.models', ->
 
       expect(handler.id).toEqual 111
       expect(handler.name).toEqual 'test'
-      expect(handler.entities).toEqual [] # this quite strange why do we need entities?
       expect({id: handler.entity.id, name: handler.entity.name, import_handler_id: handler.entity.import_handler_id})
       .toEqual {id: 333, name: 'entity333', import_handler_id: 111}
       expect(({id: x.id, name:x.name, import_handler_id: x.import_handler_id} for x in handler.xml_input_parameters))

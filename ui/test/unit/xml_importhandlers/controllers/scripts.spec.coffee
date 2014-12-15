@@ -56,7 +56,7 @@ describe 'xml_importhandlers/controllers/scripts.coffee', ->
         expect($scope.handler).toEqual handler
         expect($scope.kwargs).toEqual {'import_handler_id': handler.id}
         $scope.$digest() # to trigger the watch
-        expect($scope.objects).toBeUndefined()
+        expect($scope.objects).toEqual([])
 
         # watch
         scripts = [

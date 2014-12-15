@@ -48,7 +48,6 @@ angular.module(
       })
 
     $scope.edit = (datasource)->
-      datasource = new Datasource(datasource)
       $scope.openDialog($scope, {
         model: datasource
         template: 'partials/xml_import_handlers/datasources/edit.html'
@@ -57,7 +56,6 @@ angular.module(
       })
 
     $scope.delete = (datasource)->
-      datasource = new Datasource(datasource)
       $scope.openDialog($scope, {
         model: datasource
         template: 'partials/base/delete_dialog.html'
