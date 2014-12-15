@@ -35,6 +35,8 @@ angular.module('app.servers.model', ['app.config'])
   
   (ServerFile, Model, settings) ->
     class ModelFile extends ServerFile
+      @LIST_MODEL_NAME: 'model_files'
+      LIST_MODEL_NAME: @LIST_MODEL_NAME
 
       @$get_api_url: (opts, model) ->
         server_id = opts.server_id || model.server_id
@@ -62,6 +64,8 @@ angular.module('app.servers.model', ['app.config'])
   
   (ServerFile, ImportHandler, XmlImportHandler, settings) ->
     class ImportHandlerFile extends ServerFile
+      @LIST_MODEL_NAME: 'importhandlers_files'
+      LIST_MODEL_NAME: @LIST_MODEL_NAME
 
       @$get_api_url: (opts, model) ->
         server_id = opts.server_id || model.server_id

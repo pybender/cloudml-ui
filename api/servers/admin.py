@@ -12,5 +12,4 @@ class ServerAdmin(BaseAdmin):
         ('is_default', Server.is_default),
     )
 
-admin.add_view(ServerAdmin(
-    name='Server', category='Models'))
+admin.add_view(ServerAdmin(name='Server'))
