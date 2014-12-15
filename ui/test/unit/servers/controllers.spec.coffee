@@ -217,7 +217,7 @@ describe 'servers/controllers.coffee', ->
         expect($scope.selectedServer.modelWillExceed).toEqual true
 
 
-  xdescribe 'FileListCtrl', ->
+  describe 'FileListCtrl', ->
 
     it 'should init scope', inject (ModelFile, ImportHandlerFile)->
       createController 'FileListCtrl', {ModelFile: ModelFile, ImportHandlerFile: ImportHandlerFile}
@@ -269,7 +269,7 @@ describe 'servers/controllers.coffee', ->
       expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 
 
-  xdescribe 'ServerListCtrl', ->
+  describe 'ServerListCtrl', ->
 
     it 'should init scope', inject (Server)->
       createController 'ServerListCtrl', {Server: Server}
@@ -278,7 +278,7 @@ describe 'servers/controllers.coffee', ->
       expect($scope.ACTION).toEqual 'loading servers'
 
 
-  xdescribe 'ServerDetailsCtrl', ->
+  describe 'ServerDetailsCtrl', ->
 
     it 'should init scope', inject (Server)->
 
