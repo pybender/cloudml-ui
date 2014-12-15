@@ -262,7 +262,7 @@ class XmlField(db.Model, BaseMixin):
     FIELDS_TO_SERIALIZE = ['name', 'type', 'column', 'jsonpath', 'delimiter',
                            'regex', 'split', 'dateFormat', 'template',
                            'transform', 'headers', 'script', 'required',
-                           'multipart']
+                           'multipart', 'key_path', 'value_path']
 
     def to_dict(self):
         fieldDict = super(XmlField, self).to_dict()
@@ -287,6 +287,8 @@ class XmlField(db.Model, BaseMixin):
     script = db.Column(db.Text)
     required = db.Column(db.Boolean, default=False)
     multipart = db.Column(db.Boolean, default=False)
+    key_path = db.Column(db.String(200))
+    value_path = db.Column(db.String(200))
 
     entity_id = db.Column(db.ForeignKey('xml_entity.id'))
     entity = relationship(
@@ -553,7 +555,9 @@ def fill_import_handler(import_handler, xml_data=None):
                     transform=field.transform,
                     headers=field.headers,
                     required=field.required,
-                    multipart=field.multipart)
+                    multipart=field.multipart,
+                    key_path=field.key_path,
+                    value_path=field.value_path)
                 db_entity.fields.append(fld)
                 if field.transform:
                     TRANSFORMED_FIELDS[field.name] = fld
