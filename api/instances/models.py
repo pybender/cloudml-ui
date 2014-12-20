@@ -44,6 +44,8 @@ class Cluster(BaseModel, db.Model):
 
     STATUSES = [STATUS_NEW, STATUS_STARTING, STATUS_RUNNING, STATUS_WAITING,
                 STATUS_ERROR, STATUS_TERMINATED]
+    ACTIVE_STATUSES = [STATUS_NEW, STATUS_STARTING, STATUS_RUNNING, STATUS_WAITING,
+                       STATUS_ERROR]
 
     jobflow_id = db.Column(db.String(200), nullable=False, unique=True)
     master_node_dns = db.Column(db.String(200), nullable=True)

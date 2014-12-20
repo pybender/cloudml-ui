@@ -1,3 +1,4 @@
+<div ng-controller="BaseListCtrl" ng-init="init(false, 'cluster')">
 <h2>
   Clusters List
   <div class="actions">
@@ -6,14 +7,26 @@
 
 <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
 
-<alert-message ng-show="objects.length == 0" class="alert-info" msg="No AWS clusters found"></alert-message>
-<table ng-hide="objects.length == 0" class="table table-hover">
+<table class="table table-hover">
 <thead>
   <tr>
-    <th>Job Flow</th>
+    <th>Job Flow
+      <a ng-click="showNameFilter=!showNameFilter"><i class="icon-search"></i></a>
+      <div ng-show="showNameFilter || filter_opts['jobflow_id']">
+        <input class="input-medium" name="jobflow_id" ng-model="filter_opts['jobflow_id']" placeholder="filter by jobflow_id" />
+      </div>
+    </th>
     <th>Master Node DNS</th>
     <th>Web ui</th>
-    <th>Status</th>
+    <th>
+      Status
+      <a ng-click="showStatusFilter=!showStatusFilter"><i class="icon-search"></i></a>
+      <div ng-show="showStatusFilter || filter_opts['status']">
+        <select class="input-medium" ui-select2="{allowClear: false}" ng-multiple="false" name="status" ng-model="filter_opts['status']">
+          <option ng-repeat="status in STATUSES" value="{{ status }}">{{ status }}</option>
+        </select>
+      </div>
+    </th>
     <th>Default</th>
     <th>Created</th>
     <th>Actions</th>
@@ -58,3 +71,4 @@
   </tr>
 </tfoot>
 </table>
+</div>

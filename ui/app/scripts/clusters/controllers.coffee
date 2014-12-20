@@ -9,21 +9,14 @@ angular.module('app.clusters.controllers', ['app.config', ])
   '$location'
 
 ($scope, $rootScope, Cluster, $location) ->
-  $scope.load = () ->
-    $scope.host = $location.host()
-    Cluster.$loadAll(
-      show: ['jobflow_id','master_node_dns','port','status','ip','is_default','created_on','created_by','active_tunnel'].join(',')
-    ).then ((opts) ->
-      $scope.objects = opts.objects
-    ), ((opts) ->
-      $scope.setError(opts, 'loading Clusters')
-    )
-
-  $scope.load()
-
-  $rootScope.$on('updateList', () ->
-    $scope.load()
-  )
+  $scope.STATUSES = ['Active', 'New', 'Starting', 'Running', 'Waiting', 
+                     'Error', 'Terminated']
+  $scope.filter_opts = {'status': 'Active'}
+  $scope.showStatusFilter = true
+  $scope.host = $location.host()
+  $scope.MODEL = Cluster
+  $scope.FIELDS = ['jobflow_id','master_node_dns','port','status','ip','is_default','created_on','created_by','active_tunnel'].join(',')
+  $scope.ACTION = 'loading clusters'
 ])
 
 .controller('SshTunnelCtrl', [
