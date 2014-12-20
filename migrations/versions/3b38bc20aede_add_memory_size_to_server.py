@@ -1,14 +1,14 @@
 """add_memory_size_to_server
 
 Revision ID: 3b38bc20aede
-Revises: 2c09c89728ac
+Revises: 38526ac28bcf
 Create Date: 2014-12-10 13:56:46.239320
 
 """
 
 # revision identifiers, used by Alembic.
 revision = '3b38bc20aede'
-down_revision = '2c09c89728ac'
+down_revision = '38526ac28bcf'
 
 from alembic import op
 import sqlalchemy as sa
