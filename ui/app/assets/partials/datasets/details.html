@@ -7,6 +7,7 @@
       editable-placement="right"></small>
       <div class="actions" ng-controller="DatasetActionsCtrl" style="min-width: 100px;" ng-init="init({dataset: dataset, handler: handler})">
         <a class="btn btn-info" ng-show="dataset.on_s3" ng-click="download()"><i title="Download From Amazon S3" class="icon-download-alt"></i> Download</a>
+        <a class="btn" ng-show="ds.status != 'Importing' && ds.status != 'Uploading'" ng-click="reimport()"><i title="Re-import dataset" class="icon-refresh"></i> Re-import</a>
         <button ng-click="delete()" class="btn btn-danger">
           <i title="Delete dataset. Be careful - you could not recover it!" class="icon-remove"></i> Delete
         </button>
@@ -30,6 +31,7 @@
     <a ng-click="setSection(['model', 'details'])">Details</a> 
   </li>
   <li ng-class="{active: action[0] == 'log'}"><a ng-click="setSection(['log', 'details'])">Logs</a></li>
+  <li ng-show="dataset.cluster" ng-class="{active: action[0] == 'pig_log'}"><a ng-click="setSection(['pig_log', 'details'])">Pig Logs</a></li>
 </ul>
  
 <div class="tab-content" ng-show="dataset.loaded">
@@ -55,22 +57,51 @@
     <div>
         Loading time: <span class="value">{{ dataset.time|humanize_time }}</span>
     </div>
-    <div ng-show="dataset.samples_json" cml-has-codemirror="dataset.samples_json && action[0] == 'model'">
+    <div ng-show="dataset.cluster">
+        Cluster:
+        <span class="value">
+          <a target="_blank" href="#/aws/clusters/{{ dataset.cluster.id }}">
+            {{ dataset.cluster.jobflow_id }}
+          </a>
+        </span>
+    </div>
+    <div ng-show="dataset.samples_json"
+    cml-has-codemirror="dataset.samples_json && action[0] == 'model'">
       <h3>Sample Data</small></h3>
       <textarea ui-codemirror="codeMirrorConfigs(true)['json']" ng-model="dataset.samples_json" class="cml-codemirror-refresh"></textarea>
     </div>
   </div>
 
   <div ng-show="action[0] == 'log'" ng-controller="LogMessageListCtrl" ng-init="init('importdata_log', dataset.id)">
-    <p ng-show="dataset.cluster"><a href="#/aws/clusters/{{ dataset.cluster.id }}">
-        {{ dataset.cluster.jobflow_id }} cluster
-      </a></p>
-    <p ng-show="dataset.cluster"><a href="http://172.27.77.141:{{ dataset.cluster.port }}">
-        Hadoop Web Ui of {{ dataset.cluster.jobflow_id }} cluster 
-      </a></p>
-    <p ng-show="dataset.cluster"><a href="http://172.27.77.141:{{ dataset.cluster.port }}/logs/steps/">
-        Step logs
-      </a></p>
     <ng-include src="'partials/logmessages/list.html'"></ng-include>
+  </div>
+
+  <div ng-show="dataset.cluster && action[0] == 'pig_log'">
+    <div title="Cluster details">
+      Cluster:
+      <a target="_blank" class="badge badge-info" href="#/aws/clusters/{{ dataset.cluster.id }}">
+        {{ dataset.cluster.jobflow_id }}
+      </a>
+      <span>created on </span><span class="badge badge-info" title="dates in GMT" ng-bind="dataset.cluster.created_on|format_date" />
+      <span ng-hide="!dataset.cluster.updated_on || dataset.cluster.created_on == dataset.cluster.updated_on">
+        updated on <span title="dates in GMT" class="badge badge-info" ng-bind="dataset.cluster.updated_on|format_date" />
+      </span>
+      <span ng-class="['badge', getCssClassByStatus({status: dataset.cluster.status})]"  ng-bind="dataset.cluster.status" />
+
+      <span ng-show="dataset.cluster.status != 'Terminated'">
+        <i class="icon-book"></i>
+        <a target="_blank" href="http://172.27.77.141:{{ dataset.cluster.port }}">Hadoop Web UI</a>&nbsp;
+
+        <i class="icon-tasks"></i>
+        <a target="_blank" href="http://172.27.77.141:{{ dataset.cluster.port }}/logs/steps/">Step logs</a>
+      </span>
+    </div>
+
+    <div title="logs">
+      <h4>Logs from Amazon S3</h4>
+      <alert-message class="alert-info" msg='You could download stderr log file from Amazon S3 using command: "s3cmd get {{ dataset.cluster.logs_folder }}{{ dataset.pig_step }}/stderr stderr"' unsafe></alert-message>
+      <alert-message class="alert-info" msg='You could download stdout log file from Amazon S3 using command: "s3cmd get {{ dataset.cluster.logs_folder }}{{ dataset.pig_step }}/stdout stdout"' unsafe></alert-message>
+    </div>
+
   </div>
 </div>

@@ -51,12 +51,18 @@ def import_data(dataset_id, model_id=None, test_id=None, transformer_id=None):
         logging.info('Loading dataset %s' % dataset.id)
 
         import_start_time = datetime.now()
-        def callback(jobflow_id, master_dns):
-            cluster = Cluster.query.filter(Cluster.jobflow_id==jobflow_id).first()
+        def callback(jobflow_id, master_dns, s3_logs_folder, step_number):
+            cluster = Cluster.query.filter(
+                Cluster.jobflow_id==jobflow_id
+            ).first()
             if cluster is None:
-                cluster = Cluster(jobflow_id=jobflow_id, master_node_dns=master_dns)
+                cluster = Cluster(
+                    jobflow_id=jobflow_id,
+                    master_node_dns=master_dns,
+                    logs_folder=s3_logs_folder)
                 cluster.save()
             dataset.cluster = cluster
+            dataset.pig_step = step_number
             dataset.save()
             logging.info('Master dns %s' % master_dns)
             cluster.create_ssh_tunnel()

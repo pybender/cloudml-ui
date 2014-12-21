@@ -52,6 +52,7 @@ class DataSet(db.Model, BaseModel):
                                    db.ForeignKey('cluster.id', ondelete='SET NULL'))
     cluster = relationship('Cluster', backref=backref(
          'datasets'))
+    pig_step = db.Column(db.Integer, nullable=True)
 
     on_s3 = db.Column(db.Boolean)
     compress = db.Column(db.Boolean)

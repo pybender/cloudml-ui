@@ -37,51 +37,51 @@ describe 'clusters/controllers.coffee', ->
     $httpBackend.verifyNoOutstandingRequest()
 
 
-  describe 'ClusterListCtrl', ->
+  # describe 'ClusterListCtrl', ->
 
-    it 'should load clusters', inject (Cluster)->
-      response = {}
-      cluster = new Cluster
-      response[cluster.API_FIELDNAME + 's'] = [
-        id: 1
-        name: 'cluster1'
-      ,
-        id: 2
-        name: 'cluster2'
-      ]
-      $httpBackend.expectGET("#{cluster.BASE_API_URL}?show=" +
-        ['jobflow_id','master_node_dns','port','status','ip','is_default','created_on','created_by','active_tunnel'].join(','))
-      .respond 200, angular.toJson(response)
-      createController 'ClusterListCtrl',
-        $rootScope: $scope
-        Cluster: Cluster
-        $location: $location
-      $httpBackend.flush()
+  #   it 'should load clusters', inject (Cluster)->
+  #     response = {}
+  #     cluster = new Cluster
+  #     response[cluster.API_FIELDNAME + 's'] = [
+  #       id: 1
+  #       name: 'cluster1'
+  #     ,
+  #       id: 2
+  #       name: 'cluster2'
+  #     ]
+  #     $httpBackend.expectGET("#{cluster.BASE_API_URL}?show=" +
+  #       ['jobflow_id','master_node_dns','port','status','ip','is_default','created_on','created_by','active_tunnel'].join(','))
+  #     .respond 200, angular.toJson(response)
+  #     createController 'ClusterListCtrl',
+  #       $rootScope: $scope
+  #       Cluster: Cluster
+  #       $location: $location
+  #     $httpBackend.flush()
 
-      expect($scope.host).toEqual 'server'
-      expect($scope.objects.length).toBe 2
-      expect($scope.objects[0].id).toBe 1
-      expect($scope.objects[0].name).toEqual 'cluster1'
-      expect($scope.objects[1].id).toBe 2
-      expect($scope.objects[1].name).toEqual 'cluster2'
+  #     expect($scope.host).toEqual 'server'
+  #     expect($scope.objects.length).toBe 2
+  #     expect($scope.objects[0].id).toBe 1
+  #     expect($scope.objects[0].name).toEqual 'cluster1'
+  #     expect($scope.objects[1].id).toBe 2
+  #     expect($scope.objects[1].name).toEqual 'cluster2'
 
-      # with error
-      $scope.setError = jasmine.createSpy('$scope.setError').and.returnValue 'an error'
-      $httpBackend.expectGET("#{cluster.BASE_API_URL}?show=" +
-        ['jobflow_id','master_node_dns','port','status','ip','is_default','created_on','created_by','active_tunnel'].join(','))
-      .respond 400
-      createController 'ClusterListCtrl',
-        $rootScope: $scope
-        Cluster: Cluster
-        $location: $location
-      $httpBackend.flush()
+  #     # with error
+  #     $scope.setError = jasmine.createSpy('$scope.setError').and.returnValue 'an error'
+  #     $httpBackend.expectGET("#{cluster.BASE_API_URL}?show=" +
+  #       ['jobflow_id','master_node_dns','port','status','ip','is_default','created_on','created_by','active_tunnel'].join(','))
+  #     .respond 400
+  #     createController 'ClusterListCtrl',
+  #       $rootScope: $scope
+  #       Cluster: Cluster
+  #       $location: $location
+  #     $httpBackend.flush()
 
-      expect($scope.setError).toHaveBeenCalled()
+  #     expect($scope.setError).toHaveBeenCalled()
 
-      # event updateList triggers a load
-      $scope.load = jasmine.createSpy '$scope.load'
-      $scope.$emit 'updateList'
-      expect($scope.load).toHaveBeenCalled()
+  #     # event updateList triggers a load
+  #     $scope.load = jasmine.createSpy '$scope.load'
+  #     $scope.$emit 'updateList'
+  #     expect($scope.load).toHaveBeenCalled()
 
 
   describe 'SshTunnelCtrl', ->

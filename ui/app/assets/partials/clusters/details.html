@@ -10,7 +10,7 @@
       <button ng-show="cluster.active_tunnel && cluster.active_tunnel != -1" ng-click="terminateSshTunnel(cluster)" class="btn btn-warning">
         <i title="Terminate ssh tunnel" class=" icon-eye-close"></i> Terminate SSH tunnel
       </button>
-      <button ng-click="terminateCluster(cluster)" class="btn btn-danger">
+      <button ng-show="cluster.status != 'Terminated'" ng-click="terminateCluster(cluster)" class="btn btn-danger">
         <i title="Terminate cluster" class="icon-remove"></i> Terminate cluster
       </button>
     </div>

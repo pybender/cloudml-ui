@@ -53,6 +53,7 @@ class Cluster(BaseModel, db.Model):
     pid = db.Column(db.Integer, nullable=True)
     status = db.Column(db.Enum(*STATUSES, name='cluster_statuses'),
                        default=STATUS_NEW)
+    logs_folder = db.Column(db.String(200), nullable=True)
     is_default = db.Column(db.Boolean, default=False)
 
     def generate_port(self):

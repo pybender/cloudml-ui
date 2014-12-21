@@ -123,6 +123,14 @@ filesize,records_count,time,created_by,updated_by'
 
     $scope.initSections($scope.go, "model:details", simple=true)
     $scope.host = $location.host()
+
+    # TODO: make it global
+    $scope.getCssClassByStatus = (opts) ->
+      status = opts.status
+      MAP = {'Terminated': 'badge-inverse', 'Error': 'badge-important'}
+      if status? && MAP[status]?
+        return MAP[status]
+      return opts.default or 'badge-info'
 ])
 
 

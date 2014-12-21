@@ -16,7 +16,7 @@
       </tr>
   </thead>
   <tbody>
-    <tr ng-repeat="ds in objects" ng-class="{error : ds.status=='Error', warning : ds.status=='Importing', success : ds.status =='Imported'}">
+    <tr ng-repeat="ds in objects | orderBy:'created'" ng-class="{error : ds.status=='Error', warning : ds.status=='Importing', success : ds.status =='Imported'}">
       <td>
         <a href="#{{ ds.objectUrl() }}">{{ ds.name }}</a>
       </td>
