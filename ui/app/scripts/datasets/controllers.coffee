@@ -112,7 +112,7 @@ filesize,records_count,time,created_by,updated_by'
         show: DataSet.MAIN_FIELDS + ',' + DataSet.EXTRA_FIELDS
       .then ->
         if $scope.dataset.status and
-            $scope.dataset.status isnt DataSet.STATUS_IMPORTING
+            $scope.dataset.status is DataSet.STATUS_IMPORTED
           $scope.dataset.$getSampleData()
           .then (resp)->
             $scope.dataset.samples_json = angular.toJson(resp.data, true)

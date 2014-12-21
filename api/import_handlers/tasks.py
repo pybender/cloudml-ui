@@ -35,6 +35,9 @@ def import_data(dataset_id, model_id=None, test_id=None, transformer_id=None):
 
     obj = get_parent_object()
     dataset = DataSet.query.get(dataset_id)
+    dataset.status = dataset.STATUS_IMPORTING
+    dataset.save()
+
     if dataset is None:
         set_error("Dataset with id %s not found" % dataset_id, parent=obj)
 

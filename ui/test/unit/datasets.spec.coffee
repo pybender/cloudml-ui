@@ -121,7 +121,7 @@ describe "datasets", ->
     it "should make details query", inject (DataSet) ->
       url1 = BASE_URL + DS_ID + '/?show=' + DataSet.MAIN_FIELDS + ',' + DataSet.EXTRA_FIELDS
       url2 = BASE_URL + DS_ID + '/action/sample_data/?size=5'
-      $httpBackend.expectGET(url1).respond('{"data_set": {"name": "Some name"}}')
+      $httpBackend.expectGET(url1).respond('{"data_set": {"name": "Some name", "status": "Imported"}}')
       $httpBackend.expectGET(url2).respond('[{"contractor.dev_skill_test_passed_count": "18", "contractor.dev_bill_rate": "5.56"}]')
 
       createController "DataSetDetailsCtrl"

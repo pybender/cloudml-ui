@@ -15,6 +15,7 @@ angular.module('app.datasets.model', ['app.config'])
 
       @STATUS_IMPORTING = 'Importing'
       @STATUS_UPLOADING = 'Uploading'
+      @STATUS_IMPORTED= 'Imported'
 
       @MAIN_FIELDS: 'name,status,import_handler_type,import_handler_id'
       @EXTRA_FIELDS: ['created_on,updated_on','data','on_s3','import_params',

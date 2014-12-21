@@ -22,19 +22,20 @@ from import_handlers import IMPORT_HANDLER_TYPES, ImportHandlerMixin
 class DataSet(db.Model, BaseModel):
     LOG_TYPE = LogMessage.IMPORT_DATA
 
+    STATUS_NEW = 'New'
     STATUS_IMPORTING = 'Importing'
     STATUS_UPLOADING = 'Uploading'
     STATUS_IMPORTED = 'Imported'
     STATUS_ERROR = 'Error'
     STATUSES = [STATUS_IMPORTING, STATUS_UPLOADING, STATUS_IMPORTED,
-                STATUS_ERROR]
+                STATUS_ERROR, STATUS_NEW]
 
     FORMAT_JSON = 'json'
     FORMAT_CSV = 'csv'
     FORMATS = [FORMAT_JSON, FORMAT_CSV]
 
     name = db.Column(db.String(200))
-    status = db.Column(db.Enum(*STATUSES, name='dataset_statuses'))
+    status = db.Column(db.Enum(*STATUSES, name='dataset_statuses'), default=STATUS_NEW)
     error = db.Column(db.String(300))  # TODO: trunc error to 300 symbols
     data = db.Column(db.String(200))
     import_params = db.Column(JSONType)
