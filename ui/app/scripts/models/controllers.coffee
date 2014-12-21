@@ -446,7 +446,7 @@ angular.module('app.models.controllers', ['app.config', ])
     $scope.uploadModelToPredict = (model) ->
       $scope.openDialog($scope, {
         model: model
-        template: 'partials/servers/choose.html'
+        template: 'partials/servers/choose_server_for_model.html'
         ctrlName: 'ModelUploadToServerCtrl'
       })
 

@@ -15,6 +15,7 @@
 <p>{{ server.description }}</p>
 <div>IP: <span class="value">{{ server.ip }}</span></div>
 <div>Folder: <span class="value">{{ server.folder }}</span></div>
+<div>Memory Size: <span class="value">{{ server.memory_mb }} (MB)</span></div>
 
 <h3>Models</h3>
 <div ng-controller="FileListCtrl" ng-init="init(server, 'models')">

@@ -3,6 +3,25 @@
 angular.module('app.servers.controllers', ['app.config', ])
 
 .controller('ServersSelectLoader', [
+    '$scope'
+    'Server'
+
+    ($scope, Server) ->
+      $scope.servers = []
+      Server.$loadAll(
+        show: 'name,id,is_default'
+      ).then ((opts) ->
+        for server in opts.objects
+          $scope.servers.push
+            id: server.id
+            name: server.name
+            is_default: server.is_default
+      ), ((opts) ->
+        $scope.err = $scope.setError(opts, 'loading servers')
+      )
+])
+
+.controller('ServersSelectLoaderForModel', [
   '$scope'
   '$q'
   'Server'
@@ -13,18 +32,20 @@ angular.module('app.servers.controllers', ['app.config', ])
     $scope.servers = []
     $scope.selectedServer = null
 
-    Server.$loadAll(
+    Server.$loadAll
       show: 'name,id,is_default,memory_mb'
-    ).then ((opts) ->
+    .then (opts) ->
       for server in opts.objects
         $scope.servers.push
           id: server.id
           name: server.name
           is_default: server.is_default
           memory_mb: server.memory_mb
-    ), ((opts) ->
+    , (opts) ->
       $scope.err = $scope.setError(opts, 'loading servers')
-    )
+
+    if not $scope.model.trainer_size
+      $scope.model.$load({show: 'trainer_size'})
 
     $scope.serverChanged = (serverId)->
       filter = _.filter($scope.servers, {id: serverId})
@@ -57,9 +78,11 @@ angular.module('app.servers.controllers', ['app.config', ])
             $scope.selectedServer.models = models
             $scope.selectedServer.totalTrainers =
               Number((modelsSize/1024/1024).toFixed(2))
+            $scope.selectedServer.sizeAfterUpload =
+                $scope.selectedServer.totalTrainers +
+                (if $scope.selectedServer.modelAlreadyUploaded then 0 else ($scope.model.trainer_size/1024/1024))
             $scope.selectedServer.modelWillExceed =
-                ($scope.model.trainer_size/1024/1024) +
-                $scope.selectedServer.totalTrainers > $scope.selectedServer.memory_mb
+                $scope.selectedServer.sizeAfterUpload > $scope.selectedServer.memory_mb
             $scope.selectedServer.memoryStatsLoaded = true
           , (reason)->
             $scope.err = $scope.setError('', 'loading the server models with reason:' + reason)
@@ -124,7 +147,7 @@ angular.module('app.servers.controllers', ['app.config', ])
     $scope.server = new Server({id: $routeParams.id})
 
     $scope.server.$load(
-      show: 'id,name,ip,folder,created_on,data'
+      show: 'id,name,ip,folder,created_on,data,memory_mb'
       ).then (->
         $rootScope.$emit('ServerFileListCtrl:server_loaded')
       ), ((opts)-> $scope.setError(opts, 'loading server'))

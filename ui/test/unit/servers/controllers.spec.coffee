@@ -44,31 +44,35 @@ describe 'servers/controllers.coffee', ->
 
   describe 'ServersSelectLoader', ->
 
-    prepareContext = (Server, withError=false) ->
-      $scope.setError = jasmine.createSpy('$scope.setError').and.returnValue 'an error'
+    it 'should load servers scope', inject (Server)->
       response = {}
       server = new Server
-      servers = [
+      response[server.API_FIELDNAME + 's'] = [
         id: 1
         name: 'server1'
         is_default: true
-        memory_mb: 100
       ,
         id: 2
         name: 'server2'
         is_default: false
-        memory_mb: 10
       ]
-      response[server.API_FIELDNAME + 's'] = servers
-      if not withError
-        $httpBackend.expectGET("#{server.BASE_API_URL}?show=name,id,is_default,memory_mb")
-        .respond 200, angular.toJson(response)
-      else
-        $httpBackend.expectGET("#{server.BASE_API_URL}?show=name,id,is_default,memory_mb")
-        .respond 400
-      createController 'ServersSelectLoader'
+      $httpBackend.expectGET("#{server.BASE_API_URL}?show=name,id,is_default")
+      .respond 200, angular.toJson(response)
+      createController 'ServersSelectLoader', {Server: Server}
       $httpBackend.flush()
-      return servers
+      expect($scope.servers).toEqual response[server.API_FIELDNAME + 's']
+
+      # with error
+      $scope.setError = jasmine.createSpy('$scope.setError').and.returnValue 'an error'
+      $httpBackend.expectGET("#{server.BASE_API_URL}?show=name,id,is_default")
+      .respond 400
+      createController 'ServersSelectLoader', {Server: Server}
+      $httpBackend.flush()
+      expect($scope.setError).toHaveBeenCalled()
+      expect($scope.err).toEqual 'an error'
+
+
+  describe 'ServersSelectLoaderForModel', ->
 
     expectModeFileListHttpGet = (ModelFile, serverId, files, withError=false)->
       modelFile = new ModelFile()
@@ -90,18 +94,48 @@ describe 'servers/controllers.coffee', ->
         $httpBackend.expectGET("#{model.BASE_API_URL}#{modelDict.id}/?show=trainer_size")
         .respond 400
 
-    it 'should load servers scope', inject (Server)->
-      servers = prepareContext(Server)
+    prepareContext = (Server, Model, model=null, withError=false) ->
+      $scope.setError = jasmine.createSpy('$scope.setError').and.returnValue 'an error'
+      $scope.model = if model then model else new Model({id: 9999})
+      response = {}
+      server = new Server
+      servers = [
+        id: 1
+        name: 'server1'
+        is_default: true
+        memory_mb: 100
+      ,
+        id: 2
+        name: 'server2'
+        is_default: false
+        memory_mb: 10
+      ]
+      response[server.API_FIELDNAME + 's'] = servers
+      if not withError
+        $httpBackend.expectGET("#{server.BASE_API_URL}?show=name,id,is_default,memory_mb")
+        .respond 200, angular.toJson(response)
+      else
+        $httpBackend.expectGET("#{server.BASE_API_URL}?show=name,id,is_default,memory_mb")
+        .respond 400
+
+      if not model
+        expectModelHttpGet Model, {id: $scope.model.id, trainer_size: 10*1024*1024}
+      createController 'ServersSelectLoaderForModel'
+      $httpBackend.flush()
+      return servers
+
+    it 'should load servers scope', inject (Server, Model)->
+      servers = prepareContext(Server, Model)
       expect($scope.servers).toEqual servers
       expect($scope.selectedServer).toBe null
 
       # with error
-      prepareContext(Server, true)
+      prepareContext(Server, Model, null, true)
       expect($scope.setError).toHaveBeenCalled()
       expect($scope.err).toEqual 'an error'
 
     it 'should respond to changed server error getting files', inject (Server, Model, ModelFile)->
-      servers = prepareContext(Server)
+      servers = prepareContext(Server, Model)
 
       url = ModelFile.$get_api_url({server_id: 1})
       $httpBackend.expectGET("#{url}?folder=models&server_id=1&show=server_id,folder")
@@ -115,7 +149,7 @@ describe 'servers/controllers.coffee', ->
 
     it 'should respond to changed server and handle errors retrieving models details',
       inject (Server, Model, ModelFile)->
-        servers = prepareContext(Server)
+        servers = prepareContext(Server, Model)
 
         expectModeFileListHttpGet ModelFile, 1, [{object_id: 10}, {object_id: 20}]
 
@@ -131,18 +165,17 @@ describe 'servers/controllers.coffee', ->
         expect($scope.selectedServer).toEqual servers[0]
         expect($scope.selectedServer.models).toBeUndefined()
         expect($scope.selectedServer.totalTrainers).toBeUndefined()
+        expect($scope.selectedServer.sizeAfterUpload).toBeUndefined()
         expect($scope.selectedServer.memoryStatsLoaded).toBeUndefined()
         expect($scope.selectedServer.modelAlreadyUploaded).toBeUndefined()
         expect($scope.selectedServer.modelWillExceed).toBeUndefined()
 
     it 'should respond to changed server and current model not in it',
       inject (Server, Model, ModelFile)->
-        servers = prepareContext(Server)
+        servers = prepareContext(Server, Model, new Model({id: 30, trainer_size: 30*1024*1024}))
 
-        $scope.model = new Model({id: 30, trainer_size: 30*1024*1024})
         expectModeFileListHttpGet ModelFile, 1, [{object_id: 10}, {object_id: 20}]
 
-        # 2 models retrieved one of them fails
         expectModelHttpGet Model, {id: 10, trainer_size: 10*1024*1024}
         expectModelHttpGet Model, {id: 20, trainer_size: 20*1024*1024}
 
@@ -153,18 +186,17 @@ describe 'servers/controllers.coffee', ->
         expect($scope.selectedServer.id).toEqual servers[0].id
         expect($scope.selectedServer.models.length).toEqual 2
         expect($scope.selectedServer.totalTrainers).toEqual 30
+        expect($scope.selectedServer.sizeAfterUpload).toEqual 60
         expect($scope.selectedServer.memoryStatsLoaded).toEqual true
         expect($scope.selectedServer.modelAlreadyUploaded).toEqual false
         expect($scope.selectedServer.modelWillExceed).toEqual false
 
     it 'should respond to changed server and current model on it',
       inject (Server, Model, ModelFile)->
-        servers = prepareContext(Server)
+        servers = prepareContext(Server, Model, new Model({id: 30, trainer_size: 10*1024*1024}))
 
-        $scope.model = new Model({id: 30, trainer_size: 10*1024*1024})
         expectModeFileListHttpGet ModelFile, 2, [{object_id: 10}, {object_id: 20}, {object_id: 30}]
 
-        # 3 models retrieved one of them fails
         expectModelHttpGet Model, {id: 10, trainer_size: 10*1024*1024}
         expectModelHttpGet Model, {id: 20, trainer_size: 20*1024*1024}
         expectModelHttpGet Model, {id: 30, trainer_size: 30*1024*1024}
@@ -176,15 +208,15 @@ describe 'servers/controllers.coffee', ->
         expect($scope.selectedServer.id).toEqual servers[1].id
         expect($scope.selectedServer.models.length).toEqual 3
         expect($scope.selectedServer.totalTrainers).toEqual 60
+        expect($scope.selectedServer.sizeAfterUpload).toEqual 60
         expect($scope.selectedServer.memoryStatsLoaded).toEqual true
         expect($scope.selectedServer.modelAlreadyUploaded).toEqual true
         expect($scope.selectedServer.modelWillExceed).toEqual true
 
     it 'should respond to changed server and empty module list',
       inject (Server, Model, ModelFile)->
-        servers = prepareContext(Server)
+        servers = prepareContext(Server, Model, new Model({id: 30, trainer_size: 10*1024*1024}))
 
-        $scope.model = new Model({id: 30, trainer_size: 10*1024*1024})
         expectModeFileListHttpGet ModelFile, 2, []
 
         $scope.serverChanged 2
@@ -194,15 +226,15 @@ describe 'servers/controllers.coffee', ->
         expect($scope.selectedServer.id).toEqual servers[1].id
         expect($scope.selectedServer.models.length).toEqual 0
         expect($scope.selectedServer.totalTrainers).toEqual 0
+        expect($scope.selectedServer.sizeAfterUpload).toEqual 10
         expect($scope.selectedServer.memoryStatsLoaded).toEqual true
         expect($scope.selectedServer.modelAlreadyUploaded).toEqual false
         expect($scope.selectedServer.modelWillExceed).toEqual false
 
     it 'should respond to changed server and empty module list, current module will exceed',
       inject (Server, Model, ModelFile)->
-        servers = prepareContext(Server)
+        servers = prepareContext(Server, Model, new Model({id: 30, trainer_size: 100*1024*1024}))
 
-        $scope.model = new Model({id: 30, trainer_size: 100*1024*1024})
         expectModeFileListHttpGet ModelFile, 2, []
 
         $scope.serverChanged 2
@@ -212,6 +244,7 @@ describe 'servers/controllers.coffee', ->
         expect($scope.selectedServer.id).toEqual servers[1].id
         expect($scope.selectedServer.models.length).toEqual 0
         expect($scope.selectedServer.totalTrainers).toEqual 0
+        expect($scope.selectedServer.sizeAfterUpload).toEqual 100
         expect($scope.selectedServer.memoryStatsLoaded).toEqual true
         expect($scope.selectedServer.modelAlreadyUploaded).toEqual false
         expect($scope.selectedServer.modelWillExceed).toEqual true
@@ -293,7 +326,7 @@ describe 'servers/controllers.coffee', ->
       server = new Server
       response = {}
       response[server.API_FIELDNAME] = {}
-      $httpBackend.expectGET("#{server.BASE_API_URL}111/?show=id,name,ip,folder,created_on,data")
+      $httpBackend.expectGET("#{server.BASE_API_URL}111/?show=id,name,ip,folder,created_on,data,memory_mb")
       .respond 200, angular.toJson(response)
       $httpBackend.flush()
 
@@ -306,7 +339,7 @@ describe 'servers/controllers.coffee', ->
         Server: Server
         $rootScope: $rootScope
       expect($scope.server.id).toEqual 111
-      $httpBackend.expectGET("#{server.BASE_API_URL}111/?show=id,name,ip,folder,created_on,data")
+      $httpBackend.expectGET("#{server.BASE_API_URL}111/?show=id,name,ip,folder,created_on,data,memory_mb")
       .respond 400
       $httpBackend.flush()
       expect($scope.setError).toHaveBeenCalled()
