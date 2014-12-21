@@ -673,7 +673,7 @@ describe 'models/controllers.coffee', ->
 
       expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
         model: model
-        template: 'partials/servers/choose.html'
+        template: 'partials/servers/choose_server_for_model.html'
         ctrlName: 'ModelUploadToServerCtrl'
       expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 

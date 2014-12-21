@@ -326,4 +326,9 @@ angular.module('app.controllers', ['app.config', ])
     $rootScope.$on('modelChanged', () ->
       $scope.load()
     )
+
+    $scope.sum = (fieldName)->
+      return _.reduce $scope.objects, (acc, obj)->
+        return acc + obj[fieldName]
+      , 0
 ])
