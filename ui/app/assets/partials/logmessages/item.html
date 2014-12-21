@@ -1,3 +1,3 @@
-<p>
-  <span title="dates in GMT" class="badge badge-info">{{ msg.created_on | asDate | date: 'dd-MM-yy h:mm:ss' }}</span> {{ msg.content }}
+<p ng-init="css_class_name = {'WARNING': 'warning', 'INFO': 'info', 'CRITICAL': 'error', 'ERROR': 'error', 'WARN': 'warning', 'DEBUG': 'debug', 'NOTSET': 'muted'}[msg.level]" class="text-{{ css_class_name }}">
+  <span title="dates in GMT" class="badge badge-{{ css_class_name }}">{{ msg.created_on | asDate | date: 'dd-MM-yy h:mm:ss' }}</span> <span ng-repeat="str in msg.content.split('\n')">{{ str }}<br /></span>
 </p>
