@@ -12,6 +12,12 @@ class DataSetAdmin(BaseAdmin):
         'status': macro('status_with_error')}
     column_list = ['name', 'status', 'import_params']
     column_filters = ('status', )
+    form_excluded_columns = \
+        BaseAdmin.form_excluded_columns + \
+        ['cluster', 'status', 'error', 'data', 'import_handler_id',
+         'import_handler_type', 'pig_step', 'on_s3', 'compress', 'filename',
+         'filesize', 'records_count', 'time', 'data_fields', 'format', 'uid',
+         'parent_json', 'parent_xml']
 
 admin.add_view(DataSetAdmin(
     name='Data Set', category='Import Handlers'))
