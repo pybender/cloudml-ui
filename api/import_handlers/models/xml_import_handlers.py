@@ -603,6 +603,8 @@ def fill_import_handler(import_handler, xml_data=None):
         load_query(plan.entity, db_entity=ent)
         load_entity_items(plan.entity, db_entity=ent)
         for ent, field_name in ENTITIES_WITHOUT_DS:
+            if not field_name in TRANSFORMED_FIELDS:
+                raise ValueError('Field {0} not found'.format(field_name))
             ent.transformed_field = TRANSFORMED_FIELDS[field_name]
 
         # Fill predict section
