@@ -82,6 +82,33 @@ class XmlImportHandlerModelTests(BaseDbTestCase):
     def test_get_fields(self):
         self.assertEqual(self.handler.get_fields(), ['opening_id'])
 
+    def test_list_fields(self):
+        fields = self.handler.list_fields()
+        self.assertEqual(1, len(fields))
+        self.assertEqual('opening_id', fields[0].name)
+        self.assertEqual('integer', fields[0].type)
+
+        # another handler
+        data = open('./conf/extract.xml', 'r').read()
+        handler = XmlImportHandler(name='xml ih')
+        handler.data = data
+        handler.save()
+        fields = handler.list_fields()
+        self.assertEqual(11, len(fields))
+        self.assertEqual(sorted([f.name for f in fields]),
+                         sorted([
+                             'application_id',
+                             'employer_info',
+                             'contractor_info',
+                             'employer.op_timezone',
+                             'employer.op_country_tz',
+                             'employer.op_tot_jobs_filled',
+                             'employer.country',
+                             'contractor.dev_is_looking',
+                             'contractor.dev_is_looking_week',
+                             'contractor.dev_active_interviews',
+                             'contractor.dev_availability']))
+
     def test_get_ds_details_for_query(self):
         vendor, conn = self.handler._get_ds_details_for_query('ds')
         self.assertEqual(vendor, 'postgres')
@@ -294,6 +321,16 @@ class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
             iter_mock.assert_called_with(['SELECT NOW() WHERE TRUE LIMIT 2'],
                                          "host='localhost' dbname='odw' "
                                          "user='postgres' password='postgres'")
+
+    def test_get_list_fields(self):
+        url = self._get_url(id=self.obj.id, action='list_fields')
+
+        resp = self.client.get(
+            url, query_string=dict(show='id,name,type'),
+            headers=HTTP_HEADERS)
+        resp_obj = json.loads(resp.data)
+        self.assertTrue(resp_obj.has_key('fields'))
+        self.assertEqual(11, len(resp_obj['fields']))
 
 
 class IHLoadMixin(object):

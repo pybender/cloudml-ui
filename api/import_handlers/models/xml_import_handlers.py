@@ -167,6 +167,16 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
             raise
             logging.error(exc)
 
+    def list_fields(self):
+        # we should have the ih saved to db to get its fields
+        assert self.id > 0
+
+        return XmlField.query.join(
+            XmlEntity, XmlField.entity_id == XmlEntity.id).join(
+                XmlImportHandler,
+                XmlEntity.import_handler_id == XmlImportHandler.id).filter(
+                    XmlImportHandler.id == self.id).all()
+
     # TODO: looks like obsolete
     # def get_import_params(self):
     #     return [p.name for p in self.input_parameters]
