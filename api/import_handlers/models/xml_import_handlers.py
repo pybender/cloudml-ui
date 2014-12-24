@@ -219,6 +219,20 @@ class XmlDataSource(db.Model, BaseMixin, RefXmlImportHandlerMixin):
     def validate_params(self, key, params):  # TODO:
         return params
 
+    def to_xml(self, secure=False, to_string=False, pretty_print=True):
+        extra = self.params if secure else {}
+        elem = etree.Element(self.type, name=self.name, **extra)
+        if to_string:
+            return etree.tostring(elem, pretty_print=pretty_print)
+        return elem
+
+    @property
+    def core_datasource(self):
+        # TODO: secure
+        ds_xml = self.to_xml(secure=True)
+        from core.xmlimporthandler.datasources import DataSource
+        return DataSource.factory(ds_xml)
+
     def __repr__(self):
         return "<DataSource %s>" % self.name
 

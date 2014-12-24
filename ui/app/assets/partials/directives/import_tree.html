@@ -99,6 +99,9 @@
       <a ng-disabled="sqoop.loading_state" ng-click="sqoop.saveText()" class="btn btn-info">
         <i class="status-icon icon-edit"></i> save text
       </a>
+      <a ng-disabled="sqoop.loading_state" ng-click="getPigFields()(sqoop)" class="btn btn-success">
+        <i class="status-icon icon-edit"></i> pig fields
+      </a>
       <button ng-click="deleteSqoop()(sqoop);" class="btn btn-danger">
         <i title="Delete item. Be careful - you could not recover it!" class="icon-remove"></i>
       </button>
@@ -254,6 +257,7 @@
                        save-query-text="saveQueryText()"
                        run-query="runQuery()"
                        add-sqoop="addSqoop()"
+                       get-pig-fields="getPigFields()"
                        delete-sqoop="deleteSqoop()"></entities-tree>
       </entities-recursive>
     </div>

@@ -169,6 +169,7 @@ class XmlImportHandlerResource(BaseResourceSQL):
                 new_handler.name
             )
         }, code=201)
+
 api.add_resource(
     XmlImportHandlerResource, '/cloudml/xml_import_handlers/')
 
@@ -292,6 +293,7 @@ class XmlSqoopResource(BaseResourceSQL):
     """
     put_form = post_form = XmlSqoopForm
     Model = XmlSqoop
+    GET_ACTIONS = ('pig_fields', )
 
     def _get_details_query(self, params, **kwargs):
         try:
@@ -299,6 +301,32 @@ class XmlSqoopResource(BaseResourceSQL):
             return self._build_details_query(params, **kwargs)
         except NoResultFound:
             return None
+
+    def _get_pig_fields_action(self, **kwargs):
+        from utils import SCHEMA_INFO_FIELDS, PIG_TEMPLATE, construct_pig_sample
+        sqoop = self._get_details_query({}, **kwargs)
+        if sqoop is None:
+            raise NotFound(self.MESSAGE404 % kwargs)
+
+        handler = XmlImportHandler.query.get(kwargs.get('import_handler_id'))
+        if handler is None:
+            raise NotFound('Import Handler not found')
+
+        datasource = sqoop.datasource.core_datasource
+        sql = """{0} select * from {1} limit 1;
+select {2} from INFORMATION_SCHEMA.COLUMNS where table_name = '{1}';
+        """.format(sqoop.text.strip(';'), sqoop.table,
+                   ','.join(SCHEMA_INFO_FIELDS))
+        try:
+            iterator = datasource._get_iter(sql)
+            fields_data = [{key: opt[i] for i, key in enumerate(SCHEMA_INFO_FIELDS)} \
+                       for opt in iterator]
+        except Exception, exc:
+            msg = "Can't execute the query: {0}. Error: {1}".format(sql, exc)
+            return odesk_error_response(400, 400, msg)
+
+        fields_str = construct_pig_sample(fields_data)
+        return self._render({'fields': fields_data, 'sample': PIG_TEMPLATE.format(fields_str)})
 
 api.add_resource(XmlSqoopResource, '/cloudml/xml_import_handlers/\
 <regex("[\w\.]*"):import_handler_id>/entities/<regex("[\w\.]*"):entity_id>\

@@ -312,6 +312,7 @@ angular.module('app.directives', [
       saveQueryText: '&saveQueryText',
       runQuery: '&runQuery',
       addSqoop: '&addSqoop',
+      getPigFields: '&getPigFields',
       deleteSqoop: '&deleteSqoop',
     }
     # replace: true
