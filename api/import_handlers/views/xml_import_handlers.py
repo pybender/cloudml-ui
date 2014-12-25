@@ -326,7 +326,10 @@ select {2} from INFORMATION_SCHEMA.COLUMNS where table_name = '{1}';
             return odesk_error_response(400, 400, msg)
 
         fields_str = construct_pig_sample(fields_data)
-        return self._render({'fields': fields_data, 'sample': PIG_TEMPLATE.format(fields_str)})
+        return self._render({
+            'fields': fields_data,
+            'sample': PIG_TEMPLATE.format(fields_str),
+            'sql': sql})
 
 api.add_resource(XmlSqoopResource, '/cloudml/xml_import_handlers/\
 <regex("[\w\.]*"):import_handler_id>/entities/<regex("[\w\.]*"):entity_id>\

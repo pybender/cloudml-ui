@@ -3,14 +3,15 @@ register 's3://odesk-match-staging/pig/lib/elephant-bird-pig-4.4.jar';
 register 's3://odesk-match-staging/pig/lib/elephant-bird-hadoop-compat-4.4.jar';
 register 's3://odesk-match-staging/pig/lib/piggybank-0.12.0.jar';
 
-result = LOAD '$openings_dataset*' USING org.apache.pig.piggybank.storage.CSVExcelStorage(',', 'YES_MULTILINE') AS (
+result = LOAD '$dataset*' USING org.apache.pig.piggybank.storage.CSVExcelStorage(',', 'YES_MULTILINE') AS (
 
 {0}
 
 );"""
 
-SCHEMA_INFO_FIELDS = ['column_name', 'data_type', 'character_maximum_length', 
-               'is_nullable', 'column_default']
+SCHEMA_INFO_FIELDS = [
+    'column_name', 'data_type', 'character_maximum_length', 
+    'is_nullable', 'column_default']
 
 PIG_FIELDS_MAP = {
 	'integer': 'integer',
