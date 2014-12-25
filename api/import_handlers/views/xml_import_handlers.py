@@ -175,7 +175,7 @@ class XmlImportHandlerResource(BaseResourceSQL):
 
         handler = self._get_details_query(None, **kwargs)
 
-        context = {'fields': handler.list_fields()}
+        context = {'xml_fields': handler.list_fields()}
         return self._render(context)
 
 

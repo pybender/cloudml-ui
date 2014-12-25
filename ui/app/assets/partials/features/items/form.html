@@ -2,7 +2,10 @@
   <div class="control-group" ng-class="{error: FeatureForm.name.$invalid}">
     <label class="control-label">Name</label>
     <div class="controls">
-      <input type="text" name="name" ng-model="feature.name" required />
+      <input type="text" class="form-control" ng-model="selected"
+             ng-controller="FeatureNameTypeaheadController"
+             typeahead="fieldName for fieldName in fieldNames | filter:$viewValue"
+             typeahead-min-length="2" typeahead-on-select="typeaheadOnSelect($item)">
       <span ng-show="FeatureForm.name.$error.required" class="help-inline">*</span>
     </div>
   </div>

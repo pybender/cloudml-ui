@@ -558,3 +558,119 @@ describe 'features/controllers/features.coffee', ->
         expect($scope.savingProgress).toEqual '100%'
         expect($location.url()).toEqual "/models/#{model_id}?action=model:details"
 
+  describe 'FeatureNameTypeaheadController', ->
+
+    prepareContext = (Model, ImportHandler, model, fieldsDict)->
+      $scope.modelObj = model
+
+      $httpBackend.expectGET("#{model.BASE_API_URL}#{model.id}/?show=train_import_handler,train_import_handler_type,train_import_handler_id")
+      .respond 200,
+        angular.toJson
+          model:
+            id: model.id
+            train_import_handler_id: 222
+            train_import_handler_type: 'xml'
+            train_import_handler:
+              id: 222
+              name: 'test xml ih'
+
+      importHandler = new ImportHandler({id: 222})
+      $httpBackend.expectGET "#{importHandler.BASE_API_URL}#{importHandler.id}/action/list_fields/"
+      .respond 200, angular.toJson(fieldsDict)
+
+      createController 'FeatureNameTypeaheadController'
+      $httpBackend.flush()
+
+    it 'should load the trainer xml import handler of the module and its field, and respond to when typeahead is selected',
+      inject (Model, XmlImportHandler)->
+
+        prepareContext Model, XmlImportHandler, new Model({id: 111}),
+          xml_fields: [
+            id: 1
+            name: 'name float'
+            type: 'float'
+          ,
+            id: 2
+            name: 'name boolean'
+            type: 'boolean'
+          ,
+            id: 3
+            name: 'name integer'
+            type: 'integer'
+          ,
+            id: 4
+            name: 'name string'
+            type: 'string'
+          ,
+            id: 5
+            name: 'name json'
+            type: 'json'
+          ,
+            id: 6
+            name: 'name unknown'
+            type: 'unknown'
+          ]
+
+        expect($scope.candidateFields.length).toEqual 6
+        expect($scope.fieldNames).toEqual ['name float', 'name boolean', 'name integer', 'name string', 'name json', 'name unknown']
+
+        $scope.feature = {}
+
+        $scope.typeaheadOnSelect 'name float'
+        expect($scope.feature.type).toEqual 'float'
+
+        $scope.typeaheadOnSelect 'name boolean'
+        expect($scope.feature.type).toEqual 'boolean'
+
+        $scope.typeaheadOnSelect 'name integer'
+        expect($scope.feature.type).toEqual 'int'
+
+        $scope.typeaheadOnSelect 'name string'
+        expect($scope.feature.type).toEqual 'text'
+
+        $scope.typeaheadOnSelect 'name json'
+        expect($scope.feature.type).toEqual 'map'
+
+        $scope.typeaheadOnSelect 'name json'
+        expect($scope.feature.type).toEqual 'map'
+
+        $scope.typeaheadOnSelect 'name unknown'
+        expect($scope.feature.type).toEqual 'map'
+
+    it 'should handle failures retrieving either the module trainer or fields',
+      inject (Model, XmlImportHandler)->
+
+        model = new Model({id: 111})
+        $scope.modelObj = model
+
+        $httpBackend.expectGET("#{model.BASE_API_URL}#{model.id}/?show=train_import_handler,train_import_handler_type,train_import_handler_id")
+        .respond 400
+
+        createController 'FeatureNameTypeaheadController'
+        $httpBackend.flush()
+
+        expect($scope.modelObj.train_import_handler_obj).toBeUndefined()
+        expect($scope.candidateFields).toBeUndefined()
+        expect($scope.fieldNames).toBeUndefined()
+
+        $httpBackend.expectGET("#{model.BASE_API_URL}#{model.id}/?show=train_import_handler,train_import_handler_type,train_import_handler_id")
+        .respond 200,
+          angular.toJson
+            model:
+              id: model.id
+              train_import_handler_id: 222
+              train_import_handler_type: 'xml'
+              train_import_handler:
+                id: 222
+                name: 'test xml ih'
+
+        importHandler = new XmlImportHandler({id: 222})
+        $httpBackend.expectGET "#{importHandler.BASE_API_URL}#{importHandler.id}/action/list_fields/"
+        .respond 400
+
+        createController 'FeatureNameTypeaheadController'
+        $httpBackend.flush()
+
+        expect($scope.modelObj.train_import_handler_obj).toBeDefined()
+        expect($scope.candidateFields).toBeUndefined()
+        expect($scope.fieldNames).toBeUndefined()

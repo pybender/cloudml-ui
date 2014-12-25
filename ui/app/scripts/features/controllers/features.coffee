@@ -92,3 +92,43 @@ Feature, Transformer, Scaler, Parameters) ->
       $scope.savingProgress = '0%'
     )
 ])
+
+.controller('FeatureNameTypeaheadController', [
+    '$scope'
+
+    ($scope)->
+      ###
+      Controller to support type ahead for editing/adding feature name.
+      Expects:  $scope.modelObj
+                $scope.feature
+      ###
+      $scope.modelObj.$load
+        show: 'train_import_handler,train_import_handler_type,train_import_handler_id'
+      .then ->
+        $scope.modelObj.train_import_handler_obj.$listFields()
+        .then (opts)->
+          $scope.candidateFields = opts.objects
+          $scope.fieldNames = (f.name for f in opts.objects)
+        , (opts)->
+          console.warn 'failed loading fields for trainer ih',
+            $scope.modelObj.train_import_handler_obj, ', errors', opts
+      , (opts) ->
+        console.warn 'failed loading training ih for model', $scope.modelObj,
+          ', errors', opts
+
+      $scope.typeaheadOnSelect = ($item)->
+        field = _.find($scope.candidateFields, (f)-> f.name is $item)
+        featureType = null
+        if field.type is 'float' or field.type is 'boolean'
+          featureType = field.type
+        else if field.type is 'integer'
+          featureType = 'int'
+        else if field.type is 'string'
+          featureType = 'text'
+        else if field.type is 'json'
+          featureType = 'map'
+
+        if featureType
+          $scope.feature.type = featureType
+  ])
+

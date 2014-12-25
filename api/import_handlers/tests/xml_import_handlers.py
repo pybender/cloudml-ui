@@ -330,7 +330,7 @@ class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
             headers=HTTP_HEADERS)
         resp_obj = json.loads(resp.data)
         self.assertTrue(resp_obj.has_key('fields'))
-        self.assertEqual(11, len(resp_obj['fields']))
+        self.assertEqual(11, len(resp_obj['xml_fields']))
 
 
 class IHLoadMixin(object):
