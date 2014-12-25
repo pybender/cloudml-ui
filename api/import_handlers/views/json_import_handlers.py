@@ -39,7 +39,7 @@ class ImportHandlerResource(BaseResourceSQL):
     Model = ImportHandler
 
     post_form = ImportHandlerAddForm
-    GET_ACTIONS = ('download', )
+    GET_ACTIONS = ('download', 'list_fields')
     PUT_ACTIONS = ('run_sql', 'test_handler', 'upload_to_server')
 
     HANDLER_REGEXP = re.compile('^[a-zA-Z_]+$')
@@ -348,5 +348,12 @@ filename=importhandler-%s.json' % model.name
                     handler.name
                 )
             })
+
+    def _get_list_fields_action(self, **kwargs):
+
+        handler = self._get_details_query(None, **kwargs)
+
+        context = {'fields': handler.list_fields()}
+        return self._render(context)
 
 api.add_resource(ImportHandlerResource, '/cloudml/importhandlers/')

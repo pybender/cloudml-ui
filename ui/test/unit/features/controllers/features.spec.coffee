@@ -560,19 +560,11 @@ describe 'features/controllers/features.coffee', ->
 
   describe 'FeatureNameTypeaheadController', ->
 
-    prepareContext = (Model, ImportHandler, model, fieldsDict)->
+    prepareContext = (Model, ImportHandler, model, ihDict, fieldsDict)->
       $scope.modelObj = model
 
       $httpBackend.expectGET("#{model.BASE_API_URL}#{model.id}/?show=train_import_handler,train_import_handler_type,train_import_handler_id")
-      .respond 200,
-        angular.toJson
-          model:
-            id: model.id
-            train_import_handler_id: 222
-            train_import_handler_type: 'xml'
-            train_import_handler:
-              id: 222
-              name: 'test xml ih'
+      .respond 200, angular.toJson(ihDict)
 
       importHandler = new ImportHandler({id: 222})
       $httpBackend.expectGET "#{importHandler.BASE_API_URL}#{importHandler.id}/action/list_fields/"
@@ -584,32 +576,45 @@ describe 'features/controllers/features.coffee', ->
     it 'should load the trainer xml import handler of the module and its field, and respond to when typeahead is selected',
       inject (Model, XmlImportHandler)->
 
-        prepareContext Model, XmlImportHandler, new Model({id: 111}),
-          xml_fields: [
-            id: 1
-            name: 'name float'
-            type: 'float'
+        model = new Model({id: 111})
+        prepareContext Model, XmlImportHandler, model,
+          {
+            model:
+              id: model.id
+              train_import_handler_id: 222
+              train_import_handler_type: 'xml'
+              train_import_handler:
+                id: 222
+                name: 'test xml ih'
+          }
           ,
-            id: 2
-            name: 'name boolean'
-            type: 'boolean'
-          ,
-            id: 3
-            name: 'name integer'
-            type: 'integer'
-          ,
-            id: 4
-            name: 'name string'
-            type: 'string'
-          ,
-            id: 5
-            name: 'name json'
-            type: 'json'
-          ,
-            id: 6
-            name: 'name unknown'
-            type: 'unknown'
-          ]
+          {
+            xml_fields: [
+              id: 1
+              name: 'name float'
+              type: 'float'
+            ,
+              id: 2
+              name: 'name boolean'
+              type: 'boolean'
+            ,
+              id: 3
+              name: 'name integer'
+              type: 'integer'
+            ,
+              id: 4
+              name: 'name string'
+              type: 'string'
+            ,
+              id: 5
+              name: 'name json'
+              type: 'json'
+            ,
+              id: 6
+              name: 'name unknown'
+              type: 'unknown'
+            ]
+          }
 
         expect($scope.candidateFields.length).toEqual 6
         expect($scope.fieldNames).toEqual ['name float', 'name boolean', 'name integer', 'name string', 'name json', 'name unknown']
@@ -636,6 +641,29 @@ describe 'features/controllers/features.coffee', ->
 
         $scope.typeaheadOnSelect 'name unknown'
         expect($scope.feature.type).toEqual 'map'
+
+    it 'should load the trainer json import handler of the module and its field, and respond to when typeahead is selected',
+      inject (Model, ImportHandler)->
+
+        model = new Model({id: 111})
+        prepareContext Model, ImportHandler, model,
+          {
+            model:
+              id: model.id
+              train_import_handler_id: 222
+              train_import_handler_type: 'json'
+              train_import_handler:
+                id: 222
+                name: 'test json ih'
+          }
+          ,
+          {
+            fields: ['field1', 'field2', 'field3']
+          }
+
+        expect($scope.candidateFields).toBeUndefined()
+        expect($scope.typeaheadOnSelect).toBeUndefined()
+        expect($scope.fieldNames).toEqual ['field1', 'field2', 'field3']
 
     it 'should handle failures retrieving either the module trainer or fields',
       inject (Model, XmlImportHandler)->

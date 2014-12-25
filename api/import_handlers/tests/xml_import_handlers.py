@@ -325,11 +325,9 @@ class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
     def test_get_list_fields(self):
         url = self._get_url(id=self.obj.id, action='list_fields')
 
-        resp = self.client.get(
-            url, query_string=dict(show='id,name,type'),
-            headers=HTTP_HEADERS)
+        resp = self.client.get(url, headers=HTTP_HEADERS)
         resp_obj = json.loads(resp.data)
-        self.assertTrue(resp_obj.has_key('fields'))
+        self.assertTrue(resp_obj.has_key('xml_fields'))
         self.assertEqual(11, len(resp_obj['xml_fields']))
 
 

@@ -279,6 +279,19 @@ angular.module('app.importhandlers.model', ['app.config'])
         url = "#{@BASE_API_URL}#{@id}/action/upload_to_server/"
         @$make_request(url, {}, "PUT", {'server': server})
 
+      $listFields: ->
+        resolver = (resp) ->
+          return {
+            total: resp.data.total
+            pages: resp.data.pages
+            has_prev: resp.data.has_prev
+            has_next: resp.data.has_next
+            objects: resp.data.fields
+            _resp: resp
+          }
+
+        ImportHandler.$make_all_request("#{@BASE_API_URL}#{@id}/action/list_fields/", resolver)
+
     return ImportHandler
 ])
 
