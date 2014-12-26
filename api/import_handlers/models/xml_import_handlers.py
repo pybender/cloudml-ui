@@ -637,9 +637,9 @@ def fill_import_handler(import_handler, xml_data=None):
 
                 for weight in model.weights:
                     model_weight = PredictModelWeight(
-                        label=str(weight.label),
-                        script=str(weight.script),
-                        value=str(weight.value),
+                        label=weight.label,
+                        script=weight.script,
+                        value=str(weight.value or ''),
                         predict_model=predict_model)
                     db.session.add(model_weight)
 
