@@ -120,7 +120,7 @@ class ImportHandlerTests(BaseDbTestCase, TestChecksMixin):
     @patch('api.amazon_utils.AmazonDynamoDBHelper')
     def test_delete(self, mock_aws):
         datasets = DataSet.query.filter_by(import_handler_id=self.obj.id)
-        self.assertEquals(datasets.count(), 3, 'Invalid fixtures')
+        self.assertEquals(datasets.count(), 4, 'Invalid fixtures')
         import shutil
         files = []
         for dataset in datasets.all():
@@ -342,6 +342,17 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(data[self.RESOURCE.OBJECT_NAME], self.obj.id)
         self.assertTrue(data['url'].startswith('https://'))
         self.assertTrue('s3.amazonaws.com' in data['url'])
+
+    def test_pig_fields(self):
+        ds = DataSet.query.filter_by(name='DS (pig)').one()
+        resp = self._check(action='pig_fields', id=ds.id)
+        self.assertItemsEqual(
+            ['metric', 'opening', 'title'],
+            [fld['column_name'] for fld in resp['fields']]
+        )
+        self.assertTrue("""metric:float
+, opening:integer
+, title:chararray""" in resp['sample'], resp['sample'])
 
     @mock_s3
     @patch('api.import_handlers.tasks.upload_dataset')

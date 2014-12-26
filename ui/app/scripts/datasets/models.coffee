@@ -20,7 +20,7 @@ angular.module('app.datasets.model', ['app.config'])
       @MAIN_FIELDS: 'name,status,import_handler_type,import_handler_id'
       @EXTRA_FIELDS: ['created_on,updated_on','data','on_s3','import_params',
                       'error','filesize','records_count','time','created_by',
-                      'format', 'cluster', 'pig_step']
+                      'format', 'cluster', 'pig_step', 'pig_row']
 
       id: null
       name: null
@@ -109,6 +109,11 @@ angular.module('app.datasets.model', ['app.config'])
         base_url = @constructor.$get_api_url({}, @)
         @$make_request("#{base_url}#{@id}/action/sample_data/",
           {size:5}, 'GET')
+
+      getPigFields: () =>
+        base_url = @constructor.$get_api_url({}, @)
+        url = "#{base_url}#{@id}/action/pig_fields/"
+        @$make_request(url, {}, "GET", {})
 
     return DataSet
 ])

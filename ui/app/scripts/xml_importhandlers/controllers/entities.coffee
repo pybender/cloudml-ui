@@ -136,6 +136,7 @@ angular.module(
     $scope.sqoop.getPigFields().then((resp) ->
       $scope.fields = resp.data.fields
       $scope.generated_pig_string = resp.data.sample
+      $scope.pig_result_line = resp.data.pig_result_line
     , ((opts) ->
       $scope.err = opts.data.response.error.message
       $scope.setError(opts, 'loading pig fields')

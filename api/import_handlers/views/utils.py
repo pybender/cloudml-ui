@@ -10,11 +10,11 @@ result = LOAD '$dataset*' USING org.apache.pig.piggybank.storage.CSVExcelStorage
 );"""
 
 SCHEMA_INFO_FIELDS = [
-    'column_name', 'data_type', 'character_maximum_length', 
+    'column_name', 'data_type', 'character_maximum_length',
     'is_nullable', 'column_default']
 
 PIG_FIELDS_MAP = {
-	'integer': 'integer',
+    'integer': 'integer',
     'smallint': 'integer',
     'bigint': 'long',
     'character varying': 'chararray',
@@ -28,6 +28,7 @@ PIG_FIELDS_MAP = {
     'json': 'chararray'
 }
 
+
 def get_pig_type(field):
     type_ = field['data_type']
     if type_ in PIG_FIELDS_MAP:
@@ -38,12 +39,33 @@ def get_pig_type(field):
         return 'double'
     return "unknown"
 
+
 def construct_pig_sample(fields_data):
     fields_str = ""
     is_first = True
     for field in fields_data:
         if not is_first:
             fields_str += "\n, "
-        fields_str += "{0}:{1}".format(field['column_name'], get_pig_type(field))
+        fields_str += "{0}:{1}".format(field['column_name'],
+                                       get_pig_type(field))
         is_first = False
     return fields_str
+
+
+def isfloat(x):
+    try:
+        a = float(x)
+    except ValueError:
+        return False
+    else:
+        return True
+
+
+def isint(x):
+    try:
+        a = float(x)
+        b = int(a)
+    except ValueError:
+        return False
+    else:
+        return a == b

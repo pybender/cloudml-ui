@@ -6,10 +6,11 @@
 
   <div class="modal-body">
     <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+    <alert-message ng-hide="fields" class="alert-info" msg="Downloading pig result file from Amazon S3 and generating pig section fields..." unsafe></alert-message>
     <div ng-show="generated_pig_string">
       <textarea class="small cml-codemirror-refresh" ui-codemirror="$root.codeMirrorConfigs(false)['sql']" ng-model="generated_pig_string" />
       <br />
-      <a ng-click="showTable = !showTable">Show/hide table structure</a>
+      <a ng-click="showTable = !showTable"><span ng-hide="showTable">Show</span><span ng-show="showTable">Hide</span> table structure</a>
       <div ng-show="fields && showTable">
         <h4>Table Structure</h4>
         <table class="table">
@@ -30,6 +31,13 @@
             </tr>
           </tbody>
         </table>
+      </div>
+      <div ng-show="pig_result_line">
+        <a ng-click="showRawData = !showRawData"><span ng-hide="showRawData">Show</span><span ng-show="showRawData">Hide</span> pig result line</a>
+        <br />
+        <p ng-show="pig_result_line && showRawData">
+          {{ pig_result_line }}
+        </p>
       </div>
     </div>
   </div>

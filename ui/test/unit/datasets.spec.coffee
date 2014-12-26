@@ -84,6 +84,26 @@ describe "datasets", ->
         path: $scope.handler.objectUrl()
       expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 
+    it "Should call open dialog for getting pig fields with proper args",
+      inject (ImportHandler, DataSet) ->
+        $rootScope.openDialog = jasmine.createSpy '$rootScope.openDialog'
+        handler = new ImportHandler
+          id: 999
+          name: 'import handelr'
+        ds = new DataSet
+          id: 888
+
+        $rootScope.handler = handler
+        createController "DatasetActionsCtrl"
+
+        $scope.getPigFields ds
+        expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
+          model: ds
+          template: 'partials/xml_import_handlers/sqoop/load_pig_fields.html'
+          ctrlName: 'PigFieldsLoader'
+
+        expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
+
     it "should generate download link", inject (ImportHandler, DataSet) ->
 
       $window =
