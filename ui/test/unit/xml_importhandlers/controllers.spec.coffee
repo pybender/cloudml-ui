@@ -14,6 +14,7 @@ describe 'app.xml_importhandlers.controllers', ->
     module 'app.xml_importhandlers.models'
     module 'app.importhandlers.model'
     module 'app.xml_importhandlers.controllers'
+    module 'app.xml_importhandlers.controllers.predict'
 
   $httpBackend = null
   $rootScope = null
@@ -147,13 +148,13 @@ describe 'app.xml_importhandlers.controllers', ->
 
       # change predict
       predict =
-        models: ['some', 'models']
-        lable: 'predict label'
-        probability: 0.05
+        models: [{'name': 'some', 'id': 51}, {'name': 'models', 'id': 55}]
+        label: {'predict_model_id': 55, 'script': '...script...'}
+        probability: {'label': 'true', 'predict_model_id': 55}
       handler.predict = predict
       $scope.$digest()
 
-      expect($scope.predict_models).toEqual predict.models
+      expect($scope.objects).toEqual predict.models
       expect($scope.predict).toEqual predict
-      expect($scope.label).toEqual predict.label
-      expect($scope.probability).toEqual predict.probability
+      expect($scope.label.script).toEqual predict.label.script
+      expect($scope.probability.label).toEqual predict.probability.label
