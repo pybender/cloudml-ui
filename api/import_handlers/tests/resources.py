@@ -139,10 +139,16 @@ class ImportHandlerTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(resp.status_code, httplib.NO_CONTENT)
         self.assertIsNone(self.Model.query.filter_by(id=self.obj.id).first())
 
-        datasets = DataSet.query.filter_by(import_handler_id=self.obj.id)
-        self.assertFalse(datasets.count(), 'DataSets should be removed')
+        datasets = DataSet.query.filter_by(import_handler=self.obj)
+        self.assertFalse(
+            datasets.count(),
+            'DataSets should be removed: {0}'.format(
+                [ds.name for ds in datasets]))
         for filename in files:
-            shutil.move(filename + '.bak', filename)
+            try:
+                shutil.move(filename + '.bak', filename)
+            except IOError:
+                pass
 
         model = Model.query.get(model_id)
         self.assertTrue(model)
