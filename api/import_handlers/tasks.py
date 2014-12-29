@@ -54,21 +54,33 @@ def import_data(dataset_id, model_id=None, test_id=None, transformer_id=None):
         logging.info('Loading dataset %s' % dataset.id)
 
         import_start_time = datetime.now()
-        def callback(jobflow_id, master_dns, s3_logs_folder, step_number):
+        def callback(**kwargs):
+            jobflow_id = kwargs.get('jobflow_id')  # required
+            master_dns = kwargs.get('master_dns', None)
+            s3_logs_folder = kwargs.get('s3_logs_folder', None)
+            step_number = kwargs.get('step_number', None)
+            pig_row = kwargs.get('pig_row', None)
+
+            jobflow_id, master_dns, s3_logs_folder, step_number
             cluster = Cluster.query.filter(
                 Cluster.jobflow_id==jobflow_id
             ).first()
             if cluster is None:
-                cluster = Cluster(
-                    jobflow_id=jobflow_id,
-                    master_node_dns=master_dns,
-                    logs_folder=s3_logs_folder)
+                cluster = Cluster(jobflow_id=jobflow_id)
+                if not master_dns is None:
+                    cluster.master_node_dns = master_dns
+                if not s3_logs_folder is None:
+                    cluster.logs_folder = s3_logs_folder
                 cluster.save()
             dataset.cluster = cluster
-            dataset.pig_step = step_number
+            if not step_number is None:
+                dataset.pig_step = step_number
+            if not pig_row is None:
+                dataset.pig_row = pig_row
             dataset.save()
-            logging.info('Master dns %s' % master_dns)
-            cluster.create_ssh_tunnel()
+            if not master_dns is None:
+                logging.info('Master dns %s' % master_dns)
+                cluster.create_ssh_tunnel()
 
 
         logging.info("Import dataset using import handler '%s' \

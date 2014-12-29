@@ -356,6 +356,9 @@ the following attributes:
 - ``multipart`` - boolean (true/false), if the results of ``jsonpath`` is complex/multipart value or simple value, Used only with ``jsonpath``
 - ``key_path`` - (**Not Implemented**) a JSON path expression for identifying the keys of a map. Used together with ``value_path``
 - ``value_path`` - (**Not Implemented**) a JSON path expression for identifying the values of a map. Used together with ``key_path``.
+  
+.. note::
+    You can not use name for field 'opening' if you want to have also fields as 'opening.title'.
 
 Examples::
 
@@ -425,6 +428,16 @@ Examples::
         <field name="active" type="boolean" column="t2.is_active" />
         <field name="opening.segment" script="getSegment('#{category}')" />
     </entity>
+
+    <!-- Entity with field json datasource -->
+    <field name="contractor_info" transform="json" column="contractor_info"/>
+    <entity name="contractor_info" datasource="contractor_info">
+        <field name="contractor.dev_is_looking" jsonpath="$.dev_is_looking" />
+        <field name="contractor.dev_is_looking_week" jsonpath="$.dev_is_looking_week" />
+        <field name="contractor.dev_active_interviews" jsonpath="$.dev_active_interviews" />
+        <field name="contractor.dev_availability" type="integer" jsonpath="$.dev_availability" />
+    </entity>
+
 
 
 Sqoop

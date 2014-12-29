@@ -74,3 +74,37 @@ describe 'xml_importhandlers/controllers/entities', ->
           action: 'test xml import handler query'
         expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 
+    it "Should call open dialog for getting pig fields with proper args",
+      inject (ImportHandler, Sqoop)->
+        $rootScope.openDialog = jasmine.createSpy '$rootScope.openDialog'
+        handler = new ImportHandler
+          id: 999
+          name: 'import handelr'
+        sqoop = new Sqoop
+          id: 888
+
+        $rootScope.handler = handler
+        createController "EntitiesTreeCtrl"
+
+        $scope.getPigFields sqoop
+        expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
+          model: sqoop
+          template: 'partials/xml_import_handlers/sqoop/load_pig_fields.html'
+          ctrlName: 'PigFieldsLoader'
+
+        expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
+
+  describe "PigFieldsLoader", ->
+    it "Should request pig query generation for sqoop script",
+      inject (ImportHandler, Sqoop)->
+        sqoop = new Sqoop
+          id: 888
+          import_handler_id: 999
+          entity_id: 555
+        openOptions = {'model': sqoop}
+        createController "PigFieldsLoader", {'openOptions': openOptions}
+
+        url = Sqoop.$get_api_url({}, sqoop)
+        $httpBackend.expectGET "#{url}#{sqoop.id}/action/pig_fields/"
+        .respond 200, angular.toJson {'fields': {}, 'sample': 'pig_data', 'sql': 'sql...'}
+        $httpBackend.flush()

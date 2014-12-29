@@ -171,6 +171,27 @@ class DataSetData(DataSet):
         import_handler_id = 1
         import_handler_type = 'json'
 
+    class dataset_04:
+        name = "DS (pig)"
+        status = "Importing"
+        error = ""
+        created_on = "2013-04-19 14:37:23.145000"
+        updated_on = "2013-04-19 14:37:23.145000"
+        data = "8a7d1ae26efc11e395b420107a86d036.json"
+        import_params = '{}'
+        on_s3 = False
+        compress = True
+        filename = "api/import_handlers/ds2.gz"
+        filesize = 100
+        records_count = 100
+        time = 200
+        format = "json"
+        uid = '8a7d1ae26efc11e395b420107a86d036'
+        import_handler_id = 1
+        import_handler_type = 'xml'
+        pig_step = 1
+        pig_row = {'opening': 1, 'title': 'Title', 'metric': 0.5}
+
 
 class PredefinedDataSourceData(DataSet):
     class datasource_01:

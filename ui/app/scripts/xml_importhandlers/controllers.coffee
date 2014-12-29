@@ -97,23 +97,6 @@ angular.module('app.xml_importhandlers.controllers', ['app.config', ])
     $scope.model = new XmlImportHandler()
 ])
 
-.controller('PredictCtrl', [
-  '$scope'
-
-  ($scope) ->
-    $scope.init = (handler) ->
-      $scope.handler = handler
-      $scope.kwargs = {'import_handler_id': handler.id}
-      $scope.$watch('handler.predict', (predict, old, scope) ->
-        if predict?
-          #console.log handler, 12
-          $scope.predict_models = predict.models
-          $scope.predict = predict
-          $scope.label = predict.label
-          $scope.probability = predict.probability
-      )
-])
-
 .controller('CloneXmlImportHandlerCtrl', [
   '$scope'
   '$rootScope'

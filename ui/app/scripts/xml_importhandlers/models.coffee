@@ -181,6 +181,11 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
         if not opts.entity_id or not opts.import_handler_id
           throw new Error "entity_id:#{opts.entity_id}, import_handler_id:#{opts.import_handler_id} both should be defined"
 
+      getPigFields: () =>
+        base_url = @constructor.$get_api_url({}, @)
+        url = "#{base_url}#{@id}/action/pig_fields/"
+        @$make_request(url, {}, "GET", {})
+
       saveText: () =>
         if not @text
           @edit_err = 'Please enter a text'
