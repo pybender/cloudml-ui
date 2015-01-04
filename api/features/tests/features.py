@@ -398,6 +398,13 @@ class TestFeaturesDocs(BaseDbTestCase):
     #     feature_set2 = FeatureSet.\
     #         from_model_features_dict("Set", features_dict)
     #     self.assertEquals(feature_set.to_dict(), feature_set2.to_dict())
+    def test_field_type_to_feature_type(self):
+        self.assertEqual('float', Feature.field_type_to_feature_type('float'))
+        self.assertEqual('boolean', Feature.field_type_to_feature_type('boolean'))
+        self.assertEqual('int', Feature.field_type_to_feature_type('integer'))
+        self.assertEqual('map', Feature.field_type_to_feature_type('json'))
+        self.assertEqual('text', Feature.field_type_to_feature_type('string'))
+        self.assertEqual('text', Feature.field_type_to_feature_type('blabla'))
 
 
 def fields_from_dict(obj, fields):

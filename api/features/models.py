@@ -163,6 +163,19 @@ class Feature(ExportImportMixin, RefFeatureSetMixin,
         if commit:
             db.session.commit()
 
+    @staticmethod
+    def field_type_to_feature_type(field_type):
+        if field_type == 'float' or field_type == 'boolean':
+            return field_type
+        elif field_type == 'integer':
+            return 'int'
+        elif field_type == 'string':
+            return 'text'
+        elif field_type is 'json':
+            return 'map'
+        else:
+            return 'text'
+
 
 class FeatureSet(ExportImportMixin, BaseModel, db.Model):
     """ Represents list of the features with schema name."""
