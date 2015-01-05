@@ -72,6 +72,13 @@ filesize,records_count,time,created_by,updated_by'
 
     $scope.reimport = () ->
       $scope.ds.$reimport()
+
+    $scope.getPigFields = (dataSet)->
+      $scope.openDialog($scope, {
+        model: dataSet
+        template: 'partials/xml_import_handlers/sqoop/load_pig_fields.html'
+        ctrlName: 'PigFieldsLoader'
+      })
 ])
 
 

@@ -11,6 +11,7 @@ from core.importhandler.importhandler import DecimalEncoder, \
     ImportHandlerException
 
 from api import api
+from utils import isint, isfloat
 from api.base.models import assertion_msg
 from api.base.resources import BaseResourceSQL, NotFound, public_actions, \
     ValidationError, odesk_error_response, ERR_INVALID_DATA
@@ -25,7 +26,7 @@ class DataSetResource(BaseResourceSQL):
     Model = DataSet
 
     FILTER_PARAMS = (('status', str), )
-    GET_ACTIONS = ('generate_url', 'sample_data', )
+    GET_ACTIONS = ('generate_url', 'sample_data', 'pig_fields')
     PUT_ACTIONS = ('reupload', 'reimport')
     post_form = DataSetAddForm
     put_form = DataSetEditForm
@@ -37,6 +38,36 @@ class DataSetResource(BaseResourceSQL):
         url = ds.get_s3_download_url()
         return self._render({self.OBJECT_NAME: ds.id,
                              'url': url})
+
+    def _get_pig_fields_action(self, **kwargs):
+        if 'id' not in kwargs:
+            raise ValueError("Specify id of the datasource")
+
+        ds = self._get_details_query({}, **kwargs)
+        if ds is None:
+            raise NotFound('DataSet not found')
+
+        fields_data = []
+
+        for key, val in ds.pig_row.iteritems():
+            if isint(val):
+                data_type = 'integer'
+            elif isfloat(val):
+                data_type = 'float'
+            else:
+                data_type = 'text'
+
+            fields_data.append({
+                'column_name': key,
+                'data_type': data_type})
+
+        from utils import PIG_TEMPLATE, construct_pig_sample
+        fields_str = construct_pig_sample(fields_data)
+        return self._render({
+            'sample': PIG_TEMPLATE.format(fields_str),
+            'fields': fields_data,
+            'pig_result_line': ds.pig_row,
+        })
 
     def _put_reupload_action(self, **kwargs):
         from api.import_handlers.tasks import upload_dataset
@@ -77,8 +108,6 @@ class DataSetResource(BaseResourceSQL):
                 lines.append(json.loads(line))
                 line = f.readline()
         return self._render(lines)
-
-
 
 api.add_resource(DataSetResource, '/cloudml/importhandlers/\
 <regex("[\w\.]*"):import_handler_type>/<regex("[\w\.]*"):import_handler_id>\

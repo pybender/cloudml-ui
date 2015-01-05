@@ -116,6 +116,31 @@ angular.module(
         ctrlName: 'ModelEditDialogCtrl'
         list_model_name: "entities"
       })
+
+    $scope.getPigFields = (sqoop) ->
+      $scope.openDialog($scope, {
+        model: sqoop
+        template: 'partials/xml_import_handlers/sqoop/load_pig_fields.html'
+        ctrlName: 'PigFieldsLoader'
+      })
+
+])
+
+.controller('PigFieldsLoader', [
+  '$scope'
+  'openOptions'
+
+  ($scope, openOptions) ->
+    $scope.sqoop = openOptions.model
+    $scope.err = ""
+    $scope.sqoop.getPigFields().then((resp) ->
+      $scope.fields = resp.data.fields
+      $scope.generated_pig_string = resp.data.sample
+      $scope.pig_result_line = resp.data.pig_result_line
+    , ((opts) ->
+      $scope.err = opts.data.response.error.message
+      $scope.setError(opts, 'loading pig fields')
+    ))
 ])
 
 .controller('XmlTransformedFieldSelectCtrl', [

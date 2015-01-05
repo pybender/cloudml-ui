@@ -582,6 +582,25 @@ class XmlSqoopTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
         self.assertEqual(obj['table'], self.obj.table)
         self.assertEqual(obj['datasource']['name'], 'sqoop_db_datasource')
 
+    @patch('core.xmlimporthandler.datasources.DbDataSource._get_iter')
+    def test_get_pig_fields(self, get_iter_mock):
+        get_iter_mock.return_value = [
+            ['application', 'bigint', None, 'YES', None],
+            ['opening', 'bigint', None, 'YES', None],
+            ['employer_info', 'text', None, 'YES', None],
+            ['hire_outcome', 'text', None, 'YES', None]]
+        sqoop = self.obj
+        resp = self._check(action='pig_fields', obj=sqoop)
+        self.assertTrue(get_iter_mock.called)
+        self.assertItemsEqual(
+            ['application', 'opening', 'employer_info', 'hire_outcome'],
+            [fld['column_name'] for fld in resp['fields']]
+        )
+        self.assertTrue("""application:long
+, opening:long
+, employer_info:chararray
+, hire_outcome:chararray""" in resp['sample'])
+
 
 class PredictModelTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
     """

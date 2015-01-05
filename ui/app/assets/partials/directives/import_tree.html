@@ -49,47 +49,47 @@
       </div>
     </div>
     <div ng-repeat="sqoop in entity.sqoop_imports">
-    <hr />
-    <h5><i class="icon-wrench"></i> Sqoop</h5>
-    <div>
-      <alert-message ng-show="sqoop.msg" class="alert-info" msg="{{ sqoop.msg }}"></alert-message>
-      <alert-message ng-show="sqoop.err" class="alert-error" msg="{{ sqoop.err }}"></alert-message>
-      <alert-message ng-show="sqoop.edit_err" class="alert-error" msg="{{ sqoop.edit_err }}"></alert-message>
-      <div class="row">
-      <div class="span3">
-          <div>
-            Target:
-            <span title="target" class="target value" ng-bind="sqoop.target || 'no target'" editable="sqoop" value="sqoop.target" editable-field="target" editable-input="text" editable-placement="right"></span>
-          </div>
-          <div>
-            Table:
-            <span title="table" class="table value" ng-bind="sqoop.table || 'no table'" editable="sqoop" value="sqoop.table" editable-field="table" editable-input="text" editable-placement="right"></span>
-          </div>
-      </div>
-      <div class="span3">
-          <div>
-            Where:
-            <span title="where" class="where value" ng-bind="sqoop.where || 'no where'" editable="sqoop" value="sqoop.where" editable-field="where" editable-input="text" editable-placement="right"></span>
-          </div>
-          <div>
-            Direct:
-            <span title="direct" class="direct value" ng-bind="sqoop.direct || 'no direct'" editable="sqoop" value="sqoop.direct" editable-field="direct" editable-input="text" editable-placement="right"></span>
-          </div>
-          <div>
-            Options:
-            <span title="options" class="options" ng-bind="sqoop.options || 'no options'" editable="sqoop" value="sqoop.options" editable-field="options" editable-input="text" editable-placement="right"></span>
-          </div>
-      </div>
-      <div class="span3">
-          <div>
-            Mappers:
-            <span title="mappers" class="mappers value" ng-bind="sqoop.mappers || 'no mappers'" editable="sqoop" value="sqoop.mappers  || 'no mappers'" editable-field="mappers" editable-input="text" editable-placement="right"></span>
-          </div>
-          <div>
-            Datasource:
-            <span title="datasource" class="datasource value" ng-bind="sqoop.datasource_id || 'no datasource'" editable="sqoop" value="sqoop.datasource_id" editable-field="datasource" editable-input="select" source="getDatasources('db')"></span>
-          </div>
-      </div>
+      <hr />
+      <h5><i class="icon-wrench"></i> Sqoop</h5>
+      <div>
+        <alert-message ng-show="sqoop.msg" class="alert-info" msg="{{ sqoop.msg }}"></alert-message>
+        <alert-message ng-show="sqoop.err" class="alert-error" msg="{{ sqoop.err }}"></alert-message>
+        <alert-message ng-show="sqoop.edit_err" class="alert-error" msg="{{ sqoop.edit_err }}"></alert-message>
+        <div class="row">
+        <div class="span3">
+            <div>
+              Target:
+              <span title="target" class="target value" ng-bind="sqoop.target || 'no target'" editable="sqoop" value="sqoop.target" editable-field="target" editable-input="text" editable-placement="right"></span>
+            </div>
+            <div>
+              Table:
+              <span title="table" class="table value" ng-bind="sqoop.table || 'no table'" editable="sqoop" value="sqoop.table" editable-field="table" editable-input="text" editable-placement="right"></span>
+            </div>
+        </div>
+        <div class="span3">
+            <div>
+              Where:
+              <span title="where" class="where value" ng-bind="sqoop.where || 'no where'" editable="sqoop" value="sqoop.where" editable-field="where" editable-input="text" editable-placement="right"></span>
+            </div>
+            <div>
+              Direct:
+              <span title="direct" class="direct value" ng-bind="sqoop.direct || 'no direct'" editable="sqoop" value="sqoop.direct" editable-field="direct" editable-input="text" editable-placement="right"></span>
+            </div>
+            <div>
+              Options:
+              <span title="options" class="options" ng-bind="sqoop.options || 'no options'" editable="sqoop" value="sqoop.options" editable-field="options" editable-input="text" editable-placement="right"></span>
+            </div>
+        </div>
+        <div class="span3">
+            <div>
+              Mappers:
+              <span title="mappers" class="mappers value" ng-bind="sqoop.mappers || 'no mappers'" editable="sqoop" value="sqoop.mappers  || 'no mappers'" editable-field="mappers" editable-input="text" editable-placement="right"></span>
+            </div>
+            <div>
+              Datasource:
+              <span title="datasource" class="datasource value" ng-bind="sqoop.datasource_id || 'no datasource'" editable="sqoop" value="sqoop.datasource_id" editable-field="datasource" editable-input="select" source="getDatasources('db')"></span>
+            </div>
+        </div>
       </div>
       <div class="row">
         <div class="span11">
@@ -97,11 +97,14 @@
         </div>
       </div>
       <a ng-disabled="sqoop.loading_state" ng-click="sqoop.saveText()" class="btn btn-info">
-          <i class="status-icon icon-edit"></i> save text
-        </a>
-        <button ng-click="deleteSqoop()(sqoop);" class="btn btn-danger">
-              <i title="Delete item. Be careful - you could not recover it!" class="icon-remove"></i>
-            </button>
+        <i class="status-icon icon-edit"></i> save text
+      </a>
+      <a ng-disabled="sqoop.loading_state" ng-click="getPigFields()(sqoop)" class="btn btn-success">
+        <i class="status-icon icon-edit"></i> pig fields
+      </a>
+      <button ng-click="deleteSqoop()(sqoop);" class="btn btn-danger">
+        <i title="Delete item. Be careful - you could not recover it!" class="icon-remove"></i>
+      </button>
     </div>
     </div>
     <div ng-show="entity.query_obj">
@@ -125,7 +128,7 @@
         </a>
         <a class="btn btn-info"
            ng-disabled="entity.query_obj.loading_state"
-           ng-click="runQuery({'queryObj':entity.query_obj});"
+           ng-click="runQuery()(entity.query_obj);"
            ng-show="entity.datasource.type == 'db'">
           <i class="icon-play"></i> Run Query
         </a>
@@ -252,7 +255,9 @@
                        delete-field="deleteField()"
                        edit-data-source="editDataSource()"
                        save-query-text="saveQueryText()"
+                       run-query="runQuery()"
                        add-sqoop="addSqoop()"
+                       get-pig-fields="getPigFields()"
                        delete-sqoop="deleteSqoop()"></entities-tree>
       </entities-recursive>
     </div>

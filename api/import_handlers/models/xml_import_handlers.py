@@ -229,6 +229,20 @@ class XmlDataSource(db.Model, BaseMixin, RefXmlImportHandlerMixin):
     def validate_params(self, key, params):  # TODO:
         return params
 
+    def to_xml(self, secure=False, to_string=False, pretty_print=True):
+        extra = self.params if secure else {}
+        elem = etree.Element(self.type, name=self.name, **extra)
+        if to_string:
+            return etree.tostring(elem, pretty_print=pretty_print)
+        return elem
+
+    @property
+    def core_datasource(self):
+        # TODO: secure
+        ds_xml = self.to_xml(secure=True)
+        from core.xmlimporthandler.datasources import DataSource
+        return DataSource.factory(ds_xml)
+
     def __repr__(self):
         return "<DataSource %s>" % self.name
 
@@ -613,6 +627,8 @@ def fill_import_handler(import_handler, xml_data=None):
         load_query(plan.entity, db_entity=ent)
         load_entity_items(plan.entity, db_entity=ent)
         for ent, field_name in ENTITIES_WITHOUT_DS:
+            if not field_name in TRANSFORMED_FIELDS:
+                raise ValueError('Field {0} not found'.format(field_name))
             ent.transformed_field = TRANSFORMED_FIELDS[field_name]
 
         # Fill predict section
@@ -633,7 +649,7 @@ def fill_import_handler(import_handler, xml_data=None):
                     model_weight = PredictModelWeight(
                         label=weight.label,
                         script=weight.script,
-                        value=weight.value,
+                        value=str(weight.value or ''),
                         predict_model=predict_model)
                     db.session.add(model_weight)
 
