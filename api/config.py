@@ -84,7 +84,7 @@ SEND_ERROR_EMAILS = False
 # Name and email addresses of recipients
 ADMINS = (
     ("Nikolay Melnik", "nmelnik@odesk.com"),
-    ("Mikhail Medvedev", "moorcock@odesk.com"),
+    ("Nader Soliman", "nsoliman@elance-odesk.com"),
 )
 
 # Email address used as sender (From field).
