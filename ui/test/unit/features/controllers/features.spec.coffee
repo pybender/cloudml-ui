@@ -558,7 +558,7 @@ describe 'features/controllers/features.coffee', ->
         expect($scope.savingProgress).toEqual '100%'
         expect($location.url()).toEqual "/models/#{model_id}?action=model:details"
 
-  describe 'FeatureNameTypeaheadController', ->
+  describe 'TrainIHFieldsController', ->
 
     prepareContext = (Model, ImportHandler, model, ihDict, fieldsDict)->
       $scope.modelObj = model
@@ -570,7 +570,7 @@ describe 'features/controllers/features.coffee', ->
       $httpBackend.expectGET "#{importHandler.BASE_API_URL}#{importHandler.id}/action/list_fields/"
       .respond 200, angular.toJson(fieldsDict)
 
-      createController 'FeatureNameTypeaheadController'
+      createController 'TrainIHFieldsController'
       $httpBackend.flush()
 
     it 'should load the trainer xml import handler of the module and its field, and respond to when typeahead is selected',
@@ -617,30 +617,9 @@ describe 'features/controllers/features.coffee', ->
           }
 
         expect($scope.candidateFields.length).toEqual 6
-        expect($scope.fieldNames).toEqual ['name float', 'name boolean', 'name integer', 'name string', 'name json', 'name unknown']
-
-        $scope.feature = {}
-
-        $scope.typeaheadOnSelect 'name float'
-        expect($scope.feature.type).toEqual 'float'
-
-        $scope.typeaheadOnSelect 'name boolean'
-        expect($scope.feature.type).toEqual 'boolean'
-
-        $scope.typeaheadOnSelect 'name integer'
-        expect($scope.feature.type).toEqual 'int'
-
-        $scope.typeaheadOnSelect 'name string'
-        expect($scope.feature.type).toEqual 'text'
-
-        $scope.typeaheadOnSelect 'name json'
-        expect($scope.feature.type).toEqual 'map'
-
-        $scope.typeaheadOnSelect 'name json'
-        expect($scope.feature.type).toEqual 'map'
-
-        $scope.typeaheadOnSelect 'name unknown'
-        expect($scope.feature.type).toEqual 'map'
+        expect($scope.fieldNames).toEqual _.sortBy(
+          ['name float', 'name boolean', 'name integer', 'name string',
+           'name json', 'name unknown'], (f) -> return f.toLowerCase())
 
     it 'should load the trainer json import handler of the module and its field, and respond to when typeahead is selected',
       inject (Model, ImportHandler)->
@@ -674,7 +653,7 @@ describe 'features/controllers/features.coffee', ->
         $httpBackend.expectGET("#{model.BASE_API_URL}#{model.id}/?show=train_import_handler,train_import_handler_type,train_import_handler_id")
         .respond 400
 
-        createController 'FeatureNameTypeaheadController'
+        createController 'TrainIHFieldsController'
         $httpBackend.flush()
 
         expect($scope.modelObj.train_import_handler_obj).toBeUndefined()
@@ -696,9 +675,64 @@ describe 'features/controllers/features.coffee', ->
         $httpBackend.expectGET "#{importHandler.BASE_API_URL}#{importHandler.id}/action/list_fields/"
         .respond 400
 
-        createController 'FeatureNameTypeaheadController'
+        createController 'TrainIHFieldsController'
         $httpBackend.flush()
 
         expect($scope.modelObj.train_import_handler_obj).toBeDefined()
         expect($scope.candidateFields).toBeUndefined()
         expect($scope.fieldNames).toBeUndefined()
+
+
+  describe 'FeatureNameController', ->
+
+    it 'should convert', ->
+      createController 'FeatureNameController'
+
+      $scope.feature = {}
+      $scope.candidateFields = [
+        id: 1
+        name: 'name float'
+        type: 'float'
+      ,
+        id: 2
+        name: 'name boolean'
+        type: 'boolean'
+      ,
+        id: 3
+        name: 'name integer'
+        type: 'integer'
+      ,
+        id: 4
+        name: 'name string'
+        type: 'string'
+      ,
+        id: 5
+        name: 'name json'
+        type: 'json'
+      ,
+        id: 6
+        name: 'name unknown'
+        type: 'unknown'
+      ]
+      $scope.$digest()
+
+      $scope.fieldOnSelect 'name float'
+      expect($scope.feature.type).toEqual 'float'
+
+      $scope.fieldOnSelect 'name boolean'
+      expect($scope.feature.type).toEqual 'boolean'
+
+      $scope.fieldOnSelect 'name integer'
+      expect($scope.feature.type).toEqual 'int'
+
+      $scope.fieldOnSelect 'name string'
+      expect($scope.feature.type).toEqual 'text'
+
+      $scope.fieldOnSelect 'name json'
+      expect($scope.feature.type).toEqual 'map'
+
+      $scope.fieldOnSelect 'name json'
+      expect($scope.feature.type).toEqual 'map'
+
+      $scope.fieldOnSelect 'name unknown'
+      expect($scope.feature.type).toEqual 'map'

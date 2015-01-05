@@ -1,11 +1,13 @@
-<div class="span6">
+<div class="span6" ng-controller="TrainIHFieldsController">
   <div class="control-group" ng-class="{error: FeatureForm.name.$invalid}">
     <label class="control-label">Name</label>
     <div class="controls">
-      <input type="text" class="form-control" ng-model="selected"
-             ng-controller="FeatureNameTypeaheadController"
-             typeahead="fieldName for fieldName in fieldNames | filter:$viewValue"
-             typeahead-min-length="2" typeahead-on-select="typeaheadOnSelect($item)">
+      <select name="name" ng-model="feature.name" required
+              ng-controller="FeatureNameController"
+              ng-change="fieldOnSelect(FeatureForm.name.$viewValue)"
+              ng-options="fieldName for fieldName in fieldNames">
+          <option value="">- nothing selected -</option>
+        </select>
       <span ng-show="FeatureForm.name.$error.required" class="help-inline">*</span>
     </div>
   </div>

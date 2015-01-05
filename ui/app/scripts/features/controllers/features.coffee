@@ -93,19 +93,52 @@ Feature, Transformer, Scaler, Parameters) ->
     )
 ])
 
-.controller('FeatureNameTypeaheadController', [
+.controller('TrainIHFieldsController', [
+    '$scope'
+
+    ($scope)->
+      ###
+      Controller to load Train import handler fields if not already loaded
+      Expects: $scope.modelObj
+      ###
+
+      if $scope.fieldNames
+        return
+
+      $scope.modelObj.$load
+        show: 'train_import_handler,train_import_handler_type,train_import_handler_id'
+      .then ->
+        $scope.modelObj.train_import_handler_obj.$listFields()
+        .then (opts)->
+          fieldNames = []
+          if $scope.modelObj.train_import_handler_obj.TYPE is 'JSON'
+            fieldNames = opts.objects
+          else
+            $scope.candidateFields = opts.objects
+            fieldNames = (f.name for f in opts.objects)
+          $scope.fieldNames = _.sortBy(fieldNames, (f) -> return f.toLowerCase())
+        , (opts)->
+          console.warn 'failed loading fields for trainer ih',
+            $scope.modelObj.train_import_handler_obj, ', errors', opts
+      , (opts) ->
+        console.warn 'failed loading training ih for model', $scope.modelObj,
+          ', errors', opts
+  ])
+
+.controller('FeatureNameController', [
     '$scope'
 
     ($scope)->
       ###
       Controller to support type ahead for editing/adding feature name.
-      Expects:  $scope.modelObj
-                $scope.feature
+      Expects:  TrainIHFieldsController
       ###
 
-      typeaheadOnSelect = ($item)->
+      fieldOnSelect = ($item)->
         field = _.find($scope.candidateFields, (f)-> f.name is $item)
         featureType = null
+        if not field?.type?
+          return
         if field.type is 'float' or field.type is 'boolean'
           featureType = field.type
         else if field.type is 'integer'
@@ -118,22 +151,8 @@ Feature, Transformer, Scaler, Parameters) ->
         if featureType
           $scope.feature.type = featureType
 
-      $scope.modelObj.$load
-        show: 'train_import_handler,train_import_handler_type,train_import_handler_id'
-      .then ->
-        $scope.modelObj.train_import_handler_obj.$listFields()
-        .then (opts)->
-          if $scope.modelObj.train_import_handler_obj.TYPE is 'JSON'
-            $scope.fieldNames = opts.objects
-          else
-            $scope.candidateFields = opts.objects
-            $scope.fieldNames = (f.name for f in opts.objects)
-            $scope.typeaheadOnSelect = typeaheadOnSelect
-        , (opts)->
-          console.warn 'failed loading fields for trainer ih',
-            $scope.modelObj.train_import_handler_obj, ', errors', opts
-      , (opts) ->
-        console.warn 'failed loading training ih for model', $scope.modelObj,
-          ', errors', opts
+      $scope.$watch 'candidateFields', (newVal, oldVal)->
+        if newVal
+          $scope.fieldOnSelect = fieldOnSelect
   ])
 
