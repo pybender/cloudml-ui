@@ -91,7 +91,7 @@ describe 'xml_importhandlers/controllers/entities', ->
           model: sqoop
           template: 'partials/xml_import_handlers/sqoop/load_pig_fields.html'
           ctrlName: 'PigFieldsLoader'
-          extra: {noInput: false}
+          extra: {noInput: false, title: 'Pig Fields'}
 
         expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 

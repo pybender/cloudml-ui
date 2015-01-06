@@ -101,7 +101,7 @@ describe "datasets", ->
           model: ds
           template: 'partials/xml_import_handlers/sqoop/load_pig_fields.html'
           ctrlName: 'PigFieldsLoader'
-          extra: {noInput: true}
+          extra: {noInput: true, title: 'XML Fields'}
 
         expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 

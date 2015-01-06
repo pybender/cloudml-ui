@@ -6,7 +6,7 @@
       editable-field="name" editable-input="text"
       editable-placement="right"></small>
       <div class="actions" ng-controller="DatasetActionsCtrl" style="min-width: 100px;" ng-init="init({dataset: dataset, handler: handler})">
-        <a  ng-show="dataset.cluster && ds.status == 'Imported'" class="btn btn-success" ng-click="getPigFields(dataset)"><i title="Get pig fields" class="icon-download-alt"></i> Pig Fields</a>
+        <a  ng-show="dataset.cluster && ds.status == 'Imported'" class="btn btn-success" ng-click="getPigFields(dataset)"><i title="Get pig fields" class="icon-download-alt"></i> XML Fields</a>
         <a class="btn btn-info" ng-show="dataset.on_s3" ng-click="download()"><i title="Download From Amazon S3" class="icon-download-alt"></i> Download</a>
         <a class="btn" ng-show="ds.status != 'Importing' && ds.status != 'Uploading'" ng-click="reimport()"><i title="Re-import dataset" class="icon-refresh"></i> Re-import</a>
         <button ng-click="delete()" class="btn btn-danger">

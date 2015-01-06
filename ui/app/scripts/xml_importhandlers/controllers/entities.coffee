@@ -122,7 +122,7 @@ angular.module(
         model: sqoop
         template: 'partials/xml_import_handlers/sqoop/load_pig_fields.html'
         ctrlName: 'PigFieldsLoader'
-        extra: {noInput: false}
+        extra: {noInput: false, title: 'Pig Fields'}
       })
 
 ])
@@ -149,6 +149,7 @@ angular.module(
         $scope.setError(opts, 'loading pig fields')
       ))
 
+    $scope.title = openOptions.extra?.title || 'fields'
     $scope.noInput = openOptions.extra?.noInput || false
     if !$scope.noInput
       $scope.params = $scope.model.getParams()
