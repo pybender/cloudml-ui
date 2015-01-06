@@ -555,7 +555,7 @@ class XmlSqoopTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
             ['employer_info', 'text', None, 'YES', None],
             ['hire_outcome', 'text', None, 'YES', None]]
         sqoop = self.obj
-        resp = self._check(action='pig_fields', obj=sqoop)
+        resp = self._check(action='pig_fields', obj=sqoop, method='put')
         self.assertTrue(get_iter_mock.called)
         self.assertItemsEqual(
             ['application', 'opening', 'employer_info', 'hire_outcome'],

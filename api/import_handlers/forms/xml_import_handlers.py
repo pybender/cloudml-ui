@@ -294,7 +294,7 @@ class PredictModelForm(BaseForm):
             if handler.predict is None:
                 handler.predict = Predict()
                 handler.save()
-            predict = handler.predict 
+            predict = handler.predict
             predict.models.append(model)
             predict.save()
         return model
@@ -321,7 +321,8 @@ class PredictResultLabelForm(BaseForm):
 
 
 class PredictResultProbabilityForm(BaseForm):
-    required_fields = ('label', ('predict_model_id', 'script'), 'import_handler_id')
+    required_fields = (
+        'label', ('predict_model_id', 'script'), 'import_handler_id')
     NO_REQUIRED_FOR_EDIT = True
 
     predict_model_id = ModelField(model=PredictModel, return_model=False)
@@ -329,3 +330,7 @@ class PredictResultProbabilityForm(BaseForm):
     script = CharField()
     import_handler_id = DocumentField(
         doc=XmlImportHandler, by_name=False, return_doc=True)
+
+
+class LoadPigFieldsForm(BaseForm):
+    params = JsonField()

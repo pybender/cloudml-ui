@@ -122,6 +122,7 @@ angular.module(
         model: sqoop
         template: 'partials/xml_import_handlers/sqoop/load_pig_fields.html'
         ctrlName: 'PigFieldsLoader'
+        extra: {noInput: false}
       })
 
 ])
@@ -133,14 +134,29 @@ angular.module(
   ($scope, openOptions) ->
     $scope.sqoop = openOptions.model
     $scope.err = ""
-    $scope.sqoop.getPigFields().then((resp) ->
-      $scope.fields = resp.data.fields
-      $scope.generated_pig_string = resp.data.sample
-      $scope.pig_result_line = resp.data.pig_result_line
-    , ((opts) ->
-      $scope.err = opts.data.response.error.message
-      $scope.setError(opts, 'loading pig fields')
-    ))
+    $scope.inputParams = {}
+
+    $scope.getFields = () ->
+      $scope.sqoop.getPigFields(
+        {params: $scope.inputParams}
+      ).then((resp) ->
+        $scope.fields = resp.data.fields
+        $scope.generated_pig_string = resp.data.sample
+        $scope.pig_result_line = resp.data.pig_result_line
+      , ((opts) ->
+        $scope.err = opts.data.response.error.message
+        $scope.setError(opts, 'loading pig fields')
+      ))
+
+    $scope.noInput = openOptions.extra?.noInput || false
+    $scope.params = $scope.sqoop.getParams()
+    if !$scope.params?
+      $scope.noInput = true
+    if $scope.noInput
+      $scope.submit = true
+      $scope.getFields()
+    else
+      $scope.submit = false
 ])
 
 .controller('XmlTransformedFieldSelectCtrl', [

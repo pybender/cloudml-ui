@@ -6,10 +6,23 @@
 
   <div class="modal-body">
     <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
-    <alert-message ng-hide="fields" class="alert-info" msg="Downloading pig result file from Amazon S3 and generating pig section fields..." unsafe></alert-message>
+    <alert-message ng-show="submit && !fields" class="alert-info" msg="Downloading pig result file from Amazon S3 and generating pig section fields..." unsafe></alert-message>
+    <div ng-hide="noInput">
+      <h4>SQL Query Parameters</h4>
+      <form name="Form" class="form-horizontal alert-info alert">
+        <div ng-repeat="param in params" class="control-group">
+          <label class="control-label">{{ param | capfirst }}:</label>
+          <div class="controls"  ng-class="{error: Form[param].$invalid}">
+            <input ng-model='inputParams[param]' name="{{ param }}" placeholder='Please input {{ param }}' type='text' required />
+            <span ng-hide="inputParams[param]" class="help-inline">*</span>
+          </div>
+        </div>
+      </form>
+    </div>
     <div ng-show="generated_pig_string">
+      <h4>Pig Sample</h4>
       <textarea class="small cml-codemirror-refresh" ui-codemirror="$root.codeMirrorConfigs(false)['sql']" ng-model="generated_pig_string" />
-      <br />
+      <hr />
       <a ng-click="showTable = !showTable"><span ng-hide="showTable">Show</span><span ng-show="showTable">Hide</span> table structure</a>
       <div ng-show="fields && showTable">
         <h4>Table Structure</h4>
@@ -44,5 +57,6 @@
 
   <div class="modal-footer">
     <button ng-click="$dismiss('cancel')" class="btn btn-primary">Close</button>
+    <button ng-hide="noInput" ng-click="getFields()" class="btn btn-success">Load</button>
   </div>
 </div>

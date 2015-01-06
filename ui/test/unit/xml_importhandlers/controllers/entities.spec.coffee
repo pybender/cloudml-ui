@@ -91,6 +91,7 @@ describe 'xml_importhandlers/controllers/entities', ->
           model: sqoop
           template: 'partials/xml_import_handlers/sqoop/load_pig_fields.html'
           ctrlName: 'PigFieldsLoader'
+          extra: {noInput: false}
 
         expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 
@@ -103,8 +104,9 @@ describe 'xml_importhandlers/controllers/entities', ->
           entity_id: 555
         openOptions = {'model': sqoop}
         createController "PigFieldsLoader", {'openOptions': openOptions}
+        $scope.getFields()
 
         url = Sqoop.$get_api_url({}, sqoop)
-        $httpBackend.expectGET "#{url}#{sqoop.id}/action/pig_fields/"
+        $httpBackend.expectPUT "#{url}#{sqoop.id}/action/pig_fields/"
         .respond 200, angular.toJson {'fields': {}, 'sample': 'pig_data', 'sql': 'sql...'}
         $httpBackend.flush()

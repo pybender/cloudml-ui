@@ -176,10 +176,24 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
         if not opts.entity_id or not opts.import_handler_id
           throw new Error "entity_id:#{opts.entity_id}, import_handler_id:#{opts.import_handler_id} both should be defined"
 
-      getPigFields: () =>
+      getPigFields: (opts) =>
+        data = {
+          params: JSON.stringify(opts.params),
+        }
         base_url = @constructor.$get_api_url({}, @)
         url = "#{base_url}#{@id}/action/pig_fields/"
-        @$make_request(url, {}, "GET", {})
+        @$make_request(url, {}, "PUT", data)
+
+      getParams: ->
+        # TODO: use method from BaseQueryModel
+        params = []
+        regex = new RegExp('#{(\\w+)}', 'gi')
+        matches = regex.exec(@text)
+        while matches
+          if matches[1] not in params
+            params.push matches[1]
+          matches = regex.exec(@text)
+        return params
 
       saveText: () =>
         if not @text
