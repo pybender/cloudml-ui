@@ -9,6 +9,8 @@ result = LOAD '$dataset*' USING org.apache.pig.piggybank.storage.CSVExcelStorage
 
 );"""
 
+XML_FIELD_TEMPLATE = '<field name="%(column_name)s" type="%(data_type)s" />'
+
 SCHEMA_INFO_FIELDS = [
     'column_name', 'data_type', 'character_maximum_length',
     'is_nullable', 'column_default']

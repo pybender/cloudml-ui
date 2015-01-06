@@ -19,9 +19,15 @@
         </div>
       </form>
     </div>
-    <div ng-show="generated_pig_string">
-      <h4>Pig Sample</h4>
-      <textarea class="small cml-codemirror-refresh" ui-codemirror="$root.codeMirrorConfigs(false)['sql']" ng-model="generated_pig_string" />
+    <div ng-show="generated_pig_string || sample_xml">
+      <div ng-show="generated_pig_string">
+        <h4>Pig Sample</h4>
+        <textarea class="small cml-codemirror-refresh" ui-codemirror="$root.codeMirrorConfigs(false)['sql']" ng-model="generated_pig_string" />
+      </div>
+      <div ng-show="sample_xml">
+        <h4>XML Fields Sample</h4>
+        <textarea class="small cml-codemirror-refresh" ng-show="sample_xml" ui-codemirror="$root.codeMirrorConfigs(false)['xml']" ng-model="sample_xml" />
+      </div>
       <hr />
       <a ng-click="showTable = !showTable"><span ng-hide="showTable">Show</span><span ng-show="showTable">Hide</span> table structure</a>
       <div ng-show="fields && showTable">

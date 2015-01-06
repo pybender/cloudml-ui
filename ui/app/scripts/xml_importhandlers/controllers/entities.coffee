@@ -132,26 +132,28 @@ angular.module(
   'openOptions'
 
   ($scope, openOptions) ->
-    $scope.sqoop = openOptions.model
+    $scope.model = openOptions.model
     $scope.err = ""
     $scope.inputParams = {}
 
     $scope.getFields = () ->
-      $scope.sqoop.getPigFields(
+      $scope.model.getPigFields(
         {params: $scope.inputParams}
       ).then((resp) ->
         $scope.fields = resp.data.fields
         $scope.generated_pig_string = resp.data.sample
         $scope.pig_result_line = resp.data.pig_result_line
+        $scope.sample_xml = resp.data.sample_xml
       , ((opts) ->
         $scope.err = opts.data.response.error.message
         $scope.setError(opts, 'loading pig fields')
       ))
 
     $scope.noInput = openOptions.extra?.noInput || false
-    $scope.params = $scope.sqoop.getParams()
-    if !$scope.params?
-      $scope.noInput = true
+    if !$scope.noInput
+      $scope.params = $scope.model.getParams()
+      if !$scope.params?
+        $scope.noInput = true
     if $scope.noInput
       $scope.submit = true
       $scope.getFields()

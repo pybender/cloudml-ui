@@ -55,16 +55,16 @@ class DataSetResource(BaseResourceSQL):
             elif isfloat(val):
                 data_type = 'float'
             else:
-                data_type = 'text'
-
+                data_type = 'string'
             fields_data.append({
                 'column_name': key,
                 'data_type': data_type})
 
-        from utils import PIG_TEMPLATE, construct_pig_sample
-        fields_str = construct_pig_sample(fields_data)
+        from utils import XML_FIELD_TEMPLATE
+        xml = "\r\n".join(
+            [XML_FIELD_TEMPLATE % field for field in fields_data])
         return self._render({
-            'sample': PIG_TEMPLATE.format(fields_str),
+            'sample_xml': xml,
             'fields': fields_data,
             'pig_result_line': ds.pig_row,
         })

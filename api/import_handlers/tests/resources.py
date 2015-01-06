@@ -356,9 +356,9 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
             ['metric', 'opening', 'title'],
             [fld['column_name'] for fld in resp['fields']]
         )
-        self.assertTrue("""metric:float
-, opening:integer
-, title:chararray""" in resp['sample'], resp['sample'])
+        self.assertTrue(
+            '<field name="metric" type="float" />' in resp['sample_xml'],
+            resp['sample_xml'])
 
     @mock_s3
     @patch('api.import_handlers.tasks.upload_dataset')
