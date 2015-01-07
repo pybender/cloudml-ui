@@ -137,6 +137,19 @@ describe 'app.xml_importhandlers.models', ->
 
         expect(handler.$make_request).toHaveBeenCalledWith url, {}, "PUT", {'server': server}
 
+      it 'should call to save xml', inject (XmlImportHandler)->
+        handler = new XmlImportHandler {id: 111, name: 'test'}
+        url = "#{handler.BASE_API_URL}#{handler.id}/action/update_xml/"
+        $httpBackend.expectPUT(url).respond 400
+        spyOn(handler, '$make_request').and.callThrough()
+
+        handler.xml = '<some><new><xml></xml></new></some>'
+        handler.$updateXml()
+        $httpBackend.flush()
+
+        expect(handler.$make_request).toHaveBeenCalledWith url, {}, "PUT",
+          {data: '<some><new><xml></xml></new></some>'}
+
 
   describe 'Field Model', ->
 

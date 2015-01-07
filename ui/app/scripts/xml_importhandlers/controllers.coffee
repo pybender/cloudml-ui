@@ -118,3 +118,25 @@ angular.module('app.xml_importhandlers.controllers', ['app.config', ])
 
       )
 ])
+
+# Controller to manage editing xml text of an xml import handler
+# Expects:
+#     $scope.handler
+#     XmlIHXmlForm.ihXml
+.controller('XmlIHXmlEditCtrl', [
+    '$scope'
+    ($scope)->
+      $scope.$watch 'handler.xml', (newValue)->
+        if not newValue or $scope.handler.originalXml
+          return
+        $scope.handler.originalXml = newValue
+      $scope.resetXmlChanges = ->
+        $scope.handler.xml = $scope.handler.originalXml
+        $scope.XmlIHXmlForm.ihXml.$setPristine()
+      $scope.saveXml = ->
+        $scope.handler.$updateXml()
+        .then ->
+          console.log 'saved successfully'
+        , (opts)->
+          $scope.setError(opts, 'saving import handler xml')
+  ])
