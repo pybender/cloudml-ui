@@ -2,7 +2,7 @@ from celery.signals import task_prerun, task_postrun, task_sent
 
 from api import celery
 from api.async_tasks.models import AsyncTask
-from api.import_handlers.models import DataSet
+from api.import_handlers.models import DataSet, XmlSqoop
 from api.ml_models.models import Model
 from api.model_tests.models import TestResult
 from api.instances.models import Cluster
@@ -39,6 +39,9 @@ def get_object_from_task(task_name, args, kwargs):  # pragma: no cover
     elif task_name == 'api.instances.tasks.run_ssh_tunnel':
         cls = Cluster
         obj_id = args[0] if len(args) else kwargs['cluster_id']
+    elif task_name == 'api.import_handlers.tasks.load_pig_fields':
+        cls = XmlSqoop
+        obj_id = args[0] if len(args) else kwargs['sqoop_id']
 
     return cls.query.filter_by(id=int(obj_id)).first() \
         if cls and obj_id \

@@ -4,6 +4,7 @@ import csv
 import json
 from datetime import datetime
 import gzip
+import re
 
 from api.logs.logger import init_logger
 from api import celery
@@ -11,7 +12,7 @@ from api.ml_models.models import Model, Transformer
 from api.model_tests.models import TestResult
 from api.base.tasks import SqlAlchemyTask
 from api.instances.models import Cluster
-from models import DataSet
+from models import DataSet, XmlSqoop
 
 
 @celery.task(base=SqlAlchemyTask)
@@ -175,6 +176,46 @@ def upload_dataset(dataset_id):
 
     logging.info("Dataset using {0!s} uploaded.".format(dataset))
     return [dataset_id]
+
+
+@celery.task(base=SqlAlchemyTask)
+def load_pig_fields(sqoop_id, params):
+    """
+    Export classification results to database.
+    """
+    init_logger('load_pig_fields', obj=int(sqoop_id))
+
+    from utils import SCHEMA_INFO_FIELDS, PIG_TEMPLATE, construct_pig_sample
+    sqoop = XmlSqoop.query.get(sqoop_id)
+    if sqoop is None:
+        raise ValueError(
+            "Sqoop element with id {0} not found".format(sqoop_id))
+
+    datasource = sqoop.datasource.core_datasource
+    sql = """{0} select * from {1} limit 1;
+select {2} from INFORMATION_SCHEMA.COLUMNS where table_name = '{1}';
+    """.format(sqoop.text.strip(';'), sqoop.table,
+               ','.join(SCHEMA_INFO_FIELDS))
+    if params:
+        try:
+            sql = re.sub('#{(\w+)}', '%(\\1)s', sql)
+            sql = sql % params
+        except (KeyError, ValueError):
+            raise ValueError("Can't construct sql query {0}: parameters {1}"
+                             " are invalid.".format(sql, params))
+    try:
+        iterator = datasource._get_iter(sql)
+        fields_data = [{key: opt[i] for i, key in enumerate(
+                        SCHEMA_INFO_FIELDS)}
+                       for opt in iterator]
+    except Exception, exc:
+        return ValueError(
+            "Can't execute the query: {0}. Error: {1}".format(sql, exc))
+
+    fields_str = construct_pig_sample(fields_data)
+    return {'fields': fields_data,
+            'sample': PIG_TEMPLATE.format(fields_str),
+            'sql': sql}
 
 
 def _get_uncompressed_filesize(filename):

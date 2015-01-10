@@ -144,6 +144,7 @@ angular.module(
         $scope.generated_pig_string = resp.data.sample
         $scope.pig_result_line = resp.data.pig_result_line
         $scope.sample_xml = resp.data.sample_xml
+        $scope.msg = resp.data.result
       , ((opts) ->
         $scope.err = opts.data.response.error.message
         $scope.setError(opts, 'loading pig fields')

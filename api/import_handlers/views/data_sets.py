@@ -60,7 +60,7 @@ class DataSetResource(BaseResourceSQL):
                 'column_name': key,
                 'data_type': data_type})
 
-        from utils import XML_FIELD_TEMPLATE
+        from ..utils import XML_FIELD_TEMPLATE
         xml = "\r\n".join(
             [XML_FIELD_TEMPLATE % field for field in fields_data])
         return self._render({

@@ -293,6 +293,7 @@ class XmlSqoopResource(BaseResourceSQL):
     """
     put_form = post_form = XmlSqoopForm
     Model = XmlSqoop
+    GET_ACTIONS = ('pig_fields', )
     PUT_ACTIONS = ('pig_fields', )
 
     def _get_details_query(self, params, **kwargs):
@@ -302,45 +303,38 @@ class XmlSqoopResource(BaseResourceSQL):
         except NoResultFound:
             return None
 
-    def _put_pig_fields_action(self, **kwargs):
-        from utils import SCHEMA_INFO_FIELDS, PIG_TEMPLATE, construct_pig_sample
+    def _get_exports_action(self, **kwargs):
+        test = self._get_details_query(None, **kwargs)
+        if not test:
+            raise NotFound('Test not found')
+
+        return self._render({self.OBJECT_NAME: test.id,
+                             'exports': test.exports,
+                             'db_exports': test.db_exports})
+
+    def _get_pig_fields_action(self, **kwargs):
         sqoop = self._get_details_query({}, **kwargs)
         if sqoop is None:
             raise NotFound(self.MESSAGE404 % kwargs)
 
-        handler = XmlImportHandler.query.get(kwargs.get('import_handler_id'))
-        if handler is None:
-            raise NotFound('Import Handler not found')
+        return self._render({self.OBJECT_NAME: sqoop.id,
+                             'pig_fields': sqoop.pig_fields})
 
+    def _put_pig_fields_action(self, **kwargs):
+        sqoop = self._get_details_query({}, **kwargs)
+        if sqoop is None:
+            raise NotFound(self.MESSAGE404 % kwargs)
         from ..forms import LoadPigFieldsForm
         form = LoadPigFieldsForm(obj={})
         if form.is_valid():
+            from api.import_handlers.tasks import load_pig_fields
             params = form.cleaned_data.get('params')
-            datasource = sqoop.datasource.core_datasource
-            sql = """{0} select * from {1} limit 1;
-    select {2} from INFORMATION_SCHEMA.COLUMNS where table_name = '{1}';
-            """.format(sqoop.text.strip(';'), sqoop.table,
-                       ','.join(SCHEMA_INFO_FIELDS))
-            if params:
-                try:
-                    sql = re.sub('#{(\w+)}', '%(\\1)s', sql)
-                    sql = sql % params
-                except (KeyError, ValueError):
-                    return odesk_error_response(
-                        400, ERR_INVALID_DATA, 'Wrong query parameters')
-            try:
-                iterator = datasource._get_iter(sql)
-                fields_data = [{key: opt[i] for i, key in enumerate(SCHEMA_INFO_FIELDS)} \
-                           for opt in iterator]
-            except Exception, exc:
-                msg = "Can't execute the query: {0}. Error: {1}".format(sql, exc)
-                return odesk_error_response(400, 400, msg)
-
-            fields_str = construct_pig_sample(fields_data)
+            load_pig_fields.delay(sqoop.id, params)
             return self._render({
-                'fields': fields_data,
-                'sample': PIG_TEMPLATE.format(fields_str),
-                'sql': sql})
+                'result': "Generating pig fields delayed (link will appear in sqoop section)"})
+        return odesk_error_response(400, 400, 'Parameters are invalid')
+
+
 
 api.add_resource(XmlSqoopResource, '/cloudml/xml_import_handlers/\
 <regex("[\w\.]*"):import_handler_id>/entities/<regex("[\w\.]*"):entity_id>\

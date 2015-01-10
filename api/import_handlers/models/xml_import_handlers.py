@@ -1,4 +1,5 @@
 import logging
+import json
 from lxml import etree
 from sqlalchemy.orm import relationship, deferred, backref, validates
 from sqlalchemy.dialects import postgresql
@@ -332,6 +333,14 @@ class XmlSqoop(db.Model, BaseMixin):
     entity = relationship(
         'XmlEntity', foreign_keys=[entity_id], backref=backref(
             'sqoop_imports', cascade='all,delete', order_by='XmlSqoop.id'))
+
+    @property
+    def pig_fields(self):
+        from api.async_tasks.models import AsyncTask
+        return AsyncTask.get_current_by_object(
+            self,
+            'api.import_handlers.tasks.load_pig_fields',
+        )
 
     def to_dict(self):
         sqoop = super(XmlSqoop, self).to_dict()
