@@ -154,6 +154,33 @@
       <alert-message ng-show="entity.query_obj.msg" class="alert-info" msg="{{ entity.query_obj.msg }}"></alert-message>
       <alert-message ng-show="entity.query_obj.err" class="alert-error" msg="{{ entity.query_obj.err }}"></alert-message>
       <alert-message ng-show="entity.query_obj.edit_err" class="alert-error" msg="{{ entity.query_obj.edit_err }}"></alert-message>
+      <div ng-show="entity.sqoop_imports">
+        <div ng-hide="entity.query_obj.autoload_sqoop_dataset">
+          <label class="checkbox">
+            Autoload Sqoop Dataset: <input name="autoload_sqoop_dataset" type="checkbox" ng-checked="entity.query_obj.autoload_sqoop_dataset" ng-model="entity.query_obj.autoload_sqoop_dataset" ng-change="entity.query_obj.$save({only: ['autoload_sqoop_dataset']})" />
+          </label>
+        </div>
+        <div ng-show="entity.query_obj.autoload_sqoop_dataset" class="well">
+          <button type="button" class="close" ng-click="entity.query_obj.autoload_sqoop_dataset=false; entity.query_obj.$save({only: ['autoload_sqoop_dataset']})">×</button>
+          <div class="message">
+            <h5>Autoload Sqoop Dataset</h5>
+            <p class="text-info">
+              Now you <b>don't need</b> declare sqoop dataset loading in the pig script, i.e.
+              <code>
+                result = LOAD '$dataset*' USING org.apache.pig.piggybank.storage.CSVExcelStorage(',', 'YES_MULTILINE') AS (
+                  some_field:field_type
+                );
+              </code>
+              <br />
+              It would be appended before your pig script. Please do not forgot to set name of sqoop dataset.
+            </p>
+            <div>
+              Sqoop Dataset Name:
+              <span title="Sqoop Dataset Name" class="value" ng-bind="entity.query_obj.sqoop_dataset_name || 'no sqoop dataset name'" editable="entity.query_obj" value="entity.query_obj.sqoop_dataset_name" editable-field="sqoop_dataset_name" editable-input="text" editable-placement="right"></span>
+            </div>
+          </div>
+        </div>
+      </div>
       <div>
         Target:
         <span title="target" class="target value" ng-bind="entity.query_obj.target || 'no target'" editable="entity.query_obj" value="entity.query_obj.target" editable-field="target" editable-input="text" editable-placement="right"></span>

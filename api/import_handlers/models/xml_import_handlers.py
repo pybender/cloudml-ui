@@ -263,8 +263,14 @@ class XmlScript(db.Model, BaseMixin, RefXmlImportHandlerMixin):
 
 
 class XmlQuery(db.Model, BaseMixin):
-    FIELDS_TO_SERIALIZE = ['target', ]
+    FIELDS_TO_SERIALIZE = ['target', 'sqoop_dataset_name',
+                           'autoload_sqoop_dataset']
     target = db.Column(db.String(200))
+
+    # Could be filled when entity contains sqoop element
+    sqoop_dataset_name = db.Column(db.String(200))
+    autoload_sqoop_dataset = db.Column(db.Boolean)
+
     text = db.Column(db.Text)
 
     def __repr__(self):

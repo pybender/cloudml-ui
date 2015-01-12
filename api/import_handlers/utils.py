@@ -16,8 +16,8 @@ SCHEMA_INFO_FIELDS = [
     'is_nullable', 'column_default']
 
 PIG_FIELDS_MAP = {
-    'integer': 'integer',
-    'smallint': 'integer',
+    'integer': 'int',
+    'smallint': 'int',
     'bigint': 'long',
     'character varying': 'chararray',
     'text': 'chararray',
@@ -26,7 +26,7 @@ PIG_FIELDS_MAP = {
     'decimal': 'double',
     'numeric': 'double',
     'boolean': 'boolean',
-    'ARRAY': 'tuple',
+    'ARRAY': 'chararray',
     'json': 'chararray'
 }
 
@@ -39,7 +39,7 @@ def get_pig_type(field):
         return 'chararray'
     if type_.startswith('double'):
         return 'double'
-    return "unknown"
+    return "chararray"
 
 
 def construct_pig_sample(fields_data):
