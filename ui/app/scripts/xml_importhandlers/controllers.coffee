@@ -125,7 +125,8 @@ angular.module('app.xml_importhandlers.controllers', ['app.config', ])
 #     XmlIHXmlForm.ihXml
 .controller('XmlIHXmlEditCtrl', [
     '$scope'
-    ($scope)->
+    '$route'
+    ($scope, $route)->
       $scope.$watch 'handler.xml', (newValue)->
         if not newValue or $scope.handler.originalXml
           return
@@ -136,7 +137,7 @@ angular.module('app.xml_importhandlers.controllers', ['app.config', ])
       $scope.saveXml = ->
         $scope.handler.$updateXml()
         .then ->
-          console.log 'saved successfully'
+          $route.reload()
         , (opts)->
           $scope.setError(opts, 'saving import handler xml')
   ])

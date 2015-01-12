@@ -214,7 +214,10 @@ describe 'app.xml_importhandlers.controllers', ->
       expect($scope.setError).toHaveBeenCalledWith jasmine.any(Object), 'saving import handler xml'
 
 
-    it 'should succeed saveXml', inject (XmlImportHandler)->
+    it 'should succeed saveXml', inject (XmlImportHandler, $route)->
+
+      spyOn($route, 'reload')
 
       prepareContext XmlImportHandler, false
       expect($scope.setError).not.toHaveBeenCalled()
+      expect($route.reload).toHaveBeenCalled()
