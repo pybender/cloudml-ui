@@ -180,6 +180,12 @@ class XmlImportHandlerResource(BaseResourceSQL):
         try:
             for e in XmlEntity.query.filter_by(import_handler=handler).all():
                 e.delete()
+            for ds in XmlDataSource.query.filter_by(import_handler=handler).all():
+                ds.delete()
+            for ip in XmlInputParameter.query.filter_by(import_handler=handler).all():
+                ip.delete()
+            for s in XmlScript.query.filter_by(import_handler=handler).all():
+                s.delete()
             handler.data = form.cleaned_data['data']
         except Exception, exc:
             return odesk_error_response(400, ERR_INVALID_DATA, str(exc))

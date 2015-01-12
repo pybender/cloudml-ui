@@ -307,11 +307,20 @@ class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
         self.assertEqual(400, resp.status_code)
         self.assertIn('bad xml', resp.data)
 
+        handler = self.obj
+        self.assertEqual(4, XmlDataSource.query.filter_by(import_handler=handler).count())
+        self.assertEqual(2, XmlInputParameter.query.filter_by(import_handler=handler).count())
+        self.assertEqual(1, XmlScript.query.filter_by(import_handler=handler).count())
+
         with open('conf/extract.xml', 'r') as fp:
             resp = self.client.put(url, data={'data': fp.read()},
                                         headers=HTTP_HEADERS)
         resp_obj = json.loads(resp.data)
         self.assertEqual(200, resp.status_code)
+
+        self.assertEqual(4, XmlDataSource.query.filter_by(import_handler=handler).count())
+        self.assertEqual(2, XmlInputParameter.query.filter_by(import_handler=handler).count())
+        self.assertEqual(1, XmlScript.query.filter_by(import_handler=handler).count())
 
 
 class IHLoadMixin(object):
