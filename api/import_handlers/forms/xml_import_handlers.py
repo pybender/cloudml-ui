@@ -108,6 +108,7 @@ class XmlEntityForm(BaseForm):
                          ' transformed_field'
 
     name = CharField()
+    autoload_fields = BooleanField()
     import_handler_id = DocumentField(
         doc=XmlImportHandler, by_name=False, return_doc=False)
     entity_id = DocumentField(

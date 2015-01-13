@@ -382,8 +382,10 @@ def get_entity_tree(handler):
 
 
 class XmlEntity(db.Model, BaseMixin, RefXmlImportHandlerMixin):
+
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
+    autoload_fields = db.Column(db.Boolean, default=False)
 
     # JSON or CSV field as datasource
     transformed_field_id = db.Column(db.ForeignKey(
@@ -415,6 +417,8 @@ class XmlEntity(db.Model, BaseMixin, RefXmlImportHandlerMixin):
             ent['datasource'] = self.transformed_field.name
         if self.datasource:
             ent['datasource'] = self.datasource.name
+        if self.autoload_fields:
+            ent['autoload_fields'] = str(self.autoload_fields).lower()
         return ent
 
 
