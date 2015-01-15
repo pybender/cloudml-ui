@@ -10,7 +10,12 @@ loadParameters = (model, configuration, setDefault=false) ->
   config = configuration[model.type]
   model.config = config
   if setDefault && config?
-    model.params = config.defaults
+    if config.defaults?
+      model.params = config.defaults
+    else
+      for field in config.parameters
+        if field.default?
+          model.params[field.name] = field.default
   else
     model.params = model.params || {}
 
@@ -80,9 +85,9 @@ angular.module('app.features.controllers.base', ['app.config', ])
       $scope.setError(opts, 'loading types and parameters')
     )
 
-    $scope.loadParameters = () ->
+    $scope.loadParameters = (loadDefaults=false) ->
       model = $scope.model
-      loadParameters(model, $scope.configuration, false)
+      loadParameters(model, $scope.configuration, loadDefaults)
 ])
 
 .controller('ConfigurationLoaderCtrl', [
