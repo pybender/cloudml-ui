@@ -119,8 +119,13 @@ def train_model(dataset_ids, model_id, user_id, delete_metadata=False):
 
         model.create_segments(trainer._get_segments_info())
 
-        for segment in model.segments:
-            fill_model_parameter_weights.delay(model.id, segment.id)
+        if trainer.is_tree_classifier:
+            model.status = model.STATUS_TRAINED
+            model.weights_synchronized = True
+            model.save()
+        else:
+            for segment in model.segments:
+                fill_model_parameter_weights.delay(model.id, segment.id)
     except Exception, exc:
         db_session.rollback()
 
