@@ -119,13 +119,9 @@ def train_model(dataset_ids, model_id, user_id, delete_metadata=False):
 
         model.create_segments(trainer._get_segments_info())
 
-        if trainer.is_tree_classifier:
-            model.status = model.STATUS_TRAINED
-            model.weights_synchronized = True
-            model.save()
-        else:
-            for segment in model.segments:
-                fill_model_parameter_weights.delay(model.id, segment.id)
+        for segment in model.segments:
+            fill_model_parameter_weights.delay(model.id, segment.id)
+
     except Exception, exc:
         db_session.rollback()
 
@@ -179,27 +175,18 @@ def get_classifier_parameters_grid(grid_params_id):
 
 @celery.task(base=SqlAlchemyTask)
 def fill_model_parameter_weights(model_id, segment_id=None):
-    """
-    Adds model parameters weights to db.
-    """
+    # from core.trainer.classifier_settings import CLASSIFIER_WITH_COEF
     init_logger('trainmodel_log', obj=int(model_id))
-    logging.info("Starting to fill model weights")
+    logging.info("Starting to visualize trained model")
 
-    model = Model.query.get(model_id)
-    if model is None:
-        raise ValueError('Model not found: %s' % model_id)
+    model, segment = _get_model_and_segment_or_raise(model_id, segment_id)
+    trainer = model.get_trainer()
 
-    if segment_id is None:
-        segment = Segment.query.filter_by(model=model).first()
-    else:
-        segment = Segment.query.get(segment_id)
-    if segment is None:
-        raise ValueError('Segment not found: %s' % segment_id)
-
+    # need to sync model weights
     count = len(segment.weights)
     if count > 0:
         raise InvalidOperationError(
-            'Weights for model %s already  filled: %s' %
+            'Weights for model %s already filled: %s' %
             (model_id, count))
 
     weights_dict = None
@@ -310,11 +297,14 @@ def fill_model_parameter_weights(model_id, segment_id=None):
     model.save()
 
     try:
-        weights_dict = model.get_trainer().get_weights(segment.name)
+        visualization_data = trainer.get_visualization(segment.name)
+        weights_dict = visualization_data.pop('weights')
+        model.visualization_data = visualization_data
 
         weights_added = 0
         categories_added = 0
         classes_processed = 0
+        
         for clazz in weights_dict.keys():
             c, w = process_weights_for_class(clazz)
             categories_added += c
@@ -334,6 +324,98 @@ def fill_model_parameter_weights(model_id, segment_id=None):
         logging.exception('Got exception when fill_model_parameter: %s', exc)
         raise
     return msg
+
+
+def add_weights_to_db(model, segment, class_label, weight_list):
+    w_added = 0
+    cat_added = 0
+    from collections import defaultdict
+    tree = defaultdict(dict)
+    tree['weights'] = []
+    categories_names = []
+
+    # Adding weights and weights categories to db
+    for weight in weight_list:
+        name = weight['name']
+        splitted_name = name.split('->')
+        long_name = ''
+        count = len(splitted_name)
+        current = tree
+        for i, sname in enumerate(splitted_name):
+            parent = long_name
+            long_name = '%s.%s' % (long_name, sname) \
+                if long_name else sname
+            if i == (count - 1):
+                # The leaf of the split (last element) is not a category,
+                # it is the actual weight
+                new_weight = Weight()
+                new_weight.name = weight.get('name')
+                new_weight.value = weight.get('weight')
+                new_weight.value2 = weight.get('feature_weight') or weight.get('weight')
+                new_weight.is_positive = bool(weight.get('weight') > 0)
+                new_weight.css_class = weight.get('css_class')
+                new_weight.parent = parent
+                new_weight.short_name = sname[0:199]
+                new_weight.model_name = model.name
+                new_weight.model = model
+                new_weight.segment = segment
+                new_weight.class_label = str(class_label)
+                new_weight.save(commit=False)
+                w_added += 1
+
+                current['weights'].append(new_weight)
+            else:
+                # Intermediate elements of the split, are actual categories
+                # except of the last one (which is the actual weight)
+                if long_name not in categories_names:
+                    # Adding a category, if it has not already added
+                    categories_names.append(long_name)
+                    category = WeightsCategory()
+                    category.name = long_name
+                    category.parent = parent
+                    category.short_name = sname
+                    category.model_name = model.name
+                    category.model = model
+                    category.segment = segment
+                    category.class_label = str(class_label)
+                    category.save(commit=False)
+                    cat_added += 1
+                    current['subcategories'][sname] = {
+                        'category': category,
+                        'weights': [],
+                        'subcategories': {}}
+                current = current['subcategories'][sname]
+
+    # Calculating categories normalized weight
+    def calc_tree_item(tree_item, parent=None):
+        for category_name, item in tree_item.iteritems():
+            if 'category' in item:
+                category = item['category']
+                normalized_weight = 0
+                for w in item['weights']:
+                    normalized_weight += w.value2
+                    w.category = category
+                category.normalized_weight = normalized_weight
+                if parent:
+                    parent.normalized_weight += normalized_weight
+                if 'subcategories' in item:
+                    calc_tree_item(item['subcategories'], category)
+
+    calc_tree_item(tree['subcategories'])
+    return cat_added, w_added
+
+def _get_model_and_segment_or_raise(model_id, segment_id):
+    model = Model.query.get(model_id)
+    if model is None:
+        raise ValueError('Model not found: %s' % model_id)
+
+    if segment_id is None:
+        segment = Segment.query.filter_by(model=model).first()
+    else:
+        segment = Segment.query.get(segment_id)
+    if segment is None:
+        raise ValueError('Segment not found: %s' % segment_id)
+    return model, segment
 
 
 @celery.task(base=SqlAlchemyTask)

@@ -13,7 +13,7 @@
   "queries":[
     {
       "name":"retrieve",
-      "sql": "SELECT qi.*, 'class' || (trunc(random() * 2) + 1)::char hire_outcome FROM public.ja_quick_info qi where qi.file_provenance_date >= '%(start)s' AND qi.file_provenance_date < '%(end)s' LIMIT(100); AND '%(start)s' < '%(end)s'",
+      "sql": "SELECT qi.*, 'class' || (trunc(random() * 2) + 1)::char hire_outcome FROM public.ja_quick_info qi where qi.file_provenance_date >= '%(start)s' AND qi.file_provenance_date < '%(end)s' LIMIT(100);",
       "items": [
         {
           "source": "application",

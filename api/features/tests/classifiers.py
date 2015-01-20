@@ -10,6 +10,7 @@ from ..views import ClassifierResource
 from ..models import PredefinedClassifier
 from ..fixtures import PredefinedClassifierData
 from api.features.fixtures import FeatureSetData, FeatureData
+from ..config import CLASSIFIERS
 
 
 class TestClassifierDoc(BaseDbTestCase):
@@ -77,8 +78,7 @@ class PredefinedClassifiersTests(FeaturePredefinedItemsTestMixin):
         data = {"name": "classifier name is here",
                 'type': 'invalid'}
         _check(data, errors={
-            'type': 'Should be one of stochastic gradient descent classifier, \
-support vector regression, logistic regression'})
+            'type': 'Should be one of %s' % ', '.join(CLASSIFIERS.keys())})
 
         data['type'] = 'logistic regression'
         data["params"] = 'hello!'

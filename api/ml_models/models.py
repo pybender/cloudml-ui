@@ -170,6 +170,8 @@ class Model(db.Model, BaseModel, BaseTrainedEntity):
                             secondary=lambda: data_sets_table)
 
     classifier = deferred(db.Column(JSONType))
+    # Note: It could contains different keys depends to the classifier used
+    visualization_data = deferred(db.Column(JSONType))
 
     @property
     def test_import_handler(self):

@@ -122,6 +122,10 @@ class BaseTrainedEntityResource(BaseResourceSQL):
                 tasks_list.append(self.train_entity_task.subtask(
                     None, opts, queue=instance.name))
 
+            # self.train_entity_task(**{
+            #             'dataset_ids': dataset_ids,
+            #             'model_id': entity.id,
+            #             'user_id': request.user.id,})
             chain(tasks_list).apply_async()
             return self._render({
                 self.OBJECT_NAME: {

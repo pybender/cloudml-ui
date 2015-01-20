@@ -1,0 +1,6 @@
+<div ng-show="model.visualization_data.classifier_type">
+	Classifier used for training: {{ model.visualization_data.classifier_type }}
+</div>
+<div class="visualization-tree" ng-show="model.visualization_data.tree">
+	<todo-mv-tree tree-data="model.visualization_data.tree"></todo-mv-tree>
+</div>

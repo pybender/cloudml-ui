@@ -211,6 +211,8 @@
     <div ng-show="model.status == 'Trained'" ng-init="weights_section='training'">
       <ng-include src="'partials/weights/weights_view_switcher.html'"></ng-include>
     </div>
+    <hr />
+    <ng-include src="'partials/models/training_visualization.html'"></ng-include>
   </div>
 
   <!-- Tests tab -->
