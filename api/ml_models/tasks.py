@@ -177,9 +177,8 @@ def get_classifier_parameters_grid(grid_params_id):
 def fill_model_parameter_weights(model_id, segment_id=None):
     # from core.trainer.classifier_settings import CLASSIFIER_WITH_COEF
     init_logger('trainmodel_log', obj=int(model_id))
-    logging.info("Starting to visualize trained model")
-
     model, segment = _get_model_and_segment_or_raise(model_id, segment_id)
+    logging.info("Starting to visualize trained model. Segment: %s" % segment.name)
     trainer = model.get_trainer()
 
     # need to sync model weights
@@ -304,7 +303,7 @@ def fill_model_parameter_weights(model_id, segment_id=None):
         weights_added = 0
         categories_added = 0
         classes_processed = 0
-        
+
         for clazz in weights_dict.keys():
             c, w = process_weights_for_class(clazz)
             categories_added += c
@@ -313,6 +312,9 @@ def fill_model_parameter_weights(model_id, segment_id=None):
 
         db.session.commit()
         model.status = model.STATUS_TRAINED
+        # TODO:
+        if not model.labels:
+            model.labels = trainer._get_labels()
         model.weights_synchronized = True
         model.save()
         msg = 'Model %s parameters weights was added to db. %s weights, ' \
@@ -403,6 +405,7 @@ def add_weights_to_db(model, segment, class_label, weight_list):
 
     calc_tree_item(tree['subcategories'])
     return cat_added, w_added
+
 
 def _get_model_and_segment_or_raise(model_id, segment_id):
     model = Model.query.get(model_id)

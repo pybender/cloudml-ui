@@ -557,14 +557,17 @@ class XmlSqoopTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
         sqoop = self.obj
         resp = self._check(action='pig_fields', obj=sqoop, method='put')
         self.assertTrue(get_iter_mock.called)
-        self.assertItemsEqual(
-            ['application', 'opening', 'employer_info', 'hire_outcome'],
-            [fld['column_name'] for fld in resp['fields']]
-        )
-        self.assertTrue("""application:long
-, opening:long
-, employer_info:chararray
-, hire_outcome:chararray""" in resp['sample'])
+        print resp
+        self.assertItemsEqual(u'Generating pig fields delayed (link will appear in sqoop section)',
+               resp['result'])
+        # self.assertItemsEqual(
+        #     ['application', 'opening', 'employer_info', 'hire_outcome'],
+        #     [fld['column_name'] for fld in resp['fields']]
+        # )
+#         self.assertTrue("""application:long
+# , opening:long
+# , employer_info:chararray
+# , hire_outcome:chararray""" in resp['sample'])
 
 
 class PredictModelTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):

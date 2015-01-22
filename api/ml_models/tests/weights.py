@@ -294,7 +294,7 @@ class WeightTasksTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(cat.parent, '')
         self.assertEquals(cat.segment.name, 'default')
         self.assertEquals(cat.class_label, '1')
-        self.assertEquals(cat.normalized_weight, 2.82795631500074)
+        self.assertEquals(cat.normalized_weight, 2.78991315297586)
 
         cat = WeightsCategory.query.filter_by(
             model=model, name='contractor.dev_profile_title').one()
@@ -302,7 +302,7 @@ class WeightTasksTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(cat.short_name, 'dev_profile_title')
         self.assertEquals(cat.segment.name, 'default')
         self.assertEquals(cat.class_label, '1')
-        self.assertEquals(cat.normalized_weight, 0.40170632912897)
+        self.assertEquals(cat.normalized_weight, 0.233792602833065)
 
         # Check weights in db
         def check_random_weight():
@@ -329,8 +329,8 @@ class WeightTasksTests(BaseDbTestCase, TestChecksMixin):
                       'short_name': 'best',
                       'css_class': 'red darker',
                       'parent': 'contractor.dev_blurb',
-                      'value': -0.036828150218503,
-                      'value2': 0.0008770563514831})
+                      'value': -0.0592497003033785,
+                      'value2': 0.00146387871336896})
 
     @mock_s3
     @patch('api.amazon_utils.AmazonS3Helper.load_key')
@@ -362,6 +362,7 @@ class WeightTasksTests(BaseDbTestCase, TestChecksMixin):
                 random.choice(xrange(len(trainer_weight_list)))]
             weight = Weight.query.filter_by(
                 model=model, name=weight_dict['name'],
+                segment_id=model.segments[1].id,
                 class_label=str(class_label)).one()
             self.assertEquals(round(weight.value, 2),
                               round(weight_dict['weight'], 2))
@@ -375,19 +376,19 @@ class WeightTasksTests(BaseDbTestCase, TestChecksMixin):
                 self.assertEquals(getattr(wgh, key), val)
 
         # Fill weights
-        trainer = model.get_trainer()
-        weights = trainer.get_weights()
+        trainer = model.get_trainer(force_load=True)
+        weights = trainer.get_weights(segment='True')
         classes = weights.keys()
         self.assertItemsEqual(classes, [1, 2, 3], "Keys are %s" % classes)
         CONTRANTOR_CATEGORY_WEIGHT = {
-            3: 3.12404372537433,
-            1: 2.80831754216515,
-            2: 3.25428016841488
+            3: 3.3736167029751,
+            1: 2.34743710078954,
+            2: 4.00879922459129
         }
         PROFILE_TITLE_WEIGHT = {
-            3: 0.374189606443337,
-            1: 0.391104393555193,
-            2: 0.345716022146137
+            3: 0.228376632702345,
+            1: 0.260152609510841,
+            2: 0.214845209432491
         }
         for class_label in weights.keys():
             trainer_weights = weights[class_label]
@@ -396,6 +397,7 @@ class WeightTasksTests(BaseDbTestCase, TestChecksMixin):
 
             list_count = len(trainer_weight_list)
             query = Weight.query.filter_by(model=model,
+                                           segment_id=model.segments[1].id,
                                            class_label=str(class_label))
             db_count = query.count()
             self.assertEquals(list_count, db_count,
@@ -404,7 +406,7 @@ class WeightTasksTests(BaseDbTestCase, TestChecksMixin):
 
             # Check categories in db
             cat = WeightsCategory.query.filter_by(
-                model=model, name='contractor',
+                model=model, name='contractor',segment_id=model.segments[1].id,
                 class_label=str(class_label)).one()
             self.assertEquals(cat.parent, '')
             self.assertEquals(cat.short_name, 'contractor')
@@ -413,6 +415,7 @@ class WeightTasksTests(BaseDbTestCase, TestChecksMixin):
 
             cat = WeightsCategory.query.filter_by(
                 model=model, name='contractor.dev_profile_title',
+                segment_id=model.segments[1].id,
                 class_label=str(class_label)).one()
             self.assertEquals(cat.parent, 'contractor')
             self.assertEquals(cat.short_name, 'dev_profile_title')
@@ -424,15 +427,17 @@ class WeightTasksTests(BaseDbTestCase, TestChecksMixin):
 
         weight = Weight.query.filter_by(
                 model=model, name='contractor->dev_active_interviews',
+                segment_id=model.segments[1].id,
                 class_label='2').one()
-        self.assertEquals(round(weight.value, 3), 0.112)
-        self.assertEquals(round(weight.value2, 4), 0.0137)
+        self.assertEquals(round(weight.value, 3), 0.185)
+        self.assertEquals(round(weight.value2, 4), 0.0258)
 
         weight = Weight.query.filter_by(
                 model=model, name='contractor->dev_active_interviews',
+                segment_id=model.segments[1].id,
                 class_label='1').one()
-        self.assertEquals(round(weight.value, 3), -0.235)
-        self.assertEquals(round(weight.value2, 4), 0.0288)
+        self.assertEquals(round(weight.value, 3), -0.334)
+        self.assertEquals(round(weight.value2, 4), 0.0466)
 
 
 class WeightModelTests(BaseDbTestCase):

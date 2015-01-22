@@ -107,9 +107,9 @@ class BaseTrainedEntity(object):
         if commit:
             self.save()
 
-    def get_trainer(self, loaded=True):
+    def get_trainer(self, loaded=True, force_load=False):
         if loaded:
-            if not hasattr(self, 'loaded_trainer'):
+            if not hasattr(self, 'loaded_trainer') or force_load:
                 from core.trainer.store import TrainerStorage
                 self.loaded_trainer = TrainerStorage.loads(self.trainer)
             return self.loaded_trainer
