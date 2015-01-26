@@ -12,6 +12,6 @@ Jan 2015
 XML Import Handlers
 -------------------
 
-- Auto loading entity fields from pig results (for entities, that used pig datasource only for now). :ref:`details <import>`
+- Auto loading entity fields from results row (for entities, that used pig and db datasource for now). :ref:`details <import>`
 - Auto loading sqoop results in the pig script. :ref:`details <sqoop>`
 
