@@ -2,15 +2,23 @@
 
 describe "app.importhandlers.model", ->
 
-  beforeEach(module "ngCookies")
-  beforeEach(module "ui.bootstrap")
+  beforeEach ->
+    module "ngCookies"
+    module "ui.bootstrap"
 
-  beforeEach(module "app.base")
-  beforeEach(module "app.config")
-  beforeEach(module "app.services")
+    module "app.base"
+    module "app.config"
+    module "app.services"
 
-  beforeEach(module "app.importhandlers.model")
-  beforeEach(module "app.xml_importhandlers.models")
+    module "app.importhandlers.model"
+    module "app.xml_importhandlers.models"
+
+  $httpBackend = null
+
+  beforeEach(inject(($injector) ->
+    $httpBackend = $injector.get('$httpBackend')
+  ))
+
 
   describe "BaseQueryModel", ->
 
@@ -80,6 +88,7 @@ describe "app.importhandlers.model", ->
         expect(query.$make_request).toHaveBeenCalledWith url + "action/run_sql/", {}, "PUT", data
       )
 
+
   describe "XmlQuery", ->
 
     it "should properly parse parameters",
@@ -101,3 +110,29 @@ describe "app.importhandlers.model", ->
         query.$run 2, ['start', 'end'], 'ds_name', url
         expect(query.$make_request).toHaveBeenCalledWith url + "/action/run_sql/", {}, "PUT", data
       )
+
+
+  describe 'ImportHandler', ->
+
+    it 'should list fields', inject (ImportHandler) ->
+      ih = new ImportHandler({id: '123321'})
+
+      spyOn(ImportHandler, '$make_all_request').and.callThrough()
+
+      url = "#{ih.BASE_API_URL}#{ih.id}/action/list_fields/"
+      $httpBackend.expectGET url
+      .respond 200, angular.toJson {fields: ['field1', 'field2', 'field3']}
+
+      thenBlock = jasmine.createSpy 'thenBlock'
+      ih.$listFields().then(thenBlock)
+      $httpBackend.flush()
+
+      expect(ImportHandler.$make_all_request).toHaveBeenCalledWith url, jasmine.any(Function)
+      expect(thenBlock).toHaveBeenCalledWith
+        total : undefined
+        pages : undefined
+        has_prev : undefined
+        has_next : undefined
+        objects : ['field1', 'field2', 'field3']
+        _resp : jasmine.any(Object)
+

@@ -39,8 +39,9 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
   'PredictModel'
   'Script'
   'Datasource'
+  'Field'
   
-  (settings, BaseModel, InputParameter, Entity, PredictModel, Script, Datasource) ->
+  (settings, BaseModel, InputParameter, Entity, PredictModel, Script, Datasource, Field) ->
     class XmlImportHandler extends BaseModel
       BASE_API_URL: "#{settings.apiUrl}xml_import_handlers/"
       BASE_UI_URL: "/handlers/xml"
@@ -95,6 +96,10 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
 
       $clone: (opts={}) ->
         @$make_request("#{@BASE_API_URL}#{@id}/action/clone/", {}, "POST", {})
+
+      $listFields: ->
+        resolver = Field.$buildLoadAllResolver()
+        Field.$make_all_request("#{@BASE_API_URL}#{@id}/action/list_fields/", resolver)
 
     return XmlImportHandler
 ])

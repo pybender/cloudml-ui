@@ -32,6 +32,7 @@ class XmlImportHandlerResource(BaseResourceSQL):
     POST_ACTIONS = ('clone', )
     FILTER_PARAMS = (('created_by', str), ('updated_by_id', int),
                      ('updated_by', str), ('name', str))
+    GET_ACTIONS = ('list_fields')
 
     @property
     def Model(self):
@@ -169,6 +170,13 @@ class XmlImportHandlerResource(BaseResourceSQL):
                 new_handler.name
             )
         }, code=201)
+
+    def _get_list_fields_action(self, **kwargs):
+
+        handler = self._get_details_query(None, **kwargs)
+
+        context = {'xml_fields': handler.list_fields()}
+        return self._render(context)
 
 api.add_resource(
     XmlImportHandlerResource, '/cloudml/xml_import_handlers/')

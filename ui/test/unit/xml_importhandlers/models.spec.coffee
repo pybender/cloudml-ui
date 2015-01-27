@@ -137,6 +137,19 @@ describe 'app.xml_importhandlers.models', ->
 
         expect(handler.$make_request).toHaveBeenCalledWith url, {}, "PUT", {'server': server}
 
+      it 'should list fields', inject (XmlImportHandler, Field)->
+        handler = new XmlImportHandler {id: 111, name: 'test'}
+        url = "#{handler.BASE_API_URL}#{handler.id}/action/list_fields/"
+        $httpBackend.expectGET(url).respond 400
+
+        spyOn(Field, '$make_all_request').and.callThrough()
+        spyOn(Field, '$buildLoadAllResolver').and.callThrough()
+        handler.$listFields()
+        $httpBackend.flush()
+
+        expect(Field.$buildLoadAllResolver).toHaveBeenCalled()
+        expect(Field.$make_all_request).toHaveBeenCalledWith url, jasmine.any(Function)
+
 
   describe 'Field Model', ->
 
