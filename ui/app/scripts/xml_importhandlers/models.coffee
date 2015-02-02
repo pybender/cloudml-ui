@@ -101,6 +101,10 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
         resolver = Field.$buildLoadAllResolver()
         Field.$make_all_request("#{@BASE_API_URL}#{@id}/action/list_fields/", resolver)
 
+      $updateXml: ->
+        @$make_request("#{@BASE_API_URL}#{@id}/action/update_xml/", {}, 'PUT',
+          {'data': @xml})
+
     return XmlImportHandler
 ])
 

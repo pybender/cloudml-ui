@@ -29,7 +29,6 @@
 <div title="quick info" ng-init="obj=handler">
   <ng-include src="'partials/parts/created_tags.html'"></ng-include>
 </div>
-<p></p>
 
 <alert-message ng-show="msg" class="alert-info" msg='{{ msg }}' unsafe></alert-message>
 <alert-message ng-show="err" class="alert-error" msg='{{ err }}' unsafe></alert-message>
@@ -211,14 +210,11 @@
         </accordion-group>
 
         <!-- predict -->
-        <div class="accordion-group">
-          <div class="accordion-heading">
-            <a class="accordion-toggle" data-toggle="collapse" href="#predict">Predict</a>
-          </div>
-          <div id="predict" class="accordion-body collapse in">
-            <div class="accordion-inner">
-              <ng-include src="'partials/xml_import_handlers/predict/details.html'"></ng-include>
-            </div>
+        <accordion-group is-open="true">
+          <accordion-heading>Predict</accordion-heading>
+
+          <div id="predict">
+            <ng-include src="'partials/xml_import_handlers/predict/details.html'"></ng-include>
           </div>
         </accordion-group>
 
@@ -227,8 +223,15 @@
   </div>
 
   <div ng-show="action[1] == 'xml'" cml-has-codemirror="action[1] == 'xml'">
-    <textarea name="data" ui-codemirror="codeMirrorConfigs(true)['xml']" ng-model="handler.xml" class="cml-codemirror-refresh"></textarea>
-  </div>
+    <form name="XmlIHXmlForm" ng-controller="XmlIHXmlEditCtrl">
+      <textarea name="ihXml" class="cml-codemirror-refresh" ng-model="handler.xml"
+                ui-codemirror="codeMirrorConfigs(false, '100%', '100%')['xml']"></textarea>
+
+      <button ng-click="saveXml()" class="btn btn-info" ng-disabled="XmlIHXmlForm.ihXml.$pristine">Save</button>
+
+      <button ng-click="resetXmlChanges()" class="btn btn-info" ng-disabled="XmlIHXmlForm.ihXml.$pristine">Cancel Changes</button>
+
+    </form>
   </div>
 
   <div ng-show="action[0] == 'dataset'">

@@ -247,6 +247,14 @@ For store results we should use '$output' parameter as output dir. For example::
     C = FOREACH B GENERATE application, opening;
     STORE C INTO '$output' USING JsonStorage();
 
+Pig query
+---------
+
+- ``target`` (**required**) - name of target dataset wich will be stored.
+- ``autoload_sqoop_dataset`` (optional) - when it's true, sqoop dataset will be auto loaded in the pig script (without defining loading statement in script). Require to define `sqoop_dataset_name` attr.
+- ``sqoop_dataset_name`` (optional) - variable name that would be used in the pig script for sqoop results, when ``autoload_sqoop_dataset`` setted.
+
+
 .. _import:
 
 Import
@@ -272,6 +280,16 @@ of the element are the following:
 - ``name`` (**required**) - a unique name to identify the entity
 - ``datasource`` (**required**) - the datasource to use for importing data
 - ``query`` - a string that provides instructions on how to query a datasource (i.e. a SQL query or a path template). Queries can be also defined as child elements (to be discussed later).
+- ``autoload_fields`` (boolean) - when setted we could not define fields. They would be loaded from the pig results. 
+  
+.. note::
+
+    ``autoload_fields`` works only with ``pig`` datasource for now.
+
+.. note::
+
+    For overriding automatically defined fields (when ``autoload_fields`` setted), you could simply add them to the entity.
+
 
 Examples::
 
@@ -439,6 +457,7 @@ Examples::
     </entity>
 
 
+.. _sqoop:
 
 Sqoop
 ~~~~~
@@ -481,6 +500,58 @@ import. This feature is particularly useful if you want to run::
         <!-- Fields -->
         <field ... />
     </entity>
+
+For loading sqoop results in the pig script we should define::
+
+    <entity name="myEntity" datasource="pigConnection">
+        <sqoop target="openings_dataset" table="temp_table" datasource="sqoop_db_datasource" direct="true" mappers="1"/>
+        <query autoload_sqoop_dataset="true" sqoop_dataset_name="openings_dataset" target="result">
+            <![CDATA[
+            register 's3://odesk-match-staging/pig/lib/elephant-bird-core-4.4.jar';
+            register 's3://odesk-match-staging/pig/lib/elephant-bird-pig-4.4.jar';
+            register 's3://odesk-match-staging/pig/lib/elephant-bird-hadoop-compat-4.4.jar';
+            register 's3://odesk-match-staging/pig/lib/piggybank-0.12.0.jar';
+
+            openings_dataset = LOAD '$openings_dataset*' USING org.apache.pig.piggybank.storage.CSVExcelStorage(',', 'YES_MULTILINE') AS (
+                bidid:long
+                , jobid:long
+                , seller_userid:long
+                , is_hired:chararray
+                , seller_country:chararray
+            );
+
+            result = FOREACH openings_dataset GENERATE 
+                * 
+                , funcs.join((job_country, seller_country), ',') as buyer_seller_countries
+            ;
+            ]]>
+        <query/>
+    <entity/>
+
+
+Also we can auto load sqoop results, for example::
+
+    <entity name="myEntity" datasource="pigConnection">
+        <sqoop target="openings_dataset" table="temp_table" datasource="sqoop_db_datasource" direct="true" mappers="1"/>
+        <query autoload_sqoop_dataset="true" sqoop_dataset_name="openings_dataset" target="result">
+            <![CDATA[
+            result = FOREACH openings_dataset GENERATE 
+                * 
+                , funcs.join((job_country, seller_country), ',') as buyer_seller_countries
+            ;
+            ]]>
+        <query/>
+    <entity/>
+
+When `autoload_sqoop_dataset` setted CloudML will automatically add sqoop results definition on the top of the pig script. For example::
+
+    register 's3://odesk-match-staging/pig/lib/elephant-bird-core-4.4.jar';
+    register 's3://odesk-match-staging/pig/lib/elephant-bird-pig-4.4.jar';
+    register 's3://odesk-match-staging/pig/lib/elephant-bird-hadoop-compat-4.4.jar';
+    register 's3://odesk-match-staging/pig/lib/piggybank-0.12.0.jar';
+                
+
+    result = LOAD '$dataset*' USING org.apache.pig.piggybank.storage.CSVExcelStorage(',', 'YES_MULTILINE') AS ( some_field:field_type ); 
 
 
 Nested entities

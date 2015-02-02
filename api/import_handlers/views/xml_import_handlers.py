@@ -16,7 +16,7 @@ from api.import_handlers.forms import XmlImportHandlerAddForm, \
     XmlInputParameterForm, XmlEntityForm, XmlFieldForm, XmlDataSourceForm, \
     XmlQueryForm, XmlScriptForm, XmlImportHandlerEditForm, XmlSqoopForm, \
     PredictModelForm, PredictModelWeightForm, PredictResultLabelForm, \
-    PredictResultProbabilityForm
+    PredictResultProbabilityForm, XmlImportHandlerUpdateXmlForm
 from api.servers.forms import ChooseServerForm
 
 
@@ -28,7 +28,7 @@ class XmlImportHandlerResource(BaseResourceSQL):
     put_form = XmlImportHandlerEditForm
 
     NEED_PAGING = True
-    PUT_ACTIONS = ('upload_to_server', 'run_sql')
+    PUT_ACTIONS = ('upload_to_server', 'run_sql', 'update_xml')
     POST_ACTIONS = ('clone', )
     FILTER_PARAMS = (('created_by', str), ('updated_by_id', int),
                      ('updated_by', str), ('name', str))
@@ -171,12 +171,41 @@ class XmlImportHandlerResource(BaseResourceSQL):
             )
         }, code=201)
 
+
     def _get_list_fields_action(self, **kwargs):
 
         handler = self._get_details_query(None, **kwargs)
 
         context = {'xml_fields': handler.list_fields()}
         return self._render(context)
+
+    def _put_update_xml_action(self, **kwargs):
+        handler = self._get_details_query(None, **kwargs)
+
+        form = XmlImportHandlerUpdateXmlForm(obj={})
+        if not form.is_valid():
+            return self._render({'error': form.error_messages})
+
+        try:
+            for e in XmlEntity.query.filter_by(import_handler=handler).all():
+                e.delete()
+            for ds in XmlDataSource.query.filter_by(import_handler=handler).all():
+                ds.delete()
+            for ip in XmlInputParameter.query.filter_by(import_handler=handler).all():
+                ip.delete()
+            for s in XmlScript.query.filter_by(import_handler=handler).all():
+                s.delete()
+            handler.data = form.cleaned_data['data']
+        except Exception, exc:
+            return odesk_error_response(400, ERR_INVALID_DATA, str(exc))
+        handler.save()
+
+        return self._render({
+            self.OBJECT_NAME: handler,
+            'status': 'Import Handler "{0}" has been updated'.format(
+                handler.name)
+        })
+
 
 api.add_resource(
     XmlImportHandlerResource, '/cloudml/xml_import_handlers/')

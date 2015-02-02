@@ -233,7 +233,7 @@
       <h5>
         Fields
       </h5>
-      <label class="checkbox" title="Import handler fields would be loaded from pig results. And you could override some of them.">
+      <label class="checkbox" title="Import handler fields would be loaded from pig (when pig datasource used) or sql query (when db datasource used) results. And you could override some of them.">
         Autoload Fields <input name="autoload_fields" type="checkbox" ng-checked="entity.autoload_fields" ng-model="entity.autoload_fields" ng-change="entity.$save({only: ['autoload_fields']})" />
       </label>
       <div class="scrollable">
@@ -310,6 +310,11 @@
                     </td>
                   </tr>
               </tbody>
+              <tfoot ng-hide="entity.fields">
+                <tr>
+                  <td colspan="15">No fields found</td>
+                </tr>
+              </tfoot>
             </table>
           </div>
         </div>

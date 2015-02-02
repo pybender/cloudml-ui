@@ -158,3 +158,66 @@ describe 'app.xml_importhandlers.controllers', ->
       expect($scope.predict).toEqual predict
       expect($scope.label.script).toEqual predict.label.script
       expect($scope.probability.label).toEqual predict.probability.label
+
+
+  describe 'XmlIHXmlEditCtrl', ->
+
+    it 'should store the original xml and reset it when need be', ->
+
+      createController 'XmlIHXmlEditCtrl'
+
+      $scope.handler = {xml: '<the><original><xml></xml></original></the>'}
+      $scope.XmlIHXmlForm = {ihXml: {$setPristine: jasmine.createSpy '$setPristine'}}
+      $scope.$digest()
+
+      expect($scope.handler.originalXml).toEqual '<the><original><xml></xml></original></the>'
+
+      $scope.handler.xml = '<some><new><xml></xml></new></some>'
+      $scope.$digest()
+
+      $scope.resetXmlChanges()
+      expect($scope.handler.originalXml).toEqual '<the><original><xml></xml></original></the>'
+
+  describe 'save the xml', ->
+    prepareContext = (XmlImportHandler, withError)->
+      spyOn(window, 'FormData').and.returnValue new ()->
+        _data = {}
+        return {
+        append: (key, value)->
+          _data[key] = value
+        getData: ->
+          return angular.copy(_data)
+        toString: ->
+          angular.toJson(_data)
+        }
+
+      createController 'XmlIHXmlEditCtrl'
+
+      $scope.setError = jasmine.createSpy '$scope.setError'
+
+      theXml = '<the><original><xml></xml></original></the>'
+      $scope.handler = new XmlImportHandler({id: 999, xml: theXml})
+      $scope.XmlIHXmlForm = {ihXml: {$setPristine: jasmine.createSpy '$setPristine'}}
+      $scope.$digest()
+
+      url = "#{$scope.handler.BASE_API_URL}#{$scope.handler.id}/action/update_xml/"
+      $httpBackend.expectPUT url, (data)->
+        return data.getData()['data'] is theXml
+      .respond (if withError then 400 else 200), angular.toJson($scope.handler)
+
+      $scope.saveXml()
+      $httpBackend.flush()
+
+    it 'should handle errors when saveXml', inject (XmlImportHandler)->
+
+      prepareContext XmlImportHandler, true
+      expect($scope.setError).toHaveBeenCalledWith jasmine.any(Object), 'saving import handler xml'
+
+
+    it 'should succeed saveXml', inject (XmlImportHandler, $route)->
+
+      spyOn($route, 'reload')
+
+      prepareContext XmlImportHandler, false
+      expect($scope.setError).not.toHaveBeenCalled()
+      expect($route.reload).toHaveBeenCalled()
