@@ -180,6 +180,11 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
         if not opts.entity_id or not opts.import_handler_id
           throw new Error "entity_id:#{opts.entity_id}, import_handler_id:#{opts.import_handler_id} both should be defined"
 
+      pigFields: (opts) =>
+        base_url = @constructor.$get_api_url({}, @)
+        url = "#{base_url}#{@id}/action/pig_fields/"
+        @$make_request(url, {}, "GET", {})
+
       getPigFields: (opts) =>
         data = {
           params: JSON.stringify(opts.params),
@@ -325,7 +330,13 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
           if origData.sqoop_imports?
             @sqoop_imports = []
             for data in origData.sqoop_imports
-              @sqoop_imports.push new Sqoop(_.extend data, defaults)
+              sqoop = new Sqoop(_.extend data, defaults)
+              sqoop.pigFields().then((resp) ->
+                sqoop.pig_fields = resp.data.pig_fields
+              , ((opts) ->
+                sqoop.pig_fields_err = opts.data.response?.error?.message || 'error'
+              ))
+              @sqoop_imports.push sqoop
 
     return Entity
 ])

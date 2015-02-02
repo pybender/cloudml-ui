@@ -106,6 +106,46 @@
         <i title="Delete item. Be careful - you could not recover it!" class="icon-remove"></i>
       </button>
     </div>
+      <div ng-show="sqoop.pig_fields">
+        <h4>Pig Fields</h4>
+        <div ng-init="showFields = {}" class="well well-small" ng-repeat="fieldsTask in sqoop.pig_fields">
+          <i class="icon-calendar"></i> created on <span class="badge badge-info" title="dates in GMT">{{ fieldsTask.created_on|format_date }}</span>
+          <i class="icon-th"></i><span> fields </span>
+          <span ng-repeat="(name, param) in fieldsTask.args[1]">
+            <span class="label">{{ name }}={{ param }}</span>
+          </span>
+          <span class="badge badge-info">{{ fieldsTask.status }}</span><br/>
+          <div ng-show="fieldsTask.status == 'Completed'">
+            <a ng-click="showFields[fieldsTask.id] = !showFields[fieldsTask.id]">details</a>
+            <div ng-show="showFields[fieldsTask.id]">
+              <div ng-show="fieldsTask.result.sample">
+                <textarea class="small cml-codemirror-refresh" ui-codemirror="$root.codeMirrorConfigs(false)['sql']" ng-model="fieldsTask.result.sample" />
+              </div>
+              <div ng-show="fieldsTask.result.fields">
+                <h4>Table Structure</h4>
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Max Length</th>
+                      <th>Nullable</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr ng-repeat="field in fieldsTask.result.fields">
+                      <td>{{ field.column_name }}</td>
+                      <td>{{ field.data_type }}</td>
+                      <td>{{ field.character_maximum_length }}</td>
+                      <td>{{ field.is_nullable }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
     <div ng-show="entity.query_obj">
     <hr />
@@ -114,6 +154,33 @@
       <alert-message ng-show="entity.query_obj.msg" class="alert-info" msg="{{ entity.query_obj.msg }}"></alert-message>
       <alert-message ng-show="entity.query_obj.err" class="alert-error" msg="{{ entity.query_obj.err }}"></alert-message>
       <alert-message ng-show="entity.query_obj.edit_err" class="alert-error" msg="{{ entity.query_obj.edit_err }}"></alert-message>
+      <div ng-show="entity.sqoop_imports">
+        <div ng-hide="entity.query_obj.autoload_sqoop_dataset">
+          <label class="checkbox">
+            Autoload Sqoop Dataset: <input name="autoload_sqoop_dataset" type="checkbox" ng-checked="entity.query_obj.autoload_sqoop_dataset" ng-model="entity.query_obj.autoload_sqoop_dataset" ng-change="entity.query_obj.$save({only: ['autoload_sqoop_dataset']})" />
+          </label>
+        </div>
+        <div ng-show="entity.query_obj.autoload_sqoop_dataset" class="well">
+          <button type="button" class="close" ng-click="entity.query_obj.autoload_sqoop_dataset=false; entity.query_obj.$save({only: ['autoload_sqoop_dataset']})">×</button>
+          <div class="message">
+            <h5>Autoload Sqoop Dataset</h5>
+            <p class="text-info">
+              Now you <b>don't need</b> declare sqoop dataset loading in the pig script, i.e.
+              <code>
+                result = LOAD '$dataset*' USING org.apache.pig.piggybank.storage.CSVExcelStorage(',', 'YES_MULTILINE') AS (
+                  some_field:field_type
+                );
+              </code>
+              <br />
+              It would be appended before your pig script. Please do not forgot to set name of sqoop dataset.
+            </p>
+            <div>
+              Sqoop Dataset Name:
+              <span title="Sqoop Dataset Name" class="value" ng-bind="entity.query_obj.sqoop_dataset_name || 'no sqoop dataset name'" editable="entity.query_obj" value="entity.query_obj.sqoop_dataset_name" editable-field="sqoop_dataset_name" editable-input="text" editable-placement="right"></span>
+            </div>
+          </div>
+        </div>
+      </div>
       <div>
         Target:
         <span title="target" class="target value" ng-bind="entity.query_obj.target || 'no target'" editable="entity.query_obj" value="entity.query_obj.target" editable-field="target" editable-input="text" editable-placement="right"></span>
@@ -162,9 +229,13 @@
       </div>
     </div>
     </div>
-    <div ng-show="entity.fields">
-      <hr />
-      <h5>Fields</h5>
+    <div>
+      <h5>
+        Fields
+      </h5>
+      <label class="checkbox" title="Import handler fields would be loaded from pig (when pig datasource used) or sql query (when db datasource used) results. And you could override some of them.">
+        Autoload Fields <input name="autoload_fields" type="checkbox" ng-checked="entity.autoload_fields" ng-model="entity.autoload_fields" ng-change="entity.$save({only: ['autoload_fields']})" />
+      </label>
       <div class="scrollable">
         <div class="outer">
           <div class="inner">
@@ -239,6 +310,11 @@
                     </td>
                   </tr>
               </tbody>
+              <tfoot ng-hide="entity.fields">
+                <tr>
+                  <td colspan="15">No fields found</td>
+                </tr>
+              </tfoot>
             </table>
           </div>
         </div>

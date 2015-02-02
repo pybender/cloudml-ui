@@ -1,4 +1,5 @@
 import logging
+import json
 from lxml import etree
 from sqlalchemy.orm import relationship, deferred, backref, validates
 from sqlalchemy.dialects import postgresql
@@ -262,8 +263,14 @@ class XmlScript(db.Model, BaseMixin, RefXmlImportHandlerMixin):
 
 
 class XmlQuery(db.Model, BaseMixin):
-    FIELDS_TO_SERIALIZE = ['target', ]
+    FIELDS_TO_SERIALIZE = ['target', 'sqoop_dataset_name',
+                           'autoload_sqoop_dataset']
     target = db.Column(db.String(200))
+
+    # Could be filled when entity contains sqoop element
+    sqoop_dataset_name = db.Column(db.String(200))
+    autoload_sqoop_dataset = db.Column(db.Boolean)
+
     text = db.Column(db.Text)
 
     def __repr__(self):
@@ -333,6 +340,14 @@ class XmlSqoop(db.Model, BaseMixin):
         'XmlEntity', foreign_keys=[entity_id], backref=backref(
             'sqoop_imports', cascade='all,delete', order_by='XmlSqoop.id'))
 
+    @property
+    def pig_fields(self):
+        from api.async_tasks.models import AsyncTask
+        return AsyncTask.get_current_by_object(
+            self,
+            'api.import_handlers.tasks.load_pig_fields',
+        )
+
     def to_dict(self):
         sqoop = super(XmlSqoop, self).to_dict()
         if self.datasource:
@@ -367,8 +382,10 @@ def get_entity_tree(handler):
 
 
 class XmlEntity(db.Model, BaseMixin, RefXmlImportHandlerMixin):
+
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
+    autoload_fields = db.Column(db.Boolean, default=False)
 
     # JSON or CSV field as datasource
     transformed_field_id = db.Column(db.ForeignKey(
@@ -400,6 +417,8 @@ class XmlEntity(db.Model, BaseMixin, RefXmlImportHandlerMixin):
             ent['datasource'] = self.transformed_field.name
         if self.datasource:
             ent['datasource'] = self.datasource.name
+        if self.autoload_fields:
+            ent['autoload_fields'] = str(self.autoload_fields).lower()
         return ent
 
 
