@@ -1,13 +1,26 @@
-<form name="myForm">
-<h4>mappings:</h4>
-<dict-parameter ng-model="theDict" name="model"
-                input-key-class="input-medium"
-                input-value-class="input-medium"></dict-parameter>
+<div>
 
-<div class="alert alert-danger" ng-show="myForm.model.$error.error_no_keys">At least one key/value pair is required</div>
-<div class="alert alert-danger" ng-show="myForm.model.$error.error_keys">All keys should have valid non empty string name</div>
-<div class="alert alert-danger" ng-show="myForm.model.$error.error_values">All values should have valid non empty string value</div>
+  <style>
 
-<div>The Dictionary is Now</div>
-<div>{{theDict}}</div>
-</form>
+    .node circle {
+      fill: #fff;
+      stroke: steelblue;
+      stroke-width: 1.5px;
+    }
+
+    .node {
+      font: 10px sans-serif;
+    }
+
+    .link {
+      fill: none;
+      stroke: #ccc;
+      stroke-width: 1.5px;
+    }
+
+  </style>
+
+
+  <svg></svg>
+
+</div>
