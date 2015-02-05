@@ -765,192 +765,251 @@ angular.module('app.play.controllers', ['app.config', ])
         }]
       }
 
-      margin = {
-        top: 20,
-        right: 120,
-        bottom: 20,
-        left: 120
-      }
-      width = 960 - margin.right - margin.left
-      height = 800 - margin.top - margin.bottom
 
-      i = 0
-      duration = 750
-      rectW = 60
-      rectH = 30
+      $scope.model = new Model({id: 65})
+      $scope.model.$load {show: ['visualization_data']}
+      .then ->
+        data = $scope.model.visualization_data
+        root = data.tree
 
-      tree = d3.layout.tree().nodeSize([70, 40])
-  #.children (d)->
-  #  children = []
-  #  if d.left?
-  #    children.push d.left
-  #  if d.right?
-  #    children.push d.right
-  #  return children
+#        root = {
+#          "item": {"samples": 1000, "id": "0", "rule": "A", "impurity": 0.5716},
+#          "right": {
+#            "item": {"samples": 698, "id": "1", "rule": "AA", "impurity": 0.6102}
+#            "right": {
+#              "item": {"samples": 698, "id": "1", "rule": "AAA", "impurity": 0.6102}
+#            },
+#            "left": {
+#              "item": {"samples": 203, "id": "3", "rule": "AAB", "impurity": 0.6661}
+#            }
+#          },
+#          "left": {
+#            "item": {"samples": 203, "id": "3", "rule": "AB", "impurity": 0.6661}
+#            "right": {
+#              "item": {"samples": 698, "id": "1", "rule": "ABA", "impurity": 0.6102}
+#            },
+#            "left": {
+#              "item": {"samples": 203, "id": "3", "rule": "ABB", "impurity": 0.6661}
+#            }
+#          }
+#        }
 
-      diagonal = d3.svg.diagonal()
-      .projection (d)->
-        return [d.x + rectW / 2, d.y + rectH / 2]
+        process = (node)->
+          node.org_id = node.id
+          delete node.id
+          children = []
+          if node.left
+            children.push node.left
+            delete node.left
+          if node.right
+            children.push node.right
+            delete node.right
+          node.children = children
+          _.forEach children, process
 
-      svg = null
+        process root
+        console.log root
 
-      collapse = (d)->
-        if d.children
-          d._children = d.children
-          d._children.forEach(collapse)
-          d.children = null
+        getSize = (d) ->
+          bbox = @getBBox()
+          cbbox = @parentNode.getBBox()
+          scale = Math.min(cbbox.width/(bbox.width + 2), cbbox.height/(bbox.height + 1))
+          d.scale = scale
 
-      click = (d)->
-        if d.children
-          d._children = d.children
-          d.children = null
-        else
-          d.children = d._children;
-          d._children = null;
-        update(d)
+        margin = {
+          top: 20,
+          right: 120,
+          bottom: 20,
+          left: 120
+        }
+        width = 960 - margin.right - margin.left
+        height = 800 - margin.top - margin.bottom
 
-      redraw = ()->
-        #console.log("here", d3.event.translate, d3.event.scale);
-        svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
+        i = 0
+        duration = 750
+        rectW = 100
+        rectH = 50
+        nodeHSep = 10
+        nodeVSep = 10
 
-      zm = d3.behavior.zoom().scaleExtent([1,3]).on("zoom", redraw)
-      svg = d3.select("svg").attr("width", 1000).attr("height", 1000)
-      .call(zm).append("g")
-      .attr("transform", "translate(" + 350 + "," + 20 + ")");
+        tree = d3.layout.tree().nodeSize([rectW + nodeHSep, rectH + nodeVSep])
+#        .children (d)->
+#          if typeof d.children is 'undefined'
+#            children = []
+#            if d.left?
+#              children.push d.left
+#            if d.right?
+#              children.push d.right
+#            return children
+#          else
+#            return d.children
 
-      # necessary so that zoom knows where to zoom and unzoom from
-      zm.translate([350, 20]);
+        diagonal = d3.svg.diagonal()
+        .projection (d)->
+          return [d.x + rectW / 2, d.y + rectH / 2]
 
-      d3.select("body").style("height", "800px")
+        svg = null
 
-      update = (source)->
+        click = (d)->
+          if d.children
+            d._children = d.children
+            d.children = null
+          else
+            d.children = d._children;
+            d._children = null;
+          update(d)
 
-        # Compute the new tree layout.
-        nodes = tree.nodes(root).reverse()
-        console.log 'nodes', nodes
-        links = tree.links(nodes)
+        redraw = ()->
+          #console.log("here", d3.event.translate, d3.event.scale);
+          svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
 
-        # Normalize for fixed-depth.
-        nodes.forEach (d)->
-          d.y = d.depth * 180
+        zm = d3.behavior.zoom().scaleExtent([1,3]).on("zoom", redraw)
+        svg = d3.select("svg").attr("width", 1000).attr("height", 1000)
+        .call(zm).append("g")
+        .attr("transform", "translate(" + 350 + "," + 20 + ")");
 
-        # Update the nodes…
-        node = svg.selectAll("g.node")
-        .data nodes, (d)->
-    #    1+1
-    #    1+1
-    #    1+1
-    #    1+1
-    #    d.id = if d.id then d.id else ++i
-    #    return d.id
-          return d.id or (d.id = ++i)
+        # necessary so that zoom knows where to zoom and unzoom from
+        zm.translate([350, 20]);
 
-        # Enter any new nodes at the parent's previous position.
-        nodeEnter = node.enter().append("g")
-        .attr("class", "node")
-        .attr "transform", (d)->
-          return "translate(" + source.x0 + "," + source.y0 + ")"
-        .on("click", click)
+        d3.select("body").style("height", "800px")
 
-        nodeEnter.append("rect")
-        .attr("width", rectW)
-        .attr("height", rectH)
-        .attr("stroke", "black")
-        .attr("stroke-width", 1)
-        .style "fill", (d)->
-          return if d._children then "lightsteelblue" else "#fff"
+        update = (source)->
 
-        nodeEnter.append("text")
-        .attr("x", rectW / 2)
-        .attr("y", rectH / 2)
-        .attr("dy", ".35em")
-        .attr("text-anchor", "middle")
-        .text (d)->
-          return d.name
+          # Compute the new tree layout.
+          nodes = tree.nodes(root).reverse()
+          console.log 'nodes', nodes
+          links = tree.links(nodes)
 
-        # Transition nodes to their new position.
-        nodeUpdate = node.transition()
-        .duration(duration)
-        .attr "transform", (d)->
-          return "translate(" + d.x + "," + d.y + ")"
+          # Normalize for fixed-depth.
+          nodes.forEach (d)->
+            d.y = d.depth * 180
 
-        nodeUpdate.select("rect")
-        .attr("width", rectW)
-        .attr("height", rectH)
-        .attr("stroke", "black")
-        .attr("stroke-width", 1)
-        .style "fill", (d)->
-          return if d._children then "lightsteelblue" else "#fff"
+          # Update the nodes…
+          node = svg.selectAll("g.node")
+          .data nodes, (d)->
+      #    1+1
+      #    1+1
+      #    1+1
+      #    1+1
+      #    d.id = if d.id then d.id else ++i
+      #    return d.id
+            return d.id or (d.id = ++i)
 
-        nodeUpdate.select("text")
-        .style("fill-opacity", 1)
+          # Enter any new nodes at the parent's previous position.
+          nodeEnter = node.enter().append("g")
+          .attr("class", "node")
+          .attr "transform", (d)->
+            return "translate(" + source.x0 + "," + source.y0 + ")"
+          .on("click", click)
 
-        # Transition exiting nodes to the parent's new position.
-        nodeExit = node.exit().transition()
-        .duration(duration)
-        .attr "transform", (d)->
-          return "translate(" + source.x + "," + source.y + ")"
-        .remove()
+          updateRect = (rect)->
+            rect
+            .attr("width", rectW)
+            .attr("height", rectH)
+            .attr "stroke", (d)->
+              return "hsl(#{(1 - d.item.impurity)*260 + 100}, 75%, 10%)"
+            .attr("stroke-width", 1)
+            .style "fill", (d)->
+              return "hsl(#{(1 - d.item.impurity)*260 + 100}, 75%, 75%)"
+            return rect
 
-        nodeExit.select("rect")
-        .attr("width", rectW)
-        .attr("height", rectH)
-        #.attr("width", bbox.getBBox().width)""
-        #.attr("height", bbox.getBBox().height)
-        .attr("stroke", "black")
-        .attr("stroke-width", 1)
+          updateRect nodeEnter.append("rect")
 
-        nodeExit.select("text")
+          nodeEnter.append("text")
+          .attr("x", rectW / 2)
+          .attr("y", rectH / 2)
+#          .attr("dy", ".35em")
+          .attr("text-anchor", "middle")
+          .text (d)->
+            return d.item.rule
+          .style("font-size", "1px")
+          .each(getSize)
+          .style "font-size", (d) ->
+            return d.scale + "px"
 
-        # Update the links…
-        link = svg.selectAll("path.link")
-        .data links, (d)->
-          return d.target.id
+          # Transition nodes to their new position.
+          nodeUpdate = node.transition()
+          .duration(duration)
+          .attr "transform", (d)->
+            return "translate(" + d.x + "," + d.y + ")"
 
-        # Enter any new links at the parent's previous position.
-        link.enter().insert("path", "g")
-        .attr("class", "link")
-        .attr("x", rectW / 2)
-        .attr("y", rectH / 2)
-        .attr "d", (d) ->
-          o = {
-            x: source.x0
-            y: source.y0
-          }
-          return diagonal({
-            source: o,
-            target: o
-          })
+          updateRect nodeUpdate.select("rect")
 
-        # Transition links to their new position.
-        link.transition()
-        .duration(duration)
-        .attr("d", diagonal)
+          nodeUpdate.select("text")
+          .style("fill-opacity", 1)
 
-        # Transition exiting nodes to the parent's new position.
-        link.exit().transition()
-        .duration(duration)
-        .attr "d", (d)->
-          o = {
-            x: source.x,
-            y: source.y
-          }
-          return diagonal({
-            source: o,
-            target: o
-          })
-        .remove()
+          # Transition exiting nodes to the parent's new position.
+          nodeExit = node.exit().transition()
+          .duration(duration)
+          .attr "transform", (d)->
+            return "translate(" + source.x + "," + source.y + ")"
+          .remove()
 
-        # Stash the old positions for transition.
-        nodes.forEach (d)->
-          d.x0 = d.x
-          d.y0 = d.y
-          return
+          nodeExit.select("rect")
+          .attr("width", rectW)
+          .attr("height", rectH)
+          #.attr("width", bbox.getBBox().width)""
+          #.attr("height", bbox.getBBox().height)
+          .attr("stroke", "black")
+          .attr("stroke-width", 1)
 
-      root.x0 = 0
-      root.y0 = height / 2
-      root.children.forEach(collapse)
-      update(root)
+          nodeExit.select("text")
+
+          # Update the links…
+          link = svg.selectAll("path.link")
+          .data links, (d)->
+            return d.target.id
+
+          # Enter any new links at the parent's previous position.
+          link.enter().insert("path", "g")
+          .attr("class", "link")
+          .attr("x", rectW / 2)
+          .attr("y", rectH / 2)
+          .attr "d", (d) ->
+            o = {
+              x: source.x0
+              y: source.y0
+            }
+            return diagonal({
+              source: o,
+              target: o
+            })
+
+          # Transition links to their new position.
+          link.transition()
+          .duration(duration)
+          .attr("d", diagonal)
+
+          # Transition exiting nodes to the parent's new position.
+          link.exit().transition()
+          .duration(duration)
+          .attr "d", (d)->
+            o = {
+              x: source.x,
+              y: source.y
+            }
+            return diagonal({
+              source: o,
+              target: o
+            })
+          .remove()
+
+          # Stash the old positions for transition.
+          nodes.forEach (d)->
+            d.x0 = d.x
+            d.y0 = d.y
+            return
+
+        root.x0 = 0
+        root.y0 = height / 2
+        collapse = (d)->
+          if d.children
+            d._children = d.children
+            d._children.forEach(collapse)
+            d.children = null
+
+        _.forEach root.children, collapse
+        update(root)
 
 #      d3.selectAll("p")
 #      .data([4, 8, 15, 16, 23, 42])
