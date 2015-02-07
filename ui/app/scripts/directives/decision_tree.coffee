@@ -68,10 +68,10 @@ angular.module('app.directives')
           .attr("width", rectWidth)
           .attr("height", rectHeight)
           .attr "stroke", (datum)->
-            return "hsl(#{(1 - datum.item.impurity)*260 + 100}, 75%, 10%)"
+            return "hsl(#{datum.item.impurity*260 + 100}, 75%, 10%)"
           .attr("stroke-width", 1)
           .style "fill", (datum)->
-            return "hsl(#{(1 - datum.item.impurity)*260 + 100}, 75%, 75%)"
+            return "hsl(#{datum.item.impurity*260 + 100}, 75%, 75%)"
         return rect
 
 
@@ -119,9 +119,13 @@ angular.module('app.directives')
   ])
 
 .directive('cmlDecisionTree', [
+    '$timeout'
     'DecisionTreeUtils'
-    (DTUtils)->
+    ($timeout, DTUtils)->
       ###
+      adapted from
+        http://jsfiddle.net/nadersoliman/5ptb17bz/
+        http://jsfiddle.net/augburto/YMa2y/
       Directive to draw a decision tree using pure d3.
       Assumes a binary tree, where each node has left and right children or none
       Expects a root of the tree in the form
@@ -319,8 +323,8 @@ angular.module('app.directives')
                 .attr('id', idGradient)
                 .attr('x1', '0%')
                 .attr('x2', '0%')
-                .attr('y1', '100%')
-                .attr('y2', '0%')
+                .attr('y1', '0%')
+                .attr('y2', '100%')
                 .selectAll('stop')
                   .data ->
                     numberHues = 100
@@ -385,6 +389,10 @@ angular.module('app.directives')
 
           scope.$watch attributes.root, (newVal)->
             if newVal
-              drawTree newVal
+              # We have to wait for ng-show to kick in for proper calculation
+              # of boudning boxes and positition of text inside the nodes
+              $timeout ->
+                drawTree newVal
+              , 100
       }
   ])

@@ -72,6 +72,8 @@
     <a ng-click="setSection(['test', 'details'])">Test</a>
   </li>
   <li ng-class="{active: action[0] == 'about'}"><a ng-click="setSection(['about', 'details'])">About</a></li>
+  <li ng-class="{active: action[0] == 'visualization'}" ng-show="model.status == 'Trained'">
+    <a ng-click="setSection(['visualization', 'details'])">Visualization</a></li>
 </ul>
  
 <div class="tab-content" ng-show="model.loaded">
@@ -212,7 +214,6 @@
       <ng-include src="'partials/weights/weights_view_switcher.html'"></ng-include>
     </div>
     <hr />
-    <ng-include src="'partials/models/training_visualization.html'"></ng-include>
   </div>
 
   <!-- Tests tab -->
@@ -362,5 +363,11 @@
       </div>
     </div>
   </div>
+
+  <!-- Visualization  Tab -->
+  <div ng-show="action[0] == 'visualization' && model.status == 'Trained'">
+    <ng-include src="'partials/models/training_visualization.html'"></ng-include>
+  </div>
+
 </div>
 </div>

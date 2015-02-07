@@ -1,6 +1,7 @@
 <div ng-show="model.visualization_data.classifier_type">
-	Classifier used for training: {{ model.visualization_data.classifier_type }}
+  <alert class="alert alert-info">Use mosue wheel to zoom in/out. Drag to move the tree around. Hover on nodes to show tooltips. Click on nodes to exapnd.</alert>
+  <b>Classifier used for training:</b> {{ model.visualization_data.classifier_type }}
 </div>
 <div class="visualization-tree" ng-show="model.visualization_data.tree">
-	<todo-mv-tree tree-data="model.visualization_data.tree"></todo-mv-tree>
+  <cml-decision-tree root="model.visualization_data.tree" class="cml-decision-tree"></cml-decision-tree>
 </div>

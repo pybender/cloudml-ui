@@ -18,7 +18,7 @@ angular.module('app.models.controllers', ['app.config', ])
     training: [
       'error','weights_synchronized','memory_usage','segments', 'trained_by',
       'trained_on','training_time','datasets', 'train_records_count',
-      'trainer_size', 'visualization_data'
+      'trainer_size'
     ].join(',')
     about: [
       'created_on','target_variable','example_id','example_label',
@@ -27,6 +27,9 @@ angular.module('app.models.controllers', ['app.config', ])
     ].join(',')
     main: MODEL_FIELDS
     grid_search: 'classifier_grid_params'
+    visualization: [
+      'visualization_data'
+    ]
 ])
 
 .controller('TagCtrl', [
