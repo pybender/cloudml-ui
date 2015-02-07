@@ -14,7 +14,32 @@ angular.module('app.directives')
         ###
         return Math.min(parentBBox.width/(datumBBox.width + hMargin), parentBBox.height/(datumBBox.height + vMargin))
 
-      @click: (datum, updateFn)->
+      @getTextTransform: (node, rectW, rectH, fontSize)->
+        ###
+        Gets a transform string for <text> node containing multiple tspan such
+        that the text centered and doesn't cross the bounding box of the rect
+        ###
+        bbox = node.getBBox()
+        parentBBox = node.parentNode.getBBox()
+        dx = fontSize/2
+        dy = fontSize/2 - (bbox.y - parentBBox.y)
+
+        translate = ''
+        scale = ''
+        if rectW - bbox.width >= fontSize and rectH - bbox.height >= fontSize
+          dx = (rectW - bbox.width)/2
+          dy = (rectH - bbox.height)/2 - (bbox.y - parentBBox.y)
+          translate = "translate(#{dx}, #{dy})"
+        else
+          min = Math.min(rectW/(bbox.width + fontSize), rectH/(bbox.height + fontSize))
+          scale = "scale(#{min}, #{min})"
+          dx = (rectW - bbox.width*min)/2
+          dy = (rectH - bbox.height*min)/2 - (bbox.y*min - parentBBox.y)
+          translate = "translate(#{dx}, #{dy})"
+        return "#{translate} #{scale}"
+
+
+      @click: (node, datum, updateFn)->
         ###
         On clicking a datum it will collapse or expands children based on initial
         state by swapping children with _children and resetting _children or
@@ -81,7 +106,7 @@ angular.module('app.directives')
         newNode.text = []
         if node.item.rule
           newNode.text.push "#{node.item.rule}"
-        if node.item.impurity
+        if typeof node.item.impurity isnt undefined
           newNode.text.push "Impurity: #{node.item.impurity}"
         if node.item.samples
           newNode.text.push "Samples: #{node.item.samples}"
@@ -116,11 +141,14 @@ angular.module('app.directives')
           nodes = null
           links = null
           root = null
+          treeNode = null
+          svg = null
 
           i = 0
           duration = 750
           rectW = 100
           rectH = 50
+          fontSize = 10
           nodeHSep = 10
           nodeVSep = 10
 #          margin =
@@ -132,10 +160,7 @@ angular.module('app.directives')
 #          height = 800 - margin.top - margin.bottom
 
           redraw = ->
-            svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
-
-          setScale = (datum)->
-            datum.scale = DTUtils.getScale @getBBox(), @parentNode.getBBox(), 2, 1
+            treeNode.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
 
           tree = d3.layout.tree()
             .nodeSize([rectW + nodeHSep, rectH + nodeVSep])
@@ -148,9 +173,9 @@ angular.module('app.directives')
           .scaleExtent([1,3]).on("zoom", redraw)
 
           svg = d3.select(element[0]).append('svg')
-#            .attr('width', width)
-#            .attr('height', height)
-            .call(zm).append('g')
+            .call(zm)
+            .attr('transform', 'translate(350,20)')
+          treeNode = svg.append('g')
             .attr('transform', 'translate(350,20)')
 
           # necessary so that zoom knows where to zoom and unzoom from
@@ -165,68 +190,57 @@ angular.module('app.directives')
               datum.y = datum.depth * 180
 
             # Update the nodes
-            node = svg.selectAll('g.node')
+            node = treeNode.selectAll('g.node')
               .data nodes, (d)->
                 return d.id or (d.id = ++i)
 
             # Enter any new nodes at the parent's previous position.
             nodeEnter = node.enter().append('g')
-              .attr('class', 'node')
-              .attr 'transform', (datum)->
+            .attr('class', 'node')
+            .attr 'transform', (datum)->
                 return "translate(#{source.x0},#{source.y0})"
-              .on 'click', (datum)->
-                DTUtils.click(datum, updateTree)
-            
-            rect = nodeEnter.append('rect')
-            DTUtils.updateRect(rect, rectW, rectH)
+            .on 'click', (datum)->
+              DTUtils.click(d3.select(@), datum, updateTree)
+            .style 'cursor', (datum)->
+              if datum.children?.length > 0 or datum._children?.length > 0
+                return 'pointer'
+              else
+                return 'default'
+#            .on 'mouseenter', (datum)->
+#              clientBBox = @getBoundingClientRect()
+#              toolTip = ''
+#              for t, i in datum.text
+#                toolTip = "#{toolTip}<p #{if i is 0 then "class='bold'" else ""}>#{t}</p>"
+#              nv.tooltip.show([clientBBox.right, clientBBox.top], toolTip)
+#            .on 'mouseleave', (datum)->
+#              nv.tooltip.cleanup()
 
-            fontSize = 10
+            nodeEnter.append('title')
+            .text (datum)->
+              return datum.text.join(', ')
+
+            nodeEnter.append('rect')
+              .each ->
+                DTUtils.updateRect(d3.select(@), rectW, rectH)
+
+            # creating tspan children of the text node, fixing their fontsize
+            # we are going to scale later
             textNode = nodeEnter.append('text')
             textNode
-            .selectAll('tspan')
-              .data (datum)->
-                return datum.text
-              .enter().append('tspan')
-              .attr 'font-size', "#{fontSize}px"
-              .text (d)->
-                return d
-              .attr 'y', (d, idx)->
-                return (idx + 1)*(fontSize + 2)
-              .attr 'x', 0
+              .selectAll('tspan')
+                .data (datum)->
+                  return datum.text
+                .enter().append('tspan')
+                .attr 'font-size', "#{fontSize}px"
+                .text (d)->
+                  return d
+                .attr 'y', (d, idx)->
+                  return (idx + 1)*(fontSize + 2)
+                .attr 'x', 0
 
             textNode
-            .each (datum)->
-              bbox = @getBBox()
-              parent = @parentNode.getBBox()
-
-              dx = fontSize/2
-              dy = fontSize/2 - (bbox.y - parent.y)
-
-              translate = ''
-              scale = ''
-              if rectW - bbox.width >= fontSize and rectH - bbox.height >= fontSize
-                dx = (rectW - bbox.width)/2
-                dy = (rectH - bbox.height)/2 - (bbox.y - parent.y)
-                translate = "translate(#{dx}, #{dy})"
-              else
-                min = Math.min(rectW/(bbox.width + fontSize), rectH/(bbox.height + fontSize))
-                scale = "scale(#{min}, #{min})"
-                dx = (rectW - bbox.width*min)/2
-                dy = (rectH - bbox.height*min)/2 - (bbox.y*min - parent.y)
-                translate = "translate(#{dx}, #{dy})"
-              datum.transform = "#{translate} #{scale}"
-
-            .attr 'transform', (datum)->
-              return datum.transform
-
-#              .style('fill-opacity', 1)
-#              .attr('x', rectW / 2)
-#              .attr('y', rectH / 2)
-#              .attr('text-anchor', 'middle')
-#              .style('font-size', '1px')
-#              .each(setScale)
-#              .style 'font-size', (datum) ->
-#                return "#{datum.scale}px"
+              .attr 'transform', (datum)->
+                return DTUtils.getTextTransform(@, rectW, rectH, fontSize)
 
             # Transition nodes to their new position.
             nodeUpdate = node.transition()
@@ -234,18 +248,9 @@ angular.module('app.directives')
               . attr 'transform', (datum)->
                   return "translate(#{datum.x},#{datum.y})"
               
-            rect = nodeUpdate.select('rect')
-            DTUtils.updateRect(rect, rectW, rectH)
-
-#            nodeUpdate.select('text')
-#              .style('fill-opacity', 1)
-#              .attr('x', rectW / 2)
-#              .attr('y', rectH / 2)
-#              .attr('text-anchor', 'middle')
-#              .style('font-size', '1px')
-#              .each(setScale)
-#              .style 'font-size', (datum) ->
-#                return "#{datum.scale}px"
+            nodeUpdate.select('rect')
+              .each ->
+                DTUtils.updateRect(d3.select(@), rectW, rectH)
 
             # Transition exiting nodes to the parent's new position.
             nodeExit = node.exit().transition()
@@ -263,7 +268,7 @@ angular.module('app.directives')
             nodeExit.select('text')
             
             # Update the links
-            link = svg.selectAll('path.link')
+            link = treeNode.selectAll('path.link')
               .data links, (datum)->
                 return datum.target.id
 
@@ -298,6 +303,75 @@ angular.module('app.directives')
               datum.x0 = datum.x
               datum.y0 = datum.y
               return
+              
+          drawLegend = ->
+            idGradient = 'theGradient'
+            
+            gNode = svg.append('g')
+              .attr('x', 0)
+              .attr('y', 0)
+              .attr('width', 60)
+              .attr('height', 200)
+              .attr('transform', 'translate(0, 20)')
+
+            gNode.append('defs')
+              .append('linearGradient')
+                .attr('id', idGradient)
+                .attr('x1', '0%')
+                .attr('x2', '0%')
+                .attr('y1', '100%')
+                .attr('y2', '0%')
+                .selectAll('stop')
+                  .data ->
+                    numberHues = 100
+                    hueStart = 100
+                    hueEnd = 360
+                    deltaPercent = 1/(numberHues-1)
+                    deltaHue = (hueEnd - hueStart)/(numberHues - 1)
+
+                    theData = []
+                    for i in [0..numberHues]
+                      theHue = hueStart + deltaHue*i
+                      # the second parameter, set to 1 here, is the saturation
+                      # the third parameter is "lightness"
+                      rgbString = d3.hsl(theHue,0.75,0.75).toString()
+                      p = 0 + deltaPercent*i
+                      #console.log("i, values: " + i + ", " + rgbString + ", " + opacity + ", " + p);
+                      theData.push({"rgb":rgbString, "opacity": 1, "percent": p})
+
+                    return theData
+                  .enter().append('stop')
+                    .attr 'offset', (d)->
+                      return d.percent
+                    .attr 'stop-color',(d)->
+                      return d.rgb
+
+            gNode.append('rect')
+              .attr('x', 30)
+              .attr('y', 0)
+              .attr('width', 20)
+              .attr('height', 200)
+              .attr('fill','url(#' + idGradient + ')')
+
+            gNode.append('text')
+              .attr('x', 10)
+              .attr('y', 10)
+              .style('font-size', '10px')
+              .text('0%')
+
+            gNode.append('text')
+              .attr('x', 0)
+              .attr('y', 200)
+              .style('font-size', '10px')
+              .text('100%')
+
+            gNode.append('text')
+            .attr('x', 70)
+            .attr('y', 150)
+            .style('font-size', '20px')
+            .text('impurity')
+            .attr('transform', 'rotate(-90, 70, 150)')
+
 
           drawTree = (modelRoot)->
             # Compute the new tree layout.
@@ -307,6 +381,7 @@ angular.module('app.directives')
             _.forEach root.children, DTUtils.collapse
 
             updateTree(root)
+            drawLegend()
 
           scope.$watch attributes.root, (newVal)->
             if newVal
