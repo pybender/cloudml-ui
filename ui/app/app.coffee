@@ -379,6 +379,30 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
       $rootScope.resetError()
   )
 
+  $rootScope.getSelect2Params = (opts) ->
+    opts = opts || {}
+    return {
+      multiple: opts.multiple || false
+      data: opts.choices || []
+      allowClear: true
+      width: 220
+
+      initSelection: (element, callback) ->
+        callback(element.val())
+
+      formatResult: (state) ->
+        return state
+
+      formatSelection: (state) ->
+        return state
+
+      id: (item) ->
+        item
+
+      createSearchChoice: (term, data) ->
+        return term
+    }
+
   $rootScope.setError = (opts, message=null) ->
     if !message?
         message = 'processing request'

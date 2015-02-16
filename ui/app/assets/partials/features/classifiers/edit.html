@@ -63,7 +63,10 @@
                 <input ng-show="item.type == 'integer'" ng-model="model.params[item.name]" type='text' ng-pattern='/^\d+$/' ng-name="item.name" />
               </div>
               <!-- choices param - render select -->
-              <select ng-show="item.choices" ng-model="model.params[item.name]" ng-options="choice for choice in item.choices" ng-name="item.name"></select>
+              <div ng-show="item.choices">
+                <input ng-show="item.type == 'int_float_string_none'" ui-select2="getSelect2Params({choices: item.choices})" ng-name="item.name" ng-model="model.params[item.name]" data-placeholder="integer, float or string value" />
+                <select data-placeholder="pick an item" ng-show="item.type != 'int_float_string_none'" ui-select2="{allowClear: true}" ng-name="item.name" ng-model="model.params[item.name]" ng-options="c for c in item.choices" />
+              </div>
               <span ng-show="item.required" class="help-inline">*</span>
               <span class="help-block" ng-show="Form[item.name].$invalid">invalid</span>
             </div>
