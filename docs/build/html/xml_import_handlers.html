@@ -61,6 +61,7 @@
 <li><a class="reference internal" href="#pig">Pig</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#pig-query">Pig query</a></li>
 <li><a class="reference internal" href="#import">Import</a><ul>
 <li><a class="reference internal" href="#queries">Queries</a></li>
 <li><a class="reference internal" href="#fields">Fields</a></li>
@@ -327,6 +328,14 @@ STORE C INTO '$output' USING JsonStorage();</pre>
 </div>
 </div>
 </div>
+<div class="section" id="pig-query">
+<h2>Pig query<a class="headerlink" href="#pig-query" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">target</span></tt> (<strong>required</strong>) - name of target dataset wich will be stored.</li>
+<li><tt class="docutils literal"><span class="pre">autoload_sqoop_dataset</span></tt> (optional) - when it&#8217;s true, sqoop dataset will be auto loaded in the pig script (without defining loading statement in script). Require to define <cite>sqoop_dataset_name</cite> attr.</li>
+<li><tt class="docutils literal"><span class="pre">sqoop_dataset_name</span></tt> (optional) - variable name that would be used in the pig script for sqoop results, when <tt class="docutils literal"><span class="pre">autoload_sqoop_dataset</span></tt> setted.</li>
+</ul>
+</div>
 <div class="section" id="import">
 <span id="id4"></span><h2>Import<a class="headerlink" href="#import" title="Permalink to this headline">¶</a></h2>
 <p>After defining the datasources, the import handler need to define how to
@@ -347,7 +356,16 @@ of the element are the following:</p>
 <li><tt class="docutils literal"><span class="pre">name</span></tt> (<strong>required</strong>) - a unique name to identify the entity</li>
 <li><tt class="docutils literal"><span class="pre">datasource</span></tt> (<strong>required</strong>) - the datasource to use for importing data</li>
 <li><tt class="docutils literal"><span class="pre">query</span></tt> - a string that provides instructions on how to query a datasource (i.e. a SQL query or a path template). Queries can be also defined as child elements (to be discussed later).</li>
+<li><tt class="docutils literal"><span class="pre">autoload_fields</span></tt> (boolean) - when setted we could not define fields. They would be loaded from the pig results.</li>
 </ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last"><tt class="docutils literal"><span class="pre">autoload_fields</span></tt> works only with <tt class="docutils literal"><span class="pre">pig</span></tt> datasource for now.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">For overriding automatically defined fields (when <tt class="docutils literal"><span class="pre">autoload_fields</span></tt> setted), you could simply add them to the entity.</p>
+</div>
 <p>Examples:</p>
 <div class="highlight-python"><pre>&lt;!-- An entity that uses a DB connection --&gt;
 &lt;entity name="employer" datasource="mysqlConn" query="SELECT * FROM table"&gt;
@@ -416,7 +434,7 @@ the following attributes:</p>
 <li><tt class="docutils literal"><span class="pre">join</span></tt> - concatenates values using the defined separator. Used together with <tt class="docutils literal"><span class="pre">jsonpath</span></tt> only.</li>
 <li><tt class="docutils literal"><span class="pre">delimiter</span></tt> - concatenates values using the defined separator. Used together with <tt class="docutils literal"><span class="pre">jsonpath</span></tt> only.</li>
 <li><tt class="docutils literal"><span class="pre">template</span></tt> - used to define a template for strings. May use variables.</li>
-<li><tt class="docutils literal"><span class="pre">script</span></tt> - call the python script defined in this element and assign the result to this field. May use any of the built-in functions or any one defined in a <a href="#id6"><span class="problematic" id="id7">`Script &lt;&gt;`_</span></a> element. Variables can also be used in script elements. Also could be defined as inner &lt;script&gt; tag.</li>
+<li><tt class="docutils literal"><span class="pre">script</span></tt> - call the python script defined in this element and assign the result to this field. May use any of the built-in functions or any one defined in a <a href="#id7"><span class="problematic" id="id8">`Script &lt;&gt;`_</span></a> element. Variables can also be used in script elements. Also could be defined as inner &lt;script&gt; tag.</li>
 <li><tt class="docutils literal"><span class="pre">transform</span></tt> - transforms this field to a datasource. For example, it can be used to parse JSON or CSV data stored in a DB column. Its values can be either <tt class="docutils literal"><span class="pre">json</span></tt> or <tt class="docutils literal"><span class="pre">csv</span></tt>.</li>
 <li><tt class="docutils literal"><span class="pre">headers</span></tt> - used only if <tt class="docutils literal"><span class="pre">transform=&quot;csv&quot;</span></tt>. Defines the header names for each item in the CSV field.</li>
 <li><tt class="docutils literal"><span class="pre">required</span></tt> - whether this field is required to have a value or not. If not defined, default is false.</li>
@@ -507,7 +525,7 @@ the following attributes:</p>
 </div>
 </div>
 <div class="section" id="sqoop">
-<h3>Sqoop<a class="headerlink" href="#sqoop" title="Permalink to this headline">¶</a></h3>
+<span id="id5"></span><h3>Sqoop<a class="headerlink" href="#sqoop" title="Permalink to this headline">¶</a></h3>
 <p>Tag sqoop instructs import handler to run a Sqoop import. It should be
 used only on entities that have a pig datasource. A sqoop tag may
 contain the following attributes:</p>
@@ -545,6 +563,54 @@ import. This feature is particularly useful if you want to run:</p>
     &lt;!-- Fields --&gt;
     &lt;field ... /&gt;
 &lt;/entity&gt;</pre>
+</div>
+<p>For loading sqoop results in the pig script we should define:</p>
+<div class="highlight-python"><pre>&lt;entity name="myEntity" datasource="pigConnection"&gt;
+    &lt;sqoop target="openings_dataset" table="temp_table" datasource="sqoop_db_datasource" direct="true" mappers="1"/&gt;
+    &lt;query autoload_sqoop_dataset="true" sqoop_dataset_name="openings_dataset" target="result"&gt;
+        &lt;![CDATA[
+        register 's3://odesk-match-staging/pig/lib/elephant-bird-core-4.4.jar';
+        register 's3://odesk-match-staging/pig/lib/elephant-bird-pig-4.4.jar';
+        register 's3://odesk-match-staging/pig/lib/elephant-bird-hadoop-compat-4.4.jar';
+        register 's3://odesk-match-staging/pig/lib/piggybank-0.12.0.jar';
+
+        openings_dataset = LOAD '$openings_dataset*' USING org.apache.pig.piggybank.storage.CSVExcelStorage(',', 'YES_MULTILINE') AS (
+            bidid:long
+            , jobid:long
+            , seller_userid:long
+            , is_hired:chararray
+            , seller_country:chararray
+        );
+
+        result = FOREACH openings_dataset GENERATE
+            *
+            , funcs.join((job_country, seller_country), ',') as buyer_seller_countries
+        ;
+        ]]&gt;
+    &lt;query/&gt;
+&lt;entity/&gt;</pre>
+</div>
+<p>Also we can auto load sqoop results, for example:</p>
+<div class="highlight-python"><pre>&lt;entity name="myEntity" datasource="pigConnection"&gt;
+    &lt;sqoop target="openings_dataset" table="temp_table" datasource="sqoop_db_datasource" direct="true" mappers="1"/&gt;
+    &lt;query autoload_sqoop_dataset="true" sqoop_dataset_name="openings_dataset" target="result"&gt;
+        &lt;![CDATA[
+        result = FOREACH openings_dataset GENERATE
+            *
+            , funcs.join((job_country, seller_country), ',') as buyer_seller_countries
+        ;
+        ]]&gt;
+    &lt;query/&gt;
+&lt;entity/&gt;</pre>
+</div>
+<p>When <cite>autoload_sqoop_dataset</cite> setted CloudML will automatically add sqoop results definition on the top of the pig script. For example:</p>
+<div class="highlight-python"><pre>register 's3://odesk-match-staging/pig/lib/elephant-bird-core-4.4.jar';
+register 's3://odesk-match-staging/pig/lib/elephant-bird-pig-4.4.jar';
+register 's3://odesk-match-staging/pig/lib/elephant-bird-hadoop-compat-4.4.jar';
+register 's3://odesk-match-staging/pig/lib/piggybank-0.12.0.jar';
+
+
+result = LOAD '$dataset*' USING org.apache.pig.piggybank.storage.CSVExcelStorage(',', 'YES_MULTILINE') AS ( some_field:field_type );</pre>
 </div>
 </div>
 <div class="section" id="nested-entities">
@@ -607,7 +673,7 @@ or JSON data. To do this, two things need to be done:</p>
 </div>
 </div>
 <div class="section" id="predict">
-<span id="id5"></span><h2>Predict<a class="headerlink" href="#predict" title="Permalink to this headline">¶</a></h2>
+<span id="id6"></span><h2>Predict<a class="headerlink" href="#predict" title="Permalink to this headline">¶</a></h2>
 <p>The last part of the data import handler describes which models to
 invoke and how to formulate the response. While the old import handler
 was used with a single model, the new version should allow to use

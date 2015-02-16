@@ -61,6 +61,27 @@ class ModelData(DataSet):
         labels = ["1", "2", "3"]
 
 
+    class model_04:
+        features_set = FeatureSetData.bestmatch
+        test_import_handler = XmlImportHandlerData.xml_import_handler_01
+        train_import_handler = XmlImportHandlerData.xml_import_handler_01
+        status = "New"
+        created_on = "2013-04-19 14:37:23.145000"
+        updated_on = "2013-04-19 14:37:23.145000"
+        name = "Model with Xml IH"
+        comparable = False
+
+
+    class model_05:
+        test_import_handler = XmlImportHandlerData.xml_import_handler_01
+        train_import_handler = XmlImportHandlerData.xml_import_handler_01
+        status = "New"
+        created_on = "2013-04-19 14:37:23.145000"
+        updated_on = "2013-04-19 14:37:23.145000"
+        name = "Model with Xml IH Featuureless"
+        comparable = False
+
+
 class SegmentData(DataSet):
 
     class segment_01:

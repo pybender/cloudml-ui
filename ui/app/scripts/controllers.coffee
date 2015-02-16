@@ -78,6 +78,8 @@ angular.module('app.controllers', ['app.config', ])
       matchBrackets: true
       lineWrapping: true
       readOnly: readOnly
+      onLoad : (cm) ->
+        cm.setSize(width, height)
 ])
 
 .controller('ObjEditCtrl', [

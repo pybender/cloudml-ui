@@ -102,6 +102,22 @@ class ImportHandler(db.Model, ImportHandlerMixin):
                         feature['name'].replace('.', '->'))
         return test_handler_fields
 
+    def list_fields(self):
+        assert self.id > 0
+
+        from core.importhandler.importhandler import ExtractionPlan
+
+        data = json.dumps(self.data)
+        plan = ExtractionPlan(data, is_file=False)
+        fields = []
+        for query in plan.queries:
+            items = query['items']
+            for item in items:
+                features = item['target_features']
+                for feature in features:
+                    fields.append(feature['name'])
+        return fields
+
     def _get_ds_details_for_query(self, ds_name):
         """
         from a dataset name returns vendor and connection string

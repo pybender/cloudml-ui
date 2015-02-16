@@ -33,6 +33,10 @@
     <button ng-click="cloneModel(model)" class="btn btn-info">
       <i title="Clone your model." class="icon-tasks"></i> Clone
     </button>
+    <button class="btn btn-info" ng-click="import_ih_fields_to_features()"
+            ng-show="model.train_import_handler_type.toLowerCase() == 'xml' && model.featuresSet.features_count <= 0 && model.status.toLowerCase() == 'new'">
+      <i title="Add XML import handlers fields as mode features" class="icon-remove"></i> Add IH Fields as Features
+    </button>
     <button ng-click="delete_model(model)" class="btn btn-danger">
       <i title="Delete your model. Be careful - you could not recover it!" class="icon-remove"></i> Delete
     </button>

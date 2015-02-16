@@ -373,8 +373,9 @@ angular.module('app.models.controllers', ['app.config', ])
 
 .controller('ModelActionsCtrl', [
   '$scope'
+  '$route'
 
-  ($scope) ->
+  ($scope, $route) ->
     $scope.init = (opts) ->
       if not opts or not opts.model
         throw new Error "Please specify model"
@@ -464,7 +465,14 @@ angular.module('app.models.controllers', ['app.config', ])
           ), ((opts) ->
             $scope.setError(opts, 'loading import handler details')
           )
-])
+
+    $scope.import_ih_fields_to_features = ->
+      $scope.model.$add_ih_fields_as_features()
+      .then ->
+        $route.reload()
+      , (opts) ->
+        $scope.setError(opts, 'adding training import handler fields as features')
+  ])
 
 .controller('ModelUploadToServerCtrl', [
   '$scope'

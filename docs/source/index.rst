@@ -26,6 +26,7 @@ Contents:
    development
    api
    settings
+   whats_new
 
 
 .. seealso::

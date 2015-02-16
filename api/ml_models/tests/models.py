@@ -11,8 +11,6 @@ from api.features.models import FeatureSet, Feature
 from api.ml_models.tasks import transform_dataset_for_download
 from ..views import ModelResource
 from ..models import Model, Tag, db, Segment, Weight
-from ..fixtures import ModelData, TagData
-from api.import_handlers.fixtures import ImportHandlerData, DataSetData, XmlImportHandlerData
 from api.import_handlers.models import DataSet, ImportHandler, XmlImportHandler
 from api.instances.models import Instance
 from api.instances.fixtures import InstanceData
@@ -24,12 +22,17 @@ from api.async_tasks.models import AsyncTask
 from api.servers.fixtures import ServerData
 
 
+from ..fixtures import ModelData, TagData
+from api.import_handlers.fixtures import ImportHandlerData, DataSetData, \
+    XmlImportHandlerData, XmlEntityData, XmlFieldData
+
+
 class MlModelsTests(BaseDbTestCase):
     """
     Tests for api.ml_models.models.Model class.
     """
-    datasets = [ImportHandlerData, DataSetData,
-                ModelData, XmlImportHandlerData]
+    datasets = [ImportHandlerData, DataSetData, ModelData,
+                XmlImportHandlerData]
 
     def test_generic_relation_to_import_handler(self):
         model = Model(name="test1")
@@ -96,7 +99,8 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
     Model = Model
     datasets = [FeatureData, FeatureSetData, ImportHandlerData, DataSetData,
                 ModelData, InstanceData, TestResultData, TestExampleData,
-                ServerData, XmlImportHandlerData, TagData]
+                ServerData, XmlImportHandlerData, TagData, XmlEntityData,
+                XmlFieldData]
 
     def setUp(self):
         super(ModelsTests, self).setUp()
@@ -908,3 +912,45 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
                          'api.ml_models.tasks.transform_dataset_for_download')
         self.assertTrue(resp_obj.has_key('downloads'))
         self.assertEqual(resp_obj['downloads'][0]['dataset']['id'], dataset.id)
+
+    def test_put_add_features_from_xml_ih_action(self):
+        # bogus model
+        url = self._get_url(id=101010,
+                            action='dataset_download')
+        resp = self.client.get(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.NOT_FOUND)
+
+        # model is trained
+        model = Model.query.filter_by(name=ModelData.model_01.name).first()
+
+        url = self._get_url(id=model.id, action='import_features_from_xml_ih')
+        resp = self.client.put(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, 400)
+
+        # new model but trainer is not xml
+        model = Model.query.filter_by(name=ModelData.model_03.name).first()
+        url = self._get_url(id=model.id, action='import_features_from_xml_ih')
+        resp = self.client.put(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, 400)
+
+        # new model, trainer xml but feature count is not 0
+        model = Model.query.filter_by(name=ModelData.model_04.name).first()
+        url = self._get_url(id=model.id, action='import_features_from_xml_ih')
+        resp = self.client.put(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, 400)
+
+        # new model, trainer xml feature count is 0
+        xml_ih = XmlImportHandler.query.filter_by(
+            name=XmlImportHandlerData.xml_import_handler_01.name).first()
+        model = Model.query.filter_by(name=ModelData.model_05.name).first()
+        model.train_import_handler_id = xml_ih.id
+        model.save()
+
+        url = self._get_url(id=model.id, action='import_features_from_xml_ih')
+        resp = self.client.put(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, 200)
+        resp_obj = json.loads(resp.data)
+        self.assertEqual(resp_obj['model'], model.id)
+        self.assertEqual(len(resp_obj['features']), 1)
+        self.assertEqual(resp_obj['features'][0]['name'], 'opening_id')
+        self.assertEqual(resp_obj['features'][0]['type'], 'int')

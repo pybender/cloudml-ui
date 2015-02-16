@@ -677,6 +677,39 @@ describe 'models/controllers.coffee', ->
         ctrlName: 'ModelUploadToServerCtrl'
       expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 
+    it 'should call to import_ih_fields_to_features and reload on success',
+      inject (Model, $route)->
+        spyOn $route, 'reload'
+        $scope.model = new Model
+          id: 111
+          name: 'new model'
+
+        $httpBackend.expectPUT "#{$scope.model.BASE_API_URL}#{$scope.model.id}/action/import_features_from_xml_ih/"
+        .respond 200, ""
+
+        $scope.import_ih_fields_to_features()
+
+        $httpBackend.flush()
+
+        expect($route.reload).toHaveBeenCalled()
+
+    it 'should call to import_ih_fields_to_features and handle errors',
+      inject (Model, $route)->
+        spyOn $route, 'reload'
+        $scope.model = new Model
+          id: 111
+          name: 'new model'
+
+        $httpBackend.expectPUT "#{$scope.model.BASE_API_URL}#{$scope.model.id}/action/import_features_from_xml_ih/"
+        .respond 400, ""
+
+        $scope.import_ih_fields_to_features()
+
+        $httpBackend.flush()
+
+        expect($route.reload).not.toHaveBeenCalled()
+        expect($scope.setError).toHaveBeenCalledWith jasmine.any(Object), 'adding training import handler fields as features'
+
 
   describe 'ModelUploadToServerCtrl', ->
 

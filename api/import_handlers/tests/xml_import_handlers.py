@@ -82,6 +82,33 @@ class XmlImportHandlerModelTests(BaseDbTestCase):
     def test_get_fields(self):
         self.assertEqual(self.handler.get_fields(), ['opening_id'])
 
+    def test_list_fields(self):
+        fields = self.handler.list_fields()
+        self.assertEqual(1, len(fields))
+        self.assertEqual('opening_id', fields[0].name)
+        self.assertEqual('integer', fields[0].type)
+
+        # another handler
+        data = open('./conf/extract.xml', 'r').read()
+        handler = XmlImportHandler(name='xml ih')
+        handler.data = data
+        handler.save()
+        fields = handler.list_fields()
+        self.assertEqual(11, len(fields))
+        self.assertEqual(sorted([f.name for f in fields]),
+                         sorted([
+                             'application_id',
+                             'employer_info',
+                             'contractor_info',
+                             'employer.op_timezone',
+                             'employer.op_country_tz',
+                             'employer.op_tot_jobs_filled',
+                             'employer.country',
+                             'contractor.dev_is_looking',
+                             'contractor.dev_is_looking_week',
+                             'contractor.dev_active_interviews',
+                             'contractor.dev_availability']))
+
     def test_get_ds_details_for_query(self):
         vendor, conn = self.handler._get_ds_details_for_query('ds')
         self.assertEqual(vendor, 'postgres')
@@ -294,6 +321,42 @@ class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
             iter_mock.assert_called_with(['SELECT NOW() WHERE TRUE LIMIT 2'],
                                          "host='localhost' dbname='odw' "
                                          "user='postgres' password='postgres'")
+
+
+    def test_get_list_fields(self):
+        url = self._get_url(id=self.obj.id, action='list_fields')
+
+        resp = self.client.get(url, headers=HTTP_HEADERS)
+        resp_obj = json.loads(resp.data)
+        self.assertTrue(resp_obj.has_key('xml_fields'))
+        self.assertEqual(11, len(resp_obj['xml_fields']))
+
+    def test_put_upload_to_server_action(self):
+        url = self._get_url(id=self.obj.id, action='update_xml')
+
+        # forms validation error, no data
+        resp = self.client.put(url, data={}, headers=HTTP_HEADERS)
+        self.assertEqual(400, resp.status_code)
+
+        # forms validation error, bad xml data
+        resp = self.client.put(url, data={'data': 'bad xml'}, headers=HTTP_HEADERS)
+        self.assertEqual(400, resp.status_code)
+        self.assertIn('bad xml', resp.data)
+
+        handler = self.obj
+        self.assertEqual(4, XmlDataSource.query.filter_by(import_handler=handler).count())
+        self.assertEqual(2, XmlInputParameter.query.filter_by(import_handler=handler).count())
+        self.assertEqual(1, XmlScript.query.filter_by(import_handler=handler).count())
+
+        with open('conf/extract.xml', 'r') as fp:
+            resp = self.client.put(url, data={'data': fp.read()},
+                                        headers=HTTP_HEADERS)
+        resp_obj = json.loads(resp.data)
+        self.assertEqual(200, resp.status_code)
+
+        self.assertEqual(4, XmlDataSource.query.filter_by(import_handler=handler).count())
+        self.assertEqual(2, XmlInputParameter.query.filter_by(import_handler=handler).count())
+        self.assertEqual(1, XmlScript.query.filter_by(import_handler=handler).count())
 
 
 class IHLoadMixin(object):

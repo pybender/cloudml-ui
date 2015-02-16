@@ -69,6 +69,24 @@ exist. Please choose another one.' % value)
         return value
 
 
+class XmlImportHandlerUpdateXmlForm(BaseForm):
+    required_fields = ('data', )
+
+    data = CharField()
+
+    def clean_data(self, value, field):
+        if value is None:
+            return
+
+        value = value.encode('utf-8')
+        try:
+            from core.xmlimporthandler.importhandler import ExtractionPlan
+            ExtractionPlan(value, is_file=False)
+            return value
+        except Exception as exc:
+            raise ValidationError(exc)
+
+
 class XmlInputParameterForm(BaseForm):
     required_fields = ('name', 'type', 'import_handler_id')
     NO_REQUIRED_FOR_EDIT = True

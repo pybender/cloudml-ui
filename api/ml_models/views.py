@@ -1,10 +1,11 @@
 import os
 from api.async_tasks.models import AsyncTask
+from api.features.models import Feature, FeatureSet
 
 from api.logs.dynamodb.models import LogMessage
 from flask import Response, request
 from flask.ext.restful import reqparse
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 from sqlalchemy.orm import undefer, joinedload_all
 from werkzeug.datastructures import FileStorage
 
@@ -157,7 +158,8 @@ class ModelResource(BaseTrainedEntityResource):
     GET_ACTIONS = ('reload', 'by_importhandler', 'trainer_download_s3url',
                    'features_download', 'dataset_download')
     PUT_ACTIONS = ('train', 'tags', 'cancel_request_instance',
-                   'upload_to_server', 'dataset_download', 'grid_search')
+                   'upload_to_server', 'dataset_download', 'grid_search',
+                    'import_features_from_xml_ih')
     POST_ACTIONS = ('clone', )
     FILTER_PARAMS = (('status', str), ('comparable', str), ('tag', str),
                     ('created_by', str), ('updated_by_id', int),
@@ -330,6 +332,41 @@ class ModelResource(BaseTrainedEntityResource):
 
         return self._render({self.OBJECT_NAME: model.id,
                              'downloads': downloads})
+
+    def _put_import_features_from_xml_ih_action(self, **kwargs):
+        model = self._get_details_query(None, **kwargs)
+        error_response = odesk_error_response(
+            400, ERR_INVALID_DATA,
+            'Only new models with 0 features and Xml import handler as '
+            'trainer is allowed for this feature')
+
+        if model.status != Model.STATUS_NEW:
+            return error_response
+
+        if model.train_import_handler_type.lower() != 'xml':
+            return error_response
+
+        features_count = Feature.query.join(
+            FeatureSet, FeatureSet.id == Feature.feature_set_id).join(
+                Model, Model.features_set_id == FeatureSet.id).filter(
+                    Model.id == model.id).with_entities(
+                        func.count(Feature.id)).scalar()
+
+        if features_count > 0:
+            return error_response
+
+        fields = model.train_import_handler.list_fields()
+        features = []
+        for field in fields:
+            feature = Feature()
+            feature.name = field.name
+            feature.type = Feature.field_type_to_feature_type(field.type)
+            feature.feature_set_id = model.features_set_id
+            feature.save(commit=False)
+            features.append(feature)
+        db.session.commit()
+        return self._render({self.OBJECT_NAME: model.id,
+                             'features': [f.to_dict() for f in features]})
 
 api.add_resource(ModelResource, '/cloudml/models/')
 

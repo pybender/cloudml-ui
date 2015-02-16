@@ -148,6 +148,9 @@ angular.module('app.models.model', ['app.config'])
         url = "#{@BASE_API_URL}#{@id}/action/dataset_download/"
         @$make_request(url, {}, "PUT", {dataset: datasetId})
 
+      $add_ih_fields_as_features: (opts={}) ->
+        @$make_request("#{@BASE_API_URL}#{@id}/action/import_features_from_xml_ih/", {}, "PUT", {})
+
     return Model
 ])
 
