@@ -14,6 +14,7 @@ angular.module('app.testresults.controllers', ['app.config', ])
     $scope.FIELDS = 'name,created_on,status,parameters,accuracy,examples_count,\
 created_by,roc_auc'
     $scope.ACTION = 'loading tests'
+    $scope.filter_opts = {'sort_by': 'id', 'order': 'desc'}
 
     $scope.$on('loadTest', (event, opts) ->
       setTimeout(() ->
