@@ -665,21 +665,6 @@ angular.module('app.directives', [
   }
 ])
 
-.directive('mvTree', [ '$timeout', ($timeout) ->
-  return {
-    restrict: 'E',
-    scope: {
-      treeData: '='
-      width: '@width',
-      height: '@height'
-    },
-    link: (scope, element, attrs) ->
-      createSVG(scope, element, attrs.width, attrs.height)
-      $timeout ->
-        scope.$watch('treeData', updateMVTree)
-  }
-])
-
 
 .directive('ngDictInput', [ ->
   return {
@@ -770,11 +755,6 @@ updateChart = (chartDict, oldVal, scope) ->
   .call(chart)
 
   nv.utils.windowResize(chart.update)
-
-updateMVTree = (treeData, oldVal, scope) ->
-  if !treeData
-    return
-  # TODO: render decision tree
 
 
 zip = () ->

@@ -104,14 +104,16 @@ angular.module('app.directives')
           newNode.children.push(DecisionTreeUtils.process(node.right))
         #console.log 'got newNode', newNode
         newNode.text = []
-        if node.item.rule
+        if node.item.name
+          newNode.text.push "#{node.item.name}"
+        else if node.item.rule
           newNode.text.push "#{node.item.rule}"
         if typeof node.item.impurity isnt undefined
           newNode.text.push "Impurity: #{node.item.impurity}"
         if node.item.samples
           newNode.text.push "Samples: #{node.item.samples}"
-        if node.item.values
-          newNode.text.push "Values: [#{node.item.value.join(',')}]"
+        if node.item.value
+          newNode.text.push "Value: [#{node.item.value.join(',')}]"
         return newNode
 
 
