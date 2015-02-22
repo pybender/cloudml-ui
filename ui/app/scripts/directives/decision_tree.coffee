@@ -19,6 +19,7 @@ angular.module('app.directives')
         Gets a transform string for <text> node containing multiple tspan such
         that the text centered and doesn't cross the bounding box of the rect
         ###
+        return ""
         bbox = node.getBBox()
         parentBBox = node.parentNode.getBBox()
         dx = fontSize/2
@@ -68,10 +69,10 @@ angular.module('app.directives')
           .attr("width", rectWidth)
           .attr("height", rectHeight)
           .attr "stroke", (datum)->
-            return "hsl(#{datum.item.impurity*260 + 100}, 75%, 10%)"
+            return "hsl(#{datum.impurity*260 + 100}, 75%, 10%)"
           .attr("stroke-width", 1)
           .style "fill", (datum)->
-            return "hsl(#{datum.item.impurity*260 + 100}, 75%, 75%)"
+            return "hsl(#{datum.impurity*260 + 100}, 75%, 75%)"
         return rect
 
 
@@ -79,41 +80,27 @@ angular.module('app.directives')
         ###
         returns a new tree structure compatible with d3
         changes
-        item:
-          samples: 1000
-          id: "0"
-          rule: "opening->budget"
-          impurity: 0.5716
-          right: {right child node}
-          left: {left child node}
-        to
-        item:
-          samples: 1000
-          id: i
-          org_id: '0'
-          rule: "opening->budget"
-          impurity: 0.5716
-          children: [{left child node}, {right child node}]
         ###
-        #console.log 'got node', node
         newNode = _.omit(node, ['id'])
         newNode.children = []
-        if node.left
-          newNode.children.push(DecisionTreeUtils.process(node.left))
-        if node.right
-          newNode.children.push(DecisionTreeUtils.process(node.right))
-        #console.log 'got newNode', newNode
+        if node.children
+          for child in node.children
+            newNode.children.push(DecisionTreeUtils.process(child))
         newNode.text = []
-        if node.item.name
-          newNode.text.push "#{node.item.name}"
-        else if node.item.rule
-          newNode.text.push "#{node.item.rule}"
-        if typeof node.item.impurity isnt undefined
-          newNode.text.push "Impurity: #{node.item.impurity}"
-        if node.item.samples
-          newNode.text.push "Samples: #{node.item.samples}"
-        if node.item.value
-          newNode.text.push "Value: [#{node.item.value.join(',')}]"
+        if node.name
+          name = node.name
+          newNode.title = name
+          if node.name.length > 15
+            name = node.name.substring(0, 15) + "..."
+            newNode.title = node.name
+          newNode.text.push "#{name}"
+        if typeof node.impurity isnt undefined
+          newNode.text.push "Impurity: #{node.impurity}"
+        if node.samples
+          newNode.text.push "Samples: #{node.samples}"
+        if node.value
+          newNode.title = "Value: [#{node.value.join(',')}]"
+          newNode.text.push "Value: [#{node.value.join(',')}]"
         return newNode
 
 
@@ -151,19 +138,19 @@ angular.module('app.directives')
           svg = null
 
           i = 0
-          duration = 750
+          duration = 500
           rectW = 100
-          rectH = 50
-          fontSize = 10
-          nodeHSep = 10
-          nodeVSep = 10
-#          margin =
-#            top: 20
-#            right: 120
-#            bottom: 20
-#            left: 120
-#          width = 960 - margin.right - margin.left
-#          height = 800 - margin.top - margin.bottom
+          rectH = 60
+          fontSize = 12
+          nodeHSep = 5
+          nodeVSep = 5
+          # margin =
+          #   top: 20
+          #   right: 20
+          #   bottom: 20
+          #   left: 20
+          #width = 1560 - margin.right - margin.left
+          #height = 800 - margin.top - margin.bottom
 
           redraw = ->
             treeNode.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
@@ -176,16 +163,23 @@ angular.module('app.directives')
               return [d.x + rectW / 2, d.y + rectH / 2]
 
           zm = d3.behavior.zoom()
-          .scaleExtent([1,3]).on("zoom", redraw)
+          .scaleExtent([-3, 3]).on("zoom", redraw)
 
           svg = d3.select(element[0]).append('svg')
             .call(zm)
-            .attr('transform', 'translate(350,20)')
-          treeNode = svg.append('g')
-            .attr('transform', 'translate(350,20)')
 
-          # necessary so that zoom knows where to zoom and unzoom from
-          zm.translate([350, 20])
+          treeNode = svg.append('g')
+
+          resizeWindow = () ->
+            width = window.innerWidth - 200
+            if width < 500 then width = 500
+            svg.attr("width", width)
+            treeNode.attr('transform', 'translate('+ width / 2 +',20)')
+            # necessary so that zoom knows where to zoom and unzoom from
+            zm.translate([width / 2, 20])
+
+          window.onresize = resizeWindow
+          resizeWindow()
 
           updateTree = (source)->
             nodes = tree.nodes(root).reverse()
@@ -193,7 +187,7 @@ angular.module('app.directives')
 
             # Normalize for fixed-depth.
             _.forEach nodes, (datum)->
-              datum.y = datum.depth * 180
+              datum.y = datum.depth * 70
 
             # Update the nodes
             node = treeNode.selectAll('g.node')
@@ -223,7 +217,7 @@ angular.module('app.directives')
 
             nodeEnter.append('title')
             .text (datum)->
-              return datum.text.join(', ')
+              return datum.title
 
             nodeEnter.append('rect')
               .each ->
@@ -384,7 +378,7 @@ angular.module('app.directives')
             root = DTUtils.process(modelRoot)
             root.x0 = 0
             root.y0 = rectH / 2
-            _.forEach root.children, DTUtils.collapse
+            #_.forEach root.children, DTUtils.collapse
 
             updateTree(root)
             drawLegend()
@@ -398,3 +392,28 @@ angular.module('app.directives')
               , 100
       }
   ])
+
+.directive("cmlDecisionTextTree", [
+  'RecursionHelper'
+
+  (RecursionHelper) ->
+    return {
+          restrict: "E",
+          scope: {root: '='}
+          templateUrl:'partials/directives/decision_text_tree.html'
+          compile: (element) ->
+              # // Use the compile function from the RecursionHelper,
+              # // And return the linking function(s) which it returns
+              return RecursionHelper.compile(element)
+    }
+])
+
+.directive("swtDecisionTree", [
+
+  () ->
+    return {
+          restrict: "E",
+          scope: {root: '=', mode: '='}
+          templateUrl:'partials/directives/decision_switch_tree.html'
+    }
+])

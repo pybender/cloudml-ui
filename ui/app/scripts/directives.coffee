@@ -299,6 +299,7 @@ angular.module('app.directives', [
   }
 ])
 
+
 .directive("entitiesTree", [ ->
   return {
     scope: {

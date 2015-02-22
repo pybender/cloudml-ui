@@ -1,0 +1,26 @@
+<ul>
+	<li>
+		<div ng-show="root.node_type == 'branch'">
+			<h5>
+				<span ng-hide="root.id == '0'"><span ng-show="root.type == 'yes'" class="label label-success">{{ root.type }}</span><span ng-show="root.type == 'no'" class="label label-important">{{ root.type }}</span></span> {{ root.name }} <small>({{ root.samples }} samples)</small>
+				<span ng-hide="root.id =='0'">
+			</h5>
+			<small>
+				impurity: <span class="value" ng-bind="root.impurity" />
+			</small>
+		</div>
+		<div ng-show="root.node_type == 'leaf'">
+			<h5>
+				 <span ng-show="root.type == 'yes'" class="label label-success">{{ root.type }}</span><span ng-show="root.type == 'no'" class="label label-important">{{ root.type }}</span> <small>({{ root.samples }} samples)</small>
+			</h5>
+			<small>
+				impurity: <span class="value" ng-bind="root.impurity" />
+				<br/>
+				value: <span class="value" ng-bind="root.value" />
+			</small>
+		</div>
+		<div ng-repeat="node in root.children">
+		  <cml-decision-text-tree root="node"></cml-decision-text-tree>
+		</div>
+	</li>
+</ul>

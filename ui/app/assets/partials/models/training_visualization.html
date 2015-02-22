@@ -1,15 +1,20 @@
 <div ng-show="model.visualization_data.classifier_type">
   <b>Classifier used for training:</b> {{ model.visualization_data.classifier_type }}
 </div>
+
+<p class="switcher" ng-init="treeType = 'visual'" ng-show="model.visualization_data.tree || model.visualization_data.trees">
+	<b>Switch View: </b>
+	<a ng-class="{active: treeType == 'visual'}" ng-click="treeType = 'visual'">Visual</a> |
+	<a ng-class="{active: treeType == 'text'}" ng-click="treeType = 'text'">Text</a>
+</p>
+
 <div class="visualization-tree" ng-show="model.visualization_data.tree">
-  <alert class="alert alert-info">Use mosue wheel to zoom in/out. Drag to move the tree around. Hover on nodes to show tooltips. Click on nodes to exapnd.</alert>
-  <cml-decision-tree root="model.visualization_data.tree" class="cml-decision-tree"></cml-decision-tree>
+	<swt-decision-tree root="model.visualization_data.tree" mode="treeType" class="cml-decision-tree"></swt-decision-tree>
 </div>
 
 <div ng-init="show_tree = {}" class="visualization-trees" ng-show="model.visualization_data.trees">
-  <alert class="alert alert-info">Use mosue wheel to zoom in/out. Drag to move the tree around. Hover on nodes to show tooltips. Click on nodes to exapnd.</alert>
   <div ng-repeat="tree in model.visualization_data.trees" class="visualization-tree">
   	<h5><a href="" ng-click="show_tree[$index] = !show_tree[$index]">Tree #{{ $index }}</a></h5>
-  	<cml-decision-tree ng-show="show_tree[$index]" root="tree" class="cml-decision-tree"></cml-decision-tree>
+  	<swt-decision-tree ng-show="show_tree[$index]" root="tree" mode="treeType" class="cml-decision-tree"></swt-decision-tree>
   </div>
 </div>
