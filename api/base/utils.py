@@ -109,3 +109,22 @@ def pluralize(singular):
         suffix = 's'
     plural = root + suffix
     return plural
+
+
+def isfloat(x):
+    try:
+        a = float(x)
+    except:
+        return False
+    else:
+        return True
+
+
+def isint(x):
+    try:
+        a = float(x)
+        b = int(a)
+    except:
+        return False
+    else:
+        return a == b

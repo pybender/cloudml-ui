@@ -52,22 +52,3 @@ def construct_pig_sample(fields_data):
                                        get_pig_type(field))
         is_first = False
     return fields_str
-
-
-def isfloat(x):
-    try:
-        a = float(x)
-    except :
-        return False
-    else:
-        return True
-
-
-def isint(x):
-    try:
-        a = float(x)
-        b = int(a)
-    except :
-        return False
-    else:
-        return a == b

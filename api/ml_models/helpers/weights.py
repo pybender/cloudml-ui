@@ -201,11 +201,12 @@ def _transform_weights_values(weight_list, value_name='weight',
 
 def _append_css_class_to_weights(weight_list, value_name='weight',
                                  transformed_value_name='transformed_weight'):
-    max_transformed_val = weight_list[-1]['transformed_weight']
-    delta = round(max_transformed_val / len(TONES))
-    for i, tone in enumerate(TONES):
-        limit = i * delta
-        for item in weight_list:
-            if abs(item[transformed_value_name]) >= limit:
-                color = 'green' if item[value_name] > 0 else 'red'
-                item['css_class'] = "%s %s" % (color, tone)
+    if weight_list and 'transformed_weight' in weight_list[-1]:
+        max_transformed_val = weight_list[-1]['transformed_weight']
+        delta = round(max_transformed_val / len(TONES))
+        for i, tone in enumerate(TONES):
+            limit = i * delta
+            for item in weight_list:
+                if abs(item[transformed_value_name]) >= limit:
+                    color = 'green' if item[value_name] > 0 else 'red'
+                    item['css_class'] = "%s %s" % (color, tone)

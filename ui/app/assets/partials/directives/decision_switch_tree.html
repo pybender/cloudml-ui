@@ -1,0 +1,9 @@
+<div ng-show="mode == 'visual'">
+  <alert-message class="alert-info" msg="Use mosue wheel to zoom in/out. Drag to move the tree around. Hover on nodes to show tooltips. Click on nodes to exapand.">
+  </alert-message>
+  <cml-decision-tree root="root" class="cml-decision-tree"></cml-decision-tree>
+</div>
+<div ng-show="mode == 'text'">
+	<h5>Decision Tree</h5>
+	<cml-decision-text-tree root="root"></cml-decision-text-tree>
+</div>

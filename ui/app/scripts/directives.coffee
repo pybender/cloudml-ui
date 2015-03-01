@@ -299,6 +299,7 @@ angular.module('app.directives', [
   }
 ])
 
+
 .directive("entitiesTree", [ ->
   return {
     scope: {
@@ -755,6 +756,7 @@ updateChart = (chartDict, oldVal, scope) ->
   .call(chart)
 
   nv.utils.windowResize(chart.update)
+
 
 zip = () ->
   lengthArray = (arr.length for arr in arguments)

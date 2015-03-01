@@ -10,7 +10,6 @@ Werkzeug==0.9.6
 numpy==1.7.1
 gunicorn
 scipy==0.12.0
-#scikit-learn==0.13.1
 -e git+https://github.com/odeskdataproducts/scikit-learn.git#egg=scikit-learn
 #-e git+https://github.com/nanli0416/scikit-learn.git@new-feat-feature_extraction-text#egg=scikit-learn
 gensim==0.8.9

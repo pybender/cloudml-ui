@@ -43,6 +43,25 @@
   </div>
 </h2>
 <p class="clear clearfix"></p>
+
+<alert-message ng-show="model.status == 'Queued'" class="alert-info" msg="We queue this model to train. It would be processed soon">
+</alert-message>
+
+<alert-message ng-show="model.status == 'Training'" alert-class="alert-info" msg="Please wait! Model is training now. It could take several minutes.">
+</alert-message>
+
+<alert-message ng-show="model.status == 'New'" class="alert-warning" msg='Model is not trained yet. Please start training.' unsafe>
+</alert-message>
+
+<div ng-show="model.status == 'Error'">
+  <alert-message ng-hide="model.error" class="alert-error" msg='Error occurred while model training. Look at the logs on the Training tab for details' unsafe></alert-message>
+
+  <alert-message ng-show="model.error" class="alert-error" msg="Error occurred while model training: {{ model.error }}. Look at the logs on the Training tab for details" unsafe></alert-message>
+</div>
+
+<alert-message ng-show="model.status == 'Trained'" class="alert-success" msg='Model is trained. You could start running tests now.' unsafe>
+</alert-message>
+
 <ul class="nav nav-tabs" id="tabs" ng-show="model.loaded">
   <li ng-class="{active: action[0] == 'model'}">
     <a ng-click="setSection(['model', 'details'])">Model</a> 
@@ -57,6 +76,8 @@
     <a ng-click="setSection(['test', 'details'])">Test</a>
   </li>
   <li ng-class="{active: action[0] == 'about'}"><a ng-click="setSection(['about', 'details'])">About</a></li>
+  <li ng-class="{active: action[0] == 'visualization'}" ng-show="model.status == 'Trained'">
+    <a ng-click="setSection(['visualization', 'details'])">Visualization</a></li>
 </ul>
  
 <div class="tab-content" ng-show="model.loaded">
@@ -81,7 +102,8 @@
             </div>
              <div>
                 Parameters:
-                <span class="value">{{ model.classifier.params }}</span>
+                {{ type(model.classifier.params) }}
+                <span ng-repeat="(key, val) in model.classifier.params"><span class="badge badge-info">{{ key }}={{ val }}</span> </span>
             </div>
             <div ng-show="model.created_by">
                 Created by:
@@ -129,32 +151,15 @@
 
   <!-- Training tab starts here -->
   <div ng-show="action[0] == 'training'" ng-controller="WeightsCtrl">
-    <alert-message ng-show="model.status == 'Queued'" class="alert-info" msg="We queue this model to train. It would be processed soon">
-    </alert-message>
-
-    <alert-message ng-show="model.status == 'Training'" alert-class="alert-info" msg="Please wait! Model is training now. It could take several minutes.">
-    </alert-message>
-
-    <alert-message ng-show="model.status == 'New'" class="alert-warning" msg='Model is not trained yet. Please start training.' unsafe>
-    </alert-message>
-
-    <alert-message ng-show="model.status == 'Error'" class="alert-error" msg='Error occurred while model training. Look at celery tasks for details' unsafe>
-    </alert-message>
-
-    <alert-message ng-show="model.error" class="alert-error" msg="{{ model.error }}" unsafe></alert-message>
-
-    <alert-message ng-show="model.status == 'Trained'" class="alert-success" msg='Model is trained. You could start running tests now.' unsafe>
-    </alert-message>
-
     <div class="row">
-        <div class="span12">
-            Status: <span class="value">{{ model.status }}</span> <a ng-click="showLogs=!showLogs">(logs)</a>
-            <div ng-show="showLogs" class="well" ng-controller="LogMessageListCtrl" ng-init="init('trainmodel_log', model.id, 50)">
-              <div class="message">
-                <ng-include src="'partials/logmessages/list.html'"></ng-include>
-              </div>
+      <div class="span12">
+          Status: <span class="value">{{ model.status }}</span> <a ng-click="showLogs=!showLogs">(logs)</a>
+          <div ng-show="showLogs" class="well" ng-controller="LogMessageListCtrl" ng-init="init('trainmodel_log', model.id, 50)">
+            <div class="message">
+              <ng-include src="'partials/logmessages/list.html'"></ng-include>
             </div>
-        </div>
+          </div>
+      </div>
     </div>
     <div class="row">
       <div class="span4">
@@ -212,6 +217,7 @@
     <div ng-show="model.status == 'Trained'" ng-init="weights_section='training'">
       <ng-include src="'partials/weights/weights_view_switcher.html'"></ng-include>
     </div>
+    <hr />
   </div>
 
   <!-- Tests tab -->
@@ -361,5 +367,11 @@
       </div>
     </div>
   </div>
+
+  <!-- Visualization  Tab -->
+  <div ng-show="action[0] == 'visualization' && model.status == 'Trained'">
+    <ng-include src="'partials/models/training_visualization.html'"></ng-include>
+  </div>
+
 </div>
 </div>

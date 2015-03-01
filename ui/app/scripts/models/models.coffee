@@ -24,7 +24,7 @@ angular.module('app.models.model', ['app.config'])
                                'trainer', 'test_import_handler', 'name',
                                'test_import_handler_file',
                                'train_import_handler_file']
-      @MAIN_FIELDS: 'name,id,status'
+      @MAIN_FIELDS: 'name,id,status,error'
       @LIST_MODEL_NAME: 'models'
       LIST_MODEL_NAME: @LIST_MODEL_NAME
 

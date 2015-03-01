@@ -781,7 +781,7 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
 
         # Checking weights
         self.assertTrue(obj.weights_synchronized)
-        tr_weights = self.obj.get_trainer().get_weights()
+        tr_weights = self.obj.get_trainer(force_load=True).get_weights()
         valid_count = len(tr_weights[1]['positive']) + len(tr_weights[1]['negative'])
         weights = obj.weights
 

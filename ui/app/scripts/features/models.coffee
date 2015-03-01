@@ -118,7 +118,8 @@ angular.module('app.features.models', ['app.config'])
       LIST_MODEL_NAME: @LIST_MODEL_NAME
       @MAIN_FIELDS: 'id,name,type,created_on,created_by,params'
       @$TYPES_LIST: ['stochastic gradient descent classifier',
-      'support vector regression', 'logistic regression']
+      'support vector regression', 'logistic regression',
+      'decision trees classifier', 'decision tree regressor']
 
       id: null
       name: null
