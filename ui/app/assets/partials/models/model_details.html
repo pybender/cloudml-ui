@@ -214,9 +214,13 @@
         </div>
     </div>
     <hr />
-    <div ng-show="model.status == 'Trained'" ng-init="weights_section='training'">
-      <ng-include src="'partials/weights/weights_view_switcher.html'"></ng-include>
+    <div ng-show="model.weights_synchronized">
+      <div ng-show="model.status == 'Trained'" ng-init="weights_section='training'">
+        <ng-include src="'partials/weights/weights_view_switcher.html'"></ng-include>
+      </div>
     </div>
+
+    <alert-message ng-hide="model.weights_synchronized" class="alert-warning" msg='Model weights are unavailable or not synchronized'></alert-message>
     <hr />
   </div>
 

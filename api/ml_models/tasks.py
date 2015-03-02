@@ -297,30 +297,36 @@ def fill_model_parameter_weights(model_id, segment_id=None):
 
     try:
         visualization_data = trainer.get_visualization(segment.name)
-        weights_dict = visualization_data.pop('weights')
-        model.visualization_data = visualization_data
+        have_weights = 'weights' in visualization_data
+        if have_weights:
+            weights_dict = visualization_data.pop('weights')
+            model.visualization_data = visualization_data
 
-        weights_added = 0
-        categories_added = 0
-        classes_processed = 0
+            weights_added = 0
+            categories_added = 0
+            classes_processed = 0
 
-        for clazz in weights_dict.keys():
-            c, w = process_weights_for_class(clazz)
-            categories_added += c
-            weights_added += w
-            classes_processed += 1
+            for clazz in weights_dict.keys():
+                c, w = process_weights_for_class(clazz)
+                categories_added += c
+                weights_added += w
+                classes_processed += 1
 
-        db.session.commit()
-        model.status = model.STATUS_TRAINED
+            db.session.commit()
+            msg = 'Model %s parameters weights was added to db. %s weights, ' \
+                  'in %s categories for %s classes' % \
+                  (model.name, weights_added, categories_added, classes_processed)
+            logging.info(msg)
+        else:
+            msg = 'Weights are unavailable for the classifier'
+            logging.info(msg)
+
         # TODO:
         if not model.labels:
             model.labels = trainer._get_labels()
-        model.weights_synchronized = True
+        model.status = model.STATUS_TRAINED
+        model.weights_synchronized = have_weights
         model.save()
-        msg = 'Model %s parameters weights was added to db. %s weights, ' \
-              'in %s categories for %s classes' % \
-              (model.name, weights_added, categories_added, classes_processed)
-        logging.info(msg)
 
     except Exception, exc:
         logging.exception('Got exception when fill_model_parameter: %s', exc)

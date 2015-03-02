@@ -1,9 +1,10 @@
 import os
 import logging
+import numpy
 import csv
 import uuid
 from os import makedirs
-from itertools import izip
+from itertools import izip, repeat
 from bson.objectid import ObjectId
 from os.path import exists
 from datetime import timedelta, datetime
@@ -45,35 +46,41 @@ def run_test(dataset_ids, test_id):
         result = Model.run_test(model, dataset)
 
         metrics, raw_data = result
-        test.accuracy = metrics.accuracy
-        logging.info('Accuracy: %f', test.accuracy)
         logging.info("Memory usage: %f",
                      memory_usage(-1, interval=0, timeout=None)[0])
         metrics_dict = metrics.get_metrics_dict()
+        if 'accuracy' in metrics_dict:
+            test.accuracy = metrics.accuracy
+            logging.info('Accuracy: %f', test.accuracy)
 
         # TODO: Refactor this. Here are possible issues with conformity
         # between labels and values
-        confusion_matrix = metrics_dict['confusion_matrix']
-        confusion_matrix_ex = []
-        for i, val in enumerate(metrics.classes_set):
-            confusion_matrix_ex.append((str(val), confusion_matrix[i]))
-        metrics_dict['confusion_matrix'] = confusion_matrix_ex
+        if 'confusion_matrix' in metrics_dict:
+            confusion_matrix = metrics_dict['confusion_matrix']
+            confusion_matrix_ex = []
+            for i, val in enumerate(metrics.classes_set):
+                confusion_matrix_ex.append((str(val), confusion_matrix[i]))
+            metrics_dict['confusion_matrix'] = confusion_matrix_ex
 
-        n = len(metrics._labels) / 100 or 1
-        if metrics.classes_count == 2:
-            metrics_dict['precision_recall_curve'][1] = \
-                metrics_dict['precision_recall_curve'][1][0::n]
-            metrics_dict['precision_recall_curve'][0] = \
-                metrics_dict['precision_recall_curve'][0][0::n]
+        if 'precision_recall_curve' in metrics_dict:
+            n = len(metrics._labels) / 100 or 1
+            if metrics.classes_count == 2:
+                metrics_dict['precision_recall_curve'][1] = \
+                    metrics_dict['precision_recall_curve'][1][0::n]
+                metrics_dict['precision_recall_curve'][0] = \
+                    metrics_dict['precision_recall_curve'][0][0::n]
 
-        calc_range = [1] if metrics.classes_count == 2 else range(len(metrics.classes_set))
-        for i in calc_range:
-            label = metrics.classes_set[i]
-            sub_fpr = metrics_dict['roc_curve'][label][0][0::n]
-            sub_tpr = metrics_dict['roc_curve'][label][1][0::n]
-            metrics_dict['roc_curve'][label] = [sub_fpr, sub_tpr]
+        if 'roc_curve' in metrics_dict:
+            n = len(metrics._labels) / 100 or 1
+            calc_range = [1] if metrics.classes_count == 2 else range(len(metrics.classes_set))
+            for i in calc_range:
+                label = metrics.classes_set[i]
+                sub_fpr = metrics_dict['roc_curve'][label][0][0::n]
+                sub_tpr = metrics_dict['roc_curve'][label][1][0::n]
+                metrics_dict['roc_curve'][label] = [sub_fpr, sub_tpr]
 
-        test.roc_auc = metrics_dict.pop('roc_auc')
+        if 'roc_curve' in metrics_dict:
+            test.roc_auc = metrics_dict.pop('roc_auc')
         test.metrics = metrics_dict
         test.classes_set = list(metrics.classes_set)
         test.status = TestResult.STATUS_STORING
@@ -128,11 +135,15 @@ def run_test(dataset_ids, test_id):
             data = data + d
 
         logging.info('Storing test examples')
+        if metrics._probs is None:
+            probs = list(repeat(None, len(data)))
+        else:
+            probs = metrics._probs
         examples = izip(range(len(data)),
                         data,
                         metrics._labels,
                         metrics._preds,
-                        metrics._probs)
+                        probs)
         logging.info("Memory usage: %f",
                      memory_usage(-1, interval=0, timeout=None)[0])
 
@@ -192,7 +203,7 @@ def _add_example_to_db(test, data, label, pred, prob, num):
 
     example.pred_label = str(pred)
     example.label = str(label)
-    example.prob = prob.tolist()
+    example.prob = prob.tolist() if not prob is None else None
 
     # Denormalized fields. TODO: move denormalization to TestExample model
     example.test_name = test.name

@@ -192,7 +192,8 @@ angular.module('app.datas.controllers', ['app.config', ])
     })
 
   $scope.back = ->
-    $location.url($scope.data.listUrl())\
+    url = $scope.data.listUrl()
+    $location.url(url)\
       .search(_.extend({action: 'examples:list'}, $scope.filter_opts))
 
   $scope.redir = (opts) ->
