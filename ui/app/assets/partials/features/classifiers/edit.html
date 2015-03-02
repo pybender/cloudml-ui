@@ -52,7 +52,7 @@
                   <input ng-model="model.params[item.name]" ng-name="item.name" type='text' />
                 </div>
                 <!-- boolean params -->
-                <select  ng-show="item.type == 'boolean'" ng-model="model.params[item.name]" ng-options="choice for choice in [true, false]" ng-name="item.name"></select>
+                <select  ng-show="item.type == 'boolean'" ng-model="model.params[item.name]" ng-options="choice for choice in ['true', 'false']" ng-name="item.name"></select>
                 <!-- float params -->
                 <input ng-show="item.type == 'float'" ng-model="model.params[item.name]" type='text' smart-float ng-name="item.name" />
                 <!-- auto_dict params -->
@@ -65,7 +65,7 @@
               <!-- choices param - render select -->
               <div ng-show="item.choices">
                 <input ng-show="item.type == 'int_float_string_none'" ui-select2="getSelect2Params({choices: item.choices})" ng-name="item.name" ng-model="model.params[item.name]" data-placeholder="integer, float or string value" />
-                <select data-placeholder="pick an item" ng-show="item.type != 'int_float_string_none'" ui-select2="{allowClear: true}" ng-name="item.name" ng-model="model.params[item.name]" ng-options="c for c in item.choices" />
+                <select data-placeholder="pick an item" ng-show="item.type != 'int_float_string_none'" ui-select="{allowClear: true}" ng-name="item.name" ng-model="model.params[item.name]" ng-options="c for c in item.choices" />
               </div>
               <span ng-show="item.required" class="help-inline">*</span>
               <span class="help-block" ng-show="Form[item.name].$invalid">invalid</span>

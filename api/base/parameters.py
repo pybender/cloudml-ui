@@ -27,7 +27,7 @@ def convert_int_float_string_none(val, config):
 
 TYPE_CONVERTORS = {
     'string': lambda a, c: a,
-    'boolean': lambda a, c: a in ('True', 1, True),
+    'boolean': lambda a, c: a in ('True', 1, True, 'true'),
     'float': lambda a, c: float(a),
     'integer': lambda a, c: int(a),
     'auto_dict': convert_auto_dict,
