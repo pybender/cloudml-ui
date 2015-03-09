@@ -212,7 +212,6 @@ class BaseResource(restful.Resource):
 
         if self.post_form is None:
             raise ValueError('Specify post form')
-
         form = self.post_form(Model=self.Model, **kwargs)
         if form.is_valid():
             model = form.save()
@@ -243,7 +242,7 @@ class BaseResource(restful.Resource):
         if self.put_form is None:
             raise ValueError('Specify put form')
 
-        form = self.put_form(obj=model)
+        form = self.put_form(obj=model, **kwargs)
         if form.is_valid():
             model = form.save()
         else:

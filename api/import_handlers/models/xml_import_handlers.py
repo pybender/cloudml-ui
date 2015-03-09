@@ -36,6 +36,11 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
     def data(self):
         return self.get_plan_config()
 
+    @property
+    def crc32(self):
+        import zlib
+        return "0x%08x" % zlib.crc32(self.data)
+
     @data.setter
     def data(self, val):
         has_root_ent = XmlEntity.query.filter_by(

@@ -683,6 +683,22 @@ predict_models/'.format(sys.maxint)
         resp = self.client.get(url)
         self.assertEquals(resp.status_code, 401)
 
+    def test_post(self):
+        data, model = self.check_edit(
+            {'name': 'new name',
+             'value': 'val'},
+            load_json=True)
+        self.assertEquals(model.name, 'new name')
+
+    def test_put(self):
+        data, model = self.check_edit(
+            {'name': 'new name'},
+            load_json=True,
+            id=self.obj.id)
+        self.assertEquals(model.name, 'new name')
+        # print self.Model.query.get(self.obj.id).name
+        # raise
+
 
 class PredictModelWeightTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
     """
