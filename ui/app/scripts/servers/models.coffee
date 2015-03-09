@@ -72,6 +72,11 @@ angular.module('app.servers.model', ['app.config'])
         if not server_id then throw new Error 'server_id is required'
         return "#{settings.apiUrl}servers/#{server_id}/files/importhandlers/"
 
+      $generateS3Url: () =>
+        base_url = @constructor.$get_api_url({}, @)
+        @$make_request("#{base_url}#{@id}/action/generate_url/",
+                       {}, 'GET', {})
+
       loadFromJSON: (origData) =>
         super origData
 

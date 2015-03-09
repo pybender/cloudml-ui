@@ -76,6 +76,11 @@ class ImportHandler(db.Model, ImportHandlerMixin):
             # TODO: If query contains items, validate them
         return data
 
+    @property
+    def crc32(self):
+        import zlib
+        return "0x%08x" % zlib.crc32(self.data)
+
     def get_plan_config(self):
         """ Returns config that would be used for creating Extraction Plan """
         return json.dumps(self.data)

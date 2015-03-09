@@ -297,7 +297,7 @@ class XmlSqoopForm(BaseForm):
 
 
 class PredictModelForm(BaseForm):
-    required_fields = ('name', ('value', 'script'), 'import_handler_id')
+    required_fields = ('name', ('value', 'script'))
     NO_REQUIRED_FOR_EDIT = True
 
     name = CharField()
@@ -305,19 +305,28 @@ class PredictModelForm(BaseForm):
     script = CharField()
     positive_label_value = CharField()
     positive_label_script = CharField()
-    import_handler_id = DocumentField(
-        doc=XmlImportHandler, by_name=False, return_doc=True)
+
+    def __init__(self, *args, **kwargs):
+        handler_id = kwargs.pop('import_handler_id')
+        if handler_id is None:
+            raise ValidationError('Import Handler is required')
+
+        self.import_handler = XmlImportHandler.query.get(handler_id)
+        if self.import_handler is None:
+            raise ValidationError('Invalid import handler id specified')
+
+        super(PredictModelForm, self).__init__(*args, **kwargs)
 
     def save(self, *args, **kwargs):
         model = super(PredictModelForm, self).save(commit=False)
-        handler = self.cleaned_data.get('import_handler_id')
-        if handler is not None:
-            if handler.predict is None:
-                handler.predict = Predict()
-                handler.save()
-            predict = handler.predict
+        if self.import_handler.predict is None:
+            self.import_handler.predict = Predict()
+            self.import_handler.save(commit=False)
+        if not self.is_edit:
+            predict = self.import_handler.predict
             predict.models.append(model)
-            predict.save()
+            predict.save(commit=False)
+        db.session.commit()
         return model
 
 
