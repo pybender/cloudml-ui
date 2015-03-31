@@ -251,7 +251,8 @@ class Model(db.Model, BaseModel, BaseTrainedEntity):
         super(Model, self).set_trainer(trainer)
         self.target_variable = trainer._feature_model.target_variable
         self.feature_count = len(trainer._feature_model.features.keys())
-        if self.status == self.STATUS_TRAINED:
+        if self.status == self.STATUS_TRAINED and \
+                trainer.model_type == trainer.TYPE_CLASSIFICATION:
             self.labels = trainer._get_labels()
 
     def get_features_json(self):

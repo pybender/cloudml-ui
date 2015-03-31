@@ -606,7 +606,7 @@ class TasksRunTestTests(BaseDbTestCase):
         self.assertIsInstance(test.classes_set, list)
 
         # any new metric added, you should add corresponding asserts
-        self.assertEqual(5, len(test.metrics.keys()))
+        self.assertEqual(6, len(test.metrics.keys()))
 
         self.assertTrue(test.metrics.has_key('confusion_matrix'))
         self.assertEqual(len(test.classes_set), len(test.metrics['confusion_matrix']))
@@ -652,7 +652,7 @@ class TasksRunTestTests(BaseDbTestCase):
         self.assertIsInstance(test.classes_set, list)
 
         # any new metric added, you should add corresponding asserts
-        self.assertEqual(3, len(test.metrics.keys()))
+        self.assertEqual(4, len(test.metrics.keys()))
 
         for pos_label in test.classes_set:
             self.assertTrue(test.metrics.has_key('roc_curve'))

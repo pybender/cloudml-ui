@@ -30,9 +30,9 @@
 <alert-message ng-show="test.error" class="alert-error" msg="{{ test.error }}" unsafe></alert-message>
 
 <div>
-  <ul class="nav nav-tabs" id="tabs">
-    <li ng-show="showdetails" ng-class="{active: action[0] == 'metrics'}"><a ng-click="setSection(['metrics', 'accuracy'])">Metrics</a></li>
-    <li ng-show="showdetails" ng-class="{active: action[0] == 'matrix'}"><a ng-click="setSection(['matrix', 'confusion'])">Confusion Matrix</a></li>
+  <ul class="nav nav-tabs" id="tabs" ng-show="showdetails">
+    <li ng-class="{active: action[0] == 'metrics'}"><a ng-click="setSection(['metrics', 'accuracy'])">Metrics</a></li>
+    <li ng-class="{active: action[0] == 'matrix'}"><a ng-click="setSection(['matrix', 'confusion'])">Confusion Matrix</a></li>
     <li ng-show="showdetails" ng-show="test.status == 'Completed'" ng-class="{active: action[0] == 'examples'}"><a ng-click="setSection(['examples', 'list'])">Examples</a></li>
     <li ng-class="{active: action[0] == 'about'}"><a ng-click="setSection(['about', 'details'])">About</a></li>
     <li ng-class="{active: action[0] == 'weights'}"><a ng-click="setSection(['weights', 'tree'])" ng-show="(test.status == 'Completed' || test.status == 'Storing') && test.fill_weights">Weights</a></li>
@@ -129,43 +129,7 @@
       </div>
 
       <div ng-show="action[0] == 'metrics'">
-        <div>
-          <div>
-              Classification Accuracy: <span class="value">{{ test.accuracy|number:4 }}</span>
-          </div>
-          <hr/>
-        </div>
-        <div>
-          <h4>Receiver operating characteristic</h4>
-          <div class="row">
-            <div class="span5" ng-repeat="(clazz, obj) in rocCurves">
-              <div class="row">
-                <div class="span5">
-                  <p>The Area Under an ROC Curve:
-                    <span>{{ obj.roc_auc.toFixed(4) }}</span>
-                  </p>
-                </div>
-                <div class="span5">
-                  <sc-curves xlabel="False-positive rate" ylabel="True-positive rate" curves-dict="obj.curve" show-line="1" width="450"></sc-curves>
-                </div>
-              </div>
-            </div>
-          </div>
-          <hr/>
-        </div>
-        <div ng-show="prCurve || prCurves">
-          <h4>Precision-Recall</h4>
-          <div class="row">
-            <div class="span5">
-              <sc-curves xlabel="Recall" ylabel="Precision" curves-dict="prCurves" width="450"></sc-curves>
-            </div>
-          </div>
-          <hr/>
-        </div>
-        <div ng-show="test.status == 'Completed'">
-          <alert-message ng-show="test.examples_placement == 'Do not save'" class="alert-info" msg="Examples data isn't stored for this test at all. So average precision could not be calculated." unsafe></alert-message>
-          <a ng-hide="test.examples_placement == 'Do not save'" href="#{{ test.avaragePrecisionUrl() }}"><i class="status-icon icon-search"></i> Average precision</a>
-        </div>
+        <ng-include src="'partials/testresults/metrics.html'"></ng-include>
       </div>
 
       <div ng-show="action[0] == 'examples'" ng-controller="TestExamplesCtrl" ng-init="init(test)">

@@ -50,6 +50,7 @@ class Server(BaseModel, db.Model):
                 'object_type': key.get_metadata('type'),
                 'user_id': key.get_metadata('user_id'),
                 'user_name': key.get_metadata('user_name'),
+                'crc32': key.get_metadata('crc32'),
                 'server_id': self.id
             })
         return objects

@@ -89,7 +89,8 @@ def upload_import_handler_to_server(server_id, handler_type, handler_id,
         'user_id': user.id,
         'user_name': user.name,
         'hide': "False",
-        'uploaded_on': str(datetime.now())
+        'uploaded_on': str(datetime.now()),
+        'crc32': handler.crc32
     }
 
     handler_data = handler.get_plan_config()

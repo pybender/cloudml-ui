@@ -28,14 +28,14 @@
 <alert-message ng-show="data.test_result.examples_placement == 'Do not save'" class="alert-info" msg="Examples data isn't stored for this test at all." unsafe></alert-message>
 
 <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
-<sc-chart chart-dict="data.probChartData" width="150" height="150"></sc-chart>
+<sc-chart ng-show="data.prob" chart-dict="data.probChartData" width="150" height="150"></sc-chart>
 <div ng-show="data.loaded">
   <ul class="nav nav-tabs" id="tabs">
-    <li ng-class="{active: action[0] == 'model'}">
-      <a ng-click="setSection(['model', 'details'])">Features</a>
+    <li ng-class="{active: action[0] == 'features'}" ng-show="data.parameters_weights">
+      <a ng-click="setSection(['features', 'details'])">Features</a>
     </li>
-    <li ng-class="{active: action[0] == 'weighted'}">
-      <a ng-click="setSection(['weighted', 'details'])">Weighted Data</a>
+    <li ng-class="{active: action[0] == 'model'}">
+      <a ng-click="setSection(['model', 'details'])">Weighted Data</a>
     </li>
     <li ng-class="{active: action[0] == 'raw'}">
       <a ng-click="setSection(['raw', 'details'])">Raw Data</a>
@@ -43,7 +43,7 @@
   </ul>
   <div class="tab-content">
     <!-- Parameters table view -->
-    <div ng-show="action[0] == 'model'">
+    <div ng-show="action[0] == 'features'">
       <table class="table">
         <thead>
         <tr>
@@ -73,7 +73,7 @@
     </div>
 
     <!-- Weighted parameters -->
-    <div ng-show="action[0] == 'weighted'">
+    <div ng-show="action[0] == 'model'">
       <table class="table">
       <thead>
           <tr>
