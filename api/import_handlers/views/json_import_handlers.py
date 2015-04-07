@@ -57,6 +57,7 @@ class ImportHandlerResource(BaseResourceSQL):
     def _modify_details_query(self, cursor, params):
         return cursor.options(undefer('data'))
 
+
     def _get_download_action(self, **kwargs):
         """
         Downloads importhandler data file.

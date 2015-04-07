@@ -6,3 +6,6 @@ created by <span class="badge badge-info">{{ obj.created_by.name }}</span>
 <span ng-hide="!obj.updated_on || obj.created_on == obj.updated_on">
   updated on <span title="dates in GMT" class="badge badge-info">{{ obj.updated_on|format_date }}</span>
 </span>
+<span ng-show="obj.crc32">
+Crc32 <span class="badge badge-info">{{ obj.crc32 }}</span>
+<span>

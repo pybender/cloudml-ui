@@ -45,7 +45,7 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
       mainSection = section[0]
       if mainSection not in $scope.LOADED_SECTIONS
         # is not already loaded
-        fields = ImportHandler.MAIN_FIELDS + ',data'
+        fields = ImportHandler.MAIN_FIELDS + ',data,crc32'
 
       if fields isnt ''
         $scope.handler.$load(

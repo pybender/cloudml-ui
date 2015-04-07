@@ -192,6 +192,21 @@ class MigrateToXmlImportHandlers(Command):
         from api.import_handlers.migrator import xml_migrate
         xml_migrate()
 
+class GenerateCrc(Command):
+    def run(self, **kwargs):
+        import zlib
+        from api.amazon_utils import AmazonS3Helper
+        s3 = AmazonS3Helper(bucket_name=app.config['CLOUDML_PREDICT_BUCKET_NAME'])
+        for key in s3.list_keys('staging/importhandlers/'):
+            print key.name
+            data = s3.load_key(key.name)
+            #crc32 =  "%08x" % zlib.crc32(data)
+            crc32 = '0x%08X' % (zlib.crc32(data) & 0xffffffff)
+            try:
+                s3.set_key_metadata(key.name, {'crc32': crc32}, False)
+            except:
+                print 'Error'
+
 
 manager = Manager(app)
 migrate = Migrate(app, app.sql_db)
@@ -200,6 +215,7 @@ manager.add_command("celeryd", Celeryd())
 manager.add_command("celeryw", Celeryw())
 manager.add_command("flower", Flower())
 manager.add_command('test', Test())
+manager.add_command('generate_crc', GenerateCrc())
 manager.add_command('coverage', Coverage())
 manager.add_command('migrate', MongoMigrate())
 manager.add_command('run', Run())

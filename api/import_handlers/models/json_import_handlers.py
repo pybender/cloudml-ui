@@ -79,7 +79,7 @@ class ImportHandler(db.Model, ImportHandlerMixin):
     @property
     def crc32(self):
         import zlib
-        return "0x%08x" % zlib.crc32(self.data)
+        return '0x%08X' % (zlib.crc32(self.get_plan_config()) & 0xffffffff)
 
     def get_plan_config(self):
         """ Returns config that would be used for creating Extraction Plan """

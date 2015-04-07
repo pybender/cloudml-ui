@@ -39,7 +39,7 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
     @property
     def crc32(self):
         import zlib
-        return "0x%08x" % zlib.crc32(self.data)
+        return '0x%08X' % (zlib.crc32(self.data) & 0xffffffff)
 
     @data.setter
     def data(self, val):
