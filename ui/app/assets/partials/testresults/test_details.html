@@ -30,9 +30,9 @@
 <alert-message ng-show="test.error" class="alert-error" msg="{{ test.error }}" unsafe></alert-message>
 
 <div>
-  <ul class="nav nav-tabs" id="tabs" ng-show="showdetails">
-    <li ng-class="{active: action[0] == 'metrics'}"><a ng-click="setSection(['metrics', 'accuracy'])">Metrics</a></li>
-    <li ng-class="{active: action[0] == 'matrix'}"><a ng-click="setSection(['matrix', 'confusion'])">Confusion Matrix</a></li>
+  <ul class="nav nav-tabs" id="tabs">
+    <li ng-show="showdetails" ng-class="{active: action[0] == 'metrics'}"><a ng-click="setSection(['metrics', 'accuracy'])">Metrics</a></li>
+    <li ng-show="showdetails" ng-class="{active: action[0] == 'matrix'}"><a ng-click="setSection(['matrix', 'confusion'])">Confusion Matrix</a></li>
     <li ng-show="showdetails" ng-show="test.status == 'Completed'" ng-class="{active: action[0] == 'examples'}"><a ng-click="setSection(['examples', 'list'])">Examples</a></li>
     <li ng-class="{active: action[0] == 'about'}"><a ng-click="setSection(['about', 'details'])">About</a></li>
     <li ng-class="{active: action[0] == 'weights'}"><a ng-click="setSection(['weights', 'tree'])" ng-show="(test.status == 'Completed' || test.status == 'Storing') && test.fill_weights">Weights</a></li>
