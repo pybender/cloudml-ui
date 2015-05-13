@@ -9,6 +9,9 @@ from api.base.test_utils import SOMEBODY_HTTP_HEADERS as HTTP_HEADERS
 from models import AuthToken, User
 
 
+UPWORK_URL = 'www.upwork.com'
+
+
 class AuthDecoratorsTests(BaseDbTestCase):
     """
     Tests of the authentication system.
@@ -348,7 +351,7 @@ class OdeskAuthTests(TestCase):
         url, token, secret = auth.get_auth_url()
         self.assertEquals(
             url,
-            'https://www.odesk.com/services/api/auth?oauth_token=123'
+            'https://%s/services/api/auth?oauth_token=123' % UPWORK_URL
         )
         self.assertEquals(token, '123')
         self.assertEquals(secret, '345')
@@ -358,7 +361,10 @@ class OdeskAuthTests(TestCase):
         auth = OdeskAuth()
 
         url, token, secret = auth.get_auth_url()
-        self.assertTrue('//www.odesk.com/services/api/auth?oauth_token=' in url)
+        self.assertTrue(
+            '//%s/services/api/auth?oauth_token=' % UPWORK_URL in url,
+            "Url is following: %s" % url
+        )
         self.assertTrue(token)
         self.assertTrue(secret)
 
