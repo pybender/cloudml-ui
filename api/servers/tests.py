@@ -165,7 +165,8 @@ class ServersTasksTests(BaseDbTestCase):
                 'user_id': user.id,
                 'user_name': user.name,
                 'hide': "False",
-                'uploaded_on': ANY
+                'uploaded_on': ANY,
+                'crc32': '0xCE751090'
             }
         )
 
@@ -194,7 +195,8 @@ class ServersTasksTests(BaseDbTestCase):
                 'user_id': user.id,
                 'user_name': user.name,
                 'hide': "False",
-                'uploaded_on': ANY
+                'uploaded_on': ANY,
+                'crc32': '0xC8AD8D64'
             }
         )
 
@@ -202,31 +204,27 @@ class ServersTasksTests(BaseDbTestCase):
 class ServerModelTests(BaseDbTestCase):
 
     datasets = [ServerData]
+    METADATA_MAP = {
+        'object_name': 'prod_405_again',
+        'uploaded_on': '2014-08-06 23:38:56.081141',
+        'name': 'prod_405_again',
+        'id': '30',
+        'user_id': '1',
+        'user_name': 'Nader',
+        'type': None,
+        'hide': False,
+        'crc32': 'crc32'
+    }
 
     @patch('api.servers.models.AmazonS3Helper')
     def test_list_keys(self, helper_mock):
 
         def get_metadata(meta):
-            if meta == 'object_name':
-                return 'prod_405_again'
-            elif meta == 'uploaded_on':
-                return '2014-08-06 23:38:56.081141'
-            elif meta == 'name':
-                return 'prod_405_again'
-            elif meta == 'id':
-                return '30'
-            elif meta == 'type':
-                return None
-            elif meta == 'user_id':
-                return '1'
-            elif meta == 'user_name':
-                return 'Nader Soliman'
-            elif meta == 'hide':
-                False
-            else:
-                msg = 'unexpected call to get_metadata with %s please expand '
-                'the test', meta
-                raise Exception(msg)
+            try:
+                return self.METADATA_MAP[meta]
+            except KeyError:
+                raise Exception("unexpected call to get_metadata with %s \
+                    please expand the test" % meta)
 
         server = Server.query.filter_by(name=ServerData.server_01.name).one()
         one_key = MagicMock()
@@ -243,17 +241,17 @@ class ServerModelTests(BaseDbTestCase):
 
         helper_mock.return_value = s3_mock
 
-
         objs = server.list_keys()
 
         s3_mock.bucket.get_key.assert_called_with(one_key.name)
 
         self.assertEqual(1, len(objs))
         obj = objs[0]
-        self.assertEqual(set(obj.keys()),
-                         {'id', 'object_name', 'size', 'last_modified', 'name',
-                          'uploaded_on', 'object_id', 'object_type', 'user_id',
-                          'user_name', 'server_id'})
+        self.assertListEqual(
+            obj.keys(),
+            ['uploaded_on', 'object_type', 'last_modified', 'crc32',
+             'id', 'size', 'server_id', 'user_id', 'name', 'object_id',
+             'object_name', 'user_name'])
         # just test we can parse the datetime
         datetime.strptime(obj['last_modified'], '%Y-%m-%d %H:%M:%S')
         self.assertEqual(obj['id'], 'n3sz3FTFQJeUOe33VF2A.model')

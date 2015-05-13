@@ -31,8 +31,8 @@ class Server(BaseModel, db.Model):
             uid = key.name.split('/')[-1]
             key = s3.bucket.get_key(key.name)
 
-            if key.get_metadata('hide') == 'True':
-                continue
+            #if key.get_metadata('hide') == 'True':
+            #    continue
 
             # TODO: last_modified problems with amazon s3 and botoo
             # https://github.com/boto/boto/issues/466
