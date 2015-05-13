@@ -107,16 +107,31 @@ class ModelClassifierTest(BaseDbTestCase, TestChecksMixin):
     datasets = (FeatureData, FeatureSetData, ModelData,
                 PredefinedClassifierData, )
 
+    def test_post_predefined_classifier(self):
+        name = "classifier name"
+        data = {"name": name,
+                'type': 'logistic regression',
+                'params': json.dumps({
+                    'C': '1.5',
+                    'dual': 'True'
+                })}
+        resp = self._check(data=data, method='post')
+        classifier = PredefinedClassifier.query.get(resp['classifier']['id'])
+        self.assertEqual(classifier.type, data['type'])
+        self.assertEqual(classifier.params['C'], 1.5)
+        self.assertEqual(classifier.params['dual'], True)
+
     def test_classifier_parameters_types_convertion(self):
+        model = Model.query.filter_by(name=ModelData.model_01.name).one()
         data = {"name": "classifier name",
                 'type': 'logistic regression',
-                'model_id': 1,
+                'model_id': model.id,
                 'params': json.dumps({
                     'C': '1.5',
                     'dual': 'True'
                 })}
         self._check(data=data, method='post')
-        model = Model.query.filter_by(name=ModelData.model_01.name).one()
+        model = Model.query.get(model.id)
         self.assertEqual(model.classifier['type'], data['type'])
         self.assertEqual(model.classifier['params']['C'], 1.5)
         self.assertEqual(model.classifier['params']['dual'], True)
