@@ -109,7 +109,7 @@ describe "app.importhandlers.controllers", ->
       expect($rootScope.initSections).toHaveBeenCalledWith($scope.go)
 
       # handling errors first
-      $httpBackend.expectGET "#{$scope.handler.BASE_API_URL}#{$scope.handler.id}/?show=#{ImportHandler.MAIN_FIELDS},data"
+      $httpBackend.expectGET "#{$scope.handler.BASE_API_URL}#{$scope.handler.id}/?show=#{ImportHandler.MAIN_FIELDS},data,crc32"
       .respond 400
 
       $scope.go ['main']
@@ -120,7 +120,7 @@ describe "app.importhandlers.controllers", ->
       # good http loading
       response = {}
       response[$scope.handler.API_FIELDNAME] = $scope.handler
-      $httpBackend.expectGET "#{$scope.handler.BASE_API_URL}#{$scope.handler.id}/?show=#{ImportHandler.MAIN_FIELDS},data"
+      $httpBackend.expectGET "#{$scope.handler.BASE_API_URL}#{$scope.handler.id}/?show=#{ImportHandler.MAIN_FIELDS},data,crc32"
       .respond 200, angular.toJson(response)
 
       $scope.go ['main']
@@ -139,7 +139,7 @@ describe "app.importhandlers.controllers", ->
 
       response = {}
       response[$scope.handler.API_FIELDNAME] = $scope.handler
-      $httpBackend.expectGET "#{$scope.handler.BASE_API_URL}#{$scope.handler.id}/?show=#{ImportHandler.MAIN_FIELDS},data"
+      $httpBackend.expectGET "#{$scope.handler.BASE_API_URL}#{$scope.handler.id}/?show=#{ImportHandler.MAIN_FIELDS},data,crc32"
       .respond 200, angular.toJson(response)
 
       $scope.go ['dataset']

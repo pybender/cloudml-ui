@@ -66,7 +66,7 @@ describe "login", ->
 
   describe "AuthCtl", ->
 
-    it "should redirect to oDesk authorization", inject (auth)->
+    it "should redirect to Upwork authorization", inject (auth)->
       url = settings.apiUrl + 'auth/get_auth_url'
       $httpBackend.expectPOST(url).respond('{"auth_url": "http://odesk.com/_fake"}')
 
@@ -79,7 +79,7 @@ describe "login", ->
       expect($scope.status).toBe('Getting data. Please wait...')
 
       $httpBackend.flush()
-      expect($scope.status).toBe('Redirecting to oDesk. Please wait...')
+      expect($scope.status).toBe('Redirecting to Upwork. Please wait...')
       expect($window.location.replace).toHaveBeenCalledWith('http://odesk.com/_fake')
       expect(auth.is_authenticated.calls.count()).toBe 1
 
