@@ -334,6 +334,71 @@ def fill_model_parameter_weights(model_id, segment_id=None):
     return msg
 
 
+class VisualizationException(Exception):
+    CLASSIFIER_NOT_SUPPORTED = 1
+    ALL_WEIGHT_NOT_FILLED = 2
+
+    def __init__(self, message, error_code=0):
+        super(VisualizationException, self).__init__(message)
+        self.error_code = error_code
+
+    def __str__(self):
+        return "%s (err code=%s)" % (self.message, self.error_code)
+
+
+@celery.task(base=SqlAlchemyTask)
+def generate_visualization_tree(model_id, deep):
+    """
+    Generates Visualization tree with specified `deep`.
+
+    Parameters
+    ----------
+    model_id: integer
+        Database id of the model
+
+    deep : positive integer
+        Maximum tree deep.
+
+    Notes
+    -----
+    Decision Tree Classifier is supported.
+    """
+    from core.trainer.classifier_settings import DECISION_TREE_CLASSIFIER
+
+    init_logger('trainmodel_log', obj=int(model_id))
+    logging.info('Starting tree visualization')
+    model = Model.query.get(model_id)
+
+    if model is None:
+        raise ValueError('model not found: %s' % model_id)
+
+    if model.classifier is None or 'type' not in model.classifier:
+        raise ValueError('model has invalid classifier')
+
+    clf_type = model.classifier['type']
+    if not clf_type in (DECISION_TREE_CLASSIFIER, ):
+        raise VisualizationException(
+            "model with %s classifier doesn't support tree visualization" % clf_type,
+            VisualizationException.CLASSIFIER_NOT_SUPPORTED)
+
+    # Checking that all_weights had been stored while training model
+    # For old models we need to retrain the model.
+    if model.visualization_data is None or not 'all_weights' in model.visualization_data:
+        raise VisualizationException(
+            "we don't support the visualization re-generation for models trained before may 2015."
+            "please re-train the model to use this feature.",
+            error_code=VisualizationException.ALL_WEIGHT_NOT_FILLED)
+
+    trainer = model.get_trainer()
+    data = model.visualization_data.copy()
+    tree = trainer.model_visualizer.regenerate_tree(
+        'default', data['all_weights'], deep=deep)
+    data['tree'] = tree
+    data['parameters'] = {'deep': deep}
+    model.visualize_model(data)
+    return "Tree visualization was completed"
+
+
 def add_weights_to_db(model, segment, class_label, weight_list):
     w_added = 0
     cat_added = 0

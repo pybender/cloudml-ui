@@ -378,3 +378,50 @@ class GridSearchForm(BaseForm):
         #     test_dataset=test_dataset,
         #     model=self.model)
         # obj.save()
+
+
+class VisualizationOptionsForm(BaseForm):
+    UPDATE_TREE_DEEP = 'tree_deep'
+    TYPES = [UPDATE_TREE_DEEP, ]
+    PARAMS_BY_TYPE = {UPDATE_TREE_DEEP: [{'name': 'deep', 'type': 'int'}]}
+
+    parameters = JsonField()
+    type_ = CharField(name="type")
+
+    def __init__(self, *args, **kwargs):
+        super(VisualizationOptionsForm, self).__init__(*args, **kwargs)
+
+    def clean_type(self, value, field):
+        if value and not value in self.TYPES:
+            raise ValidationError('invalid type')
+        return value
+
+    def validate_data(self):
+        type_ = self.cleaned_data.get('type')
+        parameters = self.cleaned_data.get('parameters')
+        config = self.PARAMS_BY_TYPE[type_]
+        for item in config:
+            name = item['name']
+            val = parameters.get(name)
+            if not val:
+                self.add_error('parameters', 'Parameter %s is required' % name)
+            if item['type'] == 'int':
+                try:
+                    parameters[name] = int(val)
+                except Exception, exc:
+                    self.add_error(
+                        'parameters',
+                        "Can't parse parameter %s: %s" % (name, exc))
+
+    def process(self):
+        type_ = self.cleaned_data.get('type')
+        try:
+            self.obj.visualize_model(status='queued')
+            getattr(self, "process_%s" % type_)()
+        except Exception, exc:
+            self.obj.visualize_model(status='error: %s' % exc)
+
+    def process_tree_deep(self):
+        from tasks import generate_visualization_tree
+        parameters = self.cleaned_data.get('parameters')
+        generate_visualization_tree.delay(self.obj.id, parameters['deep'])

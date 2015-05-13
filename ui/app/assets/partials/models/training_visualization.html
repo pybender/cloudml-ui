@@ -7,6 +7,20 @@
 	<a ng-class="{active: treeType == 'visual'}" ng-click="treeType = 'visual'">Visual</a> |
 	<a ng-class="{active: treeType == 'text'}" ng-click="treeType = 'text'">Text</a>
 </p>
+<div ng-controller="TreeDeepFormCtrl" ng-init="init(model)">
+	<b>Tree Deep:</b> {{ treeDeep }} <a ng-click="showTreeDeepForm = !showTreeDeepForm">(change)</a>
+	<div ng-show="showTreeDeepForm" class="form">
+		<form class="well">
+		  <fieldset>
+		    <label>Visualization Tree Deep</label>
+		    <input type="text" ng-model="treeDeep">
+		    <span class="help-block">You would change only visualization of the classifier tree. Also keep in mind that re-generation of the tree view will take some time.</span>
+		    <button class="btn btn-success" type="submit" ng-click="generate()">Generate</button>
+		  </fieldset>
+		</form>
+	</div>
+	<alert-message ng-show="msg" alert-class="alert-info" msg="{{ msg }}"></alert-message>
+</div>
 
 <div class="visualization-tree" ng-show="model.visualization_data.tree">
 	<swt-decision-tree root="model.visualization_data.tree" mode="treeType" class="cml-decision-tree"></swt-decision-tree>

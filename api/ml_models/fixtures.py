@@ -60,7 +60,6 @@ class ModelData(DataSet):
         comparable = True
         labels = ["1", "2", "3"]
 
-
     class model_04:
         features_set = FeatureSetData.bestmatch
         test_import_handler = XmlImportHandlerData.xml_import_handler_01
@@ -71,7 +70,6 @@ class ModelData(DataSet):
         name = "Model with Xml IH"
         comparable = False
 
-
     class model_05:
         test_import_handler = XmlImportHandlerData.xml_import_handler_01
         train_import_handler = XmlImportHandlerData.xml_import_handler_01
@@ -80,6 +78,38 @@ class ModelData(DataSet):
         updated_on = "2013-04-19 14:37:23.145000"
         name = "Model with Xml IH Featuureless"
         comparable = False
+
+    class decision_tree_clf:
+        features_set = FeatureSetData.bestmatch
+        test_import_handler = ImportHandlerData.import_handler_01
+        train_import_handler = ImportHandlerData.import_handler_01
+        created_on = "2013-04-19 14:37:23.145000"
+        updated_on = "2013-04-19 14:37:23.145000"
+        name = "decision_tree_clf_model"
+        comparable = True
+        labels = ["0", "1"]
+        import_params = ["start", "end"]
+        error = ""
+        feature_count = 37
+        example_id = "opening_id"
+        example_label = "opening_title"
+        target_variable = "hire_outcome"
+        weights_synchronized = False
+        status = "Trained"
+        trainer = "trainer_file"
+        classifier = {
+            "type": "decision tree classifier",
+            "params": {
+              "splitter": "best",
+              "n_jobs": "1",
+              "penalty": "l2",
+              "min_samples_leaf": 1,
+              "n_estimators": "10",
+              "min_samples_split": 2,
+              "criterion": "gini",
+              "max_features": "auto"
+            }
+        }
 
 
 class SegmentData(DataSet):

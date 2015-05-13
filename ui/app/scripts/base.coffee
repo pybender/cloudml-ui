@@ -153,7 +153,10 @@ angular.module('app.base', ['app.config', 'app.services'])
         if load
           res.then ((resp) =>
             @loaded = true
-            @loadFromJSON(eval("resp.data.#{@API_FIELDNAME}"))
+            if resp.data?
+              @loadFromJSON(eval("resp.data.#{@API_FIELDNAME}"))
+            else
+              console.log('Got invalid response: ' + angular.toJson(resp, true))
             return resp
           )
         return res

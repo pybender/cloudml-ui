@@ -523,3 +523,45 @@ angular.module('app.models.controllers', ['app.config', ])
             $scope.setError opts,
               "requesting dataset #{datasetId} for download"
 ])
+
+.controller('TreeDeepFormCtrl', [
+    '$scope'
+    'Model'
+    '$timeout'
+
+    ($scope, Model, $timeout) ->
+      $scope.treeDeep = 10
+      $scope.msg = ''
+      $scope.showTreeDeepForm = false
+
+      $scope.init = (model) ->
+        $scope.model = model
+        $scope.$watch('model.visualization_data.parameters.deep', (val, oldVal) ->
+          if val?
+            $scope.treeDeep = val
+        , true)
+
+      $scope.generate = (model) ->
+        $scope.msg = 'Please wait! Visualization tree is re-generating now... Tree will be updated when re-generation would be completed.'
+        $scope.model.$regenerateVisualization({
+          parameters: {deep: $scope.treeDeep}
+          type: 'tree_deep'
+        }).then (() ->
+          $scope.timer = $timeout($scope.checkVisualization, 2000)
+          $scope.showTreeDeepForm = false
+        ), ((opts) ->
+          $scope.setError(opts, 'queue regenerating visualization tree task')
+        )
+
+      $scope.checkVisualization = () ->
+        $scope.model.$load(show: 'visualization_data')
+        .then (opts) ->
+          if $scope.model.visualization_data.parameters.status == 'done'
+            $scope.timer = null
+            $scope.msg = ''
+          else
+            $scope.timer = $timeout($scope.checkVisualization, 2000)
+        , (opts) ->
+          $scope.setError(opts, 'loading model visualization details')
+
+])

@@ -525,6 +525,52 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue(
             Weight.query.filter_by(segment=segments[1]).count())
 
+    @patch('api.ml_models.models.Model.get_trainer')
+    def test_generate_visualization_tree(self, get_trainer_mock):
+        # Using non existance model
+        from api.ml_models.tasks import generate_visualization_tree, VisualizationException
+        invalid_model_id = -101
+        self.assertRaises(ValueError, generate_visualization_tree, invalid_model_id, 10)
+
+        # Trying to generate tree for logistic regression classifier
+        self.assertRaises(VisualizationException, generate_visualization_tree, self.obj.id, 10)
+
+        # Re-generating tree for decision tree classifier
+        model = Model.query.filter_by(name='decision_tree_clf_model').one()
+        from core.trainer.store import TrainerStorage
+        trainer = TrainerStorage.loads(
+            open('./api/ml_models/tests/models/decision_tree.dat', 'r').read())
+        get_trainer_mock.return_value = trainer
+        # In this model 'all_weights' not saved to visualization_data while training.
+        # So it's inpossible to re-generate tree.
+        self.assertRaises(VisualizationException, generate_visualization_tree, model.id, deep=2)
+
+        model.visualization_data = json.loads(open(
+            './api/ml_models/tests/models/tree_visualization_data.json', 'r').read())
+        model.save()
+
+        from random import randint
+        deep = randint(2, 10)
+        res = generate_visualization_tree(model.id, deep=deep)
+        self.assertEquals(res, "Tree visualization was completed")
+        print "using deep %s" % deep
+        self.assertEquals(model.visualization_data['parameters']['deep'], deep)
+        tree = model.visualization_data['tree']
+
+        def determine_deep(tree):
+            def recurse(node, current_deep):
+                if 'children' in node:
+                    current_deep += 1
+                    subnodes = node['children']
+                    if subnodes:
+                        left = recurse(subnodes[0], current_deep)
+                        right = recurse(subnodes[1], current_deep)
+                        return max(left, right)
+                return current_deep
+            return recurse(tree, 0)
+
+        self.assertEquals(determine_deep(tree), deep)
+
     @mock_s3
     def test_train_model_validation_errors(self, *mocks):
         self.assertTrue(self.obj.status, Model.STATUS_NEW)

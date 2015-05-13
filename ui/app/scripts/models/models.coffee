@@ -122,6 +122,14 @@ angular.module('app.models.model', ['app.config'])
         @$make_request(
           "#{@BASE_API_URL}#{@id}/action/grid_search/", {}, "PUT", data)
 
+      $regenerateVisualization: (opts={}) ->
+        data = {}
+        for key, val of opts
+          if key == 'parameters' then val = JSON.stringify(val)
+          data[key] = val
+        @$make_request(
+          "#{@BASE_API_URL}#{@id}/action/generate_visualization/", {}, "PUT", data)
+
       $clone: (opts={}) ->
         @$make_request("#{@BASE_API_URL}#{@id}/action/clone/", {}, "POST", {})
 

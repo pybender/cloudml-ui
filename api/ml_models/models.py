@@ -173,6 +173,17 @@ class Model(db.Model, BaseModel, BaseTrainedEntity):
     # Note: It could contains different keys depends to the classifier used
     visualization_data = deferred(db.Column(JSONType))
 
+    def visualize_model(self, data=None, status='done', commit=True):
+        if data is None:
+            from copy import deepcopy
+            data = deepcopy(self.visualization_data)
+        if not 'parameters' in data:
+            data['parameters'] = {}
+        data['parameters']['status'] = status
+        self.visualization_data = data
+        if commit:
+            self.save()
+
     @property
     def test_import_handler(self):
         return getattr(
