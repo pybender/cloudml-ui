@@ -1,5 +1,6 @@
 # Models, Tags and Weights goes here
 import json
+import logging
 from functools import partial
 
 from sqlalchemy.orm import relationship, deferred, backref, foreign, remote
@@ -173,14 +174,34 @@ class Model(db.Model, BaseModel, BaseTrainedEntity):
     # Note: It could contains different keys depends to the classifier used
     visualization_data = deferred(db.Column(JSONType))
 
-    def visualize_model(self, data=None, status='done', commit=True):
-        if data is None:
-            from copy import deepcopy
-            data = deepcopy(self.visualization_data)
-        if not 'parameters' in data:
-            data['parameters'] = {}
-        data['parameters']['status'] = status
-        self.visualization_data = data
+    def __init__(self, *args, **kwargs):
+        super(Model, self).__init__(*args, **kwargs)
+        self.visualization_data = {}
+
+    def visualize_model(self, data=None, status=None, commit=True, segment=None):
+        def set_status(item, status):
+            if not 'parameters' in item:
+                item['parameters'] = {}
+            item['parameters']['status'] = status
+
+        from copy import deepcopy
+        visualization_data = deepcopy(self.visualization_data or {})
+
+        if segment is None:
+            if data:
+                visualization_data = data
+            if status:
+                set_status(visualization_data, status)
+        else:
+            if data is None:
+                raise ValueError("data is required when segment is specified")
+            else:
+                # updating the visualization data of specific segment
+                visualization_data[segment] = data or {}
+                if status:
+                    set_status(visualization_data[segment], status)
+
+        self.visualization_data = visualization_data
         if commit:
             self.save()
 
@@ -280,22 +301,35 @@ class Model(db.Model, BaseModel, BaseTrainedEntity):
     def features(self):
         return self.get_features_json()
 
-    def delete_metadata(self, delete_log=True):
-        from api.base.models import db
-        if delete_log:
+    def prepare_fields_for_train(self, user, datasets=[], delete_metadata=True):
+        """
+        Flushes model fields while re-training.
+        Removes related models, when `delete_metadata` setted.
+        """
+        if delete_metadata:
+            from api.model_tests.models import TestResult, TestExample
+            from api.base.models import db
             LogMessage.delete_related_logs(self.id)
 
-        def _del(items):
-            for item in items:
-                db.session.delete(item)
+            def _del(Cls, related_name):
+                count = Cls.query.filter(Cls.model_id == self.id).delete(
+                        synchronize_session=False)
+                logging.info('%s %s examples to delete' % (count, related_name))
 
-        _del(self.tests)
-        _del(self.weight_categories)
-        _del(self.weights)
-        db.session.commit()
+            _del(TestExample, 'test examples')
+            _del(TestResult, 'tests')
+            _del(Weight, 'weights')
+            _del(WeightsCategory, 'weights categories')
+            _del(Segment, 'segments')
 
+        self.datasets = datasets
+        self.status = self.STATUS_TRAINING
+        self.visualization_data = {}
+        self.error = ""
+        self.trained_by = user
         self.comparable = False
-        self.save()
+        db.session.add(self)
+        db.session.commit()
 
 
 tags_table = db.Table(

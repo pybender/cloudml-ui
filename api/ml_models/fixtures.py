@@ -28,6 +28,7 @@ class ModelData(DataSet):
             "params": {"penalty": "l2"},
             "type": "logistic regression"
         }
+        visualization_data = {}
 
     class model_02:
         features_set = FeatureSetData.bestmatch

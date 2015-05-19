@@ -28,7 +28,7 @@ angular.module('app.models.controllers', ['app.config', ])
     main: MODEL_FIELDS
     grid_search: 'classifier_grid_params'
     visualization: [
-      'visualization_data'
+      'visualization_data', 'segments'
     ]
 ])
 
@@ -524,19 +524,31 @@ angular.module('app.models.controllers', ['app.config', ])
               "requesting dataset #{datasetId} for download"
 ])
 
+.controller('ModelVisualizationCtrl', [
+    '$scope'
+
+    ($scope) ->
+      $scope.mode = 'visual'
+      $scope.$watch('action', (val, oldVal) ->
+        if val?
+          $scope.mode = val[1]
+      , true)
+])
+
+
 .controller('TreeDeepFormCtrl', [
     '$scope'
     'Model'
     '$timeout'
 
     ($scope, Model, $timeout) ->
-      $scope.treeDeep = 10
       $scope.msg = ''
       $scope.showTreeDeepForm = false
 
-      $scope.init = (model) ->
+      $scope.init = (model, segment) ->
         $scope.model = model
-        $scope.$watch('model.visualization_data.parameters.deep', (val, oldVal) ->
+        $scope.segment = segment
+        $scope.$watch('model.visualization_data[segment.name].parameters.deep', (val, oldVal) ->
           if val?
             $scope.treeDeep = val
         , true)
@@ -556,7 +568,7 @@ angular.module('app.models.controllers', ['app.config', ])
       $scope.checkVisualization = () ->
         $scope.model.$load(show: 'visualization_data')
         .then (opts) ->
-          if $scope.model.visualization_data.parameters.status == 'done'
+          if $scope.model.visualization_data[$scope.segment.name].parameters.status == 'done'
             $scope.timer = null
             $scope.msg = ''
           else

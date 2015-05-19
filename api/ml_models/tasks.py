@@ -7,7 +7,7 @@ from datetime import datetime
 import numpy
 import tempfile
 
-from core.trainer.trainer import Trainer
+from core.trainer.trainer import Trainer, DEFAULT_SEGMENT
 from core.trainer.config import FeatureModel
 
 from api import celery, app
@@ -37,45 +37,9 @@ def train_model(dataset_ids, model_id, user_id, delete_metadata=False):
     user = User.query.get(user_id)
     model = Model.query.get(model_id)
     datasets = DataSet.query.filter(DataSet.id.in_(dataset_ids)).all()
-    logging.info('Model: %s' % model.name)
+    logging.info('Preparing the model `%s` for training.' % model.name)
     try:
-        model.comparable = False
-        model.datasets = datasets
-        model.status = model.STATUS_TRAINING
-        model.error = ""
-        model.trained_by = user
-        model.save(commit=True)
-
-        if delete_metadata:
-            logging.info('Remove old model data on retrain model')
-            LogMessage.delete_related_logs(model.id)  # rem logs from mongo
-            count = TestExample.query.filter(
-                TestExample.model_id == model.id).delete(
-                    synchronize_session=False)
-            logging.info('%s tests examples to delete' % count)
-            count = TestResult.query.filter(
-                TestResult.model_id == model.id).delete(
-                    synchronize_session=False)
-            logging.info('%s tests to delete' % count)
-            db_session.commit()
-
-            count = Weight.query.filter(
-                Weight.model_id == model.id).delete(
-                    synchronize_session=False)
-            logging.info('%s weights to delete' % count)
-            db_session.commit()
-
-            count = WeightsCategory.query.filter(
-                WeightsCategory.model_id == model.id).delete(
-                    synchronize_session=False)
-            logging.info('%s weight categories to delete' % count)
-
-            count = Segment.query.filter(
-                Segment.model_id == model_id).delete(
-                    synchronize_session=False)
-            logging.info('%s segments to delete' % count)
-            db_session.commit()
-
+        model.prepare_fields_for_train(user=user, datasets=datasets)
         logging.info('Perform model training')
         feature_model = FeatureModel(model.get_features_json(),
                                      is_file=False)
@@ -300,8 +264,6 @@ def fill_model_parameter_weights(model_id, segment_id=None):
         have_weights = 'weights' in visualization_data
         if have_weights:
             weights_dict = visualization_data.pop('weights')
-            model.visualization_data = visualization_data
-
             weights_added = 0
             categories_added = 0
             classes_processed = 0
@@ -313,25 +275,28 @@ def fill_model_parameter_weights(model_id, segment_id=None):
                 classes_processed += 1
 
             db.session.commit()
-            msg = 'Model %s parameters weights was added to db. %s weights, ' \
-                  'in %s categories for %s classes' % \
-                  (model.name, weights_added, categories_added, classes_processed)
-            logging.info(msg)
+            logging.info(
+                'Model %s parameters weights was added to db. %s weights, ' \
+                'in %s categories for %s classes' % \
+                (model.name, weights_added, categories_added, classes_processed))
         else:
-            msg = 'Weights are unavailable for the classifier'
-            logging.info(msg)
+            logging.info('Weights are unavailable for the classifier')
 
         # TODO:
         if not model.labels:
             model.labels = trainer._get_labels()
+        model.visualize_model(
+                segment=segment.name,
+                data=visualization_data,
+                commit=False)
         model.status = model.STATUS_TRAINED
         model.weights_synchronized = have_weights
         model.save()
 
     except Exception, exc:
-        logging.exception('Got exception when fill_model_parameter: %s', exc)
+        logging.exception('Got exception when visualize the model: %s', exc)
         raise
-    return msg
+    return 'Segment %s in the model %s visualized' % (segment.name, model.name)
 
 
 class VisualizationException(Exception):
@@ -378,23 +343,37 @@ def generate_visualization_tree(model_id, deep):
     clf_type = model.classifier['type']
     if not clf_type in (DECISION_TREE_CLASSIFIER, ):
         raise VisualizationException(
-            "model with %s classifier doesn't support tree visualization" % clf_type,
+            "model with %s classifier doesn't support tree"
+            " visualization" % clf_type,
             VisualizationException.CLASSIFIER_NOT_SUPPORTED)
 
     # Checking that all_weights had been stored while training model
     # For old models we need to retrain the model.
-    if model.visualization_data is None or not 'all_weights' in model.visualization_data:
+    if model.visualization_data is None:
         raise VisualizationException(
-            "we don't support the visualization re-generation for models trained before may 2015."
+            "we don't support the visualization re-generation for "
+            "models trained before may 2015."
             "please re-train the model to use this feature.",
             error_code=VisualizationException.ALL_WEIGHT_NOT_FILLED)
 
     trainer = model.get_trainer()
-    data = model.visualization_data.copy()
-    tree = trainer.model_visualizer.regenerate_tree(
-        'default', data['all_weights'], deep=deep)
-    data['tree'] = tree
-    data['parameters'] = {'deep': deep}
+    from copy import deepcopy
+    data = deepcopy(model.visualization_data)
+    segments = [segment.name for segment in model.segments] \
+        or [DEFAULT_SEGMENT]
+    for segment in segments:
+        if not segment in model.visualization_data \
+                or not 'all_weights' in model.visualization_data[segment]:
+            raise VisualizationException(
+                "we don't support the visualization re-generation for models"
+                " trained before may 2015."
+                "please re-train the model to use this feature.",
+                error_code=VisualizationException.ALL_WEIGHT_NOT_FILLED)
+
+        tree = trainer.model_visualizer.regenerate_tree(
+            segment, data[segment]['all_weights'], deep=deep)
+        data[segment]['tree'] = tree
+        data[segment]['parameters'] = {'deep': deep, 'status': 'done'}
     model.visualize_model(data)
     return "Tree visualization was completed"
 

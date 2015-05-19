@@ -527,6 +527,9 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
 
     @patch('api.ml_models.models.Model.get_trainer')
     def test_generate_visualization_tree(self, get_trainer_mock):
+        """
+        Checks generate_visualization_tree task with decision tree clf without segmentation.
+        """
         # Using non existance model
         from api.ml_models.tasks import generate_visualization_tree, VisualizationException
         invalid_model_id = -101
@@ -545,8 +548,9 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         # So it's inpossible to re-generate tree.
         self.assertRaises(VisualizationException, generate_visualization_tree, model.id, deep=2)
 
-        model.visualization_data = json.loads(open(
-            './api/ml_models/tests/models/tree_visualization_data.json', 'r').read())
+        from core.trainer.trainer import DEFAULT_SEGMENT
+        model.visualization_data = {DEFAULT_SEGMENT: json.loads(open(
+            './api/ml_models/tests/models/tree_visualization_data.json', 'r').read())}
         model.save()
 
         from random import randint
@@ -554,21 +558,39 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         res = generate_visualization_tree(model.id, deep=deep)
         self.assertEquals(res, "Tree visualization was completed")
         print "using deep %s" % deep
-        self.assertEquals(model.visualization_data['parameters']['deep'], deep)
-        tree = model.visualization_data['tree']
+        self.assertEquals(model.visualization_data[DEFAULT_SEGMENT]['parameters']['deep'], deep)
+        tree = model.visualization_data[DEFAULT_SEGMENT]['tree']
+        self.assertEquals(determine_deep(tree), deep)
 
-        def determine_deep(tree):
-            def recurse(node, current_deep):
-                if 'children' in node:
-                    current_deep += 1
-                    subnodes = node['children']
-                    if subnodes:
-                        left = recurse(subnodes[0], current_deep)
-                        right = recurse(subnodes[1], current_deep)
-                        return max(left, right)
-                return current_deep
-            return recurse(tree, 0)
+    @patch('api.ml_models.models.Model.get_trainer')
+    def test_generate_visualization_tree_with_segments(self, get_trainer_mock):
+        """
+        Checks generate_visualization_tree task with decision tree clf with segmentation.
+        """
+        from api.ml_models.tasks import generate_visualization_tree, VisualizationException
+        from core.trainer.store import TrainerStorage
+        trainer = TrainerStorage.loads(
+            open('./api/ml_models/tests/models/decision_tree_segments.dat', 'r').read())
+        get_trainer_mock.return_value = trainer
 
+        data = json.loads(open(
+            './api/ml_models/tests/models/tree_visualization_data.json', 'r').read())
+        segments = {2: 5, 3: 4, 5: 1, 4: 1}
+        model = Model.query.filter_by(name='decision_tree_clf_model').one()
+        model.create_segments(segments)
+        model.group_by = 'contractor.dev_eng_skill'
+        model.visualization_data = {}
+        for seg in segments.keys():
+            model.visualization_data[seg] = data
+        model.save()
+
+        from random import randint
+        deep = randint(2, 4)
+        res = generate_visualization_tree(model.id, deep=deep)
+        self.assertEquals(res, "Tree visualization was completed")
+        print "using deep %s" % deep
+        self.assertEquals(model.visualization_data['2']['parameters']['deep'], deep)
+        tree = model.visualization_data['5']['tree']
         self.assertEquals(determine_deep(tree), deep)
 
     @mock_s3
@@ -1000,3 +1022,49 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         self.assertEqual(len(resp_obj['features']), 1)
         self.assertEqual(resp_obj['features'][0]['name'], 'opening_id')
         self.assertEqual(resp_obj['features'][0]['type'], 'int')
+
+
+class ModelClassTests(BaseDbTestCase):
+    datasets = [ModelData]
+
+    def test_visualize_model(self):
+        model = Model.query.first()
+
+        def check(params, result, initial_visualization_data=None):
+            model.visualization_data = initial_visualization_data or {}
+            model.save()
+            model.visualize_model(**params)
+            obj = Model.query.get(model.id)
+            self.assertEqual(obj.visualization_data, result)
+
+        check({}, {})
+        check(
+            {'data': {'smth': 'val'}},
+            {'smth': 'val'})
+        check(
+            {'data': {'smth': 'val'}, 'status': 'done'},
+            {'smth': 'val', u'parameters': {u'status': u'done'}})
+        self.assertRaises(ValueError, check, {'segment': 'seg'}, {})
+        check(
+            {'data': {'smth': 'val'}, 'status': 'done', 'segment': 'seg'},
+            {'seg': {'smth': 'val', u'parameters': {u'status': u'done'}}})
+        check(
+            {'status': 'pending'},
+            {u'parameters': {u'status': u'pending'}})
+        check(
+            {'status': 'pending'},
+            {'key': 'val', u'parameters': {u'status': u'pending'}},
+            initial_visualization_data={'key': 'val'})
+
+
+def determine_deep(tree):
+    def recurse(node, current_deep):
+        if 'children' in node:
+            current_deep += 1
+            subnodes = node['children']
+            if subnodes:
+                left = recurse(subnodes[0], current_deep)
+                right = recurse(subnodes[1], current_deep)
+                return max(left, right)
+        return current_deep
+    return recurse(tree, 0)
