@@ -135,7 +135,7 @@ Please choose another one.' % value)
                 created_handlers.append(self._save_importhandler(
                     'test_import_handler_file', name,
                     handler_type=self.test_import_handler_type))
-            if not 'test_import_handler' in self.cleaned_data:
+            if 'test_import_handler' not in self.cleaned_data:
                 self.cleaned_data['test_import_handler'] = \
                     self.cleaned_data['train_import_handler']
 
@@ -315,7 +315,7 @@ class FeatureTransformerForm(BaseForm):
                 "type": self.cleaned_data.get('type'),
                 "params": self.cleaned_data.get('params')
             }
-        if not feature is None:
+        if feature is not None:
             feature.transformer = transformer
             feature.save()
         return transformer
@@ -354,13 +354,12 @@ class GridSearchForm(BaseForm):
                 choices = pconfig.get('choices')
                 if choices:
                     for item in value:
-                        if not item in choices:
+                        if item not in choices:
                             raise ValidationError(
                                 'Invalid {0}: should be one of {1}'.format(
                                     name, ','.join(choices)))
 
                 params[name] = value
-        #import pdb; pdb.set_trace()
         return params
 
     def save(self, *args, **kwargs):
@@ -392,7 +391,7 @@ class VisualizationOptionsForm(BaseForm):
         super(VisualizationOptionsForm, self).__init__(*args, **kwargs)
 
     def clean_type(self, value, field):
-        if value and not value in self.TYPES:
+        if value and value not in self.TYPES:
             raise ValidationError('invalid type')
         return value
 

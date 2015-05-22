@@ -39,7 +39,7 @@ class DeclarativeFieldsMetaclass(type):
             if hasattr(base, 'base_fields'):
                 for f in base.base_fields:
                     field_name = f[0]
-                    if not field_name in field_list:
+                    if field_name not in field_list:
                         field_list.append(field_name)
                         attrs['base_fields'].append(f)
 

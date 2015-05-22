@@ -10,7 +10,6 @@ class FeatureData(DataSet):
     class smth:
         name = 'smth'
         type = 'int'
-        #features_set = FeatureSetData.bestmatch
         feature_set_id = FeatureSetData.bestmatch.ref('id')
 
     class hire_outcome_feature:
@@ -65,7 +64,6 @@ class FeatureData(DataSet):
     class disabled_feature:
         name = 'disabled_feature'
         type = 'int'
-        #features_set = FeatureSetData.bestmatch
         feature_set_id = FeatureSetData.bestmatch.ref('id')
         disabled = True
 

@@ -28,7 +28,10 @@ class TestTasksTests(BaseDbTestCase):
         self.assertEquals(dataset.status, dataset.STATUS_IMPORTED)
 
     def test_get_uncompressed_filesize(self):
-        self.assertEquals(258447, _get_uncompressed_filesize('api/import_handlers/ds.gz'))
+        self.assertEquals(
+            258447, _get_uncompressed_filesize('api/import_handlers/ds.gz'))
 
         # a speical test for crossing 2GB limit
-        #self.assertEquals(2447003648, _get_uncompressed_filesize('/home/nader/host-share/toolarge.gz'))
+        # self.assertEquals(
+        #    2447003648,
+        #    _get_uncompressed_filesize('/home/nader/host-share/toolarge.gz'))

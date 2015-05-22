@@ -81,23 +81,19 @@ class ServerFileResourceTests(BaseDbTestCase, TestChecksMixin):
     #     resp = self.client.get(url, headers=HTTP_HEADERS)
     #     self.assertEqual(resp.status_code, 404)
 
-    #@patch('api.servers.models.Server.list_keys')
-    #@mock_s3
+    # @patch('api.servers.models.Server.list_keys')
+    # @mock_s3
     @patch('api.servers.tasks.logging')
-    #@patch('api.amazon_utils.AmazonS3Helper.list_keys')
+    # @patch('api.amazon_utils.AmazonS3Helper.list_keys')
     def test_list(self, logging_mock):
         server = Server.query.filter_by(name=ServerData.server_01.name).one()
         model = Model.query.filter_by(name=ModelData.model_01.name).one()
         user = User.query.first()
         upload_model_to_server(server.id, model.id, user.id)
         key = "%ss" % self.RESOURCE.OBJECT_NAME
-        #list_keys_mock.return_value = [key]
         resp_data = self._check()
-        #self.assertTrue(list_keys_mock.called)
         self.assertTrue(key in resp_data, resp_data)
         self.assertTrue(len(resp_data[key]), 1)
-        #print resp_data[key], key
-        #raise
 
     def test_delete(self):
         pass
@@ -228,7 +224,8 @@ class ServerModelTests(BaseDbTestCase):
 
         server = Server.query.filter_by(name=ServerData.server_01.name).one()
         one_key = MagicMock()
-        one_key.name = 'odesk-match-cloudml/analytics/models/n3sz3FTFQJeUOe33VF2A.model'
+        one_key.name = \
+            'odesk-match-cloudml/analytics/models/n3sz3FTFQJeUOe33VF2A.model'
 
         key_obj = MagicMock()
         key_obj.get_metadata = get_metadata

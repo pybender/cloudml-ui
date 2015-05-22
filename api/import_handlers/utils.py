@@ -57,7 +57,7 @@ def construct_pig_sample(fields_data):
 def isfloat(x):
     try:
         a = float(x)
-    except :
+    except:
         return False
     else:
         return True
@@ -67,7 +67,7 @@ def isint(x):
     try:
         a = float(x)
         b = int(a)
-    except :
+    except:
         return False
     else:
         return a == b

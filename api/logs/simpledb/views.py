@@ -14,7 +14,7 @@ class LogResource(BaseResource):
         params = self._get_list_parameters()
 
         def _get_required(name):
-            if not name in params:
+            if name not in params:
                 raise ValidationError('%s is required' % name)
             return params[name]
 

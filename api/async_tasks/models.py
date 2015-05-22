@@ -59,29 +59,7 @@ class AsyncTask(db.Model, BaseModel):
 
     def terminate_task(self):
         from api import celery
-        # try:
-        
-
-        # import signal
-
-        # def kill_child_processes(parent_pid, sig=signal.SIGKILL, top=True):
-        #     ps_command = subprocess.Popen("ps -o pid --ppid %d --noheaders" % parent_pid, shell=True, stdout=subprocess.PIPE)
-        #     ps_output = ps_command.stdout.read()
-        #     retcode = ps_command.wait()
-        #     if retcode != 0: return
-        #     for pid_str in ps_output.split("n")[:-1]:
-        #         try:
-        #             kill_child_processes(int(pid_str), sig, top=False)
-
-        #             if not top: os.kill(int(pid_str), sig)
-        #         except OSError: pass
-
-        # kill_child_processes()
-
         celery.control.revoke(self.task_id, terminate=True, signal='SIGKILL')
-
-        # except Exception as e:
-        #     logging.exception(e)
 
 
 @before_models_committed.connect

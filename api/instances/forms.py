@@ -20,5 +20,6 @@ class InstanceForm(BaseForm):
         count = query.count()
         if count:
             raise ValidationError(
-                'Instance with name "%s" already exist. Please choose another one.' % value)
+                'Instance with name "%s" already exist. Please choose\
+another one.' % value)
         return value

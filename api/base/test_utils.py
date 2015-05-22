@@ -83,7 +83,7 @@ class BaseDbTestCase(TestCase):
 
         # Loading fixtures
         from api.accounts.fixtures import UserData
-        if not UserData in self.datasets:
+        if UserData not in self.datasets:
             self.datasets = list(self.datasets)
             self.datasets.append(UserData)
 
@@ -299,7 +299,7 @@ class TestChecksMixin(object):
     def _get_fields(self, show):
         if show:
             fields = show.split(',')
-            if not 'id' in fields:
+            if 'id' not in fields:
                 fields.append('id')
             return set(fields)
         else:

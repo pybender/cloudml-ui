@@ -5,8 +5,10 @@ import tempfile
 from mock import patch
 import urllib
 import numpy
+import os
 
-from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS, FEATURE_COUNT, TARGET_VARIABLE
+from api.base.test_utils import BaseDbTestCase, TestChecksMixin, \
+    HTTP_HEADERS, FEATURE_COUNT, TARGET_VARIABLE
 from api.features.models import FeatureSet, Feature
 from api.ml_models.tasks import transform_dataset_for_download
 from ..views import ModelResource
@@ -20,11 +22,16 @@ from api.features.fixtures import FeatureSetData, FeatureData
 from api.servers.models import Server
 from api.async_tasks.models import AsyncTask
 from api.servers.fixtures import ServerData
-
-
 from ..fixtures import ModelData, TagData
 from api.import_handlers.fixtures import ImportHandlerData, DataSetData, \
     XmlImportHandlerData, XmlEntityData, XmlFieldData
+
+
+DIR = os.path.dirname(__file__)
+TREE_VISUALIZATION_DATA = json.loads(open(os.path.join(
+    DIR, 'models/tree_visualization_data.json'), 'r').read())
+DECISION_TREE_WITH_SEGMENTS = open(os.path.join(
+    DIR, 'models/decision_tree_segments.dat'), 'r').read()
 
 
 class MlModelsTests(BaseDbTestCase):
@@ -62,13 +69,15 @@ class MlModelsTests(BaseDbTestCase):
     @patch('api.amazon_utils.AmazonS3Helper.save_key_string')
     @patch('api.amazon_utils.AmazonS3Helper.load_key')
     def test_get_trainer_s3url(self, *mocks):
-        model = Model(name="test", trainer='trainer file', status=Model.STATUS_TRAINED)
+        model = Model(name="test", trainer='trainer file',
+                      status=Model.STATUS_TRAINED)
         model.save()
         url = model.get_trainer_s3url()
         trainer_filename = model.get_trainer_filename()
         self.assertTrue(trainer_filename)
         self.assertTrue(url)
-        self.assertTrue('s3.amazonaws.com/%s?Signature' % trainer_filename in url)
+        self.assertTrue(
+            's3.amazonaws.com/%s?Signature' % trainer_filename in url)
         self.assertTrue(url.startswith('https://'))
 
         # trainer file not yet uploaoded
@@ -115,7 +124,8 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         # TODO: Why we need it? Could we create link to import handler
         # using fixtures. Investigate why refs to another fixtures doesn't
         # works
-        self.obj.test_import_handler = self.obj.train_import_handler = self.handler
+        self.obj.test_import_handler = self.obj.train_import_handler = \
+            self.handler
         self.obj.save()
 
         # update features with feature_set id, as ref('id') is not working
@@ -124,7 +134,8 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         feature_set = FeatureSet.query.all()[0]
         for fixture in [FeatureData.smth, FeatureData.hire_outcome_feature,
                         FeatureData.title_feature, FeatureData.name_feature,
-                        FeatureData.complex_feature, FeatureData.disabled_feature]:
+                        FeatureData.complex_feature,
+                        FeatureData.disabled_feature]:
             feature = Feature.query.filter_by(name=fixture.name).one()
             feature.feature_set_id = feature_set.id
             feature.save()
@@ -138,12 +149,14 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
 
     def test_filter(self):
         self.check_list(data={'status': 'New'}, query_params={'status': 'New'})
-        self.check_list(data={'name': 'Trained'}, 
+        self.check_list(data={'name': 'Trained'},
                         query_params={'name': 'TrainedModel'})
 
         # Comparable filter
-        #self.check_list(data={'comparable': '1'}, query_params={'comparable': True})
-        #self.check_list(data={'comparable': '0'}, query_params={'comparable': False})
+        # self.check_list(
+        #    data={'comparable': '1'}, query_params={'comparable': True})
+        # self.check_list(
+        #    data={'comparable': '0'}, query_params={'comparable': False})
 
     def test_details(self):
         self.check_details(show='')
@@ -166,7 +179,8 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         ]
         self.obj.save()
         resp = self.check_details(show='name,data_fields')
-        self.assertEquals(resp['model']['data_fields'], ['employer.country', 'opening_id'])
+        self.assertEquals(
+            resp['model']['data_fields'], ['employer.country', 'opening_id'])
 
     def test_get_features_download_action(self):
         url = self._get_url(id=self.obj.id, action='features_download')
@@ -178,8 +192,9 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
                              for f in feature_set['features']]))
         self.assertEquals(resp.status_code, httplib.OK)
         self.assertEquals(resp.mimetype, 'application/json')
-        self.assertEquals(resp.headers['Content-Disposition'],
-                          'attachment; filename=%s-features.json' % (self.obj.name,))
+        self.assertEquals(
+            resp.headers['Content-Disposition'],
+            'attachment; filename=%s-features.json' % (self.obj.name, ))
 
         # disable a feature and regenerate
         feature = Feature.query.filter_by(name='title').one()
@@ -201,7 +216,8 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         trainer_url = resp_obj['url']
         trainer_filename = model.get_trainer_filename()
         self.assertTrue(trainer_filename)
-        self.assertTrue('s3.amazonaws.com/%s?Signature' % (trainer_filename,) in trainer_url)
+        self.assertTrue(
+            's3.amazonaws.com/%s?Signature' % trainer_filename in trainer_url)
         self.assertTrue(trainer_url.startswith('https://'))
 
         # trainer file not yet uploaoded
@@ -250,7 +266,8 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
                      'name': 'new'}
         self.check_edit_error(
             post_data,
-            {'features': 'Features JSON file is invalid: schema-name is missing'})
+            {'features': "Features JSON file is invalid: "
+                         "schema-name is missing"})
 
         # Invalid trainer
         trainer = open('api/ml_models/invalid_model.dat', 'r').read()
@@ -259,7 +276,9 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
                      'trainer': trainer,
                      'name': 'new'}
         self.check_edit_error(post_data, {
-            'trainer': "Pickled trainer model is invalid: Could not unpickle trainer - 'module' object has no attribute 'TrainerStorage1'"
+            'trainer': "Pickled trainer model is invalid: "
+                       "Could not unpickle trainer - "
+                       "'module' object has no attribute 'TrainerStorage1'"
         })
 
     @mock_s3
@@ -303,7 +322,8 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
                         "Test import handler was not set")
         self.assertTrue(model.train_import_handler,
                         "Train import handler was not set")
-        self.assertNotEquals(model.test_import_handler.id, model.train_import_handler.id)
+        self.assertNotEquals(
+            model.test_import_handler.id, model.train_import_handler.id)
         # TODO
         # self.assertTrue(model.features, "Features was not set")
         self.assertEquals(model.labels, [],
@@ -341,11 +361,13 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
                         "Test import handler was not set")
         self.assertTrue(model.train_import_handler,
                         "Train import handler was not set")
-        self.assertEquals(model.test_import_handler.id, model.train_import_handler.id)
+        self.assertEquals(
+            model.test_import_handler.id, model.train_import_handler.id)
 
         handler = ImportHandler.query.first()
         name = 'another'
-        post_data = {'import_handler': '{0}{1}'.format(handler.id, handler.type),
+        handler_id = '{0}{1}'.format(handler.id, handler.type)
+        post_data = {'import_handler': handler_id,
                      'name': name}
         resp, model = self.check_edit(post_data)
         self.assertEquals(model.name, name)
@@ -370,7 +392,7 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         resp, model = self.check_edit(post_data)
         self.assertEquals(model.name, name)
         self.assertEquals(model.status, model.STATUS_NEW)
-        
+
         features_set = model.features_set
         self.assertTrue(features_set, "Features set not created")
 
@@ -462,7 +484,7 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
 
         data = {'tags': json.dumps(['tag', 'tag2'])}
         resp, obj = self.check_edit(data, id=self.obj.id)
-        self.assertEquals(set([t.text for t in obj.tags]), set(['tag', 'tag2']))
+        self.assertItemsEqual([t.text for t in obj.tags], ['tag', 'tag2'])
 
         model2 = Model.query.filter_by(name=ModelData.model_02.name).first()
         data = {'tags': json.dumps(['tag'])}
@@ -477,7 +499,8 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
 
         data = {'tags': json.dumps(['tag2', 'some_new'])}
         resp, obj = self.check_edit(data, id=self.obj.id)
-        self.assertEquals(set([t.text for t in obj.tags]), set(['tag2', 'some_new']))
+        self. assertItemsEqual(
+            [t.text for t in obj.tags], ['tag2', 'some_new'])
 
         tag = Tag.query.filter_by(text='tag').one()
         self.assertEquals(tag.count, 1)
@@ -528,15 +551,20 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
     @patch('api.ml_models.models.Model.get_trainer')
     def test_generate_visualization_tree(self, get_trainer_mock):
         """
-        Checks generate_visualization_tree task with decision tree clf without segmentation.
+        Checks generate_visualization_tree task with decision tree
+        clf without segmentation.
         """
         # Using non existance model
-        from api.ml_models.tasks import generate_visualization_tree, VisualizationException
+        from api.ml_models.tasks import generate_visualization_tree, \
+            VisualizationException
         invalid_model_id = -101
-        self.assertRaises(ValueError, generate_visualization_tree, invalid_model_id, 10)
+        self.assertRaises(
+            ValueError, generate_visualization_tree, invalid_model_id, 10)
 
         # Trying to generate tree for logistic regression classifier
-        self.assertRaises(VisualizationException, generate_visualization_tree, self.obj.id, 10)
+        self.assertRaises(
+            VisualizationException,
+            generate_visualization_tree, self.obj.id, 10)
 
         # Re-generating tree for decision tree classifier
         model = Model.query.filter_by(name='decision_tree_clf_model').one()
@@ -544,13 +572,15 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         trainer = TrainerStorage.loads(
             open('./api/ml_models/tests/models/decision_tree.dat', 'r').read())
         get_trainer_mock.return_value = trainer
-        # In this model 'all_weights' not saved to visualization_data while training.
+        # In this model 'all_weights' not saved to visualization_data
+        # while training.
         # So it's inpossible to re-generate tree.
-        self.assertRaises(VisualizationException, generate_visualization_tree, model.id, deep=2)
+        self.assertRaises(
+            VisualizationException, generate_visualization_tree,
+            model.id, deep=2)
 
         from core.trainer.trainer import DEFAULT_SEGMENT
-        model.visualization_data = {DEFAULT_SEGMENT: json.loads(open(
-            './api/ml_models/tests/models/tree_visualization_data.json', 'r').read())}
+        model.visualization_data = {DEFAULT_SEGMENT: TREE_VISUALIZATION_DATA}
         model.save()
 
         from random import randint
@@ -558,30 +588,32 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         res = generate_visualization_tree(model.id, deep=deep)
         self.assertEquals(res, "Tree visualization was completed")
         print "using deep %s" % deep
-        self.assertEquals(model.visualization_data[DEFAULT_SEGMENT]['parameters']['deep'], deep)
+        self.assertEquals(
+            model.visualization_data[DEFAULT_SEGMENT]['parameters']['deep'],
+            deep)
         tree = model.visualization_data[DEFAULT_SEGMENT]['tree']
         self.assertEquals(determine_deep(tree), deep)
 
     @patch('api.ml_models.models.Model.get_trainer')
-    def test_generate_visualization_tree_with_segments(self, get_trainer_mock):
+    def test_generate_visualization_tree_with_segments(
+            self, get_trainer_mock):
         """
-        Checks generate_visualization_tree task with decision tree clf with segmentation.
+        Checks generate_visualization_tree task with decision
+        tree clf with segmentation.
         """
-        from api.ml_models.tasks import generate_visualization_tree, VisualizationException
+        from api.ml_models.tasks import generate_visualization_tree, \
+            VisualizationException
         from core.trainer.store import TrainerStorage
-        trainer = TrainerStorage.loads(
-            open('./api/ml_models/tests/models/decision_tree_segments.dat', 'r').read())
+        trainer = TrainerStorage.loads(DECISION_TREE_WITH_SEGMENTS)
         get_trainer_mock.return_value = trainer
 
-        data = json.loads(open(
-            './api/ml_models/tests/models/tree_visualization_data.json', 'r').read())
         segments = {2: 5, 3: 4, 5: 1, 4: 1}
         model = Model.query.filter_by(name='decision_tree_clf_model').one()
         model.create_segments(segments)
         model.group_by = 'contractor.dev_eng_skill'
         model.visualization_data = {}
         for seg in segments.keys():
-            model.visualization_data[seg] = data
+            model.visualization_data[seg] = TREE_VISUALIZATION_DATA
         model.save()
 
         from random import randint
@@ -589,7 +621,8 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         res = generate_visualization_tree(model.id, deep=deep)
         self.assertEquals(res, "Tree visualization was completed")
         print "using deep %s" % deep
-        self.assertEquals(model.visualization_data['2']['parameters']['deep'], deep)
+        self.assertEquals(
+            model.visualization_data['2']['parameters']['deep'], deep)
         tree = model.visualization_data['5']['tree']
         self.assertEquals(determine_deep(tree), deep)
 
@@ -603,10 +636,12 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
             'new_dataset_selected': True,
             'params': '{}'
         }
-        self.check_edit_error(data, {
-                u'aws_instance': u'Please select instance with a worker',
-                u'parameters': u'Some parameters are missing: category, start, end',
-                u'format': u'Please select format of the Data Set'}, id=self.obj.id, action='train')
+        self.check_edit_error(
+            data,
+            {'aws_instance': 'Please select instance with a worker',
+             'parameters': 'Some parameters are missing: category, start, end',
+             'format': 'Please select format of the Data Set'},
+            id=self.obj.id, action='train')
 
         data = {
             'existing_instance_selected': False,
@@ -631,7 +666,8 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
     @mock_s3
     @patch('api.ml_models.models.Model.get_features_json')
     @patch('core.trainer.trainer.Trainer.__init__')
-    def test_train_model_exception(self, mock_trainer, mock_get_features_json, *mocks):
+    def test_train_model_exception(self, mock_trainer,
+                                   mock_get_features_json, *mocks):
         mock_trainer.side_effect = Exception('Some message')
         with open('./conf/features.json', 'r') as f:
             mock_get_features_json.return_value = f.read()
@@ -672,7 +708,8 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
 
     @mock_s3
     @patch('api.ml_models.models.Model.get_features_json')
-    def test_train_model_with_dataset_csv(self, mock_get_features_json, *mocks):
+    def test_train_model_with_dataset_csv(self, mock_get_features_json,
+                                          *mocks):
         with open('./conf/features.json', 'r') as f:
             mock_get_features_json.return_value = f.read()
 
@@ -704,7 +741,7 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         # Dataset from another handler
         new_handler = ImportHandler()
         new_handler.name = 'New Hnadler for the only one test'
-        #new_handler.type = ImportHandler.TYPE_DB
+        # new_handler.type = ImportHandler.TYPE_DB
         new_handler.import_params = ['start', 'end', 'category']
         new_handler.data = self.handler.data
         new_handler.save()
@@ -756,7 +793,8 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
 
     @mock_s3
     @patch('api.ml_models.models.Model.get_features_json')
-    def test_train_model_with_load_params(self, mock_get_features_json, *mocks):
+    def test_train_model_with_load_params(self, mock_get_features_json,
+                                          *mocks):
         with open('./conf/features.json', 'r') as f:
             mock_get_features_json.return_value = f.read()
 
@@ -778,7 +816,8 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
 
     @mock_s3
     @patch('api.ml_models.models.Model.get_features_json')
-    def test_train_model_with_load_params_csv(self, mock_get_features_json, *mocks):
+    def test_train_model_with_load_params_csv(self, mock_get_features_json,
+                                              *mocks):
         with open('./conf/features.json', 'r') as f:
             mock_get_features_json.return_value = f.read()
 
@@ -850,7 +889,9 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         # Checking weights
         self.assertTrue(obj.weights_synchronized)
         tr_weights = self.obj.get_trainer(force_load=True).get_weights()
-        valid_count = len(tr_weights[1]['positive']) + len(tr_weights[1]['negative'])
+        pos_count = len(tr_weights[1]['positive'])
+        neg_count = len(tr_weights[1]['negative'])
+        valid_count = pos_count + neg_count
         weights = obj.weights
 
         self.assertEquals(len(weights), valid_count)
@@ -919,7 +960,8 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
             s3_segment = s3_transform[segment].tolist()
             direct_segment = direct_transform[segment]
             self.assertEqual(s3_segment['Y'], direct_segment['Y'])
-            self.assertTrue((s3_segment['X'].toarray() == direct_segment['X'].toarray()).all())
+            self.assertTrue((s3_segment['X'].toarray() ==
+                             direct_segment['X'].toarray()).all())
 
         # TODO : Requires prerun or some how waiting for task to run
         # downloads = AsyncTask.get_current_by_object(
@@ -928,7 +970,8 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
 
     @patch('api.ml_models.tasks.transform_dataset_for_download')
     def test_put_dataset_download_action(self, transform_mock):
-        dataset = DataSet.query.filter_by(name=DataSetData.dataset_01.name).first()
+        dataset = DataSet.query.filter_by(
+            name=DataSetData.dataset_01.name).first()
 
         # bogus model
         self.obj.status = Model.STATUS_TRAINING
@@ -965,7 +1008,8 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(resp.status_code, httplib.NOT_FOUND)
 
         # existing model
-        dataset = DataSet.query.filter_by(name=DataSetData.dataset_01.name).first()
+        dataset = DataSet.query.filter_by(
+            name=DataSetData.dataset_01.name).first()
         task = AsyncTask()
         task.args = [self.obj.id, dataset.id]
         task.object_id = self.obj.id
@@ -978,7 +1022,7 @@ class ModelsTests(BaseDbTestCase, TestChecksMixin):
         resp_obj = json.loads(resp.data)
         self.assertEqual(async_get_object_mock.call_args_list[0][0][1],
                          'api.ml_models.tasks.transform_dataset_for_download')
-        self.assertTrue(resp_obj.has_key('downloads'))
+        self.assertTrue('downloads' in resp_obj)
         self.assertEqual(resp_obj['downloads'][0]['dataset']['id'], dataset.id)
 
     def test_put_add_features_from_xml_ih_action(self):

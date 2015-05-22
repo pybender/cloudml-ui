@@ -4,13 +4,11 @@ from core.trainer.scalers import MinMaxScaler, StandardScaler, NoScaler
 # TODO: move and use it in cloudml project
 TRANSFORMERS = {
     'Dictionary': {
-        #'mthd': get_dict_vectorizer,
         'parameters': ['separator', 'sparse'],
         'default': {},  # default value
         'defaults': {}  # default values of the parameters
     },
     'Count': {
-        #'mthd': get_count_vectorizer,
         'parameters': ['charset', 'charset_error',
                        'strip_accents', 'lowercase',
                        'stop_words', 'token_pattern',
@@ -23,7 +21,6 @@ TRANSFORMERS = {
         'defaults': {}
     },
     'Tfidf': {
-        #'mthd': get_tfidf_vectorizer,
         'parameters': ['charset', 'charset_error',
                        'strip_accents', 'lowercase',
                        'analyzer', 'stop_words',
@@ -38,7 +35,6 @@ TRANSFORMERS = {
         'defaults': {}
     },
     'Lda': {
-        #'mthd': get_count_vectorizer,
         'parameters': ['charset', 'charset_error',
                        'strip_accents', 'lowercase',
                        'stop_words', 'token_pattern',
@@ -51,7 +47,6 @@ TRANSFORMERS = {
         'defaults': {}
     },
     'Lsi': {
-        #'mthd': get_count_vectorizer,
         'parameters': ['charset', 'charset_error',
                        'strip_accents', 'lowercase',
                        'stop_words', 'token_pattern',
@@ -102,8 +97,5 @@ FIELDS_MAP = {'input_format': 'input-format',
               'is_target_variable': 'is-target-variable',
               'required': 'is-required',
               'schema_name': 'schema-name'}
-
-#INV_FIELDS_MAP = {v:k for k, v in FIELDS_MAP.items()}
-
 
 from core.trainer.classifier_settings import CLASSIFIERS

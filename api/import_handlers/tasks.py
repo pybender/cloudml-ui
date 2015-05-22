@@ -21,11 +21,11 @@ def import_data(dataset_id, model_id=None, test_id=None, transformer_id=None):
     Import data from database.
     """
     def get_parent_object():
-        if not model_id is None:
+        if model_id is not None:
             return Model.query.get(model_id)
-        if not test_id is None:
+        if test_id is not None:
             return TestResult.query.get(test_id)
-        if not transformer_id is None:
+        if transformer_id is not None:
             return Transformer.query.get(transformer_id)
 
     def set_error(err, ds=None, parent=None):
@@ -55,6 +55,7 @@ def import_data(dataset_id, model_id=None, test_id=None, transformer_id=None):
         logging.info('Loading dataset %s' % dataset.id)
 
         import_start_time = datetime.now()
+
         def callback(**kwargs):
             jobflow_id = kwargs.get('jobflow_id')  # required
             master_dns = kwargs.get('master_dns', None)
@@ -64,30 +65,30 @@ def import_data(dataset_id, model_id=None, test_id=None, transformer_id=None):
 
             jobflow_id, master_dns, s3_logs_folder, step_number
             cluster = Cluster.query.filter(
-                Cluster.jobflow_id==jobflow_id
+                Cluster.jobflow_id == jobflow_id
             ).first()
             if cluster is None:
                 cluster = Cluster(jobflow_id=jobflow_id)
-                if not master_dns is None:
+                if master_dns is not None:
                     cluster.master_node_dns = master_dns
-                if not s3_logs_folder is None:
+                if s3_logs_folder is not None:
                     cluster.logs_folder = s3_logs_folder
                 cluster.save()
             dataset.cluster = cluster
-            if not step_number is None:
+            if step_number is not None:
                 dataset.pig_step = step_number
-            if not pig_row is None:
+            if pig_row is not None:
                 dataset.pig_row = pig_row
             dataset.save()
-            if not master_dns is None:
+            if master_dns is not None:
                 logging.info('Master dns %s' % master_dns)
                 cluster.create_ssh_tunnel()
-
 
         logging.info("Import dataset using import handler '%s' \
 with%s compression", import_handler.name, '' if dataset.compress else 'out')
 
-        handler_iterator = import_handler.get_iterator(dataset.import_params, callback)
+        handler_iterator = import_handler.get_iterator(
+            dataset.import_params, callback)
 
         logging.info('The dataset will be stored to file %s', dataset.filename)
 

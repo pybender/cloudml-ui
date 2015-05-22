@@ -24,7 +24,7 @@ class CompareReportResource(BaseResourceSQL):
         def process_val(key, val, val_type):
             if key.startswith(val_type):
                 index = key.replace(val_type, '')
-                if not index in params_pairs:
+                if index not in params_pairs:
                     params_pairs[index] = {}
                 params_pairs[index][val_type] = val
 

@@ -9,7 +9,7 @@ from boto.s3.key import Key
 from api import app
 
 
-class AmazonEMRHelper(object):    # pragma: no cover
+class AmazonEMRHelper(object):
     def __init__(self, token=None, secret=None, region='us-west-1'):
         token = token or app.config['AMAZON_ACCESS_TOKEN']
         secret = secret or app.config['AMAZON_TOKEN_SECRET']
@@ -39,22 +39,31 @@ class AmazonEC2Helper(object):    # pragma: no cover
             instance_ids=[instance_id, ])
 
     def request_spot_instance(self, instance_type='m3.xlarge'):
+        """
+        Note: previously used amis: ami-4e36567e,ami-14c05a24,ami-68c85358
+        ami-a068f590,ami-78b42948,ami-65821055,ami-a7f96b97,ami-f0af86b5
+        ami-66c8e123
+        subnet: subnet-3f5bc256
+        security_group_ids: sg-534f5d3f
+        """
         request = self.conn.request_spot_instances(
             price="1",
-            image_id='ami-71d49241',#'ami-4e36567e',#'ami-14c05a24',#'ami-68c85358',#'ami-a068f590',#'ami-78b42948',#'ami-65821055',#'ami-a7f96b97',#"ami-f0af86b5",#"ami-66c8e123",
-            security_group_ids=["sg-1dc1dc71",],#["sg-534f5d3f", ],
+            image_id='ami-71d49241',
+            security_group_ids=["sg-1dc1dc71"],
             instance_type=instance_type,
             placement="us-west-2a",
-            subnet_id="subnet-7a7c3612")#"subnet-3f5bc256")
+            subnet_id="subnet-7a7c3612")
         return request[0]
 
     def get_instance(self, instance_id):
-        reservations = self.conn.get_all_instances(instance_ids=[instance_id, ])
+        reservations = self.conn.get_all_instances(
+            instance_ids=[instance_id, ])
         instance = reservations[0].instances[0]
         return instance
 
     def get_request_spot_instance(self, request_id):
-        request = self.conn.get_all_spot_instance_requests(request_ids=[request_id, ])
+        request = self.conn.get_all_spot_instance_requests(
+            request_ids=[request_id, ])
         request = request[0]
         return request
 
@@ -116,9 +125,10 @@ class AmazonS3Helper(object):
         stream = cStringIO.StringIO()
         part_count = [0]
 
-        def progress(x,y):
+        def progress(x, y):
             if y > 0:
-                logging.debug("Part %d: %0.2f%%" % (part_count[0], 100.*x/y))
+                logging.debug(
+                    "Part %d: %0.2f%%" % (part_count[0], 100. * x / y))
 
         def upload_part(part_count=[0]):
             part_count[0] += 1
@@ -138,7 +148,7 @@ class AmazonS3Helper(object):
                     mpu.complete_upload()
                     break
                 stream.write(chunk)
-                if stream.tell() > 5*1024*1024:
+                if stream.tell() > 5 * 1024 * 1024:
                     upload_part(part_count)
 
     def save_key(self, name, filename, meta={}, compressed=True):
@@ -166,13 +176,8 @@ class AmazonS3Helper(object):
                 previous_value = key.get_metadata(meta_key)
                 key.set_metadata("previous_" + meta_key, previous_value)
             key.set_metadata(meta_key, meta_val)
-        #key.metadata.update(meta)
-        #print key, key.metadata
-        key.copy(
-            key.bucket.name, 
-            key.name, 
-            key.metadata
-        )
+        # key.metadata.update(meta)
+        key.copy(key.bucket.name, key.name, key.metadata)
 
     def delete_key(self, name):
         key = Key(self.bucket)
@@ -183,7 +188,7 @@ class AmazonS3Helper(object):
         pass
 
     def _get_bucket(self):
-        #boto.set_stream_logger('boto')
+        # boto.set_stream_logger('boto')
         bucket = self.conn.lookup(self.bucket_name)
         if bucket is None:
             bucket = self.conn.create_bucket(self.bucket_name)
@@ -196,7 +201,7 @@ class AmazonDynamoDBHelper(object):
     def __new__(cls, *args, **kwargs):
         if not cls._instance:
             cls._instance = super(AmazonDynamoDBHelper, cls).__new__(
-                                cls, *args, **kwargs)
+                cls, *args, **kwargs)
         return cls._instance
 
     def __init__(self, token=None, secret=None):
@@ -232,7 +237,7 @@ class AmazonDynamoDBHelper(object):
         return self._conn
 
     def _get_table(self, table_name):
-        if not table_name in self._tables:
+        if table_name not in self._tables:
             self._refresh_tables_list()
 
         return self._tables[table_name]
@@ -270,8 +275,8 @@ class AmazonDynamoDBHelper(object):
         table = self._get_table(table_name)
         return table.get_item(**kwargs)._data
 
-    def get_items(self, table_name, limit=None, reverse=True, query_filter=None,
-                  **kwargs):
+    def get_items(self, table_name, limit=None, reverse=True,
+                  query_filter=None, **kwargs):
         table = self._get_table(table_name)
         res = table.query_2(reverse=reverse, limit=limit,
                             max_page_size=100, query_filter=query_filter,
@@ -281,7 +286,7 @@ class AmazonDynamoDBHelper(object):
 
     def create_table(self, table_name, schema):
         self._refresh_tables_list()
-        if not table_name in self._tables:
+        if table_name not in self._tables:
             try:
                 table = Table.create(table_name, connection=self.conn,
                                      schema=schema)

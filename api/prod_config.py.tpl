@@ -1,17 +1,14 @@
 SECRET_KEY = 'CHANGE_ME'
-SQLALCHEMY_DATABASE_URI = 'postgresql://cloudml:W0y137OY@odesk-cloudml-analytics.cw38fhqllwnc.us-west-1.rds.amazonaws.com/cloudml_analytics'
+SQLALCHEMY_DATABASE_URI = '{{ database_uri }}'
 STATIC_ROOT = None
 UPLOAD_FOLDER = 'models'
 DATA_FOLDER = '{{ current_var_link }}/data'
 MAX_CONTENT_LENGTH = 128 * 1024 * 1024
-DATABASE_NAME = 'cloudml'
-DATABASE_HOST = '172.27.77.252'
 TEST_MODE = False
 
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_ENABLE_UTC = True
-#BROKER_URL = 'sqla+sqlite:////home/cloudml/shared/var/cloudml-celery.db'
 BROKER_URL = 'amqp://cloudml:cloudml@localhost:5672/cloudml'
 CELERY_RESULT_BACKEND = 'amqp://cloudml:cloudml@localhost:5672/cloudml'
 
@@ -53,12 +50,12 @@ CELERY_SEND_TASK_ERROR_EMAILS = True
 SEND_ERROR_EMAILS = True
 
 ADMINS = (
-    ("Nikolay Melnik", "nmelnik@odesk.com"),
-    ("Nader Soliman", "nsoliman@elance-odesk.com"),
+    ("Nikolay Melnik", "nmelnik@upwork.com"),
+    ("Nader Soliman", "nsoliman@upwork.com"),
 )
 
 # Email address used as sender (From field).
-SERVER_EMAIL = "no-reply@cloudml.int.odesk.com"
+SERVER_EMAIL = '{{ server_email }}'
 
 # Mailserver configuration
 EMAIL_HOST = "localhost"

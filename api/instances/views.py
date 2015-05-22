@@ -28,7 +28,8 @@ class ClusterResource(BaseResourceSQL):
             cursor = cursor.filter_by(status=status)
         jobflow_id = params.pop('jobflow_id', None)
         if jobflow_id:
-            cursor = cursor.filter(Cluster.jobflow_id.ilike('%{0}%'.format(jobflow_id)))
+            cursor = cursor.filter(Cluster.jobflow_id.ilike(
+                '%{0}%'.format(jobflow_id)))
         return cursor
 
     def _put_create_tunnel_action(self, **kwargs):

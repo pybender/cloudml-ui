@@ -3,8 +3,9 @@ import json
 from api.base.forms import BaseForm, CharField, JsonField, \
     ChoiceField, ValidationError, BooleanField, IntegerField, \
     DocumentField
-from api.import_handlers.models import ImportHandler, PredefinedDataSource, XmlImportHandler
-from core.importhandler.importhandler import ImportHandlerException,\
+from api.import_handlers.models import ImportHandler, PredefinedDataSource, \
+    XmlImportHandler
+from core.importhandler.importhandler import ImportHandlerException, \
     ExtractionPlan
 
 
@@ -23,7 +24,8 @@ class PredefinedDataSourceForm(BaseForm):
         count = query.count()
         if count:
             raise ValidationError(
-                'Data Source with name "%s" already exist. Please choose another one.' % value)
+                "Data Source with name \"%s\" already exist. "
+                "Please choose another one." % value)
         return value
 
 
@@ -38,7 +40,8 @@ class BaseImportHandlerForm(BaseForm):
             plan = ExtractionPlan(json.dumps(value), is_file=False)
             self.cleaned_data['import_params'] = plan.input_params
         except (ValueError, ImportHandlerException) as exc:
-            raise ValidationError('Import Handler JSON file is invalid: %s' % exc)
+            raise ValidationError(
+                'Import Handler JSON file is invalid: %s' % exc)
 
         return value
 
@@ -52,7 +55,8 @@ class ImportHandlerAddForm(BaseImportHandlerForm):
         count = ImportHandler.query.filter_by(name=value).count()
         if count:
             raise ValidationError(
-                'Import Handler with name "%s" already exist. Please choose another one.' % value)
+                "Import Handler with name \"%s\" already exist. "
+                "Please choose another one." % value)
         return value
 
 

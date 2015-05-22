@@ -12,7 +12,8 @@ from api import api
 from api.base.models import assertion_msg
 from api.base.resources import BaseResourceSQL, NotFound, public_actions, \
     ValidationError, odesk_error_response, ERR_INVALID_DATA
-from api.import_handlers.models import ImportHandler, DataSet, PredefinedDataSource
+from api.import_handlers.models import ImportHandler, DataSet, \
+    PredefinedDataSource
 from api.import_handlers.forms import ImportHandlerAddForm, DataSetAddForm, \
     DataSetEditForm, PredefinedDataSourceForm
 from api.servers.forms import ChooseServerForm
@@ -57,7 +58,6 @@ class ImportHandlerResource(BaseResourceSQL):
     def _modify_details_query(self, cursor, params):
         return cursor.options(undefer('data'))
 
-
     def _get_download_action(self, **kwargs):
         """
         Downloads importhandler data file.
@@ -94,7 +94,8 @@ filename=importhandler-%s.json' % model.name
                 obj_dict[field] = getattr(obj, field)
             return obj_dict
 
-        return self._render({self.OBJECT_NAME: serialize(obj, self.updated_fields)})
+        return self._render(
+            {self.OBJECT_NAME: serialize(obj, self.updated_fields)})
 
     def _get_updated_import_params(self, handler):
         from core.importhandler.importhandler import ExtractionPlan
@@ -136,7 +137,7 @@ filename=importhandler-%s.json' % model.name
             if match:
                 sub_keys = key.split('.')
                 ds_num = sub_keys[1]
-                if not ds_num in datasource_forms:
+                if ds_num not in datasource_forms:
                     datasource_forms[ds_num] = HandlerDataSourceForm(
                         handler_doc['datasource'], ds_num)
                 field = sub_keys[2]
@@ -147,7 +148,7 @@ filename=importhandler-%s.json' % model.name
             if match:
                 sub_keys = key.split('.')
                 query_num = sub_keys[1]
-                if not query_num in query_forms:
+                if query_num not in query_forms:
                     query_forms[query_num] = QueryForm(
                         handler_doc['queries'], query_num)
                 field = sub_keys[2]
@@ -160,7 +161,7 @@ filename=importhandler-%s.json' % model.name
                 query_num = sub_keys[1]
                 item_num = sub_keys[3]
                 num = (query_num, item_num)
-                if not num in item_forms:
+                if num not in item_forms:
                     items = handler_doc['queries'][int(query_num)]['items']
                     item_forms[num] = QueryItemForm(
                         items, item_num)
@@ -175,7 +176,7 @@ filename=importhandler-%s.json' % model.name
                 item_num = sub_keys[3]
                 feature_num = sub_keys[5]
                 num = (query_num, item_num, feature_num)
-                if not num in feature_forms:
+                if num not in feature_forms:
                     query = handler_doc['queries'][int(query_num)]
                     features = query['items'][int(item_num)]['target_features']
                     feature_forms[num] = TargetFeatureForm(

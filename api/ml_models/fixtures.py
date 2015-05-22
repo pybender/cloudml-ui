@@ -101,14 +101,14 @@ class ModelData(DataSet):
         classifier = {
             "type": "decision tree classifier",
             "params": {
-              "splitter": "best",
-              "n_jobs": "1",
-              "penalty": "l2",
-              "min_samples_leaf": 1,
-              "n_estimators": "10",
-              "min_samples_split": 2,
-              "criterion": "gini",
-              "max_features": "auto"
+                "splitter": "best",
+                "n_jobs": "1",
+                "penalty": "l2",
+                "min_samples_leaf": 1,
+                "n_estimators": "10",
+                "min_samples_split": 2,
+                "criterion": "gini",
+                "max_features": "auto"
             }
         }
 

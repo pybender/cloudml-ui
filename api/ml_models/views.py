@@ -16,8 +16,9 @@ from api.base.resources import BaseResourceSQL, NotFound, ValidationError, \
     public_actions, ERR_INVALID_DATA, odesk_error_response, _select
 from models import Model, Tag, Weight, WeightsCategory, Segment, Transformer, \
     ClassifierGridParams
-from forms import ModelAddForm, ModelEditForm, TransformDataSetForm, TrainForm, \
-    TransformerForm, FeatureTransformerForm, GridSearchForm, VisualizationOptionsForm
+from forms import ModelAddForm, ModelEditForm, TransformDataSetForm, \
+    TrainForm, TransformerForm, FeatureTransformerForm, GridSearchForm, \
+    VisualizationOptionsForm
 from api.servers.forms import ChooseServerForm
 
 
@@ -64,8 +65,10 @@ class BaseTrainedEntityResource(BaseResourceSQL):
         if form.is_valid():
             entity = form.save()  # set status to queued
             entity_key = '{0}_id'.format(self.ENTITY_TYPE)
-            new_dataset_selected = form.cleaned_data.get('new_dataset_selected')
-            existing_instance_selected = form.cleaned_data.get('existing_instance_selected')
+            new_dataset_selected = form.cleaned_data.get(
+                'new_dataset_selected')
+            existing_instance_selected = form.cleaned_data.get(
+                'existing_instance_selected')
             instance = form.cleaned_data.get('aws_instance', None)
             spot_instance_type = form.cleaned_data.get(
                 'spot_instance_type', None)
@@ -159,11 +162,11 @@ class ModelResource(BaseTrainedEntityResource):
                    'features_download', 'dataset_download')
     PUT_ACTIONS = ('train', 'tags', 'cancel_request_instance',
                    'upload_to_server', 'dataset_download', 'grid_search',
-                    'import_features_from_xml_ih', 'generate_visualization')
+                   'import_features_from_xml_ih', 'generate_visualization')
     POST_ACTIONS = ('clone', )
     FILTER_PARAMS = (('status', str), ('comparable', str), ('tag', str),
-                    ('created_by', str), ('updated_by_id', int),
-                    ('updated_by', str), ('name', str))
+                     ('created_by', str), ('updated_by_id', int),
+                     ('updated_by', str), ('name', str))
     NEED_PAGING = True
 
     MESSAGE404 = "Model with name %(_id)s doesn't exist"
@@ -217,7 +220,7 @@ class ModelResource(BaseTrainedEntityResource):
         updated_by = params.pop('updated_by', None)
         if updated_by:
             cursor = cursor.filter(Model.updated_by.has(uid=updated_by))
-            
+
         return cursor
 
     def _get_by_importhandler_action(self, **kwargs):
@@ -274,7 +277,8 @@ class ModelResource(BaseTrainedEntityResource):
             test_import_handler=model.test_import_handler
         )
         new_model.save()
-        new_model.features_set.from_dict(model.features_set.features, commit=False)
+        new_model.features_set.from_dict(
+            model.features_set.features, commit=False)
         new_model.classifier = model.classifier
         new_model.tags = model.tags
         new_model.save()
@@ -329,8 +333,8 @@ class ModelResource(BaseTrainedEntityResource):
         if model is None:
             raise NotFound('Model not found')
 
-        tasks = AsyncTask.get_current_by_object(model,
-            'api.ml_models.tasks.transform_dataset_for_download')
+        tasks = AsyncTask.get_current_by_object(
+            model, 'api.ml_models.tasks.transform_dataset_for_download')
 
         downloads = []
         for task in tasks:
@@ -470,14 +474,15 @@ class WeightResource(BaseResourceSQL):
 
         def get_weights(is_positive):
             qry = self.Model.query.filter(Weight.model_id == model_id,
-                                           Weight.is_positive == is_positive)
+                                          Weight.is_positive == is_positive)
             if segment_id is not None:
                 qry = qry.filter(Weight.segment_id == segment_id)
             if class_query is True:
                 qry = qry.filter(Weight.class_label == class_label)
 
             page = ppage if is_positive else npage
-            direction = Weight.value.desc() if is_positive else Weight.value.asc()
+            direction = Weight.value.desc() if is_positive \
+                else Weight.value.asc()
             return qry.order_by(direction).offset((page - 1) * per_page)\
                 .limit(per_page)
 
@@ -521,7 +526,7 @@ class WeightTreeResource(BaseResourceSQL):
                        'value', 'segment_id', 'value2']
         if params['test_id']:
             test_weight = Weight.test_weight(str(params['test_id']))
-            extra_fields={'test_weight': test_weight}
+            extra_fields = {'test_weight': test_weight}
 
         context = {
             'categories': categories,
@@ -547,8 +552,8 @@ def get_class_label(model_id, params):
     :param params: params parsed from query string
     :return: tuple (class_label, class_query), `class_label` the class label
     based on the passed QS parameters if any, the type of model (binary,
-    multiclass). `class_query`, a boolean flag to include the class_label retuned
-    when queyring for weights (true) or not (false)
+    multiclass). `class_query`, a boolean flag to include the class_label
+    retuned when queyring for weights (true) or not (false)
     """
     ml_model = Model.query.get(model_id)
 

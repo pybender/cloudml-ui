@@ -18,6 +18,7 @@ def get_a_Uuid():
     r_uuid = base64.urlsafe_b64encode(uuid.uuid4().bytes)
     return r_uuid.replace('=', '').replace('-', '')
 
+
 @celery.task
 def upload_model_to_server(server_id, model_id, user_id):
     """
@@ -124,11 +125,9 @@ def update_at_server(server_id, file_name):
         raise Exception('Wrong folder: %s' % folder)
 
     url = 'http://{0}/cloudml/{1}/{2}/reload'.format(server.ip, part, name)
-    #url = 'http://{0}/cloudml/{1}/reload-all'.format(server.ip, part)
     logging.info(url)
 
     # TODO: handle response
     requests.post(url, {})
 
     logging.info('File has been updated: %s' % file_name)
-

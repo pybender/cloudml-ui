@@ -49,65 +49,21 @@ class BaseConf(DefaultConf):
     local_settings_file = 'config.py'
 
 
-class DevConf(BaseConf):
-    """Settings specific to dev environment."""
-
-    address = 'cloudml@172.27.68.147'
-
-    sudo_user = 'nmelnik'
-    home_path = '/webapps/cloudml'
-
-    # Code from this branch will be deployed.
-    branch = 'master'
-
-    server_name = '172.27.68.147'
-    # For Apache ServerAdmin directive
-    server_admin = 'ifoukarakis@odesk.com'
-    # Apache will serve WSGI on this port. (Nginx is front-end.)
-    apache_port = 80
-
-    remote_settings_lfile = 'prod_config.py.tpl'
-
-
-class StagingConf(BaseConf):
-    """Settings specific to production environment."""
-
-    address = 'cloudml@172.27.67.106'
-
-    sudo_user = 'nmelnik'
-    home_path = '/webapps/cloudml'
-
-    # Code from this branch will be deployed.
-    branch = 'staging'
-
-    server_name = 'cloudml.staging.match.odesk.com'
-    # For Apache ServerAdmin directive
-    server_admin = 'nmelnik@odesk.com'
-    # Apache will serve WSGI on this port. (Nginx is front-end.)
-    gunicorn_port = 8020
-
-    # Once on production, this file will replace %(local_settings_file)s
-    # It should be a Jinja2 template, and can make use of fabdeploy config
-    # variables.
-    remote_settings_lfile = 'staging_config.py.tpl'
-
-
-
 class ProductionConf(BaseConf):
     """Settings specific to production environment."""
 
-    address = 'cloudml@172.27.77.141'
+    address = 'user_name@ip_server'
 
-    home_path = '/webapps/cloudmlui'
+    home_path = 'home path'
 
-    sudo_user = 'nmelnik'
+    sudo_user = 'sudo user name'
 
     # Code from this branch will be deployed.
     branch = 'master'
 
-    server_name = 'cloudml.match.odesk.com'
+    server_name = 'server name'
     # For Nginx ServerAdmin directive
-    server_admin = 'nmelnik@odesk.com'
+    server_admin = 'server admin'
     # Gunicorn will serve WSGI on this port. (Nginx is front-end.)
     gunicorn_port = 5000
 
@@ -116,4 +72,4 @@ class ProductionConf(BaseConf):
 
     amazon_access_token = '....'
     amazon_token_secret = '....'
-    amazon_bucket_name = 'odesk-match-cloudml'
+    amazon_bucket_name = '....'

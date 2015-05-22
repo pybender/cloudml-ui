@@ -104,6 +104,7 @@ def run_test(dataset_ids, test_id):
             for clazz, weights in trainer.get_weights(segment.name).iteritems():
                 positive = weights['positive']
                 negative = weights['negative']
+
                 def process_weights(weight_list):
                     for weight_dict in weight_list:
                         weight = Weight.query.filter_by(
@@ -127,7 +128,8 @@ def run_test(dataset_ids, test_id):
             trainer = model.get_trainer()
             for segment in model.segments:
                 logging.info(
-                    'Storing test feature weights for segment %s', segment.name)
+                    'Storing test feature weights for segment %s',
+                    segment.name)
                 fill_weights(trainer, test, segment)
 
         data = []
@@ -207,7 +209,7 @@ def _add_example_to_db(test, data, label, pred, prob, num):
 
     example.pred_label = str(pred)
     example.label = str(label)
-    example.prob = prob.tolist() if not prob is None else None
+    example.prob = prob.tolist() if prob is not None else None
 
     # Denormalized fields. TODO: move denormalization to TestExample model
     example.test_name = test.name

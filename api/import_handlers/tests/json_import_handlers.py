@@ -42,7 +42,7 @@ class ImportHandlerResourceTests(BaseDbTestCase, TestChecksMixin):
 
         resp = self.client.get(url, headers=HTTP_HEADERS)
         resp_obj = json.loads(resp.data)
-        self.assertTrue(resp_obj.has_key('fields'))
+        self.assertTrue('fields' in resp_obj)
         self.assertEqual(39, len(resp_obj['fields']))
 
 

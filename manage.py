@@ -1,3 +1,5 @@
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 import os
 import logging
 
@@ -60,21 +62,6 @@ class Run(Command):
         gevent.monkey.patch_all()
         http_server = WSGIServer(('', 5000), app)
         http_server.serve_forever()
-
-
-class MongoMigrate(Command):
-    """Migrate"""
-
-    def get_options(self):
-        return (
-            Option('-d', '--document',
-                   dest='document',
-                   default=None),
-        )
-
-    def run(self, **kwargs):
-        from api.migrations import DbMigration
-        DbMigration.do_all_migrations(kwargs.get('document'))
 
 
 def _make_context():
@@ -187,11 +174,6 @@ class MigrateToPosgresql(Command):
         print 'Done.'
 
 
-class MigrateToXmlImportHandlers(Command):
-    def run(self, **kwargs):
-        from api.import_handlers.migrator import xml_migrate
-        xml_migrate()
-
 class GenerateCrc(Command):
     def run(self, **kwargs):
         import zlib
@@ -200,7 +182,6 @@ class GenerateCrc(Command):
         for key in s3.list_keys('staging/importhandlers/'):
             print key.name
             data = s3.load_key(key.name)
-            #crc32 =  "%08x" % zlib.crc32(data)
             crc32 = '0x%08X' % (zlib.crc32(data) & 0xffffffff)
             try:
                 s3.set_key_metadata(key.name, {'crc32': crc32}, False)
@@ -217,14 +198,12 @@ manager.add_command("flower", Flower())
 manager.add_command('test', Test())
 manager.add_command('generate_crc', GenerateCrc())
 manager.add_command('coverage', Coverage())
-manager.add_command('migrate', MongoMigrate())
 manager.add_command('run', Run())
 manager.add_command("shell", Shell(make_context=_make_context))
 manager.add_command("create_db_tables", CreateDbTables())
 manager.add_command("create_dynamodb_tables", CreateDtnamoDbTables())
 manager.add_command("drop_db_tables", DropDbTables())
 manager.add_command("migrate_to_postgresql", MigrateToPosgresql())
-manager.add_command("migrate_xml_ih", MigrateToXmlImportHandlers())
 manager.add_command("rem_pyc", RemPycFiles())
 manager.add_command("create_image", CreateWorkerImage())
 

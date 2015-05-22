@@ -76,7 +76,7 @@ class BaseResource(restful.Resource):
     def dispatch_request(self, *args, **kwargs):
         from flask import request
         method = request.method.lower()
-        if not method in self.ALLOWED_METHODS:
+        if method not in self.ALLOWED_METHODS:
             return odesk_error_response(400, ERR_INVALID_METHOD,
                                         '%s is not allowed' % method)
         try:
@@ -101,7 +101,7 @@ class BaseResource(restful.Resource):
 
     # HTTP Methods
 
-    ##### GET ######
+    # ===== GET ======
 
     def get(self, action=None, **kwargs):
         """
@@ -119,7 +119,7 @@ class BaseResource(restful.Resource):
         else:
             return self._details(**kwargs)
 
-    ### List specific ###
+    # ==== List specific ====
 
     def _list(self, extra_params=(), **kwargs):
         """
@@ -176,7 +176,7 @@ class BaseResource(restful.Resource):
             parser_params += self.PAGING_PARAMS
         return self._parse_parameters(parser_params)
 
-    ### Details specific ###
+    # ==== Details specific ====
 
     def _details(self, extra_params=(), **kwargs):
         """
@@ -201,7 +201,7 @@ class BaseResource(restful.Resource):
     def _get_details_parameters(self, extra_params):
         return self._parse_parameters(extra_params + self.GET_PARAMS)
 
-    ### POST ###
+    # ==== POST ====
 
     def post(self, action=None, **kwargs):
         """ Adds new model """
@@ -223,10 +223,9 @@ class BaseResource(restful.Resource):
         return self._render({self.OBJECT_NAME: model}, code=201)
 
     def _prepare_new_model(self, model, params):
-        #return self._prepare_model_any(model, params)
         return self._prepare_model(model, params)
 
-    ### PUT ###
+    # ==== PUT ====
 
     def put(self, action=None, **kwargs):
         """ Updates new model """
@@ -255,7 +254,7 @@ class BaseResource(restful.Resource):
     def _prepare_updated_model(self, model, params):
         return self._prepare_model(model, params)
 
-    ### DELETE ###
+    # ==== DELETE ====
 
     def delete(self, action=None, **kwargs):
         """ Deletes unused model """
@@ -269,7 +268,7 @@ class BaseResource(restful.Resource):
     def _delete_validataion(self, model):
         pass
 
-    ### Utility methods ###
+    # ==== Utility methods ====
     def _prepare_model_any(self, model, params):
         return model
 
@@ -382,7 +381,7 @@ class BaseResourceMongo(BaseResource):  # pragma: no cover
 class BaseResourceSQL(BaseResource):
     """ Base REST resource for SQL models. """
 
-    ### GET ###
+    # ==== GET ====
 
     # List related methods
     def _get_list_query(self, params, **kwargs):
@@ -416,7 +415,6 @@ class BaseResourceSQL(BaseResource):
         return cursor
 
     def _prepare_model_list(self, cursor, params):
-        # return cursor
         return [self._prepare_model(model, params) for model in cursor]
 
     def _build_list_query(self, params, **kwargs):
@@ -445,9 +443,8 @@ class BaseResourceSQL(BaseResource):
 
         for name, val in filter_params.iteritems():
             fltr = self._build_query_item(name, val)
-            if not fltr is None:
+            if fltr is not None:
                 cursor = cursor.filter(fltr)
-        #print cursor[0]
         return cursor
 
     def defer_fields(self, Model, cursor, fields):

@@ -68,7 +68,7 @@ class ImportHandlerMixin(BaseModel):
             if query.get_type() != 'SELECT':
                 error_msg = 'Only supporting SELECT queries'
 
-        if not error_msg is None:
+        if error_msg is not None:
             raise Exception(error_msg)
         else:
             return query

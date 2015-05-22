@@ -12,7 +12,8 @@ def calc_weights_css(weights, css_cls):
     """
     Determines tones of color dependly of weight value.
     """
-    cmp_func = lambda a: abs(a['weight'])
+    def cmp_func(a):
+        return abs(a['weight'])
 
     def get_min_none_zero(weights):
         none_zero_weights = [w for w in weights if w['weight'] != 0]
@@ -38,7 +39,9 @@ def calc_weights_css(weights, css_cls):
     weights = normalize_weights(weights, min_none_zero_weight)
     tones = ['lightest', 'lighter', 'light', 'dark', 'darker', 'darkest']
     tones_count = len(tones)
-    cmp_func = lambda a: abs(a['transformed_weight'])
+
+    def cmp_func(a):
+        return abs(a['transformed_weight'])
     wmax = max(weights, key=cmp_func)['transformed_weight']
     delta = round(wmax / tones_count)
     for i in xrange(tones_count):
@@ -70,7 +73,7 @@ def weights2tree(weights):  # pragma: no cover
                          'css_class': item['css_class']}
                 parent_node[part] = param
 
-            if not part in parent_node:
+            if part not in parent_node:
                 parent_node[part] = {}
 
             parent_node = parent_node[part]
@@ -117,7 +120,7 @@ def get_example_params(model_weights, row, vect_row):
                 item = _get_item(key, value)
                 if subkey:
                     result[name]['type'] = value_type
-                    if not 'weights' in result[name]:
+                    if 'weights' not in result[name]:
                         result[name]['weights'] = {}
                     result[name]['weights'][subkey] = item
                 else:

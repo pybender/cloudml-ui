@@ -39,7 +39,7 @@ class TestResult(db.Model, BaseModel):
     model_name = db.Column(db.String(200))
 
     data_set_id = db.Column(db.Integer, db.ForeignKey('data_set.id',
-                                                     ondelete='SET NULL'))
+                            ondelete='SET NULL'))
     dataset = relationship(DataSet, foreign_keys=[data_set_id])
 
     examples_count = db.Column(db.Integer)
@@ -55,8 +55,6 @@ class TestResult(db.Model, BaseModel):
 
     vect_data = deferred(db.Column(S3File))
     fill_weights = db.Column(db.Boolean, default=False)
-    #vect_data = deferred(db.Column(db.LargeBinary))
-    
 
     def get_vect_data(self, num, segment):
         from pickle import loads
@@ -117,7 +115,7 @@ class TestExample(db.Model, BaseModel):
 
     test_result_id = db.Column(db.Integer, db.ForeignKey('test_result.id'))
     test_result = relationship('TestResult', backref=backref('examples',
-                                                cascade='all,delete'))
+                               cascade='all,delete'))
     test_name = db.Column(db.String(200))
 
     model_id = db.Column(db.Integer, db.ForeignKey('model.id'))
@@ -160,13 +158,13 @@ class TestExample(db.Model, BaseModel):
         model = self.model
         feature_model = model.get_trainer()._feature_model
         segment = 'default'
-        if len(model.get_trainer().with_segmentation) > 0 :
+        if len(model.get_trainer().with_segmentation) > 0:
             ndata = dict([(key.replace('->', '.'), val)
-                 for key, val in self.data_input.iteritems()])
+                          for key, val in self.data_input.iteritems()])
             data = model.get_trainer()._apply_feature_types(ndata)
-            segment =  "_".join(
+            segment = "_".join(
                 [str(data[feature_name]) for feature_name in
-                model.get_trainer()._feature_model.group_by])
+                 model.get_trainer()._feature_model.group_by])
             features = model.get_trainer().features[segment]
             for feature_name in model.get_trainer()._feature_model.group_by:
                 features.pop(feature_name)
@@ -176,27 +174,26 @@ class TestExample(db.Model, BaseModel):
             except:
                 features = feature_model.features
 
-        #vect_data = self.test_result.get_vect_data(self.num, segment)
         ndata = dict([(key.replace('->', '.'), val)
-                 for key, val in self.data_input.iteritems()])
+                      for key, val in self.data_input.iteritems()])
         trainer = model.get_trainer()
         trainer._prepare_data(
-                iter([ndata, ]),
-                callback=None,
-                save_raw=False)
+            iter([ndata, ]), callback=None, save_raw=False)
         vect_data1 = trainer._get_vectorized_data(
             segment, trainer._test_prepare_feature)
-        
+
         vect = scipy.sparse.hstack(vect_data1)
         vect_data = vect.todense().tolist()[0]
-        
+
         data = get_features_vect_data(vect_data,
                                       features.items(),
                                       feature_model.target_variable)
 
         from api.ml_models.helpers.weights import get_example_params
-        segment = Segment.query.filter(Segment.name == segment, Segment.model == model)[0]
-        model_weights = Weight.query.with_entities(Weight.name, Weight.value).filter(Weight.segment_id == segment.id)
+        segment = Segment.query.filter(
+            Segment.name == segment, Segment.model == model)[0]
+        model_weights = Weight.query.with_entities(
+            Weight.name, Weight.value).filter(Weight.segment_id == segment.id)
         weighted_data = dict(get_example_params(
             model_weights, self.data_input, data))
         self.weighted_data_input = weighted_data

@@ -33,7 +33,7 @@ class BaseMixin(JsonSerializableMixin):
             val = getattr(self, f)
             if val is not None:
                 column = self.__table__.columns.get(f, None)
-                if not column is None:
+                if column is not None:
                     if isinstance(column.type, Boolean):
                         val = str(val).lower()
                 kwargs[f] = val

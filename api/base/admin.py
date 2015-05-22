@@ -14,12 +14,6 @@ class BaseAdmin(sqla.ModelView):
     MIX_METADATA = True
     list_template = 'admin/model/object_list.html'
     column_default_sort = 'id'
-    # form_widget_args = {
-    #     'created_by': {'disabled':True},
-    #     'created_on': {'disabled':True},
-    #     'updated_by': {'disabled':True},
-    #     'updated_on': {'disabled':True}
-    # }
     form_excluded_columns = ['created_by', 'created_on', 'updated_by',
                              'updated_on']
 
@@ -39,7 +33,7 @@ class BaseAdmin(sqla.ModelView):
         except orm_exc.NoResultFound:
             request.user = None
 
-        return not request.user is None
+        return request.user is not None
 
     def __init__(self, *args, **kwargs):
         if self.MIX_METADATA:

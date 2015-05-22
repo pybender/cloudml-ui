@@ -1,4 +1,4 @@
- # -*- coding: utf8 -*-
+# -*- coding: utf8 -*-
 import json
 from mock import patch, MagicMock, Mock
 from moto import mock_s3
@@ -11,7 +11,8 @@ from api.ml_models.models import Model
 from api.ml_models.fixtures import ModelData, WeightData, SegmentData
 from api.import_handlers.fixtures import ImportHandlerData, DataSetData, \
     PredefinedDataSourceData
-from api.import_handlers.models import DataSet, ImportHandler, PredefinedDataSource
+from api.import_handlers.models import DataSet, ImportHandler, \
+    PredefinedDataSource
 from api.instances.models import Instance
 from api.instances.fixtures import InstanceData
 from api.async_tasks.models import AsyncTask
@@ -168,7 +169,9 @@ class TestResourceTests(BaseDbTestCase, TestChecksMixin):
                 'new_dataset_selected': False}
         errors = {
             u'dataset': u'Please select Data Set',
-            u'spot_instance_type': u'Should be one of m3.xlarge, m3.2xlarge, cc2.8xlarge, cr1.8xlarge, hi1.4xlarge, hs1.8xlarge'
+            u'spot_instance_type': "Should be one of m3.xlarge, m3.2xlarge, "
+                                   "cc2.8xlarge, cr1.8xlarge, hi1.4xlarge, "
+                                   "hs1.8xlarge"
         }
         self.check_edit_error(data, errors)
 
@@ -196,6 +199,11 @@ class TestExampleResourceTests(BaseDbTestCase, TestChecksMixin):
                 DataSetData, ModelData, WeightData,
                 TestResultData, TestExampleData, SegmentData,
                 PredefinedDataSourceData]
+
+    DEFAULT_FIELDS = ['name', 'id', 'label', 'pred_label',
+                      'prob', 'data_input.employer->country']
+    DEFAULT_FIELDS_STR = ','.join(DEFAULT_FIELDS)
+    DEFAULT_FIELDS_DUMP = json.dumps(DEFAULT_FIELDS)
 
     def setUp(self):
         super(TestExampleResourceTests, self).setUp()
@@ -248,9 +256,9 @@ class TestExampleResourceTests(BaseDbTestCase, TestChecksMixin):
         def check_prob_order(data, prob_0):
             query_params = {'test_result': self.test}
             resp = self.check_list(
-                    data=data,
-                    show='prob',
-                    query_params=query_params)
+                data=data,
+                show='prob',
+                query_params=query_params)
 
             actual_prob_0 = []
             actual_prob_1 = []
@@ -295,7 +303,8 @@ class TestExampleResourceTests(BaseDbTestCase, TestChecksMixin):
     @mock_s3
     @patch('api.model_tests.models.TestResult.get_vect_data')
     @patch('api.ml_models.models.Model.get_trainer')
-    def go_details(self, obj, show, data, mock_get_trainer, mock_get_vect_data):
+    def go_details(self, obj, show, data, mock_get_trainer,
+                   mock_get_vect_data):
         should_called = not obj.is_weights_calculated
         from core.trainer.store import TrainerStorage
         trainer = TrainerStorage.loads(
@@ -336,22 +345,20 @@ class TestExampleResourceTests(BaseDbTestCase, TestChecksMixin):
 
     @patch('api.model_tests.tasks.get_csv_results')
     def test_csv(self, mock_get_csv):
-        fields = 'name,id,label,pred_label,prob,data_input.employer->country'
-        data = {'fields': json.dumps(fields.split(','))}
+        data = {'fields': self.DEFAULT_FIELDS_DUMP}
         url = self._get_url(action='csv_task')
         resp = self.client.put(url, data=data, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, 200)
         self.assertTrue(mock_get_csv.delay.called)
         mock_get_csv.delay.assert_called_with(
             self.model.id, self.test.id,
-            'name,id,label,pred_label,prob,data_input.employer->country'.split(','))
+            self.DEFAULT_FIELDS)
 
     @patch('api.model_tests.tasks.get_csv_results')
     def test_csv_invalid_things(self, mock_get_csv):
         # invalid id
         import re
-        fields = 'name,id,label,pred_label,prob,data_input.employer->country'
-        data = {'fields': json.dumps(fields.split(','))}
+        data = {'fields': self.DEFAULT_FIELDS_DUMP}
         url = self._get_url(action='csv_task')
         url = re.sub('/tests/\d+/', '/tests/123321/', url)
         resp = self.client.put(url, data=data, headers=HTTP_HEADERS)
@@ -364,8 +371,7 @@ class TestExampleResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(resp.status_code, 400)
 
         # absent fields
-        fields = 'name,id,label,pred_label,prob,data_input.employer->country'
-        data = {'zozo': json.dumps(fields.split(','))}
+        data = {'zozo': self.DEFAULT_FIELDS_DUMP}
         url = self._get_url(action='csv_task')
         resp = self.client.put(url, data=data, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, 400)
@@ -390,12 +396,15 @@ class TestExampleResourceTests(BaseDbTestCase, TestChecksMixin):
 
 class TasksTests(BaseDbTestCase):
     """ Tests celery tasks. """
-    datasets = [DataSetData, TestResultData, TestExampleData, PredefinedDataSourceData]
+    datasets = [DataSetData, TestResultData, TestExampleData,
+                PredefinedDataSourceData]
 
     def setUp(self):
         super(TasksTests, self).setUp()
-        self.test = TestResult.query.filter_by(name=TestResultData.test_01.name).one()
-        self.test2 = TestResult.query.filter_by(name=TestResultData.test_02.name).one()
+        self.test = TestResult.query.filter_by(
+            name=TestResultData.test_01.name).one()
+        self.test2 = TestResult.query.filter_by(
+            name=TestResultData.test_02.name).one()
         self.dataset = DataSet.query.first()  # TODO:
         self.examples_count = TestExample.query.filter_by(
             test_result=self.test).count()
@@ -417,13 +426,14 @@ class TasksTests(BaseDbTestCase):
             result = calculate_confusion_matrix(self.test.id, w0, w1)
             result = zip(*result)[-1]
             self.assertEquals(result, expected)
-            self.assertEquals(self.examples_count, sum([sum(row) for row in result]))
+            self.assertEquals(
+                self.examples_count, sum([sum(row) for row in result]))
 
         self._set_probabilities({
-            'Some Example #1-1':  ('0', [0.3, 0.7]),
+            'Some Example #1-1': ('0', [0.3, 0.7]),
             'Some Example #1-2': ('0', [0.9, 0.1]),
-            'Some Example #1-3':  ('1', [0.3, 0.7]),
-            'Some OtherModel Example #1-1':  ('1', [0.2, 0.8]),
+            'Some Example #1-3': ('1', [0.3, 0.7]),
+            'Some OtherModel Example #1-1': ('1', [0.2, 0.8]),
         })
 
         _assertMatrix(1, 1, ([1, 1], [0, 2]))
@@ -438,10 +448,14 @@ class TasksTests(BaseDbTestCase):
         _assertMatrix(1, 3, ([1, 1], [0, 2]))
         _assertMatrix(3, 1, ([2, 0], [1, 1]))
 
-        self.assertRaises(ValueError, calculate_confusion_matrix, self.test.id, 0, 0)
-        self.assertRaises(ValueError, calculate_confusion_matrix, self.test.id, -1, 1)
-        self.assertRaises(ValueError, calculate_confusion_matrix, self.test.id, 1, -1)
-        self.assertRaises(ValueError, calculate_confusion_matrix, 5646546, 1, 1)
+        self.assertRaises(
+            ValueError, calculate_confusion_matrix, self.test.id, 0, 0)
+        self.assertRaises(
+            ValueError, calculate_confusion_matrix, self.test.id, -1, 1)
+        self.assertRaises(
+            ValueError, calculate_confusion_matrix, self.test.id, 1, -1)
+        self.assertRaises(
+            ValueError, calculate_confusion_matrix, 5646546, 1, 1)
 
     @mock_s3
     @patch('api.models.DataSet.get_data_stream')
@@ -449,11 +463,13 @@ class TasksTests(BaseDbTestCase):
         from tasks import get_csv_results
 
         fields = ['label', 'pred_label', 'prob']
-        url = get_csv_results.delay(self.test.model.id, self.test.id, fields).get()
+        url = get_csv_results.delay(
+            self.test.model.id, self.test.id, fields).get()
 
         self.assertTrue(url)
 
-        # TODO: signals aren't called when CELERY_ALWAYS_EAGER == True. Update Celery?
+        # TODO: signals aren't called when CELERY_ALWAYS_EAGER == True.
+        # Update Celery?
         # task = AsyncTask.query.filter_by(
         #     task_name='api.model_tests.tasks.get_csv_results'
         # ).order_by(desc(AsyncTask.created_on)).first()
@@ -481,9 +497,10 @@ class TasksTests(BaseDbTestCase):
         import scipy
 
         if _fake_raw_data is None:
-            _fake_raw_data = {"default": [{'application_id': '123',
-                               'hire_outcome': '0',
-                               'title': 'A1'}] * 100}
+            _fake_raw_data = {
+                "default": [{'application_id': '123',
+                             'hire_outcome': '0',
+                             'title': 'A1'}] * 100}
 
         def _fake_test(self, *args, **kwargs):
             _fake_test.called = True
@@ -496,7 +513,8 @@ class TasksTests(BaseDbTestCase):
 
             metrics_mock._probs = [numpy.array([0.1, 0.2])] * 100
 
-            metrics_mock._true_data = scipy.sparse.coo_matrix([[0, 0, 0]] * 100)
+            metrics_mock._true_data = scipy.sparse.coo_matrix(
+                [[0, 0, 0]] * 100)
 
             return metrics_mock
 
@@ -519,33 +537,39 @@ class TasksTests(BaseDbTestCase):
                           [self.dataset.id, ], self.test.id)
 
     def test_run_test_unicode_encoding(self):
-        test = TestResult.query.filter_by(name=TestResultData.test_04.name).first()
+        test = TestResult.query.filter_by(
+            name=TestResultData.test_04.name).first()
         unicode_string = u'Привет!'
-        _fake_raw_data = {'default': [{'application_id': '123',
-                           'hire_outcome': '0',
-                           'title': 'A1',
-                           'opening_title': unicode_string,
-                           'opening_id': unicode_string}] * 100 }
-        
-        result, mocks = self._check_run_test(test, MetricsMockBinaryClassifier, _fake_raw_data)
+        _fake_raw_data = {
+            'default': [{'application_id': '123',
+                         'hire_outcome': '0',
+                         'title': 'A1',
+                         'opening_title': unicode_string,
+                         'opening_id': unicode_string}] * 100}
+
+        result, mocks = self._check_run_test(
+            test, MetricsMockBinaryClassifier, _fake_raw_data)
         self.assertEquals(result, 'Test completed')
         example = TestExample.query.filter_by(
             test_result=test).first()
-        self.assertEquals(example.data_input.keys(), _fake_raw_data['default'][0].keys())
+        self.assertEquals(
+            example.data_input.keys(), _fake_raw_data['default'][0].keys())
         self.assertEquals(
             example.data_input['opening_id'], unicode_string)
         self.assertEquals(example.example_id, unicode_string)
         self.assertEquals(example.name, unicode_string)
 
     def test_run_test(self):
-        test = TestResult.query.filter_by(name=TestResultData.test_04.name).first()
+        test = TestResult.query.filter_by(
+            name=TestResultData.test_04.name).first()
         model = test.model
         self.assertEquals(model.status, model.STATUS_TRAINED, model.__dict__)
 
         self.assertEquals(
             TestExample.query.filter_by(test_result=test).count(), 0)
 
-        result, mocks = self._check_run_test(test, MetricsMockBinaryClassifier, None)
+        result, mocks = self._check_run_test(
+            test, MetricsMockBinaryClassifier, None)
         self.assertEquals(result, 'Test completed')
         mock_get_data_stream, mock_get_trainer, mock_run_test = mocks
         self.assertEquals(1, mock_get_data_stream.call_count,
@@ -556,16 +580,18 @@ class TasksTests(BaseDbTestCase):
         self.assertEquals(example.data_input.keys(),
                           ['hire_outcome', 'application_id', 'title'])
 
-
     def test_run_test_ndim_classifier(self):
-        test = TestResult.query.filter_by(name=TestResultData.test_04.name).first()
+        test = TestResult.query.filter_by(
+            name=TestResultData.test_04.name).first()
         model = test.model
-        self.assertEquals(model.status, model.STATUS_TRAINED, model.__dict__)
+        self.assertEquals(
+            model.status, model.STATUS_TRAINED, model.__dict__)
 
         self.assertEquals(
             TestExample.query.filter_by(test_result=test).count(), 0)
 
-        result, mocks = self._check_run_test(test, MetricsMockNDimClassifier, None)
+        result, mocks = self._check_run_test(
+            test, MetricsMockNDimClassifier, None)
         self.assertEquals(result, 'Test completed')
         mock_get_data_stream, mock_get_trainer, mock_run_test = mocks
         self.assertEquals(1, mock_get_data_stream.call_count,
@@ -582,23 +608,29 @@ class TasksRunTestTests(BaseDbTestCase):
     Testing celery task run_test end-to-end with minimal mocking
     """
     datasets = [DataSetData, TestResultData, TestExampleData]
+
     def setUp(self):
         super(TasksRunTestTests, self).setUp()
         self.dataset = DataSet.query.first()
 
     @patch('api.models.Model.get_trainer')
     @patch('api.models.DataSet.get_data_stream')
-    def run_real_test_binary_classifier(self, mock_get_data_stream, mock_get_trainer):
-        test = TestResult.query.filter_by(name=TestResultData.test_04.name).first()
+    def run_real_test_binary_classifier(self, mock_get_data_stream,
+                                        mock_get_trainer):
+        test = TestResult.query.filter_by(
+            name=TestResultData.test_04.name).first()
         self.assertEqual({}, test.metrics)
-        self.assertEquals(test.model.status, test.model.STATUS_TRAINED, test.model.__dict__)
+        self.assertEquals(
+            test.model.status, test.model.STATUS_TRAINED, test.model.__dict__)
 
         from core.trainer.store import TrainerStorage
-        trainer = TrainerStorage.loads(open('./api/ml_models/model.dat', 'r').read())
+        trainer = TrainerStorage.loads(
+            open('./api/ml_models/model.dat', 'r').read())
         mock_get_trainer.return_value = trainer
 
         import gzip
-        mock_get_data_stream.return_value = gzip.open('./api/import_handlers/ds.gz', 'r')
+        mock_get_data_stream.return_value = gzip.open(
+            './api/import_handlers/ds.gz', 'r')
 
         result = run_test([self.dataset.id, ], test.id)
         self.assertEqual(result, 'Test completed')
@@ -608,43 +640,50 @@ class TasksRunTestTests(BaseDbTestCase):
         # any new metric added, you should add corresponding asserts
         self.assertEqual(6, len(test.metrics.keys()))
 
-        self.assertTrue(test.metrics.has_key('confusion_matrix'))
-        self.assertEqual(len(test.classes_set), len(test.metrics['confusion_matrix']))
+        self.assertTrue('confusion_matrix' in test.metrics)
+        self.assertEqual(
+            len(test.classes_set), len(test.metrics['confusion_matrix']))
         for i, v in enumerate(test.metrics['confusion_matrix']):
-            self.assertIsInstance(v, list, 'cofusion matrix @ index:%s is not tuple/list' % (i,))
+            self.assertIsInstance(
+                v, list, 'cofusion matrix @ index:%s is not tuple/list' % i)
             self.assertEqual(2, len(v))
 
         pos_label = test.classes_set[1]
-        self.assertTrue(test.metrics.has_key('roc_curve'))
+        self.assertTrue('roc_curve' in test.metrics)
         self.assertIsInstance(test.metrics['roc_curve'], dict)
-        self.assertTrue(test.metrics['roc_curve'].has_key(pos_label))
+        self.assertTrue(pos_label in test.metrics['roc_curve'])
         self.assertEqual(2, len(test.metrics['roc_curve'][pos_label]))
         self.assertIsInstance(test.metrics['roc_curve'][pos_label][0], list)
         self.assertIsInstance(test.metrics['roc_curve'][pos_label][1], list)
 
         self.assertTrue(test.roc_auc)
-        self.assertTrue(test.roc_auc.has_key(pos_label))
+        self.assertTrue(pos_label in test.roc_auc)
         self.assertIsInstance(test.roc_auc[pos_label], float)
 
-        self.assertTrue(test.metrics.has_key('accuracy'))
+        self.assertTrue('accuracy' in test.metrics)
         self.assertIsInstance(test.metrics['accuracy'], float)
 
-        self.assertTrue(test.metrics.has_key('avarage_precision'))
+        self.assertTrue('avarage_precision' in test.metrics)
         self.assertIsInstance(test.metrics['avarage_precision'], float)
 
     @patch('api.models.Model.get_trainer')
     @patch('api.models.DataSet.get_data_stream')
-    def run_real_test_multiclass_classifier(self, mock_get_data_stream, mock_get_trainer):
-        test = TestResult.query.filter_by(name=TestResultData.test_04.name).first()
+    def run_real_test_multiclass_classifier(self, mock_get_data_stream,
+                                            mock_get_trainer):
+        test = TestResult.query.filter_by(
+            name=TestResultData.test_04.name).first()
         self.assertEqual({}, test.metrics)
-        self.assertEquals(test.model.status, test.model.STATUS_TRAINED, test.model.__dict__)
+        self.assertEquals(
+            test.model.status, test.model.STATUS_TRAINED, test.model.__dict__)
 
         from core.trainer.store import TrainerStorage
-        trainer = TrainerStorage.loads(open('./api/ml_models/multiclass-trainer.dat', 'r').read())
+        trainer = TrainerStorage.loads(
+            open('./api/ml_models/multiclass-trainer.dat', 'r').read())
         mock_get_trainer.return_value = trainer
 
         import gzip
-        mock_get_data_stream.return_value = gzip.open('./api/import_handlers/multiclass_ds.gz', 'r')
+        mock_get_data_stream.return_value = gzip.open(
+            './api/import_handlers/multiclass_ds.gz', 'r')
 
         result = run_test([self.dataset.id, ], test.id)
         self.assertEqual(result, 'Test completed')
@@ -655,42 +694,50 @@ class TasksRunTestTests(BaseDbTestCase):
         self.assertEqual(4, len(test.metrics.keys()))
 
         for pos_label in test.classes_set:
-            self.assertTrue(test.metrics.has_key('roc_curve'))
+            self.assertTrue('roc_curve' in test.metrics)
             self.assertIsInstance(test.metrics['roc_curve'], dict)
-            self.assertTrue(test.metrics['roc_curve'].has_key(pos_label))
+            self.assertTrue(pos_label in test.metrics['roc_curve'])
             self.assertEqual(2, len(test.metrics['roc_curve'][pos_label]))
-            self.assertIsInstance(test.metrics['roc_curve'][pos_label][0], list)
-            self.assertIsInstance(test.metrics['roc_curve'][pos_label][1], list)
+            self.assertIsInstance(
+                test.metrics['roc_curve'][pos_label][0], list)
+            self.assertIsInstance(
+                test.metrics['roc_curve'][pos_label][1], list)
 
             self.assertTrue(test.roc_auc)
-            self.assertTrue(test.roc_auc.has_key(pos_label))
+            self.assertTrue(pos_label in test.roc_auc)
             self.assertIsInstance(test.roc_auc[pos_label], float)
 
-        self.assertTrue(test.metrics.has_key('confusion_matrix'))
-        self.assertEqual(len(test.classes_set), len(test.metrics['confusion_matrix']))
+        self.assertTrue('confusion_matrix' in test.metrics)
+        self.assertEqual(
+            len(test.classes_set), len(test.metrics['confusion_matrix']))
         for i, v in enumerate(test.metrics['confusion_matrix']):
-            self.assertIsInstance(v, list, 'cofusion matrix @ index:%s is not tuple/list' % (i,))
+            self.assertIsInstance(
+                v, list, 'cofusion matrix @ index:%s is not tuple/list' % i)
             self.assertEqual(2, len(v))
 
-        self.assertTrue(test.metrics.has_key('accuracy'))
+        self.assertTrue('accuracy' in test.metrics)
         self.assertIsInstance(test.metrics['accuracy'], float)
-
 
     @patch('api.models.Model.get_trainer')
     @patch('api.models.DataSet.get_data_stream')
-    def run_real_test_multiclass_classifier_0_example_for_labels(self, mock_get_data_stream, mock_get_trainer):
-        test = TestResult.query.filter_by(name=TestResultData.test_04.name).first()
+    def run_real_test_multiclass_classifier_0_example_for_labels(
+            self, mock_get_data_stream, mock_get_trainer):
+        test = TestResult.query.filter_by(
+            name=TestResultData.test_04.name).first()
         self.assertEqual({}, test.metrics)
-        self.assertEquals(test.model.status, test.model.STATUS_TRAINED, test.model.__dict__)
+        self.assertEquals(
+            test.model.status, test.model.STATUS_TRAINED, test.model.__dict__)
 
         def do_train(exclude_labels):
             from core.trainer.store import TrainerStorage
-            trainer = TrainerStorage.loads(open('./api/ml_models/multiclass-trainer.dat', 'r').read())
+            trainer = TrainerStorage.loads(
+                open('./api/ml_models/multiclass-trainer.dat', 'r').read())
             mock_get_trainer.return_value = trainer
 
             import gzip
             from StringIO import StringIO
-            with gzip.open('./api/import_handlers/multiclass_ds.gz', 'r') as dataset:
+            with gzip.open(
+                    './api/import_handlers/multiclass_ds.gz', 'r') as dataset:
                 examples = []
                 for line in dataset.readlines():
                     example = json.loads(line)
@@ -707,13 +754,16 @@ class TasksRunTestTests(BaseDbTestCase):
         result = do_train(['class2'])
         self.assertEqual(result, 'Test completed')
         self.assertEqual(test.roc_auc,
-                         {u'1': 0.5527093596059114, u'2': 0.0, u'3': 0.3931034482758621})
-        self.assertEqual(test.metrics['confusion_matrix'], [[u'1', [9, 7, 13]],
-                                                            [u'2', [0, 0, 0]],
-                                                            [u'3', [8, 16, 11]]]
-)
+                         {u'1': 0.5527093596059114,
+                          u'2': 0.0,
+                          u'3': 0.3931034482758621})
+        self.assertEqual(
+            test.metrics['confusion_matrix'],
+            [[u'1', [9, 7, 13]],
+             [u'2', [0, 0, 0]],
+             [u'3', [8, 16, 11]]])
 
-        self.assertTrue(test.metrics.has_key('accuracy'))
+        self.assertTrue('accuracy' in test.metrics)
         self.assertIsInstance(test.metrics['accuracy'], float)
 
         # excluding two labels

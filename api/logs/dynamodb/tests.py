@@ -38,8 +38,8 @@ class LogsTests(BaseDbTestCase, TestChecksMixin):
         self._delete_table()
         from models import LogMessage
         # TODO: uncomment the following when moto implements query filter
-        #self.dynamodb_mock = mock_dynamodb2()
-        #self.dynamodb_mock.start()
+        # self.dynamodb_mock = mock_dynamodb2()
+        # self.dynamodb_mock.start()
         LogMessage.create_table()
         import logging
         from logger import LogMessageHandler
@@ -63,7 +63,7 @@ class LogsTests(BaseDbTestCase, TestChecksMixin):
         self._delete_table()
         # TODO: uncomment the following when moto implements query filter,
         # and remove the delete table logic
-        #self.dynamodb_mock.stop()
+        # self.dynamodb_mock.stop()
 
     # TODO: enable this test when moto supports query filters
     def xtest_list_with_levels(self):
@@ -89,7 +89,7 @@ class LogsTests(BaseDbTestCase, TestChecksMixin):
 
         for level, count, levels in scenario:
             url = '{0}?{1}'.format(self.BASE_URL, urllib.urlencode({
-                #'next_token': None,
+                # 'next_token': None,
                 'object_id': self.OBJECT_ID,
                 'type': 'testing',
                 'per_page': 20,

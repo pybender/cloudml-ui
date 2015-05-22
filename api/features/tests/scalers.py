@@ -75,7 +75,7 @@ class FeatureScalersTests(FeatureItemsTestMixin):
                 'params': '{"feature_range_max": 2}'}
 
         resp, obj = self._test_edit(feature, extra_data=data)
-        self.assertEqual(obj, {'params': {'feature_range_max': 2}, 
+        self.assertEqual(obj, {'params': {'feature_range_max': 2},
                                'type': u'MinMaxScaler'})
 
     def test_edit_feature_scaler_from_predefined(self):

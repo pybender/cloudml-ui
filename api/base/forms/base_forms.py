@@ -21,6 +21,12 @@ class BaseChooseInstanceAndDataset(BaseForm):
     spot_instance_type = ChoiceField(choices=TYPE_CHOICES)
     format = ChoiceField(choices=DataSet.FORMATS)
 
+    @property
+    def import_handler(self):
+        if self.model is not None and self.HANDLER_TYPE is not None:
+            return getattr(
+                self.model, '%s_import_handler' % self.HANDLER_TYPE)
+
     def clean_parameters(self, params, field):
         params = params or {}
         if self.model is None:
@@ -35,29 +41,34 @@ class BaseChooseInstanceAndDataset(BaseForm):
         new_dataset_selected = self.cleaned_data.get('new_dataset_selected')
         if new_dataset_selected:
             if not self.cleaned_data.get('format'):
-                self.add_error("format", "Please select format of the Data Set")
+                self.add_error(
+                    "format", "Please select format of the Data Set")
 
-            handler = getattr(self.model, '%s_import_handler' % self.HANDLER_TYPE)
-            parameter_names = handler.import_params
-            if parameter_names and len(parameter_names) > 0:  # No params for this import handler
+            parameter_names = self.import_handler.import_params
+            # No params for this import handler
+            if parameter_names and len(parameter_names) > 0:
                 parameters = self.cleaned_data.get('parameters')
                 missed_params = set(parameter_names) - set(parameters.keys())
                 if missed_params:
                     self.add_error(
                         "parameters",
-                        "Some parameters are missing: %s" % ', '.join(missed_params))
+                        "Some parameters are missing: %s" %
+                        ', '.join(missed_params))
         else:
             if not self.cleaned_data.get('dataset'):
                 self.add_error("dataset", "Please select Data Set")
-            
+
         # Instance tab
-        existing_instance_selected = self.cleaned_data.get('existing_instance_selected')
+        existing_instance_selected = self.cleaned_data.get(
+            'existing_instance_selected')
         if existing_instance_selected:
             if not self.cleaned_data.get('aws_instance'):
-                self.add_error("aws_instance", "Please select instance with a worker")
+                self.add_error(
+                    "aws_instance", "Please select instance with a worker")
         else:
             if not self.cleaned_data.get('spot_instance_type'):
-                self.add_error("spot_instance_type", "Please select Spot instance type")
+                self.add_error(
+                    "spot_instance_type", "Please select Spot instance type")
 
 
 class BaseChooseInstanceAndDatasetMultiple(BaseChooseInstanceAndDataset):
@@ -115,7 +126,9 @@ class BasePredefinedForm(BaseForm):
             count = items.count()
 
             if count:
-                self.add_error('name', 'Predefined %s with same name already exist. Please choose another one.' % self.OBJECT_NAME)
+                self.add_error('name',
+                               "Predefined %s with same name already exist. "
+                               "Please choose another one." % self.OBJECT_NAME)
 
         if predefined_selected:
             obj = self.cleaned_data.get(self.OBJECT_NAME, None)

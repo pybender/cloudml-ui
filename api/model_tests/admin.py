@@ -10,7 +10,7 @@ class TestResultAdmin(BaseAdmin):
     form_excluded_columns = ('examples', )
     column_formatters = {
         'status': macro('status_with_error'),
-        'model': macro('render_fk_link'),}
+        'model': macro('render_fk_link')}
     column_list = ['id', 'name', 'status', 'model', 'accuracy', 'parameters',
                    'examples_count', 'examples_size', 'classes_set',
                    'memory_usage']

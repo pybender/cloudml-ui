@@ -1,15 +1,29 @@
-# parameters parser
+"""
+Utility methods for parameters parsersing and converting.
+
+Notes
+-----
+This methods mainly used for converting classifier's parameters
+to corresponding type. This type specified in the classifier
+config.
+"""
 from api.base.resources import ValidationError
 from api.base.utils import isint, isfloat
 
 
 def convert_auto_dict(val, c):
-    import ast
-    #if val != 'auto':
+    """
+    TODO: Add support of the params like
+    class_weight : {dict, auto}, optional in sklearn.svm.SVC
+    """
     return val
 
 
 def convert_int_float_string_none(val, config):
+    """
+    Parses parameter that could be int, float, string or none.
+    A sample of this is max_features in Decision Tree Classifier.
+    """
     if not val:
         return None
 
@@ -36,6 +50,16 @@ TYPE_CONVERTORS = {
 
 
 def convert_parameters(config, params):
+    """
+    Tries to convert the parameter value to corresponding type.
+
+    Parameters
+    ----------
+    C : dict
+        parameter's config with info about type, wheither it's required, etc.
+    params: dict
+        parameters filled by user
+    """
     for param_config in config:
         name = param_config.get('name')
         if name in params:
@@ -55,7 +79,7 @@ def convert_parameters(config, params):
 
 def check_choices(name, val, choices):
     if choices:
-        if not val in choices:
+        if val not in choices:
             raise ValidationError(
                 'Invalid {0}: should be one of {1}'.format(
                     name, ','.join(choices)))

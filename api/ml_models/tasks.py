@@ -62,7 +62,7 @@ def train_model(dataset_ids, model_id, user_id, delete_metadata=False):
         train_iter = _chain_datasets(datasets)
 
         from memory_profiler import memory_usage
-        #mem_usage = memory_usage((trainer.train,
+        # mem_usage = memory_usage((trainer.train,
         #                          (train_iter,)), interval=0)
         train_begin_time = datetime.utcnow()
 
@@ -142,7 +142,8 @@ def fill_model_parameter_weights(model_id, segment_id=None):
     # from core.trainer.classifier_settings import CLASSIFIER_WITH_COEF
     init_logger('trainmodel_log', obj=int(model_id))
     model, segment = _get_model_and_segment_or_raise(model_id, segment_id)
-    logging.info("Starting to visualize trained model. Segment: %s" % segment.name)
+    logging.info(
+        "Starting to visualize trained model. Segment: %s" % segment.name)
     trainer = model.get_trainer()
 
     # need to sync model weights
@@ -276,9 +277,10 @@ def fill_model_parameter_weights(model_id, segment_id=None):
 
             db.session.commit()
             logging.info(
-                'Model %s parameters weights was added to db. %s weights, ' \
-                'in %s categories for %s classes' % \
-                (model.name, weights_added, categories_added, classes_processed))
+                'Model %s parameters weights was added to db. %s weights, '
+                'in %s categories for %s classes' %
+                (model.name, weights_added, categories_added,
+                 classes_processed))
         else:
             logging.info('Weights are unavailable for the classifier')
 
@@ -286,9 +288,9 @@ def fill_model_parameter_weights(model_id, segment_id=None):
         if not model.labels:
             model.labels = trainer._get_labels()
         model.visualize_model(
-                segment=segment.name,
-                data=visualization_data,
-                commit=False)
+            segment=segment.name,
+            data=visualization_data,
+            commit=False)
         model.status = model.STATUS_TRAINED
         model.weights_synchronized = have_weights
         model.save()
@@ -341,7 +343,7 @@ def generate_visualization_tree(model_id, deep):
         raise ValueError('model has invalid classifier')
 
     clf_type = model.classifier['type']
-    if not clf_type in (DECISION_TREE_CLASSIFIER, ):
+    if clf_type not in (DECISION_TREE_CLASSIFIER, ):
         raise VisualizationException(
             "model with %s classifier doesn't support tree"
             " visualization" % clf_type,
@@ -362,8 +364,8 @@ def generate_visualization_tree(model_id, deep):
     segments = [segment.name for segment in model.segments] \
         or [DEFAULT_SEGMENT]
     for segment in segments:
-        if not segment in model.visualization_data \
-                or not 'all_weights' in model.visualization_data[segment]:
+        if segment not in model.visualization_data \
+                or 'all_weights' not in model.visualization_data[segment]:
             raise VisualizationException(
                 "we don't support the visualization re-generation for models"
                 " trained before may 2015."
@@ -403,7 +405,8 @@ def add_weights_to_db(model, segment, class_label, weight_list):
                 new_weight = Weight()
                 new_weight.name = weight.get('name')
                 new_weight.value = weight.get('weight')
-                new_weight.value2 = weight.get('feature_weight') or weight.get('weight')
+                new_weight.value2 = weight.get('feature_weight') or \
+                    weight.get('weight')
                 new_weight.is_positive = bool(weight.get('weight') > 0)
                 new_weight.css_class = weight.get('css_class')
                 new_weight.parent = parent
@@ -549,7 +552,7 @@ def train_transformer(dataset_ids, transformer_id, user_id,
         trainer = transformer.train(train_iter)
 
         mem_usage = memory_usage(-1, interval=0, timeout=None)
-        #trainer.clear_temp_data()
+        # trainer.clear_temp_data()
 
         transformer.status = transformer.STATUS_TRAINED
         transformer.set_trainer(trainer)

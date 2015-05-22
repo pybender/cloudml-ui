@@ -90,12 +90,12 @@ class TestExampleResource(BaseResourceSQL):
         return super(TestExampleResource, self)._details(**kwargs)
 
     def _get_details_parameters(self, extra_params):
-        return self._parse_parameters(
-            extra_params + self.GET_PARAMS + self.FILTER_PARAMS + self.SORT_PARAMS)
+        return self._parse_parameters(extra_params + self.GET_PARAMS +
+                                      self.FILTER_PARAMS + self.SORT_PARAMS)
 
     def populate_filter_params(self, kwargs):
         test = TestResult.query.get(kwargs.get('test_result_id'))
-        if not test.dataset is None:
+        if test.dataset is not None:
             for field in test.dataset.data_fields:
                 field_new = field.replace('.', '->')
                 self.FILTER_PARAMS += (("data_input->>%s" % field_new, str), )
@@ -194,7 +194,7 @@ class TestExampleResource(BaseResourceSQL):
             logging.error('Can not group')
             return odesk_error_response(400, ERR_INVALID_DATA,
                                         'Can not group')
-        if not 'prob' in groups[0]['list'][0]:
+        if 'prob' not in groups[0]['list'][0]:
             logging.error('Examples do not contain probabilities')
             return odesk_error_response(400, ERR_INVALID_DATA, 'Examples do \
 not contain probabilities')
@@ -204,9 +204,11 @@ not contain probabilities')
 not contain probabilities')
 
         if groups[0]['list'][0]['label'] in ("True", "False"):
-            transform = lambda x: int(bool(x))
+            def transform(x):
+                return int(bool(x))
         elif groups[0]['list'][0]['label'] in ("0", "1"):
-            transform = lambda x: int(x)
+            def transform(x):
+                return int(x)
         else:
             logging.error('Type of labels do not support')
             return odesk_error_response(400, ERR_INVALID_DATA,

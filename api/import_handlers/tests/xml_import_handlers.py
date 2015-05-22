@@ -1,5 +1,6 @@
 import uuid
 import json
+import os
 from datetime import datetime
 
 from mock import patch, MagicMock
@@ -8,10 +9,10 @@ from moto import mock_s3
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS
 from api.servers.fixtures import ServerData
 from api.servers.models import Server
-from ..views import XmlImportHandlerResource, XmlEntityResource,\
-    XmlDataSourceResource, XmlInputParameterResource, XmlFieldResource,\
-    XmlQueryResource, XmlScriptResource, XmlSqoopResource, PredictModelResource, \
-    PredictModelWeightResource
+from ..views import XmlImportHandlerResource, XmlEntityResource, \
+    XmlDataSourceResource, XmlInputParameterResource, XmlFieldResource, \
+    XmlQueryResource, XmlScriptResource, XmlSqoopResource, \
+    PredictModelResource, PredictModelWeightResource
 from ..models import XmlImportHandler, XmlDataSource, db, \
     XmlScript, XmlField, XmlEntity, XmlInputParameter, XmlQuery, XmlSqoop, \
     PredictModel, PredictModelWeight
@@ -20,22 +21,10 @@ from ..fixtures import XmlImportHandlerData, XmlEntityData, XmlFieldData, \
 
 from lxml import etree
 
-
-HANDLER1_DATA = """<plan>
-  <inputs>
-    <param name="start_date" type="date"/>
-    <param name="end_date" type="date"/>
-  </inputs>
-  <datasources>
-    <db dbname="odw" host="localhost" name="ds" password="postgres" user="postgres" vendor="postgres"/>
-  </datasources>
-  <import>
-    <entity datasource="ds" name="something">
-      <field name="opening_id" type="integer"/>
-    </entity>
-  </import>
-</plan>
-"""
+DIR = os.path.dirname(__file__)
+XML_IMPORT_HANDLER_01 = os.path.join(DIR, '../fixtures/import_handler_01.xml')
+HANDLER1_DATA = open(XML_IMPORT_HANDLER_01, 'r').read()
+APP_URL = '/cloudml/xml_import_handlers/'
 
 
 class XmlImportHandlerModelTests(BaseDbTestCase):
@@ -246,7 +235,7 @@ class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
                 'data': fp.read()
             })
         handler = self.Model.query.filter_by(name=name).first()
-        
+
         ent = XmlEntity.query.filter_by(
             import_handler=handler, name='application').one()
         joined = XmlField.query.filter_by(
@@ -291,8 +280,8 @@ class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
         # forms validation error
         resp = self.client.put(url, headers=HTTP_HEADERS)
         resp_obj = json.loads(resp.data)
-        self.assertTrue(resp_obj.has_key('response'))
-        self.assertTrue(resp_obj['response'].has_key('error'))
+        self.assertTrue('response' in resp_obj)
+        self.assertTrue('error' in resp_obj['response'])
 
         # no parameters
         resp = self.client.put(url,
@@ -301,34 +290,35 @@ class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
                                      'datasource': 'odw'},
                                headers=HTTP_HEADERS)
         resp_obj = json.loads(resp.data)
-        self.assertTrue(resp_obj.has_key('response'))
-        self.assertTrue(resp_obj['response'].has_key('error'))
+        self.assertTrue('response' in resp_obj)
+        self.assertTrue('error' in resp_obj['response'])
 
         # good
         iter_mock = MagicMock()
-        iter_mock.return_value = [{'now': datetime(2014, 7, 21, 15, 52, 5, 308936)}]
+        iter_mock.return_value = [
+            {'now': datetime(2014, 7, 21, 15, 52, 5, 308936)}]
         with patch.dict('api.import_handlers.models.import_handlers.CoreImportHandler.DB_ITERS', {'postgres': iter_mock}):
-            resp = self.client.put(url,
-                                   data={'sql': 'SELECT NOW() WHERE #{something}',
-                                         'limit': 2,
-                                         'datasource': 'odw',
-                                         'params': json.dumps({'something': 'TRUE'})},
-                                   headers=HTTP_HEADERS)
+            resp = self.client.put(
+                url,
+                data={'sql': 'SELECT NOW() WHERE #{something}',
+                      'limit': 2,
+                      'datasource': 'odw',
+                      'params': json.dumps({'something': 'TRUE'})},
+                headers=HTTP_HEADERS)
             resp_obj = json.loads(resp.data)
-            self.assertTrue(resp_obj.has_key('data'))
-            self.assertTrue(resp_obj['data'][0].has_key('now'))
-            self.assertTrue(resp_obj.has_key('sql'))
+            self.assertTrue('data' in resp_obj)
+            self.assertTrue('now' in resp_obj['data'][0])
+            self.assertTrue('sql' in resp_obj)
             iter_mock.assert_called_with(['SELECT NOW() WHERE TRUE LIMIT 2'],
                                          "host='localhost' dbname='odw' "
                                          "user='postgres' password='postgres'")
-
 
     def test_get_list_fields(self):
         url = self._get_url(id=self.obj.id, action='list_fields')
 
         resp = self.client.get(url, headers=HTTP_HEADERS)
         resp_obj = json.loads(resp.data)
-        self.assertTrue(resp_obj.has_key('xml_fields'))
+        self.assertTrue('xml_fields' in resp_obj)
         self.assertEqual(11, len(resp_obj['xml_fields']))
 
     def test_put_upload_to_server_action(self):
@@ -339,28 +329,38 @@ class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
         self.assertEqual(400, resp.status_code)
 
         # forms validation error, bad xml data
-        resp = self.client.put(url, data={'data': 'bad xml'}, headers=HTTP_HEADERS)
+        resp = self.client.put(
+            url, data={'data': 'bad xml'}, headers=HTTP_HEADERS)
         self.assertEqual(400, resp.status_code)
         self.assertIn('bad xml', resp.data)
 
         handler = self.obj
-        self.assertEqual(4, XmlDataSource.query.filter_by(import_handler=handler).count())
-        self.assertEqual(2, XmlInputParameter.query.filter_by(import_handler=handler).count())
-        self.assertEqual(1, XmlScript.query.filter_by(import_handler=handler).count())
+        self.assertEqual(
+            4, XmlDataSource.query.filter_by(import_handler=handler).count())
+        self.assertEqual(
+            2,
+            XmlInputParameter.query.filter_by(import_handler=handler).count())
+        self.assertEqual(
+            1, XmlScript.query.filter_by(import_handler=handler).count())
 
         with open('conf/extract.xml', 'r') as fp:
             resp = self.client.put(url, data={'data': fp.read()},
-                                        headers=HTTP_HEADERS)
+                                   headers=HTTP_HEADERS)
         resp_obj = json.loads(resp.data)
         self.assertEqual(200, resp.status_code)
 
-        self.assertEqual(4, XmlDataSource.query.filter_by(import_handler=handler).count())
-        self.assertEqual(2, XmlInputParameter.query.filter_by(import_handler=handler).count())
-        self.assertEqual(1, XmlScript.query.filter_by(import_handler=handler).count())
+        self.assertEqual(
+            4, XmlDataSource.query.filter_by(import_handler=handler).count())
+        self.assertEqual(
+            2,
+            XmlInputParameter.query.filter_by(import_handler=handler).count())
+        self.assertEqual(
+            1, XmlScript.query.filter_by(import_handler=handler).count())
 
 
 class IHLoadMixin(object):
-    PIG_IMPORT_HANDLER = 'api/import_handlers/tests/pig-train-import-handler.xml'
+    PIG_IMPORT_HANDLER = os.path.join(
+        DIR, '../fixtures/pig-train-import-handler.xml')
 
     def load_import_handler(self, filename='conf/extract.xml'):
         name = str(uuid.uuid1())
@@ -390,7 +390,7 @@ class XmlEntityTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
         self.BASE_URL = '/cloudml/xml_import_handlers/{0!s}/entities/'.format(
             handler_id)
         self.obj = XmlEntity.query.filter_by(import_handler_id=handler_id,
-                                              name='application').one()
+                                             name='application').one()
 
     def test_delete(self):
         field_count = XmlField.query.count()
@@ -435,8 +435,7 @@ class XmlDataSourceTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
     def setUp(self):
         super(XmlDataSourceTests, self).setUp()
         handler_id = self.load_import_handler()
-        self.BASE_URL = '/cloudml/xml_import_handlers/{0!s}/datasources/'.format(
-            handler_id)
+        self.BASE_URL = '{0!s}{1!s}/datasources/'.format(APP_URL, handler_id)
         self.obj = XmlDataSource.query.filter_by(import_handler_id=handler_id,
                                                  name='odw').one()
 
@@ -460,8 +459,8 @@ class XmlInputParameterTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
     def setUp(self):
         super(XmlInputParameterTests, self).setUp()
         handler_id = self.load_import_handler()
-        self.BASE_URL = '/cloudml/xml_import_handlers/{0!s}/input_parameters/'.format(
-            handler_id)
+        self.BASE_URL = '{0!s}{1!s}/input_parameters/'.format(
+            APP_URL, handler_id)
         self.obj = XmlInputParameter.query.filter_by(
             import_handler_id=handler_id,
             name='start').one()
@@ -493,7 +492,8 @@ class XmlScriptTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
         handler_id = self.load_import_handler()
         self.BASE_URL = '/cloudml/xml_import_handlers/{0!s}/scripts/'.format(
             handler_id)
-        self.obj = XmlScript.query.filter_by(import_handler_id=handler_id).one()
+        self.obj = XmlScript.query.filter_by(
+            import_handler_id=handler_id).one()
 
     def test_list(self):
         self.check_list(show='data')
@@ -517,8 +517,8 @@ class XmlFieldTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
         handler_id = self.load_import_handler()
         self.entity = XmlEntity.query.filter_by(import_handler_id=handler_id,
                                                 name='application').one()
-        self.BASE_URL = '/cloudml/xml_import_handlers/{0!s}/entities/{1!s}/fields/'.format(
-            handler_id, self.entity.id)
+        self.BASE_URL = '{0!s}{1!s}/entities/{2!s}/fields/'.format(
+            APP_URL, handler_id, self.entity.id)
         self.obj = XmlField.query.filter_by(entity_id=self.entity.id,
                                             name='application_id').one()
 
@@ -570,8 +570,8 @@ class XmlQueryTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
         handler_id = self.load_import_handler()
         self.entity = XmlEntity.query.filter_by(import_handler_id=handler_id,
                                                 name='application').one()
-        self.BASE_URL = '/cloudml/xml_import_handlers/{0!s}/entities/{1!s}/queries/'.format(
-            handler_id, self.entity.id)
+        self.BASE_URL = '{0!s}{1!s}/entities/{2!s}/queries/'.format(
+            APP_URL, handler_id, self.entity.id)
         self.obj = self.entity.query_obj
 
     def test_list(self):
@@ -596,8 +596,8 @@ class XmlSqoopTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
         handler_id = self.load_import_handler(self.PIG_IMPORT_HANDLER)
         self.entity = XmlEntity.query.filter_by(import_handler_id=handler_id,
                                                 name='application').one()
-        self.BASE_URL = '/cloudml/xml_import_handlers/{0!s}/entities/{1!s}/sqoop_imports/'.format(
-            handler_id, self.entity.id)
+        self.BASE_URL = '{0!s}{1!s}/entities/{2!s}/sqoop_imports/'.format(
+            APP_URL, handler_id, self.entity.id)
         self.obj = self.entity.sqoop_imports[0]
 
     def test_list(self):
@@ -621,8 +621,9 @@ class XmlSqoopTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
         resp = self._check(action='pig_fields', obj=sqoop, method='put')
         self.assertTrue(get_iter_mock.called)
         print resp
-        self.assertItemsEqual(u'Generating pig fields delayed (link will appear in sqoop section)',
-               resp['result'])
+        self.assertItemsEqual(
+            'Generating pig fields delayed (link will appear in sqoop section)',
+            resp['result'])
         # self.assertItemsEqual(
         #     ['application', 'opening', 'employer_info', 'hire_outcome'],
         #     [fld['column_name'] for fld in resp['fields']]
@@ -674,7 +675,8 @@ predict_models/'.format(handler_id)
         self.assertEquals(model['name'], db_model.name)
         self.assertEquals(model['value'], db_model.value)
         self.assertEquals(model['script'], db_model.script)
-        self.assertEquals(model['positive_label_value'], db_model.positive_label_value)
+        self.assertEquals(
+            model['positive_label_value'], db_model.positive_label_value)
 
     def test_list_invalid_handler(self):
         import sys
@@ -702,7 +704,8 @@ predict_models/'.format(sys.maxint)
 
 class PredictModelWeightTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
     """
-    Tests of the models in predict model's weights section of the xml import handlers.
+    Tests of the models in predict model's weights
+    section of the xml import handlers.
     """
     BASE_URL = ''
     RESOURCE = PredictModelWeightResource

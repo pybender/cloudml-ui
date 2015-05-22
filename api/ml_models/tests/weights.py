@@ -73,7 +73,7 @@ class WeightResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(data['per_page'], 20)
         self.assertTrue('weights' in data, data)
         self.assertFalse('tsexams->Ruby on Rails' in resp.data)
-        
+
         self.assertTrue(
             'tsexams->Python 2.x Test' in data['weights'][0]['name'])
 
@@ -208,7 +208,8 @@ class WeightResourceTests(BaseDbTestCase, TestChecksMixin):
 
 
 class WeightTreeResourceTests(BaseDbTestCase, TestChecksMixin):
-    datasets = [FeatureData, FeatureSetData, ModelData, WeightData, WeightsCategoryData]
+    datasets = [FeatureData, FeatureSetData, ModelData, WeightData,
+                WeightsCategoryData]
 
     def setUp(self):
         super(WeightTreeResourceTests, self).setUp()
@@ -222,7 +223,8 @@ class WeightTreeResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue('opening' in str(data), data)
 
         data = self._check(parent='contractor.dev_blurb')
-        self.assertEquals(data['weights'][0]['name'], WeightData.weight_02.name)
+        self.assertEquals(
+            data['weights'][0]['name'], WeightData.weight_02.name)
         self.assertEquals(len(data['weights']), 1)
 
         # test multiclass case
@@ -231,13 +233,14 @@ class WeightTreeResourceTests(BaseDbTestCase, TestChecksMixin):
         self.BASE_URL = '/cloudml/weights/%s/' % self.model.id
 
         data = self._check(class_label='2')
-        self.assertEquals(data['weights'][0]['name'], WeightData.weight_multiclass_02.name)
+        self.assertEquals(
+            data['weights'][0]['name'], WeightData.weight_multiclass_02.name)
         self.assertEquals(len(data['weights']), 1)
 
         data = self._check(class_label='3')
-        self.assertEquals(data['weights'][0]['name'], WeightData.weight_multiclass_03.name)
+        self.assertEquals(
+            data['weights'][0]['name'], WeightData.weight_multiclass_03.name)
         self.assertEquals(len(data['weights']), 2)
-
 
     def test_invalid_methods(self):
         self._check_not_allowed_method('post')
@@ -392,8 +395,8 @@ class WeightTasksTests(BaseDbTestCase, TestChecksMixin):
         }
         for class_label in weights.keys():
             trainer_weights = weights[class_label]
-            trainer_weight_list = trainer_weights['positive'] \
-                                  + trainer_weights['negative']
+            trainer_weight_list = trainer_weights['positive'] + \
+                trainer_weights['negative']
 
             list_count = len(trainer_weight_list)
             query = Weight.query.filter_by(model=model,
@@ -406,7 +409,8 @@ class WeightTasksTests(BaseDbTestCase, TestChecksMixin):
 
             # Check categories in db
             cat = WeightsCategory.query.filter_by(
-                model=model, name='contractor',segment_id=model.segments[1].id,
+                model=model, name='contractor',
+                segment_id=model.segments[1].id,
                 class_label=str(class_label)).one()
             self.assertEquals(cat.parent, '')
             self.assertEquals(cat.short_name, 'contractor')
@@ -426,16 +430,16 @@ class WeightTasksTests(BaseDbTestCase, TestChecksMixin):
                 check_random_weight()
 
         weight = Weight.query.filter_by(
-                model=model, name='contractor->dev_active_interviews',
-                segment_id=model.segments[1].id,
-                class_label='2').one()
+            model=model, name='contractor->dev_active_interviews',
+            segment_id=model.segments[1].id,
+            class_label='2').one()
         self.assertEquals(round(weight.value, 3), 0.185)
         self.assertEquals(round(weight.value2, 4), 0.0258)
 
         weight = Weight.query.filter_by(
-                model=model, name='contractor->dev_active_interviews',
-                segment_id=model.segments[1].id,
-                class_label='1').one()
+            model=model, name='contractor->dev_active_interviews',
+            segment_id=model.segments[1].id,
+            class_label='1').one()
         self.assertEquals(round(weight.value, 3), -0.334)
         self.assertEquals(round(weight.value2, 4), 0.0466)
 

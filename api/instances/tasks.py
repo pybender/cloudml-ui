@@ -23,14 +23,15 @@ def synchronyze_cluster_list():
     for cluster in clusters:
         status = emr.describe_jobflow(cluster.jobflow_id).state
         if status == 'terminated':
-            logging.info('Cluster %s terminated, it will be deleted' % cluster.jobflow_id)
+            logging.info('Cluster %s terminated, it will be deleted'
+                         % cluster.jobflow_id)
             cluster.delete()
         if status in Cluster.STATUSES:
             claster.status = status
             claster.save()
         else:
             logging.info('Unknown jobflow status %s' % status)
-    
+
 
 @celery.task(base=SqlAlchemyTask)
 def request_spot_instance(dataset_id=None, instance_type=None, model_id=None):
@@ -161,13 +162,17 @@ cancelled for model id {1!s}'.format(request_id, model_id))
 @celery.task(base=SqlAlchemyTask)
 def run_ssh_tunnel(cluster_id):
     from api.instances.models import Cluster
-    import subprocess, shlex
+    import subprocess
+    import shlex
     cluster = Cluster.query.get(cluster_id)
-    try:      
-        ssh_command = "ssh -o StrictHostKeyChecking=no -g -L %(port)d:%(dns)s:9026 hadoop@%(dns)s -i /home/cloudml/.ssh/cloudml-control.pem" \
+    try:
+        ssh_command = "ssh -o StrictHostKeyChecking=no -g -L %(port)d:%(dns)s:\
+9026 hadoop@%(dns)s -i /home/cloudml/.ssh/cloudml-control.pem" \
             % {"dns": cluster.master_node_dns, "port": cluster.port}
         args = shlex.split(ssh_command)
-        p = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        p = subprocess.Popen(args, shell=False,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT)
         cluster.pid = p.pid
         cluster.save()
         for line in p.stdout.readlines():

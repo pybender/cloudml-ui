@@ -57,7 +57,7 @@ class ExportImportMixin(object):
         return data
 
 
-### Predefined Items ###
+# ==== Predefined Items ====
 class PredefinedItemMixin(object):
     name = db.Column(db.String(200), nullable=False, unique=True)
 
@@ -105,7 +105,7 @@ class PredefinedScaler(BaseModel, PredefinedItemMixin, db.Model,
         db.Enum(*TYPES_LIST, name='scaler_types'), nullable=False)
 
 
-### Feature and Feature Set models ###
+# ==== Feature and Feature Set models ====
 class RefFeatureSetMixin(object):
     @declared_attr
     def feature_set_id(cls):
@@ -273,7 +273,6 @@ def after_insert_feature(mapper, connection, target):
         from sqlalchemy.orm import joinedload
         target = target.__class__.query.options(
             joinedload('feature_set')).get(target.id)
-        #db.session.expire(target, ['feature_set'])
     if target.feature_set is not None:
         update_feature_set_on_change_features(
             connection, target.feature_set, target)

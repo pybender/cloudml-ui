@@ -245,7 +245,6 @@ class DataSet(db.Model, BaseModel):
 
     def get_data_stream(self):
         import gzip
-        #import zlib
         if not self.on_s3 or exists(self.filename):
             logging.info('Loading data from local file')
             open_meth = gzip.open if self.compress else open
@@ -256,7 +255,6 @@ class DataSet(db.Model, BaseModel):
             if self.compress:
                 logging.info('Decompress data')
                 return gzip.GzipFile(fileobj=stream, mode='r')
-                #data = zlib.decompress(data)
             return stream
 
     def get_iterator(self, stream):

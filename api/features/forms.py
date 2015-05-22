@@ -18,7 +18,7 @@ class FeatureParamsMixin(object):
     def _validate_param(self, data, name):
         from core.trainer.feature_types import FEATURE_PARAMS_TYPES
 
-        if not name in data:
+        if name not in data:
             raise ValidationError('Parameter {} is required'.format(name))
         value = data[name]
         param_type = FEATURE_PARAMS_TYPES[name]['type']
@@ -53,7 +53,7 @@ class FeatureParamsMixin(object):
         value_type = self.data.get('type')
         if not type:
             raise ValidationError('invalid type')
-        if not value_type in FEATURE_TYPE_FACTORIES:
+        if value_type not in FEATURE_TYPE_FACTORIES:
             return
         required_params = FEATURE_TYPE_FACTORIES[value_type].required_params
         for name in required_params:
@@ -208,7 +208,7 @@ exist. Please choose another one.' % name)
         return name
 
     def clean_type(self, value, field):
-        if value and not value in NamedFeatureType.TYPES_LIST:
+        if value and value not in NamedFeatureType.TYPES_LIST:
             # Try to find type in named types
             found = NamedFeatureType.query.filter_by(name=value).count()
             if not found:

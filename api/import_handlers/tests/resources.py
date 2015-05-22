@@ -87,7 +87,8 @@ class ImportHandlerTests(BaseDbTestCase, TestChecksMixin):
         data = {'queries.1.name': 'new query1',
                 'queries.1.sql': 'select * from t1...'}
         resp, obj = self.check_edit(data, id=self.obj.id)
-        self.assertEquals(len(obj.data['queries']), 2, "Query should be updated")
+        self.assertEquals(
+            len(obj.data['queries']), 2, "Query should be updated")
         query = obj.data['queries'][1]
         self.assertEquals(query['name'], 'new query1')
         self.assertEquals(query['sql'], 'select * from t1...')
@@ -182,8 +183,8 @@ class ImportHandlerTests(BaseDbTestCase, TestChecksMixin):
         # forms validation error
         resp = self.client.put(url, headers=HTTP_HEADERS)
         resp_obj = json.loads(resp.data)
-        self.assertTrue(resp_obj.has_key('response'))
-        self.assertTrue(resp_obj['response'].has_key('error'))
+        self.assertTrue('response' in resp_obj)
+        self.assertTrue('error' in resp_obj['response'])
 
         # no parameters
         resp = self.client.put(url,
@@ -192,23 +193,25 @@ class ImportHandlerTests(BaseDbTestCase, TestChecksMixin):
                                      'datasource': 'odw'},
                                headers=HTTP_HEADERS)
         resp_obj = json.loads(resp.data)
-        self.assertTrue(resp_obj.has_key('response'))
-        self.assertTrue(resp_obj['response'].has_key('error'))
+        self.assertTrue('response' in resp_obj)
+        self.assertTrue('error' in resp_obj['response'])
 
         # good
         iter_mock = MagicMock()
-        iter_mock.return_value = [{'now': datetime(2014, 7, 21, 15, 52, 5, 308936)}]
+        iter_mock.return_value = [
+            {'now': datetime(2014, 7, 21, 15, 52, 5, 308936)}]
         with patch.dict('api.import_handlers.models.import_handlers.CoreImportHandler.DB_ITERS', {'postgres': iter_mock}):
-            resp = self.client.put(url,
-                                   data={'sql': 'SELECT NOW() WHERE %(something)s',
-                                         'limit': 2,
-                                         'datasource': 'odw',
-                                         'params': json.dumps({'something': 'TRUE'})},
-                                   headers=HTTP_HEADERS)
+            resp = self.client.put(
+                url,
+                data={'sql': 'SELECT NOW() WHERE %(something)s',
+                      'limit': 2,
+                      'datasource': 'odw',
+                      'params': json.dumps({'something': 'TRUE'})},
+                headers=HTTP_HEADERS)
             resp_obj = json.loads(resp.data)
-            self.assertTrue(resp_obj.has_key('data'))
-            self.assertTrue(resp_obj['data'][0].has_key('now'))
-            self.assertTrue(resp_obj.has_key('sql'))
+            self.assertTrue('data' in resp_obj)
+            self.assertTrue('now' in resp_obj['data'][0])
+            self.assertTrue('sql' in resp_obj)
             iter_mock.assert_called_with(['SELECT NOW() WHERE TRUE LIMIT 2'],
                                          "host='localhost' dbname='cloudml' "
                                          "user='cloudml' password='cloudml'")
@@ -283,7 +286,6 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         stream = ds.get_data_stream()
         self.assertTrue(stream)
         self.assertTrue(mock_load_key.called)
-
 
     @patch('core.importhandler.importhandler.ImportHandler.__init__')
     def test_post_exception(self, mock_handler):
@@ -471,6 +473,7 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
             resp = self.client.get(url, headers=HTTP_HEADERS)
             self.assertEquals(resp.status_code, httplib.BAD_REQUEST)
             self.assertTrue('unknown file type' in resp.data)
+
 
 class TestTasksTests(BaseDbTestCase, TestChecksMixin):
     """

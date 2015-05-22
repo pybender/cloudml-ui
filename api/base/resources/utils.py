@@ -32,11 +32,11 @@ ERR_NO_SUCH_IMPORT_HANDLER = 1009
 _punct_re = re.compile(r'[\t !"#$%&\'()*\-/<=>?@\[\\\]^_`{|},.]+')
 
 
-def _add_cors_headers(h, origin='*',
-                      methods=', '.join(
-                          ('GET', 'OPTIONS', 'DELETE', 'PUT', 'POST')),
-                      allow_headers='accept, origin, content-type, X-Auth-Token',
-                      max_age=21600):
+def _add_cors_headers(
+        h, origin='*',
+        methods=', '.join(('GET', 'OPTIONS', 'DELETE', 'PUT', 'POST')),
+        allow_headers='accept, origin, content-type, X-Auth-Token',
+        max_age=21600):
 
     h['Access-Control-Allow-Origin'] = origin
     h['Access-Control-Allow-Methods'] = methods
@@ -45,7 +45,8 @@ def _add_cors_headers(h, origin='*',
         h['Access-Control-Allow-Headers'] = allow_headers
 
 
-def odesk_error_response(status, code, message, debug=None, traceback=None, errors=None):
+def odesk_error_response(status, code, message, debug=None,
+                         traceback=None, errors=None):
     """
     Creates a JSON error response that is compliant with
     https://sites.google.com/a/odesk.com/eng/Home/FunctionalSpecifications/webservices-error-handling-enhancements-frd
@@ -73,7 +74,6 @@ def odesk_error_response(status, code, message, debug=None, traceback=None, erro
 
     h['Content-type'] = 'application/json'
     h['X-Odesk-Error-Code'] = code
-    #import pdb; pdb.set_trace()
     h['X-Odesk-Error-Message'] = ''.join(message.splitlines())
 
     # CORS headers

@@ -143,6 +143,7 @@ class AuthTokenModelTests(BaseDbTestCase):
         AuthToken.delete(TOKEN)
         self.assertEquals(AuthToken.get_auth('invalid'), None)
 
+
 class AuthResourceTests(BaseDbTestCase):
     """
     Tests of the authentication system.
@@ -167,9 +168,9 @@ class AuthResourceTests(BaseDbTestCase):
         data = json.loads(resp.data)
         self.assertTrue('auth_url' in data)
         self.assertEquals(data['auth_url'], 'url')
-        #secret = app.db['auth_tokens'].find_one({'oauth_token': '1'})
-        #self.assertIsNotNone(secret)
-        #self.assertEquals(secret.get('oauth_token_secret'), '2')
+        # secret = app.db['auth_tokens'].find_one({'oauth_token': '1'})
+        # self.assertIsNotNone(secret)
+        # self.assertEquals(secret.get('oauth_token_secret'), '2')
 
     def test_invalid_action_or_method(self):
         url = '{0}/invalid_action?oauth_token={1}&oauth_verifier={2}'.format(
@@ -202,8 +203,10 @@ class AuthResourceTests(BaseDbTestCase):
                           'Wrong token: 123')
 
         with patch('api.accounts.models.User.authenticate',
-                   return_value=('123', User.query.filter_by(
-                           uid='somebody').one())) as mock_auth:
+                   return_value=(
+                       '123',
+                       User.query.filter_by(uid='somebody').one())
+                   ) as mock_auth:
 
             # Proper token
 
@@ -292,7 +295,7 @@ class UserModelTests(BaseDbTestCase):
         with patch('api.accounts.auth.OdeskAuth.get_my_info',
                    Mock(return_value=self.INFO_RETURN_VALUE_1)):
             with patch('api.accounts.auth.OdeskAuth.get_user_info',
-                   Mock(return_value=self.INFO_RETURN_VALUE_3)):
+                       Mock(return_value=self.INFO_RETURN_VALUE_3)):
                 token, user = User.authenticate('123', '345', '567')
                 self.assertTrue(token)
                 self.assertEqual(user.uid, 'somebody')
@@ -305,7 +308,7 @@ class UserModelTests(BaseDbTestCase):
         with patch('api.accounts.auth.OdeskAuth.get_my_info',
                    Mock(return_value=self.INFO_RETURN_VALUE_2)):
             with patch('api.accounts.auth.OdeskAuth.get_user_info',
-                   Mock(return_value=self.INFO_RETURN_VALUE_4)):
+                       Mock(return_value=self.INFO_RETURN_VALUE_4)):
                 token, user = User.authenticate('123', '345', '567')
                 self.assertTrue(token)
                 self.assertTrue(str(user.id))
@@ -415,4 +418,6 @@ class OdeskAuthTests(TestCase):
         self.assertEqual(url, OAuthClient._stripOauthSignature(url))
 
         url = 'http://www.something.com?oauth_token=a'
-        self.assertEqual('http://www.something.com', OAuthClient._stripOauthSignature(url))
+        self.assertEqual(
+            'http://www.something.com',
+            OAuthClient._stripOauthSignature(url))

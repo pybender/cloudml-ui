@@ -1,13 +1,8 @@
-PIG_TEMPLATE = """register 's3://odesk-match-staging/pig/lib/elephant-bird-core-4.4.jar';
-register 's3://odesk-match-staging/pig/lib/elephant-bird-pig-4.4.jar';
-register 's3://odesk-match-staging/pig/lib/elephant-bird-hadoop-compat-4.4.jar';
-register 's3://odesk-match-staging/pig/lib/piggybank-0.12.0.jar';
+import os
 
-result = LOAD '$dataset*' USING org.apache.pig.piggybank.storage.CSVExcelStorage(',', 'YES_MULTILINE') AS (
+DIR = os.path.dirname(__file__)
 
-{0}
-
-);"""
+PIG_TEMPLATE = os.path.join(DIR, 'pig_template.txt').read()
 
 XML_FIELD_TEMPLATE = '<field name="%(column_name)s" type="%(data_type)s" />'
 

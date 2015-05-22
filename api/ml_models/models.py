@@ -92,8 +92,8 @@ class BaseTrainedEntity(object):
 
     @property
     def train_import_handler(self):
-        return getattr(
-            self, "rel_train_import_handler_%s" % self.train_import_handler_type)
+        return getattr(self, "rel_train_import_handler_%s" %
+                       self.train_import_handler_type)
 
     @train_import_handler.setter
     def train_import_handler(self, handler):
@@ -178,9 +178,10 @@ class Model(db.Model, BaseModel, BaseTrainedEntity):
         super(Model, self).__init__(*args, **kwargs)
         self.visualization_data = {}
 
-    def visualize_model(self, data=None, status=None, commit=True, segment=None):
+    def visualize_model(self, data=None, status=None,
+                        commit=True, segment=None):
         def set_status(item, status):
-            if not 'parameters' in item:
+            if 'parameters' not in item:
                 item['parameters'] = {}
             item['parameters']['status'] = status
 
@@ -301,7 +302,8 @@ class Model(db.Model, BaseModel, BaseTrainedEntity):
     def features(self):
         return self.get_features_json()
 
-    def prepare_fields_for_train(self, user, datasets=[], delete_metadata=True):
+    def prepare_fields_for_train(self, user, datasets=[],
+                                 delete_metadata=True):
         """
         Flushes model fields while re-training.
         Removes related models, when `delete_metadata` setted.
@@ -313,8 +315,9 @@ class Model(db.Model, BaseModel, BaseTrainedEntity):
 
             def _del(Cls, related_name):
                 count = Cls.query.filter(Cls.model_id == self.id).delete(
-                        synchronize_session=False)
-                logging.info('%s %s examples to delete' % (count, related_name))
+                    synchronize_session=False)
+                logging.info(
+                    '%s %s examples to delete' % (count, related_name))
 
             _del(TestExample, 'test examples')
             _del(TestResult, 'tests')
@@ -367,7 +370,7 @@ class Transformer(BaseModel, BaseTrainedEntity, db.Model):
     feature_type = db.Column(db.String(100))
     type = db.Column(
         db.Enum(*TYPES_LIST, name='pretrained_transformer_types'),
-                nullable=False)
+        nullable=False)
     datasets = relationship('DataSet',
                             secondary=lambda: transformer_data_sets_table)
 
@@ -423,6 +426,7 @@ def get_transformer(name):
 
 from api.import_handlers.models import ImportHandlerMixin
 
+
 @event.listens_for(ImportHandlerMixin, "mapper_configured", propagate=True)
 def setup_listener(mapper, class_):
     import_handler_type = class_.TYPE
@@ -432,10 +436,10 @@ def setup_listener(mapper, class_):
             class_.id == foreign(remote(Model.test_import_handler_id)),
             Model.test_import_handler_type == import_handler_type
         ),
-        #cascade='all,delete',
         backref=backref(
             "rel_test_import_handler_%s" % import_handler_type,
-            primaryjoin=remote(class_.id) == foreign(Model.test_import_handler_id)
+            primaryjoin=(remote(class_.id) ==
+                         foreign(Model.test_import_handler_id))
         )
     )
     class_.train_import_handler = relationship(
@@ -444,10 +448,10 @@ def setup_listener(mapper, class_):
             class_.id == foreign(remote(Model.train_import_handler_id)),
             Model.train_import_handler_type == import_handler_type
         ),
-        #cascade='all,delete',
         backref=backref(
             "rel_train_import_handler_%s" % import_handler_type,
-            primaryjoin=remote(class_.id) == foreign(Model.train_import_handler_id)
+            primaryjoin=(remote(class_.id) ==
+                         foreign(Model.train_import_handler_id))
         )
     )
     class_.transformers = relationship(
@@ -456,10 +460,10 @@ def setup_listener(mapper, class_):
             class_.id == foreign(remote(Transformer.train_import_handler_id)),
             Transformer.train_import_handler_type == import_handler_type
         ),
-        #cascade='all,delete',
         backref=backref(
             "rel_train_import_handler_%s" % import_handler_type,
-            primaryjoin=remote(class_.id) == foreign(Transformer.train_import_handler_id)
+            primaryjoin=(remote(class_.id) ==
+                         foreign(Transformer.train_import_handler_id))
         )
     )
 
@@ -506,7 +510,7 @@ class WeightsCategory(db.Model, BaseMixin):
 
     parent = db.Column(db.String(200))
 
-    # TODO: Maybe have FK Weight to WeightsCategory? 
+    # TODO: Maybe have FK Weight to WeightsCategory?
     # @aggregated('normalized_weight', sa.Column(sa.Float))
     # def normalized_weight(self):
     #     return sa.func.sum(Weight.value2)
@@ -579,10 +583,10 @@ class ClassifierGridParams(db.Model, BaseModel):
     scoring = db.Column(db.String(100), default='accuracy')
     status = db.Column(
         db.Enum(*STATUS_LIST, name='classifier_grid_params_statuses'),
-                nullable=False, default='New')
+        nullable=False, default='New')
 
     train_data_set_id = db.Column(db.Integer, db.ForeignKey('data_set.id',
-                                                     ondelete='SET NULL'))
+                                  ondelete='SET NULL'))
     train_dataset = relationship('DataSet', foreign_keys=[train_data_set_id])
 
     test_data_set_id = db.Column(

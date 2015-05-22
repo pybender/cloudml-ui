@@ -13,6 +13,9 @@ class AuthException(Exception):
 
 
 class Auth(object):
+    """
+    Authorization router.
+    """
     REQUEST_TOKEN_URL = ''
     REQUEST_TOKEN_METHOD = 'GET'
     ACCESS_TOKEN_URL = ''
@@ -64,8 +67,10 @@ class Auth(object):
             access_token['oauth_token'],
             access_token['oauth_token_secret'])
 
+
 class OdeskAuth(Auth):
-    REQUEST_TOKEN_URL = 'https://www.upwork.com/api/auth/v1/oauth/token/request'
+    REQUEST_TOKEN_URL = \
+        'https://www.upwork.com/api/auth/v1/oauth/token/request'
     REQUEST_TOKEN_METHOD = 'POST'
 
     ACCESS_TOKEN_URL = 'https://www.upwork.com/api/auth/v1/oauth/token/access'
@@ -92,7 +97,8 @@ class OdeskAuth(Auth):
             method
         )
         if resp['status'] != '200':
-            raise AuthException('Getting info failed url:{0!s} content: {1!s}'.
+            raise AuthException(
+                'Getting info failed url:{0!s} content: {1!s}'.
                 format(url, content))
 
         return json.loads(content)
@@ -101,29 +107,38 @@ class OdeskAuth(Auth):
         return self.api_request(self.GET_INFO_URL, 'GET',
                                 oauth_token, oauth_token_secret,
                                 oauth_verifier)
+
     def get_user_info(self, oauth_token, oauth_token_secret, oauth_verifier):
+        """
+        Returns profile information about the user.
+        """
         return self.api_request(self.GET_USER_INFO_URL, 'GET',
                                 oauth_token, oauth_token_secret,
                                 oauth_verifier)
+
 
 class OAuthClient(Client):
     '''
     We encounter redirects with odesk. Though httplib2 has follow_all_redirects
     that allows us to simply solve the problem. It has 2 major problems
     1. Unsolicited POST redirects poses secruity danger.
-    2. A bug in oauth2 as per https://github.com/simplegeo/python-oauth2/issues/157
-    So we have to manage the request redirection ourselves, still we didn't 
+    2. A bug in oauth2 as per
+    https://github.com/simplegeo/python-oauth2/issues/157
+    So we have to manage the request redirection ourselves, still we didn't
     solve issue #1 above
     '''
-    def __init__(self, consumer, token=None, cache=None, timeout=None, proxy_info=None):
-        super(OAuthClient, self).__init__(consumer, token, cache, timeout, proxy_info)
+    def __init__(self, consumer, token=None, cache=None,
+                 timeout=None, proxy_info=None):
+        super(OAuthClient, self).__init__(
+            consumer, token, cache, timeout, proxy_info)
         self.follow_all_redirects = True
         self.follow_redirects = True
 
-    def request(self, uri, method="GET", body='', headers=None, 
-        redirections=httplib2.DEFAULT_MAX_REDIRECTS, connection_type=None):
+    def request(self, uri, method="GET", body='', headers=None,
+                redirections=httplib2.DEFAULT_MAX_REDIRECTS,
+                connection_type=None):
         return super(OAuthClient, self).request(
-            OAuthClient._stripOauthSignature(uri), 
+            OAuthClient._stripOauthSignature(uri),
             method, body, headers, redirections, connection_type
         )
 
@@ -131,7 +146,8 @@ class OAuthClient(Client):
     def _stripOauthSignature(uri):
         scheme, netloc, path, query, fragment = urlparse.urlsplit(uri)
         query = dict(urlparse.parse_qsl(query))
-        if query.has_key('oauth_token'):
-            return urlparse.urlunparse((scheme, netloc, path, None, None, None))
+        if 'oauth_token' in query:
+            return urlparse.urlunparse(
+                (scheme, netloc, path, None, None, None))
         else:
             return uri

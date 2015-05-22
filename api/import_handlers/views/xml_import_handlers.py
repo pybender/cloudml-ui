@@ -171,7 +171,6 @@ class XmlImportHandlerResource(BaseResourceSQL):
             )
         }, code=201)
 
-
     def _get_list_fields_action(self, **kwargs):
 
         handler = self._get_details_query(None, **kwargs)
@@ -189,9 +188,11 @@ class XmlImportHandlerResource(BaseResourceSQL):
         try:
             for e in XmlEntity.query.filter_by(import_handler=handler).all():
                 e.delete()
-            for ds in XmlDataSource.query.filter_by(import_handler=handler).all():
+            for ds in XmlDataSource.query.filter_by(
+                    import_handler=handler).all():
                 ds.delete()
-            for ip in XmlInputParameter.query.filter_by(import_handler=handler).all():
+            for ip in XmlInputParameter.query.filter_by(
+                    import_handler=handler).all():
                 ip.delete()
             for s in XmlScript.query.filter_by(import_handler=handler).all():
                 s.delete()
@@ -371,8 +372,6 @@ class XmlSqoopResource(BaseResourceSQL):
                 'result': "Generating pig fields delayed (link will appear in sqoop section)"})
         return odesk_error_response(400, 400, 'Parameters are invalid')
 
-
-
 api.add_resource(XmlSqoopResource, '/cloudml/xml_import_handlers/\
 <regex("[\w\.]*"):import_handler_id>/entities/<regex("[\w\.]*"):entity_id>\
 /sqoop_imports/')
@@ -394,7 +393,8 @@ class PredictModelResource(BaseResourceSQL):
 
     def _get_list_query(self, params, **kwargs):
         handler = self._get_handler(kwargs.pop('import_handler_id'))
-        cursor = super(PredictModelResource, self)._get_list_query(params, **kwargs)
+        cursor = super(PredictModelResource, self)._get_list_query(
+            params, **kwargs)
         return cursor.filter(
             PredictModel.predict_section.any(id=handler.predict.id))
 
@@ -428,7 +428,8 @@ class PredictModelWeightResource(BaseResourceSQL):
 
     def _get_list_query(self, params, **kwargs):
         handler = self._get_handler(kwargs.pop('import_handler_id'))
-        return super(PredictModelWeightResource, self)._get_list_query(params, **kwargs)
+        return super(PredictModelWeightResource, self)._get_list_query(
+            params, **kwargs)
 
     def _get_handler(self, handler_id):
         if handler_id is None:
@@ -461,7 +462,8 @@ class PredictResultLabelResource(BaseResourceSQL):
 
     def _get_list_query(self, params, **kwargs):
         handler = self._get_handler(kwargs.pop('import_handler_id'))
-        cursor = super(PredictModelResource, self)._get_list_query(params, **kwargs)
+        cursor = super(PredictModelResource, self)._get_list_query(
+            params, **kwargs)
         return cursor.filter(
             PredictModel.predict_section.any(id=handler.predict.id))
 
@@ -495,7 +497,8 @@ class PredictResultProbabilityResource(BaseResourceSQL):
 
     def _get_list_query(self, params, **kwargs):
         handler = self._get_handler(kwargs.pop('import_handler_id'))
-        cursor = super(PredictModelResource, self)._get_list_query(params, **kwargs)
+        cursor = super(PredictModelResource, self)._get_list_query(
+            params, **kwargs)
         return cursor.filter(
             PredictModel.predict_section.any(id=handler.predict.id))
 

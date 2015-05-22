@@ -13,7 +13,6 @@ class FeatureSetResource(BaseResourceSQL):
     """
     MESSAGE404 = "Feature set set doesn't exist"
     OBJECT_NAME = 'set'
-    #post_form = FeatureSetAddForm
     put_form = FeatureSetForm
     GET_ACTIONS = ('download', )
     Model = FeatureSet

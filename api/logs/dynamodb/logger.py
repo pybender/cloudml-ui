@@ -3,8 +3,10 @@ import logging
 from ..logger import BaseLogMessageHandler
 from models import LogMessage
 
+
 def cap(s, l):
-    return s if len(s)<=l else s[0:l-3]+'...'
+    return s if len(s) <= l else s[0:l - 3] + '...'
+
 
 class LogMessageHandler(BaseLogMessageHandler):
     """ Logging handler, which outputs to amazon dynamodb. """

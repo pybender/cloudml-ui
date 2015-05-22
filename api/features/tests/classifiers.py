@@ -28,7 +28,7 @@ class TestClassifierDoc(BaseDbTestCase):
 
     def test_from_features(self):
         features = json.loads(open('./conf/features.json', 'r').read())
-        classifier = PredefinedClassifier(name = 'Set')
+        classifier = PredefinedClassifier(name='Set')
         classifier.from_dict(features['classifier'])
 
         db.session.refresh(classifier)
@@ -57,7 +57,7 @@ class PredefinedClassifiersTests(FeaturePredefinedItemsTestMixin):
         self.obj = self.Model.query.all()[0]
         self.assertTrue(self.obj)
 
-    ### Predefined items tests goes here ###
+    # ==== Predefined items tests goes here ====
     def test_list(self):
         self.check_list(show='name,type')
 
@@ -82,13 +82,15 @@ class PredefinedClassifiersTests(FeaturePredefinedItemsTestMixin):
 
         data['type'] = 'logistic regression'
         data["params"] = 'hello!'
-        _check(data, errors={'params': 'JSON file is corrupted. Can not load it: hello!'})
+        _check(data, errors={'params': "JSON file is corrupted. "
+               "Can not load it: hello!"})
 
         classifier = self.obj
         data = {'name': classifier.name,
                 'type': 'logistic regression'}
         _check(data, errors={
-            'name': 'Predefined classifier with same name already exist. Please choose another one.'})
+            'name': "Predefined classifier with same name already exist. "
+            "Please choose another one."})
 
     def test_edit(self):
         self._test_edit()

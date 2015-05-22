@@ -8,6 +8,9 @@ from api.accounts.models import User
 
 
 def authenticate(func):
+    """
+    Determines whether user has access to the method or the resource's action.
+    """
     @wraps(func)
     def wrapper(*args, **kwargs):
         is_authenticated = getattr(func, 'authenticated', False)
@@ -36,11 +39,18 @@ def authenticate(func):
 
 
 def public(func):
+    """
+    Marks some resource's methods as public.
+    """
     func.authenticated = True
     return func
 
 
 def public_actions(actions=None):
+    """
+    Marks some resource's actions as public
+    (no need user authentication to acess to them)
+    """
     def _public_actions(func):
         func.authenticated = False
         func.public_actions = actions

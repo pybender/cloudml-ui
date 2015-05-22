@@ -1,4 +1,4 @@
-"""# DataSet forms"""
+""" DataSet forms"""
 from api.import_handlers.models import DataSet, ImportHandler, XmlImportHandler
 from api.base.forms import BaseForm, CharField, JsonField, \
     ChoiceField, ValidationError, BooleanField, IntegerField, \

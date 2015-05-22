@@ -44,8 +44,8 @@ class Cluster(BaseModel, db.Model):
 
     STATUSES = [STATUS_NEW, STATUS_STARTING, STATUS_RUNNING, STATUS_WAITING,
                 STATUS_ERROR, STATUS_TERMINATED]
-    ACTIVE_STATUSES = [STATUS_NEW, STATUS_STARTING, STATUS_RUNNING, STATUS_WAITING,
-                       STATUS_ERROR]
+    ACTIVE_STATUSES = [STATUS_NEW, STATUS_STARTING, STATUS_RUNNING,
+                       STATUS_WAITING, STATUS_ERROR]
 
     jobflow_id = db.Column(db.String(200), nullable=False, unique=True)
     master_node_dns = db.Column(db.String(200), nullable=True)
@@ -90,7 +90,6 @@ class Cluster(BaseModel, db.Model):
             self.pid = self.PENDING
             self.save()
             run_ssh_tunnel.delay(self.id)
-            
 
     def terminate_ssh_tunnel(self):
         import os
@@ -102,7 +101,7 @@ class Cluster(BaseModel, db.Model):
                 pass
             self.pid = None
             self.save()
-            #self.active_tunnel.terminate_task()
+            # self.active_tunnel.terminate_task()
 
     def terminate(self):
         emr = AmazonEMRHelper()

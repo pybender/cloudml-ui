@@ -99,8 +99,8 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
                 field_dict = field.to_dict()
                 script = field_dict.get('script')
                 script_text = None
-                if script and (len(script.splitlines()) > 1
-                               or len(script) > 50):
+                if script and (len(script.splitlines()) > 1 or
+                               len(script) > 50):
                     del field_dict['script']
                     script_text = script
                 field_el = etree.SubElement(ent, "field", **field_dict)
@@ -127,7 +127,8 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
                     etree.SubElement(predict_model, "positive_label",
                                      **pos_lbl_dict)
                 for weight in model.predict_model_weights:
-                    etree.SubElement(predict_model, "weight", **weight.to_dict())
+                    etree.SubElement(
+                        predict_model, "weight", **weight.to_dict())
 
             if self.predict.label or self.predict.probability:
                 result = etree.SubElement(predict, "result")
@@ -200,7 +201,7 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
         ds = next((d for d in self.xml_data_sources if d.name == ds_name))
         conn = "host='{host:s}' dbname='{dbname:s}' user='{user:s}' " \
                "password='{password:s}'".format(**ds.params)
-        if ds.params.has_key('port'):
+        if 'port' in ds.params:
             conn += " port={port:s}".format(**ds.params)
         return ds.params['vendor'], conn
 
@@ -651,7 +652,7 @@ def fill_import_handler(import_handler, xml_data=None):
         load_query(plan.entity, db_entity=ent)
         load_entity_items(plan.entity, db_entity=ent)
         for ent, field_name in ENTITIES_WITHOUT_DS:
-            if not field_name in TRANSFORMED_FIELDS:
+            if field_name not in TRANSFORMED_FIELDS:
                 raise ValueError('Field {0} not found'.format(field_name))
             ent.transformed_field = TRANSFORMED_FIELDS[field_name]
 
@@ -665,8 +666,10 @@ def fill_import_handler(import_handler, xml_data=None):
                     value=model.value,
                     script=model.script)
                 if model.positive_label is not None:
-                    predict_model.positive_label_script = model.positive_label.script
-                    predict_model.positive_label_value = model.positive_label.value
+                    predict_model.positive_label_script = \
+                        model.positive_label.script
+                    predict_model.positive_label_value = \
+                        model.positive_label.value
                 db.session.add(predict_model)
 
                 for weight in model.weights:

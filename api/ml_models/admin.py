@@ -5,7 +5,6 @@ from flask.ext.admin.model.template import macro
 
 from api import admin
 from api.base.admin import BaseAdmin
-#from api.accounts.models import User
 from models import Model, Tag, WeightsCategory, Weight, Segment, Transformer, \
     ClassifierGridParams
 
@@ -85,10 +84,10 @@ class WeightsCategoryAdmin(BaseAdmin):  # TODO: tree?
         ('name', WeightsCategory.name),
         ('model', WeightsCategory.model)
     )
-    #column_filters = ('model', )
+    # column_filters = ('model', )
 
-admin.add_view(WeightsCategoryAdmin(
-    name='Weight Category', category='Models'))
+admin.add_view(
+    WeightsCategoryAdmin(name='Weight Category', category='Models'))
 
 
 class WeightAdmin(BaseAdmin):

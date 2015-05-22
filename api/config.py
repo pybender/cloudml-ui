@@ -1,8 +1,11 @@
+from kombu import Queue
+
 SECRET_KEY = 'CHANGE_ME'
 DATABASE_NAME = 'cloudml'
 STATIC_ROOT = None
 
-SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:postgres@localhost/cloudml_data'
+SQLALCHEMY_DATABASE_URI = \
+    'postgresql://postgres:postgres@localhost/cloudml_data'
 
 
 UPLOAD_FOLDER = 'models'
@@ -15,8 +18,8 @@ TEST_MODE = False
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_ENABLE_UTC = True
-#BROKER_URL = 'sqla+sqlite:///celerydb.sqlite'
-#BROKER_URL = 'mongodb://localhost:27017/cloudmlqueue'
+
+# Note: other celery brockers:
 BROKER_URL = 'amqp://guest:guest@localhost:5672//'
 CELERY_RESULT_BACKEND = 'amqp://guest:guest@localhost:5672//'
 CELERY_IMPORTS = (
@@ -25,7 +28,6 @@ CELERY_IMPORTS = (
     'api.model_tests.tasks', 'api.servers.tasks')
 CELERYD_MAX_TASKS_PER_CHILD = 1
 
-from kombu import Queue
 
 CELERY_DEFAULT_QUEUE = 'default'
 CELERY_QUEUES = [

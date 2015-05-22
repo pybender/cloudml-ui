@@ -74,11 +74,11 @@ class LogMessage(object):
             next_token = None
 
         if order_asc:
-            next_token = next_token if not next_token is None else 0
+            next_token = next_token if next_token is not None else 0
             query_filter['created_on__gt'] = next_token
         else:
             day_ahead = datetime.now() + timedelta(1)
-            next_token = next_token if not next_token is None else \
+            next_token = next_token if next_token is not None else \
                 time.mktime(day_ahead.timetuple())
             query_filter['created_on__lt'] = next_token
 

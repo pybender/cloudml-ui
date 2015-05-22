@@ -35,7 +35,8 @@ class DataSet(db.Model, BaseModel):
     FORMATS = [FORMAT_JSON, FORMAT_CSV]
 
     name = db.Column(db.String(200))
-    status = db.Column(db.Enum(*STATUSES, name='dataset_statuses'), default=STATUS_NEW)
+    status = db.Column(
+        db.Enum(*STATUSES, name='dataset_statuses'), default=STATUS_NEW)
     error = db.Column(db.String(300))  # TODO: trunc error to 300 symbols
     data = db.Column(db.String(200))
     import_params = db.Column(JSONType)
@@ -44,15 +45,9 @@ class DataSet(db.Model, BaseModel):
     import_handler_id = db.Column(db.Integer, nullable=False)
     import_handler_type = db.Column(db.String(200))
 
-    # import_handler_id = db.Column(db.Integer,
-    #                               db.ForeignKey('import_handler.id'))
-    # import_handler = relationship('ImportHandler', backref=backref(
-    #     'datasets', cascade='all,delete'))
-
-    cluster_id = db.Column(db.Integer,
-                                   db.ForeignKey('cluster.id', ondelete='SET NULL'))
-    cluster = relationship('Cluster', backref=backref(
-         'datasets'))
+    cluster_id = db.Column(
+        db.Integer, db.ForeignKey('cluster.id', ondelete='SET NULL'))
+    cluster = relationship('Cluster', backref=backref('datasets'))
     pig_step = db.Column(db.Integer, nullable=True)
     pig_row = db.Column(JSONType)
 
@@ -107,7 +102,6 @@ class DataSet(db.Model, BaseModel):
 
     def get_data_stream(self):
         import gzip
-        #import zlib
         if not self.on_s3 or exists(self.filename):
             logging.info('Loading data from local file')
             open_meth = gzip.open if self.compress else open
@@ -118,7 +112,6 @@ class DataSet(db.Model, BaseModel):
             if self.compress:
                 logging.info('Decompress data')
                 return gzip.GzipFile(fileobj=stream, mode='r')
-                #data = zlib.decompress(data)
             return stream
 
     def get_iterator(self, stream):

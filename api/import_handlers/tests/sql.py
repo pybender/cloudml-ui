@@ -20,53 +20,65 @@ class SqlMethodTests(BaseDbTestCase):
 
     def test_build_query(self):
         self.assertEquals(
-            self.obj.build_query('SELECT * FROM some_table LIMIT 100;', limit=2),
+            self.obj.build_query(
+                'SELECT * FROM some_table LIMIT 100;', limit=2),
             'SELECT * FROM some_table LIMIT 2'
         )
 
         self.assertEquals(
-            self.obj.build_query('SELECT * FROM some_table LIMIT(100);', limit=3),
+            self.obj.build_query(
+                'SELECT * FROM some_table LIMIT(100);', limit=3),
             'SELECT * FROM some_table LIMIT 3'
         )
 
         self.assertEquals(
-            self.obj.build_query('SELECT * FROM some_table limit(100)', limit=3),
+            self.obj.build_query(
+                'SELECT * FROM some_table limit(100)', limit=3),
             'SELECT * FROM some_table LIMIT 3'
         )
 
         self.assertEquals(
-            self.obj.build_query('SELECT * FROM some_table;', limit=2),
+            self.obj.build_query(
+                'SELECT * FROM some_table;', limit=2),
             'SELECT * FROM some_table LIMIT 2'
         )
 
         self.assertEquals(
             self.obj.build_query("""SELECT qi.*,
             'class' || (trunc(random() * 2) + 1)::char hire_outcome
-             FROM public.ja_quick_info qi where qi.file_provenance_date >= '2012-12-03'
+             FROM public.ja_quick_info qi
+             where qi.file_provenance_date >= '2012-12-03'
               AND qi.file_provenance_date < '2012-12-04';""", limit=2),
             """SELECT qi.*,
             'class' || (trunc(random() * 2) + 1)::char hire_outcome
-             FROM public.ja_quick_info qi where qi.file_provenance_date >= '2012-12-03'
+             FROM public.ja_quick_info qi
+             where qi.file_provenance_date >= '2012-12-03'
               AND qi.file_provenance_date < '2012-12-04' LIMIT 2"""
         )
 
         self.assertEquals(
-            self.obj.build_query('SELECT * FROM some_table LIMIT ALL OFFSET 10', limit=4),
+            self.obj.build_query(
+                'SELECT * FROM some_table LIMIT ALL OFFSET 10', limit=4),
             'SELECT * FROM some_table LIMIT 4 OFFSET 10'
         )
 
         self.assertEquals(
-            self.obj.build_query('SELECT * FROM (SELECT name from some_table LIMIT 100) some_alias LIMIT 20;', limit=1),
-            'SELECT * FROM (SELECT name from some_table LIMIT 100) some_alias LIMIT 1'
+            self.obj.build_query("SELECT * FROM (SELECT name from some_table "
+                                 "LIMIT 100) some_alias LIMIT 20;", limit=1),
+            "SELECT * FROM (SELECT name from some_table LIMIT 100) some_alias "
+            "LIMIT 1"
         )
 
         self.assertEquals(
-            self.obj.build_query('select * from (select name from some_table limit 100) some_alias', limit=2),
-            'select * from (select name from some_table limit 100) some_alias LIMIT 2'
+            self.obj.build_query(
+                'select * from (select name from tbl limit 100) al', limit=2),
+            'select * from (select name from tbl limit 100) al LIMIT 2'
         )
 
         self.assertEquals(
-            self.obj.build_query('SELECT * FROM some_table LIMIT 100; DELETE FROM some_table;', limit=2),
+            self.obj.build_query(
+                'SELECT * FROM some_table LIMIT 100; DELETE FROM some_table;',
+                limit=2),
             'SELECT * FROM some_table LIMIT 2; '
         )
 
