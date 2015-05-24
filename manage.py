@@ -24,13 +24,13 @@ class CreateWorkerImage(Command):
         version = kwargs.get('version')
         token = app.config['AMAZON_ACCESS_TOKEN']
         secret = app.config['AMAZON_TOKEN_SECRET']
-        conn = boto.ec2.connect_to_region('us-west-2',
-                                           aws_access_key_id=token,
-                                           aws_secret_access_key=secret)
-        inst = conn.get_all_instances(instance_ids=['i-49a0597d',])
+        conn = boto.ec2.connect_to_region(
+            'us-west-2',
+            aws_access_key_id=token,
+            aws_secret_access_key=secret)
+        inst = conn.get_all_instances(instance_ids=['i-49a0597d'])
         image = inst[0].instances[0].create_image(version)
         print "Created image: %s" % image
-
 
 
 class Celeryd(Command):
@@ -52,6 +52,7 @@ class Flower(Command):
 
     def run(self, **kwargs):
         os.system("celery -A api.tasks flower --loglevel=info")
+
 
 class Run(Command):
     """Runs a Celery Flower worker node."""
@@ -99,16 +100,10 @@ class Test(Command):
             nose.run(argv=argv)
         finally:
             if app.config['SQLALCHEMY_DATABASE_URI'].endswith('test_cloudml'):
-                logging.debug("drop tables (%s)", app.config['SQLALCHEMY_DATABASE_URI'])
+                logging.debug(
+                    "drop tables (%s)", app.config['SQLALCHEMY_DATABASE_URI'])
                 app.sql_db.session.remove()
                 app.sql_db.drop_all()
-
-            # if app.db.name == 'cloudml-test-db':
-            #     logging.debug("remove mongo collections from db: %s", app.db.name)
-            #     for name in app.db.collection_names():
-            #         if not name.startswith('system.'):
-            #             model = getattr(app.db, name)
-            #             model.drop()
 
 
 class Coverage(Command):
@@ -149,7 +144,7 @@ class CreateDbTables(Command):
         print 'Done.'
 
 
-class CreateDtnamoDbTables(Command):
+class CreateDynamoDbTables(Command):
     """Create db tables"""
 
     def run(self, **kwargs):
@@ -159,6 +154,7 @@ class CreateDtnamoDbTables(Command):
         AuthToken.create_table()
         print 'Done.'
 
+
 class DropDbTables(Command):
     """Drop db tables"""
 
@@ -167,18 +163,12 @@ class DropDbTables(Command):
         print 'Dropped.'
 
 
-class MigrateToPosgresql(Command):
-    def run(self, **kwargs):
-        from api.mongo.migrator import migrate as pmigrate
-        pmigrate()
-        print 'Done.'
-
-
 class GenerateCrc(Command):
     def run(self, **kwargs):
         import zlib
         from api.amazon_utils import AmazonS3Helper
-        s3 = AmazonS3Helper(bucket_name=app.config['CLOUDML_PREDICT_BUCKET_NAME'])
+        s3 = AmazonS3Helper(
+            bucket_name=app.config['CLOUDML_PREDICT_BUCKET_NAME'])
         for key in s3.list_keys('staging/importhandlers/'):
             print key.name
             data = s3.load_key(key.name)
@@ -201,9 +191,8 @@ manager.add_command('coverage', Coverage())
 manager.add_command('run', Run())
 manager.add_command("shell", Shell(make_context=_make_context))
 manager.add_command("create_db_tables", CreateDbTables())
-manager.add_command("create_dynamodb_tables", CreateDtnamoDbTables())
+manager.add_command("create_dynamodb_tables", CreateDynamoDbTables())
 manager.add_command("drop_db_tables", DropDbTables())
-manager.add_command("migrate_to_postgresql", MigrateToPosgresql())
 manager.add_command("rem_pyc", RemPycFiles())
 manager.add_command("create_image", CreateWorkerImage())
 
