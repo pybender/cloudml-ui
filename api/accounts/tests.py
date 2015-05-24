@@ -5,11 +5,12 @@ from mock import patch, Mock
 from api import app
 
 from api.base.test_utils import BaseDbTestCase
-from api.base.test_utils import SOMEBODY_HTTP_HEADERS as HTTP_HEADERS
 from models import AuthToken, User
 
 
 UPWORK_URL = 'www.upwork.com'
+AUTH_TOKEN = '123'
+HTTP_HEADERS = [('X-Auth-Token', AUTH_TOKEN)]
 
 
 class AuthDecoratorsTests(BaseDbTestCase):

@@ -11,6 +11,9 @@ from api.base.resources import ValidationError
 from api.base.utils import isint, isfloat
 
 
+__all__ = ["convert_parameters"]
+
+
 def convert_auto_dict(val, c):
     """
     TODO: Add support of the params like

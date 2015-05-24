@@ -1,21 +1,15 @@
 import urllib
-import os
 import logging
 import httplib
 import unittest
 import json
-from datetime import datetime
 from flask.ext.testing import TestCase
 from sqlalchemy import create_engine
+from moto import mock_dynamodb2, mock_s3
 
 from api import app
-
-from moto import mock_dynamodb2, mock_s3
 from api.accounts.models import AuthToken
 from api.logs.dynamodb.models import LogMessage
-
-SOMEBODY_AUTH_TOKEN = '123'
-SOMEBODY_HTTP_HEADERS = [('X-Auth-Token', SOMEBODY_AUTH_TOKEN)]
 
 AUTH_TOKEN = 'token'
 HTTP_HEADERS = [('X-Auth-Token', AUTH_TOKEN)]
@@ -29,7 +23,6 @@ class BaseDbTestCase(TestCase):
     """
     Base class for TestCases that uses database.
     """
-    TESTING = True
     datasets = []
 
     s3_mock = None
@@ -42,6 +35,8 @@ class BaseDbTestCase(TestCase):
     @classmethod
     def setUpClass(cls):
         app.config.from_object('api.test_config')
+
+        # if Model is not defined, try get it from resource.
         if hasattr(cls, 'RESOURCE') and not hasattr(cls, 'Model'):
             cls.Model = cls.RESOURCE.Model
 
@@ -51,6 +46,8 @@ class BaseDbTestCase(TestCase):
             conn = cls.engine.connect()
             conn.close()
         except Exception:  # TODO: catch OperationalError
+            logging.info(
+                "Can't connect to the test database. Try to create a new one.")
             cls.exec_db_level_sql(
                 "create database %s" % app.config['DB_NAME'])
 
@@ -93,7 +90,6 @@ class BaseDbTestCase(TestCase):
             logging.warning(
                 'Problem with loading fixture %s: %s', self.datasets, exc)
 
-        # Fixing celery config
         from api import celery
         celery.conf['CELERY_ALWAYS_EAGER'] = True
         celery.conf['CELERY_EAGER_PROPAGATES_EXCEPTIONS'] = False
@@ -314,95 +310,3 @@ class TestChecksMixin(object):
         self.assertEquals(resp.status_code, 400)
         msg = json.loads(resp.data)['response']['error']['message']
         self.assertEquals(msg, "%s is not allowed" % method)
-
-
-class BaseMongoTestCase(unittest.TestCase):
-    FIXTURES = []
-    _LOADED_COLLECTIONS = []
-    RESOURCE = None
-
-    @classmethod
-    def setUpClass(cls):
-        cls.client = app.test_client()
-
-    @classmethod
-    def tearDownClass(cls):
-        for root, dirs, files in os.walk(app.config['DATA_FOLDER']):
-            for f in files:
-                os.unlink(os.path.join(root, f))
-
-    def setUp(self):
-        self.fixtures_load()
-
-    def tearDown(self):
-        self.fixtures_cleanup()
-
-    @property
-    def mongo_db(self):
-        return app.db
-
-    @classmethod
-    def fixtures_load(cls):
-        from mongokit.document import DocumentProperties, R
-
-        # if 'users.json' not in cls.FIXTURES:
-        #     cls.FIXTURES = ('users.json',) + tuple(cls.FIXTURES)
-
-        for fixture in cls.FIXTURES:
-            data = _load_fixture_data(fixture)
-            for collection_name, documents in data.iteritems():
-                cls._LOADED_COLLECTIONS.append(collection_name)
-                Model = getattr(app.db, collection_name)
-                for doc in documents:
-                    related_objects = []
-                    obj = Model()
-                    for key, val in doc.iteritems():
-                        if val is None:
-                            continue
-
-                        if key == '_id':
-                            from bson.objectid import ObjectId
-                            obj['_id'] = ObjectId(val)
-                        else:
-                            field_type = Model.structure[key]
-                            if field_type == datetime:
-                                obj[key] = datetime.now()
-                            elif field_type == long:
-                                obj[key] = long(doc[key])
-                            elif isinstance(field_type, DocumentProperties) \
-                                    or isinstance(field_type, R):
-                                related_objects.append({
-                                    'id': doc['_id'],
-                                    'collection': collection_name,
-                                    'related_collection': val['$ref'],
-                                    'related_id': val['$id'],
-                                    'fieldname': key})
-                                doc[key] = None
-                            else:
-                                obj[key] = doc[key]
-                    obj.save()
-
-                    # Save db refs
-                    for rel in related_objects:
-                        RelModel = getattr(app.db, rel['related_collection'])
-                        related_obj = RelModel.find_one({
-                            '_id': ObjectId(rel['related_id'])})
-                        setattr(obj, rel['fieldname'], related_obj)
-                        obj.save()
-
-    @classmethod
-    def fixtures_cleanup(cls):
-        for collection_name in cls._LOADED_COLLECTIONS:
-            collection = _get_collection(collection_name)
-            collection.remove()
-
-
-def _get_collection(name):
-    callable_model = getattr(app.db, name)
-    return callable_model.collection
-
-
-def _load_fixture_data(filename):
-    filename = os.path.join('./api/fixtures/', filename)
-    content = open(filename, 'rb').read()
-    return json.loads(content)
