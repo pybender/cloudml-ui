@@ -81,7 +81,9 @@ def train_model(dataset_ids, model_id, user_id, delete_metadata=False):
         model.training_time = int((train_end_time - train_begin_time).seconds)
         model.save()
 
-        model.create_segments(trainer._get_segments_info())
+        segments = trainer._get_segments_info()
+        logging.error(segments)
+        model.create_segments(segments)
 
         for segment in model.segments:
             fill_model_parameter_weights.delay(model.id, segment.id)
@@ -328,9 +330,10 @@ def generate_visualization_tree(model_id, deep):
 
     Notes
     -----
-    Decision Tree Classifier is supported.
+    Decision Tree Classifier and Random Forest Classifier are supported.
     """
-    from core.trainer.classifier_settings import DECISION_TREE_CLASSIFIER
+    from core.trainer.classifier_settings import DECISION_TREE_CLASSIFIER, \
+        RANDOM_FOREST_CLASSIFIER, EXTRA_TREES_CLASSIFIER
 
     init_logger('trainmodel_log', obj=int(model_id))
     logging.info('Starting tree visualization')
@@ -343,7 +346,9 @@ def generate_visualization_tree(model_id, deep):
         raise ValueError('model has invalid classifier')
 
     clf_type = model.classifier['type']
-    if clf_type not in (DECISION_TREE_CLASSIFIER, ):
+    if clf_type not in (DECISION_TREE_CLASSIFIER,
+                        RANDOM_FOREST_CLASSIFIER,
+                        EXTRA_TREES_CLASSIFIER):
         raise VisualizationException(
             "model with %s classifier doesn't support tree"
             " visualization" % clf_type,
@@ -372,10 +377,17 @@ def generate_visualization_tree(model_id, deep):
                 "please re-train the model to use this feature.",
                 error_code=VisualizationException.ALL_WEIGHT_NOT_FILLED)
 
-        tree = trainer.model_visualizer.regenerate_tree(
-            segment, data[segment]['all_weights'], deep=deep)
-        data[segment]['tree'] = tree
+        if clf_type == DECISION_TREE_CLASSIFIER:
+            tree = trainer.model_visualizer.regenerate_tree(
+                segment, data[segment]['all_weights'], deep=deep)
+            data[segment]['tree'] = tree
+        elif clf_type == RANDOM_FOREST_CLASSIFIER or \
+                clf_type == EXTRA_TREES_CLASSIFIER:
+            trees = trainer.model_visualizer.regenerate_trees(
+                segment, data[segment]['all_weights'], deep=deep)
+            data[segment]['trees'] = trees
         data[segment]['parameters'] = {'deep': deep, 'status': 'done'}
+
     model.visualize_model(data)
     return "Tree visualization was completed"
 
