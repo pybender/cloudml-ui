@@ -1,3 +1,9 @@
+"""
+Utility classes and methods for unittesting.
+"""
+
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 import urllib
 import logging
 import httplib
@@ -126,9 +132,13 @@ class BaseDbTestCase(TestCase):
 
 
 class TestChecksMixin(object):
+    """
+    Mixin contains common methods for testing the resource class.
+    """
     BASE_URL = ''
 
-    def check_list(self, show='', data={}, query_params={}, count=None):
+    def check_list(self, show='', data={},
+                   query_params={}, count=None, with_paging=False):
         key = "%ss" % self.RESOURCE.OBJECT_NAME
         resp_data = self._check(show=show, **data)
         self.assertTrue(key in resp_data, resp_data)
@@ -137,7 +147,16 @@ class TestChecksMixin(object):
         if count is None:
             count = self.Model.query.filter_by(**query_params).count()
 
-        self.assertEquals(count, len(obj_resp), obj_resp)
+        if self.RESOURCE.NEED_PAGING:
+            # Checking the paging
+            per_page = 20
+            paged_count = count if count < per_page else per_page
+            self.assertEquals(resp_data['page'], 1)
+            self.assertEquals(resp_data['per_page'], 20)
+            self.assertEquals(resp_data['total'], count)
+            self.assertEquals(paged_count, len(obj_resp), obj_resp)
+        else:
+            self.assertEquals(count, len(obj_resp), obj_resp)
 
         if len(obj_resp):
             obj = obj_resp[-1]  # TODO: invest. that 1st el contains all fields

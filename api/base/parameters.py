@@ -7,6 +7,9 @@ This methods mainly used for converting classifier's parameters
 to corresponding type. This type specified in the classifier
 config.
 """
+
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 from api.base.resources import ValidationError
 from api.base.utils import isint, isfloat
 

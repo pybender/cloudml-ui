@@ -1,3 +1,8 @@
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
+__all__ = ('NotFound', 'ValidationError')
+
+
 class NotFound(Exception):
     pass
 

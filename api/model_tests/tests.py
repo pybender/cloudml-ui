@@ -8,7 +8,8 @@ from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS
 from views import TestResource, TestExampleResource
 from models import TestResult, TestExample
 from api.ml_models.models import Model
-from api.ml_models.fixtures import ModelData, WeightData, SegmentData
+from api.ml_models.fixtures import ModelData, WeightData, SegmentData, \
+    MODEL_TRAINER, MULTICLASS_MODEL
 from api.import_handlers.fixtures import ImportHandlerData, DataSetData, \
     PredefinedDataSourceData
 from api.import_handlers.models import DataSet, ImportHandler, \
@@ -307,8 +308,7 @@ class TestExampleResourceTests(BaseDbTestCase, TestChecksMixin):
                    mock_get_vect_data):
         should_called = not obj.is_weights_calculated
         from core.trainer.store import TrainerStorage
-        trainer = TrainerStorage.loads(
-            open('api/ml_models/model.dat', 'r').read())
+        trainer = TrainerStorage.loads(MODEL_TRAINER)
         mock_get_trainer.return_value = trainer
 
         mock_get_vect_data.return_value = [0.123, 0.0] * 500
@@ -520,8 +520,7 @@ class TasksTests(BaseDbTestCase):
 
         # Set up mock trainer
         from core.trainer.store import TrainerStorage
-        trainer = TrainerStorage.loads(
-            open('./api/ml_models/model.dat', 'r').read())
+        trainer = TrainerStorage.loads(MODEL_TRAINER)
         mock_get_trainer.return_value = trainer
 
         with patch('core.trainer.trainer.Trainer.test',
@@ -624,8 +623,7 @@ class TasksRunTestTests(BaseDbTestCase):
             test.model.status, test.model.STATUS_TRAINED, test.model.__dict__)
 
         from core.trainer.store import TrainerStorage
-        trainer = TrainerStorage.loads(
-            open('./api/ml_models/model.dat', 'r').read())
+        trainer = TrainerStorage.loads(MODEL_TRAINER)
         mock_get_trainer.return_value = trainer
 
         import gzip
@@ -677,8 +675,7 @@ class TasksRunTestTests(BaseDbTestCase):
             test.model.status, test.model.STATUS_TRAINED, test.model.__dict__)
 
         from core.trainer.store import TrainerStorage
-        trainer = TrainerStorage.loads(
-            open('./api/ml_models/multiclass-trainer.dat', 'r').read())
+        trainer = TrainerStorage.loads(MULTICLASS_MODEL)
         mock_get_trainer.return_value = trainer
 
         import gzip
@@ -730,8 +727,7 @@ class TasksRunTestTests(BaseDbTestCase):
 
         def do_train(exclude_labels):
             from core.trainer.store import TrainerStorage
-            trainer = TrainerStorage.loads(
-                open('./api/ml_models/multiclass-trainer.dat', 'r').read())
+            trainer = TrainerStorage.loads(MULTICLASS_MODEL)
             mock_get_trainer.return_value = trainer
 
             import gzip

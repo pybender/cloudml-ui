@@ -1,3 +1,9 @@
+"""
+Base Form classes.
+"""
+
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 from copy import deepcopy
 from datetime import datetime
 from collections import Iterable
@@ -129,9 +135,15 @@ class BaseForm(InternalForm):
 
     @property
     def is_edit(self):
+        """
+        Returns True if it's changing existant model. Otherwise, False.
+        """
         return hasattr(self.obj, "id") and bool(self.obj.id)
 
     def is_valid(self):
+        """
+        Returns True if the form has no errors. Otherwise, False.
+        """
         if not self._cleaned:
             self.clean()
         return not bool(self.errors)
@@ -147,6 +159,7 @@ class BaseForm(InternalForm):
         for name, field in self.fields.iteritems():
             value = self.data.get(self.prefix + name, None)
             try:
+                field.obj = self.obj
                 value = field.clean(value)
                 mthd = "clean_%s" % name
                 if hasattr(self, mthd):
@@ -201,6 +214,9 @@ fields %s is required' % ', '.join(fields))
         return self.cleaned_data
 
     def add_error(self, name, msg):
+        """
+        Update the content of `self._errors`.
+        """
         if self.inner_name:
             field_name = '%s-%s' % (self.inner_name, name)
         else:

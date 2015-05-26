@@ -1,3 +1,5 @@
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 from flask.ext.admin.model.template import macro
 
 from api import admin

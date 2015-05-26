@@ -1,3 +1,9 @@
+"""
+Utility methods for model serialization
+"""
+
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 from datetime import datetime, date, time
 
 

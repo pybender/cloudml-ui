@@ -1,3 +1,5 @@
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 import json
 from unittest import TestCase
 from mock import patch, Mock

@@ -1,3 +1,5 @@
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 from datetime import datetime
 import mongokit
 from sqlalchemy import orm

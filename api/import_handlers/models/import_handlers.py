@@ -16,6 +16,10 @@ class ImportHandlerMixin(BaseModel):
     def type(self):
         return self.TYPE
 
+    @property
+    def identifier(self):
+        return "{0}{1}".format(self.id, self.TYPE)
+
     @declared_attr
     def name(cls):
         return db.Column(db.String(200), nullable=False, unique=True)

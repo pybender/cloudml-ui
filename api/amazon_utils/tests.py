@@ -1,3 +1,9 @@
+"""
+Unittests of the Amazon services helper classes.
+"""
+
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 from boto.dynamodb2.types import NUMBER, STRING
 from moto import mock_s3, mock_dynamodb2
 from flask.ext.testing import TestCase

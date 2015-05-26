@@ -1,3 +1,9 @@
+"""
+Administrative views for models: Model, Tag, Weight, WeightsCategory
+"""
+
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 import json
 import importlib
 from api.base.forms.base_forms import BaseChooseInstanceAndDatasetMultiple

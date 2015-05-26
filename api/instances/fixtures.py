@@ -1,3 +1,9 @@
+"""
+Database fixtures for instance related models.
+"""
+
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 from fixture import DataSet
 
 

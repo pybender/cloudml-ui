@@ -1,3 +1,6 @@
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
+
 import logging
 from boto.dynamodb2.exceptions import ItemNotFound
 from sqlalchemy import func

@@ -1,3 +1,9 @@
+"""
+Admin part for Instances and Clusters.
+"""
+
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 from api import admin
 from api.base.admin import BaseAdmin
 from models import Instance, Cluster

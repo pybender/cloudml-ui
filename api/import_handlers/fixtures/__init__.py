@@ -6,6 +6,8 @@ from api.accounts.fixtures import UserData
 
 DIR = os.path.dirname(__file__)
 IMPORT_HANDLER_01 = os.path.join(DIR, 'import_handler_01.json')
+EXTRACT_JSON = open(os.path.join(DIR, 'extract.json'), 'r').read()
+EXTRACT_XML = open(os.path.join(DIR, 'extract.xml'), 'r').read()
 
 
 class ImportHandlerData(DataSet):

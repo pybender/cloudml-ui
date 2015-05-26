@@ -1,3 +1,5 @@
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 import logging
 from flask.ext.restful import reqparse
 from flask import request

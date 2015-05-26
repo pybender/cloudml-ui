@@ -1,3 +1,9 @@
+"""
+Various resource's method decorators
+"""
+
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 from functools import wraps
 from sqlalchemy.orm import exc as orm_exc
 
@@ -7,9 +13,13 @@ from .utils import odesk_error_response
 from api.accounts.models import User
 
 
+__all__ = ('authenticate', 'public', 'public_actions')
+
+
 def authenticate(func):
     """
-    Determines whether user has access to the method or the resource's action.
+    Decorator for views that checks that the user is logged in, raising HTTP401
+    error.
     """
     @wraps(func)
     def wrapper(*args, **kwargs):

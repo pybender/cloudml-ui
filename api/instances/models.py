@@ -1,3 +1,9 @@
+"""
+Instance related models.
+"""
+
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 import random
 
 from sqlalchemy.orm import deferred
@@ -7,7 +13,9 @@ from api.amazon_utils import AmazonEMRHelper
 
 
 class Instance(BaseModel, db.Model):
-    """ Represents instance, which could be using for exec tasks """
+    """
+    Represents instance, which could be using for exec tasks
+    """
     TYPES_LIST = ['small', 'large']
 
     name = db.Column(db.String(200), nullable=False, unique=True)
@@ -57,6 +65,17 @@ class Cluster(BaseModel, db.Model):
     is_default = db.Column(db.Boolean, default=False)
 
     def generate_port(self):
+        """
+        Generates random port which isn't used by any other cluster.
+
+        Available ports are in range: `PORT_RANGE`.
+        """
+        # exclude = set(Cluster.query.with_entities(Cluster.port).all())
+        # ports = list(set(xrange(*self.PORT_RANGE)) - exclude)
+        # if ports:
+        #     self.port = random.choice(ports)
+        # else:
+        #     raise ValueError('All ports are busy')
         port = None
         exclude = Cluster.query.with_entities(Cluster.port).all()
         while port in exclude or port is None:

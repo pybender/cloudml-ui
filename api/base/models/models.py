@@ -1,3 +1,9 @@
+"""
+SqlAlchemy Model Mixin classes.
+"""
+
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 from functools import wraps
 from flask import has_request_context, request
 from sqlalchemy.ext.declarative import declared_attr

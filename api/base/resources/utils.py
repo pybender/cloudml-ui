@@ -1,3 +1,5 @@
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 from datetime import timedelta
 from functools import update_wrapper, wraps
 import json

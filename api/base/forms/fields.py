@@ -1,3 +1,9 @@
+"""
+Form Field classes.
+"""
+
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 import json
 
 from api.base.resources import ValidationError
@@ -5,12 +11,28 @@ from sqlalchemy.orm.exc import NoResultFound
 
 
 class BaseField(object):
-
+    """
+    Base class for all form fields
+    """
     def __init__(self, name=None):
+        """Build a form field
+
+        Parameters
+        ----------
+        name : string
+            Determines how the field would be named in form's cleaned data.
+
+        """
         self.value = None
         self.name = name
 
     def clean(self, value):
+        """
+        Validates the given value and returns its "cleaned" value as an
+        appropriate Python object.
+
+        Raises ValidationError for any errors.
+        """
         self.value = value
         return self.value
 
@@ -18,6 +40,30 @@ class BaseField(object):
 # TODO: convert to string?
 class CharField(BaseField):
     pass
+
+
+class UniqueNameField(CharField):
+    def __init__(self, **kwargs):
+        self._model_cls = kwargs.pop('Model')
+        self.verbose_name = kwargs.pop('verbose_name', None)
+        if self.verbose_name is None:
+            from api.base.utils import convert_name
+            self.verbose_name = convert_name(
+                self._model_cls.__name__, to_text=True)
+        super(UniqueNameField, self).__init__(**kwargs)
+
+    def clean(self, value):
+        value = super(UniqueNameField, self).clean(value)
+
+        query = self._model_cls.query.filter_by(name=value)
+        if self.obj.id:
+            query = query.filter(self._model_cls.id != self.obj.id)
+        count = query.count()
+        if count:
+            raise ValidationError(
+                "{0} with name \"{1}\" already exist. "
+                "Please choose another one.".format(self.verbose_name, value))
+        return value
 
 
 class BooleanField(BaseField):

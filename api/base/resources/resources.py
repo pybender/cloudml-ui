@@ -1,3 +1,9 @@
+"""
+Base resource classes.
+"""
+
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 import json
 import re
 import logging
@@ -15,6 +21,9 @@ from .utils import crossdomain, ERR_NO_SUCH_MODEL, odesk_error_response, \
 from serialization import encode_model
 from api import app
 from .exceptions import NotFound, ValidationError
+
+
+__all__ = ('BaseResource', 'BaseResourceSQL')
 
 
 class ResourceMeta(MethodViewType):
@@ -302,80 +311,6 @@ class BaseResource(restful.Resource):
 
         return app.response_class(content,
                                   mimetype='application/json'), code
-
-
-class BaseResourceMongo(BaseResource):  # pragma: no cover
-
-    def _get_list_query(self, params, **kwargs):
-        fields = self._get_show_fields(params)
-        filter_params = self._prepare_filter_params(params)
-        sort_by = params.get('sort_by', None)
-        if sort_by:
-            order = params.get('order') or 'asc'
-            try:
-                order = self.ORDER_DICT[order]
-            except KeyError:
-                raise ValidationError('Invalid order. It could be asc or desc')
-
-        if self.ENABLE_FULLTEXT_SEARCH and \
-                self.FULLTEXT_SEARCH_PARAM_NAME in filter_params and \
-                filter_params[self.FULLTEXT_SEARCH_PARAM_NAME]:
-            # Run full text search
-            # NOTE: it's betta in mongo now.
-            search = filter_params[self.FULLTEXT_SEARCH_PARAM_NAME]
-            show = dict([(field, 1) for field in fields])
-            del filter_params[self.FULLTEXT_SEARCH_PARAM_NAME]
-            kwargs.update(filter_params)
-            # NOTE: The text command matches on the complete stemmed word
-            res = app.db.command("text", "weights", search=search,
-                                 project=show, filter=kwargs,
-                                 limit=1000)
-            res = [result['obj'] for result in res['results']]
-            if sort_by:
-                res.sort(key=lambda a: a[sort_by])
-                if order == -1:
-                    res.reverse()
-            self.is_fulltext_search = True
-            return res
-        else:
-            if self.FULLTEXT_SEARCH_PARAM_NAME in filter_params:
-                del filter_params[self.FULLTEXT_SEARCH_PARAM_NAME]
-
-            kwargs.update(filter_params)
-            print kwargs
-            cursor = self.Model.find(kwargs, fields)
-            if sort_by:
-                cursor.sort(sort_by, order)
-            return cursor
-
-    def _prepare_filter_params(self, params):
-        def is_none_or_empty(val):
-            return val is None or val == ''
-
-        filter_names = [v[0] for v in self.FILTER_PARAMS]
-        return dict([(k, v) for k, v in params.iteritems()
-                    if not is_none_or_empty(v) and k in filter_names])
-
-    def _get_details_query(self, params, **kwargs):
-        fields = self._get_show_fields(params)
-        if '_id' in kwargs:
-            from bson.objectid import ObjectId
-            kwargs['_id'] = ObjectId(kwargs['_id'])
-        model = self.Model.find_one(kwargs, fields)
-        return model
-
-    def _paginate(self, models, page, per_page=20):
-        # TODO: Watch https://jira.mongodb.org/browse/SERVER-9063
-        # and simplify code
-        if self.is_fulltext_search:
-            total = len(models)
-            offset = (page - 1) * per_page
-            models = models[offset:page * per_page]
-        else:
-            total = models.count()
-            offset = (page - 1) * per_page
-            models = models.skip(offset).limit(per_page)
-        return total, models
 
 
 class BaseResourceSQL(BaseResource):

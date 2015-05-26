@@ -1,4 +1,9 @@
-# Models, Tags and Weights goes here
+"""
+Model, Transformer, Segments, Weights-related models declared here.
+"""
+
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 import json
 import logging
 from functools import partial
@@ -125,7 +130,7 @@ class BaseTrainedEntity(object):
 
     def get_trainer_filename(self):
         # we don't use sqlalchemy to avoid auto loading of trainer file
-        # intoo trainer object
+        # into trainer object
         sql = text("SELECT trainer from model where id=:id")
         trainer_filename, = db.engine.execute(sql, id=self.id).first()
         return trainer_filename
@@ -138,7 +143,7 @@ class BaseTrainedEntity(object):
         return helper.get_download_url(trainer_filename, expires_in)
 
     def train(*args, **kwargs):
-        pass
+        raise NotImplemented()
 
 
 class Model(db.Model, BaseModel, BaseTrainedEntity):
@@ -147,8 +152,8 @@ class Model(db.Model, BaseModel, BaseTrainedEntity):
     """
     LOG_TYPE = LogMessage.TRAIN_MODEL
 
-    comparable = db.Column(db.Boolean)
-    weights_synchronized = db.Column(db.Boolean)
+    comparable = db.Column(db.Boolean, default=False)
+    weights_synchronized = db.Column(db.Boolean, default=False)
 
     labels = db.Column(postgresql.ARRAY(db.String), default=[])
     example_label = db.Column(db.String(100))
@@ -159,7 +164,7 @@ class Model(db.Model, BaseModel, BaseTrainedEntity):
     tags = relationship('Tag', secondary=lambda: tags_table, backref='models')
 
     target_variable = db.Column(db.Unicode)
-    feature_count = db.Column(db.Integer)
+    feature_count = db.Column(db.Integer, default=0)
 
     features_set_id = db.Column(db.Integer, db.ForeignKey('feature_set.id'))
     features_set = relationship('FeatureSet', uselist=False, backref='model')
@@ -180,6 +185,17 @@ class Model(db.Model, BaseModel, BaseTrainedEntity):
 
     def visualize_model(self, data=None, status=None,
                         commit=True, segment=None):
+        """
+        Saves visualization data to the db.
+
+        Note:
+            visualization_data is the dict like:
+            {
+                segment_name1: {parameters: {status: new, ...}, ...},
+                segment_name2: {parameters: {status: new, ...}, ...}
+                ...
+            }
+        """
         def set_status(item, status):
             if 'parameters' not in item:
                 item['parameters'] = {}
@@ -218,6 +234,13 @@ class Model(db.Model, BaseModel, BaseTrainedEntity):
             self.test_import_handler_type = handler.TYPE
 
     def create_segments(self, segments):
+        """
+        Creates Segment models by segments dict.
+
+        segments: dict
+            Dictionary where keys are segment names and values - count records
+            in this segment.
+        """
         for name, records in segments.iteritems():
             segment = Segment()
             segment.name = name

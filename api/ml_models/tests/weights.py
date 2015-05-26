@@ -10,8 +10,9 @@ from ..fixtures import WeightData, WeightsCategoryData
 from ..models import Weight, WeightsCategory
 from ..views import ModelResource
 from api.ml_models.models import Model
-from api.ml_models.fixtures import ModelData
+from api.ml_models.fixtures import ModelData, MULTICLASS_MODEL, MODEL_TRAINER
 from api.features.fixtures import FeatureSetData, FeatureData
+from api.import_handlers.fixtures import EXTRACT_JSON
 
 
 class WeightResourceTests(BaseDbTestCase, TestChecksMixin):
@@ -40,16 +41,11 @@ class WeightResourceTests(BaseDbTestCase, TestChecksMixin):
     @patch('api.amazon_utils.AmazonS3Helper.load_key')
     def test_search(self, mock_load_key):
         trained_model_name = 'Trained Model Full Text'
+        mock_load_key.return_value = MODEL_TRAINER
 
-        with open('./conf/extract.json', 'r') as f:
-            handler = f.read()
-        with open('./api/ml_models/model.dat', 'r') as f:
-            trainer = f.read()
-        mock_load_key.return_value = trainer
-
-        post_data = {'test_import_handler_file': handler,
-                     'import_handler_file': handler,
-                     'trainer': trainer,
+        post_data = {'test_import_handler_file': EXTRACT_JSON,
+                     'import_handler_file': EXTRACT_JSON,
+                     'trainer': MODEL_TRAINER,
                      'name': trained_model_name}
         resp = self.client.post('/cloudml/models/', data=post_data,
                                 headers=HTTP_HEADERS)
@@ -266,16 +262,11 @@ class WeightTasksTests(BaseDbTestCase, TestChecksMixin):
         :param mock_load_key:
         """
         name = 'new2'
+        mock_load_key.return_value = MODEL_TRAINER
 
-        with open('conf/extract.json', 'r') as f:
-            handler = f.read()
-        with open('./api/ml_models/model.dat', 'r') as f:
-            trainer = f.read()
-        mock_load_key.return_value = trainer
-
-        post_data = {'test_import_handler_file': handler,
-                     'import_handler_file': handler,
-                     'trainer': trainer,
+        post_data = {'test_import_handler_file': EXTRACT_JSON,
+                     'import_handler_file': EXTRACT_JSON,
+                     'trainer': MODEL_TRAINER,
                      'name': name}
         resp, model = self.check_edit(post_data)
         self.assertEquals(model.name, name)
@@ -344,16 +335,11 @@ class WeightTasksTests(BaseDbTestCase, TestChecksMixin):
         :param mock_load_key:
         """
         name = 'new2'
+        mock_load_key.return_value = MULTICLASS_MODEL
 
-        with open('conf/extract.json', 'r') as f:
-            handler = f.read()
-        with open('./api/ml_models/multiclass-trainer.dat', 'r') as f:
-            trainer = f.read()
-        mock_load_key.return_value = trainer
-
-        post_data = {'test_import_handler_file': handler,
-                     'import_handler_file': handler,
-                     'trainer': trainer,
+        post_data = {'test_import_handler_file': EXTRACT_JSON,
+                     'import_handler_file': EXTRACT_JSON,
+                     'trainer': MULTICLASS_MODEL,
                      'name': name}
         resp, model = self.check_edit(post_data)
         self.assertEquals(model.name, name)

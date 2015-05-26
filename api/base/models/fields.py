@@ -1,14 +1,23 @@
+"""
+Custom SqlAlchemy Field classes.
+"""
+
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 import json
 import uuid
 import os
 from bson import ObjectId
 
-from sqlalchemy.types import UserDefinedType, UnicodeText, TypeDecorator,\
+from sqlalchemy.types import UserDefinedType, UnicodeText, TypeDecorator, \
     String
 from sqlalchemy.dialects.postgresql.base import ischema_names
 from gridfs import GridFS
 
 from api.amazon_utils import AmazonS3Helper
+
+
+__all__ = ('PostgresJSON', 'JSONType', 'GridfsFile', 'S3File')
 
 
 class PostgresJSON(UserDefinedType):

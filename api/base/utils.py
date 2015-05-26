@@ -1,11 +1,19 @@
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 import re
 import json
 
 
 def convert_name(name, to_text=False):
     """
-    FeatureSet -> features_set
-    FeatureSet -> Feature Set (if to_text)
+    Converts resource's class name to name of the object in the response
+    (is to_text is not set) or to the object name, that used in the custom
+    messages.
+
+    >>> convert_name('FeatureSet')
+    features_set
+    >>> convert_name('FeatureSet', True)
+    Feature Set
     """
     if to_text:
         return re.sub("([a-z])([A-Z])", "\g<1> \g<2>", name)

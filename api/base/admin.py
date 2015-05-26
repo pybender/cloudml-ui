@@ -1,3 +1,9 @@
+"""
+Base Admin classes.
+"""
+
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 from flask.ext.admin.contrib import sqla
 from flask.ext.admin.model.template import macro
 from flask import request

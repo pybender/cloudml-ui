@@ -1,3 +1,9 @@
+"""
+Forms that used in different apps.
+"""
+
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 import sqlalchemy
 
 from api.base.resources import ValidationError

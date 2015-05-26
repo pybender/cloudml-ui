@@ -84,19 +84,35 @@ class Test(Command):
                    dest='tests',
                    default=None,
                    help="specifies tests"),
+            Option('-c', '--coverage',
+                   dest='coverage',
+                   default=None,
+                   action='store_true',
+                   help="run test with coverage")
         )
 
     def run(self, **kwargs):
         import nose
         app.config.from_object('api.test_config')
         app.init_db()
-        argv = ['--with-coverage', '--verbose']
+        #app.sql_db.create_all()
+        output_dir = 'coverage'
+        argv = ['api', '--verbose']
+
+        coverage = kwargs.get('coverage', None)
+        if coverage:
+            argv += ['--with-coverage',
+                '--cover-erase',
+                '--cover-html',
+                '--cover-package=api',
+                "--cover-html-dir={0}".format(output_dir)
+        ]
         tests = kwargs.get('tests', None)
         if tests:
             argv.append('--tests')
             argv.append(tests)
         try:
-            logging.debug("Running nosetests with args: %s", argv)
+            logging.info("Running nosetests with args: %s", argv)
             nose.run(argv=argv)
         finally:
             if app.config['SQLALCHEMY_DATABASE_URI'].endswith('test_cloudml'):
@@ -105,28 +121,6 @@ class Test(Command):
                 app.sql_db.session.remove()
                 app.sql_db.drop_all()
 
-
-class Coverage(Command):
-    """Build test code coverage report."""
-
-    def run(self):
-        import nose
-        print 'Collecting coverage info...'
-        output_dir = 'coverage'
-        args = [
-            'with-coverage',
-            'verbose',
-            'cover-erase',
-            'cover-html',
-            'cover-package=api',
-            "cover-html-dir={0}".format(output_dir),
-        ]
-        os.system('nosetests --{0}'.format(' --'.join(args)))
-        # nose.run(argv=['', ] + ['--{}'.format(arg) for arg in args])
-        report_path = 'file://' + os.path.join(
-            os.path.abspath(output_dir), 'index.html')
-        print 'Coverage html report has been generated at {}'.format(
-            report_path)
 
 
 class RemPycFiles(Command):
@@ -187,7 +181,6 @@ manager.add_command("celeryw", Celeryw())
 manager.add_command("flower", Flower())
 manager.add_command('test', Test())
 manager.add_command('generate_crc', GenerateCrc())
-manager.add_command('coverage', Coverage())
 manager.add_command('run', Run())
 manager.add_command("shell", Shell(make_context=_make_context))
 manager.add_command("create_db_tables", CreateDbTables())
