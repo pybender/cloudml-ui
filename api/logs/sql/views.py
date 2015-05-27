@@ -30,6 +30,4 @@ class LogSqlResource(BaseResourceSQL):
 
         return params
 
-
-# It's for tests only
 api.add_resource(LogSqlResource, '/cloudml/sql_logs/')
