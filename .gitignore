@@ -49,3 +49,4 @@ ui/coverage
 coverage/
 .tmp
 ui/cloudml-ui-ui.iml
+celerybeat-schedule
