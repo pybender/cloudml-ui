@@ -1,3 +1,7 @@
+""" Unittests for named feature types related classes and functions. """
+
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin
 from ..views import NamedTypeResource
 from ..models import NamedFeatureType

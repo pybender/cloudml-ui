@@ -1,6 +1,8 @@
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 from api.base.forms import BaseForm, CharField, JsonField, \
     ChoiceField, ValidationError, BooleanField, IntegerField, \
-    DocumentField, ModelField
+    DocumentField, ModelField, UniqueNameField
 from api.import_handlers.models import XmlImportHandler, XmlDataSource, \
     XmlInputParameter, XmlScript, XmlEntity, XmlField, XmlQuery, XmlSqoop, \
     PredictModel, Predict
@@ -13,15 +15,16 @@ db = app.sql_db
 class XmlImportHandlerAddForm(BaseForm):
     required_fields = ('name', )
 
-    name = CharField()
+    name = UniqueNameField(
+        Model=XmlImportHandler, verbose_name='Import Handler')
     data = CharField()
 
-    def clean_name(self, value, field):
-        count = XmlImportHandler.query.filter_by(name=value).count()
-        if count:
-            raise ValidationError('Import Handler with name "%s" already \
-exist. Please choose another one.' % value)
-        return value
+#     def clean_name(self, value, field):
+#         count = XmlImportHandler.query.filter_by(name=value).count()
+#         if count:
+#             raise ValidationError('Import Handler with name "%s" already \
+# exist. Please choose another one.' % value)
+#         return value
 
     def clean_data(self, value, field):
         if value is None:

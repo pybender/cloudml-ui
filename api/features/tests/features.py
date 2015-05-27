@@ -1,3 +1,7 @@
+""" Features and FeatureSet resources, models related unittests. """
+
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 import json
 import httplib
 import logging
@@ -5,7 +9,7 @@ import logging
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin
 from ..views import FeatureResource
 from ..models import Feature, FeatureSet, NamedFeatureType
-from ..fixtures import FeatureSetData, FeatureData
+from ..fixtures import FeatureSetData, FeatureData, FEATURES_JSON
 from api.ml_models.models import Model, Transformer
 from api.ml_models.fixtures import ModelData, TransformerData
 from api.base.models import db
@@ -316,9 +320,8 @@ class TestFeaturesDocs(BaseDbTestCase):
                           'hire_outcome')
 
     def test_load_from_features_dict(self):
-        features_json = json.loads(open('./conf/features.json', 'r').read())
         feature_set = FeatureSet()
-        feature_set.from_dict(features_json)
+        feature_set.from_dict(FEATURES_JSON)
         self.assertTrue(feature_set)
         self.assertEquals(feature_set.schema_name, 'bestmatch')
         self.assertEquals(len(feature_set.features['features']), 37)

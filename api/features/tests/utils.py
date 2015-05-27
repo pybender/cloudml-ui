@@ -1,3 +1,7 @@
+""" Unittests for utility methods and classes. """
+
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 import json
 import httplib
 from copy import copy

@@ -1,3 +1,5 @@
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 import json
 
 from api.base.forms import BaseForm, CharField, JsonField, \

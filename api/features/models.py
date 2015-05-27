@@ -1,3 +1,5 @@
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 from sqlalchemy import event
 from sqlalchemy.orm import deferred
 from sqlalchemy.schema import CheckConstraint, UniqueConstraint

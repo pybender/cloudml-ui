@@ -1,3 +1,7 @@
+""" Unittests for scaler related classes. """
+
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 from utils import FeaturePredefinedItemsTestMixin, FeatureItemsTestMixin
 from ..views import ScalerResource
 from ..models import Feature, PredefinedScaler

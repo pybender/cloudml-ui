@@ -1,7 +1,13 @@
+"""
+Features related forms
+"""
+
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 import json
 
 from api.base.forms import BaseForm, CharField, ChoiceField, BooleanField, \
-    JsonField, DocumentField
+    JsonField, DocumentField, UniqueNameField
 from api.base.resources import ValidationError
 from models import NamedFeatureType, PredefinedClassifier, PredefinedScaler, \
     FeatureSet, Feature
@@ -17,15 +23,11 @@ class FeatureParamsMixin(object):
     """
     def _validate_param(self, data, name):
         from core.trainer.feature_types import FEATURE_PARAMS_TYPES
-
-        if name not in data:
+        value = data.get(name, None)
+        if value is None:
             raise ValidationError('Parameter {} is required'.format(name))
-        value = data[name]
+
         param_type = FEATURE_PARAMS_TYPES[name]['type']
-
-        if not value:
-            raise ValidationError('Parameter {} is required'.format(name))
-
         if param_type == 'str':
             pass  # do nothing
 
@@ -64,24 +66,10 @@ class FeatureParamsMixin(object):
 class NamedFeatureTypeAddForm(BaseForm, FeatureParamsMixin):
     required_fields = ('name', 'type')
 
-    name = CharField()
+    name = UniqueNameField(Model=NamedFeatureType)
     type_field = ChoiceField(choices=NamedFeatureType.TYPES_LIST, name='type')
     input_format = CharField()
     params = JsonField()
-
-    def clean_name(self, value, field):
-        if not value:
-            raise ValidationError('name is required field')
-
-        query = NamedFeatureType.query.filter_by(name=value)
-        if self.obj.id:
-            query = query.filter(NamedFeatureType.id != self.obj.id)
-        count = query.count()
-        if count:
-            raise ValidationError(
-                'Named feature type with name "%s" already exist. \
-Please choose another one.' % value)
-        return value
 
 
 class FeatureSetForm(BaseForm):
@@ -138,7 +126,11 @@ class ScalerForm(BasePredefinedForm):
 
 class ClassifierForm(BasePredefinedForm):
     """
-    Form with predefined item selection for model instead of feature
+    Form for one of this cases (dependly of parameters):
+        1. adding/edditing predifined classifier
+        2. edditing specific model classifier
+        3. copying classifier config from predefined one
+           to the model's classifier.
     """
     OBJECT_NAME = 'classifier'
     DOC = PredefinedClassifier
@@ -171,6 +163,11 @@ class ClassifierForm(BasePredefinedForm):
 
 
 class FeatureForm(BaseForm, FeatureParamsMixin):
+    """
+    Feature add/edit form.
+    """
+    # we could edit only one feature field.
+    # no need to fill all of them for edit
     NO_REQUIRED_FOR_EDIT = True
     required_fields = ('name', 'type', 'feature_set_id')
 

@@ -1,4 +1,7 @@
 """ Features specific resources """
+
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 from api import api
 from api.base.resources import BaseResourceSQL, public_actions
 

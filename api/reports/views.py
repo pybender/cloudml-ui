@@ -1,3 +1,10 @@
+"""
+This module represents resource that makes possible to compare
+models and test results.
+"""
+
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 from flask import request
 
 from api import api

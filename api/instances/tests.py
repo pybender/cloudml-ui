@@ -95,7 +95,7 @@ class InstancesTests(BaseDbTestCase, TestChecksMixin):
 
 
 class TestInstanceTasks(BaseDbTestCase):
-    datasets = [FeatureData, FeatureSetData, ModelData]
+    datasets = [FeatureData, FeatureSetData, ModelData, ClusterData]
 
     # TODO: Investigate why we can't drop db in tearDown
     # mthd, when testing celery tasks
@@ -229,9 +229,14 @@ class TestInstanceTasks(BaseDbTestCase):
         model = Model.query.get(model.id)
         self.assertEquals(model.status, model.STATUS_CANCELED)
 
+    @patch('subprocess.Popen')
+    def test_run_ssh_tunnel(self, popen):
+        cluster = Cluster.query.first()
+        run_ssh_tunnel(cluster.id)
+        #popen.assert_called_with('dfsdf')
+
 
 # ==== Clusters ====
-
 
 class ClusterModelTest(BaseDbTestCase):
     datasets = [ClusterData]

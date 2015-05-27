@@ -1,3 +1,5 @@
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 from core.trainer.scalers import MinMaxScaler, StandardScaler, NoScaler
 
 

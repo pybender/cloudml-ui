@@ -1,3 +1,10 @@
+"""
+This module represents resource that returns statistical info
+about all models, tests, etc.
+"""
+
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 from sqlalchemy import func
 
 from api import api, app
@@ -21,6 +28,22 @@ api.add_resource(StatisticsResource, '/cloudml/statistics/')
 
 
 def get_stat_by_status(Cls):
+    """
+    Returns count of objects by status.
+
+    Cls: sqlalchemy model class (type definition)
+        Model, which objects we need to calculate.
+
+    Returns dict like:
+    {
+        {"count": 10},
+        {"data": {
+            "status1": {"count": 2},
+            "status2": {"count": 3},
+            ...
+        }
+    }
+    """
     query = app.sql_db.session.query
     models_by_status = {}
     models_count = 0

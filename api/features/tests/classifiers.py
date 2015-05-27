@@ -1,3 +1,7 @@
+""" Classifier resource, model related unittests. """
+
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 import logging
 import httplib
 import json
@@ -9,7 +13,7 @@ from utils import FeaturePredefinedItemsTestMixin
 from ..views import ClassifierResource
 from ..models import PredefinedClassifier
 from ..fixtures import PredefinedClassifierData
-from api.features.fixtures import FeatureSetData, FeatureData
+from api.features.fixtures import FeatureSetData, FeatureData, FEATURES_JSON
 from ..config import CLASSIFIERS
 
 
@@ -27,9 +31,8 @@ class TestClassifierDoc(BaseDbTestCase):
                            "type": "logistic regression"})
 
     def test_from_features(self):
-        features = json.loads(open('./conf/features.json', 'r').read())
         classifier = PredefinedClassifier(name='Set')
-        classifier.from_dict(features['classifier'])
+        classifier.from_dict(FEATURES_JSON['classifier'])
 
         db.session.refresh(classifier)
         self.assertTrue(classifier, 'Classifier not set')

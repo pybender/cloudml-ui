@@ -1,10 +1,12 @@
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 import os
 import json
 from fixture import DataSet
 
 DIR = os.path.dirname(__file__)
-FEATURES_JSON = json.loads(
-    open(os.path.join(DIR, 'features.json'), 'r').read())
+FEATURES_STR = open(os.path.join(DIR, 'features.json'), 'r').read()
+FEATURES_JSON = json.loads(FEATURES_STR)
 
 
 class FeatureSetData(DataSet):

@@ -20,7 +20,7 @@ from api.servers.fixtures import ServerData
 from api.import_handlers.models import DataSet, ImportHandler, XmlImportHandler
 from api.instances.fixtures import InstanceData
 from api.model_tests.fixtures import TestResultData, TestExampleData
-from api.features.fixtures import FeatureSetData, FeatureData
+from api.features.fixtures import FeatureSetData, FeatureData, FEATURES_STR
 from api.ml_models.fixtures import ModelData, TagData, MODEL_TRAINER, \
     DECISION_TREE_WITH_SEGMENTS, TREE_VISUALIZATION_DATA, INVALID_MODEL
 from api.import_handlers.fixtures import ImportHandlerData, DataSetData, \
@@ -268,7 +268,7 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         mock_set_trainer.side_effect = Exception('My error in set_trainer')
         post_data = {'test_import_handler_file': EXTRACT_JSON,
                      'import_handler_file': EXTRACT_JSON,
-                     'features': open('./conf/features.json', 'r').read(),
+                     'features': FEATURES_STR,
                      'name': 'name'}
         resp = self.client.post(
             self.BASE_URL, data=post_data, headers=HTTP_HEADERS)
@@ -419,8 +419,7 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
     def test_train_model_exception(self, mock_trainer,
                                    mock_get_features_json, *mocks):
         mock_trainer.side_effect = Exception('Some message')
-        with open('./conf/features.json', 'r') as f:
-            mock_get_features_json.return_value = f.read()
+        mock_get_features_json.return_value = FEATURES_STR
 
         ds = DataSet.query.filter_by(name=DataSetData.dataset_01.name).first()
         data = {'aws_instance': self.instance.id,
@@ -436,8 +435,7 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
     @mock_s3
     @patch('api.ml_models.models.Model.get_features_json')
     def test_train_model_with_dataset(self, mock_get_features_json, *mocks):
-        with open('./conf/features.json', 'r') as f:
-            mock_get_features_json.return_value = f.read()
+        mock_get_features_json.return_value = FEATURES_STR
 
         ds = DataSet.query.filter_by(name=DataSetData.dataset_01.name).first()
         data = {'aws_instance': self.instance.id,
@@ -460,8 +458,7 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
     @patch('api.ml_models.models.Model.get_features_json')
     def test_train_model_with_dataset_csv(self, mock_get_features_json,
                                           *mocks):
-        with open('./conf/features.json', 'r') as f:
-            mock_get_features_json.return_value = f.read()
+        mock_get_features_json.return_value = FEATURES_STR
 
         ds = DataSet.query.filter_by(name=DataSetData.dataset_03.name).first()
         data = {'aws_instance': self.instance.id,
@@ -485,8 +482,7 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
     def test_train_model_with_dataset_other_handler(self,
                                                     mock_get_features_json,
                                                     *mocks):
-        with open('./conf/features.json', 'r') as f:
-            mock_get_features_json.return_value = f.read()
+        mock_get_features_json.return_value = FEATURES_STR
 
         # Dataset from another handler
         new_handler = ImportHandler()
@@ -517,8 +513,7 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
     @mock_s3
     @patch('api.ml_models.models.Model.get_features_json')
     def test_train_model_with_datasets(self, mock_get_features_json, *mocks):
-        with open('./conf/features.json', 'r') as f:
-            mock_get_features_json.return_value = f.read()
+        mock_get_features_json.return_value = FEATURES_STR
 
         ds1 = DataSet.query.filter_by(name=DataSetData.dataset_01.name).first()
         ds2 = DataSet.query.filter_by(name=DataSetData.dataset_02.name).first()
@@ -545,9 +540,7 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
     @patch('api.ml_models.models.Model.get_features_json')
     def test_train_model_without_dataset(
             self, mock_get_features_json, *mocks):
-        with open('./conf/features.json', 'r') as f:
-            mock_get_features_json.return_value = f.read()
-
+        mock_get_features_json.return_value = FEATURES_STR
         data = {'aws_instance': self.instance.id,
                 'existing_instance_selected': True,
                 'new_dataset_selected': True,
@@ -568,8 +561,7 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
     @patch('api.ml_models.models.Model.get_features_json')
     def test_train_model_with_load_params_csv(self, mock_get_features_json,
                                               *mocks):
-        with open('./conf/features.json', 'r') as f:
-            mock_get_features_json.return_value = f.read()
+        mock_get_features_json.return_value = FEATURES_STR
 
         data = {'aws_instance': self.instance.id,
                 'existing_instance_selected': True,
@@ -594,8 +586,7 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue(self.obj.train_import_handler,
                         "Train import handler should be filled")
 
-        with open('./conf/features.json', 'r') as f:
-            mock_get_features_json.return_value = f.read()
+        mock_get_features_json.return_value = FEATURES_STR
 
         mock_load_key.return_value = MODEL_TRAINER
 
@@ -781,7 +772,7 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
             import_handler = XmlImportHandler.query.first()
             data['import_handler'] = import_handler.identifier
         if fill_features:
-            data['features'] = open('./conf/features.json', 'r').read()
+            data['features'] = FEATURES_STR
         if fill_trainer:
             data['trainer'] = MODEL_TRAINER
         data['name'] = name

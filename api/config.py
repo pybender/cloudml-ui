@@ -28,6 +28,15 @@ CELERY_IMPORTS = (
     'api.model_tests.tasks', 'api.servers.tasks')
 CELERYD_MAX_TASKS_PER_CHILD = 1
 
+from datetime import timedelta
+
+CELERYBEAT_SCHEDULE = {
+    'add-every-30-seconds': {
+        'task': 'api.instances.tasks.synchronyze_cluster_list',
+        'schedule': timedelta(seconds=30)
+    },
+}
+
 
 CELERY_DEFAULT_QUEUE = 'default'
 CELERY_QUEUES = [
