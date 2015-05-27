@@ -5,6 +5,7 @@ Instance related models.
 # Authors: Nikolay Melnik <nmelnik@upwork.com>
 
 import random
+import logging
 
 from sqlalchemy.orm import deferred
 
@@ -26,7 +27,7 @@ class Instance(BaseModel, db.Model):
     is_default = db.Column(db.Boolean, default=False)
 
     def save(self, commit=True):
-        BaseModel.save(self, commit=False)
+        super(Instance, self).save(False)
         if self.is_default:
             Instance.query\
                 .filter(Instance.is_default, Instance.name != self.name)\
@@ -62,6 +63,8 @@ class Cluster(BaseModel, db.Model):
     status = db.Column(db.Enum(*STATUSES, name='cluster_statuses'),
                        default=STATUS_NEW)
     logs_folder = db.Column(db.String(200), nullable=True)
+
+    # FIXME: do we need this field?
     is_default = db.Column(db.Boolean, default=False)
 
     def generate_port(self):
@@ -70,17 +73,13 @@ class Cluster(BaseModel, db.Model):
 
         Available ports are in range: `PORT_RANGE`.
         """
-        # exclude = set(Cluster.query.with_entities(Cluster.port).all())
-        # ports = list(set(xrange(*self.PORT_RANGE)) - exclude)
-        # if ports:
-        #     self.port = random.choice(ports)
-        # else:
-        #     raise ValueError('All ports are busy')
-        port = None
-        exclude = Cluster.query.with_entities(Cluster.port).all()
-        while port in exclude or port is None:
-            port = random.randrange(*self.PORT_RANGE)
-        self.port = port
+        exclude = set([cl[0] for cl in Cluster.query.with_entities(
+            Cluster.port).all()])
+        ports = list(set(xrange(*self.PORT_RANGE)) - exclude)
+        if ports:
+            self.port = random.choice(ports)
+        else:
+            raise ValueError('All ports are busy')
 
     @property
     def tunnels(self):
@@ -92,14 +91,6 @@ class Cluster(BaseModel, db.Model):
 
     @property
     def active_tunnel(self):
-        # from api.async_tasks.models import AsyncTask
-        # res = AsyncTask.get_current_by_object(
-        #     self,
-        #     'api.instances.tasks.run_ssh_tunnel',
-        #     status='In Progress'
-        # )
-        # if res:
-        #     return res[0]
         return self.pid
 
     def create_ssh_tunnel(self):
@@ -113,14 +104,14 @@ class Cluster(BaseModel, db.Model):
     def terminate_ssh_tunnel(self):
         import os
         import signal
-        if self.pid is not None:
+        if self.pid is not None and self is not self.PENDING:
             try:
                 os.kill(self.pid, signal.SIGKILL)
-            except:
-                pass
+            except Exception, exc:
+                logging.error("Unknown error occures, while removing "
+                              "process: {0}".format(exc))
             self.pid = None
             self.save()
-            # self.active_tunnel.terminate_task()
 
     def terminate(self):
         emr = AmazonEMRHelper()
@@ -129,10 +120,4 @@ class Cluster(BaseModel, db.Model):
     def save(self, commit=True):
         if self.port is None:
             self.generate_port()
-        BaseModel.save(self, commit=False)
-        if self.is_default:
-            Cluster.query\
-                .filter(Cluster.is_default, Cluster.name != self.name)\
-                .update({Cluster.is_default: False})
-        if commit:
-            db.session.commit()
+        super(Cluster, self).save(commit)

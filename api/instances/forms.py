@@ -11,6 +11,9 @@ from models import Instance
 
 
 class InstanceForm(BaseForm):
+    """
+    Add/Edit instance form.
+    """
     NO_REQUIRED_FOR_EDIT = True
     required_fields = ('name', 'ip', 'type')
 

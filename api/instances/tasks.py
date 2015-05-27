@@ -1,4 +1,7 @@
 """ Spot instances tasks """
+
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 import logging
 from boto.exception import EC2ResponseError
 from os import system, popen
@@ -18,6 +21,9 @@ class InstanceRequestingError(Exception):
 
 @celery.task(base=SqlAlchemyTask)
 def synchronyze_cluster_list():
+    """
+    Updates cluster's statuses.
+    """
     clusters = Cluster.query.all()
     emr = AmazonEMRHelper()
     for cluster in clusters:
@@ -34,7 +40,16 @@ def synchronyze_cluster_list():
 
 
 @celery.task(base=SqlAlchemyTask)
-def request_spot_instance(dataset_id=None, instance_type=None, model_id=None):
+def request_spot_instance(instance_type=None, model_id=None):
+    """
+    Requests instance on the Amazon spot market.
+
+    instance_type: string
+        The type of instance to run.
+    model_id: int
+        Id of the Model which tries to request spot instance
+        for training.
+    """
     init_logger('trainmodel_log', obj=int(model_id))
 
     model = Model.query.get(model_id)
@@ -57,11 +72,29 @@ def request_spot_instance(dataset_id=None, instance_type=None, model_id=None):
 
 
 @celery.task(base=SqlAlchemyTask)
-def get_request_instance(request_id,
-                         callback=None,
-                         dataset_ids=None,
-                         model_id=None,
-                         user_id=None):
+def get_request_instance(request_id, callback=None, dataset_ids=None,
+                         model_id=None, user_id=None):
+    """
+    Tries to get requested spot instance from Amazon EC2.
+    Dependly of the instance state it fills instance fields or retries
+    the task, if instance is opening.
+
+    request_id: string
+        The spot instance request ID.
+    callback: string
+        If `train` specified, system will run model training after the spot
+        instance would be launched.
+    dataset_ids: list of integers
+        List of dataset ids used for model training.
+    model_id: int
+        Id of the model to train on this spot instance.
+    user_id: int
+        Id of the user, who initiate training the model.
+
+    Note:
+        dataset_ids, model_id, user_id should be specified
+        when callback is `train`.
+    """
     init_logger('trainmodel_log', obj=int(model_id))
     ec2 = AmazonEC2Helper()
     logging.info('Get spot instance request %s' % request_id)
@@ -127,7 +160,13 @@ State is {0!s}, status is {1!s}, {2!s}.'.format(
 
 
 @celery.task(base=SqlAlchemyTask)
-def terminate_instance(task_id=None, instance_id=None):
+def terminate_instance(instance_id=None):
+    """
+    Terminates Amazon EC2 instance.
+
+    instance_id: str
+        The ID of the instance to be terminated.
+    """
     ec2 = AmazonEC2Helper()
     ec2.terminate_instance(instance_id)
     logging.info('Instance %s terminated' % instance_id)
@@ -141,6 +180,15 @@ def self_terminate(result=None):  # pragma: no cover
 
 @celery.task(base=SqlAlchemyTask)
 def cancel_request_spot_instance(request_id, model_id):
+    """
+    Cancel the specified Spot Instance Request.
+
+    request_id: str
+        The Request ID to terminate
+    model_id: int
+        Id of the Model which requested the spot instance
+        for training.
+    """
     init_logger('trainmodel_log', obj=int(model_id))
     model = Model.query.get(model_id)
 
@@ -161,6 +209,12 @@ cancelled for model id {1!s}'.format(request_id, model_id))
 
 @celery.task(base=SqlAlchemyTask)
 def run_ssh_tunnel(cluster_id):
+    """
+    Creates SSH tunnel to the cluster for getting access to Hadoop Web UI.
+
+    cluster_id: int
+        Id of the cluster
+    """
     from api.instances.models import Cluster
     import subprocess
     import shlex

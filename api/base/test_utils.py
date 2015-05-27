@@ -218,7 +218,7 @@ class TestChecksMixin(object):
         self._check_errors(err_data, errors)
         self.assertEquals(count, self.Model.query.count())
 
-    def check_delete(self, obj=None):
+    def check_delete(self, obj=None, check_model_deleted=True):
         if obj is None:
             obj = self.obj
 
@@ -227,7 +227,8 @@ class TestChecksMixin(object):
         resp = self.client.delete(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, 204)
 
-        self.assertFalse(self.Model.query.filter_by(id=obj.id).count())
+        if check_model_deleted:
+            self.assertFalse(self.Model.query.filter_by(id=obj.id).count())
 
     def check_readonly(self):
         url = self._get_url(id=self.obj.id)
@@ -329,3 +330,15 @@ class TestChecksMixin(object):
         self.assertEquals(resp.status_code, 400)
         msg = json.loads(resp.data)['response']['error']['message']
         self.assertEquals(msg, "%s is not allowed" % method)
+
+
+class DefaultsCheckMixin(object):
+    def _check_is_default(self, Cls):
+        obj = Cls.query.filter_by(is_default=False)[0]
+        obj.is_default = True
+        obj.save()
+
+        obj = Cls.query.get(obj.id)
+        self.assertTrue(obj.is_default)
+        defaults = Cls.query.filter_by(is_default=True)
+        self.assertEquals(defaults.count(), 1, list(defaults))

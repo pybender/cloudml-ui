@@ -1,35 +1,27 @@
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
+import httplib
 from mock import patch, Mock
 
-from api.base.test_utils import BaseDbTestCase, TestChecksMixin
+from api.base.test_utils import BaseDbTestCase, TestChecksMixin, \
+    DefaultsCheckMixin, HTTP_HEADERS
 from api.ml_models.fixtures import ModelData
 from api.ml_models.models import Model
 from api.accounts.models import User
 from api.features.fixtures import FeatureSetData, FeatureData
 
-from views import InstanceResource
+from views import InstanceResource, ClusterResource
 from models import Instance, Cluster
-from fixtures import InstanceData
+from fixtures import InstanceData, ClusterData, ACTIVE_CLUSTERS_COUNT
 from tasks import *
 from api.base.models import db
 
 
-class InstanceModelTests(BaseDbTestCase):
+class InstanceModelTests(BaseDbTestCase, DefaultsCheckMixin):
     datasets = [InstanceData]
 
     def test_set_default(self):
-        instance = Instance.query.filter_by(is_default=False)[0]
-        instance.is_default = True
-        instance.save()
-
-        db.session.refresh(instance)
-
-        self.assertTrue(instance.is_default)
-        defaults = Instance.query.filter_by(is_default=True)
-        self.assertEquals(defaults.count(), 1, list(defaults))
-
-
-class ClusterModelTest(BaseDbTestCase):
-    pass
+        self._check_is_default(Instance)
 
 
 class InstancesTests(BaseDbTestCase, TestChecksMixin):
@@ -38,13 +30,10 @@ class InstancesTests(BaseDbTestCase, TestChecksMixin):
     """
     BASE_URL = '/cloudml/aws_instances/'
     RESOURCE = InstanceResource
-    Model = Instance
     datasets = [InstanceData, ]
 
     def test_list(self):
-        resp = self.check_list(show='name,type')
-        self.assertTrue(resp['instances'][0]['type'])
-        self.assertTrue(resp['instances'][0]['name'])
+        self.check_list(show='name,type')
 
     def test_details(self):
         instance = self.Model.query.filter_by(name='Instance 1')[0]
@@ -124,8 +113,7 @@ class TestInstanceTasks(BaseDbTestCase):
            )
     def test_request_spot_instance(self, mock_request):
         model = Model.query.all()[0]
-        res = request_spot_instance(
-            'dataset_id', 'instance_type', model.id)
+        res = request_spot_instance('instance_type', model.id)
 
         model = Model.query.get(model.id)
         self.assertEquals(model.status, model.STATUS_REQUESTING_INSTANCE)
@@ -229,7 +217,7 @@ class TestInstanceTasks(BaseDbTestCase):
 
     @patch('api.amazon_utils.AmazonEC2Helper.terminate_instance')
     def test_terminate_instance(self, mock_terminate_instance):
-        terminate_instance('some task id', 'some instance id')
+        terminate_instance('some instance id')
         mock_terminate_instance.assert_called_with('some instance id')
 
     @patch('api.amazon_utils.AmazonEC2Helper.cancel_request_spot_instance')
@@ -242,26 +230,102 @@ class TestInstanceTasks(BaseDbTestCase):
         self.assertEquals(model.status, model.STATUS_CANCELED)
 
 
-# class ClusterTests(BaseDbTestCase, TestChecksMixin):
-#     """
-#     Tests of the Clusters API.
-#     """
-#     BASE_URL = '/cloudml/aws_instances/'
-#     RESOURCE = InstanceResource
-#     Model = Cluster
-#     datasets = [InstanceData, ]
+# ==== Clusters ====
 
-#     def test_list(self):
-#         resp = self.check_list(show='name,type')
-#         self.assertTrue(resp['instances'][0]['type'])
-#         self.assertTrue(resp['instances'][0]['name'])
 
-#     def test_details(self):
-#         instance = self.Model.query.filter_by(name='Instance 1')[0]
-#         resp = self.check_details(
-#             show='name,ip,is_default,type', obj=instance)
-#         instance_resp = resp['instance']
-#         self.assertEqual(instance_resp['name'], instance.name)
-#         self.assertEqual(instance_resp['type'], instance.type)
-#         self.assertEqual(instance_resp['ip'], instance.ip)
-#         self.assertEqual(instance_resp['is_default'], False)
+class ClusterModelTest(BaseDbTestCase):
+    datasets = [ClusterData]
+
+    def test_generate_port(self):
+        import uuid
+        OLD_PORT_RANGE = Cluster.PORT_RANGE
+        Cluster.PORT_RANGE = (1, 5)
+
+        def add_cluster():
+            cluster = Cluster(jobflow_id=str(uuid.uuid1()))
+            cluster.save()
+            return cluster
+
+        used_ports = []
+        port_list = xrange(*Cluster.PORT_RANGE)
+        for i in port_list:
+            cluster = add_cluster()
+            self.assertTrue(cluster.port)
+            used_ports.append(cluster.port)
+        self.assertItemsEqual(used_ports, port_list)
+
+        # There are not available ports
+        self.assertRaises(ValueError, add_cluster)
+        Cluster.PORT_RANGE = OLD_PORT_RANGE
+
+    def test_tunnels(self):
+        pass
+
+
+class ClusterResourceTests(BaseDbTestCase, TestChecksMixin):
+    """
+    Tests of the Clusters API.
+    """
+    BASE_URL = '/cloudml/instances/clusters/'
+    RESOURCE = ClusterResource
+    datasets = [ClusterData, ]
+    SHOW = 'jobflow_id,master_node_dns'
+
+    def test_list(self):
+        from api.base.resources import ValidationError
+        self.check_list(show=self.SHOW)
+
+        # Filtering by status
+        self.check_list(show=self.SHOW, count=1,
+                        data={'status': 'New'})
+        self.check_list(show=self.SHOW, count=ACTIVE_CLUSTERS_COUNT,
+                        data={'status': 'Active'})
+
+        # Invalid status passed
+        url = self._get_url(status='Inv', show=self.SHOW)
+        resp = self.client.get(
+            url, headers=HTTP_HEADERS)
+        self.assertEquals(
+            resp.status_code, 400,
+            "Resp of %s %s: %s" % (url, resp.status_code, resp.data))
+
+        # Filtering by jobflow_id
+        self.check_list(show=self.SHOW, count=0,
+                        data={'jobflow_id': 'inv'})
+        self.check_list(
+            show=self.SHOW, count=1,
+            data={'jobflow_id': ClusterData.cluster_01.jobflow_id})
+
+    def test_details(self):
+        cluster = Cluster.query.first()
+        self.check_details(show=self.SHOW, obj=cluster)
+
+    @patch('api.instances.tasks.run_ssh_tunnel')
+    def test_create_tunnel(self, run_ssh_tunnel):
+        cluster = Cluster.query.first()
+        url = self._get_url(id=cluster.id, action='create_tunnel')
+        resp = self.client.put(url, headers=HTTP_HEADERS)
+        # FIXME:
+        # self.assertTrue(run_ssh_tunnel.called)
+        self.assertEquals(cluster.pid, Cluster.PENDING)
+
+    def test_terminate_tunnel(self):
+        cluster = Cluster.query.first()
+        cluster.pid = 111
+        cluster.save()
+        url = self._get_url(id=cluster.id, action='terminate_tunnel')
+        resp = self.client.put(url, headers=HTTP_HEADERS)
+        self.assertEquals(cluster.pid, None)
+
+    @patch('api.amazon_utils.AmazonEMRHelper.terminate_jobflow')
+    def test_delete(self, terminate_jobflow):
+        cluster = Cluster.query.first()
+        self.check_delete(obj=cluster, check_model_deleted=False)
+        self.assertTrue(terminate_jobflow.called)
+        self.assertEquals(cluster.status, Cluster.STATUS_TERMINATED)
+
+    def test_post_not_allowed(self):
+        url = self._get_url()
+        resp = self.client.post(
+            url, data={'jobflow_id': 1}, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.BAD_REQUEST)
