@@ -1,3 +1,5 @@
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 from api.base.resources import BaseResource, ValidationError
 from .models import LogMessage
 

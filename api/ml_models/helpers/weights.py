@@ -12,6 +12,9 @@ def calc_weights_css(weights, css_cls):
     """
     Determines tones of color dependly of weight value.
     """
+    if not weights:
+        return []
+
     def cmp_func(a):
         return abs(a['weight'])
 

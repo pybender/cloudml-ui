@@ -1,3 +1,5 @@
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 import time
 from datetime import datetime, timedelta
 import logging

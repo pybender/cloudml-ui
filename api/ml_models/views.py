@@ -1,16 +1,18 @@
-import os
-from api.async_tasks.models import AsyncTask
-from api.features.models import Feature, FeatureSet
+"""
+Model, Transformer, Segments, Weights-related REST API declared here.
+"""
 
-from api.logs.dynamodb.models import LogMessage
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 from flask import Response, request
 from flask.ext.restful import reqparse
 from sqlalchemy import or_, func
 from sqlalchemy.orm import undefer, joinedload_all
 from werkzeug.datastructures import FileStorage
 
-from api import api
-from api.base.models import db
+from api import app, api
+from api.async_tasks.models import AsyncTask
+from api.features.models import Feature, FeatureSet
 from api.import_handlers.models import DataSet
 from api.base.resources import BaseResourceSQL, NotFound, ValidationError, \
     public_actions, ERR_INVALID_DATA, odesk_error_response, _select
@@ -19,7 +21,6 @@ from models import Model, Tag, Weight, WeightsCategory, Segment, Transformer, \
 from forms import ModelAddForm, ModelEditForm, TransformDataSetForm, \
     TrainForm, TransformerForm, FeatureTransformerForm, GridSearchForm, \
     VisualizationOptionsForm
-from api.servers.forms import ChooseServerForm
 
 
 model_parser = reqparse.RequestParser()
@@ -287,6 +288,7 @@ class ModelResource(BaseTrainedEntityResource):
 
     def _put_upload_to_server_action(self, **kwargs):
         from api.servers.tasks import upload_model_to_server
+        from api.servers.forms import ChooseServerForm
 
         model = self._get_details_query(None, **kwargs)
         if model.status != Model.STATUS_TRAINED:
@@ -373,7 +375,7 @@ class ModelResource(BaseTrainedEntityResource):
             feature.feature_set_id = model.features_set_id
             feature.save(commit=False)
             features.append(feature)
-        db.session.commit()
+        app.sql_db.session.commit()
         return self._render({self.OBJECT_NAME: model.id,
                              'features': [f.to_dict() for f in features]})
 

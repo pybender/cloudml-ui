@@ -1,3 +1,9 @@
+"""
+TestResult and TestExample models.
+"""
+
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 from collections import defaultdict
 import math
 import scipy

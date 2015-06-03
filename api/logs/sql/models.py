@@ -1,3 +1,5 @@
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 from sqlalchemy.orm import deferred
 from sqlalchemy import Integer, String, Enum
 from sqlalchemy import func

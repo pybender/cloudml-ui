@@ -201,7 +201,11 @@ class LogsTests(BaseDbTestCase, TestChecksMixin):
         self.assertEqual(items[3]['content'], '2. Debug message')
         self.assertEqual(items[4]['content'], '1. Info message')
 
-    def xtest_bad_next_token(self):
-        url = '{0}?{1}'.format(self.BASE_URL, 'level=WARNING&next_token=&object_id=69&order=desc&per_page=20&show=level%2Ctype%2Ccontent%2Cparams%2Ccreated_on&sort_by=created_on&type=importdata_log')
+    def test_bad_next_token(self):
+        url = '{0}?{1}'.format(
+            self.BASE_URL,
+            "level=WARNING&next_token=&object_id=69&order=desc&per_page=20"
+            "&show=level%2Ctype%2Ccontent%2Ccreated_on&sort_by=created_on"
+            "&type=importdata_log")
         resp = self.client.get(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.OK)

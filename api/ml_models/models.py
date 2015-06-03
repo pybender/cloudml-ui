@@ -14,10 +14,14 @@ from sqlalchemy.sql import text
 from sqlalchemy import Index, func
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy import event, and_
+from sqlalchemy.ext.hybrid import hybrid_method
+from sqlalchemy.ext.compiler import compiles
+from sqlalchemy.sql.expression import ColumnClause
 
 from api.base.models import db, BaseModel, BaseMixin, JSONType, S3File
 from api.logs.models import LogMessage
 from api.amazon_utils import AmazonS3Helper
+from api.import_handlers.models import ImportHandlerMixin
 
 
 class BaseTrainedEntity(object):
@@ -447,9 +451,6 @@ def get_transformer(name):
     return transformer.feature['transformer']
 
 
-from api.import_handlers.models import ImportHandlerMixin
-
-
 @event.listens_for(ImportHandlerMixin, "mapper_configured", propagate=True)
 def setup_listener(mapper, class_):
     import_handler_type = class_.TYPE
@@ -552,10 +553,6 @@ def _setup_search(table_name, fields, event, schema_item, bind):
         before update or insert on {0} for each row execute procedure
         tsvector_update_trigger(fts, 'pg_catalog.english', {1})""".format(
         table_name, fields_str))
-
-from sqlalchemy.ext.hybrid import hybrid_method
-from sqlalchemy.ext.compiler import compiles
-from sqlalchemy.sql.expression import ColumnClause
 
 
 class TestWeightColumn(ColumnClause):

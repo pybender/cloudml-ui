@@ -18,12 +18,12 @@ def get_object_from_task(task_name, args, kwargs):  # pragma: no cover
         cls = TestResult
         obj_id = args[1] if len(args) else kwargs['test_id']
     elif task_name in ('api.ml_models.tasks.train_model',
-                       'api.ml_models.tasks.fill_model_parameter_weights',
+                       'api.ml_models.tasks.visualize_model',
                        'api.ml_models.tasks.transform_dataset_for_download'):
         cls = Model
         if task_name == 'api.ml_models.tasks.train_model':
             obj_id = args[1] if len(args) else kwargs['model_id']
-        elif task_name == 'api.ml_models.tasks.fill_model_parameter_weights':
+        elif task_name == 'api.ml_models.tasks.visualize_model':
             obj_id = args[0] if len(args) else kwargs['model_id']
         elif task_name == 'api.ml_models.tasks.transform_dataset_for_download':
             obj_id = args[0] if len(args) else kwargs['model_id']

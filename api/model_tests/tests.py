@@ -1,3 +1,9 @@
+"""
+Model tests related unittests.
+"""
+
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 # -*- coding: utf8 -*-
 import json
 from mock import patch, MagicMock, Mock

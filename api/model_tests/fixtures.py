@@ -1,3 +1,9 @@
+"""
+DB fixtures for TestResult and TestExample models.
+"""
+
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 from fixture import DataSet
 
 from api.ml_models.fixtures import ModelData

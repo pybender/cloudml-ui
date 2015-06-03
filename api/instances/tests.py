@@ -233,7 +233,7 @@ class TestInstanceTasks(BaseDbTestCase):
     def test_run_ssh_tunnel(self, popen):
         cluster = Cluster.query.first()
         run_ssh_tunnel(cluster.id)
-        #popen.assert_called_with('dfsdf')
+        # popen.assert_called_with('dfsdf')
 
 
 # ==== Clusters ====

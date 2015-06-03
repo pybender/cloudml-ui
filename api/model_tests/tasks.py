@@ -1,18 +1,19 @@
+"""
+Model tests related Celery tasks.
+"""
+
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 import os
 import logging
 import numpy
 import csv
 import uuid
-from os import makedirs
 from itertools import izip, repeat
-from bson.objectid import ObjectId
-from os.path import exists
-from datetime import timedelta, datetime
 from sqlalchemy.exc import SQLAlchemyError
 
 from api import celery, app
-from api.base.tasks import SqlAlchemyTask, db_session
-from api.amazon_utils import AmazonS3Helper
+from api.base.tasks import SqlAlchemyTask
 from api.base.exceptions import InvalidOperationError
 from api.logs.logger import init_logger
 from api.model_tests.models import TestResult, TestExample
@@ -24,7 +25,13 @@ from api.models import PredefinedDataSource
 @celery.task(base=SqlAlchemyTask)
 def run_test(dataset_ids, test_id):
     """
-    Running tests for trained model
+    Running test for trained model.
+
+    dataset_ids: list
+        List of dataset ids used for testing model. Now only first one in the
+        list used. (Multidataset testing hasn't implemented yet).
+    model_id: int
+        ID of the model to test.
     """
     init_logger('runtest_log', obj=int(test_id))
 
@@ -72,7 +79,8 @@ def run_test(dataset_ids, test_id):
 
         if 'roc_curve' in metrics_dict:
             n = len(metrics._labels) / 100 or 1
-            calc_range = [1] if metrics.classes_count == 2 else range(len(metrics.classes_set))
+            calc_range = [1] if metrics.classes_count == 2 \
+                else range(len(metrics.classes_set))
             for i in calc_range:
                 label = metrics.classes_set[i]
                 sub_fpr = metrics_dict['roc_curve'][label][0][0::n]
@@ -101,7 +109,8 @@ def run_test(dataset_ids, test_id):
         test.save()
 
         def fill_weights(trainer, test, segment):
-            for clazz, weights in trainer.get_weights(segment.name).iteritems():
+            for clazz, weights in trainer.get_weights(
+                    segment.name).iteritems():
                 positive = weights['positive']
                 negative = weights['negative']
 
@@ -167,7 +176,7 @@ def run_test(dataset_ids, test_id):
 
     except Exception, exc:
         if isinstance(exc, SQLAlchemyError):
-            db_session.rollback()
+            app.sql_db.session.rollback()
         logging.exception('Got exception when tests model')
         test.status = test.STATUS_ERROR
         error_column_size = TestResult.error.type.length
@@ -228,7 +237,17 @@ def _add_example_to_db(test, data, label, pred, prob, num):
 @celery.task(base=SqlAlchemyTask)
 def calculate_confusion_matrix(test_id, weight0, weight1):
     """
-    Calculate confusion matrix for test.
+    Calculate confusion matrix for test with weightes.
+
+    test_id: int
+        ID of the model test.
+    weight0: positive float
+        first class weight.
+    weight1: positive float
+        second class weight.
+
+    Note:
+    Now we support calculating confusion matrix only for binary classifier.
     """
     init_logger('confusion_matrix_log', obj=int(test_id))
 
@@ -273,21 +292,34 @@ def calculate_confusion_matrix(test_id, weight0, weight1):
 def export_results_to_db(model_id, test_id,
                          datasource_id, table_name, fields):
     """
-    Export classification results to database.
+    Export model test examples data to PostgreSQL db.
+
+    model_id: int
+        ID of the model
+    test_id: int
+        ID of the test, which examples it planned to export.
+    datasource_id: int
+        ID of datasource, which would be used to connect to PostgreSQL db.
+    table_name: string
+        Name of the table
+    fields: list of string
+        List of field names from TestExample to export to the database.
     """
-    init_logger('runtest_log', obj=int(test_id))
     import psycopg2
     import psycopg2.extras
+    init_logger('runtest_log', obj=int(test_id))
+
     test = TestResult.query.filter_by(
         model_id=model_id, id=test_id).first()
     if not test:
         logging.error('Test not found')
-        return None
+        return
 
     datasource = PredefinedDataSource.query.get(datasource_id)
     if not datasource:
         logging.error('Datasource not found')
-        return None
+        return
+
     db_fields = []
     for field in fields:
         if 'prob' == field:
@@ -332,12 +364,21 @@ def export_results_to_db(model_id, test_id,
 @celery.task(base=SqlAlchemyTask)
 def get_csv_results(model_id, test_id, fields):
     """
-    Get test classification results using csv format.
+    Get test classification results in csv format and saves file
+    to Amazon S3.
+
+    model_id: int
+        ID of the model
+    test_id: int
+        ID of the test, which examples it planned to export.
+    fields: list of string
+        List of field names from TestExample to export to csv file.
     """
+    from api.amazon_utils import AmazonS3Helper
+
     def generate(test, name):
-        path = app.config['DATA_FOLDER']
-        if not exists(path):
-            makedirs(path)
+        from api.base.io_utils import get_or_create_data_folder
+        path = get_or_create_data_folder()
         filename = os.path.join(path, name)
         header = list(fields)
         if 'prob' in header:
@@ -368,9 +409,9 @@ def get_csv_results(model_id, test_id, fields):
     init_logger('runtest_log', obj=int(test_id))
 
     test = TestResult.query.filter_by(model_id=model_id, id=test_id).first()
-    if not test:
+    if test is None:
         logging.error('Test not found')
-        return None
+        return
 
     name = 'Examples-{0!s}.csv'.format(uuid.uuid1())
     expires = 60 * 60 * 24 * 7  # 7 days

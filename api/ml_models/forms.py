@@ -1,28 +1,22 @@
 """
-Administrative views for models: Model, Tag, Weight, WeightsCategory
+Model and Transformer specific forms.
 """
 
 # Authors: Nikolay Melnik <nmelnik@upwork.com>
 
 import json
 import importlib
+
+from api import app
 from api.base.forms.base_forms import BaseChooseInstanceAndDatasetMultiple
 from api.import_handlers.models import DataSet
-from api.instances.models import Instance
-from api.servers.models import Server
-
-from core.trainer.store import load_trainer
-from core.trainer.trainer import Trainer, InvalidTrainerFile
-from core.trainer.config import FeatureModel, SchemaException
-from core.importhandler.importhandler import ExtractionPlan, \
-    ImportHandlerException
 from api.base.forms import BaseForm, ValidationError, ModelField, \
-    CharField, JsonField, ImportHandlerFileField, \
+    CharField, JsonField, ImportHandlerFileField, UniqueNameField, \
     ChoiceField, ImportHandlerField, IntegerField, BooleanField
 from api.models import Tag, ImportHandler, Model, XmlImportHandler, \
     Transformer, BaseTrainedEntity, ClassifierGridParams
-from api.features.models import FeatureSet, PredefinedClassifier, Feature
-from api import app
+from api.features.models import Feature
+
 from api.features.config import CLASSIFIERS
 
 db = app.sql_db
@@ -72,25 +66,13 @@ class ModelAddForm(BaseForm):
     required_fields = ('name',
                        ('import_handler', 'import_handler_file'))
 
-    name = CharField()
+    name = UniqueNameField(Model=Model)
     import_handler = ImportHandlerField()
     import_handler_file = ImportHandlerFileField()
     test_import_handler = ImportHandlerField()
     test_import_handler_file = ImportHandlerFileField()
     features = JsonField()
     trainer = CharField()
-
-    def clean_name(self, value, field):
-        if not value:
-            raise ValidationError('specify name of the model')
-
-        count = Model.query.filter_by(name=value).count()
-        if count:
-            raise ValidationError(
-                'Model with name "%s" already exist. \
-Please choose another one.' % value)
-
-        return value
 
     def clean_import_handler(self, value, field):
         self.cleaned_data['train_import_handler'] = value
@@ -108,6 +90,8 @@ Please choose another one.' % value)
 
     def clean_features(self, value, field):
         if value:
+            from core.trainer.trainer import Trainer
+            from core.trainer.config import FeatureModel, SchemaException
             try:
                 # TODO: add support of json dict to FeatureModel
                 feature_model = FeatureModel(json.dumps(value), is_file=False)
@@ -121,6 +105,7 @@ Please choose another one.' % value)
         if value:
             try:
                 # TODO: find a better way?
+                from core.trainer.store import load_trainer
                 value = value.encode('utf-8').replace('\r', '')
                 trainer_obj = load_trainer(value)
                 self.cleaned_data['status'] = Model.STATUS_TRAINED
@@ -162,11 +147,11 @@ Please choose another one.' % value)
         else:
             db.session.commit()
         if model.status == Model.STATUS_TRAINED:
-            from api.ml_models.tasks import fill_model_parameter_weights
+            from api.ml_models.tasks import visualize_model
             model.create_segments(trainer._get_segments_info())
 
             for segment in model.segments:
-                fill_model_parameter_weights.delay(model.id, segment.id)
+                visualize_model.delay(model.id, segment.id)
 
         return model
 
@@ -373,19 +358,16 @@ class GridSearchForm(BaseForm):
         obj.model = self.model
         obj.save()
         return obj
-        # parameters = self.cleaned_data['parameters']
-        # train_dataset = self.cleaned_data['train_dataset']
-        # test_dataset = self.cleaned_data['test_dataset']
-        # scoring = self.cleaned_data['scoring']
-        # obj = ClassifierGridParams(
-        #     parameters=parameters,
-        #     train_dataset=train_dataset,
-        #     test_dataset=test_dataset,
-        #     model=self.model)
-        # obj.save()
 
 
 class VisualizationOptionsForm(BaseForm):
+    """
+    Form used for updating Trained model visualization.
+
+    Note:
+        Now it support only `tree_deep` type for Decision Tree and
+        Random Forest classifiers.
+    """
     UPDATE_TREE_DEEP = 'tree_deep'
     TYPES = [UPDATE_TREE_DEEP, ]
     PARAMS_BY_TYPE = {UPDATE_TREE_DEEP: [{'name': 'deep', 'type': 'int'}]}

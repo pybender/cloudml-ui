@@ -1,6 +1,7 @@
 # Authors: Nikolay Melnik <nmelnik@upwork.com>
 
 from core.trainer.scalers import MinMaxScaler, StandardScaler, NoScaler
+from core.trainer.classifier_settings import CLASSIFIERS
 
 
 # TODO: move and use it in cloudml project
@@ -99,5 +100,3 @@ FIELDS_MAP = {'input_format': 'input-format',
               'is_target_variable': 'is-target-variable',
               'required': 'is-required',
               'schema_name': 'schema-name'}
-
-from core.trainer.classifier_settings import CLASSIFIERS

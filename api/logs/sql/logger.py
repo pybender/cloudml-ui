@@ -1,3 +1,5 @@
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 from api.logs.logger import BaseLogMessageHandler
 
 

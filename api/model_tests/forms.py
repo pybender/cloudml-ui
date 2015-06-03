@@ -1,3 +1,9 @@
+"""
+Test Results related forms.
+"""
+
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 from api.base.forms.base_forms import BaseChooseInstanceAndDataset, \
     CharField, ModelField, ChoiceField, BooleanField
 from api.base.resources import ValidationError

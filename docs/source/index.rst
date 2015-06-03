@@ -26,6 +26,7 @@ Contents:
    development
    api
    settings
+   exporting_data
    whats_new
 
 

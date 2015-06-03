@@ -1,4 +1,5 @@
 from kombu import Queue
+from datetime import timedelta
 
 SECRET_KEY = 'CHANGE_ME'
 DATABASE_NAME = 'cloudml'
@@ -27,8 +28,6 @@ CELERY_IMPORTS = (
     'api.instances.tasks', 'api.ml_models.tasks',
     'api.model_tests.tasks', 'api.servers.tasks')
 CELERYD_MAX_TASKS_PER_CHILD = 1
-
-from datetime import timedelta
 
 CELERYBEAT_SCHEDULE = {
     'add-every-30-seconds': {

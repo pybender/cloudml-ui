@@ -1,3 +1,9 @@
+"""
+Administrative views for models: TestResult and TestExample models
+"""
+
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 from flask.ext.admin.model.template import macro
 
 from api import admin

@@ -1,7 +1,10 @@
-import logging
-from datetime import datetime
-from flask import request
+"""
+Model tests related resources.
+"""
 
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
+import logging
 from flask.ext.restful import reqparse
 
 from api import api
@@ -109,7 +112,6 @@ class TestExampleResource(BaseResourceSQL):
 
         fields = self._get_show_fields(params)
         if 'next' in fields or 'previous' in fields:
-            from sqlalchemy import desc
             from sqlalchemy.sql import select, func, text, bindparam
             from models import db
 

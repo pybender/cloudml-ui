@@ -290,6 +290,7 @@ of the element are the following:
 
     For overriding automatically defined fields (when ``autoload_fields`` setted), you could simply add them to the entity.
 
+.. image:: ./images/entity.png
 
 Examples::
 
