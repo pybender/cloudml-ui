@@ -42,7 +42,7 @@ Flask-Testing
 fixture
 sqlparse==0.1.10
 blinker
-flask-admin
+Flask-Admin==1.0.7
 nltk
 requests
 
