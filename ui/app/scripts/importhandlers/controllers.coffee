@@ -375,13 +375,13 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
   ($scope, $http, settings, auth) ->
     $http(
       method: 'GET'
-      url: "#{settings.apiUrl}any_importhandlers/"
+      url: "#{settings.apiUrl}xml_import_handlers/"
       headers: _.extend(settings.apiRequestDefaultHeaders, {
         'X-Auth-Token': auth.get_auth_token()})
       params: {show: 'name,type,id'}
     )
     .then ((resp) =>
-      data = resp.data.import_handler_for_any_types
+      data = resp.data.xml_import_handlers
       $scope.handlers_list = []
       for h in data
         $scope.handlers_list.push {value: h.id + h.type, text: h.name + '(' + h.type + ')'}
