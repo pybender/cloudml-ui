@@ -22,6 +22,7 @@ from api.base.models import db, BaseModel, BaseMixin, JSONType, S3File
 from api.logs.models import LogMessage
 from api.amazon_utils import AmazonS3Helper
 from api.import_handlers.models import ImportHandlerMixin
+from cloudml.trainer.classifier_settings import TYPE_CLASSIFICATION
 
 
 class BaseTrainedEntity(object):
@@ -120,14 +121,14 @@ class BaseTrainedEntity(object):
     def get_trainer(self, loaded=True, force_load=False):
         if loaded:
             if not hasattr(self, 'loaded_trainer') or force_load:
-                from core.trainer.store import TrainerStorage
+                from cloudml.trainer.store import TrainerStorage
                 self.loaded_trainer = TrainerStorage.loads(self.trainer)
             return self.loaded_trainer
         return self.trainer
 
     def set_trainer(self, trainer):
         from bson import Binary
-        from core.trainer.store import TrainerStorage
+        from cloudml.trainer.store import TrainerStorage
         trainer_data = Binary(TrainerStorage(trainer).dumps())
         self.trainer = trainer_data
         self.trainer_size = len(trainer_data)
@@ -312,7 +313,7 @@ class Model(db.Model, BaseModel, BaseTrainedEntity):
         self.target_variable = trainer._feature_model.target_variable
         self.feature_count = len(trainer._feature_model.features.keys())
         if self.status == self.STATUS_TRAINED and \
-                trainer.model_type == trainer.TYPE_CLASSIFICATION:
+                trainer.model_type == TYPE_CLASSIFICATION:
             self.labels = trainer._get_labels()
 
     def get_features_json(self):
@@ -402,7 +403,7 @@ class Transformer(BaseModel, BaseTrainedEntity, db.Model):
                             secondary=lambda: transformer_data_sets_table)
 
     def train(self, iterator, *args, **kwargs):
-        from core.transformers.transformer import Transformer
+        from cloudml.transformers.transformer import Transformer
         transformer = Transformer(json.dumps(self.json), is_file=False)
         transformer.train(iterator)
         return transformer

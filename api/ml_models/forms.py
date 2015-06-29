@@ -13,7 +13,7 @@ from api.import_handlers.models import DataSet
 from api.base.forms import BaseForm, ValidationError, ModelField, \
     CharField, JsonField, ImportHandlerFileField, UniqueNameField, \
     ChoiceField, ImportHandlerField, IntegerField, BooleanField
-from api.models import Tag, ImportHandler, Model, XmlImportHandler, \
+from api.models import Tag, Model, XmlImportHandler, \
     Transformer, BaseTrainedEntity, ClassifierGridParams
 from api.features.models import Feature
 
@@ -80,18 +80,16 @@ class ModelAddForm(BaseForm):
 
     def clean_import_handler_file(self, value, field):
         self.cleaned_data['train_import_params'] = field.import_params
-        self.train_import_handler_type = field.import_handler_type
         return value
 
     def clean_test_import_handler_file(self, value, field):
         self.cleaned_data['test_import_params'] = field.import_params
-        self.test_import_handler_type = field.import_handler_type
         return value
 
     def clean_features(self, value, field):
         if value:
-            from core.trainer.trainer import Trainer
-            from core.trainer.config import FeatureModel, SchemaException
+            from cloudml.trainer.trainer import Trainer
+            from cloudml.trainer.config import FeatureModel, SchemaException
             try:
                 # TODO: add support of json dict to FeatureModel
                 feature_model = FeatureModel(json.dumps(value), is_file=False)
@@ -105,7 +103,7 @@ class ModelAddForm(BaseForm):
         if value:
             try:
                 # TODO: find a better way?
-                from core.trainer.store import load_trainer
+                from cloudml.trainer.store import load_trainer
                 value = value.encode('utf-8').replace('\r', '')
                 trainer_obj = load_trainer(value)
                 self.cleaned_data['status'] = Model.STATUS_TRAINED
@@ -120,12 +118,10 @@ class ModelAddForm(BaseForm):
         try:
             if self.cleaned_data.get('import_handler_file'):
                 created_handlers.append(self._save_importhandler(
-                    'import_handler_file', name,
-                    handler_type=self.train_import_handler_type))
+                    'import_handler_file', name))
             if self.cleaned_data.get('test_import_handler_file'):
                 created_handlers.append(self._save_importhandler(
-                    'test_import_handler_file', name,
-                    handler_type=self.test_import_handler_type))
+                    'test_import_handler_file', name))
             if 'test_import_handler' not in self.cleaned_data:
                 self.cleaned_data['test_import_handler'] = \
                     self.cleaned_data['train_import_handler']
@@ -155,7 +151,7 @@ class ModelAddForm(BaseForm):
 
         return model
 
-    def _save_importhandler(self, fieldname, name, handler_type='json'):
+    def _save_importhandler(self, fieldname, name, handler_type='xml'):
         """
         Adds new import handler to the system,
         if it was specified in file field.
@@ -168,7 +164,7 @@ class ModelAddForm(BaseForm):
                 name = "%s test import handler" % name
 
             while True:
-                count = ImportHandler.query.filter_by(name=name).count()
+                count = XmlImportHandler.query.filter_by(name=name).count()
                 if not count:
                     return name
                 name += '_'
@@ -180,8 +176,6 @@ class ModelAddForm(BaseForm):
             if handler_type == 'xml':
                 from api.import_handlers.models import XmlImportHandler
                 cls = XmlImportHandler
-            else:
-                cls = ImportHandler
 
             handler = cls()
             action = 'test' if fieldname.startswith('test') else 'train'

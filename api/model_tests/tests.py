@@ -1,23 +1,25 @@
+# -*- coding: utf8 -*-
 """
 Model tests related unittests.
 """
 
 # Authors: Nikolay Melnik <nmelnik@upwork.com>
 
-# -*- coding: utf8 -*-
 import json
 from mock import patch, MagicMock, Mock
 from moto import mock_s3
 from sqlalchemy import desc
 
+from cloudml.trainer.store import TrainerStorage
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS
 from views import TestResource, TestExampleResource
 from models import TestResult, TestExample
 from api.ml_models.models import Model
 from api.ml_models.fixtures import ModelData, WeightData, SegmentData, \
     MODEL_TRAINER, MULTICLASS_MODEL
-from api.import_handlers.fixtures import ImportHandlerData, DataSetData, \
-    PredefinedDataSourceData
+from api.import_handlers.fixtures import \
+    XmlImportHandlerData as ImportHandlerData, DataSetData, \
+    IMPORT_HANDLER_FIXTURES, PredefinedDataSourceData
 from api.import_handlers.models import DataSet, ImportHandler, \
     PredefinedDataSource
 from api.instances.models import Instance
@@ -39,8 +41,9 @@ class TestResourceTests(BaseDbTestCase, TestChecksMixin):
     BASE_URL = '/cloudml/models/{0!s}/tests/'
     RESOURCE = TestResource
     Model = TestResult
-    datasets = [FeatureData, FeatureSetData, InstanceData, ImportHandlerData,
-                DataSetData, ModelData, TestResultData, TestExampleData]
+    datasets = [FeatureData, FeatureSetData, InstanceData,
+                DataSetData, ModelData, TestResultData,
+                TestExampleData] + IMPORT_HANDLER_FIXTURES
 
     def setUp(self):
         super(TestResourceTests, self).setUp()
@@ -313,7 +316,6 @@ class TestExampleResourceTests(BaseDbTestCase, TestChecksMixin):
     def go_details(self, obj, show, data, mock_get_trainer,
                    mock_get_vect_data):
         should_called = not obj.is_weights_calculated
-        from core.trainer.store import TrainerStorage
         trainer = TrainerStorage.loads(MODEL_TRAINER)
         mock_get_trainer.return_value = trainer
 
@@ -402,8 +404,7 @@ class TestExampleResourceTests(BaseDbTestCase, TestChecksMixin):
 
 class TasksTests(BaseDbTestCase):
     """ Tests celery tasks. """
-    datasets = [DataSetData, TestResultData, TestExampleData,
-                PredefinedDataSourceData]
+    datasets = [DataSetData, TestResultData, TestExampleData]
 
     def setUp(self):
         super(TasksTests, self).setUp()
@@ -482,16 +483,16 @@ class TasksTests(BaseDbTestCase):
         # self.assertEqual(task.result, url)
         # self.assertEqual(task.status, AsyncTask.STATUS_COMPLETED)
 
-    @mock_s3
-    @patch('psycopg2.connect')
-    def test_export_results_to_db(self, *mocks):
-        from tasks import export_results_to_db
-        datasource = PredefinedDataSource.query.first()
-        fields = ['label', 'pred_label', 'prob']
-        print self.test.model, self.test, datasource
-        export_results_to_db.delay(
-            self.test.model.id, self.test.id,
-            datasource.id, 'exports_tlb', fields).get()
+    # @mock_s3
+    # @patch('psycopg2.connect')
+    # def test_export_results_to_db(self, *mocks):
+    #     from tasks import export_results_to_db
+    #     datasource = PredefinedDataSource.query.first()
+    #     fields = ['label', 'pred_label', 'prob']
+    #     print self.test.model, self.test, datasource
+    #     export_results_to_db.delay(
+    #         self.test.model.id, self.test.id,
+    #         datasource.id, 'exports_tlb', fields).get()
 
     @mock_s3
     @patch('api.models.Model.get_trainer')
@@ -525,11 +526,10 @@ class TasksTests(BaseDbTestCase):
             return metrics_mock
 
         # Set up mock trainer
-        from core.trainer.store import TrainerStorage
         trainer = TrainerStorage.loads(MODEL_TRAINER)
         mock_get_trainer.return_value = trainer
 
-        with patch('core.trainer.trainer.Trainer.test',
+        with patch('cloudml.trainer.trainer.Trainer.test',
                    _fake_test) as mock_test:
             mocks.append(mock_test)
             return run_test([self.dataset.id, ], test.id), mocks
@@ -628,13 +628,12 @@ class TasksRunTestTests(BaseDbTestCase):
         self.assertEquals(
             test.model.status, test.model.STATUS_TRAINED, test.model.__dict__)
 
-        from core.trainer.store import TrainerStorage
         trainer = TrainerStorage.loads(MODEL_TRAINER)
         mock_get_trainer.return_value = trainer
 
         import gzip
         mock_get_data_stream.return_value = gzip.open(
-            './api/import_handlers/ds.gz', 'r')
+            './api/import_handlers/fixtures/ds.gz', 'r')
 
         result = run_test([self.dataset.id, ], test.id)
         self.assertEqual(result, 'Test completed')
@@ -680,13 +679,12 @@ class TasksRunTestTests(BaseDbTestCase):
         self.assertEquals(
             test.model.status, test.model.STATUS_TRAINED, test.model.__dict__)
 
-        from core.trainer.store import TrainerStorage
         trainer = TrainerStorage.loads(MULTICLASS_MODEL)
         mock_get_trainer.return_value = trainer
 
         import gzip
         mock_get_data_stream.return_value = gzip.open(
-            './api/import_handlers/multiclass_ds.gz', 'r')
+            './api/import_handlers/fixtures/multiclass_ds.gz', 'r')
 
         result = run_test([self.dataset.id, ], test.id)
         self.assertEqual(result, 'Test completed')
@@ -732,14 +730,13 @@ class TasksRunTestTests(BaseDbTestCase):
             test.model.status, test.model.STATUS_TRAINED, test.model.__dict__)
 
         def do_train(exclude_labels):
-            from core.trainer.store import TrainerStorage
             trainer = TrainerStorage.loads(MULTICLASS_MODEL)
             mock_get_trainer.return_value = trainer
 
             import gzip
             from StringIO import StringIO
             with gzip.open(
-                    './api/import_handlers/multiclass_ds.gz', 'r') as dataset:
+                    './api/import_handlers/fixtures/multiclass_ds.gz', 'r') as dataset:
                 examples = []
                 for line in dataset.readlines():
                     example = json.loads(line)
@@ -756,14 +753,14 @@ class TasksRunTestTests(BaseDbTestCase):
         result = do_train(['class2'])
         self.assertEqual(result, 'Test completed')
         self.assertEqual(test.roc_auc,
-                         {u'1': 0.5527093596059114,
+                         {u'1': 0.4775985663082437,
                           u'2': 0.0,
-                          u'3': 0.3931034482758621})
+                          u'3': 0.503584229390681})
         self.assertEqual(
             test.metrics['confusion_matrix'],
-            [[u'1', [9, 7, 13]],
+            [[u'1', [14, 7, 10]],
              [u'2', [0, 0, 0]],
-             [u'3', [8, 16, 11]]])
+             [u'3', [14, 13, 9]]])
 
         self.assertTrue('accuracy' in test.metrics)
         self.assertIsInstance(test.metrics['accuracy'], float)

@@ -16,25 +16,15 @@ from ..views import XmlImportHandlerResource, XmlEntityResource, \
 from ..models import XmlImportHandler, XmlDataSource, db, \
     XmlScript, XmlField, XmlEntity, XmlInputParameter, XmlQuery, XmlSqoop, \
     PredictModel, PredictModelWeight
-from ..fixtures import XmlImportHandlerData, XmlEntityData, XmlFieldData, \
-    XmlDataSourceData, XmlInputParameterData
+from ..fixtures import *
 
 from lxml import etree
 
-DIR = os.path.dirname(__file__)
-XML_IMPORT_HANDLER_01 = os.path.join(DIR, '../fixtures/import_handler_01.xml')
-HANDLER1_DATA = open(XML_IMPORT_HANDLER_01, 'r').read()
 APP_URL = '/cloudml/xml_import_handlers/'
 
 
 class XmlImportHandlerModelTests(BaseDbTestCase):
-    datasets = [
-        XmlImportHandlerData,
-        XmlEntityData,
-        XmlFieldData,
-        XmlDataSourceData,
-        XmlInputParameterData
-    ]
+    datasets = IMPORT_HANDLER_FIXTURES
 
     def setUp(self):
         super(XmlImportHandlerModelTests, self).setUp()
@@ -42,17 +32,19 @@ class XmlImportHandlerModelTests(BaseDbTestCase):
             name="Xml Handler 1").one()
 
     def test_get_plan_config(self):
-        self.assertEquals(HANDLER1_DATA, self.handler.get_plan_config())
-        self.assertEquals(HANDLER1_DATA, self.handler.data)
+        self.assertEquals(
+            IMPORTHANDLER_FROM_FIXTURES, self.handler.get_plan_config())
+        self.assertEquals(
+            IMPORTHANDLER_FROM_FIXTURES, self.handler.data)
 
     def test_load_import_handler(self):
-        data = open('./conf/extract.xml', 'r').read()
-        handler = XmlImportHandler(name='xml ih')
+        handler = XmlImportHandler(name='My import handler')
         handler.save()
-        handler.data = data
+        handler.data = IMPORTHANDLER
 
         self.assertEquals(len(handler.xml_input_parameters), 2)
         self.assertEquals(len(handler.xml_scripts), 1)
+
         # 3 ds defined in the file + one extra input datasource
         self.assertEquals(
             len(handler.xml_data_sources), 4, handler.xml_data_sources)
@@ -69,18 +61,21 @@ class XmlImportHandlerModelTests(BaseDbTestCase):
              'contractor.dev_availability'])
 
     def test_get_fields(self):
-        self.assertEqual(self.handler.get_fields(), ['opening_id'])
+        self.assertEqual(
+            self.handler.get_fields(), ['opening_id', 'hire_outcome'])
 
     def test_list_fields(self):
         fields = self.handler.list_fields()
-        self.assertEqual(1, len(fields))
+        self.assertEqual(2, len(fields))
         self.assertEqual('opening_id', fields[0].name)
         self.assertEqual('integer', fields[0].type)
 
+        self.assertEqual('hire_outcome', fields[1].name)
+        self.assertEqual('string', fields[1].type)
+
         # another handler
-        data = open('./conf/extract.xml', 'r').read()
         handler = XmlImportHandler(name='xml ih')
-        handler.data = data
+        handler.data = IMPORTHANDLER
         handler.save()
         fields = handler.list_fields()
         self.assertEqual(11, len(fields))
@@ -111,33 +106,26 @@ user='postgres' password='postgres'")
         db.session.refresh(self.handler)
         self.assertItemsEqual(
             self.handler.import_params,
-            ['start_date', 'end_date', 'param'])
+            ['start', 'end', 'param'])
 
         param.delete()
         db.session.refresh(self.handler)
         self.assertItemsEqual(
-            self.handler.import_params, ['start_date', 'end_date'])
+            self.handler.import_params, ['start', 'end'])
 
 
 class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
     """
     Tests of the XML ImportHandlers API.
     """
-    BASE_URL = '/cloudml/xml_import_handlers/'
+    BASE_URL = APP_URL
     RESOURCE = XmlImportHandlerResource
     Model = XmlImportHandler
     datasets = [ServerData]
 
     def setUp(self):
         super(XmlImportHandlerTests, self).setUp()
-        name = str(uuid.uuid1())
-        with open('conf/extract.xml', 'r') as fp:
-            resp_data = self._check(method='post', data={
-                'name': name,
-                'data': fp.read()
-            })
-        self.assertEqual(resp_data[self.RESOURCE.OBJECT_NAME]['name'], name)
-        self.obj = self.Model.query.filter_by(name=name).first()
+        self.obj = get_importhandler('importhandler.xml')
 
     def test_list(self):
         self.check_list(show='name,import_params')
@@ -229,11 +217,10 @@ class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
         name = str(uuid.uuid1())
         # Obsolete import handler uploading
         # Check comportability
-        with open('conf/obsolete_extract.xml', 'r') as fp:
-            resp_data = self._check(method='post', data={
-                'name': name,
-                'data': fp.read()
-            })
+        resp_data = self._check(method='post', data={
+            'name': name,
+            'data': EXTRACT_OBSOLETE
+        })
         handler = self.Model.query.filter_by(name=name).first()
 
         ent = XmlEntity.query.filter_by(
@@ -297,7 +284,7 @@ class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
         iter_mock = MagicMock()
         iter_mock.return_value = [
             {'now': datetime(2014, 7, 21, 15, 52, 5, 308936)}]
-        with patch.dict('api.import_handlers.models.import_handlers.CoreImportHandler.DB_ITERS', {'postgres': iter_mock}):
+        with patch.dict('cloudml.importhandler.datasources.DbDataSource.DB', {'postgres': iter_mock}):
             resp = self.client.put(
                 url,
                 data={'sql': 'SELECT NOW() WHERE #{something}',
@@ -319,7 +306,10 @@ class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
         resp = self.client.get(url, headers=HTTP_HEADERS)
         resp_obj = json.loads(resp.data)
         self.assertTrue('xml_fields' in resp_obj)
-        self.assertEqual(11, len(resp_obj['xml_fields']))
+        self.assertEqual(
+            11, len(resp_obj['xml_fields']),
+            "Actual fields are: {0}".format(
+                [item['name'] for item in resp_obj['xml_fields']]))
 
     def test_put_upload_to_server_action(self):
         url = self._get_url(id=self.obj.id, action='update_xml')
@@ -343,9 +333,8 @@ class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
         self.assertEqual(
             1, XmlScript.query.filter_by(import_handler=handler).count())
 
-        with open('conf/extract.xml', 'r') as fp:
-            resp = self.client.put(url, data={'data': fp.read()},
-                                   headers=HTTP_HEADERS)
+        resp = self.client.put(url, data={'data': IMPORTHANDLER},
+                               headers=HTTP_HEADERS)
         resp_obj = json.loads(resp.data)
         self.assertEqual(200, resp.status_code)
 
@@ -386,11 +375,12 @@ class XmlEntityTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
 
     def setUp(self):
         super(XmlEntityTests, self).setUp()
-        handler_id = self.load_import_handler()
+        self.handler = get_importhandler('importhandler.xml')
         self.BASE_URL = '/cloudml/xml_import_handlers/{0!s}/entities/'.format(
-            handler_id)
-        self.obj = XmlEntity.query.filter_by(import_handler_id=handler_id,
-                                             name='application').one()
+            self.handler.id)
+        self.obj = XmlEntity.query.filter_by(
+            import_handler_id=self.handler.id,
+            name='application').one()
 
     def test_delete(self):
         field_count = XmlField.query.count()
@@ -434,10 +424,12 @@ class XmlDataSourceTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
 
     def setUp(self):
         super(XmlDataSourceTests, self).setUp()
-        handler_id = self.load_import_handler()
-        self.BASE_URL = '{0!s}{1!s}/datasources/'.format(APP_URL, handler_id)
-        self.obj = XmlDataSource.query.filter_by(import_handler_id=handler_id,
-                                                 name='odw').one()
+        self.handler = get_importhandler()
+        self.BASE_URL = '{0!s}{1!s}/datasources/'.format(
+            APP_URL, self.handler.id)
+        self.obj = XmlDataSource.query.filter_by(
+            import_handler_id=self.handler.id,
+            name='odw').one()
 
     def test_list(self):
         self.check_list(show='name')
@@ -458,11 +450,11 @@ class XmlInputParameterTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
 
     def setUp(self):
         super(XmlInputParameterTests, self).setUp()
-        handler_id = self.load_import_handler()
+        self.handler = get_importhandler()
         self.BASE_URL = '{0!s}{1!s}/input_parameters/'.format(
-            APP_URL, handler_id)
+            APP_URL, self.handler.id)
         self.obj = XmlInputParameter.query.filter_by(
-            import_handler_id=handler_id,
+            import_handler_id=self.handler.id,
             name='start').one()
 
     def test_list(self):
@@ -489,11 +481,11 @@ class XmlScriptTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
 
     def setUp(self):
         super(XmlScriptTests, self).setUp()
-        handler_id = self.load_import_handler()
+        self.handler = get_importhandler()
         self.BASE_URL = '/cloudml/xml_import_handlers/{0!s}/scripts/'.format(
-            handler_id)
+            self.handler.id)
         self.obj = XmlScript.query.filter_by(
-            import_handler_id=handler_id).one()
+            import_handler_id=self.handler.id).one()
 
     def test_list(self):
         self.check_list(show='data')
@@ -514,13 +506,15 @@ class XmlFieldTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
 
     def setUp(self):
         super(XmlFieldTests, self).setUp()
-        handler_id = self.load_import_handler()
-        self.entity = XmlEntity.query.filter_by(import_handler_id=handler_id,
-                                                name='application').one()
+        self.handler = get_importhandler('importhandler.xml')
+        self.entity = XmlEntity.query.filter_by(
+            import_handler_id=self.handler.id,
+            name='application').one()
         self.BASE_URL = '{0!s}{1!s}/entities/{2!s}/fields/'.format(
-            APP_URL, handler_id, self.entity.id)
-        self.obj = XmlField.query.filter_by(entity_id=self.entity.id,
-                                            name='application_id').one()
+            APP_URL, self.handler.id, self.entity.id)
+        self.obj = XmlField.query.filter_by(
+            entity_id=self.entity.id,
+            name='application_id').one()
 
     def test_list(self):
         self.check_list(show='name', query_params={
@@ -567,11 +561,12 @@ class XmlQueryTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
 
     def setUp(self):
         super(XmlQueryTests, self).setUp()
-        handler_id = self.load_import_handler()
-        self.entity = XmlEntity.query.filter_by(import_handler_id=handler_id,
-                                                name='application').one()
+        self.handler = get_importhandler()
+        self.entity = XmlEntity.query.filter_by(
+            import_handler_id=self.handler.id,
+            name='application').one()
         self.BASE_URL = '{0!s}{1!s}/entities/{2!s}/queries/'.format(
-            APP_URL, handler_id, self.entity.id)
+            APP_URL, self.handler.id, self.entity.id)
         self.obj = self.entity.query_obj
 
     def test_list(self):
@@ -593,11 +588,12 @@ class XmlSqoopTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
 
     def setUp(self):
         super(XmlSqoopTests, self).setUp()
-        handler_id = self.load_import_handler(self.PIG_IMPORT_HANDLER)
-        self.entity = XmlEntity.query.filter_by(import_handler_id=handler_id,
-                                                name='application').one()
+        self.handler = get_importhandler('pig-train-import-handler.xml')
+        self.entity = XmlEntity.query.filter_by(
+            import_handler_id=self.handler.id,
+            name='application').one()
         self.BASE_URL = '{0!s}{1!s}/entities/{2!s}/sqoop_imports/'.format(
-            APP_URL, handler_id, self.entity.id)
+            APP_URL, self.handler.id, self.entity.id)
         self.obj = self.entity.sqoop_imports[0]
 
     def test_list(self):
@@ -610,7 +606,7 @@ class XmlSqoopTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
         self.assertEqual(obj['table'], self.obj.table)
         self.assertEqual(obj['datasource']['name'], 'sqoop_db_datasource')
 
-    @patch('core.xmlimporthandler.datasources.DbDataSource._get_iter')
+    @patch('cloudml.importhandler.datasources.DbDataSource._get_iter')
     def test_get_pig_fields(self, get_iter_mock):
         get_iter_mock.return_value = [
             ['application', 'bigint', None, 'YES', None],
@@ -644,13 +640,13 @@ class PredictModelTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
 
     def setUp(self):
         super(PredictModelTests, self).setUp()
-        # Trying to load the import handler with predict models twice.
-        self.load_import_handler()
-        handler_id = self.load_import_handler()
+        self.handler = get_importhandler('importhandler.xml')
         self.BASE_URL = '/cloudml/xml_import_handlers/{0!s}/\
-predict_models/'.format(handler_id)
-        self.handler = XmlImportHandler.query.get(handler_id)
+predict_models/'.format(self.handler.id)
         self.obj = self.handler.predict.models[0]
+        self.assertNotEquals(
+            self.obj, None, "There is a problem with loading "
+            "import handler: no predict models added")
 
     def test_predict_models_loaded_from_xml(self):
         model = self.handler.predict.models[0]
@@ -693,6 +689,7 @@ predict_models/'.format(sys.maxint)
         self.assertEquals(model.name, 'new name')
 
     def test_put(self):
+        print self.obj.id
         data, model = self.check_edit(
             {'name': 'new name'},
             load_json=True,
@@ -714,13 +711,12 @@ class PredictModelWeightTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
     def setUp(self):
         super(PredictModelWeightTests, self).setUp()
         # Trying to load the import handler with predict models twice.
-        self.load_import_handler()
-        handler_id = self.load_import_handler()
-        self.handler = XmlImportHandler.query.get(handler_id)
+        self.handler = get_importhandler('importhandler.xml')
+        self.handler = XmlImportHandler.query.get(self.handler.id)
         self.predict_model = self.handler.predict.models[0]
         self.obj = self.predict_model.predict_model_weights[0]
         self.BASE_URL = '/cloudml/xml_import_handlers/{0!s}/\
-predict_models/{1}/weights/'.format(handler_id, self.predict_model.id)
+predict_models/{1}/weights/'.format(self.handler.id, self.predict_model.id)
 
     def test_list(self):
         resp = self.check_list(

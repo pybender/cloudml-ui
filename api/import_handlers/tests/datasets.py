@@ -7,9 +7,10 @@ from mock import patch, MagicMock
 from moto import mock_s3
 
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS
-from ..views import ImportHandlerResource, DataSetResource
-from ..models import ImportHandler, DataSet
-from ..fixtures import ImportHandlerData, DataSetData
+from ..views import DataSetResource
+from ..models import DataSet, XmlImportHandler as ImportHandler
+from ..fixtures import DataSetData, IMPORT_HANDLER_FIXTURES, \
+    XmlImportHandlerData as ImportHandlerData
 from api.ml_models.fixtures import ModelData
 from api.ml_models.models import Model
 from api.model_tests.fixtures import TestResultData
@@ -19,227 +20,31 @@ from api.servers.models import Server
 from api.servers.fixtures import ServerData
 
 
-class ImportHandlerTests(BaseDbTestCase, TestChecksMixin):
-    """
-    Tests of the ImportHandlers API.
-    """
-    BASE_URL = '/cloudml/importhandlers/'
-    RESOURCE = ImportHandlerResource
-    MODEL_NAME = ModelData.model_01.name
-    Model = ImportHandler
-    datasets = [ImportHandlerData, DataSetData, ModelData, ServerData]
-
-    def setUp(self):
-        super(ImportHandlerTests, self).setUp()
-        self.obj = self.Model.query.filter_by(
-            name=ImportHandlerData.import_handler_01.name).first()
-        # for ds in DataSet.query.all():
-        #     ds.import_handler = self.obj
-        #     ds.save()
-
-    def test_list(self):
-        self.check_list(show='name')
-
-    def test_details(self):
-        resp = self.check_details(
-            show='name,type,import_params,data', obj=self.obj)
-        obj = resp[self.RESOURCE.OBJECT_NAME]
-        self.assertEqual(obj['name'], self.obj.name)
-        self.assertEqual(obj['import_params'], self.obj.import_params)
-        self.assertEqual(
-            obj['data']['target_schema'],
-            self.obj.data['target_schema']
-        )
-
-    def test_edit_name(self):
-        # TODO:
-        # data = {'name': ''}
-        # self.check_edit_error(data, errors={'fill name': 1}, id=self.obj.id)
-
-        data = {"name": "new name"}
-        resp, obj = self.check_edit(data, id=self.obj.id)
-        self.assertEquals(obj.name, data['name'])
-
-    def test_edit_target_schema(self):
-        data = {"target_schema": "new-schema"}
-        resp, obj = self.check_edit(data, id=self.obj.id)
-        self.assertEquals(obj.data['target_schema'], data['target_schema'])
-
-    def test_edit_datasource(self):
-        data = {
-            "datasource.0.name": "name2",
-            "datasource.0.type": "sql",
-            "datasource.0.db": '{"conn": "conn.st", "vendor": "postgres"}'
-        }
-        resp, obj = self.check_edit(data, id=self.obj.id)
-        ds = obj.data['datasource'][0]
-        self.assertEquals(ds['name'], "name2")
-
-    def test_edit_queries(self):
-        data = {'queries.-1.name': 'new query',
-                'queries.-1.sql': 'select * from ...'}
-        resp, obj = self.check_edit(data, id=self.obj.id)
-        self.assertEquals(len(obj.data['queries']), 2, "Query should be added")
-        query = obj.data['queries'][1]
-        self.assertEquals(query['name'], 'new query')
-        self.assertEquals(query['sql'], 'select * from ...')
-
-        data = {'queries.1.name': 'new query1',
-                'queries.1.sql': 'select * from t1...'}
-        resp, obj = self.check_edit(data, id=self.obj.id)
-        self.assertEquals(
-            len(obj.data['queries']), 2, "Query should be updated")
-        query = obj.data['queries'][1]
-        self.assertEquals(query['name'], 'new query1')
-        self.assertEquals(query['sql'], 'select * from t1...')
-
-        data = {'queries.1.items.-1.source': 'some-source'}
-        resp, obj = self.check_edit(data, id=self.obj.id)
-        self.assertEquals(len(obj.data['queries'][1]['items']), 1,
-                          "Item should be updated")
-        item = obj.data['queries'][1]['items'][0]
-        self.assertEquals(item['source'], 'some-source')
-
-        data = {'queries.1.items.0.source': 'other-source'}
-        resp, obj = self.check_edit(data, id=self.obj.id)
-        item = obj.data['queries'][1]['items'][0]
-        self.assertEquals(item['source'], 'other-source')
-
-        data = {'queries.1.items.0.target_features.-1.name': 'hire_outcome'}
-        resp, obj = self.check_edit(data, id=self.obj.id)
-        features = obj.data['queries'][1]['items'][0]['target_features']
-        self.assertEquals(len(features), 1,
-                          "Item should be updated")
-        feature = features[0]
-        self.assertEquals(feature['name'], 'hire_outcome')
-
-        data = {'queries.1.items.0.target_features.0.name': 'hire_outcome2'}
-        resp, obj = self.check_edit(data, id=self.obj.id)
-        feature = obj.data['queries'][1]['items'][0]['target_features'][0]
-        self.assertEquals(feature['name'], 'hire_outcome2')
-
-    @patch('api.amazon_utils.AmazonDynamoDBHelper')
-    def test_delete(self, mock_aws):
-        datasets = DataSet.query.filter_by(import_handler_id=self.obj.id)
-        self.assertEquals(datasets.count(), 4, 'Invalid fixtures')
-        import shutil
-        files = []
-        for dataset in datasets.all():
-            files.append(dataset.filename)
-            shutil.copy2(dataset.filename, dataset.filename + '.bak')
-
-        model = Model.query.filter_by(name=self.MODEL_NAME).first()
-        model.test_import_handler = self.obj
-        model.train_import_handler = self.obj
-        model.save()
-        model_id = model.id
-
-        url = self._get_url(id=self.obj.id)
-        resp = self.client.delete(url, headers=HTTP_HEADERS)
-
-        self.assertEquals(resp.status_code, httplib.NO_CONTENT)
-        self.assertIsNone(self.Model.query.filter_by(id=self.obj.id).first())
-
-        datasets = DataSet.query.filter_by(import_handler=self.obj)
-        self.assertFalse(
-            datasets.count(),
-            'DataSets should be removed: {0}'.format(
-                [ds.name for ds in datasets]))
-        for filename in files:
-            try:
-                shutil.move(filename + '.bak', filename)
-            except IOError:
-                pass
-
-        model = Model.query.get(model_id)
-        self.assertTrue(model)
-        self.assertIsNone(model.test_import_handler, 'Ref should be removed')
-        self.assertIsNone(model.train_import_handler, 'Ref should be removed')
-
-    def test_download(self):
-        url = self._get_url(id=self.obj.id, action='download')
-        resp = self.client.get(url, headers=HTTP_HEADERS)
-        self.assertEquals(resp.status_code, httplib.OK)
-        self.assertEquals(resp.mimetype, 'text/plain')
-        self.assertEquals(resp.headers['Content-Disposition'],
-                          'attachment; filename=importhandler-%s.json' %
-                          self.obj.name)
-
-    @mock_s3
-    @patch('api.servers.tasks.upload_import_handler_to_server')
-    def test_upload_to_server(self, mock_task):
-        url = self._get_url(id=self.obj.id, action='upload_to_server')
-        server = Server.query.filter_by(name=ServerData.server_01.name).one()
-
-        resp = self.client.put(url, data={'server': server.id},
-                               headers=HTTP_HEADERS)
-        self.assertEquals(resp.status_code, httplib.OK)
-        self.assertTrue(mock_task.delay.called)
-        self.assertTrue('status' in json.loads(resp.data))
-
-    def test_run_sql_action(self):
-        url = self._get_url(id=self.obj.id, action='run_sql')
-
-        # forms validation error
-        resp = self.client.put(url, headers=HTTP_HEADERS)
-        resp_obj = json.loads(resp.data)
-        self.assertTrue('response' in resp_obj)
-        self.assertTrue('error' in resp_obj['response'])
-
-        # no parameters
-        resp = self.client.put(url,
-                               data={'sql': 'SELECT NOW() WHERE %(something)s',
-                                     'limit': 2,
-                                     'datasource': 'odw'},
-                               headers=HTTP_HEADERS)
-        resp_obj = json.loads(resp.data)
-        self.assertTrue('response' in resp_obj)
-        self.assertTrue('error' in resp_obj['response'])
-
-        # good
-        iter_mock = MagicMock()
-        iter_mock.return_value = [
-            {'now': datetime(2014, 7, 21, 15, 52, 5, 308936)}]
-        with patch.dict('api.import_handlers.models.import_handlers.CoreImportHandler.DB_ITERS', {'postgres': iter_mock}):
-            resp = self.client.put(
-                url,
-                data={'sql': 'SELECT NOW() WHERE %(something)s',
-                      'limit': 2,
-                      'datasource': 'odw',
-                      'params': json.dumps({'something': 'TRUE'})},
-                headers=HTTP_HEADERS)
-            resp_obj = json.loads(resp.data)
-            self.assertTrue('data' in resp_obj)
-            self.assertTrue('now' in resp_obj['data'][0])
-            self.assertTrue('sql' in resp_obj)
-            iter_mock.assert_called_with(['SELECT NOW() WHERE TRUE LIMIT 2'],
-                                         "host='localhost' dbname='cloudml' "
-                                         "user='cloudml' password='cloudml'")
-
-
 class DataSetsTests(BaseDbTestCase, TestChecksMixin):
     """
-    Tests of the DataSetsTests API.
+    Tests of the DataSets API.
     """
-    DS_NAME = 'DS'
-    DS_NAME2 = 'DS 2'
+    DS_NAME = DataSetData.dataset_01.name
+    DS_NAME2 = DataSetData.dataset_02.name
     MODEL_NAME = ModelData.model_01.name
     RESOURCE = DataSetResource
     Model = DataSet
-    datasets = [FeatureData, FeatureSetData, ImportHandlerData, DataSetData,
-                ModelData, TestResultData]
+    datasets = [FeatureData, FeatureSetData, DataSetData,
+                ModelData, TestResultData] + IMPORT_HANDLER_FIXTURES
 
     def setUp(self):
         super(DataSetsTests, self).setUp()
         self.handler = ImportHandler.query.filter_by(
             name=ImportHandlerData.import_handler_01.name).first()
-        self.obj = self.Model.query.filter_by(name=self.DS_NAME).first()
-        self.BASE_URL = '/cloudml/importhandlers/%s/%s/datasets/' \
-            % (self.handler.TYPE, self.handler.id)
         for ds in DataSet.query.all():
             ds.import_handler_id = self.handler.id
             ds.import_handler_type = self.handler.TYPE
             ds.save()
+        self.obj = DataSet.query.filter_by(
+            import_handler_id=self.handler.id, name=self.DS_NAME).first()
+        self.assertTrue(self.obj)
+        self.BASE_URL = '/cloudml/importhandlers/xml/%s/datasets/' \
+            % self.handler.id
 
     def test_list(self):
         self.check_list(show='name,status,filename,filesize,records_count')
@@ -256,19 +61,16 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
     @patch('api.amazon_utils.AmazonS3Helper.save_gz_file')
     @patch('api.amazon_utils.AmazonS3Helper.load_key')
     def test_post(self, mock_load_key, mock_multipart_upload):
-        """
-        Tests loading dataset using specified import handler
-        """
         params = {'start': '2012-12-03',
-                  'end': '2012-12-04', 'category': 'smth'}
+                  'end': '2012-12-04'}
         post_data = {
             'import_params': json.dumps(params),
             'format': DataSet.FORMAT_JSON
         }
-        resp, ds = self.check_edit(post_data)
+        resp, ds = self.check_edit(post_data, )
         self.assertEquals(ds.status, 'Imported', ds.error)
         self.assertEquals(ds.import_handler_id, self.handler.id)
-        self.assertEquals(ds.records_count, 99)
+        self.assertEquals(ds.records_count, 100)
         self.assertEquals(ds.import_params, params)
         self.assertTrue(ds.compress)
         self.assertTrue(ds.on_s3)
@@ -287,7 +89,7 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue(stream)
         self.assertTrue(mock_load_key.called)
 
-    @patch('core.importhandler.importhandler.ImportHandler.__init__')
+    @patch('cloudml.importhandler.importhandler.ImportHandler.__init__')
     def test_post_exception(self, mock_handler):
         mock_handler.side_effect = Exception('Some message')
 
@@ -297,7 +99,7 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
             'import_params': json.dumps(params),
             'format': DataSet.FORMAT_JSON
         }
-        url = self._get_url()
+        url = self._get_url(id=self.obj.import_handler.id)
         resp = self.client.post(url, data=post_data, headers=HTTP_HEADERS)
         self.assertEqual(resp.status_code, httplib.CREATED)
         data = json.loads(resp.data)
@@ -309,11 +111,8 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
     @mock_s3
     @patch('api.amazon_utils.AmazonS3Helper.save_gz_file')
     def test_post_csv(self, mock_multipart_upload):
-        """
-        Tests loading dataset using specified import handler
-        """
         params = {'start': '2012-12-03',
-                  'end': '2012-12-04', 'category': 'smth'}
+                  'end': '2012-12-04'}
         post_data = {
             'import_params': json.dumps(params),
             'format': DataSet.FORMAT_CSV
@@ -321,7 +120,7 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         resp, ds = self.check_edit(post_data)
         self.assertEquals(ds.status, 'Imported', ds.error)
         self.assertEquals(ds.import_handler_id, self.handler.id)
-        self.assertEquals(ds.records_count, 99)
+        self.assertEquals(ds.records_count, 100)
         self.assertEquals(ds.import_params, params)
         self.assertTrue(ds.compress)
         self.assertTrue(ds.on_s3)
@@ -479,7 +278,8 @@ class TestTasksTests(BaseDbTestCase, TestChecksMixin):
     """
     Tests of the celery tasks.
     """
-    datasets = [ImportHandlerData, DataSetData, ModelData, TestResultData]
+    datasets = [DataSetData, ModelData, TestResultData] + \
+        IMPORT_HANDLER_FIXTURES
 
     @patch('api.logs.models.LogMessage')
     @patch('api.amazon_utils.AmazonS3Helper.save_gz_file')

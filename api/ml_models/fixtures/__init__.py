@@ -9,8 +9,7 @@ import json
 
 from fixture import DataSet
 from api.features.fixtures import FeatureSetData
-from api.import_handlers.fixtures import ImportHandlerData, \
-    XmlImportHandlerData
+from api.import_handlers.fixtures import XmlImportHandlerData as ImportHandlerData
 
 
 DIR = os.path.dirname(__file__)
@@ -88,8 +87,8 @@ class ModelData(DataSet):
 
     class model_04:
         features_set = FeatureSetData.bestmatch
-        test_import_handler = XmlImportHandlerData.xml_import_handler_01
-        train_import_handler = XmlImportHandlerData.xml_import_handler_01
+        test_import_handler = ImportHandlerData.import_handler_01
+        train_import_handler = ImportHandlerData.import_handler_01
         status = "New"
         created_on = "2013-04-19 14:37:23.145000"
         updated_on = "2013-04-19 14:37:23.145000"
@@ -97,8 +96,8 @@ class ModelData(DataSet):
         comparable = False
 
     class model_05:
-        test_import_handler = XmlImportHandlerData.xml_import_handler_01
-        train_import_handler = XmlImportHandlerData.xml_import_handler_01
+        test_import_handler = ImportHandlerData.import_handler_01
+        train_import_handler = ImportHandlerData.import_handler_01
         status = "New"
         created_on = "2013-04-19 14:37:23.145000"
         updated_on = "2013-04-19 14:37:23.145000"

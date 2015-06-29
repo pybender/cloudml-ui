@@ -1,3 +1,6 @@
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+#          Nader Soliman
+
 import re
 
 from flask import request
@@ -102,9 +105,8 @@ class XmlImportHandlerResource(BaseResourceSQL):
 
             return self._render({
                 self.OBJECT_NAME: handler,
-                'status': 'Import Handler "{0}" will be uploaded to server'.format(
-                    handler.name
-                )
+                'status': 'Import Handler "{0}" will be uploaded to server'
+                .format(handler.name)
             })
 
     # TODO: nader20140721: we need to refactor this one with the same one
@@ -282,7 +284,7 @@ class XmlDataSourceResource(BaseResourceSQL):
     FILTER_PARAMS = (('type', str), )
 
     def _get_configuration_action(self, **kwargs):
-        from core.xmlimporthandler.importhandler import ExtractionPlan
+        from cloudml.importhandler.importhandler import ExtractionPlan
         conf = ExtractionPlan.get_datasources_config()
         return self._render({'configuration': conf})
 
@@ -368,8 +370,8 @@ class XmlSqoopResource(BaseResourceSQL):
             from api.import_handlers.tasks import load_pig_fields
             params = form.cleaned_data.get('params')
             load_pig_fields.delay(sqoop.id, params)
-            return self._render({
-                'result': "Generating pig fields delayed (link will appear in sqoop section)"})
+            return self._render({'result': "Generating pig fields delayed "
+                                 "(link will appear in sqoop section)"})
         return odesk_error_response(400, 400, 'Parameters are invalid')
 
 api.add_resource(XmlSqoopResource, '/cloudml/xml_import_handlers/\

@@ -8,8 +8,9 @@ from ..models import Transformer
 from api.features.models import Feature
 from ..fixtures import TransformerData
 from api.features.fixtures import FeatureData
-from api.import_handlers.fixtures import XmlImportHandlerData, DataSetData, \
-    ImportHandlerData
+from api.import_handlers.fixtures import \
+    XmlImportHandlerData as ImportHandlerData, \
+    DataSetData, IMPORT_HANDLER_FIXTURES
 from api.instances.fixtures import InstanceData
 from api.instances.models import Instance
 from api.import_handlers.models import XmlImportHandler, DataSet, ImportHandler
@@ -22,8 +23,8 @@ class PretrainedTransformersTests(BaseDbTestCase, TestChecksMixin):
     BASE_URL = '/cloudml/transformers/'
     RESOURCE = TransformerResource
     Model = Transformer
-    datasets = (TransformerData, ImportHandlerData,
-                DataSetData, XmlImportHandlerData, InstanceData)
+    datasets = [TransformerData, DataSetData,
+                InstanceData] + IMPORT_HANDLER_FIXTURES
 
     DATA = {'type': 'Count',
             'name': 'Test Transformer',

@@ -9,7 +9,7 @@
   <import>
     <entity datasource="odw" name="application">
       <query target="results"><![CDATA[CREATE TABLE results AS
-  SELECT qi.*, 'class' || (trunc(random() * 2) + 1)::char hire_outcome 
+  SELECT qi.*, 'class' || (trunc(random() * 3) + 1)::char hire_outcome 
   FROM public.ja_quick_info qi where qi.file_provenance_date >= '#{start}'
   AND qi.file_provenance_date < '#{end}' 
   LIMIT(100);

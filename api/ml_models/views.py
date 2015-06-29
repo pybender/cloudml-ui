@@ -408,7 +408,7 @@ class TransformerResource(BaseTrainedEntityResource):
         return train_transformer
 
     def _get_configuration_action(self, **kwargs):
-        from config import TRANSFORMERS
+        from api.features.config import TRANSFORMERS
         return self._render({'configuration': TRANSFORMERS})
 
 api.add_resource(TransformerResource, '/cloudml/transformers/')

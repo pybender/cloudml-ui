@@ -87,7 +87,7 @@ class ModelTasksTests(BaseDbTestCase):
 
         # Re-generating tree for decision tree classifier
         model = Model.query.filter_by(name='decision_tree_clf_model').one()
-        from core.trainer.store import TrainerStorage
+        from cloudml.trainer.store import TrainerStorage
         trainer = TrainerStorage.loads(DECISION_TREE)
         get_trainer_mock.return_value = trainer
         # In this model 'all_weights' not saved to visualization_data
@@ -97,7 +97,7 @@ class ModelTasksTests(BaseDbTestCase):
             VisualizationException, generate_visualization_tree,
             model.id, deep=2)
 
-        from core.trainer.trainer import DEFAULT_SEGMENT
+        from cloudml.trainer.trainer import DEFAULT_SEGMENT
         model.visualization_data = {DEFAULT_SEGMENT: TREE_VISUALIZATION_DATA}
         model.save()
 
@@ -121,7 +121,7 @@ class ModelTasksTests(BaseDbTestCase):
         """
         from api.ml_models.tasks import generate_visualization_tree, \
             VisualizationException
-        from core.trainer.store import TrainerStorage
+        from cloudml.trainer.store import TrainerStorage
         trainer = TrainerStorage.loads(DECISION_TREE_WITH_SEGMENTS)
         get_trainer_mock.return_value = trainer
 
@@ -149,7 +149,7 @@ class ModelTasksTests(BaseDbTestCase):
         model = Model.query.filter_by(name=ModelData.model_01.name).first()
         dataset = DataSet.query.first()
 
-        from core.trainer.store import TrainerStorage
+        from cloudml.trainer.store import TrainerStorage
         from api.ml_models.tasks import transform_dataset_for_download
         trainer = TrainerStorage.loads(MULTICLASS_MODEL)
         get_trainer_mock.return_value = trainer

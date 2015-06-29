@@ -184,40 +184,20 @@ class JsonField(CharField):
 
 
 class ImportHandlerFileField(BaseField):
-    def clean(self, value):
-        self.import_params = None
-        self.import_handler_type = 'json'
+    import_params = None
 
-        if not value:
+    def clean(self, value):
+        if value is None:
             return
 
-        # parsing the json import handler
-        json_parsed = False
+        value = value.encode('utf-8')
+        from cloudml.importhandler.importhandler import ExtractionPlan
         try:
-            data = json.loads(value)
-            json_parsed = True
-        except ValueError, exc:
-            pass
-
-        if json_parsed:
-            try:
-                from core.importhandler.importhandler import ExtractionPlan, \
-                    ImportHandlerException
-                plan = ExtractionPlan(value, is_file=False)
-                self.import_params = plan.input_params
-                return data
-            except (ValueError, ImportHandlerException) as exc:
-                raise ValidationError(
-                    'Import Handler JSON file is invalid: %s' % exc)
-        else:
-            value = value.encode('utf-8')
-            try:
-                from core.xmlimporthandler.importhandler import ExtractionPlan
-                plan = ExtractionPlan(value, is_file=False)
-                self.import_params = plan.inputs.keys()
-                self.import_handler_type = 'xml'
-            except Exception as exc:
-                raise ValidationError(exc)
+            plan = ExtractionPlan(value, is_file=False)
+            self.import_params = plan.inputs.keys()
+            self.import_handler_type = 'xml'
+        except Exception as exc:
+            raise ValidationError(exc)
         return value
 
 

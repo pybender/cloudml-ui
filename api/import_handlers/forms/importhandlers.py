@@ -7,7 +7,8 @@ from api.import_handlers.models import XmlImportHandler, XmlDataSource, \
     XmlInputParameter, XmlScript, XmlEntity, XmlField, XmlQuery, XmlSqoop, \
     PredictModel, Predict
 from api import app
-from core.xmlimporthandler.exceptions import ImportHandlerException
+from cloudml.importhandler.exceptions import ImportHandlerException
+from cloudml.importhandler.importhandler import ExtractionPlan
 
 db = app.sql_db
 
@@ -31,8 +32,8 @@ class XmlImportHandlerAddForm(BaseForm):
             return
 
         value = value.encode('utf-8')
+        from cloudml.importhandler.importhandler import ExtractionPlan
         try:
-            from core.xmlimporthandler.importhandler import ExtractionPlan
             ExtractionPlan(value, is_file=False)
             return value
         except Exception as exc:
@@ -83,7 +84,6 @@ class XmlImportHandlerUpdateXmlForm(BaseForm):
 
         value = value.encode('utf-8')
         try:
-            from core.xmlimporthandler.importhandler import ExtractionPlan
             ExtractionPlan(value, is_file=False)
             return value
         except Exception as exc:
@@ -208,7 +208,7 @@ class XmlFieldForm(BaseForm):
 
 
 def _get_ds_types():
-    from core.xmlimporthandler.importhandler import ExtractionPlan
+    from cloudml.importhandler.importhandler import ExtractionPlan
     return ExtractionPlan.get_datasources_config().keys()
 
 
@@ -223,7 +223,6 @@ class XmlDataSourceForm(BaseForm):
         doc=XmlImportHandler, by_name=False, return_doc=False)
 
     def clean_params(self, value, field):
-        from core.xmlimporthandler.importhandler import ExtractionPlan
         conf = ExtractionPlan.get_datasources_config().get(
             self.data.get('type'))
         params_errors = []
@@ -367,3 +366,11 @@ class PredictResultProbabilityForm(BaseForm):
 
 class LoadPigFieldsForm(BaseForm):
     params = JsonField()
+
+
+class QueryTestForm(BaseForm):
+    required_fields = ('sql', 'limit', 'datasource')
+    sql = CharField()
+    params = JsonField()
+    limit = IntegerField()
+    datasource = CharField()

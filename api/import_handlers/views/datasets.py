@@ -1,3 +1,5 @@
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 import os
 import gzip
 import json
@@ -7,7 +9,7 @@ from flask import Response, request
 from sqlalchemy.orm import undefer
 from psycopg2._psycopg import DatabaseError
 
-from core.importhandler.importhandler import DecimalEncoder, \
+from cloudml.importhandler.importhandler import DecimalEncoder, \
     ImportHandlerException
 
 from api import api
@@ -109,6 +111,5 @@ class DataSetResource(BaseResourceSQL):
                 line = f.readline()
         return self._render(lines)
 
-api.add_resource(DataSetResource, '/cloudml/importhandlers/\
-<regex("[\w\.]*"):import_handler_type>/<regex("[\w\.]*"):import_handler_id>\
-/datasets/')
+api.add_resource(DataSetResource, '/cloudml/importhandlers/xml/\
+<regex("[\w\.]*"):import_handler_id>/datasets/')

@@ -17,20 +17,25 @@ from api.ml_models.views import ModelResource
 from api.ml_models.models import Model, Tag, db, Segment, Weight
 from api.servers.models import Server
 from api.servers.fixtures import ServerData
-from api.import_handlers.models import DataSet, ImportHandler, XmlImportHandler
+from api.import_handlers.models import DataSet, \
+    XmlImportHandler as ImportHandler
 from api.instances.fixtures import InstanceData
 from api.model_tests.fixtures import TestResultData, TestExampleData
 from api.features.fixtures import FeatureSetData, FeatureData, FEATURES_STR
 from api.ml_models.fixtures import ModelData, TagData, MODEL_TRAINER, \
     DECISION_TREE_WITH_SEGMENTS, TREE_VISUALIZATION_DATA, INVALID_MODEL
-from api.import_handlers.fixtures import ImportHandlerData, DataSetData, \
-    XmlImportHandlerData, XmlEntityData, XmlFieldData
-from api.import_handlers.fixtures import EXTRACT_JSON, EXTRACT_XML
+from api.import_handlers.fixtures import DataSetData, \
+    XmlImportHandlerData as ImportHandlerData, IMPORT_HANDLER_FIXTURES
+from api.import_handlers.fixtures import EXTRACT_XML, get_importhandler
 
 TRAIN_PARAMS = json.dumps(
     {'start': '2012-12-03',
      'end': '2012-12-04',
      'category': '1'})
+
+TRAIN_PARAMS1 = json.dumps(
+    {'start': '2012-12-03',
+     'end': '2012-12-04'})
 
 
 class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
@@ -40,10 +45,9 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
     BASE_URL = '/cloudml/models/'
     RESOURCE = ModelResource
     Model = Model
-    datasets = [FeatureData, FeatureSetData, ImportHandlerData, DataSetData,
-                ModelData, InstanceData, TestResultData, TestExampleData,
-                XmlImportHandlerData, TagData, XmlEntityData, XmlFieldData,
-                ServerData]
+    datasets = [FeatureData, FeatureSetData, DataSetData, ModelData,
+                InstanceData, TestResultData, TestExampleData,
+                TagData, ServerData] + IMPORT_HANDLER_FIXTURES
 
     def setUp(self):
         from api.instances.models import Instance
@@ -51,8 +55,7 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         self.obj = Model.query.filter_by(
             name=ModelData.model_01.name).first()
 
-        self.handler = ImportHandler.query.filter_by(
-            name=ImportHandlerData.import_handler_01.name).first()
+        self.handler = get_importhandler()
         self.instance = Instance.query.filter_by(
             name=InstanceData.instance_01.name).first()
 
@@ -188,16 +191,16 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
             {'name': 'name is required'})
 
         # Invalid features
-        post_data = {'test_import_handler_file': EXTRACT_JSON,
-                     'import_handler_file': EXTRACT_JSON,
+        post_data = {'test_import_handler_file': EXTRACT_XML,
+                     'import_handler_file': EXTRACT_XML,
                      'features': 'smth',
                      'name': 'new'}
         self.check_edit_error(
             post_data,
             {'features': 'JSON file is corrupted. Can not load it: smth'})
 
-        post_data = {'test_import_handler_file': EXTRACT_JSON,
-                     'import_handler_file': EXTRACT_JSON,
+        post_data = {'test_import_handler_file': EXTRACT_XML,
+                     'import_handler_file': EXTRACT_XML,
                      'features': '{"a": "1"}',
                      'name': 'new'}
         self.check_edit_error(
@@ -206,14 +209,13 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
                          "schema-name is missing"})
 
         # Invalid trainer
-        post_data = {'test_import_handler_file': EXTRACT_JSON,
-                     'import_handler_file': EXTRACT_JSON,
+        post_data = {'test_import_handler_file': EXTRACT_XML,
+                     'import_handler_file': EXTRACT_XML,
                      'trainer': INVALID_MODEL,
                      'name': 'new'}
         self.check_edit_error(post_data, {
             'trainer': "Pickled trainer model is invalid: "
-                       "Could not unpickle trainer - "
-                       "'module' object has no attribute 'TrainerStorage1'"
+                       "No module named core.trainer.store"
         })
 
     def test_post(self):
@@ -237,8 +239,8 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
                           model.train_import_handler.id)
 
         # Different import handlers
-        data = {'test_import_handler_file': EXTRACT_JSON,
-                'import_handler_file': EXTRACT_JSON}
+        data = {'test_import_handler_file': EXTRACT_XML,
+                'import_handler_file': EXTRACT_XML}
         resp, model = self._test_post(extra_data=data, fill_features=True)
         self.assertTrue(model.test_import_handler,
                         "Test import handler was not set")
@@ -266,8 +268,8 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         model_count = Model.query.count()
         ih_count = ImportHandler.query.count()
         mock_set_trainer.side_effect = Exception('My error in set_trainer')
-        post_data = {'test_import_handler_file': EXTRACT_JSON,
-                     'import_handler_file': EXTRACT_JSON,
+        post_data = {'test_import_handler_file': EXTRACT_XML,
+                     'import_handler_file': EXTRACT_XML,
                      'features': FEATURES_STR,
                      'name': 'name'}
         resp = self.client.post(
@@ -389,7 +391,7 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         self.check_edit_error(
             data,
             {'aws_instance': 'Please select instance with a worker',
-             'parameters': 'Some parameters are missing: category, start, end',
+             'parameters': 'Some parameters are missing: start, end',
              'format': 'Please select format of the Data Set'},
             id=self.obj.id, action='train')
 
@@ -415,7 +417,7 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
 
     @mock_s3
     @patch('api.ml_models.models.Model.get_features_json')
-    @patch('core.trainer.trainer.Trainer.__init__')
+    @patch('cloudml.trainer.trainer.Trainer.__init__')
     def test_train_model_exception(self, mock_trainer,
                                    mock_get_features_json, *mocks):
         mock_trainer.side_effect = Exception('Some message')
@@ -587,7 +589,6 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
                         "Train import handler should be filled")
 
         mock_get_features_json.return_value = FEATURES_STR
-
         mock_load_key.return_value = MODEL_TRAINER
 
         self.obj.status = Model.STATUS_TRAINED
@@ -621,11 +622,11 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
                 'format': DataSet.FORMAT_CSV
                 }
         resp, obj = self.check_edit(data, id=self.obj.id, action='train')
-        self.assertEqual(obj.status, Model.STATUS_TRAINED, obj.error)
 
         self.assertIsNone(TestResult.query.filter_by(id=test1_id).first())
         self.assertIsNone(TestExample.query.filter_by(id=example1_id).first())
         self.assertIsNone(TestExample.query.filter_by(id=example2_id).first())
+        self.assertEquals(obj.status, 'Trained', obj.error)
 
         # Checking weights
         self.assertTrue(obj.weights_synchronized)
@@ -637,9 +638,7 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
 
         self.assertEquals(len(weights), valid_count)
         categories = obj.weight_categories
-        self.assertEquals(len(categories), 6)
-
-        self.assertEquals(obj.status, 'Trained')
+        self.assertEquals(len(categories), 4)
 
     @mock_s3
     @patch('api.instances.tasks.cancel_request_spot_instance')
@@ -743,8 +742,8 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(resp.status_code, 400)
 
         # new model, trainer xml feature count is 0
-        xml_ih = XmlImportHandler.query.filter_by(
-            name=XmlImportHandlerData.xml_import_handler_01.name).first()
+        xml_ih = ImportHandler.query.filter_by(
+            name=ImportHandlerData.import_handler_01.name).first()
         model = Model.query.filter_by(name=ModelData.model_05.name).first()
         model.train_import_handler_id = xml_ih.id
         model.save()
@@ -754,7 +753,7 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(resp.status_code, 200)
         resp_obj = json.loads(resp.data)
         self.assertEqual(resp_obj['model'], model.id)
-        self.assertEqual(len(resp_obj['features']), 1)
+        self.assertEqual(len(resp_obj['features']), 2)
         self.assertEqual(resp_obj['features'][0]['name'], 'opening_id')
         self.assertEqual(resp_obj['features'][0]['type'], 'int')
 
@@ -769,7 +768,7 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
             import uuid
             name = str(uuid.uuid1())
         if fill_import_handler:
-            import_handler = XmlImportHandler.query.first()
+            import_handler = ImportHandler.query.first()
             data['import_handler'] = import_handler.identifier
         if fill_features:
             data['features'] = FEATURES_STR

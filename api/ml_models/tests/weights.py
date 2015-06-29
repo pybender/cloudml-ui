@@ -12,7 +12,7 @@ from ..views import ModelResource
 from api.ml_models.models import Model
 from api.ml_models.fixtures import ModelData, MULTICLASS_MODEL, MODEL_TRAINER
 from api.features.fixtures import FeatureSetData, FeatureData
-from api.import_handlers.fixtures import EXTRACT_JSON
+from api.import_handlers.fixtures import EXTRACT_XML
 
 
 class WeightResourceTests(BaseDbTestCase, TestChecksMixin):
@@ -43,8 +43,8 @@ class WeightResourceTests(BaseDbTestCase, TestChecksMixin):
         trained_model_name = 'Trained Model Full Text'
         mock_load_key.return_value = MODEL_TRAINER
 
-        post_data = {'test_import_handler_file': EXTRACT_JSON,
-                     'import_handler_file': EXTRACT_JSON,
+        post_data = {'test_import_handler_file': EXTRACT_XML,
+                     'import_handler_file': EXTRACT_XML,
                      'trainer': MODEL_TRAINER,
                      'name': trained_model_name}
         resp = self.client.post('/cloudml/models/', data=post_data,
@@ -59,19 +59,19 @@ class WeightResourceTests(BaseDbTestCase, TestChecksMixin):
             'page': 1,
             'show': 'name,value,css_class',
             'sort_by': 'name',
-            'q': 'python'
+            'q': 'dev_blurb'
         }))
         resp = self.client.get(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.OK)
         data = json.loads(resp.data)
-        self.assertFalse(data['has_next'])
+        self.assertTrue(data['has_next'])
         self.assertFalse(data['has_prev'])
         self.assertEquals(data['per_page'], 20)
         self.assertTrue('weights' in data, data)
         self.assertFalse('tsexams->Ruby on Rails' in resp.data)
-
+        
         self.assertTrue(
-            'tsexams->Python 2.x Test' in data['weights'][0]['name'])
+            'contractor->dev_blurb->all' in data['weights'][0]['name'])
 
         url = '{0}?{1}'.format(self.BASE_URL, urllib.urlencode({
             'is_positive': 0,
@@ -79,13 +79,13 @@ class WeightResourceTests(BaseDbTestCase, TestChecksMixin):
             'page': 1,
             'show': 'name,value,css_class',
             'sort_by': 'name',
-            'q': 'python'
+            'q': 'dev_blurb'
         }))
         resp = self.client.get(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.OK)
         data = json.loads(resp.data)
         self.assertTrue(
-            'tsexams->Python 2.x Test' in data['weights'][0]['name'])
+            'contractor->dev_blurb->all' in data['weights'][0]['name'])
 
         url = '{0}?{1}'.format(self.BASE_URL, urllib.urlencode({
             'is_positive': 1,
@@ -93,11 +93,11 @@ class WeightResourceTests(BaseDbTestCase, TestChecksMixin):
             'page': 1,
             'show': 'name,value,css_class',
             'sort_by': 'name',
-            'q': 'python'
+            'q': 'dev_blurb'
         }))
         resp = self.client.get(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.OK)
-        self.assertTrue('tsexams->Python 2.x Test' in resp.data)
+        self.assertTrue('contractor->dev_blurb->all' in resp.data)
         self.assertFalse('tsexams->Ruby on Rails' in resp.data)
 
         url = '{0}?{1}'.format(self.BASE_URL, urllib.urlencode({
@@ -106,11 +106,11 @@ class WeightResourceTests(BaseDbTestCase, TestChecksMixin):
             'page': 1,
             'show': 'name,value,css_class',
             'sort_by': 'name',
-            'q': 'pythonic'
+            'q': 'dev_blurbic'
         }))
         resp = self.client.get(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.OK)
-        self.assertTrue('tsexams->Python 2.x Test' in resp.data)
+        self.assertFalse('contractor->dev_blurb->all' in resp.data)
         self.assertFalse('tsexams->Ruby on Rails' in resp.data)
 
         url = '{0}?{1}'.format(self.BASE_URL, urllib.urlencode({
@@ -119,11 +119,11 @@ class WeightResourceTests(BaseDbTestCase, TestChecksMixin):
             'page': 1,
             'show': 'name,value,css_class',
             'sort_by': 'name',
-            'q': 'pyth'
+            'q': 'dev_blur'
         }))
         resp = self.client.get(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.OK)
-        self.assertTrue('tsexams->Python 2.x Test' in resp.data)
+        self.assertTrue('contractor->dev_blurb->all' in resp.data)
         self.assertFalse('tsexams->Ruby on Rails' in resp.data)
 
         url = '{0}?{1}'.format(self.BASE_URL, urllib.urlencode({
@@ -132,11 +132,11 @@ class WeightResourceTests(BaseDbTestCase, TestChecksMixin):
             'page': 1,
             'show': 'name,value,css_class',
             'sort_by': 'name',
-            'q': '2.x'
+            'q': 'blurb->all'
         }))
         resp = self.client.get(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.OK)
-        self.assertTrue('tsexams->Python 2.x Test' in resp.data)
+        self.assertTrue('contractor->dev_blurb->all' in resp.data)
         self.assertFalse('tsexams->Ruby on Rails' in resp.data)
 
     def test_brief(self):
@@ -264,8 +264,8 @@ class WeightTasksTests(BaseDbTestCase, TestChecksMixin):
         name = 'new2'
         mock_load_key.return_value = MODEL_TRAINER
 
-        post_data = {'test_import_handler_file': EXTRACT_JSON,
-                     'import_handler_file': EXTRACT_JSON,
+        post_data = {'test_import_handler_file': EXTRACT_XML,
+                     'import_handler_file': EXTRACT_XML,
                      'trainer': MODEL_TRAINER,
                      'name': name}
         resp, model = self.check_edit(post_data)
@@ -288,7 +288,7 @@ class WeightTasksTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(cat.parent, '')
         self.assertEquals(cat.segment.name, 'default')
         self.assertEquals(cat.class_label, '1')
-        self.assertEquals(cat.normalized_weight, 2.78991315297586)
+        self.assertEquals(cat.normalized_weight, 5.05717219914818)
 
         cat = WeightsCategory.query.filter_by(
             model=model, name='contractor.dev_profile_title').one()
@@ -296,7 +296,7 @@ class WeightTasksTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(cat.short_name, 'dev_profile_title')
         self.assertEquals(cat.segment.name, 'default')
         self.assertEquals(cat.class_label, '1')
-        self.assertEquals(cat.normalized_weight, 0.233792602833065)
+        self.assertEquals(cat.normalized_weight, 0.471519871363726)
 
         # Check weights in db
         def check_random_weight():
@@ -319,12 +319,12 @@ class WeightTasksTests(BaseDbTestCase, TestChecksMixin):
                 self.assertEquals(getattr(wgh, key), val)
 
         check_weight('contractor->dev_blurb->best',
-                     {'is_positive': False,
+                     {'is_positive': True,
                       'short_name': 'best',
-                      'css_class': 'red darker',
+                      'css_class': 'green light',
                       'parent': 'contractor.dev_blurb',
-                      'value': -0.0592497003033785,
-                      'value2': 0.00146387871336896})
+                      'value': 0.136906400504862,
+                      'value2': 0.0032604034524968})
 
     @mock_s3
     @patch('api.amazon_utils.AmazonS3Helper.load_key')
@@ -337,8 +337,8 @@ class WeightTasksTests(BaseDbTestCase, TestChecksMixin):
         name = 'new2'
         mock_load_key.return_value = MULTICLASS_MODEL
 
-        post_data = {'test_import_handler_file': EXTRACT_JSON,
-                     'import_handler_file': EXTRACT_JSON,
+        post_data = {'test_import_handler_file': EXTRACT_XML,
+                     'import_handler_file': EXTRACT_XML,
                      'trainer': MULTICLASS_MODEL,
                      'name': name}
         resp, model = self.check_edit(post_data)
@@ -370,14 +370,14 @@ class WeightTasksTests(BaseDbTestCase, TestChecksMixin):
         classes = weights.keys()
         self.assertItemsEqual(classes, [1, 2, 3], "Keys are %s" % classes)
         CONTRANTOR_CATEGORY_WEIGHT = {
-            3: 3.3736167029751,
-            1: 2.34743710078954,
-            2: 4.00879922459129
+            3: 3.03823203252731,
+            1: 3.42592088853183,
+            2: 3.65546865462104
         }
         PROFILE_TITLE_WEIGHT = {
-            3: 0.228376632702345,
-            1: 0.260152609510841,
-            2: 0.214845209432491
+            3: 0.0757564471271913,
+            1: 0.14058613481119,
+            2: 0.114545709977786
         }
         for class_label in weights.keys():
             trainer_weights = weights[class_label]
@@ -405,7 +405,7 @@ class WeightTasksTests(BaseDbTestCase, TestChecksMixin):
 
             cat = WeightsCategory.query.filter_by(
                 model=model, name='contractor.dev_profile_title',
-                segment_id=model.segments[1].id,
+                segment_id=model.segments[0].id,
                 class_label=str(class_label)).one()
             self.assertEquals(cat.parent, 'contractor')
             self.assertEquals(cat.short_name, 'dev_profile_title')
@@ -419,15 +419,15 @@ class WeightTasksTests(BaseDbTestCase, TestChecksMixin):
             model=model, name='contractor->dev_active_interviews',
             segment_id=model.segments[1].id,
             class_label='2').one()
-        self.assertEquals(round(weight.value, 3), 0.185)
-        self.assertEquals(round(weight.value2, 4), 0.0258)
+        self.assertEquals(round(weight.value, 3), -0.137)
+        self.assertEquals(round(weight.value2, 4), 0.0187)
 
         weight = Weight.query.filter_by(
             model=model, name='contractor->dev_active_interviews',
             segment_id=model.segments[1].id,
             class_label='1').one()
-        self.assertEquals(round(weight.value, 3), -0.334)
-        self.assertEquals(round(weight.value2, 4), 0.0466)
+        self.assertEquals(round(weight.value, 3), 0.491)
+        self.assertEquals(round(weight.value2, 4), 0.0669)
 
 
 class WeightModelTests(BaseDbTestCase):

@@ -1,0 +1,126 @@
+<plan type="online">
+
+    <!--Inputs required for this import handler to run -->
+    <inputs>
+        <param name="start" type="date" />
+        <param name="end" type="date" />
+    </inputs>
+
+    <!-- Links to external scripts may be used so that they are included to javascript context -->
+    <script ref="" />
+
+    <datasources>
+        <db name="odw" 
+            host="localhost"
+            dbname="odw"
+            user="postgres"
+            password="postgres"
+            vendor="postgres" />
+    </datasources>
+
+    <import>
+        <entity name="application" datasource="odw">
+            <query target="results">
+                <![CDATA[CREATE TABLE results AS
+  SELECT qi.*, 'class' || (trunc(random() * 2) + 1)::char hire_outcome 
+  FROM public.ja_quick_info qi where qi.file_provenance_date >= '#{start}'
+  AND qi.file_provenance_date < '#{end}' 
+  LIMIT(100);
+  ]]>
+            </query>
+            <field name="employer_info" transform="json" column="employer_info"/>
+            <field name="contractor_info" transform="json" column="contractor_info"/>
+            <field name="application_id" type="integer" column="application"/>
+            <field name="hire_outcome" type="string" required="true" column="hire_outcome"/>
+            <field name="opening_id" type="integer" required="true" column="opening_id"/>
+            
+            <entity name="contractor"
+                    datasource="contractor_info">
+                <field name="contractor.dev_is_looking" jsonpath="$.dev_is_looking" />
+                <field name="contractor.dev_is_looking_week" jsonpath="$.dev_is_looking_week" />
+                <field name="contractor.dev_active_interviews" jsonpath="$.dev_active_interviews" />
+                <field name="contractor.dev_availability" jsonpath="$.dev_availability" />
+                <field name="contractor.dev_cur_assignments" jsonpath="$.dev_cur_assignments" />
+                <field name="contractor.dev_last_worked" jsonpath="$.dev_last_worked" />
+                <field name="contractor.dev_recent_fp_jobs" jsonpath="$.dev_recent_fp_jobs" />
+                <field name="contractor.dev_total_fp_jobs" jsonpath="$.dev_total_fp_jobs" />
+                <field name="contractor.dev_recent_hourly_jobs" jsonpath="$.dev_recent_hourly_jobs" />
+                <field name="contractor.dev_total_hourly_jobs" jsonpath="$.dev_total_hourly_jobs" />
+                <field name="contractor.dev_recent_hours" jsonpath="$.dev_recent_hours" />
+                <field name="contractor.dev_total_hours_rounded" jsonpath="$.dev_total_hours_rounded" />
+                <field name="contractor.dev_billed_assignments" jsonpath="$.dev_billed_assignments" />
+                <field name="contractor.dev_total_revenue" jsonpath="$.dev_total_revenue" />
+                <field name="contractor.dev_tot_feedback" jsonpath="$.dev_tot_feedback" />
+                <field name="contractor.dev_tot_feedback_recent" jsonpath="$.dev_tot_feedback_recent" />
+                <field name="contractor.recent_feedback_comments" jsonpath="$.assignments[:10].feedback.comment" />
+                <field name="contractor.negative_feedbacks" jsonpath="$.assignments[?(@.feedback.score &lt; '4.00')].feedback.score" />
+                <field name="contractor.dev_adj_score" jsonpath="$.dev_adj_score" />
+                <field name="contractor.dev_adj_score_recent" jsonpath="$.dev_adj_score_recent" />
+                <field name="contractor.dev_rank_percentile" jsonpath="$.dev_rank_percentile" />
+                <field name="contractor.dev_recent_rank_percentile" jsonpath="$.dev_recent_rank_percentile" />
+                <field name="contractor.dev_max_karma" jsonpath="$.dev_max_karma" />
+                <field name="contractor.dev_test_passed_count" jsonpath="$.dev_test_passed_count" />
+                <field name="contractor.dev_skill_test_passed_count" jsonpath="$.dev_skill_test_passed_count" />
+                <field name="contractor.dev_profile_title" jsonpath="$.dev_profile_title" />
+                <field name="contractor.dev_blurb" jsonpath="$.dev_blurb" />
+                <field name="contractor.dev_bill_rate" jsonpath="$.dev_bill_rate" />
+                <field name="contractor.dev_expose_full_name" jsonpath="$.dev_expose_full_name" />
+                <field name="contractor.dev_year_exp" jsonpath="$.dev_year_exp" />
+                <field name="contractor.dev_portfolio_items_count" jsonpath="$.dev_portfolio_items_count" />
+                <field name="contractor.dev_eng_skill" jsonpath="$.dev_eng_skill" />
+                <field name="contractor.dev_timezone" jsonpath="$.dev_timezone" />
+                <field name="contractor.dev_country" jsonpath="$.dev_country" />
+                <field name="contractor.dev_region" jsonpath="$.dev_region" />
+                <field name="ja.is_ic_int" jsonpath="$.dev_is_affiliated" />
+                <field name="ja.is_ic" src="eq(#{ja.is_ic_int}, 1)" />
+                <field name="tsexams" jsonpath="$.tsexams" key_path="$.*.ts_name" value_path="$.*.ts_score" />
+            </entity>
+
+            <entity name="employer" datasource="employer_info">
+                <field name="employer.op_timezone" jsonpath="$.op_timezone" />
+                <field name="employer.op_country_tz" jsonpath="$.op_country_tz" />
+                <field name="employer.op_tot_jobs_filled" jsonpath="$.op_tot_jobs_filled" />
+                <field name="employer.country" jsonpath="$.op_country" />
+            </entity>
+        </entity>
+    </import>
+
+
+    <!--
+      Define which models to use and how to formulate response.
+      Required only for web import handlers.
+      -->
+    <predict>
+          <!-- Model to use -->
+          <model name="rank" value="BestMatch.v31">
+              <positive_label value="true"/>
+          </model>
+
+          <!-- Or model may result from a Javascript function -->
+          <model name="rank" script="getModel(#{opening.jobcategory})">
+              <positive_label script="getPositiveLabel(#{opening.jobcategory})" />
+              <weight label="true" script="getTrueWeight(#{opening.jobcategory}" />
+              <weight label="false" script="getTrueWeight(#{opening.jobcategory}" />
+          </model>
+
+
+          <!-- Multiple models may be required for calculating result -->
+          <model name="autohide" value="BestMatch.v31">
+              <positive_label value="false" />
+              <weight label="true" value="1.23543"/>
+              <weight label="false" value="1.0"/>
+          </model>
+
+          <!-- Result can refer model's result -->
+          <result>
+              <label model="rank" />
+              <probability model="rank" label="true" />
+          </result>
+
+          <!-- or result may be calculated using Javascript functions -->
+          <result>
+              <label script="getLabel()"/>
+              <probability script="getProbability()"/>
+          </result>
+    </predict>
+</plan>

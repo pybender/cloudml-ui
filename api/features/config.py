@@ -1,7 +1,7 @@
 # Authors: Nikolay Melnik <nmelnik@upwork.com>
 
-from core.trainer.scalers import MinMaxScaler, StandardScaler, NoScaler
-from core.trainer.classifier_settings import CLASSIFIERS
+from cloudml.trainer.scalers import MinMaxScaler, StandardScaler, NoScaler
+from cloudml.trainer.classifier_settings import CLASSIFIERS
 
 
 # TODO: move and use it in cloudml project

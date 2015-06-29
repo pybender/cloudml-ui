@@ -92,9 +92,9 @@ class ParamsResource(BaseResourceSQL):
         raise Exception('Invalid operation')
 
     def get(self, *args, **kwargs):
-        from core.trainer.feature_types import FEATURE_TYPE_FACTORIES
-        from core.trainer.feature_types import FEATURE_TYPE_DEFAULTS
-        from core.trainer.feature_types import FEATURE_PARAMS_TYPES
+        from cloudml.trainer.feature_types import FEATURE_TYPE_FACTORIES
+        from cloudml.trainer.feature_types import FEATURE_TYPE_DEFAULTS
+        from cloudml.trainer.feature_types import FEATURE_PARAMS_TYPES
         _types = [(key, {
             'type': getattr(value, 'python_type', ''),
             'required_params': value.required_params,

@@ -5,7 +5,7 @@ import base64
 import uuid
 
 from api import celery, app
-from api.import_handlers.models import ImportHandler, XmlImportHandler
+from api.import_handlers.models import XmlImportHandler
 from api.logs.logger import init_logger
 from api.accounts.models import User
 from api.ml_models.models import Model
@@ -69,7 +69,7 @@ def upload_import_handler_to_server(server_id, handler_type, handler_id,
     user = User.query.get(user_id)
 
     _model = (XmlImportHandler if handler_type == XmlImportHandler.TYPE
-              else ImportHandler)
+              else XmlImportHandler)
 
     handler = _model.query.get(handler_id)
 

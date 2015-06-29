@@ -29,7 +29,8 @@ class TestTasksTests(BaseDbTestCase):
 
     def test_get_uncompressed_filesize(self):
         self.assertEquals(
-            258447, _get_uncompressed_filesize('api/import_handlers/ds.gz'))
+            258447,
+            _get_uncompressed_filesize('api/import_handlers/fixtures/ds.gz'))
 
         # a speical test for crossing 2GB limit
         # self.assertEquals(

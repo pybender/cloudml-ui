@@ -10,8 +10,8 @@ import tempfile
 import numpy as np
 from datetime import datetime
 
-from core.trainer.trainer import Trainer, DEFAULT_SEGMENT
-from core.trainer.config import FeatureModel
+from cloudml.trainer.trainer import Trainer, DEFAULT_SEGMENT
+from cloudml.trainer.config import FeatureModel
 
 from api import celery, app
 from api.base.tasks import SqlAlchemyTask
@@ -93,7 +93,9 @@ def train_model(dataset_ids, model_id, user_id, delete_metadata=False):
         model.save()
 
         segments = trainer._get_segments_info()
-        logging.error(segments)
+        if not segments or not segments.keys():
+            raise Exception('No segments in the model')
+
         model.create_segments(segments)
 
         for segment in model.segments:
@@ -102,7 +104,8 @@ def train_model(dataset_ids, model_id, user_id, delete_metadata=False):
     except Exception, exc:
         app.sql_db.session.rollback()
 
-        logging.exception('Got exception when train model')
+        logging.exception(
+            'Got exception when train model: {0!s}'.format(exc))
         model.status = model.STATUS_ERROR
         model.error = str(exc)[:299]
         model.save()
@@ -249,7 +252,7 @@ def generate_visualization_tree(model_id, deep):
     -----
     Decision Tree Classifier and Random Forest Classifier are supported.
     """
-    from core.trainer.classifier_settings import DECISION_TREE_CLASSIFIER, \
+    from cloudml.trainer.classifier_settings import DECISION_TREE_CLASSIFIER, \
         RANDOM_FOREST_CLASSIFIER, EXTRA_TREES_CLASSIFIER
     from exceptions import VisualizationException
 

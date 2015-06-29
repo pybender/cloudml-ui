@@ -1,25 +1,26 @@
-import json
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 import logging
-import os
 import StringIO
 import uuid
+import os
 from os.path import join, exists
-from os import makedirs
 
-from boto.exception import S3ResponseError
 from sqlalchemy.orm import relationship, deferred, backref, validates, \
     foreign, remote
 from sqlalchemy.dialects import postgresql
 from sqlalchemy import event, and_
 
-from api import app
 from api.amazon_utils import AmazonS3Helper
-from api.base.models import db, BaseModel, JSONType, assertion_msg
+from api.base.models import db, BaseModel, JSONType
 from api.logs.models import LogMessage
-from import_handlers import IMPORT_HANDLER_TYPES, ImportHandlerMixin
+from ..models import XmlImportHandler as ImportHandler
 
 
 class DataSet(db.Model, BaseModel):
+    """
+    Set of the imported data.
+    """
     LOG_TYPE = LogMessage.IMPORT_DATA
 
     STATUS_NEW = 'New'
@@ -43,7 +44,7 @@ class DataSet(db.Model, BaseModel):
 
     # Generic relation to import handler
     import_handler_id = db.Column(db.Integer, nullable=False)
-    import_handler_type = db.Column(db.String(200))
+    import_handler_type = db.Column(db.String(200), default='xml')
 
     cluster_id = db.Column(
         db.Integer, db.ForeignKey('cluster.id', ondelete='SET NULL'))
@@ -66,7 +67,7 @@ class DataSet(db.Model, BaseModel):
         """Provides in-Python access to the "parent" by choosing
         the appropriate relationship.
         """
-        return getattr(self, "parent_%s" % self.import_handler_type)
+        return ImportHandler.query.get(self.import_handler_id)
 
     @import_handler.setter
     def import_handler(self, handler):
@@ -85,9 +86,8 @@ class DataSet(db.Model, BaseModel):
         self.set_uid()
         data = '%s.%s' % (self.uid, 'gz' if self.compress else 'json')
         self.data = data
-        path = app.config['DATA_FOLDER']
-        if not exists(path):
-            makedirs(path)
+        from api.base.io_utils import get_or_create_data_folder
+        path = get_or_create_data_folder()
         self.filename = join(path, data)
         self.save()
 
@@ -115,8 +115,7 @@ class DataSet(db.Model, BaseModel):
             return stream
 
     def get_iterator(self, stream):
-        from core.trainer.streamutils import streamingiterload
-
+        from cloudml.trainer.streamutils import streamingiterload
         return streamingiterload(stream, source_format=self.format)
 
     def load_from_s3(self):
@@ -156,7 +155,7 @@ class DataSet(db.Model, BaseModel):
         except OSError:
             pass
         if on_s3:
-            from api.amazon_utils import AmazonS3Helper
+            from boto.exception import S3ResponseError
             helper = AmazonS3Helper()
             try:
                 helper.delete_key(uid)
@@ -172,7 +171,7 @@ class DataSet(db.Model, BaseModel):
         return '<Dataset %r>' % self.name
 
 
-@event.listens_for(ImportHandlerMixin, "mapper_configured", propagate=True)
+@event.listens_for(ImportHandler, "mapper_configured", propagate=True)
 def setup_listener(mapper, class_):
     import_handler_type = class_.TYPE
     class_.import_handler = relationship(

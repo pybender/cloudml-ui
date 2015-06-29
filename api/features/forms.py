@@ -22,7 +22,7 @@ class FeatureParamsMixin(object):
     Mixin for feature params validation depended on feature type
     """
     def _validate_param(self, data, name):
-        from core.trainer.feature_types import FEATURE_PARAMS_TYPES
+        from cloudml.trainer.feature_types import FEATURE_PARAMS_TYPES
         value = data.get(name, None)
         if value is None:
             raise ValidationError('Parameter {} is required'.format(name))
@@ -50,7 +50,7 @@ class FeatureParamsMixin(object):
                         'Value {0} in {1} can\'t be empty'.format(key, name))
 
     def clean_params(self, value, field):
-        from core.trainer.feature_types import FEATURE_TYPE_FACTORIES
+        from cloudml.trainer.feature_types import FEATURE_TYPE_FACTORIES
 
         value_type = self.data.get('type')
         if not type:

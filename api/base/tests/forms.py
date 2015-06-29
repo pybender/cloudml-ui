@@ -54,16 +54,10 @@ class FormFieldsTests(TestCase):
         self.assertRaises(ValidationError, field.clean, 'invalid json')
 
     def test_import_handler_file_field(self):
-        json = open('./conf/extract.json', 'r').read()
-        xml = open('./conf/extract.xml', 'r').read()
-
+        from api.import_handlers.fixtures import IMPORTHANDLER
         field = ImportHandlerFileField()
 
-        # Checking with valid data
-        value = field.clean(json)
-        self.assertEquals(field.import_handler_type, 'json')
-
-        value = field.clean(xml)
+        value = field.clean(IMPORTHANDLER)
         self.assertEquals(field.import_handler_type, 'xml')
 
         # Checking with invalid data

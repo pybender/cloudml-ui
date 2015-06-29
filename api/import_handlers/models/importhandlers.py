@@ -1,5 +1,10 @@
+"""
+Import handler related models declared here.
+"""
+
+# Authors: Nikolay Melnik <nmelnik@upwork.com>
+
 import logging
-import json
 from lxml import etree
 from sqlalchemy.orm import relationship, deferred, backref, validates
 from sqlalchemy.dialects import postgresql
@@ -7,11 +12,142 @@ from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import undefer, joinedload_all, joinedload
 from sqlalchemy.ext.hybrid import hybrid_property
 
-from import_handlers import ImportHandlerMixin
 from api.base.models import db, BaseMixin, JSONType
-from core.xmlimporthandler.inputs import Input
-from core.xmlimporthandler.entities import Field
-from core.xmlimporthandler.datasources import DataSource
+from cloudml.importhandler.datasources import DbDataSource
+from cloudml.importhandler.inputs import Input
+from cloudml.importhandler.entities import Field
+from cloudml.importhandler.datasources import DataSource
+from cloudml.importhandler.importhandler import ExtractionPlan, \
+    ImportHandler as CoreImportHandler
+from api.base.models import db, BaseModel
+
+
+class ImportHandlerMixin(BaseModel):
+    """
+    Base class for any import handler.
+    """
+    TYPE = 'N/A'
+
+    @property
+    def type(self):
+        return self.TYPE
+
+    @property
+    def identifier(self):
+        return "{0}{1}".format(self.id, self.TYPE)
+
+    @declared_attr
+    def name(cls):
+        return db.Column(db.String(200), nullable=False, unique=True)
+
+    @declared_attr
+    def import_params(cls):
+        return db.Column(postgresql.ARRAY(db.String))
+
+    def get_plan_config(self):
+        """ Returns config that would be used for creating Extraction Plan """
+        return ""
+
+    def get_iterator(self, params):
+        raise Exception('not inplemented')
+
+    def get_fields(self):
+        """
+        Returns list of the field names
+        """
+        return []
+
+    def create_dataset(self, params, data_format='json', compress=True):
+        from datasets import DataSet
+        dataset = DataSet()
+        str_params = "-".join(["%s=%s" % item
+                               for item in params.iteritems()])
+        dataset.name = ("%s: %s" % (self.name, str_params))[:199]
+        dataset.import_handler_id = self.id
+        dataset.import_handler_type = self.TYPE
+        dataset.import_params = params
+        dataset.format = data_format
+        dataset.compress = compress
+        dataset.save()
+        dataset.set_file_path()
+        return dataset
+
+    def check_sql(self, sql):
+        """
+        Parses sql query structure from text,
+        raises Exception if it's not a SELECT query or invalid sql.
+        """
+        import sqlparse
+
+        query = sqlparse.parse(sql)
+        error_msg = None
+        if len(query) < 1:
+            error_msg = 'Unable to detect a query in the supplied text'
+        else:
+            query = query[0]
+            if query.get_type() != 'SELECT':
+                error_msg = 'Only supporting SELECT queries'
+
+        if error_msg is not None:
+            raise Exception(error_msg)
+        else:
+            return query
+
+    def build_query(self, sql, limit=2):
+        """
+        Parses sql query and changes LIMIT statement value.
+        """
+        import re
+        from sqlparse import parse, tokens
+        from sqlparse.sql import Token
+
+        # It's important to have a whitespace right after every LIMIT
+        pattern = re.compile('limit([^ ])', re.IGNORECASE)
+        sql = pattern.sub(r'LIMIT \1', sql)
+
+        query = parse(sql.rstrip(';'))[0]
+
+        # Find LIMIT statement
+        token = query.token_next_match(0, tokens.Keyword, 'LIMIT')
+        if token:
+            # Find and replace LIMIT value
+            value = query.token_next(query.token_index(token), skip_ws=True)
+            if value:
+                new_token = Token(value.ttype, str(limit))
+                query.tokens[query.token_index(value)] = new_token
+        else:
+            # If limit is not found, append one
+            new_tokens = [
+                Token(tokens.Whitespace, ' '),
+                Token(tokens.Keyword, 'LIMIT'),
+                Token(tokens.Whitespace, ' '),
+                Token(tokens.Number, str(limit)),
+            ]
+            last_token = query.tokens[-1]
+            if last_token.ttype == tokens.Punctuation:
+                query.tokens.remove(last_token)
+            for new_token in new_tokens:
+                query.tokens.append(new_token)
+
+        return str(query)
+
+    def execute_sql_iter(self, sql, datasource_name):
+        """
+        Executes sql using data source with name datasource_name.
+        Datasource with given name should be in handler's datasource list.
+        Returns iterator.
+        """
+        vendor, conn = self._get_ds_details_for_query(datasource_name)
+        iter_func = DbDataSource.DB.get(vendor)
+
+        for row in iter_func([sql], conn):
+            yield dict(row)
+
+    def _get_ds_details_for_query(self, ds_name):
+        raise NotImplementedError()
+
+    def __repr__(self):
+        return '<%s Import Handler %r>' % (self.TYPE, self.name)
 
 
 class XmlImportHandler(db.Model, ImportHandlerMixin):
@@ -68,8 +204,9 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
             etree.SubElement(inputs, "param", **param.to_dict())
 
         for scr in self.xml_scripts:
-            scr_tag = etree.SubElement(plan, 'script')
-            scr_tag.text = etree.CDATA(scr.data)
+            if scr.data and scr.data.strip():  # script isn't empty
+                scr_tag = etree.SubElement(plan, 'script')
+                scr_tag.text = etree.CDATA(scr.data)
 
         datasources = etree.SubElement(plan, "datasources")
         for ds in self._get_in_order(self.xml_data_sources, 'type',
@@ -141,8 +278,6 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
         return etree.tostring(plan, pretty_print=pretty_print)
 
     def get_iterator(self, params, callback=None):
-        from core.xmlimporthandler.importhandler import ExtractionPlan, \
-            ImportHandler as CoreImportHandler
         plan = ExtractionPlan(self.get_plan_config(), is_file=False)
         return CoreImportHandler(plan, params, callback=callback)
 
@@ -164,8 +299,6 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
                 fields += get_entity_fields(sub_entity)
             return fields
 
-        from core.xmlimporthandler.importhandler import ExtractionPlan, \
-            ImportHandler as CoreImportHandler
         # TODO: try .. except after check this with real import handlers
         try:
             plan = ExtractionPlan(self.data, is_file=False)
@@ -247,7 +380,6 @@ class XmlDataSource(db.Model, BaseMixin, RefXmlImportHandlerMixin):
     def core_datasource(self):
         # TODO: secure
         ds_xml = self.to_xml(secure=True)
-        from core.xmlimporthandler.datasources import DataSource
         return DataSource.factory(ds_xml)
 
     def __repr__(self):
@@ -524,7 +656,6 @@ class PredictResultProbability(db.Model, RefPredictModelMixin):
 def fill_import_handler(import_handler, xml_data=None):
     plan = None
     if xml_data:
-        from core.xmlimporthandler.importhandler import ExtractionPlan
         plan = ExtractionPlan(xml_data, is_file=False)
 
     if plan is None:

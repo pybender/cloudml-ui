@@ -7,7 +7,7 @@ from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship
 
 from api.base.models import BaseModel, db, JSONType
-from core.trainer.classifier_settings import CLASSIFIERS
+from cloudml.trainer.classifier_settings import CLASSIFIERS
 from config import TRANSFORMERS, SCALERS, FIELDS_MAP, SYSTEM_FIELDS
 
 

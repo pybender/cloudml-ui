@@ -28,16 +28,15 @@ from api.servers.models import Server
 from api.async_tasks.models import AsyncTask
 from api.servers.fixtures import ServerData
 from api.ml_models.fixtures import ModelData, TagData
-from api.import_handlers.fixtures import ImportHandlerData, DataSetData, \
-    XmlImportHandlerData, XmlEntityData, XmlFieldData
+from api.import_handlers.fixtures import DataSetData, \
+    IMPORT_HANDLER_FIXTURES, XmlEntityData, XmlFieldData
 
 
 class ModelTests(BaseDbTestCase):
     """
     Tests for api.ml_models.models.Model class.
     """
-    datasets = [ImportHandlerData, DataSetData, ModelData,
-                XmlImportHandlerData]
+    datasets = [DataSetData, ModelData] + IMPORT_HANDLER_FIXTURES
 
     def test_generic_relation_to_import_handler(self):
         model = Model(name="test1")
@@ -49,7 +48,7 @@ class ModelTests(BaseDbTestCase):
 
         self.assertEqual(model.test_import_handler, handler)
         self.assertEqual(model.test_import_handler_id, handler.id)
-        self.assertEqual(model.test_import_handler_type, 'json')
+        self.assertEqual(model.test_import_handler_type, 'xml')
         self.assertEqual(model.train_import_handler, xml_handler)
         self.assertEqual(model.train_import_handler_id, xml_handler.id)
         self.assertEqual(model.train_import_handler_type, 'xml')
@@ -59,7 +58,7 @@ class ModelTests(BaseDbTestCase):
         model.save()
 
         self.assertEqual(model.train_import_handler, handler)
-        self.assertEqual(model.train_import_handler_type, 'json')
+        self.assertEqual(model.train_import_handler_type, 'xml')
         self.assertEqual(model.test_import_handler, xml_handler)
         self.assertEqual(model.test_import_handler_type, 'xml')
 
