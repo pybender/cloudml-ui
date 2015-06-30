@@ -5,13 +5,12 @@ angular.module('app.models.model', ['app.config'])
   '$q'
   'settings'
   'BaseModel'
-  'ImportHandler'
   'XmlImportHandler'
   'DataSet'
   'FeaturesSet'
   'Classifier'
   
-  ($http, $q, settings, BaseModel, ImportHandler, XmlImportHandler,
+  ($http, $q, settings, BaseModel, XmlImportHandler,
     DataSet, FeaturesSet, Classifier) ->
     ###
     Model
@@ -61,8 +60,6 @@ angular.module('app.models.model', ['app.config'])
           if origData.test_import_handler?
             if origData.test_import_handler_type == 'xml'
               cls = XmlImportHandler
-            else
-              cls = ImportHandler
             @test_import_handler_obj = new cls(
               origData['test_import_handler'])
             @test_import_handler = @test_import_handler_obj.id

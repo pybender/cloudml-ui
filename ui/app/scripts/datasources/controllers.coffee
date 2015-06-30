@@ -1,4 +1,4 @@
-angular.module('app.importhandlers.controllers.datasources', ['app.config', ])
+angular.module('app.datasources.controllers', ['app.config', ])
 
 .controller('DataSourceChoicesLoader', [
   '$scope'
@@ -40,7 +40,7 @@ angular.module('app.importhandlers.controllers.datasources', ['app.config', ])
     $scope.edit = (ds) ->
       $scope.openDialog($scope, {
         model: ds
-        template: 'partials/import_handler/datasource/edit.html'
+        template: 'partials/datasources/edit.html'
         ctrlName: 'ModelEditDialogCtrl'
       })
 
@@ -48,7 +48,7 @@ angular.module('app.importhandlers.controllers.datasources', ['app.config', ])
       ds = new DataSource()
       $scope.openDialog($scope, {
         model: ds
-        template: 'partials/import_handler/datasource/add.html'
+        template: 'partials/datasources/add.html'
         ctrlName: 'ModelEditDialogCtrl'
       })
 

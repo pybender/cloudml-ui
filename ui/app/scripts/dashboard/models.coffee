@@ -6,7 +6,7 @@ angular.module('app.dashboard.model', ['app.config'])
   'settings'
   'BaseModel'
   'Model'
-  'ImportHandler'
+  'XmlImportHandler'
 
   ($http, $q, settings, BaseModel, Model, ImportHandler) ->
 

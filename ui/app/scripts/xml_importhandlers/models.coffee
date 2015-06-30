@@ -101,6 +101,11 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
         resolver = Field.$buildLoadAllResolver()
         Field.$make_all_request("#{@BASE_API_URL}#{@id}/action/list_fields/", resolver)
 
+      @$loadAllWithoutPaging: ->
+        url = @$get_api_url({}) + 'action/brief/'
+        resolver = (resp) -> { objects: resp.data['xml_import_handlers'] }
+        @$make_all_request(url, resolver, {})
+
       $updateXml: ->
         @$make_request("#{@BASE_API_URL}#{@id}/action/update_xml/", {}, 'PUT',
           {'data': @xml})
@@ -229,6 +234,33 @@ angular.module('app.xml_importhandlers.models', ['app.config'])
 
     return Sqoop
 ])
+
+.factory('BaseQueryModel', [
+    'BaseModel'
+    (BaseModel)->
+      class BaseQueryModel extends BaseModel
+        @PARAMS_PERCENT_REGEX: "%\\((\\w+)\\)s"
+        @PARAMS_HASH_REGEX: '#{(\\w+)}'
+
+        _getParams: (exp, sql) ->
+          params = []
+          regex = new RegExp(exp, 'gi')
+          matches = regex.exec(sql)
+          while matches
+            if matches[1] not in params
+              params.push matches[1]
+            matches = regex.exec(sql)
+          return params
+
+        _runSql: (sql, params, datasource, limit, handlerUrl) ->
+          data =
+            sql: sql,
+            params: JSON.stringify(params),
+            limit: limit,
+            datasource: datasource
+          @$make_request handlerUrl, {}, "PUT", data
+
+  ])
 
 .factory('XmlQuery', [
   'settings'

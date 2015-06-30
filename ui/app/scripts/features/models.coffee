@@ -20,9 +20,8 @@ angular.module('app.features.models', ['app.config'])
   'settings'
   'BaseModel'
   'XmlImportHandler'
-  'ImportHandler'
   
-  ($http, $q, settings, BaseModel, XmlImportHandler, ImportHandler) ->
+  ($http, $q, settings, BaseModel, XmlImportHandler) ->
     class Transformer extends BaseModel
       BASE_API_URL: "#{settings.apiUrl}transformers/"
       BASE_UI_URL: "/predefined/transformers"
@@ -47,8 +46,6 @@ angular.module('app.features.models', ['app.config'])
           if origData.train_import_handler?
             if origData.train_import_handler_type == 'xml'
               cls = XmlImportHandler
-            else if origData.train_import_handler_type == 'json'
-              cls = ImportHandler
             else
               throw new Error('Need to load import handler type')
             @train_import_handler_obj = new cls(

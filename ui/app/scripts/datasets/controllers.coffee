@@ -88,10 +88,9 @@ filesize,records_count,time,created_by,updated_by'
   '$routeParams'
   '$location'
   'DataSet'
-  'ImportHandler'
   'XmlImportHandler'
 
-  ($scope, $routeParams, $location, DataSet, ImportHandler, XmlImportHandler) ->
+  ($scope, $routeParams, $location, DataSet, XmlImportHandler) ->
     if not $routeParams.id
       throw new Error "Can't initialize without id"
 
@@ -104,7 +103,7 @@ filesize,records_count,time,created_by,updated_by'
     if $routeParams.import_handler_type == 'xml'
       cls = XmlImportHandler
     else
-      cls = ImportHandler
+      throw new Error "Unsupported import handler type"
 
     $scope.handler = new cls({
       id: $routeParams.import_handler_id

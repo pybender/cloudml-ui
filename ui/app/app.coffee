@@ -24,10 +24,8 @@ App = angular.module('app', [
   'app.datas.controllers'
   'app.reports.model'
   'app.reports.controllers'
-  'app.importhandlers.model'
-  'app.importhandlers.controllers'
-  'app.importhandlers.controllers.datasources'
-  'app.importhandlers.controllers.handlers'
+  'app.datasources.model'
+  'app.datasources.controllers'
   'app.xml_importhandlers.models'
   'app.xml_importhandlers.controllers'
   'app.xml_importhandlers.controllers.input_parameters'
@@ -262,11 +260,7 @@ App.config([
     })
     .when('/predefined/datasources', {
       controller: "DataSourceListCtrl"
-      templateUrl: 'partials/import_handler/datasource/list.html'
-    })
-  .when('/play', {
-      controller: "PlayCtrl"
-      templateUrl: 'partials/play.html'
+      templateUrl: 'partials/datasources/list.html'
     })
 
     # Catch all
