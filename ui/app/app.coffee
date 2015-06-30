@@ -79,6 +79,14 @@ App.config([
       templateUrl: 'partials/models/model_list.html'
       reloadOnSearch: false
     })
+    .when('/models/upload_model', {
+      templateUrl: 'partials/models/upload_model.html'
+      controller: 'AddModelCtl'
+    })
+    .when('/models/add_model', {
+      templateUrl: 'partials/models/add_model.html'
+      controller: 'AddModelCtl'
+    })
     .when('/models/:id', {
       controller: 'ModelDetailsCtrl'
       templateUrl: 'partials/models/model_details.html'
@@ -107,65 +115,57 @@ App.config([
       controller: 'ExampleDetailsCtrl'
       templateUrl: 'partials/examples/example_details.html'
     })
-    .when('/upload_model', {
-      templateUrl: 'partials/models/upload_model.html'
-      controller: 'UploadModelCtl'
-    })
-    .when('/add_model', {
-      templateUrl: 'partials/models/add_model.html'
-      controller: 'AddModelCtl'
-    })
     .when('/compare_models', {
       templateUrl: 'partials/reports/compare_models_form.html'
       controller: 'CompareModelsFormCtl'
     })
-    .when('/handlers', {
+    .when('/importhandlers', {
       redirectTo: (params, loc) ->
-        return '/handlers/xml'
+        return '/importhandlers/xml'
     })
-    .when('/handlers/xml', {
+    .when('/importhandlers/xml', {
       controller: "XmlImportHandlerListCtrl"
       templateUrl: 'partials/importhandlers/xml/list.html'
     })
-    .when('/handlers/xml/add', {
+    .when('/importhandlers/xml/add', {
       controller: "AddXmlImportHandlerCtl"
       templateUrl: 'partials/importhandlers/xml/add.html'
     })
-    .when('/handlers/xml/:id', {
+    .when('/importhandlers/xml/:id', {
       controller: 'XmlImportHandlerDetailsCtrl'
       templateUrl: 'partials/importhandlers/xml/details.html'
       reloadOnSearch: false
     })
-    .when('/handlers/xml/:handler_id/datasets', {
+    .when('/importhandlers/xml/:handler_id/datasets', {
       redirectTo: (p, loc) ->
-        return '/handlers/xml/' + p.handler_id + '?action=dataset:list'
+        return '/importhandlers/xml/' + p.handler_id + '?action=dataset:list'
     })
-    .when('/handlers/json', {
+    .when('/importhandlers/json', {
       controller: "ImportHandlerListCtrl"
       templateUrl: 'partials/import_handler/list.html'
     })
-    .when('/handlers/json/add', {
+    .when('/importhandlers/json/add', {
       controller: "AddImportHandlerCtl"
       templateUrl: 'partials/import_handler/add.html'
     })
-    .when('/handlers/json/:id', {
+    .when('/importhandlers/json/:id', {
       controller: 'ImportHandlerDetailsCtrl'
       templateUrl: 'partials/import_handler/details.html'
       reloadOnSearch: false
     })
-    .when('/handlers/json/:id/query/add', {
+    .when('/importhandlers/json/:id/query/add', {
       controller: 'AddImportHandlerQueryCtrl'
       templateUrl: 'partials/import_handler/add_query.html'
     })
-    .when('/handlers/json/:id/query/:num/items/add', {
+    .when('/importhandlers/json/:id/query/:num/items/add', {
       controller: 'AddImportHandlerQueryItemCtrl'
       templateUrl: 'partials/import_handler/add_query_item.html'
     })
-    .when('/handlers/json/:handler_id/datasets', {
+    .when('/importhandlers/json/:handler_id/datasets', {
       redirectTo: (params, loc) ->
-        return '/handlers/json/' + params.handler_id + '?action=dataset:list'
+        return '/importhandlers/json/' + params.handler_id + '?action=dataset:list'
     })
-    .when('/handlers/:import_handler_type/:import_handler_id/datasets/:id', {
+    .when('/importhandlers/:import_handler_type/:import_handler_id/datasets/:id', {
       controller: 'DataSetDetailsCtrl'
       templateUrl: 'partials/datasets/details.html'
       reloadOnSearch: false
