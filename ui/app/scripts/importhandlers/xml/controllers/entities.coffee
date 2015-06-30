@@ -1,7 +1,7 @@
 'use strict'
 
 angular.module(
-  'app.xml_importhandlers.controllers.entities', ['app.config', ])
+  'app.importhandlers.xml.controllers.entities', ['app.config', ])
 
 # Entities and Fields Controllers
 
@@ -38,7 +38,7 @@ angular.module(
       })
       $scope.openDialog($scope, {
         model: ent
-        template: 'partials/xml_import_handlers/entities/edit.html'
+        template: 'partials/importhandlers/xml/entities/edit.html'
         ctrlName: 'ModelEditDialogCtrl'
         list_model_name: "entities"
       })
@@ -50,7 +50,7 @@ angular.module(
       })
       $scope.openDialog($scope, {
         model: field
-        template: 'partials/xml_import_handlers/fields/edit.html'
+        template: 'partials/importhandlers/xml/fields/edit.html'
         ctrlName: 'ModelWithParamsEditDialogCtrl'
         list_model_name: "entities"
       })
@@ -75,7 +75,7 @@ angular.module(
       })
       $scope.openDialog($scope, {
         model: entity
-        template: 'partials/xml_import_handlers/entities/edit_datasource.html'
+        template: 'partials/importhandlers/xml/entities/edit_datasource.html'
         ctrlName: 'ModelEditDialogCtrl'
         list_model_name: "entities"
       })
@@ -112,7 +112,7 @@ angular.module(
       })
       $scope.openDialog($scope, {
         model: sqoop
-        template: 'partials/xml_import_handlers/sqoop/edit.html'
+        template: 'partials/importhandlers/xml/sqoop/edit.html'
         ctrlName: 'ModelEditDialogCtrl'
         list_model_name: "entities"
       })
@@ -120,7 +120,7 @@ angular.module(
     $scope.getPigFields = (sqoop) ->
       $scope.openDialog($scope, {
         model: sqoop
-        template: 'partials/xml_import_handlers/sqoop/load_pig_fields.html'
+        template: 'partials/importhandlers/xml/sqoop/load_pig_fields.html'
         ctrlName: 'PigFieldsLoader'
         extra: {noInput: false, title: 'Pig Fields'}
       })

@@ -1,7 +1,7 @@
 'use strict'
 
 angular.module(
-  'app.xml_importhandlers.controllers.predict', ['app.config', ])
+  'app.importhandlers.xml.controllers.predict', ['app.config', ])
 
 .controller('PredictCtrl', [
   '$scope'
@@ -38,7 +38,7 @@ angular.module(
       model.editPositiveLabel = false
       $scope.openDialog($scope, {
         model: model
-        template: 'partials/xml_import_handlers/predict/edit_script.html'
+        template: 'partials/importhandlers/xml/predict/edit_script.html'
         ctrlName: 'ModelEditDialogCtrl'
         action: 'edit script'
       })
@@ -68,7 +68,7 @@ angular.module(
         })
         $scope.openDialog($scope, {
           model: model
-          template: 'partials/xml_import_handlers/predict/edit_model.html'
+          template: 'partials/importhandlers/xml/predict/edit_model.html'
           ctrlName: 'ModelEditDialogCtrl'
           action: 'add predict model'
           list_model_name: "predict_models"
@@ -90,7 +90,7 @@ angular.module(
         })
       $scope.openDialog($scope, {
         model: weight
-        template: 'partials/xml_import_handlers/predict/edit_model_weight.html'
+        template: 'partials/importhandlers/xml/predict/edit_model_weight.html'
         ctrlName: 'ModelEditDialogCtrl'
         action: 'add predict model weight'
         list_model_name: "predict_model_weights"
@@ -100,7 +100,7 @@ angular.module(
       model.editPositiveLabel = true
       $scope.openDialog($scope, {
         model: model
-        template: 'partials/xml_import_handlers/predict/edit_script.html'
+        template: 'partials/importhandlers/xml/predict/edit_script.html'
         ctrlName: 'ModelEditDialogCtrl'
         action: 'edit script'
       })

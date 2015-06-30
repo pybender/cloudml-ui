@@ -1,7 +1,7 @@
 'use strict'
 
 angular.module(
-  'app.xml_importhandlers.controllers.datasources', ['app.config', ])
+  'app.importhandlers.xml.controllers.datasources', ['app.config', ])
 
 .controller('DatasourcesTypesLoader', [
   '$scope'
@@ -42,7 +42,7 @@ angular.module(
       })
       $scope.openDialog($scope, {
         model: datasource
-        template: 'partials/xml_import_handlers/datasources/edit.html'
+        template: 'partials/importhandlers/xml/datasources/edit.html'
         ctrlName: 'ModelWithParamsEditDialogCtrl'
         action: 'add datasource'
       })
@@ -50,7 +50,7 @@ angular.module(
     $scope.edit = (datasource)->
       $scope.openDialog($scope, {
         model: datasource
-        template: 'partials/xml_import_handlers/datasources/edit.html'
+        template: 'partials/importhandlers/xml/datasources/edit.html'
         ctrlName: 'ModelWithParamsEditDialogCtrl'
         action: 'edit datasource'
       })

@@ -1,7 +1,7 @@
 'use strict'
 
 angular.module(
-  'app.xml_importhandlers.controllers.scripts', ['app.config', ])
+  'app.importhandlers.xml.controllers.scripts', ['app.config', ])
 
 .controller('ScriptsListCtrl', [
   '$scope'
@@ -27,7 +27,7 @@ angular.module(
       })
       $scope.openDialog($scope, {
         model: script
-        template: 'partials/xml_import_handlers/scripts/edit.html'
+        template: 'partials/importhandlers/xml/scripts/edit.html'
         ctrlName: 'ModelEditDialogCtrl'
         action: 'add script'
       })
@@ -35,7 +35,7 @@ angular.module(
     $scope.edit = (script)->
       $scope.openDialog($scope, {
         model: script
-        template: 'partials/xml_import_handlers/scripts/edit.html'
+        template: 'partials/importhandlers/xml/scripts/edit.html'
         ctrlName: 'ModelEditDialogCtrl'
         action: 'edit script'
       })

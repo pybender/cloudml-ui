@@ -26,13 +26,17 @@ App = angular.module('app', [
   'app.reports.controllers'
   'app.datasources.model'
   'app.datasources.controllers'
-  'app.xml_importhandlers.models'
-  'app.xml_importhandlers.controllers'
-  'app.xml_importhandlers.controllers.input_parameters'
-  'app.xml_importhandlers.controllers.entities'
-  'app.xml_importhandlers.controllers.datasources'
-  'app.xml_importhandlers.controllers.scripts'
-  'app.xml_importhandlers.controllers.predict'
+
+  'app.importhandlers.models'
+  'app.importhandlers.controllers'
+  'app.importhandlers.xml.models'
+  'app.importhandlers.xml.controllers.input_parameters'
+  'app.importhandlers.xml.controllers.importhandlers'
+  'app.importhandlers.xml.controllers.entities'
+  'app.importhandlers.xml.controllers.datasources'
+  'app.importhandlers.xml.controllers.scripts'
+  'app.importhandlers.xml.controllers.predict'
+
   'app.datasets.model'
   'app.datasets.controllers'
   'app.weights.model'
@@ -121,15 +125,15 @@ App.config([
     })
     .when('/handlers/xml', {
       controller: "XmlImportHandlerListCtrl"
-      templateUrl: 'partials/xml_import_handlers/list.html'
+      templateUrl: 'partials/importhandlers/xml/list.html'
     })
     .when('/handlers/xml/add', {
       controller: "AddXmlImportHandlerCtl"
-      templateUrl: 'partials/xml_import_handlers/add.html'
+      templateUrl: 'partials/importhandlers/xml/add.html'
     })
     .when('/handlers/xml/:id', {
       controller: 'XmlImportHandlerDetailsCtrl'
-      templateUrl: 'partials/xml_import_handlers/details.html'
+      templateUrl: 'partials/importhandlers/xml/details.html'
       reloadOnSearch: false
     })
     .when('/handlers/xml/:handler_id/datasets', {
@@ -402,11 +406,17 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
         message = 'processing request'
 
     if opts.data
-      $rootScope.err = "Error while #{message}: server responded
- with #{opts.status} (#{opts.data.response.error.message or "no message"})."
-      if opts.data.response?.error?.errors?
-        for item in opts.data.response.error.errors
-            $rootScope.setFieldError(item.name, item.error)
+      console.log opts
+      resp = opts.data.response
+      if resp? && resp.error
+        $rootScope.err = "Error while #{message}: server responded
+   with #{opts.status} (#{resp.error.message or "no message"})."
+        if opts.data.response?.error?.errors?
+          for item in resp.error.errors
+              $rootScope.setFieldError(item.name, item.error)
+      else  # have no info about the error
+        $rootScope.err = "Error while #{message}: server responded
+   with #{opts.data.status} (#{opts.data.message or "no message"})."
     else
       $rootScope.err = "Unkown error while #{message}."
 

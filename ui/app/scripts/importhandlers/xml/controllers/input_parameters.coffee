@@ -1,7 +1,7 @@
 'use strict'
 
 angular.module(
-  'app.xml_importhandlers.controllers.input_parameters', ['app.config', ])
+  'app.importhandlers.xml.controllers.input_parameters', ['app.config', ])
 
 # InputParameters Controllers
 
@@ -40,7 +40,7 @@ angular.module(
       param = new InputParameter({'import_handler_id': handler.id})
       $scope.openDialog($scope, {
         model: param
-        template: 'partials/xml_import_handlers/input_parameters/edit.html'
+        template: 'partials/importhandlers/xml/input_parameters/edit.html'
         ctrlName: 'ModelEditDialogCtrl'
         action: 'add input parameter'
       })
