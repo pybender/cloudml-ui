@@ -544,8 +544,8 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
             self, mock_get_features_json, *mocks):
         mock_get_features_json.return_value = FEATURES_STR
         data = {'aws_instance': self.instance.id,
-                'existing_instance_selected': True,
-                'new_dataset_selected': True,
+                'existing_instance_selected': 1,
+                'new_dataset_selected': 1,
                 'parameters': TRAIN_PARAMS,
                 'format': DataSet.FORMAT_JSON}
         self.assertTrue(self.obj.train_import_handler,

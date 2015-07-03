@@ -95,7 +95,7 @@ angular.module(
     $scope.runQuery = (queryObj) ->
       $scope.openDialog($scope, {
         model: null
-        template: 'partials/import_handler/test_query.html'
+        template: 'partials/importhandlers/test_query.html'
         ctrlName: 'QueryTestDialogCtrl'
         extra:
           handlerUrl: "#{$scope.handler.BASE_API_URL}#{$scope.handler.id}"

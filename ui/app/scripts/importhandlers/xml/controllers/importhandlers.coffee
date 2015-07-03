@@ -80,7 +80,6 @@ angular.module('app.importhandlers.xml.controllers.importhandlers', ['app.config
         $location.url(handler.objectUrl())
       ), ((opts) ->
         $scope.setError(opts, 'error clonning the xml import handler')
-
       )
 ])
 

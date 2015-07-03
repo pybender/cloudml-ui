@@ -105,11 +105,9 @@ angular.module('app.models.model', ['app.config'])
                            resolver, opts)
 
       $train: (opts={}) ->
-        data = {}
-        for key, val of opts
-          if key == 'parameters' then val = JSON.stringify(val)
-          data[key] = val
-        @$make_request("#{@BASE_API_URL}#{@id}/action/train/", {}, "PUT", data)
+        @$make_request(
+          "#{@BASE_API_URL}#{@id}/action/train/", {},
+          "PUT", @$clean_parameters(opts))
 
       $classifierGridSearch: (opts={}) ->
         data = {}

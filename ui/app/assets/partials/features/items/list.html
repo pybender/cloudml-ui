@@ -25,7 +25,7 @@
 	</tr>
 	</thead>
 	<tbody>
-		<tr ng-repeat="feature in objects | orderBy:'name'" ng-init="init({model: feature})" ng-controller="FeatureActionsCtrl">
+		<tr ng-repeat="feature in objects | orderBy:'name'" ng-init="init({model: feature})" ng-controller="FeatureActionsCtrl" ng-class="{'error': fieldNames.indexOf(feature.name) == -1}">
 			<td title="{{ feature.name }}" ng-class="{bold : feature.is_target_variable==true}">
 				<span title="Feature Name" class="title"
               ng-bind="feature.name || 'feature name here'"  value="feature.name" editable="feature" editable-field="name" editable-input="select" source="fieldNames"
@@ -75,8 +75,7 @@
 				<span title="Default Value" class="title" ng-bind="feature.default || 'no default'" editable="feature" value="feature.default || ''" editable-field="default" editable-input="text" editable-placement="right"></span>
 			</td>
       <td>
-        <input type="checkbox" ng-model="feature.disabled" ng-click="toggleFeatureDisabled(feature)"
-               title="feature will not be included in generated JSON, but still active in training and testing">
+        <input type="checkbox" ng-model="feature.disabled" ng-click="toggleFeatureDisabled(feature)" title="feature will not be included in generated JSON, but still active in training and testing">
       </td>
       <td>
         <a class="btn btn-info" href="#/models/{{ modelObj.id }}/features/{{ modelObj.features_set_id }}/edit/{{ feature.id }}">

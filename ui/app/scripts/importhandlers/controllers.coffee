@@ -66,7 +66,7 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
   $scope.importData = (handler) ->
     $scope.openDialog $scope,
       model: handler
-      template: 'partials/import_handler/load_data.html'
+      template: 'partials/importhandlers/load_data.html'
       ctrlName: 'LoadDataDialogCtrl'
 
   $scope.delete = (handler) ->
@@ -79,7 +79,7 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
 
   $scope.testHandler = (handler) ->
     $scope.openDialog $scope,
-      template: 'partials/import_handler/test_handler.html'
+      template: 'partials/importhandlers/test_handler.html'
       ctrlName: 'ImportTestDialogCtrl'
       action: 'test import handler'
       extra: {handler: $scope.handler}
@@ -98,4 +98,104 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
         action: 'clone xml import handler'
         path: model.BASE_UI_URL
       })
+])
+
+.controller('DeleteImportHandlerCtrl', [
+  '$scope'
+  '$location'
+  'Model'
+  'openOptions'
+
+  ($scope, $location, Model, openOptions) ->
+    $scope.resetError()
+    $scope.MESSAGE = openOptions.action
+    $scope.model = openOptions.model
+    $scope.path = openOptions.path
+    $scope.action = openOptions.action
+    $scope.extra_template = 'partials/importhandlers/extra_delete.html'
+
+    $scope.loadModels = () ->
+      Model.$by_handler(
+        handler: $scope.model.id,
+        show: 'name,id'
+      ).then ((opts) ->
+        $scope.umodels = opts.objects
+      ), ((opts) ->
+        $scope.setError(opts, 'loading models that use import handler')
+      )
+
+    $scope.loadModels()
+])
+
+.controller('ImportTestDialogCtrl', [
+  '$scope'
+  'openOptions'
+  '$window'
+
+  ($scope, openOptions, $window) ->
+    $scope.handler = openOptions.extra.handler
+    $scope.params = $scope.handler.import_params
+    $scope.parameters = {}
+    $scope.test_limit = 2
+    $scope.err = ''
+
+    $scope.runTestImport = () ->
+      $scope.handler.$getTestImportUrl($scope.parameters, $scope.test_limit
+      ).then((resp) ->
+        $scope.$close(true)
+        $window.location.replace resp.data.url
+      , ((opts) ->
+        $scope.err = $scope.setError(opts, 'testing import handler')
+      ))
+])
+
+.controller('ImportHandlerUploadToServerCtrl', [
+  '$scope'
+  '$rootScope'
+  'openOptions'
+
+  ($scope, $rootScope, openOptions) ->
+    $scope.resetError()
+    $scope.model = openOptions.model
+    $scope.model.server = null
+
+    $scope.upload = () ->
+      $scope.model.$uploadPredict($scope.model.server)
+      .then (resp) ->
+        $rootScope.msg = resp.data.status
+      , (opts)->
+        $rootScope.msg = $scope.setError(opts, 'error uploading to predict')
+      $scope.$close(true)
+])
+
+.controller('QueryTestDialogCtrl', [
+  '$scope'
+  'openOptions'
+
+  ($scope, openOptions) ->
+    $scope.handlerUrl = openOptions.extra.handlerUrl
+    $scope.datasources = (ds for ds in openOptions.extra.datasources when \
+      ds.type is 'sql' or ds.type is 'db')
+    $scope.query = openOptions.extra.query
+    $scope.params = $scope.query.getParams()
+
+    if !$scope.query.test_params
+      $scope.query.test_params = {}
+    if !$scope.query.test_limit
+      $scope.query.test_limit = 2
+    if !$scope.query.test_datasource
+      $scope.query.test_datasource = $scope.datasources[0].name
+
+    $scope.runQuery = () ->
+      $scope.query.test = {}
+      $scope.query.$run($scope.query.test_limit, $scope.query.test_params,
+        $scope.query.test_datasource, $scope.handlerUrl
+      ).then((resp) ->
+        $scope.query.test.columns = resp.data.columns
+        $scope.query.test.data = resp.data.data
+        $scope.query.test.sql = resp.data.sql
+        $scope.$close(true)
+      , ((opts) ->
+        $scope.query.test.error = $scope.setError(opts, 'testing sql query')
+      ))
 ])

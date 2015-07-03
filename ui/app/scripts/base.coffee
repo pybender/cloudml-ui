@@ -102,7 +102,7 @@ angular.module('app.base', ['app.config', 'app.services'])
         for name in opts.only
           val = eval("this." + name)
           if typeIsArray val then val = JSON.stringify(val)
-          if name == 'params' && typeof(val) == 'object'
+          if (name == 'params' or name == 'parameters') && typeof(val) == 'object'
             params = {}
             for k, p of @params
               if p? && p != ''
@@ -119,6 +119,16 @@ angular.module('app.base', ['app.config', 'app.services'])
         base_url = @constructor.$get_api_url(opts, @)
         url = if @id? then base_url + @id + "/" else base_url
         @$make_request(url, {}, method, data)
+
+      $clean_parameters: (opts={}) =>
+        data = {}
+        for key, val of opts
+          if key == 'parameters' then val = JSON.stringify(val)
+
+          if val?
+            data[key] = val
+
+        return data
 
       # Removes object by id
       $delete: (opts={}) =>
