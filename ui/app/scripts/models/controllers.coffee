@@ -326,8 +326,13 @@ angular.module('app.models.controllers', ['app.config', ])
     $scope.multiple_dataset = false
 
     classifier = $scope.model.classifier
+    if !classifier.type?
+      $scope.err = 'Need to specify classifier before performing grid search'
+      $scope.inactive = true  # will hide parameters form
+      return
+
     classifier.$getConfiguration(
-    ).then ((opts)->
+    ).then ((opts) ->
       $scope.params = opts.data.configuration[classifier.type]["parameters"]
     ), ((opts)->
       $scope.setError(opts, 'loading types and parameters')

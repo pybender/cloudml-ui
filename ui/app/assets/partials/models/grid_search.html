@@ -6,7 +6,7 @@
 
   <div class="modal-body">
     <ng-include src="'partials/parts/save_form_messages.html'"></ng-include>
-    <form name="Form" class="form-horizontal" ng-show="handler">
+    <form ng-hide="inactive" name="Form" class="form-horizontal" ng-show="handler">
     	<h4 title="Choose lists of parameter settings to try. This enables searching over any sequence of parameter settings.">Grid search parameters</h4>
     	<div class="control-group error" ng-show="errorList.parameters">
     		<div class="controls">
