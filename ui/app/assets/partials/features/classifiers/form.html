@@ -11,7 +11,7 @@
     <label class="control-label">Type</label>
     <div class="controls">
       <select ng-change="loadParameters(true)" name="type" ng-model="model.type" required>
-        <option ng-repeat="(typeName, conf) in configuration" value="{{ typeName }}">{{ typeName }}</option>
+        <option ng-repeat="(type_, conf) in configuration" value="{{ type_ }}" ng-selected="type_ == model.type">{{ type_ }}</option>
       </select>
       <span ng-show="Form.type.$error.required" class="help-inline">type is required <go-to-docs page="features" section="feature-types-defined-in-cloudml-core"></go-to-docs></span>
       <span ng-show="errorList.type" class="help-block" ng-bind="errorList.type" />
@@ -19,10 +19,11 @@
   </div>
   <div ng-show="model.config.parameters">
     <h4>Classifier Parameters</h4>
-    <div ng-repeat="name in model.config.parameters" class="control-group">
-      <label class="control-label">{{ name }}</label>
+    <div ng-repeat="item in model.config.parameters" class="control-group">
+      <label class="control-label" title="Please input {{ item.name }}. Type: {{ item.type }}">{{ item.name }}</label>
       <div class="controls">
-        <input ng-model="model.params[name]" name="{{ name }}" type='text' />
+        <parameter-input ng-model="model.params[item.name]" config="item"></parameter-input>
+        <span class="help-block" ng-show="Form[item.name].$invalid">invalid</span>
       </div>
     </div>
   </div>

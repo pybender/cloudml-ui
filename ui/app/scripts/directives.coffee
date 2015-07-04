@@ -638,6 +638,20 @@ angular.module('app.directives', [
   }
 )
 
+.directive('parameterInput', () ->
+  return {
+    require: 'ngModel',
+    restrict: 'E',
+    scope: {
+      config: '='
+      value: '=ngModel'
+    }
+    templateUrl:'partials/directives/parameter_input.html',
+    link: (scope, element, attrs, ngModel) ->
+      scope.getSelect2Params = scope.$root.getSelect2Params
+  }
+)
+
 # Directives for creating plots
 .directive('scCurves', [ '$timeout', ($timeout)->
   return {

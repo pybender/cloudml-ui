@@ -1,0 +1,25 @@
+<!-- no choices -->
+<span ng-hide="config.choices">
+  <!-- string params -->
+  <span ng-show="config.type == 'string'">
+    <input ng-model="value" ng-name="config.name" type='text' />
+  </span>
+  <!-- boolean params -->
+  <select  ng-show="config.type == 'boolean'" ng-model="value" ng-options="choice for choice in [true, false]" ng-name="config.name"></select>
+  <!-- float params -->
+  <input ng-show="config.type == 'float'" ng-model="value" type='text' smart-float ng-name="config.name" />
+  <!-- auto_dict params -->
+  <span ng-show="config.type == 'auto_dict'">
+    <ng-dict-input name="config.name" ng-model="value"></ng-dict-input>
+  </span>
+  <!-- integer -->
+  <input ng-show="config.type == 'integer'" ng-model="value" type='text' ng-name="config.name" />
+  <!-- ng-pattern='/^\d+$/' -->
+</span>
+
+<!-- choices param - render select -->
+<span ng-show="config.choices">
+  <input ng-show="config.type == 'int_float_string_none'" ui-select2="getSelect2Params({choices: config.choices})" ng-name="config.name" ng-model="value" data-placeholder="integer, float or string value" />
+  <select data-placeholder="pick an item" ng-show="config.type != 'int_float_string_none'" ui-select="{allowClear: true}" ng-name="config.name" ng-model="value" ng-options="c for c in config.choices" />
+</span>
+<span ng-show="config.required" class="help-inline">*</span>
