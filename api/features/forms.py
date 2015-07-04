@@ -75,13 +75,29 @@ class NamedFeatureTypeAddForm(BaseForm, FeatureParamsMixin):
 class FeatureSetForm(BaseForm):
     schema_name = CharField()
     group_by = JsonField()
+    target_variable = CharField()
+
+    target_feature = None
 
     def clean_group_by(self, value, field):
-        ids = [feature['id'] for feature in value]
-        return Feature.query.filter(Feature.id.in_(ids)).all()
+        if value:
+            ids = [feature['id'] for feature in value]
+            return Feature.query.filter(Feature.id.in_(ids)).all()
+
+    def clean_target_variable(self, value, field):
+        if value:
+            self.target_feature = Feature.query.filter_by(
+                name=value,
+                feature_set_id=self.id).one()
+            if self.target_feature is None:
+                raise ValidationError('Feature not found')
+        return value
 
     def save(self):
         self.cleaned_data['modified'] = True
+        if self.target_feature:
+            self.target_feature.is_target_variable = True
+            self.target_feature.save(commit=False)
         return super(FeatureSetForm, self).save()
 
 

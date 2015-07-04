@@ -116,7 +116,10 @@
               Schema Name:
               <span title="Schema Name" class="title" ng-bind="featuresSet.schema_name || 'schema name here'" editable="featuresSet" value="featuresSet.schema_name" editable-field="schema_name" editable-input="text" editable-placement="right"></span>
             </div>
-            <div>Target Variable: <span class="value">{{ featuresSet.target_variable }}</span></div>
+            <div ng-controller="FeatureActionsCtrl">
+              Target Variable: <span title="Target Variable" ng-bind="featuresSet.target_variable || 'no type'" editable="featuresSet" value="featuresSet.target_variable" editable-field="target_variable" editable-placement="right" editable-input="select" source="getFeatureNames(objects)"></span>
+            </div>
+            <!-- <a class="btn btn-info" ng-click="makeTarget(feature)" ng-hide="feature.is_target_variable==true"><i title="Changes target variable (y)" class="icon-star"></i></a> -->
             <div>Features Count: <span class="value">{{ featuresSet.features_count }}</span></div>
           </div>
           <div class="span4">
