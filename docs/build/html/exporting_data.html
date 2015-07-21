@@ -52,6 +52,10 @@
   <ul>
 <li><a class="reference internal" href="#">Exporting data</a><ul>
 <li><a class="reference internal" href="#export-vectorized-data">Export vectorized data</a></li>
+<li><a class="reference internal" href="#export-test-examples-to-database">Export test examples to database</a><ul>
+<li><a class="reference internal" href="#creating-data-sources">Creating data sources</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -93,6 +97,49 @@
 <div class="section" id="export-vectorized-data">
 <h2>Export vectorized data<a class="headerlink" href="#export-vectorized-data" title="Permalink to this headline">¶</a></h2>
 <img alt="_images/export_vect_train_data.png" src="_images/export_vect_train_data.png" />
+</div>
+<div class="section" id="export-test-examples-to-database">
+<span id="export-test-examples-to-db"></span><h2>Export test examples to database<a class="headerlink" href="#export-test-examples-to-database" title="Permalink to this headline">¶</a></h2>
+<p>For exporting test examples to the database you need to:</p>
+<ul class="simple">
+<li><em class="xref std std-ref">create</em> a predefined datasource to connect to the database or use existing one.</li>
+</ul>
+<div class="section" id="creating-data-sources">
+<span id="creating-predefined-datasources"></span><h3>Creating data sources<a class="headerlink" href="#creating-data-sources" title="Permalink to this headline">¶</a></h3>
+<p>Defines the information about database connection.</p>
+<p>Following attributes are available:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="7%" />
+<col width="5%" />
+<col width="88%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Required</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>name</td>
+<td>yes</td>
+<td>A name uniquely identifying this database. In the future this should be required so that queries can refer to which DB connection to use for executing</td>
+</tr>
+<tr class="row-odd"><td>type</td>
+<td>yes</td>
+<td>Currently only &#8216;sql&#8217; is supported.</td>
+</tr>
+<tr class="row-even"><td>db.conn</td>
+<td>yes</td>
+<td>This is field &#8216;conn&#8217; defined A connection string containing the DB connection details</td>
+</tr>
+<tr class="row-odd"><td>db.vendor</td>
+<td>yes</td>
+<td>The name of the database&#8217;s vendor. Currently only &#8216;postgres&#8217; is supported.</td>
+</tr>
+</tbody>
+</table>
+</div>
 </div>
 </div>
 

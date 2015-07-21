@@ -17,31 +17,30 @@ angular.module('app.datasources.model', ['app.config'])
       @LIST_MODEL_NAME: 'datasources'
       LIST_MODEL_NAME: @LIST_MODEL_NAME
       @$TYPES_LIST: ['sql', ]
-      @MAIN_FIELDS: 'name,id,type,db,created_on,created_by'
+      @MAIN_FIELDS: 'name,id,type,db,created_on,created_by,can_edit,can_delete'
       @$VENDORS_LIST: ['postgres', ]
 
       id: null
       name: null
       type: null
-      db: {'conn': '', 'vendor': ''}
+      conn: null
+      vendor: null
       created_on: null
       updated_on: null
 
+      loadFromJSON: (origData) =>
+        super origData
+        
+        if origData?
+          if origData.db?
+            @vendor = origData.db['vendor']
+            @conn = origData.db['conn']
+
       $save: (opts={}) =>
-        if @handler?
-          prefix = 'datasource.' + @num + '.'
-          data = {}
-          for key in opts.only
-            val = eval('this.' + key)
-            if key == 'db'
-              data[prefix + key] = JSON.stringify(val)
-            else
-              data[prefix + key] = val
-          @$make_request(@handler.getUrl(), {}, "PUT", data)
-        else
-          if @db? && typeof(@db) == 'object'
-            @db = JSON.stringify(@db)
-          super opts
+        if !opts.extraData?
+          opts.extraData = {}
+        opts.extraData.db = JSON.stringify({'vendor': @vendor, 'conn': @conn})
+        super opts
 
     return DataSource
 ])

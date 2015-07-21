@@ -15,6 +15,8 @@ IMPORTHANDLER_FROM_FIXTURES = open(os.path.join(
     DIR, 'importhandler_from_fixtures.xml'), 'r').read()
 EXTRACT_TRAIN_XML = open(os.path.join(DIR, 'extract-train.xml'), 'r').read()
 EXTRACT_OBSOLETE = open(os.path.join(DIR, 'obsolete_extract.xml'), 'r').read()
+# PIG_IMPORT_HANDLER = os.path.join(
+#     DIR, 'pig-train-import-handler.xml')
 
 
 def get_importhandler(filename='extract-train.xml'):
@@ -34,9 +36,20 @@ class PredefinedDataSourceData(DataSet):
     class datasource_01:
         name = "DataSource #1"
         type = "sql"
-        db = {'conn': 'conn str', 'vendor': 'postgres'}
+        db = {'conn': "host='localhost' dbname='db1' user='user' \
+password='pwd-pwd'", 'vendor': 'postgres'}
         created_on = "2013-04-19 14:37:23.145000"
         updated_on = "2013-04-19 14:37:23.145000"
+        created_by = UserData.user_01
+
+    class datasource_02:
+        name = "DataSource #2"
+        type = "sql"
+        db = {'conn': "host='localhost' dbname='db' user='user' \
+password='pwd'", 'vendor': 'postgres'}
+        created_on = "2013-04-19 14:37:23.145000"
+        updated_on = "2013-04-19 14:37:23.145000"
+        created_by = UserData.user_02
 
 
 class XmlImportHandlerData(DataSet):

@@ -348,21 +348,7 @@ class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
 
 
 class IHLoadMixin(object):
-    PIG_IMPORT_HANDLER = os.path.join(
-        DIR, '../fixtures/pig-train-import-handler.xml')
-
-    def load_import_handler(self, filename='conf/extract.xml'):
-        name = str(uuid.uuid1())
-        with open(filename, 'r') as fp:
-            resp_data = self.client.post(
-                '/cloudml/xml_import_handlers/',
-                data={
-                    'name': name,
-                    'data': fp.read()
-                },
-                headers=HTTP_HEADERS)
-            resp_data = json.loads(resp_data.data)
-        return resp_data[XmlImportHandlerResource.OBJECT_NAME]['id']
+    pass
 
 
 class XmlEntityTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):

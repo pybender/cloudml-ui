@@ -20,6 +20,7 @@
 	    <th>Vendor</th>
 	    <th>Connection</th>
 	    <th>Created</th>
+	    <th>Actions</th>
 	  </tr>
 	</thead>
 	<tbody ng-show="objects.length == 0">
@@ -32,15 +33,19 @@
 	<tbody ng-hide="objects.length == 0">
 	  <tr ng-repeat="ds in objects | orderBy:'name'">
 	    <td>
-	      <a ng-click="edit(ds)">{{ ds.name }}</a>
+	    	<span ng-hide="ds.can_edit">{{ ds.name }}</span>
+	      	<a ng-show="ds.can_edit" ng-click="edit(ds)">{{ ds.name }}</a>
 	    </td>
 	    <td>{{ ds.type }}</td>
-	    <td>{{ ds.db.vendor }}</td>
-	    <td>{{ ds.db.conn }}</td>
+	    <td>{{ ds.vendor }}</td>
+	    <td>{{ ds.conn }}</td>
 	    <td>
-	        <span title="dates in GMT">{{ ds.created_on|format_date }}
-	        </span><br>
+	        <span title="dates in GMT">{{ ds.created_on|format_date }}</span><br>
 	        <small ng-show="ds.created_by">by {{ ds.created_by.name }} ({{ ds.created_by.uid }})</small>
+	    </td>
+	    <td>
+	    	<button ng-show="ds.can_delete" ng-click="delete(ds)" class="btn btn-danger"><i title="Delete your datasource. Be careful - you could not recover it!" class="icon-remove"></i>
+        </button>
 	    </td>
 	  </tr>
 	</tbody>

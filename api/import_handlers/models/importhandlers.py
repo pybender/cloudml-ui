@@ -160,15 +160,6 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
         'Predict', foreign_keys=[predict_id], backref="import_handler")
 
     @property
-    def can_edit(self):
-        if self.created_by is None:
-            return True
-
-        from flask import request
-        user = getattr(request, 'user', None)
-        return user.id == self.created_by.id
-
-    @property
     def data(self):
         return self.get_plan_config()
 

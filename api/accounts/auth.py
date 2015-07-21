@@ -14,6 +14,10 @@ class AuthException(Exception):
     pass
 
 
+class NoPermissionsException(AuthException):
+    pass
+
+
 class Auth(object):
     """
     Authorization router.

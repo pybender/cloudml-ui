@@ -45,13 +45,25 @@ def convert_int_float_string_none(val, config):
     return val
 
 
+def convert_float_or_int(val, config):
+    if isint(val):
+        return int(val)
+    elif isfloat(val):
+        return float(val)
+    else:
+        raise ValidationError(
+            'Invalid value {0} for type {1}'.format(
+                val, config.type))
+
+
 TYPE_CONVERTORS = {
     'string': lambda a, c: a,
     'boolean': lambda a, c: a in ('True', 1, True, 'true'),
     'float': lambda a, c: float(a),
     'integer': lambda a, c: int(a),
     'auto_dict': convert_auto_dict,
-    'int_float_string_none': convert_int_float_string_none
+    'int_float_string_none': convert_int_float_string_none,
+    'float_or_int': convert_float_or_int
 }
 
 

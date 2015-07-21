@@ -648,7 +648,10 @@ angular.module('app.directives', [
     }
     templateUrl:'partials/directives/parameter_input.html',
     link: (scope, element, attrs, ngModel) ->
-      scope.getSelect2Params = scope.$root.getSelect2Params
+      scope.select2Opts = null
+      if scope.config.choices
+        scope.select2Opts = scope.$root.getSelect2Params(
+          {choices: scope.config.choices})
   }
 )
 
@@ -698,7 +701,6 @@ angular.module('app.directives', [
     templateUrl:'partials/directives/ng_dict_input.html'
 
     link: (scope, element, attrs, ngModel) ->
-      #console.log scope.value
       scope.displayValue = JSON.stringify(scope.value)
 
       scope.change = () ->

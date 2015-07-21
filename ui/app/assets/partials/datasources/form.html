@@ -1,4 +1,4 @@
-<form name="Form" class="form-horizontal" ng-controller="DataSourceChoicesLoader">
+<form name="Form" class="form-horizontal" ng-controller="DataSourceFormCtrl">
   <div class="control-group" ng-class="{error: Form.name.$invalid || errorList.name}">
     <label class="control-label">Name</label>
     <div class="controls">
@@ -19,8 +19,8 @@
   <div class="control-group" ng-class="{error: Form.vendor.$invalid || errorList.vendor}">
     <label class="control-label">Vendor</label>
     <div class="controls">
-      <select name="vendor" ng-model="model.db.vendor" required>
-        <option ng-selected="model.db.vendor == name" ng-repeat="name in vendors" value="{{ name }}">{{ name }}</option>
+      <select name="vendor" ng-model="model.vendor" required>
+        <option ng-selected="model.vendor == name" ng-repeat="name in vendors" value="{{ name }}">{{ name }}</option>
       </select>
       <span ng-show="errorList.vendor" class="help-block" ng-bind="errorList.vendor" />
     </div>
@@ -28,9 +28,9 @@
   <div class="control-group" ng-class="{error: Form.conn.$invalid || errorList.conn}">
     <label class="control-label">Connection</label>
     <div class="controls">
-      <input type="text" name="conn" ng-model="model.db.conn" required />
+      <input type="text" name="conn" ng-model="model.conn" required />
       <span ng-show="Form.conn.$error.required" class="help-inline">*</span>
-      <span ng-show="Form.vendor.$error.required" class="help-block">A connection string containing the DB connection details</span>
+      <span ng-show="Form.conn.$error.required" class="help-block">A connection string containing the DB connection details</span>
       <span ng-show="errorList.conn" class="help-block" ng-bind="errorList.conn" />
     </div>
   </div>

@@ -56,6 +56,12 @@ class BaseMixin(JsonSerializableMixin):
         db.session.delete(self)
         db.session.commit()
 
+    def can_edit(self):
+        return True
+
+    def can_delete(self):
+        return True
+
 
 class BaseModel(BaseMixin):
     created_on = db.Column(db.DateTime, server_default=func.now())
@@ -81,6 +87,29 @@ class BaseModel(BaseMixin):
     def updated_by(cls):
         return relationship(
             "User", foreign_keys='%s.updated_by_id' % cls.__name__)
+
+    @property
+    def can_edit(self):
+        if self.created_by is None:
+            return True
+        return self._can_modify()
+
+    @property
+    def can_delete(self):
+        if self.created_by is None:
+            return True
+        return self._can_modify()
+
+    def _can_modify(self):
+        from flask import request
+        user = getattr(request, 'user', None)
+        if user is None:
+            return False
+
+        if user.email in [el[1] for el in app.config['ADMINS']]:
+            return True
+
+        return user.id == self.created_by.id
 
 
 def commit_on_success(func, raise_exc=False):

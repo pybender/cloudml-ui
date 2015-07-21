@@ -1,6 +1,6 @@
 angular.module('app.datasources.controllers', ['app.config', ])
 
-.controller('DataSourceChoicesLoader', [
+.controller('DataSourceFormCtrl', [
   '$scope'
   'DataSource'
 
@@ -37,18 +37,18 @@ angular.module('app.datasources.controllers', ['app.config', ])
     $scope.ACTION = 'loading datasources'
     $scope.LIST_MODEL_NAME = DataSource.LIST_MODEL_NAME
 
-    $scope.edit = (ds) ->
-      $scope.openDialog($scope, {
-        model: ds
-        template: 'partials/datasources/edit.html'
-        ctrlName: 'ModelEditDialogCtrl'
-      })
-
     $scope.add = () ->
       ds = new DataSource()
       $scope.openDialog($scope, {
         model: ds
         template: 'partials/datasources/add.html'
+        ctrlName: 'ModelEditDialogCtrl'
+      })
+
+    $scope.edit = (ds) ->
+      $scope.openDialog($scope, {
+        model: ds
+        template: 'partials/datasources/edit.html'
         ctrlName: 'ModelEditDialogCtrl'
       })
 
@@ -60,6 +60,7 @@ angular.module('app.datasources.controllers', ['app.config', ])
         action: 'delete data source'
       })
 
+    # open details dialog, when id is specified
     if $routeParams.id
       ds = new DataSource({id: $routeParams.id})
       ds.$load
@@ -68,24 +69,4 @@ angular.module('app.datasources.controllers', ['app.config', ])
         $scope.edit(ds)
       , (opts) ->
         $scope.setError(opts, 'loading datasource details')
-
-])
-
-.controller('DataSourceEditDialogCtrl', [
-  '$scope'
-  'openOptions'
-
-  ($scope, openOptions) ->
-    $scope.handler = openOptions.extra.handler
-    $scope.model = openOptions.extra.ds
-    $scope.DONT_REDIRECT = true
-
-    $scope.$on('SaveObjectCtl:save:success', ->
-      $scope.$close(true)
-      $scope.handler.$load
-        show: 'data'
-      .then (->)
-      , (opts)->
-        $scope.setError(opts, 'loading datasource details')
-    )
 ])

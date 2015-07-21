@@ -133,7 +133,7 @@ Deploy new version::
 
 Create image::
 
-    $ 
+    $ python manage.py create_image
 
 
 
