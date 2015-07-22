@@ -1,8 +1,8 @@
-<form name="Form" class="form-horizontal" ng-controller="DataSourceFormCtrl">
+<div ng-controller="DataSourceFormCtrl">
   <div class="control-group" ng-class="{error: Form.name.$invalid || errorList.name}">
     <label class="control-label">Name</label>
     <div class="controls">
-      <input type="text" name="name" ng-model="model.name" ng-change="setFieldError('name')" required />
+      <input type="text" name="name" ng-model="model.name" ng-change="setFieldError('name')" placeholder="unique name" required />
       <span ng-show="Form.name.$error.required" class="help-block">name is required and should be unique</span>
       <span ng-show="errorList.name" class="help-block" ng-bind="errorList.name" />
     </div>
@@ -28,10 +28,10 @@
   <div class="control-group" ng-class="{error: Form.conn.$invalid || errorList.conn}">
     <label class="control-label">Connection</label>
     <div class="controls">
-      <input type="text" name="conn" ng-model="model.conn" required />
+      <textarea type="text" rows="4" name="conn" ng-model="model.conn" placeholder="connection string" required></textarea>
       <span ng-show="Form.conn.$error.required" class="help-inline">*</span>
-      <span ng-show="Form.conn.$error.required" class="help-block">A connection string containing the DB connection details</span>
+      <span ng-show="Form.conn.$error.required" class="help-block">A connection string containing the DB connection details.</span>
       <span ng-show="errorList.conn" class="help-block" ng-bind="errorList.conn" />
     </div>
   </div>
-</form>
+</div>

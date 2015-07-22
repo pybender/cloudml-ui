@@ -1,7 +1,7 @@
-<div ng-controller="SaveObjectCtl">
+<form name="Form" class="form-horizontal" ng-controller="SaveObjectCtl">
   <div class="modal-header">
     <button ng-click="$dismiss('cancel')" class="close" data-dismiss="modal">×</button>
-    <h3>Add new data source <go-to-docs page="import_handler" section="defining-data-sources"></go-to-docs></h3>
+    <h3>Add new datasource <go-to-docs page="exporting_data" section="predefined-datasources" title="more about predefined datasources"></go-to-docs></h3>
   </div>
 
   <div class="modal-body">
@@ -12,4 +12,4 @@
   <div class="modal-footer">
     <button ng-click="save(['name', 'type', 'db'])" ng-disabled="Form.$invalid" class="btn btn-primary">Add new data source</button> <small>and start using it in import handlers</small>
   </div>
-</div>
+</form>

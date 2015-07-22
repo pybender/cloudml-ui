@@ -1,6 +1,6 @@
 <div class="modal-header">
 <button ng-click="close()" class="close" data-dismiss="modal">×</button>
-<h3>Export Classification Results to DB</h3>
+<h3>Export Classification Results to DB <go-to-docs page="exporting_data" section="export_test_examples_to_db" title="more about exporting test examples to the database"></go-to-docs></h3>
 </div>
 <div class="modal-body">
   <div class='alert alert-error' ng-show='err'>{{ err }}</div>
@@ -13,7 +13,7 @@
         <option ng-repeat="ds in datasources" value="{{ ds.id }}">{{ ds.name }}</option>
       </select>
       <span ng-show="Form.datasource.$error.required" class="help-inline">*</span>
-      <span class="help-block">You could add predefined datasources <a href="#/predefined/datasources" target="_blank">here</a></span>
+      <span class="help-block">You could add predefined datasources <a href="#/predefined/datasources/?action=add" target="_blank">here</a></span>
     </div>
     <div class="controls">
       <label>Table Name: </label>

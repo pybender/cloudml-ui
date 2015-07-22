@@ -8,7 +8,6 @@ Export vectorized data
 
 .. image:: ./images/export_vect_train_data.png
 
-
 .. _export_test_examples_to_db:
 
 Export test examples to database
@@ -16,23 +15,32 @@ Export test examples to database
 
 For exporting test examples to the database you need to:
 
-* :ref:`create <reating-predefined-datasources>` a predefined datasource to connect to the database or use existing one.
+* create :ref:`a predefined datasource <predefined-datasources>`  or `use <http://cloudml.int.odesk.com/#/predefined/datasources>`_ existing one.
+* go to test details page and click to `Export Classification Results to DB` button
+* in the form specify the datasource to be used to connect to the database, name of the table and fields, that should be imported.
 
-.. _creating-predefined-datasources:
+.. note::
 
-Creating data sources
----------------------
+	Don't forgot, that test should be completed.
 
-Defines the information about database connection.
+.. image:: ./images/export-to-db.jpg
 
-Following attributes are available:
+.. _predefined-datasources:
 
+Predefined DataSources
+----------------------
 
-============  ========   ===========
-Name          Required   Description
-============  ========   ===========
-name          yes        A name uniquely identifying this database. In the future this should be required so that queries can refer to which DB connection to use for executing
-type   		  yes        Currently only 'sql' is supported.
-db.conn       yes        This is field 'conn' defined A connection string containing the DB connection details
-db.vendor     yes        The name of the database's vendor. Currently only 'postgres' is supported.
-============  ========   ===========
+Predefined DataSource stores the information about database connection. It could be used, when exporting tests examples
+to specific database.
+
+To create a new datasource navigate to `datasources page <http://cloudml.int.odesk.com/#/predefined/datasources/?action=add>`_
+and fill the form with following attributes:
+
+- `name` : string
+	unique name of the datasource
+- `type`: string, {'sql'}
+	type of the database
+- `vendor`: string, {'postgres'}
+	the name of the database's vendor
+- `conn` : string
+	defined A connection string containing the DB connection details

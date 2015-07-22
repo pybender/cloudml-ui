@@ -53,7 +53,7 @@
 <li><a class="reference internal" href="#">Exporting data</a><ul>
 <li><a class="reference internal" href="#export-vectorized-data">Export vectorized data</a></li>
 <li><a class="reference internal" href="#export-test-examples-to-database">Export test examples to database</a><ul>
-<li><a class="reference internal" href="#creating-data-sources">Creating data sources</a></li>
+<li><a class="reference internal" href="#predefined-datasources">Predefined DataSources</a></li>
 </ul>
 </li>
 </ul>
@@ -102,43 +102,47 @@
 <span id="export-test-examples-to-db"></span><h2>Export test examples to database<a class="headerlink" href="#export-test-examples-to-database" title="Permalink to this headline">¶</a></h2>
 <p>For exporting test examples to the database you need to:</p>
 <ul class="simple">
-<li><em class="xref std std-ref">create</em> a predefined datasource to connect to the database or use existing one.</li>
+<li>create <a class="reference internal" href="#predefined-datasources"><em>a predefined datasource</em></a>  or <a class="reference external" href="http://cloudml.int.odesk.com/#/predefined/datasources">use</a> existing one.</li>
+<li>go to test details page and click to <cite>Export Classification Results to DB</cite> button</li>
+<li>in the form specify the datasource to be used to connect to the database, name of the table and fields, that should be imported.</li>
 </ul>
-<div class="section" id="creating-data-sources">
-<span id="creating-predefined-datasources"></span><h3>Creating data sources<a class="headerlink" href="#creating-data-sources" title="Permalink to this headline">¶</a></h3>
-<p>Defines the information about database connection.</p>
-<p>Following attributes are available:</p>
-<table border="1" class="docutils">
-<colgroup>
-<col width="7%" />
-<col width="5%" />
-<col width="88%" />
-</colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">Name</th>
-<th class="head">Required</th>
-<th class="head">Description</th>
-</tr>
-</thead>
-<tbody valign="top">
-<tr class="row-even"><td>name</td>
-<td>yes</td>
-<td>A name uniquely identifying this database. In the future this should be required so that queries can refer to which DB connection to use for executing</td>
-</tr>
-<tr class="row-odd"><td>type</td>
-<td>yes</td>
-<td>Currently only &#8216;sql&#8217; is supported.</td>
-</tr>
-<tr class="row-even"><td>db.conn</td>
-<td>yes</td>
-<td>This is field &#8216;conn&#8217; defined A connection string containing the DB connection details</td>
-</tr>
-<tr class="row-odd"><td>db.vendor</td>
-<td>yes</td>
-<td>The name of the database&#8217;s vendor. Currently only &#8216;postgres&#8217; is supported.</td>
-</tr>
-</tbody>
-</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Don&#8217;t forgot, that test should be completed.</p>
+</div>
+<img alt="_images/export-to-db.jpg" src="_images/export-to-db.jpg" />
+<div class="section" id="predefined-datasources">
+<span id="id1"></span><h3>Predefined DataSources<a class="headerlink" href="#predefined-datasources" title="Permalink to this headline">¶</a></h3>
+<p>Predefined DataSource stores the information about database connection. It could be used, when exporting tests examples
+to specific database.</p>
+<p>To create a new datasource navigate to <a class="reference external" href="http://cloudml.int.odesk.com/#/predefined/datasources/?action=add">datasources page</a>
+and fill the form with following attributes:</p>
+<ul>
+<li><dl class="first docutils">
+<dt><cite>name</cite> <span class="classifier-delimiter">:</span> <span class="classifier">string</span></dt>
+<dd><p class="first last">unique name of the datasource</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><cite>type</cite>: string, {&#8216;sql&#8217;}</dt>
+<dd><p class="first last">type of the database</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><cite>vendor</cite>: string, {&#8216;postgres&#8217;}</dt>
+<dd><p class="first last">the name of the database&#8217;s vendor</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><cite>conn</cite> <span class="classifier-delimiter">:</span> <span class="classifier">string</span></dt>
+<dd><p class="first last">defined A connection string containing the DB connection details</p>
+</dd>
+</dl>
+</li>
+</ul>
 </div>
 </div>
 </div>

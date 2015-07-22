@@ -1,5 +1,5 @@
 <h2>
-  DataSource List
+  DataSource List <go-to-docs page="exporting_data" section="predefined-datasources" title="more about predefined datasources"></go-to-docs>
   <div class="actions">
       <a class="btn btn-info" ng-click="add()">
         <i class="status-icon icon-plus"></i> Add new data source
@@ -33,8 +33,8 @@
 	<tbody ng-hide="objects.length == 0">
 	  <tr ng-repeat="ds in objects | orderBy:'name'">
 	    <td>
+	    	<span ng-show="ds.can_edit" title="DataSource Name" class="name" ng-bind="ds.name || 'name here'" editable="ds" value="ds.name" editable-field="name" editable-input="text" editable-placement="right"></span>
 	    	<span ng-hide="ds.can_edit">{{ ds.name }}</span>
-	      	<a ng-show="ds.can_edit" ng-click="edit(ds)">{{ ds.name }}</a>
 	    </td>
 	    <td>{{ ds.type }}</td>
 	    <td>{{ ds.vendor }}</td>
@@ -44,6 +44,7 @@
 	        <small ng-show="ds.created_by">by {{ ds.created_by.name }} ({{ ds.created_by.uid }})</small>
 	    </td>
 	    <td>
+	    	<button ng-show="ds.can_edit" class="btn btn-info" ng-click="edit(ds)"><i class="icon-edit" title="edit" /></button>
 	    	<button ng-show="ds.can_delete" ng-click="delete(ds)" class="btn btn-danger"><i title="Delete your datasource. Be careful - you could not recover it!" class="icon-remove"></i>
         </button>
 	    </td>

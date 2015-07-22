@@ -118,7 +118,7 @@ Can not load it: aaa, transformer-type: type is invalid"})
 
         transformer = Transformer.query.all()[0]
         data = {
-            "name": "title",
+            "name": "feature-with-pretrained-transformer",
             "type": "text",
             "feature_set_id": self.model.features_set_id,
             "transformer-transformer": transformer.id,

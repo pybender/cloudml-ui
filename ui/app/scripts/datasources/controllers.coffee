@@ -38,7 +38,10 @@ angular.module('app.datasources.controllers', ['app.config', ])
     $scope.LIST_MODEL_NAME = DataSource.LIST_MODEL_NAME
 
     $scope.add = () ->
-      ds = new DataSource()
+      ds = new DataSource({
+        vendor: 'postgres'
+        type: 'sql'
+        conn: "host='localhost' dbname='db' user='user' password='password' port='5432'"})
       $scope.openDialog($scope, {
         model: ds
         template: 'partials/datasources/add.html'
@@ -57,7 +60,7 @@ angular.module('app.datasources.controllers', ['app.config', ])
         model: ds
         template: 'partials/base/delete_dialog.html'
         ctrlName: 'DialogCtrl'
-        action: 'delete data source'
+        action: 'delete datasource'
       })
 
     # open details dialog, when id is specified
@@ -69,4 +72,9 @@ angular.module('app.datasources.controllers', ['app.config', ])
         $scope.edit(ds)
       , (opts) ->
         $scope.setError(opts, 'loading datasource details')
+
+    # open add new datasource dialog, when action='add' spec.
+    if $routeParams.action? && $routeParams.action == 'add'
+      $scope.add()
+
 ])
