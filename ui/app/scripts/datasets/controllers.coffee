@@ -189,19 +189,19 @@ filesize,records_count,time,created_by,updated_by'
     # parameters which affects the repeater in load_data.html and also affects
     # the number of fields in the dataset import dialog bog
     $scope.params = _.uniq(handler.import_params)
-    $scope.format = 'json'
+    $scope.data_format = 'json'
     $scope.formats = [
       {name: 'JSON', value: 'json'}, {name: 'CSV', value: 'csv'}
     ]
 
-    $scope.start = (result) ->
+    $scope.start = (format) ->
       $scope.dataset = new DataSet({
         'import_handler_id': $scope.handler.id
         'import_handler_type': $scope.handler.TYPE
       })
       data = {
         import_params: JSON.stringify($scope.parameters),
-        format: $scope.format
+        format: format,
         handler_type: $scope.handler.TYPE
       }
       $scope.dataset.$save(data)
