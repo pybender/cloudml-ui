@@ -14,32 +14,32 @@ angular.module('app.datas.controllers', ['app.config', ])
 ($scope, $rootScope, $location, Data, Model) ->
   $scope.filter_opts = $location.search() or {} # Used in ObjectListCtrl.
   $scope.simple_filters = {} # Filters by label and pred_label
-  $scope.data_filters = [] # Filters by data_input.* fields
+  $scope.data_filters = {} # Filters by data_input.* fields
   $scope.loading_state = false
   $scope.sort_by = $scope.filter_opts['sort_by'] or ''
   $scope.asc_order = $scope.filter_opts['order'] != 'desc'
+  $scope.keysf = Object.keys
 
   $scope.init = (test, extra_params={'action': 'examples:list'}) ->
     $scope.extra_params = extra_params
     $scope.test = test
     $scope.loading_state = true
-    $scope.test.$load(
-        show: 'name,examples_fields'
-    ).then ((opts) ->
-        $scope.fields = $scope.test.examples_fields
-        # Init search form
-        for key, val of $scope.filter_opts
-          key_name = key.replace("data_input->>", "")
-          if key_name in $scope.fields
-            $scope.data_filters.push({name: key, value: val})
-          else if key == 'label' || key == 'pred_label'
-            $scope.simple_filters[key] = val
-        $scope.filter()
-        $scope.loading_state = false
-    ), ((opts) ->
-        $scope.setError(opts, 'loading test details')
-        $scope.loading_state = false
-    )
+
+    Data.$loadFieldList($scope.test.model_id,
+      $scope.test.id)
+    .then (opts) ->
+      $scope.fields = opts.fields
+      for key, val of $scope.filter_opts
+        key_name = key.replace("data_input->>", "")
+        if key_name in $scope.fields
+          $scope.data_filters[key] = val
+        else if key == 'label' || key == 'pred_label'
+          $scope.simple_filters[key] = val
+      $scope.filter()
+      $scope.loading_state = false
+    , (opts) ->
+      $scope.setError(opts, 'loading data field list')
+      $scope.loading_state = false
 
     $scope.model = new Model({id: $scope.test.model_id})
     $scope.model.$load(show: 'name,labels').then (->
@@ -79,14 +79,26 @@ angular.module('app.datas.controllers', ['app.config', ])
   $scope.addFilter = () ->
     $scope.data_filters.push({name: '', value: ''})
 
+  $scope.appendDataFieldFilter = (key, value) ->
+    $scope.data_filters[key] = value
+    $scope.filter()
+    $scope.dataField = null
+    $scope.dataValue = null
+
+  $scope.removeDataFieldFilter = (key) ->
+    delete $scope.data_filters[key]
+    $scope.filter()
+
+  $scope.removeSimpleFieldFilter = (key) ->
+    delete $scope.simple_filters[key]
+    $scope.filter()
+
   $scope.filter = () ->
-    data_filters = {}
-    search_params = {}
-    for item in $scope.data_filters
-      if item.name
-        data_filters[item.name] = item.value
-    $scope.filter_opts = _.extend($scope.simple_filters, data_filters,
-                                  $scope.extra_params)
+    opts = {}
+    $scope.filter_opts = _.extend(opts, $scope.extra_params, $scope.simple_filters,
+        $scope.data_filters)
+    delete opts['action']
+    $scope.filter_opts = opts
     $location.search($scope.getParamsDict())
 
   $scope.details = (example) ->

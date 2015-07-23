@@ -13,7 +13,7 @@ Contents:
    :maxdepth: 2
    
    get_started
-   xml_import_handlers
+   import_handlers
    features
    changes
    trainer
