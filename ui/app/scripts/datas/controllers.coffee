@@ -153,7 +153,7 @@ angular.module('app.datas.controllers', ['app.config', ])
       $scope.objects = opts.objects
       $scope.loading_state = false
     ), ((opts) ->
-      $scope.setError(opts, 'loading test examples')
+      $scope.setError(opts, 'loading grouped test examples info: ' + opts.message)
       $scope.loading_state = false
     )
 ])
@@ -183,7 +183,7 @@ angular.module('app.datas.controllers', ['app.config', ])
     loadParams = _.extend(
       {show: ['test_name','weighted_data_input','model', 'pred_label',
               'label','prob', 'created_on', 'test_result', 'next', 'previous',
-              'parameters_weights', 'data_input'].join(',')}, $scope.filter_opts)
+              'parameters_weights', 'data_input', 'name'].join(',')}, $scope.filter_opts)
     $scope.data.$load loadParams
     .then ->
       $scope.loaded = true

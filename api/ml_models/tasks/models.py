@@ -150,7 +150,7 @@ def get_classifier_parameters_grid(grid_params_id):
         grid_params.parameters,
         _get_iter(grid_params.train_dataset),
         _get_iter(grid_params.test_dataset),
-        score='accuracy')
+        score=grid_params.scoring)
     grids = {}
     for segment, clf in clfs.iteritems():
         grids[segment] = [{

@@ -1,7 +1,7 @@
 <ng-include src="'partials/parts/pager.html'"></ng-include>
 
 <h2>
-  Test Example <span ng-show="data.loaded">"{{ data.test_name|capfirst }}:{{ data.example_id }}"</span> Details
+  Test Example <span ng-show="data.loaded">"{{ data.test_name|capfirst }}:{{ data.name }}"</span> Details
 </h2>
 <div title="quick info" ng-show="data.loaded" ng-init="obj=data">
   <span ng-repeat="tag in model.tags">
