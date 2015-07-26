@@ -78,7 +78,7 @@ Create postgresql tables::
 
 Run dev server::
 
-    $ python manage.py runserver
+    $ python manage.py runserver --threaded
 
 .. _celery:
 

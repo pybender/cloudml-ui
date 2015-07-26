@@ -1,0 +1,124 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Model Parameters Grid Search &mdash; oDesk CloudML 0.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="oDesk CloudML 0.0.1 documentation" href="index.html" />
+    <link rel="next" title="Exporting data" href="exporting_data.html" />
+    <link rel="prev" title="Test Examples" href="test_examples.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="exporting_data.html" title="Exporting data"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="test_examples.html" title="Test Examples"
+             accesskey="P">previous</a> |</li>
+    <li><a href="http://cloudml.int.odesk.com/">CloudML UI</a> &raquo;</li>
+    
+        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="test_examples.html"
+                        title="previous chapter">Test Examples</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="exporting_data.html"
+                        title="next chapter">Exporting data</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/grid_search.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="model-parameters-grid-search">
+<h1>Model Parameters Grid Search<a class="headerlink" href="#model-parameters-grid-search" title="Permalink to this headline">¶</a></h1>
+<p>Searches over specified parameter values for an classifier.
+As the underlying implementation used <a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.grid_search.GridSearchCV.html#sklearn-grid-search-gridsearchcv">Scikit GridSearchCV</a></p>
+<p>For starting parameters grid search click to &#8220;Grid search&#8221; button on the right-top corner of the model details page.</p>
+<p>In opened popup you should choose classifier parameters, dataset for training, dataset for testing and model evaluation metrics.</p>
+<img alt="./_static/getting_started/grid-search.png" src="./_static/getting_started/grid-search.png" />
+<p>Searching the best classifier parameters is the background process, so navigate to &#8220;Parameters Search&#8221; tab to view results:</p>
+<img alt="./_static/getting_started/grid-search-results.png" src="./_static/getting_started/grid-search-results.png" />
+<p>Seems the best parameters are &#8220;C: 100, penalty: l2&#8221;.</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="exporting_data.html" title="Exporting data"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="test_examples.html" title="Test Examples"
+             >previous</a> |</li>
+    <li><a href="http://cloudml.int.odesk.com/">CloudML UI</a> &raquo;</li>
+    
+        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, oDesk.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b2.
+    </div>
+  </body>
+</html>

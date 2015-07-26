@@ -25,6 +25,8 @@ Contents:
    developers_guide
    api
    settings
+   test_examples
+   grid_search
    exporting_data
    whats_new
 

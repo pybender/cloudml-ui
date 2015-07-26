@@ -1,0 +1,44 @@
+{
+  "schema-name": "example",
+ "classifier": {
+    "type": "logistic regression",
+    "params": {
+      "penalty": "l2"
+    }
+  },
+  "features":[
+    {
+      "name":"sex",
+      "type":"map",
+      "params": {
+        "mappings":{
+          "I": 0,
+          "M": 1,
+          "F": 2
+        }
+      },
+      "is-target-variable":true,
+      "is-required":true
+    },
+    {
+      "name":"square",
+      "type":"float"
+    },
+    {
+      "name":"diameter",
+      "type":"float"
+    },
+    {
+      "name":"whole_weight",
+      "type":"float"
+    },
+    {
+      "name":"shucked_weight",
+      "type":"float"
+    },
+    {
+      "name":"rings",
+      "type":"int"
+    }
+  ]
+}

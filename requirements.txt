@@ -45,4 +45,5 @@ Flask-Admin==1.0.7
 nltk
 requests
 lxml==3.3.3
+wtforms==1.0.5
 

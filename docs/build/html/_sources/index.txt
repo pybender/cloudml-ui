@@ -13,7 +13,7 @@ Contents:
    :maxdepth: 2
    
    get_started
-   xml_import_handlers
+   import_handlers
    features
    changes
    trainer
@@ -25,6 +25,8 @@ Contents:
    developers_guide
    api
    settings
+   test_examples
+   grid_search
    exporting_data
    whats_new
 
