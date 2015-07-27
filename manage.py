@@ -142,6 +142,7 @@ class CreateDynamoDbTables(Command):
     """Create db tables"""
 
     def run(self, **kwargs):
+        print 'Creating dynamodb tables....'
         from api.logs.dynamodb.models import LogMessage
         from api.accounts.models import AuthToken
         LogMessage.create_table()

@@ -169,7 +169,8 @@ class AmazonS3Helper(object):
         token = token or app.config['AMAZON_ACCESS_TOKEN']
         secret = secret or app.config['AMAZON_TOKEN_SECRET']
         self.bucket_name = bucket_name or app.config['AMAZON_BUCKET_NAME']
-        self.conn = boto.connect_s3(token, secret)
+        self.conn = boto.connect_s3(token, secret,is_secure=False)
+        
 
     @property
     def bucket(self):

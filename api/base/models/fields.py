@@ -46,6 +46,7 @@ class JSONType(TypeDecorator):
         return value
 
     def process_result_value(self, value, dialect):
+<<<<<<< Updated upstream
         if value is None:
             return None
 
@@ -57,6 +58,12 @@ class JSONType(TypeDecorator):
         except:
             logging.error("Can't load json {0}".format(value))
             return value
+=======
+        if value is not None:
+           # print "*** value", value
+           # print '**** value-with-type', value, type(value)
+            value = json.loads(value)
+>>>>>>> Stashed changes
         return value
 
 

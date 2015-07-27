@@ -27,8 +27,8 @@
     <link rel="next" title="Migrating JSON files" href="changes.html" />
     <link rel="prev" title="Generic Import Handler Format (XML)" href="xml_import_handlers.html" /> 
   </head>
-  <body>
-    <div class="related">
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -42,11 +42,11 @@
              accesskey="P">previous</a> |</li>
     <li><a href="http://cloudml.int.odesk.com/">CloudML UI</a> &raquo;</li>
     
-        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li>
  
       </ul>
     </div>
-      <div class="sphinxsidebar">
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
@@ -74,12 +74,14 @@
   <h4>Next topic</h4>
   <p class="topless"><a href="changes.html"
                         title="next chapter">Migrating JSON files</a></p>
-  <h3>This Page</h3>
-  <ul class="this-page-menu">
-    <li><a href="_sources/features.txt"
-           rel="nofollow">Show Source</a></li>
-  </ul>
-<div id="searchbox" style="display: none">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/features.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
       <input type="text" name="q" />
@@ -98,7 +100,7 @@
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
   <div class="section" id="feature-json-file-format">
 <span id="features"></span><h1>Feature JSON file format<a class="headerlink" href="#feature-json-file-format" title="Permalink to this headline">¶</a></h1>
@@ -113,7 +115,7 @@
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
 <p class="last">If you migrating your old import handler files just take a look to
-<a class="reference internal" href="changes.html#json-changes"><em>changes in json files</em></a></p>
+<a class="reference internal" href="changes.html#json-changes"><span>changes in json files</span></a></p>
 </div>
 <p>Here&#8217;s an example of such a file:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
@@ -173,10 +175,10 @@
 </div>
 <p>There are four top-level elements:</p>
 <ul class="simple">
-<li><a class="reference internal" href="#classifier"><em>classifier</em></a> - defining the configuration of the classifier to use</li>
+<li><a class="reference internal" href="#classifier"><span>classifier</span></a> - defining the configuration of the classifier to use</li>
 <li><cite>schema-name</cite> - a string describing the schema in the document</li>
-<li><a class="reference internal" href="#named-feature-types"><em>feature-types</em></a> - a list of feature type definitions</li>
-<li><a class="reference internal" href="#features-list"><em>features</em></a> - a list of the features that the trainer will read from the data</li>
+<li><a class="reference internal" href="#named-feature-types"><span>feature-types</span></a> - a list of feature type definitions</li>
+<li><a class="reference internal" href="#features-list"><span>features</span></a> - a list of the features that the trainer will read from the data</li>
 </ul>
 <div class="section" id="classifier">
 <span id="id1"></span><h2>Classifier<a class="headerlink" href="#classifier" title="Permalink to this headline">¶</a></h2>
@@ -210,9 +212,9 @@
 </table>
 <p>Currently following types of classifiers could be used:</p>
 <ul class="simple">
-<li><a class="reference internal" href="#classifier-logistic-regression"><em>logistic regression</em></a></li>
-<li><a class="reference internal" href="#classifier-support-vector-regression"><em>support vector regression</em></a></li>
-<li><a class="reference internal" href="#classifier-stochastic-gradient-descent-classifier"><em>stochastic gradient descent classifier</em></a></li>
+<li><a class="reference internal" href="#classifier-logistic-regression"><span>logistic regression</span></a></li>
+<li><a class="reference internal" href="#classifier-support-vector-regression"><span>support vector regression</span></a></li>
+<li><a class="reference internal" href="#classifier-stochastic-gradient-descent-classifier"><span>stochastic gradient descent classifier</span></a></li>
 </ul>
 <div class="section" id="logistic-regression">
 <span id="classifier-logistic-regression"></span><h3>Logistic Regression<a class="headerlink" href="#logistic-regression" title="Permalink to this headline">¶</a></h3>
@@ -469,7 +471,7 @@ have the following keys and values:</p>
 </tr>
 <tr class="row-odd"><td>type</td>
 <td>yes</td>
-<td><a class="reference internal" href="#core-feature-types"><em>feature type</em></a></td>
+<td><a class="reference internal" href="#core-feature-types"><span>feature type</span></a></td>
 </tr>
 <tr class="row-even"><td>params</td>
 <td>no</td>
@@ -506,7 +508,7 @@ keys and values</p>
 </tr>
 <tr class="row-odd"><td>type</td>
 <td>yes</td>
-<td>one of <a class="reference internal" href="#core-feature-types"><em>feature type</em></a> or named feature type</td>
+<td>one of <a class="reference internal" href="#core-feature-types"><span>feature type</span></a> or named feature type</td>
 </tr>
 <tr class="row-even"><td>params</td>
 <td>no</td>
@@ -518,11 +520,11 @@ keys and values</p>
 </tr>
 <tr class="row-even"><td>transformer</td>
 <td>no</td>
-<td>Defines a transformer to use for applying to the data of this feature in order to produce multiple features. See <a class="reference internal" href="#feature-transformers"><em>transformers</em></a> for more details.</td>
+<td>Defines a transformer to use for applying to the data of this feature in order to produce multiple features. See <a class="reference internal" href="#feature-transformers"><span>transformers</span></a> for more details.</td>
 </tr>
 <tr class="row-odd"><td>scaler</td>
 <td>no</td>
-<td>See <a class="reference internal" href="#feature-scalers"><em>scalers</em></a> for more details.</td>
+<td>See <a class="reference internal" href="#feature-scalers"><span>scalers</span></a> for more details.</td>
 </tr>
 <tr class="row-even"><td>is-required</td>
 <td>no</td>
@@ -723,7 +725,7 @@ ngram_range_max</td>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -737,13 +739,13 @@ ngram_range_max</td>
              >previous</a> |</li>
     <li><a href="http://cloudml.int.odesk.com/">CloudML UI</a> &raquo;</li>
     
-        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li>
  
       </ul>
     </div>
-    <div class="footer">
+    <div class="footer" role="contentinfo">
         &copy; Copyright 2013, oDesk.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
     </div>
   </body>
 </html>

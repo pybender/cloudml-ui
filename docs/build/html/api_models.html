@@ -25,8 +25,8 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="oDesk CloudML 0.0.1 documentation" href="index.html" /> 
   </head>
-  <body>
-    <div class="related">
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -34,11 +34,11 @@
              accesskey="I">index</a></li>
     <li><a href="http://cloudml.int.odesk.com/">CloudML UI</a> &raquo;</li>
     
-        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li>
  
       </ul>
     </div>
-      <div class="sphinxsidebar">
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
@@ -71,12 +71,14 @@
 </li>
 </ul>
 
-  <h3>This Page</h3>
-  <ul class="this-page-menu">
-    <li><a href="_sources/api_models.txt"
-           rel="nofollow">Show Source</a></li>
-  </ul>
-<div id="searchbox" style="display: none">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/api_models.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
       <input type="text" name="q" />
@@ -95,7 +97,7 @@
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
   <div class="section" id="models">
 <h1>Models<a class="headerlink" href="#models" title="Permalink to this headline">¶</a></h1>
@@ -113,15 +115,15 @@
 </thead>
 <tbody valign="top">
 <tr class="row-even"><td>GET</td>
-<td><a class="reference internal" href="#list-models"><em>/cloudml/model/</em></a></td>
+<td><a class="reference internal" href="#list-models"><span>/cloudml/model/</span></a></td>
 <td>Get list of models</td>
 </tr>
 <tr class="row-odd"><td>GET</td>
-<td><a class="reference internal" href="#get-model"><em>/cloudml/model/:ModelName</em></a></td>
+<td><a class="reference internal" href="#get-model"><span>/cloudml/model/:ModelName</span></a></td>
 <td>Get model by name</td>
 </tr>
 <tr class="row-even"><td>POST</td>
-<td><a class="reference internal" href="xml_import_handlers.html#predict"><em>/cloudml/model/:ModelName/:HandlerName/predict</em></a></td>
+<td><a class="reference internal" href="xml_import_handlers.html#predict"><span>/cloudml/model/:ModelName/:HandlerName/predict</span></a></td>
 <td>Predict</td>
 </tr>
 </tbody>
@@ -170,19 +172,21 @@
 <div class="section" id="example">
 <h3>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h3>
 <p>cURL:</p>
-<div class="highlight-python"><pre>curl http://127.0.0.1:5000/cloudml/model/</pre>
+<div class="highlight-python"><div class="highlight"><pre>curl http://127.0.0.1:5000/cloudml/model/
+</pre></div>
 </div>
 <p>Response body:</p>
-<div class="highlight-python"><pre>{
-    "models": [
+<div class="highlight-python"><div class="highlight"><pre>{
+    &quot;models&quot;: [
         {
-            "name": "test",
-            "status": "Trained",
-            "created_on": "2013-03-28T05:47:46.566463"
+            &quot;name&quot;: &quot;test&quot;,
+            &quot;status&quot;: &quot;Trained&quot;,
+            &quot;created_on&quot;: &quot;2013-03-28T05:47:46.566463&quot;
             ...
         }
     ]
-}</pre>
+}
+</pre></div>
 </div>
 </div>
 </div>
@@ -229,17 +233,19 @@
 <div class="section" id="id4">
 <h3>Example<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
 <p>cURL:</p>
-<div class="highlight-python"><pre>curl http://127.0.0.1:5000/cloudml/model/test</pre>
+<div class="highlight-python"><div class="highlight"><pre>curl http://127.0.0.1:5000/cloudml/model/test
+</pre></div>
 </div>
 <p>Response body:</p>
-<div class="highlight-python"><pre>{
-    "model": {
-        "name": "test",
-        "status": "Trained",
-        "created_on": "2013-03-28T05:47:46.566463"
+<div class="highlight-python"><div class="highlight"><pre>{
+    &quot;model&quot;: {
+        &quot;name&quot;: &quot;test&quot;,
+        &quot;status&quot;: &quot;Trained&quot;,
+        &quot;created_on&quot;: &quot;2013-03-28T05:47:46.566463&quot;
         ...
     }
-}</pre>
+}
+</pre></div>
 </div>
 </div>
 </div>
@@ -292,12 +298,13 @@
 <div class="section" id="id9">
 <h3>Example<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
 <p>cURL:</p>
-<div class="highlight-python"><pre>curl -XPOST http://127.0.0.1:5000/cloudml/model/1111/qqqq/predict \
---data-urlencode 'hire_outcome=1'
---data-urlencode 'application=app'
---data-urlencode 'opening=232'
---data-urlencode 'employer_info={"country": "Ukrain","op_timezone": "GMT2","op_country_tz": "GMT1"}'\
---data-urlencode 'contractor_info={"country": "Ukrain","dev_timezone": "dev_timezone"}'</pre>
+<div class="highlight-python"><div class="highlight"><pre>curl -XPOST http://127.0.0.1:5000/cloudml/model/1111/qqqq/predict \
+--data-urlencode &#39;hire_outcome=1&#39;
+--data-urlencode &#39;application=app&#39;
+--data-urlencode &#39;opening=232&#39;
+--data-urlencode &#39;employer_info={&quot;country&quot;: &quot;Ukrain&quot;,&quot;op_timezone&quot;: &quot;GMT2&quot;,&quot;op_country_tz&quot;: &quot;GMT1&quot;}&#39;\
+--data-urlencode &#39;contractor_info={&quot;country&quot;: &quot;Ukrain&quot;,&quot;dev_timezone&quot;: &quot;dev_timezone&quot;}&#39;
+</pre></div>
 </div>
 <p>Response body:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
@@ -316,7 +323,7 @@
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -324,13 +331,13 @@
              >index</a></li>
     <li><a href="http://cloudml.int.odesk.com/">CloudML UI</a> &raquo;</li>
     
-        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li>
  
       </ul>
     </div>
-    <div class="footer">
+    <div class="footer" role="contentinfo">
         &copy; Copyright 2013, oDesk.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
     </div>
   </body>
 </html>

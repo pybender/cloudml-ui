@@ -13,7 +13,7 @@ scipy==0.12.0
 -e git+https://github.com/odeskdataproducts/scikit-learn.git#egg=scikit-learn
 #-e git+https://github.com/nanli0416/scikit-learn.git@new-feat-feature_extraction-text#egg=scikit-learn
 gensim==0.8.9
-psycopg2==2.4.6 # sudo apt-get install libpq-dev python-dev
+psycopg2>=2.4.6 # sudo apt-get install libpq-dev python-dev
 jsonpath==0.54
 celery==3.0.22
 flower==0.5.0
@@ -26,7 +26,7 @@ Flask-mongokit
 nose
 gevent
 nose-exclude
--e git+https://github.com/odeskdev/odeskdev-cloudml.git@MATCH-2723_opensourcing#egg=cloudml
+-e git+https://github.com/odeskdev/cloudml.git#egg=cloudml
 -e git+https://github.com/rick446/MongoTools.git#egg=mongotools
 translitcodec==0.3
 boto==2.32.1
@@ -37,12 +37,15 @@ moto==0.3.3
 httpretty==0.8.3
 oauth2==1.5.211
 coverage==3.6
+#nosexcover
 Flask-Testing
 fixture
 sqlparse==0.1.10
 blinker
-flask-admin
+Flask-Admin==1.0.7
 nltk
 requests
-lxml==3.3.3
 
+# for xml import handlers
+lxml==3.3.3
+#PyV8
