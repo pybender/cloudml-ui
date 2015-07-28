@@ -1,5 +1,5 @@
-Test Examples
-=============
+Analyzing Test Examples
+=======================
 
 Average Precision
 ~~~~~~~~~~~~~~~~~

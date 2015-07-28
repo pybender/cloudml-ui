@@ -121,7 +121,7 @@ Uploading existing model
 For uploading the model you need to navigate to "Upload trained model" page: http://cloudml.int.odesk.com/#/upload_model and define unique name, import handlers and pickled trainer class file.
 
 .. note::
-	You could download model trainer from existing model by clicking "download trainer" in model details page.
+	You could download model trainer from existing model by clicking "download trainer" in model details page. More details in :ref:`pickled models section <pickled_models>`
 
 Edditing the model details
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -129,7 +129,8 @@ Edditing the model details
 For edditing model classifier and feature related fields you need to switch to "Model" tab. Editable parameters could be changed by clicking on them.
 
 There are list of features and 3 columns:
-* classifier
+
+* Сlassifier
 	when clicking to edit link near classifier, the popup opens, where you can change classifier type and fill approprivate parameters.
 
 	.. image:: ./_static/getting_started/change-classifier.png
@@ -214,7 +215,11 @@ Also, you can set flag "I want to save weights of the parameters.". In this case
 .. image:: ./_static/getting_started/run-test.png
 
 .. note::
-	Usually we run test on another dataset, not on which we trained the model. But sometimes, it's usefull to run few test: one on dataset, that used for training and second on another dataset. In this case, comparing accuracy of this tests, we can conclude whether model overfits data.
+	Usually we run test on another dataset, not on which we trained the model.
+	To play with different dataset in this model, go to import handler details, find csv datasource declaration and add parameters offset and count to it (for example set count = 2000). And import the dataset for train. Then change it to offset = 2000 and remove count and import dataset for test. In this case for train we will use first 2000 records in the csv file, end from 2000 to end records would be used in second dataset.
+	Now try to train and test model using specific datasets.
+
+	But sometimes, it's usefull to run few test: one on dataset, that used for training and second on another dataset. In this case, comparing accuracy of this tests, we can conclude whether model overfits data.
 
 After clicking to "Start test" button you would be redirected to test details page.
 
@@ -262,4 +267,4 @@ To view any test example details click on it on test details page:
 Exporting classification results
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You could export test examples to CSV file or to the your database by clicking to "Classification Results in CSV" and "Export Classification Results to DB" buttons respectively. More information could be found on the ref:`exporting data page <export_test_examples_to_db>`_
+You could export test examples to CSV file or to the your database by clicking to "Classification Results in CSV" and "Export Classification Results to DB" buttons respectively. More information could be found on the ref:`exporting data page <export_test_examples_to_db>`_.

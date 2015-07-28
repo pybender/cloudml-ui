@@ -1,8 +1,8 @@
 .. _test_metrics:
 
-============
-Test Metrics
-============
+====================
+Evaluating the Model
+====================
 
 After testing the model user gets a set of test metrics.
 Different 

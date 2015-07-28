@@ -2,7 +2,6 @@ from kombu import Queue
 from datetime import timedelta
 
 SECRET_KEY = 'CHANGE_ME'
-DATABASE_NAME = 'cloudml'
 STATIC_ROOT = None
 
 SQLALCHEMY_DATABASE_URI = \

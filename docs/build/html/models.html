@@ -8,7 +8,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
   
-    <title>CloudML Model &mdash; oDesk CloudML 0.0.1 documentation</title>
+    <title>Working with Models &mdash; oDesk CloudML 0.0.1 documentation</title>
   <!-- htmltitle is before nature.css - we use this hack to load bootstrap first -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="_static/css/bootstrap.min.css" media="screen" />
@@ -32,8 +32,8 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="oDesk CloudML 0.0.1 documentation" href="index.html" />
-    <link rel="next" title="Test Examples" href="test_examples.html" />
-    <link rel="prev" title="Settings" href="settings.html" />
+    <link rel="next" title="Pretrained transformers" href="transformers.html" />
+    <link rel="prev" title="Get Started With CloudML" href="get_started.html" />
   
    
        <script type="text/javascript" src="_static/sidebar.js"></script>
@@ -76,14 +76,14 @@
   <!-- rellinks[1:] is an ugly hack to avoid link to module
   index -->
         <div class="rellink">
-        <a href="settings.html"
+        <a href="get_started.html"
         accesskey="P">Previous
         <br/>
         <span class="smallrellink">
-        Settings
+        Get Started With...
         </span>
             <span class="hiddenrellink">
-            Settings
+            Get Started With CloudML
             </span>
         </a>
         </div>
@@ -91,14 +91,14 @@
             &nbsp;
             </div>
         <div class="rellink">
-        <a href="test_examples.html"
+        <a href="transformers.html"
         accesskey="N">Next
         <br/>
         <span class="smallrellink">
-        Test Examples
+        Pretrained trans...
         </span>
             <span class="hiddenrellink">
-            Test Examples
+            Pretrained transformers
             </span>
         </a>
         </div>
@@ -111,16 +111,15 @@
       <p class="doc-version">This documentation is for oDesk CloudML <strong>version 0.0.1</strong> &mdash; <a href="http://scikit-learn.org/stable/support.html#documentation-resources">Other versions</a></p> -->
 <!--     <p class="citing">If you use the software, please consider <a href="about.html#citing-scikit-learn">citing scikit-learn</a>.</p> -->
     <ul>
-<li><a class="reference internal" href="#">CloudML Model</a><ul>
+<li><a class="reference internal" href="#">Working with Models</a><ul>
 <li><a class="reference internal" href="#edditing-features">Edditing features</a><ul>
-<li><a class="reference internal" href="#training-tab">Training tab</a></li>
+<li><a class="reference internal" href="#removing-disabling-features">Removing/disabling features</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#download-transformed-dataset">Download transformed dataset</a></li>
-<li><a class="reference internal" href="#model-feature-weights">Model feature weights</a><ul>
+<li><a class="reference internal" href="#working-with-transformed-datasets">Working with transformed datasets</a></li>
+<li><a class="reference internal" href="#model-feature-weights">Model feature weights</a></li>
+<li><a class="reference internal" href="#pickled-models">Pickled Models</a></li>
 <li><a class="reference internal" href="#model-parameters-grid-search">Model Parameters Grid Search</a></li>
-</ul>
-</li>
 </ul>
 </li>
 </ul>
@@ -136,28 +135,67 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="cloudml-model">
-<h1>CloudML Model<a class="headerlink" href="#cloudml-model" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="working-with-models">
+<h1><a class="toc-backref" href="#id2">Working with Models</a><a class="headerlink" href="#working-with-models" title="Permalink to this headline">¶</a></h1>
 <p>The model is the main entity in the cloudml project. It is a classifier with set of features and other parametes.</p>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#working-with-models" id="id2">Working with Models</a><ul>
+<li><a class="reference internal" href="#edditing-features" id="id3">Edditing features</a><ul>
+<li><a class="reference internal" href="#removing-disabling-features" id="id4">Removing/disabling features</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#working-with-transformed-datasets" id="id5">Working with transformed datasets</a></li>
+<li><a class="reference internal" href="#model-feature-weights" id="id6">Model feature weights</a></li>
+<li><a class="reference internal" href="#pickled-models" id="id7">Pickled Models</a></li>
+<li><a class="reference internal" href="#model-parameters-grid-search" id="id8">Model Parameters Grid Search</a></li>
+</ul>
+</li>
+</ul>
+</div>
 <p>There are information about classifier and features on the model tab.</p>
 <div class="section" id="edditing-features">
-<h2>Edditing features<a class="headerlink" href="#edditing-features" title="Permalink to this headline">¶</a></h2>
-<p><strong>Removing/disabling features</strong></p>
+<h2><a class="toc-backref" href="#id3">Edditing features</a><a class="headerlink" href="#edditing-features" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="removing-disabling-features">
+<h3><a class="toc-backref" href="#id4">Removing/disabling features</a><a class="headerlink" href="#removing-disabling-features" title="Permalink to this headline">¶</a></h3>
 <p>If you don&#8217;t want to use the feature, when train the model, you have two ways:</p>
-<ul class="simple">
-<li>remove - after that you can&#8217;t recover it</li>
-<li>disable</li>
+<ul>
+<li><dl class="first docutils">
+<dt>remove</dt>
+<dd><p class="first last">by clicking to the red button delete in the actions column</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>disable</dt>
+<dd><p class="first last">by clicking to the grey button disable in the actions column</p>
+</dd>
+</dl>
+</li>
 </ul>
 <a class="reference internal image-reference" href="_images/remove-feature.png"><img alt="_images/remove-feature.png" src="_images/remove-feature.png" style="width: 800px;" /></a>
-<div class="section" id="training-tab">
-<h3>Training tab<a class="headerlink" href="#training-tab" title="Permalink to this headline">¶</a></h3>
 </div>
 </div>
-<div class="section" id="download-transformed-dataset">
-<h2>Download transformed dataset<a class="headerlink" href="#download-transformed-dataset" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="working-with-transformed-datasets">
+<span id="download-transformed-train-dataset"></span><h2><a class="toc-backref" href="#id5">Working with transformed datasets</a><a class="headerlink" href="#working-with-transformed-datasets" title="Permalink to this headline">¶</a></h2>
+<p>To download vectorized data, that has been used for model trainer go to the &#8220;Training&#8221; tab and click to the download button near dataset name, that was used for training:</p>
+<img alt="_images/download-dataset.png" src="_images/download-dataset.png" />
+<p>Preparing vectorized version of the dataset is a background operation, and when it would be completed on the &#8220;About&#8221; tab appears section &#8220;DataSet Transform Requests&#8221;:</p>
+<img alt="_images/transformed-dataset-list.png" src="_images/transformed-dataset-list.png" />
+<p>Click to Download button and you will have .npz archive with vectorized data.</p>
+<p>Sample usage data in your script:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">path_to_npz_file</span><span class="p">)[</span><span class="s">&#39;default.npy&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="p">[</span><span class="s">&#39;X&#39;</span><span class="p">]</span>
+<span class="go">&lt;n x m sparse matrix&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="p">[</span><span class="s">&#39;Y&#39;</span><span class="p">]</span>
+<span class="go">&lt;list with n - elements&gt;</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="model-feature-weights">
-<h2>Model feature weights<a class="headerlink" href="#model-feature-weights" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id6">Model feature weights</a><a class="headerlink" href="#model-feature-weights" title="Permalink to this headline">¶</a></h2>
 <p>For different classifiers we use different parameters as feature weights:</p>
 <ul>
 <li><dl class="first docutils">
@@ -216,8 +254,19 @@
 <a class="reference internal image-reference" href="_images/weights-list.png"><img alt="_images/weights-list.png" src="_images/weights-list.png" style="width: 800px;" /></a>
 <p>On the tree tab there are also a child nodes normalized weight sum for not leaf nodes. It displays after sigma symbol. Weights on the tree view is from red to green, normalized weights have grey color.</p>
 <img alt="_images/weights-tree.png" src="_images/weights-tree.png" />
+</div>
+<div class="section" id="pickled-models">
+<span id="id1"></span><h2><a class="toc-backref" href="#id7">Pickled Models</a><a class="headerlink" href="#pickled-models" title="Permalink to this headline">¶</a></h2>
+<p>System stores pickled Trainer class for the model in Amazon S3.
+Trainer could use the configuration defined in model features and perform the training of the classifier. The trainer can also perform testing of the generated model.</p>
+<p>The underlying implementation supporting the trainer is based on Python&#8217;s <a class="reference external" href="http://scikit-learn.org">scikit-learn</a> package.</p>
+<p>You could download model trainer from existing model by clicking &#8220;download trainer&#8221; in the top of the model details page.
+Don&#8217;t forget, that model should be trained before.</p>
+<a class="reference internal image-reference" href="_images/download-trainer.png"><img alt="_images/download-trainer.png" src="_images/download-trainer.png" style="width: 800px;" /></a>
+<p>You could load already trained model by specify trainer file in the <a class="reference external" href="http://cloudml.int.odesk.com/#/upload_model">upload model page</a>.</p>
+</div>
 <div class="section" id="model-parameters-grid-search">
-<h3>Model Parameters Grid Search<a class="headerlink" href="#model-parameters-grid-search" title="Permalink to this headline">¶</a></h3>
+<h2><a class="toc-backref" href="#id8">Model Parameters Grid Search</a><a class="headerlink" href="#model-parameters-grid-search" title="Permalink to this headline">¶</a></h2>
 <p>Searches over specified parameter values for an classifier.
 As the underlying implementation used <a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.grid_search.GridSearchCV.html#sklearn-grid-search-gridsearchcv">Scikit GridSearchCV</a></p>
 <p>For starting parameters grid search click to &#8220;Grid search&#8221; button on the right-top corner of the model details page.</p>
@@ -226,7 +275,6 @@ As the underlying implementation used <a class="reference external" href="http:/
 <p>Searching the best classifier parameters is the background process, so navigate to &#8220;Parameters Search&#8221; tab to view results:</p>
 <img alt="_images/grid-search-results.png" src="_images/grid-search-results.png" />
 <p>Seems the best parameters are &#8220;C: 100, penalty: l2&#8221;.</p>
-</div>
 </div>
 </div>
 
@@ -245,11 +293,11 @@ As the underlying implementation used <a class="reference external" href="http:/
      <div class="rel rellarge">
     
     <div class="buttonPrevious">
-      <a href="settings.html">Previous
+      <a href="get_started.html">Previous
       </a>
     </div>
     <div class="buttonNext">
-      <a href="test_examples.html">Next
+      <a href="transformers.html">Next
       </a>
     </div>
     

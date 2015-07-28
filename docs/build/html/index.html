@@ -105,35 +105,36 @@
 <li class="toctree-l2"><a class="reference internal" href="get_started.html#example">Example</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="models.html">CloudML Model</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="import_handlers.html">Importing the Data</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="import_handlers.html#testing-the-query">Testing the query</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="models.html">Working with Models</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="models.html#edditing-features">Edditing features</a></li>
-<li class="toctree-l2"><a class="reference internal" href="models.html#download-transformed-dataset">Download transformed dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html#working-with-transformed-datasets">Working with transformed datasets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="models.html#model-feature-weights">Model feature weights</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html#pickled-models">Pickled Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html#model-parameters-grid-search">Model Parameters Grid Search</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="import_handlers.html">Import Handlers</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="import_handlers.html#inputs">Inputs</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="features.html">Feature JSON file format</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="features.html#classifier">Classifier</a></li>
-<li class="toctree-l2"><a class="reference internal" href="features.html#named-feature-types">Named feature types</a></li>
-<li class="toctree-l2"><a class="reference internal" href="features.html#features-list">Features</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="trainer.html">Trainer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="transformers.html">Pretrained transformers</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="transformers.html#transformer-json-file-format">Transformer JSON file format</a></li>
 <li class="toctree-l2"><a class="reference internal" href="transformers.html#using-pretrained-transformers-in-ui">Using Pretrained Transformers in UI</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="test_examples.html">Test Examples</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="model_tests.html">Evaluating the Model</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="model_tests.html#classifier-test-metrics">Classifier Test Metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model_tests.html#regression-test-metrics">Regression Test Metrics</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="test_examples.html">Analyzing Test Examples</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="test_examples.html#average-precision">Average Precision</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="test_metrics.html">Test Metrics</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="test_metrics.html#classifier-test-metrics">Classifier Test Metrics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="test_metrics.html#regression-test-metrics">Regression Test Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deploy_on_predict.html">Deployment the model or import handler to predict server</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="deploy_on_predict.html#uploading-to-predict-server">Uploading to predict server</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deploy_on_predict.html#reloading-the-model-or-import-handler-on-predict-server">Reloading the model or import handler on predict server</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deploy_on_predict.html#deleting-the-model-or-import-handler-file">Deleting the model or import handler file</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="exporting_data.html">Exporting data</a><ul>
@@ -144,13 +145,6 @@
 <li class="toctree-l1"><a class="reference internal" href="instances.html">Instances</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="instances.html#on-demand-instances">On-Demand Instances</a></li>
 <li class="toctree-l2"><a class="reference internal" href="instances.html#spot-instances">Spot Instances</a></li>
-<li class="toctree-l2"><a class="reference internal" href="instances.html#instance-types">Instance Types</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="deploy_on_predict.html">Deployment the model or import handler to predict server</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="deploy_on_predict.html#uploading-to-predict-server">Uploading to predict server</a></li>
-<li class="toctree-l2"><a class="reference internal" href="deploy_on_predict.html#reloading-the-model-or-import-handler-on-predict-server">Reloading the model or import handler on predict server</a></li>
-<li class="toctree-l2"><a class="reference internal" href="deploy_on_predict.html#deleting-the-model-or-import-handler-file">Deleting the model or import handler file</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a><ul>
@@ -161,22 +155,16 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="developers_guide.html">Developer&#8217;s guide</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="developers_guide.html#ubuntu-installation">Ubuntu Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="developers_guide.html#macos-installation">MacOS Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developers_guide.html#ubuntu-bootstrap">Ubuntu bootstrap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developers_guide.html#macos-bootstrap">MacOS bootstrap</a></li>
 <li class="toctree-l2"><a class="reference internal" href="developers_guide.html#vagrant">Vagrant</a></li>
 <li class="toctree-l2"><a class="reference internal" href="developers_guide.html#installing-test-data">Installing test data</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="api.html">Api</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api.html#authentication">Authentication</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api.html#import-handlers">Import Handlers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api.html#models">Models</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="settings.html">Settings</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="settings.html#db-settings">DB settings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="settings.html#amazon-settings">Amazon settings</a></li>
-<li class="toctree-l2"><a class="reference internal" href="settings.html#odesk-settings">Odesk settings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="settings.html#upwork-settings">Upwork settings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="settings.html#main-settings">Main settings</a></li>
 </ul>
 </li>

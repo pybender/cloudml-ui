@@ -60,6 +60,13 @@ angular.module('app.importhandlers.xml.controllers.importhandlers', ['app.config
   ($scope, XmlImportHandler) ->
     $scope.types = [{name: 'Db'}, {name: 'Request'}]
     $scope.model = new XmlImportHandler()
+
+    # note: used to saving the file after choosing it.
+    # othervise would be setted after changing another field.
+    $scope.loadFile = ($fileContent) ->
+      $scope.model.data = $fileContent
+      alert 1
+      $scope.$apply()
 ])
 
 .controller('CloneXmlImportHandlerCtrl', [

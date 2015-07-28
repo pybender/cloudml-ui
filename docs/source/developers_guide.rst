@@ -2,7 +2,7 @@
 Developer's guide
 =================
 
-Ubuntu Installation
+Ubuntu bootstrap
 ===================
 
 -------
@@ -305,7 +305,7 @@ These files will concat and uglified in production in a file called
 vendor.js.
 
 
-MacOS Installation
+MacOS bootstrap
 ===================
 
 ---------------------

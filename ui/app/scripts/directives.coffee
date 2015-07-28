@@ -571,6 +571,7 @@ angular.module('app.directives', [
   }
 )
 
+
 .directive('requiredFile', () ->
   return {
     require: 'ngModel',

@@ -32,7 +32,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="oDesk CloudML 0.0.1 documentation" href="index.html" />
-    <link rel="next" title="Import Handlers" href="import_handlers.html" />
+    <link rel="next" title="Importing the Data" href="import_handlers.html" />
     <link rel="prev" title="Welcome to oDesk CloudML’s documentation!" href="index.html" />
   
    
@@ -95,10 +95,10 @@
         accesskey="N">Next
         <br/>
         <span class="smallrellink">
-        Import Handlers
+        Importing the Da...
         </span>
             <span class="hiddenrellink">
-            Import Handlers
+            Importing the Data
             </span>
         </a>
         </div>
@@ -304,19 +304,21 @@ For this you need to do few steps:</p>
 <p>For uploading the model you need to navigate to &#8220;Upload trained model&#8221; page: <a class="reference external" href="http://cloudml.int.odesk.com/#/upload_model">http://cloudml.int.odesk.com/#/upload_model</a> and define unique name, import handlers and pickled trainer class file.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">You could download model trainer from existing model by clicking &#8220;download trainer&#8221; in model details page.</p>
+<p class="last">You could download model trainer from existing model by clicking &#8220;download trainer&#8221; in model details page. More details in <a class="reference internal" href="models.html#pickled-models"><em>pickled models section</em></a></p>
 </div>
 </div>
 <div class="section" id="edditing-the-model-details">
 <h4><a class="toc-backref" href="#id15">Edditing the model details</a><a class="headerlink" href="#edditing-the-model-details" title="Permalink to this headline">¶</a></h4>
 <p>For edditing model classifier and feature related fields you need to switch to &#8220;Model&#8221; tab. Editable parameters could be changed by clicking on them.</p>
-<p>There are list of features and 3 columns:
-* classifier</p>
-<blockquote>
-<div><p>when clicking to edit link near classifier, the popup opens, where you can change classifier type and fill approprivate parameters.</p>
-<img alt="_images/change-classifier.png" src="_images/change-classifier.png" />
-</div></blockquote>
+<p>There are list of features and 3 columns:</p>
 <ul>
+<li><dl class="first docutils">
+<dt>Сlassifier</dt>
+<dd><p class="first">when clicking to edit link near classifier, the popup opens, where you can change classifier type and fill approprivate parameters.</p>
+<img alt="_images/change-classifier.png" class="last" src="_images/change-classifier.png" />
+</dd>
+</dl>
+</li>
 <li><dl class="first docutils">
 <dt>Features</dt>
 <dd><dl class="first last docutils">
@@ -442,7 +444,10 @@ trained model, you have two ways:</p>
 <img alt="_images/run-test.png" src="_images/run-test.png" />
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Usually we run test on another dataset, not on which we trained the model. But sometimes, it&#8217;s usefull to run few test: one on dataset, that used for training and second on another dataset. In this case, comparing accuracy of this tests, we can conclude whether model overfits data.</p>
+<p>Usually we run test on another dataset, not on which we trained the model.
+To play with different dataset in this model, go to import handler details, find csv datasource declaration and add parameters offset and count to it (for example set count = 2000). And import the dataset for train. Then change it to offset = 2000 and remove count and import dataset for test. In this case for train we will use first 2000 records in the csv file, end from 2000 to end records would be used in second dataset.
+Now try to train and test model using specific datasets.</p>
+<p class="last">But sometimes, it&#8217;s usefull to run few test: one on dataset, that used for training and second on another dataset. In this case, comparing accuracy of this tests, we can conclude whether model overfits data.</p>
 </div>
 <p>After clicking to &#8220;Start test&#8221; button you would be redirected to test details page.</p>
 <p>The result of the test is a set of metrics and data with predicted and actual values and feature weights. More information could be found in <em class="xref std std-ref">here</em></p>
@@ -514,7 +519,7 @@ trained model, you have two ways:</p>
 </div>
 <div class="section" id="exporting-classification-results">
 <h4><a class="toc-backref" href="#id19">Exporting classification results</a><a class="headerlink" href="#exporting-classification-results" title="Permalink to this headline">¶</a></h4>
-<p>You could export test examples to CSV file or to the your database by clicking to &#8220;Classification Results in CSV&#8221; and &#8220;Export Classification Results to DB&#8221; buttons respectively. More information could be found on the ref:<a class="reference external" href="export_test_examples_to_db">exporting data page</a></p>
+<p>You could export test examples to CSV file or to the your database by clicking to &#8220;Classification Results in CSV&#8221; and &#8220;Export Classification Results to DB&#8221; buttons respectively. More information could be found on the ref:<a class="reference external" href="export_test_examples_to_db">exporting data page</a>.</p>
 </div>
 </div>
 </div>

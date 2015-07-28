@@ -32,8 +32,8 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="oDesk CloudML 0.0.1 documentation" href="index.html" />
-    <link rel="next" title="CloudML Model" href="models.html" />
-    <link rel="prev" title="Api" href="api.html" />
+    <link rel="next" title="Whats New" href="whats_new.html" />
+    <link rel="prev" title="Developer’s guide" href="developers_guide.html" />
   
    
        <script type="text/javascript" src="_static/sidebar.js"></script>
@@ -76,14 +76,14 @@
   <!-- rellinks[1:] is an ugly hack to avoid link to module
   index -->
         <div class="rellink">
-        <a href="api.html"
+        <a href="developers_guide.html"
         accesskey="P">Previous
         <br/>
         <span class="smallrellink">
-        Api
+        Developer’s guid...
         </span>
             <span class="hiddenrellink">
-            Api
+            Developer’s guide
             </span>
         </a>
         </div>
@@ -91,14 +91,14 @@
             &nbsp;
             </div>
         <div class="rellink">
-        <a href="models.html"
+        <a href="whats_new.html"
         accesskey="N">Next
         <br/>
         <span class="smallrellink">
-        CloudML Model
+        Whats New
         </span>
             <span class="hiddenrellink">
-            CloudML Model
+            Whats New
             </span>
         </a>
         </div>
@@ -112,9 +112,15 @@
 <!--     <p class="citing">If you use the software, please consider <a href="about.html#citing-scikit-learn">citing scikit-learn</a>.</p> -->
     <ul>
 <li><a class="reference internal" href="#">Settings</a><ul>
-<li><a class="reference internal" href="#db-settings">DB settings</a></li>
+<li><a class="reference internal" href="#db-settings">DB settings</a><ul>
+<li><a class="reference internal" href="#sqlalchemy-database-uri">SQLALCHEMY_DATABASE_URI</a></li>
+<li><a class="reference internal" href="#sqlalchemy-debug">SQLALCHEMY_DEBUG</a></li>
+<li><a class="reference internal" href="#sqlalchemy-echo">SQLALCHEMY_ECHO</a></li>
+<li><a class="reference internal" href="#sqlalchemy-record-queries">SQLALCHEMY_RECORD_QUERIES</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#amazon-settings">Amazon settings</a></li>
-<li><a class="reference internal" href="#odesk-settings">Odesk settings</a></li>
+<li><a class="reference internal" href="#upwork-settings">Upwork settings</a></li>
 <li><a class="reference internal" href="#main-settings">Main settings</a><ul>
 <li><a class="reference internal" href="#data-folder">DATA_FOLDER</a></li>
 <li><a class="reference internal" href="#examples-chunk-size">EXAMPLES_CHUNK_SIZE</a></li>
@@ -144,22 +150,53 @@
 <h1>Settings<a class="headerlink" href="#settings" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="db-settings">
 <h2>DB settings<a class="headerlink" href="#db-settings" title="Permalink to this headline">¶</a></h2>
-<p>SQLALCHEMY_DATABASE_URI
-SQLALCHEMY_DEBUG
-SQLALCHEMY_ECHO
-DATABASE_QUERY_TIMEOUT
-SQLALCHEMY_RECORD_QUERIES</p>
+<div class="section" id="sqlalchemy-database-uri">
+<h3>SQLALCHEMY_DATABASE_URI<a class="headerlink" href="#sqlalchemy-database-uri" title="Permalink to this headline">¶</a></h3>
+<p>The database URI that should be used for the connection. Examples:</p>
+<p>postgresql://username:password&#64;server/db</p>
+</div>
+<div class="section" id="sqlalchemy-debug">
+<h3>SQLALCHEMY_DEBUG<a class="headerlink" href="#sqlalchemy-debug" title="Permalink to this headline">¶</a></h3>
+<p>Is set to True SQLAlchemy will enable debug mode.</p>
+</div>
+<div class="section" id="sqlalchemy-echo">
+<h3>SQLALCHEMY_ECHO<a class="headerlink" href="#sqlalchemy-echo" title="Permalink to this headline">¶</a></h3>
+<p>If set to True SQLAlchemy will log all the statements issued to stderr which can be useful for debugging.</p>
+</div>
+<div class="section" id="sqlalchemy-record-queries">
+<h3>SQLALCHEMY_RECORD_QUERIES<a class="headerlink" href="#sqlalchemy-record-queries" title="Permalink to this headline">¶</a></h3>
+<p>Can be used to explicitly disable or enable query recording. Query recording automatically happens in debug or testing mode.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">For detalized information please look <a class="reference external" href="https://pythonhosted.org/Flask-SQLAlchemy/config.html">https://pythonhosted.org/Flask-SQLAlchemy/config.html</a></p>
+</div>
+</div>
 </div>
 <div class="section" id="amazon-settings">
 <h2>Amazon settings<a class="headerlink" href="#amazon-settings" title="Permalink to this headline">¶</a></h2>
-<p>AMAZON_ACCESS_TOKEN
-AMAZON_TOKEN_SECRET
-AMAZON_BUCKET_NAME</p>
+<p>Need AWS credentials for get access to AWS S3, EC2, DynamoDB services.</p>
+<blockquote>
+<div><ul class="simple">
+<li>AMAZON_ACCESS_TOKEN</li>
+<li>AMAZON_TOKEN_SECRET</li>
+<li>AMAZON_BUCKET_NAME</li>
+</ul>
+</div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Please also look <a class="reference external" href="http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSGettingStartedGuide/AWSCredentials.html">http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSGettingStartedGuide/AWSCredentials.html</a> for more details.</p>
 </div>
-<div class="section" id="odesk-settings">
-<h2>Odesk settings<a class="headerlink" href="#odesk-settings" title="Permalink to this headline">¶</a></h2>
-<p>ODESK_OAUTH_KEY
-ODESK_OAUTH_SECRET</p>
+</div>
+<div class="section" id="upwork-settings">
+<h2>Upwork settings<a class="headerlink" href="#upwork-settings" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>ODESK_OAUTH_KEY</li>
+<li>ODESK_OAUTH_SECRET</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">For creating new upwork api keys please go to <a class="reference external" href="https://www.upwork.com/services/api/apply">https://www.upwork.com/services/api/apply</a> . See the list of your registered keys -<a class="reference external" href="https://www.upwork.com/services/api/keys">https://www.upwork.com/services/api/keys</a> .</p>
+</div>
 </div>
 <div class="section" id="main-settings">
 <h2>Main settings<a class="headerlink" href="#main-settings" title="Permalink to this headline">¶</a></h2>
@@ -208,11 +245,11 @@ ODESK_OAUTH_SECRET</p>
      <div class="rel rellarge">
     
     <div class="buttonPrevious">
-      <a href="api.html">Previous
+      <a href="developers_guide.html">Previous
       </a>
     </div>
     <div class="buttonNext">
-      <a href="models.html">Next
+      <a href="whats_new.html">Next
       </a>
     </div>
     

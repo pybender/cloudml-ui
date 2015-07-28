@@ -1,33 +1,58 @@
-CloudML Model
-=============
+Working with Models
+===================
 
 The model is the main entity in the cloudml project. It is a classifier with set of features and other parametes.
 
-
+.. contents:: 
+   :depth: 4
 
 There are information about classifier and features on the model tab.
 
 Edditing features
-~~~~~~~~~~~~~~~~~
+-----------------
 
-**Removing/disabling features**
+Removing/disabling features
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you don't want to use the feature, when train the model, you have two ways:
 
-* remove - after that you can't recover it
+* remove
+	by clicking to the red button delete in the actions column
 * disable
+	by clicking to the grey button disable in the actions column
 
 .. image:: ./_static/models/remove-feature.png
 	:width: 800px
 
-Training tab
-------------
+.. _download_transformed_train_dataset:
 
-Download transformed dataset
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Working with transformed datasets
+---------------------------------
+
+To download vectorized data, that has been used for model trainer go to the "Training" tab and click to the download button near dataset name, that was used for training:
+
+.. image:: ./_static/models/download-dataset.png
+
+Preparing vectorized version of the dataset is a background operation, and when it would be completed on the "About" tab appears section "DataSet Transform Requests":
+
+.. image:: ./_static/models/transformed-dataset-list.png
+
+Click to Download button and you will have .npz archive with vectorized data.
+
+Sample usage data in your script:
+
+.. code-block:: python
+
+	>>> import numpy
+	>>> dataset = numpy.load(path_to_npz_file)['default.npy'].tolist() 
+	>>> dataset['X']
+	<n x m sparse matrix>
+	>>> dataset['Y']
+	<list with n - elements>
+
 
 Model feature weights
-~~~~~~~~~~~~~~~~~~~~~
+---------------------
 
 For different classifiers we use different parameters as feature weights:
 
@@ -67,6 +92,24 @@ It used  to analyze, whether weights parameter is important with this data.
 On the tree tab there are also a child nodes normalized weight sum for not leaf nodes. It displays after sigma symbol. Weights on the tree view is from red to green, normalized weights have grey color.
 
 .. image:: ./_static/models/weights-tree.png
+
+.. _pickled_models:
+
+Pickled Models
+--------------
+
+System stores pickled Trainer class for the model in Amazon S3.
+Trainer could use the configuration defined in model features and perform the training of the classifier. The trainer can also perform testing of the generated model. 
+
+The underlying implementation supporting the trainer is based on Python's `scikit-learn <http://scikit-learn.org>`_ package.
+
+You could download model trainer from existing model by clicking "download trainer" in the top of the model details page.
+Don't forget, that model should be trained before.
+
+.. image:: ./_static/models/download-trainer.png
+	:width: 800px
+
+You could load already trained model by specify trainer file in the `upload model page <http://cloudml.int.odesk.com/#/upload_model>`_.
 
 
 Model Parameters Grid Search

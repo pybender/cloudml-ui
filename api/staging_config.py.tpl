@@ -1,18 +1,16 @@
 SECRET_KEY = 'CHANGE_ME'
-
 SQLALCHEMY_DATABASE_URI = '{{ database_uri }}'
-
 STATIC_ROOT = None
 UPLOAD_FOLDER = 'models'
-MAX_CONTENT_LENGTH = 128 * 1024 * 1024
 DATA_FOLDER = '{{ current_var_link }}/data'
+MAX_CONTENT_LENGTH = 128 * 1024 * 1024
+
 
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_ENABLE_UTC = True
 BROKER_URL = 'amqp://cloudml:cloudml@localhost:5672/cloudml'
 CELERY_RESULT_BACKEND = 'amqp://cloudml:cloudml@localhost:5672/cloudml'
-
 
 CELERY_IMPORTS = (
     'api.models', 'api', 'api.import_handlers.tasks',
