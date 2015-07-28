@@ -27,6 +27,7 @@ from api.ml_models.fixtures import ModelData, TagData, MODEL_TRAINER, \
 from api.import_handlers.fixtures import DataSetData, \
     XmlImportHandlerData as ImportHandlerData, IMPORT_HANDLER_FIXTURES
 from api.import_handlers.fixtures import EXTRACT_XML, get_importhandler
+from api.tasks import TRANSFORM_DATASET_TASK
 
 TRAIN_PARAMS = json.dumps(
     {'start': '2012-12-03',
@@ -710,7 +711,7 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(resp.status_code, httplib.OK)
         resp_obj = json.loads(resp.data)
         self.assertEqual(async_get_object_mock.call_args_list[0][0][1],
-                         'api.ml_models.tasks.transform_dataset_for_download')
+                         TRANSFORM_DATASET_TASK)
         self.assertTrue('downloads' in resp_obj)
         self.assertEqual(resp_obj['downloads'][0]['dataset']['id'], dataset.id)
 

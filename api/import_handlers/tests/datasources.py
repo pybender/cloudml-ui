@@ -80,7 +80,7 @@ class PredefinedDataSourceResourceTests(BaseDbTestCase, TestChecksMixin):
 
         ds = PredefinedDataSource.query.filter_by(
             name=PredefinedDataSourceData.datasource_02.name).one()
-        self.check_edit(data, obj=ds)
+        self.check_edit(data, id=ds.id)
 
     def test_delete(self):
         ds = PredefinedDataSource.query.filter_by(

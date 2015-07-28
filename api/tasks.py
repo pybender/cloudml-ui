@@ -7,6 +7,13 @@ from api.ml_models.models import Model
 from api.model_tests.models import TestResult
 from api.instances.models import Cluster
 
+IMPORT_DATA = 'api.import_handlers.tasks.import_data'
+TRAIN_MODEL_TASK = 'api.ml_models.tasks.models.train_model'
+TRANSFORM_DATASET_TASK = 'api.ml_models.tasks.models.\
+transform_dataset_for_download'
+VISUALIZE_MODEL_TASK = 'api.ml_models.tasks.models.visualize_model'
+TRAIN_TRANSFORMER = 'api.ml_models.tasks.transformers.train_transformer'
+
 
 def get_object_from_task(task_name, args, kwargs):  # pragma: no cover
     cls = None
@@ -17,15 +24,14 @@ def get_object_from_task(task_name, args, kwargs):  # pragma: no cover
     elif task_name == 'api.model_tests.tasks.run_test':
         cls = TestResult
         obj_id = args[1] if len(args) else kwargs['test_id']
-    elif task_name in ('api.ml_models.tasks.train_model',
-                       'api.ml_models.tasks.visualize_model',
-                       'api.ml_models.tasks.transform_dataset_for_download'):
+    elif task_name in (TRAIN_MODEL_TASK, VISUALIZE_MODEL_TASK,
+                       TRANSFORM_DATASET_TASK):
         cls = Model
-        if task_name == 'api.ml_models.tasks.train_model':
-            obj_id = args[1] if len(args) else kwargs['model_id']
-        elif task_name == 'api.ml_models.tasks.visualize_model':
+        if task_name == TRAIN_MODEL_TASK:
+            obj_id = args[1] if len(args) > 1 else kwargs['model_id']
+        elif task_name == VISUALIZE_MODEL_TASK:
             obj_id = args[0] if len(args) else kwargs['model_id']
-        elif task_name == 'api.ml_models.tasks.transform_dataset_for_download':
+        elif task_name == TRANSFORM_DATASET_TASK:
             obj_id = args[0] if len(args) else kwargs['model_id']
     elif task_name == 'api.model_tests.tasks.get_csv_results':
         cls = TestResult

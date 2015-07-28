@@ -14,6 +14,7 @@ from views import InstanceResource, ClusterResource
 from models import Instance, Cluster
 from fixtures import InstanceData, ClusterData, ACTIVE_CLUSTERS_COUNT
 from tasks import *
+from api.tasks import TRAIN_MODEL_TASK
 from api.base.models import db
 
 

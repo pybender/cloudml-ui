@@ -331,8 +331,9 @@ class ModelResource(BaseTrainedEntityResource):
         if model is None:
             raise NotFound('Model not found')
 
+        from api.tasks import TRANSFORM_DATASET_TASK
         tasks = AsyncTask.get_current_by_object(
-            model, 'api.ml_models.tasks.transform_dataset_for_download')
+            model, TRANSFORM_DATASET_TASK)
 
         downloads = []
         for task in tasks:
