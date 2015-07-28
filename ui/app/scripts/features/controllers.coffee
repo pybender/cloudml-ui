@@ -184,6 +184,13 @@ angular.module('app.features.controllers', ['app.config', ])
         $scope.setError(opts, 'updating feature')
       )
 
+    $scope.getFeatureNames = (features) ->
+      if features?
+        res = []
+        for item in features
+          res.push item.name
+        return res
+
     $scope.makeTarget = (feature) ->
       feature.is_target_variable = true
       feature.$save(only: ['is_target_variable']).then (->

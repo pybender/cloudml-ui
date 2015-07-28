@@ -17,7 +17,7 @@
       <span ng-show="loading_state">Loading...</span>
     </form>
 
-    Mean avarage precision: {{ mavp.toFixed(4) }}
+    Mean avarage precision: {{ mavp.toFixed(4) || mavp }}
     <table class="table table-striped">
         <thead>
           <tr>
@@ -30,7 +30,7 @@
           <tr ng-repeat="data in objects">
             <td><a href="#{{ test.examplesUrl() }}&data_input->>{{ form.field }}={{ data.group_by_field }}">{{ data.group_by_field }}</a></td>
             <td><span>{{ data.count }} </span></td>
-            <td><span>{{ data.avp.toFixed(4) }} </span></td>
+            <td><span>{{ data.avp.toFixed(4) || data.avp }} </span></td>
           </tr>
         </tbody>
     </table>

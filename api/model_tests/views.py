@@ -5,6 +5,7 @@ Model tests related resources.
 # Authors: Nikolay Melnik <nmelnik@upwork.com>
 
 import logging
+import math
 from flask.ext.restful import reqparse
 
 from api import api
@@ -216,6 +217,7 @@ not contain probabilities')
             return odesk_error_response(400, ERR_INVALID_DATA,
                                         'Type of labels do not support')
         logging.info('Calculating avps for groups')
+        calc_average = True
         for group in groups:
             group_list = group['list']
 
@@ -233,6 +235,9 @@ not contain probabilities')
                     avp = apk(labels, pred_labels, count)
             else:
                 avp = apk(labels, pred_labels, count)
+            if math.isnan(avp):
+                calc_average = False
+                avp = "Can't be calculated"
             avps.append(avp)
             res.append({'group_by_field': group[group_by_field],
                         'count': len(group_list),
@@ -240,8 +245,7 @@ not contain probabilities')
 
         res = sorted(res, key=itemgetter("count"), reverse=True)[:100]
         logging.info('Calculating map')
-        mavp = np.mean(avps)
-
+        mavp = np.mean(avps) if calc_average else "N/A"
         context = {self.list_key: {'items': res},
                    'field_name': group_by_field,
                    'mavp': mavp}

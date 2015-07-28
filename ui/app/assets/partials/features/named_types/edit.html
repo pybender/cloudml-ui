@@ -5,20 +5,18 @@
         <h3>Edit named feature type</h3>
       </div>
 
-      <form name="Form" class="form-vertical">
-
       <div class="modal-body">
-        <loadindicator title="Editing named feature type..." ng-show="saving" cml-progress="savingProgress"></loadindicator>
+        <form name="Form" class="form-horizontal">
+          <loadindicator title="Editing named feature type..." ng-show="saving" cml-progress="savingProgress"></loadindicator>
 
-        <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+          <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
 
-        <ng-include src="'partials/features/named_types/form.html'"></ng-include>
+          <ng-include src="'partials/features/named_types/form.html'"></ng-include>
+        </form>
       </div>
 
       <div class="modal-footer">
         <button ng-click="save(['name', 'type', 'input_format', 'params'])" ng-disabled="Form.$invalid" class="btn btn-primary">Save</button>
       </div>
-
-      </form>
   </div>
 </div>

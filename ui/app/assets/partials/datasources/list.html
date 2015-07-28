@@ -1,0 +1,54 @@
+<h2>
+  DataSource List <go-to-docs page="exporting_data" section="predefined-datasources" title="more about predefined datasources"></go-to-docs>
+  <div class="actions">
+      <a class="btn btn-info" ng-click="add()">
+        <i class="status-icon icon-plus"></i> Add new data source
+      </a>
+  </div>
+</h2>
+
+<div ng-controller="BaseListCtrl" ng-init="init(true, LIST_MODEL_NAME)">
+	<alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+
+	<alert-message ng-show="objects.length == 0" class="alert-info" msg="No data sources found"></alert-message>
+
+	<table ng-hide="objects.length == 0" class="table table-hover">
+	<thead>
+	  <tr>
+	    <th>Name</th>
+	    <th>Type</th>
+	    <th>Vendor</th>
+	    <th>Connection</th>
+	    <th>Created</th>
+	    <th>Actions</th>
+	  </tr>
+	</thead>
+	<tbody ng-show="objects.length == 0">
+    <tr>
+      <td colspan="5">
+        <alert-message ng-show="objects.length == 0" class="alert-info" msg="No predefined datasources found"></alert-message>
+      </td>
+    </tr>
+  	</tbody>
+	<tbody ng-hide="objects.length == 0">
+	  <tr ng-repeat="ds in objects | orderBy:'name'">
+	    <td>
+	    	<span ng-show="ds.can_edit" title="DataSource Name" class="name" ng-bind="ds.name || 'name here'" editable="ds" value="ds.name" editable-field="name" editable-input="text" editable-placement="right"></span>
+	    	<span ng-hide="ds.can_edit">{{ ds.name }}</span>
+	    </td>
+	    <td>{{ ds.type }}</td>
+	    <td>{{ ds.vendor }}</td>
+	    <td>{{ ds.conn }}</td>
+	    <td>
+	        <span title="dates in GMT">{{ ds.created_on|format_date }}</span><br>
+	        <small ng-show="ds.created_by">by {{ ds.created_by.name }} ({{ ds.created_by.uid }})</small>
+	    </td>
+	    <td>
+	    	<button ng-show="ds.can_edit" class="btn btn-info" ng-click="edit(ds)"><i class="icon-edit" title="edit" /></button>
+	    	<button ng-show="ds.can_delete" ng-click="delete(ds)" class="btn btn-danger"><i title="Delete your datasource. Be careful - you could not recover it!" class="icon-remove"></i>
+        </button>
+	    </td>
+	  </tr>
+	</tbody>
+	</table>
+</div>

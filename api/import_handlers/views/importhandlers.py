@@ -23,6 +23,24 @@ from api.import_handlers.forms import XmlImportHandlerAddForm, \
 from api.servers.forms import ChooseServerForm
 
 
+class ImportHandlerResourceForAnyType(BaseResourceSQL):
+    """
+    Methods for working for any type of import handler: json and xml.
+    """
+    OBJECT_NAME = 'import_handler'
+
+    def _get_list_query(self, params, **kwargs):
+        from sqlalchemy.sql import literal_column
+        fields = self._get_show_fields(params)
+        return self.defer_fields(
+            XmlImportHandler,
+            XmlImportHandler.query,
+            fields).filter_by(**kwargs).all()
+
+api.add_resource(
+    ImportHandlerResourceForAnyType, '/cloudml/any_importhandlers/')
+
+
 class XmlImportHandlerResource(BaseResourceSQL):
     """
     XmlImportHandler API methods

@@ -1,0 +1,221 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>CloudML Model &mdash; oDesk CloudML 0.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="oDesk CloudML 0.0.1 documentation" href="index.html" />
+    <link rel="next" title="Test Examples" href="test_examples.html" />
+    <link rel="prev" title="Settings" href="settings.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="test_examples.html" title="Test Examples"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="settings.html" title="Settings"
+             accesskey="P">previous</a> |</li>
+    <li><a href="http://cloudml.int.odesk.com/">CloudML UI</a> &raquo;</li>
+    
+        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">CloudML Model</a><ul>
+<li><a class="reference internal" href="#edditing-features">Edditing features</a><ul>
+<li><a class="reference internal" href="#training-tab">Training tab</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#download-transformed-dataset">Download transformed dataset</a></li>
+<li><a class="reference internal" href="#model-feature-weights">Model feature weights</a><ul>
+<li><a class="reference internal" href="#model-parameters-grid-search">Model Parameters Grid Search</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="settings.html"
+                        title="previous chapter">Settings</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="test_examples.html"
+                        title="next chapter">Test Examples</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/models.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="cloudml-model">
+<h1>CloudML Model<a class="headerlink" href="#cloudml-model" title="Permalink to this headline">¶</a></h1>
+<p>The model is the main entity in the cloudml project. It is a classifier with set of features and other parametes.</p>
+<p>There are information about classifier and features on the model tab.</p>
+<div class="section" id="edditing-features">
+<h2>Edditing features<a class="headerlink" href="#edditing-features" title="Permalink to this headline">¶</a></h2>
+<p>If you don&#8217;t want to use the feature, when train the model, you have two ways:</p>
+<ul class="simple">
+<li>remove - after that you can&#8217;t recover it</li>
+<li>disable</li>
+</ul>
+<a class="reference internal image-reference" href="_images/remove-feature.png"><img alt="_images/remove-feature.png" src="_images/remove-feature.png" style="width: 800px;" /></a>
+<div class="section" id="training-tab">
+<h3>Training tab<a class="headerlink" href="#training-tab" title="Permalink to this headline">¶</a></h3>
+</div>
+</div>
+<div class="section" id="download-transformed-dataset">
+<h2>Download transformed dataset<a class="headerlink" href="#download-transformed-dataset" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="model-feature-weights">
+<h2>Model feature weights<a class="headerlink" href="#model-feature-weights" title="Permalink to this headline">¶</a></h2>
+<p>For different classifiers we use different parameters as feature weights:</p>
+<ul>
+<li><dl class="first docutils">
+<dt><a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html#sklearn.linear_model.LogisticRegression">LogisticRegression</a></dt>
+<dd><p class="first last"><cite>coef_</cite> - coefficient of the features in the decision function</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.SGDClassifier.html#sklearn-linear-model-sgdclassifier">SGDClassifier</a></dt>
+<dd><p class="first last"><cite>coef_</cite> - weights assigned to the features.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.svm.SVR.html#sklearn-svm-svr">SVR</a></dt>
+<dd><p class="first last"><cite>coef_</cite> - weights assigned to the features (coefficients in the primal problem). This is only available in the case of linear kernel.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html">Decision Tree Classifier</a></dt>
+<dd><p class="first last"><cite>feature_importances_</cite> - the feature importances. The higher, the more important the feature. The importance of a feature is computed as the (normalized) total reduction of the criterion brought by that feature. It is also known as the Gini importance</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.ensemble.ExtraTreesClassifier.html">ExtraTreesClassifier</a></dt>
+<dd><p class="first last"><cite>feature_importances_</cite> - the feature importances (the higher, the more important the feature).</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html">RandomForestClassifier</a></dt>
+<dd><p class="first last"><cite>feature_importances_</cite> - the feature importances (the higher, the more important the feature).</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html">GradientBoostingClassifier</a></dt>
+<dd><p class="first last"><cite>feature_importances_</cite> - the feature importances (the higher, the more important the feature).</p>
+</dd>
+</dl>
+</li>
+</ul>
+<a class="reference internal image-reference" href="_images/weights-columns.png"><img alt="_images/weights-columns.png" src="_images/weights-columns.png" style="width: 800px;" /></a>
+<p>Also on the List tab there are normalized weight, calculated as:</p>
+<img alt="_images/normalized-weight.png" src="_images/normalized-weight.png" />
+<p>where:</p>
+<ul class="simple">
+<li>n - row count in train dataset</li>
+<li>betta(j) - weight of the selected feature</li>
+<li>x(i, j) - value of the selected feature for i-row in the dataset</li>
+</ul>
+<p>It used  to analyze, whether weights parameter is important with this data.</p>
+<a class="reference internal image-reference" href="_images/weights-list.png"><img alt="_images/weights-list.png" src="_images/weights-list.png" style="width: 800px;" /></a>
+<p>On the tree tab there are also a child nodes normalized weight sum for not leaf nodes. It displays after sigma symbol. Weights on the tree view is from red to green, normalized weights have grey color.</p>
+<img alt="_images/weights-tree.png" src="_images/weights-tree.png" />
+<div class="section" id="model-parameters-grid-search">
+<h3>Model Parameters Grid Search<a class="headerlink" href="#model-parameters-grid-search" title="Permalink to this headline">¶</a></h3>
+<p>Searches over specified parameter values for an classifier.
+As the underlying implementation used <a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.grid_search.GridSearchCV.html#sklearn-grid-search-gridsearchcv">Scikit GridSearchCV</a></p>
+<p>For starting parameters grid search click to &#8220;Grid search&#8221; button on the right-top corner of the model details page.</p>
+<p>In opened popup you should choose classifier parameters, dataset for training, dataset for testing and model evaluation metrics.</p>
+<img alt="_images/grid-search.png" src="_images/grid-search.png" />
+<p>Searching the best classifier parameters is the background process, so navigate to &#8220;Parameters Search&#8221; tab to view results:</p>
+<img alt="_images/grid-search-results.png" src="_images/grid-search-results.png" />
+<p>Seems the best parameters are &#8220;C: 100, penalty: l2&#8221;.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="test_examples.html" title="Test Examples"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="settings.html" title="Settings"
+             >previous</a> |</li>
+    <li><a href="http://cloudml.int.odesk.com/">CloudML UI</a> &raquo;</li>
+    
+        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, oDesk.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b2.
+    </div>
+  </body>
+</html>

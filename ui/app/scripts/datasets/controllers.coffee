@@ -76,7 +76,7 @@ filesize,records_count,time,created_by,updated_by'
     $scope.getPigFields = (dataSet)->
       $scope.openDialog($scope, {
         model: dataSet
-        template: 'partials/xml_import_handlers/sqoop/load_pig_fields.html'
+        template: 'partials/importhandlers/xml/sqoop/load_pig_fields.html'
         ctrlName: 'PigFieldsLoader'
         extra: {noInput: true, title: 'XML Fields'}
       })
@@ -88,10 +88,9 @@ filesize,records_count,time,created_by,updated_by'
   '$routeParams'
   '$location'
   'DataSet'
-  'ImportHandler'
   'XmlImportHandler'
 
-  ($scope, $routeParams, $location, DataSet, ImportHandler, XmlImportHandler) ->
+  ($scope, $routeParams, $location, DataSet, XmlImportHandler) ->
     if not $routeParams.id
       throw new Error "Can't initialize without id"
 
@@ -104,7 +103,7 @@ filesize,records_count,time,created_by,updated_by'
     if $routeParams.import_handler_type == 'xml'
       cls = XmlImportHandler
     else
-      cls = ImportHandler
+      throw new Error "Unsupported import handler type"
 
     $scope.handler = new cls({
       id: $routeParams.import_handler_id
@@ -190,19 +189,19 @@ filesize,records_count,time,created_by,updated_by'
     # parameters which affects the repeater in load_data.html and also affects
     # the number of fields in the dataset import dialog bog
     $scope.params = _.uniq(handler.import_params)
-    $scope.format = 'json'
+    $scope.data_format = 'json'
     $scope.formats = [
       {name: 'JSON', value: 'json'}, {name: 'CSV', value: 'csv'}
     ]
 
-    $scope.start = (result) ->
+    $scope.start = (format) ->
       $scope.dataset = new DataSet({
         'import_handler_id': $scope.handler.id
         'import_handler_type': $scope.handler.TYPE
       })
       data = {
         import_params: JSON.stringify($scope.parameters),
-        format: $scope.format
+        format: format,
         handler_type: $scope.handler.TYPE
       }
       $scope.dataset.$save(data)

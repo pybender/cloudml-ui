@@ -9,6 +9,9 @@ class PredefinedDataSourceForm(BaseForm):
     """
     DataSource add/edit form
     """
+    NO_REQUIRED_FOR_EDIT = True
+    required_fields = ('name', 'type')
+
     name = CharField()
     type_field = ChoiceField(
         choices=PredefinedDataSource.TYPES_LIST, name='type')
@@ -21,6 +24,6 @@ class PredefinedDataSourceForm(BaseForm):
         count = query.count()
         if count:
             raise ValidationError(
-                "Data Source with name \"%s\" already exist. "
+                "DataSource with name \"%s\" already exist. "
                 "Please choose another one." % value)
         return value

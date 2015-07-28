@@ -8,6 +8,7 @@ import json
 import uuid
 import os
 from bson import ObjectId
+import logging
 
 from sqlalchemy.types import UserDefinedType, UnicodeText, TypeDecorator, \
     String
@@ -45,8 +46,17 @@ class JSONType(TypeDecorator):
         return value
 
     def process_result_value(self, value, dialect):
-        if value is not None:
-            value = json.loads(value)
+        if value is None:
+            return None
+
+        if isinstance(value, (dict, int, float)):
+            return value
+
+        try:
+            value = json.loads(str(value))
+        except:
+            logging.error("Can't load json {0}".format(value))
+            return value
         return value
 
 

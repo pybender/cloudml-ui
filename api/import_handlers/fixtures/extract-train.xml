@@ -7,7 +7,7 @@
     </inputs>
 
     <!-- Links to external scripts may be used so that they are included to javascript context -->
-    <script ref="" />
+    <script src="" />
 
     <datasources>
         <db name="odw" 
@@ -116,12 +116,6 @@
           <result>
               <label model="rank" />
               <probability model="rank" label="true" />
-          </result>
-
-          <!-- or result may be calculated using Javascript functions -->
-          <result>
-              <label script="getLabel()"/>
-              <probability script="getProbability()"/>
           </result>
     </predict>
 </plan>

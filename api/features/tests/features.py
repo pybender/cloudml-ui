@@ -91,7 +91,7 @@ Can not load it: aaa, transformer-type: type is invalid"})
         self.assertTrue(obj.required)
         self.assertTrue(obj.is_target_variable)
         self.assertEquals(obj.input_format, data['input_format'])
-        self.assertEquals(obj.default, data['default'])
+        self.assertEquals(obj.default, int(data['default']))
         model = Model.query.get(self.model.id)
         self.assertTrue(data["name"] in model.features,
                         "Features.json should be updated")
@@ -118,7 +118,7 @@ Can not load it: aaa, transformer-type: type is invalid"})
 
         transformer = Transformer.query.all()[0]
         data = {
-            "name": "title",
+            "name": "feature-with-pretrained-transformer",
             "type": "text",
             "feature_set_id": self.model.features_set_id,
             "transformer-transformer": transformer.id,

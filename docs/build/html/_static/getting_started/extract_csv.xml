@@ -1,0 +1,17 @@
+<plan>
+    <datasources>
+        <csv name="test_datasource" src="http://archive.ics.uci.edu/ml/machine-learning-databases/abalone/abalone.data" />
+    </datasources>
+    <import>
+        <entity datasource="test_datasource" name="test">
+            <field name="sex" type="string" column="0"/>
+            <field name="length" type="float" column="1" />
+            <field name="diameter" type="float" column="2" />
+            <field name="height" type="float" column="3" />
+            <field name="whole_weight" type="float" column="4" />
+            <field name="shucked_weight" type="float" column="5" />
+            <field name="square" type="float" script="length*height" />
+            <field name="rings" type="integer" column="8" />
+        </entity>
+    </import>
+</plan>

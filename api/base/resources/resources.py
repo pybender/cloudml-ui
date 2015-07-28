@@ -247,6 +247,10 @@ class BaseResource(restful.Resource):
         if model is None:
             raise NotFound(self.MESSAGE404 % kwargs)
 
+        if not model.can_edit:
+            return odesk_error_response(
+                401, 401, 'You haven\'t permissions to edit')
+
         if self.put_form is None:
             raise ValueError('Specify put form')
 
@@ -270,6 +274,9 @@ class BaseResource(restful.Resource):
         model = self._get_details_query({}, **kwargs)
         if model is None:
             raise NotFound(self.MESSAGE404 % kwargs)
+        if not model.can_delete:
+            return odesk_error_response(
+                401, 401, 'You haven\'t permissions to delete')
         self._delete_validataion(model)
         model.delete()
         return '', 204

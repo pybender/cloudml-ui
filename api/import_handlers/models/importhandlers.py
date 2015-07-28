@@ -160,15 +160,6 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
         'Predict', foreign_keys=[predict_id], backref="import_handler")
 
     @property
-    def can_edit(self):
-        if self.created_by is None:
-            return True
-
-        from flask import request
-        user = getattr(request, 'user', None)
-        return user.id == self.created_by.id
-
-    @property
     def data(self):
         return self.get_plan_config()
 
@@ -784,7 +775,10 @@ def fill_import_handler(import_handler, xml_data=None):
         load_entity_items(plan.entity, db_entity=ent)
         for ent, field_name in ENTITIES_WITHOUT_DS:
             if field_name not in TRANSFORMED_FIELDS:
-                raise ValueError('Field {0} not found'.format(field_name))
+                raise ValueError(
+                    'Transformed field or datasource "{0}" '
+                    'not found in the entity "{1}"'.format(
+                        field_name, ent.name))
             ent.transformed_field = TRANSFORMED_FIELDS[field_name]
 
         # Fill predict section

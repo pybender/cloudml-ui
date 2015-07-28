@@ -10,11 +10,10 @@ CloudML is a declarative machine learning classifier project
 Contents:
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
    
    get_started
-   import_handler
-   xml_import_handlers
+   import_handlers
    features
    changes
    trainer
@@ -23,9 +22,11 @@ Contents:
    instances
    deploy_on_predict
    deployment
-   development
+   developers_guide
    api
    settings
+   models
+   test_examples
    exporting_data
    whats_new
 
@@ -36,7 +37,7 @@ Contents:
    * `Github repository <https://github.com/odeskdataproducts/cloudml-ui>`_
    * Production http://cloudml.int.odesk.com/
    * Staging http://172.27.77.182/
-   * Developers: Nikolay Melnik <nmelnik@odesk.com>, Nader Soliman <nsoliman@odesk.com>
+   * Developers: Nikolay Melnik <nmelnik@cloud.upwork.com>, Nader Soliman <nsoliman@cloud.upwork.com>
 
 
 

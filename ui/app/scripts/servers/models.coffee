@@ -58,11 +58,10 @@ angular.module('app.servers.model', ['app.config'])
 
 .factory('ImportHandlerFile', [
   'ServerFile'
-  'ImportHandler'
   'XmlImportHandler'
   'settings'
   
-  (ServerFile, ImportHandler, XmlImportHandler, settings) ->
+  (ServerFile, XmlImportHandler, settings) ->
     class ImportHandlerFile extends ServerFile
       @LIST_MODEL_NAME: 'importhandlers_files'
       LIST_MODEL_NAME: @LIST_MODEL_NAME
@@ -88,10 +87,7 @@ angular.module('app.servers.model', ['app.config'])
                 name: origData.object_name
               })
             else
-              @obj = new ImportHandler({
-                id: origData.object_id
-                name: origData.object_name
-              })
+              throw new Error "unsuported import handler type"
 
     return ImportHandlerFile
 ])

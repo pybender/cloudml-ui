@@ -8,6 +8,7 @@ import json
 
 from api.base.resources import ValidationError
 from sqlalchemy.orm.exc import NoResultFound
+from api.base.utils import isint
 
 
 class BaseField(object):
@@ -141,6 +142,10 @@ class ModelField(CharField):
         if value is None:
             return None
 
+        if not isint(value):
+            raise ValidationError('Invalid {0} id: {1}'.format(
+                self.Model.__name__, value))
+
         self.model = self.Model.query.get(value)
         if self.model is None:
             raise ValidationError(
@@ -162,8 +167,14 @@ class MultipleModelField(CharField):
         if not value:
             return None
 
+        values = value.split(',')
+        for item in values:
+            if not isint(item):
+                raise ValidationError('Invalid {0} id: {1}'.format(
+                    self.Model.__name__, item))
+
         self.models = self.Model.query.filter(
-            self.Model.id.in_(value.split(','))).all()
+            self.Model.id.in_(values)).all()
         if not self.models:
             raise ValidationError('{0} not found'.format(
                 self.Model.__name__))

@@ -10,6 +10,7 @@ FEATURES_JSON = json.loads(FEATURES_STR)
 TRANSFORMER_STR = open(os.path.join(DIR, 'transformer.json'), 'r').read()
 TRANSFORMER_JSON = json.loads(FEATURES_STR)
 
+
 class FeatureSetData(DataSet):
     class bestmatch:
         schema_name = 'bestmatch'
@@ -17,9 +18,12 @@ class FeatureSetData(DataSet):
 
 class FeatureData(DataSet):
     class smth:
-        name = 'smth'
+        name = 'feature-title'
         type = 'int'
-        feature_set_id = FeatureSetData.bestmatch.ref('id')
+        feature_set = FeatureSetData.bestmatch
+        params = {}
+        transformer = {}
+        scaler = {}
 
     class hire_outcome_feature:
         input_format = 'dict'
@@ -29,7 +33,7 @@ class FeatureData(DataSet):
         required = True
         params = {"mappings": {"class2": 0, "class1": 1}}
         type = "text"
-        feature_set_id = FeatureSetData.bestmatch.ref('id')
+        feature_set = FeatureSetData.bestmatch
 
     class title_feature:
         input_format = 'dict'
@@ -39,7 +43,7 @@ class FeatureData(DataSet):
         required = True
         params = {"mappings": {"class2": 0, "class1": 1}}
         type = "text"
-        feature_set_id = FeatureSetData.bestmatch.ref('id')
+        feature_set = FeatureSetData.bestmatch
 
     class name_feature:
         input_format = 'dict'
@@ -49,7 +53,7 @@ class FeatureData(DataSet):
         required = True
         params = {"mappings": {"class2": 0, "class1": 1}}
         type = "text"
-        feature_set_id = FeatureSetData.bestmatch.ref('id')
+        feature_set = FeatureSetData.bestmatch
 
     class complex_feature:
         scaler = {
@@ -68,12 +72,12 @@ class FeatureData(DataSet):
         required = True
         params = {"mappings": {"class2": 0, "class1": 1}}
         type = "map"
-        feature_set_id = FeatureSetData.bestmatch.ref('id')
+        feature_set = FeatureSetData.bestmatch
 
     class disabled_feature:
         name = 'disabled_feature'
         type = 'int'
-        feature_set_id = FeatureSetData.bestmatch.ref('id')
+        feature_set = FeatureSetData.bestmatch
         disabled = True
 
 

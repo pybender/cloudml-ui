@@ -11,7 +11,7 @@
     </form>
   </div>
 
-  <div class="modal-footer">
+  <div class="modal-footer" title="{{ Form.$error}}">
     <button ng-click="save(['name', 'type', 'input_format', 'params'])" ng-disabled="Form.$invalid" class="btn btn-primary">Add classifier</button> <small>and start using it</small>
   </div>
 </div>

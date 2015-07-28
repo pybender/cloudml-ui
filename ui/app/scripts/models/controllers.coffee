@@ -106,21 +106,13 @@ angular.module('app.models.controllers', ['app.config', ])
   'Model'
 
   ($scope, Model) ->
-    $scope.formats = [
-      {name: 'JSON', value: 'json'}, {name: 'CSV', value: 'csv'}
-    ]
-    # nader20141130 - train_format, test_format is not used anywhere on the back
-    # end should it be removed?
-    $scope.model = new Model({train_format: 'json', test_format: 'json'})
-])
-
-# Upload trained model controller
-.controller('UploadModelCtl', [
-  '$scope'
-  'Model'
-
-  ($scope, Model) ->
     $scope.model = new Model()
+
+    # note: used to saving the file after choosing it.
+    # othervise would be setted after changing another field.
+    $scope.loadFile = ($fileContent) ->
+      $scope.model.import_handler_file = $fileContent
+      $scope.$apply()
 ])
 
 .controller('ModelDetailsCtrl', [
@@ -334,8 +326,13 @@ angular.module('app.models.controllers', ['app.config', ])
     $scope.multiple_dataset = false
 
     classifier = $scope.model.classifier
+    if !classifier.type?
+      $scope.err = 'Need to specify classifier before performing grid search'
+      $scope.inactive = true  # will hide parameters form
+      return
+
     classifier.$getConfiguration(
-    ).then ((opts)->
+    ).then ((opts) ->
       $scope.params = opts.data.configuration[classifier.type]["parameters"]
     ), ((opts)->
       $scope.setError(opts, 'loading types and parameters')

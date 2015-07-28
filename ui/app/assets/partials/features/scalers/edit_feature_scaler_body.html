@@ -53,14 +53,11 @@
       </div>
       <div ng-show="feature.scaler.type && feature.scaler.config && feature.scaler.config.parameters && feature.scaler.config.parameters.length > 0">
         <h4>Scalar Parameters</h4>
-
-        <div ng-repeat="name in feature.scaler.config.parameters"
+        <div ng-repeat="item in feature.scaler.config.parameters"
              class="control-group">
-          <label class="control-label">{{ name }}</label>
-
+          <label class="control-label">{{ item.name }}</label>
           <div class="controls">
-            <input ng-model="feature.scaler.params[name]" name="{{ name }}"
-                   type='text'/>
+            <parameter-input ng-model="feature.scaler.params[item.name]" config="item"></parameter-input>
           </div>
         </div>
       </div>

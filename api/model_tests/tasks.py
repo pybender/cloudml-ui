@@ -323,7 +323,7 @@ def export_results_to_db(model_id, test_id,
     db_fields = []
     for field in fields:
         if 'prob' == field:
-            for label in reversed(test.classes_set):
+            for label in test.classes_set:
                 db_fields.append("prob_%s varchar(25)" % label)
         else:
             db_fields.append("%s varchar(25)" % field.replace('->', '__'))
@@ -383,7 +383,7 @@ def get_csv_results(model_id, test_id, fields):
         header = list(fields)
         if 'prob' in header:
             prob_index = header.index('prob')
-            for label in reversed(test.classes_set):
+            for label in test.classes_set:
                 header.insert(prob_index, 'prob_%s' % label)
             header.remove('prob')
 

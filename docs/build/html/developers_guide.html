@@ -1,0 +1,436 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Developer’s guide &mdash; oDesk CloudML 0.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="oDesk CloudML 0.0.1 documentation" href="index.html" />
+    <link rel="next" title="Api" href="api.html" />
+    <link rel="prev" title="Deployment" href="deployment.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="api.html" title="Api"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="deployment.html" title="Deployment"
+             accesskey="P">previous</a> |</li>
+    <li><a href="http://cloudml.int.odesk.com/">CloudML UI</a> &raquo;</li>
+    
+        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Developer&#8217;s guide</a><ul>
+<li><a class="reference internal" href="#ubuntu">Ubuntu</a><ul>
+<li><a class="reference internal" href="#backend">Backend</a></li>
+<li><a class="reference internal" href="#frontend">Frontend</a><ul>
+<li><a class="reference internal" href="#installation-strategy">Installation Strategy</a></li>
+<li><a class="reference internal" href="#global-modules-installation">Global Modules Installation</a></li>
+<li><a class="reference internal" href="#installation">Installation</a></li>
+<li><a class="reference internal" href="#building-3rd-party">Building 3rd party</a><ul>
+<li><a class="reference internal" href="#building-x-editable">Building x-editable</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#updating-webdrive">Updating Webdrive</a><ul>
+<li><a class="reference internal" href="#grunt-key-tasks-and-testing-your-installation">Grunt Key Tasks and Testing your installation</a><ul>
+<li><a class="reference internal" href="#unit-tests-grunt-unit">Unit Tests (grunt unit)</a></li>
+<li><a class="reference internal" href="#e2e-with-protractor-grunt-e2e">E2E with Protractor (grunt e2e)</a></li>
+<li><a class="reference internal" href="#running-the-app-during-development-grunt-server">Running the app during development (grunt server)</a></li>
+<li><a class="reference internal" href="#building-public">Building _public</a></li>
+<li><a class="reference internal" href="#coverage">Coverage</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#the-role-of-vendor-config-coffee">The role of vendor.config.coffee</a><ul>
+<li><a class="reference internal" href="#cdn-section">CDN Section</a></li>
+<li><a class="reference internal" href="#bundled-section">Bundled Section</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#mac-os">Mac Os</a></li>
+<li><a class="reference internal" href="#vagrant">Vagrant</a></li>
+<li><a class="reference internal" href="#installing-test-data">Installing test data</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="deployment.html"
+                        title="previous chapter">Deployment</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="api.html"
+                        title="next chapter">Api</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/developers_guide.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="developer-s-guide">
+<h1>Developer&#8217;s guide<a class="headerlink" href="#developer-s-guide" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="ubuntu">
+<h2>Ubuntu<a class="headerlink" href="#ubuntu" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="backend">
+<h3>Backend<a class="headerlink" href="#backend" title="Permalink to this headline">¶</a></h3>
+<p>Install system requirement:</p>
+<div class="highlight-python"><pre>$ sudo apt-get install liblapack-dev gfortran libpq-dev libevent-dev python-dev rabbitmq-server</pre>
+</div>
+<p>Create virtual env:</p>
+<div class="highlight-python"><pre>$ virtualenv --no-site-packages ve
+$ . ve/bin/activate</pre>
+</div>
+<p>Install numpy and scipy:</p>
+<div class="highlight-python"><pre>$ export LAPACK=/usr/lib/liblapack.so
+$ export ATLAS=/usr/lib/libatlas.so
+$ export BLAS=/usr/lib/libblas.so
+$ pip install numpy
+$ pip install scipy</pre>
+</div>
+<p>Install python requirements:</p>
+<div class="highlight-python"><pre>$ pip install -r ./requirements.txt</pre>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>To use your local version of cloudml, instead of the one coming from requirements.txt of cloudml-ui project:</p>
+<ul class="last simple">
+<li>pip uninstall cloudml</li>
+<li>let PYTHONPATH point to your cloudml root directory</li>
+</ul>
+</div>
+<p>Install Postgresql using instruction <a class="reference external" href="https://help.ubuntu.com/community/PostgreSQL">https://help.ubuntu.com/community/PostgreSQL</a></p>
+<p>Create user and database:</p>
+<div class="highlight-python"><pre>$ sudo -u postgres createuser -D -A -P cloudml
+$ sudo -u postgres createdb -O cloudml cloudml</pre>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Need set password to &#8216;cloudml&#8217; for default setting.</p>
+</div>
+<p>Create local config:</p>
+<div class="highlight-python"><pre>$ cp api/local_config.py.tpl api/local_config.py</pre>
+</div>
+<p>Create OATH API keys using <a class="reference external" href="https://www.upwork.com/services/api/apply">https://www.upwork.com/services/api/apply</a>. Callback URL is <a class="reference external" href="http://127.0.0.1:3333/#/auth/callback">http://127.0.0.1:3333/#/auth/callback</a> and fill local_config.py:</p>
+<div class="highlight-python"><pre>$ ODESK_OAUTH_KEY = '{{ odesk api key }}'
+$ ODESK_OAUTH_SECRET = '{{ odesk secret key }}'</pre>
+</div>
+<p>Configure rabbitmq(celery broker):</p>
+<div class="highlight-python"><pre>$ rabbitmqctl add_user cloudml cloudml
+$ rabbitmqctl add_vhost cloudml
+$ rabbitmqctl set_permissions cloudml cloudml "*" "*" "*
+"</pre>
+</div>
+<p>To install nltk/punkt you need to hid to <a class="reference external" href="http://www.nltk.org/data.html">http://www.nltk.org/data.html</a> and follow
+the direction. After nltk.download() choose to download punkt.</p>
+<p>Run local dynamodb:</p>
+<div class="highlight-python"><pre>$ ./api/logs/dynamodb/dynamodb_local.sh</pre>
+</div>
+<p>Create dynoamodb tables:</p>
+<div class="highlight-python"><pre>$ python manage.py create_dynamodb_tables</pre>
+</div>
+<p>Create postgresql tables:</p>
+<div class="highlight-python"><pre>$ python manage.py create_db_tables</pre>
+</div>
+<p>Run dev server:</p>
+<div class="highlight-python"><pre>$ python manage.py runserver --threaded</pre>
+</div>
+<p id="celery">Run celery:</p>
+<div class="highlight-python"><pre>$ python manage.py celeryd</pre>
+</div>
+<p>Run flower (celery monitor):</p>
+<div class="highlight-python"><pre>$ python manage.py flower</pre>
+</div>
+<p>Run shell:</p>
+<div class="highlight-python"><pre>$ python manage.py shell</pre>
+</div>
+<p>Run tests:</p>
+<div class="highlight-python"><pre>$ python manage.py test</pre>
+</div>
+<p>Check unittests coverage:</p>
+<div class="highlight-python"><pre>$ nosetests --with-coverage --cover-package=api.accounts --verbose --tests api.accounts.tests --cover-html-dir=coverage --cover-html</pre>
+</div>
+</div>
+<div class="section" id="frontend">
+<h3>Frontend<a class="headerlink" href="#frontend" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="installation-strategy">
+<h4>Installation Strategy<a class="headerlink" href="#installation-strategy" title="Permalink to this headline">¶</a></h4>
+<p>We are trying to maintain a minimal number of global node modules. In a
+perfect configuration you should only have the following modules in
+<tt class="docutils literal"><span class="pre">/usr/local/lib/node_modules</span></tt></p>
+<ul class="simple">
+<li>bower</li>
+<li>coffee-script</li>
+<li>grunt-cli</li>
+<li>npm</li>
+</ul>
+</div>
+<div class="section" id="global-modules-installation">
+<h4>Global Modules Installation<a class="headerlink" href="#global-modules-installation" title="Permalink to this headline">¶</a></h4>
+<p>This is on as-needed-basis, if you are missing a global dependency
+listed in the <a class="reference external" href="#installation-strategy">Installation Strategy</a> do the
+following, you will usually need <tt class="docutils literal"><span class="pre">sudo</span></tt>:</p>
+<div class="highlight-python"><pre>$ sudo npm install -g bower@1.3.9
+$ sudo npm install -g coffee-script@1.8.0
+$ sudo npm install -g grunt-cli@0.1.13</pre>
+</div>
+</div>
+<div class="section" id="installation">
+<h4>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h4>
+<p>Change directory to your local cloudml-ui/ui directory and do the
+following:</p>
+<div class="highlight-python"><pre>$ rm -r node_modules bower_components
+$ npm cache clean
+$ npm install
+$ bower cache clean
+$ bower install</pre>
+</div>
+</div>
+<div class="section" id="building-3rd-party">
+<h4>Building 3rd party<a class="headerlink" href="#building-3rd-party" title="Permalink to this headline">¶</a></h4>
+<p>Not all third party requires building, only few and declining.</p>
+<div class="section" id="building-x-editable">
+<h5>Building x-editable<a class="headerlink" href="#building-x-editable" title="Permalink to this headline">¶</a></h5>
+<p>version 1.4.4 of x-editable doesn&#8217;t yet come with pre-build
+redistributable so you have to build it yourself.</p>
+<p>Change directory to your local cloudml-ui/ui directory and do the
+following:</p>
+<blockquote>
+<div>$ cd bower_components/x-editable
+$ npm install
+$ grunt build</div></blockquote>
+<p>Now you have <tt class="docutils literal"><span class="pre">bower_components/x-editable/dist</span></tt> directory to serve
+x-editable locally, note that x-editable on production is served through
+CDN.</p>
+</div>
+</div>
+<div class="section" id="updating-webdrive">
+<h4>Updating Webdrive<a class="headerlink" href="#updating-webdrive" title="Permalink to this headline">¶</a></h4>
+<p>Change directory to your local cloudml-ui/ui directory</p>
+<p>Update webdrive to install chrome driver and selenium standalone server</p>
+<blockquote>
+<div>$ ./node_modules/protractor/bin/webdriver-manager update</div></blockquote>
+<p>in case webdrive updates fails for any reason, do the follwoing are
+retry the update</p>
+<blockquote>
+<div>$ rm -r ./node_modules/protractor/selenium</div></blockquote>
+<div class="section" id="grunt-key-tasks-and-testing-your-installation">
+<h5>Grunt Key Tasks and Testing your installation<a class="headerlink" href="#grunt-key-tasks-and-testing-your-installation" title="Permalink to this headline">¶</a></h5>
+<p>Change directory to your local cloudml-ui/ui directory</p>
+<blockquote>
+<div>$ grunt &#8211;help</div></blockquote>
+<p>This will display grunt available tasks, generally use this when needed.</p>
+<div class="section" id="unit-tests-grunt-unit">
+<h6>Unit Tests (grunt unit)<a class="headerlink" href="#unit-tests-grunt-unit" title="Permalink to this headline">¶</a></h6>
+<blockquote>
+<div>$ grunt unit</div></blockquote>
+<p>This should launch a browser/chrome and run the unit tests. It <em>should</em>
+all pass :), when done do <tt class="docutils literal"><span class="pre">CTRL+C</span></tt></p>
+</div>
+<div class="section" id="e2e-with-protractor-grunt-e2e">
+<h6>E2E with Protractor (grunt e2e)<a class="headerlink" href="#e2e-with-protractor-grunt-e2e" title="Permalink to this headline">¶</a></h6>
+<p><strong>Make sure you are running your local backend</strong></p>
+<p>Launch local frontend server:</p>
+<div class="highlight-python"><pre>$ grunt server</pre>
+</div>
+<p>Launch E2E tests:</p>
+<div class="highlight-python"><pre>$ grunt e2e</pre>
+</div>
+<p>This should launch a browser/chrome and run the E2E tests. It <em>should</em>
+all pass :)</p>
+</div>
+<div class="section" id="running-the-app-during-development-grunt-server">
+<h6>Running the app during development (grunt server)<a class="headerlink" href="#running-the-app-during-development-grunt-server" title="Permalink to this headline">¶</a></h6>
+<blockquote>
+<div>$ grunt server</div></blockquote>
+<p>This will run the application and monitors key files for live reload.</p>
+<p>You can also do:</p>
+<div class="highlight-python"><pre>$ grunt server:usecdn</pre>
+</div>
+<p>If you want to run against CDN version of 3rd parties. By default
+<tt class="docutils literal"><span class="pre">grunt</span> <span class="pre">server</span></tt> will run against local 3rd parties files for speed
+(look at ./vendor.config.coffee for more details on this)</p>
+</div>
+<div class="section" id="building-public">
+<h6>Building _public<a class="headerlink" href="#building-public" title="Permalink to this headline">¶</a></h6>
+<blockquote>
+<div>$ grunt build</div></blockquote>
+<p>This will build the distributable files. It will include
+./app/scripts/prod_config.coffee by default. You can use staging by
+grunt build:staging, further more you can try out the built files
+locally by using grunt build:local and launch a simple server against
+_public like:</p>
+<div class="highlight-python"><pre>$ cd _public
+$ python -m SimpleHTTPServer 8080</pre>
+</div>
+</div>
+<div class="section" id="coverage">
+<h6>Coverage<a class="headerlink" href="#coverage" title="Permalink to this headline">¶</a></h6>
+<blockquote>
+<div>$ grunt coverage</div></blockquote>
+<p>Then open ./coverage/xyz/index.html in browser</p>
+</div>
+</div>
+</div>
+<div class="section" id="the-role-of-vendor-config-coffee">
+<h4>The role of vendor.config.coffee<a class="headerlink" href="#the-role-of-vendor-config-coffee" title="Permalink to this headline">¶</a></h4>
+<p>The file vendor.config.coffee is centralized place to reference
+vendor/3rd party bower libraries. Currently it works with JS files only.
+Vendor/3rd party CSS files are still added manually in
+app/assets/index.html. At some point of time we will extend
+vendor.config.coffee to deal with CSS files (vendor.css and CDN
+serving), but that on as needed basis.</p>
+<p>It should also be noted that, karma will use vendor.config.coffee to
+build the test environment so all your tests will include the same 3rd
+party libraries that is used in development and production.</p>
+<p>Generally all files referenced will be processed in the same order they
+appear int vendor.config.coffee, and some libraries need special care in
+ordering, like angular before angular-route.</p>
+<p>vendor.config.coffee contains 2 sections as follow:</p>
+<div class="section" id="cdn-section">
+<h5>CDN Section<a class="headerlink" href="#cdn-section" title="Permalink to this headline">¶</a></h5>
+<p>This is for 3rd party JS that should be served from CDN on production.
+It is a list of objects, each containing:</p>
+<ul class="simple">
+<li><strong>external</strong>: The CDN url of the library, minified as it should be
+served in production. This form is used using grunt build. You should
+use <a class="reference external" href="https://">https://</a> to serve 3rd parties <strong>and refrain from using any CDN
+for any library that is not served over CDN to avoid and script
+injection attacks</strong></li>
+<li><strong>notmin</strong>: The CDN url of the library, nonminified, used create
+special builds for debugging purposes using grunt server:usecdn</li>
+<li><strong>local</strong>: The local path the library like
+&#8216;bower_components/lib/somehting.js&#8217;, this will be used generally in
+development using grunt server, also it will be used by karma to
+construct the test environment.</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>When adding a file in vendor.config.coffee watch out for coffee script indentations it should be as follows and notice the indentation of external key after the comma:</p>
+<div class="last highlight-python"><pre>``coffee-script     ,       external:         "https://cdn/lib/lib.min.js"       notmin:         "https://cdn/lib/lib.js"       local:         "bower_components/lib/lib.js"``</pre>
+</div>
+</div>
+</div>
+<div class="section" id="bundled-section">
+<h5>Bundled Section<a class="headerlink" href="#bundled-section" title="Permalink to this headline">¶</a></h5>
+<p>If you don&#8217;t wish to serve 3rd party library over CDN, like in case
+there is not HTTPS CDN for the library, or it is not being served over
+CDN, etc. You put the bower path of the library in the bundled section.
+These files will concat and uglified in production in a file called
+vendor.js.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="mac-os">
+<h2>Mac Os<a class="headerlink" href="#mac-os" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="vagrant">
+<h2>Vagrant<a class="headerlink" href="#vagrant" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="installing-test-data">
+<h2>Installing test data<a class="headerlink" href="#installing-test-data" title="Permalink to this headline">¶</a></h2>
+<p>Please download archive with test dataset <a class="reference download internal" href="_downloads/dump.tar.gz"><tt class="xref download docutils literal"><span class="pre">dump.tar.gz</span></tt></a> and decompress it:</p>
+<div class="highlight-python"><pre>$ tar -zxvf dump.tar.gz</pre>
+</div>
+<p>Create db table:</p>
+<div class="highlight-sql"><div class="highlight"><pre><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">ja_quick_info</span> <span class="p">(</span>
+<span class="n">application</span> <span class="nb">bigint</span><span class="p">,</span>
+<span class="n">opening</span> <span class="nb">bigint</span><span class="p">,</span>
+<span class="n">employer_info</span> <span class="nb">text</span><span class="p">,</span>
+<span class="n">agency_info</span> <span class="nb">text</span><span class="p">,</span>
+<span class="n">contractor_info</span> <span class="nb">text</span><span class="p">,</span>
+<span class="n">file_provenance</span> <span class="nb">character</span> <span class="nb">varying</span><span class="p">(</span><span class="mi">256</span><span class="p">),</span>
+<span class="n">file_provenance_date</span> <span class="nb">date</span>
+<span class="p">);</span>
+</pre></div>
+</div>
+<p>Fill data from dump.csv:</p>
+<div class="highlight-sql"><div class="highlight"><pre><span class="k">COPY</span> <span class="n">ja_quick_info</span> <span class="k">FROM</span> <span class="s1">&#39;path_to_dump/dump.csv&#39;</span> <span class="n">CSV</span> <span class="n">HEADER</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="api.html" title="Api"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="deployment.html" title="Deployment"
+             >previous</a> |</li>
+    <li><a href="http://cloudml.int.odesk.com/">CloudML UI</a> &raquo;</li>
+    
+        <li><a href="index.html">oDesk CloudML 0.0.1 documentation</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, oDesk.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b2.
+    </div>
+  </body>
+</html>

@@ -542,16 +542,19 @@ angular.module('app.directives', [
   }
 )
 
-.directive('notRequiredFile', () ->
+.directive('notRequiredFile', ($parse) ->
   return {
     require: 'ngModel',
     restrict: 'A',
     link: (scope, element, attrs, control) ->
+      fn = $parse(attrs.notRequiredFile)
+
       element.change((e) ->
         changeEvt = e
         if not changeEvt.target.files or not changeEvt.target.files.length
           control.$setViewValue('')
           control.$render()
+          fn(scope, {$fileContent: e.target.result})
           return
 
         scope.$apply( () ->
@@ -560,6 +563,7 @@ angular.module('app.directives', [
           reader.onload = (e) ->
             control.$setViewValue(e.target.result)
             control.$render()
+            fn(scope, {$fileContent: e.target.result})
 
           reader.readAsText(changeEvt.target.files[0])
         )
@@ -634,6 +638,23 @@ angular.module('app.directives', [
   }
 )
 
+.directive('parameterInput', () ->
+  return {
+    require: 'ngModel',
+    restrict: 'E',
+    scope: {
+      config: '='
+      value: '=ngModel'
+    }
+    templateUrl:'partials/directives/parameter_input.html',
+    link: (scope, element, attrs, ngModel) ->
+      scope.select2Opts = null
+      if scope.config.choices
+        scope.select2Opts = scope.$root.getSelect2Params(
+          {choices: scope.config.choices})
+  }
+)
+
 # Directives for creating plots
 .directive('scCurves', [ '$timeout', ($timeout)->
   return {
@@ -680,7 +701,6 @@ angular.module('app.directives', [
     templateUrl:'partials/directives/ng_dict_input.html'
 
     link: (scope, element, attrs, ngModel) ->
-      #console.log scope.value
       scope.displayValue = JSON.stringify(scope.value)
 
       scope.change = () ->

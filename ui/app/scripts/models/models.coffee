@@ -5,13 +5,12 @@ angular.module('app.models.model', ['app.config'])
   '$q'
   'settings'
   'BaseModel'
-  'ImportHandler'
   'XmlImportHandler'
   'DataSet'
   'FeaturesSet'
   'Classifier'
   
-  ($http, $q, settings, BaseModel, ImportHandler, XmlImportHandler,
+  ($http, $q, settings, BaseModel, XmlImportHandler,
     DataSet, FeaturesSet, Classifier) ->
     ###
     Model
@@ -61,8 +60,6 @@ angular.module('app.models.model', ['app.config'])
           if origData.test_import_handler?
             if origData.test_import_handler_type == 'xml'
               cls = XmlImportHandler
-            else
-              cls = ImportHandler
             @test_import_handler_obj = new cls(
               origData['test_import_handler'])
             @test_import_handler = @test_import_handler_obj.id
@@ -108,11 +105,9 @@ angular.module('app.models.model', ['app.config'])
                            resolver, opts)
 
       $train: (opts={}) ->
-        data = {}
-        for key, val of opts
-          if key == 'parameters' then val = JSON.stringify(val)
-          data[key] = val
-        @$make_request("#{@BASE_API_URL}#{@id}/action/train/", {}, "PUT", data)
+        @$make_request(
+          "#{@BASE_API_URL}#{@id}/action/train/", {},
+          "PUT", @$clean_parameters(opts))
 
       $classifierGridSearch: (opts={}) ->
         data = {}

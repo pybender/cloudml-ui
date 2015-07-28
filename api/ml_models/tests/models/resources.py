@@ -59,9 +59,8 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         self.instance = Instance.query.filter_by(
             name=InstanceData.instance_01.name).first()
 
-        # TODO: Why we need it? Could we create link to import handler
-        # using fixtures. Investigate why refs to another fixtures doesn't
-        # works
+        # TODO: Could we create link to import handler
+        # using fixtures. Problems is that different import handlers supported
         self.obj.test_import_handler = self.obj.train_import_handler = \
             self.handler
         self.obj.save()
@@ -69,17 +68,17 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         # update features with feature_set id, as ref('id') is not working
         # also force features_set to update its representation after features
         # fixtures have been added
-        feature_set = FeatureSet.query.all()[0]
-        for fixture in [FeatureData.smth, FeatureData.hire_outcome_feature,
-                        FeatureData.title_feature, FeatureData.name_feature,
-                        FeatureData.complex_feature,
-                        FeatureData.disabled_feature]:
-            feature = Feature.query.filter_by(name=fixture.name).one()
-            feature.feature_set_id = feature_set.id
-            feature.save()
+        # feature_set = FeatureSet.query.all()[0]
+        # for fixture in [FeatureData.smth, FeatureData.hire_outcome_feature,
+        #                 FeatureData.title_feature, FeatureData.name_feature,
+        #                 FeatureData.complex_feature,
+        #                 FeatureData.disabled_feature]:
+        #     feature = Feature.query.filter_by(name=fixture.name).one()
+        #     feature.feature_set_id = feature_set.id
+        #     feature.save()
 
-        feature_set.features_dict = feature_set.to_dict()
-        feature_set.save()
+        # feature_set.features_dict = feature_set.to_dict()
+        # feature_set.save()
 
     """
     GET
@@ -544,8 +543,8 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
             self, mock_get_features_json, *mocks):
         mock_get_features_json.return_value = FEATURES_STR
         data = {'aws_instance': self.instance.id,
-                'existing_instance_selected': True,
-                'new_dataset_selected': True,
+                'existing_instance_selected': 1,
+                'new_dataset_selected': 1,
                 'parameters': TRAIN_PARAMS,
                 'format': DataSet.FORMAT_JSON}
         self.assertTrue(self.obj.train_import_handler,

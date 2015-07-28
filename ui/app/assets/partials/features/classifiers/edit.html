@@ -4,34 +4,37 @@
     <h3>Edit classifier</h3>
   </div>
 
-  <div class="modal-body">
+  <div class="modal-body" ng-controller="ClassifiersSelectLoader">
     <ng-include src="'partials/parts/save_form_messages.html'"></ng-include>
 
     <ul ng-init="model.predefined_selected=false;currentTab='custom'" class="nav nav-pills" ng-init="currentTab='custom'">
       <li ng-class="{active: currentTab == 'custom'}">
         <a ng-click="currentTab='custom';target_model.classifier.predefined_selected=false">Custom</a>
       </li>
-      <li ng-class="{active: currentTab == 'predefined'}">
+      <li ng-hide="classifiers.length == 0" ng-class="{active: currentTab == 'predefined'}">
         <a ng-click="currentTab='predefined';target_model.classifier.predefined_selected=true">Predefined</a>
       </li>
+      <li ng-show="classifiers.length == 0" class="disabled"><a title="There aren't predefined classifiers in the system">Predefined</a></li>
     </ul>
 
-    <div ng-show="currentTab=='predefined'" class="control-group">
-      <alert-message class="alert-info" msg='Please choose predefined classifier. You could add other predefined classifiers at <a target="_blank" href="#/predefined/classifiers/">Classifiers List</a> page.' unsafe></alert-message>
-      <div class="control-group" ng-class="{error: Form.classifier.$invalid}">
-        <label class="control-label">Classifier</label>
-        <div class="controls"  ng-controller="ClassifiersSelectLoader">
-          <select name="classifier" ng-model="target_model.classifier.classifier" ng-required="currentTab=='predefined'">
-            <option ng-repeat="clr in classifiers" value="{{ clr.id }}">{{ clr.name }}</option>
-          </select>
-          <span ng-show="Form.classifier.$error.required" class="help-inline">*</span>
+    <form name="Form" class="form-horizontal">
+      <div ng-show="currentTab=='predefined'" class="control-group">
+        <alert-message class="alert-info" msg='Please choose predefined classifier. You could add other predefined classifiers at <a target="_blank" href="#/predefined/classifiers/">Classifiers List</a> page.' safe></alert-message>
+        <div class="control-group" ng-class="{error: Form.classifier.$invalid}">
+          <label class="control-label">Classifier</label>
+          <div class="controls">
+            <select name="classifier" ng-model="target_model.classifier.classifier" ng-required="currentTab=='predefined'">
+              <option value="" selected>--- select classifier ---</option>
+              <option ng-repeat="clr in classifiers" value="{{ clr.id }}">{{ clr.name }}</option>
+            </select>
+            <span ng-show="Form.classifier.$error.required" class="help-inline">*</span>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div ng-show="currentTab=='custom'" class="control-group">
-      <form name="Form" class="form-horizontal">
-        <div class="control-group" ng-class="{error: Form.type.$invalid && !model.type}">
+      <div ng-show="currentTab=='custom'" class="control-group">
+        <div class="control-group"
+        ng-class="{error: Form.type.$invalid && !model.type}">
           <label class="control-label">Type</label>
           <div class="controls">
             <select ng-change="loadParameters(true)" name="type" ng-model="model.type" required>
@@ -45,35 +48,13 @@
           <div ng-repeat="item in model.config.parameters" class="control-group">
             <label class="control-label" title="Please input {{ item.name }}. Type: {{ item.type }}">{{ item.name }}</label>
             <div class="controls">
-              <!-- no choices -->
-              <div ng-hide="item.choices">
-                <!-- string params -->
-                <div ng-show="item.type == 'string'">
-                  <input ng-model="model.params[item.name]" ng-name="item.name" type='text' />
-                </div>
-                <!-- boolean params -->
-                <select  ng-show="item.type == 'boolean'" ng-model="model.params[item.name]" ng-options="choice for choice in ['true', 'false']" ng-name="item.name"></select>
-                <!-- float params -->
-                <input ng-show="item.type == 'float'" ng-model="model.params[item.name]" type='text' smart-float ng-name="item.name" />
-                <!-- auto_dict params -->
-                <div ng-show="item.type == 'auto_dict'">
-                  <ng-dict-input name="item.name" ng-model="model.params[item.name]"></ng-dict-input>
-                </div>
-                <!-- integer -->
-                <input ng-show="item.type == 'integer'" ng-model="model.params[item.name]" type='text' ng-pattern='/^\d+$/' ng-name="item.name" />
-              </div>
-              <!-- choices param - render select -->
-              <div ng-show="item.choices">
-                <input ng-show="item.type == 'int_float_string_none'" ui-select2="getSelect2Params({choices: item.choices})" ng-name="item.name" ng-model="model.params[item.name]" data-placeholder="integer, float or string value" />
-                <select data-placeholder="pick an item" ng-show="item.type != 'int_float_string_none'" ui-select="{allowClear: true}" ng-name="item.name" ng-model="model.params[item.name]" ng-options="c for c in item.choices" />
-              </div>
-              <span ng-show="item.required" class="help-inline">*</span>
-              <span class="help-block" ng-show="Form[item.name].$invalid">invalid</span>
+              <parameter-input ng-model="model.params[item.name]" config="item"></parameter-input>
+              <span class="help-block" ng-show="Form[config.name].$invalid">invalid</span>
             </div>
           </div>
         </div>
-      </form>
-    </div>
+      </div>
+    </form>
   </div>
 
   <div class="modal-footer" title="{{ Form.$error}}">

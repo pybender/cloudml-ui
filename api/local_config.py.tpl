@@ -1,6 +1,5 @@
 SECRET_KEY = 'CHANGE_ME'
-SQLALCHEMY_DATABASE_URI = 'sqlite:///{{ local_path }}cloudml.db'
-DATABASE_NAME = 'main_cloudml'
+SQLALCHEMY_DATABASE_URI = 'postgresql://cloudml:postgres@localhost/cloudml'
 
 MAX_CONTENT_LENGTH = 128 * 1024 * 1024
 DEBUG = True

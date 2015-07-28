@@ -52,7 +52,7 @@ angular.module('app.datasets.model', ['app.config'])
       constructor: (opts) ->
         super
         #@BASE_API_URL = DataSet.$get_api_url({}, @)
-        @BASE_UI_URL = "/handlers/#{@import_handler_type.toLowerCase()}/" +
+        @BASE_UI_URL = "/importhandlers/#{@import_handler_type.toLowerCase()}/" +
                       "#{@import_handler_id}/datasets"
 
       @$get_api_url: (opts, model) ->

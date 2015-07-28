@@ -56,18 +56,15 @@
       </div>
       <div ng-show="feature.transformer.type && feature.transformer.config">
         <h4>Transformer Parameters</h4>
-
-        <div ng-repeat="name in feature.transformer.config.parameters"
+        <div ng-repeat="item in feature.transformer.config.parameters"
              class="control-group">
-          <label class="control-label">{{ name }}</label>
-
+          <label class="control-label">{{ item.name }}</label>
           <div class="controls">
-            <input ng-model="feature.transformer.params[name]"
-                   dynamic-name="name"
-                   type='text'/>
+            <parameter-input ng-model="feature.transformer.params[item.name]" config="item"></parameter-input>
           </div>
         </div>
       </div>
+
     </div>
   </div>
 </div>

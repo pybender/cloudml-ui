@@ -37,15 +37,13 @@ moto==0.3.3
 httpretty==0.8.3
 oauth2==1.5.211
 coverage==3.6
-#nosexcover
 Flask-Testing
 fixture
 sqlparse==0.1.10
 blinker
-flask-admin
+Flask-Admin==1.0.7
 nltk
 requests
-
-# for xml import handlers
 lxml==3.3.3
-#PyV8
+wtforms==1.0.5
+
