@@ -10,6 +10,8 @@ There are information about classifier and features on the model tab.
 Edditing features
 ~~~~~~~~~~~~~~~~~
 
+**Removing/disabling features**
+
 If you don't want to use the feature, when train the model, you have two ways:
 
 * remove - after that you can't recover it

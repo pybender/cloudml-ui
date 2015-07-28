@@ -183,11 +183,11 @@ def deploy():
     # angularjs.activate.run()
     # angularjs.push_config.run()
     # angularjs.build.run()
-
-    supervisor.update.run()
-    supervisor.restart_program.run(program='gunicorn')
-    supervisor.restart_program.run(program='celeryd')
-    supervisor.restart_program.run(program='celerycam')
+    with prefix('export PATH=$PATH:/usr/local/bin'):
+        supervisor.update.run()
+        supervisor.restart_program.run(program='gunicorn')
+        supervisor.restart_program.run(program='celeryd')
+        supervisor.restart_program.run(program='celerycam')
     #local('jgit push s3 master:master')
 
 
