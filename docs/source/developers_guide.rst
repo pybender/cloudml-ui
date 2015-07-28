@@ -18,13 +18,16 @@ Create virtual env::
     $ virtualenv --no-site-packages ve
     $ . ve/bin/activate
 
+.. note::
+  It would be better, if you have pip version 1.1.
+
 Install numpy and scipy::
 
     $ export LAPACK=/usr/lib/liblapack.so
     $ export ATLAS=/usr/lib/libatlas.so
     $ export BLAS=/usr/lib/libblas.so
-    $ pip install numpy
-    $ pip install scipy
+    $ pip install numpy==1.7.1
+    $ pip install scipy==0.12.0
 
 Install python requirements::
 
