@@ -112,7 +112,7 @@
 <!--     <p class="citing">If you use the software, please consider <a href="about.html#citing-scikit-learn">citing scikit-learn</a>.</p> -->
     <ul>
 <li><a class="reference internal" href="#">Developer&#8217;s guide</a><ul>
-<li><a class="reference internal" href="#ubuntu">Ubuntu</a><ul>
+<li><a class="reference internal" href="#ubuntu-installation">Ubuntu Installation</a><ul>
 <li><a class="reference internal" href="#backend">Backend</a></li>
 <li><a class="reference internal" href="#frontend">Frontend</a><ul>
 <li><a class="reference internal" href="#installation-strategy">Installation Strategy</a></li>
@@ -142,7 +142,14 @@
 </li>
 </ul>
 </li>
-<li><a class="reference internal" href="#mac-os">Mac Os</a></li>
+<li><a class="reference internal" href="#macos-installation">MacOS Installation</a><ul>
+<li><a class="reference internal" href="#id2">Installation strategy</a></li>
+<li><a class="reference internal" href="#id3">Backend</a><ul>
+<li><a class="reference internal" href="#front-end-installation-for-cloudml-ui">Front-end installation for Cloudml-ui</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li><a class="reference internal" href="#vagrant">Vagrant</a></li>
 <li><a class="reference internal" href="#installing-test-data">Installing test data</a></li>
 </ul>
@@ -162,8 +169,8 @@
             
   <div class="section" id="developer-s-guide">
 <h1>Developer&#8217;s guide<a class="headerlink" href="#developer-s-guide" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="ubuntu">
-<h2>Ubuntu<a class="headerlink" href="#ubuntu" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="ubuntu-installation">
+<h2>Ubuntu Installation<a class="headerlink" href="#ubuntu-installation" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="backend">
 <h3>Backend<a class="headerlink" href="#backend" title="Permalink to this headline">¶</a></h3>
 <p>Install system requirement:</p>
@@ -219,6 +226,7 @@ $ rabbitmqctl set_permissions cloudml cloudml "*" "*" "*
 </div>
 <p>To install nltk/punkt you need to hid to <a class="reference external" href="http://www.nltk.org/data.html">http://www.nltk.org/data.html</a> and follow
 the direction. After nltk.download() choose to download punkt.</p>
+<p>Install local dynamodb from <a class="reference external" href="http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Tools.DynamoDBLocal.html">http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Tools.DynamoDBLocal.html</a></p>
 <p>Run local dynamodb:</p>
 <div class="highlight-python"><pre>$ ./api/logs/dynamodb/dynamodb_local.sh</pre>
 </div>
@@ -418,8 +426,229 @@ vendor.js.</p>
 </div>
 </div>
 </div>
-<div class="section" id="mac-os">
-<h2>Mac Os<a class="headerlink" href="#mac-os" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="macos-installation">
+<h2>MacOS Installation<a class="headerlink" href="#macos-installation" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id2">
+<h3>Installation strategy<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<p>The following section describes the installation of cloudml-ui on MacOS.</p>
+</div>
+<div class="section" id="id3">
+<h3>Backend<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<p>Create virtual env:</p>
+<div class="highlight-python"><pre>$ virtualenv --no-site-packages ve
+$ . ve/bin/activate</pre>
+</div>
+<p>Install numpy and scipy:</p>
+<div class="highlight-python"><pre>$ export LAPACK=/usr/lib/liblapack.so
+$ export ATLAS=/usr/lib/libatlas.so
+$ export BLAS=/usr/lib/libblas.so
+$ pip install numpy==1.7.1
+$ pip install scipy==0.12.0</pre>
+</div>
+<p>Install python requirements:</p>
+<div class="highlight-python"><pre>$ pip install -r ./requirements.txt</pre>
+</div>
+<p>Downgrade psycopg2 (if not already set to this version):</p>
+<div class="highlight-python"><pre>$ pip install -U psycopg2==2.4.6</pre>
+</div>
+<p>Create local config:</p>
+<div class="highlight-python"><pre>$ cp api/local_config.py.tpl api/local_config.py</pre>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Create OATH API keys using <a class="reference external" href="https://www.odesk.com/services/api/apply">https://www.odesk.com/services/api/apply</a>. Callback URL is <a class="reference external" href="http://127.0.0.1:3333/#/auth/callback">http://127.0.0.1:3333/#/auth/callback</a></p>
+</div>
+<p>Install rabbit mq:</p>
+<div class="highlight-python"><pre>$ brew install rabbitmq</pre>
+</div>
+<p>Start rabbit mq:</p>
+<div class="highlight-python"><pre>$ rabbitmq-server -detached</pre>
+</div>
+<p>Configure rabbitmq(celery broker):</p>
+<div class="highlight-python"><pre>$ rabbitmqctl add_user cloudml {{password}}
+$ rabbitmqctl add_vhost cloudml
+$ rabbitmqctl set_permissions cloudml cloudml ".*" ".*" ".*"</pre>
+</div>
+<p>Download dynamodb and install it. Configure it as follows:</p>
+<div class="highlight-python"><pre>$ edit cloudml-ui/api/logs/dynamodb/dynamodb_local.sh
+$ set  -Djava.library.path to your installation's DynamoDBLocal_lib directory
+$ set -jar to your installation's DynamoDBLocal.jar</pre>
+</div>
+<p>Start local dynamodb:</p>
+<div class="highlight-python"><pre>$ cloudml-ui/api/logs/dynamodb/dynamodb_local.sh &amp;</pre>
+</div>
+<p>Install postgres:</p>
+<div class="highlight-python"><pre>$ brew install postgresql</pre>
+</div>
+<p>Start postgres:</p>
+<div class="highlight-python"><pre>$ pg_ctl -D /usr/local/var/postgres -l</pre>
+</div>
+<p>Create database, users and roles in postgres:</p>
+<div class="highlight-python"><pre>$ psql -d template1
+psql (9.4.4)
+Type "help" for help.
+
+template1=# create user cloudml with password 'cloudml';
+CREATE ROLE
+template1=# create database cloudml;
+CREATE DATABASE
+template1=# grant all privileges on database cloudml to cloudml;
+GRANT
+template1=# \q</pre>
+</div>
+<p>Tornado:</p>
+<div class="highlight-python"><pre>$ pip uninstall tornado (4.x) because of missing import in celery, tornado.auth.GoogleMixin from celery.
+$ pip install tornado==2.3</pre>
+</div>
+<p>Celery:</p>
+<div class="highlight-python"><pre>$ pip install celery
+$ pip show -f celery
+---
+Metadata-Version: 2.0
+Name: celery
+Version: 3.1.18
+Summary: Distributed Task Queue
+Home-page: http://celeryproject.org
+Author: Ask Solem
+Author-email: ask@celeryproject.org
+License: BSD
+Location: /opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/site-packages
+Requires: pytz, billiard, kombu
+Files:
+  ../../../bin/celery
+  ../../../bin/celerybeat
+  ../../../bin/celeryd
+  ../../../bin/celeryd-multi
+$ So set your path to  /opt/local/Library/Frameworks/Python.framework/Versions/2.7/bin/
+$ which celery
+/opt/local/Library/Frameworks/Python.framework/Versions/2.7/bin/celery</pre>
+</div>
+<p>Start all cloudml-ui backend servers. These have to be started from inside the cloduml-ui directory</p>
+<div class="highlight-python"><pre>$ python manage.py runserver
+$ python manage.py celeryd
+(Dont run the first two above in backend. Open a seperate console tab/window and run them.)
+$ Dyanmodb (./api/logs/dynamodb/dynamodb_local.sh &amp;)
+$ rabbitmq (rabbitmq-server -detached ) (Detached runs in background.)</pre>
+</div>
+<div class="section" id="front-end-installation-for-cloudml-ui">
+<h4>Front-end installation for Cloudml-ui<a class="headerlink" href="#front-end-installation-for-cloudml-ui" title="Permalink to this headline">¶</a></h4>
+<p>Install the following modules as follows:</p>
+<div class="highlight-python"><pre>cloudml-ui $ brew install nodejs
+cloudml-ui $ brew install npm
+cloudml-ui $ sudo npm install grunt-cli -g
+$ npm install -g bower
+
+Just run bower install under cloudml-ui/ui directory. There is a bower.json there.
+Chose the lower version of angular js or something like this !1 while doing bower install.
+Unable to find a suitable version for angular, please choose one:
+  1) angular#1.2.19 which resolved to 1.2.19 and is required by angular-mocks#1.2.19
+  2) angular#1.2.20 which resolved to 1.2.20 and is required by angular-cookies#1.2.20, angular-mocks#1.2.20, angular-resource#1.2.20, angular-route#1.2.20, angular-sanitize#1.2.20, cloudml-ui-frontend
+Unable to find a suitable version for codemirror, please choose one:
+  1) codemirror#4.3 which resolved to 4.3.0 and is required by angular-ui-codemirror#0.1.7
+  2) codemirror#4.5.0 which resolved to 4.5.0 and is required by cloudml-ui-frontend
+
+Prefix the choice with ! to persist it to bower.json
+
+? Answer: !1</pre>
+</div>
+<p>Global modules installation &#8211;&gt;
+Make sure the following are installed:</p>
+<div class="highlight-python"><pre>$ sudo npm install -g bower@1.3.9
+$ sudo npm install -g coffee-script@1.8.0
+$ sudo npm install -g grunt-cli@0.1.13</pre>
+</div>
+<p>Change directory to your local cloudml-ui/ui directory and do the following:</p>
+<div class="highlight-python"><pre>$ rm -r node_modules bower_components
+$ npm cache clean
+$ npm install
+$ bower cache clean
+$ bower install</pre>
+</div>
+<p>Building x-editable:</p>
+<div class="highlight-python"><pre>version 1.4.4 of x-editable doesn't yet come with pre-build redistributable so you have to build it yourself.
+
+Change directory to your local cloudml-ui/ui directory and do the following:
+
+cd bower_components/x-editable
+
+npm install
+
+grunt build
+
+Ignore this initial error
+Loading "test.js" tasks and helpers...ERROR
+&gt;&gt; Error: No such module: evals
+
+In the end grunt build command should output,
+Done, without errors.
+
+Now you have bower_components/x-editable/dist directory to serve x-editable locally, note that x-editable on production is served through CDN.</pre>
+</div>
+<p>Run npm install under ui directory as well:</p>
+<div class="highlight-python"><pre>cd ui
+
+npm install
+
+Ignore these errors:
+make: *** [Release/obj.target/fse/fsevents.o] Error 1
+gyp ERR! build error
+gyp ERR! stack Error: `make` failed with exit code: 2
+gyp ERR! stack    at ChildProcess.onExit (/usr/local/lib/node_modules/npm/node_modules/node-gyp/lib/build.js:269:23)
+
+As long as you get these installation messages like this, this step has run fine:
+karma@0.12.37 node_modules/karma
+├── di@0.0.1
+├── graceful-fs@3.0.8
+├── mime@1.3.4
+├── colors@1.1.2</pre>
+</div>
+<p>Updating Webdrive:</p>
+<div class="highlight-python"><pre>Change directory to your local cloudml-ui/ui directory
+
+Update webdrive to install chrome driver and selenium standalone server
+
+./node_modules/protractor/bin/webdriver-manager update
+
+in case webdrive updates fails for any reason, do the follwoing are retry the update
+
+rm -r ./node_modules/protractor/selenium</pre>
+</div>
+<p>Grunt Key Tasks and Testing your installation:</p>
+<div class="highlight-python"><pre>Change directory to your local cloudml-ui/ui directory
+
+grunt --help
+
+This will display grunt available tasks, generally use this when needed.
+
+Unit Tests (grunt unit)
+
+grunt unit
+
+This should launch a browser/chrome and run the unit tests. It should all pass :), when done do CTRL+C</pre>
+</div>
+<p>Start front-end server:</p>
+<div class="highlight-python"><pre>$ grunt server
+(Dont run the above in backend. Open a seperate tab/window and run it since you would want to see the messages on the console.)</pre>
+</div>
+<p>In case you get the following error, do the following:</p>
+<div class="highlight-python"><pre>SSLError: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed (_ssl.c:59
+
+So we looked at this
+http://stackoverflow.com/questions/28115250/boto-ssl-certificate-verify-failed-certificate-verify-failed-while-connecting
+
+And resolved it this way.
+In  cloudml-ui/api/amazon_utils/__init__.py, class AmazonS3Helper, def __init__ method,in the last line,
+we passed one additional parameter, is_secure=False to
+boto.connect_s3 method, as shown below:
+ 67 class AmazonS3Helper(object):
+ 68     def __init__(self, token=None, secret=None, bucket_name=None):
+ 69         token = token or app.config['AMAZON_ACCESS_TOKEN']
+ 70         secret = secret or app.config['AMAZON_TOKEN_SECRET']
+ 71         self.bucket_name = bucket_name or app.config['AMAZON_BUCKET_NAME']
+ 72         self.conn = boto.connect_s3(token, secret,is_secure=False)</pre>
+</div>
+</div>
+</div>
 </div>
 <div class="section" id="vagrant">
 <h2>Vagrant<a class="headerlink" href="#vagrant" title="Permalink to this headline">¶</a></h2>
@@ -428,6 +657,9 @@ vendor.js.</p>
 <h2>Installing test data<a class="headerlink" href="#installing-test-data" title="Permalink to this headline">¶</a></h2>
 <p>Please download archive with test dataset <a class="reference download internal" href="_downloads/dump.tar.gz"><tt class="xref download docutils literal"><span class="pre">dump.tar.gz</span></tt></a> and decompress it:</p>
 <div class="highlight-python"><pre>$ tar -zxvf dump.tar.gz</pre>
+</div>
+<p>Run postgres client:</p>
+<div class="highlight-python"><pre>$ psql -s cloudml</pre>
 </div>
 <p>Create db table:</p>
 <div class="highlight-sql"><div class="highlight"><pre><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">ja_quick_info</span> <span class="p">(</span>
@@ -444,6 +676,38 @@ vendor.js.</p>
 <p>Fill data from dump.csv:</p>
 <div class="highlight-sql"><div class="highlight"><pre><span class="k">COPY</span> <span class="n">ja_quick_info</span> <span class="k">FROM</span> <span class="s1">&#39;path_to_dump/dump.csv&#39;</span> <span class="n">CSV</span> <span class="n">HEADER</span><span class="p">;</span>
 </pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>The above dump file is found in cloudml-ui directory. Better to put this dump file into a folder with no spaces in its path name. Hence I created /doc and put the dump file there. Otherwise it was not working.</p>
+<p>Grant all permissions to table ja_quick_info for user cloudml:</p>
+<div class="last highlight-python"><pre>cloudml=# grant all privileges on table ja_quick_info  to cloudml;</pre>
+</div>
+</div>
+<p>Now login as cloudml user and check. The below select should work:</p>
+<div class="highlight-python"><pre>$ psql -s cloudml -U cloudml
+psql (9.4.4)
+Type "help" for help.
+
+cloudml=&gt; select * from ja_quick_info limit 1;
+***(Single step mode: verify command)*******************************************
+select * from ja_quick_info limit 1;
+***(press return to proceed or enter x and return to cancel)********************
+
+cloudml=&gt; \q</pre>
+</div>
+<p>The above select statement should NOT give a permission-denied message like this:</p>
+<div class="highlight-python"><pre>$ psql -s cloudml -U cloudml
+psql (9.4.4)
+Type "help" for help.
+
+cloudml=&gt; select * from ja_quick_info limit 1;
+***(Single step mode: verify command)*******************************************
+select * from ja_quick_info limit 1;
+***(press return to proceed or enter x and return to cancel)********************
+
+ERROR:  permission denied for relation ja_quick_info
+cloudml=&gt; \q</pre>
 </div>
 </div>
 </div>

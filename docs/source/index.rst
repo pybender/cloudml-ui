@@ -13,21 +13,20 @@ Contents:
    :maxdepth: 2
    
    get_started
+   models
    import_handlers
    features
-   changes
    trainer
    transformers
+   test_examples
    test_metrics
+   exporting_data
    instances
    deploy_on_predict
    deployment
    developers_guide
    api
    settings
-   models
-   test_examples
-   exporting_data
    whats_new
 
 
