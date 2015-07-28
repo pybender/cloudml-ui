@@ -1,0 +1,20 @@
+<plan>
+  <inputs>
+    <param format="%Y-%m-%d" name="start" type="date"/>
+    <param format="%Y-%m-%d" name="end" type="date"/>
+  </inputs>
+  <datasources>
+    <db dbname="odw" host="localhost" name="odw" password="postgres" user="postgres" vendor="postgres"/>
+  </datasources>
+  <import>
+    <entity autoload_fields="true" datasource="odw" name="application">
+      <query target="results"><![CDATA[CREATE TABLE results AS
+  SELECT qi.*, 'class' || (trunc(random() * 2) + 1)::char hire_outcome 
+  FROM public.ja_quick_info qi where qi.file_provenance_date >= '#{start}'
+  AND qi.file_provenance_date < '#{end}' 
+  LIMIT(100);
+  
+            ]]></query>
+    </entity>
+  </import>
+</plan>

@@ -20,4 +20,6 @@ For database datasources you could run the entity's sql query by clicking to "Ru
 Autoload fields
 ~~~~~~~~~~~~~~~
 
+When you set "Autoload Fields" checkbox, the subentities and fields will be created in the importhandler automaticaly by analyzing sql query results row:
+
 .. image:: ./_static/import_handlers/autoload-fields.png
