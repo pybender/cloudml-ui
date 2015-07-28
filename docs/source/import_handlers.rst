@@ -14,3 +14,10 @@ Testing the query
 For database datasources you could run the entity's sql query by clicking to "Run Query" button. In the dialog you will need specify datasource to be used, query parameter and count of the rows to display.
 
 .. image:: ./_static/import_handlers/test-query-popup.png
+
+.. image:: ./_static/import_handlers/test-query-results.png
+
+Autoload fields
+~~~~~~~~~~~~~~~
+
+.. image:: ./_static/import_handlers/autoload-fields.png

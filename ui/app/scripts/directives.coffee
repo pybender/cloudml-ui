@@ -542,19 +542,16 @@ angular.module('app.directives', [
   }
 )
 
-.directive('notRequiredFile', ($parse) ->
+.directive('notRequiredFile', () ->
   return {
     require: 'ngModel',
     restrict: 'A',
     link: (scope, element, attrs, control) ->
-      fn = $parse(attrs.notRequiredFile)
-
       element.change((e) ->
         changeEvt = e
         if not changeEvt.target.files or not changeEvt.target.files.length
           control.$setViewValue('')
           control.$render()
-          fn(scope, {$fileContent: e.target.result})
           return
 
         scope.$apply( () ->
@@ -563,7 +560,6 @@ angular.module('app.directives', [
           reader.onload = (e) ->
             control.$setViewValue(e.target.result)
             control.$render()
-            fn(scope, {$fileContent: e.target.result})
 
           reader.readAsText(changeEvt.target.files[0])
         )

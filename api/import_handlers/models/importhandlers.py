@@ -138,7 +138,7 @@ class ImportHandlerMixin(BaseModel):
         Returns iterator.
         """
         vendor, conn = self._get_ds_details_for_query(datasource_name)
-        iter_func = DbDataSource.DB.get(vendor)
+        iter_func = DbDataSource.DB.get(vendor)[0]
 
         for row in iter_func([sql], conn):
             yield dict(row)
