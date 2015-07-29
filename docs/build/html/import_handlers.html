@@ -112,11 +112,17 @@
 <!--     <p class="citing">If you use the software, please consider <a href="about.html#citing-scikit-learn">citing scikit-learn</a>.</p> -->
     <ul>
 <li><a class="reference internal" href="#">Importing the Data</a><ul>
-<li><a class="reference internal" href="#entities-and-fields">Entities and Fields</a><ul>
+<li><a class="reference internal" href="#entities-and-fields">Entities and Fields</a></li>
+<li><a class="reference internal" href="#scripting">Scripting</a><ul>
 <li><a class="reference internal" href="#testing-the-query">Testing the query</a></li>
 <li><a class="reference internal" href="#autoload-fields">Autoload fields</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#working-with-hadoop-and-pig">Working with Hadoop and Pig</a><ul>
+<li><a class="reference internal" href="#autoload-sqoop-dataset">Autoload Sqoop Dataset</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#editing-raw-xml">Editing Raw Xml</a></li>
 </ul>
 </li>
 </ul>
@@ -138,28 +144,55 @@
 <p class="topic-title first">Contents</p>
 <ul class="simple">
 <li><a class="reference internal" href="#importing-the-data" id="id1">Importing the Data</a><ul>
-<li><a class="reference internal" href="#entities-and-fields" id="id2">Entities and Fields</a><ul>
-<li><a class="reference internal" href="#testing-the-query" id="id3">Testing the query</a></li>
-<li><a class="reference internal" href="#autoload-fields" id="id4">Autoload fields</a></li>
+<li><a class="reference internal" href="#entities-and-fields" id="id2">Entities and Fields</a></li>
+<li><a class="reference internal" href="#scripting" id="id3">Scripting</a><ul>
+<li><a class="reference internal" href="#testing-the-query" id="id4">Testing the query</a></li>
+<li><a class="reference internal" href="#autoload-fields" id="id5">Autoload fields</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#working-with-hadoop-and-pig" id="id6">Working with Hadoop and Pig</a><ul>
+<li><a class="reference internal" href="#autoload-sqoop-dataset" id="id7">Autoload Sqoop Dataset</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#editing-raw-xml" id="id8">Editing Raw Xml</a></li>
 </ul>
 </li>
 </ul>
 </div>
 <div class="section" id="entities-and-fields">
 <h2><a class="toc-backref" href="#id2">Entities and Fields</a><a class="headerlink" href="#entities-and-fields" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="scripting">
+<h2><a class="toc-backref" href="#id3">Scripting</a><a class="headerlink" href="#scripting" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="testing-the-query">
-<h3><a class="toc-backref" href="#id3">Testing the query</a><a class="headerlink" href="#testing-the-query" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id4">Testing the query</a><a class="headerlink" href="#testing-the-query" title="Permalink to this headline">¶</a></h3>
 <p>For database datasources you could run the entity&#8217;s sql query by clicking to &#8220;Run Query&#8221; button. In the dialog you will need specify datasource to be used, query parameter and count of the rows to display.</p>
 <img alt="_images/test-query-popup.png" src="_images/test-query-popup.png" />
 <img alt="_images/test-query-results.png" src="_images/test-query-results.png" />
 </div>
 <div class="section" id="autoload-fields">
-<h3><a class="toc-backref" href="#id4">Autoload fields</a><a class="headerlink" href="#autoload-fields" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id5">Autoload fields</a><a class="headerlink" href="#autoload-fields" title="Permalink to this headline">¶</a></h3>
 <p>When you set &#8220;Autoload Fields&#8221; checkbox, the subentities and fields will be created in the importhandler automaticaly by analyzing sql query results row:</p>
 <img alt="_images/autoload-fields.png" src="_images/autoload-fields.png" />
 </div>
+</div>
+<div class="section" id="working-with-hadoop-and-pig">
+<h2><a class="toc-backref" href="#id6">Working with Hadoop and Pig</a><a class="headerlink" href="#working-with-hadoop-and-pig" title="Permalink to this headline">¶</a></h2>
+<p>To import data using Haddop and Pig:</p>
+<ol class="arabic simple">
+<li>Create a pig datasource</li>
+</ol>
+<img alt="_images/pig-datasource.png" src="_images/pig-datasource.png" />
+<ol class="arabic simple" start="3">
+<li></li>
+</ol>
+<div class="section" id="autoload-sqoop-dataset">
+<h3><a class="toc-backref" href="#id7">Autoload Sqoop Dataset</a><a class="headerlink" href="#autoload-sqoop-dataset" title="Permalink to this headline">¶</a></h3>
+</div>
+</div>
+<div class="section" id="editing-raw-xml">
+<h2><a class="toc-backref" href="#id8">Editing Raw Xml</a><a class="headerlink" href="#editing-raw-xml" title="Permalink to this headline">¶</a></h2>
+<p>To edit raw XML of the datasource you need to switch to the &#8220;XML File&#8221; view on the &#8220;Details&#8221; page. After clicking to the &#8220;Save&#8221; button your changes would be saved, if your changes in xml would be valid. Otherwise you will have an error message in the top of the page.</p>
 </div>
 </div>
 

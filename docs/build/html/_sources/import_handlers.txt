@@ -8,6 +8,10 @@ Importing the Data
 Entities and Fields
 -------------------
 
+Scripting
+---------
+
+
 Testing the query
 ~~~~~~~~~~~~~~~~~
 
@@ -23,3 +27,22 @@ Autoload fields
 When you set "Autoload Fields" checkbox, the subentities and fields will be created in the importhandler automaticaly by analyzing sql query results row:
 
 .. image:: ./_static/import_handlers/autoload-fields.png
+
+Working with Hadoop and Pig
+---------------------------
+
+To import data using Haddop and Pig:
+
+1. Create a pig datasource
+
+.. image:: ./_static/import_handlers/pig-datasource.png
+
+3. 
+
+Autoload Sqoop Dataset
+~~~~~~~~~~~~~~~~~~~~~~
+
+Editing Raw Xml
+---------------
+
+To edit raw XML of the datasource you need to switch to the "XML File" view on the "Details" page. After clicking to the "Save" button your changes would be saved, if your changes in xml would be valid. Otherwise you will have an error message in the top of the page.

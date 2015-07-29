@@ -173,9 +173,9 @@ def deploy():
 
     release.activate.run()
 
-    fabgrunt.private_npm.run()
-    fabgrunt.bower.run()
-    fabgrunt.activate.run()
+    # fabgrunt.private_npm.run()
+    # fabgrunt.bower.run()
+    # fabgrunt.activate.run()
 
     fabgrunt.push_config.run()
     fabgrunt.build.run()
