@@ -75,22 +75,28 @@ class Auth(object):
 
 
 class OdeskAuth(Auth):
-    REQUEST_TOKEN_URL = \
-        'https://www.upwork.com/api/auth/v1/oauth/token/request'
-    REQUEST_TOKEN_METHOD = 'POST'
-
-    ACCESS_TOKEN_URL = 'https://www.upwork.com/api/auth/v1/oauth/token/access'
-    ACCESS_TOKEN_METHOD = 'POST'
-    AUTHORIZE_URL = 'https://www.upwork.com/services/api/auth'
-
-    GET_INFO_URL = 'https://www.upwork.com/api/hr/v2/users/me'
-    GET_USER_INFO_URL = 'https://www.upwork.com/api/auth/v1/info'
 
     def __init__(self):
         super(OdeskAuth, self).__init__(
             app.config['ODESK_OAUTH_KEY'],
             app.config['ODESK_OAUTH_SECRET'],
         )
+        self.api_url = app.config.get('ODESK_API_URL', 
+                        'https://www.upwork.com')
+        self.REQUEST_TOKEN_URL = self.api_url + \
+            '/api/auth/v1/oauth/token/request'
+        self.REQUEST_TOKEN_METHOD = 'POST'
+
+        self.ACCESS_TOKEN_URL = self.api_url + \
+            '/api/auth/v1/oauth/token/access'
+        self.ACCESS_TOKEN_METHOD = 'POST'
+        self.AUTHORIZE_URL = self.api_url + \
+            '/services/api/auth'
+
+        self.GET_INFO_URL = self.api_url + \
+            '/api/hr/v2/users/me'
+        self.GET_USER_INFO_URL = self.api_url + \
+            '/api/auth/v1/info'
 
     def api_request(self, url, method, oauth_token, oauth_token_secret,
                     oauth_verifier):
