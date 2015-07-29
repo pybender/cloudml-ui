@@ -15,3 +15,6 @@ ODESK_OAUTH_KEY = '{{ odesk api key }}'
 ODESK_OAUTH_SECRET = '{{ odesk secret key }}'
 
 LOCAL_DYNAMODB = True
+BROKER_URL = 'amqp://cloudml:cloudml@localhost:5672/cloudml';
+DYNAMODB_LIBRARY_PATH= '~/dynamodb/DynamoDBLocal_lib'
+DYNAMODB_JAR= '~/dynamodb/DynamoDBLocal.jar'
