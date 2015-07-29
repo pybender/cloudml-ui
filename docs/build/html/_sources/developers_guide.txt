@@ -326,8 +326,8 @@ Fill data from dump.csv:
 
   COPY ja_quick_info FROM 'path_to_dump/dump.csv' CSV HEADER;
 
-MacOS
-======
+MacOS Installation
+===================
 
 -------
 Installation strategy
