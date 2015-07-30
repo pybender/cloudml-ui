@@ -5,9 +5,6 @@ Importing the Data
 .. contents:: 
    :depth: 4
 
-Scripting
----------
-
 Entities with DB DataSource
 ---------------------------
 
@@ -83,6 +80,8 @@ Autoload Fields
 When you set "Autoload Fields" checkbox, the subentities and fields will be created in the importhandler automaticaly by analyzing results row.
 
 .. image:: ./_static/import_handlers/autoload-fields.png
+
+.. _importing_dataset_with_pig_datasource:
 
 Importing DataSet
 ~~~~~~~~~~~~~~~~~

@@ -21,6 +21,7 @@ Contents:
    deploy_on_predict
    exporting_data
    instances
+   clusters
    
    deployment
    developers_guide
