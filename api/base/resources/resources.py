@@ -142,8 +142,16 @@ class BaseResource(restful.Resource):
         # Removing empty values
         kw = dict([(k, v) for k, v in kwargs.iteritems() if v])
         models = self._get_list_query(params, **kw)
+        exclude_fields = []
+        if models:
+            model_item = models[0]
+            if hasattr(model_item, 'example_id') and \
+                model_item.example_id == -1:
+                exclude_fields = ['example_id', 'name']
 
-        context = {}
+        context = dict()
+        context['options'] = dict()
+        context['options'] = {'exclude_fields': exclude_fields}
         if self.NEED_PAGING:
             context['per_page'] = per_page = params.get('per_page') or 20
             context['page'] = page = params.get('page') or 1
@@ -157,6 +165,14 @@ class BaseResource(restful.Resource):
 
         context.update({self.list_key: models})
         return self._render(context)
+
+    def _prepare_exclude_fields_list(self, model_item):
+        """
+        Returns exclude fields list if there are empty values in model record
+        :param model_item:
+        :return:
+        """
+        pass
 
     @property
     def list_key(self):
