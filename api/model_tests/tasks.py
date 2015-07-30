@@ -200,17 +200,16 @@ def _add_example_to_db(test, data, label, pred, prob, num):
     model = test.model
     example = TestExample()
     example.num = num
-    example_id = ndata.get(model.example_id, '-1')
-    if example_id == '-1':
-        example_id = data.get(model.example_id, '-1')
+
+    example_id = ndata.get(model.example_id, None) or \
+        data.get(model.example_id, TestExample.NOT_FILED_ID)
     try:
         example.example_id = str(example_id)
     except UnicodeEncodeError:
         example.example_id = example_id.encode('utf-8')
 
-    example_name = ndata.get(model.example_label, 'noname')
-    if example_name == 'noname':
-        example_name = data.get(model.example_label, 'noname')
+    example_name = ndata.get(model.example_label, None) or \
+        data.get(model.example_label, TestExample.NONAME)
     try:
         example.name = str(example_name)
     except UnicodeEncodeError:

@@ -304,18 +304,18 @@ not contain probabilities')
         test = TestResult.query.get(kwargs.get('test_result_id'))
         return test.dataset.data_fields
 
-    def _get_model_context(self, models, params):
-        context, models = super(TestExampleResource,
-                                self)._get_model_context(models, params)
+    def _get_model_list_context(self, models, params):
+        context = super(TestExampleResource,
+                        self)._get_model_list_context(models, params)
         extra_fields = []
         if models:
             model_item = models[0]
-            if model_item.example_id != '-1':
+            if model_item.example_id != TestExample.NOT_FILED_ID:
                 extra_fields.append('example_id')
-            if model_item.name != 'noname':
+            if model_item.name != TestExample.NONAME:
                 extra_fields.append('name')
         context['extra_fields'] = extra_fields
-        return context, models
+        return context
 
 api.add_resource(TestExampleResource, '/cloudml/models/\
 <regex("[\w\.]*"):model_id>/tests/<regex("[\w\.]*"):test_result_id>/examples/')

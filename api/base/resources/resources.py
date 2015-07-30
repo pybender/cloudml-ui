@@ -142,16 +142,11 @@ class BaseResource(restful.Resource):
         # Removing empty values
         kw = dict([(k, v) for k, v in kwargs.iteritems() if v])
         models = self._get_list_query(params, **kw)
-
-        context, models = self._get_model_context(models, params)
-
-        models = self._prepare_model_list(models, params)
-
-        context.update({self.list_key: models})
+        context = self._get_model_list_context(models, params)
         return self._render(context)
 
-    def _get_model_context(self, models, params):
-        """ Returns model context """
+    def _get_model_list_context(self, models, params):
+        """ Returns models context """
         context = dict()
         if self.NEED_PAGING:
             context['per_page'] = per_page = params.get('per_page') or 20
@@ -161,7 +156,11 @@ class BaseResource(restful.Resource):
             context['pages'] = pages = int(math.ceil(1.0 * total / per_page))
             context['has_prev'] = page > 1
             context['has_next'] = page < pages
-        return context, models
+
+        models = self._prepare_model_list(models, params)
+
+        context.update({self.list_key: models})
+        return context
 
     @property
     def list_key(self):

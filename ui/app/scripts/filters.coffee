@@ -18,6 +18,13 @@ angular.module('app.filters', [])
     return t[0].toUpperCase() + t.slice(1)
 ])
 
+.filter('humanize_title', [() ->
+  (text) ->
+    t = String(text)
+    t = t[0].toUpperCase() + t.slice(1)
+    return t.replace(/[^a-z0-9]/gi, ' ')
+])
+
 .filter('words', [() ->
   (text) ->
     t = String(text)

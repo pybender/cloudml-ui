@@ -109,6 +109,9 @@ class TestResult(db.Model, BaseModel):
 class TestExample(db.Model, BaseModel):
     __tablename__ = 'test_example'
 
+    NONAME = 'noname'
+    NOT_FILED_ID = '-1'
+
     example_id = db.Column(db.String(100))
     name = db.Column(db.String(100))
     label = db.Column(db.String(100))
