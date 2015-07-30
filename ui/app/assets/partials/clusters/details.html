@@ -21,12 +21,11 @@
 </div>
 <p></p>
 
-<alert-message ng-show="err" class="alert-error" msg='{{ err }}' unsafe>
-</alert-message>
+<alert-message ng-show="err" class="alert-error" msg='{{ err }}' unsafe></alert-message>
 
 <alert-message ng-hide="cluster.active_tunnel && cluster.active_tunnel != -1" class="alert-info" msg='Cluster Web UI not available - please create SSH Tunnel.' unsafe></alert-message>
 
-<alert-message ng-show="cluster.active_tunnel && cluster.active_tunnel != -1" class="alert-info" msg='More logs could be found in the <a href="http://{{ host }}:{{ cluster.port }}" target="_blank">Cluster Web UI</a>' unsafe></alert-message>
+<alert-message ng-show="cluster.active_tunnel && cluster.active_tunnel != -1" class="alert-info" msg='More logs could be found in the <a href="http://{{ host }}:{{ cluster.port }}" target="_blank">Cluster Web UI</a>'></alert-message>
 
 <div>Master Node DNS: <span class="value">{{ cluster.master_node_dns }}</span></div>
 <div>Port: <span class="value">{{ cluster.port }}</span></div>
