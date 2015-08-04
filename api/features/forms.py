@@ -218,6 +218,35 @@ class FeatureForm(BaseForm, FeatureParamsMixin):
         if count:
             self.add_error('name', 'Feature with name "%s" already \
 exist. Please choose another one.' % name)
+            return
+
+        # Validating feature type and parameters
+        from cloudml.trainer.feature_types import FEATURE_TYPE_FACTORIES, \
+            InvalidFeatureTypeException
+
+        def get_field_value(name):
+            value = self.cleaned_data.get(name)
+            if value is None and self.is_edit:
+                return getattr(self.obj, name)
+            return value
+
+        feature_type = get_field_value('type')
+        type_factory = FEATURE_TYPE_FACTORIES.get(feature_type)
+        if type_factory is None:
+            self.add_error('type', 'type is required')
+            return
+        try:
+            type_ = type_factory.get_instance(
+                get_field_value('params'),
+                get_field_value('input_format') or 'plain')
+            default = self.cleaned_data.get('default', None)
+            if default is not None:
+                self.cleaned_data['default'] = type_.transform(default)
+        except InvalidFeatureTypeException, e:
+            raise SchemaException(
+                'Cannot create instance of feature type: {0}. '
+                'Err: {1}'.format(config, e), e)
+
         return name
 
     def clean_type(self, value, field):
