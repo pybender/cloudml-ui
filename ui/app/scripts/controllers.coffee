@@ -217,6 +217,7 @@ angular.module('app.controllers', ['app.config', ])
         $scope.pages = opts.pages
         $scope.per_page = opts.per_page
         $scope.objects = opts.objects
+        $scope.extra_fields = opts.extra_fields || []
 
         # Notify interested parties by emitting and broadcasting an event
         # Event contains
