@@ -164,30 +164,33 @@ def deploy():
     flask.push_flask_config.run()
     gunicorn.push_config.run()
 
-    virtualenv.create.run()
-    with prefix('export LAPACK=/usr/lib/liblapack.so'):
-        with prefix('export ATLAS=/usr/lib/libatlas.so'):
-            with prefix('export BLAS=/usr/lib/libblas.so'):
-                virtualenv.pip_install_req.run()
-    virtualenv.make_relocatable.run()
+    gunicorn.push_nginx_config.run()
+    nginx.restart.run()
 
-    release.activate.run()
+    # virtualenv.create.run()
+    # with prefix('export LAPACK=/usr/lib/liblapack.so'):
+    #     with prefix('export ATLAS=/usr/lib/libatlas.so'):
+    #         with prefix('export BLAS=/usr/lib/libblas.so'):
+    #             virtualenv.pip_install_req.run()
+    # virtualenv.make_relocatable.run()
 
-    # fabgrunt.private_npm.run()
-    # fabgrunt.bower.run()
-    # fabgrunt.activate.run()
+    # release.activate.run()
 
-    fabgrunt.push_config.run()
-    fabgrunt.build.run()
+    # # fabgrunt.private_npm.run()
+    # # fabgrunt.bower.run()
+    # # fabgrunt.activate.run()
 
-    # angularjs.activate.run()
-    # angularjs.push_config.run()
-    # angularjs.build.run()
-    with prefix('export PATH=$PATH:/usr/local/bin'):
-        supervisor.update.run()
-        supervisor.restart_program.run(program='gunicorn')
-        supervisor.restart_program.run(program='celeryd')
-        supervisor.restart_program.run(program='celerycam')
+    # fabgrunt.push_config.run()
+    # fabgrunt.build.run()
+
+    # # angularjs.activate.run()
+    # # angularjs.push_config.run()
+    # # angularjs.build.run()
+    # with prefix('export PATH=$PATH:/usr/local/bin'):
+    #     supervisor.update.run()
+    #     supervisor.restart_program.run(program='gunicorn')
+    #     supervisor.restart_program.run(program='celeryd')
+    #     supervisor.restart_program.run(program='celerycam')
     #local('jgit push s3 master:master')
 
 
