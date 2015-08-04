@@ -284,7 +284,8 @@ class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
         iter_mock = MagicMock()
         iter_mock.return_value = [
             {'now': datetime(2014, 7, 21, 15, 52, 5, 308936)}]
-        with patch.dict('cloudml.importhandler.datasources.DbDataSource.DB', {'postgres': iter_mock}):
+        with patch.dict('cloudml.importhandler.datasources.DbDataSource.DB',
+                        {'postgres': [iter_mock, iter_mock]}):
             resp = self.client.put(
                 url,
                 data={'sql': 'SELECT NOW() WHERE #{something}',
