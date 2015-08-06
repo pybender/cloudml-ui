@@ -34,6 +34,9 @@ Vagrant.configure(2) do |config|
   # using a specific IP.
   # config.vm.network "private_network", ip: "192.168.33.10"
 
+  config.vm.network :forwarded_port, guest: 3333, host: 3334
+  config.vm.network :forwarded_port, guest: 5000, host: 5000
+
   # Create a public network, which generally matched to bridged network.
   # Bridged networks make the machine appear as another physical device on
   # your network.
@@ -96,7 +99,7 @@ file_provenance_date date
      sudo chmod a+rX ./dump.csv
      sudo -u postgres psql -d odw -c "COPY ja_quick_info FROM '/tmp/dump.csv' CSV HEADER;"
 
-     sudo apt-get install -y build-essential git python-pip python-dev libxml2-dev libxslt1-dev liblapack-dev gfortran libpq-dev libevent-dev rabbitmq-server
+     sudo apt-get install -y build-essential git python-pip python-dev libxml2-dev libxslt1-dev liblapack-dev gfortran libpq-dev libevent-dev rabbitmq-server curl mc
 
      sudo rabbitmqctl add_user cloudml cloudml
      sudo rabbitmqctl add_vhost cloudml
@@ -112,5 +115,25 @@ file_provenance_date date
      sudo pip install Sphinx==1.3.1
      sudo pip install nose coverage moto==0.3.3 mock==1.0.1
      pip install -r /vagrant/requirements.txt
+
+     # install node
+     curl https://raw.githubusercontent.com/creationix/nvm/v0.11.1/install.sh | bash
+     source ~/.profile
+     nvm ls-remote
+     nvm install 0.10.28
+
+
+     sudo npm install -g bower@1.3.9
+     sudo npm install -g coffee-script@1.8.0
+     sudo npm install -g grunt-cli@0.1.13
+
+     cd /vagrant/ui
+
+     rm -r node_modules bower_components
+     npm cache clean
+     npm install
+     bower cache clean
+     bower install
+
   SHELL
 end

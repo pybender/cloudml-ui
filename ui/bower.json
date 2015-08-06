@@ -40,5 +40,10 @@
   },
   "devDependencies": {
     "angular-mocks": "1.2.20"
+  },
+  "resolutions": {
+    "codemirror": "4.5.0",
+    "angular": "1.2.20",
+    "angular-mocks": "1.2.20"
   }
 }

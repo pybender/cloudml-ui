@@ -2,16 +2,18 @@
 
 import os
 import logging
-
+import boto.ec2
 from flask.ext.script import Manager, Command, Shell, Option
 from flask.ext.migrate import Migrate, MigrateCommand
 
 from api import app
-import boto.ec2
 
 
 class CreateWorkerImage(Command):
-    """Create worker image."""
+    """
+    Creates Amazon EC2 instance with preinstalled
+    Cloudml celery worker to use it in the spot instance.
+    """
     def get_options(self):
         return (
             Option('-v', '--version',
@@ -34,35 +36,27 @@ class CreateWorkerImage(Command):
 
 
 class Celeryd(Command):
-    """Runs a Celery worker node."""
+    """Runs the default Celery worker node."""
 
     def run(self, **kwargs):
         os.system("env CELERYD_FSNOTIFY=stat celery -A api.tasks worker --autoreload --concurrency=10 -Q default -E --loglevel=info")
 
 
 class Celeryw(Command):
-    """Runs a Celery worker node."""
+    """Runs another Celery worker node."""
 
     def run(self, **kwargs):
         os.system("celery -A api.tasks worker --concurrency=10 -Q worker1 -E --loglevel=info")
 
 
 class Flower(Command):
-    """Runs a Celery Flower worker node."""
+    """
+    Runs the Celery Flower is a real-time web based monitor
+    and administration tool for Celery.
+    """
 
     def run(self, **kwargs):
         os.system("celery -A api.tasks flower --loglevel=info")
-
-
-class Run(Command):
-    """Runs a Celery Flower worker node."""
-
-    def run(self, **kwargs):
-        import gevent.monkey
-        from gevent.pywsgi import WSGIServer
-        gevent.monkey.patch_all()
-        http_server = WSGIServer(('', 5000), app)
-        http_server.serve_forever()
 
 
 def _make_context():
@@ -73,9 +67,9 @@ def _make_context():
 class Test(Command):
     """
     Run app tests.
-    Please initialize env variable with path to test config:
 
-    $ export CLOUDML_CONFIG="{{ path to }}/cloudml-ui/api/test_config.py"
+    Be carefull: don't forgot to create test_config.py file
+    from template in the api folder.
     """
 
     def get_options(self):
@@ -83,12 +77,12 @@ class Test(Command):
             Option('-t', '--tests',
                    dest='tests',
                    default=None,
-                   help="specifies tests"),
+                   help="specifies unittests to run"),
             Option('-c', '--coverage',
                    dest='coverage',
                    default=None,
                    action='store_true',
-                   help="run test with coverage")
+                   help="runs API part unittest with coverage")
         )
 
     def run(self, **kwargs):
@@ -102,11 +96,10 @@ class Test(Command):
         coverage = kwargs.get('coverage', None)
         if coverage:
             argv += ['--with-coverage',
-                '--cover-erase',
-                '--cover-html',
-                '--cover-package=api',
-                "--cover-html-dir={0}".format(output_dir)
-        ]
+                     '--cover-erase',
+                     '--cover-html',
+                     '--cover-package=api',
+                     "--cover-html-dir={0}".format(output_dir)]
         tests = kwargs.get('tests', None)
         if tests:
             argv.append('--tests')
@@ -122,14 +115,6 @@ class Test(Command):
                 app.sql_db.drop_all()
 
 
-
-class RemPycFiles(Command):
-    CMD = 'find . -name "*.pyc" -exec rm -rf {} \;'
-
-    def run(self):
-        os.system(self.CMD)
-
-
 class CreateDbTables(Command):
     """Create db tables"""
 
@@ -139,7 +124,7 @@ class CreateDbTables(Command):
 
 
 class CreateDynamoDbTables(Command):
-    """Create db tables"""
+    """Create tables in DynamoDB (logs, auth)"""
 
     def run(self, **kwargs):
         from api.logs.dynamodb.models import LogMessage
@@ -164,7 +149,6 @@ class GenerateCrc(Command):
         s3 = AmazonS3Helper(
             bucket_name=app.config['CLOUDML_PREDICT_BUCKET_NAME'])
         for key in s3.list_keys('staging/importhandlers/'):
-            print key.name
             data = s3.load_key(key.name)
             crc32 = '0x%08X' % (zlib.crc32(data) & 0xffffffff)
             try:
@@ -181,12 +165,10 @@ manager.add_command("celeryw", Celeryw())
 manager.add_command("flower", Flower())
 manager.add_command('test', Test())
 manager.add_command('generate_crc', GenerateCrc())
-manager.add_command('run', Run())
 manager.add_command("shell", Shell(make_context=_make_context))
 manager.add_command("create_db_tables", CreateDbTables())
 manager.add_command("create_dynamodb_tables", CreateDynamoDbTables())
 manager.add_command("drop_db_tables", DropDbTables())
-manager.add_command("rem_pyc", RemPycFiles())
 manager.add_command("create_image", CreateWorkerImage())
 
 

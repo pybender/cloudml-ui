@@ -43,11 +43,15 @@ Available transformer types:
  - Ntile
 
 
-You can run the train transformer using::
+You can run the train transformer using:
+
+.. code-block:: console
 
 	python transformer.py [-h] [-V] [-o output] [-i input-file] [-e extraction-plan-file] [-I train-param] path
 
+
 The detials of the parameters passed to trainer.py are the following:
+
 
 
 +-----------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -69,7 +73,10 @@ The detials of the parameters passed to trainer.py are the following:
 +-----------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 
-Train transformer using existing data::
+
+Train transformer using existing data:
+
+.. code-block:: console
 
 	$ python transformer.py ./testdata/transformers/transformer.json -i ./testdata/transformers/train.data.json 
 

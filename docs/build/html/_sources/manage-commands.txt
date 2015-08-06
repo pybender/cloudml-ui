@@ -1,0 +1,51 @@
+==================
+Manage.py Commands
+==================
+
+importhandler.py
+----------------
+
+Running the Import Handler
+
+You can run the import handler using::
+
+  python importhandler.py [-h] [-o output] [-d] [-U user-param]
+                          [-V] path
+
+The details of the parameters passed to importhandler.py are the following:
+
+.. raw:: html
+
+  <table>
+    <tr>
+      <th>Parameter</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>-h, --help</td>
+      <td>Prints help message</td>
+    </tr>
+    <tr>
+      <td>-V, --version</td>
+      <td>Prints version message</td>
+    </tr>
+    <tr>
+      <td>-d, --debug</td>
+      <td>Adds more log output while running</td>
+    </tr>
+    <tr>
+      <td>-o output, --output output</td>
+      <td>Saves extracted data to file output as multiple JSON objects (one
+      object per row).</td>
+    </tr>
+    <tr>
+      <td>-U key=value</td>
+      <td>Allows user defined parameters. The given parameters will be used to
+      replace parameters in the SQL query. Can have multiple values.</td>
+    </tr>
+    <tr>
+      <td>path</td>
+      <td>Path pointing to the file containing the extraction plan.</td>
+    </tr>
+  </table>
+

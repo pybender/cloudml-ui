@@ -161,7 +161,7 @@ module.exports = (grunt)->
     connect:
       options:
         port: cmlConfig.servePort,
-        hostname: '127.0.0.1'
+        hostname: '0.0.0.0'
       livereload:
         options:
           middleware: (connect) ->

@@ -25,6 +25,7 @@ Contents:
    
    deployment
    developers_guide
+   manage_commands
    settings
    whats_new
 

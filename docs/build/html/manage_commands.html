@@ -1,0 +1,532 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+  
+    <title>Manage.py Commands &mdash; Upwork CloudML 0.0.1 documentation</title>
+  <!-- htmltitle is before nature.css - we use this hack to load bootstrap first -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="_static/css/bootstrap.min.css" media="screen" />
+  <link rel="stylesheet" href="_static/css/bootstrap-responsive.css"/>
+
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/gallery.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Upwork CloudML 0.0.1 documentation" href="index.html" />
+    <link rel="next" title="Settings" href="settings.html" />
+    <link rel="prev" title="Developer’s guide" href="developers_guide.html" />
+  
+   
+       <script type="text/javascript" src="_static/sidebar.js"></script>
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="_static/js/bootstrap.min.js" type="text/javascript"></script>
+  <link rel="canonical" href="http://scikit-learn.org/stable/manage_commands.html" />
+
+  <script type="text/javascript">
+    $("div.buttonNext, div.buttonPrevious").hover(
+       function () {
+           $(this).css('background-color', '#FF9C34');
+       },
+       function () {
+           $(this).css('background-color', '#A7D6E2');
+       }
+    );
+    var bodywrapper = $('.bodywrapper');
+    var sidebarbutton = $('#sidebarbutton');
+    sidebarbutton.css({'height': '900px'});
+  </script>
+
+  </head>
+  <body>
+
+<div class="header-wrapper">
+    <div class="header"></div>
+</div>
+
+
+
+
+<div class="content-wrapper">
+    <div class="sphinxsidebar">
+    <div class="sphinxsidebarwrapper">
+        <div class="rel rellarge">
+    
+
+  <!-- rellinks[1:] is an ugly hack to avoid link to module
+  index -->
+        <div class="rellink">
+        <a href="developers_guide.html"
+        accesskey="P">Previous
+        <br/>
+        <span class="smallrellink">
+        Developer’s guid...
+        </span>
+            <span class="hiddenrellink">
+            Developer’s guide
+            </span>
+        </a>
+        </div>
+            <div class="spacer">
+            &nbsp;
+            </div>
+        <div class="rellink">
+        <a href="settings.html"
+        accesskey="N">Next
+        <br/>
+        <span class="smallrellink">
+        Settings
+        </span>
+            <span class="hiddenrellink">
+            Settings
+            </span>
+        </a>
+        </div>
+
+    <!-- Ad a link to the 'up' page -->
+    </div>
+    
+
+<!--
+      <p class="doc-version">This documentation is for Upwork CloudML <strong>version 0.0.1</strong> &mdash; <a href="http://scikit-learn.org/stable/support.html#documentation-resources">Other versions</a></p> -->
+<!--     <p class="citing">If you use the software, please consider <a href="about.html#citing-scikit-learn">citing scikit-learn</a>.</p> -->
+    <ul>
+<li><a class="reference internal" href="#">Manage.py Commands</a><ul>
+<li><a class="reference internal" href="#commands-defined-in-flask-script">Commands defined in Flask-Script</a><ul>
+<li><a class="reference internal" href="#runserver">Runserver</a></li>
+<li><a class="reference internal" href="#shell">Shell</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#database-related-commands">Database-related commands</a><ul>
+<li><a class="reference internal" href="#create-db-tables">Create Db Tables</a></li>
+<li><a class="reference internal" href="#drop-db-tables">Drop Db Tables</a></li>
+<li><a class="reference internal" href="#create-dynamodb-tables">Create DynamoDB tables</a></li>
+<li><a class="reference internal" href="#db">Db</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#celery-related-commands">Celery-related commands</a><ul>
+<li><a class="reference internal" href="#celeryd">celeryd</a></li>
+<li><a class="reference internal" href="#flower">flower</a></li>
+<li><a class="reference internal" href="#celeryw">celeryw</a></li>
+<li><a class="reference internal" href="#create-amazon-ec2-instance-s-image">Create Amazon EC2 instance&#8217;s image</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#unittests-related-commands">Unittests-related commands</a><ul>
+<li><a class="reference internal" href="#test">Test</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+    </div>
+</div>
+
+
+
+      <div class="content">
+            
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="manage-py-commands">
+<h1><a class="toc-backref" href="#id1">Manage.py Commands</a><a class="headerlink" href="#manage-py-commands" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#manage-py-commands" id="id1">Manage.py Commands</a><ul>
+<li><a class="reference internal" href="#commands-defined-in-flask-script" id="id2">Commands defined in Flask-Script</a><ul>
+<li><a class="reference internal" href="#runserver" id="id3">Runserver</a></li>
+<li><a class="reference internal" href="#shell" id="id4">Shell</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#database-related-commands" id="id5">Database-related commands</a><ul>
+<li><a class="reference internal" href="#create-db-tables" id="id6">Create Db Tables</a></li>
+<li><a class="reference internal" href="#drop-db-tables" id="id7">Drop Db Tables</a></li>
+<li><a class="reference internal" href="#create-dynamodb-tables" id="id8">Create DynamoDB tables</a></li>
+<li><a class="reference internal" href="#db" id="id9">Db</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#celery-related-commands" id="id10">Celery-related commands</a><ul>
+<li><a class="reference internal" href="#celeryd" id="id11">celeryd</a></li>
+<li><a class="reference internal" href="#flower" id="id12">flower</a></li>
+<li><a class="reference internal" href="#celeryw" id="id13">celeryw</a></li>
+<li><a class="reference internal" href="#create-amazon-ec2-instance-s-image" id="id14">Create Amazon EC2 instance&#8217;s image</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#unittests-related-commands" id="id15">Unittests-related commands</a><ul>
+<li><a class="reference internal" href="#test" id="id16">Test</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<p>To run the manage.py command type:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="go">python manage.py cmd</span>
+</pre></div>
+</div>
+<p>in the root directory of the project.</p>
+<p>Make sure, that virtual enviroupment was activated.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">As background implementation of command line utilities <a class="reference external" href="http://flask-script.readthedocs.org/">Flask-Script package</a> is used.</p>
+</div>
+<div class="section" id="commands-defined-in-flask-script">
+<h2><a class="toc-backref" href="#id2">Commands defined in Flask-Script</a><a class="headerlink" href="#commands-defined-in-flask-script" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="runserver">
+<h3><a class="toc-backref" href="#id3">Runserver</a><a class="headerlink" href="#runserver" title="Permalink to this headline">¶</a></h3>
+<p>Usage:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="go">python manage.py runserver [-?] [-h HOST] [-p PORT]</span>
+<span class="go">                           [--threaded]</span>
+<span class="go">                           [--processes PROCESSES] [--passthrough-errors] [-d]</span>
+<span class="go">                           [-D] [-r] [-R]</span>
+</pre></div>
+</div>
+<p>Starts a lightweight development Web server on the local machine. By default, the server runs on port 8000 on the IP address 127.0.0.1. You can pass in an IP address and port number explicitly.</p>
+<p>Note that the default IP address, 127.0.0.1, is not accessible from other machines on your network. To make your development server viewable to other machines on the network, use its own IP address (e.g. 192.168.2.1) or 0.0.0.0 or :: (with IPv6 enabled).</p>
+<p>Optional arguments:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>-?, &#8211;help</dt>
+<dd>show this help message and exit</dd>
+</dl>
+<table class="docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-h <var>HOST</var></span>, <span class="option">--host <var>HOST</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>server host</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-p <var>PORT</var></span>, <span class="option">--port <var>PORT</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>server port</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--threaded</span></kbd></td>
+<td>Use it to start the development server is multithreaded mode.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--processes <var>PROCESSES</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>defines number of processes</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--passthrough-errors</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>disable the error catching. This means that the server will die on errors but it can be useful to hook debuggers in (pdb etc.)</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-d</span>, <span class="option">--debug</span></kbd></td>
+<td>enables the Werkzeug debugger (DO NOT use in production code)</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-D</span>, <span class="option">--no-debug</span></kbd></td>
+<td>disables the Werkzeug debugger</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-r</span>, <span class="option">--reload</span></kbd></td>
+<td>Use it to monitor Python files for changes (default)</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-R</span>, <span class="option">--no-reload</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Use the &#8211;noreload option to disable the use of the auto-reloader. This means any Python code changes you make while the server is running will not take effect if the particular Python modules have already been loaded into memory.</td></tr>
+</tbody>
+</table>
+</div></blockquote>
+</div>
+<div class="section" id="shell">
+<h3><a class="toc-backref" href="#id4">Shell</a><a class="headerlink" href="#shell" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-console"><div class="highlight"><pre><span class="go">python manage.py shell [-?] [--no-ipython] [--no-bpython]</span>
+</pre></div>
+</div>
+<p>Runs a Python shell inside Flask application context.</p>
+<p>optional arguments:</p>
+<blockquote>
+<div><table class="docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group">
+<kbd><span class="option">--no-bpython</span></kbd></td>
+<td>do not use the IPython shell</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--no-ipython</span></kbd></td>
+<td>do not use the BPython shell</td></tr>
+</tbody>
+</table>
+</div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<dl class="last docutils">
+<dt>Following variables would be available in the console:</dt>
+<dd><ul class="first last simple">
+<li>app - Flask application object</li>
+<li>db - SqlAlchemy database</li>
+<li>models - all defined SqlAlchemy models in the project</li>
+</ul>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="section" id="database-related-commands">
+<h2><a class="toc-backref" href="#id5">Database-related commands</a><a class="headerlink" href="#database-related-commands" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="create-db-tables">
+<h3><a class="toc-backref" href="#id6">Create Db Tables</a><a class="headerlink" href="#create-db-tables" title="Permalink to this headline">¶</a></h3>
+<p>Usage:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="go">python manage.py create_db_tables</span>
+</pre></div>
+</div>
+<p>Creates Postgres db tables</p>
+</div>
+<div class="section" id="drop-db-tables">
+<h3><a class="toc-backref" href="#id7">Drop Db Tables</a><a class="headerlink" href="#drop-db-tables" title="Permalink to this headline">¶</a></h3>
+<p>Usage:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="go">python manage.py drop_db_tables</span>
+</pre></div>
+</div>
+<p>Drops Postgres db tables</p>
+</div>
+<div class="section" id="create-dynamodb-tables">
+<h3><a class="toc-backref" href="#id8">Create DynamoDB tables</a><a class="headerlink" href="#create-dynamodb-tables" title="Permalink to this headline">¶</a></h3>
+<p>Usage:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="go">python manage.py create_dynamodb_tables</span>
+</pre></div>
+</div>
+<p>Creates tables in DynamoDB</p>
+</div>
+<div class="section" id="db">
+<h3><a class="toc-backref" href="#id9">Db</a><a class="headerlink" href="#db" title="Permalink to this headline">¶</a></h3>
+<p>Usage:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="go">python manage.py db [positional arguments]</span>
+</pre></div>
+</div>
+<p>Performs database migrations</p>
+<p>Positional arguments:</p>
+<ul>
+<li><dl class="first docutils">
+<dt><cite>upgrade</cite></dt>
+<dd><p class="first last">Upgrade to a later version</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><cite>branches</cite></dt>
+<dd><p class="first last">Lists revisions that have broken the source tree into two versions representing two independent sets of changes</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><cite>migrate</cite></dt>
+<dd><p class="first last">Alias for &#8216;revision &#8211;autogenerate&#8217;</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><cite>current</cite></dt>
+<dd><p class="first last">Display the current revision for each database.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><cite>stamp</cite></dt>
+<dd><p class="first last">&#8216;stamp&#8217; the revision table with the given revision; don&#8217;t run any migrations</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><cite>init</cite></dt>
+<dd><p class="first last">Generates a new migration</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><cite>downgrade</cite></dt>
+<dd><p class="first last">Revert to a previous version</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><cite>history</cite></dt>
+<dd><p class="first last">List changeset scripts in chronological order.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><cite>revision</cite></dt>
+<dd><p class="first last">Create a new revision file.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">As background implementation is <a class="reference external" href="https://alembic.readthedocs.org/">Alembic package</a> is used.</p>
+</div>
+</div>
+</div>
+<div class="section" id="celery-related-commands">
+<h2><a class="toc-backref" href="#id10">Celery-related commands</a><a class="headerlink" href="#celery-related-commands" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="celeryd">
+<h3><a class="toc-backref" href="#id11">celeryd</a><a class="headerlink" href="#celeryd" title="Permalink to this headline">¶</a></h3>
+<p>Usage:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="go">python manage.py celeryd [-?]</span>
+</pre></div>
+</div>
+<p>Runs the default Celery worker node.</p>
+</div>
+<div class="section" id="flower">
+<h3><a class="toc-backref" href="#id12">flower</a><a class="headerlink" href="#flower" title="Permalink to this headline">¶</a></h3>
+<p>Usage:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="go">python manage.py flower [-?]</span>
+</pre></div>
+</div>
+<p>Runs the Celery Flower is a real-time web based monitor and administration tool for Celery.</p>
+</div>
+<div class="section" id="celeryw">
+<h3><a class="toc-backref" href="#id13">celeryw</a><a class="headerlink" href="#celeryw" title="Permalink to this headline">¶</a></h3>
+<p>Usage:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="go">python manage.py celeryw [-?]</span>
+</pre></div>
+</div>
+<p>Runs another Celery worker node.</p>
+</div>
+<div class="section" id="create-amazon-ec2-instance-s-image">
+<h3><a class="toc-backref" href="#id14">Create Amazon EC2 instance&#8217;s image</a><a class="headerlink" href="#create-amazon-ec2-instance-s-image" title="Permalink to this headline">¶</a></h3>
+<p>Usage:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="go">python manage.py create_image [-?] [-v VERSION]</span>
+</pre></div>
+</div>
+<p>Creates Amazon EC2 instance with preinstalled Cloudml celery worker to use it in the spot instance.</p>
+<dl class="docutils">
+<dt>Optional arguments:</dt>
+<dd><table class="first last docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-v <var>VERSION</var></span>, <span class="option">--version <var>VERSION</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>For example cloudml-worker.v3.0</td></tr>
+</tbody>
+</table>
+</dd>
+</dl>
+<p>Creates Amazon EC2 instance&#8217;s image with preinstalled Cloudml celery worker to use it in the spot instance.</p>
+</div>
+</div>
+<div class="section" id="unittests-related-commands">
+<h2><a class="toc-backref" href="#id15">Unittests-related commands</a><a class="headerlink" href="#unittests-related-commands" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="test">
+<h3><a class="toc-backref" href="#id16">Test</a><a class="headerlink" href="#test" title="Permalink to this headline">¶</a></h3>
+<p>Usage:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="go">python manage.py test [-?] [-t TESTS] [-c]</span>
+</pre></div>
+</div>
+<p>Runs API unittests.</p>
+<p>Optional arguments:</p>
+<blockquote>
+<div><table class="docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-t <var>TESTS</var></span>, <span class="option">--tests <var>TESTS</var></span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>specifies unittests to run</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-c</span>, <span class="option">--coverage</span></kbd></td>
+<td>runs API part unittest with coverage</td></tr>
+</tbody>
+</table>
+</div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Before running tests please create test_config.py file in the <cite>api</cite> folder of the project. Use <cite>test_config.py.tpl</cite> as the sample.</p>
+</div>
+<p>If you running tests with coverage, you could find html report in <cite>coverage</cite> folder.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>Now coverage starts the monitoring after importing all model, view, etc. classes declaration. So those string would not included to the report. To avoid this you could use following command for running nosetests with coverage:</p>
+<div class="last highlight-console"><div class="highlight"><pre><span class="go">nosetests api --verbose --with-coverage --cover-erase --cover-html --cover-package=api --cover-html-dir=coverage</span>
+</pre></div>
+</div>
+</div>
+<p>You could run only one specific test, using -t argument.
+For example:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="go">python manage.py test -tests api.import_handlers.tests:DataSetsTests.test_details</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+        <div class="clearer"></div>
+      </div>
+    </div>
+
+    <div class="footer">
+        &copy; 2015, Upwork.
+      <a href="_sources/manage_commands.txt" rel="nofollow">Show this page source</a>
+    </div>
+     <div class="rel rellarge">
+    
+    <div class="buttonPrevious">
+      <a href="developers_guide.html">Previous
+      </a>
+    </div>
+    <div class="buttonNext">
+      <a href="settings.html">Next
+      </a>
+    </div>
+    
+     </div>
+
+    
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-22606712-2']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+    
+
+    <script src="http://www.google.com/jsapi" type="text/javascript"></script>
+    <script type="text/javascript"> google.load('search', '1',
+        {language : 'en'}); google.setOnLoadCallback(function() {
+            var customSearchControl = new
+            google.search.CustomSearchControl('016639176250731907682:tjtqbvtvij0');
+            customSearchControl.setResultSetSize(google.search.Search.FILTERED_CSE_RESULTSET);
+            var options = new google.search.DrawOptions();
+            options.setAutoComplete(true);
+            customSearchControl.draw('cse', options); }, true);
+    </script>
+  </body>
+</html>

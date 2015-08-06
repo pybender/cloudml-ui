@@ -8,7 +8,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
   
-    <title>Pretrained transformers &mdash; oDesk CloudML 0.0.1 documentation</title>
+    <title>Pretrained transformers &mdash; Upwork CloudML 0.0.1 documentation</title>
   <!-- htmltitle is before nature.css - we use this hack to load bootstrap first -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="_static/css/bootstrap.min.css" media="screen" />
@@ -31,7 +31,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="oDesk CloudML 0.0.1 documentation" href="index.html" />
+    <link rel="top" title="Upwork CloudML 0.0.1 documentation" href="index.html" />
     <link rel="next" title="Evaluating the Model" href="model_tests.html" />
     <link rel="prev" title="Working with Models" href="models.html" />
   
@@ -108,7 +108,7 @@
     
 
 <!--
-      <p class="doc-version">This documentation is for oDesk CloudML <strong>version 0.0.1</strong> &mdash; <a href="http://scikit-learn.org/stable/support.html#documentation-resources">Other versions</a></p> -->
+      <p class="doc-version">This documentation is for Upwork CloudML <strong>version 0.0.1</strong> &mdash; <a href="http://scikit-learn.org/stable/support.html#documentation-resources">Other versions</a></p> -->
 <!--     <p class="citing">If you use the software, please consider <a href="about.html#citing-scikit-learn">citing scikit-learn</a>.</p> -->
     <ul>
 <li><a class="reference internal" href="#">Pretrained transformers</a><ul>
@@ -172,11 +172,13 @@ Trained transformers stored to amazon s3 to folder wich defined in settings.</p>
 </ul>
 </div></blockquote>
 <p>You can run the train transformer using:</p>
-<div class="highlight-python"><pre>python transformer.py [-h] [-V] [-o output] [-i input-file] [-e extraction-plan-file] [-I train-param] path</pre>
+<div class="highlight-console"><div class="highlight"><pre><span class="go">python transformer.py [-h] [-V] [-o output] [-i input-file] [-e extraction-plan-file] [-I train-param] path</span>
+</pre></div>
 </div>
 <p>The detials of the parameters passed to trainer.py are the following:</p>
 <p>Train transformer using existing data:</p>
-<div class="highlight-python"><pre>$ python transformer.py ./testdata/transformers/transformer.json -i ./testdata/transformers/train.data.json</pre>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> python transformer.py ./testdata/transformers/transformer.json -i ./testdata/transformers/train.data.json
+</pre></div>
 </div>
 </div>
 <div class="section" id="using-pretrained-transformers-in-ui">
@@ -206,7 +208,7 @@ After this you need to fit it. To do this, go to the details page and click to <
     </div>
 
     <div class="footer">
-        &copy; 2013, oDesk.
+        &copy; 2015, Upwork.
       <a href="_sources/transformers.txt" rel="nofollow">Show this page source</a>
     </div>
      <div class="rel rellarge">
