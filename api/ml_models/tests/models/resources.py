@@ -296,6 +296,20 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         # TODO:
         # self.assertEquals(cloned_model.tags[0].count, old_tag_count + 1)
 
+    def test_clone_trained_model(self):
+        resp, model = self._test_post(
+            fill_import_handler=True, fill_trainer=True)
+
+        resp_data = self._check(
+            method='post', data={}, id=model.id, action="clone")
+        cloned_model = Model.query.get(resp_data['model']['id'])
+        self.assertEquals(
+            cloned_model.train_import_handler, self.obj.train_import_handler)
+        self.assertEquals(
+            cloned_model.test_import_handler, self.obj.test_import_handler)
+        self.assertEquals(cloned_model.classifier, self.obj.classifier)
+        self.assertItemsEqual(cloned_model.tags, self.obj.tags)
+
     ############
     # Test PUT #
     ############

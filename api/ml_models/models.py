@@ -102,8 +102,11 @@ class BaseTrainedEntity(object):
 
     @property
     def train_import_handler(self):
-        return getattr(self, "rel_train_import_handler_%s" %
-                       self.train_import_handler_type)
+        try:
+            return getattr(self, "rel_train_import_handler_%s" %
+                           self.train_import_handler_type)
+        except AttributeError:
+            return None
 
     @train_import_handler.setter
     def train_import_handler(self, handler):
@@ -229,8 +232,12 @@ class Model(db.Model, BaseModel, BaseTrainedEntity):
 
     @property
     def test_import_handler(self):
-        return getattr(
-            self, "rel_test_import_handler_%s" % self.test_import_handler_type)
+        try:
+            return getattr(
+                self, "rel_test_import_handler_%s" %
+                self.test_import_handler_type)
+        except AttributeError:
+            return None
 
     @test_import_handler.setter
     def test_import_handler(self, handler):
