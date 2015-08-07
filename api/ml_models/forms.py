@@ -182,6 +182,7 @@ class ModelAddForm(BaseForm):
             handler.name = determine_name(name, action)
             handler.import_params = self.cleaned_data.pop(
                 '%s_import_params' % action)
+            handler._set_user()
             try:
                 handler.data = data
             except Exception, exc:
