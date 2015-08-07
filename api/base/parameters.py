@@ -78,6 +78,17 @@ def convert_parameters(config, params):
     params: dict
         parameters filled by user
     """
+    missed_params = []
+    for param_config in config:
+        if param_config.get('required', None) and \
+                param_config['name'] not in params:
+            missed_params.append(param_config['name'])
+    if missed_params:
+        raise ValidationError(
+            'These params are required: {}'.format(
+                ', '.join(missed_params))
+        )
+
     for param_config in config:
         name = param_config.get('name')
         if name in params:
@@ -90,7 +101,7 @@ def convert_parameters(config, params):
                     'Invalid parameter %s value: %s' % (name, exc))
 
             choices = param_config.get('choices')
-            if type_ in ('string', 'integer', 'float') and choices:
+            if choices:
                 check_choices(name, params[name], choices)
     return params
 

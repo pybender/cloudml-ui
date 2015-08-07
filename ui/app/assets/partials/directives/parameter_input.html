@@ -1,28 +1,31 @@
 <!-- no choices -->
 <span ng-hide="config.choices">
-  <!-- string params -->
-  <span ng-show="config.type == 'string'">
-    <input ng-model="value" ng-name="config.name" type='text' placeholder="string value" />
+  <input ng-show="config.name == 'password'" ng-model="value" ng-name="config.name" type='password' ng-required="config.required" />
+  
+  <span ng-hide="config.name == 'password'">
+    <!-- string params -->
+    <span ng-show="config.type == 'string'">
+      <input ng-model="value" ng-name="config.name" type='text' placeholder="string value" ng-required="config.required" />
+    </span>
+    <!-- boolean params -->
+    <select ng-show="config.type == 'boolean'" ng-model="value" ng-options="choice for choice in [true, false]" ng-name="config.name" ng-required="config.required"></select>
+    <!-- float params -->
+    <input ng-show="config.type == 'float'" ng-model="value" type='text' smart-float ng-name="config.name" placeholder="float value" ng-required="config.required" />
+    <!-- auto_dict params -->
+    <span ng-show="config.type == 'auto_dict'">
+      <ng-dict-input name="config.name" ng-model="value"></ng-dict-input>
+    </span>
+    <!-- integer -->
+    <input ng-show="config.type == 'integer'" ng-model="value" type='text' ng-name="config.name" placeholder="integer value" type-validator="config.type" smart-integer ng-required="config.required" />
+    <!-- float_or_int -->
+    <input ng-show="config.type == 'float_or_int'" ng-model="value" type='text' ng-name="config.name" placeholder="float or integer value" smart-float ng-required="config.required" />
   </span>
-  <!-- boolean params -->
-  <select  ng-show="config.type == 'boolean'" ng-model="value" ng-options="choice for choice in [true, false]" ng-name="config.name"></select>
-  <!-- float params -->
-  <input ng-show="config.type == 'float'" ng-model="value" type='text' smart-float ng-name="config.name" placeholder="float value" />
-  <!-- auto_dict params -->
-  <span ng-show="config.type == 'auto_dict'">
-    <ng-dict-input name="config.name" ng-model="value"></ng-dict-input>
-  </span>
-  <!-- integer -->
-  <input ng-show="config.type == 'integer'" ng-model="value" type='text' ng-name="config.name" placeholder="integer value" />
-  <!-- float_or_int -->
-  <input ng-show="config.type == 'float_or_int'" ng-model="value" type='text' ng-name="config.name" placeholder="float or integer value" />
-  <!-- ng-pattern='/^\d+$/' -->
 </span>
 
 <!-- choices param - render select -->
 <span ng-show="config.choices">
-  <input ng-show="config.type == 'int_float_string_none'" ui-select="{{select2Opts}}" ng-name="config.name" ng-model="value" data-placeholder="integer, float or string value" />
-  <select data-placeholder="pick an item" ng-show="config.type != 'int_float_string_none'" ui-select="{allowClear: true}" ng-name="config.name" ng-model="value" ng-options="c for c in config.choices" />
+  <input ng-show="config.type == 'int_float_string_none'" ui-select="{{select2Opts}}" ng-name="config.name" ng-model="value" data-placeholder="integer, float or string value" ng-required="config.required" />
+  <select data-placeholder="pick an item" ng-show="config.type != 'int_float_string_none'" ui-select="{allowClear: true}" ng-name="config.name" ng-model="value" ng-options="c for c in config.choices" ng-required="config.required" />
 </span>
 <span ng-show="config.required" class="help-inline">*</span>
 <small class="help-block">{{ config.help_text }}</small>
