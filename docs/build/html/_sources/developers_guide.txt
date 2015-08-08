@@ -193,6 +193,28 @@ We are trying to maintain a minimal number of global node modules. In a perfect 
 Installation
 ------------
 
+Installing node and npm
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Downloading and install nvm:
+
+.. code-block:: console
+
+  $ curl https://raw.githubusercontent.com/creationix/nvm/v0.11.1/install.sh | bash
+  $ source ~/.profile
+
+Installing node 0.10.28:
+
+.. code-block:: console
+
+  $ nvm ls-remote
+  $ nvm install 0.10.28
+  $ nvm alias default 0.10.28
+
+
+Installing node and bower modules
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Change directory to your local cloudml-ui/ui directory and do the following:
 
 .. code-block:: console

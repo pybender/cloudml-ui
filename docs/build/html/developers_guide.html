@@ -122,6 +122,8 @@
 </li>
 <li><a class="reference internal" href="#frontend">Frontend</a><ul>
 <li><a class="reference internal" href="#id1">Installation</a><ul>
+<li><a class="reference internal" href="#installing-node-and-npm">Installing node and npm</a></li>
+<li><a class="reference internal" href="#installing-node-and-bower-modules">Installing node and bower modules</a></li>
 <li><a class="reference internal" href="#building-3rd-party">Building 3rd party</a></li>
 <li><a class="reference internal" href="#updating-webdrive">Updating Webdrive</a></li>
 </ul>
@@ -364,6 +366,22 @@ $ rabbitmqctl set_permissions cloudml cloudml "*" "*" "*
 </div>
 <div class="section" id="id1">
 <h4><a class="toc-backref" href="#id16">Installation</a><a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="installing-node-and-npm">
+<h5>Installing node and npm<a class="headerlink" href="#installing-node-and-npm" title="Permalink to this headline">¶</a></h5>
+<p>Downloading and install nvm:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> curl https://raw.githubusercontent.com/creationix/nvm/v0.11.1/install.sh | bash
+<span class="gp">$</span> <span class="nb">source</span> ~/.profile
+</pre></div>
+</div>
+<p>Installing node 0.10.28:</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> nvm ls-remote
+<span class="gp">$</span> nvm install 0.10.28
+<span class="gp">$</span> nvm <span class="nb">alias </span>default 0.10.28
+</pre></div>
+</div>
+</div>
+<div class="section" id="installing-node-and-bower-modules">
+<h5>Installing node and bower modules<a class="headerlink" href="#installing-node-and-bower-modules" title="Permalink to this headline">¶</a></h5>
 <p>Change directory to your local cloudml-ui/ui directory and do the following:</p>
 <div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> rm -r node_modules bower_components
 <span class="gp">$</span> npm cache clean
@@ -371,6 +389,7 @@ $ rabbitmqctl set_permissions cloudml cloudml "*" "*" "*
 <span class="gp">$</span> bower cache clean
 <span class="gp">$</span> bower install
 </pre></div>
+</div>
 </div>
 <div class="section" id="building-3rd-party">
 <h5>Building 3rd party<a class="headerlink" href="#building-3rd-party" title="Permalink to this headline">¶</a></h5>

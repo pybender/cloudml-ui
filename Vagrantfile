@@ -34,7 +34,7 @@ Vagrant.configure(2) do |config|
   # using a specific IP.
   # config.vm.network "private_network", ip: "192.168.33.10"
 
-  config.vm.network :forwarded_port, guest: 3333, host: 3334
+  config.vm.network :forwarded_port, guest: 3333, host: 3333
   config.vm.network :forwarded_port, guest: 5000, host: 5000
 
   # Create a public network, which generally matched to bridged network.
@@ -121,6 +121,7 @@ file_provenance_date date
      source ~/.profile
      nvm ls-remote
      nvm install 0.10.28
+     nvm alias default 0.10.28
 
 
      sudo npm install -g bower@1.3.9
