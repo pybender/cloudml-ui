@@ -96,6 +96,32 @@ Can not load it: aaa, transformer-type: type is invalid"})
         self.assertTrue(data["name"] in model.features,
                         "Features.json should be updated")
 
+    def test_feature_with_named_type(self):
+        named_type = NamedFeatureType(name='my_type', type='int')
+        named_type.save()
+
+        data = {
+            "name": "contractor.tz",
+            "type": named_type.name,
+            "feature_set_id": self.model.features_set_id,
+        }
+        self.assertFalse(data["name"] in self.model.features)
+        resp, obj = self.check_edit(data)
+        self.assertEquals(obj.name, data['name'])
+        self.assertEquals(obj.type, data['type'])
+        self.assertEquals(obj.feature_set_id, data['feature_set_id'])
+        self.assertTrue(obj.required)
+        model = Model.query.get(self.model.id)
+        self.assertTrue(data["name"] in model.features,
+                        "Features.json should be updated")
+
+        data = {
+            "name": "contractor.tz2",
+            "type": "invalid named type",
+            "feature_set_id": self.model.features_set_id,
+        }
+        self.check_edit_error(data, {'type': 'type is required'})
+
     def test_add_feature(self):
         """
         Adding feature with transformer and scaler

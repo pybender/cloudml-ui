@@ -232,22 +232,24 @@ exist. Please choose another one.' % name)
 
         feature_type = get_field_value('type')
         type_factory = FEATURE_TYPE_FACTORIES.get(feature_type)
-        if type_factory is None:
-            self.add_error('type', 'type is required')
-            return
-        try:
-            type_ = type_factory.get_instance(
-                get_field_value('params'),
-                get_field_value('input_format') or 'plain')
-            default = self.cleaned_data.get('default', None)
-            if default is not None:
-                self.cleaned_data['default'] = type_.transform(default)
-        except InvalidFeatureTypeException, e:
-            raise SchemaException(
-                'Cannot create instance of feature type: {0}. '
-                'Err: {1}'.format(config, e), e)
-
-        return name
+        if type_factory:  # inline type
+            try:
+                type_ = type_factory.get_instance(
+                    get_field_value('params'),
+                    get_field_value('input_format') or 'plain')
+                default = self.cleaned_data.get('default', None)
+                if default is not None:
+                    self.cleaned_data['default'] = type_.transform(default)
+            except InvalidFeatureTypeException, e:
+                raise SchemaException(
+                    'Cannot create instance of feature type: {0}. '
+                    'Err: {1}'.format(config, e), e)
+        else:
+            # look into named feature types
+            named_type = NamedFeatureType.query.filter_by(
+                name=feature_type).first()
+            if named_type is None:
+                self.add_error('type', 'type is required')
 
     def clean_type(self, value, field):
         if value and value not in NamedFeatureType.TYPES_LIST:
