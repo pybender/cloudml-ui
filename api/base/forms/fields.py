@@ -8,7 +8,7 @@ import json
 
 from api.base.resources import ValidationError
 from sqlalchemy.orm.exc import NoResultFound
-from api.base.utils import isint
+from cloudml.utils import isint
 
 
 class BaseField(object):

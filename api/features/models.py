@@ -203,13 +203,17 @@ class FeatureSet(ExportImportMixin, BaseModel, db.Model):
 
     @property
     def features(self):
-        if self.modified:
+        if self.features_dict is None or self.modified:
             self.features_dict = self.to_dict()
             self.modified = False
             self.save()
         return self.features_dict
 
     def from_dict(self, features_dict, commit=True):
+        if features_dict is None or \
+                not isinstance(features_dict, dict):
+            raise ValueError('should be a dictionary')
+
         self.schema_name = features_dict['schema-name']
         self.group_by = []
 

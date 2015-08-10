@@ -299,16 +299,15 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
     def test_clone_trained_model(self):
         resp, model = self._test_post(
             fill_import_handler=True, fill_trainer=True)
-
         resp_data = self._check(
             method='post', data={}, id=model.id, action="clone")
         cloned_model = Model.query.get(resp_data['model']['id'])
+        self.assertEquals(cloned_model.classifier, model.classifier)
         self.assertEquals(
-            cloned_model.train_import_handler, self.obj.train_import_handler)
+            cloned_model.train_import_handler, model.train_import_handler)
         self.assertEquals(
-            cloned_model.test_import_handler, self.obj.test_import_handler)
-        self.assertEquals(cloned_model.classifier, self.obj.classifier)
-        self.assertItemsEqual(cloned_model.tags, self.obj.tags)
+            cloned_model.test_import_handler, model.test_import_handler)
+        self.assertItemsEqual(cloned_model.tags, model.tags)
 
     ############
     # Test PUT #
@@ -780,7 +779,7 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
             data.update(extra_data)
         if name is None:
             import uuid
-            name = str(uuid.uuid1())
+            name = "model # " + str(uuid.uuid1())
         if fill_import_handler:
             import_handler = ImportHandler.query.first()
             data['import_handler'] = import_handler.identifier

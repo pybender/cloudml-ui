@@ -1,4 +1,4 @@
-<div ng-controller="SaveObjectCtl">
+<form name="Form" class="form-horizontal" ng-controller="SaveObjectCtl">
   <div class="modal-header">
     <button ng-click="$dismiss('cancel')" class="close" data-dismiss="modal">×</button>
     <h3>Edit classifier</h3>
@@ -16,48 +16,44 @@
       </li>
       <li ng-show="classifiers.length == 0" class="disabled"><a title="There aren't predefined classifiers in the system">Predefined</a></li>
     </ul>
-
-    <form name="Form" class="form-horizontal">
-      <div ng-show="currentTab=='predefined'" class="control-group">
-        <alert-message class="alert-info" msg='Please choose predefined classifier. You could add other predefined classifiers at <a target="_blank" href="#/predefined/classifiers/">Classifiers List</a> page.' safe></alert-message>
-        <div class="control-group" ng-class="{error: Form.classifier.$invalid}">
-          <label class="control-label">Classifier</label>
+    <div ng-show="currentTab=='predefined'" class="control-group">
+      <alert-message class="alert-info" msg='Please choose predefined classifier. You could add other predefined classifiers at <a target="_blank" href="#/predefined/classifiers/">Classifiers List</a> page.' safe></alert-message>
+      <div class="control-group" ng-class="{error: Form.classifier.$invalid}">
+        <label class="control-label">Classifier</label>
+        <div class="controls">
+          <select name="classifier" ng-model="target_model.classifier.classifier" ng-required="currentTab=='predefined'">
+            <option value="" selected>--- select classifier ---</option>
+            <option ng-repeat="clr in classifiers" value="{{ clr.id }}">{{ clr.name }}</option>
+          </select>
+          <span ng-show="Form.classifier.$error.required" class="help-inline">*</span>
+        </div>
+      </div>
+    </div>
+    <div ng-show="currentTab=='custom'" class="control-group">
+      <div class="control-group"
+      ng-class="{error: Form.type.$invalid && !model.type}">
+        <label class="control-label">Type</label>
+        <div class="controls">
+          <select ng-change="loadParameters(true)" name="type" ng-model="model.type" required>
+            <option ng-selected="typeName == model.type" ng-repeat="(typeName, conf) in configuration" value="{{ typeName }}">{{ typeName }}</option>
+          </select>
+          <span ng-show="Form.type.$error.required" class="help-inline">*</span>
+        </div>
+      </div>
+      <div ng-show="model.config.parameters">
+        <h4>Classifier Parameters</h4>
+        <div ng-repeat="item in model.config.parameters" class="control-group">
+          <label class="control-label" title="Please input {{ item.name }}. Type: {{ item.type }}">{{ item.name }}</label>
           <div class="controls">
-            <select name="classifier" ng-model="target_model.classifier.classifier" ng-required="currentTab=='predefined'">
-              <option value="" selected>--- select classifier ---</option>
-              <option ng-repeat="clr in classifiers" value="{{ clr.id }}">{{ clr.name }}</option>
-            </select>
-            <span ng-show="Form.classifier.$error.required" class="help-inline">*</span>
+            <parameter-input ng-model="model.params[item.name]" config="item"></parameter-input>
+            <span class="help-block" ng-show="Form[config.name].$invalid">invalid</span>
           </div>
         </div>
       </div>
-
-      <div ng-show="currentTab=='custom'" class="control-group">
-        <div class="control-group"
-        ng-class="{error: Form.type.$invalid && !model.type}">
-          <label class="control-label">Type</label>
-          <div class="controls">
-            <select ng-change="loadParameters(true)" name="type" ng-model="model.type" required>
-              <option ng-selected="typeName == model.type" ng-repeat="(typeName, conf) in configuration" value="{{ typeName }}">{{ typeName }}</option>
-            </select>
-            <span ng-show="Form.type.$error.required" class="help-inline">*</span>
-          </div>
-        </div>
-        <div ng-show="model.config.parameters">
-          <h4>Classifier Parameters</h4>
-          <div ng-repeat="item in model.config.parameters" class="control-group">
-            <label class="control-label" title="Please input {{ item.name }}. Type: {{ item.type }}">{{ item.name }}</label>
-            <div class="controls">
-              <parameter-input ng-model="model.params[item.name]" config="item"></parameter-input>
-              <span class="help-block" ng-show="Form[config.name].$invalid">invalid</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </form>
+    </div>
   </div>
 
-  <div class="modal-footer" title="{{ Form.$error}}">
-    <button ng-click="save(['name', 'type', 'params', 'model_id', 'predefined_selected', 'classifier', 'is_predefined'])" class="btn btn-primary">Save</button>
+  <div class="modal-footer" title="{{ Form.$error }}">
+    <button ng-click="save(['name', 'type', 'params', 'model_id', 'predefined_selected', 'classifier', 'is_predefined'])" ng-disabled="Form.$invalid" class="btn btn-primary">Save</button>
   </div>
-</div>
+</form>

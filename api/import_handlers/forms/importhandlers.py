@@ -1,3 +1,7 @@
+"""
+Forms, that used for adding and edditing XML Import handlers.
+"""
+
 # Authors: Nikolay Melnik <nmelnik@upwork.com>
 
 from api.base.forms import BaseForm, CharField, JsonField, \
