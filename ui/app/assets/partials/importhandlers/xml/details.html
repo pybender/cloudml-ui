@@ -72,7 +72,7 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr ng-repeat="item in objects | orderBy:'name'">
+                    <tr ng-repeat="item in objects | orderBy:'name'" ng-hide="item.type=='input'">
                       <td>
                         {{ item.name }}
                       </td>
