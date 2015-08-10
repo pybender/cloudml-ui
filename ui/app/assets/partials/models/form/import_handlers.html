@@ -9,7 +9,7 @@
     </select>
 
     <span>or</span>
-    <input type="file" name="import_handler_file" ng-model="model.import_handler_file" not-required-file xml-file ng-required='!model.import_handler' />
+    <input type="file" name="import_handler_file" ng-model="model.import_handler_file" xml-file ng-required='!model.import_handler' />
     <span ng-show="errorList.import_handler_file" class="help-block" ng-bind="errorList.import_handler_file" />
     <span ng-show="errorList.import_handler" class="help-block" ng-bind="errorList.import_handler" />
     <span ng-show="Form.import_handler_file.$error.xmlFile" class="help-block">Should be a valid XML file</span>
@@ -26,7 +26,7 @@
       <option value="">- nothing selected -</option>
     </select>
     <span>or</span> 
-    <input type="file" name="test_import_handler_file" ng-model="model.test_import_handler_file" xml-file not-required-file />
+    <input type="file" name="test_import_handler_file" ng-model="model.test_import_handler_file" xml-file />
     <span ng-show="errorList.test_import_handler_file" class="help-block" ng-bind="errorList.test_import_handler_file" />
     <span ng-show="errorList.test_import_handler" class="help-block" ng-bind="errorList.test_import_handler" />
     <span ng-show="Form.test_import_handler_file.$error.xmlFile" class="help-block">Should be a valid XML file</span>

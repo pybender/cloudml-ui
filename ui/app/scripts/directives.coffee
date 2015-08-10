@@ -559,6 +559,7 @@ angular.module('app.directives', [
             isValid = false
 
           control.$setValidity('xmlFile', isValid and xmlDoc isnt null)
+          control.$setViewValue(viewValue)
           control.$render()
         )
         return viewValue
