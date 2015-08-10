@@ -171,6 +171,7 @@ class ClearLocalCache(Command):
                    default=None,
                    help="Date")
         )
+
     def run(self, **kwargs):
         date = kwargs.get('date', None)
         delete = not kwargs.get('show', True)
@@ -179,12 +180,11 @@ class ClearLocalCache(Command):
         ds = DataSet.query.filter(
             DataSet.created_on <= date).all()
         for d in ds:
-            if d.filename: 
+            if d.filename:
                 print d.filename
                 if delete and exists(d.filename):
                     os.remove(d.filename)
                     print 'deleted'
-
 
 
 manager = Manager(app)

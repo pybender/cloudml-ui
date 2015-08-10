@@ -12,9 +12,12 @@ angular.module('app.directives')
       scope.inputKeyClass = if attributes.inputKeyClass then attributes.inputKeyClass else ''
       scope.inputValueClass = if attributes.inputValueClass then attributes.inputValueClass else ''
 
-      isEmpty = (value)->
+      isEmpty = (value) ->
         if _.isString(value)
           return _.isEmpty(value.replace(/\s+/ig, ''))
+
+        if typeof value == 'number'
+          return false
 
         return _.isEmpty(value)
 
