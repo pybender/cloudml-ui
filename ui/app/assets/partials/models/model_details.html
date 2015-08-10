@@ -102,7 +102,6 @@
             </div>
              <div>
                 Parameters:
-                {{ type(model.classifier.params) }}
                 <span ng-repeat="(key, val) in model.classifier.params"><span class="badge badge-info">{{ key }}={{ val }}</span> </span>
             </div>
             <div ng-show="model.created_by">

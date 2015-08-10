@@ -13,7 +13,7 @@ from cloudml.importhandler.importhandler import DecimalEncoder, \
     ImportHandlerException
 
 from api import api
-from api.base.utils import isint, isfloat
+from cloudml.utils import isint, isfloat
 from api.base.models import assertion_msg
 from api.base.resources import BaseResourceSQL, NotFound, public_actions, \
     ValidationError, odesk_error_response, ERR_INVALID_DATA

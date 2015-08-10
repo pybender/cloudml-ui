@@ -1,3 +1,7 @@
+"""
+Forms, that used for adding and edditing XML Import handlers.
+"""
+
 # Authors: Nikolay Melnik <nmelnik@upwork.com>
 
 from api.base.forms import BaseForm, CharField, JsonField, \
@@ -7,6 +11,7 @@ from api.import_handlers.models import XmlImportHandler, XmlDataSource, \
     XmlInputParameter, XmlScript, XmlEntity, XmlField, XmlQuery, XmlSqoop, \
     PredictModel, Predict
 from api import app
+from api.base.parameters import convert_parameters
 from cloudml.importhandler.exceptions import ImportHandlerException
 from cloudml.importhandler.importhandler import ExtractionPlan
 
@@ -19,13 +24,6 @@ class XmlImportHandlerAddForm(BaseForm):
     name = UniqueNameField(
         Model=XmlImportHandler, verbose_name='Import Handler')
     data = CharField()
-
-#     def clean_name(self, value, field):
-#         count = XmlImportHandler.query.filter_by(name=value).count()
-#         if count:
-#             raise ValidationError('Import Handler with name "%s" already \
-# exist. Please choose another one.' % value)
-#         return value
 
     def clean_data(self, value, field):
         if value is None:
@@ -222,20 +220,32 @@ class XmlDataSourceForm(BaseForm):
     import_handler_id = DocumentField(
         doc=XmlImportHandler, by_name=False, return_doc=False)
 
+    def clean_name(self, value, field):
+        if not ((self.NO_REQUIRED_FOR_EDIT and self.obj.id) or value):
+            raise ValidationError('name is required field')
+
+        import_handler_id = self.obj.import_handler_id if \
+            self.obj.id else self.data['import_handler_id']
+
+        query = XmlDataSource.query.filter_by(
+            name=value,
+            import_handler_id=import_handler_id
+        )
+        if self.obj.id:
+            query = query.filter(XmlDataSource.id != self.obj.id)
+        count = query.count()
+        if count:
+            raise ValidationError('Data Source with name "%s" already \
+exist. Please choose another one.' % value)
+        return value
+
     def clean_params(self, value, field):
         conf = ExtractionPlan.get_datasources_config().get(
             self.data.get('type'))
-        params_errors = []
-        if conf:
-            for param in conf:
-                if param['required'] and param['name'] not in value:
-                    params_errors.append(param['name'])
-        if params_errors:
-            raise ValidationError(
-                'These params are required: {}'.format(
-                    ', '.join(params_errors))
-            )
-        return value
+        convert_parameters(conf, value)
+
+        # XML doesn't supports not string parameters
+        return {key: str(val) for key, val in value.iteritems()}
 
 
 class XmlQueryForm(BaseForm):

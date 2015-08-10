@@ -59,11 +59,19 @@ Install python requirements:
 
 Install Postgresql using `the instruction <https://help.ubuntu.com/community/PostgreSQL>`_. Version should be more, than 9.2.
 
+.. code-block:: console
+
+    $ sudo bash -c "echo 'deb http://apt.postgresql.org/pub/repos/apt/ precise-pgdg main' >> /etc/apt/sources.list.d/pgdg.list"
+    $ wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+    $ sudo apt-get update
+    $ sudo apt-get install -y postgresql-9.3
+    
+
 Create user and database:
 
 .. code-block:: console
 
-    $ sudo -u postgres createuser -D -A -P cloudml
+    $ sudo -u postgres psql -c "CREATE USER cloudml WITH PASSWORD 'cloudml';"
     $ sudo -u postgres createdb -O cloudml cloudml
 
 .. note::

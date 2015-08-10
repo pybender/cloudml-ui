@@ -609,11 +609,36 @@ angular.module('app.directives', [
       FLOAT_REGEXP = /^\-?\d+((\.|\,)\d+)?$/
 
       control.$parsers.unshift((viewValue) ->
+        if !viewValue
+          control.$setValidity('float', true)
+          return null
+
         if FLOAT_REGEXP.test(viewValue)
           control.$setValidity('float', true)
           return parseFloat(viewValue.replace(',', '.'))
         else
           control.$setValidity('float', false)
+          return undefined
+      )
+  }
+)
+
+.directive('smartInteger', () ->
+  return {
+    require: 'ngModel',
+    restrict: 'A',
+    link: (scope, element, attrs, control) ->
+      INT_REGEXP = /^\d+$/
+
+      control.$parsers.unshift((viewValue) ->
+        if !viewValue
+          control.$setValidity('integer', true)
+          return null
+        if INT_REGEXP.test(viewValue)
+          control.$setValidity('integer', true)
+          return parseInt(viewValue)
+        else
+          control.$setValidity('integer', false)
           return undefined
       )
   }
@@ -642,15 +667,17 @@ angular.module('app.directives', [
     scope: {
       config: '='
       value: '=ngModel'
+      name: '='
     }
     templateUrl:'partials/directives/parameter_input.html',
     link: (scope, element, attrs, ngModel) ->
       scope.select2Opts = null
+      scope.name = scope.name || scope.config.name
       if scope.config.choices
         scope.select2Opts = scope.$root.getSelect2Params(
           {choices: scope.config.choices})
   }
-)
+)     
 
 # Directives for creating plots
 .directive('scCurves', [ '$timeout', ($timeout)->
