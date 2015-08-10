@@ -542,6 +542,48 @@ angular.module('app.directives', [
   }
 )
 
+.directive('xmlFile', () ->
+  return {
+    require: 'ngModel',
+    restrict: 'A',
+    link: (scope, element, attrs, control) ->
+
+      control.$parsers.unshift((viewValue) ->
+        scope.$apply( () ->
+          isValid = true
+
+          # Validate xml
+          try
+            xmlDoc = $.parseXML(viewValue)
+          catch e
+            isValid = false
+
+          control.$setValidity('xmlFile', isValid and xmlDoc isnt null)
+          control.$render()
+        )
+        return viewValue
+      )
+
+      element.change((e) ->
+        changeEvt = e
+        if not changeEvt.target.files or not changeEvt.target.files.length
+          control.$setViewValue('')
+          control.$render()
+          return
+
+        scope.$apply( () ->
+          reader = new FileReader()
+
+          reader.onload = (e) ->
+            control.$setViewValue(e.target.result)
+            control.$render()
+
+          reader.readAsText(changeEvt.target.files[0])
+        )
+      )
+  }
+)
+
 .directive('notRequiredFile', () ->
   return {
     require: 'ngModel',

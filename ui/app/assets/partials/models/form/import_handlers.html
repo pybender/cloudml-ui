@@ -9,10 +9,10 @@
     </select>
 
     <span>or</span>
-    <input type="file" name="import_handler_file" ng-model="model.import_handler_file" not-required-file ng-required='!model.import_handler' />
+    <input type="file" name="import_handler_file" ng-model="model.import_handler_file" not-required-file xml-file ng-required='!model.import_handler' />
     <span ng-show="errorList.import_handler_file" class="help-block" ng-bind="errorList.import_handler_file" />
     <span ng-show="errorList.import_handler" class="help-block" ng-bind="errorList.import_handler" />
-    <span ng-show="Form.import_handler_file.$error.jsonFile" class="help-block">Should be a valid json file</span>
+    <span ng-show="Form.import_handler_file.$error.xmlFile" class="help-block">Should be a valid XML file</span>
     <span ng-show="Form.import_handler.$invalid || Form.import_handler_file.$invalid" class="help-block">Please select existing import handler or create it from file <go-to-docs page="import_handler"></go-to-docs></span>
     <p><a ng-click="showTestImportHandler=!showTestImportHandler">I would like to use another one for running model tests</a></p>
   </div>
@@ -26,10 +26,10 @@
       <option value="">- nothing selected -</option>
     </select>
     <span>or</span> 
-    <input type="file" name="test_import_handler_file" ng-model="model.test_import_handler_file" not-required-file />
+    <input type="file" name="test_import_handler_file" ng-model="model.test_import_handler_file" xml-file not-required-file />
     <span ng-show="errorList.test_import_handler_file" class="help-block" ng-bind="errorList.test_import_handler_file" />
     <span ng-show="errorList.test_import_handler" class="help-block" ng-bind="errorList.test_import_handler" />
-    <span ng-show="Form.test_import_handler_file.$error.jsonFile" class="help-block">Should be a valid json file</span>
+    <span ng-show="Form.test_import_handler_file.$error.xmlFile" class="help-block">Should be a valid XML file</span>
     <span ng-show="Form.test_import_handler.$invalid || Form.test_import_handler_file.$invalid" class="help-block">Please select existing import handler for running tests or create it from file <go-to-docs page="import_handler"></go-to-docs></span>
   </div>
 </div>
