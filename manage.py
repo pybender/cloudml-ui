@@ -157,8 +157,39 @@ class GenerateCrc(Command):
                 print 'Error'
 
 
+class ClearLocalCache(Command):
+    """Clear local cache of datasets"""
+    def get_options(self):
+        return (
+            Option('-s', '--show',
+                   dest='show',
+                   default=False,
+                   action='store_true',
+                   help="Only show"),
+            Option('-d', '--date',
+                   dest='date',
+                   default=None,
+                   help="Date")
+        )
+    def run(self, **kwargs):
+        date = kwargs.get('date', None)
+        delete = not kwargs.get('show', True)
+        from api.import_handlers.models import DataSet
+        from os.path import exists
+        ds = DataSet.query.filter(
+            DataSet.created_on <= date).all()
+        for d in ds:
+            if d.filename: 
+                print d.filename
+                if delete and exists(d.filename):
+                    os.remove(d.filename)
+                    print 'deleted'
+
+
+
 manager = Manager(app)
 migrate = Migrate(app, app.sql_db)
+manager.add_command('clearlocalcache', ClearLocalCache())
 manager.add_command('db', MigrateCommand)
 manager.add_command("celeryd", Celeryd())
 manager.add_command("celeryw", Celeryw())
