@@ -323,7 +323,7 @@ class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
         resp = self.client.put(
             url, data={'data': 'bad xml'}, headers=HTTP_HEADERS)
         self.assertEqual(400, resp.status_code)
-        self.assertIn('bad xml', resp.data)
+        self.assertIn('Valid XML is expected', resp.data)
 
         handler = self.obj
         self.assertEqual(
