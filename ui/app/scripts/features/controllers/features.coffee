@@ -56,6 +56,10 @@ Feature, Transformer, Scaler, Parameters) ->
       return
 
     pType = $scope.configuration.types[$scope.feature.type]
+    if !pType?  # it's named feature type, not inline
+      $scope.feature.paramsDict = {}
+      return
+
     builtInFields = _.union(pType.required_params, pType.optional_params,
       pType.default_params)
 

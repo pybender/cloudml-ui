@@ -18,8 +18,13 @@ angular.module('app.directives')
           return
 
         configFields = _.keys(ngModel.$modelValue)
+
         featureType = scope.model.type
         pType = scope.configuration.types[featureType]
+        if !pType?  # it's named feature type, not inline
+          scope.fields = []
+          return
+
         builtInFields = _.union(pType.required_params, pType.optional_params,
           pType.default_params)
 
