@@ -187,9 +187,20 @@ class ClearLocalCache(Command):
                     print 'deleted'
 
 
+class RunDynamoDB(Command):
+    """Run local DynamoDB"""
+    def run(self, **kwargs):
+        dynamodb_path = app.config.get('DYNAMODB_PATH', '~')
+        os.system("java -Djava.library.path=\
+%s/dynamodb/DynamoDBLocal_lib -jar \
+%s/dynamodb/DynamoDBLocal.jar -port 8000" 
+        % (dynamodb_path, dynamodb_path))
+
+
 manager = Manager(app)
 migrate = Migrate(app, app.sql_db)
 manager.add_command('clearlocalcache', ClearLocalCache())
+manager.add_command('rundynamodb', RunDynamoDB())
 manager.add_command('db', MigrateCommand)
 manager.add_command("celeryd", Celeryd())
 manager.add_command("celeryw", Celeryw())

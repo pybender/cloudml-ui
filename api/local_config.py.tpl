@@ -10,6 +10,8 @@ AMAZON_BUCKET_NAME = '{{ amazon_bucket_name }}'
 
 CLOUDML_PREDICT_BUCKET_NAME = '{{ amazon_bucket_name }}'
 
+DYNAMODB_PATH = '{{ path_to_local_dynamodb }}'
+
 # OAuth keys
 ODESK_OAUTH_KEY = '{{ odesk api key }}'
 ODESK_OAUTH_SECRET = '{{ odesk secret key }}'

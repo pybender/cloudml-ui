@@ -104,11 +104,13 @@ To install nltk/punkt you need to hid to `the page <http://www.nltk.org/data.htm
 
 Install local dynamodb from `Amazon's DynamoDB Local page <http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Tools.DynamoDBLocal.html>`_.
 
+Fill local path to DYNAMODB_PATH in api/local_config.py.
+
 Run local dynamodb:
 
 .. code-block:: console
     
-    $ ./api/logs/dynamodb/dynamodb_local.sh
+    $ python manage.py rundynamodb
 
 Create dynamodb tables:
 
