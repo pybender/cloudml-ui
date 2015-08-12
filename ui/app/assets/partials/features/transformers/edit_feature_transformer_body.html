@@ -45,7 +45,7 @@
 
         <div class="controls">
           <select name="transformer"
-                  ng-change="changeTransformer(-1, TransformerForm.transformer.$viewValue)"
+                  ng-change="loadParameters(true)"
                   ng-model="feature.transformer.type"
                   ng-options="typeName for typeName in types">
             <option value="">- nothing selected -</option>

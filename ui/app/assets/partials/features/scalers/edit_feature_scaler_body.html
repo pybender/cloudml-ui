@@ -43,7 +43,7 @@
         <div class="controls">
           <select name="scaler"
                   ng-model="feature.scaler.type"
-                  ng-change="changeScalerType(true, ScalerForm.scaler.$viewValue)"
+                  ng-change="loadParameters(true)"
                   ng-options="typeName for typeName in types">
             <option value="">- nothing selected -</option>
           </select>
