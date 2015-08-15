@@ -36,7 +36,9 @@ angular.module('app.features.controllers.transformers', ['app.config', ])
     )
 
     $scope.pretrainedIdToType = (id)->
-      return _.filter($scope.pretrainedTransformers, { id: id })[0].name
+      name = _.filter($scope.pretrainedTransformers, { id: id })[0].name
+      $scope.feature.transformer.name = name
+      return name
   ])
 
 .controller('TransformersListCtrl', [

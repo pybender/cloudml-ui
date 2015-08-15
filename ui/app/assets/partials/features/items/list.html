@@ -41,28 +41,28 @@
 				<span title="Input Format" ng-bind="feature.input_format || 'input format'" editable="feature" value="feature.input_format || ''" editable-field="input_format" editable-placement="right"editable-input="text"></span>
 			</td>
 			<td nowrap>
-				<div ng-show="feature.transformer.type">
+				<div ng-show="feature.transformer.type || feature.transformer.name">
 					<a ng-click="editTransformer(feature)">
-						<span>{{ feature.transformer.type }}</span>
+						<span>{{ feature.transformer.type }}{{ feature.transformer.name }}</span>
 					</a>
 					<a ng-click="deleteTransformer(feature)">
 						<i title="Delete transformer from feature" class="icon-remove" />
 					</a>
 				</div>
-				<div ng-hide="feature.transformer.type">
+				<div ng-hide="feature.transformer.type || feature.transformer.name">
 					<a ng-click="editTransformer(feature)" title="add feature transformer" href=""><i class="status-icon icon-plus"></i></a>
 				</div>
 			</td>
 			<td nowrap>
-				<div ng-show="feature.scaler.type">
+				<div ng-show="feature.scaler.type || feature.scaler.name">
 					<a ng-click="editScaler(feature)">
-						<span>{{ feature.scaler.type }}</span>
+						<span>{{ feature.scaler.type }}{{ feature.scaler.name }}</span>
 					</a>
 					<a ng-click="deleteScaler(feature)">
 						<i title="Delete feature scaler" class="icon-remove" />
 					</a>
 				</div>
-				<div ng-hide="feature.scaler.type">
+				<div ng-hide="feature.scaler.type || feature.scaler.name">
 					<a ng-click="editScaler(feature)" title="add feature scaler" href=""><i class="status-icon icon-plus"></i></a>
 				</div>
 			</td>
