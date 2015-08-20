@@ -9,16 +9,21 @@ loadParameters = (model, configuration, setDefault=false) ->
 
   config = configuration[model.type]
   model.config = config
-  if setDefault && config?
-    if config.defaults?
-      model.params = config.defaults
-    else
-      for field in config.parameters
-        if field.default?
-          model.params[field.name] = field.default
+  if !config
+    model.params = {}
+    return
+
+  if setDefault
+    model.params = config.defaults || {}  # global defaults
+    for field in config.parameters  # default by each field
+      if field.default?
+        model.params[field.name] = field.default
   else
     model.params = model.params || {}
-
+    # Checking existing parameters and deleting unexistant
+    for param in model.params
+      if param not in config.parameters
+        delete model.params[param]
 
 angular.module('app.features.controllers.base', ['app.config', ])
 
@@ -35,22 +40,9 @@ angular.module('app.features.controllers.base', ['app.config', ])
     else
       throw new Error "Please specify a model or handler and fieldname"
 
-    if openOptions.list_model_name?
-      $scope.LIST_MODEL_NAME = openOptions.list_model_name
-    else
-      $scope.LIST_MODEL_NAME = $scope.model.LIST_MODEL_NAME
-
+    $scope.LIST_MODEL_NAME = openOptions.list_model_name || $scope.model.LIST_MODEL_NAME
     $scope.DONT_REDIRECT = true
 ])
-
-# TODO: nader20140901, subject for removal cannot find any usage for it
-#.controller('ModelCtrl', [
-#  '$scope'
-#
-#  ($scope) ->
-#    $scope.init = (model) ->
-#      $scope.model = model
-#])
 
 .controller('ModelWithParamsEditDialogCtrl', [
   '$scope'
@@ -70,10 +62,7 @@ angular.module('app.features.controllers.base', ['app.config', ])
     else
       throw new Error "Please specify a model or feature and field name"
 
-    if openOptions.list_model_name?
-      $scope.LIST_MODEL_NAME = openOptions.list_model_name
-    else
-      $scope.LIST_MODEL_NAME = $scope.model.LIST_MODEL_NAME
+    $scope.LIST_MODEL_NAME = openOptions.list_model_name || $scope.model.LIST_MODEL_NAME
 
     $scope.params = {}
     $scope.model.$getConfiguration(

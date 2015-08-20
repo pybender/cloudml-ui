@@ -8,7 +8,9 @@
       <input ng-model="value" ng-name="name" type='text' placeholder="string value" ng-required="config.required" />
     </span>
     <!-- boolean params -->
-    <select ng-show="config.type == 'boolean'" ng-model="value" ng-options="choice for choice in [true, false]" ng-name="name" ng-required="config.required"></select>
+    <select ng-show="config.type == 'boolean'" ng-model="value" ng-options="choice for choice in [true, false]" ng-name="name" ng-required="config.required">
+      <option value="">-- select {{ config.name }}</option>
+    </select>
     <!-- float params -->
     <input ng-show="config.type == 'float'" ng-model="value" type='text' smart-float ng-name="name" placeholder="float value" ng-required="config.required" />
     <!-- auto_dict params -->
@@ -25,7 +27,9 @@
 <!-- choices param - render select -->
 <span ng-show="config.choices">
   <input ng-show="config.type == 'int_float_string_none'" ui-select="{{select2Opts}}" ng-name="name" ng-model="value" data-placeholder="integer, float or string value" ng-required="config.required" />
-  <select data-placeholder="pick an item" ng-show="config.type != 'int_float_string_none'" ui-select="{allowClear: true}" ng-name="name" ng-model="value" ng-options="c for c in config.choices" ng-required="config.required" />
+  <select data-placeholder="pick an item" ng-show="config.type != 'int_float_string_none'" ui-select="{allowClear: true}" ng-name="name" ng-model="value" ng-options="c for c in config.choices" ng-required="config.required">
+    <option value="">-- select {{ config.name }}</option>
+  </select>
 </span>
 <span ng-show="config.required" class="help-inline">*</span>
 <small class="help-block">{{ config.help_text }}</small>

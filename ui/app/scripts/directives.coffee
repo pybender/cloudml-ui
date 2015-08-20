@@ -715,7 +715,6 @@ angular.module('app.directives', [
     templateUrl:'partials/directives/parameter_input.html',
     link: (scope, element, attrs, ngModel) ->
       scope.select2Opts = null
-      scope.name = scope.name || scope.config.name
       if scope.config.choices
         scope.select2Opts = scope.$root.getSelect2Params(
           {choices: scope.config.choices})
