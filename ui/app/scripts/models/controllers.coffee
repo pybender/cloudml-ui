@@ -479,7 +479,6 @@ angular.module('app.models.controllers', ['app.config', ])
   ($scope, $rootScope, openOptions) ->
     $scope.resetError()
     $scope.model = openOptions.model
-    alert($scope.model.id)
     $scope.model.server = null
 
     $scope.upload = () ->
