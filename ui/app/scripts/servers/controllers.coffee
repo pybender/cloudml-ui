@@ -46,7 +46,6 @@ angular.module('app.servers.controllers', ['app.config', ])
 
     if not $scope.model.trainer_size
       $scope.model.$load({show: 'trainer_size'})
-
     $scope.serverChanged = (serverId)->
       filter = _.filter($scope.servers, {id: serverId})
       $scope.selectedServer = if filter.length > 0 then filter[0] else null
@@ -65,7 +64,8 @@ angular.module('app.servers.controllers', ['app.config', ])
             for obj in opts.objects
               model = new Model({id: obj.object_id})
               models.push model
-              promises.push model.$load({show: 'trainer_size'})
+              model.$load({show: 'trainer_size'}).then ->
+                promises.push model
 
           $q.all(promises).then ->
             modelsSize = _.reduce models, (acc, model)->
