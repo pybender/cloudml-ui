@@ -32,10 +32,11 @@ class FeatureParamsMixin(object):
             pass  # do nothing
 
         elif param_type == 'text':
-            try:
-                json.loads(value)
-            except ValueError:
-                raise ValidationError('invalid json: {}'.format(value))
+            if isinstance(value, basestring):
+                try:
+                    data[name] = json.loads(value)
+                except ValueError:
+                    raise ValidationError('invalid json: {}'.format(value))
 
         elif param_type == 'dict':
             if not isinstance(value, dict):
@@ -53,7 +54,7 @@ class FeatureParamsMixin(object):
         from cloudml.trainer.feature_types import FEATURE_TYPE_FACTORIES
 
         value_type = self.data.get('type')
-        if not type:
+        if value_type is None and not self.NO_REQUIRED_FOR_EDIT:
             raise ValidationError('invalid type')
         if value_type not in FEATURE_TYPE_FACTORIES:
             return
@@ -234,16 +235,15 @@ exist. Please choose another one.' % name)
         type_factory = FEATURE_TYPE_FACTORIES.get(feature_type)
         if type_factory:  # inline type
             try:
-                type_ = type_factory.get_instance(
-                    get_field_value('params'),
-                    get_field_value('input_format') or 'plain')
+                params = get_field_value('params')
+                input_format = get_field_value('input_format') or 'plain'
+                type_ = type_factory.get_instance(params, input_format)
                 default = self.cleaned_data.get('default', None)
                 if default is not None:
                     self.cleaned_data['default'] = type_.transform(default)
-            except InvalidFeatureTypeException, e:
-                raise SchemaException(
-                    'Cannot create instance of feature type: {0}. '
-                    'Err: {1}'.format(config, e), e)
+            except InvalidFeatureTypeException, exc:
+                self.add_error("type", 'Cannot create instance of '
+                               'feature type: {0}'.format(exc))
         else:
             # look into named feature types
             named_type = NamedFeatureType.query.filter_by(
