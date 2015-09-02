@@ -103,6 +103,8 @@ angular.module('app.directives')
       attributes.$set('required', scope.field.required)
 
       ngModel.$parsers.push (viewValue) ->
+        if _.isObject(viewValue)
+          viewValue = JSON.stringify(viewValue)
         scope.field.valid = VALIDATORS[scope.field.type](viewValue)
         ngModel.$setValidity('error', scope.field.valid)
         if not scope.field.valid
