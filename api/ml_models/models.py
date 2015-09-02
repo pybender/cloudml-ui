@@ -110,8 +110,9 @@ class BaseTrainedEntity(object):
 
     @train_import_handler.setter
     def train_import_handler(self, handler):
-        self.train_import_handler_id = handler.id
-        self.train_import_handler_type = handler.TYPE
+        if handler is not None:
+            self.train_import_handler_id = handler.id
+            self.train_import_handler_type = handler.TYPE
 
     # Fields declaration ended
 
