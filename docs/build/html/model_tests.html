@@ -115,7 +115,10 @@
 <li><a class="reference internal" href="#classifier-test-metrics">Classifier Test Metrics</a><ul>
 <li><a class="reference internal" href="#classification-accuracy">Classification Accuracy</a></li>
 <li><a class="reference internal" href="#receiver-operating-characteristic">Receiver operating characteristic</a></li>
-<li><a class="reference internal" href="#confusion-matrix">Confusion Matrix</a></li>
+<li><a class="reference internal" href="#confusion-matrix">Confusion Matrix</a><ul>
+<li><a class="reference internal" href="#recalculating-confusion-matrics-with-class-weights">Recalculating Confusion Matrics with class weights</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#precision-recall-metrics">Precision Recall Metrics</a></li>
 </ul>
 </li>
@@ -159,8 +162,13 @@
 <div class="section" id="classification-accuracy">
 <h3>Classification Accuracy<a class="headerlink" href="#classification-accuracy" title="Permalink to this headline">¶</a></h3>
 <p>The classification accuracy depends on the number of test examples correctly classified (true positives plus true negatives) and is evaluated by the formula:</p>
-<img alt="_images/accuracy.gif" src="_images/accuracy.gif" />
-<p>where t is the number of sample cases correctly classified, and n is the total number of test examples.</p>
+<p><span class="formula"><i>accuracy</i> = <span class="fraction"><span class="ignored">(</span><span class="numerator"><i>t</i></span><span class="ignored">)/(</span><span class="denominator"><i>n</i></span><span class="ignored">)</span></span></span>
+</p>
+<p>where</p>
+<p><span class="formula"><i>t</i></span>
+ - number of sample cases correctly classified</p>
+<p><span class="formula"><i>n</i></span>
+ - total number of test examples.</p>
 </div>
 <div class="section" id="receiver-operating-characteristic">
 <h3>Receiver operating characteristic<a class="headerlink" href="#receiver-operating-characteristic" title="Permalink to this headline">¶</a></h3>
@@ -168,21 +176,41 @@
 <p>ROC curves typically feature true positive rate on the Y axis, and false positive rate on the X axis. This means that the top left corner of the plot is the “ideal” point - a false positive rate of zero, and a true positive rate of one. This is not very realistic, but it does mean that a larger area under the curve (AUC) is usually better.</p>
 <p>For binary classification we will have one
 The Area Under an ROC Curve and for multiclass classification we will have one for each class.</p>
-<p>Above each ROC curve also The Area Under an ROC Curve displayed.</p>
+<p>Above each ROC curve also The Area Under an ROC Curve displayed:</p>
+<img alt="_images/roc.png" src="_images/roc.png" />
 </div>
 <div class="section" id="confusion-matrix">
 <h3>Confusion Matrix<a class="headerlink" href="#confusion-matrix" title="Permalink to this headline">¶</a></h3>
-<p>Confusion Matrix (Matrixes in case of multiclassification) would be available in &#8220;Confusion Matrix&#8221; tab in test details page. It appears after test would be successful completed.</p>
+<p>Confusion Matrix would be available in &#8220;Confusion Matrix&#8221; tab in test details page. It appears after test would be successful completed:</p>
+<img alt="_images/confusion_matrix.png" src="_images/confusion_matrix.png" />
+<div class="section" id="recalculating-confusion-matrics-with-class-weights">
+<h4>Recalculating Confusion Matrics with class weights<a class="headerlink" href="#recalculating-confusion-matrics-with-class-weights" title="Permalink to this headline">¶</a></h4>
+<p>It possible to recalculate the confusion matrics with specific weights of each class. You need to use a form under the confusion matrics:</p>
+<img alt="_images/recalc-matrix.png" src="_images/recalc-matrix.png" />
+<p>It will be iterate over all test examples to get a probability of the each class. Then for each example system apply class weights to this probabilities using formulas:</p>
+<p><span class="formula"><i>sum</i> = <span class="limits"><span class="limit"><span class="symbol">∑</span></span></span><span class="scripts"><sup class="script"><i>n</i></sup><sub class="script"><i>i</i> = 1</sub></span><i>w</i><sub><i>i</i></sub>*<i>prob</i><sub><i>i</i></sub></span>
+,</p>
+<p>where</p>
+<p><span class="formula"><i>n</i></span>
+ - count of the model classes</p>
+<p><span class="formula"><i>w</i><sub><i>i</i></sub></span>
+ - i-class weight (specified by user)</p>
+<p><span class="formula"><i>prob</i><sub><i>i</i></sub></span>
+ - probability of i-class value for specified test example.</p>
+<p>So new weighted probabilities of each class will be equals:</p>
+<p><span class="formula"><i>nprob</i><sub><i>i</i></sub> = <i>w</i><sub><i>i</i></sub>*<i>prob</i><sub><i>i</i></sub> ⁄ <i>sum</i></span>
+</p>
+<p>Using new probabilities of the classes system will determine new predicted value for each test example. And after that system calculates a confusion matrix with new predicted values.</p>
+</div>
 </div>
 <div class="section" id="precision-recall-metrics">
 <h3>Precision Recall Metrics<a class="headerlink" href="#precision-recall-metrics" title="Permalink to this headline">¶</a></h3>
-<ul class="simple">
-<li>Avarage Precision</li>
-<li>Precision Recall curve</li>
-</ul>
+<p>Precision is a measure of result relevancy, while recall is a measure of how many truly relevant results are returned. A high area under the curve represents both high recall and high precision, where high precision relates to a low false positive rate, and high recall relates to a low false negative rate. High scores for both show that the classifier is returning accurate results (high precision), as well as returning a majority of all positive results (high recall).</p>
+<p>A system with high recall but low precision returns many results, but most of its predicted labels are incorrect when compared to the training labels. A system with high precision but low recall is just the opposite, returning very few results, but most of its predicted labels are correct when compared to the training labels. An ideal system with high precision and high recall will return many results, with all results labeled correctly.</p>
+<p>In case of binary classification in Metrics tab of the Test details page you could found precision recall curve.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Precision Recall Metrics are available only for binary classification.</p>
+<p class="last">Precision Recall Metrics now are available only for binary classification.</p>
 </div>
 </div>
 </div>
