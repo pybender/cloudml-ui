@@ -61,7 +61,7 @@ Precision Recall Metrics
 * Avarage Precision
 * Precision Recall curve
 
-.. _note::
+.. note::
 
 	Precision Recall Metrics are available only for binary classification.
 
@@ -69,7 +69,7 @@ Precision Recall Metrics
 .. _regression_test_metrics:
 
 Regression Test Metrics
------------------------
+=======================
 
 Support vector regression tests will have following metrics:
 

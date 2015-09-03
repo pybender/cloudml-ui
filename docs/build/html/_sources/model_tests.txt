@@ -53,14 +53,15 @@ Above each ROC curve also The Area Under an ROC Curve displayed.
 Confusion Matrix
 ----------------
 
+Confusion Matrix (Matrixes in case of multiclassification) would be available in "Confusion Matrix" tab in test details page. It appears after test would be successful completed.
 
 Precision Recall Metrics
 ------------------------
 
 * Avarage Precision
-* Precision-recall curve
+* Precision Recall curve
 
-.. _note::
+.. note::
 
 	Precision Recall Metrics are available only for binary classification.
 
@@ -68,7 +69,7 @@ Precision Recall Metrics
 .. _regression_test_metrics:
 
 Regression Test Metrics
------------------------
+=======================
 
 Support vector regression tests will have following metrics:
 

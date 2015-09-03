@@ -1,7 +1,5 @@
 from boto.exception import S3ResponseError
 from flask import request
-import base64
-import uuid
 
 from api import api, app
 from api.amazon_utils import AmazonS3Helper
@@ -9,11 +7,6 @@ from api.base.resources import BaseResourceSQL, NotFound, \
     odesk_error_response, BaseResource
 from .models import Server
 from .config import FOLDER_MODELS, FOLDER_IMPORT_HANDLERS
-
-
-def get_a_Uuid():
-    r_uuid = base64.urlsafe_b64encode(uuid.uuid4().bytes)
-    return r_uuid.replace('=', '').replace('-', '')
 
 
 class ServerResource(BaseResourceSQL):
@@ -80,9 +73,6 @@ class ServerFileResource(BaseResource):
 
         try:
             server.set_key_metadata(uid, folder, 'hide', 'True')
-            name = server.get_key_metadata(uid, folder, 'name')
-            name = "%s_%s" % (name, get_a_Uuid())
-            server.set_key_metadata(uid, folder, 'name', 'name')
             from .tasks import update_at_server
             file_name = '{0}/{1}'.format(folder, uid)
             update_at_server.delay(server.id, file_name)
