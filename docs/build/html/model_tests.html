@@ -112,8 +112,14 @@
 <!--     <p class="citing">If you use the software, please consider <a href="about.html#citing-scikit-learn">citing scikit-learn</a>.</p> -->
     <ul>
 <li><a class="reference internal" href="#">Evaluating the Model</a><ul>
-<li><a class="reference internal" href="#classifier-test-metrics">Classifier Test Metrics</a></li>
+<li><a class="reference internal" href="#classifier-test-metrics">Classifier Test Metrics</a><ul>
+<li><a class="reference internal" href="#classification-accuracy">Classification Accuracy</a></li>
+<li><a class="reference internal" href="#receiver-operating-characteristic">Receiver operating characteristic</a></li>
+<li><a class="reference internal" href="#confusion-matrix">Confusion Matrix</a></li>
+<li><a class="reference internal" href="#precision-recall-metrics">Precision Recall Metrics</a></li>
 <li><a class="reference internal" href="#regression-test-metrics">Regression Test Metrics</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -131,47 +137,51 @@
             
   <div class="section" id="evaluating-the-model">
 <span id="test-metrics"></span><h1>Evaluating the Model<a class="headerlink" href="#evaluating-the-model" title="Permalink to this headline">¶</a></h1>
-<p>After testing the model user gets a set of test metrics.
-Different
-<em class="xref std std-ref">classifier</em>
-has different metrics.</p>
+<p>After testing the model user gets a set of test metrics.</p>
+<p>There are two types of the models:</p>
+<ul class="simple">
+<li>classification</li>
+<li>regression</li>
+</ul>
+<p>So for classification models would be available <a class="reference internal" href="#classifier-test-metrics"><em>classfication metrics</em></a>, for regression - <a class="reference internal" href="#regression-test-metrics"><em>regression metrics</em></a>.</p>
+<p>They could be found in the <cite>Metrics</cite> tab of the Test details. Confusion Matrics would be displayed in the separate tab.</p>
 <div class="section" id="classifier-test-metrics">
-<h2>Classifier Test Metrics<a class="headerlink" href="#classifier-test-metrics" title="Permalink to this headline">¶</a></h2>
-<p>Logistic regression and stochastic gradient descent classifier&#8217;s tests will have following metrics:</p>
-<table border="1" class="docutils">
-<colgroup>
-<col width="50%" />
-<col width="50%" />
-</colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">Name</th>
-<th class="head">Description</th>
-</tr>
-</thead>
-<tbody valign="top">
-<tr class="row-even"><td>roc_curve</td>
-<td>ROC curve</td>
-</tr>
-<tr class="row-odd"><td>roc_auc</td>
-<td>Area under ROC curve</td>
-</tr>
-<tr class="row-even"><td>confusion_matrix</td>
-<td>Confusion Matrix</td>
-</tr>
-<tr class="row-odd"><td>accuracy</td>
-<td>Accuracy</td>
-</tr>
-<tr class="row-even"><td>avarage_precision</td>
-<td>Avarage Precision</td>
-</tr>
-<tr class="row-odd"><td>precision_recall_curve</td>
-<td>Precision-recall curve</td>
-</tr>
-</tbody>
-</table>
+<span id="id1"></span><h2>Classifier Test Metrics<a class="headerlink" href="#classifier-test-metrics" title="Permalink to this headline">¶</a></h2>
+<p>This metrics would be available for classifiers:</p>
+<ul class="simple">
+<li>Logistic Regression</li>
+<li>Stochastic Gradient Descent Classifier</li>
+<li>Decision Tree Classifier</li>
+<li>Gradient Boosting Classifier</li>
+<li>Extra Trees Classifier</li>
+<li>Random Forest Classifier</li>
+</ul>
+<div class="section" id="classification-accuracy">
+<h3>Classification Accuracy<a class="headerlink" href="#classification-accuracy" title="Permalink to this headline">¶</a></h3>
+<p>The classification accuracy depends on the number of test examples correctly classified (true positives plus true negatives) and is evaluated by the formula:</p>
+<img alt="_images/accuracy.gif" src="_images/accuracy.gif" />
+<p>where t is the number of sample cases correctly classified, and n is the total number of test examples.</p>
+</div>
+<div class="section" id="receiver-operating-characteristic">
+<h3>Receiver operating characteristic<a class="headerlink" href="#receiver-operating-characteristic" title="Permalink to this headline">¶</a></h3>
+<p>Receiver Operating Characteristic (ROC) metrics used to evaluate classifier output quality.</p>
+<p>ROC curves typically feature true positive rate on the Y axis, and false positive rate on the X axis. This means that the top left corner of the plot is the “ideal” point - a false positive rate of zero, and a true positive rate of one. This is not very realistic, but it does mean that a larger area under the curve (AUC) is usually better.</p>
+<p>For binary classification we will have one
+The Area Under an ROC Curve and for multiclass classification we will have one for each class.</p>
+<p>Above each ROC curve also The Area Under an ROC Curve displayed.</p>
+</div>
+<div class="section" id="confusion-matrix">
+<h3>Confusion Matrix<a class="headerlink" href="#confusion-matrix" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="precision-recall-metrics">
+<h3>Precision Recall Metrics<a class="headerlink" href="#precision-recall-metrics" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Avarage Precision</li>
+<li>Precision-recall curve</li>
+</ul>
 </div>
 <div class="section" id="regression-test-metrics">
-<h2>Regression Test Metrics<a class="headerlink" href="#regression-test-metrics" title="Permalink to this headline">¶</a></h2>
+<span id="id2"></span><h3>Regression Test Metrics<a class="headerlink" href="#regression-test-metrics" title="Permalink to this headline">¶</a></h3>
 <p>Support vector regression tests will have following metrics:</p>
 <table border="1" class="docutils">
 <colgroup>
@@ -189,6 +199,7 @@ has different metrics.</p>
 </tr>
 </tbody>
 </table>
+</div>
 </div>
 </div>
 

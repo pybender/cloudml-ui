@@ -262,8 +262,14 @@
 </ul>
 </div>
 <p>Install Postgresql using <a class="reference external" href="https://help.ubuntu.com/community/PostgreSQL">the instruction</a>. Version should be more, than 9.2.</p>
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> sudo bash -c <span class="s2">&quot;echo &#39;deb http://apt.postgresql.org/pub/repos/apt/ precise-pgdg main&#39; &gt;&gt; /etc/apt/sources.list.d/pgdg.list&quot;</span>
+<span class="gp">$</span> wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+<span class="gp">$</span> sudo apt-get update
+<span class="gp">$</span> sudo apt-get install -y postgresql-9.3
+</pre></div>
+</div>
 <p>Create user and database:</p>
-<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> sudo -u postgres createuser -D -A -P cloudml
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> sudo -u postgres psql -c <span class="s2">&quot;CREATE USER cloudml WITH PASSWORD &#39;cloudml&#39;;&quot;</span>
 <span class="gp">$</span> sudo -u postgres createdb -O cloudml cloudml
 </pre></div>
 </div>
@@ -288,8 +294,9 @@ $ rabbitmqctl set_permissions cloudml cloudml "*" "*" "*
 </div>
 <p>To install nltk/punkt you need to hid to <a class="reference external" href="http://www.nltk.org/data.html">the page</a> and follow the direction. After nltk.download() choose to download punkt.</p>
 <p>Install local dynamodb from <a class="reference external" href="http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Tools.DynamoDBLocal.html">Amazon&#8217;s DynamoDB Local page</a>.</p>
+<p>Fill local path to DYNAMODB_PATH in api/local_config.py.</p>
 <p>Run local dynamodb:</p>
-<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> ./api/logs/dynamodb/dynamodb_local.sh
+<div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> python manage.py rundynamodb
 </pre></div>
 </div>
 <p>Create dynamodb tables:</p>
