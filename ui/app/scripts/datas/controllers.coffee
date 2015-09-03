@@ -121,48 +121,29 @@ angular.module('app.datas.controllers', ['app.config', ])
   '$scope'
   '$routeParams'
   'Data'
-  'TestResult'
 
-($scope, $routeParams, Data, Test) ->
+# Average Precision page controller
+
+($scope, $routeParams, Data) ->
   $scope.form = {'field': "", 'count': 2 }
-  $scope.loading_state = true
-  $scope.test = new Test({
-    model_id: $routeParams.model_id,
-    id: $routeParams.test_id
-  })
-  $scope.test.$load(
-      show: 'name,examples_fields'
-  ).then ((opts) ->
-      $scope.loading_state = false
-  ), ((opts) ->
-      $scope.setError(opts, 'loading test details')
-      $scope.loading_state = true
-  )
 
-  Data.$loadFieldList($routeParams.model_id,
-      $scope.test.id)
-    .then (opts) ->
-      $scope.fields = opts.fields
-    , (opts) ->
-      $scope.setError(opts, 'loading data field list')
+  # loading test example's fields to use them in field select
+  Data.$loadFieldList($routeParams.model_id, $routeParams.test_id)
+    .then $scope.getResponseHandler(
+      $scope, {
+        name: 'data field list'
+        requiredFields: ['fields']
+      })...
 
   $scope.update = () ->
-    if not $scope.form.field
-      $scope.setError({}, 'Please, select a field')
-      return
-    $scope.loading_state = true
-    Data.$loadAllGroupped($routeParams.model_id, $routeParams.test_id, {
-      field: $scope.form.field,
-      count: $scope.form.count})
-    .then ((opts) ->
-      $scope.field_name = opts.field_name
-      $scope.mavp = opts.mavp
-      $scope.objects = opts.objects
-      $scope.loading_state = false
-    ), ((opts) ->
-      $scope.setError(opts, 'loading grouped test examples info: ' + opts.message)
-      $scope.loading_state = false
-    )
+    Data.$loadAllGroupped(
+      $routeParams.model_id, $routeParams.test_id,
+      $scope.form)
+    .then $scope.getResponseHandler(
+      $scope, {
+        name: 'grouped test examples'
+        requiredFields: ['field_name', 'mavp', 'objects']
+      })...
 ])
 
 .controller('ExampleDetailsCtrl', [

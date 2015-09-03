@@ -285,6 +285,25 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
   $rootScope.setFieldError = (name, msg='') ->
       $rootScope.errorList[name] = msg
 
+  $rootScope.getResponseHandler = ($scope, opts) ->
+    # Returns success and error handlers for methods
+    # who called API.
+    #
+    # $scope - current scope
+    # opts  - options:
+    #    name - name of the action
+    #    requiredFields - fields which API should return
+    name = opts.name || 'objects'
+    [(resp) ->
+        if opts.requiredFields?
+          # check that all required fields were returned via API
+          if _.difference(opts.requiredFields, Object.keys(resp)).length > 0
+            $scope.setError({}, 'loading ' + name + ' : not all fields was returned via API')
+        for key of resp
+          $scope[key] = resp[key]
+    , (err) ->
+      $scope.setError(err, 'loading ' + name)
+    ]
 
 # TODO: nader20140912, not user anywhere schedule for removal
 #  # this will be available to all scope variables

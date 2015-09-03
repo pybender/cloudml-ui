@@ -10,11 +10,10 @@
       &nbsp;
       <label>N:</label>
       <input type=text ng-model="form.count" name="field"/>
-      <button ng-click="update()" ng-disabled="Form.$invalid || loading_state" class="btn btn-success">
+      <button ng-click="update()" ng-disabled="Form.$invalid" class="btn btn-success">
           <i title="Apply" class="status-icon icon-play"></i>
           Update
       </button>
-      <span ng-show="loading_state">Loading...</span>
     </form>
 
     Mean avarage precision: {{ mavp.toFixed(4) || mavp }}
