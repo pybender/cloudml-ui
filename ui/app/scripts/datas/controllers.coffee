@@ -139,6 +139,13 @@ angular.module('app.datas.controllers', ['app.config', ])
       $scope.loading_state = true
   )
 
+  Data.$loadFieldList($routeParams.model_id,
+      $scope.test.id)
+    .then (opts) ->
+      $scope.fields = opts.fields
+    , (opts) ->
+      $scope.setError(opts, 'loading data field list')
+
   $scope.update = () ->
     if not $scope.form.field
       $scope.setError({}, 'Please, select a field')

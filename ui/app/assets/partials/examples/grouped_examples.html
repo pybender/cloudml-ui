@@ -4,7 +4,7 @@
     <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
     <form name="Form" class="form-inline well">
       <label>Field Name:</label>
-      <select title='could be field from raw data (use "data_input.{{ fieldname }}") or any other field like "label", "pred_label".' ng-model="form.field" name="field" ng-options="name for name in test.examples_fields" required>
+      <select title='could be field from raw data (use "data_input->{{ fieldname }}") or any other field like "label", "pred_label".' ng-model="form.field" name="field" ng-options="name for name in fields" required>
         <option value="">--- select field ---</option>
       </select>
       &nbsp;
