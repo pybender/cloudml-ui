@@ -113,6 +113,3 @@ Support vector regression tests will have following metrics:
 * Mean absolute error regression loss
 * Mean squared error regression loss
 * R^2 (coefficient of determination) regression
-
-Average Precision
-=================

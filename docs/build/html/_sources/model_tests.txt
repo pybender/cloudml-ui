@@ -109,8 +109,7 @@ Regression Test Metrics
 
 Support vector regression tests will have following metrics:
 
-+------+------------------------+
-| Name | Description            |
-+======+========================+
-| rsme | Root square mean error |
-+------+------------------------+
+* Explained variance regression score
+* Mean absolute error regression loss
+* Mean squared error regression loss
+* R^2 (coefficient of determination) regression
