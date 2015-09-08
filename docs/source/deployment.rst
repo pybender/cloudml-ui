@@ -23,7 +23,7 @@ Create virtual env locally::
 
 Note::
 
-    Create OATH API keys using https://www.odesk.com/services/api/apply. Callback URL is http://{{host}}/#/auth/callback
+    Create OATH API keys using https://www.upworkg.com/services/api/apply. Callback URL is http://{{host}}/#/auth/callback
 
 Create fabsettings::
 

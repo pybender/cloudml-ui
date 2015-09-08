@@ -58,7 +58,7 @@
   </script>
 
   </head>
-  <body>
+  <body role="document">
 
 <div class="header-wrapper">
     <div class="header"></div>
@@ -128,14 +128,18 @@
             
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
   <div class="section" id="deployment-the-model-or-import-handler-to-predict-server">
 <span id="deploy-on-predict"></span><h1>Deployment the model or import handler to predict server<a class="headerlink" href="#deployment-the-model-or-import-handler-to-predict-server" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="uploading-to-predict-server">
 <h2>Uploading to predict server<a class="headerlink" href="#uploading-to-predict-server" title="Permalink to this headline">¶</a></h2>
-<p>You could upload model or import handler to predict server by clicking to  &#8220;Upload for Predict&#8221; button in the details page. In popup you will need to
+<p>You could upload model or import handler to predict server by clicking to  &#8220;Upload for Predict&#8221; button in the details page.</p>
+<p>For example model details page:</p>
+<a class="reference internal image-reference" href="_images/upload-model1.png"><img alt="_images/upload-model1.png" src="_images/upload-model1.png" style="width: 800px;" /></a>
+<p>In popup you will need to
 specify the server.</p>
+<img alt="_images/upload-model2.png" src="_images/upload-model2.png" />
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">List of available servers you could find in the <a class="reference external" href="http://cloudml.int.odesk.com/#/servers">server list page</a>.</p>
@@ -144,10 +148,41 @@ specify the server.</p>
 <div class="section" id="reloading-the-model-or-import-handler-on-predict-server">
 <h2>Reloading the model or import handler on predict server<a class="headerlink" href="#reloading-the-model-or-import-handler-on-predict-server" title="Permalink to this headline">¶</a></h2>
 <p>To use the uploaded model in predict you need to reload the model on the predict server. For it go to the server details page. Find corresponding model or import handler in the list and click on &#8220;reload&#8221; button in the actions column.</p>
+<img alt="_images/upload-model3.png" src="_images/upload-model3.png" />
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">If you moved model/import handler file to Amazon S3 manually, you could simply find it in corresponding server details page and load it to use for predict (by clicking to reload button).</p>
 </div>
+<p>If you need different name on predict, you can rename model.</p>
+<p>For checking new model on predict:</p>
+<blockquote>
+<div>$ curl <a class="reference external" href="http://your_server_url/cloudml/v1/model/">http://your_server_url/cloudml/v1/model/</a></div></blockquote>
+<p>Example of response:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>{</dt>
+<dd><dl class="first docutils">
+<dt>&#8220;models&#8221;: [</dt>
+<dd><dl class="first docutils">
+<dt>{</dt>
+<dd>&#8220;created&#8221;: {},
+&#8220;name&#8221;: &#8220;somemodel1&#8221;,
+&#8220;schema-name&#8221;: &#8220;bestmatch&#8221;</dd>
+</dl>
+<p>},
+{</p>
+<blockquote>
+<div>&#8220;created&#8221;: {},
+&#8220;name&#8221;: &#8220;somemodel2&#8221;,
+&#8220;schema-name&#8221;: &#8220;bestmatch&#8221;</div></blockquote>
+<p class="last">}</p>
+</dd>
+</dl>
+<p class="last">]</p>
+</dd>
+</dl>
+<p>}</p>
+</div></blockquote>
 </div>
 <div class="section" id="deleting-the-model-or-import-handler-file">
 <h2>Deleting the model or import handler file<a class="headerlink" href="#deleting-the-model-or-import-handler-file" title="Permalink to this headline">¶</a></h2>

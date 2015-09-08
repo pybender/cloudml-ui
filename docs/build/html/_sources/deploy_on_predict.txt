@@ -7,8 +7,18 @@ Deployment the model or import handler to predict server
 Uploading to predict server
 ---------------------------
 
-You could upload model or import handler to predict server by clicking to  "Upload for Predict" button in the details page. In popup you will need to
+You could upload model or import handler to predict server by clicking to  "Upload for Predict" button in the details page.
+
+For example model details page:
+
+.. image:: ./_static/servers/upload-model1.png
+   :width: 800px
+
+
+In popup you will need to
 specify the server.
+
+.. image:: ./_static/servers/upload-model2.png
 
 .. note::
 
@@ -17,11 +27,36 @@ specify the server.
 Reloading the model or import handler on predict server
 -------------------------------------------------------
 
-To use the uploaded model in predict you need to reload the model on the predict server. For it go to the server details page. Find corresponding model or import handler in the list and click on "reload" button in the actions column.
+To use the uploaded model in predict you need to reload the model on the predict server. For it go to the server details page. Find corresponding model or import handler in the list and click on "reload" button in the actions column. 
+
+.. image:: ./_static/servers/upload-model3.png
 
 .. note::
 
     If you moved model/import handler file to Amazon S3 manually, you could simply find it in corresponding server details page and load it to use for predict (by clicking to reload button).
+
+If you need different name on predict, you can rename model.
+
+For checking new model on predict:
+	
+	$ curl http://your_server_url/cloudml/v1/model/
+
+Example of response:
+
+	{
+	  "models": [
+	    {
+	      "created": {}, 
+	      "name": "somemodel1", 
+	      "schema-name": "bestmatch"
+	    }, 
+	    {
+	      "created": {}, 
+	      "name": "somemodel2", 
+	      "schema-name": "bestmatch"
+	    }
+	  ]
+	}
 
 Deleting the model or import handler file
 -----------------------------------------

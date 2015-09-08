@@ -58,7 +58,7 @@
   </script>
 
   </head>
-  <body>
+  <body role="document">
 
 <div class="header-wrapper">
     <div class="header"></div>
@@ -136,7 +136,7 @@
             
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
   <div class="section" id="evaluating-the-model">
 <span id="test-metrics"></span><h1>Evaluating the Model<a class="headerlink" href="#evaluating-the-model" title="Permalink to this headline">¶</a></h1>
@@ -146,7 +146,7 @@
 <li>classification</li>
 <li>regression</li>
 </ul>
-<p>So for classification models would be available <a class="reference internal" href="#classifier-test-metrics"><em>classfication metrics</em></a>, for regression - <a class="reference internal" href="#regression-test-metrics"><em>regression metrics</em></a>.</p>
+<p>So for classification models would be available <a class="reference internal" href="#classifier-test-metrics"><span>classfication metrics</span></a>, for regression - <a class="reference internal" href="#regression-test-metrics"><span>regression metrics</span></a>.</p>
 <p>They could be found in the <cite>Metrics</cite> tab of the Test details. Confusion Matrics would be displayed in the separate tab.</p>
 <div class="section" id="classifier-test-metrics">
 <span id="id1"></span><h2>Classifier Test Metrics<a class="headerlink" href="#classifier-test-metrics" title="Permalink to this headline">¶</a></h2>
@@ -162,13 +162,10 @@
 <div class="section" id="classification-accuracy">
 <h3>Classification Accuracy<a class="headerlink" href="#classification-accuracy" title="Permalink to this headline">¶</a></h3>
 <p>The classification accuracy depends on the number of test examples correctly classified (true positives plus true negatives) and is evaluated by the formula:</p>
-<p><span class="formula"><i>accuracy</i> = <span class="fraction"><span class="ignored">(</span><span class="numerator"><i>t</i></span><span class="ignored">)/(</span><span class="denominator"><i>n</i></span><span class="ignored">)</span></span></span>
-</p>
+<p></p>
 <p>where</p>
-<p><span class="formula"><i>t</i></span>
- - number of sample cases correctly classified</p>
-<p><span class="formula"><i>n</i></span>
- - total number of test examples.</p>
+<p> - number of sample cases correctly classified</p>
+<p> - total number of test examples.</p>
 </div>
 <div class="section" id="receiver-operating-characteristic">
 <h3>Receiver operating characteristic<a class="headerlink" href="#receiver-operating-characteristic" title="Permalink to this headline">¶</a></h3>
@@ -188,18 +185,13 @@ The Area Under an ROC Curve and for multiclass classification we will have one f
 <p>It possible to recalculate the confusion matrics with specific weights of each class. You need to use a form under the confusion matrics:</p>
 <img alt="_images/recalc-matrix.png" src="_images/recalc-matrix.png" />
 <p>It will be iterate over all test examples to get a probability of the each class. Then for each example system apply class weights to this probabilities using formulas:</p>
-<p><span class="formula"><i>sum</i> = <span class="limits"><span class="limit"><span class="symbol">∑</span></span></span><span class="scripts"><sup class="script"><i>n</i></sup><sub class="script"><i>i</i> = 1</sub></span><i>w</i><sub><i>i</i></sub>*<i>prob</i><sub><i>i</i></sub></span>
-,</p>
+<p>,</p>
 <p>where</p>
-<p><span class="formula"><i>n</i></span>
- - count of the model classes</p>
-<p><span class="formula"><i>w</i><sub><i>i</i></sub></span>
- - i-class weight (specified by user)</p>
-<p><span class="formula"><i>prob</i><sub><i>i</i></sub></span>
- - probability of i-class value for specified test example.</p>
+<p> - count of the model classes</p>
+<p> - i-class weight (specified by user)</p>
+<p> - probability of i-class value for specified test example.</p>
 <p>So new weighted probabilities of each class will be equals:</p>
-<p><span class="formula"><i>nprob</i><sub><i>i</i></sub> = <i>w</i><sub><i>i</i></sub>*<i>prob</i><sub><i>i</i></sub> ⁄ <i>sum</i></span>
-</p>
+<p></p>
 <p>Using new probabilities of the classes system will determine new predicted value for each test example. And after that system calculates a confusion matrix with new predicted values.</p>
 </div>
 </div>
