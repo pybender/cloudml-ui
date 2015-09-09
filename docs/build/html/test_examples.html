@@ -58,7 +58,7 @@
   </script>
 
   </head>
-  <body role="document">
+  <body>
 
 <div class="header-wrapper">
     <div class="header"></div>
@@ -134,7 +134,7 @@
             
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body" role="main">
+          <div class="body">
             
   <div class="section" id="analyzing-test-examples">
 <h1>Analyzing Test Examples<a class="headerlink" href="#analyzing-test-examples" title="Permalink to this headline">¶</a></h1>
@@ -171,7 +171,8 @@ To view them you need to navigate to the <cite>Examples</cite> tab in the Test d
 <li>Vectorized Value - the vectorized value of the feature, that is passed to the model to predict a probabilities of the target variable. It isn&#8217;t a real value, this one could be found in Weighted Data tab.</li>
 <li>Weight - feature&#8217;s value weight, calculated as:</li>
 </ul>
-<p></p>
+<p><span class="formula"><i>weight</i> = <i>value</i><sub><i>vectorized</i></sub>*<i>weight</i><sub><i>model</i></sub></span>
+</p>
 </div>
 <div class="section" id="weighted-data">
 <h4>Weighted Data<a class="headerlink" href="#weighted-data" title="Permalink to this headline">¶</a></h4>

@@ -58,7 +58,7 @@
   </script>
 
   </head>
-  <body role="document">
+  <body>
 
 <div class="header-wrapper">
     <div class="header"></div>
@@ -147,7 +147,7 @@
             
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body" role="main">
+          <div class="body">
             
   <div class="section" id="get-started-with-cloudml">
 <span id="get-started"></span><h1><a class="toc-backref" href="#id7">Get Started With CloudML</a><a class="headerlink" href="#get-started-with-cloudml" title="Permalink to this headline">¶</a></h1>
@@ -213,7 +213,7 @@ For this you need to do few steps:</p>
 <div class="section" id="creating-the-import-handler">
 <h4><a class="toc-backref" href="#id12">Creating the import handler</a><a class="headerlink" href="#creating-the-import-handler" title="Permalink to this headline">¶</a></h4>
 <ul class="simple">
-<li>Download <a class="reference download internal" href="_downloads/extract_csv.xml"><code class="xref download docutils literal"><span class="pre">import</span> <span class="pre">handler</span> <span class="pre">file</span></code></a> (format is described in <span class="xref std std-ref">Cloudml Core documentation</span>).</li>
+<li>Download <a class="reference download internal" href="_downloads/extract_csv.xml"><tt class="xref download docutils literal"><span class="pre">import</span> <span class="pre">handler</span> <span class="pre">file</span></tt></a> (format is described in <em class="xref std std-ref">Cloudml Core documentation</em>).</li>
 <li>Navigate to <a class="reference external" href="http://cloudml.int.odesk.com/#/importhandlers/xml/add">add import handler page</a>, define unique name and upload xml import handler file. Click to &#8220;Add new XML import handler&#8221; button.</li>
 </ul>
 <img alt="_images/add-import-handler.png" src="_images/add-import-handler.png" />
@@ -254,7 +254,7 @@ For this you need to do few steps:</p>
 <h3><a class="toc-backref" href="#id14">Creating the model</a><a class="headerlink" href="#creating-the-model" title="Permalink to this headline">¶</a></h3>
 <div class="section" id="creating-the-cloudml-model">
 <h4><a class="toc-backref" href="#id15">Creating the Cloudml model</a><a class="headerlink" href="#creating-the-cloudml-model" title="Permalink to this headline">¶</a></h4>
-<p><a href="#id1"><span class="problematic" id="id2">*</span></a>. Download <a class="reference download internal" href="_downloads/features.json"><code class="xref download docutils literal"><span class="pre">features.json</span> <span class="pre">file</span></code></a> (format is described in <span class="xref std std-ref">Cloudml Core documentation</span>).
+<p><a href="#id1"><span class="problematic" id="id2">*</span></a>. Download <a class="reference download internal" href="_downloads/features.json"><tt class="xref download docutils literal"><span class="pre">features.json</span> <span class="pre">file</span></tt></a> (format is described in <em class="xref std std-ref">Cloudml Core documentation</em>).
 <a href="#id3"><span class="problematic" id="id4">*</span></a>. Navigate to <a class="reference external" href="http://cloudml.int.odesk.com/#/add_model">add new model page</a>, define unique name, select features.json file  and select &#8220;Abalone import handler&#8221;. Click to &#8220;Adding new model&#8221; button.</p>
 <img alt="_images/new-model.png" src="_images/new-model.png" />
 <p>You will be redirected to model details page.</p>
@@ -304,7 +304,7 @@ For this you need to do few steps:</p>
 <p>For uploading the model you need to navigate to &#8220;Upload trained model&#8221; page: <a class="reference external" href="http://cloudml.int.odesk.com/#/upload_model">http://cloudml.int.odesk.com/#/upload_model</a> and define unique name, import handlers and pickled trainer class file.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">You could download model trainer from existing model by clicking &#8220;download trainer&#8221; in model details page. More details in <a class="reference internal" href="models.html#pickled-models"><span>pickled models section</span></a></p>
+<p class="last">You could download model trainer from existing model by clicking &#8220;download trainer&#8221; in model details page. More details in <a class="reference internal" href="models.html#pickled-models"><em>pickled models section</em></a></p>
 </div>
 </div>
 <div class="section" id="edditing-the-model-details">
@@ -439,7 +439,7 @@ trained model, you have two ways:</p>
 <div class="section" id="testing-the-model">
 <h3><a class="toc-backref" href="#id19">Testing the model</a><a class="headerlink" href="#testing-the-model" title="Permalink to this headline">¶</a></h3>
 <p>Now we need to evaluate the model. Click to &#8220;Test&#8221; button in the right-top corner of the model details. In the opened popup you need specify way to get data and AWS instance (same to
-<span class="xref std std-ref">model train</span> popup).</p>
+<em class="xref std std-ref">model train</em> popup).</p>
 <p>Also, you can set flag &#8220;I want to save weights of the parameters.&#8221;. In this case you will have &#8220;Weights&#8221; tab on the test details page, with test specific weights of each model parameter.</p>
 <img alt="_images/run-test.png" src="_images/run-test.png" />
 <div class="admonition note">
