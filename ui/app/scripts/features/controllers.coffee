@@ -166,6 +166,10 @@ angular.module('app.features.controllers', ['app.config', ])
         throw new Error "Please specify feature model"
 
       $scope.model = opts.model
+      if $scope.model.type is 'date' && $scope.model.paramsDict?.pattern?
+        $scope.model.default = strftimeDate($scope.model.paramsDict.pattern,
+                                            $scope.model.default)
+
 
     $scope.deleteModel = (model) ->
       $scope.openDialog($scope, {
