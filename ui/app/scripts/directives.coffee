@@ -269,7 +269,7 @@ angular.module('app.directives', [
                 }).on('hide', (ev) ->
                      scope.$apply ( () ->
                          d = strftime(attr.pattern.valueOf(), ev.date.valueOf())
-                         ngModel.$setViewValue(d)
+                         ngModel.$setViewValue(ev.date.valueOf())
                          element.val(d)
                          )
 

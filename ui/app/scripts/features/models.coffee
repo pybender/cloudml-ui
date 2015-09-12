@@ -269,6 +269,12 @@ angular.module('app.features.models', ['app.config'])
       $save: (opts={}) =>
         opts.extraData = {}
 
+        if 'default' in opts.only
+          if this.type is 'date' && this.paramsDict?.pattern?
+              d = new Date(this.default)
+              if not isNaN(d.valueOf())
+                this.default = strftime(this.paramsDict.pattern, d)
+
         if 'transformer' in opts.only
           _.remove opts.only, (x)-> x is 'transformer'
           transType = @transformer.type
