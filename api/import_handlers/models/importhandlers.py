@@ -790,11 +790,6 @@ def fill_import_handler(import_handler, xml_data=None):
                     name=model.name,
                     value=model.value,
                     script=model.script)
-                if model.positive_label is not None:
-                    predict_model.positive_label_script = \
-                        model.positive_label.script
-                    predict_model.positive_label_value = \
-                        model.positive_label.value
                 db.session.add(predict_model)
 
                 for weight in model.weights:
