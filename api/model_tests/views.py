@@ -58,7 +58,7 @@ class TestResource(BaseResourceSQL):
 
             weights = []
             for w in json_weights["weights_list"]:
-                if not w["label"] or not w["value"]:
+                if not ("label" in w and "value" in w):
                     raise ValueError("Weights list is incorrect")
                 weights.append((w["label"], float(w["value"])))
             calculate_confusion_matrix.delay(

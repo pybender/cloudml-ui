@@ -240,7 +240,7 @@ def calculate_confusion_matrix(test_id, weights):
 
     test_id: int
         ID of the model test.
-    weights: list of objects {label: weight}
+    weights: list of tuples (label, weight)
         where label - test.model.label - class label
         weight: positive float class weight
 

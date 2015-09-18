@@ -100,8 +100,6 @@ class TestResult(db.Model, BaseModel):
     @property
     def confusion_matrix_calculations(self):
         from api.async_tasks.models import AsyncTask
-        import logging
-        logging.info("start calculating")
         return AsyncTask.get_current_by_object(
             self,
             'api.model_tests.tasks.calculate_confusion_matrix',
