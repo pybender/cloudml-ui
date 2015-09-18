@@ -234,27 +234,31 @@ def _add_example_to_db(test, data, label, pred, prob, num):
 
 
 @celery.task(base=SqlAlchemyTask)
-def calculate_confusion_matrix(test_id, weight0, weight1):
+def calculate_confusion_matrix(test_id, weights):
     """
-    Calculate confusion matrix for test with weightes.
+    Calculate confusion matrix for test with weights.
 
     test_id: int
         ID of the model test.
-    weight0: positive float
-        first class weight.
-    weight1: positive float
-        second class weight.
+    weights: list of objects {label: weight}
+        where label - test.model.label - class label
+        weight: positive float class weight
 
     Note:
-    Now we support calculating confusion matrix only for binary classifier.
+    Now we support calculating confusion matrix for
+    binary and multi class classifiers.
     """
     init_logger('confusion_matrix_log', obj=int(test_id))
 
-    if weight0 == 0 and weight1 == 0:
-        raise ValueError('Both weights can not be 0')
+    all_zero = True
+    for weight in weights:
+        if weight[1] != 0:
+            all_zero = False
+        if weight[1] < 0:
+            raise ValueError('Negative weights are not allowed')
 
-    if weight0 < 0 or weight1 < 0:
-        raise ValueError('Negative weights are not allowed')
+    if all_zero:
+        raise ValueError('All weights can not be 0')
 
     test = TestResult.query.get(test_id)
     if test is None:
@@ -265,23 +269,28 @@ def calculate_confusion_matrix(test_id, weight0, weight1):
         raise ValueError('Model with id {0!s} not found!'.format(
             test.model_id))
 
-    logging.info('Calculating confusion matrix for test id {!s}'.format(
+    logging.info('Calculating confusion matrix for test id {0!s}'.format(
         test_id))
 
-    matrix = [[0, 0],
-              [0, 0]]
+    dim = len(weights)
+    matrix = [[0 for x in range(dim)] for x in range(dim)]
 
     for example in test.examples:
         true_value_idx = model.labels.index(example.label)
 
-        prob0, prob1 = example.prob[:2]
+        weighted_sum = 0
+        for weight in weights:
+            weighted_sum += weight[1] * example.prob[int(weight[0])]
 
-        weighted_sum = weight0 * prob0 + weight1 * prob1
-        weighted_prob0 = weight0 * prob0 / weighted_sum
-        weighted_prob1 = weight1 * prob1 / weighted_sum
+        if weighted_sum == 0:
+            raise ValueError("Weighted sum is 0")
 
-        predicted = [weighted_prob0, weighted_prob1].index(
-            max([weighted_prob0, weighted_prob1]))
+        weighted_prob = []
+        for weight in weights:
+            weighted_prob.append(weight[1] * example.prob[int(weight[0])]
+                                 / weighted_sum)
+
+        predicted = weighted_prob.index(max(weighted_prob))
         matrix[true_value_idx][predicted] += 1
 
     return zip(model.labels, matrix)

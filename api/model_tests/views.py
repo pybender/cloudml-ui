@@ -38,8 +38,7 @@ class TestResource(BaseResourceSQL):
         from tasks import calculate_confusion_matrix
 
         parser = reqparse.RequestParser()
-        parser.add_argument('weight0', type=float)
-        parser.add_argument('weight1', type=float)
+        parser.add_argument('weights', type=str)
         args = parser.parse_args()
 
         test = self._get_details_query(None, **kwargs)
@@ -51,8 +50,20 @@ class TestResource(BaseResourceSQL):
             raise NotFound('Model not found')
 
         try:
+            arg = args.get("weights")
+            import json
+            json_weights = json.loads(arg)
+            if not json_weights["weights_list"]:
+                raise ValueError("Weights list is empty")
+
+            weights = []
+            for w in json_weights["weights_list"]:
+                if not w["label"] or not w["value"]:
+                    raise ValueError("Weights list is incorrect")
+                weights.append((w["label"], float(w["value"])))
             calculate_confusion_matrix.delay(
-                test.id, args.get('weight0'), args.get('weight1'))
+                test.id, sorted(weights, key=lambda x: x[0]))
+
         except Exception as e:
             return self._render({self.OBJECT_NAME: test.id,
                                  'error': e.message})

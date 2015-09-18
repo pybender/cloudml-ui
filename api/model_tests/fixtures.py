@@ -92,6 +92,22 @@ class TestResultData(DataSet):
         model = ModelData.model_03
         dataset = DataSetData.dataset_01
 
+    class test_06:
+        name = "Test-6"
+        status = "Completed"
+        created_on = "2013-04-19 14:37:23.145000"
+        updated_on = "2013-04-19 14:37:23.145000"
+        model_name = "model_multiclass_correct_labels"
+        parameters = {}
+        metrics = {}
+        examples_count = 100
+        examples_fields = ["hire_outcome", "application_id"]
+        error = ""
+        classes_set = []
+        accuracy = 0.95
+        model = ModelData.model_multiclass_1
+        dataset = DataSetData.dataset_01
+
 
 class TestExampleData(DataSet):
     class test_example_01:
@@ -219,4 +235,106 @@ class TestExampleData(DataSet):
         data_input = {
             'opening_id': "201913099",
             'employer->country': 'Ukraine'
+        }
+
+    class test_example_07:
+        created_on = "2013-04-19 14:37:23.145000"
+        updated_on = "2013-04-19 14:37:23.145000"
+        name = "Some Example #6-1"
+        pred_label = "1"
+        label = "0"
+        test_name = "Test-6"
+        model_name = "model_multiclass_correct_labels"
+        weighted_data_input = {}
+        prob = [0.6, 0.3, 0.1]
+        example_id = "1"
+        num = 1
+        model = ModelData.model_multiclass_1
+        test_result = TestResultData.test_06
+        data_input = {
+        }
+
+    class test_example_08:
+        created_on = "2013-04-19 14:37:23.145000"
+        updated_on = "2013-04-19 14:37:23.145000"
+        name = "Some Example #6-2"
+        pred_label = "1"
+        label = "0"
+        test_name = "Test-6"
+        model_name = "model_multiclass_correct_labels"
+        weighted_data_input = {}
+        prob = [0.3, 0.5, 0.2]
+        example_id = "1"
+        num = 0
+        model = ModelData.model_multiclass_1
+        test_result = TestResultData.test_06
+        data_input = {
+        }
+
+    class test_example_09:
+        created_on = "2013-04-19 14:37:23.145000"
+        updated_on = "2013-04-19 14:37:23.145000"
+        name = "Some Example #6-3"
+        pred_label = "0"
+        label = "1"
+        test_name = "Test-6"
+        model_name = "model_multiclass_correct_labels"
+        weighted_data_input = {}
+        prob = [0.6, 0.3, 0.1]
+        example_id = "1"
+        num = 1
+        model = ModelData.model_multiclass_1
+        test_result = TestResultData.test_06
+        data_input = {
+        }
+
+    class test_example_10:
+        created_on = "2013-04-19 14:37:23.145000"
+        updated_on = "2013-04-19 14:37:23.145000"
+        name = "Some Example #6-4"
+        pred_label = "0"
+        label = "1"
+        test_name = "Test-6"
+        model_name = "model_multiclass_correct_labels"
+        weighted_data_input = {}
+        prob = [0.3, 0.5, 0.2]
+        example_id = "1"
+        num = 0
+        model = ModelData.model_multiclass_1
+        test_result = TestResultData.test_06
+        data_input = {
+        }
+
+    class test_example_11:
+        created_on = "2013-04-19 14:37:23.145000"
+        updated_on = "2013-04-19 14:37:23.145000"
+        name = "Some Example #6-5"
+        pred_label = "1"
+        label = "2"
+        test_name = "Test-6"
+        model_name = "model_multiclass_correct_labels"
+        weighted_data_input = {}
+        prob = [0.6, 0.3, 0.1]
+        example_id = "1"
+        num = 1
+        model = ModelData.model_multiclass_1
+        test_result = TestResultData.test_06
+        data_input = {
+        }
+
+    class test_example_12:
+        created_on = "2013-04-19 14:37:23.145000"
+        updated_on = "2013-04-19 14:37:23.145000"
+        name = "Some Example #6-6"
+        pred_label = "1"
+        label = "2"
+        test_name = "Test-6"
+        model_name = "model_multiclass"
+        weighted_data_input = {}
+        prob = [0.3, 0.5, 0.2]
+        example_id = "1"
+        num = 0
+        model = ModelData.model_multiclass_1
+        test_result = TestResultData.test_06
+        data_input = {
         }

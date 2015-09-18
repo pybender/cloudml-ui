@@ -80,15 +80,14 @@ class TestResourceTests(BaseDbTestCase, TestChecksMixin):
         url = self._get_url(
             id=self.obj.id,
             action='confusion_matrix',
-            weight0=10,
-            weight1=12,
+            weights='{"weights_list":[{"label":"0","value": 10},'
+                    '{"label":"1","value": 12}]}'
         )
         resp = self.client.get(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, 200)
         mock_calculate.delay.assert_called_once_with(
             self.obj.id,
-            10.0,
-            12.0
+            [("0", 10.0), ("1", 12.0)]
         )
 
     @mock_s3
@@ -412,16 +411,20 @@ class TasksTests(BaseDbTestCase):
             name=TestResultData.test_01.name).one()
         self.test2 = TestResult.query.filter_by(
             name=TestResultData.test_02.name).one()
+        self.testmulti = TestResult.query.filter_by(
+            name=TestResultData.test_06.name).one()
         self.dataset = DataSet.query.first()  # TODO:
         self.examples_count = TestExample.query.filter_by(
             test_result=self.test).count()
+        self.examples_count_multi = TestExample.query.filter_by(
+            test_result=self.testmulti).count()
 
-    def _set_probabilities(self, probabilities):
+    def _set_probabilities(self, probabilities, test_result):
         for example in TestExample.query.all():
             params = probabilities.get(example.name)
             if params:
                 label, prob = params
-                example.test = self.test
+                example.test = test_result
                 example.label = label
                 example.prob = prob
                 example.save()
@@ -429,40 +432,95 @@ class TasksTests(BaseDbTestCase):
     def test_calculate_confusion_matrix(self):
         from tasks import calculate_confusion_matrix
 
-        def _assertMatrix(w0, w1, expected):
-            result = calculate_confusion_matrix(self.test.id, w0, w1)
+        def _assertMatrix(w, expected, test_result, examples_count):
+            result = calculate_confusion_matrix(test_result.id, w)
             result = zip(*result)[-1]
             self.assertEquals(result, expected)
             self.assertEquals(
-                self.examples_count, sum([sum(row) for row in result]))
+                examples_count, sum([sum(row) for row in result]))
 
         self._set_probabilities({
             'Some Example #1-1': ('0', [0.3, 0.7]),
             'Some Example #1-2': ('0', [0.9, 0.1]),
             'Some Example #1-3': ('1', [0.3, 0.7]),
             'Some OtherModel Example #1-1': ('1', [0.2, 0.8]),
-        })
+        }, self.test)
 
-        _assertMatrix(1, 1, ([1, 1], [0, 2]))
-        _assertMatrix(0.5, 0.5, ([1, 1], [0, 2]))
+        _assertMatrix([('0', 1), ('1', 1)], ([1, 1], [0, 2]), self.test,
+                      self.examples_count)
+        _assertMatrix([('0', 0.5), ('1', 0.5)], ([1, 1], [0, 2]), self.test,
+                      self.examples_count)
+        _assertMatrix([('0', 1), ('1', 10)], ([0, 2], [0, 2]), self.test,
+                      self.examples_count)
+        _assertMatrix([('0', 1), ('1', 100)], ([0, 2], [0, 2]), self.test,
+                      self.examples_count)
+        _assertMatrix([('0', 10), ('1', 1)], ([2, 0], [2, 0]), self.test,
+                      self.examples_count)
+        _assertMatrix([('0', 100), ('1', 1)], ([2, 0], [2, 0]), self.test,
+                      self.examples_count)
+        _assertMatrix([('0', 0), ('1', 1)], ([0, 2], [0, 2]), self.test,
+                      self.examples_count)
+        _assertMatrix([('0', 1), ('1', 0)], ([2, 0], [2, 0]), self.test,
+                      self.examples_count)
+        _assertMatrix([('0', 1), ('1', 3)], ([1, 1], [0, 2]), self.test,
+                      self.examples_count)
+        _assertMatrix([('0', 3), ('1', 1)], ([2, 0], [1, 1]), self.test,
+                      self.examples_count)
 
-        _assertMatrix(1, 10, ([0, 2], [0, 2]))
-        _assertMatrix(1, 100, ([0, 2], [0, 2]))
-        _assertMatrix(10, 1, ([2, 0], [2, 0]))
-        _assertMatrix(100, 1, ([2, 0], [2, 0]))
-        _assertMatrix(0, 1, ([0, 2], [0, 2]))
-        _assertMatrix(1, 0, ([2, 0], [2, 0]))
-        _assertMatrix(1, 3, ([1, 1], [0, 2]))
-        _assertMatrix(3, 1, ([2, 0], [1, 1]))
+        self.assertRaises(
+            ValueError, calculate_confusion_matrix, self.test.id,
+            [('0', 0), ('1', 0)])
+        self.assertRaises(
+            ValueError, calculate_confusion_matrix, self.testmulti.id,
+            [('0', 0), ('1', 0), ('2', 0)])
+        self.assertRaises(
+            ValueError, calculate_confusion_matrix, self.test.id,
+            [('0', -1), ('1', 1)])
+        self.assertRaises(
+            ValueError, calculate_confusion_matrix, self.testmulti.id,
+            [('0', 1), ('1', -1), ('2', -1)])
+        self.assertRaises(
+            ValueError, calculate_confusion_matrix, 5646546,
+            [('0', 1), ('1', 1)])
 
+        #multiclass model
+        self._set_probabilities({
+            'Some Example #6-1': ('0', [0.2, 0.7, 0.1]),
+            'Some Example #6-2': ('0', [0.5, 0.1, 0.4]),
+            'Some Example #6-3': ('1', [0.5, 0.1, 0.4]),
+            'Some Example #6-4': ('1', [0.8, 0.1, 0.1]),
+            'Some Example #6-5': ('2', [0.3, 0.1, 0.6]),
+            'Some Example #6-6': ('2', [0.4, 0.5, 0.1])
+        }, self.testmulti)
+
+        _assertMatrix([('0', 3), ('1', 1), ('2', 2)],
+                      ([1, 1, 0], [2, 0, 0], [1, 0, 1]),
+                      self.testmulti,
+                      self.examples_count_multi)
+        _assertMatrix([('0', 2), ('1', 10), ('2', 5)],
+                      ([0, 1, 1], [1, 0, 1], [0, 1, 1]),
+                      self.testmulti,
+                      self.examples_count_multi)
+        _assertMatrix([('0', 0), ('1', 1), ('2', 0)],
+                      ([0, 2, 0], [0, 2, 0], [0, 2, 0]),
+                      self.testmulti,
+                      self.examples_count_multi)
+
+        self._set_probabilities({
+            'Some Example #6-1': ('0', [0, 0, 1]),
+            'Some Example #6-2': ('0', [1, 0, 0]),
+            'Some Example #6-3': ('1', [0, 1, 0]),
+            'Some Example #6-4': ('1', [1, 0, 0]),
+            'Some Example #6-5': ('2', [0, 0, 1]),
+            'Some Example #6-6': ('2', [0, 0, 1])
+        }, self.testmulti)
+        _assertMatrix([('0', 1), ('1', 10), ('2', 100)],
+                      ([1, 0, 1], [1, 1, 0], [0, 0, 2]),
+                      self.testmulti,
+                      self.examples_count_multi)
         self.assertRaises(
-            ValueError, calculate_confusion_matrix, self.test.id, 0, 0)
-        self.assertRaises(
-            ValueError, calculate_confusion_matrix, self.test.id, -1, 1)
-        self.assertRaises(
-            ValueError, calculate_confusion_matrix, self.test.id, 1, -1)
-        self.assertRaises(
-            ValueError, calculate_confusion_matrix, 5646546, 1, 1)
+            ValueError, calculate_confusion_matrix, self.testmulti.id,
+            [('0', 0), ('1', 1), ('2', 1)])
 
     @mock_s3
     @patch('api.models.DataSet.get_data_stream')

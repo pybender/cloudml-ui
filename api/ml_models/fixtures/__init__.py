@@ -85,6 +85,17 @@ class ModelData(DataSet):
         comparable = True
         labels = ["1", "2", "3"]
 
+    class model_multiclass_1:
+        features_set = FeatureSetData.bestmatch
+        test_import_handler = ImportHandlerData.import_handler_01
+        train_import_handler = ImportHandlerData.import_handler_01
+        status = "Trained"
+        created_on = "2013-04-19 14:37:23.145000"
+        updated_on = "2013-04-19 14:37:23.145000"
+        name = "model_multiclass_correct_labels"
+        comparable = True
+        labels = ["0", "1", "2"]
+
     class model_04:
         features_set = FeatureSetData.bestmatch
         test_import_handler = ImportHandlerData.import_handler_01

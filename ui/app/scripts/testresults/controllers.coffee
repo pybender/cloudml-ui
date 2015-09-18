@@ -134,7 +134,9 @@ without test id and model id"
         when 'metrics'
           extra_fields = 'accuracy,metrics,roc_auc'
           cb = addMetricsToScope
-        when 'matrix' then extra_fields = Test.MATRIX_FIELDS
+        when 'matrix'
+          extra_fields = Test.MATRIX_FIELDS
+          cb = addConfusionMatrixWeightsToScope
 
       if 'main' in $scope.LOADED_SECTIONS
         # Do not need load main fields -> only extra
@@ -189,6 +191,11 @@ without test id and model id"
         roc_auc: roc_auc
       pr = $scope.test.metrics.precision_recall_curve
       $scope.prCurves = {'Precision-Recall curve': [pr[1], pr[0]]}
+
+  addConfusionMatrixWeightsToScope = ->
+    $scope.confusion_matrix_weights = []
+    for label in $scope.test.model.labels
+      $scope.confusion_matrix_weights.push({"label": label, "value": 1})
 
   $scope.initSections($scope.goSection, 'metrics:accuracy')
 ])
@@ -255,14 +262,15 @@ without test id and model id"
 
   ($scope) ->
     $scope.open_calc_id = null
-    $scope.confusion_matrix_weights = {w0: 1, w1: 1, error: undefined}
+    $scope.confusion_matrix_error = undefined
 
     $scope.init = (test) ->
       $scope.test = test
 
-    $scope.recalculate = (weight0, weight1) ->
-      $scope.test.$get_confusion_matrix(weight0, weight1).then((resp) ->
-        $scope.confusion_matrix_weights.error = resp.data.error
+    $scope.recalculate = () ->
+      $scope.test.$get_confusion_matrix(
+                   $scope.confusion_matrix_weights).then((resp) ->
+        $scope.confusion_matrix_error = resp.data.error
         window.setTimeout(
           () -> $scope.reload()
           100)

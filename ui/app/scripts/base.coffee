@@ -148,7 +148,7 @@ angular.module('app.base', ['app.config', 'app.services'])
         fd = new FormData()
         for key, val of data
           fd.append(key, val)
-        
+
         res = $http(
           method: method
           #headers: settings.apiRequestDefaultHeaders

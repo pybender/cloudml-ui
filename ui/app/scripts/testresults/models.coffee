@@ -106,9 +106,9 @@ angular.module('app.testresults.model', ['app.config'])
         @$make_all_request(
           TestResult.$get_api_url({'model_id': model_id}), resolver, opts)
 
-      $get_confusion_matrix: (weight0, weight1) ->
+      $get_confusion_matrix: (weights) ->
         url = "#{@BASE_API_URL}#{@id}/action/confusion_matrix/"
-        data = {weight0: weight0, weight1: weight1}
+        data = {weights: {"weights_list": weights}}
         @$make_request(url, data, "GET", {})
 
       @$get_examples_size: (opts) ->
