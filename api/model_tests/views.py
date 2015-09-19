@@ -53,7 +53,8 @@ class TestResource(BaseResourceSQL):
             arg = args.get("weights")
             import json
             json_weights = json.loads(arg)
-            if not json_weights["weights_list"]:
+            if not "weights_list" in json_weights or \
+                    not json_weights["weights_list"]:
                 raise ValueError("Weights list is empty")
 
             weights = []

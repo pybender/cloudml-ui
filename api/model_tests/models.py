@@ -103,6 +103,7 @@ class TestResult(db.Model, BaseModel):
         return AsyncTask.get_current_by_object(
             self,
             'api.model_tests.tasks.calculate_confusion_matrix',
+            statuses=AsyncTask.STATUSES
         )
 
 

@@ -283,7 +283,8 @@ def calculate_confusion_matrix(test_id, weights):
             weighted_sum += weight[1] * example.prob[int(weight[0])]
 
         if weighted_sum == 0:
-            raise ValueError("Weighted sum is 0")
+            raise ValueError("Weighted sum is 0. Try another weights "
+                             "or retest model.")
 
         weighted_prob = []
         for weight in weights:

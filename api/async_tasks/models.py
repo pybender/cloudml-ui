@@ -44,12 +44,14 @@ class AsyncTask(db.Model, BaseModel):
         )
 
     @classmethod
-    def get_current_by_object(cls, obj, task_name=None, user=None, **kwargs):
+    def get_current_by_object(cls, obj, task_name=None, user=None,
+                              statuses=[STATUS_IN_PROGRESS, STATUS_COMPLETED],
+                              **kwargs):
         cursor = cls.query.filter_by(
             object_type=cls._get_object_type_name(obj),
             object_id=obj.id,
         ).filter(
-            cls.status.in_([cls.STATUS_IN_PROGRESS, cls.STATUS_COMPLETED])
+            cls.status.in_(statuses)
         )
         if task_name:
             cursor = cursor.filter_by(task_name=task_name)

@@ -145,13 +145,13 @@
 
             </div>
         </div>
-        <div ng-controller="TestConfusionMatrixCtrl" ng-init="init(test)" class="row">
+        <div ng-controller="TestConfusionMatrixCtrl" ng-init="init(test)" >
+           <div class="row alert alert-error" ng-show="confusion_matrix_error">
+              {{ confusion_matrix_error }}
+           </div>
+
+           <div class="row">
             <form name="ConfusionMatrixForm" class="form-inline well">
-
-              <div class="alert alert-error" ng-show="confusion_matrix_error">
-                  {{ confusion_matrix_error }}
-              </div>
-
               <div class="span2" ng-repeat="w in confusion_matrix_weights">
                   <label>Weight of &quot;{{ w.label }}&quot;: </label>
                   <input type="text" name="weight{{ w.label }}" class="input-mini" ng-model="w.value" required smart-float>
@@ -163,6 +163,7 @@
                   </button>
               </div>
             </form>
+           </div>
 
 
             <div class="span10" ng-show="test.confusion_matrix_calculations">
@@ -170,22 +171,26 @@
               <ul class="unstyled">
                 <li class="row well well-small" ng-repeat="calc in test.confusion_matrix_calculations">
                   <div class="row">
-                    <div class="span5">
+                    <div class="span6">
                         <i class="icon-calendar"></i> created on <span class="badge badge-info" title="dates in GMT">{{ calc.created_on|format_date }}</span>
                         <i class="icon-th"></i><span> weights </span>
                         <span ng-repeat="label in [calc.args[1], calc.args[2]] track by $index">
                             <span class="label">{{ label }}</span>
                         </span>
-                        <span class="badge badge-info">{{ calc.status }}</span><br/>
+                        <span ng-show="calc.status=='Completed'" class="badge badge-info">{{ calc.status }}</span>
+                        <span ng-show="calc.status=='Error'" class="badge badge-error">{{ calc.status }}</span>
+                        <br/>
                     </div>
-                    <div ng-show="calc.status == 'Completed'" class="span2 pull-right">
-                      <button class="btn btn-link" ng-click="showResult(calc.id)">
-                          Show result
-                      </button>
+                    <div ng-show="calc.status != 'In Progress'" class="span2 pull-right">
+                      <button class="btn btn-link" ng-click="showResult(calc.id)" ng-show="calc.status=='Completed'">Show result</button>
+                      <button class="btn btn-link" ng-click="showResult(calc.id)" ng-show="calc.status=='Error'">Show details</button>
                     </div>
                   </div>
                   <div class="row" ng-show="open_calc_id == calc.id">
-                      <div class="span4"><confusion-matrix matrix=calc.result></confusion-matrix></div>
+                      <div class="span6">
+                          <confusion-matrix ng-show="calc.status=='Completed'" matrix=calc.result></confusion-matrix>
+                          <div class="alert alert-error" ng-show="calc.status=='Error'">{{calc.error}}</div>
+                      </div>
                   </div>
                 </li>
               </ul>
