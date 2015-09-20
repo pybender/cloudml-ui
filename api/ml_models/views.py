@@ -189,7 +189,7 @@ class ModelResource(BaseTrainedEntityResource):
 
     # GET specific methods
 
-    @public_actions(['features_download'])
+    @public_actions(['features_download', 'weights_download'])
     def get(self, *args, **kwargs):
         return super(ModelResource, self).get(*args, **kwargs)
 

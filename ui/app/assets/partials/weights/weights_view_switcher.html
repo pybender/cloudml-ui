@@ -31,3 +31,8 @@
 <div ng-show="action[1] == 'list'" class="list">
   <ng-include src="'partials/weights/list.html'"></ng-include>
 </div>
+<div class="row well">
+    <a style="font-weight: normal;" href="{{ model.downloadWeightsUrl() }}" class="btn btn-info">
+      <i title="Download weights JSON file" class="icon-download-alt"></i> Download Weighs JSON
+    </a>
+</div>
