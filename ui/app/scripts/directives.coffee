@@ -256,29 +256,6 @@ angular.module('app.directives', [
   }
 )
 
-
-.directive('calendar',  () ->
-  return {
-    restrict: 'A',
-    require: 'ngModel',
-    link: (scope, element, attr, ngModel) ->
-       $(() ->
-            element.datepicker({
-                format:'dd/mm/yyyy',
-                autoclose:true,
-                }).on('hide', (ev) ->
-                     scope.$apply ( () ->
-                         d = strftime(attr.pattern.valueOf(), ev.date.valueOf())
-                         ngModel.$setViewValue(ev.date.valueOf())
-                         element.val(d)
-                         )
-
-                   )
-        )
-  }
-)
-
-
 .directive('confusionMatrix', () ->
   return {
     restrict: 'E',

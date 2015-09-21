@@ -29,8 +29,7 @@
   <div class="control-group" ng-class="{error: FeatureForm.default.$invalid}">
     <label class="control-label">Default</label>
     <div class="controls">
-      <input ng-show="feature.type=='date'" type="text" name="default" ng-model="feature.default" calendar pattern="{{ feature.paramsDict.pattern }}" />
-      <input ng-hide="feature.type=='date'" type="text" name="default" ng-model="feature.default" />
+      <input type="text" name="default" ng-model="feature.default" />
       <span ng-show="FeatureForm.default.$error.required" class="help-inline">*</span>
     </div>
   </div>
