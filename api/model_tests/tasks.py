@@ -280,7 +280,8 @@ def calculate_confusion_matrix(test_id, weights):
 
         weighted_sum = 0
         for weight in weights:
-            weighted_sum += weight[1] * example.prob[int(weight[0])]
+            index = model.labels.index(weight[0])
+            weighted_sum += weight[1] * example.prob[index]
 
         if weighted_sum == 0:
             raise ValueError("Weighted sum is 0. Try another weights "
@@ -288,7 +289,8 @@ def calculate_confusion_matrix(test_id, weights):
 
         weighted_prob = []
         for weight in weights:
-            weighted_prob.append(weight[1] * example.prob[int(weight[0])]
+            index = model.labels.index(weight[0])
+            weighted_prob.append(weight[1] * example.prob[index]
                                  / weighted_sum)
 
         predicted = weighted_prob.index(max(weighted_prob))

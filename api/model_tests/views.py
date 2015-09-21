@@ -62,8 +62,7 @@ class TestResource(BaseResourceSQL):
                 if not ("label" in w and "value" in w):
                     raise ValueError("Weights list is incorrect")
                 weights.append((w["label"], float(w["value"])))
-            calculate_confusion_matrix.delay(
-                test.id, sorted(weights, key=lambda x: x[0]))
+            calculate_confusion_matrix.delay(test.id, weights)
 
         except Exception as e:
             return self._render({self.OBJECT_NAME: test.id,
