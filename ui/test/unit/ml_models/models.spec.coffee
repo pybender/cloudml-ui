@@ -1,4 +1,4 @@
-describe 'models/controllers.coffee', ->
+describe 'ML Models Controllers', ->
 
   beforeEach ->
     module 'ngCookies'
@@ -24,16 +24,20 @@ describe 'models/controllers.coffee', ->
   $location = null
   $timeout = null
   $rootScope = null
+  $routeParams = null
 
   beforeEach inject ($injector) ->
     settings = $injector.get('settings')
     $httpBackend = $injector.get('$httpBackend')
-    $rootScope = $injector.get('$rootScope')
-    $scope = $rootScope.$new()
     $controller = $injector.get('$controller')
     $window = $injector.get('$window')
     $location = $injector.get('$location')
     $timeout = $injector.get('$timeout')
+    $routeParams = $injector.get('$routeParams')
+    $rootScope = $injector.get('$rootScope')
+
+    $scope = $rootScope.$new()
+    spyOn($location, 'path')
 
     createController = (ctrl, extras) ->
       injected = extras or {}
@@ -43,15 +47,6 @@ describe 'models/controllers.coffee', ->
   afterEach ->
     $httpBackend.verifyNoOutstandingExpectation()
     $httpBackend.verifyNoOutstandingRequest()
-
-
-  describe 'TagCtrl', ->
-
-    it  'should init scope with current tag', ->
-      $location.search {tag: 'zozo'}
-      createController 'TagCtrl'
-      expect($scope.currentTag).toEqual 'zozo'
-
 
   describe 'ModelListCtrl', ->
 
@@ -109,44 +104,49 @@ describe 'models/controllers.coffee', ->
       expect($scope.filter_opts).toEqual
         status: ''
 
-
-  describe 'TagCloudCtrl', ->
-
-    it  'should load all tags', inject (Tag)->
-
-      tag = new Tag
-        id: 1
-        name: 'tag1'
-      response = {}
-      response[tag.API_FIELDNAME + 's'] = [tag]
-      $httpBackend.expectGET "#{tag.BASE_API_URL}?show=text,count"
-      .respond 200, angular.toJson(response)
-      createController 'TagCloudCtrl', {Tag: Tag}
-      $httpBackend.flush()
-
-      expect(({id: x.id, name: x.name} for x in $scope.tag_list)).toEqual [
-        id: 1
-        name: 'tag1'
-      ]
-
-      # handling errors
-      $scope.setError = jasmine.createSpy '$scope.setError'
-      delete $scope.tag_list
-      tag = new Tag
-      $httpBackend.expectGET "#{tag.BASE_API_URL}?show=text,count"
-      .respond 400
-      createController 'TagCloudCtrl', {Tag: Tag}
-      $httpBackend.flush()
-
-      expect($scope.setError).toHaveBeenCalled()
-      expect($scope.tag_list).toBeUndefined()
-
-
   describe 'AddModelCtl', ->
 
     it  'should init scope', inject (Model)->
       createController 'AddModelCtl', Model
       expect($scope.model).not.toBeUndefined()
+
+  describe "ModelDetailsCtrl1", ->
+    MODEL_ID = '5566'
+    BASE_URL = null
+
+    beforeEach ->
+      url = settings.apiUrl + 'tags/?show=' + 'text,id'
+      BASE_URL = settings.apiUrl + 'models/'
+      $httpBackend.expectGET(url).respond('{"tags": [{"text": "smth"}]}')
+      $routeParams.id = MODEL_ID
+      $scope.initSections = jasmine.createSpy()
+
+      createController "ModelDetailsCtrl"
+      $httpBackend.flush()
+
+      expect($scope.model.id).toEqual(MODEL_ID)
+      expect($scope.LOADED_SECTIONS).toBeDefined()
+      expect($scope.select2params).toBeDefined()
+      expect($scope.params).toBeDefined()
+
+    # it "should make details request", inject (MODEL_FIELDS, FIELDS_BY_SECTION) ->
+    #   url = BASE_URL + MODEL_ID + '/' + '?show=' + MODEL_FIELDS + ',' + FIELDS_BY_SECTION['model']
+    #   $httpBackend.expectGET(url).respond.apply @, map_url_to_response(url, 'multiclass model main fields')
+
+    #   s3_url = "#{BASE_URL}#{$rootScope.model.id}/action/trainer_download_s3url/"
+    #   $httpBackend.expectGET(s3_url)
+    #   .respond '{"trainer_file_for": #{MODEL_ID}, "url": "https://.s3.amazonaws.com/9c4012780c0111e4968b000c29e3f35c?Signature=%2FO7%2BaUv4Fk84ioxWigRwkcdgVM0"}'
+    #   $rootScope.goSection(['model'])
+    #   $httpBackend.flush()
+    #   expect($rootScope.model.trainer_s3_url).toEqual 'https://.s3.amazonaws.com/9c4012780c0111e4968b000c29e3f35c?Signature=%2FO7%2BaUv4Fk84ioxWigRwkcdgVM0'
+
+    it "should request only features", inject (FIELDS_BY_SECTION) ->
+      url = BASE_URL + MODEL_ID + '/' + '?show=' + FIELDS_BY_SECTION['main']
+      $httpBackend.expectGET(url).respond('{"model": [{"id": "' + MODEL_ID + '"}]}')
+
+      $scope.goSection(['features'])
+      $httpBackend.flush()
+
 
   describe 'ModelDetailsCtrl', ->
 

@@ -2,7 +2,7 @@
 
 # jasmine specs for weights
 
-describe "weights", ->
+describe "Model Weights Controllers", ->
 
   beforeEach(module "ngCookies")
   beforeEach(module "ngRoute")
@@ -29,6 +29,7 @@ describe "weights", ->
   $controller = null
   $httpBackend = null
   $routeParams = null
+  $scope = null
 
   beforeEach(inject(($injector) ->
     $rootScope = $injector.get('$rootScope')
@@ -37,8 +38,12 @@ describe "weights", ->
     $httpBackend = $injector.get('$httpBackend')
     $routeParams = $injector.get('$routeParams')
 
-    createController = (ctrl) ->
-      $controller(ctrl, {'$scope' : $rootScope })
+    $scope = $rootScope.$new()
+
+    createController = (ctrl, extras) ->
+      injected = extras or {}
+      _.extend injected, {'$scope' : $scope }
+      $controller(ctrl, injected)
   ))
 
   afterEach( ->
@@ -52,14 +57,14 @@ describe "weights", ->
       $routeParams.id = 'somemodelid'
       createController "WeightsCtrl"
 
-      expect($rootScope.search_form).toBeDefined()
+      expect($scope.search_form).toBeDefined()
 
     it "should sort weights", inject () ->
-      $rootScope.loadList = jasmine.createSpy()
+      $scope.loadList = jasmine.createSpy()
 
-      $rootScope.sort('somefield')
-      expect($rootScope.loadList).toHaveBeenCalled()
-      expect($rootScope.sort_by).toEqual('somefield')
+      $scope.sort('somefield')
+      expect($scope.loadList).toHaveBeenCalled()
+      expect($scope.sort_by).toEqual('somefield')
 
     it "should load weights list", inject () ->
       url = settings.apiUrl + 'weights/somemodelid/?is_positive=0&order=asc&page=1&q=&show=' +
@@ -67,9 +72,9 @@ describe "weights", ->
       $httpBackend.expectGET(url).respond('{"weights": []}')
 
       # TODO: there're two same requests when action is weights:list
-      $rootScope.action = ['weights', '']
+      $scope.action = ['weights', '']
 
-      $rootScope.loadList()
+      $scope.loadList()
       $httpBackend.flush()
 
     it "should load weights tree", inject () ->
@@ -77,9 +82,9 @@ describe "weights", ->
       'name,short_name,parent,value2'
       $httpBackend.expectGET(url).respond('{"weights": [], "categories": []}')
 
-      $rootScope.action = ['weights', '']
+      $scope.action = ['weights', '']
 
-      $rootScope.loadTreeNode(undefined, true)
+      $scope.loadTreeNode(undefined, true)
       $httpBackend.flush()
 
     it "should load weights brief list", inject () ->
@@ -87,9 +92,9 @@ describe "weights", ->
       'name,value,css_class,segment_id'
       $httpBackend.expectGET(url).respond('{"negative_weights": [], "positive_weights": []}')
 
-      $rootScope.action = ['weights', '']
+      $scope.action = ['weights', '']
 
-      $rootScope.loadColumns(true, true)
+      $scope.loadColumns(true, true)
       $httpBackend.flush()
 
     it "should load more positive weights", inject () ->
@@ -97,9 +102,9 @@ describe "weights", ->
       'name,value,css_class,segment_id'
       $httpBackend.expectGET(url).respond('{"negative_weights": [], "positive_weights": []}')
 
-      $rootScope.action = ['weights', '']
+      $scope.action = ['weights', '']
 
-      $rootScope.morePositiveWeights()
+      $scope.morePositiveWeights()
       $httpBackend.flush()
 
     it "should load more negative weights", inject () ->
@@ -107,7 +112,7 @@ describe "weights", ->
       'name,value,css_class,segment_id'
       $httpBackend.expectGET(url).respond('{"negative_weights": [], "positive_weights": []}')
 
-      $rootScope.action = ['weights', '']
+      $scope.action = ['weights', '']
 
-      $rootScope.moreNegativeWeights()
+      $scope.moreNegativeWeights()
       $httpBackend.flush()
