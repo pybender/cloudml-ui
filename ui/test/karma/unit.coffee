@@ -17,6 +17,7 @@ module.exports = (karma)->
 
       # Tests
       'test/unit/canned_responses.coffee',
+      'test/unit/utils.coffee',
       {pattern: 'bower_components/angular-mocks/angular-mocks.js', watched:false, included:true, served:true}
       'test/unit/**/*.spec.coffee',
     ]

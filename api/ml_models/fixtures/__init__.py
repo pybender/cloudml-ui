@@ -44,7 +44,7 @@ class ModelData(DataSet):
         example_id = "opening_id"
         example_label = "opening_title"
         target_variable = "hire_outcome"
-        weights_synchronized = False
+        weights_synchronized = True
         status = "Trained"
         trainer = "trainer_file"
         classifier = {
@@ -79,6 +79,8 @@ class ModelData(DataSet):
         test_import_handler = ImportHandlerData.import_handler_01
         train_import_handler = ImportHandlerData.import_handler_01
         status = "Trained"
+        weights_synchronized = True
+        trainer = "trainer_file"
         created_on = "2013-04-19 14:37:23.145000"
         updated_on = "2013-04-19 14:37:23.145000"
         name = "model_multiclass"
@@ -160,8 +162,13 @@ class SegmentData(DataSet):
         records = 87
         model = ModelData.model_02
 
-    class segment_multiclass:
-        name = "default"
+    class segment_multiclass_01:
+        name = "True"
+        records = 87
+        model = ModelData.model_multiclass
+
+    class segment_multiclass_02:
+        name = "False"
         records = 87
         model = ModelData.model_multiclass
 
@@ -240,7 +247,7 @@ class WeightData(DataSet):
         name = "multiclass_opening_id"
         model_name = ModelData.model_multiclass.name
         model = ModelData.model_multiclass
-        segment = SegmentData.segment_multiclass
+        segment = SegmentData.segment_multiclass_01
         short_name = "opening_id"
         value = 0.4444
         is_positive = True
@@ -252,7 +259,7 @@ class WeightData(DataSet):
         name = "multiclass_contractor->dev_blurb->Over"
         model_name = ModelData.model_multiclass.name
         model = ModelData.model_multiclass
-        segment = SegmentData.segment_multiclass
+        segment = SegmentData.segment_multiclass_01
         short_name = "Over"
         value = -0.022345208915455828
         is_positive = False
@@ -264,7 +271,7 @@ class WeightData(DataSet):
         name = "multiclass_opening"
         model_name = ModelData.model_multiclass.name
         model = ModelData.model_multiclass
-        segment = SegmentData.segment_multiclass
+        segment = SegmentData.segment_multiclass_01
         short_name = "opening"
         value = -0.022345208915455828
         is_positive = False
@@ -276,7 +283,7 @@ class WeightData(DataSet):
         name = "multiclass_opening2"
         model_name = ModelData.model_multiclass.name
         model = ModelData.model_multiclass
-        segment = SegmentData.segment_multiclass
+        segment = SegmentData.segment_multiclass_01
         short_name = "opening2"
         value = 0.022345208915455828
         is_positive = True

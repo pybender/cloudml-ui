@@ -1,36 +1,34 @@
-'use strict'
-
-# jasmine specs for datasets
-
-describe 'importhandlers/controllers/datasources.coffee', ->
+describe 'xml_importhandlers/controllers/datasources.coffee', ->
 
   beforeEach ->
     module 'ngCookies'
-    module 'ngRoute'
 
     module 'app.base'
     module 'app.config'
     module 'app.services'
 
-    module 'app.importhandlers.model'
-    module 'app.importhandlers.controllers.datasources'
+    module 'app.importhandlers.models'
+    module 'app.importhandlers.xml.models'
+    module 'app.importhandlers.xml.controllers.datasources'
 
   $httpBackend = null
   $scope = null
-  $rootScope = null
   settings = null
   $window = null
   createController = null
+  $location = null
+  $timeout = null
 
   beforeEach inject ($injector) ->
     settings = $injector.get('settings')
     $httpBackend = $injector.get('$httpBackend')
-    $rootScope = $injector.get('$rootScope')
+    $scope = $injector.get('$rootScope')
     $controller = $injector.get('$controller')
     $window = $injector.get('$window')
+    $location = $injector.get('$location')
+    $timeout = $injector.get('$timeout')
 
     createController = (ctrl, extras) ->
-      $scope = $rootScope.$new()
       injected = extras or {}
       _.extend injected, {'$scope' : $scope }
       $controller(ctrl, injected)
@@ -39,146 +37,120 @@ describe 'importhandlers/controllers/datasources.coffee', ->
     $httpBackend.verifyNoOutstandingExpectation()
     $httpBackend.verifyNoOutstandingRequest()
 
-  describe 'DataSourceChoicesLoader', ->
 
-    it 'should add type and vendors to scope', inject (DataSource)->
-      createController 'DataSourceChoicesLoader', {DataSource: DataSource}
-      expect($scope.types).toEqual DataSource.$TYPES_LIST
-      expect($scope.vendors).toEqual DataSource.$VENDORS_LIST
+  describe 'DatasourcesTypesLoader', ->
 
-  describe 'DataSourcesSelectLoader', ->
-
-    beforeEach ->
-      $rootScope.setError = jasmine.createSpy('$rootScope.setError').and.returnValue 'an error'
-
-    it 'should load datasources', inject (DataSource)->
-      objects = [
-        id: 1
-        name: 'ds1'
-      ,
-        id: 2
-        name: 'ds2'
-      ]
-      $httpBackend.expectGET("#{settings.apiUrl}datasources/?show=name,id")
-      .respond 200, angular.toJson({predefined_data_sources: objects})
-      createController 'DataSourcesSelectLoader', {DataSource: DataSource}
-      $httpBackend.flush()
-
-      expect($scope.datasources).toEqual objects
-
-      # handling errors
-      $httpBackend.expectGET("#{settings.apiUrl}datasources/?show=name,id")
-      .respond 400
-      $scope.setError = jasmine.createSpy('$scope.setError').and.returnValue('an error')
-      createController 'DataSourcesSelectLoader', {DataSource: DataSource}
-      $httpBackend.flush()
-
-      expect($scope.datasources).toEqual []
-      expect($scope.err).toEqual 'an error'
-      expect($scope.setError).toHaveBeenCalled()
-
-  describe 'DataSourceListCtrl', ->
-
-    beforeEach ->
-      $rootScope.openDialog = jasmine.createSpy '$rootScope.openDialog'
-      $rootScope.setError = jasmine.createSpy '$rootScope.setError'
-
-    it 'should prepare load datasource and handle errors', inject (DataSource)->
-      # will just do nothing
-      createController 'DataSourceListCtrl', {DataSource: DataSource}
-
-      # success will call $scope.edit which opens the dialog
-      ds = new DataSource {id: 999}
-      response = []
-      response[ds.API_FIELDNAME] = ds
-      $httpBackend.expectGET "#{ds.BASE_API_URL}#{ds.id}/?show=name,id,type,db,created_on,created_by"
-      .respond 200, angular.toJson response
-      $routeParams = {id: ds.id}
-      createController 'DataSourceListCtrl',
-        $routeParams: $routeParams
-        DataSource: DataSource
-      $httpBackend.flush()
-
-      expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
-        model: jasmine.any DataSource
-        template: 'partials/import_handler/datasource/edit.html'
-        ctrlName: 'ModelEditDialogCtrl'
-      expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
-      expect($scope.openDialog.calls.mostRecent().args[1].model.id).toEqual 999
-
-      # error in http will call setError
-      $httpBackend.expectGET "#{ds.BASE_API_URL}#{ds.id}/?show=name,id,type,db,created_on,created_by"
-      .respond 400
-      $routeParams = {id: ds.id}
-      createController 'DataSourceListCtrl',
-        $routeParams: $routeParams
-        DataSource: DataSource
-      $httpBackend.flush()
-
-      expect($scope.setError).toHaveBeenCalledWith jasmine.any(Object), 'loading datasource details'
-
-    it 'should prepare $scope functions', inject (DataSource)->
-      createController 'DataSourceListCtrl', {DataSource: DataSource}
-
-      expect($scope.MODEL).toEqual DataSource
-      expect($scope.FIELDS).toEqual DataSource.MAIN_FIELDS
-      expect($scope.ACTION).toBeDefined()
-      expect($scope.LIST_MODEL_NAME).toEqual DataSource.LIST_MODEL_NAME
-
-      $scope.edit({some: 'ds'})
-      expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
-        model: {some: 'ds'}
-        template: 'partials/import_handler/datasource/edit.html'
-        ctrlName: 'ModelEditDialogCtrl'
-      expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
-
-      $scope.add()
-      obj = $scope.openDialog.calls.mostRecent().args[1]
-      expect(obj.template).toEqual 'partials/import_handler/datasource/add.html'
-      expect(obj.ctrlName).toEqual 'ModelEditDialogCtrl'
-      expect(obj.model).toBeDefined()
-
-      $scope.delete({some: 'ds'})
-      expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
-        model: {some: 'ds'}
-        template: 'partials/base/delete_dialog.html'
-        ctrlName: 'DialogCtrl'
-        action: 'delete data source'
-      expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
-
-  describe 'DataSourceEditDialogCtrl', ->
-
-    beforeEach ->
-      $rootScope.setError = jasmine.createSpy '$rootScope.setError'
-      $rootScope.$close = jasmine.createSpy '$rootScope.$close'
-
-    it 'should load prepare $scope', inject (ImportHandler)->
-      openOptions =
-        extra:
-          handler: new ImportHandler({id:123321, name: 'handler'})
-          ds: {some: 'ds'}
-
-      createController 'DataSourceEditDialogCtrl', {openOptions: openOptions}
-
-      expect($scope.handler).toEqual openOptions.extra.handler
-      expect($scope.model).toEqual openOptions.extra.ds
-      expect($scope.DONT_REDIRECT).toBe true
-
-      response = {}
-      response[ImportHandler.API_FIELDNAME] = []
-      $httpBackend.expectGET("#{settings.apiUrl}importhandlers/123321/?show=data")
-      .respond 200, angular.toJson(response)
-      $scope.$emit 'SaveObjectCtl:save:success'
+    it 'should watch configurations', ->
+      # starting with a configuration
+      $scope.configuration = {type1: 't1', type2: 't2'}
+      createController 'DatasourcesTypesLoader'
       $scope.$digest()
-      $httpBackend.flush()
-      expect($scope.$close).toHaveBeenCalledWith true
+      expect($scope.types).toEqual ['type1', 'type2']
 
-      # with errror
-      $scope.$close.calls.reset()
-      $httpBackend.expectGET("#{settings.apiUrl}importhandlers/123321/?show=data")
-      .respond 400
-      $scope.$emit 'SaveObjectCtl:save:success'
+      # starting with on configuration
+      delete $scope.configuration
+      createController 'DatasourcesTypesLoader'
       $scope.$digest()
-      $httpBackend.flush()
-      expect($scope.setError).toHaveBeenCalledWith jasmine.any(Object), 'loading datasource details'
-      #expect($scope.$close).not.toHaveBeenCalled()
+      expect($scope.types).toEqual []
+
+      $scope.configuration = {type1: 't1', type2: 't2'}
+      $scope.$digest()
+      expect($scope.types).toEqual ['type1', 'type2']
+
+      # changing configuuration
+      $scope.configuration = {type1: 't1', type2: 't2', type3: 't3'}
+      $scope.$digest()
+      expect($scope.types).toEqual ['type1', 'type2', 'type3']
+
+
+  describe 'DatasourcesListCtrl', ->
+
+    it 'should init scope and call unto openDialog when needed',
+      inject (Datasource, XmlImportHandler)->
+        $scope.openDialog = jasmine.createSpy '$scope.openDialog'
+        createController 'DatasourcesListCtrl', {Datasource: Datasource}
+        expect($scope.MODEL).toEqual = Datasource
+        expect($scope.FIELDS).toEqual Datasource.MAIN_FIELDS
+        expect($scope.ACTION).toEqual 'loading datasources'
+
+        handler = new XmlImportHandler
+          id: 888
+          xml_data_sources: [
+            id: 1
+            name: 'ds1'
+          ,
+            id: 1
+            name: 'ds1'
+          ]
+        $scope.init handler
+        $scope.$digest()
+
+        expect($scope.handler).toEqual handler
+        expect($scope.kwargs).toEqual {'import_handler_id': handler.id}
+        expect($scope.objects).toEqual handler.xml_data_sources
+
+        # check the watch is working
+        $scope.handler.xml_data_sources = [{id:4, name: 'ds4'}]
+        $scope.$digest()
+        expect($scope.objects).toEqual handler.xml_data_sources
+
+        # add dialog
+        $scope.add()
+        expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
+          model: jasmine.any(Datasource)
+          template: 'partials/importhandlers/xml/datasources/edit.html'
+          ctrlName: 'ModelWithParamsEditDialogCtrl'
+          action: 'add datasource'
+        expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
+
+        # edit dialog
+        datasource = new Datasource {id: 777, name: 'ds777'}
+        $scope.edit(datasource)
+        expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
+          model: datasource
+          template: 'partials/importhandlers/xml/datasources/edit.html'
+          ctrlName: 'ModelWithParamsEditDialogCtrl'
+          action: 'edit datasource'
+        expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
+
+        # delete dialog
+        $scope.delete(datasource)
+        expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
+          model: datasource
+          template: 'partials/base/delete_dialog.html'
+          ctrlName: 'DialogCtrl'
+          action: 'delete datasource'
+        expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
+
+
+  describe 'XmlDataSourceSelectCtrl', ->
+
+    it 'should init scope and load',
+      inject (Datasource, XmlImportHandler)->
+        $scope.openDialog = jasmine.createSpy '$scope.openDialog'
+        createController 'XmlDataSourceSelectCtrl', {Datasource: Datasource}
+
+        datasource = new Datasource {id: 444, name: 'ds444'}
+        response = {}
+        response[datasource.API_FIELDNAME + 's'] = [datasource]
+        $httpBackend.expectGET("#{settings.apiUrl}xml_import_handlers/555/datasources/?import_handler_id=555&show=name&type=dataset+type")
+        .respond 200, angular.toJson response
+
+        $scope.init 555, 'dataset type'
+        expect($scope.handler_id).toEqual 555
+        expect($scope.ds_type).toEqual 'dataset type'
+        $httpBackend.flush()
+
+        expect($scope.datasources.length).toBe 1
+        expect($scope.datasources[0].name).toEqual datasource.name
+        expect($scope.datasources[0].id).toEqual datasource.id
+
+        # error
+        $scope.setError = jasmine.createSpy '$scope.setError'
+        $httpBackend.expectGET("#{settings.apiUrl}xml_import_handlers/555/datasources/?import_handler_id=555&show=name&type=dataset+type")
+        .respond 400
+
+        $scope.init 555, 'dataset type'
+        $httpBackend.flush()
+        expect($scope.setError).toHaveBeenCalled()
+

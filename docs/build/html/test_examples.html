@@ -112,6 +112,14 @@
 <!--     <p class="citing">If you use the software, please consider <a href="about.html#citing-scikit-learn">citing scikit-learn</a>.</p> -->
     <ul>
 <li><a class="reference internal" href="#">Analyzing Test Examples</a><ul>
+<li><a class="reference internal" href="#listing-test-examples">Listing Test Examples</a><ul>
+<li><a class="reference internal" href="#text-example-details">Text Example Details</a><ul>
+<li><a class="reference internal" href="#features-tab">Features tab</a></li>
+<li><a class="reference internal" href="#weighted-data">Weighted Data</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li><a class="reference internal" href="#average-precision">Average Precision</a></li>
 </ul>
 </li>
@@ -130,8 +138,54 @@
             
   <div class="section" id="analyzing-test-examples">
 <h1>Analyzing Test Examples<a class="headerlink" href="#analyzing-test-examples" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="listing-test-examples">
+<h2>Listing Test Examples<a class="headerlink" href="#listing-test-examples" title="Permalink to this headline">¶</a></h2>
+<p>After test would be completed, all data rows used for testing, called Test Examples stored in the database.
+To view them you need to navigate to the <cite>Examples</cite> tab in the Test details page:</p>
+<img alt="_images/test_examples.png" src="_images/test_examples.png" />
+<p>In the examples table there are following columns:</p>
+<ul class="simple">
+<li>Original - value of the target variable in the original dataset&#8217;s row</li>
+<li>Predict - value of the target variable, predicted using trained model</li>
+<li>&lt;&lt;class&gt;&gt; probability - probabilities of each class, predicted using the trained model</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Correctly predicted test examples are with green background, mistakenly - with red.</p>
+</div>
+<div class="section" id="text-example-details">
+<h3>Text Example Details<a class="headerlink" href="#text-example-details" title="Permalink to this headline">¶</a></h3>
+<p>You could open details page by clicking to any test example in the list tab.</p>
+<p>There are following tabs:</p>
+<ul class="simple">
+<li>Features - table of the features, weights and vectorized values</li>
+<li>Weighted Data - list of features with it&#8217;s weight</li>
+<li>Raw Data - raw data that was used for predicting target variable, when the test was runned.</li>
+</ul>
+<div class="section" id="features-tab">
+<h4>Features tab<a class="headerlink" href="#features-tab" title="Permalink to this headline">¶</a></h4>
+<p>There are a table with following columns:</p>
+<ul class="simple">
+<li>Name - name of the feature (is same to the model&#8217;s feature name)</li>
+<li>Model Weight - weight of this feature in the trained model (very often it would be a model&#8217;s feature coef)</li>
+<li>Vectorized Value - the vectorized value of the feature, that is passed to the model to predict a probabilities of the target variable. It isn&#8217;t a real value, this one could be found in Weighted Data tab.</li>
+<li>Weight - feature&#8217;s value weight, calculated as:</li>
+</ul>
+<p><span class="formula"><i>weight</i> = <i>value</i><sub><i>vectorized</i></sub>*<i>weight</i><sub><i>model</i></sub></span>
+</p>
+</div>
+<div class="section" id="weighted-data">
+<h4>Weighted Data<a class="headerlink" href="#weighted-data" title="Permalink to this headline">¶</a></h4>
+<p>On this tab shows a list of the features, their values with weights. Red/green colors used to show which features have negative/positive weight.</p>
+<p>It could be useful, when analyzing test example with text fields - significant words of this feature will be displayed with it&#8217;s weight.</p>
+<img alt="_images/example_details.png" src="_images/example_details.png" />
+<p>When hover the mouse to the value, there are information about model weight, vectorized value and weight in the tooltip.</p>
+</div>
+</div>
+</div>
 <div class="section" id="average-precision">
 <h2>Average Precision<a class="headerlink" href="#average-precision" title="Permalink to this headline">¶</a></h2>
+<img alt="_images/average_precision.png" src="_images/average_precision.png" />
 </div>
 </div>
 

@@ -4,7 +4,7 @@ from flask import request
 from api import api, app
 from api.amazon_utils import AmazonS3Helper
 from api.base.resources import BaseResourceSQL, NotFound, \
-     odesk_error_response, BaseResource
+    odesk_error_response, BaseResource
 from .models import Server
 from .config import FOLDER_MODELS, FOLDER_IMPORT_HANDLERS
 

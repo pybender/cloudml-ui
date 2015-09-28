@@ -4,6 +4,8 @@ Model, Transformer, Segments, Weights-related REST API declared here.
 
 # Authors: Nikolay Melnik <nmelnik@upwork.com>
 
+import json
+
 from flask import Response, request
 from flask.ext.restful import reqparse
 from sqlalchemy import or_, func
@@ -156,7 +158,7 @@ class ModelResource(BaseTrainedEntityResource):
     Models API methods
     """
     GET_ACTIONS = ('reload', 'by_importhandler', 'trainer_download_s3url',
-                   'features_download', 'dataset_download')
+                   'features_download', 'dataset_download', 'weights_download')
     PUT_ACTIONS = ('train', 'tags', 'cancel_request_instance',
                    'upload_to_server', 'dataset_download', 'grid_search',
                    'import_features_from_xml_ih', 'generate_visualization')
@@ -187,7 +189,7 @@ class ModelResource(BaseTrainedEntityResource):
 
     # GET specific methods
 
-    @public_actions(['features_download'])
+    @public_actions(['features_download', 'weights_download'])
     def get(self, *args, **kwargs):
         return super(ModelResource, self).get(*args, **kwargs)
 
@@ -241,6 +243,30 @@ class ModelResource(BaseTrainedEntityResource):
         resp.headers['Content-Disposition'] = \
             'attachment; filename=%s-features.json' % model.name
         return resp
+
+    def _get_weights_download_action(self, **kwargs):
+        model = self._get_details_query(None, **kwargs)
+        if model is None:
+            raise NotFound(self.MESSAGE404 % kwargs)
+        if model.status != model.STATUS_TRAINED:
+            raise ValidationError('Model should be trained')
+        if not model.weights_synchronized:
+            raise ValidationError('Model weights should be synchronized')
+
+        trainer = model.get_trainer(force_load=True)
+        result = {}
+        for segment in model.segments:
+            result[segment.name] = trainer.get_weights(segment.name)
+        content = json.dumps(result)
+
+        resp = Response(content)
+        resp.headers['Content-Type'] = 'application/json'
+        resp.headers['Content-Disposition'] = \
+            'attachment; filename=%s-weights.json' % model.name
+        return resp
+
+        # with open(args.weights, 'w') as weights_fp:
+        #     trainer.store_feature_weights(weights_fp)
 
     def _put_grid_search_action(self, **kwargs):
         model = self._get_details_query(None, **kwargs)

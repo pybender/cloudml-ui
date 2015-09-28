@@ -32,6 +32,12 @@ Can be used to explicitly disable or enable query recording. Query recording aut
 
 .. note:: For detalized information please look https://pythonhosted.org/Flask-SQLAlchemy/config.html
 
+DYNAMODB_PATH
+~~~~~~~~~~~~~
+
+The path to local instalation of DynamoDB.
+
+
 Amazon settings
 ---------------
 

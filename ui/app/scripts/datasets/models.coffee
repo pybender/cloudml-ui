@@ -34,7 +34,7 @@ angular.module('app.datasets.model', ['app.config'])
       import_handler_id: null
       on_s3: false
       format: 'json'
-      import_handler_type: 'JSON'
+      import_handler_type: 'xml'
       samples: null
       samples_json: null
 
