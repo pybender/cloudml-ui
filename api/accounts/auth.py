@@ -81,8 +81,8 @@ class OdeskAuth(Auth):
             app.config['ODESK_OAUTH_KEY'],
             app.config['ODESK_OAUTH_SECRET'],
         )
-        self.api_url = app.config.get('ODESK_API_URL', 
-                        'https://www.upwork.com')
+        self.api_url = app.config.get('ODESK_API_URL',
+                                      'https://www.upwork.com')
         self.REQUEST_TOKEN_URL = self.api_url + \
             '/api/auth/v1/oauth/token/request'
         self.REQUEST_TOKEN_METHOD = 'POST'

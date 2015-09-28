@@ -69,7 +69,7 @@ class WeightResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(data['per_page'], 20)
         self.assertTrue('weights' in data, data)
         self.assertFalse('tsexams->Ruby on Rails' in resp.data)
-        
+
         self.assertTrue(
             'contractor->dev_blurb->all' in data['weights'][0]['name'])
 

@@ -483,7 +483,7 @@ class TasksTests(BaseDbTestCase):
             ValueError, calculate_confusion_matrix, 5646546,
             [('0', 1), ('1', 1)])
 
-        #multiclass model
+        # multiclass model
         self._set_probabilities({
             'Some Example #6-1': ('0', [0.2, 0.7, 0.1]),
             'Some Example #6-2': ('0', [0.5, 0.1, 0.4]),
