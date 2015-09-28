@@ -23,7 +23,8 @@ from api.instances.fixtures import InstanceData
 from api.model_tests.fixtures import TestResultData, TestExampleData
 from api.features.fixtures import FeatureSetData, FeatureData, FEATURES_STR
 from api.ml_models.fixtures import ModelData, TagData, MODEL_TRAINER, \
-    DECISION_TREE_WITH_SEGMENTS, TREE_VISUALIZATION_DATA, INVALID_MODEL
+    DECISION_TREE_WITH_SEGMENTS, TREE_VISUALIZATION_DATA, INVALID_MODEL, \
+    SegmentData, MULTICLASS_MODEL
 from api.import_handlers.fixtures import DataSetData, \
     XmlImportHandlerData as ImportHandlerData, IMPORT_HANDLER_FIXTURES
 from api.import_handlers.fixtures import EXTRACT_XML, get_importhandler
@@ -47,7 +48,7 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
     RESOURCE = ModelResource
     Model = Model
     datasets = [FeatureData, FeatureSetData, DataSetData, ModelData,
-                InstanceData, TestResultData, TestExampleData,
+                InstanceData, TestResultData, TestExampleData, SegmentData,
                 TagData, ServerData] + IMPORT_HANDLER_FIXTURES
 
     def setUp(self):
@@ -140,6 +141,54 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         resp = self.client.get(url, headers=HTTP_HEADERS)
         feature_set = json.loads(resp.data)
         self.assertEqual(4, len(feature_set['features']))
+
+    @mock_s3
+    @patch('api.amazon_utils.AmazonS3Helper.load_key')
+    def test_get_weights_download_action(self, mock_load_key):
+        def check_download(model):
+            url = self._get_url(id=model.id, action='weights_download')
+            resp = self.client.get(url, headers=HTTP_HEADERS)
+            self.assertEquals(resp.status_code, httplib.OK)
+            self.assertEquals(resp.mimetype, 'application/json')
+            self.assertEquals(
+                resp.headers['Content-Disposition'],
+                'attachment; filename=%s-weights.json' % (model.name, ))
+            res = json.loads(resp.data)
+
+            # {'segment1':{'class1': {'feature1: 0.444, .... }, ...,
+            #  'segment2': {.... }}
+            segments = [segment.name for segment in model.segments]
+            classes = model.labels if len(model.labels) > 2 else ['1']
+            self.assertItemsEqual(segments, res)
+            for segment in segments:
+                self.assertItemsEqual(classes, res[segment].keys())
+                for cls in classes:
+                    weights = res[segment][cls]
+                    self.assertItemsEqual(
+                        ['positive', 'negative'], weights.keys())
+                    self.assertTrue(weights['positive'] + weights['negative'])
+
+        # Not trained model
+        model = Model.query.filter_by(status=Model.STATUS_NEW).first()
+        url = self._get_url(id=model.id, action='weights_download')
+        resp = self.client.get(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.BAD_REQUEST)
+        res = json.loads(resp.data)
+        self.assertEquals(
+            res['response']['error']['message'],
+            'Model should be trained')
+
+        # Binary, without segmentation
+        mock_load_key.return_value = MODEL_TRAINER
+        check_download(model=self.obj)
+
+        mock_load_key.reset_mock()
+
+        # Multiclass, with segmentation
+        mock_load_key.return_value = MULTICLASS_MODEL
+        model = Model.query.filter_by(
+            name=ModelData.model_multiclass.name).first()
+        check_download(model)
 
     def test_get_trainer_download_s3url_action(self):
         model = Model.query.filter_by(name='TrainedModel').first()

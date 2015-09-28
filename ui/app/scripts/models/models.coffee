@@ -50,7 +50,6 @@ angular.module('app.models.model', ['app.config'])
 
       loadFromJSON: (origData) ->
         super origData
-
         if origData?
           # TODO:
           if origData.features?
@@ -67,8 +66,6 @@ angular.module('app.models.model', ['app.config'])
           if origData.train_import_handler?
             if origData.train_import_handler_type == 'xml'
               cls = XmlImportHandler
-            else if origData.train_import_handler_type == 'json'
-              cls = ImportHandler
             else
               throw new Error('Need to load import handler type')
             @train_import_handler_obj = new cls(
@@ -91,6 +88,9 @@ angular.module('app.models.model', ['app.config'])
 
       downloadFeaturesUrl: ->
         return "#{@BASE_API_URL}#{@id}/action/features_download/?"
+
+      downloadWeightsUrl: ->
+        return "#{@BASE_API_URL}#{@id}/action/weights_download/?"
 
       @$by_handler: (opts) ->
         resolver = (resp, Model) ->

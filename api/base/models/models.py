@@ -106,8 +106,8 @@ class BaseModel(BaseMixin):
         if user is None:
             return False
 
-        # if user.email in [el[1] for el in app.config['ADMINS']]:
-        #     return True
+        if user.email in [el[1] for el in app.config['ADMINS']]:
+            return True
 
         return user.id == self.created_by.id
 

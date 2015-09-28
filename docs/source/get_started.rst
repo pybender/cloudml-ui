@@ -223,9 +223,7 @@ Also, you can set flag "I want to save weights of the parameters.". In this case
 
 After clicking to "Start test" button you would be redirected to test details page.
 
-The result of the test is a set of metrics and data with predicted and actual values and feature weights. More information could be found in :ref:`here <cloudml:test_metrics>`
-
-.. image:: ./_static/getting_started/run-test.png
+The result of the test is a set of metrics and data with predicted and actual values and feature weights. More information could be found in :ref:`here <test_metrics>`_.
 
 It contains few tabs:
 

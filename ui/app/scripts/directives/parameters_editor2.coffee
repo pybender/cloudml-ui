@@ -103,7 +103,7 @@ angular.module('app.directives')
       attributes.$set('required', scope.field.required)
 
       ngModel.$parsers.push (viewValue) ->
-        if _.isObject(viewValue)
+        if scope.field.type != TYPE_OBJECT && _.isObject(viewValue)
           viewValue = JSON.stringify(viewValue)
         scope.field.valid = VALIDATORS[scope.field.type](viewValue)
         ngModel.$setValidity('error', scope.field.valid)
@@ -113,7 +113,7 @@ angular.module('app.directives')
           return viewValue
 
       ngModel.$formatters.push (modelValue)->
-        if _.isObject(modelValue)
+        if scope.field.type != TYPE_OBJECT && _.isObject(modelValue)
           modelValue = JSON.stringify(modelValue)
         scope.field.valid = VALIDATORS[scope.field.type](modelValue)
         ngModel.$setValidity('error', scope.field.valid)

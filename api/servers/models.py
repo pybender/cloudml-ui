@@ -31,8 +31,8 @@ class Server(BaseModel, db.Model):
             uid = key.name.split('/')[-1]
             key = s3.bucket.get_key(key.name)
 
-            # if key.get_metadata('hide') == 'True':
-            #     continue
+            if key.get_metadata('hide') == 'True':
+                continue
 
             # TODO: last_modified problems with amazon s3 and botoo
             # https://github.com/boto/boto/issues/466
@@ -65,7 +65,8 @@ class Server(BaseModel, db.Model):
         key_name = '{0}/{1}/{2}'.format(self.folder, folder, uid)
         s3 = AmazonS3Helper(
             bucket_name=app.config['CLOUDML_PREDICT_BUCKET_NAME'])
-        return s3.get_key_metadata(key_name, key)
+        s3key = s3.bucket.get_key(key_name)
+        return s3key.get_metadata(key)
 
     def save(self, commit=True):
         BaseModel.save(self, commit=False)
