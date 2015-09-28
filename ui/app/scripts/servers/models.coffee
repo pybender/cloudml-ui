@@ -52,6 +52,7 @@ angular.module('app.servers.model', ['app.config'])
               id: origData.object_id
               name: origData.object_name
             })
+          console.log origData
 
     return ModelFile
 ])

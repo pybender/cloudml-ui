@@ -8,8 +8,8 @@ describe 'features/controllers/features.coffee', ->
     module 'app.services'
 
     module 'app.models.model'
-    module 'app.importhandlers.model'
-    module 'app.xml_importhandlers.models'
+    module 'app.importhandlers.models'
+    module 'app.importhandlers.xml.models'
     module 'app.datasets.model'
     module 'app.features.models'
     module 'app.features.controllers.features'
@@ -560,13 +560,13 @@ describe 'features/controllers/features.coffee', ->
 
   describe 'TrainIHFieldsController', ->
 
-    prepareContext = (Model, ImportHandler, model, ihDict, fieldsDict)->
+    prepareContext = (Model, XmlImportHandler, model, ihDict, fieldsDict)->
       $scope.modelObj = model
 
       $httpBackend.expectGET("#{model.BASE_API_URL}#{model.id}/?show=train_import_handler,train_import_handler_type,train_import_handler_id")
       .respond 200, angular.toJson(ihDict)
 
-      importHandler = new ImportHandler({id: 222})
+      importHandler = new XmlImportHandler({id: 222})
       $httpBackend.expectGET "#{importHandler.BASE_API_URL}#{importHandler.id}/action/list_fields/"
       .respond 200, angular.toJson(fieldsDict)
 
@@ -620,29 +620,6 @@ describe 'features/controllers/features.coffee', ->
         expect($scope.fieldNames).toEqual _.sortBy(
           ['name float', 'name boolean', 'name integer', 'name string',
            'name json', 'name unknown'], (f) -> return f.toLowerCase())
-
-    it 'should load the trainer json import handler of the module and its field, and respond to when typeahead is selected',
-      inject (Model, ImportHandler)->
-
-        model = new Model({id: 111})
-        prepareContext Model, ImportHandler, model,
-          {
-            model:
-              id: model.id
-              train_import_handler_id: 222
-              train_import_handler_type: 'json'
-              train_import_handler:
-                id: 222
-                name: 'test json ih'
-          }
-          ,
-          {
-            fields: ['field1', 'field2', 'field3']
-          }
-
-        expect($scope.candidateFields).toBeUndefined()
-        expect($scope.typeaheadOnSelect).toBeUndefined()
-        expect($scope.fieldNames).toEqual ['field1', 'field2', 'field3']
 
     it 'should handle failures retrieving either the module trainer or fields',
       inject (Model, XmlImportHandler)->

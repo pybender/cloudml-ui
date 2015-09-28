@@ -425,7 +425,6 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
         message = 'processing request'
 
     if opts.data
-      console.log opts
       resp = opts.data.response
       if resp? && resp.error
         $rootScope.err = "Error while #{message}: server responded

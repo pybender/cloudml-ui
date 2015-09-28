@@ -7,9 +7,10 @@ describe 'xml_importhandlers/controllers/input_parameters.coffee', ->
     module 'app.config'
     module 'app.services'
 
-    module 'app.xml_importhandlers.models'
-    module 'app.xml_importhandlers.controllers.input_parameters'
-    module 'app.importhandlers.model'
+    module 'app.importhandlers.models'
+    module 'app.importhandlers.xml.models'
+    module 'app.importhandlers.xml.controllers.input_parameters'
+
     module 'app.datas.model'
     module 'app.testresults.model'
     module 'app.models.model'
@@ -102,7 +103,7 @@ describe 'xml_importhandlers/controllers/input_parameters.coffee', ->
       $scope.add(handler)
       expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
         model: jasmine.any(InputParameter)
-        template: 'partials/xml_import_handlers/input_parameters/edit.html'
+        template: 'partials/importhandlers/xml/input_parameters/edit.html'
         ctrlName: 'ModelEditDialogCtrl'
         action: 'add input parameter'
       expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope

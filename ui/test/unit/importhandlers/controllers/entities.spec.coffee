@@ -8,9 +8,9 @@ describe 'xml_importhandlers/controllers/entities', ->
     module 'app.config'
     module 'app.services'
 
-    module 'app.importhandlers.model'
-    module 'app.xml_importhandlers.controllers.entities'
-    module 'app.xml_importhandlers.models'
+    module 'app.importhandlers.models'
+    module 'app.importhandlers.xml.models'
+    module 'app.importhandlers.xml.controllers.entities'
 
   $httpBackend = null
   $rootScope = null
@@ -49,12 +49,12 @@ describe 'xml_importhandlers/controllers/entities', ->
 
   describe "EntitiesTreeCtrl", ->
     it "Should call open dialog for runQuery with proper arguments",
-      inject (ImportHandler, Query)->
+      inject (XmlImportHandler, XmlQuery)->
         $rootScope.openDialog = jasmine.createSpy '$rootScope.openDialog'
-        handler = new ImportHandler
+        handler = new XmlImportHandler
           id: 999
           name: 'import handelr'
-        query = new Query
+        query = new XmlQuery
           id: 888
 
         url = "#{handler.BASE_API_URL}#{handler.id}"
@@ -65,7 +65,7 @@ describe 'xml_importhandlers/controllers/entities', ->
         $scope.runQuery query
         expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
           model: null
-          template: 'partials/import_handler/test_query.html'
+          template: 'partials/importhandlers/test_query.html'
           ctrlName: 'QueryTestDialogCtrl'
           extra:
             handlerUrl: url
@@ -75,9 +75,9 @@ describe 'xml_importhandlers/controllers/entities', ->
         expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 
     it "Should call open dialog for getting pig fields with proper args",
-      inject (ImportHandler, Sqoop)->
+      inject (XmlImportHandler, Sqoop)->
         $rootScope.openDialog = jasmine.createSpy '$rootScope.openDialog'
-        handler = new ImportHandler
+        handler = new XmlImportHandler
           id: 999
           name: 'import handelr'
         sqoop = new Sqoop
@@ -89,7 +89,7 @@ describe 'xml_importhandlers/controllers/entities', ->
         $scope.getPigFields sqoop
         expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
           model: sqoop
-          template: 'partials/xml_import_handlers/sqoop/load_pig_fields.html'
+          template: 'partials/importhandlers/xml/sqoop/load_pig_fields.html'
           ctrlName: 'PigFieldsLoader'
           extra: {noInput: false, title: 'Pig Fields'}
 
@@ -97,7 +97,7 @@ describe 'xml_importhandlers/controllers/entities', ->
 
   describe "PigFieldsLoader", ->
     it "Should request pig query generation for sqoop script",
-      inject (ImportHandler, Sqoop)->
+      inject (XmlImportHandler, Sqoop)->
         sqoop = new Sqoop
           id: 888
           import_handler_id: 999

@@ -12,8 +12,8 @@ describe "datasets", ->
   beforeEach(module "app.config")
   beforeEach(module "app.services")
 
-  beforeEach(module "app.importhandlers.model")
-  beforeEach(module "app.xml_importhandlers.models")
+  beforeEach(module "app.importhandlers.models")
+  beforeEach(module "app.importhandlers.xml.models")
   beforeEach(module "app.datasets.model")
 
   beforeEach(module "app.datasets.model")
@@ -42,7 +42,7 @@ describe "datasets", ->
     $window = $injector.get('$window')
     $modal = $injector.get('$modal')
 
-    BASE_URL = settings.apiUrl + 'importhandlers/json/' + HANDLER_ID + '/datasets/'
+    BASE_URL = settings.apiUrl + 'importhandlers/xml/' + HANDLER_ID + '/datasets/'
 
     createController = (ctrl, extras) ->
       $scope = $rootScope.$new()
@@ -66,12 +66,12 @@ describe "datasets", ->
     it "should make no query", inject () ->
       createController "DatasetActionsCtrl"
 
-    it "should open delete dialog", inject (ImportHandler, DataSet) ->
+    it "should open delete dialog", inject (XmlImportHandler, DataSet) ->
 
       $rootScope.openDialog = jasmine.createSpy('$rootScope.openDialog')
 
       createController "DatasetActionsCtrl"
-      $scope.handler = new ImportHandler()
+      $scope.handler = new XmlImportHandler()
       $scope.handler.id = HANDLER_ID
       $scope.ds = new DataSet()
       $scope.delete()
@@ -85,9 +85,9 @@ describe "datasets", ->
       expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 
     it "Should call open dialog for getting pig fields with proper args",
-      inject (ImportHandler, DataSet) ->
+      inject (XmlImportHandler, DataSet) ->
         $rootScope.openDialog = jasmine.createSpy '$rootScope.openDialog'
-        handler = new ImportHandler
+        handler = new XmlImportHandler
           id: 999
           name: 'import handelr'
         ds = new DataSet
@@ -99,19 +99,19 @@ describe "datasets", ->
         $scope.getPigFields ds
         expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
           model: ds
-          template: 'partials/xml_import_handlers/sqoop/load_pig_fields.html'
+          template: 'partials/importhandlers/xml/sqoop/load_pig_fields.html'
           ctrlName: 'PigFieldsLoader'
           extra: {noInput: true, title: 'XML Fields'}
 
         expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 
-    it "should generate download link", inject (ImportHandler, DataSet) ->
+    it "DatasetActionsCtrl.download: should generate download link", inject (XmlImportHandler, DataSet) ->
 
       $window =
         location:
           replace: jasmine.createSpy '$window.location.replace'
       createController "DatasetActionsCtrl", {$window: $window}
-      $scope.handler = new ImportHandler({id: HANDLER_ID})
+      $scope.handler = new XmlImportHandler({id: HANDLER_ID})
       $scope.ds = new DataSet(
         {id: DS_ID, on_s3: true, import_handler_id: HANDLER_ID}
       )
@@ -129,7 +129,7 @@ describe "datasets", ->
     beforeEach ->
       $routeParams.import_handler_id = HANDLER_ID
       $routeParams.id = DS_ID
-      $routeParams.import_handler_type = 'json'
+      $routeParams.import_handler_type = 'xml'
       $rootScope.initSections = jasmine.createSpy '$rootScope.initSections'
       $rootScope.setError = jasmine.createSpy '$rootScope.setError'
 
@@ -206,15 +206,15 @@ describe "datasets", ->
   describe "DatasetSelectCtrl", ->
 
     it "should make list query", inject () ->
-      url = settings.apiUrl + 'importhandlers/json/' + HANDLER_ID +
-        '/datasets/?import_handler_id=522333333344445d26c73315&import_handler_type=json&show=name&status=Imported'
+      url = settings.apiUrl + 'importhandlers/xml/' + HANDLER_ID +
+        '/datasets/?import_handler_id=522333333344445d26c73315&import_handler_type=xml&show=name&status=Imported'
 
       $httpBackend.expectGET(url).respond('{"data_sets": [{"name": "Some name", "id": "'+ DS_ID + '"}]}')
 
       createController "DatasetSelectCtrl"
       $scope.init
         id: HANDLER_ID
-        TYPE: 'json'
+        TYPE: 'xml'
       $httpBackend.flush()
 
       expect($scope.datasets[0].id).toEqual('')
@@ -250,7 +250,7 @@ describe "datasets", ->
         $httpBackend.flush()
 
         expect($scope.$close).toHaveBeenCalled()
-        expect($location.url).toHaveBeenCalledWith("/handlers/xml/#{HANDLER_ID}/datasets/#{DS_ID}")
+        expect($location.url).toHaveBeenCalledWith("/importhandlers/xml/#{HANDLER_ID}/datasets/#{DS_ID}")
     )
 
   describe "DataSet", ->

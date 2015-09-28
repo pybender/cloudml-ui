@@ -18,8 +18,7 @@ describe "login", ->
 
     # the following just to inject Model
     module 'app.models.model'
-    module 'app.importhandlers.model'
-    module 'app.xml_importhandlers.models'
+    module 'app.importhandlers.models'
     module 'app.datasets.model'
     module 'app.features.models'
 

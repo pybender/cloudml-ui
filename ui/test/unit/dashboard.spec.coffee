@@ -13,8 +13,8 @@ describe "dashboard", ->
   beforeEach(module "app.dashboard.model")
 
   beforeEach(module "app.models.model")
-  beforeEach(module "app.importhandlers.model")
-  beforeEach(module "app.xml_importhandlers.models")
+  beforeEach(module "app.importhandlers.models")
+  beforeEach(module "app.importhandlers.xml.models")
   beforeEach(module "app.datasets.model")
   beforeEach(module "app.features.models")
   beforeEach(module "app.testresults.model")

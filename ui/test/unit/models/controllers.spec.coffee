@@ -10,8 +10,8 @@ describe 'models/controllers.coffee', ->
 
     module 'app.models.controllers'
     module 'app.models.model'
-    module 'app.importhandlers.model'
-    module 'app.xml_importhandlers.models'
+    module 'app.importhandlers.models'
+    module 'app.importhandlers.xml.models'
     module 'app.datasets.model'
     module 'app.features.models'
     module 'app.testresults.model'
@@ -146,24 +146,7 @@ describe 'models/controllers.coffee', ->
 
     it  'should init scope', inject (Model)->
       createController 'AddModelCtl', Model
-
-      expect($scope.formats).toEqual [{name: 'JSON', value: 'json'},
-        {name: 'CSV', value: 'csv'}]
-      expect
-        train_format: $scope.model.train_format
-        test_format: $scope.model.test_format
-      .toEqual
-        train_format: 'json'
-        test_format: 'json'
-
-
-  describe 'UploadModelCtl', ->
-
-    it  'should init scope', inject (Model)->
-      createController 'UploadModelCtl', Model
-
-      expect($scope.model).toEqual jasmine.any(Model)
-
+      expect($scope.model).not.toBeUndefined()
 
   describe 'ModelDetailsCtrl', ->
 

@@ -19,8 +19,8 @@ describe "directives", ->
     module 'app.base'
     module "app.directives"
     module 'app.models.model'
-    module 'app.importhandlers.model'
-    module 'app.xml_importhandlers.models'
+    module 'app.importhandlers.models'
+    module 'app.importhandlers.xml.models'
     module 'app.datasets.model'
     module 'app.features.models'
     module 'app.templates' # to serve partials html

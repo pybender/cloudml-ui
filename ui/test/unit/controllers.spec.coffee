@@ -9,8 +9,8 @@ describe 'controllers.coffee', ->
     module 'app.services'
 
     module 'app.controllers'
-    module 'app.xml_importhandlers.models'
-    module 'app.importhandlers.model'
+    module 'app.importhandlers.models'
+    module 'app.importhandlers.xml.models'
     module 'app.datas.model'
     module 'app.testresults.model'
     module 'app.models.model'

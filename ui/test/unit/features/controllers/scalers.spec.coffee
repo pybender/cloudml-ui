@@ -10,8 +10,8 @@ describe 'features/controllers/transformers.coffee', ->
 
     module 'app.features.models'
     module 'app.features.controllers.named_types'
-    module 'app.xml_importhandlers.models'
-    module 'app.importhandlers.model'
+    module 'app.importhandlers.models'
+    module 'app.importhandlers.xml.models'
     module 'app.features.controllers.scalers'
 
   $httpBackend = null

@@ -13,8 +13,8 @@ describe "models", ->
   beforeEach(module "app.services")
   beforeEach(module "app.controllers")
 
-  beforeEach(module "app.importhandlers.model")
-  beforeEach(module "app.xml_importhandlers.models")
+  beforeEach(module "app.importhandlers.models")
+  beforeEach(module "app.importhandlers.xml.models")
   beforeEach(module "app.datasets.model")
   beforeEach(module "app.testresults.model")
   beforeEach(module "app.weights.model")
@@ -82,12 +82,6 @@ describe "models", ->
       createController "AddModelCtl"
       expect($rootScope.model).toBeDefined()
 
-  describe "UploadModelCtl", ->
-
-    it "should init empty model", inject () ->
-      createController "UploadModelCtl"
-      expect($rootScope.model).toBeDefined()
-
   describe "ModelDetailsCtrl", ->
     beforeEach ->
       url = settings.apiUrl + 'tags/?show=' + 'text,id'
@@ -106,18 +100,16 @@ describe "models", ->
       expect($rootScope.tag_list).toBeDefined()
       expect($rootScope.tag_list[0].text).toEqual('smth')
 
-    it "should make details request", inject (MODEL_FIELDS, FIELDS_BY_SECTION) ->
-      url = BASE_URL + MODEL_ID + '/' + '?show=' + MODEL_FIELDS + ',' + FIELDS_BY_SECTION['model']
-      $httpBackend.expectGET(url).respond.apply @, map_url_to_response(url, 'multiclass model main fields')
+    # it "should make details request", inject (MODEL_FIELDS, FIELDS_BY_SECTION) ->
+    #   url = BASE_URL + MODEL_ID + '/' + '?show=' + MODEL_FIELDS + ',' + FIELDS_BY_SECTION['model']
+    #   $httpBackend.expectGET(url).respond.apply @, map_url_to_response(url, 'multiclass model main fields')
 
-      s3_url = "#{BASE_URL}#{$rootScope.model.id}/action/trainer_download_s3url/"
-      $httpBackend.expectGET(s3_url)
-      .respond """
-{"trainer_file_for": #{MODEL_ID}, "url": "https://.s3.amazonaws.com/9c4012780c0111e4968b000c29e3f35c?Signature=%2FO7%2BaUv4Fk84ioxWigRwkcdgVM0"}
-"""
-      $rootScope.goSection(['model'])
-      $httpBackend.flush()
-      expect($rootScope.model.trainer_s3_url).toEqual 'https://.s3.amazonaws.com/9c4012780c0111e4968b000c29e3f35c?Signature=%2FO7%2BaUv4Fk84ioxWigRwkcdgVM0'
+    #   s3_url = "#{BASE_URL}#{$rootScope.model.id}/action/trainer_download_s3url/"
+    #   $httpBackend.expectGET(s3_url)
+    #   .respond '{"trainer_file_for": #{MODEL_ID}, "url": "https://.s3.amazonaws.com/9c4012780c0111e4968b000c29e3f35c?Signature=%2FO7%2BaUv4Fk84ioxWigRwkcdgVM0"}'
+    #   $rootScope.goSection(['model'])
+    #   $httpBackend.flush()
+    #   expect($rootScope.model.trainer_s3_url).toEqual 'https://.s3.amazonaws.com/9c4012780c0111e4968b000c29e3f35c?Signature=%2FO7%2BaUv4Fk84ioxWigRwkcdgVM0'
 
     it "should request only features", inject (FIELDS_BY_SECTION) ->
       url = BASE_URL + MODEL_ID + '/' + '?show=' + FIELDS_BY_SECTION['main']

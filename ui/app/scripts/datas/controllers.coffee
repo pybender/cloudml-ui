@@ -45,7 +45,7 @@ angular.module('app.datas.controllers', ['app.config', ])
     $scope.model.$load(show: 'name,labels').then (->
       $scope.labels = $scope.model.labels
     ), ((opts) ->
-      $scope.setError(opts, 'loading model')
+      $scope.setError(opts, 'loading model labels')
     )
 
   $scope.loadDatas = () ->
@@ -76,6 +76,7 @@ angular.module('app.datas.controllers', ['app.config', ])
     # TODO: nader20140916, what is this? @
     @load()
 
+  # TODO: obsolete?
   $scope.addFilter = () ->
     $scope.data_filters.push({name: '', value: ''})
 
@@ -126,7 +127,6 @@ angular.module('app.datas.controllers', ['app.config', ])
 
 ($scope, $routeParams, Data) ->
   $scope.form = {'field': "", 'count': 2 }
-
   # loading test example's fields to use them in field select
   Data.$loadFieldList($routeParams.model_id, $routeParams.test_id)
     .then $scope.getResponseHandler(

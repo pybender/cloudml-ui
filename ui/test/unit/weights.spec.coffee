@@ -14,7 +14,8 @@ describe "weights", ->
   beforeEach(module "app.controllers")
 
   beforeEach(module "app.models.model")
-  beforeEach(module "app.importhandlers.model")
+  beforeEach(module "app.importhandlers.models")
+  beforeEach(module "app.importhandlers.xml.models")
   beforeEach(module "app.datasets.model")
   beforeEach(module "app.testresults.model")
   beforeEach(module "app.datas.model")

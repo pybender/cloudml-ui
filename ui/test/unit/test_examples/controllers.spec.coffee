@@ -7,6 +7,7 @@ describe 'app.datas.controllers', ->
     module 'ngRoute'
     module 'ui.bootstrap'
 
+    module 'app'
     module 'app.base'
     module 'app.config'
     module 'app.services'
@@ -15,8 +16,8 @@ describe 'app.datas.controllers', ->
     module 'app.datas.model'
     module 'app.testresults.model'
     module 'app.models.model'
-    module 'app.importhandlers.model'
-    module 'app.xml_importhandlers.models'
+    module 'app.importhandlers.models'
+    module 'app.importhandlers.xml.models'
     module 'app.datasets.model'
     module 'app.features.models'
 
@@ -46,50 +47,60 @@ describe 'app.datas.controllers', ->
      $httpBackend.verifyNoOutstandingExpectation()
      $httpBackend.verifyNoOutstandingRequest()
 
+  $base_url = null
+  $test = null
+  $model = null
+  $data_fields_url = null
+  $data_fields_response = {"fields": ["data_input->total", "data_input->country"]}
 
-  describe 'TestExamplesCtrl', ->
+  beforeEach inject (Model, TestResult) ->
+    $routeParams = {model_id: 999, test_id: 888}
+    $test = new TestResult {id: $routeParams.test_id, model_id: $routeParams.model_id}
+    $model = new Model {id: $test.model_id, labels: ['yes', 'no']}
+    $base_url = $test.BASE_API_URL + $test.id
+    $data_fields_url = $base_url + "/examples/action/datafields/"
 
-    it 'should load an initialize scope with filter options', ->
-      createController 'TestExamplesCtrl'
-      expect($scope.filter_opts).toBeDefined()
-      expect($scope.simple_filters).toEqual {}
-      expect($scope.data_filters).toEqual []
-      expect($scope.loading_state).toBe false
-      expect($scope.sort_by).toEqual ''
-      expect($scope.asc_order).toBe true
+  describe 'TestExamplesCtrl (Examples List tab)', ->
+    describe 'TestExamplesCtrl creating', ->
 
-      $location.search({sort_by: 'something', order: 'desc'})
-      createController 'TestExamplesCtrl'
-      expect($scope.filter_opts).toEqual {sort_by: 'something', order: 'desc'}
-      expect($scope.simple_filters).toEqual {}
-      expect($scope.data_filters).toEqual []
-      expect($scope.loading_state).toBe false
-      expect($scope.sort_by).toEqual 'something'
-      expect($scope.asc_order).toBe false
+      it 'should load an initialize scope with default values', ->
+        createController 'TestExamplesCtrl'
+        expect($scope.filter_opts).toBeDefined()
+        expect($scope.simple_filters).toEqual {}
+        expect($scope.data_filters).toEqual {}
+        expect($scope.sort_by).toEqual ''
+        expect($scope.asc_order).toBe true
 
-    describe 'loading test and model with handling http errors', ->
+      it 'should load an initialize scope with values from query string', ->
+        $location.search({sort_by: 'the_field', order: 'desc'})
+        createController 'TestExamplesCtrl'
+        expect($scope.filter_opts).toEqual {sort_by: 'the_field', order: 'desc'}
+        expect($scope.simple_filters).toEqual {}
+        expect($scope.data_filters).toEqual {}
+        expect($scope.sort_by).toEqual 'the_field'
+        expect($scope.asc_order).toBe false
+
+    describe 'TestExamplesCtrl.init', ->
 
       beforeEach ->
         $rootScope.setError = jasmine.createSpy '$rootScope.setError'
-
-      test = null
-      model = null
-      prepareHttp = (test, model, failTestGET, failModelGET) ->
+     
+      prepareHttp = (test, model, failDataFieldsGET, failLabelsGET) ->
         createController 'TestExamplesCtrl'
 
         $scope.init test
-        expect($scope.loading_state).toBe true
 
-        if failTestGET
+        # initializing data filters
+        if failDataFieldsGET
           respondArgs = [400]
         else
-          response = {}
-          response[test.API_FIELDNAME] = test
-          respondArgs = [200, angular.toJson response]
-        $httpBackend.expectGET "#{test.BASE_API_URL}#{test.id}/?show=name,examples_fields"
+          respondArgs = [200, angular.toJson $data_fields_response]
+
+        $httpBackend.expectGET $data_fields_url
         .respond respondArgs...
 
-        if failModelGET
+        # Initializing model's labels (target_variables values)
+        if failLabelsGET
           respondArgs = [400]
         else
           response = {}
@@ -97,85 +108,86 @@ describe 'app.datas.controllers', ->
           respondArgs = [200, angular.toJson response]
         $httpBackend.expectGET "#{model.BASE_API_URL}#{model.id}/?show=name,labels"
         .respond respondArgs...
+
         $httpBackend.flush()
 
-      it 'should process filter options to build form', inject (TestResult, Model)->
-        test = new TestResult {id: 999, model_id: 888, examples_fields: ['fieldA', 'fieldB']}
-        model = new Model {id: test.model_id, labels: ['label1', 'label2']}
-
+      it 'should initialize form filters', inject (TestResult, Model)->
         $location.search
-          'data_input->>fieldA': 'fieldAValue'
-          'label': 'somelable'
-          'pred_label': 'soomepred_label'
-        prepareHttp test, model, false, false
+          'data_input->country': 'Australia'
+          'label': 'yes'
+          'pred_label': 'no'
+        prepareHttp $test, $model, false, false
 
-        expect($scope.data_filters).toEqual [{name: 'data_input->>fieldA', value: 'fieldAValue'}]
+        # Checking whether filters was properly constructed
+        expect($scope.data_filters).toEqual
+          "data_input->country" : 'Australia'
         expect($scope.simple_filters).toEqual
-          label: 'somelable'
-          pred_label: 'soomepred_label'
-          'data_input->>fieldA': 'fieldAValue'
-          action: 'examples:list'
+          label: 'yes'
+          pred_label: 'no'
 
-      it 'should load test data test GET success, model GET success', inject (TestResult, Model)->
-        test = new TestResult {id: 999, model_id: 888, examples_fields: ['fieldA', 'fieldB']}
-        model = new Model {id: test.model_id, labels: ['label1', 'label2']}
-        prepareHttp test, model, false, false
+        expect($scope.fields).toEqual $data_fields_response.fields
+        expect($scope.labels).toEqual $model.labels
+        expect($scope.model.id).toEqual $model.id
+        expect($scope.test.id).toEqual $test.id
+        expect($scope.extra_params).toEqual {action: 'examples:list'}
+
+      it 'should does not include unexistant data filters', inject (TestResult, Model)->
+        $location.search
+          'data_input->country': 'Australia'
+          'data_input->unexistant': 'value1'
+          'unexistant_filter': 'value2'
+          'label': 'yes'
+          'pred_label': 'no'
+        prepareHttp $test, $model, false, false
+
+        # Checking whether filters was properly constructed
+        expect($scope.data_filters).toEqual
+          "data_input->country" : 'Australia'
+        expect($scope.simple_filters).toEqual
+          label: 'yes'
+          pred_label: 'no'
+
+      it 'should load data fields GET fail, model labels GET success', ->
+        prepareHttp $test, $model, true, false
 
         expect($scope.extra_params).toEqual {action: 'examples:list'}
-        expect($scope.test).toEqual test
-        expect($scope.fields).toEqual ['fieldA', 'fieldB']
-        expect($scope.loading_state).toBe false
-        expect($scope.model.id).toEqual model.id
-        expect($scope.labels).toEqual ['label1', 'label2']
+        expect($scope.test).toEqual $test
+        expect($scope.model.id).toEqual $model.id
+        expect($scope.labels).toEqual $model.labels
 
-      it 'should load test data test GET fail, model GET success', inject (TestResult, Model)->
-        test = new TestResult {id: 999, model_id: 888, examples_fields: ['fieldA', 'fieldB']}
-        model = new Model {id: test.model_id, labels: ['label1', 'label2']}
-        prepareHttp test, model, true, false
-
-        expect($scope.extra_params).toEqual {action: 'examples:list'}
-        expect($scope.test).toEqual test
+        # Checking the error initializing data fields
         expect($scope.fields).toBeUndefined()
-        expect($scope.loading_state).toBe false
-        expect($scope.model.id).toEqual model.id
-        expect($scope.labels).toEqual ['label1', 'label2']
+        expect($scope.setError).toHaveBeenCalledWith jasmine.any(Object), 'loading data field list'
 
-        expect($scope.setError).toHaveBeenCalledWith jasmine.any(Object), 'loading test details'
-
-      it 'should load test data test GET success, model GET fail', inject (TestResult, Model)->
-        test = new TestResult {id: 999, model_id: 888, examples_fields: ['fieldA', 'fieldB']}
-        model = new Model {id: test.model_id, labels: ['label1', 'label2']}
-        prepareHttp test, model, false, true
+      it 'should load data fields GET success, model labels GET fail', ->
+        prepareHttp $test, $model, false, true
 
         expect($scope.extra_params).toEqual {action: 'examples:list'}
-        expect($scope.test).toEqual test
-        expect($scope.fields).toEqual ['fieldA', 'fieldB']
-        expect($scope.loading_state).toBe false
-        expect($scope.model.id).toEqual model.id
+        expect($scope.test).toEqual $test
+        expect($scope.fields).toEqual $data_fields_response.fields
+        expect($scope.model.id).toEqual $model.id
+
+        # Checking model labels loading error
         expect($scope.labels).toBeUndefined()
+        expect($scope.setError).toHaveBeenCalledWith jasmine.any(Object), 'loading model labels'
 
-        expect($scope.setError).toHaveBeenCalledWith jasmine.any(Object), 'loading model'
-
-      it 'should load test data test GET fail, model GET fail', inject (TestResult, Model)->
-        test = new TestResult {id: 999, model_id: 888, examples_fields: ['fieldA', 'fieldB']}
-        model = new Model {id: test.model_id, labels: ['label1', 'label2']}
-        prepareHttp test, model, true, true
+      it 'should load data fields GET fail, model labels GET fail', ->
+        prepareHttp $test, $model, true, true
 
         expect($scope.extra_params).toEqual {action: 'examples:list'}
-        expect($scope.test).toEqual test
+        expect($scope.test).toEqual $test
+        expect($scope.model.id).toEqual $model.id
+
+        # Checking loading error
         expect($scope.fields).toBeUndefined()
-        expect($scope.loading_state).toBe false
-        expect($scope.model.id).toEqual model.id
         expect($scope.labels).toBeUndefined()
-
-        expect($scope.setError).toHaveBeenCalledWith jasmine.any(Object), 'loading model'
-        expect($scope.setError).toHaveBeenCalledWith jasmine.any(Object), 'loading test details'
+        expect($scope.setError).toHaveBeenCalledWith jasmine.any(Object), 'loading model labels'
+        expect($scope.setError).toHaveBeenCalledWith jasmine.any(Object), 'loading data field list'
 
     it 'should load data with and without filter options', inject (TestResult, Data)->
 
       createController 'TestExamplesCtrl'
-      test = new TestResult {id: 999, model_id: 888, examples_fields: ['fieldA', 'fieldB']}
-      $scope.test = test
+      test = $scope.test = $test
       $scope.loadDatas()({})
 
       d1 = new Data {id: 777, model_id: test.model_id, test_id: test.id}
@@ -235,23 +247,17 @@ describe 'app.datas.controllers', ->
       expect($scope.asc_order).toBe true
       expect($location.search()).toEqual { sort_by : 'zinger', order : 'asc' }
 
-    it 'should add filter', ->
+    it 'should change query string when init data filters', ->
       createController 'TestExamplesCtrl'
+      data_filters =
+        "data_input->country" : 'Australia'
+        "data_input->total" : 10
 
-      expect($scope.data_filters).toEqual []
-
-      $scope.addFilter()
-      expect($scope.data_filters).toEqual [{name: '', value: ''}]
-
-    it 'should change filter configuration', ->
-      createController 'TestExamplesCtrl'
-
-      $scope.data_filters = [{name: 'filter1_name', value: 'filter1_value'},
-      {name: 'filter2_name', value: 'filter2_value'}]
+      $scope.data_filters = data_filters
       $scope.filter()
 
-      expect($scope.filter_opts).toEqual {filter1_name: 'filter1_value', filter2_name: 'filter2_value'}
-      expect($location.search()).toEqual {sort_by : '', order: 'asc', filter1_name: 'filter1_value', filter2_name: 'filter2_value'}
+      expect($scope.filter_opts).toEqual data_filters
+      expect($location.search()).toEqual _.extend(data_filters, {sort_by : '', order: 'asc'})
 
     it 'should go to example details', inject (Data)->
 
@@ -280,86 +286,70 @@ describe 'app.datas.controllers', ->
       expect($scope.getExampleUrl d).toEqual '/models/888/tests/777/examples/999?sort_by=&order=asc'
 
 
-  describe 'GroupedExamplesCtrl', ->
-
+  describe 'GroupedExamplesCtrl (Average Precision Page)', ->
     beforeEach ->
       $rootScope.setError = jasmine.createSpy '$rootScope.setError'
 
-    it 'should initialize scope and load test', inject (TestResult)->
-
-      $routeParams = {model_id: 999, test_id: 888}
-
       createController 'GroupedExamplesCtrl', {$routeParams: $routeParams}
-      expect($scope.loading_state).toBe true
       expect($scope.form).toEqual = {'field': "", 'count': 2 }
-      expect($scope.loading_state).toBe true
-      expect($scope.test.id).toEqual $routeParams.test_id
-      expect($scope.test.model_id).toEqual $routeParams.model_id
 
-      test = new TestResult {id: $routeParams.test_id, model_id: $routeParams.model_id}
-      response = {}
-      response[test.API_FIELDNAME] = test
-      $httpBackend.expectGET "#{test.BASE_API_URL}#{test.id}/?show=name,examples_fields"
-      .respond 200, angular.toJson response
+    it 'should initialize scope and load data fields',  ->
+      $httpBackend.expectGET $data_fields_url
+      .respond 200, angular.toJson $data_fields_response
       $httpBackend.flush()
-      expect($scope.loading_state).toBe false
 
-      # test load error
-      createController 'GroupedExamplesCtrl', {$routeParams: $routeParams}
-      $httpBackend.expectGET "#{test.BASE_API_URL}#{test.id}/?show=name,examples_fields"
+    it 'should show error message when have bad request while loading data fields', ->
+      $httpBackend.expectGET $data_fields_url
       .respond 400
       $httpBackend.flush()
-      expect($scope.loading_state).toBe true
-      expect($scope.setError).toHaveBeenCalledWith jasmine.any(Object), 'loading test details'
+      expect($scope.setError).toHaveBeenCalledWith jasmine.any(Object), 'loading data field list'
 
-    it 'should update groups', inject (TestResult, Data)->
-      $routeParams = {model_id: 999, test_id: 888}
+    describe 'GroupedExamplesCtrl.update', ->
+      $form = {count: 2, field: 'data_input->country'}
+      $average_precision_url = null
+      $average_precision_response = null
+      $avp_items = null
 
-      createController 'GroupedExamplesCtrl', {$routeParams: $routeParams}
-      test = new TestResult {id: $routeParams.test_id, model_id: $routeParams.model_id}
-      response = {}
-      response[test.API_FIELDNAME] = test
-      $httpBackend.expectGET "#{test.BASE_API_URL}#{test.id}/?show=name,examples_fields"
-      .respond 200, angular.toJson response
-      $httpBackend.flush()
+      beforeEach inject ($injector) ->
+        Data = $injector.get 'Data'
+        $httpBackend.expectGET $data_fields_url
+        .respond 200, angular.toJson $data_fields_response
+        $httpBackend.flush()
+        
+        test_example = new Data _.extend($routeParams, {id: 777})
+        $average_precision_response = {
+          field_name: $form.field
+          mavp: 0.9
+        }
+        $avp_items = [
+          {"count": 60, "avp": 1.0, "group_by_field": "United States"},
+          {"count": 9, "avp": 0.89, "group_by_field": "Australia"}
+        ]
+        $average_precision_response[test_example.API_FIELDNAME + 's'] = {
+          items: $avp_items
+        }
+        $average_precision_url = test_example.BASE_API_URL + "action/groupped/?" + $.param($form)
 
-      $scope.update()
-      expect($scope.setError).toHaveBeenCalledWith {}, 'Please, select a field'
+      it "should calculate average precision", inject (Data) ->
+        $scope.form = $form
+        $scope.update()
 
-      $scope.form = {field: 'the_field', count: 1}
-      $scope.update()
-      expect($scope.loading_state).toBe true
+        $httpBackend.expectGET $average_precision_url
+        .respond 200, angular.toJson $average_precision_response
+        $httpBackend.flush()
 
-      d1 = new Data {id: 777, test_id: $routeParams.test_id, model_id: $routeParams.model_id}
-      d2 = new Data {id: 666, test_id: $routeParams.test_id, model_id: $routeParams.model_id}
-      response = {field_name: 'should_be_the_field', mavp: 'dont know what is that'}
-      response[d1.API_FIELDNAME + 's'] = {items: [d1, d2]}
-      $httpBackend.expectGET "#{d1.BASE_API_URL}action/groupped/?count=1&field=the_field"
-      .respond 200, angular.toJson response
-      $httpBackend.flush()
+        expect($scope.field_name).toEqual $form.field
+        expect($scope.mavp).toEqual $average_precision_response['mavp']
+        expect($scope.objects).toEqual $avp_items
 
-      expect($scope.field_name).toEqual 'should_be_the_field'
-      expect($scope.mavp).toEqual 'dont know what is that'
-      expect([{id: x.id} for x in $scope.objects]).toEqual [[{id: 777}, {id: 666}]]
-      expect($scope.loading_state).toBe false
+      it "should show an error message, when have bad request while calc avp", ->
+        $scope.form = $form
+        $scope.update()
 
-      # http error
-      createController 'GroupedExamplesCtrl', {$routeParams: $routeParams}
-      test = new TestResult {id: $routeParams.test_id, model_id: $routeParams.model_id}
-      $httpBackend.expectGET "#{test.BASE_API_URL}#{test.id}/?show=name,examples_fields"
-      .respond 400
-      $httpBackend.flush()
-
-      $scope.form = {field: 'the_field', count: 1}
-      $scope.update()
-      expect($scope.loading_state).toBe true
-
-      $httpBackend.expectGET "#{d1.BASE_API_URL}action/groupped/?count=1&field=the_field"
-      .respond 400
-      $httpBackend.flush()
-
-      expect($scope.setError).toHaveBeenCalledWith jasmine.any(Object), 'loading test examples'
-      expect($scope.loading_state).toBe false
+        $httpBackend.expectGET $average_precision_url
+        .respond 400
+        $httpBackend.flush()
+        expect($scope.setError).toHaveBeenCalledWith jasmine.any(Object), 'loading grouped test examples'
 
 
   describe 'ExampleDetailsCtrl', ->
@@ -367,10 +357,10 @@ describe 'app.datas.controllers', ->
     beforeEach ->
       $rootScope.initSections = jasmine.createSpy '$rootScope.initSections'
       $rootScope.setError = jasmine.createSpy '$rootScope.setError'
+      $routeParams = _.extend($routeParams, {id: 777})
 
     it 'should initialize scope and call goSection', inject (Data)->
-
-      $routeParams = {id: 777, model_id: 999, test_id: 888}
+      d1 = new Data $routeParams
 
       $location.search({filter_name: 'filter_value'})
       createController 'ExampleDetailsCtrl', {$routeParams: $routeParams}
@@ -378,11 +368,15 @@ describe 'app.datas.controllers', ->
       expect($scope.filter_opts).toEqual {filter_name: 'filter_value'}
       expect($scope.loaded).toBe false
 
-      d1 = new Data $routeParams
+      fields = ['test_name', 'weighted_data_input', 'model',
+                'pred_label', 'label', 'prob', 'created_on',
+                'test_result', 'next', 'previous', 'parameters_weights',
+                'data_input', 'name'].join(',')
+      url = d1.BASE_API_URL + "#{d1.id}/?filter_name=filter_value&show=" + fields
 
       # error in http
-      $scope.goSection()
-      $httpBackend.expectGET "#{d1.BASE_API_URL}#{d1.id}/?filter_name=filter_value&show=test_name,weighted_data_input,model,pred_label,label,prob,created_on,test_result,next,previous,parameters_weights,data_input"
+      $scope.goSection()      
+      $httpBackend.expectGET url
       .respond 400
       $httpBackend.flush()
       expect($scope.setError).toHaveBeenCalledWith jasmine.any(Object), 'loading test example'
@@ -391,13 +385,12 @@ describe 'app.datas.controllers', ->
       $scope.goSection()
       response = {}
       response[d1.API_FIELDNAME] = d1
-      $httpBackend.expectGET "#{d1.BASE_API_URL}#{d1.id}/?filter_name=filter_value&show=test_name,weighted_data_input,model,pred_label,label,prob,created_on,test_result,next,previous,parameters_weights,data_input"
+      $httpBackend.expectGET url
       .respond 200, angular.toJson response
       $httpBackend.flush()
       expect($scope.loaded).toBe true
 
     it 'should respond to next,previous and back', inject (Data)->
-      $routeParams = {id: 777, model_id: 999, test_id: 888}
       $location.search({filter_name: 'filter_value'})
       createController 'ExampleDetailsCtrl', {$routeParams: $routeParams}
 

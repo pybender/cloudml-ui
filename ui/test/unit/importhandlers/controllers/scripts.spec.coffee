@@ -1,4 +1,4 @@
-describe 'xml_importhandlers/controllers/scripts.coffee', ->
+describe 'importhandlers/xml/controllers/scripts.coffee', ->
 
   beforeEach ->
     module 'ngCookies'
@@ -7,9 +7,9 @@ describe 'xml_importhandlers/controllers/scripts.coffee', ->
     module 'app.config'
     module 'app.services'
 
-    module 'app.importhandlers.model'
-    module 'app.xml_importhandlers.models'
-    module 'app.xml_importhandlers.controllers.scripts'
+    module 'app.importhandlers.models'
+    module 'app.importhandlers.xml.models'
+    module 'app.importhandlers.xml.controllers.scripts'
 
   $httpBackend = null
   $scope = null
@@ -80,7 +80,7 @@ describe 'xml_importhandlers/controllers/scripts.coffee', ->
         $scope.add()
         expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
           model: jasmine.any Script
-          template: 'partials/xml_import_handlers/scripts/edit.html'
+          template: 'partials/importhandlers/xml/scripts/edit.html'
           ctrlName: 'ModelEditDialogCtrl'
           action: 'add script'
         expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
@@ -93,7 +93,7 @@ describe 'xml_importhandlers/controllers/scripts.coffee', ->
         $scope.edit(script)
         expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
           model: jasmine.any Script
-          template: 'partials/xml_import_handlers/scripts/edit.html'
+          template: 'partials/importhandlers/xml/scripts/edit.html'
           ctrlName: 'ModelEditDialogCtrl'
           action: 'edit script'
         expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope

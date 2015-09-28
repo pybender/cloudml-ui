@@ -64,8 +64,11 @@ angular.module('app.servers.controllers', ['app.config', ])
             for obj in opts.objects
               model = new Model({id: obj.object_id})
               models.push model
-              model.$load({show: 'trainer_size'}).then ->
+              model.$load({show: 'trainer_size'})
+              .then (opts) ->
                 promises.push model
+              , (opts) ->
+                $scope.err = $scope.setError(opts, 'loading the model with id: ' + model.id)
 
           $q.all(promises).then ->
             modelsSize = _.reduce models, (acc, model)->
