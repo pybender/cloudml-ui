@@ -51,6 +51,17 @@ angular.module('app.filters', [])
       return text
 ])
 
+.filter('full_format_date', [() ->
+  (text) ->
+    if not text
+      return ''
+    dt = moment(text, 'YYYY-MM-DD HH:mm:ss.SSS')
+    if dt
+      return dt.format('DD-MM-YYYY HH:mm:ss')
+    else
+      return text
+])
+
 .filter('humanize_time', [() ->
   (text) ->
     if not text

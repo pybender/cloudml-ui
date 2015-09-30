@@ -20,7 +20,7 @@ class LogResource(BaseResource):
                 raise ValidationError('%s is required' % name)
             return params[name]
 
-        type_ = _get_required('type')
+        type_ = params.get('type', None)
         object_id = _get_required('object_id')
         order_ = params['order'] if params['order'] is not None else 'asc'
         next_token = params['next_token']

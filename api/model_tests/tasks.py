@@ -255,26 +255,32 @@ def calculate_confusion_matrix(test_id, weights):
         if weight[1] != 0:
             all_zero = False
         if weight[1] < 0:
+            logging.error("Negative weights found")
             raise ValueError('Negative weights are not allowed')
 
     if all_zero:
+        logging.error("All weights are zero")
         raise ValueError('All weights can not be 0')
 
     test = TestResult.query.get(test_id)
     if test is None:
+        logging.error('Test with id {0!s} not found!'.format(test_id))
         raise ValueError('Test with id {0!s} not found!'.format(test_id))
 
     model = test.model
     if model is None:
+        logging.error('Model with id {0!s} not found!'.format(
+            test.model_id))
         raise ValueError('Model with id {0!s} not found!'.format(
             test.model_id))
 
-    logging.info('Calculating confusion matrix for test id {0!s}'.format(
+    logging.info('Start calculating confusion matrix for test id {0!s}'.format(
         test_id))
 
     dim = len(weights)
     matrix = [[0 for x in range(dim)] for x in range(dim)]
 
+    i = 1
     for example in test.examples:
         true_value_idx = model.labels.index(example.label)
 
@@ -284,6 +290,10 @@ def calculate_confusion_matrix(test_id, weights):
             weighted_sum += weight[1] * example.prob[index]
 
         if weighted_sum == 0:
+            import json
+            logging.error("Weighted sum is 0 on calculating test example #{0} "
+                          "(probabilities: {1})"
+                          .format(i, json.dumps(example.prob)))
             raise ValueError("Weighted sum is 0. Try another weights "
                              "or retest model.")
 
@@ -295,6 +305,11 @@ def calculate_confusion_matrix(test_id, weights):
 
         predicted = weighted_prob.index(max(weighted_prob))
         matrix[true_value_idx][predicted] += 1
+        if i % 50 == 0:
+            logging.info("{0} test examples processed".format(i))
+        i += 1
+
+    logging.info("Confusion matrix calculation completed")
 
     return zip(model.labels, matrix)
 

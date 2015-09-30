@@ -468,16 +468,16 @@ class AmazonDynamoDBHelper(object):
         table = self._get_table(table_name)
         return table.get_item(**kwargs)._data
 
-    def get_items(self, table_name, limit=None, reverse=True,
+    def get_items(self, table_name, index=None, limit=None, reverse=True,
                   query_filter=None, **kwargs):
         table = self._get_table(table_name)
-        res = table.query_2(reverse=reverse, limit=limit,
+        res = table.query_2(reverse=reverse, index=index, limit=limit,
                             max_page_size=100, query_filter=query_filter,
                             consistent=True, **kwargs)
 
         return [i._data for i in res]
 
-    def create_table(self, table_name, schema):
+    def create_table(self, table_name, schema, indexes=None):
         """
         Creates a new table in DynamoDB & returns an
         in-memory ``Table`` object.
@@ -486,7 +486,19 @@ class AmazonDynamoDBHelper(object):
         if table_name not in self._tables:
             try:
                 table = Table.create(table_name, connection=self.conn,
-                                     schema=schema)
+                                     schema=schema, indexes=indexes)
                 self._tables[table_name] = table
             except JSONResponseError as ex:
+                logging.exception(str(ex))
+
+    def delete_table(self, table_name):
+        """
+        Deleted existing table
+        """
+        self._refresh_tables_list()
+        if table_name in self._tables:
+            try:
+                table = self._get_table(table_name)
+                table.delete()
+            except Exception as ex:
                 logging.exception(str(ex))
