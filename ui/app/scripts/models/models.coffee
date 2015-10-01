@@ -59,6 +59,8 @@ angular.module('app.models.model', ['app.config'])
           if origData.test_import_handler?
             if origData.test_import_handler_type == 'xml'
               cls = XmlImportHandler
+            else
+              throw Error('invalid import handler type: ' + origData.test_import_handler_type)
             @test_import_handler_obj = new cls(
               origData['test_import_handler'])
             @test_import_handler = @test_import_handler_obj.id
@@ -67,7 +69,7 @@ angular.module('app.models.model', ['app.config'])
             if origData.train_import_handler_type == 'xml'
               cls = XmlImportHandler
             else
-              throw new Error('Need to load import handler type')
+              throw new Error('invalid import handler type: ' + origData.train_import_handler_type)
             @train_import_handler_obj = new cls(
               origData['train_import_handler'])
             @train_import_handler = @train_import_handler_obj.id

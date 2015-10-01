@@ -129,16 +129,16 @@ describe 'ML Models Controllers', ->
       expect($scope.select2params).toBeDefined()
       expect($scope.params).toBeDefined()
 
-    # it "should make details request", inject (MODEL_FIELDS, FIELDS_BY_SECTION) ->
-    #   url = BASE_URL + MODEL_ID + '/' + '?show=' + MODEL_FIELDS + ',' + FIELDS_BY_SECTION['model']
-    #   $httpBackend.expectGET(url).respond.apply @, map_url_to_response(url, 'multiclass model main fields')
+    it "should make details request", inject (MODEL_FIELDS, FIELDS_BY_SECTION) ->
+      url = BASE_URL + MODEL_ID + '/' + '?show=' + MODEL_FIELDS + ',' + FIELDS_BY_SECTION['model']
+      $httpBackend.expectGET(url).respond.apply @, map_url_to_response(url, 'multiclass model main fields')
 
-    #   s3_url = "#{BASE_URL}#{$rootScope.model.id}/action/trainer_download_s3url/"
-    #   $httpBackend.expectGET(s3_url)
-    #   .respond '{"trainer_file_for": #{MODEL_ID}, "url": "https://.s3.amazonaws.com/9c4012780c0111e4968b000c29e3f35c?Signature=%2FO7%2BaUv4Fk84ioxWigRwkcdgVM0"}'
-    #   $rootScope.goSection(['model'])
-    #   $httpBackend.flush()
-    #   expect($rootScope.model.trainer_s3_url).toEqual 'https://.s3.amazonaws.com/9c4012780c0111e4968b000c29e3f35c?Signature=%2FO7%2BaUv4Fk84ioxWigRwkcdgVM0'
+      s3_url = "#{BASE_URL}#{$scope.model.id}/action/trainer_download_s3url/"
+      $httpBackend.expectGET(s3_url)
+      .respond "{\"trainer_file_for\": #{MODEL_ID}, \"url\": \"https://.s3.amazonaws.com/9c4012780c0111e4968b000c29e3f35c?Signature=%2FO7%2BaUv4Fk84ioxWigRwkcdgVM0\"}"
+      $scope.goSection(['model'])
+      $httpBackend.flush()
+      expect($scope.model.trainer_s3_url).toEqual 'https://.s3.amazonaws.com/9c4012780c0111e4968b000c29e3f35c?Signature=%2FO7%2BaUv4Fk84ioxWigRwkcdgVM0'
 
     it "should request only features", inject (FIELDS_BY_SECTION) ->
       url = BASE_URL + MODEL_ID + '/' + '?show=' + FIELDS_BY_SECTION['main']
