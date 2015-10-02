@@ -248,7 +248,15 @@ def calculate_confusion_matrix(test_id, weights):
     Now we support calculating confusion matrix for
     binary and multi class classifiers.
     """
-    init_logger('confusion_matrix_log', obj=int(test_id))
+    log_id = test_id
+    from api.async_tasks.models import AsyncTask
+    import calendar
+    tasks = AsyncTask.query\
+        .filter_by(task_id=calculate_confusion_matrix.request.id).limit(1)
+    if tasks:
+        log_id = calendar.timegm(tasks[0].created_on.utctimetuple())
+
+    init_logger('confusion_matrix_log', obj=int(log_id))
 
     all_zero = True
     for weight in weights:
@@ -274,8 +282,8 @@ def calculate_confusion_matrix(test_id, weights):
         raise ValueError('Model with id {0!s} not found!'.format(
             test.model_id))
 
-    logging.info('Start calculating confusion matrix for test id {0!s}'.format(
-        test_id))
+    logging.info('Start calculating confusion matrix for test id {0!s}, '
+                 'log id {1}'.format(test_id, log_id))
 
     dim = len(weights)
     matrix = [[0 for x in range(dim)] for x in range(dim)]
@@ -305,7 +313,7 @@ def calculate_confusion_matrix(test_id, weights):
 
         predicted = weighted_prob.index(max(weighted_prob))
         matrix[true_value_idx][predicted] += 1
-        if i % 50 == 0:
+        if i % 500 == 0:
             logging.info("{0} test examples processed".format(i))
         i += 1
 

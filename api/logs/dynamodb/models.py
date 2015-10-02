@@ -6,7 +6,7 @@ import logging
 import uuid
 
 from boto.dynamodb2.table import Table
-from boto.dynamodb2.fields import HashKey, RangeKey, AllIndex
+from boto.dynamodb2.fields import HashKey, RangeKey
 from boto.dynamodb2.types import NUMBER, STRING
 from boto.exception import JSONResponseError
 
@@ -33,13 +33,6 @@ class LogMessage(object):
         HashKey('object_id', data_type=NUMBER),
         RangeKey('id', data_type=STRING)
     ]
-    INDEXES = [
-        AllIndex('CreationTime',
-                 parts=[
-                     HashKey('object_id', data_type=NUMBER),
-                     RangeKey('created_on', data_type=NUMBER)
-                 ])
-    ]
 
     def __init__(self, type_, content, object_id=None, level='INFO'):
         self.id = '{0}:{1}'.format(type_, str(time.time()))
@@ -65,23 +58,16 @@ class LogMessage(object):
 
     @classmethod
     def create_table(cls):
-        db.create_table(cls.TABLE_NAME, cls.SCHEMA, indexes=cls.INDEXES)
-
-    @classmethod
-    def delete_table(cls):
-        db.delete_table(cls.TABLE_NAME)
+        db.create_table(cls.TABLE_NAME, cls.SCHEMA)
 
     @classmethod
     def filter_by_object(cls, log_type, object_id, next_token, order_str,
                          level=None, limit=None):
         query_filter = {}
         params = {
-            'object_id__eq': object_id
+            'object_id__eq': object_id,
+            'id__beginswith': log_type
         }
-        if log_type:
-            params['id__beginswith'] = log_type
-        else:
-            params['index'] = 'CreationTime'
 
         order_asc = True if order_str == 'asc' else False
         try:
