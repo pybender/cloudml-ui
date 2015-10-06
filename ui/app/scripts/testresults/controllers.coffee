@@ -289,10 +289,6 @@ without test id and model id"
       else
         $scope.open_logs_calc_id = id
 
-    $scope.getLogId = (date) ->
-        d = moment.utc(date, 'YYYY-MM-DD HH:mm:ss.SSS')
-        return Math.floor(d.valueOf()/1000)
-
     $scope.reload = () ->
       $scope.test.$load({show: 'confusion_matrix_calculations'}).then((resp) ->
         statuses = []

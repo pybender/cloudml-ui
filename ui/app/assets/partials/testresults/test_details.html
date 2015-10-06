@@ -196,7 +196,7 @@
                   </div>
                   <div class="row" ng-show="open_logs_calc_id == calc.id">
                       <div class="span9">
-                          <div ng-controller="LogMessageListCtrl" ng-init="init('confusion_matrix_log', getLogId(calc.created_on))">
+                          <div ng-controller="LogMessageListCtrl" ng-init="init('confusion_matrix_log', calc.id)">
                             <ng-include src="'partials/logmessages/list.html'"></ng-include>
                           </div>
                       </div>

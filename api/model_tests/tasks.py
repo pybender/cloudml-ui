@@ -250,11 +250,10 @@ def calculate_confusion_matrix(test_id, weights):
     """
     log_id = test_id
     from api.async_tasks.models import AsyncTask
-    import calendar
     if calculate_confusion_matrix.request.id is not None:
         tasks = AsyncTask.query\
             .filter_by(task_id=calculate_confusion_matrix.request.id).limit(1)
-        log_id = calendar.timegm(tasks[0].created_on.utctimetuple())
+        log_id = tasks[0].id
 
     init_logger('confusion_matrix_log', obj=int(log_id))
 
