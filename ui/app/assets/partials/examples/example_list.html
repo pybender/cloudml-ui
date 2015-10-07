@@ -78,7 +78,7 @@
         </tbody>
         <tbody ng-show="!loading_state">
           <tr ng-repeat="data in objects | filter:search" ng-class="{success : data.label==data.pred_label, error : !(data.label==data.pred_label)}">
-            <td><a href="#{{ getExampleUrl(data) }}">{{ $index + 1 }}</a></td>
+            <td><a href="#{{ getExampleUrl(data) }}">{{ (page-1) * per_page + $index + 1 }}</a></td>
             <td ng-repeat="field_name in extra_fields">{{ data[field_name] }}</td>
             <td><span>{{ data.label }}</span></td>
             <td><span>{{ data.pred_label }}</span></td>
@@ -96,6 +96,6 @@
           </tr>
         </tfoot>
     </table>
-    <pagination ng-show="total" boundary-links="true" total-items="total" max-size="8" page="page"></pagination>
+    <pagination ng-show="total" boundary-links="true" total-items="total" max-size="8" page="page" items-per-page="per_page"></pagination>
   </div>
 </div>
