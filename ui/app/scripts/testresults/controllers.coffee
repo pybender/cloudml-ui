@@ -262,6 +262,7 @@ without test id and model id"
 
   ($scope) ->
     $scope.open_calc_id = null
+    $scope.open_logs_calc_id = null
     $scope.confusion_matrix_error = undefined
 
     $scope.init = (test) ->
@@ -281,6 +282,12 @@ without test id and model id"
         $scope.open_calc_id = null
       else
         $scope.open_calc_id = id
+
+    $scope.showLogs = (id) ->
+      if $scope.open_logs_calc_id == id
+        $scope.open_logs_calc_id = null
+      else
+        $scope.open_logs_calc_id = id
 
     $scope.reload = () ->
       $scope.test.$load({show: 'confusion_matrix_calculations'}).then((resp) ->

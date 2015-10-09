@@ -171,25 +171,34 @@
               <ul class="unstyled">
                 <li class="row well well-small" ng-repeat="calc in test.confusion_matrix_calculations">
                   <div class="row">
-                    <div class="span6">
+                    <div class="span7">
                         <i class="icon-calendar"></i> created on <span class="badge badge-info" title="dates in GMT">{{ calc.created_on|format_date }}</span>
-                        <i class="icon-th"></i><span> weights </span>
-                        <span ng-repeat="label in [calc.args[1], calc.args[2]] track by $index">
-                            <span class="label">{{ label }}</span>
+                        <i class="icon-th"></i><span> weights: </span>
+                        <span ng-repeat="label in calc.args[1] track by $index">
+                            <span class="label">"{{ label[0] }}": {{ label[1] }}</span>
                         </span>
                         <span ng-show="calc.status=='Completed'" class="badge badge-info">{{ calc.status }}</span>
                         <span ng-show="calc.status=='Error'" class="badge badge-error">{{ calc.status }}</span>
+                        <span ng-show="calc.status=='In Progress'" class="badge badge-warning">{{ calc.status }}</span>
                         <br/>
                     </div>
-                    <div ng-show="calc.status != 'In Progress'" class="span2 pull-right">
-                      <button class="btn btn-link" ng-click="showResult(calc.id)" ng-show="calc.status=='Completed'">Show result</button>
-                      <button class="btn btn-link" ng-click="showResult(calc.id)" ng-show="calc.status=='Error'">Show details</button>
+                    <div class="span3 pull-right">
+                      <button class="btn btn-link pull-right" ng-click="showLogs(calc.id)">Show logs</button>
+                      <button class="btn btn-link pull-right" ng-click="showResult(calc.id)" ng-show="calc.status=='Completed'">Show result</button>
+                      <button class="btn btn-link pull-right" ng-click="showResult(calc.id)" ng-show="calc.status=='Error'">Show details</button>
                     </div>
                   </div>
                   <div class="row" ng-show="open_calc_id == calc.id">
-                      <div class="span6">
+                      <div class="span7">
                           <confusion-matrix ng-show="calc.status=='Completed'" matrix=calc.result></confusion-matrix>
                           <div class="alert alert-error" ng-show="calc.status=='Error'">{{calc.error}}</div>
+                      </div>
+                  </div>
+                  <div class="row" ng-show="open_logs_calc_id == calc.id">
+                      <div class="span9">
+                          <div ng-controller="LogMessageListCtrl" ng-init="init('confusion_matrix_log', calc.id)">
+                            <ng-include src="'partials/logmessages/list.html'"></ng-include>
+                          </div>
                       </div>
                   </div>
                 </li>
