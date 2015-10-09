@@ -195,6 +195,12 @@ angular.module('app.directives', [
         promiseHandler = (promise) ->
           promise.then successHandler, errorHandler
 
+        validateRequired = (value) ->
+           $(".editable-error-block").css("font-size", "14px")
+           $(".editable-error-block").css("font-weight", "normal")
+           if $.trim(value) == ''
+             return 'This field is required'
+
         editableOpts = {
           url: submitFn
           type: inputType
@@ -205,6 +211,9 @@ angular.module('app.directives', [
 
         if inputType == 'select'
           editableOpts.source = scope.source
+
+        if attrs.editableRequired?
+          editableOpts.validate = validateRequired
 
         $(el).editable editableOpts
 

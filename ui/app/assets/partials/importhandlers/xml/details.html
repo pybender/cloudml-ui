@@ -4,7 +4,7 @@
     class="title" ng-bind="model.name || 'untitled handler'"
     editable="handler" value="handler.name"
     editable-field="name" editable-input="text"
-    editable-placement="right"></small>
+    editable-placement="right" editable-required></small>
   <div class="actions" ng-controller="ImportHandlerActionsCtrl">
     <div ng-init="init({handler: handler})">
       <button ng-click="importData(handler)" class="btn btn-info">
@@ -125,7 +125,7 @@
                   <tbody>
                     <tr ng-repeat="item in objects | orderBy:'name'">
                       <td>
-                        <span title="name" class="name" ng-bind="item.name || 'no name'" editable="item" value="item.name" editable-field="name" editable-input="text" editable-placement="right"></span>
+                        <span title="name" class="name" ng-bind="item.name || 'no name'" editable="item" value="item.name" editable-field="name" editable-input="text" editable-placement="right" editable-required></span>
                       </td>
                       <td ng-controller="InputParameterTypesLoader">
                         <span title="Input Format Type" ng-bind="item.type || 'not specified'" editable="item" value="item.type" editable-field="type" editable-placement="right" editable-input="select" source="types"></span>

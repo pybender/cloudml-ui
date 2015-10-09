@@ -13,7 +13,7 @@
       <ul class="list-style tree">
         <li ng-repeat="item in objects | orderBy:'name'">
           <h5>
-            <span title="name" class="value" ng-bind="item.name || 'no name'" editable="item" value="item.name" editable-field="name" editable-input="text" editable-placement="right"></span>
+            <span title="name" class="value" ng-bind="item.name || 'no name'" editable="item" value="item.name" editable-field="name" editable-input="text" editable-placement="right" editable-required></span>
             <div class="actions">
               <a class="btn btn-info" ng-click="addWeight(item)">
                 <i class="status-icon icon-plus"></i> add weight
@@ -27,7 +27,8 @@
           <div class="row">
             <div class="span2">Value</div>
             <div class="span7">
-              <span title="" class="value" ng-bind="item.value || 'no value'" editable="item" value="item.value" editable-field="value" editable-input="text" editable-placement="right"></span>
+              <span ng-show="item.script.length == 0" title="" class="value" ng-bind="item.value || 'no value'" editable="item" value="item.value" editable-field="value" editable-input="text" editable-placement="right" editable-required></span>
+              <span ng-hide="item.script.length == 0" title="" class="value" ng-bind="item.value || 'no value'" editable="item" value="item.value" editable-field="value" editable-input="text" editable-placement="right"></span>
             </div>
           </div>
           <div class="row">
@@ -59,7 +60,7 @@
             <ul ng-controller="BaseListCtrl" ng-init="init(false, 'predict_model_weights', false)">
               <li ng-repeat="weight in objects">
                 <h4>
-                  <span title="" class="value" ng-bind="weight.label || 'no value'" editable="weight" value="weight.label" editable-field="label" editable-input="text" editable-placement="right"></span>
+                  <span title="" class="value" ng-bind="weight.label || 'no value'" editable="weight" value="weight.label" editable-field="label" editable-input="text" editable-placement="right" editable-required></span>
                   <div class="actions">
                     <button class="btn btn-danger" ng-click="deleteWeight(weight)">
                       <i title="Delete predict model weight. Be careful - you could not recover it!" class="icon-remove"></i> delete weight
@@ -70,7 +71,8 @@
                 <div class="row">
                   <div class="span2">Value</div>
                   <div class="span7">
-                    <span title="" class="value" ng-bind="weight.value || 'no value'" editable="weight" value="weight.value" editable-field="value" editable-input="text" editable-placement="right"></span>
+                    <span ng-show="weight.script.length == 0" title="" class="value" ng-bind="weight.value || 'no value'" editable="weight" value="weight.value" editable-field="value" editable-input="text" editable-placement="right" editable-required></span>
+                    <span ng-hide="weight.script.length == 0" title="" class="value" ng-bind="weight.value || 'no value'" editable="weight" value="weight.value" editable-field="value" editable-input="text" editable-placement="right"></span>
                   </div>
                 </div>
                 <div class="row">

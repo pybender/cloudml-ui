@@ -33,7 +33,7 @@
 	<tbody ng-hide="objects.length == 0">
 	  <tr ng-repeat="ds in objects | orderBy:'name'">
 	    <td>
-	    	<span ng-show="ds.can_edit" title="DataSource Name" class="name" ng-bind="ds.name || 'name here'" editable="ds" value="ds.name" editable-field="name" editable-input="text" editable-placement="right"></span>
+	    	<span ng-show="ds.can_edit" title="DataSource Name" class="name" ng-bind="ds.name || 'name here'" editable="ds" value="ds.name" editable-field="name" editable-input="text" editable-placement="right" editable-required></span>
 	    	<span ng-hide="ds.can_edit">{{ ds.name }}</span>
 	    </td>
 	    <td>{{ ds.type }}</td>

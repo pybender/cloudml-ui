@@ -3,14 +3,13 @@
 
 <alert-message ng-show="err" class="alert-error" msg='{{ err }}' unsafe>
 </alert-message>
-
 <div ng-init="init({model: model})" ng-controller="ModelActionsCtrl">
 <h2 class="title">
   <span title="Title"
     class="title" ng-bind="model.name || 'untitled model'"
     editable="model" value="model.name"
     editable-field="name" editable-input="text"
-    editable-placement="right"></span> details
+    editable-placement="right" editable-required></span> details
   <div class="actions">
     <button ng-show="model.status == 'Trained'" ng-click="test_model(model)" class="btn btn-success">
       <i title="Apply the classifier to the input provided by the data import handler" class="status-icon icon-play"></i>

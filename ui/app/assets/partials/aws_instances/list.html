@@ -25,13 +25,13 @@
 <tbody>
   <tr ng-repeat="instance in objects | orderBy:'name'">
     <td>
-      <span title="Instance Name" class="name" ng-bind="instance.name || 'instance name here'" editable="instance" value="instance.name" editable-field="name" editable-input="text" editable-placement="right"></span>
+      <span title="Instance Name" class="name" ng-bind="instance.name || 'instance name here'" editable="instance" value="instance.name" editable-field="name" editable-input="text" editable-placement="right" editable-required></span>
       <a href="#{{ instance.objectUrl() }}">
         ->
       </a>
     </td>
     <td>
-      <span title="Instance IP" class="ip" ng-bind="instance.ip || 'instance ip here'" editable="instance" value="instance.ip" editable-field="ip" editable-input="text" editable-placement="right"></span>
+      <span title="Instance IP" class="ip" ng-bind="instance.ip || 'instance ip here'" editable="instance" value="instance.ip" editable-field="ip" editable-input="text" editable-placement="right" editable-required></span>
     </td>
     <td>{{ instance.type }}</td>
     <td>
