@@ -179,7 +179,22 @@ class XmlImportHandlerResource(BaseResourceSQL):
             handler.name, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         new_handler = XmlImportHandler(name=name)
         try:
-            new_handler.data = handler.data
+            import xml.etree.ElementTree as ET
+            if request.user is None or request.user.id != handler.created_by_id:
+                data = handler.data
+                e = ET.fromstring(data)
+                datasources = e.find('datasources')
+                if datasources:
+                    for ds in datasources.iter('*'):
+                        if ds.tag == 'pig':
+                            ds.set('amazon_access_token', '')
+                            ds.set('amazon_token_secret', '')
+                        if ds.tag == 'db':
+                            ds.set('password', '')
+                    data = ET.tostring(e)
+                new_handler.data = data
+            else:
+                new_handler.data = handler.data
         except Exception, exc:
             return odesk_error_response(
                 400, ERR_INVALID_DATA, str(exc))
