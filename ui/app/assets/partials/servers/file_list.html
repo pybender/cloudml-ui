@@ -16,7 +16,7 @@
       <a href="#{{ file.obj.objectUrl() }}">{{ file.obj.name }}</a>
     </td>
     <td>
-      <span title="Name" class="name" ng-bind="file.name || 'not specified'" editable="file" value="file.name" editable-field="name" editable-input="text" editable-placement="right"></span>
+      <span title="Name" class="name" ng-bind="file.name || 'not specified'" editable="file" value="file.name" editable-field="name" editable-input="text" editable-placement="right" editable-required></span>
     </td>
     <td>{{ file.size|bytes }}</td>
     <td>{{ file.crc32 }}</td>

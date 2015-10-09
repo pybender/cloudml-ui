@@ -1,19 +1,21 @@
 <div>
+      <div ng-controller="DatasetActionsCtrl"  ng-init="init({dataset: dataset, handler: handler})">
   <h2>
     DataSet <small title="Title"
       class="title" ng-bind="dataset.name || 'untitled dataset'"
       editable="dataset" value="dataset.name"
       editable-field="name" editable-input="text"
-      editable-placement="right"></small>
-      <div class="actions" ng-controller="DatasetActionsCtrl" style="min-width: 100px;" ng-init="init({dataset: dataset, handler: handler})">
+      editable-placement="right" editable-required></small></h2>
+      <div class="actions" style="min-width: 100px;">
         <a  ng-show="dataset.cluster && ds.status == 'Imported'" class="btn btn-success" ng-click="getPigFields(dataset)"><i title="Get pig fields" class="icon-download-alt"></i> XML Fields</a>
         <a class="btn btn-info" ng-show="dataset.on_s3" ng-click="download()"><i title="Download From Amazon S3" class="icon-download-alt"></i> Download</a>
         <a class="btn" ng-show="ds.status != 'Importing' && ds.status != 'Uploading'" ng-click="reimport()"><i title="Re-import dataset" class="icon-refresh"></i> Re-import</a>
         <button ng-click="delete()" class="btn btn-danger">
           <i title="Delete dataset. Be careful - you could not recover it!" class="icon-remove"></i> Delete
         </button>
-      </div>
-  </h2>
+        </div>
+  </div>
+
   <div class="date-created" ng-init="obj=dataset">
     <ng-include src="'partials/parts/created_tags.html'"></ng-include>
     <i class="icon-status"></i>

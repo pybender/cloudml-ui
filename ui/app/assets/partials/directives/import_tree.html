@@ -2,7 +2,7 @@
   <li>
   <div>
     <h4>
-      <span title="name" class="name" ng-bind="entity.name || 'no name'" editable="entity" value="entity.name" editable-field="name" editable-input="text" editable-placement="right"></span>
+      <span title="name" class="name" ng-bind="entity.name || 'no name'" editable="entity" value="entity.name" editable-field="name" editable-input="text" editable-placement="right" editable-required></span>
       <div class="actions">
         <a ng-click="addEntity()(entity);" class="btn btn-info">
           <i class="status-icon icon-plus"></i> add sub entity
@@ -59,11 +59,11 @@
         <div class="span3">
             <div>
               Target:
-              <span title="target" class="target value" ng-bind="sqoop.target || 'no target'" editable="sqoop" value="sqoop.target" editable-field="target" editable-input="text" editable-placement="right"></span>
+              <span title="target" class="target value" ng-bind="sqoop.target || 'no target'" editable="sqoop" value="sqoop.target" editable-field="target" editable-input="text" editable-placement="right" editable-required></span>
             </div>
             <div>
               Table:
-              <span title="table" class="table value" ng-bind="sqoop.table || 'no table'" editable="sqoop" value="sqoop.table" editable-field="table" editable-input="text" editable-placement="right"></span>
+              <span title="table" class="table value" ng-bind="sqoop.table || 'no table'" editable="sqoop" value="sqoop.table" editable-field="table" editable-input="text" editable-placement="right" editable-required></span>
             </div>
         </div>
         <div class="span3">
@@ -262,7 +262,7 @@
                 <tbody>
                   <tr ng-repeat="field in entity.fields">
                     <th>
-                      <span title="name" class="name" ng-bind="field.name || 'no name'" editable="field" value="field.name" editable-field="name" editable-input="text" editable-placement="right"></span>
+                      <span title="name" class="name" ng-bind="field.name || 'no name'" editable="field" value="field.name" editable-field="name" editable-input="text" editable-placement="right" editable-required></span>
                     </th>
                     <td>
                       <span title="Type" ng-bind="field.type || 'no type'" editable="field" value="field.type" editable-field="type" editable-placement="right" editable-input="select" source="field.TYPES_LIST"></span>
