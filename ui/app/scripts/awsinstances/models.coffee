@@ -32,7 +32,8 @@ angular.module('app.awsinstances.model', ['app.config'])
         @is_default.toString().toLowerCase() == 'true'
 
       $save: (opts={}) =>
-        @type = @type['name']
+        if "type" in opts.only
+          @type = @type['name']
         super opts
 
     return AwsInstance
