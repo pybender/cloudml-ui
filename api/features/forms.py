@@ -15,6 +15,8 @@ from api.ml_models.models import Model, Transformer
 from api.ml_models.forms import FeatureTransformerForm
 from api.base.forms.base_forms import BasePredefinedForm
 from api.features.models import CLASSIFIERS
+from cloudml.trainer.feature_types import FEATURE_TYPE_FACTORIES, \
+    InvalidFeatureTypeException
 
 
 class FeatureParamsMixin(object):
@@ -51,26 +53,42 @@ class FeatureParamsMixin(object):
                         'Value {0} in {1} can\'t be empty'.format(key, name))
 
     def clean_params(self, value, field):
-        from cloudml.trainer.feature_types import FEATURE_TYPE_FACTORIES
-
         value_type = self.data.get('type')
         if value_type is None and not self.NO_REQUIRED_FOR_EDIT:
             raise ValidationError('invalid type')
         if value_type not in FEATURE_TYPE_FACTORIES:
             return
         required_params = FEATURE_TYPE_FACTORIES[value_type].required_params
+        if required_params and value is None:
+            raise ValidationError('Parameters are required for type {0}, '
+                                  'but was not specified'.format(value_type))
         for name in required_params:
             self._validate_param(value, name)
         return value
 
 
-class NamedFeatureTypeAddForm(BaseForm, FeatureParamsMixin):
+class NamedFeatureTypeForm(BaseForm, FeatureParamsMixin):
     required_fields = ('name', 'type')
 
     name = UniqueNameField(Model=NamedFeatureType)
     type_field = ChoiceField(choices=NamedFeatureType.TYPES_LIST, name='type')
     input_format = CharField()
     params = JsonField()
+
+    def validate_data(self):
+        if self.errors:
+            return
+
+        # Trying to make instance of the type
+        type_ = self.cleaned_data.get('type')
+        type_factory = FEATURE_TYPE_FACTORIES.get(type_)
+        try:
+            params = self.cleaned_data.get('params') or {}
+            input_format = self.cleaned_data.get('params') or 'plain'
+            type_factory.get_instance(params, input_format)
+        except InvalidFeatureTypeException, exc:
+            self.add_error("type", 'Cannot create instance of '
+                           'feature type: {0}'.format(exc))
 
 
 class FeatureSetForm(BaseForm):
@@ -222,9 +240,6 @@ exist. Please choose another one.' % name)
             return
 
         # Validating feature type and parameters
-        from cloudml.trainer.feature_types import FEATURE_TYPE_FACTORIES, \
-            InvalidFeatureTypeException
-
         def get_field_value(name):
             value = self.cleaned_data.get(name)
             if value is None and self.is_edit:

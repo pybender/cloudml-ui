@@ -2,6 +2,8 @@
 
 # Authors: Nikolay Melnik <nmelnik@upwork.com>
 
+import json
+
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin
 from ..views import NamedTypeResource
 from ..models import NamedFeatureType
@@ -33,3 +35,42 @@ class NamedFeatureTypeTests(BaseDbTestCase, TestChecksMixin):
         resp, obj = self.check_edit(post_data, load_model=True)
         self.assertEqual(obj.name, post_data['name'])
         self.assertEqual(obj.type, post_data['type'])
+
+    def test_post_composite(self):
+        data = {'type': 'composite',
+                'name': 'new-composite'}
+        self.check_edit_error(data, errors={
+            'params': 'Parameters are required for type composite, '
+                      'but was not specified'}
+        )
+
+        data = {'type': 'composite',
+                'name': 'new-composite',
+                'params': 'invalid'}
+        self.check_edit_error(data, errors={
+            'params': "JSON file is corrupted. Can not load it: invalid"}
+        )
+
+        data = {'type': 'composite',
+                'name': 'new-composite',
+                'params': '{}'}
+        self.check_edit_error(data, errors={
+            'params': "Parameter chain is required"}
+        )
+
+        data = {'type': 'composite',
+                'name': 'new-composite',
+                'params': '{"chain": {}}'}
+        self.check_edit_error(data, errors={
+            'type': "Cannot create instance of feature type: "
+                    "Composite feature types should define a "
+                    "list of individual feature types"}
+        )
+
+        data = {'type': 'composite',
+                'name': 'new-composite',
+                'params': '{"chain": [{"type": "int"}, {"type": "float"}]}'}
+        resp, obj = self.check_edit(data, load_model=True)
+        self.assertEqual(obj.name, data['name'])
+        self.assertEqual(obj.type, data['type'])
+        self.assertEqual(obj.params, json.loads(data['params']))

@@ -53,7 +53,7 @@ api.add_resource(ClassifierResource, '/cloudml/features/classifiers/')
 
 class NamedTypeResource(BaseResourceSQL):
     """ Predefined named feature types API methods """
-    put_form = post_form = NamedFeatureTypeAddForm
+    put_form = post_form = NamedFeatureTypeForm
     Model = NamedFeatureType
 
 api.add_resource(NamedTypeResource, '/cloudml/features/named_types/')
