@@ -81,7 +81,7 @@ class FeatureSetForm(BaseForm):
     target_feature = None
 
     def clean_group_by(self, value, field):
-        if value:
+        if value is not None:
             ids = [feature['id'] for feature in value]
             return Feature.query.filter(Feature.id.in_(ids)).all()
 

@@ -1,7 +1,7 @@
 # Authors: Nikolay Melnik <nmelnik@upwork.com>
 
 from sqlalchemy import event
-from sqlalchemy.orm import deferred
+from sqlalchemy.orm import deferred, backref
 from sqlalchemy.schema import CheckConstraint, UniqueConstraint
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship
@@ -116,7 +116,7 @@ class RefFeatureSetMixin(object):
 
     @declared_attr
     def feature_set(cls):
-        return relationship("FeatureSet")
+        return relationship("FeatureSet", backref=backref('feature_list'))
 
 
 class Feature(ExportImportMixin, RefFeatureSetMixin,

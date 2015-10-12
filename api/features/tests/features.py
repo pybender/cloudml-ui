@@ -7,7 +7,7 @@ import httplib
 import logging
 
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin
-from ..views import FeatureResource
+from ..views import FeatureResource, FeatureSetResource
 from ..models import Feature, FeatureSet, NamedFeatureType
 from ..fixtures import FeatureSetData, FeatureData, FEATURES_JSON
 from api.ml_models.models import Model, Transformer
@@ -435,6 +435,41 @@ class TestFeaturesDocs(BaseDbTestCase):
         self.assertEqual('map', Feature.field_type_to_feature_type('json'))
         self.assertEqual('text', Feature.field_type_to_feature_type('string'))
         self.assertEqual('text', Feature.field_type_to_feature_type('blabla'))
+
+
+class TestFeatureSetResource(BaseDbTestCase, TestChecksMixin):
+    """
+    Features API methods tests.
+    """
+    BASE_URL = '/cloudml/features/sets/'
+    RESOURCE = FeatureSetResource
+    Model = FeatureSet
+    datasets = (FeatureSetData, FeatureData, ModelData,
+                TransformerData)
+
+    def setUp(self):
+        BaseDbTestCase.setUp(self)
+        self.model = Model.query.filter_by(name=ModelData.model_01.name)[0]
+        self.obj = FeatureSet.query.filter_by(
+            schema_name=FeatureSetData.bestmatch.schema_name)[0]
+        self.model.features_set = self.obj
+        self.model.save()
+
+    def test_edit_group_by(self):
+        # setting a group by field
+        feature = Feature.query.filter_by(
+            feature_set=self.obj,
+            name='title').first()
+        data = {"group_by": json.dumps(
+            [{'id': feature.id,
+             'text': feature.name}])}
+        resp, obj = self.check_edit(data, id=self.obj.id)
+        self.assertItemsEqual(obj.group_by, [feature])
+
+        # removing group by field
+        data = {"group_by": json.dumps([])}
+        resp, obj = self.check_edit(data, id=self.obj.id)
+        self.assertFalse(obj.group_by)
 
 
 def fields_from_dict(obj, fields):
