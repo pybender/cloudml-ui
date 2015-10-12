@@ -23,6 +23,8 @@ db = app.sql_db
 
 
 class ModelEditForm(BaseForm):
+    NO_REQUIRED_FOR_EDIT = True
+    required_fields = ('name', )
     name = CharField()
     train_import_handler = ImportHandlerField()
     test_import_handler = ImportHandlerField()

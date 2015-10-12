@@ -212,7 +212,7 @@ angular.module('app.directives', [
         if inputType == 'select'
           editableOpts.source = scope.source
 
-        if attrs.editableRequired?
+        if attrs.editableRequired? && scope.$eval(attrs.editableRequired) != false
           editableOpts.validate = validateRequired
 
         $(el).editable editableOpts
