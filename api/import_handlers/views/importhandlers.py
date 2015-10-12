@@ -179,13 +179,8 @@ class XmlImportHandlerResource(BaseResourceSQL):
             handler.name, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         new_handler = XmlImportHandler(name=name)
         try:
-            from api import app
             import xml.etree.ElementTree as ET
-            authorized = request.user is not None
-            creator = authorized and request.user.id == handler.created_by_id
-            admin = authorized and request.user.email in \
-                [el[1] for el in app.config['ADMINS']]
-            if not (creator or admin):
+            if not handler._can_modify():
                 data = handler.data
                 e = ET.fromstring(data)
                 datasources = e.find('datasources')
