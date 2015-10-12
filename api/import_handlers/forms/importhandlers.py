@@ -315,8 +315,6 @@ class PredictModelForm(BaseForm):
     name = CharField()
     value = CharField()
     script = CharField()
-    positive_label_value = CharField()
-    positive_label_script = CharField()
 
     def __init__(self, *args, **kwargs):
         handler_id = kwargs.pop('import_handler_id')
@@ -330,11 +328,9 @@ class PredictModelForm(BaseForm):
         super(PredictModelForm, self).__init__(*args, **kwargs)
 
     def save(self, *args, **kwargs):
+        is_new_model = not self.is_edit
         model = super(PredictModelForm, self).save(commit=False)
-        if self.import_handler.predict is None:
-            self.import_handler.predict = Predict()
-            self.import_handler.save(commit=False)
-        if not self.is_edit:
+        if is_new_model:
             predict = self.import_handler.predict
             predict.models.append(model)
             predict.save(commit=False)

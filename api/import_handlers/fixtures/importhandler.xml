@@ -67,7 +67,6 @@
     </import>
     <predict>
           <model name="autohide" value="BestMatch.v31">
-              <positive_label value="false" />
               <weight label="true" value="1.23543"/>
               <weight label="false" value="1.0"/>
           </model>

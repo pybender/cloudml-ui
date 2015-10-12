@@ -94,12 +94,10 @@
     <predict>
           <!-- Model to use -->
           <model name="rank" value="BestMatch.v31">
-              <positive_label value="true"/>
           </model>
 
           <!-- Or model may result from a Javascript function -->
           <model name="rank" script="getModel(#{opening.jobcategory})">
-              <positive_label script="getPositiveLabel(#{opening.jobcategory})" />
               <weight label="true" script="getTrueWeight(#{opening.jobcategory}" />
               <weight label="false" script="getTrueWeight(#{opening.jobcategory}" />
           </model>
@@ -107,7 +105,6 @@
 
           <!-- Multiple models may be required for calculating result -->
           <model name="autohide" value="BestMatch.v31">
-              <positive_label value="false" />
               <weight label="true" value="1.23543"/>
               <weight label="false" value="1.0"/>
           </model>

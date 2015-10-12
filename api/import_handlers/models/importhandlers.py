@@ -11,6 +11,7 @@ from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import undefer, joinedload_all, joinedload
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy import event
 
 from api.base.models import db, BaseMixin, JSONType
 from cloudml.importhandler.datasources import DbDataSource
@@ -246,14 +247,6 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
             for model in self.predict.models:
                 predict_model = etree.SubElement(
                     predict, "model", **model.to_dict())
-                pos_lbl_dict = {}
-                if model.positive_label_value:
-                    pos_lbl_dict['value'] = model.positive_label_value
-                if model.positive_label_script:
-                    pos_lbl_dict['script'] = model.positive_label_script
-                if pos_lbl_dict.keys():
-                    etree.SubElement(predict_model, "positive_label",
-                                     **pos_lbl_dict)
                 for weight in model.predict_model_weights:
                     etree.SubElement(
                         predict_model, "weight", **weight.to_dict())
@@ -586,10 +579,6 @@ class PredictModel(db.Model, BaseMixin):
     value = db.Column(db.String(200), name='value')
     script = db.Column(db.Text, name='script')
 
-    positive_label_value = db.Column(db.String(200))
-    positive_label_script = db.Column(db.Text)
-
-
 predict_models_table = db.Table(
     'predict_models_table', db.Model.metadata,
     db.Column('predict_model_id', db.Integer, db.ForeignKey(
@@ -611,7 +600,7 @@ class RefPredictModelMixin(BaseMixin):
         backref_name = pluralize(convert_name(cls.__name__))
         return relationship(
             "PredictModel",
-            backref=backref(backref_name, cascade='all,delete'))
+            backref=backref(backref_name))
 
     def to_dict(self):
         res = super(RefPredictModelMixin, self).to_dict()
@@ -654,9 +643,6 @@ def fill_import_handler(import_handler, xml_data=None):
             name=import_handler.name,
             import_handler=import_handler)
         ent.save()
-        import_handler.predict = Predict()
-        import_handler.predict.label = PredictResultLabel()
-        import_handler.predict.probability = PredictResultProbability()
     else:  # Loading import handler from XML file
         ds_dict = {}
         for datasource in plan.datasources.values():
@@ -816,3 +802,23 @@ def fill_import_handler(import_handler, xml_data=None):
 
             db.session.add(predict)
             import_handler.predict = predict
+
+
+@event.listens_for(XmlImportHandler, "after_insert")
+def create_predict(mapper, connection, target):
+    """
+    Creates predict section, if them doesn't exist.
+    """
+    if target.predict is None:
+        target.predict = Predict()
+
+
+@event.listens_for(Predict, "after_insert")
+def create_predict(mapper, connection, target):
+    """
+    Creates predict section, if them doesn't exist.
+    """
+    if target.label is None:
+        target.label = PredictResultLabel()
+    if target.probability is None:
+        target.probability = PredictResultProbability()

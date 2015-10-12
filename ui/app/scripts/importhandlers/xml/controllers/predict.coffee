@@ -35,7 +35,6 @@ angular.module(
       return options
 
     $scope.editScript = (model) ->
-      model.editPositiveLabel = false
       $scope.openDialog($scope, {
         model: model
         template: 'partials/importhandlers/xml/predict/edit_script.html'

@@ -604,9 +604,8 @@ class XmlSqoopTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
         resp = self._check(action='pig_fields', obj=sqoop, method='put')
         self.assertTrue(get_iter_mock.called)
         print resp
-        self.assertItemsEqual(
-            'Generating pig fields delayed (link will appear in sqoop section)',
-            resp['result'])
+        self.assertItemsEqual('Generating pig fields delayed (link will '
+                              'appear in sqoop section)', resp['result'])
         # self.assertItemsEqual(
         #     ['application', 'opening', 'employer_info', 'hire_outcome'],
         #     [fld['column_name'] for fld in resp['fields']]
@@ -640,8 +639,6 @@ predict_models/'.format(self.handler.id)
         self.assertEquals(model.name, 'autohide')
         self.assertEquals(model.value, 'BestMatch.v31')
         self.assertFalse(model.script)
-        self.assertEquals(model.positive_label_value, 'false')
-        self.assertFalse(model.positive_label_script)
         weights = model.predict_model_weights
         self.assertEquals(len(weights), 2)
         weight = weights[0]
@@ -651,15 +648,13 @@ predict_models/'.format(self.handler.id)
 
     def test_list(self):
         resp = self.check_list(
-            show='id,name,script,value,positive_label_value',
+            show='id,name,script,value',
             count=1)
         model = resp['predict_models'][0]
         db_model = self.handler.predict.models[0]
         self.assertEquals(model['name'], db_model.name)
         self.assertEquals(model['value'], db_model.value)
         self.assertEquals(model['script'], db_model.script)
-        self.assertEquals(
-            model['positive_label_value'], db_model.positive_label_value)
 
     def test_list_invalid_handler(self):
         import sys
@@ -676,14 +671,25 @@ predict_models/'.format(sys.maxint)
         self.assertEquals(model.name, 'new name')
 
     def test_put(self):
-        print self.obj.id
         data, model = self.check_edit(
             {'name': 'new name'},
-            load_json=True,
             id=self.obj.id)
         self.assertEquals(model.name, 'new name')
-        # print self.Model.query.get(self.obj.id).name
-        # raise
+
+        data, model = self.check_edit(
+            {'script': '1000'},
+            id=self.obj.id)
+        self.assertEquals(model.script, '1000')
+
+        data, model = self.check_edit(
+            {'value': 'value'},
+            id=self.obj.id)
+        self.assertEquals(model.value, 'value')
+
+        data, model = self.check_edit(
+            {'script': ''},
+            id=self.obj.id)
+        self.assertEquals(model.script, '')
 
 
 class PredictModelWeightTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
