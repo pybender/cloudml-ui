@@ -32,7 +32,7 @@ angular.module('app.awsinstances.model', ['app.config'])
         @is_default.toString().toLowerCase() == 'true'
 
       $save: (opts={}) =>
-        if "type" in opts.only
+        if opts.only? && "type" in opts.only
           @type = @type['name']
         super opts
 
