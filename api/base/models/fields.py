@@ -49,7 +49,7 @@ class JSONType(TypeDecorator):
         if value is None:
             return None
 
-        if isinstance(value, (dict, int, float)):
+        if isinstance(value, (tuple, list, dict, int, float)):
             return value
 
         try:

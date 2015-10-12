@@ -256,7 +256,8 @@ def calculate_confusion_matrix(test_id, weights):
         log_id = tasks[0].id
 
     init_logger('confusion_matrix_log', obj=int(log_id))
-
+    logging.info('Starting re-calculating confusion matrix')
+    logging.info('Checking confusion matrix weights')
     all_zero = True
     for weight in weights:
         if weight[1] != 0:
@@ -282,7 +283,8 @@ def calculate_confusion_matrix(test_id, weights):
             test.model_id))
 
     logging.info('Start calculating confusion matrix for test id {0!s}, '
-                 'log id {1}'.format(test_id, log_id))
+                 'log id {1} with weights {2}'.format(
+                     test_id, log_id, weights))
 
     dim = len(weights)
     matrix = [[0 for x in range(dim)] for x in range(dim)]
