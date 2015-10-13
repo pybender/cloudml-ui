@@ -88,7 +88,7 @@ def train_transformer(dataset_ids, transformer_id, user_id,
             (train_end_time - train_begin_time).seconds)
         transformer.save()
     except Exception, exc:
-        db_session.rollback()
+        app.sql_db.session.rollback()
 
         logging.exception('Got exception when train transformer')
         transformer.status = transformer.STATUS_ERROR

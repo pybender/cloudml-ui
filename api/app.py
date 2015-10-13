@@ -20,6 +20,7 @@ class App(Flask):
         self.url_map.converters['regex'] = RegExConverter
         self.init_sql_db()
 
+    # TODO: obsolete!
     @property
     def db(self):
         if not hasattr(self, '_db'):
