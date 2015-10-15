@@ -393,7 +393,7 @@ angular.module('app.directives')
       }
   ])
 
-.directive("cmlDecisionTextTree", [
+.directive("cmlDecisionTextTreeOld", [
   'RecursionHelper'
 
   (RecursionHelper) ->
@@ -406,6 +406,60 @@ angular.module('app.directives')
               # // And return the linking function(s) which it returns
               return RecursionHelper.compile(element)
     }
+])
+
+.directive("cmlDecisionTextTree", [
+    ()->
+      return {
+        restrict: 'E'
+        scope: {root: '='}
+        link: (scope, element, attributes) ->
+          root = scope.root
+
+          buildTree = (node, element) ->
+            el = $("<ul></ul>")
+            $(el).append($("<li></li>"))
+            li = $(el).find("li")
+            $(li).append($("<div></div>"))
+            $(el).find("div").append($("<h5></h5>"))
+            h5 = $(el).find("h5")
+
+            l_class = ''
+            if node.type == 'yes'
+              l_class = 'label-success'
+            if node.type == 'no'
+              l_class = 'label-important'
+            label = $("<span></span>")
+            $(label).attr("class", " label "+l_class).text(node.type)
+
+            if node.id != 0
+              $(h5).append(label)
+
+            if node.node_type == 'branch'
+              name = $("<span></span>")
+              $(name).text(' '+node.name+' ')
+              $(h5).append(name)
+
+            samples = $("<small></small>")
+            $(samples).text(' ('+node.samples+' samples)')
+            $(h5).append(samples)
+
+            impurity_html = 'impurity: <span class="value">'+node.impurity+'</span>'
+            if node.node_type == 'leaf'
+              impurity_html += '<br/>value: <span class="value">'+node.value+'</span>'
+
+            impurity = $("<small></small>")
+            $(impurity).html(impurity_html)
+            $(el).find("div").append(impurity)
+
+            $(element).append(el)
+
+            if node.children?
+              for child in node.children
+                buildTree(child, li)
+
+          buildTree(root, element)
+  }
 ])
 
 .directive("swtDecisionTree", [
