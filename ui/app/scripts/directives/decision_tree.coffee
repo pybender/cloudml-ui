@@ -418,11 +418,12 @@ angular.module('app.directives')
 
           buildTree = (node, element) ->
             el = $("<ul></ul>")
-            $(el).append($("<li></li>"))
-            li = $(el).find("li")
-            $(li).append($("<div></div>"))
-            $(el).find("div").append($("<h5></h5>"))
-            h5 = $(el).find("h5")
+            li = $("<li></li>")
+            div = $("<div></div>")
+            h5 = $("<h5></h5>")
+            $(el).append(li)
+            $(li).append(div)
+            $(div).append(h5)
 
             l_class = ''
             if node.type == 'yes'
@@ -450,7 +451,7 @@ angular.module('app.directives')
 
             impurity = $("<small></small>")
             $(impurity).html(impurity_html)
-            $(el).find("div").append(impurity)
+            $(div).append(impurity)
 
             $(element).append(el)
 
