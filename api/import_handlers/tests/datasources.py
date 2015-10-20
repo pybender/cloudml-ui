@@ -75,8 +75,10 @@ class PredefinedDataSourceResourceTests(BaseDbTestCase, TestChecksMixin):
         ds = PredefinedDataSource.query.filter_by(
             name=PredefinedDataSourceData.datasource_01.name).one()
         url = self._get_url(id=ds.id)
+        resp = self.client.put(url, data=data, headers=[])
+        self.assertEquals(resp.status_code, 401)  # unauthorized
         resp = self.client.put(url, data=data, headers=HTTP_HEADERS)
-        self.assertEquals(resp.status_code, 401)  # haven't permissions
+        self.assertEquals(resp.status_code, 405)  # haven't permissions
 
         ds = PredefinedDataSource.query.filter_by(
             name=PredefinedDataSourceData.datasource_02.name).one()
@@ -86,8 +88,10 @@ class PredefinedDataSourceResourceTests(BaseDbTestCase, TestChecksMixin):
         ds = PredefinedDataSource.query.filter_by(
             name=PredefinedDataSourceData.datasource_01.name).one()
         url = self._get_url(id=ds.id)
+        resp = self.client.delete(url, headers=[])
+        self.assertEquals(resp.status_code, 401)  # unauthorized
         resp = self.client.delete(url, headers=HTTP_HEADERS)
-        self.assertEquals(resp.status_code, 401)  # haven't permissions
+        self.assertEquals(resp.status_code, 405)  # haven't permissions
 
         ds = PredefinedDataSource.query.filter_by(
             name=PredefinedDataSourceData.datasource_02.name).one()

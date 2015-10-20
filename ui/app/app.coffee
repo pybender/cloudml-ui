@@ -441,7 +441,7 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
     $rootScope.statusCode = opts.status
     if opts.status == 401  # Unauthorized
       $auth.logout()
-      return $location.path("/auth/login")
+      $location.path("/auth/login")
 
     return $rootScope.err
 

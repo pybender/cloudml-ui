@@ -62,6 +62,9 @@ class BaseMixin(JsonSerializableMixin):
     def can_delete(self):
         return True
 
+    def is_authorized(self):
+        return True
+
 
 class BaseModel(BaseMixin):
     created_on = db.Column(db.DateTime, server_default=func.now())
@@ -100,12 +103,17 @@ class BaseModel(BaseMixin):
             return True
         return self._can_modify()
 
-    def _can_modify(self):
-        from flask import request
+    @property
+    def is_authorized(self):
         user = getattr(request, 'user', None)
         if user is None:
             return False
+        return True
 
+    def _can_modify(self):
+        if not self.is_authorized:
+            return False
+        user = getattr(request, 'user', None)
         if user.email in [el[1] for el in app.config['ADMINS']]:
             return True
 
