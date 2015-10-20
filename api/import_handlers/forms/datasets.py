@@ -40,4 +40,6 @@ class DataSetAddForm(BaseForm):
 
 
 class DataSetEditForm(BaseForm):
+    NO_REQUIRED_FOR_EDIT = True
+    required_fields = ('name', )
     name = CharField()

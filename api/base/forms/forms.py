@@ -187,6 +187,13 @@ class BaseForm(InternalForm):
                     else:
                         self.add_error("fields", 'either one of \
 fields %s is required' % ', '.join(fields))
+        else:
+            # check that empty value is not set when editing required fields
+            # one by one
+            for field in self.cleaned_data:
+                if field in self.required_fields:
+                    if self.cleaned_data[field] == '':
+                        self.add_error(field, '%s is required' % field)
 
         for name, form in self.forms.iteritems():
             try:
