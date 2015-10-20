@@ -180,7 +180,7 @@ class XmlImportHandlerResource(BaseResourceSQL):
         new_handler = XmlImportHandler(name=name)
         try:
             import xml.etree.ElementTree as ET
-            if request.user is None or request.user.id != handler.created_by_id:
+            if not handler._can_modify():
                 data = handler.data
                 e = ET.fromstring(data)
                 datasources = e.find('datasources')
