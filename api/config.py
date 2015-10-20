@@ -92,6 +92,7 @@ SEND_ERROR_EMAILS = False
 
 # Name and email addresses of recipients
 ADMINS = (
+    ("Panagiotis Papadimitriou", "papadimitriou@upwork.com"),
     ("Nikolay Melnik", "nmelnik@odesk.com"),
     ("Nader Soliman", "nsoliman@elance-odesk.com"),
 )
