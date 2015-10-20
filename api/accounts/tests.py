@@ -341,6 +341,14 @@ class OdeskAuthTests(TestCase):
         'status': '500',
     }, '')
 
+    OAUTH_RESPONSE_ERROR_TOKEN = ({
+        'status': '200',
+    }, 'oauth_callback_confirmed=1')
+
+    OAUTH_RESPONSE_ERROR_SECRET = ({
+        'status': '200',
+    }, 'oauth_callback_confirmed=1&oauth_token=789')
+
     OAUTH_RESPONSE_AUTH = ({
         'status': '200',
     }, 'oauth_callback_confirmed=1&oauth_token=789&oauth_token_secret=999')
@@ -375,7 +383,21 @@ class OdeskAuthTests(TestCase):
         self.assertTrue(secret)
 
     @patch('oauth2.Client.request', Mock(return_value=OAUTH_RESPONSE_ERROR))
+    def test_odesk_auth_request_response_error(self):
+        from api.accounts.auth import OdeskAuth, AuthException
+        auth = OdeskAuth()
+        self.assertRaises(AuthException, auth.get_auth_url)
+
+    @patch('oauth2.Client.request', Mock(return_value=
+                                         OAUTH_RESPONSE_ERROR_TOKEN))
     def test_odesk_auth_request_token_error(self):
+        from api.accounts.auth import OdeskAuth, AuthException
+        auth = OdeskAuth()
+        self.assertRaises(AuthException, auth.get_auth_url)
+
+    @patch('oauth2.Client.request', Mock(return_value=
+                                         OAUTH_RESPONSE_ERROR_SECRET))
+    def test_odesk_auth_request_secret_error(self):
         from api.accounts.auth import OdeskAuth, AuthException
         auth = OdeskAuth()
         self.assertRaises(AuthException, auth.get_auth_url)
@@ -402,6 +424,14 @@ class OdeskAuthTests(TestCase):
         auth = OdeskAuth()
 
         info = auth.get_my_info('123', '345', '567')
+        self.assertEquals(info['name'], 'Mickey')
+
+    @patch('oauth2.Client.request', Mock(return_value=OAUTH_RESPONSE_INFO))
+    def test_odesk_auth_get_user_info(self):
+        from api.accounts.auth import OdeskAuth
+        auth = OdeskAuth()
+
+        info = auth.get_user_info('123', '345', '567')
         self.assertEquals(info['name'], 'Mickey')
 
     @patch('oauth2.Client.request', Mock(return_value=OAUTH_RESPONSE_ERROR))
