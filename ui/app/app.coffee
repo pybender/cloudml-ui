@@ -294,6 +294,7 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
     #    name - name of the action
     #    requiredFields - fields which API should return
     name = opts.name || 'objects'
+    objects_key = opts.objects_key
     [(resp) ->
         if opts.requiredFields?
           # check that all required fields were returned via API
@@ -301,6 +302,8 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
             $scope.setError({}, 'loading ' + name + ' : not all fields was returned via API')
         for key of resp
           $scope[key] = resp[key]
+        if objects_key?
+          $scope[objects_key] = resp.objects
     , (err) ->
       $scope.setError(err, 'loading ' + name)
     ]

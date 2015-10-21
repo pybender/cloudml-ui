@@ -7,6 +7,7 @@ describe 'servers/controllers.coffee', ->
   beforeEach ->
     module 'ngCookies'
 
+    module 'app'
     module 'app.base'
     module 'app.config'
     module 'app.services'
@@ -87,25 +88,49 @@ describe 'servers/controllers.coffee', ->
       $httpBackend.expectGET(url)
       .respond 400
 
-  describe 'ServersSelectLoader', ->
+  describe 'ServersSelectLoaderForImportHandler', ->
 
     $fields = null
 
     beforeEach ->
-      $fields = ['name', 'id', 'is_default']
+      $fields = ['name', 'id', 'is_default', 'memory_mb']
 
-    it 'should load servers', inject (Server) ->
-      expectServersHttpGet($fields)
-      createController 'ServersSelectLoader', {Server: Server}
+    prepareContext = (Server, XmlImportHandler, withError=false) ->
+      expectServersHttpGet($fields, withError)
+      createController 'ServersSelectLoaderForImportHandler', {Server: Server}
+      $scope.model = new XmlImportHandler({id: 1, name: "handler1"})
       $httpBackend.flush()
-      expect($scope.servers).toEqual getServers($fields)
+      return getServers($fields)
 
-    it 'should servers loading error', inject (Server) ->
-      expectServersHttpGet($fields, true)
-      createController 'ServersSelectLoader', {Server: Server}
-      $httpBackend.flush()
+    expectImportHandlerFileListHttpGet = (ImportHandlerFile, serverId, files, withError=false)->
+      file = new ImportHandlerFile()
+      response = {}
+      response[file.API_FIELDNAME + 's'] = files
+      url = ImportHandlerFile.$get_api_url {server_id: serverId}
+
+      $httpBackend.expectGET("#{url}?folder=importhandlers&server_id=#{serverId}&show=server_id,folder")
+      .respond 200, angular.toJson(response)
+
+    it 'should load servers', inject (Server, XmlImportHandler) ->
+      prepareContext Server, XmlImportHandler
+      expect($scope.servers.length).toEqual getServers($fields).length
+
+    it 'should servers loading error', inject (Server, XmlImportHandler) ->
+      prepareContext Server, XmlImportHandler, true
       expect($scope.setError).toHaveBeenCalled()
       expect($scope.setError.calls.mostRecent().args[1]).toEqual 'loading servers'
+
+    it 'should respond that the import handler with same name already exist in the server',
+      inject (Server, XmlImportHandler, ImportHandlerFile) ->
+        servers = prepareContext Server, XmlImportHandler
+
+        expectImportHandlerFileListHttpGet ImportHandlerFile, 1, [{object_id: 10, object_type: 'xml', name: 'handler1'}]
+        $scope.serverChanged 1
+        $httpBackend.flush()
+
+        expect($scope.setError).not.toHaveBeenCalled()
+        expect($scope.selectedServer.id).toEqual servers[0].id
+        expect(/already exist/.test($scope.error)).toEqual true
 
   describe 'ServersSelectLoaderForModel', ->
 
@@ -135,7 +160,7 @@ describe 'servers/controllers.coffee', ->
         .respond 400
 
     prepareContext = (Server, Model, model=null, withError=false) ->
-      $scope.model = if model then model else new Model({id: 9999})
+      $scope.model = if model then model else new Model({id: 9999, name: "the model"})
       expectServersHttpGet($fields, withError)
 
       if not model
@@ -146,7 +171,7 @@ describe 'servers/controllers.coffee', ->
 
     it 'should load servers scope', inject (Server, Model)->
       servers = prepareContext(Server, Model)
-      expect($scope.servers).toEqual servers
+      expect($scope.servers.length).toEqual servers.length
       expect($scope.selectedServer).toBe null
 
     it 'should show error message, when bad request while loading servers', inject (Server, Model)->
@@ -165,7 +190,8 @@ describe 'servers/controllers.coffee', ->
 
       expect($scope.setError).toHaveBeenCalled()
       expect($scope.setError.calls.mostRecent().args[1]).toEqual 'loading models on server'
-      expect($scope.selectedServer).toEqual servers[0]
+      expect($scope.selectedServer.name).toEqual servers[0].name
+      expect($scope.selectedServer.id).toEqual servers[0].id
 
     it 'should respond to changed server and handle errors retrieving models details',
       inject (Server, Model, ModelFile)->
@@ -272,6 +298,22 @@ describe 'servers/controllers.coffee', ->
         expect($scope.selectedServer.modelAlreadyUploaded).toEqual false
         expect($scope.selectedServer.modelWillExceed).toEqual true
 
+    it 'should respond that model with same name already exist in the server',
+      inject (Server, Model, ModelFile) ->
+        servers = prepareContext(Server, Model, new Model({id: 30, trainer_size: 30*1024*1024, name: "the model"}))
+
+        expectModeFileListHttpGet ModelFile, 1, [{object_id: 10, name: "the model"}, {object_id: 20}]
+
+        expectModelHttpGet Model, {id: 10, trainer_size: 10*1024*1024}
+        expectModelHttpGet Model, {id: 20, trainer_size: 20*1024*1024}
+
+        $scope.serverChanged 1
+        $httpBackend.flush()
+
+        expect($scope.setError).not.toHaveBeenCalled()
+        expect($scope.selectedServer.id).toEqual servers[0].id
+        expect($scope.selectedServer.models.length).toEqual 2
+        expect(/already exist/.test($scope.error)).toEqual true
 
   describe 'FileListCtrl', ->
 

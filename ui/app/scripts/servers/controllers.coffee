@@ -2,54 +2,75 @@
 
 angular.module('app.servers.controllers', ['app.config', ])
 
-.controller('ServersSelectLoader', [
-    '$scope'
-    'Server'
+.controller('BaseServersSelectLoader', [
+  '$scope'
+  'Server'
 
-    ($scope, Server) ->
-      $scope.servers = []
-      Server.$loadAll(
-        show: 'name,id,is_default'
-      ).then ((opts) ->
-        for server in opts.objects
-          $scope.servers.push
-            id: server.id
-            name: server.name
-            is_default: server.is_default
-      ), ((opts) ->
-        $scope.err = $scope.setError(opts, 'loading servers')
-      )
+  ($scope, Server) ->
+    $scope.servers = []
+
+    fields = ['name', 'id', 'is_default', 'memory_mb']
+    Server.$loadAll(show: fields.join(','))
+    .then $scope.getResponseHandler(
+      $scope, {
+        name: 'servers'
+        objects_key: 'servers'
+      })...
 ])
+
+
+# Select loader for uploading the import handler
+# checks whether import handler's name is not duplicated
+
+.controller('ServersSelectLoaderForImportHandler', [
+  '$scope'
+  '$controller'
+  'ImportHandlerFile'
+
+  ($scope, $controller, ImportHandlerFile) ->
+    $scope.error = null
+    $scope.selectedServer = null
+    $controller('BaseServersSelectLoader', {$scope: $scope})
+
+    $scope.serverChanged = (serverId) ->
+      filter = _.filter($scope.servers, {id: serverId})
+      $scope.selectedServer = if filter.length > 0 then filter[0] else null
+      if $scope.selectedServer? && not $scope.selectedServer.statsLoaded
+        params = {folder: 'importhandlers', server_id: serverId, show:'server_id,folder'}
+        ImportHandlerFile.$loadAll(params).then (opts) ->
+          for obj in opts.objects
+            if obj.name == $scope.model.name
+              $scope.error = 'Import Handler with name "' + obj.name + '" already exist on the server. Please rename your import handler or delete the import handler from the <a href="#' + $scope.selectedServer.objectUrl() + '" target="_blank">server</a> before uploading.'
+        $scope.selectedServer.statsLoaded = true
+])
+
+# Select loader for uploading the model
+# checks whether it's enough of the memory
+# in the server, model's name, etc.
 
 .controller('ServersSelectLoaderForModel', [
   '$scope'
   '$q'
-  'Server'
+  '$controller'
   'Model'
   'ModelFile'
 
-  ($scope, $q, Server, Model, ModelFile) ->
-    $scope.servers = []
+  ($scope, $q, $controller, Model, ModelFile) ->
+    $scope.error = null
     $scope.selectedServer = null
-
-    Server.$loadAll
-      show: 'name,id,is_default,memory_mb'
-    .then (opts) ->
-      $scope.servers = opts.objects
-    , (opts) ->
-      $scope.err = $scope.setError(opts, 'loading servers')
+    $controller('BaseServersSelectLoader', {$scope: $scope})
 
     if not $scope.model.trainer_size
       $scope.model.$load({show: 'trainer_size'})
+
     $scope.serverChanged = (serverId)->
       filter = _.filter($scope.servers, {id: serverId})
       $scope.selectedServer = if filter.length > 0 then filter[0] else null
-      if not $scope.selectedServer.memoryStatsLoaded
+      if $scope.selectedServer? && not $scope.selectedServer.memoryStatsLoaded
         promises = []
         models = []
         modelsSize = 0
         params = {folder: 'models', server_id: serverId, show:'server_id,folder'}
-        $scope.error = ""
         ModelFile.$loadAll(params).then (opts) ->
           if opts.objects.length <= 0
             # queue empty promise to consolidate code in $q.all for both cases
