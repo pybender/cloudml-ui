@@ -54,6 +54,8 @@
   </div>
 
   <div class="modal-footer" title="{{ Form.$error }}">
-    <button ng-click="save(['name', 'type', 'params', 'model_id', 'predefined_selected', 'classifier', 'is_predefined'])" ng-disabled="Form.$invalid" class="btn btn-primary">Save</button>
+    <button ng-click="save(['name', 'type', 'params', 'model_id', 'predefined_selected', 'classifier', 'is_predefined'])"
+            ng-disabled="(target_model.classifier.predefined_selected && Form.classifier.$error.required) || (!target_model.classifier.predefined_selected && Form.$invalid)"
+            class="btn btn-primary">Save</button>
   </div>
 </form>
