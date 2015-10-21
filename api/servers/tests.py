@@ -12,7 +12,8 @@ from .models import Server
 from .config import FOLDER_MODELS
 from .views import ServerResource, ServerFileResource
 from .tasks import upload_import_handler_to_server, upload_model_to_server
-from api.import_handlers.fixtures import XmlImportHandlerData as ImportHandlerData, XmlEntityData
+from api.import_handlers.fixtures import XmlImportHandlerData as \
+    ImportHandlerData, XmlEntityData
 from api.import_handlers.models import ImportHandler, XmlImportHandler,\
     XmlEntity
 from api.ml_models.fixtures import ModelData
@@ -138,6 +139,35 @@ class ServersTasksTests(BaseDbTestCase):
     @mock_s3
     @patch('api.amazon_utils.AmazonS3Helper.save_key_string')
     @patch('api.servers.tasks.get_a_Uuid')
+    @patch('api.servers.models.Server.list_keys')
+    def test_upload_model_existing_name(self, list_keys, uuid,
+                                        mock_save_key_string):
+        guid = '7686f8b8-dc26-11e3-af6a-20689d77b543'
+        uuid.return_value = guid
+        server = Server.query.filter_by(name=ServerData.server_01.name).one()
+        model = Model.query.filter_by(name=ModelData.model_01.name).one()
+        user = User.query.first()
+
+        list_keys.return_value = [{
+            'id': 'uid',
+            'object_name': model.name,
+            'size': 100,
+            'name': model.name,
+            'object_id': model.id,
+            'object_type': 'model',
+            'user_id': user.id,
+            'user_name': user.name,
+            'crc32': 'crc32',
+            'server_id': server.id}]
+
+        with self.assertRaises(ValueError):
+            upload_model_to_server(server.id, model.id, user.id)
+
+        self.assertFalse(mock_save_key_string.called)
+
+    @mock_s3
+    @patch('api.amazon_utils.AmazonS3Helper.save_key_string')
+    @patch('api.servers.tasks.get_a_Uuid')
     def test_upload_import_handler(self, uuid, mock_save_key_string):
         guid = 'pbnehzuEQlGTeQO7I6P8_w'
         uuid.return_value = guid
@@ -164,6 +194,35 @@ class ServersTasksTests(BaseDbTestCase):
                 'crc32': '0x4FAF0BAA'  # TODO: '0xC8AD8D64'
             }
         )
+
+    @mock_s3
+    @patch('api.amazon_utils.AmazonS3Helper.save_key_string')
+    @patch('api.servers.tasks.get_a_Uuid')
+    @patch('api.servers.models.Server.list_keys')
+    def test_upload_import_handler_existing_name(self, list_keys, uuid,
+                                                 mock_save_key_string):
+        guid = 'pbnehzuEQlGTeQO7I6P8_w'
+        uuid.return_value = guid
+        server = Server.query.filter_by(name=ServerData.server_01.name).one()
+        handler = XmlImportHandler.query.filter_by(
+            name=ImportHandlerData.import_handler_01.name).one()
+        user = User.query.first()
+        list_keys.return_value = [{
+            'id': 'uid',
+            'object_name': handler.name,
+            'size': 100,
+            'name': handler.name,
+            'object_id': handler.id,
+            'object_type': handler.TYPE,
+            'user_id': user.id,
+            'user_name': user.name,
+            'crc32': 'crc32',
+            'server_id': server.id}]
+
+        with self.assertRaises(ValueError):
+            upload_import_handler_to_server(
+                server.id, XmlImportHandler.TYPE,
+                handler.id, user.id)
 
 
 class ServerModelTests(BaseDbTestCase):

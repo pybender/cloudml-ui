@@ -30,6 +30,14 @@ def upload_model_to_server(server_id, model_id, user_id):
     server = Server.query.get(server_id)
     user = User.query.get(user_id)
     model = Model.query.get(model_id)
+
+    # TODO: Checking name, whether it's enough of the memory, etc.
+    model_files = server.list_keys(FOLDER_MODELS)
+    for file_ in model_files:
+        if file_['name'] == model.name:
+            raise ValueError('Model with name "{0}" already exist on '
+                             'the server {1}'.format(model.name, server.name))
+
     uid = get_a_Uuid()
 
     # TODO: Shall we use another account?
@@ -67,11 +75,14 @@ def upload_import_handler_to_server(server_id, handler_type, handler_id,
 
     server = Server.query.get(server_id)
     user = User.query.get(user_id)
+    handler = XmlImportHandler.query.get(handler_id)
 
-    _model = (XmlImportHandler if handler_type == XmlImportHandler.TYPE
-              else XmlImportHandler)
-
-    handler = _model.query.get(handler_id)
+    handler_files = server.list_keys(FOLDER_IMPORT_HANDLERS)
+    for file_ in handler_files:
+        if file_['name'] == handler.name:
+            raise ValueError('Import Handler with name "{0}" already exist on '
+                             'the server {1}'.format(
+                                 handler.name, server.name))
 
     uid = get_a_Uuid()
     # TODO: Shall we use another account?
