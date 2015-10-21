@@ -19,6 +19,7 @@
       </div>
     </form>
     <hr ng-show="selectedServer"/>
+    <alert-message ng-show="error" class="alert-error" msg="{{ error }}" safe></alert-message>
     <div ng-show="selectedServer"><b>Server Memory: </b>{{selectedServer.memory_mb}} MB</div>
     <div ng-show="selectedServer && !selectedServer.memoryStatsLoaded">Loading models on selected server ...</div>
     <div tooltip="Number of models' trainers on selected server"
@@ -43,7 +44,7 @@
   <div class="modal-footer">
     <button class="btn btn-primary"
             ng-click="upload()"
-            ng-disabled="Form.$invalid || !model.server || !selectedServer || !selectedServer.memoryStatsLoaded">
+            ng-disabled="Form.$invalid || !model.server || !selectedServer || !selectedServer.memoryStatsLoaded || error">
       Upload
     </button>
   </div>

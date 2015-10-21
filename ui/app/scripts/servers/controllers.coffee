@@ -35,12 +35,7 @@ angular.module('app.servers.controllers', ['app.config', ])
     Server.$loadAll
       show: 'name,id,is_default,memory_mb'
     .then (opts) ->
-      for server in opts.objects
-        $scope.servers.push
-          id: server.id
-          name: server.name
-          is_default: server.is_default
-          memory_mb: server.memory_mb
+      $scope.servers = opts.objects
     , (opts) ->
       $scope.err = $scope.setError(opts, 'loading servers')
 
@@ -54,6 +49,7 @@ angular.module('app.servers.controllers', ['app.config', ])
         models = []
         modelsSize = 0
         params = {folder: 'models', server_id: serverId, show:'server_id,folder'}
+        $scope.error = ""
         ModelFile.$loadAll(params).then (opts) ->
           if opts.objects.length <= 0
             # queue empty promise to consolidate code in $q.all for both cases
@@ -61,7 +57,10 @@ angular.module('app.servers.controllers', ['app.config', ])
             promises.push ->
               return $q (resolve)-> resolve()
           else
+            $scope.serverModels = opts.objects
             for obj in opts.objects
+              if obj.name == $scope.model.name
+                $scope.error = 'Model with name "' + obj.name + '" already exist on the server. Please rename your model or delete the model from the <a href="#' + $scope.selectedServer.objectUrl() + '" target="_blank">server</a> before uploading.'
               model = new Model({id: obj.object_id})
               models.push model
               model.$load({show: 'trainer_size'})
