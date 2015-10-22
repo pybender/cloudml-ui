@@ -417,6 +417,8 @@ angular.module('app.directives')
           root = scope.root
 
           buildTree = (node, element) ->
+            if !node?
+              return
             el = $("<ul></ul>")
             li = $("<li></li>")
             div = $("<div></div>")
