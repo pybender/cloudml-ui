@@ -298,10 +298,10 @@
                       <span title="script" class="script" ng-bind="field.script || 'no script'" editable="field" value="field.script" editable-field="script" editable-input="textarea" editable-placement="left"></span>
                     </td>
                     <td>
-                      <input title="multipart" type="checkbox" ng-checked="field.multipart" ng-model="field.multipart" ng-change="field.$save({only: ['multipart']})" />
+                      <input title="multipart" name="multipart" type="checkbox" ng-checked="field.multipart" ng-model="field.multipart" ng-change="field.$save({only: ['multipart']})" />
                     </td>
                     <td>
-                      <input title="required" type="checkbox" ng-checked="field.required" ng-model="field.required" ng-change="field.$save({only: ['required']})" />
+                      <input title="required" name="required" type="checkbox" ng-checked="field.required" ng-model="field.required" ng-change="field.$save({only: ['required']})" />
                     </td>
                     <td>
                       <button ng-click="deleteField()(field);" class="btn btn-danger">

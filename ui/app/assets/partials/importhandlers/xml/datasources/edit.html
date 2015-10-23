@@ -35,7 +35,7 @@
                 <div ng-repeat="param in model.config" class="control-group">
                 <label class="control-label">{{ param.name }}</label>
                 <div class="controls">
-                  <parameter-input ng-model="model.params[param.name]" config="param" />
+                  <parameter-input ng-model="model.params[param.name]" config="param" name="param.name"/>
                 </div>
             </div>
         </div>

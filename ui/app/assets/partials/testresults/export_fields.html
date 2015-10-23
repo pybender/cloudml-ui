@@ -11,10 +11,10 @@
   </div>
   <div class="row">
     <div class="span5">
-      <form class="form-inline">
+      <form name="ExtraFieldsForm" class="form-inline">
       <label>Extra Fields ({{extraFields.length}}): </label>
       <div class="input-append">
-        <select ng-model="csvField" ng-disabled="loading_state || !selectFields.length">
+        <select name="csv_field" ng-model="csvField" ng-disabled="loading_state || !selectFields.length">
           <option value=''>
             {{ {true:'-- Select Field Name (' + selectFields.length + ') --',
                 false:'-- All Fields Selected --'}[selectFields.length > 0] }}
