@@ -57,7 +57,7 @@ def convert_parameters(config, params):
                     'Invalid parameter %s value: %s' % (name, exc))
 
             choices = param_config.get('choices')
-            if choices:
+            if choices and type_ == 'string':
                 check_choices(name, params[name], choices)
     return params
 

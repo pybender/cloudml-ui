@@ -417,48 +417,49 @@ angular.module('app.directives')
           root = scope.root
 
           buildTree = (node, element) ->
-            if node != undefined
-              el = $("<ul></ul>")
-              li = $("<li></li>")
-              div = $("<div></div>")
-              h5 = $("<h5></h5>")
-              $(el).append(li)
-              $(li).append(div)
-              $(div).append(h5)
+            if !node?
+              return
+            el = $("<ul></ul>")
+            li = $("<li></li>")
+            div = $("<div></div>")
+            h5 = $("<h5></h5>")
+            $(el).append(li)
+            $(li).append(div)
+            $(div).append(h5)
 
-              l_class = ''
-              if node.type == 'yes'
-                l_class = 'label-success'
-              if node.type == 'no'
-                l_class = 'label-important'
-              label = $("<span></span>")
-              $(label).attr("class", " label "+l_class).text(node.type)
+            l_class = ''
+            if node.type == 'yes'
+              l_class = 'label-success'
+            if node.type == 'no'
+              l_class = 'label-important'
+            label = $("<span></span>")
+            $(label).attr("class", " label "+l_class).text(node.type)
 
-              if node.id != 0
-                $(h5).append(label)
+            if node.id != 0
+              $(h5).append(label)
 
-              if node.node_type == 'branch'
-                name = $("<span></span>")
-                $(name).text(' '+node.name+' ')
-                $(h5).append(name)
+            if node.node_type == 'branch'
+              name = $("<span></span>")
+              $(name).text(' '+node.name+' ')
+              $(h5).append(name)
 
-              samples = $("<small></small>")
-              $(samples).text(' ('+node.samples+' samples)')
-              $(h5).append(samples)
+            samples = $("<small></small>")
+            $(samples).text(' ('+node.samples+' samples)')
+            $(h5).append(samples)
 
-              impurity_html = 'impurity: <span class="value">'+node.impurity+'</span>'
-              if node.node_type == 'leaf'
-                impurity_html += '<br/>value: <span class="value">'+node.value+'</span>'
+            impurity_html = 'impurity: <span class="value">'+node.impurity+'</span>'
+            if node.node_type == 'leaf'
+              impurity_html += '<br/>value: <span class="value">'+node.value+'</span>'
 
-              impurity = $("<small></small>")
-              $(impurity).html(impurity_html)
-              $(div).append(impurity)
+            impurity = $("<small></small>")
+            $(impurity).html(impurity_html)
+            $(div).append(impurity)
 
-              $(element).append(el)
+            $(element).append(el)
 
-              if node.children?
-                for child in node.children
-                  buildTree(child, li)
+            if node.children?
+              for child in node.children
+                buildTree(child, li)
 
           buildTree(root, element)
   }
