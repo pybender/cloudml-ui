@@ -13,7 +13,7 @@ from api.import_handlers.models import XmlImportHandler, XmlDataSource, \
 from api import app
 from api.base.parameters import convert_parameters
 from cloudml.importhandler.exceptions import ImportHandlerException
-from cloudml.importhandler.importhandler import ExtractionPlan
+from cloudml.importhandler.importhandler import ExtractionPlan, ScriptManager
 
 db = app.sql_db
 
@@ -269,6 +269,15 @@ class XmlScriptForm(BaseForm):
     data = CharField()
     import_handler_id = DocumentField(
         doc=XmlImportHandler, by_name=False, return_doc=False)
+
+    def clean_data(self, value, field):
+        try:
+            s = ScriptManager()
+            # this will raise exception in case of incorrect script
+            s.add_python(value)
+        except ImportHandlerException as ex:
+            raise ValidationError(ex.message)
+        return value
 
 
 class XmlSqoopForm(BaseForm):
