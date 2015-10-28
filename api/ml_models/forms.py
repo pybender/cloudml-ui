@@ -8,7 +8,8 @@ import json
 import importlib
 
 from api import app
-from api.base.forms.base_forms import BaseChooseInstanceAndDatasetMultiple
+from api.base.forms.base_forms import BaseChooseInstanceAndDatasetMultiple, \
+    ParametersConvertorMixin
 from api.import_handlers.models import DataSet
 from api.base.forms import BaseForm, ValidationError, ModelField, \
     CharField, JsonField, ImportHandlerFileField, UniqueNameField, \
@@ -16,7 +17,7 @@ from api.base.forms import BaseForm, ValidationError, ModelField, \
 from api.models import Tag, Model, XmlImportHandler, \
     Transformer, BaseTrainedEntity, ClassifierGridParams
 from api.features.models import Feature
-
+from cloudml.trainer.transformers import TRANSFORMERS
 from api.features.config import CLASSIFIERS
 
 db = app.sql_db
@@ -212,7 +213,7 @@ class TransformDataSetForm(BaseForm):
     dataset = ModelField(model=DataSet, return_model=True)
 
 
-class TransformerForm(BaseForm):
+class TransformerForm(BaseForm, ParametersConvertorMixin):
     """
     Adds/Edits Pretrained transformer form
     """
@@ -241,9 +242,15 @@ class TransformerForm(BaseForm):
         if json_selected:
             json = self.cleaned_data.get('json')
             name = json['transformer-name']
+            params = json['transformer'].get('params')
+            type_ = json['transformer'].get('type')
             self.is_name_available(name, field_name='json')
         else:
             self.is_name_available(name)
+            params = self.cleaned_data.get('params')
+            type_ = self.cleaned_data.get('type')
+
+        self.convert_params(type_, params, configuration=TRANSFORMERS)
 
     def save(self, commit=True):
         if self.cleaned_data.get('json_selected'):
@@ -268,7 +275,7 @@ already exist'.format(name))
         return True
 
 
-class FeatureTransformerForm(BaseForm):
+class FeatureTransformerForm(BaseForm, ParametersConvertorMixin):
     """
     Adds/edits feature transformer form.
     """
@@ -293,6 +300,10 @@ class FeatureTransformerForm(BaseForm):
         pretrained_selected = self.cleaned_data.get('predefined_selected')
         if not pretrained_selected and type_ not in Transformer.TYPES_LIST:
             self.add_error('type', 'type is invalid')
+            return
+
+        self.convert_params(type_, self.cleaned_data.get('params'),
+                            configuration=TRANSFORMERS)
 
     def save(self, commit=True, save=True):
         feature = self.cleaned_data.get('feature_id', None)
