@@ -18,6 +18,8 @@ angular.module('app.base', ['app.config', 'app.services'])
       $rootScope.loadingCount -= 1
       $rootScope.$broadcast('httpCallStopped')
       if data
+        Number.prototype.formatMoney = () ->
+          return this.baseValue
         return JSON.parse(data)
       return data
 

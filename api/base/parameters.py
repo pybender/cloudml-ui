@@ -50,6 +50,9 @@ def convert_parameters(config, params):
         if name in params:
             type_ = param_config.get('type')
             convertor = TYPE_CONVERTORS[type_]
+            if params[name] is None:
+                params.pop(name)
+                continue
             try:
                 params[name] = convertor(params[name], param_config)
             except ValueError, exc:
