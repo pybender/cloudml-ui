@@ -402,12 +402,15 @@ angular.module('app.importhandlers.xml.models', ['app.config'])
       API_FIELDNAME: 'xml_script'
       @LIST_MODEL_NAME: 'xml_scripts'
       LIST_MODEL_NAME: @LIST_MODEL_NAME
-      @MAIN_FIELDS: 'id,import_handler_id,data'
+      @MAIN_FIELDS: 'id,import_handler_id,data,type'
       @ITEM_NAME: 'scripts'
+      TYPES_LIST: ['python_code', 'python_file']
+      DEFAULT_FIELDS_TO_SAVE: ['import_handler_id', 'data', 'data_file']
 
       id: null
       import_handler_id: null
       data: null
+      type: null
 
     return Script
 ])

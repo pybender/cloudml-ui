@@ -197,8 +197,11 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
 
         for scr in self.xml_scripts:
             if scr.data and scr.data.strip():  # script isn't empty
-                scr_tag = etree.SubElement(plan, 'script')
-                scr_tag.text = etree.CDATA(scr.data)
+                if scr.type == XmlScript.TYPE_PYTHON_FILE:
+                    scr_tag = etree.SubElement(plan, 'script', src=scr.data)
+                if scr.type == XmlScript.TYPE_PYTHON_CODE:
+                    scr_tag = etree.SubElement(plan, 'script')
+                    scr_tag.text = etree.CDATA(scr.data)
 
         datasources = etree.SubElement(plan, "datasources")
         for ds in self._get_in_order(self.xml_data_sources, 'type',
@@ -391,7 +394,12 @@ class XmlInputParameter(db.Model, BaseMixin, RefXmlImportHandlerMixin):
 
 
 class XmlScript(db.Model, BaseMixin, RefXmlImportHandlerMixin):
+    TYPE_PYTHON_CODE = 'python_code'
+    TYPE_PYTHON_FILE = 'python_file'
+    TYPES = [TYPE_PYTHON_CODE, TYPE_PYTHON_FILE]
     data = db.Column(db.Text)
+    type = db.Column(db.Enum(*TYPES, name='xml_script_types'),
+                     server_default=TYPE_PYTHON_CODE)
 
 
 class XmlQuery(db.Model, BaseMixin):
@@ -670,8 +678,16 @@ def fill_import_handler(import_handler, xml_data=None):
             import_handler.import_params.append(inp.name)
 
         for scr in plan.data.xpath("script"):
+            if "src" in scr.attrib:
+                script_data = scr.attrib["src"]
+                script_type = XmlScript.TYPE_PYTHON_FILE
+            else:
+                script_data = scr.text
+                script_type = XmlScript.TYPE_PYTHON_CODE
             script = XmlScript(
-                data=scr.text, import_handler=import_handler)
+                type=script_type,
+                data=script_data,
+                import_handler=import_handler)
             db.session.add(script)
 
         def get_datasource(entity):

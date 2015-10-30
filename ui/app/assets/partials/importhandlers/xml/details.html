@@ -169,11 +169,14 @@
             <div ng-controller="BaseListCtrl" ng-init="init(false, 'xml_scripts', false)">
               <div ng-repeat="item in objects">
                 <div class="row">
-                  <div class="span9">
+                  <div class="span9" ng-show="item.type=='python_code'">
                     <textarea class="small" ui-codemirror="codeMirrorConfigs('nocursor')['python']" ng-model="item.data" class="cml-codemirror-refresh" />
                   </div>
+                  <div class="span9" ng-show="item.type=='python_file'">
+                      File: {{ item.data }}
+                  </div>
                   <div class="span2">
-                    <button ng-click="edit(item)" class="btn btn-info">
+                    <button ng-click="edit(item)" class="btn btn-info" ng-show="item.type=='python_code'">
                       <i title="Edit script" class="icon-edit"></i>
                     </button>
                     <button ng-click="delete(item)" class="btn btn-danger">

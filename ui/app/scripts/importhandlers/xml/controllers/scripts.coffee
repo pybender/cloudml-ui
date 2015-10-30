@@ -22,12 +22,11 @@ angular.module(
 
     $scope.add = () ->
       script = new Script({
-        import_handler_id: $scope.handler.id,
-        data: ''
+        import_handler_id: $scope.handler.id
       })
       $scope.openDialog($scope, {
         model: script
-        template: 'partials/importhandlers/xml/scripts/edit.html'
+        template: 'partials/importhandlers/xml/scripts/add.html'
         ctrlName: 'ModelEditDialogCtrl'
         action: 'add script'
       })
