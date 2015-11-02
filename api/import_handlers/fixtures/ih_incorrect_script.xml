@@ -6,8 +6,8 @@
         <param name="start" type="date" />
         <param name="end" type="date" />
     </inputs>
-    <script src="./api/import_handlers/fixtures/functions.py" />
-    <script><![CDATA[1+1]]></script>
+    <script src="./api/import_handlers/fixtures/functions_inc.py" />
+    <script><![CDATA[1+1]]]></script>
 
     <datasources>
         <!--

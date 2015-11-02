@@ -15,6 +15,9 @@ IMPORTHANDLER_FROM_FIXTURES = open(os.path.join(
     DIR, 'importhandler_from_fixtures.xml'), 'r').read()
 EXTRACT_TRAIN_XML = open(os.path.join(DIR, 'extract-train.xml'), 'r').read()
 EXTRACT_OBSOLETE = open(os.path.join(DIR, 'obsolete_extract.xml'), 'r').read()
+IH_INCORRECT_SCRIPT = open(os.path.join(DIR,
+                                        'ih_incorrect_script.xml'), 'r').read()
+IH_INVALID_PYTHON = open(os.path.join(DIR, 'ih_invalid_python.xml'), 'r').read()
 # PIG_IMPORT_HANDLER = os.path.join(
 #     DIR, 'pig-train-import-handler.xml')
 

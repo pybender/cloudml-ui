@@ -62,9 +62,16 @@ describe 'importhandlers/xml/controllers/scripts.coffee', ->
         scripts = [
           id: 222
           data: 'script 222 data'
+          type: 'python_code'
         ,
           id: 333,
           data: 'script 333 data'
+          type: 'python_code'
+        ,
+          id: 444,
+          data: 'functions.py'
+          type: 'python_file'
+
         ]
         handler.xml_scripts = scripts
         $scope.$digest() # to trigger the watch
@@ -80,13 +87,12 @@ describe 'importhandlers/xml/controllers/scripts.coffee', ->
         $scope.add()
         expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
           model: jasmine.any Script
-          template: 'partials/importhandlers/xml/scripts/edit.html'
+          template: 'partials/importhandlers/xml/scripts/add.html'
           ctrlName: 'ModelEditDialogCtrl'
           action: 'add script'
         expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
         openOptions = $scope.openDialog.calls.mostRecent().args[1]
         expect(openOptions.model.import_handler_id).toEqual 111
-        expect(openOptions.model.data).toEqual ''
 
         # edit dialog
         script = new Script {id: 999, import_handler_id: 888, data: 'to edit'}

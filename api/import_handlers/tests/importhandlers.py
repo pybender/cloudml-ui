@@ -347,6 +347,25 @@ class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
         self.assertEqual(
             1, XmlScript.query.filter_by(import_handler=handler).count())
 
+        #incorrect script path in scripts src
+        resp = self.client.put(
+            url, data={'data': IH_INCORRECT_SCRIPT}, headers=HTTP_HEADERS)
+        self.assertEqual(400, resp.status_code)
+        self.assertIn('not found', resp.data)
+
+        #invalid python in existing script
+        resp = self.client.put(
+            url, data={'data': IH_INVALID_PYTHON}, headers=HTTP_HEADERS)
+        self.assertEqual(400, resp.status_code)
+        self.assertIn('Exception occurs while adding python script', resp.data)
+
+        #2 scripts (src and text)
+        resp = self.client.put(url, data={'data': EXTRACT_OBSOLETE},
+                               headers=HTTP_HEADERS)
+        self.assertEqual(200, resp.status_code)
+        self.assertEqual(
+            2, XmlScript.query.filter_by(import_handler=handler).count())
+
 
 class IHLoadMixin(object):
     pass
@@ -481,6 +500,70 @@ class XmlScriptTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
         resp = self.check_details(show='data', obj=self.obj)
         obj = resp[self.RESOURCE.OBJECT_NAME]
         self.assertEqual(obj['data'], self.obj.data)
+
+    def test_post_put(self):
+        handler = get_importhandler(filename='obsolete_extract.xml')
+        self.handler_amazon = handler
+        url = '/cloudml/xml_import_handlers/{0!s}/scripts/'.format(handler.id)
+        data_01 = {'data_file': '2+2', 'import_handler_id': handler.id}
+        data_02 = {'data_file': 'kwwkk', 'import_handler_id': handler.id}
+        data_03 = {'data': '2*11', 'data_file': '3*11',
+                   'import_handler_id': handler.id}
+        data_04 = {'data': '2*11', 'import_handler_id': handler.id}
+        data_05 = {'data': '2*12', 'import_handler_id': handler.id}
+
+        #correct data file
+        resp = self.client.post(url, data=data_01, headers=HTTP_HEADERS)
+        self.assertEqual(201, resp.status_code)
+        resp_obj = json.loads(resp.data)
+        obj = XmlScript.query.get(resp_obj[self.RESOURCE.OBJECT_NAME]['id'])
+        self.assertEqual(obj.type, XmlScript.TYPE_PYTHON_FILE)
+        key = "{0}_python_script_".format(handler.name)
+        self.assertIn(key, obj.data)
+
+        #incorrect data file
+        resp = self.client.post(url, data=data_02, headers=HTTP_HEADERS)
+        self.assertEqual(400, resp.status_code)
+        self.assertIn("Exception occurs while adding python script", resp.data)
+
+        #choose data file
+        resp = self.client.post(url, data=data_03, headers=HTTP_HEADERS)
+        self.assertEqual(201, resp.status_code)
+        resp_obj = json.loads(resp.data)
+        obj = XmlScript.query.get(resp_obj[self.RESOURCE.OBJECT_NAME]['id'])
+        self.assertEqual(obj.type, XmlScript.TYPE_PYTHON_FILE)
+        key = "{0}_python_script_".format(handler.name)
+        self.assertIn(key, obj.data)
+
+        #correct data
+        resp = self.client.post(url, data=data_04, headers=HTTP_HEADERS)
+        self.assertEqual(201, resp.status_code)
+        resp_obj = json.loads(resp.data)
+        obj = XmlScript.query.get(resp_obj[self.RESOURCE.OBJECT_NAME]['id'])
+        self.assertEqual(obj.type, XmlScript.TYPE_PYTHON_CODE)
+        self.assertEqual(obj.data, '2*11')
+
+        #PUT correct data
+        resp = self.client.put(
+            '{0}{1}/'.format(url,
+                             resp_obj[self.RESOURCE.OBJECT_NAME]['id']),
+            data=data_05,
+            headers=HTTP_HEADERS)
+        self.assertEqual(200, resp.status_code)
+        resp_obj = json.loads(resp.data)
+        obj = XmlScript.query.get(resp_obj[self.RESOURCE.OBJECT_NAME]['id'])
+        self.assertEqual(obj.type, XmlScript.TYPE_PYTHON_CODE)
+        self.assertEqual(obj.data, '2*12')
+
+        def tearDown(self):
+            scripts = XmlScript.query.filter_by(
+                import_handler_id=self.handler_amazon.id,
+                type=XmlScript.TYPE_PYTHON_FILE).all()
+            from api.amazon_utils import AmazonS3Helper
+            helper = AmazonS3Helper()
+            for script in scripts:
+                helper.delete_key(script.data)
+            super(XmlScriptTests, self).tearDown()
 
 
 class XmlFieldTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):

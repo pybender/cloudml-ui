@@ -545,7 +545,7 @@ describe 'app.xml_importhandlers.models', ->
     it 'should have Field properties and methods defined', inject (Script)->
 
       expect(Script.LIST_MODEL_NAME).toEqual 'xml_scripts'
-      expect(Script.MAIN_FIELDS).toEqual 'id,import_handler_id,data'
+      expect(Script.MAIN_FIELDS).toEqual 'id,import_handler_id,data,type'
       expect(Script.ITEM_NAME).toEqual 'scripts'
 
     it 'can create an instance with predefined properties set', inject (Script)->
