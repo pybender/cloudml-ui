@@ -50,6 +50,8 @@ def run_test(dataset_ids, test_id):
 
         logging.info('Getting metrics and raw data')
         from memory_profiler import memory_usage
+        logging.info('Using {0} (id #{1}) dataset'.format(dataset.filename,
+                                                          dataset.id))
         result = Model.run_test(model, dataset)
 
         metrics, raw_data = result
