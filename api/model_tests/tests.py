@@ -666,7 +666,7 @@ class TasksTests(BaseDbTestCase):
                           ['hire_outcome', 'application_id', 'title'])
 
 
-class TasksRunTestTests(BaseDbTestCase):
+class TasksRunTestTests(BaseDbTestCase, TestChecksMixin):
     """
     Testing celery task run_test end-to-end with minimal mocking
     """
@@ -810,10 +810,10 @@ class TasksRunTestTests(BaseDbTestCase):
 
         result = do_train(['class2'])
         self.assertEqual(result, 'Test completed')
-        self.assertEqual(test.roc_auc,
-                         {u'1': 0.4775985663082437,
-                          u'2': 0.0,
-                          u'3': 0.503584229390681})
+        expected = {u'1': 0.4775985663082437,
+                    u'2': 0.0,
+                    u'3': 0.503584229390681}
+        self.assertDeepAlmostEqual(expected, test.roc_auc)
         self.assertEqual(
             test.metrics['confusion_matrix'],
             [[u'1', [14, 7, 10]],
@@ -822,6 +822,7 @@ class TasksRunTestTests(BaseDbTestCase):
 
         self.assertTrue('accuracy' in test.metrics)
         self.assertIsInstance(test.metrics['accuracy'], float)
+        self.assertNumAlmostEqual(0.34328358208955223, test.metrics['accuracy'])
 
         # excluding two labels
         result = do_train(['class3', 'class2'])
