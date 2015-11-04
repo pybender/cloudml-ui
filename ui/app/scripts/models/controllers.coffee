@@ -342,7 +342,7 @@ angular.module('app.models.controllers', ['app.config', ])
       openOptions.model.$classifierGridSearch($scope.data).then (() ->
         $scope.$close(true)
       ), ((opts) ->
-        $scope.setError(opts, 'starting '+$scope.model.name+' training')
+        $scope.setError(opts, 'starting '+$scope.model.name+' searching for classifier parameters')
       )
 ])
 

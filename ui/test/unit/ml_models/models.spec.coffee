@@ -501,7 +501,7 @@ describe 'ML Models Controllers', ->
       .respond 400
       $scope.start()
       $httpBackend.flush()
-      expect($rootScope.setError.calls.mostRecent().args[1]).toEqual 'error starting model training'
+      expect($rootScope.setError.calls.mostRecent().args[1]).toEqual 'starting someModel training'
 
 
   describe 'ModelActionsCtrl', ->
