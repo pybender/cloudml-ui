@@ -21,6 +21,7 @@ angular.module(
       )
 
     $scope.add = () ->
+      $scope.resetError()
       script = new Script({
         import_handler_id: $scope.handler.id,
         data: ''
@@ -33,6 +34,7 @@ angular.module(
       })
 
     $scope.edit = (script)->
+      $scope.resetError()
       $scope.openDialog($scope, {
         model: script
         template: 'partials/importhandlers/xml/scripts/edit.html'
@@ -41,6 +43,7 @@ angular.module(
       })
 
     $scope.delete = (script)->
+      $scope.resetError()
       $scope.openDialog($scope, {
         model: script
         template: 'partials/base/delete_dialog.html'
