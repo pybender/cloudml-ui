@@ -305,7 +305,7 @@ angular.module('app.models.controllers', ['app.config', ])
       openOptions.model.$train($scope.data).then (() ->
         $scope.$close(true)
       ), ((opts) ->
-        $scope.setError(opts, 'error starting model training')
+        $scope.setError(opts, 'starting '+$scope.model.name+' training')
       )
 ])
 
@@ -342,7 +342,7 @@ angular.module('app.models.controllers', ['app.config', ])
       openOptions.model.$classifierGridSearch($scope.data).then (() ->
         $scope.$close(true)
       ), ((opts) ->
-        $scope.setError(opts, 'error starting model training')
+        $scope.setError(opts, 'starting '+$scope.model.name+' training')
       )
 ])
 
@@ -363,7 +363,7 @@ angular.module('app.models.controllers', ['app.config', ])
         $scope.$close(true)
         $location.url(model.objectUrl())
       ), ((opts) ->
-        $scope.setError(opts, 'error clonning the model')
+        $scope.setError(opts, 'error cloning the '+$scope.model.name)
 
       )
 ])
