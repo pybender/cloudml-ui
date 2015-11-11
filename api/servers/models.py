@@ -12,12 +12,18 @@ class Server(BaseModel, db.Model):
     """ Represents cloudml-predict server """
     ALLOWED_FOLDERS = [FOLDER_MODELS, FOLDER_IMPORT_HANDLERS]
 
+    PRODUCTION = 'Production'
+    STAGING = 'Staging'
+    DEV = 'Development'
+    TYPES = [PRODUCTION, STAGING, DEV]
+
     name = db.Column(db.String(200), nullable=False, unique=True)
     description = deferred(db.Column(db.Text))
     ip = db.Column(db.String(200), nullable=False)
     folder = db.Column(db.String(600), nullable=False)
     is_default = db.Column(db.Boolean, default=False)
     memory_mb = db.Column(db.Integer, nullable=False, default=0)
+    type = db.Column(db.Enum(*TYPES, name='server_types'), default=DEV)
 
     def list_keys(self, folder=None):
         path = self.folder.strip('/')
@@ -76,3 +82,9 @@ class Server(BaseModel, db.Model):
                 .update({Server.is_default: False})
         if commit:
             db.session.commit()
+
+    def _can_modify(self):
+        if self.type == Server.PRODUCTION and not self.is_admin:
+            self.reason = 'Only admin can modify/delete production server.'
+            return False
+        return super(Server, self)._can_modify()

@@ -253,12 +253,13 @@ class BaseResource(restful.Resource):
 
         if not model.is_authorized:
             return odesk_error_response(
-                401, 401, 'You haven\'t permissions to edit.')
+                401, 401, 'You haven\'t permissions to edit. Only authorized '
+                          'users are permitted to do modifications')
 
         if not model.can_edit:
             return odesk_error_response(
-                405, 405, 'You haven\'t permissions to edit item created by '
-                          'another user')
+                405, 405, 'You haven\'t permissions to edit. {0}'
+                          .format(model.reason))
 
         if self.put_form is None:
             raise ValueError('Specify put form')
@@ -285,12 +286,13 @@ class BaseResource(restful.Resource):
             raise NotFound(self.MESSAGE404 % kwargs)
         if not model.is_authorized:
             return odesk_error_response(
-                401, 401, 'You haven\'t permissions to delete.')
+                401, 401, 'You haven\'t permissions to delete. Only authorized '
+                          'users are permitted to do modifications')
 
         if not model.can_delete:
             return odesk_error_response(
-                405, 405, 'You haven\'t permissions to delete item created by '
-                          'another user')
+                405, 405, 'You haven\'t permissions to delete. {0}'
+                          .format(model.reason))
         self._delete_validataion(model)
         model.delete()
         return '', 204
