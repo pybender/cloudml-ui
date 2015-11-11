@@ -23,6 +23,7 @@ from api.logs.models import LogMessage
 from api.amazon_utils import AmazonS3Helper
 from api.import_handlers.models import ImportHandlerMixin
 from cloudml.trainer.classifier_settings import TYPE_CLASSIFICATION
+from api import app
 
 
 class BaseTrainedEntity(object):
@@ -41,11 +42,12 @@ class BaseTrainedEntity(object):
     STATUS_ERROR = 'Error'
     STATUS_CANCELED = 'Canceled'
     STATUS_FILLING_WEIGHTS = 'Filling Weights'
+    STATUS_DEPLOYED = 'Deployed'
 
     STATUSES = [STATUS_NEW, STATUS_QUEUED, STATUS_IMPORTING, STATUS_IMPORTED,
                 STATUS_REQUESTING_INSTANCE, STATUS_INSTANCE_STARTED,
                 STATUS_TRAINING, STATUS_FILLING_WEIGHTS, STATUS_TRAINED,
-                STATUS_ERROR, STATUS_CANCELED]
+                STATUS_ERROR, STATUS_CANCELED, STATUS_DEPLOYED]
 
     @declared_attr
     def name(cls):
@@ -153,6 +155,14 @@ class BaseTrainedEntity(object):
 
     def train(*args, **kwargs):
         raise NotImplemented()
+
+
+class ModelRefEntity(object):
+    def can_delete(self):
+        return self.model.can_delete()
+
+    def can_edit(self):
+        return self.model.can_edit()
 
 
 class Model(db.Model, BaseModel, BaseTrainedEntity):
@@ -370,6 +380,14 @@ class Model(db.Model, BaseModel, BaseTrainedEntity):
         db.session.add(self)
         db.session.commit()
 
+    def _can_modify(self):
+        if not app.config['MODIFY_DEPLOYED_MODEL'] and \
+           self.status == Model.STATUS_DEPLOYED:
+            self.can_modify_msg = 'Model {0} has been deployed and blocked ' \
+                                  'for modifications. Forbidden to change ' \
+                                  'its properties'.format(self.name)
+            return False
+        return super(Model, self)._can_modify()
 
 tags_table = db.Table(
     'model_tag', db.Model.metadata,
@@ -509,7 +527,7 @@ class Tag(db.Model, BaseMixin):
     count = db.Column(db.Integer)
 
 
-class Segment(db.Model, BaseMixin):
+class Segment(db.Model, BaseMixin, ModelRefEntity):
     __tablename__ = 'segment'
 
     name = db.Column(db.String(200))
@@ -519,7 +537,7 @@ class Segment(db.Model, BaseMixin):
     model = relationship(Model, backref=backref('segments'))
 
 
-class WeightsCategory(db.Model, BaseMixin):
+class WeightsCategory(db.Model, BaseMixin, ModelRefEntity):
     """
     Represents Model Parameter Weights Category.
 
@@ -573,7 +591,7 @@ def compile_mycolumn(element, compiler, **kw):
     return "weight.test_weights->'%s'" % element.name
 
 
-class Weight(db.Model, BaseMixin):
+class Weight(db.Model, BaseMixin, ModelRefEntity):
     """
     Represents Model Parameter Weight
     """

@@ -14,11 +14,11 @@ from sqlalchemy.sql import expression
 
 from api.base.models import db, BaseModel, JSONType, S3File
 from api.logs.models import LogMessage
-from api.ml_models.models import Model, Segment, Weight
+from api.ml_models.models import Model, Segment, Weight, ModelRefEntity
 from api.import_handlers.models import DataSet
 
 
-class TestResult(db.Model, BaseModel):
+class TestResult(db.Model, BaseModel, ModelRefEntity):
     LOG_TYPE = LogMessage.RUN_TEST
 
     STATUS_QUEUED = 'Queued'
@@ -107,7 +107,7 @@ class TestResult(db.Model, BaseModel):
         )
 
 
-class TestExample(db.Model, BaseModel):
+class TestExample(db.Model, BaseModel, ModelRefEntity):
     __tablename__ = 'test_example'
 
     NONAME = 'noname'

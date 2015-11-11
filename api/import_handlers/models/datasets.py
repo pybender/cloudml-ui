@@ -28,8 +28,9 @@ class DataSet(db.Model, BaseModel):
     STATUS_UPLOADING = 'Uploading'
     STATUS_IMPORTED = 'Imported'
     STATUS_ERROR = 'Error'
+    STATUS_LOCKED = 'Locked'
     STATUSES = [STATUS_IMPORTING, STATUS_UPLOADING, STATUS_IMPORTED,
-                STATUS_ERROR, STATUS_NEW]
+                STATUS_ERROR, STATUS_NEW, STATUS_LOCKED]
 
     FORMAT_JSON = 'json'
     FORMAT_CSV = 'csv'
@@ -170,6 +171,13 @@ class DataSet(db.Model, BaseModel):
     def __repr__(self):
         return '<Dataset %r>' % self.name
 
+    def _can_modify(self):
+        if self.status == DataSet.STATUS_LOCKED:
+            self.can_modify_msg = 'Some existing models were ' \
+                                  'trained/tested using this dataset. ' \
+                                  'Forbidden to modify/delete'
+            return False
+        return super(DataSet, self)._can_modify()
 
 @event.listens_for(ImportHandler, "mapper_configured", propagate=True)
 def setup_listener(mapper, class_):

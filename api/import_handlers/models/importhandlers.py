@@ -21,6 +21,7 @@ from cloudml.importhandler.datasources import DataSource
 from cloudml.importhandler.importhandler import ExtractionPlan, \
     ImportHandler as CoreImportHandler
 from api.base.models import db, BaseModel
+from api import app
 
 
 class ImportHandlerMixin(BaseModel):
@@ -159,6 +160,7 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
     predict_id = db.Column(db.ForeignKey('predict.id', ondelete='CASCADE'))
     predict = relationship(
         'Predict', foreign_keys=[predict_id], backref="import_handler")
+    #on_s3 = db.Column(db.Boolean)
 
     @property
     def data(self):
@@ -325,6 +327,13 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
     def __repr__(self):
         return "<Import Handler %s>" % self.name
 
+    def _can_modify(self):
+        if not app.config['MODIFY_DEPLOYED_IH'] and self.on_s3:
+            self.can_modify_msg = 'Import handler {0} has been deployed. ' \
+                                  'Forbidden to modify/delete its properties'\
+                                  .format(self.name)
+            return False
+        return super(XmlImportHandler, self)._can_modify()
 
 class RefXmlImportHandlerMixin(object):
     @declared_attr
@@ -339,6 +348,9 @@ class RefXmlImportHandlerMixin(object):
         return relationship(
             "XmlImportHandler", backref=backref(backref_name,
                                                 cascade='all,delete'))
+
+    def _can_modify(self):
+        return self.import_handler._can_modify()
 
 
 class XmlDataSource(db.Model, BaseMixin, RefXmlImportHandlerMixin):

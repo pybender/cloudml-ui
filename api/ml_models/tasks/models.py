@@ -48,6 +48,12 @@ def train_model(dataset_ids, model_id, user_id, delete_metadata=False):
 
     user = User.query.get(user_id)
     model = Model.query.get(model_id)
+    if not app.config['MODIFY_DEPLOYED_MODEL'] \
+            and model.status == Model.STATUS_DEPLOYED:
+        logging.error('Model {0} is deployed and modifications are not allowed.'
+                      ' Forbidden to re-train model.'.format(model.name))
+        return
+
     datasets = DataSet.query.filter(DataSet.id.in_(dataset_ids)).all()
     logging.info('Preparing the model `%s` for training.' % model.name)
     try:
@@ -177,6 +183,14 @@ def visualize_model(model_id, segment_id=None):
     """
     init_logger('trainmodel_log', obj=int(model_id))
     model, segment = _get_model_and_segment_or_raise(model_id, segment_id)
+
+    if not app.config['MODIFY_DEPLOYED_MODEL'] \
+            and model.status == Model.STATUS_DEPLOYED:
+        logging.error('Model {0} is deployed and modifications are not allowed.'
+                      ' Forbidden to change model visualization data.'
+                      .format(model.name))
+        return
+
     logging.info(
         "Starting to visualize trained model {0}. Segment: {1}".format(
             model.name, segment.name))

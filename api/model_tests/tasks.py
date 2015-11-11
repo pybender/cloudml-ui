@@ -40,6 +40,12 @@ def run_test(dataset_ids, test_id):
     dataset = datasets[0]
     model = test.model
 
+    if not app.config['MODIFY_DEPLOYED_MODEL'] \
+            and model.status == Model.STATUS_DEPLOYED:
+        logging.error('Model {0} is deployed and modifications are not allowed.'
+                      ' Forbidden to test model.'.format(model.name))
+        return
+
     try:
         if model.status != model.STATUS_TRAINED:
             raise InvalidOperationError("Train the model before")

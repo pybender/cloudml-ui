@@ -193,6 +193,7 @@ class FeatureSet(ExportImportMixin, BaseModel, db.Model):
     features_count = db.Column(db.Integer, default=0)
     features_dict = db.Column(JSONType)
     modified = db.Column(db.Boolean, default=False)
+    locked = db.Column(db.Boolean, default=False)
     __table_args__ = (
         CheckConstraint(features_count >= 0,
                         name='check_features_count_positive'), {})
