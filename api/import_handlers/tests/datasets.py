@@ -39,6 +39,7 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         for ds in DataSet.query.all():
             ds.import_handler_id = self.handler.id
             ds.import_handler_type = self.handler.TYPE
+            ds.import_handler_xml = self.handler.data
             ds.save()
         self.obj = DataSet.query.filter_by(
             import_handler_id=self.handler.id, name=self.DS_NAME).first()
@@ -120,6 +121,7 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         resp, ds = self.check_edit(post_data)
         self.assertEquals(ds.status, 'Imported', ds.error)
         self.assertEquals(ds.import_handler_id, self.handler.id)
+        self.assertEquals(ds.import_handler_xml, self.handler.data)
         self.assertEquals(ds.records_count, 100)
         self.assertEquals(ds.import_params, params)
         self.assertTrue(ds.compress)
