@@ -848,7 +848,7 @@ editable-placement="right" display="instance.obj.name"></span>
       $('>input', elem).val('-1,2').change()
       $scope.$digest()
       expect($scope.myform.tofloat.$invalid).toBe false
-      expect($scope.model.tofloat).toBe -1.2
+      expect($scope.model.tofloat).toBe '-1.2'
 
 
   describe 'ngModelOnblur', ->

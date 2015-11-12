@@ -23,6 +23,7 @@ HTTP_HEADERS = [('X-Auth-Token', AUTH_TOKEN)]
 # Count of the features in conf/features.json file
 FEATURE_COUNT = 37
 TARGET_VARIABLE = 'hire_outcome'
+FLOAT_ACCURACY = 15
 
 
 class BaseDbTestCase(TestCase):
@@ -248,6 +249,34 @@ class TestChecksMixin(object):
         resp = getattr(self.client, 'post')(
             url, data=post_data, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.BAD_REQUEST)
+
+    def assertDeepAlmostEqual(self, expected, actual):
+        """
+        Assert that two complex structures have almost equal contents.
+
+        Compares lists, dicts and tuples recursively. Checks numeric values
+        using test_case's assertAlmostEqual and
+        checks all other values with assertEqual.
+        Accepts additional positional and keyword arguments and pass those
+        intact to assertAlmostEqual() (that's how you specify comparison
+        precision).
+        """
+        if isinstance(expected, (float, long, complex)):
+            self.assertAlmostEqual(expected, actual, places=FLOAT_ACCURACY)
+        elif isinstance(expected, (list, tuple, set)):
+            self.assertEqual(len(expected), len(actual))
+            for index in xrange(len(expected)):
+                v1, v2 = expected[index], actual[index]
+                self.assertDeepAlmostEqual(v1, v2)
+        elif isinstance(expected, dict):
+            self.assertEqual(set(expected), set(actual))
+            for key in expected:
+                self.assertDeepAlmostEqual(expected[key], actual[key])
+        else:
+            self.assertEqual(expected, actual)
+
+    def assertNumAlmostEqual(self, n1, n2, places=FLOAT_ACCURACY):
+        self.assertAlmostEqual(n1, n2, places=places)
 
     def assertDictEqual(self, d1, d2, msg=None):  # assertEqual uses for dicts
         for k, v1 in d1.iteritems():

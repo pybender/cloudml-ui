@@ -666,7 +666,7 @@ angular.module('app.directives', [
 
         if FLOAT_REGEXP.test(viewValue)
           control.$setValidity('float', true)
-          return parseFloat(viewValue.replace(',', '.'))
+          return viewValue.replace(',', '.')
         else
           control.$setValidity('float', false)
           return undefined

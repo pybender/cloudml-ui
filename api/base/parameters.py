@@ -50,6 +50,9 @@ def convert_parameters(config, params):
         if name in params:
             type_ = param_config.get('type')
             convertor = TYPE_CONVERTORS[type_]
+            if params[name] is None:
+                params.pop(name)
+                continue
             try:
                 params[name] = convertor(params[name], param_config)
             except ValueError, exc:
@@ -80,7 +83,7 @@ def convert_int_float_string_none(val, config):
     if not val:
         return None
 
-    if isint(val):
+    if not '.' in str(val) and isint(val):
         return int(val)
     elif isfloat(val):
         return float(val)
@@ -93,7 +96,7 @@ def convert_int_float_string_none(val, config):
 
 
 def convert_float_or_int(val, config):
-    if isint(val):
+    if not '.' in str(val) and isint(val):
         return int(val)
     elif isfloat(val):
         return float(val)
