@@ -95,6 +95,7 @@ ADMINS = (
     ("Panagiotis Papadimitriou", "papadimitriou@upwork.com"),
     ("Nikolay Melnik", "nmelnik@odesk.com"),
     ("Nader Soliman", "nsoliman@elance-odesk.com"),
+    ("Anna Lysak", "anna_lysak@odesk.com")
 )
 
 # Email address used as sender (From field).

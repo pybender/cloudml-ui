@@ -83,8 +83,3 @@ class Server(BaseModel, db.Model):
         if commit:
             db.session.commit()
 
-    def _can_modify(self):
-        if self.type == Server.PRODUCTION and not self.is_admin:
-            self.reason = 'Only admin can modify/delete production server.'
-            return False
-        return super(Server, self)._can_modify()

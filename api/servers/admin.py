@@ -7,12 +7,14 @@ from models import Server
 
 class ServerAdmin(BaseAdmin):
     Model = Server
-    column_list = ['id', 'name', 'ip', 'folder', 'is_default', 'memory_mb']
+    column_list = ['id', 'name', 'ip', 'folder', 'is_default', 'memory_mb',
+                   'type']
     column_sortable_list = (
         ('ip', Server.ip),
         ('folder', Server.folder),
         ('is_default', Server.is_default),
-        ('memory_mb', Server.memory_mb)
+        ('memory_mb', Server.memory_mb),
+        ('type', Server.type)
     )
     form_args = dict(memory_mb=dict(label='Memory Size (MB)'))
 

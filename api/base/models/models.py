@@ -19,7 +19,6 @@ db = app.sql_db
 
 class BaseMixin(JsonSerializableMixin):
     id = db.Column(db.Integer, primary_key=True)
-    reason = ''
 
     @declared_attr
     def __tablename__(cls):
@@ -66,14 +65,11 @@ class BaseMixin(JsonSerializableMixin):
     def is_authorized(self):
         return True
 
-    def is_admin(self):
-        return True
 
 class BaseModel(BaseMixin):
     created_on = db.Column(db.DateTime, server_default=func.now())
     updated_on = db.Column(db.DateTime, server_default=func.now(),
                            onupdate=func.current_timestamp())
-    reason = 'Item is created by another user.'
 
     @declared_attr
     def created_by_id(cls):
@@ -114,20 +110,12 @@ class BaseModel(BaseMixin):
             return False
         return True
 
-    @property
-    def is_admin(self):
+    def _can_modify(self):
         if not self.is_authorized:
             return False
         user = getattr(request, 'user', None)
         if user.email in [el[1] for el in app.config['ADMINS']]:
             return True
-
-    def _can_modify(self):
-        if not self.is_authorized:
-            return False
-        if self.is_admin:
-            return True
-        user = getattr(request, 'user', None)
 
         return user.id == self.created_by.id
 
