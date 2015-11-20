@@ -43,6 +43,7 @@ admin.add_view(InputParameterAdmin(
 class ScriptAdmin(BaseAdmin):
     MIX_METADATA = False
     Model = XmlScript
+    column_formatters = {'import_handler': macro('render_fk_link'), }
     column_list = ['id', 'type', 'import_handler']
 
 admin.add_view(ScriptAdmin(
