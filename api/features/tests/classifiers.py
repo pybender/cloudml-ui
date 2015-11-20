@@ -171,8 +171,6 @@ class ModelClassifierTest(BaseDbTestCase, TestChecksMixin):
             self.BASE_URL, data=data, headers=HTTP_HEADERS)
         self.assertEqual(405, resp.status_code)
         self.assertIn('Model is deployed', resp.data)
-        #model.on_s3 = False
-        #model.save()
 
     def test_edit(self):
         model = Model.query.filter_by(name=ModelData.model_01.name).one()
