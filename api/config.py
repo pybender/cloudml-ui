@@ -9,7 +9,7 @@ SQLALCHEMY_DATABASE_URI = \
 
 
 UPLOAD_FOLDER = 'models'
-IH_SCRIPTS_FOLDER = 'IH_python_scrips'
+IMPORT_HANDLER_SCRIPTS_FOLDER = 'scripts/import_handlers'
 DATA_FOLDER = './data'
 MAX_CONTENT_LENGTH = 128 * 1024 * 1024
 DEBUG = False

@@ -401,6 +401,26 @@ class XmlScript(db.Model, BaseMixin, RefXmlImportHandlerMixin):
     type = db.Column(db.Enum(*TYPES, name='xml_script_types'),
                      server_default=TYPE_PYTHON_CODE)
 
+    @staticmethod
+    def to_s3(data, import_handler_id):
+        from api.amazon_utils import AmazonS3Helper
+        from datetime import datetime
+        import api
+        try:
+            handler = XmlImportHandler.query.get(import_handler_id)
+            if not handler:
+                raise ValueError("Import handler {0} not found".format(
+                    import_handler_id))
+            key = "{0}/{1}_python_script_{2}.py".format(
+                api.app.config['IMPORT_HANDLER_SCRIPTS_FOLDER'],
+                handler.name,
+                datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            s3helper = AmazonS3Helper()
+            s3helper.save_key_string(key, data)
+        except Exception as e:
+            raise ValueError(e)
+        return key
+
 
 class XmlQuery(db.Model, BaseMixin):
     FIELDS_TO_SERIALIZE = ['target', 'sqoop_dataset_name',
@@ -677,16 +697,11 @@ def fill_import_handler(import_handler, xml_data=None):
             db.session.add(param)
             import_handler.import_params.append(inp.name)
 
-        for scr in plan.data.xpath("script"):
-            if "src" in scr.attrib:
-                script_data = scr.attrib["src"]
-                script_type = XmlScript.TYPE_PYTHON_FILE
-            else:
-                script_data = scr.text
-                script_type = XmlScript.TYPE_PYTHON_CODE
+        for scr in plan.scripts:
             script = XmlScript(
-                type=script_type,
-                data=script_data,
+                data=scr.src or scr.text,
+                type=XmlScript.TYPE_PYTHON_FILE if scr.src else
+                XmlScript.TYPE_PYTHON_CODE,
                 import_handler=import_handler)
             db.session.add(script)
 

@@ -275,20 +275,13 @@ class XmlScriptForm(BaseForm):
         try:
             data_file = self.cleaned_data.get('data_file')
             if data_file:
-                from api.amazon_utils import AmazonS3Helper
-                from datetime import datetime
-                handler = XmlImportHandler.query.get(
-                    self.cleaned_data.get('import_handler_id'))
-                key = "{0}/{1}_python_script_{2}.py".format(
-                    app.config['IH_SCRIPTS_FOLDER'], handler.name,
-                    datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-                s3helper = AmazonS3Helper()
-                s3helper.save_key_string(key, data_file)
+                key = XmlScript.to_s3(
+                    data_file, self.cleaned_data.get('import_handler_id'))
                 self.cleaned_data['data'] = key
                 self.cleaned_data['type'] = XmlScript.TYPE_PYTHON_FILE
             script = super(XmlScriptForm, self).save()
         except Exception as e:
-            raise
+            raise ValidationError(e)
         return script
 
 

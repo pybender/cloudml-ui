@@ -3,7 +3,7 @@ import json
 import os
 from datetime import datetime
 
-from mock import patch, MagicMock
+from mock import patch, MagicMock, ANY
 from moto import mock_s3
 
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS
@@ -501,7 +501,9 @@ class XmlScriptTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
         obj = resp[self.RESOURCE.OBJECT_NAME]
         self.assertEqual(obj['data'], self.obj.data)
 
-    def test_post_put(self):
+    @mock_s3
+    @patch('api.amazon_utils.AmazonS3Helper.save_key_string')
+    def test_post_put(self, mock_save_key_string):
         handler = get_importhandler(filename='obsolete_extract.xml')
         self.handler_amazon = handler
         url = '/cloudml/xml_import_handlers/{0!s}/scripts/'.format(handler.id)
@@ -520,6 +522,7 @@ class XmlScriptTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
         self.assertEqual(obj.type, XmlScript.TYPE_PYTHON_FILE)
         key = "{0}_python_script_".format(handler.name)
         self.assertIn(key, obj.data)
+        mock_save_key_string.assert_called_once_with(obj.data, '2+2')
 
         #incorrect data file
         resp = self.client.post(url, data=data_02, headers=HTTP_HEADERS)
@@ -554,16 +557,6 @@ class XmlScriptTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
         obj = XmlScript.query.get(resp_obj[self.RESOURCE.OBJECT_NAME]['id'])
         self.assertEqual(obj.type, XmlScript.TYPE_PYTHON_CODE)
         self.assertEqual(obj.data, '2*12')
-
-        def tearDown(self):
-            scripts = XmlScript.query.filter_by(
-                import_handler_id=self.handler_amazon.id,
-                type=XmlScript.TYPE_PYTHON_FILE).all()
-            from api.amazon_utils import AmazonS3Helper
-            helper = AmazonS3Helper()
-            for script in scripts:
-                helper.delete_key(script.data)
-            super(XmlScriptTests, self).tearDown()
 
 
 class XmlFieldTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
