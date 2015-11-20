@@ -65,9 +65,6 @@ def upload_model_to_server(server_id, model_id, user_id):
     feature_set = model.features_set
     feature_set.locked = True
     feature_set.save()
-    for dataset in model.datasets:
-        dataset.locked = True
-        dataset.save()
     logging.info('Model has been uploaded: %s' % model.name)
 
 
