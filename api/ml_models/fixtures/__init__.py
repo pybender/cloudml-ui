@@ -9,7 +9,8 @@ import json
 
 from fixture import DataSet
 from api.features.fixtures import FeatureSetData
-from api.import_handlers.fixtures import XmlImportHandlerData as ImportHandlerData
+from api.import_handlers.fixtures import XmlImportHandlerData as \
+    ImportHandlerData, DataSetData
 
 
 DIR = os.path.dirname(__file__)
@@ -148,6 +149,17 @@ class ModelData(DataSet):
                 "max_features": "auto"
             }
         }
+
+    class model_06:
+        features_set = FeatureSetData.bestmatch_02
+        test_import_handler = ImportHandlerData.import_handler_01
+        train_import_handler = ImportHandlerData.import_handler_01
+        status = "Trained"
+        created_on = "2013-04-19 14:37:23.145000"
+        updated_on = "2013-04-19 14:37:23.145000"
+        name = "Model6"
+        comparable = False
+        datasets = [DataSetData.dataset_02]
 
 
 class SegmentData(DataSet):

@@ -53,13 +53,6 @@ def request_spot_instance(instance_type=None, model_id=None):
     init_logger('trainmodel_log', obj=int(model_id))
 
     model = Model.query.get(model_id)
-
-    if not app.config['MODIFY_DEPLOYED_MODEL'] \
-            and model.status == Model.STATUS_DEPLOYED:
-        logging.error('Model {0} is deployed and modifications are not allowed.'
-                      ' Forbidden to change model status.'.format(model.name))
-        return
-
     model.status = model.STATUS_REQUESTING_INSTANCE
     model.save()
 
@@ -107,13 +100,6 @@ def get_request_instance(request_id, callback=None, dataset_ids=None,
     logging.info('Get spot instance request %s' % request_id)
 
     model = Model.query.get(model_id)
-
-    if not app.config['MODIFY_DEPLOYED_MODEL'] \
-            and model.status == Model.STATUS_DEPLOYED:
-        logging.error('Model {0} is deployed and modifications are not allowed.'
-                      ' Forbidden to train model.'.format(model.name))
-        return
-
     try:
         request = ec2.get_request_spot_instance(request_id)
     except EC2ResponseError as e:
@@ -204,13 +190,6 @@ def cancel_request_spot_instance(request_id, model_id):
     """
     init_logger('trainmodel_log', obj=int(model_id))
     model = Model.query.get(model_id)
-
-    if not app.config['MODIFY_DEPLOYED_MODEL'] \
-            and model.status == Model.STATUS_DEPLOYED:
-        logging.error('Model {0} is deployed and modifications are not allowed.'
-                      ' Forbidden to change model status.'.format(model.name))
-        return
-
     logging.info('Cancelling spot instance request {0!s} \
 for model id {1!s}...'.format(
         request_id, model_id))

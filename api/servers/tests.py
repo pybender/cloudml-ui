@@ -135,6 +135,10 @@ class ServersTasksTests(BaseDbTestCase):
                 'uploaded_on': ANY
             }
         )
+        self.assertTrue(model.on_s3)
+        self.assertTrue(model.features_set.locked)
+        for ds in model.datasets:
+            self.assertTrue(ds.locked)
 
     @mock_s3
     @patch('api.amazon_utils.AmazonS3Helper.save_key_string')
@@ -194,6 +198,7 @@ class ServersTasksTests(BaseDbTestCase):
                 'crc32': '0x4FAF0BAA'  # TODO: '0xC8AD8D64'
             }
         )
+        self.assertTrue(handler.on_s3)
 
     @mock_s3
     @patch('api.amazon_utils.AmazonS3Helper.save_key_string')

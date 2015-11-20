@@ -34,7 +34,7 @@ angular.module('app.importhandlers.xml.controllers.importhandlers', ['app.config
       if mainSection not in $scope.LOADED_SECTIONS
         # is not already loaded
         extraFields = ['xml_data_sources', 'xml_input_parameters', 'xml_scripts',
-                       'entities', 'predict', 'can_edit', 'crc32'].join(',')
+                       'entities', 'predict', 'can_edit', 'crc32', 'on_s3'].join(',')
         fields = "#{XmlImportHandler.MAIN_FIELDS},#{extraFields}"
 
       if section[1] == 'xml' then fields = [fields, 'xml'].join(',')

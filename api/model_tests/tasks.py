@@ -40,12 +40,6 @@ def run_test(dataset_ids, test_id):
     dataset = datasets[0]
     model = test.model
 
-    if not app.config['MODIFY_DEPLOYED_MODEL'] \
-            and model.status == Model.STATUS_DEPLOYED:
-        logging.error('Model {0} is deployed and modifications are not allowed.'
-                      ' Forbidden to test model.'.format(model.name))
-        return
-
     try:
         if model.status != model.STATUS_TRAINED:
             raise InvalidOperationError("Train the model before")
@@ -107,6 +101,10 @@ def run_test(dataset_ids, test_id):
 
         all_count = metrics._preds.size
         test.dataset = dataset
+        # lock dataset used for testing
+        dataset.locked = True
+        dataset.save()
+
         test.examples_count = all_count
         test.memory_usage = memory_usage(-1, interval=0, timeout=None)[0]
 

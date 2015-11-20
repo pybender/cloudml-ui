@@ -3,8 +3,8 @@
 # Authors: Nikolay Melnik <nmelnik@upwork.com>
 
 from api import api
-from api.base.resources import BaseResourceSQL, public_actions
-
+from api.base.resources import BaseResourceSQL, public_actions, NotFound
+from api.base.resources.utils import odesk_error_response
 from models import *
 from forms import *
 from config import CLASSIFIERS
@@ -47,6 +47,17 @@ class ClassifierResource(BaseResourceSQL):
 
     def _get_configuration_action(self, **kwargs):
         return self._render({'configuration': CLASSIFIERS})
+
+    def post(self, **kwargs):
+        form = self.post_form(Model=self.Model, **kwargs)
+        if form.is_valid() and 'model_id' in form.cleaned_data:
+            model = Model.query.get(form.cleaned_data['model_id'])
+            if not api.app.config['MODIFY_DEPLOYED_MODEL'] and \
+               model is not None and model.on_s3:
+                return odesk_error_response(
+                    405, 405, 'Model is deployed and blocked for '
+                    'modifications. Forbidden to change it\'s classifier.')
+        return super(ClassifierResource, self).post(**kwargs)
 
 api.add_resource(ClassifierResource, '/cloudml/features/classifiers/')
 

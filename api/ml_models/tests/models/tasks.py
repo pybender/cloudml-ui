@@ -43,6 +43,7 @@ class ModelTasksTests(BaseDbTestCase):
             dataset_ids=[ds.id], model_id=self.obj.id, user_id=1)
         self.assertTrue('Model trained' in res)
         self.assertEqual(self.obj.status, Model.STATUS_TRAINED, self.obj.error)
+        self.assertTrue(ds.locked)
 
     @mock_s3
     @patch('api.ml_models.models.Model.get_features_json')

@@ -160,7 +160,7 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
     predict_id = db.Column(db.ForeignKey('predict.id', ondelete='CASCADE'))
     predict = relationship(
         'Predict', foreign_keys=[predict_id], backref="import_handler")
-    #on_s3 = db.Column(db.Boolean)
+    on_s3 = db.Column(db.Boolean, default=False)
 
     @property
     def data(self):
@@ -327,13 +327,21 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
     def __repr__(self):
         return "<Import Handler %s>" % self.name
 
-    def _can_modify(self):
+    def _check_deployed(self):
         if not app.config['MODIFY_DEPLOYED_IH'] and self.on_s3:
-            self.can_modify_msg = 'Import handler {0} has been deployed. ' \
-                                  'Forbidden to modify/delete its properties'\
-                                  .format(self.name)
+            self.reason_msg = "Import handler {0} has been deployed and " \
+                              "blocked for modifications. ".format(self.name)
             return False
-        return super(XmlImportHandler, self)._can_modify()
+        return True
+
+    @property
+    def can_edit(self):
+        return self._check_deployed() and super(XmlImportHandler, self).can_edit
+
+    @property
+    def can_delete(self):
+        return self._check_deployed() and super(
+            XmlImportHandler, self).can_delete
 
 class RefXmlImportHandlerMixin(object):
     @declared_attr
@@ -348,9 +356,6 @@ class RefXmlImportHandlerMixin(object):
         return relationship(
             "XmlImportHandler", backref=backref(backref_name,
                                                 cascade='all,delete'))
-
-    def _can_modify(self):
-        return self.import_handler._can_modify()
 
 
 class XmlDataSource(db.Model, BaseMixin, RefXmlImportHandlerMixin):

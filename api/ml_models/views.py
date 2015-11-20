@@ -18,6 +18,7 @@ from api.features.models import Feature, FeatureSet
 from api.import_handlers.models import DataSet
 from api.base.resources import BaseResourceSQL, NotFound, ValidationError, \
     public_actions, ERR_INVALID_DATA, odesk_error_response, _select
+from api.base.resources.utils import ERR_INVALID_METHOD
 from models import Model, Tag, Weight, WeightsCategory, Segment, Transformer, \
     ClassifierGridParams
 from forms import ModelAddForm, ModelEditForm, TransformDataSetForm, \
@@ -63,6 +64,13 @@ class BaseTrainedEntityResource(BaseResourceSQL):
             get_request_instance
         from celery import chain
         obj = self._get_details_query(None, **kwargs)
+        if not app.config['MODIFY_DEPLOYED_MODEL'] and \
+           self.ENTITY_TYPE == 'model' and obj.on_s3:
+            return odesk_error_response(405, ERR_INVALID_METHOD,
+                                        'Re-train is forbidden. Model is '
+                                        'deployed and blocked for '
+                                        'modifications.')
+
         delete_metadata = obj.status != obj.STATUS_NEW
         form = self.train_form(obj=obj, **kwargs)
         if form.is_valid():
@@ -282,6 +290,12 @@ class ModelResource(BaseTrainedEntityResource):
 
     def _put_generate_visualization_action(self, **kwargs):
         model = self._get_details_query(None, **kwargs)
+        if not app.config['MODIFY_DEPLOYED_MODEL'] and model.on_s3:
+            return odesk_error_response(405, ERR_INVALID_METHOD,
+                                        'Forbidden to change visualization '
+                                        'data. Model is deployed and blocked '
+                                        'for modifications.')
+
         form = VisualizationOptionsForm(obj=model)
         if form.is_valid():
             form.process()
@@ -374,7 +388,7 @@ class ModelResource(BaseTrainedEntityResource):
     def _put_import_features_from_xml_ih_action(self, **kwargs):
         model = self._get_details_query(None, **kwargs)
         error_response = odesk_error_response(
-            400, ERR_INVALID_DATA,
+            405, ERR_INVALID_METHOD,
             'Only new models with 0 features and Xml import handler as '
             'trainer is allowed for this feature')
 

@@ -42,12 +42,11 @@ class BaseTrainedEntity(object):
     STATUS_ERROR = 'Error'
     STATUS_CANCELED = 'Canceled'
     STATUS_FILLING_WEIGHTS = 'Filling Weights'
-    STATUS_DEPLOYED = 'Deployed'
 
     STATUSES = [STATUS_NEW, STATUS_QUEUED, STATUS_IMPORTING, STATUS_IMPORTED,
                 STATUS_REQUESTING_INSTANCE, STATUS_INSTANCE_STARTED,
                 STATUS_TRAINING, STATUS_FILLING_WEIGHTS, STATUS_TRAINED,
-                STATUS_ERROR, STATUS_CANCELED, STATUS_DEPLOYED]
+                STATUS_ERROR, STATUS_CANCELED]
 
     @declared_attr
     def name(cls):
@@ -157,14 +156,6 @@ class BaseTrainedEntity(object):
         raise NotImplemented()
 
 
-class ModelRefEntity(object):
-    def can_delete(self):
-        return self.model.can_delete()
-
-    def can_edit(self):
-        return self.model.can_edit()
-
-
 class Model(db.Model, BaseModel, BaseTrainedEntity):
     """
     Represents Model details.
@@ -197,6 +188,7 @@ class Model(db.Model, BaseModel, BaseTrainedEntity):
     classifier = deferred(db.Column(JSONType))
     # Note: It could contains different keys depends to the classifier used
     visualization_data = deferred(db.Column(JSONType))
+    on_s3 = db.Column(db.Boolean, default=False)
 
     def __init__(self, *args, **kwargs):
         super(Model, self).__init__(*args, **kwargs)
@@ -283,6 +275,17 @@ class Model(db.Model, BaseModel, BaseTrainedEntity):
             self.classifier = {}
         super(Model, self).save(commit)
 
+    def delete(self):
+        # delete features and feature set as they are used by this model only
+        self.features_set.delete()
+
+        # prepare dataset list to unlock
+        ds_to_unlock = self.datasets
+        super(Model, self).delete()
+        # unlock datasets after model deletion
+        for ds in ds_to_unlock:
+            ds.unlock()
+
     @property
     def dataset(self):
         return self.datasets[0] if len(self.datasets) else None
@@ -357,6 +360,7 @@ class Model(db.Model, BaseModel, BaseTrainedEntity):
         if delete_metadata:
             from api.model_tests.models import TestResult, TestExample
             from api.base.models import db
+            from api.import_handlers.models.datasets import DataSet
             LogMessage.delete_related_logs(self.id)
 
             def _del(Cls, related_name):
@@ -372,6 +376,11 @@ class Model(db.Model, BaseModel, BaseTrainedEntity):
             _del(Segment, 'segments')
 
         self.datasets = datasets
+        # model is trained, lock datasets used for training
+        for dataset in datasets:
+            dataset.locked = True
+            dataset.save()
+
         self.status = self.STATUS_TRAINING
         self.visualization_data = {}
         self.error = ""
@@ -380,14 +389,20 @@ class Model(db.Model, BaseModel, BaseTrainedEntity):
         db.session.add(self)
         db.session.commit()
 
-    def _can_modify(self):
-        if not app.config['MODIFY_DEPLOYED_MODEL'] and \
-           self.status == Model.STATUS_DEPLOYED:
-            self.can_modify_msg = 'Model {0} has been deployed and blocked ' \
-                                  'for modifications. Forbidden to change ' \
-                                  'its properties'.format(self.name)
+    def _check_deployed(self):
+        if not app.config['MODIFY_DEPLOYED_MODEL'] and self.on_s3:
+            self.reason_msg = 'Model {0} has been deployed and blocked ' \
+                              'for modifications. '.format(self.name)
             return False
-        return super(Model, self)._can_modify()
+        return True
+
+    @property
+    def can_edit(self):
+        return self._check_deployed() and super(Model, self).can_edit
+
+    @property
+    def can_delete(self):
+        return self._check_deployed() and super(Model, self).can_delete
 
 tags_table = db.Table(
     'model_tag', db.Model.metadata,
@@ -527,7 +542,7 @@ class Tag(db.Model, BaseMixin):
     count = db.Column(db.Integer)
 
 
-class Segment(db.Model, BaseMixin, ModelRefEntity):
+class Segment(db.Model, BaseMixin):
     __tablename__ = 'segment'
 
     name = db.Column(db.String(200))
@@ -537,7 +552,7 @@ class Segment(db.Model, BaseMixin, ModelRefEntity):
     model = relationship(Model, backref=backref('segments'))
 
 
-class WeightsCategory(db.Model, BaseMixin, ModelRefEntity):
+class WeightsCategory(db.Model, BaseMixin):
     """
     Represents Model Parameter Weights Category.
 
@@ -591,7 +606,7 @@ def compile_mycolumn(element, compiler, **kw):
     return "weight.test_weights->'%s'" % element.name
 
 
-class Weight(db.Model, BaseMixin, ModelRefEntity):
+class Weight(db.Model, BaseMixin):
     """
     Represents Model Parameter Weight
     """

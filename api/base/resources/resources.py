@@ -257,8 +257,8 @@ class BaseResource(restful.Resource):
 
         if not model.can_edit:
             return odesk_error_response(
-                405, 405, 'You haven\'t permissions to edit item created by '
-                          'another user')
+                405, 405, 'Editing is not allowed. {0}'.format(model.reason_msg)
+            )
 
         if self.put_form is None:
             raise ValueError('Specify put form')
@@ -289,8 +289,8 @@ class BaseResource(restful.Resource):
 
         if not model.can_delete:
             return odesk_error_response(
-                405, 405, 'You haven\'t permissions to delete item created by '
-                          'another user')
+                405, 405, 'Deletion is not allowed. {0}'.format(
+                    model.reason_msg))
         self._delete_validataion(model)
         model.delete()
         return '', 204

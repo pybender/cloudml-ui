@@ -117,7 +117,7 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
     $scope.loadModels = () ->
       Model.$by_handler(
         handler: $scope.model.id,
-        show: 'name,id'
+        show: 'name,id,on_s3'
       ).then ((opts) ->
         $scope.umodels = opts.objects
       ), ((opts) ->

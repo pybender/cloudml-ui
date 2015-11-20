@@ -60,14 +60,13 @@ def upload_model_to_server(server_id, model_id, user_id):
     trainer_data = model.trainer
     s3.save_key_string(path, trainer_data, meta)
     s3.close()
-    model.status = Model.STATUS_DEPLOYED
+    model.on_s3 = True
     model.save()
     feature_set = model.features_set
     feature_set.locked = True
     feature_set.save()
-    from api.import_handlers.models.datasets import DataSet
     for dataset in model.datasets:
-        dataset.status = DataSet.STATUS_LOCKED
+        dataset.locked = True
         dataset.save()
     logging.info('Model has been uploaded: %s' % model.name)
 

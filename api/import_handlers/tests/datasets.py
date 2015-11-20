@@ -137,6 +137,16 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         dataset = self.Model.query.get(self.obj.id)
         self.assertEquals(dataset.name, data['name'])
 
+    def test_edit_locked(self):
+        #test locked dataset
+        self.obj.locked = True
+        self.obj.save()
+        data = {'name': 'new name1'}
+        url = self._get_url(id=self.obj.id)
+        resp = self.client.put(url, data=data, headers=HTTP_HEADERS)
+        self.assertEqual(405, resp.status_code)
+        self.assertIn('Some existing models were trained/tested', resp.data)
+
     @mock_s3
     def test_generate_url_action(self):
         """
@@ -212,6 +222,13 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(resp.status_code, httplib.OK)
         self.assertFalse(mock_import_data.delay.called)
 
+        #test locked dataset
+        self.obj.locked = True
+        self.obj.save()
+        resp = self.client.put(url, headers=HTTP_HEADERS)
+        self.assertEqual(405, resp.status_code)
+        self.assertIn('Data set is locked for modifications', resp.data)
+
     @patch('api.logs.models.LogMessage')
     def test_delete(self, *mocks):
         test = TestResult.query.filter_by(name='Test-1').first()
@@ -272,6 +289,23 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
             resp = self.client.get(url, headers=HTTP_HEADERS)
             self.assertEquals(resp.status_code, httplib.BAD_REQUEST)
             self.assertTrue('unknown file type' in resp.data)
+
+    def test_unlock(self):
+        data_set = DataSet.query.filter_by(
+            name=DataSetData.dataset_01.name).one()
+        data_set.locked = True
+        data_set.save()
+        data_set.unlock()
+        # this should not be unlocked
+        self.assertTrue(data_set.locked)
+
+        data_set = DataSet.query.filter_by(
+            name=DataSetData.dataset_04.name).one()
+        data_set.locked = True
+        data_set.save()
+        data_set.unlock()
+        # this should be unlocked
+        self.assertFalse(data_set.locked)
 
 
 class TestTasksTests(BaseDbTestCase, TestChecksMixin):
