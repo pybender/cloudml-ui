@@ -598,6 +598,13 @@ angular.module('app.directives', [
     require: 'ngModel',
     restrict: 'A',
     link: (scope, element, attrs, control) ->
+
+      control.$parsers.unshift((viewValue) ->
+        scope.$apply( () ->
+          control.$render()
+        )
+        return viewValue
+      )
       element.change((e) ->
         changeEvt = e
         if not changeEvt.target.files or not changeEvt.target.files.length

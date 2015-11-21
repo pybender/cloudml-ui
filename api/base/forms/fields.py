@@ -212,6 +212,22 @@ class ImportHandlerFileField(BaseField):
         return value
 
 
+class ScriptFileField(BaseField):
+
+    def clean(self, value):
+        if value is None:
+            return
+
+        value = value.encode('utf-8')
+        from cloudml.importhandler.importhandler import ScriptManager
+        try:
+            s = ScriptManager()
+            s.add_python(value)
+        except Exception as exc:
+            raise ValidationError(exc)
+        return value
+
+
 # TODO: Use ModelField after removing JSON Import handlers
 class ImportHandlerField(CharField):  # pragma: no cover
     def clean(self, value):
