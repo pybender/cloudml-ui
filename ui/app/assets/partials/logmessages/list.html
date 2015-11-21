@@ -1,8 +1,8 @@
 <div>
   <div class="row">
-      <form class="span-5 form-inline">
+      <form name="LogsForm" class="span-5 form-inline">
         <b>Level:</b>
-          <select ng-options="level for level in log_levels"
+          <select name="level" ng-options="level for level in log_levels"
         ng-model="log_level" ng-change="setLogLevel()"></select>
       </form>
       <div class="pull-right">

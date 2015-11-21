@@ -1,13 +1,13 @@
-<form class="form-search well">
-  <input type="text" placeholder="complete word" ng-model="search_form.q" class="input-medium search-query" title="Search by complete stemmed word">
-  <select ng-model="search_form.is_positive">
+<form name="WeightsSearchForm" class="form-search well">
+  <input type="text" name="word" placeholder="complete word" ng-model="search_form.q" class="input-medium search-query" title="Search by complete stemmed word">
+  <select name="is_positive" ng-model="search_form.is_positive">
     <option value="0">both</option>
     <option value="1">only positive</option>
     <option value="-1">only negative</option>
   </select>
   <div class="input-prepend" ng-show="model.segments.length">
     <span class="add-on">Segment:</span>
-    <select class="span2" ng-model="search_form.segment">
+    <select name="segment" class="span2" ng-model="search_form.segment">
       <option value="{{segment.id}}" ng-repeat="segment in model.segments">{{segment.name}}</option>
     </select>
   </div>

@@ -2,15 +2,15 @@
   <div>
     <h2>{{ test.name|capfirst }} Examples List</h2>
     <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
-    <form name="Form" class="form-inline well">
+    <form name="GroupedExamplesSearchForm" class="form-inline well">
       <label>Field Name:</label>
       <select title='could be field from raw data (use "data_input->{{ fieldname }}") or any other field like "label", "pred_label".' ng-model="form.field" name="field" ng-options="name for name in fields" required>
         <option value="">--- select field ---</option>
       </select>
       &nbsp;
       <label>N:</label>
-      <input type=text ng-model="form.count" name="field"/>
-      <button ng-click="update()" ng-disabled="Form.$invalid" class="btn btn-success">
+      <input type=text ng-model="form.count" name="count"/>
+      <button ng-click="update()" ng-disabled="GroupedExamplesSearchForm.$invalid" class="btn btn-success">
           <i title="Apply" class="status-icon icon-play"></i>
           Update
       </button>

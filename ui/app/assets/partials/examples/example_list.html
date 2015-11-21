@@ -3,14 +3,14 @@
 
     <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
 
-    <form class="form-inline">
+    <form name="ExampleListSearchForm" class="form-inline">
       <label>Label: </label>
-      <select class="input-small" ng-change="filter()" ng-model="simple_filters.label">
+      <select name="label" class="input-small" ng-change="filter()" ng-model="simple_filters.label">
         <option value="">--- any ---</option>
         <option ng-repeat="label in labels" ng-value="label" ng-selected="label==simple_filters.label">{{ label }}</option>
       </select> &nbsp;
       <label>Predicted Label: </label>
-      <select class="input-small" ng-change="filter()" ng-model="simple_filters.pred_label">
+      <select name="predicted_label" class="input-small" ng-change="filter()" ng-model="simple_filters.pred_label">
         <option value="">--- any ---</option>
         <option ng-repeat="label in labels" ng-value="label" ng-selected="label==simple_filters.pred_label">{{ label }}</option>
       </select>
@@ -18,12 +18,12 @@
       <div ng-show="showDataFiltering">
         <hr />
         <div class="input-append">
-          <select class="input-small" ng-model="dataField">
+          <select name="field" class="input-small" ng-model="dataField">
             <option value=''>-- select field name --</option>
             <option ng-repeat="field in fields" value="data_input->>{{ field }}">{{ field }}</option>
           </select>
           <span class="add-on">:</span>
-          <input type="text" ng-model="dataValue" />
+          <input name="field_value" type="text" ng-model="dataValue" />
           <a class="btn btn-info" ng-click="appendDataFieldFilter(dataField, dataValue)" ng-disabled="loading_state || !(dataField)">
               <i class="icon-plus"></i>
           </a>

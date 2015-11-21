@@ -15,12 +15,12 @@
         <span ng-show="DialogForm.start.$error.required" class="help-inline">Required</span>
       </div>
     </div>
-    <div class="control-group" ng-class="{error: Form.format.$invalid}">
+    <div class="control-group" ng-class="{error: DialogForm.format.$invalid}">
     <label class="control-label">Data Format</label>
     <div class="controls">
-      <select ng-model="format" required ng-options="v.value as v.name for v in formats" ng-selected='formats[0]'>
+      <select name="data_format" ng-model="format" required ng-options="v.value as v.name for v in formats" ng-selected='formats[0]'>
       </select>
-      <span ng-show="Form.format.$error.required" class="help-inline">Required</span>
+      <span ng-show="DialogForm.format.$error.required" class="help-inline">Required</span>
     </div>
   </div>
 </form>
