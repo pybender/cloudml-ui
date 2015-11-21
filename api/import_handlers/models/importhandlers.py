@@ -418,7 +418,8 @@ class XmlScript(db.Model, BaseMixin, RefXmlImportHandlerMixin):
             s3helper = AmazonS3Helper()
             s3helper.save_key_string(key, data)
         except Exception as e:
-            raise ValueError(e)
+            raise ValueError("Error when uploading file to Amazon S3: "
+                             "{0}".format(e))
         return key
 
 
