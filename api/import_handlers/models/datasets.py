@@ -45,6 +45,7 @@ class DataSet(db.Model, BaseModel):
     # Generic relation to import handler
     import_handler_id = db.Column(db.Integer, nullable=False)
     import_handler_type = db.Column(db.String(200), default='xml')
+    import_handler_xml = db.Column(db.Text)
 
     cluster_id = db.Column(
         db.Integer, db.ForeignKey('cluster.id', ondelete='SET NULL'))
@@ -73,6 +74,7 @@ class DataSet(db.Model, BaseModel):
     def import_handler(self, handler):
         self.import_handler_id = handler.id
         self.import_handler_type = handler.TYPE
+        self.import_handler_xml = handler.data
 
     def set_uid(self):
         if not self.uid:

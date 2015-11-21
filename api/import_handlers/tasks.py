@@ -87,6 +87,7 @@ def import_data(dataset_id, model_id=None, test_id=None, transformer_id=None):
         logging.info("Import dataset using import handler '%s' \
 with%s compression", import_handler.name, '' if dataset.compress else 'out')
 
+        dataset.import_handler_xml = import_handler.data
         handler_iterator = import_handler.get_iterator(
             dataset.import_params, callback)
 

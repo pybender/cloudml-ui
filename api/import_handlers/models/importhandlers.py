@@ -66,6 +66,7 @@ class ImportHandlerMixin(BaseModel):
         dataset.name = ("%s: %s" % (self.name, str_params))[:199]
         dataset.import_handler_id = self.id
         dataset.import_handler_type = self.TYPE
+        dataset.import_handler_xml = self.data
         dataset.import_params = params
         dataset.format = data_format
         dataset.compress = compress

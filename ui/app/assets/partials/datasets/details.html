@@ -70,9 +70,16 @@
     </div>
     <div ng-show="dataset.samples_json"
     cml-has-codemirror="dataset.samples_json && action[0] == 'model'">
-      <h3>Sample Data</small></h3>
+      <h3>Sample Data</h3>
       <textarea ui-codemirror="codeMirrorConfigs(true)['json']" ng-model="dataset.samples_json" class="cml-codemirror-refresh"></textarea>
     </div>
+    <br/>
+    <div ng-show="dataset.import_handler_xml"
+    cml-has-codemirror="dataset.import_handler_xml && action[0] == 'model'">
+      <h3>Import Handler (on DataSet importing/latest re-importing/creation moment)</h3>
+      <textarea ui-codemirror="codeMirrorConfigs(true, '100%')['xml']" ng-model="dataset.import_handler_xml" class="cml-codemirror-refresh"></textarea>
+    </div>
+    <br/>
   </div>
 
   <div ng-show="action[0] == 'log'" ng-controller="LogMessageListCtrl" ng-init="init('importdata_log', dataset.id)">
