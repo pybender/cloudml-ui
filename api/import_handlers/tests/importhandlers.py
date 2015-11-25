@@ -502,17 +502,24 @@ class XmlScriptTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
         self.assertEqual(obj['data'], self.obj.data)
 
     @mock_s3
-    @patch('api.amazon_utils.AmazonS3Helper.save_key_string')
-    def test_post_put(self, mock_save_key_string):
+    def test_post_put(self):
         handler = get_importhandler(filename='obsolete_extract.xml')
         self.handler_amazon = handler
         url = '/cloudml/xml_import_handlers/{0!s}/scripts/'.format(handler.id)
         data_01 = {'data_file': '2+2', 'import_handler_id': handler.id}
         data_02 = {'data_file': 'kwwkk', 'import_handler_id': handler.id}
         data_03 = {'data': '2*11', 'data_file': '3*11',
+                   'data_url': './api/import_handlers/fixtures/functions.py',
                    'import_handler_id': handler.id}
         data_04 = {'data': '2*11', 'import_handler_id': handler.id}
         data_05 = {'data': '2*12', 'import_handler_id': handler.id}
+        data_06 = {'data_url': './api/import_handlers/fixtures/functions.py',
+                   'import_handler_id': handler.id, 'data': '2+3'}
+        data_07 = {'data_url': './api/import_handlers/fixtures/function.py',
+                   'import_handler_id': handler.id}
+        data_08 = {'data_url':
+                   './api/import_handlers/fixtures/bad_functions.py',
+                   'import_handler_id': handler.id}
 
         #correct data file
         resp = self.client.post(url, data=data_01, headers=HTTP_HEADERS)
@@ -522,7 +529,6 @@ class XmlScriptTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
         self.assertEqual(obj.type, XmlScript.TYPE_PYTHON_FILE)
         key = "{0}_python_script_".format(handler.name)
         self.assertIn(key, obj.data)
-        mock_save_key_string.assert_called_once_with(obj.data, '2+2')
 
         #incorrect data file
         resp = self.client.post(url, data=data_02, headers=HTTP_HEADERS)
@@ -537,8 +543,28 @@ class XmlScriptTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
         self.assertEqual(obj.type, XmlScript.TYPE_PYTHON_FILE)
         key = "{0}_python_script_".format(handler.name)
         self.assertIn(key, obj.data)
+        amazon_file = obj.data
 
-        #correct data
+        #choose data url
+        resp = self.client.post(url, data=data_06, headers=HTTP_HEADERS)
+        self.assertEqual(201, resp.status_code)
+        resp_obj = json.loads(resp.data)
+        obj = XmlScript.query.get(resp_obj[self.RESOURCE.OBJECT_NAME]['id'])
+        self.assertEqual(obj.type, XmlScript.TYPE_PYTHON_FILE)
+        self.assertEqual('./api/import_handlers/fixtures/functions.py',
+                         obj.data)
+
+        #incorrect data url (file doesn't exist)
+        resp = self.client.post(url, data=data_07, headers=HTTP_HEADERS)
+        self.assertEqual(400, resp.status_code)
+        self.assertIn("not found", resp.data)
+
+        #incorrect data in url
+        resp = self.client.post(url, data=data_08, headers=HTTP_HEADERS)
+        self.assertEqual(400, resp.status_code)
+        self.assertIn("Exception occurs while adding python script", resp.data)
+
+        #just correct data
         resp = self.client.post(url, data=data_04, headers=HTTP_HEADERS)
         self.assertEqual(201, resp.status_code)
         resp_obj = json.loads(resp.data)
@@ -557,6 +583,49 @@ class XmlScriptTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
         obj = XmlScript.query.get(resp_obj[self.RESOURCE.OBJECT_NAME]['id'])
         self.assertEqual(obj.type, XmlScript.TYPE_PYTHON_CODE)
         self.assertEqual(obj.data, '2*12')
+
+        #PUT correct data and data url to amazon (choose data url)
+        data_05['data_url'] = amazon_file
+        resp = self.client.put(
+            '{0}{1}/'.format(url,
+                             resp_obj[self.RESOURCE.OBJECT_NAME]['id']),
+            data=data_05,
+            headers=HTTP_HEADERS)
+        self.assertEqual(200, resp.status_code)
+        resp_obj = json.loads(resp.data)
+        obj = XmlScript.query.get(resp_obj[self.RESOURCE.OBJECT_NAME]['id'])
+        self.assertEqual(obj.type, XmlScript.TYPE_PYTHON_FILE)
+        self.assertEqual(obj.data, amazon_file)
+
+        #PUT correct data to previously stored url, it should change type
+        data_05['data_url'] = ''
+        resp = self.client.put(
+            '{0}{1}/'.format(url,
+                             resp_obj[self.RESOURCE.OBJECT_NAME]['id']),
+            data=data_05,
+            headers=HTTP_HEADERS)
+        self.assertEqual(200, resp.status_code)
+        resp_obj = json.loads(resp.data)
+        obj = XmlScript.query.get(resp_obj[self.RESOURCE.OBJECT_NAME]['id'])
+        self.assertEqual(obj.type, XmlScript.TYPE_PYTHON_CODE)
+        self.assertEqual(obj.data, "2*12")
+
+    def test_get_script_string(self):
+        handler = get_importhandler(filename='obsolete_extract.xml')
+        script = XmlScript.query.filter_by(import_handler_id=handler.id).all()
+        url = '/cloudml/xml_import_handlers/{0}/scripts/{1}/action/' \
+              'script_string/'.format(handler.id, script[0].id)
+        resp = self.client.get(url, headers=HTTP_HEADERS)
+        resp_obj = json.loads(resp.data)
+        self.assertIn('multiply(x, y)', resp_obj['script_string'])
+        self.assertEqual(200, resp.status_code)
+
+        url = '/cloudml/xml_import_handlers/{0}/scripts/{1}/action/' \
+              'script_string/'.format(handler.id, script[1].id)
+        resp = self.client.get(url, headers=HTTP_HEADERS)
+        resp_obj = json.loads(resp.data)
+        self.assertIn('1+1', resp_obj['script_string'])
+        self.assertEqual(200, resp.status_code)
 
 
 class XmlFieldTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
