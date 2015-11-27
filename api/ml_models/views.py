@@ -132,7 +132,9 @@ class BaseTrainedEntityResource(BaseResourceSQL):
             chain(tasks_list).apply_async()
             return self._render({
                 self.OBJECT_NAME: {
-                    'id': entity.id
+                    'id': entity.id,
+                    'status': entity.status,
+                    'training_in_progress': entity.training_in_progress
                 }
             })
 

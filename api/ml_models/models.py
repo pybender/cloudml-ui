@@ -101,6 +101,11 @@ class BaseTrainedEntity(object):
         return db.Column(db.Integer, nullable=True)
 
     @property
+    def training_in_progress(self):
+        return self.status in [self.STATUS_QUEUED, self.STATUS_TRAINING,
+                               self.STATUS_FILLING_WEIGHTS]
+
+    @property
     def train_import_handler(self):
         try:
             return getattr(self, "rel_train_import_handler_%s" %

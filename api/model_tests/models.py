@@ -106,6 +106,12 @@ class TestResult(db.Model, BaseModel):
             statuses=AsyncTask.STATUSES
         )
 
+    @property
+    def test_in_progress(self):
+        return self.status in [TestResult.STATUS_QUEUED,
+                               TestResult.STATUS_IN_PROGRESS,
+                               TestResult.STATUS_STORING]
+
 
 class TestExample(db.Model, BaseModel):
     __tablename__ = 'test_example'
