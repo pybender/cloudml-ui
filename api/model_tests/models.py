@@ -33,6 +33,9 @@ class TestResult(db.Model, BaseModel):
                 STATUS_IN_PROGRESS, STATUS_STORING, STATUS_COMPLETED,
                 STATUS_ERROR]
 
+    TEST_STATUSES = [STATUS_QUEUED, STATUS_IMPORTING, STATUS_IMPORTED,
+                     STATUS_IN_PROGRESS, STATUS_STORING]
+
     __tablename__ = 'test_result'
 
     name = db.Column(db.String(200), nullable=False)
@@ -108,9 +111,7 @@ class TestResult(db.Model, BaseModel):
 
     @property
     def test_in_progress(self):
-        return self.status in [TestResult.STATUS_QUEUED,
-                               TestResult.STATUS_IN_PROGRESS,
-                               TestResult.STATUS_STORING]
+        return self.status in self.TEST_STATUSES
 
 
 class TestExample(db.Model, BaseModel):

@@ -47,6 +47,10 @@ class BaseTrainedEntity(object):
                 STATUS_TRAINING, STATUS_FILLING_WEIGHTS, STATUS_TRAINED,
                 STATUS_ERROR, STATUS_CANCELED]
 
+    TRAINING_STATUSES = [STATUS_QUEUED, STATUS_IMPORTING, STATUS_IMPORTED,
+                         STATUS_REQUESTING_INSTANCE, STATUS_INSTANCE_STARTED,
+                         STATUS_TRAINING, STATUS_FILLING_WEIGHTS,
+                         STATUS_CANCELED]
     @declared_attr
     def name(cls):
         return db.Column(db.String(200), nullable=False, unique=True)
@@ -102,8 +106,7 @@ class BaseTrainedEntity(object):
 
     @property
     def training_in_progress(self):
-        return self.status in [self.STATUS_QUEUED, self.STATUS_TRAINING,
-                               self.STATUS_FILLING_WEIGHTS]
+        return self.status in self.TRAINING_STATUSES
 
     @property
     def train_import_handler(self):
