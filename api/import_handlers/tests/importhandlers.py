@@ -213,6 +213,16 @@ class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
         resp, obj = self.check_edit(data, id=self.obj.id)
         self.assertEquals(obj.name, data['name'])
 
+    def test_edit_deployed(self):
+        #check handler uploaded to server
+        self.obj.on_s3 = True
+        self.obj.save()
+        data = {"name": "new"}
+        url = self._get_url(id=self.obj.id)
+        resp = self.client.put(url, data=data, headers=HTTP_HEADERS)
+        self.assertEqual(405, resp.status_code)
+        self.assertIn('has been deployed', resp.data)
+
     def test_upload_obsolete_import_handler(self):
         name = str(uuid.uuid1())
         # Obsolete import handler uploading

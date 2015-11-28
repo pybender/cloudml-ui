@@ -379,6 +379,16 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue(model.name == data['model']['name'] ==
                         'new name %@#')
 
+    def test_edit_deployed_model(self):
+        #test edit deployed model
+        data = {'name': 'new name1'}
+        self.obj.on_s3 = True
+        self.obj.save()
+        url = self._get_url(id=self.obj.id)
+        resp = self.client.put(url, data=data, headers=HTTP_HEADERS)
+        self.assertEqual(405, resp.status_code)
+        self.assertIn('has been deployed and blocked ', resp.data)
+
     def test_edit_tags(self):
         self.obj.tags = []
         self.obj.save()
@@ -435,6 +445,32 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         self.obj.save()
 
         resp = self.client.put(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.BAD_REQUEST)
+
+    @mock_s3
+    @patch('api.ml_models.tasks.generate_visualization_tree')
+    def test_put_generate_visualization(self, mock_task):
+        # test deployed model
+        self.obj.on_s3 = True
+        self.obj.save()
+        url = self._get_url(id=self.obj.id, action='generate_visualization')
+        resp = self.client.put(url, data={}, headers=HTTP_HEADERS)
+        self.assertEqual(405, resp.status_code)
+        self.assertIn('Forbidden to change visualization data', resp.data)
+        self.obj.on_s3 = False
+        self.obj.save()
+
+        # test model with valid data
+        data = {"type": "tree_deep", "parameters": json.dumps({"deep": "10"})}
+        url = self._get_url(id=self.obj.id, action='generate_visualization')
+        resp = self.client.put(url, data=data, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.OK)
+        self.assertTrue(mock_task.delay.called)
+
+        # test model with invalid data
+        data = {"type": "tree_deep", "parameters": json.dumps({'dee': "10"})}
+        url = self._get_url(id=self.obj.id, action='generate_visualization')
+        resp = self.client.put(url, data=data, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.BAD_REQUEST)
 
     """
@@ -703,6 +739,14 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         categories = obj.weight_categories
         self.assertEquals(len(categories), 4)
 
+        #test retrain deployed model
+        self.obj.on_s3 = True
+        self.obj.save()
+        url = self._get_url(id=self.obj.id, action='train')
+        resp = self.client.put(url, data=data, headers=HTTP_HEADERS)
+        self.assertEqual(405, resp.status_code)
+        self.assertIn('Re-train is forbidden. Model is deployed', resp.data)
+
     @mock_s3
     @patch('api.instances.tasks.cancel_request_spot_instance')
     def test_cancel_request_instance(self, mock_task, *mocks):
@@ -790,19 +834,19 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
 
         url = self._get_url(id=model.id, action='import_features_from_xml_ih')
         resp = self.client.put(url, headers=HTTP_HEADERS)
-        self.assertEquals(resp.status_code, 400)
+        self.assertEquals(resp.status_code, 405)
 
         # new model but trainer is not xml
         model = Model.query.filter_by(name=ModelData.model_03.name).first()
         url = self._get_url(id=model.id, action='import_features_from_xml_ih')
         resp = self.client.put(url, headers=HTTP_HEADERS)
-        self.assertEquals(resp.status_code, 400)
+        self.assertEquals(resp.status_code, 405)
 
         # new model, trainer xml but feature count is not 0
         model = Model.query.filter_by(name=ModelData.model_04.name).first()
         url = self._get_url(id=model.id, action='import_features_from_xml_ih')
         resp = self.client.put(url, headers=HTTP_HEADERS)
-        self.assertEquals(resp.status_code, 400)
+        self.assertEquals(resp.status_code, 405)
 
         # new model, trainer xml feature count is 0
         xml_ih = ImportHandler.query.filter_by(

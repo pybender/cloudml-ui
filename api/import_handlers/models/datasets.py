@@ -62,6 +62,7 @@ class DataSet(db.Model, BaseModel):
     data_fields = db.Column(postgresql.ARRAY(db.String))
     format = db.Column(db.String(10))
     uid = db.Column(db.String(200))
+    locked = db.Column(db.Boolean, default=False)
 
     @property
     def import_handler(self):
@@ -172,6 +173,30 @@ class DataSet(db.Model, BaseModel):
     def __repr__(self):
         return '<Dataset %r>' % self.name
 
+    def _check_locked(self):
+        if self.locked:
+            self.reason_msg = 'Some existing models were trained/tested ' \
+                              'using this dataset. '
+            return False
+        return True
+
+    @property
+    def can_edit(self):
+        return self._check_locked() and super(DataSet, self).can_edit
+
+    @property
+    def can_delete(self):
+        return self._check_locked() and super(DataSet, self).can_delete
+
+    def unlock(self):
+        from api.ml_models.models import data_sets_table
+        from api.model_tests.models import TestResult
+        if db.session.query(data_sets_table).filter(
+                data_sets_table.c.data_set_id == self.id).count() == 0 and \
+           TestResult.query.filter(
+                TestResult.data_set_id == self.id).count() == 0:
+            self.locked = False
+            self.save()
 
 @event.listens_for(ImportHandler, "mapper_configured", propagate=True)
 def setup_listener(mapper, class_):

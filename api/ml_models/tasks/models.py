@@ -181,6 +181,7 @@ def visualize_model(model_id, segment_id=None):
     """
     init_logger('trainmodel_log', obj=int(model_id))
     model, segment = _get_model_and_segment_or_raise(model_id, segment_id)
+
     logging.info(
         "Starting to visualize trained model {0}. Segment: {1}".format(
             model.name, segment.name))

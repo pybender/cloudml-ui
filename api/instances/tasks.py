@@ -33,8 +33,8 @@ def synchronyze_cluster_list():
                          % cluster.jobflow_id)
             cluster.delete()
         if status in Cluster.STATUSES:
-            claster.status = status
-            claster.save()
+            cluster.status = status
+            cluster.save()
         else:
             logging.info('Unknown jobflow status %s' % status)
 
@@ -100,7 +100,6 @@ def get_request_instance(request_id, callback=None, dataset_ids=None,
     logging.info('Get spot instance request %s' % request_id)
 
     model = Model.query.get(model_id)
-
     try:
         request = ec2.get_request_spot_instance(request_id)
     except EC2ResponseError as e:
@@ -191,7 +190,6 @@ def cancel_request_spot_instance(request_id, model_id):
     """
     init_logger('trainmodel_log', obj=int(model_id))
     model = Model.query.get(model_id)
-
     logging.info('Cancelling spot instance request {0!s} \
 for model id {1!s}...'.format(
         request_id, model_id))

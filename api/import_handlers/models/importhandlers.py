@@ -21,6 +21,7 @@ from cloudml.importhandler.datasources import DataSource
 from cloudml.importhandler.importhandler import ExtractionPlan, \
     ImportHandler as CoreImportHandler
 from api.base.models import db, BaseModel
+from api import app
 
 
 class ImportHandlerMixin(BaseModel):
@@ -160,6 +161,7 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
     predict_id = db.Column(db.ForeignKey('predict.id', ondelete='CASCADE'))
     predict = relationship(
         'Predict', foreign_keys=[predict_id], backref="import_handler")
+    locked = db.Column(db.Boolean, default=False)
 
     @property
     def data(self):
@@ -329,6 +331,21 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
     def __repr__(self):
         return "<Import Handler %s>" % self.name
 
+    def _check_deployed(self):
+        if not app.config['MODIFY_DEPLOYED_IH'] and self.locked:
+            self.reason_msg = "Import handler {0} has been deployed and " \
+                              "blocked for modifications. ".format(self.name)
+            return False
+        return True
+
+    @property
+    def can_edit(self):
+        return self._check_deployed() and super(XmlImportHandler, self).can_edit
+
+    @property
+    def can_delete(self):
+        return self._check_deployed() and super(
+            XmlImportHandler, self).can_delete
 
 class RefXmlImportHandlerMixin(object):
     @declared_attr

@@ -5,7 +5,9 @@
       class="title" ng-bind="dataset.name || 'untitled dataset'"
       editable="dataset" value="dataset.name"
       editable-field="name" editable-input="text"
-      editable-placement="right" editable-required></small></h2>
+      editable-placement="right" editable-required></small>
+    <small ng-show="dataset.locked">(Locked by trained/tested models)</small>
+  </h2>
       <div class="actions" style="min-width: 100px;">
         <a  ng-show="dataset.cluster && ds.status == 'Imported'" class="btn btn-success" ng-click="getPigFields(dataset)"><i title="Get pig fields" class="icon-download-alt"></i> XML Fields</a>
         <a class="btn btn-info" ng-show="dataset.on_s3" ng-click="download()"><i title="Download From Amazon S3" class="icon-download-alt"></i> Download</a>

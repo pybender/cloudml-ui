@@ -4,7 +4,7 @@
     Models that use import handler as train or test import handler:
     <ul>
         <li ng-repeat="m in umodels">
-            <a href="#{{ m.objectUrl() }}">{{ m.name }}</a>
+            <a href="#{{ m.objectUrl() }}">{{ m.name }}</a> <span class="error_message bold" ng-show="m.on_s3">Deployed!</span>
         </li>
     </ul>
 </div>

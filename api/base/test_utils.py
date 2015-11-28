@@ -42,6 +42,8 @@ class BaseDbTestCase(TestCase):
     @classmethod
     def setUpClass(cls):
         app.config.from_object('api.test_config')
+        app.config['MODIFY_DEPLOYED_MODEL'] = False
+        app.config['MODIFY_DEPLOYED_IH'] = False
 
         # if Model is not defined, try get it from resource.
         if hasattr(cls, 'RESOURCE') and not hasattr(cls, 'Model'):

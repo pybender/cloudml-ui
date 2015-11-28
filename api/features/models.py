@@ -118,6 +118,20 @@ class RefFeatureSetMixin(object):
     def feature_set(cls):
         return relationship("FeatureSet", backref=backref('feature_list'))
 
+    @property
+    def can_edit(self):
+        if not self.feature_set.can_edit:
+            self.reason_msg = self.feature_set.reason_msg
+            return False
+        return BaseModel.can_edit
+
+    @property
+    def can_delete(self):
+        if not self.feature_set.can_delete:
+            self.reason_msg = self.feature_set.reason_msg
+            return False
+        return BaseModel.can_delete
+
 
 class Feature(ExportImportMixin, RefFeatureSetMixin,
               BaseModel, db.Model):
@@ -193,6 +207,7 @@ class FeatureSet(ExportImportMixin, BaseModel, db.Model):
     features_count = db.Column(db.Integer, default=0)
     features_dict = db.Column(JSONType)
     modified = db.Column(db.Boolean, default=False)
+    locked = db.Column(db.Boolean, default=False)
     __table_args__ = (
         CheckConstraint(features_count >= 0,
                         name='check_features_count_positive'), {})
@@ -256,12 +271,34 @@ class FeatureSet(ExportImportMixin, BaseModel, db.Model):
 
         return features_dict
 
+    def _check_locked(self):
+        if self.locked:
+            self.reason_msg = 'The model referring to this feature set is ' \
+                              'deployed and blocked for modifications.'
+            return False
+        return True
+
+    @property
+    def can_edit(self):
+        return self._check_locked() and super(FeatureSet, self).can_edit
+
+    @property
+    def can_delete(self):
+        return self._check_locked() and super(FeatureSet, self).can_delete
+
     def save(self, commit=True):
         # TODO: Why do default attr of the column not work?
         if self.features_dict is None:
             self.features_dict = self.FEATURES_STRUCT
         self.features_dict['schema-name'] = self.schema_name
         BaseModel.save(self, commit=commit)
+
+    def delete(self):
+        features = Feature.query.filter(
+            Feature.feature_set_id == self.id).all()
+        for feature in features:
+            feature.delete()
+        super(FeatureSet, self).delete()
 
 
 group_by_table = db.Table(

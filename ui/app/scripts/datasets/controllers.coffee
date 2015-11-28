@@ -19,7 +19,7 @@ angular.module('app.datasets.controllers', ['app.config', ])
   ($scope, $rootScope, DataSet, $location) ->
     $scope.MODEL = DataSet
     $scope.FIELDS = 'name,created_on,status,error,data,import_params,on_s3,
-filesize,records_count,time,created_by,updated_by'
+filesize,records_count,time,created_by,updated_by,locked'
     $scope.ACTION = 'loading datasets'
 
     $scope.$on('loadDataSet', (event, opts) ->
@@ -71,7 +71,13 @@ filesize,records_count,time,created_by,updated_by'
         $scope.ds.$reupload()
 
     $scope.reimport = () ->
-      $scope.ds.$reimport()
+      $scope.ds.$reimport().then ((resp) ->
+        $scope.ds.status = resp.data.data_set.status
+        ),
+        ((resp) ->
+          $scope.setError(resp, 'reimporting')
+        )
+
 
     $scope.getPigFields = (dataSet)->
       $scope.openDialog($scope, {

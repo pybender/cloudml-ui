@@ -159,6 +159,19 @@ class ModelClassifierTest(BaseDbTestCase, TestChecksMixin):
             name=ModelData.model_01.name).one().id
         _check(data, errors={u'classifier': u'classifier is required'})
 
+    def test_post_deployed_model(self):
+        model = Model.query.filter_by(name=ModelData.model_01.name).one()
+        model.on_s3 = True
+        model.save()
+        data = {'name': 'new classifier name',
+                'type': 'logistic regression',
+                'params': '{"C": 1}',
+                'model_id': model.id}
+        resp = self.client.post(
+            self.BASE_URL, data=data, headers=HTTP_HEADERS)
+        self.assertEqual(405, resp.status_code)
+        self.assertIn('Model is deployed', resp.data)
+
     def test_edit(self):
         model = Model.query.filter_by(name=ModelData.model_01.name).one()
         self.assertTrue(model)

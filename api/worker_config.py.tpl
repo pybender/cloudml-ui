@@ -91,3 +91,6 @@ LOGGING = {
         },
     }
 }
+
+MODIFY_DEPLOYED_MODEL = True
+MODIFY_DEPLOYED_IH = True

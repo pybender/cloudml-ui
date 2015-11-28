@@ -103,6 +103,10 @@ def run_test(dataset_ids, test_id):
 
         all_count = metrics._preds.size
         test.dataset = dataset
+        # lock dataset used for testing
+        dataset.locked = True
+        dataset.save()
+
         test.examples_count = all_count
         test.memory_usage = memory_usage(-1, interval=0, timeout=None)[0]
 
