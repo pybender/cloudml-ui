@@ -21,6 +21,7 @@ from cloudml.importhandler.datasources import DataSource
 from cloudml.importhandler.importhandler import ExtractionPlan, \
     ImportHandler as CoreImportHandler
 from api.base.models import db, BaseModel
+from api import app
 
 
 class ImportHandlerMixin(BaseModel):
@@ -66,6 +67,7 @@ class ImportHandlerMixin(BaseModel):
         dataset.name = ("%s: %s" % (self.name, str_params))[:199]
         dataset.import_handler_id = self.id
         dataset.import_handler_type = self.TYPE
+        dataset.import_handler_xml = self.data
         dataset.import_params = params
         dataset.format = data_format
         dataset.compress = compress
@@ -159,6 +161,7 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
     predict_id = db.Column(db.ForeignKey('predict.id', ondelete='CASCADE'))
     predict = relationship(
         'Predict', foreign_keys=[predict_id], backref="import_handler")
+    locked = db.Column(db.Boolean, default=False)
 
     @property
     def data(self):
@@ -197,8 +200,11 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
 
         for scr in self.xml_scripts:
             if scr.data and scr.data.strip():  # script isn't empty
-                scr_tag = etree.SubElement(plan, 'script')
-                scr_tag.text = etree.CDATA(scr.data)
+                if scr.type == XmlScript.TYPE_PYTHON_FILE:
+                    scr_tag = etree.SubElement(plan, 'script', src=scr.data)
+                if scr.type == XmlScript.TYPE_PYTHON_CODE:
+                    scr_tag = etree.SubElement(plan, 'script')
+                    scr_tag.text = etree.CDATA(scr.data)
 
         datasources = etree.SubElement(plan, "datasources")
         for ds in self._get_in_order(self.xml_data_sources, 'type',
@@ -325,6 +331,21 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
     def __repr__(self):
         return "<Import Handler %s>" % self.name
 
+    def _check_deployed(self):
+        if not app.config['MODIFY_DEPLOYED_IH'] and self.locked:
+            self.reason_msg = "Import handler {0} has been deployed and " \
+                              "blocked for modifications. ".format(self.name)
+            return False
+        return True
+
+    @property
+    def can_edit(self):
+        return self._check_deployed() and super(XmlImportHandler, self).can_edit
+
+    @property
+    def can_delete(self):
+        return self._check_deployed() and super(
+            XmlImportHandler, self).can_delete
 
 class RefXmlImportHandlerMixin(object):
     @declared_attr
@@ -391,7 +412,33 @@ class XmlInputParameter(db.Model, BaseMixin, RefXmlImportHandlerMixin):
 
 
 class XmlScript(db.Model, BaseMixin, RefXmlImportHandlerMixin):
+    TYPE_PYTHON_CODE = 'python_code'
+    TYPE_PYTHON_FILE = 'python_file'
+    TYPES = [TYPE_PYTHON_CODE, TYPE_PYTHON_FILE]
     data = db.Column(db.Text)
+    type = db.Column(db.Enum(*TYPES, name='xml_script_types'),
+                     server_default=TYPE_PYTHON_CODE)
+
+    @staticmethod
+    def to_s3(data, import_handler_id):
+        from api.amazon_utils import AmazonS3Helper
+        from datetime import datetime
+        import api
+        try:
+            handler = XmlImportHandler.query.get(import_handler_id)
+            if not handler:
+                raise ValueError("Import handler {0} not found".format(
+                    import_handler_id))
+            key = "{0}/{1}_python_script_{2}.py".format(
+                api.app.config['IMPORT_HANDLER_SCRIPTS_FOLDER'],
+                handler.name,
+                datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            s3helper = AmazonS3Helper()
+            s3helper.save_key_string(key, data)
+        except Exception as e:
+            raise ValueError("Error when uploading file to Amazon S3: "
+                             "{0}".format(e))
+        return key
 
 
 class XmlQuery(db.Model, BaseMixin):
@@ -669,9 +716,12 @@ def fill_import_handler(import_handler, xml_data=None):
             db.session.add(param)
             import_handler.import_params.append(inp.name)
 
-        for scr in plan.data.xpath("script"):
+        for scr in plan.scripts:
             script = XmlScript(
-                data=scr.text, import_handler=import_handler)
+                data=scr.src or scr.text,
+                type=XmlScript.TYPE_PYTHON_FILE if scr.src else
+                XmlScript.TYPE_PYTHON_CODE,
+                import_handler=import_handler)
             db.session.add(script)
 
         def get_datasource(entity):

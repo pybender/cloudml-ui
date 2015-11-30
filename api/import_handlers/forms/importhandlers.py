@@ -6,7 +6,7 @@ Forms, that used for adding and edditing XML Import handlers.
 
 from api.base.forms import BaseForm, CharField, JsonField, \
     ChoiceField, ValidationError, BooleanField, IntegerField, \
-    DocumentField, ModelField, UniqueNameField
+    DocumentField, ModelField, UniqueNameField, ScriptFileField
 from api.import_handlers.models import XmlImportHandler, XmlDataSource, \
     XmlInputParameter, XmlScript, XmlEntity, XmlField, XmlQuery, XmlSqoop, \
     PredictModel, Predict
@@ -263,12 +263,26 @@ class XmlQueryForm(BaseForm):
 
 
 class XmlScriptForm(BaseForm):
-    required_fields = ('data', 'import_handler_id')
+    required_fields = (('data', 'data_file'), 'import_handler_id')
     NO_REQUIRED_FOR_EDIT = True
 
     data = CharField()
     import_handler_id = DocumentField(
         doc=XmlImportHandler, by_name=False, return_doc=False)
+    data_file = ScriptFileField()
+
+    def save(self, *args, **kwargs):
+        try:
+            data_file = self.cleaned_data.get('data_file')
+            if data_file:
+                key = XmlScript.to_s3(
+                    data_file, self.cleaned_data.get('import_handler_id'))
+                self.cleaned_data['data'] = key
+                self.cleaned_data['type'] = XmlScript.TYPE_PYTHON_FILE
+            script = super(XmlScriptForm, self).save()
+        except Exception as e:
+            raise ValidationError(e)
+        return script
 
     def clean_data(self, value, field):
         try:

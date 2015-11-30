@@ -1,0 +1,28 @@
+<div ng-controller="SaveObjectCtl">
+  <div class="modal-header">
+    <button ng-click="$dismiss('cancel')" class="close" data-dismiss="modal">×</button>
+    <h3>Script</h3>
+  </div>
+
+  <div class="modal-body">
+    <ng-include src="'partials/parts/save_form_messages.html'"></ng-include>
+    <form name="Form" class="form-horizontal">
+      <div class="control-group" ng-class="{error: Form.data.$invalid || Form.data_file.$invalid || errorList.data || errorList.data_file}">
+        <div class="control-group">
+          <span ng-show="Form.data.$invalid && Form.data_file.$invalid" class="help-block">Write python script below or upload file with it</span>
+          <textarea rows="8" ui-codemirror="codeMirrorConfigs(false)['python']" class="cml-codemirror-refresh"
+                  name="data" ng-model="model.data" ng-change="setFieldError('data')" ng-required="Form.data_file.$invalid"></textarea>
+          <br/>
+          <span>or</span>
+          <input type="file" name="data_file" ng-model="model.data_file" not-required-file ng-required="!model.data"/>
+          <span ng-show="errorList.data" class="help-block" ng-bind="errorList.data" />
+          <span ng-show="errorList.data_file" class="help-block" ng-bind="errorList.data_file" />
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="modal-footer">
+    <button ng-click="save(['data', 'data_file', 'import_handler_id'])" ng-disabled="Form.data.$invalid && Form.data_file.$invalid" class="btn btn-primary">Save</button>
+  </div>
+</div>

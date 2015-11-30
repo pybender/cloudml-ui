@@ -106,6 +106,25 @@ class TestResult(db.Model, BaseModel):
             statuses=AsyncTask.STATUSES
         )
 
+    @property
+    def can_edit(self):
+        if not self.model.can_edit:
+            self.reason_msg = self.model.reason_msg
+            return False
+        return super(TestResult, self).can_edit
+
+    @property
+    def can_delete(self):
+        if not self.model.can_delete:
+            self.reason_msg = self.model.reason_msg
+            return False
+        return super(TestResult, self).can_delete
+
+    def delete(self):
+        ds = self.dataset
+        super(TestResult, self).delete()
+        ds.unlock()
+
 
 class TestExample(db.Model, BaseModel):
     __tablename__ = 'test_example'

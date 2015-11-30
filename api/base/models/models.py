@@ -19,6 +19,7 @@ db = app.sql_db
 
 class BaseMixin(JsonSerializableMixin):
     id = db.Column(db.Integer, primary_key=True)
+    reason_msg = ''
 
     @declared_attr
     def __tablename__(cls):
@@ -70,6 +71,7 @@ class BaseModel(BaseMixin):
     created_on = db.Column(db.DateTime, server_default=func.now())
     updated_on = db.Column(db.DateTime, server_default=func.now(),
                            onupdate=func.current_timestamp())
+    reason_msg = 'Item is created by another user.'
 
     @declared_attr
     def created_by_id(cls):

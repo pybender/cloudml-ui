@@ -15,6 +15,12 @@ class FeatureSetData(DataSet):
     class bestmatch:
         schema_name = 'bestmatch'
 
+    class bestmatch_01:
+        schema_name = 'bestmatch_01'
+
+    class bestmatch_02:
+        schema_name = 'bestmatch_02'
+
 
 class FeatureData(DataSet):
     class smth:
@@ -80,6 +86,35 @@ class FeatureData(DataSet):
         feature_set = FeatureSetData.bestmatch
         disabled = True
 
+    class name_feature_1:
+        input_format = 'dict'
+        name = "name1"
+        is_target_variable = False
+        default = "smth"
+        required = True
+        params = {"mappings": {"class2": 0, "class1": 1}}
+        type = "text"
+        feature_set = FeatureSetData.bestmatch_01
+
+    class name_feature_2:
+        input_format = 'dict'
+        name = "name2"
+        is_target_variable = True
+        default = "smth"
+        required = True
+        params = {"mappings": {"class2": 0, "class1": 1}}
+        type = "text"
+        feature_set = FeatureSetData.bestmatch_01
+
+    class name_feature_2_1:
+        input_format = 'dict'
+        name = "name21"
+        is_target_variable = False
+        default = "smth"
+        required = True
+        params = {"mappings": {"class2": 0, "class1": 1}}
+        type = "text"
+        feature_set = FeatureSetData.bestmatch_02
 
 class PredefinedScalerData(DataSet):
     class scaler_01:

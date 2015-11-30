@@ -20,7 +20,7 @@ angular.module('app.datasets.model', ['app.config'])
       @MAIN_FIELDS: 'name,status,import_handler_type,import_handler_id'
       @EXTRA_FIELDS: ['created_on,updated_on','data','on_s3','import_params',
                       'error','filesize','records_count','time','created_by',
-                      'format', 'cluster', 'pig_step', 'pig_row']
+                      'format', 'cluster', 'pig_step', 'pig_row', 'locked', 'import_handler_xml']
 
       id: null
       name: null
@@ -35,6 +35,7 @@ angular.module('app.datasets.model', ['app.config'])
       on_s3: false
       format: 'json'
       import_handler_type: 'xml'
+      import_handler_xml: null
       samples: null
       samples_json: null
 
@@ -102,8 +103,6 @@ angular.module('app.datasets.model', ['app.config'])
 
         url = "#{base_url}#{@id}/action/reimport/"
         @$make_request url, {}, "PUT", {}
-        .then (resp) ->
-          me.status = resp.data.data_set.status
 
       $getSampleData: ->
         base_url = @constructor.$get_api_url({}, @)

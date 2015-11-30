@@ -15,6 +15,9 @@ IMPORTHANDLER_FROM_FIXTURES = open(os.path.join(
     DIR, 'importhandler_from_fixtures.xml'), 'r').read()
 EXTRACT_TRAIN_XML = open(os.path.join(DIR, 'extract-train.xml'), 'r').read()
 EXTRACT_OBSOLETE = open(os.path.join(DIR, 'obsolete_extract.xml'), 'r').read()
+IH_INCORRECT_SCRIPT = open(os.path.join(DIR,
+                                        'ih_incorrect_script.xml'), 'r').read()
+IH_INVALID_PYTHON = open(os.path.join(DIR, 'ih_invalid_python.xml'), 'r').read()
 # PIG_IMPORT_HANDLER = os.path.join(
 #     DIR, 'pig-train-import-handler.xml')
 
@@ -161,6 +164,7 @@ class DataSetData(DataSet):
         uid = '8a7d1ae26efc11e395b420107a86d036'
         import_handler_id = 1
         import_handler_type = 'xml'
+        locked = True
 
     class dataset_03:
         name = "DS 3 (csv)"

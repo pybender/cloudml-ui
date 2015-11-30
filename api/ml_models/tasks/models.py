@@ -52,6 +52,10 @@ def train_model(dataset_ids, model_id, user_id, delete_metadata=False):
     logging.info('Preparing the model `%s` for training.' % model.name)
     try:
         model.prepare_fields_for_train(user=user, datasets=datasets)
+        logging.info(
+            'DataSet files chosen for training: %s'
+            % ', '.join(['{0} (id #{1})'.
+            format(dataset.filename, dataset.id) for dataset in datasets]))
         logging.info('Perform model training')
         feature_model = FeatureModel(model.get_features_json(),
                                      is_file=False)
@@ -177,6 +181,7 @@ def visualize_model(model_id, segment_id=None):
     """
     init_logger('trainmodel_log', obj=int(model_id))
     model, segment = _get_model_and_segment_or_raise(model_id, segment_id)
+
     logging.info(
         "Starting to visualize trained model {0}. Segment: {1}".format(
             model.name, segment.name))

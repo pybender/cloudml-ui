@@ -6,9 +6,8 @@
         <param name="start" type="date" />
         <param name="end" type="date" />
     </inputs>
-    <script>
-    <![CDATA[def always99(a): return 99]]>
-    </script>
+    <script src="./api/import_handlers/fixtures/functions.py" />
+    <script><![CDATA[1+1]]></script>
 
     <datasources>
         <!--

@@ -6,7 +6,7 @@ import json
 import httplib
 import logging
 
-from api.base.test_utils import BaseDbTestCase, TestChecksMixin
+from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS
 from ..views import FeatureResource, FeatureSetResource
 from ..models import Feature, FeatureSet, NamedFeatureType
 from ..fixtures import FeatureSetData, FeatureData, FEATURES_JSON
@@ -208,6 +208,20 @@ Can not load it: aaa, transformer-type: type is invalid"})
         self.assertFalse(obj.transformer,
                          "Transformer should be rem (%s)" % obj.transformer)
         self.assertFalse(obj.scaler, "scaler should be removed")
+
+    def test_modify_locked_feature(self):
+        self.model.features_set.locked = True
+        self.model.features_set.save()
+        data = {"type": "boolean"}
+        url = self._get_url(id=self.obj.id, method='put')
+        resp = self.client.put(url, data=data, headers=HTTP_HEADERS)
+        self.assertEqual(405, resp.status_code)
+        self.assertIn('The model referring to this', resp.data)
+
+        url = self._get_url(id=self.obj.id, method='delete')
+        resp = self.client.delete(url, headers=HTTP_HEADERS)
+        self.assertEqual(405, resp.status_code)
+        self.assertIn('The model referring to this', resp.data)
 
     def test_make_target_variable(self):
         fset = self.model.features_set
@@ -470,6 +484,27 @@ class TestFeatureSetResource(BaseDbTestCase, TestChecksMixin):
         data = {"group_by": json.dumps([])}
         resp, obj = self.check_edit(data, id=self.obj.id)
         self.assertFalse(obj.group_by)
+
+    def test_edit_locked(self):
+        self.model.features_set.locked = True
+        self.model.features_set.save()
+        data = {"schema_name": "new name"}
+        url = self._get_url(id=self.model.features_set.id, method='put')
+        resp = self.client.put(url, data=data, headers=HTTP_HEADERS)
+        self.assertEqual(405, resp.status_code)
+        self.assertIn('The model referring to this', resp.data)
+
+    def test_delete(self):
+        feature_set = FeatureSet.query.filter_by(
+            schema_name=FeatureSetData.bestmatch_01.schema_name).one()
+        feature_set_id = feature_set.id
+        url = self._get_url(id=feature_set.id, method='delete')
+        resp = self.client.delete(url, headers=HTTP_HEADERS)
+        self.assertEqual(204, resp.status_code)
+        self.assertEqual(0, Feature.query.filter_by(
+            feature_set_id=feature_set_id).count())
+        self.assertEqual(0, FeatureSet.query.filter_by(
+            id=feature_set_id).count())
 
 
 def fields_from_dict(obj, fields):

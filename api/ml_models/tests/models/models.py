@@ -117,3 +117,15 @@ class ModelTests(BaseDbTestCase):
             {'status': 'pending'},
             {'key': 'val', u'parameters': {u'status': u'pending'}},
             initial_visualization_data={'key': 'val'})
+
+    def test_delete(self):
+        model = Model.query.filter_by(name=ModelData.model_06.name).one()
+        model_id = model.id
+        feature_set_id = model.features_set.id
+        datasets = model.datasets
+        model.delete()
+        self.assertEqual(0, Model.query.filter_by(id=model_id).count())
+        self.assertEqual(0, FeatureSet.query.filter_by(
+            id=feature_set_id).count())
+        self.assertEqual(1, len(datasets))
+        self.assertFalse(datasets[0].locked)

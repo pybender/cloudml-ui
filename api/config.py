@@ -9,6 +9,7 @@ SQLALCHEMY_DATABASE_URI = \
 
 
 UPLOAD_FOLDER = 'models'
+IMPORT_HANDLER_SCRIPTS_FOLDER = 'scripts/import_handlers'
 DATA_FOLDER = './data'
 MAX_CONTENT_LENGTH = 128 * 1024 * 1024
 DEBUG = False
@@ -94,7 +95,7 @@ SEND_ERROR_EMAILS = False
 ADMINS = (
     ("Panagiotis Papadimitriou", "papadimitriou@upwork.com"),
     ("Nikolay Melnik", "nmelnik@odesk.com"),
-    ("Nader Soliman", "nsoliman@elance-odesk.com"),
+    ("Nader Soliman", "nsoliman@elance-odesk.com")
 )
 
 # Email address used as sender (From field).
