@@ -242,15 +242,22 @@ angular.module('app.models.controllers', ['app.config', ])
             $scope.params.tags.push {id: id, text: id}
 
     $scope.train_timer = null
+    $scope.same_status_count = 0
+    $scope.status = $scope.model.status
     $scope.monitorTraining = () ->
       $scope.train_timer = $timeout( ()->
           $scope.model.$load(
             show: 'status,training_in_progress'
           ).then (->
-            if $scope.model.training_in_progress
+            if $scope.model.status == $scope.status
+              $scope.same_status_count += 1
+            else
+              $scope.status = $scope.model.status
+              $scope.same_status_count = 0
+            if $scope.model.training_in_progress && $scope.same_status_count < 20
               $scope.monitorTraining()
           )
-        10000
+        20000
       )
 
     $scope.$watch 'model.training_in_progress', (newVal, oldVal)->
