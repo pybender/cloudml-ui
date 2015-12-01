@@ -428,7 +428,7 @@ class TransformerResource(BaseTrainedEntityResource):
     Model = Transformer
     GET_ACTIONS = BaseTrainedEntityResource.GET_ACTIONS + ['configuration']
     ENTITY_TYPE = 'transformer'
-    DEFAULT_FIELDS = ['name', 'type']
+    DEFAULT_FIELDS = ['name', 'type', 'params']
     FILTER_PARAMS = (('status', str), )
     put_form = TransformerForm
     train_form = TrainForm
