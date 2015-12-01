@@ -69,7 +69,6 @@ angular.module('app.directives')
       scope.displayValue = displayFor(scope.value, scope.parameterType)
 
       scope.change = ()->
-      	console.log "c!!!"
       	scope.value = valueFor(scope.displayValue, scope.parameterType)
   }
 )
