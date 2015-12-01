@@ -6,7 +6,8 @@ import json
 import httplib
 import logging
 
-from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS
+from api.base.test_utils import BaseDbTestCase, TestChecksMixin, \
+    HTTP_HEADERS, FEATURE_COUNT
 from ..views import FeatureResource, FeatureSetResource
 from ..models import Feature, FeatureSet, NamedFeatureType
 from ..fixtures import FeatureSetData, FeatureData, FEATURES_JSON
@@ -364,8 +365,9 @@ class TestFeaturesDocs(BaseDbTestCase):
         feature_set.from_dict(FEATURES_JSON)
         self.assertTrue(feature_set)
         self.assertEquals(feature_set.schema_name, 'bestmatch')
-        self.assertEquals(len(feature_set.features['features']), 37)
-        self.assertEquals(feature_set.features_count, 37)
+        self.assertEquals(len(feature_set.features['features']),
+                          FEATURE_COUNT)
+        self.assertEquals(feature_set.features_count, FEATURE_COUNT)
         self.assertEquals(feature_set.target_variable, 'hire_outcome')
 
         # named features type "str_to_timezone" should be added

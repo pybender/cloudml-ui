@@ -920,7 +920,7 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(model.feature_count, FEATURE_COUNT)
         self.assertEquals(model.target_variable, TARGET_VARIABLE)
         features = Feature.query.filter_by(feature_set=model.features_set)
-        self.assertEquals(features.count(), 37)
+        self.assertEquals(features.count(), FEATURE_COUNT)
 
         # Checking that classifier from features created
         classifier = model.classifier

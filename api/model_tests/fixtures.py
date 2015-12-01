@@ -191,7 +191,7 @@ class TestExampleData(DataSet):
         weighted_data_input = {}
         prob = [0.5, 0.5]
         example_id = "3"
-        on_s3 = True
+        locked = True
         num = 0
         model = ModelData.model_01
         test_result = TestResultData.test_02
