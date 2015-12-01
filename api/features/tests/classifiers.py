@@ -161,7 +161,7 @@ class ModelClassifierTest(BaseDbTestCase, TestChecksMixin):
 
     def test_post_deployed_model(self):
         model = Model.query.filter_by(name=ModelData.model_01.name).one()
-        model.on_s3 = True
+        model.locked = True
         model.save()
         data = {'name': 'new classifier name',
                 'type': 'logistic regression',

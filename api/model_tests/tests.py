@@ -136,7 +136,7 @@ class TestResourceTests(BaseDbTestCase, TestChecksMixin):
     @patch('api.model_tests.tasks.run_test')
     def test_post_on_deployed_model(self, mock_run_test, mock_multipart_upload):
         # check run test with deployed model
-        self.model.on_s3 = True
+        self.model.locked = True
         self.model.save()
         dataset = DataSet.query.filter_by(
             name=DataSetData.dataset_02.name).first()

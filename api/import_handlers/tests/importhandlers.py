@@ -215,7 +215,7 @@ class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
 
     def test_edit_deployed(self):
         #check handler uploaded to server
-        self.obj.on_s3 = True
+        self.obj.locked = True
         self.obj.save()
         data = {"name": "new"}
         url = self._get_url(id=self.obj.id)

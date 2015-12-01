@@ -65,7 +65,7 @@ class BaseTrainedEntityResource(BaseResourceSQL):
         from celery import chain
         obj = self._get_details_query(None, **kwargs)
         if not app.config['MODIFY_DEPLOYED_MODEL'] and \
-           self.ENTITY_TYPE == 'model' and obj.on_s3:
+           self.ENTITY_TYPE == 'model' and obj.locked:
             return odesk_error_response(405, ERR_INVALID_METHOD,
                                         'Re-train is forbidden. Model is '
                                         'deployed and blocked for '
@@ -290,7 +290,7 @@ class ModelResource(BaseTrainedEntityResource):
 
     def _put_generate_visualization_action(self, **kwargs):
         model = self._get_details_query(None, **kwargs)
-        if not app.config['MODIFY_DEPLOYED_MODEL'] and model.on_s3:
+        if not app.config['MODIFY_DEPLOYED_MODEL'] and model.locked:
             return odesk_error_response(405, ERR_INVALID_METHOD,
                                         'Forbidden to change visualization '
                                         'data. Model is deployed and blocked '

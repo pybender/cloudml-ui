@@ -382,7 +382,7 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
     def test_edit_deployed_model(self):
         #test edit deployed model
         data = {'name': 'new name1'}
-        self.obj.on_s3 = True
+        self.obj.locked = True
         self.obj.save()
         url = self._get_url(id=self.obj.id)
         resp = self.client.put(url, data=data, headers=HTTP_HEADERS)
@@ -451,13 +451,13 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
     @patch('api.ml_models.tasks.generate_visualization_tree')
     def test_put_generate_visualization(self, mock_task):
         # test deployed model
-        self.obj.on_s3 = True
+        self.obj.locked = True
         self.obj.save()
         url = self._get_url(id=self.obj.id, action='generate_visualization')
         resp = self.client.put(url, data={}, headers=HTTP_HEADERS)
         self.assertEqual(405, resp.status_code)
         self.assertIn('Forbidden to change visualization data', resp.data)
-        self.obj.on_s3 = False
+        self.obj.locked = False
         self.obj.save()
 
         # test model with valid data
@@ -740,7 +740,7 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(len(categories), 4)
 
         #test retrain deployed model
-        self.obj.on_s3 = True
+        self.obj.locked = True
         self.obj.save()
         url = self._get_url(id=self.obj.id, action='train')
         resp = self.client.put(url, data=data, headers=HTTP_HEADERS)
