@@ -107,20 +107,26 @@ def convert_float_or_int(val, config):
 
 
 def convert_string_list_none(val, config):
-    type_ = val.get('type')
-    value = val.get('value')
-    if type_ == 'empty':
-        return None
+    if isinstance(val, dict):
+        type_ = val.get('type')
+        value = val.get('value')
+        if type_ == 'empty':
+            return None
+        else:
+            if config.get('required', None) and value is None:
+                raise ValidationError(
+                    '{0} parameter is required'.format(config.name))
+            if type_ == 'string':
+                return str(value) or ''
+            elif type_ == 'list':
+                if not isinstance(value, (list, tuple)):
+                    return [value, ]
+                return value
     else:
-        if config.get('required', None) and value is None:
-            raise ValidationError(
-                '{0} parameter is required'.format(config.name))
-        if type_ == 'string':
-            return str(value) or ''
-        elif type_ == 'list':
-            if not isinstance(value, (list, tuple)):
-                return [value, ]
-            return value
+        if val is None or isinstance(val, basestring) or \
+                isinstance(val, (list, tuple)):
+            return val
+
     raise ValidationType(
         "Invalid subtype of the {0} parameter".format(config.name))
 

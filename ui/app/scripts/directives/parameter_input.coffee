@@ -68,7 +68,7 @@ angular.module('app.directives')
       scope.parameterType = typeFor(scope.value)
       scope.displayValue = displayFor(scope.value, scope.parameterType)
 
-      scope.change = ()->
+      scope.change = () ->
       	scope.value = valueFor(scope.displayValue, scope.parameterType)
   }
 )
