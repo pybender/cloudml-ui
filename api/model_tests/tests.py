@@ -831,15 +831,15 @@ class TasksRunTestTests(BaseDbTestCase, TestChecksMixin):
 
         result = do_train(['class2'])
         self.assertEqual(result, 'Test completed')
-        expected = {u'1': 0.4775985663082437,
+        expected = {u'1': 0.49283154121863804,
                     u'2': 0.0,
-                    u'3': 0.503584229390681}
+                    u'3': 0.482078853046595}
         self.assertDeepAlmostEqual(expected, test.roc_auc)
         self.assertEqual(
             test.metrics['confusion_matrix'],
-            [[u'1', [14, 7, 10]],
+            [[u'1', [10, 10, 11]],
              [u'2', [0, 0, 0]],
-             [u'3', [14, 13, 9]]])
+             [u'3', [12, 15, 9]]])
 
         self.assertTrue('accuracy' in test.metrics)
         self.assertIsInstance(test.metrics['accuracy'], float)

@@ -263,9 +263,8 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
                      'trainer': INVALID_MODEL,
                      'name': 'new'}
         self.check_edit_error(post_data, {
-            'trainer': "Pickled trainer model is invalid: Could not unpickle "
-                       "trainer - 'module' object has no attribute "
-                       "'TrainerStorage1'"
+            'trainer': "Pickled trainer model is invalid:"
+            " No module named core.trainer.store"
         })
 
     def test_post(self):

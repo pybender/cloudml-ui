@@ -381,7 +381,7 @@ class TestFeaturesDocs(BaseDbTestCase):
 
         # Checking features
         features = Feature.query.filter_by(feature_set=feature_set)
-        self.assertEquals(features.count(), 37)
+        self.assertEquals(features.count(), 35)
 
         def _check_feature(name, fields):
             feature = Feature.query.filter_by(
