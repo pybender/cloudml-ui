@@ -140,7 +140,11 @@
     </div>
 
     <div ng-show="action[1] == 'json'" cml-has-codemirror="action[1] == 'json'">
-      <textarea ng-model="model.features" ui-codemirror="codeMirrorConfigs(true)['json']" class="cml-codemirror-refresh"></textarea>
+      <form name="FeaturesJsonForm" ng-controller="ModelFeaturesJsonEditCtrl">
+        <textarea ng-model="model.features" name="fJson" ui-codemirror="codeMirrorConfigs(false)['json']" class="cml-codemirror-refresh"></textarea><br/>
+        <button ng-click="saveJson()" class="btn btn-info" ng-disabled="FeaturesJsonForm.fJson.$pristine">Save</button>
+        <button ng-click="resetJsonChanges()" class="btn btn-info" ng-disabled="FeaturesJsonForm.fJson.$pristine">Cancel Changes</button>
+      </form>
     </div>
 
     <div class="row well">

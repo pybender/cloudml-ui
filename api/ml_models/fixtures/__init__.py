@@ -28,6 +28,12 @@ DECISION_TREE = open(os.path.join(
     DIR, 'decision_tree.dat'), 'r').read()
 MODELS_COUNT = 7
 
+FEATURES_CORRECT = open(os.path.join(
+    DIR, 'features_correct.json'), 'r').read()
+FEATURES_CORRECT_WITH_DISABLED = open(os.path.join(
+    DIR, 'features_correct_with_disabled.json'), 'r').read()
+FEATURES_INCORRECT = open(os.path.join(
+    DIR, 'features_incorrect.json'), 'r').read()
 
 class ModelData(DataSet):
     class model_01:

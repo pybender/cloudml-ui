@@ -27,7 +27,8 @@ from api.features.fixtures import FeatureSetData, FeatureData
 from api.servers.models import Server
 from api.async_tasks.models import AsyncTask
 from api.servers.fixtures import ServerData
-from api.ml_models.fixtures import ModelData, TagData
+from api.ml_models.fixtures import ModelData, TagData, \
+    FEATURES_CORRECT_WITH_DISABLED, FEATURES_INCORRECT, FEATURES_CORRECT
 from api.import_handlers.fixtures import DataSetData, \
     IMPORT_HANDLER_FIXTURES, XmlEntityData, XmlFieldData
 
@@ -129,3 +130,25 @@ class ModelTests(BaseDbTestCase):
             id=feature_set_id).count())
         self.assertEqual(1, len(datasets))
         self.assertFalse(datasets[0].locked)
+
+    def test_features(self):
+        model = Model.query.filter_by(name=ModelData.model_01.name).one()
+        model.features = json.loads(FEATURES_CORRECT)
+        self.assertEqual(4, Feature.query.filter_by(
+            feature_set_id=model.features_set_id).count())
+        self.assertEqual('auto', model.classifier['params']['max_features'])
+        self.assertEqual(FEATURES_CORRECT, model.features)
+
+        model.features = json.loads(FEATURES_CORRECT_WITH_DISABLED)
+        self.assertEqual(4, Feature.query.filter_by(
+            feature_set_id=model.features_set_id).count())
+        self.assertEqual('example', model.features_set.schema_name)
+        self.assertEqual('auto', model.classifier['params']['max_features'])
+        self.assertNotEqual(FEATURES_CORRECT_WITH_DISABLED, model.features)
+        self.assertEqual(3, len(model.features['features']))
+        feature_names = [f['name'] for f in model.features['features']]
+        self.assertEqual[feature_names, ['rings', 'sex', 'square']]
+
+        self.assertRaises(ValueError, model.features,
+                          json.loads(FEATURES_INCORRECT))
+

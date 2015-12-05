@@ -1,0 +1,20 @@
+{
+  "schema-name": "bestmatch",
+  "feature-types":[
+    {
+      "name":"str_to_timezone",
+      "type": "composite",
+      "params": {
+        "chain": [
+          { "type": "regex", "params": { "pattern": "UTC([-\\+]+\\d\\d).*"  }},
+          { "type": "int" }
+        ]
+      }
+    }
+  ],
+  "features":[
+    {"name":"hire_outcome", "type": "map", "params": {"mappings": {"hire": 1, "nothire": 0}}, "is-target-variable":true},
+    {"name": "contractor.dev_last_worked", "type": "string-to-date", "params": {"pattern": "%B %d, %Y"}, "default": 946684800}
+    {"name": "contractor.dev_scores", "transformer": {"type": "Dictionary", "cast-value-as": "float"}},
+  ]
+}

@@ -23,7 +23,7 @@ from models import Model, Tag, Weight, WeightsCategory, Segment, Transformer, \
     ClassifierGridParams
 from forms import ModelAddForm, ModelEditForm, TransformDataSetForm, \
     TrainForm, TransformerForm, FeatureTransformerForm, GridSearchForm, \
-    VisualizationOptionsForm
+    VisualizationOptionsForm, ModelFeaturesJSONForm
 
 
 model_parser = reqparse.RequestParser()
@@ -169,7 +169,8 @@ class ModelResource(BaseTrainedEntityResource):
                    'features_download', 'dataset_download', 'weights_download')
     PUT_ACTIONS = ('train', 'tags', 'cancel_request_instance',
                    'upload_to_server', 'dataset_download', 'grid_search',
-                   'import_features_from_xml_ih', 'generate_visualization')
+                   'import_features_from_xml_ih', 'generate_visualization',
+                   'update_features_json')
     POST_ACTIONS = ('clone', )
     FILTER_PARAMS = (('status', str), ('comparable', str), ('tag', str),
                      ('created_by', str), ('updated_by_id', int),
@@ -419,6 +420,28 @@ class ModelResource(BaseTrainedEntityResource):
         app.sql_db.session.commit()
         return self._render({self.OBJECT_NAME: model.id,
                              'features': [f.to_dict() for f in features]})
+
+    def _put_update_features_json_action(self, **kwargs):
+        model = self._get_details_query(None, **kwargs)
+        if not app.config['MODIFY_DEPLOYED_MODEL'] and model.locked:
+            return odesk_error_response(405, ERR_INVALID_METHOD,
+                                        'Forbidden to change model features. '
+                                        'Model is deployed and blocked for'
+                                        ' modifications.')
+
+        form = ModelFeaturesJSONForm(obj=model)
+        if not form.is_valid():
+            return self._render({'error': form.error_messages})
+        try:
+            model.features = form.cleaned_data['features']
+        except Exception, exc:
+            return odesk_error_response(400, ERR_INVALID_DATA, str(exc))
+
+        return self._render({
+            self.OBJECT_NAME: model.id,
+            'features': model.features
+        })
+
 
 api.add_resource(ModelResource, '/cloudml/models/')
 

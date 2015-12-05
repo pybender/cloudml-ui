@@ -24,7 +24,8 @@ from api.model_tests.fixtures import TestResultData, TestExampleData
 from api.features.fixtures import FeatureSetData, FeatureData, FEATURES_STR
 from api.ml_models.fixtures import ModelData, TagData, MODEL_TRAINER, \
     DECISION_TREE_WITH_SEGMENTS, TREE_VISUALIZATION_DATA, INVALID_MODEL, \
-    SegmentData, MULTICLASS_MODEL
+    SegmentData, MULTICLASS_MODEL, FEATURES_CORRECT, FEATURES_INCORRECT, \
+    FEATURES_CORRECT_WITH_DISABLED
 from api.import_handlers.fixtures import DataSetData, \
     XmlImportHandlerData as ImportHandlerData, IMPORT_HANDLER_FIXTURES
 from api.import_handlers.fixtures import EXTRACT_XML, get_importhandler
@@ -862,6 +863,40 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertEqual(len(resp_obj['features']), 2)
         self.assertEqual(resp_obj['features'][0]['name'], 'opening_id')
         self.assertEqual(resp_obj['features'][0]['type'], 'int')
+
+    def test_post_update_features_json(self):
+        model = Model.query.filter_by(name=ModelData.model_01.name).first()
+        url = self._get_url(id=model.id, action='update_features_json')
+        data = {'features': ''}
+        resp = self.client.put(url, data=data, headers=HTTP_HEADERS)
+        self.assertEqual(400, resp.status_code)
+        self.assertIn('features is required', resp.data)
+
+        data = {'features': FEATURES_INCORRECT}
+        resp = self.client.put(url, data=data, headers=HTTP_HEADERS)
+        self.assertEqual(400, resp.status_code)
+        self.assertIn('Features JSON file is invalid: No classifier '
+                      'configuration defined', resp.data)
+
+        data = {'features': FEATURES_CORRECT}
+        resp = self.client.put(url, data=data, headers=HTTP_HEADERS)
+        self.assertEqual(200, resp.status_code)
+        resp_obj = json.loads(resp.data)
+        self.assertEqual(resp_obj['model'], model.id)
+        self.assertEqual(4, len(resp_obj['features']))
+        self.assertEquel('example', resp_obj['schema-name'])
+        self.assertEqual(1, len(resp_obj['group-by']))
+        self.assertEqual('random forest classifier',
+                         resp_obj['classifier']['type'])
+
+        data = {'features': FEATURES_CORRECT_WITH_DISABLED}
+        resp = self.client.put(url, data=data, headers=HTTP_HEADERS)
+        self.assertEqual(200, resp.status_code)
+        resp_obj = json.loads(resp.data)
+        self.assertEqual(resp_obj['model'], model.id)
+        self.assertEqual(3, len(resp_obj['features']))
+        self.assertEqual(4, Feature.query.filter_by(
+            feature_set_id=model.features_set_id).count())
 
     @mock_s3
     def _test_post(self, name=None, extra_data=None,

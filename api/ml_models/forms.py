@@ -324,6 +324,23 @@ class FeatureTransformerForm(BaseForm, ParametersConvertorMixin):
         return transformer
 
 
+class ModelFeaturesJSONForm(BaseForm):
+    required_fields = ('features', )
+
+    features = JsonField()
+
+    def clean_features(self, value, field):
+        if value is None:
+            return
+        from cloudml.trainer.config import FeatureModel, SchemaException
+        try:
+            feature_model = FeatureModel(json.dumps(value), is_file=False)
+        except SchemaException, exc:
+            raise ValidationError(
+                'Features JSON file is invalid: %s' % exc)
+        return value
+
+
 class GridSearchForm(BaseForm):
     parameters = JsonField()
     scoring = CharField()
