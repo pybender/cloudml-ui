@@ -354,20 +354,21 @@ class Model(db.Model, BaseModel, BaseTrainedEntity):
     @features.setter
     def features(self, features):
         from cloudml.trainer.config import FeatureModel, SchemaException
-        from api.features.models import FeatureSet
+        from api.features.models import Feature
         try:
-            feature_model = FeatureModel(json.dumps(features), is_file=False)
-            self.classifier = features['classifier'] or {}
-            if self.features_set:
-                self.features_set.delete()
-            self.features_set = FeatureSet()
-            self.features_set.from_dict(features, commit=False)
-        except SchemaException as e:
-            raise ValueError("Can not update model features. JSON file is "
-                             "invalid. {0}".format(e))
+            features_json = json.loads(features)
+            feature_model = FeatureModel(json.dumps(features_json),
+                                         is_file=False)
+            self.classifier = features_json['classifier'] or {}
+            Feature.query.filter_by(
+                feature_set_id=self.features_set_id).delete()
+            self.features_set.from_dict(features_json, commit=False)
+        except SchemaException as se:
+            raise ValueError("Can not set model features. JSON file is "
+                             "invalid. {0}".format(se))
         except Exception as e:
             db.session.rollback()
-            raise ValueError("Can not update features from JSON: {0}".format(e))
+            raise ValueError("Can not load features from JSON: {0}".format(e))
         else:
             db.session.commit()
 

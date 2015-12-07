@@ -726,7 +726,7 @@ describe 'ML Models Controllers', ->
       $scope.FeaturesJsonForm = {fJson: {$setPristine: jasmine.createSpy '$setPristine'}}
       $scope.$digest()
 
-      url = "#{$scope.model.BASE_API_URL}#{$scope.model.id}/action/update_features_json/"
+      url = "#{$scope.model.BASE_API_URL}#{$scope.model.id}/"
       $httpBackend.expectPUT url, (features)->
         return fJson
       .respond (if withError then 400 else 200), angular.toJson($scope.model)

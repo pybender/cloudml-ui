@@ -1,20 +1,51 @@
 {
-  "schema-name": "bestmatch",
-  "feature-types":[
+    "schema-name": "example",
+    "group-by": [
+        "rings"
+    ],
+    "features": [
     {
-      "name":"str_to_timezone",
-      "type": "composite",
-      "params": {
-        "chain": [
-          { "type": "regex", "params": { "pattern": "UTC([-\\+]+\\d\\d).*"  }},
-          { "type": "int" }
-        ]
-      }
+        "transformer": {
+            "params": {
+                "encoding": "fff"
+            },
+            "type": "Count",
+            "id": -1
+        },
+        "name": "diameter",
+        "scaler": {
+            "params": {
+                "copy": true
+            },
+            "type": "StandardScaler"
+        },
+        "default": 26,
+        "type": "int",
+        "is-required": true
+    },
+    {
+        "type": "int",
+        "name": "rings",
+        "is-required": true
+    },
+    {
+        "is-target-variable": true,
+        "type": "map",
+        "params": {
+            "mappings": {
+                "I": 0,
+                "M": 1,
+                "F": 2
+            }
+        },
+        "is-required": true,
+        "name": "sex"
+    },
+    {
+        "type": "float",
+        "name": "square",
+        "is-required": true
     }
-  ],
-  "features":[
-    {"name":"hire_outcome", "type": "map", "params": {"mappings": {"hire": 1, "nothire": 0}}, "is-target-variable":true},
-    {"name": "contractor.dev_last_worked", "type": "string-to-date", "params": {"pattern": "%B %d, %Y"}, "default": 946684800}
-    {"name": "contractor.dev_scores", "transformer": {"type": "Dictionary", "cast-value-as": "float"}},
-  ]
+    ],
+    "feature-types": []
 }

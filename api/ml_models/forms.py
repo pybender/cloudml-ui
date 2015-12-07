@@ -13,7 +13,7 @@ from api.base.forms.base_forms import BaseChooseInstanceAndDatasetMultiple, \
 from api.import_handlers.models import DataSet
 from api.base.forms import BaseForm, ValidationError, ModelField, \
     CharField, JsonField, ImportHandlerFileField, UniqueNameField, \
-    ChoiceField, ImportHandlerField, IntegerField, BooleanField
+    ChoiceField, ImportHandlerField, IntegerField, BooleanField, FeaturesField
 from api.models import Tag, Model, XmlImportHandler, \
     Transformer, BaseTrainedEntity, ClassifierGridParams
 from api.features.models import Feature
@@ -32,6 +32,7 @@ class ModelEditForm(BaseForm):
     example_id = CharField()
     example_label = CharField()
     tags = JsonField()
+    features = FeaturesField()
 
     def save(self, commit=True):
         old_tags = [t.text for t in self.obj.tags]
@@ -322,23 +323,6 @@ class FeatureTransformerForm(BaseForm, ParametersConvertorMixin):
             feature.transformer = transformer
             feature.save()
         return transformer
-
-
-class ModelFeaturesJSONForm(BaseForm):
-    required_fields = ('features', )
-
-    features = JsonField()
-
-    def clean_features(self, value, field):
-        if value is None:
-            return
-        from cloudml.trainer.config import FeatureModel, SchemaException
-        try:
-            feature_model = FeatureModel(json.dumps(value), is_file=False)
-        except SchemaException, exc:
-            raise ValidationError(
-                'Features JSON file is invalid: %s' % exc)
-        return value
 
 
 class GridSearchForm(BaseForm):

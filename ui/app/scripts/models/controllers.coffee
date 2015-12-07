@@ -484,7 +484,7 @@ angular.module('app.models.controllers', ['app.config', ])
         $scope.model.features = $scope.model.originalJson
         $scope.FeaturesJsonForm.fJson.$setPristine()
       $scope.saveJson = ->
-        $scope.model.$updateFeaturesJson()
+        $scope.model.$save(only: ['features'])
         .then () ->
           $route.reload()
         , (opts)->

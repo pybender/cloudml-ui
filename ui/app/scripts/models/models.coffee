@@ -156,10 +156,6 @@ angular.module('app.models.model', ['app.config'])
       $add_ih_fields_as_features: (opts={}) ->
         @$make_request("#{@BASE_API_URL}#{@id}/action/import_features_from_xml_ih/", {}, "PUT", {})
 
-      $updateFeaturesJson: ->
-        @$make_request("#{@BASE_API_URL}#{@id}/action/update_features_json/", {}, 'PUT',
-          {'features': @features})
-
     return Model
 ])
 
