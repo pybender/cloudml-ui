@@ -1,0 +1,13 @@
+<div>
+  <div class="modal-header">
+    <button ng-click="$dismiss('cancel')" class="close" data-dismiss="modal">×</button>
+    <h3><span ng-hide="name">Script</span><span ng-show="name">{{ name }}</span><span> preview</span></h3>
+  </div>
+
+  <div class="modal-body">
+    <alert-message ng-show="err" class="alert-error" msg="{{err}}" unsafe></alert-message>
+    <textarea ui-codemirror="codeMirrorConfigs(true)['python']" ng-model="code" class="cml-codemirror-refresh"></textarea>
+  </div>
+
+  <div class="modal-footer"></div>
+</div>

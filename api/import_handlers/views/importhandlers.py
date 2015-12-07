@@ -354,6 +354,18 @@ class XmlScriptResource(BaseResourceSQL):
     """
     put_form = post_form = XmlScriptForm
     Model = XmlScript
+    GET_ACTIONS = ('script_string', )
+
+    def _get_script_string_action(self, **kwargs):
+        script = self._get_details_query({}, **kwargs)
+        if script is None:
+            raise NotFound(self.MESSAGE404 % kwargs)
+        try:
+            return self._render({self.OBJECT_NAME: script.id,
+                                'script_string': script.script_string})
+        except Exception as e:
+            return odesk_error_response(400, ERR_INVALID_DATA, str(e))
+
 
 api.add_resource(
     XmlScriptResource, '/cloudml/xml_import_handlers/\

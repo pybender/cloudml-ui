@@ -16,6 +16,7 @@ from sqlalchemy import event
 from api.base.models import db, BaseMixin, JSONType
 from cloudml.importhandler.datasources import DbDataSource
 from cloudml.importhandler.inputs import Input
+from cloudml.importhandler.scripts import Script
 from cloudml.importhandler.entities import Field
 from cloudml.importhandler.datasources import DataSource
 from cloudml.importhandler.importhandler import ExtractionPlan, \
@@ -439,6 +440,24 @@ class XmlScript(db.Model, BaseMixin, RefXmlImportHandlerMixin):
             raise ValueError("Error when uploading file to Amazon S3: "
                              "{0}".format(e))
         return key
+
+    def to_xml(self, to_string=False, pretty_print=True):
+        attrib = {"src": self.data} if self.type == XmlScript.TYPE_PYTHON_FILE \
+            else {}
+        text = self.data if self.type == XmlScript.TYPE_PYTHON_CODE else None
+        elem = etree.Element(self.type, attrib)
+        elem.text = text
+        if to_string:
+            return etree.tostring(elem, pretty_print=pretty_print)
+        return elem
+
+    @property
+    def script_string(self):
+        try:
+            script = Script(self.to_xml())
+            return script.get_script_str()
+        except Exception as e:
+            raise ValueError("Can't load script sources. {0}".format(e))
 
 
 class XmlQuery(db.Model, BaseMixin):
