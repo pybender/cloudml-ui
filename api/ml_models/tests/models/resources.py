@@ -919,8 +919,6 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         data['name'] = name
 
         logging.debug('Posting model with filled: {0}'.format(data.keys()))
-        print '***'
-        print data
         resp, model = self.check_edit(data)
         self.assertEquals(model.name, name)
 

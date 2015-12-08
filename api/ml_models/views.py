@@ -169,8 +169,7 @@ class ModelResource(BaseTrainedEntityResource):
                    'features_download', 'dataset_download', 'weights_download')
     PUT_ACTIONS = ('train', 'tags', 'cancel_request_instance',
                    'upload_to_server', 'dataset_download', 'grid_search',
-                   'import_features_from_xml_ih', 'generate_visualization',
-                   'update_features_json')
+                   'import_features_from_xml_ih', 'generate_visualization')
     POST_ACTIONS = ('clone', )
     FILTER_PARAMS = (('status', str), ('comparable', str), ('tag', str),
                      ('created_by', str), ('updated_by_id', int),
@@ -316,8 +315,8 @@ class ModelResource(BaseTrainedEntityResource):
         )
         new_model.save()
         new_model.classifier = model.classifier
-        new_model.features_set.from_dict(model.features_set.features,
-                                         commit=False)
+        new_model.features_set.from_dict(
+            model.features_set.features, commit=False)
         new_model.tags = model.tags
         new_model.save()
         return self._render({
