@@ -56,6 +56,20 @@ class ModelEditForm(BaseForm):
                 tag.count = len(tag.models)
                 tag.save()
 
+        features = self.cleaned_data.get('features')
+        if features:
+            try:
+                Feature.query.filter_by(
+                    feature_set_id=model.features_set_id).delete()
+                model.classifier = features['classifier'] or {}
+                model.features_set.from_dict(features, commit=False)
+            except Exception as e:
+                db.session.rollback()
+                raise Exception("Error occurred while updating features: "
+                                "{0}".format(e))
+            else:
+                db.session.commit()
+
         return model
 
 

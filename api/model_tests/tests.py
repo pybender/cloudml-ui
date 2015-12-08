@@ -843,7 +843,7 @@ class TasksRunTestTests(BaseDbTestCase, TestChecksMixin):
 
         self.assertTrue('accuracy' in test.metrics)
         self.assertIsInstance(test.metrics['accuracy'], float)
-        self.assertNumAlmostEqual(0.34328358208955223, test.metrics['accuracy'])
+        self.assertNumAlmostEqual(0.2835820895522388, test.metrics['accuracy'])
 
         # excluding two labels
         result = do_train(['class3', 'class2'])

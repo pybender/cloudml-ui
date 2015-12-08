@@ -131,22 +131,3 @@ class ModelTests(BaseDbTestCase):
         self.assertEqual(1, len(datasets))
         self.assertFalse(datasets[0].locked)
 
-    def test_features(self):
-        model = Model.query.filter_by(name=ModelData.model_01.name).one()
-        model.features = FEATURES_CORRECT
-        self.assertEqual(4, Feature.query.filter_by(
-            feature_set_id=model.features_set_id).count())
-        self.assertEqual('auto', model.classifier['params']['max_features'])
-        self.assertEqual(4, len(model.features['features']))
-
-        model.features = FEATURES_CORRECT_WITH_DISABLED
-        self.assertEqual(4, Feature.query.filter_by(
-            feature_set_id=model.features_set_id).count())
-        self.assertEqual('example', model.features_set.schema_name)
-        self.assertEqual('auto', model.classifier['params']['max_features'])
-        self.assertEqual(3, len(model.features['features']))
-        feature_names = [f['name'] for f in model.features['features']]
-        self.assertEqual[feature_names, ['rings', 'sex', 'square']]
-
-        self.assertRaises(ValueError, model.features.set, FEATURES_INCORRECT)
-
