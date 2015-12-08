@@ -1,0 +1,46 @@
+<div ng-controller="SaveObjectCtl">
+  <div class="modal-header">
+    <button ng-click="$dismiss('cancel')" class="close" data-dismiss="modal">×</button>
+    <h3>Script</h3>
+  </div>
+
+  <div class="modal-body">
+
+    <ng-include src="'partials/parts/save_form_messages.html'"></ng-include>
+
+    <ul class="nav nav-pills" ng-hide="model.id">
+      <li ng-class="{active: model.type == 'python_code'}">
+        <a ng-click="model.type='python_code'">Code</a>
+      </li>
+      <li ng-class="{active: model.type == 'python_file'}">
+        <a ng-click="model.type='python_file'">File</a>
+      </li>
+    </ul>
+
+    <form name="Form" class="form-horizontal">
+      <div ng-show="model.type == 'python_code'">
+        <span class="help-block">Write python script below:</span>
+        <div class="control-group" ng-class="{error: Form.data.$invalid || errorList.data}" ng-show="model.type == 'python_code'">
+          <textarea rows="8" ui-codemirror="codeMirrorConfigs(false)['python']" class="cml-codemirror-refresh"
+                  name="data" ng-model="model.data" ng-required="model.type == 'python_code'"></textarea>
+          <span ng-show="errorList.data" class="help-block" ng-bind="errorList.data" />
+        </div>
+      </div>
+      <div ng-show="model.type == 'python_file'">
+        <span class="help-block">Upload python file or enter URL (local or Amazon S3):</span>
+        <div class="control-group" ng-class="{error: Form.data_file.$invalid || Form.data_url.$invalid || errorList.data_file || errorList.data_url}" >
+          <input type="file" name="data_file" ng-model="model.data_file" not-required-file ng-required="model.type == 'python_file' && !model.data_url"/>
+          <br/><br/>
+          <span>or URL:</span>
+          <input type="text" name="data_url" ng-model="model.data_url" ng-required="Form.data_file.$invalid && model.type == 'python_file'"/>
+          <span ng-show="errorList.data_file" class="help-block" ng-bind="errorList.data_file" />
+          <span ng-show="errorList.data_url" class="help-block" ng-bind="errorList.data_url" />
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="modal-footer">
+    <button ng-click="save(['data', 'data_url', 'data_file', 'type', 'import_handler_id'])" ng-disabled="Form.$invalid" class="btn btn-primary">Save</button>
+  </div>
+</div>

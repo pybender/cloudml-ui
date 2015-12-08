@@ -64,6 +64,19 @@ class FormFieldsTests(TestCase):
         self.assertRaises(ValidationError, field.clean, '{"key": "value"}')
         self.assertRaises(ValidationError, field.clean, '<plan></plan>')
 
+    def test_script_file_field(self):
+        field = ScriptFileField()
+        value = field.clean('2+2')
+        self.assertEqual(value, '2+2')
+        self.assertRaises(ValidationError, field.clean, 'invalid code')
+
+    def test_script_url_field(self):
+        field = ScriptUrlField()
+        value = field.clean('./api/import_handlers/fixtures/functions.py')
+        self.assertEqual(value, './api/import_handlers/fixtures/functions.py')
+        self.assertRaises(ValidationError, field.clean, 'incorrect/path.py')
+        self.assertRaises(ValidationError, field.clean,
+                          './api/import_handlers/fixtures/bad_functions.py')
 
 class TestDbFields(BaseDbTestCase):
     datasets = [XmlImportHandlerData]

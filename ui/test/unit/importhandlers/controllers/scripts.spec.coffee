@@ -87,7 +87,7 @@ describe 'importhandlers/xml/controllers/scripts.coffee', ->
         $scope.add()
         expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
           model: jasmine.any Script
-          template: 'partials/importhandlers/xml/scripts/add.html'
+          template: 'partials/importhandlers/xml/scripts/form.html'
           ctrlName: 'ModelEditDialogCtrl'
           action: 'add script'
         expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
@@ -99,7 +99,7 @@ describe 'importhandlers/xml/controllers/scripts.coffee', ->
         $scope.edit(script)
         expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
           model: jasmine.any Script
-          template: 'partials/importhandlers/xml/scripts/edit.html'
+          template: 'partials/importhandlers/xml/scripts/form.html'
           ctrlName: 'ModelEditDialogCtrl'
           action: 'edit script'
         expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
@@ -114,7 +114,7 @@ describe 'importhandlers/xml/controllers/scripts.coffee', ->
         $scope.edit(script)
         expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
           model: jasmine.any Script
-          template: 'partials/importhandlers/xml/scripts/edit.html'
+          template: 'partials/importhandlers/xml/scripts/form.html'
           ctrlName: 'ModelEditDialogCtrl'
           action: 'edit script'
         expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
