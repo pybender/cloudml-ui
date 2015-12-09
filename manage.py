@@ -197,6 +197,14 @@ class RunDynamoDB(Command):
         % (dynamodb_path, dynamodb_path))
 
 
+class UpdateDeployed(Command):
+    """Updates deployed models and import handlers"""
+    def run(self):
+        from api.servers.scripts import update_deployed
+        update_deployed()
+        print "Done"
+
+
 manager = Manager(app)
 migrate = Migrate(app, app.sql_db)
 manager.add_command('clearlocalcache', ClearLocalCache())
@@ -212,6 +220,7 @@ manager.add_command("create_db_tables", CreateDbTables())
 manager.add_command("create_dynamodb_tables", CreateDynamoDbTables())
 manager.add_command("drop_db_tables", DropDbTables())
 manager.add_command("create_image", CreateWorkerImage())
+manager.add_command("update_deployed", UpdateDeployed())
 
 
 if __name__ == "__main__":

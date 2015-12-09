@@ -11,8 +11,8 @@ def update_deployed():
         model_files = server.list_keys(FOLDER_MODELS)
         for file_ in model_files:
             model = Model.query.get(file_["object_id"])
-            if model and not model.on_s3:
-                model.on_s3 = True
+            if model and not model.locked:
+                model.locked = True
                 model.save()
                 model.features_set.locked = True
                 model.features_set.save()
@@ -33,8 +33,8 @@ def update_deployed():
         handler_files = server.list_keys(FOLDER_IMPORT_HANDLERS)
         for file_ in handler_files:
             ih = XmlImportHandler.query.get(file_["object_id"])
-            if ih and not ih.on_s3:
-                ih.on_s3 = True
+            if ih and not ih.locked:
+                ih.locked = True
                 ih.save()
                 print "Import handler {0} (id#{1}) updated".format(ih.name,
                                                                    ih.id)
