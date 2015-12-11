@@ -137,7 +137,7 @@ class DataSet(db.Model, BaseModel):
         self.save()
 
     def set_error(self, error, commit=True):
-        self.error = str(error)
+        self.error = str(error)[:299]
         self.status = self.STATUS_ERROR
         if commit:
             self.save()
