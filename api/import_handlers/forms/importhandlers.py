@@ -271,21 +271,40 @@ class XmlScriptForm(BaseForm):
         doc=XmlImportHandler, by_name=False, return_doc=False)
     data_file = ScriptFileField()
     data_url = ScriptUrlField()
+    type_field = ChoiceField(choices=XmlScript.TYPES, name='type')
 
     def save(self, *args, **kwargs):
         try:
-            data_file = self.cleaned_data.get('data_file')
-            data_url = self.cleaned_data.get('data_url')
-            if data_file:
-                key = XmlScript.to_s3(
-                    data_file, self.cleaned_data.get('import_handler_id'))
-                self.cleaned_data['data'] = key
-                self.cleaned_data['type'] = XmlScript.TYPE_PYTHON_FILE
-            elif data_url:
-                self.cleaned_data['data'] = data_url
-                self.cleaned_data['type'] = XmlScript.TYPE_PYTHON_FILE
+            script_type = self.cleaned_data.get('type', None)
+            data_file = self.cleaned_data.get('data_file', None)
+            data_url = self.cleaned_data.get('data_url', None)
+            data = self.cleaned_data.get('data', None)
+            if script_type == XmlScript.TYPE_PYTHON_FILE:
+                if data_file:
+                    key = XmlScript.to_s3(
+                        data_file, self.cleaned_data.get('import_handler_id'))
+                    self.cleaned_data['data'] = key
+                elif data_url:
+                    self.cleaned_data['data'] = data_url
+                else:
+                    raise ValidationError("File upload or URL required "
+                                          "for type '{0}'".format(script_type))
+            elif script_type == XmlScript.TYPE_PYTHON_CODE:
+                if not data:
+                    raise ValidationError("Code is required for type "
+                                          "'{0}'".format(script_type))
+            # type is not passed
             else:
-                self.cleaned_data['type'] = XmlScript.TYPE_PYTHON_CODE
+                if data_file:
+                    key = XmlScript.to_s3(
+                        data_file, self.cleaned_data.get('import_handler_id'))
+                    self.cleaned_data['data'] = key
+                    self.cleaned_data['type'] = XmlScript.TYPE_PYTHON_FILE
+                elif data_url:
+                    self.cleaned_data['data'] = data_url
+                    self.cleaned_data['type'] = XmlScript.TYPE_PYTHON_FILE
+                else:
+                    self.cleaned_data['type'] = XmlScript.TYPE_PYTHON_CODE
 
             script = super(XmlScriptForm, self).save()
         except Exception as e:

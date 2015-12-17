@@ -23,11 +23,12 @@ angular.module(
     $scope.add = () ->
       $scope.resetError()
       script = new Script({
-        import_handler_id: $scope.handler.id
+        import_handler_id: $scope.handler.id,
+        type: 'python_code'
       })
       $scope.openDialog($scope, {
         model: script
-        template: 'partials/importhandlers/xml/scripts/add.html'
+        template: 'partials/importhandlers/xml/scripts/form.html'
         ctrlName: 'ModelEditDialogCtrl'
         action: 'add script'
       })
@@ -37,10 +38,9 @@ angular.module(
       script.data_url = ''
       if script.type == 'python_file'
         script.data_url = script.data
-        script.data = ''
       $scope.openDialog($scope, {
         model: script
-        template: 'partials/importhandlers/xml/scripts/edit.html'
+        template: 'partials/importhandlers/xml/scripts/form.html'
         ctrlName: 'ModelEditDialogCtrl'
         action: 'edit script'
       })

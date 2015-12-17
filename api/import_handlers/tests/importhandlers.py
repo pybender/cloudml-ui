@@ -530,6 +530,12 @@ class XmlScriptTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
         data_08 = {'data_url':
                    './api/import_handlers/fixtures/bad_functions.py',
                    'import_handler_id': handler.id}
+        data_09 = {'data_url': './api/import_handlers/fixtures/functions.py',
+                   'import_handler_id': handler.id,
+                   'type': XmlScript.TYPE_PYTHON_CODE}
+        data_10 = {'data': '1+1',
+                   'import_handler_id': handler.id,
+                   'type': XmlScript.TYPE_PYTHON_FILE}
 
         #correct data file
         resp = self.client.post(url, data=data_01, headers=HTTP_HEADERS)
@@ -619,6 +625,17 @@ class XmlScriptTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
         obj = XmlScript.query.get(resp_obj[self.RESOURCE.OBJECT_NAME]['id'])
         self.assertEqual(obj.type, XmlScript.TYPE_PYTHON_CODE)
         self.assertEqual(obj.data, "2*12")
+
+        # type and data mismatch
+        resp = self.client.post(url, data=data_09, headers=HTTP_HEADERS)
+        self.assertEqual(400, resp.status_code)
+        self.assertIn("Code is required for type 'python_code'", resp.data)
+
+        # type and data mismatch
+        resp = self.client.post(url, data=data_10, headers=HTTP_HEADERS)
+        self.assertEqual(400, resp.status_code)
+        self.assertIn("File upload or URL required for type 'python_file'",
+                      resp.data)
 
     def test_get_script_string(self):
         handler = get_importhandler(filename='obsolete_extract.xml')
