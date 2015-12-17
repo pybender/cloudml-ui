@@ -537,7 +537,7 @@ class XmlScriptTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
                    'import_handler_id': handler.id,
                    'type': XmlScript.TYPE_PYTHON_FILE}
 
-        #correct data file
+        # correct data file
         resp = self.client.post(url, data=data_01, headers=HTTP_HEADERS)
         self.assertEqual(201, resp.status_code)
         resp_obj = json.loads(resp.data)
@@ -546,12 +546,12 @@ class XmlScriptTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
         key = "{0}_python_script_".format(handler.name)
         self.assertIn(key, obj.data)
 
-        #incorrect data file
+        # incorrect data file
         resp = self.client.post(url, data=data_02, headers=HTTP_HEADERS)
         self.assertEqual(400, resp.status_code)
         self.assertIn("Exception occurs while adding python script", resp.data)
 
-        #choose data file
+        # choose data file
         resp = self.client.post(url, data=data_03, headers=HTTP_HEADERS)
         self.assertEqual(201, resp.status_code)
         resp_obj = json.loads(resp.data)
@@ -561,7 +561,7 @@ class XmlScriptTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
         self.assertIn(key, obj.data)
         amazon_file = obj.data
 
-        #choose data url
+        # choose data url
         resp = self.client.post(url, data=data_06, headers=HTTP_HEADERS)
         self.assertEqual(201, resp.status_code)
         resp_obj = json.loads(resp.data)
@@ -570,17 +570,17 @@ class XmlScriptTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
         self.assertEqual('./api/import_handlers/fixtures/functions.py',
                          obj.data)
 
-        #incorrect data url (file doesn't exist)
+        # incorrect data url (file doesn't exist)
         resp = self.client.post(url, data=data_07, headers=HTTP_HEADERS)
         self.assertEqual(400, resp.status_code)
         self.assertIn("not found", resp.data)
 
-        #incorrect data in url
+        # incorrect data in url
         resp = self.client.post(url, data=data_08, headers=HTTP_HEADERS)
         self.assertEqual(400, resp.status_code)
         self.assertIn("Exception occurs while adding python script", resp.data)
 
-        #just correct data
+        # just correct data
         resp = self.client.post(url, data=data_04, headers=HTTP_HEADERS)
         self.assertEqual(201, resp.status_code)
         resp_obj = json.loads(resp.data)
@@ -588,7 +588,7 @@ class XmlScriptTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
         self.assertEqual(obj.type, XmlScript.TYPE_PYTHON_CODE)
         self.assertEqual(obj.data, '2*11')
 
-        #PUT correct data
+        # PUT correct data
         resp = self.client.put(
             '{0}{1}/'.format(url,
                              resp_obj[self.RESOURCE.OBJECT_NAME]['id']),
@@ -600,13 +600,14 @@ class XmlScriptTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
         self.assertEqual(obj.type, XmlScript.TYPE_PYTHON_CODE)
         self.assertEqual(obj.data, '2*12')
 
-        #PUT correct data and data url to amazon (choose data url)
+        # PUT correct data and data url to amazon (choose data url)
         data_05['data_url'] = amazon_file
         resp = self.client.put(
             '{0}{1}/'.format(url,
                              resp_obj[self.RESOURCE.OBJECT_NAME]['id']),
             data=data_05,
             headers=HTTP_HEADERS)
+        print resp.data
         self.assertEqual(200, resp.status_code)
         resp_obj = json.loads(resp.data)
         obj = XmlScript.query.get(resp_obj[self.RESOURCE.OBJECT_NAME]['id'])

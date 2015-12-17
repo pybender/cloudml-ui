@@ -264,9 +264,8 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
                      'trainer': INVALID_MODEL,
                      'name': 'new'}
         self.check_edit_error(post_data, {
-            'trainer': "Pickled trainer model is invalid: Could not unpickle "
-                       "trainer - 'module' object has no attribute "
-                       "'TrainerStorage1'"
+            'trainer': "Pickled trainer model is invalid: No module "
+                       "named core.trainer.store"
         })
 
     def test_post(self):
@@ -437,7 +436,7 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         data = {'features': FEATURES_INCORRECT}
         resp = self.client.put(url, data=data, headers=HTTP_HEADERS)
         self.assertEqual(400, resp.status_code)
-        self.assertIn('Classifier is missing', resp.data)
+        self.assertIn('No classifier configuration defined', resp.data)
 
         data = {'features': FEATURES_CORRECT}
         resp = self.client.put(url, data=data, headers=HTTP_HEADERS)
