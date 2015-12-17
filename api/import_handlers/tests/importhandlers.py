@@ -591,17 +591,20 @@ class XmlScriptTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
         self.assertEqual(obj.data, '2*12')
 
         #PUT correct data and data url to amazon (choose data url)
-        data_05['data_url'] = amazon_file
-        resp = self.client.put(
-            '{0}{1}/'.format(url,
-                             resp_obj[self.RESOURCE.OBJECT_NAME]['id']),
-            data=data_05,
-            headers=HTTP_HEADERS)
-        self.assertEqual(200, resp.status_code)
-        resp_obj = json.loads(resp.data)
-        obj = XmlScript.query.get(resp_obj[self.RESOURCE.OBJECT_NAME]['id'])
-        self.assertEqual(obj.type, XmlScript.TYPE_PYTHON_FILE)
-        self.assertEqual(obj.data, amazon_file)
+        with patch('cloudml.importhandler.scripts.Script._process_amazon_file',
+                   return_value='2+2'):
+            data_05['data_url'] = amazon_file
+            resp = self.client.put(
+                '{0}{1}/'.format(url,
+                                 resp_obj[self.RESOURCE.OBJECT_NAME]['id']),
+                data=data_05,
+                headers=HTTP_HEADERS)
+            print resp
+            self.assertEqual(200, resp.status_code)
+            resp_obj = json.loads(resp.data)
+            obj = XmlScript.query.get(resp_obj[self.RESOURCE.OBJECT_NAME]['id'])
+            self.assertEqual(obj.type, XmlScript.TYPE_PYTHON_FILE)
+            self.assertEqual(obj.data, amazon_file)
 
         #PUT correct data to previously stored url, it should change type
         data_05['data_url'] = ''
