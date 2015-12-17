@@ -9,9 +9,10 @@ angular.module('app.models.model', ['app.config'])
   'DataSet'
   'FeaturesSet'
   'Classifier'
+  '$timeout'
   
   ($http, $q, settings, BaseModel, XmlImportHandler,
-    DataSet, FeaturesSet, Classifier) ->
+    DataSet, FeaturesSet, Classifier, $timeout) ->
     ###
     Model
     ###
@@ -23,7 +24,7 @@ angular.module('app.models.model', ['app.config'])
                                'trainer', 'test_import_handler', 'name',
                                'test_import_handler_file',
                                'train_import_handler_file']
-      @MAIN_FIELDS: 'name,id,status,error'
+      @MAIN_FIELDS: 'name,id,status,error,training_in_progress'
       @LIST_MODEL_NAME: 'models'
       LIST_MODEL_NAME: @LIST_MODEL_NAME
 
@@ -47,7 +48,7 @@ angular.module('app.models.model', ['app.config'])
       labels: null
 
       trainer_s3_url: null
-
+      training_in_progress: false
       loadFromJSON: (origData) ->
         super origData
         if origData?

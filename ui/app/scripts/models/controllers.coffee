@@ -7,7 +7,8 @@ angular.module('app.models.controllers', ['app.config', ])
 .constant('MODEL_FIELDS',
   [ 'name','status','test_import_handler', 'train_import_handler',
     'train_import_handler_type', 'test_import_handler_type',
-    'test_handler_fields', 'labels', 'classifier', 'error', 'locked'].join(',')
+    'test_handler_fields', 'labels', 'classifier', 'error',
+    'locked', 'training_in_progress'].join(',')
 )
 
 .factory('FIELDS_BY_SECTION', [
@@ -240,6 +241,32 @@ angular.module('app.models.controllers', ['app.config', ])
           else
             $scope.params.tags.push {id: id, text: id}
 
+    $scope.train_timer = null
+    $scope.same_status_count = 0
+    $scope.status = $scope.model.status
+    $scope.monitorTraining = () ->
+      $scope.train_timer = $timeout( ()->
+          $scope.model.$load(
+            show: 'status,training_in_progress'
+          ).then (->
+            if $scope.model.status == $scope.status
+              $scope.same_status_count += 1
+            else
+              $scope.status = $scope.model.status
+              $scope.same_status_count = 0
+            if $scope.model.training_in_progress && $scope.same_status_count < 20
+              $scope.monitorTraining()
+          )
+        20000
+      )
+
+    $scope.$watch 'model.training_in_progress', (newVal, oldVal)->
+      if newVal == true
+        $scope.monitorTraining()
+
+    $scope.$on '$destroy', (event) ->
+      $timeout.cancel($scope.train_timer)
+
     $scope.updateTags = () ->
       $scope.model.tags = []
       for t in $scope.params['tags']
@@ -302,7 +329,9 @@ angular.module('app.models.controllers', ['app.config', ])
     $scope.multiple_dataset = true
 
     $scope.start = (result) ->
-      openOptions.model.$train($scope.data).then (() ->
+      openOptions.model.$train($scope.data).then ((resp) ->
+        $scope.model.status = resp.data.model.status
+        $scope.model.training_in_progress = true
         $scope.$close(true)
       ), ((opts) ->
         $scope.setError(opts, 'starting '+$scope.model.name+' training')

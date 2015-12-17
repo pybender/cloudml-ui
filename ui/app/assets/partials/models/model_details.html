@@ -47,7 +47,7 @@
 <alert-message ng-show="model.status == 'Queued'" class="alert-info" msg="We queue this model to train. It would be processed soon">
 </alert-message>
 
-<alert-message ng-show="model.status == 'Training'" alert-class="alert-info" msg="Please wait! Model is training now. It could take several minutes.">
+<alert-message ng-show="model.status != 'Queued' && model.training_in_progress" alert-class="alert-info" msg="Please wait! Model is training now. It could take several minutes.">
 </alert-message>
 
 <alert-message ng-show="model.status == 'New'" class="alert-warning" msg='Model is not trained yet. Please start training.' unsafe>
