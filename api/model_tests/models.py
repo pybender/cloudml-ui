@@ -213,7 +213,7 @@ class TestExample(db.Model, BaseModel):
                       for key, val in self.data_input.iteritems()])
         trainer = model.get_trainer()
         trainer._prepare_data(
-            iter([ndata, ]), callback=None, save_raw=False)
+            iter([ndata, ]), callback=None, save_raw=False, is_predict=True)
         vect_data1 = trainer._get_vectorized_data(
             segment, trainer._test_prepare_feature)
 

@@ -134,7 +134,8 @@ class TestResourceTests(BaseDbTestCase, TestChecksMixin):
     @mock_s3
     @patch('api.amazon_utils.AmazonS3Helper.save_gz_file')
     @patch('api.model_tests.tasks.run_test')
-    def test_post_on_deployed_model(self, mock_run_test, mock_multipart_upload):
+    def test_post_on_deployed_model(self, mock_run_test,
+                                    mock_multipart_upload):
         # check run test with deployed model
         self.model.locked = True
         self.model.save()
@@ -341,7 +342,9 @@ class TestExampleResourceTests(BaseDbTestCase, TestChecksMixin):
 
         url = self._get_url(id=obj.id, show=show, data=data)
         resp = self.client.get(url, headers=HTTP_HEADERS)
-        self.assertEquals(resp.status_code, 200, url)
+        self.assertEquals(
+            resp.status_code, 200,
+            "code: {0}, data: {1}".format(resp.status_code, resp.data))
         self.assertEquals(mock_get_trainer.called, should_called)
         return json.loads(resp.data)['test_example']
 
@@ -814,8 +817,8 @@ class TasksRunTestTests(BaseDbTestCase, TestChecksMixin):
 
             import gzip
             from StringIO import StringIO
-            with gzip.open(
-                    './api/import_handlers/fixtures/multiclass_ds.gz', 'r') as dataset:
+            with gzip.open('./api/import_handlers/fixtures/'
+                           'multiclass_ds.gz', 'r') as dataset:
                 examples = []
                 for line in dataset.readlines():
                     example = json.loads(line)
