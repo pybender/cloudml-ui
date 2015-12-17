@@ -155,7 +155,8 @@ angular.module('app.models.controllers', ['app.config', ])
                 $scope.model.trainer_s3_url = resp.data.url
               , (opts)->
                 $scope.setError(opts, 'loading trainer s3 url')
-          $scope.LOADED_SECTIONS.push section
+          if section isnt 'modeljson'
+            $scope.LOADED_SECTIONS.push section
           deferred.resolve 'model loaded'
         ), ((opts)->
           $scope.setError(opts, 'loading model details')
@@ -177,8 +178,8 @@ angular.module('app.models.controllers', ['app.config', ])
       loadedSections = []
       if name is 'modeljson'
         $scope.load('features', 'modeljson').then ->
-          if 'modeljson' not in $scope.LOADED_SECTIONS
-            $scope.LOADED_SECTIONS.push 'modeljson'
+          # need to reload model.features each time because features may change
+          # and JSON should be relevant, so dont push modeljson into loaded sections
         name = 'model'
         subsection = 'json'
 
@@ -498,6 +499,25 @@ angular.module('app.models.controllers', ['app.config', ])
         $route.reload()
       , (opts) ->
         $scope.setError(opts, 'adding training import handler fields as features')
+  ])
+
+.controller('ModelFeaturesJsonEditCtrl', [
+    '$scope'
+    '$route'
+    ($scope, $route)->
+      $scope.$watch 'model.features', (newValue)->
+        if not newValue or $scope.model.originalJson
+          return
+        $scope.model.originalJson = newValue
+      $scope.resetJsonChanges = ->
+        $scope.model.features = $scope.model.originalJson
+        $scope.FeaturesJsonForm.fJson.$setPristine()
+      $scope.saveJson = ->
+        $scope.model.$save(only: ['features'])
+        .then () ->
+          $route.reload()
+        , (opts)->
+          $scope.setError(opts, 'saving model features JSON')
   ])
 
 .controller('ModelUploadToServerCtrl', [

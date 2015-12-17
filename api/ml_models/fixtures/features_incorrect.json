@@ -1,0 +1,51 @@
+{
+    "schema-name": "example",
+    "group-by": [
+        "rings"
+    ],
+    "features": [
+    {
+        "transformer": {
+            "params": {
+                "encoding": "fff"
+            },
+            "type": "Count",
+            "id": -1
+        },
+        "name": "diameter",
+        "scaler": {
+            "params": {
+                "copy": true
+            },
+            "type": "StandardScaler"
+        },
+        "default": 26,
+        "type": "int",
+        "is-required": true
+    },
+    {
+        "type": "int",
+        "name": "rings",
+        "is-required": true
+    },
+    {
+        "is-target-variable": true,
+        "type": "map",
+        "params": {
+            "mappings": {
+                "I": 0,
+                "M": 1,
+                "F": 2
+            }
+        },
+        "is-required": true,
+        "name": "sex"
+    },
+    {
+        "type": "float",
+        "name": "square",
+        "is-required": true
+    }
+    ],
+    "feature-types": []
+}

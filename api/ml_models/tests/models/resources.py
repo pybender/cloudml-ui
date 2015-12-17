@@ -24,7 +24,8 @@ from api.model_tests.fixtures import TestResultData, TestExampleData
 from api.features.fixtures import FeatureSetData, FeatureData, FEATURES_STR
 from api.ml_models.fixtures import ModelData, TagData, MODEL_TRAINER, \
     DECISION_TREE_WITH_SEGMENTS, TREE_VISUALIZATION_DATA, INVALID_MODEL, \
-    SegmentData, MULTICLASS_MODEL
+    SegmentData, MULTICLASS_MODEL, FEATURES_CORRECT, FEATURES_INCORRECT, \
+    FEATURES_CORRECT_WITH_DISABLED
 from api.import_handlers.fixtures import DataSetData, \
     XmlImportHandlerData as ImportHandlerData, IMPORT_HANDLER_FIXTURES
 from api.import_handlers.fixtures import EXTRACT_XML, get_importhandler
@@ -263,8 +264,9 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
                      'trainer': INVALID_MODEL,
                      'name': 'new'}
         self.check_edit_error(post_data, {
-            'trainer': "Pickled trainer model is invalid:"
-            " No module named core.trainer.store"
+            'trainer': "Pickled trainer model is invalid: Could not unpickle "
+                       "trainer - 'module' object has no attribute "
+                       "'TrainerStorage1'"
         })
 
     def test_post(self):
@@ -427,6 +429,40 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
 
         tag3 = Tag.query.filter_by(text='some_new').one()
         self.assertEquals(tag3.count, 1)
+
+    def test_edit_features_json(self):
+        model = Model.query.filter_by(name=ModelData.model_01.name).first()
+        url = self._get_url(id=model.id)
+
+        data = {'features': FEATURES_INCORRECT}
+        resp = self.client.put(url, data=data, headers=HTTP_HEADERS)
+        self.assertEqual(400, resp.status_code)
+        self.assertIn('Classifier is missing', resp.data)
+
+        data = {'features': FEATURES_CORRECT}
+        resp = self.client.put(url, data=data, headers=HTTP_HEADERS)
+        self.assertEqual(200, resp.status_code)
+        resp_obj = json.loads(resp.data)
+        self.assertEqual(resp_obj['model']['id'], model.id)
+        self.assertEqual(4, Feature.query.filter_by(
+            feature_set_id=model.features_set_id).count())
+        features = json.loads(model.features)
+        self.assertEqual(4, len(features['features']))
+        self.assertEqual('example', model.features_set.schema_name)
+        self.assertEqual(1, len(model.features_set.features['group-by']))
+        self.assertEqual('random forest classifier', model.classifier['type'])
+
+        data = {'features': FEATURES_CORRECT_WITH_DISABLED}
+        resp = self.client.put(url, data=data, headers=HTTP_HEADERS)
+        self.assertEqual(200, resp.status_code)
+        resp_obj = json.loads(resp.data)
+        self.assertEqual(resp_obj['model']['id'], model.id)
+        self.assertEqual(4, Feature.query.filter_by(
+            feature_set_id=model.features_set_id).count())
+        features = json.loads(model.features)
+        self.assertEqual(3, len(features['features']))
+        feature_names = [f['name'] for f in features['features']]
+        self.assertEqual(set(feature_names), set(['rings', 'sex', 'square']))
 
     @mock_s3
     @patch('api.servers.tasks.upload_model_to_server')

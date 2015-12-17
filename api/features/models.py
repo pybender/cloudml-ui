@@ -336,12 +336,19 @@ def after_delete_feature(mapper, connection, target):
 
 
 def update_feature_set_on_change_features(connection, fset, feature):
+    from api.ml_models.models import Model
     count = Feature.query.filter_by(feature_set=fset).count()
     values = {'features_count': count,
               'modified': True}
+    model_values = {'feature_count': count}
     if feature and feature.is_target_variable:
         values['target_variable'] = feature.name
+        model_values['target_variable'] = feature.name
 
     connection.execute(
         FeatureSet.__table__.update().
         where(FeatureSet.id == fset.id).values(**values))
+
+    connection.execute(
+        Model.__table__.update().
+        where(Model.features_set_id == fset.id).values(**model_values))

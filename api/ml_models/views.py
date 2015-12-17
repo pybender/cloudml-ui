@@ -316,9 +316,9 @@ class ModelResource(BaseTrainedEntityResource):
             test_import_handler=model.test_import_handler
         )
         new_model.save()
+        new_model.classifier = model.classifier
         new_model.features_set.from_dict(
             model.features_set.features, commit=False)
-        new_model.classifier = model.classifier
         new_model.tags = model.tags
         new_model.save()
         return self._render({
@@ -421,6 +421,7 @@ class ModelResource(BaseTrainedEntityResource):
         app.sql_db.session.commit()
         return self._render({self.OBJECT_NAME: model.id,
                              'features': [f.to_dict() for f in features]})
+
 
 api.add_resource(ModelResource, '/cloudml/models/')
 
