@@ -62,7 +62,7 @@ class TestResultData(DataSet):
 
     class test_04:
         name = "Test-4"
-        status = "Queued"
+        status = "Completed"
         created_on = "2013-04-19 14:37:23.145000"
         updated_on = "2013-04-19 14:37:23.145000"
         model_name = "TrainedModel"
@@ -78,7 +78,7 @@ class TestResultData(DataSet):
 
     class test_05:
         name = "Test-5"
-        status = "Queued"
+        status = "Completed"
         created_on = "2013-04-19 14:37:23.145000"
         updated_on = "2013-04-19 14:37:23.145000"
         model_name = ModelData.model_03.name

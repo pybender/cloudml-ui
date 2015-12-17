@@ -64,13 +64,25 @@ class BaseTrainedEntityResource(BaseResourceSQL):
             get_request_instance
         from celery import chain
         obj = self._get_details_query(None, **kwargs)
+        # check if model is deployed
         if not app.config['MODIFY_DEPLOYED_MODEL'] and \
            self.ENTITY_TYPE == 'model' and obj.locked:
             return odesk_error_response(405, ERR_INVALID_METHOD,
                                         'Re-train is forbidden. Model is '
                                         'deployed and blocked for '
                                         'modifications.')
-
+        # check if some model tests are in progress
+        from api.model_tests.models import TestResult
+        tests_in_progress = TestResult.query.\
+            filter(TestResult.model_id == obj.id)\
+            .filter(~TestResult.status.in_([TestResult.STATUS_COMPLETED,
+                                           TestResult.STATUS_ERROR])).count()
+        if tests_in_progress:
+            return odesk_error_response(405, ERR_INVALID_METHOD,
+                                        'There are some tests of this model '
+                                        'in progress. Please, wait for a moment'
+                                        ' before re-training model.')
+        # start train model
         delete_metadata = obj.status != obj.STATUS_NEW
         form = self.train_form(obj=obj, **kwargs)
         if form.is_valid():
