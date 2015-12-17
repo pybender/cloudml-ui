@@ -201,60 +201,9 @@ class FeaturesField(JsonField):
             from cloudml.trainer.config import FeatureModel, SchemaException
             from collections import OrderedDict
 
-            class SimplifiedFeatureModel(FeatureModel):
-                def __init__(self, config, is_file=False):
-                    try:
-                        if is_file:
-                            with open(config, 'r') as fp:
-                                data = json.load(fp)
-                        else:
-                            data = json.loads(config)
-                    except ValueError as e:
-                        raise SchemaException(message='%s %s ' % (config, e))
-
-                    if 'schema-name' not in data:
-                        raise SchemaException(message="schema-name is missing")
-
-                    self.schema_name = data['schema-name']
-                    self.classifier = {}
-                    self.target_variable = None
-                    self._named_feature_types = {}
-                    self.features = OrderedDict()
-                    self.required_feature_names = []
-                    self.group_by = []
-
-                    # simplification: classifier should present in config, but
-                    # can be empty
-                    if 'classifier' not in data:
-                        raise SchemaException('Classifier is missing')
-                    if data['classifier']:
-                        self._process_classifier(data)
-
-                    # Add feature types defined in 'feature-types section
-                    if 'feature-types' in data:
-                        for feature_type in data['feature-types']:
-                            self._process_named_feature_type(feature_type)
-
-                    self.feature_names = []
-                    # features should present in config
-                    if 'features' not in data:
-                        raise SchemaException('Features list is missing')
-
-                    for feature in data['features']:
-                        self._process_feature(feature)
-
-                    # simplification: features list can be empty,
-                    # so target variable may not set
-                    if len(self.feature_names) and self.target_variable is None:
-                        raise SchemaException('No target variable defined')
-
-                    group_by = data.get('group-by', None)
-                    if group_by:
-                        self._process_group_by(group_by)
-
             try:
-                feature_model = SimplifiedFeatureModel(json.dumps(value),
-                                                       is_file=False)
+                feature_model = FeatureModel(
+                    json.dumps(value), is_file=False)
             except SchemaException, exc:
                 raise ValidationError(
                     'Features JSON file is invalid: %s' % exc)
@@ -312,6 +261,7 @@ class ScriptUrlField(BaseField):
         except Exception as exc:
             raise ValidationError(exc)
         return value
+
 
 # TODO: Use ModelField after removing JSON Import handlers
 class ImportHandlerField(CharField):  # pragma: no cover
