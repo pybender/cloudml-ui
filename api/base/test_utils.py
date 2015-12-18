@@ -21,7 +21,7 @@ AUTH_TOKEN = 'token'
 HTTP_HEADERS = [('X-Auth-Token', AUTH_TOKEN)]
 
 # Count of the features in conf/features.json file
-FEATURE_COUNT = 37
+FEATURE_COUNT = 35
 TARGET_VARIABLE = 'hire_outcome'
 FLOAT_ACCURACY = 15
 
@@ -42,6 +42,8 @@ class BaseDbTestCase(TestCase):
     @classmethod
     def setUpClass(cls):
         app.config.from_object('api.test_config')
+        app.config['MODIFY_DEPLOYED_MODEL'] = False
+        app.config['MODIFY_DEPLOYED_IH'] = False
 
         # if Model is not defined, try get it from resource.
         if hasattr(cls, 'RESOURCE') and not hasattr(cls, 'Model'):

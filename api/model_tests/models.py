@@ -33,6 +33,9 @@ class TestResult(db.Model, BaseModel):
                 STATUS_IN_PROGRESS, STATUS_STORING, STATUS_COMPLETED,
                 STATUS_ERROR]
 
+    TEST_STATUSES = [STATUS_QUEUED, STATUS_IMPORTING, STATUS_IMPORTED,
+                     STATUS_IN_PROGRESS, STATUS_STORING]
+
     __tablename__ = 'test_result'
 
     name = db.Column(db.String(200), nullable=False)
@@ -105,6 +108,28 @@ class TestResult(db.Model, BaseModel):
             'api.model_tests.tasks.calculate_confusion_matrix',
             statuses=AsyncTask.STATUSES
         )
+
+    @property
+    def can_edit(self):
+        if not self.model.can_edit:
+            self.reason_msg = self.model.reason_msg
+            return False
+        return super(TestResult, self).can_edit
+
+    @property
+    def can_delete(self):
+        if not self.model.can_delete:
+            self.reason_msg = self.model.reason_msg
+            return False
+        return super(TestResult, self).can_delete
+
+    def delete(self):
+        ds = self.dataset
+        super(TestResult, self).delete()
+        ds.unlock()
+
+    def test_in_progress(self):
+        return self.status in self.TEST_STATUSES
 
 
 class TestExample(db.Model, BaseModel):
@@ -188,7 +213,7 @@ class TestExample(db.Model, BaseModel):
                       for key, val in self.data_input.iteritems()])
         trainer = model.get_trainer()
         trainer._prepare_data(
-            iter([ndata, ]), callback=None, save_raw=False)
+            iter([ndata, ]), callback=None, save_raw=False, is_predict=True)
         vect_data1 = trainer._get_vectorized_data(
             segment, trainer._test_prepare_feature)
 

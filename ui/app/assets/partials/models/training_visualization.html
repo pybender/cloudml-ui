@@ -23,10 +23,10 @@
 			<i class="icon-arrow-down"></i><b>Tree Deep:</b> {{ treeDeep }} <a ng-click="showTreeDeepForm = !showTreeDeepForm">(change)</a>
 		</p>
 		<div ng-show="showTreeDeepForm" class="form">
-			<form class="well">
+			<form name="TreeDeepForm" class="well">
 			  <fieldset>
 			    <label>Visualization Tree Deep</label>
-			    <input type="text" ng-model="treeDeep">
+			    <input name="tree_deep" type="text" ng-model="treeDeep">
 			    <span class="help-block">You would change only visualization of the classifier tree. Also keep in mind that re-generation of the tree view will take some time.</span>
 			    <button class="btn btn-success" type="submit" ng-click="generate()">Generate</button>
 			  </fieldset>

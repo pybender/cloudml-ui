@@ -164,6 +164,7 @@ class DataSetData(DataSet):
         uid = '8a7d1ae26efc11e395b420107a86d036'
         import_handler_id = 1
         import_handler_type = 'xml'
+        locked = True
 
     class dataset_03:
         name = "DS 3 (csv)"

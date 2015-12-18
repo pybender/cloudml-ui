@@ -268,14 +268,13 @@ angular.module('app.features.models', ['app.config'])
 
       $save: (opts={}) =>
         opts.extraData = {}
-
         if 'transformer' in opts.only
           _.remove opts.only, (x)-> x is 'transformer'
           transType = @transformer.type
           transId = @transformer.id
           transParams = @transformer.params
 
-          if not transId or transId is 0
+          if (transId? and transId is 0) or not transType
             opts.extraData['remove_transformer'] = true
           else
             opts.extraData['remove_transformer'] = false

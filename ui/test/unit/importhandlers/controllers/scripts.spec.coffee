@@ -3,6 +3,7 @@ describe 'importhandlers/xml/controllers/scripts.coffee', ->
   beforeEach ->
     module 'ngCookies'
 
+    module 'app'
     module 'app.base'
     module 'app.config'
     module 'app.services'

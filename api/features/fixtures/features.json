@@ -94,10 +94,6 @@
       "type":"int"
     },
     {
-      "name":"contractor.dev_adj_score",
-      "type":"float"
-    },
-    {
       "name":"contractor.dev_rank_percentile",
       "type":"float"
     },
@@ -116,11 +112,6 @@
     {
       "name":"contractor.dev_total_revenue",
       "type":"float"
-    },
-    {
-      "name":"contractor.dev_recent_hourly_jobs",
-      "type":"int",
-      "is-required": false
     },
     {
       "name":"contractor.dev_bill_rate",

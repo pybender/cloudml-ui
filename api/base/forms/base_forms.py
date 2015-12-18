@@ -167,3 +167,20 @@ class BasePredefinedForm(BaseForm):
             model.save()
 
         return obj
+
+
+class ParametersConvertorMixin(object):
+    def convert_params(self, type_, params, configuration):
+        if not params:
+            return
+
+        if type_ is None:
+            self.add_error('type', 'type is required')
+            return
+        if type_ not in configuration:
+            self.add_error('type', 'type is invalid')
+            return
+
+        from api.base.parameters import convert_parameters
+        config = configuration[type_]['parameters']
+        convert_parameters(config, params)

@@ -83,6 +83,10 @@ class DataSetResource(BaseResourceSQL):
     def _put_reimport_action(self, **kwargs):
         from api.import_handlers.tasks import import_data
         dataset = self._get_details_query({}, **kwargs)
+        if dataset.locked:
+            return odesk_error_response(405, 1006,
+                                        'Data set is locked for modifications.'
+                                        ' Some trained/tested models use it.')
         if dataset.status not in (DataSet.STATUS_IMPORTING,
                                   DataSet.STATUS_UPLOADING):
             dataset.status = DataSet.STATUS_IMPORTING

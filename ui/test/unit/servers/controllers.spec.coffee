@@ -61,11 +61,13 @@ describe 'servers/controllers.coffee', ->
       name: 'server1'
       is_default: true
       memory_mb : 100
+      type: 'Production'
     ,
       id: 2
       name: 'server2'
       is_default: false
       memory_mb : 10
+      type: 'Development'
     ]
     servers_list = []
     for server in servers
@@ -93,7 +95,7 @@ describe 'servers/controllers.coffee', ->
     $fields = null
 
     beforeEach ->
-      $fields = ['name', 'id', 'is_default', 'memory_mb']
+      $fields = ['name', 'id', 'is_default', 'memory_mb', 'type']
 
     prepareContext = (Server, XmlImportHandler, withError=false) ->
       expectServersHttpGet($fields, withError)
@@ -137,7 +139,7 @@ describe 'servers/controllers.coffee', ->
     $fields = null
 
     beforeEach ->
-      $fields = ['name', 'id', 'is_default', 'memory_mb']
+      $fields = ['name', 'id', 'is_default', 'memory_mb', 'type']
 
     expectModeFileListHttpGet = (ModelFile, serverId, files, withError=false)->
       modelFile = new ModelFile()
@@ -145,7 +147,7 @@ describe 'servers/controllers.coffee', ->
       response[modelFile.API_FIELDNAME + 's'] = files
       url = ModelFile.$get_api_url {server_id: serverId}
 
-      $httpBackend.expectGET("#{url}?folder=models&server_id=#{serverId}&show=server_id,folder")
+      $httpBackend.expectGET("#{url}?folder=models&server_id=#{serverId}&show=server_id,folder,type")
       .respond 200, angular.toJson(response)
 
     expectModelHttpGet = (Model, modelDict, withError=false)->
@@ -183,7 +185,7 @@ describe 'servers/controllers.coffee', ->
       servers = prepareContext(Server, Model)
 
       url = ModelFile.$get_api_url({server_id: 1})
-      $httpBackend.expectGET("#{url}?folder=models&server_id=1&show=server_id,folder")
+      $httpBackend.expectGET("#{url}?folder=models&server_id=1&show=server_id,folder,type")
       .respond 400
       $scope.serverChanged 1
       $httpBackend.flush()
@@ -372,7 +374,7 @@ describe 'servers/controllers.coffee', ->
     it 'should init scope', inject (Server)->
       createController 'ServerListCtrl', {Server: Server}
       expect($scope.MODEL).toEqual Server
-      expect($scope.FIELDS).toEqual 'name,ip,folder'
+      expect($scope.FIELDS).toEqual 'name,ip,folder,type'
       expect($scope.ACTION).toEqual 'loading servers'
 
 
@@ -391,7 +393,7 @@ describe 'servers/controllers.coffee', ->
       server = new Server
       response = {}
       response[server.API_FIELDNAME] = {}
-      $httpBackend.expectGET("#{server.BASE_API_URL}111/?show=id,name,ip,folder,created_on,data,memory_mb")
+      $httpBackend.expectGET("#{server.BASE_API_URL}111/?show=id,name,ip,folder,created_on,data,memory_mb,type")
       .respond 200, angular.toJson(response)
       $httpBackend.flush()
 
@@ -404,7 +406,7 @@ describe 'servers/controllers.coffee', ->
         Server: Server
         $rootScope: $rootScope
       expect($scope.server.id).toEqual 111
-      $httpBackend.expectGET("#{server.BASE_API_URL}111/?show=id,name,ip,folder,created_on,data,memory_mb")
+      $httpBackend.expectGET("#{server.BASE_API_URL}111/?show=id,name,ip,folder,created_on,data,memory_mb,type")
       .respond 400
       $httpBackend.flush()
       expect($scope.setError).toHaveBeenCalled()

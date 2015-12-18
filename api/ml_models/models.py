@@ -23,6 +23,7 @@ from api.logs.models import LogMessage
 from api.amazon_utils import AmazonS3Helper
 from api.import_handlers.models import ImportHandlerMixin
 from cloudml.trainer.classifier_settings import TYPE_CLASSIFICATION
+from api import app
 
 
 class BaseTrainedEntity(object):
@@ -47,6 +48,10 @@ class BaseTrainedEntity(object):
                 STATUS_TRAINING, STATUS_FILLING_WEIGHTS, STATUS_TRAINED,
                 STATUS_ERROR, STATUS_CANCELED]
 
+    TRAINING_STATUSES = [STATUS_QUEUED, STATUS_IMPORTING, STATUS_IMPORTED,
+                         STATUS_REQUESTING_INSTANCE, STATUS_INSTANCE_STARTED,
+                         STATUS_TRAINING, STATUS_FILLING_WEIGHTS,
+                         STATUS_CANCELED]
     @declared_attr
     def name(cls):
         return db.Column(db.String(200), nullable=False, unique=True)
@@ -99,6 +104,10 @@ class BaseTrainedEntity(object):
     @declared_attr
     def train_import_handler_id(cls):
         return db.Column(db.Integer, nullable=True)
+
+    @property
+    def training_in_progress(self):
+        return self.status in self.TRAINING_STATUSES
 
     @property
     def train_import_handler(self):
@@ -187,6 +196,7 @@ class Model(db.Model, BaseModel, BaseTrainedEntity):
     classifier = deferred(db.Column(JSONType))
     # Note: It could contains different keys depends to the classifier used
     visualization_data = deferred(db.Column(JSONType))
+    locked = db.Column(db.Boolean, default=False)
 
     def __init__(self, *args, **kwargs):
         super(Model, self).__init__(*args, **kwargs)
@@ -273,6 +283,17 @@ class Model(db.Model, BaseModel, BaseTrainedEntity):
             self.classifier = {}
         super(Model, self).save(commit)
 
+    def delete(self):
+        # delete features and feature set as they are used by this model only
+        self.features_set.delete()
+
+        # prepare dataset list to unlock
+        ds_to_unlock = self.datasets
+        super(Model, self).delete()
+        # unlock datasets after model deletion
+        for ds in ds_to_unlock:
+            ds.unlock()
+
     @property
     def dataset(self):
         return self.datasets[0] if len(self.datasets) else None
@@ -347,6 +368,7 @@ class Model(db.Model, BaseModel, BaseTrainedEntity):
         if delete_metadata:
             from api.model_tests.models import TestResult, TestExample
             from api.base.models import db
+            from api.import_handlers.models.datasets import DataSet
             LogMessage.delete_related_logs(self.id)
 
             def _del(Cls, related_name):
@@ -362,6 +384,11 @@ class Model(db.Model, BaseModel, BaseTrainedEntity):
             _del(Segment, 'segments')
 
         self.datasets = datasets
+        # model is trained, lock datasets used for training
+        for dataset in datasets:
+            dataset.locked = True
+            dataset.save()
+
         self.status = self.STATUS_TRAINING
         self.visualization_data = {}
         self.error = ""
@@ -370,6 +397,20 @@ class Model(db.Model, BaseModel, BaseTrainedEntity):
         db.session.add(self)
         db.session.commit()
 
+    def _check_deployed(self):
+        if not app.config['MODIFY_DEPLOYED_MODEL'] and self.locked:
+            self.reason_msg = 'Model {0} has been deployed and blocked ' \
+                              'for modifications. '.format(self.name)
+            return False
+        return True
+
+    @property
+    def can_edit(self):
+        return self._check_deployed() and super(Model, self).can_edit
+
+    @property
+    def can_delete(self):
+        return self._check_deployed() and super(Model, self).can_delete
 
 tags_table = db.Table(
     'model_tag', db.Model.metadata,

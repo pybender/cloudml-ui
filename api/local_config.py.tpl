@@ -17,3 +17,6 @@ ODESK_OAUTH_KEY = '{{ odesk api key }}'
 ODESK_OAUTH_SECRET = '{{ odesk secret key }}'
 
 LOCAL_DYNAMODB = True
+
+MODIFY_DEPLOYED_MODEL = True
+MODIFY_DEPLOYED_IH = True

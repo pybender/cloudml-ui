@@ -64,6 +64,14 @@ class FormFieldsTests(TestCase):
         self.assertRaises(ValidationError, field.clean, '{"key": "value"}')
         self.assertRaises(ValidationError, field.clean, '<plan></plan>')
 
+    def test_features_field(self):
+        from api.ml_models.fixtures import FEATURES_CORRECT, FEATURES_INCORRECT
+        field = FeaturesField()
+        value = field.clean(FEATURES_CORRECT)
+        self.assertEquals(value, json.loads(FEATURES_CORRECT))
+        self.assertRaises(ValidationError, field.clean, FEATURES_INCORRECT)
+        self.assertRaises(ValidationError, field.clean, "some invalid data")
+
     def test_script_file_field(self):
         field = ScriptFileField()
         value = field.clean('2+2')
@@ -77,6 +85,7 @@ class FormFieldsTests(TestCase):
         self.assertRaises(ValidationError, field.clean, 'incorrect/path.py')
         self.assertRaises(ValidationError, field.clean,
                           './api/import_handlers/fixtures/bad_functions.py')
+
 
 class TestDbFields(BaseDbTestCase):
     datasets = [XmlImportHandlerData]

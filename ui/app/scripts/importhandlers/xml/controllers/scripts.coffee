@@ -21,6 +21,7 @@ angular.module(
       )
 
     $scope.add = () ->
+      $scope.resetError()
       script = new Script({
         import_handler_id: $scope.handler.id,
         type: 'python_code'
@@ -33,6 +34,7 @@ angular.module(
       })
 
     $scope.edit = (script)->
+      $scope.resetError()
       script.data_url = ''
       if script.type == 'python_file'
         script.data_url = script.data
@@ -52,6 +54,7 @@ angular.module(
       })
 
     $scope.delete = (script)->
+      $scope.resetError()
       script.name = if script.type == 'python_file' then script.data else script.data.substr(0, 15) + '...'
       $scope.openDialog($scope, {
         model: script

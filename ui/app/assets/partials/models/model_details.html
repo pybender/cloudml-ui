@@ -10,6 +10,7 @@
     editable="model" value="model.name"
     editable-field="name" editable-input="text"
     editable-placement="right" editable-required></span> details
+  <span ng-show="model.on_s3">(Deployed)</span>
   <div class="actions">
     <button ng-show="model.status == 'Trained'" ng-click="test_model(model)" class="btn btn-success">
       <i title="Apply the classifier to the input provided by the data import handler" class="status-icon icon-play"></i>
@@ -46,7 +47,7 @@
 <alert-message ng-show="model.status == 'Queued'" class="alert-info" msg="We queue this model to train. It would be processed soon">
 </alert-message>
 
-<alert-message ng-show="model.status == 'Training'" alert-class="alert-info" msg="Please wait! Model is training now. It could take several minutes.">
+<alert-message ng-show="model.status != 'Queued' && model.training_in_progress" alert-class="alert-info" msg="Please wait! Model is training now. It could take several minutes.">
 </alert-message>
 
 <alert-message ng-show="model.status == 'New'" class="alert-warning" msg='Model is not trained yet. Please start training.' unsafe>
@@ -139,7 +140,11 @@
     </div>
 
     <div ng-show="action[1] == 'json'" cml-has-codemirror="action[1] == 'json'">
-      <textarea ng-model="model.features" ui-codemirror="codeMirrorConfigs(true)['json']" class="cml-codemirror-refresh"></textarea>
+      <form name="FeaturesJsonForm" ng-controller="ModelFeaturesJsonEditCtrl">
+        <textarea ng-model="model.features" name="fJson" ui-codemirror="codeMirrorConfigs(false)['json']" class="cml-codemirror-refresh"></textarea><br/>
+        <button ng-click="saveJson()" class="btn btn-info" ng-disabled="FeaturesJsonForm.fJson.$pristine || !model.features">Save</button>
+        <button ng-click="resetJsonChanges()" class="btn btn-info" ng-disabled="FeaturesJsonForm.fJson.$pristine">Cancel Changes</button>
+      </form>
     </div>
 
     <div class="row well">

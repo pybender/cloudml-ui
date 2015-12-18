@@ -15,7 +15,7 @@
        <div ng-repeat="param in params" class="control-group">
             <label class="control-label">{{ param | capfirst }}:</label>
             <div class="controls"  ng-class="{error: DialogForm.parameters[param].$invalid}">
-              <input ng-model='parameters[param]' placeholder='Please input {{ param }}' type='text' required />
+              <input name="{{ param }}" ng-model='parameters[param]' placeholder='Please input {{ param }}' type='text' required />
               <span ng-show="DialogForm.parameters[param].$error.required" class="help-inline">Required</span>
             </div>
         </div>

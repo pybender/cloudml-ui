@@ -36,7 +36,7 @@
   <p class="lead">
     Please choose to models with test to compare
   </p>
-  <div class="control-group" ng-class="{error: UploadModelForm.name.$invalid}" ng-repeat="item in form_data">
+  <div class="control-group" ng-class="{error: CompareModelsForm.name.$invalid}" ng-repeat="item in form_data">
     <label class="control-label">Model/Test {{ $index + 1 }}</label>
     <div class="controls">
       <select ng-change="changeModel(item)" ng-model="item.model" name="model{{ $index }}" ng-options="m.name for m in comparable_models" required>

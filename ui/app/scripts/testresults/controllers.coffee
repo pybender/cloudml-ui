@@ -90,8 +90,9 @@ created_by,roc_auc'
   'TestResult'
   '$location'
   '$rootScope'
+  '$timeout'
 
-($scope, $routeParams, Test, $location, $rootScope) ->
+($scope, $routeParams, Test, $location, $rootScope, $timeout) ->
   $scope.LOADED_SECTIONS = []
   if not $scope.test
     if not ($routeParams.model_id and $routeParams.id)
@@ -196,6 +197,28 @@ without test id and model id"
     $scope.confusion_matrix_weights = []
     for label in $scope.test.model.labels
       $scope.confusion_matrix_weights.push({"label": label, "value": 1})
+
+  $scope.test_timer = null
+  $scope.monitorTesting = () ->
+    $scope.test_timer = $timeout( ()->
+        $scope.test.$load(
+          show: 'status,test_in_progress'
+        ).then (->
+          if $scope.test.test_in_progress
+            $scope.monitorTesting()
+          else
+            $scope.LOADED_SECTIONS = ['main']
+            $scope.setSection(['metrics', 'accuracy'])
+        )
+      10000
+    )
+
+  $scope.$watch 'test.test_in_progress', (newVal, oldVal)->
+    if newVal == true
+      $scope.monitorTesting()
+
+  $scope.$on '$destroy', (event) ->
+    $timeout.cancel($scope.test_timer)
 
   $scope.initSections($scope.goSection, 'metrics:accuracy')
 ])

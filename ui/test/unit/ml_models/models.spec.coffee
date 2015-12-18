@@ -306,11 +306,14 @@ describe 'ML Models Controllers', ->
       $scope.goSection ['model', 'json']
       $httpBackend.flush()
 
-      expect($scope.LOADED_SECTIONS).toEqual ['modeljson', 'model', 'main']
+      expect($scope.LOADED_SECTIONS).toEqual ['model', 'main']
 
-      # caching
+      # no caching in model:json section
+      $httpBackend.expectGET "#{model.BASE_API_URL}#{$scope.model.id}/?show=features"
+      .respond 200, angular.toJson(response)
       $scope.goSection ['model', 'json']
-      expect($scope.LOADED_SECTIONS).toEqual ['modeljson', 'model', 'main']
+      $httpBackend.flush()
+      expect($scope.LOADED_SECTIONS).toEqual ['model', 'main']
 
     it  'should load main for trained model and update its tags, and handles errors saving tags',
       inject (Model, MODEL_FIELDS, FIELDS_BY_SECTION, Tag)->
@@ -501,7 +504,7 @@ describe 'ML Models Controllers', ->
       .respond 400
       $scope.start()
       $httpBackend.flush()
-      expect($rootScope.setError.calls.mostRecent().args[1]).toEqual 'error starting model training'
+      expect($rootScope.setError.calls.mostRecent().args[1]).toEqual 'starting someModel training'
 
 
   describe 'ModelActionsCtrl', ->
@@ -692,6 +695,58 @@ describe 'ML Models Controllers', ->
 
         expect($route.reload).not.toHaveBeenCalled()
         expect($scope.setError).toHaveBeenCalledWith jasmine.any(Object), 'adding training import handler fields as features'
+
+
+  describe 'ModelFeaturesJsonEditCtrl', ->
+
+    it 'should store the original features json and reset it', ->
+
+      createController 'ModelFeaturesJsonEditCtrl'
+
+      $scope.model = {features: '{"schema": "example", "features": {"feature1": "lala", "feature2": "ololo"}}'}
+      $scope.FeaturesJsonForm = {fJson: {$setPristine: jasmine.createSpy '$setPristine'}}
+      $scope.$digest()
+
+      expect($scope.model.originalJson).toEqual $scope.model.features
+
+      $scope.model.features = '{"schema": "example1", "features": {"feature1": "alala", "feature2": "ololo"}}'
+      $scope.$digest()
+
+      $scope.resetJsonChanges()
+      expect($scope.model.originalJson).toEqual '{"schema": "example", "features": {"feature1": "lala", "feature2": "ololo"}}'
+      expect($scope.model.features).toEqual $scope.model.originalJson
+
+  describe 'save json', ->
+    prepareContext = (Model, withError)->
+      createController 'ModelFeaturesJsonEditCtrl'
+      $scope.setError = jasmine.createSpy '$scope.setError'
+
+      fJson = '{"schema": "example", "features": {"feature1": "lala", "feature2": "ololo"}}'
+      $scope.model = new Model({id: 111, features: fJson})
+      $scope.FeaturesJsonForm = {fJson: {$setPristine: jasmine.createSpy '$setPristine'}}
+      $scope.$digest()
+
+      url = "#{$scope.model.BASE_API_URL}#{$scope.model.id}/"
+      $httpBackend.expectPUT url, (features)->
+        return fJson
+      .respond (if withError then 400 else 200), angular.toJson($scope.model)
+
+      $scope.saveJson()
+      $httpBackend.flush()
+
+    it 'should handle errors when saveJson', inject (Model)->
+
+      prepareContext Model, true
+      expect($scope.setError).toHaveBeenCalledWith jasmine.any(Object), 'saving model features JSON'
+
+
+    it 'should succeed saveJson', inject (Model, $route)->
+
+      spyOn($route, 'reload')
+
+      prepareContext Model, false
+      expect($scope.setError).not.toHaveBeenCalled()
+      expect($route.reload).toHaveBeenCalled()
 
 
   describe 'ModelUploadToServerCtrl', ->

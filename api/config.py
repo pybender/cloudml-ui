@@ -95,7 +95,7 @@ SEND_ERROR_EMAILS = False
 ADMINS = (
     ("Panagiotis Papadimitriou", "papadimitriou@upwork.com"),
     ("Nikolay Melnik", "nmelnik@odesk.com"),
-    ("Nader Soliman", "nsoliman@elance-odesk.com"),
+    ("Nader Soliman", "nsoliman@elance-odesk.com")
 )
 
 # Email address used as sender (From field).

@@ -9,7 +9,7 @@ angular.module('app.servers.controllers', ['app.config', ])
   ($scope, Server) ->
     $scope.servers = []
 
-    fields = ['name', 'id', 'is_default', 'memory_mb']
+    fields = ['name', 'id', 'is_default', 'memory_mb', 'type']
     Server.$loadAll(show: fields.join(','))
     .then $scope.getResponseHandler(
       $scope, {
@@ -70,7 +70,7 @@ angular.module('app.servers.controllers', ['app.config', ])
         promises = []
         models = []
         modelsSize = 0
-        params = {folder: 'models', server_id: serverId, show:'server_id,folder'}
+        params = {folder: 'models', server_id: serverId, show:'server_id,folder,type'}
         ModelFile.$loadAll(params).then (opts) ->
           if opts.objects.length <= 0
             # queue empty promise to consolidate code in $q.all for both cases
@@ -154,7 +154,7 @@ angular.module('app.servers.controllers', ['app.config', ])
 
   ($scope, Server) ->
     $scope.MODEL = Server
-    $scope.FIELDS = 'name,ip,folder'
+    $scope.FIELDS = 'name,ip,folder,type'
     $scope.ACTION = 'loading servers'
 
 ])
@@ -170,7 +170,7 @@ angular.module('app.servers.controllers', ['app.config', ])
     $scope.server = new Server({id: $routeParams.id})
 
     $scope.server.$load(
-      show: 'id,name,ip,folder,created_on,data,memory_mb'
+      show: 'id,name,ip,folder,created_on,data,memory_mb,type'
       ).then (->
         $rootScope.$emit('ServerFileListCtrl:server_loaded')
       ), ((opts)-> $scope.setError(opts, 'loading server'))

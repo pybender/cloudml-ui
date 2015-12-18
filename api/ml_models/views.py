@@ -18,6 +18,7 @@ from api.features.models import Feature, FeatureSet
 from api.import_handlers.models import DataSet
 from api.base.resources import BaseResourceSQL, NotFound, ValidationError, \
     public_actions, ERR_INVALID_DATA, odesk_error_response, _select
+from api.base.resources.utils import ERR_INVALID_METHOD
 from models import Model, Tag, Weight, WeightsCategory, Segment, Transformer, \
     ClassifierGridParams
 from forms import ModelAddForm, ModelEditForm, TransformDataSetForm, \
@@ -63,6 +64,25 @@ class BaseTrainedEntityResource(BaseResourceSQL):
             get_request_instance
         from celery import chain
         obj = self._get_details_query(None, **kwargs)
+        # check if model is deployed
+        if not app.config['MODIFY_DEPLOYED_MODEL'] and \
+           self.ENTITY_TYPE == 'model' and obj.locked:
+            return odesk_error_response(405, ERR_INVALID_METHOD,
+                                        'Re-train is forbidden. Model is '
+                                        'deployed and blocked for '
+                                        'modifications.')
+        # check if some model tests are in progress
+        from api.model_tests.models import TestResult
+        tests_in_progress = TestResult.query.\
+            filter(TestResult.model_id == obj.id)\
+            .filter(~TestResult.status.in_([TestResult.STATUS_COMPLETED,
+                                           TestResult.STATUS_ERROR])).count()
+        if tests_in_progress:
+            return odesk_error_response(405, ERR_INVALID_METHOD,
+                                        'There are some tests of this model '
+                                        'in progress. Please, wait for a moment'
+                                        ' before re-training model.')
+        # start train model
         delete_metadata = obj.status != obj.STATUS_NEW
         form = self.train_form(obj=obj, **kwargs)
         if form.is_valid():
@@ -132,7 +152,9 @@ class BaseTrainedEntityResource(BaseResourceSQL):
             chain(tasks_list).apply_async()
             return self._render({
                 self.OBJECT_NAME: {
-                    'id': entity.id
+                    'id': entity.id,
+                    'status': entity.status,
+                    'training_in_progress': entity.training_in_progress
                 }
             })
 
@@ -282,6 +304,12 @@ class ModelResource(BaseTrainedEntityResource):
 
     def _put_generate_visualization_action(self, **kwargs):
         model = self._get_details_query(None, **kwargs)
+        if not app.config['MODIFY_DEPLOYED_MODEL'] and model.locked:
+            return odesk_error_response(405, ERR_INVALID_METHOD,
+                                        'Forbidden to change visualization '
+                                        'data. Model is deployed and blocked '
+                                        'for modifications.')
+
         form = VisualizationOptionsForm(obj=model)
         if form.is_valid():
             form.process()
@@ -300,9 +328,9 @@ class ModelResource(BaseTrainedEntityResource):
             test_import_handler=model.test_import_handler
         )
         new_model.save()
+        new_model.classifier = model.classifier
         new_model.features_set.from_dict(
             model.features_set.features, commit=False)
-        new_model.classifier = model.classifier
         new_model.tags = model.tags
         new_model.save()
         return self._render({
@@ -374,7 +402,7 @@ class ModelResource(BaseTrainedEntityResource):
     def _put_import_features_from_xml_ih_action(self, **kwargs):
         model = self._get_details_query(None, **kwargs)
         error_response = odesk_error_response(
-            400, ERR_INVALID_DATA,
+            405, ERR_INVALID_METHOD,
             'Only new models with 0 features and Xml import handler as '
             'trainer is allowed for this feature')
 
@@ -406,6 +434,7 @@ class ModelResource(BaseTrainedEntityResource):
         return self._render({self.OBJECT_NAME: model.id,
                              'features': [f.to_dict() for f in features]})
 
+
 api.add_resource(ModelResource, '/cloudml/models/')
 
 
@@ -414,7 +443,7 @@ class TransformerResource(BaseTrainedEntityResource):
     Model = Transformer
     GET_ACTIONS = BaseTrainedEntityResource.GET_ACTIONS + ['configuration']
     ENTITY_TYPE = 'transformer'
-    DEFAULT_FIELDS = ['name', 'type']
+    DEFAULT_FIELDS = ['name', 'type', 'params']
     FILTER_PARAMS = (('status', str), )
     put_form = TransformerForm
     train_form = TrainForm

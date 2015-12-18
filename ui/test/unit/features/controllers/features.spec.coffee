@@ -361,54 +361,6 @@ describe 'features/controllers/features.coffee', ->
         expect($scope.savingProgress).toEqual '100%'
         expect($location.url()).toEqual "/models/#{model_id}?action=model:details"
 
-    it 'should handle transformer removal if transformer.id is not set',
-      inject (Model, Feature, Transformer, Scaler, Parameters, $filter)->
-        [model_id, set_id, feature_id] = [111, 222, 333]
-        [configuration, feature] = prepareTestContext Model, Feature, Transformer,
-          Scaler, Parameters, model_id, set_id, feature_id
-
-        updatedFeature = new Feature
-          id: feature_id
-          feature_set_id: set_id
-          name: 'feature'
-          type: 'boolean'
-          params: {}
-          transformer: new Transformer({})
-          scaler: new Scaler({})
-
-        $httpBackend.expectPUT "#{Feature.$get_api_url(feature_set_id: set_id)}#{feature_id}/"
-        , (data)->
-          featureData = data.getData()
-          params = JSON.parse featureData['params']
-          valid = true
-          valid = valid and featureData['name'] is 'feature'
-          valid = valid and featureData['type'] is 'boolean'
-          valid = valid and featureData['feature_set_id'] is 222
-          valid = valid and featureData['is_target_variable'] is false
-          valid = valid and featureData['params'] is $filter('json')({})
-
-          valid = valid and featureData['remove_transformer'] is true
-          valid = valid and 'transformer-predefined_selected' not in _.keys(featureData)
-          valid = valid and 'transformer-params' not in _.keys(featureData)
-          valid = valid and 'transformer-type' not in _.keys(featureData)
-          valid = valid and 'transformer-transformer' not in _.keys(featureData)
-
-          if not valid
-            console.log 'the post form was not as expected', data.getData()
-          return valid
-        .respond 200, angular.toJson({feature: updatedFeature})
-
-        $scope.feature.type = 'boolean'
-        $scope.feature.transformer = new Transformer({})
-        $scope.$digest()
-
-        $scope.save(['name', 'type', 'input_format', 'transformer', 'params', 'required', 'scaler', 'default', 'feature_set_id', 'is_target_variable'])
-        $httpBackend.flush()
-        $scope.$digest()
-
-        expect($scope.savingProgress).toEqual '100%'
-        expect($location.url()).toEqual "/models/#{model_id}?action=model:details"
-
     it 'should handle builtin scaler',
       inject (Model, Feature, Transformer, Scaler, Parameters, $filter)->
         [model_id, set_id, feature_id] = [111, 222, 333]
