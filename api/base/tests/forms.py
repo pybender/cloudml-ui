@@ -71,6 +71,9 @@ class FormFieldsTests(TestCase):
         self.assertEquals(value, json.loads(FEATURES_CORRECT))
         self.assertRaises(ValidationError, field.clean, FEATURES_INCORRECT)
         self.assertRaises(ValidationError, field.clean, "some invalid data")
+        self.assertRaises(ValidationError, field.clean, '4')
+        self.assertRaises(ValidationError, field.clean, '{}')
+        self.assertRaises(ValidationError, field.clean, '')
 
     def test_script_file_field(self):
         field = ScriptFileField()
