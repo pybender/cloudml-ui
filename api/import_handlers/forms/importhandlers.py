@@ -241,7 +241,7 @@ exist. Please choose another one.' % value)
 
     def clean_params(self, value, field):
         conf = ExtractionPlan.get_datasources_config().get(
-            self.data.get('type'))
+            self.data.get('type'))['parameters']
         convert_parameters(conf, value)
 
         # XML doesn't supports not string parameters

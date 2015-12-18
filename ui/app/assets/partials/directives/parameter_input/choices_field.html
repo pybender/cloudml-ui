@@ -1,0 +1,3 @@
+<select data-placeholder="pick an item" ng-show="config.type != 'int_float_string_none'" ui-select="{allowClear: true}" ng-name="name" ng-model="value[config.name]" ng-options="c for c in config.choices" ng-required="config.required">
+    <option value="">-- select {{ config.name }} --</option>
+</select>

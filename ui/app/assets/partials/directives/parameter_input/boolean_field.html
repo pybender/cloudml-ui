@@ -1,0 +1,4 @@
+<!-- boolean params -->
+<select ng-show="config.type == 'boolean'" ng-model="value[config.name]" ng-options="choice for choice in [true, false]" ng-name="name" ng-required="config.required">
+  <option value="">-- select {{ config.name }} --</option>
+</select>
