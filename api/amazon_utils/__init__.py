@@ -15,18 +15,30 @@ from boto.s3.key import Key
 from api import app
 
 
-class AmazonEMRHelper(object):
+class AmazonSettings(object):
+    def __init__(self, token=None, secret=None, bucket_name=None):
+        self.token = token or app.config['AMAZON_ACCESS_TOKEN']
+        self.secret = secret or app.config['AMAZON_TOKEN_SECRET']
+        self.bucket_name = bucket_name or app.config['AMAZON_BUCKET_NAME']
+
+    @property
+    def settings(self):
+        return {'bucket': self.bucket_name,
+                'token': self.token,
+                'secret': self.secret}
+
+
+class AmazonEMRHelper(AmazonSettings):
     """
     This class provies an interface to the Elastic MapReduce (EMR)
     service from AWS.
     """
     def __init__(self, token=None, secret=None, region='us-west-1'):
-        token = token or app.config['AMAZON_ACCESS_TOKEN']
-        secret = secret or app.config['AMAZON_TOKEN_SECRET']
+        super(AmazonEMRHelper, self).__init__(token=token, secret=secret)
         self.conn = boto.emr.connect_to_region(
             region,
-            aws_access_key_id=token,
-            aws_secret_access_key=secret)
+            aws_access_key_id=self.token,
+            aws_secret_access_key=self.secret)
 
     def terminate_jobflow(self, jobflowid):
         """
@@ -47,18 +59,17 @@ class AmazonEMRHelper(object):
         return self.conn.describe_jobflow(jobflowid)
 
 
-class AmazonEC2Helper(object):
+class AmazonEC2Helper(AmazonSettings):
     """
     Class provides an interface to the Elastic Compute Cloud (EC2)
     service from AWS.
     """
     def __init__(self, token=None, secret=None, region='us-west-2'):
-        token = token or app.config['AMAZON_ACCESS_TOKEN']
-        secret = secret or app.config['AMAZON_TOKEN_SECRET']
+        super(AmazonEC2Helper, self).__init__(token=token, secret=secret)
         self.conn = boto.ec2.connect_to_region(
             region,
-            aws_access_key_id=token,
-            aws_secret_access_key=secret)
+            aws_access_key_id=self.token,
+            aws_secret_access_key=self.secret)
 
     def terminate_instance(self, instance_id):
         """
@@ -160,16 +171,15 @@ class AmazonEC2Helper(object):
         return request
 
 
-class AmazonS3Helper(object):
+class AmazonS3Helper(AmazonSettings):
     """
     Class provides an interface to the Simple Storage Service
     service from Amazon.
     """
     def __init__(self, token=None, secret=None, bucket_name=None):
-        token = token or app.config['AMAZON_ACCESS_TOKEN']
-        secret = secret or app.config['AMAZON_TOKEN_SECRET']
-        self.bucket_name = bucket_name or app.config['AMAZON_BUCKET_NAME']
-        self.conn = boto.connect_s3(token, secret)
+        super(AmazonS3Helper, self).__init__(token=token, secret=secret,
+                                             bucket_name=bucket_name)
+        self.conn = boto.connect_s3(self.token, self.secret)
 
     @property
     def bucket(self):
@@ -365,7 +375,7 @@ class AmazonS3Helper(object):
         return bucket
 
 
-class AmazonDynamoDBHelper(object):
+class AmazonDynamoDBHelper(AmazonSettings):
     """
     Class provides an interface to the NoSQL database Amazon DynamoDB2.
     """
@@ -378,8 +388,7 @@ class AmazonDynamoDBHelper(object):
         return cls._instance
 
     def __init__(self, token=None, secret=None):
-        self.token = token or app.config['AMAZON_ACCESS_TOKEN']
-        self.secret = secret or app.config['AMAZON_TOKEN_SECRET']
+        super(AmazonDynamoDBHelper, self).__init__(token=token, secret=secret)
         self._conn = None
         self._tables = {}
 

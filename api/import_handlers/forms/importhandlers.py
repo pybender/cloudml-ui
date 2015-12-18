@@ -14,7 +14,7 @@ from api import app
 from api.base.parameters import convert_parameters
 from cloudml.importhandler.exceptions import ImportHandlerException
 from cloudml.importhandler.importhandler import ExtractionPlan, ScriptManager
-
+from api.amazon_utils import AmazonS3Helper
 db = app.sql_db
 
 
@@ -32,7 +32,8 @@ class XmlImportHandlerAddForm(BaseForm):
         value = value.encode('utf-8')
         from cloudml.importhandler.importhandler import ExtractionPlan
         try:
-            ExtractionPlan(value, is_file=False)
+            helper = AmazonS3Helper()
+            ExtractionPlan(value, is_file=False, amazon_params=helper.settings)
             return value
         except Exception as exc:
             raise ValidationError(exc)
@@ -82,7 +83,8 @@ class XmlImportHandlerUpdateXmlForm(BaseForm):
 
         value = value.encode('utf-8')
         try:
-            ExtractionPlan(value, is_file=False)
+            helper = AmazonS3Helper()
+            ExtractionPlan(value, is_file=False, amazon_params=helper.settings)
             return value
         except Exception as exc:
             raise ValidationError(exc)

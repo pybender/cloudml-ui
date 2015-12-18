@@ -23,6 +23,7 @@ from cloudml.importhandler.importhandler import ExtractionPlan, \
     ImportHandler as CoreImportHandler
 from api.base.models import db, BaseModel
 from api import app
+from api.amazon_utils import AmazonS3Helper
 
 
 class ImportHandlerMixin(BaseModel):
@@ -269,7 +270,9 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
         return etree.tostring(plan, pretty_print=pretty_print)
 
     def get_iterator(self, params, callback=None):
-        plan = ExtractionPlan(self.get_plan_config(), is_file=False)
+        helper = AmazonS3Helper()
+        plan = ExtractionPlan(self.get_plan_config(), is_file=False,
+                              amazon_params=helper.settings)
         return CoreImportHandler(plan, params, callback=callback)
 
     def get_fields(self):
@@ -292,7 +295,9 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
 
         # TODO: try .. except after check this with real import handlers
         try:
-            plan = ExtractionPlan(self.data, is_file=False)
+            helper = AmazonS3Helper()
+            plan = ExtractionPlan(self.data, is_file=False,
+                                  amazon_params=helper.settings)
             return get_entity_fields(plan.entity)
         except Exception, exc:
             raise
@@ -454,7 +459,9 @@ class XmlScript(db.Model, BaseMixin, RefXmlImportHandlerMixin):
     @property
     def script_string(self):
         try:
-            script = Script(self.to_xml())
+            from api.amazon_utils import AmazonS3Helper
+            helper = AmazonS3Helper()
+            script = Script(self.to_xml(), amazon_params=helper.settings)
             return script.get_script_str()
         except Exception as e:
             raise ValueError("Can't load script sources. {0}".format(e))
@@ -702,7 +709,9 @@ class PredictResultProbability(db.Model, RefPredictModelMixin):
 def fill_import_handler(import_handler, xml_data=None):
     plan = None
     if xml_data:
-        plan = ExtractionPlan(xml_data, is_file=False)
+        helper = AmazonS3Helper()
+        plan = ExtractionPlan(xml_data, is_file=False,
+                              amazon_params=helper.settings)
 
     if plan is None:
         ent = XmlEntity(
