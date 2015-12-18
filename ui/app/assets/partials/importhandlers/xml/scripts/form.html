@@ -27,14 +27,25 @@
         </div>
       </div>
       <div ng-show="model.type == 'python_file'">
-        <span class="help-block">Upload python file or enter URL (local or Amazon S3):</span>
-        <div class="control-group" ng-class="{error: Form.data_file.$invalid || Form.data_url.$invalid || errorList.data_file || errorList.data_url}" >
-          <input type="file" name="data_file" ng-model="model.data_file" not-required-file ng-required="model.type == 'python_file' && !model.data_url"/>
-          <br/><br/>
-          <span>or URL:</span>
-          <input type="text" name="data_url" ng-model="model.data_url" ng-required="Form.data_file.$invalid && model.type == 'python_file'"/>
-          <span ng-show="errorList.data_file" class="help-block" ng-bind="errorList.data_file" />
-          <span ng-show="errorList.data_url" class="help-block" ng-bind="errorList.data_url" />
+        <div class="alert-info alert alert-block">
+          Please enter Amazon S3 path to the script file or upload local python file.
+        </div>
+        <div class="control-group" ng-class="{error: Form.data_url.$invalid || errorList.data_url}">
+          <label class="control-label">Amazon S3 path:</label>
+          <div class="controls">
+            <input type="text" name="data_url" ng-model="model.data_url" ng-required="Form.data_file.$invalid && model.type == 'python_file'" placeholder="scripts/import_handlers/func.py"/>
+            <span ng-show="errorList.data_url" class="help-block" ng-bind="errorList.data_url" />
+          </div>
+        </div>
+        <div class="text-center">
+          <strong>or</strong>
+        </div>
+        <div class="control-group" ng-class="{error: Form.data_file.$invalid || errorList.data_file}">
+          <label class="control-label">Python File:</label>
+          <div class="controls">
+            <input type="file" name="data_file" ng-model="model.data_file" not-required-file ng-required="model.type == 'python_file' && !model.data_url"/>
+            <span ng-show="errorList.data_file" class="help-block" ng-bind="errorList.data_file" />
+          </div>
         </div>
       </div>
     </form>

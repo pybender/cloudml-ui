@@ -13,10 +13,27 @@ angular.module('app.directives')
     }
     templateUrl:'partials/directives/parameter_input/main.html',
     link: (scope, element, attrs, ngModel) ->
+      if !scope.name?
+        scope.name = scope.config.name
+
       scope.select2Opts = null
       if scope.config.choices
         scope.select2Opts = scope.$root.getSelect2Params(
           {choices: scope.config.choices})
+
+      scope.getFieldTemplate = (config) ->
+        if config.choices
+          if config.type == 'int_float_string_none'
+            name = 'int_float_string_none_choices'
+          else
+            name = 'choices'
+        else
+          if config.name == 'password'
+            name = 'password'
+          else
+            name = config.type
+
+        return "partials/directives/parameter_input/#{name}_field.html"
   }
 )
 

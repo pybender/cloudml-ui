@@ -10,6 +10,7 @@ from api.base.forms import BaseForm, CharField, JsonField, \
 from api.import_handlers.models import XmlImportHandler, XmlDataSource, \
     XmlInputParameter, XmlScript, XmlEntity, XmlField, XmlQuery, XmlSqoop, \
     PredictModel, Predict
+from api.base.forms.base_forms import ParametersConvertorMixin
 from api import app
 from api.base.parameters import convert_parameters
 from cloudml.importhandler.exceptions import ImportHandlerException
@@ -210,7 +211,10 @@ def _get_ds_types():
     return ExtractionPlan.get_datasources_config().keys()
 
 
-class XmlDataSourceForm(BaseForm):
+class XmlDataSourceForm(ParametersConvertorMixin, BaseForm):
+    XML_PARAMETERS = True
+    PARAMETERS_CONFIGURATION = ExtractionPlan.get_datasources_config()
+
     required_fields = ('name', 'type', 'import_handler_id')
     NO_REQUIRED_FOR_EDIT = True
 
@@ -239,13 +243,10 @@ class XmlDataSourceForm(BaseForm):
 exist. Please choose another one.' % value)
         return value
 
-    def clean_params(self, value, field):
-        conf = ExtractionPlan.get_datasources_config().get(
-            self.data.get('type'))
-        convert_parameters(conf, value)
-
-        # XML doesn't supports not string parameters
-        return {key: str(val) for key, val in value.iteritems()}
+    def validate_data(self):
+        type_ = self.cleaned_data.get('type')
+        self.convert_params(type_, self.cleaned_data.get('params'),
+                            configuration=self.PARAMETERS_CONFIGURATION)
 
 
 class XmlQueryForm(BaseForm):

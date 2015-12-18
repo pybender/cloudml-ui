@@ -75,8 +75,7 @@ class BaseTrainedEntityResource(BaseResourceSQL):
         from api.model_tests.models import TestResult
         tests_in_progress = TestResult.query.\
             filter(TestResult.model_id == obj.id)\
-            .filter(~TestResult.status.in_([TestResult.STATUS_COMPLETED,
-                                           TestResult.STATUS_ERROR])).count()
+            .filter(TestResult.status.in_(TestResult.TEST_STATUSES)).count()
         if tests_in_progress:
             return odesk_error_response(405, ERR_INVALID_METHOD,
                                         'There are some tests of this model '

@@ -170,6 +170,8 @@ class BasePredefinedForm(BaseForm):
 
 
 class ParametersConvertorMixin(object):
+    XML_PARAMETERS = False
+
     def convert_params(self, type_, params, configuration):
         if not params:
             return
@@ -184,3 +186,13 @@ class ParametersConvertorMixin(object):
         from api.base.parameters import convert_parameters
         config = configuration[type_]['parameters']
         convert_parameters(config, params)
+
+        if self.XML_PARAMETERS:
+            def xml_stringify(value):
+                if isinstance(value, bool):
+                    return str(value).lower()
+                return str(value)
+
+            # XML doesn't supports not string parameters
+            for key, val in params.iteritems():
+                params[key] = xml_stringify(val)

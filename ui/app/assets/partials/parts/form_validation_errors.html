@@ -1,0 +1,13 @@
+<div ng-show="Form.$invalid">
+  <hr />
+  <small>
+    <a ng-click="showErrors = !showErrors">Validation Errors</a>
+    <ul ng-show="showErrors">
+      <li ng-repeat="(key, errors) in Form.$error track by $index"> <strong>{{ key }}</strong> errors
+        <ul>
+          <li ng-repeat="e in errors">{{ e.$name }} has an error: <strong>{{ key }}</strong>.</li>
+        </ul>
+      </li>
+    </ul>
+  </small>
+</div>

@@ -33,6 +33,8 @@ def convert_parameters(config, params):
         parameter's config with info about type, wheither it's required, etc.
     params : dict
         parameters filled by user
+
+    Note: Use `ParametersConvertorMixin` for converting parameters in forms.
     """
     missed_params = []
     for param_config in config:
