@@ -781,6 +781,20 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertEqual(405, resp.status_code)
         self.assertIn('Re-train is forbidden. Model is deployed', resp.data)
 
+    def test_retrain_model_test_in_progress(self):
+        from api.model_tests.models import TestResult
+        test1 = TestResult.query.filter_by(
+            name=TestResultData.test_01.name).first()
+        test1.model = self.obj
+        test1.status = TestResult.STATUS_IN_PROGRESS
+        test1.save()
+        url = self._get_url(id=self.obj.id, action='train')
+        resp = self.client.put(url, data={'any': 'any'}, headers=HTTP_HEADERS)
+        self.assertEqual(405, resp.status_code)
+        self.assertIn('There are some tests of this model in progress. '
+                      'Please, wait for a moment before re-training model.',
+                      resp.data)
+
     @mock_s3
     @patch('api.instances.tasks.cancel_request_spot_instance')
     def test_cancel_request_instance(self, mock_task, *mocks):
