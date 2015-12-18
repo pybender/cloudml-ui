@@ -1,27 +1,14 @@
-from api.servers.models import Server
 from api.ml_models.models import Model
 from api.model_tests.models import TestResult
 from api.import_handlers.models.importhandlers import XmlImportHandler
 from api.servers.models import Server, FOLDER_MODELS, FOLDER_IMPORT_HANDLERS
 
 
-def update_server_types():
-    """
-    Sets correct server type (based on name)
-    """
-    # set production type
-    servers = Server.query.filter(Server.name.like('%Production%')).all()
-    for server in servers:
-        server.type = Server.PRODUCTION
-        server.save()
-    # set staging type
-    servers = Server.query.filter(Server.name.like('%Staging%')).all()
-    for server in servers:
-        server.type = Server.STAGING
-        server.save()
-
-
 def update_deployed():
+    """
+    Locks already deployed models and import handlers
+    from modifications
+    """
     servers = Server.query.all()
     for server in servers:
         # update models
