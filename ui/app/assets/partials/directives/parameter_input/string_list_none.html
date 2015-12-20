@@ -1,0 +1,4 @@
+<select class="input-small" ng-model="parameterType" name="parameterType" ng-options="t as t for t in parameterTypes" ng-selected="parameterType" ng-change="change()" required></select> :
+<input class="input-medium2" type='text' ng-show="parameterType == 'empty'" readonly displayValue="None" />
+<input class="input-medium2" ng-show="parameterType == 'string'" ng-model="displayValue" type='text' ng-name="name" placeholder="string" ng-required="config.required" ng-change="change()" />
+<input class="input-medium2" ng-show="parameterType == 'list'" ng-model="displayValue" type='text' ng-name="name" placeholder="csv" ng-required="config.required" ng-change="change()" />

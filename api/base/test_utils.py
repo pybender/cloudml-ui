@@ -21,7 +21,7 @@ AUTH_TOKEN = 'token'
 HTTP_HEADERS = [('X-Auth-Token', AUTH_TOKEN)]
 
 # Count of the features in conf/features.json file
-FEATURE_COUNT = 37
+FEATURE_COUNT = 35
 TARGET_VARIABLE = 'hire_outcome'
 FLOAT_ACCURACY = 15
 

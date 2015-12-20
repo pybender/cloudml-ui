@@ -194,6 +194,22 @@ class JsonField(CharField):
                     'JSON file is corrupted. Can not load it: %s' % value)
 
 
+class FeaturesField(JsonField):
+    def clean(self, value):
+        value = super(FeaturesField, self).clean(value)
+        if value:
+            from cloudml.trainer.config import FeatureModel, SchemaException
+            from collections import OrderedDict
+
+            try:
+                feature_model = FeatureModel(
+                    json.dumps(value), is_file=False)
+            except SchemaException, exc:
+                raise ValidationError(
+                    'Features JSON file is invalid: %s' % exc)
+        return value
+
+
 class ImportHandlerFileField(BaseField):
     import_params = None
 
@@ -223,6 +239,25 @@ class ScriptFileField(BaseField):
         try:
             s = ScriptManager()
             s.add_python(value)
+        except Exception as exc:
+            raise ValidationError(exc)
+        return value
+
+
+class ScriptUrlField(BaseField):
+
+    def clean(self, value):
+        if value is None:
+            return
+
+        value = value.encode('utf-8')
+        from cloudml.importhandler.importhandler import Script, ScriptManager
+        from api.import_handlers.models import XmlScript
+        try:
+            xml_scr = XmlScript(data=value, type=XmlScript.TYPE_PYTHON_FILE)
+            s = Script(xml_scr.to_xml())
+            manager = ScriptManager()
+            manager.add_python(s.get_script_str())
         except Exception as exc:
             raise ValidationError(exc)
         return value

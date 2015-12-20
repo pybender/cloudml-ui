@@ -405,12 +405,30 @@ angular.module('app.importhandlers.xml.models', ['app.config'])
       @MAIN_FIELDS: 'id,import_handler_id,data,type'
       @ITEM_NAME: 'scripts'
       TYPES_LIST: ['python_code', 'python_file']
-      DEFAULT_FIELDS_TO_SAVE: ['import_handler_id', 'data', 'data_file']
+      DEFAULT_FIELDS_TO_SAVE: ['import_handler_id', 'data', 'data_file', 'data_url', 'type']
 
       id: null
       import_handler_id: null
       data: null
       type: null
+      data_file: null
+      data_url: null
+
+      $getScriptString: ->
+        base_url = @constructor.$get_api_url({}, @)
+        @$make_request("#{base_url}#{@id}/action/script_string/", {}, 'GET')
+
+      $save: (opts={}) ->
+        if 'type' in opts.only
+          if @type == 'python_file'
+            if 'data' in opts.only
+              _.remove opts.only, (x)-> x is 'data'
+          else if @type == 'python_code'
+            if 'data_file' in opts.only
+              _.remove opts.only, (x)-> x is 'data_file'
+            if 'data_url' in opts.only
+              _.remove opts.only, (x)-> x is 'data_url'
+        super opts
 
     return Script
 ])

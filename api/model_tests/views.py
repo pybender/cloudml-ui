@@ -30,7 +30,7 @@ class TestResource(BaseResourceSQL):
     def post(self, **kwargs):
         model = Model.query.get(kwargs.get('model_id'))
         if not api.app.config['MODIFY_DEPLOYED_MODEL'] and model is not None \
-                and model.on_s3:
+                and model.locked:
             return odesk_error_response(405, 405,
                                         'Model is deployed and blocked for '
                                         'modifications. Forbidden to change '

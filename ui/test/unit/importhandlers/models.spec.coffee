@@ -555,3 +555,25 @@ describe 'app.xml_importhandlers.models', ->
       expect(script.id).toBe null
       expect(script.import_handler_id).toBe null
       expect(script.data).toBe null
+      expect(script.data_file).toBe null
+      expect(script.data_url).toBe null
+      expect(script.type).toBe null
+
+    it "should call get script string", inject(
+      (Script)->
+
+        scr = new Script
+          id: 22
+          import_handler_id: 55
+          type: 'python_file'
+          data: 'url/to/file.py'
+
+        url = "#{settings.apiUrl}xml_import_handlers/#{scr.import_handler_id}/scripts/#{scr.id}/action/script_string/"
+        response = {"script": {"id": 22}, "script_string": "3+5"}
+        $httpBackend.expectGET(url).respond 200, angular.toJson response
+
+        spyOn(scr, '$getScriptString').and.callThrough()
+        scr.$getScriptString()
+        $httpBackend.flush()
+        expect(scr.$getScriptString).toHaveBeenCalled()
+    )

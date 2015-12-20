@@ -8,6 +8,7 @@ import json
 
 from api.base.forms import BaseForm, CharField, ChoiceField, BooleanField, \
     JsonField, DocumentField, UniqueNameField
+from api.base.forms.base_forms import ParametersConvertorMixin
 from api.base.resources import ValidationError
 from models import NamedFeatureType, PredefinedClassifier, PredefinedScaler, \
     FeatureSet, Feature
@@ -159,7 +160,7 @@ class ScalerForm(BasePredefinedForm):
                                return_doc=False)
 
 
-class ClassifierForm(BasePredefinedForm):
+class ClassifierForm(BasePredefinedForm, ParametersConvertorMixin):
     """
     Form for one of this cases (dependly of parameters):
         1. adding/edditing predifined classifier
@@ -192,9 +193,9 @@ class ClassifierForm(BasePredefinedForm):
         params = self.cleaned_data.get('params')
         if params:
             from config import CLASSIFIERS
-            from api.base.parameters import convert_parameters
-            config = CLASSIFIERS[self.cleaned_data['type']]['parameters']
-            convert_parameters(config, params)
+            self.convert_params(self.cleaned_data['type'],
+                                params,
+                                configuration=CLASSIFIERS)
 
 
 class FeatureForm(BaseForm, FeatureParamsMixin):

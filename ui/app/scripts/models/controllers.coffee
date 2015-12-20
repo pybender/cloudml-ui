@@ -7,7 +7,8 @@ angular.module('app.models.controllers', ['app.config', ])
 .constant('MODEL_FIELDS',
   [ 'name','status','test_import_handler', 'train_import_handler',
     'train_import_handler_type', 'test_import_handler_type',
-    'test_handler_fields', 'labels', 'classifier', 'error', 'locked'].join(',')
+    'test_handler_fields', 'labels', 'classifier', 'error',
+    'locked', 'training_in_progress'].join(',')
 )
 
 .factory('FIELDS_BY_SECTION', [
@@ -154,7 +155,8 @@ angular.module('app.models.controllers', ['app.config', ])
                 $scope.model.trainer_s3_url = resp.data.url
               , (opts)->
                 $scope.setError(opts, 'loading trainer s3 url')
-          $scope.LOADED_SECTIONS.push section
+          if section isnt 'modeljson'
+            $scope.LOADED_SECTIONS.push section
           deferred.resolve 'model loaded'
         ), ((opts)->
           $scope.setError(opts, 'loading model details')
@@ -176,8 +178,8 @@ angular.module('app.models.controllers', ['app.config', ])
       loadedSections = []
       if name is 'modeljson'
         $scope.load('features', 'modeljson').then ->
-          if 'modeljson' not in $scope.LOADED_SECTIONS
-            $scope.LOADED_SECTIONS.push 'modeljson'
+          # need to reload model.features each time because features may change
+          # and JSON should be relevant, so dont push modeljson into loaded sections
         name = 'model'
         subsection = 'json'
 
@@ -239,6 +241,32 @@ angular.module('app.models.controllers', ['app.config', ])
             $scope.params.tags.push (t for t in $scope.tag_list when t.id is nId)[0]
           else
             $scope.params.tags.push {id: id, text: id}
+
+    $scope.train_timer = null
+    $scope.same_status_count = 0
+    $scope.status = $scope.model.status
+    $scope.monitorTraining = () ->
+      $scope.train_timer = $timeout( ()->
+          $scope.model.$load(
+            show: 'status,training_in_progress'
+          ).then (->
+            if $scope.model.status == $scope.status
+              $scope.same_status_count += 1
+            else
+              $scope.status = $scope.model.status
+              $scope.same_status_count = 0
+            if $scope.model.training_in_progress && $scope.same_status_count < 20
+              $scope.monitorTraining()
+          )
+        20000
+      )
+
+    $scope.$watch 'model.training_in_progress', (newVal, oldVal)->
+      if newVal == true
+        $scope.monitorTraining()
+
+    $scope.$on '$destroy', (event) ->
+      $timeout.cancel($scope.train_timer)
 
     $scope.updateTags = () ->
       $scope.model.tags = []
@@ -302,7 +330,9 @@ angular.module('app.models.controllers', ['app.config', ])
     $scope.multiple_dataset = true
 
     $scope.start = (result) ->
-      openOptions.model.$train($scope.data).then (() ->
+      openOptions.model.$train($scope.data).then ((resp) ->
+        $scope.model.status = resp.data.model.status
+        $scope.model.training_in_progress = true
         $scope.$close(true)
       ), ((opts) ->
         $scope.setError(opts, 'starting '+$scope.model.name+' training')
@@ -469,6 +499,25 @@ angular.module('app.models.controllers', ['app.config', ])
         $route.reload()
       , (opts) ->
         $scope.setError(opts, 'adding training import handler fields as features')
+  ])
+
+.controller('ModelFeaturesJsonEditCtrl', [
+    '$scope'
+    '$route'
+    ($scope, $route)->
+      $scope.$watch 'model.features', (newValue)->
+        if not newValue or $scope.model.originalJson
+          return
+        $scope.model.originalJson = newValue
+      $scope.resetJsonChanges = ->
+        $scope.model.features = $scope.model.originalJson
+        $scope.FeaturesJsonForm.fJson.$setPristine()
+      $scope.saveJson = ->
+        $scope.model.$save(only: ['features'])
+        .then () ->
+          $route.reload()
+        , (opts)->
+          $scope.setError(opts, 'saving model features JSON')
   ])
 
 .controller('ModelUploadToServerCtrl', [

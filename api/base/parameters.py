@@ -33,6 +33,8 @@ def convert_parameters(config, params):
         parameter's config with info about type, wheither it's required, etc.
     params : dict
         parameters filled by user
+
+    Note: Use `ParametersConvertorMixin` for converting parameters in forms.
     """
     missed_params = []
     for param_config in config:
@@ -106,6 +108,31 @@ def convert_float_or_int(val, config):
                 val, config.type))
 
 
+def convert_string_list_none(val, config):
+    if isinstance(val, dict):
+        type_ = val.get('type')
+        value = val.get('value')
+        if type_ == 'empty':
+            return None
+        else:
+            if config.get('required', None) and value is None:
+                raise ValidationError(
+                    '{0} parameter is required'.format(config.name))
+            if type_ == 'string':
+                return str(value) or ''
+            elif type_ == 'list':
+                if not isinstance(value, (list, tuple)):
+                    return [value, ]
+                return value
+    else:
+        if val is None or isinstance(val, basestring) or \
+                isinstance(val, (list, tuple)):
+            return val
+
+    raise ValidationType(
+        "Invalid subtype of the {0} parameter".format(config.name))
+
+
 TYPE_CONVERTORS = {
     'string': lambda a, c: a,
     'boolean': lambda a, c: a in ('True', 1, True, 'true'),
@@ -113,7 +140,8 @@ TYPE_CONVERTORS = {
     'integer': lambda a, c: int(a),
     'auto_dict': convert_auto_dict,
     'int_float_string_none': convert_int_float_string_none,
-    'float_or_int': convert_float_or_int
+    'float_or_int': convert_float_or_int,
+    'string_list_none': convert_string_list_none,
 }
 
 # Utils

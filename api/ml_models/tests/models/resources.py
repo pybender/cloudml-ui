@@ -24,7 +24,8 @@ from api.model_tests.fixtures import TestResultData, TestExampleData
 from api.features.fixtures import FeatureSetData, FeatureData, FEATURES_STR
 from api.ml_models.fixtures import ModelData, TagData, MODEL_TRAINER, \
     DECISION_TREE_WITH_SEGMENTS, TREE_VISUALIZATION_DATA, INVALID_MODEL, \
-    SegmentData, MULTICLASS_MODEL
+    SegmentData, MULTICLASS_MODEL, FEATURES_CORRECT, FEATURES_INCORRECT, \
+    FEATURES_CORRECT_WITH_DISABLED
 from api.import_handlers.fixtures import DataSetData, \
     XmlImportHandlerData as ImportHandlerData, IMPORT_HANDLER_FIXTURES
 from api.import_handlers.fixtures import EXTRACT_XML, get_importhandler
@@ -263,9 +264,8 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
                      'trainer': INVALID_MODEL,
                      'name': 'new'}
         self.check_edit_error(post_data, {
-            'trainer': "Pickled trainer model is invalid: Could not unpickle "
-                       "trainer - 'module' object has no attribute "
-                       "'TrainerStorage1'"
+            'trainer': "Pickled trainer model is invalid: No module "
+                       "named core.trainer.store"
         })
 
     def test_post(self):
@@ -382,7 +382,7 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
     def test_edit_deployed_model(self):
         #test edit deployed model
         data = {'name': 'new name1'}
-        self.obj.on_s3 = True
+        self.obj.locked = True
         self.obj.save()
         url = self._get_url(id=self.obj.id)
         resp = self.client.put(url, data=data, headers=HTTP_HEADERS)
@@ -429,6 +429,40 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         tag3 = Tag.query.filter_by(text='some_new').one()
         self.assertEquals(tag3.count, 1)
 
+    def test_edit_features_json(self):
+        model = Model.query.filter_by(name=ModelData.model_01.name).first()
+        url = self._get_url(id=model.id)
+
+        data = {'features': FEATURES_INCORRECT}
+        resp = self.client.put(url, data=data, headers=HTTP_HEADERS)
+        self.assertEqual(400, resp.status_code)
+        self.assertIn('No classifier configuration defined', resp.data)
+
+        data = {'features': FEATURES_CORRECT}
+        resp = self.client.put(url, data=data, headers=HTTP_HEADERS)
+        self.assertEqual(200, resp.status_code)
+        resp_obj = json.loads(resp.data)
+        self.assertEqual(resp_obj['model']['id'], model.id)
+        self.assertEqual(4, Feature.query.filter_by(
+            feature_set_id=model.features_set_id).count())
+        features = json.loads(model.features)
+        self.assertEqual(4, len(features['features']))
+        self.assertEqual('example', model.features_set.schema_name)
+        self.assertEqual(1, len(model.features_set.features['group-by']))
+        self.assertEqual('random forest classifier', model.classifier['type'])
+
+        data = {'features': FEATURES_CORRECT_WITH_DISABLED}
+        resp = self.client.put(url, data=data, headers=HTTP_HEADERS)
+        self.assertEqual(200, resp.status_code)
+        resp_obj = json.loads(resp.data)
+        self.assertEqual(resp_obj['model']['id'], model.id)
+        self.assertEqual(4, Feature.query.filter_by(
+            feature_set_id=model.features_set_id).count())
+        features = json.loads(model.features)
+        self.assertEqual(3, len(features['features']))
+        feature_names = [f['name'] for f in features['features']]
+        self.assertEqual(set(feature_names), set(['rings', 'sex', 'square']))
+
     @mock_s3
     @patch('api.servers.tasks.upload_model_to_server')
     def test_upload_to_server(self, mock_task):
@@ -451,13 +485,13 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
     @patch('api.ml_models.tasks.generate_visualization_tree')
     def test_put_generate_visualization(self, mock_task):
         # test deployed model
-        self.obj.on_s3 = True
+        self.obj.locked = True
         self.obj.save()
         url = self._get_url(id=self.obj.id, action='generate_visualization')
         resp = self.client.put(url, data={}, headers=HTTP_HEADERS)
         self.assertEqual(405, resp.status_code)
         self.assertIn('Forbidden to change visualization data', resp.data)
-        self.obj.on_s3 = False
+        self.obj.locked = False
         self.obj.save()
 
         # test model with valid data
@@ -740,12 +774,26 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(len(categories), 4)
 
         #test retrain deployed model
-        self.obj.on_s3 = True
+        self.obj.locked = True
         self.obj.save()
         url = self._get_url(id=self.obj.id, action='train')
         resp = self.client.put(url, data=data, headers=HTTP_HEADERS)
         self.assertEqual(405, resp.status_code)
         self.assertIn('Re-train is forbidden. Model is deployed', resp.data)
+
+    def test_retrain_model_test_in_progress(self):
+        from api.model_tests.models import TestResult
+        test1 = TestResult.query.filter_by(
+            name=TestResultData.test_01.name).first()
+        test1.model = self.obj
+        test1.status = TestResult.STATUS_IN_PROGRESS
+        test1.save()
+        url = self._get_url(id=self.obj.id, action='train')
+        resp = self.client.put(url, data={'any': 'any'}, headers=HTTP_HEADERS)
+        self.assertEqual(405, resp.status_code)
+        self.assertIn('There are some tests of this model in progress. '
+                      'Please, wait for a moment before re-training model.',
+                      resp.data)
 
     @mock_s3
     @patch('api.instances.tasks.cancel_request_spot_instance')
@@ -920,7 +968,7 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(model.feature_count, FEATURE_COUNT)
         self.assertEquals(model.target_variable, TARGET_VARIABLE)
         features = Feature.query.filter_by(feature_set=model.features_set)
-        self.assertEquals(features.count(), 37)
+        self.assertEquals(features.count(), FEATURE_COUNT)
 
         # Checking that classifier from features created
         classifier = model.classifier

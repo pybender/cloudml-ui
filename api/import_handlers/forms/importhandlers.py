@@ -6,10 +6,11 @@ Forms, that used for adding and edditing XML Import handlers.
 
 from api.base.forms import BaseForm, CharField, JsonField, \
     ChoiceField, ValidationError, BooleanField, IntegerField, \
-    DocumentField, ModelField, UniqueNameField, ScriptFileField
+    DocumentField, ModelField, UniqueNameField, ScriptFileField, ScriptUrlField
 from api.import_handlers.models import XmlImportHandler, XmlDataSource, \
     XmlInputParameter, XmlScript, XmlEntity, XmlField, XmlQuery, XmlSqoop, \
     PredictModel, Predict
+from api.base.forms.base_forms import ParametersConvertorMixin
 from api import app
 from api.base.parameters import convert_parameters
 from cloudml.importhandler.exceptions import ImportHandlerException
@@ -210,7 +211,10 @@ def _get_ds_types():
     return ExtractionPlan.get_datasources_config().keys()
 
 
-class XmlDataSourceForm(BaseForm):
+class XmlDataSourceForm(ParametersConvertorMixin, BaseForm):
+    XML_PARAMETERS = True
+    PARAMETERS_CONFIGURATION = ExtractionPlan.get_datasources_config()
+
     required_fields = ('name', 'type', 'import_handler_id')
     NO_REQUIRED_FOR_EDIT = True
 
@@ -239,13 +243,10 @@ class XmlDataSourceForm(BaseForm):
 exist. Please choose another one.' % value)
         return value
 
-    def clean_params(self, value, field):
-        conf = ExtractionPlan.get_datasources_config().get(
-            self.data.get('type'))
-        convert_parameters(conf, value)
-
-        # XML doesn't supports not string parameters
-        return {key: str(val) for key, val in value.iteritems()}
+    def validate_data(self):
+        type_ = self.cleaned_data.get('type')
+        self.convert_params(type_, self.cleaned_data.get('params'),
+                            configuration=self.PARAMETERS_CONFIGURATION)
 
 
 class XmlQueryForm(BaseForm):
@@ -263,22 +264,49 @@ class XmlQueryForm(BaseForm):
 
 
 class XmlScriptForm(BaseForm):
-    required_fields = (('data', 'data_file'), 'import_handler_id')
+    required_fields = (('data', 'data_file', 'data_url'), 'import_handler_id')
     NO_REQUIRED_FOR_EDIT = True
 
     data = CharField()
     import_handler_id = DocumentField(
         doc=XmlImportHandler, by_name=False, return_doc=False)
     data_file = ScriptFileField()
+    data_url = ScriptUrlField()
+    type_field = ChoiceField(choices=XmlScript.TYPES, name='type')
 
     def save(self, *args, **kwargs):
         try:
-            data_file = self.cleaned_data.get('data_file')
-            if data_file:
-                key = XmlScript.to_s3(
-                    data_file, self.cleaned_data.get('import_handler_id'))
-                self.cleaned_data['data'] = key
-                self.cleaned_data['type'] = XmlScript.TYPE_PYTHON_FILE
+            script_type = self.cleaned_data.get('type', None)
+            data_file = self.cleaned_data.get('data_file', None)
+            data_url = self.cleaned_data.get('data_url', None)
+            data = self.cleaned_data.get('data', None)
+            if script_type == XmlScript.TYPE_PYTHON_FILE:
+                if data_file:
+                    key = XmlScript.to_s3(
+                        data_file, self.cleaned_data.get('import_handler_id'))
+                    self.cleaned_data['data'] = key
+                elif data_url:
+                    self.cleaned_data['data'] = data_url
+                else:
+                    raise ValidationError("File upload or URL required "
+                                          "for type '{0}'".format(script_type))
+            elif script_type == XmlScript.TYPE_PYTHON_CODE:
+                if not data:
+                    raise ValidationError("Code is required for type "
+                                          "'{0}'".format(script_type))
+            # type is not passed
+            else:
+                if data_file:
+                    key = XmlScript.to_s3(
+                        data_file, self.cleaned_data.get('import_handler_id'))
+                    self.cleaned_data['data'] = key
+                    self.cleaned_data['type'] = XmlScript.TYPE_PYTHON_FILE
+                elif data_url:
+                    self.cleaned_data['data'] = data_url
+                    self.cleaned_data['type'] = XmlScript.TYPE_PYTHON_FILE
+                else:
+                    self.cleaned_data['type'] = XmlScript.TYPE_PYTHON_CODE
+
             script = super(XmlScriptForm, self).save()
         except Exception as e:
             raise ValidationError(e)

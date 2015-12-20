@@ -134,9 +134,10 @@ class TestResourceTests(BaseDbTestCase, TestChecksMixin):
     @mock_s3
     @patch('api.amazon_utils.AmazonS3Helper.save_gz_file')
     @patch('api.model_tests.tasks.run_test')
-    def test_post_on_deployed_model(self, mock_run_test, mock_multipart_upload):
+    def test_post_on_deployed_model(self, mock_run_test,
+                                    mock_multipart_upload):
         # check run test with deployed model
-        self.model.on_s3 = True
+        self.model.locked = True
         self.model.save()
         dataset = DataSet.query.filter_by(
             name=DataSetData.dataset_02.name).first()
@@ -341,7 +342,9 @@ class TestExampleResourceTests(BaseDbTestCase, TestChecksMixin):
 
         url = self._get_url(id=obj.id, show=show, data=data)
         resp = self.client.get(url, headers=HTTP_HEADERS)
-        self.assertEquals(resp.status_code, 200, url)
+        self.assertEquals(
+            resp.status_code, 200,
+            "code: {0}, data: {1}".format(resp.status_code, resp.data))
         self.assertEquals(mock_get_trainer.called, should_called)
         return json.loads(resp.data)['test_example']
 
@@ -814,8 +817,8 @@ class TasksRunTestTests(BaseDbTestCase, TestChecksMixin):
 
             import gzip
             from StringIO import StringIO
-            with gzip.open(
-                    './api/import_handlers/fixtures/multiclass_ds.gz', 'r') as dataset:
+            with gzip.open('./api/import_handlers/fixtures/'
+                           'multiclass_ds.gz', 'r') as dataset:
                 examples = []
                 for line in dataset.readlines():
                     example = json.loads(line)
@@ -831,19 +834,19 @@ class TasksRunTestTests(BaseDbTestCase, TestChecksMixin):
 
         result = do_train(['class2'])
         self.assertEqual(result, 'Test completed')
-        expected = {u'1': 0.4775985663082437,
+        expected = {u'1': 0.49283154121863804,
                     u'2': 0.0,
-                    u'3': 0.503584229390681}
+                    u'3': 0.482078853046595}
         self.assertDeepAlmostEqual(expected, test.roc_auc)
         self.assertEqual(
             test.metrics['confusion_matrix'],
-            [[u'1', [14, 7, 10]],
+            [[u'1', [10, 10, 11]],
              [u'2', [0, 0, 0]],
-             [u'3', [14, 13, 9]]])
+             [u'3', [12, 15, 9]]])
 
         self.assertTrue('accuracy' in test.metrics)
         self.assertIsInstance(test.metrics['accuracy'], float)
-        self.assertNumAlmostEqual(0.34328358208955223, test.metrics['accuracy'])
+        self.assertNumAlmostEqual(0.2835820895522388, test.metrics['accuracy'])
 
         # excluding two labels
         result = do_train(['class3', 'class2'])
