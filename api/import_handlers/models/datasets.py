@@ -97,7 +97,7 @@ class DataSet(db.Model, BaseModel):
     @property
     def loaded_data(self):
         if not self.on_s3:
-            raise Exception('Invalid oper')
+            raise Exception('Data set is not uploaded to s3. Invalid operation')
 
         if not hasattr(self, '_data'):
             self._data = self.load_from_s3()

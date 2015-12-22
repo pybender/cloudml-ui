@@ -94,10 +94,12 @@ class BaseResource(restful.Resource):
             return odesk_error_response(404, ERR_NO_SUCH_MODEL, str(exc))
         except ValidationError, exc:
             return odesk_error_response(400, ERR_INVALID_DATA,
-                                        str(exc), errors=exc.errors)
+                                        str(exc), errors=exc.errors,
+                                        traceback=exc.traceback)
         except AssertionError, exc:
             return odesk_error_response(400, ERR_INVALID_DATA,
-                                        str(exc), errors=exc.message)
+                                        str(exc), errors=exc.message,
+                                        traceback=exc.traceback)
 
     def _apply_action(self, action, method='GET', **kwargs):
         if action in getattr(self, '%s_ACTIONS' % method):
@@ -229,7 +231,7 @@ class BaseResource(restful.Resource):
         if form.is_valid():
             model = form.save()
         else:
-            raise ValidationError(form.error_messages)
+            raise ValidationError(form.error_messages, traceback=form.traceback)
 
         model = self._prepare_new_model(model, params)
 
@@ -268,7 +270,7 @@ class BaseResource(restful.Resource):
         if form.is_valid():
             model = form.save()
         else:
-            raise ValidationError(form.error_messages)
+            raise ValidationError(form.error_messages, traceback=form.traceback)
 
         model = self._prepare_updated_model(model, params)
 

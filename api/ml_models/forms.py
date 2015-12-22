@@ -19,6 +19,7 @@ from api.models import Tag, Model, XmlImportHandler, \
 from api.features.models import Feature
 from cloudml.trainer.transformers import TRANSFORMERS
 from api.features.config import CLASSIFIERS
+from cloudml.utils import traceback_info
 
 db = app.sql_db
 
@@ -114,7 +115,8 @@ class ModelAddForm(BaseForm):
                 self.cleaned_data['trainer'] = Trainer(feature_model)
             except SchemaException, exc:
                 raise ValidationError(
-                    'Features JSON file is invalid: %s' % exc)
+                    'Features JSON file is invalid: %s' % exc,
+                    traceback=traceback_info())
         return value
 
     def clean_trainer(self, value, field):
@@ -128,7 +130,8 @@ class ModelAddForm(BaseForm):
                 return trainer_obj
             except Exception as exc:
                 raise ValidationError(
-                    'Pickled trainer model is invalid: {0!s}'.format(exc))
+                    'Pickled trainer model is invalid: {0!s}'.format(exc),
+                    traceback=traceback_info())
 
     def save(self, *args, **kwargs):
         name = self.cleaned_data['name']
@@ -147,9 +150,11 @@ class ModelAddForm(BaseForm):
             model = super(ModelAddForm, self).save(commit=False)
             trainer = self.cleaned_data.get('trainer')
             if trainer:
+                __traceback_info__ = 'Store Model Trainer'
                 model.set_trainer(trainer)
             features = self.cleaned_data.get('features')
             if features:
+                __traceback_info__ = 'Store model features'
                 model.features_set.from_dict(features, commit=False)
                 model.classifier = features['classifier']
         except Exception, exc:
@@ -162,6 +167,7 @@ class ModelAddForm(BaseForm):
             db.session.commit()
         if model.status == Model.STATUS_TRAINED:
             from api.ml_models.tasks import visualize_model
+            __traceback_info__ = 'Create and visualize model segments'
             model.create_segments(trainer._get_segments_info())
 
             for segment in model.segments:
@@ -205,7 +211,8 @@ class ModelAddForm(BaseForm):
                 handler.data = data
             except Exception, exc:
                 self.add_error('fields', str(exc))
-                raise ValidationError(self.error_messages, errors=self.errors)
+                raise ValidationError(self.error_messages, errors=self.errors,
+                                      traceback=traceback_info())
             self.cleaned_data['%s_import_handler' % action] = handler
             db.session.add(handler)
             db.session.commit()
@@ -407,7 +414,7 @@ class VisualizationOptionsForm(BaseForm):
 
     def clean_type(self, value, field):
         if value and value not in self.TYPES:
-            raise ValidationError('invalid type')
+            raise ValidationError('invalid operation type')
         return value
 
     def validate_data(self):

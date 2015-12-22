@@ -18,6 +18,7 @@ from api.base.forms.base_forms import BasePredefinedForm
 from api.features.models import CLASSIFIERS
 from cloudml.trainer.feature_types import FEATURE_TYPE_FACTORIES, \
     InvalidFeatureTypeException
+from cloudml.utils import traceback_info
 
 
 class FeatureParamsMixin(object):
@@ -25,10 +26,12 @@ class FeatureParamsMixin(object):
     Mixin for feature params validation depended on feature type
     """
     def _validate_param(self, data, name):
+        __traceback_info__ = '"%s" parameter validation' % name
         from cloudml.trainer.feature_types import FEATURE_PARAMS_TYPES
         value = data.get(name, None)
         if value is None:
-            raise ValidationError('Parameter {} is required'.format(name))
+            raise ValidationError('Parameter {} is required'.format(name),
+                                  traceback=traceback_info())
 
         param_type = FEATURE_PARAMS_TYPES[name]['type']
         if param_type == 'str':
@@ -39,24 +42,28 @@ class FeatureParamsMixin(object):
                 try:
                     data[name] = json.loads(value)
                 except ValueError:
-                    raise ValidationError('invalid json: {}'.format(value))
+                    raise ValidationError('invalid json: {}'.format(value),
+                                          traceback=traceback_info())
 
         elif param_type == 'dict':
             if not isinstance(value, dict):
                 raise ValidationError(
-                    '{} should be a dictionary'.format(name))
+                    '{} should be a dictionary'.format(name),
+                    traceback=traceback_info())
             if not value.keys():
                 raise ValidationError(
-                    'Map {} should contain at least one value'.format(name))
+                    'Map {} should contain at least one value'.format(name),
+                    traceback=traceback_info())
             for key, val in value.items():
                 if not val:
                     raise ValidationError(
-                        'Value {0} in {1} can\'t be empty'.format(key, name))
+                        'Value {0} in {1} can\'t be empty'.format(key, name),
+                        traceback=traceback_info())
 
     def clean_params(self, value, field):
         value_type = self.data.get('type')
         if value_type is None and not self.NO_REQUIRED_FOR_EDIT:
-            raise ValidationError('invalid type')
+            raise ValidationError('Type can\'t be empty')
         if value_type not in FEATURE_TYPE_FACTORIES:
             return
         required_params = FEATURE_TYPE_FACTORIES[value_type].required_params
@@ -82,14 +89,16 @@ class NamedFeatureTypeForm(BaseForm, FeatureParamsMixin):
 
         # Trying to make instance of the type
         type_ = self.cleaned_data.get('type')
-        type_factory = FEATURE_TYPE_FACTORIES.get(type_)
+        __traceback_info__ = 'Trying to make instance of the type "%s"' % type_
         try:
+            type_factory = FEATURE_TYPE_FACTORIES.get(type_)
             params = self.cleaned_data.get('params') or {}
             input_format = self.cleaned_data.get('params') or 'plain'
             type_factory.get_instance(params, input_format)
         except InvalidFeatureTypeException, exc:
             self.add_error("type", 'Cannot create instance of '
                            'feature type: {0}'.format(exc))
+            self.add_traceback("type", traceback_info())
 
 
 class FeatureSetForm(BaseForm):
@@ -110,7 +119,7 @@ class FeatureSetForm(BaseForm):
                 name=value,
                 feature_set_id=self.id).one()
             if self.target_feature is None:
-                raise ValidationError('Feature not found')
+                raise ValidationError('Feature "%s" not found' % value)
         return value
 
     def save(self):
@@ -135,7 +144,8 @@ class FeatureSetAddForm(BaseForm):
 
         classifier = PredefinedClassifier.query.get(value)
         if not classifier:
-            raise ValidationError('classifier not found')
+            raise ValidationError('predefined classifier #%s not found' %
+                                  classifier)
 
         return classifier
 
@@ -272,7 +282,7 @@ exist. Please choose another one.' % name)
             # Try to find type in named types
             found = NamedFeatureType.query.filter_by(name=value).count()
             if not found:
-                raise ValidationError('invalid type')
+                raise ValidationError('Type "%s" not found' % value)
         return value
 
     def clean_remove_scaler(self, value, field):

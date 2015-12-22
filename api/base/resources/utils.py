@@ -17,6 +17,7 @@ except ImportError:
 
 from flask import make_response, request, current_app, jsonify
 from api import app
+from cloudml.utils import traceback_info, full_stack
 
 
 ERR_INVALID_CONTENT_TYPE = 1000
@@ -65,7 +66,8 @@ def odesk_error_response(status, code, message, debug=None,
     result = {'response': {
               'server_time': time(),
               'error': {'status': status, 'code': code,
-                        'message': message, 'traceback': traceback,
+                        'message': message,
+                        'traceback': traceback or traceback_info(),
                         'errors': errors}}}
     if app.debug:
         result['response']['error']['debug'] = app.debug

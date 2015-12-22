@@ -15,7 +15,7 @@ from api import app
 from api.base.parameters import convert_parameters
 from cloudml.importhandler.exceptions import ImportHandlerException
 from cloudml.importhandler.importhandler import ExtractionPlan, ScriptManager
-
+from cloudml.utils import traceback_info
 db = app.sql_db
 
 
@@ -36,7 +36,7 @@ class XmlImportHandlerAddForm(BaseForm):
             ExtractionPlan(value, is_file=False)
             return value
         except Exception as exc:
-            raise ValidationError(exc)
+            raise ValidationError(exc, traceback=traceback_info())
 
     def save(self):
         try:
@@ -49,7 +49,8 @@ class XmlImportHandlerAddForm(BaseForm):
                 import_handler.data = self.cleaned_data.get('data')
             except Exception, exc:
                 self.add_error('fields', str(exc))
-                raise ValidationError(self.error_messages, errors=self.errors)
+                raise ValidationError(self.error_messages, errors=self.errors,
+                                      traceback=traceback_info())
         except:
             db.session.rollback()
             raise
@@ -86,7 +87,7 @@ class XmlImportHandlerUpdateXmlForm(BaseForm):
             ExtractionPlan(value, is_file=False)
             return value
         except Exception as exc:
-            raise ValidationError(exc)
+            raise ValidationError(exc, traceback=traceback_info())
 
 
 class XmlInputParameterForm(BaseForm):
@@ -288,7 +289,7 @@ class XmlScriptForm(BaseForm):
                 elif data_url:
                     self.cleaned_data['data'] = data_url
                 else:
-                    raise ValidationError("File upload or URL required "
+                    raise ValidationError("File upload or URL is required "
                                           "for type '{0}'".format(script_type))
             elif script_type == XmlScript.TYPE_PYTHON_CODE:
                 if not data:
@@ -309,7 +310,7 @@ class XmlScriptForm(BaseForm):
 
             script = super(XmlScriptForm, self).save()
         except Exception as e:
-            raise ValidationError(e)
+            raise ValidationError(e, traceback=traceback_info())
         return script
 
     def clean_data(self, value, field):
@@ -318,7 +319,7 @@ class XmlScriptForm(BaseForm):
             # this will raise exception in case of incorrect script
             s.add_python(value)
         except ImportHandlerException as ex:
-            raise ValidationError(ex.message)
+            raise ValidationError(ex.message, traceback=traceback_info())
         return value
 
 

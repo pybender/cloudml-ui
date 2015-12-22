@@ -225,9 +225,10 @@ class FeatureSet(ExportImportMixin, BaseModel, db.Model):
         return self.features_dict
 
     def from_dict(self, features_dict, commit=True):
+        __traceback_info__ = 'Updating features set from dictionary'
         if features_dict is None or \
                 not isinstance(features_dict, dict):
-            raise ValueError('should be a dictionary')
+            raise ValueError('Non-empty dictionary is expected')
 
         self.schema_name = features_dict['schema-name']
         self.group_by = []

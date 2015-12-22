@@ -8,7 +8,7 @@ import json
 
 from api.base.resources import ValidationError
 from sqlalchemy.orm.exc import NoResultFound
-from cloudml.utils import isint
+from cloudml.utils import isint, traceback_info
 
 
 class BaseField(object):
@@ -120,7 +120,8 @@ class DocumentField(CharField):  # pragma: no cover
             try:
                 obj = self.Model.query.filter_by(**params)[0]
             except:
-                raise ValidationError('Document not found')
+                raise ValidationError('Document not found',
+                                      traceback=traceback_info())
 
             if self.return_doc:
                 return obj
@@ -199,14 +200,13 @@ class FeaturesField(JsonField):
         value = super(FeaturesField, self).clean(value)
         if value:
             from cloudml.trainer.config import FeatureModel, SchemaException
-            from collections import OrderedDict
-
             try:
                 feature_model = FeatureModel(
                     json.dumps(value), is_file=False)
             except SchemaException, exc:
                 raise ValidationError(
-                    'Features JSON file is invalid: %s' % exc)
+                    'Features JSON file is invalid: %s' % exc,
+                    traceback=traceback_info())
         return value
 
 
@@ -224,7 +224,7 @@ class ImportHandlerFileField(BaseField):
             self.import_params = plan.inputs.keys()
             self.import_handler_type = 'xml'
         except Exception as exc:
-            raise ValidationError(exc)
+            raise ValidationError(exc, traceback=traceback_info())
         return value
 
 
@@ -259,7 +259,7 @@ class ScriptUrlField(BaseField):
             manager = ScriptManager()
             manager.add_python(s.get_script_str())
         except Exception as exc:
-            raise ValidationError(exc)
+            raise ValidationError(exc, traceback=traceback_info())
         return value
 
 

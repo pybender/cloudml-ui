@@ -19,7 +19,7 @@ class DataSetAddForm(BaseForm):
 
     def clean_import_params(self, value, field):
         if not isinstance(value, dict):
-            raise ValidationError('Should be a dict')
+            raise ValidationError('Should be a dictionary')
 
         for param in self.importhandler.import_params:
             if param not in value:

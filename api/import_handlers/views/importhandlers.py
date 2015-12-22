@@ -8,7 +8,7 @@ from psycopg2._psycopg import DatabaseError
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm import joinedload, joinedload_all, undefer
 
-from api.base.resources import BaseResourceSQL, NotFound, \
+from api.base.resources import BaseResourceSQL, NotFound, ValidationError, \
     odesk_error_response, ERR_INVALID_DATA
 from api import api
 from api.import_handlers.models import XmlImportHandler, XmlInputParameter, \
