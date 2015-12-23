@@ -6,6 +6,7 @@ from api import app
 from api.base.models import BaseModel, db
 from .config import FOLDER_MODELS, FOLDER_IMPORT_HANDLERS
 from api.amazon_utils import AmazonS3Helper
+from boto.exception import S3ResponseError
 
 
 class Server(BaseModel, db.Model):
@@ -62,10 +63,29 @@ class Server(BaseModel, db.Model):
         return objects
 
     def set_key_metadata(self, uid, folder, key, value):
-        key_name = '{0}/{1}/{2}'.format(self.folder, folder, uid)
-        s3 = AmazonS3Helper(
-            bucket_name=app.config['CLOUDML_PREDICT_BUCKET_NAME'])
-        s3.set_key_metadata(key_name, {key: value}, True)
+        if self.check_edit_metadata(folder, key, value):
+            key_name = '{0}/{1}/{2}'.format(self.folder, folder, uid)
+            s3 = AmazonS3Helper(
+                bucket_name=app.config['CLOUDML_PREDICT_BUCKET_NAME'])
+            s3.set_key_metadata(key_name, {key: value}, True)
+
+    def check_edit_metadata(self, folder, key, value):
+        entities_by_folder = {
+            FOLDER_MODELS: 'Model',
+            FOLDER_IMPORT_HANDLERS: 'Import Handler'
+        }
+        entity = entities_by_folder.get(folder, None)
+        if not entity:
+            raise ValueError('Wrong folder: %s' % folder)
+
+        if key == 'name':
+            files = self.list_keys(folder)
+            for file_ in files:
+                if file_['name'] == value:
+                    raise ValueError('{0} with name "{1}" already exists on '
+                                     'the server {2}'.format(entity, value,
+                                                             self.name))
+        return True
 
     def get_key_metadata(self, uid, folder, key):
         key_name = '{0}/{1}/{2}'.format(self.folder, folder, uid)

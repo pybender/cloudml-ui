@@ -11,7 +11,8 @@ from .fixtures import ServerData
 from .models import Server
 from .config import FOLDER_MODELS
 from .views import ServerResource, ServerFileResource
-from .tasks import upload_import_handler_to_server, upload_model_to_server
+from .tasks import upload_import_handler_to_server, upload_model_to_server, \
+    update_at_server
 from api.import_handlers.fixtures import XmlImportHandlerData as \
     ImportHandlerData, XmlEntityData
 from api.import_handlers.models import ImportHandler, XmlImportHandler,\
@@ -19,6 +20,7 @@ from api.import_handlers.models import ImportHandler, XmlImportHandler,\
 from api.ml_models.fixtures import ModelData
 from api.ml_models.models import Model
 from api.accounts.models import User
+import json
 
 
 class ServerModelTests(BaseDbTestCase):
@@ -71,10 +73,15 @@ class ServerFileResourceTests(BaseDbTestCase, TestChecksMixin):
     datasets = [ModelData, ImportHandlerData,
                 XmlEntityData, ServerData]
 
+    @mock_s3
     def setUp(self):
         super(ServerFileResourceTests, self).setUp()
         self.server = Server.query.first()
         self.BASE_URL = self.BASE_URL.format(self.server.id, FOLDER_MODELS)
+        model = Model.query.filter_by(name=ModelData.model_01.name).one()
+        model.trainer = 'trainer_file'
+        self.user = User.query.first()
+        upload_model_to_server(self.server.id, model.id, self.user.id)
 
     # def test_invalid_folder(self):
     #     url = self.BASE_URL.format(self.server.id, 'invalid_folder1')
@@ -86,23 +93,69 @@ class ServerFileResourceTests(BaseDbTestCase, TestChecksMixin):
     @patch('api.servers.tasks.logging')
     # @patch('api.amazon_utils.AmazonS3Helper.list_keys')
     def test_list(self, logging_mock):
-        server = Server.query.filter_by(name=ServerData.server_01.name).one()
-        model = Model.query.filter_by(name=ModelData.model_01.name).one()
-        user = User.query.first()
-        upload_model_to_server(server.id, model.id, user.id)
         key = "%ss" % self.RESOURCE.OBJECT_NAME
         resp_data = self._check()
         self.assertTrue(key in resp_data, resp_data)
         self.assertTrue(len(resp_data[key]), 1)
 
-    def test_delete(self):
-        pass
+    @patch('api.servers.tasks.update_at_server')
+    def test_delete(self, mock_update_at_server):
+        files_list = [f for f in self.server.list_keys(FOLDER_MODELS)]
+        obj_id = files_list[0]['id']
 
-    def test_edit(self):
-        pass
+        # correct data
+        url = '{0}{1}/'.format(self.BASE_URL, obj_id)
+        resp = self.client.delete(url, headers=HTTP_HEADERS)
+        self.assertEquals(204, resp.status_code)
+        self.assertTrue(mock_update_at_server.delay.called)
+        self.assertEqual(0, len(self.server.list_keys(FOLDER_MODELS)))
 
-    def test_reload_on_predict(self):
-        pass
+        # non-existing
+        url = '{0}{1}/'.format(self.BASE_URL, 'bbb.model')
+        resp = self.client.delete(url, headers=HTTP_HEADERS)
+        self.assertEqual(404, resp.status_code)
+        self.assertIn('not found', resp.data)
+
+
+    @patch('api.servers.tasks.update_at_server')
+    def test_edit(self, mock_update_at_server):
+        # set Up
+        model2 = Model.query.filter_by(name=ModelData.model_02.name).one()
+        model2.trainer = 'trainer_file2'
+        upload_model_to_server(self.server.id, model2.id, self.user.id)
+        # make order
+        files_list = [f for f in self.server.list_keys(FOLDER_MODELS)]
+        obj_id = files_list[0]['id']
+
+        url = '{0}{1}/'.format(self.BASE_URL, obj_id)
+        # correct data
+        resp = self.client.put(url, data={'name': 'new name'},
+                               headers=HTTP_HEADERS)
+        self.assertEqual(200, resp.status_code)
+        self.assertTrue(mock_update_at_server.delay.called)
+        resp_data = json.loads(resp.data)
+        self.assertEqual(obj_id, resp_data[self.RESOURCE.OBJECT_NAME]['id'])
+
+        # test edit with same name
+        resp = self.client.put(url, data={'name': files_list[1]['name']},
+                               headers=HTTP_HEADERS)
+        self.assertEqual(400, resp.status_code)
+        self.assertIn('already exists on the server', resp.data)
+
+        # non-existing
+        url = '{0}{1}/'.format(self.BASE_URL, 'bbb.model')
+        resp = self.client.put(url, data={'name': 'nnn'}, headers=HTTP_HEADERS)
+        self.assertEqual(404, resp.status_code)
+        self.assertIn('not found', resp.data)
+
+    @patch('api.servers.tasks.update_at_server')
+    def test_reload_on_predict(self, mock_update_at_server):
+        files_list = [f for f in self.server.list_keys(FOLDER_MODELS)]
+        obj_id = files_list[0]['id']
+        url = self._get_url(id=obj_id, action='reload')
+        resp = self.client.put(url, headers=HTTP_HEADERS)
+        self.assertEqual(200, resp.status_code)
+        self.assertTrue(mock_update_at_server.delay.called)
 
 
 class ServersTasksTests(BaseDbTestCase):
