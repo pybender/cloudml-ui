@@ -392,6 +392,7 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
 
   $rootScope.resetError = ->
     $rootScope.err = ''
+    $rootScope.trace = ''
     $rootScope.statusCode = null
     $rootScope.errorList = {}
 
@@ -430,6 +431,8 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
     if opts.data
       resp = opts.data.response
       if resp? && resp.error
+        if resp.error.traceback
+          $rootScope.trace = resp.error.traceback
         $rootScope.err = "Error while #{message}: server responded
    with #{opts.status} (#{resp.error.message or "no message"})."
         if opts.data.response?.error?.errors?

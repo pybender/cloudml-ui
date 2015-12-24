@@ -461,7 +461,7 @@ angular.module('app.directives', [
 
       <alert ng-show="savingError"
              alert-class="alert-error"
-             msg="savingError" unsafe></alert>
+             msg="savingError" trace="trace" unsafe></alert>
 
     ``msg`` is an expression, and ``alert-class`` a string.
 
@@ -479,7 +479,11 @@ angular.module('app.directives', [
         <div class="alert alert-block">
           <button type="button"
             class="close" data-dismiss="alert">&times;</button>
-          <div class="message"></div>
+          <div>
+            <span class="message"></span>&nbsp;
+            <a ng-init="show=false" ng-click="show=!show" class="view-trace"></a>
+            <span ng-show="show" class="traceback"></span>
+          </div>
         </div>
         '''
 
@@ -491,6 +495,12 @@ angular.module('app.directives', [
         attrs.$observe 'msg', (newVal, oldVal, scope) ->
           if newVal
             el.find('.message')[_meth] newVal
+
+        attrs.$observe 'trace', (newVal, oldVal, scope) ->
+          if newVal
+            el.find('.view-trace')['html'] '[Error Backtrace]'
+            values = newVal.split('\n')
+            el.find('.traceback')['html'] values.join('<br/>')
 
         oldHtmlClass = null
         attrs.$observe 'htmlclass', (newVal, oldVal, scope) ->

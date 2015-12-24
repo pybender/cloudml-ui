@@ -239,7 +239,7 @@ fields %s is required' % ', '.join(fields))
         For each invalid field adds traceback if it comes
         """
         if traceback:
-            self.traceback = '{0}{1} field traceback: {2}\n\n'.format(
+            self.traceback += '\n\n{0}{1} field traceback: {2}\n\n'.format(
                 self.traceback, name, traceback)
 
     def save_inner(self):
