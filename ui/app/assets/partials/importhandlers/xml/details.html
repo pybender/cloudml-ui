@@ -5,7 +5,7 @@
     editable="handler" value="handler.name"
     editable-field="name" editable-input="text"
     editable-placement="right" editable-required></small>
-  <small ng-show="handler.on_s3">(Deployed)</small>
+  <small ng-show="handler.locked">(Deployed)</small>
   <div class="actions" ng-controller="ImportHandlerActionsCtrl">
     <div ng-init="init({handler: handler})">
       <button ng-click="importData(handler)" class="btn btn-info">

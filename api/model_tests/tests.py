@@ -134,24 +134,6 @@ class TestResourceTests(BaseDbTestCase, TestChecksMixin):
     @mock_s3
     @patch('api.amazon_utils.AmazonS3Helper.save_gz_file')
     @patch('api.model_tests.tasks.run_test')
-    def test_post_on_deployed_model(self, mock_run_test,
-                                    mock_multipart_upload):
-        # check run test with deployed model
-        self.model.locked = True
-        self.model.save()
-        dataset = DataSet.query.filter_by(
-            name=DataSetData.dataset_02.name).first()
-        data = {'dataset': dataset.id}
-        data.update(self.POST_DATA)
-        data['new_dataset_selected'] = False
-        url = self._get_url()
-        resp = self.client.post(url, data=data, headers=HTTP_HEADERS)
-        self.assertEquals(405, resp.status_code)
-        self.assertIn('Forbidden to change test data.', resp.data)
-
-    @mock_s3
-    @patch('api.amazon_utils.AmazonS3Helper.save_gz_file')
-    @patch('api.model_tests.tasks.run_test')
     def test_post_csv(self, mock_run_test, mock_multipart_upload):
         """ Checks creating new Test with creating new dataset. """
         data = {'format': DataSet.FORMAT_CSV, 'parameters': IMPORT_PARAMS}

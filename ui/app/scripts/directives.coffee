@@ -131,9 +131,9 @@ angular.module('app.directives', [
 #     }
 # )
 
-.directive('editable',
-
-  () ->
+.directive('editable', [
+  '$rootScope'
+  ($rootScope) ->
     ###
     Integrates editable widget for updating fields without opening separate
     page.
@@ -167,6 +167,7 @@ angular.module('app.directives', [
         placement = attrs.editablePlacement
 
         submitFn = (params) ->
+          $rootScope.resetError()
           if not scope.obj.$save
             throw new Error "Editable: can't handle object without $save method"
 
@@ -183,13 +184,14 @@ angular.module('app.directives', [
           # scope.obj[fieldName] = obj[fieldName]
           # scope.value = obj[fieldName]
 
-        errorHandler = ->
+        errorHandler = (err) ->
           # Revert changed value
           # TODO: nader20140910 the following line will break the select
           # type. the value is instance.object.id, the field is instance.object
           # assigning the id of the object to instance.object will break it
           scope.obj[fieldName] = previousValue
           $(el).editable 'setValue', previousValue
+          $rootScope.setError(err)
           #if attrs.display then $(el).text scope.display
 
         promiseHandler = (promise) ->
@@ -229,7 +231,7 @@ angular.module('app.directives', [
         attrs.$observe 'display', (newVal, oldVal) ->
           if newVal then $(el).text newVal
     }
-)
+])
 
 .directive('weightsTable', () ->
   return {

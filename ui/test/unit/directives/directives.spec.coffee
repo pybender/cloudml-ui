@@ -107,6 +107,11 @@ describe "directives", ->
       $httpBackend.verifyNoOutstandingRequest()
 
     prepareContext = (inputTypeText=true)->
+      $rootScope.setError = (err) ->
+        return err
+      $rootScope.resetError = () ->
+        return ''
+
       if inputTypeText
         html = """
 <span ng-bind="instance.name || 'instance name here'"
@@ -186,8 +191,9 @@ editable-placement="right" display="instance.obj.name"></span>
         name: 'zinger'
       response = {}
       response[model.API_FIELDNAME] = updatedModel
+      err_response = {}
       $httpBackend.expectPUT "#{model.BASE_API_URL}#{model.id}/"
-      .respond 400
+      .respond 400, angular.toJson(err_response)
       # doing what x-editable would be doing
       simulateXeditableSubmit()
       $httpBackend.flush()
@@ -209,8 +215,9 @@ editable-placement="right" display="instance.obj.name"></span>
         expect($(elem).text()).toEqual 'two'
 
         # simulate a submit
+        err_response = {}
         $httpBackend.expectPUT "#{model.BASE_API_URL}#{model.id}/"
-        .respond 400
+        .respond 400, angular.toJson(err_response)
         # doing what x-editable would be doing
         simulateXeditableSubmit()
         # upon the following flush, the watch is called with newVal undefined

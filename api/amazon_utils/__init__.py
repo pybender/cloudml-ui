@@ -9,7 +9,7 @@ import uuid
 from boto.dynamodb2.table import Table
 
 import boto.ec2
-from boto.exception import JSONResponseError
+from boto.exception import JSONResponseError, S3ResponseError
 from boto.s3.key import Key
 
 from api import app
@@ -332,6 +332,8 @@ class AmazonS3Helper(object):
             "previous_".
         """
         key = self.bucket.lookup(name)
+        if not key:
+            raise S3ResponseError(404, "Key '{}' not found".format(name))
         for meta_key, meta_val in meta.iteritems():
             if store_previous:
                 previous_value = key.get_metadata(meta_key)

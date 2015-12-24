@@ -27,16 +27,6 @@ class TestResource(BaseResourceSQL):
     Model = TestResult
     post_form = AddTestForm
 
-    def post(self, **kwargs):
-        model = Model.query.get(kwargs.get('model_id'))
-        if not api.app.config['MODIFY_DEPLOYED_MODEL'] and model is not None \
-                and model.locked:
-            return odesk_error_response(405, 405,
-                                        'Model is deployed and blocked for '
-                                        'modifications. Forbidden to change '
-                                        'test data.')
-        return super(TestResource, self).post(**kwargs)
-
     def _get_examples_size_action(self, **kwargs):
         fields = ['name', 'model_name', 'model_id', 'examples_size',
                   'created_on', 'created_by']

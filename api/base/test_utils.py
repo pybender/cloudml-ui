@@ -44,6 +44,7 @@ class BaseDbTestCase(TestCase):
         app.config.from_object('api.test_config')
         app.config['MODIFY_DEPLOYED_MODEL'] = False
         app.config['MODIFY_DEPLOYED_IH'] = False
+        app.config['CLOUDML_PREDICT_BUCKET_NAME'] = 'test-predict-bucket'
 
         # if Model is not defined, try get it from resource.
         if hasattr(cls, 'RESOURCE') and not hasattr(cls, 'Model'):
