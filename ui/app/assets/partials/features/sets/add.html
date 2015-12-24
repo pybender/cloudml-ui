@@ -7,7 +7,7 @@
   <div class="modal-body">
     <loadindicator title="Adding features set..." ng-show="saving" cml-progress="savingProgress"></loadindicator>
 
-    <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+    <alert-message ng-show="err" class="alert-error" msg="{{ err }}" trace='{{ trace }}' unsafe></alert-message>
 
     <form name="Form" class="form-horizontal">
       <div class="control-group" ng-class="{error: Form.name.$invalid}">

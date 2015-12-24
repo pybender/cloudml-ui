@@ -27,7 +27,7 @@
 
 <alert-message ng-show="data.test_result.examples_placement == 'Do not save'" class="alert-info" msg="Examples data isn't stored for this test at all." unsafe></alert-message>
 
-<alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+<alert-message ng-show="err" class="alert-error" msg="{{ err }}" trace='{{ trace }}' unsafe></alert-message>
 <sc-chart ng-show="data.prob" chart-dict="data.probChartData" width="150" height="150"></sc-chart>
 <div ng-show="data.loaded">
   <ul class="nav nav-tabs" id="tabs">

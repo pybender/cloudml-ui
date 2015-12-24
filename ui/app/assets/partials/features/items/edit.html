@@ -6,7 +6,7 @@
 
   <loadindicator title="Save feature..." ng-show="saving" cml-progress="savingProgress"></loadindicator>
 
-  <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+  <alert-message ng-show="err" class="alert-error" msg="{{ err }}" trace='{{ trace }}' unsafe></alert-message>
  
   <div class="row">
     <form name="FeatureForm" class="form-horizontal">

@@ -8,7 +8,7 @@
 </h2>
 
 <div ng-controller="BaseListCtrl" ng-init="init(true, LIST_MODEL_NAME)">
-	<alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+	<alert-message ng-show="err" class="alert-error" msg="{{ err }}" trace='{{ trace }}' unsafe></alert-message>
 
 	<alert-message ng-show="objects.length == 0" class="alert-info" msg="No data sources found"></alert-message>
 

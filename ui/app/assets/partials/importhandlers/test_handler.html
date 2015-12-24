@@ -5,7 +5,7 @@
   </div>
 
   <div class="modal-body">
-    <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+    <alert-message ng-show="err" class="alert-error" msg="{{ err }}" trace='{{ trace }}' unsafe></alert-message>
     <form name="Form" class="form-horizontal">
       <div ng-repeat="param in params" class="control-group">
           <label class="control-label">{{ param | capfirst }}:</label>

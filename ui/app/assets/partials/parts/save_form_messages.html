@@ -1,4 +1,4 @@
   <loadindicator title="Adding model..." ng-show="saving && savingProgress != '0%'" cml-progress="savingProgress"></loadindicator>
-  <alert-message ng-show="err && statusCode != 400" class="alert-error" msg="{{err}}" unsafe></alert-message>
-  <alert-message ng-show="statusCode == 400 && !errorList['fields']" class="alert-error" msg="Here are some validation errors" unsafe></alert-message>
-  <alert-message ng-show="statusCode == 400 && errorList['fields']" class="alert-error" msg="{{errorList['fields']}}" unsafe></alert-message>
+  <alert-message ng-show="err && statusCode != 400" class="alert-error" msg="{{err}}" trace='{{ trace }}' unsafe></alert-message>
+  <alert-message ng-show="statusCode == 400 && !errorList['fields']" class="alert-error" msg="Here are some validation errors" trace='{{ trace }}' unsafe></alert-message>
+  <alert-message ng-show="statusCode == 400 && errorList['fields']" class="alert-error" msg="{{errorList['fields']}}" trace='{{ trace }}' unsafe></alert-message>

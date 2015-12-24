@@ -21,7 +21,7 @@
 </div>
 <p></p>
 
-<alert-message ng-show="err" class="alert-error" msg='{{ err }}' unsafe></alert-message>
+<alert-message ng-show="err" class="alert-error" msg='{{ err }}' trace='{{ trace }}' unsafe></alert-message>
 
 <alert-message ng-hide="cluster.active_tunnel && cluster.active_tunnel != -1" class="alert-info" msg='Cluster Web UI not available - please create SSH Tunnel.' unsafe></alert-message>
 

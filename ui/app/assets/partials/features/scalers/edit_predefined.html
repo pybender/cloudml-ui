@@ -7,7 +7,7 @@
   <div class="modal-body">
     <loadindicator title="Editing scaler..." ng-show="saving" cml-progress="savingProgress"></loadindicator>
 
-    <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+    <alert-message ng-show="err" class="alert-error" msg="{{ err }}" trace='{{ trace }}' unsafe></alert-message>
     <form name="Form" class="form-horizontal">
     <ng-include src="'partials/features/scalers/form.html'"></ng-include>
     </form>

@@ -6,7 +6,7 @@
 
   <div class="modal-body">
     <loadindicator title="Cloning import handler..." ng-show="saving && savingProgress != '0%'" cml-progress="savingProgress"></loadindicator>
-    <alert-message ng-show="err" class="alert-error" msg="{{err}}" unsafe></alert-message>
+    <alert-message ng-show="err" class="alert-error" msg="{{err}}" trace='{{ trace }}' unsafe></alert-message>
     <p>
       You will create a new xml import handler with same options. <br />
       Do you really want to process?
