@@ -19,7 +19,7 @@ from api.models import Tag, Model, XmlImportHandler, \
 from api.features.models import Feature
 from cloudml.trainer.transformers import TRANSFORMERS
 from api.features.config import CLASSIFIERS
-from cloudml.utils import traceback_info
+from cloudml import traceback_info
 
 db = app.sql_db
 

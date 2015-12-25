@@ -53,7 +53,7 @@ class AuthResource(BaseResourceSQL):
             if not auth:
                 logging.error('User Auth: token %s not found', oauth_token)
                 return odesk_error_response(
-                    500, 500,
+                    401, 401,
                     'Wrong token: {0!s}'.format(oauth_token))
 
             oauth_token_secret = auth.get('oauth_token_secret')

@@ -8,7 +8,7 @@ from api.base.resources.utils import odesk_error_response
 from models import *
 from forms import *
 from config import CLASSIFIERS
-
+from api.base.exceptions import InvalidOperationError
 
 class FeatureSetResource(BaseResourceSQL):
     """
@@ -100,7 +100,7 @@ class ParamsResource(BaseResourceSQL):
     """
     @property
     def Model(self):
-        raise Exception('Invalid operation')
+        raise InvalidOperationError('Invalid operation')
 
     def get(self, *args, **kwargs):
         from cloudml.trainer.feature_types import FEATURE_TYPE_FACTORIES

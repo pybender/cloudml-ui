@@ -224,7 +224,8 @@ class AmazonS3Helper(object):
                 n += 1
             else:
                 logging.error('Got error when getting data from s3')
-                raise exc
+                raise S3ResponseError(500, "Got error when getting data from "
+                                           "s3: {}".format(exc))
 
     def save_gz_file(self, name, filename, meta={}):
         """

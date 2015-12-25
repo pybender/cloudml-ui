@@ -345,7 +345,7 @@ class ModelResource(BaseTrainedEntityResource):
 
         model = self._get_details_query(None, **kwargs)
         if model.status != Model.STATUS_TRAINED:
-            return odesk_error_response(400, ERR_INVALID_DATA,
+            return odesk_error_response(405, ERR_INVALID_METHOD,
                                         'Model is not yet trained')
 
         form = ChooseServerForm(obj=model)
@@ -366,7 +366,7 @@ class ModelResource(BaseTrainedEntityResource):
         if model is None:
             raise NotFound('Model not found')
         if model.status != Model.STATUS_TRAINED:
-            return odesk_error_response(400, ERR_INVALID_DATA,
+            return odesk_error_response(405, ERR_INVALID_METHOD,
                                         'Model is not trained')
 
         form = TransformDataSetForm(obj=model)

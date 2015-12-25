@@ -15,7 +15,7 @@ from api import app
 from api.base.parameters import convert_parameters
 from cloudml.importhandler.exceptions import ImportHandlerException
 from cloudml.importhandler.importhandler import ExtractionPlan, ScriptManager
-from cloudml.utils import traceback_info
+from api.base.exceptions import *
 db = app.sql_db
 
 
@@ -36,7 +36,7 @@ class XmlImportHandlerAddForm(BaseForm):
             ExtractionPlan(value, is_file=False)
             return value
         except Exception as exc:
-            raise ValidationError(exc, traceback=traceback_info())
+            raise ValidationError(exc.message, exc)
 
     def save(self):
         try:
@@ -49,11 +49,11 @@ class XmlImportHandlerAddForm(BaseForm):
                 import_handler.data = self.cleaned_data.get('data')
             except Exception, exc:
                 self.add_error('fields', str(exc))
-                raise ValidationError(self.error_messages, errors=self.errors,
-                                      traceback=traceback_info())
-        except:
+                raise ValidationError(self.error_messages, exc,
+                                      errors=self.errors)
+        except Exception as e:
             db.session.rollback()
-            raise
+            raise CloudmlDBException(e.message, e)
         else:
             db.session.commit()
 
@@ -87,7 +87,7 @@ class XmlImportHandlerUpdateXmlForm(BaseForm):
             ExtractionPlan(value, is_file=False)
             return value
         except Exception as exc:
-            raise ValidationError(exc, traceback=traceback_info())
+            raise ValidationError(exc.message, exc)
 
 
 class XmlInputParameterForm(BaseForm):
@@ -174,9 +174,9 @@ class XmlEntityForm(BaseForm):
                 for sqoop in entity.sqoop_imports:
                     db.session.delete(sqoop)
 
-        except Exception:
+        except Exception as e:
             db.session.rollback()
-            raise
+            raise CloudmlDBException(e.message, e)
         else:
             db.session.commit()
 
@@ -310,7 +310,7 @@ class XmlScriptForm(BaseForm):
 
             script = super(XmlScriptForm, self).save()
         except Exception as e:
-            raise ValidationError(e, traceback=traceback_info())
+            raise ValidationError(e.message, e)
         return script
 
     def clean_data(self, value, field):
@@ -319,7 +319,7 @@ class XmlScriptForm(BaseForm):
             # this will raise exception in case of incorrect script
             s.add_python(value)
         except ImportHandlerException as ex:
-            raise ValidationError(ex.message, traceback=traceback_info())
+            raise ValidationError(ex.message, e)
         return value
 
 

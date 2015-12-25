@@ -18,7 +18,7 @@ from api.base.forms.base_forms import BasePredefinedForm
 from api.features.models import CLASSIFIERS
 from cloudml.trainer.feature_types import FEATURE_TYPE_FACTORIES, \
     InvalidFeatureTypeException
-from cloudml.utils import traceback_info
+from cloudml import traceback_info
 
 
 class FeatureParamsMixin(object):
@@ -30,9 +30,9 @@ class FeatureParamsMixin(object):
         from cloudml.trainer.feature_types import FEATURE_PARAMS_TYPES
         value = data.get(name, None)
         if value is None:
-            raise ValidationError('Parameter {} is required'.format(name),
-                                  traceback=traceback_info())
-
+            raise ValidationError('Parameter {} is required'.format(name))
+        __traceback_info__ = "Validating '{0}' parameter value: {1}"\
+            .format(name, value)
         param_type = FEATURE_PARAMS_TYPES[name]['type']
         if param_type == 'str':
             pass  # do nothing
@@ -41,24 +41,20 @@ class FeatureParamsMixin(object):
             if isinstance(value, basestring):
                 try:
                     data[name] = json.loads(value)
-                except ValueError:
-                    raise ValidationError('invalid json: {}'.format(value),
-                                          traceback=traceback_info())
+                except ValueError as e:
+                    raise ValidationError('invalid json: {}'.format(value), e)
 
         elif param_type == 'dict':
             if not isinstance(value, dict):
                 raise ValidationError(
-                    '{} should be a dictionary'.format(name),
-                    traceback=traceback_info())
+                    '{} should be a dictionary'.format(name))
             if not value.keys():
                 raise ValidationError(
-                    'Map {} should contain at least one value'.format(name),
-                    traceback=traceback_info())
+                    'Map {} should contain at least one value'.format(name))
             for key, val in value.items():
                 if not val:
                     raise ValidationError(
-                        'Value {0} in {1} can\'t be empty'.format(key, name),
-                        traceback=traceback_info())
+                        'Value {0} in {1} can\'t be empty'.format(key, name))
 
     def clean_params(self, value, field):
         value_type = self.data.get('type')
@@ -69,7 +65,7 @@ class FeatureParamsMixin(object):
         required_params = FEATURE_TYPE_FACTORIES[value_type].required_params
         if required_params and value is None:
             raise ValidationError('Parameters are required for type {0}, '
-                                  'but was not specified'.format(value_type))
+                                  'but were not specified'.format(value_type))
         for name in required_params:
             self._validate_param(value, name)
         return value
@@ -270,6 +266,7 @@ exist. Please choose another one.' % name)
             except InvalidFeatureTypeException, exc:
                 self.add_error("type", 'Cannot create instance of '
                                'feature type: {0}'.format(exc))
+                self.add_traceback("type", traceback_info())
         else:
             # look into named feature types
             named_type = NamedFeatureType.query.filter_by(

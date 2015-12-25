@@ -15,7 +15,7 @@ from api.amazon_utils import AmazonS3Helper
 from api.base.models import db, BaseModel, JSONType
 from api.logs.models import LogMessage
 from ..models import XmlImportHandler as ImportHandler
-
+from api.base.exceptions import InvalidOperationError
 
 class DataSet(db.Model, BaseModel):
     """
@@ -97,7 +97,8 @@ class DataSet(db.Model, BaseModel):
     @property
     def loaded_data(self):
         if not self.on_s3:
-            raise Exception('Data set is not uploaded to s3. Invalid operation')
+            raise InvalidOperationError('Data set is not uploaded to s3. '
+                                        'Invalid operation')
 
         if not hasattr(self, '_data'):
             self._data = self.load_from_s3()

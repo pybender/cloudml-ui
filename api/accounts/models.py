@@ -55,7 +55,8 @@ class AuthToken(object):
             if ex.status == 404:
                 return None
             else:
-                raise ex
+                from api.base.exceptions import CloudmlUIException
+                raise CloudmlUIException(ex.message, ex)
 
     @classmethod
     def delete(cls, auth_token):

@@ -10,6 +10,7 @@ from collections import Iterable
 
 from fields import BaseField
 from api.base.resources import ValidationError
+from api.base.exceptions import CloudmlUIValueError
 
 
 def get_declared_items(bases, attrs, cls=BaseField):
@@ -85,12 +86,12 @@ class BaseForm(InternalForm):
         self.obj = None
 
         if self.required_fields and self.required_fields_groups:
-            raise ValueError(
+            raise CloudmlUIValueError(
                 'Either required fields or groups should be specified')
 
         if self.required_fields_groups:
             if not self.group_chooser:
-                raise ValueError('Specify group_chooser')
+                raise CloudmlUIValueError('Specify group_chooser')
 
         if obj is not None:
             self.obj = obj
@@ -101,7 +102,7 @@ class BaseForm(InternalForm):
         elif model_name:
             self.model_name = model_name
         else:
-            raise ValueError('Either obj or Model should be specified')
+            raise CloudmlUIValueError('Either obj or Model should be specified')
 
         self.set_data(from_request() if data_from_request else data)
 
@@ -297,7 +298,7 @@ def check_required(obj, cd):
         if not is_valid:
             return False
     else:
-        raise ValueError()
+        raise CloudmlUIValueError()
 
     return True
 

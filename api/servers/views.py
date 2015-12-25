@@ -47,7 +47,7 @@ class ServerFileResource(BaseResource):
             update_at_server.delay(server.id, file_name)
         except (S3ResponseError, ValueError) as err:
             status = err.status if hasattr(err, 'status') else 400
-            return odesk_error_response(status, 1006, str(err))
+            return odesk_error_response(status, 1006, str(err), err)
 
         return self._render({self.OBJECT_NAME: {'id': uid}})
 
@@ -78,7 +78,7 @@ class ServerFileResource(BaseResource):
             file_name = '{0}/{1}'.format(folder, uid)
             update_at_server.delay(server.id, file_name)
         except S3ResponseError as err:
-            return odesk_error_response(err.status, 1006, str(err))
+            return odesk_error_response(err.status, 1006, str(err), err)
         return '', 204
 
     def _get_uid(self, kwargs):

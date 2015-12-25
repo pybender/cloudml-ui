@@ -1,18 +1,26 @@
 # Authors: Nikolay Melnik <nmelnik@upwork.com>
 
 __all__ = ('NotFound', 'ValidationError')
+from cloudml import ChainedException
 
 
-class NotFound(Exception):
+class CloudmlUINotImplemented(ChainedException):
     pass
 
 
-class ValidationError(Exception):
+class NotFound(ChainedException):
+    pass
+
+
+class ValidationError(ChainedException):
     """
     Base exception class for form validation, that stores
     validation errors.
     """
-    def __init__(self, *args, **kwargs):
+    def __init__(self, message, chain=None, **kwargs):
         self.errors = kwargs.pop('errors', None)
-        self.traceback = kwargs.pop('traceback', None)
-        super(ValidationError, self).__init__(*args, **kwargs)
+        super(ValidationError, self).__init__(message, chain)
+        # replace traceback if needed
+        if 'traceback' in kwargs:
+            self.traceback = kwargs.pop('traceback')
+

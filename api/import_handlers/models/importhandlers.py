@@ -23,6 +23,8 @@ from cloudml.importhandler.importhandler import ExtractionPlan, \
     ImportHandler as CoreImportHandler
 from api.base.models import db, BaseModel
 from api import app
+from api.base.exceptions import CloudmlUIValueError, CloudmlUIException
+from api.base.resources import CloudmlUINotImplemented
 
 
 class ImportHandlerMixin(BaseModel):
@@ -52,7 +54,7 @@ class ImportHandlerMixin(BaseModel):
         return ""
 
     def get_iterator(self, params):
-        raise Exception('not inplemented')
+        raise CloudmlUINotImplemented('not inplemented')
 
     def get_fields(self):
         """
@@ -93,7 +95,7 @@ class ImportHandlerMixin(BaseModel):
                 error_msg = 'Only supporting SELECT queries'
 
         if error_msg is not None:
-            raise Exception(error_msg)
+            raise CloudmlUIException(error_msg)
         else:
             return query
 
@@ -148,7 +150,7 @@ class ImportHandlerMixin(BaseModel):
             yield dict(row)
 
     def _get_ds_details_for_query(self, ds_name):
-        raise NotImplementedError()
+        raise CloudmlUINotImplemented()
 
     def __repr__(self):
         return '<%s Import Handler %r>' % (self.TYPE, self.name)
@@ -179,7 +181,7 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
             import_handler=self,
             entity=None).count()
         if has_root_ent:
-            raise ValueError("Import Handler isn't empty")
+            raise CloudmlUIValueError("Import Handler isn't empty")
 
         fill_import_handler(self, val)
 
@@ -295,8 +297,8 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
             plan = ExtractionPlan(self.data, is_file=False)
             return get_entity_fields(plan.entity)
         except Exception, exc:
-            raise
             logging.error(exc)
+            raise CloudmlUIException(exc.message, exc)
 
     def list_fields(self):
         # we should have the ih saved to db to get its fields
@@ -428,7 +430,7 @@ class XmlScript(db.Model, BaseMixin, RefXmlImportHandlerMixin):
         try:
             handler = XmlImportHandler.query.get(import_handler_id)
             if not handler:
-                raise ValueError("Import handler {0} not found".format(
+                raise CloudmlUIValueError("Import handler {0} not found".format(
                     import_handler_id))
             key = "{0}/{1}_python_script_{2}.py".format(
                 api.app.config['IMPORT_HANDLER_SCRIPTS_FOLDER'],
@@ -437,8 +439,8 @@ class XmlScript(db.Model, BaseMixin, RefXmlImportHandlerMixin):
             s3helper = AmazonS3Helper()
             s3helper.save_key_string(key, data)
         except Exception as e:
-            raise ValueError("Error when uploading file to Amazon S3: "
-                             "{0}".format(e))
+            raise CloudmlUIValueError("Error when uploading file to Amazon S3: "
+                                      "{0}".format(e), e)
         return key
 
     def to_xml(self, to_string=False, pretty_print=True):
@@ -457,7 +459,8 @@ class XmlScript(db.Model, BaseMixin, RefXmlImportHandlerMixin):
             script = Script(self.to_xml())
             return script.get_script_str()
         except Exception as e:
-            raise ValueError("Can't load script sources. {0}".format(e))
+            raise CloudmlUIValueError("Can't load script sources. {0}"
+                                      .format(e), e)
 
 
 class XmlQuery(db.Model, BaseMixin):
@@ -830,7 +833,7 @@ def fill_import_handler(import_handler, xml_data=None):
         load_entity_items(plan.entity, db_entity=ent)
         for ent, field_name in ENTITIES_WITHOUT_DS:
             if field_name not in TRANSFORMED_FIELDS:
-                raise ValueError(
+                raise CloudmlUIValueError(
                     'Transformed field or datasource "{0}" '
                     'not found in the entity "{1}"'.format(
                         field_name, ent.name))

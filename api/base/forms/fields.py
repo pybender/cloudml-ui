@@ -8,7 +8,7 @@ import json
 
 from api.base.resources import ValidationError
 from sqlalchemy.orm.exc import NoResultFound
-from cloudml.utils import isint, traceback_info
+from cloudml.utils import isint
 
 
 class BaseField(object):
@@ -82,8 +82,8 @@ class IntegerField(BaseField):
         value = super(IntegerField, self).clean(value)
         try:
             return int(value)
-        except (ValueError, TypeError):
-            raise ValidationError('should be integer number')
+        except (ValueError, TypeError) as e:
+            raise ValidationError('should be integer number', e)
 
 
 class ChoiceField(CharField):
@@ -119,9 +119,8 @@ class DocumentField(CharField):  # pragma: no cover
 
             try:
                 obj = self.Model.query.filter_by(**params)[0]
-            except:
-                raise ValidationError('Document not found',
-                                      traceback=traceback_info())
+            except Exception as e:
+                raise ValidationError('Document not found', e)
 
             if self.return_doc:
                 return obj
@@ -190,9 +189,9 @@ class JsonField(CharField):
         if value:
             try:
                 return json.loads(value)
-            except ValueError:
+            except ValueError as e:
                 raise ValidationError(
-                    'JSON file is corrupted. Can not load it: %s' % value)
+                    'JSON file is corrupted. Can not load it: %s' % value, e)
 
 
 class FeaturesField(JsonField):
@@ -205,8 +204,7 @@ class FeaturesField(JsonField):
                     json.dumps(value), is_file=False)
             except SchemaException, exc:
                 raise ValidationError(
-                    'Features JSON file is invalid: %s' % exc,
-                    traceback=traceback_info())
+                    'Features JSON file is invalid: %s' % exc, exc)
         return value
 
 
@@ -224,7 +222,7 @@ class ImportHandlerFileField(BaseField):
             self.import_params = plan.inputs.keys()
             self.import_handler_type = 'xml'
         except Exception as exc:
-            raise ValidationError(exc, traceback=traceback_info())
+            raise ValidationError(exc.message, exc)
         return value
 
 
@@ -240,7 +238,7 @@ class ScriptFileField(BaseField):
             s = ScriptManager()
             s.add_python(value)
         except Exception as exc:
-            raise ValidationError(exc)
+            raise ValidationError(exc.message, exc)
         return value
 
 
@@ -259,7 +257,7 @@ class ScriptUrlField(BaseField):
             manager = ScriptManager()
             manager.add_python(s.get_script_str())
         except Exception as exc:
-            raise ValidationError(exc, traceback=traceback_info())
+            raise ValidationError(exc.message, exc)
         return value
 
 

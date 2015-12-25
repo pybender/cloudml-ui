@@ -20,7 +20,8 @@ from .utils import crossdomain, ERR_NO_SUCH_MODEL, odesk_error_response, \
     ERR_INVALID_METHOD, ERR_INVALID_DATA
 from serialization import encode_model
 from api import app
-from .exceptions import NotFound, ValidationError
+from api.base.resources import *
+from api.base.exceptions import *
 
 
 __all__ = ('BaseResource', 'BaseResourceSQL')
@@ -86,20 +87,18 @@ class BaseResource(restful.Resource):
         from flask import request
         method = request.method.lower()
         if method not in self.ALLOWED_METHODS:
-            return odesk_error_response(400, ERR_INVALID_METHOD,
+            return odesk_error_response(405, ERR_INVALID_METHOD,
                                         '%s is not allowed' % method)
         try:
             return super(BaseResource, self).dispatch_request(*args, **kwargs)
         except NotFound, exc:
-            return odesk_error_response(404, ERR_NO_SUCH_MODEL, str(exc))
+            return odesk_error_response(404, ERR_NO_SUCH_MODEL, str(exc), exc)
         except ValidationError, exc:
             return odesk_error_response(400, ERR_INVALID_DATA,
-                                        str(exc), errors=exc.errors,
-                                        traceback=exc.traceback)
+                                        str(exc), exc, errors=exc.errors)
         except AssertionError, exc:
             return odesk_error_response(400, ERR_INVALID_DATA,
-                                        str(exc), errors=exc.message,
-                                        traceback=exc.traceback)
+                                        str(exc), exc, errors=exc.message)
 
     def _apply_action(self, action, method='GET', **kwargs):
         if action in getattr(self, '%s_ACTIONS' % method):
@@ -176,10 +175,10 @@ class BaseResource(restful.Resource):
             * params - parsed GET parameters
             * **kwargs - data from URI
         """
-        raise NotImplemented()
+        raise CloudmlUINotImplemented()
 
     def _paginate(self, models, page, per_page=20):
-        raise NotImplemented()
+        raise CloudmlUINotImplemented()
 
     def _prepare_model_list(self, models, params):
         return models
@@ -211,7 +210,7 @@ class BaseResource(restful.Resource):
         return self._prepare_model_any(model, params)
 
     def _get_details_query(self, params, **kwargs):
-        raise NotImplemented()
+        raise CloudmlUINotImplemented()
 
     def _get_details_parameters(self, extra_params):
         return self._parse_parameters(extra_params + self.GET_PARAMS)
@@ -226,7 +225,7 @@ class BaseResource(restful.Resource):
         params = self._parse_parameters(self.POST_PARAMS)
 
         if self.post_form is None:
-            raise ValueError('Specify post form')
+            raise CloudmlUIValueError('Specify post form')
         form = self.post_form(Model=self.Model, **kwargs)
         if form.is_valid():
             model = form.save()
@@ -264,7 +263,7 @@ class BaseResource(restful.Resource):
             )
 
         if self.put_form is None:
-            raise ValueError('Specify put form')
+            raise CloudmlUIValueError('Specify put form')
 
         form = self.put_form(obj=model, **kwargs)
         if form.is_valid():
@@ -332,7 +331,7 @@ class BaseResource(restful.Resource):
         except Exception, exc:
             msg = 'Error when dump data: %s' % exc
             logging.error(msg)
-            return odesk_error_response(500, ERR_INVALID_DATA, msg)
+            return odesk_error_response(500, ERR_INVALID_DATA, msg, exc)
 
         return app.response_class(content,
                                   mimetype='application/json'), code
@@ -349,8 +348,9 @@ class BaseResourceSQL(BaseResource):
             order = params.get('order', 'asc')
             try:
                 return self.ORDER_DICT[order]
-            except KeyError:
-                raise ValidationError('Invalid order. It could be asc or desc')
+            except KeyError as e:
+                raise ValidationError('Invalid order. It could be asc or'
+                                      ' desc', e)
 
         # Quering
         cursor = self._build_list_query(params, **kwargs)

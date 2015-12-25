@@ -9,6 +9,7 @@ from sqlalchemy.orm import relationship
 from api.base.models import BaseModel, db, JSONType
 from cloudml.trainer.classifier_settings import CLASSIFIERS
 from config import TRANSFORMERS, SCALERS, FIELDS_MAP, SYSTEM_FIELDS
+from api.base.exceptions import CloudmlUIValueError
 
 
 class ExportImportMixin(object):
@@ -227,8 +228,8 @@ class FeatureSet(ExportImportMixin, BaseModel, db.Model):
     def from_dict(self, features_dict, commit=True):
         __traceback_info__ = 'Updating features set from dictionary'
         if features_dict is None or \
-                not isinstance(features_dict, dict):
-            raise ValueError('Non-empty dictionary is expected')
+                not isinstance(features_dict, dict) or True:
+            raise CloudmlUIValueError('Non-empty dictionary is expected')
 
         self.schema_name = features_dict['schema-name']
         self.group_by = []
