@@ -14,13 +14,16 @@ from cloudml.trainer.trainer import Trainer, DEFAULT_SEGMENT
 from cloudml.trainer.config import FeatureModel
 
 from api import celery, app
-from api.base.tasks import SqlAlchemyTask
+from api.base.tasks import SqlAlchemyTask, CloudmlUITaskException, \
+    get_task_traceback
 from api.logs.logger import init_logger
 from api.accounts.models import User
 from api.ml_models.models import Model, Segment
 from api.import_handlers.models import DataSet
 from api.logs.dynamodb.models import LogMessage
 from api.base.io_utils import get_or_create_data_folder
+from api.base.resources.exceptions import NotFound
+from api.base.exceptions import CloudmlUIValueError, CloudmlUIException
 
 
 __all__ = ['train_model', 'get_classifier_parameters_grid',
@@ -98,7 +101,7 @@ def train_model(dataset_ids, model_id, user_id, delete_metadata=False):
 
         segments = trainer._get_segments_info()
         if not segments or not segments.keys():
-            raise Exception('No segments in the model')
+            raise CloudmlUIException('No segments in the model')
 
         model.create_segments(segments)
 
@@ -108,12 +111,13 @@ def train_model(dataset_ids, model_id, user_id, delete_metadata=False):
     except Exception, exc:
         app.sql_db.session.rollback()
 
-        logging.exception(
-            'Got exception when train model: {0!s}'.format(exc))
+        logging.error(
+            'Got exception when train model: {0!s}'.format(exc),
+            exc_info=get_task_traceback(exc))
         model.status = model.STATUS_ERROR
         model.error = str(exc)[:299]
         model.save()
-        raise
+        raise CloudmlUITaskException(exc.message, exc)
 
     msg = "Model trained at %s" % trainer.train_time
     logging.info(msg)
@@ -234,8 +238,9 @@ def visualize_model(model_id, segment_id=None):
         model.save()
 
     except Exception, exc:
-        logging.exception('Got exception when visualize the model: %s', exc)
-        raise
+        logging.error('Got exception when visualize the model: %s' %
+                      exc.message, exc_info=get_task_traceback(exc))
+        raise CloudmlUITaskException(exc.message, exc)
     return 'Segment %s of the model %s has been visualized' % \
         (segment.name, model.name)
 
@@ -266,10 +271,10 @@ def generate_visualization_tree(model_id, deep):
     model = Model.query.get(model_id)
 
     if model is None:
-        raise ValueError('model not found: %s' % model_id)
+        raise NotFound('model not found: %s' % model_id)
 
     if model.classifier is None or 'type' not in model.classifier:
-        raise ValueError('model has invalid classifier')
+        raise CloudmlUIException('model has invalid classifier')
 
     clf_type = model.classifier['type']
     if clf_type not in (DECISION_TREE_CLASSIFIER,
@@ -349,12 +354,12 @@ def transform_dataset_for_download(model_id, dataset_id):
 def _get_model_and_segment_or_raise(model_id, segment_id=None):
     model = Model.query.get(model_id)
     if model is None:
-        raise ValueError('Model not found: %s' % model_id)
+        raise NotFound('Model not found: %s' % model_id)
 
     if segment_id is None:
         segment = Segment.query.filter_by(model=model).first()
     else:
         segment = Segment.query.get(segment_id)
     if segment is None:
-        raise ValueError('Segment not found: %s' % segment_id)
+        raise NotFound('Segment not found: %s' % segment_id)
     return model, segment

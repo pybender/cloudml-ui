@@ -11,6 +11,7 @@ from flask.ext.restful import reqparse
 from api import api
 from api.base.resources import BaseResourceSQL, NotFound, \
     odesk_error_response, ERR_INVALID_DATA
+from api.base.exceptions import CloudmlUIValueError
 from models import TestResult, TestExample, Model
 from forms import AddTestForm, SelectFieldsForCSVForm, ExportToDbForm
 from sqlalchemy import desc
@@ -55,12 +56,12 @@ class TestResource(BaseResourceSQL):
             json_weights = json.loads(arg)
             if "weights_list" not in json_weights or \
                     not json_weights["weights_list"]:
-                raise ValueError("Weights list is empty")
+                raise CloudmlUIValueError("Weights list is empty")
 
             weights = []
             for w in json_weights["weights_list"]:
                 if not ("label" in w and "value" in w):
-                    raise ValueError("Weights list is incorrect")
+                    raise CloudmlUIValueError("Weights list is incorrect")
                 weights.append((w["label"], float(w["value"])))
             calculate_confusion_matrix.delay(test.id, weights)
 

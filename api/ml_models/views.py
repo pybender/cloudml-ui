@@ -19,6 +19,7 @@ from api.import_handlers.models import DataSet
 from api.base.resources import BaseResourceSQL, NotFound, ValidationError, \
     public_actions, ERR_INVALID_DATA, odesk_error_response, _select
 from api.base.resources.utils import ERR_INVALID_METHOD
+from api.base.resources.exceptions import CloudmlUINotImplemented
 from models import Model, Tag, Weight, WeightsCategory, Segment, Transformer, \
     ClassifierGridParams
 from forms import ModelAddForm, ModelEditForm, TransformDataSetForm, \
@@ -45,11 +46,11 @@ class BaseTrainedEntityResource(BaseResourceSQL):
 
     @property
     def train_entity_task(self):
-        raise NotImplemented()
+        raise CloudmlUINotImplemented()
 
     @property
     def train_form(self):
-        raise NotImplemented()
+        raise CloudmlUINotImplemented()
 
     def _get_trainer_download_s3url_action(self, **kwargs):
         entity = self._get_details_query(None, **kwargs)
@@ -116,7 +117,7 @@ class BaseTrainedEntityResource(BaseResourceSQL):
 
             if not existing_instance_selected:  # request spot instance
                 if self.ENTITY_TYPE != 'model':
-                    raise NotImplemented()
+                    raise CloudmlUINotImplemented()
 
                 tasks_list.append(request_spot_instance.s(
                     instance_type=spot_instance_type,
@@ -159,7 +160,7 @@ class BaseTrainedEntityResource(BaseResourceSQL):
 
     def _put_cancel_request_instance_action(self, **kwargs):
         if self.ENTITY_TYPE != 'model':
-            raise NotImplemented()
+            raise CloudmlUINotImplemented()
         from api.instances.tasks import cancel_request_spot_instance
         model = self._get_details_query(None, **kwargs)
         request_id = model.spot_instance_request_id

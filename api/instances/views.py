@@ -6,7 +6,7 @@ Instance and Cluster resources.
 
 from api import api
 from api.base.resources import BaseResourceSQL
-from api.base.resources import ValidationError
+from api.base.resources import ValidationError, NotFound
 from models import Instance, Cluster
 from forms import InstanceForm
 

@@ -24,6 +24,8 @@ from api.amazon_utils import AmazonS3Helper
 from api.import_handlers.models import ImportHandlerMixin
 from cloudml.trainer.classifier_settings import TYPE_CLASSIFICATION
 from api import app
+from api.base.resources.exceptions import CloudmlUINotImplemented, NotFound
+from api.base.exceptions import CloudmlUIValueError, CloudmlUIException
 
 
 class BaseTrainedEntity(object):
@@ -161,7 +163,7 @@ class BaseTrainedEntity(object):
         return helper.get_download_url(trainer_filename, expires_in)
 
     def train(*args, **kwargs):
-        raise NotImplemented()
+        raise CloudmlUINotImplemented()
 
 
 class Model(db.Model, BaseModel, BaseTrainedEntity):
@@ -230,7 +232,8 @@ class Model(db.Model, BaseModel, BaseTrainedEntity):
                 set_status(visualization_data, status)
         else:
             if data is None:
-                raise ValueError("data is required when segment is specified")
+                raise CloudmlUIValueError("data is required when segment is "
+                                          "specified")
             else:
                 # updating the visualization data of specific segment
                 visualization_data[segment] = data or {}
@@ -494,9 +497,9 @@ class Transformer(BaseModel, BaseTrainedEntity, db.Model):
 def get_transformer(name):
     transformer = Transformer.query.filter(Transformer.name == name).one()
     if transformer is None:
-        raise Exception('Transformer "%s" not found ' % name)
+        raise NotFound('Transformer "%s" not found ' % name)
     if transformer.status != Transformer.STATUS_TRAINED:
-        raise Exception('Transformer "%s" not trained' % name)
+        raise CloudmlUIException('Transformer "%s" not trained' % name)
     transformer = transformer.get_trainer()
     return transformer.feature['transformer']
 

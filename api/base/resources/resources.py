@@ -20,7 +20,7 @@ from .utils import crossdomain, ERR_NO_SUCH_MODEL, odesk_error_response, \
     ERR_INVALID_METHOD, ERR_INVALID_DATA
 from serialization import encode_model
 from api import app
-from api.base.resources import *
+from api.base.resources.exceptions import *
 from api.base.exceptions import *
 
 

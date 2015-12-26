@@ -13,8 +13,9 @@ from itertools import izip, repeat
 from sqlalchemy.exc import SQLAlchemyError
 
 from api import celery, app
-from api.base.tasks import SqlAlchemyTask
-from api.base.exceptions import InvalidOperationError
+from api.base.tasks import SqlAlchemyTask, CloudmlUITaskException, \
+    get_task_traceback
+from api.base.exceptions import InvalidOperationError, CloudmlUIValueError
 from api.logs.logger import init_logger
 from api.model_tests.models import TestResult, TestExample
 from api.ml_models.models import Model, Weight
@@ -183,7 +184,8 @@ def run_test(dataset_ids, test_id):
     except Exception, exc:
         if isinstance(exc, SQLAlchemyError):
             app.sql_db.session.rollback()
-        logging.exception('Got exception when tests model')
+        logging.error('Got exception when tests model',
+                      exc_info=get_task_traceback(exc))
         test.status = test.STATUS_ERROR
         error_column_size = TestResult.error.type.length
         str_exc = str(exc)
@@ -191,7 +193,7 @@ def run_test(dataset_ids, test_id):
         test.error = str_exc if len(str_exc) <= error_column_size else \
             (str_exc[:error_column_size - len(msg)] + msg)
         test.save()
-        raise
+        raise CloudmlUITaskException(exc.message, exc)
     return 'Test completed'
 
 
@@ -270,22 +272,23 @@ def calculate_confusion_matrix(test_id, weights):
             all_zero = False
         if weight[1] < 0:
             logging.error("Negative weights found")
-            raise ValueError('Negative weights are not allowed')
+            raise CloudmlUIValueError('Negative weights are not allowed')
 
     if all_zero:
         logging.error("All weights are zero")
-        raise ValueError('All weights can not be 0')
+        raise CloudmlUIValueError('All weights can not be 0')
 
     test = TestResult.query.get(test_id)
     if test is None:
         logging.error('Test with id {0!s} not found!'.format(test_id))
-        raise ValueError('Test with id {0!s} not found!'.format(test_id))
+        raise CloudmlUIValueError('Test with id {0!s} not found!'
+                                  .format(test_id))
 
     model = test.model
     if model is None:
         logging.error('Model with id {0!s} not found!'.format(
             test.model_id))
-        raise ValueError('Model with id {0!s} not found!'.format(
+        raise CloudmlUIValueError('Model with id {0!s} not found!'.format(
             test.model_id))
 
     logging.info('Start calculating confusion matrix for test id {0!s}, '
@@ -309,8 +312,8 @@ def calculate_confusion_matrix(test_id, weights):
             logging.error("Weighted sum is 0 on calculating test example #{0} "
                           "(probabilities: {1})"
                           .format(i, json.dumps(example.prob)))
-            raise ValueError("Weighted sum is 0. Try another weights "
-                             "or retest model.")
+            raise CloudmlUIValueError("Weighted sum is 0. Try another weights "
+                                      "or retest model.")
 
         weighted_prob = []
         for weight in weights:

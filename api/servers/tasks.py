@@ -12,6 +12,7 @@ from api.ml_models.models import Model
 from api.servers.models import Server
 from api.amazon_utils import AmazonS3Helper
 from .config import FOLDER_MODELS, FOLDER_IMPORT_HANDLERS
+from api.base.exceptions import CloudmlUIValueError
 
 
 def get_a_Uuid():
@@ -35,8 +36,9 @@ def upload_model_to_server(server_id, model_id, user_id):
     model_files = server.list_keys(FOLDER_MODELS)
     for file_ in model_files:
         if file_['name'] == model.name:
-            raise ValueError('Model with name "{0}" already exist on '
-                             'the server {1}'.format(model.name, server.name))
+            raise CloudmlUIValueError('Model with name "{0}" already exist on '
+                                      'the server {1}'.format(model.name,
+                                                              server.name))
 
     uid = get_a_Uuid()
 
@@ -84,9 +86,9 @@ def upload_import_handler_to_server(server_id, handler_type, handler_id,
     handler_files = server.list_keys(FOLDER_IMPORT_HANDLERS)
     for file_ in handler_files:
         if file_['name'] == handler.name:
-            raise ValueError('Import Handler with name "{0}" already exist on '
-                             'the server {1}'.format(
-                                 handler.name, server.name))
+            raise CloudmlUIValueError('Import Handler with name "{0}" already '
+                                      'exist on the server {1}'.format(
+                                      handler.name, server.name))
 
     uid = get_a_Uuid()
     # TODO: Shall we use another account?
@@ -138,7 +140,7 @@ def update_at_server(server_id, file_name):
     }
     part = parts.get(folder)
     if not part:
-        raise Exception('Wrong folder: %s' % folder)
+        raise CloudmlUIValueError('Wrong folder: %s' % folder)
 
     url = 'http://{0}/cloudml/{1}/{2}/reload'.format(server.ip, part, name)
     logging.info(url)

@@ -24,7 +24,7 @@ from cloudml.importhandler.importhandler import ExtractionPlan, \
 from api.base.models import db, BaseModel
 from api import app
 from api.base.exceptions import CloudmlUIValueError, CloudmlUIException
-from api.base.resources import CloudmlUINotImplemented
+from api.base.resources.exceptions import CloudmlUINotImplemented
 
 
 class ImportHandlerMixin(BaseModel):

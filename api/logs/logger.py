@@ -44,7 +44,8 @@ class BaseLogMessageHandler(logging.Handler):
         self.write_to_db(content, record)
 
     def write_to_db(self, content, record):
-        raise NotImplemented()
+        from api.base.resources.exceptions import CloudmlUINotImplemented
+        raise CloudmlUINotImplemented()
 
 
 def init_logger(name, **kwargs):

@@ -19,7 +19,7 @@ from api.base.resources import BaseResourceSQL, NotFound, public_actions, \
     ValidationError, odesk_error_response, ERR_INVALID_DATA
 from api.import_handlers.models import DataSet
 from api.import_handlers.forms import DataSetAddForm, DataSetEditForm
-
+from api.base.exceptions import CloudmlUIValueError
 
 class DataSetResource(BaseResourceSQL):
     """
@@ -43,7 +43,7 @@ class DataSetResource(BaseResourceSQL):
 
     def _get_pig_fields_action(self, **kwargs):
         if 'id' not in kwargs:
-            raise ValueError("Specify id of the datasource")
+            raise CloudmlUIValueError("Specify id of the datasource")
 
         ds = self._get_details_query({}, **kwargs)
         if ds is None:
