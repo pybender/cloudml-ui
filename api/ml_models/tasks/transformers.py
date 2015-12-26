@@ -95,8 +95,8 @@ def train_transformer(dataset_ids, transformer_id, user_id,
     except Exception, exc:
         app.sql_db.session.rollback()
 
-        logging.error('Got exception when train transformer',
-                      exc_info=get_task_traceback(exc))
+        logging.error('Got exception when train transformer: {0} \n {1}'
+                      .format(exc.message, get_task_traceback(exc)))
         transformer.status = transformer.STATUS_ERROR
         transformer.error = str(exc)[:299]
         transformer.save()

@@ -112,8 +112,8 @@ def train_model(dataset_ids, model_id, user_id, delete_metadata=False):
         app.sql_db.session.rollback()
 
         logging.error(
-            'Got exception when train model: {0!s}'.format(exc),
-            exc_info=get_task_traceback(exc))
+            'Got exception when train model: {0!s} \n {1}'
+            .format(exc, get_task_traceback(exc)))
         model.status = model.STATUS_ERROR
         model.error = str(exc)[:299]
         model.save()
@@ -238,8 +238,8 @@ def visualize_model(model_id, segment_id=None):
         model.save()
 
     except Exception, exc:
-        logging.error('Got exception when visualize the model: %s' %
-                      exc.message, exc_info=get_task_traceback(exc))
+        logging.error('Got exception when visualize the model: {0} \n {1}'
+                      .format(exc.message, get_task_traceback(exc)))
         raise CloudmlUITaskException(exc.message, exc)
     return 'Segment %s of the model %s has been visualized' % \
         (segment.name, model.name)

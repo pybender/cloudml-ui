@@ -140,8 +140,8 @@ with%s compression", import_handler.name, '' if dataset.compress else 'out')
 
         logging.info('DataSet was loaded')
     except Exception, exc:
-        logging.error('Got exception when import dataset',
-                      exc_info=get_task_traceback(exc))
+        logging.error('Got exception when import dataset: {0}\n {1}'.format(
+                      exc.message, get_task_traceback(exc)))
         set_error(exc, ds=dataset, parent=obj)
         raise CloudmlUITaskException(exc.message, exc)
 
@@ -174,8 +174,8 @@ def upload_dataset(dataset_id):
         dataset.save()
 
     except Exception, exc:
-        logging.error('Got exception when uploading dataset',
-                      exc_info=get_task_traceback(exc))
+        logging.error('Got exception when uploading dataset: {0}\n {1}'.format(
+                      exc.message, get_task_traceback(exc)))
         dataset.set_error(exc)
         raise CloudmlUITaskException(exc.message, exc)
 

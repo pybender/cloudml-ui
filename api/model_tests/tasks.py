@@ -184,8 +184,8 @@ def run_test(dataset_ids, test_id):
     except Exception, exc:
         if isinstance(exc, SQLAlchemyError):
             app.sql_db.session.rollback()
-        logging.error('Got exception when tests model',
-                      exc_info=get_task_traceback(exc))
+        logging.error('Got exception when test model: {0}\n {1}'.format(
+                      exc.message, get_task_traceback(exc)))
         test.status = test.STATUS_ERROR
         error_column_size = TestResult.error.type.length
         str_exc = str(exc)
