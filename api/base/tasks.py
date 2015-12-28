@@ -15,10 +15,9 @@ class SqlAlchemyTask(celery.Task):
 
 
 def get_task_traceback(exc):
+    traceback = traceback_info()
     if isinstance(exc, ChainedException):
-        traceback = exc.traceback
-    else:
-        traceback = traceback_info()
+        traceback = '{0}\nCAUSED BY: \n{1}'.format(traceback, exc.traceback)
     return traceback
 
 
