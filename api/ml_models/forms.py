@@ -56,7 +56,7 @@ class ModelEditForm(BaseForm):
                 tag.count = len(tag.models)
                 tag.save()
 
-        features = self.cleaned_data.get('features')
+        features = self.cleaned_data.get('features', None)
         if features:
             try:
                 Feature.query.filter_by(
