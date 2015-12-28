@@ -41,7 +41,7 @@ class NamedFeatureTypeTests(BaseDbTestCase, TestChecksMixin):
                 'name': 'new-composite'}
         self.check_edit_error(data, errors={
             'params': 'Parameters are required for type composite, '
-                      'but was not specified'}
+                      'but were not specified'}
         )
 
         data = {'type': 'composite',

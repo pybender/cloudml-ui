@@ -17,6 +17,7 @@ from api.ml_models.fixtures import ModelData, TagData, DECISION_TREE, \
     DECISION_TREE_WITH_SEGMENTS, TREE_VISUALIZATION_DATA, MULTICLASS_MODEL
 from api.import_handlers.models import DataSet
 from api.import_handlers.fixtures import DataSetData
+from api.base.resources.exceptions import NotFound
 
 
 class ModelTasksTests(BaseDbTestCase):
@@ -79,7 +80,7 @@ class ModelTasksTests(BaseDbTestCase):
             VisualizationException
         invalid_model_id = -101
         self.assertRaises(
-            ValueError, generate_visualization_tree, invalid_model_id, 10)
+            NotFound, generate_visualization_tree, invalid_model_id, 10)
 
         # Trying to generate tree for logistic regression classifier
         self.assertRaises(

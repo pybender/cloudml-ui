@@ -256,7 +256,7 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         self.check_edit_error(
             post_data,
             {'features': "Features JSON file is invalid: "
-                         "schema-name is missing"})
+                         "schema-name is missing in model features config"})
 
         # Invalid trainer
         post_data = {'test_import_handler_file': EXTRACT_XML,
@@ -479,7 +479,7 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         self.obj.save()
 
         resp = self.client.put(url, headers=HTTP_HEADERS)
-        self.assertEquals(resp.status_code, httplib.BAD_REQUEST)
+        self.assertEquals(resp.status_code, httplib.METHOD_NOT_ALLOWED)
 
     @mock_s3
     @patch('api.ml_models.tasks.generate_visualization_tree')
@@ -831,7 +831,7 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
                             action='dataset_download')
         resp = self.client.put(url, headers=HTTP_HEADERS,
                                data={'dataset': dataset.id})
-        self.assertEquals(resp.status_code, 400)
+        self.assertEquals(resp.status_code, 405)
 
         # model is trained
         self.obj.status = Model.STATUS_TRAINED

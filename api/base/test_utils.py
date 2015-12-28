@@ -239,19 +239,19 @@ class TestChecksMixin(object):
 
         # Deleting
         resp = self.client.delete(url, headers=HTTP_HEADERS)
-        self.assertEquals(resp.status_code, httplib.BAD_REQUEST)
+        self.assertEquals(resp.status_code, httplib.METHOD_NOT_ALLOWED)
 
         # Edditing
         post_data = {'name': 'test'}
         resp = getattr(self.client, 'put')(
             url, data=post_data, headers=HTTP_HEADERS)
-        self.assertEquals(resp.status_code, httplib.BAD_REQUEST)
+        self.assertEquals(resp.status_code, httplib.METHOD_NOT_ALLOWED)
 
         # Adding
         url = self._get_url()
         resp = getattr(self.client, 'post')(
             url, data=post_data, headers=HTTP_HEADERS)
-        self.assertEquals(resp.status_code, httplib.BAD_REQUEST)
+        self.assertEquals(resp.status_code, httplib.METHOD_NOT_ALLOWED)
 
     def assertDeepAlmostEqual(self, expected, actual):
         """
@@ -359,7 +359,7 @@ class TestChecksMixin(object):
 
         mthd = getattr(self.client, method)
         resp = mthd(url, headers=HTTP_HEADERS, data=data)
-        self.assertEquals(resp.status_code, 400)
+        self.assertEquals(resp.status_code, httplib.METHOD_NOT_ALLOWED)
         msg = json.loads(resp.data)['response']['error']['message']
         self.assertEquals(msg, "%s is not allowed" % method)
 

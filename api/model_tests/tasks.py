@@ -40,11 +40,10 @@ def run_test(dataset_ids, test_id):
     datasets = DataSet.query.filter(DataSet.id.in_(dataset_ids)).all()
     dataset = datasets[0]
     model = test.model
+    if model.status != model.STATUS_TRAINED:
+        raise InvalidOperationError("Train the model before")
 
     try:
-        if model.status != model.STATUS_TRAINED:
-            raise InvalidOperationError("Train the model before")
-
         test.status = test.STATUS_IN_PROGRESS
         test.error = ""
         test.save()

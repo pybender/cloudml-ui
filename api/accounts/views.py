@@ -77,7 +77,7 @@ class AuthResource(BaseResourceSQL):
             return odesk_error_response(401, 401, 'Unauthorized')
 
         logging.error('User Auth: invalid action %s', action)
-        raise NotFound()
+        raise NotFound('User Auth: invalid action %s', action)
 
 api.add_resource(AuthResource, '/cloudml/auth/<regex("[\w\.]*"):action>',
                  add_standard_urls=False)

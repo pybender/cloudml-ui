@@ -121,7 +121,7 @@ class TestExampleResource(BaseResourceSQL):
             params, **kwargs)
 
         if example is None:
-            raise NotFound()
+            raise NotFound("Test example not found")
 
         fields = self._get_show_fields(params)
         if 'next' in fields or 'previous' in fields:

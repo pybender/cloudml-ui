@@ -16,6 +16,7 @@ from fixtures import InstanceData, ClusterData, ACTIVE_CLUSTERS_COUNT
 from tasks import *
 from api.tasks import TRAIN_MODEL_TASK
 from api.base.models import db
+from api.base.exceptions import CloudmlUIValueError
 
 
 class InstanceModelTests(BaseDbTestCase, DefaultsCheckMixin):
@@ -261,7 +262,7 @@ class ClusterModelTest(BaseDbTestCase):
         self.assertItemsEqual(used_ports, port_list)
 
         # There are not available ports
-        self.assertRaises(ValueError, add_cluster)
+        self.assertRaises(CloudmlUIValueError, add_cluster)
         Cluster.PORT_RANGE = OLD_PORT_RANGE
 
     def test_tunnels(self):
@@ -334,4 +335,4 @@ class ClusterResourceTests(BaseDbTestCase, TestChecksMixin):
         url = self._get_url()
         resp = self.client.post(
             url, data={'jobflow_id': 1}, headers=HTTP_HEADERS)
-        self.assertEquals(resp.status_code, httplib.BAD_REQUEST)
+        self.assertEquals(resp.status_code, httplib.METHOD_NOT_ALLOWED)

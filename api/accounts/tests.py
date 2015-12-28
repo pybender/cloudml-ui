@@ -201,7 +201,7 @@ class AuthResourceTests(BaseDbTestCase):
 
         # Wrong token
         resp = self.client.post(url, data={})
-        self.assertEquals(resp.status_code, 500)
+        self.assertEquals(resp.status_code, 401)
         self.assertEquals(resp.headers['X-Odesk-Error-Message'],
                           'Wrong token: 123')
 

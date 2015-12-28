@@ -451,7 +451,7 @@ class PredictModelResource(BaseResourceSQL):
 
         handler = XmlImportHandler.query.get(handler_id)
         if handler is None:
-            raise NotFound()
+            raise NotFound("Import handler #{} not found".format(handler_id))
         return handler
 
 api.add_resource(
@@ -484,7 +484,7 @@ class PredictModelWeightResource(BaseResourceSQL):
 
         handler = XmlImportHandler.query.get(handler_id)
         if handler is None:
-            raise NotFound()
+            raise NotFound("Import handler #{} not found".format(handler_id))
         return handler
 
 api.add_resource(
@@ -520,7 +520,7 @@ class PredictResultLabelResource(BaseResourceSQL):
 
         handler = XmlImportHandler.query.get(handler_id)
         if handler is None:
-            raise NotFound()
+            raise NotFound("Import handler #{} not found".format(handler_id))
         return handler
 
 api.add_resource(
@@ -555,7 +555,7 @@ class PredictResultProbabilityResource(BaseResourceSQL):
 
         handler = XmlImportHandler.query.get(handler_id)
         if handler is None:
-            raise NotFound()
+            raise NotFound("Import handler #{} not found".format(handler_id))
         return handler
 
 api.add_resource(
