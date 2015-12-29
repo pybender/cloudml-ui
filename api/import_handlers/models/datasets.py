@@ -17,6 +17,7 @@ from api.logs.models import LogMessage
 from ..models import XmlImportHandler as ImportHandler
 from api.base.exceptions import InvalidOperationError
 
+
 class DataSet(db.Model, BaseModel):
     """
     Set of the imported data.
@@ -198,6 +199,7 @@ class DataSet(db.Model, BaseModel):
                 TestResult.data_set_id == self.id).count() == 0:
             self.locked = False
             self.save()
+
 
 @event.listens_for(ImportHandler, "mapper_configured", propagate=True)
 def setup_listener(mapper, class_):

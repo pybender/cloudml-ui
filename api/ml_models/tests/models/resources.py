@@ -380,7 +380,7 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
                         'new name %@#')
 
     def test_edit_deployed_model(self):
-        #test edit deployed model
+        # test edit deployed model
         data = {'name': 'new name1'}
         self.obj.locked = True
         self.obj.save()
@@ -788,7 +788,7 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         categories = obj.weight_categories
         self.assertEquals(len(categories), 4)
 
-        #test retrain deployed model
+        # test retrain deployed model
         self.obj.locked = True
         self.obj.save()
         url = self._get_url(id=self.obj.id, action='train')

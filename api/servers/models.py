@@ -85,7 +85,8 @@ class Server(BaseModel, db.Model):
                 if file_['name'] == value:
                     raise CloudmlUIValueError('{0} with name "{1}" already'
                                               ' exists on the server {2}'
-                                              .format(entity, value, self.name))
+                                              .format(entity, value,
+                                                      self.name))
         return True
 
     def get_key_metadata(self, uid, folder, key):
@@ -103,4 +104,3 @@ class Server(BaseModel, db.Model):
                 .update({Server.is_default: False})
         if commit:
             db.session.commit()
-

@@ -140,7 +140,7 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(dataset.name, data['name'])
 
     def test_edit_locked(self):
-        #test locked dataset
+        # test locked dataset
         self.obj.locked = True
         self.obj.save()
         data = {'name': 'new name1'}
@@ -224,7 +224,7 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(resp.status_code, httplib.OK)
         self.assertFalse(mock_import_data.delay.called)
 
-        #test locked dataset
+        # test locked dataset
         self.obj.locked = True
         self.obj.save()
         resp = self.client.put(url, headers=HTTP_HEADERS)

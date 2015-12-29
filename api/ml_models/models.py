@@ -54,6 +54,7 @@ class BaseTrainedEntity(object):
                          STATUS_REQUESTING_INSTANCE, STATUS_INSTANCE_STARTED,
                          STATUS_TRAINING, STATUS_FILLING_WEIGHTS,
                          STATUS_CANCELED]
+
     @declared_attr
     def name(cls):
         return db.Column(db.String(200), nullable=False, unique=True)

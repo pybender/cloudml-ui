@@ -13,6 +13,7 @@ from api.base.models import BaseModel, db
 from api.amazon_utils import AmazonEMRHelper
 from api.base.exceptions import CloudmlUIValueError
 
+
 class Instance(BaseModel, db.Model):
     """
     Represents instance, which could be using for exec tasks

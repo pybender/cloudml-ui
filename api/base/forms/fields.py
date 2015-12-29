@@ -198,7 +198,8 @@ class FeaturesField(BaseField):
     def clean(self, value):
         if value is not None:
             if value:
-                from cloudml.trainer.config import FeatureModel, SchemaException
+                from cloudml.trainer.config import FeatureModel, \
+                    SchemaException
                 try:
                     value = json.loads(value)
                     feature_model = FeatureModel(

@@ -102,7 +102,8 @@ class BaseForm(InternalForm):
         elif model_name:
             self.model_name = model_name
         else:
-            raise CloudmlUIValueError('Either obj or Model should be specified')
+            raise CloudmlUIValueError('Either obj or Model should be '
+                                      'specified')
 
         self.set_data(from_request() if data_from_request else data)
 

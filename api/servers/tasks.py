@@ -87,8 +87,8 @@ def upload_import_handler_to_server(server_id, handler_type, handler_id,
     for file_ in handler_files:
         if file_['name'] == handler.name:
             raise CloudmlUIValueError('Import Handler with name "{0}" already '
-                                      'exist on the server {1}'.format(
-                                      handler.name, server.name))
+                                      'exist on the server {1}'
+                                      .format(handler.name, server.name))
 
     uid = get_a_Uuid()
     # TODO: Shall we use another account?

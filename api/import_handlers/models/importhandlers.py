@@ -343,12 +343,14 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
 
     @property
     def can_edit(self):
-        return self._check_deployed() and super(XmlImportHandler, self).can_edit
+        return self._check_deployed() and super(
+            XmlImportHandler, self).can_edit
 
     @property
     def can_delete(self):
         return self._check_deployed() and super(
             XmlImportHandler, self).can_delete
+
 
 class RefXmlImportHandlerMixin(object):
     @declared_attr
@@ -430,8 +432,8 @@ class XmlScript(db.Model, BaseMixin, RefXmlImportHandlerMixin):
         try:
             handler = XmlImportHandler.query.get(import_handler_id)
             if not handler:
-                raise CloudmlUIValueError("Import handler {0} not found".format(
-                    import_handler_id))
+                raise CloudmlUIValueError("Import handler {0} not found"
+                                          .format(import_handler_id))
             key = "{0}/{1}_python_script_{2}.py".format(
                 api.app.config['IMPORT_HANDLER_SCRIPTS_FOLDER'],
                 handler.name,
@@ -439,13 +441,13 @@ class XmlScript(db.Model, BaseMixin, RefXmlImportHandlerMixin):
             s3helper = AmazonS3Helper()
             s3helper.save_key_string(key, data)
         except Exception as e:
-            raise CloudmlUIValueError("Error when uploading file to Amazon S3: "
-                                      "{0}".format(e), e)
+            raise CloudmlUIValueError("Error when uploading file to Amazon "
+                                      "S3: {0}".format(e), e)
         return key
 
     def to_xml(self, to_string=False, pretty_print=True):
-        attrib = {"src": self.data} if self.type == XmlScript.TYPE_PYTHON_FILE \
-            else {}
+        attrib = {"src": self.data} \
+            if self.type == XmlScript.TYPE_PYTHON_FILE else {}
         text = self.data if self.type == XmlScript.TYPE_PYTHON_CODE else None
         elem = etree.Element(self.type, attrib)
         elem.text = text

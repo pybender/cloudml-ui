@@ -1,7 +1,8 @@
 # Authors: Nikolay Melnik <nmelnik@upwork.com>
-
-__all__ = ('NotFound', 'ValidationError')
 from cloudml import ChainedException
+
+
+__all__ = ('NotFound', 'ValidationError', 'CloudmlUINotImplemented')
 
 
 class CloudmlUINotImplemented(ChainedException):
@@ -23,4 +24,3 @@ class ValidationError(ChainedException):
         # replace traceback if needed
         if 'traceback' in kwargs:
             self.traceback = kwargs.pop('traceback')
-

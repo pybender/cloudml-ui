@@ -1,7 +1,8 @@
 # Authors: Nikolay Melnik <nmelnik@upwork.com>
+from api.base.tasks import CloudmlUITaskException
+
 
 __all__ = ['VisualizationException']
-from api.base.tasks import CloudmlUITaskException
 
 
 class VisualizationException(CloudmlUITaskException):

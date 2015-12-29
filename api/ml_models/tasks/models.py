@@ -57,8 +57,9 @@ def train_model(dataset_ids, model_id, user_id, delete_metadata=False):
         model.prepare_fields_for_train(user=user, datasets=datasets)
         logging.info(
             'DataSet files chosen for training: %s'
-            % ', '.join(['{0} (id #{1})'.
-            format(dataset.filename, dataset.id) for dataset in datasets]))
+            % ', '.join(['{0} (id #{1})'
+                        .format(dataset.filename, dataset.id) for dataset
+                         in datasets]))
         logging.info('Perform model training')
         feature_model = FeatureModel(model.get_features_json(),
                                      is_file=False)

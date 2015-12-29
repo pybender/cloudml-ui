@@ -33,6 +33,7 @@ from api.import_handlers.fixtures import DataSetData, \
     IMPORT_HANDLER_FIXTURES, XmlEntityData, XmlFieldData
 from api.base.exceptions import CloudmlUIValueError
 
+
 class ModelTests(BaseDbTestCase):
     """
     Tests for api.ml_models.models.Model class.
@@ -130,4 +131,3 @@ class ModelTests(BaseDbTestCase):
             id=feature_set_id).count())
         self.assertEqual(1, len(datasets))
         self.assertFalse(datasets[0].locked)
-

@@ -117,7 +117,6 @@ class ServerFileResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertEqual(404, resp.status_code)
         self.assertIn('not found', resp.data)
 
-
     @patch('api.servers.tasks.update_at_server')
     def test_edit(self, mock_update_at_server):
         # set Up

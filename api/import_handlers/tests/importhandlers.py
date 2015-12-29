@@ -214,7 +214,7 @@ class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(obj.name, data['name'])
 
     def test_edit_deployed(self):
-        #check handler uploaded to server
+        # check handler uploaded to server
         self.obj.locked = True
         self.obj.save()
         data = {"name": "new"}
@@ -357,19 +357,19 @@ class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
         self.assertEqual(
             1, XmlScript.query.filter_by(import_handler=handler).count())
 
-        #incorrect script path in scripts src
+        # incorrect script path in scripts src
         resp = self.client.put(
             url, data={'data': IH_INCORRECT_SCRIPT}, headers=HTTP_HEADERS)
         self.assertEqual(400, resp.status_code)
         self.assertIn('not found', resp.data)
 
-        #invalid python in existing script
+        # invalid python in existing script
         resp = self.client.put(
             url, data={'data': IH_INVALID_PYTHON}, headers=HTTP_HEADERS)
         self.assertEqual(400, resp.status_code)
         self.assertIn('Exception occurs while adding python script', resp.data)
 
-        #2 scripts (src and text)
+        # 2 scripts (src and text)
         resp = self.client.put(url, data={'data': EXTRACT_OBSOLETE},
                                headers=HTTP_HEADERS)
         self.assertEqual(200, resp.status_code)
@@ -614,7 +614,7 @@ class XmlScriptTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
         self.assertEqual(obj.type, XmlScript.TYPE_PYTHON_FILE)
         self.assertEqual(obj.data, amazon_file)
 
-        #PUT correct data to previously stored url, it should change type
+        # PUT correct data to previously stored url, it should change type
         data_05['data_url'] = ''
         resp = self.client.put(
             '{0}{1}/'.format(url,

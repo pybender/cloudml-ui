@@ -230,7 +230,8 @@ class BaseResource(restful.Resource):
         if form.is_valid():
             model = form.save()
         else:
-            raise ValidationError(form.error_messages, traceback=form.traceback)
+            raise ValidationError(form.error_messages,
+                                  traceback=form.traceback)
 
         model = self._prepare_new_model(model, params)
 
@@ -259,7 +260,8 @@ class BaseResource(restful.Resource):
 
         if not model.can_edit:
             return odesk_error_response(
-                405, 405, 'Editing is not allowed. {0}'.format(model.reason_msg)
+                405, 405, 'Editing is not allowed. {0}'
+                          .format(model.reason_msg)
             )
 
         if self.put_form is None:
@@ -269,7 +271,8 @@ class BaseResource(restful.Resource):
         if form.is_valid():
             model = form.save()
         else:
-            raise ValidationError(form.error_messages, traceback=form.traceback)
+            raise ValidationError(form.error_messages,
+                                  traceback=form.traceback)
 
         model = self._prepare_updated_model(model, params)
 
@@ -287,8 +290,8 @@ class BaseResource(restful.Resource):
             raise NotFound(self.MESSAGE404 % kwargs)
         if not model.is_authorized:
             return odesk_error_response(
-                401, 401, 'You haven\'t permissions to delete. Only authorized '
-                          'users are permitted to do modifications')
+                401, 401, 'You haven\'t permissions to delete. Only '
+                          'authorized users are permitted to do modifications')
 
         if not model.can_delete:
             return odesk_error_response(

@@ -10,6 +10,7 @@ from forms import *
 from config import CLASSIFIERS
 from api.base.exceptions import InvalidOperationError
 
+
 class FeatureSetResource(BaseResourceSQL):
     """
     Features Set API methods
