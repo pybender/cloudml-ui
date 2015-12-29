@@ -433,6 +433,21 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         model = Model.query.filter_by(name=ModelData.model_01.name).first()
         url = self._get_url(id=model.id)
 
+        data = {'features': ''}
+        resp = self.client.put(url, data=data, headers=HTTP_HEADERS)
+        self.assertEqual(400, resp.status_code)
+        self.assertIn('Features JSON should not be empty', resp.data)
+
+        data = {'features': '5.3'}
+        resp = self.client.put(url, data=data, headers=HTTP_HEADERS)
+        self.assertEqual(400, resp.status_code)
+        self.assertIn('Dictionary is expected', resp.data)
+
+        data = {'features': '{}'}
+        resp = self.client.put(url, data=data, headers=HTTP_HEADERS)
+        self.assertEqual(400, resp.status_code)
+        self.assertIn('schema-name is missing', resp.data)
+
         data = {'features': FEATURES_INCORRECT}
         resp = self.client.put(url, data=data, headers=HTTP_HEADERS)
         self.assertEqual(400, resp.status_code)

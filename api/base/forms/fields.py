@@ -194,17 +194,25 @@ class JsonField(CharField):
                     'JSON file is corrupted. Can not load it: %s' % value, e)
 
 
-class FeaturesField(JsonField):
+class FeaturesField(BaseField):
     def clean(self, value):
-        value = super(FeaturesField, self).clean(value)
-        if value:
-            from cloudml.trainer.config import FeatureModel, SchemaException
-            try:
-                feature_model = FeatureModel(
-                    json.dumps(value), is_file=False)
-            except SchemaException, exc:
-                raise ValidationError(
-                    'Features JSON file is invalid: %s' % exc, exc)
+        if value is not None:
+            if value:
+                from cloudml.trainer.config import FeatureModel, SchemaException
+                try:
+                    value = json.loads(value)
+                    feature_model = FeatureModel(
+                        json.dumps(value), is_file=False)
+                except SchemaException, exc:
+                    raise ValidationError(
+                        'Features JSON file is invalid: %s' % exc, exc)
+                except ValueError as e:
+                    raise ValidationError(
+                        'JSON file is corrupted. Can not load it: %s' % value,
+                        e)
+            else:
+                # features came, but value is empty
+                raise ValidationError('Features JSON should not be empty')
         return value
 
 
