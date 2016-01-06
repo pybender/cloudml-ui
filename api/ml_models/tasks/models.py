@@ -226,7 +226,7 @@ def visualize_model(model_id, segment_id=None):
 
         # TODO:
         from cloudml.trainer.classifier_settings import CLASSIFIER_MODELS
-        clf_type = model.classifier['type']
+        clf_type = model.classifier.get('type')
         if clf_type in CLASSIFIER_MODELS and not model.labels:
             model.labels = trainer._get_labels()
         model.visualize_model(segment=segment.name, data=visualization_data,
