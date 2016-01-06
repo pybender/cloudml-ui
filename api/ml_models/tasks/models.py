@@ -225,7 +225,9 @@ def visualize_model(model_id, segment_id=None):
             logging.info('Weights are unavailable for the classifier')
 
         # TODO:
-        if not model.labels:
+        from cloudml.trainer.classifier_settings import CLASSIFIER_MODELS
+        clf_type = model.classifier['type']
+        if clf_type in CLASSIFIER_MODELS and not model.labels:
             model.labels = trainer._get_labels()
         model.visualize_model(segment=segment.name, data=visualization_data,
                               commit=False)
