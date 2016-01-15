@@ -1,0 +1,43 @@
+<div ng-show="trace" class="alert alert-block traceback">
+    <ul>
+       <li ng-repeat="traceback in trace track by $index">
+           <ul style="padding-left:{{$index*25}}px">
+               <li ng-show="{{ $index > 0 }}"><b>CAUSED BY:</b></li>
+               <li ng-repeat="line in traceback track by $index">
+                   <span ng-show="line.exception"><b>{{ line.exception }}</b></span>
+                   <a ng-show="line.locals" ng-init="showloc_$index=false" ng-click="showloc_$index=!showloc_$index">{{ line.line }}</a>
+                   <span ng-hide="line.locals">{{ line.line }}</span>
+                   <div ng-show="showloc_$index">
+                       <ul ng-show="line.locals">
+                           <li ng-repeat="(name, value) in line.locals"><b>{{ name }}</b>: {{ value }}</li>
+                       </ul>
+                   </div>
+               </li>
+           </ul>
+        </li>
+    </ul>
+
+    <div ng-show="tb_fields">
+        <div ng-repeat="(name, tb) in tb_fields track by $index">
+            <b ng-show="{{$index == 0}}"><br/>TRACEBACK BY FIELDS:<br/></b>
+            <a ng-show="name" ng-init="show_$index=false" ng-click="show_$index=!show_$index"><h4>[{{ name }} field traceback]</h4></a>
+            <ul ng-show="show_$index">
+               <li ng-repeat="tb_traceback in tb track by $index">
+                   <ul style="padding-left:{{$index*25}}px">
+                       <li ng-show="{{ $index > 0 }}"><b>CAUSED BY:</b></li>
+                       <li ng-repeat="line in tb_traceback track by $index">
+                           <span ng-show="line.exception"><b>{{ line.exception }}</b></span>
+                           <a ng-show="line.locals" ng-init="showloc_$index=false" ng-click="showloc_$index=!showloc_$index">{{ line.line }}</a>
+                           <span ng-hide="line.locals">{{ line.line }}</span>
+                           <div ng-show="showloc_$index">
+                               <ul ng-show="line.locals">
+                                   <li ng-repeat="(name, value) in line.locals"><b>{{ name }}</b>: {{ value }}</li>
+                               </ul>
+                           </div>
+                       </li>
+                   </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>

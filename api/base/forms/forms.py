@@ -10,7 +10,6 @@ from collections import Iterable
 
 from fields import BaseField
 from api.base.resources import ValidationError
-from api.base.exceptions import CloudmlUIValueError
 
 
 def get_declared_items(bases, attrs, cls=BaseField):
@@ -82,16 +81,15 @@ class BaseForm(InternalForm):
         self.no_required = no_required
         self.filled = False
         self.inner_name = None
-        self.traceback = ''
         self.obj = None
 
         if self.required_fields and self.required_fields_groups:
-            raise CloudmlUIValueError(
+            raise ValueError(
                 'Either required fields or groups should be specified')
 
         if self.required_fields_groups:
             if not self.group_chooser:
-                raise CloudmlUIValueError('Specify group_chooser')
+                raise ValueError('Specify group_chooser')
 
         if obj is not None:
             self.obj = obj
@@ -102,8 +100,7 @@ class BaseForm(InternalForm):
         elif model_name:
             self.model_name = model_name
         else:
-            raise CloudmlUIValueError('Either obj or Model should be '
-                                      'specified')
+            raise ValueError('Either obj or Model should be specified')
 
         self.set_data(from_request() if data_from_request else data)
 
@@ -168,8 +165,7 @@ class BaseForm(InternalForm):
                 if hasattr(self, mthd):
                     value = getattr(self, mthd)(value, field)
             except ValidationError, exc:
-                self.add_error(name, str(exc))
-                self.add_traceback(name, exc.traceback)
+                self.add_error(name, str(exc), exc)
 
             if value is not None:
                 self.cleaned_data[name] = value
@@ -178,8 +174,7 @@ class BaseForm(InternalForm):
         try:
             self.validate_data()
         except ValidationError, exc:
-            self.add_error("fields", str(exc))
-            self.add_traceback("fields", exc.traceback)
+            self.add_error("fields", str(exc), exc)
 
         if not self.no_required:
             # Check required fields
@@ -214,11 +209,11 @@ fields %s is required' % ', '.join(fields))
             except ValidationError, exc:
                 if form.filled:
                     self.errors.append(
-                        {'name': '%s' % name, 'error': str(exc)})
+                        {'name': '%s' % name, 'error': str(exc),
+                         'traceback': exc.traceback})
 
         if self.errors:
-            raise ValidationError(self.error_messages, errors=self.errors,
-                                  traceback=self.traceback)
+            raise ValidationError(self.error_messages, errors=self.errors)
 
         self._cleaned = True
 
@@ -226,7 +221,7 @@ fields %s is required' % ', '.join(fields))
 
         return self.cleaned_data
 
-    def add_error(self, name, msg):
+    def add_error(self, name, msg, exc=None):
         """
         Update the content of `self._errors`.
         """
@@ -234,22 +229,22 @@ fields %s is required' % ', '.join(fields))
             field_name = '%s-%s' % (self.inner_name, name)
         else:
             field_name = name
-        self.errors.append({'name': field_name, 'error': msg})
 
-    def add_traceback(self, name, traceback):
-        """
-        For each invalid field adds traceback if it comes
-        """
-        if traceback:
-            self.traceback += '\n\n{0}{1} field traceback: {2}\n\n'.format(
-                self.traceback, name, traceback)
+        tb = None
+        if exc is not None:
+            if hasattr(exc, 'traceback'):
+                tb = exc.traceback
+            else:
+                e = ValidationError(msg, exc)
+                tb = e.traceback
+        self.errors.append({'name': field_name, 'error': msg, 'traceback': tb})
 
     def save_inner(self):
         return self.save(False, True)
 
     def save(self, commit=True, save=True):
         if not self.is_valid():
-            raise ValidationError(self.errors, traceback=self.traceback)
+            raise ValidationError(self.error_messages, errors=self.errors)
         for name, val in self.cleaned_data.iteritems():
             try:
                 setattr(self.obj, name, val)
@@ -299,7 +294,7 @@ def check_required(obj, cd):
         if not is_valid:
             return False
     else:
-        raise CloudmlUIValueError()
+        raise ValueError()
 
     return True
 

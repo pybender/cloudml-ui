@@ -1,17 +1,13 @@
-from cloudml import ChainedException
+from cloudml.exceptions import ChainedException
 
 
-class CloudmlUIException(ChainedException):
+class BaseApiException(ChainedException):
     pass
 
 
-class CloudmlDBException(ChainedException):
+class DBException(BaseApiException):
     pass
 
 
-class CloudmlUIValueError(ChainedException):
-    pass
-
-
-class InvalidOperationError(ChainedException):
+class InvalidOperationError(BaseApiException):
     pass

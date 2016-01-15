@@ -67,3 +67,4 @@ class Api(restful.Api):
         resp = super(Api, self).handle_error(e)
         _add_cors_headers(resp.headers)
         return resp
+

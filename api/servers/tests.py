@@ -21,7 +21,6 @@ from api.ml_models.fixtures import ModelData
 from api.ml_models.models import Model
 from api.accounts.models import User
 import json
-from api.base.exceptions import CloudmlUIValueError
 
 
 class ServerModelTests(BaseDbTestCase):
@@ -217,7 +216,7 @@ class ServersTasksTests(BaseDbTestCase):
             'crc32': 'crc32',
             'server_id': server.id}]
 
-        with self.assertRaises(CloudmlUIValueError):
+        with self.assertRaises(ValueError):
             upload_model_to_server(server.id, model.id, user.id)
 
         self.assertFalse(mock_save_key_string.called)
@@ -277,7 +276,7 @@ class ServersTasksTests(BaseDbTestCase):
             'crc32': 'crc32',
             'server_id': server.id}]
 
-        with self.assertRaises(CloudmlUIValueError):
+        with self.assertRaises(ValueError):
             upload_import_handler_to_server(
                 server.id, XmlImportHandler.TYPE,
                 handler.id, user.id)

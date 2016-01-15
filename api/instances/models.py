@@ -11,7 +11,6 @@ from sqlalchemy.orm import deferred
 
 from api.base.models import BaseModel, db
 from api.amazon_utils import AmazonEMRHelper
-from api.base.exceptions import CloudmlUIValueError
 
 
 class Instance(BaseModel, db.Model):
@@ -80,7 +79,7 @@ class Cluster(BaseModel, db.Model):
         if ports:
             self.port = random.choice(ports)
         else:
-            raise CloudmlUIValueError('All ports are busy')
+            raise ValueError('All ports are busy')
 
     @property
     def tunnels(self):

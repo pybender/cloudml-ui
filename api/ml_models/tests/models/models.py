@@ -31,7 +31,6 @@ from api.ml_models.fixtures import ModelData, TagData, \
     FEATURES_CORRECT_WITH_DISABLED, FEATURES_INCORRECT, FEATURES_CORRECT
 from api.import_handlers.fixtures import DataSetData, \
     IMPORT_HANDLER_FIXTURES, XmlEntityData, XmlFieldData
-from api.base.exceptions import CloudmlUIValueError
 
 
 class ModelTests(BaseDbTestCase):
@@ -108,7 +107,7 @@ class ModelTests(BaseDbTestCase):
         check(
             {'data': {'smth': 'val'}, 'status': 'done'},
             {'smth': 'val', u'parameters': {u'status': u'done'}})
-        self.assertRaises(CloudmlUIValueError, check, {'segment': 'seg'}, {})
+        self.assertRaises(ValueError, check, {'segment': 'seg'}, {})
         check(
             {'data': {'smth': 'val'}, 'status': 'done', 'segment': 'seg'},
             {'seg': {'smth': 'val', u'parameters': {u'status': u'done'}}})

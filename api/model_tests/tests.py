@@ -26,7 +26,7 @@ from api.instances.models import Instance
 from api.instances.fixtures import InstanceData
 from api.async_tasks.models import AsyncTask
 from tasks import run_test
-from api.base.exceptions import InvalidOperationError, CloudmlUIValueError
+from api.base.exceptions import InvalidOperationError
 from fixtures import TestResultData, TestExampleData
 from api.features.fixtures import FeatureSetData, FeatureData
 
@@ -472,19 +472,19 @@ class TasksTests(BaseDbTestCase):
                       self.examples_count)
 
         self.assertRaises(
-            CloudmlUIValueError, calculate_confusion_matrix, self.test.id,
+            ValueError, calculate_confusion_matrix, self.test.id,
             [('0', 0), ('1', 0)])
         self.assertRaises(
-            CloudmlUIValueError, calculate_confusion_matrix, self.testmulti.id,
+            ValueError, calculate_confusion_matrix, self.testmulti.id,
             [('0', 0), ('1', 0), ('2', 0)])
         self.assertRaises(
-            CloudmlUIValueError, calculate_confusion_matrix, self.test.id,
+            ValueError, calculate_confusion_matrix, self.test.id,
             [('0', -1), ('1', 1)])
         self.assertRaises(
-            CloudmlUIValueError, calculate_confusion_matrix, self.testmulti.id,
+            ValueError, calculate_confusion_matrix, self.testmulti.id,
             [('0', 1), ('1', -1), ('2', -1)])
         self.assertRaises(
-            CloudmlUIValueError, calculate_confusion_matrix, 5646546,
+            ValueError, calculate_confusion_matrix, 5646546,
             [('0', 1), ('1', 1)])
 
         # multiclass model
@@ -523,7 +523,7 @@ class TasksTests(BaseDbTestCase):
                       self.testmulti,
                       self.examples_count_multi)
         self.assertRaises(
-            CloudmlUIValueError, calculate_confusion_matrix, self.testmulti.id,
+            ValueError, calculate_confusion_matrix, self.testmulti.id,
             [('0', 0), ('1', 1), ('2', 1)])
 
     @mock_s3

@@ -13,6 +13,7 @@ from boto.dynamodb2.types import STRING
 from boto.exception import JSONResponseError
 
 from api.amazon_utils import AmazonDynamoDBHelper
+from api.accounts.auth import AuthException
 
 
 dynamodb = AmazonDynamoDBHelper()
@@ -55,8 +56,7 @@ class AuthToken(object):
             if ex.status == 404:
                 return None
             else:
-                from api.base.exceptions import CloudmlUIException
-                raise CloudmlUIException(ex.message, ex)
+                raise AuthException(ex.message, ex)
 
     @classmethod
     def delete(cls, auth_token):

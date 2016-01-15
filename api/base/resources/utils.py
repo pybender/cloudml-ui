@@ -17,7 +17,7 @@ except ImportError:
 
 from flask import make_response, request, current_app, jsonify
 from api import app
-from cloudml import traceback_info, ChainedException
+from api.base.exceptions import BaseApiException
 
 
 ERR_INVALID_CONTENT_TYPE = 1000
@@ -62,11 +62,12 @@ def odesk_error_response(status, code, message, exception=None,
              running on debug mode.
     """
 
-    if traceback is None and status == 400 or status >= 500:
-        if exception is not None and isinstance(exception, ChainedException):
+    if traceback is None and exception is not None:
+        if hasattr(exception, 'traceback'):
             traceback = exception.traceback
         else:
-            traceback = traceback_info()
+            e = BaseApiException('Got exception', exception)
+            traceback = e.traceback
 
     result = {'response': {
               'server_time': time(),

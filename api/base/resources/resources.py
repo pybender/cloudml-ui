@@ -21,7 +21,6 @@ from .utils import crossdomain, ERR_NO_SUCH_MODEL, odesk_error_response, \
 from serialization import encode_model
 from api import app
 from api.base.resources.exceptions import *
-from api.base.exceptions import *
 
 
 __all__ = ('BaseResource', 'BaseResourceSQL')
@@ -175,10 +174,10 @@ class BaseResource(restful.Resource):
             * params - parsed GET parameters
             * **kwargs - data from URI
         """
-        raise CloudmlUINotImplemented()
+        raise NotImplemented()
 
     def _paginate(self, models, page, per_page=20):
-        raise CloudmlUINotImplemented()
+        raise NotImplemented()
 
     def _prepare_model_list(self, models, params):
         return models
@@ -210,7 +209,7 @@ class BaseResource(restful.Resource):
         return self._prepare_model_any(model, params)
 
     def _get_details_query(self, params, **kwargs):
-        raise CloudmlUINotImplemented()
+        raise NotImplemented()
 
     def _get_details_parameters(self, extra_params):
         return self._parse_parameters(extra_params + self.GET_PARAMS)
@@ -225,13 +224,12 @@ class BaseResource(restful.Resource):
         params = self._parse_parameters(self.POST_PARAMS)
 
         if self.post_form is None:
-            raise CloudmlUIValueError('Specify post form')
+            raise ValueError('Specify post form')
         form = self.post_form(Model=self.Model, **kwargs)
         if form.is_valid():
             model = form.save()
         else:
-            raise ValidationError(form.error_messages,
-                                  traceback=form.traceback)
+            raise ValidationError(form.error_messages, errors=form.errors)
 
         model = self._prepare_new_model(model, params)
 
@@ -265,14 +263,13 @@ class BaseResource(restful.Resource):
             )
 
         if self.put_form is None:
-            raise CloudmlUIValueError('Specify put form')
+            raise ValueError('Specify put form')
 
         form = self.put_form(obj=model, **kwargs)
         if form.is_valid():
             model = form.save()
         else:
-            raise ValidationError(form.error_messages,
-                                  traceback=form.traceback)
+            raise ValidationError(form.error_messages, errors=form.errors)
 
         model = self._prepare_updated_model(model, params)
 

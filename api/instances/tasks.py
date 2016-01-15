@@ -10,13 +10,12 @@ from api import celery, app
 from api.logs.logger import init_logger
 from api.amazon_utils import AmazonEC2Helper
 from api.ml_models.models import Model
-from api.base.tasks import SqlAlchemyTask, get_task_traceback, \
-    CloudmlUITaskException
+from api.base.tasks import SqlAlchemyTask, get_task_traceback, TaskException
 from api.instances.models import Cluster
 from api.amazon_utils import AmazonEMRHelper
 
 
-class InstanceRequestingError(CloudmlUITaskException):
+class InstanceRequestingError(TaskException):
     pass
 
 
@@ -64,7 +63,7 @@ def request_spot_instance(instance_type=None, model_id=None):
         logging.info('Request id: %s:' % request.id)
     except EC2ResponseError as e:
         model.set_error(e.error_message)
-        raise CloudmlUITaskException(e.error_message, e)
+        raise TaskException(e.error_message, e)
 
     model.spot_instance_request_id = request.id
     model.save()
@@ -203,7 +202,7 @@ cancelled for model id {1!s}'.format(request_id, model_id))
         model.save()
     except EC2ResponseError as e:
         model.set_error(e.error_message)
-        raise CloudmlUITaskException(e.error_message, e)
+        raise TaskException(e.error_message, e)
 
 
 @celery.task(base=SqlAlchemyTask)

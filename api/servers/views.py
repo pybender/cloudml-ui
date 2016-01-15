@@ -7,7 +7,6 @@ from api.base.resources import BaseResourceSQL, NotFound, \
     odesk_error_response, BaseResource
 from .models import Server
 from .config import FOLDER_MODELS, FOLDER_IMPORT_HANDLERS
-from api.base.exceptions import CloudmlUIValueError
 
 
 class ServerResource(BaseResourceSQL):
@@ -46,7 +45,7 @@ class ServerFileResource(BaseResource):
             from .tasks import update_at_server
             file_name = '{0}/{1}'.format(folder, uid)
             update_at_server.delay(server.id, file_name)
-        except (S3ResponseError, CloudmlUIValueError, ValueError) as err:
+        except (S3ResponseError, ValueError) as err:
             status = err.status if hasattr(err, 'status') else 400
             return odesk_error_response(status, 1006, str(err), err)
 

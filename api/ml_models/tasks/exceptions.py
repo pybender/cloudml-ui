@@ -1,11 +1,11 @@
 # Authors: Nikolay Melnik <nmelnik@upwork.com>
-from api.base.tasks import CloudmlUITaskException
+from api.base.tasks import TaskException
 
 
 __all__ = ['VisualizationException']
 
 
-class VisualizationException(CloudmlUITaskException):
+class VisualizationException(TaskException):
     CLASSIFIER_NOT_SUPPORTED = 1
     ALL_WEIGHT_NOT_FILLED = 2
 

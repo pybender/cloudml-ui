@@ -10,11 +10,9 @@ from api.logs.logger import init_logger
 from api import celery
 from api.ml_models.models import Model, Transformer
 from api.model_tests.models import TestResult
-from api.base.tasks import SqlAlchemyTask, get_task_traceback, \
-    CloudmlUITaskException
+from api.base.tasks import SqlAlchemyTask, get_task_traceback, TaskException
 from api.instances.models import Cluster
 from models import DataSet, XmlSqoop
-from api.base.exceptions import *
 
 
 @celery.task(base=SqlAlchemyTask)
@@ -144,7 +142,7 @@ with%s compression", import_handler.name, '' if dataset.compress else 'out')
         logging.error('Got exception when import dataset: {0}\n {1}'.format(
                       exc.message, get_task_traceback(exc)))
         set_error(exc, ds=dataset, parent=obj)
-        raise CloudmlUITaskException(exc.message, exc)
+        raise TaskException(exc.message, exc)
 
     logging.info("Dataset using %s imported.", import_handler.name)
     return [dataset_id]
@@ -158,7 +156,7 @@ def upload_dataset(dataset_id):
     dataset = DataSet.query.get(dataset_id)
     try:
         if not dataset:
-            raise CloudmlUIValueError('DataSet not found')
+            raise ValueError('DataSet not found')
         init_logger('importdata_log', obj=dataset.id)
         logging.info('Uploading dataset %s' % dataset.id)
 
@@ -178,7 +176,7 @@ def upload_dataset(dataset_id):
         logging.error('Got exception when uploading dataset: {0}\n {1}'.format(
                       exc.message, get_task_traceback(exc)))
         dataset.set_error(exc)
-        raise CloudmlUITaskException(exc.message, exc)
+        raise TaskException(exc.message, exc)
 
     logging.info("Dataset using {0!s} uploaded.".format(dataset))
     return [dataset_id]
@@ -194,7 +192,7 @@ def load_pig_fields(sqoop_id, params):
     from utils import SCHEMA_INFO_FIELDS, PIG_TEMPLATE, construct_pig_sample
     sqoop = XmlSqoop.query.get(sqoop_id)
     if sqoop is None:
-        raise CloudmlUIValueError(
+        raise ValueError(
             "Sqoop element with id {0} not found".format(sqoop_id))
 
     datasource = sqoop.datasource.core_datasource
@@ -207,16 +205,16 @@ select {2} from INFORMATION_SCHEMA.COLUMNS where table_name = '{1}';
             sql = re.sub('#{(\w+)}', '%(\\1)s', sql)
             sql = sql % params
         except (KeyError, ValueError) as e:
-            raise CloudmlUIValueError("Can't construct sql query {0}: "
-                                      "parameters {1}"
-                                      " are invalid.".format(sql, params), e)
+            raise TaskException("Can't construct sql query {0}: "
+                                "parameters {1}"
+                                " are invalid.".format(sql, params), e)
     try:
         iterator = datasource._get_iter(sql)
         fields_data = [{key: opt[i] for i, key in enumerate(
                         SCHEMA_INFO_FIELDS)}
                        for opt in iterator]
     except Exception, exc:
-        return CloudmlUIValueError(
+        return TaskException(
             "Can't execute the query: {0}. Error: {1}".format(sql, exc), exc)
 
     fields_str = construct_pig_sample(fields_data)

@@ -1,6 +1,3 @@
-from api.base.exceptions import CloudmlUIValueError
-
-
 def get_data_from_vectorizer(vect_data, feature_name, vectorizer, offset):
     data = {}
     feature_names = vectorizer.get_feature_names()
@@ -34,8 +31,7 @@ def get_features_vect_data(vect_data, features, target_variable):
                 data.update(data_v)
                 index += len(data_v)
             else:
-                raise CloudmlUIValueError('Invalid transformer for %s' %
-                                          feature_name)
+                raise ValueError('Invalid transformer for %s' % feature_name)
         elif preprocessor is not None:
             if hasattr(preprocessor, 'get_feature_names'):
                 data_v = get_data_from_vectorizer(vect_data, feature_name,
@@ -44,8 +40,7 @@ def get_features_vect_data(vect_data, features, target_variable):
                 data.update(data_v)
                 index += len(data_v)
             else:
-                raise CloudmlUIValueError('Invalid preprocessor for %s' %
-                                          feature_name)
+                raise ValueError('Invalid preprocessor for %s' % feature_name)
         else:
             # Scaler or array
             data[feature_name.replace(".", "->")] = vect_data[index]

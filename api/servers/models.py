@@ -7,7 +7,6 @@ from api.base.models import BaseModel, db
 from .config import FOLDER_MODELS, FOLDER_IMPORT_HANDLERS
 from api.amazon_utils import AmazonS3Helper
 from boto.exception import S3ResponseError
-from api.base.exceptions import CloudmlUIValueError
 
 
 class Server(BaseModel, db.Model):
@@ -77,16 +76,15 @@ class Server(BaseModel, db.Model):
         }
         entity = entities_by_folder.get(folder, None)
         if not entity:
-            raise CloudmlUIValueError('Wrong folder: %s' % folder)
+            raise ValueError('Wrong folder: %s' % folder)
 
         if key == 'name':
             files = self.list_keys(folder)
             for file_ in files:
                 if file_['name'] == value:
-                    raise CloudmlUIValueError('{0} with name "{1}" already'
-                                              ' exists on the server {2}'
-                                              .format(entity, value,
-                                                      self.name))
+                    raise ValueError('{0} with name "{1}" already exists on '
+                                     'the server {2}'.format(entity, value,
+                                                             self.name))
         return True
 
     def get_key_metadata(self, uid, folder, key):

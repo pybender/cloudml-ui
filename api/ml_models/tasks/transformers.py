@@ -8,8 +8,7 @@ import logging
 from datetime import datetime
 
 from api import celery, app
-from api.base.tasks import SqlAlchemyTask, CloudmlUITaskException, \
-    get_task_traceback
+from api.base.tasks import SqlAlchemyTask, TaskException, get_task_traceback
 from api.logs.logger import init_logger
 from api.accounts.models import User
 from api.ml_models.models import Transformer
@@ -101,7 +100,7 @@ def train_transformer(dataset_ids, transformer_id, user_id,
         transformer.status = transformer.STATUS_ERROR
         transformer.error = str(exc)[:299]
         transformer.save()
-        raise CloudmlUITaskException(exc.message, exc)
+        raise TaskException(exc.message, exc)
 
     msg = "Transformer trained"
     logging.info(msg)

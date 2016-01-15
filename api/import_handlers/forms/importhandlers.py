@@ -48,12 +48,12 @@ class XmlImportHandlerAddForm(BaseForm):
             try:
                 import_handler.data = self.cleaned_data.get('data')
             except Exception, exc:
-                self.add_error('fields', str(exc))
+                self.add_error('fields', str(exc), exc)
                 raise ValidationError(self.error_messages, exc,
                                       errors=self.errors)
         except Exception as e:
             db.session.rollback()
-            raise CloudmlDBException(e.message, e)
+            raise DBException(e.message, e)
         else:
             db.session.commit()
 
@@ -176,7 +176,7 @@ class XmlEntityForm(BaseForm):
 
         except Exception as e:
             db.session.rollback()
-            raise CloudmlDBException(e.message, e)
+            raise DBException(e.message, e)
         else:
             db.session.commit()
 
@@ -319,7 +319,7 @@ class XmlScriptForm(BaseForm):
             # this will raise exception in case of incorrect script
             s.add_python(value)
         except ImportHandlerException as ex:
-            raise ValidationError(ex.message, e)
+            raise ValidationError(ex.message, ex)
         return value
 
 

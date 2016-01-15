@@ -18,7 +18,6 @@ from api.base.forms.base_forms import BasePredefinedForm
 from api.features.models import CLASSIFIERS
 from cloudml.trainer.feature_types import FEATURE_TYPE_FACTORIES, \
     InvalidFeatureTypeException
-from cloudml import traceback_info
 
 
 class FeatureParamsMixin(object):
@@ -26,13 +25,10 @@ class FeatureParamsMixin(object):
     Mixin for feature params validation depended on feature type
     """
     def _validate_param(self, data, name):
-        __traceback_info__ = '"%s" parameter validation' % name
         from cloudml.trainer.feature_types import FEATURE_PARAMS_TYPES
         value = data.get(name, None)
         if value is None:
             raise ValidationError('Parameter {} is required'.format(name))
-        __traceback_info__ = "Validating '{0}' parameter value: {1}"\
-            .format(name, value)
         param_type = FEATURE_PARAMS_TYPES[name]['type']
         if param_type == 'str':
             pass  # do nothing
@@ -93,8 +89,7 @@ class NamedFeatureTypeForm(BaseForm, FeatureParamsMixin):
             type_factory.get_instance(params, input_format)
         except InvalidFeatureTypeException, exc:
             self.add_error("type", 'Cannot create instance of '
-                           'feature type: {0}'.format(exc))
-            self.add_traceback("type", traceback_info())
+                           'feature type: {0}'.format(exc), exc)
 
 
 class FeatureSetForm(BaseForm):
@@ -265,8 +260,7 @@ exist. Please choose another one.' % name)
                     self.cleaned_data['default'] = type_.transform(default)
             except InvalidFeatureTypeException, exc:
                 self.add_error("type", 'Cannot create instance of '
-                               'feature type: {0}'.format(exc))
-                self.add_traceback("type", traceback_info())
+                               'feature type: {0}'.format(exc), exc)
         else:
             # look into named feature types
             named_type = NamedFeatureType.query.filter_by(

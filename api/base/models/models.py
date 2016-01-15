@@ -13,7 +13,7 @@ from sqlalchemy.types import Boolean
 
 from serialization import JsonSerializableMixin
 from api import app
-from api.base.exceptions import CloudmlDBException
+from api.base.exceptions import DBException
 
 db = app.sql_db
 
@@ -131,12 +131,12 @@ def commit_on_success(func, raise_exc=False):
         except Exception as e:
             if db.session.dirty:
                 db.session.rollback()
-            raise CloudmlDBException(e.message, e)
+            raise DBException(e.message, e)
         else:
             if db.session.dirty:
                 try:
                     db.session.commit()
                 except Exception as ex:
                     db.session.rollback()
-                    raise CloudmlDBException(ex.message, ex)
+                    raise DBException(ex.message, ex)
     return wraps(func)(_commit_on_success)

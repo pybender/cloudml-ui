@@ -3,7 +3,8 @@
 import celery
 
 from api import app
-from cloudml import ChainedException, traceback_info
+from api.base.exceptions import BaseApiException
+from cloudml.exceptions import print_exception
 
 db_session = app.sql_db.session
 
@@ -15,11 +16,8 @@ class SqlAlchemyTask(celery.Task):
 
 
 def get_task_traceback(exc):
-    traceback = traceback_info()
-    if isinstance(exc, ChainedException):
-        traceback = '{0}\nCAUSED BY: \n{1}'.format(traceback, exc.traceback)
-    return traceback
+    return print_exception(exc, with_colors=False, ret_value=True)
 
 
-class CloudmlUITaskException(ChainedException):
+class TaskException(BaseApiException):
     pass

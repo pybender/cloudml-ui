@@ -8,10 +8,10 @@ import httplib2
 from oauth2 import Consumer, Client, Token
 
 from api import app
-from cloudml import ChainedException
+from api.base.exceptions import BaseApiException
 
 
-class AuthException(ChainedException):
+class AuthException(BaseApiException):
     pass
 
 

@@ -14,8 +14,7 @@ from cloudml.trainer.trainer import Trainer, DEFAULT_SEGMENT
 from cloudml.trainer.config import FeatureModel
 
 from api import celery, app
-from api.base.tasks import SqlAlchemyTask, CloudmlUITaskException, \
-    get_task_traceback
+from api.base.tasks import SqlAlchemyTask, TaskException, get_task_traceback
 from api.logs.logger import init_logger
 from api.accounts.models import User
 from api.ml_models.models import Model, Segment
@@ -23,7 +22,6 @@ from api.import_handlers.models import DataSet
 from api.logs.dynamodb.models import LogMessage
 from api.base.io_utils import get_or_create_data_folder
 from api.base.resources.exceptions import NotFound
-from api.base.exceptions import CloudmlUIValueError, CloudmlUIException
 
 
 __all__ = ['train_model', 'get_classifier_parameters_grid',
@@ -102,7 +100,7 @@ def train_model(dataset_ids, model_id, user_id, delete_metadata=False):
 
         segments = trainer._get_segments_info()
         if not segments or not segments.keys():
-            raise CloudmlUIException('No segments in the model')
+            raise Exception('No segments in the model')
 
         model.create_segments(segments)
 
@@ -118,7 +116,7 @@ def train_model(dataset_ids, model_id, user_id, delete_metadata=False):
         model.status = model.STATUS_ERROR
         model.error = str(exc)[:299]
         model.save()
-        raise CloudmlUITaskException(exc.message, exc)
+        raise TaskException(exc.message, exc)
 
     msg = "Model trained at %s" % trainer.train_time
     logging.info(msg)
@@ -241,7 +239,7 @@ def visualize_model(model_id, segment_id=None):
     except Exception, exc:
         logging.error('Got exception when visualize the model: {0} \n {1}'
                       .format(exc.message, get_task_traceback(exc)))
-        raise CloudmlUITaskException(exc.message, exc)
+        raise TaskException(exc.message, exc)
     return 'Segment %s of the model %s has been visualized' % \
         (segment.name, model.name)
 
@@ -275,7 +273,7 @@ def generate_visualization_tree(model_id, deep):
         raise NotFound('model not found: %s' % model_id)
 
     if model.classifier is None or 'type' not in model.classifier:
-        raise CloudmlUIException('model has invalid classifier')
+        raise ValueError('model has invalid classifier')
 
     clf_type = model.classifier['type']
     if clf_type not in (DECISION_TREE_CLASSIFIER,

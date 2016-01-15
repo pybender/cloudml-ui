@@ -454,6 +454,20 @@ angular.module('app.directives', [
     }
 )
 
+.directive('traceback', [
+  '$rootScope'
+  ($rootScope) ->
+    return {
+      restrict: 'E',
+      scope: true,
+      templateUrl:'partials/directives/traceback.html',
+      replace: false,
+      link: (scope, el, attr) ->
+        if attr.trace? && attr.trace
+          scope.trace = JSON.parse(attr.trace)
+        scope.tb_fields = $rootScope.tracebackList
+    }
+])
 
 .directive('alertMessage',
 
@@ -484,7 +498,7 @@ angular.module('app.directives', [
           <div>
             <span class="message"></span>&nbsp;
             <a ng-init="show=false" ng-click="show=!show" class="view-trace"></a>
-            <span ng-show="show" class="traceback"></span>
+            <traceback class="tb" ng-show="show" trace=""></traceback>
           </div>
         </div>
         '''
@@ -499,10 +513,9 @@ angular.module('app.directives', [
             el.find('.message')[_meth] newVal
 
         attrs.$observe 'trace', (newVal, oldVal, scope) ->
-          if newVal
+          if newVal && newVal != '[]'
             el.find('.view-trace')['html'] '[Error Backtrace]'
-            values = newVal.split('\n')
-            el.find('.traceback')['html'] values.join('<br/>')
+            el.find(".tb").attr('trace', newVal)
 
         oldHtmlClass = null
         attrs.$observe 'htmlclass', (newVal, oldVal, scope) ->

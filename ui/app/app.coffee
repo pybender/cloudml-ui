@@ -282,8 +282,10 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
   # $rootScope.Object = Object
   $rootScope.loadingCount = 0
   $rootScope.errorList = {}
-  $rootScope.setFieldError = (name, msg='') ->
+  $rootScope.tracebackList = {}
+  $rootScope.setFieldError = (name, msg='', trace=[]) ->
       $rootScope.errorList[name] = msg
+      $rootScope.tracebackList[name] = trace
 
   $rootScope.getResponseHandler = ($scope, opts) ->
     # Returns success and error handlers for methods
@@ -392,9 +394,10 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
 
   $rootScope.resetError = ->
     $rootScope.err = ''
-    $rootScope.trace = ''
+    $rootScope.trace = []
     $rootScope.statusCode = null
     $rootScope.errorList = {}
+    $rootScope.tracebackList = {}
 
   $rootScope.$on('$routeChangeStart', (next, current) ->
       $rootScope.resetError()
@@ -437,10 +440,13 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
    with #{opts.status} (#{resp.error.message or "no message"})."
         if opts.data.response?.error?.errors?
           for item in resp.error.errors
-              $rootScope.setFieldError(item.name, item.error)
+              $rootScope.setFieldError(item.name, item.error, item.traceback)
       else  # have no info about the error
         $rootScope.err = "Error while #{message}: server responded
    with #{opts.data.status} (#{opts.data.message or "no message"})."
+        if opts.data.traceback
+          $rootScope.trace = opts.data.traceback
+
     else
       $rootScope.err = "Unkown error while #{message}."
 
