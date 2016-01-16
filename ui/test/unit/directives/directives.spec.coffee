@@ -583,20 +583,20 @@ editable-placement="right" display="instance.obj.name"></span>
 
     it 'should render with unsafe', ->
       $scope.msg = '<first-message>'
-      $scope.trace = 'backtrace1 \n backtrace11'
+      $scope.trace = "[[{'line': 'backtrace1'}]]"
       $scope.htmlclass = 'first-class'
       elem = $compile('<alert-message htmlclass="{{ htmlclass }}"  msg="{{ msg }}" trace="{{ trace }}" unsafe></alert-message>')($scope)
       $(document.body).append(elem)
       $scope.$digest()
 
       expect(elem.html()).toContain '&lt;first-message&gt;'
-      expect(elem.html()).toContain 'backtrace1 <br> backtrace11'
+      expect(elem.html()).toContain 'backtrace1'
       expect(elem.html()).toContain '[Error Backtrace]</a>'
       expect(elem.hasClass('first-class')).toBe true
 
       # change message
       $scope.msg = '<second-message>'
-      $scope.trace = 'backtrace2'
+      $scope.trace = "[[{'line': 'backtrace2'}]]"
       $scope.$digest()
 
       expect(elem.html()).not.toContain '&lt;first-message&gt;'
@@ -620,22 +620,18 @@ editable-placement="right" display="instance.obj.name"></span>
 
     it 'should render with not unsafe', ->
       $scope.msg = '<first-message>'
-      $scope.trace = 'backtrace1 \n backtrace11'
+      $scope.trace = "[]"
       elem = $compile('<alert-message  msg="{{ msg }}" trace="{{ trace }}"></alert-message>')($scope)
       $(document.body).append(elem)
       $scope.$digest()
 
       expect(elem.html()).toContain '<first-message>'
-      expect(elem.html()).toContain 'backtrace1 <br> backtrace11'
 
       # change message
       $scope.msg = '<second-message>'
-      $scope.trace = 'backtrace2'
       $scope.$digest()
       expect(elem.html()).not.toContain '<first-message>'
       expect(elem.html()).toContain '<second-message>'
-      expect(elem.html()).not.toContain 'backtrace1'
-      expect(elem.html()).toContain 'backtrace2'
 
     it 'should render with no backtrace', ->
       $scope.msg = '<first-message>'
