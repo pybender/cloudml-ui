@@ -185,11 +185,11 @@ class AuthResourceTests(BaseDbTestCase):
 
         url = '{0}/get_auth_url'.format(self.BASE_URL)
         resp = self.client.get(url, data={})
-        self.assertEquals(resp.status_code, 400)
+        self.assertEquals(resp.status_code, 405)
 
         url = '{0}/get_auth_url'.format(self.BASE_URL)
         resp = self.client.put(url, data={})
-        self.assertEquals(resp.status_code, 400)
+        self.assertEquals(resp.status_code, 405)
 
     @patch('api.accounts.models.AuthToken.get_auth',
            return_value=None)

@@ -226,7 +226,7 @@ class FeatureSet(ExportImportMixin, BaseModel, db.Model):
 
     def from_dict(self, features_dict, commit=True):
         if features_dict is None or \
-                not isinstance(features_dict, dict) or True:
+                not isinstance(features_dict, dict):
             raise ValueError('Non-empty dictionary is expected')
 
         self.schema_name = features_dict['schema-name']
