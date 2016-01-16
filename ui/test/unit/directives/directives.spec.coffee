@@ -643,6 +643,48 @@ editable-placement="right" display="instance.obj.name"></span>
       expect(elem.html()).toContain '<first-message>'
       expect(elem.html()).not.toContain '[Error Backtrace]</a>'
 
+
+  describe 'traceback', ->
+    elem = null
+    afterEach ->
+      elem.remove()
+
+    it 'should render traceback', ->
+      $scope.trace = '[[{"line": "backtrace1"}, {"line": "backtrace2", "locals": {"var1":"value1", "var2":"value2"}}]]'
+      $rootScope.tracebackList = {}
+      elem = $compile('<traceback trace="{{ trace }}"/>')($scope)
+      $(document.body).append(elem)
+      $scope.$digest()
+
+      expect(elem.html()).toContain 'backtrace1'
+      expect(elem.html()).toContain 'backtrace2</a>'
+      expect(elem.html()).toContain 'var1'
+      expect(elem.html()).toContain 'value1'
+      expect(elem.html()).toContain 'var2'
+      expect(elem.html()).toContain 'value2'
+
+    it 'should render traceback with traceback by fields', ->
+      $scope.trace = '[[{"line": "backtrace3"}]]'
+      $rootScope.tracebackList = {"field1": [[{"line": "trace1"}]]}
+      elem = $compile('<traceback trace="{{ trace }}"/>')($scope)
+      $(document.body).append(elem)
+      $scope.$digest()
+
+      expect(elem.html()).toContain 'backtrace3'
+      expect(elem.html()).toContain 'TRACEBACK BY FIELDS:'
+      expect(elem.html()).toContain '[field1 field traceback]'
+      expect(elem.html()).toContain 'trace1'
+
+    it 'should render error traceback', ->
+      $scope.trace = 'kwkwkwkw'
+      $rootScope.tracebackList = {"field1": 'ghghghg'}
+      elem = $compile('<traceback trace="{{ trace }}"/>')($scope)
+      $(document.body).append(elem)
+      $scope.$digest()
+
+      expect(elem.html()).toContain "Traceback can't be parsed"
+
+
   describe 'files manipulation', ->
 
     elem = null

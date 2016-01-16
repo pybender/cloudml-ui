@@ -464,7 +464,10 @@ angular.module('app.directives', [
       replace: false,
       link: (scope, el, attr) ->
         if attr.trace? && attr.trace
-          scope.trace = JSON.parse(attr.trace)
+          try
+            scope.trace = JSON.parse(attr.trace)
+          catch e
+            scope.trace = [[{"line": "Traceback can't be parsed"}]]
         scope.tb_fields = $rootScope.tracebackList
     }
 ])
