@@ -61,7 +61,7 @@ angular.module('app.testresults.model', ['app.config'])
       examplesDbUrl: () ->
         return "#{@BASE_API_URL}#{@id}/examples/action/db_task/"
 
-      avaragePrecisionUrl: =>
+      averagePrecisionUrl: =>
         return "#{@BASE_UI_URL}/#{@id}/grouped_examples"
 
       fullName: =>
