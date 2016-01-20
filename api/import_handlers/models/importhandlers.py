@@ -21,6 +21,7 @@ from cloudml.importhandler.entities import Field
 from cloudml.importhandler.datasources import DataSource
 from cloudml.importhandler.importhandler import ExtractionPlan, \
     ImportHandler as CoreImportHandler
+from cloudml.importhandler.utils import PROCESS_STRATEGIES
 from api.base.models import db, BaseModel
 from api import app
 from api.base.exceptions import BaseApiException
@@ -405,7 +406,7 @@ class XmlDataSource(db.Model, BaseMixin, RefXmlImportHandlerMixin):
 
 class XmlInputParameter(db.Model, BaseMixin, RefXmlImportHandlerMixin):
     FIELDS_TO_SERIALIZE = ['name', 'type', 'regex', 'format']
-    TYPES = Input.PROCESS_STRATEGIES.keys()
+    TYPES = PROCESS_STRATEGIES.keys()
 
     # TODO: unique for XmlImportHandler
     name = db.Column(db.String(200), nullable=False)
@@ -487,7 +488,7 @@ class XmlQuery(db.Model, BaseMixin):
 
 
 class XmlField(db.Model, BaseMixin):
-    TYPES = Field.PROCESS_STRATEGIES.keys()
+    TYPES = PROCESS_STRATEGIES.keys()
     TRANSFORM_TYPES = ['json', 'csv']
     FIELDS_TO_SERIALIZE = ['name', 'type', 'column', 'jsonpath', 'delimiter',
                            'regex', 'split', 'dateFormat', 'template',

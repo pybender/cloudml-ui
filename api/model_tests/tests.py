@@ -729,8 +729,8 @@ class TasksRunTestTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue('accuracy' in test.metrics)
         self.assertIsInstance(test.metrics['accuracy'], float)
 
-        self.assertTrue('avarage_precision' in test.metrics)
-        self.assertIsInstance(test.metrics['avarage_precision'], float)
+        self.assertTrue('average_precision' in test.metrics)
+        self.assertIsInstance(test.metrics['average_precision'], float)
 
     @patch('api.models.Model.get_trainer')
     @patch('api.models.DataSet.get_data_stream')
