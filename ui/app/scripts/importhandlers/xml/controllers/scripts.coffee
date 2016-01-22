@@ -44,6 +44,11 @@ angular.module(
         ctrlName: 'ModelEditDialogCtrl'
         action: 'edit script'
       })
+      .result
+      .then ->
+        return
+      , ->
+        $scope.$emit 'BaseListCtrl:start:load', Script.LIST_MODEL_NAME
 
     $scope.preview = (script)->
       $scope.openDialog($scope, {

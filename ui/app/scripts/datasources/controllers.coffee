@@ -54,6 +54,11 @@ angular.module('app.datasources.controllers', ['app.config', ])
         template: 'partials/datasources/edit.html'
         ctrlName: 'ModelEditDialogCtrl'
       })
+      .result
+      .then ->
+        return
+      , ->
+        $scope.$emit 'BaseListCtrl:start:load', $scope.LIST_MODEL_NAME
 
     $scope.delete = (ds)->
       $scope.openDialog($scope, {

@@ -44,6 +44,11 @@ angular.module('app.features.controllers.classifiers', ['app.config', ])
         template: 'partials/features/classifiers/edit_predefined.html'
         ctrlName: 'ModelWithParamsEditDialogCtrl'
       })
+      .result
+      .then ->
+        return
+      , ->
+        $scope.$emit 'BaseListCtrl:start:load', $scope.LIST_MODEL_NAME
 
     $scope.add = () ->
       classifier = new Classifier()

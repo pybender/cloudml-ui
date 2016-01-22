@@ -54,6 +54,11 @@ angular.module(
         ctrlName: 'ModelWithParamsEditDialogCtrl'
         action: 'edit datasource'
       })
+      .result
+      .then ->
+        return
+      , ->
+        $scope.$emit 'BaseListCtrl:start:load', Datasource.LIST_MODEL_NAME
 
     $scope.delete = (datasource)->
       $scope.openDialog($scope, {

@@ -35,12 +35,20 @@ angular.module(
       return options
 
     $scope.editScript = (model) ->
+      $scope.resetError()
+      $scope.bk_script = model.script
       $scope.openDialog($scope, {
         model: model
         template: 'partials/importhandlers/xml/predict/edit_script.html'
         ctrlName: 'ModelEditDialogCtrl'
         action: 'edit script'
       })
+      .result
+      .then ->
+        $scope.bk_script = null
+      , ->
+        model.script = $scope.bk_script
+        $scope.bk_script = null
 ])
 
 .controller('PredictModelListCtrl', [
