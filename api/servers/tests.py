@@ -318,17 +318,21 @@ class ServerModelTests(BaseDbTestCase):
         key_obj.size = 123321
         key_obj.last_modified = 'Wed, 06 Aug 2014 23:46:48 GMT'
 
+        two_key = MagicMock()
+        two_key.name = \
+            'odesk-match-cloudml/analytics/models/n3sz3FTFQJeUOe33VF2B.model'
+
         s3_mock = MagicMock()
-        s3_mock.list_keys.return_value = [one_key]
+        s3_mock.list_keys.return_value = [one_key, two_key]
         s3_mock.bucket.get_key.return_value = key_obj
 
         helper_mock.return_value = s3_mock
 
         objs = server.list_keys()
 
-        s3_mock.bucket.get_key.assert_called_with(one_key.name)
+        s3_mock.bucket.get_key.assert_called_with(two_key.name)
 
-        self.assertEqual(1, len(objs))
+        self.assertEqual(2, len(objs))
         obj = objs[0]
         self.assertListEqual(
             obj.keys(),
@@ -349,3 +353,17 @@ class ServerModelTests(BaseDbTestCase):
         self.assertEqual(obj['user_id'], get_metadata('user_id'))
         self.assertEqual(obj['user_name'], get_metadata('user_name'))
         self.assertEqual(obj['server_id'], server.id)
+
+
+        # sort by id
+        params = {'sort_by': 'id', 'order': 'desc'}
+        objs = server.list_keys(folder=None, params=params)
+
+        self.assertEqual(2, len(objs))
+        self.assertEqual('n3sz3FTFQJeUOe33VF2B.model', objs[0]['id'])
+        self.assertEqual('n3sz3FTFQJeUOe33VF2A.model', objs[1]['id'])
+
+        # sort by non-existing field
+        params = {'sort_by': 'my_id', 'order': 'desc'}
+        #objs = server.list_keys(folder=None, params=params)
+        self.assertRaises(ValueError, server.list_keys, None, params)

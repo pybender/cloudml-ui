@@ -63,10 +63,15 @@ class Server(BaseModel, db.Model):
 
         sort_by = params.get('sort_by', None)
         order = params.get('order', 'asc')
-        if sort_by:
-            return sorted(objects,
-                          key=lambda x: x[sort_by],
-                          reverse=order != 'asc')
+        if objects and sort_by:
+            obj = objects[0]
+            if sort_by in obj.keys():
+                return sorted(objects,
+                              key=lambda x: x[sort_by],
+                              reverse=order != 'asc')
+            else:
+                raise ValueError('Unable to sort by %s. Property is not exist.'
+                                 % sort_by)
         return objects
 
     def set_key_metadata(self, uid, folder, key, value):
