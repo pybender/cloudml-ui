@@ -26,7 +26,7 @@ class Server(BaseModel, db.Model):
     memory_mb = db.Column(db.Integer, nullable=False, default=0)
     type = db.Column(db.Enum(*TYPES, name='server_types'), default=DEV)
 
-    def list_keys(self, folder=None):
+    def list_keys(self, folder=None, params={}):
         path = self.folder.strip('/')
         if folder and folder in self.ALLOWED_FOLDERS:
             path += '/{0!s}'.format(folder)
@@ -60,6 +60,13 @@ class Server(BaseModel, db.Model):
                 'crc32': key.get_metadata('crc32'),
                 'server_id': self.id
             })
+
+        sort_by = params.get('sort_by', None)
+        order = params.get('order', 'asc')
+        if sort_by:
+            return sorted(objects,
+                          key=lambda x: x[sort_by],
+                          reverse=order != 'asc')
         return objects
 
     def set_key_metadata(self, uid, folder, key, value):

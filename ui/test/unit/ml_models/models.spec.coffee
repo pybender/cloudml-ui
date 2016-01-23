@@ -63,7 +63,7 @@ describe 'ML Models Controllers', ->
         per_page: 5
         sort_by: 'updated_on'
         order: 'desc'
-      expect($scope.page).toBe 1
+        page: 1
       expect($scope.STATUSES).toEqual ['', 'New', 'Queued', 'Importing',
                        'Imported', 'Requesting Instance', 'Instance Started',
                        'Training', 'Trained', 'Error', 'Canceled']
@@ -88,11 +88,6 @@ describe 'ML Models Controllers', ->
       $scope.filter_opts = {}
       $scope.$digest()
       expect($scope.$emit.calls.mostRecent().args).toEqual ['BaseListCtrl:start:load', 'some_model_name']
-
-      # showMore
-      $scope.page = 2
-      $scope.showMore()
-      expect($scope.$emit.calls.mostRecent().args).toEqual ['BaseListCtrl:start:load', 'some_model_name', true, {'page': 3}]
 
     it  'should init scope, no updatedByMe', ->
       $scope.$digest()
