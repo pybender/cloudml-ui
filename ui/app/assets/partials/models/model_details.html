@@ -56,7 +56,7 @@
 <div ng-show="model.status == 'Error'">
   <alert-message ng-hide="model.error" class="alert-error" msg='Error occurred while model training. Look at the logs on the Training tab for details' unsafe></alert-message>
 
-  <alert-message ng-show="model.error" class="alert-error" msg="Error occurred while model training: {{ model.error }}. Look at the logs on the Training tab for details" unsafe></alert-message>
+  <alert-message ng-show="model.error" class="alert-error" msg="Error occurred while model training: {{ model.error }}. Look at the logs on the Training tab (or dataset Logs tab) for details" unsafe></alert-message>
 </div>
 
 <alert-message ng-show="model.status == 'Trained'" class="alert-success" msg='Model is trained. You could start running tests now.' unsafe>
@@ -159,7 +159,9 @@
   <div ng-show="action[0] == 'training'" ng-controller="WeightsCtrl">
     <div class="row">
       <div class="span12">
-          Status: <span class="value">{{ model.status }}</span> <a ng-click="showLogs=!showLogs">(logs)</a>
+          Status: <span class="value">{{ model.status }}</span> <a ng-click="showLogs=!showLogs">(logs)</a><br/>
+          <a ng-show="model.new_dataset" target="_blank" href='#/importhandlers/xml/{{model.train_import_handler}}/datasets/{{model.new_dataset}}?action=log:details'>[Dataset import logs]</a>
+          <br/>
           <div ng-show="showLogs" class="well" ng-controller="LogMessageListCtrl" ng-init="init('trainmodel_log', model.id, 50)">
             <div class="message">
               <ng-include src="'partials/logmessages/list.html'"></ng-include>

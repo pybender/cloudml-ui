@@ -248,7 +248,7 @@ angular.module('app.models.controllers', ['app.config', ])
     $scope.monitorTraining = () ->
       $scope.train_timer = $timeout( ()->
           $scope.model.$load(
-            show: 'status,training_in_progress'
+            show: 'status,training_in_progress,error'
           ).then (->
             if $scope.model.status == $scope.status
               $scope.same_status_count += 1
@@ -258,7 +258,7 @@ angular.module('app.models.controllers', ['app.config', ])
             if $scope.model.training_in_progress && $scope.same_status_count < 20
               $scope.monitorTraining()
           )
-        20000
+        10000
       )
 
     $scope.$watch 'model.training_in_progress', (newVal, oldVal)->

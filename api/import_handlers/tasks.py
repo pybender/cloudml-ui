@@ -32,7 +32,9 @@ def import_data(dataset_id, model_id=None, test_id=None, transformer_id=None):
         if ds is not None:
             ds.set_error(err)
         if parent is not None:
-            parent.set_error(err)
+            msg = 'Got exception when importing dataset #{0}. Error: {1}'\
+                .format(ds.id, err.message or 'Unknown')
+            parent.set_error(msg)
 
     obj = get_parent_object()
     dataset = DataSet.query.get(dataset_id)
