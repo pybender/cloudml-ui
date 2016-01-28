@@ -56,7 +56,7 @@
 <div ng-show="model.status == 'Error'">
   <alert-message ng-hide="model.error" class="alert-error" msg='Error occurred while model training. Look at the logs on the Training tab for details' unsafe></alert-message>
 
-  <alert-message ng-show="model.error" class="alert-error" msg="Error occurred while model training: {{ model.error }}. Look at the logs on the Training tab (or dataset Logs tab) for details" unsafe></alert-message>
+  <alert-message ng-show="model.error" class="alert-error" msg="Error occurred while model training: {{ model.error }}. Look at the logs on the Training tab for details" unsafe></alert-message>
 </div>
 
 <alert-message ng-show="model.status == 'Trained'" class="alert-success" msg='Model is trained. You could start running tests now.' unsafe>

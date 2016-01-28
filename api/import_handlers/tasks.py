@@ -6,7 +6,7 @@ from datetime import datetime
 import gzip
 import re
 
-from api.logs.logger import init_logger
+from api.logs.logger import init_logger, logger_handler
 from api import celery
 from api.ml_models.models import Model, Transformer
 from api.model_tests.models import TestResult
@@ -33,10 +33,11 @@ def import_data(dataset_id, model_id=None, test_id=None, transformer_id=None):
             ds.set_error(err)
         if parent is not None:
             msg = 'Got exception when importing dataset #{0}. Error: {1}'\
-                .format(ds.id, err.message or 'Unknown')
+                .format(ds.id, err or 'Unknown')
             parent.set_error(msg)
 
     obj = get_parent_object()
+    parent_handler = None
     dataset = DataSet.query.get(dataset_id)
     if dataset is None:
         set_error("Dataset with id %s not found" % dataset_id, parent=obj)
@@ -53,7 +54,12 @@ def import_data(dataset_id, model_id=None, test_id=None, transformer_id=None):
         obj.save()
 
     try:
-        init_logger('importdata_log', obj=dataset.id)
+        logger = init_logger('importdata_log', obj=dataset.id)
+        if obj:
+            name = 'trainmodel_log' if isinstance(obj, Model) \
+                else 'runtest_log'
+            parent_handler = logger_handler(name, obj=obj.id)
+            logger.addHandler(parent_handler)
         logging.info('Loading dataset %s' % dataset.id)
 
         import_start_time = datetime.now()
@@ -88,6 +94,9 @@ def import_data(dataset_id, model_id=None, test_id=None, transformer_id=None):
 
         logging.info("Import dataset using import handler '%s' \
 with%s compression", import_handler.name, '' if dataset.compress else 'out')
+
+        if parent_handler:
+            logger.removeHandler(parent_handler)
 
         dataset.import_handler_xml = import_handler.data
         handler_iterator = import_handler.get_iterator(
@@ -141,8 +150,10 @@ with%s compression", import_handler.name, '' if dataset.compress else 'out')
 
         logging.info('DataSet was loaded')
     except Exception, exc:
+        if parent_handler:
+            logger.addHandler(parent_handler)
         logging.exception('Got exception when import dataset')
-        set_error(exc, ds=dataset, parent=obj)
+        set_error(exc.message, ds=dataset, parent=obj)
         raise
 
     logging.info("Dataset using %s imported.", import_handler.name)

@@ -313,13 +313,13 @@ not contain probabilities')
 
     def _get_datafields(self, **kwargs):
         test = TestResult.query.get(kwargs.get('test_result_id'))
-        return test.dataset.data_fields
+        return test.dataset.data_fields if test.dataset else []
 
     def _get_model_list_context(self, models, params):
         context = super(TestExampleResource,
                         self)._get_model_list_context(models, params)
         extra_fields = []
-        if models:
+        if models and isinstance(models, list):
             model_item = models[0]
             if model_item.example_id != TestExample.NOT_FILED_ID:
                 extra_fields.append('example_id')
