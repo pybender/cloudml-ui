@@ -281,6 +281,10 @@ def calculate_confusion_matrix(test_id, weights):
         logging.error('Test with id {0!s} not found!'.format(test_id))
         raise ValueError('Test with id {0!s} not found!'.format(test_id))
 
+    if test.status != TestResult.STATUS_COMPLETED:
+        logging.error('Test is not completed! Please wait and try again')
+        raise ValueError('Test is not completed!')
+
     model = test.model
     if model is None:
         logging.error('Model with id {0!s} not found!'.format(

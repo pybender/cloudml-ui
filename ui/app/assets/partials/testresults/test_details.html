@@ -159,11 +159,12 @@
                 </div>
               </div>
 
-              <div class="span3">
+              <div class="span12">
                 <div class="p10">
-                  <button ng-disabled="ConfusionMatrixForm.$invalid" class="btn" ng-click="recalculate()">
+                  <button ng-disabled="ConfusionMatrixForm.$invalid || test.status != 'Completed'" class="btn" ng-click="recalculate()">
                       Recalculate with weights
                   </button>
+                  <span class="text-error" ng-show="test.status != 'Completed'">&nbsp;&nbsp;Please, wait until test is fully stored, then confusion matrix recalculation will be available.</span>
                 </div>
               </div>
             </form>

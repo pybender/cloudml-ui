@@ -526,6 +526,14 @@ class TasksTests(BaseDbTestCase):
             ValueError, calculate_confusion_matrix, self.testmulti.id,
             [('0', 0), ('1', 1), ('2', 1)])
 
+        # test is not completed
+        self.testmulti.status = 'Storing'
+        self.testmulti.save()
+        self.assertRaises(
+            ValueError, calculate_confusion_matrix, self.testmulti.id,
+            [('0', 1), ('1', 1), ('2', 1)]
+        )
+
     @mock_s3
     @patch('api.models.DataSet.get_data_stream')
     def test_get_csv_results(self, mock_get_data_stream):

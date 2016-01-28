@@ -128,6 +128,7 @@ class TestResult(db.Model, BaseModel):
         super(TestResult, self).delete()
         ds.unlock()
 
+    @property
     def test_in_progress(self):
         return self.status in self.TEST_STATUSES
 

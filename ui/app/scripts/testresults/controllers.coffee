@@ -202,13 +202,13 @@ without test id and model id"
   $scope.monitorTesting = () ->
     $scope.test_timer = $timeout( ()->
         $scope.test.$load(
-          show: 'status,test_in_progress'
+          show: 'status,test_in_progress,error'
         ).then (->
           if $scope.test.test_in_progress
             $scope.monitorTesting()
           else
             $scope.LOADED_SECTIONS = ['main']
-            $scope.setSection(['metrics', 'accuracy'])
+            $scope.setSection($scope.action || ['metrics', 'accuracy'])
         )
       10000
     )
