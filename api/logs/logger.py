@@ -66,3 +66,14 @@ def init_logger(name, **kwargs):
         logger.setLevel(logging.ERROR)
         logger.disabled = True
     return logger
+
+
+def logger_handler(name, **kwargs):
+    """Possibility to add more than one logger handler"""
+    from api import app
+    if not app.config['TEST_MODE']:
+        from dynamodb.logger import LogMessageHandler
+        handler = LogMessageHandler(log_type=name, params=kwargs)
+        handler.setFormatter(logging.Formatter(logging.BASIC_FORMAT))
+        return handler
+    return None

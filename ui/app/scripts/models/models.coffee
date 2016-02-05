@@ -49,6 +49,7 @@ angular.module('app.models.model', ['app.config'])
 
       trainer_s3_url: null
       training_in_progress: false
+      new_dataset: null
       loadFromJSON: (origData) ->
         super origData
         if origData?

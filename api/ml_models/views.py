@@ -149,13 +149,15 @@ class BaseTrainedEntityResource(BaseResourceSQL):
                     None, opts, queue=instance.name))
 
             chain(tasks_list).apply_async()
-            return self._render({
-                self.OBJECT_NAME: {
-                    'id': entity.id,
-                    'status': entity.status,
-                    'training_in_progress': entity.training_in_progress
-                }
-            })
+            ret_obj = {
+                'id': entity.id,
+                'status': entity.status,
+                'training_in_progress': entity.training_in_progress
+            }
+            if new_dataset_selected:
+                ret_obj['new_dataset'] = dataset[0].id
+
+            return self._render({self.OBJECT_NAME: ret_obj})
 
     def _put_cancel_request_instance_action(self, **kwargs):
         if self.ENTITY_TYPE != 'model':
