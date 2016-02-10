@@ -12,7 +12,7 @@ gunicorn
 scipy==0.12.0
 -e git+https://github.com/odeskdataproducts/scikit-learn.git@f1bad9216522e4fa6e1c45179d8693d1dbd0966f#egg=scikit-learn
 #-e git+https://github.com/nanli0416/scikit-learn.git@new-feat-feature_extraction-text#egg=scikit-learn
-gensim==0.8.9
+gensim==0.12.3
 psycopg2==2.4.6 # sudo apt-get install libpq-dev python-dev
 jsonpath==0.54
 celery==3.0.22
