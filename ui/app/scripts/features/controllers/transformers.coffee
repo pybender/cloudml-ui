@@ -145,11 +145,18 @@ angular.module('app.features.controllers.transformers', ['app.config', ])
       )
 
     $scope.changeType = (transformer) ->
+      $scope.backupT = angular.copy(transformer)
       $scope.openDialog($scope, {
         model: transformer
         template: 'partials/features/transformers/edit_type.html'
         ctrlName: 'ModelWithParamsEditDialogCtrl'
       })
+      .result
+      .then ->
+        $scope.backupT = null
+      , ->
+        $scope.transformer = $scope.backupT
+        $scope.backupT = null
 
     $scope.delete = (transformer) ->
       $scope.openDialog($scope, {

@@ -95,6 +95,11 @@ angular.module('app.features.controllers.named_types', ['app.config', ])
         template: 'partials/features/named_types/edit.html'
         ctrlName: 'ModelEditDialogCtrl'
       })
+      .result
+      .then ->
+        return
+      , ->
+        $scope.$emit 'BaseListCtrl:start:load', $scope.LIST_MODEL_NAME
 
     $scope.add = () ->
       namedType = new NamedFeatureType()

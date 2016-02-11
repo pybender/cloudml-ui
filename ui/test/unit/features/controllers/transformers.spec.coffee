@@ -226,7 +226,9 @@ describe 'features/controllers/transformers.coffee', ->
 
     it 'should handle change type and delete action', inject (Transformer)->
 
-      $rootScope.openDialog = jasmine.createSpy '$rootScope.openDialog'
+      $rootScope.openDialog = (->)
+      spyOn($rootScope, 'openDialog').and.returnValue {result: 'then': (->)}
+
       createController 'TransformerActionsCtrl'
 
       transformer = new Transformer {id: 555}

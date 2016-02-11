@@ -18,15 +18,18 @@ describe 'xml_importhandlers/controllers/datasources.coffee', ->
   createController = null
   $location = null
   $timeout = null
+  $rootScope = null
 
   beforeEach inject ($injector) ->
     settings = $injector.get('settings')
     $httpBackend = $injector.get('$httpBackend')
-    $scope = $injector.get('$rootScope')
+    $rootScope = $injector.get('$rootScope')
     $controller = $injector.get('$controller')
     $window = $injector.get('$window')
     $location = $injector.get('$location')
     $timeout = $injector.get('$timeout')
+
+    $scope = $rootScope.$new()
 
     createController = (ctrl, extras) ->
       injected = extras or {}
@@ -65,9 +68,12 @@ describe 'xml_importhandlers/controllers/datasources.coffee', ->
 
   describe 'DatasourcesListCtrl', ->
 
+    beforeEach ->
+      $rootScope.openDialog = (->)
+      spyOn($rootScope, 'openDialog').and.returnValue {result: 'then': (->)}
+
     it 'should init scope and call unto openDialog when needed',
       inject (Datasource, XmlImportHandler)->
-        $scope.openDialog = jasmine.createSpy '$scope.openDialog'
         createController 'DatasourcesListCtrl', {Datasource: Datasource}
         expect($scope.MODEL).toEqual = Datasource
         expect($scope.FIELDS).toEqual Datasource.MAIN_FIELDS

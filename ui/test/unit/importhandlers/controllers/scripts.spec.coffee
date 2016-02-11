@@ -19,15 +19,18 @@ describe 'importhandlers/xml/controllers/scripts.coffee', ->
   createController = null
   $location = null
   $timeout = null
+  $rootScope = null
 
   beforeEach inject ($injector) ->
     settings = $injector.get('settings')
     $httpBackend = $injector.get('$httpBackend')
-    $scope = $injector.get('$rootScope')
+    $rootScope = $injector.get('$rootScope')
     $controller = $injector.get('$controller')
     $window = $injector.get('$window')
     $location = $injector.get('$location')
     $timeout = $injector.get('$timeout')
+
+    $scope = $rootScope.$new()
 
     createController = (ctrl, extras) ->
       injected = extras or {}
@@ -40,6 +43,10 @@ describe 'importhandlers/xml/controllers/scripts.coffee', ->
 
 
   describe 'ScriptsListCtrl', ->
+
+    beforeEach ->
+      $rootScope.openDialog = (->)
+      spyOn($rootScope, 'openDialog').and.returnValue {result: 'then': (->)}
 
     it 'should init scope and watch handler.xml_scripts and call onto openDialog',
       inject (Script, XmlImportHandler)->
@@ -81,8 +88,6 @@ describe 'importhandlers/xml/controllers/scripts.coffee', ->
         handler.xml_scripts.pop()
         $scope.$digest() # to trigger the watch
         expect($scope.objects).toEqual handler.xml_scripts
-
-        $scope.openDialog = jasmine.createSpy 'openDialog'
 
         # add dialog
         $scope.add()

@@ -168,7 +168,7 @@
           </accordion-heading>
           <div id="scripts">
             <div ng-controller="BaseListCtrl" ng-init="init(false, 'xml_scripts', false)">
-              <div ng-repeat="item in objects">
+              <div ng-repeat="item in objects | orderBy:'id'">
                 <div class="row">
                   <div class="span9" ng-show="item.type=='python_code'">
                     <textarea class="small" ui-codemirror="codeMirrorConfigs('nocursor')['python']" ng-model="item.data" class="cml-codemirror-refresh" />

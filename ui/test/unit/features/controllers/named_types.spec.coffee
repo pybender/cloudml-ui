@@ -17,15 +17,18 @@ describe 'features/controllers/named_types.coffee', ->
   createController = null
   $location = null
   $timeout = null
+  $rootScope = null
 
   beforeEach inject ($injector) ->
     settings = $injector.get('settings')
     $httpBackend = $injector.get('$httpBackend')
-    $scope = $injector.get('$rootScope')
+    $rootScope = $injector.get('$rootScope')
     $controller = $injector.get('$controller')
     $window = $injector.get('$window')
     $location = $injector.get('$location')
     $timeout = $injector.get('$timeout')
+
+    $scope = $rootScope.$new()
 
     createController = (ctrl, extras) ->
       injected = extras or {}
@@ -152,6 +155,10 @@ describe 'features/controllers/named_types.coffee', ->
 
   describe 'FeatureTypeListCtrl', ->
 
+    beforeEach ->
+      $rootScope.openDialog = (->)
+      spyOn($rootScope, 'openDialog').and.returnValue {result: 'then': (->)}
+
     it 'should init scope and call onto openDialog ',
       inject (NamedFeatureType)->
         createController 'FeatureTypeListCtrl', {NamedFeatureType: NamedFeatureType}
@@ -161,8 +168,6 @@ describe 'features/controllers/named_types.coffee', ->
         expect($scope.ACTION).toEqual 'loading named feature types'
         expect($scope.LIST_MODEL_NAME).toEqual NamedFeatureType.LIST_MODEL_NAME
         expect($scope.filter_opts).toEqual {'is_predefined': 1}
-
-        $scope.openDialog = jasmine.createSpy 'openDialog'
 
         # add dialog
         $scope.add()

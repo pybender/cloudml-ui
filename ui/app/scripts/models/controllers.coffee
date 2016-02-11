@@ -459,7 +459,7 @@ angular.module('app.models.controllers', ['app.config', ])
 
 
     $scope.editClassifier = (model) ->
-      $scope.backupClassifier = _.clone(model.classifier)
+      $scope.backupClassifier = angular.copy(model.classifier)
       $scope.openDialog($scope, {
         model: null
         template: 'partials/features/classifiers/edit.html'

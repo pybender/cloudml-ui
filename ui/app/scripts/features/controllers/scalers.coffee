@@ -73,6 +73,11 @@ angular.module('app.features.controllers.scalers', ['app.config', ])
         action: 'edit scalers'
         path: 'scalers'
       })
+      .result
+      .then ->
+        return
+      , ->
+        $scope.$emit 'BaseListCtrl:start:load', $scope.LIST_MODEL_NAME
 
     $scope.add = () ->
       scalar = new Scaler()
