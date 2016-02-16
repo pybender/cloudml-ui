@@ -178,7 +178,7 @@ describe 'app.features.controllers', ->
     beforeEach ->
       $rootScope.setError = jasmine.createSpy '$rootScope.setError'
 
-    it 'should make no query and initialize fields', ->
+    it 'should initialize fields and update features set of model on watch', inject (FeaturesSet) ->
       createController 'GroupBySelector'
 
       expect($scope.group_by_opts).toEqual
@@ -190,16 +190,29 @@ describe 'app.features.controllers', ->
       # trigger some events
       $scope.objects = [{id: 111, name: 'feature111'},
         {id: 222, name: 'feature222'}, {id: 333, name: 'feature333'}]
-      $scope.modelObj = {featuresSet: {group_by: []}}
+      featuresSet = new FeaturesSet {id: 111, name: 'set111', group_by: []}
+      $scope.modelObj = {featuresSet: featuresSet}
       $scope.$digest()
       expect($scope.modelObj.featuresSet.group_by).toEqual []
+
       $scope.modelObj.featuresSet.group_by = '111,333'
+      response = {}
+      response[featuresSet.API_FIELDNAME] = $scope.modelObj.featuresSet
+      $httpBackend.expectPUT "#{featuresSet.BASE_API_URL}#{featuresSet.id}/"
+      .respond 200, angular.toJson response
       $scope.$digest()
       expect($scope.modelObj.featuresSet.group_by).toEqual [
         {id: 111, name: 'feature111'}, {id: 333, name: 'feature333'}]
+      $httpBackend.flush()
+
       $scope.modelObj.featuresSet.group_by = '222,zzz'
+      response = {}
+      response[featuresSet.API_FIELDNAME] = $scope.modelObj.featuresSet
+      $httpBackend.expectPUT "#{featuresSet.BASE_API_URL}#{featuresSet.id}/"
+      .respond 200, angular.toJson response
       $scope.$digest()
       expect($scope.modelObj.featuresSet.group_by).toEqual [{id: 222, name: 'feature222'}]
+      $httpBackend.flush()
 
     it 'should handle group by commands from select2', ->
 
