@@ -9,7 +9,8 @@ _build
 _public
 *.bak
 local_config.coffee
-ve
+ve*
+env
 *.sqlite
 
 **/.DS_Store
