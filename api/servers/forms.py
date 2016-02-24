@@ -1,7 +1,7 @@
 from api.base.forms import BaseForm, CharField, BooleanField, ModelField, \
-    ChoiceField
+    ChoiceField, ModelField
 from api.base.resources import ValidationError
-from models import Server
+from models import Server, Model, TestResult
 
 
 class ServerForm(BaseForm):
@@ -27,3 +27,12 @@ class ServerForm(BaseForm):
 
 class ChooseServerForm(BaseForm):
     server = ModelField(model=Server, return_model=True)
+
+
+class ServerModelVerificationForm(BaseForm):
+    required_fields = ('server_id', 'model_id', 'test_result_id')
+
+    server_id = ModelField(model=Server)
+    model_id = ModelField(model=Model)
+    test_result_id = ModelField(model=TestResult)
+    description = CharField()

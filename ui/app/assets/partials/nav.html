@@ -12,7 +12,13 @@
       <li ng-class="getClass('/aws/clusters')"><a ng-href="#/aws/clusters">clusters</a></li>
     </ul>
   </li>
-  <li ng-class="getClass('/servers')"><a ng-href="#/servers">servers</a></li>
+  <li ng-class="getClass('/servers')" class="dropdown">
+    <a class="dropdown-toggle" data-toggle="dropdown">servers <b class="caret"></b></a>
+    <ul class="dropdown-menu">
+      <li ng-class="getClass('/servers')"><a ng-href="#/servers">servers</a></li>
+      <li ng-class="getClass('/servers/verifications')"><a ng-href="#/servers/verifications">verifications</a></li>
+    </ul>
+  </li>
   <li ng-class="getClass('/features')" class="dropdown">
     <a class="dropdown-toggle" data-toggle="dropdown">predefined entities <b class="caret"></b></a>
     <ul class="dropdown-menu">

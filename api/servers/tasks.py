@@ -147,3 +147,13 @@ def update_at_server(server_id, file_name):
     requests.post(url, {})
 
     logging.info('File has been updated: %s' % file_name)
+
+
+@celery.task
+def verify_model(verification_id, parameters_map):
+    from models import ServerModelVerifications
+    verification = ServerModelVerifications.query.get(verification_id)
+    if not verification:
+        raise ValueError('Verification not found')
+
+    raise NotImplemented()

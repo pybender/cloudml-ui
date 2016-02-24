@@ -2,7 +2,7 @@ from wtforms import validators
 
 from api import admin
 from api.base.admin import BaseAdmin
-from models import Server
+from models import Server, ServerModelVerifications
 
 
 class ServerAdmin(BaseAdmin):
@@ -19,3 +19,10 @@ class ServerAdmin(BaseAdmin):
     form_args = dict(memory_mb=dict(label='Memory Size (MB)'))
 
 admin.add_view(ServerAdmin(name='Server'))
+
+
+class ServerModelVerificationsAdmin(BaseAdmin):
+    Model = ServerModelVerifications
+    column_list = ['id', 'server']
+
+admin.add_view(ServerModelVerificationsAdmin(name='ServerModelVerifications'))

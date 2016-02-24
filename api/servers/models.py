@@ -1,9 +1,13 @@
 from datetime import datetime
 
-from sqlalchemy.orm import deferred
+from sqlalchemy.orm import relationship, deferred, backref
 
 from api import app
-from api.base.models import BaseModel, db
+from api.base.models import BaseModel, db, JSONType
+from api.ml_models.models import Model
+from api.import_handlers.models import RefXmlImportHandlerMixin, \
+    XmlImportHandler
+from api.model_tests.models import TestResult
 from .config import FOLDER_MODELS, FOLDER_IMPORT_HANDLERS
 from api.amazon_utils import AmazonS3Helper
 from boto.exception import S3ResponseError
@@ -103,3 +107,22 @@ class Server(BaseModel, db.Model):
         if commit:
             db.session.commit()
 
+
+class ServerModelVerifications(BaseModel, db.Model,
+                               RefXmlImportHandlerMixin):
+    """
+    Represents verification of the model,
+    that deployed to the server
+    """
+    server_id = db.Column(db.Integer, db.ForeignKey('server.id'))
+    server = relationship(
+        Server, backref=backref('model_verifications', cascade='all,delete'))
+    model_id = db.Column(db.Integer, db.ForeignKey('model.id'))
+    model = relationship(
+        Model, backref=backref('model_verifications', cascade='all,delete'))
+    test_result_id = db.Column(db.Integer, db.ForeignKey('test_result.id'))
+    test_result = relationship(
+        'TestResult',
+        backref=backref('model_verifications',
+                        cascade='all,delete'))
+    description = db.Column(JSONType)

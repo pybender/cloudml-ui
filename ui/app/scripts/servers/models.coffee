@@ -52,7 +52,6 @@ angular.module('app.servers.model', ['app.config'])
               id: origData.object_id
               name: origData.object_name
             })
-          console.log origData
 
     return ModelFile
 ])
@@ -112,5 +111,67 @@ angular.module('app.servers.model', ['app.config'])
       models_list: null
       importhandlers_list: null
 
+      @$active_models: (opts) ->
+        resolver = (resp, Model) ->
+          {
+            total: resp.data.found
+            objects: resp.data.files
+            _resp: resp
+          }
+        @$make_all_request("#{@prototype.BASE_API_URL}action/models/",
+                           resolver, opts)
+
     return Server
+])
+
+
+.factory('ModelVerification', [
+  '$http'
+  '$q'
+  'settings'
+  'BaseModel'
+  'Model'
+  'Server'
+  'TestResult'
+  
+  ($http, $q, settings, BaseModel, Model, Server, TestResult) ->
+    class ModelVerification extends BaseModel
+      BASE_API_URL: "#{settings.apiUrl}servers/verifications/"
+      BASE_UI_URL: '/servers/verifications'
+      API_FIELDNAME: 'server_model_verification'
+      @MAIN_FIELDS: 'id,model,server,test_result,created_by,created_on,import_handler'
+
+      id: null
+      server: null
+      model: null
+      data: null
+
+      loadFromJSON: (origData) =>
+        super origData
+        
+        if origData?
+          if origData.model?
+            @model_obj = new Model(_.extend origData.model)
+          if origData.test_result?
+            @test_result_obj = new TestResult(_.extend origData.test_result)
+          if origData.server?
+            @server_obj = new Server(_.extend origData.server)
+
+      $save: (opts={}) =>
+        data = {}
+        for name in opts.only
+          val = eval("this." + name)
+          if val? then data[name] = val
+        data['description'] = JSON.stringify(@description)
+        method = if @isNew() then "POST" else "PUT"
+        base_url = @constructor.$get_api_url(opts, @)
+        url = if @id? then base_url + @id + "/" else base_url
+        @$make_request(url, {}, method, data)
+
+      $verify: (opts) ->
+        @$make_request(
+          "#{@BASE_API_URL}#{@id}/action/verify/", {},
+          "PUT", opts)
+
+    return ModelVerification
 ])

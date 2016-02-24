@@ -60,6 +60,7 @@ App = angular.module('app', [
   'app.features.controllers.features'
   'app.servers.model'
   'app.servers.controllers'
+  'app.servers.verifications'
 
   'app.play.controllers'
 ])
@@ -196,6 +197,14 @@ App.config([
     .when('/servers', {
       controller: "ServerListCtrl"
       templateUrl: 'partials/servers/list.html'
+    })
+    .when('/servers/verifications', {
+      controller: 'ServerModelVerificationListCtrl'
+      templateUrl: 'partials/servers/verification/list.html'
+    })
+    .when('/servers/verifications/:id', {
+      controller: 'ServerModelVerificationDetailsCtrl'
+      templateUrl: 'partials/servers/verification/details.html'
     })
     .when('/servers/:id', {
       controller: 'ServerDetailsCtrl'

@@ -1,3 +1,5 @@
+import json
+
 from boto.exception import S3ResponseError
 from flask import request
 
@@ -5,14 +7,51 @@ from api import api, app
 from api.amazon_utils import AmazonS3Helper
 from api.base.resources import BaseResourceSQL, NotFound, \
     odesk_error_response, BaseResource
-from .models import Server
+from .models import Server, ServerModelVerifications, \
+    XmlImportHandler, Model
 from .config import FOLDER_MODELS, FOLDER_IMPORT_HANDLERS
+from .forms import ServerModelVerificationForm
 
 
 class ServerResource(BaseResourceSQL):
     """ Servers API methods """
     Model = Server
+    GET_ACTIONS = ('models', )
     ALLOWED_METHODS = ('get', )
+
+    def _get_models_action(self, **kwargs):
+        parser_params = (('server', str), )
+        params = self._parse_parameters(parser_params)
+        server_id = params.get('server')
+        server = Server.query.get(server_id)
+        results = []
+        models = server.list_keys(folder=FOLDER_MODELS)
+        models_map = {item.get('name'): item for item in models}
+        import_handlers = server.list_keys(folder=FOLDER_IMPORT_HANDLERS)
+        handler_map = {int(item['object_id']): item
+                       for item in import_handlers if item['object_id']}
+        ids = handler_map.keys()
+        import_handlers_obj = XmlImportHandler.query.filter(
+            XmlImportHandler.id.in_(ids)).all()
+        from cloudml.importhandler.importhandler import ExtractionPlan
+        for h in import_handlers_obj:
+            plan = ExtractionPlan(h.get_plan_config(), is_file=False)
+            if plan.predict.models:
+                model_name = plan.predict.models[0].value
+                model_key = models_map.get(model_name)
+                if model_key:
+                    handler_key = handler_map[h.id]
+                    model_obj = Model.query.get(model_key.get('object_id'))
+                    results.append({
+                        'model_name': model_name,
+                        'model_metadata': model_key,
+                        'model': model_obj,
+                        'import_handler_name': handler_key.get('name'),
+                        'import_handler': h,
+                        'import_handler_metadata': handler_key
+                    })
+        return self._render({'files': results})
+
 
 api.add_resource(ServerResource, '/cloudml/servers/')
 
@@ -106,3 +145,32 @@ class ServerFileResource(BaseResource):
 api.add_resource(ServerFileResource,
                  '/cloudml/servers/<regex("[\w\.]*"):server_id>/\
 files/<regex("[\w\.]*"):folder>/')
+
+
+class ServerModelVerificationResource(BaseResourceSQL):
+    """ Server Model Verifications API methods """
+    Model = ServerModelVerifications
+    ALLOWED_METHODS = ('get', 'post', 'put')
+    post_form = ServerModelVerificationForm
+    PUT_ACTIONS = ('verify', )
+
+    def _put_verify_action(self, **kwargs):
+        verification_id = kwargs.get('id')
+        if verification_id is None:
+            raise NotFound('Need to specify verification_id')
+
+        verification = ServerModelVerifications.query.get(verification_id)
+        if verification is None:
+            raise NotFound()
+
+        params = self._parse_parameters([('params', str), ])
+        parameters_map = json.loads(params['params'])
+
+        from tasks import verify_model
+        verify_model.run(verification_id, parameters_map)
+        return self._render({self.OBJECT_NAME: {'id': 1}})
+
+
+api.add_resource(
+    ServerModelVerificationResource,
+    '/cloudml/servers/verifications/')
