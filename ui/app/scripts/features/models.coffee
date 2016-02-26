@@ -31,7 +31,8 @@ angular.module('app.features.models', ['app.config'])
       @MAIN_FIELDS: ['id', 'name', 'type', 'params', 'created_on', 'created_by',
                      'status', 'train_import_handler_type',
                      'train_import_handler'].join(',')
-      @$TYPES_LIST: ['Dictionary', 'Count', 'Tfidf', 'Lda', 'Lsi', 'Ntile']
+      @$TYPES_LIST: ['Dictionary', 'Count', 'Tfidf', 'Lda', 'Lsi', 'Ntile',
+                     'Word2Vec', 'Doc2Vec']
 
 
       id: null

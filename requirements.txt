@@ -10,9 +10,9 @@ Werkzeug==0.9.6
 numpy==1.7.1
 gunicorn
 scipy==0.12.0
--e git+https://github.com/odeskdataproducts/scikit-learn.git@f1bad9216522e4fa6e1c45179d8693d1dbd0966f#egg=scikit-learn
+-e git+https://github.com/odeskdataproducts/scikit-learn.git@MATCH-61_word2vec_doc2vec#egg=scikit-learn
 #-e git+https://github.com/nanli0416/scikit-learn.git@new-feat-feature_extraction-text#egg=scikit-learn
-gensim==0.8.9
+gensim==0.12.3
 psycopg2==2.4.6 # sudo apt-get install libpq-dev python-dev
 jsonpath==0.54
 celery==3.0.22
@@ -26,7 +26,7 @@ Flask-mongokit
 nose
 gevent
 nose-exclude
--e git+https://github.com/odeskdataproducts/cloudml.git@MATCH-2723_opensourcing#egg=cloudml
+-e git+https://github.com/odeskdataproducts/cloudml.git@MATCH-61_add_word2vec_doc2vec#egg=cloudml
 -e git+https://github.com/rick446/MongoTools.git#egg=mongotools
 translitcodec==0.3
 boto==2.32.1
@@ -47,5 +47,5 @@ nltk==2.0.4
 requests==1.2.3
 lxml==3.3.3
 WTForms==1.0.5
-twill==0.9
+twill==0.9.1
 coloredlogs==2.0
