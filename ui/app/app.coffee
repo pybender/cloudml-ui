@@ -206,6 +206,10 @@ App.config([
       controller: 'ServerModelVerificationDetailsCtrl'
       templateUrl: 'partials/servers/verification/details.html'
     })
+    .when('/servers/verifications/:verification_id/examples/:id', {
+      controller: 'VerificationExampleDetailsCtrl'
+      templateUrl: 'partials/servers/verification/example_details.html'
+    })
     .when('/servers/:id', {
       controller: 'ServerDetailsCtrl'
       templateUrl: 'partials/servers/details.html'

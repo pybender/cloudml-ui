@@ -2,7 +2,8 @@ from wtforms import validators
 
 from api import admin
 from api.base.admin import BaseAdmin
-from models import Server, ServerModelVerifications
+from models import Server, ServerModelVerification, \
+    VerificationExample
 
 
 class ServerAdmin(BaseAdmin):
@@ -21,8 +22,16 @@ class ServerAdmin(BaseAdmin):
 admin.add_view(ServerAdmin(name='Server'))
 
 
-class ServerModelVerificationsAdmin(BaseAdmin):
-    Model = ServerModelVerifications
+class ServerModelVerificationAdmin(BaseAdmin):
+    Model = ServerModelVerification
     column_list = ['id', 'server']
 
-admin.add_view(ServerModelVerificationsAdmin(name='ServerModelVerifications'))
+admin.add_view(ServerModelVerificationAdmin(name='Server Model Verification', category='Verification'))
+
+
+class VerificationExampleAdmin(BaseAdmin):
+    Model = VerificationExample
+    MIX_METADATA = False
+    column_list = ['id', 'example', 'verification']
+
+admin.add_view(VerificationExampleAdmin(name='Verification Example', category='Verification'))

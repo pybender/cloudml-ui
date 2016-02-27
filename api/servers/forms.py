@@ -1,7 +1,8 @@
 from api.base.forms import BaseForm, CharField, BooleanField, ModelField, \
     ChoiceField, ModelField
 from api.base.resources import ValidationError
-from models import Server, Model, TestResult
+from models import Server, Model, TestResult, \
+    XmlImportHandler
 
 
 class ServerForm(BaseForm):
@@ -34,5 +35,13 @@ class ServerModelVerificationForm(BaseForm):
 
     server_id = ModelField(model=Server)
     model_id = ModelField(model=Model)
+    import_handler_id = ModelField(model=XmlImportHandler)
     test_result_id = ModelField(model=TestResult)
     description = CharField()
+
+    # def save(self, *args, **kwargs):
+    #     obj = super(ServerModelVerificationForm, self).save(commit=False, *args, **kwargs)
+    #     import pdb
+    #     pdb.set_trace()
+    #     obj.import_handler = obj.description['import_handler']
+    #     obj.save()

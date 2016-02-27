@@ -151,9 +151,25 @@ def update_at_server(server_id, file_name):
 
 @celery.task
 def verify_model(verification_id, parameters_map):
-    from models import ServerModelVerifications
-    verification = ServerModelVerifications.query.get(verification_id)
+    from models import ServerModelVerification, \
+        VerificationExample
+    from predict.libpredict import Predict
+    verification = ServerModelVerification.query.get(verification_id)
     if not verification:
         raise ValueError('Verification not found')
-
-    raise NotImplemented()
+    importhandler = verification.description['import_handler_metadata']['name']
+    config_file = "/home/atmel/workspace/predict-utils/env/staging.properties"
+    predict = Predict(config_file)
+    results = []
+    for example in verification.test_result.examples:
+        data = {}
+        for k, v in parameters_map.iteritems():
+            data[k] = example.data_input[v]
+        result = predict.post_to_cloudml(
+            'v3', importhandler, None, data)
+        del result['raw_data']
+        ver_example = VerificationExample(
+            example=example,
+            verification=verification,
+            result=result)
+        ver_example.save()

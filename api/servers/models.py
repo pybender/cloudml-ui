@@ -3,7 +3,7 @@ from datetime import datetime
 from sqlalchemy.orm import relationship, deferred, backref
 
 from api import app
-from api.base.models import BaseModel, db, JSONType
+from api.base.models import BaseModel, db, JSONType, BaseMixin
 from api.ml_models.models import Model
 from api.import_handlers.models import RefXmlImportHandlerMixin, \
     XmlImportHandler
@@ -108,8 +108,8 @@ class Server(BaseModel, db.Model):
             db.session.commit()
 
 
-class ServerModelVerifications(BaseModel, db.Model,
-                               RefXmlImportHandlerMixin):
+class ServerModelVerification(BaseModel, db.Model,
+                              RefXmlImportHandlerMixin):
     """
     Represents verification of the model,
     that deployed to the server
@@ -126,3 +126,20 @@ class ServerModelVerifications(BaseModel, db.Model,
         backref=backref('model_verifications',
                         cascade='all,delete'))
     description = db.Column(JSONType)
+
+
+class VerificationExample(BaseMixin, db.Model):
+    verification_id = db.Column(
+        db.Integer, db.ForeignKey('server_model_verification.id'))
+    verification = relationship(
+        'ServerModelVerification',
+        backref=backref('verification_examples',
+                        cascade='all,delete'))
+
+    example_id = db.Column(db.Integer, db.ForeignKey('test_example.id'))
+    example = relationship(
+        'TestExample',
+        backref=backref('verification_examples',
+                        cascade='all,delete'))
+
+    result = db.Column(JSONType)

@@ -7,8 +7,8 @@ from api import api, app
 from api.amazon_utils import AmazonS3Helper
 from api.base.resources import BaseResourceSQL, NotFound, \
     odesk_error_response, BaseResource
-from .models import Server, ServerModelVerifications, \
-    XmlImportHandler, Model
+from .models import Server, ServerModelVerification, \
+    XmlImportHandler, Model, VerificationExample
 from .config import FOLDER_MODELS, FOLDER_IMPORT_HANDLERS
 from .forms import ServerModelVerificationForm
 
@@ -149,7 +149,7 @@ files/<regex("[\w\.]*"):folder>/')
 
 class ServerModelVerificationResource(BaseResourceSQL):
     """ Server Model Verifications API methods """
-    Model = ServerModelVerifications
+    Model = ServerModelVerification
     ALLOWED_METHODS = ('get', 'post', 'put')
     post_form = ServerModelVerificationForm
     PUT_ACTIONS = ('verify', )
@@ -159,7 +159,7 @@ class ServerModelVerificationResource(BaseResourceSQL):
         if verification_id is None:
             raise NotFound('Need to specify verification_id')
 
-        verification = ServerModelVerifications.query.get(verification_id)
+        verification = ServerModelVerification.query.get(verification_id)
         if verification is None:
             raise NotFound()
 
@@ -174,3 +174,14 @@ class ServerModelVerificationResource(BaseResourceSQL):
 api.add_resource(
     ServerModelVerificationResource,
     '/cloudml/servers/verifications/')
+
+
+class VerificationExampleResource(BaseResourceSQL):
+    """ VerificationExample API methods """
+    Model = VerificationExample
+    ALLOWED_METHODS = ('get', )
+    NEED_PAGING = True
+
+api.add_resource(
+    VerificationExampleResource,
+    '/cloudml/servers/verifications/<regex("[\w\.]*"):verification_id>/examples/')

@@ -175,3 +175,65 @@ angular.module('app.servers.model', ['app.config'])
 
     return ModelVerification
 ])
+
+
+.factory('VerificationExample', [
+  '$http'
+  '$q'
+  'settings'
+  'BaseModel'
+  'Data'
+  
+  ($http, $q, settings, BaseModel, TestExample) ->
+    class VerificationExample extends BaseModel
+      API_FIELDNAME: 'verification_example'
+      @MAIN_FIELDS: 'id,example,result'
+
+      constructor: (opts) ->
+        super opts
+        @BASE_API_URL = VerificationExample.$get_api_url({
+          'verification_id': @verification_id}, @)
+        @BASE_UI_URL = "/servers/verifications/#{@verification_id}/examples"
+
+      @$get_api_url: (opts, example) ->
+        verification_id = opts.verification_id
+        if example?
+          verification_id = verification_id || example.verification_id
+        if not verification_id then throw Error 'verification_id is required'
+        return "#{settings.apiUrl}servers/verifications/#{verification_id}/examples/"
+
+      loadFromJSON: (origData) =>
+        super origData
+        
+        if origData?
+          if origData.example?
+            @example = new TestExample(origData.example)
+          if origData.result && origData.result.probs?
+              @probChartData = []
+              for item in @result.probs
+                @probChartData.push {
+                  value: item.prob, label: item.label}
+
+      @$loadAll: (verification_id, opts) ->
+        if not verification_id
+          throw new Error "verification_id is required to load examples"
+
+        url = VerificationExample.$get_api_url({
+          'verification_id': verification_id})
+        resolver = (resp, Model) ->
+          extra_data = {loaded: true, verification_id: verification_id}
+          {
+            page: resp.data.page
+            total: resp.data.total
+            per_page: resp.data.per_page
+            pages: resp.data.pages
+            extra_fields: resp.data.extra_fields
+            objects: (
+              new Model(_.extend(obj, extra_data)) \
+              for obj in eval("resp.data.#{Model.prototype.API_FIELDNAME}s"))
+            _resp: resp
+          }
+        @$make_all_request(url, resolver, opts)
+
+    return VerificationExample
+])
