@@ -99,7 +99,7 @@ angular.module('app.servers.model', ['app.config'])
   ($http, $q, settings, BaseModel) ->
     class Server extends BaseModel
       BASE_API_URL: "#{settings.apiUrl}servers/"
-      BASE_UI_URL: '/servers'
+      BASE_UI_URL: '/predict/servers'
       API_FIELDNAME: 'server'
       @MAIN_FIELDS: 'id,name,ip'
 
@@ -137,7 +137,7 @@ angular.module('app.servers.model', ['app.config'])
   ($http, $q, settings, BaseModel, Model, Server, TestResult) ->
     class ModelVerification extends BaseModel
       BASE_API_URL: "#{settings.apiUrl}servers/verifications/"
-      BASE_UI_URL: '/servers/verifications'
+      BASE_UI_URL: '/predict/verifications'
       API_FIELDNAME: 'server_model_verification'
       @MAIN_FIELDS: 'id,model,server,test_result,created_by,created_on,import_handler'
 
@@ -193,7 +193,7 @@ angular.module('app.servers.model', ['app.config'])
         super opts
         @BASE_API_URL = VerificationExample.$get_api_url({
           'verification_id': @verification_id}, @)
-        @BASE_UI_URL = "/servers/verifications/#{@verification_id}/examples"
+        @BASE_UI_URL = "/predict/verifications/#{@verification_id}/examples"
 
       @$get_api_url: (opts, example) ->
         verification_id = opts.verification_id

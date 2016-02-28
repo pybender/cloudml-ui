@@ -194,25 +194,29 @@ App.config([
       controller: 'ClusterDetailsCtrl'
       templateUrl: 'partials/clusters/details.html'
     })
-    .when('/servers', {
+    .when('/predict/servers', {
       controller: "ServerListCtrl"
       templateUrl: 'partials/servers/list.html'
     })
-    .when('/servers/verifications', {
+    .when('/predict/servers/:id', {
+      controller: 'ServerDetailsCtrl'
+      templateUrl: 'partials/servers/details.html'
+    })
+    .when('/predict/verifications', {
       controller: 'ServerModelVerificationListCtrl'
       templateUrl: 'partials/servers/verification/list.html'
     })
-    .when('/servers/verifications/:id', {
+    .when('/predict/verifications/:id', {
       controller: 'ServerModelVerificationDetailsCtrl'
       templateUrl: 'partials/servers/verification/details.html'
     })
-    .when('/servers/verifications/:verification_id/examples/:id', {
+    .when('/predict/verifications/:verification_id/examples/:id', {
       controller: 'VerificationExampleDetailsCtrl'
       templateUrl: 'partials/servers/verification/example_details.html'
     })
-    .when('/servers/:id', {
-      controller: 'ServerDetailsCtrl'
-      templateUrl: 'partials/servers/details.html'
+    .when('/predict/verifications/:verification_id/examples', {
+      redirectTo: (params, loc) ->
+        return 'predict/verifications/' + params.verification_id + '?action=result:details'
     })
 
     # auth
