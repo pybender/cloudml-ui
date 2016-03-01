@@ -161,15 +161,28 @@ def verify_model(verification_id, parameters_map):
     config_file = "/home/atmel/workspace/predict-utils/env/staging.properties"
     predict = Predict(config_file)
     results = []
+    valid_count = 0
     for example in verification.test_result.examples:
         data = {}
         for k, v in parameters_map.iteritems():
             data[k] = example.data_input[v]
         result = predict.post_to_cloudml(
             'v3', importhandler, None, data)
-        del result['raw_data']
+        if result is None:
+            continue
+
+        if 'raw_data' in result:
+            del result['raw_data']
+        if 'prediction' in result and \
+                result['prediction'] == example.pred_label:
+            valid_count += 1
         ver_example = VerificationExample(
             example=example,
             verification=verification,
             result=result)
         ver_example.save()
+    verification.result = {
+        'valid_count': valid_count,
+        'count': len(verification.test_result.examples)
+    }
+    verification.save()

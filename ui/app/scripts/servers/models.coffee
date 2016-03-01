@@ -168,11 +168,6 @@ angular.module('app.servers.model', ['app.config'])
         url = if @id? then base_url + @id + "/" else base_url
         @$make_request(url, {}, method, data)
 
-      $verify: (opts) ->
-        @$make_request(
-          "#{@BASE_API_URL}#{@id}/action/verify/", {},
-          "PUT", opts)
-
     return ModelVerification
 ])
 

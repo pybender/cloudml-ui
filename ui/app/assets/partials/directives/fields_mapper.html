@@ -1,0 +1,23 @@
+<div>
+  <label class="control-label">Import Parameter</label>
+  <div class="controls">
+    <div class="input-append">
+      <select name="importParam" class="input-small" ng-model="importParam" ng-options="field as field for field in params">
+        <option value=''>-- select field name --</option>
+      </select>
+      <span class="add-on">:</span>
+      <select name="dataField" class="input-small" ng-model="dataField" ng-options="field as field for field in fields">
+        <option value=''>-- select field name --</option>
+      </select>
+      <a class="btn btn-info" ng-click="appendFieldMap(importParam, dataField)" ng-disabled="!dataField || !importParam">
+        <i class="icon-plus"></i>
+      </a>
+    </div>
+    <label>Selected Fields: </label>
+    <div class="alert-info well block">
+      <div ng-repeat="(key, value) in fieldsMap" class="label label-info"a>
+        <span> {{ key }} </span> = <span> {{ value }} </span> <a ng-click="removeField(key)"><i class="icon-remove"></i></a>
+      </div>
+    </div>
+  </div>
+</div>

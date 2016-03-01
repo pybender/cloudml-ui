@@ -152,24 +152,6 @@ class ServerModelVerificationResource(BaseResourceSQL):
     Model = ServerModelVerification
     ALLOWED_METHODS = ('get', 'post', 'put')
     post_form = ServerModelVerificationForm
-    PUT_ACTIONS = ('verify', )
-
-    def _put_verify_action(self, **kwargs):
-        verification_id = kwargs.get('id')
-        if verification_id is None:
-            raise NotFound('Need to specify verification_id')
-
-        verification = ServerModelVerification.query.get(verification_id)
-        if verification is None:
-            raise NotFound()
-
-        params = self._parse_parameters([('params', str), ])
-        parameters_map = json.loads(params['params'])
-
-        from tasks import verify_model
-        verify_model.run(verification_id, parameters_map)
-        return self._render({self.OBJECT_NAME: {'id': 1}})
-
 
 api.add_resource(
     ServerModelVerificationResource,

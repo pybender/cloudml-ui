@@ -126,6 +126,7 @@ class ServerModelVerification(BaseModel, db.Model,
         backref=backref('model_verifications',
                         cascade='all,delete'))
     description = db.Column(JSONType)
+    result = db.Column(JSONType)
 
 
 class VerificationExample(BaseMixin, db.Model):
