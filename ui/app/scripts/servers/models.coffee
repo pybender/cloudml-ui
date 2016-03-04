@@ -203,6 +203,8 @@ angular.module('app.servers.model', ['app.config'])
         if origData?
           if origData.example?
             @example = new TestExample(origData.example)
+            @exampleProb = Math.max.apply null, @example.prob
+
           if origData.result && origData.result.probs?
               @probChartData = []
               for item in @result.probs

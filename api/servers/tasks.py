@@ -150,7 +150,7 @@ def update_at_server(server_id, file_name):
 
 
 @celery.task
-def verify_model(verification_id, parameters_map):
+def verify_model(verification_id, parameters_map, count):
     from models import ServerModelVerification, \
         VerificationExample
     from predict.libpredict import Predict
@@ -162,7 +162,9 @@ def verify_model(verification_id, parameters_map):
     predict = Predict(config_file)
     results = []
     valid_count = 0
-    for example in verification.test_result.examples:
+    valid_prob_count = 0
+    examples = verification.test_result.examples[:count + 1]
+    for example in examples:
         data = {}
         for k, v in parameters_map.iteritems():
             data[k] = example.data_input[v]
@@ -176,6 +178,15 @@ def verify_model(verification_id, parameters_map):
         if 'prediction' in result and \
                 result['prediction'] == example.pred_label:
             valid_count += 1
+            if 'result' in result and 'probability' in result['result']:
+                def approximately_equal(val1, val2, accuracy=4):
+                    return round(val1, accuracy) == round(val2, accuracy)
+
+                example_prob = max(example.prob)
+                prob = result['result']['probability']
+                if approximately_equal(example_prob, prob):
+                    valid_prob_count += 1
+
         ver_example = VerificationExample(
             example=example,
             verification=verification,
@@ -183,6 +194,7 @@ def verify_model(verification_id, parameters_map):
         ver_example.save()
     verification.result = {
         'valid_count': valid_count,
-        'count': len(verification.test_result.examples)
+        'count': len(examples),
+        'valid_prob_count': valid_prob_count
     }
     verification.save()

@@ -1,7 +1,7 @@
 import json
 
 from api.base.forms import BaseForm, CharField, BooleanField, ModelField, \
-    ChoiceField, ModelField, JsonField
+    ChoiceField, ModelField, JsonField, IntegerField
 from api.base.resources import ValidationError
 from models import Server, Model, TestResult, \
     XmlImportHandler
@@ -41,9 +41,13 @@ class ServerModelVerificationForm(BaseForm):
     test_result_id = ModelField(model=TestResult)
     description = CharField()
     params_map = JsonField()
+    count = IntegerField()
 
     def save(self, *args, **kwargs):
         obj = super(ServerModelVerificationForm, self).save(*args, **kwargs)
         from tasks import verify_model
-        verify_model.delay(obj.id, self.cleaned_data['params_map'])
+        verify_model.delay(
+            obj.id,
+            self.cleaned_data['params_map'],
+            self.cleaned_data['count'])
         return obj
