@@ -164,6 +164,19 @@ class VerificationExampleResource(BaseResourceSQL):
     ALLOWED_METHODS = ('get', )
     NEED_PAGING = True
 
+    def _get_details_query(self, params, **kwargs):
+        ver_example = super(VerificationExampleResource, self).\
+            _get_details_query(params, **kwargs)
+
+        if ver_example is None:
+            raise NotFound()
+
+        if not ver_example.example.is_weights_calculated:
+            ver_example.example.calc_weighted_data()
+
+        return ver_example
+
 api.add_resource(
     VerificationExampleResource,
-    '/cloudml/servers/verifications/<regex("[\w\.]*"):verification_id>/examples/')
+    '/cloudml/servers/verifications/\
+<regex("[\w\.]*"):verification_id>/examples/')

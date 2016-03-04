@@ -206,9 +206,9 @@ angular.module('app.servers.model', ['app.config'])
             @exampleProb = Math.max.apply null, @example.prob
 
           if origData.result && origData.result.probs?
-              @probChartData = []
-              for item in @result.probs
-                @probChartData.push {
+            @probChartData = []
+            for item in @result.probs
+              @probChartData.push {
                   value: item.prob, label: item.label}
 
       @$loadAll: (verification_id, opts) ->
