@@ -4,7 +4,7 @@ from api.base.forms import BaseForm, CharField, BooleanField, ModelField, \
     ChoiceField, ModelField, JsonField, IntegerField
 from api.base.resources import ValidationError
 from models import Server, Model, TestResult, \
-    XmlImportHandler
+    XmlImportHandler, ServerModelVerification
 
 
 class ServerForm(BaseForm):
@@ -48,6 +48,23 @@ class ServerModelVerificationForm(BaseForm):
         from tasks import verify_model
         verify_model.delay(
             obj.id,
-            self.cleaned_data['params_map'],
             self.cleaned_data['count'])
         return obj
+
+
+class VerifyForm(BaseForm):
+    count = IntegerField()
+
+    def __init__(self, *args, **kwargs):
+        self.model = kwargs.get('obj', None)
+        super(VerifyForm, self).__init__(*args, **kwargs)
+
+    def save(self, *args, **kwargs):
+        self.model.status = ServerModelVerification.STATUS_QUEUED
+        self.model.save()
+
+        from tasks import verify_model
+        verify_model.delay(
+            self.model.id,
+            self.cleaned_data['count'])
+        return self.model

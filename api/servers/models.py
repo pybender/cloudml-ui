@@ -30,6 +30,9 @@ class Server(BaseModel, db.Model):
     memory_mb = db.Column(db.Integer, nullable=False, default=0)
     type = db.Column(db.Enum(*TYPES, name='server_types'), default=DEV)
 
+    def __repr__(self):
+        return '<Server {0}>'.format(self.name)
+
     def list_keys(self, folder=None):
         path = self.folder.strip('/')
         if folder and folder in self.ALLOWED_FOLDERS:
@@ -114,6 +117,20 @@ class ServerModelVerification(BaseModel, db.Model,
     Represents verification of the model,
     that deployed to the server
     """
+    STATUS_NEW = 'New'
+    STATUS_QUEUED = 'Queued'
+    STATUS_IN_PROGRESS = 'In Progress'
+    STATUS_ERROR = 'Error'
+    STATUS_DONE = 'Done'
+
+    STATUSES = [STATUS_NEW, STATUS_QUEUED,
+                STATUS_IN_PROGRESS, STATUS_ERROR,
+                STATUS_DONE]
+
+    status = db.Column(
+        db.Enum(*STATUSES, name='model_verification_statuses'),
+        nullable=False, default=STATUS_NEW)
+    error = db.Column(db.Text)
     server_id = db.Column(db.Integer, db.ForeignKey('server.id'))
     server = relationship(
         Server, backref=backref('model_verifications', cascade='all,delete'))
@@ -127,6 +144,10 @@ class ServerModelVerification(BaseModel, db.Model,
                         cascade='all,delete'))
     description = db.Column(JSONType)
     result = db.Column(JSONType)
+    params_map = db.Column(JSONType)
+
+    def __repr__(self):
+        return '<ServerModelVerification {0}>'.format(self.model.name)
 
 
 class VerificationExample(BaseMixin, db.Model):

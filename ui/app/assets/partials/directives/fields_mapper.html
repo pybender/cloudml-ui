@@ -6,7 +6,7 @@
         <option value=''>-- select field name --</option>
       </select>
       <span class="add-on">:</span>
-      <select name="dataField" class="input-small" ng-model="dataField" ng-options="field as field for field in fields">
+      <select name="dataField" class="input-small" ng-model="dataField" ng-options="field as field for field in fields" ng-disabled="disabled">
         <option value=''>-- select field name --</option>
       </select>
       <a class="btn btn-info" ng-click="appendFieldMap(importParam, dataField)" ng-disabled="!dataField || !importParam">

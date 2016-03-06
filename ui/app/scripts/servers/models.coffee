@@ -139,7 +139,7 @@ angular.module('app.servers.model', ['app.config'])
       BASE_API_URL: "#{settings.apiUrl}servers/verifications/"
       BASE_UI_URL: '/predict/verifications'
       API_FIELDNAME: 'server_model_verification'
-      @MAIN_FIELDS: 'id,model,server,test_result,created_by,created_on,import_handler'
+      @MAIN_FIELDS: 'id,model,server,test_result,created_by,created_on,import_handler,status'
 
       id: null
       server: null
@@ -152,10 +152,17 @@ angular.module('app.servers.model', ['app.config'])
         if origData?
           if origData.model?
             @model_obj = new Model(_.extend origData.model)
+            if !@name?
+              @name = @model_obj.name
           if origData.test_result?
             @test_result_obj = new TestResult(_.extend origData.test_result)
           if origData.server?
             @server_obj = new Server(_.extend origData.server)
+
+      $verify: (opts={}) ->
+        @$make_request(
+          "#{@BASE_API_URL}#{@id}/action/verify/", {},
+          "PUT", @$clean_parameters(opts))
 
       $save: (opts={}) =>
         data = {}

@@ -150,51 +150,78 @@ def update_at_server(server_id, file_name):
 
 
 @celery.task
-def verify_model(verification_id, parameters_map, count):
+def verify_model(verification_id, count):
     from models import ServerModelVerification, \
         VerificationExample
     from predict.libpredict import Predict
     verification = ServerModelVerification.query.get(verification_id)
     if not verification:
         raise ValueError('Verification not found')
-    importhandler = verification.description['import_handler_metadata']['name']
-    config_file = "/home/atmel/workspace/predict-utils/env/staging.properties"
-    predict = Predict(config_file)
+    verification.status = verification.STATUS_IN_PROGRESS
+    verification.save()
+
+    deleted_count = VerificationExample.query.filter(
+        VerificationExample.verification_id == verification.id).delete(
+            synchronize_session=False)
+    logging.info('%s verification examples to delete', deleted_count)
+
     results = []
     valid_count = 0
     valid_prob_count = 0
-    examples = verification.test_result.examples[:count + 1]
-    for example in examples:
-        data = {}
-        for k, v in parameters_map.iteritems():
-            data[k] = example.data_input[v]
-        result = predict.post_to_cloudml(
-            'v3', importhandler, None, data)
-        if result is None:
-            continue
+    if 'import_handler_metadata' not in verification.description or \
+            'name' not in verification.description['import_handler_metadata']:
+        raise ValueError(
+            "Import handler name was not specified in the metadata")
 
-        if 'raw_data' in result:
-            del result['raw_data']
-        if 'prediction' in result and \
-                result['prediction'] == example.pred_label:
-            valid_count += 1
-            if 'result' in result and 'probability' in result['result']:
-                def approximately_equal(val1, val2, accuracy=4):
-                    return round(val1, accuracy) == round(val2, accuracy)
+    try:
+        config_file = "/home/atmel/workspace/predict-utils/env/staging.properties"
+        predict = Predict(config_file)
+        importhandler = verification.description['import_handler_metadata']['name']
+        examples = verification.test_result.examples[:count]
+        num = 0
+        for example in examples:
+            data = {}
+            for k, v in verification.params_map.iteritems():
+                data[k] = example.data_input[v]
+            result = predict.post_to_cloudml(
+                'v3', importhandler, None, data)
+            if result is None:
+                # Http or UrlError occured
+                ver_example = VerificationExample(
+                    example=example,
+                    verification=verification,
+                    result={'message': 'Error sending data to predict'})
+                ver_example.save()
+                continue
 
-                example_prob = max(example.prob)
-                prob = result['result']['probability']
-                if approximately_equal(example_prob, prob):
-                    valid_prob_count += 1
+            if 'raw_data' in result:
+                del result['raw_data']
+            if 'prediction' in result and \
+                    result['prediction'] == example.pred_label:
+                valid_count += 1
+                if 'result' in result and 'probability' in result['result']:
+                    def approximately_equal(val1, val2, accuracy=4):
+                        return round(val1, accuracy) == round(val2, accuracy)
 
-        ver_example = VerificationExample(
-            example=example,
-            verification=verification,
-            result=result)
-        ver_example.save()
-    verification.result = {
-        'valid_count': valid_count,
-        'count': len(examples),
-        'valid_prob_count': valid_prob_count
-    }
-    verification.save()
+                    example_prob = max(example.prob)
+                    prob = result['result']['probability']
+                    if approximately_equal(example_prob, prob):
+                        valid_prob_count += 1
+
+            ver_example = VerificationExample(
+                example=example,
+                verification=verification,
+                result=result)
+            ver_example.save()
+
+        verification.result = {
+            'valid_count': valid_count,
+            'count': len(examples),
+            'valid_prob_count': valid_prob_count
+        }
+        verification.status = verification.STATUS_DONE
+        verification.save()
+    except Exception, exc:
+        verification.status = verification.STATUS_ERROR
+        verification.error = str(exc)
+        verification.save()

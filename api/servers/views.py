@@ -10,7 +10,7 @@ from api.base.resources import BaseResourceSQL, NotFound, \
 from .models import Server, ServerModelVerification, \
     XmlImportHandler, Model, VerificationExample
 from .config import FOLDER_MODELS, FOLDER_IMPORT_HANDLERS
-from .forms import ServerModelVerificationForm
+from .forms import ServerModelVerificationForm, VerifyForm
 
 
 class ServerResource(BaseResourceSQL):
@@ -150,8 +150,19 @@ files/<regex("[\w\.]*"):folder>/')
 class ServerModelVerificationResource(BaseResourceSQL):
     """ Server Model Verifications API methods """
     Model = ServerModelVerification
-    ALLOWED_METHODS = ('get', 'post', 'put')
     post_form = ServerModelVerificationForm
+    PUT_ACTIONS = ('verify', )
+
+    def _put_verify_action(self, **kwargs):
+        model = self._get_details_query(None, **kwargs)
+        form = VerifyForm(obj=model, **kwargs)
+        if form.is_valid():
+            model = form.save()
+
+        return self._render({
+            self.OBJECT_NAME: model,
+            'status': 'done'
+        }, code=201)
 
 api.add_resource(
     ServerModelVerificationResource,
