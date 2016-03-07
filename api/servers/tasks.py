@@ -153,7 +153,11 @@ def update_at_server(server_id, file_name):
 def verify_model(verification_id, count):
     from api.logs.models import LogMessage
     init_logger(LogMessage.VERIFY_MODEL, obj=int(verification_id))
+    LogMessage.delete_related_logs(
+        verification_id,
+        type_=LogMessage.VERIFY_MODEL)
 
+    logging.info('Starting model verification')
     from models import ServerModelVerification, \
         VerificationExample
     from predict.libpredict import Predict
@@ -164,9 +168,6 @@ def verify_model(verification_id, count):
     verification.error = ""
     verification.save()
 
-    LogMessage.delete_related_logs(
-        verification.id,
-        type_=LogMessage.VERIFY_MODEL)
     deleted_count = VerificationExample.query.filter(
         VerificationExample.verification_id == verification.id).delete(
             synchronize_session=False)
@@ -191,10 +192,15 @@ def verify_model(verification_id, count):
         config_file = "%s.properties" % env_map[verification.server.type]
 
         config_file = os.path.join(base_path, 'env', config_file)
+        logging.info('Using %s config file', config_file)
         predict = Predict(config_file)
         predict.cloudml_url = "http://%s/cloudml" % verification.server.ip
+        logging.info('CloudML URL: %s', predict.cloudml_url)
         importhandler = verification.description['import_handler_metadata']['name']
+        logging.info('Using %s import handler', importhandler)
         examples = verification.test_result.examples[:count]
+        logging.info('Iterating only %s test examples from %s test',
+                     count, verification.test_result.name)
         for example in examples:
             data = {}
             for k, v in verification.params_map.iteritems():
