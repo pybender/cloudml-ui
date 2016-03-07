@@ -151,7 +151,8 @@ def update_at_server(server_id, file_name):
 
 @celery.task
 def verify_model(verification_id, count):
-    init_logger('verifymodel_log', obj=int(verification_id))
+    from api.logs.models import LogMessage
+    init_logger(LogMessage.VERIFY_MODEL, obj=int(verification_id))
 
     from models import ServerModelVerification, \
         VerificationExample
@@ -160,8 +161,12 @@ def verify_model(verification_id, count):
     if not verification:
         raise ValueError('Verification not found')
     verification.status = verification.STATUS_IN_PROGRESS
+    verification.error = ""
     verification.save()
 
+    LogMessage.delete_related_logs(
+        verification.id,
+        type_=LogMessage.VERIFY_MODEL)
     deleted_count = VerificationExample.query.filter(
         VerificationExample.verification_id == verification.id).delete(
             synchronize_session=False)
@@ -186,11 +191,10 @@ def verify_model(verification_id, count):
         config_file = "%s.properties" % env_map[verification.server.type]
 
         config_file = os.path.join(base_path, 'env', config_file)
-        predict = Predict(config_file)        
+        predict = Predict(config_file)
         predict.cloudml_url = "http://%s/cloudml" % verification.server.ip
         importhandler = verification.description['import_handler_metadata']['name']
         examples = verification.test_result.examples[:count]
-        num = 0
         for example in examples:
             data = {}
             for k, v in verification.params_map.iteritems():

@@ -22,8 +22,10 @@ class LogMessage(object):
     RUN_TEST = 'runtest_log'
     VERIFY_MODEL = 'verifymodel_log'
     CONFUSION_MATRIX_LOG = 'confusion_matrix_log'
+    TRAIN_TRANSFORMER = 'traintransformer_log'
     TYPES_LIST = (TRAIN_MODEL, IMPORT_DATA, RUN_TEST,
-                  CONFUSION_MATRIX_LOG, VERIFY_MODEL)
+                  CONFUSION_MATRIX_LOG, VERIFY_MODEL,
+                  TRAIN_TRANSFORMER)
     LEVELS_LIST = ['CRITICAL', 'ERROR', 'WARN', 'WARNING',
                    'INFO', 'DEBUG', 'NOTSET']
 
@@ -105,7 +107,10 @@ class LogMessage(object):
         return items, new_next_token
 
     @classmethod
-    def delete_related_logs(cls, object_id, level=None):
+    def delete_related_logs(cls, object_id, level=None, type_=TRAIN_MODEL):
         from api import app
         if not app.config['TEST_MODE']:
-            db.delete_items(cls.TABLE_NAME, object_id__eq=object_id)
+            db.delete_items(
+                cls.TABLE_NAME,
+                object_id__eq=object_id,
+                id__beginswith=type_)

@@ -150,7 +150,8 @@ class DataSet(db.Model, BaseModel):
         uid = self.uid
 
         super(DataSet, self).delete()
-        LogMessage.delete_related_logs(self.id)
+        LogMessage.delete_related_logs(
+            self.id, type_=LogMessage.IMPORT_DATA)
 
         # TODO: check import handler type
         try:
