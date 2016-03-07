@@ -152,6 +152,8 @@ def update_at_server(server_id, file_name):
 @celery.task
 def verify_model(verification_id, count):
     from api.logs.models import LogMessage
+    from urllib2 import URLError, HTTPError
+
     init_logger(LogMessage.VERIFY_MODEL, obj=int(verification_id))
     LogMessage.delete_related_logs(
         verification_id,
@@ -181,6 +183,21 @@ def verify_model(verification_id, count):
         raise ValueError(
             "Import handler name was not specified in the metadata")
 
+    def create_example_err(example, error, data):
+        result = {
+            'message': 'Error sending data to predict',
+            'error': str(error),
+            'status': 'Error',
+            '_data': data
+        }
+        if isinstance(error, HTTPError):
+            result['content'] = error.read()
+        ver_example = VerificationExample(
+            example=example,
+            verification=verification,
+            result=result)
+        ver_example.save()
+
     try:
         import predict
         import os
@@ -205,15 +222,12 @@ def verify_model(verification_id, count):
             data = {}
             for k, v in verification.params_map.iteritems():
                 data[k] = example.data_input[v]
-            result = predict.post_to_cloudml(
-                'v3', importhandler, None, data)
-            if result is None:
-                # Http or UrlError occured
-                ver_example = VerificationExample(
-                    example=example,
-                    verification=verification,
-                    result={'message': 'Error sending data to predict'})
-                ver_example.save()
+            try:
+                result = predict.post_to_cloudml(
+                    'v3', importhandler, None, data, throw_error=True)
+                result['_data'] = data
+            except Exception, error:
+                create_example_err(example, error, data)
                 continue
 
             if 'raw_data' in result:
