@@ -151,6 +151,8 @@ def update_at_server(server_id, file_name):
 
 @celery.task
 def verify_model(verification_id, count):
+    init_logger('verifymodel_log', obj=int(verification_id))
+
     from models import ServerModelVerification, \
         VerificationExample
     from predict.libpredict import Predict
@@ -174,8 +176,18 @@ def verify_model(verification_id, count):
             "Import handler name was not specified in the metadata")
 
     try:
-        config_file = "/home/atmel/workspace/predict-utils/env/staging.properties"
-        predict = Predict(config_file)
+        import predict
+        import os
+        base_path = os.path.dirname(predict.__file__)
+        base_path = os.path.split(base_path)[0]
+        env_map = {'Production': 'prod',
+                   'Staging': 'staging',
+                   'Development': 'dev'}
+        config_file = "%s.properties" % env_map[verification.server.type]
+
+        config_file = os.path.join(base_path, 'env', config_file)
+        predict = Predict(config_file)        
+        predict.cloudml_url = "http://%s/cloudml" % verification.server.ip
         importhandler = verification.description['import_handler_metadata']['name']
         examples = verification.test_result.examples[:count]
         num = 0

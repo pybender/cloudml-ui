@@ -20,9 +20,10 @@ class LogMessage(object):
     TRAIN_MODEL = 'trainmodel_log'
     IMPORT_DATA = 'importdata_log'
     RUN_TEST = 'runtest_log'
+    VERIFY_MODEL = 'verifymodel_log'
     CONFUSION_MATRIX_LOG = 'confusion_matrix_log'
     TYPES_LIST = (TRAIN_MODEL, IMPORT_DATA, RUN_TEST,
-                  CONFUSION_MATRIX_LOG)
+                  CONFUSION_MATRIX_LOG, VERIFY_MODEL)
     LEVELS_LIST = ['CRITICAL', 'ERROR', 'WARN', 'WARNING',
                    'INFO', 'DEBUG', 'NOTSET']
 
