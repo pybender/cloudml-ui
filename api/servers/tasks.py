@@ -223,6 +223,7 @@ def verify_model(verification_id, count):
             for k, v in verification.params_map.iteritems():
                 data[k] = example.data_input[v]
             try:
+                logging.info('Sending %s to predict', data)
                 result = predict.post_to_cloudml(
                     'v3', importhandler, None, data, throw_error=True)
                 result['_data'] = data
