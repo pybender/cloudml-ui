@@ -60,7 +60,6 @@ App = angular.module('app', [
   'app.features.controllers.features'
   'app.servers.model'
   'app.servers.controllers'
-  'app.servers.verifications'
 
   'app.play.controllers'
 ])
