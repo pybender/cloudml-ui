@@ -1,0 +1,16 @@
+{
+    "status_code": 200,
+    "data": {
+        "Attributes": {
+            "object_id": {"N": "1"},
+            "id": {"S": "one"}
+        },
+        "ConsumedCapacity": {
+            "TableName": "test_table",
+            "CapacityUnits": 1.0,
+            "Table": {
+                "CapacityUnits": 1.0
+            }
+        }
+    }
+}

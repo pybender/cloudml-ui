@@ -74,9 +74,14 @@ LOGGING = {
             'level': 'INFO',
             'propagate': True,
         },
-        'boto': {
+        'boto3': {
             'handlers': ['console'],
-            'level': 'INFO',
+            'level': 'CRITICAL',
+            'propagate': True,
+        },
+        'botocore': {
+            'handlers': ['console'],
+            'level': 'CRITICAL',
             'propagate': True,
         },
         # 'sqlalchemy.engine': {

@@ -1,0 +1,25 @@
+{
+    "status_code": 200, 
+    "data": {
+        "SpotInstanceRequests": [
+            {
+                "SpotInstanceRequestId": "request_id",
+                "SpotPrice": "string",
+                "Type": "one-time",
+                "State": "open",
+                "Status": {
+                    "Code": "string",
+                    "Message": "string"
+                },
+                "InstanceId": "string",
+                "Tags": [
+                    {
+                        "Key": "string",
+                        "Value": "string"
+                    }
+                ],
+                "LaunchedAvailabilityZone": "string"
+            }
+        ]
+    }
+}

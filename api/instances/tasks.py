@@ -3,7 +3,7 @@
 # Authors: Nikolay Melnik <nmelnik@upwork.com>
 
 import logging
-from boto.exception import EC2ResponseError
+from botocore.exceptions import ClientError
 from os import system, popen
 
 from api import celery, app
@@ -27,7 +27,8 @@ def synchronyze_cluster_list():
     clusters = Cluster.query.all()
     emr = AmazonEMRHelper()
     for cluster in clusters:
-        status = emr.describe_jobflow(cluster.jobflow_id).state
+        status = emr.describe_jobflow(
+            cluster.jobflow_id)['ExecutionStatusDetail']['State'].lower()
         if status == 'terminated':
             logging.info('Cluster %s terminated, it will be deleted'
                          % cluster.jobflow_id)
@@ -60,15 +61,15 @@ def request_spot_instance(instance_type=None, model_id=None):
         ec2 = AmazonEC2Helper()
         logging.info('Request spot instance type: %s' % instance_type)
         request = ec2.request_spot_instance(instance_type)
-        logging.info('Request id: %s:' % request.id)
-    except EC2ResponseError as e:
+        logging.info('Request id: %s:' % request['SpotInstanceRequestId'])
+    except ClientError as e:
         model.set_error(e.error_message)
         raise Exception(e.error_message)
 
-    model.spot_instance_request_id = request.id
+    model.spot_instance_request_id = request['SpotInstanceRequestId']
     model.save()
 
-    return request.id
+    return request['SpotInstanceRequestId']
 
 
 @celery.task(base=SqlAlchemyTask)
@@ -101,8 +102,8 @@ def get_request_instance(request_id, callback=None, dataset_ids=None,
 
     model = Model.query.get(model_id)
     try:
-        request = ec2.get_request_spot_instance(request_id)
-    except EC2ResponseError as e:
+        request = ec2.get_request_spot_instance(request_id)['State']
+    except ClientError as e:
         model.set_error(e.error_message)
         raise InstanceRequestingError(e.error_message)
 
@@ -139,10 +140,11 @@ State is {0!s}, status is {1!s}, {2!s}.'.format(
     instance = ec2.get_instance(request.instance_id)
     logging.info('Instance %s(%s) lunched' %
                  (instance.id, instance.private_ip_address))
-    instance.add_tag('Name', 'cloudml-worker-auto')
-    instance.add_tag('Owner', 'papadimitriou,nmelnik')
-    instance.add_tag('Model_id', model_id)
-    instance.add_tag('whoami', 'cloudml')
+    tags = [{'Key': 'Name', 'Value': 'cloudml-worker-auto'},
+            {'Key': 'Owner', 'Value': 'papadimitriou,nmelnik'},
+            {'Key': 'Model_id', 'Value': str(model_id)},
+            {'Key': 'whoami', 'Value': 'cloudml'}]
+    instance.create_tags(Tags=tags)
 
     if callback == "train":
         logging.info('Train model task apply async')
@@ -200,7 +202,7 @@ for model id {1!s}...'.format(
 cancelled for model id {1!s}'.format(request_id, model_id))
         model.status = model.STATUS_CANCELED
         model.save()
-    except EC2ResponseError as e:
+    except ClientError as e:
         model.set_error(e.error_message)
         raise Exception(e.error_message)
 

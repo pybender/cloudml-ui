@@ -1,8 +1,8 @@
-from boto.exception import S3ResponseError
+from botocore.exceptions import ClientError
 from flask import request
 
 from api import api, app
-from api.amazon_utils import AmazonS3Helper
+from api.amazon_utils import AmazonS3ObjectNotFound
 from api.base.resources import BaseResourceSQL, NotFound, \
     odesk_error_response, BaseResource
 from .models import Server
@@ -45,9 +45,10 @@ class ServerFileResource(BaseResource):
             from .tasks import update_at_server
             file_name = '{0}/{1}'.format(folder, uid)
             update_at_server.delay(server.id, file_name)
-        except (S3ResponseError, ValueError) as err:
-            status = err.status if hasattr(err, 'status') else 400
-            return odesk_error_response(status, 1006, str(err))
+        except ValueError as err:
+            return odesk_error_response(400, 1006, str(err))
+        except AmazonS3ObjectNotFound as err:
+            return odesk_error_response(404, 1006, str(err))
 
         return self._render({self.OBJECT_NAME: {'id': uid}})
 
@@ -77,7 +78,7 @@ class ServerFileResource(BaseResource):
             from .tasks import update_at_server
             file_name = '{0}/{1}'.format(folder, uid)
             update_at_server.delay(server.id, file_name)
-        except S3ResponseError as err:
+        except ClientError as err:
             return odesk_error_response(err.status, 1006, str(err))
         return '', 204
 

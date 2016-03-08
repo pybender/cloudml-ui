@@ -5,28 +5,38 @@ Amazon services helper classes.
 # Authors: Nikolay Melnik <nmelnik@upwork.com>
 
 import logging
-import uuid
-from boto.dynamodb2.table import Table
-
-import boto.ec2
-from boto.exception import JSONResponseError, S3ResponseError
-from boto.s3.key import Key
+import boto3
+from botocore.exceptions import ClientError
+from boto3.s3.transfer import S3Transfer, TransferConfig
+import urllib
 
 from api import app
 
 
-class AmazonEMRHelper(object):
+class AmazonS3ObjectNotFound(Exception):
+    pass
+
+
+class AmazonMixin(object):
+    """
+    This class keeps amazon settings
+    """
+    def __init__(self, token=None, secret=None):
+        self.token = token or app.config['AMAZON_ACCESS_TOKEN']
+        self.secret = secret or app.config['AMAZON_TOKEN_SECRET']
+
+
+class AmazonEMRHelper(AmazonMixin):
     """
     This class provies an interface to the Elastic MapReduce (EMR)
     service from AWS.
     """
     def __init__(self, token=None, secret=None, region='us-west-1'):
-        token = token or app.config['AMAZON_ACCESS_TOKEN']
-        secret = secret or app.config['AMAZON_TOKEN_SECRET']
-        self.conn = boto.emr.connect_to_region(
-            region,
-            aws_access_key_id=token,
-            aws_secret_access_key=secret)
+        super(AmazonEMRHelper, self).__init__(token, secret)
+        self.conn = boto3.client('emr',
+                                 region_name=region,
+                                 aws_access_key_id=self.token,
+                                 aws_secret_access_key=self.secret)
 
     def terminate_jobflow(self, jobflowid):
         """
@@ -35,7 +45,7 @@ class AmazonEMRHelper(object):
         jobflow_id: str
             A jobflow id
         """
-        self.conn.terminate_jobflow(jobflowid)
+        return self.conn.terminate_job_flows(JobFlowIds=[jobflowid])
 
     def describe_jobflow(self, jobflowid):
         """
@@ -44,21 +54,22 @@ class AmazonEMRHelper(object):
         jobflow_id: str
             The job flow id of interest
         """
-        return self.conn.describe_jobflow(jobflowid)
+        return self.conn.describe_job_flows(
+            JobFlowIds=[jobflowid])['JobFlows'][0]
 
 
-class AmazonEC2Helper(object):
+class AmazonEC2Helper(AmazonMixin):
     """
     Class provides an interface to the Elastic Compute Cloud (EC2)
     service from AWS.
     """
     def __init__(self, token=None, secret=None, region='us-west-2'):
-        token = token or app.config['AMAZON_ACCESS_TOKEN']
-        secret = secret or app.config['AMAZON_TOKEN_SECRET']
-        self.conn = boto.ec2.connect_to_region(
-            region,
-            aws_access_key_id=token,
-            aws_secret_access_key=secret)
+        super(AmazonEC2Helper, self).__init__(token, secret)
+        self.resource = boto3.resource('ec2',
+                                       region_name=region,
+                                       aws_access_key_id=self.token,
+                                       aws_secret_access_key=self.secret)
+        self.client = self.resource.meta.client
 
     def terminate_instance(self, instance_id):
         """
@@ -67,8 +78,8 @@ class AmazonEC2Helper(object):
         instance_id: str
             The ID of the instance to be terminated.
         """
-        return self.conn.terminate_instances(
-            instance_ids=[instance_id, ])
+        return self.client.terminate_instances(
+            InstanceIds=[instance_id, ])
 
     def request_spot_instance(self, instance_type='m3.xlarge'):
         """
@@ -118,23 +129,22 @@ class AmazonEC2Helper(object):
         subnet: subnet-3f5bc256
         security_group_ids: sg-534f5d3f
         """
-        request = self.conn.request_spot_instances(
-            price="1",
-            image_id='ami-71d49241',
-            security_group_ids=["sg-1dc1dc71"],
-            instance_type=instance_type,
-            placement="us-west-2a",
-            subnet_id="subnet-7a7c3612")
-        return request[0]
+        request = self.client.request_spot_instances(
+            SpotPrice="1",
+            LaunchSpecification={
+                'ImageId': 'ami-71d49241',
+                'InstanceType': instance_type,
+                'Placement': {'AvailabilityZone': "us-west-2a"},
+                'SubnetId': 'subnet-7a7c3612',
+                'SecurityGroupIds': ['sg-1dc1dc71']
+            })
+        return request['SpotInstanceRequests'][0]
 
     def get_instance(self, instance_id):
         """
         Retrieve the instance reservations by instance_id.
         """
-        reservations = self.conn.get_all_instances(
-            instance_ids=[instance_id, ])
-        instance = reservations[0].instances[0]
-        return instance
+        return self.resource.Instance(instance_id)
 
     def get_request_spot_instance(self, request_id):
         """
@@ -143,10 +153,9 @@ class AmazonEC2Helper(object):
         request_id: str
             The Request ID
         """
-        request = self.conn.get_all_spot_instance_requests(
-            request_ids=[request_id, ])
-        request = request[0]
-        return request
+        requests = self.client.describe_spot_instance_requests(
+            SpotInstanceRequestIds=[request_id, ])
+        return requests['SpotInstanceRequests'][0]
 
     def cancel_request_spot_instance(self, request_id):
         """
@@ -155,30 +164,22 @@ class AmazonEC2Helper(object):
         request_id: str
             The Request ID to terminate
         """
-        request = self.conn.cancel_spot_instance_requests([request_id, ])
-        request = request[0]
-        return request
+        request = self.client.cancel_spot_instance_requests(
+            SpotInstanceRequestIds=[request_id, ])
+        return request['CancelledSpotInstanceRequests'][0]
 
 
-class AmazonS3Helper(object):
+class AmazonS3Helper(AmazonMixin):
     """
     Class provides an interface to the Simple Storage Service
     service from Amazon.
     """
     def __init__(self, token=None, secret=None, bucket_name=None):
-        token = token or app.config['AMAZON_ACCESS_TOKEN']
-        secret = secret or app.config['AMAZON_TOKEN_SECRET']
+        super(AmazonS3Helper, self).__init__(token, secret)
         self.bucket_name = bucket_name or app.config['AMAZON_BUCKET_NAME']
-        self.conn = boto.connect_s3(token, secret)
-
-    @property
-    def bucket(self):
-        """
-        Returns Amazon S3 bucket.
-        """
-        if not hasattr(self, '_bucket'):
-            self._bucket = self._get_bucket()
-        return self._bucket
+        self.conn = boto3.resource('s3',
+                                   aws_access_key_id=self.token,
+                                   aws_secret_access_key=self.secret)
 
     def get_download_url(self, name, expires_in):
         """
@@ -189,9 +190,11 @@ class AmazonS3Helper(object):
         expires_in: int
             How long the url is valid for, in seconds
         """
-        key = Key(self.bucket)
-        key.key = name
-        return key.generate_url(expires_in)
+        url = self.conn.meta.client.generate_presigned_url(
+            'get_object',
+            Params={'Bucket': self.bucket_name, 'Key': name},
+            ExpiresIn=expires_in)
+        return url
 
     def list_keys(self, prefix):
         """
@@ -203,9 +206,11 @@ class AmazonS3Helper(object):
             prefix='/foo/' then the iterator will only cycle through
             the keys that begin with the string '/foo/'.
         """
-        return self.bucket.list(prefix)
+        res = self.conn.meta.client.list_objects(Bucket=self.bucket_name,
+                                                 Prefix=prefix)
+        return res.get('Contents', [])
 
-    def load_key(self, name):
+    def load_key(self, name, with_metadata=False):
         """
         Retrieve an object from S3 using the name of the Key object as the
         key in S3.  Return the contents of the object as a string.
@@ -213,18 +218,24 @@ class AmazonS3Helper(object):
         name: string
             name of the key
         """
-        key = Key(self.bucket)
-        key.key = name
         n = 0
-        try:
-            return key.get_contents_as_string()
-        except Exception, exc:
-            if n < 4:
-                logging.info('Got error %s try again %d' % (name, n))
+        while n < 4:
+            try:
+                res = self.conn.Object(self.bucket_name, name).get()
+                if with_metadata:
+                    metadata = {}
+                    for meta_k, meta_v in res['Metadata'].iteritems():
+                        metadata[meta_k] = urllib.unquote(meta_v).\
+                            decode('utf8')
+                    res['Metadata'] = metadata
+                    return res
+                return res['Body'].read(res['ContentLength'])
+            except Exception, exc:
+                logging.info('Got error %s try again for %s' % (exc, name))
                 n += 1
-            else:
                 logging.error('Got error when getting data from s3')
-                raise exc
+
+        raise AmazonS3ObjectNotFound("Object %s doesn't exist on S3" % name)
 
     def save_gz_file(self, name, filename, meta={}):
         """
@@ -237,45 +248,14 @@ class AmazonS3Helper(object):
         meta: dict
             Additional metadata, should be setted to the Key
         """
-        import cStringIO
-
-        headers = {
-            'Content-Type': 'application/octet-stream',
-            'Content-Encoding': 'gzip'
-        }
-        mpu = self.bucket.initiate_multipart_upload(
-            name,
-            metadata=meta,
-            headers=headers
-        )
-        stream = cStringIO.StringIO()
-        part_count = [0]
-
-        def progress(x, y):
-            if y > 0:
-                logging.debug(
-                    "Part %d: %0.2f%%" % (part_count[0], 100. * x / y))
-
-        def upload_part(part_count=[0]):
-            part_count[0] += 1
-            stream.seek(0)
-            mpu.upload_part_from_file(stream, part_count[0], cb=progress)
-            stream.seek(0)
-            stream.truncate()
-
-        with open(filename, 'r') as input_file:
-            while True:
-                chunk = input_file.read(
-                    app.config.get('MULTIPART_UPLOAD_CHUNK_SIZE'))
-                if len(chunk) == 0:
-                    upload_part(part_count)
-                    logging.info('Uploaded parts: {0!s}'.format(
-                        [(part.part_number, part.size) for part in mpu]))
-                    mpu.complete_upload()
-                    break
-                stream.write(chunk)
-                if stream.tell() > 5 * 1024 * 1024:
-                    upload_part(part_count)
+        config = TransferConfig(
+            multipart_threshold=app.config.get('MULTIPART_UPLOAD_CHUNK_SIZE'))
+        transfer = S3Transfer(self.conn.meta.client, config)
+        return transfer.upload_file(
+            filename, self.bucket_name, name,
+            extra_args={'ContentType': 'application/octet-stream',
+                        'ContentEncoding': 'gzip',
+                        'Metadata': self._prepare_meta(meta)})
 
     def save_key(self, name, filename, meta={}, compressed=True):
         """
@@ -291,15 +271,12 @@ class AmazonS3Helper(object):
         compressed: bool
             True, if the file is compressed (gzip). Otherwise, False.
         """
-        key = Key(self.bucket)
-        key.key = name
-        for meta_key, meta_val in meta.iteritems():
-            key.set_metadata(meta_key, meta_val)
-
-        headers = {'Content-Type': 'application/octet-stream'}
+        kwargs = {'Body': open(filename, 'rb'),
+                  'Metadata': self._prepare_meta(meta),
+                  'ContentType': 'application/octet-stream'}
         if compressed:
-            headers['Content-Encoding'] = 'gzip'
-        key.set_contents_from_filename(filename, headers)
+            kwargs['ContentEncoding'] = 'gzip'
+        return self.conn.Object(self.bucket_name, name).put(**kwargs)
 
     def save_key_string(self, name, data, meta={}):
         """
@@ -313,11 +290,9 @@ class AmazonS3Helper(object):
         meta: dict
             Additional metadata, should be setted to the Key
         """
-        key = Key(self.bucket)
-        key.key = name
-        for meta_key, meta_val in meta.iteritems():
-            key.set_metadata(meta_key, meta_val)
-        key.set_contents_from_string(data)
+        return self.conn.Object(self.bucket_name, name).put(
+            Body=data,
+            Metadata=self._prepare_meta(meta))
 
     def set_key_metadata(self, name, meta, store_previous=False):
         """
@@ -331,16 +306,16 @@ class AmazonS3Helper(object):
             Determines whether we need to save previous metadata with prefix
             "previous_".
         """
-        key = self.bucket.lookup(name)
-        if not key:
-            raise S3ResponseError(404, "Key '{}' not found".format(name))
+        if not self.key_exists(name):
+            raise AmazonS3ObjectNotFound("Key '{}' not found".format(name))
+        resp = self.conn.Object(self.bucket_name, name).get()
+        metadata = resp.get('Metadata', {})
         for meta_key, meta_val in meta.iteritems():
             if store_previous:
-                previous_value = key.get_metadata(meta_key)
-                key.set_metadata("previous_" + meta_key, previous_value)
-            key.set_metadata(meta_key, meta_val)
-        # key.metadata.update(meta)
-        key.copy(key.bucket.name, key.name, key.metadata)
+                previous_value = metadata.get(meta_key, '')
+                metadata["previous_"+meta_key] = str(previous_value)
+            metadata[meta_key] = str(meta_val)
+        return self.conn.Object(self.bucket_name, name).put(Metadata=metadata)
 
     def delete_key(self, name):
         """
@@ -349,25 +324,46 @@ class AmazonS3Helper(object):
         name: string
             Amazon S3 key name
         """
-        key = Key(self.bucket)
-        key.key = name
-        key.delete()
+        return self.conn.Object(self.bucket_name, name).delete()
 
     def close(self):
         pass
 
-    def _get_bucket(self):
+    def _check_or_create_bucket(self):
         """
-        Gets the bucket on Amazon S3 by bucket_name.
+        Checks if the bucket exists on Amazon S3 (by bucket_name).
         Creates the one, if it doesn't exists.
         """
-        bucket = self.conn.lookup(self.bucket_name)
-        if bucket is None:
-            bucket = self.conn.create_bucket(self.bucket_name)
-        return bucket
+        try:
+            self.conn.meta.client.head_bucket(Bucket=self.bucket_name)
+        except ClientError as e:
+            if e.response['Error']['Code'] == "404":
+                # bucket doesn't exist - create new one
+                self.conn.Bucket(self.bucket_name).create()
+            else:
+                raise
+        return True
+
+    def key_exists(self, name):
+        """
+        Checks if key exists in the bucket
+        """
+        try:
+            self.conn.Object(self.bucket_name, name).load()
+            return True
+        except ClientError as e:
+            if e.response['Error']['Code'] == "404":
+                return False
+            else:
+                raise
+
+    def _prepare_meta(self, meta):
+        for key, val in meta.iteritems():
+            meta[key] = str(val)
+        return meta
 
 
-class AmazonDynamoDBHelper(object):
+class AmazonDynamoDBHelper(AmazonMixin):
     """
     Class provides an interface to the NoSQL database Amazon DynamoDB2.
     """
@@ -380,35 +376,36 @@ class AmazonDynamoDBHelper(object):
         return cls._instance
 
     def __init__(self, token=None, secret=None):
-        self.token = token or app.config['AMAZON_ACCESS_TOKEN']
-        self.secret = secret or app.config['AMAZON_TOKEN_SECRET']
+        super(AmazonDynamoDBHelper, self).__init__(token, secret)
         self._conn = None
+        self.resource = None
         self._tables = {}
 
     @property
     def conn(self):
         if not self._conn:
-            from boto import dynamodb2
-            from boto.dynamodb2.layer1 import DynamoDBConnection
-
             if app.config.get('TEST_DYNAMODB'):
-                self._conn = boto.dynamodb2.connect_to_region(
-                    'us-west-2', aws_access_key_id="ak",
-                    aws_secret_access_key="sk")
+                self.resource = boto3.resource(
+                    'dynamodb',
+                    aws_access_key_id='ak',
+                    aws_secret_access_key='sk',
+                    region_name='us-west-2')
             elif app.config.get('LOCAL_DYNAMODB'):
                 # Local DynamoDB (see dynamodb_local.sh)
-                self._conn = DynamoDBConnection(
-                    host='localhost',
-                    port=8000,
+                self.resource = boto3.resource(
+                    'dynamodb',
                     aws_access_key_id='any',
                     aws_secret_access_key='any',
-                    is_secure=False)
+                    endpoint_url='http://localhost:8000',
+                    region_name='us-west-2')
             else:
                 # Real DynamoDB connection
-                self._conn = dynamodb2.connect_to_region(
-                    'us-west-1',
+                self.resource = boto3.resource(
+                    'dynamodb',
                     aws_access_key_id=self.token,
-                    aws_secret_access_key=self.secret)
+                    aws_secret_access_key=self.secret,
+                    region_name='us-west-1')
+            self._conn = self.resource.meta.client
         return self._conn
 
     def _get_table(self, table_name):
@@ -418,11 +415,9 @@ class AmazonDynamoDBHelper(object):
         return self._tables[table_name]
 
     def _refresh_tables_list(self):
-        from boto.dynamodb2.table import Table
         self._tables = {}
         for table_name in self.conn.list_tables()['TableNames']:
-            table = Table(table_name, connection=self.conn)
-            table.describe()
+            table = self.resource.Table(table_name)
             self._tables[table_name] = table
 
     def put_item(self, table_name, data):
@@ -435,14 +430,17 @@ class AmazonDynamoDBHelper(object):
             A dictionary of the data you'd like to store in DynamoDB.
         """
         table = self._get_table(table_name)
-        return table.put_item(data=data, overwrite=True)
+        return table.put_item(Item=data)
 
-    def delete_items(self, table_name, **kwargs):
+    def delete_items(self, table_name, keys, **kwargs):
         table = self._get_table(table_name)
-        res = table.query_2(**kwargs)
-        with table.batch_write() as batch:
-            for item in res:
-                batch.delete_item(**item.get_keys())
+        res = table.query(**kwargs)
+        with table.batch_writer() as batch:
+            for item in res['Items']:
+                k = {}
+                for key in keys:
+                    k[key] = item[key]
+                batch.delete_item(Key=k)
 
     def delete_item(self, table_name, **kwargs):
         """
@@ -451,13 +449,13 @@ class AmazonDynamoDBHelper(object):
         value.
         """
         table = self._get_table(table_name)
-        table.delete_item(**kwargs)
+        return table.delete_item(Key=kwargs)
 
     def batch_write(self, table_name, data_list):
         table = self._get_table(table_name)
-        with table.batch_write() as batch:
+        with table.batch_writer() as batch:
             for data in data_list:
-                batch.put_item(data=data)
+                batch.put_item(Item=data)
 
     def get_item(self, table_name, **kwargs):
         """
@@ -468,18 +466,14 @@ class AmazonDynamoDBHelper(object):
         Returns an ``Item`` instance containing all the data for that record.
         """
         table = self._get_table(table_name)
-        return table.get_item(**kwargs)._data
+        return table.get_item(Key=kwargs)['Item']
 
-    def get_items(self, table_name, limit=None, reverse=True,
-                  query_filter=None, **kwargs):
+    def get_items(self, table_name, **kwargs):
         table = self._get_table(table_name)
-        res = table.query_2(reverse=reverse, limit=limit,
-                            max_page_size=100, query_filter=query_filter,
-                            consistent=True, **kwargs)
+        res = table.query(**kwargs)
+        return res['Items']
 
-        return [i._data for i in res]
-
-    def create_table(self, table_name, schema):
+    def create_table(self, table_name, schema, types):
         """
         Creates a new table in DynamoDB & returns an
         in-memory ``Table`` object.
@@ -487,8 +481,14 @@ class AmazonDynamoDBHelper(object):
         self._refresh_tables_list()
         if table_name not in self._tables:
             try:
-                table = Table.create(table_name, connection=self.conn,
-                                     schema=schema)
-                self._tables[table_name] = table
-            except JSONResponseError as ex:
+                self.conn.create_table(
+                    TableName=table_name, KeySchema=schema,
+                    AttributeDefinitions=types,
+                    ProvisionedThroughput={
+                        'ReadCapacityUnits': 10000,
+                        'WriteCapacityUnits': 10000
+                    }
+                )
+                self._tables[table_name] = self.resource.Table(table_name)
+            except ClientError as ex:
                 logging.exception(str(ex))
