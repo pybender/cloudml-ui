@@ -49,3 +49,5 @@ lxml==3.3.3
 WTForms==1.0.5
 twill==0.9.1
 coloredlogs==2.0
+
+-e git+http://stash.odesk.com/scm/dp/predict-utils.git@nikolay#egg=predict

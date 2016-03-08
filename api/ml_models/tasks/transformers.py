@@ -34,7 +34,7 @@ def train_transformer(dataset_ids, transformer_id, user_id,
     delete_metadata: bool
         Whether we need transformer related db logs.
     """
-    init_logger('traintransformer_log', obj=int(transformer_id))
+    init_logger(LogMessage.TRAIN_TRANSFORMER, obj=int(transformer_id))
 
     user = User.query.get(user_id)
     transformer = Transformer.query.get(transformer_id)
@@ -50,7 +50,9 @@ def train_transformer(dataset_ids, transformer_id, user_id,
 
         if delete_metadata:
             logging.info('Remove logs on retrain transformer')
-            LogMessage.delete_related_logs(transformer.id)
+            LogMessage.delete_related_logs(
+                transformer.id,
+                type_=LogMessage.TRAIN_TRANSFORMER)
 
         logging.info('Perform transformer training')
         from api.base.io_utils import get_or_create_data_folder

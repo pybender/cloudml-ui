@@ -52,7 +52,6 @@ angular.module('app.servers.model', ['app.config'])
               id: origData.object_id
               name: origData.object_name
             })
-          console.log origData
 
     return ModelFile
 ])
@@ -100,7 +99,7 @@ angular.module('app.servers.model', ['app.config'])
   ($http, $q, settings, BaseModel) ->
     class Server extends BaseModel
       BASE_API_URL: "#{settings.apiUrl}servers/"
-      BASE_UI_URL: '/servers'
+      BASE_UI_URL: '/predict/servers'
       API_FIELDNAME: 'server'
       @MAIN_FIELDS: 'id,name,ip'
 
@@ -112,5 +111,133 @@ angular.module('app.servers.model', ['app.config'])
       models_list: null
       importhandlers_list: null
 
+      @$active_models: (opts) ->
+        resolver = (resp, Model) ->
+          {
+            total: resp.data.found
+            objects: resp.data.files
+            _resp: resp
+          }
+        @$make_all_request("#{@prototype.BASE_API_URL}action/models/",
+                           resolver, opts)
+
     return Server
+])
+
+
+.factory('ModelVerification', [
+  '$http'
+  '$q'
+  'settings'
+  'BaseModel'
+  'Model'
+  'Server'
+  'TestResult'
+  
+  ($http, $q, settings, BaseModel, Model, Server, TestResult) ->
+    class ModelVerification extends BaseModel
+      BASE_API_URL: "#{settings.apiUrl}servers/verifications/"
+      BASE_UI_URL: '/predict/verifications'
+      API_FIELDNAME: 'server_model_verification'
+      @MAIN_FIELDS: 'id,model,server,test_result,created_by,created_on,import_handler,status'
+
+      id: null
+      server: null
+      model: null
+      data: null
+
+      loadFromJSON: (origData) =>
+        super origData
+        
+        if origData?
+          if origData.model?
+            @model_obj = new Model(_.extend origData.model)
+            if !@name?
+              @name = @model_obj.name
+          if origData.test_result?
+            @test_result_obj = new TestResult(_.extend origData.test_result)
+          if origData.server?
+            @server_obj = new Server(_.extend origData.server)
+
+      $verify: (opts={}) ->
+        @$make_request(
+          "#{@BASE_API_URL}#{@id}/action/verify/", {},
+          "PUT", @$clean_parameters(opts))
+
+      $save: (opts={}) =>
+        data = {}
+        for name in opts.only
+          val = eval("this." + name)
+          if val? then data[name] = val
+        data['description'] = JSON.stringify(@description)
+        method = if @isNew() then "POST" else "PUT"
+        base_url = @constructor.$get_api_url(opts, @)
+        url = if @id? then base_url + @id + "/" else base_url
+        @$make_request(url, {}, method, data)
+
+    return ModelVerification
+])
+
+
+.factory('VerificationExample', [
+  '$http'
+  '$q'
+  'settings'
+  'BaseModel'
+  'Data'
+  
+  ($http, $q, settings, BaseModel, TestExample) ->
+    class VerificationExample extends BaseModel
+      API_FIELDNAME: 'verification_example'
+      @MAIN_FIELDS: 'id,example,result'
+
+      constructor: (opts) ->
+        super opts
+        @BASE_API_URL = VerificationExample.$get_api_url({
+          'verification_id': @verification_id}, @)
+        @BASE_UI_URL = "/predict/verifications/#{@verification_id}/examples"
+
+      @$get_api_url: (opts, example) ->
+        verification_id = opts.verification_id
+        if example?
+          verification_id = verification_id || example.verification_id
+        if not verification_id then throw Error 'verification_id is required'
+        return "#{settings.apiUrl}servers/verifications/#{verification_id}/examples/"
+
+      loadFromJSON: (origData) =>
+        super origData
+        
+        if origData?
+          if origData.example?
+            @example = new TestExample(origData.example)
+            @exampleProb = Math.max.apply null, @example.prob
+
+          if origData.result && origData.result.probs?
+            @probChartData = []
+            for item in @result.probs
+              @probChartData.push {
+                  value: item.prob, label: item.label}
+
+      @$loadAll: (verification_id, opts) ->
+        if not verification_id
+          throw new Error "verification_id is required to load examples"
+
+        url = VerificationExample.$get_api_url({
+          'verification_id': verification_id})
+        resolver = (resp, Model) ->
+          extra_data = {loaded: true, verification_id: verification_id}
+          {
+            page: resp.data.page
+            total: resp.data.total
+            per_page: resp.data.per_page
+            pages: resp.data.pages
+            extra_fields: resp.data.extra_fields
+            objects: (
+              new Model(_.extend(obj, extra_data)) \
+              for obj in eval("resp.data.#{Model.prototype.API_FIELDNAME}s"))
+            _resp: resp
+          }
+        @$make_all_request(url, resolver, opts)
+
+    return VerificationExample
 ])

@@ -1,9 +1,13 @@
 from datetime import datetime
 
-from sqlalchemy.orm import deferred
+from sqlalchemy.orm import relationship, deferred, backref
 
 from api import app
-from api.base.models import BaseModel, db
+from api.base.models import BaseModel, db, JSONType, BaseMixin
+from api.ml_models.models import Model
+from api.import_handlers.models import RefXmlImportHandlerMixin, \
+    XmlImportHandler
+from api.model_tests.models import TestResult
 from .config import FOLDER_MODELS, FOLDER_IMPORT_HANDLERS
 from api.amazon_utils import AmazonS3Helper
 from boto.exception import S3ResponseError
@@ -25,6 +29,9 @@ class Server(BaseModel, db.Model):
     is_default = db.Column(db.Boolean, default=False)
     memory_mb = db.Column(db.Integer, nullable=False, default=0)
     type = db.Column(db.Enum(*TYPES, name='server_types'), default=DEV)
+
+    def __repr__(self):
+        return '<Server {0}>'.format(self.name)
 
     def list_keys(self, folder=None):
         path = self.folder.strip('/')
@@ -103,3 +110,58 @@ class Server(BaseModel, db.Model):
         if commit:
             db.session.commit()
 
+
+class ServerModelVerification(BaseModel, db.Model,
+                              RefXmlImportHandlerMixin):
+    """
+    Represents verification of the model,
+    that deployed to the server
+    """
+    STATUS_NEW = 'New'
+    STATUS_QUEUED = 'Queued'
+    STATUS_IN_PROGRESS = 'In Progress'
+    STATUS_ERROR = 'Error'
+    STATUS_DONE = 'Done'
+
+    STATUSES = [STATUS_NEW, STATUS_QUEUED,
+                STATUS_IN_PROGRESS, STATUS_ERROR,
+                STATUS_DONE]
+
+    status = db.Column(
+        db.Enum(*STATUSES, name='model_verification_statuses'),
+        nullable=False, default=STATUS_NEW)
+    error = db.Column(db.Text)
+    server_id = db.Column(db.Integer, db.ForeignKey('server.id'))
+    server = relationship(
+        Server, backref=backref('model_verifications', cascade='all,delete'))
+    model_id = db.Column(db.Integer, db.ForeignKey('model.id'))
+    model = relationship(
+        Model, backref=backref('model_verifications', cascade='all,delete'))
+    test_result_id = db.Column(db.Integer, db.ForeignKey('test_result.id'))
+    test_result = relationship(
+        'TestResult',
+        backref=backref('model_verifications',
+                        cascade='all,delete'))
+    description = db.Column(JSONType)
+    result = db.Column(JSONType)
+    params_map = db.Column(JSONType)
+
+    def __repr__(self):
+        return '<ServerModelVerification {0}>'.format(self.model.name)
+
+
+class VerificationExample(BaseMixin, db.Model):
+    verification_id = db.Column(
+        db.Integer, db.ForeignKey('server_model_verification.id'))
+    verification = relationship(
+        'ServerModelVerification',
+        backref=backref('verification_examples',
+                        cascade='all,delete'))
+
+    example_id = db.Column(db.Integer, db.ForeignKey('test_example.id'))
+    example = relationship(
+        'TestExample',
+        backref=backref('verification_examples',
+                        cascade='all,delete'))
+
+    result = db.Column(JSONType)
