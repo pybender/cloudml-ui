@@ -1,0 +1,15 @@
+<form name="Form" class="form-horizontal">
+  <div class="modal-header">
+    <button ng-click="close()" class="close" data-dismiss="modal">×</button>
+    <h3>Re-verify the {{ verification.name }}</h3>
+  </div>
+
+  <div class="modal-body">
+    <ng-include src="'partials/parts/save_form_messages.html'"></ng-include>
+    <ng-include src="'partials/servers/verification/count_control.html'"></ng-include>
+  </div>
+
+  <div class="modal-footer">
+    <button ng-click="start(data)" ng-disabled="Form.$invalid" class="btn btn-primary" >Start server model verification</button>
+  </div>
+</form>

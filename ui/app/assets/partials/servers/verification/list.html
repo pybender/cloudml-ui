@@ -1,0 +1,67 @@
+<h2>
+  Server Model Verifications List
+  <div class="actions">
+      <a class="btn btn-info" ng-click="add()">
+        <i class="status-icon icon-plus"></i> Add new verification
+      </a>
+  </div>
+</h2>
+
+<div ng-controller="BaseListCtrl" ng-init="init(true, LIST_MODEL_NAME)">
+	<alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+
+	<alert-message ng-show="objects.length == 0" class="alert-info" msg="No model verifications found"></alert-message>
+
+	<table ng-hide="objects.length == 0" class="table table-hover">
+	<thead>
+	  <tr>
+	  	<th>#</th>
+	  	<th>Status</th>
+		<th>Server</th>	    
+	    <th>Model</th>
+	    <th>Data</th>
+	    <th>Created</th>
+	    <th>Action</th>
+	  </tr>
+	</thead>
+	<tbody>
+	  <tr ng-repeat="verification in objects">
+	  	<td>
+	  		<a href="#{{ verification.objectUrl() }}">{{ $index + 1 }}</a>
+	  	</td>
+	  	<td>
+	  		{{ verification.status }}
+	  	</td>
+	    <td>
+	    	<a target="_blank" href="#{{ verification.server_obj.objectUrl() }}">{{ verification.server.name }}</a>
+	    </td>
+	    <td>
+	    	<a target="_blank" href="#{{ verification.model_obj.objectUrl() }}">{{ verification.model.name }}</a>
+	    <td>
+	    	<a target="_blank" href="#{{ verification.test_result_obj.objectUrl() }}">{{ verification.test_result.name }}</a>
+	    </td>
+	    <td>
+	    	<span title="dates in GMT">{{ verification.created_on|format_date }}</span><br>
+          	<small ng-show="verification.created_by">by {{ verification.created_by.name }} ({{ verification.created_by.uid }})</small>
+	    </td>
+	    <td ng-controller="ModelVerificationActionsCtrl">
+          <div ng-init="init({verification: verification})">
+	    	<button ng-click="verify()" class="btn btn-info">
+            	<i title="Re-verify the model" class="icon-tasks"></i>
+          	</button>
+	    	<button ng-click="delete()" class="btn btn-danger">
+            	<i title="Delete your server model verification. Be careful - you could not recover it!" class="icon-remove"></i>
+          	</button>
+          </div>
+	    </td>
+	  </tr>
+	</tbody>
+	<tfoot>
+		<tr>
+			<td colspan="4">
+				Found {{ objects.length}} model verifications(s).
+			</td>
+		</tr>
+	</tfoot>
+	</table>
+</div>

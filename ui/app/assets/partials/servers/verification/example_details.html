@@ -1,0 +1,49 @@
+<h2>
+  Verification Example <span ng-show="example.loaded">"{{ example.example.test_name|capfirst }}:{{ example.example.name }}"</span> Details
+</h2>
+
+<div title="quick info" ng-show="example.loaded" ng-init="obj=example">
+  <i class="icon-screenshot"></i> label
+  <span class="badge badge-info">{{ example.example.label }}</span>
+  <i class="icon-screenshot"></i> predicted label (example)
+  <span class="badge badge-success">{{ example.result.prediction || 'N/A' }}</span>
+  <i class="icon-screenshot"></i> predicted label
+  <span ng-show="example.example.label == example.prediction" class="badge badge-success">{{ example.example.pred_label }}</span>
+  <span title="predicted invalid value" ng-hide="example.example.label == example.prediction" class="badge badge-important">{{ example.result.prediction || 'N/A' }}</span>
+  <i class="icon-asterisk"></i> probability
+  <span class="badge badge-info" title="{{ example.result.result.probability }}">{{ example.result.result.probability.toFixed(4) || 'N/A' }}</span>
+  <i class="icon-asterisk"></i> example probability
+  <span class="badge badge-success" title="{{ example.exampleProb }}">{{ example.exampleProb.toFixed(4) || 'N/A' }}</span>
+</div>
+<p/>
+
+<alert-message ng-show="example.result.error" class="alert-warning" msg="Error sending data to predict: {{ example.result.error }}. {{ example.result.content }}" unsafe></alert-message>
+
+<p>Data: <span class="value">{{ example.result._data }}</span></p>
+
+<p>Test Example: <span class="value"><a href="#{{ example.example.objectUrl() }}" target="_blank">{{ example.example.test_name }}: {{ example.example.name }}</a></span></p>
+
+<sc-chart ng-show="example.result.probs" chart-dict="example.probChartData" width="150" height="150"></sc-chart>
+
+<table class="table">
+  <thead>
+  <tr>
+    <th>Name</th>
+    <th>Vectorized Value (Example)</th>
+    <th>Vectorized Value (Predict)</th>
+  </tr>
+  </thead>
+  <tbody>
+    <tr ng-repeat="(name, val) in example.example.weighted_data_input" ng-init="predict_vect_value=example.result.data.default[name.replace('->', '.')]" ng-class="{error: predict_vect_value != val.vect_value, success: predict_vect_value && predict_vect_value == val.vect_value}">
+      <td>
+        {{ name }}
+      </td>
+      <td>
+        <span class="badge badge-info" title="{{ val.vect_value }}">{{ val.vect_value.toFixed(4) }}</span>
+      </td>
+      <td>
+        <span class="badge badge-info" title="{{ predict_vect_value }}">{{ predict_vect_value.toFixed(4) }}</span>
+      </td>
+    </tr>
+  </tbody>
+</table>

@@ -1,0 +1,10 @@
+<div class="control-group" ng-class="{error: Form.count.$invalid || errorList.count}">
+  <label class="control-label">Examples Count</label>
+  <div class="controls">
+    <input type="text" name="count" ng-model="data.count" smartInteger required />
+    <span ng-show="Form.count.$error.integer" class="help-inline">integer required</span>
+    <span ng-show="Form.count.$error.required" class="help-inline">*</span>
+    <span class="help-block" ng-show="verification.test_result.examples_count">There are {{ verification.test_result.examples_count }} examples available.</span>
+    <span class="help-block" ng-show="data.examples_count">There are {{ data.examples_count }} examples available.</span>
+  </div>
+</div>
