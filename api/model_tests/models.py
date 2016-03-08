@@ -65,6 +65,9 @@ class TestResult(db.Model, BaseModel):
     vect_data = deferred(db.Column(S3File))
     fill_weights = db.Column(db.Boolean, default=False)
 
+    def __repr__(self):
+        return '<TestResult {0}>'.format(self.name)
+
     def get_vect_data(self, num, segment):
         from pickle import loads
         data = loads(self.vect_data)
@@ -157,6 +160,9 @@ class TestExample(db.Model, BaseModel):
     model_id = db.Column(db.Integer, db.ForeignKey('model.id'))
     model = relationship('Model')
     model_name = db.Column(db.String(200))
+
+    def __repr__(self):
+        return '<TestExample {0}>'.format(self.name)
 
     @property
     def parameters_weights(self):

@@ -142,9 +142,9 @@ def cdeploy():
 def deployui():
     release.work_on.run(0)
     git.push.run()
-    fabgrunt.private_npm.run()
-    fabgrunt.bower.run()
-    fabgrunt.activate.run()
+    # fabgrunt.private_npm.run()
+    # fabgrunt.bower.run()
+    # fabgrunt.activate.run()
     fabgrunt.push_config.run()
     fabgrunt.build.run()
     # angularjs.activate.run()

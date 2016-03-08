@@ -217,15 +217,31 @@ App.config([
       templateUrl: 'partials/clusters/details.html'
       title: 'Cluster Details'
     })
-    .when('/servers', {
+    .when('/predict/servers', {
       controller: "ServerListCtrl"
       templateUrl: 'partials/servers/list.html'
       title: 'Servers'
     })
-    .when('/servers/:id', {
+    .when('/predict/servers/:id', {
       controller: 'ServerDetailsCtrl'
       templateUrl: 'partials/servers/details.html'
       title: 'Server Details'
+    })
+    .when('/predict/verifications', {
+      controller: 'ServerModelVerificationListCtrl'
+      templateUrl: 'partials/servers/verification/list.html'
+    })
+    .when('/predict/verifications/:id', {
+      controller: 'ServerModelVerificationDetailsCtrl'
+      templateUrl: 'partials/servers/verification/details.html'
+    })
+    .when('/predict/verifications/:verification_id/examples/:id', {
+      controller: 'VerificationExampleDetailsCtrl'
+      templateUrl: 'partials/servers/verification/example_details.html'
+    })
+    .when('/predict/verifications/:verification_id/examples', {
+      redirectTo: (params, loc) ->
+        return 'predict/verifications/' + params.verification_id + '?action=result:details'
     })
 
     # auth
