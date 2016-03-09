@@ -178,8 +178,12 @@ def verify_model(verification_id, count):
     results = []
     valid_count = 0
     valid_prob_count = 0
-    if 'import_handler_metadata' not in verification.description or \
-            'name' not in verification.description['import_handler_metadata']:
+    meta = verification.description
+    if isinstance(meta, unicode):
+        import json
+        meta = json.loads(meta)
+    if 'import_handler_metadata' not in meta or \
+            'name' not in meta['import_handler_metadata']:
         raise ValueError(
             "Import handler name was not specified in the metadata")
 
@@ -213,10 +217,6 @@ def verify_model(verification_id, count):
         predict = Predict(config_file)
         predict.cloudml_url = "http://%s/cloudml" % verification.server.ip
         logging.info('CloudML URL: %s', predict.cloudml_url)
-        meta = verification.description
-        if isinstance(meta, unicode):
-            import json
-            meta = json.loads(meta)
 
         importhandler = None
         if 'import_handler_metadata' in meta and \
