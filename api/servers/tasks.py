@@ -213,7 +213,18 @@ def verify_model(verification_id, count):
         predict = Predict(config_file)
         predict.cloudml_url = "http://%s/cloudml" % verification.server.ip
         logging.info('CloudML URL: %s', predict.cloudml_url)
-        importhandler = verification.description['import_handler_metadata']['name']
+        meta = verification.description
+        if isinstance(meta, unicode):
+            import json
+            meta = json.loads(meta)
+
+        importhandler = None
+        if 'import_handler_metadata' in meta and \
+                'name' in meta['import_handler_metadata']:
+            importhandler = meta['import_handler_metadata']['name']
+        if importhandler is None:
+            raise ValueError('Import handler do no found: %s', meta)
+
         logging.info('Using %s import handler', importhandler)
         examples = verification.test_result.examples[:count]
         logging.info('Iterating only %s test examples from %s test',
