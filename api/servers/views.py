@@ -153,6 +153,17 @@ class ServerModelVerificationResource(BaseResourceSQL):
     post_form = ServerModelVerificationForm
     PUT_ACTIONS = ('verify', )
 
+    # FIXME: migrate to newer version of the sql alchemy
+    # with JsonField support
+    # On staging we have a unicode, not dict
+    def _get_details_query(self, params, **kwargs):
+        ver = super(ServerModelVerificationResource, self).\
+            _get_details_query(params, **kwargs)
+        if isinstance(ver.description, unicode):
+            import json
+            ver.description = json.loads(ver.description)
+        return ver
+
     def _put_verify_action(self, **kwargs):
         model = self._get_details_query(None, **kwargs)
         form = VerifyForm(obj=model, **kwargs)

@@ -442,6 +442,19 @@ angular.module('app.servers.controllers', ['app.config', ])
 
     $scope.example.$load(
       show: VerificationExample.MAIN_FIELDS + ',example')
+    .then (opts) ->
+        1
+      , (opts) ->
+        $scope.setError(opts, 'loading verification example details')
+
+    $scope.getPredictVectValue = (name) ->
+      data = $scope.example.result.data
+      keys = Object.keys(data)
+      if keys?
+        key = keys[0]
+        return data[key][name.replace('->', '.')]
+      return undefined
+
 ])
 
 .controller('VerifyModelCtrl', [

@@ -34,7 +34,7 @@
   </tr>
   </thead>
   <tbody>
-    <tr ng-repeat="(name, val) in example.example.weighted_data_input" ng-init="predict_vect_value=example.result.data.default[name.replace('->', '.')]" ng-class="{error: predict_vect_value != val.vect_value, success: predict_vect_value && predict_vect_value == val.vect_value}">
+    <tr ng-repeat="(name, val) in example.example.weighted_data_input" ng-init="predict_vect_value=getPredictVectValue(name)" ng-class="{error: predict_vect_value != val.vect_value, success: predict_vect_value && predict_vect_value == val.vect_value}">
       <td>
         {{ name }}
       </td>
