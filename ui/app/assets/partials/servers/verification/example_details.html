@@ -19,31 +19,45 @@
 
 <alert-message ng-show="example.result.error" class="alert-warning" msg="Error sending data to predict: {{ example.result.error }}. {{ example.result.content }}" unsafe></alert-message>
 
-<p>Data: <span class="value">{{ example.result._data }}</span></p>
+<ul class="nav nav-tabs" id="tabs" ng-show="example.loaded">
+  <li ng-class="{active: action[0] == 'about'}">
+    <a ng-click="setSection(['about', 'details'])">About</a>
+  </li>
+  <li ng-class="{active: action[0] == 'result'}">
+    <a ng-click="setSection(['result', 'details'])">Result</a></li>
+</ul>
+<div class="tab-content" ng-show="example.loaded">
+  <div ng-show="action[0] == 'about'">
+    <p>Data: <span class="value">{{ example.result._data }}</span></p>
 
-<p>Test Example: <span class="value"><a href="#{{ example.example.objectUrl() }}" target="_blank">{{ example.example.test_name }}: {{ example.example.name }}</a></span></p>
+    <p>Test Example: <span class="value"><a href="#{{ example.example.objectUrl() }}" target="_blank">{{ example.example.test_name }}: {{ example.example.name }}</a></span></p>
 
-<sc-chart ng-show="example.result.probs" chart-dict="example.probChartData" width="150" height="150"></sc-chart>
+    <sc-chart ng-show="example.result.probs" chart-dict="example.probChartData" width="150" height="150"></sc-chart>
 
-<table class="table">
-  <thead>
-  <tr>
-    <th>Name</th>
-    <th>Vectorized Value (Example)</th>
-    <th>Vectorized Value (Predict)</th>
-  </tr>
-  </thead>
-  <tbody>
-    <tr ng-repeat="(name, val) in example.example.weighted_data_input" ng-init="predict_vect_value=getPredictVectValue(name)" ng-class="{error: predict_vect_value != val.vect_value, success: predict_vect_value && predict_vect_value == val.vect_value}">
-      <td>
-        {{ name }}
-      </td>
-      <td>
-        <span class="badge badge-info" title="{{ val.vect_value }}">{{ val.vect_value.toFixed(4) }}</span>
-      </td>
-      <td>
-        <span class="badge badge-info" title="{{ predict_vect_value }}">{{ predict_vect_value.toFixed(4) }}</span>
-      </td>
-    </tr>
-  </tbody>
-</table>
+    <table class="table">
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Vectorized Value (Example)</th>
+        <th>Vectorized Value (Predict)</th>
+      </tr>
+      </thead>
+      <tbody>
+        <tr ng-repeat="(name, val) in example.example.weighted_data_input" ng-init="predict_vect_value=getPredictVectValue(name)" ng-class="{error: predict_vect_value != val.vect_value, success: predict_vect_value && predict_vect_value == val.vect_value}">
+          <td>
+            {{ name }}
+          </td>
+          <td>
+            <span class="badge badge-info" title="{{ val.vect_value }}">{{ val.vect_value.toFixed(4) }}</span>
+          </td>
+          <td>
+            <span class="badge badge-info" title="{{ predict_vect_value }}">{{ predict_vect_value.toFixed(4) }}</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div ng-show="action[0] == 'result'">
+    <textarea ng-model="resultJson" name="fJson" ui-codemirror="codeMirrorConfigs(true)['json']" class="cml-codemirror-refresh"></textarea>
+  </div>
+</div>

@@ -242,8 +242,6 @@ def verify_model(verification_id, count):
                 create_example_err(example, error, data)
                 continue
 
-            if 'raw_data' in result:
-                del result['raw_data']
             if 'prediction' in result and \
                     result['prediction'] == example.pred_label:
                 valid_count += 1
