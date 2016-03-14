@@ -30,6 +30,8 @@
   <div ng-show="action[0] == 'about'">
     <p>Data: <span class="value">{{ example.result._data }}</span></p>
 
+    <p>Response Time: <span class="value">{{ example.result._response_time }}</span></p>
+
     <p>Test Example: <span class="value"><a href="#{{ example.example.objectUrl() }}" target="_blank">{{ example.example.test_name }}: {{ example.example.name }}</a></span></p>
 
     <sc-chart ng-show="example.result.probs" chart-dict="example.probChartData" width="150" height="150"></sc-chart>

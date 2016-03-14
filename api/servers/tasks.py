@@ -3,6 +3,7 @@ import json
 from datetime import datetime
 import base64
 import uuid
+import os
 
 from api import celery, app
 from api.import_handlers.models import XmlImportHandler
@@ -202,10 +203,11 @@ def verify_model(verification_id, count):
             result=result)
         ver_example.save()
 
+    max_time = 0
+    errors_count = 0
     try:
-        import predict
-        import os
-        base_path = os.path.dirname(predict.__file__)
+        import predict as predict_module
+        base_path = os.path.dirname(predict_module.__file__)
         base_path = os.path.split(base_path)[0]
         env_map = {'Production': 'prod',
                    'Staging': 'staging',
@@ -236,10 +238,15 @@ def verify_model(verification_id, count):
             try:
                 logging.info('Sending %s to predict', data)
                 result = predict.post_to_cloudml(
-                    'v3', importhandler, None, data, throw_error=True)
+                    'v3', importhandler, None, data,
+                    throw_error=True, saveResponseTime=True)
+                if '_response_time' in result \
+                        and result['_response_time'] > max_time:
+                    max_time = result['_response_time']
                 result['_data'] = data
             except Exception, error:
                 create_example_err(example, error, data)
+                errors_count += 1
                 continue
 
             if 'prediction' in result and \
@@ -263,7 +270,9 @@ def verify_model(verification_id, count):
         verification.result = {
             'valid_count': valid_count,
             'count': len(examples),
-            'valid_prob_count': valid_prob_count
+            'valid_prob_count': valid_prob_count,
+            'max_response_time': max_time,
+            'error_count': errors_count
         }
         verification.status = verification.STATUS_DONE
         verification.save()

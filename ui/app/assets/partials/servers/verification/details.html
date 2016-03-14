@@ -84,6 +84,22 @@
   </div>
   <div class="row">
     <div class="span12">
+      Errors Count:
+      <span class="value">
+        {{ verification.result.error_count }}
+      </span>
+    </div>
+  </div>
+  <div class="row">
+    <div class="span12">
+    Max Response Time:
+    <span class="value" title="{{ verification.result.max_response_time }}">
+      {{ verification.result.max_response_time.toFixed(4) }}
+    </span>
+    </div>
+  </div>
+  <div class="row">
+    <div class="span12">
       Predicted Valid Label Count:
       <span class="value">
         {{ verification.result.valid_count }}
