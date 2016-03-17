@@ -34,7 +34,7 @@ class ServerResource(BaseResourceSQL):
         from cloudml.importhandler.importhandler import ExtractionPlan
         for h in import_handlers_obj:
             plan = ExtractionPlan(h.get_plan_config(), is_file=False)
-            if plan.predict.models:
+            if plan.predict and plan.predict.models:
                 model_name = plan.predict.models[0].value
                 model_key = models_map.get(model_name)
                 if model_key:
