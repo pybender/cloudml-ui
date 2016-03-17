@@ -26,99 +26,110 @@
 </ul>
 <div class="tab-content" ng-show="verification.loaded">
   <div ng-show="action[0] == 'about'">
-  <div title="quick info" ng-init="obj=verification">
-    <ng-include src="'partials/parts/created_tags.html'"></ng-include>
-  </div>
-  <p></p>
-  <div class="row">
-    <div class="span12">
-      Status: <span class="value">{{ verification.status }}</span> <a ng-click="showLogs=!showLogs">(logs)</a>
-      <br/>
-      <div ng-show="showLogs" class="well" ng-controller="LogMessageListCtrl" ng-init="init('verifymodel_log', verification.id, 50)">
-        <div class="message">
-          <ng-include src="'partials/logmessages/list.html'"></ng-include>
+    <div title="quick info" ng-init="obj=verification">
+      <ng-include src="'partials/parts/created_tags.html'"></ng-include>
+    </div>
+    <p></p>
+    <div class="row">
+      <div class="span11">
+        Status: <span class="value">{{ verification.status }}</span> <a ng-click="showLogs=!showLogs">(logs)</a>
+        <br/>
+        <div ng-show="showLogs" class="well" ng-controller="LogMessageListCtrl" ng-init="init('verifymodel_log', verification.id, 50)">
+          <div class="message">
+            <ng-include src="'partials/logmessages/list.html'"></ng-include>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-  <div class="row">
-    <div class="span12">
-      Server:
+    <div class="row">
+      <div class="span11">
+        Server:
+        <span class="value">
+          <a target="_blank" href="#{{ verification.server_obj.objectUrl() }}">{{ verification.server.name }}</a>
+        </span>
+      </div>
+    </div>
+    <div class="row">
+      <div class="span11">
+      Model:
       <span class="value">
-        <a target="_blank" href="#{{ verification.server_obj.objectUrl() }}">{{ verification.server.name }}</a>
+        <a target="_blank" href="#{{ verification.model_obj.objectUrl() }}">{{ verification.model.name }}</a>
       </span>
+      </div>
     </div>
-  </div>
-  <div class="row">
-    <div class="span12">
-    Model:
-    <span class="value">
-      <a target="_blank" href="#{{ verification.model_obj.objectUrl() }}">{{ verification.model.name }}</a>
-    </span>
+    <div class="row">
+      <div class="span11">
+        Model Test (Data):
+        <span class="value">
+          <a target="_blank" href="#{{ verification.test_result_obj.objectUrl() }}">{{ verification.test_result.name }}</a>
+        </span>
+      </div>
     </div>
-  </div>
-  <div class="row">
-    <div class="span12">
-      Model Test (Data):
-      <span class="value">
-        <a target="_blank" href="#{{ verification.test_result_obj.objectUrl() }}">{{ verification.test_result.name }}</a>
+    <h4>Results</h4>
+    <div class="row">
+      <div class="span11">
+        Examples Count:
+        <span class="value">
+          {{ verification.result.count }}
+        </span>
+      </div>
+    </div>
+    <div class="row">
+      <div class="span11">
+        Parameters Map:
+        <span class="value">
+          {{ verification.params_map }}
+        </span>
+      </div>
+    </div>
+    <div class="row">
+      <div class="span11">
+        Errors Count:
+        <span class="value">
+          {{ verification.result.error_count }}
+        </span>
+      </div>
+    </div>
+    <div class="row">
+      <div class="span11">
+      Max Response Time:
+      <span class="value" title="{{ verification.result.max_response_time }}">
+        {{ verification.result.max_response_time.toFixed(4) }}
       </span>
+      </div>
     </div>
-  </div>
-  <h4>Results</h4>
-  <div class="row">
-    <div class="span12">
-      Examples Count:
-      <span class="value">
-        {{ verification.result.count }}
-      </span>
+    <div class="row">
+      <div class="span11">
+        Predicted Valid Label Count:
+        <span class="value">
+          {{ verification.result.valid_count }}
+        </span>
+      </div>
     </div>
-  </div>
-  <div class="row">
-    <div class="span12">
-      Parameters Map:
-      <span class="value">
-        {{ verification.params_map }}
-      </span>
+    <div class="row">
+      <div class="span11">
+        Valid Probability Count:
+        <span class="value">
+          {{ verification.result.valid_prob_count }}
+        </span>
+      </div>
     </div>
-  </div>
-  <div class="row">
-    <div class="span12">
-      Errors Count:
-      <span class="value">
-        {{ verification.result.error_count }}
-      </span>
+    <div class="row">
+      <div class="span10">
+        <h4>Zero Features</h4>
+        <ol>
+          <li ng-repeat="f in verification.result.zero_features">
+            <span class="value">{{ f }}</span>
+          </li>
+        </ol>
+      </div>
     </div>
-  </div>
-  <div class="row">
-    <div class="span12">
-    Max Response Time:
-    <span class="value" title="{{ verification.result.max_response_time }}">
-      {{ verification.result.max_response_time.toFixed(4) }}
-    </span>
-    </div>
-  </div>
-  <div class="row">
-    <div class="span12">
-      Predicted Valid Label Count:
-      <span class="value">
-        {{ verification.result.valid_count }}
-      </span>
-    </div>
-  </div>
-  <div class="row">
-    <div class="span12">
-      Valid Probability Count:
-      <span class="value">
-        {{ verification.result.valid_prob_count }}
-      </span>
-    </div>
-  </div>
+    
   </div>
   <!-- end of about -->
 
   <div ng-show="action[0] == 'metadata'">
-  <h4>Information from the Amazon S3 key metadata</h4>
+    <h4>Information from the Amazon S3 key metadata</h4>
     <div>
       <b>Import Handler</b>
       <div>

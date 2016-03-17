@@ -205,6 +205,7 @@ def verify_model(verification_id, count):
 
     max_time = 0
     errors_count = 0
+    zero_features = verification.test_result.examples_fields
     try:
         import predict as predict_module
         base_path = os.path.dirname(predict_module.__file__)
@@ -244,6 +245,14 @@ def verify_model(verification_id, count):
                         and result['_response_time'] > max_time:
                     max_time = result['_response_time']
                 result['_data'] = data
+                if 'data' in result:
+                    # Looking to vect. data
+                    for segment, features in result['data'].iteritems():
+                        for feature_name, feature_value \
+                                in features.iteritems():
+                            if feature_name in zero_features and \
+                                    feature_value != 0:
+                                zero_features.remove(feature_name)
             except Exception, error:
                 create_example_err(example, error, data)
                 errors_count += 1
@@ -272,7 +281,8 @@ def verify_model(verification_id, count):
             'count': len(examples),
             'valid_prob_count': valid_prob_count,
             'max_response_time': max_time,
-            'error_count': errors_count
+            'error_count': errors_count,
+            'zero_features': zero_features
         }
         verification.status = verification.STATUS_DONE
         verification.save()

@@ -85,18 +85,7 @@
           <tr ng-repeat="(title, val) in data.weighted_data_input" ng-class="val.2">
             <td>{{ title }}</td>
             <td style="max-width: 200px;">
-              <span ng-show="!val.weights" title="Weight: {{ val.model_weight }}. Vectorized value: {{ val.vect_value }}. Parameters weight: {{ val.weight }}" class="badge {{ val.css_class }}">{{ val.value }}</span>
-
-              <div ng-show="val.weights">
-                <span ng-show="val.type == 'list'" ng-init="lword=word.toLowerCase()" ng-repeat="word in val.value|words track by $index">
-                  <span ng-show="val.weights[lword].weight" title="Weight: {{ val.weights[lword].model_weight }}. Vectorized value: {{ val.weights[lword].vect_value }}. Parameters weight: {{ val.weights[lword].weight }}" class="badge {{ val.weights[lword].css_class }}">{{ word }}</span>
-                  <span ng-show="!val.weights[lword].weight">{{ word }}</span>
-                </span>
-
-                <span ng-show="val.type == 'dict'" ng-repeat="(key, dval) in val.weights">
-                  <span title="Weight: {{ dval.model_weight }}. Vectorized value: {{ dval.vect_value }}. Parameters weight: {{ dval.weight }}" class="badge {{ dval.css_class }}">{{ key }}={{ dval.value }}</span>
-                </span>
-              </div>
+              <te-feature-value val="val" title="weights" />
             </td>
           </tr>
       </tbody>

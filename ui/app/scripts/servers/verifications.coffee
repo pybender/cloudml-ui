@@ -282,6 +282,10 @@ angular.module('app.servers.verifications', ['app.config', ])
         return data[key][name.replace('->', '.')]
       return undefined
 
+    $scope.getRawDataValue = (name) ->
+      title = name.replace('->', '.')
+      return $scope.example.result.raw_data[0][title]
+
     $scope.goSection = (section) ->
       name = section[0]
       subsection = section[1]
