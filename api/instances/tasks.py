@@ -102,14 +102,14 @@ def get_request_instance(request_id, callback=None, dataset_ids=None,
 
     model = Model.query.get(model_id)
     try:
-        request = ec2.get_request_spot_instance(request_id)['State']
+        request = ec2.get_request_spot_instance(request_id)
     except ClientError as e:
         model.set_error(e.error_message)
         raise InstanceRequestingError(e.error_message)
 
-    if request.state == 'open':
+    if request['State'] == 'open':
         logging.info('Instance was not ran. \
-Status: %s . Retry in 10s.' % request.state)
+Status: %s . Retry in 10s.' % request['State'])
         try:
             raise get_request_instance.retry(
                 countdown=app.config['REQUESTING_INSTANCE_COUNTDOWN'],
@@ -120,24 +120,25 @@ Status: %s . Retry in 10s.' % request.state)
             model.set_error('Instance was not launched')
             raise InstanceRequestingError('Instance was not launched')
 
-    if request.state == 'canceled':
+    if request['State'] == 'canceled':
         logging.info('Instance was canceled.')
         model.status = model.STATUS_CANCELED
         model.save()
         return None
 
-    if request.state != 'active':
+    if request['State'] != 'active':
         logging.info('Instance was not launched. \
 State is {0!s}, status is {1!s}, {2!s}.'.format(
-            request.state, request.status.code, request.status.message))
+            request['State'], request['Status']['Code'],
+            request['Status']['Message']))
         model.set_error('Instance was not launched')
         raise InstanceRequestingError('Instance was not launched')
 
     model.status = model.STATUS_INSTANCE_STARTED
     model.save()
 
-    logging.info('Get instance %s' % request.instance_id)
-    instance = ec2.get_instance(request.instance_id)
+    logging.info('Get instance %s' % request['InstanceId'])
+    instance = ec2.get_instance(request['InstanceId'])
     logging.info('Instance %s(%s) lunched' %
                  (instance.id, instance.private_ip_address))
     tags = [{'Key': 'Name', 'Value': 'cloudml-worker-auto'},

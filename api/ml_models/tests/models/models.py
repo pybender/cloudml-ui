@@ -6,7 +6,6 @@ Unittests for Model class
 
 import httplib
 import json
-from moto import mock_s3
 import tempfile
 from mock import patch
 import numpy
@@ -63,15 +62,17 @@ class ModelTests(BaseDbTestCase):
         self.assertEqual(model.test_import_handler, xml_handler)
         self.assertEqual(model.test_import_handler_type, 'xml')
 
-    @mock_s3
     @patch('api.amazon_utils.AmazonS3Helper.save_key_string')
     @patch('api.amazon_utils.AmazonS3Helper.load_key')
-    def test_get_trainer_s3url(self, *mocks):
+    @patch('api.amazon_utils.AmazonS3Helper.get_download_url')
+    def test_get_trainer_s3url(self, dl_mock, *mocks):
         model = Model(name="test", trainer='trainer file',
                       status=Model.STATUS_TRAINED)
         model.save()
-        url = model.get_trainer_s3url()
         trainer_filename = model.get_trainer_filename()
+        dl_mock.return_value = 'https://s3.amazonaws.com/%s?Signature' % \
+                               trainer_filename
+        url = model.get_trainer_s3url()
         self.assertTrue(trainer_filename)
         self.assertTrue(url)
         self.assertTrue(

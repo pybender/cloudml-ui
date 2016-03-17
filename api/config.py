@@ -84,6 +84,11 @@ LOGGING = {
             'level': 'CRITICAL',
             'propagate': True,
         },
+        'placebo': {
+            'handlers': ['console'],
+            'level': 'CRITICAL',
+            'propagate': False,
+        },
         # 'sqlalchemy.engine': {
         #     'handlers': ['console'],
         #     'level': 'INFO',

@@ -25,7 +25,7 @@ class AmazonS3HelperTests(TestCase):
 
     def setUp(self):
         super(AmazonS3HelperTests, self).setUp()
-        self.pill = StreamPill(debug=True)
+        self.pill = StreamPill(debug=False)
         self.session = boto3.session.Session()
         boto3.DEFAULT_SESSION = self.session
         self.credentials = {'token': 'token', 'secret': 'secret',
@@ -175,7 +175,7 @@ class AmazonDynamoDBHelperTests(TestCase):
 
     def setUp(self):
         super(AmazonDynamoDBHelperTests, self).setUp()
-        self.pill = StreamPill(debug=True)
+        self.pill = StreamPill(debug=False)
         self.session = boto3.session.Session()
         boto3.DEFAULT_SESSION = self.session
 
@@ -246,7 +246,7 @@ class AmazonEMRHelperTests(TestCase):
 
     def setUp(self):
         super(AmazonEMRHelperTests, self).setUp()
-        self.pill = StreamPill(debug=True)
+        self.pill = StreamPill(debug=False)
         self.session = boto3.session.Session()
         boto3.DEFAULT_SESSION = self.session
         self.credentials = {'token': 'token', 'secret': 'secret',
@@ -285,7 +285,7 @@ class AmazonEC2HelperTests(TestCase):
 
     def setUp(self):
         super(AmazonEC2HelperTests, self).setUp()
-        self.pill = StreamPill(debug=True)
+        self.pill = StreamPill(debug=False)
         self.session = boto3.session.Session()
         boto3.DEFAULT_SESSION = self.session
         self.credentials = {'token': 'token', 'secret': 'secret',

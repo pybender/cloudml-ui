@@ -1,10 +1,6 @@
-import httplib
-from moto.s3.models import FakeKey
-from mock import patch, ANY
-from moto import mock_s3, mock_dynamodb2
-import boto
 from datetime import datetime
 from mock import patch, ANY, MagicMock
+from api.amazon_utils import AmazonS3ObjectNotFound
 
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS
 from .fixtures import ServerData
@@ -73,33 +69,38 @@ class ServerFileResourceTests(BaseDbTestCase, TestChecksMixin):
     datasets = [ModelData, ImportHandlerData,
                 XmlEntityData, ServerData]
 
-    @mock_s3
-    def setUp(self):
+    @patch('api.amazon_utils.AmazonS3Helper.load_key')
+    @patch('api.amazon_utils.AmazonS3Helper.list_keys')
+    @patch('api.amazon_utils.AmazonS3Helper.save_key_string')
+    def setUp(self, save_mock, list_mock, load_mock):
         super(ServerFileResourceTests, self).setUp()
         self.server = Server.query.first()
         self.BASE_URL = self.BASE_URL.format(self.server.id, FOLDER_MODELS)
-        model = Model.query.filter_by(name=ModelData.model_01.name).one()
-        model.trainer = 'trainer_file'
+        self.model = Model.query.filter_by(name=ModelData.model_01.name).one()
+        self.model.trainer = 'trainer_file'
         self.user = User.query.first()
-        upload_model_to_server(self.server.id, model.id, self.user.id)
+        upload_model_to_server(self.server.id, self.model.id, self.user.id)
 
     # def test_invalid_folder(self):
     #     url = self.BASE_URL.format(self.server.id, 'invalid_folder1')
     #     resp = self.client.get(url, headers=HTTP_HEADERS)
     #     self.assertEqual(resp.status_code, 404)
 
-    # @patch('api.servers.models.Server.list_keys')
-    # @mock_s3
+    @patch('api.servers.models.Server.list_keys')
     @patch('api.servers.tasks.logging')
-    # @patch('api.amazon_utils.AmazonS3Helper.list_keys')
-    def test_list(self, logging_mock):
+    def test_list(self, logging_mock, list_mock):
+        list_mock.return_value = [{'id': str(self.model.id),
+                                   'name': self.model.name}]
         key = "%ss" % self.RESOURCE.OBJECT_NAME
         resp_data = self._check()
         self.assertTrue(key in resp_data, resp_data)
         self.assertTrue(len(resp_data[key]), 1)
 
+    @patch('api.amazon_utils.AmazonS3Helper.set_key_metadata')
+    @patch('api.servers.models.Server.list_keys')
     @patch('api.servers.tasks.update_at_server')
-    def test_delete(self, mock_update_at_server):
+    def test_delete(self, mock_update_at_server, list_mock, set_meta):
+        list_mock.return_value = [{'id': str(self.model.id)}]
         files_list = [f for f in self.server.list_keys(FOLDER_MODELS)]
         obj_id = files_list[0]['id']
 
@@ -108,22 +109,24 @@ class ServerFileResourceTests(BaseDbTestCase, TestChecksMixin):
         resp = self.client.delete(url, headers=HTTP_HEADERS)
         self.assertEquals(204, resp.status_code)
         self.assertTrue(mock_update_at_server.delay.called)
-        self.assertEqual(0, len(self.server.list_keys(FOLDER_MODELS)))
 
         # non-existing
+        set_meta.side_effect = AmazonS3ObjectNotFound('not found')
         url = '{0}{1}/'.format(self.BASE_URL, 'bbb.model')
         resp = self.client.delete(url, headers=HTTP_HEADERS)
         self.assertEqual(404, resp.status_code)
         self.assertIn('not found', resp.data)
 
 
+    @patch('api.amazon_utils.AmazonS3Helper.set_key_metadata')
+    @patch('api.servers.models.Server.list_keys')
     @patch('api.servers.tasks.update_at_server')
-    def test_edit(self, mock_update_at_server):
+    def test_edit(self, mock_update_at_server, list_mock, set_meta):
         # set Up
         model2 = Model.query.filter_by(name=ModelData.model_02.name).one()
-        model2.trainer = 'trainer_file2'
-        upload_model_to_server(self.server.id, model2.id, self.user.id)
-        # make order
+        list_mock.return_value = [
+            {'id': str(self.model.id), 'name': self.model.name},
+            {'id': str(model2.id), 'name': model2.name}]
         files_list = [f for f in self.server.list_keys(FOLDER_MODELS)]
         obj_id = files_list[0]['id']
 
@@ -143,13 +146,16 @@ class ServerFileResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertIn('already exists on the server', resp.data)
 
         # non-existing
+        set_meta.side_effect = AmazonS3ObjectNotFound('not found')
         url = '{0}{1}/'.format(self.BASE_URL, 'bbb.model')
         resp = self.client.put(url, data={'name': 'nnn'}, headers=HTTP_HEADERS)
         self.assertEqual(404, resp.status_code)
         self.assertIn('not found', resp.data)
 
+    @patch('api.servers.models.Server.list_keys')
     @patch('api.servers.tasks.update_at_server')
-    def test_reload_on_predict(self, mock_update_at_server):
+    def test_reload_on_predict(self, mock_update_at_server, list_mock):
+        list_mock.return_value = [{'id': str(self.model.id)}]
         files_list = [f for f in self.server.list_keys(FOLDER_MODELS)]
         obj_id = files_list[0]['id']
         url = self._get_url(id=obj_id, action='reload')
@@ -163,12 +169,15 @@ class ServersTasksTests(BaseDbTestCase):
     datasets = [ModelData, ImportHandlerData,
                 XmlEntityData, ServerData]
 
-    @mock_s3
+    @patch('api.servers.models.Server.list_keys')
+    @patch('api.amazon_utils.AmazonS3Helper.load_key')
     @patch('api.amazon_utils.AmazonS3Helper.save_key_string')
     @patch('api.servers.tasks.get_a_Uuid')
-    def test_upload_model(self, uuid, mock_save_key_string):
+    def test_upload_model(self, uuid, mock_save_key_string, load_mock,
+                          list_mock):
         guid = '7686f8b8-dc26-11e3-af6a-20689d77b543'
         uuid.return_value = guid
+        list_mock.return_value = []
         server = Server.query.filter_by(name=ServerData.server_01.name).one()
         model = Model.query.filter_by(name=ModelData.model_01.name).one()
         user = User.query.first()
@@ -193,7 +202,6 @@ class ServersTasksTests(BaseDbTestCase):
         for ds in model.datasets:
             self.assertTrue(ds.locked)
 
-    @mock_s3
     @patch('api.amazon_utils.AmazonS3Helper.save_key_string')
     @patch('api.servers.tasks.get_a_Uuid')
     @patch('api.servers.models.Server.list_keys')
@@ -222,12 +230,14 @@ class ServersTasksTests(BaseDbTestCase):
 
         self.assertFalse(mock_save_key_string.called)
 
-    @mock_s3
+    @patch('api.servers.models.Server.list_keys')
     @patch('api.amazon_utils.AmazonS3Helper.save_key_string')
     @patch('api.servers.tasks.get_a_Uuid')
-    def test_upload_import_handler(self, uuid, mock_save_key_string):
+    def test_upload_import_handler(self, uuid, mock_save_key_string,
+                                   list_mock):
         guid = 'pbnehzuEQlGTeQO7I6P8_w'
         uuid.return_value = guid
+        list_mock.return_value = []
         server = Server.query.filter_by(name=ServerData.server_01.name).one()
         handler = XmlImportHandler.query.filter_by(
             name=ImportHandlerData.import_handler_01.name).one()
@@ -253,7 +263,6 @@ class ServersTasksTests(BaseDbTestCase):
         )
         self.assertTrue(handler.locked)
 
-    @mock_s3
     @patch('api.amazon_utils.AmazonS3Helper.save_key_string')
     @patch('api.servers.tasks.get_a_Uuid')
     @patch('api.servers.models.Server.list_keys')
@@ -313,20 +322,20 @@ class ServerModelTests(BaseDbTestCase):
         one_key.name = \
             'odesk-match-cloudml/analytics/models/n3sz3FTFQJeUOe33VF2A.model'
 
-        key_obj = MagicMock()
-        key_obj.get_metadata = get_metadata
-        key_obj.size = 123321
-        key_obj.last_modified = 'Wed, 06 Aug 2014 23:46:48 GMT'
+        key_obj = {}
+        key_obj['Metadata'] = self.METADATA_MAP
+        key_obj['ContentLength'] = 123321
+        key_obj['LastModified'] = datetime(2014, 8, 6, 23, 46, 48)
 
         s3_mock = MagicMock()
-        s3_mock.list_keys.return_value = [one_key]
-        s3_mock.bucket.get_key.return_value = key_obj
+        s3_mock.list_keys.return_value = [{'Key': one_key.name}]
+        s3_mock.load_key.return_value = key_obj
 
         helper_mock.return_value = s3_mock
 
         objs = server.list_keys()
 
-        s3_mock.bucket.get_key.assert_called_with(one_key.name)
+        s3_mock.load_key.assert_called_with(one_key.name, with_metadata=True)
 
         self.assertEqual(1, len(objs))
         obj = objs[0]
@@ -335,8 +344,6 @@ class ServerModelTests(BaseDbTestCase):
             ['uploaded_on', 'object_type', 'last_modified', 'crc32',
              'id', 'size', 'server_id', 'user_id', 'name', 'object_id',
              'object_name', 'user_name'])
-        # just test we can parse the datetime
-        datetime.strptime(obj['last_modified'], '%Y-%m-%d %H:%M:%S')
         self.assertEqual(obj['id'], 'n3sz3FTFQJeUOe33VF2A.model')
         self.assertEqual(obj['object_name'], get_metadata('object_name'))
         self.assertEqual(obj['size'], 123321)

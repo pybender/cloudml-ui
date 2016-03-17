@@ -8,13 +8,13 @@ import json
 import urllib
 import tempfile
 import numpy
-from moto import mock_s3
 from mock import patch
 
 from api.base.test_utils import BaseDbTestCase
 from api.ml_models.models import Model, Segment, Weight
 from api.ml_models.fixtures import ModelData, TagData, DECISION_TREE, \
-    DECISION_TREE_WITH_SEGMENTS, TREE_VISUALIZATION_DATA, MULTICLASS_MODEL
+    DECISION_TREE_WITH_SEGMENTS, TREE_VISUALIZATION_DATA, MULTICLASS_MODEL, \
+    MODEL_TRAINER, SEGMENTATION_MODEL
 from api.import_handlers.models import DataSet
 from api.import_handlers.fixtures import DataSetData
 
@@ -30,12 +30,13 @@ class ModelTasksTests(BaseDbTestCase):
         self.obj = Model.query.filter_by(
             name=ModelData.model_01.name).first()
 
-    @mock_s3
+    @patch('api.amazon_utils.AmazonS3Helper.load_key')
     @patch('api.ml_models.models.Model.get_features_json')
-    def test_train_model_task(self, mock_get_features_json, *mocks):
+    def test_train_model_task(self, mock_get_features_json, load_mock):
         from api.ml_models.tasks import train_model
         ds = DataSet.query.filter_by(
             name=DataSetData.dataset_03.name).first()
+        load_mock.return_value = MODEL_TRAINER
 
         with open('./conf/features.json', 'r') as f:
             mock_get_features_json.return_value = f.read()
@@ -45,13 +46,13 @@ class ModelTasksTests(BaseDbTestCase):
         self.assertEqual(self.obj.status, Model.STATUS_TRAINED, self.obj.error)
         self.assertTrue(ds.locked)
 
-    @mock_s3
+    @patch('api.amazon_utils.AmazonS3Helper.load_key')
     @patch('api.ml_models.models.Model.get_features_json')
-    def test_model_segmentation(self, mock_get_features_json, *mocks):
+    def test_model_segmentation(self, mock_get_features_json, load_mock):
         from api.ml_models.tasks import train_model
         ds = DataSet.query.filter_by(
             name=DataSetData.dataset_03.name).first()
-
+        load_mock.return_value = SEGMENTATION_MODEL
         with open('./conf/features_with_segmentation.json', 'r') as f:
             mock_get_features_json.return_value = f.read()
         res = train_model.run(
@@ -145,8 +146,11 @@ class ModelTasksTests(BaseDbTestCase):
         tree = model.visualization_data['5']['tree']
         self.assertEquals(determine_deep(tree), deep)
 
+    @patch('api.amazon_utils.AmazonS3Helper.get_download_url')
+    @patch('api.amazon_utils.AmazonS3Helper.save_key')
     @patch('api.ml_models.models.Model.get_trainer')
-    def test_transform_dataset_for_download_task(self, get_trainer_mock):
+    def test_transform_dataset_for_download_task(self, get_trainer_mock,
+                                                 save_mock, dl_mock):
         model = Model.query.filter_by(name=ModelData.model_01.name).first()
         dataset = DataSet.query.first()
 
@@ -155,12 +159,13 @@ class ModelTasksTests(BaseDbTestCase):
         trainer = TrainerStorage.loads(MULTICLASS_MODEL)
         get_trainer_mock.return_value = trainer
 
+        # check that nothing fails
+        transform_dataset_for_download(model.id, dataset.id)
+
         direct_transform = model.transform_dataset(dataset)
-
-        url = transform_dataset_for_download(model.id, dataset.id)
-
+        # repeat logic from task here except posting to Amazon S3
         temp_file = tempfile.NamedTemporaryFile()
-        urllib.urlretrieve(url, temp_file.name)
+        numpy.savez_compressed(temp_file, **direct_transform)
         temp_file.seek(0)
 
         s3_transform = numpy.load(temp_file)

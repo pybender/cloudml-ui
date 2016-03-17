@@ -78,8 +78,10 @@ class ServerFileResource(BaseResource):
             from .tasks import update_at_server
             file_name = '{0}/{1}'.format(folder, uid)
             update_at_server.delay(server.id, file_name)
+        except AmazonS3ObjectNotFound as err:
+            return odesk_error_response(404, 1001, str(err))
         except ClientError as err:
-            return odesk_error_response(err.status, 1006, str(err))
+            return odesk_error_response(500, 1006, str(err))
         return '', 204
 
     def _get_uid(self, kwargs):

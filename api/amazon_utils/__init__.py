@@ -466,7 +466,8 @@ class AmazonDynamoDBHelper(AmazonMixin):
         Returns an ``Item`` instance containing all the data for that record.
         """
         table = self._get_table(table_name)
-        return table.get_item(Key=kwargs)['Item']
+        item = table.get_item(Key=kwargs)
+        return item.get('Item', None)
 
     def get_items(self, table_name, **kwargs):
         table = self._get_table(table_name)

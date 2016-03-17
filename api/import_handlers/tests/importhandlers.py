@@ -4,7 +4,6 @@ import os
 from datetime import datetime
 
 from mock import patch, MagicMock, ANY
-from moto import mock_s3
 
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS
 from api.servers.fixtures import ServerData
@@ -261,7 +260,6 @@ class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
                 import_handler_id=self.obj.id).count(), 0)
             self.assertEqual(model.query.count(), count_all - count)
 
-    @mock_s3
     @patch('api.servers.tasks.upload_import_handler_to_server')
     def test_upload_to_server(self, mock_task):
         server = Server.query.filter_by(name=ServerData.server_01.name).one()
@@ -511,8 +509,9 @@ class XmlScriptTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
         obj = resp[self.RESOURCE.OBJECT_NAME]
         self.assertEqual(obj['data'], self.obj.data)
 
-    @mock_s3
-    def test_post_put(self):
+    @patch('api.amazon_utils.AmazonS3Helper.save_key_string')
+    @patch('cloudml.importhandler.scripts.Script._process_amazon_file')
+    def test_post_put(self, process_mock, save_mock):
         handler = get_importhandler(filename='obsolete_extract.xml')
         self.handler_amazon = handler
         url = '/cloudml/xml_import_handlers/{0!s}/scripts/'.format(handler.id)
@@ -571,6 +570,7 @@ class XmlScriptTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
                          obj.data)
 
         # incorrect data url (file doesn't exist)
+        process_mock.side_effect = Exception('Not found on Amazon')
         resp = self.client.post(url, data=data_07, headers=HTTP_HEADERS)
         self.assertEqual(400, resp.status_code)
         self.assertIn("not found", resp.data)
@@ -602,12 +602,13 @@ class XmlScriptTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
 
         # PUT correct data and data url to amazon (choose data url)
         data_05['data_url'] = amazon_file
+        process_mock.return_value = '3*11'
+        process_mock.side_effect = None
         resp = self.client.put(
             '{0}{1}/'.format(url,
                              resp_obj[self.RESOURCE.OBJECT_NAME]['id']),
             data=data_05,
             headers=HTTP_HEADERS)
-        print resp.data
         self.assertEqual(200, resp.status_code)
         resp_obj = json.loads(resp.data)
         obj = XmlScript.query.get(resp_obj[self.RESOURCE.OBJECT_NAME]['id'])

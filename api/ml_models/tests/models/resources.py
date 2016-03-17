@@ -7,7 +7,6 @@ Unittests for ModelResource
 import logging
 import httplib
 import json
-from moto import mock_s3
 from mock import patch
 
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin, \
@@ -143,7 +142,6 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         feature_set = json.loads(resp.data)
         self.assertEqual(4, len(feature_set['features']))
 
-    @mock_s3
     @patch('api.amazon_utils.AmazonS3Helper.load_key')
     def test_get_weights_download_action(self, mock_load_key):
         def check_download(model):
@@ -191,9 +189,14 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
             name=ModelData.model_multiclass.name).first()
         check_download(model)
 
-    def test_get_trainer_download_s3url_action(self):
+    @patch('api.amazon_utils.AmazonS3Helper.save_key_string')
+    @patch('api.amazon_utils.AmazonS3Helper.load_key')
+    @patch('api.amazon_utils.AmazonS3Helper.get_download_url')
+    def test_get_trainer_download_s3url_action(self, dl_mock, *mocks):
         model = Model.query.filter_by(name='TrainedModel').first()
         self.assertTrue(model)
+        dl_mock.return_value = 'https://s3.amazonaws.com/%s?Signature' % \
+                               model.get_trainer_filename()
         url = self._get_url(id=model.id, action='trainer_download_s3url')
         resp = self.client.get(url, headers=HTTP_HEADERS)
         self.assertEqual(resp.status_code, httplib.OK)
@@ -230,7 +233,6 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
     POST
     """
 
-    @mock_s3
     def test_post_validation(self, *mocks):
         # No name
         self.check_edit_error(
@@ -268,7 +270,8 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
                        "named core.trainer.store"
         })
 
-    def test_post(self):
+    @patch('api.amazon_utils.AmazonS3Helper.load_key')
+    def test_post(self, load_mock):
         # No features specified
         resp, model = self._test_post(fill_import_handler=True)
         self.assertEquals(model.feature_count, 0)
@@ -308,6 +311,7 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
             model.test_import_handler.id)
 
         # Posting trained model
+        load_mock.return_value = MODEL_TRAINER
         self._test_post(fill_import_handler=True, fill_trainer=True)
 
     @patch('api.ml_models.models.Model.set_trainer')
@@ -329,7 +333,6 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(model_count, Model.query.count())
         self.assertEquals(ih_count, ImportHandler.query.count())
 
-    @mock_s3
     def test_clone_the_model(self):
         self.obj.tags = [Tag.query.first()]
         old_tag_count = self.obj.tags[0].count
@@ -346,7 +349,9 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         # TODO:
         # self.assertEquals(cloned_model.tags[0].count, old_tag_count + 1)
 
-    def test_clone_trained_model(self):
+    @patch('api.amazon_utils.AmazonS3Helper.load_key')
+    def test_clone_trained_model(self, load_mock):
+        load_mock.return_value = MODEL_TRAINER
         resp, model = self._test_post(
             fill_import_handler=True, fill_trainer=True)
         resp_data = self._check(
@@ -478,7 +483,6 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         feature_names = [f['name'] for f in features['features']]
         self.assertEqual(set(feature_names), set(['rings', 'sex', 'square']))
 
-    @mock_s3
     @patch('api.servers.tasks.upload_model_to_server')
     def test_upload_to_server(self, mock_task):
         url = self._get_url(id=self.obj.id, action='upload_to_server')
@@ -496,7 +500,6 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         resp = self.client.put(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.BAD_REQUEST)
 
-    @mock_s3
     @patch('api.ml_models.tasks.generate_visualization_tree')
     def test_put_generate_visualization(self, mock_task):
         # test deployed model
@@ -526,7 +529,6 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
     Testing model training.
     """
 
-    @mock_s3
     def test_train_model_validation_errors(self, *mocks):
         self.assertTrue(self.obj.status, Model.STATUS_NEW)
         self.assertTrue(self.obj.train_import_handler,
@@ -563,7 +565,6 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
             'dataset': 'DataSet not found',
         }, id=self.obj.id, action='train')
 
-    @mock_s3
     @patch('api.ml_models.models.Model.get_features_json')
     @patch('cloudml.trainer.trainer.Trainer.__init__')
     def test_train_model_exception(self, mock_trainer,
@@ -582,10 +583,11 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertEqual(obj.status, obj.STATUS_ERROR)
         self.assertEqual(obj.error, 'Some message')
 
-    @mock_s3
+    @patch('api.amazon_utils.AmazonS3Helper.load_key')
     @patch('api.ml_models.models.Model.get_features_json')
-    def test_train_model_with_dataset(self, mock_get_features_json, *mocks):
+    def test_train_model_with_dataset(self, mock_get_features_json, load_mock):
         mock_get_features_json.return_value = FEATURES_STR
+        load_mock.return_value = MODEL_TRAINER
 
         ds = DataSet.query.filter_by(name=DataSetData.dataset_01.name).first()
         data = {'aws_instance': self.instance.id,
@@ -604,11 +606,12 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue(obj.memory_usage > 0)
         self.assertEqual(obj.train_records_count, 100)
 
-    @mock_s3
+    @patch('api.amazon_utils.AmazonS3Helper.load_key')
     @patch('api.ml_models.models.Model.get_features_json')
     def test_train_model_with_dataset_csv(self, mock_get_features_json,
-                                          *mocks):
+                                          load_mock):
         mock_get_features_json.return_value = FEATURES_STR
+        load_mock.return_value = MODEL_TRAINER
 
         ds = DataSet.query.filter_by(name=DataSetData.dataset_03.name).first()
         data = {'aws_instance': self.instance.id,
@@ -627,16 +630,17 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue(obj.memory_usage > 0)
         self.assertEqual(obj.train_records_count, 100)
 
-    @mock_s3
+    @patch('api.amazon_utils.AmazonS3Helper.load_key')
     @patch('api.ml_models.models.Model.get_features_json')
     def test_train_model_with_dataset_other_handler(self,
                                                     mock_get_features_json,
-                                                    *mocks):
+                                                    load_mock):
         mock_get_features_json.return_value = FEATURES_STR
+        load_mock.return_value = MODEL_TRAINER
 
         # Dataset from another handler
         new_handler = ImportHandler()
-        new_handler.name = 'New Hnadler for the only one test'
+        new_handler.name = 'New Handler for the only one test'
         # new_handler.type = ImportHandler.TYPE_DB
         new_handler.import_params = ['start', 'end', 'category']
         new_handler.data = self.handler.data
@@ -660,11 +664,12 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue(obj.memory_usage > 0)
         self.assertEqual(obj.train_records_count, 100)
 
-    @mock_s3
+    @patch('api.amazon_utils.AmazonS3Helper.load_key')
     @patch('api.ml_models.models.Model.get_features_json')
-    def test_train_model_with_datasets(self, mock_get_features_json, *mocks):
+    def test_train_model_with_datasets(self, mock_get_features_json,
+                                       load_mock):
         mock_get_features_json.return_value = FEATURES_STR
-
+        load_mock.return_value = MODEL_TRAINER
         ds1 = DataSet.query.filter_by(name=DataSetData.dataset_01.name).first()
         ds2 = DataSet.query.filter_by(name=DataSetData.dataset_02.name).first()
 
@@ -686,11 +691,21 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue(obj.memory_usage > 0)
         self.assertEqual(obj.train_records_count, 200)
 
-    @mock_s3
+    @patch('api.import_handlers.models.datasets.DataSet.query.filter')
+    @patch('api.import_handlers.models.datasets.DataSet.save_to_s3')
+    @patch('api.amazon_utils.AmazonS3Helper.save_gz_file')
+    @patch('api.amazon_utils.AmazonS3Helper.load_key')
     @patch('api.ml_models.models.Model.get_features_json')
     def test_train_model_without_dataset(
-            self, mock_get_features_json, *mocks):
+            self, mock_get_features_json, load_mock, save_mock, save_ds_mock,
+            ds_mock):
         mock_get_features_json.return_value = FEATURES_STR
+        load_mock.return_value = MODEL_TRAINER
+        ds = DataSet.query.filter_by(name=DataSetData.dataset_01.name).first()
+        ds.import_params = json.loads(TRAIN_PARAMS)
+        ds.save()
+        ds_mock.return_value = [ds]
+
         data = {'aws_instance': self.instance.id,
                 'existing_instance_selected': 1,
                 'new_dataset_selected': 1,
@@ -707,11 +722,20 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue(obj.memory_usage > 0)
         self.assertEqual(obj.train_records_count, 99)
 
-    @mock_s3
+    @patch('api.import_handlers.models.datasets.DataSet.query.filter')
+    @patch('api.import_handlers.models.datasets.DataSet.save_to_s3')
+    @patch('api.amazon_utils.AmazonS3Helper.save_gz_file')
+    @patch('api.amazon_utils.AmazonS3Helper.load_key')
     @patch('api.ml_models.models.Model.get_features_json')
     def test_train_model_with_load_params_csv(self, mock_get_features_json,
-                                              *mocks):
+                                              load_mock, save_mock, ds_save,
+                                              ds_mock):
         mock_get_features_json.return_value = FEATURES_STR
+        load_mock.return_value = MODEL_TRAINER
+        ds = DataSet.query.filter_by(name=DataSetData.dataset_03.name).first()
+        ds.import_params = json.loads(TRAIN_PARAMS)
+        ds.save()
+        ds_mock.return_value = [ds]
 
         data = {'aws_instance': self.instance.id,
                 'existing_instance_selected': True,
@@ -727,17 +751,23 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertIsInstance(obj.datasets[0].id, int)
         self.assertEquals(obj.dataset.format, DataSet.FORMAT_CSV)
 
-    @mock_s3
+    @patch('api.import_handlers.models.datasets.DataSet.query.filter')
+    @patch('api.import_handlers.models.datasets.DataSet.save_to_s3')
     @patch('api.ml_models.models.Model.get_features_json')
     @patch('api.amazon_utils.AmazonS3Helper.save_gz_file')
     @patch('api.amazon_utils.AmazonS3Helper.load_key')
-    def test_retrain_model(self, mock_load_key,
-                           mock_multipart_upload, mock_get_features_json):
+    def test_retrain_model(self, mock_load_key, mock_multipart_upload,
+                           mock_get_features_json, ds_save, ds_mock):
         self.assertTrue(self.obj.train_import_handler,
                         "Train import handler should be filled")
 
         mock_get_features_json.return_value = FEATURES_STR
         mock_load_key.return_value = MODEL_TRAINER
+
+        ds = DataSet.query.filter_by(name=DataSetData.dataset_03.name).first()
+        ds.import_params = json.loads(TRAIN_PARAMS)
+        ds.save()
+        ds_mock.return_value = [ds]
 
         self.obj.status = Model.STATUS_TRAINED
         self.obj.save()
@@ -810,7 +840,6 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
                       'Please, wait for a moment before re-training model.',
                       resp.data)
 
-    @mock_s3
     @patch('api.instances.tasks.cancel_request_spot_instance')
     def test_cancel_request_instance(self, mock_task, *mocks):
         url = self._get_url(id=self.obj.id, action='cancel_request_instance')
@@ -927,7 +956,6 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertEqual(resp_obj['features'][0]['name'], 'opening_id')
         self.assertEqual(resp_obj['features'][0]['type'], 'int')
 
-    @mock_s3
     def _test_post(self, name=None, extra_data=None,
                    fill_import_handler=False, fill_features=False,
                    fill_trainer=False, *mocks):
