@@ -76,7 +76,7 @@ class LogsTests(BaseDbTestCase, TestChecksMixin):
         expr_1 = expr['values'][1].get_expression()
         self.assertEqual(expr_1['values'][0].name, 'id')
         self.assertEqual(expr_1['values'][1], 'testing')
-        self.assertEqual(expr_1['operator'], '=')
+        self.assertEqual(expr_1['operator'], 'begins_with')
 
         # in test mode
         app.config['TEST_MODE'] = True
