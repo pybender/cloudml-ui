@@ -224,8 +224,9 @@ class ImportHandlerFileField(BaseField):
 
         value = value.encode('utf-8')
         from cloudml.importhandler.importhandler import ExtractionPlan
+        from api.amazon_utils import amazon_config
         try:
-            plan = ExtractionPlan(value, is_file=False)
+            plan = ExtractionPlan(value, is_file=False, callback=amazon_config)
             self.import_params = plan.inputs.keys()
             self.import_handler_type = 'xml'
         except Exception as exc:
@@ -258,9 +259,10 @@ class ScriptUrlField(BaseField):
         value = value.encode('utf-8')
         from cloudml.importhandler.importhandler import Script, ScriptManager
         from api.import_handlers.models import XmlScript
+        from api.amazon_utils import amazon_config
         try:
             xml_scr = XmlScript(data=value, type=XmlScript.TYPE_PYTHON_FILE)
-            s = Script(xml_scr.to_xml())
+            s = Script(xml_scr.to_xml(), callback=amazon_config)
             manager = ScriptManager()
             manager.add_python(s.get_script_str())
         except Exception as exc:
