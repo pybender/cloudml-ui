@@ -116,7 +116,7 @@ angular.module('app.servers.verifications', ['app.config', ])
       .then ((opts) ->
         $scope.datas = opts.objects
         for file in $scope.serverFiles
-          if file.model.id == model
+          if file.model? and file.model.id == model
             $scope.model.description = file
             $scope.model.import_handler_id = file.import_handler.id
             $scope.importParams = file.import_handler.import_params
