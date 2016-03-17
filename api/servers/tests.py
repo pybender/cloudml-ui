@@ -3,10 +3,11 @@ from mock import patch, ANY, MagicMock
 from api.amazon_utils import AmazonS3ObjectNotFound
 
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS
-from .fixtures import ServerData
-from .models import Server
+from .fixtures import ServerData, ServerModelVerificationData
+from .models import Server, ServerModelVerification
 from .config import FOLDER_MODELS
-from .views import ServerResource, ServerFileResource
+from .views import ServerResource, ServerFileResource, \
+    ServerModelVerificationResource
 from .tasks import upload_import_handler_to_server, upload_model_to_server, \
     update_at_server
 from api.import_handlers.fixtures import XmlImportHandlerData as \
@@ -356,3 +357,43 @@ class ServerModelTests(BaseDbTestCase):
         self.assertEqual(obj['user_id'], get_metadata('user_id'))
         self.assertEqual(obj['user_name'], get_metadata('user_name'))
         self.assertEqual(obj['server_id'], server.id)
+
+# Verification Related Tests
+
+
+class ServerModelVerificationResourceTests(BaseDbTestCase, TestChecksMixin):
+    """
+    Tests of the Server Model Verification API.
+    """
+    SHOW = 'status,params_map,error'
+    BASE_URL = '/cloudml/servers/verifications/'
+    RESOURCE = ServerModelVerificationResource
+    datasets = [ServerData, ServerModelVerificationData]
+
+    def setUp(self):
+        super(ServerModelVerificationResourceTests, self).setUp()
+        self.obj = self.Model.query.first()
+
+    def test_list(self):
+        resp = self.check_list(show=self.SHOW)
+        model = self._get_resp_object(resp)
+        self._check_object_with_fixture_class(
+            model,
+            ServerModelVerificationData.model_verification_01)
+
+    def test_details(self):
+        self.check_details(
+            show=self.SHOW,
+            fixture_cls=ServerModelVerificationData.model_verification_01)
+
+    def test_verify_action(self):
+        url = self._get_url(
+            id=self.obj.id, action='verify')
+        resp = self.client.put(
+            url, data={'count': 5}, headers=HTTP_HEADERS)
+        result = json.loads(resp.data)
+        self.assertEqual('done', result['status'])
+        model = result['server_model_verification']
+        self.assertEqual(
+            ServerModelVerification.STATUS_IN_PROGRESS,
+            model['status'])

@@ -317,3 +317,12 @@ describe "app", ->
 
         it 'authenticated going to login resource, AuthCallbackCtl and redirect', ->
           doSpec 'AuthCallbackCtl', '/redirect/to/this/url'
+
+    describe '$routeChangeSuccess page title', ->
+      it 'should change page title', ->
+
+        $scope.$emit '$routeChangeSuccess', {$$route: {title: 'Import Handlers'}}
+        expect($rootScope.pageTitle).toEqual 'Import Handlers'
+
+        $scope.$emit '$routeChangeSuccess', {$$route: {title: 'Models'}}
+        expect($rootScope.pageTitle).toEqual 'Models'

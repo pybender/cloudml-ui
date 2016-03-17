@@ -3,6 +3,7 @@ import json
 from datetime import datetime
 import base64
 import uuid
+import os
 
 from api import celery, app
 from api.import_handlers.models import XmlImportHandler
@@ -147,3 +148,135 @@ def update_at_server(server_id, file_name):
     requests.post(url, {})
 
     logging.info('File has been updated: %s' % file_name)
+
+
+@celery.task
+def verify_model(verification_id, count):
+    from api.logs.models import LogMessage
+    from urllib2 import URLError, HTTPError
+
+    init_logger(LogMessage.VERIFY_MODEL, obj=int(verification_id))
+    LogMessage.delete_related_logs(
+        verification_id,
+        type_=LogMessage.VERIFY_MODEL)
+
+    logging.info('Starting model verification')
+    from models import ServerModelVerification, \
+        VerificationExample
+    from predict.libpredict import Predict
+    verification = ServerModelVerification.query.get(verification_id)
+    if not verification:
+        raise ValueError('Verification not found')
+    verification.status = verification.STATUS_IN_PROGRESS
+    verification.error = ""
+    verification.save()
+
+    deleted_count = VerificationExample.query.filter(
+        VerificationExample.verification_id == verification.id).delete(
+            synchronize_session=False)
+    logging.info('%s verification examples to delete', deleted_count)
+
+    results = []
+    valid_count = 0
+    valid_prob_count = 0
+    meta = verification.description
+    if isinstance(meta, unicode):
+        import json
+        meta = json.loads(meta)
+    if 'import_handler_metadata' not in meta or \
+            'name' not in meta['import_handler_metadata']:
+        raise ValueError(
+            "Import handler name was not specified in the metadata")
+
+    def create_example_err(example, error, data):
+        result = {
+            'message': 'Error sending data to predict',
+            'error': str(error),
+            'status': 'Error',
+            '_data': data
+        }
+        if isinstance(error, HTTPError):
+            result['content'] = error.read()
+        ver_example = VerificationExample(
+            example=example,
+            verification=verification,
+            result=result)
+        ver_example.save()
+
+    max_time = 0
+    errors_count = 0
+    try:
+        import predict as predict_module
+        base_path = os.path.dirname(predict_module.__file__)
+        base_path = os.path.split(base_path)[0]
+        env_map = {'Production': 'prod',
+                   'Staging': 'staging',
+                   'Development': 'dev'}
+        config_file = "%s.properties" % env_map[verification.server.type]
+
+        config_file = os.path.join(base_path, 'env', config_file)
+        logging.info('Using %s config file', config_file)
+        predict = Predict(config_file)
+        predict.cloudml_url = "http://%s/cloudml" % verification.server.ip
+        logging.info('CloudML URL: %s', predict.cloudml_url)
+
+        importhandler = None
+        if 'import_handler_metadata' in meta and \
+                'name' in meta['import_handler_metadata']:
+            importhandler = meta['import_handler_metadata']['name']
+        if importhandler is None:
+            raise ValueError('Import handler do no found: %s', meta)
+
+        logging.info('Using %s import handler', importhandler)
+        examples = verification.test_result.examples[:count]
+        logging.info('Iterating only %s test examples from %s test',
+                     count, verification.test_result.name)
+        for example in examples:
+            data = {}
+            for k, v in verification.params_map.iteritems():
+                data[k] = example.data_input[v]
+            try:
+                logging.info('Sending %s to predict', data)
+                result = predict.post_to_cloudml(
+                    'v3', importhandler, None, data,
+                    throw_error=True, saveResponseTime=True)
+                if '_response_time' in result \
+                        and result['_response_time'] > max_time:
+                    max_time = result['_response_time']
+                result['_data'] = data
+            except Exception, error:
+                create_example_err(example, error, data)
+                errors_count += 1
+                continue
+
+            if 'prediction' in result and \
+                    result['prediction'] == example.pred_label:
+                valid_count += 1
+                if 'result' in result and 'probability' in result['result']:
+                    def approximately_equal(val1, val2, accuracy=4):
+                        return round(val1, accuracy) == round(val2, accuracy)
+
+                    example_prob = max(example.prob)
+                    prob = result['result']['probability']
+                    if approximately_equal(example_prob, prob):
+                        valid_prob_count += 1
+
+            ver_example = VerificationExample(
+                example=example,
+                verification=verification,
+                result=result)
+            ver_example.save()
+
+        verification.result = {
+            'valid_count': valid_count,
+            'count': len(examples),
+            'valid_prob_count': valid_prob_count,
+            'max_response_time': max_time,
+            'error_count': errors_count
+        }
+        verification.status = verification.STATUS_DONE
+        verification.save()
+    except Exception, exc:
+        verification.status = verification.STATUS_ERROR
+        verification.error = str(exc)
+        verification.save()

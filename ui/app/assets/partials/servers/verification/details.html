@@ -1,0 +1,166 @@
+<h2>
+  {{ verification.model.name|capfirst }} Server Model Verification Details
+  <div class="actions" ng-controller="ModelVerificationActionsCtrl">
+    <button ng-click="verify(verification)" class="btn btn-info">
+      <i title="Verify your model" class="icon-tasks"></i>
+      Verify
+    </button>
+  </div>
+</h2>
+
+<alert-message ng-show="err" class="alert-error" msg='{{ err }}' unsafe>
+</alert-message>
+<alert-message ng-show="msg" class="alert-info" msg='{{ msg }}' unsafe>
+</alert-message>
+<alert-message ng-show="verification.error" class="alert-error" msg="Error occurred while model verification: {{ verification.error }}." unsafe></alert-message>
+
+<ul class="nav nav-tabs" id="tabs" ng-show="verification.loaded">
+  <li ng-class="{active: action[0] == 'about'}">
+    <a ng-click="setSection(['about', 'details'])">About</a>
+  </li>
+  <li ng-class="{active: action[0] == 'metadata'}">
+    <a ng-click="setSection(['metadata', 'details'])">Metadata</a>
+  </li>
+  <li ng-class="{active: action[0] == 'result'}">
+    <a ng-click="setSection(['result', 'details'])">Examples</a></li>
+</ul>
+<div class="tab-content" ng-show="verification.loaded">
+  <div ng-show="action[0] == 'about'">
+  <div title="quick info" ng-init="obj=verification">
+    <ng-include src="'partials/parts/created_tags.html'"></ng-include>
+  </div>
+  <p></p>
+  <div class="row">
+    <div class="span12">
+      Status: <span class="value">{{ verification.status }}</span> <a ng-click="showLogs=!showLogs">(logs)</a>
+      <br/>
+      <div ng-show="showLogs" class="well" ng-controller="LogMessageListCtrl" ng-init="init('verifymodel_log', verification.id, 50)">
+        <div class="message">
+          <ng-include src="'partials/logmessages/list.html'"></ng-include>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="span12">
+      Server:
+      <span class="value">
+        <a target="_blank" href="#{{ verification.server_obj.objectUrl() }}">{{ verification.server.name }}</a>
+      </span>
+    </div>
+  </div>
+  <div class="row">
+    <div class="span12">
+    Model:
+    <span class="value">
+      <a target="_blank" href="#{{ verification.model_obj.objectUrl() }}">{{ verification.model.name }}</a>
+    </span>
+    </div>
+  </div>
+  <div class="row">
+    <div class="span12">
+      Model Test (Data):
+      <span class="value">
+        <a target="_blank" href="#{{ verification.test_result_obj.objectUrl() }}">{{ verification.test_result.name }}</a>
+      </span>
+    </div>
+  </div>
+  <h4>Results</h4>
+  <div class="row">
+    <div class="span12">
+      Examples Count:
+      <span class="value">
+        {{ verification.result.count }}
+      </span>
+    </div>
+  </div>
+  <div class="row">
+    <div class="span12">
+      Parameters Map:
+      <span class="value">
+        {{ verification.params_map }}
+      </span>
+    </div>
+  </div>
+  <div class="row">
+    <div class="span12">
+      Errors Count:
+      <span class="value">
+        {{ verification.result.error_count }}
+      </span>
+    </div>
+  </div>
+  <div class="row">
+    <div class="span12">
+    Max Response Time:
+    <span class="value" title="{{ verification.result.max_response_time }}">
+      {{ verification.result.max_response_time.toFixed(4) }}
+    </span>
+    </div>
+  </div>
+  <div class="row">
+    <div class="span12">
+      Predicted Valid Label Count:
+      <span class="value">
+        {{ verification.result.valid_count }}
+      </span>
+    </div>
+  </div>
+  <div class="row">
+    <div class="span12">
+      Valid Probability Count:
+      <span class="value">
+        {{ verification.result.valid_prob_count }}
+      </span>
+    </div>
+  </div>
+  </div>
+  <!-- end of about -->
+
+  <div ng-show="action[0] == 'metadata'">
+  <h4>Information from the Amazon S3 key metadata</h4>
+    <div>
+      <b>Import Handler</b>
+      <div>
+        Name:
+        <span class="value">
+          <a target="_blank" href="#/importhandlers/xml/{{ verification.description.import_handler_obj.id }}">{{ verification.description.import_handler_name }}</a>
+          <span ng-show="verification.description.import_handler_metadata.name != verification.description.import_handler_metadata.object_name"> / {{ verification.description.import_handler_metadata.object_name }}
+          </span>
+          <span ng-show="verification.description.import_handler_metadata.name != verification.description.import_handler_metadata.name"> / {{ verification.description.import_handler_metadata.name }}
+          </span>
+        </span>
+      </div>
+      <div>
+        Uploaded On:
+        <span class="value">{{ verification.description.import_handler_metadata.uploaded_on|format_date }}</span>
+      </div>
+      <div>
+        User Name:
+        <span class="value">{{ verification.description.import_handler_metadata.user_name }}</span>
+      </div>
+    </div>
+    <div>
+      <b>Model</b>
+      <div>
+          Model Name:
+          <span class="value"><a target="_blank" href="#/models/{{ verification.description.model_obj.id }}">{{ verification.description.model_name }}</a></span>
+      </div>
+      <div>
+          Uploaded On:
+          <span class="value">{{ verification.description.model_metadata.uploaded_on|format_date }}</span>
+      </div>
+      <div>
+          Size:
+          <span class="value">{{ verification.description.model_metadata.size }}</span>
+      </div>
+      <div>
+          User Name:
+          <span class="value">{{ verification.description.model_metadata.user_name }}</span>
+      </div>
+    </div>
+  </div>
+  <div ng-show="action[0] == 'result'" ng-controller="VerificationExamplesCtrl" ng-init="init(verification)">
+    <ng-include src="'partials/servers/verification/example_list.html'"></ng-include>
+  </div>
+</div>

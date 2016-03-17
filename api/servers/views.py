@@ -5,14 +5,51 @@ from api import api, app
 from api.amazon_utils import AmazonS3ObjectNotFound
 from api.base.resources import BaseResourceSQL, NotFound, \
     odesk_error_response, BaseResource
-from .models import Server
+from .models import Server, ServerModelVerification, \
+    XmlImportHandler, Model, VerificationExample
 from .config import FOLDER_MODELS, FOLDER_IMPORT_HANDLERS
+from .forms import ServerModelVerificationForm, VerifyForm
 
 
 class ServerResource(BaseResourceSQL):
     """ Servers API methods """
     Model = Server
+    GET_ACTIONS = ('models', )
     ALLOWED_METHODS = ('get', )
+
+    def _get_models_action(self, **kwargs):
+        parser_params = (('server', str), )
+        params = self._parse_parameters(parser_params)
+        server_id = params.get('server')
+        server = Server.query.get(server_id)
+        results = []
+        models = server.list_keys(folder=FOLDER_MODELS)
+        models_map = {item.get('name'): item for item in models}
+        import_handlers = server.list_keys(folder=FOLDER_IMPORT_HANDLERS)
+        handler_map = {int(item['object_id']): item
+                       for item in import_handlers if item['object_id']}
+        ids = handler_map.keys()
+        import_handlers_obj = XmlImportHandler.query.filter(
+            XmlImportHandler.id.in_(ids)).all()
+        from cloudml.importhandler.importhandler import ExtractionPlan
+        for h in import_handlers_obj:
+            plan = ExtractionPlan(h.get_plan_config(), is_file=False)
+            if plan.predict.models:
+                model_name = plan.predict.models[0].value
+                model_key = models_map.get(model_name)
+                if model_key:
+                    handler_key = handler_map[h.id]
+                    model_obj = Model.query.get(model_key.get('object_id'))
+                    results.append({
+                        'model_name': model_name,
+                        'model_metadata': model_key,
+                        'model': model_obj,
+                        'import_handler_name': handler_key.get('name'),
+                        'import_handler': h,
+                        'import_handler_metadata': handler_key
+                    })
+        return self._render({'files': results})
+
 
 api.add_resource(ServerResource, '/cloudml/servers/')
 
@@ -109,3 +146,60 @@ class ServerFileResource(BaseResource):
 api.add_resource(ServerFileResource,
                  '/cloudml/servers/<regex("[\w\.]*"):server_id>/\
 files/<regex("[\w\.]*"):folder>/')
+
+
+class ServerModelVerificationResource(BaseResourceSQL):
+    """ Server Model Verifications API methods """
+    Model = ServerModelVerification
+    post_form = ServerModelVerificationForm
+    PUT_ACTIONS = ('verify', )
+
+    # FIXME: migrate to newer version of the sql alchemy
+    # with JsonField support
+    # On staging we have a unicode, not dict
+    def _get_details_query(self, params, **kwargs):
+        ver = super(ServerModelVerificationResource, self).\
+            _get_details_query(params, **kwargs)
+        if isinstance(ver.description, unicode):
+            import json
+            ver.description = json.loads(ver.description)
+        return ver
+
+    def _put_verify_action(self, **kwargs):
+        model = self._get_details_query(None, **kwargs)
+        form = VerifyForm(obj=model, **kwargs)
+        if form.is_valid():
+            model = form.save()
+
+        return self._render({
+            self.OBJECT_NAME: model,
+            'status': 'done'
+        }, code=201)
+
+api.add_resource(
+    ServerModelVerificationResource,
+    '/cloudml/servers/verifications/')
+
+
+class VerificationExampleResource(BaseResourceSQL):
+    """ VerificationExample API methods """
+    Model = VerificationExample
+    ALLOWED_METHODS = ('get', )
+    NEED_PAGING = True
+
+    def _get_details_query(self, params, **kwargs):
+        ver_example = super(VerificationExampleResource, self).\
+            _get_details_query(params, **kwargs)
+
+        if ver_example is None:
+            raise NotFound()
+
+        if not ver_example.example.is_weights_calculated:
+            ver_example.example.calc_weighted_data()
+
+        return ver_example
+
+api.add_resource(
+    VerificationExampleResource,
+    '/cloudml/servers/verifications/\
+<regex("[\w\.]*"):verification_id>/examples/')

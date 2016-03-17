@@ -62,19 +62,25 @@ class LogsTests(BaseDbTestCase, TestChecksMixin):
     def test_delete_related_logs(self, delete_mock):
         from api import app
         app.config['TEST_MODE'] = False
-        LogMessage.delete_related_logs(self.OBJECT_ID)
+        LogMessage.delete_related_logs(self.OBJECT_ID, type_='testing')
         delete_mock.assert_called_with(
             LogMessage.TABLE_NAME, KeyConditionExpression=ANY,
             keys=['id', 'object_id'])
         expr = delete_mock.call_args[1]['KeyConditionExpression']\
             .get_expression()
-        self.assertEqual(expr['operator'], '=')
-        self.assertEqual(expr['values'][0].name, 'object_id')
-        self.assertEqual(expr['values'][1], self.OBJECT_ID)
+        self.assertEqual('AND', expr['operator'])
+        expr_0 = expr['values'][0].get_expression()
+        self.assertEqual(expr_0['values'][0].name, 'object_id')
+        self.assertEqual(expr_0['values'][1], self.OBJECT_ID)
+        self.assertEqual(expr_0['operator'], '=')
+        expr_1 = expr['values'][1].get_expression()
+        self.assertEqual(expr_1['values'][0].name, 'id')
+        self.assertEqual(expr_1['values'][1], 'testing')
+        self.assertEqual(expr_1['operator'], '=')
 
         # in test mode
         app.config['TEST_MODE'] = True
-        LogMessage.delete_related_logs(self.OBJECT_ID)
+        LogMessage.delete_related_logs(self.OBJECT_ID, type_='testing')
         delete_mock.assert_not_called()
 
     @patch('time.mktime')
