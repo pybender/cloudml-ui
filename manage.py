@@ -2,7 +2,7 @@
 
 import os
 import logging
-import boto.ec2
+import boto3
 from flask.ext.script import Manager, Command, Shell, Option
 from flask.ext.migrate import Migrate, MigrateCommand
 
@@ -26,12 +26,12 @@ class CreateWorkerImage(Command):
         version = kwargs.get('version')
         token = app.config['AMAZON_ACCESS_TOKEN']
         secret = app.config['AMAZON_TOKEN_SECRET']
-        conn = boto.ec2.connect_to_region(
-            'us-west-2',
-            aws_access_key_id=token,
-            aws_secret_access_key=secret)
-        inst = conn.get_all_instances(instance_ids=['i-49a0597d'])
-        image = inst[0].instances[0].create_image(version)
+        conn = boto3.resource('ec2',
+                              region_name='us-west-2',
+                              aws_access_key_id=token,
+                              aws_secret_access_key=secret)
+        inst = conn.Instance('i-49a0597d')
+        image = inst.create_image(Name=version)
         print "Created image: %s" % image
 
 
