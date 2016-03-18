@@ -170,7 +170,7 @@ angular.module('app.servers.controllers', ['app.config', ])
     $scope.server = new Server({id: $routeParams.id})
 
     $scope.server.$load(
-      show: 'id,name,ip,folder,created_on,data,memory_mb,type'
+      show: 'id,name,ip,folder,created_on,data,memory_mb,type,logs_url'
       ).then (->
         $rootScope.$emit('ServerFileListCtrl:server_loaded')
       ), ((opts)-> $scope.setError(opts, 'loading server'))

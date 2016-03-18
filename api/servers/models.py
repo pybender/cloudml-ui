@@ -29,6 +29,7 @@ class Server(BaseModel, db.Model):
     is_default = db.Column(db.Boolean, default=False)
     memory_mb = db.Column(db.Integer, nullable=False, default=0)
     type = db.Column(db.Enum(*TYPES, name='server_types'), default=DEV)
+    logs_url = db.Column(db.Text)
 
     def __repr__(self):
         return '<Server {0}>'.format(self.name)
