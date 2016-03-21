@@ -7,7 +7,6 @@ import os
 from celery import Task
 from celery.contrib.methods import task
 
-
 from models import ServerModelVerification, \
     VerificationExample, Server
 from api import celery, app
@@ -167,6 +166,7 @@ class VerifyModelTask(object):
             self.verification.status = self.verification.STATUS_ERROR
             self.verification.error = str(exc)
             self.verification.save()
+            raise
 
     @property
     def importhandler(self):
@@ -213,7 +213,11 @@ class VerifyModelTask(object):
 
     def prepare_example_data(self, example):
         data = {}
-        for k, v in self.verification.params_map.iteritems():
+        params_map = self.verification.params_map
+        if isinstance(params_map, unicode):
+            import json
+            params_map = json.loads(params_map)
+        for k, v in params_map.iteritems():
             name = v.replace('.', '->')
             data[k] = example.data_input[name]
         return data
@@ -234,6 +238,7 @@ class VerifyModelTask(object):
         return predict
 
     def process(self, count):
+        from api.model_tests.models import TestExample
         verification = self.verification
         results = []
         valid_count = 0
@@ -245,7 +250,9 @@ class VerifyModelTask(object):
         logging.info('Using %s import handler', self.importhandler)
         logging.info('Iterating only %s test examples from %s test',
                      count, verification.test_result.name)
-        for example in verification.test_result.examples[:count]:
+        examples = TestExample.query.filter_by(
+            test_result=verification.test_result).limit(count)
+        for example in examples:
             data = self.prepare_example_data(example)
             try:
                 result = self.call_predict_command(data)
