@@ -36,11 +36,7 @@
     	</div>
   	</div>
     <ng-include ng-init="data=model" src="'partials/servers/verification/count_control.html'"></ng-include>
-    {{ model.test_result.examples_count }}
-    {{ model.test_result }}
-    <div class="control-group" ng-class="{error: Form.fieldsMap.$invalid}">
-      <fields-mapper ng-model="model.params_map" params="importParams" fields="dataFields" name="'Map Parameters'" />
-    </div>
+    <ng-include ng-init="data=model" src="'partials/servers/verification/predict_class_control.html'"></ng-include>
     <div ng-show="model.description">
       <h4>Brief info about the model</h4>
       <div>
@@ -87,6 +83,6 @@
   </div>
 
   <div class="modal-footer" title="{{ Form.$error}}">
-    <button ng-click="save(['server_id', 'model_id', 'test_result_id', 'description', 'import_handler_id', 'params_map', 'count'])" ng-disabled="Form.$invalid" class="btn btn-primary">Check the model on the server </button>
+    <button ng-click="save(['server_id', 'model_id', 'test_result_id', 'description', 'import_handler_id', 'params_map', 'count', 'clazz'])" ng-disabled="Form.$invalid" class="btn btn-primary">Check the model on the server </button>
   </div>
 </form>

@@ -152,6 +152,7 @@ class ServerModelVerificationResource(BaseResourceSQL):
     Model = ServerModelVerification
     post_form = ServerModelVerificationForm
     PUT_ACTIONS = ('verify', )
+    GET_ACTIONS = ('predict_classes', )
 
     # FIXME: migrate to newer version of the sql alchemy
     # with JsonField support
@@ -163,6 +164,20 @@ class ServerModelVerificationResource(BaseResourceSQL):
             import json
             ver.description = json.loads(ver.description)
         return ver
+
+    def _get_predict_classes_action(self, **kwargs):
+        from api.base.utils import inheritors
+        from predict.command import *
+        classes = inheritors(base.BasePredictCommand)
+        result = {}
+        for clazz in classes:
+            cmd = clazz()
+            parser = cmd.get_arg_parser()
+            name = "{1}.{0}".format(clazz.__name__, clazz.__module__)
+            result[name] = [arg.dest for arg in parser._actions]
+        return self._render({
+            'classes': result
+        })
 
     def _put_verify_action(self, **kwargs):
         model = self._get_details_query(None, **kwargs)
