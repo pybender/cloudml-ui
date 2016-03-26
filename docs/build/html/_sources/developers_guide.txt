@@ -840,6 +840,14 @@ The above select statement should NOT give a permission-denied message like this
   ERROR:  permission denied for relation ja_quick_info
   cloudml=> \q  
 
+---------------------------
+Installing hadoop and sqoop
+---------------------------
+
+Download and install hadoop::
+
+  $ wget https://archive.apache.org/dist/hadoop/core/hadoop-1.0.0/hadoop_1.0.0-1_i386.deb
+  $ sudo dpkg -i ./hadoop_1.0.0-1_i386.deb
 
 Build docs
 ==========

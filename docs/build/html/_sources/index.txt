@@ -22,6 +22,7 @@ Contents:
    exporting_data
    instances
    clusters
+   verification
    
    deployment
    developers_guide
