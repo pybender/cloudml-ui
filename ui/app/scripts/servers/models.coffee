@@ -139,12 +139,13 @@ angular.module('app.servers.model', ['app.config'])
       BASE_API_URL: "#{settings.apiUrl}servers/verifications/"
       BASE_UI_URL: '/predict/verifications'
       API_FIELDNAME: 'server_model_verification'
-      @MAIN_FIELDS: 'id,model,server,test_result,created_by,created_on,import_handler,status'
+      @MAIN_FIELDS: 'id,model,server,test_result,created_by,created_on,import_handler,status,clazz'
 
       id: null
       server: null
       model: null
       data: null
+      params_map: {}
 
       loadFromJSON: (origData) =>
         super origData
@@ -159,6 +160,15 @@ angular.module('app.servers.model', ['app.config'])
           if origData.server?
             @server_obj = new Server(_.extend origData.server)
 
+      @$getPredictClasses: (opts) ->
+        resolver = (resp, Model) ->
+          {
+            classes: resp.data.classes
+            _resp: resp
+          }
+        @$make_all_request(
+          "#{@prototype.BASE_API_URL}action/predict_classes/", resolver, opts)
+
       $verify: (opts={}) ->
         @$make_request(
           "#{@BASE_API_URL}#{@id}/action/verify/", {},
@@ -170,6 +180,7 @@ angular.module('app.servers.model', ['app.config'])
           val = eval("this." + name)
           if val? then data[name] = val
         data['description'] = JSON.stringify(@description)
+        data['params_map'] = JSON.stringify(@params_map)
         method = if @isNew() then "POST" else "PUT"
         base_url = @constructor.$get_api_url(opts, @)
         url = if @id? then base_url + @id + "/" else base_url

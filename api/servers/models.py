@@ -146,6 +146,7 @@ class ServerModelVerification(BaseModel, db.Model,
     description = db.Column(JSONType)
     result = db.Column(JSONType)
     params_map = db.Column(JSONType)
+    clazz = db.Column(db.String(200))
 
     def __repr__(self):
         return '<ServerModelVerification {0}>'.format(self.model.name)

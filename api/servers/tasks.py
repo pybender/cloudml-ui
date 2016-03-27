@@ -4,13 +4,16 @@ from datetime import datetime
 import base64
 import uuid
 import os
+from celery import Task
+from celery.contrib.methods import task
 
+from models import ServerModelVerification, \
+    VerificationExample, Server
 from api import celery, app
 from api.import_handlers.models import XmlImportHandler
 from api.logs.logger import init_logger
 from api.accounts.models import User
 from api.ml_models.models import Model
-from api.servers.models import Server
 from api.amazon_utils import AmazonS3Helper
 from .config import FOLDER_MODELS, FOLDER_IMPORT_HANDLERS
 
@@ -150,114 +153,130 @@ def update_at_server(server_id, file_name):
     logging.info('File has been updated: %s' % file_name)
 
 
-@celery.task
-def verify_model(verification_id, count):
-    from api.logs.models import LogMessage
-    from urllib2 import URLError, HTTPError
+class VerifyModelTask(object):
+    def run(self, verification_id, count,
+            *args, **kwargs):
+        self.init_logger(verification_id)
 
-    init_logger(LogMessage.VERIFY_MODEL, obj=int(verification_id))
-    LogMessage.delete_related_logs(
-        verification_id,
-        type_=LogMessage.VERIFY_MODEL)
+        logging.info('Starting model verification')
+        self.verification = self.get_verification(verification_id)
+        try:
+            self.process(count)
+        except Exception, exc:
+            self.verification.status = self.verification.STATUS_ERROR
+            self.verification.error = str(exc)
+            self.verification.save()
+            raise
 
-    logging.info('Starting model verification')
-    from models import ServerModelVerification, \
-        VerificationExample
-    from predict.libpredict import Predict
-    verification = ServerModelVerification.query.get(verification_id)
-    if not verification:
-        raise ValueError('Verification not found')
-    verification.status = verification.STATUS_IN_PROGRESS
-    verification.error = ""
-    verification.save()
+    @property
+    def importhandler(self):
+        meta = self.verification.description
+        if isinstance(meta, unicode):
+            import json
+            meta = json.loads(meta)
+        if 'import_handler_metadata' not in meta or \
+                'name' not in meta['import_handler_metadata']:
+            raise ValueError(
+                "Import handler name was not specified in the metadata")
+        else:
+            return meta['import_handler_metadata']['name']
 
-    deleted_count = VerificationExample.query.filter(
-        VerificationExample.verification_id == verification.id).delete(
-            synchronize_session=False)
-    logging.info('%s verification examples to delete', deleted_count)
-
-    results = []
-    valid_count = 0
-    valid_prob_count = 0
-    meta = verification.description
-    if isinstance(meta, unicode):
-        import json
-        meta = json.loads(meta)
-    if 'import_handler_metadata' not in meta or \
-            'name' not in meta['import_handler_metadata']:
-        raise ValueError(
-            "Import handler name was not specified in the metadata")
-
-    def create_example_err(example, error, data):
+    def create_example_err(self, example, error, data):
         result = {
             'message': 'Error sending data to predict',
             'error': str(error),
             'status': 'Error',
             '_data': data
         }
+        from urllib2 import HTTPError
         if isinstance(error, HTTPError):
             result['content'] = error.read()
+        logging.error('Error: %s', result)
         ver_example = VerificationExample(
             example=example,
-            verification=verification,
+            verification=self.verification,
             result=result)
         ver_example.save()
 
-    max_time = 0
-    errors_count = 0
-    zero_features = verification.test_result.examples_fields
-    try:
+    def get_config_file(self):
         import predict as predict_module
         base_path = os.path.dirname(predict_module.__file__)
         base_path = os.path.split(base_path)[0]
         env_map = {'Production': 'prod',
                    'Staging': 'staging',
                    'Development': 'dev'}
-        config_file = "%s.properties" % env_map[verification.server.type]
+        config_file = "%s.properties" % env_map[self.verification.server.type]
 
         config_file = os.path.join(base_path, 'env', config_file)
         logging.info('Using %s config file', config_file)
+        return config_file
+
+    def prepare_example_data(self, example):
+        data = {}
+        params_map = self.verification.params_map
+        if isinstance(params_map, unicode):
+            import json
+            params_map = json.loads(params_map)
+        for k, v in params_map.iteritems():
+            name = v.replace('.', '->')
+            data[k] = example.data_input[name]
+        return data
+
+    @property
+    def command(self):
+        from api.base.utils import load_class
+        clazz = load_class(self.verification.clazz)
+        return clazz()
+
+    @property
+    def predict(self):
+        from predict.libpredict import Predict
+        config_file = self.get_config_file()
         predict = Predict(config_file)
-        predict.cloudml_url = "http://%s/cloudml" % verification.server.ip
+        predict.cloudml_url = "http://%s/cloudml" % self.verification.server.ip
         logging.info('CloudML URL: %s', predict.cloudml_url)
+        return predict
 
-        importhandler = None
-        if 'import_handler_metadata' in meta and \
-                'name' in meta['import_handler_metadata']:
-            importhandler = meta['import_handler_metadata']['name']
-        if importhandler is None:
-            raise ValueError('Import handler do no found: %s', meta)
+    def process(self, count):
+        from api.model_tests.models import TestExample
+        verification = self.verification
+        results = []
+        valid_count = 0
+        valid_prob_count = 0
+        max_time = 0
+        errors_count = 0
+        zero_features = verification.test_result.examples_fields
 
-        logging.info('Using %s import handler', importhandler)
-        examples = verification.test_result.examples[:count]
+        logging.info('Using %s import handler', self.importhandler)
         logging.info('Iterating only %s test examples from %s test',
                      count, verification.test_result.name)
+        examples = TestExample.query.filter_by(
+            test_result=verification.test_result).limit(count)
         for example in examples:
-            data = {}
-            for k, v in verification.params_map.iteritems():
-                data[k] = example.data_input[v]
+            data = self.prepare_example_data(example)
             try:
-                logging.info('Sending %s to predict', data)
-                result = predict.post_to_cloudml(
-                    'v3', importhandler, None, data,
-                    throw_error=True, saveResponseTime=True)
-                if '_response_time' in result \
-                        and result['_response_time'] > max_time:
-                    max_time = result['_response_time']
-                result['_data'] = data
-                if 'data' in result:
-                    # Looking to vect. data
-                    for segment, features in result['data'].iteritems():
-                        for feature_name, feature_value \
-                                in features.iteritems():
-                            if feature_name in zero_features and \
-                                    feature_value != 0:
-                                zero_features.remove(feature_name)
+                result = self.call_predict_command(data)
             except Exception, error:
-                create_example_err(example, error, data)
+                self.create_example_err(example, error, data)
                 errors_count += 1
                 continue
 
+            # determine max response time
+            if '_response_time' in result \
+                    and result['_response_time'] > max_time:
+                max_time = result['_response_time']
+            result['_data'] = data
+
+            # looking for zero-features
+            if 'data' in result:
+                for segment, features in result['data'].iteritems():
+                    for feature_name, feature_value \
+                            in features.iteritems():
+                        if feature_name in zero_features and \
+                                feature_value != 0:
+                            zero_features.remove(feature_name)
+
+            # checking whether the prediction is valid
             if 'prediction' in result and \
                     result['prediction'] == example.pred_label:
                 valid_count += 1
@@ -278,7 +297,7 @@ def verify_model(verification_id, count):
 
         verification.result = {
             'valid_count': valid_count,
-            'count': len(examples),
+            'count': count,
             'valid_prob_count': valid_prob_count,
             'max_response_time': max_time,
             'error_count': errors_count,
@@ -286,7 +305,57 @@ def verify_model(verification_id, count):
         }
         verification.status = verification.STATUS_DONE
         verification.save()
-    except Exception, exc:
-        verification.status = verification.STATUS_ERROR
-        verification.error = str(exc)
+
+    def call_predict_command(self, data):
+        logging.info('Sending %s to predict', data)
+        if not self.verification.clazz or \
+                self.verification.clazz == '- Other -':
+            result = self.predict.post_to_cloudml(
+                'v3', self.importhandler, None, data,
+                throw_error=True, saveResponseTime=True)
+        else:
+            call_data = [
+                'run.py',
+                '-c', self.get_config_file(),
+                '-i', self.importhandler,
+                '-p', 'v3']
+            logging.info('Calling %s command with %s',
+                         self.verification.clazz, ' '.join(call_data))
+            command = self.command
+            parser = command.get_arg_parser()
+            for key, val in data.iteritems():
+                for action in parser._actions:
+                    if action.dest == key:
+                        opt = action.option_strings[0]
+                        call_data.append(opt)
+                        call_data.append(str(val))
+            result = command.call(call_data)
+        return result
+
+    def init_logger(self, verification_id):
+        from api.logs.models import LogMessage
+        LogMessage.delete_related_logs(
+            verification_id,
+            type_=LogMessage.VERIFY_MODEL)
+        init_logger(LogMessage.VERIFY_MODEL, obj=int(verification_id))
+
+    def get_verification(self, verification_id):
+        verification = ServerModelVerification.query.get(verification_id)
+        if not verification:
+            raise ValueError('Verification not found')
+        verification.status = verification.STATUS_IN_PROGRESS
+        verification.error = ""
+        verification.result = {}
         verification.save()
+
+        deleted_count = VerificationExample.query.filter(
+            VerificationExample.verification_id == verification.id).delete(
+                synchronize_session=False)
+        logging.info('%s verification examples to delete', deleted_count)
+        return verification
+
+
+@celery.task
+def verify_model(verification_id, count):
+    task = VerifyModelTask()
+    task.run(verification_id, count)
