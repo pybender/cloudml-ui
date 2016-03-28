@@ -166,7 +166,10 @@
 </ul>
 </li>
 <li><a class="reference internal" href="#vagrant">Vagrant</a></li>
-<li><a class="reference internal" href="#installing-test-data">Installing test data</a></li>
+<li><a class="reference internal" href="#installing-test-data">Installing test data</a><ul>
+<li><a class="reference internal" href="#installing-hadoop-and-sqoop">Installing hadoop and sqoop</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#build-docs">Build docs</a></li>
 </ul>
 </li>
@@ -216,8 +219,11 @@
 </ul>
 </li>
 <li><a class="reference internal" href="#vagrant" id="id25">Vagrant</a></li>
-<li><a class="reference internal" href="#installing-test-data" id="id26">Installing test data</a></li>
-<li><a class="reference internal" href="#build-docs" id="id27">Build docs</a></li>
+<li><a class="reference internal" href="#installing-test-data" id="id26">Installing test data</a><ul>
+<li><a class="reference internal" href="#installing-hadoop-and-sqoop" id="id27">Installing hadoop and sqoop</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#build-docs" id="id28">Build docs</a></li>
 </ul>
 </li>
 </ul>
@@ -872,9 +878,16 @@ select * from ja_quick_info limit 1;
 ERROR:  permission denied for relation ja_quick_info
 cloudml=&gt; \q</pre>
 </div>
+<div class="section" id="installing-hadoop-and-sqoop">
+<h3><a class="toc-backref" href="#id27">Installing hadoop and sqoop</a><a class="headerlink" href="#installing-hadoop-and-sqoop" title="Permalink to this headline">¶</a></h3>
+<p>Download and install hadoop:</p>
+<div class="highlight-python"><pre>$ wget https://archive.apache.org/dist/hadoop/core/hadoop-1.0.0/hadoop_1.0.0-1_i386.deb
+$ sudo dpkg -i ./hadoop_1.0.0-1_i386.deb</pre>
+</div>
+</div>
 </div>
 <div class="section" id="build-docs">
-<h2><a class="toc-backref" href="#id27">Build docs</a><a class="headerlink" href="#build-docs" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id28">Build docs</a><a class="headerlink" href="#build-docs" title="Permalink to this headline">¶</a></h2>
 <p>For build docs please install:</p>
 <div class="highlight-console"><div class="highlight"><pre><span class="gp">$</span> sudo pip install <span class="nv">Sphinx</span><span class="o">==</span>1.3.1
 </pre></div>

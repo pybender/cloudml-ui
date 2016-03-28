@@ -174,7 +174,8 @@ class VerifyModelTask(object):
         if isinstance(meta, unicode):
             import json
             meta = json.loads(meta)
-        if 'import_handler_metadata' not in meta or \
+        if meta is None or \
+                'import_handler_metadata' not in meta or \
                 'name' not in meta['import_handler_metadata']:
             raise ValueError(
                 "Import handler name was not specified in the metadata")

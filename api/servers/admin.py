@@ -10,7 +10,7 @@ from models import Server, ServerModelVerification, \
 class ServerAdmin(BaseAdmin):
     Model = Server
     column_list = ['id', 'name', 'ip', 'folder', 'is_default', 'memory_mb',
-                   'type']
+                   'type', 'logs_url']
     column_sortable_list = (
         ('ip', Server.ip),
         ('folder', Server.folder),
@@ -19,6 +19,9 @@ class ServerAdmin(BaseAdmin):
         ('type', Server.type)
     )
     form_args = dict(memory_mb=dict(label='Memory Size (MB)'))
+    column_formatters = {
+        'logs_url': macro('render_link')
+    }
 
 admin.add_view(ServerAdmin(name='Server'))
 

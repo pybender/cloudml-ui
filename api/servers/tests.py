@@ -384,8 +384,9 @@ class ServerModelVerificationResourceTests(BaseDbTestCase, TestChecksMixin):
         resp = self.client.put(
             url, data={'count': 5}, headers=HTTP_HEADERS)
         result = json.loads(resp.data)
-        self.assertEqual('done', result['status'])
+        self.assertEqual(
+            ServerModelVerification.STATUS_DONE, result['status'])
         model = result['server_model_verification']
         self.assertEqual(
-            ServerModelVerification.STATUS_IN_PROGRESS,
+            ServerModelVerification.STATUS_DONE,
             model['status'])
