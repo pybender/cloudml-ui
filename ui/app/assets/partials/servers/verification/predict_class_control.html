@@ -4,12 +4,12 @@
   <h4>Predict Class Settings</h4>
   <label class="control-label">Predict Class</label>
   <div class="controls">
-    <select name="clazz" ng-model="model.clazz" ng-required ng-change="clazzChanged(Form.clazz.$viewValue)"ng-options="clazz as clazz for (clazz, params) in predictClassesConfig" required>
+    <select name="clazz" ng-model="model.clazz" ng-required ng-change="clazzChanged(Form.clazz.$viewValue)" ng-options="clazz as clazz for (clazz, params) in predictClassesConfig" required>
       <option value="">- nothing selected -</option>
     </select>
     <span ng-show="Form.clazz.$error.required" class="help-inline">*</span>
   </div>
 </div>
 <div class="control-group" ng-class="{error: Form.fieldsMap.$invalid}">
-  <fields-mapper ng-model="model.params_map" params="importParams" fields="dataFields" name="'Map Parameters'" />
+  <fields-mapper ng-model="model.params_map" params="importParams" fields="dataFields" name="'Map Parameters'" disabled="!Form.test_result_id.$viewValue || !Form.clazz.$viewValue"/>
 </div>
