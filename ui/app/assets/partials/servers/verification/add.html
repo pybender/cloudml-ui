@@ -1,7 +1,7 @@
 <form name="Form" class="form-horizontal" ng-controller="SaveObjectCtl">
   <div class="modal-header">
     <button ng-click="$dismiss('cancel')" class="close" data-dismiss="modal">×</button>
-    <h3>Add server model verification.</h3>
+    <h3>Add server model verification</h3>
   </div>
 
   <div class="modal-body">
@@ -9,7 +9,7 @@
   	<div class="control-group" ng-class="{error: Form.server_id.$invalid || errorList.server_id}">
       <label class="control-label">Server</label>
     	<div class="controls">
-      	<select name="server_id" ng-model="model.server_id" ng-required ng-change="serverChanged(Form.server_id.$viewValue)"ng-options="server.id as server.name for server in servers">
+      	<select name="server_id" ng-model="model.server_id" ng-required ng-change="serverChanged(Form.server_id.$viewValue)" ng-options="server.id as server.name for server in servers">
         	<option value="">- nothing selected -</option>
       	</select>
       	<span ng-show="Form.server_id.$error.required" class="help-inline">*</span>

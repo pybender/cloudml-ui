@@ -11,6 +11,7 @@ angular.module('app.directives')
       value: '=ngModel'
       fields: '='
       name: '='
+      disabled: '='
     }
     link: ($scope, element, attributes, ngModel) ->
       $scope.fieldsMap = {}

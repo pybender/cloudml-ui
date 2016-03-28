@@ -115,10 +115,13 @@ angular.module('app.servers.verifications', ['app.config', ])
         $scope.datas = []
         $scope.datasDisabled = true
         $scope.loadingTests = false
+        $scope.importParams = []
+        $scope.dataFields = []
         return
       $scope.model.description = null
       $scope.loadingTests = true
       $scope.datasDisabled = true
+      $scope.dataFields = []
       TestResult.$loadAll({
         model_id: $scope.model.model_id,
         show: 'name,examples_fields,examples_count'})
@@ -139,6 +142,8 @@ angular.module('app.servers.verifications', ['app.config', ])
 
     $scope.dataChanged = (id) ->
       if !id?
+        $scope.dataFields = []
+        $scope.model.examples_count = 0
         return
       for data in $scope.datas
         if (data.id == id)
@@ -146,6 +151,9 @@ angular.module('app.servers.verifications', ['app.config', ])
           $scope.model.examples_count = data.examples_count
 
     $scope.clazzChanged = (clazz) ->
+      if !clazz?
+        $scope.importParams = []
+        return
       $scope.importParams = $scope.predictClassesConfig[clazz]
 ])
 
