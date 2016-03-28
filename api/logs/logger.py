@@ -61,10 +61,11 @@ def init_logger(name, **kwargs):
         logger.setLevel(logging.DEBUG)
         logger.propagate = True
     else:
-        # using standart logger for unittests
-        logger.propagate = False
-        logger.setLevel(logging.ERROR)
-        #logger.disabled = True
+        import sys
+        logger.level = logging.DEBUG
+        stream_handler = logging.StreamHandler(sys.stdout)
+        logger.addHandler(stream_handler)
+        logger.disabled = True
     return logger
 
 
