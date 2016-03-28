@@ -187,7 +187,7 @@ class ServerModelVerificationResource(BaseResourceSQL):
 
         return self._render({
             self.OBJECT_NAME: model,
-            'status': 'done'
+            'status': model.status
         }, code=201)
 
 api.add_resource(
