@@ -492,3 +492,12 @@ class AmazonDynamoDBHelper(object):
                 self._tables[table_name] = table
             except JSONResponseError as ex:
                 logging.exception(str(ex))
+
+
+def amazon_config():
+    """
+    Returns amazon credentials of current config
+    """
+    return app.config['AMAZON_ACCESS_TOKEN'], \
+        app.config['AMAZON_TOKEN_SECRET'], \
+        app.config['AMAZON_BUCKET_NAME']
