@@ -64,7 +64,7 @@ def init_logger(name, **kwargs):
         # using standart logger for unittests
         logger.propagate = False
         logger.setLevel(logging.ERROR)
-        logger.disabled = True
+        #logger.disabled = True
     return logger
 
 
