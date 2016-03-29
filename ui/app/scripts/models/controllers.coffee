@@ -59,8 +59,8 @@ angular.module('app.models.controllers', ['app.config', ])
       per_page: 5
       sort_by: 'updated_on'
       order: 'desc'
+      page: 1
     }
-    $scope.page = 1
     $scope.STATUSES = ['', 'New', 'Queued', 'Importing',
     'Imported', 'Requesting Instance', 'Instance Started',
     'Training', 'Trained', 'Error', 'Canceled']
@@ -74,16 +74,13 @@ angular.module('app.models.controllers', ['app.config', ])
               'updated_by_id': user.id
               'status': ''}
             $scope.$watch('filter_opts', (filter_opts, oldVal, scope) ->
+              $scope.kwargs['page'] = 1
               $scope.$emit 'BaseListCtrl:start:load', modelName
             , true)
         , true)
       else
         $scope.filter_opts = {'status': ''}
 
-    $scope.showMore = () ->
-      $scope.page += 1
-      extra = {'page': $scope.page}
-      $scope.$emit 'BaseListCtrl:start:load', $scope.modelName, true, extra
 ])
 
 

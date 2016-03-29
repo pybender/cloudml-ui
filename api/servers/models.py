@@ -34,7 +34,7 @@ class Server(BaseModel, db.Model):
     def __repr__(self):
         return '<Server {0}>'.format(self.name)
 
-    def list_keys(self, folder=None):
+    def list_keys(self, folder=None, params={}):
         path = self.folder.strip('/')
         if folder and folder in self.ALLOWED_FOLDERS:
             path += '/{0!s}'.format(folder)
@@ -68,6 +68,18 @@ class Server(BaseModel, db.Model):
                 'crc32': key.get_metadata('crc32'),
                 'server_id': self.id
             })
+
+        sort_by = params.get('sort_by', None)
+        order = params.get('order', 'asc')
+        if objects and sort_by:
+            obj = objects[0]
+            if sort_by in obj.keys():
+                return sorted(objects,
+                              key=lambda x: x[sort_by],
+                              reverse=order != 'asc')
+            else:
+                raise ValueError('Unable to sort by %s. Property is not exist.'
+                                 % sort_by)
         return objects
 
     def set_key_metadata(self, uid, folder, key, value):
