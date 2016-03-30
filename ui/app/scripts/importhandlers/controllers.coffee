@@ -13,8 +13,8 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
       per_page: 5
       sort_by: 'updated_on'
       order: 'desc'
+      page: 1
     }
-    $scope.page = 1
 
     $scope.init = (updatedByMe, listUniqueName) ->
       $scope.listUniqueName = listUniqueName
@@ -25,16 +25,12 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
               'updated_by_id': user.id
               'status': ''}
             $scope.$watch('filter_opts', (filter_opts, oldVal, scope) ->
+              $scope.kwargs['page'] = 1
               $scope.$emit 'BaseListCtrl:start:load', listUniqueName
             , true)
         , true)
       else
         $scope.filter_opts = {'status': ''}
-
-    $scope.showMore = () ->
-      $scope.page += 1
-      extra = {'page': $scope.page}
-      $scope.$emit 'BaseListCtrl:start:load', $scope.listUniqueName, true, extra
 ])
 
 .controller('ImportHandlerSelectCtrl', [

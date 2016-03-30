@@ -65,8 +65,10 @@ class ServerFileResource(BaseResource):
     PUT_ACTIONS = ('reload', )
 
     def _list(self, extra_params=(), **kwargs):
+        params = self._get_list_parameters(extra_params)
         server = self._get_server(kwargs)
-        objects = server.list_keys(folder=self._get_folder(kwargs))
+        objects = server.list_keys(folder=self._get_folder(kwargs),
+                                   params=params)
         return self._render({"%ss" % self.OBJECT_NAME: objects})
 
     def put(self, action=None, **kwargs):

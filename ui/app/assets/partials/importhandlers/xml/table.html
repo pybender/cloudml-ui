@@ -1,7 +1,12 @@
 <table class="table table-hover">
   <thead>
     <tr>
-      <th>Name
+      <th>
+        <span>
+          <a ng-class="{active: sort_by == 'name'}" ng-click="sort_list('name')">Name</a>
+          <i ng-show="sort_by == 'name' && !asc_order" class="icon-arrow-down"></i>
+          <i ng-show="sort_by == 'name' && asc_order" class="icon-arrow-up"></i>
+        </span>
         <a ng-click="showNameFilter=!showNameFilter"><i class="icon-search"></i></a>
         <div ng-show="showNameFilter || filter_opts['name']">
           <input class="input-medium" name="name" ng-model="filter_opts['name']" placeholder="filter by name" />
@@ -16,7 +21,11 @@
         </div>
       </th>
       <th>
-        Updated
+        <span>
+          <a ng-class="{active: sort_by == 'updated_on'}" ng-click="sort_list('updated_on')">Updated</a>
+          <i ng-show="sort_by == 'updated_on' && !asc_order" class="icon-arrow-down"></i>
+          <i ng-show="sort_by == 'updated_on' && asc_order" class="icon-arrow-up"></i>
+        </span>
         <span ng-show="modelName=='xml_import_handlers'">
         <a ng-click="showUpdatedFilter=!showUpdatedFilter"><i class="icon-search"></i></a>
         <span ng-show="showUpdatedFilter || filter_opts['updated_by']"><br/>
@@ -69,4 +78,4 @@
     </tr>
   </tbody>
   </table>
-  <a ng-show="has_next" ng-click="showMore()">Load More...</a>
+  <a ng-show="has_next" ng-click="loadMore()">Load More...</a>
