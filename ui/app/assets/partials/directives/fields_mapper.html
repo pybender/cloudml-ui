@@ -9,13 +9,13 @@
       <select name="dataField" class="input-small" ng-model="dataField" ng-options="field as field for field in fields" ng-disabled="disabled">
         <option value=''>-- select field name --</option>
       </select>
-      <a class="btn btn-info" ng-click="appendFieldMap(importParam, dataField)" ng-disabled="!dataField || !importParam">
+      <a class="btn btn-info" ng-click="appendFieldMap(importParam, dataField)" ng-disabled="!dataField || !importParam || disabled">
         <i class="icon-plus"></i>
       </a>
     </div>
     <label>Selected Fields: </label>
     <div class="alert-info well block">
-      <div ng-repeat="(key, value) in fieldsMap" class="label label-info">
+      <div ng-repeat="(key, value) in fieldsMap" class="label label-info" name="fieldsMap">
         <span> {{ key }} </span> = <span> {{ value }} </span> <a ng-click="removeField(key)"><i class="icon-remove"></i></a>
       </div>
     </div>

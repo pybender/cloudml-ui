@@ -231,14 +231,17 @@ App.config([
     .when('/predict/verifications', {
       controller: 'ServerModelVerificationListCtrl'
       templateUrl: 'partials/servers/verification/list.html'
+      title: 'Server Model Verifications'
     })
     .when('/predict/verifications/:id', {
       controller: 'ServerModelVerificationDetailsCtrl'
       templateUrl: 'partials/servers/verification/details.html'
+      title: 'Server Model Verification'
     })
     .when('/predict/verifications/:verification_id/examples/:id', {
       controller: 'VerificationExampleDetailsCtrl'
       templateUrl: 'partials/servers/verification/example_details.html'
+      title: 'Server Model Verification Details'
     })
     .when('/predict/verifications/:verification_id/examples', {
       redirectTo: (params, loc) ->
