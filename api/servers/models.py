@@ -22,6 +22,11 @@ class Server(BaseModel, db.Model):
     DEV = 'Development'
     TYPES = [PRODUCTION, STAGING, DEV]
 
+    ENV_MAP = {
+        PRODUCTION: 'prod',
+        STAGING: 'staging',
+        DEV: 'dev'}
+
     name = db.Column(db.String(200), nullable=False, unique=True)
     description = deferred(db.Column(db.Text))
     ip = db.Column(db.String(200), nullable=False)
@@ -33,6 +38,14 @@ class Server(BaseModel, db.Model):
 
     def __repr__(self):
         return '<Server {0}>'.format(self.name)
+
+    @property
+    def grafana_name(self):
+        if not hasattr(self, '_grafana_name'):
+            from slugify import slugify
+            name = self.name.replace('_', '-')
+            self._grafana_name = slugify('CloudMl ' + name)
+        return self._grafana_name
 
     def list_keys(self, folder=None, params={}):
         path = self.folder.strip('/')

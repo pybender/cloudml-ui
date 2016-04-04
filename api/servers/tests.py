@@ -407,3 +407,24 @@ class ServerModelVerificationResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertEqual(
             ServerModelVerification.STATUS_DONE,
             model['status'])
+
+
+class GrafanaTests(BaseDbTestCase):
+    datasets = [ServerData, ModelData]
+
+    def setUp(self):
+        super(GrafanaTests, self).setUp()
+        self.server = Server.query.first()
+        self.model = Model.query.first()
+
+    def test_model_to_grafana(self):
+        from api.servers.grafana import GrafanaHelper
+        with patch('grafana_api_client.DeferredClientRequest.get') as mock:
+            with patch('grafana_api_client.DeferredClientRequest.create') as post_mock:
+                helper = GrafanaHelper(self.server)
+                dashboard = helper._create_dashboard_json()
+                dashboard['rows'].append(helper._get_model_json(self.model))
+                mock.return_value = {'dashboard': dashboard}
+                post_mock.return_value = {}
+                result = helper.model2grafana(self.model)
+                # self.assertEqual(result, 1)
