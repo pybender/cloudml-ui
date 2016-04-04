@@ -9,7 +9,7 @@ def add_grafana_dashboads():
     """
     Create grafana dashboards for existing models
     """
-    servers = Server.query.all()
+    servers = Server.query.filter(Server.id.in_((11,12,13,14,15))).all()
     for server in servers:
         # update models
         model_files = server.list_keys(FOLDER_MODELS)
