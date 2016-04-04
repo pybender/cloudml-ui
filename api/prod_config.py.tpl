@@ -6,6 +6,9 @@ DATA_FOLDER = '{{ current_var_link }}/data'
 MAX_CONTENT_LENGTH = 128 * 1024 * 1024
 TEST_MODE = False
 
+GRAFANA_KEY = "eyJrIjoiYk1KME10bGtOSGh2V3JZVmxFWlJIU0ljcnFLRzE5OTUiLCJuIjoibmlrb2xheW1lbG5payIsImlkIjoxfQ=="
+GRAFANA_HOST = "grafana.odesk.com"
+
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_ENABLE_UTC = True

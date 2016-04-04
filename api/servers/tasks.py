@@ -16,7 +16,7 @@ from api.accounts.models import User
 from api.ml_models.models import Model
 from api.amazon_utils import AmazonS3Helper
 from .config import FOLDER_MODELS, FOLDER_IMPORT_HANDLERS
-
+from grafana.grafana import create_server_dashboard
 
 def get_a_Uuid():
     r_uuid = base64.urlsafe_b64encode(uuid.uuid4().bytes)
@@ -69,6 +69,8 @@ def upload_model_to_server(server_id, model_id, user_id):
     feature_set = model.features_set
     feature_set.locked = True
     feature_set.save()
+    logging.info('Creating grafan dashboard for model')
+    create_server_dashboard(server, model)
     logging.info('Model has been uploaded: %s' % model.name)
 
 

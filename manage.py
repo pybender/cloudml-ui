@@ -204,6 +204,13 @@ class UpdateDeployed(Command):
         update_deployed()
         print "Done"
 
+class CreateGrafanaDashboards(Command):
+    """Create grafana dashboard"""
+    def run(self):
+        from api.servers.scripts import add_grafana_dashboads
+        add_grafana_dashboads()
+        print "Done"
+
 
 manager = Manager(app)
 migrate = Migrate(app, app.sql_db)
@@ -221,6 +228,7 @@ manager.add_command("create_dynamodb_tables", CreateDynamoDbTables())
 manager.add_command("drop_db_tables", DropDbTables())
 manager.add_command("create_image", CreateWorkerImage())
 manager.add_command("update_deployed", UpdateDeployed())
+manager.add_command("create_grafana", CreateGrafanaDashboards())
 
 
 if __name__ == "__main__":
