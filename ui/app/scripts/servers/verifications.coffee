@@ -111,7 +111,7 @@ angular.module('app.servers.verifications', ['app.config', ])
 
 
     $scope.setClazz = () ->
-      if $scope.clazz?
+      if $scope.clazz? && $scope.predictClassesConfig[$scope.clazz]
         $scope.importParams = angular.copy($scope.predictClassesConfig[$scope.clazz])
 
 
@@ -185,11 +185,13 @@ angular.module('app.servers.verifications', ['app.config', ])
   'ModelVerification'
 
   ($scope, $routeParams, ModelVerification, VerificationExample) ->
-    if not $routeParams.id then err = "Can't initialize without server model verification id"
+    if not $routeParams.id then throw new Error "Can't initialize without server model verification id"
     $scope.verification = new ModelVerification({id: $routeParams.id})
 
     $scope.verification.$load(
-      show: ModelVerification.MAIN_FIELDS + ',description,result,params_map,error')
+      show: ModelVerification.MAIN_FIELDS + ',description,result,params_map,error').then (->
+        # model verification loaded
+      ), ((opts)-> $scope.setError(opts, 'loading server model verification'))
 
     $scope.goSection = (section) ->
       name = section[0]
@@ -268,37 +270,6 @@ angular.module('app.servers.verifications', ['app.config', ])
     example.objectUrl() + '?' + $.param($scope.getParamsDict())
 ])
 
-.controller('VerificationParamsMapCtrl', [
-  '$scope'
-  '$routeParams'
-  'openOptions'
-
-  ($scope, $routeParams, openOptions) ->
-    $scope.resetError()
-    model = openOptions.model
-    $scope.verification = model
-    $scope.importParams = model.import_handler.import_params
-    $scope.dataFields = model.test_result.examples_fields
-    $scope.fieldsMap = {}
-
-    $scope.appendFieldMap = (importParam, dataField) ->
-      if not importParam? or not dataField?
-        return
-      $scope.fieldsMap[importParam] = dataField
-      $scope.importParams.pop importParam
-      $scope.importParam = 1
-      $scope.dataField = 1
-
-    $scope.removeField = (param) ->
-      delete $scope.fieldsMap[param]
-      $scope.importParams.push param
-
-    $scope.getVerificationParamsMap = () ->
-      {
-        params: angular.toJson($scope.fieldsMap)
-      }
-])
-
 
 .controller('VerificationExampleDetailsCtrl', [
   '$scope'
@@ -306,7 +277,7 @@ angular.module('app.servers.verifications', ['app.config', ])
   'VerificationExample'
 
   ($scope, $routeParams, VerificationExample) ->
-    if not $routeParams.verification_id then err = "Can't initialize without server model verification id"
+    if not $routeParams.verification_id then throw new Error "Can't initialize without server model verification id"
     $scope.example = new VerificationExample({id: $routeParams.id, verification_id: $routeParams.verification_id})
 
     $scope.example.$load(
