@@ -417,14 +417,65 @@ class GrafanaTests(BaseDbTestCase):
         self.server = Server.query.first()
         self.model = Model.query.first()
 
-    def test_model_to_grafana(self):
+    def test_model2grafana(self):
+        def _check(get_dashboard_mock,
+                   post_dashboard_mock, old_dashboard_json):
+            get_dashboard_mock.return_value = {'dashboard': old_dashboard_json}
+            post_dashboard_mock.return_value = {}
+            result = helper.model2grafana(self.model)
+            self.assertTrue(get_dashboard_mock.called,
+                            'Should try to get server dashboard')
+            self.assertTrue(post_dashboard_mock.called,
+                            'Should update server dashboard')
+            get_dashboard_mock.reset_mock()
+            post_dashboard_mock.reset_mock()
+            return result
+
         from api.servers.grafana import GrafanaHelper
+        helper = GrafanaHelper(self.server)
+
         with patch('grafana_api_client.DeferredClientRequest.get') as mock:
-            with patch('grafana_api_client.DeferredClientRequest.create') as post_mock:
-                helper = GrafanaHelper(self.server)
+            with patch('grafana_api_client.DeferredClientRequest.create') \
+                    as post_mock:
+                # dashboard does not exist
+                from grafana_api_client import GrafanaClientError
+                mock.side_effect = GrafanaClientError()
+                result = _check(mock, post_mock, {})
+                self.assertEqual(result['title'],
+                                 'CloudMl {}'.format(self.server.name),
+                                 'Server dashboard should be added')
+                self.assertEquals(len(result['rows']), 1)
+                self.assertEqual(result['rows'][0]['title'], self.model.name)
+                mock.side_effect = None
+
+                # dashboard exist, model exist
                 dashboard = helper._create_dashboard_json()
-                dashboard['rows'].append(helper._get_model_json(self.model))
-                mock.return_value = {'dashboard': dashboard}
-                post_mock.return_value = {}
-                result = helper.model2grafana(self.model)
-                # self.assertEqual(result, 1)
+                dashboard['title'] += '-old'
+                model_json = helper._get_model_json(self.model)
+                model_json['old_title'] = 'old-model-name'
+                dashboard['rows'].append(model_json)
+
+                result = _check(mock, post_mock, dashboard)
+                self.assertEqual(
+                    result['title'],
+                    'CloudMl {}-old'.format(self.server.name),
+                    'Server dashboard should not be replaced {}'.format(result['title']))
+                self.assertEquals(len(result['rows']), 1)
+                self.assertEqual(result['rows'][0]['title'], self.model.name)
+                self.assertFalse('old_title' in result['rows'][0])
+
+                # dashboard exist, model does not exist
+                OTHER_MODEL = 'other-model'
+                dashboard = helper._create_dashboard_json()
+                dashboard['title'] += '-old'
+                model_json = helper._get_model_json(self.model)
+                model_json['title'] = OTHER_MODEL
+                dashboard['rows'].append(model_json)
+
+                result = _check(mock, post_mock, dashboard)
+                self.assertEqual(result['title'],
+                                 'CloudMl {}-old'.format(self.server.name),
+                                 'Server dashboard should not be replaced')
+                self.assertEquals(len(result['rows']), 2)
+                self.assertEqual(result['rows'][0]['title'], OTHER_MODEL)
+                self.assertEqual(result['rows'][1]['title'], self.model.name)

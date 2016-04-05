@@ -25,6 +25,8 @@ class GrafanaHelper(object):
         return self._server_name
 
     def model2grafana(self, model):
+        logging.info('Posting %s to server %s Grafana dashboard',
+                     model.name, self.server.name)
         dashboard = self._get_or_create_dashboard_json()
         self._model_to_dashboard(dashboard, model)
         self._update_grafana_dashboard(dashboard)
@@ -40,7 +42,8 @@ not found.'.format(self.server.name))
 
     def _get_dashboard_json(self):
         try:
-            data = self.client.dashboards.db.__getitem__(self.server.grafana_name).get()
+            data = self.client.dashboards.db.__getitem__(
+                self.server.grafana_name).get()
             logging.info('Grafana dashboard for server {0!s} \
 found.'.format(self.server.name))
             return data['dashboard']
