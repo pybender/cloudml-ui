@@ -17,7 +17,8 @@
 <div>Type: <span class="value">{{ server.type }}</span></div>
 <div>Folder: <span class="value">{{ server.folder }}</span></div>
 <div>Memory Size: <span class="value">{{ server.memory_mb }} (MB)</span></div>
-<div>Logs URL: <span class="value"><a href="{{ server.logs_url }}" target="_blank">{{ server.logs_url }}</a></span></div>
+<div><i class="icon"><img class="logo-icon" src="http://logs.dev.agora.odesk.com/img/small.png"></i> Logs URL: <span class="value"><a href="{{ server.logs_url }}" target="_blank">{{ server.logs_url }}</a></span></div>
+<div><i class="icon"><img class="logo-icon" src="http://grafana.odesk.com/img/fav32.png"></i> Grafana URL: <span class="value"><a href="{{ server.grafana_url }}" target="_blank">{{ server.grafana_url }}</a></span></div>
 
 <h3>Models</h3>
 <div ng-controller="FileListCtrl" ng-init="init(server, 'models')">

@@ -47,6 +47,13 @@ class Server(BaseModel, db.Model):
             self._grafana_name = slugify('CloudMl ' + name)
         return self._grafana_name
 
+    @property
+    def grafana_url(self):
+        from api import app
+        return 'http://{0}/dashboard/db/{1}'.format(
+            app.config.get('GRAFANA_HOST'),
+            self.grafana_name)
+
     def list_keys(self, folder=None, params={}):
         path = self.folder.strip('/')
         if folder and folder in self.ALLOWED_FOLDERS:

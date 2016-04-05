@@ -101,7 +101,7 @@ angular.module('app.servers.model', ['app.config'])
       BASE_API_URL: "#{settings.apiUrl}servers/"
       BASE_UI_URL: '/predict/servers'
       API_FIELDNAME: 'server'
-      @MAIN_FIELDS: 'id,name,ip'
+      @MAIN_FIELDS: 'id,name,ip,grafana_url'
 
       id: null
       name: null
