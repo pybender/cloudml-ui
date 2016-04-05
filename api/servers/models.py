@@ -26,7 +26,7 @@ class Server(BaseModel, db.Model):
     ENV_MAP = {
         PRODUCTION: 'prod',
         STAGING: 'staging',
-        DEV: 'dev'
+        DEV: 'dev',
         AALYTICS: 'analytics'}
 
     name = db.Column(db.String(200), nullable=False, unique=True)
