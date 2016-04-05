@@ -74,7 +74,7 @@ found.'.format(self.server.name))
         model_data = model_data.substitute(
             env=Server.ENV_MAP[self.server.type],
             server=self.server.folder,
-            name=model.name
+            name=model.name,
             datasource=datasource)
 
         return json.loads(model_data)
