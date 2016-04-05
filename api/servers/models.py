@@ -20,12 +20,14 @@ class Server(BaseModel, db.Model):
     PRODUCTION = 'Production'
     STAGING = 'Staging'
     DEV = 'Development'
-    TYPES = [PRODUCTION, STAGING, DEV]
+    AALYTICS = 'Analytics'
+    TYPES = [PRODUCTION, STAGING, DEV, AALYTICS]
 
     ENV_MAP = {
         PRODUCTION: 'prod',
         STAGING: 'staging',
-        DEV: 'dev'}
+        DEV: 'dev'
+        AALYTICS: 'analytics'}
 
     name = db.Column(db.String(200), nullable=False, unique=True)
     description = deferred(db.Column(db.Text))

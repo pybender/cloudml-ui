@@ -1,3 +1,5 @@
+.. _model-verification:
+
 ==================
 Model verification
 ==================

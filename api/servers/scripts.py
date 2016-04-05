@@ -2,25 +2,26 @@ from api.ml_models.models import Model
 from api.model_tests.models import TestResult
 from api.import_handlers.models.importhandlers import XmlImportHandler
 from api.servers.models import Server, FOLDER_MODELS, FOLDER_IMPORT_HANDLERS
-from grafana.grafana import create_server_dashboard
+from grafana import update_grafana_dashboard
 
 
 def add_grafana_dashboads():
     """
     Create grafana dashboards for existing models
     """
-    servers = Server.query.filter(Server.id.in_((11,12,13,14,15))).all()
+    servers = Server.query.filter(Server.id.in_((11, 12, 13, 14, 15))).all()
     for server in servers:
         # update models
         model_files = server.list_keys(FOLDER_MODELS)
         for file_ in model_files:
             model = Model.query.get(file_["object_id"])
             if model:
-                create_server_dashboard(server, model)
+                update_grafana_dashboard(server, model)
                 print "Model {0} (id#{1}) on server {2} updated".format(
-                        model.name,
-                        model.id,
-                        server.name)
+                    model.name,
+                    model.id,
+                    server.name)
+
 
 def update_deployed():
     """

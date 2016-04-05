@@ -16,7 +16,8 @@ from api.accounts.models import User
 from api.ml_models.models import Model
 from api.amazon_utils import AmazonS3Helper
 from .config import FOLDER_MODELS, FOLDER_IMPORT_HANDLERS
-from grafana.grafana import create_server_dashboard
+from grafana import update_grafana_dashboard
+
 
 def get_a_Uuid():
     r_uuid = base64.urlsafe_b64encode(uuid.uuid4().bytes)
@@ -70,7 +71,7 @@ def upload_model_to_server(server_id, model_id, user_id):
     feature_set.locked = True
     feature_set.save()
     logging.info('Creating grafan dashboard for model')
-    create_server_dashboard(server, model)
+    update_grafana_dashboard(server, model)
     logging.info('Model has been uploaded: %s' % model.name)
 
 
@@ -205,7 +206,8 @@ class VerifyModelTask(object):
         import predict as predict_module
         base_path = os.path.dirname(predict_module.__file__)
         base_path = os.path.split(base_path)[0]
-        config_file = "%s.properties" % Server.ENV_MAP[self.verification.server.type]
+        config_file = "%s.properties" % Server.ENV_MAP[
+            self.verification.server.type]
 
         config_file = os.path.join(base_path, 'env', config_file)
         logging.info('Using %s config file', config_file)

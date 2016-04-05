@@ -6,7 +6,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": null,
+          "datasource": "$datasource",
           "editable": true,
           "error": false,
           "fill": 1,
@@ -81,7 +81,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": null,
+          "datasource": "$datasource",
           "editable": true,
           "error": false,
           "fill": 1,

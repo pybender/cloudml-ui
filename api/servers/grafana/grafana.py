@@ -67,10 +67,15 @@ found.'.format(self.server.name))
             model_tmpl = fp.read()
 
         model_data = Template(model_tmpl)
+        if self.server.type == Server.PRODUCTION:
+            datasource = "graphite prod"
+        else:
+            datasource = "Dev Graphite"
         model_data = model_data.substitute(
             env=Server.ENV_MAP[self.server.type],
             server=self.server.folder,
-            name=model.name)
+            name=model.name
+            datasource=datasource)
 
         return json.loads(model_data)
 
@@ -95,41 +100,6 @@ Grafana dashboard.'.format(self.server.name))
         self.client.dashboards.db.create(dashboard=dashboard, overwrite=True)
 
 
-def create_server_dashboard(server, model):
+def update_grafana_dashboard(server, model):
     helper = GrafanaHelper(server)
     return helper.model2grafana(model)
-    # server_name = (server.name).replace('_', '-')
-    # server_slug = slugify('Cloudml ' + server_name)
-    # try:
-    #     data = client.dashboards.db.__getitem__(server_slug).get()
-    #     dashboard = data['dashboard']
-    # except GrafanaClientError, e:
-    #     dashboard = None
-    # if not dashboard:
-    #     filename = os.path.join(BASE_PATH, filename)
-    #     with open(filename, 'r') as fp:
-    #         tmpl = fp.read()
-    #     data = Template(tmpl)
-    #     data = data.substitute(name=server_name)
-    #     dashboard = json.loads(data)
-    # model_filename = 'model_tmpl.json'
-    # model_filename = os.path.join(BASE_PATH, model_filename)
-    # with open(model_filename, 'r') as fp:
-    #     model_tmpl = fp.read()
-
-    # model_data = Template(model_tmpl)
-    # model_data = model_data.substitute(
-    #     env=Server.ENV_MAP[server.type],
-    #     server=server.folder,
-    #     name=model.name)
-
-    # model_json = json.loads(model_data)
-    # exist = False
-    # for index, row in enumerate(dashboard['rows']):
-    #     if row['title'] == model.name:
-    #         dashboard['rows'][index] = model_json
-    #         exist = True
-    #         break
-    # if not exist:
-    #     dashboard['rows'].append(model_json)
-    # client.dashboards.db.create(dashboard=dashboard, overwrite=True)
