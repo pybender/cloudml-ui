@@ -220,7 +220,9 @@ class VerifyModelTask(object):
             params_map = json.loads(params_map)
         for k, v in params_map.iteritems():
             name = v.replace('.', '->')
-            data[k] = example.data_input[name]
+            # or KeyError is expected in this case ?
+            if name in example.data_input.keys():
+                data[k] = example.data_input[name]
         return data
 
     @property
