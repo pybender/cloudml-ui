@@ -103,6 +103,28 @@ angular.module('app.filters', [])
         return 'No'
 )
 
+.filter('truncate', () ->
+    return (input, chars, breakOnWord) ->
+      if isNaN(chars) then return input
+      if chars <= 0 then return ''
+
+      if typeof input isnt 'string'
+        return input
+
+      if input and input.length > chars
+          input = input.substring(0, chars)
+
+          if not breakOnWord
+            lastspace = input.lastIndexOf(' ')
+            if not lastspace == -1
+              input = input.substr(0, lastspace)
+          else
+            while (input.charAt(input.length - 1) == ' ')
+              input = input.substr(0, input.length -1)
+          return input + '…'
+      return input
+)
+
 add_zero = (val) ->
   if val < 10
     val = '0' + val

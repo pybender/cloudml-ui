@@ -288,6 +288,12 @@ angular.module('app.controllers', ['app.config', ])
       $scope.modelName = modelName
       $scope.autoload = autoload
       $scope.autoloadOnFilter = autoloadOnFilter
+      if $scope.kwargs?.order? && $scope.kwargs?.sort_by?
+        $scope.asc_order = if $scope.kwargs.order == 'desc' then false else true
+        $scope.sort_by = $scope.kwargs.sort_by
+      else
+        $scope.asc_order = true
+        $scope.sort_by = 'updated_on'
 
       if $scope.autoload
         $scope.load()
@@ -301,6 +307,8 @@ angular.module('app.controllers', ['app.config', ])
       if $scope.autoloadOnFilter
         $scope.$watch('filter_opts', (filter_opts, oldVal, scope) ->
           if filter_opts?
+            if scope.kwargs?
+              $scope.kwargs['page'] = 1
             $scope.load()
         , true)
 
@@ -334,4 +342,17 @@ angular.module('app.controllers', ['app.config', ])
       return _.reduce $scope.objects, (acc, obj)->
         return acc + obj[fieldName]
       , 0
+
+    $scope.sort_list = (sort_by) ->
+      if $scope.sort_by == sort_by
+        # Only change ordering
+        $scope.asc_order = !$scope.asc_order
+      else
+        # Change sort by field
+        $scope.asc_order = true
+        $scope.sort_by = sort_by
+      $scope.kwargs['page'] = 1
+      $scope.kwargs['sort_by'] = $scope.sort_by
+      $scope.kwargs['order'] = if $scope.asc_order then 'asc' else 'desc'
+      $scope.load()
 ])

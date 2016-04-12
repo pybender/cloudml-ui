@@ -499,5 +499,5 @@ def amazon_config():
     Returns amazon credentials of current config
     """
     return app.config['AMAZON_ACCESS_TOKEN'], \
-           app.config['AMAZON_TOKEN_SECRET'], \
-           app.config['AMAZON_BUCKET_NAME']
+        app.config['AMAZON_TOKEN_SECRET'], \
+        app.config['AMAZON_BUCKET_NAME']

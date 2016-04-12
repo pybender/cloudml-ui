@@ -1,0 +1,13 @@
+<div class="feature_value">
+  <span ng-show="!val.weights" title="{{ renderTitle(val) }}" class="badge {{ val.css_class }}">{{ val.value }}</span>
+
+  <div ng-show="val.weights">
+    <span ng-show="val.type == 'list'" ng-init="lword=word.toLowerCase();value = val.weights[lword]" ng-repeat="word in val.value|words track by $index">
+      <span ng-show="value.weight" title="{{ renderTitle(value) }}" class="badge {{ value.css_class }}">{{ word }}</span>
+      <span ng-show="!value.weight">{{ word }}</span>
+    </span>
+    <span ng-show="val.type == 'dict'" ng-repeat="(key, dval) in val.weights">
+      <span title="{{ renderTitle(dval) }}" class="badge {{ dval.css_class }}">{{ key }}={{ dval.value }}</span>
+    </span>
+  </div>
+</div>

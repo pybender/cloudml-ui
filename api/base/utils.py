@@ -2,6 +2,7 @@
 
 import re
 import json
+import importlib
 
 
 def convert_name(name, to_text=False):
@@ -117,3 +118,28 @@ def pluralize(singular):
         suffix = 's'
     plural = root + suffix
     return plural
+
+
+def inheritors(klass):
+    subclasses = set()
+    work = [klass]
+    while work:
+        parent = work.pop()
+        for child in parent.__subclasses__():
+            if child not in subclasses:
+                subclasses.add(child)
+                work.append(child)
+    return list(subclasses)
+
+
+def load_class(full_class_string):
+    """
+    dynamically load a class from a string
+    """
+    class_data = full_class_string.split(".")
+    module_path = ".".join(class_data[:-1])
+    class_str = class_data[-1]
+
+    module = importlib.import_module(module_path)
+    # Finally, we retrieve the Class
+    return getattr(module, class_str)

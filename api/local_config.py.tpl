@@ -7,6 +7,8 @@ DEBUG = True
 AMAZON_ACCESS_TOKEN = '{{ amazon_access_token }}'
 AMAZON_TOKEN_SECRET = '{{ amazon_token_secret }}'
 AMAZON_BUCKET_NAME = '{{ amazon_bucket_name }}'
+GRAFANA_KEY = "{{ fill me }}"
+GRAFANA_HOST = "{{ fill me }}"
 
 CLOUDML_PREDICT_BUCKET_NAME = '{{ amazon_bucket_name }}'
 

@@ -393,7 +393,7 @@ describe 'servers/controllers.coffee', ->
       server = new Server
       response = {}
       response[server.API_FIELDNAME] = {}
-      $httpBackend.expectGET("#{server.BASE_API_URL}111/?show=id,name,ip,folder,created_on,data,memory_mb,type")
+      $httpBackend.expectGET("#{server.BASE_API_URL}111/?show=id,name,ip,folder,created_on,data,memory_mb,type,logs_url")
       .respond 200, angular.toJson(response)
       $httpBackend.flush()
 
@@ -406,7 +406,7 @@ describe 'servers/controllers.coffee', ->
         Server: Server
         $rootScope: $rootScope
       expect($scope.server.id).toEqual 111
-      $httpBackend.expectGET("#{server.BASE_API_URL}111/?show=id,name,ip,folder,created_on,data,memory_mb,type")
+      $httpBackend.expectGET("#{server.BASE_API_URL}111/?show=id,name,ip,folder,created_on,data,memory_mb,type,logs_url")
       .respond 400
       $httpBackend.flush()
       expect($scope.setError).toHaveBeenCalled()

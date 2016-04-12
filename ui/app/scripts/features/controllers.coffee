@@ -95,12 +95,13 @@ angular.module('app.features.controllers', ['app.config', ])
         ids = newVal.split(',')
         $scope.modelObj.featuresSet.group_by =
           (f for f in $scope.objects when f.id + '' in ids)
+        $scope.updateGroupBy()
 
     $scope.updateGroupBy = () ->
       $scope.modelObj.featuresSet.$save(only: ['group_by'])
       .then ->
         $rootScope.segmentationMsg = "Group by fields have been saved"
-        $timeout($scope.clear, 4000)
+        $timeout($scope.clear, 2000)
       , (opts) ->
         $scope.setError opts, 'saving group by fields'
 

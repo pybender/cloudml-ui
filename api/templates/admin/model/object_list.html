@@ -32,7 +32,9 @@
 
 {% macro render_link(model, column) %}
     {% set val = model.__dict__.get(column) %}
-    <a href="{{ val }}) }}">{{ val }}</a>
+    {% if val %}
+        <a href="{{ val }}" target="_blank">{{ val }}</a>
+    {% endif %}
 {% endmacro %}
 
 {% macro status_with_error(model, column) %}

@@ -1,3 +1,4 @@
+import json
 import httplib
 from moto.s3.models import FakeKey
 from mock import patch, ANY
@@ -21,7 +22,7 @@ from api.import_handlers.models import ImportHandler, XmlImportHandler,\
 from api.ml_models.fixtures import ModelData
 from api.ml_models.models import Model
 from api.accounts.models import User
-import json
+from api.servers.grafana import GrafanaHelper
 
 
 class ServerModelTests(BaseDbTestCase):
@@ -75,7 +76,8 @@ class ServerFileResourceTests(BaseDbTestCase, TestChecksMixin):
                 XmlEntityData, ServerData]
 
     @mock_s3
-    def setUp(self):
+    @patch.object(GrafanaHelper, 'model2grafana')
+    def setUp(self, grafana_mock):
         super(ServerFileResourceTests, self).setUp()
         self.server = Server.query.first()
         self.BASE_URL = self.BASE_URL.format(self.server.id, FOLDER_MODELS)
@@ -83,6 +85,7 @@ class ServerFileResourceTests(BaseDbTestCase, TestChecksMixin):
         model.trainer = 'trainer_file'
         self.user = User.query.first()
         upload_model_to_server(self.server.id, model.id, self.user.id)
+        self.assertTrue(grafana_mock.called)
 
     # def test_invalid_folder(self):
     #     url = self.BASE_URL.format(self.server.id, 'invalid_folder1')
@@ -118,11 +121,13 @@ class ServerFileResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertIn('not found', resp.data)
 
     @patch('api.servers.tasks.update_at_server')
-    def test_edit(self, mock_update_at_server):
+    @patch.object(GrafanaHelper, 'model2grafana')
+    def test_edit(self, grafana_mock, mock_update_at_server):
         # set Up
         model2 = Model.query.filter_by(name=ModelData.model_02.name).one()
         model2.trainer = 'trainer_file2'
         upload_model_to_server(self.server.id, model2.id, self.user.id)
+        self.assertTrue(grafana_mock.called)
         # make order
         files_list = [f for f in self.server.list_keys(FOLDER_MODELS)]
         obj_id = files_list[0]['id']
@@ -166,7 +171,8 @@ class ServersTasksTests(BaseDbTestCase):
     @mock_s3
     @patch('api.amazon_utils.AmazonS3Helper.save_key_string')
     @patch('api.servers.tasks.get_a_Uuid')
-    def test_upload_model(self, uuid, mock_save_key_string):
+    @patch.object(GrafanaHelper, 'model2grafana')
+    def test_upload_model(self, grafana_mock, uuid, mock_save_key_string):
         guid = '7686f8b8-dc26-11e3-af6a-20689d77b543'
         uuid.return_value = guid
         server = Server.query.filter_by(name=ServerData.server_01.name).one()
@@ -175,6 +181,7 @@ class ServersTasksTests(BaseDbTestCase):
 
         upload_model_to_server(server.id, model.id, user.id)
 
+        self.assertTrue(grafana_mock.called)
         mock_save_key_string.assert_called_once_with(
             'odesk-match-cloudml/analytics/models/%s.model' % guid,
             ANY,
@@ -197,7 +204,8 @@ class ServersTasksTests(BaseDbTestCase):
     @patch('api.amazon_utils.AmazonS3Helper.save_key_string')
     @patch('api.servers.tasks.get_a_Uuid')
     @patch('api.servers.models.Server.list_keys')
-    def test_upload_model_existing_name(self, list_keys, uuid,
+    @patch.object(GrafanaHelper, 'model2grafana')
+    def test_upload_model_existing_name(self, grafana_mock, list_keys, uuid,
                                         mock_save_key_string):
         guid = '7686f8b8-dc26-11e3-af6a-20689d77b543'
         uuid.return_value = guid
@@ -220,6 +228,7 @@ class ServersTasksTests(BaseDbTestCase):
         with self.assertRaises(ValueError):
             upload_model_to_server(server.id, model.id, user.id)
 
+        self.assertFalse(grafana_mock.called)
         self.assertFalse(mock_save_key_string.called)
 
     @mock_s3
@@ -318,17 +327,21 @@ class ServerModelTests(BaseDbTestCase):
         key_obj.size = 123321
         key_obj.last_modified = 'Wed, 06 Aug 2014 23:46:48 GMT'
 
+        two_key = MagicMock()
+        two_key.name = \
+            'odesk-match-cloudml/analytics/models/n3sz3FTFQJeUOe33VF2B.model'
+
         s3_mock = MagicMock()
-        s3_mock.list_keys.return_value = [one_key]
+        s3_mock.list_keys.return_value = [one_key, two_key]
         s3_mock.bucket.get_key.return_value = key_obj
 
         helper_mock.return_value = s3_mock
 
         objs = server.list_keys()
 
-        s3_mock.bucket.get_key.assert_called_with(one_key.name)
+        s3_mock.bucket.get_key.assert_called_with(two_key.name)
 
-        self.assertEqual(1, len(objs))
+        self.assertEqual(2, len(objs))
         obj = objs[0]
         self.assertListEqual(
             obj.keys(),
@@ -349,6 +362,19 @@ class ServerModelTests(BaseDbTestCase):
         self.assertEqual(obj['user_id'], get_metadata('user_id'))
         self.assertEqual(obj['user_name'], get_metadata('user_name'))
         self.assertEqual(obj['server_id'], server.id)
+
+        # sort by id
+        params = {'sort_by': 'id', 'order': 'desc'}
+        objs = server.list_keys(folder=None, params=params)
+
+        self.assertEqual(2, len(objs))
+        self.assertEqual('n3sz3FTFQJeUOe33VF2B.model', objs[0]['id'])
+        self.assertEqual('n3sz3FTFQJeUOe33VF2A.model', objs[1]['id'])
+
+        # sort by non-existing field
+        params = {'sort_by': 'my_id', 'order': 'desc'}
+        # objs = server.list_keys(folder=None, params=params)
+        self.assertRaises(ValueError, server.list_keys, None, params)
 
 # Verification Related Tests
 
@@ -384,8 +410,81 @@ class ServerModelVerificationResourceTests(BaseDbTestCase, TestChecksMixin):
         resp = self.client.put(
             url, data={'count': 5}, headers=HTTP_HEADERS)
         result = json.loads(resp.data)
-        self.assertEqual('done', result['status'])
+        self.assertEqual(
+            ServerModelVerification.STATUS_DONE, result['status'])
         model = result['server_model_verification']
         self.assertEqual(
-            ServerModelVerification.STATUS_IN_PROGRESS,
+            ServerModelVerification.STATUS_DONE,
             model['status'])
+
+
+class GrafanaTests(BaseDbTestCase):
+    datasets = [ServerData, ModelData]
+
+    def setUp(self):
+        super(GrafanaTests, self).setUp()
+        self.server = Server.query.first()
+        self.model = Model.query.first()
+
+    def test_model2grafana(self):
+        def _check(get_dashboard_mock,
+                   post_dashboard_mock, old_dashboard_json):
+            get_dashboard_mock.return_value = {'dashboard': old_dashboard_json}
+            post_dashboard_mock.return_value = {}
+            result = helper.model2grafana(self.model)
+            self.assertTrue(get_dashboard_mock.called,
+                            'Should try to get server dashboard')
+            self.assertTrue(post_dashboard_mock.called,
+                            'Should update server dashboard')
+            get_dashboard_mock.reset_mock()
+            post_dashboard_mock.reset_mock()
+            return result
+
+        helper = GrafanaHelper(self.server)
+
+        with patch('grafana_api_client.DeferredClientRequest.get') as mock:
+            with patch('grafana_api_client.DeferredClientRequest.create') \
+                    as post_mock:
+                # dashboard does not exist
+                from grafana_api_client import GrafanaClientError
+                mock.side_effect = GrafanaClientError()
+                result = _check(mock, post_mock, {})
+                self.assertEqual(result['title'],
+                                 'CloudMl {}'.format(self.server.name),
+                                 'Server dashboard should be added')
+                self.assertEquals(len(result['rows']), 1)
+                self.assertEqual(result['rows'][0]['title'], self.model.name)
+                mock.side_effect = None
+
+                # dashboard exist, model exist
+                dashboard = helper._create_dashboard_json()
+                dashboard['title'] += '-old'
+                model_json = helper._get_model_json(self.model)
+                model_json['old_title'] = 'old-model-name'
+                dashboard['rows'].append(model_json)
+
+                result = _check(mock, post_mock, dashboard)
+                self.assertEqual(
+                    result['title'],
+                    'CloudMl {}-old'.format(self.server.name),
+                    'Server dashboard should not be replaced {}'.format(
+                        result['title']))
+                self.assertEquals(len(result['rows']), 1)
+                self.assertEqual(result['rows'][0]['title'], self.model.name)
+                self.assertFalse('old_title' in result['rows'][0])
+
+                # dashboard exist, model does not exist
+                OTHER_MODEL = 'other-model'
+                dashboard = helper._create_dashboard_json()
+                dashboard['title'] += '-old'
+                model_json = helper._get_model_json(self.model)
+                model_json['title'] = OTHER_MODEL
+                dashboard['rows'].append(model_json)
+
+                result = _check(mock, post_mock, dashboard)
+                self.assertEqual(result['title'],
+                                 'CloudMl {}-old'.format(self.server.name),
+                                 'Server dashboard should not be replaced')
+                self.assertEquals(len(result['rows']), 2)
+                self.assertEqual(result['rows'][0]['title'], OTHER_MODEL)
+                self.assertEqual(result['rows'][1]['title'], self.model.name)

@@ -47,9 +47,18 @@ angular.module('app.servers.verifications', ['app.config', ])
   'EXAMPLES_COUNT'
 
   ($scope, $q, ModelVerification, Server, ModelFile, ImportHandlerFile, TestResult, EXAMPLES_COUNT) ->
+    OTHER = '- Other -'
     $scope.model = new ModelVerification({'count': EXAMPLES_COUNT})
     $scope.modelsDisabled = true
     $scope.datasDisabled = true
+
+    ModelVerification.$getPredictClasses(
+    ).then ((opts)->
+      $scope.predictClassesConfig = opts.classes
+      $scope.predictClassesConfig[OTHER] = []
+    ), ((opts)->
+      $scope.setError(opts, 'loading types and parameters')
+    )
 
     Server.$loadAll(show: ['name', 'id'].join(','))
     .then $scope.getResponseHandler(
@@ -106,20 +115,24 @@ angular.module('app.servers.verifications', ['app.config', ])
         $scope.datas = []
         $scope.datasDisabled = true
         $scope.loadingTests = false
+        $scope.importParams = []
+        $scope.dataFields = []
         return
       $scope.model.description = null
       $scope.loadingTests = true
       $scope.datasDisabled = true
+      $scope.dataFields = []
       TestResult.$loadAll({
         model_id: $scope.model.model_id,
         show: 'name,examples_fields,examples_count'})
       .then ((opts) ->
         $scope.datas = opts.objects
         for file in $scope.serverFiles
-          if file.model.id == model
+          if file.model? and file.model.id == model
             $scope.model.description = file
             $scope.model.import_handler_id = file.import_handler.id
-            $scope.importParams = file.import_handler.import_params
+            $scope.predictClassesConfig[OTHER] = file.import_handler.import_params
+            $scope.importHandlerParams = file.import_handler.import_params
 
         $scope.loadingTests = false
         $scope.datasDisabled = false
@@ -129,11 +142,19 @@ angular.module('app.servers.verifications', ['app.config', ])
 
     $scope.dataChanged = (id) ->
       if !id?
+        $scope.dataFields = []
+        $scope.model.examples_count = 0
         return
       for data in $scope.datas
         if (data.id == id)
           $scope.dataFields = data.examples_fields
           $scope.model.examples_count = data.examples_count
+
+    $scope.clazzChanged = (clazz) ->
+      if !clazz?
+        $scope.importParams = []
+        return
+      $scope.importParams = $scope.predictClassesConfig[clazz]
 ])
 
 
@@ -281,6 +302,10 @@ angular.module('app.servers.verifications', ['app.config', ])
         key = keys[0]
         return data[key][name.replace('->', '.')]
       return undefined
+
+    $scope.getRawDataValue = (name) ->
+      title = name.replace('->', '.')
+      return $scope.example.result.raw_data[0][title]
 
     $scope.goSection = (section) ->
       name = section[0]

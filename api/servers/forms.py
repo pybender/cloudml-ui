@@ -39,9 +39,10 @@ class ServerModelVerificationForm(BaseForm):
     model_id = ModelField(model=Model)
     import_handler_id = ModelField(model=XmlImportHandler)
     test_result_id = ModelField(model=TestResult)
-    description = CharField()
+    description = JsonField()
     params_map = JsonField()
     count = IntegerField()
+    clazz = CharField()
 
     def save(self, *args, **kwargs):
         obj = super(ServerModelVerificationForm, self).save(*args, **kwargs)

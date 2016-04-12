@@ -798,6 +798,31 @@ angular.module('app.directives', [
       e.stopPropagation()
 )
 
+.directive("teFeatureValue", [ ->
+  return {
+    scope: {
+      val: '='
+      truncate: '='
+      description: '='
+    }
+    restrict: 'E',
+    replace: true,
+    transclude : true,
+    templateUrl:'partials/directives/feature_value.html'
+    link: (scope, element, attr) ->
+      scope.renderTitle = (val) ->
+        if not val? then return ""
+        if scope.description == 'weights'
+          if val.weight?
+            return "Weight: #{val.model_weight}. Vectorized value: #{val.vect_value}. Parameters weight: #{val.weight }"
+        # if scope.description == 'value'
+        if val.value?
+          return val.value
+        else
+          return val
+  }
+])
+
 createSVG = (scope, element, width=400, height=300) ->
   scope.margin = {top: 20, right: 20, bottom: 30, left: 210}
   if not scope.svg?

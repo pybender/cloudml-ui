@@ -408,6 +408,7 @@ describe 'controllers.coffee', ->
         expect($scope.init).toBeDefined()
         expect($scope.load).toBeDefined()
         expect($scope.loadMore).toBeDefined()
+        expect($scope.sort_list).toBeDefined()
 
         # init scope & load
         response =
@@ -509,3 +510,61 @@ describe 'controllers.coffee', ->
           expect(({id: x.id, name: x.name} for x in $scope.objects)).toEqual [{id: 444, name: 'handler444'}]
           expect($scope.$emit).toHaveBeenCalledWith 'BaseListCtrl:load:success', $scope.objects
 
+      it "should sort list", inject (XmlImportHandler) ->
+          # loadMore concats objects
+          handler1 = new XmlImportHandler
+            id: 11
+            name: 'handler11'
+          handler2 = new XmlImportHandler
+            id: 22
+            name: 'handler22'
+          $scope.kwargs =
+            page: 1
+            sort_by: 'updated_on'
+            order: 'desc'
+          response =
+            pages: 1
+            has_next: false
+          response[handler.API_FIELDNAME + 's'] = [handler1, handler2]
+          $httpBackend.expectGET "#{handler.BASE_API_URL}?order=asc&page=1&show=id,name,page,sort_by,order&sort_by=name"
+          .respond 200, angular.toJson(response)
+          $scope.sort_list('name')
+          $httpBackend.flush()
+          expect(({id: x.id, name: x.name} for x in $scope.objects)).toEqual [
+            {id: 11, name: 'handler11'}
+            {id: 22, name: 'handler22'}
+          ]
+          expect($scope.sort_by).toEqual('name')
+          expect($scope.asc_order).toBe true
+
+          # sort again (should change order to desc)
+          response =
+            pages: 1
+            has_next: false
+          response[handler.API_FIELDNAME + 's'] = [handler2, handler1]
+          $httpBackend.expectGET "#{handler.BASE_API_URL}?order=desc&page=1&show=id,name,page,sort_by,order&sort_by=name"
+          .respond 200, angular.toJson(response)
+          $scope.sort_list('name')
+          $httpBackend.flush()
+          expect(({id: x.id, name: x.name} for x in $scope.objects)).toEqual [
+            {id: 22, name: 'handler22'}
+            {id: 11, name: 'handler11'}
+          ]
+          expect($scope.sort_by).toEqual('name')
+          expect($scope.asc_order).toBe false
+
+          # sort again by another field (should change order to asc)
+          response =
+            pages: 1
+            has_next: false
+          response[handler.API_FIELDNAME + 's'] = [handler1, handler2]
+          $httpBackend.expectGET "#{handler.BASE_API_URL}?order=asc&page=1&show=id,name,page,sort_by,order&sort_by=id"
+          .respond 200, angular.toJson(response)
+          $scope.sort_list('id')
+          $httpBackend.flush()
+          expect(({id: x.id, name: x.name} for x in $scope.objects)).toEqual [
+            {id: 11, name: 'handler11'}
+            {id: 22, name: 'handler22'}
+          ]
+          expect($scope.sort_by).toEqual('id')
+          expect($scope.asc_order).toBe true

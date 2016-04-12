@@ -20,7 +20,14 @@ class Server(BaseModel, db.Model):
     PRODUCTION = 'Production'
     STAGING = 'Staging'
     DEV = 'Development'
-    TYPES = [PRODUCTION, STAGING, DEV]
+    AALYTICS = 'Analytics'
+    TYPES = [PRODUCTION, STAGING, DEV, AALYTICS]
+
+    ENV_MAP = {
+        PRODUCTION: 'prod',
+        STAGING: 'staging',
+        DEV: 'dev',
+        AALYTICS: 'analytics'}
 
     name = db.Column(db.String(200), nullable=False, unique=True)
     description = deferred(db.Column(db.Text))
@@ -29,11 +36,27 @@ class Server(BaseModel, db.Model):
     is_default = db.Column(db.Boolean, default=False)
     memory_mb = db.Column(db.Integer, nullable=False, default=0)
     type = db.Column(db.Enum(*TYPES, name='server_types'), default=DEV)
+    logs_url = db.Column(db.Text)
 
     def __repr__(self):
         return '<Server {0}>'.format(self.name)
 
-    def list_keys(self, folder=None):
+    @property
+    def grafana_name(self):
+        if not hasattr(self, '_grafana_name'):
+            from slugify import slugify
+            name = self.name.replace('_', '-')
+            self._grafana_name = slugify('CloudMl ' + name)
+        return self._grafana_name
+
+    @property
+    def grafana_url(self):
+        from api import app
+        return 'http://{0}/dashboard/db/{1}'.format(
+            app.config.get('GRAFANA_HOST'),
+            self.grafana_name)
+
+    def list_keys(self, folder=None, params={}):
         path = self.folder.strip('/')
         if folder and folder in self.ALLOWED_FOLDERS:
             path += '/{0!s}'.format(folder)
@@ -67,6 +90,18 @@ class Server(BaseModel, db.Model):
                 'crc32': key.get_metadata('crc32'),
                 'server_id': self.id
             })
+
+        sort_by = params.get('sort_by', None)
+        order = params.get('order', 'asc')
+        if objects and sort_by:
+            obj = objects[0]
+            if sort_by in obj.keys():
+                return sorted(objects,
+                              key=lambda x: x[sort_by],
+                              reverse=order != 'asc')
+            else:
+                raise ValueError('Unable to sort by %s. Property is not exist.'
+                                 % sort_by)
         return objects
 
     def set_key_metadata(self, uid, folder, key, value):
@@ -145,6 +180,7 @@ class ServerModelVerification(BaseModel, db.Model,
     description = db.Column(JSONType)
     result = db.Column(JSONType)
     params_map = db.Column(JSONType)
+    clazz = db.Column(db.String(200))
 
     def __repr__(self):
         return '<ServerModelVerification {0}>'.format(self.model.name)

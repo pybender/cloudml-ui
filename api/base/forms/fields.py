@@ -9,6 +9,7 @@ import json
 from api.base.resources import ValidationError
 from sqlalchemy.orm.exc import NoResultFound
 from cloudml.utils import isint
+from api.amazon_utils import amazon_config
 
 
 class BaseField(object):
@@ -198,7 +199,8 @@ class FeaturesField(BaseField):
     def clean(self, value):
         if value is not None:
             if value:
-                from cloudml.trainer.config import FeatureModel, SchemaException
+                from cloudml.trainer.config import FeatureModel, \
+                    SchemaException
                 try:
                     value = json.loads(value)
                     feature_model = FeatureModel(
@@ -226,7 +228,8 @@ class ImportHandlerFileField(BaseField):
         from cloudml.importhandler.importhandler import ExtractionPlan
         from api.amazon_utils import amazon_config
         try:
-            plan = ExtractionPlan(value, is_file=False, callback=amazon_config)
+            plan = ExtractionPlan(value, is_file=False)
+            plan.amazon_settings = amazon_config()
             self.import_params = plan.inputs.keys()
             self.import_handler_type = 'xml'
         except Exception as exc:
@@ -262,7 +265,8 @@ class ScriptUrlField(BaseField):
         from api.amazon_utils import amazon_config
         try:
             xml_scr = XmlScript(data=value, type=XmlScript.TYPE_PYTHON_FILE)
-            s = Script(xml_scr.to_xml(), callback=amazon_config)
+            s = Script(xml_scr.to_xml())
+            s.amazon_settings = amazon_config()
             manager = ScriptManager()
             manager.add_python(s.get_script_str())
         except Exception as exc:

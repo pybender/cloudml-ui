@@ -25,3 +25,7 @@ class ServerModelVerificationData(DataSet):
         server = ServerData.server_01
         params_map = {"application": "app"}
         error = ""
+        description = {
+            'import_handler_metadata': {
+                'name': 'my_import_handler'
+            }}

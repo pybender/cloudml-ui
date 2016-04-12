@@ -1,0 +1,248 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+  
+    <title>Model verification &mdash; Upwork CloudML 0.0.1 documentation</title>
+  <!-- htmltitle is before nature.css - we use this hack to load bootstrap first -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="_static/css/bootstrap.min.css" media="screen" />
+  <link rel="stylesheet" href="_static/css/bootstrap-responsive.css"/>
+
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/gallery.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Upwork CloudML 0.0.1 documentation" href="index.html" />
+    <link rel="next" title="Deployment" href="deployment.html" />
+    <link rel="prev" title="Clusters" href="clusters.html" />
+  
+   
+       <script type="text/javascript" src="_static/sidebar.js"></script>
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="_static/js/bootstrap.min.js" type="text/javascript"></script>
+  <link rel="canonical" href="http://scikit-learn.org/stable/verification.html" />
+
+  <script type="text/javascript">
+    $("div.buttonNext, div.buttonPrevious").hover(
+       function () {
+           $(this).css('background-color', '#FF9C34');
+       },
+       function () {
+           $(this).css('background-color', '#A7D6E2');
+       }
+    );
+    var bodywrapper = $('.bodywrapper');
+    var sidebarbutton = $('#sidebarbutton');
+    sidebarbutton.css({'height': '900px'});
+  </script>
+
+  </head>
+  <body>
+
+<div class="header-wrapper">
+    <div class="header"></div>
+</div>
+
+
+
+
+<div class="content-wrapper">
+    <div class="sphinxsidebar">
+    <div class="sphinxsidebarwrapper">
+        <div class="rel rellarge">
+    
+
+  <!-- rellinks[1:] is an ugly hack to avoid link to module
+  index -->
+        <div class="rellink">
+        <a href="clusters.html"
+        accesskey="P">Previous
+        <br/>
+        <span class="smallrellink">
+        Clusters
+        </span>
+            <span class="hiddenrellink">
+            Clusters
+            </span>
+        </a>
+        </div>
+            <div class="spacer">
+            &nbsp;
+            </div>
+        <div class="rellink">
+        <a href="deployment.html"
+        accesskey="N">Next
+        <br/>
+        <span class="smallrellink">
+        Deployment
+        </span>
+            <span class="hiddenrellink">
+            Deployment
+            </span>
+        </a>
+        </div>
+
+    <!-- Ad a link to the 'up' page -->
+    </div>
+    
+
+<!--
+      <p class="doc-version">This documentation is for Upwork CloudML <strong>version 0.0.1</strong> &mdash; <a href="http://scikit-learn.org/stable/support.html#documentation-resources">Other versions</a></p> -->
+<!--     <p class="citing">If you use the software, please consider <a href="about.html#citing-scikit-learn">citing scikit-learn</a>.</p> -->
+    <ul>
+<li><a class="reference internal" href="#">Model verification</a><ul>
+<li><a class="reference internal" href="#creating-new-verification">Creating new verification</a><ul>
+<li><a class="reference internal" href="#predict-commands">Predict Commands</a></li>
+<li><a class="reference internal" href="#mapping-parameters">Mapping parameters</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#id2">Model Verification</a><ul>
+<li><a class="reference internal" href="#verification-example">Verification Example</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+    </div>
+</div>
+
+
+
+      <div class="content">
+            
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="model-verification">
+<span id="id1"></span><h1>Model verification<a class="headerlink" href="#model-verification" title="Permalink to this headline">¶</a></h1>
+<p>Model verification - is a tool, which makes possible to verify the model, deployed to the predict server.</p>
+<p>List of the model verifications could be found on  <a class="reference external" href="http://cloudml.int.odesk.com/#/predict/verifications">this page</a>.</p>
+<div class="section" id="creating-new-verification">
+<h2>Creating new verification<a class="headerlink" href="#creating-new-verification" title="Permalink to this headline">¶</a></h2>
+<p>To create a new verification click to the &#8220;Add new verification&#8221; button. In the dialog it needed to specify:</p>
+<ul class="simple">
+<li>server - cloudml-predict server.</li>
+<li>predict import handler, which deployed to specified server. This import handler also defines the CloudML model, which also should be deployed to this server.</li>
+<li>data - successfully passed CloudML model test with test examples. This test examples would be iterated while model verification.</li>
+<li>count - specifies how many test examples would be used.</li>
+<li>predict class - predict command to be used</li>
+<li>parameters map - specifies how to map command parameters to the data from the test example.</li>
+</ul>
+<div class="section" id="predict-commands">
+<h3>Predict Commands<a class="headerlink" href="#predict-commands" title="Permalink to this headline">¶</a></h3>
+<p>You could use any predict command from predict-utils project. When it choosed a predict command you will need to map the command options to test example fields. When calling this command also following options would be added:</p>
+<ul class="simple">
+<li>-c - path to config file (it depends on type of the predict-server and is different for production, staging and dev servers).</li>
+<li>-i - importhandler name which was specified</li>
+<li>-p - version of the cloudml-predict: &#8216;v3&#8217;</li>
+</ul>
+<p>Also it possible to choose &#8220;Other&#8221; option in predict class select. In this case no predict commands would be used and the data from test example would be posted to the predict server.</p>
+</div>
+<div class="section" id="mapping-parameters">
+<h3>Mapping parameters<a class="headerlink" href="#mapping-parameters" title="Permalink to this headline">¶</a></h3>
+<p>When choosing the predict-utils command it needed to map command arguments to the test example fields.</p>
+<p>When choosing &#8220;Other&#8221; as predict class, it needed to map predict import handler&#8217;s import parameters to test example fields.</p>
+</div>
+</div>
+<div class="section" id="id2">
+<h2>Model Verification<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<p>Following metrics calculating while model verification:</p>
+<ul class="simple">
+<li>count of the errors, for example bad requests, etc.</li>
+<li>max response time of the predict server</li>
+<li>count of the valid label predictions</li>
+<li>count of the same probability as in the test example prediction</li>
+</ul>
+<p>Also it created a list of the zero features.
+Zero feature is the feature which have zero  vectorized value in all predict server responses.</p>
+<p>Also it possible to iterate over verification examples to compare test example results with predict server response.</p>
+<div class="section" id="verification-example">
+<h3>Verification Example<a class="headerlink" href="#verification-example" title="Permalink to this headline">¶</a></h3>
+<p>Verification Example details contains following information:</p>
+<ul class="simple">
+<li>Data - data, which was posted to predict server</li>
+<li>Response Time - predict server response time</li>
+<li>Vectorized values from the test example and from the predict server response.</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">In Result tab present all response of the predict server.</p>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+        <div class="clearer"></div>
+      </div>
+    </div>
+
+    <div class="footer">
+        &copy; 2015, Upwork.
+      <a href="_sources/verification.txt" rel="nofollow">Show this page source</a>
+    </div>
+     <div class="rel rellarge">
+    
+    <div class="buttonPrevious">
+      <a href="clusters.html">Previous
+      </a>
+    </div>
+    <div class="buttonNext">
+      <a href="deployment.html">Next
+      </a>
+    </div>
+    
+     </div>
+
+    
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-22606712-2']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+    
+
+    <script src="http://www.google.com/jsapi" type="text/javascript"></script>
+    <script type="text/javascript"> google.load('search', '1',
+        {language : 'en'}); google.setOnLoadCallback(function() {
+            var customSearchControl = new
+            google.search.CustomSearchControl('016639176250731907682:tjtqbvtvij0');
+            customSearchControl.setResultSetSize(google.search.Search.FILTERED_CSE_RESULTSET);
+            var options = new google.search.DrawOptions();
+            options.setAutoComplete(true);
+            customSearchControl.draw('cse', options); }, true);
+    </script>
+  </body>
+</html>
