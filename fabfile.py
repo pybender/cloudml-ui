@@ -67,14 +67,22 @@ def install():
         sudo("make install")
 
 @task
-def node_reinstall():
+def node_nvm_reinstall():
+    version = '0.10.28'
     # Install nodejs, put your version
-    sudo("wget http://nodejs.org/dist/v0.10.28/node-v0.10.28.tar.gz")
-    sudo("tar -zxf node-v0.10.28.tar.gz")
-    with cd("node-v0.10.28"):
+    sudo("wget http://nodejs.org/dist/v%s/node-v%s.tar.gz" % version, version)
+    sudo("tar -zxf node-v%s.tar.gz" % version)
+    with cd("node-v%s" % version):
         sudo("./configure")
         sudo("make")
         sudo("make install")
+
+    run("curl https://raw.githubusercontent.com/creationix/nvm/v0.11.1/"
+        "install.sh | bash")
+    run("source ~/.profile")
+    run("nvm install %s" % version)
+    run("nvm alias default %s" % version)
+
 
 
 @task
