@@ -59,12 +59,23 @@ def install():
  libevent-dev python-dev mongodb libxml2-dev libxslt-dev libv8-dev scons libboost-python-dev libboost-thread-dev libboost-all-dev')
 
     # Install nodejs from source
-    sudo("wget http://nodejs.org/dist/v0.10.18/node-v0.10.18.tar.gz")
-    sudo("tar -zxf node-v0.10.18.tar.gz")
-    with cd("node-v0.10.18"):
+    sudo("wget http://nodejs.org/dist/v0.10.28/node-v0.10.28.tar.gz")
+    sudo("tar -zxf node-v0.10.28.tar.gz")
+    with cd("node-v0.10.28"):
         sudo("./configure")
         sudo("make")
         sudo("make install")
+
+@task
+def node_reinstall():
+    # Install nodejs, put your version
+    sudo("wget http://nodejs.org/dist/v0.10.28/node-v0.10.28.tar.gz")
+    sudo("tar -zxf node-v0.10.28.tar.gz")
+    with cd("node-v0.10.28"):
+        sudo("./configure")
+        sudo("make")
+        sudo("make install")
+
 
 @task
 def push_key():
@@ -151,7 +162,8 @@ def deployui():
     # angularjs.push_config.run()
     # angularjs.build.run()
 
-
+# ln --symbolic --force --no-target-directory /webapps/cloudml/releases/2016.04.13-11.24.34 /webapps/cloudml/current
+# ln --symbolic --force --no-target-directory /webapps/cloudml/releases/2016.04.13-11.24.34 /webapps/cloudml/last
 @task
 def deploy():
     fabd.mkdirs.run()
@@ -176,9 +188,9 @@ def deploy():
 
     release.activate.run()
 
-    # # fabgrunt.private_npm.run()
-    # # fabgrunt.bower.run()
-    # # fabgrunt.activate.run()
+    fabgrunt.private_npm.run()
+    fabgrunt.bower.run()
+    fabgrunt.activate.run()
 
     fabgrunt.push_config.run()
     fabgrunt.build.run()
