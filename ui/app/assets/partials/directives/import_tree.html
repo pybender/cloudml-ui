@@ -3,7 +3,7 @@
   <div>
     <h4>
       <span title="name" class="name" ng-bind="entity.name || 'no name'" editable="entity" value="entity.name" editable-field="name" editable-input="text" editable-placement="right" editable-required></span>
-      <div class="actions">
+      <div class="actions" ng-show="handler.can_edit">
         <a ng-click="addEntity()(entity);" class="btn btn-info">
           <i class="status-icon icon-plus"></i> add sub entity
         </a>
@@ -96,7 +96,7 @@
         Text:<textarea class="small cml-codemirror-refresh" ui-codemirror="$root.codeMirrorConfigs(false)['sql']" ng-model="sqoop.text" />
         </div>
       </div>
-      <a ng-disabled="sqoop.loading_state" ng-click="sqoop.saveText()" class="btn btn-info">
+      <a ng-disabled="sqoop.loading_state" ng-click="sqoop.saveText()" class="btn btn-info" ng-show="handler.can_edit">
         <i class="status-icon icon-edit"></i> save text
       </a>
       <a ng-disabled="sqoop.loading_state" ng-click="getPigFields()(sqoop)" class="btn btn-success">
@@ -157,11 +157,11 @@
       <div ng-show="entity.sqoop_imports">
         <div ng-hide="entity.query_obj.autoload_sqoop_dataset">
           <label class="checkbox">
-            Autoload Sqoop Dataset: <input name="autoload_sqoop_dataset" type="checkbox" ng-checked="entity.query_obj.autoload_sqoop_dataset" ng-model="entity.query_obj.autoload_sqoop_dataset" ng-change="entity.query_obj.$save({only: ['autoload_sqoop_dataset']})" />
+            Autoload Sqoop Dataset: <input name="autoload_sqoop_dataset" type="checkbox" ng-checked="entity.query_obj.autoload_sqoop_dataset" ng-model="entity.query_obj.autoload_sqoop_dataset" ng-change="saveModel()(entity.query_obj, 'autoload_sqoop_dataset')" />
           </label>
         </div>
         <div ng-show="entity.query_obj.autoload_sqoop_dataset" class="well">
-          <button type="button" class="close" ng-click="entity.query_obj.autoload_sqoop_dataset=false; entity.query_obj.$save({only: ['autoload_sqoop_dataset']})">×</button>
+          <button type="button" class="close" ng-click="entity.query_obj.autoload_sqoop_dataset=false; saveModel()(entity.query_obj, 'autoload_sqoop_dataset')">×</button>
           <div class="message">
             <h5>Autoload Sqoop Dataset</h5>
             <p class="text-info">
@@ -190,7 +190,7 @@
         <p>
         <textarea class="small cml-codemirror-refresh" ui-codemirror="$root.codeMirrorConfigs(false)['sql']" ng-model="entity.query_obj.text" />
         </p>
-        <a ng-disabled="entity.query_obj.loading_state" ng-click="saveQueryText()(entity.query_obj);" class="btn btn-info">
+        <a ng-disabled="entity.query_obj.loading_state" ng-click="saveQueryText()(entity.query_obj);" class="btn btn-info" ng-show="handler.can_edit">
           <i class="status-icon icon-edit"></i> save text
         </a>
         <a class="btn btn-info"
@@ -229,13 +229,15 @@
       </div>
     </div>
     </div>
-    <div>
+    <div >
       <h5>
         Fields
       </h5>
+      <div >
       <label class="checkbox" title="Import handler fields would be loaded from pig (when pig datasource used) or sql query (when db datasource used) results. And you could override some of them.">
-        Autoload Fields <input name="autoload_fields" type="checkbox" ng-checked="entity.autoload_fields" ng-model="entity.autoload_fields" ng-change="entity.$save({only: ['autoload_fields']})" />
+        Autoload Fields <input name="autoload_fields" type="checkbox" ng-checked="entity.autoload_fields" ng-model="entity.autoload_fields" ng-change="saveModel()(entity, 'autoload_fields')" />
       </label>
+      </div>
       <div class="scrollable">
         <div class="outer">
           <div class="inner">
@@ -256,7 +258,7 @@
                     <th>Script</th>
                     <th width="50px" title="Multipart">Multipart</th>
                     <th width="50px" title="Required">Required</th>
-                    <th width="50px">Actions</th>
+                    <th width="50px" ng-show="handler.can_edit">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -298,12 +300,12 @@
                       <span title="script" class="script" ng-bind="field.script || 'no script'" editable="field" value="field.script" editable-field="script" editable-input="textarea" editable-placement="left"></span>
                     </td>
                     <td>
-                      <input title="multipart" name="multipart" type="checkbox" ng-checked="field.multipart" ng-model="field.multipart" ng-change="field.$save({only: ['multipart']})" />
+                      <input title="multipart" name="multipart" type="checkbox" ng-checked="field.multipart" ng-model="field.multipart" ng-change="saveModel()(field, 'multipart')" />
                     </td>
                     <td>
-                      <input title="required" name="required" type="checkbox" ng-checked="field.required" ng-model="field.required" ng-change="field.$save({only: ['required']})" />
+                      <input title="required" name="required" type="checkbox" ng-checked="field.required" ng-model="field.required" ng-change="saveModel()(field, 'required')" />
                     </td>
-                    <td>
+                    <td ng-show="handler.can_edit">
                       <button ng-click="deleteField()(field);" class="btn btn-danger">
                         <i title="Delete field. Be careful - you could not recover it!" class="icon-remove"></i>
                       </button>
@@ -334,7 +336,8 @@
                        run-query="runQuery()"
                        add-sqoop="addSqoop()"
                        get-pig-fields="getPigFields()"
-                       delete-sqoop="deleteSqoop()"></entities-tree>
+                       delete-sqoop="deleteSqoop()"
+                       save-model="saveModel()"></entities-tree>
       </entities-recursive>
     </div>
   </div>

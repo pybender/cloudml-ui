@@ -6,6 +6,7 @@ import uuid
 
 from fixture import DataSet
 from api.accounts.fixtures import UserData
+from api.accounts.models import User
 from ..models import XmlImportHandler as ImportHandler
 
 DIR = os.path.dirname(__file__)
@@ -29,6 +30,8 @@ def get_importhandler(filename='extract-train.xml'):
     from ..models import fill_import_handler
     name = str(uuid.uuid1())
     handler = ImportHandler(name=name, import_params=['start', 'end'])
+    user = User.query.filter_by(name=UserData.user_02.name).first()
+    handler.created_by_id = user.id
     data = open(os.path.join(DIR, filename), 'r').read()
     fill_import_handler(handler, data)
     handler.save()

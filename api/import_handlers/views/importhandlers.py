@@ -10,6 +10,8 @@ from sqlalchemy.orm import joinedload, joinedload_all, undefer
 
 from api.base.resources import BaseResourceSQL, NotFound, \
     odesk_error_response, ERR_INVALID_DATA
+from api.base.resources.utils import ERR_INVALID_METHOD
+from api.base.resources.exceptions import ValidationError
 from api import api
 from api.import_handlers.models import XmlImportHandler, XmlInputParameter, \
     XmlEntity, XmlField, XmlDataSource, XmlQuery, XmlScript, XmlSqoop, \
@@ -216,6 +218,10 @@ class XmlImportHandlerResource(BaseResourceSQL):
     def _put_update_xml_action(self, **kwargs):
         handler = self._get_details_query(None, **kwargs)
 
+        if not handler._can_modify():
+            return odesk_error_response(405, ERR_INVALID_METHOD,
+                                        handler.reason_msg)
+
         form = XmlImportHandlerUpdateXmlForm(obj={})
         if not form.is_valid():
             return self._render({'error': form.error_messages})
@@ -247,7 +253,36 @@ api.add_resource(
     XmlImportHandlerResource, '/cloudml/xml_import_handlers/')
 
 
-class XmlInputParameterResource(BaseResourceSQL):
+class XmlImportHandlerPartResource(BaseResourceSQL):
+
+    def _modify(self, mtd, msg, action=None, **kwargs):
+        handler_id = kwargs.get('import_handler_id', None)
+        handler = XmlImportHandler.query.filter_by(id=handler_id).one()
+        if handler and not handler.can_edit:
+            return odesk_error_response(
+                405, ERR_INVALID_METHOD,
+                '{0} {1}'.format(msg, handler.reason_msg))
+        else:
+            mthd = getattr(super(XmlImportHandlerPartResource, self), mtd)
+            return mthd(action, **kwargs)
+
+    def post(self, action=None, **kwargs):
+        return self._modify('post',
+                           'Forbidden to add entities to this import handler.',
+                           action, **kwargs)
+
+    def put(self, action=None, **kwargs):
+        return self._modify('put',
+                           'Forbidden to change entities of this import '
+                           'handler.', action, **kwargs)
+
+    def delete(self, action=None, **kwargs):
+        return self._modify('delete',
+                           'Forbidden to delete entities of this import '
+                           'handler.', action, **kwargs)
+
+
+class XmlInputParameterResource(XmlImportHandlerPartResource):
     """
     XmlInputParameter API methods
     """
@@ -263,7 +298,7 @@ api.add_resource(XmlInputParameterResource, '/cloudml/xml_import_handlers/\
 <regex("[\w\.]*"):import_handler_id>/input_parameters/')
 
 
-class XmlEntityResource(BaseResourceSQL):
+class XmlEntityResource(XmlImportHandlerPartResource):
     """
     XmlEntity API methods
     """
@@ -275,7 +310,7 @@ api.add_resource(
 <regex("[\w\.]*"):import_handler_id>/entities/')
 
 
-class XmlFieldResource(BaseResourceSQL):
+class XmlFieldResource(XmlImportHandlerPartResource):
     """
     XmlField API methods
     """
@@ -307,7 +342,7 @@ api.add_resource(XmlFieldResource, '/cloudml/xml_import_handlers/\
 /fields/')
 
 
-class XmlDataSourceResource(BaseResourceSQL):
+class XmlDataSourceResource(XmlImportHandlerPartResource):
     """
     XmlDataSource API methods
     """
@@ -326,7 +361,7 @@ api.add_resource(
 <regex("[\w\.]*"):import_handler_id>/datasources/')
 
 
-class XmlQueryResource(BaseResourceSQL):
+class XmlQueryResource(XmlImportHandlerPartResource):
     """
     XmlQuery API methods
     """
@@ -348,7 +383,7 @@ api.add_resource(
 <regex("[\w\.]*"):entity_id>/queries/')
 
 
-class XmlScriptResource(BaseResourceSQL):
+class XmlScriptResource(XmlImportHandlerPartResource):
     """
     XmlScript API methods
     """
@@ -372,7 +407,7 @@ api.add_resource(
 <regex("[\w\.]*"):import_handler_id>/scripts/')
 
 
-class XmlSqoopResource(BaseResourceSQL):
+class XmlSqoopResource(XmlImportHandlerPartResource):
     """
     XmlSqoop API methods
     """
@@ -424,7 +459,7 @@ api.add_resource(XmlSqoopResource, '/cloudml/xml_import_handlers/\
 /sqoop_imports/')
 
 
-class PredictModelResource(BaseResourceSQL):
+class PredictModelResource(XmlImportHandlerPartResource):
     """
     Predict section of XML import handler API methods
     """
@@ -459,7 +494,7 @@ api.add_resource(
 <regex("[\w\.]*"):import_handler_id>/predict_models/')
 
 
-class PredictModelWeightResource(BaseResourceSQL):
+class PredictModelWeightResource(XmlImportHandlerPartResource):
     """
     Predict section of XML import handler API methods
     """
@@ -493,7 +528,7 @@ api.add_resource(
 <regex("[\w\.]*"):predict_model_id>/weights/')
 
 
-class PredictResultLabelResource(BaseResourceSQL):
+class PredictResultLabelResource(XmlImportHandlerPartResource):
     """
     Predict section of XML import handler API methods
     """
@@ -528,7 +563,7 @@ api.add_resource(
 <regex("[\w\.]*"):import_handler_id>/predict_labels/')
 
 
-class PredictResultProbabilityResource(BaseResourceSQL):
+class PredictResultProbabilityResource(XmlImportHandlerPartResource):
     """
     Predict section of XML import handler API methods
     """
