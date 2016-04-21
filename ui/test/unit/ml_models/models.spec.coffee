@@ -423,6 +423,60 @@ describe 'ML Models Controllers', ->
         expect($scope.LOADED_SECTIONS).toEqual ['training', 'main']
         expect($scope.setError.calls.mostRecent().args[1]).toEqual 'loading trainer s3 url'
 
+    it 'should watch for training progress and update model status until it is done',
+      inject (Model)->
+        prepareContext()
+
+        expect($scope.initSections).toHaveBeenCalledWith $scope.goSection
+
+        model = new Model
+          id: $scope.model.id
+          status: 'Trained'
+          training_in_progress: false
+          error: ''
+        response = {}
+        response[model.API_FIELDNAME] = model
+        $httpBackend.expectGET "#{model.BASE_API_URL}#{$scope.model.id}/?show=status,training_in_progress,error"
+        .respond 200, angular.toJson(response)
+
+        $scope.model.training_in_progress = true
+        $scope.model.status = 'Training'
+        $scope.$digest()
+        $timeout.flush()
+        $httpBackend.flush()
+        expect($scope.model.status).toEqual 'Trained'
+        expect($scope.model.training_in_progress).toBe false
+
+        $timeout.cancel = jasmine.createSpy '$timeout.cancel'
+        $scope.$emit '$destroy'
+        expect($timeout.cancel).toHaveBeenCalled
+
+    it 'should watch for predefined classifier changes and update it on page',
+      inject (Model, Classifier)->
+        prepareContext()
+
+        expect($scope.initSections).toHaveBeenCalledWith $scope.goSection
+
+        model = new Model
+          id: $scope.model.id
+          classifier:
+            type: 'random forest classifier'
+        response = {}
+        response[model.API_FIELDNAME] = model
+        $httpBackend.expectGET "#{model.BASE_API_URL}#{$scope.model.id}/?show=classifier"
+        .respond 200, angular.toJson(response)
+
+        $scope.model.classifier = new Classifier
+          type: 'desicion tree classifier'
+          name: ''
+
+        $scope.model.classifier.name = 'My predefined'
+        $scope.model.classifier.predefined_selected = true
+        $scope.$digest()
+        $httpBackend.flush()
+        expect($scope.model.classifier.type).toEqual 'random forest classifier'
+        expect($scope.model.classifier.name).toEqual 'My predefined'
+
 
   describe 'BaseModelDataSetActionCtrl', ->
 
