@@ -116,31 +116,31 @@ angular.module('app.features.controllers.transformers', ['app.config', ])
     if fields isnt '' # otherwise we had those loaded before
       $scope.load(fields, name)
 
-    $scope.train_timer = null
-    $scope.same_status_count = 0
-    $scope.status = $scope.transformer.status
-    $scope.monitorTraining = () ->
-      $scope.train_timer = $timeout( ()->
-          $scope.transformer.$load(
-            show: 'status,training_in_progress,error'
-          ).then (->
-            if $scope.transformer.status == $scope.status
-              $scope.same_status_count += 1
-            else
-              $scope.status = $scope.transformer.status
-              $scope.same_status_count = 0
-            if $scope.transformer.training_in_progress && $scope.same_status_count < 20
-              $scope.monitorTraining()
-          )
-        10000
-      )
+  $scope.train_timer = null
+  $scope.same_status_count = 0
+  $scope.status = $scope.transformer.status
+  $scope.monitorTraining = () ->
+    $scope.train_timer = $timeout( ()->
+        $scope.transformer.$load(
+          show: 'status,training_in_progress,error'
+        ).then (->
+          if $scope.transformer.status == $scope.status
+            $scope.same_status_count += 1
+          else
+            $scope.status = $scope.transformer.status
+            $scope.same_status_count = 0
+          if $scope.transformer.training_in_progress && $scope.same_status_count < 20
+            $scope.monitorTraining()
+        )
+      10000
+    )
 
-    $scope.$watch 'transformer.training_in_progress', (newVal, oldVal)->
-      if newVal == true
-        $scope.monitorTraining()
+  $scope.$watch 'transformer.training_in_progress', (newVal, oldVal)->
+    if newVal == true
+      $scope.monitorTraining()
 
-    $scope.$on '$destroy', (event) ->
-      $timeout.cancel($scope.train_timer)
+  $scope.$on '$destroy', (event) ->
+    $timeout.cancel($scope.train_timer)
 
   $scope.initSections($scope.goSection, 'about:details')
 ])
