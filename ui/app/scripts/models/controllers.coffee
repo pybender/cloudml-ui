@@ -328,7 +328,7 @@ angular.module('app.models.controllers', ['app.config', ])
 
     $scope.start = (result) ->
       openOptions.model.$train($scope.data).then ((resp) ->
-        $scope.model.status = resp.data.model.status
+        $scope.model.status = resp.data[$scope.model.API_FIELDNAME].status
         $scope.model.training_in_progress = true
         $scope.$close(true)
       ), ((opts) ->

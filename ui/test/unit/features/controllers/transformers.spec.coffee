@@ -141,7 +141,7 @@ describe 'features/controllers/transformers.coffee', ->
       transformer = new Transformer {id: 222}
       response = {}
       response[transformer.API_FIELDNAME] = transformer
-      $httpBackend.expectGET "#{transformer.BASE_API_URL}#{transformer.id}/?show=updated_on,created_on,status,name,created_by,updated_by,train_import_handler_type,train_import_handler,type,params,field_name,feature_type,json"
+      $httpBackend.expectGET "#{transformer.BASE_API_URL}#{transformer.id}/?show=updated_on,created_on,status,name,created_by,updated_by,training_in_progress,train_import_handler_type,train_import_handler,type,params,field_name,feature_type,json"
       .respond 200, angular.toJson response
       createController 'TransformerDetailsCtrl', {$routeParams: {id: 222}}
       $scope.goSection ['about', 'details']
@@ -153,7 +153,7 @@ describe 'features/controllers/transformers.coffee', ->
       $scope.goSection ['about', 'details']
       expect($scope.LOADED_SECTIONS).toEqual ['main', 'about']
 
-      $httpBackend.expectGET "#{transformer.BASE_API_URL}#{transformer.id}/?show=,error,memory_usage,trainer_size,training_time,trained_by"
+      $httpBackend.expectGET "#{transformer.BASE_API_URL}#{transformer.id}/?show=,error,memory_usage,trainer_size,training_time,trained_by,training_in_progress,status"
       .respond 200, angular.toJson response
       $scope.goSection ['training', '']
       $httpBackend.flush()
@@ -172,7 +172,7 @@ describe 'features/controllers/transformers.coffee', ->
       transformer = new Transformer {id: 222}
       response = {}
       response[transformer.API_FIELDNAME] = transformer
-      $httpBackend.expectGET "#{transformer.BASE_API_URL}#{transformer.id}/?show=updated_on,created_on,status,name,created_by,updated_by,train_import_handler_type,train_import_handler,type,params,field_name,feature_type,json"
+      $httpBackend.expectGET "#{transformer.BASE_API_URL}#{transformer.id}/?show=updated_on,created_on,status,name,created_by,updated_by,training_in_progress,train_import_handler_type,train_import_handler,type,params,field_name,feature_type,json"
       .respond 400
       createController 'TransformerDetailsCtrl', {$routeParams: {id: 222}}
       $scope.goSection ['about', 'details']

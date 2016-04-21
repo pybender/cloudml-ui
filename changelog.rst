@@ -3,6 +3,8 @@
 Changelog
 =========
 
+* Bug - Fixed train transformer dialog issue + support automatic update of training status
+
 Relese 2013-09-??
 -----------------
 * Bug - Fixed deleting test and dataset while they is in progress

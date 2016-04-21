@@ -66,10 +66,9 @@ angular.module('app.features.controllers.transformers', ['app.config', ])
   '$scope'
   '$routeParams'
   'Transformer'
-  '$location'
-  '$rootScope'
+  '$timeout'
 
-($scope, $routeParams, Transformer) ->
+($scope, $routeParams, Transformer, $timeout) ->
   $scope.LOADED_SECTIONS = []
   if not $scope.transformer
     if not $routeParams.id
@@ -93,13 +92,13 @@ angular.module('app.features.controllers.transformers', ['app.config', ])
     FIELDS_BY_SECTION = {
       'training': [
         'error', 'memory_usage', 'trainer_size', 'training_time',
-        'trained_by'
+        'trained_by', 'training_in_progress', 'status'
       ].join(',')
       'about': [
         'type','params', 'field_name', 'feature_type', 'json'].join(',')
       'main': [
         'updated_on', 'created_on', 'status', 'name',
-        'created_by', 'updated_by',
+        'created_by', 'updated_by', 'training_in_progress',
         'train_import_handler_type', 'train_import_handler'].join(',')
     }
     name = section[0]
@@ -116,6 +115,32 @@ angular.module('app.features.controllers.transformers', ['app.config', ])
 
     if fields isnt '' # otherwise we had those loaded before
       $scope.load(fields, name)
+
+    $scope.train_timer = null
+    $scope.same_status_count = 0
+    $scope.status = $scope.transformer.status
+    $scope.monitorTraining = () ->
+      $scope.train_timer = $timeout( ()->
+          $scope.transformer.$load(
+            show: 'status,training_in_progress,error'
+          ).then (->
+            if $scope.transformer.status == $scope.status
+              $scope.same_status_count += 1
+            else
+              $scope.status = $scope.transformer.status
+              $scope.same_status_count = 0
+            if $scope.transformer.training_in_progress && $scope.same_status_count < 20
+              $scope.monitorTraining()
+          )
+        10000
+      )
+
+    $scope.$watch 'transformer.training_in_progress', (newVal, oldVal)->
+      if newVal == true
+        $scope.monitorTraining()
+
+    $scope.$on '$destroy', (event) ->
+      $timeout.cancel($scope.train_timer)
 
   $scope.initSections($scope.goSection, 'about:details')
 ])
