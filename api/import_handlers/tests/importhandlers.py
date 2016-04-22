@@ -262,13 +262,16 @@ class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
             self.assertEqual(model.query.count(), count_all - count)
 
     @mock_s3
-    @patch('api.servers.tasks.upload_import_handler_to_server')
-    def test_upload_to_server(self, mock_task):
+    @patch('api.servers.tasks.upload_import_handler_to_server.s')
+    @patch('api.servers.tasks.update_at_server.s')
+    def test_upload_to_server(self, update_task, mock_task):
         server = Server.query.filter_by(name=ServerData.server_01.name).one()
         resp = self._check(method='put', action='upload_to_server', data={
             'server': server.id
         })
-        self.assertTrue(mock_task.delay.called)
+        mock_task.return_value = 'importhandlers/xyz.xml'
+        self.assertTrue(mock_task.called)
+        self.assertTrue(update_task.called)
         self.assertTrue('status' in resp)
 
     def test_put_run_sql_action(self):

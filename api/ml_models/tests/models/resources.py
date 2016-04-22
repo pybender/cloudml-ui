@@ -479,15 +479,18 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertEqual(set(feature_names), set(['rings', 'sex', 'square']))
 
     @mock_s3
-    @patch('api.servers.tasks.upload_model_to_server')
-    def test_upload_to_server(self, mock_task):
+    @patch('api.servers.tasks.upload_model_to_server.s')
+    @patch('api.servers.tasks.update_at_server.s')
+    def test_upload_to_server(self, update_task, mock_task):
         url = self._get_url(id=self.obj.id, action='upload_to_server')
         server = Server.query.filter_by(name=ServerData.server_01.name).one()
 
         resp = self.client.put(url, data={'server': server.id},
                                headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.OK)
-        self.assertTrue(mock_task.delay.called)
+        mock_task.return_value = 'models/xyz.model'
+        self.assertTrue(mock_task.called)
+        self.assertTrue(update_task.called)
         self.assertTrue('status' in json.loads(resp.data))
 
         self.obj.status = Model.STATUS_NEW

@@ -342,7 +342,7 @@ class ModelResource(BaseTrainedEntityResource):
         }, code=201)
 
     def _put_upload_to_server_action(self, **kwargs):
-        from api.servers.tasks import upload_model_to_server
+        from api.servers.tasks import upload_model_to_server, update_at_server
         from api.servers.forms import ChooseServerForm
 
         model = self._get_details_query(None, **kwargs)
@@ -353,8 +353,9 @@ class ModelResource(BaseTrainedEntityResource):
         form = ChooseServerForm(obj=model)
         if form.is_valid():
             server = form.cleaned_data['server']
-            upload_model_to_server.delay(server.id, model.id,
-                                         request.user.id)
+            (upload_model_to_server.s(server.id, model.id,
+                                      request.user.id) |
+             update_at_server.s(server.id)).apply_async()
 
             return self._render({
                 self.OBJECT_NAME: model,
