@@ -274,6 +274,14 @@ angular.module('app.models.controllers', ['app.config', ])
       .then (->), (opts)->
         $scope.setError opts, 'saving model tags'
 
+    $scope.$watch 'model.classifier.name', (nVal, oVal)->
+      if nVal != oVal && $scope.model.classifier.predefined_selected
+        $scope.model.$load(
+          show: 'classifier'
+        ).then (->
+          $scope.model.classifier.name = nVal
+        )
+
     $scope.initSections($scope.goSection)
   ])
 
