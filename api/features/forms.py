@@ -49,9 +49,29 @@ class FeatureParamsMixin(object):
                 raise ValidationError(
                     'Map {} should contain at least one value'.format(name))
             for key, val in value.items():
-                if not val:
+                if not len(str(val)):
                     raise ValidationError(
                         'Value {0} in {1} can\'t be empty'.format(key, name))
+
+    def _clean_param(self, data, name):
+        from cloudml.trainer.feature_types import FEATURE_PARAMS_TYPES
+        value = data.get(name, None)
+        param_type = FEATURE_PARAMS_TYPES[name]['type']
+        if param_type == 'dict':
+            new_dict = {}
+            for key, val in value.iteritems():
+                try:
+                    # for numeric values save int
+                    new_dict[key] = int(val)
+                except ValueError:
+                    try:
+                        # try to save float
+                        new_dict[key] = float(val)
+                    except ValueError:
+                        new_dict[key] = val
+            return new_dict
+        else:
+            return value
 
     def clean_params(self, value, field):
         value_type = self.data.get('type')
@@ -63,9 +83,11 @@ class FeatureParamsMixin(object):
         if required_params and value is None:
             raise ValidationError('Parameters are required for type {0}, '
                                   'but was not specified'.format(value_type))
+        data = {}
         for name in required_params:
             self._validate_param(value, name)
-        return value
+            data[name] = self._clean_param(value, name)
+        return data
 
 
 class NamedFeatureTypeForm(BaseForm, FeatureParamsMixin):
