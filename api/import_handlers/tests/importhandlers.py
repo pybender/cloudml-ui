@@ -379,6 +379,17 @@ class XmlImportHandlerTests(BaseDbTestCase, TestChecksMixin):
         self.assertEqual(
             2, XmlScript.query.filter_by(import_handler=handler).count())
 
+    def test_get_xml_download_action(self):
+        url = self._get_url(id=self.obj.id, action='xml_download')
+        resp = self.client.get(url, headers=HTTP_HEADERS)
+
+        self.assertTrue('<plan>' in resp.data)
+        self.assertEquals(resp.status_code, 200)
+        self.assertEquals(resp.mimetype, 'text/xml')
+        self.assertEquals(
+            resp.headers['Content-Disposition'],
+            'attachment; filename="%s-importhandler.xml"' % (self.obj.name, ))
+
 
 class IHLoadMixin(object):
     pass

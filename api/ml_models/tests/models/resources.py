@@ -132,7 +132,7 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(resp.mimetype, 'application/json')
         self.assertEquals(
             resp.headers['Content-Disposition'],
-            'attachment; filename=%s-features.json' % (self.obj.name, ))
+            'attachment; filename="%s-features.json"' % (self.obj.name, ))
 
         # disable a feature and regenerate
         feature = Feature.query.filter_by(name='title').one()

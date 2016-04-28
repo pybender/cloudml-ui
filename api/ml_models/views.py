@@ -264,7 +264,7 @@ class ModelResource(BaseTrainedEntityResource):
         resp = Response(content)
         resp.headers['Content-Type'] = 'application/json'
         resp.headers['Content-Disposition'] = \
-            'attachment; filename=%s-features.json' % model.name
+            'attachment; filename="%s-features.json"' % model.name
         return resp
 
     def _get_weights_download_action(self, **kwargs):

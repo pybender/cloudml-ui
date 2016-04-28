@@ -110,6 +110,9 @@ angular.module('app.importhandlers.xml.models', ['app.config'])
         @$make_request("#{@BASE_API_URL}#{@id}/action/update_xml/", {}, 'PUT',
           {'data': @xml})
 
+      downloadXmlUrl: ->
+        return "#{@BASE_API_URL}#{@id}/action/xml_download/?"
+
     return XmlImportHandler
 ])
 
