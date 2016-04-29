@@ -111,17 +111,19 @@ class XmlImportHandlerResource(BaseResourceSQL):
         return res
 
     def _put_upload_to_server_action(self, **kwargs):
-        from api.servers.tasks import upload_import_handler_to_server
+        from api.servers.tasks import upload_import_handler_to_server, \
+            update_at_server
 
         handler = self._get_details_query(None, **kwargs)
 
         form = ChooseServerForm(obj=handler)
         if form.is_valid():
             server = form.cleaned_data['server']
-            upload_import_handler_to_server.delay(server.id,
-                                                  XmlImportHandler.TYPE,
-                                                  handler.id,
-                                                  request.user.id)
+            (upload_import_handler_to_server.s(server.id,
+                                               XmlImportHandler.TYPE,
+                                               handler.id,
+                                               request.user.id) |
+             update_at_server.s(server.id)).apply_async()
 
             return self._render({
                 self.OBJECT_NAME: handler,

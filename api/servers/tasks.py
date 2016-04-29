@@ -74,6 +74,8 @@ def upload_model_to_server(server_id, model_id, user_id):
     update_grafana_dashboard(server, model)
     logging.info('Model has been uploaded: %s' % model.name)
 
+    return '{0}/{1}.model'.format(FOLDER_MODELS, uid)
+
 
 @celery.task
 def upload_import_handler_to_server(server_id, handler_type, handler_id,
@@ -124,9 +126,14 @@ def upload_import_handler_to_server(server_id, handler_type, handler_id,
 
     logging.info('Import Handler has been uploaded: %s' % handler.name)
 
+    return '{0}/{1}.{2}'.format(
+        FOLDER_IMPORT_HANDLERS,
+        uid,
+        'xml' if handler_type == XmlImportHandler.TYPE else 'json')
+
 
 @celery.task
-def update_at_server(server_id, file_name):
+def update_at_server(file_name, server_id):
     """
     Update given file at cloudml-predict.
     """
