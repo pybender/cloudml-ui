@@ -10,10 +10,10 @@
 <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
 
 <h4>My recently updated</h4>
-<div ng-controller="BigListCtrl" ng-init="init(true, 'my_xml_import_handlers')">
+<div ng-controller="BigListCtrl" ng-init="init(true, 'my_xml_import_handlers', 'updated_on', 'desc')">
   <ng-include ng-controller="BaseListCtrl" ng-init="init(false, 'my_xml_import_handlers', false)" src="'partials/importhandlers/xml/table.html'"></ng-include>
 </div>
 <h4>All import handlers</h4>
-<div ng-controller="BigListCtrl" ng-init="init(null, 'xml_import_handlers')">
+<div ng-controller="BigListCtrl" ng-init="init(null, 'xml_import_handlers', 'name', 'asc')">
   <ng-include ng-controller="BaseListCtrl" ng-init="init(true, 'xml_import_handlers', true)" src="'partials/importhandlers/xml/table.html'"></ng-include>
 </div>

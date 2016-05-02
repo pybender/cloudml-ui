@@ -376,6 +376,9 @@ describe 'servers/controllers.coffee', ->
       expect($scope.MODEL).toEqual Server
       expect($scope.FIELDS).toEqual 'name,ip,folder,type'
       expect($scope.ACTION).toEqual 'loading servers'
+      expect($scope.kwargs).toEqual
+        sort_by: 'name'
+        order: 'asc'
 
 
   describe 'ServerDetailsCtrl', ->

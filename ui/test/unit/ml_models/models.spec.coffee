@@ -58,12 +58,6 @@ describe 'ML Models Controllers', ->
         ['tags','created_on','created_by', 'updated_on','updated_by', 'comparable'].join(',')
       expect($scope.ACTION).toEqual 'loading models'
       expect($scope.currentTag).toEqual = 'zozo'
-      expect($scope.kwargs).toEqual
-        tag: $scope.currentTag
-        per_page: 5
-        sort_by: 'updated_on'
-        order: 'desc'
-        page: 1
       expect($scope.STATUSES).toEqual ['', 'New', 'Queued', 'Importing',
                        'Imported', 'Requesting Instance', 'Instance Started',
                        'Training', 'Trained', 'Error', 'Canceled']
@@ -76,10 +70,16 @@ describe 'ML Models Controllers', ->
         id: 1111
         name: 'user'
 
-      $scope.init true, 'some_model_name'
+      $scope.init true, 'some_model_name', 'updated_on', 'desc'
       $scope.$digest()
 
       expect($scope.modelName).toEqual 'some_model_name'
+      expect($scope.kwargs).toEqual
+        tag: $scope.currentTag
+        per_page: 5
+        sort_by: 'updated_on'
+        order: 'desc'
+        page: 1
       expect($scope.filter_opts).toEqual
         updated_by_id: $scope.user.id
         status: ''

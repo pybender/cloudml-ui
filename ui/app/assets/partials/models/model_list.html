@@ -28,11 +28,11 @@
   <alert-message ng-show="msg" class="alert-info" msg="{{ msg }}"></alert-message>
 
   <h4>My recently updated</h4>
-  <div ng-controller="ModelListCtrl" ng-init="init(true, 'my_models')">
+  <div ng-controller="ModelListCtrl" ng-init="init(true, 'my_models', 'updated_on', 'desc')">
     <ng-include ng-controller="BaseListCtrl" ng-init="init(false, 'my_models', false)" src="'partials/models/table.html'"></ng-include>
   </div>
   <h4>All models</h4>
-  <div ng-controller="ModelListCtrl" ng-init="init(null, 'models')">
+  <div ng-controller="ModelListCtrl" ng-init="init(null, 'models', 'name', 'asc')">
     <ng-include ng-controller="BaseListCtrl" ng-init="init(true, 'models', true)" src="'partials/models/table.html'"></ng-include>
   </div>
 </div>
