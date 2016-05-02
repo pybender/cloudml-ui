@@ -3,7 +3,7 @@
     <div ng-controller="BaseListCtrl" ng-init="init(false, 'predict_models', false)">
       <h4 title="Defines parameters for using a model with the data from the <import> part of the handler">
         Models
-        <div class="actions">
+        <div class="actions" ng-show="handler.can_edit">
           <a class="btn btn-info" ng-click="add()">
             <i class="status-icon icon-plus"></i> add predict model
           </a>
@@ -15,7 +15,7 @@
           <h5>
             <span title="name" class="value" ng-bind="item.name || 'no name'" editable="item" value="item.name" editable-field="name" editable-input="text" editable-placement="right" editable-required></span>
             <div class="actions">
-              <button class="btn btn-danger" ng-click="delete(item)">
+              <button class="btn btn-danger" ng-click="delete(item)" ng-show="handler.can_edit">
                 <i title="Delete predict model. Be careful - you could not recover it!" class="icon-remove"></i> delete predict model
               </button>
             </div>
@@ -32,14 +32,14 @@
             <div class="span8" ng-show="item.script">
               <textarea class="small" ui-codemirror="codeMirrorConfigs('nocursor', 'auto', 70)['python']" ng-model="item.script" class="cml-codemirror-refresh" />
             </div>
-            <div class="span1">
+            <div class="span1" ng-show="handler.can_edit">
               <button ng-click="editScript(item)" class="btn btn-info"><i title="Edit script" class="icon-edit"></i></button>
             </div>
           </div>
           <div ng-controller="PredictModelWeightListCtrl" ng-init="init(item)">
             <h5>
               Weights
-              <div class="actions">
+              <div class="actions" ng-show="handler.can_edit">
                 <a class="btn btn-info" ng-click="addWeight(item)">
                 <i class="status-icon icon-plus"></i> add weight
               </a>
@@ -69,7 +69,7 @@
                         <textarea class="small" ui-codemirror="codeMirrorConfigs('nocursor', 'auto', 70)['python']" ng-model="weight.script" class="cml-codemirror-refresh" />
                       </div>
                       <div class="span2">
-                        <button ng-click="editScript(weight)" class="btn btn-info">
+                        <button ng-click="editScript(weight)" class="btn btn-info" ng-show="handler.can_edit">
                           <i title="Edit script" class="icon-edit"></i>
                         </button>
                       </div>
@@ -77,7 +77,7 @@
                   </td>
 
                   <td>
-                    <button class="btn btn-danger" ng-click="deleteWeight(weight)">
+                    <button class="btn btn-danger" ng-click="deleteWeight(weight)" ng-show="handler.can_edit">
                         <i title="Delete predict model weight. Be careful - you could not recover it!" class="icon-remove"></i>
                     </button>
                   </td>
@@ -105,7 +105,7 @@
             <textarea ui-codemirror="codeMirrorConfigs('nocursor', 'auto', 70)['python']" ng-model="label.script" class="small cml-codemirror-refresh" />
           </div>
           <div class="span2">
-            <button ng-click="editScript(label)" class="btn btn-info">
+            <button ng-click="editScript(label)" class="btn btn-info" ng-show="handler.can_edit">
               <i title="Edit script" class="icon-edit"></i>
             </button>
           </div>
@@ -131,7 +131,7 @@
           <textarea class="small" ui-codemirror="codeMirrorConfigs('nocursor', 'auto', 70)['python']" ng-model="probability.script" class="cml-codemirror-refresh" />
         </div>
         <div class="span2">
-          <button ng-click="editScript(probability)" class="btn btn-info">
+          <button ng-click="editScript(probability)" class="btn btn-info" ng-show="handler.can_edit">
             <i title="Edit script" class="icon-edit"></i>
           </button>
         </div>

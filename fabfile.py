@@ -59,12 +59,20 @@ def install():
  libevent-dev python-dev mongodb libxml2-dev libxslt-dev libv8-dev scons libboost-python-dev libboost-thread-dev libboost-all-dev')
 
     # Install nodejs from source
-    sudo("wget http://nodejs.org/dist/v0.10.18/node-v0.10.18.tar.gz")
-    sudo("tar -zxf node-v0.10.18.tar.gz")
-    with cd("node-v0.10.18"):
+    sudo("wget http://nodejs.org/dist/v0.10.18/node-v0.10.28.tar.gz")
+    sudo("tar -zxf node-v0.10.28.tar.gz")
+    with cd("node-v0.10.28"):
         sudo("./configure")
         sudo("make")
         sudo("make install")
+
+    # Install NVM
+    run("curl https://raw.githubusercontent.com/creationix/nvm/v0.11.1/"
+        "install.sh | bash")
+    run("source ~/.profile")
+    run("nvm install 0.10.28")
+    run("nvm alias default 0.10.28")
+
 
 @task
 def push_key():
@@ -142,9 +150,9 @@ def cdeploy():
 def deployui():
     release.work_on.run(0)
     git.push.run()
-    # fabgrunt.private_npm.run()
-    # fabgrunt.bower.run()
-    # fabgrunt.activate.run()
+    fabgrunt.private_npm.run()
+    fabgrunt.bower.run()
+    fabgrunt.activate.run()
     fabgrunt.push_config.run()
     fabgrunt.build.run()
     # angularjs.activate.run()
@@ -176,9 +184,9 @@ def deploy():
 
     release.activate.run()
 
-    # # fabgrunt.private_npm.run()
-    # # fabgrunt.bower.run()
-    # # fabgrunt.activate.run()
+    fabgrunt.private_npm.run()
+    fabgrunt.bower.run()
+    fabgrunt.activate.run()
 
     fabgrunt.push_config.run()
     fabgrunt.build.run()

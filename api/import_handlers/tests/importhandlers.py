@@ -5,7 +5,7 @@ from datetime import datetime
 
 from mock import patch, MagicMock, ANY
 from moto import mock_s3
-
+from api.accounts.models import User
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS
 from api.servers.fixtures import ServerData
 from api.servers.models import Server
@@ -402,6 +402,7 @@ class XmlEntityTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
     BASE_URL = ''
     RESOURCE = XmlEntityResource
     Model = XmlEntity
+    datasets = [XmlDataSourceData]
 
     def setUp(self):
         super(XmlEntityTests, self).setUp()
@@ -442,6 +443,69 @@ class XmlEntityTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):
         resp = self.check_details(show='name', obj=self.obj)
         obj = resp[self.RESOURCE.OBJECT_NAME]
         self.assertEqual(obj['name'], self.obj.name)
+
+    def test_edit_ih_part(self):
+        entity = XmlEntity.query.filter_by(
+            name=XmlEntityData.xml_entity_01.name).one()
+        ds = XmlDataSource.query.filter_by(
+            name=XmlDataSourceData.datasource_01.name).one()
+        # Import handler is created by another user
+        user = User.query.filter_by(name=UserData.user_01.name).first()
+        self.handler.created_by_id = user.id
+        self.handler.save()
+
+        # put
+        url = self._get_url(id=self.obj.id)
+        resp = self.client.put(url, data={"name": "nn"}, headers=HTTP_HEADERS)
+        self.assertEqual(405, resp.status_code)
+        self.assertIn("Item is created by another user.", resp.data)
+
+        # post
+        resp = self.client.post(self.BASE_URL,
+                                data={"name": "nn",
+                                      "import_handler_id": self.handler.id,
+                                      "entity_id": entity.id,
+                                      "datasource": ds.id},
+                                headers=HTTP_HEADERS)
+        self.assertEqual(405, resp.status_code)
+        self.assertIn("Forbidden to add entities to this import handler",
+                      resp.data)
+
+        # delete
+        url = self._get_url(id=self.obj.id)
+        resp = self.client.delete(url, headers=HTTP_HEADERS)
+        self.assertEqual(405, resp.status_code)
+        self.assertIn("Forbidden to delete entities of this import handler. "
+                      "Item is created by another user.", resp.data)
+
+        # Import handler is created by the same user
+        user = User.query.filter_by(name=UserData.user_02.name).first()
+        self.handler.created_by_id = user.id
+        self.handler.save()
+        # post
+        resp = self.client.post(self.BASE_URL,
+                                data={"name": "nn",
+                                      "import_handler_id": self.handler.id,
+                                      "entity_id": entity.id,
+                                      "datasource": ds.id},
+                                headers=HTTP_HEADERS)
+        self.assertEqual(201, resp.status_code)
+        resp = json.loads(resp.data)
+        obj = XmlEntity.query.get(resp[self.RESOURCE.OBJECT_NAME]['id'])
+        self.assertEqual(obj.name, "nn")
+
+        # put
+        url = self._get_url(id=self.obj.id)
+        resp = self.client.put(url, data={"name": "nn"}, headers=HTTP_HEADERS)
+        self.assertEqual(200, resp.status_code)
+        resp = json.loads(resp.data)
+        obj = XmlEntity.query.get(resp[self.RESOURCE.OBJECT_NAME]['id'])
+        self.assertEqual(obj.name, "nn")
+
+        # delete
+        url = self._get_url(id=self.obj.id)
+        resp = self.client.delete(url, headers=HTTP_HEADERS)
+        self.assertEqual(204, resp.status_code)
 
 
 class XmlDataSourceTests(BaseDbTestCase, TestChecksMixin, IHLoadMixin):

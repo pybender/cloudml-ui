@@ -325,6 +325,7 @@ angular.module('app.directives', [
       addSqoop: '&addSqoop',
       getPigFields: '&getPigFields',
       deleteSqoop: '&deleteSqoop',
+      saveModel: '&saveModel',
     }
     # replace: true
     restrict: 'E'
