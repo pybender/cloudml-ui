@@ -17,7 +17,8 @@ from api.ml_models.forms import FeatureTransformerForm
 from api.base.forms.base_forms import BasePredefinedForm
 from api.features.models import CLASSIFIERS
 from cloudml.trainer.feature_types import FEATURE_TYPE_FACTORIES, \
-    InvalidFeatureTypeException
+    InvalidFeatureTypeException, FEATURE_PARAMS_TYPES
+from cloudml.utils import isfloat, isint
 
 
 class FeatureParamsMixin(object):
@@ -25,13 +26,16 @@ class FeatureParamsMixin(object):
     Mixin for feature params validation depended on feature type
     """
     def _validate_param(self, data, name):
-        from cloudml.trainer.feature_types import FEATURE_PARAMS_TYPES
         value = data.get(name, None)
         if value is None:
             raise ValidationError('Parameter {} is required'.format(name))
 
         param_type = FEATURE_PARAMS_TYPES[name]['type']
-        if param_type == 'str':
+        if param_type == 'int':
+            if not isint(value):
+                raise ValidationError('{} - int is required'.format(value))
+
+        elif param_type == 'str':
             pass  # do nothing
 
         elif param_type == 'text':
@@ -54,22 +58,20 @@ class FeatureParamsMixin(object):
                         'Value {0} in {1} can\'t be empty'.format(key, name))
 
     def _clean_param(self, data, name):
-        from cloudml.trainer.feature_types import FEATURE_PARAMS_TYPES
-        value = data.get(name, None)
         param_type = FEATURE_PARAMS_TYPES[name]['type']
+        value = data.get(name, None)
         if param_type == 'dict':
             new_dict = {}
             for key, val in value.iteritems():
-                try:
-                    # for numeric values save int
+                if isint(val):
                     new_dict[key] = int(val)
-                except ValueError:
-                    try:
-                        # try to save float
-                        new_dict[key] = float(val)
-                    except ValueError:
-                        new_dict[key] = val
+                elif isfloat(val):
+                    new_dict[key] = float(val)
+                else:
+                    new_dict[key] = val
             return new_dict
+        elif param_type == 'int':
+            return int(value)
         else:
             return value
 
@@ -80,6 +82,7 @@ class FeatureParamsMixin(object):
         if value_type not in FEATURE_TYPE_FACTORIES:
             return
         required_params = FEATURE_TYPE_FACTORIES[value_type].required_params
+        optional_params = FEATURE_TYPE_FACTORIES[value_type].optional_params
         if required_params and value is None:
             raise ValidationError('Parameters are required for type {0}, '
                                   'but was not specified'.format(value_type))
@@ -87,6 +90,11 @@ class FeatureParamsMixin(object):
         for name in required_params:
             self._validate_param(value, name)
             data[name] = self._clean_param(value, name)
+        for name in optional_params:
+            v = value.get(name, None)
+            if v not in ['', None]:
+                self._validate_param(value, name)
+                data[name] = self._clean_param(value, name)
         return data
 
 
