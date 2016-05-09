@@ -420,10 +420,16 @@ class AmazonDynamoDBHelper(object):
     def _refresh_tables_list(self):
         from boto.dynamodb2.table import Table
         self._tables = {}
-        for table_name in self.conn.list_tables()['TableNames']:
-            table = Table(table_name, connection=self.conn)
-            table.describe()
-            self._tables[table_name] = table
+        start_table = None
+        while True:
+            result = self.conn.list_tables(limit=50, exclusive_start_table_name=start_table)
+            start_table = result.get('LastEvaluatedTableName', None)
+            for table_name in result['TableNames']:
+                table = Table(table_name, connection=self.conn)
+                table.describe()
+                self._tables[table_name] = table
+            if not start_table:
+                break
 
     def put_item(self, table_name, data):
         """
