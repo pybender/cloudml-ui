@@ -15,6 +15,9 @@
       <button ng-click="uploadHandlerToPredict(handler)" class="btn btn-info">
         <i title="Upload for Predict" class="icon-upload"></i> Upload for Predict
       </button>
+      <a style="font-weight: normal;" href="{{ handler.downloadXmlUrl() }}" class="btn btn-info">
+        <i title="Download import handler XML file" class="icon-download-alt"></i> Download XML
+      </a>
       <button ng-click="clone(handler)" class="btn btn-info">
         <i title="Clone your import handler." class="icon-tasks"></i> Clone
       </button>

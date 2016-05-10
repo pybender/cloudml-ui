@@ -3,15 +3,16 @@
 
 import re
 
-from flask import request
+from flask import request, Response
 from psycopg2._psycopg import DatabaseError
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm import joinedload, joinedload_all, undefer
 
 from api.base.resources import BaseResourceSQL, NotFound, \
-    odesk_error_response, ERR_INVALID_DATA
+    odesk_error_response, ERR_INVALID_DATA, public_actions
 from api.base.resources.utils import ERR_INVALID_METHOD
 from api.base.resources.exceptions import ValidationError
+
 from api import api
 from api.import_handlers.models import XmlImportHandler, XmlInputParameter, \
     XmlEntity, XmlField, XmlDataSource, XmlQuery, XmlScript, XmlSqoop, \
@@ -55,11 +56,15 @@ class XmlImportHandlerResource(BaseResourceSQL):
     POST_ACTIONS = ('clone', )
     FILTER_PARAMS = (('created_by', str), ('updated_by_id', int),
                      ('updated_by', str), ('name', str))
-    GET_ACTIONS = ('list_fields')
+    GET_ACTIONS = ('list_fields', 'xml_download')
 
     @property
     def Model(self):
         return XmlImportHandler
+
+    @public_actions(['xml_download'])
+    def get(self, *args, **kwargs):
+        return super(XmlImportHandlerResource, self).get(*args, **kwargs)
 
     def _modify_details_query(self, cursor, params):
         show = self._get_show_fields(params)
@@ -249,6 +254,18 @@ class XmlImportHandlerResource(BaseResourceSQL):
             'status': 'Import Handler "{0}" has been updated'.format(
                 handler.name)
         })
+
+    def _get_xml_download_action(self, **kwargs):
+        handler = self._get_details_query(None, **kwargs)
+        if handler is None:
+            raise NotFound(self.MESSAGE404 % kwargs)
+
+        content = handler.data
+        resp = Response(content)
+        resp.headers['Content-Type'] = 'text/xml'
+        resp.headers['Content-Disposition'] = \
+            'attachment; filename="%s-importhandler.xml"' % handler.name
+        return resp
 
 
 api.add_resource(

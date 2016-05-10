@@ -3,11 +3,17 @@
 Changelog
 =========
 
-Release 2016-xx-xx
+
+Release 2016-05-*
 ------------------
 * Task - Server sorting by name
 * Task - Upload to predict and update file there in one action
 * Bug - Reload model classifier properties if predefined classified is selected and saved
+
+
+Release 2016-05-03
+------------------
+* Feature - Added possibility to download xml of ih
 * Bug - Don't allow to edit entities of import handler created by another user
 * Bug - Fixed server model verification form issues
 * Bug - Fixed amazon settings configuration issues between cloudml and cloudml ui
