@@ -6,6 +6,10 @@ Changelog
 
 Release 2016-05-*
 ------------------
+* Bug - Target variable is always required now, fixed possibility to make it not required 
+* Bug - Cut error message on dataset import
+* Bug - Fixed train transformer dialog issue + support automatic update of training status
+* Bug - Fixed deleting test and dataset while they is in progress
 * Task - Server sorting by name
 * Task - Upload to predict and update file there in one action
 * Bug - Reload model classifier properties if predefined classified is selected and saved
@@ -51,10 +55,6 @@ Release 2016-05-03
 * Bug - Fixed aws instance editing
 * Bug - Fixed alert on scaler editing
 
-
-Relese 2013-09-15
------------------
-* Bug - Fixed deleting test and dataset while they is in progress
 
 
 Relese 2013-09-09
