@@ -24,6 +24,7 @@ from cloudml.importhandler.importhandler import ExtractionPlan, \
 from cloudml.importhandler.utils import PROCESS_STRATEGIES
 from api.base.models import db, BaseModel
 from api import app
+from api.amazon_utils import amazon_config
 
 
 class ImportHandlerMixin(BaseModel):
@@ -270,7 +271,8 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
         return etree.tostring(plan, pretty_print=pretty_print)
 
     def get_iterator(self, params, callback=None):
-        plan = ExtractionPlan(self.get_plan_config(), is_file=False)
+        plan = ExtractionPlan(self.get_plan_config(), is_file=False,
+                              amazon_settings=amazon_config)
         return CoreImportHandler(plan, params, callback=callback)
 
     def get_fields(self):
@@ -293,7 +295,8 @@ class XmlImportHandler(db.Model, ImportHandlerMixin):
 
         # TODO: try .. except after check this with real import handlers
         try:
-            plan = ExtractionPlan(self.data, is_file=False)
+            plan = ExtractionPlan(self.data, is_file=False,
+                                  amazon_settings=amazon_config)
             return get_entity_fields(plan.entity)
         except Exception, exc:
             raise
@@ -455,7 +458,7 @@ class XmlScript(db.Model, BaseMixin, RefXmlImportHandlerMixin):
     @property
     def script_string(self):
         try:
-            script = Script(self.to_xml())
+            script = Script(self.to_xml(), amazon_settings=amazon_config)
             return script.get_script_str()
         except Exception as e:
             raise ValueError("Can't load script sources. {0}".format(e))
@@ -703,7 +706,8 @@ class PredictResultProbability(db.Model, RefPredictModelMixin):
 def fill_import_handler(import_handler, xml_data=None):
     plan = None
     if xml_data:
-        plan = ExtractionPlan(xml_data, is_file=False)
+        plan = ExtractionPlan(xml_data, is_file=False,
+                              amazon_settings=amazon_config)
 
     if plan is None:
         ent = XmlEntity(
