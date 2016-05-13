@@ -6,7 +6,7 @@ Changelog
 
 Release 2016-05-*
 ------------------
-* Bug - Target variable is always required now, fixed possibility to make it not required 
+* Bug - Target variable is always required now, fixed possibility to make it not required
 * Bug - Cut error message on dataset import
 * Bug - Fixed train transformer dialog issue + support automatic update of training status
 * Bug - Fixed deleting test and dataset while they is in progress
