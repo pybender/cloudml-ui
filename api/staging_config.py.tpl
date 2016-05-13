@@ -5,7 +5,8 @@ UPLOAD_FOLDER = 'models'
 DATA_FOLDER = '{{ current_var_link }}/data'
 MAX_CONTENT_LENGTH = 128 * 1024 * 1024
 
-GRAFANA_KEY = "eyJrIjoiYk1KME10bGtOSGh2V3JZVmxFWlJIU0ljcnFLRzE5OTUiLCJuIjoibmlrb2xheW1lbG5payIsImlkIjoxfQ=="
+#GRAFANA_KEY = "eyJrIjoiYk1KME10bGtOSGh2V3JZVmxFWlJIU0ljcnFLRzE5OTUiLCJuIjoibmlrb2xheW1lbG5payIsImlkIjoxfQ=="
+GRAFANA_KEY = "eyJrIjoibXllRFY3M2JkcjMyd25sWjdaZ1pYSEM2MEh4eldsd3kiLCJuIjoibm1lbG5payIsImlkIjoxfQ=="
 GRAFANA_HOST = "grafana.odesk.com"
 
 CELERY_TASK_SERIALIZER = 'json'

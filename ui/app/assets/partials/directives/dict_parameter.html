@@ -1,14 +1,16 @@
 <div class="form-inline">
-  <div ng-repeat="pair in pairs" class="control-group" ng-class="{error: pair.error.error_key || pair.error.error_value || pair.error.error_duplicate_key}">
+  <div ng-repeat="pair in pairs" class="control-group" ng-class="{error: pair.error.error_key || pair.error.error_value || pair.error.error_duplicate_key || pair.error.regexp_key_error || pair.error.regexp_val_error}">
     <div>
-      <input type="text" ng-model="pair.key" placeholder="key" ng-model-onblur="" ng-class="inputKeyClass" required ng-pattern="/\w+/"/>
+      <input type="text" ng-model="pair.key" placeholder="key" ng-model-onblur="" ng-class="inputKeyClass" required />
       <span>:</span>
-      <input type="text" ng-model="pair.value" placeholder="value" ng-model-onblur="" ng-class="inputValueClass" required pattern="\w+"/>
+      <input type="text" ng-model="pair.value" placeholder="value" ng-model-onblur="" ng-class="inputValueClass" required />
       <button title="delete key/value pair" ng-click="deleteKey($index)" class="btn">
         <i class="icon-trash"></i></button>
       <div>
         <div class="help-block" ng-show="pair.error.error_key">key cannot be empty</div>
         <div class="help-block" ng-show="pair.error.error_value">value cannot be empty</div>
+        <div class="help-block" ng-show="pair.error.regexp_key_error">key doesn't match the pattern \w+</div>
+        <div class="help-block" ng-show="pair.error.regexp_val_error">value doesn't match the pattern \w+</div>
         <div class="help-block" ng-show="pair.error.error_duplicate_key">keys must be unique</div>
       </div>
     </div>

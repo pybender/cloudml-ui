@@ -176,6 +176,7 @@ class Feature(ExportImportMixin, RefFeatureSetMixin,
                     Feature.is_target_variable, Feature.name != self.name,
                     Feature.feature_set_id == self.feature_set_id)\
                 .update({Feature.is_target_variable: False})
+            self.required = True
         if commit:
             db.session.commit()
 

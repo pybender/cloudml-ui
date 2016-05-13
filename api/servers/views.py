@@ -37,7 +37,7 @@ class ServerResource(BaseResourceSQL):
         from api.amazon_utils import amazon_config
         for h in import_handlers_obj:
             plan = ExtractionPlan(h.get_plan_config(), is_file=False,
-                                  callback=amazon_config)
+                                  amazon_settings=amazon_config)
             if plan.predict.models:
                 model_name = plan.predict.models[0].value
                 model_key = models_map.get(model_name)
@@ -87,7 +87,7 @@ class ServerFileResource(BaseResource):
                     server.set_key_metadata(uid, folder, key, val)
             from .tasks import update_at_server
             file_name = '{0}/{1}'.format(folder, uid)
-            update_at_server.delay(server.id, file_name)
+            update_at_server.delay(file_name, server.id)
         except (S3ResponseError, ValueError) as err:
             status = err.status if hasattr(err, 'status') else 400
             return odesk_error_response(status, 1006, str(err))
@@ -106,7 +106,7 @@ class ServerFileResource(BaseResource):
         from .tasks import update_at_server
         file_name = '{0}/{1}'.format(folder, uid)
 
-        update_at_server.delay(server.id, file_name)
+        update_at_server.delay(file_name, server.id)
 
         return self._render({self.OBJECT_NAME: {'id': uid}})
 
@@ -119,7 +119,7 @@ class ServerFileResource(BaseResource):
             server.set_key_metadata(uid, folder, 'hide', 'True')
             from .tasks import update_at_server
             file_name = '{0}/{1}'.format(folder, uid)
-            update_at_server.delay(server.id, file_name)
+            update_at_server.delay(file_name, server.id)
         except S3ResponseError as err:
             return odesk_error_response(err.status, 1006, str(err))
         return '', 204

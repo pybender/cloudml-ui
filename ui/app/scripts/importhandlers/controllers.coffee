@@ -8,15 +8,15 @@ angular.module('app.importhandlers.controllers', ['app.config', ])
 
   ($scope, $location) ->
     $scope.currentTag = $location.search()['tag']
-    $scope.kwargs = {
-      tag: $scope.currentTag
-      per_page: 5
-      sort_by: 'updated_on'
-      order: 'desc'
-      page: 1
-    }
 
-    $scope.init = (updatedByMe, listUniqueName) ->
+    $scope.init = (updatedByMe, listUniqueName, sort_by, order) ->
+      $scope.kwargs = {
+        tag: $scope.currentTag
+        per_page: 5
+        sort_by: sort_by
+        order: order
+        page: 1
+      }
       $scope.listUniqueName = listUniqueName
       if updatedByMe
         $scope.$watch('user', (user, oldVal, scope) ->

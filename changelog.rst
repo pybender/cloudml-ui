@@ -3,9 +3,58 @@
 Changelog
 =========
 
-Relese 2013-09-??
------------------
+
+Release 2016-05-*
+------------------
+* Bug - Target variable is always required now, fixed possibility to make it not required
+* Bug - Cut error message on dataset import
+* Bug - Fixed train transformer dialog issue + support automatic update of training status
 * Bug - Fixed deleting test and dataset while they is in progress
+* Task - Server sorting by name
+* Task - Upload to predict and update file there in one action
+* Bug - Reload model classifier properties if predefined classified is selected and saved
+
+
+Release 2016-05-03
+------------------
+* Feature - Added possibility to download xml of ih
+* Bug - Don't allow to edit entities of import handler created by another user
+* Bug - Fixed server model verification form issues
+* Bug - Fixed amazon settings configuration issues between cloudml and cloudml ui
+* Task - Link to dataset importing logs from model training/testing logs
+* Bug - Don't allow to train model when test is not finished
+* Bug - Fixed dataset import error
+* Bug - Fixed updating model issues: model was not relevant in some scenarios
+* Task - Load necessary tabs when model train/test is completed
+* Bug - Fixed not relevant values appearing in group by section
+* Task - Added link to server logs
+* Task - Added page title
+* Feature - Server Model Verification
+* Feature - word2vec and doc2vec transformers support
+* Feature - Support python scripts (part of xml import handler) in separate files (local or amazon)
+* Task - Added preview of python script
+* Bug - Production server settings can be modified only by admins
+* Task - Save import handler's XML to dataset on import
+* Task - Block modifying deployed import handlers, models and datasets that were used on deployed model train/test
+* Task - Add dataset name and id to training logs
+* Bug - Fix some form inputs names on ui
+* Bug - Fixed confusion matrix recalculation and layout for more that 10 labels
+* Task - Allow editing model features in JSON view
+* Bug - Fixed error messages appearing after changed in input-editable elements
+* Bug - Fixed python True and xsd true error in pig datasource
+* Bug - Fixed model visualisation tree displaying freeze
+* Bug - Cut amazon credentials and logins/passwrods in datasources on import handler cloning
+* Bug - Set import handler user on cloning
+* Task - Check and parse feature default date
+* Feature - Support confusion matrix calculation for multi-class models
+* Bug - Fixed predefined classifier save issues
+* Feature - Displaying celery logs for each confusion matrix recalculation
+* Bug - Fixed test examples pagination
+* Bug - Added validation of python script on posting
+* Feature - Added ordering of model and import handler lists (by Name, Updated on)
+* Bug - Fixed aws instance editing
+* Bug - Fixed alert on scaler editing
+
 
 
 Relese 2013-09-09

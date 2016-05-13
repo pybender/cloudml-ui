@@ -156,6 +156,10 @@ angular.module('app.servers.controllers', ['app.config', ])
     $scope.MODEL = Server
     $scope.FIELDS = 'name,ip,folder,type'
     $scope.ACTION = 'loading servers'
+    $scope.kwargs = {
+      sort_by: 'name'
+      order: 'asc'
+    }
 
 ])
 

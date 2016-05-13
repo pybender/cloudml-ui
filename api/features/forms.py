@@ -17,7 +17,8 @@ from api.ml_models.forms import FeatureTransformerForm
 from api.base.forms.base_forms import BasePredefinedForm
 from api.features.models import CLASSIFIERS
 from cloudml.trainer.feature_types import FEATURE_TYPE_FACTORIES, \
-    InvalidFeatureTypeException
+    InvalidFeatureTypeException, FEATURE_PARAMS_TYPES
+from cloudml.utils import isfloat, isint
 
 
 class FeatureParamsMixin(object):
@@ -25,13 +26,16 @@ class FeatureParamsMixin(object):
     Mixin for feature params validation depended on feature type
     """
     def _validate_param(self, data, name):
-        from cloudml.trainer.feature_types import FEATURE_PARAMS_TYPES
         value = data.get(name, None)
         if value is None:
             raise ValidationError('Parameter {} is required'.format(name))
 
         param_type = FEATURE_PARAMS_TYPES[name]['type']
-        if param_type == 'str':
+        if param_type == 'int':
+            if not isint(value):
+                raise ValidationError('{} - int is required'.format(value))
+
+        elif param_type == 'str':
             pass  # do nothing
 
         elif param_type == 'text':
@@ -49,9 +53,27 @@ class FeatureParamsMixin(object):
                 raise ValidationError(
                     'Map {} should contain at least one value'.format(name))
             for key, val in value.items():
-                if not val:
+                if not len(str(val)):
                     raise ValidationError(
                         'Value {0} in {1} can\'t be empty'.format(key, name))
+
+    def _clean_param(self, data, name):
+        param_type = FEATURE_PARAMS_TYPES[name]['type']
+        value = data.get(name, None)
+        if param_type == 'dict':
+            new_dict = {}
+            for key, val in value.iteritems():
+                if isint(val):
+                    new_dict[key] = int(val)
+                elif isfloat(val):
+                    new_dict[key] = float(val)
+                else:
+                    new_dict[key] = val
+            return new_dict
+        elif param_type == 'int':
+            return int(value)
+        else:
+            return value
 
     def clean_params(self, value, field):
         value_type = self.data.get('type')
@@ -60,12 +82,20 @@ class FeatureParamsMixin(object):
         if value_type not in FEATURE_TYPE_FACTORIES:
             return
         required_params = FEATURE_TYPE_FACTORIES[value_type].required_params
+        optional_params = FEATURE_TYPE_FACTORIES[value_type].optional_params
         if required_params and value is None:
             raise ValidationError('Parameters are required for type {0}, '
                                   'but was not specified'.format(value_type))
+        data = {}
         for name in required_params:
             self._validate_param(value, name)
-        return value
+            data[name] = self._clean_param(value, name)
+        for name in optional_params:
+            v = value.get(name, None)
+            if v not in ['', None]:
+                self._validate_param(value, name)
+                data[name] = self._clean_param(value, name)
+        return data
 
 
 class NamedFeatureTypeForm(BaseForm, FeatureParamsMixin):
@@ -117,6 +147,7 @@ class FeatureSetForm(BaseForm):
         self.cleaned_data['modified'] = True
         if self.target_feature:
             self.target_feature.is_target_variable = True
+            self.target_feature.required = True
             self.target_feature.save(commit=False)
         return super(FeatureSetForm, self).save()
 
@@ -280,6 +311,13 @@ exist. Please choose another one.' % name)
 
     def clean_remove_transformer(self, value, field):
         return value and self.is_edit
+
+    def clean_required(self, value, field):
+        target_variable = self.cleaned_data.get('is_target_variable', None)
+        if target_variable or \
+                (self.obj.is_target_variable and target_variable is None):
+            return True
+        return value
 
     def save(self, *args, **kwargs):
         remove_transformer = self.cleaned_data.get('remove_transformer', False)

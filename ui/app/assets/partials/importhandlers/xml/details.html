@@ -15,6 +15,9 @@
       <button ng-click="uploadHandlerToPredict(handler)" class="btn btn-info">
         <i title="Upload for Predict" class="icon-upload"></i> Upload for Predict
       </button>
+      <a style="font-weight: normal;" href="{{ handler.downloadXmlUrl() }}" class="btn btn-info">
+        <i title="Download import handler XML file" class="icon-download-alt"></i> Download XML
+      </a>
       <button ng-click="clone(handler)" class="btn btn-info">
         <i title="Clone your import handler." class="icon-tasks"></i> Clone
       </button>
@@ -58,7 +61,7 @@
           <div id="datasouces" ng-controller="DatasourcesListCtrl" ng-init="init(handler)">
             <div>
               <div class="actions">
-                <a class="btn btn-info" ng-click="add()">
+                <a class="btn btn-info" ng-click="add()" ng-show="handler.can_edit">
                   <i class="status-icon icon-plus"></i> add datasource
                 </a>
               </div>
@@ -108,7 +111,7 @@
           <div id="inputs" ng-controller="InputParametersListCtrl" ng-init="init(handler)">
             <div>
               <div class="actions">
-                <a class="btn btn-info" ng-click="add(handler)">
+                <a class="btn btn-info" ng-click="add(handler)" ng-show="handler.can_edit">
                   <i class="status-icon icon-plus"></i> add parameter
                 </a>
               </div>
@@ -120,7 +123,7 @@
                       <th>Type</th>
                       <th>Regex</th>
                       <th>Format</th>
-                      <th width="100px">Actions</th>
+                      <th width="100px" ng-show="handler.can_edit">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -137,7 +140,7 @@
                       <td>
                         <span title="format" class="format" ng-bind="item.format || 'no format'" editable="item" value="item.format" editable-field="format" editable-input="text" editable-placement="right"></span>
                       </td>
-                      <td>
+                      <td ng-show="handler.can_edit">
                         <button ng-click="delete(item)" class="btn btn-danger"><i title="Delete your input parameter. Be careful - you could not recover it!" class="icon-remove"></i></button>
                       </td>
                     </tr>
@@ -159,7 +162,7 @@
               <div class="span8">Scripts</div>
               <div class="span3 pull-right">
                 <div class="actions button-in-header">
-                  <a class="btn btn-info" ng-click="add(handler)" stop-event="click">
+                  <a class="btn btn-info" ng-click="add(handler)" stop-event="click" ng-show="handler.can_edit">
                     <i class="status-icon icon-plus"></i> add script
                   </a>
                 </div>
@@ -177,10 +180,10 @@
                       File: <a ng-click="preview(item)" stop-event="click">{{ item.data }}</a>
                   </div>
                   <div class="span2">
-                    <button ng-click="edit(item)" class="btn btn-info">
+                    <button ng-click="edit(item)" class="btn btn-info" ng-show="handler.can_edit">
                       <i title="Edit script" class="icon-edit"></i>
                     </button>
-                    <button ng-click="delete(item)" class="btn btn-danger">
+                    <button ng-click="delete(item)" class="btn btn-danger" ng-show="handler.can_edit">
                       <i title="Delete script. Be careful - you could not recover it!" class="icon-remove"></i>
                     </button>
                   </div>
@@ -209,7 +212,8 @@
                            run-query="runQuery"
                            add-sqoop="addSqoop"
                            get-pig-fields="getPigFields"
-                           delete-sqoop="delete"></entities-tree>
+                           delete-sqoop="delete"
+                           save-model="saveModel"></entities-tree>
           </div>
         </accordion-group>
 
@@ -229,11 +233,11 @@
   <div ng-show="action[1] == 'xml'" cml-has-codemirror="action[1] == 'xml'">
     <form name="XmlIHXmlForm" ng-controller="XmlIHXmlEditCtrl">
       <textarea name="ihXml" class="cml-codemirror-refresh" ng-model="handler.xml"
-                ui-codemirror="codeMirrorConfigs(false, '100%', '100%')['xml']"></textarea>
+                ui-codemirror="codeMirrorConfigs(!handler.can_edit, '100%', '100%')['xml']"></textarea>
 
-      <button ng-click="saveXml()" class="btn btn-info" ng-disabled="XmlIHXmlForm.ihXml.$pristine">Save</button>
+      <button ng-click="saveXml()" class="btn btn-info" ng-disabled="XmlIHXmlForm.ihXml.$pristine" ng-show="handler.can_edit">Save</button>
 
-      <button ng-click="resetXmlChanges()" class="btn btn-info" ng-disabled="XmlIHXmlForm.ihXml.$pristine">Cancel Changes</button>
+      <button ng-click="resetXmlChanges()" class="btn btn-info" ng-disabled="XmlIHXmlForm.ihXml.$pristine" ng-show="handler.can_edit">Cancel Changes</button>
 
     </form>
   </div>

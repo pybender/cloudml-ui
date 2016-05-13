@@ -21,6 +21,7 @@ describe 'features/controllers/transformers.coffee', ->
   $location = null
   createController = null
   $scope = null
+  $timeout = null
 
   beforeEach inject ($injector) ->
     settings = $injector.get('settings')
@@ -29,6 +30,7 @@ describe 'features/controllers/transformers.coffee', ->
     $controller = $injector.get('$controller')
     $routeParams = $injector.get('$routeParams')
     $location = $injector.get('$location')
+    $timeout = $injector.get('$timeout')
 
     createController = (ctrl, extras) ->
       $scope = $rootScope.$new()
@@ -141,7 +143,7 @@ describe 'features/controllers/transformers.coffee', ->
       transformer = new Transformer {id: 222}
       response = {}
       response[transformer.API_FIELDNAME] = transformer
-      $httpBackend.expectGET "#{transformer.BASE_API_URL}#{transformer.id}/?show=updated_on,created_on,status,name,created_by,updated_by,train_import_handler_type,train_import_handler,type,params,field_name,feature_type,json"
+      $httpBackend.expectGET "#{transformer.BASE_API_URL}#{transformer.id}/?show=updated_on,created_on,status,name,created_by,updated_by,training_in_progress,train_import_handler_type,train_import_handler,type,params,field_name,feature_type,json"
       .respond 200, angular.toJson response
       createController 'TransformerDetailsCtrl', {$routeParams: {id: 222}}
       $scope.goSection ['about', 'details']
@@ -153,7 +155,7 @@ describe 'features/controllers/transformers.coffee', ->
       $scope.goSection ['about', 'details']
       expect($scope.LOADED_SECTIONS).toEqual ['main', 'about']
 
-      $httpBackend.expectGET "#{transformer.BASE_API_URL}#{transformer.id}/?show=,error,memory_usage,trainer_size,training_time,trained_by"
+      $httpBackend.expectGET "#{transformer.BASE_API_URL}#{transformer.id}/?show=,error,memory_usage,trainer_size,training_time,trained_by,training_in_progress,status"
       .respond 200, angular.toJson response
       $scope.goSection ['training', '']
       $httpBackend.flush()
@@ -172,13 +174,39 @@ describe 'features/controllers/transformers.coffee', ->
       transformer = new Transformer {id: 222}
       response = {}
       response[transformer.API_FIELDNAME] = transformer
-      $httpBackend.expectGET "#{transformer.BASE_API_URL}#{transformer.id}/?show=updated_on,created_on,status,name,created_by,updated_by,train_import_handler_type,train_import_handler,type,params,field_name,feature_type,json"
+      $httpBackend.expectGET "#{transformer.BASE_API_URL}#{transformer.id}/?show=updated_on,created_on,status,name,created_by,updated_by,training_in_progress,train_import_handler_type,train_import_handler,type,params,field_name,feature_type,json"
       .respond 400
       createController 'TransformerDetailsCtrl', {$routeParams: {id: 222}}
       $scope.goSection ['about', 'details']
       $httpBackend.flush()
 
       expect($rootScope.setError).toHaveBeenCalledWith jasmine.any(Object), 'loading transformer details'
+
+    it 'should watch for training progress and update transformer status until it is done', inject (Transformer)->
+      $rootScope.initSections = jasmine.createSpy '$scope.initSections'
+
+      transformer = new Transformer
+        id: 222
+        status: 'Trained'
+        training_in_progress: false
+        error: ''
+      response = {}
+      response[transformer.API_FIELDNAME] = transformer
+      $httpBackend.expectGET "#{transformer.BASE_API_URL}#{transformer.id}/?show=status,training_in_progress,error"
+      .respond 200, angular.toJson(response)
+      createController 'TransformerDetailsCtrl', {$routeParams: {id: 222}}
+
+      $scope.transformer.training_in_progress = true
+      $scope.transformer.status = 'Training'
+      $scope.$digest()
+      $timeout.flush()
+      $httpBackend.flush()
+      expect($scope.transformer.status).toEqual 'Trained'
+      expect($scope.transformer.training_in_progress).toBe false
+
+      $timeout.cancel = jasmine.createSpy '$timeout.cancel'
+      $scope.$emit '$destroy'
+      expect($timeout.cancel).toHaveBeenCalled
 
 
   describe 'TransformerActionsCtrl', ->

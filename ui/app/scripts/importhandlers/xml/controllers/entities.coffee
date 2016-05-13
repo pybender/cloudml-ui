@@ -125,6 +125,13 @@ angular.module(
         extra: {noInput: false, title: 'Pig Fields'}
       })
 
+    $scope.saveModel = (model, fields) ->
+      $rootScope.resetError()
+      model.$save(only: fields).then (() ->
+        #
+      ), ((opts) ->
+        $scope.err = $rootScope.setError(opts, 'saving model')
+      )
 ])
 
 .controller('PigFieldsLoader', [

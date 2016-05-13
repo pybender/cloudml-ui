@@ -54,19 +54,19 @@ angular.module('app.models.controllers', ['app.config', ])
                                           'comparable'].join(',')
     $scope.ACTION = 'loading models'
     $scope.currentTag = $location.search()['tag']
-    $scope.kwargs = {
-      tag: $scope.currentTag
-      per_page: 5
-      sort_by: 'updated_on'
-      order: 'desc'
-      page: 1
-    }
     $scope.STATUSES = ['', 'New', 'Queued', 'Importing',
     'Imported', 'Requesting Instance', 'Instance Started',
     'Training', 'Trained', 'Error', 'Canceled']
 
-    $scope.init = (updatedByMe, modelName) ->
+    $scope.init = (updatedByMe, modelName, sort_by, order) ->
       $scope.modelName = modelName
+      $scope.kwargs = {
+        tag: $scope.currentTag
+        per_page: 5
+        sort_by: sort_by
+        order: order
+        page: 1
+      }
       if updatedByMe
         $scope.$watch('user', (user, oldVal, scope) ->
           if user?
@@ -274,6 +274,14 @@ angular.module('app.models.controllers', ['app.config', ])
       .then (->), (opts)->
         $scope.setError opts, 'saving model tags'
 
+    $scope.$watch 'model.classifier.name', (nVal, oVal)->
+      if nVal != oVal && $scope.model.classifier.predefined_selected
+        $scope.model.$load(
+          show: 'classifier'
+        ).then (->
+          $scope.model.classifier.name = nVal
+        )
+
     $scope.initSections($scope.goSection)
   ])
 
@@ -328,7 +336,7 @@ angular.module('app.models.controllers', ['app.config', ])
 
     $scope.start = (result) ->
       openOptions.model.$train($scope.data).then ((resp) ->
-        $scope.model.status = resp.data.model.status
+        $scope.model.status = resp.data[$scope.model.API_FIELDNAME].status
         $scope.model.training_in_progress = true
         $scope.$close(true)
       ), ((opts) ->
