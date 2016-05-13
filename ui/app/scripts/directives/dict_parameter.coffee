@@ -25,11 +25,14 @@ angular.module('app.directives')
         pairs = ngModel.$viewValue
         validKeys = true
         validValues = true
-
+        r = /\w+/
+        #r = /^([a-zA-Z0-9])+$/
         for pair, index in pairs
-          pair.error = {error_key: false, error_value: false, error_duplicate_key: false}
+          pair.error = {error_key: false, error_value: false, error_duplicate_key: false, regexp_key_error: false, regexp_val_error: false}
           pair.error.error_key = isEmpty(pair.key)
           pair.error.error_value = isEmpty(pair.value)
+          pair.error.regexp_key_error = !r.test(pair.key)
+          pair.error.regexp_val_error = !r.test(pair.value)
           for pair2, index2 in pairs
             if pair.key is pair2.key and index isnt index2
               pair.error.error_duplicate_key = true
@@ -37,17 +40,21 @@ angular.module('app.directives')
 
         validKeys = not _.some(_.pluck(_.pluck(pairs, 'error'), 'error_key'))
         validValues = not _.some(_.pluck(_.pluck(pairs, 'error'), 'error_value'))
+        validKeysR = not _.some(_.pluck(_.pluck(pairs, 'error'), 'regexp_key_error'))
+        validValuesR = not _.some(_.pluck(_.pluck(pairs, 'error'), 'regexp_val_error'))
         uniqueKeys = not _.some(_.pluck(_.pluck(pairs, 'error'), 'error_duplicate_key'))
 
         ngModel.$setValidity('error_keys', validKeys)
         ngModel.$setValidity('error_values', validValues)
+        ngModel.$setValidity('regexp_key_error', validKeysR)
+        ngModel.$setValidity('regexp_val_error', validValuesR)
         ngModel.$setValidity('error_no_keys', pairs.length > 0)
         ngModel.$setValidity('error_duplicate_keys', uniqueKeys)
 
         # adding a new key is a subset of the model being valid or not
         # the only excluded condition from validity that still allows
         # adding a new key is the model having no keys at all
-        scope.canAddNewKey = validKeys and validValues and uniqueKeys
+        scope.canAddNewKey = validKeys and validValues and uniqueKeys and validKeysR and validValuesR
 
         return scope.canAddNewKey and pairs.length > 0
 
