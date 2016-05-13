@@ -147,6 +147,7 @@ class FeatureSetForm(BaseForm):
         self.cleaned_data['modified'] = True
         if self.target_feature:
             self.target_feature.is_target_variable = True
+            self.target_feature.required = True
             self.target_feature.save(commit=False)
         return super(FeatureSetForm, self).save()
 
@@ -310,6 +311,13 @@ exist. Please choose another one.' % name)
 
     def clean_remove_transformer(self, value, field):
         return value and self.is_edit
+
+    def clean_required(self, value, field):
+        target_variable = self.cleaned_data.get('is_target_variable', None)
+        if target_variable or \
+                (self.obj.is_target_variable and target_variable is None):
+            return True
+        return value
 
     def save(self, *args, **kwargs):
         remove_transformer = self.cleaned_data.get('remove_transformer', False)
