@@ -34,10 +34,8 @@ class ServerResource(BaseResourceSQL):
         import_handlers_obj = XmlImportHandler.query.filter(
             XmlImportHandler.id.in_(ids)).all()
         from cloudml.importhandler.importhandler import ExtractionPlan
-        from api.amazon_utils import amazon_config
         for h in import_handlers_obj:
-            plan = ExtractionPlan(h.get_plan_config(), is_file=False,
-                                  amazon_settings=amazon_config)
+            plan = ExtractionPlan(h.get_plan_config(), is_file=False)
             if plan.predict.models:
                 model_name = plan.predict.models[0].value
                 model_key = models_map.get(model_name)
