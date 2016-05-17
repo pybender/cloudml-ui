@@ -4,7 +4,7 @@ Changelog
 =========
 
 
-Release 2016-05-*
+Release 2016-05-17
 ------------------
 * Bug - Target variable is always required now, fixed possibility to make it not required
 * Bug - Cut error message on dataset import
