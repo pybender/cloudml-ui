@@ -5,6 +5,7 @@ Changelog
 
 Release 2016-05-20
 ------------------
+* Bug - Add Model verification form fixes
 * Task - Parse feature default date according to pattern on ui
 * Bug - Delete verifications and examples on model re-train
 

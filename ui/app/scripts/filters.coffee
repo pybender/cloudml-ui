@@ -125,6 +125,11 @@ angular.module('app.filters', [])
       return input
 )
 
+.filter('isArrayEmpty', () ->
+    return (input) ->
+      return input.length == 0
+)
+
 add_zero = (val) ->
   if val < 10
     val = '0' + val
