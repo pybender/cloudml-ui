@@ -8,21 +8,27 @@ from datetime import datetime
 from mock import patch, ANY, MagicMock
 
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS
-from .fixtures import ServerData, ServerModelVerificationData
-from .models import Server, ServerModelVerification
+from .fixtures import ServerData, ServerModelVerificationData, \
+    VerificationExampleData
+from .models import Server, ServerModelVerification, VerificationExample
 from .config import FOLDER_MODELS
 from .views import ServerResource, ServerFileResource, \
-    ServerModelVerificationResource
+    ServerModelVerificationResource, VerificationExampleResource
 from .tasks import upload_import_handler_to_server, upload_model_to_server, \
-    update_at_server
+    update_at_server, verify_model, VerifyModelTask
 from api.import_handlers.fixtures import XmlImportHandlerData as \
     ImportHandlerData, XmlEntityData
 from api.import_handlers.models import ImportHandler, XmlImportHandler,\
     XmlEntity
-from api.ml_models.fixtures import ModelData
+from api.ml_models.fixtures import ModelData, MODEL_TRAINER, SegmentData
+from api.model_tests.fixtures import TestExampleData
+from api.import_handlers.fixtures import get_importhandler
 from api.ml_models.models import Model
+from api.model_tests.models import TestExample
 from api.accounts.models import User
 from api.servers.grafana import GrafanaHelper
+import json
+from cloudml.trainer.store import TrainerStorage
 
 
 class ServerModelTests(BaseDbTestCase):
@@ -47,7 +53,7 @@ class ServerResourceTests(BaseDbTestCase, TestChecksMixin):
     SHOW = 'name,ip,folder'
     BASE_URL = '/cloudml/servers/'
     RESOURCE = ServerResource
-    datasets = [ServerData]
+    datasets = [ServerData, ModelData]
 
     def setUp(self):
         super(ServerResourceTests, self).setUp()
@@ -63,6 +69,39 @@ class ServerResourceTests(BaseDbTestCase, TestChecksMixin):
 
     def test_readonly(self):
         self.check_readonly()
+
+    @mock_s3
+    def test_get_models_action(self):
+        # no models and import handlers
+        result = self._check(server=self.obj.id, id=self.obj.id,
+                             action='models')
+        self.assertEqual(0, len(result['files']))
+
+        # should return model data
+        model = Model.query.filter_by(name=ModelData.model_01.name).one()
+        model.trainer = 'trainer_file'
+        model.train_import_handler = get_importhandler()
+        model.test_import_handler = get_importhandler()
+        model.name = 'BestMatch.v31'
+        model.save()
+        user = User.query.first()
+        upload_model_to_server(self.obj.id, model.id, user.id)
+        upload_import_handler_to_server(self.obj.id, 'xml',
+                                        model.test_import_handler.id, user.id)
+
+        result = self._check(server=self.obj.id, id=self.obj.id,
+                             action='models')
+        self.assertEqual(1, len(result['files']))
+        f = result['files'][0]
+        self.assertEqual(f['model_name'], 'BestMatch.v31')
+        self.assertEqual(f['model_metadata']['name'], 'BestMatch.v31')
+        self.assertEqual(f['model']['id'], model.id)
+        self.assertEqual(f['import_handler_name'],
+                         f['import_handler_metadata']['name'])
+        self.assertEqual(f['import_handler_metadata']['object_id'],
+                         str(model.test_import_handler.id))
+        self.assertEqual(f['import_handler']['id'],
+                         model.test_import_handler.id)
 
 
 class ServerFileResourceTests(BaseDbTestCase, TestChecksMixin):
@@ -87,10 +126,11 @@ class ServerFileResourceTests(BaseDbTestCase, TestChecksMixin):
         upload_model_to_server(self.server.id, model.id, self.user.id)
         self.assertTrue(grafana_mock.called)
 
-    # def test_invalid_folder(self):
-    #     url = self.BASE_URL.format(self.server.id, 'invalid_folder1')
-    #     resp = self.client.get(url, headers=HTTP_HEADERS)
-    #     self.assertEqual(resp.status_code, 404)
+    def test_invalid_folder(self):
+        base_url = '/cloudml/servers/{0!s}/files/{1!s}/'
+        url = base_url.format(self.server.id, 'invalid_folder1')
+        resp = self.client.get(url, headers=HTTP_HEADERS)
+        self.assertEqual(resp.status_code, 404)
 
     # @patch('api.servers.models.Server.list_keys')
     # @mock_s3
@@ -166,7 +206,7 @@ class ServerFileResourceTests(BaseDbTestCase, TestChecksMixin):
 class ServersTasksTests(BaseDbTestCase):
     """ Tests of the celery tasks. """
     datasets = [ModelData, ImportHandlerData,
-                XmlEntityData, ServerData]
+                XmlEntityData, ServerData, ServerModelVerificationData]
 
     @mock_s3
     @patch('api.amazon_utils.AmazonS3Helper.save_key_string')
@@ -291,6 +331,12 @@ class ServersTasksTests(BaseDbTestCase):
                 server.id, XmlImportHandler.TYPE,
                 handler.id, user.id)
 
+    @patch('api.servers.tasks.VerifyModelTask.run')
+    def test_verify_model_task(self, verify_task):
+        verification = ServerModelVerification.query.first()
+        verify_model(verification.id, 2)
+        verify_task.assert_called_once_with(verification.id, 2)
+
 
 class ServerModelTests(BaseDbTestCase):
 
@@ -379,6 +425,113 @@ class ServerModelTests(BaseDbTestCase):
 # Verification Related Tests
 
 
+class VerifyModelTaskTests(BaseDbTestCase, TestChecksMixin):
+    datasets = [ServerModelVerificationData, VerificationExampleData, TestExampleData]
+
+    def setUp(self):
+        super(VerifyModelTaskTests, self).setUp()
+        self.verify_model_task = VerifyModelTask()
+        self.verification = ServerModelVerification.query.first()
+        self.verify_model_task.verification = self.verification
+
+    def test_get_verification(self):
+        self.assertRaises(ValueError,
+                          self.verify_model_task.get_verification, 0)
+        self.assertEqual(1, len(VerificationExample.query.filter(
+            VerificationExample.verification_id == self.verification.id).all())
+        )
+        ver = self.verify_model_task.get_verification(self.verification.id)
+        self.assertEqual(ServerModelVerification.STATUS_IN_PROGRESS,
+                         ver.status)
+        self.assertEqual({}, ver.result)
+        self.assertEqual(0, len(VerificationExample.query.filter(
+            VerificationExample.verification_id == ver.id).all()))
+
+    def test_create_example_error(self):
+        test_example = TestExample.query.first()
+        self.verify_model_task.create_example_err(test_example, 'Some error',
+                                                  'Some data')
+
+        examples = VerificationExample.query.filter_by(
+            verification_id=self.verification.id).all()
+        self.assertEqual(2, len(examples))
+        self.assertEqual(examples[1].result, {
+            'message': 'Error sending data to predict',
+            'error': 'Some error',
+            'status': 'Error',
+            '_data': 'Some data'
+        })
+
+    def test_importhandler_property(self):
+        self.assertEqual('my_import_handler',
+                         self.verify_model_task.importhandler)
+
+        self.verification.description = {}
+        self.verification.save()
+        with self.assertRaises(ValueError):
+            ih = self.verify_model_task.importhandler
+
+    def test_prepare_example_data(self):
+        self.verification.params_map = {}
+        test_example = TestExample.query.first()
+        self.assertEqual({},
+                         self.verify_model_task.prepare_example_data(
+                             test_example))
+
+        self.verification.params_map = u'{"country": "employer.country"}'
+        self.assertEqual({"country": "USA"},
+                         self.verify_model_task.prepare_example_data(
+                             test_example))
+
+    def test_predict_property(self):
+        predict = self.verify_model_task.predict
+        self.assertEqual(predict.cloudml_url, 'http://127.0.0.1/cloudml')
+
+    @patch('predict.libpredict.Predict.post_to_cloudml')
+    @patch('predict.command.bestmatch.BestmatchPredictCommand.call')
+    def test_call_predict_command(self, bestmatch_mock, predict_post_mock):
+        example = TestExample.query.filter_by(
+            test_result=self.verification.test_result).limit(1)
+        data = self.verify_model_task.prepare_example_data(example[0])
+        res = self.verify_model_task.call_predict_command(data)
+        predict_post_mock.assert_called_once_with('v3', 'my_import_handler',
+                                                  None, data, throw_error=True,
+                                                  saveResponseTime=True)
+
+        self.verification.clazz = 'predict.command.bestmatch.' \
+                                  'BestmatchPredictCommand'
+        res = self.verify_model_task.call_predict_command(data)
+        bestmatch_mock.assert_called_once_with([
+            'run.py', '-c', self.verify_model_task.get_config_file(), '-i',
+            'my_import_handler', '-p', 'v3', '-a', '201913099'])
+
+    def test_process(self):
+        self.verify_model_task.process(3)
+        self.assertEqual({
+            u'count': 3,
+            u'valid_count': 0,
+            u'zero_features': [u'hire_outcome', u'application_id'],
+            u'max_response_time': 0,
+            u'valid_prob_count': 0,
+            u'error_count': 3}, self.verification.result)
+        self.assertEqual(ServerModelVerification.STATUS_DONE,
+                         self.verification.status)
+
+    @patch('api.servers.tasks.VerifyModelTask.process')
+    def test_run_exception(self, process_mock):
+        process_mock.side_effect = Exception('Some exception')
+        self.assertRaises(Exception, self.verify_model_task.run,
+                          self.verification.id, 3)
+        self.assertEqual(ServerModelVerification.STATUS_ERROR,
+                         self.verification.status)
+        self.assertEqual('Some exception', self.verification.error)
+
+    @patch('api.servers.tasks.VerifyModelTask.process')
+    def test_run(self, process_mock):
+        self.verify_model_task.run(self.verification.id, 3)
+        process_mock.assert_called_once_with(3)
+
+
 class ServerModelVerificationResourceTests(BaseDbTestCase, TestChecksMixin):
     """
     Tests of the Server Model Verification API.
@@ -416,6 +569,12 @@ class ServerModelVerificationResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertEqual(
             ServerModelVerification.STATUS_DONE,
             model['status'])
+
+    def test_get_predict_classes_action(self):
+        url = self._get_url(id=self.obj.id, action='predict_classes')
+        resp = self.client.get(url, headers=HTTP_HEADERS)
+        result = json.loads(resp.data)
+        self.assertTrue('classes' in result.keys())
 
 
 class GrafanaTests(BaseDbTestCase):
@@ -488,3 +647,43 @@ class GrafanaTests(BaseDbTestCase):
                 self.assertEquals(len(result['rows']), 2)
                 self.assertEqual(result['rows'][0]['title'], OTHER_MODEL)
                 self.assertEqual(result['rows'][1]['title'], self.model.name)
+
+
+class VerificationExampleResourceTests(BaseDbTestCase, TestChecksMixin):
+    """
+    Tests of the Server Model Verification API.
+    """
+    SHOW = 'result'
+    BASE_URL = '/cloudml/servers/verifications/{0!s}/examples/'
+    RESOURCE = VerificationExampleResource
+    datasets = [ServerModelVerificationData, VerificationExampleData,
+                SegmentData]
+
+    def setUp(self):
+        super(VerificationExampleResourceTests, self).setUp()
+        verification = ServerModelVerification.query.first()
+        self.BASE_URL = self.BASE_URL.format(verification.id)
+        self.obj = self.Model.query.first()
+
+
+    def test_list(self):
+        resp = self.check_list(show=self.SHOW)
+        model = self._get_resp_object(resp)
+        self._check_object_with_fixture_class(
+            model,
+            VerificationExampleData.verification_example_01)
+
+    @patch('api.ml_models.models.Model.get_trainer')
+    def test_details(self, mock_get_trainer):
+        trainer = TrainerStorage.loads(MODEL_TRAINER)
+        mock_get_trainer.return_value = trainer
+        self.check_details(
+            show=self.SHOW,
+            fixture_cls=VerificationExampleData.verification_example_01)
+        self.assertTrue(self.obj.example.weighted_data_input)
+
+        # with existing weighted data input
+        self.check_details(
+            show=self.SHOW,
+            fixture_cls=VerificationExampleData.verification_example_01)
+

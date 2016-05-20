@@ -48,9 +48,12 @@ angular.module('app.servers.verifications', ['app.config', ])
 
   ($scope, $q, ModelVerification, Server, ModelFile, ImportHandlerFile, TestResult, EXAMPLES_COUNT) ->
     OTHER = '- Other -'
-    $scope.model = new ModelVerification({'count': EXAMPLES_COUNT})
-    $scope.modelsDisabled = true
-    $scope.datasDisabled = true
+    $scope.model = new ModelVerification({'count': 0})
+    $scope.serverFiles = []
+    $scope.datas = []
+    $scope.importParams = []
+    $scope.dataFields = []
+    $scope.verifyAllowed = false
 
     ModelVerification.$getPredictClasses(
     ).then ((opts)->
@@ -68,22 +71,6 @@ angular.module('app.servers.verifications', ['app.config', ])
       })...
 
     $scope.serverChanged = (serverId) ->
-      if !serverId?
-        $scope.loadingModels = false
-        $scope.modelsDisabled = true
-        $scope.serverFiles = []
-        return
-      $scope.model.description = null
-      $scope.loadingModels = true
-      Server.$active_models(
-        server: serverId
-      ).then ((opts) ->
-        $scope.serverFiles = opts.objects
-        $scope.modelsDisabled = false
-        $scope.loadingModels = false
-      ), ((opts) ->
-        $scope.setError(opts, 'loading models that use import handler')
-      )
       # params = {folder: 'models', server_id: serverId, show:'server_id,folder,type'}
       # promiseModel = ModelFile.$loadAll(params).then ((opts) ->
       #   $scope.modelsDisabled = false
@@ -110,51 +97,85 @@ angular.module('app.servers.verifications', ['app.config', ])
       #   return values
       # )
 
-    $scope.modelChanged = (model) ->
-      if !model?
-        $scope.datas = []
-        $scope.datasDisabled = true
-        $scope.loadingTests = false
-        $scope.importParams = []
-        $scope.dataFields = []
+    $scope.resetData = (params) ->
+      for param in params
+        $scope[param] = []
+      if 'datas' in params
+        $scope.model.test_result_id = ''
+        $scope.model.description = ''
+      if 'serverFiles' in params
+        $scope.model.model_id = ''
+      $scope.model.examples_count = 0
+      $scope.model.count = 0
+      $scope.setClazz()
+
+
+    $scope.setClazz = () ->
+      if $scope.clazz? && $scope.predictClassesConfig[$scope.clazz]
+        $scope.importParams = angular.copy($scope.predictClassesConfig[$scope.clazz])
+
+
+    $scope.loadModels = (serverId) ->
+      $scope.resetData(['serverFiles', 'datas', 'dataFields'])
+      if !serverId?
         return
-      $scope.model.description = null
+      $scope.loadingModels = true
+      Server.$active_models(
+        server: serverId
+      ).then ((opts) ->
+        $scope.serverFiles = opts.objects
+        $scope.loadingModels = false
+      ), ((opts) ->
+        $scope.setError(opts, 'loading models that use import handler')
+        $scope.loadingModels = false
+      )
+
+
+    $scope.loadDatas = (modelId) ->
+      $scope.resetData(['datas', 'dataFields'])
+      if !modelId?
+        return
       $scope.loadingTests = true
-      $scope.datasDisabled = true
-      $scope.dataFields = []
       TestResult.$loadAll({
         model_id: $scope.model.model_id,
         show: 'name,examples_fields,examples_count'})
       .then ((opts) ->
         $scope.datas = opts.objects
         for file in $scope.serverFiles
-          if file.model? and file.model.id == model
+          if file.model? and file.model.id == modelId
             $scope.model.description = file
             $scope.model.import_handler_id = file.import_handler.id
             $scope.predictClassesConfig[OTHER] = file.import_handler.import_params
             $scope.importHandlerParams = file.import_handler.import_params
-
         $scope.loadingTests = false
-        $scope.datasDisabled = false
       ), ((opts) ->
         $scope.setError(opts, 'loading model test data')
       )
 
-    $scope.dataChanged = (id) ->
-      if !id?
-        $scope.dataFields = []
-        $scope.model.examples_count = 0
+
+    $scope.loadFields = (testId) ->
+      $scope.resetData(['dataFields'])
+      if !testId?
         return
       for data in $scope.datas
-        if (data.id == id)
+        if (data.id == testId)
           $scope.dataFields = data.examples_fields
           $scope.model.examples_count = data.examples_count
+          $scope.model.count = EXAMPLES_COUNT
 
-    $scope.clazzChanged = (clazz) ->
-      if !clazz?
-        $scope.importParams = []
-        return
-      $scope.importParams = $scope.predictClassesConfig[clazz]
+
+    $scope.loadIParams = (clazz) ->
+      $scope.clazz = clazz
+      $scope.setClazz()
+
+
+    $scope.$watch 'model.params_map', (nVal, oVal) ->
+      $scope.verifyAllowed = false
+      try
+        if !jQuery.isEmptyObject(JSON.parse(nVal))
+          $scope.verifyAllowed = true
+      catch e
+        # nothing
 ])
 
 
@@ -164,11 +185,13 @@ angular.module('app.servers.verifications', ['app.config', ])
   'ModelVerification'
 
   ($scope, $routeParams, ModelVerification, VerificationExample) ->
-    if not $routeParams.id then err = "Can't initialize without server model verification id"
+    if not $routeParams.id then throw new Error "Can't initialize without server model verification id"
     $scope.verification = new ModelVerification({id: $routeParams.id})
 
     $scope.verification.$load(
-      show: ModelVerification.MAIN_FIELDS + ',description,result,params_map,error')
+      show: ModelVerification.MAIN_FIELDS + ',description,result,params_map,error').then (->
+        # model verification loaded
+      ), ((opts)-> $scope.setError(opts, 'loading server model verification'))
 
     $scope.goSection = (section) ->
       name = section[0]
@@ -247,37 +270,6 @@ angular.module('app.servers.verifications', ['app.config', ])
     example.objectUrl() + '?' + $.param($scope.getParamsDict())
 ])
 
-.controller('VerificationParamsMapCtrl', [
-  '$scope'
-  '$routeParams'
-  'openOptions'
-
-  ($scope, $routeParams, openOptions) ->
-    $scope.resetError()
-    model = openOptions.model
-    $scope.verification = model
-    $scope.importParams = model.import_handler.import_params
-    $scope.dataFields = model.test_result.examples_fields
-    $scope.fieldsMap = {}
-
-    $scope.appendFieldMap = (importParam, dataField) ->
-      if not importParam? or not dataField?
-        return
-      $scope.fieldsMap[importParam] = dataField
-      $scope.importParams.pop importParam
-      $scope.importParam = 1
-      $scope.dataField = 1
-
-    $scope.removeField = (param) ->
-      delete $scope.fieldsMap[param]
-      $scope.importParams.push param
-
-    $scope.getVerificationParamsMap = () ->
-      {
-        params: angular.toJson($scope.fieldsMap)
-      }
-])
-
 
 .controller('VerificationExampleDetailsCtrl', [
   '$scope'
@@ -285,7 +277,7 @@ angular.module('app.servers.verifications', ['app.config', ])
   'VerificationExample'
 
   ($scope, $routeParams, VerificationExample) ->
-    if not $routeParams.verification_id then err = "Can't initialize without server model verification id"
+    if not $routeParams.verification_id then throw new Error "Can't initialize without server model verification id"
     $scope.example = new VerificationExample({id: $routeParams.id, verification_id: $routeParams.verification_id})
 
     $scope.example.$load(

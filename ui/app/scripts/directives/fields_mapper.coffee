@@ -16,11 +16,26 @@ angular.module('app.directives')
     link: ($scope, element, attributes, ngModel) ->
       $scope.fieldsMap = {}
 
+      $scope.$watch 'params', (nVal, oVal) ->
+        if nVal != oVal
+          $scope.resetFieldsMap()
+
+      $scope.$watch 'fields', (nVal, oVal) ->
+        if nVal != oVal
+          $scope.resetFieldsMap()
+
+      $scope.$watch 'disabled', (nVal, oVal) ->
+        if nVal
+          $scope.importParam = undefined
+          $scope.dataField = undefined
+
       $scope.appendFieldMap = (importParam, dataField) ->
         if not importParam? or not dataField?
           return
         $scope.fieldsMap[importParam] = dataField
-        $scope.params.pop importParam
+        index = $scope.params.indexOf(importParam)
+        if index >= 0
+          $scope.params.splice(index, 1)
         $scope.importParam = undefined
         $scope.dataField = undefined
         $scope.value = $scope.getVerificationParamsMap()
@@ -32,5 +47,12 @@ angular.module('app.directives')
 
       $scope.getVerificationParamsMap = () ->
         angular.toJson($scope.fieldsMap)
+
+      $scope.resetFieldsMap = () ->
+        $scope.fieldsMap = {}
+        $scope.value = $scope.getVerificationParamsMap()
+        #$scope.importParam = undefined
+        #$scope.dataField = undefined
+
   }
 ])

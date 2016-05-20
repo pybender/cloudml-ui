@@ -9,7 +9,7 @@
   	<div class="control-group" ng-class="{error: Form.server_id.$invalid || errorList.server_id}">
       <label class="control-label">Server</label>
     	<div class="controls">
-      	<select name="server_id" ng-model="model.server_id" ng-required ng-change="serverChanged(Form.server_id.$viewValue)" ng-options="server.id as server.name for server in servers">
+      	<select name="server_id" ng-model="model.server_id" ng-required ng-change="loadModels(Form.server_id.$viewValue)" ng-options="server.id as server.name for server in servers">
         	<option value="">- nothing selected -</option>
       	</select>
       	<span ng-show="Form.server_id.$error.required" class="help-inline">*</span>
@@ -18,21 +18,21 @@
   	<div class="control-group" ng-class="{error: Form.model_id.$invalid || errorList.model_id}">
     	<label class="control-label">Import Handler / Model</label>
     	<div class="controls">
-      	<select name="model_id" ng-model="model.model_id" ng-required ng-change="modelChanged(Form.model_id.$viewValue)" ng-options="file.model.id as file.import_handler_name + ' / ' + file.model_name for file in serverFiles" ng-disabled="modelsDisabled">
-        	<option value="">- nothing selected -</option>
+      	<select name="model_id" ng-model="model.model_id" ng-required ng-change="loadDatas(Form.model_id.$viewValue)" ng-options="file.model.id as file.import_handler_name + ' / ' + file.model_name for file in serverFiles" ng-disabled="serverFiles | isArrayEmpty">
+        	<option value="" selected="selected">- nothing selected -</option>
       	</select>
       	<span ng-show="Form.model_id.$error.required" class="help-inline">*</span>
-        <img ng-show="loadingModels" width="30" src="/img/loading.gif" />
+        <img ng-show="loadingModels" width="30" src="/img/loading.gif" /><span ng-show="(serverFiles | isArrayEmpty) && !loadingModels">No models</span>
     	</div>
   	</div>
   	<div class="control-group" ng-class="{error: Form.test_result_id.$invalid || errorList.data}">
     	<label class="control-label">Data</label>
     	<div class="controls">
-      	<select name="test_result_id" ng-model="model.test_result_id" ng-required ng-change="dataChanged(Form.test_result_id.$viewValue)" ng-options="data.id as data.name for data in datas" ng-disabled="datasDisabled">
-        	<option value="">- nothing selected -</option>
+      	<select name="test_result_id" ng-model="model.test_result_id" ng-required ng-change="loadFields(Form.test_result_id.$viewValue)" ng-options="data.id as data.name for data in datas" ng-disabled="datas | isArrayEmpty">
+        	<option value="" selected="selected">- nothing selected -</option>
       	</select>
       	<span ng-show="Form.test_result_id.$error.required" class="help-inline">*</span>
-        <img ng-show="loadingTests" width="30" src="/img/loading.gif" />
+        <img ng-show="loadingTests" width="30" src="/img/loading.gif" /><span ng-show="(datas | isArrayEmpty) && !loadingTests">No tests data</span>
     	</div>
   	</div>
     <ng-include ng-init="data=model" src="'partials/servers/verification/count_control.html'"></ng-include>
@@ -44,10 +44,10 @@
         <div>
           Name:
           <span class="value">
-            <a target="_blank" href="#/importhandlers/xml/{{ model.description.import_handler_metadata_obj.id }}">{{ model.description.import_handler_metadata.name }}</a>
+            <a target="_blank" href="#/importhandlers/xml/{{ model.description.import_handler_metadata.object_id }}">{{ model.description.import_handler_metadata.name }}</a>
             <span ng-show="model.description.import_handler_metadata.name != model.description.import_handler_metadata.object_name"> / {{ model.description.import_handler_metadata.object_name }}
             </span>
-            <span ng-show="model.description.import_handler_metadata_obj.name != model.description.import_handler_metadata.name"> / {{ model.description.import_handler_metadata_obj.name }}
+            <span ng-show="model.description.import_handler_metadata.object_name != model.description.import_handler_metadata.name"> / {{ model.description.import_handler_metadata.name }}
             </span>
           </span>
         </div>
@@ -64,7 +64,7 @@
         <b>Model</b>
         <div>
             Model Name:
-            <span class="value"><a target="_blank" href="#/models/{{ model.description.model_metadata_obj.id }}">{{ model.description.model_name }}</a></span>
+            <span class="value"><a target="_blank" href="#/models/{{ model.description.model_metadata.object_id }}">{{ model.description.model_name }}</a></span>
         </div>
         <div>
             Uploaded On:
@@ -83,6 +83,6 @@
   </div>
 
   <div class="modal-footer" title="{{ Form.$error}}">
-    <button ng-click="save(['server_id', 'model_id', 'test_result_id', 'description', 'import_handler_id', 'params_map', 'count', 'clazz'])" ng-disabled="Form.$invalid" class="btn btn-primary">Check the model on the server </button>
+    <button ng-click="save(['server_id', 'model_id', 'test_result_id', 'description', 'import_handler_id', 'params_map', 'count', 'clazz'])" ng-disabled="Form.$invalid || !verifyAllowed " class="btn btn-primary">Check the model on the server </button>
   </div>
 </form>
