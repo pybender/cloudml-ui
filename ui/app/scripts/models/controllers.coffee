@@ -546,33 +546,50 @@ angular.module('app.models.controllers', ['app.config', ])
     '$scope'
     'Model'
     '$rootScope'
+    '$timeout'
 
-    ($scope, Model, $rootScope) ->
+    ($scope, Model, $rootScope, $timeout) ->
+      $scope.downloadRequested = false
+      $rootScope.dl_msg = ""
+      $rootScope.downloads = {}
+
       $scope.getDataSetsDownloads = (modelId) ->
         model = $scope.model or new Model({id: modelId})
         model.$getDataSetDownloads()
         .then (opts) ->
-          $scope.queuedIds = _.map opts.data.downloads, (download) ->
-            parseInt download.dataset.id
-          $scope.downloads = opts.data.downloads
+          $rootScope.downloads = opts.data.downloads
         , (opts) ->
           $scope.setError(opts, 'loading dataset downloads request')
 
       $scope.requestDataSetDownload = (datasetId, modelId)->
         model = $scope.model or new Model({id: modelId})
-        if datasetId in $scope.queuedIds
-          $scope.setError {},
-            "dataset #{datasetId} was already requested for download"
-        else
-          model.$putDataSetDownload(datasetId)
-          .then (opts)->
-            $scope.queuedIds.push datasetId
-            $rootScope.msg = "DataSet has been queued for
-            transformation/vectorization. Check Model > About for when
-            it is ready for download"
+        $scope.downloadRequested = true
+        $rootScope.dl_msg = "Checking in-progress requests for DataSet transformation/vectorization ... "
+        $timeout ->
+          model.$getDataSetDownloads()
+          .then (opts) ->
+            $rootScope.downloads = opts.data.downloads
+            if $scope.downloads? && $scope.downloads.length > 0 &&
+            $scope.downloads[0].task.status != 'Completed'
+              $rootScope.dl_msg = "Please, check in-progress DataSet transformation request on
+              Model > About tab. Try to reload page to see it and it's status updates."
+            else
+              model.$putDataSetDownload datasetId
+              .then (opts)->
+                $rootScope.dl_msg = "DataSet has been queued for
+                transformation/vectorization. Check its status on Model > About tab
+                when it is ready for download. (Reload page to see status updates)"
+                $timeout ->
+                  $scope.getDataSetsDownloads modelId
+                , 5000
+              , (opts) ->
+                $scope.downloadRequested = false
+                $scope.setError opts,
+                  "requesting dataset #{datasetId} for download"
           , (opts) ->
-            $scope.setError opts,
-              "requesting dataset #{datasetId} for download"
+            $scope.downloadRequested = false
+            $scope.setError(opts, 'loading dataset downloads request')
+        , 5000
 ])
 
 .controller('ModelVisualizationCtrl', [

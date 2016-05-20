@@ -57,16 +57,15 @@
             <a href="#{{ test.dataset_obj.objectUrl() }}">
             {{ test.dataset_obj.name }}</a>
           </span>
-          <a class="btn btn-info btn-mini"
+          <a class="btn btn-info btn-mini" ng-class="downloadRequested ? 'link-inactive' : ''"
              ng-init="getDataSetsDownloads(test.model_id)"
              ng-controller="ModelDataSetDownloadCtrl"
-             ng-hide="angular.isUndefined(queuedIds)"
-             title="{{ {true: 'DataSet already Transformed, Check Model &gt; About for list of datasets transformed using this model and ready for download',
-                        false: 'Download Tranformed DataSet'}[queuedIds.indexOf(test.dataset_obj.id) >= 0] }}"
-             ng-disabled="queuedIds.indexOf(test.dataset_obj.id) >= 0"
+             title="Download Tranformed DataSet"
+             ng-disabled="downloadRequested"
              ng-click="requestDataSetDownload(test.dataset_obj.id, test.model_id)">
             <i class="icon-download-alt"></i> Download
           </a>
+          <alert-message ng-show="dl_msg" class="alert-info" style="margin-top:10px;" msg="{{dl_msg}}" unsafe></alert-message>
         </div>
         <div>
             Examples count: <span class="value">{{ test.examples_count }}</span>
