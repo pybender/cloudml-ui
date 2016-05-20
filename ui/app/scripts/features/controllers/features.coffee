@@ -33,7 +33,9 @@ Feature, Transformer, Scaler, Parameters) ->
     $scope.feature.id = $routeParams.feature_id
     $scope.feature.$load(show: Feature.MAIN_FIELDS
     ).then ((opts) ->
-      #
+      if $scope.feature.type is 'date' && $scope.feature.paramsDict?.pattern?
+        $scope.feature.default = strftimeDate($scope.feature.paramsDict.pattern,
+                                              $scope.feature.default)
     ), ((opts)->
       $scope.setError(opts, 'loading feature details')
     )

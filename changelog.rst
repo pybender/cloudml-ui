@@ -3,8 +3,13 @@
 Changelog
 =========
 
+Release 2016-05-20
+------------------
+* Task - Parse feature default date according to pattern on ui
+* Bug - Delete verifications and examples on model re-train
 
-Release 2016-05-*
+
+Release 2016-05-17
 ------------------
 * Bug - Target variable is always required now, fixed possibility to make it not required
 * Bug - Cut error message on dataset import
