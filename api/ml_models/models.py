@@ -368,15 +368,26 @@ class Model(db.Model, BaseModel, BaseTrainedEntity):
         if delete_metadata:
             from api.model_tests.models import TestResult, TestExample
             from api.base.models import db
-            from api.import_handlers.models.datasets import DataSet
+            from api.servers.models import ServerModelVerification, \
+                VerificationExample
             LogMessage.delete_related_logs(self.id)
 
             def _del(Cls, related_name):
                 count = Cls.query.filter(Cls.model_id == self.id).delete(
                     synchronize_session=False)
                 logging.info(
-                    '%s %s examples to delete' % (count, related_name))
+                    '%s %s to delete' % (count, related_name))
 
+            # delete server model verification examples
+            # (as they don't have reference to model)
+            smv = ServerModelVerification.query.filter(
+                ServerModelVerification.model_id == self.id).all()
+            smv_ids = [s.id for s in smv]
+            count = VerificationExample.query.filter(
+                VerificationExample.verification_id.in_(smv_ids)).delete(
+                    synchronize_session=False)
+            logging.info('%s model verification examples to delete' % count)
+            _del(ServerModelVerification, 'server model verifications')
             _del(TestExample, 'test examples')
             _del(TestResult, 'tests')
             _del(Weight, 'weights')
