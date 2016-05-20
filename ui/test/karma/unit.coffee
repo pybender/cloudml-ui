@@ -11,6 +11,7 @@ module.exports = (karma)->
       'app/scripts/directives.coffee'
       'app/scripts/controllers.coffee'
       'app/scripts/base.coffee'
+      'app/scripts/helpers.coffee'
 
       'app/**/*.coffee'
       'app/assets/partials/**/*.html'

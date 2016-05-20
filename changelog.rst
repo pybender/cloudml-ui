@@ -3,6 +3,11 @@
 Changelog
 =========
 
+Release 2016-05-20
+------------------
+* Task - Parse feature default date according to pattern on ui
+* Bug - Delete verifications and examples on model re-train
+
 
 Release 2016-05-17
 ------------------
