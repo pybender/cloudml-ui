@@ -569,8 +569,10 @@ angular.module('app.models.controllers', ['app.config', ])
           model.$getDataSetDownloads()
           .then (opts) ->
             $rootScope.downloads = opts.data.downloads
-            if $scope.downloads? && $scope.downloads.length > 0 &&
-            $scope.downloads[0].task.status != 'Completed'
+            statuses = []
+            for d in $scope.downloads
+              statuses.push d.task.status
+            if 'In Progress' in statuses
               $rootScope.dl_msg = "Please, check in-progress DataSet transformation request on
               Model > About tab. Try to reload page to see it and it's status updates."
             else
