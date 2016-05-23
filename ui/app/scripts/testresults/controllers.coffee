@@ -287,11 +287,13 @@ without test id and model id"
     $scope.open_calc_id = null
     $scope.open_logs_calc_id = null
     $scope.confusion_matrix_error = undefined
+    $scope.in_progress_requests = false
 
     $scope.init = (test) ->
       $scope.test = test
 
     $scope.recalculate = () ->
+      $scope.in_progress_requests = true
       $scope.test.$get_confusion_matrix(
                    $scope.confusion_matrix_weights).then((resp) ->
         $scope.confusion_matrix_error = resp.data.error
@@ -318,8 +320,11 @@ without test id and model id"
         statuses.push c.status for c in ($scope.test
         .confusion_matrix_calculations)
         if 'In Progress' in statuses
+          $scope.in_progress_requests = true
           window.setTimeout(
             () -> $scope.reload()
             1000)
+        else
+          $scope.in_progress_requests = false
       )
 ])

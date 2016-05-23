@@ -161,10 +161,11 @@
 
               <div class="span12">
                 <div class="p10">
-                  <button ng-disabled="ConfusionMatrixForm.$invalid || test.status != 'Completed'" class="btn" ng-click="recalculate()">
+                  <button ng-disabled="ConfusionMatrixForm.$invalid || test.status != 'Completed' || in_progress_requests" class="btn" ng-click="recalculate()">
                       Recalculate with weights
                   </button>
                   <span class="text-error" ng-show="test.status != 'Completed'">&nbsp;&nbsp;Please, wait until test is fully stored, then confusion matrix recalculation will be available.</span>
+                  <span class="text-warning" ng-show="in_progress_requests">&nbsp;&nbsp;There are confusion matrix recalculation requests in progress. Please, wait a bit.</span>
                 </div>
               </div>
             </form>
@@ -177,7 +178,7 @@
                 <li class="row well well-small" ng-repeat="calc in test.confusion_matrix_calculations">
                   <div class="row">
                     <div class="span7">
-                        <i class="icon-calendar"></i> created on <span class="badge badge-info" title="dates in GMT">{{ calc.created_on|format_date }}</span>
+                        <i class="icon-calendar"></i> created on <span class="badge badge-info" title="dates in GMT">{{ calc.created_on|full_format_date }}</span>
                         <i class="icon-th"></i><span> weights: </span>
                         <span ng-repeat="label in calc.args[1] track by $index">
                             <span class="label">"{{ label[0] }}": {{ label[1] }}</span>
