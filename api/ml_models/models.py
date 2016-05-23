@@ -382,11 +382,13 @@ class Model(db.Model, BaseModel, BaseTrainedEntity):
             # (as they don't have reference to model)
             smv = ServerModelVerification.query.filter(
                 ServerModelVerification.model_id == self.id).all()
-            smv_ids = [s.id for s in smv]
-            count = VerificationExample.query.filter(
-                VerificationExample.verification_id.in_(smv_ids)).delete(
-                    synchronize_session=False)
-            logging.info('%s model verification examples to delete' % count)
+            if len(smv):
+                smv_ids = [s.id for s in smv]
+                count = VerificationExample.query.filter(
+                    VerificationExample.verification_id.in_(smv_ids)).delete(
+                        synchronize_session=False)
+                logging.info('%s model verification examples to delete' %
+                             count)
             _del(ServerModelVerification, 'server model verifications')
             _del(TestExample, 'test examples')
             _del(TestResult, 'tests')
