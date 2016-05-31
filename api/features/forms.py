@@ -56,6 +56,10 @@ class FeatureParamsMixin(object):
                 if not len(str(val)):
                     raise ValidationError(
                         'Value {0} in {1} can\'t be empty'.format(key, name))
+        elif param_type == 'list':
+            if not isinstance(value, basestring):
+                raise ValidationError(
+                    '{} should be a list'.format(name))
 
     def _clean_param(self, data, name):
         param_type = FEATURE_PARAMS_TYPES[name]['type']
@@ -72,6 +76,8 @@ class FeatureParamsMixin(object):
             return new_dict
         elif param_type == 'int':
             return int(value)
+        elif param_type == 'list':
+            return list(json.loads(value))
         else:
             return value
 
