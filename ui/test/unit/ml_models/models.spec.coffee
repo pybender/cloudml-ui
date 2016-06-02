@@ -991,3 +991,117 @@ describe 'ML Models Controllers', ->
         expect($rootScope.downloads.length).toEqual 3
         expect($scope.downloadRequested).toBe true
         expect($rootScope.dl_msg).toContain "DataSet has been queued for transformation/vectorization"
+
+
+  describe "GridSearchParametersCtrl", ->
+
+    it 'should init scope', inject (Model)->
+      model = new Model({
+        id: '4321',
+        name: 'NN'
+        train_import_handler_obj: {id: 888, name: 'some_handler_for_training'}
+        classifier: {id: 222, type: 'random forest'}
+      })
+      openOptions = {model: model}
+      $rootScope.resetError = jasmine.createSpy '$rootScope.resetError'
+      $scope.$close = jasmine.createSpy '$scope.$close'
+      $rootScope.setError = jasmine.createSpy '$rootScope.setError'
+      createController "GridSearchParametersCtrl", {$rootScope: $rootScope, openOptions: openOptions}
+      expect($scope.resetError).toHaveBeenCalled()
+      expect($scope.data).toEqual {parameters: {}}
+      expect($scope.handler.id).toEqual 888
+      url = "#{settings.apiUrl}features/classifiers/#{model.classifier.id}/action/configuration/"
+      resp = {configuration: {'random forest': {"parameters": {"param1": "p1", "param2": "p2"}}}}
+      $httpBackend.expectGET(url).respond 200, angular.toJson resp
+      $httpBackend.flush()
+      expect($scope.params).toEqual {param1: "p1", param2: "p2"}
+
+      url = "#{model.BASE_API_URL}#{model.id}/action/grid_search/"
+      resp = {model: model}
+      $httpBackend.expectPUT(url).respond 200, angular.toJson resp
+      $scope.start {}
+      $httpBackend.flush()
+      expect($scope.model.grid_search_in_progress).toBe true
+      expect($scope.$close).toHaveBeenCalled()
+
+      # with error
+      $httpBackend.expectPUT(url).respond 400, "{}"
+      $scope.start {}
+      $httpBackend.flush()
+      expect($scope.setError.calls.mostRecent().args[1]).toEqual 'starting NN searching for classifier parameters'
+
+    it 'should init scope with configuration error', inject (Model)->
+      model = new Model({
+        id: '4321',
+        train_import_handler_obj: {id: 888, name: 'some_handler_for_training'}
+        classifier: {id: 222, type: 'random forest'}
+      })
+      openOptions = {model: model}
+      $rootScope.resetError = jasmine.createSpy '$rootScope.resetError'
+      $scope.setError = jasmine.createSpy '$scope.setError'
+      createController "GridSearchParametersCtrl", {$rootScope: $rootScope, openOptions: openOptions}
+      expect($scope.resetError).toHaveBeenCalled()
+      expect($scope.data).toEqual {parameters: {}}
+      expect($scope.handler.id).toEqual 888
+      url = "#{settings.apiUrl}features/classifiers/#{model.classifier.id}/action/configuration/"
+      $httpBackend.expectGET(url).respond 400, "{}"
+      $httpBackend.flush()
+      expect($scope.params).toBeUndefined
+      expect($scope.setError.calls.mostRecent().args[1]).toEqual 'loading types and parameters'
+
+    it 'should init scope with classifier type error', inject (Model)->
+      model = new Model({
+        id: '4321',
+        train_import_handler_obj: {id: 888, name: 'some_handler_for_training'}
+        classifier: {id: 222}
+      })
+      openOptions = {model: model}
+      $rootScope.resetError = jasmine.createSpy '$rootScope.resetError'
+      createController "GridSearchParametersCtrl", {$rootScope: $rootScope, openOptions: openOptions}
+      expect($scope.resetError).toHaveBeenCalled()
+      expect($scope.data).toEqual {parameters: {}}
+      expect($scope.handler.id).toEqual 888
+      expect($scope.inactive).toBe true
+      expect($scope.err).toEqual "Need to specify classifier before performing grid search"
+
+
+  describe "GridSearchResultsCtrl", ->
+
+    beforeEach inject (Model) ->
+      $scope.model = new Model({
+        id: '4321',
+        classifier_grid_params: [{
+          id: 3
+          status: 'Completed'
+        }]
+      })
+      createController "GridSearchResultsCtrl"
+
+    it "should reload items", inject () ->
+      model = $scope.model
+      url = "#{model.BASE_API_URL}#{model.id}/?show=classifier_grid_params"
+      resp = {"model": $scope.model}
+      $httpBackend.expectGET(url).respond 200, angular.toJson resp
+
+      $scope.reload()
+      $httpBackend.flush()
+      expect($scope.model.grid_search_in_progress).toBe false
+
+      # reloading
+      $scope.model.classifier_grid_params[0].status = 'Calculating'
+      resp = {"model": $scope.model}
+      $httpBackend.expectGET(url).respond 200, angular.toJson resp
+
+      $scope.model.classifier_grid_params[0].status = 'Completed'
+      resp1 = {"model": $scope.model}
+      $httpBackend.expectGET(url).respond 200, angular.toJson resp1
+
+      $scope.reload()
+      $httpBackend.flush()
+      expect($scope.model.grid_search_in_progress).toBe false
+
+    it 'should watch for grid search', inject () ->
+      $scope.reload = jasmine.createSpy()
+      $scope.model.grid_search_in_progress = true
+      $scope.$digest()
+      expect($scope.reload).toHaveBeenCalled()

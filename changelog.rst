@@ -3,6 +3,14 @@
 Changelog
 =========
 
+Release 2016-06-??
+------------------
+* Bug - Set Grid search status to Error if something wrong happened during calculation
+* Bug - Set model status to Error if something goes wrong on Filling Weights state
+* Bug - Confusion mastrix recalculation is not available if there are in progress calculations
+* Bug - Transformed dataset download available if there are no in progress transformation tasks
+
+
 Release 2016-05-20
 ------------------
 * Bug - Add Model verification form fixes

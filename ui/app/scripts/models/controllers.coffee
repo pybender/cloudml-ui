@@ -375,9 +375,41 @@ angular.module('app.models.controllers', ['app.config', ])
 
     $scope.start = (result) ->
       openOptions.model.$classifierGridSearch($scope.data).then (() ->
+        $scope.model.grid_search_in_progress = true
         $scope.$close(true)
       ), ((opts) ->
         $scope.setError(opts, 'starting '+$scope.model.name+' searching for classifier parameters')
+      )
+])
+
+
+.controller('GridSearchResultsCtrl', [
+  '$scope'
+
+  ($scope) ->
+    $scope.open_logs_calc_id = null
+
+    $scope.showLogs = (id) ->
+      if $scope.open_logs_calc_id == id
+        $scope.open_logs_calc_id = null
+      else
+        $scope.open_logs_calc_id = id
+
+    $scope.$watch 'model.grid_search_in_progress', (newVal, oldVal)->
+      if newVal == true
+        $scope.reload()
+
+    $scope.reload = () ->
+      $scope.model.$load({show: 'classifier_grid_params'}).then((resp) ->
+        statuses = []
+        statuses.push c.status for c in $scope.model.classifier_grid_params
+        if ('New' in statuses || 'Queued' in statuses || 'Calculating' in statuses)
+          $scope.model.grid_search_in_progress = true
+          window.setTimeout(
+            () -> $scope.reload()
+            5000)
+        else
+          $scope.model.grid_search_in_progress = false
       )
 ])
 

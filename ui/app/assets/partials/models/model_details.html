@@ -238,12 +238,26 @@
     </div>
   </div>
 
-  <div ng-show="action[0] == 'grid_search'" id="grid_search">
+  <!-- Grid Search tab -->
+  <div ng-show="action[0] == 'grid_search'" id="grid_search" ng-controller="GridSearchResultsCtrl">
     <h3>Classifier grid search parameters</h3>
-    <div ng-repeat="grid_param in model.classifier_grid_params" class="well">
+    <div ng-repeat="grid_param in model.classifier_grid_params | orderBy:'-id'" class="well">
       <i class="icon-calendar"></i> created on <span class="badge badge-info" title="dates in GMT">{{ grid_param.created_on|format_date }}</span>
       scoring <span class="badge badge-info">{{ grid_param.scoring || 'N/A' }}</span>
-      <span class="badge badge-info">{{ grid_param.status }}</span>
+      <span ng-show="grid_param.status!='Error'" class="badge badge-info">{{ grid_param.status }}</span>
+      <span ng-show="grid_param.status=='Error'" class="badge badge-error">{{ grid_param.status }}</span>
+      <div class="span3 pull-right">
+        <button class="btn btn-link pull-right" ng-click="showLogs(grid_param.id)">Show logs</button>
+      </div>
+
+      <div class="row" ng-show="open_logs_calc_id == grid_param.id">
+        <div class="span9">
+          <div ng-controller="LogMessageListCtrl" ng-init="init('gridsearch_log', grid_param.id)">
+            <br/><ng-include src="'partials/logmessages/list.html'"></ng-include>
+          </div>
+        </div>
+      </div>
+
       <div ng-hide="grid_param.parameters_grid">
         <h4>Parameters</h4>
         <div ng-repeat="(k,v) in grid_param.parameters">  
