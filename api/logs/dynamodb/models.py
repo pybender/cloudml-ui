@@ -23,9 +23,10 @@ class LogMessage(object):
     VERIFY_MODEL = 'verifymodel_log'
     CONFUSION_MATRIX_LOG = 'confusion_matrix_log'
     TRAIN_TRANSFORMER = 'traintransformer_log'
+    GRID_SEARCH = 'gridsearch_log'
     TYPES_LIST = (TRAIN_MODEL, IMPORT_DATA, RUN_TEST,
                   CONFUSION_MATRIX_LOG, VERIFY_MODEL,
-                  TRAIN_TRANSFORMER)
+                  TRAIN_TRANSFORMER, GRID_SEARCH)
     LEVELS_LIST = ['CRITICAL', 'ERROR', 'WARN', 'WARNING',
                    'INFO', 'DEBUG', 'NOTSET']
 

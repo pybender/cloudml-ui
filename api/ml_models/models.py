@@ -658,7 +658,7 @@ Weight.__table__.append_ddl_listener(
 
 
 class ClassifierGridParams(db.Model, BaseModel):
-    STATUS_LIST = ('New', 'Queued', 'Calculating', 'Completed')
+    STATUS_LIST = ('New', 'Queued', 'Calculating', 'Completed', 'Error')
     model_id = db.Column(db.Integer, db.ForeignKey('model.id'))
     model = relationship(Model, backref=backref('classifier_grid_params'))
     scoring = db.Column(db.String(100), default='accuracy')
