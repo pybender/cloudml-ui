@@ -195,21 +195,20 @@
                   <a href="#{{ ds.objectUrl() }}">
                   {{ ds.name }}</a>
                 </span>
-                <a class="btn btn-info btn-mini"
+                <a class="btn btn-info btn-mini" ng-class="downloadRequested ? 'link-inactive' : ''"
                    ng-init="getDataSetsDownloads(ds.id)"
                    ng-controller="ModelDataSetDownloadCtrl"
-                   ng-hide="angular.isUndefined(queuedIds)"
-                   title="{{ {true: 'DataSet already Transformed, Check Model &gt; About for list of datasets transformed using this model and ready for download',
-                          false: 'Download Tranformed DataSet'}[queuedIds.indexOf(ds.id) >= 0] }}"
-                   ng-disabled="queuedIds.indexOf(ds.id) >= 0"
+                   title="Download Tranformed DataSet"
+                   ng-disabled="downloadRequested"
                    ng-click="requestDataSetDownload(ds.id, model.id)">
                   <i class="icon-download-alt"></i> Download
                 </a>
+                <alert-message ng-show="dl_msg" class="alert-info" style="margin-top:10px;" msg="{{dl_msg}}" unsafe></alert-message>
             </div>
             Records count: <span class="value">{{ model.train_records_count }}</span>
           </div>
       </div>
-      <div class="span4">
+      <div class="span3">
         <div ng-show="model.status == 'Trained'">
               Segments:
               <div ng-repeat="segment in model.segments">
@@ -361,7 +360,7 @@
     </div>
     <div ng-controller="ModelDataSetDownloadCtrl"
          ng-init="getDataSetsDownloads(model.id)"
-         ng-show="queuedIds && queuedIds.length > 0">
+         ng-show="downloads.length > 0">
       <hr/>
       <div class="row">
         <div class="span10">

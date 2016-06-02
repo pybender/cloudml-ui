@@ -830,7 +830,7 @@ describe 'ML Models Controllers', ->
     it  'should have no downloads', ->
       inject (Model) ->
         createController 'ModelDataSetDownloadCtrl', Model
-        expect($rootScope.queuedIds).toBeUndefined()
+        expect($rootScope.downloads).toEqual {}
 
         model = new Model
           id: 999
@@ -843,13 +843,11 @@ describe 'ML Models Controllers', ->
         $scope.getDataSetsDownloads model.id
         $httpBackend.flush()
 
-        expect($scope.downloads).toEqual downloads
-        expect($scope.queuedIds).toEqual []
+        expect($rootScope.downloads).toEqual downloads
 
     it  "should have two downloads", ->
       inject (Model) ->
         createController 'ModelDataSetDownloadCtrl', Model
-        expect($scope.queuedIds).toBeUndefined()
 
         model = new Model
           id: 999
@@ -862,9 +860,8 @@ describe 'ML Models Controllers', ->
         $scope.getDataSetsDownloads model.id
         $httpBackend.flush()
 
-        expect($scope.downloads).toEqual downloads
-        expect($scope.queuedIds.length).toEqual 2
-        expect($scope.queuedIds).toEqual [1, 2]
+        expect($rootScope.downloads).toEqual downloads
+        expect($rootScope.downloads.length).toEqual 2
 
     it  "should put new download request", ->
       inject (Model) ->
@@ -880,31 +877,72 @@ describe 'ML Models Controllers', ->
         $scope.getDataSetsDownloads()
         $httpBackend.flush()
 
+        downloads = [{dataset: {id: 1}, task: {status: 'Completed'}}, {dataset: {id: 2}, task: {}}, {dataset: {id: 3}, task: {}}]
+        url = "#{model.BASE_API_URL}#{model.id}/action/dataset_download/"
+        $httpBackend.expectGET(url).respond angular.toJson
+          model: model.id
+          downloads: downloads
+
         url = "#{model.BASE_API_URL}#{model.id}/action/dataset_download/"
         $httpBackend.expectPUT(url).respond angular.toJson {dataset: 3}
 
         $scope.requestDataSetDownload 3
+        $timeout.flush()
         $httpBackend.flush()
+        expect($rootScope.downloads.length).toEqual 3
+        expect($scope.downloadRequested).toBe true
+        expect($rootScope.dl_msg).toContain "DataSet has been queued for transformation/vectorization"
 
-        expect($scope.queuedIds.length).toEqual 3
-        expect($scope.queuedIds).toEqual [1, 2, 3]
+    it  "should put new download request with err", ->
+      inject (Model) ->
+        model = new Model({id: 888})
+        $scope.model = model
+        createController 'ModelDataSetDownloadCtrl'
 
         # handles request error
-        $scope.queuedIds = []
         $scope.setError = jasmine.createSpy('$scope.setError')
+
+        downloads = [{dataset: {id: 1}, task: {status: 'Completed'}}, {dataset: {id: 2}, task: {}}, {dataset: {id: 3}, task: {}}]
+        url = "#{model.BASE_API_URL}#{model.id}/action/dataset_download/"
+        $httpBackend.expectGET(url).respond angular.toJson
+          model: model.id
+          downloads: downloads
+
         url = "#{model.BASE_API_URL}#{model.id}/action/dataset_download/"
         $httpBackend.expectPUT(url).respond 400
 
         $scope.requestDataSetDownload 3
+        $timeout.flush()
         $httpBackend.flush()
 
         expect($scope.setError.calls.mostRecent().args[1]).toEqual 'requesting dataset 3 for download'
-        expect($scope.queuedIds).toEqual []
+        expect($scope.downloadRequested).toBe false
+        expect($rootScope.dl_msg).toContain "Checking in-progress requests"
+
+    it  "should handle error on get downloads for new download request", ->
+      inject (Model) ->
+        model = new Model({id: 888})
+        $scope.model = model
+        createController 'ModelDataSetDownloadCtrl'
+
+        # handles request error
+        $scope.setError = jasmine.createSpy('$scope.setError')
+
+        downloads = [{dataset: {id: 1}, task: {status: 'Completed'}}, {dataset: {id: 2}, task: {}}, {dataset: {id: 3}, task: {}}]
+        url = "#{model.BASE_API_URL}#{model.id}/action/dataset_download/"
+        $httpBackend.expectGET(url).respond 500
+
+        $scope.requestDataSetDownload 3
+        $timeout.flush()
+        $httpBackend.flush()
+
+        expect($scope.setError.calls.mostRecent().args[1]).toEqual 'loading dataset downloads request'
+        expect($scope.downloadRequested).toBe false
 
     it  "should refuse to put new download request", ->
       inject (Model) ->
         model = new Model({id: 777})
-        downloads = [{dataset: {id: 1}, task: {}},
+        downloads = [{dataset: {id: 1}, task: {status: 'In Progress'}},
           {dataset: {id: 2}, task: {}},
           {dataset: {id: 3}, task: {}}]
         url = "#{model.BASE_API_URL}#{model.id}/action/dataset_download/"
@@ -912,26 +950,44 @@ describe 'ML Models Controllers', ->
           model: model.id
           downloads: downloads
 
-        $scope.setError = jasmine.createSpy()
         $scope.model = model
         createController 'ModelDataSetDownloadCtrl'
-        $scope.getDataSetsDownloads()
-        $httpBackend.flush()
 
-        url = "#{model.BASE_API_URL}#{model.id}/action/dataset_download/"
         $scope.requestDataSetDownload 3
+        $timeout.flush()
+        $httpBackend.flush()
+        expect($scope.downloadRequested).toBe true
+        expect($rootScope.dl_msg).toContain "Please, check in-progress DataSet transformation request"
 
-        expect($scope.setError).toHaveBeenCalledWith({}, 'dataset 3 was already requested for download')
-
-    it  "should set scope error on getting dataset downloads",
+    it  "should check full scenario of dataset downloads",
       inject (Model) ->
-        model = new Model({id: 666})
-        url = "#{model.BASE_API_URL}#{model.id}/action/dataset_download/"
-        $httpBackend.expectGET(url).respond 400, "{}"
-        $scope.setError = jasmine.createSpy()
+        model = new Model({id: 888})
         $scope.model = model
         createController 'ModelDataSetDownloadCtrl'
-        $scope.getDataSetsDownloads()
-        $httpBackend.flush()
 
-        expect($scope.setError).toHaveBeenCalled()
+        downloads = [{dataset: {id: 1}, task: {status: 'Completed'}}, {dataset: {id: 2}, task: {}}]
+        url = "#{model.BASE_API_URL}#{model.id}/action/dataset_download/"
+        $httpBackend.expectGET(url).respond angular.toJson
+          model: model.id
+          downloads: downloads
+
+        url = "#{model.BASE_API_URL}#{model.id}/action/dataset_download/"
+        $httpBackend.expectPUT(url).respond angular.toJson {dataset: 3}
+
+        $scope.requestDataSetDownload 3
+        $timeout.flush()
+        $httpBackend.flush()
+        expect($rootScope.downloads.length).toEqual 2
+        expect($scope.downloadRequested).toBe true
+        expect($rootScope.dl_msg).toContain "DataSet has been queued for transformation/vectorization"
+
+        downloads = [{dataset: {id: 1}, task: {status: 'Completed'}}, {dataset: {id: 2}, task: {}}, {dataset: {id: 3}, task: {}}]
+        url = "#{model.BASE_API_URL}#{model.id}/action/dataset_download/"
+        $httpBackend.expectGET(url).respond angular.toJson
+          model: model.id
+          downloads: downloads
+        $timeout.flush()
+        $httpBackend.flush()
+        expect($rootScope.downloads.length).toEqual 3
+        expect($scope.downloadRequested).toBe true
+        expect($rootScope.dl_msg).toContain "DataSet has been queued for transformation/vectorization"
