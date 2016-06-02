@@ -237,6 +237,9 @@ def visualize_model(model_id, segment_id=None):
 
     except Exception, exc:
         logging.exception('Got exception when visualize the model: %s', exc)
+        model.status = model.STATUS_ERROR
+        model.error = str(exc)[:299]
+        model.save()
         raise
     return 'Segment %s of the model %s has been visualized' % \
         (segment.name, model.name)
