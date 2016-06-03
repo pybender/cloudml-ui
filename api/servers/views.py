@@ -1,10 +1,8 @@
-import json
-
-from boto.exception import S3ResponseError
+from botocore.exceptions import ClientError
 from flask import request
 
 from api import api, app
-from api.amazon_utils import AmazonS3Helper
+from api.amazon_utils import AmazonS3ObjectNotFound
 from api.base.resources import BaseResourceSQL, NotFound, \
     odesk_error_response, BaseResource
 from .models import Server, ServerModelVerification, \
@@ -36,7 +34,7 @@ class ServerResource(BaseResourceSQL):
         from cloudml.importhandler.importhandler import ExtractionPlan
         for h in import_handlers_obj:
             plan = ExtractionPlan(h.get_plan_config(), is_file=False)
-            if plan.predict.models:
+            if plan.predict and plan.predict.models:
                 model_name = plan.predict.models[0].value
                 model_key = models_map.get(model_name)
                 if model_key:
@@ -86,9 +84,10 @@ class ServerFileResource(BaseResource):
             from .tasks import update_at_server
             file_name = '{0}/{1}'.format(folder, uid)
             update_at_server.delay(file_name, server.id)
-        except (S3ResponseError, ValueError) as err:
-            status = err.status if hasattr(err, 'status') else 400
-            return odesk_error_response(status, 1006, str(err))
+        except ValueError as err:
+            return odesk_error_response(400, 1006, str(err))
+        except AmazonS3ObjectNotFound as err:
+            return odesk_error_response(404, 1006, str(err))
 
         return self._render({self.OBJECT_NAME: {'id': uid}})
 
@@ -118,8 +117,10 @@ class ServerFileResource(BaseResource):
             from .tasks import update_at_server
             file_name = '{0}/{1}'.format(folder, uid)
             update_at_server.delay(file_name, server.id)
-        except S3ResponseError as err:
-            return odesk_error_response(err.status, 1006, str(err))
+        except AmazonS3ObjectNotFound as err:
+            return odesk_error_response(404, 1001, str(err))
+        except ClientError as err:
+            return odesk_error_response(500, 1006, str(err))
         return '', 204
 
     def _get_uid(self, kwargs):

@@ -1,0 +1,19 @@
+{
+    "status_code": 200,
+    "data": {
+        "IsTruncated": false,
+        "Marker": "string",
+        "NextMarker": "string",
+        "Contents": [
+            {
+                "Key": "a"
+            },
+            {
+                "Key": "b"
+            },
+            {
+                "Key": "c"
+            }
+        ]
+    }
+}

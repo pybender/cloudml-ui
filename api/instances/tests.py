@@ -110,7 +110,7 @@ class TestInstanceTasks(BaseDbTestCase):
 
     """ Tests spot instances specific tasks """
     @patch('api.amazon_utils.AmazonEC2Helper.request_spot_instance',
-           return_value=Mock(id='some_id')
+           return_value={"SpotInstanceRequestId": "some_id"}
            )
     def test_request_spot_instance(self, mock_request):
         model = Model.query.all()[0]
@@ -131,9 +131,14 @@ class TestInstanceTasks(BaseDbTestCase):
 
         with patch(
             'api.amazon_utils.AmazonEC2Helper.get_request_spot_instance',
-            return_value=Mock(**{'state': 'active',
-                                 'status.code': '200',
-                                 'status.message': 'Msg'})):
+            return_value={
+                "State": "active",
+                "Status": {
+                    "Code": "200",
+                    "Message": "Msg"
+                },
+                "InstanceId": "some_id"
+            }):
             res = get_request_instance(
                 'some_id',
                 callback='train',
@@ -151,11 +156,14 @@ class TestInstanceTasks(BaseDbTestCase):
         model = Model.query.all()[0]
         user = User.query.all()[0]
 
-        mock_request_instance.return_value = Mock(**{
-            'state': 'failed',
-            'status.code': 'bad-parameters',
-            'status.message': 'Msg',
-        })
+        mock_request_instance.return_value = \
+            {
+                "State": "failed",
+                "Status": {
+                    "Code": "400",
+                    "Message": "Msg"
+                }
+            }
 
         self.assertRaises(
             InstanceRequestingError,
@@ -176,11 +184,14 @@ class TestInstanceTasks(BaseDbTestCase):
         model = Model.query.all()[0]
         user = User.query.all()[0]
 
-        mock_request_instance.return_value = Mock(**{
-            'state': 'canceled',
-            'status.code': 'canceled',
-            'status.message': 'Msg',
-        })
+        mock_request_instance.return_value = \
+            {
+                "State": "canceled",
+                "Status": {
+                    "Code": "200",
+                    "Message": "Msg"
+                }
+            }
 
         res = get_request_instance(
             'some_id',
@@ -200,11 +211,14 @@ class TestInstanceTasks(BaseDbTestCase):
         model = Model.query.all()[0]
         user = User.query.all()[0]
 
-        mock_request_instance.return_value = Mock(**{
-            'state': 'open',
-            'status.code': 'bad-parameters',
-            'status.message': 'Msg',
-        })
+        mock_request_instance.return_value = \
+            {
+                "State": "open",
+                "Status": {
+                    "Code": "200",
+                    "Message": "Msg"
+                }
+            }
 
         self.assertRaises(
             RetryTaskError,

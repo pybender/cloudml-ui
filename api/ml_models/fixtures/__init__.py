@@ -26,6 +26,8 @@ DECISION_TREE_WITH_SEGMENTS = open(os.path.join(
     DIR, 'decision_tree_segments.dat'), 'r').read()
 DECISION_TREE = open(os.path.join(
     DIR, 'decision_tree.dat'), 'r').read()
+SEGMENTATION_MODEL = open(os.path.join(
+    DIR, 'segmentation.dat'), 'r').read()
 MODELS_COUNT = 7
 
 FEATURES_CORRECT = open(os.path.join(

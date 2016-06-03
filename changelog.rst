@@ -5,6 +5,7 @@ Changelog
 
 Release 2016-06-??
 ------------------
+* Task - Migration from boto to boto3
 * Bug - Set Grid search status to Error if something wrong happened during calculation
 * Bug - Set model status to Error if something goes wrong on Filling Weights state
 * Bug - Confusion mastrix recalculation is not available if there are in progress calculations

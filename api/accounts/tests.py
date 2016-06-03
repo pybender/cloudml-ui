@@ -125,7 +125,10 @@ class AuthTokenModelTests(BaseDbTestCase):
     def tearDown(self):
         BaseDbTestCase.tearDown(self)
 
-    def test_token(self):
+    @patch('api.amazon_utils.AmazonDynamoDBHelper.put_item')
+    @patch('api.amazon_utils.AmazonDynamoDBHelper.get_item')
+    @patch('api.amazon_utils.AmazonDynamoDBHelper.delete_item')
+    def test_token(self, delete_mock, get_mock, put_mock):
         TOKEN = '394c46b8902fb5e8fc9268f3cfd84539'
         SECRET = '394c46b8902fb5e8fc9268f3cfd84538'
         token_dict = dict(oauth_token=TOKEN, oauth_token_secret=SECRET,
@@ -136,14 +139,19 @@ class AuthTokenModelTests(BaseDbTestCase):
             oauth_token_secret=SECRET)
         self.assertEquals(token.to_dict(), token_dict)
         token.save()
+        put_mock.assert_called_with(token.TABLE_NAME, token_dict)
 
+        get_mock.return_value = None
         self.assertEquals(AuthToken.get_auth('invalid'), None)
 
         # get_item
+        get_mock.return_value = token_dict
         self.assertEquals(AuthToken.get_auth(TOKEN), token_dict)
 
         # delete
         AuthToken.delete(TOKEN)
+        delete_mock.assert_called_with(token.TABLE_NAME, id=TOKEN)
+        get_mock.return_value = None
         self.assertEquals(AuthToken.get_auth('invalid'), None)
 
 
