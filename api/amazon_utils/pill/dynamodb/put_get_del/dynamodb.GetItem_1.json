@@ -1,0 +1,17 @@
+{
+    "status_code": 200,
+    "data": {
+        "Item": {
+            "object_id": {"N": "1"},
+            "id": {"S": "one"},
+            "data": {"S": "d1"}
+        },
+        "ConsumedCapacity": {
+            "TableName": "test_table",
+            "CapacityUnits": 1.0,
+            "Table": {
+                "CapacityUnits": 1.0
+            }
+        }
+    }
+}

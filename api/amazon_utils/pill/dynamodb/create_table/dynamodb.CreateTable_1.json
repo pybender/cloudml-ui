@@ -1,0 +1,29 @@
+{
+    "status_code": 200,
+    "data": {
+        "TableDescription": {
+            "AttributeDefinitions": [
+                {
+                    "AttributeName": "object_id",
+                    "AttributeType": "N"
+                },
+                {
+                    "AttributeName": "id",
+                    "AttributeType": "S"
+                }
+            ],
+            "TableName": "test_table",
+            "KeySchema": [
+                {
+                    "AttributeName": "object_id",
+                    "KeyType": "HASH"
+                },
+                {
+                    "AttributeName": "id",
+                    "KeyType": "RANGE"
+                }
+            ],
+            "TableStatus": "ACTIVE"
+        }
+    }
+}

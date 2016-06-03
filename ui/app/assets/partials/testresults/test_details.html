@@ -57,16 +57,15 @@
             <a href="#{{ test.dataset_obj.objectUrl() }}">
             {{ test.dataset_obj.name }}</a>
           </span>
-          <a class="btn btn-info btn-mini"
+          <a class="btn btn-info btn-mini" ng-class="downloadRequested ? 'link-inactive' : ''"
              ng-init="getDataSetsDownloads(test.model_id)"
              ng-controller="ModelDataSetDownloadCtrl"
-             ng-hide="angular.isUndefined(queuedIds)"
-             title="{{ {true: 'DataSet already Transformed, Check Model &gt; About for list of datasets transformed using this model and ready for download',
-                        false: 'Download Tranformed DataSet'}[queuedIds.indexOf(test.dataset_obj.id) >= 0] }}"
-             ng-disabled="queuedIds.indexOf(test.dataset_obj.id) >= 0"
+             title="Download Tranformed DataSet"
+             ng-disabled="downloadRequested"
              ng-click="requestDataSetDownload(test.dataset_obj.id, test.model_id)">
             <i class="icon-download-alt"></i> Download
           </a>
+          <alert-message ng-show="dl_msg" class="alert-info" style="margin-top:10px;" msg="{{dl_msg}}" unsafe></alert-message>
         </div>
         <div>
             Examples count: <span class="value">{{ test.examples_count }}</span>
@@ -161,10 +160,11 @@
 
               <div class="span12">
                 <div class="p10">
-                  <button ng-disabled="ConfusionMatrixForm.$invalid || test.status != 'Completed'" class="btn" ng-click="recalculate()">
+                  <button ng-disabled="ConfusionMatrixForm.$invalid || test.status != 'Completed' || in_progress_requests" class="btn" ng-click="recalculate()">
                       Recalculate with weights
                   </button>
                   <span class="text-error" ng-show="test.status != 'Completed'">&nbsp;&nbsp;Please, wait until test is fully stored, then confusion matrix recalculation will be available.</span>
+                  <span class="text-warning" ng-show="in_progress_requests">&nbsp;&nbsp;There are confusion matrix recalculation requests in progress. Please, wait a bit.</span>
                 </div>
               </div>
             </form>
@@ -177,7 +177,7 @@
                 <li class="row well well-small" ng-repeat="calc in test.confusion_matrix_calculations">
                   <div class="row">
                     <div class="span7">
-                        <i class="icon-calendar"></i> created on <span class="badge badge-info" title="dates in GMT">{{ calc.created_on|format_date }}</span>
+                        <i class="icon-calendar"></i> created on <span class="badge badge-info" title="dates in GMT">{{ calc.created_on|full_format_date }}</span>
                         <i class="icon-th"></i><span> weights: </span>
                         <span ng-repeat="label in calc.args[1] track by $index">
                             <span class="label">"{{ label[0] }}": {{ label[1] }}</span>

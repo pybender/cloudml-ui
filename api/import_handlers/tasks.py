@@ -59,7 +59,9 @@ def import_data(dataset_id, model_id=None, test_id=None, transformer_id=None):
             name = 'trainmodel_log' if isinstance(obj, Model) \
                 else 'runtest_log'
             parent_handler = logger_handler(name, obj=obj.id)
-            logger.addHandler(parent_handler)
+            if parent_handler:
+                logger.addHandler(parent_handler)
+
         logging.info('Loading dataset %s' % dataset.id)
 
         import_start_time = datetime.now()

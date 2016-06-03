@@ -1,0 +1,17 @@
+{
+    "status_code": 200,
+    "data": {
+        "Items": [
+            {
+                "object_id": {"N": "2"},
+                "id": {"S": "two"},
+                "data": {"S": "d2"}
+            }
+        ],
+        "Count": 1,
+        "ScannedCount": 2,
+        "LastEvaluatedKey": {
+            "id": {"S": "two"}
+        }
+    }
+}

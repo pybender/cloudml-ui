@@ -1,0 +1,9 @@
+{
+    "status_code": 404,
+    "data": {
+        "Error": {
+            "Code": "404",
+            "Message": "Object not found"
+        }
+    }
+}

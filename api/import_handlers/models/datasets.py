@@ -159,11 +159,11 @@ class DataSet(db.Model, BaseModel):
         except OSError:
             pass
         if on_s3:
-            from boto.exception import S3ResponseError
+            from botocore.exceptions import ClientError
             helper = AmazonS3Helper()
             try:
                 helper.delete_key(uid)
-            except S3ResponseError as e:
+            except ClientError as e:
                 logging.exception(str(e))
 
     def save(self, *args, **kwargs):

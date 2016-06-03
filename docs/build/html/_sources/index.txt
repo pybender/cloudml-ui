@@ -37,7 +37,7 @@ Contents:
    * `Github repository <https://github.com/odeskdataproducts/cloudml-ui>`_
    * Production http://cloudml.int.odesk.com/
    * Staging http://172.27.77.182/
-   * Developers: Nikolay Melnik <nmelnik@cloud.upwork.com>, Nader Soliman <nsoliman@cloud.upwork.com>
+   * Developers: Nikolay Melnik <nmelnik@cloud.upwork.com>, Anna Lysak <annalysak@cloud.upwork.com>
 
 
 

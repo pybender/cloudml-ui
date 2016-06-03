@@ -1,0 +1,18 @@
+{
+    "status_code": 200, 
+    "data": {
+        "TerminatingInstances": [
+            {
+                "InstanceId": "instance_id",
+                "CurrentState": {
+                    "Code": 123,
+                    "Name": "running"
+                },
+                "PreviousState": {
+                    "Code": 123,
+                    "Name": "running"
+                }
+            }
+        ]
+    }
+}

@@ -64,6 +64,7 @@ angular.module('app.directives')
       TYPE_OBJECT = 'dict'
       TYPE_TEXT = 'text'
       TYPE_INT = 'int'
+      TYPE_LIST = 'list'
 
       _validateStrParam = (data) ->
         # string validation is any thing, unless the parameter is required
@@ -94,11 +95,19 @@ angular.module('app.directives')
         # of validation error messages to the dictParameter directive
         return not ngModel.$error.error_no_keys
 
+      # TODO:
+      _validateList = (data) ->
+        if not scope.field.required and data is ''
+          return true
+        return true
+
+
       VALIDATORS = {}
       VALIDATORS[TYPE_STRING] = _validateStrParam
       VALIDATORS[TYPE_OBJECT] = _validateObjectParam
       VALIDATORS[TYPE_TEXT] = _validateJsonParam
       VALIDATORS[TYPE_INT] = _validateInt
+      VALIDATORS[TYPE_LIST] = _validateList
 
       attributes.$set('required', scope.field.required)
 

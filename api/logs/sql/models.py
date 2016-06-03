@@ -12,8 +12,9 @@ class LogMessage(BaseMixin, db.Model):
     IMPORT_DATA = 'importdata_log'
     RUN_TEST = 'runtest_log'
     CONFUSION_MATRIX_LOG = 'confusion_matrix_log'
+    GRID_SEARCH = 'gridsearch_log'
     TYPES_LIST = (TRAIN_MODEL, IMPORT_DATA, RUN_TEST,
-                  CONFUSION_MATRIX_LOG)
+                  CONFUSION_MATRIX_LOG, GRID_SEARCH)
     LEVELS_LIST = ['CRITICAL', 'ERROR', 'WARN', 'WARNING',
                    'INFO', 'DEBUG', 'NOTSET']
 

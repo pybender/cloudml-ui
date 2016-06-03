@@ -11,7 +11,8 @@ import unittest
 import json
 from flask.ext.testing import TestCase
 from sqlalchemy import create_engine
-from moto import mock_dynamodb2, mock_s3
+from cloudml.tests.test_utils import StreamPill
+import boto3
 
 from api import app
 from api.accounts.models import AuthToken
@@ -31,9 +32,6 @@ class BaseDbTestCase(TestCase):
     Base class for TestCases that uses database.
     """
     datasets = []
-
-    s3_mock = None
-    dynamodb_mock = None
 
     @property
     def db(self):
@@ -66,23 +64,24 @@ class BaseDbTestCase(TestCase):
         app.sql_db.metadata.create_all(cls.engine)
         app.sql_db.create_all()
 
-        cls.dynamodb_mock = mock_dynamodb2()
-        cls.dynamodb_mock.start()
-        cls.s3_mock = mock_s3()
-        cls.s3_mock.start()
-        AuthToken.create_table()
-        LogMessage.create_table()
-
     @classmethod
     def tearDownClass(cls):
         app.sql_db.session.expunge_all()
         app.sql_db.session.remove()
         app.sql_db.drop_all()
-        cls.dynamodb_mock.stop()
-        cls.s3_mock.stop()
+        #cls.dynamodb_mock.stop()
+        #cls.s3_mock.stop()
 
     def setUp(self):
         # Clean all tables
+        import os
+        self.pill = StreamPill(debug=False)
+        self.session = boto3.session.Session()
+        boto3.DEFAULT_SESSION = self.session
+        self.pill.attach(self.session, os.path.abspath(
+            os.path.join(os.path.dirname(__file__), 'pill')))
+        self.pill.playback()
+
         for table in reversed(self.db.metadata.sorted_tables):
             self.db.session.execute(table.delete())
         self.db.session.commit()

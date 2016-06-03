@@ -4,7 +4,6 @@ import os
 from datetime import datetime
 
 from mock import patch, MagicMock
-from moto import mock_s3
 
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS
 from ..views import DataSetResource
@@ -58,7 +57,6 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         self.assertEqual(obj['status'], self.obj.status)
         self.assertEqual(obj['data_fields'], self.obj.data_fields)
 
-    @mock_s3
     @patch('api.amazon_utils.AmazonS3Helper.save_gz_file')
     @patch('api.amazon_utils.AmazonS3Helper.load_key')
     def test_post(self, mock_load_key, mock_multipart_upload):
@@ -109,7 +107,6 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         self.assertEqual(dataset.status, dataset.STATUS_ERROR)
         self.assertEqual(dataset.error, 'Some message')
 
-    @mock_s3
     @patch('api.amazon_utils.AmazonS3Helper.save_gz_file')
     def test_post_csv(self, mock_multipart_upload):
         params = {'start': '2012-12-03',
@@ -149,11 +146,12 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
         self.assertEqual(405, resp.status_code)
         self.assertIn('Some existing models were trained/tested', resp.data)
 
-    @mock_s3
-    def test_generate_url_action(self):
+    @patch('api.amazon_utils.AmazonS3Helper.get_download_url')
+    def test_generate_url_action(self, dl_mock):
         """
         Tests generation Amazon S3 url method.
         """
+        dl_mock.return_value = 'https://s3.amazonaws.com/url'
         url = self._get_url(id=self.obj.id, action='generate_url')
         resp = self.client.get(url, headers=HTTP_HEADERS)
         self.assertEquals(resp.status_code, httplib.OK)
@@ -173,7 +171,6 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
             '<field name="metric" type="float" />' in resp['sample_xml'],
             resp['sample_xml'])
 
-    @mock_s3
     @patch('api.import_handlers.tasks.upload_dataset')
     def test_reupload_action(self, mock_upload_dataset):
         """
@@ -196,7 +193,6 @@ class DataSetsTests(BaseDbTestCase, TestChecksMixin):
                           DataSet.STATUS_IMPORTING)
         mock_upload_dataset.delay.assert_called_once_with(self.obj.id)
 
-    @mock_s3
     @patch('api.import_handlers.tasks.import_data')
     def test_reimport_action(self, mock_import_data):
         """

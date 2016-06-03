@@ -14,10 +14,7 @@
           <span>:&nbsp;</span>
           <span ng-show="!field.valid" class="help-inline">*</span>
         </label>
-        <dict-parameter ng-model="data[field.name]"
-                input-key-class="input-medium"
-                input-value-class="input-medium"
-                parameter-validator=""></dict-parameter>
+        <dict-parameter ng-model="data[field.name]" input-key-class="input-medium" input-value-class="input-medium" parameter-validator=""></dict-parameter>
         <div ng-hide="field.valid">
           <i class="help_text help-block"> {{ field.help_text }} </i>
         </div>
@@ -27,9 +24,17 @@
           <span>:&nbsp;</span>
           <span ng-show="field.required && !field.valid" class="help-inline">*</span>
         </label>
-        <textarea class="span3" rows="5"
-                  ng-model="data[field.name]" ng-model-onblur=""
-                  dynamic-name="field.name" parameter-validator=""></textarea>
+        <textarea class="span3" rows="5" ng-model="data[field.name]" ng-model-onblur="" dynamic-name="field.name" parameter-validator=""></textarea>
+        <div ng-hide="field.valid">
+          <i class="help_text help-block"> {{ field.help_text }} </i>
+        </div>
+      </span>
+      <span ng-switch-when="list" class="no-horizontal-form-param">
+        <label class="control-label">{{field.name}}
+          <span>:&nbsp;</span>
+          <span ng-show="field.required && !field.valid" class="help-inline">*</span>
+        </label>
+        <list-parameter ng-model="data[field.name]" input-key-class="input-medium" input-value-class="input-medium" parameter-validator=""></list-parameter>        
         <div ng-hide="field.valid">
           <i class="help_text help-block"> {{ field.help_text }} </i>
         </div>
