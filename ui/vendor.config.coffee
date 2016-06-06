@@ -85,5 +85,5 @@ module.exports =
     "bower_components/codemirror/mode/python/python.js"
     "bower_components/codemirror/mode/javascript/javascript.js"
     "bower_components/angular-ui-codemirror/ui-codemirror.js"
-    "bower_components/nvd3/nv.d3.js"
+    "bower_components/nvd3/build/nv.d3.js"
   ]
