@@ -437,9 +437,10 @@ App.run(['$rootScope', '$routeParams', '$location', 'settings', 'auth',
   $rootScope.setSection = (action) ->
     $rootScope.action = action
     actionString = action.join(':')
-    $location.search(
-      if actionString == DEFAULT_ACTION then ""
-      else "action=#{actionString}")
+    filter_opts = $location.search()
+    delete filter_opts['action']
+    action_dict = if actionString == DEFAULT_ACTION then {} else {action: actionString}
+    $location.search(_.extend(action_dict, filter_opts))
 
     needGo = true
     if $rootScope.isSimpleTabs && actionString in $rootScope.initializedSections
