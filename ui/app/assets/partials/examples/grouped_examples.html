@@ -27,7 +27,10 @@
           </thead>
           <tbody>
           <tr ng-repeat="data in objects">
-            <td><a href="#{{ test.examplesUrl() }}&data_input->>{{ form.field }}={{ data.group_by_field }}">{{ data.group_by_field }}</a></td>
+            <td>
+              <a ng-show="data.group_by_field" href="#{{ test.examplesUrl() }}&data_input->>{{ form.field }}={{ data.group_by_field }}">{{ data.group_by_field }}</a>
+              <span ng-hide="data.group_by_field" class="empty">Empty</span>
+            </td>
             <td><span>{{ data.count }} </span></td>
             <td><span>{{ data.avp.toFixed(4) || data.avp }} </span></td>
           </tr>
