@@ -7,7 +7,6 @@ Model tests related unittests.
 
 import json
 from mock import patch, MagicMock, Mock
-from moto import mock_s3
 from sqlalchemy import desc
 
 from cloudml.trainer.store import TrainerStorage
@@ -90,15 +89,16 @@ class TestResourceTests(BaseDbTestCase, TestChecksMixin):
             [("0", 10.0), ("1", 12.0)]
         )
 
-    @mock_s3
+    @patch('api.amazon_utils.AmazonS3Helper.load_key')
     @patch('api.amazon_utils.AmazonS3Helper.save_gz_file')
     @patch('api.model_tests.tasks.run_test')
-    def test_post(self, mock_run_test, mock_multipart_upload):
+    def test_post(self, mock_run_test, mock_multipart_upload, load_mock):
         """
         Checks creating new Test with creating new dataset.
         """
         data = {'format': DataSet.FORMAT_JSON, 'parameters': IMPORT_PARAMS}
         data.update(self.POST_DATA)
+        load_mock.return_value = MODEL_TRAINER
         data, test = self.check_edit(data, load_json=True)
 
         self.assertEquals(test.status, test.STATUS_IMPORTED)
@@ -131,13 +131,14 @@ class TestResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(data[self.RESOURCE.OBJECT_NAME]['id'], test.id)
         self.assertEquals(data[self.RESOURCE.OBJECT_NAME]['name'], test.name)
 
-    @mock_s3
+    @patch('api.amazon_utils.AmazonS3Helper.load_key')
     @patch('api.amazon_utils.AmazonS3Helper.save_gz_file')
     @patch('api.model_tests.tasks.run_test')
-    def test_post_csv(self, mock_run_test, mock_multipart_upload):
-        """ Checks creating new Test with creating new dataset. """
+    def test_post_csv(self, mock_run_test, mock_multipart_upload, load_mock):
+        """ Checks creating new Test with creating new dataset CSV. """
         data = {'format': DataSet.FORMAT_CSV, 'parameters': IMPORT_PARAMS}
         data.update(self.POST_DATA)
+        load_mock.return_value = MODEL_TRAINER
         resp, test = self.check_edit(data)
 
         self.assertEquals(test.status, test.STATUS_IMPORTED)
@@ -148,15 +149,17 @@ class TestResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(test.model_id, self.model.id)
         self.assertFalse(test.error)
 
-    @mock_s3
+    @patch('api.amazon_utils.AmazonS3Helper.load_key')
+    @patch('api.amazon_utils.AmazonS3Helper.save_gz_file')
     @patch('api.model_tests.tasks.run_test')
-    def test_post_with_dataset(self, mock_run_test):
+    def test_post_with_dataset(self, mock_run_test, save_mock, load_mock):
         """ Tests creating new Test with specifying dataset. """
         dataset = DataSet.query.filter_by(
             name=DataSetData.dataset_01.name).first()
         data = {'dataset': dataset.id}
         data.update(self.POST_DATA)
         data['new_dataset_selected'] = False
+        load_mock.return_value = MODEL_TRAINER
         resp = self.client.post(self._get_url(), data=data,
                                 headers=HTTP_HEADERS)
         data = json.loads(resp.data)
@@ -224,9 +227,6 @@ class TestExampleResourceTests(BaseDbTestCase, TestChecksMixin):
         self.BASE_URL = '/cloudml/models/{0!s}/tests/{1!s}/examples/'.format(
             self.model.id, self.test.id
         )
-
-        # TODO: investigate why does it help
-        self.db.session.expire_all()
 
     def test_list(self):
         self.check_list(
@@ -311,7 +311,6 @@ class TestExampleResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(data['previous'], prev.id)
         self.assertEquals(data['next'], next.id)
 
-    @mock_s3
     @patch('api.model_tests.models.TestResult.get_vect_data')
     @patch('api.ml_models.models.Model.get_trainer')
     def go_details(self, obj, show, data, mock_get_trainer,
@@ -534,7 +533,6 @@ class TasksTests(BaseDbTestCase):
             [('0', 1), ('1', 1), ('2', 1)]
         )
 
-    @mock_s3
     @patch('api.models.DataSet.get_data_stream')
     def test_get_csv_results(self, mock_get_data_stream):
         from tasks import get_csv_results
@@ -553,7 +551,6 @@ class TasksTests(BaseDbTestCase):
         # self.assertEqual(task.result, url)
         # self.assertEqual(task.status, AsyncTask.STATUS_COMPLETED)
 
-    # @mock_s3
     # @patch('psycopg2.connect')
     # def test_export_results_to_db(self, *mocks):
     #     from tasks import export_results_to_db
@@ -564,11 +561,11 @@ class TasksTests(BaseDbTestCase):
     #         self.test.model.id, self.test.id,
     #         datasource.id, 'exports_tlb', fields).get()
 
-    @mock_s3
     @patch('api.models.Model.get_trainer')
     @patch('api.models.DataSet.get_data_stream')
+    @patch('api.amazon_utils.AmazonS3Helper.load_key')
     def _check_run_test(self, test, metrics_mock_class, _fake_raw_data,
-                        mock_get_data_stream, mock_get_trainer):
+                        load_mock, mock_get_data_stream, mock_get_trainer):
         mocks = [mock_get_data_stream, mock_get_trainer]
         import numpy
         import scipy
@@ -690,7 +687,8 @@ class TasksRunTestTests(BaseDbTestCase, TestChecksMixin):
 
     @patch('api.models.Model.get_trainer')
     @patch('api.models.DataSet.get_data_stream')
-    def run_real_test_binary_classifier(self, mock_get_data_stream,
+    @patch('api.amazon_utils.AmazonS3Helper.load_key')
+    def run_real_test_binary_classifier(self, load_mock, mock_get_data_stream,
                                         mock_get_trainer):
         test = TestResult.query.filter_by(
             name=TestResultData.test_04.name).first()
@@ -740,10 +738,11 @@ class TasksRunTestTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue('average_precision' in test.metrics)
         self.assertIsInstance(test.metrics['average_precision'], float)
 
+    @patch('api.amazon_utils.AmazonS3Helper.load_key')
     @patch('api.models.Model.get_trainer')
     @patch('api.models.DataSet.get_data_stream')
     def run_real_test_multiclass_classifier(self, mock_get_data_stream,
-                                            mock_get_trainer):
+                                            mock_get_trainer, load_mock):
         test = TestResult.query.filter_by(
             name=TestResultData.test_04.name).first()
         self.assertEqual({}, test.metrics)
@@ -791,10 +790,11 @@ class TasksRunTestTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue('accuracy' in test.metrics)
         self.assertIsInstance(test.metrics['accuracy'], float)
 
+    @patch('api.amazon_utils.AmazonS3Helper.load_key')
     @patch('api.models.Model.get_trainer')
     @patch('api.models.DataSet.get_data_stream')
     def run_real_test_multiclass_classifier_0_example_for_labels(
-            self, mock_get_data_stream, mock_get_trainer):
+            self, mock_get_data_stream, mock_get_trainer, load_mock):
         test = TestResult.query.filter_by(
             name=TestResultData.test_04.name).first()
         self.assertEqual({}, test.metrics)

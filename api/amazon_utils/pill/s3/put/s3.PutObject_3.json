@@ -1,0 +1,9 @@
+{
+    "status_code": 200, 
+    "data": {
+            "Expiration": "2016-06-06",
+            "ETag": "etag",
+            "VersionId": "1",
+            "RequestCharged": "cloudml"
+    }
+}

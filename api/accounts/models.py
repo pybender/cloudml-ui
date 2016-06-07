@@ -2,16 +2,10 @@
 
 
 import logging
-from boto.dynamodb2.exceptions import ItemNotFound
 from sqlalchemy import func
 from sqlalchemy.orm import exc as orm_exc, validates
-
 from api.base.models import BaseMixin, db
-
-from boto.dynamodb2.fields import HashKey
-from boto.dynamodb2.types import STRING
-from boto.exception import JSONResponseError
-
+from botocore.exceptions import ClientError
 from api.amazon_utils import AmazonDynamoDBHelper
 
 
@@ -21,9 +15,8 @@ dynamodb = AmazonDynamoDBHelper()
 class AuthToken(object):
     TABLE_NAME = 'auth_tokens'
 
-    SCHEMA = [
-        HashKey('id', data_type=STRING)
-    ]
+    SCHEMA = [{'AttributeName': 'id', 'KeyType': 'HASH'}]
+    SCHEMA_TYPES = [{'AttributeName': 'id', 'AttributeType': 'S'}]
 
     def __init__(self, oauth_token, oauth_token_secret):
         self.id = oauth_token
@@ -43,19 +36,17 @@ class AuthToken(object):
 
     @classmethod
     def create_table(cls):
-        dynamodb.create_table(cls.TABLE_NAME, cls.SCHEMA)
+        dynamodb.create_table(cls.TABLE_NAME, cls.SCHEMA, cls.SCHEMA_TYPES)
 
     @classmethod
     def get_auth(cls, auth_token):
         try:
             return dynamodb.get_item(cls.TABLE_NAME, id=auth_token)
-        except ItemNotFound:
-            return None
-        except JSONResponseError as ex:
-            if ex.status == 404:
+        except ClientError as e:
+            if e.response['Error']['Code'] == "404":
                 return None
             else:
-                raise ex
+                raise e
 
     @classmethod
     def delete(cls, auth_token):

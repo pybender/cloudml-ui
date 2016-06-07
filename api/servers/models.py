@@ -1,7 +1,4 @@
-from datetime import datetime
-
 from sqlalchemy.orm import relationship, deferred, backref
-
 from api import app
 from api.base.models import BaseModel, db, JSONType, BaseMixin
 from api.ml_models.models import Model
@@ -10,7 +7,7 @@ from api.import_handlers.models import RefXmlImportHandlerMixin, \
 from api.model_tests.models import TestResult
 from .config import FOLDER_MODELS, FOLDER_IMPORT_HANDLERS
 from api.amazon_utils import AmazonS3Helper
-from boto.exception import S3ResponseError
+import urllib
 
 
 class Server(BaseModel, db.Model):
@@ -65,29 +62,24 @@ class Server(BaseModel, db.Model):
         s3 = AmazonS3Helper(
             bucket_name=app.config['CLOUDML_PREDICT_BUCKET_NAME'])
         for key in s3.list_keys(path):
-            uid = key.name.split('/')[-1]
-            key = s3.bucket.get_key(key.name)
+            uid = key['Key'].split('/')[-1]
+            key = s3.load_key(key['Key'], with_metadata=True)
 
-            if key.get_metadata('hide') == 'True':
+            if key['Metadata']['hide'] == 'True':
                 continue
 
-            # TODO: last_modified problems with amazon s3 and botoo
-            # https://github.com/boto/boto/issues/466
-            # https://github.com/spulec/moto/issues/146
-            # http://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectGET.html
             objects.append({
                 'id': uid,
-                'object_name': key.get_metadata('object_name'),
-                'size': key.size,
-                'uploaded_on': key.get_metadata('uploaded_on'),
-                'last_modified': str(datetime.strptime(
-                    key.last_modified, '%a, %d %b %Y %H:%M:%S %Z')),
-                'name': key.get_metadata('name'),
-                'object_id': key.get_metadata('id'),
-                'object_type': key.get_metadata('type'),
-                'user_id': key.get_metadata('user_id'),
-                'user_name': key.get_metadata('user_name'),
-                'crc32': key.get_metadata('crc32'),
+                'object_name': key['Metadata'].get('object_name', None),
+                'size': key['ContentLength'],
+                'uploaded_on': key['Metadata'].get('uploaded_on', None),
+                'last_modified': str(key['LastModified']),
+                'name': key['Metadata'].get('name', None),
+                'object_id': key['Metadata'].get('id', None),
+                'object_type': key['Metadata'].get('type', None),
+                'user_id': key['Metadata'].get('user_id', None),
+                'user_name': key['Metadata'].get('user_name', None),
+                'crc32': key['Metadata'].get('crc32', None),
                 'server_id': self.id
             })
 
@@ -133,8 +125,8 @@ class Server(BaseModel, db.Model):
         key_name = '{0}/{1}/{2}'.format(self.folder, folder, uid)
         s3 = AmazonS3Helper(
             bucket_name=app.config['CLOUDML_PREDICT_BUCKET_NAME'])
-        s3key = s3.bucket.get_key(key_name)
-        return s3key.get_metadata(key)
+        s3key = s3.load_key(key_name, with_metadata=True)
+        return s3key['Metadata'][key]
 
     def save(self, commit=True):
         BaseModel.save(self, commit=False)

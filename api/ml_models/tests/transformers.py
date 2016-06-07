@@ -1,6 +1,6 @@
 import logging
 import json
-from moto import mock_s3
+from mock import patch
 
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin
 from ..views import TransformerResource
@@ -103,8 +103,8 @@ class PretrainedTransformersTests(BaseDbTestCase, TestChecksMixin):
         data, transformer = self.check_edit(put_data, id=self.obj.id)
         self.assertEquals(transformer.field_name, put_data['field_name'])
 
-    @mock_s3
-    def test_train(self, *mocks):
+    @patch('api.amazon_utils.AmazonS3Helper.load_key')
+    def test_train(self, load_mock):
         ds = DataSet.query.filter_by(name=DataSetData.dataset_01.name).first()
         data = {'aws_instance': self.instance.id,
                 'existing_instance_selected': True,

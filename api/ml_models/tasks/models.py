@@ -132,40 +132,52 @@ def get_classifier_parameters_grid(grid_params_id):
         model, datasets for training and testing, parameters, choosen by
         user.
     """
+    init_logger('gridsearch_log', obj=int(grid_params_id))
+    logging.info('Parameters grid search task started')
+
     from api.ml_models.models import ClassifierGridParams
     grid_params = ClassifierGridParams.query.get(grid_params_id)
     grid_params.status = 'Calculating'
     grid_params.save()
-    feature_model = FeatureModel(
-        grid_params.model.get_features_json(), is_file=False)
-    trainer = Trainer(feature_model)
+    try:
+        feature_model = FeatureModel(
+            grid_params.model.get_features_json(), is_file=False)
+        trainer = Trainer(feature_model)
 
-    def _get_iter(dataset):
-        fp = None
-        if fp:
-            fp.close()
-        fp = dataset.get_data_stream()
-        for row in dataset.get_iterator(fp):
-            yield row
-        if fp:
-            fp.close()
+        def _get_iter(dataset):
+            fp = None
+            if fp:
+                fp.close()
+            fp = dataset.get_data_stream()
+            for row in dataset.get_iterator(fp):
+                yield row
+            if fp:
+                fp.close()
 
-    clfs = trainer.grid_search(
-        grid_params.parameters,
-        _get_iter(grid_params.train_dataset),
-        _get_iter(grid_params.test_dataset),
-        score=grid_params.scoring)
-    grids = {}
-    for segment, clf in clfs.iteritems():
-        grids[segment] = [{
-            'parameters': item.parameters,
-            'mean': item.mean_validation_score,
-            'std': np.std(item.cv_validation_scores)}
-            for item in clf.grid_scores_]
-    grid_params.parameters_grid = grids
-    grid_params.status = 'Completed'
-    grid_params.save()
-    return "grid_params done"
+        clfs = trainer.grid_search(
+            grid_params.parameters,
+            _get_iter(grid_params.train_dataset),
+            _get_iter(grid_params.test_dataset),
+            score=grid_params.scoring)
+        grids = {}
+        for segment, clf in clfs.iteritems():
+            grids[segment] = [{
+                'parameters': item.parameters,
+                'mean': item.mean_validation_score,
+                'std': np.std(item.cv_validation_scores)}
+                for item in clf.grid_scores_]
+        grid_params.parameters_grid = grids
+        grid_params.status = 'Completed'
+        grid_params.save()
+    except Exception, e:
+        logging.exception('Got exception on grid params search: {}'.format(e))
+        grid_params.status = 'Error'
+        grid_params.save()
+        raise
+
+    msg = "Parameters grid search done"
+    logging.info(msg)
+    return msg
 
 
 @celery.task(base=SqlAlchemyTask)
@@ -237,6 +249,9 @@ def visualize_model(model_id, segment_id=None):
 
     except Exception, exc:
         logging.exception('Got exception when visualize the model: %s', exc)
+        model.status = model.STATUS_ERROR
+        model.error = str(exc)[:299]
+        model.save()
         raise
     return 'Segment %s of the model %s has been visualized' % \
         (segment.name, model.name)

@@ -1,0 +1,102 @@
+{
+    "status_code": 200, 
+    "data": {
+        "JobFlows": [
+            {
+                "JobFlowId": "job_flow_id",
+                "Name": "name",
+                "LogUri": "log_uri",
+                "AmiVersion": "1.1",
+                "ExecutionStatusDetail": {
+                    "State": "COMPLETED",
+                    "CreationDateTime": "2016-06-06",
+                    "StartDateTime": "2016-06-06",
+                    "ReadyDateTime": "2016-06-06",
+                    "EndDateTime": "2016-06-06",
+                    "LastStateChangeReason": "reason"
+                },
+                "Instances": {
+                    "MasterInstanceType": "type",
+                    "MasterPublicDnsName": "dns_name",
+                    "MasterInstanceId": "abc-123",
+                    "SlaveInstanceType": "type",
+                    "InstanceCount": 123,
+                    "InstanceGroups": [
+                        {
+                            "InstanceGroupId": 123,
+                            "Name": "name",
+                            "Market": "SPOT",
+                            "InstanceRole": "TASK",
+                            "BidPrice": "price",
+                            "InstanceType": "type",
+                            "InstanceRequestCount": 123,
+                            "InstanceRunningCount": 123,
+                            "State": "RUNNING",
+                            "LastStateChangeReason": "reason",
+                            "CreationDateTime": "2016-06-06",
+                            "StartDateTime": "2016-06-06",
+                            "ReadyDateTime": "2016-06-06",
+                            "EndDateTime": "2016-06-06"
+                        }
+                    ],
+                    "NormalizedInstanceHours": 123,
+                    "Ec2KeyName": "name",
+                    "Ec2SubnetId": "abc-123",
+                    "Placement": {
+                        "AvailabilityZone": "zone"
+                    },
+                    "KeepJobFlowAliveWhenNoSteps": true,
+                    "TerminationProtected": true,
+                    "HadoopVersion": "v0.1"
+                },
+                "Steps": [
+                    {
+                        "StepConfig": {
+                            "Name": "name",
+                            "ActionOnFailure": "CONTINUE",
+                            "HadoopJarStep": {
+                                "Properties": [
+                                    {
+                                        "Key": "key",
+                                        "Value": "value"
+                                    }
+                                ],
+                                "Jar": "path_to_jar.jar",
+                                "MainClass": "main",
+                                "Args": [
+                                    "-arg some_arg=arg_value"
+                                ]
+                            }
+                        },
+                        "ExecutionStatusDetail": {
+                            "State": "COMPLETED",
+                            "CreationDateTime": "2016-06-06",
+                            "StartDateTime": "2016-06-06",
+                            "EndDateTime": "2016-06-06",
+                            "LastStateChangeReason": "reason"
+                        }
+                    }
+                ],
+                "BootstrapActions": [
+                    {
+                        "BootstrapActionConfig": {
+                            "Name": "name",
+                            "ScriptBootstrapAction": {
+                                "Path": "some_path",
+                                "Args": [
+                                    "string"
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "SupportedProducts": [
+                    "product"
+                ],
+                "VisibleToAllUsers": true,
+                "JobFlowRole": "role",
+                "ServiceRole": "role"
+            }
+        ]
+    }
+}

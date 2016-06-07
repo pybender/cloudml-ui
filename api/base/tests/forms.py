@@ -1,6 +1,6 @@
 from flask.ext.testing import TestCase
 from api.base.test_utils import BaseDbTestCase
-
+from mock import patch
 from api import app
 from api.base.forms.fields import *
 from api.import_handlers.fixtures import XmlImportHandlerData
@@ -81,7 +81,9 @@ class FormFieldsTests(TestCase):
         self.assertEqual(value, '2+2')
         self.assertRaises(ValidationError, field.clean, 'invalid code')
 
-    def test_script_url_field(self):
+    @patch('cloudml.importhandler.importhandler.Script._process_amazon_file')
+    def test_script_url_field(self, amazon_mock):
+        amazon_mock.side_effect = Exception('Fail reading from Amazone')
         field = ScriptUrlField()
         value = field.clean('./api/import_handlers/fixtures/functions.py')
         self.assertEqual(value, './api/import_handlers/fixtures/functions.py')

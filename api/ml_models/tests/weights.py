@@ -3,7 +3,6 @@ import json
 import random
 import urllib
 from mock import patch
-from moto import mock_s3
 
 from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS
 from ..fixtures import WeightData, WeightsCategoryData
@@ -37,7 +36,6 @@ class WeightResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertEquals(data['total'],
                           Weight.query.filter_by(model=self.model).count())
 
-    @mock_s3
     @patch('api.amazon_utils.AmazonS3Helper.load_key')
     def test_search(self, mock_load_key):
         trained_model_name = 'Trained Model Full Text'
@@ -253,7 +251,6 @@ class WeightTasksTests(BaseDbTestCase, TestChecksMixin):
     def setUp(self):
         super(WeightTasksTests, self).setUp()
 
-    @mock_s3
     @patch('api.amazon_utils.AmazonS3Helper.load_key')
     def test_fill_weights_binary_classifier(self, mock_load_key):
         """
@@ -326,7 +323,6 @@ class WeightTasksTests(BaseDbTestCase, TestChecksMixin):
                       'value': 0.136906400504862,
                       'value2': 0.0032604034524968})
 
-    @mock_s3
     @patch('api.amazon_utils.AmazonS3Helper.load_key')
     def test_fill_weights_multiclass_classifier(self, mock_load_key):
         """
