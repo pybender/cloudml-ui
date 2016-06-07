@@ -9,7 +9,7 @@
     <div class="control-group" ng-class="{error: Form.label.$invalid || errorList.label}">
       <label class="control-label">Label</label>
       <div class="controls">
-        <input type="text" name="name" ng-model="model.label" ng-change="setFieldError('name')" required />
+        <input type="text" name="label" ng-model="model.label" ng-change="setFieldError('label')" required />
         <span ng-show="Form.label.$error.required" class="help-inline">*</span>
         <span ng-show="errorList.label" class="help-block" ng-bind="errorList.label" />
       </div>
