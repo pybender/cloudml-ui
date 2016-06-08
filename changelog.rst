@@ -3,7 +3,7 @@
 Changelog
 =========
 
-Release 2016-06-??
+Release 2016-06-08
 ------------------
 * Task - Migration from boto to boto3
 * Bug - Set Grid search status to Error if something wrong happened during calculation
