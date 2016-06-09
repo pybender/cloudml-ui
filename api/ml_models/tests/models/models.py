@@ -36,7 +36,7 @@ class ModelTests(BaseDbTestCase):
     """
     Tests for api.ml_models.models.Model class.
     """
-    datasets = [DataSetData, ModelData] + IMPORT_HANDLER_FIXTURES
+    datasets = [DataSetData, ModelData, TagData] + IMPORT_HANDLER_FIXTURES
 
     def test_generic_relation_to_import_handler(self):
         model = Model(name="test1")
@@ -122,6 +122,10 @@ class ModelTests(BaseDbTestCase):
 
     def test_delete(self):
         model = Model.query.filter_by(name=ModelData.model_06.name).one()
+        tag = Tag.query.filter_by(text=TagData.tag_01.text).one()
+        model.tags = [tag]
+        tag.update_counter()
+        count = tag.count
         model_id = model.id
         feature_set_id = model.features_set.id
         datasets = model.datasets
@@ -131,4 +135,5 @@ class ModelTests(BaseDbTestCase):
             id=feature_set_id).count())
         self.assertEqual(1, len(datasets))
         self.assertFalse(datasets[0].locked)
+        self.assertEqual(tag.count, count-1)
 

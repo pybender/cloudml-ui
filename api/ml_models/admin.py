@@ -65,6 +65,10 @@ class TagAdmin(BaseAdmin):
     )
     column_filters = ('count', )
 
+    def after_model_change(self, form, model, is_created):
+        model.count = len(model.models)
+        super(TagAdmin, self).after_model_change(form, model, is_created)
+
 admin.add_view(TagAdmin(
     name='Tag', category='Models'))
 
