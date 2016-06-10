@@ -486,9 +486,9 @@ class XmlField(db.Model, BaseMixin):
 
     def to_dict(self):
         fieldDict = super(XmlField, self).to_dict()
-        if fieldDict['multipart'] == 'false':
+        if 'multipart' in fieldDict and fieldDict['multipart'] == 'false':
             fieldDict.pop('multipart')
-        if fieldDict['required'] == 'false':
+        if 'required' in fieldDict and fieldDict['required'] == 'false':
             fieldDict.pop('required')
         return fieldDict
 
