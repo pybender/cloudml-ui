@@ -334,6 +334,8 @@ class ModelResource(BaseTrainedEntityResource):
             model.features_set.features, commit=False)
         new_model.tags = model.tags
         new_model.save()
+        for tag in new_model.tags:
+            tag.update_counter()
         return self._render({
             self.OBJECT_NAME: new_model,
             'status': 'New model "{0}" created'.format(

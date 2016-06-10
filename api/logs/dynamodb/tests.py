@@ -105,8 +105,15 @@ class LogsTests(BaseDbTestCase, TestChecksMixin):
                     },
                     'Limit': 20,
                     'ScanIndexForward': True,
-                    'FilterExpression': {'operator': '<=',
-                                         'values': ['level', 1]}
+                    'FilterExpression': {
+                        'operator': 'AND',
+                        'values': [
+                            {'operator': '=',
+                             'values': ['type', 'testing']},
+                            {'operator': '<=',
+                             'values': ['level', 1]}
+                        ]
+                    }
                 },
                 'result': {'items': [], 'items_from_mock': [],
                            'next_token': None
@@ -131,8 +138,15 @@ class LogsTests(BaseDbTestCase, TestChecksMixin):
                     },
                     'Limit': 2,
                     'ScanIndexForward': False,
-                    'FilterExpression': {'operator': '<=',
-                                         'values': ['level', 4]}
+                    'FilterExpression': {
+                        'operator': 'AND',
+                        'values': [
+                            {'operator': '=',
+                             'values': ['type', 'testing']},
+                            {'operator': '<=',
+                             'values': ['level', 4]}
+                        ]
+                    }
                 },
                 'result': {
                     'items_from_mock': [
@@ -167,8 +181,15 @@ class LogsTests(BaseDbTestCase, TestChecksMixin):
                     },
                     'Limit': 10,
                     'ScanIndexForward': True,
-                    'FilterExpression': {'operator': '<=',
-                                         'values': ['level', 5]}
+                    'FilterExpression': {
+                        'operator': 'AND',
+                        'values': [
+                            {'operator': '=',
+                             'values': ['type', 'testing']},
+                            {'operator': '<=',
+                             'values': ['level', 5]}
+                        ]
+                    }
                 },
                 'result': {
                     'items_from_mock': [
@@ -195,7 +216,9 @@ class LogsTests(BaseDbTestCase, TestChecksMixin):
                              'values': ['id', 'testing:1458214261.0']}
                         ]
                     },
-                    'ScanIndexForward': False
+                    'ScanIndexForward': False,
+                    'FilterExpression': {'operator': '=',
+                                         'values': ['type', 'testing']}
                 },
                 'result': {
                     'items_from_mock': [
@@ -224,29 +247,24 @@ class LogsTests(BaseDbTestCase, TestChecksMixin):
 
             query_mock.assert_called_with(LogMessage.TABLE_NAME, **kwargs)
 
-            # check Key Condition
-            expr = query_mock.call_args[1]['KeyConditionExpression']\
-                .get_expression()
-            self.assertEqual(sc['query']['KeyConditionExpression']['operator'],
-                             expr['operator'])
-            values = sc['query']['KeyConditionExpression']['values']
-            for i in range(len(values)):
-                expr_i = expr['values'][i].get_expression()
-                self.assertEqual(values[i]['operator'], expr_i['operator'])
-                self.assertEqual(values[i]['values'][0],
-                                 expr_i['values'][0].name)
-                self.assertEqual(values[i]['values'][1], expr_i['values'][1])
-
-            # check Filter Expression if any
-            if 'FilterExpression' in sc['query']:
-                expr = query_mock.call_args[1]['FilterExpression']\
+            def check_expression(expr_var):
+                expr = query_mock.call_args[1][expr_var]\
                     .get_expression()
-                self.assertEqual(
-                    sc['query']['FilterExpression']['operator'],
-                    expr['operator'])
-                values = sc['query']['FilterExpression']['values']
-                self.assertEqual(values[0], expr['values'][0].name)
-                self.assertEqual(values[1], expr['values'][1])
+                self.assertEqual(sc['query'][expr_var]['operator'],
+                                 expr['operator'])
+                values = sc['query'][expr_var]['values']
+                for i in range(len(values)):
+                    if not isinstance(values[i], basestring):
+                        expr_i = expr['values'][i].get_expression()
+                        self.assertEqual(values[i]['operator'],
+                                         expr_i['operator'])
+                        self.assertEqual(values[i]['values'][0],
+                                         expr_i['values'][0].name)
+                        self.assertEqual(values[i]['values'][1],
+                                         expr_i['values'][1])
+
+            check_expression('KeyConditionExpression')
+            check_expression('FilterExpression')
 
             self.assertEquals(resp.status_code, httplib.OK)
             items = json.loads(resp.data)['logs']

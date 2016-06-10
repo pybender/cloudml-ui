@@ -115,7 +115,7 @@ angular.module('app.datas.controllers', ['app.config', ])
     return res
 
   $scope.getExampleUrl = (example) ->
-    example.objectUrl() + '?' + $.param($scope.getParamsDict())
+    example.objectUrl() + '?' + $.param($scope.getParamsDict()).replace(/\+/g, ' ')
 ])
 
 .controller('GroupedExamplesCtrl', [
@@ -162,6 +162,7 @@ angular.module('app.datas.controllers', ['app.config', ])
 
   # used for getting next/prev example ids
   $scope.filter_opts = $location.search()
+  delete $scope.filter_opts['action']
   $scope.loaded = false
 
   $scope.goSection = () ->

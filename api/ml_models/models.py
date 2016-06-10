@@ -287,12 +287,16 @@ class Model(db.Model, BaseModel, BaseTrainedEntity):
         # delete features and feature set as they are used by this model only
         self.features_set.delete()
 
-        # prepare dataset list to unlock
+        # prepare dataset list to unlock and tags to decrease
         ds_to_unlock = self.datasets
+        tags = self.tags
         super(Model, self).delete()
         # unlock datasets after model deletion
         for ds in ds_to_unlock:
             ds.unlock()
+        # decrease corresponding tags counters
+        for tag in tags:
+            tag.update_counter()
 
     @property
     def dataset(self):
@@ -561,6 +565,11 @@ class Tag(db.Model, BaseMixin):
     """
     text = db.Column(db.String(200))
     count = db.Column(db.Integer)
+
+    def update_counter(self):
+        """ Recalculates the counter """
+        self.count = len(self.models)
+        self.save()
 
 
 class Segment(db.Model, BaseMixin):

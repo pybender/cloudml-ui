@@ -335,6 +335,7 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
 
     def test_clone_the_model(self):
         self.obj.tags = [Tag.query.first()]
+        self.obj.tags[0].update_counter()
         old_tag_count = self.obj.tags[0].count
         self.obj.save()
         resp_data = self._check(
@@ -346,8 +347,7 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
             cloned_model.test_import_handler, self.obj.test_import_handler)
         self.assertEquals(cloned_model.classifier, self.obj.classifier)
         self.assertItemsEqual(cloned_model.tags, self.obj.tags)
-        # TODO:
-        # self.assertEquals(cloned_model.tags[0].count, old_tag_count + 1)
+        self.assertEquals(cloned_model.tags[0].count, old_tag_count + 1)
 
     @patch('api.amazon_utils.AmazonS3Helper.load_key')
     def test_clone_trained_model(self, load_mock):
