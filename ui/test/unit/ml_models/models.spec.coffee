@@ -1006,6 +1006,7 @@ describe 'ML Models Controllers', ->
       $rootScope.resetError = jasmine.createSpy '$rootScope.resetError'
       $scope.$close = jasmine.createSpy '$scope.$close'
       $rootScope.setError = jasmine.createSpy '$rootScope.setError'
+      $rootScope.setSection = jasmine.createSpy '$rootScope.setSection'
       createController "GridSearchParametersCtrl", {$rootScope: $rootScope, openOptions: openOptions}
       expect($scope.resetError).toHaveBeenCalled()
       expect($scope.data).toEqual {parameters: {}}
@@ -1023,6 +1024,7 @@ describe 'ML Models Controllers', ->
       $httpBackend.flush()
       expect($scope.model.grid_search_in_progress).toBe true
       expect($scope.$close).toHaveBeenCalled()
+      expect($rootScope.setSection.calls.mostRecent().args[0]).toEqual ['grid_search', 'details']
 
       # with error
       $httpBackend.expectPUT(url).respond 400, "{}"
@@ -1086,6 +1088,7 @@ describe 'ML Models Controllers', ->
       $scope.reload()
       $httpBackend.flush()
       expect($scope.model.grid_search_in_progress).toBe false
+      expect($scope.reload_counter).toEqual 0
 
       # reloading
       $scope.model.classifier_grid_params[0].status = 'Calculating'
@@ -1099,6 +1102,7 @@ describe 'ML Models Controllers', ->
       $scope.reload()
       $httpBackend.flush()
       expect($scope.model.grid_search_in_progress).toBe false
+      expect($scope.reload_counter).toEqual 1
 
     it 'should watch for grid search', inject () ->
       $scope.reload = jasmine.createSpy()
