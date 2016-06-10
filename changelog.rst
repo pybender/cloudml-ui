@@ -3,6 +3,18 @@
 Changelog
 =========
 
+Release 2016-06-??
+------------------
+* Bug - Set grid search section when grid search task started
+* Bug - Fixed back to search results in test examples
+* Bug - Fixed js error by updating nvd3
+* Bug - Fixed empty value in groupped examples
+* Bug - Fixed log type selection
+* Bug - Fixed predicted model weight form, label field
+* Bug - Update tag counter accurately after model tags change
+* Bug - Fixed error with serialization importhandler
+
+
 Release 2016-06-08
 ------------------
 * Task - Migration from boto to boto3
