@@ -88,13 +88,15 @@ class LogMessage(object):
                 Key('id').lt(log_type+":"+str(next_token))
 
         query_params = {'KeyConditionExpression': key_condition_expression,
-                        'ScanIndexForward': order_asc}
+                        'ScanIndexForward': order_asc,
+                        'FilterExpression': Attr('type').eq(log_type)}
         if limit is not None:
             query_params['Limit'] = limit
 
         if level is not None and level in cls.LEVELS_LIST:
             idx = cls.LEVELS_LIST.index(level)
-            query_params['FilterExpression'] = Attr('level').lte(idx)
+            query_params['FilterExpression'] = \
+                query_params['FilterExpression'] & Attr('level').lte(idx)
 
         items = []
         res = db.get_items(cls.TABLE_NAME, **query_params)
