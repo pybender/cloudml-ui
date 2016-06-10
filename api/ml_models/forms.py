@@ -35,26 +35,27 @@ class ModelEditForm(BaseForm):
     features = FeaturesField()
 
     def save(self, commit=True):
-        old_tags = [t.text for t in self.obj.tags]
+        old_tags = [tag for tag in self.obj.tags]
+        old_tags_texts = [t.text for t in self.obj.tags]
         model = super(ModelEditForm, self).save()
 
         tags = self.cleaned_data.get('tags', None)
-        # TODO: refactor
         if tags:
-            model.tags = []
-            existing_tags = [t.text for t in Tag.query.all()]
-            tags_to_create = list(set(tags) - set(existing_tags))
-            for text in tags_to_create:
-                tag = Tag()
-                tag.text = text
-                tag.count = 1
-                tag.save()
-            model.tags = Tag.query.filter(Tag.text.in_(tags)).all()
+            for tag_text in tags:
+                if tag_text not in old_tags_texts:
+                    t = Tag.query.filter_by(text=tag_text).all()
+                    if len(t):
+                        new_tag = t[0]
+                    else:
+                        new_tag = Tag()
+                        new_tag.text = tag_text
+                        new_tag.save()
+                    old_tags.append(new_tag)
+
+            model.tags = [tag for tag in old_tags if tag.text in tags]
             model.save()
-            for text in list(set(tags + old_tags) - set(tags_to_create)):
-                tag = Tag.query.filter_by(text=text).one()
-                tag.count = len(tag.models)
-                tag.save()
+            for tag in old_tags:
+                tag.update_counter()
 
         features = self.cleaned_data.get('features', None)
         if features:

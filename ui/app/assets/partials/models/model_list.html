@@ -19,7 +19,7 @@
 
   <div ng-hide="tag_list.length == 0" ng-controller="TagCloudCtrl" class="alert-info well">
     <span ng-repeat="tag in tag_list">
-      <span>
+      <span ng-show="tag.count > 0">
         <a href="#/models/?tag={{ tag.text }}">{{ tag.text }} ({{ tag.count }})</a> 
       </span>&nbsp;
     </span>
