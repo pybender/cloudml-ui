@@ -97,6 +97,9 @@ angular.module('app.models.model', ['app.config'])
       downloadWeightsUrl: ->
         return "#{@BASE_API_URL}#{@id}/action/weights_download/?"
 
+      downloadFeatureTransformerUrl: ->
+        return "#{@BASE_API_URL}#{@id}/action/feature_transformer_download/"
+
       @$by_handler: (opts) ->
         resolver = (resp, Model) ->
           {

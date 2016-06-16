@@ -216,9 +216,36 @@
                   "{{ segment.name }}" - {{segment.records}} records
                 </span>
               </div>
-            </div>
         </div>
+      </div>
     </div>
+
+    <div class="row">
+      <div class="span11" ng-show="model.status == 'Trained'" ng-controller="FeaturesTransformersDataCtrl" >
+        <h4>Features Transformers data</h4>
+        <form name="TransformerDlForm" class="form-horizontal">
+          <span>Segment:</span>
+          <select ng-change="getTFDataUrl()" name="segment" ng-model="tf_segment" ng-required>
+            <option ng-repeat="s in model.segments" value="{{ s.name }}">{{ s.name }}</option>
+          </select>
+          &nbsp;&nbsp;
+          <span>Feature:</span>
+          <select ng-change="getTFDataUrl()" name="feature" ng-model="tf_feature" ng-required>
+            <option ng-repeat="f in model.transformed_features" value="{{ f }}">{{ f }}</option>
+          </select>
+          &nbsp;&nbsp;
+          <span>Format:</span>
+          <select ng-change="getTFDataUrl()" name="format" ng-model="tf_format" ng-required>
+            <option ng-repeat="ft in formats" value="{{ ft.value }}">{{ ft.name }}</option>
+          </select>
+          &nbsp;&nbsp;
+          <a class="btn btn-small" ng-class="!dl_url ? 'link-inactive' : ''"
+             href="{{ dl_url }}"  ng-disabled="!dl_url" target="_blank"
+             title="Download Transformer Vocabulary"><i class="icon-download-alt"></i> Download </a>
+        </form>
+      </div>
+    </div>
+
     <hr />
     <div ng-show="model.weights_synchronized">
       <div ng-show="model.status == 'Trained'" ng-init="weights_section='training'">
