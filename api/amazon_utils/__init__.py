@@ -315,7 +315,9 @@ class AmazonS3Helper(AmazonMixin):
                 previous_value = metadata.get(meta_key, '')
                 metadata["previous_"+meta_key] = str(previous_value)
             metadata[meta_key] = str(meta_val)
-        return self.conn.Object(self.bucket_name, name).put(Metadata=metadata)
+        return self.conn.Object(self.bucket_name, name).copy_from(Metadata=metadata,
+                 MetadataDirective='REPLACE',
+                 CopySource='%s/%s' % (self.bucket_name, name))
 
     def delete_key(self, name):
         """
