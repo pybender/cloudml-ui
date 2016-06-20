@@ -19,7 +19,7 @@ angular.module('app.models.controllers', ['app.config', ])
     training: [
       'error','weights_synchronized','memory_usage','segments', 'trained_by',
       'trained_on','training_time','datasets', 'train_records_count',
-      'trainer_size'
+      'trainer_size', 'transformed_features'
     ].join(',')
     about: [
       'created_on','target_variable','example_id','example_label',
@@ -245,7 +245,7 @@ angular.module('app.models.controllers', ['app.config', ])
     $scope.monitorTraining = () ->
       $scope.train_timer = $timeout( ()->
           $scope.model.$load(
-            show: 'status,training_in_progress,error'
+            show: 'status,training_in_progress,error,transformed_features,segments'
           ).then (->
             if $scope.model.status == $scope.status
               $scope.same_status_count += 1
@@ -683,3 +683,28 @@ angular.module('app.models.controllers', ['app.config', ])
           $scope.setError(opts, 'loading model visualization details')
 
 ])
+
+
+.controller('FeaturesTransformersDataCtrl', [
+    '$scope'
+
+    ($scope) ->
+      $scope.tf_segment = ''
+      $scope.tf_feature = ''
+      $scope.tf_format = ''
+      $scope.formats = [{name: 'JSON', value: 'json'},
+                        {name: 'CSV', value: 'csv'}]
+      $scope.dl_url = ''
+
+      $scope.getTFDataUrl = () ->
+        if $scope.tf_feature.length > 0 && $scope.tf_segment.length > 0 && $scope.tf_format.length > 0
+          $scope.dl_url = $scope.model.downloadFeatureTransformerUrl() + '?' + $.param({
+              feature: $scope.tf_feature
+              segment: $scope.tf_segment
+              format: $scope.tf_format
+            })
+        else
+          $scope.dl_url = ''
+
+])
+

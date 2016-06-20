@@ -436,7 +436,7 @@ describe 'ML Models Controllers', ->
           error: ''
         response = {}
         response[model.API_FIELDNAME] = model
-        $httpBackend.expectGET "#{model.BASE_API_URL}#{$scope.model.id}/?show=status,training_in_progress,error"
+        $httpBackend.expectGET "#{model.BASE_API_URL}#{$scope.model.id}/?show=status,training_in_progress,error,transformed_features,segments"
         .respond 200, angular.toJson(response)
 
         $scope.model.training_in_progress = true
@@ -1109,3 +1109,34 @@ describe 'ML Models Controllers', ->
       $scope.model.grid_search_in_progress = true
       $scope.$digest()
       expect($scope.reload).toHaveBeenCalled()
+
+
+  describe "FeaturesTransformersDataCtrl", ->
+
+    beforeEach inject (Model) ->
+      $scope.model = new Model({
+        id: '4321'
+      })
+      createController "FeaturesTransformersDataCtrl"
+
+    it "should init scope and build download url", inject () ->
+      expect($scope.tf_segment).toEqual ''
+      expect($scope.tf_feature).toEqual ''
+      expect($scope.tf_format).toEqual ''
+      expect($scope.formats[0].name).toEqual 'JSON'
+      expect($scope.dl_url).toEqual ''
+
+      $scope.getTFDataUrl()
+      expect($scope.dl_url).toEqual ''
+
+      $scope.tf_segment = 'default'
+      $scope.getTFDataUrl()
+      expect($scope.dl_url).toEqual ''
+
+      $scope.tf_feature = 'my_feature'
+      $scope.getTFDataUrl()
+      expect($scope.dl_url).toEqual ''
+
+      $scope.tf_format = 'csv'
+      $scope.getTFDataUrl()
+      expect($scope.dl_url).toEqual "#{$scope.model.BASE_API_URL}#{$scope.model.id}/action/feature_transformer_download/?feature=my_feature&segment=default&format=csv"

@@ -181,7 +181,8 @@ class ModelResource(BaseTrainedEntityResource):
     Models API methods
     """
     GET_ACTIONS = ('reload', 'by_importhandler', 'trainer_download_s3url',
-                   'features_download', 'dataset_download', 'weights_download')
+                   'features_download', 'dataset_download', 'weights_download',
+                   'feature_transformer_download')
     PUT_ACTIONS = ('train', 'tags', 'cancel_request_instance',
                    'upload_to_server', 'dataset_download', 'grid_search',
                    'import_features_from_xml_ih', 'generate_visualization')
@@ -212,7 +213,8 @@ class ModelResource(BaseTrainedEntityResource):
 
     # GET specific methods
 
-    @public_actions(['features_download', 'weights_download'])
+    @public_actions(['features_download', 'weights_download',
+                     'feature_transformer_download'])
     def get(self, *args, **kwargs):
         return super(ModelResource, self).get(*args, **kwargs)
 
@@ -437,6 +439,60 @@ class ModelResource(BaseTrainedEntityResource):
         app.sql_db.session.commit()
         return self._render({self.OBJECT_NAME: model.id,
                              'features': [f.to_dict() for f in features]})
+
+    def _get_feature_transformer_download_action(self, **kwargs):
+        model = self._get_details_query(None, **kwargs)
+        parser_params = (('feature', str), ('segment', str), ('format', str),)
+        params = self._parse_parameters(parser_params)
+        feature_name = params.get('feature', None)
+        segment = params.get('segment', None)
+        f_format = params.get('format', 'json')
+        if model is None:
+            raise NotFound(self.MESSAGE404 % kwargs)
+
+        if model.status != Model.STATUS_TRAINED:
+            return odesk_error_response(405, ERR_INVALID_METHOD,
+                                        'Model is not trained')
+
+        try:
+            trainer = model.get_trainer()
+            content = trainer.features[segment][feature_name]["transformer"]\
+                .load_vocabulary()
+
+            if f_format == 'csv':
+                import csv
+                import StringIO
+                si = StringIO.StringIO()
+                if len(content):
+                    fieldnames = content[0].keys()
+                    writer = csv.DictWriter(si, fieldnames=fieldnames)
+                    writer.writeheader()
+                    for c in content:
+                        writer.writerow(c)
+                response = si.getvalue()
+            else:
+                response = json.dumps(content, indent=4)
+
+            resp = Response(response)
+            resp.headers['Content-Type'] = 'text/csv' if f_format == 'csv' \
+                else 'application/json'
+            resp.headers['Content-Disposition'] = \
+                'attachment; filename="%s-%s-%s-transformer-data.%s"' % \
+                (segment, feature_name,
+                 trainer.features[segment][feature_name]["transformer-type"],
+                 f_format)
+            return resp
+        except KeyError as e:
+            return odesk_error_response(
+                400, ERR_INVALID_DATA,
+                'Invalid feature or segment: %s' % e.message)
+        except AttributeError:
+            return odesk_error_response(
+                400, ERR_INVALID_DATA,
+                'Transformer of type %s doesn\'t have vocabulary data' %
+                trainer.features[segment][feature_name]["transformer-type"])
+        except Exception, exc:
+            return odesk_error_response(400, ERR_INVALID_DATA, exc.message)
 
 
 api.add_resource(ModelResource, '/cloudml/models/')
