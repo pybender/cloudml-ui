@@ -76,6 +76,8 @@ class FeatureParamsMixin(object):
             return new_dict
         elif param_type == 'int':
             return int(value)
+        elif param_type == 'boolean':
+            return bool(value)
         elif param_type == 'list':
             return list(json.loads(value))
         else:

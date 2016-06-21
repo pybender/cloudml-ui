@@ -39,6 +39,30 @@
           <i class="help_text help-block"> {{ field.help_text }} </i>
         </div>
       </span>
+
+      <span ng-switch-when="boolean" ng-init="booleanItems = [{
+        id: true,
+        label: 'True'
+      },
+       {
+        id: false,
+        label: 'False'
+      },
+      {
+        id: '',
+        label: '-----'
+      }]">
+        <label class="control-label">{{field.name}}<span>: &nbsp;</span></label>
+        <input type="checkbox" 
+               class="input-medium"
+               ng-model="data[field.name]" ng-model-onblur=""
+               dynamic-name="field.name" parameter-validator="boolean"/>
+        <span ng-show="field.required && !field.valid" class="help-inline">*</span>
+        <div ng-hide="field.valid">
+          <i class="help_text help-block"> {{ field.help_text }} </i>
+        </div>
+      </span>
+
       <span ng-switch-default>
         <label class="control-label">{{field.name}}<span>: &nbsp;</span></label>
         <input type="text" placeholder="Empty" class="input-medium"

@@ -65,6 +65,7 @@ angular.module('app.directives')
       TYPE_TEXT = 'text'
       TYPE_INT = 'int'
       TYPE_LIST = 'list'
+      TYPE_BOOLEAN = 'boolean'
 
       _validateStrParam = (data) ->
         # string validation is any thing, unless the parameter is required
@@ -101,6 +102,13 @@ angular.module('app.directives')
           return true
         return true
 
+      _validateBoolean = (data) ->
+        if not scope.field.required and data is ''
+          return true
+        if data in [true, false, '']
+          return true
+        return false
+
 
       VALIDATORS = {}
       VALIDATORS[TYPE_STRING] = _validateStrParam
@@ -108,6 +116,7 @@ angular.module('app.directives')
       VALIDATORS[TYPE_TEXT] = _validateJsonParam
       VALIDATORS[TYPE_INT] = _validateInt
       VALIDATORS[TYPE_LIST] = _validateList
+      VALIDATORS[TYPE_BOOLEAN] = _validateBoolean
 
       attributes.$set('required', scope.field.required)
 

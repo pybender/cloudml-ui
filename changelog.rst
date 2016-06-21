@@ -3,9 +3,10 @@
 Changelog
 =========
 
-Release 2016-06-??
+Release 2016-06-21
 ------------------
-* Task - Possibility to download feature transformer data
+* Feature - Added categories and exclude params to categorical feature type
+* Feature - Added possibility to download feature transformer data
 * Bug - Fixed set_metadata method in s3 helper
 * Bug - Set grid search section when grid search task started
 * Bug - Fixed back to search results in test examples
