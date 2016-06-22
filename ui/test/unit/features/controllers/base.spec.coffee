@@ -216,7 +216,7 @@ describe 'Features Controllers', ->
       expect($scope.configuration).toEqual TRANSFORMERS.configuration
       expect($scope.configurationLoaded).toBe true
       expect(window.loadParameters).toHaveBeenCalledWith feature.transformer,
-        $scope.configuration, false
+        $scope.configuration, true
       expect($scope.setError).not.toHaveBeenCalled()
       # configuration loaded should not GET configurations
       $scope.loadConfiguration(transformer)

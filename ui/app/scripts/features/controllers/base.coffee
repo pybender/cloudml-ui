@@ -99,13 +99,13 @@ angular.module('app.features.controllers.base', ['app.config', ])
       ).then ((opts)->
         $scope.configuration = opts.data.configuration
         $scope.configurationLoaded = true
-        $scope.loadParameters()
+        $scope.loadParameters(true)
       ), ((opts)->
         $scope.setError(opts, 'loading types and parameters')
       )
 
-    $scope.loadParameters = ->
+    $scope.loadParameters = (loadDefaults=false) ->
       model = eval('$scope.parentModel.' + $scope.fieldname)
-      loadParameters(model, $scope.configuration, false)
+      loadParameters(model, $scope.configuration, loadDefaults)
 
 ])
