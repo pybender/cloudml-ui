@@ -216,7 +216,7 @@ describe 'Features Controllers', ->
       expect($scope.configuration).toEqual TRANSFORMERS.configuration
       expect($scope.configurationLoaded).toBe true
       expect(window.loadParameters).toHaveBeenCalledWith feature.transformer,
-        $scope.configuration, true
+        $scope.configuration, false
       expect($scope.setError).not.toHaveBeenCalled()
       # configuration loaded should not GET configurations
       $scope.loadConfiguration(transformer)
@@ -262,7 +262,7 @@ describe 'Features Controllers', ->
 
       loadParameters model, configuration
       expect(model.config).toEqual configuration.dictionary
-      expect(model.params).toEqual {x: 1, y: 2}
+      expect(model.params).toEqual {a:1, b: 2, x: 1, y: 2}
 
     it 'should handle models with a type and load the configuration with no defaults and no params', ->
       model =
@@ -274,7 +274,7 @@ describe 'Features Controllers', ->
 
       loadParameters model, configuration
       expect(model.config).toEqual configuration.dictionary
-      expect(model.params).toEqual {}
+      expect(model.params).toEqual {a: 1, b: 2}
 
     it 'should handle models with a type and load the configuration with defaults', ->
       model =
