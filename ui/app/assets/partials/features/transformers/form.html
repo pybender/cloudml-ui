@@ -36,7 +36,7 @@
     <div class="control-group" ng-class="{error: Form.type.$invalid || errorList.type}">
       <label class="control-label">Type</label>
       <div class="controls" ng-controller="TransformersTypesLoader">
-        <select ng-change="loadParameters()" name="type" ng-model="model.type" ng-required="model.json_selected == false">
+        <select ng-change="loadParameters(true)" name="type" ng-model="model.type" ng-required="model.json_selected == false">
           <option ng-selected="typeName == model.type" ng-repeat="typeName in types" value="{{ typeName }}">{{ typeName }}</option>
         </select>
         <span ng-show="Form.type.$error.required" class="help-block">type is required</span>

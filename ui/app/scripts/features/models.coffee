@@ -11,6 +11,13 @@ getVal = (val) ->
       val = null
   return val
 
+removeDefaults = (model) ->
+  if model.config?.parameters?
+    for param in model.config.parameters
+      if model.params[param.name]? && model.params[param.name] == param.default
+        delete model.params[param.name]
+  return model.params
+
 
 angular.module('app.features.models', ['app.config'])
 
@@ -273,7 +280,7 @@ angular.module('app.features.models', ['app.config'])
           _.remove opts.only, (x)-> x is 'transformer'
           transType = @transformer.type
           transId = @transformer.id
-          transParams = @transformer.params
+          transParams = removeDefaults(@transformer)
 
           if (transId? and transId is 0) or not transType
             opts.extraData['remove_transformer'] = true
@@ -292,7 +299,7 @@ angular.module('app.features.models', ['app.config'])
           scalerType = @scaler.type
           scalerName = @scaler.name
           predefined = @scaler.predefined
-          scalerParams = @scaler.params
+          scalerParams = removeDefaults(@scaler)
 
           if not scalerType and not scalerName
             opts.extraData['remove_scaler'] = true

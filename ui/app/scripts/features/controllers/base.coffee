@@ -19,7 +19,7 @@ loadParameters = (model, configuration, setDefault=false) ->
       if field.default?
         model.params[field.name] = field.default
   else
-    model.params = model.params || {}
+    model.params = _.extend config.defaults, model.params || {}
     # Checking existing parameters and deleting unexistant
     for param in model.params
       if param not in config.parameters
@@ -99,13 +99,13 @@ angular.module('app.features.controllers.base', ['app.config', ])
       ).then ((opts)->
         $scope.configuration = opts.data.configuration
         $scope.configurationLoaded = true
-        $scope.loadParameters()
+        $scope.loadParameters(false)
       ), ((opts)->
         $scope.setError(opts, 'loading types and parameters')
       )
 
-    $scope.loadParameters = ->
+    $scope.loadParameters = (loadDefaults=false) ->
       model = eval('$scope.parentModel.' + $scope.fieldname)
-      loadParameters(model, $scope.configuration, false)
+      loadParameters(model, $scope.configuration, loadDefaults)
 
 ])
