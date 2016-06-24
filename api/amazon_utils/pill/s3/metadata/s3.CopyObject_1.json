@@ -1,0 +1,10 @@
+{
+    "status_code": 200,
+    "data": {
+        "CopyObjectResult": {
+            "ETag": "tag"
+        },
+        "Expiration": "ttt",
+        "CopySourceVersionId": "123"
+    }
+}

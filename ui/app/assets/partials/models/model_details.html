@@ -239,9 +239,11 @@
             <option ng-repeat="ft in formats" value="{{ ft.value }}">{{ ft.name }}</option>
           </select>
           &nbsp;&nbsp;
-          <a class="btn btn-small" ng-class="!dl_url ? 'link-inactive' : ''"
-             href="{{ dl_url }}"  ng-disabled="!dl_url" target="_blank"
-             title="Download Transformer Vocabulary"><i class="icon-download-alt"></i> Download </a>
+          <button class="btn btn-small" ng-class="!dl_url ? 'link-inactive' : ''"
+             ng-disabled="!dl_url" ng-click="getTransformerData()"
+             title="Download Transformer Vocabulary"><i class="icon-download-alt"></i> Download </button>
+          &nbsp;&nbsp;
+          <a ng-show="false" id="DlTfData">D</a>
         </form>
       </div>
     </div>

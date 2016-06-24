@@ -692,8 +692,8 @@ angular.module('app.models.controllers', ['app.config', ])
       $scope.tf_segment = ''
       $scope.tf_feature = ''
       $scope.tf_format = ''
-      $scope.formats = [{name: 'JSON', value: 'json'},
-                        {name: 'CSV', value: 'csv'}]
+      $scope.formats = [{name: 'JSON', value: 'application/json'},
+                        {name: 'CSV', value: 'text/csv'}]
       $scope.dl_url = ''
 
       $scope.getTFDataUrl = () ->
@@ -701,10 +701,25 @@ angular.module('app.models.controllers', ['app.config', ])
           $scope.dl_url = $scope.model.downloadFeatureTransformerUrl() + '?' + $.param({
               feature: $scope.tf_feature
               segment: $scope.tf_segment
-              format: $scope.tf_format
             })
         else
           $scope.dl_url = ''
+
+      $scope.getTransformerData = () ->
+        $scope.model.$make_request($scope.dl_url, {}, "GET", {})
+        .then (opts) ->
+          if $scope.tf_format == 'text/csv'
+            result = JSON2CSV(opts.data.content)
+          else
+            result = JSON.stringify(opts.data.content, null, 2)
+          fileType = $scope.tf_format + ";charset=UTF-8"
+          extension = $scope.tf_format.split( "/" )[1]
+          fileName = [$scope.tf_segment, $scope.tf_feature, opts.data.transformer_type,
+                      'transformer-data'].join("-") + "." + extension
+          initiateFileDownload(result, fileName, fileType, "DlTfData")
+
+        , (opts) ->
+          $scope.setError(opts, 'downloading transformer data')
 
 ])
 

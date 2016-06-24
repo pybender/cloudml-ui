@@ -1139,4 +1139,20 @@ describe 'ML Models Controllers', ->
 
       $scope.tf_format = 'csv'
       $scope.getTFDataUrl()
-      expect($scope.dl_url).toEqual "#{$scope.model.BASE_API_URL}#{$scope.model.id}/action/feature_transformer_download/?feature=my_feature&segment=default&format=csv"
+      expect($scope.dl_url).toEqual "#{$scope.model.BASE_API_URL}#{$scope.model.id}/action/feature_transformer_download/?feature=my_feature&segment=default"
+
+    it 'shoud initiate download and set Error', inject () ->
+      $scope.setError = jasmine.createSpy '$scope.setError'
+      resp = {content: [{feature1: 'val1', feature2: 'val2'}], transformer_type: 'Tfidf'}
+      $scope.dl_url = "#{$scope.model.BASE_API_URL}#{$scope.model.id}/action/feature_transformer_download/?feature=my_feature&segment=default"
+      $scope.tf_format = 'application/json'
+      $httpBackend.expectGET($scope.dl_url).respond 200, angular.toJson resp
+      $scope.getTransformerData()
+      $httpBackend.flush()
+      # should go without errors
+
+      # with error
+      $httpBackend.expectGET($scope.dl_url).respond 400
+      $scope.getTransformerData()
+      $httpBackend.flush()
+      expect($scope.setError.calls.mostRecent().args[1]).toEqual 'downloading transformer data'

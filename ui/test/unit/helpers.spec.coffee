@@ -94,3 +94,12 @@ describe "helpers", ->
     it "should return time according to given pattern", ->
       expect(strftimeDate('%Y year %m month(%b) %d day, %a, %j day of year, week %U(by Sun) %W(by Mon)',
                           946684800)).toEqual "2000 year 01 month(Jan) 01 day, Sat, 001 day of year, week 00(by Sun) 00(by Mon)"
+
+
+  describe "JSON2CSV", ->
+
+    it "should transform JSON to CSV format",  ->
+      expect(JSON2CSV([{file: "xx", m: "yy"}, {file: "zz", m: "bb"}])).toEqual 'file,m\r\nxx,yy\r\nzz,bb\r\n'
+      expect(JSON2CSV([{file: "xx", m: [["yy", "kk"], ["ll", "oo"]]}])).toEqual 'file,m\r\nxx,"[yy,kk], [ll,oo]"\r\n'
+      expect(JSON2CSV([{file: "xx", m: ["yy", "kk"]}])).toEqual 'file,m\r\nxx,"yy, kk"\r\n'
+      expect(JSON2CSV(null)).toEqual 'There is an issue in JSON response. Content can not be transformed to CSV'
