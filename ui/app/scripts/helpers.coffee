@@ -159,3 +159,55 @@ strftimeDate = (pattern, unixdate) ->
     # use strftime because strptime will ignore some pattern pieces on backend
     # anyway, but every pattern will be available on frontend
     return strftime(pattern, unixdate*1000)
+
+
+### download file using blob and click link ###
+initiateFileDownload = (content, fileName, fileType, linkId) ->
+    blob = new Blob([content], {type: fileType})
+    url = window.URL.createObjectURL(blob)
+    a = document.getElementById(linkId)
+    if a
+      a.href = url
+      a.download = fileName
+      if document.createEvent && a.dispatchEvent
+        event = document.createEvent("MouseEvents")
+        event.initMouseEvent("click", true, true)
+        a.dispatchEvent(event)
+      else if a.click
+        a.click()
+      else if a.fireEvent
+        a.fireEvent("onclick")
+      setTimeout(() ->
+          window.URL.revokeObjectURL(url);
+      , 2000)
+
+
+### JSON to CSV converter (handles 2-dimensional arrays in values) ###
+JSON2CSV = (objArray) ->
+    try
+      arr = JSON.parse(JSON.stringify(objArray))
+      str = ''
+      line = []
+      for k, v of arr[0]
+        line.push k
+      str += line.join(',') + '\r\n'
+
+      for i in arr
+        line = []
+        for k, v of i
+          if typeof v == 'object'
+            k = []
+            for d in v
+              if typeof d == 'object'
+                k.push "["+d.toString()+"]"
+              else
+                k.push d
+            m = k.join(', ')
+            line.push '"'+m.replace(/"([^"]+(?="))"/g, '$1')+'"'
+          else
+            line.push v
+        str += line.join(',') + '\r\n'
+      return str
+    catch e
+      return 'There is an issue in JSON response. Content can not be transformed to CSV'
+

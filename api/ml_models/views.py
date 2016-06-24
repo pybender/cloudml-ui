@@ -442,11 +442,10 @@ class ModelResource(BaseTrainedEntityResource):
 
     def _get_feature_transformer_download_action(self, **kwargs):
         model = self._get_details_query(None, **kwargs)
-        parser_params = (('feature', str), ('segment', str), ('format', str),)
+        parser_params = (('feature', str), ('segment', str),)
         params = self._parse_parameters(parser_params)
         feature_name = params.get('feature', None)
         segment = params.get('segment', None)
-        f_format = params.get('format', 'json')
         if model is None:
             raise NotFound(self.MESSAGE404 % kwargs)
 
@@ -456,43 +455,32 @@ class ModelResource(BaseTrainedEntityResource):
 
         try:
             trainer = model.get_trainer()
+            if segment not in trainer.features:
+                raise ValidationError("Trained model doesn't have segment %s" %
+                                      segment)
+            if feature_name not in trainer.features[segment]:
+                raise ValidationError("Trained model doesn't have feature %s" %
+                                      feature_name)
+            if 'transformer' not in trainer.features[segment][feature_name]:
+                raise ValidationError("Feature %s doesn't have transformer "
+                                      "data in trained model" % feature_name)
+            transformer_type = \
+                trainer.features[segment][feature_name]['transformer-type']
             content = trainer.features[segment][feature_name]["transformer"]\
                 .load_vocabulary()
 
-            if f_format == 'csv':
-                import csv
-                import StringIO
-                si = StringIO.StringIO()
-                if len(content):
-                    fieldnames = content[0].keys()
-                    writer = csv.DictWriter(si, fieldnames=fieldnames)
-                    writer.writeheader()
-                    for c in content:
-                        writer.writerow(c)
-                response = si.getvalue()
-            else:
-                response = json.dumps(content, indent=4)
+            return self._render({'content': content,
+                                 'transformer_type': transformer_type})
 
-            resp = Response(response)
-            resp.headers['Content-Type'] = 'text/csv' if f_format == 'csv' \
-                else 'application/json'
-            resp.headers['Content-Disposition'] = \
-                'attachment; filename="%s-%s-%s-transformer-data.%s"' % \
-                (segment, feature_name,
-                 trainer.features[segment][feature_name]["transformer-type"],
-                 f_format)
-            return resp
-        except KeyError as e:
-            return odesk_error_response(
-                400, ERR_INVALID_DATA,
-                'Invalid feature or segment: %s' % e.message)
+        except ValidationError as e:
+            return odesk_error_response(400, ERR_INVALID_DATA, e.message)
         except AttributeError:
             return odesk_error_response(
-                400, ERR_INVALID_DATA,
+                500, ERR_INVALID_DATA,
                 'Transformer of type %s doesn\'t have vocabulary data' %
-                trainer.features[segment][feature_name]["transformer-type"])
+                transformer_type)
         except Exception, exc:
-            return odesk_error_response(400, ERR_INVALID_DATA, exc.message)
+            return odesk_error_response(500, ERR_INVALID_DATA, exc.message)
 
 
 api.add_resource(ModelResource, '/cloudml/models/')
