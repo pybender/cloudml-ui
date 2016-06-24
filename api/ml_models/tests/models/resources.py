@@ -234,42 +234,33 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         model = Model.query.filter_by(name='TrainedModel').first()
         load_mock.return_value = MODEL_TRAINER
         url = self._get_url(id=model.id, action='feature_transformer_download',
-                            feature='contractor.dev_blurb', segment='default',
-                            format='csv')
+                            feature='contractor.dev_blurb', segment='default')
         resp = self.client.get(url, headers=HTTP_HEADERS)
         self.assertEqual(resp.status_code, httplib.OK)
-        self.assertEqual(resp.headers['Content-Type'], 'text/csv')
+        json_data = json.loads(resp.data)
+        self.assertTrue('content' in json_data)
+        self.assertEqual('Tfidf', json_data['transformer_type'])
 
         url = self._get_url(id=model.id, action='feature_transformer_download',
-                            feature='contractor.dev_blurb', segment='default',
-                            format='json')
-        resp = self.client.get(url, headers=HTTP_HEADERS)
-        self.assertEqual(resp.status_code, httplib.OK)
-        self.assertEqual(resp.headers['Content-Type'], 'application/json')
-
-        url = self._get_url(id=model.id, action='feature_transformer_download',
-                            feature='contractor.dev_blurb', segment='default1',
-                            format='csv')
+                            feature='contractor.dev_blurb', segment='default1')
         resp = self.client.get(url, headers=HTTP_HEADERS)
         self.assertEqual(resp.status_code, httplib.BAD_REQUEST)
         resp_data = json.loads(resp.data)
-        self.assertTrue('Invalid feature or segment: default1' in
+        self.assertTrue("Trained model doesn't have segment default1" in
                         resp_data['response']['error']['message'])
 
         url = self._get_url(id=model.id, action='feature_transformer_download',
-                            feature='contractor.dev_blur', segment='default',
-                            format='csv')
+                            feature='contractor.dev_', segment='default')
         resp = self.client.get(url, headers=HTTP_HEADERS)
         self.assertEqual(resp.status_code, httplib.BAD_REQUEST)
         resp_data = json.loads(resp.data)
-        self.assertTrue('Invalid feature or segment: contractor.dev_blur' in
+        self.assertTrue("Trained model doesn't have feature contractor.dev_" in
                         resp_data['response']['error']['message'])
 
         model.status = Model.STATUS_ERROR
         model.save()
         url = self._get_url(id=model.id, action='feature_transformer_download',
-                            feature='contractor.dev_blurb', segment='default',
-                            format='json')
+                            feature='contractor.dev_blurb', segment='default')
         resp = self.client.get(url, headers=HTTP_HEADERS)
         self.assertEqual(resp.status_code, httplib.METHOD_NOT_ALLOWED)
         resp_data = json.loads(resp.data)
