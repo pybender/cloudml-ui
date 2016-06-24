@@ -3,6 +3,12 @@
 Changelog
 =========
 
+Release 2016-06-XX
+------------------
+* Task - Show default parameters for feature transformers and scalers
+* Bug - Fixed error messages displaying when downloading feature transformer
+
+
 Release 2016-06-21
 ------------------
 * Feature - Added categories and exclude params to categorical feature type
