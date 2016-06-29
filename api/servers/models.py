@@ -17,14 +17,14 @@ class Server(BaseModel, db.Model):
     PRODUCTION = 'Production'
     STAGING = 'Staging'
     DEV = 'Development'
-    AALYTICS = 'Analytics'
-    TYPES = [PRODUCTION, STAGING, DEV, AALYTICS]
+    ANALYTICS = 'Analytics'
+    TYPES = [STAGING, DEV, ANALYTICS, PRODUCTION]
 
     ENV_MAP = {
         PRODUCTION: 'prod',
         STAGING: 'staging',
         DEV: 'dev',
-        AALYTICS: 'analytics'}
+        ANALYTICS: 'analytics'}
 
     name = db.Column(db.String(200), nullable=False, unique=True)
     description = deferred(db.Column(db.Text))
@@ -102,6 +102,14 @@ class Server(BaseModel, db.Model):
             s3 = AmazonS3Helper(
                 bucket_name=app.config['CLOUDML_PREDICT_BUCKET_NAME'])
             s3.set_key_metadata(key_name, {key: value}, True)
+            # this means key is deleted, need to update model/import handler
+            if key == 'hide' and value == 'True':
+                obj = s3.load_key(key_name, with_metadata=True)
+                cl = Model if folder == FOLDER_MODELS else XmlImportHandler
+                model = cl.query.get(obj['Metadata']['id'])
+                server_list = [s for s in model.servers_ids if s != self.id]
+                model.servers_ids = server_list
+                model.save()
 
     def check_edit_metadata(self, folder, key, value):
         entities_by_folder = {

@@ -49,7 +49,7 @@ angular.module('app.importhandlers.xml.models', ['app.config'])
       @LIST_MODEL_NAME: 'xml_import_handlers'
       LIST_MODEL_NAME: @LIST_MODEL_NAME
       @MAIN_FIELDS: ['id','name','created_on','created_by', 'updated_on',
-                     'updated_by','import_params'].join(',')
+                     'updated_by','import_params','locked','server_type'].join(',')
       TYPE: 'XML'
 
       id: null

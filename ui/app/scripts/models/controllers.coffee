@@ -8,7 +8,7 @@ angular.module('app.models.controllers', ['app.config', ])
   [ 'name','status','test_import_handler', 'train_import_handler',
     'train_import_handler_type', 'test_import_handler_type',
     'test_handler_fields', 'labels', 'classifier', 'error',
-    'locked', 'training_in_progress'].join(',')
+    'locked', 'training_in_progress','server_type'].join(',')
 )
 
 .factory('FIELDS_BY_SECTION', [
@@ -24,7 +24,7 @@ angular.module('app.models.controllers', ['app.config', ])
     about: [
       'created_on','target_variable','example_id','example_label',
       'updated_on','feature_count','created_by','data_fields',
-      'test_handler_fields','tags'
+      'test_handler_fields','tags','servers','server_type'
     ].join(',')
     main: MODEL_FIELDS
     grid_search: 'classifier_grid_params'
@@ -51,7 +51,7 @@ angular.module('app.models.controllers', ['app.config', ])
     $scope.MODEL = Model
     $scope.FIELDS = MODEL_FIELDS + ',' + ['tags','created_on','created_by',
                                           'updated_on','updated_by',
-                                          'comparable'].join(',')
+                                          'comparable', 'servers'].join(',')
     $scope.ACTION = 'loading models'
     $scope.currentTag = $location.search()['tag']
     $scope.STATUSES = ['', 'New', 'Queued', 'Importing',

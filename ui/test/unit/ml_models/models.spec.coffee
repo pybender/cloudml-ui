@@ -127,6 +127,7 @@ describe 'ML Models Controllers', ->
     it "should make details request", inject (MODEL_FIELDS, FIELDS_BY_SECTION) ->
       url = BASE_URL + MODEL_ID + '/' + '?show=' + MODEL_FIELDS + ',' + FIELDS_BY_SECTION['model']
       $httpBackend.expectGET(url).respond.apply @, map_url_to_response(url, 'multiclass model main fields')
+      $scope.model.status = 'Trained'
 
       s3_url = "#{BASE_URL}#{$scope.model.id}/action/trainer_download_s3url/"
       $httpBackend.expectGET(s3_url)

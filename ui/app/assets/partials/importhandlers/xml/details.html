@@ -5,7 +5,8 @@
     editable="handler" value="handler.name"
     editable-field="name" editable-input="text"
     editable-placement="right" editable-required></small>
-  <small ng-show="handler.locked">(Deployed)</small>
+  <small ng-show="handler.locked && handler.server_type != None">(Deployed to {{ handler.server_type }})</small>
+  <small ng-show="handler.locked && handler.server_type == None">(Locked for modifications)</small>
   <div class="actions" ng-controller="ImportHandlerActionsCtrl">
     <div ng-init="init({handler: handler})">
       <button ng-click="importData(handler)" class="btn btn-info">
@@ -33,7 +34,11 @@
 <div title="quick info" ng-init="obj=handler">
   <ng-include src="'partials/parts/created_tags.html'"></ng-include>
 </div>
-
+<br/>
+<div title="Servers where import handler is deployed" ng-init="obj=handler">
+    <ng-include src="'partials/parts/deployed_servers.html'"></ng-include>
+</div>
+<br/>
 <alert-message ng-show="msg" class="alert-info" msg='{{ msg }}' unsafe></alert-message>
 <alert-message ng-show="err" class="alert-error" msg='{{ err }}' unsafe></alert-message>
 <alert-message ng-show="handler.error" class="alert-error" msg="{{ handler.error }}" unsafe></alert-message>

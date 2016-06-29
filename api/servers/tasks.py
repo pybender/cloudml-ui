@@ -66,6 +66,8 @@ def upload_model_to_server(server_id, model_id, user_id):
     s3.save_key_string(path, trainer_data, meta)
     s3.close()
     model.locked = True
+    s_ids = model.servers_ids if (isinstance(model.servers_ids, list)) else []
+    model.servers_ids = s_ids + [server.id]
     model.save()
     feature_set = model.features_set
     feature_set.locked = True
@@ -120,6 +122,9 @@ def upload_import_handler_to_server(server_id, handler_type, handler_id,
 
     handler_data = handler.get_plan_config()
     handler.locked = True
+    s_ids = handler.servers_ids if (isinstance(handler.servers_ids, list)) \
+        else []
+    handler.servers_ids = s_ids + [server.id]
     handler.save()
     s3.save_key_string(path, handler_data, meta)
     s3.close()

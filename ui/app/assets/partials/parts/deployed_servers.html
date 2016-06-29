@@ -1,0 +1,11 @@
+<div ng-show="obj.locked && obj.server_type != None">
+   <i class="icon-upload"></i> deployed to
+   <span ng-repeat="server in obj.servers">
+     <span class="badge {{ server.type | to_lower }}">
+       <a href="#/predict/servers/{{server.id}}" class="server">{{ server.name }}</a>
+     </span>
+   </span>
+</div>
+<div ng-show="obj.locked && obj.server_type == None">
+   <i class="icon-upload"></i> <span class="error_message">Locked for modifications (deployed and then removed from all servers)</span>
+</div>

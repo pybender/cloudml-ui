@@ -19,6 +19,7 @@ from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.sql.expression import ColumnClause
 
 from api.base.models import db, BaseModel, BaseMixin, JSONType, S3File
+from api.base.models.models import BaseDeployedEntity
 from api.logs.models import LogMessage
 from api.amazon_utils import AmazonS3Helper
 from api.import_handlers.models import ImportHandlerMixin
@@ -164,7 +165,7 @@ class BaseTrainedEntity(object):
         raise NotImplemented()
 
 
-class Model(db.Model, BaseModel, BaseTrainedEntity):
+class Model(db.Model, BaseModel, BaseTrainedEntity, BaseDeployedEntity):
     """
     Represents Model details.
     """
