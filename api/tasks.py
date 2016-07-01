@@ -3,7 +3,7 @@ from celery.signals import task_prerun, task_postrun, task_sent
 from api import celery
 from api.async_tasks.models import AsyncTask
 from api.import_handlers.models import DataSet, XmlSqoop
-from api.ml_models.models import Model
+from api.ml_models.models import Model, Segment
 from api.model_tests.models import TestResult
 from api.instances.models import Cluster
 
@@ -13,7 +13,8 @@ TRANSFORM_DATASET_TASK = 'api.ml_models.tasks.models.\
 transform_dataset_for_download'
 VISUALIZE_MODEL_TASK = 'api.ml_models.tasks.models.visualize_model'
 TRAIN_TRANSFORMER = 'api.ml_models.tasks.transformers.train_transformer'
-
+TRANSFORMERS_UPLOAD_TASK = 'api.ml_models.tasks.models.' \
+                           'upload_segment_features_transformers'
 
 def get_object_from_task(task_name, args, kwargs):  # pragma: no cover
     cls = None
@@ -48,6 +49,9 @@ def get_object_from_task(task_name, args, kwargs):  # pragma: no cover
     elif task_name == 'api.import_handlers.tasks.load_pig_fields':
         cls = XmlSqoop
         obj_id = args[0] if len(args) else kwargs['sqoop_id']
+    elif task_name == TRANSFORMERS_UPLOAD_TASK:
+        cls = Segment
+        obj_id = args[1] if len(args) else kwargs['segment_id']
 
     return cls.query.filter_by(id=int(obj_id)).first() \
         if cls and obj_id \

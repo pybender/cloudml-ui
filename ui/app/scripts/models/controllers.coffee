@@ -19,7 +19,7 @@ angular.module('app.models.controllers', ['app.config', ])
     training: [
       'error','weights_synchronized','memory_usage','segments', 'trained_by',
       'trained_on','training_time','datasets', 'train_records_count',
-      'trainer_size', 'transformed_features'
+      'trainer_size'
     ].join(',')
     about: [
       'created_on','target_variable','example_id','example_label',
@@ -245,7 +245,7 @@ angular.module('app.models.controllers', ['app.config', ])
     $scope.monitorTraining = () ->
       $scope.train_timer = $timeout( ()->
           $scope.model.$load(
-            show: 'status,training_in_progress,error,transformed_features,segments'
+            show: 'status,training_in_progress,error,segments'
           ).then (->
             if $scope.model.status == $scope.status
               $scope.same_status_count += 1
@@ -687,39 +687,53 @@ angular.module('app.models.controllers', ['app.config', ])
 
 .controller('FeaturesTransformersDataCtrl', [
     '$scope'
+    'Model'
+    '$rootScope'
+    '$timeout'
 
-    ($scope) ->
+    ($scope, Model, $rootScope, $timeout) ->
+      $scope.downloadRequested = false
+      $rootScope.tf_dl_msg = ""
+      $rootScope.tf_downloads = {}
       $scope.tf_segment = ''
-      $scope.tf_feature = ''
       $scope.tf_format = ''
-      $scope.formats = [{name: 'JSON', value: 'application/json'},
-                        {name: 'CSV', value: 'text/csv'}]
-      $scope.dl_url = ''
+      $scope.formats = [{name: 'JSON', value: 'json'},
+                        {name: 'CSV', value: 'csv'}]
+      $scope.open_logs_task_id = null
 
-      $scope.getTFDataUrl = () ->
-        if $scope.tf_feature.length > 0 && $scope.tf_segment.length > 0 && $scope.tf_format.length > 0
-          $scope.dl_url = $scope.model.downloadFeatureTransformerUrl() + '?' + $.param({
-              feature: $scope.tf_feature
-              segment: $scope.tf_segment
-            })
-        else
-          $scope.dl_url = ''
-
-      $scope.getTransformerData = () ->
-        $scope.model.$make_request($scope.dl_url, {}, "GET", {})
+      $scope.getTransformersDownloads = (modelId) ->
+        model = $scope.model or new Model({id: modelId})
+        model.$getTransformersDataDownloads()
         .then (opts) ->
-          if $scope.tf_format == 'text/csv'
-            result = JSON2CSV(opts.data.content)
-          else
-            result = JSON.stringify(opts.data.content, null, 2)
-          fileType = $scope.tf_format + ";charset=UTF-8"
-          extension = $scope.tf_format.split( "/" )[1]
-          fileName = [$scope.tf_segment, $scope.tf_feature, opts.data.transformer_type,
-                      'transformer-data'].join("-") + "." + extension
-          initiateFileDownload(result, fileName, fileType, "DlTfData")
-
+          $rootScope.tf_downloads = opts.data.downloads
+          $rootScope.tf_dl_msg = ''
+          statuses = []
+          statuses.push c.task.status for c in ($rootScope.tf_downloads)
+          console.log statuses
+          if 'In Progress' in statuses
+            $timeout ->
+              $scope.getTransformersDownloads modelId
+            , 5000
         , (opts) ->
-          $scope.setError(opts, 'downloading transformer data')
+          $scope.setError(opts, 'loading transformers downloads')
+
+      $scope.requestTransformersDownload = (modelId)->
+        model = $scope.model or new Model({id: modelId})
+        model.$putTransformersDataDownload $scope.tf_segment, $scope.tf_format
+        .then (opts)->
+          $rootScope.tf_dl_msg = "Segment data has been queued for
+          download. Reload page to check status updates if downloads don't
+          appear in 5 seconds"
+          $timeout ->
+            $scope.getTransformersDownloads modelId
+          , 5000
+        , (opts) ->
+          $scope.setError(opts, 'requesting transformers downloads')
+
+      $scope.showLogs = (id) ->
+        if $scope.open_logs_task_id == id
+          $scope.open_logs_task_id = null
+        else
+          $scope.open_logs_task_id = id
 
 ])
-

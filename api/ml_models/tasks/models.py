@@ -25,7 +25,8 @@ from api.base.io_utils import get_or_create_data_folder
 
 __all__ = ['train_model', 'get_classifier_parameters_grid',
            'visualize_model', 'generate_visualization_tree',
-           'transform_dataset_for_download']
+           'transform_dataset_for_download',
+           'upload_segment_features_transformers']
 
 
 @celery.task(base=SqlAlchemyTask)
@@ -375,3 +376,102 @@ def _get_model_and_segment_or_raise(model_id, segment_id=None):
     if segment is None:
         raise ValueError('Segment not found: %s' % segment_id)
     return model, segment
+
+
+@celery.task(base=SqlAlchemyTask)
+def upload_segment_features_transformers(model_id, segment_id, fformat):
+    model = Model.query.get(model_id)
+    segment = Segment.query.get(segment_id)
+    log_id = segment_id
+    from api.async_tasks.models import AsyncTask
+    if upload_segment_features_transformers.request.id is not None:
+        tasks = AsyncTask.query\
+            .filter_by(task_id=
+                       upload_segment_features_transformers.request.id)\
+            .limit(1)
+        log_id = tasks[0].id
+
+    init_logger('prepare_transformer_for_download_log',
+                obj=int(log_id))
+    logging.info('Start preparing segment features transformers for download')
+
+    try:
+        from zipfile import ZipFile, ZIP_DEFLATED
+        from api.amazon_utils import AmazonS3Helper
+        import os
+        from tempfile import NamedTemporaryFile
+        files = []
+        arc_name = "{0}-{1}-{2}.zip".format(model.name, segment.name, fformat)
+
+        def _save_content(content, feature_name, transformer_type):
+            filename = "{0}-{1}-{2}-data.{3}".format(segment.name,
+                                                     feature_name,
+                                                     transformer_type,
+                                                     fformat)
+            logging.info("Creating %s" % filename)
+            if fformat == 'csv':
+                import csv
+                import StringIO
+                si = StringIO.StringIO()
+                if len(content):
+                    fieldnames = content[0].keys()
+                    writer = csv.DictWriter(si, fieldnames=fieldnames)
+                    writer.writeheader()
+                    for c in content:
+                        writer.writerow(c)
+                response = si.getvalue()
+            else:
+                import json
+                response = json.dumps(content, indent=2)
+
+            with open(filename, 'w') as fh:
+                fh.write(response)
+                fh.close()
+            return filename
+
+        trainer = model.get_trainer()
+        if segment.name not in trainer.features:
+            raise Exception("Segment %s doesn't exists in trained model" %
+                            segment.name)
+        for name, feature in trainer.features[segment.name].iteritems():
+            if "transformer" in feature and feature["transformer"] is not None:
+                try:
+                    data = feature["transformer"].load_vocabulary()
+                    files.append(_save_content(data, name,
+                                               feature["transformer-type"]))
+                except AttributeError:
+                    logging.warning(
+                        "Can't load transformer data for segment {0} feature "
+                        "{1} transformer {2}. Transformer doesn't have "
+                        "vocabulary to return or feature haven't been "
+                        "transformed on model training"
+                        .format(segment.name, name,
+                                feature["transformer-type"]))
+                    continue
+
+        logging.info("Add files to archive")
+        with ZipFile(arc_name, "w") as z:
+            for f in files:
+                z.write(f, compress_type=ZIP_DEFLATED)
+            z.close()
+
+        s3 = AmazonS3Helper()
+        logging.info('Uploading archive to s3 with name {0}'.format(arc_name))
+        s3.save_key(arc_name, arc_name, {
+            'model_id': model.id,
+            'segment_id': segment_id}, compressed=False)
+        s3.close()
+        return s3.get_download_url(arc_name, 60 * 60 * 24 * 7)
+
+    except Exception, e:
+        logging.exception("Got exception when preparing features transformers "
+                          "of segment {0} for download: {1}"
+                          .format(segment.name, e.message))
+        raise
+
+    finally:
+        for f in files:
+            os.remove(f)
+        if os.path.exists(arc_name):
+            os.remove(arc_name)
+

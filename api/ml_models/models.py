@@ -317,17 +317,6 @@ class Model(db.Model, BaseModel, BaseTrainedEntity):
                 pass
         return []
 
-    @property
-    def transformed_features(self):
-        features = []
-        if self.trainer:
-            trainer = self.get_trainer()
-            for feature_name, feature in \
-                    trainer._feature_model.features.iteritems():
-                if feature['transformer'] is not None:
-                    features.append(feature_name)
-        return features
-
     def run_test(self, dataset, callback=None):
         trainer = self.get_trainer()
         fp = dataset.get_data_stream()

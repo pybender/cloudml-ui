@@ -162,6 +162,14 @@ angular.module('app.models.model', ['app.config'])
       $add_ih_fields_as_features: (opts={}) ->
         @$make_request("#{@BASE_API_URL}#{@id}/action/import_features_from_xml_ih/", {}, "PUT", {})
 
+      $getTransformersDataDownloads: ()->
+        url = "#{@BASE_API_URL}#{@id}/action/transformers_download/"
+        @$make_request(url, {}, "GET", {})
+
+      $putTransformersDataDownload: (segment, file_format)->
+        url = "#{@BASE_API_URL}#{@id}/action/transformers_download/"
+        @$make_request(url, {}, "PUT", {segment: segment, data_format: file_format})
+
     return Model
 ])
 
