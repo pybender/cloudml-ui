@@ -1,4 +1,4 @@
-<div ng-show="obj.locked && obj.server_type != None">
+<div ng-show="obj.locked && !(obj.servers|isArrayEmpty)">
    <i class="icon-upload"></i> deployed to
    <span ng-repeat="server in obj.servers">
      <span class="badge {{ server.type | to_lower }}">
@@ -6,6 +6,6 @@
      </span>
    </span>
 </div>
-<div ng-show="obj.locked && obj.server_type == None">
+<div ng-show="obj.locked && (obj.servers|isArrayEmpty)">
    <i class="icon-upload"></i> <span class="error_message">Locked for modifications (deployed and then removed from all servers)</span>
 </div>

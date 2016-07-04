@@ -356,7 +356,6 @@ class ServersTasksTests(BaseDbTestCase):
         )
         self.assertTrue(handler.locked)
         self.assertTrue(server.id in handler.servers_ids)
-        self.assertEqual(handler.server_type, server.type)
         self.assertEqual(handler.servers[0].name, server.name)
 
     @patch('api.amazon_utils.AmazonS3Helper.save_key_string')

@@ -52,8 +52,8 @@ angular.module('app.models.model', ['app.config'])
       grid_search_in_progress: false
       new_dataset: null
 
-      servers: null
-      server_type: null
+      servers: []
+
       loadFromJSON: (origData) ->
         super origData
         if origData?

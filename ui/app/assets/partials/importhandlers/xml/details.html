@@ -5,8 +5,8 @@
     editable="handler" value="handler.name"
     editable-field="name" editable-input="text"
     editable-placement="right" editable-required></small>
-  <small ng-show="handler.locked && handler.server_type != None">(Deployed to {{ handler.server_type }})</small>
-  <small ng-show="handler.locked && handler.server_type == None">(Locked for modifications)</small>
+  <small ng-show="handler.locked && !(handler.servers|isArrayEmpty)">(Deployed to {{ handler.servers[0].type }})</small>
+  <small ng-show="handler.locked && (handler.servers|isArrayEmpty)">(Locked for modifications)</small>
   <div class="actions" ng-controller="ImportHandlerActionsCtrl">
     <div ng-init="init({handler: handler})">
       <button ng-click="importData(handler)" class="btn btn-info">

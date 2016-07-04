@@ -10,8 +10,8 @@
     editable="model" value="model.name"
     editable-field="name" editable-input="text"
     editable-placement="right" editable-required></span> details
-  <br/><span ng-show="model.locked && model.server_type != None">(Deployed to {{model.server_type}})</span>
-    <span ng-show="model.locked && model.server_type == None">(Locked for modifications)</span>
+  <br/><span ng-show="model.locked && !(model.servers|isArrayEmpty)">(Deployed to {{model.servers[0].type}})</span>
+    <span ng-show="model.locked && (model.servers|isArrayEmpty)">(Locked for modifications)</span>
   <div class="actions">
     <button ng-show="model.status == 'Trained'" ng-click="test_model(model)" class="btn btn-success">
       <i title="Apply the classifier to the input provided by the data import handler" class="status-icon icon-play"></i>

@@ -156,19 +156,6 @@ class BaseDeployedEntity(object):
                 server = Server.query.get(server_id)
                 if server:
                     servers.append(server)
-        return servers
+        return sorted(servers, key=lambda x: Server.TYPES.index(x.type),
+                      reverse=True)
 
-    @property
-    def server_type(self):
-        """
-        Returns most important server type among those
-        where model is deployed
-        """
-        from api.servers.models import Server
-        if not len(self.servers):
-            return None
-        server_type = 0
-        for server in self.servers:
-            if server_type < Server.TYPES.index(server.type):
-                server_type = Server.TYPES.index(server.type)
-        return Server.TYPES[server_type]
