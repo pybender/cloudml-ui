@@ -19,7 +19,8 @@ loadParameters = (model, configuration, setDefault=false) ->
       if field.default?
         model.params[field.name] = field.default
   else
-    model.params = _.extend config.defaults, model.params || {}
+    if config.defaults?
+      model.params = _.extend config.defaults, model.params || {}
     # Checking existing parameters and deleting unexistant
     for param in model.params
       if param not in config.parameters
