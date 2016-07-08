@@ -28,7 +28,7 @@ from api.ml_models.fixtures import ModelData, TagData, MODEL_TRAINER, \
 from api.import_handlers.fixtures import DataSetData, \
     XmlImportHandlerData as ImportHandlerData, IMPORT_HANDLER_FIXTURES
 from api.import_handlers.fixtures import EXTRACT_XML, get_importhandler
-from api.tasks import TRANSFORM_DATASET_TASK
+from api.tasks import TRANSFORM_DATASET_TASK, TRANSFORMERS_UPLOAD_TASK
 
 TRAIN_PARAMS = json.dumps(
     {'start': '2012-12-03',
@@ -228,44 +228,6 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         resp_obj = json.loads(resp.data)
         self.assertEqual(resp_obj['trainer_file_for'], model.id)
         self.assertTrue(resp_obj['url'] is None)
-
-    @patch('api.amazon_utils.AmazonS3Helper.load_key')
-    def test_get_feature_transformer_download_action(self, load_mock):
-        model = Model.query.filter_by(name='TrainedModel').first()
-        load_mock.return_value = MODEL_TRAINER
-        url = self._get_url(id=model.id, action='feature_transformer_download',
-                            feature='contractor.dev_blurb', segment='default')
-        resp = self.client.get(url, headers=HTTP_HEADERS)
-        self.assertEqual(resp.status_code, httplib.OK)
-        json_data = json.loads(resp.data)
-        self.assertTrue('content' in json_data)
-        self.assertEqual('Tfidf', json_data['transformer_type'])
-
-        url = self._get_url(id=model.id, action='feature_transformer_download',
-                            feature='contractor.dev_blurb', segment='default1')
-        resp = self.client.get(url, headers=HTTP_HEADERS)
-        self.assertEqual(resp.status_code, httplib.BAD_REQUEST)
-        resp_data = json.loads(resp.data)
-        self.assertTrue("Trained model doesn't have segment default1" in
-                        resp_data['response']['error']['message'])
-
-        url = self._get_url(id=model.id, action='feature_transformer_download',
-                            feature='contractor.dev_', segment='default')
-        resp = self.client.get(url, headers=HTTP_HEADERS)
-        self.assertEqual(resp.status_code, httplib.BAD_REQUEST)
-        resp_data = json.loads(resp.data)
-        self.assertTrue("Trained model doesn't have feature contractor.dev_" in
-                        resp_data['response']['error']['message'])
-
-        model.status = Model.STATUS_ERROR
-        model.save()
-        url = self._get_url(id=model.id, action='feature_transformer_download',
-                            feature='contractor.dev_blurb', segment='default')
-        resp = self.client.get(url, headers=HTTP_HEADERS)
-        self.assertEqual(resp.status_code, httplib.METHOD_NOT_ALLOWED)
-        resp_data = json.loads(resp.data)
-        self.assertTrue('Model is not trained' in
-                        resp_data['response']['error']['message'])
 
     """
     POST
@@ -726,7 +688,8 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
         # NOTE: Make sure that ds.gz file exist in test_data folder
 
         self.assertEqual(obj.status, Model.STATUS_TRAINED, obj.error)
-        self.assertEqual([d.name for d in obj.datasets], [ds1.name, ds2.name])
+        self.assertEqual(set([d.name for d in obj.datasets]),
+                         set([ds1.name, ds2.name]))
 
         self.assertEqual(obj.trained_by.uid, 'user')
         self.assertTrue(obj.memory_usage > 0)
@@ -954,6 +917,75 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
                          TRANSFORM_DATASET_TASK)
         self.assertTrue('downloads' in resp_obj)
         self.assertEqual(resp_obj['downloads'][0]['dataset']['id'], dataset.id)
+
+    @patch('api.ml_models.tasks.upload_segment_features_transformers')
+    def test_put_transformers_download_action(self, ipload_mock):
+        segment = Segment.query.filter_by(
+            name=SegmentData.segment_01.name).first()
+
+        # other model
+        self.obj.status = Model.STATUS_TRAINING
+        url = self._get_url(id=101010,
+                            action='transformers_download')
+        resp = self.client.put(url, headers=HTTP_HEADERS,
+                               data={'segment': segment.name,
+                                     'data_format': 'json'})
+        self.assertEquals(resp.status_code, httplib.NOT_FOUND)
+
+        # model not trained
+        self.obj.status = Model.STATUS_TRAINING
+        url = self._get_url(id=self.obj.id,
+                            action='transformers_download')
+        resp = self.client.put(url, headers=HTTP_HEADERS,
+                               data={'segment': 'some_other_name',
+                                     'data_format': 'json'})
+        self.assertEquals(resp.status_code, 405)
+
+        # model trained, segment doesn't exists
+        self.obj.status = Model.STATUS_TRAINED
+        url = self._get_url(id=self.obj.id,
+                            action='transformers_download')
+        resp = self.client.put(url, headers=HTTP_HEADERS,
+                               data={'segment': 'some_other_name',
+                                     'data_format': 'json'})
+        self.assertEquals(resp.status_code, httplib.NOT_FOUND)
+
+        # model is trained
+        self.obj.status = Model.STATUS_TRAINED
+        url = self._get_url(id=self.obj.id,
+                            action='transformers_download')
+        resp = self.client.put(url, headers=HTTP_HEADERS,
+                               data={'segment': segment.name,
+                                     'data_format': 'json'})
+        self.assertEquals(resp.status_code, httplib.OK)
+
+        ipload_mock.delay.assert_called_with(self.obj.id, segment.id, 'json')
+
+    @patch('api.ml_models.views.AsyncTask.get_current_by_object')
+    def test_get_transformers_download_action(self, async_get_object_mock):
+        # bogus model
+        url = self._get_url(id=101010,
+                            action='transformers_download')
+        resp = self.client.get(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.NOT_FOUND)
+
+        # existing model
+        segment = Segment.query.filter_by(
+            name=SegmentData.segment_01.name).first()
+        from api.async_tasks.models import AsyncTask
+        task = AsyncTask()
+        task.args = [self.obj.id, segment.id]
+        task.object_id = segment.id
+        async_get_object_mock.return_value = [task]
+        url = self._get_url(id=self.obj.id,
+                            action='transformers_download')
+        resp = self.client.get(url, headers=HTTP_HEADERS)
+        self.assertEquals(resp.status_code, httplib.OK)
+        resp_obj = json.loads(resp.data)
+        self.assertEqual(async_get_object_mock.call_args_list[0][0][1],
+                         TRANSFORMERS_UPLOAD_TASK)
+        self.assertTrue('downloads' in resp_obj)
+        self.assertEqual(resp_obj['downloads'][0]['segment']['id'], segment.id)
 
     def test_put_add_features_from_xml_ih_action(self):
         # bogus model

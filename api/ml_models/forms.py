@@ -229,6 +229,12 @@ class TransformDataSetForm(BaseForm):
     dataset = ModelField(model=DataSet, return_model=True)
 
 
+class TransformersDownloadForm(BaseForm):
+    required_fields = ('segment', 'data_format')
+    segment = CharField()
+    data_format = ChoiceField(choices=['csv', 'json'])
+
+
 class TransformerForm(BaseForm, ParametersConvertorMixin):
     """
     Adds/Edits Pretrained transformer form
