@@ -18,6 +18,12 @@ angular.module('app.filters', [])
     return t[0].toUpperCase() + t.slice(1)
 ])
 
+.filter('to_lower', [() ->
+  (text) ->
+    t = String(text)
+    return t.toLowerCase()
+])
+
 .filter('humanize_title', [() ->
   (text) ->
     t = String(text)

@@ -8,7 +8,7 @@ angular.module('app.models.controllers', ['app.config', ])
   [ 'name','status','test_import_handler', 'train_import_handler',
     'train_import_handler_type', 'test_import_handler_type',
     'test_handler_fields', 'labels', 'classifier', 'error',
-    'locked', 'training_in_progress'].join(',')
+    'locked', 'training_in_progress','servers'].join(',')
 )
 
 .factory('FIELDS_BY_SECTION', [

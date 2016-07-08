@@ -13,6 +13,7 @@ from sqlalchemy.types import Boolean
 
 from serialization import JsonSerializableMixin
 from api import app
+from api.base.models.fields import JSONType
 
 db = app.sql_db
 
@@ -139,3 +140,22 @@ def commit_on_success(func, raise_exc=False):
                     db.session.rollback()
                     raise
     return wraps(func)(_commit_on_success)
+
+
+class BaseDeployedEntity(object):
+    """Represents entity that can be deployed to predict"""
+    servers_ids = db.Column(JSONType)
+
+    @property
+    def servers(self):
+        """Returns servers where model is deployed to"""
+        from api.servers.models import Server
+        servers = []
+        if self.servers_ids is not None:
+            for server_id in self.servers_ids:
+                server = Server.query.get(server_id)
+                if server:
+                    servers.append(server)
+        return sorted(servers, key=lambda x: Server.TYPES.index(x.type),
+                      reverse=True)
+

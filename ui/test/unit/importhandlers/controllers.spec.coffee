@@ -93,7 +93,7 @@ describe 'app.xml_importhandlers.controllers', ->
     it 'should initialize scope and load xml only', inject (XmlImportHandler)->
 
       prepareContext XmlImportHandler, ['something', 'xml'],
-        'id,name,created_on,created_by,updated_on,updated_by,import_params,xml_data_sources,xml_input_parameters,xml_scripts,entities,predict,can_edit,crc32,locked,xml', false
+        'id,name,created_on,created_by,updated_on,updated_by,import_params,locked,servers,xml_data_sources,xml_input_parameters,xml_scripts,entities,predict,can_edit,crc32,locked,xml', false
 
       expect($scope.LOADED_SECTIONS).toEqual ['something']
       expect($scope.$broadcast).not.toHaveBeenCalled()
@@ -101,7 +101,7 @@ describe 'app.xml_importhandlers.controllers', ->
     it 'should should handle errors', inject (XmlImportHandler)->
 
       prepareContext XmlImportHandler, ['something', 'xml'],
-        'id,name,created_on,created_by,updated_on,updated_by,import_params,xml_data_sources,xml_input_parameters,xml_scripts,entities,predict,can_edit,crc32,locked,xml', true
+        'id,name,created_on,created_by,updated_on,updated_by,import_params,locked,servers,xml_data_sources,xml_input_parameters,xml_scripts,entities,predict,can_edit,crc32,locked,xml', true
 
       expect($scope.LOADED_SECTIONS).toEqual []
       expect($scope.$broadcast).not.toHaveBeenCalled()
@@ -110,7 +110,7 @@ describe 'app.xml_importhandlers.controllers', ->
     it 'should initialize scope and load with all fields and broadcast', inject (XmlImportHandler)->
 
       prepareContext XmlImportHandler, ['dataset', 'something'],
-        'id,name,created_on,created_by,updated_on,updated_by,import_params,xml_data_sources,xml_input_parameters,xml_scripts,entities,predict,can_edit,crc32,locked', false
+        'id,name,created_on,created_by,updated_on,updated_by,import_params,locked,servers,xml_data_sources,xml_input_parameters,xml_scripts,entities,predict,can_edit,crc32,locked', false
 
       expect($scope.LOADED_SECTIONS).toEqual ['dataset']
       expect($scope.$broadcast).toHaveBeenCalledWith 'loadDataSet', true
@@ -118,7 +118,7 @@ describe 'app.xml_importhandlers.controllers', ->
     it 'should initialize scope and load with all fields and not broadcast dataset load', inject (XmlImportHandler)->
 
       prepareContext XmlImportHandler, ['main', 'something'],
-        'id,name,created_on,created_by,updated_on,updated_by,import_params,xml_data_sources,xml_input_parameters,xml_scripts,entities,predict,can_edit,crc32,locked', false
+        'id,name,created_on,created_by,updated_on,updated_by,import_params,locked,servers,xml_data_sources,xml_input_parameters,xml_scripts,entities,predict,can_edit,crc32,locked', false
 
       expect($scope.LOADED_SECTIONS).toEqual ['main']
       expect($scope.$broadcast).not.toHaveBeenCalled()

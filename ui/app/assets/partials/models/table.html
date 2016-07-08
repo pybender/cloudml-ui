@@ -65,6 +65,8 @@
   <tbody ng-hide="objects.length == 0">
     <tr ng-repeat="model in objects" ng-class="{success : model.status=='Trained', warning : model.status =='New', info : model.status =='Training', error : model.status =='Error'}">
       <td>
+        <span ng-show="model.locked && !(model.servers|isArrayEmpty)" class="badge {{ model.servers[0].type | to_lower }}">{{ model.servers[0].type }}</span>
+        <span ng-show="model.locked && (model.servers|isArrayEmpty)" class="badge">Locked</span>
         <a href="#{{ model.objectUrl() }}">{{ model.name }}</a>
         <div title="tags">
           <span ng-repeat="tag in model.tags">

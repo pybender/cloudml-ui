@@ -46,6 +46,8 @@
   <tbody ng-hide="objects.length == 0">
     <tr ng-repeat="handler in objects" ng-class="{success : model.status=='Trained', warning : model.status =='New', info : model.status =='Training', error : model.status =='Error'}">
       <td>
+        <span ng-show="handler.locked && !(handler.servers|isArrayEmpty)" class="badge {{ handler.servers[0].type | to_lower }}">{{ handler.servers[0].type }}</span>
+        <span ng-show="handler.locked && (handler.servers|isArrayEmpty)" class="badge">Locked</span>
         <a href="#{{ handler.objectUrl() }}">{{ handler.name }}</a>
         <div title="tags">
           <span ng-repeat="tag in handler.tags">
