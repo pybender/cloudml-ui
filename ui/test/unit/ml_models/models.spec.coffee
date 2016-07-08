@@ -127,6 +127,7 @@ describe 'ML Models Controllers', ->
     it "should make details request", inject (MODEL_FIELDS, FIELDS_BY_SECTION) ->
       url = BASE_URL + MODEL_ID + '/' + '?show=' + MODEL_FIELDS + ',' + FIELDS_BY_SECTION['model']
       $httpBackend.expectGET(url).respond.apply @, map_url_to_response(url, 'multiclass model main fields')
+      $scope.model.status = 'Trained'
 
       s3_url = "#{BASE_URL}#{$scope.model.id}/action/trainer_download_s3url/"
       $httpBackend.expectGET(s3_url)
@@ -436,7 +437,7 @@ describe 'ML Models Controllers', ->
           error: ''
         response = {}
         response[model.API_FIELDNAME] = model
-        $httpBackend.expectGET "#{model.BASE_API_URL}#{$scope.model.id}/?show=status,training_in_progress,error,transformed_features,segments"
+        $httpBackend.expectGET "#{model.BASE_API_URL}#{$scope.model.id}/?show=status,training_in_progress,error,segments"
         .respond 200, angular.toJson(response)
 
         $scope.model.training_in_progress = true
@@ -1118,41 +1119,104 @@ describe 'ML Models Controllers', ->
         id: '4321'
       })
       createController "FeaturesTransformersDataCtrl"
+      $scope.url = "#{$scope.model.BASE_API_URL}#{$scope.model.id}/action/transformers_download/"
 
-    it "should init scope and build download url", inject () ->
+    it "should init scope", inject () ->
       expect($scope.tf_segment).toEqual ''
-      expect($scope.tf_feature).toEqual ''
       expect($scope.tf_format).toEqual ''
       expect($scope.formats[0].name).toEqual 'JSON'
-      expect($scope.dl_url).toEqual ''
+      expect($rootScope.tf_dl_msg).toEqual ''
+      expect($rootScope.tf_downloads).toEqual {}
 
-      $scope.getTFDataUrl()
-      expect($scope.dl_url).toEqual ''
+    it  'should have no downloads', ->
+      inject () ->
+        downloads = {}
+        $httpBackend.expectGET($scope.url).respond angular.toJson
+          model: $scope.model.id
+          downloads: downloads
 
-      $scope.tf_segment = 'default'
-      $scope.getTFDataUrl()
-      expect($scope.dl_url).toEqual ''
+        $scope.getTransformersDownloads $scope.model.id
+        $httpBackend.flush()
 
-      $scope.tf_feature = 'my_feature'
-      $scope.getTFDataUrl()
-      expect($scope.dl_url).toEqual ''
+        expect($rootScope.tf_downloads).toEqual downloads
 
-      $scope.tf_format = 'csv'
-      $scope.getTFDataUrl()
-      expect($scope.dl_url).toEqual "#{$scope.model.BASE_API_URL}#{$scope.model.id}/action/feature_transformer_download/?feature=my_feature&segment=default"
+    it  "should have two downloads", ->
+      inject () ->
+        downloads = [{segment: {id: 1}, task: {}}, {segment: {id: 2}, task: {}}]
+        $httpBackend.expectGET($scope.url).respond angular.toJson
+          model: $scope.model.id
+          downloads: downloads
 
-    it 'shoud initiate download and set Error', inject () ->
-      $scope.setError = jasmine.createSpy '$scope.setError'
-      resp = {content: [{feature1: 'val1', feature2: 'val2'}], transformer_type: 'Tfidf'}
-      $scope.dl_url = "#{$scope.model.BASE_API_URL}#{$scope.model.id}/action/feature_transformer_download/?feature=my_feature&segment=default"
-      $scope.tf_format = 'application/json'
-      $httpBackend.expectGET($scope.dl_url).respond 200, angular.toJson resp
-      $scope.getTransformerData()
-      $httpBackend.flush()
-      # should go without errors
+        $scope.getTransformersDownloads $scope.model.id
+        $httpBackend.flush()
 
-      # with error
-      $httpBackend.expectGET($scope.dl_url).respond 400
-      $scope.getTransformerData()
-      $httpBackend.flush()
-      expect($scope.setError.calls.mostRecent().args[1]).toEqual 'downloading transformer data'
+        expect($rootScope.tf_downloads).toEqual downloads
+        expect($rootScope.tf_downloads.length).toEqual 2
+
+    it  "should put new download request", ->
+      inject () ->
+        $httpBackend.expectPUT($scope.url).respond angular.toJson {segment: 'default', data_format: 'json'}
+        $scope.requestTransformersDownload 3
+        $httpBackend.flush()
+        expect($rootScope.tf_dl_msg).toContain "Segment data has been queued "
+        downloads = [{segment: {id: 1}, task: {status: 'Completed'}}, {segment: {id: 2}, task: {}}, {segment: {id: 3}, task: {}}]
+        $httpBackend.expectGET($scope.url).respond angular.toJson
+          model: $scope.model.id
+          downloads: downloads
+        $timeout.flush()
+        $httpBackend.flush()
+        expect($rootScope.tf_downloads.length).toEqual 3
+
+    it  "should put new download request with err", ->
+      inject () ->
+        # handles request error
+        $scope.setError = jasmine.createSpy('$scope.setError')
+        $httpBackend.expectPUT($scope.url).respond 400
+        $scope.requestTransformersDownload 3
+        $httpBackend.flush()
+        expect($scope.setError.calls.mostRecent().args[1]).toEqual 'requesting transformers downloads'
+
+    it  "should handle error on get downloads for new download request", ->
+      inject () ->
+        # handles request error
+        $scope.setError = jasmine.createSpy('$scope.setError')
+        $httpBackend.expectPUT($scope.url).respond angular.toJson {segment: 'default', data_format: 'json'}
+        $scope.requestTransformersDownload 3
+        $httpBackend.flush()
+        $httpBackend.expectGET($scope.url).respond 500
+        $timeout.flush()
+        $httpBackend.flush()
+        expect($scope.setError.calls.mostRecent().args[1]).toEqual 'loading transformers downloads'
+        expect($scope.downloadRequested).toBe false
+
+    it  "should check full scenario of transformers downloads",
+      inject () ->
+        $httpBackend.expectPUT($scope.url).respond angular.toJson {segment: 3}
+        $scope.requestTransformersDownload 3
+        $httpBackend.flush()
+        expect($rootScope.tf_dl_msg).toContain "Segment data has been queued"
+        downloads = [{segment: {id: 1}, task: {status: 'In Progress'}}, {segment: {id: 2}, task: {}}, {segment: {id: 3}, task: {}}]
+        $httpBackend.expectGET($scope.url).respond angular.toJson
+          model: $scope.model.id
+          downloads: downloads
+        $timeout.flush()
+        $httpBackend.flush()
+        expect($rootScope.tf_downloads.length).toEqual 3
+        downloads = [{segment: {id: 1}, task: {status: 'Completed'}}, {segment: {id: 2}, task: {}}, {segment: {id: 3}, task: {}}]
+        $httpBackend.expectGET($scope.url).respond angular.toJson
+          model: $scope.model.id
+          downloads: downloads
+        $timeout.flush()
+        $httpBackend.flush()
+        expect($rootScope.tf_downloads.length).toEqual 3
+        expect($rootScope.tf_dl_msg).toEqual ""
+
+    it  "should set flag for showLogs",
+      inject () ->
+        expect($scope.open_logs_task_id).toBe null
+
+        $scope.showLogs 3
+        expect($scope.open_logs_task_id).toEqual 3
+
+        $scope.showLogs 3
+        expect($scope.open_logs_task_id).toBe null

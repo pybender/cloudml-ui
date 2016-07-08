@@ -183,6 +183,111 @@ class ModelTasksTests(BaseDbTestCase):
         #     model, 'api.ml_models.tasks.transform_dataset_for_download')
         # self.assertEqual(1, len(downloads))
 
+    @patch('api.amazon_utils.AmazonS3Helper.get_download_url')
+    @patch('api.amazon_utils.AmazonS3Helper.save_key')
+    @patch('api.ml_models.models.Model.get_trainer')
+    def test_upload_segment_features_transformers_task(self, get_trainer_mock,
+                                                       save_mock, dl_mock):
+        from cloudml.trainer.store import TrainerStorage
+        from api.ml_models.tasks import upload_segment_features_transformers
+        from zipfile import ZipFile, ZIP_DEFLATED
+        import os
+
+        model = Model.query.filter_by(name=ModelData.model_01.name).first()
+
+        trainer = TrainerStorage.loads(MODEL_TRAINER)
+        get_trainer_mock.return_value = trainer
+        for segment_name in trainer.features:
+            s = Segment()
+            s.name = segment_name
+            s.records = 111
+            s.model_id = model.id
+            s.save()
+
+        segment = Segment.query.filter(
+            Segment.name == s.name).one()
+
+        # check that nothing fails
+        upload_segment_features_transformers(model.id, segment.id, 'json')
+
+        # repeat logic from task here except posting to Amazon S3
+        try:
+            fformat = 'json'
+            def _save_content(content, feature_name, transformer_type):
+                filename = "{0}-{1}-{2}-data.{3}".format(segment.name,
+                                                         feature_name,
+                                                         transformer_type,
+                                                         fformat)
+                if fformat == 'csv':
+                    import csv
+                    import StringIO
+                    si = StringIO.StringIO()
+                    if len(content):
+                        fieldnames = content[0].keys()
+                        writer = csv.DictWriter(si, fieldnames=fieldnames)
+                        writer.writeheader()
+                        for c in content:
+                            writer.writerow(c)
+                    response = si.getvalue()
+                else:
+                    import json
+                    response = json.dumps(content, indent=2)
+                with open(filename, 'w') as fh:
+                    fh.write(response)
+                    fh.close()
+                return filename
+
+            trainer = model.get_trainer()
+            if segment.name not in trainer.features:
+                raise Exception("Segment %s doesn't exists in trained model" %
+                                segment.name)
+            files = []
+            for name, feature in trainer.features[segment.name].iteritems():
+                if "transformer" in feature and \
+                                feature["transformer"] is not None:
+                    try:
+                        data = feature["transformer"].load_vocabulary()
+                        files.append(_save_content(data, name,
+                                                   feature["transformer-type"])
+                        )
+                    except AttributeError:
+                        continue
+
+            arc_name = "{0}-{1}-{2}.zip".format(model.name, segment.name,
+                                                fformat)
+            with ZipFile(arc_name, "w") as z:
+                for f in files:
+                    z.write(f, compress_type=ZIP_DEFLATED)
+                z.close()
+            for f in files:
+                os.remove(f)
+
+            self.assertEqual(arc_name,
+                             "{0}-default-json.zip".format(model.name))
+            fh = open(arc_name, 'rb')
+            z = ZipFile(fh)
+            for name in z.namelist():
+                outpath = "./"
+                z.extract(name, outpath)
+            file_list = z.namelist()
+            fh.close()
+
+            self.assertEqual(len(file_list), 2)
+            self.assertEqual(
+                set(file_list),
+                set(["default-contractor.dev_blurb-Tfidf-data.json",
+                     "default-contractor.dev_profile_title-Tfidf-data.json"]))
+            fh = open("default-contractor.dev_blurb-Tfidf-data.json", 'r')
+            content = fh.read()
+            res = json.loads(content)
+            self.assertEqual(set(res[0].keys()),
+                             set(["word", "index", "weight"]))
+        finally:
+            for f in files:
+                os.remove(f)
+            if os.path.exists(arc_name):
+                os.remove(arc_name)
+
 
 def determine_deep(tree):
     def recurse(node, current_deep):

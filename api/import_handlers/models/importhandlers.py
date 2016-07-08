@@ -23,6 +23,7 @@ from cloudml.importhandler.importhandler import ExtractionPlan, \
     ImportHandler as CoreImportHandler
 from cloudml.importhandler.utils import PROCESS_STRATEGIES
 from api.base.models import db, BaseModel
+from api.base.models.models import BaseDeployedEntity
 from api import app
 
 
@@ -155,7 +156,7 @@ class ImportHandlerMixin(BaseModel):
         return '<%s Import Handler %r>' % (self.TYPE, self.name)
 
 
-class XmlImportHandler(db.Model, ImportHandlerMixin):
+class XmlImportHandler(db.Model, ImportHandlerMixin, BaseDeployedEntity):
     TYPE = 'xml'
 
     DATASOURCES_ORDER = ['db', 'csv', 'http', 'pig', 'input']

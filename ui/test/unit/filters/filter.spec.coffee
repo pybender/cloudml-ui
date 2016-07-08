@@ -24,6 +24,14 @@ describe "filter", ->
       expect(capfirstFilter("someStr")).toEqual("SomeStr")
     )
 
+  describe "to_lower", ->
+
+    it "should make the first letter uppercase", inject((to_lowerFilter) ->
+      expect(to_lowerFilter("somestr")).toEqual("somestr")
+      expect(to_lowerFilter("Somestr")).toEqual("somestr")
+      expect(to_lowerFilter("someStr")).toEqual("somestr")
+    )
+
   describe "words", ->
 
     it "should return words which string contains", inject((wordsFilter) ->

@@ -1,5 +1,13 @@
 @red_color: #f97777;
 @green_color: #92fc6c;
+@blue:                  #049cdb;
+@blueDark:              #0064cd;
+@green:                 #46a546;
+@red:                   #9d261d;
+@yellow:                #ffc40d;
+@orange:                #f89406;
+@pink:                  #c3325f;
+@purple:                #7a43b6;
 
 .darkest(@c) when (iscolor(@c)) {
   background-color: darken(@c, 40%);
@@ -437,4 +445,24 @@ i.icon img {
 
 .empty {
   font-style: italic;
+}
+
+a.server {
+  color: #ffffff;
+}
+
+.production {
+  background-color: @green;
+}
+
+.development {
+  background-color: @orange;
+}
+
+.staging {
+  background-color: @blue;
+}
+
+.analytics {
+  background-color: @pink;
 }

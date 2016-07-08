@@ -28,7 +28,7 @@
     </td>
     <td>{{ server.ip }}</td>
     <td>{{ server.folder }}</td>
-    <td>{{ server.type }}</td>
+    <td><span class="badge {{ server.type | to_lower }}">{{ server.type }}</span></td>
   </tr>
 </tbody>
 </table>

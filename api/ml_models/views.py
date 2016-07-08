@@ -23,7 +23,7 @@ from models import Model, Tag, Weight, WeightsCategory, Segment, Transformer, \
     ClassifierGridParams
 from forms import ModelAddForm, ModelEditForm, TransformDataSetForm, \
     TrainForm, TransformerForm, FeatureTransformerForm, GridSearchForm, \
-    VisualizationOptionsForm
+    VisualizationOptionsForm, TransformersDownloadForm
 
 
 model_parser = reqparse.RequestParser()
@@ -182,10 +182,11 @@ class ModelResource(BaseTrainedEntityResource):
     """
     GET_ACTIONS = ('reload', 'by_importhandler', 'trainer_download_s3url',
                    'features_download', 'dataset_download', 'weights_download',
-                   'feature_transformer_download')
+                   'transformers_download')
     PUT_ACTIONS = ('train', 'tags', 'cancel_request_instance',
                    'upload_to_server', 'dataset_download', 'grid_search',
-                   'import_features_from_xml_ih', 'generate_visualization')
+                   'import_features_from_xml_ih', 'generate_visualization',
+                   'transformers_download')
     POST_ACTIONS = ('clone', )
     FILTER_PARAMS = (('status', str), ('comparable', str), ('tag', str),
                      ('created_by', str), ('updated_by_id', int),
@@ -213,8 +214,7 @@ class ModelResource(BaseTrainedEntityResource):
 
     # GET specific methods
 
-    @public_actions(['features_download', 'weights_download',
-                     'feature_transformer_download'])
+    @public_actions(['features_download', 'weights_download'])
     def get(self, *args, **kwargs):
         return super(ModelResource, self).get(*args, **kwargs)
 
@@ -440,47 +440,51 @@ class ModelResource(BaseTrainedEntityResource):
         return self._render({self.OBJECT_NAME: model.id,
                              'features': [f.to_dict() for f in features]})
 
-    def _get_feature_transformer_download_action(self, **kwargs):
+    def _put_transformers_download_action(self, **kwargs):
         model = self._get_details_query(None, **kwargs)
-        parser_params = (('feature', str), ('segment', str),)
-        params = self._parse_parameters(parser_params)
-        feature_name = params.get('feature', None)
-        segment = params.get('segment', None)
         if model is None:
-            raise NotFound(self.MESSAGE404 % kwargs)
-
+            raise NotFound('Model not found')
         if model.status != Model.STATUS_TRAINED:
             return odesk_error_response(405, ERR_INVALID_METHOD,
                                         'Model is not trained')
 
-        try:
-            trainer = model.get_trainer()
-            if segment not in trainer.features:
-                raise ValidationError("Trained model doesn't have segment %s" %
-                                      segment)
-            if feature_name not in trainer.features[segment]:
-                raise ValidationError("Trained model doesn't have feature %s" %
-                                      feature_name)
-            if 'transformer' not in trainer.features[segment][feature_name]:
-                raise ValidationError("Feature %s doesn't have transformer "
-                                      "data in trained model" % feature_name)
-            transformer_type = \
-                trainer.features[segment][feature_name]['transformer-type']
-            content = trainer.features[segment][feature_name]["transformer"]\
-                .load_vocabulary()
+        form = TransformersDownloadForm(obj=model)
+        if not form.is_valid():
+            return
 
-            return self._render({'content': content,
-                                 'transformer_type': transformer_type})
+        segment = form.cleaned_data['segment']
+        segment_obj = Segment.query.filter(Segment.model_id == model.id)\
+            .filter(Segment.name == segment).all()
+        if not len(segment_obj):
+            raise NotFound('Segment not found in trained model')
 
-        except ValidationError as e:
-            return odesk_error_response(400, ERR_INVALID_DATA, e.message)
-        except AttributeError:
-            return odesk_error_response(
-                500, ERR_INVALID_DATA,
-                'Transformer of type %s doesn\'t have vocabulary data' %
-                transformer_type)
-        except Exception, exc:
-            return odesk_error_response(500, ERR_INVALID_DATA, exc.message)
+        data_format = form.cleaned_data['data_format']
+
+        from api.ml_models.tasks import upload_segment_features_transformers
+        upload_segment_features_transformers.delay(model.id, segment_obj[0].id,
+                                                   data_format)
+        return self._render({})
+
+    def _get_transformers_download_action(self, **kwargs):
+        model = self._get_details_query(None, **kwargs)
+        if model is None:
+            raise NotFound('Model not found')
+
+        from api.tasks import TRANSFORMERS_UPLOAD_TASK
+        tasks = []
+        for segment in model.segments:
+            tasks.extend(AsyncTask.get_current_by_object(
+                segment, TRANSFORMERS_UPLOAD_TASK))
+
+        downloads = []
+        for task in sorted(tasks, key=lambda x: x.created_on, reverse=True):
+            downloads.append({
+                'segment': Segment.query.get(task.args[1]),
+                'task': task
+            })
+
+        return self._render({self.OBJECT_NAME: model.id,
+                             'downloads': downloads})
 
 
 api.add_resource(ModelResource, '/cloudml/models/')

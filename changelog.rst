@@ -3,7 +3,7 @@
 Changelog
 =========
 
-Release 2016-06-XX
+Release 2016-06-26
 ------------------
 * Task - Show default parameters for feature transformers and scalers
 * Bug - Fixed error messages displaying when downloading feature transformer

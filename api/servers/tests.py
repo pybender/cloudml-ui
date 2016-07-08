@@ -176,9 +176,14 @@ class ServerFileResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue(len(resp_data[key]), 1)
 
     @patch('api.amazon_utils.AmazonS3Helper.set_key_metadata')
+    @patch('api.amazon_utils.AmazonS3Helper.load_key')
     @patch('api.servers.models.Server.list_keys')
     @patch('api.servers.tasks.update_at_server')
-    def test_delete(self, mock_update_at_server, list_mock, set_meta):
+    def test_delete(self, mock_update_at_server, list_mock, load_mock,
+                    set_meta):
+        self.model.servers_ids = [self.server.id]
+        self.model.save()
+        load_mock.return_value = {'Metadata': {'id': self.model.id}}
         list_mock.return_value = [{'id': str(self.model.id)}]
         files_list = [f for f in self.server.list_keys(FOLDER_MODELS)]
         obj_id = files_list[0]['id']
@@ -188,6 +193,7 @@ class ServerFileResourceTests(BaseDbTestCase, TestChecksMixin):
         resp = self.client.delete(url, headers=HTTP_HEADERS)
         self.assertEquals(204, resp.status_code)
         self.assertTrue(mock_update_at_server.delay.called)
+        self.assertTrue(self.server.id not in self.model.servers_ids)
 
         # non-existing
         set_meta.side_effect = AmazonS3ObjectNotFound('not found')
@@ -283,6 +289,7 @@ class ServersTasksTests(BaseDbTestCase):
         self.assertTrue(model.features_set.locked)
         for ds in model.datasets:
             self.assertTrue(ds.locked)
+        self.assertTrue(server.id in model.servers_ids)
 
     @patch('api.amazon_utils.AmazonS3Helper.save_key_string')
     @patch('api.servers.tasks.get_a_Uuid')
@@ -325,6 +332,8 @@ class ServersTasksTests(BaseDbTestCase):
         server = Server.query.filter_by(name=ServerData.server_01.name).one()
         handler = XmlImportHandler.query.filter_by(
             name=ImportHandlerData.import_handler_01.name).one()
+        handler.servers_ids = []
+        handler.save()
         user = User.query.first()
 
         upload_import_handler_to_server(server.id, XmlImportHandler.TYPE,
@@ -346,6 +355,8 @@ class ServersTasksTests(BaseDbTestCase):
             }
         )
         self.assertTrue(handler.locked)
+        self.assertTrue(server.id in handler.servers_ids)
+        self.assertEqual(handler.servers[0].name, server.name)
 
     @patch('api.amazon_utils.AmazonS3Helper.save_key_string')
     @patch('api.servers.tasks.get_a_Uuid')

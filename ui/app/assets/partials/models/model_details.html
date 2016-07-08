@@ -10,7 +10,8 @@
     editable="model" value="model.name"
     editable-field="name" editable-input="text"
     editable-placement="right" editable-required></span> details
-  <span ng-show="model.locked">(Deployed)</span>
+  <br/><span ng-show="model.locked && !(model.servers|isArrayEmpty)">(Deployed to {{model.servers[0].type}})</span>
+    <span ng-show="model.locked && (model.servers|isArrayEmpty)">(Locked for modifications)</span>
   <div class="actions">
     <button ng-show="model.status == 'Trained'" ng-click="test_model(model)" class="btn btn-success">
       <i title="Apply the classifier to the input provided by the data import handler" class="status-icon icon-play"></i>
@@ -219,34 +220,60 @@
         </div>
       </div>
     </div>
-
+    <hr/>
     <div class="row">
-      <div class="span11" ng-show="model.status == 'Trained'" ng-controller="FeaturesTransformersDataCtrl" >
+      <div class="span11" ng-show="model.status == 'Trained'" ng-controller="FeaturesTransformersDataCtrl">
         <h4>Features Transformers data</h4>
         <form name="TransformerDlForm" class="form-horizontal">
           <span>Segment:</span>
-          <select ng-change="getTFDataUrl()" name="segment" ng-model="tf_segment" ng-required>
+          <select name="segment" ng-model="tf_segment" ng-required>
             <option ng-repeat="s in model.segments" value="{{ s.name }}">{{ s.name }}</option>
           </select>
           &nbsp;&nbsp;
-          <span>Feature:</span>
-          <select ng-change="getTFDataUrl()" name="feature" ng-model="tf_feature" ng-required>
-            <option ng-repeat="f in model.transformed_features" value="{{ f }}">{{ f }}</option>
-          </select>
-          &nbsp;&nbsp;
           <span>Format:</span>
-          <select ng-change="getTFDataUrl()" name="format" ng-model="tf_format" ng-required>
+          <select name="file_format" ng-model="tf_format" ng-required>
             <option ng-repeat="ft in formats" value="{{ ft.value }}">{{ ft.name }}</option>
           </select>
           &nbsp;&nbsp;
-          <button class="btn btn-small" ng-class="!dl_url ? 'link-inactive' : ''"
-             ng-disabled="!dl_url" ng-click="getTransformerData()"
-             title="Download Transformer Vocabulary"><i class="icon-download-alt"></i> Download </button>
-          &nbsp;&nbsp;
-          <a ng-show="false" id="DlTfData">D</a>
+          <a class="btn btn-small" ng-class="!tf_format || !tf_segment ? 'link-inactive' : ''"
+             title="Download Tranformers Data"
+             ng-click="requestTransformersDownload(model.id)">
+            <i class="icon-download-alt"></i> Download
+          </a>
+          <alert-message ng-show="tf_dl_msg" class="alert-info" style="margin-top:10px;" msg="{{tf_dl_msg}}" unsafe></alert-message>
         </form>
       </div>
     </div>
+
+    <div ng-controller="FeaturesTransformersDataCtrl"
+         ng-init="getTransformersDownloads(model.id)"
+         ng-show="tf_downloads.length > 0">
+      <div class="row">
+        <div class="span10">
+          <h4>Transformers Data Requests</h4>
+          <div class="row" ng-repeat="download in tf_downloads">
+            <div class="span10 well">
+              <i class="icon-calendar"></i> created on <span class="badge badge-info" title="dates in GMT">{{ download.task.created_on|format_date }}</span>
+              <i class="icon-th"></i>transformers data for segment <span class="label">{{ download.segment.name }}</span>
+              <span class="badge badge-info">{{ download.task.status }}</span>
+              <a class="btn btn-small" href="{{ download.task.result }}" target="_blank">Download</a>
+              <div class="span3 pull-right">
+                  <button class="btn btn-link pull-right" ng-click="showLogs(download.task.id)">Show logs</button>
+              </div>
+              <div class="row" ng-show="open_logs_task_id == download.task.id">
+                  <div class="span9">
+                      <div ng-controller="LogMessageListCtrl" ng-init="init('prepare_transformer_for_download_log', download.task.id)">
+                        <br/>
+                        <ng-include src="'partials/logmessages/list.html'"></ng-include>
+                      </div>
+                  </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
 
     <hr />
     <div ng-show="model.weights_synchronized">
@@ -326,6 +353,8 @@
         </span> 
       </span>
       <ng-include src="'partials/parts/created_tags.html'"></ng-include>
+      <br/><br/>
+      <ng-include src="'partials/parts/deployed_servers.html'"></ng-include>
     </div>
     <div class="row">
       <div class="span6">
