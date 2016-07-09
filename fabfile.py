@@ -75,25 +75,6 @@ def install():
 
 
 @task
-def node_nvm_reinstall():
-    version = '0.10.28'
-    # Install nodejs, put your version
-    sudo("wget http://nodejs.org/dist/v%s/node-v%s.tar.gz" % version, version)
-    sudo("tar -zxf node-v%s.tar.gz" % version)
-    with cd("node-v%s" % version):
-        sudo("./configure")
-        sudo("make")
-        sudo("make install")
-
-    run("curl https://raw.githubusercontent.com/creationix/nvm/v0.11.1/"
-        "install.sh | bash")
-    run("source ~/.profile")
-    run("nvm install %s" % version)
-    run("nvm alias default %s" % version)
-
-
-
-@task
 def push_key():
     ssh.push_key.run(pub_key_file='~/.ssh/id_rsa.pub')
 
@@ -178,8 +159,6 @@ def deployui():
     # angularjs.push_config.run()
     # angularjs.build.run()
 
-# ln --symbolic --force --no-target-directory /webapps/cloudml/releases/2016.04.13-11.24.34 /webapps/cloudml/current
-# ln --symbolic --force --no-target-directory /webapps/cloudml/releases/2016.04.13-11.24.34 /webapps/cloudml/last
 @task
 def deploy():
     fabd.mkdirs.run()
@@ -204,9 +183,9 @@ def deploy():
 
     release.activate.run()
 
-    fabgrunt.private_npm.run()
-    fabgrunt.bower.run()
-    fabgrunt.activate.run()
+    #fabgrunt.private_npm.run()
+    #fabgrunt.bower.run()
+    #fabgrunt.activate.run()
 
     fabgrunt.push_config.run()
     fabgrunt.build.run()
