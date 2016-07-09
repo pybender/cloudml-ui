@@ -22,7 +22,7 @@ def upgrade():
     op.add_column('model', sa.Column('servers_ids', JSONType(), nullable=True))
     op.add_column('xml_import_handler', sa.Column('servers_ids', JSONType(),
                                                   nullable=True))
-    set_server_ids()
+    #set_server_ids()
     ### end Alembic commands ###
 
 
