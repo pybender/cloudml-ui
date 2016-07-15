@@ -2,6 +2,9 @@
 
 Changelog
 =========
+Release 2016-07-
+* Task - Remove server memsize from server details page
+
 
 Release 2016-06-26
 ------------------
