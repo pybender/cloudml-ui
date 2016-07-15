@@ -18,7 +18,6 @@
     </form>
     <hr ng-show="selectedServer"/>
     <alert-message ng-show="error" class="alert-error" msg="{{ error }}" safe></alert-message>
-    <div ng-show="selectedServer"><b>Server Memory: </b>{{selectedServer.memory_mb}} MB</div>
     <div ng-show="selectedServer && !selectedServer.memoryStatsLoaded">Loading models on selected server ...</div>
     <div tooltip="Number of models' trainers on selected server"
          style="cursor: pointer"
