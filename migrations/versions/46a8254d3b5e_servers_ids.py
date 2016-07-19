@@ -12,7 +12,6 @@ down_revision = '1685b74d3aea'
 
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
 from api.base.models import JSONType
 from api.servers.scripts import set_server_ids
 
