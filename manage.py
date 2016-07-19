@@ -212,6 +212,41 @@ class CreateGrafanaDashboards(Command):
         print "Done"
 
 
+class ClearUnusedCache(Command):
+    """Remove unused files from DATA_FOLDER folder"""
+    def run(self):
+        from api.config import DATA_FOLDER
+        from api.test_config import DATA_FOLDER as TEST_DATA_FOLDER
+        from api.import_handlers.models import DataSet
+        from api.ml_models.models import Model, Transformer
+
+        print "Check and delete files in %s ..." % DATA_FOLDER
+        if os.path.exists(DATA_FOLDER):
+            files = [f for f in os.listdir(DATA_FOLDER)
+                     if os.path.isfile(os.path.join(DATA_FOLDER, f))]
+            datasets = DataSet.query.all()
+            dataset_files = [ds.data for ds in datasets if ds.data]
+            models = Model.query.all()
+            model_trainers = ["{}.dat".format(m.get_trainer_filename())
+                              for m in models]
+            transformers = Transformer.query.all()
+            tf_trainers = ["{}.dat".format(tf.get_trainer_filename())
+                           for tf in transformers]
+            for f in files:
+                if f not in dataset_files and f not in model_trainers and \
+                   f not in tf_trainers:
+                    os.remove(os.path.join(DATA_FOLDER, f))
+                    print "{} deleted".format(f)
+
+        print "Clear %s folder ..." % TEST_DATA_FOLDER
+        if os.path.exists(TEST_DATA_FOLDER):
+            for f in os.listdir(TEST_DATA_FOLDER):
+                fp = os.path.join(TEST_DATA_FOLDER, f)
+                if os.path.isfile(fp):
+                    os.remove(fp)
+        print "Done"
+
+
 manager = Manager(app)
 migrate = Migrate(app, app.sql_db)
 manager.add_command('clearlocalcache', ClearLocalCache())
@@ -229,6 +264,7 @@ manager.add_command("drop_db_tables", DropDbTables())
 manager.add_command("create_image", CreateWorkerImage())
 manager.add_command("update_deployed", UpdateDeployed())
 manager.add_command("create_grafana", CreateGrafanaDashboards())
+manager.add_command("clear_unused_cache", ClearUnusedCache())
 
 
 if __name__ == "__main__":
