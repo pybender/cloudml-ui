@@ -63,7 +63,7 @@ angular.module('app.servers.verifications', ['app.config', ])
       $scope.setError(opts, 'loading types and parameters')
     )
 
-    Server.$loadAll(show: ['name', 'id'].join(','))
+    Server.$loadAll(show: ['name', 'id'].join(','), sort_by: 'name', order: 'asc')
     .then $scope.getResponseHandler(
       $scope, {
         name: 'servers'
