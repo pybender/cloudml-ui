@@ -8,7 +8,11 @@ import logging
 import numpy
 import tempfile
 import numpy as np
-from datetime import datetime
+import datetime
+import dateutil.relativedelta
+import os
+from api.config import DATA_FOLDER
+from api.test_config import DATA_FOLDER as TEST_DATA_FOLDER
 
 from cloudml.trainer.trainer import Trainer, DEFAULT_SEGMENT
 from cloudml.trainer.config import FeatureModel
@@ -17,7 +21,7 @@ from api import celery, app
 from api.base.tasks import SqlAlchemyTask
 from api.logs.logger import init_logger
 from api.accounts.models import User
-from api.ml_models.models import Model, Segment
+from api.ml_models.models import Model, Segment, Transformer
 from api.import_handlers.models import DataSet
 from api.logs.dynamodb.models import LogMessage
 from api.base.io_utils import get_or_create_data_folder
@@ -26,7 +30,7 @@ from api.base.io_utils import get_or_create_data_folder
 __all__ = ['train_model', 'get_classifier_parameters_grid',
            'visualize_model', 'generate_visualization_tree',
            'transform_dataset_for_download',
-           'upload_segment_features_transformers']
+           'upload_segment_features_transformers', 'clear_model_data_cache']
 
 
 @celery.task(base=SqlAlchemyTask)
@@ -475,3 +479,42 @@ def upload_segment_features_transformers(model_id, segment_id, fformat):
         if os.path.exists(arc_name):
             os.remove(arc_name)
 
+
+@celery.task(base=SqlAlchemyTask)
+def clear_model_data_cache():
+    """Deletes trainer files and datasets from data and test data folders"""
+    now = datetime.datetime.now()
+    month_ago = now + dateutil.relativedelta.relativedelta(months=-1)
+    logging.info("Check and delete files in %s older than %s" % (DATA_FOLDER,
+                                                                 month_ago))
+    if os.path.exists(DATA_FOLDER):
+        files = [f for f in os.listdir(DATA_FOLDER)
+                 if os.path.isfile(os.path.join(DATA_FOLDER, f))]
+        datasets = []
+        models = Model.query.filter(Model.updated_on > month_ago).all()
+        model_trainers = ["{}.dat".format(m.get_trainer_filename())
+                          for m in models]
+        for model in models:
+            datasets.extend(model.datasets)
+        transformers = Transformer.query\
+            .filter(Transformer.updated_on > month_ago).all()
+        tf_trainers = ["{}.dat".format(tf.get_trainer_filename())
+                       for tf in transformers]
+        for tf in transformers:
+            datasets.extend(tf.datasets)
+
+        dataset_files = [ds.data for ds in datasets if ds.data]
+
+        for f in files:
+            if f not in set(dataset_files) and f not in model_trainers \
+                    and f not in tf_trainers:
+                os.remove(os.path.join(DATA_FOLDER, f))
+                logging.info("{} deleted".format(f))
+
+    logging.info("Clear %s folder ..." % TEST_DATA_FOLDER)
+    if os.path.exists(TEST_DATA_FOLDER):
+        for f in os.listdir(TEST_DATA_FOLDER):
+            fp = os.path.join(TEST_DATA_FOLDER, f)
+            if os.path.isfile(fp):
+                os.remove(fp)
+    logging.info("Finished")
