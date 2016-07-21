@@ -175,12 +175,12 @@ def deploy():
     #gunicorn.push_nginx_config.run()
     #nginx.restart.run()
 
-    virtualenv.create.run()
-    with prefix('export LAPACK=/usr/lib/liblapack.so'):
-        with prefix('export ATLAS=/usr/lib/libatlas.so'):
-            with prefix('export BLAS=/usr/lib/libblas.so'):
-                virtualenv.pip_install_req.run()
-    virtualenv.make_relocatable.run()
+    #virtualenv.create.run()
+    #with prefix('export LAPACK=/usr/lib/liblapack.so'):
+    #    with prefix('export ATLAS=/usr/lib/libatlas.so'):
+    #        with prefix('export BLAS=/usr/lib/libblas.so'):
+    #            virtualenv.pip_install_req.run()
+    #virtualenv.make_relocatable.run()
 
     release.activate.run()
 

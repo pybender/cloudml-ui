@@ -109,8 +109,11 @@ def train_model(dataset_ids, model_id, user_id, delete_metadata=False):
     except Exception, exc:
         app.sql_db.session.rollback()
 
-        logging.exception(
-            'Got exception when train model: {0!s}'.format(exc))
+        try:
+            logging.exception(
+                'Got exception when train model: {0!s}'.format(exc))
+        except:
+            logging.error('Got exception when train model: {0!s}'.format(exc))
         model.status = model.STATUS_ERROR
         model.error = str(exc)[:299]
         model.save()
