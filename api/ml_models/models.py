@@ -150,7 +150,9 @@ class BaseTrainedEntity(object):
     def get_trainer_filename(self):
         # we don't use sqlalchemy to avoid auto loading of trainer file
         # into trainer object
-        sql = text("SELECT trainer from model where id=:id")
+        from api.base.utils import convert_name
+        name = convert_name(self.__class__.__name__)
+        sql = text("SELECT trainer from %s where id=:id" % name)
         trainer_filename, = db.engine.execute(sql, id=self.id).first()
         return trainer_filename
 
