@@ -1,3 +1,4 @@
+pip==8.1.2
 Flask==0.10.1
 Flask-RESTful==0.1.6
 Flask-Script==0.5.3
