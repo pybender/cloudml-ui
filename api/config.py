@@ -1,5 +1,4 @@
 from kombu import Queue
-from datetime import timedelta
 
 SECRET_KEY = 'CHANGE_ME'
 STATIC_ROOT = None
@@ -32,11 +31,11 @@ CELERYD_MAX_TASKS_PER_CHILD = 1
 CELERYBEAT_SCHEDULE = {
     'add-every-30-seconds': {
         'task': 'api.instances.tasks.synchronyze_cluster_list',
-        'schedule': timedelta(seconds=30)
+        'schedule': 30
     },
     'add-every-week': {
         'task': 'api.ml_models.tasks.models.clear_model_data_cache',
-        'schedule': timedelta(days=7)
+        'schedule': 7 * 24 * 60 * 60
     },
 }
 
