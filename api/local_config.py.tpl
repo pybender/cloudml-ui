@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 SECRET_KEY = 'CHANGE_ME'
 SQLALCHEMY_DATABASE_URI = 'postgresql://cloudml:postgres@localhost/cloudml'
 
