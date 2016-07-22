@@ -53,7 +53,7 @@ describe 'servers/controllers.coffee', ->
 
   beforeEach inject (Server) ->
     $server = new Server
-    $base_url = $server.BASE_API_URL + "?show="
+    $base_url = $server.BASE_API_URL + "?order=asc&show="
 
   getServers = (fields) ->
     servers = [
@@ -78,7 +78,7 @@ describe 'servers/controllers.coffee', ->
     return servers_list
 
   expectServersHttpGet = (fields, withError=false) ->
-    url = $base_url + fields.join(',')
+    url = $base_url + fields.join(',') + "&sort_by=name"
 
     if not withError
       servers_list = getServers(fields)

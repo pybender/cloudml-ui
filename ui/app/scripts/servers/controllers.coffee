@@ -10,7 +10,7 @@ angular.module('app.servers.controllers', ['app.config', ])
     $scope.servers = []
 
     fields = ['name', 'id', 'is_default', 'memory_mb', 'type']
-    Server.$loadAll(show: fields.join(','))
+    Server.$loadAll(show: fields.join(','), sort_by: 'name', order: 'asc')
     .then $scope.getResponseHandler(
       $scope, {
         name: 'servers'
