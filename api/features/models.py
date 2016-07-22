@@ -180,6 +180,13 @@ class Feature(ExportImportMixin, RefFeatureSetMixin,
         if commit:
             db.session.commit()
 
+    @property
+    def can_delete(self):
+        if self.is_target_variable:
+            self.reason_msg = "Target variable can not be deleted"
+            return False
+        return super(Feature, self).can_delete
+
     @staticmethod
     def field_type_to_feature_type(field_type):
         if field_type == 'float' or field_type == 'boolean':

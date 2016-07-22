@@ -63,7 +63,7 @@ describe 'servers/verifications.coffee', ->
     $base_url = $verification.BASE_API_URL + "?show="
 
     $server = new Server({id: 1})
-    $server_base_url = $server.BASE_API_URL + "?show="
+    $server_base_url = $server.BASE_API_URL + "?order=asc&show="
 
   getServers = () ->
     servers = [
@@ -76,7 +76,7 @@ describe 'servers/verifications.coffee', ->
     return servers
 
   expectServersHttpGet = (withError=false) ->
-    url = $server_base_url + ['name', 'id'].join(',')
+    url = $server_base_url + ['name', 'id'].join(',') + "&sort_by=name"
 
     if not withError
       servers_list = getServers()

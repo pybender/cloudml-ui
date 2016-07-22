@@ -78,7 +78,7 @@
 			<td>
 				<a class="btn btn-info" href="#/models/{{ modelObj.id }}/features/{{ modelObj.features_set_id }}/edit/{{ feature.id }}"><i class="icon-edit" title="edit" /></a>
               	<a class="btn" ng-hide="feature.disabled==true  || feature.is_target_variable" title="Disable {{ feature.name }}: feature will not be included in generated JSON, but still active in training and testing" ng-click="toggleFeatureDisabled(feature)"><i class="icon-warning-sign"></i></a>
-				<button ng-click="deleteModel(feature)" class="btn btn-danger"><i title="Delete your feature. Be careful - you could not recover it!" class="icon-remove"></i></button>
+				<button ng-hide="feature.is_target_variable" ng-click="deleteModel(feature)" class="btn btn-danger"><i title="Delete your feature. Be careful - you could not recover it!" class="icon-remove"></i></button>
 			</td>
 		</tr>
 	</tbody>
