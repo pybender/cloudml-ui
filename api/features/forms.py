@@ -327,6 +327,31 @@ exist. Please choose another one.' % name)
             return True
         return value
 
+    def clean_disabled(self, value, field):
+        target_variable = self.cleaned_data.get('is_target_variable', None)
+        if target_variable or \
+                (self.obj.is_target_variable and target_variable is None):
+            return False
+        return value
+
+    def clean_is_target_variable(self, value, field):
+        if self.obj.is_target_variable and not value:
+            feature_set_id = self.cleaned_data.get('feature_set_id')
+            query = Feature.query.filter_by(
+                feature_set_id=feature_set_id)
+            if self.obj.id:
+                query = query.filter(Feature.id != self.obj.id)
+            features = query.all()
+            t_variable = None
+            for feature in features:
+                if feature.is_target_variable:
+                    t_variable = feature.name
+            if not t_variable:
+                raise ValidationError('Target variable is not set for model '
+                                      'feature set. Edit another feature in '
+                                      'order to change target variable')
+        return value
+
     def save(self, *args, **kwargs):
         remove_transformer = self.cleaned_data.get('remove_transformer', False)
         if remove_transformer and self.obj.transformer:

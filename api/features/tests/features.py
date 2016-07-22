@@ -230,7 +230,8 @@ Can not load it: aaa, transformer-type: type is invalid"})
         # TODO: Fix this hack. use refs in fixtures
         Feature.query.update(dict(feature_set_id=fset.id))
 
-        data = {'is_target_variable': 'true'}
+        data = {'is_target_variable': 'true', 'required': 'false',
+                'disabled': 'true'}
         params = {'is_target_variable': False,
                   'feature_set_id': str(fset.id)}
         feature = Feature.query.filter_by(**params)[0]
@@ -242,11 +243,28 @@ Can not load it: aaa, transformer-type: type is invalid"})
         logging.debug('Target varialble is %s', feature.name)
         feature = Feature.query.get(feature.id)
         self.assertTrue(feature.is_target_variable)
+        self.assertTrue(feature.required)
+        self.assertFalse(feature.disabled)
 
         features = Feature.query.filter_by(**params)
         self.assertTrue(features.count())
         for f in features:
             self.assertFalse(f.is_target_variable)
+
+        # check setting target variable to false when no other target variable
+        # in features set
+        resp, feature = self.check_edit(data, id=feature.id)
+        data = {'is_target_variable': 'false'}
+        url = self._get_url(id=feature.id, method='put')
+        resp = self.client.put(url, data=data, headers=HTTP_HEADERS)
+        self.assertEqual(400, resp.status_code)
+        self.assertIn('Target variable is not set', resp.data)
+
+        # check deleting target variable
+        url = self._get_url(id=feature.id)
+        resp = self.client.delete(url, headers=HTTP_HEADERS)
+        self.assertEqual(405, resp.status_code)
+        self.assertIn('Target variable can not be deleted', resp.data)
 
 
 class TestFeaturesDocs(BaseDbTestCase):
