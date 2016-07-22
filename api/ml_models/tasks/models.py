@@ -12,7 +12,6 @@ import datetime
 import dateutil.relativedelta
 import os
 from api.config import DATA_FOLDER
-from api.test_config import DATA_FOLDER as TEST_DATA_FOLDER
 
 from cloudml.trainer.trainer import Trainer, DEFAULT_SEGMENT
 from cloudml.trainer.config import FeatureModel
@@ -511,10 +510,15 @@ def clear_model_data_cache():
                 os.remove(os.path.join(DATA_FOLDER, f))
                 logging.info("{} deleted".format(f))
 
-    logging.info("Clear %s folder ..." % TEST_DATA_FOLDER)
-    if os.path.exists(TEST_DATA_FOLDER):
-        for f in os.listdir(TEST_DATA_FOLDER):
-            fp = os.path.join(TEST_DATA_FOLDER, f)
-            if os.path.isfile(fp):
-                os.remove(fp)
+    try:
+        from api.test_config import DATA_FOLDER as TEST_DATA_FOLDER
+        logging.info("Clear %s folder ..." % TEST_DATA_FOLDER)
+        if os.path.exists(TEST_DATA_FOLDER):
+            for f in os.listdir(TEST_DATA_FOLDER):
+                fp = os.path.join(TEST_DATA_FOLDER, f)
+                if os.path.isfile(fp):
+                    os.remove(fp)
+    except Exception:
+        pass
+    
     logging.info("Finished")
