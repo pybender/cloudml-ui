@@ -2,7 +2,13 @@
 
 Changelog
 =========
-Release 2016-07-
+Release 2016-07-??
+------------------
+* Bug - Download transformer data link appears on Completed status now
+* Bug - Deletion of target variable is not possible now
+* Bug - Recalculate incorrect tags counters (using manage.py command)
+* Task - Order servers by name in lists (dialogs selects)
+* Task - Added link to jupyter from application
 * Task - Remove server memsize from server details page
 
 
