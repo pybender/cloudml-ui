@@ -142,8 +142,14 @@ def migrate():
 def cdeploy():
     release.work_on.run(0)
     git.push.run()
-    supervisor.restart_program.run(program='gunicorn')
-    supervisor.restart_program.run(program='celeryd')
+    supervisor.push_configs.run()
+    flask.push_flask_config.run()
+    gunicorn.push_config.run()
+    with prefix('export PATH=$PATH:/usr/local/bin'):
+        supervisor.update.run()
+        supervisor.restart_program.run(program='gunicorn')
+        supervisor.restart_program.run(program='celeryd')
+        supervisor.restart_program.run(program='celerycam')
 
 
 @task
