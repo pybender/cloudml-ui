@@ -1,5 +1,3 @@
-from datetime import timedelta
-
 SECRET_KEY = 'CHANGE_ME'
 SQLALCHEMY_DATABASE_URI = '{{ database_uri }}'
 STATIC_ROOT = None
@@ -37,7 +35,7 @@ CELERYD_MAX_TASKS_PER_CHILD = 1
 CELERYBEAT_SCHEDULE = {
     'add-every-week': {
         'task': 'api.ml_models.tasks.models.clear_model_data_cache',
-        'schedule': timedelta(days=7)
+        'schedule': 7 * 24 * 60 * 60
     },
 }
 
