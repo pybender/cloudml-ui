@@ -7,7 +7,7 @@ alembic==0.6.2
 Flask-Migrate==1.2.0
 Jinja2==2.7.3
 Werkzeug==0.9.6
-numpy==1.7.1
+numpy==1.10.04
 gunicorn
 scipy==0.12.0
 -e git+https://github.com/odeskdataproducts/scikit-learn.git@MATCH-61_word2vec_doc2vec#egg=scikit-learn
