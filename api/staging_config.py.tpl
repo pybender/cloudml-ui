@@ -33,7 +33,7 @@ CELERYD_MAX_TASKS_PER_CHILD = 1
 CELERYBEAT_SCHEDULE = {
     'add-every-week': {
         'task': 'api.ml_models.tasks.models.clear_model_data_cache',
-        'schedule': timedelta(days=7)
+        'schedule': timedelta(minutes=10)
     },
 }
 
