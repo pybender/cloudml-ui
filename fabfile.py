@@ -180,7 +180,7 @@ def deploy():
             with prefix('export BLAS=/usr/lib/libblas.so'):
                 virtualenv.pip_install.run(app='numpy==1.10.04')
                 virtualenv.pip_install.run(app='scipy==0.12.0')
-                virtualenv.pip_install.run(app='pip==8.1.2')
+                sudo('pip install --upgrade pip')
                 virtualenv.pip_install_req.run()
     virtualenv.make_relocatable.run()
 
