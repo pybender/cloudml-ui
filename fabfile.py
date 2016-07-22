@@ -178,6 +178,8 @@ def deploy():
     with prefix('export LAPACK=/usr/lib/liblapack.so'):
         with prefix('export ATLAS=/usr/lib/libatlas.so'):
             with prefix('export BLAS=/usr/lib/libblas.so'):
+                virtualenv.pip_install.run(app='numpy==1.10.04')
+                virtualenv.pip_install.run(app='scipy==0.12.0')
                 virtualenv.pip_install_req.run()
     virtualenv.make_relocatable.run()
 
