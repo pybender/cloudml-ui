@@ -4,6 +4,7 @@ Changelog
 =========
 Release 2016-07-??
 ------------------
+* Task - Clearing local cache (via periodical celery task)
 * Bug - Download transformer data link appears on Completed status now
 * Bug - Deletion of target variable is not possible now
 * Bug - Recalculate incorrect tags counters (using manage.py command)
