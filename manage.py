@@ -39,7 +39,7 @@ class Celeryd(Command):
     """Runs the default Celery worker node."""
 
     def run(self, **kwargs):
-        os.system("env CELERYD_FSNOTIFY=stat celery -A api.tasks worker --autoreload --concurrency=10 -Q default -E --loglevel=info")
+        os.system("env CELERYD_FSNOTIFY=stat celery -A api.tasks worker --beat --autoreload --concurrency=10 -Q default -E --loglevel=info")
 
 
 class Celeryw(Command):
@@ -212,6 +212,14 @@ class CreateGrafanaDashboards(Command):
         print "Done"
 
 
+class RecalculateCounters(Command):
+    """Recalculates models tags counters"""
+    def run(self):
+        from api.ml_models.scripts import recalculate_tags_counters
+        recalculate_tags_counters()
+        print "Done"
+
+
 manager = Manager(app)
 migrate = Migrate(app, app.sql_db)
 manager.add_command('clearlocalcache', ClearLocalCache())
@@ -229,6 +237,7 @@ manager.add_command("drop_db_tables", DropDbTables())
 manager.add_command("create_image", CreateWorkerImage())
 manager.add_command("update_deployed", UpdateDeployed())
 manager.add_command("create_grafana", CreateGrafanaDashboards())
+manager.add_command("recalculate_counters", RecalculateCounters())
 
 
 if __name__ == "__main__":

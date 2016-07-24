@@ -256,7 +256,7 @@
               <i class="icon-calendar"></i> created on <span class="badge badge-info" title="dates in GMT">{{ download.task.created_on|format_date }}</span>
               <i class="icon-th"></i>transformers data for segment <span class="label">{{ download.segment.name }}</span>
               <span class="badge badge-info">{{ download.task.status }}</span>
-              <a class="btn btn-small" href="{{ download.task.result }}" target="_blank">Download</a>
+              <a ng-show="download.task.status == 'Completed'" class="btn btn-small" href="{{ download.task.result }}" target="_blank">Download</a>
               <div class="span3 pull-right">
                   <button class="btn btn-link pull-right" ng-click="showLogs(download.task.id)">Show logs</button>
               </div>

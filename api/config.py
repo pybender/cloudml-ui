@@ -34,6 +34,10 @@ CELERYBEAT_SCHEDULE = {
         'task': 'api.instances.tasks.synchronyze_cluster_list',
         'schedule': timedelta(seconds=30)
     },
+    'add-every-week': {
+        'task': 'api.ml_models.tasks.models.clear_model_data_cache',
+        'schedule': timedelta(days=7)
+    },
 }
 
 
