@@ -2,7 +2,7 @@
 
 Changelog
 =========
-Release 2016-07-??
+Release 2016-07-24
 ------------------
 * Task - Clearing local cache (via periodical celery task)
 * Bug - Download transformer data link appears on Completed status now
