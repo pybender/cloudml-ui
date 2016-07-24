@@ -88,15 +88,17 @@ def train_model(dataset_ids, model_id, user_id, delete_metadata=False):
         mem_usage = memory_usage(-1, interval=0, timeout=None)
         trainer.clear_temp_data()
 
+        logging.info('Store trainer to s3')
         model.set_trainer(trainer)
         model.save()
+        logging.info('Set train records')
         model.memory_usage = max(mem_usage)
         model.train_records_count = int(sum((
             d.records_count for d in model.datasets)))
         train_end_time = datetime.utcnow()
         model.training_time = int((train_end_time - train_begin_time).seconds)
         model.save()
-
+        logging.info('Get segment info')
         segments = trainer._get_segments_info()
         if not segments or not segments.keys():
             raise Exception('No segments in the model')
