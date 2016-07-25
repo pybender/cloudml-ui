@@ -82,7 +82,7 @@ def train_model(dataset_ids, model_id, user_id, delete_metadata=False):
         from memory_profiler import memory_usage
         # mem_usage = memory_usage((trainer.train,
         #                          (train_iter,)), interval=0)
-        train_begin_time = datetime.utcnow()
+        train_begin_time = datetime.datetime.utcnow()
 
         from api.ml_models.models import get_transformer
         trainer.set_transformer_getter(get_transformer)
@@ -98,7 +98,7 @@ def train_model(dataset_ids, model_id, user_id, delete_metadata=False):
         model.memory_usage = max(mem_usage)
         model.train_records_count = int(sum((
             d.records_count for d in model.datasets)))
-        train_end_time = datetime.utcnow()
+        train_end_time = datetime.datetime.utcnow()
         model.training_time = int((train_end_time - train_begin_time).seconds)
         model.save()
         logging.info('Get segment info')
