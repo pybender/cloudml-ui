@@ -405,7 +405,8 @@ class ServerModelTests(BaseDbTestCase):
         'user_name': 'Nader',
         'type': None,
         'hide': False,
-        'crc32': 'crc32'
+        'crc32': 'crc32',
+        'loading_error': 'Some error'
     }
 
     @patch('api.servers.models.AmazonS3Helper')
@@ -446,9 +447,9 @@ class ServerModelTests(BaseDbTestCase):
         obj = objs[0]
         self.assertListEqual(
             obj.keys(),
-            ['uploaded_on', 'object_type', 'last_modified', 'crc32',
-             'id', 'size', 'server_id', 'user_id', 'name', 'object_id',
-             'object_name', 'user_name'])
+            ['uploaded_on', 'object_type', 'loading_error', 'last_modified',
+             'crc32', 'id', 'size', 'server_id', 'user_id', 'name',
+             'object_id', 'object_name', 'user_name'])
         self.assertEqual(obj['id'], 'n3sz3FTFQJeUOe33VF2A.model')
         self.assertEqual(obj['object_name'], get_metadata('object_name'))
         self.assertEqual(obj['size'], 123321)
@@ -461,6 +462,7 @@ class ServerModelTests(BaseDbTestCase):
         self.assertEqual(obj['user_id'], get_metadata('user_id'))
         self.assertEqual(obj['user_name'], get_metadata('user_name'))
         self.assertEqual(obj['server_id'], server.id)
+        self.assertEqual(obj['loading_error'], get_metadata('loading_error'))
 
         # sort by id
         s3_mock.list_keys.return_value = [{'Key': one_key.name},
