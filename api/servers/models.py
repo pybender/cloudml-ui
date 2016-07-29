@@ -80,7 +80,8 @@ class Server(BaseModel, db.Model):
                 'user_id': key['Metadata'].get('user_id', None),
                 'user_name': key['Metadata'].get('user_name', None),
                 'crc32': key['Metadata'].get('crc32', None),
-                'server_id': self.id
+                'server_id': self.id,
+                'loading_error': key['Metadata'].get('loading_error', None)
             })
 
         sort_by = params.get('sort_by', None)
