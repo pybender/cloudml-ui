@@ -286,19 +286,19 @@ class XmlImportHandlerPartResource(BaseResourceSQL):
             return mthd(action, **kwargs)
 
     def post(self, action=None, **kwargs):
-        return self._modify('post',
-                           'Forbidden to add entities to this import handler.',
-                           action, **kwargs)
+        return self._modify(
+            'post', 'Forbidden to add entities to this import handler.',
+            action, **kwargs)
 
     def put(self, action=None, **kwargs):
-        return self._modify('put',
-                           'Forbidden to change entities of this import '
-                           'handler.', action, **kwargs)
+        return self._modify(
+            'put', 'Forbidden to change entities of this import handler.',
+            action, **kwargs)
 
     def delete(self, action=None, **kwargs):
-        return self._modify('delete',
-                           'Forbidden to delete entities of this import '
-                           'handler.', action, **kwargs)
+        return self._modify(
+            'delete', 'Forbidden to delete entities of this import handler.',
+            action, **kwargs)
 
 
 class XmlInputParameterResource(XmlImportHandlerPartResource):

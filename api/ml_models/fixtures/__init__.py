@@ -37,6 +37,7 @@ FEATURES_CORRECT_WITH_DISABLED = open(os.path.join(
 FEATURES_INCORRECT = open(os.path.join(
     DIR, 'features_incorrect.json'), 'r').read()
 
+
 class ModelData(DataSet):
     class model_01:
         features_set = FeatureSetData.bestmatch

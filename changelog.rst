@@ -2,6 +2,16 @@
 
 Changelog
 =========
+Release 2016-07-??
+------------------
+* Task - Show dataset id in train and test dialogs
+* Task - Added clearing memory heap when generate example test details page
+* Task - Added profiler middleware
+* Task - Adding index to updated_by cloumn to optimize My models (import handlers) requests
+* Task - Display file loading error on predict servers
+* Task - Display log loss metric
+
+
 Release 2016-07-24
 ------------------
 * Task - Clearing local cache (via periodical celery task)

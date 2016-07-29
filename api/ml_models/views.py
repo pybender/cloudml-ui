@@ -79,8 +79,8 @@ class BaseTrainedEntityResource(BaseResourceSQL):
         if tests_in_progress:
             return odesk_error_response(405, ERR_INVALID_METHOD,
                                         'There are some tests of this model '
-                                        'in progress. Please, wait for a moment'
-                                        ' before re-training model.')
+                                        'in progress. Please, wait for a '
+                                        'moment before re-training model.')
         # start train model
         delete_metadata = obj.status != obj.STATUS_NEW
         form = self.train_form(obj=obj, **kwargs)

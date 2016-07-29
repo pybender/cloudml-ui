@@ -116,6 +116,7 @@ class FeatureData(DataSet):
         type = "text"
         feature_set = FeatureSetData.bestmatch_02
 
+
 class PredefinedScalerData(DataSet):
     class scaler_01:
         name = u"my scaler"

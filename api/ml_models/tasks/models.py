@@ -59,7 +59,8 @@ def train_model(dataset_ids, model_id, user_id, delete_metadata=False):
         logging.info(
             'DataSet files chosen for training: %s'
             % ', '.join(['{0} (id #{1})'.
-            format(dataset.filename, dataset.id) for dataset in datasets]))
+                        format(dataset.filename, dataset.id)
+                         for dataset in datasets]))
         logging.info('Perform model training')
         feature_model = FeatureModel(model.get_features_json(),
                                      is_file=False)
@@ -394,9 +395,9 @@ def upload_segment_features_transformers(model_id, segment_id, fformat):
     from api.async_tasks.models import AsyncTask
     if upload_segment_features_transformers.request.id is not None:
         tasks = AsyncTask.query\
-            .filter_by(task_id=
-                       upload_segment_features_transformers.request.id)\
-            .limit(1)
+            .filter_by(
+                task_id=upload_segment_features_transformers.request.id
+            ).limit(1)
         log_id = tasks[0].id
 
     init_logger('prepare_transformer_for_download_log',

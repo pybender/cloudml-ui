@@ -213,6 +213,7 @@ class ModelTasksTests(BaseDbTestCase):
         # repeat logic from task here except posting to Amazon S3
         try:
             fformat = 'json'
+
             def _save_content(content, feature_name, transformer_type):
                 filename = "{0}-{1}-{2}-data.{3}".format(segment.name,
                                                          feature_name,
@@ -249,7 +250,7 @@ class ModelTasksTests(BaseDbTestCase):
                         data = feature["transformer"].load_vocabulary()
                         files.append(_save_content(data, name,
                                                    feature["transformer-type"])
-                        )
+                                     )
                     except AttributeError:
                         continue
 

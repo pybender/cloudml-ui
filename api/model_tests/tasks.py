@@ -319,8 +319,8 @@ def calculate_confusion_matrix(test_id, weights):
         weighted_prob = []
         for weight in weights:
             index = model.labels.index(weight[0])
-            weighted_prob.append(weight[1] * example.prob[index]
-                                 / weighted_sum)
+            weighted_prob.append(
+                weight[1] * example.prob[index] / weighted_sum)
 
         predicted = weighted_prob.index(max(weighted_prob))
         matrix[true_value_idx][predicted] += 1
@@ -428,7 +428,6 @@ def get_csv_results(model_id, test_id, fields):
         header = list(fields)
         if 'prob' in header:
             prob_index = header.index('prob')
-            #for label in test.model.labels:
             for label in reversed(test.classes_set):
                 header.insert(prob_index, 'prob_%s' % label)
             header.remove('prob')
