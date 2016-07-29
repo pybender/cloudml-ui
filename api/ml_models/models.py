@@ -133,6 +133,7 @@ class BaseTrainedEntity(object):
             self.save()
 
     def get_trainer(self, loaded=True, force_load=False):
+        logging.info("Getting the model %s trainer", self.name)
         if loaded:
             if not hasattr(self, 'loaded_trainer') or force_load:
                 from cloudml.trainer.store import TrainerStorage

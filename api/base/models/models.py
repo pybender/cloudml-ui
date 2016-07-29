@@ -87,7 +87,7 @@ class BaseModel(BaseMixin):
     @declared_attr
     def updated_by_id(cls):
         return db.Column(
-            db.ForeignKey('user.id', ondelete='SET NULL'))
+            db.ForeignKey('user.id', ondelete='SET NULL'), index=True)
 
     @declared_attr
     def updated_by(cls):

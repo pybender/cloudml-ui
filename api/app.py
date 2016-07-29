@@ -8,9 +8,9 @@ import re
 from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
 from werkzeug.routing import BaseConverter
+# from werkzeug.contrib.profiler import ProfilerMiddleware
 
 __all__ = ["create_app"]
-
 
 class App(Flask):
 
@@ -39,7 +39,9 @@ class App(Flask):
 
 
 def create_app():
-    return App(__name__)
+    app = App(__name__)
+    # app.wsgi_app = ProfilerMiddleware(app.wsgi_app)
+    return app
 
 
 class RegExConverter(BaseConverter):
