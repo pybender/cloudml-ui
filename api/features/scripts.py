@@ -11,7 +11,7 @@ def update_target_variable():
         if fs.target_variable:
             Feature.query.filter(Feature.feature_set_id == fs.id)\
                 .filter(Feature.name == fs.target_variable)\
-                .filter(Feature.is_target_variable == False)\
+                .filter(Feature.is_target_variable is not True)\
                 .update({Feature.is_target_variable: True})
     db.session.commit()
     print "Done"

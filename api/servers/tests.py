@@ -202,7 +202,6 @@ class ServerFileResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertEqual(404, resp.status_code)
         self.assertIn('not found', resp.data)
 
-
     @patch('api.amazon_utils.AmazonS3Helper.set_key_metadata')
     @patch('api.servers.models.Server.list_keys')
     @patch('api.servers.tasks.update_at_server')
@@ -466,7 +465,7 @@ class ServerModelTests(BaseDbTestCase):
 
         # sort by id
         s3_mock.list_keys.return_value = [{'Key': one_key.name},
-            {'Key': two_key.name}]
+                                          {'Key': two_key.name}]
         helper_mock.return_value = s3_mock
         params = {'sort_by': 'id', 'order': 'desc'}
         objs = server.list_keys(folder=None, params=params)
@@ -483,7 +482,8 @@ class ServerModelTests(BaseDbTestCase):
 
 
 class VerifyModelTaskTests(BaseDbTestCase, TestChecksMixin):
-    datasets = [ServerModelVerificationData, VerificationExampleData, TestExampleData]
+    datasets = [ServerModelVerificationData, VerificationExampleData,
+                TestExampleData]
 
     def setUp(self):
         super(VerifyModelTaskTests, self).setUp()
@@ -722,7 +722,6 @@ class VerificationExampleResourceTests(BaseDbTestCase, TestChecksMixin):
         self.BASE_URL = self.BASE_URL.format(verification.id)
         self.obj = self.Model.query.first()
 
-
     def test_list(self):
         resp = self.check_list(show=self.SHOW)
         model = self._get_resp_object(resp)
@@ -743,4 +742,3 @@ class VerificationExampleResourceTests(BaseDbTestCase, TestChecksMixin):
         self.check_details(
             show=self.SHOW,
             fixture_cls=VerificationExampleData.verification_example_01)
-

@@ -74,7 +74,8 @@ class Cluster(BaseModel, db.Model):
         Available ports are in range: `PORT_RANGE`.
         """
         exclude = set([cl[0] for cl in Cluster.query.with_entities(
-            Cluster.port).filter(Cluster.status!=Cluster.STATUS_TERMINATED, Cluster.status!=Cluster.STATUS_ERROR)])
+            Cluster.port).filter(Cluster.status != Cluster.STATUS_TERMINATED,
+                                 Cluster.status != Cluster.STATUS_ERROR)])
         ports = list(set(xrange(*self.PORT_RANGE)) - exclude)
         if ports:
             self.port = random.choice(ports)

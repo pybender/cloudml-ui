@@ -72,14 +72,14 @@ def set_server_ids():
         print "Process server #{0} {1}".format(server.id, server.name)
         for key in server.list_keys(folder=FOLDER_MODELS):
             k = str(key['object_id'])
-            if k in models and not server.id in models[k]:
+            if k in models and server.id not in models[k]:
                 models[k].append(server.id)
             else:
                 models[k] = [server.id]
 
         for key in server.list_keys(folder=FOLDER_IMPORT_HANDLERS):
             k = str(key['object_id'])
-            if k in ihs and not server.id in ihs[k]:
+            if k in ihs and server.id not in ihs[k]:
                 ihs[k].append(server.id)
             else:
                 ihs[k] = [server.id]

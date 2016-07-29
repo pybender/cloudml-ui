@@ -12,6 +12,7 @@ from werkzeug.routing import BaseConverter
 
 __all__ = ["create_app"]
 
+
 class App(Flask):
 
     def __init__(self, *args, **kwargs):

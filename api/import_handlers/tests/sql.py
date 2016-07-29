@@ -63,21 +63,25 @@ from api import app
 #         )
 
 #         self.assertEquals(
-#             self.obj.build_query("SELECT * FROM (SELECT name from some_table "
+#             self.obj.build_query("SELECT * FROM (SELECT name from "
+#                                  "some_table "
 #                                  "LIMIT 100) some_alias LIMIT 20;", limit=1),
-#             "SELECT * FROM (SELECT name from some_table LIMIT 100) some_alias "
+#             "SELECT * FROM (SELECT name from some_table LIMIT 100) "
+#             "some_alias "
 #             "LIMIT 1"
 #         )
 
 #         self.assertEquals(
 #             self.obj.build_query(
-#                 'select * from (select name from tbl limit 100) al', limit=2),
+#                 'select * from (select name from tbl limit 100) al',
+#                 limit=2),
 #             'select * from (select name from tbl limit 100) al LIMIT 2'
 #         )
 
 #         self.assertEquals(
 #             self.obj.build_query(
-#                 'SELECT * FROM some_table LIMIT 100; DELETE FROM some_table;',
+#                 'SELECT * FROM some_table LIMIT 100; DELETE FROM '
+#                 'some_table;',
 #                 limit=2),
 #             'SELECT * FROM some_table LIMIT 2; '
 #         )
