@@ -7,6 +7,7 @@ TestResult and TestExample models.
 from collections import defaultdict
 import math
 import scipy
+import gc
 
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import relationship, deferred, backref
@@ -200,25 +201,25 @@ class TestExample(db.Model, BaseModel):
         model = self.model
         feature_model = model.get_trainer()._feature_model
         segment = 'default'
-        if len(model.get_trainer().with_segmentation) > 0:
+        trainer = model.get_trainer()
+        if len(trainer.with_segmentation) > 0:
             ndata = dict([(key.replace('->', '.'), val)
                           for key, val in self.data_input.iteritems()])
-            data = model.get_trainer()._apply_feature_types(ndata)
+            data = trainer._apply_feature_types(ndata)
             segment = "_".join(
                 [str(data[feature_name]) for feature_name in
-                 model.get_trainer()._feature_model.group_by])
-            features = model.get_trainer().features[segment]
-            for feature_name in model.get_trainer()._feature_model.group_by:
+                 trainer._feature_model.group_by])
+            features = trainer.features[segment]
+            for feature_name in trainer._feature_model.group_by:
                 features.pop(feature_name)
         else:
             try:
-                features = model.get_trainer().features[segment]
+                features = trainer.features[segment]
             except:
                 features = feature_model.features
 
         ndata = dict([(key.replace('->', '.'), val)
                       for key, val in self.data_input.iteritems()])
-        trainer = model.get_trainer()
         trainer._prepare_data(
             iter([ndata, ]), callback=None, save_raw=False, is_predict=True)
         vect_data1 = trainer._get_vectorized_data(
@@ -240,6 +241,9 @@ class TestExample(db.Model, BaseModel):
             model_weights, self.data_input, data))
         self.weighted_data_input = weighted_data
         self.save()
+        del trainer
+        gc.collect()
+
 
     @classmethod
     def get_grouped(cls, field, model_id, test_result_id):
