@@ -4,6 +4,12 @@
     </div>
     <hr/>
 </div>
+<div ng-show="test.metrics.log_loss">
+   <div>
+        Logistic Loss (Cross-Entropy Loss): <span class="value">{{ test.metrics.log_loss|number:4 }}</span>
+   </div>
+   <hr/>
+</div>
 <div ng-show="test.metrics.type == 'classification'">
   <h4>Receiver operating characteristic</h4>
   <div class="row">
