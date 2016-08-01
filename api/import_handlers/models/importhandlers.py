@@ -343,12 +343,14 @@ class XmlImportHandler(db.Model, ImportHandlerMixin, BaseDeployedEntity):
 
     @property
     def can_edit(self):
-        return self._check_deployed() and super(XmlImportHandler, self).can_edit
+        return self._check_deployed() and super(
+            XmlImportHandler, self).can_edit
 
     @property
     def can_delete(self):
         return self._check_deployed() and super(
             XmlImportHandler, self).can_delete
+
 
 class RefXmlImportHandlerMixin(object):
     @declared_attr
@@ -444,7 +446,8 @@ class XmlScript(db.Model, BaseMixin, RefXmlImportHandlerMixin):
         return key
 
     def to_xml(self, to_string=False, pretty_print=True):
-        attrib = {"src": self.data} if self.type == XmlScript.TYPE_PYTHON_FILE \
+        attrib = {"src": self.data} \
+            if self.type == XmlScript.TYPE_PYTHON_FILE \
             else {}
         text = self.data if self.type == XmlScript.TYPE_PYTHON_CODE else None
         elem = etree.Element(self.type, attrib)

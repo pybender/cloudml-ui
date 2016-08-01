@@ -9,7 +9,7 @@
   <div ng-hide="data.new_dataset_selected">
     <div class="control-group" ng-class="{error: Form.dataset.$invalid || errorList.dataset}">
       <select class="input-xlarge" ui-select2="select2Options" ng-multiple="multiple_dataset" name="dataset" ng-model="data.dataset" ng-required="!data.new_dataset_selected">
-        <option ng-repeat="ds in datasets" value="{{ ds.id }}">{{ ds.name }}</option>
+        <option ng-repeat="ds in datasets" value="{{ ds.id }}">{{ ds.id ? '(#'+ds.id+')' : '' }} {{ ds.name }}</option>
       </select>
       <span ng-show="Form.dataset.$error.required" class="help-block">Choose successfull loaded dataset</span>
       <span ng-show="errorList.dataset" class="help-block" ng-bind="errorList.dataset" />

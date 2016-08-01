@@ -244,7 +244,6 @@ class TestExample(db.Model, BaseModel):
         del trainer
         gc.collect()
 
-
     @classmethod
     def get_grouped(cls, field, model_id, test_result_id):
         cursor = cls.query.filter_by(

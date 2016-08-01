@@ -69,8 +69,8 @@ class BaseDbTestCase(TestCase):
         app.sql_db.session.expunge_all()
         app.sql_db.session.remove()
         app.sql_db.drop_all()
-        #cls.dynamodb_mock.stop()
-        #cls.s3_mock.stop()
+        # cls.dynamodb_mock.stop()
+        # cls.s3_mock.stop()
 
     def setUp(self):
         # Clean all tables

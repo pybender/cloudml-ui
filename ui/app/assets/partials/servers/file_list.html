@@ -17,7 +17,8 @@
 <tbody>
   <tr ng-repeat="file in objects">
     <td title="Key UUID {{ file.id }}">
-      <a href="#{{ file.obj.objectUrl() }}">{{ file.obj.name }}</a>
+      <a href="#{{ file.obj.objectUrl() }}">{{ file.obj.name }}</a><br/>
+      <alert-message ng-show="file.loading_error" class="alert-error alert-in-table" msg="Loading error: {{ file.loading_error }}" unsafe></alert-message>
     </td>
     <td>
       <span title="Name" class="name" ng-bind="file.name || 'not specified'" editable="file" value="file.name" editable-field="name" editable-input="text" editable-placement="right" editable-required></span>

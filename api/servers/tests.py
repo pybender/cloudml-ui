@@ -202,7 +202,6 @@ class ServerFileResourceTests(BaseDbTestCase, TestChecksMixin):
         self.assertEqual(404, resp.status_code)
         self.assertIn('not found', resp.data)
 
-
     @patch('api.amazon_utils.AmazonS3Helper.set_key_metadata')
     @patch('api.servers.models.Server.list_keys')
     @patch('api.servers.tasks.update_at_server')
@@ -405,7 +404,8 @@ class ServerModelTests(BaseDbTestCase):
         'user_name': 'Nader',
         'type': None,
         'hide': False,
-        'crc32': 'crc32'
+        'crc32': 'crc32',
+        'loading_error': 'Some error'
     }
 
     @patch('api.servers.models.AmazonS3Helper')
@@ -446,9 +446,9 @@ class ServerModelTests(BaseDbTestCase):
         obj = objs[0]
         self.assertListEqual(
             obj.keys(),
-            ['uploaded_on', 'object_type', 'last_modified', 'crc32',
-             'id', 'size', 'server_id', 'user_id', 'name', 'object_id',
-             'object_name', 'user_name'])
+            ['uploaded_on', 'object_type', 'loading_error', 'last_modified',
+             'crc32', 'id', 'size', 'server_id', 'user_id', 'name',
+             'object_id', 'object_name', 'user_name'])
         self.assertEqual(obj['id'], 'n3sz3FTFQJeUOe33VF2A.model')
         self.assertEqual(obj['object_name'], get_metadata('object_name'))
         self.assertEqual(obj['size'], 123321)
@@ -461,10 +461,11 @@ class ServerModelTests(BaseDbTestCase):
         self.assertEqual(obj['user_id'], get_metadata('user_id'))
         self.assertEqual(obj['user_name'], get_metadata('user_name'))
         self.assertEqual(obj['server_id'], server.id)
+        self.assertEqual(obj['loading_error'], get_metadata('loading_error'))
 
         # sort by id
         s3_mock.list_keys.return_value = [{'Key': one_key.name},
-            {'Key': two_key.name}]
+                                          {'Key': two_key.name}]
         helper_mock.return_value = s3_mock
         params = {'sort_by': 'id', 'order': 'desc'}
         objs = server.list_keys(folder=None, params=params)
@@ -481,7 +482,8 @@ class ServerModelTests(BaseDbTestCase):
 
 
 class VerifyModelTaskTests(BaseDbTestCase, TestChecksMixin):
-    datasets = [ServerModelVerificationData, VerificationExampleData, TestExampleData]
+    datasets = [ServerModelVerificationData, VerificationExampleData,
+                TestExampleData]
 
     def setUp(self):
         super(VerifyModelTaskTests, self).setUp()
@@ -720,7 +722,6 @@ class VerificationExampleResourceTests(BaseDbTestCase, TestChecksMixin):
         self.BASE_URL = self.BASE_URL.format(verification.id)
         self.obj = self.Model.query.first()
 
-
     def test_list(self):
         resp = self.check_list(show=self.SHOW)
         model = self._get_resp_object(resp)
@@ -741,4 +742,3 @@ class VerificationExampleResourceTests(BaseDbTestCase, TestChecksMixin):
         self.check_details(
             show=self.SHOW,
             fixture_cls=VerificationExampleData.verification_example_01)
-

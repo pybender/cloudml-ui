@@ -138,7 +138,8 @@ class TestInstanceTasks(BaseDbTestCase):
                     "Message": "Msg"
                 },
                 "InstanceId": "some_id"
-            }):
+            }
+        ):
             res = get_request_instance(
                 'some_id',
                 callback='train',

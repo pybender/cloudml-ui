@@ -120,5 +120,5 @@ class LogMessage(object):
         if not app.config['TEST_MODE']:
             db.delete_items(
                 cls.TABLE_NAME, keys=['id', 'object_id'],
-                KeyConditionExpression=
-                Key('object_id').eq(object_id) & Key('id').begins_with(type_))
+                KeyConditionExpression=Key('object_id').eq(object_id) &
+                Key('id').begins_with(type_))

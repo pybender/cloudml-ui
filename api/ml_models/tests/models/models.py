@@ -136,4 +136,3 @@ class ModelTests(BaseDbTestCase):
         self.assertEqual(1, len(datasets))
         self.assertFalse(datasets[0].locked)
         self.assertEqual(tag.count, count-1)
-

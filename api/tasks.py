@@ -16,6 +16,7 @@ TRAIN_TRANSFORMER = 'api.ml_models.tasks.transformers.train_transformer'
 TRANSFORMERS_UPLOAD_TASK = 'api.ml_models.tasks.models.' \
                            'upload_segment_features_transformers'
 
+
 def get_object_from_task(task_name, args, kwargs):  # pragma: no cover
     cls = None
     obj_id = None

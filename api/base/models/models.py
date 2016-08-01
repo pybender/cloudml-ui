@@ -158,4 +158,3 @@ class BaseDeployedEntity(object):
                     servers.append(server)
         return sorted(servers, key=lambda x: Server.TYPES.index(x.type),
                       reverse=True)
-

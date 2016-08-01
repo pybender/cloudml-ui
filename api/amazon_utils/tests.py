@@ -100,7 +100,7 @@ class AmazonS3HelperTests(TestCase):
         # PutObject_2
         self.assertTrue(helper.save_key('name',
                                         os.path.join(self.PILL_RESPONSES_DIR,
-                                        'put/test_file.py'),
+                                                     'put/test_file.py'),
                                         {'model_id': 234}))
         # PutObject_3
         self.assertTrue(helper.save_key_string('name', 'data',

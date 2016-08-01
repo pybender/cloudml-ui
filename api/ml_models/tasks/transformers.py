@@ -75,7 +75,8 @@ def train_transformer(dataset_ids, transformer_id, user_id,
         logging.info(
             'DataSet files chosen for training: %s'
             % ', '.join(['{0} (id #{1})'.
-            format(dataset.filename, dataset.id) for dataset in datasets]))
+                        format(dataset.filename, dataset.id)
+                         for dataset in datasets]))
         from memory_profiler import memory_usage
         train_begin_time = datetime.utcnow()
         trainer = transformer.train(train_iter)

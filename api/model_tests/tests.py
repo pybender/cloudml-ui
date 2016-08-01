@@ -710,7 +710,7 @@ class TasksRunTestTests(BaseDbTestCase, TestChecksMixin):
         self.assertIsInstance(test.classes_set, list)
 
         # any new metric added, you should add corresponding asserts
-        self.assertEqual(6, len(test.metrics.keys()))
+        self.assertEqual(7, len(test.metrics.keys()))
 
         self.assertTrue('confusion_matrix' in test.metrics)
         self.assertEqual(
@@ -738,6 +738,9 @@ class TasksRunTestTests(BaseDbTestCase, TestChecksMixin):
         self.assertTrue('average_precision' in test.metrics)
         self.assertIsInstance(test.metrics['average_precision'], float)
 
+        self.assertTrue('log_loss' in test.metrics)
+        self.assertIsInstance(test.metrics['log_loss'], float)
+
     @patch('api.amazon_utils.AmazonS3Helper.load_key')
     @patch('api.models.Model.get_trainer')
     @patch('api.models.DataSet.get_data_stream')
@@ -763,7 +766,7 @@ class TasksRunTestTests(BaseDbTestCase, TestChecksMixin):
         self.assertIsInstance(test.classes_set, list)
 
         # any new metric added, you should add corresponding asserts
-        self.assertEqual(4, len(test.metrics.keys()))
+        self.assertEqual(5, len(test.metrics.keys()))
 
         for pos_label in test.classes_set:
             self.assertTrue('roc_curve' in test.metrics)
@@ -789,6 +792,9 @@ class TasksRunTestTests(BaseDbTestCase, TestChecksMixin):
 
         self.assertTrue('accuracy' in test.metrics)
         self.assertIsInstance(test.metrics['accuracy'], float)
+
+        self.assertTrue('log_loss' in test.metrics)
+        self.assertIsInstance(test.metrics['log_loss'], float)
 
     @patch('api.amazon_utils.AmazonS3Helper.load_key')
     @patch('api.models.Model.get_trainer')

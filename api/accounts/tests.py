@@ -396,15 +396,15 @@ class OdeskAuthTests(TestCase):
         auth = OdeskAuth()
         self.assertRaises(AuthException, auth.get_auth_url)
 
-    @patch('oauth2.Client.request', Mock(return_value=
-                                         OAUTH_RESPONSE_ERROR_TOKEN))
+    @patch('oauth2.Client.request',
+           Mock(return_value=OAUTH_RESPONSE_ERROR_TOKEN))
     def test_odesk_auth_request_token_error(self):
         from api.accounts.auth import OdeskAuth, AuthException
         auth = OdeskAuth()
         self.assertRaises(AuthException, auth.get_auth_url)
 
-    @patch('oauth2.Client.request', Mock(return_value=
-                                         OAUTH_RESPONSE_ERROR_SECRET))
+    @patch('oauth2.Client.request',
+           Mock(return_value=OAUTH_RESPONSE_ERROR_SECRET))
     def test_odesk_auth_request_secret_error(self):
         from api.accounts.auth import OdeskAuth, AuthException
         auth = OdeskAuth()

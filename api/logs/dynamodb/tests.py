@@ -7,6 +7,7 @@ from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS
 from api.logs.views import LogResource
 from models import LogMessage
 
+
 class LogsTests(BaseDbTestCase, TestChecksMixin):
     BASE_URL = '/cloudml/logs/'
     RESOURCE = LogResource
@@ -113,11 +114,13 @@ class LogsTests(BaseDbTestCase, TestChecksMixin):
                             {'operator': '<=',
                              'values': ['level', 1]}
                         ]
-                    }
+                        }
                 },
-                'result': {'items': [], 'items_from_mock': [],
-                           'next_token': None
-                }
+                'result': {
+                    'items': [],
+                    'items_from_mock': [],
+                    'next_token': None
+                    }
             },
             {
                 'request': {'object_id': self.OBJECT_ID,
@@ -271,7 +274,6 @@ class LogsTests(BaseDbTestCase, TestChecksMixin):
             next_token = json.loads(resp.data)['next_token']
             self.assertEqual(sc['result']['items'], items)
             self.assertEqual(sc['result']['next_token'], next_token)
-
 
     # TODO: enable this test when checking query filters is possible
     def xtest_list_with_levels(self):
