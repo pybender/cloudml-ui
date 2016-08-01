@@ -28,6 +28,7 @@ ui/node_modules/*
 ui/bower_components
 npm-debug.log
 local.json
+models/bestmatchv12.dat
 
 target
 

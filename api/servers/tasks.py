@@ -63,6 +63,10 @@ def upload_model_to_server(server_id, model_id, user_id):
     }
 
     trainer_data = model.trainer
+    from cloudml.trainer.store import load_trainer
+    trainer = load_trainer(trainer_data)
+    trainer.visualization = None
+    trainer_data = store_trainer(trainer)
     s3.save_key_string(path, trainer_data, meta)
     s3.close()
     model.locked = True

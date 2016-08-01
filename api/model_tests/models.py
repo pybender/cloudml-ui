@@ -199,9 +199,9 @@ class TestExample(db.Model, BaseModel):
 
         from api.ml_models.helpers.features import get_features_vect_data
         model = self.model
-        feature_model = model.get_trainer()._feature_model
-        segment = 'default'
         trainer = model.get_trainer()
+        feature_model = trainer._feature_model
+        segment = 'default'
         if len(trainer.with_segmentation) > 0:
             ndata = dict([(key.replace('->', '.'), val)
                           for key, val in self.data_input.iteritems()])
