@@ -65,6 +65,11 @@ def upload_model_to_server(server_id, model_id, user_id):
     #trainer = model.get_trainer()
     #from cloudml.trainer.store import load_trainer
     #trainer = load_trainer(trainer_data)
+    from cloudml.trainer.store import TrainerStorage
+    from bson import Binary
+    import cPickle as pickle
+    trainer_data = Binary(TrainerStorage(trainer).dumps())
+    logging.info(len(trainer_data))
     #trainer.visualization = None
     #trainer_data = store_trainer(trainer)
     #trainer_data = model.trainer
