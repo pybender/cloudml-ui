@@ -231,8 +231,9 @@ class VerifyModelTask(object):
         import predict as predict_module
         base_path = os.path.dirname(predict_module.__file__)
         base_path = os.path.split(base_path)[0]
-        config_file = "%s.properties" % Server.ENV_MAP[
-            self.verification.server.type]
+        #config_file = "%s.properties" % Server.ENV_MAP[
+        #    self.verification.server.type]
+        config_file = "prod.properties"
 
         config_file = os.path.join(base_path, 'env', config_file)
         logging.info('Using %s config file', config_file)
