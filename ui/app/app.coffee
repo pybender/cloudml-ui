@@ -62,6 +62,8 @@ App = angular.module('app', [
   'app.servers.model'
   'app.servers.controllers'
   'app.servers.verifications'
+  'app.about.model'
+  'app.about.controllers'
 
   'app.play.controllers'
 ])
@@ -324,6 +326,11 @@ App.config([
       controller: "DataSourceListCtrl"
       templateUrl: 'partials/datasources/list.html'
       title: 'Predefined Datasources'
+    })
+    .when('/about', {
+      controller: "AboutCtrl"
+      templateUrl: 'partials/about.html'
+      title: 'About'
     })
 
     # Catch all

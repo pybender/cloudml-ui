@@ -1,0 +1,19 @@
+<alert-message ng-show="err" class="alert-error" msg='{{ err }}' unsafe></alert-message>
+
+<h2 class="title">About</h2>
+<br/>
+<div>Version: <span class="value">{{ about.version }}</span></div>
+<br/>
+<h5>Declarative machine learning classifier project</h5>
+<ul>
+  <li>Simple and efficient tools for data mining and data analysis</li>
+  <li>Accessible to everybody, and reusable in various contexts</li>
+  <li>Built on NumPy, SciPy, scikit-learn</li>
+  <li>Open source</li>
+</ul>
+<br/>
+<div>Release notes:</div>
+<div class="span8 releasenotes">
+  <pre>{{ about.releasenotes }}</pre>
+</div>
+

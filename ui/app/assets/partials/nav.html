@@ -1,5 +1,5 @@
 
-<ul class="nav nav-pills" ng-show="user">
+<ul class="custom-padding nav nav-pills" ng-show="user">
   <li ng-class="getClass('/dashboard')"><a ng-href="#/dashboard">dashboard</a></li>
   <li ng-class="getClass('/models')"><a ng-href="#/models">models</a></li>
   <li ng-class="getClass('/importhandlers/xml')">
@@ -42,6 +42,7 @@
   <li><a href="/docs/">docs</a></li>
   <li><a href="/flower/">flower</a></li>
   <li><a href="/jupyter/tree/">jupyter</a></li>
+  <li ng-class="getClass('/about')"><a ng-href="#/about">about</a></li>
 </ul>
 
-<ul class="nav pull-right" ng-include="'partials/login/user.html'" ng-controller="UserCtl" ng-init="init()"></ul>
+<ul class="custom-padding nav pull-right" ng-include="'partials/login/user.html'" ng-controller="UserCtl" ng-init="init()"></ul>
