@@ -14,7 +14,7 @@ from app import create_app
 from rest_api import Api
 
 
-__version__ = '0.0.1'
+__version__ = '2016.08.08'
 
 app = create_app()
 celery = Celery('cloudml')
