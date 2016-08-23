@@ -62,7 +62,17 @@ def upload_model_to_server(server_id, model_id, user_id):
         'uploaded_on': str(datetime.now())
     }
 
-    trainer_data = model.trainer
+    #trainer = model.get_trainer()
+    #from cloudml.trainer.store import load_trainer
+    #trainer = load_trainer(trainer_data)
+    from cloudml.trainer.store import TrainerStorage
+    from bson import Binary
+    import cPickle as pickle
+    trainer_data = Binary(TrainerStorage(trainer).dumps())
+    logging.info(len(trainer_data))
+    #trainer.visualization = None
+    #trainer_data = store_trainer(trainer)
+    #trainer_data = model.trainer
     s3.save_key_string(path, trainer_data, meta)
     s3.close()
     model.locked = True
@@ -221,8 +231,9 @@ class VerifyModelTask(object):
         import predict as predict_module
         base_path = os.path.dirname(predict_module.__file__)
         base_path = os.path.split(base_path)[0]
-        config_file = "%s.properties" % Server.ENV_MAP[
-            self.verification.server.type]
+        #config_file = "%s.properties" % Server.ENV_MAP[
+        #    self.verification.server.type]
+        config_file = "prod.properties"
 
         config_file = os.path.join(base_path, 'env', config_file)
         logging.info('Using %s config file', config_file)

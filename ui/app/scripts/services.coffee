@@ -4,7 +4,7 @@
 
 services = angular.module('app.services', ['app.config',])
 
-services.factory 'version', -> "0.1"
+services.factory 'version', -> "2016-08-08"
 
 services.factory('auth', ['$http'
   '$cookieStore'
