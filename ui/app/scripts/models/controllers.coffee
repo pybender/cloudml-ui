@@ -45,13 +45,12 @@ angular.module('app.models.controllers', ['app.config', ])
   '$scope'
   '$location'
   'Model'
-  'MODEL_FIELDS'
 
-  ($scope, $location, Model, MODEL_FIELDS) ->
+  ($scope, $location, Model) ->
     $scope.MODEL = Model
-    $scope.FIELDS = MODEL_FIELDS + ',' + ['tags','created_on','created_by',
-                                          'updated_on','updated_by',
-                                          'comparable'].join(',')
+    $scope.FIELDS = ['name','status','locked','servers',
+                     'tags','created_on','created_by', 'updated_on',
+                     'updated_by','comparable'].join(',')
     $scope.ACTION = 'loading models'
     $scope.currentTag = $location.search()['tag']
     $scope.STATUSES = ['', 'New', 'Queued', 'Importing',
