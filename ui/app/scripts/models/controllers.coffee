@@ -67,19 +67,17 @@ angular.module('app.models.controllers', ['app.config', ])
         order: order
         page: 1
       }
-      if updatedByMe
-        $scope.$watch('user', (user, oldVal, scope) ->
-          if user?
+      $scope.$watch('user', (user, oldVal, scope) ->
+        if user?
+          if updatedByMe
             $scope.filter_opts = {
               'updated_by_id': user.id
               'status': ''}
-            $scope.$watch('filter_opts', (filter_opts, oldVal, scope) ->
-              $scope.kwargs['page'] = 1
-              $scope.$emit 'BaseListCtrl:start:load', modelName
-            , true)
-        , true)
-      else
-        $scope.filter_opts = {'status': ''}
+            $scope.kwargs['page'] = 1
+            $scope.$emit 'BaseListCtrl:start:load', modelName
+          else
+            $scope.filter_opts = {'status': ''}
+      , true)
 
 ])
 
