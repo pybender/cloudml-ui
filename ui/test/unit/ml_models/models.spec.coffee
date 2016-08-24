@@ -50,12 +50,12 @@ describe 'ML Models Controllers', ->
 
   describe 'ModelListCtrl', ->
 
-    beforeEach inject (Model, MODEL_FIELDS)->
+    beforeEach inject (Model)->
       $location.search {tag: 'zozo'}
-      createController 'ModelListCtrl', {Model: Model, $location: $location, MODEL_FIELDS: MODEL_FIELDS}
+      createController 'ModelListCtrl', {Model: Model, $location: $location}
       expect($scope.MODEL).toEqual Model
-      expect($scope.FIELDS).toEqual = MODEL_FIELDS + ',' +
-        ['tags','created_on','created_by', 'updated_on','updated_by', 'comparable'].join(',')
+      expect($scope.FIELDS).toEqual = ['name','status','locked','servers','tags','created_on',
+                                       'created_by', 'updated_on','updated_by', 'comparable'].join(',')
       expect($scope.ACTION).toEqual 'loading models'
       expect($scope.currentTag).toEqual = 'zozo'
       expect($scope.STATUSES).toEqual ['', 'New', 'Queued', 'Importing',
@@ -90,11 +90,13 @@ describe 'ML Models Controllers', ->
       expect($scope.$emit.calls.mostRecent().args).toEqual ['BaseListCtrl:start:load', 'some_model_name']
 
     it  'should init scope, no updatedByMe', ->
+      $scope.user =
+        id: 1111
+        name: 'user'
+
+      $scope.init null, 'some_model_name', 'updated_on', 'asc'
       $scope.$digest()
 
-      $scope.$emit = jasmine.createSpy '$scope.$emit'
-
-      $scope.init null, 'some_model_name'
       expect($scope.modelName).toEqual 'some_model_name'
       expect($scope.filter_opts).toEqual
         status: ''
