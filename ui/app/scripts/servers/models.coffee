@@ -115,7 +115,8 @@ angular.module('app.servers.model', ['app.config'])
         resolver = (resp, Model) ->
           {
             total: resp.data.found
-            objects: resp.data.files
+            files: resp.data.files
+            all_model_files: resp.data.all_model_files
             _resp: resp
           }
         @$make_all_request("#{@prototype.BASE_API_URL}action/models/",

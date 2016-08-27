@@ -18,6 +18,29 @@ class ServerResource(BaseResourceSQL):
     ALLOWED_METHODS = ('get', )
 
     def _get_models_action(self, **kwargs):
+        cntx = {
+        'files': [
+            {'model_name': 'm1',
+                'model_metadata': 'm1',
+                'model': {'id': 1},
+                'import_handler_name': 'h1',
+                'import_handler': {'id': 1},
+                'import_handler_metadata': {}
+            },
+            {
+                'import_handler_name': 'h2',
+                'import_handler': {'id': 2},
+                'import_handler_metadata': {}
+            }
+        ],
+        'all_model_files': [
+            {'id': "id.model",
+            'last_modified': "2015-11-09 15:38:44+00:00",
+            'name': "fjp-psm-v9",
+            'object_id': 1},
+        ]
+        }
+        return self._render(cntx)
         parser_params = (('server', str), )
         params = self._parse_parameters(parser_params)
         server_id = params.get('server')
@@ -35,20 +58,29 @@ class ServerResource(BaseResourceSQL):
         for h in import_handlers_obj:
             plan = ExtractionPlan(h.get_plan_config(), is_file=False)
             if plan.predict and plan.predict.models:
-                model_name = plan.predict.models[0].value
-                model_key = models_map.get(model_name)
-                if model_key:
-                    handler_key = handler_map[h.id]
-                    model_obj = Model.query.get(model_key.get('object_id'))
+                pmodel = plan.predict.models[0]
+                model_name = pmodels.value
+                handler_key = handler_map[h.id]
+                if pmodel.value:
+                    model_key = models_map.get(pmodel.value)
+                    if model_key:
+                        model_obj = Model.query.get(model_key.get('object_id'))
+                        results.append({
+                            'model_name': pmodel.value,
+                            'model_metadata': model_key,
+                            'model': model_obj,
+                            'import_handler_name': handler_key.get('name'),
+                            'import_handler': h,
+                            'import_handler_metadata': handler_key
+                        })
+                else:  # model is defined in the script
                     results.append({
-                        'model_name': model_name,
-                        'model_metadata': model_key,
-                        'model': model_obj,
                         'import_handler_name': handler_key.get('name'),
                         'import_handler': h,
                         'import_handler_metadata': handler_key
                     })
-        return self._render({'files': results})
+
+        return self._render({'files': results, 'all_model_files': models})
 
 
 api.add_resource(ServerResource, '/cloudml/servers/')
