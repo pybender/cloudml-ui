@@ -62,7 +62,7 @@ def upload_model_to_server(server_id, model_id, user_id):
         'uploaded_on': str(datetime.now())
     }
 
-    #trainer = model.get_trainer()
+    trainer = model.get_trainer()
     #from cloudml.trainer.store import load_trainer
     #trainer = load_trainer(trainer_data)
     from cloudml.trainer.store import TrainerStorage

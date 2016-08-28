@@ -1,3 +1,4 @@
+import logging
 from botocore.exceptions import ClientError
 from flask import request
 
@@ -33,22 +34,36 @@ class ServerResource(BaseResourceSQL):
             XmlImportHandler.id.in_(ids)).all()
         from cloudml.importhandler.importhandler import ExtractionPlan
         for h in import_handlers_obj:
-            plan = ExtractionPlan(h.get_plan_config(), is_file=False)
+            try:
+                plan = ExtractionPlan(h.get_plan_config(), is_file=False)
+            except Exception, exc:
+                logging.error('Corrupted import handler: {0}'.format(h.id))
+                continue
+
             if plan.predict and plan.predict.models:
-                model_name = plan.predict.models[0].value
-                model_key = models_map.get(model_name)
-                if model_key:
-                    handler_key = handler_map[h.id]
-                    model_obj = Model.query.get(model_key.get('object_id'))
+                pmodel = plan.predict.models[0]
+                model_name = pmodels.value
+                handler_key = handler_map[h.id]
+                if pmodel.value:
+                    model_key = models_map.get(pmodel.value)
+                    if model_key:
+                        model_obj = Model.query.get(model_key.get('object_id'))
+                        results.append({
+                            'model_name': pmodel.value,
+                            'model_metadata': model_key,
+                            'model': model_obj,
+                            'import_handler_name': handler_key.get('name'),
+                            'import_handler': h,
+                            'import_handler_metadata': handler_key
+                        })
+                else:  # model is defined in the script
                     results.append({
-                        'model_name': model_name,
-                        'model_metadata': model_key,
-                        'model': model_obj,
                         'import_handler_name': handler_key.get('name'),
                         'import_handler': h,
                         'import_handler_metadata': handler_key
                     })
-        return self._render({'files': results})
+
+        return self._render({'files': results, 'all_model_files': models})
 
 
 api.add_resource(ServerResource, '/cloudml/servers/')
