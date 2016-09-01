@@ -2,6 +2,9 @@
 
 Changelog
 =========
+* Bug - Reduced loading time of model list
+* Bug - Don't allow deletion of model when training is in progress
+
 Release 2016-08-08
 ------------------
 * Task - Show dataset id in train and test dialogs
