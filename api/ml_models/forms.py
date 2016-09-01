@@ -446,3 +446,23 @@ class VisualizationOptionsForm(BaseForm):
         from tasks import generate_visualization_tree
         parameters = self.cleaned_data.get('parameters')
         generate_visualization_tree.delay(self.obj.id, parameters['deep'])
+
+
+class ModelPartsSizeCalculationForm(BaseForm):
+    required_fields = ('deep')
+    deep = IntegerField()
+
+    def clean_deep(self, value, field):
+        try:
+            val = int(value)
+            if val < 1:
+                raise ValidationError('deep should be positive value')
+            return val
+        except Exception, exc:
+            raise ValidationError("Can't parse deep parameter: {}"
+                                  .format(exc.message))
+
+    def process(self):
+        from tasks import calculate_model_parts_size
+        deep = self.cleaned_data.get('deep')
+        calculate_model_parts_size.delay(self.obj.id, deep)

@@ -51,7 +51,7 @@ angular.module('app.models.model', ['app.config'])
       training_in_progress: false
       grid_search_in_progress: false
       new_dataset: null
-
+      model_parts_size: null
       servers: []
 
       loadFromJSON: (origData) ->
@@ -172,6 +172,10 @@ angular.module('app.models.model', ['app.config'])
       $putTransformersDataDownload: (segment, file_format)->
         url = "#{@BASE_API_URL}#{@id}/action/transformers_download/"
         @$make_request(url, {}, "PUT", {segment: segment, data_format: file_format})
+
+      $putCalculateModelPartsSize: (deep)->
+        url = "#{@BASE_API_URL}#{@id}/action/calculate_model_parts_size/"
+        @$make_request(url, {}, "PUT", {deep: deep})
 
     return Model
 ])

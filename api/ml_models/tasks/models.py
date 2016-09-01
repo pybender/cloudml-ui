@@ -29,7 +29,8 @@ from api.base.io_utils import get_or_create_data_folder
 __all__ = ['train_model', 'get_classifier_parameters_grid',
            'visualize_model', 'generate_visualization_tree',
            'transform_dataset_for_download',
-           'upload_segment_features_transformers', 'clear_model_data_cache']
+           'upload_segment_features_transformers', 'clear_model_data_cache',
+           'calculate_model_parts_size']
 
 
 @celery.task(base=SqlAlchemyTask)
@@ -110,7 +111,9 @@ def train_model(dataset_ids, model_id, user_id, delete_metadata=False):
         model.create_segments(segments)
 
         for segment in model.segments:
-            visualize_model.delay(model.id, segment.id)
+            visualize_model.apply_async(
+                (model.id, segment.id),
+                link=calculate_model_parts_size.s(model.id))
 
     except Exception, exc:
         app.sql_db.session.rollback()
@@ -528,3 +531,43 @@ def clear_model_data_cache():
         pass
 
     logging.info("Finished")
+
+
+@celery.task(base=SqlAlchemyTask)
+def calculate_model_parts_size(whatever, model_id, deep=6):
+    from sys import getsizeof
+    from pympler.asizeof import asizeof
+    init_logger('trainmodel_log', obj=int(model_id))
+    logging.info('Starting calculation size of model parts')
+
+    model = Model.query.get(model_id)
+    trainer = model.get_trainer()
+
+    def walk_object(obj, name, recursion_deep):
+        res = {"name": name, "size": asizeof(obj), "properties": []}
+
+        if recursion_deep > 0:
+            try:
+                for attr, value in obj.iteritems():
+                    res["properties"].append(walk_object(value, attr,
+                                                         recursion_deep - 1))
+            except Exception:
+                try:
+                    for attr in dir(obj):
+                        if not attr.startswith('__') and \
+                                not callable(getattr(obj, attr)):
+                            value = getattr(obj, attr)
+                            res["properties"].append(walk_object(value, attr,
+                                                      recursion_deep - 1))
+                except Exception:
+                    pass
+        return res
+
+    try:
+        model.model_parts_size = walk_object(trainer, "model trainer", deep)
+        model.save()
+    except Exception as e:
+        logging.warning('Exception while calculating model parts size: {}'
+                        .format(e.message))
+    logging.info('PARTS SIZE: {}'.format(model.model_parts_size))
+    logging.info('Finished calculation')
