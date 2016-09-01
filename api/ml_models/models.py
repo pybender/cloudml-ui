@@ -432,7 +432,11 @@ class Model(db.Model, BaseModel, BaseTrainedEntity, BaseDeployedEntity):
 
     @property
     def can_delete(self):
-        return self._check_deployed() and super(Model, self).can_delete
+        if self.training_in_progress:
+            self.reason_msg = "The model cannot be deleted while training is" \
+                              " still in progress."
+        return self._check_deployed() and not self.training_in_progress and \
+            super(Model, self).can_delete
 
 tags_table = db.Table(
     'model_tag', db.Model.metadata,
@@ -511,6 +515,14 @@ class Transformer(BaseModel, BaseTrainedEntity, db.Model):
             transformer_config = json["transformer"]
             self.type = transformer_config.get("type")
             self.params = transformer_config.get("params")
+
+    @property
+    def can_delete(self):
+        if self.training_in_progress:
+            self.reason_msg = "The transformer cannot be deleted while " \
+                              "training is still in progress."
+        return not self.training_in_progress and \
+            super(Transformer, self).can_delete
 
 
 def get_transformer(name):
