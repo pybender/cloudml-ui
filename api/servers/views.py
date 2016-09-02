@@ -42,7 +42,7 @@ class ServerResource(BaseResourceSQL):
 
             if plan.predict and plan.predict.models:
                 pmodel = plan.predict.models[0]
-                model_name = pmodels.value
+                model_name = pmodel.value
                 handler_key = handler_map[h.id]
                 if pmodel.value:
                     model_key = models_map.get(pmodel.value)
