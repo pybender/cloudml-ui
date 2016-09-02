@@ -13,6 +13,9 @@ from celery import Celery
 from app import create_app
 from rest_api import Api
 
+
+__version__ = '2016.08.08'
+
 app = create_app()
 celery = Celery('cloudml')
 celery.add_defaults(lambda: app.config)
@@ -39,7 +42,7 @@ if app.config.get('SEND_ERROR_EMAILS'):
     mail_handler.setLevel(logging.ERROR)
     app.logger.addHandler(mail_handler)
 
-APPS = ('accounts', 'features', 'import_handlers', 'instances',
+APPS = ('about', 'accounts', 'features', 'import_handlers', 'instances',
         'logs', 'ml_models', 'model_tests', 'statistics', 'reports',
         'async_tasks', 'servers')
 

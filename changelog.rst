@@ -2,11 +2,13 @@
 
 Changelog
 =========
-Release 2016-07-??
+* Bug - Reduced loading time of model list
+* Bug - Don't allow deletion of model when training is in progress
+
+Release 2016-08-08
 ------------------
 * Task - Show dataset id in train and test dialogs
 * Task - Added clearing memory heap when generate example test details page
-* Task - Added profiler middleware
 * Task - Adding index to updated_by cloumn to optimize My models (import handlers) requests
 * Task - Display file loading error on predict servers
 * Task - Display log loss metric
