@@ -165,7 +165,7 @@ class BaseForm(InternalForm):
                 if hasattr(self, mthd):
                     value = getattr(self, mthd)(value, field)
             except ValidationError, exc:
-                self.add_error(name, str(exc))
+                self.add_error(name, str(exc), exc)
 
             if value is not None:
                 self.cleaned_data[name] = value
@@ -174,7 +174,7 @@ class BaseForm(InternalForm):
         try:
             self.validate_data()
         except ValidationError, exc:
-            self.add_error("fields", str(exc))
+            self.add_error("fields", str(exc), exc)
 
         if not self.no_required:
             # Check required fields
@@ -209,7 +209,8 @@ fields %s is required' % ', '.join(fields))
             except ValidationError, exc:
                 if form.filled:
                     self.errors.append(
-                        {'name': '%s' % name, 'error': str(exc)})
+                        {'name': '%s' % name, 'error': str(exc),
+                         'traceback': exc.traceback})
 
         if self.errors:
             raise ValidationError(self.error_messages, errors=self.errors)
@@ -220,7 +221,7 @@ fields %s is required' % ', '.join(fields))
 
         return self.cleaned_data
 
-    def add_error(self, name, msg):
+    def add_error(self, name, msg, exc=None):
         """
         Update the content of `self._errors`.
         """
@@ -228,7 +229,14 @@ fields %s is required' % ', '.join(fields))
             field_name = '%s-%s' % (self.inner_name, name)
         else:
             field_name = name
-        self.errors.append({'name': field_name, 'error': msg})
+        tb = None
+        if exc is not None:
+            if hasattr(exc, 'traceback'):
+                tb = exc.traceback
+            else:
+                e = ValidationError(msg, exc)
+                tb = e.traceback
+        self.errors.append({'name': field_name, 'error': msg, 'traceback': tb})
 
     def save_inner(self):
         return self.save(False, True)

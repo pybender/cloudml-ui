@@ -25,7 +25,15 @@ from cloudml.importhandler.utils import PROCESS_STRATEGIES
 from api.base.models import db, BaseModel
 from api.base.models.models import BaseDeployedEntity
 from api import app
+from api.base.exceptions import ApiBaseException
 
+
+class XMLScriptError(ApiBaseException):
+    pass
+
+
+class ImportHandlerError(ApiBaseException):
+    pass
 
 class ImportHandlerMixin(BaseModel):
     """
@@ -297,8 +305,8 @@ class XmlImportHandler(db.Model, ImportHandlerMixin, BaseDeployedEntity):
             plan = ExtractionPlan(self.data, is_file=False)
             return get_entity_fields(plan.entity)
         except Exception, exc:
-            raise
             logging.error(exc)
+            raise ImportHandlerError(exc.message, exc)
 
     def list_fields(self):
         # we should have the ih saved to db to get its fields

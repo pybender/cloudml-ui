@@ -85,9 +85,9 @@ class ServerFileResource(BaseResource):
             file_name = '{0}/{1}'.format(folder, uid)
             update_at_server.delay(file_name, server.id)
         except ValueError as err:
-            return odesk_error_response(400, 1006, str(err))
+            return odesk_error_response(400, 1006, str(err), err)
         except AmazonS3ObjectNotFound as err:
-            return odesk_error_response(404, 1006, str(err))
+            return odesk_error_response(404, 1006, str(err), err)
 
         return self._render({self.OBJECT_NAME: {'id': uid}})
 
@@ -118,9 +118,9 @@ class ServerFileResource(BaseResource):
             file_name = '{0}/{1}'.format(folder, uid)
             update_at_server.delay(file_name, server.id)
         except AmazonS3ObjectNotFound as err:
-            return odesk_error_response(404, 1001, str(err))
+            return odesk_error_response(404, 1001, str(err), err)
         except ClientError as err:
-            return odesk_error_response(500, 1006, str(err))
+            return odesk_error_response(500, 1006, str(err), err)
         return '', 204
 
     def _get_uid(self, kwargs):

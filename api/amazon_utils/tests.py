@@ -13,7 +13,7 @@ from botocore.response import StreamingBody
 from boto3.dynamodb.conditions import Key
 from flask.ext.testing import TestCase
 from api.amazon_utils import AmazonS3Helper, AmazonDynamoDBHelper, \
-    AmazonS3ObjectNotFound, AmazonEMRHelper, AmazonEC2Helper
+    AmazonS3ObjectNotFound, AmazonEMRHelper, AmazonEC2Helper, S3ResponseError
 from api import app
 
 
@@ -152,7 +152,7 @@ class AmazonS3HelperTests(TestCase):
 
         helper = AmazonS3Helper(**self.credentials)
         # HeadBucket_1
-        self.assertRaises(ClientError, helper._check_or_create_bucket)
+        self.assertRaises(S3ResponseError, helper._check_or_create_bucket)
 
         # HeadBucket_2
         self.assertTrue(helper._check_or_create_bucket())

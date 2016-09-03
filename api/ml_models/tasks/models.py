@@ -17,7 +17,7 @@ from cloudml.trainer.trainer import Trainer, DEFAULT_SEGMENT
 from cloudml.trainer.config import FeatureModel
 
 from api import celery, app
-from api.base.tasks import SqlAlchemyTask
+from api.base.tasks import SqlAlchemyTask, TaskException, get_task_traceback
 from api.logs.logger import init_logger
 from api.accounts.models import User
 from api.ml_models.models import Model, Segment, Transformer
@@ -114,16 +114,12 @@ def train_model(dataset_ids, model_id, user_id, delete_metadata=False):
 
     except Exception, exc:
         app.sql_db.session.rollback()
-
-        try:
-            logging.exception(
-                'Got exception when train model: {0!s}'.format(exc))
-        except:
-            logging.error('Got exception when train model: {0!s}'.format(exc))
+        logging.error('Got exception when train model: {0} \n {1}'
+                      .format(exc.message, get_task_traceback(exc)))
         model.status = model.STATUS_ERROR
         model.error = str(exc)[:299]
         model.save()
-        raise
+        raise TaskException(exc.message, exc)
 
     msg = "Model trained at %s" % trainer.train_time
     logging.info(msg)
@@ -180,10 +176,11 @@ def get_classifier_parameters_grid(grid_params_id):
         grid_params.status = 'Completed'
         grid_params.save()
     except Exception, e:
-        logging.exception('Got exception on grid params search: {}'.format(e))
+        logging.error('Got exception on grid params search: {0} \n {1}'
+                      .format(e.message, get_task_traceback(e)))
         grid_params.status = 'Error'
         grid_params.save()
-        raise
+        raise TaskException(e.message, e)
 
     msg = "Parameters grid search done"
     logging.info(msg)
@@ -258,11 +255,12 @@ def visualize_model(model_id, segment_id=None):
         model.save()
 
     except Exception, exc:
-        logging.exception('Got exception when visualize the model: %s', exc)
+        logging.error('Got exception when visualize the model: {0} \n {1}'
+                      .format(exc.message, get_task_traceback(exc)))
         model.status = model.STATUS_ERROR
         model.error = str(exc)[:299]
         model.save()
-        raise
+        raise TaskException(exc.message, exc)
     return 'Segment %s of the model %s has been visualized' % \
         (segment.name, model.name)
 
@@ -440,8 +438,8 @@ def upload_segment_features_transformers(model_id, segment_id, fformat):
 
         trainer = model.get_trainer()
         if segment.name not in trainer.features:
-            raise Exception("Segment %s doesn't exists in trained model" %
-                            segment.name)
+            raise TaskException("Segment %s doesn't exists in trained model" %
+                                segment.name)
         for name, feature in trainer.features[segment.name].iteritems():
             if "transformer" in feature and feature["transformer"] is not None:
                 try:
@@ -473,10 +471,10 @@ def upload_segment_features_transformers(model_id, segment_id, fformat):
         return s3.get_download_url(arc_name, 60 * 60 * 24 * 7)
 
     except Exception, e:
-        logging.exception("Got exception when preparing features transformers "
-                          "of segment {0} for download: {1}"
-                          .format(segment.name, e.message))
-        raise
+        logging.error("Got exception when preparing features transformers "
+                      "of segment {0} for download: {1} \n {2}"
+                      .format(segment.name, e.message, get_task_traceback(e)))
+        raise TaskException(e.message, e)
 
     finally:
         for f in files:

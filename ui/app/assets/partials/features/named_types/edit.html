@@ -9,7 +9,7 @@
         <form name="Form" class="form-horizontal">
           <loadindicator title="Editing named feature type..." ng-show="saving" cml-progress="savingProgress"></loadindicator>
 
-          <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+          <alert-message ng-show="err" class="alert-error" msg="{{ err }}" trace="{{ trace }}" unsafe></alert-message>
 
           <ng-include src="'partials/features/named_types/form.html'"></ng-include>
         </form>

@@ -7,7 +7,7 @@
   </div>
 </h2>
 
-<alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+<alert-message ng-show="err" class="alert-error" msg="{{ err }}" trace="{{ trace }}" unsafe></alert-message>
 
 <h4>My recently updated</h4>
 <div ng-controller="BigListCtrl" ng-init="init(true, 'my_xml_import_handlers', 'updated_on', 'desc')">

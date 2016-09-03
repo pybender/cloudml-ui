@@ -11,9 +11,14 @@ from boto3.s3.transfer import S3Transfer, TransferConfig
 import urllib
 
 from api import app
+from api.base.exceptions import ApiBaseException
 
 
-class AmazonS3ObjectNotFound(Exception):
+class AmazonS3ObjectNotFound(ApiBaseException):
+    pass
+
+
+class S3ResponseError(ApiBaseException):
     pass
 
 
@@ -344,7 +349,7 @@ class AmazonS3Helper(AmazonMixin):
                 # bucket doesn't exist - create new one
                 self.conn.Bucket(self.bucket_name).create()
             else:
-                raise
+                raise S3ResponseError(e.message, e)
         return True
 
     def key_exists(self, name):
@@ -358,7 +363,7 @@ class AmazonS3Helper(AmazonMixin):
             if e.response['Error']['Code'] == "404":
                 return False
             else:
-                raise
+                raise S3ResponseError(e.message, e)
 
     def _prepare_meta(self, meta):
         for key, val in meta.iteritems():

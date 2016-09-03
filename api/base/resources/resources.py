@@ -91,13 +91,15 @@ class BaseResource(restful.Resource):
         try:
             return super(BaseResource, self).dispatch_request(*args, **kwargs)
         except NotFound, exc:
-            return odesk_error_response(404, ERR_NO_SUCH_MODEL, str(exc))
+            return odesk_error_response(404, ERR_NO_SUCH_MODEL, str(exc), exc)
         except ValidationError, exc:
             return odesk_error_response(400, ERR_INVALID_DATA,
-                                        str(exc), errors=exc.errors)
+                                        str(exc), errors=exc.errors,
+                                        exception=exc)
         except AssertionError, exc:
             return odesk_error_response(400, ERR_INVALID_DATA,
-                                        str(exc), errors=exc.message)
+                                        str(exc), errors=exc.message,
+                                        exception=exc)
 
     def _apply_action(self, action, method='GET', **kwargs):
         if action in getattr(self, '%s_ACTIONS' % method):
@@ -331,7 +333,7 @@ class BaseResource(restful.Resource):
         except Exception, exc:
             msg = 'Error when dump data: %s' % exc
             logging.error(msg)
-            return odesk_error_response(500, ERR_INVALID_DATA, msg)
+            return odesk_error_response(500, ERR_INVALID_DATA, msg, exc)
 
         return app.response_class(content,
                                   mimetype='application/json'), code
@@ -348,8 +350,9 @@ class BaseResourceSQL(BaseResource):
             order = params.get('order', 'asc')
             try:
                 return self.ORDER_DICT[order]
-            except KeyError:
-                raise ValidationError('Invalid order. It could be asc or desc')
+            except KeyError as e:
+                raise ValidationError('Invalid order. It could be asc or desc',
+                                      e)
 
         # Quering
         cursor = self._build_list_query(params, **kwargs)
