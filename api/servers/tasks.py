@@ -17,6 +17,7 @@ from api.ml_models.models import Model
 from api.amazon_utils import AmazonS3Helper
 from .config import FOLDER_MODELS, FOLDER_IMPORT_HANDLERS
 from grafana import update_grafana_dashboard
+from api.base.tasks import TaskException, get_task_traceback
 
 
 def get_a_Uuid():
@@ -68,11 +69,11 @@ def upload_model_to_server(server_id, model_id, user_id):
     from cloudml.trainer.store import TrainerStorage
     from bson import Binary
     import cPickle as pickle
-    trainer_data = Binary(TrainerStorage(trainer).dumps())
-    logging.info(len(trainer_data))
+    #trainer_data = Binary(TrainerStorage(trainer).dumps())
+    #logging.info(len(trainer_data))
     #trainer.visualization = None
     #trainer_data = store_trainer(trainer)
-    #trainer_data = model.trainer
+    trainer_data = model.trainer
     s3.save_key_string(path, trainer_data, meta)
     s3.close()
     model.locked = True
@@ -194,7 +195,7 @@ class VerifyModelTask(object):
             self.verification.status = self.verification.STATUS_ERROR
             self.verification.error = str(exc)
             self.verification.save()
-            raise
+            raise TaskException(exc.message, exc)
 
     @property
     def importhandler(self):

@@ -40,8 +40,8 @@
 </div>
 <br/>
 <alert-message ng-show="msg" class="alert-info" msg='{{ msg }}' unsafe></alert-message>
-<alert-message ng-show="err" class="alert-error" msg='{{ err }}' unsafe></alert-message>
-<alert-message ng-show="handler.error" class="alert-error" msg="{{ handler.error }}" unsafe></alert-message>
+<alert-message ng-show="err" class="alert-error" msg='{{ err }}' trace="{{ trace }}" unsafe></alert-message>
+<alert-message ng-show="handler.error" class="alert-error" msg="{{ handler.error }}" trace="{{ trace }}" unsafe></alert-message>
 
 <ul class="nav nav-tabs" ng-show="handler.loaded">
   <li ng-class="{active: action[0] == 'model'}">

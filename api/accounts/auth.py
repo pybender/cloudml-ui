@@ -6,11 +6,12 @@ import json
 import httplib2
 
 from oauth2 import Consumer, Client, Token
+from api.base.exceptions import ApiBaseException
 
 from api import app
 
 
-class AuthException(Exception):
+class AuthException(ApiBaseException):
     pass
 
 

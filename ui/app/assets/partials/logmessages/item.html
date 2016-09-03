@@ -1,3 +1,10 @@
-<p ng-init="css_class_name = {'WARNING': 'warning', 'INFO': 'info', 'CRITICAL': 'error', 'ERROR': 'error', 'WARN': 'warning', 'DEBUG': 'debug', 'NOTSET': 'muted'}[msg.level]" class="text-{{ css_class_name }}">
-  <span title="dates in GMT" class="badge badge-{{ css_class_name }}">{{ msg.created_on | full_format_date }}</span> <span ng-repeat="str in msg.content.split('\n') track by $index">{{ str }}<br /></span>
+<p ng-init="css_class_name = {'WARNING': 'warning', 'INFO': 'info', 'CRITICAL': 'error', 'ERROR': 'error', 'EXCEPTION': 'error', 'WARN': 'warning', 'DEBUG': 'debug', 'NOTSET': 'muted'}[msg.level]" class="text-{{ css_class_name }}">
+  <span title="dates in GMT" class="badge badge-{{ css_class_name }}">{{ msg.created_on | full_format_date }}</span>
+  <span ng-show="msg.level != 'ERROR'" ng-repeat="str in msg.content.split('\n') track by $index">{{ str }}<br /></span>
+
+  <span ng-show="msg.level == 'ERROR'" ng-init="s = msg.content.split('\n'); heading=s.shift(); tb=s.join('\n');">{{ heading }}</span>
+  <span ng-show="msg.level == 'ERROR'" ng-init="show_error=false">
+      <br/><a ng-click="show_error=!show_error">[<span ng-show="!show_error">Show</span><span ng-show="show_error">Hide</span> detailed backtrace]</a>
+      <pre class="text-{{ css_class_name }} traceback" ng-show="show_error">{{ tb }}</pre>
+  </span>
 </p>

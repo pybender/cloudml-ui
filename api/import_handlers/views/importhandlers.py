@@ -158,14 +158,14 @@ class XmlImportHandlerResource(BaseResourceSQL):
         try:
             sql = re.sub('#{(\w+)}', '%(\\1)s', sql)
             sql = sql % params
-        except (KeyError, ValueError):
+        except (KeyError, ValueError) as e:
             return odesk_error_response(400, ERR_INVALID_DATA,
-                                        'Wrong query parameters')
+                                        'Wrong query parameters', e)
 
         try:
             model.check_sql(sql)
         except Exception as e:
-            return odesk_error_response(400, ERR_INVALID_DATA, str(e))
+            return odesk_error_response(400, ERR_INVALID_DATA, str(e), e)
 
         # Change query LIMIT
         sql = model.build_query(sql, limit=limit)
@@ -173,7 +173,7 @@ class XmlImportHandlerResource(BaseResourceSQL):
         try:
             data = list(model.execute_sql_iter(sql, datasource_name))
         except DatabaseError as e:
-            return odesk_error_response(400, ERR_INVALID_DATA, str(e))
+            return odesk_error_response(400, ERR_INVALID_DATA, str(e), e)
 
         columns = []
         if len(data) > 0:
@@ -206,7 +206,7 @@ class XmlImportHandlerResource(BaseResourceSQL):
                 new_handler.data = handler.data
         except Exception, exc:
             return odesk_error_response(
-                400, ERR_INVALID_DATA, str(exc))
+                400, ERR_INVALID_DATA, str(exc), exc)
         new_handler.save()
         return self._render({
             self.OBJECT_NAME: new_handler,
@@ -246,7 +246,7 @@ class XmlImportHandlerResource(BaseResourceSQL):
                 s.delete()
             handler.data = form.cleaned_data['data']
         except Exception, exc:
-            return odesk_error_response(400, ERR_INVALID_DATA, str(exc))
+            return odesk_error_response(400, ERR_INVALID_DATA, str(exc), exc)
         handler.save()
 
         return self._render({
@@ -418,7 +418,7 @@ class XmlScriptResource(XmlImportHandlerPartResource):
             return self._render({self.OBJECT_NAME: script.id,
                                 'script_string': script.script_string})
         except Exception as e:
-            return odesk_error_response(400, ERR_INVALID_DATA, str(e))
+            return odesk_error_response(400, ERR_INVALID_DATA, str(e), e)
 
 
 api.add_resource(

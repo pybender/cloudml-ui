@@ -26,7 +26,7 @@ class AboutResource(BaseResource):
                 'releasenotes': res.replace('.. _changelog:', '').strip(),
             }})
         except Exception as e:
-            return odesk_error_response(500, ERR_INVALID_DATA, e.message)
+            return odesk_error_response(500, ERR_INVALID_DATA, e.message, e)
 
 
 api.add_resource(AboutResource, '/cloudml/about/')

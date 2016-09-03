@@ -15,6 +15,7 @@ from api import app
 from api.base.parameters import convert_parameters
 from cloudml.importhandler.exceptions import ImportHandlerException
 from cloudml.importhandler.importhandler import ExtractionPlan, ScriptManager
+from api.base.exceptions import DBException
 
 db = app.sql_db
 
@@ -36,7 +37,7 @@ class XmlImportHandlerAddForm(BaseForm):
             ExtractionPlan(value, is_file=False)
             return value
         except Exception as exc:
-            raise ValidationError(exc)
+            raise ValidationError(exc.message, exc)
 
     def save(self):
         try:
@@ -48,11 +49,12 @@ class XmlImportHandlerAddForm(BaseForm):
             try:
                 import_handler.data = self.cleaned_data.get('data')
             except Exception, exc:
-                self.add_error('fields', str(exc))
-                raise ValidationError(self.error_messages, errors=self.errors)
-        except:
+                self.add_error('fields', str(exc), exc)
+                raise ValidationError(self.error_messages, exc,
+                                      errors=self.errors)
+        except Exception as e:
             db.session.rollback()
-            raise
+            raise DBException(e.message, e)
         else:
             db.session.commit()
 
@@ -86,7 +88,7 @@ class XmlImportHandlerUpdateXmlForm(BaseForm):
             ExtractionPlan(value, is_file=False)
             return value
         except Exception as exc:
-            raise ValidationError(exc)
+            raise ValidationError(exc.message, exc)
 
 
 class XmlInputParameterForm(BaseForm):
@@ -173,9 +175,9 @@ class XmlEntityForm(BaseForm):
                 for sqoop in entity.sqoop_imports:
                     db.session.delete(sqoop)
 
-        except Exception:
+        except Exception as e:
             db.session.rollback()
-            raise
+            raise DBException(e.message, e)
         else:
             db.session.commit()
 
@@ -309,7 +311,7 @@ class XmlScriptForm(BaseForm):
 
             script = super(XmlScriptForm, self).save()
         except Exception as e:
-            raise ValidationError(e)
+            raise ValidationError(e.message, e)
         return script
 
     def clean_data(self, value, field):
@@ -318,7 +320,7 @@ class XmlScriptForm(BaseForm):
             # this will raise exception in case of incorrect script
             s.add_python(value)
         except ImportHandlerException as ex:
-            raise ValidationError(ex.message)
+            raise ValidationError(ex.message, ex)
         return value
 
 

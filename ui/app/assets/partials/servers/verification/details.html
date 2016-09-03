@@ -8,11 +8,11 @@
   </div>
 </h2>
 
-<alert-message ng-show="err" class="alert-error" msg='{{ err }}' unsafe>
+<alert-message ng-show="err" class="alert-error" msg='{{ err }}' trace="{{ trace }}" unsafe>
 </alert-message>
 <alert-message ng-show="msg" class="alert-info" msg='{{ msg }}' unsafe>
 </alert-message>
-<alert-message ng-show="verification.error" class="alert-error" msg="Error occurred while model verification: {{ verification.error }}." unsafe></alert-message>
+<alert-message ng-show="verification.error" class="alert-error" msg="Error occurred while model verification: {{ verification.error }}." trace="{{ trace }}" unsafe></alert-message>
 
 <ul class="nav nav-tabs" id="tabs" ng-show="verification.loaded">
   <li ng-class="{active: action[0] == 'about'}">

@@ -5,7 +5,7 @@
   </div>
 
   <div class="modal-body">
-    <alert-message ng-show="query.test.error" class="alert-error" msg="{{ query.test.error }}" unsafe></alert-message>
+    <alert-message ng-show="query.test.error" class="alert-error" msg="{{ query.test.error }}" trace="{{ trace }}" unsafe></alert-message>
     <form name="Form" class="form-horizontal">
       <div class="control-group" ng-class="{error: Form.datasource.$invalid}">
         <label class="control-label">Data Source</label>

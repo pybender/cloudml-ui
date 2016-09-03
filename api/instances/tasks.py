@@ -10,12 +10,12 @@ from api import celery, app
 from api.logs.logger import init_logger
 from api.amazon_utils import AmazonEC2Helper
 from api.ml_models.models import Model
-from api.base.tasks import SqlAlchemyTask
+from api.base.tasks import SqlAlchemyTask, TaskException
 from api.instances.models import Cluster
 from api.amazon_utils import AmazonEMRHelper
 
 
-class InstanceRequestingError(Exception):
+class InstanceRequestingError(TaskException):
     pass
 
 
@@ -64,7 +64,7 @@ def request_spot_instance(instance_type=None, model_id=None):
         logging.info('Request id: %s:' % request['SpotInstanceRequestId'])
     except ClientError as e:
         model.set_error(e.error_message)
-        raise Exception(e.error_message)
+        raise TaskException(e.error_message, e)
 
     model.spot_instance_request_id = request['SpotInstanceRequestId']
     model.save()
@@ -105,7 +105,7 @@ def get_request_instance(request_id, callback=None, dataset_ids=None,
         request = ec2.get_request_spot_instance(request_id)
     except ClientError as e:
         model.set_error(e.error_message)
-        raise InstanceRequestingError(e.error_message)
+        raise InstanceRequestingError(e.error_message, e)
 
     if request['State'] == 'open':
         logging.info('Instance was not ran. \
@@ -114,11 +114,11 @@ Status: %s . Retry in 10s.' % request['State'])
             raise get_request_instance.retry(
                 countdown=app.config['REQUESTING_INSTANCE_COUNTDOWN'],
                 max_retries=app.config['REQUESTING_INSTANCE_MAX_RETRIES'])
-        except get_request_instance.MaxRetriesExceededError:
+        except get_request_instance.MaxRetriesExceededError as e:
             logging.info('Max retries was reached, cancelling now.')
             cancel_request_spot_instance.delay(request_id, model_id)
             model.set_error('Instance was not launched')
-            raise InstanceRequestingError('Instance was not launched')
+            raise InstanceRequestingError('Instance was not launched', e)
 
     if request['State'] == 'canceled':
         logging.info('Instance was canceled.')
@@ -205,7 +205,7 @@ cancelled for model id {1!s}'.format(request_id, model_id))
         model.save()
     except ClientError as e:
         model.set_error(e.error_message)
-        raise Exception(e.error_message)
+        raise Exception(e.error_message, e)
 
 
 @celery.task(base=SqlAlchemyTask)
