@@ -2,7 +2,7 @@ import logging
 import json
 from mock import patch
 
-from api.base.test_utils import BaseDbTestCase, TestChecksMixin
+from api.base.test_utils import BaseDbTestCase, TestChecksMixin, HTTP_HEADERS
 from ..views import TransformerResource
 from ..models import Transformer
 from api.features.models import Feature
@@ -123,6 +123,15 @@ class PretrainedTransformersTests(BaseDbTestCase, TestChecksMixin):
 
     def test_delete(self):
         self.check_delete(obj=self.obj)
+
+    def test_delete_model_training_in_progress(self):
+        self.obj.status = 'Training'
+        self.obj.save()
+        url = self._get_url(id=self.obj.id, action='train')
+        resp = self.client.delete(url, headers=HTTP_HEADERS)
+        self.assertEqual(405, resp.status_code)
+        self.assertIn('The transformer cannot be deleted while training is '
+                      'still in progress.', resp.data)
 
 
 class FeatureTransformersTests(BaseDbTestCase, TestChecksMixin):

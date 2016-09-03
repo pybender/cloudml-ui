@@ -844,6 +844,15 @@ class ModelResourceTests(BaseDbTestCase, TestChecksMixin):
                       'Please, wait for a moment before re-training model.',
                       resp.data)
 
+    def test_delete_model_training_in_progress(self):
+        self.obj.status = 'Queued'
+        self.obj.save()
+        url = self._get_url(id=self.obj.id, action='train')
+        resp = self.client.delete(url, headers=HTTP_HEADERS)
+        self.assertEqual(405, resp.status_code)
+        self.assertIn('The model cannot be deleted while training is still '
+                      'in progress.', resp.data)
+
     @patch('api.instances.tasks.cancel_request_spot_instance')
     def test_cancel_request_instance(self, mock_task, *mocks):
         url = self._get_url(id=self.obj.id, action='cancel_request_instance')
