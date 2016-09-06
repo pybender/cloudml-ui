@@ -517,10 +517,7 @@ angular.module('app.directives', [
             el.find('.message')[_meth] newVal
 
         attrs.$observe 'trace', (newVal, oldVal, scope) ->
-          if newVal
-            console.log newVal
           if newVal && newVal != '[]'
-
             el.find('.view-trace')['html'] '[Error Backtrace]'
             el.find(".tb").attr('trace', newVal)
 

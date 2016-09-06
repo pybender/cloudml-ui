@@ -4,14 +4,17 @@ import celery
 
 from api import app
 from api.base.exceptions import ApiBaseException
-from cloudml.exceptions import print_exception
+import json
 
 
 db_session = app.sql_db.session
 
 
 def get_task_traceback(exc):
-    return print_exception(exc, with_colors=False, ret_value=True)
+    e = TaskException(exc.message, exc)
+    if e.traceback:
+        return json.dumps(e.traceback)
+    return ''
 
 
 class TaskException(ApiBaseException):
