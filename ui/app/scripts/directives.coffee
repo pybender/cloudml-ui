@@ -365,33 +365,18 @@ angular.module('app.directives', [
 ])
 
 .directive("modelPartsSizesTree", [
-    ()->
-      return {
-        restrict: 'E'
-        transclude: true
-        scope: true
-        link: (scope, element, attributes) ->
+  'RecursionHelper'
 
-          buildTree = (node, element) ->
-            if !node?
-              return
-            el = $('<ul></ul>')
-            li = $('<li></li>')
-            label = $('<a></a>')
-            $(label).attr('ng-click', 'open=!open')
-            $(li).html(node.name+": <b>"+(node.size/1024)+" K</b>")
-            $(el).append(li)
-            $(element).append(el)
-
-            if node.properties?
-              for child in node.properties
-                buildTree(child, li)
-
-          attributes.$observe 'root', (newVal, oldVal, scope) ->
-            if newVal
-              nv = JSON.parse(newVal)
-              buildTree(nv, element)
-  }
+  (RecursionHelper) ->
+    return {
+          restrict: "E",
+          scope: {root: '='}
+          templateUrl:'partials/directives/sizes_tree.html'
+          compile: (element) ->
+              # // Use the compile function from the RecursionHelper,
+              # // And return the linking function(s) which it returns
+              return RecursionHelper.compile(element)
+    }
 ])
 
 .directive("paramsEditor", [ ->

@@ -23,8 +23,7 @@ from models import Model, Tag, Weight, WeightsCategory, Segment, Transformer, \
     ClassifierGridParams
 from forms import ModelAddForm, ModelEditForm, TransformDataSetForm, \
     TrainForm, TransformerForm, FeatureTransformerForm, GridSearchForm, \
-    VisualizationOptionsForm, TransformersDownloadForm, \
-    ModelPartsSizeCalculationForm
+    VisualizationOptionsForm, TransformersDownloadForm
 
 
 model_parser = reqparse.RequestParser()
@@ -187,7 +186,7 @@ class ModelResource(BaseTrainedEntityResource):
     PUT_ACTIONS = ('train', 'tags', 'cancel_request_instance',
                    'upload_to_server', 'dataset_download', 'grid_search',
                    'import_features_from_xml_ih', 'generate_visualization',
-                   'transformers_download', 'calculate_model_parts_size')
+                   'transformers_download')
     POST_ACTIONS = ('clone', )
     FILTER_PARAMS = (('status', str), ('comparable', str), ('tag', str),
                      ('created_by', str), ('updated_by_id', int),
@@ -315,21 +314,6 @@ class ModelResource(BaseTrainedEntityResource):
                                         'for modifications.')
 
         form = VisualizationOptionsForm(obj=model)
-        if form.is_valid():
-            form.process()
-            return self._render({
-                self.OBJECT_NAME: model
-            })
-
-    def _put_calculate_model_parts_size_action(self, **kwargs):
-        model = self._get_details_query(None, **kwargs)
-        if not app.config['MODIFY_DEPLOYED_MODEL'] and model.locked:
-            return odesk_error_response(405, ERR_INVALID_METHOD,
-                                        'Forbidden to change visualization '
-                                        'data. Model is deployed and blocked '
-                                        'for modifications.')
-
-        form = ModelPartsSizeCalculationForm(obj=model)
         if form.is_valid():
             form.process()
             return self._render({

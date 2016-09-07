@@ -173,10 +173,6 @@ angular.module('app.models.model', ['app.config'])
         url = "#{@BASE_API_URL}#{@id}/action/transformers_download/"
         @$make_request(url, {}, "PUT", {segment: segment, data_format: file_format})
 
-      $putCalculateModelPartsSize: (deep)->
-        url = "#{@BASE_API_URL}#{@id}/action/calculate_model_parts_size/"
-        @$make_request(url, {}, "PUT", {deep: deep})
-
     return Model
 ])
 

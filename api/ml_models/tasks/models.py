@@ -24,6 +24,7 @@ from api.ml_models.models import Model, Segment, Transformer
 from api.import_handlers.models import DataSet
 from api.logs.dynamodb.models import LogMessage
 from api.base.io_utils import get_or_create_data_folder
+from celery import chord
 
 
 __all__ = ['train_model', 'get_classifier_parameters_grid',
@@ -110,10 +111,9 @@ def train_model(dataset_ids, model_id, user_id, delete_metadata=False):
 
         model.create_segments(segments)
 
-        for segment in model.segments:
-            visualize_model.apply_async(
-                (model.id, segment.id),
-                link=calculate_model_parts_size.s(model.id))
+        chord((visualize_model.s(model.id, segment.id)
+               for segment in model.segments),
+              calculate_model_parts_size.s(model.id))()
 
     except Exception, exc:
         app.sql_db.session.rollback()
@@ -534,40 +534,30 @@ def clear_model_data_cache():
 
 
 @celery.task(base=SqlAlchemyTask)
-def calculate_model_parts_size(whatever, model_id, deep=6):
-    from sys import getsizeof
-    from pympler.asizeof import asizeof
+def calculate_model_parts_size(data_from_training, model_id, deep=7):
+    """Calculates size of model trainer and records result json"""
+    from pympler.asizeof import asized
     init_logger('trainmodel_log', obj=int(model_id))
     logging.info('Starting calculation size of model parts')
 
     model = Model.query.get(model_id)
     trainer = model.get_trainer()
 
-    def walk_object(obj, name, recursion_deep):
-        res = {"name": name, "size": asizeof(obj), "properties": []}
-
-        if recursion_deep > 0:
-            try:
-                for attr, value in obj.iteritems():
-                    res["properties"].append(walk_object(value, attr,
-                                                         recursion_deep - 1))
-            except Exception:
-                try:
-                    for attr in dir(obj):
-                        if not attr.startswith('__') and \
-                                not callable(getattr(obj, attr)):
-                            value = getattr(obj, attr)
-                            res["properties"].append(walk_object(value, attr,
-                                                      recursion_deep - 1))
-                except Exception:
-                    pass
+    def walk_asized(asz):
+        """Prepares output dict from Asized object"""
+        res = {"name": asz.name, "size": asz.size, "properties": []}
+        for r in asz.refs:
+            res["properties"].append(
+                {"name": r.name, "size": r.size,
+                 "properties": [walk_asized(k) for k in r.refs]})
         return res
 
     try:
-        model.model_parts_size = walk_object(trainer, "model trainer", deep)
+        result = walk_asized(asized(trainer, detail=deep))
+        result["name"] = "trainer"
+        model.model_parts_size = result
         model.save()
     except Exception as e:
-        logging.warning('Exception while calculating model parts size: {}'
-                        .format(e.message))
-    logging.info('PARTS SIZE: {}'.format(model.model_parts_size))
+        logging.exception('Exception while calculating model parts size: {}'
+                          .format(e))
     logging.info('Finished calculation')

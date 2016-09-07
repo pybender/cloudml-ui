@@ -641,22 +641,6 @@ angular.module('app.models.controllers', ['app.config', ])
       , true)
 ])
 
-.controller('SizePartsCtrl', [
-    '$scope'
-
-    ($scope) ->
-      $scope.model.$load(show: 'model_parts_size')
-        .then (opts) ->
-          console.log "loaded"
-          $scope.root = $scope.model.model_parts_size
-          console.log $scope.root
-
-      $scope.$watch('model.model_parts_size', (val, oldVal) ->
-        if val?
-          console.log val
-          $scope.root = val
-      , true)
-])
 
 .controller('TreeDeepFormCtrl', [
     '$scope'
