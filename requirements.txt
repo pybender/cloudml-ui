@@ -54,5 +54,5 @@ coloredlogs==2.0
 grafana-api-client==0.1.4
 python-slugify==1.2.0
 requests==2.8.1
-
+Pympler==0.4.3
 -e git+http://stash.odesk.com/scm/dp/predict-utils.git@nikolay#egg=predict

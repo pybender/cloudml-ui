@@ -447,3 +447,4 @@ class VisualizationOptionsForm(BaseForm):
         from tasks import generate_visualization_tree
         parameters = self.cleaned_data.get('parameters')
         generate_visualization_tree.delay(self.obj.id, parameters['deep'])
+
