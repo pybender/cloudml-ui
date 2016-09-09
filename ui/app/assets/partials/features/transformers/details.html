@@ -1,7 +1,7 @@
 <alert-message ng-show="msg" class="alert-info" msg='{{ msg }}' unsafe>
 </alert-message>
 
-<alert-message ng-show="err" class="alert-error" msg='{{ err }}' unsafe></alert-message>
+<alert-message ng-show="err" class="alert-error" msg='{{ err }}' trace="{{ trace }}" unsafe></alert-message>
 
 <div ng-init="init({transformer: transformer})" ng-controller="TransformerActionsCtrl">
 <h2 class="title">
@@ -43,9 +43,9 @@
 
     <alert-message ng-show="transformer.status == 'New'" class="alert-warning" msg='Transformer is not fitted yet. Please start training.' unsafe></alert-message>
 
-    <alert-message ng-show="transformer.status == 'Error'" class="alert-error" msg='Error occurred while transformer training. Look at celery tasks for details' unsafe></alert-message>
+    <alert-message ng-show="transformer.status == 'Error'" class="alert-error" trace="{{ trace }}" msg='Error occurred while transformer training. Look at celery tasks for details' unsafe></alert-message>
 
-    <alert-message ng-show="transformer.error" class="alert-error" msg="{{ transformer.error }}" unsafe></alert-message>
+    <alert-message ng-show="transformer.error" class="alert-error" trace="{{ trace }}" msg="{{ transformer.error }}" unsafe></alert-message>
 
     <alert-message ng-show="transformer.status == 'Trained'" class="alert-success" msg='Transformer is trained. You could use it in the model.' unsafe></alert-message>
 

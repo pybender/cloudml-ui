@@ -1,7 +1,7 @@
 <alert-message ng-show="msg" class="alert-info" msg='{{ msg }}' unsafe>
 </alert-message>
 
-<alert-message ng-show="err" class="alert-error" msg='{{ err }}' unsafe>
+<alert-message ng-show="err" class="alert-error" msg='{{ err }}' trace="{{ trace }}" unsafe>
 </alert-message>
 
 <h2 ng-show="test.loaded">
@@ -27,7 +27,7 @@
 
 <alert-message ng-show="test.loaded && test.status != 'Completed'" class="alert-warning" msg="Test was not calculated yet. Status: {{ test.status }}" unsafe></alert-message>
 
-<alert-message ng-show="test.error" class="alert-error" msg="{{ test.error }}" unsafe></alert-message>
+<alert-message ng-show="test.error" class="alert-error" msg="{{ test.error }}" trace="{{ trace }}" unsafe></alert-message>
 
 <div>
   <ul class="nav nav-tabs" id="tabs">

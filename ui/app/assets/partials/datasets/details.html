@@ -27,9 +27,9 @@
 </div>
 
 <alert-message ng-show="msg" class="alert-info" msg='{{ msg }}' unsafe></alert-message>
-<alert-message ng-show="err" class="alert-error" msg='{{ err }}' unsafe></alert-message>
+<alert-message ng-show="err" class="alert-error" msg='{{ err }}' trace="{{ trace }}" unsafe></alert-message>
 
-<alert-message ng-show="dataset.error" class="alert-error" msg='{{ dataset.error }}' unsafe></alert-message>
+<alert-message ng-show="dataset.error" class="alert-error" msg='{{ dataset.error }}' trace="{{ trace }}" unsafe></alert-message>
 
 <ul class="nav nav-tabs" ng-show="dataset.loaded">
   <li ng-class="{active: action[0] == 'model'}">

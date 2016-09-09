@@ -10,7 +10,7 @@ from api.logs.logger import init_logger, logger_handler
 from api import celery
 from api.ml_models.models import Model, Transformer
 from api.model_tests.models import TestResult
-from api.base.tasks import SqlAlchemyTask
+from api.base.tasks import SqlAlchemyTask, get_task_traceback, TaskException
 from api.instances.models import Cluster
 from models import DataSet, XmlSqoop
 
@@ -154,9 +154,10 @@ with%s compression", import_handler.name, '' if dataset.compress else 'out')
     except Exception, exc:
         if parent_handler:
             logger.addHandler(parent_handler)
-        logging.exception('Got exception when import dataset')
+        logging.error('Got exception when import dataset: {0}\n {1}'.format(
+                      exc.message, get_task_traceback(exc)))
         set_error(exc.message, ds=dataset, parent=obj)
-        raise
+        raise TaskException(exc.message, exc)
 
     logging.info("Dataset using %s imported.", import_handler.name)
     return [dataset_id]
@@ -187,9 +188,10 @@ def upload_dataset(dataset_id):
         dataset.save()
 
     except Exception, exc:
-        logging.exception('Got exception when uploading dataset')
+        logging.error('Got exception when uploading dataset: {0}\n {1}'.format(
+                      exc.message, get_task_traceback(exc)))
         dataset.set_error(exc)
-        raise
+        raise TaskException(exc.message, exc)
 
     logging.info("Dataset using {0!s} uploaded.".format(dataset))
     return [dataset_id]

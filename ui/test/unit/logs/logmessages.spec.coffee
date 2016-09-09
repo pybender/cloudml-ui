@@ -68,3 +68,12 @@ describe "logmessages", ->
 
       expect($rootScope.params['level']).toBe('WARNING')
       expect($rootScope.load).toHaveBeenCalled()
+
+    it 'should parse and set traceback', inject () ->
+      createController "LogMessageListCtrl"
+      $rootScope.showTraceback('[{"line": "myline"}]')
+      expect($rootScope.trace).toEqual [{'line': 'myline'}]
+
+      $rootScope.showTraceback("incorrect[]")
+      expect($rootScope.trace).toEqual [[{"line": "Traceback can't be parsed"}]]
+

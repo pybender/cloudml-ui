@@ -38,7 +38,7 @@
     "karma-jasmine": "^0.2.2",
     "karma-ng-html2js-preprocessor": "^0.1.0",
     "karma-phantomjs-launcher": "^0.1.4",
-    "karma-spec-reporter": "0.0.13",
+    "karma-spec-reporter": "^0.0.13",
     "phantomjs": "*",
     "protractor": "^1.1.1",
     "protractor-http-mock": "git+https://github.com/nadersoliman/protractor-http-mock.git#make_protractor_config_file_configurable"

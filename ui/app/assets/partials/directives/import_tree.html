@@ -53,8 +53,8 @@
       <h5><i class="icon-wrench"></i> Sqoop</h5>
       <div>
         <alert-message ng-show="sqoop.msg" class="alert-info" msg="{{ sqoop.msg }}"></alert-message>
-        <alert-message ng-show="sqoop.err" class="alert-error" msg="{{ sqoop.err }}"></alert-message>
-        <alert-message ng-show="sqoop.edit_err" class="alert-error" msg="{{ sqoop.edit_err }}"></alert-message>
+        <alert-message ng-show="sqoop.err" class="alert-error" msg="{{ sqoop.err }}" trace="{{ trace }}" ></alert-message>
+        <alert-message ng-show="sqoop.edit_err" class="alert-error" msg="{{ sqoop.edit_err }}" trace="{{ trace }}" ></alert-message>
         <div class="row">
         <div class="span3">
             <div>
@@ -152,8 +152,8 @@
     <h5><i class=" icon-magnet"></i> Query</h5>
     <div>
       <alert-message ng-show="entity.query_obj.msg" class="alert-info" msg="{{ entity.query_obj.msg }}"></alert-message>
-      <alert-message ng-show="entity.query_obj.err" class="alert-error" msg="{{ entity.query_obj.err }}"></alert-message>
-      <alert-message ng-show="entity.query_obj.edit_err" class="alert-error" msg="{{ entity.query_obj.edit_err }}"></alert-message>
+      <alert-message ng-show="entity.query_obj.err" class="alert-error" msg="{{ entity.query_obj.err }}" trace="{{ trace }}" ></alert-message>
+      <alert-message ng-show="entity.query_obj.edit_err" class="alert-error" msg="{{ entity.query_obj.edit_err }}" trace="{{ trace }}" ></alert-message>
       <div ng-show="entity.sqoop_imports">
         <div ng-hide="entity.query_obj.autoload_sqoop_dataset">
           <label class="checkbox">

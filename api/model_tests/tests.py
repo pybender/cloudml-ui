@@ -25,7 +25,7 @@ from api.instances.models import Instance
 from api.instances.fixtures import InstanceData
 from api.async_tasks.models import AsyncTask
 from tasks import run_test
-from api.base.exceptions import InvalidOperationError
+from api.base.tasks import TaskException
 from fixtures import TestResultData, TestExampleData
 from api.features.fixtures import FeatureSetData, FeatureData
 
@@ -605,7 +605,7 @@ class TasksTests(BaseDbTestCase):
         model = self.test.model
         model.status = model.STATUS_NEW
         model.save()
-        self.assertRaises(InvalidOperationError, run_test,
+        self.assertRaises(TaskException, run_test,
                           [self.dataset.id, ], self.test.id)
 
     def test_run_test_unicode_encoding(self):

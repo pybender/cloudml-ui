@@ -83,8 +83,8 @@ class IntegerField(BaseField):
         value = super(IntegerField, self).clean(value)
         try:
             return int(value)
-        except (ValueError, TypeError):
-            raise ValidationError('should be integer number')
+        except (ValueError, TypeError) as e:
+            raise ValidationError('should be integer number', e)
 
 
 class ChoiceField(CharField):
@@ -190,9 +190,9 @@ class JsonField(CharField):
         if value:
             try:
                 return json.loads(value)
-            except ValueError:
+            except ValueError as e:
                 raise ValidationError(
-                    'JSON file is corrupted. Can not load it: %s' % value)
+                    'JSON file is corrupted. Can not load it: %s' % value, e)
 
 
 class FeaturesField(BaseField):
@@ -207,10 +207,11 @@ class FeaturesField(BaseField):
                         json.dumps(value), is_file=False)
                 except SchemaException, exc:
                     raise ValidationError(
-                        'Features JSON file is invalid: %s' % exc)
-                except ValueError:
+                        'Features JSON file is invalid: %s' % exc, exc)
+                except ValueError, e:
                     raise ValidationError(
-                        'JSON file is corrupted. Can not load it: %s' % value)
+                        'JSON file is corrupted. Can not load it: %s' % value,
+                        e)
             else:
                 # features came, but value is empty
                 raise ValidationError('Features JSON should not be empty')
@@ -226,13 +227,14 @@ class ImportHandlerFileField(BaseField):
 
         value = value.encode('utf-8')
         from cloudml.importhandler.importhandler import ExtractionPlan
+        from api.amazon_utils import amazon_config
         try:
             plan = ExtractionPlan(value, is_file=False)
             plan.amazon_settings = amazon_config()
             self.import_params = plan.inputs.keys()
             self.import_handler_type = 'xml'
         except Exception as exc:
-            raise ValidationError(exc)
+            raise ValidationError(exc.message, exc)
         return value
 
 
@@ -248,7 +250,7 @@ class ScriptFileField(BaseField):
             s = ScriptManager()
             s.add_python(value)
         except Exception as exc:
-            raise ValidationError(exc)
+            raise ValidationError(exc.message, exc)
         return value
 
 
@@ -261,6 +263,7 @@ class ScriptUrlField(BaseField):
         value = value.encode('utf-8')
         from cloudml.importhandler.importhandler import Script, ScriptManager
         from api.import_handlers.models import XmlScript
+        from api.amazon_utils import amazon_config
         try:
             xml_scr = XmlScript(data=value, type=XmlScript.TYPE_PYTHON_FILE)
             s = Script(xml_scr.to_xml())
@@ -268,7 +271,7 @@ class ScriptUrlField(BaseField):
             manager = ScriptManager()
             manager.add_python(s.get_script_str())
         except Exception as exc:
-            raise ValidationError(exc)
+            raise ValidationError(exc.message, exc)
         return value
 
 

@@ -59,7 +59,7 @@ def convert_parameters(config, params):
                 params[name] = convertor(params[name], param_config)
             except ValueError, exc:
                 raise ValidationError(
-                    'Invalid parameter %s value: %s' % (name, exc))
+                    'Invalid parameter %s value: %s' % (name, exc), exc)
 
             choices = param_config.get('choices')
             if choices and type_ == 'string':

@@ -17,6 +17,7 @@ except ImportError:
 
 from flask import make_response, request, current_app, jsonify
 from api import app
+from api.base.exceptions import ApiBaseException
 
 
 ERR_INVALID_CONTENT_TYPE = 1000
@@ -47,7 +48,7 @@ def _add_cors_headers(
         h['Access-Control-Allow-Headers'] = allow_headers
 
 
-def odesk_error_response(status, code, message, debug=None,
+def odesk_error_response(status, code, message, exception=None,
                          traceback=None, errors=None):
     """
     Creates a JSON error response that is compliant with
@@ -60,7 +61,12 @@ def odesk_error_response(status, code, message, debug=None,
     debug -- Additional debug information, to be added only if server is
              running on debug mode.
     """
-    result = {}
+    if traceback is None and exception is not None:
+        if hasattr(exception, 'traceback'):
+            traceback = exception.traceback
+        else:
+            e = ApiBaseException('Got exception', exception)
+            traceback = e.traceback
 
     result = {'response': {
               'server_time': time(),

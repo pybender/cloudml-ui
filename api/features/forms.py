@@ -42,8 +42,8 @@ class FeatureParamsMixin(object):
             if isinstance(value, basestring):
                 try:
                     data[name] = json.loads(value)
-                except ValueError:
-                    raise ValidationError('invalid json: {}'.format(value))
+                except ValueError as e:
+                    raise ValidationError('invalid json: {}'.format(value), e)
 
         elif param_type == 'dict':
             if not isinstance(value, dict):
@@ -127,7 +127,7 @@ class NamedFeatureTypeForm(BaseForm, FeatureParamsMixin):
             type_factory.get_instance(params, input_format)
         except InvalidFeatureTypeException, exc:
             self.add_error("type", 'Cannot create instance of '
-                           'feature type: {0}'.format(exc))
+                           'feature type: {0}'.format(exc), exc)
 
 
 class FeatureSetForm(BaseForm):
@@ -298,7 +298,7 @@ exist. Please choose another one.' % name)
                     self.cleaned_data['default'] = type_.transform(default)
             except InvalidFeatureTypeException, exc:
                 self.add_error("type", 'Cannot create instance of '
-                               'feature type: {0}'.format(exc))
+                               'feature type: {0}'.format(exc), exc)
         else:
             # look into named feature types
             named_type = NamedFeatureType.query.filter_by(

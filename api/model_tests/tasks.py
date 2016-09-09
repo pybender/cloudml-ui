@@ -13,7 +13,7 @@ from itertools import izip, repeat
 from sqlalchemy.exc import SQLAlchemyError
 
 from api import celery, app
-from api.base.tasks import SqlAlchemyTask
+from api.base.tasks import SqlAlchemyTask, TaskException, get_task_traceback
 from api.base.exceptions import InvalidOperationError
 from api.logs.logger import init_logger
 from api.model_tests.models import TestResult, TestExample
@@ -183,7 +183,8 @@ def run_test(dataset_ids, test_id):
     except Exception, exc:
         if isinstance(exc, SQLAlchemyError):
             app.sql_db.session.rollback()
-        logging.exception('Got exception when tests model')
+        logging.error('Got exception when test model: {0} \n {1}'
+                      .format(exc.message, get_task_traceback(exc)))
         test.status = test.STATUS_ERROR
         error_column_size = TestResult.error.type.length
         str_exc = str(exc)
@@ -191,7 +192,7 @@ def run_test(dataset_ids, test_id):
         test.error = str_exc if len(str_exc) <= error_column_size else \
             (str_exc[:error_column_size - len(msg)] + msg)
         test.save()
-        raise
+        raise TaskException(exc.message, exc)
     return 'Test completed'
 
 

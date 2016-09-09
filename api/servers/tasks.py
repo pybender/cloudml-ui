@@ -17,6 +17,7 @@ from api.ml_models.models import Model
 from api.amazon_utils import AmazonS3Helper
 from .config import FOLDER_MODELS, FOLDER_IMPORT_HANDLERS
 from grafana import update_grafana_dashboard
+from api.base.tasks import TaskException, get_task_traceback
 
 
 def get_a_Uuid():
@@ -194,7 +195,9 @@ class VerifyModelTask(object):
             self.verification.status = self.verification.STATUS_ERROR
             self.verification.error = str(exc)
             self.verification.save()
-            raise
+            logging.error("Exception when verifying the model: {0} \n {1}"
+                          .format(exc.message, get_task_traceback(exc)))
+            raise TaskException(exc.message, exc)
 
     @property
     def importhandler(self):
