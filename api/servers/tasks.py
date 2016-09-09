@@ -33,63 +33,70 @@ def upload_model_to_server(server_id, model_id, user_id):
     init_logger('trainmodel_log', obj=int(model_id))
     logging.info('Starting uploading to cloudml_predict')
 
-    server = Server.query.get(server_id)
-    user = User.query.get(user_id)
-    model = Model.query.get(model_id)
+    try:
+        server = Server.query.get(server_id)
+        user = User.query.get(user_id)
+        model = Model.query.get(model_id)
 
-    # TODO: Checking name, whether it's enough of the memory, etc.
-    model_files = server.list_keys(FOLDER_MODELS)
-    for file_ in model_files:
-        if file_['name'] == model.name:
-            raise ValueError('Model with name "{0}" already exist on '
-                             'the server {1}'.format(model.name, server.name))
+        # TODO: Checking name, whether it's enough of the memory, etc.
+        model_files = server.list_keys(FOLDER_MODELS)
+        for file_ in model_files:
+            if file_['name'] == model.name:
+                raise ValueError('Model with name "{0}" already exist on '
+                                 'the server {1}'
+                                 .format(model.name, server.name))
 
-    uid = get_a_Uuid()
+        uid = get_a_Uuid()
 
-    # TODO: Shall we use another account?
-    s3 = AmazonS3Helper(bucket_name=app.config['CLOUDML_PREDICT_BUCKET_NAME'])
-    path = '{0}/{1}/{2}.model'.format(
-        server.folder.strip('/'),
-        FOLDER_MODELS,
-        uid
-    )
-    meta = {
-        'id': model.id,
-        'object_name': model.name,
-        'name': model.name,
-        'user_id': user.id,
-        'user_name': user.name,
-        'hide': "False",
-        'uploaded_on': str(datetime.now())
-    }
+        # TODO: Shall we use another account?
+        s3 = AmazonS3Helper(
+            bucket_name=app.config['CLOUDML_PREDICT_BUCKET_NAME'])
+        path = '{0}/{1}/{2}.model'.format(
+            server.folder.strip('/'),
+            FOLDER_MODELS,
+            uid
+        )
+        meta = {
+            'id': model.id,
+            'object_name': model.name,
+            'name': model.name,
+            'user_id': user.id,
+            'user_name': user.name,
+            'hide': "False",
+            'uploaded_on': str(datetime.now())
+        }
 
-    trainer = model.get_trainer()
-    #from cloudml.trainer.store import load_trainer
-    #trainer = load_trainer(trainer_data)
-    from cloudml.trainer.store import TrainerStorage
-    from bson import Binary
-    import cPickle as pickle
-    trainer_data = Binary(TrainerStorage(trainer).dumps())
-    logging.info(len(trainer_data))
-    #trainer.visualization = None
-    #trainer_data = store_trainer(trainer)
-    #trainer_data = model.trainer
-    s3.save_key_string(path, trainer_data, meta)
-    s3.close()
-    model.locked = True
-    s_ids = list(model.servers_ids) if (isinstance(model.servers_ids,
-                                                   list)) else []
-    s_ids.append(server.id)
-    model.servers_ids = list(s_ids)
-    model.save()
-    feature_set = model.features_set
-    feature_set.locked = True
-    feature_set.save()
-    logging.info('Creating grafan dashboard for model')
-    update_grafana_dashboard(server, model)
-    logging.info('Model has been uploaded: %s' % model.name)
+        trainer = model.get_trainer()
+        #from cloudml.trainer.store import load_trainer
+        #trainer = load_trainer(trainer_data)
+        from cloudml.trainer.store import TrainerStorage
+        from bson import Binary
+        import cPickle as pickle
+        trainer_data = Binary(TrainerStorage(trainer).dumps())
+        logging.info(len(trainer_data))
+        #trainer.visualization = None
+        #trainer_data = store_trainer(trainer)
+        #trainer_data = model.trainer
+        s3.save_key_string(path, trainer_data, meta)
+        s3.close()
+        model.locked = True
+        s_ids = list(model.servers_ids) if (isinstance(model.servers_ids,
+                                                       list)) else []
+        s_ids.append(server.id)
+        model.servers_ids = list(s_ids)
+        model.save()
+        feature_set = model.features_set
+        feature_set.locked = True
+        feature_set.save()
+        logging.info('Creating grafan dashboard for model')
+        update_grafana_dashboard(server, model)
+        logging.info('Model has been uploaded: %s' % model.name)
 
-    return '{0}/{1}.model'.format(FOLDER_MODELS, uid)
+        return '{0}/{1}.model'.format(FOLDER_MODELS, uid)
+    except Exception as e:
+        logging.error("Got exception on uploading model to predict: "
+                      " {0} \n {1}".format(e.message, get_task_traceback(e)))
+        raise TaskException(e.message, e)
 
 
 @celery.task
@@ -101,54 +108,60 @@ def upload_import_handler_to_server(server_id, handler_type, handler_id,
     init_logger('importdata_log', obj=int(handler_id))
     logging.info('Starting uploading to cloudml_predict')
 
-    server = Server.query.get(server_id)
-    user = User.query.get(user_id)
-    handler = XmlImportHandler.query.get(handler_id)
+    try:
+        server = Server.query.get(server_id)
+        user = User.query.get(user_id)
+        handler = XmlImportHandler.query.get(handler_id)
 
-    handler_files = server.list_keys(FOLDER_IMPORT_HANDLERS)
-    for file_ in handler_files:
-        if file_['name'] == handler.name:
-            raise ValueError('Import Handler with name "{0}" already exist on '
-                             'the server {1}'.format(
-                                 handler.name, server.name))
+        handler_files = server.list_keys(FOLDER_IMPORT_HANDLERS)
+        for file_ in handler_files:
+            if file_['name'] == handler.name:
+                raise ValueError('Import Handler with name "{0}" already exist'
+                                 ' on the server {1}'.format(
+                                     handler.name, server.name))
 
-    uid = get_a_Uuid()
-    # TODO: Shall we use another account?
-    s3 = AmazonS3Helper(bucket_name=app.config['CLOUDML_PREDICT_BUCKET_NAME'])
-    path = '{0}/{1}/{2}.{3}'.format(
-        server.folder.strip('/'),
-        FOLDER_IMPORT_HANDLERS,
-        uid,
-        'xml' if handler_type == XmlImportHandler.TYPE else 'json'
-    )
-    meta = {
-        'id': handler.id,
-        'name': handler.name,
-        'object_name': handler.name,
-        'type': handler.TYPE,
-        'user_id': user.id,
-        'user_name': user.name,
-        'hide': "False",
-        'uploaded_on': str(datetime.now()),
-        'crc32': handler.crc32
-    }
+        uid = get_a_Uuid()
+        # TODO: Shall we use another account?
+        s3 = AmazonS3Helper(
+            bucket_name=app.config['CLOUDML_PREDICT_BUCKET_NAME'])
+        path = '{0}/{1}/{2}.{3}'.format(
+            server.folder.strip('/'),
+            FOLDER_IMPORT_HANDLERS,
+            uid,
+            'xml' if handler_type == XmlImportHandler.TYPE else 'json'
+        )
+        meta = {
+            'id': handler.id,
+            'name': handler.name,
+            'object_name': handler.name,
+            'type': handler.TYPE,
+            'user_id': user.id,
+            'user_name': user.name,
+            'hide': "False",
+            'uploaded_on': str(datetime.now()),
+            'crc32': handler.crc32
+        }
 
-    handler_data = handler.get_plan_config()
-    handler.locked = True
-    s_ids = list(handler.servers_ids) if (isinstance(handler.servers_ids,
-                                                     list)) else []
-    s_ids.append(server.id)
-    handler.servers_ids = list(s_ids)
-    handler.save()
-    s3.save_key_string(path, handler_data, meta)
-    s3.close()
+        handler_data = handler.get_plan_config()
+        handler.locked = True
+        s_ids = list(handler.servers_ids) if (isinstance(handler.servers_ids,
+                                                         list)) else []
+        s_ids.append(server.id)
+        handler.servers_ids = list(s_ids)
+        handler.save()
+        s3.save_key_string(path, handler_data, meta)
+        s3.close()
 
-    logging.info('Import Handler has been uploaded: %s' % handler.name)
+        logging.info('Import Handler has been uploaded: %s' % handler.name)
 
-    return '{0}/{1}.{2}'.format(
-        FOLDER_IMPORT_HANDLERS,
-        uid,
-        'xml' if handler_type == XmlImportHandler.TYPE else 'json')
+        return '{0}/{1}.{2}'.format(
+            FOLDER_IMPORT_HANDLERS,
+            uid,
+            'xml' if handler_type == XmlImportHandler.TYPE else 'json')
+    except Exception as e:
+        logging.error("Got exception on uploading import handler to predict: "
+                      " {0} \n {1}".format(e.message, get_task_traceback(e)))
+        raise TaskException(e.message, e)
 
 
 @celery.task
