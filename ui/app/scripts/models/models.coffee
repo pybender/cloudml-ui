@@ -51,7 +51,7 @@ angular.module('app.models.model', ['app.config'])
       training_in_progress: false
       grid_search_in_progress: false
       new_dataset: null
-
+      model_parts_size: null
       servers: []
 
       loadFromJSON: (origData) ->

@@ -364,6 +364,20 @@ angular.module('app.directives', [
   }
 ])
 
+.directive("modelPartsSizesTree", [
+  'RecursionHelper'
+
+  (RecursionHelper) ->
+    return {
+          restrict: "E",
+          scope: {root: '='}
+          templateUrl:'partials/directives/sizes_tree.html'
+          compile: (element) ->
+              # // Use the compile function from the RecursionHelper,
+              # // And return the linking function(s) which it returns
+              return RecursionHelper.compile(element)
+    }
+])
 
 .directive("paramsEditor", [ ->
   return {

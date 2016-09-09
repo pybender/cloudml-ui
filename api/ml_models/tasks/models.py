@@ -24,12 +24,14 @@ from api.ml_models.models import Model, Segment, Transformer
 from api.import_handlers.models import DataSet
 from api.logs.dynamodb.models import LogMessage
 from api.base.io_utils import get_or_create_data_folder
+from celery import chord
 
 
 __all__ = ['train_model', 'get_classifier_parameters_grid',
            'visualize_model', 'generate_visualization_tree',
            'transform_dataset_for_download',
-           'upload_segment_features_transformers', 'clear_model_data_cache']
+           'upload_segment_features_transformers', 'clear_model_data_cache',
+           'calculate_model_parts_size']
 
 
 @celery.task(base=SqlAlchemyTask)
@@ -109,8 +111,9 @@ def train_model(dataset_ids, model_id, user_id, delete_metadata=False):
 
         model.create_segments(segments)
 
-        for segment in model.segments:
-            visualize_model.delay(model.id, segment.id)
+        chord((visualize_model.s(model.id, segment.id)
+               for segment in model.segments),
+              calculate_model_parts_size.s(model.id))()
 
     except Exception, exc:
         app.sql_db.session.rollback()
@@ -528,3 +531,33 @@ def clear_model_data_cache():
         pass
 
     logging.info("Finished")
+
+
+@celery.task(base=SqlAlchemyTask)
+def calculate_model_parts_size(data_from_training, model_id, deep=7):
+    """Calculates size of model trainer and records result json"""
+    from pympler.asizeof import asized
+    init_logger('trainmodel_log', obj=int(model_id))
+    logging.info('Starting calculation size of model parts')
+
+    model = Model.query.get(model_id)
+    trainer = model.get_trainer()
+
+    def walk_asized(asz):
+        """Prepares output dict from Asized object"""
+        res = {"name": asz.name, "size": asz.size, "properties": []}
+        for r in asz.refs:
+            res["properties"].append(
+                {"name": r.name, "size": r.size,
+                 "properties": [walk_asized(k) for k in r.refs]})
+        return res
+
+    try:
+        result = walk_asized(asized(trainer, detail=deep))
+        result["name"] = "trainer"
+        model.model_parts_size = result
+        model.save()
+    except Exception as e:
+        logging.exception('Exception while calculating model parts size: {}'
+                          .format(e))
+    logging.info('Finished calculation')
