@@ -218,25 +218,29 @@ def visualize_model(model_id, segment_id=None):
 
     weights_dict = None
     model.status = model.STATUS_FILLING_WEIGHTS
+    logging.info('Visualize model model.STATUS_FILLING_WEIGHTS: %s' % model.STATUS_FILLING_WEIGHTS)
     model.save()
 
     try:
         visualization_data = trainer.get_visualization(segment.name)
+        logging.info('Visualize model visualization_data: %s' % visualization_data)
         have_weights = 'weights' in visualization_data
         if have_weights:
             from utils import fill_model_weights
             weights_dict = visualization_data.pop('weights')
+            logging.info('Visualize model weights_dict: %s' % weights_dict)
             weights_added = 0
             categories_added = 0
             classes_processed = 0
 
             for clazz in weights_dict.keys():
-                c, w = fill_model_weights(
-                    model, segment, clazz, weights_dict[clazz])
+                logging.info('Visualize model insert 1: %s' % clazz)
+                c, w = fill_model_weights(model, segment, clazz, weights_dict[clazz])
                 categories_added += c
                 weights_added += w
                 classes_processed += 1
 
+            logging.info('Visualize model 02')
             app.sql_db.session.commit()
             logging.info(
                 'Model %s parameters weights was added to db. %s weights, '
