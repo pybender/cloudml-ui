@@ -321,7 +321,8 @@ class FeatureTransformerForm(BaseForm, ParametersConvertorMixin):
     def validate_data(self):
         type_ = self.cleaned_data.get('type')
         pretrained_selected = self.cleaned_data.get('predefined_selected')
-        if not pretrained_selected and type_ not in Transformer.TYPES_LIST:
+        if not pretrained_selected and type_ \
+                and type_ not in Transformer.TYPES_LIST:
             self.add_error('type', 'type is invalid')
             return
 

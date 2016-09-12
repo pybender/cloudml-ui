@@ -471,19 +471,19 @@ class TasksTests(BaseDbTestCase):
                       self.examples_count)
 
         self.assertRaises(
-            ValueError, calculate_confusion_matrix, self.test.id,
+            TaskException, calculate_confusion_matrix, self.test.id,
             [('0', 0), ('1', 0)])
         self.assertRaises(
-            ValueError, calculate_confusion_matrix, self.testmulti.id,
+            TaskException, calculate_confusion_matrix, self.testmulti.id,
             [('0', 0), ('1', 0), ('2', 0)])
         self.assertRaises(
-            ValueError, calculate_confusion_matrix, self.test.id,
+            TaskException, calculate_confusion_matrix, self.test.id,
             [('0', -1), ('1', 1)])
         self.assertRaises(
-            ValueError, calculate_confusion_matrix, self.testmulti.id,
+            TaskException, calculate_confusion_matrix, self.testmulti.id,
             [('0', 1), ('1', -1), ('2', -1)])
         self.assertRaises(
-            ValueError, calculate_confusion_matrix, 5646546,
+            TaskException, calculate_confusion_matrix, 5646546,
             [('0', 1), ('1', 1)])
 
         # multiclass model
@@ -522,14 +522,14 @@ class TasksTests(BaseDbTestCase):
                       self.testmulti,
                       self.examples_count_multi)
         self.assertRaises(
-            ValueError, calculate_confusion_matrix, self.testmulti.id,
+            TaskException, calculate_confusion_matrix, self.testmulti.id,
             [('0', 0), ('1', 1), ('2', 1)])
 
         # test is not completed
         self.testmulti.status = 'Storing'
         self.testmulti.save()
         self.assertRaises(
-            ValueError, calculate_confusion_matrix, self.testmulti.id,
+            TaskException, calculate_confusion_matrix, self.testmulti.id,
             [('0', 1), ('1', 1), ('2', 1)]
         )
 
