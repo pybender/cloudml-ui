@@ -30,5 +30,8 @@
     <td>{{ server.folder }}</td>
     <td><span class="badge {{ server.type | to_lower }}">{{ server.type }}</span></td>
   </tr>
+  <tr ng-hide="objects">
+    <td colspan="3">No servers added.</td>
+  </tr>
 </tbody>
 </table>

@@ -24,6 +24,8 @@ from api.accounts.models import User
 from api.servers.grafana import GrafanaHelper
 import json
 from cloudml.trainer.store import TrainerStorage
+from api.ml_models.fixtures import MODEL_TRAINER
+from api.base.tasks import TaskException
 
 
 class ServerModelTests(BaseDbTestCase):
@@ -64,14 +66,17 @@ class ServerResourceTests(BaseDbTestCase, TestChecksMixin):
 
     def test_readonly(self):
         self.check_readonly()
-
+    
+    @patch('api.ml_models.models.Model.get_trainer')
     @patch('api.amazon_utils.AmazonS3Helper.load_key')
     @patch('api.servers.models.Server.list_keys')
     @patch('api.amazon_utils.AmazonS3Helper.save_key_string')
     @patch.object(GrafanaHelper, 'model2grafana')
     def test_get_models_action(self, grafana_mock, save_mock, list_mock,
-                               load_mock):
+                               load_mock, mock_get_trainer):
         # no models and import handlers
+        trainer = TrainerStorage.loads(MODEL_TRAINER)
+        mock_get_trainer.return_value = trainer
         list_mock.return_value = []
         result = self._check(server=self.obj.id, id=self.obj.id,
                              action='models')
@@ -144,13 +149,15 @@ class ServerFileResourceTests(BaseDbTestCase, TestChecksMixin):
     RESOURCE = ServerFileResource
     datasets = [ModelData, ImportHandlerData,
                 XmlEntityData, ServerData]
-
+    @patch('api.ml_models.models.Model.get_trainer')
     @patch('api.amazon_utils.AmazonS3Helper.load_key')
     @patch('api.amazon_utils.AmazonS3Helper.list_keys')
     @patch('api.amazon_utils.AmazonS3Helper.save_key_string')
     @patch.object(GrafanaHelper, 'model2grafana')
-    def setUp(self, grafana_mock, save_mock, list_mock, load_mock):
+    def setUp(self, grafana_mock, save_mock, list_mock, load_mock, mock_get_trainer):
         super(ServerFileResourceTests, self).setUp()
+        trainer = TrainerStorage.loads(MODEL_TRAINER)
+        mock_get_trainer.return_value = trainer
         self.server = Server.query.first()
         self.BASE_URL = self.BASE_URL.format(self.server.id, FOLDER_MODELS)
         self.model = Model.query.filter_by(name=ModelData.model_01.name).one()
@@ -158,16 +165,22 @@ class ServerFileResourceTests(BaseDbTestCase, TestChecksMixin):
         self.user = User.query.first()
         upload_model_to_server(self.server.id, self.model.id, self.user.id)
         self.assertTrue(grafana_mock.called)
-
-    def test_invalid_folder(self):
+    
+    @patch('api.ml_models.models.Model.get_trainer')
+    def test_invalid_folder(self, mock_get_trainer):
+        trainer = TrainerStorage.loads(MODEL_TRAINER)
+        mock_get_trainer.return_value = trainer
         base_url = '/cloudml/servers/{0!s}/files/{1!s}/'
         url = base_url.format(self.server.id, 'invalid_folder1')
         resp = self.client.get(url, headers=HTTP_HEADERS)
         self.assertEqual(resp.status_code, 404)
-
+    
+    @patch('api.ml_models.models.Model.get_trainer')
     @patch('api.servers.models.Server.list_keys')
     @patch('api.servers.tasks.logging')
-    def test_list(self, logging_mock, list_mock):
+    def test_list(self, logging_mock, list_mock, mock_get_trainer):
+        trainer = TrainerStorage.loads(MODEL_TRAINER)
+        mock_get_trainer.return_value = trainer
         list_mock.return_value = [{'id': str(self.model.id),
                                    'name': self.model.name}]
         key = "%ss" % self.RESOURCE.OBJECT_NAME
@@ -201,12 +214,16 @@ class ServerFileResourceTests(BaseDbTestCase, TestChecksMixin):
         resp = self.client.delete(url, headers=HTTP_HEADERS)
         self.assertEqual(404, resp.status_code)
         self.assertIn('not found', resp.data)
-
+    
+    @patch('api.ml_models.models.Model.get_trainer')
     @patch('api.amazon_utils.AmazonS3Helper.set_key_metadata')
     @patch('api.servers.models.Server.list_keys')
     @patch('api.servers.tasks.update_at_server')
-    def test_edit(self, mock_update_at_server, list_mock, set_meta):
+    def test_edit(self, mock_update_at_server, list_mock,
+                  set_meta, mock_get_trainer):
         # set Up
+        trainer = TrainerStorage.loads(MODEL_TRAINER)
+        mock_get_trainer.return_value = trainer
         model2 = Model.query.filter_by(name=ModelData.model_02.name).one()
         model2.trainer = 'trainer_file2'
         list_mock.return_value = [
@@ -236,10 +253,14 @@ class ServerFileResourceTests(BaseDbTestCase, TestChecksMixin):
         resp = self.client.put(url, data={'name': 'nnn'}, headers=HTTP_HEADERS)
         self.assertEqual(404, resp.status_code)
         self.assertIn('not found', resp.data)
-
+    
+    @patch('api.ml_models.models.Model.get_trainer')
     @patch('api.servers.models.Server.list_keys')
     @patch('api.servers.tasks.update_at_server')
-    def test_reload_on_predict(self, mock_update_at_server, list_mock):
+    def test_reload_on_predict(self, mock_update_at_server, list_mock,
+                               mock_get_trainer):
+        trainer = TrainerStorage.loads(MODEL_TRAINER)
+        mock_get_trainer.return_value = trainer
         list_mock.return_value = [{'id': str(self.model.id)}]
         files_list = [f for f in self.server.list_keys(FOLDER_MODELS)]
         obj_id = files_list[0]['id']
@@ -254,15 +275,18 @@ class ServersTasksTests(BaseDbTestCase):
     datasets = [ModelData, ImportHandlerData,
                 XmlEntityData, ServerData, ServerModelVerificationData]
 
+    @patch('api.ml_models.models.Model.get_trainer')
     @patch('api.servers.models.Server.list_keys')
     @patch('api.amazon_utils.AmazonS3Helper.load_key')
     @patch('api.amazon_utils.AmazonS3Helper.save_key_string')
     @patch('api.servers.tasks.get_a_Uuid')
     @patch.object(GrafanaHelper, 'model2grafana')
     def test_upload_model(self, grafana_mock, uuid, mock_save_key_string,
-                          load_mock, list_mock):
+                          load_mock, list_mock, mock_get_trainer):
         guid = '7686f8b8-dc26-11e3-af6a-20689d77b543'
         uuid.return_value = guid
+        trainer = TrainerStorage.loads(MODEL_TRAINER)
+        mock_get_trainer.return_value = trainer
         list_mock.return_value = []
         server = Server.query.filter_by(name=ServerData.server_01.name).one()
         model = Model.query.filter_by(name=ModelData.model_01.name).one()
@@ -289,15 +313,18 @@ class ServersTasksTests(BaseDbTestCase):
         for ds in model.datasets:
             self.assertTrue(ds.locked)
         self.assertTrue(server.id in model.servers_ids)
-
+    
+    @patch('api.ml_models.models.Model.get_trainer')
     @patch('api.amazon_utils.AmazonS3Helper.save_key_string')
     @patch('api.servers.tasks.get_a_Uuid')
     @patch('api.servers.models.Server.list_keys')
     @patch.object(GrafanaHelper, 'model2grafana')
     def test_upload_model_existing_name(self, grafana_mock, list_keys, uuid,
-                                        mock_save_key_string):
+                                        mock_save_key_string, mock_get_trainer):
         guid = '7686f8b8-dc26-11e3-af6a-20689d77b543'
         uuid.return_value = guid
+        trainer = TrainerStorage.loads(MODEL_TRAINER)
+        mock_get_trainer.return_value = trainer
         server = Server.query.filter_by(name=ServerData.server_01.name).one()
         model = Model.query.filter_by(name=ModelData.model_01.name).one()
         user = User.query.first()
@@ -314,7 +341,7 @@ class ServersTasksTests(BaseDbTestCase):
             'crc32': 'crc32',
             'server_id': server.id}]
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TaskException):
             upload_model_to_server(server.id, model.id, user.id)
 
         self.assertFalse(grafana_mock.called)
@@ -380,7 +407,7 @@ class ServersTasksTests(BaseDbTestCase):
             'crc32': 'crc32',
             'server_id': server.id}]
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TaskException):
             upload_import_handler_to_server(
                 server.id, XmlImportHandler.TYPE,
                 handler.id, user.id)

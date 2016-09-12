@@ -50,6 +50,7 @@ angular.module('app.servers.verifications', ['app.config', ])
     OTHER = '- Other -'
     $scope.model = new ModelVerification({'count': 0})
     $scope.serverFiles = []
+    $scope.modelFiles = []
     $scope.datas = []
     $scope.importParams = []
     $scope.dataFields = []
@@ -102,7 +103,6 @@ angular.module('app.servers.verifications', ['app.config', ])
         $scope[param] = []
       if 'datas' in params
         $scope.model.test_result_id = ''
-        $scope.model.description = ''
       if 'serverFiles' in params
         $scope.model.model_id = ''
       $scope.model.examples_count = 0
@@ -115,7 +115,7 @@ angular.module('app.servers.verifications', ['app.config', ])
         $scope.importParams = angular.copy($scope.predictClassesConfig[$scope.clazz])
 
 
-    $scope.loadModels = (serverId) ->
+    $scope.loadServerFiles = (serverId) ->
       $scope.resetData(['serverFiles', 'datas', 'dataFields'])
       if !serverId?
         return
@@ -123,13 +123,35 @@ angular.module('app.servers.verifications', ['app.config', ])
       Server.$active_models(
         server: serverId
       ).then ((opts) ->
-        $scope.serverFiles = opts.objects
+        $scope.serverFiles = opts.files
+        $scope.modelFiles = opts.all_model_files
+        $scope.handlersDict = {}
+        for file in $scope.serverFiles
+          $scope.handlersDict[file.import_handler.id] = file
+          if file.model_name?
+            name = file.import_handler_name + ' / ' + file.model_name
+          else
+            name = file.import_handler_name
+          file['name'] = name
         $scope.loadingModels = false
       ), ((opts) ->
         $scope.setError(opts, 'loading models that use import handler')
         $scope.loadingModels = false
       )
 
+    $scope.importHandlerChanged = (importHandlerId) ->
+      file = $scope.handlersDict[importHandlerId]
+      $scope.model.description = file
+      $scope.predictClassesConfig[OTHER] = file.import_handler.import_params
+      $scope.importHandlerParams = file.import_handler.import_params
+
+      if file.model? && file.model.id?
+        $scope.model.model_id = file.model.id
+        $scope.loadDatas(file.model.id)
+        $scope.showModelSelect = false
+      else  # the model was defined in the script
+        $scope.showModelSelect = true
+        $scope.model.model_id = null
 
     $scope.loadDatas = (modelId) ->
       $scope.resetData(['datas', 'dataFields'])
@@ -141,17 +163,10 @@ angular.module('app.servers.verifications', ['app.config', ])
         show: 'name,examples_fields,examples_count'})
       .then ((opts) ->
         $scope.datas = opts.objects
-        for file in $scope.serverFiles
-          if file.model? and file.model.id == modelId
-            $scope.model.description = file
-            $scope.model.import_handler_id = file.import_handler.id
-            $scope.predictClassesConfig[OTHER] = file.import_handler.import_params
-            $scope.importHandlerParams = file.import_handler.import_params
         $scope.loadingTests = false
       ), ((opts) ->
         $scope.setError(opts, 'loading model test data')
       )
-
 
     $scope.loadFields = (testId) ->
       $scope.resetData(['dataFields'])

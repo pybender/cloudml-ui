@@ -293,56 +293,61 @@ def generate_visualization_tree(model_id, deep):
     logging.info('Starting tree visualization')
     model = Model.query.get(model_id)
 
-    if model is None:
-        raise ValueError('model not found: %s' % model_id)
+    try:
+        if model is None:
+            raise ValueError('model not found: %s' % model_id)
 
-    if model.classifier is None or 'type' not in model.classifier:
-        raise ValueError('model has invalid classifier')
+        if model.classifier is None or 'type' not in model.classifier:
+            raise ValueError('model has invalid classifier')
 
-    clf_type = model.classifier['type']
-    if clf_type not in (DECISION_TREE_CLASSIFIER,
-                        RANDOM_FOREST_CLASSIFIER,
-                        EXTRA_TREES_CLASSIFIER):
-        raise VisualizationException(
-            "model with %s classifier doesn't support tree"
-            " visualization" % clf_type,
-            VisualizationException.CLASSIFIER_NOT_SUPPORTED)
-
-    # Checking that all_weights had been stored while training model
-    # For old models we need to retrain the model.
-    if model.visualization_data is None:
-        raise VisualizationException(
-            "we don't support the visualization re-generation for "
-            "models trained before may 2015."
-            "please re-train the model to use this feature.",
-            error_code=VisualizationException.ALL_WEIGHT_NOT_FILLED)
-
-    trainer = model.get_trainer()
-    from copy import deepcopy
-    data = deepcopy(model.visualization_data)
-    segments = [segment.name for segment in model.segments] \
-        or [DEFAULT_SEGMENT]
-    for segment in segments:
-        if segment not in model.visualization_data \
-                or 'all_weights' not in model.visualization_data[segment]:
+        clf_type = model.classifier['type']
+        if clf_type not in (DECISION_TREE_CLASSIFIER,
+                            RANDOM_FOREST_CLASSIFIER,
+                            EXTRA_TREES_CLASSIFIER):
             raise VisualizationException(
-                "we don't support the visualization re-generation for models"
-                " trained before may 2015."
+                "model with %s classifier doesn't support tree"
+                " visualization" % clf_type,
+                VisualizationException.CLASSIFIER_NOT_SUPPORTED)
+
+        # Checking that all_weights had been stored while training model
+        # For old models we need to retrain the model.
+        if model.visualization_data is None:
+            raise VisualizationException(
+                "we don't support the visualization re-generation for "
+                "models trained before may 2015."
                 "please re-train the model to use this feature.",
                 error_code=VisualizationException.ALL_WEIGHT_NOT_FILLED)
 
-        if clf_type == DECISION_TREE_CLASSIFIER:
-            tree = trainer.model_visualizer.regenerate_tree(
-                segment, data[segment]['all_weights'], deep=deep)
-            data[segment]['tree'] = tree
-        elif clf_type == RANDOM_FOREST_CLASSIFIER or \
-                clf_type == EXTRA_TREES_CLASSIFIER:
-            trees = trainer.model_visualizer.regenerate_trees(
-                segment, data[segment]['all_weights'], deep=deep)
-            data[segment]['trees'] = trees
-        data[segment]['parameters'] = {'deep': deep, 'status': 'done'}
+        trainer = model.get_trainer()
+        from copy import deepcopy
+        data = deepcopy(model.visualization_data)
+        segments = [segment.name for segment in model.segments] \
+            or [DEFAULT_SEGMENT]
+        for segment in segments:
+            if segment not in model.visualization_data \
+                    or 'all_weights' not in model.visualization_data[segment]:
+                raise VisualizationException(
+                    "we don't support the visualization re-generation for "
+                    "models trained before may 2015."
+                    "please re-train the model to use this feature.",
+                    error_code=VisualizationException.ALL_WEIGHT_NOT_FILLED)
 
-    model.visualize_model(data)
+            if clf_type == DECISION_TREE_CLASSIFIER:
+                tree = trainer.model_visualizer.regenerate_tree(
+                    segment, data[segment]['all_weights'], deep=deep)
+                data[segment]['tree'] = tree
+            elif clf_type == RANDOM_FOREST_CLASSIFIER or \
+                    clf_type == EXTRA_TREES_CLASSIFIER:
+                trees = trainer.model_visualizer.regenerate_trees(
+                    segment, data[segment]['all_weights'], deep=deep)
+                data[segment]['trees'] = trees
+            data[segment]['parameters'] = {'deep': deep, 'status': 'done'}
+
+        model.visualize_model(data)
+    except Exception as e:
+        logging.error("Got exception on tree visualization: "
+                      " {0} \n {1}".format(e.message, get_task_traceback(e)))
+        raise TaskException(e.message, e)
     return "Tree visualization was completed"
 
 
@@ -353,25 +358,29 @@ def transform_dataset_for_download(model_id, dataset_id):
 
     init_logger('transform_for_download_log', obj=int(dataset_id))
     logging.info('Starting Transform For Download Task')
+    try:
+        transformed = model.transform_dataset(dataset)
 
-    transformed = model.transform_dataset(dataset)
+        logging.info('Saving transformed data to disk')
+        temp_file = tempfile.NamedTemporaryFile()
+        numpy.savez_compressed(temp_file, **transformed)
 
-    logging.info('Saving transformed data to disk')
-    temp_file = tempfile.NamedTemporaryFile()
-    numpy.savez_compressed(temp_file, **transformed)
+        s3_filename = "dataset_{0}_vectorized_for_model_{1}.npz".format(
+            dataset.id, model.id)
 
-    s3_filename = "dataset_{0}_vectorized_for_model_{1}.npz".format(
-        dataset.id, model.id)
-
-    from api.amazon_utils import AmazonS3Helper
-    s3 = AmazonS3Helper()
-    logging.info('Uploading file {0} to s3 with name {1}...'.format(
-        temp_file.name, s3_filename))
-    s3.save_key(s3_filename, temp_file.name, {
-        'model_id': model.id,
-        'dataset_id': dataset.id}, compressed=False)
-    s3.close()
-    return s3.get_download_url(s3_filename, 60 * 60 * 24 * 7)
+        from api.amazon_utils import AmazonS3Helper
+        s3 = AmazonS3Helper()
+        logging.info('Uploading file {0} to s3 with name {1}...'.format(
+            temp_file.name, s3_filename))
+        s3.save_key(s3_filename, temp_file.name, {
+            'model_id': model.id,
+            'dataset_id': dataset.id}, compressed=False)
+        s3.close()
+        return s3.get_download_url(s3_filename, 60 * 60 * 24 * 7)
+    except Exception as e:
+        logging.error("Got exception when transforming dataset: "
+                      " {0} \n {1}".format(e.message, get_task_traceback(e)))
+        raise TaskException(e.message, e)
 
 
 def _get_model_and_segment_or_raise(model_id, segment_id=None):
@@ -555,6 +564,6 @@ def calculate_model_parts_size(data_from_training, model_id, deep=7):
         model.model_parts_size = result
         model.save()
     except Exception as e:
-        logging.exception('Exception while calculating model parts size: {}'
-                          .format(e))
+        logging.error("Exception while calculating model parts size: {0} "
+                      " \n {1}".format(e.message, get_task_traceback(e)))
     logging.info('Finished calculation')

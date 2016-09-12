@@ -117,161 +117,273 @@ describe 'servers/verifications.coffee', ->
       $httpBackend.flush()
       return getServers()
 
-    it 'should init scope, load servers, predict classes and watch for params_map changes', ->
-      # new feature
-      prepareContext false, false
+    expectServerFilesHttpGet = (serverId, withError=false) ->
+      url = "#{$server.BASE_API_URL}action/models/?server=#{serverId}"
+      if not withError
+        response = {
+          files: [
+            {
+              "model_metadata": "m1"
+              "import_handler_name": "h1"
+              "import_handler_metadata": {}
+              "model": {"id": 11, "import_handler_id": 1}
+              "import_handler": {"import_params": ["app_id"], "id": 1}
+              "model_name": "m1"
+            },
+            {
+              "import_handler_name": "h2"
+              "import_handler": {"import_params": ["my_id"], "id": 2}
+              "import_handler_metadata": {}
+            }],
+          all_model_files: [
+            {
+              "last_modified": "2015-11-09"
+              "id": "id.model"
+              "object_id": 11
+              "name": "the model"
+            },
+            {
+              "last_modified": "2015-11-09"
+              "id": "id.model"
+              "object_id": 222
+              "name": "the model 2"
+            }]
+          }
+        $httpBackend.expectGET(url)
+        .respond 200, angular.toJson(response)
+        return response
+      else
+        $httpBackend.expectGET(url)
+        .respond 400
 
-      expect($scope.model.count).toEqual 0
-      expect($scope.serverFiles).toEqual []
-      expect($scope.datas).toEqual []
-      expect($scope.importParams).toEqual []
-      expect($scope.dataFields).toEqual []
-      expect($scope.verifyAllowed).toBe false
+    expectDatasRequest = (modelId, withError) ->
+        inject (TestResult) ->
+          testResult = new TestResult({id:111, model_id: modelId})
+          url = "#{testResult.BASE_API_URL}?model_id=#{modelId}&show=name,examples_fields,examples_count"
+          if not withError
+            response = {}
+            response[testResult.API_FIELDNAME+'s'] = [
+              {
+                id: 123
+                name: "test1"
+                examples_fields: ["field1", "field2"]
+                examples_count: 99
+              }]
+            $httpBackend.expectGET(url)
+              .respond 200, angular.toJson(response)
+          else
+            $httpBackend.expectGET(url)
+            .respond 400
 
-      classes = getPredictClasses()
-      classes['- Other -'] = []
-      expect($scope.predictClassesConfig).toEqual classes
-
-      servers = getServers()
-      expect($scope.servers[0].id).toEqual servers[0].id
-      expect($scope.servers[1].id).toEqual servers[1].id
-      expect($scope.servers[0].name).toEqual servers[0].name
-      expect($scope.servers[1].name).toEqual servers[1].name
-
-      # check verify allowed
-      $scope.model.params_map = '{"field1": "field11"}'
-      $scope.$digest()
-      expect($scope.verifyAllowed).toBe true
-
-      $scope.model.params_map = {}
-      $scope.$digest()
-      expect($scope.verifyAllowed).toBe false
-
-      $scope.model.params_map = '{}'
-      $scope.$digest()
-      expect($scope.verifyAllowed).toBe false
-
-
-    it 'should set error on predict classes loading failure', ->
-      prepareContext true, false
-      expect($scope.setError).toHaveBeenCalled()
-      expect($scope.setError.calls.mostRecent().args[1]).toEqual 'loading types and parameters'
-
-
-    it 'should set error on server loading failure', ->
-      prepareContext false, true
-      expect($scope.setError).toHaveBeenCalled()
-      expect($scope.setError.calls.mostRecent().args[1]).toEqual 'loading servers'
-
-
-    it 'should load server files', ->
-      prepareContext false, false
-      response = {}
-      response["files"] = ["file1", "file2"]
-      $httpBackend.expectGET("#{$server.BASE_API_URL}action/models/?server=1")
-      .respond 200, angular.toJson(response)
-
-      $scope.loadModels
-      expect($scope.serverFiles).toEqual []
-      expect($scope.datas).toEqual []
-      expect($scope.dataFields).toEqual []
-
-      $scope.loadModels 1
+    selectServer = (serverId) ->
+      $scope.model.server_id = serverId
+      serverFilesResp = expectServerFilesHttpGet(serverId)
+      $scope.loadServerFiles serverId
       $httpBackend.flush()
-      expect($scope.serverFiles).toEqual ["file1", "file2"]
+      expect($scope.serverFiles.length).toEqual serverFilesResp['files'].length
       expect($scope.datas).toEqual []
       expect($scope.dataFields).toEqual []
 
-      $httpBackend.expectGET("#{$server.BASE_API_URL}action/models/?server=1")
-      .respond 400
-      $scope.loadModels 1
+    selectImportHandler = (importHandlerId, modelId, predefined=true) ->
+      expectDatasRequest(modelId)
+      if predefined
+        $scope.model.import_handler_id = importHandlerId
+        $scope.importHandlerChanged importHandlerId
+      else
+        $scope.model.import_handler_id = importHandlerId
+        $scope.importHandlerChanged importHandlerId
+        $scope.model.model_id = modelId
+        $scope.loadDatas modelId
       $httpBackend.flush()
-      expect($scope.serverFiles).toEqual []
-      expect($scope.datas).toEqual []
-      expect($scope.dataFields).toEqual []
-      expect($scope.setError).toHaveBeenCalled()
-      expect($scope.setError.calls.mostRecent().args[1]).toEqual 'loading models that use import handler'
 
 
-    it 'should load test result data for model, set model description if it is', inject (TestResult) ->
-      prepareContext false, false
-      testResult = new TestResult({id:111, model_id: 2})
-      response = {}
-      response[testResult.API_FIELDNAME+'s'] = [{id: 123, name: "test1", examples_fields: ["field1", "field2"], examples_count: 99}]
-      $httpBackend.expectGET("#{testResult.BASE_API_URL}?model_id=2&show=name,examples_fields,examples_count")
-      .respond 200, angular.toJson(response)
+    describe 'Form Initialization', ->
 
-      $scope.model.model_id = 2
-      $scope.serverFiles = [{model: {id: 2}, import_handler: {id: 22, import_params: ["app_id"]}},
-                            {model: {id: 1}}]
+      it 'should init scope, load servers, predict classes and watch for params_map changes', ->
+        prepareContext false, false
+        expect($scope.model.count).toEqual 0
+        expect($scope.serverFiles).toEqual []
+        expect($scope.datas).toEqual []
+        expect($scope.importParams).toEqual []
+        expect($scope.dataFields).toEqual []
+        expect($scope.verifyAllowed).toBe false
 
-      $scope.loadDatas
-      expect($scope.datas).toEqual []
-      expect($scope.dataFields).toEqual []
+        classes = getPredictClasses()
+        classes['- Other -'] = []
+        expect($scope.predictClassesConfig).toEqual classes
 
-      $scope.loadDatas 2
-      $httpBackend.flush()
-      expect($scope.datas[0].id).toEqual 123
-      expect($scope.datas[0].name).toEqual "test1"
-      expect($scope.datas[0].examples_fields).toEqual ["field1", "field2"]
-      expect($scope.datas[0].examples_count).toEqual 99
-      expect($scope.dataFields).toEqual []
-      expect($scope.model.description).toEqual $scope.serverFiles[0]
-      expect($scope.model.import_handler_id).toEqual 22
-      expect($scope.predictClassesConfig['- Other -']).toEqual ["app_id"]
-      expect($scope.importHandlerParams).toEqual ["app_id"]
+        servers = getServers()
+        expect($scope.servers[0].id).toEqual servers[0].id
+        expect($scope.servers[1].id).toEqual servers[1].id
+        expect($scope.servers[0].name).toEqual servers[0].name
+        expect($scope.servers[1].name).toEqual servers[1].name
 
-      $httpBackend.expectGET("#{testResult.BASE_API_URL}?model_id=2&show=name,examples_fields,examples_count")
-      .respond 400
-      $scope.loadDatas 2
-      $httpBackend.flush()
-      expect($scope.datas).toEqual []
-      expect($scope.dataFields).toEqual []
-      expect($scope.setError).toHaveBeenCalled()
-      expect($scope.setError.calls.mostRecent().args[1]).toEqual 'loading model test data'
+        # check verify allowed
+        $scope.model.params_map = '{"field1": "field11"}'
+        $scope.$digest()
+        expect($scope.verifyAllowed).toBe true
+
+        $scope.model.params_map = {}
+        $scope.$digest()
+        expect($scope.verifyAllowed).toBe false
+
+        $scope.model.params_map = '{}'
+        $scope.$digest()
+        expect($scope.verifyAllowed).toBe false
 
 
-    it 'should load test data fields', ->
-      prepareContext false, false
-      $scope.datas = [{id: 123, name: "test1", examples_fields: ["field1", "field2"], examples_count: 99}]
-
-      $scope.loadFields
-      expect($scope.dataFields).toEqual []
-
-      $scope.loadFields 122
-      expect($scope.dataFields).toEqual []
-
-      $scope.loadFields 123
-      expect($scope.dataFields).toEqual ["field1", "field2"]
-      expect($scope.model.examples_count).toEqual 99
-      expect($scope.model.count).toEqual 10
+      it 'should set error on predict classes loading failure', ->
+        prepareContext true, false
+        expect($scope.setError).toHaveBeenCalled()
+        expect($scope.setError.calls.mostRecent().args[1]).toEqual 'loading types and parameters'
 
 
-    it 'should load import params for clazz', ->
-      prepareContext false, false
-
-      $scope.loadIParams "some"
-      expect($scope.clazz).toEqual "some"
-      expect($scope.importParams).toEqual []
-
-      $scope.loadIParams "class2"
-      expect($scope.clazz).toEqual "class2"
-      expect($scope.importParams).toEqual ["field12"]
+      it 'should set error on server loading failure', ->
+        prepareContext false, true
+        expect($scope.setError).toHaveBeenCalled()
+        expect($scope.setError.calls.mostRecent().args[1]).toEqual 'loading servers'
 
 
-    it 'should reset data and set class', ->
-      prepareContext false, false
-      $scope.clazz = "class2"
+    describe 'Server Select', ->
+      beforeEach ->
+        prepareContext false, false
 
-      $scope.resetData ["serverFiles", "datas"]
-      expect($scope.datas).toEqual []
-      expect($scope.serverFiles).toEqual []
-      expect($scope.model.test_result_id).toEqual ''
-      expect($scope.model.description).toEqual ''
-      expect($scope.model.model_id).toEqual ''
-      expect($scope.model.examples_count).toEqual 0
-      expect($scope.model.count).toEqual 0
-      expect($scope.importParams).toEqual ["field12"]
+      it 'do nothing when no server selected', ->
+        $scope.loadServerFiles
+        expect($scope.serverFiles).toEqual []
+        expect($scope.datas).toEqual []
+        expect($scope.dataFields).toEqual []
+
+      it 'force server files loading when server selected', ->
+        selectServer(1)
+
+      it 'show error while loading server files when we have 400 resp', ->
+        serverId = 1
+        expectServerFilesHttpGet(serverId, true)
+        $scope.loadServerFiles serverId
+        $httpBackend.flush()
+        expect($scope.serverFiles).toEqual []
+        expect($scope.datas).toEqual []
+        expect($scope.dataFields).toEqual []
+        expect($scope.setError).toHaveBeenCalled()
+        expect($scope.setError.calls.mostRecent().args[1]).toEqual 'loading models that use import handler'
+
+    describe 'Import Handler/Model Select', ->
+      beforeEach ->
+        prepareContext false, false
+        selectServer(1)
+
+      it 'should load datas (import handler with predefined model)', ->
+        importHandlerId = 1
+        # model id of this import handler is 11
+        expectDatasRequest(11)
+        $scope.model.import_handler_id = importHandlerId
+        $scope.importHandlerChanged importHandlerId
+        expect($scope.showModelSelect).toEqual false
+        expect($scope.datas).toEqual []
+        expect($scope.dataFields).toEqual []
+        $httpBackend.flush()
+
+        expect($scope.datas[0].id).toEqual 123
+        expect($scope.datas[0].name).toEqual "test1"
+        expect($scope.datas[0].examples_fields).toEqual ["field1", "field2"]
+        expect($scope.datas[0].examples_count).toEqual 99
+        expect($scope.dataFields).toEqual []
+        expect($scope.model.description).toEqual $scope.serverFiles[0]
+        expect($scope.model.import_handler_id).toEqual importHandlerId
+        expect($scope.predictClassesConfig['- Other -']).toEqual ["app_id"]
+        expect($scope.importHandlerParams).toEqual ["app_id"]
+
+      it 'should load datas (import handler with model defined via script -> system should ask user to select the model manually)', ->
+        # selecting import handler
+        importHandlerId = 2  # model is not spec in the import handler
+        $scope.model.import_handler_id = importHandlerId
+        $scope.importHandlerChanged importHandlerId
+
+        expect($scope.datas).toEqual []
+        expect($scope.dataFields).toEqual []
+        expect($scope.showModelSelect).toEqual true
+        expect($scope.model.model_id).toBeNull()
+        
+        # selecting the model
+        $scope.model.model_id = 222
+        $scope.loadDatas 222
+        expectDatasRequest(222)
+        $httpBackend.flush()
+
+        expect($scope.datas[0].id).toEqual 123
+        expect($scope.datas[0].name).toEqual "test1"
+        expect($scope.datas[0].examples_fields).toEqual ["field1", "field2"]
+        expect($scope.datas[0].examples_count).toEqual 99
+        expect($scope.dataFields).toEqual []
+        expect($scope.model.description).toEqual $scope.serverFiles[1]
+        expect($scope.model.import_handler_id).toEqual importHandlerId
+        expect($scope.predictClassesConfig['- Other -']).toEqual ["my_id"]
+        expect($scope.importHandlerParams).toEqual ["my_id"]
+
+
+      it 'process 400 error (loading datas), when selecting import handler/model', ->
+        importHandlerId = 1
+        # model id of this import handler is 11
+        expectDatasRequest(11, true)
+        $scope.model.import_handler_id = importHandlerId
+        $scope.importHandlerChanged importHandlerId
+        $httpBackend.flush()
+        expect($scope.datas).toEqual []
+        expect($scope.dataFields).toEqual []
+        expect($scope.setError).toHaveBeenCalled()
+        expect($scope.setError.calls.mostRecent().args[1]).toEqual 'loading model test data'
+
+    describe 'Test Data Select', ->
+      beforeEach ->
+        prepareContext false, false
+        selectServer(1)
+        selectImportHandler(1, 11)  # in the import handler 1 model is 11.
+
+      it 'should load test data fields, when selecting the TestResult.', ->
+        $scope.loadFields
+        expect($scope.dataFields).toEqual []
+
+        $scope.loadFields 122
+        expect($scope.dataFields).toEqual []
+
+        $scope.loadFields 123
+        expect($scope.dataFields).toEqual ["field1", "field2"]
+        expect($scope.model.examples_count).toEqual 99
+        expect($scope.model.count).toEqual 10
+
+    describe 'Predict Class Select', ->
+      beforeEach ->
+        prepareContext false, false
+        selectServer(1)
+        selectImportHandler(1, 11)  # in the import handler 1 model is 11.
+        testResultId = 123
+        $scope.loadFields testResultId
+
+      it 'should load import params for clazz', ->
+        prepareContext false, false
+
+        $scope.loadIParams "some"
+        expect($scope.clazz).toEqual "some"
+        expect($scope.importParams).toEqual []
+
+        $scope.loadIParams "class2"
+        expect($scope.clazz).toEqual "class2"
+        expect($scope.importParams).toEqual ["field12"]
+
+
+      it 'should reset data and set class', ->
+        prepareContext false, false
+        $scope.clazz = "class2"
+
+        $scope.resetData ["serverFiles", "datas"]
+        expect($scope.datas).toEqual []
+        expect($scope.serverFiles).toEqual []
+        expect($scope.model.test_result_id).toEqual ''
+        expect($scope.model.model_id).toEqual ''
+        expect($scope.model.examples_count).toEqual 0
+        expect($scope.model.count).toEqual 0
+        expect($scope.importParams).toEqual ["field12"]
 
 
   describe 'ModelVerificationActionsCtrl', ->

@@ -110,7 +110,7 @@ def setup():
     with prefix('export LAPACK=/usr/lib/liblapack.so'):
         with prefix('export ATLAS=/usr/lib/libatlas.so'):
             with prefix('export BLAS=/usr/lib/libblas.so'):
-                virtualenv.pip_install.run(app='numpy==1.10.04')
+                virtualenv.pip_install.run(app='numpy==1.7.1')
                 virtualenv.pip_install.run(app='scipy==0.12.0')
 
     virtualenv.make_relocatable.run()
@@ -142,14 +142,8 @@ def migrate():
 def cdeploy():
     release.work_on.run(0)
     git.push.run()
-    supervisor.push_configs.run()
-    flask.push_flask_config.run()
-    gunicorn.push_config.run()
-    with prefix('export PATH=$PATH:/usr/local/bin'):
-        supervisor.update.run()
-        supervisor.restart_program.run(program='gunicorn')
-        supervisor.restart_program.run(program='celeryd')
-        supervisor.restart_program.run(program='celerycam')
+    supervisor.restart_program.run(program='gunicorn')
+    supervisor.restart_program.run(program='celeryd')
 
 
 @task
@@ -164,6 +158,7 @@ def deployui():
     # angularjs.activate.run()
     # angularjs.push_config.run()
     # angularjs.build.run()
+
 
 @task
 def deploy():
@@ -184,17 +179,14 @@ def deploy():
     with prefix('export LAPACK=/usr/lib/liblapack.so'):
         with prefix('export ATLAS=/usr/lib/libatlas.so'):
             with prefix('export BLAS=/usr/lib/libblas.so'):
-                virtualenv.pip_install.run(app='numpy==1.10.04')
-                virtualenv.pip_install.run(app='scipy==0.12.0')
-                #virtualenv.run('pip install --upgrade pip')
                 virtualenv.pip_install_req.run()
     virtualenv.make_relocatable.run()
 
     release.activate.run()
 
-    fabgrunt.private_npm.run()
-    fabgrunt.bower.run()
-    fabgrunt.activate.run()
+    #fabgrunt.private_npm.run()
+    #fabgrunt.bower.run()
+    #fabgrunt.activate.run()
 
     fabgrunt.push_config.run()
     fabgrunt.build.run()

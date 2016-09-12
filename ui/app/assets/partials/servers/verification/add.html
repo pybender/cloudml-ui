@@ -9,22 +9,34 @@
   	<div class="control-group" ng-class="{error: Form.server_id.$invalid || errorList.server_id}">
       <label class="control-label">Server</label>
     	<div class="controls">
-      	<select name="server_id" ng-model="model.server_id" ng-required ng-change="loadModels(Form.server_id.$viewValue)" ng-options="server.id as server.name for server in servers">
+      	<select name="server_id" ng-model="model.server_id" ng-required ng-change="loadServerFiles(Form.server_id.$viewValue)" ng-options="server.id as server.name for server in servers">
         	<option value="">- nothing selected -</option>
       	</select>
       	<span ng-show="Form.server_id.$error.required" class="help-inline">*</span>
       </div>
     </div>
-  	<div class="control-group" ng-class="{error: Form.model_id.$invalid || errorList.model_id}">
+  	<div class="control-group" ng-class="{error: Form.import_handler_id.$invalid || errorList.import_handler_id}">
     	<label class="control-label">Import Handler / Model</label>
     	<div class="controls">
-      	<select name="model_id" ng-model="model.model_id" ng-required ng-change="loadDatas(Form.model_id.$viewValue)" ng-options="file.model.id as file.import_handler_name + ' / ' + file.model_name for file in serverFiles" ng-disabled="serverFiles | isArrayEmpty">
+      	<select name="import_handler_id" ng-model="model.import_handler_id" ng-required ng-change="importHandlerChanged(Form.import_handler_id.$viewValue)" ng-options="file.import_handler.id as file.name for file in serverFiles" ng-disabled="serverFiles | isArrayEmpty">
         	<option value="" selected="selected">- nothing selected -</option>
       	</select>
-      	<span ng-show="Form.model_id.$error.required" class="help-inline">*</span>
-        <img ng-show="loadingModels" width="30" src="/img/loading.gif" /><span ng-show="(serverFiles | isArrayEmpty) && !loadingModels">No models</span>
+      	<span ng-show="Form.import_handler_id.$error.required" class="help-inline">*</span>
+        <img ng-show="loadingModels" width="30" src="/img/loading.gif" /><span ng-show="(serverFiles | isArrayEmpty) && !loadingModels">No import handlers</span>
     	</div>
   	</div>
+    <div class="control-group" ng-show="showModelSelect" ng-class="{error: Form.model_id.$invalid || errorList.model_id}">
+      <label class="control-label">Model</label>
+      <div class="controls">
+        <select name="model_id" ng-model="model.model_id" ng-required ng-change="loadDatas(Form.model_id.$viewValue)" ng-options="file.object_id as file.name for file in modelFiles" ng-disabled="modelFiles | isArrayEmpty">
+          <option value="" selected="selected">- nothing selected -</option>
+        </select>
+        <span class="help-inline">In the import handler the model is setted via script tag. Please select which model from the server should be tested.</span>
+        <span ng-show="Form.model_id.$error.required" class="help-inline">*</span>
+        <img ng-show="loadingModels" width="30" src="/img/loading.gif" /><span ng-show="(modelFiles | isArrayEmpty) && !loadingModels">No models</span>
+      </div>
+    </div>
+    
   	<div class="control-group" ng-class="{error: Form.test_result_id.$invalid || errorList.data}">
     	<label class="control-label">Data</label>
     	<div class="controls">
