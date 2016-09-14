@@ -58,7 +58,7 @@ class AuthResource(BaseResourceSQL):
             logging.debug("User Auth: got auth {}".format(auth))
 
             oauth_token_secret = auth.get('oauth_token_secret')
-            logging.degug("Starting User.authenticate")
+            logging.debug("Starting User.authenticate")
             auth_token, user = User.authenticate(
                 oauth_token, oauth_token_secret, oauth_verifier)
 
