@@ -81,7 +81,18 @@ class Server(BaseModel, db.Model):
                 'user_name': key['Metadata'].get('user_name', None),
                 'crc32': key['Metadata'].get('crc32', None),
                 'server_id': self.id,
-                'loading_error': key['Metadata'].get('loading_error', None)
+                'loading_error': key['Metadata'].get('loading_error', None),
+                'count_400': key['Metadata'].get('count_400', None),
+                'count_500': key['Metadata'].get('count_500', None),
+                'count_of_max_response': key['Metadata'].get(
+                    'count_of_max_response', None),
+                'longest_resp_count': key['Metadata'].get('longest_resp_count',
+                                                          None),
+                'longest_resp_time': key['Metadata'].get('longest_resp_time',
+                                                         None),
+                'max_response_time': key['Metadata'].get('max_response_time',
+                                                         None),
+                'requests': key['Metadata'].get('requests', None)
             })
 
         sort_by = params.get('sort_by', None)
