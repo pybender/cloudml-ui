@@ -88,7 +88,7 @@ class User(BaseMixin, db.Model):
                                                        _oauth_token_secret))
         info = auth.get_my_info(_oauth_token, _oauth_token_secret,
                                 oauth_verifier)
-        logging.degug("Got my info: {}".format(info))
+        logging.debug("Got my info: {}".format(info))
         user_info = auth.get_user_info(_oauth_token, _oauth_token_secret,
                                        oauth_verifier)
         logging.info(
