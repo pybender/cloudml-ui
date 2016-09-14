@@ -31,6 +31,8 @@ services.factory('auth', ['$http'
         return not not _get_auth_token()
 
       login: () ->
+        console.log "login"
+        console.log Date.now()
         url = settings.apiUrl + "auth/get_auth_url"
         $http(
           method: 'POST'
@@ -39,11 +41,17 @@ services.factory('auth', ['$http'
           transformRequest: angular.identity
           params: {}
         ).then ((resp) ->
+          console.log "login resp"
+          console.log Date.now()
           resp
         )
 
       authorize: (oauth_token, oauth_verifier) ->
         url = settings.apiUrl + "auth/authenticate"
+        console.log "authenticate"
+        console.log Date.now()
+        console.log url
+        console.log angular.identity
         $http(
           method: 'POST'
           headers: settings.apiRequestDefaultHeaders
@@ -55,7 +63,10 @@ services.factory('auth', ['$http'
           }
         ).then ((resp) ->
           token = resp.data.auth_token
+          console.log token
+          console.log Date.now()
           _put_auth_token(token)
+          console.log Date.now()
 
           resp
         )
@@ -67,9 +78,12 @@ services.factory('auth', ['$http'
       get_user: () ->
         if not _get_auth_token()
           return null
-
+        console.log "get user"
+        console.log Date.now()
         url = settings.apiUrl + "auth/get_user"
         token = _get_auth_token()
+        console.log "Token"
+        console.log Date.now()
         $http(
           method: 'POST'
           headers: {
@@ -80,6 +94,8 @@ services.factory('auth', ['$http'
           transformRequest: angular.identity
           params: {}
         ).then ((resp) ->
+          console.log resp.data.user
+          console.log Date.now()
           $rootScope.user = resp.data.user
           resp
         )

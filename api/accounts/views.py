@@ -55,8 +55,10 @@ class AuthResource(BaseResourceSQL):
                 return odesk_error_response(
                     500, 500,
                     'Wrong token: {0!s}'.format(oauth_token))
+            logging.debug("User Auth: got auth {}".format(auth))
 
             oauth_token_secret = auth.get('oauth_token_secret')
+            logging.degug("Starting User.authenticate")
             auth_token, user = User.authenticate(
                 oauth_token, oauth_token_secret, oauth_verifier)
 
@@ -70,7 +72,9 @@ class AuthResource(BaseResourceSQL):
             })
 
         if action == 'get_user':
+            logging.debug("Start reading request")
             user = getattr(request, 'user', None)
+            logging.debug("Finished reading request. {}".format(user))
             if user:
                 return self._render({'user': user})
 

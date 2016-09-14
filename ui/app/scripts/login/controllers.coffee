@@ -15,6 +15,7 @@ angular.module('app.login.controllers', ['app.config', 'app.services'])
     $scope.loading_state = false
 
     $scope.authenticate = ->
+      console.log "Authenticate func"
       $location.path("/auth/authenticate")
 ])
 
@@ -29,7 +30,9 @@ angular.module('app.login.controllers', ['app.config', 'app.services'])
       $scope.status = 'Already logged in'
       return
     $scope.status = 'Getting data. Please wait...'
+    console.log 'logging'
     auth.login().then ((resp) ->
+      console.log 'got url'
       $scope.status = 'Redirecting to Upwork. Please wait...'
       $window.location.replace resp.data.auth_url
     ), ((resp) ->
@@ -57,8 +60,12 @@ angular.module('app.login.controllers', ['app.config', 'app.services'])
     $scope.status = 'Authorization. Please wait...'
     oauth_token = $location.search().oauth_token
     oauth_verifier = $location.search().oauth_verifier
+    console.log "Aith authorize"
+    console.log Date.now()
     auth.authorize(oauth_token, oauth_verifier).then ((resp) ->
       $scope.status = 'Authorized'
+      console.log 'authorized'
+      console.log Date.now()
       $window.location.reload()
     ), ((resp) ->
       $scope.setError(resp, 'authorizing')
@@ -75,7 +82,10 @@ angular.module('app.login.controllers', ['app.config', 'app.services'])
 
   ($scope, $http, $location, $routeParams, settings, auth) ->
     $scope.init = ->
+      console.log "user ctrl"
       user = auth.get_user()
+      console.log Date.now()
+      console.log user
       if user
         user.then ((resp) ->
           $scope.user = resp.data.user

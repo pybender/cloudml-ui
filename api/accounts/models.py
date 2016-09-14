@@ -84,8 +84,11 @@ class User(BaseMixin, db.Model):
         auth = OdeskAuth()
         _oauth_token, _oauth_token_secret = auth.authenticate(
             oauth_token, oauth_token_secret, oauth_verifier)
+        logging.debug("Got odeskauth: {0}, {1}".format(_oauth_token,
+                                                       _oauth_token_secret))
         info = auth.get_my_info(_oauth_token, _oauth_token_secret,
                                 oauth_verifier)
+        logging.degug("Got my info: {}".format(info))
         user_info = auth.get_user_info(_oauth_token, _oauth_token_secret,
                                        oauth_verifier)
         logging.info(
@@ -110,6 +113,7 @@ class User(BaseMixin, db.Model):
         user.email = info['user']['email']
 
         user.save()
+        logging.debug("Finished user authenticate")
         return auth_token, user
 
     @classmethod
