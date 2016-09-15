@@ -289,7 +289,7 @@ def generate_visualization_tree(model_id, deep):
     Decision Tree Classifier and Random Forest Classifier are supported.
     """
     from cloudml.trainer.classifier_settings import DECISION_TREE_CLASSIFIER, \
-        RANDOM_FOREST_CLASSIFIER, EXTRA_TREES_CLASSIFIER
+        RANDOM_FOREST_CLASSIFIER, EXTRA_TREES_CLASSIFIER, XGBOOST_CLASSIFIER
     from exceptions import VisualizationException
 
     init_logger('trainmodel_log', obj=int(model_id))
@@ -305,7 +305,8 @@ def generate_visualization_tree(model_id, deep):
     clf_type = model.classifier['type']
     if clf_type not in (DECISION_TREE_CLASSIFIER,
                         RANDOM_FOREST_CLASSIFIER,
-                        EXTRA_TREES_CLASSIFIER):
+                        EXTRA_TREES_CLASSIFIER,
+                        XGBOOST_CLASSIFIER):
         raise VisualizationException(
             "model with %s classifier doesn't support tree"
             " visualization" % clf_type,
@@ -340,6 +341,11 @@ def generate_visualization_tree(model_id, deep):
             data[segment]['tree'] = tree
         elif clf_type == RANDOM_FOREST_CLASSIFIER or \
                 clf_type == EXTRA_TREES_CLASSIFIER:
+            trees = trainer.model_visualizer.regenerate_trees(
+                segment, data[segment]['all_weights'], deep=deep)
+            data[segment]['trees'] = trees
+        elif clf_type == XGBOOST_CLASSIFIER:
+            # TODO XGBOOST visualize
             trees = trainer.model_visualizer.regenerate_trees(
                 segment, data[segment]['all_weights'], deep=deep)
             data[segment]['trees'] = trees
