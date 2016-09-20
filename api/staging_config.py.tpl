@@ -49,7 +49,7 @@ CLOUDML_PREDICT_BUCKET_NAME = '{{ amazon_bucket_name }}'
 # OAuth keys
 ODESK_OAUTH_KEY = '{{ odesk_api_key }}'
 ODESK_OAUTH_SECRET = '{{ odesk_secret_key }}'
-ODESK_API_URL = 'https://stage.upwork.com'
+#ODESK_API_URL = 'https://stage.upwork.com'
 
 MULTIPART_UPLOAD_CHUNK_SIZE = 8192
 
