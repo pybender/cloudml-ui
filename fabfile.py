@@ -142,6 +142,9 @@ def migrate():
 def cdeploy():
     release.work_on.run(0)
     git.push.run()
+    supervisor.push_configs.run()
+    flask.push_flask_config.run()
+    gunicorn.push_config.run()
     supervisor.restart_program.run(program='gunicorn')
     supervisor.restart_program.run(program='celeryd')
 
