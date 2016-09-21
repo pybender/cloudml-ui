@@ -179,7 +179,7 @@ def deploy():
     with prefix('export LAPACK=/usr/lib/liblapack.so'):
         with prefix('export ATLAS=/usr/lib/libatlas.so'):
             with prefix('export BLAS=/usr/lib/libblas.so'):
-                virtualenv.pip_install_req.run()
+                virtualenv.pip_install_req.run(cache=False)
     virtualenv.make_relocatable.run()
 
     release.activate.run()
