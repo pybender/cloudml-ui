@@ -39,7 +39,7 @@ class Celeryd(Command):
     """Runs the default Celery worker node."""
 
     def run(self, **kwargs):
-        os.system("env CELERYD_FSNOTIFY=stat celery -A api.tasks worker --beat --autoreload --concurrency=10 -Q default -E --loglevel=info")
+        os.system("env CELERYD_FSNOTIFY=stat celery -A api.tasks worker --autoreload --concurrency=10 -Q default -E --loglevel=info")
 
 
 class Celeryw(Command):

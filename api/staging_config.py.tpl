@@ -32,12 +32,12 @@ CELERY_DEFAULT_EXCHANGE = 'tasks'
 CELERY_DEFAULT_EXCHANGE_TYPE = 'topic'
 CELERY_DEFAULT_ROUTING_KEY = 'task.default'
 CELERYD_MAX_TASKS_PER_CHILD = 1
-CELERYBEAT_SCHEDULE = {
-    'add-every-week': {
-        'task': 'api.ml_models.tasks.models.clear_model_data_cache',
-        'schedule': timedelta(days=7)
-    },
-}
+#CELERYBEAT_SCHEDULE = {
+#    'add-every-week': {
+#        'task': 'api.ml_models.tasks.models.clear_model_data_cache',
+#        'schedule': timedelta(days=7)
+#    },
+#}
 
 
 AMAZON_ACCESS_TOKEN = '{{ amazon_access_token }}'
