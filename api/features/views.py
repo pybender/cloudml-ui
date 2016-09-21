@@ -46,7 +46,12 @@ class ClassifierResource(BaseResourceSQL):
     Model = PredefinedClassifier
 
     def _get_configuration_action(self, **kwargs):
-        return self._render({'configuration': CLASSIFIERS})
+        result = []
+        for name, config in CLASSIFIERS.iteritems():
+            config['name'] = name
+            result.append(config)
+        result.sort(key=lambda x: (x['support_description'], x['name']))
+        return self._render({'configuration_list': result, 'configuration': CLASSIFIERS})
 
     def post(self, **kwargs):
         form = self.post_form(Model=self.Model, **kwargs)

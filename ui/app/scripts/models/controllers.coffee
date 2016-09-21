@@ -366,6 +366,7 @@ angular.module('app.models.controllers', ['app.config', ])
     classifier.$getConfiguration(
     ).then ((opts) ->
       $scope.params = opts.data.configuration[classifier.type]["parameters"]
+      $scope.configuration_list = opts.data.configuration_list
     ), ((opts)->
       $scope.setError(opts, 'loading types and parameters')
     )

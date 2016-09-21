@@ -30,16 +30,7 @@
       </div>
     </div>
     <div ng-show="currentTab=='custom'" class="control-group">
-      <div class="control-group"
-      ng-class="{error: Form.type.$invalid && !model.type}">
-        <label class="control-label">Type</label>
-        <div class="controls">
-          <select ng-change="loadParameters(true);target_model.classifier.name='';" name="type" ng-model="model.type" required>
-            <option ng-selected="typeName == model.type" ng-repeat="(typeName, conf) in configuration" value="{{ typeName }}">{{ typeName }}</option>
-          </select>
-          <span ng-show="Form.type.$error.required" class="help-inline">*</span>
-        </div>
-      </div>
+      <ng-include src="'partials/features/classifiers/class_select.html'"></ng-include>
       <div ng-show="model.config.parameters">
         <h4>Classifier Parameters</h4>
         <div ng-repeat="item in model.config.parameters" class="control-group">

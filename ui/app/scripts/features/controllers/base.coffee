@@ -69,6 +69,7 @@ angular.module('app.features.controllers.base', ['app.config', ])
     $scope.model.$getConfiguration(
     ).then ((opts)->
       $scope.configuration = opts.data.configuration
+      $scope.configuration_list = opts.data.configuration_list
       if $scope.model.type?
         $scope.loadParameters()
     ), ((opts)->
@@ -99,6 +100,7 @@ angular.module('app.features.controllers.base', ['app.config', ])
       model.$getConfiguration(
       ).then ((opts)->
         $scope.configuration = opts.data.configuration
+        $scope.configuration_list = opts.data.configuration_list
         $scope.configurationLoaded = true
         $scope.loadParameters(false)
       ), ((opts)->
