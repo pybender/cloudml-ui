@@ -277,6 +277,7 @@ class XmlImportHandlerPartResource(BaseResourceSQL):
     def _modify(self, mtd, msg, action=None, **kwargs):
         handler_id = kwargs.get('import_handler_id', None)
         handler = XmlImportHandler.query.filter_by(id=handler_id).one()
+        # TODO pnvasko edit upload handler
         if handler and not handler.can_edit:
             return odesk_error_response(
                 405, ERR_INVALID_METHOD,

@@ -75,6 +75,7 @@ def upload_model_to_server(server_id, model_id, user_id):
     #trainer_data = model.trainer
     s3.save_key_string(path, trainer_data, meta)
     s3.close()
+    # TODO pnvasko set model locked logging.info('upload_model_to_server: model.locked')
     model.locked = True
     s_ids = list(model.servers_ids) if (isinstance(model.servers_ids,
                                                    list)) else []
@@ -133,6 +134,9 @@ def upload_import_handler_to_server(server_id, handler_type, handler_id,
     }
 
     handler_data = handler.get_plan_config()
+
+    # TODO pnvasko: add edit import handler after upload
+    # if not handler.locked: if server.type == 'Production':
     handler.locked = True
     s_ids = list(handler.servers_ids) if (isinstance(handler.servers_ids,
                                                      list)) else []
