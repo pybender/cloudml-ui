@@ -25,7 +25,8 @@ MODIFY_DEPLOYED_IH = True
 MODIFY_DEPLOYED_IH = False
 
 # Modify Import handler after deployed to AWS
-# Example: {'Production':(edit, delete)}; 1 - enable, 0 - disable
+# Example MODIFY_DEPLOYED: {'Production':(edit, delete)}; 1 - enable, 0 - disable
+
 MODIFY_DEPLOYED ={'Production': (0, 0),
                   'Staging': (1, 0),
                   'Analytics': (1, 0),
