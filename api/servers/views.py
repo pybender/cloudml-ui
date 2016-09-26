@@ -74,7 +74,8 @@ class ServerFileResource(BaseResource):
     Amazon S3 file (model or import handler) resource.
     """
     ALLOWED_FOLDERS = [FOLDER_MODELS, FOLDER_IMPORT_HANDLERS]
-    ALLOWED_METADATA_KEY_NAMES = ['name', 'max_response_time', 'requests']
+    ALLOWED_METADATA_KEY_NAMES = ['name', 'max_response_time', 'count_400',
+                                  'count_500', 'count_of_max_response']
     PUT_ACTIONS = ('reload', )
 
     def _list(self, extra_params=(), **kwargs):

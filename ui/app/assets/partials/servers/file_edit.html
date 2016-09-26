@@ -1,4 +1,4 @@
-<div ng-controller="BaseDeleteCtrl">
+<div>
 <div class="modal-header">
     <button ng-click="$dismiss('cancel')" class="close" data-dismiss="modal">×</button>
 <h3>{{ model.name }} file metadata</h3>
@@ -16,10 +16,10 @@
         User Name: <span class="value">{{ model.user_name }}</span><br/>
         Crc32: <span class="value">{{ model.crc32 }}</span><br/>
         Max response time: <span title="Max response time" class="name" ng-bind="model.max_response_time || 'not specified'" editable="model" value="model.max_response_time" editable-field="max_response_time" editable-input="text" editable-placement="right"></span><br/>
-        Requests: <span title="Requests" class="name" ng-bind="model.requests || 'not specified'" editable="model" value="model.requests" editable-field="requests" editable-input="text" editable-placement="right"></span><br/>
-        Count 400 response: <span class="value">{{ model.count_400 || 0 }}</span><br/>
-        Count 500 response: <span class="value">{{ model.count_500 || 0}}</span><br/>
-        Count of max response: <span class="value">{{ model.count_of_max_response || 0}}</span><br/>
+        Requests: <span class="value">{{ model.requests || '-' }}</span><br/>
+        Count 400 response: <span title="Count 400 response" class="name" ng-bind="model.count_400 || 'not specified'" editable="model" value="model.count_400" editable-field="count_400" editable-input="text" editable-placement="right"></span><br/>
+        Count 500 response: <span title="Count 500 response" class="name" ng-bind="model.count_500 || 'not specified'" editable="model" value="model.count_500" editable-field="count_500" editable-input="text" editable-placement="right"></span><br/>
+        Count of max response: <span title="Count of max response" class="name" ng-bind="model.count_of_max_response || 'not specified'" editable="model" value="model.count_of_max_response" editable-field="count_of_max_response" editable-input="text" editable-placement="right"></span><br/>
         Longest response count: <span class="value">{{ model.longest_resp_count || '-'}}</span><br/>
         Longest response time: <span class="value">{{ model.longest_resp_time || '-'}}</span><br/>
         Loading error: <span class="value">{{ model.loading_error || 'No error'}}</span><br/>

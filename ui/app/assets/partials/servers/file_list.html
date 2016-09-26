@@ -33,11 +33,11 @@
       <button ng-click="reloadFile(file)" class="btn btn-info">
         <i title="Force load/reload this file at Predict" class="icon-upload"></i>
       </button>
-      <button ng-click="deleteFile(file)" class="btn btn-danger">
-        <i title="Remove file" class="icon-remove"></i>
-      </button>
       <button ng-show="folder=='importhandlers'" ng-click="editFile(file)" class="btn btn-info">
         <i class="icon-edit" title="Edit file metadata on Predict" />
+      </button>
+      <button ng-click="deleteFile(file)" class="btn btn-danger">
+        <i title="Remove file" class="icon-remove"></i>
       </button>
     </td>
   </tr>

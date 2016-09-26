@@ -128,6 +128,7 @@ class Server(BaseModel, db.Model):
             FOLDER_MODELS: 'Model',
             FOLDER_IMPORT_HANDLERS: 'Import Handler'
         }
+        integer_keys = ['count_400', 'count_500', 'count_of_max_response']
         entity = entities_by_folder.get(folder, None)
         if not entity:
             raise ValueError('Wrong folder: %s' % folder)
@@ -139,6 +140,12 @@ class Server(BaseModel, db.Model):
                     raise ValueError('{0} with name "{1}" already exists on '
                                      'the server {2}'.format(entity, value,
                                                              self.name))
+        if key in integer_keys:
+            try:
+                v = int(value)
+            except Exception:
+                raise ValueError("Incorrect value '{0}' for '{1}'. Integer is "
+                                 "expected".format(value, key))
         return True
 
     def get_key_metadata(self, uid, folder, key):
