@@ -18,7 +18,6 @@ from api.amazon_utils import AmazonEMRHelper
 class InstanceRequestingError(TaskException):
     pass
 
-
 @celery.task(base=SqlAlchemyTask)
 def synchronyze_cluster_list():
     """
@@ -27,18 +26,16 @@ def synchronyze_cluster_list():
     clusters = Cluster.query.all()
     emr = AmazonEMRHelper()
     for cluster in clusters:
-        status = emr.describe_jobflow(
-            cluster.jobflow_id)['ExecutionStatusDetail']['State'].lower()
-        if status == 'terminated':
+        status = emr.describe_cluster(cluster.jobflow_id)['Cluster']['Status']['State'].capitalize()
+        if status in Cluster.TERMINATED_STATUSES:
             logging.info('Cluster %s terminated, it will be deleted'
                          % cluster.jobflow_id)
             cluster.delete()
-        if status in Cluster.STATUSES:
+        elif status in Cluster.ACTIVE_STATUSES:
             cluster.status = status
             cluster.save()
         else:
             logging.info('Unknown jobflow status %s' % status)
-
 
 @celery.task(base=SqlAlchemyTask)
 def request_spot_instance(instance_type=None, model_id=None):

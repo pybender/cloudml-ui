@@ -11,14 +11,9 @@ from boto3.s3.transfer import S3Transfer, TransferConfig
 import urllib
 
 from api import app
-from api.base.exceptions import ApiBaseException
 
 
-class AmazonS3ObjectNotFound(ApiBaseException):
-    pass
-
-
-class S3ResponseError(ApiBaseException):
+class AmazonS3ObjectNotFound(Exception):
     pass
 
 
@@ -26,9 +21,10 @@ class AmazonMixin(object):
     """
     This class keeps amazon settings
     """
-    def __init__(self, token=None, secret=None):
+    def __init__(self, token=None, secret=None, region=None):
         self.token = token or app.config['AMAZON_ACCESS_TOKEN']
         self.secret = secret or app.config['AMAZON_TOKEN_SECRET']
+        self.region = region or app.config['AMAZON_REGION']
 
 
 class AmazonEMRHelper(AmazonMixin):
@@ -36,10 +32,10 @@ class AmazonEMRHelper(AmazonMixin):
     This class provies an interface to the Elastic MapReduce (EMR)
     service from AWS.
     """
-    def __init__(self, token=None, secret=None, region='us-west-1'):
-        super(AmazonEMRHelper, self).__init__(token, secret)
+    def __init__(self, token=None, secret=None, region=None):
+        super(AmazonEMRHelper, self).__init__(token, secret, region)
         self.conn = boto3.client('emr',
-                                 region_name=region,
+                                 region_name=self.region,
                                  aws_access_key_id=self.token,
                                  aws_secret_access_key=self.secret)
 
@@ -52,16 +48,14 @@ class AmazonEMRHelper(AmazonMixin):
         """
         return self.conn.terminate_job_flows(JobFlowIds=[jobflowid])
 
-    def describe_jobflow(self, jobflowid):
+    def describe_cluster(self, jobflowid):
         """
-        Describes a single Elastic MapReduce job flow
-
-        jobflow_id: str
-            The job flow id of interest
+        Provides cluster-level details including status e t.c.
+        :param jobflowid:
+        :return:
         """
-        return self.conn.describe_job_flows(
-            JobFlowIds=[jobflowid])['JobFlows'][0]
-
+        cluster = self.conn.describe_cluster(ClusterId=jobflowid)
+        return cluster
 
 class AmazonEC2Helper(AmazonMixin):
     """
@@ -230,7 +224,7 @@ class AmazonS3Helper(AmazonMixin):
                 if with_metadata:
                     metadata = {}
                     for meta_k, meta_v in res['Metadata'].iteritems():
-                        metadata[meta_k] = urllib.unquote(meta_v).\
+                        metadata[meta_k] = urllib.unquote(meta_v). \
                             decode('utf8')
                     res['Metadata'] = metadata
                     return res
@@ -349,7 +343,7 @@ class AmazonS3Helper(AmazonMixin):
                 # bucket doesn't exist - create new one
                 self.conn.Bucket(self.bucket_name).create()
             else:
-                raise S3ResponseError(e.message, e)
+                raise
         return True
 
     def key_exists(self, name):
@@ -363,7 +357,7 @@ class AmazonS3Helper(AmazonMixin):
             if e.response['Error']['Code'] == "404":
                 return False
             else:
-                raise S3ResponseError(e.message, e)
+                raise
 
     def _prepare_meta(self, meta):
         for key, val in meta.iteritems():
@@ -518,5 +512,5 @@ def amazon_config():
     Returns amazon credentials of current config
     """
     return app.config['AMAZON_ACCESS_TOKEN'], \
-        app.config['AMAZON_TOKEN_SECRET'], \
-        app.config['AMAZON_BUCKET_NAME']
+           app.config['AMAZON_TOKEN_SECRET'], \
+           app.config['AMAZON_BUCKET_NAME']
