@@ -146,6 +146,14 @@ angular.module('app.servers.controllers', ['app.config', ])
         ctrlName: 'DialogCtrl'
         action: 'delete file'
       })
+
+    $scope.editFile = (file) ->
+      $scope.openDialog($scope, {
+        model: file
+        template: 'partials/servers/file_edit.html'
+        ctrlName: 'DialogCtrl'
+        action: 'edit file'
+      })
 ])
 
 .controller('ServerListCtrl', [

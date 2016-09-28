@@ -368,6 +368,18 @@ describe 'servers/controllers.coffee', ->
         action: 'delete file'
       expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
 
+    it 'should open edit metadata dialog', inject (ModelFile, ImportHandlerFile)->
+      createController 'FileListCtrl', {ModelFile: ModelFile, ImportHandlerFile: ImportHandlerFile}
+      $scope.openDialog = jasmine.createSpy '$scope.openDialog'
+
+      $scope.editFile {some: 'file'}
+      expect($scope.openDialog).toHaveBeenCalledWith jasmine.any(Object),
+        model: {some: 'file'}
+        template: 'partials/servers/file_edit.html'
+        ctrlName: 'DialogCtrl'
+        action: 'edit file'
+      expect($scope.openDialog.calls.mostRecent().args[0]).toEqual $scope
+
 
   describe 'ServerListCtrl', ->
 
