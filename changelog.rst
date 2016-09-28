@@ -2,6 +2,7 @@
 
 Changelog
 =========
+* Taks - Added xgboost
 * Bug - Reduced loading time of model list
 * Bug - Don't allow deletion of model when training is in progress
 

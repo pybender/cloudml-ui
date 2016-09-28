@@ -54,3 +54,4 @@ grafana-api-client==0.1.4
 python-slugify==1.2.0
 requests==2.8.1
 jupyter==1.0.0
+xgboost==0.6a2
