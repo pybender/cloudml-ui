@@ -432,7 +432,14 @@ class ServerModelTests(BaseDbTestCase):
         'type': None,
         'hide': False,
         'crc32': 'crc32',
-        'loading_error': 'Some error'
+        'loading_error': 'Some error',
+        'count_400': 6,
+        'count_500': 3,
+        'count_of_max_response': 8,
+        'requests': 100,
+        'longest_resp_count': 23,
+        'longest_resp_time': 23,
+        'max_response_time': None
     }
 
     @patch('api.servers.models.AmazonS3Helper')
@@ -471,11 +478,14 @@ class ServerModelTests(BaseDbTestCase):
 
         self.assertEqual(1, len(objs))
         obj = objs[0]
-        self.assertListEqual(
-            obj.keys(),
-            ['uploaded_on', 'object_type', 'loading_error', 'last_modified',
-             'crc32', 'id', 'size', 'server_id', 'user_id', 'name',
-             'object_id', 'object_name', 'user_name'])
+        self.assertEqual(
+            set(obj.keys()),
+            set(['uploaded_on', 'object_type', 'loading_error',
+                 'last_modified', 'crc32', 'id', 'size', 'server_id',
+                 'user_id', 'name', 'object_id', 'object_name', 'user_name',
+                 'count_400', 'count_500', 'requests', 'longest_resp_count',
+                 'longest_resp_time', 'max_response_time',
+                 'count_of_max_response']))
         self.assertEqual(obj['id'], 'n3sz3FTFQJeUOe33VF2A.model')
         self.assertEqual(obj['object_name'], get_metadata('object_name'))
         self.assertEqual(obj['size'], 123321)
@@ -487,8 +497,18 @@ class ServerModelTests(BaseDbTestCase):
         self.assertEqual(obj['object_type'], None)
         self.assertEqual(obj['user_id'], get_metadata('user_id'))
         self.assertEqual(obj['user_name'], get_metadata('user_name'))
-        self.assertEqual(obj['server_id'], server.id)
         self.assertEqual(obj['loading_error'], get_metadata('loading_error'))
+        self.assertEqual(obj['count_400'], get_metadata('count_400'))
+        self.assertEqual(obj['count_500'], get_metadata('count_500'))
+        self.assertEqual(obj['count_of_max_response'],
+                         get_metadata('count_of_max_response'))
+        self.assertEqual(obj['requests'], get_metadata('requests'))
+        self.assertEqual(obj['longest_resp_count'],
+                         get_metadata('longest_resp_count'))
+        self.assertEqual(obj['longest_resp_time'],
+                         get_metadata('longest_resp_time'))
+        self.assertEqual(obj['max_response_time'],
+                         get_metadata('max_response_time'))
 
         # sort by id
         s3_mock.list_keys.return_value = [{'Key': one_key.name},
