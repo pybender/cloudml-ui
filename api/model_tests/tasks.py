@@ -13,7 +13,7 @@ from itertools import izip, repeat
 from sqlalchemy.exc import SQLAlchemyError
 
 from api import celery, app
-from api.base.tasks import SqlAlchemyTask
+from api.base.tasks import SqlAlchemyTask, TaskException, get_task_traceback
 from api.base.exceptions import InvalidOperationError
 from api.logs.logger import init_logger
 from api.model_tests.models import TestResult, TestExample
@@ -183,7 +183,8 @@ def run_test(dataset_ids, test_id):
     except Exception, exc:
         if isinstance(exc, SQLAlchemyError):
             app.sql_db.session.rollback()
-        logging.exception('Got exception when tests model')
+        logging.error('Got exception when test model: {0} \n {1}'
+                      .format(exc.message, get_task_traceback(exc)))
         test.status = test.STATUS_ERROR
         error_column_size = TestResult.error.type.length
         str_exc = str(exc)
@@ -191,7 +192,7 @@ def run_test(dataset_ids, test_id):
         test.error = str_exc if len(str_exc) <= error_column_size else \
             (str_exc[:error_column_size - len(msg)] + msg)
         test.save()
-        raise
+        raise TaskException(exc.message, exc)
     return 'Test completed'
 
 
@@ -264,73 +265,79 @@ def calculate_confusion_matrix(test_id, weights):
     init_logger('confusion_matrix_log', obj=int(log_id))
     logging.info('Starting re-calculating confusion matrix')
     logging.info('Checking confusion matrix weights')
-    all_zero = True
-    for weight in weights:
-        if weight[1] != 0:
-            all_zero = False
-        if weight[1] < 0:
-            logging.error("Negative weights found")
-            raise ValueError('Negative weights are not allowed')
 
-    if all_zero:
-        logging.error("All weights are zero")
-        raise ValueError('All weights can not be 0')
-
-    test = TestResult.query.get(test_id)
-    if test is None:
-        logging.error('Test with id {0!s} not found!'.format(test_id))
-        raise ValueError('Test with id {0!s} not found!'.format(test_id))
-
-    if test.status != TestResult.STATUS_COMPLETED:
-        logging.error('Test is not completed! Please wait and try again')
-        raise ValueError('Test is not completed!')
-
-    model = test.model
-    if model is None:
-        logging.error('Model with id {0!s} not found!'.format(
-            test.model_id))
-        raise ValueError('Model with id {0!s} not found!'.format(
-            test.model_id))
-
-    logging.info('Start calculating confusion matrix for test id {0!s}, '
-                 'log id {1} with weights {2}'.format(
-                     test_id, log_id, weights))
-
-    dim = len(weights)
-    matrix = [[0 for x in range(dim)] for x in range(dim)]
-
-    i = 1
-    for example in test.examples:
-        true_value_idx = model.labels.index(example.label)
-
-        weighted_sum = 0
+    try:
+        all_zero = True
         for weight in weights:
-            index = model.labels.index(weight[0])
-            weighted_sum += weight[1] * example.prob[index]
+            if weight[1] != 0:
+                all_zero = False
+            if weight[1] < 0:
+                logging.error("Negative weights found")
+                raise ValueError('Negative weights are not allowed')
 
-        if weighted_sum == 0:
-            import json
-            logging.error("Weighted sum is 0 on calculating test example #{0} "
-                          "(probabilities: {1})"
-                          .format(i, json.dumps(example.prob)))
-            raise ValueError("Weighted sum is 0. Try another weights "
-                             "or retest model.")
+        if all_zero:
+            logging.error("All weights are zero")
+            raise ValueError('All weights can not be 0')
 
-        weighted_prob = []
-        for weight in weights:
-            index = model.labels.index(weight[0])
-            weighted_prob.append(
-                weight[1] * example.prob[index] / weighted_sum)
+        test = TestResult.query.get(test_id)
+        if test is None:
+            logging.error('Test with id {0!s} not found!'.format(test_id))
+            raise ValueError('Test with id {0!s} not found!'.format(test_id))
 
-        predicted = weighted_prob.index(max(weighted_prob))
-        matrix[true_value_idx][predicted] += 1
-        if i % 500 == 0:
-            logging.info("{0} test examples processed".format(i))
-        i += 1
+        if test.status != TestResult.STATUS_COMPLETED:
+            logging.error('Test is not completed! Please wait and try again')
+            raise ValueError('Test is not completed!')
 
-    logging.info("Confusion matrix calculation completed")
+        model = test.model
+        if model is None:
+            logging.error('Model with id {0!s} not found!'.format(
+                test.model_id))
+            raise ValueError('Model with id {0!s} not found!'.format(
+                test.model_id))
 
-    return zip(model.labels, matrix)
+        logging.info('Start calculating confusion matrix for test id {0!s}, '
+                     'log id {1} with weights {2}'.format(
+                         test_id, log_id, weights))
+
+        dim = len(weights)
+        matrix = [[0 for x in range(dim)] for x in range(dim)]
+
+        i = 1
+        for example in test.examples:
+            true_value_idx = model.labels.index(example.label)
+
+            weighted_sum = 0
+            for weight in weights:
+                index = model.labels.index(weight[0])
+                weighted_sum += weight[1] * example.prob[index]
+
+            if weighted_sum == 0:
+                import json
+                logging.error("Weighted sum is 0 on calculating test example "
+                              "#{0} (probabilities: {1})"
+                              .format(i, json.dumps(example.prob)))
+                raise ValueError("Weighted sum is 0. Try another weights "
+                                 "or retest model.")
+
+            weighted_prob = []
+            for weight in weights:
+                index = model.labels.index(weight[0])
+                weighted_prob.append(
+                    weight[1] * example.prob[index] / weighted_sum)
+
+            predicted = weighted_prob.index(max(weighted_prob))
+            matrix[true_value_idx][predicted] += 1
+            if i % 500 == 0:
+                logging.info("{0} test examples processed".format(i))
+            i += 1
+
+        logging.info("Confusion matrix calculation completed")
+
+        return zip(model.labels, matrix)
+    except Exception as e:
+        logging.error("Got exception om matrix recalculation: "
+                      " {0} \n {1}".format(e.message, get_task_traceback(e)))
+        raise TaskException(e.message, e)
 
 
 @celery.task(base=SqlAlchemyTask)
@@ -354,54 +361,59 @@ def export_results_to_db(model_id, test_id,
     import psycopg2.extras
     init_logger('runtest_log', obj=int(test_id))
 
-    test = TestResult.query.filter_by(
-        model_id=model_id, id=test_id).first()
-    if not test:
-        logging.error('Test not found')
-        return
+    try:
+        test = TestResult.query.filter_by(
+            model_id=model_id, id=test_id).first()
+        if not test:
+            logging.error('Test not found')
+            return
 
-    datasource = PredefinedDataSource.query.get(datasource_id)
-    if not datasource:
-        logging.error('Datasource not found')
-        return
+        datasource = PredefinedDataSource.query.get(datasource_id)
+        if not datasource:
+            logging.error('Datasource not found')
+            return
 
-    db_fields = []
-    for field in fields:
-        if 'prob' == field:
-            for label in test.classes_set:
-                db_fields.append("prob_%s varchar(25)" % label)
-        else:
-            db_fields.append("%s varchar(25)" % field.replace('->', '__'))
-
-    logging.info('Creating db connection %s' % datasource.db)
-    conn = psycopg2.connect(datasource.db['conn'])
-    query = "drop table if exists %s;" % table_name
-    cursor = conn.cursor().execute(query)
-    logging.info('Creating table %s' % table_name)
-    query = "CREATE TABLE %s (%s);" % (table_name, ','.join(db_fields))
-    cursor = conn.cursor().execute(query)
-
-    count = 0
-    for example in TestExample.get_data(test_id, fields):
-        rows = []
-        if count % 10 == 0:
-            logging.info('Processed %s rows so far' % (count, ))
+        db_fields = []
         for field in fields:
-            if field == '_id':
-                field = 'id'
-            if field == 'id':
-                field = 'example_id'
-            val = example[field] if field in example else ''
-            if field == 'prob':
-                rows += val
+            if 'prob' == field:
+                for label in test.classes_set:
+                    db_fields.append("prob_%s varchar(25)" % label)
             else:
-                rows.append(val)
-        rows = map(lambda x: "'%s'" % x, rows)
-        query = "INSERT INTO %s VALUES (%s)" % (table_name, ",".join(rows))
+                db_fields.append("%s varchar(25)" % field.replace('->', '__'))
+
+        logging.info('Creating db connection %s' % datasource.db)
+        conn = psycopg2.connect(datasource.db['conn'])
+        query = "drop table if exists %s;" % table_name
         cursor = conn.cursor().execute(query)
-        count += 1
-    conn.commit()
-    logging.info('Export completed.')
+        logging.info('Creating table %s' % table_name)
+        query = "CREATE TABLE %s (%s);" % (table_name, ','.join(db_fields))
+        cursor = conn.cursor().execute(query)
+
+        count = 0
+        for example in TestExample.get_data(test_id, fields):
+            rows = []
+            if count % 10 == 0:
+                logging.info('Processed %s rows so far' % (count, ))
+            for field in fields:
+                if field == '_id':
+                    field = 'id'
+                if field == 'id':
+                    field = 'example_id'
+                val = example[field] if field in example else ''
+                if field == 'prob':
+                    rows += val
+                else:
+                    rows.append(val)
+            rows = map(lambda x: "'%s'" % x, rows)
+            query = "INSERT INTO %s VALUES (%s)" % (table_name, ",".join(rows))
+            cursor = conn.cursor().execute(query)
+            count += 1
+        conn.commit()
+        logging.info('Export completed.')
+    except Exception as e:
+        logging.error("Got exception on exporting to db: "
+                      " {0} \n {1}".format(e.message, get_task_traceback(e)))
+        raise TaskException(e.message, e)
 
     return
 
@@ -453,24 +465,30 @@ def get_csv_results(model_id, test_id, fields):
 
     init_logger('runtest_log', obj=int(test_id))
 
-    test = TestResult.query.filter_by(model_id=model_id, id=test_id).first()
-    if test is None:
-        logging.error('Test not found')
-        return
+    try:
+        test = TestResult.query.filter_by(model_id=model_id,
+                                          id=test_id).first()
+        if test is None:
+            logging.error('Test not found')
+            return
 
-    name = 'Examples-{0!s}.csv'.format(uuid.uuid1())
-    expires = 60 * 60 * 24 * 7  # 7 days
+        name = 'Examples-{0!s}.csv'.format(uuid.uuid1())
+        expires = 60 * 60 * 24 * 7  # 7 days
 
-    logging.info('Creating file {0}...'.format(name))
+        logging.info('Creating file {0}...'.format(name))
 
-    s3 = AmazonS3Helper()
-    filename = generate(test, name)
-    logging.info('Uploading file {0} to s3...'.format(filename))
-    s3.save_key(name, filename, {
-        'model_id': model_id,
-        'test_id': test_id}, compressed=False)
-    s3.close()
-    os.remove(filename)
-    url = s3.get_download_url(name, expires)
+        s3 = AmazonS3Helper()
+        filename = generate(test, name)
+        logging.info('Uploading file {0} to s3...'.format(filename))
+        s3.save_key(name, filename, {
+            'model_id': model_id,
+            'test_id': test_id}, compressed=False)
+        s3.close()
+        os.remove(filename)
+        url = s3.get_download_url(name, expires)
 
-    return url
+        return url
+    except Exception as e:
+        logging.error("Got exception on getting test classification results: "
+                      " {0} \n {1}".format(e.message, get_task_traceback(e)))
+        raise TaskException(e.message, e)

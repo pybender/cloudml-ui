@@ -45,6 +45,8 @@ class ModelTasksTests(BaseDbTestCase):
         self.assertTrue('Model trained' in res)
         self.assertEqual(self.obj.status, Model.STATUS_TRAINED, self.obj.error)
         self.assertTrue(ds.locked)
+        self.assertTrue('size' in self.obj.model_parts_size)
+        self.assertEqual('trainer', self.obj.model_parts_size['name'])
 
     @patch('api.amazon_utils.AmazonS3Helper.load_key')
     @patch('api.ml_models.models.Model.get_features_json')
@@ -288,6 +290,17 @@ class ModelTasksTests(BaseDbTestCase):
                 os.remove(f)
             if os.path.exists(arc_name):
                 os.remove(arc_name)
+
+    @patch('api.amazon_utils.AmazonS3Helper.load_key')
+    def test_calculate_model_parts_task(self, load_mock):
+        from api.ml_models.tasks import calculate_model_parts_size
+        load_mock.return_value = MODEL_TRAINER
+
+        calculate_model_parts_size.run(
+            data_from_training="", model_id=self.obj.id)
+        self.assertTrue('size' in self.obj.model_parts_size)
+        self.assertEqual('trainer', self.obj.model_parts_size['name'])
+        self.assertTrue(len(self.obj.model_parts_size['properties']) > 0)
 
 
 def determine_deep(tree):

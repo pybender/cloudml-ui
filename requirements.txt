@@ -7,7 +7,7 @@ alembic==0.6.2
 Flask-Migrate==1.2.0
 Jinja2==2.7.3
 Werkzeug==0.9.6
-numpy==1.11.1
+numpy==1.10.04
 gunicorn
 scipy==0.12.0
 -e git+https://github.com/odeskdataproducts/scikit-learn.git@MATCH-61_word2vec_doc2vec#egg=scikit-learn
@@ -55,3 +55,5 @@ python-slugify==1.2.0
 requests==2.8.1
 jupyter==1.0.0
 xgboost==0.6a2
+Pympler==0.4.3
+-e git+http://stash.odesk.com/scm/dp/predict-utils.git@nikolay#egg=predict

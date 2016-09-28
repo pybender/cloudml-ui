@@ -1,6 +1,6 @@
 <div ng-controller="ObjectListCtrl">
   <div ng-init="init({objectLoader: loadDatas()})">
-    <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+    <alert-message ng-show="err" class="alert-error" msg="{{ err }}" trace="{{ trace }}" unsafe></alert-message>
 
     <table class="table table-striped ordered">
         <thead>

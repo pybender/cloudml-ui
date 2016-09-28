@@ -364,6 +364,20 @@ angular.module('app.directives', [
   }
 ])
 
+.directive("modelPartsSizesTree", [
+  'RecursionHelper'
+
+  (RecursionHelper) ->
+    return {
+          restrict: "E",
+          scope: {root: '='}
+          templateUrl:'partials/directives/sizes_tree.html'
+          compile: (element) ->
+              # // Use the compile function from the RecursionHelper,
+              # // And return the linking function(s) which it returns
+              return RecursionHelper.compile(element)
+    }
+])
 
 .directive("paramsEditor", [ ->
   return {
@@ -455,6 +469,23 @@ angular.module('app.directives', [
     }
 )
 
+.directive('traceback', [
+  '$rootScope'
+  ($rootScope) ->
+    return {
+      restrict: 'E',
+      scope: true,
+      templateUrl:'partials/directives/traceback.html',
+      replace: false,
+      link: (scope, el, attr) ->
+        if attr.trace? && attr.trace
+          try
+            scope.trace = JSON.parse(attr.trace)
+          catch e
+            scope.trace = [[{"line": "Traceback can't be parsed"}]]
+        scope.tb_fields = $rootScope.tracebackList
+    }
+])
 
 .directive('alertMessage',
 
@@ -482,7 +513,11 @@ angular.module('app.directives', [
         <div class="alert alert-block">
           <button type="button"
             class="close" data-dismiss="alert">&times;</button>
-          <div class="message"></div>
+          <div>
+            <span class="message"></span>&nbsp;
+            <a ng-init="show=false" ng-click="show=!show" class="view-trace"></a>
+            <traceback class="tb" ng-show="show" trace=""></traceback>
+          </div>
         </div>
         '''
 
@@ -494,6 +529,14 @@ angular.module('app.directives', [
         attrs.$observe 'msg', (newVal, oldVal, scope) ->
           if newVal
             el.find('.message')[_meth] newVal
+
+        attrs.$observe 'trace', (newVal, oldVal, scope) ->
+          if newVal
+            el.find(".tb").attr('trace', newVal)
+            if newVal != '[]'
+              el.find('.view-trace')['html'] '[Error Backtrace]'
+            else
+              el.find('.view-trace')['html'] ''
 
         oldHtmlClass = null
         attrs.$observe 'htmlclass', (newVal, oldVal, scope) ->

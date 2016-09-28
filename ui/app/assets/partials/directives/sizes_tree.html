@@ -1,0 +1,16 @@
+<ul>
+	<li>
+		<div ng-init="show=false;">
+            <a ng-show="root.properties" ng-click="show=!show">
+                <span class="badge badge-error" ng-show="!show">+</span>
+                <span class="badge badge-info" ng-show="show">-</span>
+            </a>
+			<span>
+				{{root.name}}: <span class="value"> {{ root.size | bytes:4 }}</span>
+			</span>
+		</div>
+		<div ng-repeat="node in root.properties" ng-show="show">
+		  <model-parts-sizes-tree root="node"></model-parts-sizes-tree>
+		</div>
+	</li>
+</ul>

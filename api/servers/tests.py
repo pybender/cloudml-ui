@@ -25,6 +25,8 @@ from api.servers.grafana import GrafanaHelper
 import json
 from cloudml.trainer.store import TrainerStorage
 from api.ml_models.fixtures import MODEL_TRAINER
+from api.base.tasks import TaskException
+
 
 class ServerModelTests(BaseDbTestCase):
     datasets = [ServerData]
@@ -339,7 +341,7 @@ class ServersTasksTests(BaseDbTestCase):
             'crc32': 'crc32',
             'server_id': server.id}]
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TaskException):
             upload_model_to_server(server.id, model.id, user.id)
 
         self.assertFalse(grafana_mock.called)
@@ -405,7 +407,7 @@ class ServersTasksTests(BaseDbTestCase):
             'crc32': 'crc32',
             'server_id': server.id}]
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TaskException):
             upload_import_handler_to_server(
                 server.id, XmlImportHandler.TYPE,
                 handler.id, user.id)

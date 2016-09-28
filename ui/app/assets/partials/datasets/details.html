@@ -27,9 +27,9 @@
 </div>
 
 <alert-message ng-show="msg" class="alert-info" msg='{{ msg }}' unsafe></alert-message>
-<alert-message ng-show="err" class="alert-error" msg='{{ err }}' unsafe></alert-message>
+<alert-message ng-show="err" class="alert-error" msg='{{ err }}' trace="{{ trace }}" unsafe></alert-message>
 
-<alert-message ng-show="dataset.error" class="alert-error" msg='{{ dataset.error }}' unsafe></alert-message>
+<alert-message ng-show="dataset.error" class="alert-error" msg='{{ dataset.error }}' trace="{{ trace }}" unsafe></alert-message>
 
 <ul class="nav nav-tabs" ng-show="dataset.loaded">
   <li ng-class="{active: action[0] == 'model'}">
@@ -102,10 +102,10 @@
 
       <span ng-show="dataset.cluster.status != 'Terminated'">
         <i class="icon-book"></i>
-        <a target="_blank" href="http://172.27.77.141:{{ dataset.cluster.port }}">Hadoop Web UI</a>&nbsp;
+        <a target="_blank" href="http://172.27.77.71:{{ dataset.cluster.port }}">Hadoop Web UI</a>&nbsp;
 
         <i class="icon-tasks"></i>
-        <a target="_blank" href="http://172.27.77.141:{{ dataset.cluster.port }}/logs/steps/">Step logs</a>
+        <a target="_blank" href="http://172.27.77.71:{{ dataset.cluster.port }}/logs/steps/">Step logs</a>
       </span>
     </div>
 

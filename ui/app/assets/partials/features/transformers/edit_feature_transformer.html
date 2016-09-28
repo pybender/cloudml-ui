@@ -7,7 +7,7 @@
   <div class="modal-body">
     <loadindicator title="Adding feature transformer..." ng-show="saving" cml-progress="savingProgress"></loadindicator>
 
-    <alert-message ng-show="err" class="alert-error" msg="{{ err }}" unsafe></alert-message>
+    <alert-message ng-show="err" class="alert-error" msg="{{ err }}" trace="{{ trace }}" unsafe></alert-message>
 
     <form name="TransformerForm" class="form-horizontal">
       <ng-include src="'partials/features/transformers/edit_feature_transformer_body.html'"></ng-include>

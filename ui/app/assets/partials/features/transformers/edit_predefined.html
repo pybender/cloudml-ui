@@ -5,7 +5,7 @@
   </div>
 
   <div class="modal-body">
-    <alert-message ng-show="info" class="alert-error" msg="Transformer fields in features (that use this transformer) would not be changed." unsafe></alert-message>
+    <alert-message ng-show="info" class="alert-error" trace="{{ trace }}" msg="Transformer fields in features (that use this transformer) would not be changed." unsafe></alert-message>
     <ng-include src="'partials/parts/save_form_messages.html'"></ng-include>
     <form name="Form" class="form-horizontal">
     <ng-include src="'partials/features/transformers/form.html'"></ng-include>

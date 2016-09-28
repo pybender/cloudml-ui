@@ -43,4 +43,12 @@ angular.module('app.logmessages.controllers', ['app.config', ])
   $scope.refresh = () ->
     $scope.params['next_token'] = ''
     $scope.load()
+
+  $scope.showTraceback = (trace) ->
+    $scope.trace = null
+    try
+      $scope.trace = JSON.parse(trace)
+    catch e
+      $scope.trace = [[{"line": "Traceback can't be parsed"}]]
+
 ])

@@ -202,6 +202,7 @@ class Model(db.Model, BaseModel, BaseTrainedEntity, BaseDeployedEntity):
     # Note: It could contains different keys depends to the classifier used
     visualization_data = deferred(db.Column(JSONType))
     locked = db.Column(db.Boolean, default=False)
+    model_parts_size = deferred(db.Column(JSONType))
 
     def __init__(self, *args, **kwargs):
         super(Model, self).__init__(*args, **kwargs)

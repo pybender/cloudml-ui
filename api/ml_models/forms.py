@@ -19,7 +19,7 @@ from api.models import Tag, Model, XmlImportHandler, \
 from api.features.models import Feature
 from cloudml.trainer.transformers import TRANSFORMERS
 from api.features.config import CLASSIFIERS
-
+from api.base.exceptions import DBException
 db = app.sql_db
 
 
@@ -66,8 +66,8 @@ class ModelEditForm(BaseForm):
                 model.features_set.from_dict(features, commit=False)
             except Exception as e:
                 db.session.rollback()
-                raise Exception("Error occurred while updating features: "
-                                "{0}".format(e))
+                raise DBException("Error occurred while updating features: "
+                                  "{0}".format(e), e)
             else:
                 db.session.commit()
 
@@ -115,7 +115,7 @@ class ModelAddForm(BaseForm):
                 self.cleaned_data['trainer'] = Trainer(feature_model)
             except SchemaException, exc:
                 raise ValidationError(
-                    'Features JSON file is invalid: %s' % exc)
+                    'Features JSON file is invalid: %s' % exc, exc)
         return value
 
     def clean_trainer(self, value, field):
@@ -129,7 +129,7 @@ class ModelAddForm(BaseForm):
                 return trainer_obj
             except Exception as exc:
                 raise ValidationError(
-                    'Pickled trainer model is invalid: {0!s}'.format(exc))
+                    'Pickled trainer model is invalid: {0!s}'.format(exc), exc)
 
     def save(self, *args, **kwargs):
         name = self.cleaned_data['name']
@@ -158,7 +158,7 @@ class ModelAddForm(BaseForm):
             for handler in created_handlers:
                 db.session.delete(handler)
                 db.session.commit()
-            raise
+            raise DBException(exc.message, exc)
         else:
             db.session.commit()
         if model.status == Model.STATUS_TRAINED:
@@ -205,8 +205,9 @@ class ModelAddForm(BaseForm):
             try:
                 handler.data = data
             except Exception, exc:
-                self.add_error('fields', str(exc))
-                raise ValidationError(self.error_messages, errors=self.errors)
+                self.add_error('fields', str(exc), exc)
+                raise ValidationError(self.error_messages, exc,
+                                      errors=self.errors)
             self.cleaned_data['%s_import_handler' % action] = handler
             db.session.add(handler)
             db.session.commit()
@@ -320,7 +321,8 @@ class FeatureTransformerForm(BaseForm, ParametersConvertorMixin):
     def validate_data(self):
         type_ = self.cleaned_data.get('type')
         pretrained_selected = self.cleaned_data.get('predefined_selected')
-        if not pretrained_selected and type_ not in Transformer.TYPES_LIST:
+        if not pretrained_selected and type_ \
+                and type_ not in Transformer.TYPES_LIST:
             self.add_error('type', 'type is invalid')
             return
 
@@ -432,7 +434,7 @@ class VisualizationOptionsForm(BaseForm):
                 except Exception, exc:
                     self.add_error(
                         'parameters',
-                        "Can't parse parameter %s: %s" % (name, exc))
+                        "Can't parse parameter %s: %s" % (name, exc), exc)
 
     def process(self):
         type_ = self.cleaned_data.get('type')
@@ -446,3 +448,4 @@ class VisualizationOptionsForm(BaseForm):
         from tasks import generate_visualization_tree
         parameters = self.cleaned_data.get('parameters')
         generate_visualization_tree.delay(self.obj.id, parameters['deep'])
+

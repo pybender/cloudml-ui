@@ -24,7 +24,7 @@ angular.module('app.models.controllers', ['app.config', ])
     about: [
       'created_on','target_variable','example_id','example_label',
       'updated_on','feature_count','created_by','data_fields',
-      'test_handler_fields','tags'
+      'test_handler_fields','tags','model_parts_size'
     ].join(',')
     main: MODEL_FIELDS
     grid_search: 'classifier_grid_params'

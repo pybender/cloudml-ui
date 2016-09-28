@@ -17,19 +17,21 @@ from cloudml.trainer.trainer import Trainer, DEFAULT_SEGMENT
 from cloudml.trainer.config import FeatureModel
 
 from api import celery, app
-from api.base.tasks import SqlAlchemyTask
+from api.base.tasks import SqlAlchemyTask, TaskException, get_task_traceback
 from api.logs.logger import init_logger
 from api.accounts.models import User
 from api.ml_models.models import Model, Segment, Transformer
 from api.import_handlers.models import DataSet
 from api.logs.dynamodb.models import LogMessage
 from api.base.io_utils import get_or_create_data_folder
+from celery import chord
 
 
 __all__ = ['train_model', 'get_classifier_parameters_grid',
            'visualize_model', 'generate_visualization_tree',
            'transform_dataset_for_download',
-           'upload_segment_features_transformers', 'clear_model_data_cache']
+           'upload_segment_features_transformers', 'clear_model_data_cache',
+           'calculate_model_parts_size']
 
 
 @celery.task(base=SqlAlchemyTask)
@@ -109,21 +111,18 @@ def train_model(dataset_ids, model_id, user_id, delete_metadata=False):
 
         model.create_segments(segments)
 
-        for segment in model.segments:
-            visualize_model.delay(model.id, segment.id)
+        chord((visualize_model.s(model.id, segment.id)
+               for segment in model.segments),
+              calculate_model_parts_size.s(model.id))()
 
     except Exception, exc:
         app.sql_db.session.rollback()
-
-        try:
-            logging.exception(
-                'Got exception when train model: {0!s}'.format(exc))
-        except:
-            logging.error('Got exception when train model: {0!s}'.format(exc))
+        logging.error('Got exception when train model: {0} \n {1}'
+                      .format(exc.message, get_task_traceback(exc)))
         model.status = model.STATUS_ERROR
         model.error = str(exc)[:299]
         model.save()
-        raise
+        raise TaskException(exc.message, exc)
 
     msg = "Model trained at %s" % trainer.train_time
     logging.info(msg)
@@ -180,10 +179,11 @@ def get_classifier_parameters_grid(grid_params_id):
         grid_params.status = 'Completed'
         grid_params.save()
     except Exception, e:
-        logging.exception('Got exception on grid params search: {}'.format(e))
+        logging.error('Got exception on grid params search: {0} \n {1}'
+                      .format(e.message, get_task_traceback(e)))
         grid_params.status = 'Error'
         grid_params.save()
-        raise
+        raise TaskException(e.message, e)
 
     msg = "Parameters grid search done"
     logging.info(msg)
@@ -257,11 +257,12 @@ def visualize_model(model_id, segment_id=None):
         model.save()
 
     except Exception, exc:
-        logging.exception('Got exception when visualize the model: %s', exc)
+        logging.error('Got exception when visualize the model: {0} \n {1}'
+                      .format(exc.message, get_task_traceback(exc)))
         model.status = model.STATUS_ERROR
         model.error = str(exc)[:299]
         model.save()
-        raise
+        raise TaskException(exc.message, exc)
     return 'Segment %s of the model %s has been visualized' % \
         (segment.name, model.name)
 
@@ -290,62 +291,70 @@ def generate_visualization_tree(model_id, deep):
     init_logger('trainmodel_log', obj=int(model_id))
     model = Model.query.get(model_id)
 
-    if model is None:
-        raise ValueError('model not found: %s' % model_id)
+    try:
+        if model is None:
+            raise ValueError('model not found: %s' % model_id)
 
-    if model.classifier is None or 'type' not in model.classifier:
-        raise ValueError('model has invalid classifier')
+        if model.classifier is None or 'type' not in model.classifier:
+            raise ValueError('model has invalid classifier')
 
-    clf_type = model.classifier['type']
-    if clf_type not in (DECISION_TREE_CLASSIFIER,
-                        RANDOM_FOREST_CLASSIFIER,
-                        EXTRA_TREES_CLASSIFIER,
-                        XGBOOST_CLASSIFIER):
-        raise VisualizationException(
-            "model with %s classifier doesn't support tree"
-            " visualization" % clf_type,
-            VisualizationException.CLASSIFIER_NOT_SUPPORTED)
-
-    # Checking that all_weights had been stored while training model
-    # For old models we need to retrain the model.
-    if model.visualization_data is None:
-        raise VisualizationException(
-            "we don't support the visualization re-generation for "
-            "models trained before may 2015."
-            "please re-train the model to use this feature.",
-            error_code=VisualizationException.ALL_WEIGHT_NOT_FILLED)
-
-    trainer = model.get_trainer()
-    from copy import deepcopy
-    data = deepcopy(model.visualization_data)
-    segments = [segment.name for segment in model.segments] \
-        or [DEFAULT_SEGMENT]
-    for segment in segments:
-        if segment not in model.visualization_data \
-                or 'all_weights' not in model.visualization_data[segment]:
+        clf_type = model.classifier['type']
+        if clf_type not in (DECISION_TREE_CLASSIFIER,
+                            RANDOM_FOREST_CLASSIFIER,
+                            EXTRA_TREES_CLASSIFIER,
+                            XGBOOST_CLASSIFIER):
             raise VisualizationException(
-                "we don't support the visualization re-generation for models"
-                " trained before may 2015."
+                "model with %s classifier doesn't support tree"
+                " visualization" % clf_type,
+                VisualizationException.CLASSIFIER_NOT_SUPPORTED)
+
+        # Checking that all_weights had been stored while training model
+        # For old models we need to retrain the model.
+        if model.visualization_data is None:
+            raise VisualizationException(
+                "we don't support the visualization re-generation for "
+                "models trained before may 2015."
                 "please re-train the model to use this feature.",
                 error_code=VisualizationException.ALL_WEIGHT_NOT_FILLED)
+        
+        trainer = model.get_trainer()
+        from copy import deepcopy
+        data = deepcopy(model.visualization_data)
+        segments = [segment.name for segment in model.segments] \
+            or [DEFAULT_SEGMENT]
+        for segment in segments:
+            if segment not in model.visualization_data \
+                    or 'all_weights' not in model.visualization_data[segment]:
+                raise VisualizationException(
+                    "we don't support the visualization re-generation for "
+                    "models trained before may 2015."
+                    "please re-train the model to use this feature.",
+                    error_code=VisualizationException.ALL_WEIGHT_NOT_FILLED)
 
-        if clf_type == DECISION_TREE_CLASSIFIER:
-            tree = trainer.model_visualizer.regenerate_tree(
-                segment, data[segment]['all_weights'], deep=deep)
-            data[segment]['tree'] = tree
-        elif clf_type == RANDOM_FOREST_CLASSIFIER or \
-                clf_type == EXTRA_TREES_CLASSIFIER:
-            trees = trainer.model_visualizer.regenerate_trees(
-                segment, data[segment]['all_weights'], deep=deep)
-            data[segment]['trees'] = trees
-        elif clf_type == XGBOOST_CLASSIFIER:
-            # TODO XGBOOST visualize
-            trees = trainer.model_visualizer.regenerate_trees(
-                segment, data[segment]['all_weights'], deep=deep)
-            data[segment]['trees'] = trees
-        data[segment]['parameters'] = {'deep': deep, 'status': 'done'}
 
-    model.visualize_model(data)
+            if clf_type == DECISION_TREE_CLASSIFIER:
+                tree = trainer.model_visualizer.regenerate_tree(
+                    segment, data[segment]['all_weights'], deep=deep)
+                data[segment]['tree'] = tree
+            elif clf_type == RANDOM_FOREST_CLASSIFIER or \
+                    clf_type == EXTRA_TREES_CLASSIFIER:
+                trees = trainer.model_visualizer.regenerate_trees(
+                    segment, data[segment]['all_weights'], deep=deep)
+                data[segment]['trees'] = trees
+            elif clf_type == XGBOOST_CLASSIFIER:
+                # TODO XGBOOST visualize
+                trees = trainer.model_visualizer.regenerate_trees(
+                    segment, data[segment]['all_weights'], deep=deep)
+                data[segment]['trees'] = trees
+            data[segment]['parameters'] = {'deep': deep, 'status': 'done'}
+
+        model.visualize_model(data)
+
+    except Exception as e:
+        logging.error("Got exception on tree visualization: "
+                      " {0} \n {1}".format(e.message, get_task_traceback(e)))
+        raise TaskException(e.message, e)
+
     return "Tree visualization was completed"
 
 
@@ -356,25 +365,29 @@ def transform_dataset_for_download(model_id, dataset_id):
 
     init_logger('transform_for_download_log', obj=int(dataset_id))
     logging.info('Starting Transform For Download Task')
+    try:
+        transformed = model.transform_dataset(dataset)
 
-    transformed = model.transform_dataset(dataset)
+        logging.info('Saving transformed data to disk')
+        temp_file = tempfile.NamedTemporaryFile()
+        numpy.savez_compressed(temp_file, **transformed)
 
-    logging.info('Saving transformed data to disk')
-    temp_file = tempfile.NamedTemporaryFile()
-    numpy.savez_compressed(temp_file, **transformed)
+        s3_filename = "dataset_{0}_vectorized_for_model_{1}.npz".format(
+            dataset.id, model.id)
 
-    s3_filename = "dataset_{0}_vectorized_for_model_{1}.npz".format(
-        dataset.id, model.id)
-
-    from api.amazon_utils import AmazonS3Helper
-    s3 = AmazonS3Helper()
-    logging.info('Uploading file {0} to s3 with name {1}...'.format(
-        temp_file.name, s3_filename))
-    s3.save_key(s3_filename, temp_file.name, {
-        'model_id': model.id,
-        'dataset_id': dataset.id}, compressed=False)
-    s3.close()
-    return s3.get_download_url(s3_filename, 60 * 60 * 24 * 7)
+        from api.amazon_utils import AmazonS3Helper
+        s3 = AmazonS3Helper()
+        logging.info('Uploading file {0} to s3 with name {1}...'.format(
+            temp_file.name, s3_filename))
+        s3.save_key(s3_filename, temp_file.name, {
+            'model_id': model.id,
+            'dataset_id': dataset.id}, compressed=False)
+        s3.close()
+        return s3.get_download_url(s3_filename, 60 * 60 * 24 * 7)
+    except Exception as e:
+        logging.error("Got exception when transforming dataset: "
+                      " {0} \n {1}".format(e.message, get_task_traceback(e)))
+        raise TaskException(e.message, e)
 
 
 def _get_model_and_segment_or_raise(model_id, segment_id=None):
@@ -444,8 +457,8 @@ def upload_segment_features_transformers(model_id, segment_id, fformat):
 
         trainer = model.get_trainer()
         if segment.name not in trainer.features:
-            raise Exception("Segment %s doesn't exists in trained model" %
-                            segment.name)
+            raise TaskException("Segment %s doesn't exists in trained model" %
+                                segment.name)
         for name, feature in trainer.features[segment.name].iteritems():
             if "transformer" in feature and feature["transformer"] is not None:
                 try:
@@ -477,10 +490,10 @@ def upload_segment_features_transformers(model_id, segment_id, fformat):
         return s3.get_download_url(arc_name, 60 * 60 * 24 * 7)
 
     except Exception, e:
-        logging.exception("Got exception when preparing features transformers "
-                          "of segment {0} for download: {1}"
-                          .format(segment.name, e.message))
-        raise
+        logging.error("Got exception when preparing features transformers "
+                      "of segment {0} for download: {1} \n {2}"
+                      .format(segment.name, e.message, get_task_traceback(e)))
+        raise TaskException(e.message, e)
 
     finally:
         for f in files:
@@ -530,5 +543,34 @@ def clear_model_data_cache():
                     os.remove(fp)
     except Exception:
         pass
-
     logging.info("Finished")
+
+
+@celery.task(base=SqlAlchemyTask)
+def calculate_model_parts_size(data_from_training, model_id, deep=7):
+    """Calculates size of model trainer and records result json"""
+    from pympler.asizeof import asized
+    init_logger('trainmodel_log', obj=int(model_id))
+    logging.info('Starting calculation size of model parts')
+
+    model = Model.query.get(model_id)
+    trainer = model.get_trainer()
+
+    def walk_asized(asz):
+        """Prepares output dict from Asized object"""
+        res = {"name": asz.name, "size": asz.size, "properties": []}
+        for r in asz.refs:
+            res["properties"].append(
+                {"name": r.name, "size": r.size,
+                 "properties": [walk_asized(k) for k in r.refs]})
+        return res
+
+    try:
+        result = walk_asized(asized(trainer, detail=deep))
+        result["name"] = "trainer"
+        model.model_parts_size = result
+        model.save()
+    except Exception as e:
+        logging.error("Exception while calculating model parts size: {0} "
+                      " \n {1}".format(e.message, get_task_traceback(e)))
+    logging.info('Finished calculation')

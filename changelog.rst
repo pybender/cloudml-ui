@@ -3,6 +3,8 @@
 Changelog
 =========
 * Taks - Added xgboost
+* Task - Show detailed traceback on exceptions
+* Task - display model trainer parts sizes
 * Bug - Reduced loading time of model list
 * Bug - Don't allow deletion of model when training is in progress
 

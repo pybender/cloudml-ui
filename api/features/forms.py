@@ -42,8 +42,8 @@ class FeatureParamsMixin(object):
             if isinstance(value, basestring):
                 try:
                     data[name] = json.loads(value)
-                except ValueError:
-                    raise ValidationError('invalid json: {}'.format(value))
+                except ValueError as e:
+                    raise ValidationError('invalid json: {}'.format(value), e)
 
         elif param_type == 'dict':
             if not isinstance(value, dict):
@@ -127,7 +127,7 @@ class NamedFeatureTypeForm(BaseForm, FeatureParamsMixin):
             type_factory.get_instance(params, input_format)
         except InvalidFeatureTypeException, exc:
             self.add_error("type", 'Cannot create instance of '
-                           'feature type: {0}'.format(exc))
+                           'feature type: {0}'.format(exc), exc)
 
 
 class FeatureSetForm(BaseForm):
@@ -266,6 +266,7 @@ class FeatureForm(BaseForm, FeatureParamsMixin):
     remove_scaler = BooleanField()
 
     def validate_data(self):
+        from numpy import nan
         feature_set_id = self.cleaned_data.get('feature_set_id')
         name = self.cleaned_data.get('name')
         query = Feature.query.filter_by(
@@ -294,11 +295,16 @@ exist. Please choose another one.' % name)
                 input_format = get_field_value('input_format') or 'plain'
                 type_ = type_factory.get_instance(params, input_format)
                 default = self.cleaned_data.get('default', None)
-                if default is not None:
+                if default:
                     self.cleaned_data['default'] = type_.transform(default)
+                    if self.cleaned_data['default'] is nan:
+                        self.add_error(
+                            "default",
+                            "Incorrect default value {0} for type {1}. "
+                            .format(default, feature_type))
             except InvalidFeatureTypeException, exc:
                 self.add_error("type", 'Cannot create instance of '
-                               'feature type: {0}'.format(exc))
+                               'feature type: {0}'.format(exc), exc)
         else:
             # look into named feature types
             named_type = NamedFeatureType.query.filter_by(

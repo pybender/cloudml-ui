@@ -14,6 +14,8 @@ from sqlalchemy.types import Boolean
 from serialization import JsonSerializableMixin
 from api import app
 from api.base.models.fields import JSONType
+from api.base.exceptions import DBException
+
 
 db = app.sql_db
 
@@ -128,17 +130,17 @@ def commit_on_success(func, raise_exc=False):
         db = func.func_globals['db']
         try:
             return func(*args, **kw)
-        except:
+        except Exception, e:
             if db.session.dirty:
                 db.session.rollback()
-            raise
+            raise DBException(e.message, e)
         else:
             if db.session.dirty:
                 try:
                     db.session.commit()
-                except:
+                except Exception, ex:
                     db.session.rollback()
-                    raise
+                    raise DBException(ex.message, ex)
     return wraps(func)(_commit_on_success)
 
 
