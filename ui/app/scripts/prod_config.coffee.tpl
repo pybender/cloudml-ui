@@ -5,8 +5,8 @@
 
 LOCAL_SETTINGS = {
 
-  apiUrl: 'http://cloudml.int.odesk.com/api/cloudml/'
-  logUrl: 'http://172.27.77.141:5000/cloudml/'
+  apiUrl: 'http://cloudml.int.upwork.com/api/cloudml/'
+  logUrl: 'http://172.27.77.71:5000/cloudml/'
 }
 
 angular.module('app.local_config', []).constant 'settings', LOCAL_SETTINGS
