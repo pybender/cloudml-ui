@@ -63,8 +63,7 @@ CELERY_SEND_TASK_ERROR_EMAILS = True
 SEND_ERROR_EMAILS = True
 
 ADMINS = (
-    ("Nikolay Melnik", "nmelnik@upwork.com"),
-    ("Nader Soliman", "nsoliman@upwork.com"),
+    ("Nikolay Melnik", "nmelnik@odesk.com"),
 )
 
 # Email address used as sender (From field).
