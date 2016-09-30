@@ -231,8 +231,7 @@ def visualize_model(model_id, segment_id=None):
             classes_processed = 0
 
             for clazz in weights_dict.keys():
-                c, w = fill_model_weights(
-                    model, segment, clazz, weights_dict[clazz])
+                c, w = fill_model_weights(model, segment, clazz, weights_dict[clazz])
                 categories_added += c
                 weights_added += w
                 classes_processed += 1
@@ -286,11 +285,10 @@ def generate_visualization_tree(model_id, deep):
     Decision Tree Classifier and Random Forest Classifier are supported.
     """
     from cloudml.trainer.classifier_settings import DECISION_TREE_CLASSIFIER, \
-        RANDOM_FOREST_CLASSIFIER, EXTRA_TREES_CLASSIFIER
+        RANDOM_FOREST_CLASSIFIER, EXTRA_TREES_CLASSIFIER, XGBOOST_CLASSIFIER
     from exceptions import VisualizationException
 
     init_logger('trainmodel_log', obj=int(model_id))
-    logging.info('Starting tree visualization')
     model = Model.query.get(model_id)
 
     try:
@@ -303,7 +301,8 @@ def generate_visualization_tree(model_id, deep):
         clf_type = model.classifier['type']
         if clf_type not in (DECISION_TREE_CLASSIFIER,
                             RANDOM_FOREST_CLASSIFIER,
-                            EXTRA_TREES_CLASSIFIER):
+                            EXTRA_TREES_CLASSIFIER,
+                            XGBOOST_CLASSIFIER):
             raise VisualizationException(
                 "model with %s classifier doesn't support tree"
                 " visualization" % clf_type,
@@ -317,7 +316,7 @@ def generate_visualization_tree(model_id, deep):
                 "models trained before may 2015."
                 "please re-train the model to use this feature.",
                 error_code=VisualizationException.ALL_WEIGHT_NOT_FILLED)
-
+        
         trainer = model.get_trainer()
         from copy import deepcopy
         data = deepcopy(model.visualization_data)
@@ -332,6 +331,7 @@ def generate_visualization_tree(model_id, deep):
                     "please re-train the model to use this feature.",
                     error_code=VisualizationException.ALL_WEIGHT_NOT_FILLED)
 
+
             if clf_type == DECISION_TREE_CLASSIFIER:
                 tree = trainer.model_visualizer.regenerate_tree(
                     segment, data[segment]['all_weights'], deep=deep)
@@ -341,13 +341,20 @@ def generate_visualization_tree(model_id, deep):
                 trees = trainer.model_visualizer.regenerate_trees(
                     segment, data[segment]['all_weights'], deep=deep)
                 data[segment]['trees'] = trees
+            elif clf_type == XGBOOST_CLASSIFIER:
+                # TODO XGBOOST visualize
+                trees = trainer.model_visualizer.regenerate_trees(
+                    segment, data[segment]['all_weights'], deep=deep)
+                data[segment]['trees'] = trees
             data[segment]['parameters'] = {'deep': deep, 'status': 'done'}
 
         model.visualize_model(data)
+
     except Exception as e:
         logging.error("Got exception on tree visualization: "
                       " {0} \n {1}".format(e.message, get_task_traceback(e)))
         raise TaskException(e.message, e)
+
     return "Tree visualization was completed"
 
 
