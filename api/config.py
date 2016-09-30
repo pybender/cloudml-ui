@@ -55,6 +55,7 @@ REQUESTING_INSTANCE_MAX_RETRIES = 30
 EXAMPLES_CHUNK_SIZE = 10
 
 MULTIPART_UPLOAD_CHUNK_SIZE = 8192
+AMAZON_REGION = 'us-west-1'
 
 LOGGING = {
     'version': 1,
@@ -113,7 +114,7 @@ ADMINS = (
 )
 
 # Email address used as sender (From field).
-SERVER_EMAIL = "no-reply@cloudml.int.odesk.com"
+SERVER_EMAIL = "no-reply@cloudml.int.upwork.com"
 
 # Mailserver configuration
 EMAIL_HOST = "localhost"

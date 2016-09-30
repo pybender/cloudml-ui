@@ -2,6 +2,7 @@
 
 Changelog
 =========
+* Bug - Fixed synchronyzing clusters list
 * Taks - Added xgboost
 * Task - Show detailed traceback on exceptions
 * Task - display model trainer parts sizes

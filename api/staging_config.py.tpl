@@ -43,6 +43,7 @@ CELERYBEAT_SCHEDULE = {
 AMAZON_ACCESS_TOKEN = '{{ amazon_access_token }}'
 AMAZON_TOKEN_SECRET = '{{ amazon_token_secret }}'
 AMAZON_BUCKET_NAME = '{{ amazon_bucket_name }}'
+AMAZON_REGION = 'us-west-1'
 
 CLOUDML_PREDICT_BUCKET_NAME = '{{ amazon_bucket_name }}'
 
