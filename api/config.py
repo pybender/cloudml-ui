@@ -16,6 +16,7 @@ DEBUG = False
 TEST_MODE = False
 
 # Celery beat (Scheduler) settings
+
 ENGINE_URL = 'postgresql://cloudml:cloudml@192.168.2.253/cloudml'
 #ENGINE_URL='postgresql://postgres:postgres@localhost/cloudml_data'
 # ENGINE_URL = SQLALCHEMY_DATABASE_URI

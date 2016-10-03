@@ -3,6 +3,7 @@ from api import app, celery, admin
 from api.base.admin import BaseAdmin
 from .models import (PeriodicTask, CrontabSchedule, PeriodicTasks, IntervalSchedule)
 from .tasks import *
+from beatsqlalchemy.schedulers import DatabaseScheduler
 
 class PeriodicTaskAdmin(BaseAdmin):
     Model = PeriodicTask
@@ -21,9 +22,15 @@ class PeriodicTaskAdmin(BaseAdmin):
         )
     )
     def after_model_change(self, form, model, is_created):
-        # TODO: nader20141214, we still dont have a way to set the request user
-        print ('Save start 01')
         model.save()
+        args = ()
+        kwargs = {'schedule_filename': 'celerybeat-schedule', 'app': celery, 'lazy': False, 'max_interval': 0}
+        scheduler = DatabaseScheduler(*args, **kwargs)
+
+    def on_model_delete(self, model):
+        args = ()
+        kwargs = {'schedule_filename': 'celerybeat-schedule', 'app': celery, 'lazy': False, 'max_interval': 0}
+        scheduler = DatabaseScheduler(*args, **kwargs)
 
 admin.add_view(PeriodicTaskAdmin(
     name='Periodic Task', category='Schedule'))

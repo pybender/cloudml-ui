@@ -20,10 +20,11 @@ app = create_app()
 celery = Celery('cloudml')
 celery.add_defaults(lambda: app.config)
 
+
 api = Api(app)
 admin = Admin(app, 'CloudML Admin Interface')
-
 logging_config.dictConfig(app.config['LOGGING'])
+
 
 # Note: to see sqlalchemy SQL statements, uncomment the following,
 # and watch out for the logs will be huge

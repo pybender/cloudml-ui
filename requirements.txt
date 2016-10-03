@@ -57,3 +57,6 @@ jupyter==1.0.0
 xgboost==0.6a2
 Pympler==0.4.3
 -e git+http://stash.odesk.com/scm/dp/predict-utils.git@nikolay#egg=predict
+-e git+http://github.com/pnvasko/celerybeat-sqlalchemy.git#egg=cloudml
+sqlalchemy-utils
+

@@ -40,7 +40,7 @@ class Celeryd(Command):
 
     def run(self, **kwargs):
         # os.system("env CELERYD_FSNOTIFY=stat celery -A api.tasks worker --beat --concurrency=10 -Q default -E --loglevel=info")
-        os.system("env CELERYD_FSNOTIFY=stat celery -A api.tasks worker --beat -S api.schedule.scheduler.CloudmluiDatabaseScheduler --concurrency=10 -Q default -E --loglevel=info")
+        os.system("env CELERYD_FSNOTIFY=stat celery -A api.tasks worker --beat -S api.schedule.scheduler.CloudmluiDatabaseScheduler --concurrency=10 -Q default -E --loglevel=debug")
 
 class Celerybeat(Command):
     """Runs the default Celery worker node."""
@@ -244,9 +244,6 @@ manager.add_command("create_image", CreateWorkerImage())
 manager.add_command("update_deployed", UpdateDeployed())
 manager.add_command("create_grafana", CreateGrafanaDashboards())
 manager.add_command("recalculate_counters", RecalculateCounters())
-# TODO pnvasko
-manager.add_command("celerybeat", Celerybeat())
-
 
 if __name__ == "__main__":
     manager.run()

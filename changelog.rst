@@ -2,6 +2,9 @@
 
 Changelog
 =========
+
+* Task - Add Celery Beat Scheduler task based on backend SQLALChemy.
+
 * Taks - Added xgboost
 * Task - Show detailed traceback on exceptions
 * Task - display model trainer parts sizes

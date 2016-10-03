@@ -12,7 +12,6 @@ from werkzeug.routing import BaseConverter
 
 __all__ = ["create_app"]
 
-
 class App(Flask):
 
     def __init__(self, *args, **kwargs):
@@ -21,7 +20,6 @@ class App(Flask):
         self.url_map.converters['regex'] = RegExConverter
         self.init_sql_db()
         self.scheduletasks = {}
-
     # TODO: obsolete!
     @property
     def db(self):
