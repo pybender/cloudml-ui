@@ -9,3 +9,5 @@ from api.model_tests.models import *
 
 from api.async_tasks.models import *
 from api.servers.models import *
+from api.schedule.models import *
+

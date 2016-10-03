@@ -20,6 +20,7 @@ class App(Flask):
         self.config.from_object('api.config')
         self.url_map.converters['regex'] = RegExConverter
         self.init_sql_db()
+        self.scheduletasks = {}
 
     # TODO: obsolete!
     @property
@@ -27,6 +28,20 @@ class App(Flask):
         if not hasattr(self, '_db'):
             self.init_db()
         return self._db
+
+    # TODO pnvasko decorator for registration schedule task
+    def regscheduletask(self, name=None):
+        def decorator(f):
+            if not name:
+                endpoint = '%s.%s' %(f.__module__, f.__name__)
+            else:
+                # TODO pnvasko write task by name in decorator
+                #endpoint = name
+                endpoint = '%s.%s' %(f.__module__, f.__name__)
+
+            self.scheduletasks[endpoint]=f
+            return f
+        return decorator
 
     def init_db(self):
         db_name = self.config['DATABASE_NAME']
