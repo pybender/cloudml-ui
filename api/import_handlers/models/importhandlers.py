@@ -348,17 +348,37 @@ class XmlImportHandler(db.Model, ImportHandlerMixin, BaseDeployedEntity):
                               "blocked for modifications. ".format(self.name)
             return False
         return True
+    
+    def _check_status_deployed(self):
+        permission = app.config['MODIFY_DEPLOYED']
+        canedit = True
+        candelete = True
+        if app.config['MODIFY_DEPLOYED_IH']:
+            return (canedit, candelete)
+        if not self.locked:
+            return (canedit, candelete)
+        try:
+            for srv in self.servers:
+                canedit = canedit and permission[srv.type][0]
+                candelete = candelete and permission[srv.type][0]
+        except:
+            canedit = False
+            candelete = False
+
+        if (not canedit or not candelete):
+            self.reason_msg = "Import handler {0} has been deployed and " \
+                              "blocked for modifications. ".format(self.name)
+            
+        return (canedit, candelete)
 
     @property
     def can_edit(self):
-        return self._check_deployed() and super(
+        return self._check_status_deployed()[0] and super(
             XmlImportHandler, self).can_edit
-
     @property
     def can_delete(self):
-        return self._check_deployed() and super(
+        return self._check_status_deployed()[1] and super(
             XmlImportHandler, self).can_delete
-
 
 class RefXmlImportHandlerMixin(object):
     @declared_attr
