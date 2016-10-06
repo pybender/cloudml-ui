@@ -226,6 +226,23 @@ class RecalculateCounters(Command):
         print "Done"
 
 
+class CreateCeleryDbTables(Command):
+    """
+    Create Celery Db Tables
+    python manage.py create_celery_db_tables
+
+    """
+    def run(self):
+        from sqlalchemy import create_engine
+        from beatsqlalchemy.model.base import Base
+        from beatsqlalchemy.model.model import (PeriodicTask, CrontabSchedule, PeriodicTasks, IntervalSchedule)
+
+        engine = create_engine(app.config['ENGINE_URL'], pool_size=20, pool_recycle=3600)
+        Base.metadata.create_all(engine)
+
+        print "Done"
+
+
 manager = Manager(app)
 migrate = Migrate(app, app.sql_db)
 manager.add_command('clearlocalcache', ClearLocalCache())
@@ -244,6 +261,9 @@ manager.add_command("create_image", CreateWorkerImage())
 manager.add_command("update_deployed", UpdateDeployed())
 manager.add_command("create_grafana", CreateGrafanaDashboards())
 manager.add_command("recalculate_counters", RecalculateCounters())
+
+#TODO pnvasko temp create_celery_db_tables
+manager.add_command("create_celery_db_tables", CreateCeleryDbTables())
 
 if __name__ == "__main__":
     manager.run()
