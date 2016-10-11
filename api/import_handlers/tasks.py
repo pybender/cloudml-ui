@@ -12,7 +12,7 @@ from api.ml_models.models import Model, Transformer
 from api.model_tests.models import TestResult
 from api.base.tasks import SqlAlchemyTask, get_task_traceback, TaskException
 from api.instances.models import Cluster
-from models import DataSet, XmlSqoop
+from models import DataSet, XmlSqoop, XmlImportHandler
 
 
 @celery.task(base=SqlAlchemyTask)
@@ -195,6 +195,16 @@ def upload_dataset(dataset_id):
 
     logging.info("Dataset using {0!s} uploaded.".format(dataset))
     return [dataset_id]
+
+
+@celery.task(base=SqlAlchemyTask)
+def create_dataset(import_handler_id, import_params, data_format):
+    importhandler = XmlImportHandler.query.get(import_handler_id)
+    dataset = importhandler.create_dataset(
+        params=import_params, data_format=data_format, compress=True)
+    dataset.save()
+    import_data.delay(dataset.id)
+    return [dataset.id]
 
 
 @celery.task(base=SqlAlchemyTask)

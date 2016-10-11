@@ -235,9 +235,13 @@ class CreateCeleryDbTables(Command):
     def run(self):
         from sqlalchemy import create_engine
         from beatsqlalchemy.model.base import Base
-        from beatsqlalchemy.model.model import (PeriodicTask, CrontabSchedule, PeriodicTasks, IntervalSchedule)
+        from beatsqlalchemy.model.model import (PeriodicTask,
+                                                CrontabSchedule,
+                                                PeriodicTasks,
+                                                IntervalSchedule)
 
-        engine = create_engine(app.config['ENGINE_URL'], pool_size=20, pool_recycle=3600)
+        engine = create_engine(app.config['ENGINE_URL'], pool_size=20,
+                               pool_recycle=3600)
         Base.metadata.create_all(engine)
 
         print "Done"
@@ -256,6 +260,7 @@ manager.add_command('generate_crc', GenerateCrc())
 manager.add_command("shell", Shell(make_context=_make_context))
 manager.add_command("create_db_tables", CreateDbTables())
 manager.add_command("create_dynamodb_tables", CreateDynamoDbTables())
+manager.add_command("create_celerydb_tables", CreateCeleryDbTables())
 manager.add_command("drop_db_tables", DropDbTables())
 manager.add_command("create_image", CreateWorkerImage())
 manager.add_command("update_deployed", UpdateDeployed())
