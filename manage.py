@@ -3,8 +3,8 @@
 import os
 import logging
 import boto3
-from flask.ext.script import Manager, Command, Shell, Option
-from flask.ext.migrate import Migrate, MigrateCommand
+from flask_script import Manager, Command, Shell, Option
+from flask_migrate import Migrate, MigrateCommand
 
 from api import app
 
@@ -39,8 +39,9 @@ class Celeryd(Command):
     """Runs the default Celery worker node."""
 
     def run(self, **kwargs):
-        # os.system("env CELERYD_FSNOTIFY=stat celery -A api.tasks worker --beat --concurrency=10 -Q default -E --loglevel=info")
-        os.system("env CELERYD_FSNOTIFY=stat celery -A api.tasks worker --beat -S api.schedule.scheduler.CloudmluiDatabaseScheduler --concurrency=10 -Q default -E --loglevel=info")
+        # os.system("env CELERYD_FSNOTIFY=stat celery -A api.tasks worker --concurrency=10 -Q default -E --loglevel=debug")
+        #os.system("env CELERYD_FSNOTIFY=stat celery -A api.tasks worker --beat --concurrency=10 -Q default -E --loglevel=info")
+        os.system("env CELERYD_FSNOTIFY=stat celery -A api.tasks worker --beat -S api.schedule.scheduler.CloudmluiDatabaseScheduler --concurrency=10 -Q default -E --loglevel=debug")
 
 class Celerybeat(Command):
     """Runs the default Celery worker node."""
@@ -234,8 +235,7 @@ class CreateCeleryDbTables(Command):
     """
     def run(self):
         from sqlalchemy import create_engine
-        from beatsqlalchemy.model.base import Base
-        from beatsqlalchemy.model.model import (PeriodicTask, CrontabSchedule, PeriodicTasks, IntervalSchedule)
+        from api.schedule.models import (PeriodicTask, CrontabSchedule, PeriodicTasks, IntervalSchedule, Base)
 
         engine = create_engine(app.config['ENGINE_URL'], pool_size=20, pool_recycle=3600)
         Base.metadata.create_all(engine)
