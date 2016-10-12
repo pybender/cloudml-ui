@@ -5,7 +5,7 @@ Periodic tasks schedules related resources.
 # Authors: Anna Lysak <annalysak@cloud.upwork.com>
 
 from api.base.resources import BaseResourceSQL
-import api
+from api import api
 
 
 class ScheduleResource(BaseResourceSQL):
