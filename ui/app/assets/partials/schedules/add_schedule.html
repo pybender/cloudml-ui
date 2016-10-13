@@ -1,0 +1,53 @@
+<div ng-controller="SaveObjectCtl">
+  <h2>
+    Add New Periodic Task Schedule
+    <small><a ng-href="#/schedules" href="#/schedules">(Cancel)</a></small>
+  </h2>
+  <ng-include src="'partials/parts/save_form_messages.html'"></ng-include>
+  <form name="Form" class="form-horizontal">
+  <div class="control-group" ng-class="{error: Form.name.$invalid || errorList.name}">
+    <label class="control-label">Name</label>
+    <div class="controls">
+      <input type="text" name="name" ng-model="model.name" ng-change="setFieldError('name')" required />
+      <span ng-show="Form.name.$error.required" class="help-block">Task name is required</span>
+      <span ng-show="errorList.name" class="help-block" ng-bind="errorList.name" />
+    </div>
+  </div>
+  <div class="control-group" ng-class="{error: Form.description.$invalid}">
+    <label class="control-label">Description</label>
+    <div class="controls">
+      <textarea name="description" ng-model="model.description">
+      </textarea>
+    </div>
+  </div>
+  <div class="control-group" ng-class="{error: Form.type.$invalid || errorList.type}">
+    <label class="control-label">Schedule Type</label>
+    <div class="controls">
+      <select ng-model="model.type" name="type" ng-change="loadScheduleFields(Form.type.$viewValue)" required ng-options="value.name for value in types">
+      </select>
+      <span ng-show="Form.type.$error.required" class="help-block">Select schedule type</span>
+      <span ng-show="errorList.type" class="help-block" ng-bind="errorList.type" />
+    </div>
+  </div>
+  <div ng-show="model.schedule_config">
+    <h4>Schedule Parameters</h4>
+    <div ng-repeat="item in model.schedule_config" class="control-group">
+      <label class="control-label" title="Please input {{ item.name }}. Type: {{ item.type }}">{{ item.name }}</label>
+      <div class="controls">
+        <parameter-input ng-model="model.schedule" config="item" name="item.name"></parameter-input>
+        <span class="help-block" ng-show="Form[item.name].$invalid">invalid</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="control-group" ng-class="{error: Form.enabled.$invalid}">
+    <label class="control-label">Enabled</label>
+    <div class="controls">
+      <input type="checkbox" ng-model="model.enabled" name="enabled" />
+    </div>
+  </div>
+
+  <a href="#/schedules" class="btn">Cancel</a>
+    <button ng-click="save(['name', 'description', 'type', 'schedule', 'scenario', 'enabled'])" ng-disabled="Form.$invalid" class="btn btn-primary">Add new schedule</button>
+  </form>
+</div>

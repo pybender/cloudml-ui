@@ -1,0 +1,58 @@
+<alert-message ng-show="msg" class="alert-info" msg='{{ msg }}' unsafe>
+</alert-message>
+<alert-message ng-show="err" class="alert-error" msg='{{ err }}' trace="{{ trace }}" unsafe>
+</alert-message>
+
+<div ng-init="init({model: schedule})" ng-controller="ScheduleActionsCtrl">
+    <h2 class="title">Task
+      <span title="Title"
+        class="title" ng-bind="model.name || 'untitled schedule'"
+        editable="model" value="model.name"
+        editable-field="name" editable-input="text"
+        editable-placement="right" editable-required></span> details
+      <div class="actions">
+        <button ng-click="delete_schedule(model)" class="btn btn-danger">
+          <i title="Delete your task schedule. Be careful - you could not recover it!" class="icon-remove"></i> Delete
+        </button>
+      </div>
+    </h2>
+    <p class="clear clearfix"></p>
+
+    <ul class="nav nav-tabs" id="tabs" ng-show="model.loaded">
+      <li ng-class="{active: action[0] == 'model'}">
+        <a ng-click="setSection(['schedule', 'details'])">Details</a>
+      </li>
+      <li ng-class="{active: action[0] == 'model'}">
+        <a ng-click="setSection(['schedule', 'logs'])">Logs</a>
+      </li>
+    </ul>
+
+    <div class="tab-content" ng-show="handler.loaded">
+      <div ng-show="action[0] == 'model'">
+        <div ng-show="action[1] == 'details'" >
+            <div ng-show="model.created_by">
+                Created by:
+                <span class="value">{{ model.created_by.name }} ({{ model.created_by.uid }})</span>
+            </div>
+            <div ng-show="model.updated_by">
+                Updated by:
+                <span class="value">{{ model.updated_by.name }} ({{ model.updated_by.uid }})</span>
+            </div>
+        </div>
+
+        <div ng-show="action[1] == 'logs'">
+            <div class="row">
+              <div class="span12">
+                  Status: <span class="value">{{ model.status }}</span> <a ng-click="showLogs=!showLogs">(logs)</a><br/>
+                  <div ng-show="showLogs" class="well" ng-controller="LogMessageListCtrl" ng-init="init('taskschedule_log', model.id, 50)">
+                    <div class="message">
+                      <ng-include src="'partials/logmessages/list.html'"></ng-include>
+                    </div>
+                  </div>
+              </div>
+            </div>
+        </div>
+      </div>
+    </div>
+
+</div>
