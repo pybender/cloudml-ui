@@ -1,0 +1,48 @@
+<div class="control-group">
+<label class="control-label">Type</label>
+<div class="controls">
+  <select ng-model="scenario.type" name="scenario_type" ng-options="value for value in taskTypes">
+  </select>
+</div>
+</div>
+
+<div class="control-group" >
+<label class="control-label">Task</label>
+<div class="controls">
+  <select ng-model="task" name="task" ng-options="value.task for value in taskConfig">
+  </select>
+  <h5>Task Parameters</h5>
+  <div ng-repeat="item in task.params" class="control-group">
+    <label class="control-label" title="Please input {{ item.name }}. Type: {{ item.type }}">{{ item.name }}</label>
+    <div class="controls">
+      <parameter-input ng-model="kwargs" config="item" name="item.name"></parameter-input>
+    </div>
+  </div>
+  <a class="btn" ng-show="scenario.type == 'group' || scenario.type == 'chord' || scenario.type == 'chain'" ng-click="addChainedTask()">Add Task to {{ scenario.type }}</a>
+</div>
+<span class="span5" ng-show="scenario.tasks && scenario.type != 'single'">
+<h5>Tasks in {{ scenario.type }}</h5>
+<div class="tasks" ng-repeat="t in scenario.tasks track by $index">
+    {{ t.tasks[0] }} {{ t.params }} <a class="btn btn-danger"  ng-click="delChainedTask($index)">x</a>
+</div>
+</span>
+</div>
+
+<div class="control-group" ng-show="scenario.type == 'chord'">
+<label class="control-label">Chord Callback</label>
+<div class="controls">
+  <select ng-model="scenario.callback" name="callback" ng-options="value.task for value in taskConfig">
+  </select>
+  <h5>Callback Task Parameters</h5>
+  <div ng-repeat="item in scenario.callback.params" class="control-group">
+    <label class="control-label" title="Please input {{ item.name }}. Type: {{ item.type }}">{{ item.name }}</label>
+    <div class="controls">
+      <parameter-input ng-model="scenario.callback_kwargs" config="item" name="item.name"></parameter-input>
+    </div>
+  </div>
+</div>
+</div>
+
+<a class="btn btn-info" ng-click="setScenario()">Save Scenario</a>
+<br/><br/>
+

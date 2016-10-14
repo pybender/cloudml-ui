@@ -80,8 +80,8 @@ ALLOWED_PERIODIC_TASKS = [
     },
     {
         'task': REQUEST_SPOT_INSTANCE,
-        'params': [{'name': 'instance_type', 'type': 'string',
-                    'choice': ['m3.xlarge', 'm3.2xlarge', 'cc2.8xlarge',
+        'params': [{'name': 'instance_type', 'type': 'choices',
+                    'choices': ['m3.xlarge', 'm3.2xlarge', 'cc2.8xlarge',
                                'cr1.8xlarge', 'hi1.4xlarge', 'hs1.8xlarge']},
                    {'name': 'model_id', 'type': 'integer', 'entity': 'Model'}],
         'result': ['request_id']
@@ -89,7 +89,7 @@ ALLOWED_PERIODIC_TASKS = [
     {
         'task': GET_REQUEST_INSTANCE,
         'params': [{'name': 'request_id', 'type': 'string'},
-                   {'name': 'callback', 'type': 'string', 'choice': ['train']},
+                   {'name': 'callback', 'type': 'choices', 'choices': ['train']},
                    {'name': 'model_id', 'type': 'integer', 'entity': 'Model'},
                    {'name': 'dataset_ids', 'type': 'list',
                     'entity': 'DataSet'},

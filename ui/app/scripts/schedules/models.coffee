@@ -11,8 +11,8 @@ angular.module('app.schedules.model', ['app.config'])
     Periodic Task Schedule
     ###
     class Schedule  extends BaseModel
-      BASE_API_URL: "#{settings.apiUrl}schedules/"
-      BASE_UI_URL: '/schedules'
+      BASE_API_URL: "#{settings.apiUrl}schedule/"
+      BASE_UI_URL: '/schedule'
       API_FIELDNAME: 'schedule'
       DEFAULT_FIELDS_TO_SAVE: ['name', 'description', 'scenario', 'type',
                                'enabled', 'schedule']
@@ -22,8 +22,8 @@ angular.module('app.schedules.model', ['app.config'])
       name: null
       type: null
       description: null
-      scenario: null
-      schedule: null
+      scenario: {}
+      schedule: {}
       type: null
       enabled: null
 
@@ -31,9 +31,23 @@ angular.module('app.schedules.model', ['app.config'])
         super origData
 
       $save: (opts={}) =>
+        console.log opts.only
+        console.log @
         if opts.only? && "type" in opts.only
           @type = @type['name']
+
+        if opts.only? && "scenario" in opts.only
+          @scenario = angular.toJson(@scenario)
+
+        if opts.only? && "schedule" in opts.only
+          @schedule = angular.toJson(@schedule)
+
         super opts
+
+      $getConfiguration: (opts={}) =>  # TODO: into mixin
+        base_url = @constructor.$get_api_url(opts, @)
+        @$make_request("#{base_url}action/task_configuration/",
+                       load=false)
 
     return Schedule
 ])

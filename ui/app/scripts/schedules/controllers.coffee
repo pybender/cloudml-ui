@@ -97,11 +97,32 @@ angular.module('app.schedules.controllers', ['app.config', ])
   ($scope, $location, Schedule) ->
     $scope.model = new Schedule()
     $scope.types = [{name: 'crontab'}, {name: 'interval'}]
+    $scope.type_config = {
+        crontab: [{name: 'minute', type: 'string', default: '*'},
+                  {name: 'hour', type: 'string', default: '*'},
+                  {name: 'day_of_week', type: 'string', default: '*'},
+                  {name: 'day_of_month', type: 'string', default: '*'},
+                  {name: 'month_of_year', type: 'string', default: '*'}],
+        interval: [{name:'every', type: 'integer'},
+                   {name: 'period', type: 'string', choices: ['microseconds', 'seconds', 'minutes', 'hours', 'days']}]
+    }
+
+    $scope.task_types = ['single', 'chain', 'chord', 'group']
+
+    $scope.schedule_config_params = []
     $scope.err = ''
     $scope.new = true
+    console.log $scope.model
+    $scope.model.$getConfiguration()
+    .then (opts) ->
+      $scope.task_config = opts.data.configuration
+      console.log $scope.task_config
+    , (opts) ->
+      $scope.setError(opts, 'loading tasks configuration')
 
     $scope.loadScheduleFields = (schedule_type) ->
-      $scope.model.$loadScheduleParams(schedule_type)
+      $scope.schedule_config_params = $scope.type_config[schedule_type.name]
+
 ])
 
 
