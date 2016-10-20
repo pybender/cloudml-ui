@@ -1,0 +1,15 @@
+<div class="modal-header">
+    <button ng-click="$dismiss('cancel')" class="close" data-dismiss="modal">×</button>
+<h3>Delete tasks</h3>
+<p class="lead">
+    Do you really want to {{ title }}?
+</p>
+</div>
+<div class="modal-body">
+    {{ description }}
+</div>
+<div class="modal-footer">
+<button ng-click="$dismiss('cancel')" class="btn">Cancel</button>
+<button ng-click="deleteTask(index, tasks)" class="btn btn-primary">Delete</button>
+</div>
+</div>

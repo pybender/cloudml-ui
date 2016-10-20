@@ -1,0 +1,66 @@
+<div class="modal-header">
+  <button ng-click="$dismiss('cancel')" class="close" data-dismiss="modal">×</button>
+  <h3>{{ action }}</h3>
+</div>
+
+<div class="modal-body">
+
+  <form name="Task" class="form-horizontal">
+    <div class="control-group" ng-class="{error: Task.type.$invalid || errorList.type}">
+      <label class="control-label">Type</label>
+      <div class="controls">
+        <select ng-model="task.type" name="type" ng-options="value for value in task_types">
+        </select>
+      </div>
+    </div>
+
+    <div ng-show="task.type=='single'">
+    <div class="control-group" ng-class="{error: Task.task.$invalid || errorList.task}">
+      <hr/>
+      <label class="control-label">Task</label>
+      <div class="controls">
+        <select ng-model="task.task" name="task" ng-options="value.task for value in task_config" ng-required="task.type=='single'">
+        </select>
+      </div>
+    </div>
+    <div ng-show="task.task.params">
+      <h4 >Task Parameters</h4>
+      <div ng-repeat="item in task.task.params" class="control-group">
+        <label class="control-label" title="Please input {{ item.name }}. Type: {{ item.type }}">{{ item.name }}</label>
+        <div class="controls">
+          <parameter-input ng-model="task.kwargs" config="item" name="item.name"></parameter-input>
+        </div>
+      </div>
+    </div>
+    </div>
+<!--<span class="span5" ng-show="scenario.tasks && scenario.type != 'single'">
+<h5>Tasks in {{ scenario.type }}</h5>
+<div class="tasks" ng-repeat="t in scenario.tasks track by $index">
+    {{ t.tasks[0] }} {{ t.params }} <a class="btn btn-danger"  ng-click="delChainedTask($index)">x</a>
+</div>
+</span>
+</div>-->
+
+    <div class="control-group" ng-show="task.type == 'chord'" ng-class="{error: Task.callback.$invalid || errorList.callback}">
+      <hr/>
+      <label class="control-label">Chord Callback</label>
+      <div class="controls">
+        <select ng-model="task.callback" name="callback" ng-options="value.task for value in task_config" ng-required="task.type=='chord'">
+        </select>
+      </div>
+    </div>
+    <div ng-show="task.callback.params && task.type=='chord'">
+      <h4 >Callback Task Parameters</h4>
+      <div ng-repeat="item in task.callback.params" class="control-group">
+        <label class="control-label" title="Please input {{ item.name }}. Type: {{ item.type }}">{{ item.name }}</label>
+        <div class="controls">
+          <parameter-input ng-model="task.callback_kwargs" config="item" name="item.name"></parameter-input>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+
+<div class="modal-footer" title="{{ Task.$error}}">
+  <a class="btn btn-primary" ng-click="Save()" ng-disabled="Task.$invalid">Save</a>
+</div>

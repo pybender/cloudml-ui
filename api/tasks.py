@@ -45,7 +45,7 @@ ALLOWED_PERIODIC_TASKS = [
         'task': CREATE_DATASET,
         'params': [{'name': 'import_handler_id', 'type': 'integer',
                     'entity': 'XmlImportHandler'},
-                   {'name': 'import_params', 'type': 'json'},
+                   {'name': 'import_params', 'type': 'string'},
                    {'name': 'data_format', 'type': 'string',
                     'choices': ['json', 'csv'], 'default': 'json'}],
         'result': ['dataset_ids']
@@ -70,7 +70,7 @@ ALLOWED_PERIODIC_TASKS = [
                     'entity': 'XmlEntity'},
                    {'name': 'sqoop_id', 'type': 'integer',
                     'entity': 'XmlSqoop'},
-                   {'name': 'params', 'type': 'json'}],
+                   {'name': 'params', 'type': 'string'}],
         'result': ['fields', 'sample', 'sql']
     },
     {
@@ -91,7 +91,7 @@ ALLOWED_PERIODIC_TASKS = [
         'params': [{'name': 'request_id', 'type': 'string'},
                    {'name': 'callback', 'type': 'choices', 'choices': ['train']},
                    {'name': 'model_id', 'type': 'integer', 'entity': 'Model'},
-                   {'name': 'dataset_ids', 'type': 'list',
+                   {'name': 'dataset_ids', 'type': 'string',
                     'entity': 'DataSet'},
                    {'name': 'user_id', 'type': 'integer', 'entity': 'User'}],
         'result': ['instance_ip']
@@ -115,7 +115,7 @@ ALLOWED_PERIODIC_TASKS = [
     },
     {
         'task': TRAIN_MODEL_TASK,
-        'params': [{'name': 'dataset_ids', 'type': 'list',
+        'params': [{'name': 'dataset_ids', 'type': 'string',
                     'entity': 'DataSet'},
                     {'name': 'model_id', 'type': 'integer', 'entity': 'Model'},
                     {'name': 'user_id', 'type': 'integer', 'entity': 'User'}],
@@ -153,8 +153,8 @@ ALLOWED_PERIODIC_TASKS = [
         'params': [{'name': 'model_id', 'type': 'integer', 'entity': 'Model'},
                    {'name': 'segment_id', 'type': 'integer',
                     'entity': 'Segment'},
-                   {'name': 'fformat', 'type': 'string',
-                    'choice': ['json', 'csv']}],
+                   {'name': 'fformat', 'type': 'choices',
+                    'choices': ['json', 'csv']}],
         'result': ['s3_download_url']
     },
     {
@@ -170,7 +170,7 @@ ALLOWED_PERIODIC_TASKS = [
     },
     {
         'task': TRAIN_TRANSFORMER,
-        'params': [{'name': 'dataset_ids', 'type': 'list',
+        'params': [{'name': 'dataset_ids', 'type': 'string',
                     'entity': 'DataSet'},
                     {'name': 'transformer_id', 'type': 'integer',
                      'entity': 'Transformer'},
@@ -179,7 +179,7 @@ ALLOWED_PERIODIC_TASKS = [
     },
     {
         'task': RUN_TEST,
-        'params': [{'name': 'dataset_ids', 'type': 'list',
+        'params': [{'name': 'dataset_ids', 'type': 'string',
                     'entity': 'DataSet'},
                    {'name': 'test_id', 'type': 'integer',
                     'entity': 'TestResult'}],
@@ -189,7 +189,7 @@ ALLOWED_PERIODIC_TASKS = [
         'task': CONFUSION_MATRIX,
         'params': [{'name': 'test_id', 'type': 'integer',
                     'entity': 'TestResult'},
-                   {'name': 'weights', 'type': 'json'}],
+                   {'name': 'weights', 'type': 'string'}],
         'result': ['confusion_matrix']
     },
     {
@@ -223,8 +223,8 @@ ALLOWED_PERIODIC_TASKS = [
         'task': UPLOAD_IMPORT_HANDLER,
         'params': [{'name': 'server_id', 'type': 'integer',
                     'entity': 'Server'},
-                   {'name': 'handler_type', 'type': 'string',
-                    'choice': ['xml']},
+                   {'name': 'handler_type', 'type': 'choices',
+                    'choices': ['xml']},
                    {'name': 'import_handler_id', 'type': 'integer',
                     'entity': 'XmlImportHandler'},
                    {'name': 'user_id', 'type': 'integer', 'entity': 'User'}],

@@ -5,6 +5,7 @@
   </h2>
   <ng-include src="'partials/parts/save_form_messages.html'"></ng-include>
   <form name="Form" class="form-horizontal">
+  <div class="span5">
   <div class="control-group" ng-class="{error: Form.name.$invalid || errorList.name}">
     <label class="control-label">Name</label>
     <div class="controls">
@@ -46,20 +47,25 @@
       <input type="checkbox" ng-model="model.enabled" name="enabled" />
     </div>
   </div>
+  </div>
 
-  <div class="control-group" ng-class="{error: Form.scenario.$invalid}">
-    <div class="controls">
-      <input type="text" ng-model="model.scenario" ng-bind="model.scenario" name="scenario" required/>
+  <div class="span5">
+    <input type="hidden" ng-model="model.scenario" ng-bind="model.scenario" name="scenario" />
+    <div ng-show="task_config" ng-controller="TasksActionsCtrl">
+      <h4>Periodic tasks scenario</h4>
+        <a class="btn btn-info" ng-click="addTask(model.scenario)" ng-show="model.scenario | isArrayEmpty">Add Task</a>
+
+        <ul ng-init="tasks=model.scenario; parent_tasks=model.scenario;">
+          <li ng-repeat="task in tasks track by $index" ng-include="'partials/schedules/tasks/tasks.html'"></li>
+        </ul>
     </div>
   </div>
-  <div ng-show="task_config">
-    <h4>Create Scenario</h4>
-    <tasks ng-model="model.scenario" task-config="task_config" task-types="task_types"></tasks>
-  </div>
 
 
+  <div class="span12">
   <a href="#/schedules" class="btn">Cancel</a>
-    <button ng-click="save(['name', 'description', 'type', 'schedule', 'scenario', 'enabled'])" ng-disabled="Form.$invalid" class="btn btn-primary">Add new schedule</button>
+    <button ng-click="save(['name', 'description', 'type', 'schedule', 'scenario', 'enabled'])" ng-disabled="Form.$invalid || model.scenario | isArrayEmpty" class="btn btn-primary">Add new schedule</button>
+  </div>
   </form>
 
 
