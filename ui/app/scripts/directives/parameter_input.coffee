@@ -2,40 +2,64 @@
 
 angular.module('app.directives')
 
-.directive('parameterInput', () ->
-  return {
-    require: 'ngModel',
-    restrict: 'E',
-    scope: {
-      config: '='
-      value: '=ngModel'
-      name: '='
-    }
-    templateUrl:'partials/directives/parameter_input/main.html',
-    link: (scope, element, attrs, ngModel) ->
-      if !scope.name?
-        scope.name = scope.config.name
+.directive('parameterInput', [
+  'Model'
+  'DataSet'
+  'XmlImportHandler'
+  'Server'
+  (Model, DataSet, XmlImportHandler, Server) ->
+      return {
+        require: 'ngModel',
+        restrict: 'E',
+        scope: {
+          config: '='
+          value: '=ngModel'
+          name: '='
+        }
+        templateUrl:'partials/directives/parameter_input/main.html',
+        link: (scope, element, attrs, ngModel) ->
+          console.log ngModel
+          console.log scope.value
+          if !scope.name?
+            scope.name = scope.config.name
 
-      scope.select2Opts = null
-      if scope.config.choices
-        scope.select2Opts = scope.$root.getSelect2Params(
-          {choices: scope.config.choices})
+          if scope.config.entity?
+            entity_error = false
+            scope.config.choices = []
+            try
+              eval(scope.config.entity).$loadAll(
+                show: 'id,name'
+              ).then ((opts) ->
+                scope.config.choices = opts.objects
+              ), ((opts) ->
+                entity_error = true
+              )
+            catch e
+              entity_error = true
+              scope.config.choices = null
 
-      scope.getFieldTemplate = (config) ->
-        if config.choices
-          if config.type == 'int_float_string_none'
-            name = 'int_float_string_none_choices'
-          else
-            name = 'choices'
-        else
-          if config.name == 'password'
-            name = 'password'
-          else
-            name = config.type
+          scope.select2Opts = null
+          if scope.config.choices
+            scope.select2Opts = scope.$root.getSelect2Params(
+              {choices: scope.config.choices})
 
-        return "partials/directives/parameter_input/#{name}_field.html"
-  }
-)
+          scope.getFieldTemplate = (config) ->
+            if config.choices
+              if config.type == 'int_float_string_none'
+                name = 'int_float_string_none_choices'
+              else
+                name = 'choices'
+              if config.entity
+                name = 'entity_choices'
+            else
+              if config.name == 'password'
+                name = 'password'
+              else
+                name = config.type
+
+            return "partials/directives/parameter_input/#{name}_field.html"
+      }
+])
 
 .directive('piStringListNone', () ->
   return {
