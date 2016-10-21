@@ -4,7 +4,7 @@
 </alert-message>
 
 <div ng-init="init({model: schedule})" ng-controller="ScheduleActionsCtrl">
-    <h2 class="title">Task
+    <h2 class="title">Schedule
       <span title="Title"
         class="title" ng-bind="model.name || 'untitled schedule'"
         editable="model" value="model.name"
@@ -70,12 +70,12 @@
                 </div>
               </div>
 
-                <input type="hidden" ng-model="model.scenario" ng-bind="model.scenario" name="scenario" />
-                <div ng-show="task_config" ng-controller="TasksActionsCtrl">
+                <input type="hidden" ng-model="model.scenarios" ng-bind="model.scenarios" name="scenarios" />
+                <div ng-show="task_config" ng-controller="TasksActionsCtrl">ss
                   <h4>Periodic tasks scenario</h4>
-                    <a class="btn btn-info" ng-click="addTask(model.scenario)" ng-show="model.scenario | isArrayEmpty">Add Task</a>
+                    <a class="btn btn-info" ng-click="addTask(model.scenario)" ng-show="model.scenarios | isArrayEmpty">Add Task</a>
 
-                    <ul ng-init="tasks=model.scenario; parent_tasks=model.scenario;">
+                    <ul ng-init="tasks=model.scenarios; parent_tasks=model.scenarios;">
                       <li ng-repeat="task in tasks track by $index" ng-include="'partials/schedules/tasks/tasks.html'"></li>
                     </ul>
                 </div>
@@ -86,18 +86,18 @@
             </form>
         </div>
 
-        <div ng-show="action[1] == 'logs'">
+        <!--<div ng-show="action[1] == 'logs'">
             <div class="row">
               <div class="span12">
-                  Status: <span class="value">{{ model.status }}</span> <a ng-click="showLogs=!showLogs">(logs)</a><br/>
-                  <div ng-show="showLogs" class="well" ng-controller="LogMessageListCtrl" ng-init="init('taskschedule_log', model.id, 50)">
+                  Status: <span class="value">{{ model.type }}</span> <a ng-click="showLogs=!showLogs">(logs)</a><br/>
+                  <div ng-show="showLogs" class="well" ng-controller="LogMessageListCtrl" ng-init="init('trainmodel_log', model.id, 50)">
                     <div class="message">
                       <ng-include src="'partials/logmessages/list.html'"></ng-include>
                     </div>
                   </div>
               </div>
             </div>
-        </div>
+        </div>-->
       </div>
     </div>
 

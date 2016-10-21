@@ -32,12 +32,9 @@ angular.module('app.schedules.controllers', ['app.config', ])
   'Schedule'
 
 ($scope, $rootScope, Schedule) ->
-  $scope.changeEnabled = (schedule) ->
-    if schedule.enabled
-      schedule.enabled = false
-    else
-      schedule.enabled = true
-    schedule.$save().then (->
+  $scope.changeEnabled = (schedule, enabled) ->
+    schedule.enabled = enabled
+    schedule.$save(only: ['enabled']).then (->
       $scope.$emit('updateList', [])
     ), ((opts) ->
       $scope.setError(opts, 'updating periodic task schedule')
@@ -62,29 +59,29 @@ angular.module('app.schedules.controllers', ['app.config', ])
 
 ($scope, $rootScope, $routeParams, Schedule) ->
   if not $routeParams.id then err = "Can't initialize without schedule id"
-  $scope.schedule = new Schedule({id: $routeParams.id})
+  $scope.model = new Schedule({id: $routeParams.id})
   $scope.LOADED_SECTIONS = []
 
-  $scope.schedule.$load(
-    show: ['name','type','created_on','updated_on','enabled','description',
-           'scenario','schedule','created_by'].join(',')
+  $scope.model.$load(
+    show: ['name','created_on','updated_on','enabled','description',
+           'scenarios','interval','crontab','created_by'].join(',')
     ).then (->), ((opts)-> $scope.setError(opts, 'loading periodic task schedule'))
 
   $scope.go = (section) ->
-      fields = ''
-      mainSection = section[0]
-      if mainSection not in $scope.LOADED_SECTIONS
-        # is not already loaded
-        fields = ['name','type','created_on','updated_on','enabled','description',
-                 'scenario','schedule','created_by'].join(',')
+    fields = ''
+    mainSection = section[0]
+    if mainSection not in $scope.LOADED_SECTIONS
+      # is not already loaded
+      fields = ['name','created_on','updated_on','enabled','description',
+                'scenarios','interval','crontab','created_by'].join(',')
 
-      if fields isnt ''
-        $scope.schedule.$load
-            show: fields
-        .then ->
-          $scope.LOADED_SECTIONS.push mainSection
-        , (opts) ->
-          $scope.setError(opts, 'loading schedule details')
+    if fields isnt ''
+      $scope.model.$load
+          show: fields
+      .then ->
+        $scope.LOADED_SECTIONS.push mainSection
+      , (opts) ->
+        $scope.setError(opts, 'loading schedule details')
 
   $scope.initSections($scope.go)
 ])
@@ -96,7 +93,7 @@ angular.module('app.schedules.controllers', ['app.config', ])
 
   ($scope, $location, Schedule) ->
     $scope.model = new Schedule()
-    $scope.types = [{name: 'crontab'}, {name: 'interval'}]
+    $scope.types = ['crontab', 'interval']
     $scope.type_config = {
         crontab: [{name: 'minute', type: 'string', default: '*'},
                   {name: 'hour', type: 'string', default: '*'},
@@ -106,20 +103,25 @@ angular.module('app.schedules.controllers', ['app.config', ])
         interval: [{name:'every', type: 'integer'},
                    {name: 'period', type: 'string', choices: ['microseconds', 'seconds', 'minutes', 'hours', 'days']}]
     }
+    $scope.interval_config = $scope.type_config['interval']
+    $scope.crontab_config = $scope.type_config['crontab']
 
     $scope.task_types = ['single', 'chain', 'chord', 'group']
 
-    $scope.model.scenario = []
+    $scope.model.scenarios = []
     $scope.err = ''
     $scope.new = true
+    $scope.schedule_type = null
     $scope.model.$getConfiguration()
     .then (opts) ->
       $scope.task_config = opts.data.configuration
     , (opts) ->
       $scope.setError(opts, 'loading tasks configuration')
 
-    $scope.loadScheduleFields = (schedule_type) ->
-      $scope.schedule_config_params = $scope.type_config[schedule_type.name]
+    #$scope.loadScheduleFields = (schedule_type) ->
+    #  $scope.schedule_type = schedule_type['name']
+    #  console.log $scope.schedule_type
+    #$scope.schedule_config_params = $scope.type_config[schedule_type.name]
 
 ])
 

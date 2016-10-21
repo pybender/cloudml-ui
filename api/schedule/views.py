@@ -6,21 +6,21 @@ Periodic tasks schedules related resources.
 
 from api.base.resources import BaseResourceSQL
 from api import api
+from api.schedule.models import PeriodicTaskScenarios
+from api.schedule.forms import PeriodicTaskScenariosForm
 
 
 class ScheduleResource(BaseResourceSQL):
     """ Schedule API methods """
-    GET_ACTIONS = ('task_configuration', 'schedule_configuration')
+    GET_ACTIONS = ('configuration')
 
     # TODO: set model
-    # Model = Schedule
+    Model = PeriodicTaskScenarios
+    post_form = put_form = PeriodicTaskScenariosForm
 
-    def _get_task_configuration_action(self, **kwargs):
+    def _get_configuration_action(self, **kwargs):
         from api.tasks import ALLOWED_PERIODIC_TASKS
         return self._render({'configuration': ALLOWED_PERIODIC_TASKS})
 
-    def _get_schedule_configuration_action(self, **kwargs):
-        from api.tasks import ALLOWED_PERIODIC_TASKS
-        return self._render({'configuration': ALLOWED_PERIODIC_TASKS})
 
 api.add_resource(ScheduleResource, '/cloudml/schedule/')

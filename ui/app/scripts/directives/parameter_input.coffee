@@ -18,8 +18,6 @@ angular.module('app.directives')
         }
         templateUrl:'partials/directives/parameter_input/main.html',
         link: (scope, element, attrs, ngModel) ->
-          console.log ngModel
-          console.log scope.value
           if !scope.name?
             scope.name = scope.config.name
 

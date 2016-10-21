@@ -28,8 +28,8 @@ def upgrade():
     sa.Column('interval', JSONType(), nullable=True),
     sa.Column('crontab', JSONType(), nullable=True),
     sa.Column('enabled', sa.Boolean(), nullable=False),
-    sa.Column('updated_by_id', sa.Integer(), nullable=False),
-    sa.Column('created_by_id', sa.Integer(), nullable=False),
+    sa.Column('updated_by_id', sa.Integer(), nullable=True),
+    sa.Column('created_by_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['created_by_id'], ['user.id'], ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['updated_by_id'], ['user.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id')

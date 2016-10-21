@@ -18,15 +18,15 @@
             <th>Type</th>
             <th>Created</th>
             <th>Updated</th>
+            <th>Enabled</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           <tr ng-repeat="schedule in objects | orderBy:'created'">
             <td>
-              <span title="Schedule Name" class="name" ng-bind="schedule.name || 'schedule name here'" editable="schedule" value="schedule.name" editable-field="name" editable-input="text" editable-placement="right" editable-required></span>
-              <a href="#{{ schedule.objectUrl() }}">
-                ->
+              <a href="#/schedules/{{ schedule.id }}">
+                {{ schedule.name }}
               </a>
             </td>
             <td>{{ schedule.type }}</td>
@@ -39,10 +39,12 @@
                 <span title="dates in GMT">{{ schedule.updated_on|format_date }}</span><br>
                 <small ng-show="schedule.updated_by">by {{ schedule.updated_by.name }} ({{ schedule.updated_by.uid }})</small>
             </td>
+            <td>
+              <span ng-show="schedule.enabled">Yes</span>
+              <span ng-show="!schedule.enabled">No</span>
+            </td>
             <td ng-controller="ScheduleActionsCtrl">
-              <span ng-show="instance.enabled" class="text-info">Enabled</span>
-              <span ng-show="!instance.enabled" class="text-info">Disabled</span>
-              <a ng-click="changeEnabled(schedule)" title="enable/disable" class="btn btn-info"><i class="icon-check"></i></a>
+              <a ng-click="changeEnabled(schedule, !schedule.enabled)" title="Enable/Disable" class="btn btn-info"><i class="icon-check"></i></a>
               <button ng-click="delete_schedule(schedule)" class="btn btn-danger">
                   <i title="Delete your task schedule. Be careful - you could not recover it!" class="icon-remove"></i>
               </button>
