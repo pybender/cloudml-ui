@@ -67,6 +67,13 @@ angular.module('app.schedules.controllers', ['app.config', ])
            'scenarios','interval','crontab','created_by'].join(',')
     ).then (->), ((opts)-> $scope.setError(opts, 'loading periodic task schedule'))
 
+  $scope.model.$getConfiguration()
+  .then (opts) ->
+    $scope.task_config = opts.data.configuration
+  , (opts) ->
+    $scope.setError(opts, 'loading tasks configuration')
+  $scope.task_types = $scope.model.TASK_TYPES
+
   $scope.go = (section) ->
     fields = ''
     mainSection = section[0]
@@ -80,6 +87,7 @@ angular.module('app.schedules.controllers', ['app.config', ])
           show: fields
       .then ->
         $scope.LOADED_SECTIONS.push mainSection
+        console.log $scope.model.scenarios
       , (opts) ->
         $scope.setError(opts, 'loading schedule details')
 
@@ -93,35 +101,14 @@ angular.module('app.schedules.controllers', ['app.config', ])
 
   ($scope, $location, Schedule) ->
     $scope.model = new Schedule()
-    $scope.types = ['crontab', 'interval']
-    $scope.type_config = {
-        crontab: [{name: 'minute', type: 'string', default: '*'},
-                  {name: 'hour', type: 'string', default: '*'},
-                  {name: 'day_of_week', type: 'string', default: '*'},
-                  {name: 'day_of_month', type: 'string', default: '*'},
-                  {name: 'month_of_year', type: 'string', default: '*'}],
-        interval: [{name:'every', type: 'integer'},
-                   {name: 'period', type: 'string', choices: ['microseconds', 'seconds', 'minutes', 'hours', 'days']}]
-    }
-    $scope.interval_config = $scope.type_config['interval']
-    $scope.crontab_config = $scope.type_config['crontab']
-
-    $scope.task_types = ['single', 'chain', 'chord', 'group']
-
-    $scope.model.scenarios = []
-    $scope.err = ''
+    $scope.task_types = $scope.model.TASK_TYPES
     $scope.new = true
-    $scope.schedule_type = null
+
     $scope.model.$getConfiguration()
     .then (opts) ->
       $scope.task_config = opts.data.configuration
     , (opts) ->
       $scope.setError(opts, 'loading tasks configuration')
-
-    #$scope.loadScheduleFields = (schedule_type) ->
-    #  $scope.schedule_type = schedule_type['name']
-    #  console.log $scope.schedule_type
-    #$scope.schedule_config_params = $scope.type_config[schedule_type.name]
 
 ])
 

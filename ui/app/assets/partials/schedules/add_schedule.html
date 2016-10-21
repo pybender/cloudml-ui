@@ -24,7 +24,7 @@
   <div class="control-group" ng-class="{error: Form.type.$invalid || errorList.type}">
     <label class="control-label">Schedule Type</label>
     <div class="controls">
-      <select ng-model="model.type" name="type" ng-change="loadScheduleFields(Form.type.$viewValue)" required ng-options="value for value in types">
+      <select ng-model="model.type" name="type" required ng-options="value for value in model.SCHEDULE_TYPES">
       </select>
       <span ng-show="Form.type.$error.required" class="help-block">Select schedule type</span>
       <span ng-show="errorList.type" class="help-block" ng-bind="errorList.type" />
@@ -32,7 +32,7 @@
   </div>
   <div ng-show="Form.type.$viewValue == 'interval'">
     <h4>Interval Parameters</h4>
-    <div ng-repeat="item in interval_config" class="control-group">
+    <div ng-repeat="item in model.INTERVAL_CONFIG" class="control-group">
       <label class="control-label" title="Please input {{ item.name }}. Type: {{ item.type }}">{{ item.name }}</label>
       <div class="controls">
         <parameter-input ng-model="model.interval" config="item" name="item.name"></parameter-input>
@@ -43,7 +43,7 @@
 
   <div ng-show="Form.type.$viewValue == 'crontab'">
     <h4>Crontab Parameters</h4>
-    <div ng-repeat="item in crontab_config" class="control-group">
+    <div ng-repeat="item in model.CRONTAB_CONFIG" class="control-group">
       <label class="control-label" title="Please input {{ item.name }}. Type: {{ item.type }}">{{ item.name }}</label>
       <div class="controls">
         <parameter-input ng-model="model.crontab" config="item" name="item.name"></parameter-input>

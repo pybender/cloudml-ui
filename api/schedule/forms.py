@@ -33,9 +33,9 @@ class PeriodicTaskScenariosForm(BaseForm):
                 raise ValidationError('Interval should have an "every" value')
             try:
                 every = int(value['every'])
-                return {'period': value['period'], 'every': every}
             except Exception as exc:
                 raise ValidationError(exc.message, exc)
+        print value
         return value
 
     def clean_crontab(self, value, field):
@@ -50,13 +50,6 @@ class PeriodicTaskScenariosForm(BaseForm):
                 raise ValidationError('Crontab should have day_of_month value')
             if 'month_of_year' not in value or not value['month_of_year']:
                 raise ValidationError('Crontab should have month_of_year value')
-            return {
-                'minute': value['minute'],
-                'hour': value['hour'],
-                'day_of_week': value['day_of_week'],
-                'day_of_month': value['day_of_month'],
-                'month_of_year': value['month_of_year']
-            }
         return value
 
     def clean_scenarios(self, v, field):
@@ -84,4 +77,9 @@ class PeriodicTaskScenariosForm(BaseForm):
         if v:
             _validate_task(v)
         return v
+
+    def clean_description(self, value, field):
+        print "desc"
+        print value
+        return value
 

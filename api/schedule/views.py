@@ -23,4 +23,4 @@ class ScheduleResource(BaseResourceSQL):
         return self._render({'configuration': ALLOWED_PERIODIC_TASKS})
 
 
-api.add_resource(ScheduleResource, '/cloudml/schedule/')
+api.add_resource(ScheduleResource, '/cloudml/schedules/')
