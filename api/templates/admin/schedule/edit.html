@@ -1,0 +1,66 @@
+{% extends 'admin/model/create.html' %}
+
+{% block tail %}
+{{ super() }}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/5.5.9/jsoneditor.min.css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/5.5.9/jsoneditor.min.js"></script>
+
+<script>
+    $(document).ready( function() {
+        var $scenarios = $('#scenarios');
+        $scenarios.parent().append('<div id="jsoneditorscenarios" style="width: 720px; height: 450px;"></div>');
+        $scenarios.addClass('hidden');
+        var containerscenarios = document.getElementById('jsoneditorscenarios');
+        var optionsscenarios = { "mode": "code", "onChange":function(){  }};
+        var editorscenarios = new JSONEditor(containerscenarios, optionsscenarios);
+        editorscenarios.setText($scenarios.val());
+
+        var $interval = $('#interval');
+        $interval.parent().append('<div id="jsoneditorinterval" style="width: 720px; height: 150px;"></div>');
+        $interval.addClass('hidden');
+        var containerinterval = document.getElementById('jsoneditorinterval');
+        var optionsinterval = { "mode": "code", "onChange":function(){ }};
+        var editorinterval = new JSONEditor(containerinterval, optionsinterval);
+        editorinterval.setText($interval.val());
+
+        var $crontab = $('#crontab');
+        $crontab.parent().append('<div id="jsoneditorcrontab" style="width: 720px; height: 150px;"></div>');
+        $crontab.addClass('hidden');
+        var containercrontab = document.getElementById('jsoneditorcrontab');
+        var optionscrontab = { "mode": "code", "onChange":function(){ }};
+        var editorcrontab = new JSONEditor(containercrontab, optionscrontab);
+        editorcrontab.setText($crontab.val());
+
+        $('form').on('submit', function (e) {
+            e.preventDefault();
+            $this = this;
+            var text = editorscenarios.getText();
+            $scenarios.val(text);
+            text = editorinterval.getText();
+            $interval.val(text);
+            text = editorcrontab.getText();
+            $crontab.val(text);
+
+            var interval = $('#interval');
+            var crontab = $('#crontab');
+            $('.crontab-interval-error').remove();
+            if ((interval.val() != '') && (crontab.val() != ''))  {
+                var error01 = "<div class='crontab-interval-error' style='color: red'>Error: Only one of interval or crontab must be set.</div>";
+                interval.parent().append(error01);
+                crontab.parent().append(error01);
+                return false;
+            }
+            else if ((interval.val() == '') && (crontab.val() == '')) {
+                var error02 = "<div class='crontab-interval-error' style='color: red'>Error: One of interval or crontab must be set.</div>";
+                interval.parent().append(error02);
+                crontab.parent().append(error02);
+                return false;
+            }
+            else{
+                $this.submit();
+                return true;
+            }
+        });
+    });
+</script>
+{% endblock %}

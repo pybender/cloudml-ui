@@ -3,7 +3,14 @@
 from datetime import datetime
 from sqlalchemy import Column, Integer, DateTime
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
+from api import app
+from api.base.models import db
+
+engine = create_engine(app.config['ENGINE_URL'], pool_size=20, pool_recycle=3600)
+Session = sessionmaker(bind=engine, autocommit=True)
 
 class TimestampModel(object):
     id = Column(Integer, primary_key=True, autoincrement=True)

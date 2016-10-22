@@ -1,116 +1,70 @@
-from flask_admin.form import Select2Field, Select2TagsField
-from flask_admin.form.widgets import Select2Widget
+from flask_admin.form import Select2Field, Select2TagsField, rules
+from flask_admin.babel import gettext
 from sqlalchemy.orm import scoped_session, sessionmaker, sessionmaker
+from sqlalchemy.orm.attributes import get_history
 from cgi import escape
-from wtforms.compat import text_type
-from wtforms.widgets.core import HTMLString, html_params
-
+from wtforms.fields import TextAreaField
 from api import app, admin
 from api.base.admin import BaseAdmin
 from api.base.models import db
 from api.models import (PeriodicTask, CrontabSchedule, PeriodicTasks, IntervalSchedule, PeriodicTaskScenarios)
 from .tasks import *
+from .fields import SelectScenariosTask, JSONField
+from wtforms import validators
 
 class PeriodicTaskScenariosAdmin(BaseAdmin):
     Model = PeriodicTaskScenarios
+    create_template = 'admin/schedule/create.html'
+    edit_template = 'admin/schedule/edit.html'
+
     MIX_METADATA = False
+    column_list = ['id', 'name', 'enabled', 'status', 'interval', 'crontab', 'created_on', 'updated_on', 'created_by', 'updated_by']
+    # TODO try uniqum name for PeriodicTaskScenarios and PeriodicTask
+    form_overrides = {
+        'descriptions': TextAreaField,
+        'scenarios': JSONField,
+        'crontab': JSONField,
+        'interval': JSONField,
+    }
+
+    form_widget_args = {
+        'descriptions': {
+            'rows': 10,
+            'style': 'width: 720px; height: 100px;'
+        },
+        'scenarios': {
+            'rows': 1,
+            'style': 'width: 720px; height: 3px;'
+        },
+        'crontab': {
+            'rows': 5,
+            'style': 'width: 720px; height: 3px;',
+            'data-error': 'Error 1'
+        },
+        'interval': {
+            'rows': 5,
+            'style': 'width: 720px; height: 3px;',
+            'data-error': 'Error 2'
+        },
+        'error': {
+            'disabled':'disabled',
+            'style': 'width: 720px;'
+        },
+        'status': {
+            'disabled':'disabled'
+        }
+    }
+    # form_create_rules = [ rules.Field('name'), rules.Field('descriptions'), rules.Field('crontab'), rules.Field('interval') ]
+    # form_args = { 'crontab' : { 'validators': [try_crontab_interval] }, 'interval': { 'validators':[try_crontab_interval] } }
 
     def after_model_change(self, form, model, is_created):
-        #model.scenarios = {'name':model.name, 'chains':[{'chainname':'chain_1', ''}]}
-        model.scenarios = {'mainname':model.name,
-                           'type':'chain',
-                           'tasks':[
-                                    {'chainname':'Start upload header',
-                                     'type':'chain',
-                                     'tasks':[
-                                                { 'chainname':'Read header',
-                                                  'type':'chain',
-                                                  'tasks':[
-                                                             { 'chainname':'Get name header',
-                                                               'type':'chord',
-                                                               'tasks':[{'chainname': 'task.0.1', 'type':'single', 'tasks':['api.schedule.tasks.test_chord_01']},
-                                                                        {'chainname': 'task.0.2', 'type':'single', 'tasks':['api.schedule.tasks.test_chord_02']}],
-                                                               'callback': 'api.schedule.tasks.test_chord_03'
-                                                               },
-                                                             { 'chainname':'Upload header',
-                                                               'type':'chain',
-                                                               'tasks':[{'chainname': 'task.1.1', 'type':'single', 'tasks':['api.schedule.tasks.test_chain_01']},
-                                                                        {'chainname': 'task.1.2', 'type':'single', 'tasks':['api.schedule.tasks.test_chain_02']},
-                                                                        {'chainname': 'task.1.3', 'type':'single', 'tasks':['api.schedule.tasks.test_chain_01']},
-                                                                        {'chainname': 'task.1.4', 'type':'single', 'tasks':['api.schedule.tasks.test_chain_02']}
-                                                                        ]
-                                                               },
-                                                             { 'chainname': 'Finish upload',
-                                                               'type':'single',
-                                                               'tasks':['api.schedule.tasks.test_chain_01']
-                                                               }
-                                                  ]
-                                                }
-                                             ]
-                                     },
-                                    {'chainname':'Train model',
-                                     'type':'single',
-                                     'tasks':['api.schedule.tasks.test_single_01']
-                                     }
-                                  ]
-                           }
+        # model.scenarios = {'name':model.name, 'chains':[{'chainname':'chain_1', ''}]}
+        # model.crontab = {'minute':'*/5', 'hour':'*', 'day_off_week':'*', 'day_of_month':'5', 'month':''}
+        # model.interval = {"every":30, "period": "seconds"}
         model.save()
 
 admin.add_view(PeriodicTaskScenariosAdmin(
     name='Scenarios', category='Schedule'))
-
-class Select2ScenariosWidget(Select2Widget):
-    def __call__(self, field, **kwargs):
-        allow_blank = getattr(field, 'allow_blank', False)
-
-        kwargs['data-role'] = u'select2'
-
-        if allow_blank and not self.multiple:
-            kwargs['data-allow-blank'] = u'1'
-        print ("Select2ScenariosWidget")
-        return super(Select2ScenariosWidget, self).__call__(field, **kwargs)
-
-class SelectScenariosTask(Select2Field):
-    def __init__(self, label='Scenarios', validators=None, coerce=text_type,
-                 choices=None, allow_blank=True, blank_text=None, **kwargs):
-        self.allow_blank = allow_blank
-        self.blank_text = ''
-
-        super(Select2Field, self).__init__(
-            label, validators, coerce, choices, **kwargs
-        )
-
-    def process_data(self, value):
-        self.choices = PeriodicTask().tasks_scenarios
-        self.data = None
-
-    def iter_choices(self):
-        if self.allow_blank:
-            yield (u'__None', self.blank_text, self.data is None)
-        for value, label in self.choices:
-            yield (value, label, self.coerce(value) == self.data)
-
-    def process_formdata(self, valuelist):
-        if valuelist:
-            if valuelist[0] == '__None':
-                self.data = None
-            else:
-                try:
-                    self.data = int(valuelist[0])
-                except ValueError:
-                    raise ValueError(self.gettext(u'Invalid Choice: could not Scenarios Task'))
-        else:
-            self.data = None
-
-    def pre_validate(self, form):
-        if self.data is None:
-            return
-        super(Select2Field, self).pre_validate(form)
-
-    def populate_obj(self, obj, name):
-        if self.data:
-            kwargs = '{"task":"%s"}' % self.data
-            setattr(obj, 'kwargs', kwargs)
 
 class PeriodicTaskAdmin(BaseAdmin):
     Model = PeriodicTask
@@ -132,6 +86,8 @@ class PeriodicTaskAdmin(BaseAdmin):
             choices = zip(tasks, names)
         )
     )
+    # TODO Cannot change scenarios schedule task name
+    #def on_model_change (self, form, model, is_created): print ("on_model_change", model) try: old_name = get_history(model, 'name')[2][0] new_name = get_history(model, 'name')[0][0] if old_name != new_name: print ("on_model_change", new_name, old_name) except: pass
 
     def after_model_change(self, form, model, is_created):
         model.save()
@@ -172,22 +128,3 @@ class IntervalScheduleAdmin(BaseAdmin):
 
 admin.add_view(IntervalScheduleAdmin(
     name='Interval Schedule', category='Schedule'))
-
-#PeriodicTask
-
-"""
-class ConstraintError(Exception):
-    pass
-@event.listens_for(Session, "before_flush")
-def before_flush_listens_for(session, flush_context, instances):
-    print("__________________________________________________________________________")
-    print("before_flush")
-    for obj in session.new | session.dirty:
-        if isinstance(obj, PeriodicTask):
-            print ('before_flush PeriodicTask', obj)
-            if not obj.interval and not obj.crontab:
-                raise ConstraintError('One of interval or crontab must be set.')
-            if obj.interval and obj.crontab:
-                raise ConstraintError('Only one of interval or crontab must be set')
-            PeriodicTasks.changed(session, obj)
-"""

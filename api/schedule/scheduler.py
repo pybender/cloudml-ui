@@ -16,7 +16,7 @@ from models import (PeriodicTaskScenarios, PeriodicTask, CrontabSchedule, Period
 
 DEFAULT_MAX_INTERVAL = 5
 logger = get_logger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 ADD_ENTRY_ERROR = """\
 Couldn't add entry %r to database schedule: %r. Contents: %r
 """
@@ -37,6 +37,11 @@ class ModelEntry(ScheduleEntry):
         self.schedule = model.schedule
         self.args = json.loads(model.args or '[]')
         self.kwargs = json.loads(model.kwargs or '{}')
+
+        print ("ModelEntry args:", self.args)
+        print ("ModelEntry kwargs:", self.kwargs)
+
+
         self.total_run_count = model.total_run_count
         self.model = model
         self.options = {}  # need reconstruction
@@ -81,7 +86,7 @@ class ModelEntry(ScheduleEntry):
     @classmethod
     def to_model_schedule(cls, schedule, session):
         for schedule_type, model_type, model_field in cls.model_schedules:
-            logger.debug(cls.model_schedules)
+            print "to_model_schedule: %s, %s, %s," % (schedule_type, model_type, model_field)
             schedule = schedules.maybe_schedule(schedule)
             if isinstance(schedule, schedule_type):
                 model_schedule = model_type.from_schedule(session, schedule)
@@ -95,6 +100,10 @@ class ModelEntry(ScheduleEntry):
         for skip_field in skip_fields:
             fields.pop(skip_field, None)
         schedule = fields.pop('schedule')
+        print "---------------------------------------------------------------------------"
+        print "ModelEntry from_entry schedule: %s" %schedule
+        print "ModelEntry from_entry fields: %s" % fields
+
         model_schedule, model_field = cls.to_model_schedule(schedule, session)
         fields[model_field] = model_schedule
         fields['args'] = json.dumps(fields.get('args') or [])
@@ -114,6 +123,8 @@ class CloudmluiDatabaseScheduler(Scheduler):
     Entry = ModelEntry
     Model = PeriodicTask
     Changes = PeriodicTasks
+    Scenarios = PeriodicTaskScenarios
+
     _schedule = None
     _last_timestamp = None
     _initial_read = False
@@ -132,6 +143,7 @@ class CloudmluiDatabaseScheduler(Scheduler):
                              DEFAULT_MAX_INTERVAL)
 
         celery.databasescheduler = self
+        #print ("celery.tasks", celery.tasks)
     #TODO 1.0 Make correct delete celery beat task.
 
     def setup_schedule(self):
@@ -164,7 +176,7 @@ class CloudmluiDatabaseScheduler(Scheduler):
         for name, entry in dict_.items():
             try:
                 self._cureenttasks[name] = 1
-                s[name] = self.Entry.from_entry(name, self.session, **entry)
+
             except Exception as exc:
                 logger.error(ADD_ENTRY_ERROR, name, exc, entry)
         self.schedule.update(s)
@@ -175,8 +187,46 @@ class CloudmluiDatabaseScheduler(Scheduler):
         for model in self.Model.filter_by(self.session, enabled=True).all():
             try:
                 s[model.name] = self.Entry(model)
-            except ValueError:
-                pass
+                print (model)
+            except Exception as e:
+                logger.error(e)
+        for scenarios in self.session.query(self.Scenarios).filter_by(enabled=True).all():
+            try:
+                model = self.session.query(self.Model).filter_by(name=scenarios.name).first()
+                if not model:
+                    model = self.Model()
+                    model.name = scenarios.name
+                    model.task = scenarios.ScenariosPlayer
+
+                model.args = scenarios.args
+                model.kwargs = scenarios.kargs
+
+                if scenarios.crontab:
+                    cs = scenarios.schedule_crontab(self.session)
+                    if cs:
+                        model.crontab_id = cs.id
+                        model.crontab = cs
+                    else:
+                        raise ValueError('Cannot get crontab for scenarios {0!r} to model'.format(scenarios.name))
+                elif scenarios.interval:
+                    cs = scenarios.schedule_interval(self.session)
+                    if cs:
+                        model.interval_id = cs.id
+                        model.interval = cs
+                    else:
+                        raise ValueError('Cannot get interval for scenarios {0!r} to model'.format(scenarios.name))
+                else:
+                    raise ValueError('Cannot get interval or crontab for scenarios {0!r} to model'.format(scenarios.name))
+                self.session.add(model)
+                self.session.flush()
+                s[model.name] = self.Entry(model)
+                print (model, model.id)
+            except Exception as e:
+                import sys
+                import traceback
+                exc_info = sys.exc_info()
+                traceback.print_exception(*exc_info)
+                logger.error(e)
         return s
 
     def schedule_changed(self):
@@ -216,25 +266,19 @@ class CloudmluiDatabaseScheduler(Scheduler):
                 logger.error(ADD_ENTRY_ERROR, name, exc, entry)
         self.schedule.update(s)
 
-
     @property
     def schedule(self):
-        logger.debug('CloudmluiDatabaseScheduler schedule (property)...')
-
         update = False
         if not self._initial_read:
-            logger.debug('CloudmluiDatabaseScheduler: intial read')
+            logger.debug('CloudmluiDatabaseScheduler schedule (property): intial read')
             update = True
             self._initial_read = True
         elif self.schedule_changed():
-            logger.debug('---------------------------------------------------------------------------------------')
-            logger.debug('CloudmluiDatabaseScheduler: schedule_changed True.')
-            logger.debug('---------------------------------------------------------------------------------------')
+            logger.debug('CloudmluiDatabaseScheduler schedule (property): schedule_changed True.')
             update = True
 
         if update:
-            logger.debug('CloudmluiDatabaseScheduler: UPDATE all_as_schedule.')
-            # celery.control.purge()
+            logger.debug('CloudmluiDatabaseScheduler schedule (property): UPDATE all_as_schedule.')
             self.sync()
             self._schedule = self.all_as_schedule()
             logger.debug('Current schedule:\n%s', '\n'.join(repr(entry) for entry in self._schedule.itervalues()))

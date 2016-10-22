@@ -63,9 +63,9 @@ def test_chord_03(*args, **kwargs):
 
 @celery.task(base=SqlAlchemyTask)
 def test_task_01(*args, **kwargs):
-    logger.info('task 01')
+    name = kwargs.get('name', 'None')
     print("single:", args, kwargs)
-    return 21
+    return name
 
 @celery.task(base=SqlAlchemyTask)
 def test_single_01(*args, **kwargs):
@@ -88,29 +88,39 @@ def test_schedule_task():
 def test_schedule_task_01():
     logger.debug('Test %s start...' % 'test_schedule_task_01')
 
+
     logger.debug('Test %s completed.' % 'test_schedule_task_01')
 
+@celery.task(base=SqlAlchemyTask)
+def add(x,y):
+    return x+y
+@celery.task(base=SqlAlchemyTask)
+def mul(x,y):
+    return x*y
 
 @celery.task(base=SqlAlchemyTask)
 @app.regscheduletask()
 def scenarios_schedule_task(*args, **kwargs):
-    taskid = kwargs.get('task', None)
-    if taskid:
-        try:
-            taskid = int(taskid)
-            logger.info('Task %s start...' % taskid)
-            task = PeriodicTaskScenarios.query.filter_by(id=taskid).first()
-            if task:
-                scenario = TaskScenario(task.name, task.scenarios)
-                print (scenario)
-                logger.info('Task end.')
-                return 'Completed'
-
-        except Exception as e:
-            logger.error('Error get scenarios task  id: %s .' % taskid)
-            print ("Error", e)
-    else:
-        logger.info('No task enter')
-
-    return 'Error.GetTask'
+    try:
+        taskid = kwargs.get('scenario_task_id', None)
+        if not taskid:
+            raise ValueError('Error get scenarios task  id: %s .' % taskid)
+        taskid = int(taskid)
+        logger.info('Task %s start...' % taskid)
+        task = PeriodicTaskScenarios.query.filter_by(id=taskid).first()
+        if not task:
+            raise ValueError('Error get scenarios task  id: %s from db.' % taskid)
+        if task.task_parser():
+            logger.info('Start tasks.')
+            res0 = task.sctasks.delay().as_tuple()
+            #print ("res0:", res0)
+        logger.info('Task end.')
+        return 'Completed'
+    except Exception as e:
+        logger.error('Error error processing scenarios task (%s).' % e)
+        import sys
+        import traceback
+        exc_info = sys.exc_info()
+        traceback.print_exception(*exc_info)
+        return 'Error.ProcessingTask'
 
