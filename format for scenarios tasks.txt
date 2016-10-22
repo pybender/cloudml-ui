@@ -1,5 +1,4 @@
 JSON FORMAT
-
 Scenarios Work:
 type: chain, group, chord (only single chord availible in tree)
 {"chainname":"test_01",
