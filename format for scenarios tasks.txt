@@ -1,0 +1,20 @@
+JSON FORMAT
+
+Scenarios Work:
+type: chain, group, chord (only single chord availible in tree)
+{"chainname":"test_01",
+   "type":"chord",
+   "tasks":[
+      {"name":"api.schedule.tasks.test_task_01", "args":[1, 2 ], "kwargs":{ "name":1 }},
+      {"name":"api.schedule.tasks.test_task_01", "args":[3, 4 ], "kwargs":{ "name":2 }}
+   ],
+   "callback":{
+      "name":"api.schedule.tasks.test_task_01", "args":[10, 11], "kwargs":{ "name":1000 }}
+}
+
+interval:
+{"every":30, "period": "seconds"}
+where period can be: "microseconds", ""seconds",  "minutes", "hours", "days"
+
+crontab:
+{'minute':'*/5', 'hour':'*', 'day_off_week':'*', 'day_of_month':'5', 'month':'*'}
