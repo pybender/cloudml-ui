@@ -16,7 +16,8 @@ from models import (PeriodicTaskScenarios, PeriodicTask, CrontabSchedule, Period
 
 DEFAULT_MAX_INTERVAL = 5
 logger = get_logger(__name__)
-logger.setLevel(logging.DEBUG)
+#logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 ADD_ENTRY_ERROR = """\
 Couldn't add entry %r to database schedule: %r. Contents: %r
 """
@@ -37,11 +38,6 @@ class ModelEntry(ScheduleEntry):
         self.schedule = model.schedule
         self.args = json.loads(model.args or '[]')
         self.kwargs = json.loads(model.kwargs or '{}')
-
-        print ("ModelEntry args:", self.args)
-        print ("ModelEntry kwargs:", self.kwargs)
-
-
         self.total_run_count = model.total_run_count
         self.model = model
         self.options = {}  # need reconstruction
@@ -86,7 +82,6 @@ class ModelEntry(ScheduleEntry):
     @classmethod
     def to_model_schedule(cls, schedule, session):
         for schedule_type, model_type, model_field in cls.model_schedules:
-            print "to_model_schedule: %s, %s, %s," % (schedule_type, model_type, model_field)
             schedule = schedules.maybe_schedule(schedule)
             if isinstance(schedule, schedule_type):
                 model_schedule = model_type.from_schedule(session, schedule)
@@ -100,10 +95,6 @@ class ModelEntry(ScheduleEntry):
         for skip_field in skip_fields:
             fields.pop(skip_field, None)
         schedule = fields.pop('schedule')
-        print "---------------------------------------------------------------------------"
-        print "ModelEntry from_entry schedule: %s" %schedule
-        print "ModelEntry from_entry fields: %s" % fields
-
         model_schedule, model_field = cls.to_model_schedule(schedule, session)
         fields[model_field] = model_schedule
         fields['args'] = json.dumps(fields.get('args') or [])
@@ -187,7 +178,6 @@ class CloudmluiDatabaseScheduler(Scheduler):
         for model in self.Model.filter_by(self.session, enabled=True).all():
             try:
                 s[model.name] = self.Entry(model)
-                print (model)
             except Exception as e:
                 logger.error(e)
         for scenarios in self.session.query(self.Scenarios).filter_by(enabled=True).all():
@@ -219,8 +209,10 @@ class CloudmluiDatabaseScheduler(Scheduler):
                     raise ValueError('Cannot get interval or crontab for scenarios {0!r} to model'.format(scenarios.name))
                 self.session.add(model)
                 self.session.flush()
+                scenarios.periodictask_id = model.id
+                self.session.add(scenarios)
+                self.session.flush()
                 s[model.name] = self.Entry(model)
-                print (model, model.id)
             except Exception as e:
                 import sys
                 import traceback

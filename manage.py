@@ -41,7 +41,7 @@ class Celeryd(Command):
     def run(self, **kwargs):
         # os.system("env CELERYD_FSNOTIFY=stat celery -A api.tasks worker --concurrency=10 -Q default -E --loglevel=debug")
         #os.system("env CELERYD_FSNOTIFY=stat celery -A api.tasks worker --beat --concurrency=10 -Q default -E --loglevel=info")
-        os.system("env CELERYD_FSNOTIFY=stat celery -A api.tasks worker --beat -S api.schedule.scheduler.CloudmluiDatabaseScheduler --concurrency=10 -Q default -E --loglevel=debug")
+        os.system("env CELERYD_FSNOTIFY=stat celery -A api.tasks worker --beat -S api.schedule.scheduler.CloudmluiDatabaseScheduler --concurrency=10 -Q default -E --loglevel=info")
 
 class Celerybeat(Command):
     """Runs the default Celery worker node."""

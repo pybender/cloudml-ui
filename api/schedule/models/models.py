@@ -4,8 +4,13 @@ import json
 import datetime
 import logging
 from functools import partial
+from flask import has_request_context, request
 
 from sqlalchemy.orm import relationship, deferred, backref, foreign, remote
+from sqlalchemy import Column, String, DateTime, ForeignKey, Integer, Boolean
+from sqlalchemy_utils.types.choice import ChoiceType
+from sqlalchemy.orm import validates
+
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.sql import text
 from sqlalchemy import Index, func
@@ -14,12 +19,11 @@ from sqlalchemy import event, and_
 from sqlalchemy.ext.hybrid import hybrid_method
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.sql.expression import ColumnClause
+from sqlalchemy import inspect
 
 from celery import schedules
 from celery.canvas import signature, chain, group, chord
 from celery.utils.log import get_logger
-from sqlalchemy import Column, String, DateTime, ForeignKey, Integer, Boolean
-from sqlalchemy_utils.types.choice import ChoiceType
 
 from api.base.models import db, BaseModel, BaseMixin, JSONType, S3File
 from api.base.models.models import BaseDeployedEntity
@@ -58,20 +62,16 @@ class IntervalSchedule(Base):
 
     @classmethod
     def from_interval(cls, session, every, period):
-        print ("from_interval 00:", every, period)
         obj = cls.filter_by(session, every=every, period=period).first()
         if obj is None:
             obj = cls(every=every, period=period)
             session.add(obj)
-        print ("from_interval 01", obj)
         return obj
 
     @classmethod
     def from_schedule(cls, session, schedule, period='seconds'):
         #TODO not correct period send
-        print ("INTERVAL:", schedule, period)
         every = max(schedule.run_every.total_seconds(), 0)
-        print ("INTERVAL every:", schedule.run_every, schedule.run_every.total_seconds(), every)
         obj = cls.filter_by(session, every=every, period=period).first()
         if obj is None:
             return cls(every=every, period=period)
@@ -190,6 +190,18 @@ class PeriodicTask(Base):
             choices.append((task.id, task.name))
         return choices
 
+    @classmethod
+    def get_periodic_task_byid(cls, id, session = None):
+        session = session or Session()
+        p_task = PeriodicTask.filter_by(session, id=id).first()
+        return p_task
+
+    @classmethod
+    def get_periodic_task_byname(cls, name, session = None):
+        session = session or Session()
+        p_task = PeriodicTask.filter_by(session, name=name).first()
+        return p_task
+
     def save(self):
         print ("PeriodicTask save")
         pass
@@ -203,8 +215,9 @@ class PeriodicTaskScenarios(BaseModel, db.Model):
     STATUS_ERROR_PARSER = 'Parser error'
     ScenariosPlayer = 'api.schedule.tasks.scenarios_schedule_task'
 
+    name = db.Column(db.String(100), nullable=False, unique=True)
 
-    name = db.Column(db.String(100))
+    periodictask_id = Column(Integer, nullable=True)
     descriptions = db.Column(db.String(254))
     enabled = db.Column(Boolean, default=True)
     no_changes = db.Column(Boolean, default=False)
@@ -217,23 +230,23 @@ class PeriodicTaskScenarios(BaseModel, db.Model):
     chorduse = False
     sctasks = None
     celeryregistertask = celery.tasks.keys()
-    # celeryregistertask = app.scheduletasks.keys()
-    session = None
-    # TODO for dev only  start
+    session = db.session
 
-    def __init__(self, session=None):
-        self.session = session or Session()
+    @property
+    def periodictask(self):
+        ptask = None
+        if self.periodictask_id:
+            ptask = PeriodicTask.filter_by(self.session, id=self.periodictask_id).first()
+        return ptask
 
     @property
     def args(self):
-        #try:  args = self.scenarios['args'] except: args = []
         args = []
         return json.dumps(args)
 
     @property
     def kargs(self):
         kargs = dict(scenario_task_id = self.id)
-        #try: if type(self.scenarios['kargs']) is dict: kargs.update(self.scenarios['kargs']) except: pass
         return json.dumps(kargs)
 
     def schedule_crontab(self, session):
@@ -263,7 +276,6 @@ class PeriodicTaskScenarios(BaseModel, db.Model):
             cs = IntervalSchedule.from_interval(session, self.interval['every'], self.interval['period'])
         else:
             cs = None
-
         return cs
 
     def _enable(self):
@@ -272,10 +284,11 @@ class PeriodicTaskScenarios(BaseModel, db.Model):
         self.save()
 
     def _disable(self):
+        print ("_disable")
         self.no_changes = True
         self.enabled = False
-        self.save()
-#       self.session.add(model)
+        self.session.add(self)
+        self.session.commit()
 
 #    @staticmethod def save_model(session, obj): session.add(obj)
 #    def save(self): super(PeriodicTaskScenarios, self).save()
@@ -366,6 +379,30 @@ class PeriodicTaskScenarios(BaseModel, db.Model):
         else:
             raise ValueError('Error validate 07. Not correct\
                               group type for tasks: {0!r}.'.format(chainname))
+
+    @validates('name')
+    def validate_name(self, key, name):
+        self.oldname = self.name
+        if self.name != name:
+            p_task = PeriodicTask.get_periodic_task_byname(name, self.session)
+            if p_task:
+                raise  ValueError('Error: duplicate task name in  Periodic Task.')
+        return name
+
+    def save(self, commit=True):
+        if has_request_context():
+            self._set_user(getattr(request, 'user', None))
+        if self.periodictask_id:
+            p_task = PeriodicTask.get_periodic_task_byid(self.periodictask_id, self.session)
+            p_task.name = self.name
+            self.session.add(p_task)
+        self.session.add(self)
+        if commit:
+            self.session.commit()
+        if not self.enabled:
+            if self.periodictask:
+                self.session.delete(self.periodictask)
+                self.session.commit()
 
     def __str__(self):
         return self.name

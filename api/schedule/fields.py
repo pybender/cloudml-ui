@@ -5,9 +5,8 @@ from flask_admin._compat import text_type, as_unicode
 from wtforms import widgets
 from wtforms.compat import text_type
 from wtforms.widgets.core import HTMLString, html_params
-from wtforms.fields import TextAreaField
-
-from api.models import (PeriodicTask, CrontabSchedule, PeriodicTasks, IntervalSchedule, PeriodicTaskScenarios)
+from wtforms.fields import TextAreaField, Field, StringField
+from .models import (PeriodicTask, CrontabSchedule, PeriodicTasks, IntervalSchedule, PeriodicTaskScenarios)
 
 class CKTextAreaWidget(widgets.TextArea):
     def __call__(self, field, **kwargs):
@@ -16,6 +15,23 @@ class CKTextAreaWidget(widgets.TextArea):
 
 class CKTextAreaField(TextAreaField):
     widget = CKTextAreaWidget()
+
+class PeriodicTaskScenariosNameField(StringField):
+    def pre_validate(self, valuelist):
+        print "pre_validate 1:", self.data
+        if False:
+            if not PeriodicTaskScenarios.validity_name(self.data):
+                raise ValueError(self.gettext("duplicate Scenario's name. Name be uniqum for Scenarios and Tasks"))
+
+    def process_formdata(self, valuelist):
+        if valuelist:
+            value = valuelist[0]
+            # raise ValueError(self.gettext('Invalid Scenarios Name 1'))
+            # allow saving blank field as None
+            if not value:
+                self.data = None
+                raise ValueError(self.gettext("Scenarios Name can't be empty"))
+            self.data = value
 
 class JSONField(TextAreaField):
     def _value(self):

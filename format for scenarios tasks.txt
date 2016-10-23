@@ -5,7 +5,14 @@ type: chain, group, chord (only single chord availible in tree)
    "type":"chord",
    "tasks":[
       {"name":"api.schedule.tasks.test_task_01", "args":[1, 2 ], "kwargs":{ "name":1 }},
-      {"name":"api.schedule.tasks.test_task_01", "args":[3, 4 ], "kwargs":{ "name":2 }}
+      {"name":"api.schedule.tasks.test_task_01", "args":[3, 4 ], "kwargs":{ "name":2 }},
+      {"chainname":"Upload",
+       "type":"chain",
+       "tasks":[
+          {"name":"api.schedule.tasks.test_task_01", "args":[10, 20 ], "kwargs":{ "name":3 }},
+          {"name":"api.schedule.tasks.test_task_01", "args":[30, 40 ], "kwargs":{ "name":4 }}
+         ]
+       }
    ],
    "callback":{
       "name":"api.schedule.tasks.test_task_01", "args":[10, 11], "kwargs":{ "name":1000 }}

@@ -9,7 +9,7 @@ from api.base.admin import BaseAdmin
 from api.base.models import db
 from api.models import (PeriodicTask, CrontabSchedule, PeriodicTasks, IntervalSchedule, PeriodicTaskScenarios)
 from .tasks import *
-from .fields import SelectScenariosTask, JSONField
+from .fields import SelectScenariosTask, JSONField, PeriodicTaskScenariosNameField
 from wtforms import validators
 
 class PeriodicTaskScenariosAdmin(BaseAdmin):
@@ -52,15 +52,23 @@ class PeriodicTaskScenariosAdmin(BaseAdmin):
         },
         'status': {
             'disabled':'disabled'
+        },
+        'periodictask_id': {
+            'disabled':'disabled'
         }
     }
     # form_create_rules = [ rules.Field('name'), rules.Field('descriptions'), rules.Field('crontab'), rules.Field('interval') ]
     # form_args = { 'crontab' : { 'validators': [try_crontab_interval] }, 'interval': { 'validators':[try_crontab_interval] } }
 
+    def on_model_change(self, form, model, is_created):
+        print ("on_model_change", form, model, is_created)
+
     def after_model_change(self, form, model, is_created):
         # model.scenarios = {'name':model.name, 'chains':[{'chainname':'chain_1', ''}]}
         # model.crontab = {'minute':'*/5', 'hour':'*', 'day_off_week':'*', 'day_of_month':'5', 'month':''}
         # model.interval = {"every":30, "period": "seconds"}
+        print ("after_model_change", form, model, is_created)
+        model.status = model.STATUS_NEW
         model.save()
 
 admin.add_view(PeriodicTaskScenariosAdmin(
