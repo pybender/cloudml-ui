@@ -1,16 +1,11 @@
-from flask_admin.form import Select2Field, Select2TagsField, rules
-from flask_admin.babel import gettext
-from sqlalchemy.orm import scoped_session, sessionmaker, sessionmaker
-from sqlalchemy.orm.attributes import get_history
-from cgi import escape
+from flask_admin.form import Select2Field
 from wtforms.fields import TextAreaField
 from api import app, admin
 from api.base.admin import BaseAdmin
-from api.base.models import db
 from api.models import (PeriodicTask, CrontabSchedule, PeriodicTasks, IntervalSchedule, PeriodicTaskScenarios)
 from .tasks import *
-from .fields import SelectScenariosTask, JSONField, PeriodicTaskScenariosNameField
-from wtforms import validators
+from .fields import SelectScenariosTask, JSONField
+
 
 class PeriodicTaskScenariosAdmin(BaseAdmin):
     Model = PeriodicTaskScenarios
@@ -19,7 +14,6 @@ class PeriodicTaskScenariosAdmin(BaseAdmin):
 
     MIX_METADATA = False
     column_list = ['id', 'name', 'enabled', 'status', 'interval', 'crontab', 'created_on', 'updated_on', 'created_by', 'updated_by']
-    # TODO try uniqum name for PeriodicTaskScenarios and PeriodicTask
     form_overrides = {
         'descriptions': TextAreaField,
         'scenarios': JSONField,
@@ -64,10 +58,6 @@ class PeriodicTaskScenariosAdmin(BaseAdmin):
         print ("on_model_change", form, model, is_created)
 
     def after_model_change(self, form, model, is_created):
-        # model.scenarios = {'name':model.name, 'chains':[{'chainname':'chain_1', ''}]}
-        # model.crontab = {'minute':'*/5', 'hour':'*', 'day_off_week':'*', 'day_of_month':'5', 'month':''}
-        # model.interval = {"every":30, "period": "seconds"}
-        print ("after_model_change", form, model, is_created)
         model.status = model.STATUS_NEW
         model.save()
 
