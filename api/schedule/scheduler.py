@@ -1,22 +1,16 @@
 import json
 import logging
 from multiprocessing.util import Finalize
-
 from api import app, celery
-from api.base.models import db
-
 from celery import schedules
 from celery.beat import ScheduleEntry, Scheduler
 from celery.utils.log import get_logger
 from celery.utils.encoding import safe_str
 from celery.utils.timeutils import is_naive
-
 from models import (PeriodicTaskScenarios, PeriodicTask, CrontabSchedule, PeriodicTasks, IntervalSchedule, Session)
-#Session = db.session
 
 DEFAULT_MAX_INTERVAL = 5
 logger = get_logger(__name__)
-#logger.setLevel(logging.DEBUG)
 logger.setLevel(logging.INFO)
 ADD_ENTRY_ERROR = """\
 Couldn't add entry %r to database schedule: %r. Contents: %r
@@ -110,41 +104,32 @@ class ModelEntry(ScheduleEntry):
 
 class CloudmluiDatabaseScheduler(Scheduler):
     sync_every = 5
-
     Entry = ModelEntry
     Model = PeriodicTask
     Changes = PeriodicTasks
     Scenarios = PeriodicTaskScenarios
-
     _schedule = None
     _last_timestamp = None
     _initial_read = False
 
     def __init__(self, initcelery = 'INIT', session=None, *args, **kwargs):
-        logger.info("Start Cloudmlui celery beat database scheduler...")
         self.session = session or Session()
         self._cureenttasks = {}
         self._dirty = set()
         self._finalize = Finalize(self, self.sync, exitpriority=5)
-        logger.debug(LOGER_INFO, 'args', args)
-        logger.debug(LOGER_INFO, 'kwargs', kwargs)
         super(CloudmluiDatabaseScheduler, self).__init__(*args, **kwargs)
         self.max_interval = (kwargs.get('max_interval') or
                              self.app.conf.CELERYBEAT_MAX_LOOP_INTERVAL or
                              DEFAULT_MAX_INTERVAL)
 
         celery.databasescheduler = self
-        #print ("celery.tasks", celery.tasks)
-    #TODO 1.0 Make correct delete celery beat task.
 
     def setup_schedule(self):
-        logger.debug('CloudmluiDatabaseScheduler setup_schedule...')
         self.install_default_entries({})
         self.update_from_dict(self.app.conf.CELERYBEAT_SCHEDULE)
         self.update_from_db(self.schedule)
 
     def install_default_entries(self, data):
-        logger.debug('CloudmluiDatabaseScheduler install_default_entries...')
         entries = {}
         if self.app.conf.CELERY_TASK_RESULT_EXPIRES:
             entries.setdefault(
@@ -157,12 +142,10 @@ class CloudmluiDatabaseScheduler(Scheduler):
         self.update_from_dict(entries)
 
     def update_from_db(self, data):
-        logger.debug('CloudmluiDatabaseScheduler update_from_db...')
         entries = {}
         self.update_from_dict(entries)
 
     def update_from_dict(self, dict_):
-        logger.debug('CloudmluiDatabaseScheduler update_from_dict...')
         s = {}
         for name, entry in dict_.items():
             try:
@@ -173,13 +156,14 @@ class CloudmluiDatabaseScheduler(Scheduler):
         self.schedule.update(s)
 
     def all_as_schedule(self):
-        logger.debug('CloudmluiDatabaseScheduler: all_as_schedule')
         s = {}
+        # Get all tasks from Periodic Task table
         for model in self.Model.filter_by(self.session, enabled=True).all():
             try:
                 s[model.name] = self.Entry(model)
             except Exception as e:
                 logger.error(e)
+        # Get all scenarios from Periodic Task Scenarios table and make Periodic Task from it
         for scenarios in self.session.query(self.Scenarios).filter_by(enabled=True).all():
             try:
                 model = self.session.query(self.Model).filter_by(name=scenarios.name).first()
@@ -222,7 +206,6 @@ class CloudmluiDatabaseScheduler(Scheduler):
         return s
 
     def schedule_changed(self):
-        logger.debug('CloudmluiDatabaseScheduler schedule_changed...')
         last, ts = self._last_timestamp, self.Changes.last_change(self.session)
         try:
             if ts and ts > (last if last else ts):
@@ -232,13 +215,11 @@ class CloudmluiDatabaseScheduler(Scheduler):
         return False
 
     def reserve(self, entry):
-        logger.debug('CloudmluiDatabaseScheduler reserve...')
         new_entry = Scheduler.reserve(self, entry)
         self._dirty.add(new_entry.name)
         return new_entry
 
     def sync(self):
-        logger.debug('CloudmluiDatabaseScheduler - sync...')
         _tried = set()
         while self._dirty:
             try:
@@ -249,7 +230,6 @@ class CloudmluiDatabaseScheduler(Scheduler):
                 logger.error("sync key error ")
 
     def update_from_dict(self, dict_):
-        logger.debug('CloudmluiDatabaseScheduler update_from_dict...')
         s = {}
         for name, entry in dict_.items():
             try:
@@ -262,15 +242,11 @@ class CloudmluiDatabaseScheduler(Scheduler):
     def schedule(self):
         update = False
         if not self._initial_read:
-            logger.debug('CloudmluiDatabaseScheduler schedule (property): intial read')
             update = True
             self._initial_read = True
         elif self.schedule_changed():
-            logger.debug('CloudmluiDatabaseScheduler schedule (property): schedule_changed True.')
             update = True
-
         if update:
-            logger.debug('CloudmluiDatabaseScheduler schedule (property): UPDATE all_as_schedule.')
             self.sync()
             self._schedule = self.all_as_schedule()
             logger.debug('Current schedule:\n%s', '\n'.join(repr(entry) for entry in self._schedule.itervalues()))
