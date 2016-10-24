@@ -44,7 +44,7 @@ def after_update(mapper, connection, target):
     PeriodicTasks.changed(session, target)
 # TODO correct delete beat task fro celery
 
-def after_delete_periodic_task_scenarios(mapper, connection, target):
+def before_delete_periodic_task_scenarios(mapper, connection, target):
     session = Session()
     try:
         task = PeriodicTask.filter_by(session, id=target.periodictask_id).first()
@@ -57,7 +57,6 @@ def after_delete_periodic_task_scenarios(mapper, connection, target):
 
 def after_delete_periodic_task(mapper, connection, target):
     session = Session()
-    print ("after_delete_periodic_task")
     try:
         scenarios = session.query(PeriodicTaskScenarios).filter_by(periodictask_id=target.id).first()
         if scenarios:
@@ -73,7 +72,7 @@ event.listen(PeriodicTask, "after_insert", after_update)
 event.listen(PeriodicTask, "after_update", after_update)
 event.listen(PeriodicTask, "before_update", before_update_periodic_task)
 
-event.listen(PeriodicTaskScenarios, "after_delete", after_delete_periodic_task_scenarios)
+event.listen(PeriodicTaskScenarios, "before_delete", before_delete_periodic_task_scenarios)
 event.listen(PeriodicTaskScenarios, "after_insert", after_update)
 event.listen(PeriodicTaskScenarios, "after_update", after_update)
 
