@@ -199,10 +199,6 @@ class CloudmluiDatabaseScheduler(Scheduler):
                 self.session.flush()
                 s[model.name] = self.Entry(model)
             except Exception as e:
-                import sys
-                import traceback
-                exc_info = sys.exc_info()
-                traceback.print_exception(*exc_info)
                 logger.error(e)
         return s
 
