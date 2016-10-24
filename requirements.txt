@@ -14,7 +14,7 @@ scipy==0.12.0
 #-e git+https://github.com/nanli0416/scikit-learn.git@new-feat-feature_extraction-text#egg=scikit-learn
 gensim==0.12.3
 psycopg2==2.4.6 # sudo apt-get install libpq-dev python-dev
-celery==3.0.22
+celery==3.1.24
 flower==0.7.3
 tornado==3.2.2
 supervisor
