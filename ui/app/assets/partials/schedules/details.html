@@ -3,116 +3,114 @@
 <alert-message ng-show="err" class="alert-error" msg='{{ err }}' trace="{{ trace }}" unsafe>
 </alert-message>
 
-<div ng-init="init({model: model})" ng-controller="ScheduleActionsCtrl">
-    <h2 class="title">Schedule
-      <span title="Title"
+<h2 class="title">Schedule
+  <span title="Title"
         class="title" ng-bind="model.name || 'untitled schedule'"
         editable="model" value="model.name"
         editable-field="name" editable-input="text"
         editable-placement="right" editable-required></span> details
-      <div class="actions">
-        <button ng-click="delete_schedule(model)" class="btn btn-danger">
-          <i title="Delete your task schedule. Be careful - you could not recover it!" class="icon-remove"></i> Delete
-        </button>
-      </div>
-    </h2>
-    <p class="clear clearfix"></p>
 
-    <ul class="nav nav-tabs" id="tabs" ng-show="model.loaded">
-      <li ng-class="{active: action[0] == 'model'}">
-        <a ng-click="setSection(['schedule', 'details'])">Details</a>
-      </li>
-      <li ng-class="{active: action[0] == 'model'}">
-        <a ng-click="setSection(['schedule', 'logs'])">Logs</a>
-      </li>
-    </ul>
+        <span class="badge badge-info" ng-show="model.enabled">Enabled</span>
+        <span class="badge" ng-show="!model.enabled">Disabled</span>
 
-    <div class="tab-content" ng-show="model.loaded">
-      <div ng-show="action[0] == 'model'">
-        <div ng-show="action[1] == 'details'" >
-            <div>
-                Description: <span title="Description" class="description" ng-bind="model.description || 'not specified'" editable="model" value="model.description" editable-field="description" editable-input="textarea" editable-placement="right"></span>
+</h2>
+<div ng-init="init({model: model})" ng-controller="ScheduleActionsCtrl">
+  <div class="actions">
+    <button ng-click="changeEnabled(model, !model.enabled)" class="btn btn-info">
+      <i title="Enable/Disable" class="icon-check"></i> <span ng-show="model.enabled">Disable</span><span ng-show="!model.enabled">Enable</span>
+    </button>
+    <button ng-click="delete_schedule(model)" class="btn btn-danger">
+      <i title="Delete your task schedule. Be careful - you could not recover it!" class="icon-remove"></i> Delete
+    </button>
+  </div>
+</div>
+<p class="clear clearfix"></p>
+
+<ul class="nav nav-tabs" ng-show="model.loaded">
+  <li ng-class="{active: action[1] == 'details'}">
+    <a ng-click="setSection(['model', 'details'])">Details</a>
+  </li>
+  <li ng-class="{active: action[1] == 'logs'}">
+    <a ng-click="setSection(['model', 'logs'])">Logs</a>
+  </li>
+</ul>
+
+<div class="tab-content" ng-show="model.loaded">
+  <div ng-show="action[1] == 'details'">
+
+    <div>
+        Description: <span title="Description" class="descriptions" ng-bind="model.descriptions || 'not specified'" editable="model" value="model.descriptions" editable-field="descriptions" editable-input="textarea" editable-placement="right"></span>
+    </div>
+    <div ng-show="model.status">
+        Status: <span class="value">{{ model.status }}</span>
+    </div>
+    <div ng-show="model.created_by">
+        Created by: <span class="value">{{ model.created_by.name }} ({{ model.created_by.uid }})</span>
+    </div>
+    <div ng-show="model.updated_on">
+        Updated on: <span class="value">{{ model.updated_on | full_format_date }}</span>
+    </div>
+    <br/>
+    <div ng-controller="SaveObjectCtl" ng-init="{model: model}">
+      <form name="Form" class="form-horizontal">
+        <div class="span5">
+          <div class="control-group" ng-class="{error: Form.type.$invalid || errorList.type}">
+            <label class="control-label">Schedule Type</label>
+            <div class="controls">
+              <select ng-model="model.type" name="type" required ng-options="value for value in model.SCHEDULE_TYPES">
+              </select>
+              <span ng-show="Form.type.$error.required" class="help-block">Select schedule type</span>
+              <span ng-show="errorList.type" class="help-block" ng-bind="errorList.type" />
             </div>
-            <div ng-show="model.created_by">
-                Created by:
-                <span class="value">{{ model.created_by.name }} ({{ model.created_by.uid }})</span>
+          </div>
+          <div ng-show="Form.type.$viewValue == 'interval'">
+            <h4>Interval Parameters</h4>
+            <div ng-repeat="item in model.INTERVAL_CONFIG" class="control-group">
+              <label class="control-label" title="Please input {{ item.name }}. Type: {{ item.type }}">{{ item.name }}</label>
+              <div class="controls">
+                <parameter-input ng-model="model.intervalDict" config="item" name="item.name"></parameter-input>
+                <span class="help-block" ng-show="Form[item.name].$invalid">invalid</span>
+              </div>
             </div>
-            <div ng-show="model.updated_by">
-                Updated by:
-                <span class="value">{{ model.updated_by.name }} ({{ model.updated_by.uid }})</span>
+          </div>
+
+          <div ng-show="Form.type.$viewValue == 'crontab'">
+            <h4>Crontab Parameters</h4>
+            <div ng-repeat="item in model.CRONTAB_CONFIG" class="control-group">
+              <label class="control-label" title="Please input {{ item.name }}. Type: {{ item.type }}">{{ item.name }}</label>
+              <div class="controls">
+                <parameter-input ng-model="model.crontabDict" config="item" name="item.name"></parameter-input>
+                <span class="help-block" ng-show="Form[item.name].$invalid">invalid</span>
+              </div>
             </div>
+          </div>
 
-            <div ng-controller="ObjEditCtrl" ng-init="{model: model}">
-            <form name="Form" class="form-horizontal">
-              <div class="control-group" ng-class="{error: Form.type.$invalid || errorList.type}">
-                <label class="control-label">Schedule Type</label>
-                <div class="controls">
-                  <select ng-model="model.type" name="type" required ng-options="value for value in model.SCHEDULE_TYPES">
-                  </select>
-                  <span ng-show="Form.type.$error.required" class="help-block">Select schedule type</span>
-                  <span ng-show="errorList.type" class="help-block" ng-bind="errorList.type" />
-                </div>
-              </div>
-              <div ng-show="Form.type.$viewValue == 'interval'">
-                <h4>Interval Parameters</h4>
-                <div ng-repeat="item in interval_config" class="control-group">
-                  <label class="control-label" title="Please input {{ item.name }}. Type: {{ item.type }}">{{ item.name }}</label>
-                  <div class="controls">
-                    <parameter-input ng-model="model.interval" config="item" name="item.name"></parameter-input>
-                    <span class="help-block" ng-show="Form[item.name].$invalid">invalid</span>
-                  </div>
-                </div>
-              </div>
-
-              <div ng-show="Form.type.$viewValue == 'crontab'">
-                <h4>Crontab Parameters</h4>
-                <div ng-repeat="item in crontab_config" class="control-group">
-                  <label class="control-label" title="Please input {{ item.name }}. Type: {{ item.type }}">{{ item.name }}</label>
-                  <div class="controls">
-                    <parameter-input ng-model="model.crontab" config="item" name="item.name"></parameter-input>
-                    <span class="help-block" ng-show="Form[item.name].$invalid">invalid</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="control-group" ng-class="{error: Form.enabled.$invalid}">
-                <label class="control-label">Enabled</label>
-                <div class="controls">
-                  <input type="checkbox" ng-model="model.enabled" name="enabled" ng-checked="model.enabled"/>
-                </div>
-              </div>
-
-                <input type="hidden" ng-model="model.scenarios" ng-bind="model.scenarios" name="scenarios" />
-                <div ng-show="task_config" ng-controller="TasksActionsCtrl">
-                  <h4>Periodic tasks scenario</h4>
-                    <a class="btn btn-info" ng-click="addTask(model.scenarios)" ng-show="model.scenarios | isArrayEmpty">Add Task</a>
-
-                    <ul ng-init="tasks=model.scenarios; parent_tasks=model.scenarios;">
-                      <li ng-repeat="task in tasks track by $index" ng-include="'partials/schedules/tasks/tasks.html'"></li>
-                    </ul>
-                </div>
-              <div class="span8">
-                <button ng-click="save(['type', 'interval', 'crontab', 'scenarios', 'enabled'])" ng-disabled="Form.$invalid || model.scenarios | isArrayEmpty" class="btn btn-primary">Edit schedule</button>
-              </div>
-
-
-            </form>
-            </div>
         </div>
 
-        <!--<div ng-show="action[1] == 'logs'">
-            <div class="row">
-              <div class="span12">
-                  Status: <span class="value">{{ model.type }}</span> <a ng-click="showLogs=!showLogs">(logs)</a><br/>
-                  <div ng-show="showLogs" class="well" ng-controller="LogMessageListCtrl" ng-init="init('trainmodel_log', model.id, 50)">
-                    <div class="message">
-                      <ng-include src="'partials/logmessages/list.html'"></ng-include>
-                    </div>
-                  </div>
-              </div>
-            </div>
-        </div>-->
-      </div>
+        <div class="span5">
+          <input type="hidden" ng-model="model.scenariosDict" ng-bind="model.scenariosDict" name="scenarios" />
+          <div ng-show="task_config" ng-controller="TasksActionsCtrl">
+            <h4>Periodic tasks scenario</h4>
+              <a class="btn btn-info" ng-click="addTask(model.scenariosDict)" ng-show="model.scenariosDict | isArrayEmpty">Add Task</a>
+
+              <ul ng-init="tasks=model.scenariosDict; parent_tasks=model.scenariosDict;">
+                <li ng-repeat="task in tasks track by $index" ng-include="'partials/schedules/tasks/tasks.html'"></li>
+              </ul>
+          </div>
+        </div>
+
+        <div class="span8">
+          <button ng-click="save(['interval', 'crontab', 'type', 'scenarios'])" ng-disabled="Form.$invalid || model.scenariosDict | isArrayEmpty" class="btn btn-primary">Edit schedule</button>
+          <br/>
+        </div>
+      </form>
     </div>
+  </div>
+  <br/>
+
+  <div ng-show="action[1] == 'logs'" ng-controller="LogMessageListCtrl" ng-init="init('schedule_log', model.id)">
+      <ng-include src="'partials/logmessages/list.html'"></ng-include>
+  </div>
 
 </div>
+

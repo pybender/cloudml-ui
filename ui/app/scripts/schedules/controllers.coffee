@@ -13,7 +13,7 @@ angular.module('app.schedules.controllers', ['app.config', ])
   $scope.load = () ->
     Schedule.$loadAll(
       show: ['name','type','created_on','updated_on','enabled',
-             'created_by','updated_by'].join(',')
+             'created_by','updated_by','crontab','interval','descriptions'].join(',')
     ).then ((opts) ->
       $scope.objects = opts.objects
     ), ((opts) ->
@@ -61,37 +61,36 @@ angular.module('app.schedules.controllers', ['app.config', ])
   if not $routeParams.id then err = "Can't initialize without schedule id"
   $scope.model = new Schedule({id: $routeParams.id})
   $scope.LOADED_SECTIONS = []
-
-  $scope.model.$load(
-    show: ['name','created_on','updated_on','enabled','description',
-           'scenarios','interval','crontab','created_by'].join(',')
-    ).then (->), ((opts)-> $scope.setError(opts, 'loading periodic task schedule'))
-
-  $scope.model.$getConfiguration()
-  .then (opts) ->
-    $scope.task_config = opts.data.configuration
-  , (opts) ->
-    $scope.setError(opts, 'loading tasks configuration')
   $scope.task_types = $scope.model.TASK_TYPES
 
   $scope.go = (section) ->
-    fields = ''
-    mainSection = section[0]
-    if mainSection not in $scope.LOADED_SECTIONS
-      # is not already loaded
-      fields = ['name','created_on','updated_on','enabled','description',
-                'scenarios','interval','crontab','created_by'].join(',')
+      fields = ''
+      mainSection = section[1]
+      if mainSection not in $scope.LOADED_SECTIONS
+        # is not already loaded
+        fields = "#{Schedule.MAIN_FIELDS}"
 
-    if fields isnt ''
-      $scope.model.$load
+      if fields isnt ''
+        $scope.model.$load
           show: fields
-      .then ->
-        $scope.LOADED_SECTIONS.push mainSection
-        console.log $scope.model.scenarios
-      , (opts) ->
-        $scope.setError(opts, 'loading schedule details')
+        .then ->
+          $scope.LOADED_SECTIONS.push mainSection
+          $scope.model.$getConfiguration()
+          .then (opts) ->
+            $scope.task_config = opts.data.configuration
+          , (opts) ->
+            $scope.setError(opts, 'loading tasks configuration')
+        , (opts) ->
+          $scope.setError(opts, 'loading schedule details')
 
   $scope.initSections($scope.go)
+
+  $rootScope.$on(
+    'SaveObjectCtl:save:success', (event, model) ->
+      if model.name is $scope.model.name
+        $scope.msg = "Schedule has been saved."
+  )
+
 ])
 
 .controller('AddScheduleCtrl', [

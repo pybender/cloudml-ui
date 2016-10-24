@@ -12,11 +12,11 @@ db = app.sql_db
 
 
 class PeriodicTaskScenariosForm(BaseForm):
-    required_fields = ('name', 'scenarios', ('interval', 'crontab'), 'enabled')
+    required_fields = ('name', 'scenarios', ('interval', 'crontab'))
     NO_REQUIRED_FOR_EDIT = True
 
     name = CharField()
-    description = CharField()
+    descriptions = CharField()
     scenarios = JsonField()
     interval = JsonField()
     crontab = JsonField()
@@ -78,8 +78,9 @@ class PeriodicTaskScenariosForm(BaseForm):
             _validate_task(v)
         return v
 
-    def clean_description(self, value, field):
-        print "desc"
-        print value
-        return value
-
+    def validate_data(self):
+        schedule_type = self.cleaned_data.get('type', None)
+        if schedule_type == 'interval':
+            self.cleaned_data['crontab'] = {}
+        elif schedule_type == 'crontab':
+            self.cleaned_data['interval'] = {}

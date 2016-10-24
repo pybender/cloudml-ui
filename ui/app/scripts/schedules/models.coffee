@@ -14,8 +14,11 @@ angular.module('app.schedules.model', ['app.config'])
       BASE_API_URL: "#{settings.apiUrl}schedules/"
       BASE_UI_URL: '/schedules'
       API_FIELDNAME: 'schedule'
-      DEFAULT_FIELDS_TO_SAVE: ['name', 'description', 'scenarios', 'interval',
-                               'enabled', 'crontab']
+      DEFAULT_FIELDS_TO_SAVE: ['name', 'descriptions', 'scenarios', 'interval',
+                               'enabled', 'crontab', 'type']
+      @MAIN_FIELDS: ['id','name','created_on','updated_on','enabled','descriptions',
+                    'scenarios','interval','crontab','created_by','type'].join(',')
+
       @LIST_MODEL_NAME: 'schedules'
       LIST_MODEL_NAME: @LIST_MODEL_NAME
       SCHEDULE_TYPES: ['crontab', 'interval']
@@ -28,43 +31,35 @@ angular.module('app.schedules.model', ['app.config'])
                         {name: 'period', type: 'string', choices: ['microseconds', 'seconds', 'minutes', 'hours', 'days']}]
       TASK_TYPES: ['single', 'chain', 'chord', 'group']
 
-      id: null
-      created_on: null
-      updated_on: null
-      created_by: null
-      updated_by: null
-      name: null
-      description: null
-      scenarios: []
-      interval: {}
-      crontab: {}
-      type: null
-      enabled: null
+      scenariosDict: []
+      intervalDict: {}
+      crontabDict: {}
 
       loadFromJSON: (origData) =>
         super origData
         if origData?
           if origData.scenarios?
-            @scenarios = array(origData['scenarios'])
-            console.log @scenarios
+            @scenariosDict.splice(0, @scenariosDict.length)
+            @scenariosDict.push origData['scenarios']
           if origData.interval?
-            @type = 'interval'
-          else
-            @type = 'crontab'
+            @intervalDict = origData['interval']
+          if origData.crontab?
+            @crontabDict = origData['crontab']
 
 
       $save: (opts={}) =>
-        console.log opts.only
-        console.log @
         if opts.only? && "interval" in opts.only
-          @interval = angular.toJson(@interval)
+          if @type == 'crontab'
+            @intervalDict = {}
+          @interval = JSON.stringify(@intervalDict)
 
         if opts.only? && "crontab" in opts.only
-          @crontab = angular.toJson(@crontab)
+          if @type == 'interval'
+            @crontabDict = {}
+          @crontab = JSON.stringify(@crontabDict)
 
         if opts.only? && "scenarios" in opts.only
-          @scenarios = @scenarios[0]
-          @scenarios = angular.toJson(@scenarios)
+          @scenarios = JSON.stringify(@scenariosDict[0])
 
         super opts
 

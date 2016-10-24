@@ -16,6 +16,7 @@
           <tr>
             <th>Name</th>
             <th>Type</th>
+            <th>Status</th>
             <th>Created</th>
             <th>Updated</th>
             <th>Enabled</th>
@@ -30,6 +31,7 @@
               </a>
             </td>
             <td>{{ schedule.type }}</td>
+            <td>{{ schedule.status }}</td>
             <td>
                 <span title="dates in GMT">{{ schedule.created_on|format_date }}</span>
                 <br>
