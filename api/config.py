@@ -33,7 +33,9 @@ CELERY_RESULT_BACKEND = 'amqp://guest:guest@localhost:5672//'
 CELERY_IMPORTS = (
     'api.models', 'api', 'api.import_handlers.tasks',
     'api.instances.tasks', 'api.ml_models.tasks',
-    'api.model_tests.tasks', 'api.servers.tasks')
+    'api.model_tests.tasks', 'api.servers.tasks',
+    'api.schedule.tasks')
+
 CELERYD_MAX_TASKS_PER_CHILD = 1
 
 CELERYBEAT_SCHEDULE = {
@@ -46,7 +48,6 @@ CELERYBEAT_SCHEDULE = {
         'schedule': timedelta(days=7)
     },
 }
-
 
 CELERY_DEFAULT_QUEUE = 'default'
 CELERY_QUEUES = [
