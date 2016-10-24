@@ -12,6 +12,8 @@ local_config.coffee
 ve
 ve2
 env
+nve
+ove
 *.sqlite
 
 **/.DS_Store
