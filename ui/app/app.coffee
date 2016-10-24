@@ -64,6 +64,8 @@ App = angular.module('app', [
   'app.servers.verifications'
   'app.about.model'
   'app.about.controllers'
+  'app.schedules.model'
+  'app.schedules.controllers'
 
   'app.play.controllers'
 ])
@@ -249,6 +251,21 @@ App.config([
     .when('/predict/verifications/:verification_id/examples', {
       redirectTo: (params, loc) ->
         return 'predict/verifications/' + params.verification_id + '?action=result:details'
+    })
+    .when('/schedules', {
+      controller: 'SchedulesListCtrl'
+      templateUrl: 'partials/schedules/list.html'
+      title: 'Periodic Tasks Schedules'
+    })
+    .when('/schedules/add_schedule', {
+      controller: 'AddScheduleCtrl'
+      templateUrl: 'partials/schedules/add_schedule.html'
+      title: 'Add Periodic Task Schedule'
+    })
+    .when('/schedules/:id', {
+      controller: 'ScheduleDetailsCtrl'
+      templateUrl: 'partials/schedules/details.html'
+      title: 'Periodic Task Schedule'
     })
 
     # auth

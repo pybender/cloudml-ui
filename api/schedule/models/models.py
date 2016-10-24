@@ -194,6 +194,10 @@ class PeriodicTaskScenarios(BaseModel, db.Model):
     STATUS_CANCELED = 'Canceled'
     STATUS_ERROR = 'Error'
     STATUS_ERROR_PARSER = 'Parser error'
+
+    TYPE_INTERVAL = 'interval'
+    TYPE_CRONTAB = 'crontab'
+
     ScenariosPlayer = 'api.schedule.tasks.scenarios_schedule_task'
 
     name = db.Column(db.String(100), nullable=False, unique=True)
@@ -229,6 +233,13 @@ class PeriodicTaskScenarios(BaseModel, db.Model):
     def kargs(self):
         kargs = dict(scenario_task_id = self.id)
         return json.dumps(kargs)
+
+    @property
+    def type(self):
+        if self.interval != {}:
+            return self.TYPE_INTERVAL
+        else:
+            return self.TYPE_CRONTAB
 
     def schedule_crontab(self, session):
         if self.crontab:

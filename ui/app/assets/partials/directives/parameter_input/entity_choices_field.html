@@ -1,0 +1,4 @@
+<select data-placeholder="pick an item" ng-show="config.type != 'int_float_string_none'" ui-select="{allowClear: true}" ng-name="name" ng-model="value[config.name]" ng-required="config.required">
+    <option value="">-- select {{ config.name }} --</option>
+    <option ng-repeat="c in config.choices" value="{{ c.id }}" ng-selected="value[config.name] == c.id">{{ c.id ? '(#'+c.id+')' : '' }} {{ c.name }}</option>
+</select>

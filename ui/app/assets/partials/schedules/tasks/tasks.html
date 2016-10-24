@@ -1,0 +1,18 @@
+<div ng-init="parents=tasks">
+  <div ng-show="task.type == 'chain' || task.type == 'chord' || task.type == 'group'">
+    <b>{{task.type}}</b>
+    <a class="btn btn-info" ng-click="addTask(task.tasks)">Add task to {{task.type}}</a>
+    <a class="btn btn-info" ng-click="editTask($index, task, parents)">Edit {{task.type}}</a>
+    <a class="btn btn-danger" ng-click="delTasks($index, parents, task.type)">Delete {{task.type}}</a>
+    <ul ng-init="tasks=task.tasks">
+      <li ng-repeat="task in tasks track by $index" ng-include="'partials/schedules/tasks/tasks.html'"></li>
+    </ul>
+    <div ng-show="task.type=='chord'">Callback: <b>{{task.callback}}</b></div>
+  </div>
+
+  <div ng-show="task.type == 'single'">
+    {{task.tasks[0]}}
+    <a class="btn btn-info" ng-click="editTask($index, task, parents)">Edit</a>
+    <a class="btn btn-danger" ng-click="delTasks($index, parents, task.type)">Delete</a>
+  </div>
+</div>

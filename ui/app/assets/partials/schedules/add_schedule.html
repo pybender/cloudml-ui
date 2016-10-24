@@ -1,0 +1,83 @@
+<div ng-controller="SaveObjectCtl">
+  <h2>
+    Add New Periodic Task Schedule
+    <small><a ng-href="#/schedules" href="#/schedules">(Cancel)</a></small>
+  </h2>
+  <ng-include src="'partials/parts/save_form_messages.html'"></ng-include>
+  <form name="Form" class="form-horizontal">
+  <div class="span5">
+  <div class="control-group" ng-class="{error: Form.name.$invalid || errorList.name}">
+    <label class="control-label">Name</label>
+    <div class="controls">
+      <input type="text" name="name" ng-model="model.name" ng-change="setFieldError('name')" required />
+      <span ng-show="Form.name.$error.required" class="help-block">Task name is required</span>
+      <span ng-show="errorList.name" class="help-block" ng-bind="errorList.name" />
+    </div>
+  </div>
+  <div class="control-group" ng-class="{error: Form.descriptions.$invalid}">
+    <label class="control-label">Description</label>
+    <div class="controls">
+      <textarea name="descriptions" ng-model="model.descriptions">
+      </textarea>
+    </div>
+  </div>
+  <div class="control-group" ng-class="{error: Form.type.$invalid || errorList.type}">
+    <label class="control-label">Schedule Type</label>
+    <div class="controls">
+      <select ng-model="model.type" name="type" required ng-options="value for value in model.SCHEDULE_TYPES">
+      </select>
+      <span ng-show="Form.type.$error.required" class="help-block">Select schedule type</span>
+      <span ng-show="errorList.type" class="help-block" ng-bind="errorList.type" />
+    </div>
+  </div>
+  <div ng-show="Form.type.$viewValue == 'interval'">
+    <h4>Interval Parameters</h4>
+    <div ng-repeat="item in model.INTERVAL_CONFIG" class="control-group">
+      <label class="control-label" title="Please input {{ item.name }}. Type: {{ item.type }}">{{ item.name }}</label>
+      <div class="controls">
+        <parameter-input ng-model="model.intervalDict" config="item" name="item.name"></parameter-input>
+        <span class="help-block" ng-show="Form[item.name].$invalid">invalid</span>
+      </div>
+    </div>
+  </div>
+
+  <div ng-show="Form.type.$viewValue == 'crontab'">
+    <h4>Crontab Parameters</h4>
+    <div ng-repeat="item in model.CRONTAB_CONFIG" class="control-group">
+      <label class="control-label" title="Please input {{ item.name }}. Type: {{ item.type }}">{{ item.name }}</label>
+      <div class="controls">
+        <parameter-input ng-model="model.crontabDict" config="item" name="item.name"></parameter-input>
+        <span class="help-block" ng-show="Form[item.name].$invalid">invalid</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="control-group" ng-class="{error: Form.enabled.$invalid}">
+    <label class="control-label">Enabled</label>
+    <div class="controls">
+      <input type="checkbox" ng-model="model.enabled" name="enabled" />
+    </div>
+  </div>
+  </div>
+
+  <div class="span5">
+    <input type="hidden" ng-model="model.scenariosDict" ng-bind="model.scenariosDict" name="scenarios" />
+    <div ng-show="task_config" ng-controller="TasksActionsCtrl">
+      <h4>Periodic tasks scenario</h4>
+        <a class="btn btn-info" ng-click="addTask(model.scenariosDict)" ng-show="model.scenariosDict | isArrayEmpty">Add Task</a>
+
+        <ul ng-init="tasks=model.scenariosDict; parent_tasks=model.scenariosDict;">
+          <li ng-repeat="task in tasks track by $index" ng-include="'partials/schedules/tasks/tasks.html'"></li>
+        </ul>
+    </div>
+  </div>
+
+
+  <div class="span12">
+  <a href="#/schedules" class="btn">Cancel</a>
+    <button ng-click="save(['name', 'descriptions', 'type', 'interval', 'crontab', 'scenarios', 'enabled'])" ng-disabled="Form.$invalid || model.scenariosDict | isArrayEmpty" class="btn btn-primary">Add new schedule</button>
+  </div>
+  </form>
+
+
+</div>

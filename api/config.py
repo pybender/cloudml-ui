@@ -16,7 +16,7 @@ DEBUG = False
 TEST_MODE = False
 
 # Celery beat (Scheduler) settings
-
+ENGINE_URL = 'postgresql://postgres:postgres@localhost/cloudml_data'
 CELERYBEAT_SCHEDULER = 'api.schedule.CloudmluiDatabaseScheduler'
 
 # Celery specific settings
