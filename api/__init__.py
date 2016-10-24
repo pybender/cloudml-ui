@@ -7,19 +7,24 @@ This module main application class and gather all imports together.
 import logging
 from logging import config as logging_config
 
-from flask.ext.admin import Admin
+from flask_admin import Admin
 from celery import Celery
 
 from app import create_app
 from rest_api import Api
 
-
 __version__ = '2016.08.08'
 
 app = create_app()
-celery = Celery('cloudml')
-celery.add_defaults(lambda: app.config)
 
+class cloudmlCelery(Celery):
+    databasescheduler = None
+    def __init__(self, *args, **kwargs):
+        super(cloudmlCelery, self).__init__(*args, **kwargs)
+
+#celery = Celery('cloudml')
+celery = cloudmlCelery('cloudml')
+celery.add_defaults(lambda: app.config)
 
 api = Api(app)
 admin = Admin(app, 'CloudML Admin Interface')
