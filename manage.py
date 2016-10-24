@@ -237,7 +237,7 @@ class CreateCeleryDbTables(Command):
         from sqlalchemy import create_engine
         from api.schedule.models import (PeriodicTask, CrontabSchedule, PeriodicTasks, IntervalSchedule, Base)
 
-        engine = create_engine(app.config['ENGINE_URL'], pool_size=20, pool_recycle=3600)
+        engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'], pool_size=20, pool_recycle=3600)
         Base.metadata.create_all(engine)
 
         print "Done"

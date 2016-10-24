@@ -9,7 +9,7 @@ from sqlalchemy.orm import sessionmaker
 from api import app
 from api.base.models import db
 
-engine = create_engine(app.config['ENGINE_URL'], pool_size=20, pool_recycle=3600)
+engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'], pool_size=20, pool_recycle=3600)
 Session = sessionmaker(bind=engine, autocommit=True)
 
 class TimestampModel(object):
