@@ -35,7 +35,6 @@ class PeriodicTaskScenariosForm(BaseForm):
                 every = int(value['every'])
             except Exception as exc:
                 raise ValidationError(exc.message, exc)
-        print value
         return value
 
     def clean_crontab(self, value, field):

@@ -31,6 +31,8 @@ angular.module('app.schedules.model', ['app.config'])
                         {name: 'period', type: 'string', choices: ['microseconds', 'seconds', 'minutes', 'hours', 'days']}]
       TASK_TYPES: ['single', 'chain', 'chord', 'group']
 
+      id: null
+      name: null
       scenariosDict: []
       intervalDict: {}
       crontabDict: {}
