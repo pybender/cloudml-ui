@@ -2,8 +2,6 @@ from .base import Base
 
 import json
 import datetime
-import logging
-from functools import partial
 from flask import has_request_context, request
 
 from sqlalchemy.orm import relationship, deferred, backref, foreign, remote
@@ -11,26 +9,11 @@ from sqlalchemy import Column, String, DateTime, ForeignKey, Integer, Boolean
 from sqlalchemy_utils.types.choice import ChoiceType
 from sqlalchemy.orm import validates
 
-from sqlalchemy.dialects import postgresql
-from sqlalchemy.sql import text
-from sqlalchemy import Index, func
-from sqlalchemy.ext.declarative import declared_attr
-from sqlalchemy import event, and_
-from sqlalchemy.ext.hybrid import hybrid_method
-from sqlalchemy.ext.compiler import compiles
-from sqlalchemy.sql.expression import ColumnClause
-from sqlalchemy import inspect
-
 from celery import schedules
 from celery.canvas import signature, chain, group, chord
 from celery.utils.log import get_logger
 
 from api.base.models import db, BaseModel, BaseMixin, JSONType, S3File
-from api.base.models.models import BaseDeployedEntity
-from api.logs.models import LogMessage
-from api.amazon_utils import AmazonS3Helper
-from api.import_handlers.models import ImportHandlerMixin
-from cloudml.trainer.classifier_settings import TYPE_CLASSIFICATION
 from api import app, celery
 from . import Session
 
@@ -70,7 +53,6 @@ class IntervalSchedule(Base):
 
     @classmethod
     def from_schedule(cls, session, schedule, period='seconds'):
-        #TODO not correct period send
         every = max(schedule.run_every.total_seconds(), 0)
         obj = cls.filter_by(session, every=every, period=period).first()
         if obj is None:
@@ -86,7 +68,6 @@ class IntervalSchedule(Base):
     @property
     def period_singular(self):
         return self.period.value[:-1]
-        # return self.period[:-1] - Old give error 'Choice' object has no attribute '__getitem__'
 
     def save(self):
         pass
