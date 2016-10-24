@@ -9,6 +9,7 @@ from celery.utils.encoding import safe_str
 from celery.utils.timeutils import is_naive
 from models import (PeriodicTaskScenarios, PeriodicTask, CrontabSchedule, PeriodicTasks, IntervalSchedule, Session)
 
+
 DEFAULT_MAX_INTERVAL = 5
 logger = get_logger(__name__)
 logger.setLevel(logging.INFO)
