@@ -1,9 +1,42 @@
 JSON FORMAT
 Scenarios Work:
 type: chain, group, chord (only single chord availible in tree)
-{"chainname":"test_01",
-   "type":"chord",
-   "tasks":[
+
+NOW not correct:
+{"callback": "api.import_handlers.tasks.create_dataset",
+ "callback_kwargs": {},
+ "tasks": [
+    {"tasks": ["api.import_handlers.tasks.import_data"],
+     "type": "single",
+     "kwargs": {"dataset_id": 1}
+     },
+     {"tasks": ["api.import_handlers.tasks.import_data"],
+      "type": "single",
+      "kwargs": {"dataset_id": 1}}
+      ],
+   "type": "chord"
+ }
+
+Correct json:
+
+{'chainname':'test_01',
+ 'type':'single',
+ 'tasks':[
+    { 'name':'celerytest.mytasks.test', 'args':[1, 2], 'kwargs':{'name':1}}
+  ]
+}
+
+{ 'chainname':'test_02',
+  'type':'chain',
+  'tasks':[
+        {'name':'celerytest.mytasks.test', 'args':[1, 2], 'kwargs':{'name':1}},
+        {'name':'celerytest.mytasks.test', 'args':[3, 4], 'kwargs':{'name':2}}
+  ]
+}
+
+{"chainname":"test_03",
+ "type":"chord",
+ "tasks":[
       {"name":"api.schedule.tasks.test_task_01", "args":[1, 2 ], "kwargs":{ "name":1 }},
       {"name":"api.schedule.tasks.test_task_01", "args":[3, 4 ], "kwargs":{ "name":2 }},
       {"chainname":"Upload",
