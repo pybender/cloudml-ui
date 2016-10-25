@@ -48,9 +48,5 @@ def scenarios_schedule_task(*args, **kwargs):
         return 'Completed'
     except Exception as e:
         logger.error('Error error processing scenarios task (%s).' % e)
-        import sys
-        import traceback
-        exc_info = sys.exc_info()
-        traceback.print_exception(*exc_info)
         return 'Error.ProcessingTask'
 
