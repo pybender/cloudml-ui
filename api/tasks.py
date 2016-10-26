@@ -130,9 +130,10 @@ ALLOWED_PERIODIC_TASKS = [
     },
     {
         'task': VISUALIZE_MODEL_TASK,
-        'params': [{'name': 'model_id', 'type': 'integer', 'entity': 'Model'},
+        'params': [{'name': 'model_id', 'type': 'integer', 'entity': 'Model',
+                    'dependencies': ['segment_id']},
                    {'name': 'segment_id', 'type': 'integer',
-                    'entity': 'Segment'}],
+                    'entity': 'Segment', 'field': 'segments', 'dependency': 'model_id'}],
         'result': []
     },
     {

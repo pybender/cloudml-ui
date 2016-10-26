@@ -103,6 +103,11 @@ angular.module('app.schedules.controllers', ['app.config', ])
     $scope.task_types = $scope.model.TASK_TYPES
     $scope.new = true
 
+    $scope.$watch 'user', (user, oldVal, scope) ->
+      if user?
+        $scope.user_id = user.id
+
+
     $scope.model.$getConfiguration()
     .then (opts) ->
       $scope.task_config = opts.data.configuration
@@ -170,10 +175,10 @@ angular.module('app.schedules.controllers', ['app.config', ])
 
   ($scope, openOptions) ->
     $scope.task = {
-        type: '',
-        task: '',
-        kwargs: {},
-        callback: '',
+        type: ''
+        task: ''
+        kwargs: {}
+        callback: ''
         callback_kwargs: {}
     }
     $scope.action = openOptions.action

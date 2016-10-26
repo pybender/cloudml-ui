@@ -193,3 +193,35 @@ angular.module('app.models.model', ['app.config'])
 
     return Tag
 ])
+
+.factory('Segment', [
+  '$http'
+  '$q'
+  'settings'
+  'BaseModel'
+
+  ($http, $q, settings, BaseModel) ->
+    class Segment extends BaseModel
+      BASE_API_URL: "#{settings.apiUrl}segments/"
+      API_FIELDNAME: 'segment'
+
+      id: null
+      name: null
+      model_id: null
+
+      constructor: (opts) ->
+        super
+        @BASE_UI_URL = "/models/#{@model_id}/segments/"
+
+      @$get_api_url: (opts, model) ->
+        model_id = opts.model_id
+        if model?
+          model_id = model.id
+
+        if not model_id
+          throw new Error('model details are required')
+
+        return "#{settings.apiUrl}models/#{model_id}/segments/"
+
+    return Segment
+])

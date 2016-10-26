@@ -651,6 +651,14 @@ def get_segment(model_id, name=None):
         return Segment.query.filter_by(model_id=model_id, name=name).one()
 
 
+class SegmentResource(BaseResourceSQL):
+    """ Segments API methods """
+    Model = Segment
+
+api.add_resource(SegmentResource,
+                 '/cloudml/models/<regex("[\w\.]*"):model_id>/segments/')
+
+
 def get_class_label(model_id, params):
     """
     Default behavior for getting class_label for weights querying.

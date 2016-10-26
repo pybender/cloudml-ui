@@ -7,7 +7,8 @@ angular.module('app.directives')
   'DataSet'
   'XmlImportHandler'
   'Server'
-  (Model, DataSet, XmlImportHandler, Server) ->
+  'Segment'
+  (Model, DataSet, XmlImportHandler, Server, Segment) ->
       return {
         require: 'ngModel',
         restrict: 'E',
@@ -15,26 +16,43 @@ angular.module('app.directives')
           config: '='
           value: '=ngModel'
           name: '='
-        }
+          pdata: '='
+        },
         templateUrl:'partials/directives/parameter_input/main.html',
         link: (scope, element, attrs, ngModel) ->
           if !scope.name?
             scope.name = scope.config.name
 
-          if scope.config.entity?
-            entity_error = false
+          scope.loadEntity = () ->
             scope.config.choices = []
             try
-              eval(scope.config.entity).$loadAll(
+              ent = eval(scope.config.entity)
+              opts = {
                 show: 'id,name'
-              ).then ((opts) ->
+              }
+              if scope.config.dependency?
+                if scope.pdata? && scope.pdata != 'undefined' && scope.pdata[scope.config.dependency]
+                  opts[scope.config.dependency] = scope.pdata[scope.config.dependency]
+                else
+                  throw "Model not ready"
+              ent.$loadAll opts
+              .then ((opts) ->
                 scope.config.choices = opts.objects
               ), ((opts) ->
-                entity_error = true
+                throw "Dependent model "+scope.config.name+" loading error"
               )
             catch e
-              entity_error = true
-              scope.config.choices = null
+              console.log e
+
+          if scope.config.entity?
+            scope.loadEntity()
+
+          scope.$watch('pdata', (oV, nV, scope) ->
+            if nV && nV != oV
+              if scope.config.dependency? && nV[scope.config.dependency] != oV[scope.config.dependency]
+                scope.loadEntity()
+          , true)
+
 
           scope.select2Opts = null
           if scope.config.choices

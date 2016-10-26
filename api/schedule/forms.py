@@ -7,6 +7,7 @@ Forms, that used for adding and edditing XML Import handlers.
 from api.base.forms import BaseForm, CharField, BooleanField, JsonField
 from api import app
 from api.base.resources import ValidationError
+from api.tasks import ALLOWED_PERIODIC_TASKS
 
 db = app.sql_db
 
