@@ -40,26 +40,55 @@ UPLOAD_IMPORT_HANDLER = 'api.servers.tasks.upload_import_handler_to_server'
 UPDATE_AT_SERVER = 'api.servers.tasks.update_at_server'
 VERIFY_MODEL = 'api.servers.tasks.verify_model'
 
+ALLOWED_PERIODIC_TASKS = {
+    'Import Dataset': CREATE_DATASET,
+    'Re-import Dataset': IMPORT_DATA,
+    'Re-upload Dataset': UPLOAD_DATASET,
+    'Synchronize Cluster List': SYNCHRONIZE_CLUSTER_LIST,
+    'Run SSH Tunnel': RUN_SSH_TUNNEL,
+    'Train Model (default instance)': TRAIN_MODEL_TASK,
+    'Train Model (request new instance)': GET_REQUEST_INSTANCE, # new task
+    'Train Transformer': TRAIN_TRANSFORMER,
+    'Visualize Model': VISUALIZE_MODEL_TASK,
+    'Re-generate Visualization Tree': GENERATE_VISUALIZATION_TREE,
+    'Transform Dataset For Download': TRANSFORM_DATASET_TASK,
+    'Get Model Feature Transformers': TRANSFORMERS_UPLOAD_TASK,
+    'Clear Model Data Cache': CLEAR_ML_DATA_CACHE,
+    'Calculate Model Parts Size': MODEL_PARTS_SIZE,
+    'Test Model': RUN_TEST, # new task, should return test result id
+    'Get CSV Test Results': GET_CSV_RESULTS,
+    'Upload Model to Server': UPLOAD_MODEL, # update task
+    'Upload ImportHandler to Server': UPLOAD_IMPORT_HANDLER, # update task
+    'Verify Model at Server': VERIFY_MODEL, # update task, should return verification id
+}
+
+
 ALLOWED_PERIODIC_TASKS = [
     {
         'task': CREATE_DATASET,
         'params': [{'name': 'import_handler_id', 'type': 'integer',
                     'entity': 'XmlImportHandler'},
-                   {'name': 'import_params', 'type': 'string'},
+                   {'name': 'import_params', 'type': 'string',
+                    'entity': 'InputParameter', 'dependency': 'import_handler_id',
+                    'dict_fields': True, 'add_info': ['type', 'regex', 'format']},
                    {'name': 'data_format', 'type': 'string',
                     'choices': ['json', 'csv'], 'default': 'json'}],
         'result': ['dataset_ids']
     },
     {
         'task': IMPORT_DATA,
-        'params': [{'name': 'dataset_id', 'type': 'integer',
-                    'entity': 'DataSet'}],
+        'params': [{'name': 'import_handler_id', 'type': 'integer',
+                    'entity': 'XmlImportHandler'},
+                   {'name': 'dataset_id', 'type': 'integer',
+                    'entity': 'DataSet', 'dependency': 'import_handler_id'}],
         'result': ['dataset_ids']
     },
     {
         'task': UPLOAD_DATASET,
-        'params': [{'name': 'dataset_id', 'type': 'integer',
-                    'entity': 'DataSet'}],
+        'params': [{'name': 'import_handler_id', 'type': 'integer',
+                    'entity': 'XmlImportHandler'},
+                   {'name': 'dataset_id', 'type': 'integer',
+                    'entity': 'DataSet', 'dependency': 'import_handler_id'}],
         'result': ['dataset_ids']
     },
     {
@@ -67,9 +96,9 @@ ALLOWED_PERIODIC_TASKS = [
         'params': [{'name': 'import_handler_id', 'type': 'integer',
                     'entity': 'XmlImportHandler'},
                    {'name': 'entity_id', 'type': 'integer',
-                    'entity': 'XmlEntity'},
+                    'entity': 'XmlEntity', 'dependency': 'import_handler_id'},
                    {'name': 'sqoop_id', 'type': 'integer',
-                    'entity': 'XmlSqoop'},
+                    'entity': 'XmlSqoop', 'dependency': 'import_handler_id'},
                    {'name': 'params', 'type': 'string'}],
         'result': ['fields', 'sample', 'sql']
     },
@@ -92,7 +121,8 @@ ALLOWED_PERIODIC_TASKS = [
                    {'name': 'callback', 'type': 'choices', 'choices': ['train']},
                    {'name': 'model_id', 'type': 'integer', 'entity': 'Model'},
                    {'name': 'dataset_ids', 'type': 'string',
-                    'entity': 'DataSet'},
+                    'entity': 'DataSet', 'dependency': 'model_id',
+                    'choose_multiple': True},
                    {'name': 'user_id', 'type': 'integer', 'entity': 'User'}],
         'result': ['instance_ip']
     },
@@ -115,25 +145,29 @@ ALLOWED_PERIODIC_TASKS = [
     },
     {
         'task': TRAIN_MODEL_TASK,
-        'params': [{'name': 'dataset_ids', 'type': 'string',
-                    'entity': 'DataSet'},
-                    {'name': 'model_id', 'type': 'integer', 'entity': 'Model'},
+        'params': [{'name': 'model_id', 'type': 'integer', 'entity': 'Model',
+                    'add_info': ['train_import_handler_id']},
+                    {'name': 'dataset_ids', 'type': 'string',
+                    'entity': 'DataSet', 'dependency': 'import_handler_id',
+                    'choose_multiple': True},
+
                     {'name': 'user_id', 'type': 'integer', 'entity': 'User'}],
         'result': []
     },
-    {
-        'task': CLASSIFIER_GRID_PARAMS,
-        'params': [{'name': 'model_id', 'type': 'integer', 'entity': 'Model'},
-                   {'name': 'grid_params_id', 'type': 'integer',
-                    'entity': 'ClassifierGridParams'}],
-        'result': []
-    },
+    #{
+    #    'task': CLASSIFIER_GRID_PARAMS,
+    #    'params': [{'name': 'model_id', 'type': 'integer', 'entity': 'Model'},
+    #               {'name': 'grid_params_id', 'type': 'integer',
+    #                'entity': 'ClassifierGridParams'}],
+    #    'result': []
+    #},
     {
         'task': VISUALIZE_MODEL_TASK,
         'params': [{'name': 'model_id', 'type': 'integer', 'entity': 'Model',
                     'dependencies': ['segment_id']},
                    {'name': 'segment_id', 'type': 'integer',
-                    'entity': 'Segment', 'field': 'segments', 'dependency': 'model_id'}],
+                    'entity': 'Segment', 'field': 'segments',
+                    'dependency': 'model_id'}],
         'result': []
     },
     {
@@ -146,7 +180,7 @@ ALLOWED_PERIODIC_TASKS = [
         'task': TRANSFORM_DATASET_TASK,
         'params': [{'name': 'model_id', 'type': 'integer', 'entity': 'Model'},
                    {'name': 'dataset_id', 'type': 'integer',
-                    'entity': 'DataSet'}],
+                    'entity': 'DataSet', 'dependency': 'model_id'}],
         'result': ['s3_download_url']
     },
     {
