@@ -9,7 +9,11 @@ angular.module('app.directives')
   'Server'
   'Segment'
   'InputParameter'
-  (Model, DataSet, XmlImportHandler, Server, Segment, InputParameter) ->
+  'Cluster'
+  'Transformer'
+  'TestResult'
+  'ModelVerification'
+  (Model, DataSet, XmlImportHandler, Server, Segment, InputParameter, Cluster, Transformer, TestResult, ModelVerification) ->
       return {
         require: 'ngModel',
         restrict: 'E',
@@ -26,6 +30,20 @@ angular.module('app.directives')
 
           scope.loadEntity = () ->
             scope.config.choices = []
+            if scope.config.entity == 'Mock'
+              mocked = scope.pdata[scope.config.mocked]
+              if mocked != undefined
+                if typeof(mocked[0]) != "object"
+                  for m in mocked
+                    scope.config.choices.push {
+                      id: m,
+                      name: m,
+                      type: 'string'
+                    }
+                else
+                  scope.config.choices = mocked
+              return
+
             try
               ent = eval(scope.config.entity)
               to_show = ['id', 'name']
@@ -57,19 +75,20 @@ angular.module('app.directives')
 
           scope.$watch('pdata', (oV, nV, scope) ->
             if nV && nV != oV
+              console.log scope.pdata
               if scope.config.dependency? && nV[scope.config.dependency] != oV[scope.config.dependency]
                 scope.loadEntity()
           , true)
 
           scope.setAdditionalInfo = (value) ->
+            scope.pdata['import_handler_type'] = 'xml'
             if scope.config.add_info?
               for ai in scope.config.add_info
                 if scope.config.choices && scope.config.choices[0][ai]
                   for c in scope.config.choices
                     if parseInt(value) == parseInt(c.id)
-                      if ai == 'train_import_handler_id'
+                      if ai == 'train_import_handler_id' || ai == 'test_import_handler_id'
                         scope.pdata['import_handler_id'] = c[ai]
-                        scope.pdata['import_handler_type'] = 'xml'
                       else
                         scope.pdata[ai] = c[ai]
                       break

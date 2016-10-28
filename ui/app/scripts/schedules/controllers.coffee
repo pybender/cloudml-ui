@@ -62,6 +62,7 @@ angular.module('app.schedules.controllers', ['app.config', ])
   $scope.model = new Schedule({id: $routeParams.id})
   $scope.LOADED_SECTIONS = []
   $scope.task_types = $scope.model.TASK_TYPES
+  $scope.task_config = $scope.model.TASK_CONFIG
 
   $scope.go = (section) ->
       fields = ''
@@ -75,11 +76,6 @@ angular.module('app.schedules.controllers', ['app.config', ])
           show: fields
         .then ->
           $scope.LOADED_SECTIONS.push mainSection
-          $scope.model.$getConfiguration()
-          .then (opts) ->
-            $scope.task_config = opts.data.configuration
-          , (opts) ->
-            $scope.setError(opts, 'loading tasks configuration')
         , (opts) ->
           $scope.setError(opts, 'loading schedule details')
 
@@ -101,18 +97,8 @@ angular.module('app.schedules.controllers', ['app.config', ])
   ($scope, $location, Schedule) ->
     $scope.model = new Schedule()
     $scope.task_types = $scope.model.TASK_TYPES
+    $scope.task_config = $scope.model.TASK_CONFIG
     $scope.new = true
-
-    $scope.$watch 'user', (user, oldVal, scope) ->
-      if user?
-        $scope.user_id = user.id
-
-
-    $scope.model.$getConfiguration()
-    .then (opts) ->
-      $scope.task_config = opts.data.configuration
-    , (opts) ->
-      $scope.setError(opts, 'loading tasks configuration')
 
 ])
 
@@ -190,11 +176,13 @@ angular.module('app.schedules.controllers', ['app.config', ])
       if $scope.task.type == 'single'
         res.tasks = [$scope.task.task.task]
         res.kwargs = $scope.task.kwargs || {}
+        res.kwargs['user_id'] = $scope.user.id
       else
         res.tasks = []
         if $scope.task.type == 'chord'
           res.callback = $scope.task.callback.task
           res.callback_kwargs = $scope.task.callback_kwargs || {}
+          res.callback_kwargs['user_id'] = $scope.user.id
       openOptions.model.push res
       $scope.$close(true)
 ])
@@ -226,12 +214,14 @@ angular.module('app.schedules.controllers', ['app.config', ])
       if $scope.task.type == 'single'
         res.tasks[0] = $scope.task.task.task
         res.kwargs = $scope.task.kwargs || {}
+        res.kwargs['user_id'] = $scope.user.id
       else
         if openOptions.model.tasks.length > 0 && typeof(openOptions.model.tasks[0]) == 'string'
           res.tasks.splice(0, 1)
       if $scope.task.type == 'chord'
         res.callback = $scope.task.callback.task
         res.callback_kwargs = $scope.task.callback_kwargs || {}
+        res.callback_kwargs['user_id'] = $scope.user.id
       openOptions.tasks[openOptions.index] = res
 
       $scope.$close(true)

@@ -25,6 +25,7 @@
     </div>
     <div ng-show="task.task.params">
       <h4 >Task Parameters</h4>
+      <h5>*If you expect some parameters came from previous task in chain - leave them empty.</h5>
       <div ng-repeat="item in task.task.params" class="control-group">
         <label class="control-label" title="Please input {{ item.name }}. Type: {{ item.type }}">{{ item.name }}</label>
         <div class="controls">

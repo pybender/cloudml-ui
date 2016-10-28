@@ -25,9 +25,11 @@ from api.import_handlers.models import DataSet
 from api.logs.dynamodb.models import LogMessage
 from api.base.io_utils import get_or_create_data_folder
 from celery import chord
+from api.instances.tasks import request_spot_instance, get_request_instance
 
 
-__all__ = ['train_model', 'get_classifier_parameters_grid',
+__all__ = ['train_model', 'train_model_request_instance',
+           'get_classifier_parameters_grid',
            'visualize_model', 'generate_visualization_tree',
            'transform_dataset_for_download',
            'upload_segment_features_transformers', 'clear_model_data_cache',
@@ -127,6 +129,46 @@ def train_model(dataset_ids, model_id, user_id, delete_metadata=False):
     msg = "Model trained at %s" % trainer.train_time
     logging.info(msg)
     return msg
+
+
+@celery.task(base=SqlAlchemyTask)
+def train_model_request_instance(dataset_ids, model_id, user_id,
+                                 spot_instance_type, delete_metadata=False):
+    """
+    Train or re-train the model.
+
+    dataset_ids: list of integers
+        List of dataset ids used for model training.
+    model_id: int
+        Id of the model to train.
+    user_id: int
+        Id of the user, who initiate training the model.
+    spot_instance_type: string
+        Type of new requested instance
+    delete_metadata: bool
+        Whether we need model related db logs, test results and
+        other model related data.
+    """
+    tasks_list = []
+    tasks_list.append(request_spot_instance.s(
+        instance_type=spot_instance_type,
+        model_id=model_id
+    ))
+    tasks_list.append(get_request_instance.subtask(
+        (),
+        {
+            'callback': 'train',
+            'dataset_ids': dataset_ids,
+            'model_id': model_id,
+            'user_id': user_id,
+        },
+        retry=True,
+        countdown=10,
+        retry_policy={
+            'max_retries': 3,
+            'interval_start': 5,
+            'interval_step': 5,
+            'interval_max': 10}))
 
 
 @celery.task(base=SqlAlchemyTask)

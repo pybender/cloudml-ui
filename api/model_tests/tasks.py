@@ -20,6 +20,7 @@ from api.model_tests.models import TestResult, TestExample
 from api.ml_models.models import Model, Weight
 from api.import_handlers.models import DataSet
 from api.models import PredefinedDataSource
+from api.instances.models import Instance
 
 
 @celery.task(base=SqlAlchemyTask)
@@ -193,7 +194,32 @@ def run_test(dataset_ids, test_id):
             (str_exc[:error_column_size - len(msg)] + msg)
         test.save()
         raise TaskException(exc.message, exc)
-    return 'Test completed'
+    return 'Test completed' # should return test_id
+
+
+@celery.task(base=SqlAlchemyTask)
+def test_model(dataset_ids, model_id):
+    """
+    Running test for trained model.
+
+    dataset_ids: list
+        List of dataset ids used for testing model. Now only first one in the
+        list used. (Multidataset testing hasn't implemented yet).
+    model_id: int
+        ID of the model to test.
+    """
+    model = Model.query.get(model_id)
+    instance = Instance.query.filter_by(is_default=True).one()
+    total = TestResult.query.filter_by(model_id=model.id).count()
+    test = TestResult(name="Test%s" % (total + 1),
+                      model_id=model.id,
+                      model_name=model.name,
+                      status=TestResult.STATUS_QUEUED).save()
+    test.examples_fields = model.test_import_handler.get_fields()
+    test.save()
+
+    init_logger('runtest_log', obj=int(test.id))
+    run_test.apply_async((dataset_ids, test.id), queue=instance.name)
 
 
 def _add_example_to_db(test, data, label, pred, prob, num):
@@ -267,6 +293,15 @@ def calculate_confusion_matrix(test_id, weights):
     logging.info('Checking confusion matrix weights')
 
     try:
+        # if came from periodic chain
+        if type(weights) is dict:
+            logging.info("Transform weights from dict {}".format(weights))
+            transformed = []
+            for k, v in weights.iteritems():
+                transformed.append = (int(k), float(v))
+            weights = transformed
+            logging.info("Transformed weights list {}".format(weights))
+
         all_zero = True
         for weight in weights:
             if weight[1] != 0:
