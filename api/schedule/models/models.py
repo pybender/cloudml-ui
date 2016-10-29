@@ -15,6 +15,7 @@ from celery.utils.log import get_logger
 
 from api.base.models import db, BaseModel, BaseMixin, JSONType, S3File
 from api import app, celery
+from api.schedule.tasks import scenarios_task_loger
 from . import Session
 
 logger = get_logger(__name__)
@@ -340,7 +341,7 @@ class PeriodicTaskScenarios(BaseModel, db.Model):
                             raise ValueError('Error validate 04. Task name: {0!r}\
                                               not register in Celery'.format(group_tasks))
                         group_tasks.append(task)
-        if name:
+        elif name:
             type = 'single'
             args = tree.get('args', [])
             kwargs = tree.get('kwargs', {})
@@ -348,6 +349,9 @@ class PeriodicTaskScenarios(BaseModel, db.Model):
             if group_tasks.task not in self.celeryregistertask:
                 raise ValueError('Error validate 05. Task name: {0!r}\
                                   not register in Celery'.format(group_tasks))
+        else:
+            raise ValueError('Error validate 06. Not correct scenarios json')
+
 
         if type == 'chain':
             return chain(group_tasks)
@@ -355,12 +359,12 @@ class PeriodicTaskScenarios(BaseModel, db.Model):
             return group(group_tasks)
         elif type == 'chord':
             if self.chorduse:
-                raise ValueError('Error validate 08. "Chord" type can\
+                raise ValueError('Error validate 07. "Chord" type can\
                                   used once in scenarios: {0!r}.'.format(chainname))
             self.chorduse = True
             callback = tree.get('callback', None)
             if not callback:
-                raise ValueError('Error validate 06. Not callback\
+                raise ValueError('Error validate 08. Not callback\
                                   function for chord group: {0!r}.'.format(chainname))
             name = callback.get('name', [])
             args = callback.get('args', [])
@@ -369,7 +373,7 @@ class PeriodicTaskScenarios(BaseModel, db.Model):
         elif type == 'single':
             return group_tasks
         else:
-            raise ValueError('Error validate 07. Not correct\
+            raise ValueError('Error validate 09. Not correct\
                               group type for tasks: {0!r}.'.format(chainname))
 
     @validates('name')
