@@ -31,8 +31,7 @@ def scenarios_schedule_task(*args, **kwargs):
             raise ValueError('Error get scenarios task  id: %s from db.' % taskid)
         if task.task_parser():
             logger.info('Start task %s .' % task.name)
-            #result = task.sctasks.delay(serializer='pickle')
-            result = task.sctasks.apply_async(serializer='pickle')
+            result = task.sctasks.delay()
 
         logger.info('Task end.')
         return 'Completed.'
