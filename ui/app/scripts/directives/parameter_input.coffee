@@ -7,7 +7,13 @@ angular.module('app.directives')
   'DataSet'
   'XmlImportHandler'
   'Server'
-  (Model, DataSet, XmlImportHandler, Server) ->
+  'Segment'
+  'InputParameter'
+  'Cluster'
+  'Transformer'
+  'TestResult'
+  'ModelVerification'
+  (Model, DataSet, XmlImportHandler, Server, Segment, InputParameter, Cluster, Transformer, TestResult, ModelVerification) ->
       return {
         require: 'ngModel',
         restrict: 'E',
@@ -15,31 +21,93 @@ angular.module('app.directives')
           config: '='
           value: '=ngModel'
           name: '='
-        }
+          pdata: '='
+        },
         templateUrl:'partials/directives/parameter_input/main.html',
         link: (scope, element, attrs, ngModel) ->
           if !scope.name?
             scope.name = scope.config.name
 
-          if scope.config.entity?
-            entity_error = false
+          scope.loadEntity = () ->
             scope.config.choices = []
+            if scope.config.entity == 'Mock'
+              mocked = scope.pdata[scope.config.mocked]
+              if mocked != undefined
+                if typeof(mocked[0]) != "object"
+                  for m in mocked
+                    scope.config.choices.push {
+                      id: m,
+                      name: m,
+                      type: 'string'
+                    }
+                else
+                  scope.config.choices = mocked
+              return
+
             try
-              eval(scope.config.entity).$loadAll(
-                show: 'id,name'
-              ).then ((opts) ->
+              ent = eval(scope.config.entity)
+              to_show = ['id', 'name']
+              if scope.config.add_info?
+                to_show.push.apply(to_show, scope.config.add_info)
+              opts = {
+                show: to_show.join(',')
+              }
+
+              if scope.config.dependency?
+                if scope.pdata? && scope.pdata != undefined && scope.pdata[scope.config.dependency]
+                  _.extend opts, scope.pdata
+                else
+                  throw "Model not ready"
+
+              ent.$loadAll opts
+              .then ((opts) ->
                 scope.config.choices = opts.objects
+                if scope.pdata[scope.name]
+                  scope.setAdditionalInfo(scope.pdata[scope.name])
               ), ((opts) ->
-                entity_error = true
+                throw "Dependent model "+scope.config.name+" loading error"
               )
             catch e
-              entity_error = true
-              scope.config.choices = null
+              console.log e
+
+          if scope.config.entity?
+            scope.loadEntity()
+
+          scope.$watch('pdata', (oV, nV, scope) ->
+            if nV && nV != oV
+              console.log scope.pdata
+              if scope.config.dependency? && nV[scope.config.dependency] != oV[scope.config.dependency]
+                scope.loadEntity()
+          , true)
+
+          scope.setAdditionalInfo = (value) ->
+            scope.pdata['import_handler_type'] = 'xml'
+            if scope.config.add_info?
+              for ai in scope.config.add_info
+                if scope.config.choices && scope.config.choices[0][ai]
+                  for c in scope.config.choices
+                    if parseInt(value) == parseInt(c.id)
+                      if ai == 'train_import_handler_id' || ai == 'test_import_handler_id'
+                        scope.pdata['import_handler_id'] = c[ai]
+                      else
+                        scope.pdata[ai] = c[ai]
+                      break
+
+          scope.entitySelectHandler = (value) ->
+            scope.setAdditionalInfo(value)
 
           scope.select2Opts = null
           if scope.config.choices
             scope.select2Opts = scope.$root.getSelect2Params(
               {choices: scope.config.choices})
+
+          if scope.config.choose_multiple
+            scope.select2Opts = {
+              allowClear: true,
+              placeholder: 'Please select several '+scope.name,
+              width: 230,
+              choices: scope.config.choices
+            }
 
           scope.getFieldTemplate = (config) ->
             if config.choices
@@ -49,6 +117,10 @@ angular.module('app.directives')
                 name = 'choices'
               if config.entity
                 name = 'entity_choices'
+                if config.choose_multiple
+                  name = 'entity_choices_multiple'
+                if config.dict_fields
+                  name = 'recursive_parameter_input'
             else
               if config.name == 'password'
                 name = 'password'

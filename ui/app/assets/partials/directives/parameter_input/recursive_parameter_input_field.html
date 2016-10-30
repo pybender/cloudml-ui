@@ -1,0 +1,6 @@
+<div  ng-init="value[config.name] = value[config.name] == undefined ? {} : value[config.name]">
+  <div ng-repeat="item in config.choices">
+    <span class="span1" title="Please input {{ item.name }}. Type: {{ item.type }}">{{ item.name }}:</span>
+    <parameter-input ng-model="value[config.name]" config="item" name="item.name" pdata="value[config.name]"></parameter-input><br/>
+  </div>
+</div>

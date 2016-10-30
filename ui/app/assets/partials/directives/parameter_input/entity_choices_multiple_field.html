@@ -1,0 +1,3 @@
+<select ui-select2="select2Opts" ng-multiple="true" name="name" ng-model="value[config.name]" ng-required="config.required">
+    <option ng-repeat="c in config.choices" value="{{ c.id }}" >{{ c.id ? '(#'+c.id+')' : '' }} {{ c.name }}</option>
+</select>

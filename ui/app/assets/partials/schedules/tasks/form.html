@@ -25,10 +25,11 @@
     </div>
     <div ng-show="task.task.params">
       <h4 >Task Parameters</h4>
+      <h5>*If you expect some parameters came from previous task in chain - leave them empty.</h5>
       <div ng-repeat="item in task.task.params" class="control-group">
         <label class="control-label" title="Please input {{ item.name }}. Type: {{ item.type }}">{{ item.name }}</label>
         <div class="controls">
-          <parameter-input ng-model="task.kwargs" config="item" name="item.name"></parameter-input>
+          <parameter-input ng-model="task.kwargs" config="item" name="item.name" pdata="task.kwargs"></parameter-input>
         </div>
       </div>
     </div>
@@ -54,7 +55,7 @@
       <div ng-repeat="item in task.callback.params" class="control-group">
         <label class="control-label" title="Please input {{ item.name }}. Type: {{ item.type }}">{{ item.name }}</label>
         <div class="controls">
-          <parameter-input ng-model="task.callback_kwargs" config="item" name="item.name"></parameter-input>
+          <parameter-input ng-model="task.callback_kwargs" config="item" name="item.name" pdata="task.callback_kwargs"></parameter-input>
         </div>
       </div>
     </div>
