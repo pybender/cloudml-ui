@@ -1,7 +1,6 @@
+from .logger import scenarios_task_loger
 from .scheduler import CloudmluiDatabaseScheduler
 from .models import (PeriodicTask, CrontabSchedule, PeriodicTasks, IntervalSchedule)
-
-print ("/media/wwwnfs/upwork/cloudml/cloudml-ui/api/schedule/__init__.py")
 
 __all__ = [
     'CloudmluiDatabaseScheduler',
@@ -9,5 +8,6 @@ __all__ = [
     'CrontabSchedule',
     'PeriodicTasks',
     'IntervalSchedule',
-    'PeriodicTaskScenarios'
+    'PeriodicTaskScenarios',
+    'scenarios_task_loger'
 ]

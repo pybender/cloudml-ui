@@ -15,7 +15,7 @@ from celery.utils.log import get_logger
 
 from api.base.models import db, BaseModel, BaseMixin, JSONType, S3File
 from api import app, celery
-from api.schedule.tasks import scenarios_task_loger
+from api.schedule.logger import scenarios_task_loger
 from . import Session
 
 logger = get_logger(__name__)
@@ -309,7 +309,7 @@ class PeriodicTaskScenarios(BaseModel, db.Model):
             self.set_error(e, self.STATUS_ERROR_PARSER)
             return False
 
-    def _load_tree(self, tree=None):
+    def _load_tree(self, tree=None, topchainname=None):
         group_tasks = []
         self.celeryregistertask = celery.tasks.keys()
         def get_correct_scenarios_tree(t):
@@ -329,26 +329,50 @@ class PeriodicTaskScenarios(BaseModel, db.Model):
                 raise ValueError('Error validate 01. Invalid input format \
                                   for scenarios.')
             if len(tasks) == 1:
-                group_tasks = self._load_tree(tree=tasks[0])
+                group_tasks = self._load_tree(tree=tasks[0], topchainname=chainname)
                 if group_tasks.task not in self.celeryregistertask:
                     raise ValueError('Error validate 03. Task name: {0!r} \
                                       not register in Celery'.format(group_tasks))
             else:
                 for elm in tasks:
-                    task = self._load_tree(tree=elm)
+                    task = self._load_tree(tree=elm, topchainname=chainname)
                     if task:
                         if task.task not in self.celeryregistertask:
                             raise ValueError('Error validate 04. Task name: {0!r}\
                                               not register in Celery'.format(group_tasks))
                         group_tasks.append(task)
+        elif False:
+            type = 'single'
+            inargs = tree.get('args', [])
+            inkwargs = tree.get('kwargs', {})
+            group_tasks =  signature(name, args=inargs, kwargs=inkwargs)
         elif name:
             type = 'single'
-            args = tree.get('args', [])
-            kwargs = tree.get('kwargs', {})
-            group_tasks = signature(name, args=args, kwargs=kwargs)
-            if group_tasks.task not in self.celeryregistertask:
+            group_tasks = []
+            inargs = tree.get('args', [])
+            inkwargs = tree.get('kwargs', {})
+            sctask = signature(name)
+            if sctask.task not in self.celeryregistertask:
                 raise ValueError('Error validate 05. Task name: {0!r}\
                                   not register in Celery'.format(group_tasks))
+
+            inkwargs.update(dict(scenarios_task_loger_arg = dict(scenariosid = self.id,
+                                                                 scenarios = self.name,
+                                                                 chainname = topchainname,
+                                                                 name = name,
+                                                                 text ='Start.')))
+            group_tasks.append(signature('api.schedule.logger.scenarios_task_loger',
+                                         args=inargs, kwargs=inkwargs))
+            group_tasks.append(sctask)
+            inkwargs = {}
+            inkwargs.update(dict(scenarios_task_loger_arg = dict(scenariosid = self.id,
+                                                                 scenarios = self.name,
+                                                                 chainname = topchainname,
+                                                                 name = name,
+                                                                 text ='Stop.')))
+            group_tasks.append(signature('api.schedule.logger.scenarios_task_loger',
+                                         args=[], kwargs=inkwargs))
+            group_tasks = chain(group_tasks)
         else:
             raise ValueError('Error validate 06. Not correct scenarios json')
 
